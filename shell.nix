@@ -1,7 +1,6 @@
 { fullDeps ? false
 , hardwareTest ? false
 , devTools ? false
-, pythonTest ? false
  }:
 
 let
@@ -163,16 +162,12 @@ stdenvNoCC.mkDerivation ({
 
   # Avoid printing "Using udevCheckHook", there are no rules to check
   dontUdevCheck = 1;
-} // (if pythonTest then {
-  # Allow uv to use any python version for python tests
-  UV_PYTHON_PREFERENCE = "managed";
-  UV_PYTHON_DOWNLOADS = "automatic";
-} else {
+
   # Force uv to use the nix-provided Python instead of its own managed builds.
   # Without this, uv defaults to python-preference=managed + python-downloads=automatic,
   # silently downloading/reusing its own interpreter and ignoring python3 on PATH.
   UV_PYTHON_PREFERENCE = "only-system";
   UV_PYTHON_DOWNLOADS = "never";
-}) // (lib.optionalAttrs fullDeps) {
+} // (lib.optionalAttrs fullDeps) {
   TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
 })
