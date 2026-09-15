@@ -40,12 +40,16 @@ async def sign_message(
     node = keychain.derive(address_n)
     address = get_address(script_type, coin, node)
     path = address_n_to_str(address_n)
-    if is_sign_message_account_node(coin, address_n, script_type):
-        # The naming table cannot match an account node, and "Unknown path"
-        # would contradict a path we allow without warning.
-        account = None
-    else:
-        account = address_n_to_name_or_unknown(coin, address_n, script_type)
+    # Cosigners share the xpub at the BIP-48 account node, two levels above
+    # the patterns in the naming table; account_level trims them to match, so
+    # the node is named rather than left as "Unknown path" -- which would
+    # contradict a path we allow without warning.
+    account = address_n_to_name_or_unknown(
+        coin,
+        address_n,
+        script_type,
+        account_level=is_sign_message_account_node(coin, address_n, script_type),
+    )
     await confirm_signverify(
         decode_message(message),
         address_short(coin, address),
