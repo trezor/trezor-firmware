@@ -37,6 +37,9 @@ static mp_obj_t mod_trezorcrypto_bip39_from_data(mp_obj_t data) {
         "Invalid data length (only 16, 20, 24, 28 and 32 bytes are allowed)"));
   }
   const char *mnemo = mnemonic_from_data(bin.buf, bin.len);
+  if (mnemo == NULL) {
+    mp_raise_type(&mp_type_RuntimeError);
+  }
   mp_obj_t res =
       mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)mnemo, strlen(mnemo));
   mnemonic_clear();
