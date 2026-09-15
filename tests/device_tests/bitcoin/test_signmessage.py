@@ -633,6 +633,39 @@ def test_signmessage_unknown_path_is_refused(session: Session):
 
 
 @pytest.mark.models("core")
+def test_signmessage_fork_coin_gets_no_bitcoin_path_alias(session: Session):
+    """Selecting a fork must not grant its Bitcoin-namespace account node.
+
+    For a replay-protected fork, get_schemas_from_patterns() also emits every
+    schema under Bitcoin's SLIP-44 id, so legacy funds on Bitcoin paths stay
+    spendable. The BIP-48 account-node grant deliberately skips that helper:
+    otherwise asking for Bcash would make m/48'/0'/0'/0' -- a Bitcoin key --
+    signable, where it is otherwise outside the keychain entirely.
+    """
+    message = "This is an example of a signed message."
+
+    # Bcash's own account node signs
+    sig = btc.sign_message(
+        session,
+        coin_name="Bcash",
+        n=parse_path("m/48h/145h/0h/0h"),
+        message=message,
+        script_type=S.SPENDADDRESS,
+    )
+    assert sig.signature
+
+    # the Bitcoin-namespace one does not
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        btc.sign_message(
+            session,
+            coin_name="Bcash",
+            n=parse_path("m/48h/0h/0h/0h"),
+            message=message,
+            script_type=S.SPENDADDRESS,
+        )
+
+
+@pytest.mark.models("core")
 @pytest.mark.parametrize(
     "path",
     ["m/44h/60h/0h/0/0", "m"],

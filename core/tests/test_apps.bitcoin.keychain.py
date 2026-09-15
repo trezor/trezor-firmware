@@ -716,13 +716,13 @@ class TestSignMessageKeyAccess(TestCaseWithContext):
 
         return await_result(handler(msg))
 
-    def _sign_message(self, address_n, script_type=None):
+    def _sign_message(self, address_n, script_type=None, coin_name="Bitcoin"):
         from trezor.messages import SignMessage
 
         return SignMessage(
             address_n=address_n,
             message=b"hello",
-            coin_name="Bitcoin",
+            coin_name=coin_name,
             script_type=script_type,
         )
 
@@ -742,6 +742,47 @@ class TestSignMessageKeyAccess(TestCaseWithContext):
         address_n = [H_(1234), H_(5), H_(6)]
         msg = self._sign_message(address_n, InputScriptType.SPENDADDRESS)
 
+        self.assertRaises(wire.DataError, self._derive, msg)
+        self.assertFalse(validate_path_against_script_type(coin, msg))
+
+    def test_fork_coins_get_no_bitcoin_path_alias(self):
+        """A fork's grant covers its own coin type, not Bitcoin's.
+
+        get_schemas_from_patterns() duplicates every schema under Bitcoin's
+        SLIP-44 id for a replay-protected fork, so that legacy funds held on
+        Bitcoin paths stay spendable. Message signing needs nothing of the
+        sort: routed through that helper, selecting Bcash would make a
+        Bitcoin-namespace BIP-48 account key derivable, which before this
+        grant existed was a hard failure rather than a warning.
+        """
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import (
+            _get_sign_message_account_patterns,
+            get_schemas_from_patterns,
+            validate_path_against_script_type,
+        )
+
+        coin = _get_coin_by_name("Bcash")
+        self.assertIsNotNone(coin.fork_id)
+
+        # the alias the helper would have added, pinned so the trap stays
+        # visible if anyone routes this grant through it again
+        patterns = _get_sign_message_account_patterns(
+            coin, InputScriptType.SPENDADDRESS
+        )
+        self.assertEqual(len(patterns), 1)
+        self.assertEqual(len(get_schemas_from_patterns(patterns, coin)), 2)
+
+        # Bcash's own account node: granted
+        own = [H_(48), H_(145), H_(0), H_(0)]
+        msg = self._sign_message(own, InputScriptType.SPENDADDRESS, "Bcash")
+        self.assertTrue(self._derive(msg))
+        self.assertTrue(validate_path_against_script_type(coin, msg))
+
+        # the Bitcoin-namespace node under Bcash: not granted at all
+        aliased = [H_(48), H_(0), H_(0), H_(0)]
+        msg = self._sign_message(aliased, InputScriptType.SPENDADDRESS, "Bcash")
         self.assertRaises(wire.DataError, self._derive, msg)
         self.assertFalse(validate_path_against_script_type(coin, msg))
 

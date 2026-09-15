@@ -490,12 +490,21 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
         if SignMessage.is_type_of(msg):
             # SignMessage only: in _get_schemas_for_coin() these nodes would
             # also be spendable by SignTx.
-            extra_schemas += get_schemas_from_patterns(
-                _get_sign_message_account_patterns(
+            #
+            # Parsed against this coin's SLIP-44 id alone, deliberately not
+            # through get_schemas_from_patterns(): its Bitcoin-path aliases
+            # exist so a replay-protected fork can spend legacy funds held on
+            # Bitcoin paths. Message signing needs no such thing, and the
+            # alias would make a Bitcoin-namespace account key signable by
+            # selecting an altcoin. It would also disagree with
+            # validate_path_against_script_type(), which matches this coin's
+            # id only, so the path would be reachable but warn.
+            extra_schemas += [
+                PathSchema.parse(pattern, coin.slip44)
+                for pattern in _get_sign_message_account_patterns(
                     coin, msg.script_type or InputScriptType.SPENDADDRESS
-                ),
-                coin,
-            )
+                )
+            ]
         keychain = await _get_keychain_for_coin(coin, extra_schemas)
         if AuthorizeCoinJoin.is_type_of(auth_msg):
             auth_obj = authorization.from_cached_message(auth_msg)
