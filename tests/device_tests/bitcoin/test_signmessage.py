@@ -615,6 +615,54 @@ def test_signmessage_multisig_account_wrong_script_type(session: Session):
 
 
 @pytest.mark.models("core")
+@pytest.mark.parametrize(
+    "path",
+    [
+        "m/48h/0h/0h/0h",
+        "m/48h/0h/0h/1h",
+        "m/48h/0h/0h/2h",
+        "m/48h/0h/0h/0h/0/0",
+        "m/48h/0h/0h/1h/0/0",
+        "m/48h/0h/0h/2h/0/0",
+    ],
+)
+def test_signmessage_bip48_with_derived_script_type(session: Session, path: str):
+    """Every BIP-48 level signs when the host derives the script type.
+
+    The device holds the level and the script type in agreement, so a host
+    must say which level it means rather than leaving trezorlib's
+    SPENDADDRESS default. btc.guess_sign_message_script_type() is published
+    for exactly that; this is the shape HWI takes once patched. See #7717.
+    """
+    address_n = parse_path(path)
+    message = "This is an example of a signed message."
+
+    with session.test_ctx as client:
+        client.set_expected_responses(
+            [
+                # no path warning
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                messages.MessageSignature,
+            ]
+        )
+        IF = InputFlowConfirmAllWarnings(session)
+        client.set_input_flow(IF.get())
+        sig = btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=address_n,
+            message=message,
+            script_type=btc.guess_sign_message_script_type(address_n),
+        )
+
+    assert sig.signature
+    # the path fixes the format, so every host gets the same address
+    expected_prefix = {"0h": "1", "1h": "3", "2h": "bc1"}[path.split("/")[4]]
+    assert sig.address.startswith(expected_prefix)
+
+
+@pytest.mark.models("core")
 def test_signmessage_unknown_path_is_refused(session: Session):
     """A path in no schema cannot be signed with under strict safety checks.
 
