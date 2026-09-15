@@ -13,8 +13,11 @@
  * construction (SLH-DSA over modelRoot; Ed25519 over SHA256(modelRoot||slh_sig)),
  * which MUST match the STM's boot_header_check_signature or the two MCUs disagree
  * about which images are authentic, and the 2-of-3 key derivation (the image
- * declares no sigmask, so the verifier searches the pool and must require two
- * DISTINCT keys).
+ * declares a PROTECTED sigmask naming which pool keys signed, and the verifier
+ * must require exactly two DISTINCT ones).
+ *
+ * Only the nRF side of that "MUST match" is executed here: no harness compiles
+ * boot_header.c, so the STM's verifier is checked against nothing.
  *
  * Build (from core/):
  *   see tests/fw_merkle/run_founder_sig.sh

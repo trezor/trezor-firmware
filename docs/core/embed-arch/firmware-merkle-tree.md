@@ -57,7 +57,13 @@ The `0x00` / `0x01` prefixes prevent a proof for an internal node from being
 replayed as a leaf and vice-versa. The device (`boot_header_merkle.c`) and the
 host tooling (`trezorlib.merkle_tree`) implement these identically; a
 cross-validation harness (`core/tests/fw_merkle`) replays vectors through both
-to guarantee they agree byte-for-byte.
+to check they agree byte-for-byte.
+
+The harness is run by hand: nothing in the build or CI invokes it, it needs this
+branch's `trezorlib` on `PYTHONPATH`, and the nRF and founder-signature scripts
+additionally need the sibling mcuboot checkout on its PQ branch (they skip
+otherwise). What it covers is also narrower than the list above suggests — see
+[Harness coverage](#harness-coverage).
 
 ## Model layer (boardloader)
 
@@ -383,3 +389,16 @@ asserted to leave the leaf unchanged, so it really is invisible to the fold.
 All three must agree byte-for-byte; a mismatch is silent (images simply stop
 verifying), so they are cross-validated against shared vectors in
 `core/tests/fw_merkle`.
+
+### Harness coverage
+
+What the vectors actually reach today, so the gaps are not mistaken for checks:
+
+| covered | not covered |
+| --- | --- |
+| tree math, manifest folds, variant leaves (`boot_header_merkle.c`) | `boot_header.c` — `boot_header_check_signature` is compiled by no harness, so the STM's own signature verify is cross-checked against nothing |
+| the nRF's leaf, bounds discipline and acceptance predicates | `firmware_manifest_layout_valid` — the only bound on a custom app's `addr`/`size` before hashing |
+| the founder signature scheme, via the nRF's `pq_image_verify` | `firmware_manifest_read_proof` — `crossvalidate.c` takes the proof from a side field of the vector, not from the manifest region the device parses |
+
+A drift in the EC pre-hash, the sigmask-to-key mapping or the model-path fold
+between the STM, the nRF and the signer would therefore go undetected.
