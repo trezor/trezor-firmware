@@ -1245,23 +1245,59 @@ if not utils.BITCOIN_ONLY:
             )
 
     async def confirm_ethereum_clear_signing(
+        *,
         recipient_str: str,
         intent: str,
         properties: list[StrPropertyType],
         maximum_fee: str,
+        contract_address: str,
         amount: str | None = None,
+        account: str | None = None,
+        account_path: str | None = None,
     ) -> None:
+        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
         from ..properties import with_colon
 
-        await confirm_action("confirm_contract", TR.words__provider, recipient_str)
-        await confirm_action("confirm_contract", TR.words__intent, intent)
-        if properties:
-            await confirm_properties(
-                "confirm_contract",
-                TR.ethereum__confirm_contract,
-                properties,
+        br_name = "ethereum/clear_signing"
+
+        account_properties: list[StrPropertyType] = []
+        if account_path:
+            assert account is not None
+            account_properties.append((TR.words__account, account, None))
+            account_properties.append(
+                (TR.address_details__derivation_path, account_path, None)
             )
 
+        def _menu() -> Menu[None]:
+            menu_items: list[MenuLeaf[None]] = []
+            if account_properties:
+                menu_items.append(
+                    create_info_menu_leaf(
+                        TR.address_details__account_info,
+                        with_colon(account_properties),
+                    )
+                )
+            menu_items.append(
+                create_info_menu_leaf(TR.ethereum__contract_address, contract_address)
+            )
+            return Menu(menu_items)
+
+        await confirm_action(f"{br_name}/provider", TR.words__provider, recipient_str)
+        await confirm_action(f"{br_name}/intent", TR.words__intent, intent)
+        if properties:
+            with trezorui_api.confirm_properties(
+                title=TR.ethereum__confirm_contract,
+                items=with_colon(properties),
+                hold=False,
+                external_menu=True,
+            ) as layout:
+                await confirm_with_menu(
+                    layout, _menu(), br_name, ButtonRequestType.ConfirmOutput
+                )
+
+        # NOTE: `account_items`/`extra_items` cannot be combined with an external
+        # menu on Caesar, so all the context goes into the menu.
         with trezorui_api.confirm_summary(
             amount=amount,
             amount_label=with_colon(TR.words__amount) if amount is not None else None,
@@ -1269,11 +1305,9 @@ if not utils.BITCOIN_ONLY:
             fee_label=with_colon(TR.send__maximum_fee),
             extra_items=None,
             extra_title=None,
+            external_menu=True,
         ) as layout:
-            await raise_if_not_confirmed(
-                layout,
-                br_name="confirm_ethereum_tx",
-            )
+            await confirm_with_menu(layout, _menu(), f"{br_name}/summary")
 
     async def confirm_ethereum_staking_tx(
         title: str,
