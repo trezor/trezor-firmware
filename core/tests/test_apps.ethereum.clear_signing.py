@@ -1856,6 +1856,290 @@ class TestABIValueFromProto(unittest.TestCase):
         self.assertEqual(parsed, ([7, 8],))
         self.assertEqual(consumed, 32)
 
+    # --- shapes from the registry ---
+    #
+    # The real ERC-7730 descriptor shapes this recursion exists to unblock.
+    # Each is named for the contract it came from, so that if one is ever
+    # dropped the reviewer can tell which provider regresses. Arrays are kept
+    # short and unused dynamic members empty - the point is the tree shape, not
+    # the payload.
+
+    def test_serenita_leaf_array_inside_struct(self):
+        # serenita `updateState`:
+        #   (bytes32 rewardsRoot, int160 reward, uint160 unlockedMevReward,
+        #    bytes32[] proof) harvestParams
+        # The `bytes32[]` member is what `_get_leaf_parser` used to reject.
+        # Every field of this descriptor is `visible: never` - it is dropped
+        # today purely because the parameter cannot be typed.
+        node = ABIValue.from_proto(
+            p_tuple(
+                [
+                    p_atomic(EABIT.ABI_BYTES32),
+                    p_atomic(EABIT.ABI_INT160),
+                    p_atomic(EABIT.ABI_UINT160),
+                    p_array(p_atomic(EABIT.ABI_BYTES32)),
+                ],
+                is_dynamic=True,
+            )
+        )
+
+        root = bytes(range(32))
+        leaf0 = bytes(range(32, 64))
+        leaf1 = bytes(range(64, 96))
+        data = memoryview(
+            to_bytes(32)  # 0   head -> struct body at 32
+            + root  # 32  rewardsRoot
+            + to_bytes((1 << 256) - 5)  # 64  reward = -5, two's complement
+            + to_bytes(123456)  # 96  unlockedMevReward
+            + to_bytes(128)  # 128 proof head, rel 32 -> 160
+            + to_bytes(2)  # 160 proof count
+            + leaf0  # 192
+            + leaf1  # 224
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, (root, -5, 123456, [leaf0, leaf1]))
+        self.assertEqual(consumed, 32)
+
+    def test_kyberswap_struct_in_struct_end_to_end(self):
+        # kyberswap `swap`, the one supported descriptor that reads *through*
+        # nesting: its visible fields are `execution.desc.amount`,
+        # `execution.desc.minReturnAmount` and `execution.desc.dstReceiver`,
+        # with `tokenPath` pointing at `execution.desc.srcToken`. So this
+        # asserts the whole chain - nested parse, then the index path walk,
+        # then the rendered row.
+        #
+        #   execution = (callTarget, approveTarget, targetData, desc, clientData)
+        #   desc      = (srcToken, dstToken, srcReceivers[], srcAmounts[],
+        #                feeReceivers[], feeAmounts[], dstReceiver, amount,
+        #                minReturnAmount, flags, permit)
+        desc = p_tuple(
+            [
+                p_atomic(EABIT.ABI_ADDRESS),  # 0 srcToken
+                p_atomic(EABIT.ABI_ADDRESS),  # 1 dstToken
+                p_array(p_atomic(EABIT.ABI_ADDRESS)),  # 2 srcReceivers
+                p_array(p_atomic(EABIT.ABI_UINT256)),  # 3 srcAmounts
+                p_array(p_atomic(EABIT.ABI_ADDRESS)),  # 4 feeReceivers
+                p_array(p_atomic(EABIT.ABI_UINT256)),  # 5 feeAmounts
+                p_atomic(EABIT.ABI_ADDRESS),  # 6 dstReceiver
+                p_atomic(EABIT.ABI_UINT256),  # 7 amount
+                p_atomic(EABIT.ABI_UINT256),  # 8 minReturnAmount
+                p_atomic(EABIT.ABI_UINT256),  # 9 flags
+                p_dynamic(EABIT.ABI_BYTES),  # 10 permit
+            ],
+            is_dynamic=True,
+        )
+        execution = p_tuple(
+            [
+                p_atomic(EABIT.ABI_ADDRESS),  # 0 callTarget
+                p_atomic(EABIT.ABI_ADDRESS),  # 1 approveTarget
+                p_dynamic(EABIT.ABI_BYTES),  # 2 targetData
+                desc,  # 3 desc
+                p_dynamic(EABIT.ABI_BYTES),  # 4 clientData
+            ],
+            is_dynamic=True,
+        )
+
+        src_token = bytes.fromhex("a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
+        dst_token = bytes.fromhex("dac17f958d2ee523a2206206994597c13d831ec7")
+        receiver = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
+        other = bytes.fromhex("1111111111111111111111111111111111111111")
+        amount = 2_500_000  # 2.5 at 6 decimals
+
+        calldata = (
+            to_bytes(32)  # 0   param head -> execution body at 32
+            + pad_left(other)  # 32  callTarget
+            + pad_left(other)  # 64  approveTarget
+            + to_bytes(160)  # 96  targetData head, rel 32 -> 192
+            + to_bytes(192)  # 128 desc head, rel 32 -> 224
+            + to_bytes(704)  # 160 clientData head, rel 32 -> 736
+            + to_bytes(0)  # 192 targetData: empty
+            + pad_left(src_token)  # 224 desc.srcToken
+            + pad_left(dst_token)  # 256 desc.dstToken
+            + to_bytes(352)  # 288 srcReceivers head, rel 224 -> 576
+            + to_bytes(384)  # 320 srcAmounts   head, rel 224 -> 608
+            + to_bytes(416)  # 352 feeReceivers head, rel 224 -> 640
+            + to_bytes(448)  # 384 feeAmounts   head, rel 224 -> 672
+            + pad_left(receiver)  # 416 desc.dstReceiver
+            + to_bytes(amount)  # 448 desc.amount
+            + to_bytes(2_400_000)  # 480 desc.minReturnAmount
+            + to_bytes(0)  # 512 desc.flags
+            + to_bytes(480)  # 544 permit head, rel 224 -> 704
+            + to_bytes(0)  # 576 srcReceivers: empty
+            + to_bytes(0)  # 608 srcAmounts: empty
+            + to_bytes(0)  # 640 feeReceivers: empty
+            + to_bytes(0)  # 672 feeAmounts: empty
+            + to_bytes(0)  # 704 permit: empty
+            + to_bytes(0)  # 736 clientData: empty
+        )
+
+        class _Defs:
+            network = make_eth_network()
+
+            def get_token(self, address):
+                return make_eth_token(symbol="TST", decimals=6, address=address)
+
+        display_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x00\x00\x00\x00",
+            provider_name=None,
+            intent="Swap",
+            parameter_definitions=[ABIValue.from_proto(execution)],
+            field_definitions=[
+                FieldDefinition(
+                    (0, 3, 7),
+                    "Amount to Send",
+                    TokenAmountFormatter(token_path=(0, 3, 0)),
+                ),
+                FieldDefinition((0, 3, 6), "Beneficiary", AddressNameFormatter),
+            ],
+        )
+
+        parameters, fields = await_result(
+            display_format.parse_calldata(memoryview(calldata), None, _Defs())
+        )
+
+        # the nested struct decoded, grandchild leaves included
+        self.assertEqual(parameters[0][3][0], src_token)
+        self.assertEqual(parameters[0][3][7], amount)
+        self.assertEqual(parameters[0][3][2], [])  # empty srcReceivers
+
+        (label, formatted, _), token, token_address = fields[0]
+        self.assertEqual(label, "Amount to Send")
+        self.assertEqual(token_address, src_token)
+        self.assertEqual(token.symbol, "TST")
+        self.assertIn("2.5", formatted)
+
+        (label, formatted, _), _, _ = fields[1]
+        self.assertEqual(label, "Beneficiary")
+        self.assertEqual(formatted.lower(), "0x" + receiver.hex())
+
+    def test_okx_dag_swap_array_of_structs_with_leaf_arrays(self):
+        # okx `dagSwapByOrderId`s `paths`:
+        #   (address[] mixAdapters, address[] assetTo, uint256[] rawData,
+        #    bytes[] extraData, uint256 fromToken)[]
+        # Two nested array levels - the outer array plus the arrays inside the
+        # element struct - so it sits exactly on `_MAX_NESTED_ARRAYS` and must
+        # pass. Its `smartSwap*` siblings add a third level and are rejected;
+        # see test_okx_smart_swap_shape_rejected.
+        node = ABIValue.from_proto(
+            p_array(
+                p_tuple(
+                    [
+                        p_array(p_atomic(EABIT.ABI_ADDRESS)),
+                        p_array(p_atomic(EABIT.ABI_ADDRESS)),
+                        p_array(p_atomic(EABIT.ABI_UINT256)),
+                        p_array(p_dynamic(EABIT.ABI_BYTES)),
+                        p_atomic(EABIT.ABI_UINT256),
+                    ],
+                    is_dynamic=True,
+                )
+            )
+        )
+
+        adapter = bytes.fromhex("2222222222222222222222222222222222222222")
+        data = memoryview(
+            to_bytes(32)  # 0   head -> array body at 32
+            + to_bytes(1)  # 32  element count
+            + to_bytes(32)  # 64  elem 0, rel 64 -> struct body at 96
+            + to_bytes(160)  # 96  mixAdapters head, rel 96 -> 256
+            + to_bytes(224)  # 128 assetTo     head, rel 96 -> 320
+            + to_bytes(256)  # 160 rawData     head, rel 96 -> 352
+            + to_bytes(288)  # 192 extraData   head, rel 96 -> 384
+            + to_bytes(42)  # 224 fromToken
+            + to_bytes(1)  # 256 mixAdapters count
+            + pad_left(adapter)  # 288
+            + to_bytes(0)  # 320 assetTo: empty
+            + to_bytes(0)  # 352 rawData: empty
+            + to_bytes(0)  # 384 extraData: empty
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, [([adapter], [], [], [], 42)])
+        self.assertEqual(consumed, 32)
+
+    def test_flare_array_of_structs_with_nested_struct(self):
+        # flare `initialiseWeightBasedClaims`:
+        #   (bytes32[] merkleProof,
+        #    (uint24 rewardEpochId, bytes20 beneficiary, uint120 amount,
+        #     uint8 claimType) body)[] _proofs
+        # A struct holding both a leaf array and a nested *static* struct. The
+        # static struct occupies four words inline, so the element's field
+        # heads are not one word apart - this is the shape that the old fixed
+        # `i * 32` stride got wrong.
+        body = p_tuple(
+            [
+                p_atomic(EABIT.ABI_UINT24),
+                p_atomic(EABIT.ABI_BYTES20),
+                p_atomic(EABIT.ABI_UINT120),
+                p_atomic(EABIT.ABI_UINT8),
+            ],
+            is_dynamic=False,
+        )
+        node = ABIValue.from_proto(
+            p_array(
+                p_tuple(
+                    [p_array(p_atomic(EABIT.ABI_BYTES32)), body],
+                    is_dynamic=True,
+                )
+            )
+        )
+
+        beneficiary = bytes.fromhex("3333333333333333333333333333333333333333")
+        proof_leaf = bytes(range(32))
+        data = memoryview(
+            to_bytes(32)  # 0   head -> array body at 32
+            + to_bytes(1)  # 32  element count
+            + to_bytes(32)  # 64  elem 0, rel 64 -> struct body at 96
+            + to_bytes(160)  # 96  merkleProof head, rel 96 -> 256
+            + to_bytes(7)  # 128 body.rewardEpochId
+            + pad_right(beneficiary)  # 160 body.beneficiary (bytes20)
+            + to_bytes(99)  # 192 body.amount
+            + to_bytes(1)  # 224 body.claimType
+            + to_bytes(1)  # 256 merkleProof count
+            + proof_leaf  # 288
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, [([proof_leaf], (7, beneficiary, 99, 1))])
+        self.assertEqual(consumed, 32)
+
+    def test_struct_field_may_be_an_array_of_structs(self):
+        # (uint256 a, (address b, uint256 c)[] xs). No supported descriptor has
+        # this shape, but the recursion admits it and the static element
+        # struct gives the array a 64-byte stride.
+        node = ABIValue.from_proto(
+            p_tuple(
+                [
+                    p_atomic(EABIT.ABI_UINT256),
+                    p_array(
+                        p_tuple(
+                            [
+                                p_atomic(EABIT.ABI_ADDRESS),
+                                p_atomic(EABIT.ABI_UINT256),
+                            ],
+                            is_dynamic=False,
+                        )
+                    ),
+                ],
+                is_dynamic=True,
+            )
+        )
+
+        addr = bytes.fromhex("4444444444444444444444444444444444444444")
+        data = memoryview(
+            to_bytes(32)  # 0   head -> struct body at 32
+            + to_bytes(5)  # 32  a
+            + to_bytes(64)  # 64  xs head, rel 32 -> array body at 96
+            + to_bytes(1)  # 96  element count
+            + pad_left(addr)  # 128 xs[0].b   (static struct, in place)
+            + to_bytes(7)  # 160 xs[0].c
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, (5, [(addr, 7)]))
+        self.assertEqual(consumed, 32)
+
     # --- nesting caps ---
     #
     # Two caps, bounding two different resources. `_MAX_NESTED_ARRAYS` (2)
