@@ -22,6 +22,21 @@ pub fn get_heap() -> (*mut u8, usize) {
     (ptr.cast(), size)
 }
 
+/// Returns the IPC inbox size, in bytes, the currently active applet declared
+/// in its manifest (`ipc-buffer-size` under `[package.metadata.trezor]`).
+///
+/// Validated on the way in: the app header is rejected at load unless this is
+/// a power of two in `8..=IPC_MAX_BUFFER_SIZE` that fits inside the app's
+/// heap, so callers can size an allocation from it directly.
+#[cfg(feature = "app_loading")]
+pub fn get_ipc_buffer_size() -> usize {
+    let mut size = 0usize;
+    // SAFETY: `size` is a valid out-pointer for the duration of the call.
+    let status = unsafe { ffi::app_get_ipc_buffer_size(&mut size) };
+    assert!(status.code == 0, "app_get_ipc_buffer_size failed");
+    size
+}
+
 #[cfg(test)]
 #[unsafe(no_mangle)]
 pub fn main() -> i32 {
