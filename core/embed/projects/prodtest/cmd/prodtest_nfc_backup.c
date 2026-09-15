@@ -691,10 +691,15 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
 
   nfc_backup_certificate_t cert = {0};
   parse_x509_certificate(certificate, certificate_size, &cert);
-  print_certificate(cli, &cert);
+
+  if (cli != NULL) {
+    print_certificate(cli, &cert);
+  }
 
   if (memcmp(cert.public_key, card_public_key, NOISE_XXPSK3_DHLEN) != 0) {
-    cli_trace(cli, "Card public key does not match certificate public key.");
+    if (cli != NULL) {
+      cli_trace(cli, "Card public key does not match certificate public key.");
+    }
     TSH_CHECK(false, TS_EINVAL);
   }
 
@@ -721,8 +726,10 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
       sizeof(plain_text), &plain_text_size);
   TSH_CHECK(noise_status, TS_EINVAL);
 
-  cli_trace(cli, "Card welcome message: %.*s", (int)plain_text_size,
-            plain_text);
+  if (cli != NULL) {
+    cli_trace(cli, "Card welcome message: %.*s", (int)plain_text_size,
+              plain_text);
+  }
 
 cleanup:
   TSH_RETURN;
@@ -735,9 +742,10 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
   // Clear the initiator structure
   memzero(&intr, sizeof(intr));
 
-  cli_trace(cli, "Handshake: start");
-  cli_trace(cli, "Handshake step 1/4: selecting backup applet.");
-
+  if(cli != NULL) {  
+    cli_trace(cli, "Handshake: start");
+    cli_trace(cli, "Handshake step 1/4: selecting backup applet.");
+  } 
   nfc_apdu_message_t cmd = {.data = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xA0, 0x00,
                                      0x00, 0x09, 0x59, 0x00, 0x01},
                             .data_len = 12};
@@ -750,8 +758,9 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
   TSH_CHECK(resp.data_len == 2U, TS_EINVAL);
   TSH_CHECK(resp.data[0] == 0x90U && resp.data[1] == 0x00U, TS_EINVAL);
 
-  cli_trace(cli, "Handshake step 2/4: exchanging PSK.");
-
+  if(cli != NULL) {
+    cli_trace(cli, "Handshake step 2/4: exchanging PSK.");
+  }
   uint8_t pcd_psk[16] = {0};
   uint8_t picc_psk[16] = {0};
   uint16_t picc_psk_len = 0;
@@ -762,8 +771,10 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
                               sizeof(picc_psk), &picc_psk_len);
 
   if (ts_error(status) || picc_psk_len != sizeof(picc_psk)) {
-    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_PSK_EXCHANGE_FAILED,
-              "NFC PSK exchange failed");
+    if(cli != NULL) {
+      cli_error(cli, PRODTEST_ERR_NFC_BACKUP_PSK_EXCHANGE_FAILED,
+                 "NFC PSK exchange failed");
+    }
   }
   TSH_CHECK_OK(status);
 
@@ -774,17 +785,22 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
 
   nfc_backup_trace_hex_preview(cli, "Exchanged PSK", psk, sizeof(psk));
 
-  cli_trace(cli, "Handshake step 3/4: running Noise XXpsk3.");
-
+  if(cli != NULL) {
+    cli_trace(cli, "Handshake step 3/4: running Noise XXpsk3.");
+  }
   status = nfc_backup_noise(cli, &psk);
   if (ts_error(status)) {
-    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_NOISE_FAILED,
-              "NFC noise handshake failed");
+    if(cli != NULL) {
+      cli_error(cli, PRODTEST_ERR_NFC_BACKUP_NOISE_FAILED,
+                "NFC noise handshake failed");
+    }
   }
   TSH_CHECK_OK(status);
 
-  cli_trace(cli, "Handshake step 4/4: secure channel established.");
-  cli_trace(cli, "Handshake: completed");
+  if(cli != NULL) {
+    cli_trace(cli, "Handshake step 4/4: secure channel established.");
+    cli_trace(cli, "Handshake: completed");
+  }
 
 cleanup:
   TSH_RETURN;
@@ -1442,6 +1458,211 @@ cleanup:
   TSH_RETURN;
 }
 
+// Transparent mode CLI: buffers incoming characters into a line and, once a
+// termination character (or a full buffer) is seen, dispatches it to one of
+// the registered command handlers below.
+
+typedef const char *(*nfc_backup_tm_cmd_fn_t)(cli_t *cli, const char *arg);
+
+// Tracks whether the NFC field is powered and whether a card is tapped.
+static bool nfc_tm_running = false;
+static bool nfc_tm_connected = false;
+
+static const char *nfc_backup_tm_cmd_on(cli_t *cli, const char *arg) {
+  if (nfc_tm_running) {
+    return "ERROR: already on";
+  }
+
+  if (ts_error(nfc_init()) || ts_error(nfc_start_discovery())) {
+    return "ERROR";
+  }
+
+  nfc_tm_running = true;
+  nfc_tm_connected = false;
+  return "OK";
+}
+
+static const char *nfc_backup_tm_cmd_off(cli_t *cli, const char *arg) {
+  if (!nfc_tm_running) {
+    return "ERROR: already off";
+  }
+
+  nfc_stop_discovery();
+  nfc_deinit();
+  nfc_tm_running = false;
+  nfc_tm_connected = false;
+  return "OK";
+}
+
+static const char *nfc_backup_tm_cmd_reset(cli_t *cli, const char *arg) {
+  // Example: power-cycle the NFC field and restart discovery.
+  nfc_stop_discovery();
+  nfc_deinit();
+  nfc_tm_connected = false;
+
+  if (ts_error(nfc_init()) || ts_error(nfc_start_discovery())) {
+    nfc_tm_running = false;
+    return "ERROR";
+  }
+
+  nfc_tm_running = true;
+  return "OK";
+}
+
+static const char *nfc_backup_tm_cmd_noise(cli_t *cli, const char *arg) {
+
+  if (!nfc_tm_connected) {
+    return "ERROR: no card connected";
+  }
+
+  ts_t status = nfc_backup_handshake(cli);
+  if(ts_ok(status)) {
+    return "OK";
+  }
+  
+  return "ERROR: handshake failed";
+}
+
+static const char *nfc_backup_tm_cmd_transceive(cli_t *cli, const char *arg) {
+  // Example: decode `arg` as hex, transceive it, and return the response
+  // encoded back as hex. The buffer is static so it outlives this call.
+  static char resp_text[2 * NFC_MAX_APDU_LEN + 1];
+
+  if (!nfc_tm_connected) {
+    return "ERROR: no card connected";
+  }
+
+  nfc_apdu_message_t cmd = {0};
+  nfc_apdu_message_t rsp = {0};
+  size_t cmd_len = 0;
+
+  if (!cstr_decode_hex(arg, cmd.data, sizeof(cmd.data), &cmd_len) ||
+      cmd_len == 0) {
+    return "ERROR: invalid hex argument";
+  }
+  cmd.data_len = (uint16_t)cmd_len;
+
+  if (ts_error(nfc_transceive(&cmd, &rsp))) {
+    return "ERROR: transceive failed";
+  }
+
+  cstr_encode_hex(resp_text, sizeof(resp_text), rsp.data, rsp.data_len);
+  return resp_text;
+}
+
+// Command table: add new entries here to extend the transparent mode CLI.
+static const struct {
+  const char *name;
+  nfc_backup_tm_cmd_fn_t handler;
+} nfc_backup_tm_cmds[] = {
+    {"on", nfc_backup_tm_cmd_on},
+    {"off", nfc_backup_tm_cmd_off},
+    {"reset", nfc_backup_tm_cmd_reset},
+    {"noise", nfc_backup_tm_cmd_noise},
+    {"transceive", nfc_backup_tm_cmd_transceive},
+};
+
+// Splits `line` into a command name and its (possibly empty) argument, and
+// invokes the matching handler from nfc_backup_tm_cmds.
+static void nfc_backup_tm_dispatch(cli_t *cli, char *line) {
+  char *arg = strchr(line, ' ');
+  if (arg != NULL) {
+    *arg++ = '\0';
+    while (*arg == ' ') {
+      arg++;
+    }
+  } else {
+    arg = "";
+  }
+
+  for (size_t i = 0; i < sizeof(nfc_backup_tm_cmds) / sizeof(nfc_backup_tm_cmds[0]);
+       i++) {
+    if (strcmp(line, nfc_backup_tm_cmds[i].name) == 0) {
+      const char *resp = nfc_backup_tm_cmds[i].handler(cli, arg);
+      if (resp != NULL) {
+        cli->write(cli, resp, strlen(resp));
+        cli->write(cli, "\r\n", 2);
+      }
+      return;
+    }
+  }
+
+  cli_trace(cli, "Unknown command: %s", line);
+}
+
+static void prodtest_nfc_backup_transparent_mode(cli_t *cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_trace(cli, "Entering transparent mode. Commands: on, off, reset, noise, "
+                 "transceive <hex>.");
+
+  char line_buf[1024] = {0};
+  size_t line_len = 0;
+
+  sysevents_t awaited_events = {0};
+  sysevents_t signalled_events = {0};
+  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
+
+  while (true) {
+    if (cli_aborted(cli)) {
+      cli_trace(cli, "Aborted by operator.");
+      break;
+    }
+
+    if (nfc_tm_running) {
+      sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
+
+      if (signalled_events.read_ready & (1 << SYSHANDLE_NFC)) {
+        nfc_event_t event_flag;
+        if (nfc_get_event(&event_flag)) {
+          if (event_flag == NFC_EVENT_CONNECTED) {
+            nfc_tm_connected = true;
+            cli_trace(cli, "NFC card connected.");
+          } else if (event_flag == NFC_EVENT_DISCONNECTED) {
+            nfc_tm_connected = false;
+            cli_trace(cli, "NFC card removed.");
+          }
+        }
+      }
+    }
+
+    uint8_t c;
+    ssize_t len = syshandle_read(SYSHANDLE_USB_VCP, &c, 1);
+    if (len != 1) {
+      continue;
+    }
+
+    if (c == '\n' || c == '\r') {
+      if (line_len > 0) {
+        line_buf[line_len] = '\0';
+        nfc_backup_tm_dispatch(cli, line_buf);
+        line_len = 0;
+      }
+      continue;
+    }
+
+    if (line_len >= sizeof(line_buf) - 1) {
+      // Buffer full: process what has been collected so far.
+      line_buf[line_len] = '\0';
+      nfc_backup_tm_dispatch(cli, line_buf);
+      line_len = 0;
+    }
+
+    line_buf[line_len++] = (char)c;
+  }
+
+  if (nfc_tm_running) {
+    nfc_stop_discovery();
+    nfc_deinit();
+    nfc_tm_running = false;
+    nfc_tm_connected = false;
+  }
+}
+
+
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_handshake, &nfc_backup_handshake,
                         PRODTEST_ERR_NFC_BACKUP_HANDSHAKE_FAILED,
                         "NFC handshake failed");
@@ -1581,5 +1802,12 @@ PRODTEST_CLI_CMD(
   .info = "Run nfc-backup activate flashloader test",
   .args = ""
 );
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-backup-transparent-mode",
+  .func = prodtest_nfc_backup_transparent_mode,
+  .info = "Run nfc-backup tests",
+  .args = ""
+);  
 
 #endif  // USE_NFC
