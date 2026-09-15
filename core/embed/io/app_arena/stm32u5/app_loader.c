@@ -510,7 +510,13 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
 
   applet_init(applet, &privileges, unload_cb);
 
+  // The inbox is allocated out of the app's heap at launch, so an app that
+  // asks for more inbox than heap can never start. The build tool rejects
+  // this too; re-check here because the header is attacker-supplied.
+  TSH_CHECK(header->ipc_buffer_size <= map.heap_size, TS_ENOMEM);
+
   applet_set_heap(applet, (void*)map.heap_p_addr, map.heap_size);
+  applet_set_ipc_buffer_size(applet, header->ipc_buffer_size);
 
   applet->layout = (applet_layout_t){
       .code1.start = map.ro_p_addr,
