@@ -49,7 +49,7 @@ where
         Self {
             prompt: Child::new(Maybe::new(
                 theme::BG,
-                Label::centered(prompt, theme::label_keyboard_prompt()),
+                Label::centered(prompt, theme::label_keyboard_prompt()).vertically_centered(),
                 prompt_visible,
             )),
             back: Child::new(Maybe::new(
@@ -119,9 +119,17 @@ where
         let back_area = grid.row_col(0, 0);
         let input_area = grid.row_col(0, 1).union(grid.row_col(0, 3));
 
-        let prompt_center = grid.row_col(0, 0).union(grid.row_col(0, 3)).center();
-        let prompt_size = self.prompt.inner().inner().max_size();
-        let prompt_area = Rect::snap(prompt_center, prompt_size, Alignment2D::CENTER);
+        let prompt_row = grid.row_col(0, 0).union(grid.row_col(0, 3));
+        let prompt_center = prompt_row.center();
+        // Give the prompt room for up to two lines; the vertically-centered
+        // `Label` wraps onto the second line if needed.
+        let prompt_font = theme::label_keyboard_prompt().text_font;
+        let prompt_size = Offset::new(
+            prompt_row.width(),
+            prompt_font.text_max_height() + prompt_font.line_height(),
+        );
+        let prompt_area =
+            Rect::snap(prompt_center, prompt_size, Alignment2D::CENTER).clamp(prompt_row);
 
         self.swipe.place(bounds);
         self.prompt.place(prompt_area);
