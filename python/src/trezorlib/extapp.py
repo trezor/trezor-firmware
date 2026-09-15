@@ -70,6 +70,8 @@ class AppHeader(SanityCheckedStruct):
     curves: list[str]
     # Allowed BIP32 path prefixes
     paths: list[str]
+    # Size in bytes of the IPC inbox Core registers for the app at launch
+    ipc_buffer_size: int
     # Reserved for future use
     reserved_3: bytes | None = None
 
@@ -114,6 +116,7 @@ class AppHeader(SanityCheckedStruct):
                 path.encode("utf-8") for path in cast(list[str], obj)
             ).ljust(256, b"\0"),
         ),
+        "ipc_buffer_size" / c.Int32ul,
         "_end_offset" / c.Tell,
         "reserved_3"
         / Reserved(c.this.header_size - c.this._end_offset + c.this._start_offset),
