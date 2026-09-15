@@ -2,10 +2,10 @@ ENTRY(reset_handler)
 
 /* Merkle-tree layout (pq_secure_boot feature): prodtest is a single secure module
    (its own variant). The firmware manifest ("firmware directory") occupies
-   FW_MANIFEST_REGION at the image start, before the module header + code. This is
-   prodtest.ld with ONLY the FLASH header layout swapped to the tree format
-   (manifest + TRZM module header, replacing the legacy vendor/image/secmon
-   headers); the RAM layout, stack and prodtest-specific sections are unchanged. */
+   FW_MANIFEST_REGION at the image start, before the code. This is prodtest.ld
+   with ONLY the FLASH header layout swapped to the tree format (the manifest
+   replacing the legacy vendor/image/secmon headers); the RAM layout, stack and
+   prodtest-specific sections are unchanged. */
 FW_MANIFEST_REGION = 0x400;
 /* Smart-hashing chunk size stamped into the manifest entry by manifest_header.S
    (the code_hash chain folds chunks of this size; the last chunk may be partial).
@@ -94,7 +94,6 @@ SECTIONS {
   _image_flash_end = LOADADDR(.data) + SIZEOF(.data);
 
   .bss : ALIGN(4) {
-    *(.no_dma_buffers*);
     *(.bss*);
     . = ALIGN(4);
   } >AUX1_RAM
@@ -109,7 +108,9 @@ SECTIONS {
     . = ALIGN(4);
   } >FB2_RAM
 
-  .buf : ALIGN(4) {
+  .buf (NOLOAD) : ALIGN(4) {
+    *(.no_dma_buffers*);
+    . = ALIGN(4);
     *(.buf*);
     . = ALIGN(4);
   } >AUX1_RAM
