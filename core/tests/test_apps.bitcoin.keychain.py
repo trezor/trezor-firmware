@@ -296,6 +296,134 @@ class TestValidateXpubPath(unittest.TestCase):
         )
 
 
+class TestXpubExportPoints(unittest.TestCase):
+    """Every path at which an xpub exports without a warning, enumerated.
+
+    validate_xpub_path_against_script_type() does not hold a list of approved
+    export points; it derives them from the spending-path tables via
+    _xpub_export_depths(). A pattern added to _get_patterns_for_script_type()
+    for transaction or address compatibility therefore also creates a
+    no-warning xpub export at some prefix of it, which is the wrong default for
+    a consent screen.
+
+    This test is the fail-closed counterweight: it pins the whole derived set,
+    so a new pattern fails here until its export points have been looked at and
+    written down below. Each entry was reviewed; the notes say why.
+    """
+
+    # coins chosen to open every gate in _get_patterns_for_script_type():
+    # slip44, segwit, bech32, taproot, fork_id and BITCOIN_NAMES
+    COINS = ("Bitcoin", "Testnet", "Litecoin", "Bcash", "Decred")
+
+    # pattern -> path lengths that export without a warning
+    EXPECTED = {
+        # account xpubs, the ordinary case
+        "m/44'/coin_type'/account'/change/address_index": (3,),
+        "m/49'/coin_type'/account'/change/address_index": (3,),
+        "m/84'/coin_type'/account'/change/address_index": (3,),
+        "m/86'/coin_type'/account'/change/address_index": (3,),
+        # BIP-48 cosigner xpubs, one per script-type level
+        "m/48'/coin_type'/account'/0'/change/address_index": (4,),
+        "m/48'/coin_type'/account'/1'/change/address_index": (4,),
+        "m/48'/coin_type'/account'/2'/change/address_index": (4,),
+        # BIP-45 has no hardened account level, so the cosigner xpub at m/45'
+        # is the export point, and it derives every branch below it
+        "m/45'/[0-100]/change/address_index": (1,),
+        # Unchained: hardened account, plus the m/45' form for the unhardened
+        # variant, which therefore exports at both depths
+        "m/45'/coin_type'/account'/[0-1000000]/change/address_index": (3,),
+        "m/45'/coin_type/account/[0-1000000]/change/address_index": (1, 3),
+        # Casa: unhardened account level, so m/45' and the account both export
+        "m/45'/coin_type/account/change/address_index": (1, 3),
+        # GreenAddress B is hardened two levels deep
+        "m/3'/[1-100]'/[1,4]/address_index": (2,),
+        # Coinjoin account xpub. No warning, but GetPublicKey refuses SLIP-25
+        # without UnlockPath, so the export is gated before the warning runs.
+        "m/10025'/coin_type'/0'/1'/change/address_index": (4,),
+        # No hardened component, so no export point at all: these would hand
+        # out the root xpub.
+        "m/49/coin_type/account/change/address_index": (),
+        "m/[1,4]/address_index": (),
+    }
+
+    def test_every_export_point_is_enumerated(self):
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import (
+            _get_patterns_for_script_type,
+            _xpub_export_depths,
+        )
+
+        script_types = (
+            InputScriptType.SPENDADDRESS,
+            InputScriptType.SPENDMULTISIG,
+            InputScriptType.SPENDP2SHWITNESS,
+            InputScriptType.SPENDWITNESS,
+            InputScriptType.SPENDTAPROOT,
+        )
+
+        seen = {}
+        for coin_name in self.COINS:
+            coin = _get_coin_by_name(coin_name)
+            for script_type in script_types:
+                for multisig in (False, True):
+                    for pattern in _get_patterns_for_script_type(
+                        coin, script_type, multisig
+                    ):
+                        seen[pattern] = _xpub_export_depths(pattern)
+
+        for pattern in sorted(seen):
+            self.assertTrue(
+                pattern in self.EXPECTED,
+                "new pattern, review its xpub export points: " + pattern,
+            )
+            self.assertEqual(seen[pattern], self.EXPECTED[pattern], pattern)
+
+        for pattern in sorted(self.EXPECTED):
+            self.assertTrue(pattern in seen, "pattern no longer reachable: " + pattern)
+
+    def test_enumerated_depths_are_reachable(self):
+        """The depths above are export points of the real validator.
+
+        Keeps the table honest: it describes what
+        validate_xpub_path_against_script_type() accepts, not just what
+        _xpub_export_depths() computes.
+        """
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import validate_xpub_path_against_script_type
+
+        coin = _get_coin_by_name("Bitcoin")
+
+        # one concrete path per documented export depth
+        cases = (
+            ([H_(44), H_(0), H_(0)], InputScriptType.SPENDADDRESS),
+            ([H_(49), H_(0), H_(0)], InputScriptType.SPENDP2SHWITNESS),
+            ([H_(84), H_(0), H_(0)], InputScriptType.SPENDWITNESS),
+            ([H_(86), H_(0), H_(0)], InputScriptType.SPENDTAPROOT),
+            ([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDWITNESS),
+            ([H_(45)], InputScriptType.SPENDADDRESS),
+            ([H_(45), 0, 0], InputScriptType.SPENDP2SHWITNESS),
+        )
+        for address_n, script_type in cases:
+            self.assertTrue(
+                validate_xpub_path_against_script_type(coin, address_n, script_type),
+                address_n,
+            )
+
+        # and the root stays withheld, at every script type
+        for script_type in (
+            InputScriptType.SPENDADDRESS,
+            InputScriptType.SPENDP2SHWITNESS,
+            InputScriptType.SPENDWITNESS,
+            InputScriptType.SPENDTAPROOT,
+        ):
+            self.assertFalse(
+                validate_xpub_path_against_script_type(coin, [], script_type),
+                script_type,
+            )
+
+
 class TestSignMessagePathValidation(unittest.TestCase):
     """SignMessage has no multisig field, so it matches the union of both
     pattern sets. See #7717."""

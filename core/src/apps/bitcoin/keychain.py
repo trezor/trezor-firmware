@@ -219,6 +219,35 @@ def validate_path_against_script_type(
     )
 
 
+def _xpub_export_depths(pattern: str) -> tuple[int, ...]:
+    """The path lengths at which `pattern` may be exported as an xpub.
+
+    Derived from the pattern's shape rather than declared, so adding a pattern
+    to _get_patterns_for_script_type() for spending also creates an export
+    point here. TestXpubExportPoints enumerates the whole resulting set and
+    fails on any change, so a new pattern cannot quietly widen xpub export.
+    """
+    components = pattern.split("/")[1:]
+
+    deepest_hardened = 0
+    account_level = 0
+    for i, component in enumerate(components):
+        if component.endswith("'"):
+            deepest_hardened = i + 1
+        if component in ("account", "account'"):
+            account_level = i + 1
+
+    if deepest_hardened == 0:
+        # A pattern with no hardened components has no meaningful export
+        # point. It would allow exporting the root xpub.
+        return ()
+
+    if account_level > deepest_hardened:
+        return (deepest_hardened, account_level)
+
+    return (deepest_hardened,)
+
+
 def validate_xpub_path_against_script_type(
     coin: coininfo.CoinInfo,
     address_n: Bip32Path,
@@ -250,27 +279,10 @@ def validate_xpub_path_against_script_type(
     patterns += _get_patterns_for_script_type(coin, script_type, multisig=True)
 
     for pattern in patterns:
+        if len(address_n) not in _xpub_export_depths(pattern):
+            continue
+
         components = pattern.split("/")[1:]
-
-        deepest_hardened = 0
-        account_level = 0
-        for i, component in enumerate(components):
-            if component.endswith("'"):
-                deepest_hardened = i + 1
-            if component in ("account", "account'"):
-                account_level = i + 1
-
-        if deepest_hardened == 0:
-            # A pattern with no hardened components has no meaningful export
-            # point. It would allow exporting the root xpub.
-            continue
-
-        if len(address_n) not in (
-            deepest_hardened,
-            max(deepest_hardened, account_level),
-        ):
-            continue
-
         prefix_pattern = "m/" + "/".join(components[: len(address_n)])
         if PathSchema.parse(prefix_pattern, coin.slip44).match(address_n):
             return True
