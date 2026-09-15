@@ -181,6 +181,75 @@ static void build_image(uint8_t sigmask) {
   image_len = q;
 }
 
+/* Recompute this image's leaf and modelRoot and write both founder signature
+ * pairs, signing slot i with the key slot_key[i] names.
+ *
+ * Every build_image() has to be followed by one of these. The sigmask and the
+ * security counter are PROTECTED, so they are inside the image hash and hence
+ * inside the leaf: a rebuild moves the root, and build_image zeroes the
+ * signature records on its way through. An unsigned image is rejected by the
+ * signature check alone, which would make a negative below pass without ever
+ * reaching the property it names.
+ */
+static int sign_image(const uint8_t *copath, const int *slot_key,
+                      const uint8_t pq_sk[][CRYPTO_SECRETKEYBYTES],
+                      const uint8_t ec_sk[][32], uint8_t *root_out) {
+  struct flat img = {image, image_len};
+  uint8_t img_hash[32], leaf[32];
+  if (pq_image_hash(flat_read, &img, image_len, img_hash) != 0) {
+    printf("FAIL: pq_image_hash\n");
+    return 1;
+  }
+  {
+    /* Same 44 bytes mcuboot builds, with the model taken from the same
+     * MODEL_IDENTIFIER the run script passes to both translation units. */
+    uint8_t slot[PQ_COPROC_SLOT_LEN];
+    memset(slot, 0, sizeof(slot));
+    memcpy(slot, PQ_COPROC_SLOT_TAG, 4);
+    slot[4] = (uint8_t)(MODEL_IDENTIFIER & 0xFFu);
+    slot[5] = (uint8_t)((MODEL_IDENTIFIER >> 8) & 0xFFu);
+    slot[6] = (uint8_t)((MODEL_IDENTIFIER >> 16) & 0xFFu);
+    slot[7] = (uint8_t)((MODEL_IDENTIFIER >> 24) & 0xFFu);
+    slot[8] = (uint8_t)PQ_COPROC_KIND_NRF;
+    slot[9] = (uint8_t)PQ_COPROC_INDEX;
+    memcpy(&slot[12], img_hash, 32);
+
+    SHA256_CTX c;
+    const uint8_t p0 = 0x00;
+    sha256_Init(&c);
+    sha256_Update(&c, &p0, 1);
+    sha256_Update(&c, slot, sizeof(slot));
+    sha256_Final(&c, leaf);
+  }
+  pq_merkle_fold(leaf, copath, COPATH_NODES, root_out);
+
+  /* Sign as the founder does: SLH-DSA over modelRoot, then Ed25519 over
+   * SHA256(modelRoot || slh_sig) so the EC half commits to the PQ half. */
+  for (int slot = 0; slot < PQ_SIG_COUNT; slot++) {
+    size_t siglen = 0;
+    static uint8_t sig[CRYPTO_BYTES];
+    if (crypto_sign_signature(sig, &siglen, root_out, 32,
+                              pq_sk[slot_key[slot]]) != 0 ||
+        siglen != PQ_SLH_SIG_LEN) {
+      printf("FAIL: crypto_sign_signature (siglen=%zu)\n", siglen);
+      return 1;
+    }
+    memcpy(&image[off_slh[slot]], sig, PQ_SLH_SIG_LEN);
+
+    uint8_t hash[32];
+    SHA256_CTX ctx;
+    sha256_Init(&ctx);
+    sha256_Update(&ctx, root_out, 32);
+    sha256_Update(&ctx, sig, PQ_SLH_SIG_LEN);
+    sha256_Final(&ctx, hash);
+
+    uint8_t ec_sig[64];
+    ed25519_sign(hash, sizeof(hash), ec_sk[slot_key[slot]], ec_sig);
+    memcpy(&image[off_ec[slot]], ec_sig, sizeof(ec_sig));
+  }
+  return 0;
+}
+
 int main(void) {
   int fails = 0;
 
@@ -221,58 +290,9 @@ int main(void) {
   randombytes(copath, sizeof(copath));
   memcpy(&image[off_copath], copath, sizeof(copath));
 
-  uint8_t img_hash[32], leaf[32], root[32];
-  if (pq_image_hash(flat_read, &img, image_len, img_hash) != 0) {
-    printf("FAIL: pq_image_hash\n");
+  uint8_t root[32];
+  if (sign_image(copath, slot_key, pq_sk, ec_sk, root) != 0) {
     return 1;
-  }
-  {
-    /* Same 44 bytes mcuboot builds, with the model taken from the same
-     * MODEL_IDENTIFIER the run script passes to both translation units. */
-    uint8_t slot[PQ_COPROC_SLOT_LEN];
-    memset(slot, 0, sizeof(slot));
-    memcpy(slot, PQ_COPROC_SLOT_TAG, 4);
-    slot[4] = (uint8_t)(MODEL_IDENTIFIER & 0xFFu);
-    slot[5] = (uint8_t)((MODEL_IDENTIFIER >> 8) & 0xFFu);
-    slot[6] = (uint8_t)((MODEL_IDENTIFIER >> 16) & 0xFFu);
-    slot[7] = (uint8_t)((MODEL_IDENTIFIER >> 24) & 0xFFu);
-    slot[8] = (uint8_t)PQ_COPROC_KIND_NRF;
-    slot[9] = (uint8_t)PQ_COPROC_INDEX;
-    memcpy(&slot[12], img_hash, 32);
-
-    SHA256_CTX c;
-    const uint8_t p0 = 0x00;
-    sha256_Init(&c);
-    sha256_Update(&c, &p0, 1);
-    sha256_Update(&c, slot, sizeof(slot));
-    sha256_Final(&c, leaf);
-  }
-  pq_merkle_fold(leaf, copath, COPATH_NODES, root);
-
-  /* --- sign as the founder does: SLH-DSA over modelRoot, then Ed25519 over
-   *     SHA256(modelRoot || slh_sig) so the EC half commits to the PQ half. --- */
-  printf("signing modelRoot with 2 hybrid signature pairs...\n");
-  for (int slot = 0; slot < PQ_SIG_COUNT; slot++) {
-    size_t siglen = 0;
-    static uint8_t sig[CRYPTO_BYTES];
-    if (crypto_sign_signature(sig, &siglen, root, sizeof(root),
-                              pq_sk[slot_key[slot]]) != 0 ||
-        siglen != PQ_SLH_SIG_LEN) {
-      printf("FAIL: crypto_sign_signature (siglen=%zu)\n", siglen);
-      return 1;
-    }
-    memcpy(&image[off_slh[slot]], sig, PQ_SLH_SIG_LEN);
-
-    uint8_t hash[32];
-    SHA256_CTX ctx;
-    sha256_Init(&ctx);
-    sha256_Update(&ctx, root, sizeof(root));
-    sha256_Update(&ctx, sig, PQ_SLH_SIG_LEN);
-    sha256_Final(&ctx, hash);
-
-    uint8_t ec_sig[64];
-    ed25519_sign(hash, sizeof(hash), ec_sk[slot_key[slot]], ec_sig);
-    memcpy(&image[off_ec[slot]], ec_sig, sizeof(ec_sig));
   }
 
   /* ---------------- positive ---------------- */
@@ -353,6 +373,7 @@ int main(void) {
    * modelRoot -- the signatures no longer match anything. Rebuilt rather than
    * patched, since patching in place would leave an inconsistent image hash. */
   build_image(0x03);
+  img.len = image_len; /* a rebuild can change it */
   memcpy(&image[off_copath], copath, sizeof(copath));
   for (int slot = 0; slot < PQ_SIG_COUNT; slot++) {
     memcpy(&image[off_slh[slot]], &good[off_slh[slot]], PQ_SLH_SIG_LEN);
@@ -367,9 +388,17 @@ int main(void) {
     printf("sigmask 0b011 vs signatures from keys 0,2 rejected: OK\n");
   }
 
-  /* A single-key sigmask must not satisfy the 2-of-3 threshold. */
-  build_image(0x01);
-  memcpy(&image[off_copath], copath, sizeof(copath));
+  /* A single-key sigmask must not satisfy the 2-of-3 threshold. Signed with the
+   * ONLY key the mask names, in both slots -- so if the popcount check were
+   * dropped and both slots resolved to key 0, the image would verify and this
+   * test would fail rather than pass on an unsigned image. */
+  {
+    const int single[PQ_SIG_COUNT] = {0, 0};
+    build_image(0x01);
+    img.len = image_len; /* a rebuild can change it */
+    memcpy(&image[off_copath], copath, sizeof(copath));
+    if (sign_image(copath, single, pq_sk, ec_sk, root) != 0) return 1;
+  }
   FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL, pq_keys,
            ec_keys, NUM_KEYS, NULL);
   if (FIH_EQ(fih_rc, FIH_SUCCESS)) {
@@ -385,6 +414,7 @@ int main(void) {
      * the image, so absence can only ever be MORE restrictive. */
     g_sec_cnt = -1;
     build_image(0x05);
+    img.len = image_len; /* a rebuild can change it */
     memcpy(&image[off_copath], copath, sizeof(copath));
     uint32_t got = 0xdeadbeef;
     if (pq_image_security_counter(flat_read, &img, image_len, &got) != 0 ||
@@ -400,6 +430,7 @@ int main(void) {
      * yield 0x04030201, which silently inverts the ordering of every release. */
     g_sec_cnt = 0x01020304;
     build_image(0x05);
+    img.len = image_len; /* a rebuild can change it */
     memcpy(&image[off_copath], copath, sizeof(copath));
     got = 0;
     if (pq_image_security_counter(flat_read, &img, image_len, &got) != 0 ||
@@ -413,7 +444,15 @@ int main(void) {
 
     /* It is PROTECTED, so it is inside the founder leaf: flipping it must break
      * the signature. This is what makes the counter unforgeable rather than
-     * merely present. */
+     * merely present. Sign the rebuilt image first and confirm it verifies --
+     * otherwise the rejection below proves only that an unsigned image fails. */
+    if (sign_image(copath, slot_key, pq_sk, ec_sk, root) != 0) return 1;
+    FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL, pq_keys,
+             ec_keys, NUM_KEYS, NULL);
+    if (FIH_NOT_EQ(fih_rc, FIH_SUCCESS)) {
+      printf("FAIL: re-signed counter image REJECTED (test setup broken)\n");
+      fails++;
+    }
     image[off_sec_cnt] ^= 0xFF;
     FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL,
              pq_keys, ec_keys, NUM_KEYS, NULL);
@@ -428,8 +467,13 @@ int main(void) {
 
   /* A sigmask naming a key outside the pool must be rejected on range, not
    * silently indexed. */
+  /* Key 3 has no secret to sign with, so slot 1 gets a real key: the image is
+   * otherwise well-formed and the out-of-range bit is the only thing wrong with
+   * it, which is what makes the rejection attributable to the range check. */
   build_image(0x09); /* keys 0 and 3 -- key 3 does not exist */
+  img.len = image_len; /* a rebuild can change it */
   memcpy(&image[off_copath], copath, sizeof(copath));
+  if (sign_image(copath, slot_key, pq_sk, ec_sk, root) != 0) return 1;
   FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL, pq_keys,
            ec_keys, NUM_KEYS, NULL);
   if (FIH_EQ(fih_rc, FIH_SUCCESS)) {
