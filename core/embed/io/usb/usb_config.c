@@ -56,21 +56,6 @@ static secbool usb_device_init(void) {
       .usb21_enabled = sectrue,
       .usb21_landing = secfalse,
   };
-#elif defined(PRODTEST)
-  static const usb_dev_info_t dev_info_default = {
-      .device_class = 0xEF,     // Composite Device Class
-      .device_subclass = 0x02,  // Common Class
-      .device_protocol = 0x01,  // Interface Association Descriptor
-      .vendor_id = 0x1209,
-      .product_id = 0x53C1,
-      .release_num = 0x0400,
-      .manufacturer = MODEL_USB_MANUFACTURER,
-      .product = MODEL_USB_PRODUCT,
-      .serial_number = "000000000000",
-      .interface = "TREZOR Interface",
-      .usb21_enabled = secfalse,
-      .usb21_landing = secfalse,
-  };
 #else
   static const usb_dev_info_t dev_info_default = {
       .device_class = 0x00,
