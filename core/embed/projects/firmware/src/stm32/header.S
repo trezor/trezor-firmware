@@ -1,6 +1,6 @@
     .syntax unified
 
-#include "version.h"
+#include "../../version.h"
 
     .section .header, "a"
 

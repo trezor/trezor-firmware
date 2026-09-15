@@ -80,7 +80,7 @@
 
 #include <SDL3/SDL.h>
 
-#include "version.h"
+#include "../../version.h"
 
 static void drivers_deinit(void) { flash_deinit(); }
 

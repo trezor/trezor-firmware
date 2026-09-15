@@ -44,7 +44,7 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
     // features so an unsupported option fails here with the option named,
     // instead of as a cargo error.
     let project_config = config::ProjectConfig::load(args.project)?;
-    let package = args.project.package_name(args.emulator);
+    let package = args.project.package_name();
     let package_features = config::package_features(package)?;
     for activated in project_config.options.resolve(args) {
         // Crate-qualified features ("io/foo") belong to dependencies and
@@ -135,7 +135,7 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
     let resolved = resolve_features(args)?;
     let mut rebuild_std = false;
 
-    cmd.args(["--package", args.project.package_name(args.emulator)]);
+    cmd.args(["--package", args.project.package_name()]);
     cmd.args(["--features", &resolved.features.join(",")]);
     cmd.args(["--profile", args.cargo_profile_name()]);
     cmd.env("TREZOR_BOARD_HEADER", &resolved.board_header);
