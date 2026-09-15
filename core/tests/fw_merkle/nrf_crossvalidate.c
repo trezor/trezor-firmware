@@ -9,8 +9,9 @@
  *
  * Covered: the genuine image passes; tamper inside the hashed range breaks the
  * fold; tamper OUTSIDE it does not, by design, and is caught instead by the push
- * gate's shape check and per-scheme acceptance; ANOTHER model's nRF -- which folds
- * to modelRoot fine -- is rejected on its model id; and the legacy sigmask ->
+ * gate's shape check and per-scheme acceptance; ANOTHER model's nRF -- slotted
+ * under this model so that it folds -- is rejected on its model id; and the
+ * legacy sigmask ->
  * key-slot map matches MCUboot's for all 256 masks.
  *
  * Build (from core/):
@@ -608,13 +609,31 @@ int main(void) {
     printf("malformed image rejected (bad magic / signed-region parse): OK\n");
   }
 
-  /* another model's OTA: folds to modelRoot fine, rejected on model id */
+  /* Another model's OTA, slotted under THIS device's model so that it really
+   * does fold -- the misissuance case, where the founder put a foreign image in
+   * this model's tree. Role binding covers the ordinary cross-model image (its
+   * own slot carries its own model, which this device never computes), so
+   * without that deliberate slotting the fold would reject first and this would
+   * assert nothing about the model-id TLV. */
   if (harness_ota_gate(OTHER_OTA, OTHER_OTA_LEN, &root, DEVICE_MODEL_ID, NULL,
                      NULL) != secfalse) {
     printf("FAIL: other model's OTA accepted (cross-model!)\n");
     fails++;
   } else {
-    printf("other model's OTA rejected on model id (folds OK): OK\n");
+    printf("other model's OTA rejected on model id (it folds): OK\n");
+  }
+  /* Assert the premise, rather than describing it: the SAME artifact passes the
+   * gate when the device id it is compared against is the one in its TLV. So the
+   * fold and every other step succeeded, and the rejection above is the model-id
+   * comparison and nothing else. Without this the test silently became a fold
+   * check once role binding landed. */
+  if (harness_ota_gate(OTHER_OTA, OTHER_OTA_LEN, &root, OTHER_MODEL_ID, NULL,
+                     NULL) != sectrue) {
+    printf("FAIL: other model's OTA does not fold -- the model-id negative "
+           "above is vacuous\n");
+    fails++;
+  } else {
+    printf("other model's OTA folds under this tree (premise holds): OK\n");
   }
 
   /* NOT tested here: an oversized proof_count. That bound belongs to whoever
