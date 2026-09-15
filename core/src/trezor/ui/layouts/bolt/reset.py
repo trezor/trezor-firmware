@@ -138,10 +138,9 @@ async def _prompt_number(
                 assert isinstance(value, int)
                 return value
 
-            with trezorui_api.show_simple(
-                title=None,
-                text=info(value),
-                button=TR.buttons__ok_i_understand,
+            with trezorui_api.show_info_with_cancel(
+                title="",
+                items = [(info(value), "", False),],
             ) as layout:
                 await interact(layout, None, raise_on_cancel=None)
 
