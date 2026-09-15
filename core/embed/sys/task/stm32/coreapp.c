@@ -67,9 +67,9 @@ static void applet_set_unpriv(applet_t* applet, bool unpriv) {
 
 static void coreapp_unload_cb(applet_t* applet) {
   // Clear all memory the applet was allowed to use
-  mpu_set_active_applet(&applet->layout);
+  mpu_set_active_applet(&applet->layout, false);
   coreapp_clear_memory(applet);
-  mpu_set_active_applet(NULL);
+  mpu_set_active_applet(NULL, false);
 #ifdef USE_TRUSTZONE
   // Disable unprivileged access to the coreapp memory regions
   applet_set_unpriv(applet, false);
@@ -102,7 +102,8 @@ bool coreapp_init(applet_t* applet, uint32_t cmd, const void* arg,
   };
 
   applet_privileges_t coreapp_privileges = {
-      .assets_area_access = true,
+      .framebuffer_access = true,
+      .unlimited_syscalls = true,
   };
 
   applet_init(applet, &coreapp_privileges, coreapp_unload_cb);
@@ -110,7 +111,7 @@ bool coreapp_init(applet_t* applet, uint32_t cmd, const void* arg,
   applet->layout = coreapp_layout;
 
   // Enable access to coreapp memory regions
-  mpu_set_active_applet(&applet->layout);
+  mpu_set_active_applet(&applet->layout, false);
 
   // Clear all memory the applet is allowed to use
   coreapp_clear_memory(applet);
