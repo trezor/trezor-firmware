@@ -661,3 +661,112 @@ def test_clear_signing_weth_withdraw(session: Session) -> None:
         client.set_input_flow(client.ui.default_input_flow(on_page=on_page))
         ethereum.sign_tx(session, **_get_weth_sign_tx_params(WETH_WITHDRAW_CALLDATA))
     assert_all_seen()
+
+
+# okx `dagSwapByOrderId`s `paths` parameter:
+#   (address[] mixAdapters, address[] assetTo, uint256[] rawData,
+#    bytes[] extraData, uint256 fromToken)[]
+# An array of structs each holding leaf arrays, so it sits exactly on
+# `_MAX_NESTED_ARRAYS` - the deepest array nesting the firmware accepts. This
+# runs it on the device at the largest size the calldata cap allows.
+
+_EVM_WORD = 32
+_MAX_DATA_STORED = 6144  # keep in sync with core/src/apps/ethereum/sign_tx.py
+
+# One path costs 9 words of calldata before any contents - its head word, five
+# field heads and three empty array counts - while a `rawData` leaf costs one.
+# So the parser does the most work with a single path whose `rawData` fills the
+# rest of the budget: 4 + 32 (param head) + 32 (path count) + 32 (path head)
+# + 288 (path body with three empty arrays) + 32*L <= 6144, giving L = 179 and
+# 186 nodes parsed in total.
+_MAX_RAW_DATA = (_MAX_DATA_STORED - 388) // _EVM_WORD  # 179
+
+
+def _word(value: int) -> bytes:
+    return value.to_bytes(_EVM_WORD, "big")
+
+
+def _make_okx_paths_calldata(raw_data_count: int) -> bytes:
+    """Encode one `paths` element with `raw_data_count` `rawData` entries."""
+    # Offsets inside the path body, relative to the body start: five field
+    # heads, then the four array bodies laid out in field order.
+    return (
+        FUNC_SIG_FAKE
+        + _word(32)  # paths head
+        + _word(1)  # path count
+        + _word(32)  # path 0 head, relative to the count word
+        + _word(160)  # mixAdapters head
+        + _word(192)  # assetTo head
+        + _word(224)  # rawData head
+        + _word(256 + _EVM_WORD * raw_data_count)  # extraData head
+        + _word(0x1234)  # fromToken
+        + _word(0)  # mixAdapters: empty
+        + _word(0)  # assetTo: empty
+        + _word(raw_data_count)  # rawData count
+        + _word((1 << 256) - 1) * raw_data_count
+        + _word(0)  # extraData: empty
+    )
+
+
+OKX_PATHS_DISPLAY_FORMAT = definitions.make_eth_display_format(
+    chain_id=1,
+    address=UNISWAP_V3_ROUTER2,
+    func_sig=FUNC_SIG_FAKE,
+    intent="FAKE Swap",
+    parameter_definitions=[
+        messages.EthereumABIValueInfo(
+            array=messages.EthereumABIValueInfo(
+                tuple=messages.EthereumABITupleInfo(
+                    fields=[
+                        messages.EthereumABIValueInfo(
+                            array=messages.EthereumABIValueInfo(
+                                atomic=messages.EthereumABIType.ABI_ADDRESS
+                            )
+                        ),  # mixAdapters
+                        messages.EthereumABIValueInfo(
+                            array=messages.EthereumABIValueInfo(
+                                atomic=messages.EthereumABIType.ABI_ADDRESS
+                            )
+                        ),  # assetTo
+                        messages.EthereumABIValueInfo(
+                            array=messages.EthereumABIValueInfo(
+                                atomic=messages.EthereumABIType.ABI_UINT256
+                            )
+                        ),  # rawData
+                        messages.EthereumABIValueInfo(
+                            array=messages.EthereumABIValueInfo(
+                                dynamic=messages.EthereumABIType.ABI_BYTES
+                            )
+                        ),  # extraData
+                        messages.EthereumABIValueInfo(
+                            atomic=messages.EthereumABIType.ABI_UINT256
+                        ),  # fromToken
+                    ],
+                    is_dynamic=True,
+                )
+            )
+        )
+    ],
+    field_definitions=[
+        messages.EthereumERC7730FieldInfo(
+            path=messages.EthereumERC7730Path(path=[0, 0, 4]),
+            label="FAKE fromToken",
+            formatter=messages.EthereumERC7730FieldFormatterType.FORMATTER_UNIT,
+        ),
+    ],
+)
+
+
+@pytest.mark.models("core")
+def test_clear_signing_max_nesting_paths(session: Session) -> None:
+    calldata = _make_okx_paths_calldata(_MAX_RAW_DATA)
+    assert len(calldata) <= _MAX_DATA_STORED
+
+    on_page, assert_all_seen = make_label_checker(expected={"FAKE fromToken"})
+    _sign_tx_with_display_format(
+        session,
+        OKX_PATHS_DISPLAY_FORMAT,
+        sign_tx_params=get_clear_signing_sign_tx_params(calldata),
+        on_page=on_page,
+    )
+    assert_all_seen()
