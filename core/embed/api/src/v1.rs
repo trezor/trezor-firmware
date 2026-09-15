@@ -25,14 +25,6 @@ pub static TREZOR_API_V1: TrezorApiV1Struct = TrezorApiV1Struct {
 struct TrezorApiV1Impl;
 
 impl TrezorApiV1 for TrezorApiV1Impl {
-    extern "C" fn init(&self, inbox_words: usize) {
-        // The app's heap was already claimed for `APP_ALLOCATOR` by
-        // `crate::coreapp_app_entry`, before `applet_main` (and so this
-        // vtable call) ever started — which is what lets `register_inbox`
-        // allocate here in the first place.
-        crate::wire::register_inbox(inbox_words);
-    }
-
     extern "C" fn system_exit(&self) -> ! {
         rtl::sysexit::system_exit()
     }

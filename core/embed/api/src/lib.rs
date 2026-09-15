@@ -46,5 +46,8 @@ pub extern "C" fn coreapp_app_entry(
     applet_main: extern "C" fn(ApiGetter) -> core::ffi::c_int,
 ) -> core::ffi::c_int {
     allocator::init();
+    // Must follow `allocator::init`: the inbox is allocated out of the heap
+    // that call just claimed.
+    wire::register_inbox();
     applet_main(coreapp_api_get)
 }

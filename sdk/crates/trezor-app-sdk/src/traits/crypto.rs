@@ -69,11 +69,7 @@ pub trait CryptoV1: Send + Sync {
     /// Starts an HMAC computation (over `algorithm`, one of the SHA-2
     /// family) under `key`. `key` is only read during this call (copied into
     /// the HMAC context's internal state); Core never retains it afterward.
-    extern "C" fn get_hmac<'a>(
-        &self,
-        algorithm: HmacAlgorithm,
-        key: Slice<'a, u8>,
-    ) -> BoxedHasher;
+    extern "C" fn get_hmac<'a>(&self, algorithm: HmacAlgorithm, key: Slice<'a, u8>) -> BoxedHasher;
 
     /// Derives the extended public key (xpub) for `address_n`.
     extern "C" fn get_xpub<'a>(

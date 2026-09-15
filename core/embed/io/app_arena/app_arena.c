@@ -332,6 +332,7 @@ ts_t app_image_get_info(app_image_handle_t handle, app_image_info_t* info) {
   info->code_size = entry->header->code_size;
   info->data_size = entry->header->data_size;
   info->chunk_size = entry->header->chunk_size;
+  info->ipc_buffer_size = entry->header->ipc_buffer_size;
   info->version = entry->header->version;
   info->fingerprint = entry->fingerprint;
   info->ring = entry->header->app_ring;
@@ -551,6 +552,11 @@ cleanup:
 ts_t app_get_heap(void** heap_ptr, size_t* heap_size) {
   applet_t* applet = applet_active();
   return applet_get_heap(applet, heap_ptr, heap_size);
+}
+
+ts_t app_get_ipc_buffer_size(size_t* ipc_buffer_size) {
+  applet_t* applet = applet_active();
+  return applet_get_ipc_buffer_size(applet, ipc_buffer_size);
 }
 #endif
 

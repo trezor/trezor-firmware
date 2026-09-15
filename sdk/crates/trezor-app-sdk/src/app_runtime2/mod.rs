@@ -19,23 +19,15 @@ unsafe extern "Rust" {
     unsafe fn app() -> crate::error::Result<()>;
 }
 
-/// Words for this app's own IPC inbox buffer, passed to [`TrezorApiV1::init`]
-/// (via [`applet_main`]) for Core to allocate and register once at startup.
-/// Core allocates it out of this app's heap, which is already claimed by the
-/// time [`applet_main`] runs — see its docs.
-/// 8192 `usize` words is 64 KiB on a 32-bit target, matching the kernel's
-/// `IPC_MAX_BUFFER_SIZE`.
-///
-/// [`TrezorApiV1::init`]: crate::traits::trezor_v1::TrezorApiV1::init
-const INBOX_WORDS: usize = 8192;
-
 /// This app's entry point — but not the first thing to run on its task.
 ///
 /// Core starts the task in `coreapp_app_entry` (`core/embed/api/src/lib.rs`)
-/// and passes this function to it; Core points its global allocator at this
-/// app's heap region there, then calls in here. So the heap behind
-/// [`allocator::RedirAllocator`] is already live on entry, and an app may
-/// allocate as soon as `API` below is populated — the very first statement.
+/// and passes this function to it. Before calling in here Core points its
+/// global allocator at this app's heap region and registers this app's
+/// `WireV1` inbox, sized from the `ipc-buffer-size` the app declared in its
+/// manifest. So the heap behind [`allocator::RedirAllocator`] is already live
+/// on entry and the wire is already usable; an app may allocate as soon as
+/// `API` below is populated — the very first statement.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn applet_main(api_get: crate::traits::ApiGetter) -> core::ffi::c_int {
     match api_get(API_VERSION) {
@@ -51,12 +43,6 @@ pub unsafe extern "C" fn applet_main(api_get: crate::traits::ApiGetter) -> core:
 
     #[cfg(not(feature = "test"))]
     {
-        // `init` must run before anything else that talks to Core over the
-        // wire: it registers this app's `WireV1` inbox. Allocation already
-        // works at this point — Core claimed this app's heap before calling
-        // into `applet_main` at all.
-        get_api_or_die().api.init(INBOX_WORDS);
-
         match unsafe { app() } {
             Ok(()) => system_exit(),
             Err(e) => {
