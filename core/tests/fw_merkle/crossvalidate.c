@@ -30,15 +30,16 @@ static void print_hex(const char *label, const uint8_t *b, size_t n) {
   printf("\n");
 }
 
-/* Manifest-based multi-variant vector (FWM2): each variant is a full firmware
+/* Manifest-based multi-variant vector (FWM3): each variant is a full firmware
  * image [manifest | module code...], the variant leaf is H(0x00 || manifest),
  * and a real proof folds it to the founder firmware_root. Replays the REAL
  * device firmware_verify_manifest (authenticity fold + per-entry code_hash).
- * Layout: "FWM2" | founder_root(32) | variant_count(u32), then per variant:
+ * Layout: "FWM3" | founder_root(32) | variant_count(u32), then per variant:
  *   variant_id(u32) | image_len(u32) | image | manifest_len(u32) |
- *   proof_count(u32) | proof_node(32)... */
+ *   proof_count(u32) | proof_node(32)...
+ * then once: noapp_len(u32) | noapp_manifest | noapp_leaf(32). */
 static int run_manifest(const uint8_t *buf) {
-  const uint8_t *p = buf + 4; /* skip "FWM2" */
+  const uint8_t *p = buf + 4; /* skip "FWM3" */
   const uint8_t *founder_root = p;
   p += 32;
   uint32_t variant_count;
@@ -194,6 +195,29 @@ static int run_manifest(const uint8_t *buf) {
           tamper_proof_ok & alt_ok;
   }
 
+  /* A CUSTOM manifest with no APP entry: there is no app tail to zero, so both
+   * sides must hash it VERBATIM -- a mirror that zeroed firmware_version anyway
+   * would compute a different leaf here. Checked as a single-leaf tree (empty
+   * proof, root = the leaf the signer computed), so this asserts leaf equality
+   * and nothing about folding. */
+  {
+    uint32_t noapp_len;
+    memcpy(&noapp_len, p, 4);
+    p += 4;
+    const firmware_manifest_t *nm = (const firmware_manifest_t *)p;
+    p += noapp_len;
+    merkle_proof_node_t noapp_leaf;
+    memcpy(noapp_leaf.bytes, p, 32);
+    p += 32;
+
+    secbool rn =
+        firmware_manifest_authentic(nm, noapp_len, NULL, 0, &noapp_leaf);
+    int noapp_ok = (rn == sectrue);
+    printf("  no-APP custom manifest: leaf %s\n",
+           noapp_ok ? "matches the signer OK" : "DIFFERS from the signer (bug!)");
+    ok &= noapp_ok;
+  }
+
   /* The variant is a HARDENED codeword in both places it lives (the manifest
    * field and the boot header's firmware_type), so there is no small<->wide
    * conversion on the device -- only the narrowing for the storage KDF.
@@ -280,13 +304,13 @@ int main(int argc, char **argv) {
   fclose(f);
 
   /* Manifest-based multi-variant vector. */
-  if (sz >= 4 && memcmp(buf, "FWM2", 4) == 0) {
+  if (sz >= 4 && memcmp(buf, "FWM3", 4) == 0) {
     int r = run_manifest(buf);
     free(buf);
     return r;
   }
 
-  fprintf(stderr, "bad magic (expected FWM2)\n");
+  fprintf(stderr, "bad magic (expected FWM3)\n");
   free(buf);
   return 2;
 }

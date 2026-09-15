@@ -194,21 +194,29 @@ def authenticity_bytes(manifest: bytes) -> bytes:
     ``size`` + ``code_hash``. The app's type, flags, addr and chunk_size stay
     authenticated, as does the whole secmon entry -- chunk_size sits before the
     zeroed tail precisely so it keeps being covered. Mirrors
-    ``boot_header_variant_leaf()`` byte for byte.
+    ``boot_header_variant_leaf()`` byte for byte -- including a malformed custom
+    manifest (no APP entry, or an app tail outside the manifest or reaching into
+    the version), which is hashed verbatim and so matches no signed leaf.
     """
     (variant,) = struct.unpack_from("<I", manifest, 4)
     if variant != FirmwareVariant.CUSTOM:
         return manifest
     (module_count,) = struct.unpack_from("<I", manifest, _MANIFEST_COUNT_OFFSET)
-    buf = bytearray(manifest)
-    buf[8:12] = b"\x00" * 4  # firmware_version
+    app_off = None
     for i in range(module_count):
         off = _MANIFEST_HEADER_SIZE + i * _MANIFEST_ENTRY_SIZE
         (module_type,) = struct.unpack_from("<I", manifest, off)
         if module_type == ModuleType.APP:
-            # size (+16, 4 B) and code_hash (+20, 32 B) -- a contiguous tail.
-            buf[off + 16 : off + 52] = b"\x00" * 36
+            app_off = off
             break
+    # size (+16, 4 B) and code_hash (+20, 32 B) -- a contiguous tail.
+    a_off = len(manifest) if app_off is None else app_off + 16
+    a_len = 0 if app_off is None else 36
+    if app_off is None or a_off + a_len > len(manifest) or a_off < 12:
+        return manifest
+    buf = bytearray(manifest)
+    buf[8:12] = b"\x00" * 4  # firmware_version
+    buf[a_off : a_off + a_len] = b"\x00" * a_len
     return bytes(buf)
 
 

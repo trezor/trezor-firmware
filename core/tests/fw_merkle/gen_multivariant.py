@@ -15,8 +15,8 @@ Image layout (offsets authenticated via the manifest's addr fields):
   MR     secmon code   (padded to CODE_ALIGNMENT)
   ...    kernel code   (padded to CODE_ALIGNMENT)
 
-FWM2 layout (little-endian):
-  "FWM2" | founder_root(32) | variant_count(u32)
+FWM3 layout (little-endian):
+  "FWM3" | founder_root(32) | variant_count(u32)
   per variant:
     variant_id(u32)
     image_len(u32) | image[image_len]
@@ -25,6 +25,14 @@ FWM2 layout (little-endian):
                                          app that must fold to the SAME slot; 0
                                          for official variants)
     proof_count(u32) | proof_node(32) * proof_count
+  then once, the no-APP case:
+    noapp_len(u32) | noapp_manifest[noapp_len] | noapp_leaf(32)
+
+A CUSTOM manifest with no APP entry is malformed -- there is nothing to zero --
+and both sides hash it VERBATIM, so it folds to no founder-signed slot. Nothing
+builds one, which is why it is carried as its own section rather than a variant:
+it is checked as a single-leaf tree (empty proof, root = leaf), which asserts the
+C leaf equals the Python leaf and nothing more.
 """
 
 from __future__ import annotations
@@ -104,6 +112,25 @@ def _build_variant_image(
     return bytes(image), manifest
 
 
+def _build_noapp_manifest() -> bytes:
+    """A CUSTOM manifest carrying only a SECMON entry -- structurally valid
+    (magic, count, declared size all agree), but with no APP entry to zero."""
+    secmon_code = b"\xaa" * CODE_SIZE
+    entries = [
+        {
+            "module_type": 1,
+            "flags": fm.FW_MANIFEST_ENTRY_FLAG_BOOT,
+            "addr": MANIFEST_REGION,
+            "chunk_size": CHUNK_SIZE_TEST,
+            "size": CODE_SIZE,
+            "code_hash": fm.module_code_hash(secmon_code, CHUNK_SIZE_TEST),
+        },
+    ]
+    return fm.build_manifest(
+        fm.FW_VARIANT_SEC[1], entries, firmware_version=b"\x07\x07\x07\x07"
+    )
+
+
 def build():
     images, manifests, leaves, alts = {}, {}, {}, {}
     for vid in VARIANTS:
@@ -136,7 +163,7 @@ def emit(path: Path) -> None:
     images, manifests, leaves, proofs, root, alts = build()
 
     print(f"founder firmware_root : {root.hex()}")
-    buf = b"FWM2" + root + struct.pack("<I", len(images))
+    buf = b"FWM3" + root + struct.pack("<I", len(images))
     for vid, vname in VARIANTS.items():
         image, manifest, alt = images[vid], manifests[vid], alts[vid]
         proof = proofs[leaves[vid]]
@@ -153,6 +180,14 @@ def emit(path: Path) -> None:
         buf += struct.pack("<I", len(proof))
         for node in proof:
             buf += node
+
+    noapp = _build_noapp_manifest()
+    # Deliberately NOT asserted here: whether this manifest is hashed verbatim is
+    # exactly what the C side is asked to agree about, and a Python self-check
+    # would fail first and hide the comparison that matters.
+    noapp_leaf = fm.variant_leaf(noapp)
+    print(f"  no-APP custom manifest {len(noapp)}B leaf {noapp_leaf.hex()[:12]}")
+    buf += struct.pack("<I", len(noapp)) + noapp + noapp_leaf
 
     path.write_bytes(buf)
     print(f"wrote {path} ({len(buf)} bytes)")

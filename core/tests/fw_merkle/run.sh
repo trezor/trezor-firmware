@@ -5,7 +5,7 @@
 # against a host SHA-256 and replays vectors produced by the Python signer, so the
 # on-device and host implementations are proven byte-identical.
 #
-#   FWM2: multi-variant founder firmware_root + per-variant proofs over full
+#   FWM3: multi-variant founder firmware_root + per-variant proofs over full
 #         firmware images [manifest | module code...] (synthetic, generated here).
 #         Replayed through the real device firmware_verify_manifest.
 set -euo pipefail
@@ -29,11 +29,11 @@ gcc -O2 -Wall -Wextra \
 echo "== generating multi-variant vector =="
 python "$here/gen_multivariant.py" "$vec"
 
-echo "== FWM2 (manifest) cross-validation =="
+echo "== FWM3 (manifest) cross-validation =="
 "$out" "$vec"
 
-# Optional: replay an additional FWM2 vector produced by the signer.
+# Optional: replay an additional FWM3 vector produced by the signer.
 if [[ "${1:-}" != "" ]]; then
-  echo "== FWM2 cross-validation ($1) =="
+  echo "== FWM3 cross-validation ($1) =="
   "$out" "$1"
 fi
