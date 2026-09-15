@@ -617,6 +617,29 @@ class TestSignMessageKeyAccess(TestCaseWithContext):
         self.assertRaises(wire.DataError, self._derive, msg)
         self.assertFalse(validate_path_against_script_type(coin, msg))
 
+    def test_cross_namespace_paths_are_refused(self):
+        """Another coin's namespace, and the master key itself.
+
+        PATTERN_BIP44 substitutes Bitcoin's coin_type, so 44'/60' matches
+        nothing, and PathSchema.match() rejects a path shorter than its schema,
+        so the empty path matches nothing either. Neither is reachable, which
+        is the point: a namespace is signable only once allowlisted.
+        """
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import validate_path_against_script_type
+
+        coin = _get_coin_by_name("Bitcoin")
+
+        for address_n in (
+            [H_(44), H_(60), H_(0), 0, 0],  # Ethereum's SLIP-44 coin type
+            [],  # the BIP-32 master node
+        ):
+            msg = self._sign_message(address_n, InputScriptType.SPENDADDRESS)
+            self.assertRaises(wire.DataError, self._derive, msg)
+            # ... and unrecognized, so they would warn even if they were not.
+            self.assertFalse(validate_path_against_script_type(coin, msg), address_n)
+
     def test_bip48_account_node_and_leaf(self):
         """The two paths #7717 asks for: signable, and without a warning."""
         from trezor.enums import InputScriptType
@@ -643,6 +666,40 @@ class TestSignMessageKeyAccess(TestCaseWithContext):
             InputScriptType.SPENDTAPROOT,
         )
         self.assertRaises(wire.DataError, self._derive, msg)
+
+    def test_account_node_is_not_shared_with_other_messages(self):
+        """The BIP-48 account node is a SignMessage grant, nothing wider.
+
+        GetAddress cannot derive it -- it is in no schema of its own, the
+        six-component BIP-48 patterns being two levels deeper -- and the
+        pattern union that recognizes it is not offered to a caller passing
+        address_n/script_type directly, as GetAddress and SignTx do.
+        """
+        from trezor.enums import InputScriptType
+        from trezor.messages import GetAddress
+
+        from apps.bitcoin.keychain import validate_path_against_script_type
+
+        coin = _get_coin_by_name("Bitcoin")
+        account = [H_(48), H_(0), H_(0), H_(2)]
+
+        msg = GetAddress(
+            address_n=account,
+            coin_name="Bitcoin",
+            script_type=InputScriptType.SPENDWITNESS,
+        )
+        self.assertRaises(wire.DataError, self._derive, msg)
+
+        for multisig in (False, True):
+            self.assertFalse(
+                validate_path_against_script_type(
+                    coin,
+                    address_n=account,
+                    script_type=InputScriptType.SPENDWITNESS,
+                    multisig=multisig,
+                ),
+                multisig,
+            )
 
     def test_other_messages_keep_their_schemas(self):
         """Whatever SignMessage unlocks, GetAddress must not inherit."""
