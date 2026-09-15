@@ -1415,8 +1415,15 @@ EXPECTED_CREATE_CONTRACT_ARGS = messages.StellarCreateContractArgsV2(
 )
 
 
-def make_create_contract_tx(host_function, auth=()):
-    op = InvokeHostFunction(host_function=host_function, auth=list(auth))
+def make_create_contract_tx(args, auth=()):
+    """A transaction creating a contract with the given CreateContractArgsV2."""
+    op = InvokeHostFunction(
+        host_function=stellar_xdr.HostFunction(
+            type=stellar_xdr.HostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2,
+            create_contract_v2=args,
+        ),
+        auth=list(auth),
+    )
     return make_default_tx().append_operation(op).build()
 
 
@@ -1435,12 +1442,8 @@ def test_from_envelope_create_contract():
             sub_invocations=[],
         ),
     )
-    host_function = stellar_xdr.HostFunction(
-        type=stellar_xdr.HostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2,
-        create_contract_v2=args,
-    )
 
-    _, operations, _ = from_envelope(make_create_contract_tx(host_function, [entry]))
+    _, operations, _ = from_envelope(make_create_contract_tx(args, [entry]))
 
     op = operations[0]
     assert op.function == messages.StellarHostFunction(
@@ -1461,32 +1464,33 @@ def test_from_envelope_unsupported_contract_creation():
         type=stellar_xdr.ContractIDPreimageType.CONTRACT_ID_PREIMAGE_FROM_ASSET,
         from_asset=SAC_ASSET.to_xdr_object(),
     )
+    with pytest.raises(ValueError, match="Unsupported ContractIDPreimage type"):
+        from_envelope(
+            make_create_contract_tx(make_create_contract_args(preimage=from_asset))
+        )
+
     stellar_asset = stellar_xdr.ContractExecutable(
         type=stellar_xdr.ContractExecutableType.CONTRACT_EXECUTABLE_STELLAR_ASSET
     )
-    for args, error in (
-        (make_create_contract_args(preimage=from_asset), "ContractIDPreimage type"),
-        (
-            make_create_contract_args(executable=stellar_asset),
-            "ContractExecutable type",
-        ),
-    ):
-        host_function = stellar_xdr.HostFunction(
-            type=stellar_xdr.HostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2,
-            create_contract_v2=args,
+    with pytest.raises(ValueError, match="Unsupported ContractExecutable type"):
+        from_envelope(
+            make_create_contract_tx(make_create_contract_args(executable=stellar_asset))
         )
-        with pytest.raises(ValueError, match=f"Unsupported {error}"):
-            from_envelope(make_create_contract_tx(host_function))
 
     # the legacy creation without constructor arguments
-    args = make_create_contract_args()
-    legacy = stellar_xdr.CreateContractArgs(args.contract_id_preimage, args.executable)
-    host_function = stellar_xdr.HostFunction(
-        type=stellar_xdr.HostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT,
-        create_contract=legacy,
+    v2_args = make_create_contract_args()
+    legacy = stellar_xdr.CreateContractArgs(
+        v2_args.contract_id_preimage, v2_args.executable
+    )
+    legacy_op = InvokeHostFunction(
+        host_function=stellar_xdr.HostFunction(
+            type=stellar_xdr.HostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT,
+            create_contract=legacy,
+        ),
+        auth=[],
     )
     with pytest.raises(ValueError, match="Unsupported host function type"):
-        from_envelope(make_create_contract_tx(host_function))
+        from_envelope(make_default_tx().append_operation(legacy_op).build())
 
     entry = stellar_xdr.SorobanAuthorizationEntry(
         credentials=stellar_xdr.SorobanCredentials(
