@@ -1861,6 +1861,104 @@ class TestABIValueFromProto(unittest.TestCase):
         self.assertEqual(parsed, ([7, 8],))
         self.assertEqual(consumed, 32)
 
+    # --- nesting caps ---
+    #
+    # Two caps, bounding two different resources. `_MAX_NESTED_ARRAYS` (2)
+    # bounds parse *work*: a tuple parses each field once so it adds, an array
+    # parses its element subtree once per element so it multiplies, and the
+    # element count comes from attacker-supplied calldata. `_MAX_ABI_NESTING`
+    # (8) bounds the *recursion* itself, which is as deep as the tree whatever
+    # the node types. Both values are hardcoded below - they are `const()` with
+    # a leading underscore, so MicroPython keeps them compile-time only and
+    # they cannot be imported.
+
+    def test_three_nested_arrays_rejected(self):
+        # Rejected by `_MAX_NESTED_ARRAYS`: each nested array level multiplies
+        # the parse work by an attacker-controlled element count, so the cap is
+        # what keeps the worst case at the order already reachable today.
+        node = p_array(p_array(p_array(p_atomic(EABIT.ABI_UINT256))))
+        with self.assertRaises(InvalidFormatDefinition):
+            ABIValue.from_proto(node)
+
+    def test_three_nested_arrays_through_tuple_rejected(self):
+        # The array counter follows the root-to-leaf path, not the top level:
+        # burying the same three array levels under a tuple does not launder
+        # them past the cap.
+        node = p_tuple(
+            [p_array(p_array(p_array(p_atomic(EABIT.ABI_UINT256))))],
+            is_dynamic=True,
+        )
+        with self.assertRaises(InvalidFormatDefinition):
+            ABIValue.from_proto(node)
+
+    def test_sibling_arrays_do_not_accumulate(self):
+        # (uint256[] a, uint256[] b): two arrays in one tuple sit on separate
+        # paths, so each carries one array level, not two between them. Sibling
+        # arrays add work; only nesting multiplies it.
+        node = ABIValue.from_proto(
+            p_tuple(
+                [
+                    p_array(p_atomic(EABIT.ABI_UINT256)),
+                    p_array(p_atomic(EABIT.ABI_UINT256)),
+                ],
+                is_dynamic=True,
+            )
+        )
+
+        data = memoryview(
+            to_bytes(32)  # 0   outer head -> struct body at 32
+            + to_bytes(64)  # 32  field 0 head, rel to 32 -> array a at 96
+            + to_bytes(160)  # 64  field 1 head, rel to 32 -> array b at 192
+            + to_bytes(2)  # 96  a: count
+            + to_bytes(1)  # 128
+            + to_bytes(2)  # 160
+            + to_bytes(1)  # 192 b: count
+            + to_bytes(9)  # 224
+        )
+        parsed, consumed = node.parse(data, 0)
+
+        self.assertEqual(parsed, ([1, 2], [9]))
+        self.assertEqual(consumed, 32)
+
+    def test_depth_cap_boundary(self):
+        # `_MAX_ABI_NESTING` is 8 and the check is `depth > cap` with the root
+        # at depth 0, so 8 wrapping tuples (leaf at depth 8) is the deepest
+        # accepted and 9 is one too many. Pure tuple nesting costs no parse
+        # work at all - one value per field - which is exactly why the array
+        # cap cannot stand in for this one.
+        def nest(n):
+            node = p_atomic(EABIT.ABI_UINT256)
+            for _ in range(n):
+                node = p_tuple([node], is_dynamic=False)
+            return node
+
+        deepest_accepted = ABIValue.from_proto(nest(8))
+        self.assertFalse(deepest_accepted.is_dynamic)
+        self.assertEqual(deepest_accepted.head_size, 32)
+
+        with self.assertRaises(InvalidFormatDefinition):
+            ABIValue.from_proto(nest(9))
+
+    def test_okx_smart_swap_shape_rejected(self):
+        # okx `smartSwapByOrderId`s `batches` parameter:
+        #   (address[], address[], uint256[], bytes[], uint256)[][]
+        # Three array levels - the two on the parameter plus the one inside the
+        # element struct - so it is over the cap and the whole display format
+        # is dropped. This is the deferred case: it flips to accepted once
+        # unreferenced parameters are pruned, since no field ever reads it.
+        element = p_tuple(
+            [
+                p_array(p_atomic(EABIT.ABI_ADDRESS)),  # mixAdapters
+                p_array(p_atomic(EABIT.ABI_ADDRESS)),  # assetTo
+                p_array(p_atomic(EABIT.ABI_UINT256)),  # rawData
+                p_array(p_dynamic(EABIT.ABI_BYTES)),  # extraData
+                p_atomic(EABIT.ABI_UINT256),  # fromToken
+            ],
+            is_dynamic=True,
+        )
+        with self.assertRaises(InvalidFormatDefinition):
+            ABIValue.from_proto(p_array(p_array(element)))
+
     # --- shapes the decoder refuses ---
 
     def test_no_variant_set_rejected(self):
@@ -1871,14 +1969,6 @@ class TestABIValueFromProto(unittest.TestCase):
         # 99 is not a member of EthereumABIType.
         with self.assertRaises(InvalidFormatDefinition):
             ABIValue.from_proto(p_atomic(99))
-
-    def test_three_nested_arrays_rejected(self):
-        # Rejected by `_MAX_NESTED_ARRAYS`: each nested array level multiplies
-        # the parse work by an attacker-controlled element count, so the cap is
-        # what keeps the worst case at the order already reachable today.
-        node = p_array(p_array(p_array(p_atomic(EABIT.ABI_UINT256))))
-        with self.assertRaises(InvalidFormatDefinition):
-            ABIValue.from_proto(node)
 
 
 if __name__ == "__main__":
