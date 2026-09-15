@@ -60,6 +60,9 @@ pub fn build(args: BuildArgs) -> Result<()> {
             // Signed where it lies: a single-variant build has no use for a
             // release directory, and `tree/` belongs to `xtask release`.
             pq::Dest::Artifacts,
+            // A standalone build is not a ceremony: it signs with development
+            // keys, so the selection is the signer's default.
+            None,
         );
     }
 

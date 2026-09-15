@@ -616,6 +616,9 @@ pub fn build_release(
     bootloader: BootloaderSource,
     sign: SignStage,
     dest: Dest,
+    // None leaves the choice to the signer's own development default, so the
+    // value lives in exactly one place instead of being mirrored here.
+    sigmask: Option<u8>,
 ) -> Result<()> {
     // Checked before anything is built: signing is the last step, and finding
     // out then would waste four builds. Only an inline signature needs keys --
@@ -728,7 +731,7 @@ pub fn build_release(
     let nrf = stage_nrf_image(args, &out)?;
     let nrf_pq_native = args.model.config()?.nrf_pq_native;
 
-    run_signer(&out, &firmwares, nrf.as_deref(), nrf_pq_native, sign)?;
+    run_signer(&out, &firmwares, nrf.as_deref(), nrf_pq_native, sign, sigmask)?;
     match dest {
         // Signed where it lies: already the canonical set, nothing to publish.
         // Pack the container `upload` installs so every consumer finds it.
@@ -1533,6 +1536,7 @@ fn run_signer(
     nrf: Option<&Path>,
     nrf_pq_native: bool,
     stage: SignStage,
+    sigmask: Option<u8>,
 ) -> Result<()> {
     let signer = helpers::workspace_dir()?
         .join("../tools/trezor_core_tools/firmware_pq_sign.py")
@@ -1554,6 +1558,12 @@ fn run_signer(
         "--manifest-out".as_ref(),
         out.join("bundle.json").as_os_str(),
     ]);
+    // Only when asked. `sigmask` is authenticated, so it is fixed here at
+    // PREPARE time whatever we do; passing nothing means the signer commits the
+    // development selection it documents, rather than one this side invented.
+    if let Some(mask) = sigmask {
+        cmd.args(["--sigmask", &format!("0x{mask:02x}")]);
+    }
     // No archive here. Packing is one job in one place -- `release_pack.py`,
     // driven by `pack_install_zip` for an install set and by the release for
     // its containers -- so an archive is never cut before the thing it packs is
@@ -1741,6 +1751,7 @@ pub fn release(args: ReleaseArgs) -> Result<()> {
             args.bootloader,
             SignStage::PrepareOnly,
             Dest::Release,
+            args.sigmask,
         )?;
         devel = Some(resolved.bootloader_devel);
     }

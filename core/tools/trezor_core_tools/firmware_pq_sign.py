@@ -43,6 +43,41 @@ MCUBOOT_TLV_SHA256 = 0x10
 # `BootloaderV2Image.sign_with_devkeys`.
 DEV_SIGMASK = (1 << 0) | (1 << 1)
 
+# What the DEVICE accepts, mirrored here so a bad selection is refused while the
+# release is prepared rather than discovered on hardware. boot_header.c runs
+# exactly BOOT_HEADER_SIGNATURE_COUNT verification rounds, each consuming one set
+# bit, and then requires the mask to be exactly used up and to match what it
+# started with -- so a valid selection names EXACTLY that many slots, no more and
+# no fewer. The slot ceiling is the static assert on the key arrays.
+SIGNATURE_COUNT = 2  # BOOT_HEADER_SIGNATURE_COUNT
+MAX_KEY_SLOTS = 3  # _Static_assert(ARRAY_LENGTH(BOARDLOADER_PQ_KEYS) <= 3)
+
+
+def _check_sigmask(mask: int, signing_inline: bool) -> None:
+    if not 0 <= mask <= 0xFF:
+        raise SystemExit(f"sigmask 0x{mask:x} does not fit the header's uint8_t")
+    slots = [i for i in range(8) if mask & (1 << i)]
+    if len(slots) != SIGNATURE_COUNT:
+        raise SystemExit(
+            f"sigmask 0x{mask:02x} names {len(slots)} key slot(s), but the header "
+            f"carries exactly {SIGNATURE_COUNT} signatures and the device requires "
+            f"every named slot to be used -- name exactly {SIGNATURE_COUNT}"
+        )
+    if slots[-1] >= MAX_KEY_SLOTS:
+        raise SystemExit(
+            f"sigmask 0x{mask:02x} names slot {slots[-1]}, but only "
+            f"{MAX_KEY_SLOTS} founder key slots exist (0..{MAX_KEY_SLOTS - 1})"
+        )
+    if signing_inline and mask != DEV_SIGMASK:
+        # Inline signing is `sign_with_devkeys`, which writes the development
+        # selection into the header itself. Accepting another value here would
+        # silently hand back a release signed with the dev keys regardless.
+        raise SystemExit(
+            f"sigmask 0x{mask:02x} cannot be signed inline: inline signing uses "
+            f"the development keys, which are slots 0x{DEV_SIGMASK:02x}. Prepare "
+            "with --unsigned and let the ceremony sign for any other selection"
+        )
+
 
 def _variant_info(firmware: Path) -> dict:
     fw = bytearray(firmware.read_bytes())
@@ -144,6 +179,7 @@ def sign_firmware_images(
     # header, so a later change would invalidate every leaf computed from it --
     # which is why the nRF path used to need a defensive check that signing had
     # not moved it. Setting it here removes that hazard rather than detecting it.
+    _check_sigmask(sigmask, signing_inline=sign)
     bl.header.sigmask = sigmask
 
     nrf_info: dict | None = None
@@ -326,6 +362,15 @@ def build_bundle(
             # modelRoot has no way to tell whether the code it is vouching
             # for trusts production keys or the development ones whose
             # private halves are in this repository.
+            # Which founder key slots this release expects to be signed with.
+            # Recorded on the same footing as the two fields below -- a READ-BACK
+            # of the prepared header, not an independent claim: the header's copy
+            # is authenticated and always wins, and `firmware_pq_attach.py`
+            # refuses a container whose record disagrees with it. It is written
+            # down because a ceremony reads this file to learn what it is being
+            # asked to sign, and the selection is committed before it ever sees
+            # the header.
+            "sigmask": bl.header.sigmask,
             "code_sha256": bootloader_provenance.code_digest(
                 bootloader.read_bytes()
             ),
@@ -441,6 +486,16 @@ def main() -> None:
         "founder ceremony runs in). The container records the modelRoot to be "
         "signed, so it IS the signing request.",
     )
+    ap.add_argument(
+        "--sigmask",
+        type=lambda s: int(s, 0),
+        default=DEV_SIGMASK,
+        help="which key slots sign this release, as a bitmask (e.g. 0x03 for slots "
+        "0 and 1). AUTHENTICATED -- it is inside the digest, so it is committed "
+        "while the release is PREPARED, before any leaf exists and before anyone "
+        "holds a key. A founder ceremony signing with a different selection must "
+        f"say so here; the default 0x{DEV_SIGMASK:02x} is the development one.",
+    )
     ap.add_argument("--manifest-out", type=Path)
     ap.add_argument(
         "--zip-out",
@@ -460,6 +515,7 @@ def main() -> None:
         args.nrf,
         args.nrf_pq_native,
         sign=not args.unsigned,
+        sigmask=args.sigmask,
     )
 
     single = len(variants) == 1

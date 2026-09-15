@@ -213,8 +213,60 @@ pub struct ReleaseArgs {
     #[arg(long)]
     pub promote: bool,
 
+    /// Which key slots sign this release, as a bitmask (e.g. 0x03 for slots 0
+    /// and 1).
+    ///
+    /// AUTHENTICATED: `sigmask` sits inside the boot header's signed part, so
+    /// it is committed while the release is PREPARED -- before any leaf exists
+    /// and before anyone holds a key. A founder ceremony signing with a
+    /// selection other than the development one has to say so here; omitted,
+    /// the signer keeps its development default.
+    #[arg(long, value_name = "MASK", value_parser = parse_sigmask)]
+    pub sigmask: Option<u8>,
+
     #[command(flatten)]
     pub options: BuildOptions,
+}
+
+/// Accepts the bitmask in whichever base the ceremony writes it -- `0x03`,
+/// `0b11` or `3` all name the same two slots.
+///
+/// The shape is checked here so a bad selection costs nothing: a release builds
+/// every variant before it signs, and finding out at the signer would waste all
+/// of it. The signer checks again -- it is the one the ceremony drives directly,
+/// and it knows things this side does not.
+fn parse_sigmask(s: &str) -> Result<u8, String> {
+    /// BOOT_HEADER_SIGNATURE_COUNT: the header carries exactly this many
+    /// signatures, and the device requires every named slot to be used.
+    const SIGNATURE_COUNT: u32 = 2;
+    /// _Static_assert(ARRAY_LENGTH(BOARDLOADER_PQ_KEYS) <= 3)
+    const MAX_KEY_SLOTS: u32 = 3;
+
+    let t = s.trim();
+    let (digits, radix) = match t.get(..2) {
+        Some("0x") | Some("0X") => (&t[2..], 16),
+        Some("0b") | Some("0B") => (&t[2..], 2),
+        _ => (t, 10),
+    };
+    let mask = u8::from_str_radix(digits, radix)
+        .map_err(|e| format!("invalid sigmask `{s}`: {e} (expected e.g. 0x03, 0b11 or 3)"))?;
+
+    if mask.count_ones() != SIGNATURE_COUNT {
+        return Err(format!(
+            "sigmask 0x{mask:02x} names {} key slot(s), but the boot header carries \
+             exactly {SIGNATURE_COUNT} signatures -- name exactly {SIGNATURE_COUNT}",
+            mask.count_ones()
+        ));
+    }
+    if mask.leading_zeros() < u8::BITS - MAX_KEY_SLOTS {
+        return Err(format!(
+            "sigmask 0x{mask:02x} names a slot above {}, but only {MAX_KEY_SLOTS} \
+             founder key slots exist (0..{})",
+            MAX_KEY_SLOTS - 1,
+            MAX_KEY_SLOTS - 1
+        ));
+    }
+    Ok(mask)
 }
 
 #[derive(Args, Debug)]

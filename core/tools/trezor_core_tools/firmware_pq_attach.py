@@ -50,6 +50,18 @@ def _attach_model(
             f"{sigs['model_root'][:16]}… but the prepared bootloader folds to "
             f"{root.hex()[:16]}… -- wrong release, or it was re-prepared"
         )
+    # The container records the selection so a ceremony can read it without
+    # parsing a boot header. It is a record, never an authority: the header's
+    # copy is inside the digest, so a disagreement means the container was
+    # edited or the bootloader replaced after preparing. Optional, so containers
+    # written before the field existed still attach.
+    recorded = body["bootloader"].get("sigmask")
+    if recorded is not None and recorded != bl.header.sigmask:
+        raise SystemExit(
+            f"{model}: the container records sigmask 0x{recorded:02x} but the "
+            f"prepared header committed 0x{bl.header.sigmask:02x} -- the "
+            "container does not describe this bootloader"
+        )
     if bl.header.sigmask != sigs["sigmask"]:
         raise SystemExit(
             f"{model}: the signature set names sigmask 0x{sigs['sigmask']:02x} "
