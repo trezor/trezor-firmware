@@ -187,15 +187,6 @@ pub struct BuildArgs {
 
 #[derive(Args, Debug)]
 pub struct ReleaseArgs {
-    /// Target model. Omit to release EVERY model using the Merkle-tree layout.
-    ///
-    /// Each model's bootloader header carries its own firmware_root, so models
-    /// are independent: releasing one leaves the others' signatures untouched.
-    /// Omitting this is a convenience for cutting them together, not a joint
-    /// tree.
-    #[arg(long, short = 'm', ignore_case = true)]
-    pub model: Option<Model>,
-
     /// Build preset
     #[arg(long, short = 'p')]
     pub preset: Option<String>,

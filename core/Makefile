@@ -291,7 +291,7 @@ upload_pq_test: ## [test] drive the PQ OTA harness, incl. --tamper fault injecti
 	# harness so a fault can be injected to exercise one specific device
 	# rejection. Separate because trezorctl deliberately cannot do this: fault
 	# injection must not ship in a library. Build a release first
-	# (`xtask release -m $(TREZOR_MODEL) --bootloader-devel`) or just build one,
+	# (`xtask release --bootloader-devel`) or just build one,
 	# then e.g. -- this installs the SAME set `xtask flash`/`upload` do, so a
 	# tamper case exercises what a real install would carry:
 	#   make upload_pq_test UPLOAD_OPTS="--tamper consent-mismatch"

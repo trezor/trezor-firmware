@@ -48,7 +48,7 @@ xtask build <project> -m <model> [options]
 - `xtask combine <project> -m <model>` — combine the boot chain, from the
   boardloader up to this project, into a single flashable binary. Flash it with
   `xtask flash <project> -m <model> --combined`.
-- `xtask release [-m <model>]` — cut a complete pq_secure release: every
+- `xtask release` — cut a complete pq_secure release: every
   variant, folded into one signed tree (see
   [pq_secure releases](#pq_secure-releases)).
 
@@ -633,10 +633,10 @@ explicit because that is the case you get by typing nothing.
 
 ```sh
 # development: prepared, then signed with dev keys and assembled, in one command
-xtask release -m t3w1 --bootloader-devel
+xtask release --bootloader-devel
 
 # production: stops after prepare, unsigned, waiting for the ceremony
-xtask release -m t3w1 --production
+xtask release --production
 #   -> release-unsigned.zip
 # ... ceremony returns a signature set ...
 python tools/trezor_core_tools/firmware_pq_attach.py \

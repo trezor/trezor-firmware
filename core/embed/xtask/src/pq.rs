@@ -769,9 +769,8 @@ pub fn build_presigned(args: &ResolvedBuildArgs) -> Result<()> {
         bundle_src.exists(),
         "a custom build folds into the committed release, but {} does not exist \
          -- cut and promote one first:\n             \
-         xtask release -m {} {}--promote",
+         xtask release {}--promote",
         bundle_src.display(),
-        args.model.model_id(),
         if args.bootloader_devel {
             "--bootloader-devel "
         } else {
@@ -1658,41 +1657,38 @@ fn warn_if_nrf_stale(committed: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Cut a complete pq_secure release: every variant, in one signed founder tree.
+/// Cut a complete pq_secure release: every variant of every model using the
+/// layout, each in its own signed founder tree.
 ///
-/// With no model, every model using the layout is released. They are
-/// independent, not joint: each carries its own firmware_root in its own signed
-/// bootloader header, so releasing one leaves the others' signatures alone.
-/// Doing them together is a convenience, and deliberately so -- a shared root
-/// across models would turn every single-model release into an all-model
-/// re-sign.
+/// Models are independent, not joint: each carries its own firmware_root in its
+/// own signed bootloader header, so the trees never share a root -- which is
+/// what keeps one model's re-sign from touching another's signatures. They are
+/// nonetheless cut TOGETHER and only together, because a release is the thing
+/// that reaches devices and a partial one is a set nobody asked for: the
+/// promoted reference set spans models, so a release missing one leaves it
+/// folding against a bundle cut from a different source tag.
 pub fn release(args: ReleaseArgs) -> Result<()> {
-    let models: Vec<Model> = match args.model {
-        Some(model) => vec![model],
-        None => {
-            let all: Vec<Model> = Model::value_variants()
-                .iter()
-                .copied()
-                .filter(|m| {
-                    m.config()
-                        .map(|c| c.has_feature("pq_secure_boot"))
-                        .unwrap_or(false)
-                })
-                .collect();
-            ensure!(
-                !all.is_empty(),
-                "no model uses the Merkle-tree layout, so there is nothing to release"
-            );
-            println!(
-                "xtask: releasing every tree model: {}",
-                all.iter()
-                    .map(|m| m.model_id())
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            );
-            all
-        }
-    };
+    let models: Vec<Model> = Model::value_variants()
+        .iter()
+        .copied()
+        .filter(|m| {
+            m.config()
+                .map(|c| c.has_feature("pq_secure_boot"))
+                .unwrap_or(false)
+        })
+        .collect();
+    ensure!(
+        !models.is_empty(),
+        "no model uses the Merkle-tree layout, so there is nothing to release"
+    );
+    println!(
+        "xtask: releasing every tree model: {}",
+        models
+            .iter()
+            .map(|m| m.model_id())
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 
     let mut devel: Option<bool> = None;
     for model in &models {
