@@ -84,92 +84,6 @@ _Static_assert(NRF_PQ_EC_SIG_LEN == BOOT_HEADER_EC_SIGNATURE_LEN,
                "nRF EC signature record must match the boot header's");
 #endif
 
-typedef struct __attribute__((packed)) {
-  uint32_t ih_magic;
-  uint32_t ih_load_addr;
-  uint16_t ih_hdr_size;
-  uint16_t ih_protect_tlv_size;
-  uint32_t ih_img_size;
-  uint32_t ih_flags;
-  struct __attribute__((packed)) {
-    uint8_t major;
-    uint8_t minor;
-    uint16_t revision;
-    uint32_t build_num;
-  } ih_ver;
-  uint32_t _pad1;
-} nrf_image_header_t;
-
-/**
- * @brief Read one TLV value from the protected or unprotected TLV area.
- *
- * Bounds-checked against @p image_len throughout.
- *
- * @param image      the signed MCUboot image
- * @param image_len  its length in bytes
- * @param tlv_type   TLV type to look for
- * @param protected_area  true to search the protected area, false the
- * unprotected
- * @param out_val    [out] set to the value on success
- * @return the value length, or 0 if absent or malformed
- */
-static uint16_t nrf_image_find_tlv(const uint8_t* image, size_t image_len,
-                                   uint16_t tlv_type, const uint8_t** out_val) {
-  if (image_len < sizeof(nrf_image_header_t)) {
-    return 0;
-  }
-  nrf_image_header_t hdr;
-  memcpy(&hdr, image, sizeof(hdr));
-  if (hdr.ih_magic != NRF_MCUBOOT_IMAGE_MAGIC) {
-    return 0;
-  }
-  size_t prot_off = (size_t)hdr.ih_hdr_size + hdr.ih_img_size;
-
-  /* Two TLV areas: protected (size ih_protect_tlv_size, incl. its 4-byte info
-   * header) then unprotected (its own 4-byte info header + payload). */
-  for (int area = 0; area < 2; area++) {
-    size_t start, end;
-    if (area == 0) {
-      if (hdr.ih_protect_tlv_size == 0) {
-        continue;
-      }
-      start = prot_off + 4; /* skip the protected TLV-info header */
-      end = prot_off + hdr.ih_protect_tlv_size;
-    } else {
-      size_t unprot_off = prot_off + hdr.ih_protect_tlv_size;
-      if (unprot_off + 4 > image_len) {
-        break;
-      }
-      uint16_t info_magic, info_len;
-      memcpy(&info_magic, image + unprot_off, 2);
-      memcpy(&info_len, image + unprot_off + 2, 2);
-      if (info_magic != NRF_MCUBOOT_TLV_INFO_MAGIC) {
-        break;
-      }
-      start = unprot_off + 4;
-      end = unprot_off + info_len;
-    }
-    if (end > image_len) {
-      end = image_len;
-    }
-    size_t p = start;
-    while (p + 4 <= end) {
-      uint16_t t, ln;
-      memcpy(&t, image + p, 2);
-      memcpy(&ln, image + p + 2, 2);
-      if (p + 4 + ln > end) {
-        break;
-      }
-      if (t == tlv_type) {
-        *out_val = image + p + 4;
-        return ln;
-      }
-      p += 4 + ln;
-    }
-  }
-  return 0;
-}
-
 /* Fold a co-processor slot built around an image hash the caller already has.
  *
  * Separate from the image-based entry point because the update-required hint
@@ -204,8 +118,16 @@ secbool nrf_image_verify_hash_in_tree(
                                  proof_count, trusted_model_root);
 }
 
+// Defined below, next to the layout parser it needs; declared here because the
+// model id is read through it.
+static uint16_t nrf_image_find_prot_tlv(const uint8_t* image, size_t image_len,
+                                        uint16_t want, const uint8_t** out_val);
+
 /**
- * @brief Extract the 4-byte model id (TLV 0x00A3).
+ * @brief Extract the 4-byte model id (TLV 0x00A3) from the PROTECTED area.
+ *
+ * Protected only: this is the cross-model guard, and the fold does not pin the
+ * model, so an unprotected copy would be a model tag the attacker chose.
  *
  * @param image      the signed MCUboot image
  * @param image_len  its length in bytes
@@ -215,8 +137,8 @@ secbool nrf_image_verify_hash_in_tree(
 bool nrf_image_model_id(const uint8_t* image, size_t image_len,
                         uint8_t out[NRF_IMAGE_MODEL_ID_LEN]) {
   const uint8_t* val = NULL;
-  uint16_t len =
-      nrf_image_find_tlv(image, image_len, NRF_MCUBOOT_TLV_MODEL_ID, &val);
+  uint16_t len = nrf_image_find_prot_tlv(image, image_len,
+                                         NRF_MCUBOOT_TLV_MODEL_ID, &val);
   if (len != NRF_IMAGE_MODEL_ID_LEN || val == NULL) {
     return false;
   }
@@ -528,10 +450,13 @@ static const uint8_t* const NRF_LEGACY_KEYS[] = {
     MODEL_NRF_LEGACY_KEYS_PRODUCTION
 #endif
 };
-// Locate one TLV in the PROTECTED area only. The sigmask must come from there:
-// an unprotected copy is outside the image hash, hence outside the leaf, hence
-// attacker-controlled. Only the legacy predicate needs this, so it lives inside
-// the same guard.
+#define NRF_LEGACY_KEY_N (sizeof(NRF_LEGACY_KEYS) / sizeof(NRF_LEGACY_KEYS[0]))
+#endif  // NRF_LEGACY_PREDICATE_AVAILABLE
+
+// Locate one TLV in the PROTECTED area only. Every authenticated value must come
+// from there: an unprotected copy is outside the image hash, hence outside the
+// leaf, hence attacker-controlled. Used by the legacy sigmask and by the model
+// id, so it is not tied to the legacy predicate's availability.
 static uint16_t nrf_image_find_prot_tlv(const uint8_t* image, size_t image_len,
                                         uint16_t want,
                                         const uint8_t** out_val) {
@@ -582,9 +507,6 @@ static uint16_t nrf_image_find_prot_tlv(const uint8_t* image, size_t image_len,
   }
   return 0;
 }
-
-#define NRF_LEGACY_KEY_N (sizeof(NRF_LEGACY_KEYS) / sizeof(NRF_LEGACY_KEYS[0]))
-#endif  // NRF_LEGACY_PREDICATE_AVAILABLE
 
 // The classic image's own TLVs: two Ed25519 signatures in the UNPROTECTED area,
 // and the sigmask naming which keys signed in the PROTECTED one. Format
