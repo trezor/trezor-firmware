@@ -673,7 +673,9 @@ def address_n_to_name_or_unknown(
 ) -> str:
     from trezor import TR
 
-    account_name = address_n_to_name(coin, address_n, script_type)
+    account_name = address_n_to_name(
+        coin, address_n, script_type, account_level, show_account_str
+    )
     if account_name is None:
         return TR.bitcoin__unknown_path
     elif account_name == "":

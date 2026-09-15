@@ -782,6 +782,58 @@ class TestSignMessageKeyAccess(TestCaseWithContext):
             self.assertTrue(self._derive(msg), address_n)
             self.assertTrue(validate_path_against_script_type(coin, msg), address_n)
 
+    def test_account_node_is_named_not_unknown(self):
+        """The row SignMessage shows for a BIP-48 account node.
+
+        The six-component patterns sit two levels below the node, so without
+        account_level the naming table misses it and the screen would read
+        "Unknown path" for a path that is deliberately allowed unwarned.
+        """
+        from trezor.enums import InputScriptType
+
+        from apps.bitcoin.keychain import (
+            address_n_to_name_or_unknown,
+            is_sign_message_account_node,
+        )
+
+        coin = _get_coin_by_name("Bitcoin")
+
+        named = (
+            ([H_(48), H_(0), H_(0), H_(0)], InputScriptType.SPENDADDRESS, "Legacy MS"),
+            (
+                [H_(48), H_(0), H_(0), H_(1)],
+                InputScriptType.SPENDP2SHWITNESS,
+                "L. SW MS",
+            ),
+            ([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDWITNESS, "SegWit MS"),
+        )
+
+        for address_n, script_type, name in named:
+            # The call sign_message() makes, account_level and all.
+            self.assertEqual(
+                address_n_to_name_or_unknown(
+                    coin,
+                    address_n,
+                    script_type,
+                    account_level=is_sign_message_account_node(
+                        coin, address_n, script_type
+                    ),
+                ),
+                f"BTC {name} #1",
+                address_n,
+            )
+
+        # A leaf is not an account node, so it is named by the untrimmed
+        # pattern and must not gain account_level along the way.
+        leaf = [H_(48), H_(0), H_(0), H_(2), 0, 0]
+        self.assertFalse(
+            is_sign_message_account_node(coin, leaf, InputScriptType.SPENDWITNESS)
+        )
+        self.assertEqual(
+            address_n_to_name_or_unknown(coin, leaf, InputScriptType.SPENDWITNESS),
+            "BTC SegWit MS #1",
+        )
+
     def test_slip25_still_requires_unlock_path(self):
         """_get_unlock_schemas() offers SignMessage the external chain alone,
         and only after UnlockPath."""
