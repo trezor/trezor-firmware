@@ -1,0 +1,1 @@
+`btc.guess_script_type_from_path()` and `btc.guess_sign_message_script_type()` are public, so a host can derive the script type the device expects for a path instead of carrying its own table.

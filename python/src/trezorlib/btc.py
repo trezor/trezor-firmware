@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Any, AnyStr, Optional
 # TypedDict is not available in typing for python < 3.8
 from typing_extensions import Protocol, TypedDict
 
-from . import exceptions, messages
+from . import exceptions, messages, tools
 from .tools import prepare_message_bytes, workflow
 
 if TYPE_CHECKING:
@@ -221,6 +221,66 @@ def get_ownership_proof(
     )
 
     return res.ownership_proof, res.signature
+
+
+PURPOSE_BIP44 = 44
+PURPOSE_BIP48 = 48
+PURPOSE_BIP49 = 49
+PURPOSE_BIP84 = 84
+PURPOSE_BIP86 = 86
+PURPOSE_SLIP25 = 10025
+
+BIP_PURPOSE_TO_DEFAULT_SCRIPT_TYPE = {
+    PURPOSE_BIP44: messages.InputScriptType.SPENDADDRESS,
+    PURPOSE_BIP49: messages.InputScriptType.SPENDP2SHWITNESS,
+    PURPOSE_BIP84: messages.InputScriptType.SPENDWITNESS,
+    PURPOSE_BIP86: messages.InputScriptType.SPENDTAPROOT,
+    PURPOSE_SLIP25: messages.InputScriptType.SPENDTAPROOT,
+}
+
+BIP48_SCRIPT_TYPES = {
+    tools.H_(0): messages.InputScriptType.SPENDMULTISIG,
+    tools.H_(1): messages.InputScriptType.SPENDP2SHWITNESS,
+    tools.H_(2): messages.InputScriptType.SPENDWITNESS,
+}
+
+
+def guess_script_type_from_path(address_n: list[int]) -> messages.InputScriptType:
+    """The script type the derivation path implies."""
+    if len(address_n) < 1 or not tools.is_hardened(address_n[0]):
+        return messages.InputScriptType.SPENDADDRESS
+
+    purpose = tools.unharden(address_n[0])
+    if purpose in BIP_PURPOSE_TO_DEFAULT_SCRIPT_TYPE:
+        return BIP_PURPOSE_TO_DEFAULT_SCRIPT_TYPE[purpose]
+
+    if purpose == PURPOSE_BIP48 and len(address_n) >= 4:
+        script_type_field = address_n[3]
+        if script_type_field in BIP48_SCRIPT_TYPES:
+            return BIP48_SCRIPT_TYPES[script_type_field]
+
+    return messages.InputScriptType.SPENDADDRESS
+
+
+def guess_sign_message_script_type(
+    address_n: list[int],
+) -> messages.InputScriptType:
+    """Script type for signing a message with the key at `address_n`.
+
+    The device expects the script type to agree with the path: a BIP-48
+    account is signed for under the script type its 0'/1'/2' level names, so
+    the proof format follows the path and every verifier derives the same
+    address from the same xpub. Pass this rather than leaving the default,
+    which would send SPENDADDRESS for every path.
+
+    Message signing is single-key -- there is no multisig message signature --
+    so the BIP-48 0' level, which guess_script_type_from_path() reads as
+    SPENDMULTISIG, signs as its single-key analogue.
+    """
+    script_type = guess_script_type_from_path(address_n)
+    if script_type is messages.InputScriptType.SPENDMULTISIG:
+        return messages.InputScriptType.SPENDADDRESS
+    return script_type
 
 
 @workflow(capability=messages.Capability.Bitcoin)
