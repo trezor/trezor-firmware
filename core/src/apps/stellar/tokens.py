@@ -5,8 +5,7 @@ from trezor.crypto.hashlib import sha256
 from trezor.wire import DataError
 
 from .consts import AMOUNT_DECIMALS, NETWORK_PASSPHRASE_PUBLIC
-from .helpers import STRKEY_CONTRACT, encode_strkey
-from .writers import write_asset, write_bytes_fixed, write_uint32
+from .helpers import contract_address_from_asset
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -65,19 +64,6 @@ class StellarToken:
 NATIVE_TOKEN = StellarToken("XLM", AMOUNT_DECIMALS, None)
 
 
-def sac_address_from_asset(network_id: AnyBytes, asset: StellarAsset) -> str:
-    """Derive the address of the Stellar Asset Contract (SAC) of an asset (C...).
-
-    See https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-02.md#contract-identifier-preimage-type
-    """
-    w = bytearray()
-    write_uint32(w, 8)  # ENVELOPE_TYPE_CONTRACT_ID
-    write_bytes_fixed(w, network_id, 32)
-    write_uint32(w, 1)  # CONTRACT_ID_PREIMAGE_FROM_ASSET
-    write_asset(w, asset)
-    return encode_strkey(STRKEY_CONTRACT, sha256(w).digest())
-
-
 def resolve_sep41_token(
     args: StellarInvokeContractArgs, network_id: AnyBytes
 ) -> StellarToken | None:
@@ -96,7 +82,7 @@ def resolve_sep41_token(
     asset = args.asset_hint
     if asset is not None:
         try:
-            if sac_address_from_asset(network_id, asset) == contract:
+            if contract_address_from_asset(network_id, asset) == contract:
                 return StellarToken.from_asset(asset)
         except DataError:
             pass
