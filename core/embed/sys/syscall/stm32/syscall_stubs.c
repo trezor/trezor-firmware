@@ -1079,6 +1079,11 @@ ts_t app_get_heap(void **heap_ptr, size_t *heap_size) {
                                  SYSCALL_APP_GET_HEAP));
 }
 
+ts_t app_get_ipc_buffer_size(size_t *ipc_buffer_size) {
+  return ts_make(syscall_invoke1((uint32_t)ipc_buffer_size,
+                                 SYSCALL_APP_GET_IPC_BUFFER_SIZE));
+}
+
 #endif
 
 #endif  // KERNEL_MODE

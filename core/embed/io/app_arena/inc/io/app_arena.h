@@ -67,6 +67,8 @@ typedef struct {
    * Each entry is a null-terminated string, and the list
    * is zero-padded to the maximum length */
   char paths[APP_HEADER_PATHS_MAX_LEN];
+  /** Size, in bytes, of the IPC inbox Core registers for this app. */
+  size_t ipc_buffer_size;
 
 } app_image_info_t;
 
@@ -236,3 +238,15 @@ ts_t app_image_get_pminfo(app_image_handle_t handle,
  * @return TS_OK on success, or an error code on failure.
  */
 ts_t app_get_heap(void **heap_ptr, size_t *heap_size);
+
+/**
+ * @brief Gets the IPC inbox size, in bytes, for the currently active applet.
+ *
+ * The value comes from the app's manifest via its header; Core uses it to
+ * size the inbox it allocates and registers on the app's behalf at launch.
+ *
+ * @param ipc_buffer_size Pointer to a variable to store the inbox size.
+ *
+ * @return TS_OK on success, or an error code on failure.
+ */
+ts_t app_get_ipc_buffer_size(size_t *ipc_buffer_size);

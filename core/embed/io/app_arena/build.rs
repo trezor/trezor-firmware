@@ -26,7 +26,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
     let builder = builder
         .header("app_arena/inc/io/app_arena.h")
-        .allowlist_function("app_get_heap");
+        .allowlist_function("app_get_heap")
+        .allowlist_function("app_get_ipc_buffer_size");
 
     Ok(builder)
 }

@@ -85,7 +85,13 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
 
   applet_init(applet, &privileges, app_loader_applet_unload);
 
+  // The inbox is allocated out of the app's heap at launch, so an app that
+  // asks for more inbox than heap can never start. The build tool rejects
+  // this too; re-check here because the header is attacker-supplied.
+  TSH_CHECK(header->ipc_buffer_size <= data_size, TS_ENOMEM);
+
   applet_set_heap(applet, data, data_size);
+  applet_set_ipc_buffer_size(applet, header->ipc_buffer_size);
 
   // Isolate the applet file from other users before loading it.
   rc = asprintf(&directory, "%s/trezor_ext_app.XXXXXX", profile_dir());

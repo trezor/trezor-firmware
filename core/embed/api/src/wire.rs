@@ -122,13 +122,22 @@ pub(crate) fn ipc_call(
     }
 }
 
-/// Allocates this app's IPC inbox buffer (`inbox_words` [`usize`] words) out
-/// of its own heap and registers it with Core's [`sys::ipc`] layer. Called
-/// once by [`crate::v1::TrezorApiV1Impl::init`], right after
-/// [`crate::allocator::init`] makes the app's heap available — Core never
-/// allocates memory of its own for IPC, it only ever borrows a buffer the
-/// app itself allocated.
-pub(crate) fn register_inbox(inbox_words: usize) {
+/// Allocates this app's IPC inbox out of its own heap and registers it with
+/// Core's [`sys::ipc`] layer.
+///
+/// The size comes from the app's manifest (`ipc-buffer-size`) via its header,
+/// so each app gets an inbox matched to the messages it actually receives
+/// rather than one hardcoded size for everyone. Called once per launch by
+/// [`crate::coreapp_app_entry`], right after [`crate::allocator::init`] makes
+/// the app's heap available and before any app code runs — Core never
+/// allocates memory of its own for IPC, it only ever borrows a buffer carved
+/// out of the app's own heap.
+///
+/// The byte size is a power of two of at least 8 (enforced at header
+/// verification), so it always divides evenly into `usize` words on both the
+/// 32-bit target and the 64-bit emulator.
+pub(crate) fn register_inbox() {
+    let inbox_words = io::get_ipc_buffer_size() / core::mem::size_of::<usize>();
     let buffer: &'static mut [usize] =
         alloc::boxed::Box::leak(alloc::vec![0usize; inbox_words].into_boxed_slice());
     let mut guard = INBOX.lock();

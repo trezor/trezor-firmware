@@ -16,6 +16,29 @@ pub const APP_CURVES_MAX_LEN: usize = 64;
 /// Maximum total length, in bytes, of the packed, null-terminated path list (see [`paths`]).
 pub const APP_PATHS_MAX_LEN: usize = 256;
 
+/// Upper bound on an app's IPC inbox, mirroring the kernel's
+/// `IPC_MAX_BUFFER_SIZE` (`core/embed/sys/ipc/inc/sys/ipc.h`). `ipc_register`
+/// refuses anything larger.
+pub const IPC_BUFFER_MAX_SIZE: u64 = 64 * 1024;
+
+/// Smallest inbox we accept. Anything below this cannot hold even a single
+/// API reply plus framing, so it is always a mistake.
+pub const IPC_BUFFER_MIN_SIZE: u64 = 256;
+
+/// Inbox size used when an app does not declare `ipc-buffer-size` (or sets it
+/// to 0).
+///
+/// Sized off the fixed API traffic, not off wire messages: the largest reply
+/// Core sends back over IPC is the 111-byte xpub from
+/// `CryptoV1::get_xpub`, and UI replies are a handful of bytes each. With the
+/// 12-byte `ipc_queue_item_t` header that is ~128 bytes for the biggest single
+/// message, so 1 KiB leaves 8x headroom for queued replies.
+///
+/// An app that receives host wire messages through the same inbox needs more
+/// than this and must say so explicitly -- there is no way to guess how large
+/// its protocol messages get.
+pub const IPC_BUFFER_DEFAULT_SIZE: u64 = 1024;
+
 /// Retrieves the app version from the package metadata and converts it into a 4-byte array.
 pub fn app_version(package: &Package) -> Result<[u8; 4]> {
     let ver = package.version.clone();
@@ -113,6 +136,46 @@ pub fn heap_size(package: &Package) -> Result<u32> {
     Ok(heap_size as u32)
 }
 
+/// Retrieve the IPC inbox size, in bytes, from the package metadata.
+///
+/// The key is optional; a missing entry or an explicit 0 means "no opinion"
+/// and yields [`IPC_BUFFER_DEFAULT_SIZE`].
+///
+/// The value must be a power of two. That is not an IPC requirement -- the
+/// kernel queue is a plain byte ring -- but the inbox is allocated as
+/// `[usize]`, so its byte size has to be a multiple of `size_of::<usize>()`,
+/// which is 4 on the ARM target and 8 on the x86-64 emulator. Requiring a
+/// power of two satisfies both with one rule instead of a target-dependent
+/// alignment check.
+pub fn ipc_buffer_size(package: &Package) -> Result<u32> {
+    let size = match get_optional_metadata_number(package, "ipc-buffer-size")? {
+        None | Some(0) => IPC_BUFFER_DEFAULT_SIZE,
+        Some(size) => size,
+    };
+
+    ensure!(
+        size >= IPC_BUFFER_MIN_SIZE,
+        "IPC buffer size {} is too small (min {} bytes)",
+        size,
+        IPC_BUFFER_MIN_SIZE
+    );
+
+    ensure!(
+        size <= IPC_BUFFER_MAX_SIZE,
+        "IPC buffer size {} is too large (max {} bytes)",
+        size,
+        IPC_BUFFER_MAX_SIZE
+    );
+
+    ensure!(
+        size.is_power_of_two(),
+        "IPC buffer size {} must be a power of two",
+        size
+    );
+
+    Ok(size as u32)
+}
+
 /// Retrieves the app ring from the package metadata
 pub fn app_ring(package: &Package) -> Result<u8> {
     let ring = get_metadata_number(package, "app-ring")?;
@@ -188,6 +251,20 @@ fn get_metadata_string(package: &Package, key: &str) -> Result<String> {
         .ok_or_else(|| anyhow::anyhow!("{} not found in Cargo.toml", key))?;
 
     Ok(value.to_string())
+}
+
+/// Like [`get_metadata_number`], but returns `None` instead of failing when
+/// the key is absent.
+fn get_optional_metadata_number(package: &Package, key: &str) -> Result<Option<u64>> {
+    if package
+        .metadata
+        .get("trezor")
+        .and_then(|m| m.get(key))
+        .is_none()
+    {
+        return Ok(None);
+    }
+    get_metadata_number(package, key).map(Some)
 }
 
 fn get_metadata_number(package: &Package, key: &str) -> Result<u64> {

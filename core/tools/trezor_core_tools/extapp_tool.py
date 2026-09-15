@@ -398,6 +398,7 @@ def _generate_app_image(
         chunk_size=1024,
         curves=[],
         paths=[],
+        ipc_buffer_size=1024,
     )
     return AppImage(header=header, payload=payload)
 
