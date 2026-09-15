@@ -583,7 +583,7 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
     // installed" test: INVALID reads as absent there, which is right for
     // display, but display is not consent.)
     empty_device = sectrue;
-  } else if (cur_unauth->firmware_type == firmware_type) {
+  } else if (cur_unauth != NULL && cur_unauth->firmware_type == firmware_type) {
     // Same storage domain: BOTH the variant AND the official/custom flag match
     // (the salt keys off the full firmware_type). An official<->custom switch
     // at the same variant changes firmware_type -> different salt -> wipe.
