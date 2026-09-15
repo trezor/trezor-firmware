@@ -501,9 +501,9 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
                              RELOC_FLAG_NORMAL | RELOC_FLAG_RW_SEGMENT);
   TSH_CHECK_OK(status);
 
-  // Get entrypoint address
-  void* entrypoint = map_va(&map, chdr->entry_va);
-  TSH_CHECK(entrypoint != NULL, TS_EBADMSG);
+  // Get the app's own entry point address
+  void* applet_main = map_va(&map, chdr->entry_va);
+  TSH_CHECK(applet_main != NULL, TS_EBADMSG);
 
   // Initialize applet privileges
   applet_privileges_t privileges = {0};
@@ -532,11 +532,15 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
   // Enable coreapp TLS area swapping
   systask_enable_tls(&applet->task, coreapp_get_tls_area());
 
-  uint32_t api_getter = (uint32_t)coreapp_get_api_getter();
+  // Start the task in Core's own app entry point, handing it `applet_main`,
+  // rather than jumping into `applet_main` directly. Core then sets up the
+  // app's global allocator and calls `applet_main` itself.
+  void* app_entry = coreapp_get_app_entry();
+  TSH_CHECK(app_entry != NULL, TS_EBADMSG);
 
   // Prepare the applet to run - push exception frame on the stack
-  // with the entrypoint address
-  ok = systask_push_call(&applet->task, entrypoint, api_getter, 0, 0);
+  // with Core's app entry point address
+  ok = systask_push_call(&applet->task, app_entry, (uint32_t)applet_main, 0, 0);
   TSH_CHECK(ok, TS_ENOMEM);
 
   systask_set_mpu(systask_active());
