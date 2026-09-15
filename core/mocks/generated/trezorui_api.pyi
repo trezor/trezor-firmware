@@ -74,6 +74,16 @@ class LayoutObj(Generic[T]):
         """Return the number of pages in the layout object."""
     def button_request(self) -> tuple[ButtonRequestType, str] | None:
         """Return (code, type) of button request made during the last event or timer pass."""
+    def needs_params_refresh(self) -> bool:
+        """Return True if the layout is waiting for fresh construction
+        parameters.
+        The request stays pending until `update_params()` serves it.
+        """
+    def update_params(self, params: Mapping[str, Any]) -> LayoutState | None:
+        """Hand fresh construction parameters to the layout.
+        `params` takes the same keys the layout was constructed with. The
+        layout updates itself in place, without being restarted.
+        """
     def get_transition_out(self) -> AttachType:
         """Return the transition type."""
     def return_value(self) -> T | None:
@@ -633,26 +643,37 @@ def show_homescreen(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+class DeviceMenuParams(TypedDict):
+    """Everything the device menu is built from.
+    The same set opens the menu and refreshes a running one through
+    `LayoutObj.update_params`. A refresh always carries the complete set
+    and rebuilds the menu from it; there is no partial update or diff, so
+    every key is always present. A value of `None` therefore means "not
+    applicable on this device", never "unchanged".
+    """
+    init_submenu_idx: int | None
+    init_submenu_offset: int
+    backup_failed: bool
+    backup_needed: bool
+    ble_enabled: bool
+    paired_devices: Iterable[tuple[str, tuple[str, str] | None]]
+    connected_idx: int | None
+    pin_enabled: bool | None
+    auto_lock: tuple[str, str] | None
+    wipe_code_enabled: bool | None
+    backup_check_allowed: bool
+    device_name: str | None
+    brightness: str | None
+    tap_to_wake_enabled: bool | None
+    haptics_enabled: bool | None
+    led_enabled: bool | None
+    about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]]
+    production_year: str | None
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def show_device_menu(
-    *,
-    init_submenu_idx: int | None,
-    init_submenu_offset: int,
-    backup_failed: bool,
-    backup_needed: bool,
-    ble_enabled: bool,
-    paired_devices: Iterable[tuple[str, tuple[str, str] | None]],
-    connected_idx: int | None,
-    pin_enabled: bool | None,
-    auto_lock: tuple[str, str] | None,
-    wipe_code_enabled: bool | None,
-    backup_check_allowed: bool,
-    device_name: str | None,
-    brightness: str | None,
-    tap_to_wake_enabled: bool | None,
-    haptics_enabled: bool | None,
-    led_enabled: bool | None,
-    about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
-    production_year: str | None,
+    params: DeviceMenuParams,
 ) -> LayoutContext[tuple[str, int | None, int, int]]:
     """Show the device menu. Result is a tuple (action, action_arg, next_menu_id, next_menu_offset)."""
 
@@ -927,4 +948,3 @@ class DeviceMenuResult:
     Reboot: ClassVar[str]
     RebootToBootloader: ClassVar[str]
     TurnOff: ClassVar[str]
-    RefreshMenu: ClassVar[str]

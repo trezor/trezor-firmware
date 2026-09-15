@@ -20,7 +20,7 @@ if utils.USE_POWER_MANAGER:
     from trezor.power_management.autodim import autodim_clear
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterator
+    from collections.abc import Callable, Generator, Iterator, Mapping
     from typing import Any, Generic, TypeVar
 
     from trezor.enums import ButtonRequestType
@@ -120,6 +120,11 @@ class Layout(Generic[T]):
     event loop, and take part in global layout management. See
     [docs/core/misc/layout-lifecycle.md] for details.
     """
+
+    # Supplies fresh construction parameters when the Rust layout asks for them.
+    # Subclasses of layouts that call `EventCtx::request_params()` override this
+    # with a `staticmethod`; everything else leaves it as None.
+    params_provider: "Callable[[], Mapping[str, Any]] | None" = None
 
     if __debug__:
 
@@ -304,6 +309,10 @@ class Layout(Generic[T]):
 
         first_paint = False
         state = event_call(*args)
+        if state is None:
+            # The layout may have asked for fresh parameters instead of finishing.
+            # Feed them in right away, so it can update itself in place.
+            state = self._refresh_params()
         self.transition_out = self.layout.get_transition_out()
 
         if state is LayoutState.DONE:
@@ -325,6 +334,21 @@ class Layout(Generic[T]):
             self._first_paint()
         else:
             self._paint()
+
+    def _refresh_params(self) -> LayoutState | None:
+        """Hand the layout fresh construction parameters, if it asked for them.
+
+        Returns the state of the resulting update pass, or None if no refresh
+        was requested. Lets a layout react to changed inputs without being torn
+        down and redrawn from scratch.
+        """
+        if not self.layout.needs_params_refresh():
+            return None
+        if self.params_provider is None:
+            # The layout is waiting for parameters nobody can supply, and the
+            # request stays pending, so it would ask again on every event pass.
+            raise wire.FirmwareError("layout asked for params but none are provided")
+        return self.layout.update_params(self.params_provider())
 
     def put_button_request(self, msg: ButtonRequestMsg | None) -> bool:
         if self.button_request_handler is None or msg is None:
