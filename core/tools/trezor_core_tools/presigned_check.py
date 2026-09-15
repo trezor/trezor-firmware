@@ -56,7 +56,7 @@ from trezorlib.firmware import pq_secure
 from trezorlib.firmware.core import BootableImage
 from trezorlib.merkle_tree import evaluate_proof
 
-from . import firmware_module
+from . import firmware_module, nrf_tree
 from .common import MODELS_DIR
 
 # A key set: the suffix its committed artifacts carry, and whether signatures
@@ -313,7 +313,34 @@ def check_model(
     if not nrf_path.is_file():
         out.append(f"    SKIP  nRF: {nrf['file']} not found beside the set")
         return out
-    out.append(f"    nRF            {nrf['file']} present, modelRoot agrees")
+    # Presence is not enough. On a PQ-NATIVE model signing rewrites the image --
+    # founder signature and co-path into its own TLVs, sigmask and monotonic
+    # stamped from the header -- and the entry's image_hash describes the SIGNED
+    # file. A promote that forgot to carry it over leaves the build's unsigned
+    # output here, which folds to nothing and which no later step would notice:
+    # the same silent shape the secmon pair already has a check for.
+    recorded = nrf.get("image_hash")
+    if recorded is None:
+        out.append(
+            f"    SKIP  nRF: {nrf['file']} present, but the entry records no "
+            "image_hash to check it against"
+        )
+        return out
+    # Recomputed over the protected region, not read back from TLV 0x10: the
+    # TLV is the image's own claim about itself, so an edited image that
+    # re-stamped it would still agree with itself. This range is the one the
+    # founder leaf is built over.
+    try:
+        actual = nrf_tree.mcuboot_image_hash(nrf_path.read_bytes())
+    except ValueError as e:
+        raise Mismatch(f"{nrf['file']} is not a usable MCUboot image: {e}") from e
+    if _hex(actual) != _hex(recorded):
+        raise Mismatch(
+            f"{nrf['file']} hashes to {_short(actual)} but the entry records "
+            f"{_short(recorded)} -- the committed image is not the one that was "
+            f"signed (re-promote, or re-cut the release)"
+        )
+    out.append(f"    nRF            {nrf['file']} matches the signed image")
     return out
 
 

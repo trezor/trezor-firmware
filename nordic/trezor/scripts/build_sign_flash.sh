@@ -183,10 +183,17 @@ resolve_sign_variant() {
     echo "signing variant: $SIGN_VARIANT (model $MODEL_NAME)"
 }
 
-# Name of this model's committed/bundled nRF image. Dev builds (-d) use the -dev
-# variant, matching trezor-firmware's default_nrf_image().
+# Name of this model's SIGNED nRF image -- what a trezor-firmware promote commits
+# and what the bundle records. Dev builds (-d) use the -dev variant.
 nrf_image_name() {
     if [ -n "$DEBUG" ]; then echo "trezor-ble-dev.bin"; else echo "trezor-ble.bin"; fi
+}
+
+# Name of the BARE image: this build's output, carrying no founder material. It is
+# a separate file from the signed one because it is the release INPUT -- xtask
+# stages it and the firmware embeds it, so a promote must not land on top of it.
+nrf_bare_image_name() {
+    if [ -n "$DEBUG" ]; then echo "trezor-ble-dev-bare.bin"; else echo "trezor-ble-bare.bin"; fi
 }
 
 # Verify the active nRF Connect SDK / toolchain match the target board before
@@ -439,9 +446,9 @@ stage_for_signing() {
         echo "note: $model_dir not found; skipping the copy for signing"
         return 0
     fi
-    cp "build/$APP_DIR/zephyr/zephyr.trz.bin" "$model_dir/$(nrf_image_name)" \
+    cp "build/$APP_DIR/zephyr/zephyr.trz.bin" "$model_dir/$(nrf_bare_image_name)" \
         || fatal "failed to copy the image into $model_dir"
-    echo "copied for signing -> $model_dir/$(nrf_image_name)"
+    echo "copied for signing -> $model_dir/$(nrf_bare_image_name)"
 }
 
 

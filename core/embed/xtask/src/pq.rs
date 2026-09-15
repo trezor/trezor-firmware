@@ -761,7 +761,7 @@ pub fn build_release(
 ///
 /// The release directory is rebuilt from the COMMITTED set plus this one image:
 /// the promoted bootloader (it already carries the signed `firmware_root`), the
-/// committed bundle, the committed nRF. Nothing here is signed.
+/// committed bundle, the promoted co-processor images. Nothing here is signed.
 pub fn build_presigned(args: &ResolvedBuildArgs) -> Result<()> {
     let models_dir = helpers::workspace_dir()?.join("models");
     let bundle_src = models_dir.join(bundle_name(args.bootloader_devel));
@@ -814,7 +814,7 @@ pub fn build_presigned(args: &ResolvedBuildArgs) -> Result<()> {
     fs::copy(&bootloader, out.join(DEFAULT_BOOTLOADER_FILE))
         .with_context(|| format!("Failed to copy {}", bootloader.display()))?;
 
-    stage_nrf_image(args, &out)?;
+    copy_signed_coprocessors(model_id, &body, &out)?;
     presign(&firmware, &bundle_src, model_id)?;
 
     // The COMMITTED body describes the release this image folds into, so it is
@@ -852,6 +852,45 @@ pub fn build_presigned(args: &ResolvedBuildArgs) -> Result<()> {
         )
         .green()
     );
+    Ok(())
+}
+
+/// Copy each co-processor image the committed body names into the release dir.
+///
+/// The PROMOTED image, not the bare one a release stages: the body records that
+/// file's `length` and `image_hash`, and on a PQ-native model signing rewrites
+/// the image, so staging the build output here would pack something the manifest
+/// beside it describes incorrectly. A custom build re-uses the committed fold
+/// wholesale, so the co-processor it ships has to be the folded one too.
+///
+/// Absent is an error rather than a skip: the body naming a co-processor is the
+/// statement that the set includes one, and shipping a manifest whose image is
+/// missing fails later, further from the cause.
+fn copy_signed_coprocessors(model_id: &str, body: &serde_json::Value, out: &Path) -> Result<()> {
+    for entry in body
+        .get("coprocessors")
+        .and_then(|v| v.as_array())
+        .cloned()
+        .unwrap_or_default()
+    {
+        let Some(name) = entry.get("file").and_then(|v| v.as_str()) else {
+            continue;
+        };
+        let src = helpers::workspace_dir()?
+            .join("models")
+            .join(model_id)
+            .join(name);
+        ensure!(
+            src.exists(),
+            "the committed bundle lists co-processor image {name}, but {} is not \
+             there -- promote a release for {model_id} first:\n             \
+             xtask release --promote",
+            src.display(),
+        );
+        fs::copy(&src, out.join(name))
+            .with_context(|| format!("Failed to copy {}", src.display()))?;
+        println!("xtask: co-processor {name} taken from the promoted set");
+    }
     Ok(())
 }
 
@@ -1311,6 +1350,31 @@ fn promote(models: &[Model], devel: bool) -> Result<()> {
             fs::copy(&src, &dst).with_context(|| format!("Failed to write {}", dst.display()))?;
             println!("  {id} {dst_name} -> {}", dst.display());
         }
+
+        // The nRF image, for the same reason as the bootloader: on a PQ-NATIVE
+        // model signing REWRITES it -- the founder signature and co-path go into
+        // its own TLVs, and the protected sigmask and monotonic counter are
+        // stamped from the header being signed. The bundle's recorded image_hash
+        // describes THAT file, so leaving the build's unsigned output committed
+        // would promote a set whose nRF nothing can verify.
+        //
+        // Copied unconditionally: where the model is not PQ-native the signer
+        // only reads the image, so this is the same bytes and the copy is a
+        // no-op. Sourced from the release for the same reason the secmon is --
+        // it is the image the modelRoot was folded over.
+        //
+        // Lands beside `trezor-ble{suffix}-bare.bin`, never on it: the bare image
+        // is the next release's input, so the two have to stay separate files or a
+        // promote leaves the following release nothing signable to stage.
+        let nrf_suffix = if devel { "-dev" } else { "" };
+        let nrf_name = format!("trezor-ble{nrf_suffix}.bin");
+        let nrf_src = out.join(&nrf_name);
+        if nrf_src.exists() {
+            let nrf_dst = models_dir.join(id).join(&nrf_name);
+            fs::copy(&nrf_src, &nrf_dst)
+                .with_context(|| format!("Failed to write {}", nrf_dst.display()))?;
+            println!("  {id} {nrf_name} -> {}", nrf_dst.display());
+        }
     }
 
     // Verified here rather than suggested. The committed set is four artifacts
@@ -1600,10 +1664,15 @@ fn run_signer(
 /// source is never modified.
 fn stage_nrf_image(args: &ResolvedBuildArgs, out: &Path) -> Result<Option<PathBuf>> {
     let suffix = if args.bootloader_devel { "-dev" } else { "" };
+    // The BARE image -- the nordic build output, carrying no founder material.
+    // Distinct from the signed `trezor-ble{suffix}.bin` a promote commits, because
+    // this file is a release INPUT: on a PQ-native model the signer appends the
+    // founder records, and handed back its own output it refuses the image as
+    // already carrying them.
     let committed = helpers::workspace_dir()?
         .join("models")
         .join(args.model.model_id())
-        .join(format!("trezor-ble{suffix}.bin"));
+        .join(format!("trezor-ble{suffix}-bare.bin"));
 
     if !committed.exists() {
         return Ok(None);
@@ -1613,7 +1682,9 @@ fn stage_nrf_image(args: &ResolvedBuildArgs, out: &Path) -> Result<Option<PathBu
 
     let raw =
         fs::read(&committed).with_context(|| format!("Failed to read {}", committed.display()))?;
-    let padded = out.join(committed.file_name().expect("nRF image has a file name"));
+    // Staged under the SIGNED name: it is the name the bundle records, so it is
+    // the one promote writes back and the presigned check looks for.
+    let padded = out.join(format!("trezor-ble{suffix}.bin"));
     let mut bytes = raw;
     bytes.resize(bytes.len().next_multiple_of(16), 0);
     fs::write(&padded, &bytes).with_context(|| format!("Failed to write {}", padded.display()))?;

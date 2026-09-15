@@ -153,6 +153,9 @@ fn embed_nrf_app_binary(lib: &mut CLibrary) -> Result<()> {
     } else {
         ""
     };
-    let nrf_app = format!("{model_dir}/trezor-ble{suffix}.bin");
+    // The BARE image: the nordic build output. The signed `trezor-ble{suffix}.bin`
+    // beside it is a pq_secure promote artifact, and this path is legacy-only --
+    // it carries no founder material and wants none.
+    let nrf_app = format!("{model_dir}/trezor-ble{suffix}-bare.bin");
     lib.embed_binary(&nrf_app, "nrf_app")
 }

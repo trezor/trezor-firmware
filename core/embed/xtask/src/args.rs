@@ -198,9 +198,10 @@ pub struct ReleaseArgs {
     pub bootloader: BootloaderSource,
 
     /// Copy the cut release into the tree as the committed presigned reference:
-    /// the cross-model bundle, each model's signed bootloader, and the secmon
-    /// pair. They are copied together because a bundle only folds against the
-    /// bootloader and secmon it was signed over.
+    /// the cross-model bundle, each model's signed bootloader, the secmon pair
+    /// and the signed nRF image. They are copied together because a bundle only
+    /// folds against the artifacts it was signed over. The nRF lands under its
+    /// signed name, beside the `-bare` build output the next release stages.
     #[arg(long)]
     pub promote: bool,
 
