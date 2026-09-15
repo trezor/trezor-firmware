@@ -24,17 +24,19 @@ import click
 import construct as c
 
 from .. import btc, messages, protobuf, tools
+from ..btc import (
+    PURPOSE_BIP44,
+    PURPOSE_BIP49,
+    PURPOSE_BIP84,
+    PURPOSE_BIP86,
+    PURPOSE_SLIP25,
+    guess_script_type_from_path,
+    guess_sign_message_script_type,
+)
 from . import ChoiceType, with_session
 
 if TYPE_CHECKING:
     from ..client import Session
-
-PURPOSE_BIP44 = 44
-PURPOSE_BIP48 = 48
-PURPOSE_BIP49 = 49
-PURPOSE_BIP84 = 84
-PURPOSE_BIP86 = 86
-PURPOSE_SLIP25 = 10025
 
 INPUT_SCRIPTS = {
     "address": messages.InputScriptType.SPENDADDRESS,
@@ -58,14 +60,6 @@ OUTPUT_SCRIPTS = {
     "tr": messages.OutputScriptType.PAYTOTAPROOT,
 }
 
-BIP_PURPOSE_TO_DEFAULT_SCRIPT_TYPE = {
-    PURPOSE_BIP44: messages.InputScriptType.SPENDADDRESS,
-    PURPOSE_BIP49: messages.InputScriptType.SPENDP2SHWITNESS,
-    PURPOSE_BIP84: messages.InputScriptType.SPENDWITNESS,
-    PURPOSE_BIP86: messages.InputScriptType.SPENDTAPROOT,
-    PURPOSE_SLIP25: messages.InputScriptType.SPENDTAPROOT,
-}
-
 SCRIPT_TYPE_TO_BIP_PURPOSES = {
     messages.InputScriptType.SPENDADDRESS: (PURPOSE_BIP44,),
     messages.InputScriptType.SPENDP2SHWITNESS: (PURPOSE_BIP49,),
@@ -79,12 +73,6 @@ ACCOUNT_TYPE_TO_BIP_PURPOSE = {
     "bip84": PURPOSE_BIP84,
     "bip86": PURPOSE_BIP86,
     "slip25": PURPOSE_SLIP25,
-}
-
-BIP48_SCRIPT_TYPES = {
-    tools.H_(0): messages.InputScriptType.SPENDMULTISIG,
-    tools.H_(1): messages.InputScriptType.SPENDP2SHWITNESS,
-    tools.H_(2): messages.InputScriptType.SPENDWITNESS,
 }
 
 DEFAULT_COIN = "Bitcoin"
@@ -121,37 +109,6 @@ def xpub_deserialize(xpubstr: str) -> tuple[str, messages.HDNodeType]:
     )
 
     return data.version, node
-
-
-def guess_script_type_from_path(address_n: list[int]) -> messages.InputScriptType:
-    if len(address_n) < 1 or not tools.is_hardened(address_n[0]):
-        return messages.InputScriptType.SPENDADDRESS
-
-    purpose = tools.unharden(address_n[0])
-    if purpose in BIP_PURPOSE_TO_DEFAULT_SCRIPT_TYPE:
-        return BIP_PURPOSE_TO_DEFAULT_SCRIPT_TYPE[purpose]
-
-    if purpose == PURPOSE_BIP48 and len(address_n) >= 4:
-        script_type_field = address_n[3]
-        if script_type_field in BIP48_SCRIPT_TYPES:
-            return BIP48_SCRIPT_TYPES[script_type_field]
-
-    return messages.InputScriptType.SPENDADDRESS
-
-
-def guess_sign_message_script_type(
-    address_n: list[int],
-) -> messages.InputScriptType:
-    """Script type for signing a message with the key at `address_n`.
-
-    Message signing is single-key -- there is no multisig message signature --
-    so the BIP-48 0' level, which guess_script_type_from_path() reads as
-    SPENDMULTISIG, signs as its single-key analogue.
-    """
-    script_type = guess_script_type_from_path(address_n)
-    if script_type is messages.InputScriptType.SPENDMULTISIG:
-        return messages.InputScriptType.SPENDADDRESS
-    return script_type
 
 
 def get_unlock_path(address_n: list[int]) -> Optional[list[int]]:
