@@ -146,9 +146,7 @@
       "Delizia": "Erstelle ein Backup, um den Zugriff auf deine Assets nicht zu verlieren.",
       "Eckhart": "Erstelle ein Backup, um den Zugriff auf deine Assets nicht zu verlieren."
     },
-    "backup__info_multi_group_backup": "Dein Wallet-Backup enthält {0} Gruppen mit einem Gruppen-Schwellenwert von {1}.",
     "backup__info_multi_share_backup": "Dein Wallet-Backup enthält mehrere Listen von Wörtern in einer bestimmten Reihenfolge (Shares).",
-    "backup__info_n_of_m_template": "{0}-von-{1}",
     "backup__info_single_share_backup": "Dein Wallet-Backup enthält {0} Wörter in einer bestimmten Reihenfolge.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Du solltest jetzt dein neues Wallet sichern.",
@@ -207,7 +205,7 @@
     },
     "backup__type_create": "",
     "backup__type_have": "",
-    "backup__type_n1w1": "",
+    "backup__type_n4w1": "",
     "backup__type_wordlist": "",
     "backup__want_to_skip": {
       "Bolt": "Möchtest du das Backup wirklich überspringen?",
@@ -623,6 +621,7 @@
     "cardano__message_text": "Nachrichtentext",
     "cardano__multisig_path": "Multisig-Pfad",
     "cardano__nested_scripts_template": "Enthält {0} verschachtelte Skripte.",
+    "cardano__network": "Netzwerk",
     "cardano__no_output_tx": "Transaktion hat keine Ausgaben. Netzwerk kann nicht verifiziert werden.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Andere",
@@ -727,19 +726,20 @@
     "cardano__vote_public_key": "Public Key für Vote",
     "cardano__voting_purpose": "Voting-Zweck",
     "cardano__warning": "Warnung",
+    "cardano__weight": "Gewicht",
     "cardano__withdrawal_for_address_template": "Auszahlung für {0} Adresse bestätigen",
     "cardano__x_of_y_signatures_template": "Erfordert {0} von {1} Signaturen.",
     "coinjoin__access_account": "Auf CoinJoin-Konto zugreifen?",
     "coinjoin__do_not_disconnect": "Trenne deinen Trezor nicht!",
     "coinjoin__max_coordinator_fee_pct": "Maximale Koordinatorgebühr",
-    "coinjoin__max_mining_fee": "Max. Mining-Gebühr",
-    "coinjoin__max_rounds": "Max. Runden",
-    "coinjoin__title": {
-      "Bolt": "CoinJoin autorisier.",
-      "Caesar": "Coinjoin autorisier.",
-      "Delizia": "Coinjoin autorisier.",
-      "Eckhart": "Coinjoin autorisier."
+    "coinjoin__max_mining_fee": "Maximale Mining-Gebühr",
+    "coinjoin__max_rounds": {
+      "Bolt": "Maximale Runden",
+      "Caesar": "Maximale Runden",
+      "Delizia": "Maximale Runden",
+      "Eckhart": "Max. Runden"
     },
+    "coinjoin__title": "Coinjoin autorisieren",
     "coinjoin__title_progress": {
       "Bolt": "CoinJoin läuft",
       "Caesar": "Coinjoin läuft",
@@ -833,8 +833,20 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "eos__delegate": {
+      "Bolt": "Delegieren",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__delete_auth": {
       "Bolt": "Auth löschen",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__from": {
+      "Bolt": "Von",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -953,6 +965,12 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "eos__undelegate": {
+      "Bolt": "Delegieren aufheben",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__unlink_auth": {
       "Bolt": "Auth-Verknüpfung aufheben",
       "Caesar": "",
@@ -1043,8 +1061,9 @@
     "ethereum__gas_limit": "Gas-Grenze",
     "ethereum__gas_price": "Gas-Preis",
     "ethereum__interaction_contract": "Interaktionsvertrag",
-    "ethereum__max_gas_price": "Max. Gas-Preis",
+    "ethereum__max_gas_price": "Maximaler Gas-Preis",
     "ethereum__name_and_version": "Name und Version",
+    "ethereum__network": "Netzwerk",
     "ethereum__new_contract": {
       "Bolt": "Neuen Vertrag einstellen",
       "Caesar": "Neuen Vertrag einstellen",
@@ -1052,12 +1071,7 @@
       "Eckhart": "Neu Vertrag einstellen"
     },
     "ethereum__no_message_field": "Kein Nachrichtenfeld",
-    "ethereum__priority_fee": {
-      "Bolt": "Prioritätsgebühr",
-      "Caesar": "Prioritätsgebühr",
-      "Delizia": "Max. Prio. Gebühr",
-      "Eckhart": "Prioritätsgebühr"
-    },
+    "ethereum__priority_fee": "Maximale Prio-Gebühr",
     "ethereum__redeem": "Einlösen",
     "ethereum__redeem_amount": "Einlösungsbetrag",
     "ethereum__redeem_from": "Einlösen von",
@@ -1301,12 +1315,7 @@
       "Eckhart": "Backup fehlgeschlagen"
     },
     "homescreen__title_backup_needed": "Backup erforderlich",
-    "homescreen__title_coinjoin_authorized": {
-      "Bolt": "Coinjoin autoris.",
-      "Caesar": "Coinjoin autoris.",
-      "Delizia": "Coinjoin autoris.",
-      "Eckhart": "Coinjoin autorisiert"
-    },
+    "homescreen__title_coinjoin_authorized": "Coinjoin autorisiert",
     "homescreen__title_experimental_mode": "Experimentiermodus",
     "homescreen__title_no_usb_connection": "Keine USB-Verbindung",
     "homescreen__title_pin_not_set": {
@@ -1650,17 +1659,17 @@
     "monero__wanna_export_watchkey": "Möchtest du wirklich Watch-Only-Daten exportieren?",
     "monero__wanna_start_refresh": "Möchtest du wirklich\ndie Aktualisierung starten?",
     "monero__wanna_sync_key_images": "Möchtest du wirklich\ndie Key-Images synchronisieren?",
-    "n1w1__err_damaged": "",
-    "n1w1__err_empty": "",
-    "n1w1__err_nonempty": "",
-    "n1w1__footer_first": "",
-    "n1w1__footer_last": "",
-    "n1w1__footer_next": "",
-    "n1w1__hold_first": "",
-    "n1w1__hold_last": "",
-    "n1w1__hold_next": "",
-    "n1w1__reading": "",
-    "n1w1__writing": "",
+    "n4w1__err_damaged": "",
+    "n4w1__err_empty": "",
+    "n4w1__err_nonempty": "",
+    "n4w1__footer_first": "",
+    "n4w1__footer_last": "",
+    "n4w1__footer_next": "",
+    "n4w1__hold_first": "",
+    "n4w1__hold_last": "",
+    "n4w1__hold_next": "",
+    "n4w1__reading": "",
+    "n4w1__writing": "",
     "nem__absolute": {
       "Bolt": "absolut",
       "Caesar": "",
@@ -2249,7 +2258,12 @@
     },
     "recovery__enter_each_word": "Gib jedes Wort aus deinem Wallet-Backup nacheinander ein.",
     "recovery__enter_share_from_diff_group": "Share von anderer Gruppe eingeben.",
-    "recovery__group_num_template": "Gruppe {0}",
+    "recovery__group_num_template": {
+      "Bolt": "Gruppe {0}",
+      "Caesar": "Gruppe {0}",
+      "Delizia": "Gruppe {0}",
+      "Eckhart": ""
+    },
     "recovery__group_threshold_reached": "Gruppenschwelle wurde erreicht.",
     "recovery__invalid_share_entered": "Eingegebener Recovery Share ist ungültig.",
     "recovery__invalid_wallet_backup_entered": "Eingegebener Recovery Seed ist ungültig.",
@@ -2627,9 +2641,9 @@
       "Eckhart": "Wähle das Wort {0} aus deinem Wallet-Backup"
     },
     "reset__select_word_x_of_y_template": {
-      "Bolt": "Wort {0} von {1}:",
+      "Bolt": "Wort {0} von {1} ist:",
       "Caesar": "Wort {0} von {1}:",
-      "Delizia": "Wort {0} von {1}",
+      "Delizia": "Wort {0} von {1} ist",
       "Eckhart": ""
     },
     "reset__set_it_to_count_template": {
@@ -2693,9 +2707,9 @@
       "Eckhart": "Anzahl der Shares: {0}"
     },
     "reset__slip39_checklist_set_num_groups": {
-      "Bolt": "Gruppenanzahl wählen",
+      "Bolt": "Gruppenanzahl festlegen",
       "Caesar": "",
-      "Delizia": "Gruppenanzahl wählen",
+      "Delizia": "Gruppenanzahl festlegen",
       "Eckhart": "Gruppenanzahl festlegen"
     },
     "reset__slip39_checklist_set_num_shares": {
@@ -2786,16 +2800,16 @@
       "Eckhart": "Gruppen-Schwellenwert festlegen"
     },
     "reset__title_set_number_of_groups": {
-      "Bolt": "Anzahl der Gruppen",
+      "Bolt": "Gruppenanzahl festlegen",
       "Caesar": "",
-      "Delizia": "Anzahl der Gruppen",
-      "Eckhart": "Anzahl der Gruppen festlegen"
+      "Delizia": "Gruppenanzahl festlegen",
+      "Eckhart": "Gruppenanzahl festlegen"
     },
     "reset__title_set_number_of_shares": {
-      "Bolt": "Anzahl der Shares",
+      "Bolt": "Share-Anzahl festlegen",
       "Caesar": "",
-      "Delizia": "Anzahl der Shares",
-      "Eckhart": "Anzahl der Shares festlegen"
+      "Delizia": "Share-Anzahl festlegen",
+      "Eckhart": "Share-Anzahl festlegen"
     },
     "reset__title_set_threshold": {
       "Bolt": "Schwelle festlegen",
@@ -3048,12 +3062,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "send__maximum_fee": {
-      "Bolt": "Max. Gebühr",
-      "Caesar": "Max. Gebühr",
-      "Delizia": "Max. Gebühr",
-      "Eckhart": "Maximale Gebühr"
-    },
+    "send__maximum_fee": "Maximale Gebühr",
     "send__multisig_different_paths": "Verwendung verschiedener Pfade für verschiedene XPUBs.",
     "send__receiving_to_multisig": {
       "Bolt": "An eine Multisig-Adresse empfangen.",
@@ -3181,12 +3190,7 @@
     "solana__instruction_is_multisig": "Die folgende Anweisung ist eine Multisig-Anweisung.",
     "solana__is_provided_via_lookup_table_template": "{0} wird in einer Referenztabelle bereitgestellt.",
     "solana__lookup_table_address": "Adresse der Referenztabelle",
-    "solana__max_fees_rent": {
-      "Bolt": "Max. Gebühren und Rent",
-      "Caesar": "Max. Gebühren und Rent",
-      "Delizia": "Maximale Gebühren und Miete",
-      "Eckhart": "Max. Gebühren und Rent"
-    },
+    "solana__max_fees_rent": "Maximale Gebühren und Miete",
     "solana__max_rent_fee": {
       "Bolt": "Max. Rent-Gebühr",
       "Caesar": "Max. Rent-Gebühr",
@@ -3244,7 +3248,7 @@
     "stellar__delete_passive_offer": "Passives Angebot löschen",
     "stellar__delete_trust": "Trust löschen",
     "stellar__destination": "Ziel",
-    "stellar__exchanges_require_memo": "Memo ist nicht festgelegt. Es wird normalerweise benötigt, wenn du an Börsen sendest.",
+    "stellar__exchanges_require_memo": "Kein Memo festgelegt. Wird meist beim Senden an Börsen benötigt.",
     "stellar__ext_auth": "Externe Autorisierungen",
     "stellar__ext_auth_message": "Die Transaktion enthält zusätzliche Aufrufe, die durch externe Mittel autorisiert wurden.",
     "stellar__final_confirm": "Letzte Bestätigung",
@@ -3814,12 +3818,6 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "words__delegate": {
-      "Bolt": "Delegieren",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "words__deposit": "Einzahlung",
     "words__device": "Gerät",
     "words__disabled": {
@@ -3849,12 +3847,6 @@
       "Delizia": "von",
       "Eckhart": ""
     },
-    "words__from_title": {
-      "Bolt": "Von",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "words__function": "Funktion",
     "words__important": "Wichtig",
     "words__instructions": "Anweisungen",
@@ -3880,7 +3872,6 @@
     },
     "words__my_trezor": "Mein Trezor",
     "words__name": "Name",
-    "words__network": "Netzwerk",
     "words__no": "Nein",
     "words__not_recommended": {
       "Bolt": "",
@@ -3999,12 +3990,6 @@
       "Delizia": "Versuche es erneut.",
       "Eckhart": "Versuche es erneut"
     },
-    "words__undelegate": {
-      "Bolt": "Delegieren aufheben",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "words__unknown": "Unbekannt",
     "words__unlimited": "Unbegrenzt",
     "words__unlocked": {
@@ -4017,7 +4002,6 @@
     "words__voting": "Abstimmung",
     "words__wallet": "Wallet",
     "words__warning": "Warnung",
-    "words__weight": "Gewicht",
     "words__writable": "Beschreibbar",
     "words__yes": "Ja"
   }
