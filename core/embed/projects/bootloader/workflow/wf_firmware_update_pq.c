@@ -375,7 +375,9 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
 #ifdef USE_SMP
   // --- A device WITH a co-processor requires every install to carry one. ---
   //     Arming the UCB is what commits the bootloader swap, and it is done
-  //     last so an abort leaves the old system whole. That ordering assumes
+  //     last so an abort leaves the old BOOTLOADER whole with nothing
+  //     committed -- not the firmware, which the staging scratch has already
+  //     overwritten by then (see the arm-last comment). That ordering assumes
   //     the co-processor leg has already run; a FirmwareBegin that simply
   //     omits the nRF fields skips it and arms anyway, landing on exactly the
   //     new-bootloader + old-co-processor pair the ordering exists to avoid.
@@ -800,9 +802,15 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   //     host needed. See coproc-ota-phase-transport-design.
   //
   //     Staging fold-verifies the nRF leaf against model_root BEFORE arming, so
-  //     a mismatched image ABORTS before the point of no return (old system
-  //     intact). That the nRF's own MCUboot will accept the (founder-signed)
-  //     image is a BUILD invariant (the founder-tree nRF image is always a
+  //     a mismatched image ABORTS before the point of no return: the UCB stays
+  //     unarmed and the staged bootloader is untouched, which the static_assert
+  //     on NRF_STAGING_AREA guarantees it cannot reach. The old FIRMWARE is NOT
+  //     intact by then -- the staging scratch IS the firmware region, so the
+  //     stream has already erased secmon and the front of the kernel. An abort
+  //     here leaves a working bootloader over a firmware phase 2 must reinstall,
+  //     which is the accepted cost of siting the scratch there (see
+  //     flash_layout_ucb.c). That the nRF's own MCUboot will accept the
+  //     (founder-signed) image is a BUILD invariant (the founder-tree nRF image is always a
   //     valid MCUboot image), not a runtime abort. The nRF leaf is a peer under
   //     model_root; an already-current nRF is skipped with no wire traffic; the
   //     sub-stream suppresses its own Success. ---
@@ -842,8 +850,14 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   //     and fold-verified. The coupled swap then completes autonomously on the
   //     next boot: the boardloader installs the new bootloader, and the resume
   //     driver pushes the staged nRF before anything uses the link. Arming last
-  //     means an interruption BEFORE this point leaves the working OLD system
-  //     (nothing committed); AFTER it, the forward-only resume drives to
+  //     means an interruption BEFORE this point leaves the working OLD
+  //     BOOTLOADER with nothing committed -- but not the firmware body. Both
+  //     staging areas are carved out of the firmware region: STAGING_AREA is
+  //     its tail (bootloader code) and NRF_STAGING_AREA its front (secmon and
+  //     the kernel front), so whichever legs ran have already erased what they
+  //     cover, and phase 2 must reinstall it. Only a header-only install with
+  //     no co-processor image leaves the firmware untouched. AFTER this point,
+  //     the forward-only resume drives to
   //     new-bootloader + new-nRF (power-loss-idempotent, retried across
   //     reboots), never stranding at "new bootloader + old co-processor" (the
   //     brick). ---
