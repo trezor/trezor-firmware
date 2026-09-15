@@ -1005,9 +1005,10 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
 
 #include <io/app_root.h>
 
-ts_t app_root_update(const void *root_packet, size_t root_packet_size) {
-  return ts_make(syscall_invoke2((uint32_t)root_packet, root_packet_size,
-                                 SYSCALL_APP_ROOT_UPDATE));
+ts_t app_root_update(const void *root_packet, size_t root_packet_size,
+                     app_root_state_t *state) {
+  return ts_make(syscall_invoke3((uint32_t)root_packet, root_packet_size,
+                                 (uint32_t)state, SYSCALL_APP_ROOT_UPDATE));
 }
 
 bool app_root_is_loaded(app_ring_t ring) {
