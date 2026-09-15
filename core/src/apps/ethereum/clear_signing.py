@@ -59,6 +59,11 @@ _EVM_WORD_SIZE = const(32)  # in bytes
 _EVM_WORD_BITS = const(8 * _EVM_WORD_SIZE)
 _ADDRESS_BYTES = const(20)
 
+# Recursion depth for raw decoding (ABIValue.from_proto)
+_MAX_ABI_NESTING = const(8)
+# Encoding depth counting just array nesting. To be increased cautiously.
+_MAX_NESTED_ARRAYS = const(2)
+
 
 class ClearSigningFailed(Exception):
     pass
@@ -633,40 +638,28 @@ class ABIValue:
         raise NotImplementedError
 
     @staticmethod
-    def from_proto(info: EthereumABIValueInfo) -> "ABIValue":
+    def from_proto(
+        info: EthereumABIValueInfo, depth: int = 0, arrays: int = 0
+    ) -> "ABIValue":
+        """Build the parser tree for one wire descriptor node.
+
+        `depth` bounds recursion; `arrays` counts only the
+        `Array` levels on this "root-to-leaf" path.
+        Dynamic (array) parsing could explode faster than recursion."""
+        if depth > _MAX_ABI_NESTING or arrays > _MAX_NESTED_ARRAYS:
+            raise InvalidFormatDefinition
         if info.atomic is not None:
             return Atomic(_get_parser(info.atomic, is_dynamic=False))
         elif info.dynamic is not None:
             return DynamicLeaf(_get_parser(info.dynamic, is_dynamic=True))
         elif info.tuple is not None:
             return Tuple(
-                tuple(_get_leaf_value(f) for f in info.tuple.fields),
+                tuple(
+                    ABIValue.from_proto(f, depth + 1, arrays) for f in info.tuple.fields
+                )
             )
         elif info.array is not None:
-            element = info.array
-            if element.atomic is not None:
-                return Array(Atomic(_get_parser(element.atomic, is_dynamic=False)))
-            elif element.dynamic is not None:
-                return Array(DynamicLeaf(_get_parser(element.dynamic, is_dynamic=True)))
-            elif element.tuple is not None:
-                fields = tuple(_get_leaf_value(f) for f in element.tuple.fields)
-                # A non-array (leaf) struct/tuple is dynamic if any of its fields is dynamic.
-                # E.g. of dynamic members: bytes, string, uint256[], bytes[], bytes[][] etc.
-                # An array (this outer structure) is always* dynamic regardless of its fields.
-                # (*Unless it's of fixed length, which generally don't exist.)
-                return Array(Tuple(fields))
-            elif element.array is not None:
-                inner = element.array
-                if inner.atomic is not None:
-                    return Array(
-                        Array(Atomic(_get_parser(inner.atomic, is_dynamic=False)))
-                    )
-                elif inner.dynamic is not None:
-                    return Array(
-                        Array(DynamicLeaf(_get_parser(inner.dynamic, is_dynamic=True)))
-                    )
-                raise InvalidFormatDefinition  # deeper nesting not supported
-            raise InvalidFormatDefinition
+            return Array(ABIValue.from_proto(info.array, depth + 1, arrays + 1))
         raise InvalidFormatDefinition
 
 
@@ -692,15 +685,6 @@ def _read_dynamic_data(raw_data: memoryview, pointer: int) -> memoryview:
     if body_start + length > len(raw_data):
         raise OutOfBounds
     return raw_data[body_start : body_start + length]
-
-
-def _get_leaf_value(info: EthereumABIValueInfo) -> ABIValue:
-    """Build a leaf (atomic or dynamic) node. Raises for nested structures."""
-    if info.atomic is not None:
-        return Atomic(_get_parser(info.atomic, is_dynamic=False))
-    elif info.dynamic is not None:
-        return DynamicLeaf(_get_parser(info.dynamic, is_dynamic=True))
-    raise InvalidFormatDefinition
 
 
 class DynamicLeaf(ABIValue):
