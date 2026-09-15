@@ -100,14 +100,6 @@ PATTERN_UNCHAINED_UNHARDENED = (
 # 826421588 is ASCII string "T1B1" as a little-endian 32-bit integer.
 PATTERN_SLIP26_T1_FW = "m/10026'/826421588'/2'/0'"
 
-# Script types sign_message() has a recovery byte for. Anything else cannot be
-# signed however standard the path is for spending.
-SIGN_MESSAGE_SCRIPT_TYPES = (
-    InputScriptType.SPENDADDRESS,
-    InputScriptType.SPENDP2SHWITNESS,
-    InputScriptType.SPENDWITNESS,
-)
-
 # SLIP-44 coin type for Bitcoin
 SLIP44_BITCOIN = const(0)
 
@@ -190,72 +182,41 @@ def _get_sign_message_fw_patterns(
     return []
 
 
-def _get_sign_message_account_patterns(coin: coininfo.CoinInfo) -> list[str]:
+def _get_sign_message_account_patterns(
+    coin: coininfo.CoinInfo,
+    script_type: InputScriptType,
+) -> list[str]:
     """
     BIP-48 account nodes, for SignMessage only.
 
-    The six-component BIP-48 patterns cannot match the four-component node, so
-    the node needs a pattern of its own. Wildcard-free, so the subtree below it
-    stays out.
+    The six-component BIP-48 patterns cannot match the four-component node.
+    Only the node matching `script_type` is returned, so a mismatch still
+    warns, and the patterns are wildcard-free, so the subtree stays out.
 
-    All three levels, whatever script type was asked for: the 0'/1'/2' level
-    says what the multisig wallet's output script looks like, and a message
-    signature commits to no output script -- the same reason the single-sig and
-    multisig pattern sets are unioned for SignMessage. Requiring them to agree
-    would oblige every host to infer the script type from the path, which is
-    what hosts sending the SPENDADDRESS default do not do.
+    SPENDMULTISIG is absent: message signing is single-key, so there is no
+    multisig account node to sign with.
     """
-    patterns = [PATTERN_BIP48_RAW_ACCOUNT]
+    if script_type == InputScriptType.SPENDADDRESS:
+        return [PATTERN_BIP48_RAW_ACCOUNT]
 
-    if coin.segwit:
-        patterns.append(PATTERN_BIP48_P2SHSEGWIT_ACCOUNT)
-        patterns.append(PATTERN_BIP48_SEGWIT_ACCOUNT)
+    if coin.segwit and script_type == InputScriptType.SPENDP2SHWITNESS:
+        return [PATTERN_BIP48_P2SHSEGWIT_ACCOUNT]
 
-    return patterns
+    if coin.segwit and script_type == InputScriptType.SPENDWITNESS:
+        return [PATTERN_BIP48_SEGWIT_ACCOUNT]
 
-
-def _get_sign_message_leaf_patterns(coin: coininfo.CoinInfo) -> list[str]:
-    """
-    BIP-48 address-level patterns, for SignMessage only.
-
-    The ordinary tables offer one level per script type; these make the other
-    two recognized as well, for the reason in
-    _get_sign_message_account_patterns(). Recognition only -- the leaves are
-    already in _get_schemas_for_coin(), so nothing is unlocked here.
-    """
-    patterns = [PATTERN_BIP48_RAW]
-
-    if coin.segwit:
-        patterns.append(PATTERN_BIP48_P2SHSEGWIT)
-        patterns.append(PATTERN_BIP48_SEGWIT)
-
-    return patterns
+    return []
 
 
 def is_sign_message_account_node(
     coin: coininfo.CoinInfo,
     address_n: Bip32Path,
+    script_type: InputScriptType,
 ) -> bool:
     """Whether the path is a BIP-48 account node SignMessage may sign with."""
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n)
-        for pattern in _get_sign_message_account_patterns(coin)
-    )
-
-
-def is_sign_message_bip48_path(
-    coin: coininfo.CoinInfo,
-    address_n: Bip32Path,
-) -> bool:
-    """Whether the path is any BIP-48 level SignMessage recognizes.
-
-    Such a path is named by its level rather than by the requested script type,
-    which the level need not agree with.
-    """
-    return any(
-        PathSchema.parse(pattern, coin.slip44).match(address_n)
-        for pattern in _get_sign_message_account_patterns(coin)
-        + _get_sign_message_leaf_patterns(coin)
+        for pattern in _get_sign_message_account_patterns(coin, script_type)
     )
 
 
@@ -277,7 +238,11 @@ def validate_path_against_script_type(
 
     if SignMessage.is_type_of(msg):
         # No output script, so the multisig distinction is meaningless here.
-        if script_type not in SIGN_MESSAGE_SCRIPT_TYPES:
+        if script_type not in (
+            InputScriptType.SPENDADDRESS,
+            InputScriptType.SPENDP2SHWITNESS,
+            InputScriptType.SPENDWITNESS,
+        ):
             # sign_message() has no recovery byte for anything else, so such a
             # path is not standard for message signing however standard it is
             # to spend from.
@@ -285,10 +250,8 @@ def validate_path_against_script_type(
         patterns = (
             _get_patterns_for_script_type(coin, script_type, multisig=False)
             + _get_patterns_for_script_type(coin, script_type, multisig=True)
-            # Same nodes with_keychain() unlocks, so access and warning
-            # agree, plus the other levels' leaves.
-            + _get_sign_message_account_patterns(coin)
-            + _get_sign_message_leaf_patterns(coin)
+            # Same list with_keychain() unlocks, so access and warning agree.
+            + _get_sign_message_account_patterns(coin, script_type)
             # Model 1 firmware-signing key: a signing target, never a spend
             # target.
             + _get_sign_message_fw_patterns(coin, script_type)
@@ -524,11 +487,7 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
     ) -> MsgOut:
         coin = _get_coin_by_name(msg.coin_name)
         extra_schemas = _get_unlock_schemas(msg, auth_msg, coin)
-        if (
-            SignMessage.is_type_of(msg)
-            and (msg.script_type or InputScriptType.SPENDADDRESS)
-            in SIGN_MESSAGE_SCRIPT_TYPES
-        ):
+        if SignMessage.is_type_of(msg):
             # SignMessage only: in _get_schemas_for_coin() these nodes would
             # also be spendable by SignTx.
             #
@@ -542,7 +501,9 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
             # id only, so the path would be reachable but warn.
             extra_schemas += [
                 PathSchema.parse(pattern, coin.slip44)
-                for pattern in _get_sign_message_account_patterns(coin)
+                for pattern in _get_sign_message_account_patterns(
+                    coin, msg.script_type or InputScriptType.SPENDADDRESS
+                )
             ]
         keychain = await _get_keychain_for_coin(coin, extra_schemas)
         if AuthorizeCoinJoin.is_type_of(auth_msg):

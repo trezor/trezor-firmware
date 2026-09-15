@@ -98,11 +98,7 @@ Sign message paths are validated against both the single-sig and the multisig sc
 the requested script type, because a message signature commits to no output script and the
 distinction is not meaningful for it. Sign tx keeps the strict single-versus-multisig rule.
 The BIP-48 account nodes `48'/c'/a'/t'` are accepted as well, since cosigners share the
-xpub there and hosts sign with that key to prove ownership of the account. The BIP-48
-script-type level `t'` need not match the requested script type, for the same reason:
-the level says what the multisig wallet's output script is, and a message signature has
-none. Requiring them to agree would oblige every host to derive the script type from the
-path, which a host sending the protocol's SPENDADDRESS default does not do.
+xpub there and hosts sign with that key to prove ownership of the account.
 
 ## Allowed values
 
