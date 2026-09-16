@@ -31,6 +31,8 @@ target_sources(app PRIVATE
         src/trezor-crypto/memzero.c
 )
 
+target_sources_ifdef(CONFIG_TRZ_CONSOLE app PRIVATE src/ble/console.c)
+
 include_directories(src/signals/inc)
 include_directories(src/trz_comm/inc)
 include_directories(src/ble/inc)
