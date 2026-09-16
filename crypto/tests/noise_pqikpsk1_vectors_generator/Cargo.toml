@@ -1,0 +1,15 @@
+[package]
+name = "noise-pqikpsk1-vectors-generator"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+clatter = { git = "https://github.com/jmlepisto/clatter", rev = "9a8d15c4f80d5911ca0403aa22e0de99ea59df08" }
+ml-kem = { version = "=0.3.2", features = ["hazmat"] }
+x25519-dalek = { version = "=3.0.0", default-features = false, features = ["static_secrets"] }
+sha3 = "0.10"
+hex = "0.4"
+rand_core = "0.10"
