@@ -33,8 +33,10 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: cp -r crypto crypto_noasan
-      - run: nix-shell --run "uv run make -C crypto"
-      - run: nix-shell --run "export ADDRESS_SANITIZER=0; uv run make -C crypto_noasan"
+      - run: $UV_RUN make -C crypto
+      - run: $UV_RUN make -C crypto_noasan
+        env:
+          ADDRESS_SANITIZER: 0
       - run: mv crypto_noasan/tests/test_check crypto/tests/test_check_noasan
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
@@ -68,8 +70,12 @@ jobs:
       - run: ./crypto/tests/aestst
       - run: ./crypto/tests/test_check
       - run: ./crypto/tests/test_openssl 1000
-      - run: nix-shell --run "cd crypto && ITERS=10 uv run pytest tests"
-      - run: nix-shell --run "CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./crypto/tests/test_check_noasan"
+      - run: $UV_RUN pytest crypto/tests
+        env:
+          ITERS: 10
+      - run: $NIX_RUN valgrind -q --error-exitcode=1 ./crypto/tests/test_check_noasan
+        env:
+          CK_TIMEOUT_MULTIPLIER: 20
 
   python_test:
     name: Python test
@@ -85,7 +91,7 @@ jobs:
       - uses: ./.github/actions/environment
       # LD_LIBRARY_PATH workaround: https://discourse.nixos.org/t/nixpkgs-nixos-unstable-many-package-fail-with-glibc-2-38-not-found/35078 https://github.com/NixOS/nixpkgs/issues/287764
       # Allow uv to use any python version for python tests
-      - run: nix-shell --run "unset LD_LIBRARY_PATH && export UV_PYTHON_PREFERENCE=managed UV_PYTHON_DOWNLOADS=automatic && cd python && uv run tox"
+      - run: $NIX_RUN bash -c "unset LD_LIBRARY_PATH && export UV_PYTHON_PREFERENCE=managed UV_PYTHON_DOWNLOADS=automatic && cd python && uv run tox"
 
   rust_test:
     name: Rust crates test
@@ -96,7 +102,7 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "make -C rust check"
+      - run: $NIX_RUN make -C rust check
 
   storage_test:
     name: Storage test
@@ -109,8 +115,8 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: unset PYTEST_TIMEOUT
-      - run: nix-shell --run "uv run make -C storage/tests build"
-      - run: nix-shell --run "uv run make -C storage/tests tests_all"
+      - run: $UV_RUN make -C storage/tests build
+      - run: $UV_RUN make -C storage/tests tests_all
 
   docs_build:
     name: Docs build

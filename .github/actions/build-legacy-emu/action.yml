@@ -13,7 +13,7 @@ runs:
   steps:
     - uses: ./.github/actions/environment
 
-    - run: nix-shell --run "uv run legacy/script/cibuild"
+    - run: $UV_RUN legacy/script/cibuild
       shell: sh
 
     - id: prepare_binary
