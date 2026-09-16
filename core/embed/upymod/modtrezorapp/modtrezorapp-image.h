@@ -254,21 +254,21 @@ static mp_obj_t mod_trezorapp_AppImage_ring(mp_obj_t self) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_ring_obj,
                                  mod_trezorapp_AppImage_ring);
 
-/// def header_hash(self) -> bytes:
+/// def fingerprint(self) -> bytes:
 ///     """
 ///     Return the hash of the application image header.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_header_hash(mp_obj_t self) {
+static mp_obj_t mod_trezorapp_AppImage_fingerprint(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
   app_image_get_info_or_raise(o->handle, &info);
 
-  return mp_obj_new_bytes((const byte *)&info.header_hash,
-                          sizeof(info.header_hash));
+  return mp_obj_new_bytes((const byte *)&info.fingerprint,
+                          sizeof(info.fingerprint));
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_header_hash_obj,
-                                 mod_trezorapp_AppImage_header_hash);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_fingerprint_obj,
+                                 mod_trezorapp_AppImage_fingerprint);
 
 /// def write_chunk(self, data: AnyBytes, hash: AnyBytes) -> None:
 ///     """
@@ -491,8 +491,8 @@ static const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_vendor),
      MP_ROM_PTR(&mod_trezorapp_AppImage_vendor_obj)},
     {MP_ROM_QSTR(MP_QSTR_ring), MP_ROM_PTR(&mod_trezorapp_AppImage_ring_obj)},
-    {MP_ROM_QSTR(MP_QSTR_header_hash),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_header_hash_obj)},
+    {MP_ROM_QSTR(MP_QSTR_fingerprint),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_fingerprint_obj)},
     {MP_ROM_QSTR(MP_QSTR_write_chunk),
      MP_ROM_PTR(&mod_trezorapp_AppImage_write_chunk_obj)},
     {MP_ROM_QSTR(MP_QSTR_delete),
