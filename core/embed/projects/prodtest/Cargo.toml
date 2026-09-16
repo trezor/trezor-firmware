@@ -66,6 +66,9 @@ display_rgba8888 = ["trezor_lib/display_rgba8888", "trezor_lib/ui_color_32bit"]
 backlight = ["io/backlight", "trezor_lib/backlight"]
 backup_ram = ["sec/backup_ram"]
 ble = ["io/ble", "trezor_lib/ble", "nrf", "nrf_auth"]
+# Board declares `[ble_console]`: the CLI runs on the BLE console service
+# instead of USB VCP (the only option on USB-less boards).
+ble_console = ["io/ble_console"]
 boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
 button = ["io/button", "trezor_lib/button"]
 consumption_mask = ["sec/consumption_mask"]

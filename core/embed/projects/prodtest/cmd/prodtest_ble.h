@@ -24,3 +24,29 @@
 #include <rtl/cli.h>
 
 bool prodtest_ble_erase_bonds(cli_t* cli);
+
+#ifdef USE_BLE_CONSOLE
+/**
+ * Brings up the BLE console at boot.
+ *
+ * Initializes the console interface, erases all bonds (a unit arriving at any
+ * station starts with none, so a full bond table can never lock the host out),
+ * forces a static address, and advertises in pairing mode under a per-unit
+ * name derived from the CPU id. Pairing requests are then accepted
+ * automatically by the periodic BLE timer.
+ *
+ * @return false if any step failed; the CLI keeps running on whatever other
+ * console is compiled in.
+ */
+bool prodtest_ble_console_start(void);
+
+/**
+ * Keeps the BLE console reachable; call from the main loop on every iteration.
+ *
+ * Whenever the unit is idle (no connection, not advertising for pairing) it
+ * re-enters pairing mode under the boot-time name, because the host forgets
+ * its bond every session and the driver alone would fall back to whitelist
+ * advertising after a disconnect. Rate-limited; cheap to call often.
+ */
+void prodtest_ble_console_tick(void);
+#endif

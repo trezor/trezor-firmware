@@ -5,6 +5,7 @@ uses = [
     "backlight",
     "backup_ram",
     "ble",
+    "ble_console",
     "boot_ucb",
     "button",
     "consumption_mask",
