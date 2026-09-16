@@ -145,6 +145,7 @@ SRCS  += elligator2.c
 SRCS  += consteq.c
 SRCS  += fault_handler_noop.c
 SRCS  += mlkem.c
+SRCS  += xwing.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o
