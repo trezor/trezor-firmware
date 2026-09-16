@@ -116,6 +116,8 @@ pub enum ConsoleType {
     Vcp,
     Swo,
     SystemView,
+    /// BLE console service (boards with BLE; not the emulator)
+    Ble,
 }
 
 #[derive(Parser, Debug)]

@@ -49,6 +49,11 @@
 #include <io/ble.h>
 #endif
 
+#ifdef USE_BLE_CONSOLE
+#include <io/ble_console.h>
+#include <sys/dbg_console.h>
+#endif
+
 #ifdef USE_NFC
 #include <io/nfc.h>
 #endif
@@ -206,6 +211,14 @@ void drivers_init() {
 
 #ifdef USE_BLE
   ble_init();
+#endif
+#ifdef USE_BLE_CONSOLE
+  // Debug console over the BLE console service (dbg-console=ble). Logs
+  // buffered since boot start flowing once a bonded host subscribes. The
+  // banner guarantees the host sees a line even on an otherwise quiet device.
+  bool ble_console_ok = ble_console_init();
+  dbg_printf("BLE debug console %s\n",
+             ble_console_ok ? "ready" : "unavailable");
 #endif
 
 #ifdef USE_NFC

@@ -61,8 +61,8 @@ option at all (and no preset sets it), it resolves to `false`:
 ```
 
 A few options take a value from a fixed set instead. `--dbg-console` is one of
-`none`, `vcp`, `swo`, `system-view`, and you must always supply the value — it
-cannot be used bare:
+`none`, `vcp`, `swo`, `system-view`, `ble`, and you must always supply the value
+— it cannot be used bare:
 
 ```text
 --dbg-console vcp     # ok
@@ -75,7 +75,7 @@ cannot be used bare:
 - `--frozen` — embed frozen MicroPython modules.
 - `--pyopt` — optimize MicroPython bytecode (on by default).
 - `--debug-link` — enable debug link (on by default when `pyopt` is off).
-- `--dbg-console <none|vcp|swo|system-view>` — debug console backend.
+- `--dbg-console <none|vcp|swo|system-view|ble>` — debug console backend (see `docs/core/misc/logging.md`).
 - `--disable-animation` — disable UI animations.
 - `--bootloader-devel` — use development bootloader.
 - `--force-bootloader-upgrade` — force bootloader upgrade on next boot.
