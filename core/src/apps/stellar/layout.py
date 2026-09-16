@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from trezor.messages import (
         PaymentRequest,
         StellarAsset,
+        StellarCreateContractArgsV2,
         StellarInt128Parts,
         StellarInt256Parts,
         StellarInvokeContractArgs,
@@ -271,11 +272,20 @@ async def _confirm_invoke_contract_args(
         args.function_name,
         description=TR.words__function if authorization_title else None,
     )
-    if not args.args:
+    await _confirm_args(args.args, br_name_prefix, authorization_title)
+
+
+async def _confirm_args(
+    args: list[StellarSCVal],
+    br_name_prefix: str,
+    authorization_title: str | None,
+) -> None:
+    """Confirm the arguments of a call, if any, one formatted value each."""
+    if not args:
         return
     props = [
-        (f"{i + 1} / {len(args.args)}", _format_sc_val(arg), True)
-        for i, arg in enumerate(args.args)
+        (f"{i + 1} / {len(args)}", _format_sc_val(arg), True)
+        for i, arg in enumerate(args)
     ]
     await layouts.confirm_properties(
         f"{br_name_prefix}_args",
@@ -514,6 +524,60 @@ async def _confirm_sep41_approve(
     )
 
 
+async def confirm_create_contract(
+    args: StellarCreateContractArgsV2,
+    network_id: AnyBytes,
+    authorization_title: str | None = None,
+) -> None:
+    """Confirm the creation of a contract, i.e. a deployment.
+
+    The new contract is identified by its address, which is derived from the
+    contract ID preimage (CAP-46-02) and so commits to the deployer and salt.
+    Neither is shown on its own: in Soroban the deployer gains no rights over
+    the contract, and it has to authorize the creation anyway. Then the Wasm
+    the contract runs and the arguments of its constructor are confirmed.
+
+    `authorization_title` is used like in `confirm_invoke_contract`.
+    """
+    from trezor.enums import (
+        StellarContractExecutableType,
+        StellarContractIDPreimageType,
+    )
+
+    from .helpers import contract_address_from_address
+
+    preimage = args.contract_id_preimage
+    executable = args.executable
+    if preimage.type != StellarContractIDPreimageType.CONTRACT_ID_PREIMAGE_FROM_ADDRESS:
+        raise ProcessError("Stellar: unsupported contract ID preimage type")
+    if executable.type != StellarContractExecutableType.CONTRACT_EXECUTABLE_WASM:
+        raise ProcessError("Stellar: unsupported contract executable type")
+    if preimage.from_address is None:
+        raise DataError("Stellar: missing from_address")
+    if executable.wasm_hash is None:
+        raise DataError("Stellar: missing wasm_hash")
+
+    br_name_prefix = "op_create" if authorization_title is None else "op_auth"
+    title = authorization_title or TR.stellar__deploy_contract
+
+    await layouts.confirm_address(
+        title,
+        contract_address_from_address(
+            network_id, preimage.from_address.address, preimage.from_address.salt
+        ),
+        description=TR.stellar__deploy_contract if authorization_title else None,
+        br_name=f"{br_name_prefix}_contract_address",
+    )
+    await layouts.confirm_value(
+        title,
+        executable.wasm_hash.hex(),
+        TR.stellar__wasm_hash,
+        f"{br_name_prefix}_wasm_hash",
+        verb=TR.buttons__continue,
+    )
+    await _confirm_args(args.constructor_args, br_name_prefix, authorization_title)
+
+
 async def confirm_authorized_invocation(
     invocation: StellarSorobanAuthorizedInvocation,
     network_id: AnyBytes,
@@ -547,27 +611,39 @@ async def confirm_invocation(
     """
     from trezor.enums import StellarSorobanAuthorizedFunctionType
 
-    func = invocation.function
-    if (
-        func.type
-        != StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN
-    ):
-        raise ProcessError("Stellar: unsupported authorized function type")
-    if func.contract_fn is None:
-        raise DataError("Stellar: missing contract_fn")
-
     if position:
         authorization_title = f"{TR.words__authorization} {position}"
     else:
         authorization_title = TR.words__authorization
 
-    if not is_root:
-        await confirm_invoke_contract(
-            func.contract_fn,
-            network_id,
-            authorizing_address,
-            authorization_title=authorization_title,
-        )
+    func = invocation.function
+    if (
+        func.type
+        == StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN
+    ):
+        if func.contract_fn is None:
+            raise DataError("Stellar: missing contract_fn")
+        if not is_root:
+            await confirm_invoke_contract(
+                func.contract_fn,
+                network_id,
+                authorizing_address,
+                authorization_title=authorization_title,
+            )
+    elif (
+        func.type
+        == StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN
+    ):
+        if func.create_contract_v2_host_fn is None:
+            raise DataError("Stellar: missing create_contract_v2_host_fn")
+        if not is_root:
+            await confirm_create_contract(
+                func.create_contract_v2_host_fn,
+                network_id,
+                authorization_title=authorization_title,
+            )
+    else:
+        raise ProcessError("Stellar: unsupported authorized function type")
 
     for i, sub in enumerate(invocation.sub_invocations):
         await confirm_invocation(

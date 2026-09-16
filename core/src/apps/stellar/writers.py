@@ -12,13 +12,16 @@ write_uint32 = writers.write_uint32_be
 write_uint64 = writers.write_uint64_be
 
 if TYPE_CHECKING:
-    from buffer_types import StrOrBytes
+    from buffer_types import AnyBytes, StrOrBytes
     from collections.abc import Callable
     from typing import TypeVar
 
     from trezor.enums import StellarAssetType
     from trezor.messages import (
         StellarAsset,
+        StellarContractExecutable,
+        StellarContractIDPreimage,
+        StellarCreateContractArgsV2,
         StellarInt128Parts,
         StellarInt256Parts,
         StellarInvokeContractArgs,
@@ -136,6 +139,68 @@ def write_invoke_contract_args(w: Writer, msg: StellarInvokeContractArgs) -> Non
     write_sc_address(w, msg.contract_address)
     _write_sc_symbol(w, msg.function_name)
     write_vec(w, msg.args, write_sc_val)
+
+
+def write_create_contract_args_v2(w: Writer, msg: StellarCreateContractArgsV2) -> None:
+    write_contract_id_preimage(w, msg.contract_id_preimage)
+    write_contract_executable(w, msg.executable)
+    write_vec(w, msg.constructor_args, write_sc_val)
+
+
+def write_hash_id_preimage_header(
+    w: Writer, envelope_type: int, network_id: AnyBytes
+) -> None:
+    """Write what every HashIDPreimage variant starts with: its envelope type
+    and the ID of the network it is bound to."""
+    write_uint32(w, envelope_type)
+    write_bytes_fixed(w, network_id, 32)
+
+
+def write_contract_id_preimage(w: Writer, msg: StellarContractIDPreimage) -> None:
+    """Write a ContractIDPreimage, of which only the address variant is supported."""
+    from trezor.enums import StellarContractIDPreimageType
+
+    if msg.type != StellarContractIDPreimageType.CONTRACT_ID_PREIMAGE_FROM_ADDRESS:
+        raise ProcessError("Stellar: unsupported contract ID preimage type")
+    if msg.from_address is None:
+        raise DataError("Stellar: missing from_address")
+    write_contract_id_preimage_from_address(
+        w, msg.from_address.address, msg.from_address.salt
+    )
+
+
+def write_contract_id_preimage_from_address(
+    w: Writer, address: str, salt: AnyBytes
+) -> None:
+    """Write the CONTRACT_ID_PREIMAGE_FROM_ADDRESS variant of ContractIDPreimage."""
+    if len(salt) != 32:
+        raise DataError("Stellar: invalid salt length")
+    write_uint32(w, 0)  # CONTRACT_ID_PREIMAGE_FROM_ADDRESS
+    write_sc_address(w, address)
+    write_bytes_fixed(w, salt, 32)
+
+
+def write_contract_id_preimage_from_asset(w: Writer, asset: StellarAsset) -> None:
+    """Write the CONTRACT_ID_PREIMAGE_FROM_ASSET variant of ContractIDPreimage.
+
+    Contracts are not created from it on the device; it only serves to derive
+    the address of an asset's Stellar Asset Contract.
+    """
+    write_uint32(w, 1)  # CONTRACT_ID_PREIMAGE_FROM_ASSET
+    write_asset(w, asset)
+
+
+def write_contract_executable(w: Writer, msg: StellarContractExecutable) -> None:
+    from trezor.enums import StellarContractExecutableType
+
+    if msg.type != StellarContractExecutableType.CONTRACT_EXECUTABLE_WASM:
+        raise ProcessError("Stellar: unsupported contract executable type")
+    if msg.wasm_hash is None:
+        raise DataError("Stellar: missing wasm_hash")
+    if len(msg.wasm_hash) != 32:
+        raise DataError("Stellar: invalid wasm_hash length")
+    write_uint32(w, msg.type)
+    write_bytes_fixed(w, msg.wasm_hash, 32)
 
 
 def write_sc_address(w: Writer, addr: str) -> None:
@@ -312,5 +377,12 @@ def _write_soroban_authorized_function(
         if msg.contract_fn is None:
             raise DataError("Stellar: missing contract_fn")
         write_invoke_contract_args(w, msg.contract_fn)
+    elif (
+        msg.type
+        == StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN
+    ):
+        if msg.create_contract_v2_host_fn is None:
+            raise DataError("Stellar: missing create_contract_v2_host_fn")
+        write_create_contract_args_v2(w, msg.create_contract_v2_host_fn)
     else:
         raise ProcessError("Stellar: unsupported authorized function type")

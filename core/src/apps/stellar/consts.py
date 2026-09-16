@@ -79,6 +79,10 @@ FLAG_AUTH_REVOCABLE = const(2)
 FLAG_AUTH_IMMUTABLE = const(4)
 FLAGS_MAX_SIZE = const(7)
 
+# The HashIDPreimage variant contract IDs are derived from (CAP-46-02)
+# https://github.com/stellar/stellar-xdr/blob/v28.0/Stellar-ledger-entries.x#L666
+ENVELOPE_TYPE_CONTRACT_ID = const(8)
+
 # SCSymbol is a string with a maximum length of 32
 # https://github.com/stellar/stellar-xdr/blob/v26.0/Stellar-contract.x#L211
 SCSYMBOL_MAX_SIZE = const(32)
