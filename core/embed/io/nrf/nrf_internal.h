@@ -37,6 +37,7 @@ typedef enum {
   MGMT_CMD_SUSPEND = 0x04,
   MGMT_CMD_RESUME = 0x05,
   MGMT_CMD_AUTH_CHALLENGE = 0x06,
+  MGMT_CMD_CONSOLE_ENABLE = 0x07,  // no payload; request the BLE console
 } management_cmd_t;
 
 typedef enum {
