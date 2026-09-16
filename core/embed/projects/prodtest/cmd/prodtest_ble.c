@@ -30,6 +30,7 @@
 #include <sys/systick.h>
 #include <sys/systimer.h>
 
+#include "prodtest_ble.h"
 #include "prodtest_error_codes.h"
 
 // When set, the BLE monitoring loop (ble-monitor) is the sole consumer of BLE
@@ -56,6 +57,22 @@ void ble_timer_cb(void* context) {
   }
 }
 
+// Starts the periodic timer that drains BLE events and auto-accepts pairing.
+// Idempotent.
+static bool ble_timer_start(void) {
+  static systimer_t* timer = NULL;
+
+  if (timer == NULL) {
+    timer = systimer_create(ble_timer_cb, NULL);
+    if (timer == NULL) {
+      return false;
+    }
+    systimer_set_periodic(timer, 10);
+  }
+
+  return true;
+}
+
 static bool ensure_ble_init(cli_t* cli) {
   cli_trace(cli, "Initializing the BLE...");
   if (!ble_init()) {
@@ -63,15 +80,9 @@ static bool ensure_ble_init(cli_t* cli) {
     return false;
   }
 
-  static systimer_t* timer = NULL;
-
-  if (timer == NULL) {
-    timer = systimer_create(ble_timer_cb, NULL);
-    if (timer == NULL) {
-      cli_error(cli, PRODTEST_ERR_BLE_TIMER_CREATE, "Cannot create timer.");
-      return false;
-    }
-    systimer_set_periodic(timer, 10);
+  if (!ble_timer_start()) {
+    cli_error(cli, PRODTEST_ERR_BLE_TIMER_CREATE, "Cannot create timer.");
+    return false;
   }
 
   return true;
