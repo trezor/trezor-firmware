@@ -19,3 +19,6 @@ panel = "io/touch_panel_lx154a2422cpt23"
 [nrf]
 
 [nrf_auth]
+
+# No USB on this model: the prodtest CLI runs on the BLE console service.
+[ble_console]
