@@ -56,6 +56,13 @@ current directory for `*-signed.bin` pairs.
 Code generation tool for fonts, the loader graphic (deprecated) and cryptographic keys
 (also deprecated).
 
+### `console.py`
+
+Terminal for a device's console: the prodtest CLI, or the firmware's debug log when
+it is built with `--dbg-console ble`. Reaches the device over BLE, a USB VCP serial
+port or the prodtest emulator's UDP; `--serve` exposes the console as a
+pseudo-terminal for other tools. Standalone (needs only `bleak`).
+
 ### `dialog-designer`
 
 Deprecated tool to visually preview multi-line dialogs in the old Trezor T UI.

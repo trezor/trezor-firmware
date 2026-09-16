@@ -14,6 +14,32 @@ Pressing the ENTER key twice switches the interface to interactive mode, enablin
 
 To exit from interactive mode type `.+ENTER`.
 
+### Console transport
+
+The CLI runs over USB VCP unless the board declares `[ble_console]` in its
+`embed/models/<MODEL>/boards/<board>.toml`, in which case it runs over the BLE
+console service (a GATT service separate from the wire-protocol one, see
+`nordic/trezor/README.md`), the only option on USB-less models. The T3W1 board
+configs carry the entry temporarily for bring-up; the nRF image must be built
+with `CONFIG_TRZ_CONSOLE` for the same board. The emulator always keeps its
+console on the UDP-backed VCP.
+
+With the BLE console, prodtest at boot erases all bonds, forces a static address
+and advertises in pairing mode as `<MODEL> PT <cpuid>`; pairing requests are
+accepted automatically. The host must be bonded (numeric comparison) and
+subscribed to the console TX characteristic. `core/tools/console.py` is a
+standalone terminal for it (needs only `bleak`, plus `pyserial` for `--serial`;
+no trezorlib); the same tool reads the firmware's debug log when the firmware
+is built with `--dbg-console ble` (see `docs/core/misc/logging.md`). Its
+`--serve` mode keeps the connection up, reconnecting across device reboots, and
+exposes the console as a pseudo-terminal at `/tmp/ttyVCP0` for any terminal or
+serial tool, including the prodtest test suite via
+`--prodtest-serial /tmp/ttyVCP0`. The same tool serves the emulator
+(`--udp 21327`), replacing the former socat step. Output is coalesced into
+packets of up to 244 bytes, flushed per line while the link is idle; Ctrl-C
+aborts a running command. Commands that reflash the nRF or erase the active
+bond drop the BLE link they run on.
+
 ### Commands
 These commands begin with the command name and may optionally include parameters separated by spaces.
 Parameters are marked with angle brackets (`<...>`), square brackets (`[<...>]`) indicate optional parameters.
