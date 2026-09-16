@@ -49,7 +49,7 @@ apps                          = { true = ["app_loading"] }
 block-on-vcp                  = { true = ["block_on_vcp"] }
 bootloader-devel              = { true = ["bootloader_devel"] }
 btc-only                      = { false = ["universal_fw"] }
-dbg-console                   = { vcp = ["dbg_console_vcp"], swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
+dbg-console                   = { vcp = ["dbg_console_vcp"], swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"], ble = ["dbg_console_ble"] }
 debug-link                    = { true = ["debuglink"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 n1w1                          = { true = ["nfc"] }  # TODO: move back to `uses` section (after stabilization)

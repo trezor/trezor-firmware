@@ -19,8 +19,22 @@ The following options are supported for the `--dbg-console` argument:
 * vcp - outputs logs to the USB VCP console
 * swo - outputs logs to the SWO interface (requires STLink)
 * systemview - outputs logs using JLink and Segger SystemView
+* ble - outputs logs to the BLE console service, for boards without USB
 
 In the firmware emulator, all these logging backends are replaced with regular stderr output.
+
+### Logs over BLE
+
+The `ble` backend needs a board whose configuration declares `[ble_console]` and an nRF image built with `CONFIG_TRZ_CONSOLE`; `--dbg-console ble` on any other board yields no console at all. The log is sent on a GATT service separate from the wire-protocol one (see `nordic/trezor/README.md`), output only.
+
+Read it with `core/tools/console.py`, a standalone tool that needs only `bleak`. Without arguments it connects to the one device in range that announces the console service; with several around, name it:
+
+```
+core/tools/console.py
+core/tools/console.py --ble "Trezor Safe 7"
+```
+
+The first connection pairs, so "Pair new device" must be open on the device; a bonded host reconnects without it. `--serve` keeps the connection up across device reboots and exposes the log as a pseudo-terminal at `/tmp/ttyVCP0`, so `cat`, `screen` or any serial tool can read it. Run the tool with `--help` for the rest.
 
 ## Runtime filtering
 
@@ -102,3 +116,5 @@ When the logging backend is configured to use USB VCP (`--dbg-console=vcp`), all
 This default behavior can be overridden by setting the `--block-on-vcp` build argument. However, when logging from an interrupt context, writes to USB VCP remain non-blocking regardless of this setting.
 
 When the logging backend is set to `swo` or `systemview`, writes are always blocking, ensuring that messages are never lost.
+
+The `ble` backend never blocks: records go to a 4 KB ring buffer that is drained to the link one packet at a time, and when the host is slow or not connected the oldest bytes are dropped. Buffering starts at boot, so early records are delivered once a host subscribes, as long as they still fit.

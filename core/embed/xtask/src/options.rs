@@ -319,6 +319,7 @@ impl MapValue for ConsoleType {
             ConsoleType::Vcp => &map.vcp,
             ConsoleType::Swo => &map.swo,
             ConsoleType::SystemView => &map.system_view,
+            ConsoleType::Ble => &map.ble,
         }
     }
 }
@@ -334,6 +335,8 @@ pub struct ConsoleMap {
     pub swo: Vec<String>,
     #[serde(default)]
     pub system_view: Vec<String>,
+    #[serde(default)]
+    pub ble: Vec<String>,
 }
 
 /// A feature selected from the `[build-options]` table, together with the

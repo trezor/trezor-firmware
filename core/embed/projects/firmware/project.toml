@@ -62,7 +62,7 @@ benchmark                     = { true = ["benchmark"] }
 block-on-vcp                  = { true = ["block_on_vcp"] }
 bootloader-devel              = { true = ["bootloader_devel"] }
 btc-only                      = { false = ["universal_fw"] }
-dbg-console                   = { vcp = ["dbg_console"], swo = ["dbg_console"], system-view = ["dbg_console"] }
+dbg-console                   = { vcp = ["dbg_console"], swo = ["dbg_console"], system-view = ["dbg_console"], ble = ["dbg_console"] }
 debug-link                    = { true = ["debuglink", "ui_debug"] }
 disable-animation             = { true = ["disable_animation"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
