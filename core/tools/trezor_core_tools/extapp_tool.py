@@ -65,14 +65,14 @@ def print_apps(*app_paths: Path) -> None:
     for path, data in _get_files_iterator(*app_paths):
         size = f"{len(data):,}".replace(",", " ")
         print(
-            f"{str(path):<{name_width}}{size:>10} bytes {_get_app_digest(data)[:8].hex()}"
+            f"{str(path):<{name_width}}{size:>10} bytes {_get_app_fingerprint(data)[:8].hex()}"
         )
     print("-" * name_width + "\n")
 
 
-def _get_app_digest(raw_app: bytes) -> bytes:
+def _get_app_fingerprint(raw_app: bytes) -> bytes:
     app = AppImage.parse(raw_app)
-    return app.header_hash()
+    return app.fingerprint()
 
 
 @click.group()
@@ -247,7 +247,7 @@ def _app_filename(header: AppHeader) -> str:
 def _read_app_info(path: Path) -> AppInfo:
     """Parse the app at `path`, leaving the file where it is."""
     app = AppImage.parse(path.read_bytes())
-    return AppInfo(path, app.header_hash(), app.header.app_ring)
+    return AppInfo(path, app.fingerprint(), app.header.app_ring)
 
 
 # Rings sharing a single RootPacket, as (ring_mask, rings, base name).
@@ -320,7 +320,7 @@ def _get_app_info_list(
     for path, data in _get_files_iterator(*app_paths):
         app = AppImage.parse(data)
         app_ring = app.header.app_ring
-        digest = app.header_hash()
+        digest = app.fingerprint()
         # Copy the app into `out_dir` under its canonical name, ignoring the
         # original filename and suffix.
         out_path = out_dir / _app_filename(app.header)
@@ -553,7 +553,7 @@ def verify_app(app: Path, proof: Path, rootpacket: Path) -> None:
     checks that the reconstructed root matches the RootPacket root for that ring.
     """
     app_image = AppImage.parse(app.read_bytes())
-    digest = app_image.header_hash()
+    digest = app_image.fingerprint()
     app_ring = app_image.header.app_ring
 
     proof_bytes = proof.read_bytes()
