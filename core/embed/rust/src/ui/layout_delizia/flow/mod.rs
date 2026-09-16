@@ -21,8 +21,6 @@ pub use confirm_action::{
     new_confirm_action, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
     ConfirmActionOptions, ConfirmActionStrings,
 };
-#[cfg(feature = "universal_fw")]
-pub use confirm_fido::new_confirm_fido;
 pub use confirm_firmware_update::new_confirm_firmware_update;
 pub use confirm_homescreen::new_confirm_homescreen;
 pub use confirm_reset::new_confirm_reset;

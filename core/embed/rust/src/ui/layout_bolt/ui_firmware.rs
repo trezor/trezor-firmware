@@ -1,10 +1,12 @@
 use core::cmp::Ordering;
 
+#[cfg(feature = "universal_fw")]
+use super::component::FidoConfirm;
 use super::component::{
     check_homescreen_format, AddressDetails, Bip39Input, Button, ButtonMsg, ButtonPage,
-    ButtonStyleSheet, CancelConfirmMsg, CoinJoinProgress, Dialog, FidoConfirm, Frame, Homescreen,
-    IconDialog, Lockscreen, MnemonicKeyboard, NumberInputDialog, PassphraseKeyboard, PinKeyboard,
-    Progress, SelectMenu, SelectWordCount, SelectWordCountLayout, SetBrightnessDialog, ShareWords,
+    ButtonStyleSheet, CancelConfirmMsg, CoinJoinProgress, Dialog, Frame, Homescreen, IconDialog,
+    Lockscreen, MnemonicKeyboard, NumberInputDialog, PassphraseKeyboard, PinKeyboard, Progress,
+    SelectMenu, SelectWordCount, SelectWordCountLayout, SetBrightnessDialog, ShareWords,
     SimplePage, Slip39Input,
 };
 use super::{fonts, theme, UIBolt};
@@ -223,6 +225,7 @@ impl FirmwareUI for UIBolt {
         Ok(layout)
     }
 
+    #[cfg(feature = "universal_fw")]
     fn confirm_fido(
         title: TString<'static>,
         app_name: TString<'static>,

@@ -216,6 +216,7 @@ pub trait FirmwareUI {
         verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[cfg(feature = "universal_fw")]
     fn confirm_fido(
         title: TString<'static>,
         app_name: TString<'static>,
