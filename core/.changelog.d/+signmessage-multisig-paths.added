@@ -1,0 +1,1 @@
+Allow signing messages with keys from any supported path pattern, including multisig schemes (BIP-45, BIP-48, Casa, Unchained) and account nodes whose xpub can already be exported.

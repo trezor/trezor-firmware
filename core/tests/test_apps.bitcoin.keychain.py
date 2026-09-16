@@ -283,12 +283,25 @@ class TestSignMessageBip48(TestCaseWithContext):
         self.assertRaises(wire.DataError, self._derive, msg)
 
     def test_fork_coins_get_no_bitcoin_path_alias(self):
-        """The Bitcoin-namespace alias of a fork must not carry the grant."""
+        """The Bitcoin-namespace alias of a fork must not carry the grant.
+
+        Bcash is not a segwit coin, so SPENDADDRESS is the only script type
+        under which it has a BIP-48 pattern at all.
+        """
         from trezor.enums import InputScriptType
 
+        # Bcash's own coin type is granted...
         msg = self._sign_message(
-            [H_(48), H_(0), H_(0), H_(2)],
-            InputScriptType.SPENDWITNESS,
+            [H_(48), H_(145), H_(0), H_(0)],
+            InputScriptType.SPENDADDRESS,
+            coin_name="Bcash",
+        )
+        self.assertTrue(self._derive(msg))
+
+        # ...the Bitcoin-namespace alias of it is not.
+        msg = self._sign_message(
+            [H_(48), H_(0), H_(0), H_(0)],
+            InputScriptType.SPENDADDRESS,
             coin_name="Bcash",
         )
         self.assertRaises(wire.DataError, self._derive, msg)

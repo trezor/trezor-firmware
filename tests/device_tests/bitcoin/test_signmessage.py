@@ -550,8 +550,7 @@ VECTORS_BIP48_MATRIX = (  # path, script_type, expected
 LEGACY_LEVEL_EXPECTED = SIGNS
 
 
-@pytest.mark.parametrize("path, script_type, expected", VECTORS_BIP48_MATRIX)
-def test_signmessage_bip48_matrix(
+def _assert_sign_message(
     session: Session,
     path: str,
     script_type: messages.InputScriptType,
@@ -597,6 +596,46 @@ def test_signmessage_bip48_matrix(
         )
 
     assert sig.signature
+
+
+@pytest.mark.parametrize("path, script_type, expected", VECTORS_BIP48_MATRIX)
+def test_signmessage_bip48_matrix(
+    session: Session,
+    path: str,
+    script_type: messages.InputScriptType,
+    expected: str,
+):
+    _assert_sign_message(session, path, script_type, expected)
+
+
+# These follow from the ordinary path patterns, nothing BIP-48 specific.
+
+VECTORS_SIGNMESSAGE_LENIENCY = (  # path, script_type, expected
+    # The BIP-45 cosigner node: PATTERN_BIP45 is unhardened below m/45'
+    pytest.param("m/45h", S.SPENDADDRESS, SIGNS, id="bip45_cosigner_node"),
+    # ...and a leaf under it
+    pytest.param("m/45h/0/0/0", S.SPENDADDRESS, SIGNS, id="bip45_leaf"),
+    # Unchained, whose account level is hardened
+    pytest.param("m/45h/0h/0h/1000000/0/0", S.SPENDADDRESS, SIGNS, id="unchained_leaf"),
+    # An ordinary account node, where any wallet shares its xpub
+    pytest.param("m/44h/0h/0h", S.SPENDADDRESS, SIGNS, id="bip44_account"),
+    pytest.param("m/84h/0h/0h", S.SPENDWITNESS, SIGNS, id="bip84_account"),
+    # The script type still has to match the purpose
+    pytest.param("m/44h/0h/0h", S.SPENDWITNESS, FORBIDDEN, id="bip44_account-segwit"),
+    # A pattern with no hardened component has no export point, so the root
+    # stays withheld
+    pytest.param("m", S.SPENDADDRESS, FORBIDDEN, id="root"),
+)
+
+
+@pytest.mark.parametrize("path, script_type, expected", VECTORS_SIGNMESSAGE_LENIENCY)
+def test_signmessage_leniency(
+    session: Session,
+    path: str,
+    script_type: messages.InputScriptType,
+    expected: str,
+):
+    _assert_sign_message(session, path, script_type, expected)
 
 
 def test_signmessage_bip48_legacy_level_signs_as_p2pkh(session: Session):
