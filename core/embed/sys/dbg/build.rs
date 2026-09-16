@@ -30,6 +30,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             lib.add_define("USE_DBG_CONSOLE_SYSTEM_VIEW", None);
         }
 
+        if cfg!(feature = "dbg_console_ble") {
+            lib.add_define("USE_DBG_CONSOLE_BLE", None);
+        }
+
         if cfg!(feature = "system_view") {
             def_system_view(lib);
         }
