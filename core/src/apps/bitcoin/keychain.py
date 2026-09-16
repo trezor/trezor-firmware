@@ -93,25 +93,15 @@ SLIP44_BITCOIN = const(0)
 SLIP44_TESTNET = const(1)
 
 
-def validate_path_against_script_type(
+def _get_patterns_for_script_type(
     coin: coininfo.CoinInfo,
-    msg: MsgWithAddressScriptType | None = None,
-    address_n: Bip32Path | None = None,
-    script_type: InputScriptType | None = None,
-    multisig: bool = False,
-) -> bool:
-    patterns = []
+    script_type: InputScriptType,
+    multisig: bool,
+    include_fw_signing: bool = False,
+) -> list[str]:
+    patterns: list[str] = []
     append = patterns.append  # local_cache_attribute
     slip44 = coin.slip44  # local_cache_attribute
-
-    if msg is not None:
-        assert address_n is None and script_type is None
-        address_n = msg.address_n
-        script_type = msg.script_type or InputScriptType.SPENDADDRESS
-        multisig = bool(getattr(msg, "multisig", False))
-
-    else:
-        assert address_n is not None and script_type is not None
 
     if script_type == InputScriptType.SPENDADDRESS and not multisig:
         append(PATTERN_BIP44)
@@ -119,7 +109,7 @@ def validate_path_against_script_type(
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
 
-        if SignMessage.is_type_of(msg):
+        if include_fw_signing:
             append(PATTERN_SLIP26_T1_FW)
     elif (
         script_type in (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG)
@@ -163,9 +153,69 @@ def validate_path_against_script_type(
         append(PATTERN_BIP86)
         append(PATTERN_SLIP25_TAPROOT)
 
+    return patterns
+
+
+def validate_path_against_script_type(
+    coin: coininfo.CoinInfo,
+    msg: MsgWithAddressScriptType | None = None,
+    address_n: Bip32Path | None = None,
+    script_type: InputScriptType | None = None,
+    multisig: bool = False,
+) -> bool:
+    if msg is not None:
+        assert address_n is None and script_type is None
+        address_n = msg.address_n
+        script_type = msg.script_type or InputScriptType.SPENDADDRESS
+        multisig = bool(getattr(msg, "multisig", False))
+
+    else:
+        assert address_n is not None and script_type is not None
+
+    patterns = _get_patterns_for_script_type(
+        coin, script_type, multisig, include_fw_signing=SignMessage.is_type_of(msg)
+    )
+
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
     )
+
+
+def validate_xpub_path_against_script_type(
+    coin: coininfo.CoinInfo,
+    address_n: Bip32Path,
+    script_type: InputScriptType,
+) -> bool:
+    """Checks whether the path is a plausible xpub export point.
+
+    A prefix of a pattern ending at its deepest hardened level, or at its
+    account level where that is deeper. Both multisig cases are accepted.
+    """
+    patterns = _get_patterns_for_script_type(coin, script_type, False)
+    patterns += _get_patterns_for_script_type(coin, script_type, True)
+
+    for pattern in patterns:
+        components = pattern.split("/")[1:]
+
+        deepest_hardened = 0
+        account = 0
+        for i, component in enumerate(components):
+            if component.endswith("'"):
+                deepest_hardened = i + 1
+            if component in ("account", "account'"):
+                account = i + 1
+
+        if deepest_hardened == 0:
+            continue
+
+        if len(address_n) not in (deepest_hardened, max(deepest_hardened, account)):
+            continue
+
+        prefix = "m/" + "/".join(components[: len(address_n)])
+        if PathSchema.parse(prefix, coin.slip44).match(address_n):
+            return True
+
+    return False
 
 
 def _get_schemas_for_coin(

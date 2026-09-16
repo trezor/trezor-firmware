@@ -6,7 +6,11 @@ from trezor import wire
 from trezor.crypto import bip39
 from trezor.wire import context
 
-from apps.bitcoin.keychain import _get_coin_by_name, _get_keychain_for_coin
+from apps.bitcoin.keychain import (
+    _get_coin_by_name,
+    _get_keychain_for_coin,
+    validate_xpub_path_against_script_type,
+)
 
 if not utils.USE_THP:
     from storage import cache_codec
@@ -185,6 +189,36 @@ class TestAltcoinKeychains(TestCaseWithContext):
 
         for addr in invalid_addresses:
             self.assertRaises(wire.DataError, keychain.derive, addr)
+
+
+class TestValidateXpubPath(unittest.TestCase):
+    def test_export_points(self):
+        from trezor.enums import InputScriptType
+
+        coin = _get_coin_by_name("Bitcoin")
+
+        def is_export_point(address_n, script_type):
+            return validate_xpub_path_against_script_type(coin, address_n, script_type)
+
+        # Casa: PATTERN_CASA is unhardened below m/45', so the purpose level
+        # is the deepest hardened prefix and an export point of its own.
+        self.assertTrue(is_export_point([H_(45)], InputScriptType.SPENDP2SHWITNESS))
+        # BIP-48: the account node, where cosigners share the xpub.
+        self.assertTrue(
+            is_export_point([H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDWITNESS)
+        )
+        self.assertFalse(
+            is_export_point([H_(48), H_(0), H_(0)], InputScriptType.SPENDWITNESS)
+        )
+        self.assertTrue(
+            is_export_point([H_(84), H_(0), H_(0)], InputScriptType.SPENDWITNESS)
+        )
+        self.assertFalse(
+            is_export_point([H_(84), H_(0), H_(0), 0], InputScriptType.SPENDWITNESS)
+        )
+        # A pattern with no hardened component has no export point, so the
+        # root xpub is never exportable this way.
+        self.assertFalse(is_export_point([], InputScriptType.SPENDADDRESS))
 
 
 if __name__ == "__main__":
