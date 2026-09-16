@@ -155,8 +155,6 @@
                 shellcheck
                 crowdin-cli # for translations, pulls in openjdk
                 openocd-stm # compiled from source
-                nrfutil # compiled from source
-                nrfconnect # compiled from source
                 # CI hardware tests:
                 uhubctl
                 socat
@@ -166,6 +164,8 @@
               ++ lib.optionals (devTools && !isDarwin) [
                 gdb
                 kdePackages.kcachegrind
+                nrfutil # compiled from source
+                nrfconnect # compiled from source
               ];
 
               LD_LIBRARY_PATH = lib.makeLibraryPath [ libffi libjpeg libusb1 libressl ];
@@ -189,7 +189,7 @@
               UV_PYTHON_PREFERENCE = "only-system";
               UV_PYTHON_DOWNLOADS = "never";
             }
-            // (lib.optionalAttrs fullDeps) {
+            // (lib.optionalAttrs (fullDeps && !isDarwin)) {
               # ~250MiB binary
               TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
             }
