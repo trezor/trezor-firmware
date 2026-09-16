@@ -72,6 +72,7 @@
 #include "nem.h"
 #include "nist256p1.h"
 #include "noise_kk1.h"
+#include "noise_pqikpsk1.h"
 #include "noise_xxpsk3.h"
 #include "pbkdf2.h"
 #include "rand.h"
@@ -12943,6 +12944,544 @@ START_TEST(test_noise_xxpsk3_vectors) {
 }
 END_TEST
 
+static void test_noise_pqikpsk1_handshake(
+    uint32_t seed, noise_pqikpsk1_initiator_t *initiator,
+    noise_pqikpsk1_responder_t *responder) {
+  random_reseed(seed);
+
+  uint8_t psk[NOISE_PQIKPSK1_PSK_SIZE] = "this_is_a_32byte_preshared_key!!";
+  static const uint8_t prologue[] = "pqikpsk1 test prologue";
+
+  uint8_t initiator_private[XWING_PRIVATE_KEY_SIZE] = {0};
+  static uint8_t initiator_public[XWING_PUBLIC_KEY_SIZE] = {0};
+  uint8_t responder_private[XWING_PRIVATE_KEY_SIZE] = {0};
+  static uint8_t responder_public[XWING_PUBLIC_KEY_SIZE] = {0};
+  ck_assert_int_eq(xwing_generate_key_pair(initiator_private, initiator_public),
+                   true);
+  ck_assert_int_eq(xwing_generate_key_pair(responder_private, responder_public),
+                   true);
+
+  ck_assert_int_eq(
+      noise_pqikpsk1_initiator_init(initiator, psk, initiator_private,
+                                    initiator_public, responder_public,
+                                    prologue, sizeof(prologue)),
+      true);
+  ck_assert_int_eq(
+      noise_pqikpsk1_responder_init(responder, psk, responder_private,
+                                    responder_public, prologue,
+                                    sizeof(prologue)),
+      true);
+
+  uint8_t request_payload[] = "request payload";
+  uint8_t response_payload[] = "response payload";
+
+  static uint8_t request[NOISE_PQIKPSK1_REQUEST_OVERHEAD + 64] = {0};
+  size_t request_size = 0;
+  ck_assert_int_eq(
+      noise_pqikpsk1_initiator_create_request(
+          initiator, request_payload, sizeof(request_payload), request,
+          sizeof(request), &request_size),
+      true);
+  ck_assert_uint_eq(request_size,
+                    NOISE_PQIKPSK1_REQUEST_OVERHEAD + sizeof(request_payload));
+
+  static uint8_t initiator_static_public[XWING_PUBLIC_KEY_SIZE] = {0};
+  uint8_t received_payload[64] = {0};
+  size_t received_payload_size = 0;
+  ck_assert_int_eq(
+      noise_pqikpsk1_responder_handle_request(
+          responder, request, request_size, initiator_static_public,
+          received_payload, sizeof(received_payload), &received_payload_size),
+      true);
+  ck_assert_uint_eq(received_payload_size, sizeof(request_payload));
+  ck_assert_mem_eq(received_payload, request_payload, sizeof(request_payload));
+  // The responder learns the initiator's static public key from the request
+  ck_assert_mem_eq(initiator_static_public, initiator_public,
+                   XWING_PUBLIC_KEY_SIZE);
+
+  static uint8_t response[NOISE_PQIKPSK1_RESPONSE_OVERHEAD + 64] = {0};
+  size_t response_size = 0;
+  ck_assert_int_eq(
+      noise_pqikpsk1_responder_create_response(
+          responder, response_payload, sizeof(response_payload), response,
+          sizeof(response), &response_size),
+      true);
+  ck_assert_uint_eq(
+      response_size,
+      NOISE_PQIKPSK1_RESPONSE_OVERHEAD + sizeof(response_payload));
+
+  memzero(received_payload, sizeof(received_payload));
+  ck_assert_int_eq(
+      noise_pqikpsk1_initiator_handle_response(
+          initiator, response, response_size, received_payload,
+          sizeof(received_payload), &received_payload_size),
+      true);
+  ck_assert_uint_eq(received_payload_size, sizeof(response_payload));
+  ck_assert_mem_eq(received_payload, response_payload,
+                   sizeof(response_payload));
+
+  // Both sides must have the same handshake hash
+  ck_assert_mem_eq(initiator->transport_state.handshake_hash,
+                   responder->transport_state.handshake_hash,
+                   NOISE_PQIKPSK1_HASHLEN);
+}
+
+START_TEST(test_noise_pqikpsk1) {
+  static noise_pqikpsk1_initiator_t initiator = {0};
+  static noise_pqikpsk1_responder_t responder = {0};
+  bool ret = false;
+
+  test_noise_pqikpsk1_handshake(2748932008, &initiator, &responder);
+
+  // --- Transport phase: both directions ---
+
+  // Initiator -> Responder
+  uint8_t msg_i2r[] = "hello from initiator";
+  uint8_t ct_i2r[sizeof(msg_i2r) + 16] = {0};
+  size_t ct_i2r_size = 0;
+  ret = noise_pqikpsk1_send_message(&initiator.transport_state, msg_i2r,
+                                    sizeof(msg_i2r), ct_i2r, sizeof(ct_i2r),
+                                    &ct_i2r_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_uint_eq(ct_i2r_size, sizeof(msg_i2r) + 16);
+  ck_assert_int_eq(memcmp(ct_i2r, msg_i2r, sizeof(msg_i2r)) != 0, true);
+
+  uint8_t pt_i2r[64] = {0};
+  size_t pt_i2r_size = 0;
+  ret = noise_pqikpsk1_receive_message(&responder.transport_state, ct_i2r,
+                                       ct_i2r_size, pt_i2r, sizeof(pt_i2r),
+                                       &pt_i2r_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_uint_eq(pt_i2r_size, sizeof(msg_i2r));
+  ck_assert_mem_eq(pt_i2r, msg_i2r, sizeof(msg_i2r));
+
+  // Responder -> Initiator, two messages advance the nonce correctly
+  uint8_t msg_a[] = "first";
+  uint8_t msg_b[] = "second";
+  uint8_t ct_a[sizeof(msg_a) + 16] = {0}, ct_b[sizeof(msg_b) + 16] = {0};
+  size_t ct_a_size = 0, ct_b_size = 0;
+  ret = noise_pqikpsk1_send_message(&responder.transport_state, msg_a,
+                                    sizeof(msg_a), ct_a, sizeof(ct_a),
+                                    &ct_a_size);
+  ck_assert_int_eq(ret, true);
+  ret = noise_pqikpsk1_send_message(&responder.transport_state, msg_b,
+                                    sizeof(msg_b), ct_b, sizeof(ct_b),
+                                    &ct_b_size);
+  ck_assert_int_eq(ret, true);
+
+  uint8_t pt_a[64] = {0}, pt_b[64] = {0};
+  size_t pt_a_size = 0, pt_b_size = 0;
+  ret = noise_pqikpsk1_receive_message(&initiator.transport_state, ct_a,
+                                       ct_a_size, pt_a, sizeof(pt_a),
+                                       &pt_a_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(pt_a, msg_a, sizeof(msg_a));
+  ret = noise_pqikpsk1_receive_message(&initiator.transport_state, ct_b,
+                                       ct_b_size, pt_b, sizeof(pt_b),
+                                       &pt_b_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(pt_b, msg_b, sizeof(msg_b));
+
+  // A tampered transport ciphertext must fail to decrypt
+  uint8_t tampered[sizeof(msg_i2r) + 16] = {0};
+  size_t tampered_size = 0;
+  ret = noise_pqikpsk1_send_message(&initiator.transport_state, msg_i2r,
+                                    sizeof(msg_i2r), tampered,
+                                    sizeof(tampered), &tampered_size);
+  ck_assert_int_eq(ret, true);
+  tampered[0] ^= 0xFF;  // flip a bit
+  uint8_t pt_bad[64] = {0};
+  size_t pt_bad_size = 0;
+  ret = noise_pqikpsk1_receive_message(&responder.transport_state, tampered,
+                                       tampered_size, pt_bad, sizeof(pt_bad),
+                                       &pt_bad_size);
+  ck_assert_int_eq(ret, false);
+
+  // --- Double-init should fail ---
+  // The arguments are irrelevant, an already initialized structure is rejected
+  // before they are looked at
+  uint8_t unused_key[XWING_PUBLIC_KEY_SIZE] = {0};
+  ret = noise_pqikpsk1_initiator_init(&initiator, unused_key, unused_key,
+                                      unused_key, unused_key, NULL, 0);
+  ck_assert_int_eq(ret, false);
+
+  ret = noise_pqikpsk1_responder_init(&responder, unused_key, unused_key,
+                                      unused_key, NULL, 0);
+  ck_assert_int_eq(ret, false);
+
+  // Cleanup
+  noise_pqikpsk1_initiator_deinit(&initiator);
+  noise_pqikpsk1_responder_deinit(&responder);
+
+  // Verify structures are zeroed after deinit
+  static noise_pqikpsk1_initiator_t zeroed_intr = {0};
+  static noise_pqikpsk1_responder_t zeroed_rspn = {0};
+  ck_assert_int_eq(memcmp(&initiator, &zeroed_intr, sizeof(initiator)), 0);
+  ck_assert_int_eq(memcmp(&responder, &zeroed_rspn, sizeof(responder)), 0);
+}
+END_TEST
+
+START_TEST(test_noise_pqikpsk1_failures) {
+  static noise_pqikpsk1_initiator_t initiator = {0};
+  static noise_pqikpsk1_responder_t responder = {0};
+
+  random_reseed(1234567890);
+
+  uint8_t psk[NOISE_PQIKPSK1_PSK_SIZE] = "this_is_a_32byte_preshared_key!!";
+  uint8_t wrong_psk[NOISE_PQIKPSK1_PSK_SIZE] = "this_is_a_wrong_preshared_key!!!";
+
+  uint8_t initiator_private[XWING_PRIVATE_KEY_SIZE] = {0};
+  static uint8_t initiator_public[XWING_PUBLIC_KEY_SIZE] = {0};
+  uint8_t responder_private[XWING_PRIVATE_KEY_SIZE] = {0};
+  static uint8_t responder_public[XWING_PUBLIC_KEY_SIZE] = {0};
+  ck_assert_int_eq(xwing_generate_key_pair(initiator_private, initiator_public),
+                   true);
+  ck_assert_int_eq(xwing_generate_key_pair(responder_private, responder_public),
+                   true);
+
+  static uint8_t request[NOISE_PQIKPSK1_REQUEST_OVERHEAD] = {0};
+  size_t request_size = 0;
+  static uint8_t initiator_static_public[XWING_PUBLIC_KEY_SIZE] = {0};
+  uint8_t dummy[16] = {0};
+
+  ck_assert_int_eq(
+      noise_pqikpsk1_initiator_init(&initiator, psk, initiator_private,
+                                    initiator_public, responder_public, NULL,
+                                    0),
+      true);
+  ck_assert_int_eq(noise_pqikpsk1_initiator_create_request(
+                       &initiator, NULL, 0, request, sizeof(request),
+                       &request_size),
+                   true);
+
+  // A responder with a different psk must reject the request
+  ck_assert_int_eq(
+      noise_pqikpsk1_responder_init(&responder, wrong_psk, responder_private,
+                                    responder_public, NULL, 0),
+      true);
+  ck_assert_int_eq(noise_pqikpsk1_responder_handle_request(
+                       &responder, request, request_size,
+                       initiator_static_public, dummy, sizeof(dummy), NULL),
+                   false);
+  ck_assert_int_eq(responder.initialized, false);
+
+  // A tampered request must be rejected, wherever the flipped bit is
+  const size_t tamper_offsets[] = {
+      0,                                                    // ct_r
+      XWING_CIPHERTEXT_SIZE,                                // pk_e
+      XWING_CIPHERTEXT_SIZE + XWING_PUBLIC_KEY_SIZE,        // enc(pk_i)
+      NOISE_PQIKPSK1_REQUEST_OVERHEAD - 1,                  // payload tag
+  };
+  for (size_t i = 0; i < sizeof(tamper_offsets) / sizeof(*tamper_offsets);
+       i++) {
+    ck_assert_int_eq(
+        noise_pqikpsk1_responder_init(&responder, psk, responder_private,
+                                      responder_public, NULL, 0),
+        true);
+    request[tamper_offsets[i]] ^= 0x01;
+    ck_assert_int_eq(noise_pqikpsk1_responder_handle_request(
+                         &responder, request, request_size,
+                         initiator_static_public, dummy, sizeof(dummy), NULL),
+                     false);
+    ck_assert_int_eq(responder.initialized, false);
+    request[tamper_offsets[i]] ^= 0x01;
+  }
+
+  // A tampered response must be rejected, wherever the flipped bit is.  A
+  // rejected response deinitializes the initiator, so each offset gets a
+  // fresh handshake.
+  const size_t response_tamper_offsets[] = {
+      0,                                     // ct_e
+      XWING_CIPHERTEXT_SIZE,                 // enc(ct_i)
+      NOISE_PQIKPSK1_RESPONSE_OVERHEAD - 1,  // payload tag
+  };
+  static uint8_t response[NOISE_PQIKPSK1_RESPONSE_OVERHEAD] = {0};
+  size_t response_size = 0;
+  for (size_t i = 0;
+       i < sizeof(response_tamper_offsets) / sizeof(*response_tamper_offsets);
+       i++) {
+    noise_pqikpsk1_initiator_deinit(&initiator);
+    ck_assert_int_eq(
+        noise_pqikpsk1_initiator_init(&initiator, psk, initiator_private,
+                                      initiator_public, responder_public, NULL,
+                                      0),
+        true);
+    ck_assert_int_eq(noise_pqikpsk1_initiator_create_request(
+                         &initiator, NULL, 0, request, sizeof(request),
+                         &request_size),
+                     true);
+    ck_assert_int_eq(
+        noise_pqikpsk1_responder_init(&responder, psk, responder_private,
+                                      responder_public, NULL, 0),
+        true);
+    ck_assert_int_eq(noise_pqikpsk1_responder_handle_request(
+                         &responder, request, request_size,
+                         initiator_static_public, dummy, sizeof(dummy), NULL),
+                     true);
+    ck_assert_int_eq(noise_pqikpsk1_responder_create_response(
+                         &responder, NULL, 0, response, sizeof(response),
+                         &response_size),
+                     true);
+
+    response[response_tamper_offsets[i]] ^= 0x01;
+    ck_assert_int_eq(noise_pqikpsk1_initiator_handle_response(
+                         &initiator, response, response_size, dummy,
+                         sizeof(dummy), NULL),
+                     false);
+    ck_assert_int_eq(initiator.initialized, false);
+    noise_pqikpsk1_responder_deinit(&responder);
+  }
+
+  noise_pqikpsk1_initiator_deinit(&initiator);
+  noise_pqikpsk1_responder_deinit(&responder);
+}
+END_TEST
+
+START_TEST(test_noise_pqikpsk1_derand) {
+  static noise_pqikpsk1_initiator_t initiator = {0};
+  static noise_pqikpsk1_responder_t responder = {0};
+
+  // Fixed keys derived from fixed seeds; the private key is the seed itself
+  uint8_t psk[NOISE_PQIKPSK1_PSK_SIZE] = "this_is_a_32byte_preshared_key!!";
+  uint8_t initiator_private[XWING_PRIVATE_KEY_SIZE] = {1};
+  uint8_t responder_private[XWING_PRIVATE_KEY_SIZE] = {2};
+  uint8_t ephemeral_private[XWING_PRIVATE_KEY_SIZE] = {3};
+  uint8_t skem_seed[XWING_ENCAPSULATION_SEED_SIZE] = {4};
+  uint8_t ekem_seed[XWING_ENCAPSULATION_SEED_SIZE] = {5};
+  uint8_t rspn_skem_seed[XWING_ENCAPSULATION_SEED_SIZE] = {6};
+  static uint8_t initiator_public[XWING_PUBLIC_KEY_SIZE] = {0};
+  static uint8_t responder_public[XWING_PUBLIC_KEY_SIZE] = {0};
+  ck_assert_int_eq(
+      xwing_derive_public_key(initiator_private, initiator_public), true);
+  ck_assert_int_eq(
+      xwing_derive_public_key(responder_private, responder_public), true);
+
+  uint8_t payload[] = "derand payload";
+  static uint8_t request1[NOISE_PQIKPSK1_REQUEST_OVERHEAD + 64] = {0};
+  static uint8_t request2[NOISE_PQIKPSK1_REQUEST_OVERHEAD + 64] = {0};
+  size_t request1_size = 0, request2_size = 0;
+
+  // The same inputs and seeds must produce a bit-identical request
+  for (int run = 0; run < 2; run++) {
+    uint8_t *request = (run == 0) ? request1 : request2;
+    size_t *request_size = (run == 0) ? &request1_size : &request2_size;
+    ck_assert_int_eq(
+        noise_pqikpsk1_initiator_init(&initiator, psk, initiator_private,
+                                      initiator_public, responder_public,
+                                      NULL, 0),
+        true);
+    ck_assert_int_eq(
+        noise_pqikpsk1_initiator_create_request_derand(
+            &initiator, skem_seed, ephemeral_private, payload,
+            sizeof(payload), request,
+            NOISE_PQIKPSK1_REQUEST_OVERHEAD + sizeof(payload), request_size),
+        true);
+    noise_pqikpsk1_initiator_deinit(&initiator);
+  }
+  ck_assert_uint_eq(request1_size, request2_size);
+  ck_assert_mem_eq(request1, request2, request1_size);
+
+  // The same holds for the response
+  static uint8_t response1[NOISE_PQIKPSK1_RESPONSE_OVERHEAD + 64] = {0};
+  static uint8_t response2[NOISE_PQIKPSK1_RESPONSE_OVERHEAD + 64] = {0};
+  size_t response1_size = 0, response2_size = 0;
+  static uint8_t initiator_static_public[XWING_PUBLIC_KEY_SIZE] = {0};
+
+  for (int run = 0; run < 2; run++) {
+    uint8_t *response = (run == 0) ? response1 : response2;
+    size_t *response_size = (run == 0) ? &response1_size : &response2_size;
+    ck_assert_int_eq(
+        noise_pqikpsk1_responder_init(&responder, psk, responder_private,
+                                      responder_public, NULL, 0),
+        true);
+    uint8_t received[64] = {0};
+    size_t received_size = 0;
+    ck_assert_int_eq(noise_pqikpsk1_responder_handle_request(
+                         &responder, request1, request1_size,
+                         initiator_static_public, received, sizeof(received),
+                         &received_size),
+                     true);
+    ck_assert_mem_eq(received, payload, sizeof(payload));
+    ck_assert_mem_eq(initiator_static_public, initiator_public,
+                     XWING_PUBLIC_KEY_SIZE);
+    ck_assert_int_eq(
+        noise_pqikpsk1_responder_create_response_derand(
+            &responder, ekem_seed, rspn_skem_seed, payload, sizeof(payload),
+            response, NOISE_PQIKPSK1_RESPONSE_OVERHEAD + sizeof(payload),
+            response_size),
+        true);
+    noise_pqikpsk1_responder_deinit(&responder);
+  }
+  ck_assert_uint_eq(response1_size, response2_size);
+  ck_assert_mem_eq(response1, response2, response1_size);
+
+  // The derand response completes the handshake on the initiator's side
+  ck_assert_int_eq(
+      noise_pqikpsk1_initiator_init(&initiator, psk, initiator_private,
+                                    initiator_public, responder_public, NULL,
+                                    0),
+      true);
+  size_t request_size = 0;
+  ck_assert_int_eq(
+      noise_pqikpsk1_initiator_create_request_derand(
+          &initiator, skem_seed, ephemeral_private, payload, sizeof(payload),
+          request1, NOISE_PQIKPSK1_REQUEST_OVERHEAD + sizeof(payload),
+          &request_size),
+      true);
+  uint8_t received[64] = {0};
+  size_t received_size = 0;
+  ck_assert_int_eq(noise_pqikpsk1_initiator_handle_response(
+                       &initiator, response1, response1_size, received,
+                       sizeof(received), &received_size),
+                   true);
+  ck_assert_mem_eq(received, payload, sizeof(payload));
+  noise_pqikpsk1_initiator_deinit(&initiator);
+}
+END_TEST
+
+START_TEST(test_noise_pqikpsk1_limits) {
+  // The buffers are large enough to hold an oversized Noise message, so only
+  // the message size limit itself can reject the calls below
+  static uint8_t payload_buf[NOISE_PQIKPSK1_MAX_MESSAGE_SIZE + 1] = {0};
+  static uint8_t message_buf[NOISE_PQIKPSK1_MAX_MESSAGE_SIZE + 1] = {0};
+  size_t message_size = 0;
+
+  static noise_pqikpsk1_initiator_t initiator = {0};
+  static noise_pqikpsk1_responder_t responder = {0};
+  static uint8_t initiator_static_public[XWING_PUBLIC_KEY_SIZE] = {0};
+  bool ret = false;
+
+  random_reseed(2748932008);
+  uint8_t psk[NOISE_PQIKPSK1_PSK_SIZE] = "this_is_a_32byte_preshared_key!!";
+  uint8_t initiator_private[XWING_PRIVATE_KEY_SIZE] = {0};
+  static uint8_t initiator_public[XWING_PUBLIC_KEY_SIZE] = {0};
+  uint8_t responder_private[XWING_PRIVATE_KEY_SIZE] = {0};
+  static uint8_t responder_public[XWING_PUBLIC_KEY_SIZE] = {0};
+  ck_assert_int_eq(xwing_generate_key_pair(initiator_private, initiator_public),
+                   true);
+  ck_assert_int_eq(xwing_generate_key_pair(responder_private, responder_public),
+                   true);
+
+  // --- Handshake message size limit ---
+
+  // An oversized request payload is rejected
+  ret = noise_pqikpsk1_initiator_init(&initiator, psk, initiator_private,
+                                      initiator_public, responder_public,
+                                      NULL, 0);
+  ck_assert_int_eq(ret, true);
+  ret = noise_pqikpsk1_initiator_create_request(
+      &initiator, payload_buf, NOISE_PQIKPSK1_MAX_REQUEST_PAYLOAD_SIZE + 1,
+      message_buf, sizeof(message_buf), &message_size);
+  ck_assert_int_eq(ret, false);
+  // A rejected call deinitializes the initiator
+  ck_assert_int_eq(initiator.initialized, false);
+
+  // The largest allowed request payload produces a request of exactly the
+  // maximum message size
+  ret = noise_pqikpsk1_initiator_init(&initiator, psk, initiator_private,
+                                      initiator_public, responder_public,
+                                      NULL, 0);
+  ck_assert_int_eq(ret, true);
+  ret = noise_pqikpsk1_initiator_create_request(
+      &initiator, payload_buf, NOISE_PQIKPSK1_MAX_REQUEST_PAYLOAD_SIZE,
+      message_buf, sizeof(message_buf), &message_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_uint_eq(message_size, NOISE_PQIKPSK1_MAX_MESSAGE_SIZE);
+  noise_pqikpsk1_initiator_deinit(&initiator);
+
+  // An oversized request is rejected before any cryptographic processing
+  ret = noise_pqikpsk1_responder_init(&responder, psk, responder_private,
+                                      responder_public, NULL, 0);
+  ck_assert_int_eq(ret, true);
+  // The sentinel shows that the message was rejected for its size before it
+  // was decrypted, a failed tag verification would have wiped the output
+  // buffer
+  payload_buf[0] = 0xA5;
+  ret = noise_pqikpsk1_responder_handle_request(
+      &responder, message_buf, NOISE_PQIKPSK1_MAX_MESSAGE_SIZE + 1,
+      initiator_static_public, payload_buf, sizeof(payload_buf),
+      &message_size);
+  ck_assert_int_eq(ret, false);
+  ck_assert_int_eq(responder.initialized, false);
+  ck_assert_uint_eq(payload_buf[0], 0xA5);
+
+  // A truncated request is rejected as well
+  ret = noise_pqikpsk1_responder_init(&responder, psk, responder_private,
+                                      responder_public, NULL, 0);
+  ck_assert_int_eq(ret, true);
+  ret = noise_pqikpsk1_responder_handle_request(
+      &responder, message_buf, NOISE_PQIKPSK1_REQUEST_OVERHEAD - 1,
+      initiator_static_public, payload_buf, sizeof(payload_buf),
+      &message_size);
+  ck_assert_int_eq(ret, false);
+
+  // A truncated response is rejected
+  static noise_pqikpsk1_initiator_t initiator2 = {0};
+  ret = noise_pqikpsk1_initiator_init(&initiator2, psk, initiator_private,
+                                      initiator_public, responder_public,
+                                      NULL, 0);
+  ck_assert_int_eq(ret, true);
+  ret = noise_pqikpsk1_initiator_create_request(&initiator2, NULL, 0,
+                                                message_buf,
+                                                sizeof(message_buf),
+                                                &message_size);
+  ck_assert_int_eq(ret, true);
+  ret = noise_pqikpsk1_initiator_handle_response(
+      &initiator2, message_buf, NOISE_PQIKPSK1_RESPONSE_OVERHEAD - 1,
+      payload_buf, sizeof(payload_buf), NULL);
+  ck_assert_int_eq(ret, false);
+
+  // --- Transport message size limit ---
+  test_noise_pqikpsk1_handshake(2748932008, &initiator, &responder);
+
+  ret = noise_pqikpsk1_send_message(&initiator.transport_state, payload_buf,
+                                    NOISE_PQIKPSK1_MAX_PLAINTEXT_SIZE + 1,
+                                    message_buf, sizeof(message_buf),
+                                    &message_size);
+  ck_assert_int_eq(ret, false);
+
+  payload_buf[0] = 0xA5;
+  ret = noise_pqikpsk1_receive_message(&responder.transport_state, message_buf,
+                                       NOISE_PQIKPSK1_MAX_MESSAGE_SIZE + 1,
+                                       payload_buf, sizeof(payload_buf),
+                                       &message_size);
+  ck_assert_int_eq(ret, false);
+  ck_assert_uint_eq(payload_buf[0], 0xA5);
+
+  // The largest allowed plaintext passes the size check and is encrypted into
+  // a message of exactly the maximum size
+  ret = noise_pqikpsk1_send_message(&initiator.transport_state, payload_buf,
+                                    NOISE_PQIKPSK1_MAX_PLAINTEXT_SIZE,
+                                    message_buf, sizeof(message_buf),
+                                    &message_size);
+  ck_assert_int_eq(ret, true);
+  ck_assert_uint_eq(message_size, NOISE_PQIKPSK1_MAX_MESSAGE_SIZE);
+
+  // --- Message limit ---
+  uint8_t msg[] = "hello";
+  uint8_t ciphertext[sizeof(msg) + 16] = {0};
+  size_t ciphertext_size = 0;
+
+  // The last message below the limit, with the nonce at 2^48 - 1, is still
+  // encrypted, which advances the nonce to the limit
+  responder.transport_state.send_cipher_state.nonce = (1ULL << 48) - 1;
+  ret = noise_pqikpsk1_send_message(&responder.transport_state, msg,
+                                    sizeof(msg), ciphertext,
+                                    sizeof(ciphertext), &ciphertext_size);
+  ck_assert_int_eq(ret, true);
+
+  // With the nonce at 2^48 no further message is encrypted
+  ret = noise_pqikpsk1_send_message(&responder.transport_state, msg,
+                                    sizeof(msg), ciphertext,
+                                    sizeof(ciphertext), &ciphertext_size);
+  ck_assert_int_eq(ret, false);
+
+  noise_pqikpsk1_initiator_deinit(&initiator);
+  noise_pqikpsk1_initiator_deinit(&initiator2);
+  noise_pqikpsk1_responder_deinit(&responder);
+}
+END_TEST
+
 static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
   size_t i = 0;
   while (i < n) {
@@ -13323,6 +13862,10 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_noise_xxpsk3);
   tcase_add_test(tc, test_noise_xxpsk3_limits);
   tcase_add_test(tc, test_noise_xxpsk3_vectors);
+  tcase_add_test(tc, test_noise_pqikpsk1);
+  tcase_add_test(tc, test_noise_pqikpsk1_failures);
+  tcase_add_test(tc, test_noise_pqikpsk1_derand);
+  tcase_add_test(tc, test_noise_pqikpsk1_limits);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO
