@@ -30,9 +30,14 @@ typedef enum {
   NRF_SERVICE_MANAGEMENT = 2,
   NRF_SERVICE_PRODTEST = 3,
   NRF_SERVICE_IDLE = 4,
+  NRF_SERVICE_CONSOLE = 5,  // BLE console service, see ble/console.c
 
   NRF_SERVICE_CNT  // Number of services
 } nrf_service_id_t;
+
+// Keep in sync with core/embed/io/nrf/inc/io/nrf.h on the STM32 side. The
+// id travels in the low nibble of every frame header, so both ends must agree
+// on the numbering; there is no negotiation.
 
 typedef struct {
   void *fifo_reserved;

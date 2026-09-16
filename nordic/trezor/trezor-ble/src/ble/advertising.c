@@ -45,6 +45,10 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define ADV_FLAG_BOND_MEM_FULL 0x02
 #define ADV_FLAG_DEV_CONNECTED 0x04
 #define ADV_FLAG_USER_DISCONNECT 0x08
+// The BLE console service is present (CONFIG_TRZ_CONSOLE); lets a host pick
+// the device by service before connecting, as the 128-bit UUID does not fit
+// into the scan response next to the wire-protocol one.
+#define ADV_FLAG_CONSOLE 0x10
 
 #define ADV_INTERVAL_FAST_MIN_MS 20
 #define ADV_INTERVAL_FAST_MAX_MS 25
@@ -165,6 +169,9 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
   }
   if (user_disconnect) {
     manufacturer_data[2] |= ADV_FLAG_USER_DISCONNECT;
+  }
+  if (IS_ENABLED(CONFIG_TRZ_CONSOLE)) {
+    manufacturer_data[2] |= ADV_FLAG_CONSOLE;
   }
 
   manufacturer_data[3] = color;

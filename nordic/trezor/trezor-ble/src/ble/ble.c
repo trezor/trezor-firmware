@@ -129,6 +129,12 @@ bool ble_init(void) {
     return 0;
   }
 
+#if IS_ENABLED(CONFIG_TRZ_CONSOLE)
+  // Registered unconditionally for now; a later version registers it only on
+  // MGMT_CMD_CONSOLE_ENABLE. Not fatal: the wire protocol works without it.
+  console_init();
+#endif
+
   advertising_init();
   ble_management_init();
 
