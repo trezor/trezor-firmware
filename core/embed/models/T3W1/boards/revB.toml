@@ -36,3 +36,7 @@ wireless = "io/wireless_stwlc38"
 [tropic]
 
 [sbu]
+
+# Temporary, for bringing up the BLE console on T3W1 development units: the
+# prodtest CLI runs on the BLE console service instead of USB VCP.
+[ble_console]
