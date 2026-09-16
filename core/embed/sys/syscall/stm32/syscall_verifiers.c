@@ -1565,7 +1565,7 @@ access_violation:
   return TS_EACCES;
 }
 
-ts_t app_root_get_timestamp__verified(app_ring_t ring, uint32_t *timestamp) {
+ts_t app_root_get_timestamp__verified(app_ring_t ring, int64_t *timestamp) {
   if (!probe_write_access(timestamp, sizeof(*timestamp))) {
     goto access_violation;
   }
