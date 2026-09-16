@@ -29,7 +29,15 @@
 //
 // Consider different implementation (i.e. priority queue
 // using binary heap if MAX_SYSTIMERS exceeds 10 or more)
+//
+// The kernel's drivers on the largest boards already use about 16 (I2C takes
+// one per bus), so it gets headroom for late-initialized users; secmon runs
+// only a handful and has no RAM to spare for unused slots.
+#ifdef SECMON
 #define MAX_SYSTIMERS 16
+#else
+#define MAX_SYSTIMERS 32
+#endif
 
 // User timer instance
 struct systimer {
