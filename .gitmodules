@@ -44,3 +44,7 @@
 	path = vendor/mldsa-native
 	url = https://github.com/pq-code-package/mldsa-native.git
 	ignore = untracked
+[submodule "vendor/mlkem-native"]
+	path = vendor/mlkem-native
+	url = https://github.com/pq-code-package/mlkem-native.git
+	ignore = untracked
