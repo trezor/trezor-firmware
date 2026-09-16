@@ -1,0 +1,1 @@
+Don't show the unknown derivation path warning when exporting an xpub at a valid export point of a supported path pattern (BIP-45, BIP-48, Casa, Unchained).
