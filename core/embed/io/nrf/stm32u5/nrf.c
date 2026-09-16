@@ -543,6 +543,16 @@ uint32_t nrf_get_version(void) {
   return 0;
 }
 
+bool nrf_enable_console(void) {
+  nrf_driver_t *drv = &g_nrf_driver;
+  if (!drv->initialized) {
+    return false;
+  }
+
+  uint8_t data[1] = {MGMT_CMD_CONSOLE_ENABLE};
+  return nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, sizeof(data), NULL, NULL);
+}
+
 bool nrf_system_off(void) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (!drv->initialized) {

@@ -32,9 +32,15 @@ typedef enum : uint8_t {
   NRF_SERVICE_MANAGEMENT = 2,
   NRF_SERVICE_PRODTEST = 3,
   NRF_SERVICE_IDLE = 4,
+  NRF_SERVICE_CONSOLE = 5,  // BLE console service (prodtest CLI, debug logs)
 
   NRF_SERVICE_CNT  // Number of services
 } nrf_service_id_t;
+
+// Keep in sync with
+// nordic/trezor/trezor-ble/src/trz_comm/inc/trz_comm/trz_comm.h. The id travels
+// in the low nibble of every frame header; there is no negotiation, and frames
+// with an id >= NRF_SERVICE_CNT are dropped.
 
 typedef enum {
   NRF_STATUS_OK = 0,       // Packet completed successfully
@@ -156,6 +162,18 @@ bool nrf_system_off(void);
  * @brief Reboot the NRF device immediately.
  */
 void nrf_reboot(void);
+
+/**
+ * @brief Ask the nRF to expose the BLE console service.
+ *
+ * Current nRF firmware registers the console service unconditionally and treats
+ * this as a no-op; the request exists so a later nRF version can register the
+ * service only when asked, without an STM32 change. Only firmware that routes
+ * the console (prodtest, debug builds) sends it.
+ *
+ * @return true if the request was queued; false if the link is not up yet
+ */
+bool nrf_enable_console(void);
 
 /**
  * @brief Send raw UART data to the NRF device (for debugging purposes).
