@@ -77,6 +77,10 @@ ZKP_PATH = ../vendor/secp256k1-zkp
 # this is specific for 64-bit builds
 CFLAGS += -DSECP256K1_CONTEXT_SIZE=208
 
+# needed by the single compilation unit build of mlkem-native in mlkem.c
+MLKEM_PATH = ../vendor/mlkem-native/mlkem
+CFLAGS += -I$(MLKEM_PATH)
+
 VALGRIND ?= 1
 ifeq ($(VALGRIND),1)
 CFLAGS += -DVALGRIND
@@ -140,6 +144,7 @@ SRCS  += buffer.c der.c
 SRCS  += elligator2.c
 SRCS  += consteq.c
 SRCS  += fault_handler_noop.c
+SRCS  += mlkem.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o

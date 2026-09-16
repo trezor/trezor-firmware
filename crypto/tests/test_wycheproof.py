@@ -834,12 +834,205 @@ def generate_eddsa(filename):
     return vectors
 
 
+MLKEM768_PUBLIC_KEY_SIZE = 1184
+MLKEM768_PRIVATE_KEY_SIZE = 2400
+MLKEM768_KEY_PAIR_SEED_SIZE = 64
+MLKEM768_CIPHERTEXT_SIZE = 1088
+MLKEM768_ENCAPSULATION_SEED_SIZE = 32
+MLKEM768_SHARED_SECRET_SIZE = 32
+
+
+def check_mlkem_data(data):
+    if not keys_in_dict(data, {"algorithm", "testGroups"}):
+        raise DataError()
+
+    if data["algorithm"] != "ML-KEM":
+        raise DataError()
+
+
+def generate_mlkem_keygen(filename):
+    vectors = []
+
+    data = load_json_testvectors(filename)
+    check_mlkem_data(data)
+
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests", "parameterSet"}):
+            raise DataError()
+
+        if test_group["parameterSet"] != "ML-KEM-768":
+            continue
+
+        for test in test_group["tests"]:
+            if not keys_in_dict(test, {"seed", "ek", "dk", "result"}):
+                raise DataError()
+
+            try:
+                seed = unhexlify(test["seed"])
+                ek = unhexlify(test["ek"])
+                dk = unhexlify(test["dk"])
+                result = parse_result(test["result"])
+            except Exception:
+                raise DataError()
+
+            if result is None:
+                continue
+
+            if len(seed) != MLKEM768_KEY_PAIR_SEED_SIZE:
+                # The fixed-size C API cannot accept a seed of invalid length.
+                if result:
+                    raise DataError()
+                continue
+
+            vectors.append((hexlify(seed), hexlify(ek), hexlify(dk), result))
+
+    return vectors
+
+
+def generate_mlkem_encaps(filename):
+    vectors = []
+
+    data = load_json_testvectors(filename)
+    check_mlkem_data(data)
+
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests", "parameterSet"}):
+            raise DataError()
+
+        if test_group["parameterSet"] != "ML-KEM-768":
+            continue
+
+        for test in test_group["tests"]:
+            if not keys_in_dict(test, {"m", "ek", "c", "K", "result"}):
+                raise DataError()
+
+            try:
+                m = unhexlify(test["m"])
+                ek = unhexlify(test["ek"])
+                c = unhexlify(test["c"])
+                shared = unhexlify(test["K"])
+                result = parse_result(test["result"])
+            except Exception:
+                raise DataError()
+
+            if result is None:
+                continue
+
+            if (
+                len(m) != MLKEM768_ENCAPSULATION_SEED_SIZE
+                or len(ek) != MLKEM768_PUBLIC_KEY_SIZE
+            ):
+                # The fixed-size C API cannot accept inputs of invalid length.
+                if result:
+                    raise DataError()
+                continue
+
+            vectors.append(
+                (hexlify(m), hexlify(ek), hexlify(c), hexlify(shared), result)
+            )
+
+    return vectors
+
+
+def generate_mlkem_decaps(filename):
+    vectors = []
+
+    data = load_json_testvectors(filename)
+    check_mlkem_data(data)
+
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests", "parameterSet"}):
+            raise DataError()
+
+        if test_group["parameterSet"] != "ML-KEM-768":
+            continue
+
+        for test in test_group["tests"]:
+            if not keys_in_dict(test, {"seed", "c", "result"}):
+                raise DataError()
+
+            try:
+                seed = unhexlify(test["seed"])
+                ek = unhexlify(test.get("ek", ""))
+                c = unhexlify(test["c"])
+                shared = unhexlify(test.get("K", ""))
+                result = parse_result(test["result"])
+            except Exception:
+                raise DataError()
+
+            if result is None:
+                continue
+
+            if (
+                len(seed) != MLKEM768_KEY_PAIR_SEED_SIZE
+                or len(c) != MLKEM768_CIPHERTEXT_SIZE
+            ):
+                # The fixed-size C API cannot accept inputs of invalid length.
+                if result:
+                    raise DataError()
+                continue
+
+            vectors.append(
+                (hexlify(seed), hexlify(ek), hexlify(c), hexlify(shared), result)
+            )
+
+    return vectors
+
+
+def generate_mlkem_expanded_decaps(filename):
+    vectors = []
+
+    data = load_json_testvectors(filename)
+    check_mlkem_data(data)
+
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests", "parameterSet"}):
+            raise DataError()
+
+        if test_group["parameterSet"] != "ML-KEM-768":
+            continue
+
+        for test in test_group["tests"]:
+            if not keys_in_dict(test, {"dk", "c", "result"}):
+                raise DataError()
+
+            try:
+                dk = unhexlify(test["dk"])
+                c = unhexlify(test["c"])
+                shared = unhexlify(test.get("K", ""))
+                result = parse_result(test["result"])
+            except Exception:
+                raise DataError()
+
+            if result is None:
+                continue
+
+            if (
+                len(dk) != MLKEM768_PRIVATE_KEY_SIZE
+                or len(c) != MLKEM768_CIPHERTEXT_SIZE
+            ):
+                # The fixed-size C API cannot accept inputs of invalid length.
+                if result:
+                    raise DataError()
+                continue
+
+            vectors.append((hexlify(dk), hexlify(c), hexlify(shared), result))
+
+    return vectors
+
+
 dir = os.path.abspath(os.path.dirname(__file__))
 lib = ctypes.cdll.LoadLibrary(os.path.join(dir, "libtrezor-crypto.so"))
 if not lib.zkp_context_is_initialized():
     assert lib.zkp_context_init() == 0
 testvectors_directory = os.path.join(dir, "wycheproof/testvectors_v1")
 context_structure_length = 1024
+
+# These functions return C bool. Without the declared restype ctypes would
+# read the whole return register, whose upper bits are undefined.
+lib.mlkem768_generate_key_pair_from_seed.restype = ctypes.c_bool
+lib.mlkem768_encapsulate_from_seed.restype = ctypes.c_bool
+lib.mlkem768_decapsulate.restype = ctypes.c_bool
 
 # Since these functions take more than six arguments, some end up passed on
 # the stack instead of in registers. Ctypes needs the exact declared widths
@@ -930,6 +1123,12 @@ pbkdf2_sha256_vectors = generate_pbkdf2(
 )
 pbkdf2_sha512_vectors = generate_pbkdf2(
     "pbkdf2_hmacsha512_test.json", "PBKDF2-HMACSHA512"
+)
+mlkem_keygen_vectors = generate_mlkem_keygen("mlkem_768_keygen_seed_test.json")
+mlkem_encaps_vectors = generate_mlkem_encaps("mlkem_768_encaps_test.json")
+mlkem_decaps_vectors = generate_mlkem_decaps("mlkem_768_test.json")
+mlkem_expanded_decaps_vectors = generate_mlkem_expanded_decaps(
+    "mlkem_768_semi_expanded_decaps_test.json"
 )
 
 
@@ -1152,4 +1351,61 @@ def test_pbkdf2_sha512(password, salt, iteration_count, dk_len, dk, result):
         password, len(password), salt, len(salt), iteration_count, computed_dk, dk_len
     )
     computed_result = dk == computed_dk
+    assert result == computed_result
+
+
+@pytest.mark.parametrize("seed, ek, dk, result", mlkem_keygen_vectors)
+def test_mlkem768_keygen(seed, ek, dk, result):
+    seed = unhexlify(seed)
+    ek = unhexlify(ek)
+    dk = unhexlify(dk)
+
+    computed_dk = bytes(MLKEM768_PRIVATE_KEY_SIZE)
+    computed_ek = bytes(MLKEM768_PUBLIC_KEY_SIZE)
+    ret = lib.mlkem768_generate_key_pair_from_seed(seed, computed_dk, computed_ek)
+    computed_result = ret != 0 and computed_ek == ek and computed_dk == dk
+    assert result == computed_result
+
+
+@pytest.mark.parametrize("m, ek, c, shared, result", mlkem_encaps_vectors)
+def test_mlkem768_encaps(m, ek, c, shared, result):
+    m = unhexlify(m)
+    ek = unhexlify(ek)
+    c = unhexlify(c)
+    shared = unhexlify(shared)
+
+    computed_c = bytes(MLKEM768_CIPHERTEXT_SIZE)
+    computed_shared = bytes(MLKEM768_SHARED_SECRET_SIZE)
+    ret = lib.mlkem768_encapsulate_from_seed(m, ek, computed_c, computed_shared)
+    computed_result = ret != 0 and computed_c == c and computed_shared == shared
+    assert result == computed_result
+
+
+@pytest.mark.parametrize("seed, ek, c, shared, result", mlkem_decaps_vectors)
+def test_mlkem768_decaps(seed, ek, c, shared, result):
+    seed = unhexlify(seed)
+    ek = unhexlify(ek)
+    c = unhexlify(c)
+    shared = unhexlify(shared)
+
+    computed_dk = bytes(MLKEM768_PRIVATE_KEY_SIZE)
+    computed_ek = bytes(MLKEM768_PUBLIC_KEY_SIZE)
+    assert lib.mlkem768_generate_key_pair_from_seed(seed, computed_dk, computed_ek)
+    assert computed_ek == ek
+
+    computed_shared = bytes(MLKEM768_SHARED_SECRET_SIZE)
+    ret = lib.mlkem768_decapsulate(computed_dk, c, computed_shared)
+    computed_result = ret != 0 and computed_shared == shared
+    assert result == computed_result
+
+
+@pytest.mark.parametrize("dk, c, shared, result", mlkem_expanded_decaps_vectors)
+def test_mlkem768_expanded_decaps(dk, c, shared, result):
+    dk = unhexlify(dk)
+    c = unhexlify(c)
+    shared = unhexlify(shared)
+
+    computed_shared = bytes(MLKEM768_SHARED_SECRET_SIZE)
+    ret = lib.mlkem768_decapsulate(dk, c, computed_shared)
+    computed_result = ret != 0 and computed_shared == shared
     assert result == computed_result
