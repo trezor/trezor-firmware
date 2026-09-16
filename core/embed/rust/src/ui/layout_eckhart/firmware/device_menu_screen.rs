@@ -15,9 +15,6 @@ use crate::micropython::qstr::Qstr;
 use crate::micropython::{Error, Obj};
 use crate::strutil::TString;
 use crate::translations::TR;
-#[cfg(feature = "ble")]
-use crate::trezorhal::ble;
-use crate::trezorhal::usb;
 use crate::ui::component::base::ParamsObj;
 use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
@@ -294,6 +291,7 @@ impl DeviceMenuScreen {
             ble_enabled,
             paired_devices,
             connected_idx,
+            host_connected,
             pin_enabled,
             auto_lock,
             wipe_code_enabled,
@@ -340,12 +338,8 @@ impl DeviceMenuScreen {
         screen.register_settings_menu(ble_enabled);
         screen.register_power_menu();
 
-        let is_connected = usb::usb_configured();
-        #[cfg(feature = "ble")]
-        let is_connected = is_connected || ble::is_connected();
-
         let connected_subtext: Option<TString<'static>> =
-            is_connected.then_some(TR::words__connected.into());
+            host_connected.then_some(TR::words__connected.into());
 
         let mut submenu_indices: Vec<u8, MAX_PAIRED_DEVICES> = Vec::new();
         for (device_index, (mac, host_info)) in (0u8..).zip(paired_devices.iter()) {
@@ -1068,10 +1062,10 @@ impl Component for DeviceMenuScreen {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
-            // What USB feeds is read from the HAL inside this screen, so there
-            // is no parameter to name -- ask for the whole set, as before.
+            // Connection state we display went stale -- name the parameters it
+            // feeds and ask for them. The layout keeps running.
             Event::USB(USBEvent::Configured | USBEvent::Deconfigured) => {
-                ctx.request_params(ParamsRequest::everything());
+                ctx.request_params(ParamsRequest::new(&[Qstr::MP_QSTR_host_connected]));
                 return None;
             }
 
@@ -1080,6 +1074,7 @@ impl Component for DeviceMenuScreen {
                 BLEEvent::Connected | BLEEvent::Disconnected | BLEEvent::ConnectionChanged,
             ) => {
                 ctx.request_params(ParamsRequest::new(&[
+                    Qstr::MP_QSTR_host_connected,
                     Qstr::MP_QSTR_connected_idx,
                     Qstr::MP_QSTR_paired_devices,
                 ]));

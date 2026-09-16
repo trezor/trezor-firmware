@@ -70,7 +70,7 @@ def ble_enable(enable: bool) -> None:
 
 # The keys `_connection_params()` produces, i.e. what a connection change can
 # make stale. A request naming only these is served without touching storage.
-_CONNECTION_KEYS = ("paired_devices", "connected_idx")
+_CONNECTION_KEYS = ("paired_devices", "connected_idx", "host_connected")
 
 # The parameter set the running menu was last built from, kept so that a refresh
 # can recompute only the stale part of it.
@@ -84,6 +84,7 @@ def _connection_params() -> dict:
     storage reads, version strings or About items. The device menu asks for
     exactly these on every USB and BLE event.
     """
+    from trezor import io
     from trezor.wire.thp import paired_cache
 
     bonds = ble.get_bonds()
@@ -94,6 +95,9 @@ def _connection_params() -> dict:
     return {
         "paired_devices": [_get_hostinfo(bond, hostname_map) for bond in bonds],
         "connected_idx": (_find_device(connected_addr, bonds) if ble_enabled else None),
+        # The "Connected" indicator covers any transport: a USB host that
+        # enumerated us, or a connected BLE peer.
+        "host_connected": io.usb_configured() or ble.is_connected(),
     }
 
 
@@ -169,6 +173,7 @@ def _menu_params(
         "ble_enabled": ble_enabled,
         "paired_devices": connection["paired_devices"],
         "connected_idx": connection["connected_idx"],
+        "host_connected": connection["host_connected"],
         "pin_enabled": config.has_pin() if is_initialized else None,
         "auto_lock": get_auto_lock_delay(),
         "wipe_code_enabled": (

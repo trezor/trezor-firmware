@@ -1927,6 +1927,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     ble_enabled: bool
     ///     paired_devices: Iterable[tuple[str, tuple[str, str] | None]]
     ///     connected_idx: int | None
+    ///     host_connected: bool
     ///     pin_enabled: bool | None
     ///     auto_lock: tuple[str, str] | None
     ///     wipe_code_enabled: bool | None

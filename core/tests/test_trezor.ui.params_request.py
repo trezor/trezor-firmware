@@ -4,11 +4,9 @@ from common import *  # isort:skip
 import trezorui_api
 from trezor import utils
 
-# raw event codes, see `USBEvent::new` and `BLEEvent::new`
+# `usb_event` takes the raw event code, see `USBEvent::new`.
 USB_CONFIGURED = 1
 USB_DECONFIGURED = 2
-BLE_CONNECTED = 1
-BLE_DISCONNECTED = 2
 
 
 def menu_params(**overrides):
@@ -21,6 +19,7 @@ def menu_params(**overrides):
         "ble_enabled": True,
         "paired_devices": [],
         "connected_idx": None,
+        "host_connected": False,
         "pin_enabled": True,
         "auto_lock": ("Auto-lock", "10 minutes"),
         "wipe_code_enabled": False,
@@ -53,35 +52,25 @@ class TestParamsRequest(unittest.TestCase):
         layout = self.make_menu()
         self.assertIsNone(layout.params_request())
 
-    def test_usb_event_asks_for_everything(self):
+    def test_usb_event_asks_for_the_connection_indicator(self):
         layout = self.make_menu()
         layout.usb_event(USB_CONFIGURED)
-        # what USB feeds is read from the HAL inside the screen, so there is no
-        # key to name; an empty tuple asks for the whole set
-        self.assertEqual(layout.params_request(), ())
+        # USB feeds exactly one displayed value, so one key is named
+        self.assertEqual(layout.params_request(), ("host_connected",))
 
     def test_request_is_taken_out_on_read(self):
         layout = self.make_menu()
         layout.usb_event(USB_CONFIGURED)
-        self.assertEqual(layout.params_request(), ())
+        self.assertEqual(layout.params_request(), ("host_connected",))
         # the second read comes up empty; the request was served by the reader
         self.assertIsNone(layout.params_request())
 
-    def test_ble_event_names_the_stale_keys(self):
-        layout = self.make_menu()
-        layout.ble_event(BLE_CONNECTED, None)
-        # BLE feeds real parameters, so the request narrows to them
-        self.assertEqual(
-            sorted(layout.params_request()), ["connected_idx", "paired_devices"]
-        )
-
     def test_unread_requests_merge(self):
         layout = self.make_menu()
-        layout.ble_event(BLE_CONNECTED, None)
+        layout.usb_event(USB_CONFIGURED)
         layout.usb_event(USB_DECONFIGURED)
-        # USB asks for everything, which has to swallow the narrower BLE request
-        # rather than be dropped by it
-        self.assertEqual(layout.params_request(), ())
+        # a later pass must not drop what an earlier one asked for
+        self.assertEqual(layout.params_request(), ("host_connected",))
 
     def test_update_params_does_not_re_ask(self):
         layout = self.make_menu()
@@ -96,17 +85,15 @@ class TestParamsRequest(unittest.TestCase):
         # an unrelated event pass in between must not drop the pending request
         if self.timers:
             layout.timer(self.timers[0])
-        self.assertEqual(layout.params_request(), ())
+        self.assertEqual(layout.params_request(), ("host_connected",))
 
     def test_keys_name_real_params(self):
         # every key the layout asks for must exist in the set it is built from,
         # or the provider could not serve it
         layout = self.make_menu()
-        layout.ble_event(BLE_DISCONNECTED, None)
+        layout.usb_event(USB_CONFIGURED)
         full = menu_params()
-        keys = layout.params_request()
-        self.assertTrue(len(keys) > 0)
-        for key in keys:
+        for key in layout.params_request():
             self.assertIn(key, full)
 
 
