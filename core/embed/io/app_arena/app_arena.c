@@ -75,8 +75,8 @@ typedef struct {
   size_t written_bytes;
   // Hash of the next chunk
   sha256_digest_t chunk_hash;
-  // Hash of the image header
-  sha256_digest_t header_hash;
+  // App fingerpint (hash of the image header)
+  sha256_digest_t fingerprint;
 
   // Applet associated with the application
   applet_t applet;
@@ -242,13 +242,13 @@ ts_t app_arena_create_image(const void* header, size_t header_size,
       entry->chunk_hash = entry->header->chunk_hash;
 
       // Calculate header hash
-      sha256_digest_t header_hash;
+      sha256_digest_t fingerprint;
       SHA256_CTX ctx;
       sha256_Init(&ctx);
       sha256_Update(&ctx, entry->header_raw, entry->header->header_size);
-      sha256_Final(&ctx, (uint8_t*)&header_hash);
+      sha256_Final(&ctx, (uint8_t*)&fingerprint);
 
-      entry->header_hash = header_hash;
+      entry->fingerprint = fingerprint;
 
       // Verify the signature of the header
       secbool signature_valid = secfalse;
@@ -331,7 +331,7 @@ ts_t app_image_get_info(app_image_handle_t handle, app_image_info_t* info) {
   info->data_size = entry->header->data_size;
   info->chunk_size = entry->header->chunk_size;
   info->version = entry->header->version;
-  info->header_hash = entry->header_hash;
+  info->fingerprint = entry->fingerprint;
   info->ring = entry->header->app_ring;
   memcpy(info->id, entry->header->id, sizeof(info->id));
   memcpy(info->name, entry->header->app_name, sizeof(info->name));
