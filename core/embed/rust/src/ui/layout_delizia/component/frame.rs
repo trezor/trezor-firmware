@@ -79,8 +79,8 @@ pub struct Frame<T> {
     content: T,
     header: Option<Header>,
     header_update_fn: Option<fn(&T, &mut EventCtx, &mut Header)>,
-    footer: Option<Footer<'static>>,
-    footer_update_fn: Option<fn(&T, &mut EventCtx, &mut Footer<'static>)>,
+    footer: Option<Footer>,
+    footer_update_fn: Option<fn(&T, &mut EventCtx, &mut Footer)>,
     swipe: SwipeConfig,
     horizontal_swipe: HorizontalSwipe,
     margin: u8,
@@ -208,10 +208,7 @@ where
         self
     }
 
-    pub fn register_footer_update_fn(
-        mut self,
-        f: fn(&T, &mut EventCtx, &mut Footer<'static>),
-    ) -> Self {
+    pub fn register_footer_update_fn(mut self, f: fn(&T, &mut EventCtx, &mut Footer)) -> Self {
         self.footer_update_fn = Some(f);
         self
     }
