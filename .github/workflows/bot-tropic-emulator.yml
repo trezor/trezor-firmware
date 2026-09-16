@@ -59,7 +59,7 @@ jobs:
     name: Open an issue for trezor-user-env
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.event.action == 'closed' && github.event.merged == true && github.repository == 'trezor/trezor-firmware'
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true && github.repository == 'trezor/trezor-firmware'
     env:
       URL: ${{ github.event.pull_request.html_url }}
     steps:
