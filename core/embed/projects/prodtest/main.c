@@ -107,6 +107,8 @@
 #include "cmd/prodtest_ble.h"
 #endif
 
+#include "console.h"
+
 #ifdef USE_HW_REVISION
 #include <sec/hw_revision.h>
 #endif
@@ -129,20 +131,20 @@ struct {
   bool set;
 } g_layout __attribute__((aligned(4))) = {0};
 
-static ssize_t console_read(void *context, char *buf, size_t size) {
-  return syshandle_read(SYSHANDLE_USB_VCP, buf, size);
-}
-
-static ssize_t console_write(void *context, const char *buf, size_t size) {
-  static uint32_t timeout = 2000;
-  int rc = syshandle_write_blocking(SYSHANDLE_USB_VCP, buf, size, timeout);
-  // Do not wait too long if the host is not connected.
-  // This is a workaround that needs to be fixed properly later.
-  timeout = rc < size ? 100 : 2000;
-  return rc;
-}
-
 static void usb_vcp_intr_callback(void) { cli_abort(&g_cli); }
+
+// Reads console input, runs a command if a full line arrived, flushes output
+static void prodtest_process_cli(void) {
+  const cli_command_t *cmd = cli_process_io(&g_cli);
+
+  if (cmd != NULL) {
+    screen_prodtest_bars("", 0);
+    memzero(&g_layout, sizeof(g_layout));
+    cli_process_command(&g_cli, cmd);
+  }
+
+  console_flush();
+}
 
 // Set if the RGB LED must not be controlled by the main loop
 static bool g_rgbled_control_disabled = false;
@@ -240,6 +242,8 @@ int prodtest_main(void) {
 
   cli_set_commands(&g_cli, commands_get_ptr(), commands_count());
 
+  console_init(&g_cli);
+
 #ifdef USE_OPTIGA
   optiga_init();
   optiga_open_application();
@@ -263,8 +267,15 @@ int prodtest_main(void) {
   prodtest_show_homescreen();
 
   while (true) {
+    if (console_input_pending()) {
+      // Unread bytes from an already received packet: no event will announce
+      // them, so service the CLI right away.
+      prodtest_process_cli();
+      continue;
+    }
+
     sysevents_t awaited = {0};
-    awaited.read_ready |= 1 << SYSHANDLE_USB_VCP;
+    awaited.read_ready |= console_poll_mask();
 #ifdef USE_BUTTON
     awaited.read_ready |= 1 << SYSHANDLE_BUTTON;
 #endif
@@ -277,15 +288,8 @@ int prodtest_main(void) {
     sysevents_t signalled = {0};
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
-    if (signalled.read_ready & (1 << SYSHANDLE_USB_VCP)) {
-      const cli_command_t *cmd = cli_process_io(&g_cli);
-
-      if (cmd != NULL) {
-        screen_prodtest_bars("", 0);
-        memzero(&g_layout, sizeof(g_layout));
-        cli_process_command(&g_cli, cmd);
-      }
-
+    if (signalled.read_ready & console_poll_mask()) {
+      prodtest_process_cli();
       continue;
     }
 
