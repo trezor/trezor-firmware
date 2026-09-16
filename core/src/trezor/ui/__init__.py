@@ -122,9 +122,12 @@ class Layout(Generic[T]):
     """
 
     # Supplies fresh construction parameters when the Rust layout asks for them.
-    # Subclasses of layouts that call `EventCtx::request_params()` override this
-    # with a `staticmethod`; everything else leaves it as None.
-    params_provider: "Callable[[], Mapping[str, Any]] | None" = None
+    # Called with the keys the layout says went stale, so only those have to be
+    # recomputed, and returns the *complete* parameter set -- the Rust side
+    # rebuilds from a full set. An empty key tuple asks for everything.
+    # Subclasses of layouts whose components call `EventCtx::request_params()`
+    # override this; everything else leaves it None.
+    params_provider: "Callable[[tuple[str, ...]], Mapping[str, Any]] | None" = None
 
     if __debug__:
 
@@ -309,10 +312,15 @@ class Layout(Generic[T]):
 
         first_paint = False
         state = event_call(*args)
-        if state is None:
-            # The layout may have asked for fresh parameters instead of finishing.
-            # Feed them in right away, so it can update itself in place.
-            state = self._refresh_params()
+
+        # The layout may have asked for fresh parameters instead of finishing.
+        # Serve them right away, so it can update itself in place.
+        stale_keys = self.layout.params_request()
+        if stale_keys is not None:
+            # The update pass may finish the layout; if it reports nothing, the
+            # state of the pass that raised the request still stands.
+            state = self._serve_params_request(stale_keys) or state
+
         self.transition_out = self.layout.get_transition_out()
 
         if state is LayoutState.DONE:
@@ -335,20 +343,21 @@ class Layout(Generic[T]):
         else:
             self._paint()
 
-    def _refresh_params(self) -> LayoutState | None:
-        """Hand the layout fresh construction parameters, if it asked for them.
+    def _serve_params_request(
+        self, stale_keys: "tuple[str, ...]"
+    ) -> LayoutState | None:
+        """Hand the layout fresh construction parameters.
 
-        Returns the state of the resulting update pass, or None if no refresh
-        was requested. Lets a layout react to changed inputs without being torn
-        down and redrawn from scratch.
+        `stale_keys` names what the layout says went stale; the provider has to
+        recompute at least those and return the complete set. Returns the state
+        of the resulting update pass. Lets a layout react to changed inputs
+        without being torn down and redrawn from scratch.
         """
-        if not self.layout.needs_params_refresh():
-            return None
         if self.params_provider is None:
-            # The layout is waiting for parameters nobody can supply, and the
-            # request stays pending, so it would ask again on every event pass.
+            # The layout asked for parameters nobody can supply, which means the
+            # layout and its Python counterpart disagree on the parameter set.
             raise wire.FirmwareError("layout asked for params but none are provided")
-        return self.layout.update_params(self.params_provider())
+        return self.layout.update_params(self.params_provider(stale_keys))
 
     def put_button_request(self, msg: ButtonRequestMsg | None) -> bool:
         if self.button_request_handler is None or msg is None:

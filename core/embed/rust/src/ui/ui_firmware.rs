@@ -47,7 +47,9 @@ impl SelectMenuItem {
 ///
 /// A refresh is always complete: the caller sends every field and the menu is
 /// rebuilt from it. Partial updates are not supported, so no field can mean
-/// "leave this one alone".
+/// "leave this one alone" -- a `ParamsRequest` names which fields went stale so
+/// the application layer recomputes only those, then sends the whole set.
+/// Applying a partial set here is a possible later improvement.
 pub struct DeviceMenuParams {
     pub init_submenu_idx: Option<u8>,
     pub init_submenu_offset: i16,

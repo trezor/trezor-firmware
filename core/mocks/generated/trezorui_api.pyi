@@ -74,10 +74,11 @@ class LayoutObj(Generic[T]):
         """Return the number of pages in the layout object."""
     def button_request(self) -> tuple[ButtonRequestType, str] | None:
         """Return (code, type) of button request made during the last event or timer pass."""
-    def needs_params_refresh(self) -> bool:
-        """Return True if the layout is waiting for fresh construction
-        parameters.
-        The request stays pending until `update_params()` serves it.
+    def params_request(self) -> tuple[str, ...] | None:
+        """Return the parameter keys the layout said went stale during the
+        last event or timer pass, or None if it asked for nothing.
+        An empty tuple asks for every parameter. The request is taken out
+        on read; serve it with `update_params()`.
         """
     def update_params(self, params: Mapping[str, Any]) -> LayoutState | None:
         """Hand fresh construction parameters to the layout.
@@ -649,7 +650,9 @@ class DeviceMenuParams(TypedDict):
     `LayoutObj.update_params`. A refresh always carries the complete set
     and rebuilds the menu from it; there is no partial update or diff, so
     every key is always present. A value of `None` therefore means "not
-    applicable on this device", never "unchanged".
+    applicable on this device", never "unchanged". `LayoutObj.params_request`
+    names which keys went stale so the caller can recompute just those,
+    but what it sends back is always the whole set.
     """
     init_submenu_idx: int | None
     init_submenu_offset: int

@@ -531,7 +531,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_n1w1__hold_next;
   MP_QSTR_n1w1__reading;
   MP_QSTR_n1w1__writing;
-  MP_QSTR_needs_params_refresh;
   MP_QSTR_next_timeout;
   MP_QSTR_notification;
   MP_QSTR_packet_in;
@@ -544,6 +543,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_paint;
   MP_QSTR_paired_devices;
   MP_QSTR_pairing_state;
+  MP_QSTR_params_request;
   MP_QSTR_passphrase__access_hidden_wallet;
   MP_QSTR_passphrase__access_wallet;
   MP_QSTR_passphrase__always_on_device;

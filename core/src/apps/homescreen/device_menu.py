@@ -68,6 +68,35 @@ def ble_enable(enable: bool) -> None:
     storage_device.set_ble(enable)
 
 
+# The keys `_connection_params()` produces, i.e. what a connection change can
+# make stale. A request naming only these is served without touching storage.
+_CONNECTION_KEYS = ("paired_devices", "connected_idx")
+
+# The parameter set the running menu was last built from, kept so that a refresh
+# can recompute only the stale part of it.
+_params_cache: "DeviceMenuParams | None" = None
+
+
+def _connection_params() -> dict:
+    """The keys that go stale when a host connects or disconnects.
+
+    Cheaper than the full set: bonds and the paired cache, but none of the
+    storage reads, version strings or About items. The device menu asks for
+    exactly these on every USB and BLE event.
+    """
+    from trezor.wire.thp import paired_cache
+
+    bonds = ble.get_bonds()
+    ble_enabled = ble.get_enabled()
+    connected_addr = ble.connected_addr()
+    hostname_map = {e.mac_addr: e for e in paired_cache.load()}
+
+    return {
+        "paired_devices": [_get_hostinfo(bond, hostname_map) for bond in bonds],
+        "connected_idx": (_find_device(connected_addr, bonds) if ble_enabled else None),
+    }
+
+
 def _menu_params(
     init_submenu_idx: int | None = None,
     init_submenu_offset: int = 0,
@@ -80,8 +109,6 @@ def _menu_params(
     `init_submenu_idx` of None means "leave the menu where it is" on a refresh,
     and "open at the root" when constructing.
     """
-    from trezor.wire.thp import paired_cache
-
     is_initialized = storage_device.is_initialized()
     led_configurable = is_initialized and utils.USE_RGB_LED
     haptic_configurable = is_initialized and utils.USE_HAPTIC
@@ -95,16 +122,11 @@ def _menu_params(
         and not storage_device.no_backup()
     )
 
-    bonds = ble.get_bonds()
-    if __debug__:
-        log.debug(__name__, "bonds: %s", bonds)
     ble_enabled = ble.get_enabled()
-    connected_addr = ble.connected_addr()
-    connected_idx = _find_device(connected_addr, bonds) if ble_enabled else None
+    connection = _connection_params()
     if __debug__:
-        log.debug(__name__, "connected: %s (%s)", connected_addr, connected_idx)
-    hostname_map = {e.mac_addr: e for e in paired_cache.load()}
-    paired_devices = [_get_hostinfo(bond, hostname_map) for bond in bonds]
+        log.debug(__name__, "bonds: %s", ble.get_bonds())
+        log.debug(__name__, "connected idx: %s", connection["connected_idx"])
 
     # versions used in "About" screen, emulator uses dummy versions for fixtures
     if utils.EMULATOR or not utils.USE_NRF:
@@ -137,14 +159,16 @@ def _menu_params(
         about_items.append((TR.sn__title, serial_no, True))
     about_items.append((TR.words__made_in, "Ostrava, Czechia", False))
 
-    return {
+    global _params_cache
+
+    _params_cache = {
         "init_submenu_idx": init_submenu_idx,
         "init_submenu_offset": init_submenu_offset,
         "backup_failed": backup_failed,
         "backup_needed": backup_needed,
         "ble_enabled": ble_enabled,
-        "paired_devices": paired_devices,
-        "connected_idx": connected_idx,
+        "paired_devices": connection["paired_devices"],
+        "connected_idx": connection["connected_idx"],
         "pin_enabled": config.has_pin() if is_initialized else None,
         "auto_lock": get_auto_lock_delay(),
         "wipe_code_enabled": (
@@ -167,6 +191,26 @@ def _menu_params(
         "about_items": about_items,
         "production_year": production_year,
     }
+    return _params_cache
+
+
+def _refresh_menu_params(stale_keys: "tuple[str, ...]") -> "DeviceMenuParams":
+    """Recompute what the menu says went stale, return the complete set.
+
+    The Rust side rebuilds from a full parameter set, so the whole thing goes
+    back; the keys only decide how much of it has to be computed again. An empty
+    key tuple, or anything outside the connection keys, means a full recompute.
+    """
+    if _params_cache is None or not stale_keys:
+        return _menu_params()
+    if not all(key in _CONNECTION_KEYS for key in stale_keys):
+        return _menu_params()
+
+    _params_cache.update(_connection_params())
+    # A refresh must not move the user, whatever the cached set was built with.
+    _params_cache["init_submenu_idx"] = None
+    _params_cache["init_submenu_offset"] = 0
+    return _params_cache
 
 
 class DeviceMenuLayout(UsbAwareLayout):
@@ -175,7 +219,7 @@ class DeviceMenuLayout(UsbAwareLayout):
     No submenu index is supplied, so a refresh leaves the user where they are.
     """
 
-    params_provider = staticmethod(_menu_params)
+    params_provider = staticmethod(_refresh_menu_params)
 
 
 async def handle_device_menu() -> None:

@@ -17,6 +17,7 @@ use crate::ui::event::{SwipeEvent, TouchEvent};
 #[cfg(feature = "touch")]
 use crate::ui::geometry::Direction;
 use crate::ui::geometry::{Offset, Rect};
+use crate::ui::params_request::ParamsRequest;
 use crate::ui::shape::Renderer;
 use crate::ui::util::Pager;
 use crate::ui::UIError;
@@ -515,10 +516,10 @@ pub struct EventCtx {
     anim_frame_scheduled: bool,
     page_count: Option<u16>,
     button_request: Option<ButtonRequest>,
+    params_request: Option<ParamsRequest>,
     root_repaint_requested: bool,
     swipe_disable_req: bool,
     swipe_enable_req: bool,
-    params_requested: bool,
 }
 
 impl EventCtx {
@@ -539,10 +540,10 @@ impl EventCtx {
             anim_frame_scheduled: false,
             page_count: None,
             button_request: None,
+            params_request: None,
             root_repaint_requested: false,
             swipe_disable_req: false,
             swipe_enable_req: false,
-            params_requested: false,
         }
     }
 
@@ -614,19 +615,24 @@ impl EventCtx {
     }
 
     /// Ask the application layer for fresh construction parameters. The layout
-    /// keeps running; the params arrive later as an `Event::UpdateParams`.
+    /// keeps running; the parameters arrive later as an `Event::UpdateParams`.
     ///
     /// Use this instead of returning a "please restart me" message when only
     /// the layout's inputs went stale -- it avoids tearing the layout down and
-    /// redrawing it from scratch.
-    pub fn request_params(&mut self) {
-        self.params_requested = true;
+    /// redrawing it from scratch. The `request` names the keys that went stale,
+    /// so the application layer recomputes only those.
+    ///
+    /// Requests raised during the same event pass are merged, so a component
+    /// asking never discards what another one already asked for.
+    pub fn request_params(&mut self, request: ParamsRequest) {
+        match &mut self.params_request {
+            Some(pending) => pending.merge(&request),
+            None => self.params_request = Some(request),
+        }
     }
 
-    /// Returns `true` if a component asked for fresh construction parameters
-    /// during this event pass.
-    pub fn params_requested(&self) -> bool {
-        self.params_requested
+    pub fn params_request(&mut self) -> Option<ParamsRequest> {
+        self.params_request.take()
     }
 
     pub fn pop_timer(&mut self) -> Option<(TimerToken, Duration)> {

@@ -11,9 +11,12 @@ use super::super::firmware::{
 };
 use super::{theme, MediumMenuVec, ShortMenuVec};
 use crate::micropython::gc::GcBox;
+use crate::micropython::qstr::Qstr;
 use crate::micropython::{Error, Obj};
 use crate::strutil::TString;
 use crate::translations::TR;
+#[cfg(feature = "ble")]
+use crate::trezorhal::ble;
 use crate::trezorhal::usb;
 use crate::ui::component::base::ParamsObj;
 use crate::ui::component::text::paragraphs::{
@@ -21,14 +24,15 @@ use crate::ui::component::text::paragraphs::{
 };
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{Component, Event, EventCtx};
+#[cfg(feature = "ble")]
+use crate::ui::event::BLEEvent;
 use crate::ui::event::USBEvent;
 use crate::ui::geometry::{LinearPlacement, Rect};
 pub use crate::ui::layout::device_menu_result::DeviceMenuMsg;
 use crate::ui::layout::util::PropsList;
+use crate::ui::params_request::ParamsRequest;
 use crate::ui::shape::Renderer;
 use crate::ui::ui_firmware::{DeviceMenuParams, MAX_PAIRED_DEVICES};
-#[cfg(feature = "ble")]
-use crate::{trezorhal::ble, ui::event::BLEEvent};
 
 #[repr(u8)]
 #[derive(Copy, Clone, Default, FromPrimitive, ToPrimitive, PartialEq, Eq)]
@@ -1064,10 +1068,10 @@ impl Component for DeviceMenuScreen {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
-            // The connection status we display went stale -- ask the application
-            // layer to hand us fresh parameters. The layout keeps running.
+            // What USB feeds is read from the HAL inside this screen, so there
+            // is no parameter to name -- ask for the whole set, as before.
             Event::USB(USBEvent::Configured | USBEvent::Deconfigured) => {
-                ctx.request_params();
+                ctx.request_params(ParamsRequest::everything());
                 return None;
             }
 
@@ -1075,7 +1079,10 @@ impl Component for DeviceMenuScreen {
             Event::BLE(
                 BLEEvent::Connected | BLEEvent::Disconnected | BLEEvent::ConnectionChanged,
             ) => {
-                ctx.request_params();
+                ctx.request_params(ParamsRequest::new(&[
+                    Qstr::MP_QSTR_connected_idx,
+                    Qstr::MP_QSTR_paired_devices,
+                ]));
                 return None;
             }
 
