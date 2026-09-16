@@ -466,6 +466,9 @@ def sign_message(
     address_n = tools.parse_path(address)
     if script_type is None:
         script_type = guess_script_type_from_path(address_n)
+        if script_type is messages.InputScriptType.SPENDMULTISIG:
+            # Message signing is single-key; use the single-key analogue.
+            script_type = messages.InputScriptType.SPENDADDRESS
     res = btc.sign_message(
         session,
         coin,
