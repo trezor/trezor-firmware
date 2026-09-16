@@ -178,7 +178,7 @@ def validate_path_against_script_type(
 
     if SignMessage.is_type_of(msg):
         patterns += _get_patterns_for_script_type(coin, script_type, multisig=True)
-        patterns += _xpub_export_patterns(coin, script_type)
+        patterns += _sign_message_export_patterns(coin)
 
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
@@ -219,6 +219,21 @@ def _xpub_export_patterns(
                 export_patterns.append(prefix)
 
     return export_patterns
+
+
+def _sign_message_export_patterns(coin: coininfo.CoinInfo) -> list[str]:
+    """Export points of every script type sign_message() can sign with."""
+    patterns: list[str] = []
+    for script_type in (
+        InputScriptType.SPENDADDRESS,
+        InputScriptType.SPENDP2SHWITNESS,
+        InputScriptType.SPENDWITNESS,
+    ):
+        for pattern in _xpub_export_patterns(coin, script_type):
+            if pattern not in patterns:
+                patterns.append(pattern)
+
+    return patterns
 
 
 def validate_xpub_path_against_script_type(
@@ -385,20 +400,12 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
         coin = _get_coin_by_name(msg.coin_name)
         extra_schemas = _get_unlock_schemas(msg, auth_msg, coin)
         if SignMessage.is_type_of(msg):
-            script_type = msg.script_type or InputScriptType.SPENDADDRESS
             # Only the export points need granting; leaf patterns are already
-            # in _get_schemas_for_coin(). SPENDTAPROOT is out, which keeps
-            # PATTERN_SLIP25_TAPROOT behind UnlockPath.
-            if script_type in (
-                InputScriptType.SPENDADDRESS,
-                InputScriptType.SPENDP2SHWITNESS,
-                InputScriptType.SPENDWITNESS,
-            ):
-                # Do not add Bitcoin-path aliases for fork coins.
-                extra_schemas += [
-                    PathSchema.parse(pattern, coin.slip44)
-                    for pattern in _xpub_export_patterns(coin, script_type)
-                ]
+            # in _get_schemas_for_coin(), and no Bitcoin-path aliases for forks.
+            extra_schemas += [
+                PathSchema.parse(pattern, coin.slip44)
+                for pattern in _sign_message_export_patterns(coin)
+            ]
         keychain = await _get_keychain_for_coin(coin, extra_schemas)
         if AuthorizeCoinJoin.is_type_of(auth_msg):
             auth_obj = authorization.from_cached_message(auth_msg)
