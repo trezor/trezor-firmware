@@ -15,11 +15,6 @@ from trezorlib.merkle_tree import MerkleTree, evaluate_proof
 from trezorlib.root_packet import RootPacket, RootPacketAuth
 from trezorlib.trezorapp import AppHeader, AppImage
 
-# Genesis of the root-packet timestamp: 2026-06-14 12:00 UTC.
-# The firmware only requires the stored timestamp to be non-zero; the epoch itself is a
-# tooling convention, so adjust here if a different reference is desired.
-TIMESTAMP_GENESIS = datetime(2026, 6, 14, 12, 0, 0, tzinfo=timezone.utc)
-
 # Hardcoded dummy development seeds (32 bytes each) for deterministic ML-DSA-44 key
 # generation (FIPS 204 key generation is seeded by a 32-byte value). NOT for production.
 DEV_SIGNING_SEEDS = (
@@ -181,6 +176,7 @@ def _make_root_packet(ring_mask: int, root_rings: list[bytes]) -> RootPacket:
             ring_mask=ring_mask,
             reserved=b"\x00" * 2,
             timestamp=0,
+            chain_timestamp=0,
             root_rings=root_rings,
         ),
         sigmask=3,
@@ -411,6 +407,7 @@ def _print_root_packet(rp: RootPacket) -> None:
     print("RootPacket:")
     print(f"  ring_mask:   {auth.ring_mask:#04x}")
     print(f"  timestamp:   {auth.timestamp} ({auth.timestamp:#010x})")
+    print(f"  chain_timestamp:   {auth.chain_timestamp} ({auth.chain_timestamp:#010x})")
     for index, root in auth.rings.items():
         print(f"  ring[{index}]:     {root.hex()}")
     print(f"  sigmask:     {rp.sigmask:#04x}")
@@ -442,10 +439,9 @@ def show(rootpacket: Path) -> None:
 def _apply_timestamp(rp: RootPacket) -> int:
     """Stamp `rp` in place with the current time; returns the seconds since genesis."""
     # Signed offset (in seconds) from the genesis; may be negative before the genesis.
-    time_signed = int((datetime.now(timezone.utc) - TIMESTAMP_GENESIS).total_seconds())
-    # The on-device field is a uint32, so store the two's-complement of the signed value.
-    rp.auth.timestamp = time_signed & 0xFFFFFFFF
-    return time_signed
+    timestamp = int(datetime.now(timezone.utc).timestamp())
+    rp.auth.timestamp = timestamp
+    return timestamp
 
 
 def _apply_dev_signatures(rp: RootPacket) -> bytes:
@@ -470,11 +466,9 @@ def timestamp(rootpacket: Path) -> None:
     rp = RootPacket.parse(rootpacket.read_bytes())
     _print_root_packet(rp)
 
-    time_signed = _apply_timestamp(rp)
+    timestamp = _apply_timestamp(rp)
     print(f"\nCurrent time (human):   {datetime.now(timezone.utc).isoformat()}")
-    print(
-        f"Current time (genesis): {time_signed} seconds since {TIMESTAMP_GENESIS.isoformat()}"
-    )
+    print(f"Current time (unix): {timestamp} seconds since the Unix epoch")
 
     out_file = _suffixed_path(rootpacket, "timestamped")
     out_file.write_bytes(rp.build())
