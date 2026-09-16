@@ -79,11 +79,6 @@ jobs:
       # Disable Evolu tests since they require Optiga
       # Disable telemetry test, fails because there's no battery
       # 5.5h pytest global timeout
-      TESTOPTS: >-
-        -m 'not sd_card'
-        -k 'not test_authenticate_device and not evolu and not test_telemetry'
-        --durations=50
-        --session-timeout 19800
       TT_UHUB_PORT: all
     timeout-minutes: 360  # 6h CI job timeout
     steps:
@@ -92,19 +87,21 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - uses: ./.github/actions/environment
+        with:
+          nix-dev-shell: default
       - name: uhubctl
         run: |
-          nix-shell --arg hardwareTest true --run uhubctl || true
-          nix-shell --arg hardwareTest true --run "uv run core/tools/check-usb-permissions.py" |& tee check-usb-permissions.log
-      - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build/artifacts/latest/firmware.bin"
+          $NIX_RUN uhubctl || true
+          $UV_RUN core/tools/check-usb-permissions.py |& tee check-usb-permissions.log
+      - run: $UV_RUN make -C core build_firmware
+      - run: $UV_RUN ci/hardware_tests/bootstrap.py "$TREZOR_MODEL" core/build/artifacts/latest/firmware.bin
       - run: |
-          nix-shell --run "uv run trezorctl list"
-          nix-shell --run "uv run trezorctl get-features"
+          $UV_RUN trezorctl list
+          $UV_RUN trezorctl get-features
         if: matrix.model != 'T3W1'  # gets stuck on models with THP
       - run: |
-          nix-shell --arg hardwareTest true --run "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
-          nix-shell --run "uv run pytest -v --verbose-log-file pytest.log tests/device_tests $TESTOPTS"
+          $NIX_RUN bash -c "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
+          $UV_RUN pytest -v --verbose-log-file pytest.log tests/device_tests -m 'not sd_card' -k 'not test_authenticate_device and not evolu and not test_telemetry' --durations=50 --session-timeout 19800
       - run: tail -n50 trezor.log || true
         if: failure()
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -145,15 +142,15 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/environment
         with:
-          full-deps: "true"
-      - run: nix-shell --arg hardwareTest true --run uhubctl
-      - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build/artifacts/latest/firmware.bin"
-      - run: nix-shell --run "uv run trezorctl list"
-      - run: nix-shell --run "uv run trezorctl get-features"
+          nix-dev-shell: everything
+      - run: $NIX_RUN uhubctl
+      - run: $UV_RUN make -C core build_firmware
+      - run: $UV_RUN ci/hardware_tests/bootstrap.py "$TREZOR_MODEL" core/build/artifacts/latest/firmware.bin
+      - run: $UV_RUN trezorctl list
+      - run: $UV_RUN trezorctl get-features
       - run: |
-          nix-shell --arg hardwareTest true --run "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
-          nix-shell --arg fullDeps true --run "./core/tests/run_tests_device_emu_monero.sh --trezor-path webusb:"
+          $NIX_RUN bash -c "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
+          $NIX_RUN ./core/tests/run_tests_device_emu_monero.sh --trezor-path webusb:
       - run: tail -n50 trezor.log || true
         if: failure()
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -189,13 +186,17 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - uses: ./.github/actions/environment
+        with:
+          nix-dev-shell: default
       - name: uhubctl
         run: |
-          nix-shell --arg hardwareTest true --run uhubctl || true
-          nix-shell --arg hardwareTest true --run "uv run core/tools/check-usb-permissions.py" |& tee check-usb-permissions.log
-      - run: nix-shell --run "uv run legacy/script/setup"
-      - run: nix-shell --run "export PRODUCTION=0 && uv run legacy/script/cibuild"
-      - run: nix-shell --arg hardwareTest true --run "ci/hardware_tests/t1_hw_test.sh"
+          $NIX_RUN uhubctl || true
+          $UV_RUN core/tools/check-usb-permissions.py |& tee check-usb-permissions.log
+      - run: $UV_RUN legacy/script/setup
+      - run: $UV_RUN legacy/script/cibuild
+        env:
+          PRODUCTION: 0
+      - run: $NIX_RUN ci/hardware_tests/t1_hw_test.sh
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-hardware-${{ matrix.coins }}
