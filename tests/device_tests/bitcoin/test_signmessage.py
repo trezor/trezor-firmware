@@ -595,6 +595,7 @@ def _assert_sign_message(
     assert sig.signature
 
 
+@pytest.mark.models("core")
 @pytest.mark.parametrize("path, script_type, expected", VECTORS_BIP48_MATRIX)
 def test_signmessage_bip48_matrix(
     session: Session,
@@ -605,11 +606,22 @@ def test_signmessage_bip48_matrix(
     _assert_sign_message(session, path, script_type, expected)
 
 
-
 VECTORS_SIGNMESSAGE_LENIENCY = (  # path, script_type, expected
     # The BIP-45 cosigner node: PATTERN_BIP45 is unhardened below m/45'
-    pytest.param("m/45h", S.SPENDADDRESS, SIGNS, id="bip45_cosigner_node"),
+    pytest.param("m/45h", S.SPENDADDRESS, SIGNS, id="cosigner_node-address"),
+    pytest.param("m/45h", S.SPENDP2SHWITNESS, SIGNS, id="cosigner_node-p2shsegwit"),
+    pytest.param("m/45h", S.SPENDWITNESS, SIGNS, id="cosigner_node-segwit"),
     pytest.param("m/45h/0/0/0", S.SPENDADDRESS, SIGNS, id="bip45_leaf"),
+    # The Casa and Unchained-unhardened account level
+    pytest.param("m/45h/0/0", S.SPENDADDRESS, SIGNS, id="casa_account-address"),
+    pytest.param("m/45h/0/0", S.SPENDP2SHWITNESS, SIGNS, id="casa_account-p2shsegwit"),
+    pytest.param("m/45h/0/0", S.SPENDWITNESS, SIGNS, id="casa_account-segwit"),
+    # The Unchained hardened account level
+    pytest.param("m/45h/0h/0h", S.SPENDADDRESS, SIGNS, id="unchained_account-address"),
+    pytest.param(
+        "m/45h/0h/0h", S.SPENDP2SHWITNESS, FORBIDDEN, id="unchained_account-p2shsegwit"
+    ),
+    pytest.param("m/45h/0h/0h", S.SPENDWITNESS, SIGNS, id="unchained_account-segwit"),
     # Unchained, whose account level is hardened
     pytest.param("m/45h/0h/0h/1000000/0/0", S.SPENDADDRESS, SIGNS, id="unchained_leaf"),
     # An ordinary account node, where any wallet shares its xpub
@@ -623,6 +635,7 @@ VECTORS_SIGNMESSAGE_LENIENCY = (  # path, script_type, expected
 )
 
 
+@pytest.mark.models("core")
 @pytest.mark.parametrize("path, script_type, expected", VECTORS_SIGNMESSAGE_LENIENCY)
 def test_signmessage_leniency(
     session: Session,
@@ -633,6 +646,7 @@ def test_signmessage_leniency(
     _assert_sign_message(session, path, script_type, expected)
 
 
+@pytest.mark.models("core")
 def test_signmessage_bip48_legacy_level_signs_as_p2pkh(session: Session):
     # The path alone reads as SPENDMULTISIG, but there is no multisig message
     # signature, so trezorctl sends the single-key analogue.
