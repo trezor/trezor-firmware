@@ -131,7 +131,9 @@ struct {
   bool set;
 } g_layout __attribute__((aligned(4))) = {0};
 
+#ifndef USE_BLE_CONSOLE
 static void usb_vcp_intr_callback(void) { cli_abort(&g_cli); }
+#endif
 
 // Reads console input, runs a command if a full line arrived, flushes output
 static void prodtest_process_cli(void) {
@@ -233,9 +235,11 @@ int prodtest_main(void) {
 
   drivers_init();
 
+#ifndef USE_BLE_CONSOLE
   ensure(usb_configure(&usb_vcp_intr_callback), "usb_configure failed");
 
   ensure(usb_start(NULL), "usb_start failed");
+#endif
 
   // Initialize command line interface
   cli_init(&g_cli, console_read, console_write, NULL);
@@ -243,6 +247,12 @@ int prodtest_main(void) {
   cli_set_commands(&g_cli, commands_get_ptr(), commands_count());
 
   console_init(&g_cli);
+
+#ifdef USE_BLE_CONSOLE
+  // Not fatal: the CLI still runs, so a host that manages to connect later
+  // (or a debugger) can see what went wrong.
+  prodtest_ble_console_start();
+#endif
 
 #ifdef USE_OPTIGA
   optiga_init();
@@ -287,6 +297,10 @@ int prodtest_main(void) {
 #endif
     sysevents_t signalled = {0};
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
+
+#ifdef USE_BLE_CONSOLE
+    prodtest_ble_console_tick();
+#endif
 
     if (signalled.read_ready & console_poll_mask()) {
       prodtest_process_cli();
