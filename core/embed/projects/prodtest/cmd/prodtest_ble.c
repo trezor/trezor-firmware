@@ -20,6 +20,7 @@
 #ifdef USE_BLE
 
 #include <trezor_bsp.h>
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <io/ble.h>
@@ -29,6 +30,12 @@
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
+
+#ifdef USE_BLE_CONSOLE
+#include <io/ble_console.h>
+#include <rtl/printf.h>
+#include <sys/cpuid.h>
+#endif
 
 #include "prodtest_ble.h"
 #include "prodtest_error_codes.h"
@@ -87,6 +94,97 @@ static bool ensure_ble_init(cli_t* cli) {
 
   return true;
 }
+
+#ifdef USE_BLE_CONSOLE
+// Advertising name of the console; set once at boot, reused on every
+// re-entry into pairing mode.
+static char g_console_adv_name[BLE_ADV_NAME_LEN + 1] = {0};
+static uint16_t g_console_adv_name_len = 0;
+
+// Do not re-enter pairing mode more often than this. Entering it flushes the
+// BLE event queue, so a pairing request in flight must not be flushed away.
+#define CONSOLE_READVERTISE_PERIOD_MS 1000
+
+void prodtest_ble_console_tick(void) {
+  static uint32_t deadline = 0;
+
+  if (g_console_adv_name_len == 0 || !ticks_expired(deadline)) {
+    return;
+  }
+
+  ble_state_t state = {0};
+  ble_get_state(&state);
+
+  if (!state.state_known || state.connected || state.pairing ||
+      state.pairing_requested) {
+    return;
+  }
+
+  // Idle and not accepting pairing: after a disconnect the driver falls back
+  // to whitelist advertising for bonded peers, but the host forgets its bond
+  // every session and needs a fresh pairing. Go back to pairing mode.
+  ble_enter_pairing_mode((const uint8_t*)g_console_adv_name,
+                         g_console_adv_name_len);
+  deadline = ticks_timeout(CONSOLE_READVERTISE_PERIOD_MS);
+}
+
+bool prodtest_ble_console_start(void) {
+  if (!ble_init() || !ble_timer_start()) {
+    return false;
+  }
+
+  if (!ble_console_init()) {
+    return false;
+  }
+
+  if (!ble_wait_until_ready()) {
+    return false;
+  }
+
+  // Prodtest has no use for a bond that survived a power cycle, and a full
+  // bond table would refuse the very pairing needed to clear it.
+  prodtest_ble_erase_bonds(NULL);
+
+  ble_set_enabled(true);
+  ble_set_static_mac(true);
+
+  // Per-unit advertising name, e.g. "T3W1 PT 1A2B3C4D"; fits BLE_ADV_NAME_LEN.
+  cpuid_t cpuid = {0};
+  cpuid_get(&cpuid);
+
+  int name_len =
+      snprintf_(g_console_adv_name, sizeof(g_console_adv_name), "%s PT %08lX",
+                MODEL_INTERNAL_NAME, (unsigned long)cpuid.id[2]);
+  if (name_len < 0) {
+    return false;
+  }
+  if (name_len > BLE_ADV_NAME_LEN) {
+    name_len = BLE_ADV_NAME_LEN;
+  }
+  g_console_adv_name_len = name_len;
+
+  // Pairing mode is kept up by prodtest_ble_console_tick() from the main loop;
+  // this only gets it started.
+  return ble_enter_pairing_mode((const uint8_t*)g_console_adv_name,
+                                g_console_adv_name_len);
+}
+
+static void prodtest_ble_console_stats(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  ble_console_stats_t st = {0};
+  ble_console_get_stats(&st);
+
+  cli_ok(cli,
+         "tx=%lu credits=%lu timeouts=%lu failed=%lu rx=%lu rx-dropped=%lu",
+         (unsigned long)st.tx_packets, (unsigned long)st.tx_credits,
+         (unsigned long)st.tx_timeouts, (unsigned long)st.tx_failed,
+         (unsigned long)st.rx_packets, (unsigned long)st.rx_dropped);
+}
+#endif  // USE_BLE_CONSOLE
 
 static void prodtest_ble_adv_start(cli_t* cli) {
   const char* name = cli_arg(cli, "name");
@@ -668,5 +766,14 @@ PRODTEST_CLI_CMD(
   .info = "Proxy data between the USB VCP and the nRF over UART in direct test mode.",
   .args = ""
 );
+
+#ifdef USE_BLE_CONSOLE
+PRODTEST_CLI_CMD(
+  .name = "ble-console-stats",
+  .func = prodtest_ble_console_stats,
+  .info = "Report BLE console link counters (packets, credits, timeouts, drops)",
+  .args = ""
+);
+#endif
 
 #endif

@@ -28,21 +28,25 @@
  *
  * The CLI engine (rtl/cli) is a byte stream: it reads one byte at a time and
  * writes many small fragments. This module sits between the engine and the
- * transport, today USB VCP: a byte stream already, passed through with a
- * blocking write and an adaptive timeout so an absent host does not stall the
- * main loop. Keeping the transport behind these few calls lets another one be
- * slotted in without touching the main loop.
+ * transport the board provides:
+ *
+ * - BLE console (USE_BLE_CONSOLE, board declares `[ble_console]`): a packet
+ *   channel of up to 244 bytes. Input packets are handed to the engine byte by
+ *   byte; output fragments are coalesced into a packet that is flushed on a
+ *   newline, when full, or when the main loop calls console_flush().
+ * - USB VCP otherwise: a byte stream already; passed through with a blocking
+ *   write and an adaptive timeout so an absent host does not stall the loop.
  */
 
-/** Sets up the transport. */
+/** Sets up the transport and the Ctrl-C abort hook. */
 void console_init(cli_t *cli);
 
 /** Bits of `sysevents_t.read_ready` the main loop should wait on. */
 uint32_t console_poll_mask(void);
 
 /**
- * True when input is buffered but not yet consumed, so the CLI should be
- * serviced without waiting for a new read-ready event.
+ * True when bytes from an already received packet are still unread, so the
+ * CLI should be serviced without waiting for a new read-ready event.
  */
 bool console_input_pending(void);
 
