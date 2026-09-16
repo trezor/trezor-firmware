@@ -245,8 +245,8 @@ ts_t root_packet_verify(const void* data, size_t size,
     TSH_CHECK(auth->chain_timestamp == 0, TS_EBADMSG);
   } else {
     // Ring #1 and/or #2
-    int32_t diff = (int32_t)(auth->timestamp - auth->chain_timestamp);
-    TSH_CHECK(abs(diff) <= ROOT_PACKET_MAX_DRIFT, TS_EBADMSG);
+    int64_t diff = (int64_t)(auth->timestamp - auth->chain_timestamp);
+    TSH_CHECK(llabs(diff) <= ROOT_PACKET_MAX_DRIFT, TS_EBADMSG);
   }
 
   // Calculate the expected size of the authenticated part of the root packet
