@@ -270,17 +270,31 @@ class TestSignMessageBip48(TestCaseWithContext):
             self.assertTrue(validate_path_against_script_type(coin, msg))
             self.assertTrue(self._derive(msg))
 
-    def test_script_type_must_match_the_level(self):
-        """Only the matching account node is granted, so this is not derivable."""
+    def test_export_point_ignores_the_script_type(self):
+        """An export point is reached under every signable script type."""
+        from trezor.enums import InputScriptType
+
+        coin = _get_coin_by_name("Bitcoin")
+        for script_type in (
+            InputScriptType.SPENDADDRESS,
+            InputScriptType.SPENDP2SHWITNESS,
+            InputScriptType.SPENDWITNESS,
+        ):
+            msg = self._sign_message([H_(48), H_(0), H_(0), H_(2)], script_type)
+            self.assertTrue(validate_path_against_script_type(coin, msg))
+            self.assertTrue(self._derive(msg))
+
+    def test_leaf_script_type_must_match_the_level(self):
+        """Below an export point the encoding must match, but only warns."""
         from trezor.enums import InputScriptType
 
         coin = _get_coin_by_name("Bitcoin")
         msg = self._sign_message(
-            [H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDADDRESS
+            [H_(48), H_(0), H_(0), H_(2), 0, 0], InputScriptType.SPENDADDRESS
         )
 
         self.assertFalse(validate_path_against_script_type(coin, msg))
-        self.assertRaises(wire.DataError, self._derive, msg)
+        self.assertTrue(self._derive(msg))
 
     def test_fork_coins_get_no_bitcoin_path_alias(self):
         """The Bitcoin-namespace alias of a fork must not carry the grant.

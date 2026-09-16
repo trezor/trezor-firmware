@@ -515,29 +515,29 @@ VECTORS_BIP48_MATRIX = (  # path, script_type, expected
     # signs as p2pkh and trezorctl sends SPENDADDRESS rather than SPENDMULTISIG
     pytest.param("m/48h/0h/0h/0h", S.SPENDADDRESS, SIGNS, id="account_0h-address"),
     pytest.param(
-        "m/48h/0h/0h/0h", S.SPENDP2SHWITNESS, FORBIDDEN, id="account_0h-p2shsegwit"
+        "m/48h/0h/0h/0h", S.SPENDP2SHWITNESS, SIGNS, id="account_0h-p2shsegwit"
     ),
-    pytest.param("m/48h/0h/0h/0h", S.SPENDWITNESS, FORBIDDEN, id="account_0h-segwit"),
+    pytest.param("m/48h/0h/0h/0h", S.SPENDWITNESS, SIGNS, id="account_0h-segwit"),
     pytest.param("m/48h/0h/0h/0h/0/0", S.SPENDADDRESS, SIGNS, id="leaf_0h-address"),
     pytest.param(
         "m/48h/0h/0h/0h/0/0", S.SPENDP2SHWITNESS, WARN, id="leaf_0h-p2shsegwit"
     ),
     pytest.param("m/48h/0h/0h/0h/0/0", S.SPENDWITNESS, WARN, id="leaf_0h-segwit"),
     # 1h is the P2SH-segwit level
-    pytest.param("m/48h/0h/0h/1h", S.SPENDADDRESS, FORBIDDEN, id="account_1h-address"),
+    pytest.param("m/48h/0h/0h/1h", S.SPENDADDRESS, SIGNS, id="account_1h-address"),
     pytest.param(
         "m/48h/0h/0h/1h", S.SPENDP2SHWITNESS, SIGNS, id="account_1h-p2shsegwit"
     ),
-    pytest.param("m/48h/0h/0h/1h", S.SPENDWITNESS, FORBIDDEN, id="account_1h-segwit"),
+    pytest.param("m/48h/0h/0h/1h", S.SPENDWITNESS, SIGNS, id="account_1h-segwit"),
     pytest.param("m/48h/0h/0h/1h/0/0", S.SPENDADDRESS, WARN, id="leaf_1h-address"),
     pytest.param(
         "m/48h/0h/0h/1h/0/0", S.SPENDP2SHWITNESS, SIGNS, id="leaf_1h-p2shsegwit"
     ),
     pytest.param("m/48h/0h/0h/1h/0/0", S.SPENDWITNESS, WARN, id="leaf_1h-segwit"),
     # 2h is the native-segwit level -- the paths reported in #7717
-    pytest.param("m/48h/0h/0h/2h", S.SPENDADDRESS, FORBIDDEN, id="account_2h-address"),
+    pytest.param("m/48h/0h/0h/2h", S.SPENDADDRESS, SIGNS, id="account_2h-address"),
     pytest.param(
-        "m/48h/0h/0h/2h", S.SPENDP2SHWITNESS, FORBIDDEN, id="account_2h-p2shsegwit"
+        "m/48h/0h/0h/2h", S.SPENDP2SHWITNESS, SIGNS, id="account_2h-p2shsegwit"
     ),
     pytest.param("m/48h/0h/0h/2h", S.SPENDWITNESS, SIGNS, id="account_2h-segwit"),
     pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDADDRESS, WARN, id="leaf_2h-address"),
@@ -621,8 +621,8 @@ VECTORS_SIGNMESSAGE_LENIENCY = (  # path, script_type, expected
     # An ordinary account node, where any wallet shares its xpub
     pytest.param("m/44h/0h/0h", S.SPENDADDRESS, SIGNS, id="bip44_account"),
     pytest.param("m/84h/0h/0h", S.SPENDWITNESS, SIGNS, id="bip84_account"),
-    # The script type still has to match the purpose
-    pytest.param("m/44h/0h/0h", S.SPENDWITNESS, FORBIDDEN, id="bip44_account-segwit"),
+    # An export point is reached under any signable script type
+    pytest.param("m/44h/0h/0h", S.SPENDWITNESS, SIGNS, id="bip44_account-segwit"),
     # A pattern with no hardened component has no export point, so the root
     # stays withheld
     pytest.param("m", S.SPENDADDRESS, FORBIDDEN, id="root"),

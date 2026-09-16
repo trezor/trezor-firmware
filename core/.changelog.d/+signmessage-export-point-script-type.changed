@@ -1,0 +1,1 @@
+Signing a message at a node whose xpub can be exported no longer requires the host to send the script type matching that node.
