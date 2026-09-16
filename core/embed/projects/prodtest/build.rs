@@ -8,7 +8,7 @@ fn main() -> Result<()> {
 
         lib.add_include("../../rust"); // Cyclic dependency
 
-        lib.add_sources(["main.c", "commands.c"]);
+        lib.add_sources(["main.c", "commands.c", "console.c"]);
 
         if cfg!(feature = "emulator") {
             lib.add_source("emulator.c");
