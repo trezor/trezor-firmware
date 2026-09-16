@@ -513,12 +513,12 @@ SIGNS = "signs"
 VECTORS_BIP48_MATRIX = (  # path, script_type, expected
     # 0h is the legacy-multisig level; message signing is single-key, so it
     # signs as p2pkh and trezorctl sends SPENDADDRESS rather than SPENDMULTISIG
-    pytest.param("m/48h/0h/0h/0h", S.SPENDADDRESS, FORBIDDEN, id="account_0h-address"),
+    pytest.param("m/48h/0h/0h/0h", S.SPENDADDRESS, SIGNS, id="account_0h-address"),
     pytest.param(
         "m/48h/0h/0h/0h", S.SPENDP2SHWITNESS, FORBIDDEN, id="account_0h-p2shsegwit"
     ),
     pytest.param("m/48h/0h/0h/0h", S.SPENDWITNESS, FORBIDDEN, id="account_0h-segwit"),
-    pytest.param("m/48h/0h/0h/0h/0/0", S.SPENDADDRESS, WARN, id="leaf_0h-address"),
+    pytest.param("m/48h/0h/0h/0h/0/0", S.SPENDADDRESS, SIGNS, id="leaf_0h-address"),
     pytest.param(
         "m/48h/0h/0h/0h/0/0", S.SPENDP2SHWITNESS, WARN, id="leaf_0h-p2shsegwit"
     ),
@@ -526,32 +526,29 @@ VECTORS_BIP48_MATRIX = (  # path, script_type, expected
     # 1h is the P2SH-segwit level
     pytest.param("m/48h/0h/0h/1h", S.SPENDADDRESS, FORBIDDEN, id="account_1h-address"),
     pytest.param(
-        "m/48h/0h/0h/1h", S.SPENDP2SHWITNESS, FORBIDDEN, id="account_1h-p2shsegwit"
+        "m/48h/0h/0h/1h", S.SPENDP2SHWITNESS, SIGNS, id="account_1h-p2shsegwit"
     ),
     pytest.param("m/48h/0h/0h/1h", S.SPENDWITNESS, FORBIDDEN, id="account_1h-segwit"),
     pytest.param("m/48h/0h/0h/1h/0/0", S.SPENDADDRESS, WARN, id="leaf_1h-address"),
     pytest.param(
-        "m/48h/0h/0h/1h/0/0", S.SPENDP2SHWITNESS, WARN, id="leaf_1h-p2shsegwit"
+        "m/48h/0h/0h/1h/0/0", S.SPENDP2SHWITNESS, SIGNS, id="leaf_1h-p2shsegwit"
     ),
     pytest.param("m/48h/0h/0h/1h/0/0", S.SPENDWITNESS, WARN, id="leaf_1h-segwit"),
-    # 2h is the native-segwit level -- the paths reported in #7717
+    # 2h is the native-segwit level
     pytest.param("m/48h/0h/0h/2h", S.SPENDADDRESS, FORBIDDEN, id="account_2h-address"),
     pytest.param(
         "m/48h/0h/0h/2h", S.SPENDP2SHWITNESS, FORBIDDEN, id="account_2h-p2shsegwit"
     ),
-    pytest.param("m/48h/0h/0h/2h", S.SPENDWITNESS, FORBIDDEN, id="account_2h-segwit"),
+    pytest.param("m/48h/0h/0h/2h", S.SPENDWITNESS, SIGNS, id="account_2h-segwit"),
     pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDADDRESS, WARN, id="leaf_2h-address"),
     pytest.param(
         "m/48h/0h/0h/2h/0/0", S.SPENDP2SHWITNESS, WARN, id="leaf_2h-p2shsegwit"
     ),
-    pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDWITNESS, WARN, id="leaf_2h-segwit"),
+    pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDWITNESS, SIGNS, id="leaf_2h-segwit"),
 )
 
-LEGACY_LEVEL_EXPECTED = WARN
 
-
-@pytest.mark.parametrize("path, script_type, expected", VECTORS_BIP48_MATRIX)
-def test_signmessage_bip48_matrix(
+def _assert_sign_message(
     session: Session,
     path: str,
     script_type: messages.InputScriptType,
@@ -598,6 +595,44 @@ def test_signmessage_bip48_matrix(
     assert sig.signature
 
 
+@pytest.mark.parametrize("path, script_type, expected", VECTORS_BIP48_MATRIX)
+def test_signmessage_bip48_matrix(
+    session: Session,
+    path: str,
+    script_type: messages.InputScriptType,
+    expected: str,
+):
+    _assert_sign_message(session, path, script_type, expected)
+
+
+
+VECTORS_SIGNMESSAGE_LENIENCY = (  # path, script_type, expected
+    # The BIP-45 cosigner node: PATTERN_BIP45 is unhardened below m/45'
+    pytest.param("m/45h", S.SPENDADDRESS, SIGNS, id="bip45_cosigner_node"),
+    pytest.param("m/45h/0/0/0", S.SPENDADDRESS, SIGNS, id="bip45_leaf"),
+    # Unchained, whose account level is hardened
+    pytest.param("m/45h/0h/0h/1000000/0/0", S.SPENDADDRESS, SIGNS, id="unchained_leaf"),
+    # An ordinary account node, where any wallet shares its xpub
+    pytest.param("m/44h/0h/0h", S.SPENDADDRESS, SIGNS, id="bip44_account"),
+    pytest.param("m/84h/0h/0h", S.SPENDWITNESS, SIGNS, id="bip84_account"),
+    # The script type still has to match the purpose
+    pytest.param("m/44h/0h/0h", S.SPENDWITNESS, FORBIDDEN, id="bip44_account-segwit"),
+    # A pattern with no hardened component has no export point, so the root
+    # stays withheld
+    pytest.param("m", S.SPENDADDRESS, FORBIDDEN, id="root"),
+)
+
+
+@pytest.mark.parametrize("path, script_type, expected", VECTORS_SIGNMESSAGE_LENIENCY)
+def test_signmessage_leniency(
+    session: Session,
+    path: str,
+    script_type: messages.InputScriptType,
+    expected: str,
+):
+    _assert_sign_message(session, path, script_type, expected)
+
+
 def test_signmessage_bip48_legacy_level_signs_as_p2pkh(session: Session):
     # The path alone reads as SPENDMULTISIG, but there is no multisig message
     # signature, so trezorctl sends the single-key analogue.
@@ -606,14 +641,7 @@ def test_signmessage_bip48_legacy_level_signs_as_p2pkh(session: Session):
     address_n = parse_path("m/48h/0h/0h/0h/0/0")
     assert guess_script_type_from_path(address_n) is S.SPENDMULTISIG
 
-    expected_responses = []
-    if LEGACY_LEVEL_EXPECTED == WARN:
-        expected_responses.append(
-            message_filters.ButtonRequest(
-                code=messages.ButtonRequestType.UnknownDerivationPath
-            )
-        )
-    expected_responses += [
+    expected_responses = [
         message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
         message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
         messages.MessageSignature,
