@@ -174,6 +174,8 @@ extern uint8_t globalCommProtectCnt; /* Global Protection Counter provided per
           length       */
 #define RFAL_FEATURE_NFC_DEP_PDU_MAX_LEN 512U /*!< NFC-DEP PDU max length. */
 
+#define RFAL_CMATH /* enable the usage of C mathematical operations */
+
 /*
 ******************************************************************************
 * RFAL CUSTOM SETTINGS

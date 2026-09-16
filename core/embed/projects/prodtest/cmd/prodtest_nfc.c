@@ -29,6 +29,55 @@
 
 static nfc_dev_info_t dev_info = {0};
 
+// static nfc_status_t nfc_print_antenna_info(cli_t* cli) {
+//   bool tx_en = false;
+//   int8_t wu_i = 0;
+//   int8_t wu_q = 0;
+//   uint8_t sense_adc = 0;
+//   uint16_t rssi = 0;
+//   uint8_t amp = 0;
+//   uint8_t phase = 0;
+
+//   nfc_status_t ret = nfc_get_tx_en(&tx_en);
+//   if (ret != NFC_OK) {
+//     cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "NFC TX_EN error");
+//     return NFC_ERROR;
+//   }
+//   ret = nfc_get_wu_i_q(&wu_i, &wu_q);
+//   if (ret != NFC_OK) {
+//     cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "NFC WU I/Q error");
+//     return NFC_ERROR;
+//   }
+
+//   // ret = nfc_amp_phase_calibration(&amp, &phase);
+//   // if (ret != NFC_OK) {
+//   //   cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED,
+//   //             "NFC Amplitude/Phase calibration error");
+//   //   return NFC_ERROR;
+//   // }
+
+//   ret = nfc_get_sense_rf(&sense_adc);
+//   if (ret != NFC_OK) {
+//     cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "NFC Sense RF error");
+//     return NFC_ERROR;
+//   }
+
+//   if (tx_en) {
+//     ret = nfc_get_rssi(&rssi);
+//     if (ret != NFC_OK) {
+//       cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "NFC RSSI error");
+//       return NFC_ERROR;
+//     }
+//   }
+
+//   cli_trace(cli,
+//             "tx_en: %d, WU I: %03d, WU Q: %03d, Amplitude: %03d, Phase: %03d,
+//             " "Sense RF: %03d, RSSI: %03d", tx_en, wu_i, wu_q, amp, phase,
+//             sense_adc, rssi);
+
+//   return NFC_OK;
+// }
+
 static void prodtest_nfc_read_card(cli_t* cli) {
   uint32_t timeout = 0;
   bool timeout_set = false;
@@ -66,14 +115,19 @@ static void prodtest_nfc_read_card(cli_t* cli) {
     goto cleanup;
   }
 
+  // nfc_print_antenna_info(cli);
+
   if (NFC_OK != nfc_activate_stm()) {
     cli_error(cli, PRODTEST_ERR_NFC_ACTIVATION, "NFC activation failed");
     goto cleanup;
   }
 
+  // nfc_print_antenna_info(cli);
+
   nfc_event_t nfc_event;
   uint32_t expire_time = ticks_timeout(timeout);
 
+  // uint32_t counter = 1;
   while (true) {
     if (timeout_set && ticks_expired(expire_time)) {
       cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_TIMEOUT, "NFC timeout");
@@ -119,6 +173,9 @@ static void prodtest_nfc_read_card(cli_t* cli) {
           goto cleanup;
       }
 
+      // nfc_print_antenna_info(cli);
+      // counter = 1;
+
       if (timeout_set) {
         nfc_dev_deactivate();
         cli_trace(cli, "NFC reader mode over");
@@ -127,6 +184,9 @@ static void prodtest_nfc_read_card(cli_t* cli) {
 
       systick_delay_ms(100);
       nfc_dev_deactivate();
+      // } else if (counter++ % 1500 == 0) {
+      //   nfc_print_antenna_info(cli);
+      //   counter = 1;
     }
 
     if (cli_aborted(cli)) {
