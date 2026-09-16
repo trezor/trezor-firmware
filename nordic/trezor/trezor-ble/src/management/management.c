@@ -53,6 +53,7 @@ typedef enum {
   MGMT_CMD_SUSPEND = 0x04,
   MGMT_CMD_RESUME = 0x05,
   MGMT_CMD_AUTH_CHALLENGE = 0x06,
+  MGMT_CMD_CONSOLE_ENABLE = 0x07,
 } management_cmd_t;
 
 typedef enum {
@@ -218,6 +219,14 @@ static void process_command(uint8_t *data, uint16_t len) {
       }
       mgmt_process_challenge(&data[1], len - 1);
 
+      break;
+    case MGMT_CMD_CONSOLE_ENABLE:
+      // Sent at boot by STM32 firmware that routes the BLE console (prodtest,
+      // debug builds). The console service is currently registered
+      // unconditionally when CONFIG_TRZ_CONSOLE is set, so this is a no-op;
+      // it exists so that a later nRF version can register the service only
+      // on request without changing the STM32 side.
+      LOG_INF("Console enable");
       break;
     default:
       break;

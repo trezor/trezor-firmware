@@ -37,6 +37,9 @@ static K_FIFO_DEFINE(fifo_uart_rx_ble);
 static K_FIFO_DEFINE(fifo_uart_rx_ble_manager);
 static K_FIFO_DEFINE(fifo_uart_rx_management);
 static K_FIFO_DEFINE(fifo_uart_rx_prodtest);
+#if IS_ENABLED(CONFIG_TRZ_CONSOLE)
+static K_FIFO_DEFINE(fifo_uart_rx_console);
+#endif
 
 atomic_t g_suspended_flag = ATOMIC_INIT(0);
 
@@ -91,7 +94,15 @@ void process_rx_msg(uint8_t service_id, uint8_t *data, uint32_t len) {
     case NRF_SERVICE_PRODTEST:
       k_fifo_put(&fifo_uart_rx_prodtest, buf);
       break;
+#if IS_ENABLED(CONFIG_TRZ_CONSOLE)
+    case NRF_SERVICE_CONSOLE:
+      k_fifo_put(&fifo_uart_rx_console, buf);
+      break;
+#endif
     default:
+      // Also reached for NRF_SERVICE_CONSOLE when the console is compiled
+      // out: the frame is dropped here instead of piling up in a FIFO
+      // nobody drains.
       LOG_WRN("Unknown service");
       k_free(buf);
       break;
@@ -108,6 +119,10 @@ trz_packet_t *trz_comm_poll_data(nrf_service_id_t service) {
       return k_fifo_get(&fifo_uart_rx_management, K_FOREVER);
     case NRF_SERVICE_PRODTEST:
       return k_fifo_get(&fifo_uart_rx_prodtest, K_FOREVER);
+#if IS_ENABLED(CONFIG_TRZ_CONSOLE)
+    case NRF_SERVICE_CONSOLE:
+      return k_fifo_get(&fifo_uart_rx_console, K_FOREVER);
+#endif
     default:
       LOG_WRN("Unknown service");
       return NULL;
