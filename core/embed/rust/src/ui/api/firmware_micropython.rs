@@ -264,6 +264,7 @@ extern "C" fn new_confirm_emphasized(n_args: usize, args: *const Obj, kwargs: *m
 }
 
 extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    #[cfg(feature = "universal_fw")]
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let app_name: TString = kwargs.get(Qstr::MP_QSTR_app_name)?.try_into()?;
@@ -273,6 +274,8 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
         let layout = ModelUI::confirm_fido(title, app_name, icon, accounts)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
+    #[cfg(not(feature = "universal_fw"))]
+    let block = |_args: &[Obj], _kwargs: &Map| Err(Error::NotImplementedError);
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
