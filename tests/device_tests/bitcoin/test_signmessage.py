@@ -21,7 +21,7 @@ import pytest
 from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType, message_filters
-from trezorlib.exceptions import Cancelled
+from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...common import is_core
@@ -492,4 +492,158 @@ def test_signmessage_path_warning(session: Session):
             n=parse_path("m/86h/0h/0h/0/0"),
             message=message,
             script_type=messages.InputScriptType.SPENDWITNESS,
+        )
+
+
+# BIP-48 message signing, see #7717. The whole permission surface, one
+# trezorctl invocation per row:
+#
+#     trezorctl btc sign-message -n "<path>" -t <script type> "hello"
+
+MESSAGE = "This is an example of a signed message."
+
+# Not in the keychain, so refused outright rather than warned about.
+FORBIDDEN = "forbidden"
+# Signs, but shows the unknown derivation path screen first.
+WARN = "warn"
+# Signs with no warning.
+SIGNS = "signs"
+
+
+VECTORS_BIP48_MATRIX = (  # path, script_type, expected
+    # 0h is the legacy-multisig level; message signing is single-key, so it
+    # signs as p2pkh and trezorctl sends SPENDADDRESS rather than SPENDMULTISIG
+    pytest.param("m/48h/0h/0h/0h", S.SPENDADDRESS, FORBIDDEN, id="account_0h-address"),
+    pytest.param(
+        "m/48h/0h/0h/0h", S.SPENDP2SHWITNESS, FORBIDDEN, id="account_0h-p2shsegwit"
+    ),
+    pytest.param("m/48h/0h/0h/0h", S.SPENDWITNESS, FORBIDDEN, id="account_0h-segwit"),
+    pytest.param("m/48h/0h/0h/0h/0/0", S.SPENDADDRESS, WARN, id="leaf_0h-address"),
+    pytest.param(
+        "m/48h/0h/0h/0h/0/0", S.SPENDP2SHWITNESS, WARN, id="leaf_0h-p2shsegwit"
+    ),
+    pytest.param("m/48h/0h/0h/0h/0/0", S.SPENDWITNESS, WARN, id="leaf_0h-segwit"),
+    # 1h is the P2SH-segwit level
+    pytest.param("m/48h/0h/0h/1h", S.SPENDADDRESS, FORBIDDEN, id="account_1h-address"),
+    pytest.param(
+        "m/48h/0h/0h/1h", S.SPENDP2SHWITNESS, FORBIDDEN, id="account_1h-p2shsegwit"
+    ),
+    pytest.param("m/48h/0h/0h/1h", S.SPENDWITNESS, FORBIDDEN, id="account_1h-segwit"),
+    pytest.param("m/48h/0h/0h/1h/0/0", S.SPENDADDRESS, WARN, id="leaf_1h-address"),
+    pytest.param(
+        "m/48h/0h/0h/1h/0/0", S.SPENDP2SHWITNESS, WARN, id="leaf_1h-p2shsegwit"
+    ),
+    pytest.param("m/48h/0h/0h/1h/0/0", S.SPENDWITNESS, WARN, id="leaf_1h-segwit"),
+    # 2h is the native-segwit level -- the paths reported in #7717
+    pytest.param("m/48h/0h/0h/2h", S.SPENDADDRESS, FORBIDDEN, id="account_2h-address"),
+    pytest.param(
+        "m/48h/0h/0h/2h", S.SPENDP2SHWITNESS, FORBIDDEN, id="account_2h-p2shsegwit"
+    ),
+    pytest.param("m/48h/0h/0h/2h", S.SPENDWITNESS, FORBIDDEN, id="account_2h-segwit"),
+    pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDADDRESS, WARN, id="leaf_2h-address"),
+    pytest.param(
+        "m/48h/0h/0h/2h/0/0", S.SPENDP2SHWITNESS, WARN, id="leaf_2h-p2shsegwit"
+    ),
+    pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDWITNESS, WARN, id="leaf_2h-segwit"),
+)
+
+LEGACY_LEVEL_EXPECTED = WARN
+
+
+@pytest.mark.parametrize("path, script_type, expected", VECTORS_BIP48_MATRIX)
+def test_signmessage_bip48_matrix(
+    session: Session,
+    path: str,
+    script_type: messages.InputScriptType,
+    expected: str,
+):
+    if expected == FORBIDDEN:
+        with pytest.raises(TrezorFailure, match="Forbidden key path") as exc:
+            btc.sign_message(
+                session,
+                coin_name="Bitcoin",
+                n=parse_path(path),
+                message=MESSAGE,
+                script_type=script_type,
+            )
+        assert exc.value.code is messages.FailureType.DataError
+        return
+
+    expected_responses = []
+    if expected == WARN:
+        expected_responses.append(
+            message_filters.ButtonRequest(
+                code=messages.ButtonRequestType.UnknownDerivationPath
+            )
+        )
+    expected_responses += [
+        message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+        message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+        messages.MessageSignature,
+    ]
+
+    with session.test_ctx as client:
+        client.set_expected_responses(expected_responses)
+        if is_core(session):
+            IF = InputFlowConfirmAllWarnings(session)
+            client.set_input_flow(IF.get())
+        sig = btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=parse_path(path),
+            message=MESSAGE,
+            script_type=script_type,
+        )
+
+    assert sig.signature
+
+
+def test_signmessage_bip48_legacy_level_signs_as_p2pkh(session: Session):
+    # The path alone reads as SPENDMULTISIG, but there is no multisig message
+    # signature, so trezorctl sends the single-key analogue.
+    from trezorlib.cli.btc import guess_script_type_from_path
+
+    address_n = parse_path("m/48h/0h/0h/0h/0/0")
+    assert guess_script_type_from_path(address_n) is S.SPENDMULTISIG
+
+    expected_responses = []
+    if LEGACY_LEVEL_EXPECTED == WARN:
+        expected_responses.append(
+            message_filters.ButtonRequest(
+                code=messages.ButtonRequestType.UnknownDerivationPath
+            )
+        )
+    expected_responses += [
+        message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+        message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+        messages.MessageSignature,
+    ]
+
+    with session.test_ctx as client:
+        client.set_expected_responses(expected_responses)
+        if is_core(session):
+            IF = InputFlowConfirmAllWarnings(session)
+            client.set_input_flow(IF.get())
+        sig = btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=address_n,
+            message=MESSAGE,
+            script_type=S.SPENDADDRESS,
+        )
+
+    assert sig.signature
+    assert sig.address.startswith("1")
+
+
+@pytest.mark.models("core")
+def test_signmessage_slip25_requires_unlock_path(session: Session):
+    # The account-node grant must not reach the coinjoin account.
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=parse_path("m/10025h/0h/0h/1h"),
+            message=MESSAGE,
+            script_type=S.SPENDTAPROOT,
         )
