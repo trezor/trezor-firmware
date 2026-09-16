@@ -40,6 +40,7 @@ class RootPacketAuth(SanityCheckedStruct):
     ring_mask: int
     reserved: bytes
     timestamp: int
+    chain_timestamp: int
     root_rings: list[bytes]
 
     SUBCON = c.Struct(
@@ -47,7 +48,8 @@ class RootPacketAuth(SanityCheckedStruct):
         "_version" / c.Const(b"\x01", c.Bytes(1)),
         "ring_mask" / c.Byte,
         "reserved" / Reserved(2),
-        "timestamp" / c.Int32ul,
+        "timestamp" / c.Int64sl,
+        "chain_timestamp" / c.Int64sl,
         "root_rings" / c.Array(lambda ctx: bin(ctx.ring_mask).count("1"), c.Bytes(32)),
     )
 

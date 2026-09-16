@@ -135,7 +135,7 @@ class AppImage(SanityCheckedStruct):
         """Rebuild the original header bytes including padding."""
         return self.header.build()
 
-    def header_hash(self) -> bytes:
+    def fingerprint(self) -> bytes:
         """Calculate the SHA256 hash of the application header."""
         return sha256(self.header_bytes()).digest()
 
@@ -163,6 +163,10 @@ def _format_version(version: tuple[int, ...]) -> str:
     while len(parts) > 2 and parts[-1] == 0:
         parts.pop()
     return "v" + ".".join(str(part) for part in parts)
+
+
+def _version_message(version: tuple[int, ...]) -> messages.Version:
+    return messages.Version(**dict(zip(("major", "minor", "patch", "build"), version)))
 
 
 def load(
@@ -196,30 +200,32 @@ def load(
 
     print(f"Requesting {image.header.id} {min_version_info}")
 
-    header_hash = image.header_hash() if force_reload else b""
+    fingerprint = image.fingerprint() if force_reload else b""
 
     # Send a request to the device to load the app, providing the hash, app ID, and minimum version.
     resp = session.call(
-        messages.TrezorAppLoad(
-            hash=header_hash, id=image.header.id, version=min_version
+        messages.ExtAppLoad(
+            fingerprint=fingerprint,
+            id=image.header.id,
+            version=_version_message(min_version),
         )
     )
 
     # If the device requests the binary, we proceed to upload it.
-    if isinstance(resp, messages.TrezorAppHeaderRequest):
+    if isinstance(resp, messages.ExtAppHeaderRequest):
         rp = RootPacket.parse(root_packet)
         # Send the header and proof to the device
 
         resp = session.call(
-            messages.TrezorAppHeaderAck(
-                header=image.header_bytes(), proof=proof, timestamp=rp.auth.timestamp
+            messages.ExtAppHeaderAck(
+                header=image.header_bytes(),
+                proof=proof,
+                root_packet_timestamp=rp.auth.timestamp,
             )
         )
 
-        if isinstance(resp, messages.TrezorAppRootPacketRequest):
-            resp = session.call(
-                messages.TrezorAppRootPacketAck(root_packet=root_packet)
-            )
+        if isinstance(resp, messages.ExtAppRootPacketRequest):
+            resp = session.call(messages.ExtAppRootPacketAck(root_packet=root_packet))
 
         chunks = image.chunks()
 
@@ -227,12 +233,12 @@ def load(
             f"Uploading {image.header.id} {_format_version(image.header.version)} ({len(image.payload) / 1024:.1f} KB)"
         )
         # Send the payload in chunks as requested by the device
-        while isinstance(resp, messages.TrezorAppDataChunkRequest):
+        while isinstance(resp, messages.ExtAppDataChunkRequest):
             chunk = chunks[resp.index]
             resp = session.call(
-                messages.TrezorAppDataChunkAck(data=chunk[0], hash=chunk[1])
+                messages.ExtAppDataChunkAck(data=chunk[0], hash=chunk[1])
             )
 
-    # After the upload, the device should respond with TrezorAppLoaded containing the instance ID.
-    resp = messages.TrezorAppLoaded.ensure_isinstance(resp)
+    # After the upload, the device should respond with ExtAppLoaded containing the instance ID.
+    resp = messages.ExtAppLoaded.ensure_isinstance(resp)
     return resp.instance_id
