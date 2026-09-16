@@ -107,7 +107,7 @@ class AppImage:
         Return the privilege ring of the application.
         """
 
-    def header_hash(self) -> bytes:
+    def fingerprint(self) -> bytes:
         """
         Return the hash of the application image header.
         """
