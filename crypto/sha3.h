@@ -85,6 +85,16 @@ void keccak_512(const unsigned char* data, size_t len, unsigned char* digest);
 void sha3_256(const unsigned char* data, size_t len, unsigned char* digest);
 void sha3_512(const unsigned char* data, size_t len, unsigned char* digest);
 
+/**
+ * @brief Computes SHAKE256 output of the given length (FIPS 202).
+ *
+ * @param[in]  data       Input data.
+ * @param[in]  data_len   Length of the input data in bytes.
+ * @param[out] digest     Buffer for `digest_len` bytes of output.
+ * @param[in]  digest_len Requested number of output bytes.
+ */
+void shake256(const unsigned char* data, size_t data_len, unsigned char* digest, size_t digest_len);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

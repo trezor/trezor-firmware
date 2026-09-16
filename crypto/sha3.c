@@ -426,3 +426,33 @@ void sha3_512(const unsigned char* data, size_t len, unsigned char* digest)
 	sha3_Update(&ctx, data, len);
 	sha3_Final(&ctx, digest);
 }
+
+void shake256(const unsigned char* data, size_t data_len, unsigned char* digest, size_t digest_len)
+{
+	SHA3_CTX ctx = {0};
+
+	/* NB: SHAKE256 uses the same capacity (512 bits) as SHA3-256 */
+	keccak_Init(&ctx, 256);
+	sha3_Update(&ctx, data, data_len);
+
+	const size_t block_size = ctx.block_size;
+
+	/* pad the message with the SHAKE domain separation suffix and process the
+	 * final block */
+	memzero((char*)ctx.message + ctx.rest, block_size - ctx.rest);
+	((char*)ctx.message)[ctx.rest] |= 0x1F;
+	((char*)ctx.message)[block_size - 1] |= 0x80;
+	sha3_process_block(ctx.hash, ctx.message, block_size);
+
+	/* squeeze the requested number of output bytes out of the sponge */
+	while (digest_len > block_size)
+	{
+		me64_to_le_str(digest, ctx.hash, block_size);
+		digest += block_size;
+		digest_len -= block_size;
+		sha3_permutation(ctx.hash);
+	}
+	me64_to_le_str(digest, ctx.hash, digest_len);
+
+	memzero(&ctx, sizeof(SHA3_CTX));
+}

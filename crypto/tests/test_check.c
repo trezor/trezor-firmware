@@ -5980,6 +5980,73 @@ START_TEST(test_sha3_512) {
 }
 END_TEST
 
+// test vectors generated with hashlib.shake_256, cross-checked against
+// https://www.di-mgt.com.au/sha_testvectors.html
+START_TEST(test_shake256) {
+  static const struct {
+    const char *data;
+    size_t digest_length;
+    const char *digest;
+  } tests[] = {
+      {
+          // 32-byte output
+          "",
+          32,
+          "46b9dd2b0ba88d13233b3feb743eeb243fcd52ea62b81b82b50c27646ed5762f",
+      },
+      {
+          // 64-byte output
+          "abc",
+          64,
+          "483366601360a8771c6863080cc4114d8db44530f8f1e1ee4f94ea37e78b5739"
+          "d5a15bef186a5386c75744c0527e1faa9f8726e462a12a4feb06bd8801e751e4",
+      },
+      {
+          // 96-byte output, the length used by X-Wing seed expansion
+          "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+          96,
+          "4d8c2dd2435a0128eefbb8c36f6f87133a7911e18d979ee1ae6be5d4fd2e3329"
+          "40d8688a4e6a59aa8060f1f9bc996c05aca3c696a8b66279dc672c740bb224ec"
+          "37a92b65db0539c0203455f51d97cce4cfc49127d7260afc673af208baf19be2",
+      },
+      {
+          // output length equal to the SHAKE256 rate (136 bytes)
+          "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
+          "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+          136,
+          "98be04516c04cc73593fef3ed0352ea9f6443942d6950e29a372a681c3deaf45"
+          "35423709b02843948684e029010badcc0acd8303fc85fdad3eabf4f78cae1656"
+          "35f57afd28810fc22abf63df55c5ead450fdfb64209010e982102aa0b5f0a4b4"
+          "753b53eb4b5319c06986f5aac5cc247256d06b05a273d7ef8d31864777d488d5"
+          "41451ed82a389265",
+      },
+      {
+          // input longer than one block, output requiring multiple squeezes
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          "aaaaaaaa",
+          200,
+          "e49647491c9d12d125a2f75826c96f6307d2fabebcbb9fb1616d76b09499380e"
+          "8bcf60f72750879140e73fb7453a979b69d25efa8de613462f108ce7f2f1d7c5"
+          "e444637301336604f42850beddef9434234ccc7d84196841069a7105379ca1e5"
+          "c6f79db0e8a7ef1f1ac2f55a76c5c355ddcd4cbac02037a93e18b0091df839a0"
+          "2a53df3e5af7a2811b70369652d13019887159d3fc9e8d36f0691168b3c7ec1d"
+          "88a1297c11c020ffa64166889651fcb8cc9e3170973701d8cf46faee26a9f8ba"
+          "e301ba265a442bff",
+      },
+  };
+
+  uint8_t digest[200];
+  for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
+    shake256((const uint8_t *)tests[i].data, strlen(tests[i].data), digest,
+             tests[i].digest_length);
+    ck_assert_mem_eq(digest, fromhex(tests[i].digest),
+                     tests[i].digest_length);
+  }
+}
+END_TEST
+
 // test vectors from
 // https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/0.test-sha3-256.dat
 START_TEST(test_keccak_256) {
@@ -12814,6 +12881,7 @@ Suite *test_suite(void) {
   tc = tcase_create("sha3");
   tcase_add_test(tc, test_sha3_256);
   tcase_add_test(tc, test_sha3_512);
+  tcase_add_test(tc, test_shake256);
   tcase_add_test(tc, test_keccak_256);
   suite_add_tcase(s, tc);
 
