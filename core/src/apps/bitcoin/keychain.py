@@ -56,6 +56,11 @@ PATTERN_BIP48_RAW = "m/48'/coin_type'/account'/0'/change/address_index"
 PATTERN_BIP48_P2SHSEGWIT = "m/48'/coin_type'/account'/1'/change/address_index"
 PATTERN_BIP48_SEGWIT = "m/48'/coin_type'/account'/2'/change/address_index"
 
+# BIP-48 account nodes, where cosigners share the xpub.
+PATTERN_BIP48_RAW_ACCOUNT = "m/48'/coin_type'/account'/0'"
+PATTERN_BIP48_P2SHSEGWIT_ACCOUNT = "m/48'/coin_type'/account'/1'"
+PATTERN_BIP48_SEGWIT_ACCOUNT = "m/48'/coin_type'/account'/2'"
+
 # BIP-49 for segwit-in-P2SH: https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki
 PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
 # BIP-84 for segwit: https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki
@@ -156,6 +161,23 @@ def _get_patterns_for_script_type(
     return patterns
 
 
+def _bip48_sign_message_patterns(
+    coin: coininfo.CoinInfo,
+    script_type: InputScriptType,
+) -> tuple[str, str] | tuple[()]:
+    """BIP-48 leaf and account node for `script_type`, for SignMessage only."""
+    if script_type == InputScriptType.SPENDADDRESS:
+        return PATTERN_BIP48_RAW, PATTERN_BIP48_RAW_ACCOUNT
+
+    if coin.segwit and script_type == InputScriptType.SPENDP2SHWITNESS:
+        return PATTERN_BIP48_P2SHSEGWIT, PATTERN_BIP48_P2SHSEGWIT_ACCOUNT
+
+    if coin.segwit and script_type == InputScriptType.SPENDWITNESS:
+        return PATTERN_BIP48_SEGWIT, PATTERN_BIP48_SEGWIT_ACCOUNT
+
+    return ()
+
+
 def validate_path_against_script_type(
     coin: coininfo.CoinInfo,
     msg: MsgWithAddressScriptType | None = None,
@@ -175,6 +197,9 @@ def validate_path_against_script_type(
     patterns = _get_patterns_for_script_type(
         coin, script_type, multisig, include_fw_signing=SignMessage.is_type_of(msg)
     )
+
+    if SignMessage.is_type_of(msg):
+        patterns.extend(_bip48_sign_message_patterns(coin, script_type))
 
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
@@ -369,8 +394,16 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
         auth_msg: MessageType | None = None,
     ) -> MsgOut:
         coin = _get_coin_by_name(msg.coin_name)
-        unlock_schemas = _get_unlock_schemas(msg, auth_msg, coin)
-        keychain = await _get_keychain_for_coin(coin, unlock_schemas)
+        extra_schemas = _get_unlock_schemas(msg, auth_msg, coin)
+        if SignMessage.is_type_of(msg):
+            patterns = _bip48_sign_message_patterns(
+                coin, msg.script_type or InputScriptType.SPENDADDRESS
+            )
+            if patterns:
+                _leaf, account_pattern = patterns
+                # Do not add Bitcoin-path aliases for fork coins.
+                extra_schemas.append(PathSchema.parse(account_pattern, coin.slip44))
+        keychain = await _get_keychain_for_coin(coin, extra_schemas)
         if AuthorizeCoinJoin.is_type_of(auth_msg):
             auth_obj = authorization.from_cached_message(auth_msg)
             return await func(msg, keychain, coin, auth_obj)

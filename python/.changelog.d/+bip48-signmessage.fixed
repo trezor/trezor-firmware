@@ -1,0 +1,1 @@
+`trezorctl btc sign-message` now signs with the single-key script type for a BIP-48 legacy-multisig path instead of the unsupported SPENDMULTISIG.

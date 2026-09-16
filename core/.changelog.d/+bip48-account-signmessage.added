@@ -1,0 +1,1 @@
+Allow signing messages with BIP-48 account keys and leaves without the unknown derivation path warning.

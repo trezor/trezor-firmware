@@ -513,12 +513,12 @@ SIGNS = "signs"
 VECTORS_BIP48_MATRIX = (  # path, script_type, expected
     # 0h is the legacy-multisig level; message signing is single-key, so it
     # signs as p2pkh and trezorctl sends SPENDADDRESS rather than SPENDMULTISIG
-    pytest.param("m/48h/0h/0h/0h", S.SPENDADDRESS, FORBIDDEN, id="account_0h-address"),
+    pytest.param("m/48h/0h/0h/0h", S.SPENDADDRESS, SIGNS, id="account_0h-address"),
     pytest.param(
         "m/48h/0h/0h/0h", S.SPENDP2SHWITNESS, FORBIDDEN, id="account_0h-p2shsegwit"
     ),
     pytest.param("m/48h/0h/0h/0h", S.SPENDWITNESS, FORBIDDEN, id="account_0h-segwit"),
-    pytest.param("m/48h/0h/0h/0h/0/0", S.SPENDADDRESS, WARN, id="leaf_0h-address"),
+    pytest.param("m/48h/0h/0h/0h/0/0", S.SPENDADDRESS, SIGNS, id="leaf_0h-address"),
     pytest.param(
         "m/48h/0h/0h/0h/0/0", S.SPENDP2SHWITNESS, WARN, id="leaf_0h-p2shsegwit"
     ),
@@ -526,12 +526,12 @@ VECTORS_BIP48_MATRIX = (  # path, script_type, expected
     # 1h is the P2SH-segwit level
     pytest.param("m/48h/0h/0h/1h", S.SPENDADDRESS, FORBIDDEN, id="account_1h-address"),
     pytest.param(
-        "m/48h/0h/0h/1h", S.SPENDP2SHWITNESS, FORBIDDEN, id="account_1h-p2shsegwit"
+        "m/48h/0h/0h/1h", S.SPENDP2SHWITNESS, SIGNS, id="account_1h-p2shsegwit"
     ),
     pytest.param("m/48h/0h/0h/1h", S.SPENDWITNESS, FORBIDDEN, id="account_1h-segwit"),
     pytest.param("m/48h/0h/0h/1h/0/0", S.SPENDADDRESS, WARN, id="leaf_1h-address"),
     pytest.param(
-        "m/48h/0h/0h/1h/0/0", S.SPENDP2SHWITNESS, WARN, id="leaf_1h-p2shsegwit"
+        "m/48h/0h/0h/1h/0/0", S.SPENDP2SHWITNESS, SIGNS, id="leaf_1h-p2shsegwit"
     ),
     pytest.param("m/48h/0h/0h/1h/0/0", S.SPENDWITNESS, WARN, id="leaf_1h-segwit"),
     # 2h is the native-segwit level -- the paths reported in #7717
@@ -539,15 +539,15 @@ VECTORS_BIP48_MATRIX = (  # path, script_type, expected
     pytest.param(
         "m/48h/0h/0h/2h", S.SPENDP2SHWITNESS, FORBIDDEN, id="account_2h-p2shsegwit"
     ),
-    pytest.param("m/48h/0h/0h/2h", S.SPENDWITNESS, FORBIDDEN, id="account_2h-segwit"),
+    pytest.param("m/48h/0h/0h/2h", S.SPENDWITNESS, SIGNS, id="account_2h-segwit"),
     pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDADDRESS, WARN, id="leaf_2h-address"),
     pytest.param(
         "m/48h/0h/0h/2h/0/0", S.SPENDP2SHWITNESS, WARN, id="leaf_2h-p2shsegwit"
     ),
-    pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDWITNESS, WARN, id="leaf_2h-segwit"),
+    pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDWITNESS, SIGNS, id="leaf_2h-segwit"),
 )
 
-LEGACY_LEVEL_EXPECTED = WARN
+LEGACY_LEVEL_EXPECTED = SIGNS
 
 
 @pytest.mark.parametrize("path, script_type, expected", VECTORS_BIP48_MATRIX)
