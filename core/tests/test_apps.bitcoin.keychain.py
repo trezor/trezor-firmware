@@ -9,7 +9,9 @@ from trezor.wire import context
 from apps.bitcoin.keychain import (
     _get_coin_by_name,
     _get_keychain_for_coin,
+    validate_path_against_script_type,
     validate_xpub_path_against_script_type,
+    with_keychain,
 )
 
 if not utils.USE_THP:
@@ -216,6 +218,103 @@ class TestValidateXpubPath(unittest.TestCase):
         # A pattern with no hardened component has no export point, so the
         # root xpub is never exportable this way.
         self.assertFalse(is_export_point([], InputScriptType.SPENDADDRESS))
+
+
+class TestSignMessageBip48(TestCaseWithContext):
+    """BIP-48 message signing: the account node and the leaf."""
+
+    if utils.USE_THP:
+
+        def setUp(self):
+            seed = bip39.seed(" ".join(["all"] * 12), "")
+            context.cache_set(cache_common.APP_COMMON_SEED, seed)
+
+    else:
+
+        def setUp(self):
+            cache_codec.start_session()
+            seed = bip39.seed(" ".join(["all"] * 12), "")
+            cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
+
+    def _sign_message(self, address_n, script_type, coin_name="Bitcoin"):
+        from trezor.messages import SignMessage
+
+        return SignMessage(
+            address_n=address_n,
+            message=b"hello",
+            coin_name=coin_name,
+            script_type=script_type,
+        )
+
+    def _derive(self, msg):
+        """Derive msg.address_n through the schemas with_keychain() picks."""
+
+        @with_keychain
+        async def handler(msg, keychain, coin):
+            keychain.derive(msg.address_n)
+            return True
+
+        return await_result(handler(msg))
+
+    def test_account_node_and_leaf(self):
+        from trezor.enums import InputScriptType
+
+        coin = _get_coin_by_name("Bitcoin")
+        account = [H_(48), H_(0), H_(0), H_(2)]
+        leaf = account + [0, 0]
+
+        for address_n in (account, leaf):
+            msg = self._sign_message(address_n, InputScriptType.SPENDWITNESS)
+            self.assertTrue(validate_path_against_script_type(coin, msg))
+            self.assertTrue(self._derive(msg))
+
+    def test_script_type_must_match_the_level(self):
+        """Only the matching account node is granted, so this is not derivable."""
+        from trezor.enums import InputScriptType
+
+        coin = _get_coin_by_name("Bitcoin")
+        msg = self._sign_message(
+            [H_(48), H_(0), H_(0), H_(2)], InputScriptType.SPENDADDRESS
+        )
+
+        self.assertFalse(validate_path_against_script_type(coin, msg))
+        self.assertRaises(wire.DataError, self._derive, msg)
+
+    def test_fork_coins_get_no_bitcoin_path_alias(self):
+        """The Bitcoin-namespace alias of a fork must not carry the grant.
+
+        Bcash is not a segwit coin, so SPENDADDRESS is the only script type
+        under which it has a BIP-48 pattern at all.
+        """
+        from trezor.enums import InputScriptType
+
+        # Bcash's own coin type is granted...
+        msg = self._sign_message(
+            [H_(48), H_(145), H_(0), H_(0)],
+            InputScriptType.SPENDADDRESS,
+            coin_name="Bcash",
+        )
+        self.assertTrue(self._derive(msg))
+
+        # ...the Bitcoin-namespace alias of it is not.
+        msg = self._sign_message(
+            [H_(48), H_(0), H_(0), H_(0)],
+            InputScriptType.SPENDADDRESS,
+            coin_name="Bcash",
+        )
+        self.assertRaises(wire.DataError, self._derive, msg)
+
+    def test_grant_is_sign_message_only(self):
+        """GetAddress gets no account node; it is not a spendable path."""
+        from trezor.enums import InputScriptType
+        from trezor.messages import GetAddress
+
+        msg = GetAddress(
+            address_n=[H_(48), H_(0), H_(0), H_(2)],
+            coin_name="Bitcoin",
+            script_type=InputScriptType.SPENDWITNESS,
+        )
+        self.assertRaises(wire.DataError, self._derive, msg)
 
 
 if __name__ == "__main__":

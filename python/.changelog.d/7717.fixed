@@ -1,0 +1,1 @@
+`trezorctl btc sign-message`: sign multisig paths with their single-key analogue.

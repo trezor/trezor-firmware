@@ -176,30 +176,35 @@ def validate_path_against_script_type(
         coin, script_type, multisig, include_fw_signing=SignMessage.is_type_of(msg)
     )
 
+    if SignMessage.is_type_of(msg):
+        patterns += _get_patterns_for_script_type(coin, script_type, multisig=True)
+        patterns += _xpub_export_patterns(coin, script_type)
+
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
     )
 
 
-def validate_xpub_path_against_script_type(
+def _xpub_export_patterns(
     coin: coininfo.CoinInfo,
-    address_n: Bip32Path,
     script_type: InputScriptType,
-) -> bool:
-    """Checks whether the path is a plausible xpub export point.
+) -> list[str]:
+    """Prefixes of the supported patterns at which an xpub may be exported.
 
-    A prefix of a pattern ending at its deepest hardened level, or at its
-    account level where that is deeper. Both multisig cases are accepted.
+    A prefix ending at the deepest hardened level, or at the account level
+    where that is deeper.
     """
-    patterns = _get_patterns_for_script_type(coin, script_type, False)
-    patterns += _get_patterns_for_script_type(coin, script_type, True)
+    patterns = _get_patterns_for_script_type(coin, script_type, multisig=False)
+    patterns += _get_patterns_for_script_type(coin, script_type, multisig=True)
 
+    export_patterns: list[str] = []
     for pattern in patterns:
         components = pattern.split("/")[1:]
 
         deepest_hardened = 0
         account = 0
         for i, component in enumerate(components):
+            # No pattern here uses a wildcard; "*'" would read as hardened.
             if component.endswith("'"):
                 deepest_hardened = i + 1
             if component in ("account", "account'"):
@@ -208,14 +213,23 @@ def validate_xpub_path_against_script_type(
         if deepest_hardened == 0:
             continue
 
-        if len(address_n) not in (deepest_hardened, max(deepest_hardened, account)):
-            continue
+        for depth in (deepest_hardened, max(deepest_hardened, account)):
+            prefix = "m/" + "/".join(components[:depth])
+            if prefix not in export_patterns:
+                export_patterns.append(prefix)
 
-        prefix = "m/" + "/".join(components[: len(address_n)])
-        if PathSchema.parse(prefix, coin.slip44).match(address_n):
-            return True
+    return export_patterns
 
-    return False
+
+def validate_xpub_path_against_script_type(
+    coin: coininfo.CoinInfo,
+    address_n: Bip32Path,
+    script_type: InputScriptType,
+) -> bool:
+    return any(
+        PathSchema.parse(pattern, coin.slip44).match(address_n)
+        for pattern in _xpub_export_patterns(coin, script_type)
+    )
 
 
 def _get_schemas_for_coin(
@@ -369,8 +383,23 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
         auth_msg: MessageType | None = None,
     ) -> MsgOut:
         coin = _get_coin_by_name(msg.coin_name)
-        unlock_schemas = _get_unlock_schemas(msg, auth_msg, coin)
-        keychain = await _get_keychain_for_coin(coin, unlock_schemas)
+        extra_schemas = _get_unlock_schemas(msg, auth_msg, coin)
+        if SignMessage.is_type_of(msg):
+            script_type = msg.script_type or InputScriptType.SPENDADDRESS
+            # Only the export points need granting; leaf patterns are already
+            # in _get_schemas_for_coin(). SPENDTAPROOT is out, which keeps
+            # PATTERN_SLIP25_TAPROOT behind UnlockPath.
+            if script_type in (
+                InputScriptType.SPENDADDRESS,
+                InputScriptType.SPENDP2SHWITNESS,
+                InputScriptType.SPENDWITNESS,
+            ):
+                # Do not add Bitcoin-path aliases for fork coins.
+                extra_schemas += [
+                    PathSchema.parse(pattern, coin.slip44)
+                    for pattern in _xpub_export_patterns(coin, script_type)
+                ]
+        keychain = await _get_keychain_for_coin(coin, extra_schemas)
         if AuthorizeCoinJoin.is_type_of(auth_msg):
             auth_obj = authorization.from_cached_message(auth_msg)
             return await func(msg, keychain, coin, auth_obj)
