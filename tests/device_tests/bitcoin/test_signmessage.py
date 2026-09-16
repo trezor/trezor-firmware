@@ -598,6 +598,7 @@ def _assert_sign_message(
     assert sig.signature
 
 
+@pytest.mark.models("core")
 @pytest.mark.parametrize("path, script_type, expected", VECTORS_BIP48_MATRIX)
 def test_signmessage_bip48_matrix(
     session: Session,
@@ -628,6 +629,7 @@ VECTORS_SIGNMESSAGE_LENIENCY = (  # path, script_type, expected
 )
 
 
+@pytest.mark.models("core")
 @pytest.mark.parametrize("path, script_type, expected", VECTORS_SIGNMESSAGE_LENIENCY)
 def test_signmessage_leniency(
     session: Session,
@@ -638,6 +640,7 @@ def test_signmessage_leniency(
     _assert_sign_message(session, path, script_type, expected)
 
 
+@pytest.mark.models("core")
 def test_signmessage_bip48_legacy_level_signs_as_p2pkh(session: Session):
     # The path alone reads as SPENDMULTISIG, but there is no multisig message
     # signature, so trezorctl sends the single-key analogue.
