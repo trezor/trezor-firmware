@@ -1859,12 +1859,7 @@
     "pin__enter": "Enter PIN",
     "pin__enter_new": "Enter new PIN",
     "pin__entered_not_valid": "The PIN you have entered is not valid.",
-    "pin__info": {
-      "Bolt": "PIN will be required to access this device.",
-      "Caesar": "PIN will be required to access this device.",
-      "Delizia": "PIN will be required to access this device.",
-      "Eckhart": "The PIN will be required to access this device."
-    },
+    "pin__info": "A PIN will be required to access this device.",
     "pin__invalid_pin": "Invalid PIN",
     "pin__last_attempt": {
       "Bolt": "Last",
