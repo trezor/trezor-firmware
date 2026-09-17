@@ -104,6 +104,14 @@ secbool send_msg_features(protob_io_t *iface, const fw_check_info_t *fw) {
                         (secret_bootloader_locked() == sectrue));
 #endif
 
+  // Always reported; an absent field means a (legacy) bootloader predating it.
+#ifdef PQ_SECURE_BOOT
+  MSG_SEND_ASSIGN_VALUE(firmware_scheme,
+                        FirmwareScheme_FirmwareScheme_PqSecure);
+#else
+  MSG_SEND_ASSIGN_VALUE(firmware_scheme, FirmwareScheme_FirmwareScheme_Legacy);
+#endif
+
 #ifdef USE_POWER_MANAGER
   pm_state_t state = {0};
   if (PM_OK == pm_get_state(&state)) {
@@ -152,10 +160,14 @@ secbool recv_msg_firmware_erase(protob_io_t *iface, FirmwareErase *msg) {
 }
 
 secbool send_msg_request_firmware(protob_io_t *iface, uint32_t offset,
-                                  uint32_t length) {
+                                  uint32_t length, uint32_t coprocessor_index) {
   MSG_SEND_INIT(FirmwareRequest);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, offset);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(length, length);
+  // 0 = primary stream (omitted on the wire), 1 = nRF image.
+  if (coprocessor_index != 0) {
+    MSG_SEND_ASSIGN_VALUE(coprocessor_index, coprocessor_index);
+  }
   return MSG_SEND(FirmwareRequest);
 }
 
@@ -209,6 +221,62 @@ secbool recv_msg_firmware_upload(protob_io_t *iface, FirmwareUpload *msg,
   memcpy(msg, &msg_recv, sizeof(FirmwareUpload));
   return result;
 }
+
+#ifdef PQ_SECURE_BOOT
+typedef struct {
+  uint8_t *buffer;
+  size_t buffer_size;
+  size_t len;  // out: number of bytes decoded into buffer
+} buf_ctx_t;
+
+// Decodes a bytes field straight into a caller-provided buffer.
+static bool read_into_buffer(pb_istream_t *stream, const pb_field_t *field,
+                             void **arg) {
+  (void)field;
+  buf_ctx_t *c = (buf_ctx_t *)*arg;
+  if (stream->bytes_left > c->buffer_size) {
+    return false;
+  }
+  c->len = stream->bytes_left;
+  return pb_read(stream, (pb_byte_t *)c->buffer, stream->bytes_left);
+}
+
+secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
+                                uint8_t *bh_buf, size_t bh_size, size_t *bh_len,
+                                uint8_t *mh_buf, size_t mh_size, size_t *mh_len,
+                                uint8_t *ch_buf, size_t ch_size, size_t *ch_len,
+                                firmware_begin_nrf_t *nrf) {
+  buf_ctx_t bh_ctx = {.buffer = bh_buf, .buffer_size = bh_size, .len = 0};
+  buf_ctx_t mh_ctx = {.buffer = mh_buf, .buffer_size = mh_size, .len = 0};
+  buf_ctx_t ch_ctx = {.buffer = ch_buf, .buffer_size = ch_size, .len = 0};
+  buf_ctx_t cp_ctx = {0};
+  buf_ctx_t ih_ctx = {0};
+
+  MSG_RECV_INIT(FirmwareBegin);
+  MSG_RECV_CALLBACK(boot_header, read_into_buffer, &bh_ctx);
+  MSG_RECV_CALLBACK(module_headers, read_into_buffer, &mh_ctx);
+  MSG_RECV_CALLBACK(code_hash, read_into_buffer, &ch_ctx);
+  if (nrf != NULL) {
+    cp_ctx.buffer = nrf->co_path_buf;
+    cp_ctx.buffer_size = nrf->co_path_size;
+    ih_ctx.buffer = nrf->image_hash_buf;
+    ih_ctx.buffer_size = nrf->image_hash_size;
+    MSG_RECV_CALLBACK(nrf_co_path, read_into_buffer, &cp_ctx);
+    MSG_RECV_CALLBACK(nrf_image_hash, read_into_buffer, &ih_ctx);
+  }
+  secbool result = MSG_RECV(FirmwareBegin);
+  memcpy(msg, &msg_recv, sizeof(FirmwareBegin));
+  *bh_len = bh_ctx.len;
+  *mh_len = mh_ctx.len;
+  *ch_len = ch_ctx.len;
+  if (nrf != NULL) {
+    nrf->co_path_len = cp_ctx.len;
+    nrf->image_hash_len = ih_ctx.len;
+  }
+  return result;
+}
+
+#endif
 
 void recv_msg_unknown(protob_io_t *iface) {
   codec_flush(iface->wire, iface->msg_size, iface->buf);
