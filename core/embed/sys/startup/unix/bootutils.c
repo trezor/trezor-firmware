@@ -161,6 +161,12 @@ __attribute__((noreturn)) void reboot_and_upgrade(const uint8_t hash[32]) {
   bootutils_emu_exit(BOOTUTILS_EMU_EXIT_REBOOT);
 }
 
+__attribute__((noreturn)) void reboot_and_continue_upgrade(void) {
+  LOG_WARN("reboot (continue upgrade)");
+
+  exit(3);
+}
+
 __attribute__((noreturn)) void reboot_to_off(void) {
   LOG_WARN("reboot (power off)");
 
