@@ -28,6 +28,7 @@ uses = [
     "nrf",
     "optiga",
     "power_manager",
+    "pq_secure_boot",
     "pvd",
     "rgb_led",
     "rtc",
@@ -48,7 +49,9 @@ uses = [
 
 # ELF sections to be included in the final binary.
 # The order of sections is important.
-elf_sections = [".vendorheader", ".header", ".flash", ".data"]
+# ".manifest" exists only in the Merkle-tree layout, ".vendorheader"/".header"
+# only in the legacy one; absent sections are no-ops.
+elf_sections = [".manifest", ".vendorheader", ".header", ".flash", ".data"]
 
 secmon_body_sections   = [".secmon_header", ".flash", ".data"]
 secmon_header_sections = [".vendorheader", ".header"]
