@@ -39,6 +39,16 @@ _fix_version_ [1].
 The device gets **wiped on every reboot**:
 - If the firmware's debug mode is turned on.
 
+## Models with `pq_secure_boot`
+
+The decision moves to the boot header, which carries the release version and the
+release's _fix_version_ [1]; both are signed. The device gets **wiped**:
+- If the firmware to be installed is a different variant (`firmware_type`) than the
+present firmware. Crossing between official and custom firmware always wipes.
+- If the release to be installed has a lower version than the installed release's
+_fix_version_ [1]. The value is the firmware's `FIX_VERSION`, stamped into the boot
+header when the release is signed.
+
 ----
 
 [1] Firmware contains a _fix_version_, which is the lowest version to which that
