@@ -40,6 +40,15 @@
 #include "rust_ui_prodtest.h"
 #include "sys/sysevent.h"
 
+// FW_VARIANT (prodtest/build.rs -> manifest_header.S) must be the hardened
+// PRODTEST codeword; manifest_header.S emits it unchecked.
+#ifdef FW_VARIANT
+#include <sec/boot_header.h>
+_Static_assert(FW_VARIANT == FW_VARIANT_SEC_PRODTEST,
+               "FW_VARIANT must be FW_VARIANT_SEC_PRODTEST (see "
+               "prodtest/build.rs)");
+#endif
+
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
