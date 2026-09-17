@@ -42,6 +42,10 @@
 #include "rust_ui_bootloader.h"
 #include "workflow.h"
 
+#if defined(PQ_SECURE_BOOT) && defined(USE_BOOT_UCB)
+#include "wf_ucb_stage.h"
+#endif
+
 static void send_error_conditionally(protob_io_t* iface, const char* msg) {
   if (iface != NULL) {
     send_msg_failure(iface, FailureType_Failure_ProcessError, msg);
@@ -114,6 +118,16 @@ workflow_result_t workflow_wipe_device(protob_io_t* iface) {
   if (sectrue != wipe_result) {
     send_error_conditionally(iface, "Could not erase flash");
   }
+
+#if defined(PQ_SECURE_BOOT) && defined(USE_BOOT_UCB)
+  // The tree layout reads "provisioned" from the boot header firmware_type,
+  // so clear it too. Must come after the erase: the staging area lives in the
+  // firmware region's tail.
+  if (sectrue == wipe_result && sectrue != ucb_stage_clear_firmware_type()) {
+    send_error_conditionally(iface, "Could not unprovision the device");
+    wipe_result = secfalse;
+  }
+#endif
 
 #ifdef USE_BACKUP_RAM
   if (!backup_ram_erase_protected()) {
