@@ -91,7 +91,7 @@ jobs:
       - uses: ./.github/actions/environment
       # LD_LIBRARY_PATH workaround: https://discourse.nixos.org/t/nixpkgs-nixos-unstable-many-package-fail-with-glibc-2-38-not-found/35078 https://github.com/NixOS/nixpkgs/issues/287764
       # Allow uv to use any python version for python tests
-      - run: $NIX_RUN bash -c "unset LD_LIBRARY_PATH && export UV_PYTHON_PREFERENCE=managed UV_PYTHON_DOWNLOADS=automatic && cd python && uv run tox"
+      - run: nix develop --command bash -c "unset LD_LIBRARY_PATH && export UV_PYTHON_PREFERENCE=managed UV_PYTHON_DOWNLOADS=automatic && cd python && uv run tox"
 
   rust_test:
     name: Rust crates test
