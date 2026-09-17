@@ -14,6 +14,7 @@ crypto.workspace = true
 cty.workspace = true
 rtl.workspace = true
 models.workspace = true
+spin.workspace = true
 ufmt.workspace = true
 
 [features]
@@ -39,6 +40,7 @@ secure_mode = ["models/secure_mode"]
 # Selectable components
 # --------------------------------------------------------------------------
 
+alloc = []
 app_loading = ["applets"]
 applets = []
 block_on_vcp = []
