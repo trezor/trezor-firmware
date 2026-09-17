@@ -10,6 +10,21 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     flake-utils.url = "github:numtide/flake-utils";
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.uv2nix.follows = "uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     flake-compat = {
       url = "github:NixOS/flake-compat";
       flake = false;
@@ -26,6 +41,9 @@
       nixpkgs,
       rust-overlay,
       flake-utils,
+      uv2nix,
+      pyproject-nix,
+      pyproject-build-systems,
       monero-tests,
       ...
     }:
@@ -88,10 +106,41 @@
           chmod -w $out
         '';
 
+        # uv2nix setup
+        workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
+        pyOverlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
+        editableOverlay = workspace.mkEditablePyprojectOverlay { root = "$REPO_ROOT"; };
+        hacks = pkgs.callPackage pyproject-nix.build.hacks { };
+        # https://pyproject-nix.github.io/uv2nix/overriding/index.html
+        pyprojectOverrides = final: prev:
+          {
+            dbus-fast = prev.dbus-fast.overrideAttrs (old: {
+              nativeBuildInputs = old.nativeBuildInputs ++ final.resolveBuildSystem { setuptools = [ ]; poetry-core = [ ]; };
+            });
+            libcst =
+              (hacks.importCargoLock { prev = prev.libcst; cargoRoot = "native"; }).overrideAttrs (old: {
+                nativeBuildInputs = old.nativeBuildInputs ++ final.resolveBuildSystem { setuptools = [ ]; setuptools-rust = [ ]; };
+              });
+          }
+          // lib.genAttrs
+            [ "crcmod" "demjson3" "docopt" "fido2" "markupsafe" "pyyaml" "pyyaml-ft" ]
+            (pkgName: prev."${pkgName}".overrideAttrs (old: {
+              nativeBuildInputs = old.nativeBuildInputs ++ final.resolveBuildSystem { setuptools = [ ]; };
+            }));
+        pythonSet = (pkgs.callPackage pyproject-nix.build.packages { python = pkgs.python3; }).overrideScope
+          (lib.composeManyExtensions [
+            pyproject-build-systems.overlays.wheel
+            pyOverlay
+            editableOverlay
+            pyprojectOverrides
+          ]);
+        uv2NixVirtualenv = pythonSet.mkVirtualEnv "trezor-firmware-py-env" workspace.deps.all;
+
         mkShellFromParams =
           {
             fullDeps ? false,
             devTools ? false,
+            useUv2Nix ? false,
           }:
           with pkgs;
           pkgs.mkShellNoCC ({
@@ -163,7 +212,17 @@
               kdePackages.kcachegrind
               nrfutil # compiled from source
               nrfconnect # compiled from source
+            ]
+            ++ lib.optionals useUv2Nix [
+              uv2NixVirtualenv
             ];
+
+            shellHook = lib.optionalString useUv2Nix ''
+              # https://pyproject-nix.github.io/pyproject.nix/build.html#pythonpath-leaking-into-unrelated-builds
+              unset PYTHONPATH
+              export REPO_ROOT=$(git rev-parse --show-toplevel)
+              source ${uv2NixVirtualenv}/bin/activate
+            '';
 
             env = rec {
               LD_LIBRARY_PATH = lib.makeLibraryPath [ libffi libjpeg libusb1 libressl ];
@@ -187,7 +246,11 @@
               UV_PYTHON_PREFERENCE = "only-system";
               UV_PYTHON_DOWNLOADS = "never";
             }
-            // (lib.optionalAttrs (fullDeps && !isDarwin)) {
+            // lib.optionalAttrs useUv2Nix {
+              UV_PYTHON = pythonSet.python.interpreter;
+              UV_NO_SYNC = 1;
+            }
+            // lib.optionalAttrs (fullDeps && !isDarwin) {
               # ~250MiB binary
               TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
             };
@@ -197,14 +260,24 @@
         devShells = {
           # Only necessary dependencies for building and running tests in CI.
           minimal = mkShellFromParams { };
+          minimal-uv2nix = mkShellFromParams { useUv2Nix = true; };
 
           # Includes various development and testing tools.
           default = mkShellFromParams { devTools = true; };
+          default-uv2nix = mkShellFromParams {
+            devTools = true;
+            useUv2Nix = true;
+          };
 
           # The default shell with additional large or slow to build dependencies.
           everything = mkShellFromParams {
             devTools = true;
             fullDeps = true;
+          };
+          everything-uv2nix = mkShellFromParams {
+            devTools = true;
+            fullDeps = true;
+            useUv2Nix = true;
           };
         };
       }
