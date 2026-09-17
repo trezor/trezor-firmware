@@ -13,6 +13,7 @@ use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
 use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
+use crate::micropython::py_object::GcObject;
 use crate::micropython::{util, Error, Obj};
 use crate::storage;
 use crate::strutil::TString;
@@ -26,7 +27,6 @@ use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
     Border, ComponentExt, Empty, FormattedText, Jpeg, Label, Never, Timeout,
 };
-use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
@@ -87,7 +87,7 @@ impl FirmwareUI for UIBolt {
         verb: Option<TString<'static>>,
         info_button: bool,
         chunkify: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
         ConfirmValue::new(title, address, None, Some(verb), None, false)
             .with_subtitle(address_label)
@@ -145,8 +145,8 @@ impl FirmwareUI for UIBolt {
         _verb_view_all: Option<TString<'static>>,
         _hold: bool,
         _chunkify: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
+    ) -> Result<GcObject<LayoutObj>, Error> {
+        Err(Error::NotImplementedError)
     }
 
     fn confirm_homescreen(
@@ -491,7 +491,7 @@ impl FirmwareUI for UIBolt {
         verb_info: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         _external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
@@ -544,7 +544,7 @@ impl FirmwareUI for UIBolt {
         recovery_type: RecoveryType,
         _show_instructions: bool,
         remaining_shares: Option<Obj>,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_DEMIBOLD, text),
             Paragraph::new(&theme::TEXT_NORMAL, subtext.unwrap_or(TString::empty())),
@@ -867,7 +867,7 @@ impl FirmwareUI for UIBolt {
         description: TString<'static>,
         allow_cancel: bool,
         time_ms: u32,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let icon = BlendedImage::new(
             theme::IMAGE_BG_CIRCLE,
             theme::IMAGE_FG_ERROR,
@@ -966,7 +966,7 @@ impl FirmwareUI for UIBolt {
         button: Option<(TString<'static>, bool)>,
         time_ms: u32,
         external_menu: bool, // TODO: will eventually replace the internal menu
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         if external_menu {
             return Err(Error::NotImplementedError);
         }
@@ -1101,7 +1101,7 @@ impl FirmwareUI for UIBolt {
         indeterminate: bool,
         time_ms: u32,
         skip_first_paint: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let progress = CoinJoinProgress::<Never>::new(title, indeterminate)?;
         let obj = if time_ms > 0 && indeterminate {
             let timeout = Timeout::new(time_ms);
@@ -1109,9 +1109,7 @@ impl FirmwareUI for UIBolt {
         } else {
             LayoutObj::new(progress)?
         };
-        if skip_first_paint {
-            obj.skip_first_paint();
-        }
+        obj.borrow_mut().skip_first_paint(skip_first_paint);
         Ok(obj)
     }
 
@@ -1174,7 +1172,7 @@ impl FirmwareUI for UIBolt {
         text: TString<'static>,
         title: Option<TString<'static>>,
         button: Option<TString<'static>>,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let button = button.unwrap_or(TString::empty());
         if let Some(t) = title {
             LayoutObj::new(Frame::left_aligned(
@@ -1214,7 +1212,7 @@ impl FirmwareUI for UIBolt {
         description: TString<'static>,
         allow_cancel: bool,
         time_ms: u32,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let icon = BlendedImage::new(
             theme::IMAGE_BG_CIRCLE,
             theme::IMAGE_FG_SUCCESS,
@@ -1239,7 +1237,7 @@ impl FirmwareUI for UIBolt {
         description: TString<'static>,
         allow_cancel: bool,
         danger: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let icon = BlendedImage::new(
             theme::IMAGE_BG_OCTAGON,
             theme::IMAGE_FG_WARN,
@@ -1314,7 +1312,7 @@ fn new_show_modal(
     buttons: ModalButtons,
     icon: BlendedImage,
     button_style: ButtonStyleSheet,
-) -> Result<Gc<LayoutObj>, Error> {
+) -> Result<GcObject<LayoutObj>, Error> {
     let obj = match buttons {
         ModalButtons::NoButtons => LayoutObj::new(
             IconDialog::new(icon, title, Empty)
@@ -1477,7 +1475,7 @@ impl ConfirmValue {
         Ok(frame)
     }
 
-    fn into_layout(self) -> Result<Gc<LayoutObj>, Error> {
+    fn into_layout(self) -> Result<GcObject<LayoutObj>, Error> {
         LayoutObj::new(self.into_frame()?)
     }
 }

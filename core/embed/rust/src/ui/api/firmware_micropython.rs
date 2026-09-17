@@ -901,9 +901,7 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
         let layout = ModelUI::show_homescreen(label, notification, lockable)?;
         let layout_obj = LayoutObj::new_root(layout)?;
-        if skip_first_paint {
-            layout_obj.skip_first_paint();
-        }
+        layout_obj.borrow_mut().skip_first_paint(skip_first_paint);
         Ok(layout_obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1049,9 +1047,7 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
         let layout = ModelUI::show_lockscreen(label, bootscreen, coinjoin_authorized)?;
         let layout_obj = LayoutObj::new_root(layout)?;
-        if skip_first_paint {
-            layout_obj.skip_first_paint();
-        }
+        layout_obj.borrow_mut().skip_first_paint(skip_first_paint);
         Ok(layout_obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

@@ -15,6 +15,7 @@ use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
 use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
+use crate::micropython::py_object::GcObject;
 use crate::micropython::{util, Error, Obj};
 use crate::strutil::TString;
 use crate::translations::TR;
@@ -84,7 +85,7 @@ impl FirmwareUI for UICaesar {
         verb: Option<TString<'static>>,
         info_button: bool,
         chunkify: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
         let address: TString = address.try_into()?;
 
@@ -191,8 +192,8 @@ impl FirmwareUI for UICaesar {
         _verb_view_all: Option<TString<'static>>,
         _hold: bool,
         _chunkify: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
+    ) -> Result<GcObject<LayoutObj>, Error> {
+        Err(Error::NotImplementedError)
     }
 
     fn confirm_homescreen(
@@ -625,7 +626,7 @@ impl FirmwareUI for UICaesar {
         verb_info: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
         if let Some(subtitle) = subtitle {
@@ -670,7 +671,7 @@ impl FirmwareUI for UICaesar {
         recovery_type: RecoveryType,
         show_instructions: bool,
         _remaining_shares: Option<crate::micropython::obj::Obj>,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
         let button = button.unwrap_or(TString::empty());
         paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, text));
@@ -1071,8 +1072,8 @@ impl FirmwareUI for UICaesar {
         _description: TString<'static>,
         _allow_cancel: bool,
         _time_ms: u32,
-    ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
+    ) -> Result<GcObject<LayoutObj>, Error> {
+        Err(Error::NotImplementedError)
     }
 
     fn show_group_share_success(
@@ -1164,7 +1165,7 @@ impl FirmwareUI for UICaesar {
         _button: Option<(TString<'static>, bool)>,
         time_ms: u32,
         external_menu: bool, // TODO: will eventually replace the internal menu
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         if external_menu {
             return Err(Error::NotImplementedError);
         }
@@ -1244,7 +1245,7 @@ impl FirmwareUI for UICaesar {
         indeterminate: bool,
         time_ms: u32,
         skip_first_paint: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let progress = CoinJoinProgress::new(title, indeterminate);
         let obj = if time_ms > 0 && indeterminate {
             let timeout = Timeout::new(time_ms);
@@ -1252,9 +1253,7 @@ impl FirmwareUI for UICaesar {
         } else {
             LayoutObj::new(progress)?
         };
-        if skip_first_paint {
-            obj.skip_first_paint();
-        }
+        obj.borrow_mut().skip_first_paint(skip_first_paint);
         Ok(obj)
     }
 
@@ -1329,7 +1328,7 @@ impl FirmwareUI for UICaesar {
         text: TString<'static>,
         _title: Option<TString<'static>>,
         _button: Option<TString<'static>>,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let paragraph = Paragraph::new(&theme::TEXT_NORMAL, text).centered();
         let content = Paragraphs::new([paragraph]);
         let obj = LayoutObj::new(content)?;
@@ -1342,8 +1341,8 @@ impl FirmwareUI for UICaesar {
         _description: TString<'static>,
         _allow_cancel: bool,
         _time_ms: u32,
-    ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
+    ) -> Result<GcObject<LayoutObj>, Error> {
+        Err(Error::NotImplementedError)
     }
 
     fn show_warning(
@@ -1353,7 +1352,7 @@ impl FirmwareUI for UICaesar {
         description: TString<'static>,
         _allow_cancel: bool,
         danger: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         if danger && title.is_none() {
             // Disallow showing "dangerous" warning with no header.
             return Err(Error::ValueError(c"Non-empty title is required"));
