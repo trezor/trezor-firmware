@@ -61,4 +61,16 @@ secbool ucb_stage_arm(const flash_area_t *staging_area, uint32_t code_address);
  */
 secbool ucb_stage_write_header(const uint8_t *data, uint32_t len);
 
+#ifdef PQ_SECURE_BOOT
+/**
+ * Restage the device's own boot header with `firmware_type` cleared (device
+ * reads as unprovisioned after the next boot). Routed through the UCB because
+ * the header shares a flash page with the founder signatures. Borrows
+ * `chunk_buffer`. Does not check whether the caller may un-provision.
+ *
+ * @return sectrue if staged and armed; the caller must reboot
+ */
+secbool ucb_stage_clear_firmware_type(void);
+#endif  // PQ_SECURE_BOOT
+
 #endif  // USE_BOOT_UCB

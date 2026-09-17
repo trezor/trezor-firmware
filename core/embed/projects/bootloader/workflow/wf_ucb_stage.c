@@ -182,4 +182,50 @@ secbool ucb_stage_write_header(const uint8_t *data, uint32_t len) {
   return sectrue;
 }
 
+#ifdef PQ_SECURE_BOOT
+secbool ucb_stage_clear_firmware_type(void) {
+  const boot_header_auth_t *installed = boot_header_auth_get(BOOTLOADER_START);
+  if (installed == NULL) {
+    return secfalse;
+  }
+  const uint32_t header_size = installed->header_size;
+  if (header_size == 0 || header_size > IMAGE_CHUNK_SIZE) {
+    return secfalse;
+  }
+
+  // Verbatim copy; the authenticated part stays bit for bit.
+  uint8_t *staged = (uint8_t *)chunk_buffer;
+  memcpy(staged, (const void *)(uintptr_t)BOOTLOADER_START, header_size);
+
+  boot_header_auth_t *hdr =
+      (boot_header_auth_t *)boot_header_auth_get((uintptr_t)staged);
+  if (hdr == NULL) {
+    return secfalse;
+  }
+  boot_header_unauth_t *unauth =
+      (boot_header_unauth_t *)(uintptr_t)boot_header_unauth_get(hdr);
+  if (unauth == NULL) {
+    return secfalse;
+  }
+  if (unauth->firmware_type == FW_VARIANT_SEC_NONE) {
+    return sectrue;  // already the canonical unprovisioned value
+  }
+  // INVALID is normalised too: the empty-device auto-confirm requires a
+  // positive NONE.
+  unauth->firmware_type = FW_VARIANT_SEC_NONE;
+
+  if (sectrue != ucb_stage_write_header(staged, header_size)) {
+    return secfalse;
+  }
+
+  // No iface: boot path, nobody to report to.
+  uint32_t code_address = 0;
+  if (UPLOAD_OK != ucb_stage_verify(&STAGING_AREA, /*header_only=*/true, NULL,
+                                    NULL, &code_address)) {
+    return secfalse;
+  }
+  return ucb_stage_arm(&STAGING_AREA, code_address);
+}
+#endif  // PQ_SECURE_BOOT
+
 #endif  // USE_BOOT_UCB

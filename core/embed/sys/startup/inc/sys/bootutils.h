@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <rtl/secbool.h>
 #include <sys/startup_args.h>
 #include <sys/systask.h>
 
@@ -34,6 +35,9 @@ typedef struct {
   char title[64];
   char message[64];
   char footer[64];
+  // sectrue also returns the device to the unprovisioned (empty) state;
+  // any other value (including zero) keeps it provisioned
+  secbool unprovision;
 } bootutils_wipe_info_t;
 
 // Immediately resets the device and initiates the normal boot sequence as if
@@ -80,6 +84,8 @@ void __attribute__((noreturn)) reboot_with_rsod(
 
 // Resets the device and wipes all the user data.
 // RSOD with wipe information is displayed.
+// With `info->unprovision == sectrue` the bootloader also erases the firmware
+// and assets and reboots without an RSOD (end of factory testing).
 void __attribute__((noreturn)) reboot_and_wipe(
     const bootutils_wipe_info_t *info);
 
