@@ -35,7 +35,6 @@ import argparse
 import json
 import struct
 import sys
-import zipfile
 from pathlib import Path
 
 from trezor_core_tools import firmware_module
@@ -150,13 +149,6 @@ def main() -> int:
     ap.add_argument(
         "--model", help="which model's entry to use (default: the only one)"
     )
-    ap.add_argument(
-        "--zip-out",
-        type=Path,
-        help="also write the portable release zip that `trezorctl firmware update -f` "
-        "consumes -- without it an earlier release's zip stays behind and installs "
-        "a stale image",
-    )
     args = ap.parse_args()
 
     entry, model = _custom_entry(args.bundle, args.model)
@@ -216,31 +208,6 @@ def main() -> int:
     print(f"  folds through {len(proof)} node(s) to firmware_root {root.hex()[:16]}…")
     print("  proof baked into the manifest region -- no key used, bootloader untouched")
 
-    if args.zip_out is not None:
-        # The same flat archive `firmware_pq_sign.py --zip-out` writes, holding
-        # only what a presigned custom release consists of: the committed
-        # bootloader, this one image, the bundle, and the nRF image. Written here
-        # because the image is only self-contained once the proof is baked in.
-        release = args.firmware.parent
-        bundle = release / "bundle.json"
-        body = firmware_module.check_container(json.loads(bundle.read_text()), bundle)
-        members = [release / body["bootloader"]["file"], args.firmware, bundle]
-        members += [
-            release / c["file"] for c in body.get("coprocessors", []) if "file" in c
-        ]
-        args.zip_out.parent.mkdir(parents=True, exist_ok=True)
-        # Deterministic for the same reason the signer's archive is: identical
-        # inputs must give identical bytes, so the container can be digested.
-        with zipfile.ZipFile(args.zip_out, "w", zipfile.ZIP_DEFLATED) as zf:
-            for member in members:
-                if not member.is_file():
-                    raise SystemExit(f"{member} is missing from the release")
-            for member in sorted(members, key=lambda m: m.name):
-                info = zipfile.ZipInfo(member.name, date_time=(1980, 1, 1, 0, 0, 0))
-                info.compress_type = zipfile.ZIP_DEFLATED
-                info.external_attr = 0o644 << 16
-                zf.writestr(info, member.read_bytes())
-        print(f"  zip {args.zip_out} ({', '.join(m.name for m in members)})")
     return 0
 
 

@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import zipfile
 from pathlib import Path
 
 from trezor_core_tools import bootloader_provenance, firmware_module, nrf_tree
@@ -502,13 +501,6 @@ def main() -> None:
     )
     ap.add_argument("--manifest-out", type=Path)
     ap.add_argument(
-        "--zip-out",
-        type=Path,
-        help="also write a portable zip of the release directory (bootloader, "
-        "every variant, bundle.json and the nRF image if present) -- what "
-        "`trezorctl firmware update -f` consumes",
-    )
-    ap.add_argument(
         "--vector-out", type=Path, help="write the first variant's raw manifest bytes"
     )
     args = ap.parse_args()
@@ -575,36 +567,6 @@ def main() -> None:
             )
             + "\n"
         )
-
-    if args.zip_out is not None:
-        # A flat archive of the release: the bootloader, each variant, the
-        # bundle.json and the nRF image. Written here because this is the step
-        # that finalises the release -- every variant's Merkle proof has just
-        # been baked into its own manifest region, so each <variant>.bin in the
-        # archive is self-contained.
-        members = [
-            args.bootloader,
-            *(v["path"] for v in variants),
-        ]
-        if args.manifest_out is not None:
-            members.append(args.manifest_out)
-        if nrf_info is not None:
-            members.append(args.bootloader.parent / nrf_info["image_name"])
-        args.zip_out.parent.mkdir(parents=True, exist_ok=True)
-        # DETERMINISTIC: two runs over identical inputs must produce identical
-        # archive bytes, so the container can be digested and that digest
-        # published. `ZipFile.write` defeats this -- it stamps each member's
-        # mtime -- so members are written through an explicit ZipInfo with a
-        # fixed timestamp and mode, in sorted order. (The natural order is
-        # already stable, but sorting means it cannot come to depend on the
-        # caller's argument order.)
-        with zipfile.ZipFile(args.zip_out, "w", zipfile.ZIP_DEFLATED) as zf:
-            for f in sorted((f for f in members if f.exists()), key=lambda p: p.name):
-                info = zipfile.ZipInfo(f.name, date_time=(1980, 1, 1, 0, 0, 0))
-                info.compress_type = zipfile.ZIP_DEFLATED
-                info.external_attr = 0o644 << 16
-                zf.writestr(info, f.read_bytes())
-        print(f"zip            : {args.zip_out}")
 
     print("\nverification:")
     if args.unsigned:
