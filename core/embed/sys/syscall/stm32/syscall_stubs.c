@@ -171,6 +171,8 @@ bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
 
 #endif  // USE_IPC
 
+#ifndef PQ_SECURE_BOOT
+
 // =============================================================================
 // boot_image.h
 // =============================================================================
@@ -184,6 +186,8 @@ bool boot_image_check(const boot_image_t *image) {
 void boot_image_replace(const boot_image_t *image) {
   syscall_invoke1((uint32_t)image, SYSCALL_BOOT_IMAGE_REPLACE);
 }
+
+#endif  // PQ_SECURE_BOOT
 
 // =============================================================================
 // bootutils.h
@@ -796,6 +800,8 @@ bool ble_get_enabled(void) {
 // nrf.h
 // =============================================================================
 
+#ifndef PQ_SECURE_BOOT
+
 bool nrf_update_required(const uint8_t *data, size_t len) {
   return (bool)syscall_invoke2((uint32_t)data, (uint32_t)len,
                                SYSCALL_NRF_UPDATE_REQUIRED);
@@ -805,6 +811,8 @@ bool nrf_update(const uint8_t *data, size_t len) {
   return (bool)syscall_invoke2((uint32_t)data, (uint32_t)len,
                                SYSCALL_NRF_UPDATE);
 }
+
+#endif  // PQ_SECURE_BOOT
 
 uint32_t nrf_get_version(void) {
   return syscall_invoke0(SYSCALL_NRF_GET_VERSION);

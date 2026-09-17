@@ -50,6 +50,11 @@ fn main() -> Result<()> {
             lib.add_define("USE_BOOT_UCB", Some("1"));
         }
 
+        // Defined here so every translation unit agrees on the firmware layout.
+        if cfg!(feature = "pq_secure_boot") {
+            lib.add_define("PQ_SECURE_BOOT", Some("1"));
+        }
+
         // Hardware-derived storage key (BHK) is an stm32u5 feature only,
         // and the emulator has no BHK regardless of which MCU it emulates.
         if cfg!(feature = "mcu_stm32u5") && cfg!(not(feature = "emulator")) {

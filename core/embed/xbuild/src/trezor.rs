@@ -229,18 +229,53 @@ impl CLibrary {
             cargo_out::rerun_if_changed(&memory_ld);
 
             // Include the linker script that defines the layout of the
-            // final binary according to the selected binary type.
-            let target_ld = if has_feature("mcu_stm32u5g") {
-                format!("sys/linker/stm32u5g/{binary_type}.ld")
+            // final binary according to the selected binary type. The
+            // Merkle-tree layout (pq_secure_boot) uses `{binary_type}_pq.ld`
+            // for the modules whose layout changes.
+            let ld_suffix = if has_feature("pq_secure_boot")
+                && matches!(binary_type, "firmware" | "secmon" | "kernel" | "prodtest")
+            {
+                "_pq"
+            } else {
+                ""
+            };
+            // One path expression for every MCU, so `ld_suffix` cannot be
+            // dropped for some of them.
+            let mcu_dir = if has_feature("mcu_stm32u5g") {
+                "stm32u5g"
             } else if has_feature("mcu_stm32u5a") {
-                format!("sys/linker/stm32u5a/{binary_type}.ld")
+                "stm32u5a"
             } else if has_feature("mcu_stm32u58") {
-                format!("sys/linker/stm32u58/{binary_type}.ld")
+                "stm32u58"
             } else if has_feature("mcu_stm32f4") {
-                format!("sys/linker/stm32f4/{binary_type}.ld")
+                "stm32f4"
             } else {
                 bail!("Unsupported configuration");
             };
+            let target_ld = format!("sys/linker/{mcu_dir}/{binary_type}{ld_suffix}.ld");
+            if !ld_suffix.is_empty() {
+                // `-T` paths are relative to the linker's cwd (embed/), so
+                // resolve against the ancestor holding sys/linker; skip the
+                // check if none is found.
+                let embed_root = env::var("CARGO_MANIFEST_DIR").ok().and_then(|dir| {
+                    PathBuf::from(dir)
+                        .ancestors()
+                        .find(|p| p.join("sys/linker").is_dir())
+                        .map(PathBuf::from)
+                });
+                if let Some(root) = embed_root {
+                    if !root.join(&target_ld).exists() {
+                        bail!(
+                            "pq_secure_boot needs {target_ld}, which does not \
+                             exist. Falling back to \
+                             sys/linker/{mcu_dir}/{binary_type}.ld would link \
+                             {binary_type} with the legacy layout (no manifest \
+                             region) -- it would build and then fail verification \
+                             on device. Port the _pq variant for {mcu_dir} first."
+                        );
+                    }
+                }
+            }
 
             cargo_out::rustc_link_arg(format!("-T{target_ld}"));
             cargo_out::rerun_if_changed(&target_ld);

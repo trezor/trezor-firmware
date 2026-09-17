@@ -26,6 +26,7 @@ uses = [
     "nrf",
     "optiga",
     "power_manager",
+    "pq_secure_boot",
     "rgb_led",
     "sd_card",
     "secmon_layout",
@@ -48,7 +49,9 @@ uses = [
 
 # ELF sections to be included in the final binary.
 # The order of sections is important.
-elf_sections = [".vendorheader", ".header", ".flash", ".data"]
+# ".manifest"/".secmon" exist only in the Merkle-tree layout, ".vendorheader"/
+# ".header" only in the legacy one; absent sections are no-ops.
+elf_sections = [".manifest", ".secmon", ".vendorheader", ".header", ".flash", ".data"]
 
 # STM32F4: firmware spans two non-contiguous flash banks (bank2 starts at 0x08100000)
 split_pad_to         = "0x08100000"
