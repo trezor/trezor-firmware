@@ -720,6 +720,7 @@ def show_thp_pairing_code(
     *,
     title: str,
     description: str,
+    host_name: str | None,
     code: str,
 ) -> LayoutContext[UiResult]:
     """THP pairing: second screen (pairing code)."""
