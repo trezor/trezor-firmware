@@ -42,6 +42,10 @@
 #include <sec/boot_ucb.h>
 #endif
 
+#ifdef PQ_SECURE_BOOT
+#include <sec/boot_header.h>
+#endif
+
 #ifdef USE_PVD
 #include <sys/pvd.h>
 #endif
@@ -106,6 +110,10 @@
 #include "wire/wire_iface_usb.h"
 #include "workflow/workflow.h"
 
+#if defined(PQ_SECURE_BOOT) && defined(USE_BOOT_UCB)
+#include "workflow/wf_ucb_stage.h"
+#endif
+
 #ifdef DEBUGLINK
 #include "workflow/debuglink.h"
 #endif
@@ -123,6 +131,20 @@ void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 static secbool is_manufacturing_mode(void) {
   unit_properties_init();
 
+#ifdef PQ_SECURE_BOOT
+  // Tree layout: manufacturing mode is the prodtest variant recorded in the
+  // write-protected boot header firmware_type.
+  // FIH: the is_custom test is redundant on purpose -- a second independent
+  // compare of the same value; do not simplify it away.
+  const boot_header_auth_t *bl = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_unauth_t *unauth =
+      (bl != NULL) ? boot_header_unauth_get(bl) : NULL;
+  if (unauth == NULL ||
+      fw_variant_is_custom(unauth->firmware_type) != secfalse ||
+      unauth->firmware_type != FW_VARIANT_SEC_PRODTEST) {
+    return secfalse;
+  }
+#else
   vendor_header vhdr;
   memset(&vhdr, 0, sizeof(vhdr));
   (void)!read_vendor_header((const uint8_t *)FIRMWARE_START,
@@ -131,6 +153,7 @@ static secbool is_manufacturing_mode(void) {
   if ((vhdr.vtrust & VTRUST_ALLOW_PROVISIONING) != VTRUST_ALLOW_PROVISIONING) {
     return secfalse;
   }
+#endif
 
 #if (defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1)
   // on T3T1 and T3W1, tester needs to run without touch and tamper, so making
@@ -527,7 +550,18 @@ int bootloader_main(void) {
     display_init(DISPLAY_RESET_CONTENT);
 #endif
 
-    erase_storage(NULL);
+    // wipe info was left in bootargs
+    boot_args_t args;
+    bootargs_get_args(&args);
+
+    // Unprovisioning erases the firmware too; a plain wipe keeps it bootable.
+    const bool unprovision = (args.wipeinfo.unprovision == sectrue);
+
+    if (unprovision) {
+      erase_device(NULL);
+    } else {
+      erase_storage(NULL);
+    }
 
 #ifdef USE_BLE
     ble_init();
@@ -539,9 +573,17 @@ int bootloader_main(void) {
     backup_ram_erase_protected();
 #endif
 
-    // wipe info was left in bootargs
-    boot_args_t args;
-    bootargs_get_args(&args);
+    if (unprovision) {
+#if defined(PQ_SECURE_BOOT) && defined(USE_BOOT_UCB)
+      // The tree layout reads "provisioned" from the boot header firmware_type,
+      // so clear it too (staged via the UCB; installed on the reboot below).
+      if (sectrue != ucb_stage_clear_firmware_type()) {
+        error_shutdown("Unprovision failed");
+      }
+#endif
+      // No wipe screen: an empty device is a state, not an event.
+      reboot_device();
+    }
 
     show_wipe_info(&args.wipeinfo);
     reboot_or_halt_after_rsod();

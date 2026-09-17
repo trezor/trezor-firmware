@@ -47,6 +47,7 @@
 workflow_result_t workflow_empty_device(void) {
   ui_set_initial_setup(true);
 
+  // Only reached for an unprovisioned device (!header_present).
 #ifdef USE_STORAGE_HWKEY
   secret_bhk_regenerate();
 #endif

@@ -21,6 +21,11 @@
 
 #include <trezor_types.h>
 
+// Flash region constants are replaced by the mmap'd addresses assigned in
+// main(). Include after trezor_model.h so the #undef takes effect.
+
 #undef FIRMWARE_START
+#undef BOOTLOADER_START
 
 extern uintptr_t FIRMWARE_START;
+extern uintptr_t BOOTLOADER_START;

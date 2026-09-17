@@ -53,10 +53,10 @@ const boot_header_padded_t g_bootloader_header = {
             },
         .min_prev_version =
             {
-                .major = 0,
-                .minor = 0,
-                .patch = 0,
-                .build = 0,
+                .major = MIN_PREV_VERSION_MAJOR,
+                .minor = MIN_PREV_VERSION_MINOR,
+                .patch = MIN_PREV_VERSION_PATCH,
+                .build = MIN_PREV_VERSION_BUILD,
             },
         .monotonic_version = BOOTLOADER_MONOTONIC_VERSION,
         // The sigmask field is properly initialized later by headertool_pq
