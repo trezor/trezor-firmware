@@ -444,6 +444,29 @@ def upload_firmware_into_device(
         sys.exit(3)
 
 
+_REBOOT_DEPART_TIMEOUT = 5.0
+
+
+def _wait_for_device(obj: "TrezorConnection", message: str) -> None:
+    """Wait for the device to leave the bus and come back: the pre-reboot
+    enumeration still answers for a moment, and after phase 1 bootloader_mode is
+    the same on both sides of the reboot, so a reconnect could hit a rebooting
+    device."""
+    click.echo(message)
+    deadline = time.monotonic() + _REBOOT_DEPART_TIMEOUT
+    while time.monotonic() < deadline:
+        if not obj.is_present():
+            break
+        time.sleep(0.1)
+    while True:
+        time.sleep(0.5)
+        try:
+            obj.open()
+            break
+        except Exception:
+            pass
+
+
 def _is_strict_update(client: "TrezorClient", firmware_data: bytes) -> bool:
     """Check if the firmware is from the same vendor and the
     firmware is newer than the currently installed firmware.
@@ -668,14 +691,7 @@ def update(
                 device.reboot_to_bootloader(seedless_session)
 
             obj.close()
-            click.echo("Waiting for bootloader...")
-            while True:
-                time.sleep(0.5)
-                try:
-                    obj.open()
-                    break
-                except Exception:
-                    pass
+            _wait_for_device(obj, "Waiting for bootloader...")
 
     with obj.client_context() as client:
         if not client.features.bootloader_mode:
