@@ -31,3 +31,8 @@ features = [
     "layout_eckhart",
     "display_rgba8888",
 ]
+
+# Under pq_secure_boot the bootloader pushes the nRF firmware (workflow_nrf_ota)
+# and the kernel does not need SMP. Restore `smp` if pq_secure_boot is dropped.
+[project_overrides.kernel]
+exclude = ["smp"]
