@@ -40,6 +40,8 @@ VECTORS = (  # path, script_type, warns
     # deepest hardened prefix and an export point of its own
     pytest.param("m/45h", IST.SPENDADDRESS, SILENT, id="casa_address"),
     pytest.param("m/45h", IST.SPENDP2SHWITNESS, SILENT, id="casa_p2sh"),
+    # ...and so is the Casa account level, two levels below it
+    pytest.param("m/45h/0/0", IST.SPENDP2SHWITNESS, SILENT, id="casa_account"),
     # One level deeper is neither the deepest hardened prefix nor the account
     pytest.param("m/45h/0", IST.SPENDADDRESS, WARN, id="below_casa"),
     # The BIP-48 account node, where cosigners share the xpub
