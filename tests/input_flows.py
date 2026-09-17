@@ -687,7 +687,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.index = index
 
     def _assert_xpub_title(self, title: str, xpub_num: int) -> None:
-        expected_title = f"MULTISIG XPUB #{xpub_num + 1}"
+        expected_title = TR.format(
+            "address__title_multisig_xpub_template", xpub_num + 1
+        )
         assert expected_title in title
         if self.index == xpub_num:
             assert TR.address__title_yours in title
