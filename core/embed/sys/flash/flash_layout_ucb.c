@@ -59,6 +59,28 @@ const flash_area_t STAGING_AREA = {
         },
 };
 
+// nRF OTA scratch at the front of the firmware area. Must stay clear of
+// STAGING_AREA (the upload engine erases to the end of its target area).
+// 384 kB fits a debug PQ-native nRF image (~280 kB) with margin.
+#ifndef NRF_STAGING_MAXSIZE
+#define NRF_STAGING_MAXSIZE (48 * 8 * 1024)  // 384 kB
+#endif
+#define NRF_STAGING_SECTOR_COUNT (NRF_STAGING_MAXSIZE / FLASH_LAYOUT_PAGE_SIZE)
+_Static_assert(
+    NRF_STAGING_MAXSIZE % FLASH_LAYOUT_PAGE_SIZE == 0,
+    "NRF_STAGING_MAXSIZE must be a multiple of the flash sector size");
+_Static_assert(FIRMWARE_SECTOR_START + NRF_STAGING_SECTOR_COUNT <=
+                   FIRMWARE_SECTOR_END - STAGING_SECTOR_COUNT + 1,
+               "nRF staging scratch would overlap the bootloader staging tail");
+const flash_area_t NRF_STAGING_AREA = {
+    .num_subareas = 1,
+    .subarea[0] =
+        {
+            .first_sector = FIRMWARE_SECTOR_START,
+            .num_sectors = NRF_STAGING_SECTOR_COUNT,
+        },
+};
+
 #endif  // USE_BOOT_UCB
 
 #endif  // KERNEL_MODE
