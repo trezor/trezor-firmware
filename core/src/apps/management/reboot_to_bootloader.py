@@ -18,7 +18,7 @@ async def install_upgrade(firmware_header: AnyBytes) -> AnyBytes:
 
     # check and parse received firmware header
     try:
-        hdr = utils.check_firmware_header(firmware_header)
+        hdr = utils.check_firmware_update(firmware_header)
     except Exception:
         raise wire.DataError("Invalid firmware header.")
 
@@ -55,13 +55,16 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
     # For convenience, we block unofficial firmwares from jumping to bootloader
     # this way, so that the user doesn't get mysterious "install failed" errors.
     # (It would be somewhat nicer if this was a compile-time flag, but oh well.)
-    is_official = utils.firmware_vendor() != "UNSAFE, DO NOT USE!"
+    # any UNSAFE-prefixed vendor (custom, prodtest) is not an official image
+    is_official = not utils.firmware_vendor().startswith("UNSAFE")
+    # each scheme reads only its own field
+    offered = msg.firmware_preamble if utils.USE_PQ_SECURE_BOOT else msg.firmware_header
     if (
         msg.boot_command == BootCommand.INSTALL_UPGRADE
-        and msg.firmware_header is not None
+        and offered is not None
         and is_official
     ):
-        fw_hash = await install_upgrade(msg.firmware_header)
+        fw_hash = await install_upgrade(offered)
 
     else:
         await confirm_action(

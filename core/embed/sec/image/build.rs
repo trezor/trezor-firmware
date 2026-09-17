@@ -23,6 +23,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             "image/fw_variant.c",
             "image/merkle.c",
             "image/model_tree.c",
+            "image/tree_preamble.c",
         ]);
     }
 
@@ -41,7 +42,11 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         bail_unsupported!();
     }
 
-    lib.add_sources(["image/image.c"]);
+    // Legacy vendor/image/secmon header verification; a Merkle-tree build
+    // verifies boot headers and manifests instead.
+    if !cfg!(feature = "pq_secure_boot") {
+        lib.add_source("image/image.c");
+    }
 
     Ok(())
 }
