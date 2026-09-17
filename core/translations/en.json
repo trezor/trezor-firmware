@@ -1866,7 +1866,12 @@
       "Eckhart": "The PIN will be required to access this device."
     },
     "pin__invalid_pin": "Invalid PIN",
-    "pin__last_attempt": "Last attempt",
+    "pin__last_attempt": {
+      "Bolt": "Last",
+      "Caesar": "Last attempt",
+      "Delizia": "Last attempt",
+      "Eckhart": "Last attempt"
+    },
     "pin__mismatch": "Entered PINs do not match!",
     "pin__pin_mismatch": "PIN mismatch",
     "pin__please_check_again": {
