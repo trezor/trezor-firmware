@@ -1,9 +1,11 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.crypto import AuthenticationError, aesgcm_decrypt, aesgcm_encrypt
+if utils.USE_AES_GCM:
+    from trezor.crypto import AuthenticationError, aesgcm_decrypt, aesgcm_encrypt
 
 
+@unittest.skipUnless(utils.USE_AES_GCM, "AES-GCM not supported")
 class TestCryptoAes(unittest.TestCase):
     # test vectors from
     # https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
