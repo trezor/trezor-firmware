@@ -33,7 +33,7 @@
 #include <sys/dbg_console.h>
 #endif
 
-#include "version.h"
+#include "../../version.h"
 
 #include <ctype.h>
 #include <errno.h>

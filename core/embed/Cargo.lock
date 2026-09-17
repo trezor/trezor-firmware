@@ -1073,22 +1073,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
 
 [[package]]
-name = "unix"
-version = "0.0.0"
-dependencies = [
- "color-eyre",
- "crypto",
- "io",
- "models",
- "rtl",
- "sec",
- "sys",
- "trezor_lib",
- "upymod",
- "xbuild",
-]
-
-[[package]]
 name = "unsize"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

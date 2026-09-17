@@ -40,30 +40,12 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
         features.push("emulator".into());
     }
 
-    // Option-mapped features, validated against the target package's declared
-    // features so an unsupported option fails here with the option named,
-    // instead of as a cargo error.
     let project_config = config::ProjectConfig::load(args.project)?;
-    let package = args.project.package_name(args.emulator);
-    let package_features = config::package_features(package)?;
+
     for activated in project_config.options.resolve(args) {
-        // Crate-qualified features ("io/foo") belong to dependencies and
-        // can't be checked against this package's feature table.
-        if !activated.feature.contains('/') && !package_features.contains(&activated.feature) {
-            bail!(
-                "option '{}' is not supported by this build: feature '{}' is not defined in package '{}'",
-                activated.option,
-                activated.feature,
-                package
-            );
-        }
         features.push(activated.feature);
     }
 
-    // Board and model-intrinsic features from TOML config. The emulator
-    // emulates the same board it would build for on real hardware
-    // (`default_board`, or an explicit `--board`); only the configuration
-    // header differs.
     let model_config = args.model.config()?;
 
     let board_id = args
@@ -71,7 +53,6 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
         .clone()
         .unwrap_or_else(|| model_config.default_board.clone());
 
-    // Get the model/board features filtered by the project's `uses` list.
     let board_def = config::resolve_board_definition(
         &model_config,
         &board_id,
@@ -119,9 +100,9 @@ fn forward_color_choice(cmd: &mut process::Command) {
     let color = if env::var_os("NO_COLOR").is_some_and(|v| !v.is_empty()) {
         "never"
     // https://bixense.com/clicolors
-    } else if env::var_os("CLICOLOR_FORCE").is_some_and(|v| !v.is_empty() && v != "0") {
-        "always"
-    } else if io::stderr().is_terminal() {
+    } else if io::stderr().is_terminal()
+        || env::var_os("CLICOLOR_FORCE").is_some_and(|v| !v.is_empty() && v != "0")
+    {
         "always"
     } else {
         "never"
@@ -135,7 +116,7 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
     let resolved = resolve_features(args)?;
     let mut rebuild_std = false;
 
-    cmd.args(["--package", args.project.package_name(args.emulator)]);
+    cmd.args(["--package", args.project.package_name()]);
     cmd.args(["--features", &resolved.features.join(",")]);
     cmd.args(["--profile", args.cargo_profile_name()]);
     cmd.env("TREZOR_BOARD_HEADER", &resolved.board_header);
@@ -248,27 +229,6 @@ mod tests {
 
         let error = resolve_features(&args).unwrap_err();
         assert!(error.to_string().contains("production"));
-    }
-
-    #[test]
-    fn rejects_options_unsupported_by_the_package() {
-        // `memperf` exists only in the unix (emulator) package. The firmware
-        // project maps it, so a hardware build must reject the option up
-        // front instead of failing later inside cargo.
-        let args = ResolvedBuildArgs {
-            frozen: true,
-            pyopt: true,
-            mem_perf: true,
-            ..ResolvedBuildArgs::default()
-        };
-
-        let error = resolve_features(&args).unwrap_err();
-        assert!(
-            error
-                .to_string()
-                .contains("option 'mem-perf' is not supported"),
-            "unexpected error: {error}"
-        );
     }
 
     #[test]
