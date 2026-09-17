@@ -29,8 +29,8 @@ if TYPE_CHECKING:
         EthereumTokenInfo,
         PaymentRequest,
     )
-    from trezor.ui.layouts import StrPropertyType
     from trezor.ui.layouts.properties import AboveThreshold
+    from trezorui_api import StrPropertyType
 
 
 async def require_confirm_approve(

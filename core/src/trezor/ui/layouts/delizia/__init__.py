@@ -1281,24 +1281,23 @@ if not utils.BITCOIN_ONLY:
             (TR.ethereum__contract_address, contract_address, None)
         ]
 
-        def _menu() -> Menu[None]:
-            menu_items: list[MenuLeaf[None]] = [cancel_leaf(TR.buttons__cancel)]
-            if account_properties:
-                menu_items.append(
-                    create_info_menu_leaf(
-                        TR.address_details__account_info,
-                        account_properties,
-                        TR.address_details__account_info,
-                    )
-                )
+        menu_items: list[MenuLeaf[None]] = [cancel_leaf(TR.buttons__cancel)]
+        if account_properties:
             menu_items.append(
                 create_info_menu_leaf(
-                    TR.ethereum__contract_address,
-                    contract_address,
-                    TR.ethereum__contract_address,
+                    TR.address_details__account_info,
+                    account_properties,
+                    TR.address_details__account_info,
                 )
             )
-            return Menu(menu_items)
+        menu_items.append(
+            create_info_menu_leaf(
+                TR.ethereum__contract_address,
+                contract_address,
+                TR.ethereum__contract_address,
+            )
+        )
+        menu = Menu(menu_items)
 
         for screen, title, value in (
             ("provider", TR.words__provider, recipient_str),
@@ -1312,7 +1311,7 @@ if not utils.BITCOIN_ONLY:
                 external_menu=True,
             ) as layout:
                 await confirm_with_menu(
-                    layout, _menu(), f"{br_name}/{screen}", BR_CODE_OTHER
+                    layout, menu, f"{br_name}/{screen}", BR_CODE_OTHER
                 )
 
         if properties:
@@ -1324,7 +1323,7 @@ if not utils.BITCOIN_ONLY:
                 external_menu=True,
             ) as layout:
                 await confirm_with_menu(
-                    layout, _menu(), br_name, ButtonRequestType.ConfirmOutput
+                    layout, menu, br_name, ButtonRequestType.ConfirmOutput
                 )
 
         with trezorui_api.confirm_summary(

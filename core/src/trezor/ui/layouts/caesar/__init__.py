@@ -1276,19 +1276,18 @@ if not utils.BITCOIN_ONLY:
                 (TR.address_details__derivation_path, account_path, None)
             )
 
-        def _menu() -> Menu[None]:
-            menu_items: list[MenuLeaf[None]] = []
-            if account_properties:
-                menu_items.append(
-                    create_info_menu_leaf(
-                        TR.address_details__account_info,
-                        with_colon(account_properties),
-                    )
-                )
+        menu_items: list[MenuLeaf[None]] = []
+        if account_properties:
             menu_items.append(
-                create_info_menu_leaf(TR.ethereum__contract_address, contract_address)
+                create_info_menu_leaf(
+                    TR.address_details__account_info,
+                    with_colon(account_properties),
+                )
             )
-            return Menu(menu_items)
+        menu_items.append(
+            create_info_menu_leaf(TR.ethereum__contract_address, contract_address)
+        )
+        menu = Menu(menu_items)
 
         await confirm_action(f"{br_name}/provider", TR.words__provider, recipient_str)
         await confirm_action(f"{br_name}/intent", TR.words__intent, intent)
@@ -1300,7 +1299,7 @@ if not utils.BITCOIN_ONLY:
                 external_menu=True,
             ) as layout:
                 await confirm_with_menu(
-                    layout, _menu(), br_name, ButtonRequestType.ConfirmOutput
+                    layout, menu, br_name, ButtonRequestType.ConfirmOutput
                 )
 
         # NOTE: `account_items`/`extra_items` cannot be combined with an external
@@ -1314,7 +1313,7 @@ if not utils.BITCOIN_ONLY:
             extra_title=None,
             external_menu=True,
         ) as layout:
-            await confirm_with_menu(layout, _menu(), f"{br_name}/summary")
+            await confirm_with_menu(layout, menu, f"{br_name}/summary")
 
     async def confirm_ethereum_staking_tx(
         title: str,

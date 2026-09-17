@@ -1323,27 +1323,26 @@ if not utils.BITCOIN_ONLY:
 
         br_name = "ethereum/clear_signing"
 
-        def _menu() -> Menu[None]:
-            menu_items: list[MenuLeaf[None]] = []
-            account_properties = _get_account_info_items(account, account_path)
-            if account_properties:
-                menu_items.append(
-                    create_info_menu_leaf(
-                        TR.address_details__account_info,
-                        account_properties,
-                        title=TR.address_details__account_info,
-                        subtitle=TR.send__send_from,
-                    )
-                )
+        menu_items: list[MenuLeaf[None]] = []
+        account_properties = _get_account_info_items(account, account_path)
+        if account_properties:
             menu_items.append(
                 create_info_menu_leaf(
-                    TR.ethereum__contract_address,
-                    contract_address,
-                    title=TR.ethereum__contract_address,
+                    TR.address_details__account_info,
+                    account_properties,
+                    title=TR.address_details__account_info,
+                    subtitle=TR.send__send_from,
                 )
             )
-            menu_items.append(cancel_leaf(TR.buttons__cancel))
-            return Menu(menu_items)
+        menu_items.append(
+            create_info_menu_leaf(
+                TR.ethereum__contract_address,
+                contract_address,
+                title=TR.ethereum__contract_address,
+            )
+        )
+        menu_items.append(cancel_leaf(TR.buttons__cancel))
+        menu = Menu(menu_items)
 
         for screen, title, value in (
             ("provider", TR.words__provider, recipient_str),
@@ -1358,7 +1357,7 @@ if not utils.BITCOIN_ONLY:
                 external_menu=True,
             ) as layout:
                 await confirm_with_menu(
-                    layout, _menu(), f"{br_name}/{screen}", BR_CODE_OTHER
+                    layout, menu, f"{br_name}/{screen}", BR_CODE_OTHER
                 )
 
         if properties:
@@ -1370,7 +1369,7 @@ if not utils.BITCOIN_ONLY:
                 external_menu=True,
             ) as layout:
                 await confirm_with_menu(
-                    layout, _menu(), br_name, ButtonRequestType.ConfirmOutput
+                    layout, menu, br_name, ButtonRequestType.ConfirmOutput
                 )
 
         with trezorui_api.confirm_summary(
@@ -1382,7 +1381,7 @@ if not utils.BITCOIN_ONLY:
             extra_title=None,
             external_menu=True,
         ) as layout:
-            await confirm_with_menu(layout, _menu(), f"{br_name}/summary")
+            await confirm_with_menu(layout, menu, f"{br_name}/summary")
 
     async def confirm_ethereum_vault_tx(
         title: str,

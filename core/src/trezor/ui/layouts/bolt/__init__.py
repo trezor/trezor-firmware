@@ -1312,7 +1312,7 @@ if not utils.BITCOIN_ONLY:
                 title=TR.ethereum__confirm_contract,
                 items=with_colon(properties),
                 hold=False,
-                external_menu=bool(info_items),
+                external_menu=True,
             )
             with props_ctx as props_layout, _info_ctx() as info_layout:
                 await with_info(
@@ -1327,7 +1327,7 @@ if not utils.BITCOIN_ONLY:
             amount_label=with_colon(TR.words__amount) if amount is not None else None,
             fee=maximum_fee,
             fee_label=with_colon(TR.send__maximum_fee),
-            account_items=info_items or None,
+            account_items=info_items,
             extra_items=None,
             extra_title=None,
         )
