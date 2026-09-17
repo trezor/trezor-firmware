@@ -121,6 +121,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address__qr_code;
   MP_QSTR_address__title_cosigner;
   MP_QSTR_address__title_cosigner_template;
+  MP_QSTR_address__title_multisig_xpub_template;
   MP_QSTR_address__title_provider_address;
   MP_QSTR_address__title_receive_address;
   MP_QSTR_address__title_refund_address;

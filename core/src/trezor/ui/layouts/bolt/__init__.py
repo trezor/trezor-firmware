@@ -355,7 +355,7 @@ async def show_address(
         elif result is INFO:
 
             def xpub_title(i: int) -> str:
-                result = f"MULTISIG XPUB #{i + 1}\n"
+                result = TR.address__title_multisig_xpub_template.format(i + 1)
                 result += (
                     TR.address__title_yours
                     if i == multisig_index
