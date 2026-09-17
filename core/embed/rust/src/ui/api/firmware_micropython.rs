@@ -797,8 +797,8 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
             if obj == Obj::const_none() {
                 Ok(None)
             } else {
-                let [label, content]: [Obj; 2] = util::iter_into_array(obj)?;
-                Ok(Some((label.try_into()?, content.try_into()?)))
+                let [label, content]: [TString; 2] = util::iter_into_array(obj)?;
+                Ok(Some((label, content)))
             }
         };
         let account = labeled(kwargs.get(Qstr::MP_QSTR_account)?)?;
