@@ -23,11 +23,9 @@ fn main() -> Result<()> {
 
         lib.add_sources([
             "bootui.c",
-            "fw_check.c",
             "main.c",
             "ui_helpers.c",
             "version_check.c",
-            "workflow/wf_firmware_update.c",
             "workflow/wf_image_upload.c",
             "workflow/wf_ucb_stage.c",
             "workflow/wf_wipe_device.c",
@@ -56,6 +54,27 @@ fn main() -> Result<()> {
 
         if cfg!(feature = "lockable_bootloader") {
             lib.add_source("workflow/wf_unlock_bootloader.c");
+        }
+
+        // Legacy or Merkle-tree firmware check + update flow; exactly one, both
+        // provide `workflow_firmware_update`.
+        if cfg!(feature = "pq_secure_boot") {
+            lib.add_source("fw_check_pq.c");
+            lib.add_source("workflow/wf_firmware_update_pq.c");
+
+            // Boot-warning logo for unofficial firmware (the tree layout has no
+            // vendor header to carry one), taken from the model's own
+            // vendorheader directory so it is already sized for its UI. The
+            // `rodata_*` section name lets the existing `*(.rodata*)` linker
+            // rule place it in flash.
+            let model_id = xbuild::current_model_id()?;
+            lib.embed_binary(
+                format!("../../models/{model_id}/vendorheader/vendor_unsafe.toif"),
+                "rodata_vendor_unsafe",
+            )?;
+        } else {
+            lib.add_source("fw_check.c");
+            lib.add_source("workflow/wf_firmware_update.c");
         }
 
         if cfg!(feature = "disable_animation") {
