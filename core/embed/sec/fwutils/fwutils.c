@@ -23,10 +23,16 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/boot_header.h>
 #include <sec/fwutils.h>
 #include <sec/image.h>
 #include <sys/flash.h>
+#include <sys/mpu.h>
 #include <sys/systask.h>
+
+#ifdef PQ_SECURE_BOOT
+#include <sec/firmware_manifest.h>
+#endif
 
 #include "blake2s.h"
 
@@ -112,6 +118,44 @@ cleanup:
   TSH_RETURN;
 }
 
+#ifdef PQ_SECURE_BOOT
+// Merkle-tree layout: no vendor header in the image. Report a vendor only when
+// a manifest is present, derived from the firmware_type the bootloader
+// persisted into the write-protected boot header. Must agree with the
+// bootloader's tree_vendor_str and the UNSAFE-prefix test in
+// reboot_to_bootloader.py.
+ts_t firmware_get_vendor(char* buff, size_t buff_size) {
+  TSH_DECLARE;
+  const void* data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
+
+  memset(buff, 0, buff_size);
+
+  TSH_CHECK(data != NULL, TS_EINVAL);
+  TSH_CHECK(*(const uint32_t*)data == FW_MANIFEST_MAGIC, TS_EBADMSG);
+
+  // The bootloader area is unmapped in the secmon's default MPU mode.
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
+  // Via the flash area, not BOOTLOADER_START: sec/ is shared with the emulator,
+  // where the raw constant is not a valid pointer.
+  const boot_header_auth_t* bl =
+      boot_header_auth_get((uintptr_t)flash_area_get_address(
+          &BOOTLOADER_AREA, 0, sizeof(boot_header_auth_t)));
+  const boot_header_unauth_t* unauth =
+      (bl != NULL) ? boot_header_unauth_get(bl) : NULL;
+  const fw_variant_sec_t variant =
+      (unauth != NULL) ? unauth->firmware_type : FW_VARIANT_SEC_INVALID;
+  mpu_restore(mpu_mode);
+
+  const char* vendor = firmware_vendor_str(variant);
+
+  size_t len = strlen(vendor);
+  TSH_CHECK(buff_size >= len + 1, TS_EINVAL);
+  memcpy(buff, vendor, len);
+
+cleanup:
+  TSH_RETURN;
+}
+#else
 ts_t firmware_get_vendor(char* buff, size_t buff_size) {
   TSH_DECLARE;
   const void* data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
@@ -132,6 +176,7 @@ ts_t firmware_get_vendor(char* buff, size_t buff_size) {
 cleanup:
   TSH_RETURN;
 }
+#endif
 
 void firmware_invalidate_header(void) {
 #ifdef STM32U5
