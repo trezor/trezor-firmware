@@ -307,8 +307,12 @@ typedef struct __attribute__((packed)) {
   uint32_t flags;       /**< FW_MANIFEST_ENTRY_FLAG_* (e.g. _FLAG_BOOT) */
   uint32_t addr;       /**< module code offset from the firmware region start */
   uint32_t chunk_size; /**< smart-hashing chunk size for THIS module's code_hash
-                            chain (authenticated); the device validates it
-                            against IMAGE_CHUNK_SIZE as a max */
+                            chain (authenticated). Bounded against
+                            IMAGE_CHUNK_SIZE on the INSTALL path only, where it
+                            sizes the transport; at boot it is required to be
+                            non-zero and nothing more, because the chain does
+                            not care -- a chunk_size at or above the module size
+                            simply folds one chunk */
   uint32_t size;       /**< module code size */
   merkle_proof_node_t
       code_hash; /**< smart-hashing chain over the module code */
@@ -345,7 +349,15 @@ typedef struct __attribute__((packed)) {
 
 /** Total size in bytes of a firmware manifest (fixed part + entries). This is
  *  exactly the span the variant leaf H(0x00 || manifest) covers; the firmware
- *  Merkle proof begins right after it (see firmware_manifest_proof_t). */
+ *  Merkle proof begins right after it (see firmware_manifest_proof_t).
+ *
+ *  `module_count` MUST be bounded before this is trusted. size_t is 32 bits on
+ *  device, so a crafted count wraps the product: 0x4EC4EC4F yields 60, small
+ *  enough to pass a "does the manifest fit" check and leave entries[] running
+ *  far past the region. Bounding is done by firmware_manifest_layout_valid,
+ *  firmware_manifest_authentic and firmware_manifest_read_proof -- reach the
+ *  raw count through one of those, not through this. Saturating here instead
+ *  would be worse: callers add to the result, and SIZE_MAX + 4 wraps to 4. */
 static inline size_t firmware_manifest_size(const firmware_manifest_t* m) {
   return sizeof(firmware_manifest_t) +
          (size_t)m->module_count * sizeof(firmware_manifest_entry_t);
@@ -398,6 +410,12 @@ static inline secbool firmware_manifest_read_proof(
     const merkle_proof_node_t** out_nodes, size_t* out_count) {
   *out_nodes = NULL;
   *out_count = 0;
+  // BEFORE the size arithmetic, for the wrap firmware_manifest_size documents:
+  // this is the shared entry point for untrusted manifests, so it does not
+  // depend on the caller having bounded the count first.
+  if (m->module_count == 0 || m->module_count > BOOT_HEADER_MAX_MODULES) {
+    return secfalse;
+  }
   size_t manifest_len = firmware_manifest_size(m);
   if (avail < manifest_len + sizeof(uint32_t)) {
     return secfalse;

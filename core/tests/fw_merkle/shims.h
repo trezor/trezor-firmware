@@ -149,6 +149,10 @@ typedef struct __attribute__((packed)) {
   firmware_manifest_entry_t entries[];
 } firmware_manifest_t;
 
+// Same wrap as the device's copy in sec/boot_header.h: module_count is
+// untrusted and size_t is 32-bit there, so it must be bounded before this is
+// trusted. Harmless in the harness (64-bit host, vectors are well-formed), kept
+// identical so the two do not drift.
 static inline size_t firmware_manifest_size(const firmware_manifest_t* m) {
   return sizeof(firmware_manifest_t) +
          (size_t)m->module_count * sizeof(firmware_manifest_entry_t);

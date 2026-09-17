@@ -203,7 +203,15 @@ void firmware_module_code_hash(uintptr_t base, uint32_t addr, uint32_t size,
   // the whole-module recompute and the streaming per-chunk verify use identical
   // primitives.
   firmware_module_chain_seed(size, out);
-  uint32_t n = (chunk_size != 0) ? (size + chunk_size - 1) / chunk_size : 0;
+  // ceil(size / chunk_size) without the (size + chunk_size - 1) rounding trick,
+  // which overflows uint32_t once size + chunk_size exceeds 2^32 and yields 0 --
+  // no chunks folded, so the digest is the bare seed and the module is rejected.
+  // chunk_size is founder-signed and bounded at install, so that was never
+  // reachable; this form is correct for any chunk_size instead of relying on it.
+  // k * chunk_size cannot overflow either: k < n implies k * chunk_size < size.
+  uint32_t n = (chunk_size != 0)
+                   ? size / chunk_size + ((size % chunk_size != 0) ? 1u : 0u)
+                   : 0;
   for (uint32_t k = n; k-- > 0;) {
     uint32_t off = k * chunk_size;
     uint32_t clen = (size - off < chunk_size) ? (size - off) : chunk_size;
