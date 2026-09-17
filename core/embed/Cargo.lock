@@ -905,6 +905,7 @@ dependencies = [
  "cty",
  "models",
  "rtl",
+ "spin",
  "ufmt",
  "xbuild",
 ]
