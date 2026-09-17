@@ -2,7 +2,6 @@ use heapless::Vec;
 
 use super::{theme, Button, ButtonMsg};
 use crate::micropython::Error;
-use crate::strutil::TString;
 use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::geometry::{Insets, Rect};
 use crate::ui::layout::menu_item_intent::MenuItemIntent;
