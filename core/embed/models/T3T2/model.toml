@@ -2,6 +2,8 @@ mcu = "stm32u58"
 default_board = "devkit"
 secmon = true
 bootloader_header_tool = "headertool_pq"
+# The nRF verifies the founder tree itself; the signer embeds founder material.
+nrf_pq_native = true
 
 features = [
     "backup_ram",
