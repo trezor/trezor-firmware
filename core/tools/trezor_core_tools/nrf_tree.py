@@ -120,6 +120,27 @@ def _tlv_areas(image: bytes) -> list[tuple[int, int]]:
     return areas
 
 
+def mcuboot_find_prot_tlv(image: bytes, tlv_type: int) -> bytes | None:
+    """Find a TLV in the PROTECTED area only.
+
+    Mirrors the device's nrf_image_find_prot_tlv. Anything the signature or the
+    leaf must cover has to come from here: an unprotected copy of the same type
+    is outside the image hash and so attacker-controlled, and searching both
+    areas would silently accept one.
+    """
+    areas = _tlv_areas(image)
+    if not areas:
+        return None
+    start, end = areas[0]  # protected first, by construction
+    p = start
+    while p + 4 <= end:
+        t, ln = struct.unpack_from("<HH", image, p)
+        if t == tlv_type:
+            return image[p + 4 : p + 4 + ln]
+        p += 4 + ln
+    return None
+
+
 def mcuboot_find_tlv(image: bytes, tlv_type: int) -> bytes | None:
     for start, end in _tlv_areas(image):
         p = start

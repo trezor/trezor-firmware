@@ -70,7 +70,10 @@ def check(image: bytes) -> int:
     else:
         print(f"  image-hash TLV consistent ({want.hex()[:16]}...)")
 
-    sigmask = nrf_tree.mcuboot_find_tlv(image, nrf_tree.TLV_SIGMASK)
+    # PROTECTED area only -- the device reads it that way (nrf_image_find_prot_tlv)
+    # because an unprotected copy is outside the image hash. Searching both areas
+    # would report an attacker-placed mask as "protected".
+    sigmask = nrf_tree.mcuboot_find_prot_tlv(image, nrf_tree.TLV_SIGMASK)
     if sigmask is None or len(sigmask) != 1:
         print("  FAIL no protected sigmask TLV")
         return problems + 1
