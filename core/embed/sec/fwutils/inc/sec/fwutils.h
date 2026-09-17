@@ -50,9 +50,4 @@ secbool firmware_get_vendor(char* buff, size_t buff_size);
 
 #ifdef SECURE_MODE
 
-// Invalidates the firmware by erasing the first 1KB of the firmware area.
-//
-// Note: only works when write access to firmware area is enabled by MPU
-void firmware_invalidate_header(void);
-
 #endif  // SECURE_MODE
