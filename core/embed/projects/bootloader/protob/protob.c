@@ -169,7 +169,8 @@ secbool send_msg_request_firmware(protob_io_t *iface, uint32_t offset,
   MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, offset);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(length, length);
   // 0 => the primary stream (bootloader code / firmware); the host omits it.
-  // k>=1 identifies the k-th co-processor image so the host serves its bytes.
+  // 1 => the nRF image (NRF_OTA_REQUEST_INDEX) so the host serves its bytes. A
+  // routing tag, not a list index: FirmwareBegin has no co-processor array.
   if (coprocessor_index != 0) {
     MSG_SEND_ASSIGN_VALUE(coprocessor_index, coprocessor_index);
   }

@@ -189,7 +189,9 @@ message FirmwareBegin {
     optional uint32 nrf_length = 5;     // nRF MCUboot image bytes available to stream; omit/0 => no nRF update
     optional bytes nrf_co_path = 6;     // model-tree co-path (nRF leaf -> modelRoot), 32*depth bytes
     optional bytes nrf_image_hash = 7;  // SHA-256 of the nRF image; "update required" hint (device compares to the
-                                        // running nRF), NOT a trust input -- authenticity is the co-path fold
+                                        // running nRF). It DECIDES whether the stream is skipped, so the device
+                                        // fold-verifies it against the founder tree before believing it -- a hint
+                                        // that does not fold rejects the whole upload
 }
 
 /**
@@ -200,8 +202,11 @@ message FirmwareRequest {
     required uint32 offset = 1;  // offset of requested firmware chunk
     required uint32 length = 2;  // length of requested firmware chunk
     // Which image the chunk belongs to: 0 (default) = the primary stream
-    // (bootloader code in phase 1 / firmware in phase 2); k>=1 = the k-th
-    // co-processor image in FirmwareBegin.coprocessors. Lets the host serve the
+    // (bootloader code in phase 1 / firmware in phase 2); 1 = the nRF image.
+    // A routing tag, not an index into a list: FirmwareBegin carries the nRF
+    // fields directly (nrf_length / nrf_co_path / nrf_image_hash) rather than a
+    // co-processor array, so a second co-processor would take the next value
+    // here and its own fields there. Lets the host serve the
     // right bytes when a session streams several images (bl code + co-procs).
     optional uint32 coprocessor_index = 3;
 }

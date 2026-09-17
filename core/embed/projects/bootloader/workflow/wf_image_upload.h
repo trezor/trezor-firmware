@@ -170,9 +170,9 @@ struct image_upload_handler {
   uint32_t init_chunk_size;
   /** Image index sent in every FirmwareRequest so the host knows which image
    *  these chunks are for: 0 (default) = the primary stream (bootloader code /
-   *  firmware); k>=1 = the k-th co-processor image
-   * (FirmwareBegin.coprocessors). Lets one phase-1 session stream several
-   * images (bl code + co-procs). */
+   *  firmware); 1 = the nRF image (NRF_OTA_REQUEST_INDEX). A routing tag rather
+   *  than an index into a list -- FirmwareBegin has no co-processor array -- so
+   *  one phase-1 session can stream several images (bl code + the nRF). */
   uint32_t request_index;
   /** Workflow result returned on a successful upload. */
   workflow_result_t success_result;
