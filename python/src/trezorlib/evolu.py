@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2025 SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
