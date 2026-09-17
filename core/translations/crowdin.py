@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import collections
 import json
-import re
 from pathlib import Path
 
 import click
@@ -53,10 +52,7 @@ def merge() -> None:
     tdir = TranslationsDir()
 
     def clean_translation(text: str) -> str:
-        """Remove or replace non-printable characters in translation strings."""
-        # Replace non-breaking spaces with regular spaces, EXCEPT before ? ! and :
-        # Use negative lookahead to avoid replacing before French punctuation
-        text = re.sub(r"\u00A0(?![?!:])", " ", text)
+        """For global translation fixes."""
         # Replace double newlines with newline-carriage return
         # This is needed because Crowdin converts \n\r to \n\n on import
         text = text.replace("\n\n", "\n\r")
