@@ -63,11 +63,6 @@ secbool nrf_staging_write_desc(uint32_t image_len,
                                const merkle_proof_node_t *co_path,
                                size_t co_path_count);
 
-// True iff a structurally-valid descriptor is present (magic + version + bounds
-// + integrity tag). Cheap: a single mapped read of the descriptor sector, so it
-// is a safe no-op probe on every boot.
-bool nrf_staging_valid(void);
-
 // Read the validated descriptor. Returns false if none is valid. `out_co_path`
 // points into memory-mapped flash (stable, read-only) and is valid until the
 // staging area is erased.

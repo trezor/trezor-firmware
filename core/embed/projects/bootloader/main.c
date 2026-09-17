@@ -141,6 +141,12 @@ static secbool is_manufacturing_mode(void) {
   // POSITIVELY official prodtest variant -- anything else (custom, other
   // variant, missing header, glitch) returns secfalse and stays in the
   // fully-enforced state.
+  //
+  // The is_custom test is LOGICALLY redundant -- reaching the body already
+  // requires firmware_type == PRODTEST, which no custom codeword is -- and is
+  // kept on purpose: it is a second, independent COMPARISON of the same value,
+  // so a glitch in one comparison does not open manufacturing mode on its own.
+  // Do not simplify it away.
   const boot_header_auth_t *bl = boot_header_auth_get(BOOTLOADER_START);
   const boot_header_unauth_t *unauth =
       (bl != NULL) ? boot_header_unauth_get(bl) : NULL;

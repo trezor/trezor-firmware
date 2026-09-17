@@ -28,9 +28,6 @@
 #include "protob/protob.h"
 #include "workflow_common.h"
 
-// Upper bound on the nRF model-tree co-path (in 32-byte nodes), bounding the
-// untrusted co_path_len from FirmwareBegin.
-
 // FirmwareRequest.coprocessor_index value the nRF stream uses (0 = the primary
 // bootloader-code / firmware stream). Lets the host tell a phase-1 bl-code
 // request from an nRF request when both stream in one session.
@@ -82,7 +79,7 @@ workflow_result_t workflow_nrf_ota_update(
  * boot+nRF update. Call once on every bootloader boot, BEFORE any host/BLE data
  * transfer.
  *
- * A no-op unless a valid staged descriptor is present (nrf_staging_valid).
+ * A no-op unless a valid staged descriptor is present.
  * Otherwise it:
  *   1. re-verifies the staged image against the INSTALLED boot header's
  *      modelRoot (the authority after any bootloader swap) + model id, and

@@ -97,8 +97,6 @@ static const nrf_staging_desc_t *nrf_staging_get_valid(void) {
   return desc;
 }
 
-bool nrf_staging_valid(void) { return nrf_staging_get_valid() != NULL; }
-
 bool nrf_staging_read(uint32_t *out_image_len,
                       const merkle_proof_node_t **out_co_path,
                       size_t *out_co_path_count) {

@@ -352,6 +352,15 @@ def place_bootloader_in_tree(
 # --- OTA artifact + verification --------------------------------------------
 
 
+# --- Test-only OTA container ------------------------------------------------
+#
+# NOT a wire format. The device receives the co-path and the image as separate
+# FirmwareBegin fields (nrf_co_path / nrf_length), never as one blob. This
+# concatenation exists so a harness can hand one artifact to the C side and to
+# verify_nrf_ota below; gen_nrf_vector.py and this module's self-test are its
+# only callers. Do not reach for it when writing a host that talks to a device.
+
+
 def build_nrf_ota(image: bytes, co_path: list[bytes]) -> bytes:
     """OTA payload: proof_count || co_path nodes || mcuboot_image. The STM verifies
     it against modelRoot, then pushes the raw image to the nRF over SMP."""
