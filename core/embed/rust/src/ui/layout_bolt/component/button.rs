@@ -1,9 +1,9 @@
+#[cfg(feature = "haptic")]
+use io::haptic::{self, HapticEffect};
 use sys::time::ShortDuration;
 
 use super::theme;
 use crate::strutil::TString;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic::{self, HapticEffect};
 use crate::ui::component::{
     Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, Timer,
 };

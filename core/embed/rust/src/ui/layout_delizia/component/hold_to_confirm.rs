@@ -1,3 +1,5 @@
+#[cfg(feature = "haptic")]
+use io::haptic::{self, HapticEffect};
 use pareen;
 use sys::time::{Duration, ShortDuration};
 
@@ -5,8 +7,6 @@ use super::theme::{self, TITLE_HEIGHT};
 use super::{Button, ButtonContent, ButtonMsg};
 use crate::time::Stopwatch;
 use crate::translations::TR;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic::{self, HapticEffect};
 use crate::ui::component::{Component, Event, EventCtx, Label};
 use crate::ui::constant::screen;
 use crate::ui::display::Color;
