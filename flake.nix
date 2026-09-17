@@ -190,8 +190,8 @@
             // (lib.optionalAttrs (fullDeps && !isDarwin)) {
               # ~250MiB binary
               TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
-            }
-          );
+            };
+          });
       in
       {
         devShells = {
