@@ -34,23 +34,38 @@ fn main() -> Result<()> {
 
 fn embed_secmon_binary(lib: &mut CLibrary) -> Result<()> {
     let model_id = xbuild::current_model_id()?;
-    let dir = PathBuf::from(format!("../../models/{}/secmon", model_id));
+    let prebuilt = PathBuf::from(format!("../../models/{}/secmon", model_id));
+    // Fresh: the secmon built as this kernel's dependency, in Cargo's profile
+    // directory.
+    let fresh = xbuild::cargo_profile_dir()?;
 
-    if cfg!(feature = "bootloader_devel") {
+    let (dir, bin, api) = if cfg!(feature = "prebuilt_secmon") {
+        // A custom build folded into an already-signed release: its custom slot
+        // commits to the secmon that release was signed over. The binary and its
+        // veneer object travel together, per signing key set.
+        if cfg!(feature = "bootloader_devel") {
+            (prebuilt, "secmon_DEV.bin", "secmon_api_DEV.o")
+        } else {
+            (prebuilt, "secmon.bin", "secmon_api.o")
+        }
+    } else if cfg!(feature = "pq_secure_boot") {
+        // A Merkle-tree release signs whatever secmon it embeds; use the one
+        // it built.
+        (fresh, "secmon.bin", "secmon_api.o")
+    } else if cfg!(feature = "bootloader_devel") {
         if cfg!(feature = "unsafe_fw") {
-            lib.add_object(dir.join("secmon_api_DEV.o"));
-            lib.embed_binary(dir.join("secmon_DEV.bin"), "secmon")?;
+            (prebuilt, "secmon_DEV.bin", "secmon_api_DEV.o")
         } else {
             // Take recently built secmon from Cargo's profile directory
-            let dir = xbuild::cargo_profile_dir()?;
-            lib.add_object(dir.join("secmon_api.o"));
-            lib.embed_binary(dir.join("secmon.bin"), "secmon")?;
+            (fresh, "secmon.bin", "secmon_api.o")
         }
     } else {
         // Take officially released secmon
-        lib.add_object(dir.join("secmon_api.o"));
-        lib.embed_binary(dir.join("secmon.bin"), "secmon")?;
-    }
+        (prebuilt, "secmon.bin", "secmon_api.o")
+    };
+
+    lib.add_object(dir.join(api));
+    lib.embed_binary(dir.join(bin), "secmon")?;
 
     Ok(())
 }

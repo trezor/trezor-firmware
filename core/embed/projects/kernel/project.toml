@@ -20,6 +20,7 @@ uses = [
     "nrf_auth",
     "optiga",
     "power_manager",
+    "pq_secure_boot",
     "pvd",
     "rgb_led",
     "rtc",
@@ -49,6 +50,7 @@ apps                          = { true = ["app_loading"] }
 block-on-vcp                  = { true = ["block_on_vcp"] }
 bootloader-devel              = { true = ["bootloader_devel"] }
 btc-only                      = { false = ["universal_fw"] }
+prebuilt-secmon              = { true = ["prebuilt_secmon"] }
 dbg-console                   = { vcp = ["dbg_console_vcp"], swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 debug-link                    = { true = ["debuglink"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }

@@ -51,6 +51,8 @@ ui_debug_overlay = ["trezor_lib/ui_debug_overlay"]
 ui_performance_overlay = ["trezor_lib/ui_performance_overlay"]
 universal_fw = ["trezor_lib/universal_fw", "upymod/universal_fw"]
 unsafe_fw = []
+# Embed the prebuilt secmon (a custom build folded into a signed release).
+prebuilt_secmon = []
 ward = ["trezor_lib/ward", "upymod/ward"]
 
 # --------------------------------------------------------------------------
@@ -133,6 +135,7 @@ power_manager = [
     "trezor_lib/power_manager",
     "trezor_lib/pmic",
 ]
+pq_secure_boot = ["sec/pq_secure_boot"]
 rgb_led = ["io/rgb_led", "upymod/rgb_led", "trezor_lib/rgb_led"]
 sd_card = ["io/sd_card", "upymod/sd_card", "trezor_lib/sd_card"]
 secmon_layout = ["models/secmon_layout"]
