@@ -1,4 +1,6 @@
 #[cfg(feature = "haptic")]
+use io::haptic;
+#[cfg(feature = "haptic")]
 use pareen;
 use sys::time::Duration;
 
@@ -8,8 +10,6 @@ use super::super::theme;
 use super::constant::SCREEN;
 use crate::strutil::TString;
 use crate::time::Stopwatch;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic;
 use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::display::Color;
 use crate::ui::geometry::{Alignment2D, Insets, Offset, Rect};
