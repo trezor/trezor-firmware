@@ -122,6 +122,12 @@ pub fn git_modified() -> Result<bool> {
 /// Parses a version file and returns the version string in the format
 /// "major.minor.patch".
 pub fn parse_version_file(file_name: &Path) -> Result<String> {
+    let [major, minor, patch, _] = parse_version_defines(file_name, "VERSION")?;
+    Ok(format!("{}.{}.{}", major, minor, patch))
+}
+
+/// Reads `<prefix>_MAJOR` .. `<prefix>_BUILD` from a version file.
+pub fn parse_version_defines(file_name: &Path, prefix: &str) -> Result<[String; 4]> {
     let content = std::fs::read_to_string(file_name)
         .with_context(|| format!("Failed to read version file: {}", file_name.display()))?;
 
@@ -140,11 +146,12 @@ pub fn parse_version_file(file_name: &Path) -> Result<String> {
         ))
     };
 
-    let major = parse_symbol("VERSION_MAJOR")?;
-    let minor = parse_symbol("VERSION_MINOR")?;
-    let patch = parse_symbol("VERSION_PATCH")?;
-
-    Ok(format!("{}.{}.{}", major, minor, patch))
+    Ok([
+        parse_symbol(&format!("{prefix}_MAJOR"))?,
+        parse_symbol(&format!("{prefix}_MINOR"))?,
+        parse_symbol(&format!("{prefix}_PATCH"))?,
+        parse_symbol(&format!("{prefix}_BUILD"))?,
+    ])
 }
 
 /// Reads symbol from memory.ld file and parse it as an address.
