@@ -158,7 +158,7 @@ pub struct ProjectConfig {
 
 impl ProjectConfig {
     pub fn load(project: Project) -> Result<Self> {
-        let pkg = project.package_name(false);
+        let pkg = project.package_name();
         let path = workspace_dir()?
             .join("projects")
             .join(pkg)
@@ -168,26 +168,6 @@ impl ProjectConfig {
         toml::from_str(&content)
             .with_context(|| format!("Failed to parse project config: {}", path.display()))
     }
-}
-
-/// Returns the names declared in the `[features]` table of the given
-/// package's Cargo.toml. Used to validate that option-mapped features exist
-/// in the package actually being built.
-pub fn package_features(package: &str) -> Result<HashSet<String>> {
-    let path = workspace_dir()?
-        .join("projects")
-        .join(package)
-        .join("Cargo.toml");
-    let content = std::fs::read_to_string(&path)
-        .with_context(|| format!("Failed to read package manifest: {}", path.display()))?;
-    let manifest: toml::Value = toml::from_str(&content)
-        .with_context(|| format!("Failed to parse package manifest: {}", path.display()))?;
-
-    Ok(manifest
-        .get("features")
-        .and_then(|v| v.as_table())
-        .map(|table| table.keys().cloned().collect())
-        .unwrap_or_default())
 }
 
 #[derive(Deserialize, Default, Clone)]
@@ -209,7 +189,7 @@ pub fn resolve_board_definition(
     emulator: bool,
 ) -> Result<BoardDefinition> {
     let board_config = BoardConfig::load(&model_config.model_id, board_id)?;
-    let pkg = project.package_name(false);
+    let pkg = project.package_name();
     let model_override = model_config
         .project_overrides
         .get(pkg)
