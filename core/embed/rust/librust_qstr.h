@@ -99,7 +99,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_about_items;
   MP_QSTR_account;
   MP_QSTR_account_items;
-  MP_QSTR_account_label;
   MP_QSTR_account_title;
   MP_QSTR_accounts;
   MP_QSTR_action;
@@ -565,7 +564,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_passphrase__turn_on;
   MP_QSTR_passphrase__wallet;
   MP_QSTR_path;
-  MP_QSTR_path_label;
   MP_QSTR_peer_count;
   MP_QSTR_pin__cancel_description;
   MP_QSTR_pin__cancel_info;
