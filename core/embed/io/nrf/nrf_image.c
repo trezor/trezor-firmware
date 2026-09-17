@@ -138,8 +138,8 @@ static uint16_t nrf_image_find_prot_tlv(const uint8_t* image, size_t image_len,
 bool nrf_image_model_id(const uint8_t* image, size_t image_len,
                         uint8_t out[NRF_IMAGE_MODEL_ID_LEN]) {
   const uint8_t* val = NULL;
-  uint16_t len = nrf_image_find_prot_tlv(image, image_len,
-                                         NRF_MCUBOOT_TLV_MODEL_ID, &val);
+  uint16_t len =
+      nrf_image_find_prot_tlv(image, image_len, NRF_MCUBOOT_TLV_MODEL_ID, &val);
   if (len != NRF_IMAGE_MODEL_ID_LEN || val == NULL) {
     return false;
   }
@@ -283,13 +283,15 @@ secbool nrf_image_hash(const uint8_t* image, size_t image_len,
 //
 // leaf = H(0x00 || coproc_slot(model, kind, index, mcuboot_image_hash(image)))
 // -- see nrf_image_hash for why the image is committed through its hash rather
-// than a byte range, and coproc_slot_t for why the role fields are in the value.
+// than a byte range, and coproc_slot_t for why the role fields are in the
+// value.
 //
 // The nRF's own MCUboot image signature is verified by the nRF at boot. Since
 // role binding the slot carries this device's model, so an image built for
-// another model does not fold here -- the model-id TLV check in the OTA workflow
-// is defence in depth rather than the cross-model guard it used to be. Mirrors
-// the firmware-variant fold (firmware_manifest_authentic), one tree level up.
+// another model does not fold here -- the model-id TLV check in the OTA
+// workflow is defence in depth rather than the cross-model guard it used to be.
+// Mirrors the firmware-variant fold (firmware_manifest_authentic), one tree
+// level up.
 secbool nrf_image_verify_in_tree(
     const uint8_t* image, size_t image_len, const merkle_proof_node_t* proof,
     size_t proof_count, const merkle_proof_node_t* trusted_model_root) {
@@ -458,10 +460,10 @@ static const uint8_t* const NRF_LEGACY_KEYS[] = {
 #define NRF_LEGACY_KEY_N (sizeof(NRF_LEGACY_KEYS) / sizeof(NRF_LEGACY_KEYS[0]))
 #endif  // NRF_LEGACY_PREDICATE_AVAILABLE
 
-// Locate one TLV in the PROTECTED area only. Every authenticated value must come
-// from there: an unprotected copy is outside the image hash, hence outside the
-// leaf, hence attacker-controlled. Used by the legacy sigmask and by the model
-// id, so it is not tied to the legacy predicate's availability.
+// Locate one TLV in the PROTECTED area only. Every authenticated value must
+// come from there: an unprotected copy is outside the image hash, hence outside
+// the leaf, hence attacker-controlled. Used by the legacy sigmask and by the
+// model id, so it is not tied to the legacy predicate's availability.
 static uint16_t nrf_image_find_prot_tlv(const uint8_t* image, size_t image_len,
                                         uint16_t want,
                                         const uint8_t** out_val) {
@@ -872,15 +874,16 @@ secbool nrf_image_verify_for_push(const uint8_t* image, size_t image_len,
   // TLV, so it lies INSIDE the leaf -- and the fold above already proved that
   // leaf reaches this boot header's modelRoot. An image that folds is therefore
   // the one signed alongside THIS bootloader, carrying the counter the signer
-  // stamped from THIS header; a tampered counter simply fails the fold. Nor, over
-  // the wire, can the nRF refuse the push on rollback grounds: that needs the
-  // nRF's floor above the pushed counter, which needs the bootloader downgraded
-  // first, which check_bootloader_min_version already refuses.
+  // stamped from THIS header; a tampered counter simply fails the fold. Nor,
+  // over the wire, can the nRF refuse the push on rollback grounds: that needs
+  // the nRF's floor above the pushed counter, which needs the bootloader
+  // downgraded first, which check_bootloader_min_version already refuses.
   //
-  // The floor can still be raised out of band -- serial recovery over UART takes
-  // a signed newer image straight into the nRF, past this bootloader. That needs
-  // physical access, and it costs a refused push (the STM erases the slot, then
-  // the nRF rejects the image) rather than anything accepted that should not be.
+  // The floor can still be raised out of band -- serial recovery over UART
+  // takes a signed newer image straight into the nRF, past this bootloader.
+  // That needs physical access, and it costs a refused push (the STM erases the
+  // slot, then the nRF rejects the image) rather than anything accepted that
+  // should not be.
   //
   // That is exactly why the signature records below DO need checking: they are
   // UNPROTECTED, outside the leaf, so the fold says nothing about them. If the

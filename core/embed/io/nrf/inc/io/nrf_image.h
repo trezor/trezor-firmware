@@ -88,8 +88,8 @@ secbool nrf_image_verify_hash_in_tree(
  *
  * The caller SHOULD ALSO check the image's model id (MCUboot TLV) against the
  * device. Since role binding that is defence in depth -- the slot folded here
- * carries this build's model, so a foreign model's image does not fold -- but it
- * still separates a foreign image MISISSUED into this model's tree.
+ * carries this build's model, so a foreign model's image does not fold -- but
+ * it still separates a foreign image MISISSUED into this model's tree.
  *
  * @param image        the signed MCUboot image
  * @param image_len    its length in bytes

@@ -133,9 +133,10 @@ static upload_status_t nrf_on_finish(image_upload_handler_t *base,
 
   // 2. Model-id TLV must name THIS device. Defence in depth since role binding:
   //    the slot the fold is computed over already carries MODEL_INTERNAL_NAME,
-  //    so another model's image does not fold at all. What this still catches is
-  //    misissuance -- a foreign image signed into THIS model's tree, which folds
-  //    and which only the TLV separates (see the nrf_crossvalidate fixture).
+  //    so another model's image does not fold at all. What this still catches
+  //    is misissuance -- a foreign image signed into THIS model's tree, which
+  //    folds and which only the TLV separates (see the nrf_crossvalidate
+  //    fixture).
   uint8_t model_id[NRF_IMAGE_MODEL_ID_LEN];
   if (!nrf_image_model_id(image, h->image_len, model_id) ||
       memcmp(model_id, MODEL_INTERNAL_NAME, NRF_IMAGE_MODEL_ID_LEN) != 0) {
@@ -338,8 +339,8 @@ workflow_result_t workflow_nrf_ota_update(
   //     matching: a device that cannot be queried at all (refusing would strand
   //     an nRF stuck where it cannot answer, and streaming is the safe
   //     direction), and one declaring UNDECLARED, which every nRF built before
-  //     this existed does -- see NRF_KEY_SET_UNDECLARED. A value that is neither
-  //     undeclared nor ours is refused, unknown values included. ---
+  //     this existed does -- see NRF_KEY_SET_UNDECLARED. A value that is
+  //     neither undeclared nor ours is refused, unknown values included. ---
 #if BOOTLOADER_DEVEL
   const uint8_t want_key_set = NRF_KEY_SET_DEVEL;
 #else
@@ -358,8 +359,7 @@ workflow_result_t workflow_nrf_ota_update(
                                       co_path_count, model_root) != sectrue) {
       return nrf_fail(iface, "nRF image not in founder tree");
     }
-    if (have_info &&
-        memcmp(info.hash, image_hash, SHA256_DIGEST_LENGTH) == 0) {
+    if (have_info && memcmp(info.hash, image_hash, SHA256_DIGEST_LENGTH) == 0) {
       return WF_OK;  // already up to date -> nothing to push
     }
   }
