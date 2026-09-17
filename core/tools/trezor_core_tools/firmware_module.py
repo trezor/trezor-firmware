@@ -45,16 +45,19 @@ FW_MANIFEST_REGION = 0x400
 FW_MANIFEST_PROOF_MAX_NODES = 4
 
 TYPE_NAMES = {1: "secmon", 2: "app (kernel+coreapp)", 3: "prodtest"}
-# Variant vocabulary shared with vendor_fw_type_t (sec/image.h) and the model
-# vendorheader JSONs. Value 1 (custom) is a FIRST-CLASS variant in the tree
-# scheme -- the founder-signed unofficial-app slot (see variant_leaf).
+# Variant vocabulary, keyed by the HARDENED codeword the manifest actually
+# carries (fw_variant_sec_t). The small vendor_fw_type_t numbers these replaced
+# survive only as the storage-KDF and legacy vendor-header form, so keying by
+# them here printed "variant1515870810" for a universal build. CUSTOM is a
+# FIRST-CLASS variant in the tree scheme -- the founder-signed unofficial-app
+# slot (see variant_leaf).
 VARIANT_NAMES = {
-    0: "none",
-    1: "custom",
-    2: "universal",
-    3: "bitcoin-only",
-    4: "prodtest",
-    5: "CA",
+    0x00000000: "invalid",
+    0xCCCCCCCC: "none",
+    0x33333333: "custom",
+    0x5A5A5A5A: "universal",
+    0xA5A5A5A5: "bitcoin-only",
+    0x66666666: "prodtest",
 }
 
 # --- Release container ('bundle.json') ---------------------------------------
@@ -240,8 +243,8 @@ def boot_header_model_id(header) -> str:
 # The variant leaf is a manifest: a directory of the variant's modules plus
 # variant-level authenticated fields (firmware_variant,
 # translations_root). Each directory entry references its module directly by
-# code_hash = SHA-256 over the whole module code (there is no per-module TRZM
-# header). The variant leaf is H(0x00 || manifest); the founder tree combines
+# code_hash = the tagged smart-hashing CHAIN over the module code, not a flat
+# SHA-256 of it (see module_code_hash); there is no per-module TRZM header. The variant leaf is H(0x00 || manifest); the founder tree combines
 # variant leaves.
 #
 # Layout (little-endian), must byte-match the on-device manifest:

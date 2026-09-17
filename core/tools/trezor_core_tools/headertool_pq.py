@@ -25,7 +25,8 @@ def _fill_module_image(
     """Fill the manifest code hashes of a Merkle-tree firmware image.
 
     This is the build-time step for `firmware.bin`: each manifest directory
-    entry's `code_hash` (single SHA-256 over the module code at addr..addr+size)
+    entry's `code_hash` (the tagged smart-hashing chain over the module code at
+    addr..addr+size, NOT a flat SHA-256 of it)
     is filled -- ALWAYS the real code hash, including a CUSTOM variant's
     kernel+coreapp (its real hash is the creator's integrity hash). The
     firmware_root is derived later (by the tree signer) from the filled image;
@@ -109,8 +110,6 @@ def cli(
 
     Run with no options on a file to dump information about that file.
 
-    Run with -d to print the header digest and exit. This works correctly regardless of
-    whether code hashes have been filled.
 
     """
     firmware_data = firmware_file.read()

@@ -371,7 +371,7 @@ def main() -> None:
             raise SystemExit(
                 "custom-app-size needs the CUSTOM variant (only there is the app "
                 "size unauthenticated): "
-                'make upload_pq VARIANT=custom UPLOAD_OPTS="--tamper custom-app-size"'
+                'make upload_pq_test VARIANT=custom UPLOAD_OPTS="--tamper custom-app-size"'
             )
         hdr_len = pq_secure._MANIFEST_HEADER_SIZE
         ent_len = pq_secure._MANIFEST_ENTRY_SIZE
@@ -401,7 +401,7 @@ def main() -> None:
         if not bundle.firmware.manifest.is_custom:
             raise SystemExit(
                 "custom-app-unaligned needs the CUSTOM variant (only there is the "
-                "app size unauthenticated): make upload_pq VARIANT=custom "
+                "app size unauthenticated): make upload_pq_test VARIANT=custom "
                 'UPLOAD_OPTS="--tamper custom-app-unaligned"'
             )
         hdr_len = pq_secure._MANIFEST_HEADER_SIZE

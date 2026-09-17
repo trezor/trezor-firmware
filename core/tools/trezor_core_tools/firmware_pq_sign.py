@@ -289,11 +289,14 @@ def finalize_bare_bootloader(
     """Leave firmware_type BARE and report where it sits. Shared by every
     path that finishes a bootloader, so the probe exists once.
     """
-    # firmware_type is the PROVISIONING marker: 0 means the device reads as
-    # unprovisioned, and whoever installs the firmware writes the variant into
-    # it -- the bootloader when installing over the wire, `xtask flash` when
-    # flashing with a debugger. A release is therefore always signed BARE, and
-    # zeroed explicitly so re-signing an already-stamped bootloader is bare too.
+    # firmware_type is the PROVISIONING marker: FW_VARIANT_SEC_NONE (0xCCCCCCCC)
+    # is what the device reads as unprovisioned, and whoever installs the
+    # firmware writes the variant into it -- the bootloader when installing over
+    # the wire, `xtask flash` when flashing with a debugger. NOT zero: 0 is
+    # FW_VARIANT_SEC_INVALID, deliberately distinct, because unprovisioned is a
+    # real state that auto-confirms an official install and erased memory must
+    # not decode into it. A release is therefore always signed BARE, and set to
+    # NONE explicitly so re-signing an already-stamped bootloader is bare too.
     #
     # The field is unauthenticated, so stamping it later needs no key and does
     # not disturb the signature. To let a tool find it without duplicating the

@@ -249,7 +249,9 @@ flashing and combining don't depend on the profile path. Files use the
 project's artifact name, with `-emu` appended for emulator builds:
 
 - `<name>.elf` — the ELF (hardware); `<name>` (no extension) for emulator.
-- `<name>.bin` — signed raw binary (hardware, non-dependency builds only).
+- `<name>.bin` — signed raw binary (hardware). Top-level builds, and also the
+  secmon/kernel *dependencies* of a `pq_secure_boot` firmware build, whose
+  freshly built binaries would otherwise stay in the transient `OUT_DIR`.
 - `<name>.map` — linker map (hardware only).
 - `<name>.cc.json` — compile_commands; for `firmware`, the merged
   secmon+kernel+firmware commands.
@@ -393,8 +395,10 @@ which is what a developer usually wants — a one-leaf tree, so a different
 every variant; omitting `-m` cuts one release per pq_secure model, which are
 independent since each model's `firmware_root` lives in its own header.
 
-Both currently require `--bootloader-devel`, since only development signing
-keys are available locally.
+`--bootloader-devel` cuts a release against the development keys, which is
+what works locally. `--production` is accepted and selects the production key
+set, but a local build cannot sign with it -- the ceremony does that, so such a
+release stops after prepare (see the three-stage flow below).
 
 ### Which bootloader a release folds
 
@@ -496,6 +500,7 @@ needs instead is a **reference set** — the signed pieces that slot hangs from.
 | the cross-model bundle | `models/bundle[_devel].json` |
 | each model's signed bootloader | `models/<MODEL_ID>/bootloaders/bootloader_<MODEL_ID>[_devel].bin` |
 | the secmon pair | `models/<MODEL_ID>/secmon/secmon[_DEV].bin` and `secmon_api[_DEV].o` |
+| the signed nRF image | `models/<MODEL_ID>/trezor-ble[-dev].bin` |
 
 They are promoted together because a bundle only folds against the bootloader
 and secmon it was signed over. The bundle is one file for every model, keyed by
@@ -503,7 +508,10 @@ model id, since the models are independent trees — merging is a convenience fo
 whoever reads the set, not a joint tree. Production and development keys get
 separate files so promoting one set cannot touch the other's data.
 
-Two details about the pieces. The signed bootloader *replaces* the committed
+Three details about the pieces. The signed nRF lands under its plain name,
+beside the `-bare` build output a release stages: signing a PQ-native image
+rewrites it, so the two have to stay separate files or a promote would poison the
+next release's input. The signed bootloader *replaces* the committed
 one rather than sitting beside it: signing rewrites the header and not the code,
 so the next release folds this same binary again. And the secmon travels as a
 pair — the kernel links the veneer object and secure-faults if it drifts from
@@ -640,7 +648,8 @@ xtask release --production
 #   -> release-unsigned.zip
 # ... ceremony returns a signature set ...
 python tools/trezor_core_tools/firmware_pq_attach.py \
-    --release build-xtask/tree --signatures signatures.json
+    --bundle build-xtask/tree/bundle_devel.json \
+    --tree build-xtask/tree --signatures signatures.json
 ```
 
 `firmware_pq_devsign.py` is the ceremony's stand-in for development: it signs a
