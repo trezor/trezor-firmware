@@ -24,7 +24,7 @@ from enum import Enum
 import click
 import construct as c
 from construct_classes import Struct
-from slhdsa import PublicKey, SecretKey, sha2_128s  # noqa: I900
+from slhdsa import SecretKey, sha2_128s
 from typing_extensions import Protocol, Self, runtime_checkable
 
 from .. import _ed25519, cosi, firmware
@@ -526,45 +526,6 @@ class BootloaderV2Image(firmware.BootableImage):
         ]
 
         return "\n".join(output)
-
-    def verify(self, dev_keys: bool = False) -> None:
-        digest = self.merkle_root()
-
-        hash_fn = self.get_hash_params().hash_function
-        mask = self.header.sigmask
-
-        if (mask.bit_length() > len(self.public_ec_keys(dev_keys))) or (
-            mask.bit_length() > len(self.public_pq_keys(dev_keys))
-        ):
-            raise ValueError("Sigmask specifies more public keys than provided.")
-
-        # Verify ed25519 signatures
-        if mask.bit_count() != len(self.unauth.ec_signatures):
-            raise ValueError("Sigmask does not specify valid number of ed25519 keys.")
-
-        sig_idx = 0
-        for pubkey_idx, key in enumerate(self.public_ec_keys(dev_keys)):
-            if not (mask & (1 << pubkey_idx)):
-                continue
-            ext_digest = hash_fn(digest + self.unauth.slh_signatures[sig_idx]).digest()
-            try:
-                _ed25519.checkvalid(self.unauth.ec_signatures[sig_idx], ext_digest, key)
-            except _ed25519.SignatureMismatch:
-                raise firmware.InvalidSignatureError("Invalid bootloader signature")
-            sig_idx += 1
-
-        # Verify slh-dsa signatures
-        if mask.bit_count() != len(self.unauth.slh_signatures):
-            raise ValueError("Sigmask does not specify valid number of slh-dsa keys.")
-
-        sig_idx = 0
-        for pubkey_idx, key in enumerate(self.public_pq_keys(dev_keys)):
-            if not (mask & (1 << pubkey_idx)):
-                continue
-            pq_key = PublicKey.from_digest(key, sha2_128s)
-            if not pq_key.verify(digest, self.unauth.slh_signatures[sig_idx]):
-                raise firmware.InvalidSignatureError("Invalid bootloader signature")
-            sig_idx += 1
 
 
 class LegacyFirmware(firmware.LegacyFirmware):
