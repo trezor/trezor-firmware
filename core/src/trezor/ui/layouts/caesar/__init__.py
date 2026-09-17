@@ -1502,7 +1502,7 @@ if not utils.BITCOIN_ONLY:
                     network_item,
                 )
             ),
-            hold=True,
+            hold=False,
             external_menu=True,
         ) as layout:
             account_info = with_colon(
