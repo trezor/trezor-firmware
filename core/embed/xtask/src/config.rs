@@ -23,6 +23,11 @@ pub struct ModelConfig {
     /// Signing tool for bootloader/bootloader_ci. Defaults to "headertool".
     #[serde(default)]
     pub bootloader_header_tool: Option<String>,
+    /// This model's nRF verifies the founder tree itself
+    /// (CONFIG_BOOT_PQ_SECURE_BOOT). Must match `MODEL_NRF_LEGACY_KEYS_*` in
+    /// the model header.
+    #[serde(default)]
+    pub nrf_pq_native: bool,
 }
 
 impl ModelConfig {
@@ -41,6 +46,10 @@ impl ModelConfig {
 
     pub fn is_stm32f4(&self) -> bool {
         matches!(self.mcu.as_str(), "stm32f427" | "stm32f429")
+    }
+
+    pub fn has_feature(&self, name: &str) -> bool {
+        self.features.iter().any(|f| f == name)
     }
 
     pub fn mcu_feature(&self) -> String {
