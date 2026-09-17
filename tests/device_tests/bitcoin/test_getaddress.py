@@ -20,11 +20,12 @@ from trezorlib import btc, device, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import MultisigPubkeysOrder, SafetyCheckLevel
+from trezorlib.testing import translations as TR
 from trezorlib.tools import parse_path
 
 from ... import bip32
 from ...common import is_core
-from ...input_flows import InputFlowConfirmAllWarnings
+from ...input_flows import InputFlowConfirmAllWarnings, InputFlowShowAddressAccount
 
 
 def getmultisig(chain, nr, xpubs):
@@ -471,6 +472,50 @@ def test_unknown_path(session: Session):
         # no warning is displayed when the call is silent
         client.set_expected_responses([messages.Address])
         btc.get_address(session, "Bitcoin", UNKNOWN_PATH, show_display=False)
+
+
+@pytest.mark.models("core")
+def test_export_point(session: Session):
+    # m/48h/0h/0h/2h is a point at which an xpub may be exported, not an
+    # address path. Even once the safety checks let it through, it must not be
+    # presented as an ordinary account.
+    EXPORT_POINT = parse_path("m/48h/0h/0h/2h")
+
+    with session.test_ctx as client:
+        client.set_expected_responses([messages.Failure])
+
+        with pytest.raises(TrezorFailure, match="Forbidden key path"):
+            btc.get_address(
+                session,
+                "Bitcoin",
+                EXPORT_POINT,
+                show_display=True,
+                script_type=messages.InputScriptType.SPENDWITNESS,
+            )
+
+    # disable safety checks
+    device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
+
+    with session.test_ctx as client:
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(
+                    code=messages.ButtonRequestType.UnknownDerivationPath
+                ),
+                messages.ButtonRequest(code=messages.ButtonRequestType.Address),
+                messages.Address,
+            ]
+        )
+        IF = InputFlowShowAddressAccount(session, TR.bitcoin__unknown_path)
+        client.set_input_flow(IF.get())
+
+        btc.get_address(
+            session,
+            "Bitcoin",
+            EXPORT_POINT,
+            show_display=True,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+        )
 
 
 @pytest.mark.altcoin
