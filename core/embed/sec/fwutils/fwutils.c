@@ -111,8 +111,9 @@ int firmware_hash_continue(uint8_t* hash, size_t hash_len) {
 // header, so there is nothing to read from the image. Only report a vendor when
 // a firmware image is actually present (manifest magic), and derive the
 // identity from the (write-protected, trusted) firmware_type the bootloader
-// persisted into the signed boot header: its variant names an official image,
-// its custom flag flips it to the UNSAFE marker. Mirrors the bootloader's
+// persisted into the signed boot header. Custom-ness is not a flag: the variant
+// VALUE is either an official codeword or FW_VARIANT_SEC_CUSTOM, which is what
+// selects the UNSAFE marker. Mirrors the bootloader's
 // tree_vendor_str and the UNSAFE-prefix official test in
 // reboot_to_bootloader.py, so device and host agree on official-vs-custom.
 secbool firmware_get_vendor(char* buff, size_t buff_size) {

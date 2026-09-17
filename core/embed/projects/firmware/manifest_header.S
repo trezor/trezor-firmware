@@ -26,7 +26,7 @@
     .type g_firmware_manifest, %object
 g_firmware_manifest:
     .byte 'T','R','Z','D'            // magic (FW_MANIFEST_MAGIC)
-    .word FW_VARIANT                 // firmware_variant (fw_variant_t; from build.rs)
+    .word FW_VARIANT                 // firmware_variant (fw_variant_sec_t codeword; from build.rs)
     .byte VERSION_MAJOR              // firmware_version.major  (same source as the
     .byte VERSION_MINOR              //   kernel+coreapp module header, version.h)
     .byte VERSION_PATCH              // firmware_version.patch

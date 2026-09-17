@@ -311,9 +311,11 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   //     well: otherwise installing an older bootloader first removes the check,
   //     and the floor with it.
   if (boot_header_version_is_set(hdr->min_prev_version)) {
-    const boot_header_auth_t *installed = boot_header_auth_get(BOOTLOADER_START);
-    if (installed == NULL || boot_header_version_compare(
-                                 installed->version, hdr->min_prev_version) < 0) {
+    const boot_header_auth_t *installed =
+        boot_header_auth_get(BOOTLOADER_START);
+    if (installed == NULL ||
+        boot_header_version_compare(installed->version, hdr->min_prev_version) <
+            0) {
       return fw_begin_fail(iface, "Unsupported upgrade path");
     }
   }
@@ -807,15 +809,16 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   //     on NRF_STAGING_AREA guarantees it cannot reach. The old FIRMWARE is NOT
   //     intact by then -- the staging scratch IS the firmware region, so the
   //     stream has already erased secmon and the front of the kernel. An abort
-  //     here leaves a working bootloader over a firmware phase 2 must reinstall,
-  //     which is the accepted cost of siting the scratch there (see
-  //     flash_layout_ucb.c). That the nRF's own MCUboot will accept the image is
-  //     NOT taken on trust: nrf_pq_gate re-checks at runtime, below, everything
-  //     that verifier will look at which the fold does not cover -- the
-  //     image-side proof, this release's signature records, and the absence of
-  //     rogue TLVs -- precisely so a push never erases a working nRF for an
-  //     image it would refuse. The nRF leaf is a peer under model_root; an already-current nRF is skipped with no wire traffic; the
-  //     sub-stream suppresses its own Success. ---
+  //     here leaves a working bootloader over a firmware phase 2 must
+  //     reinstall, which is the accepted cost of siting the scratch there (see
+  //     flash_layout_ucb.c). That the nRF's own MCUboot will accept the image
+  //     is NOT taken on trust: nrf_pq_gate re-checks at runtime, below,
+  //     everything that verifier will look at which the fold does not cover --
+  //     the image-side proof, this release's signature records, and the absence
+  //     of rogue TLVs -- precisely so a push never erases a working nRF for an
+  //     image it would refuse. The nRF leaf is a peer under model_root; an
+  //     already-current nRF is skipped with no wire traffic; the sub-stream
+  //     suppresses its own Success. ---
   if (msg.has_nrf_length && msg.nrf_length > 0) {
     workflow_result_t nrf_res = workflow_nrf_ota_update(
         iface, &model_root, nrf_co_path, nrf_out.co_path_len, nrf_image_hash,
@@ -888,14 +891,15 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   // boot header (firmware_root + firmware_type), not by bootargs.
   //
   // How TIGHTLY depends on the variant. For an OFFICIAL one firmware_root pins
-  // the modules exactly -- every app code_hash is inside the leaf. For CUSTOM it
-  // pins the variant, the whole secmon entry and the app's placement, but NOT
-  // the app's size or code_hash: the fold zeroes that tail so any creator's app
-  // reaches the one founder-signed custom slot. So a self-consistent app other
-  // than the one confirmed in phase 1 also authenticates here. That is the
-  // custom slot working as designed -- the leaf cannot name a creator build and
-  // still be code-independent -- and the confirm the user saw says "unofficial"
-  // rather than naming an image. Not something this ordering could close.
+  // the modules exactly -- every app code_hash is inside the leaf. For CUSTOM
+  // it pins the variant, the whole secmon entry and the app's placement, but
+  // NOT the app's size or code_hash: the fold zeroes that tail so any creator's
+  // app reaches the one founder-signed custom slot. So a self-consistent app
+  // other than the one confirmed in phase 1 also authenticates here. That is
+  // the custom slot working as designed -- the leaf cannot name a creator build
+  // and still be code-independent -- and the confirm the user saw says
+  // "unofficial" rather than naming an image. Not something this ordering could
+  // close.
   //
   // In particular it carries NO consent digest: phase 2 never reads one, and
   // not leaving it behind is what keeps the user's consent one-shot -- a second

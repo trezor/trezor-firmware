@@ -269,12 +269,19 @@ typedef uint32_t fw_variant_sec_t;
 #define FW_VARIANT_SEC_PRODTEST 0x66666666U
 
 /*
- * The resolved firmware_type byte (the storage-domain identity the bootloader
- * persists to boot_header_unauth_t.firmware_type) IS the authenticated variant
- * (fw_variant_t). Custom-ness is the variant value (FW_VARIANT_CUSTOM), not a
- * separate flag: official and custom therefore occupy distinct storage domains,
- * and custom<->custom stays a single shared domain. Per-vendor isolation (tier
- * 2) folds into the storage entropy, not this byte.
+ * The resolved firmware_type (the storage-domain identity the bootloader
+ * persists to boot_header_unauth_t.firmware_type) IS the authenticated variant,
+ * as the same hardened fw_variant_sec_t codeword. Custom-ness is the variant
+ * value (FW_VARIANT_SEC_CUSTOM), not a separate flag: official and custom
+ * therefore occupy distinct storage domains, and custom<->custom stays a single
+ * shared domain. Per-vendor isolation (tier 2) folds into the storage entropy,
+ * not this value.
+ *
+ * It is trustworthy only because the bootloader is the SOLE writer of the
+ * write-protected boot-header region, and only if it is DERIVED from the
+ * authenticated manifest variant rather than taken from any untrusted input.
+ * Storage entropy and wipe-on-change key off it, so that derivation is what
+ * keeps one variant out of another's storage.
  */
 
 /** Magic at the start of a firmware manifest ('TRZD', little-endian u32). */
@@ -623,10 +630,12 @@ secbool boot_header_consent_digest(const uint8_t* prefix, size_t prefix_len,
  * manifest` is the full check (this + per-module integrity).
  *
  * The variant leaf is `H(0x00 || manifest)`, EXCEPT for the CUSTOM variant
- * (`firmware_variant == FW_VARIANT_CUSTOM`) where the kernel+coreapp
- * (FW_MODULE_APP) entry's `code_hash` is substituted with ZERO before hashing.
- * The founder signs the custom slot with a zeroed app hash, so any creator's
- * app authenticates to the same leaf -- the app is founder-UNauthenticated (it
+ * (`firmware_variant == FW_VARIANT_CUSTOM`), where THREE fields are substituted
+ * with ZERO before hashing: the manifest's `firmware_version`, and the
+ * kernel+coreapp (FW_MODULE_APP) entry's `size` and `code_hash` -- a contiguous
+ * tail, which is why `chunk_size` sits before it and stays authenticated.
+ * The founder signs the custom slot with those zeroed, so any creator's app
+ * authenticates to the same leaf -- the app is founder-UNauthenticated (it
  * is integrity-checked separately, in firmware_verify_manifest). This zero-for-
  * fold substitution is centralized here (and in the leaf helper) so no path can
  * fold with the wrong app-hash treatment.
@@ -737,9 +746,14 @@ secbool firmware_verify_manifest_entry(const firmware_manifest_entry_t* entry,
  *  Bounds an UNTRUSTED proof_count before it is used in size arithmetic, so it
  * is load-bearing rather than cosmetic. Declared beside
  * boot_header_verify_slot, which takes the count, and there is exactly ONE
- * definition: the fold, the OTA workflow, the staging descriptor and the shape
- * check all share it, where they previously each had a copy (two of them under
- * the same name in different headers).
+ * definition of THIS bound: the fold, the OTA workflow, the staging descriptor
+ * and the shape check all share it, where they previously each had a copy (two
+ * of them under the same name in different headers).
+ *
+ * Not the only ceiling on a model-tree proof, though: the boot header's own
+ * path is bounded by the separate, far looser BOOT_HEADER_MERKLE_PROOF_MAXLEN
+ * (256) in boot_header_prefix_extent, which sizes a header field rather than an
+ * untrusted co-path.
  */
 #define MODEL_TREE_MAX_PROOF_NODES 32U
 
@@ -801,15 +815,15 @@ _Static_assert(sizeof(coproc_slot_t) == 44,
  * @brief Fold a MODEL-tree slot value up to `trusted_model_root`.
  *
  * A slot value is the byte string something sharing the model tree is committed
- * by -- today a co-processor's 44-byte coproc_slot_t. This hashes it into a leaf
- * and folds the co-path; it knows nothing about what produced the value, so
- * every slot folds the same way and a second co-processor needs no new fold.
+ * by -- today a co-processor's 44-byte coproc_slot_t. This hashes it into a
+ * leaf and folds the co-path; it knows nothing about what produced the value,
+ * so every slot folds the same way and a second co-processor needs no new fold.
  *
  * A passing fold proves founder-commitment for the value AS BUILT. Identity
  * comes from what the caller put IN the value: coproc_slot_t carries model,
- * kind and index, all from the verifier's own build, so a slot for another model
- * or another co-processor position cannot fold here. A caller folding a bare
- * digest has no such binding and must pin identity separately.
+ * kind and index, all from the verifier's own build, so a slot for another
+ * model or another co-processor position cannot fold here. A caller folding a
+ * bare digest has no such binding and must pin identity separately.
  *
  * @param slot_value   the committed value (coproc_slot_t for a co-processor)
  * @param proof        co-path from the slot up to modelRoot
@@ -837,23 +851,14 @@ void firmware_module_chain_step(const uint8_t* h_prev, const uint8_t* data,
                                 size_t len, uint8_t* out);
 
 /**
- * Composes the persisted firmware_type byte from the authenticated `variant`
- * (fw_variant_t). firmware_type IS the variant: custom-ness is the variant
- * value (FW_VARIANT_CUSTOM), not a separate flag.
- *
- * The result is only trustworthy because the bootloader is the sole writer of
- * the write-protected boot header region; it must be *derived* from the
- * authenticated manifest variant, never taken from an untrusted input. Storage
- * entropy / wipe-on-change key off this value.
- */
-/**
- * @brief Display identity for a firmware_type byte.
+ * @brief Display identity for a hardened firmware variant.
  *
  * "Trezor", "Trezor Bitcoin-only", or an UNSAFE marker for the custom /
- * factory-test / unknown cases. ONE definition shared by every binary that must
- * name a firmware -- the secmon for the INSTALLED image, the coreapp for an
- * OFFERED one -- so the string the user confirms before rebooting is the string
- * the device reports afterwards. Never returns NULL.
+ * factory-test / unknown cases. ONE definition shared by the sec/ binaries --
+ * the secmon for the INSTALLED image, the coreapp for an OFFERED one -- so the
+ * string the user confirms before rebooting is the string the device reports
+ * afterwards. The bootloader cannot link this and keeps its own
+ * tree_vendor_str, which must agree. Never returns NULL.
  */
 const char* firmware_vendor_str(fw_variant_sec_t variant);
 

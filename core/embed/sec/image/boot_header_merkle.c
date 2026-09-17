@@ -204,11 +204,12 @@ void firmware_module_code_hash(uintptr_t base, uint32_t addr, uint32_t size,
   // primitives.
   firmware_module_chain_seed(size, out);
   // ceil(size / chunk_size) without the (size + chunk_size - 1) rounding trick,
-  // which overflows uint32_t once size + chunk_size exceeds 2^32 and yields 0 --
-  // no chunks folded, so the digest is the bare seed and the module is rejected.
-  // chunk_size is founder-signed and bounded at install, so that was never
-  // reachable; this form is correct for any chunk_size instead of relying on it.
-  // k * chunk_size cannot overflow either: k < n implies k * chunk_size < size.
+  // which overflows uint32_t once size + chunk_size exceeds 2^32 and yields 0
+  // -- no chunks folded, so the digest is the bare seed and the module is
+  // rejected. chunk_size is founder-signed and bounded at install, so that was
+  // never reachable; this form is correct for any chunk_size instead of relying
+  // on it. k * chunk_size cannot overflow either: k < n implies k * chunk_size
+  // < size.
   uint32_t n = (chunk_size != 0)
                    ? size / chunk_size + ((size % chunk_size != 0) ? 1u : 0u)
                    : 0;
@@ -335,10 +336,10 @@ void merkle_leaf_hash(const uint8_t* data, size_t len,
 // Fold a MODEL-tree slot value up to modelRoot.
 //
 // A slot value is the opaque byte string a co-processor (or anything else
-// sharing the model tree) is committed by -- for the nRF, the 44-byte role-bound
-// coproc_slot_t; this hashes it into a leaf and folds the co-path. Nothing here knows what produced the value -- which is the point:
-// every slot folds identically, so adding a second co-processor needs no new
-// fold.
+// sharing the model tree) is committed by -- for the nRF, the 44-byte
+// role-bound coproc_slot_t; this hashes it into a leaf and folds the co-path.
+// Nothing here knows what produced the value -- which is the point: every slot
+// folds identically, so adding a second co-processor needs no new fold.
 //
 // The caller must ALSO pin the value to the right device where that matters:
 // every model's slot hangs under the same modelRoot, so a passing fold proves
@@ -422,10 +423,11 @@ secbool fw_variant_is_provisioned(fw_variant_sec_t variant) {
 }
 
 // Display identity for a hardened firmware variant. ONE definition shared by
-// every binary that has to name a firmware: the secmon for the INSTALLED image
-// (firmware_get_vendor), the coreapp for an OFFERED one
-// (check_firmware_header). So the string the user confirms before rebooting is
-// the string the device reports afterwards.
+// the binaries in sec/: the secmon for the INSTALLED image
+// (firmware_get_vendor) and the coreapp for an OFFERED one
+// (check_firmware_header). The bootloader keeps its own tree_vendor_str -- it
+// cannot link this -- so the two must agree. So the string the user confirms
+// before rebooting is the string the device reports afterwards.
 //
 // FIH: assume UNSAFE. Only a POSITIVE custom == secfalse AND a known official
 // variant name a trusted vendor; a glitch or an unknown variant stays UNSAFE.

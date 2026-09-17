@@ -137,8 +137,9 @@ typedef struct {
 /**
  * @brief Merkle-tree firmware verification (tree layout).
  *
- * Enumerates the fixed on-device module set (secmon + kernel+coreapp) at their
- * flash locations, then verifies role-binding, authenticity (recomputed root ==
+ * Walks the manifest's module directory (today secmon + kernel+coreapp, but the
+ * count and roles come from the manifest, not from here) at the flash locations
+ * it records, then verifies role-binding, authenticity (recomputed root ==
  * the firmware_root signed into this bootloader's own boot header) and
  * integrity (each module's code vs its chunk hashes). Replaces the legacy
  * vendor/image/ secmon-header verification. On success, fills `info` with the
