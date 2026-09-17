@@ -17,6 +17,7 @@ enum MessageType {
     MessageType_ButtonAck = 27;
     MessageType_GetFeatures = 55;
     MessageType_UnlockBootloader = 96;
+    MessageType_FirmwareBegin = 106;
 
     // Debug
     MessageType_DebugLinkDecision = 100;
@@ -80,6 +81,13 @@ message Features {
     optional bool firmware_corrupted = 56;  // is firmware corrupted?
     optional bool usb_connected = 59;       // USB connected
     optional bool wireless_connected = 60;  // Wireless charger connected
+    // must match Features.firmware_scheme in common/protob/messages-management.proto
+    optional FirmwareScheme firmware_scheme = 65;
+}
+
+enum FirmwareScheme {
+    FirmwareScheme_Legacy = 0;    // vendor header + image header
+    FirmwareScheme_PqSecure = 1;  // Merkle-tree (pq_secure_boot)
 }
 
 /**
@@ -146,12 +154,31 @@ message FirmwareErase {
 }
 
 /**
+ * Request: Begin a pq_secure_boot firmware update (phase 1: authenticate,
+ * confirm, stage the boot header, reboot; phase 2 installs the modules)
+ * @start
+ * @next FirmwareRequest
+ */
+message FirmwareBegin {
+    required bytes boot_header = 1;     // new signed boot header (TRZQ)
+    required bytes module_headers = 2;  // firmware manifest (TRZD) + per-variant Merkle proof to firmware_root
+    optional uint32 code_length = 3;    // new bootloader code available to stream; omit/0 => header-only
+    optional bytes code_hash = 8;       // SHA-256 of that code, lets the header signature be checked before the
+                                        // stream; required iff code_length > 0
+    reserved 4;                         // was custom_install
+    optional uint32 nrf_length = 5;     // nRF MCUboot image bytes available to stream; omit/0 => no nRF update
+    optional bytes nrf_co_path = 6;     // model-tree co-path (nRF leaf -> modelRoot), 32*depth bytes
+    optional bytes nrf_image_hash = 7;  // SHA-256 of the nRF image (update-required hint); fold-verified on device
+}
+
+/**
  * Response: Ask for firmware chunk
  * @next FirmwareUpload
  */
 message FirmwareRequest {
     required uint32 offset = 1;  // offset of requested firmware chunk
     required uint32 length = 2;  // length of requested firmware chunk
+    optional uint32 coprocessor_index = 3;  // which image: 0 (default) = primary stream, 1 = nRF image
 }
 
 /**
@@ -161,8 +188,10 @@ message FirmwareRequest {
  * @next Failure
  */
 message FirmwareUpload {
-    required bytes payload = 1;  // firmware to be loaded into device
-    optional bytes hash = 2;     // hash of the payload
+    required bytes payload = 1;    // firmware to be loaded into device
+    optional bytes hash = 2;       // hash of the payload
+    optional bytes prev_hash = 3;  // pq_secure_boot: chain H_prev after this block (absent for a module's last
+                                   // block and for the header block)
 }
 
 /**
