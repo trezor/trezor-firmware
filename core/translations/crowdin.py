@@ -14,6 +14,9 @@ HERE = Path(__file__).parent
 # staging directory for layout-specific translation JSON files
 CROWDIN_DIR = HERE / "crowdin"
 
+# source language, split and uploaded to Crowdin but never merged back
+SOURCE_LANG = "en"
+
 
 @click.group()
 def cli() -> None:
@@ -59,6 +62,10 @@ def merge() -> None:
         return text
 
     for lang in sorted(tdir.all_languages()):
+        # en.json is the source of truth, Crowdin never changes it
+        if lang == SOURCE_LANG:
+            continue
+
         merged_translations: dict[str, str | dict[str, str]] = collections.defaultdict(
             dict
         )
