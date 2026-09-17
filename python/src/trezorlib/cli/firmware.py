@@ -31,6 +31,7 @@ from . import ChoiceType, with_session
 
 if TYPE_CHECKING:
     from ..client import Session, TrezorClient
+    from ..transport import Transport
     from . import TrezorConnection
 
 # Built from the single-source model registry: every model is selectable by its
@@ -444,6 +445,61 @@ def upload_firmware_into_device(
         sys.exit(3)
 
 
+_REBOOT_DEPART_TIMEOUT = 5.0
+_PROBE_TIMEOUT = 1.0
+
+
+def _answers(transport: "Transport") -> bool:
+    """Whether the device answers a message right now. A Busy failure does not
+    count: the nRF sends it on its own while the main MCU is not accepting
+    messages, e.g. during a reboot."""
+    from .. import mapping, protocol_v1
+
+    try:
+        if not transport.is_open():
+            transport.open()
+        protocol_v1.write(transport, *mapping.DEFAULT_MAPPING.encode(messages.Cancel()))
+        resp = mapping.DEFAULT_MAPPING.decode(
+            *protocol_v1.read(transport, timeout=_PROBE_TIMEOUT, _ignore_bad_magic=True)
+        )
+    except Exception:
+        return False
+    return not (
+        isinstance(resp, messages.Failure) and resp.code == messages.FailureType.Busy
+    )
+
+
+def _wait_for_device(obj: "TrezorConnection", message: str) -> None:
+    """Close the connection and wait for the device to leave and come back: the
+    pre-reboot device still answers for a moment, and after phase 1
+    bootloader_mode is the same on both sides of the reboot, so a reconnect
+    could hit a rebooting device.
+
+    Over BLE the link can outlive the reboot (the nRF keeps running), so the
+    device is watched to stop and resume answering instead of enumerating."""
+    from ..transport.ble import BleTransport
+
+    transport = obj.transport
+    ble = isinstance(transport, BleTransport)
+    obj.close()
+    click.echo(message)
+    deadline = time.monotonic() + _REBOOT_DEPART_TIMEOUT
+    while time.monotonic() < deadline:
+        if not (_answers(transport) if ble else obj.is_present()):
+            break
+        time.sleep(0.1)
+    if ble:
+        while not _answers(transport):
+            time.sleep(0.5)
+    while True:
+        time.sleep(0.5)
+        try:
+            obj.open()
+            break
+        except Exception:
+            pass
+
+
 def _is_strict_update(client: "TrezorClient", firmware_data: bytes) -> bool:
     """Check if the firmware is from the same vendor and the
     firmware is newer than the currently installed firmware.
@@ -667,15 +723,7 @@ def update(
             else:
                 device.reboot_to_bootloader(seedless_session)
 
-            obj.close()
-            click.echo("Waiting for bootloader...")
-            while True:
-                time.sleep(0.5)
-                try:
-                    obj.open()
-                    break
-                except Exception:
-                    pass
+            _wait_for_device(obj, "Waiting for bootloader...")
 
     with obj.client_context() as client:
         if not client.features.bootloader_mode:
