@@ -882,8 +882,18 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   // new bootloader through the UCB leaves behind -- so nothing unprivileged may
   // select it.
   //
-  // It carries no arguments: what phase 2 installs is pinned in the staged
-  // boot header (firmware_root + firmware_type), not in bootargs.
+  // It carries no arguments: what phase 2 installs is constrained by the staged
+  // boot header (firmware_root + firmware_type), not by bootargs.
+  //
+  // How TIGHTLY depends on the variant. For an OFFICIAL one firmware_root pins
+  // the modules exactly -- every app code_hash is inside the leaf. For CUSTOM it
+  // pins the variant, the whole secmon entry and the app's placement, but NOT
+  // the app's size or code_hash: the fold zeroes that tail so any creator's app
+  // reaches the one founder-signed custom slot. So a self-consistent app other
+  // than the one confirmed in phase 1 also authenticates here. That is the
+  // custom slot working as designed -- the leaf cannot name a creator build and
+  // still be code-independent -- and the confirm the user saw says "unofficial"
+  // rather than naming an image. Not something this ordering could close.
   //
   // In particular it carries NO consent digest: phase 2 never reads one, and
   // not leaving it behind is what keeps the user's consent one-shot -- a second
