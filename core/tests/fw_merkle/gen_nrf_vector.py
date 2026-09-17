@@ -15,8 +15,11 @@ Usage: gen_nrf_vector.py <out.h>
 
 import struct
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "core/tools")
+# Script-relative, not cwd-relative: this used to work only when run from the
+# repo root, i.e. only via run_nrf.sh.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
 from trezor_core_tools import nrf_tree  # noqa: E402
 
 DEVICE_MODEL = b"T3W1"

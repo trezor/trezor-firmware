@@ -2,8 +2,9 @@
 """Host side of the consent-digest cross-validation.
 
 Reads the vector consent_test dumped straight out of the REAL device code and
-checks that trezor_core_tools' preamble builder -- the thing that will actually
-put bytes on the wire -- derives the same auth/proof boundary and the same digest.
+checks that trezorlib's preamble builder (trezorlib.firmware.pq_secure) -- the
+thing that will actually put bytes on the wire -- derives the same auth/proof
+boundary and the same digest.
 A disagreement here means a host would ask the user to confirm one release and the
 device would compute a different digest for it, so every interaction-less upgrade
 would be refused.

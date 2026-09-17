@@ -281,8 +281,10 @@ int main(void) {
       printf("push gate: tampered PQ material rejected: OK\n");
     }
 
-    /* a CLASSIC image is gated against its OWN scheme; under the host shim there
-     * is no Ed25519, so this exercises the founder/classic branch split only */
+    /* a CLASSIC image is gated against its OWN scheme. shims_nrf.h links
+     * ed25519-donna and defines NRF_LEGACY_ED25519_HOST, so the classic
+     * acceptance predicate runs for real here rather than stopping at the shape
+     * check -- this is the branch split AND the predicate. */
     if (nrf_image_verify_for_push(NRF_IMAGE, NRF_IMAGE_LEN, &root, e_slh0, e_slh1,
                                e_ec0, e_ec1) != sectrue) {
       printf("FAIL: push gate rejected a classic image (should be a no-op)\n");

@@ -4,8 +4,8 @@
 Builds SYNTHETIC firmware images for several variants -- each image is
 [manifest | secmon code | kernel code], where the variant leaf is
 H(0x00 || manifest) and the manifest references each module directly by
-code_hash = SHA-256 over the whole module code (one commitment hop, no per-module
-header). Computes the founder firmware_root + per-variant proofs
+code_hash = the tagged smart-hashing CHAIN over the module code, not a flat
+SHA-256 of it (one commitment hop, no per-module header). Computes the founder firmware_root + per-variant proofs
 (firmware_module.build_founder_tree), self-checks the fold in Python, and writes
 a vector the C harness (crossvalidate.c) replays through the REAL device math
 (firmware_verify_manifest).
@@ -47,8 +47,11 @@ from trezor_core_tools import firmware_module as fm  # noqa: E402
 MANIFEST_REGION = 0x400  # reserved region for the manifest at image start
 CODE_ALIGNMENT = 0x400
 CODE_SIZE = 0x100
-# Smart-hashing chunk size for the vector (100 -> partial last chunks, so the
-# C/Python chain agree on a short final chunk too).
+# Smart-hashing chunk size for the vector: 100 gives partial last chunks, so the
+# C/Python chain is compared on a short final chunk too. Deliberately NOT a
+# device-valid value -- an install requires FLASH_BLOCK_SIZE alignment and a cap
+# of IMAGE_CHUNK_SIZE -- because nothing here installs, and the awkward size is
+# the point.
 CHUNK_SIZE_TEST = 100
 
 # Includes the CUSTOM variant (1): its manifest carries a REAL app code_hash
@@ -70,7 +73,8 @@ def _build_variant_image(
 ):
     """Lay out [manifest | secmon code | kernel code] and return
     (image, manifest_bytes). Each manifest entry commits its module directly by
-    code_hash = SHA-256 over the module code (no per-module header). The secmon is
+    code_hash = the tagged smart-hashing chain over the module code, not a flat
+    SHA-256 of it (no per-module header). The secmon is
     fixed (founder-bound); the app version/size/code vary per (custom) build."""
     secmon_code = b"\xaa" * CODE_SIZE
     kernel_code = bytes([vid & 0xFF if app_byte is None else app_byte]) * app_size

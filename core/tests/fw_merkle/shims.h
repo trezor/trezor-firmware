@@ -127,9 +127,6 @@ typedef uint32_t fw_variant_sec_t;
 
 #define FW_MANIFEST_MAGIC 0x445A5254 /* 'TRZD' */
 #define FW_MANIFEST_REGION 0x400     /* mirrors sec/boot_header.h */
-#ifndef BOOT_HEADER_MAX_MODULES
-#define BOOT_HEADER_MAX_MODULES 8
-#endif
 
 typedef struct __attribute__((packed)) {
   uint32_t module_type;
@@ -158,8 +155,8 @@ static inline size_t firmware_manifest_size(const firmware_manifest_t* m) {
          (size_t)m->module_count * sizeof(firmware_manifest_entry_t);
 }
 
-/* the real on-device algorithm, verbatim (we supply the shims above) */
-#define BOOT_HEADER_MERKLE_SHIMMED
+/* the real on-device algorithm, verbatim (we supply the shims above); the
+ * SHIMMED marker is defined once at the top of this file */
 
 /* Declarations for the sources the harness links instead of textually
  * including. The public API normally comes from sec/boot_header.h, which cannot

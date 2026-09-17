@@ -110,7 +110,14 @@ static void build_image(uint8_t sigmask) {
   uint32_t pl = 0;
   prot[pl++] = TLV_MODEL_ID & 0xff; prot[pl++] = TLV_MODEL_ID >> 8;
   prot[pl++] = 4; prot[pl++] = 0;
-  memcpy(&prot[pl], "T3T2", 4); pl += 4;
+  /* From MODEL_IDENTIFIER, the same value the slot is built from below -- a
+   * literal here said T3T2 while the slot said T3W1. Nothing in this test reads
+   * the TLV, so the mismatch was invisible; deriving it keeps the fixture
+   * self-consistent for anyone who does look. */
+  prot[pl++] = (uint8_t)(MODEL_IDENTIFIER & 0xFFu);
+  prot[pl++] = (uint8_t)((MODEL_IDENTIFIER >> 8) & 0xFFu);
+  prot[pl++] = (uint8_t)((MODEL_IDENTIFIER >> 16) & 0xFFu);
+  prot[pl++] = (uint8_t)((MODEL_IDENTIFIER >> 24) & 0xFFu);
   prot[pl++] = IMAGE_TLV_PQ_SIGMASK & 0xff;
   prot[pl++] = IMAGE_TLV_PQ_SIGMASK >> 8;
   prot[pl++] = 1; prot[pl++] = 0;

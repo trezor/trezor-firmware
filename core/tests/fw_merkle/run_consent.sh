@@ -32,5 +32,5 @@ echo "== consent digest cross-validation (device code) =="
 
 # The host builder must agree, or every interaction-less upgrade gets refused:
 # the host would confirm one release and the device would digest it differently.
-echo "== host builder vs device (trezor_core_tools) =="
+echo "== host builder vs device (trezorlib.firmware.pq_secure) =="
 python "$here/consent_host_check.py" "$vecdir"

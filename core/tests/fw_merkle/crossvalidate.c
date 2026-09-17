@@ -7,9 +7,14 @@
  * the same firmware_root as Python and enforces the same accept/reject policy,
  * via the REAL device entry point firmware_verify_manifest.
  *
- * Build:
- *   gcc -I embed/sec/image/stm32 -I ../crypto \
- *       tests/fw_merkle/crossvalidate.c ../crypto/sha2.c -o /tmp/crossvalidate
+ * Build: run.sh, which is the authority -- it compiles the real
+ * boot_header_merkle.c against shims.h:
+ *   gcc -I tests/fw_merkle -I embed/sec/image -I embed/sec/image/inc \
+ *       -I ../crypto -include tests/fw_merkle/shims.h \
+ *       tests/fw_merkle/crossvalidate.c embed/sec/image/boot_header_merkle.c \
+ *       ../crypto/sha2.c -o "$TMPDIR/crossvalidate"
+ * The -include is load-bearing: without it the device sources pull the embedded
+ * headers and do not build on a host.
  */
 #include <stddef.h>
 #include <stdint.h>
