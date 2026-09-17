@@ -5,12 +5,23 @@ use owo_colors::OwoColorize;
 
 use crate::args::{BuildArgs, Project, TestArgs};
 use crate::options::ResolvedBuildArgs;
-use crate::{artifacts, features, helpers, memusage, postbuild, prebuild};
+use crate::{artifacts, bundle, features, helpers, memusage, postbuild, prebuild};
 
 pub fn build(args: BuildArgs) -> Result<()> {
     let resolved_args = ResolvedBuildArgs::from_build_args(&args)?;
 
-    build_impl(resolved_args.clone(), false)?;
+    // `--bootloader` picks an existing binary for a bundle to fold into, so
+    // it means nothing when building the bootloader itself.
+    ensure!(
+        args.project != Project::Bootloader || args.options.bootloader.is_none(),
+        "--bootloader option is not supported when building the bootloader."
+    );
+
+    if bundle::applies(&resolved_args)? {
+        build_pq_secure(&resolved_args)?;
+    } else {
+        build_project(resolved_args.clone())?;
+    }
 
     if resolved_args.storage_insecure_testing_mode {
         println!(
@@ -22,6 +33,39 @@ pub fn build(args: BuildArgs) -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Build on a pq_secure_boot model.
+fn build_pq_secure(args: &ResolvedBuildArgs) -> Result<()> {
+    match args.project {
+        Project::Bootloader => {
+            // A bare bootloader build invalidates the published bundle.
+            bundle::invalidate_bundle(args.model)?;
+            build_project(args.clone())
+        }
+        // A Merkle-tree image is only installable next to a bootloader header
+        // that commits to its root, so building one builds a bundle. Prodtest
+        // is a leaf of the same tree.
+        Project::Firmware | Project::Prodtest => {
+            let variant = bundle::selected_variant(args);
+            // A custom build folds into the prebuilt release's custom slot; it
+            // never cuts a tree.
+            if variant == bundle::Variant::Custom {
+                return bundle::build_presigned(args);
+            }
+            // Standalone: sign inline with development keys.
+            bundle::build_bundle(
+                args,
+                &[variant],
+                bundle::SignStage::Inline,
+                // Signed in place; `artifacts/release/` belongs to `xtask release`.
+                bundle::Dest::Artifacts,
+                // Not a ceremony: the signer's default sigmask.
+                None,
+            )
+        }
+        _ => build_project(args.clone()),
+    }
 }
 
 pub fn clippy(args: BuildArgs) -> Result<()> {
@@ -92,17 +136,33 @@ pub fn fmt() -> Result<()> {
     Ok(())
 }
 
+/// Build a single project with no release orchestration; called per variant
+/// by [`bundle::build_bundle`], so it must not route back through [`build`].
+pub fn build_project(args: ResolvedBuildArgs) -> Result<()> {
+    build_impl(args, false)
+}
+
 fn build_impl(args: ResolvedBuildArgs, is_dependency: bool) -> Result<()> {
     if !args.emulator {
         // Recursively build dependencies (Firmware -> Kernel -> Secmon)
         if let Some(dependency) = args.project.dependency(args.model)? {
-            build_impl(
-                ResolvedBuildArgs {
-                    project: dependency,
-                    ..args.clone()
-                },
-                true,
-            )?;
+            // A presigned custom build embeds the prebuilt secmon; skip it.
+            let embeds_prebuilt_secmon = dependency == Project::Secmon && args.prebuilt_secmon;
+            if embeds_prebuilt_secmon {
+                println!(
+                    "{}",
+                    "xtask: skipping the secmon build -- a custom build embeds the prebuilt one"
+                        .dimmed()
+                );
+            } else {
+                build_impl(
+                    ResolvedBuildArgs {
+                        project: dependency,
+                        ..args.clone()
+                    },
+                    true,
+                )?;
+            }
         }
     }
 
@@ -126,10 +186,20 @@ fn build_impl(args: ResolvedBuildArgs, is_dependency: bool) -> Result<()> {
         // binary before signing it.
         let bin = postbuild::elf_to_bin(&elf, args.project, &model_config, use_dev_keys)?;
 
-        // Sign the binary except for those that don't have headers
-        if !matches!(args.project, Project::Boardloader | Project::Kernel) {
+        // Sign the binary except for those that don't have headers. Merkle-tree
+        // firmware is signed by the tree signer instead.
+        let is_tree = model_config.has_feature("pq_secure_boot");
+        let skip_legacy_sign = matches!(args.project, Project::Boardloader | Project::Kernel)
+            || (matches!(
+                args.project,
+                Project::Firmware | Project::Secmon | Project::Prodtest
+            ) && is_tree);
+        if !skip_legacy_sign {
             postbuild::sign_binary(&bin, args.project, &model_config, use_dev_keys)?;
         }
+
+        // Merkle-tree firmware: code_hashes are filled at sign time by
+        // firmware_pq_sign.py; the build emits only the manifest template.
 
         if args.project == Project::Firmware {
             let firwmare_cc_json = bin.with_extension("cc.json");

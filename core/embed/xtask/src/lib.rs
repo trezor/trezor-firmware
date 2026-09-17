@@ -1,6 +1,7 @@
 pub mod apptool;
 pub mod args;
 pub mod artifacts;
+pub mod bundle;
 pub mod cargo;
 pub mod combine;
 pub mod config;
@@ -14,4 +15,5 @@ pub mod postbuild;
 pub mod prebuild;
 pub mod presets;
 pub mod raconfig;
+pub mod release;
 pub mod upload;

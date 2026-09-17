@@ -3,6 +3,7 @@ use clap::Args;
 use serde::Deserialize;
 
 use crate::args::{BuildArgs, ConsoleType, LogLevel, Model, Project};
+use crate::bundle::BootloaderSource;
 use crate::presets;
 
 /// How an option's `Option<T>` value from the defaults/presets/CLI layers is
@@ -30,6 +31,14 @@ impl ResolveValue for ConsoleType {
 
 impl ResolveValue for LogLevel {
     type Resolved = LogLevel;
+    fn resolve(value: Option<Self>) -> Self::Resolved {
+        value.unwrap_or_default()
+    }
+}
+
+/// Unset resolves to [`BootloaderSource::Auto`].
+impl ResolveValue for BootloaderSource {
+    type Resolved = BootloaderSource;
     fn resolve(value: Option<Self>) -> Self::Resolved {
         value.unwrap_or_default()
     }
@@ -184,6 +193,17 @@ build_options! {
     /// Enable unsafe firmware features
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map unsafe_fw: bool,
+
+    /// Embed the prebuilt secmon instead of building one. Internal: set by a
+    /// custom build that folds into the prebuilt, already-signed release.
+    #[arg(long, hide = true, num_args = 0..=1, default_missing_value = "true")]
+    map prebuilt_secmon: bool,
+
+    /// Which existing bootloader binary a pq_secure release folds its
+    /// firmware_root into (default: auto); the bootloader is never built
+    /// implicitly
+    #[arg(long, value_name = "SOURCE")]
+    opt bootloader: BootloaderSource,
 
     /// Embed frozen MicroPython modules
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
