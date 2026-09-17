@@ -28,10 +28,8 @@
 #include "shared/timeutils/timeutils.h"
 
 // 32-bit signed integer will overflow at 2038.
-_Static_assert(sizeof(mp_timestamp_t) >= 8);
-
-// Make sure both timestamp types have the same width:
-_Static_assert(sizeof(mp_timestamp_t) == sizeof(timeutils_timestamp_t));
+_Static_assert(sizeof(mp_timestamp_t) >= 8, "mp_timestamp_t must be at least 8 bytes");
+_Static_assert(sizeof(mp_timestamp_t) == sizeof(timeutils_timestamp_t), "mp_timestamp_t and timeutils_timestamp_t must have the same width");
 
 // copy of ports/stm32/modutime.c:time_localtime, without support
 // for getting current clock time (i.e., timestamp must always be provided)

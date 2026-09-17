@@ -49,9 +49,10 @@ static const uint8_t* const BOARDLOADER_EC_KEYS[] = {
 secbool boot_header_check_signature(const boot_header_auth_t* hdr,
                                     const merkle_proof_node_t* merkle_root) {
   // Get the signature indices based on the signature mask
-  _Static_assert(ARRAY_LENGTH(BOARDLOADER_PQ_KEYS) <= 3);
-  _Static_assert(ARRAY_LENGTH(BOARDLOADER_EC_KEYS) ==
-                 ARRAY_LENGTH(BOARDLOADER_PQ_KEYS));
+  _Static_assert(ARRAY_LENGTH(BOARDLOADER_PQ_KEYS) <= 3, "Too many PQ keys");
+  _Static_assert(
+      ARRAY_LENGTH(BOARDLOADER_EC_KEYS) == ARRAY_LENGTH(BOARDLOADER_PQ_KEYS),
+      "EC vs PQ key count mismatch");
 
   uint8_t sigmask = hdr->sigmask;
   uint8_t sigmask_inv = 0;  // FIH
