@@ -239,6 +239,12 @@ class BleAsync:
                 await ready(pipe, write=True)
                 pipe.send(result)
 
+    # Keeps scan running for some time - for reliably connecting on Linux scan needs to be running
+    # at the same time, however the following patter does not work reliably wrt timeouts:
+    # (scan on), enumerate, (scan off), ..., (scan on), connect, (scan off)
+    # So we instead end up doing:
+    # (scan on), enumerate, ..., connect, ..., (scan off)
+    # TODO: refactor into separate class
     async def _start_scan(self) -> None:
         if self.scan_timeout_reset is not None:
             self.scan_timeout_reset.set()
@@ -328,6 +334,7 @@ class BleAsync:
             and periph.last_seen() <= SCAN_INTERVAL_SECONDS
         ]
         LOG.debug(f"scan: {len(res)} devices")
+        # TODO: stop scan immediatelly if 0 devices found?
         return res
 
     async def connect(self, address: str) -> None:
@@ -397,7 +404,11 @@ class BleAsync:
         ) -> None:
             await queue.put(data)
 
-        await client.start_notify(TREZOR_CHARACTERISTIC_TX, read_callback)
+        await client.start_notify(
+            TREZOR_CHARACTERISTIC_TX,
+            read_callback,
+            bluez={"use_start_notify": False},  # request exclusive access on Linux
+        )
         periph.client = client
         periph.queue = queue
         LOG.info(f"Connected to {client.address}")
