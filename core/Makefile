@@ -29,6 +29,7 @@
 BUILD_DIR = build/artifacts/latest
 
 TREZOR_MODEL ?= T3W1
+VARIANT ?= universal
 PYTEST_TIMEOUT ?= 500
 TEST_LANG ?= "en"
 XTASK_BUILD_OPTS ?=

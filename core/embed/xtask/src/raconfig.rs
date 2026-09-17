@@ -51,6 +51,7 @@ fn resolve_config(args: &RaConfigArgs) -> Result<ResolvedRustAnalyzerConfig> {
             model: args.model,
             emulator: args.emulator,
             preset: args.preset.clone(),
+            bootloader: Default::default(),
             options: args.options.clone(),
         };
 
