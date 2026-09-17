@@ -409,10 +409,8 @@ pub trait FirmwareUI {
         address: TString<'static>,
         case_sensitive: bool,
         details_title: TString<'static>,
-        account_label: TString<'static>,
-        account: Option<TString<'static>>,
-        path_label: TString<'static>,
-        path: Option<TString<'static>>,
+        account: Option<(TString<'static>, TString<'static>)>,
+        path: Option<(TString<'static>, TString<'static>)>,
         xpubs: Obj, // TODO: replace Obj
     ) -> Result<impl LayoutMaybeTrace, Error>;
 

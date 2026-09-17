@@ -793,10 +793,16 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
         let details_title: TString = kwargs.get(Qstr::MP_QSTR_details_title)?.try_into()?;
         let address: TString = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
         let case_sensitive: bool = kwargs.get(Qstr::MP_QSTR_case_sensitive)?.try_into()?;
-        let account_label: TString = kwargs.get(Qstr::MP_QSTR_account_label)?.try_into()?;
-        let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
-        let path_label: TString = kwargs.get(Qstr::MP_QSTR_path_label)?.try_into()?;
-        let path: Option<TString> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
+        let labeled = |obj: Obj| -> Result<Option<(TString, TString)>, Error> {
+            if obj == Obj::const_none() {
+                Ok(None)
+            } else {
+                let [label, content]: [Obj; 2] = util::iter_into_array(obj)?;
+                Ok(Some((label.try_into()?, content.try_into()?)))
+            }
+        };
+        let account = labeled(kwargs.get(Qstr::MP_QSTR_account)?)?;
+        let path = labeled(kwargs.get(Qstr::MP_QSTR_path)?)?;
         let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
 
         let layout = ModelUI::show_address_details(
@@ -804,9 +810,7 @@ extern "C" fn new_show_address_details(n_args: usize, args: *const Obj, kwargs: 
             address,
             case_sensitive,
             details_title,
-            account_label,
             account,
-            path_label,
             path,
             xpubs,
         )?;
@@ -1854,10 +1858,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     address: str,
     ///     case_sensitive: bool,
     ///     details_title: str,
-    ///     account_label: str,
-    ///     account: str | None,
-    ///     path_label: str,
-    ///     path: str | None,
+    ///     account: tuple[str, str] | None,
+    ///     path: tuple[str, str] | None,
     ///     xpubs: Sequence[tuple[str, str]],
     /// ) -> LayoutContext[UiResult]:
     ///     """Show address details - QR code, account, path, cosigner xpubs."""
