@@ -286,9 +286,9 @@ async def show_address(
     def xpub_title(i: int) -> str:
         result = f"Multisig XPUB #{i + 1}\n"
         result += (
-            f"({TR.address__title_yours.lower()})"
+            TR.address__title_yours
             if i == multisig_index
-            else f"({TR.address__title_cosigner.lower()})"
+            else TR.address__title_cosigner
         )
         return result
 
