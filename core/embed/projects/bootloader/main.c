@@ -581,8 +581,16 @@ int bootloader_main(void) {
       connect_to_host = sectrue;
       break;
     case BOOT_COMMAND_INSTALL_UPGRADE:
+      // Consent obtained in the firmware UI (hash in bootargs); firmware was
+      // running, so its body must still be valid.
       if (fw.firmware_present == sectrue) {
-        // continue without user interaction
+        auto_upgrade = sectrue;
+      }
+      break;
+    case BOOT_COMMAND_CONTINUE_UPGRADE:
+      // Phase 2 of the bootloader's own install: the firmware body may be
+      // invalid after the bootloader swap, so only a valid header is required.
+      if (fw.header_present == sectrue) {
         auto_upgrade = sectrue;
       }
       break;
@@ -647,7 +655,8 @@ int bootloader_main(void) {
 #endif
 
     if (fw.header_present == sectrue) {
-      if (auto_upgrade == sectrue && fw.firmware_present == sectrue) {
+      // A pre-authorized update continues even with an invalid firmware body.
+      if (auto_upgrade == sectrue) {
         result = workflow_auto_update(&fw);
       } else {
         result = workflow_bootloader(&fw, connect_to_host);
