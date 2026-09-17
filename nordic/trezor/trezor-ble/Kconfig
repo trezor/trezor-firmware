@@ -28,5 +28,19 @@ config DEFAULT_THREAD_STACK_SIZE
 config MODEL_IDENTIFIER
     int "Model identifier"
 
+config TREZOR_KEY_SET_PRODUCTION
+	bool "Built for the production key set"
+	default n
+	help
+	  Which key set this build belongs to. Reported to the STM in the
+	  management info response so it can refuse to push an image built for the
+	  other set, instead of pushing one the nRF's own MCUboot will then reject
+	  -- which on a BLE-only device costs the link.
+
+	  Set by prod.conf, which build_sign_flash.sh -p applies together with
+	  sysbuild/mcuboot_prod.conf, so the app and MCUboot move on one switch.
+	  The same symbol covers the PQ-native founder pool, which follows the
+	  same overlay.
+
 
 endmenu
