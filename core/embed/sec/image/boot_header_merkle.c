@@ -356,6 +356,9 @@ secbool boot_header_verify_slot(const uint8_t* slot_value, size_t slot_len,
   for (size_t i = 0; i < proof_count; i++) {
     boot_header_internal_node(&node, &proof[i], &node);
   }
+  // ONE memcmp, not double-checked and not FIH_CALL'd -- and on T3W1 this is
+  // the only founder check the nRF image gets. A single glitched comparison
+  // here accepts an image the fold rejects.
   return (memcmp(node.bytes, trusted_model_root->bytes, sizeof(node.bytes)) ==
           0)
              ? sectrue
@@ -383,12 +386,20 @@ uint8_t fw_variant_to_fw_type(fw_variant_sec_t variant) {
 secbool fw_variant_is_official(fw_variant_sec_t variant) {
   // Positive allow-list; custom / none / unknown / INVALID yield secfalse.
   //
-  // FIH: branchless, and `|` rather than `||` so no comparison is skipped by
-  // short-circuiting. The verdict is a PRODUCT with sectrue, not a literal
-  // returned from a taken branch: a glitch in the multiply or in any comparison
-  // yields something that is not sectrue, and every caller tests `== sectrue`,
-  // so the failure direction is restricted. A switch would put the whole
-  // decision on one jump.
+  // What this guarantees is the FAILURE DIRECTION: only an exact match on a
+  // listed codeword can produce sectrue, every caller tests `== sectrue`, and
+  // the codewords are >= 16 bit flips apart -- so a corrupted variant decodes
+  // to secfalse, never to "official".
+  //
+  // It does NOT guarantee the generated code, and the source cannot. `|` is
+  // written rather than `||` to keep every comparison live, but for T3W1
+  // (GCC 13.3, thumbv8m) the emitted form is `cmp; it ne; cmpne` -- the second
+  // comparison is predicated off when the first matches, so short-circuiting is
+  // back; `* sectrue` becomes `negs`+`and`, and in fw_variant_is_custom a plain
+  // conditional move of the literal. Checked, not assumed: there are no
+  // BRANCHES in any of the three, but that is this compiler's choice. Do not
+  // cite these as fault-hardened -- the one real double check on this value is
+  // the unlock gate in wf_firmware_update_pq.c.
   return ((variant == FW_VARIANT_SEC_UNIVERSAL) |
           (variant == FW_VARIANT_SEC_BITCOIN_ONLY) |
           (variant == FW_VARIANT_SEC_PRODTEST)) *
@@ -396,13 +407,13 @@ secbool fw_variant_is_official(fw_variant_sec_t variant) {
 }
 
 secbool fw_variant_is_custom(fw_variant_sec_t variant) {
-  // FIH: branchless, as above.
+  // Failure direction and codegen caveat as above.
   return (variant == FW_VARIANT_SEC_CUSTOM) * sectrue;
 }
 
 secbool fw_variant_is_provisioned(fw_variant_sec_t variant) {
   // Positive allow-list over the real variants; NONE and INVALID yield
-  // secfalse. FIH: branchless, as above.
+  // secfalse. Failure direction and codegen caveat as above.
   return ((variant == FW_VARIANT_SEC_CUSTOM) |
           (variant == FW_VARIANT_SEC_UNIVERSAL) |
           (variant == FW_VARIANT_SEC_BITCOIN_ONLY) |
