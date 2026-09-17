@@ -96,7 +96,8 @@
           with pkgs;
           pkgs.mkShellNoCC ({
             name = "trezor-firmware-env";
-            packages = [
+            nativeBuildInputs = lib.optionals (!isDarwin) [ autoPatchelfHook ];
+            buildInputs = [
               sdl3
               sdl3-image
               sdl2-compat # for running old emulators used in upgrade tests
@@ -138,7 +139,6 @@
               #bitcoind # for HWI tests which are currently disabled
             ]
             ++ lib.optionals (!isDarwin) [
-              autoPatchelfHook
               procps
               valgrind
             ]
