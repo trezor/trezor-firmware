@@ -295,6 +295,14 @@ workflow_result_t workflow_nrf_ota_update(
   if (nrf_length == 0 || nrf_length > nrf_staging_image_capacity()) {
     return nrf_fail(iface, "nRF image size invalid");
   }
+  // A hint that is present but is not a SHA-256 is MALFORMED, not absent. The
+  // decoder accepts any length up to the buffer, so 1..31 arrives here; falling
+  // through would stream the image and leave the host believing its hint was
+  // honoured. Rejected like a malformed co-path above -- same function, same
+  // wire message, so the same treatment.
+  if (image_hash_len != 0 && image_hash_len != SHA256_DIGEST_LENGTH) {
+    return nrf_fail(iface, "Invalid nRF image hash");
+  }
 
   // --- Update-required hint: if the running nRF already reports this image's
   //     hash, skip the stream entirely. The hint DECIDES whether we stream, so

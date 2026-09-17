@@ -63,7 +63,8 @@
  * @param co_path_len  Length of `co_path` in bytes.
  * @param image_hash   SHA-256 of the offered nRF image (update-required hint);
  *                     may be NULL / `image_hash_len` 0 to always stream.
- * @param image_hash_len Length of `image_hash` (32 or 0).
+ * @param image_hash_len Length of `image_hash`: 32, or 0 for no hint. Anything
+ *                       else is rejected rather than ignored.
  * @param nrf_length   Offered nRF image size in bytes (> 0).
  * @return WF_OK on success (including "already up to date, skipped"); WF_ERROR
  *         on any validation / transport failure (a wire Failure + fail screen
