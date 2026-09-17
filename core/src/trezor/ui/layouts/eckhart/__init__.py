@@ -284,7 +284,7 @@ async def show_address(
     chunkify: bool = False,
 ) -> None:
     def xpub_title(i: int) -> str:
-        result = f"Multisig XPUB #{i + 1}\n"
+        result = TR.address__title_multisig_xpub_template.format(i + 1)
         result += (
             TR.address__title_yours
             if i == multisig_index
