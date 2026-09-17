@@ -259,7 +259,8 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_firmware_hash_obj, 0,
 
 /// def firmware_vendor() -> str:
 ///     """
-///     Returns the firmware vendor string from the vendor header.
+///     Returns the firmware vendor string (legacy: from the vendor header;
+///     Merkle tree: derived from the boot header's firmware_type).
 ///     """
 static mp_obj_t mod_trezorutils_firmware_vendor(void) {
 #ifdef TREZOR_EMULATOR
@@ -644,7 +645,12 @@ static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_obj,
 /// mock:global
 
 /// def check_firmware_header(header : AnyBytes) -> FirmwareHeaderInfo:
-///     """Parses incoming firmware header and returns information about it."""
+///     """Parses an incoming firmware header and returns information about it.
+///
+///     Legacy: vendor header + image header. Merkle tree: boot header prefix
+///     (without signatures) + firmware manifest region; `fingerprint` is the
+///     firmware_root and `hash` the consent digest for `reboot_and_upgrade`.
+///     """
 static mp_obj_t mod_trezorutils_check_firmware_header(mp_obj_t header) {
   mp_buffer_info_t header_buf = {0};
   mp_get_buffer_raise(header, &header_buf, MP_BUFFER_READ);
@@ -844,6 +850,8 @@ static const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the hardware supports BLE."""
 /// USE_NFC: bool
 /// """Whether the hardware supports NFC."""
+/// USE_PQ_SECURE_BOOT: bool
+/// """Whether this build uses the Merkle-tree (pq_secure_boot) image layout."""
 /// USE_SD_CARD: bool
 /// """Whether the hardware supports SD card."""
 /// USE_SERIAL_NUMBER: bool
@@ -1059,6 +1067,11 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_NFC), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_NFC), mp_const_false},
+#endif
+#ifdef PQ_SECURE_BOOT
+    {MP_ROM_QSTR(MP_QSTR_USE_PQ_SECURE_BOOT), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_PQ_SECURE_BOOT), mp_const_false},
 #endif
 #ifdef USE_BACKLIGHT
     {MP_ROM_QSTR(MP_QSTR_USE_BACKLIGHT), mp_const_true},

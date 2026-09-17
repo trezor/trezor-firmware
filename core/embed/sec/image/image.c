@@ -22,6 +22,7 @@
 
 #include "ed25519-donna/ed25519.h"
 
+#include <sec/boot_header.h>
 #include <sec/image.h>
 #include <sys/bootutils.h>
 #include <sys/flash.h>
@@ -523,8 +524,108 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
 }
 #endif  // KERNEL_MODE
 
+// Gated on the scheme, not on USE_BOOT_UCB: T3W1 declares boot_ucb with and
+// without pq_secure_boot, and a legacy build must reject a tree preamble here
+// rather than after the confirm screen and reboot.
+#if defined(PQ_SECURE_BOOT) && !defined(USE_BOOT_UCB)
+#error "pq_secure_boot needs boot_ucb (boot header is staged via the UCB)"
+#endif
+
+#ifdef PQ_SECURE_BOOT
+
+// Merkle-tree layout: `header` is a boot header PREFIX (auth part + Merkle
+// proof, no signatures) followed by the firmware manifest region -- the
+// consent-digest preimage. Runs unprivileged over host bytes; the signature is
+// NOT checked (that needs the bootloader code), so this is self-consistency,
+// not authenticity -- the bootloader recomputes the digest before installing.
+static secbool check_tree_preamble(const uint8_t *preamble, size_t len,
+                                   firmware_header_info_t *info) {
+  // The prefix is self-describing, so the manifest is located the same way the
+  // bootloader will locate it.
+  size_t prefix_len = 0;
+  if (sectrue != boot_header_prefix_extent(preamble, len, &prefix_len)) {
+    return secfalse;
+  }
+  if (prefix_len >= len) {
+    // Nothing left for a manifest.
+    return secfalse;
+  }
+
+  const boot_header_auth_t *hdr = (const boot_header_auth_t *)preamble;
+  if (hdr->hw_model != HW_MODEL || hdr->hw_revision != HW_REVISION) {
+    return secfalse;
+  }
+
+  const uint8_t *mh = preamble + prefix_len;
+  const size_t mh_len = len - prefix_len;
+  const firmware_manifest_t *manifest = (const firmware_manifest_t *)mh;
+  if (mh_len < sizeof(firmware_manifest_t) ||
+      manifest->magic != FW_MANIFEST_MAGIC) {
+    return secfalse;
+  }
+  const size_t manifest_len = firmware_manifest_size(manifest);
+  if (manifest_len > mh_len) {
+    return secfalse;
+  }
+
+  // Fold the variant leaf through the embedded co-path to the prefix's own
+  // firmware_root; reads no module code.
+  merkle_proof_node_t root;
+  memcpy(root.bytes, hdr->firmware_root.bytes, sizeof(root.bytes));
+  const merkle_proof_node_t *proof = NULL;
+  size_t proof_count = 0;
+  if (sectrue != firmware_manifest_read_proof(manifest, mh_len, &proof,
+                                              &proof_count) ||
+      sectrue != firmware_manifest_authentic(manifest, manifest_len, proof,
+                                             proof_count, &root)) {
+    return secfalse;
+  }
+
+  // Only the manifest is hashed, not its trailing proof -- same extent as the
+  // bootloader.
+  merkle_proof_node_t consent;
+  if (sectrue != boot_header_consent_digest(preamble, prefix_len, mh,
+                                            manifest_len, &consent)) {
+    return secfalse;
+  }
+
+  // The variant is authenticated (inside the folded manifest).
+  const char *vendor = firmware_vendor_str(manifest->firmware_variant);
+  info->vstr_len = MIN(sizeof(info->vstr), strlen(vendor));
+  memcpy(info->vstr, vendor, info->vstr_len);
+
+  info->ver_major = manifest->firmware_version[0];
+  info->ver_minor = manifest->firmware_version[1];
+  info->ver_patch = manifest->firmware_version[2];
+  info->ver_build = manifest->firmware_version[3];
+
+  // fingerprint: firmware_root, as the bootloader's confirm screen shows it;
+  // hash: the consent digest for reboot_and_upgrade.
+  memcpy(info->fingerprint, root.bytes, sizeof(info->fingerprint));
+  memcpy(info->hash, consent.bytes, sizeof(info->hash));
+
+  return sectrue;
+}
+
+#endif  // PQ_SECURE_BOOT
+
 secbool check_firmware_header(const uint8_t *header, size_t header_size,
                               firmware_header_info_t *info) {
+  if (header == NULL || info == NULL) {
+    return secfalse;
+  }
+  memset(info, 0, sizeof(*info));
+
+  // A tree preamble opens with the TRZQ magic, the legacy layout with a vendor
+  // header; a build without the scheme rejects a preamble as an unparseable
+  // vendor header.
+#ifdef PQ_SECURE_BOOT
+  if (header_size >= sizeof(uint32_t) &&
+      *(const uint32_t *)(const void *)header == BOOT_HEADER_MAGIC_TRZQ) {
+    return check_tree_preamble(header, header_size, info);
+  }
+#endif
+
   // parse and check vendor header
   vendor_header vhdr;
   if (sectrue != read_vendor_header(header, header_size, &vhdr)) {
