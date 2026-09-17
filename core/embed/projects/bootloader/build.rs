@@ -72,6 +72,11 @@ fn main() -> Result<()> {
                 format!("../../models/{model_id}/vendorheader/vendor_unsafe.toif"),
                 "rodata_vendor_unsafe",
             )?;
+            // nRF OTA needs the SMP serial-recovery push.
+            if cfg!(feature = "smp") {
+                lib.add_source("workflow/wf_nrf_ota.c");
+                lib.add_source("nrf_staging.c");
+            }
         } else {
             lib.add_source("fw_check.c");
             lib.add_source("workflow/wf_firmware_update.c");

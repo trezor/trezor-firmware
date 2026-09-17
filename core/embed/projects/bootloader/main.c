@@ -108,6 +108,7 @@
 #include "ui_helpers.h"
 #include "version_check.h"
 #include "wire/wire_iface_usb.h"
+#include "workflow/wf_nrf_ota.h"
 #include "workflow/workflow.h"
 
 #if defined(PQ_SECURE_BOOT) && defined(USE_BOOT_UCB)
@@ -595,6 +596,11 @@ int bootloader_main(void) {
   // wait a bit so that the empty lock icon is visible
   // (on a real device, we are waiting for touch init which takes longer)
   hal_delay(400);
+#endif
+
+#if defined(PQ_SECURE_BOOT) && defined(USE_SMP)
+  // Push a staged nRF image before any BLE use (no-op on a normal boot).
+  nrf_ota_resume_boot();
 #endif
 
   volatile secbool auto_upgrade = secfalse;
