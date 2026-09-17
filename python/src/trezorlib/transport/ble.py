@@ -51,6 +51,8 @@ TREZOR_CHARACTERISTIC_TX = "8c000003-a59b-4d58-a9ad-073df69fa1b1"
 
 SCAN_INTERVAL_SECONDS = 3
 SHUTDOWN_TIMEOUT_SECONDS = 10
+# A single GATT write; a stalled one must not block the caller forever.
+WRITE_TIMEOUT_SECONDS = 5
 
 SHOULD_WRITE_WITH_RESPONSE = sys.platform == "darwin"
 
@@ -355,9 +357,17 @@ class BleAsync:
         periph = self.devices[address]
         if periph.client is None:
             raise RuntimeError("Connect to peripheral before writing")
-        await periph.client.write_gatt_char(
-            TREZOR_CHARACTERISTIC_RX, chunk, response=SHOULD_WRITE_WITH_RESPONSE
-        )
+        try:
+            await asyncio.wait_for(
+                periph.client.write_gatt_char(
+                    TREZOR_CHARACTERISTIC_RX, chunk, response=SHOULD_WRITE_WITH_RESPONSE
+                ),
+                timeout=WRITE_TIMEOUT_SECONDS,
+            )
+        except (TimeoutError, asyncio.TimeoutError) as err:
+            raise Timeout(
+                f"Timeout writing BLE packet ({WRITE_TIMEOUT_SECONDS}s)"
+            ) from err
 
     async def shutdown(self) -> None:
         raise self.Shutdown
