@@ -104,7 +104,7 @@ async def get_public_key(
             coin, address_n, script_type
         )
         account_name = address_n_to_name(
-            coin, address_n, script_type, account_level=True
+            coin, address_n, script_type, export_point=True
         )
         if path_warning:
             await confirm_path_warning(path)

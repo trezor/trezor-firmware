@@ -7,7 +7,7 @@ from trezor.messages import AuthorizeCoinJoin, SignMessage
 from apps.common.paths import PATTERN_BIP44, PATTERN_CASA, PathSchema, unharden
 
 from . import authorization
-from .common import BIP32_WALLET_DEPTH, BITCOIN_NAMES
+from .common import BITCOIN_NAMES
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Iterable
@@ -199,26 +199,35 @@ def _xpub_export_patterns(
 
     export_patterns: list[str] = []
     for pattern in patterns:
-        components = pattern.split("/")[1:]
-
-        deepest_hardened = 0
-        account = 0
-        for i, component in enumerate(components):
-            # No pattern here uses a wildcard; "*'" would read as hardened.
-            if component.endswith("'"):
-                deepest_hardened = i + 1
-            if component in ("account", "account'"):
-                account = i + 1
-
-        if deepest_hardened == 0:
-            continue
-
-        for depth in (deepest_hardened, max(deepest_hardened, account)):
-            prefix = "m/" + "/".join(components[:depth])
+        for prefix in _pattern_export_points(pattern):
             if prefix not in export_patterns:
                 export_patterns.append(prefix)
 
     return export_patterns
+
+
+def _pattern_export_points(pattern: str) -> list[str]:
+    components = pattern.split("/")[1:]
+
+    deepest_hardened = 0
+    account = 0
+    for i, component in enumerate(components):
+        # No pattern here uses a wildcard; "*'" would read as hardened.
+        if component.endswith("'"):
+            deepest_hardened = i + 1
+        if component in ("account", "account'"):
+            account = i + 1
+
+    if deepest_hardened == 0:
+        return []
+
+    prefixes: list[str] = []
+    for depth in (deepest_hardened, max(deepest_hardened, account)):
+        prefix = "m/" + "/".join(components[:depth])
+        if prefix not in prefixes:
+            prefixes.append(prefix)
+
+    return prefixes
 
 
 def _sign_message_export_patterns(coin: coininfo.CoinInfo) -> list[str]:
@@ -422,19 +431,19 @@ class AccountType:
         self,
         account_name: str,
         pattern: str,
-        script_type: InputScriptType,
+        script_types: tuple[InputScriptType, ...],
         require_segwit: bool,
         require_bech32: bool,
         require_taproot: bool,
-        account_level: bool = False,
+        require_bitcoin: bool = False,
     ) -> None:
         self.account_name = account_name
         self.pattern = pattern
-        self.script_type = script_type
+        self.script_types = script_types
         self.require_segwit = require_segwit
         self.require_bech32 = require_bech32
         self.require_taproot = require_taproot
-        self.account_level = account_level
+        self.require_bitcoin = require_bitcoin
 
     def get_name(
         self,
@@ -442,30 +451,35 @@ class AccountType:
         address_n: Bip32Path,
         script_type: InputScriptType | None,
         show_account_str: bool,
+        export_point: bool,
     ) -> str | None:
-        pattern = self.pattern
-        if self.account_level:
-            # Discard the last two parts of the pattern. For bitcoin these generally are `change`
-            # and `address_index`. The result can be used to match XPUB paths.
-            pattern = "/".join(pattern.split("/")[:-BIP32_WALLET_DEPTH])
+        if export_point:
+            patterns = _pattern_export_points(self.pattern)
+        else:
+            patterns = [self.pattern]
 
         if (
-            (script_type is not None and script_type != self.script_type)
-            or not PathSchema.parse(pattern, coin.slip44).match(address_n)
+            (script_type is not None and script_type not in self.script_types)
+            or not any(
+                PathSchema.parse(pattern, coin.slip44).match(address_n)
+                for pattern in patterns
+            )
             or (not coin.segwit and self.require_segwit)
             or (not coin.bech32_prefix and self.require_bech32)
             or (not coin.taproot and self.require_taproot)
+            or (coin.slip44 != SLIP44_BITCOIN and self.require_bitcoin)
         ):
             return None
 
         name = self.account_name
         if show_account_str:
             name = f"{self.account_name} account"
-        account_pos = pattern.find("/account'")
+        account_pos = self.pattern.find("/account")
         if account_pos >= 0:
-            i = pattern.count("/", 0, account_pos)
-            account_number = unharden(address_n[i]) + 1
-            name += f" #{account_number}"
+            i = self.pattern.count("/", 0, account_pos)
+            # An export point can be shallower than the account level.
+            if i < len(address_n):
+                name += f" #{unharden(address_n[i]) + 1}"
 
         return name
 
@@ -474,68 +488,154 @@ def address_n_to_name(
     coin: coininfo.CoinInfo,
     address_n: Bip32Path,
     script_type: InputScriptType | None = None,
-    account_level: bool = False,
+    export_point: bool = False,
     show_account_str: bool = False,
 ) -> str | None:
     ACCOUNT_TYPES = (
         AccountType(
             "Legacy",
             PATTERN_BIP44,
-            InputScriptType.SPENDADDRESS,
+            (InputScriptType.SPENDADDRESS,),
             require_segwit=True,
             require_bech32=False,
             require_taproot=False,
-            account_level=account_level,
         ),
         AccountType(
             "",
             PATTERN_BIP44,
-            InputScriptType.SPENDADDRESS,
+            (InputScriptType.SPENDADDRESS,),
             require_segwit=False,
             require_bech32=False,
             require_taproot=False,
-            account_level=account_level,
         ),
         AccountType(
             "L. SegWit",
             PATTERN_BIP49,
-            InputScriptType.SPENDP2SHWITNESS,
+            (InputScriptType.SPENDP2SHWITNESS,),
             require_segwit=True,
             require_bech32=False,
             require_taproot=False,
-            account_level=account_level,
         ),
         AccountType(
             "SegWit",
             PATTERN_BIP84,
-            InputScriptType.SPENDWITNESS,
+            (InputScriptType.SPENDWITNESS,),
             require_segwit=True,
             require_bech32=True,
             require_taproot=False,
-            account_level=account_level,
         ),
         AccountType(
             "Taproot",
             PATTERN_BIP86,
-            InputScriptType.SPENDTAPROOT,
+            (InputScriptType.SPENDTAPROOT,),
             require_segwit=False,
             require_bech32=True,
             require_taproot=True,
-            account_level=account_level,
         ),
         AccountType(
             "Coinjoin",
             PATTERN_SLIP25_TAPROOT,
-            InputScriptType.SPENDTAPROOT,
+            (InputScriptType.SPENDTAPROOT,),
             require_segwit=False,
             require_bech32=True,
             require_taproot=True,
-            account_level=account_level,
+        ),
+        AccountType(
+            "BIP 48 multisig",
+            PATTERN_BIP48_RAW,
+            (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG),
+            require_segwit=False,
+            require_bech32=False,
+            require_taproot=False,
+        ),
+        AccountType(
+            "BIP 48 multisig",
+            PATTERN_BIP48_P2SHSEGWIT,
+            (InputScriptType.SPENDP2SHWITNESS,),
+            require_segwit=True,
+            require_bech32=False,
+            require_taproot=False,
+        ),
+        AccountType(
+            "BIP 48 multisig",
+            PATTERN_BIP48_SEGWIT,
+            (InputScriptType.SPENDWITNESS,),
+            require_segwit=True,
+            require_bech32=True,
+            require_taproot=False,
+        ),
+        AccountType(
+            "BIP 45 multisig",
+            PATTERN_BIP45,
+            (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG),
+            require_segwit=False,
+            require_bech32=False,
+            require_taproot=False,
+        ),
+        # GreenAddress subaccounts, offered for Bitcoin only. PATTERN_GREENADDRESS_A
+        # is unhardened throughout and so has no export point at all.
+        AccountType(
+            "GreenAddress",
+            PATTERN_GREENADDRESS_B,
+            (
+                InputScriptType.SPENDADDRESS,
+                InputScriptType.SPENDMULTISIG,
+                InputScriptType.SPENDP2SHWITNESS,
+                InputScriptType.SPENDWITNESS,
+            ),
+            require_segwit=False,
+            require_bech32=False,
+            require_taproot=False,
+            require_bitcoin=True,
+        ),
+        AccountType(
+            "Casa",
+            PATTERN_CASA,
+            (InputScriptType.SPENDP2SHWITNESS,),
+            require_segwit=True,
+            require_bech32=False,
+            require_taproot=False,
+        ),
+        # Unhardened throughout, so it has no export point and is named only
+        # at its leaves.
+        AccountType(
+            "Casa",
+            PATTERN_CASA_UNHARDENED,
+            (InputScriptType.SPENDP2SHWITNESS,),
+            require_segwit=True,
+            require_bech32=False,
+            require_taproot=False,
+        ),
+        AccountType(
+            "Unchained",
+            PATTERN_UNCHAINED_HARDENED,
+            (
+                InputScriptType.SPENDADDRESS,
+                InputScriptType.SPENDMULTISIG,
+                InputScriptType.SPENDWITNESS,
+            ),
+            require_segwit=False,
+            require_bech32=False,
+            require_taproot=False,
+        ),
+        AccountType(
+            "Unchained",
+            PATTERN_UNCHAINED_UNHARDENED,
+            (
+                InputScriptType.SPENDADDRESS,
+                InputScriptType.SPENDMULTISIG,
+                InputScriptType.SPENDWITNESS,
+            ),
+            require_segwit=False,
+            require_bech32=False,
+            require_taproot=False,
         ),
     )
 
     for account in ACCOUNT_TYPES:
-        name = account.get_name(coin, address_n, script_type, show_account_str)
+        name = account.get_name(
+            coin, address_n, script_type, show_account_str, export_point
+        )
         if name:
             return name
 
@@ -546,12 +646,15 @@ def address_n_to_name_or_unknown(
     coin: coininfo.CoinInfo,
     address_n: Bip32Path,
     script_type: InputScriptType | None = None,
-    account_level: bool = False,
-    show_account_str: bool = False,
+    allow_export_point: bool = False,
 ) -> str:
     from trezor import TR
 
     account_name = address_n_to_name(coin, address_n, script_type)
+    if account_name is None and allow_export_point:
+        account_name = address_n_to_name(
+            coin, address_n, script_type, export_point=True
+        )
     if account_name is None:
         return TR.bitcoin__unknown_path
     elif account_name == "":

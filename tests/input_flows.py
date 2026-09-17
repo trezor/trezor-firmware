@@ -684,6 +684,109 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.ok())
 
 
+class InputFlowShowAddressAccount(InputFlowBase):
+    """Confirm a path warning, then read the account name off address details."""
+
+    def __init__(self, client: Client | DebugSession, account: str) -> None:
+        super().__init__(client)
+        self.account = account
+
+    def _assert_account(self) -> None:
+        # Narrow screens wrap this label, sometimes mid-word, and may cut the
+        # rest of the screen off. Strip whitespace from both sides before
+        # comparing, the way the address assertions do, and check only the
+        # account name: a wrong screen would not carry it either.
+        content = "".join(self.debug.read_layout().screen_content().split())
+        assert "".join(self.account.split()) in content
+
+    def input_flow_bolt(self) -> BRGeneratorType:
+        yield  # path warning
+        self.debug.press_yes()
+
+        yield  # show address
+        self.debug.click(self.debug.screen_buttons.menu())
+        # synchronize; TODO get rid of this once we have single-global-layout
+        self.debug.synchronize_at("SimplePage")
+
+        self.debug.swipe_left()
+        # address details
+        self._assert_account()
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.press_yes()
+
+    def input_flow_caesar(self) -> BRGeneratorType:
+        yield  # path warning
+        self.debug.press_yes()
+
+        br = yield  # show address
+        # Find out the page-length of the address
+        if br.pages is not None:
+            address_swipes = br.pages - 1
+        else:
+            address_swipes = 0
+        for _ in range(address_swipes):
+            self.debug.press_right()
+
+        # qr code
+        self.debug.press_right()
+        # address details
+        self.debug.press_right()
+        self._assert_account()
+
+        # Go back and confirm
+        self.debug.press_left()
+        self.debug.press_left()
+        for _ in range(address_swipes):
+            self.debug.press_right()
+        self.debug.press_middle()
+
+    def input_flow_delizia(self) -> BRGeneratorType:
+        yield  # path warning
+        self.debug.press_yes()
+
+        yield  # show address
+        self.debug.click(self.debug.screen_buttons.menu())
+        # synchronize; TODO get rid of this once we have single-global-layout
+        self.debug.synchronize_at("VerticalMenu")
+        # menu
+        self.debug.button_actions.navigate_to_menu_item(1)
+        # address details
+        self._assert_account()
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        # menu
+        self.debug.click(self.debug.screen_buttons.menu())
+
+        layout = self.debug.read_layout()
+        while "PromptScreen" not in layout.all_components():
+            self.debug.swipe_up()
+            layout = self.debug.read_layout()
+        self.debug.synchronize_at("PromptScreen")
+        # tap to confirm
+        self.debug.click(self.debug.screen_buttons.tap_to_confirm())
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        yield  # path warning
+        self.debug.press_yes()
+
+        yield  # show address
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.synchronize_at("VerticalMenu")
+        # menu
+        self.debug.button_actions.navigate_to_menu_item(1)
+        # address details
+        self._assert_account()
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        # menu
+        self.debug.click(self.debug.screen_buttons.menu())
+        # address
+        self.debug.click(self.debug.screen_buttons.ok())
+        # continue to the app
+        self.debug.press_yes()
+
+
 class InputFlowShowMultisigXPUBs(InputFlowBase):
     def __init__(
         self, client: Client | DebugSession, address: str, xpubs: list[str], index: int

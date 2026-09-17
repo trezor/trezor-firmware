@@ -39,7 +39,9 @@ async def sign_message(
     node = keychain.derive(address_n)
     address = get_address(script_type, coin, node)
     path = address_n_to_str(address_n)
-    account = address_n_to_name_or_unknown(coin, address_n, script_type)
+    account = address_n_to_name_or_unknown(
+        coin, address_n, script_type, allow_export_point=True
+    )
     await confirm_signverify(
         decode_message(message),
         address_short(coin, address),
