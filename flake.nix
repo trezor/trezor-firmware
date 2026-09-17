@@ -2,6 +2,8 @@
   description = "Trezor Firmware development environment";
 
   inputs = {
+    self.submodules = true;
+
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
@@ -27,8 +29,7 @@
       monero-tests,
       ...
     }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
+    flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [ (import rust-overlay) ];
 
@@ -44,8 +45,7 @@
         # Create a wrapper that only exposes $pkg/bin. This prevents pulling in
         # development deps, packages to a nix-shell. This is especially important
         # when packages are combined from different nixpkgs versions.
-        mkBinOnlyWrapper =
-          pkg:
+        mkBinOnlyWrapper = pkg:
           pkgs.runCommand "${pkg.pname}-${pkg.version}-bin" { inherit (pkg) meta; } ''
             mkdir -p "$out/bin"
             for bin in "${pkgs.lib.getBin pkg}/bin/"*; do
@@ -68,18 +68,16 @@
             "rustfmt"
           ];
         };
-        openocd-stm = (
-          pkgs.openocd.overrideAttrs (oldAttrs: {
-            src = pkgs.fetchFromGitHub {
-              owner = "STMicroelectronics";
-              repo = "OpenOCD";
-              rev = "openocd-cubeide-v1.13.0";
-              sha256 = "a811402e19f0bfe496f6eecdc05ecea57f79a323879a810efaaff101cb0f420f";
-            };
-            version = "stm-cubeide-v1.13.0";
-            nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ pkgs.autoreconfHook ];
-          })
-        );
+        openocd-stm = pkgs.openocd.overrideAttrs (oldAttrs: {
+          src = pkgs.fetchFromGitHub {
+            owner = "STMicroelectronics";
+            repo = "OpenOCD";
+            rev = "openocd-cubeide-v1.13.0";
+            sha256 = "a811402e19f0bfe496f6eecdc05ecea57f79a323879a810efaaff101cb0f420f";
+          };
+          version = "stm-cubeide-v1.13.0";
+          nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ pkgs.autoreconfHook ];
+        });
         moneroTestsPatched = pkgs.runCommandCC "monero_trezor_tests" { } ''
           cp ${monero-tests} $out
           chmod +wx $out
@@ -96,78 +94,78 @@
             devTools ? false,
           }:
           with pkgs;
-          pkgs.mkShellNoCC (
-            rec {
-              name = "trezor-firmware-env";
-              nativeBuildInputs = lib.optionals (!isDarwin) [ pkgs.autoPatchelfHook ];
-              buildInputs = [
-                sdl3
-                sdl3-image
-                sdl2-compat # for running old emulators used in upgrade tests
-                SDL2_image # for running old emulators used in upgrade tests
-                bash
-                bloaty # for binsize
-                cargo-audit
-                cargo-vet
-                check
-                curl # for connect tests
-                editorconfig-checker
-                gcc-arm-embedded-13
-                gcc14
-                git
-                git-subrepo
-                gnumake
-                graphviz
-                libffi
-                libjpeg
-                libusb1
-                llvmPackages.clang
-                openssl
-                perl
-                pkg-config
-                ps
-                protobuf_31 # version needs to be <= than the one in pyproject.toml
-                pyright
-                python3
-                ruff
-                (mkBinOnlyWrapper rustNightly)
-                s5cmd # CI S3 upload
-                sccache
-                uv
-                wget
-                zlib
-                moreutils
-              ]
-              ++ lib.optionals fullDeps [
-                #bitcoind # for HWI tests which are currently disabled
-              ]
-              ++ lib.optionals (!isDarwin) [
-                procps
-                valgrind
-              ]
-              ++ lib.optionals (isDarwin) [
-                libiconv
-              ]
-              ++ lib.optionals devTools [
-                cmake
-                ninja
-                tio
-                shellcheck
-                crowdin-cli # for translations, pulls in openjdk
-                openocd-stm # compiled from source
-                # CI hardware tests:
-                uhubctl
-                socat
-                ffmpeg_7-headless
-                dejavu_fonts
-              ]
-              ++ lib.optionals (devTools && !isDarwin) [
-                gdb
-                kdePackages.kcachegrind
-                nrfutil # compiled from source
-                nrfconnect # compiled from source
-              ];
+          pkgs.mkShellNoCC ({
+            name = "trezor-firmware-env";
+            packages = [
+              sdl3
+              sdl3-image
+              sdl2-compat # for running old emulators used in upgrade tests
+              SDL2_image # for running old emulators used in upgrade tests
+              bash
+              bloaty # for binsize
+              cargo-audit
+              cargo-vet
+              check
+              curl # for connect tests
+              editorconfig-checker
+              gcc-arm-embedded-13
+              gcc14
+              git
+              git-subrepo
+              gnumake
+              graphviz
+              libffi
+              libjpeg
+              libusb1
+              llvmPackages.clang
+              openssl
+              perl
+              pkg-config
+              ps
+              protobuf_31 # version needs to be <= than the one in pyproject.toml
+              pyright
+              python3
+              ruff
+              (mkBinOnlyWrapper rustNightly)
+              s5cmd # CI S3 upload
+              sccache
+              uv
+              wget
+              zlib
+              moreutils
+            ]
+            ++ lib.optionals fullDeps [
+              #bitcoind # for HWI tests which are currently disabled
+            ]
+            ++ lib.optionals (!isDarwin) [
+              autoPatchelfHook
+              procps
+              valgrind
+            ]
+            ++ lib.optionals (isDarwin) [
+              libiconv
+            ]
+            ++ lib.optionals devTools [
+              cmake
+              ninja
+              tio
+              shellcheck
+              crowdin-cli # for translations, pulls in openjdk
+              openocd-stm # compiled from source
+              # CI hardware tests:
+              uhubctl
+              socat
+              ffmpeg_7-headless
+              dejavu_fonts
+            ]
+            ++ lib.optionals (devTools && !isDarwin) [
+              gdb
+              kdePackages.kcachegrind
+              nrfutil # compiled from source
+              nrfconnect # compiled from source
+            ];
 
+            env = rec {
               LD_LIBRARY_PATH = lib.makeLibraryPath [ libffi libjpeg libusb1 libressl ];
               DYLD_LIBRARY_PATH = LD_LIBRARY_PATH;
 
