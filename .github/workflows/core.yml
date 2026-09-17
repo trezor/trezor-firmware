@@ -47,6 +47,19 @@ jobs:
           echo asan=${{ '[\"noasan\"]' }} >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
+  core_build_tools_test:
+    name: Rust build-tool tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "cd core/embed && cargo test -p xtask -p xbuild"
+      - run: nix-shell --run "cd core/embed && cargo clippy -p xtask -p xbuild --all-targets -- -D warnings"
+
   core_firmware:
     name: Build firmware (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}${{ matrix.miniscript && ', miniscript' || '' }}${{matrix.n1w1 && ', n1w1' || '' }})
     runs-on: ubuntu-latest
