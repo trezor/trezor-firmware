@@ -121,7 +121,8 @@ static upload_status_t nrf_on_finish(image_upload_handler_t *base,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER;
   }
 
-  // 1. Founder commitment: leaf = H(0x00 || image) folds through the co-path to
+  // 1. Founder commitment: the leaf (H(0x00 || this device's role-bound slot
+  //    around the image hash)) folds through the co-path to
   //    the signature-verified modelRoot.
   if (nrf_image_verify_in_tree(image, h->image_len, h->co_path,
                                h->co_path_count, &h->model_root) != sectrue) {
@@ -130,8 +131,11 @@ static upload_status_t nrf_on_finish(image_upload_handler_t *base,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
   }
 
-  // 2. Cross-model guard: the image's model-id TLV must be THIS device (every
-  //    model's nRF shares modelRoot, so the fold alone does not pin the model).
+  // 2. Model-id TLV must name THIS device. Defence in depth since role binding:
+  //    the slot the fold is computed over already carries MODEL_INTERNAL_NAME,
+  //    so another model's image does not fold at all. What this still catches is
+  //    misissuance -- a foreign image signed into THIS model's tree, which folds
+  //    and which only the TLV separates (see the nrf_crossvalidate fixture).
   uint8_t model_id[NRF_IMAGE_MODEL_ID_LEN];
   if (!nrf_image_model_id(image, h->image_len, model_id) ||
       memcmp(model_id, MODEL_INTERNAL_NAME, NRF_IMAGE_MODEL_ID_LEN) != 0) {
@@ -159,8 +163,9 @@ static upload_status_t nrf_on_finish(image_upload_handler_t *base,
   // 4. Persist the descriptor (co-path) as the FINAL staging commit. The push
   //    itself is deferred to the boot-time resume driver (see the file header);
   //    writing the descriptor last means a half-staged image never presents as
-  //    valid. The nRF's own MCUboot Ed25519 check remains the authoritative
-  //    gate at push time.
+  //    valid. The nRF's own MCUboot remains the last gate at push time --
+  //    Ed25519 for a classic image, the founder SLH-DSA + Ed25519 pair for a
+  //    PQ-native one.
   if (nrf_staging_write_desc(h->image_len, h->co_path, h->co_path_count) !=
       sectrue) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
@@ -229,7 +234,7 @@ void nrf_ota_resume_boot(void) {
   boot_header_calc_merkle_root(cur, BOOTLOADER_START + cur->header_size,
                                &model_root);
 
-  // Founder commitment + cross-model guard against the INSTALLED root. A
+  // Founder commitment + model-id check against the INSTALLED root. A
   // stale/aborted/foreign descriptor (e.g. staged for a bootloader we did NOT
   // end up installing) will not fold -> discard and boot normally. This fold is
   // the coupling between the two durable flags (UCB armed / staging valid):
@@ -262,8 +267,8 @@ void nrf_ota_resume_boot(void) {
   // Idempotent, forward-only push over the link-independent GPIO
   // serial-recovery path. Skip if the live nRF already matches (resume after a
   // push that completed before the staging was cleared);
-  // nrf_update_with_progress retries internally and the nRF's own MCUboot
-  // Ed25519 check is the authoritative gate.
+  // nrf_update_with_progress retries internally and the nRF's own MCUboot is
+  // the last gate (Ed25519 classic, founder SLH-DSA + Ed25519 PQ-native).
   bool ok = true;
   if (nrf_update_required(image, image_len)) {
     ok = nrf_update_with_progress(image, image_len, nrf_resume_progress);

@@ -216,8 +216,9 @@ def sign_firmware_images(
             # leaf), values once the signature exists.
             nrf_image = nrf_tree.add_pq_placeholders(nrf_image)
         model_val = nrf_tree.model_leaf_value(bl)  # sizes model path -> stable leaf
-        # The nRF slot value is MCUboot's SIGNED REGION, not the whole image (the
-        # unprotected TLVs carry signatures -- see nrf_tree.nrf_leaf).
+        # The nRF slot value is the role-bound record around the hash of MCUboot's
+        # SIGNED REGION, not the whole image (the unprotected TLVs carry
+        # signatures -- see nrf_tree.nrf_leaf_value).
         model_root, model_proofs = nrf_tree.build_model_tree(
             [model_val, nrf_tree.nrf_leaf_value(nrf_image)]
         )
@@ -535,7 +536,8 @@ def main() -> None:
         assert firmware_module.read_manifest_proof(v["fw"]) == proof
 
     if nrf_info is not None:
-        # The nRF leaf (H(0x00 || image)) folded through its co-path must equal the
+        # The nRF leaf (H(0x00 || the role-bound slot over the image hash))
+        # folded through its co-path must equal the
         # signed modelRoot (== bl.merkle_root()). Mirrors the device install check.
         assert nrf_info["model_root"] == bytes(bl.merkle_root())
         print(

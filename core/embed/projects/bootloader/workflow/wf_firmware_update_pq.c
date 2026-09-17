@@ -809,10 +809,12 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   //     stream has already erased secmon and the front of the kernel. An abort
   //     here leaves a working bootloader over a firmware phase 2 must reinstall,
   //     which is the accepted cost of siting the scratch there (see
-  //     flash_layout_ucb.c). That the nRF's own MCUboot will accept the
-  //     (founder-signed) image is a BUILD invariant (the founder-tree nRF image is always a
-  //     valid MCUboot image), not a runtime abort. The nRF leaf is a peer under
-  //     model_root; an already-current nRF is skipped with no wire traffic; the
+  //     flash_layout_ucb.c). That the nRF's own MCUboot will accept the image is
+  //     NOT taken on trust: nrf_pq_gate re-checks at runtime, below, everything
+  //     that verifier will look at which the fold does not cover -- the
+  //     image-side proof, this release's signature records, and the absence of
+  //     rogue TLVs -- precisely so a push never erases a working nRF for an
+  //     image it would refuse. The nRF leaf is a peer under model_root; an already-current nRF is skipped with no wire traffic; the
   //     sub-stream suppresses its own Success. ---
   if (msg.has_nrf_length && msg.nrf_length > 0) {
     workflow_result_t nrf_res = workflow_nrf_ota_update(

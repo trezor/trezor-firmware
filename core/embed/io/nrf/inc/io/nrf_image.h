@@ -69,9 +69,14 @@ secbool nrf_image_verify_hash_in_tree(
  * boot header via boot_header_calc_merkle_root). No separate nRF signature --
  * the one boot-header signature over modelRoot covers the nRF leaf.
  *
- * The leaf is MCUboot's own image hash:
+ * The leaf is a 44-byte role-bound slot built around MCUboot's own image hash:
  *
- *     leaf = H(0x00 || SHA-256(header || payload || protected TLVs))
+ *     image_hash = SHA-256(header || payload || protected TLVs)
+ *     slot       = "TRZP" | model | kind | index | reserved(2) | image_hash
+ *     leaf       = H(0x00 || slot)
+ *
+ * model/kind/index come from THIS build, never from the image, so an image for
+ * another model or another co-processor slot does not fold here at all.
  *
  * Uniform for classic and PQ-native images -- no per-model branch, and a
  * malformed image is rejected. That hash stops at the protected TLVs, so the
@@ -81,9 +86,10 @@ secbool nrf_image_verify_hash_in_tree(
  * own MCUboot rejects leaves no valid app at all. See
  * nrf_image_verify_for_push.
  *
- * The caller MUST ALSO check the image's model id (MCUboot TLV) against the
- * device, because every model's nRF shares modelRoot so the fold alone does not
- * pin the model.
+ * The caller SHOULD ALSO check the image's model id (MCUboot TLV) against the
+ * device. Since role binding that is defence in depth -- the slot folded here
+ * carries this build's model, so a foreign model's image does not fold -- but it
+ * still separates a foreign image MISISSUED into this model's tree.
  *
  * @param image        the signed MCUboot image
  * @param image_len    its length in bytes

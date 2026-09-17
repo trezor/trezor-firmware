@@ -126,8 +126,9 @@ static uint16_t nrf_image_find_prot_tlv(const uint8_t* image, size_t image_len,
 /**
  * @brief Extract the 4-byte model id (TLV 0x00A3) from the PROTECTED area.
  *
- * Protected only: this is the cross-model guard, and the fold does not pin the
- * model, so an unprotected copy would be a model tag the attacker chose.
+ * Protected only: an unprotected copy would be a model tag the attacker chose.
+ * The fold itself does pin the model now (it is in the slot), so this is a
+ * second, independent statement of the same fact rather than the only one.
  *
  * @param image      the signed MCUboot image
  * @param image_len  its length in bytes
@@ -146,10 +147,12 @@ bool nrf_image_model_id(const uint8_t* image, size_t image_len,
   return true;
 }
 
-// MCUboot's own image hash IS the founder leaf value:
+// MCUboot's own image hash is what the founder leaf is built AROUND -- the leaf
+// itself is the 44-byte role-bound slot (see coproc_slot_t):
 //
 //     image_hash = SHA-256(header || payload || protected TLVs)
-//     leaf       = H(0x00 || image_hash)
+//     slot       = "TRZP" | model | kind | index | reserved(2) | image_hash
+//     leaf       = H(0x00 || slot)
 //
 // That range -- everything except the unprotected TLV area -- is exactly the
 // boundary the founder material needs: it signs modelRoot, so it cannot lie
@@ -254,9 +257,10 @@ static secbool nrf_image_parse(const uint8_t* image, size_t image_len,
 // derived from TLV types with the definition it was derived from. Committing a
 // collision-resistant hash commits the bytes, so nothing is weakened.
 //
-// Being 32 bytes, it is also what lets a device learn WHICH nRF a release
-// expects without holding the image: fold H(0x00 || hash) to modelRoot, then
-// compare against the live chip's reported hash.
+// A bare hash is also enough to learn WHICH nRF a release expects without
+// holding the image: rebuild the slot around the offered hash -- every other
+// field is this device's own -- fold it to modelRoot, then compare against the
+// live chip's reported hash.
 secbool nrf_image_hash(const uint8_t* image, size_t image_len,
                        uint8_t out[SHA256_DIGEST_LENGTH]) {
   nrf_image_layout_t layout;
@@ -277,14 +281,15 @@ secbool nrf_image_hash(const uint8_t* image, size_t image_len,
 // at OTA install -- there is NO separate nRF founder signature; the ONE
 // boot-header signature over modelRoot covers the nRF leaf.
 //
-// leaf = H(0x00 || mcuboot_image_hash(image)) -- see nrf_image_hash for
-// why the image is committed through its hash rather than a byte range.
+// leaf = H(0x00 || coproc_slot(model, kind, index, mcuboot_image_hash(image)))
+// -- see nrf_image_hash for why the image is committed through its hash rather
+// than a byte range, and coproc_slot_t for why the role fields are in the value.
 //
-// The nRF's own MCUboot image signature is verified by the nRF at boot. Because
-// every model's nRF hangs under the same modelRoot, the fold alone does NOT pin
-// an image to a model -- the caller MUST also check the image's model id
-// (MCUboot TLV) against the device (see the OTA workflow). Mirrors the
-// firmware-variant fold (firmware_manifest_authentic), one tree level up.
+// The nRF's own MCUboot image signature is verified by the nRF at boot. Since
+// role binding the slot carries this device's model, so an image built for
+// another model does not fold here -- the model-id TLV check in the OTA workflow
+// is defence in depth rather than the cross-model guard it used to be. Mirrors
+// the firmware-variant fold (firmware_manifest_authentic), one tree level up.
 secbool nrf_image_verify_in_tree(
     const uint8_t* image, size_t image_len, const merkle_proof_node_t* proof,
     size_t proof_count, const merkle_proof_node_t* trusted_model_root) {

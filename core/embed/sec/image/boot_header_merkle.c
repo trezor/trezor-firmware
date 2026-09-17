@@ -320,8 +320,8 @@ secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
 
 // Generic Merkle leaf hash H(0x00 || data). The firmware variant leaf
 // (boot_header_variant_leaf) is the manifest-specific case; this is the plain
-// leaf used for the nRF (over MCUboot's signed region) -- see
-// nrf_image_verify_in_tree.
+// leaf, used for the nRF over its 44-byte coproc_slot_t -- the image hash is a
+// FIELD of that slot, not the hashed input here. See nrf_image_verify_in_tree.
 void merkle_leaf_hash(const uint8_t* data, size_t len,
                       merkle_proof_node_t* out) {
   static const uint8_t prefix0[] = {0x00};
@@ -334,9 +334,9 @@ void merkle_leaf_hash(const uint8_t* data, size_t len,
 
 // Fold a MODEL-tree slot value up to modelRoot.
 //
-// A slot value is the 32 bytes a co-processor (or anything else sharing the
-// model tree) is committed by; this hashes it into a leaf and folds the
-// co-path. Nothing here knows what produced the value -- which is the point:
+// A slot value is the opaque byte string a co-processor (or anything else
+// sharing the model tree) is committed by -- for the nRF, the 44-byte role-bound
+// coproc_slot_t; this hashes it into a leaf and folds the co-path. Nothing here knows what produced the value -- which is the point:
 // every slot folds identically, so adding a second co-processor needs no new
 // fold.
 //

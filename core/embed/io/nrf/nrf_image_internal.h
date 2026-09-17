@@ -47,8 +47,8 @@
 #define NRF_MCUBOOT_TLV_INFO_MAGIC 0x6907U
 /** TLV-info magic marking the PROTECTED area (inside the image hash) */
 #define NRF_MCUBOOT_TLV_PROT_INFO_MAGIC 0x6908U
-/** SHA-256 over header + payload + protected TLVs; this value IS the model-tree
- *  slot value for an nRF image */
+/** SHA-256 over header + payload + protected TLVs; this value is the DIGEST
+ *  FIELD of an nRF image's model-tree slot, not the slot itself */
 #define NRF_MCUBOOT_TLV_IMAGE_HASH 0x10U
 /** Custom TLV: 4-byte model tag, e.g. "T3W1" (protected) */
 #define NRF_MCUBOOT_TLV_MODEL_ID 0x00A3U
@@ -88,8 +88,9 @@
  * @brief MCUboot's own image hash: SHA-256 over header + payload + protected
  * TLVs.
  *
- * This value IS the model-tree slot value for an nRF image, i.e. the founder
- * leaf's preimage.
+ * This value is the digest field of the nRF's 44-byte model-tree slot
+ * (coproc_slot_t); the founder leaf's preimage is that whole slot, not this
+ * hash on its own.
  *
  * @param image      the signed MCUboot image
  * @param image_len  its length in bytes

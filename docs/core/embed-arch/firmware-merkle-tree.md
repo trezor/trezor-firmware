@@ -257,13 +257,20 @@ signature over `modelRoot` already covers that slot.
 
 ### The leaf
 
-The slot value is MCUboot's *own* image hash — the SHA-256 it computes for itself
-and publishes in TLV `0x10`:
+The slot value is a 44-byte **role-bound record** built around MCUboot's *own*
+image hash — the SHA-256 it computes for itself and publishes in TLV `0x10`:
 
 ```
 image_hash = SHA256(header ‖ payload ‖ protected TLVs)
-leaf       = SHA256(0x00 ‖ image_hash)
+slot_value = "TRZP" ‖ model ‖ kind ‖ index ‖ reserved(2) ‖ image_hash   (44 B)
+leaf       = SHA256(0x00 ‖ slot_value)
 ```
+
+The role fields are what stop a slot being replayed into another position: the
+sorted-pair fold discards position, so `kind` and `index` have to live in the
+value. Both come from the verifier's own build configuration, never from the
+image — so an image belonging to another model, or to another co-processor slot
+on this one, computes a value this device never forms and simply does not fold.
 
 Uniform for every co-processor image, classic (Ed25519, T3W1) or PQ-native
 (founder, T3T2) — no per-model branch. MCUboot's hash range is exactly
@@ -275,9 +282,14 @@ private, and neither verifier hashes the image twice. Committing a
 collision-resistant hash commits the bytes, so this is no weaker than hashing the
 range directly.
 
-Because the value is a bare 32 bytes, it is foldable on its own: a device can
-establish *which* co-processor image a release expects without holding the image —
-fold `H(0x00 ‖ hash)` through the co-path and compare against `modelRoot`.
+The value is foldable from the hash alone: a device can establish *which*
+co-processor image a release expects without holding the image — rebuild the
+44-byte record around the offered hash, fold it through the co-path and compare
+against `modelRoot`. Everything but the hash comes from the device itself.
+
+The image's model-id TLV is still checked at install, but since role binding it
+is **defence in depth** rather than the cross-model guard: an image for another
+model no longer folds at all.
 
 ### Rollback floor (PQ-native only)
 
@@ -374,9 +386,11 @@ All four are covered by negative tests in `nrf_crossvalidate.c`, which assert
 land inside the staging area would otherwise pass unnoticed. Each test mutation is
 asserted to leave the leaf unchanged, so it really is invisible to the fold.
 
-> The nRF's own `pq_parse_layout` still clamps here rather than rejecting. That is
-> not exploitable, because its generic validate refuses the image anyway, but the
-> two should be aligned.
+> The nRF's own `pq_parse_layout` rejects an overrunning extent rather than
+> clamping it, matching invariant 1. The remaining asymmetry is on the STM side:
+> `nrf_image_find_unprot_tlv` still clamps. Not exploitable — the fold and the
+> exact-shape check surround it — but it is the one parser here that does not
+> follow the rule.
 
 ### Where it lives
 

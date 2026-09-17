@@ -53,7 +53,8 @@ def check(image: bytes) -> int:
         return 1
     prot_end = nrf_tree.mcuboot_prot_end(image)
     print(
-        f"image {len(image)} B; hashed range {prot_end} B (leaf = H(0x00 || that hash))"
+        f"image {len(image)} B; hashed range {prot_end} B "
+        "(leaf = H(0x00 || the role-bound slot over that hash))"
     )
 
     # MCUboot's own hash must match the protected region, or it rejects the image

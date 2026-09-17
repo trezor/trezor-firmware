@@ -48,11 +48,13 @@
  *   2. otherwise streams the image into NRF_STAGING_AREA (non-secure firmware
  *      scratch, capped short of STAGING_AREA so it can't erase the staged
  *      bootloader);
- *   3. founder-verifies it: leaf = H(0x00 || image) folded through `co_path`
- *      must equal `model_root`, AND the image's model-id TLV must equal THIS
- *      device (cross-model guard -- every model's nRF shares modelRoot);
- *   4. SMP-pushes the raw image to the nRF, whose own MCUboot Ed25519 check is
- *      the authoritative post-upload gate.
+ *   3. founder-verifies it: the leaf -- H(0x00 || the 44-byte role-bound slot
+ *      built from THIS device's model/kind/index and the image hash) -- folded
+ *      through `co_path` must equal `model_root`. The image's model-id TLV is
+ *      also compared against this device; since role binding that is defence in
+ *      depth, because a foreign model's slot no longer folds;
+ *   4. SMP-pushes the raw image to the nRF, whose own MCUboot is the last gate
+ *      (Ed25519 for a classic image, founder SLH-DSA + Ed25519 for PQ-native).
  *
  * @param iface        Protobuf I/O (also used to send failure messages).
  * @param model_root   The signature-verified modelRoot the boot header commits

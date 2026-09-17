@@ -800,16 +800,18 @@ _Static_assert(sizeof(coproc_slot_t) == 44,
 /**
  * @brief Fold a MODEL-tree slot value up to `trusted_model_root`.
  *
- * A slot value is the 32 bytes something sharing the model tree is committed by
- * -- today a co-processor's firmware image hash. This hashes it into a leaf and
- * folds the co-path; it knows nothing about what produced the value, so every
- * slot folds the same way and a second co-processor needs no new fold.
+ * A slot value is the byte string something sharing the model tree is committed
+ * by -- today a co-processor's 44-byte coproc_slot_t. This hashes it into a leaf
+ * and folds the co-path; it knows nothing about what produced the value, so
+ * every slot folds the same way and a second co-processor needs no new fold.
  *
- * A passing fold proves founder-commitment, NOT identity: every model's slot
- * hangs under the same modelRoot. Callers that need identity must pin it
- * separately.
+ * A passing fold proves founder-commitment for the value AS BUILT. Identity
+ * comes from what the caller put IN the value: coproc_slot_t carries model,
+ * kind and index, all from the verifier's own build, so a slot for another model
+ * or another co-processor position cannot fold here. A caller folding a bare
+ * digest has no such binding and must pin identity separately.
  *
- * @param slot_value   the committed 32-byte value
+ * @param slot_value   the committed value (coproc_slot_t for a co-processor)
  * @param proof        co-path from the slot up to modelRoot
  * @param proof_count  number of co-path nodes (bound by
  * MODEL_TREE_MAX_PROOF_NODES)

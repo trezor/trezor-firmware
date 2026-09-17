@@ -6,7 +6,9 @@ separate nRF signature. On T3W1 the nRF's own MCUboot (Ed25519) is unchanged;
 this layer is the STM-side founder gate that verifies an nRF image against the
 signed tree before pushing it (raw) to the nRF over SMP serial recovery.
 
-Leaf = H(0x00 || mcuboot_image): the leaf commits the MCUboot image **directly**,
+Leaf = H(0x00 || coproc_slot): the leaf commits a 44-byte role-bound record
+("TRZP" | model | kind | index | reserved | mcuboot_image_hash), so it names the
+image **directly**,
 so there is no separate nRF header to keep in sync -- the model id, version and
 hash already live in the image (imgtool header + custom TLV 0x00A3 = model tag,
 produced by nordic/trezor/scripts/build_sign_flash.sh). This is also forward-
@@ -16,7 +18,7 @@ just changes the committed bytes; the tree mechanism is unchanged.
 Tree shape (prepared for MULTIPLE models), one signed root:
 
     modelRoot
-    ├── <model A> STM leaf (its boot header) ├── <model A> nRF leaf = H(0x00 || A_image)
+    ├── <model A> STM leaf (its boot header) ├── <model A> nRF leaf = H(0x00 || slot(A))
     ├── <model B> STM leaf                   ├── <model B> nRF leaf
     └── ... padded to 2^MODEL_TREE_DEPTH slots
 
@@ -26,10 +28,11 @@ its own co-path. The device folds nrf_leaf + co-path -> modelRoot.
 FIXED DEPTH keeps every co-path MODEL_TREE_DEPTH nodes long, so the boot header's
 auth padding (hence the model leaf) does not depend on how many models exist.
 
-hw_model BINDING IS LOAD-BEARING: every model's nRF is under the same modelRoot,
-so folding alone does not pin an image to a model -- another model's nRF folds
-fine. The model id (TLV 0x00A3) read from the image and checked on-device is what
-prevents a cross-model install.
+hw_model BINDING IS LOAD-BEARING, and since role binding it lives in the SLOT:
+the 44-byte value carries the model, so another model's nRF computes a different
+slot and does not fold at all. The model id (TLV 0x00A3) read from the image and
+checked on-device is now a second statement of the same fact -- what it still
+catches on its own is a foreign image MISISSUED into this model's tree.
 """
 
 from __future__ import annotations
@@ -255,7 +258,8 @@ def nrf_leaf_value(image: bytes, index: int = 0) -> bytes:
 
 
 def nrf_leaf(image: bytes) -> bytes:
-    """The nRF's model-tree leaf = H(0x00 || mcuboot_image_hash(image))."""
+    """The nRF's model-tree leaf = H(0x00 || nrf_leaf_value(image)) -- the
+    44-byte role-bound slot, NOT the bare image hash."""
     return merkle_tree.leaf_hash(nrf_leaf_value(image))
 
 
@@ -343,9 +347,11 @@ def parse_nrf_ota(artifact: bytes) -> tuple[list[bytes], bytes]:
 
 def verify_nrf_ota(model_root: bytes, artifact: bytes, device_model_id: bytes) -> dict:
     """Host mirror of the device install check (no nRF signature):
-    1. leaf = H(0x00 || founder-covered range) + co-path folds to the (verified)
+    1. leaf = H(0x00 || the role-bound slot over the founder-covered range) +
+       co-path folds to the (verified)
        modelRoot -- the range excludes founder material, if any (see nrf_leaf),
-    2. the image's model-id TLV matches THIS device (cross-model guard)."""
+    2. the image's model-id TLV matches THIS device (defence in depth since
+       role binding; catches misissuance into this model's tree)."""
     co_path, image = parse_nrf_ota(artifact)
     if merkle_tree.evaluate_proof(nrf_leaf_value(image), co_path) != model_root:
         raise ValueError("nRF image leaf + co-path does not fold to modelRoot")
@@ -377,7 +383,8 @@ def _fake_mcuboot_image(model_tag: bytes, body: bytes, founder: bool = False) ->
     record set exactly right matters because the per-scheme shape whitelist demands
     EXACTLY these and nothing else.
 
-    Both shapes are needed. The leaf is the same for both (H(0x00 || image hash)),
+    Both shapes are needed. The leaf rule is the same for both (H(0x00 || the
+    role-bound slot around the image hash)),
     but the unprotected area differs, and it is the area that the per-scheme shape
     whitelist and acceptance predicate act on.
     """
@@ -817,7 +824,7 @@ def _demo(bl_path: str, img_path: str) -> None:
     print(
         f"image model_id={mcuboot_model_id(image)!r} version={mcuboot_version(image)}"
         f"  hashed range {mcuboot_prot_end(image)}/{len(image)} B"
-        " (leaf = H(0x00 || that hash))"
+        " (leaf = H(0x00 || the role-bound slot over that hash))"
     )
     print(
         f"nRF OTA artifact: {len(ota)} B  (image {len(image)} B + {MODEL_TREE_DEPTH}-node co-path, no header)"
