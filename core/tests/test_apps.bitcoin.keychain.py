@@ -9,6 +9,8 @@ from trezor.wire import context
 from apps.bitcoin.keychain import (
     _get_coin_by_name,
     _get_keychain_for_coin,
+    address_n_to_name,
+    address_n_to_name_or_unknown,
     validate_path_against_script_type,
     validate_xpub_path_against_script_type,
     with_keychain,
@@ -218,6 +220,114 @@ class TestValidateXpubPath(unittest.TestCase):
         # A pattern with no hardened component has no export point, so the
         # root xpub is never exportable this way.
         self.assertFalse(is_export_point([], InputScriptType.SPENDADDRESS))
+
+
+class TestAccountNames(unittest.TestCase):
+    """The 45'-rooted multisig schemes, at their export points and leaves."""
+
+    def _name(self, address_n, script_type, account_level=False):
+        coin = _get_coin_by_name("Bitcoin")
+        return address_n_to_name(
+            coin, address_n, script_type, account_level=account_level
+        )
+
+    def test_export_points(self):
+        from trezor.enums import InputScriptType
+
+        # The cosigner node, shared by BIP-45 and Casa, under either encoding.
+        for script_type in (
+            InputScriptType.SPENDADDRESS,
+            InputScriptType.SPENDP2SHWITNESS,
+        ):
+            self.assertEqual(
+                self._name([H_(45)], script_type, account_level=True), "Multisig"
+            )
+
+        # Casa's deeper export point, and Unchained's, whose account level is
+        # hardened and so numbered like any other account.
+        self.assertEqual(
+            self._name(
+                [H_(45), 0, 0], InputScriptType.SPENDP2SHWITNESS, account_level=True
+            ),
+            "Multisig",
+        )
+        self.assertEqual(
+            self._name(
+                [H_(45), H_(0), H_(1)],
+                InputScriptType.SPENDADDRESS,
+                account_level=True,
+            ),
+            "Multisig #2",
+        )
+
+    def test_leaves_are_not_named(self):
+        """Only the export points are named; a leaf keeps its raw path."""
+        from trezor.enums import InputScriptType
+
+        self.assertIsNone(
+            self._name([H_(45), 0, 0, 0, 0], InputScriptType.SPENDP2SHWITNESS)
+        )
+        self.assertIsNone(self._name([H_(45), 0, 0, 0], InputScriptType.SPENDADDRESS))
+        self.assertIsNone(
+            self._name(
+                [H_(45), H_(0), H_(0), 1000000, 0, 0], InputScriptType.SPENDWITNESS
+            )
+        )
+
+    def test_other_names_do_not_move(self):
+        """The export-point match must agree with the old truncation."""
+        from trezor.enums import InputScriptType
+
+        self.assertEqual(
+            self._name(
+                [H_(44), H_(0), H_(0)], InputScriptType.SPENDADDRESS, account_level=True
+            ),
+            "Legacy #1",
+        )
+        self.assertEqual(
+            self._name([H_(84), H_(0), H_(1), 0, 0], InputScriptType.SPENDWITNESS),
+            "SegWit #2",
+        )
+        self.assertEqual(
+            self._name(
+                [H_(10025), H_(0), H_(0), H_(1)],
+                InputScriptType.SPENDTAPROOT,
+                account_level=True,
+            ),
+            "Coinjoin",
+        )
+        # A leaf is not an account node and a script type still has to match.
+        self.assertIsNone(
+            self._name(
+                [H_(44), H_(0), H_(0), 0, 0],
+                InputScriptType.SPENDADDRESS,
+                account_level=True,
+            )
+        )
+        self.assertIsNone(
+            self._name([H_(45), 0, 0, 0, 0], InputScriptType.SPENDWITNESS)
+        )
+
+    def test_or_unknown_falls_back_to_the_account_node(self):
+        from trezor.enums import InputScriptType
+
+        coin = _get_coin_by_name("Bitcoin")
+        self.assertEqual(
+            address_n_to_name_or_unknown(
+                coin, [H_(45)], InputScriptType.SPENDP2SHWITNESS
+            ),
+            "BTC Multisig",
+        )
+        self.assertEqual(
+            address_n_to_name_or_unknown(
+                coin, [H_(44), H_(0), H_(0)], InputScriptType.SPENDADDRESS
+            ),
+            "BTC Legacy #1",
+        )
+        self.assertEqual(
+            address_n_to_name_or_unknown(coin, [], InputScriptType.SPENDADDRESS),
+            "Unknown path",
+        )
 
 
 class TestSignMessageBip48(TestCaseWithContext):
