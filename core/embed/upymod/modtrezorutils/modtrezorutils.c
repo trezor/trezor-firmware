@@ -880,6 +880,8 @@ static const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether Miniscript is supported."""
 /// USE_N1W1: bool
 /// """Whether N1W1 is supported."""
+/// USE_AES_GCM: bool
+/// """Whether the AES-GCM is supported."""
 /// MODEL: str
 /// """Model name."""
 /// MODEL_FULL_NAME: str
@@ -1011,6 +1013,11 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_N1W1), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_N1W1), mp_const_false},
+#endif
+#if USE_AES_GCM
+    {MP_ROM_QSTR(MP_QSTR_USE_AES_GCM), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_AES_GCM), mp_const_false},
 #endif
     {MP_ROM_QSTR(MP_QSTR_zero_unused_stack),
      MP_ROM_PTR(&mod_trezorutils_zero_unused_stack_obj)},
