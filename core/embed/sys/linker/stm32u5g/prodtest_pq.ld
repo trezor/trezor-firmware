@@ -1,15 +1,10 @@
 ENTRY(reset_handler)
 
-/* Merkle-tree layout (pq_secure_boot feature): prodtest is a single secure module
-   (its own variant). The firmware manifest ("firmware directory") occupies
-   FW_MANIFEST_REGION at the image start, before the code. This is prodtest.ld
-   with ONLY the FLASH header layout swapped to the tree format (the manifest
-   replacing the legacy vendor/image/secmon headers); the RAM layout, stack and
-   prodtest-specific sections are unchanged. */
+/* Merkle-tree layout: prodtest is a single module, preceded by the manifest
+   region. Same as prodtest.ld apart from the FLASH header layout. */
 FW_MANIFEST_REGION = 0x400;
-/* Smart-hashing chunk size stamped into the manifest entry by manifest_header.S
-   (the code_hash chain folds chunks of this size; the last chunk may be partial).
-   NOT a layout/padding constant. Must match FW_CHUNK_SIZE in sec/boot_header.h. */
+/* Smart-hashing chunk size stamped into the manifest entry; not a padding
+   constant. Must match FW_CHUNK_SIZE in sec/boot_header.h. */
 FW_CHUNK_SIZE = 0x2000;
 
 MEMORY {
@@ -34,20 +29,15 @@ _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-/* Tree module code size -- what the manifest entry's size / code_hash cover:
-   everything after the manifest region. Mirrors firmware_pq.ld. */
+/* Module code size covered by the manifest entry; mirrors firmware_pq.ld. */
 _codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data);
 
-/* The single prodtest module's code region, self-described by the manifest
-   entry (emitted by manifest_header.S). There is no per-module header. */
+/* The single module's code region, for the manifest_header.S entry. */
 _manifest_module_addr = ADDR(.padding) - FIRMWARE_START;
 _manifest_module_size = _codelen;
 
 SECTIONS {
-  /* Firmware manifest ("firmware directory") at the image start -- prodtest's
-     single-module variant leaf (see manifest_header.S). Padded to
-     FW_MANIFEST_REGION there; the entry's addr/size come from manifest_header.S
-     and the post-build step fills its code_hash. */
+  /* Manifest, padded to FW_MANIFEST_REGION by manifest_header.S. */
   .manifest : ALIGN(CODE_ALIGNMENT) {
     KEEP(*(.manifest));
   } >FLASH AT>FLASH

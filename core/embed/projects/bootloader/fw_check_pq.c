@@ -20,10 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-// Must sit at TOP LEVEL, not inside any #ifdef: it #undefs the model's flash
-// address constants so they resolve to the emulator's mapped addresses, and a
-// use further down the file that is NOT under the same condition would silently
-// get the device constant back -- a pointer to nothing on the host.
+// Must stay at top level: it #undefs the model's flash address constants.
 #ifdef TREZOR_EMULATOR
 #include "emulator.h"
 #endif
@@ -33,21 +30,13 @@
 #include "fw_check.h"
 #include "version_check.h"
 
-// Boot-warning logo for an unofficial (custom) firmware, embedded by build.rs
-// from THIS model's vendorheader/vendor_unsafe.toif -- so it is already the
-// right size and format for this model's UI (see the comment there). The tree
-// layout has no vendor header to carry a logo, and the unofficial variant is
-// the only one that ever draws this screen, so the bootloader owns the asset.
+// Boot-warning logo for unofficial firmware, embedded by build.rs from this
+// model's vendorheader/vendor_unsafe.toif.
 extern const void rodata_vendor_unsafe_start;
 extern const void rodata_vendor_unsafe_end;
 
-// Vendor identity string for the tree layout (which has no vendor header). Used
-// by every place the bootloader surfaces a vendor name: the boot warning, the
-// intro screen, the install confirm and the Features `fw_vendor`. A custom
-// (unofficial) image gets a loud UNSAFE marker; an official image is named by
-// its variant. FIH: the caller passes is_official, and anything that is not a
-// POSITIVE `sectrue` maps to the UNSAFE string -- a glitched/zeroed verdict can
-// only ever over-warn, never present unofficial firmware as a trusted vendor.
+// Vendor string for the tree layout (no vendor header). FIH: anything but a
+// positive is_official maps to the UNSAFE string.
 const char* tree_vendor_str(fw_variant_sec_t variant, secbool is_official,
                             size_t* out_len) {
   static const char VENDOR_UNSAFE[] = "UNSAFE, DO NOT USE!";
@@ -56,17 +45,15 @@ const char* tree_vendor_str(fw_variant_sec_t variant, secbool is_official,
   static const char VENDOR_BITCOIN_ONLY[] = "Trezor Bitcoin-only";
   const char* s;
   if (is_official != sectrue) {
-    // Custom/unofficial -- loud warning, never a trusted name.
     s = VENDOR_UNSAFE;
   } else if (variant == FW_VARIANT_SEC_PRODTEST) {
-    // Founder-signed but factory-only -- must never be used in the field.
     s = VENDOR_PRODTEST;
   } else if (variant == FW_VARIANT_SEC_BITCOIN_ONLY) {
     s = VENDOR_BITCOIN_ONLY;
   } else if (variant == FW_VARIANT_SEC_UNIVERSAL) {
     s = VENDOR_UNIVERSAL;
   } else {
-    // FIH: unknown / NONE variant -> unsafe, never a silent "Trezor".
+    // FIH: unknown / NONE variant -> unsafe.
     s = VENDOR_UNSAFE;
   }
   *out_len = strlen(s);
@@ -74,8 +61,7 @@ const char* tree_vendor_str(fw_variant_sec_t variant, secbool is_official,
 }
 
 secbool firmware_verify_tree(firmware_tree_info_t* info) {
-  // The trusted firmware_root comes from our own boot header, which the
-  // boardloader has already verified. It commits to the firmware tree.
+  // firmware_root comes from our own boardloader-verified boot header.
   const boot_header_auth_t* bl = boot_header_auth_get(BOOTLOADER_START);
   if (bl == NULL) {
     return secfalse;
@@ -84,11 +70,7 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
   memcpy(trusted_root.bytes, bl->firmware_root.bytes,
          sizeof(trusted_root.bytes));
 
-  // The manifest ("firmware directory") is at the firmware region start. It is
-  // the variant leaf (H(0x00 || manifest)); firmware_verify_manifest folds it
-  // up to firmware_root, then verifies each module's code against its
-  // code_hash. The module set/roles/layout come from the (authenticated)
-  // manifest, so this does not hardcode a module table.
+  // The manifest at the firmware region start is the variant leaf.
   const firmware_manifest_t* manifest =
       (const firmware_manifest_t*)(uintptr_t)FIRMWARE_START;
   if (manifest->magic != FW_MANIFEST_MAGIC) {
@@ -99,12 +81,8 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
     return secfalse;
   }
 
-  // Firmware Merkle proof: the co-path folding this device's installed variant
-  // leaf up to the signed firmware_root. It is embedded in the firmware image's
-  // manifest region, right after the manifest (self-contained image -- nothing
-  // in the boot header). A node_count of 0 (single-variant tree) is an identity
-  // fold, so this stays backward-compatible. Bounds-checked against the
-  // on-flash region size FW_MANIFEST_REGION (and FW_MANIFEST_PROOF_MAX_NODES).
+  // Per-variant proof embedded right after the manifest; 0 nodes is an
+  // identity fold.
   const merkle_proof_node_t* fw_proof = NULL;
   size_t fw_proof_count = 0;
   if (sectrue != firmware_manifest_read_proof(manifest, FW_MANIFEST_REGION,
@@ -112,11 +90,8 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
     return secfalse;
   }
 
-  // Bound the module regions BEFORE hashing them: firmware_verify_manifest
-  // reads entry->size bytes at FIRMWARE_START + entry->addr, and for a CUSTOM
-  // variant the app size is not founder-authenticated (zeroed-for-fold) -- a
-  // tampered on-flash size still folds, so without this an out-of-bounds read
-  // could occur on every boot. The same check runs at install (phases 1 + 2).
+  // Bound the module regions before hashing: the CUSTOM variant's app size is
+  // not founder-authenticated. Same check as install phases 1 + 2.
   if (sectrue != firmware_manifest_layout_valid(manifest, FIRMWARE_MAXSIZE)) {
     return secfalse;
   }
@@ -127,20 +102,10 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
     return secfalse;
   }
 
-  // Variant pin: the authenticated running variant MUST equal the variant the
-  // device is provisioned as -- the write-protected boot-header firmware_type,
-  // which IS the storage-domain identity (see boot_header firmware_type). This
-  // couples "which variant runs" to "which storage domain it decrypts": a
-  // genuine but DIFFERENT variant image (e.g. a factory-privileged prodtest
-  // swapped onto a universal device) folds to firmware_root, yet must NOT boot
-  // against another domain's seed. The firmware Merkle proof now rides in the
-  // (firmware-controlled) image, so this write-protected byte is what pins the
-  // device to its one installed variant -- re-establishing the coupling the
-  // boot-header proof used to provide, but stated directly on the
-  // storage-domain authority. FIH: fail-closed -- an unprovisioned
-  // (firmware_type NONE or INVALID) or mismatched device stays unbootable
-  // until a real install stamps the matching variant (so a bare/direct-flashed
-  // image also does not run until installed).
+  // Variant pin: the running variant must equal the write-protected boot
+  // header firmware_type (the storage-domain identity), or a genuine image of
+  // another variant could boot against this domain's seed. FIH: fail closed on
+  // an unprovisioned (NONE / INVALID) or mismatched device.
   const boot_header_unauth_t* unauth = boot_header_unauth_get(bl);
   if (unauth == NULL ||
       fw_variant_is_provisioned(unauth->firmware_type) != sectrue ||
@@ -148,32 +113,20 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
     return secfalse;
   }
 
-  // Variant, version and entry point from the (now-verified) manifest. The
-  // variant and firmware version are authenticated manifest fields (part of the
-  // variant leaf that folded to firmware_root); for the CUSTOM variant only the
-  // app code_hash was zeroed in that fold, so the variant field itself is
-  // bound. Official ONLY on a POSITIVE is_official on that authenticated
-  // variant
-  // -- custom / none / unknown fall through to not-official (FIH: a glitched or
-  // unexpected variant can never fabricate an official verdict).
+  // Variant and version are authenticated manifest fields (the CUSTOM fold
+  // zeroes only the app code_hash). FIH: official only on a positive check.
   info->variant = manifest->firmware_variant;
   info->is_official = fw_variant_is_official(info->variant);
   info->version = (uint32_t)manifest->firmware_version[0] |
                   ((uint32_t)manifest->firmware_version[1] << 8) |
                   ((uint32_t)manifest->firmware_version[2] << 16) |
                   ((uint32_t)manifest->firmware_version[3] << 24);
-  // The secure entry point is the module the (authenticated) manifest flags
-  // with FW_MANIFEST_ENTRY_FLAG_BOOT -- the secmon for firmware variants, the
-  // prodtest module for prodtest. Selecting it by an explicit flag (not by
-  // module type or array position) keeps entry selection decoupled from the
-  // type enum. Exactly one entry must be flagged; anything else is a malformed
-  // manifest -> reject.
+  // Exactly one entry must carry FW_MANIFEST_ENTRY_FLAG_BOOT.
   info->entry_address = 0;
   size_t boot_entries = 0;
   for (size_t i = 0; i < manifest->module_count; i++) {
     const firmware_manifest_entry_t* e = &manifest->entries[i];
     if ((e->flags & FW_MANIFEST_ENTRY_FLAG_BOOT) != 0) {
-      // entry->addr points directly at the module code (no per-module header).
       info->entry_address = FIRMWARE_START + e->addr;
       boot_entries++;
     }
@@ -187,21 +140,9 @@ secbool firmware_verify_tree(firmware_tree_info_t* info) {
 void fw_check(fw_check_info_t* info) {
   memset(info, 0, sizeof(*info));
 
-  // header_present == the device is provisioned. Decided from the boot header's
-  // firmware_type (the provisioning marker), NOT the firmware image: a fresh /
-  // bare bootloader carries FW_VARIANT_SEC_NONE and reads as unprovisioned ->
-  // empty-device (wipe-on-setup). A zero-filled or torn field lands on
-  // FW_VARIANT_SEC_INVALID, which is equally unprovisioned but deliberately a
-  // DIFFERENT value -- garbage must not earn the empty-device auto-confirm.
-  // Once an install stamps the real variant, a subsequently absent or
-  // mid-update (e.g. power loss) firmware still reads as provisioned ->
-  // bootloader menu / reinstall, keeping storage. firmware_type lives in the
-  // write-protected boot header unauth region (only the bootloader writes it)
-  // and is carried across a bootloader update by the UCB hash.
-  //
-  // So "corrupted" (provisioned, firmware does not verify) versus "empty"
-  // (unprovisioned) is decided ENTIRELY here, by one word of the installed
-  // header -- never by whether a firmware image happens to be present.
+  // header_present == provisioned, decided solely by the boot header's
+  // firmware_type (NONE and INVALID both read as unprovisioned), never by
+  // whether a firmware image is present.
   const boot_header_auth_t* bh = boot_header_auth_get(BOOTLOADER_START);
   const boot_header_unauth_t* unauth =
       (bh != NULL) ? boot_header_unauth_get(bh) : NULL;
@@ -211,11 +152,8 @@ void fw_check(fw_check_info_t* info) {
           ? sectrue
           : secfalse;
 
-  // A provisioned device has a vendor identity for the UI / Features even when
-  // its firmware is absent or invalid. Derive it from the (write-protected,
-  // trusted) firmware_type byte, which IS the authenticated variant: an
-  // official variant names the image; the custom variant (or any non-official
-  // value) maps to the UNSAFE marker via the positive is_official check.
+  // Vendor identity from the trusted firmware_type, even without a valid
+  // firmware.
   if (info->header_present == sectrue) {
     const fw_variant_sec_t variant = unauth->firmware_type;
     secbool is_official = fw_variant_is_official(variant);
@@ -223,8 +161,7 @@ void fw_check(fw_check_info_t* info) {
         tree_vendor_str(variant, is_official, &info->ui.vendor_str_len);
   }
 
-  // Full verification (role-binding + authenticity + per-module code integrity)
-  // -> bootable. Only a verified firmware contributes its (trusted) version.
+  // Only a verified firmware contributes its version.
   firmware_tree_info_t tree = {0};
   if (sectrue == firmware_verify_tree(&tree)) {
     info->firmware_present = sectrue;
@@ -236,36 +173,18 @@ void fw_check(fw_check_info_t* info) {
 void fw_run_prepare(fw_run_info_t* info) {
   memset(info, 0, sizeof(*info));
 
-  // Verify the module tree (secmon + kernel+coreapp) against the firmware_root
-  // signed into our own boot header.
   firmware_tree_info_t fw_tree = {0};
   ensure(firmware_verify_tree(&fw_tree), "Firmware is corrupted");
 
-  // Single downgrade counter (bootloader monotonic) vs the signed boot header.
   const boot_header_auth_t* bl = boot_header_auth_get(BOOTLOADER_START);
   ensure((bl != NULL) * sectrue, "Invalid boot header");
   ensure(check_bootloader_min_version(bl->monotonic_version),
          "Firmware downgrade protection");
 
-  // Official iff the kernel+coreapp matched the founder manifest. A custom
-  // (unofficial) firmware -- installed only on an unlocked bootloader -- runs
-  // unprivileged with a boot warning. (The custom flag is authenticated via the
-  // write-protected boot header firmware_type; see firmware_verify_tree.)
-  // fw_tree.is_official already carries the safe default (secfalse unless the
-  // manifest verified strictly); the `== sectrue` gates below reject any
-  // glitch.
   const secbool is_official = fw_tree.is_official;
 
-  // FIH: assume UNOFFICIAL and boot in the fully-restricted, fully-warned
-  // state. No secret/provisioning access, runtime-limited, and the
-  // untrusted-image warning (red styling, a visible countdown, a required
-  // click) -- the legacy path derives the warning fields from the vendor
-  // header's vtrust flags; the tree layout has no vendor header, so set them
-  // explicitly. Every field is phrased so that secfalse is the safe answer,
-  // which the memset above has already written; only a POSITIVE determination
-  // that the kernel+coreapp matched the founder manifest raises any of them, so
-  // a skipped or glitched check leaves the safe path -- never a silent official
-  // boot, and never a warning drawn-and-dismissed in one frame.
+  // FIH: start fully restricted and fully warned (the tree layout has no
+  // vtrust flags); only a positive official verdict raises anything.
   info->secret_run_access = secfalse;
   info->provisioning_access = secfalse;
   info->allow_unlimited_run = secfalse;
@@ -277,26 +196,20 @@ void fw_run_prepare(fw_run_info_t* info) {
   info->ui.version = fw_tree.version;
   info->ui.vendor_str =
       tree_vendor_str(fw_tree.variant, is_official, &info->ui.vendor_str_len);
-  // Same FIH direction as the rest of this block: the UNSAFE logo is the
-  // default, so a skipped/glitched official verdict can only over-warn.
+  // UNSAFE logo is the default; a glitched verdict can only over-warn.
   info->ui.vendor_img = (const uint8_t*)&rodata_vendor_unsafe_start;
   info->ui.vendor_img_len = (const uint8_t*)&rodata_vendor_unsafe_end -
                             (const uint8_t*)&rodata_vendor_unsafe_start;
 
-  // Positively official -> grant privileges and clear the warning.
   if (is_official == sectrue) {
     info->secret_run_access = sectrue;
-    // Ternary (not `* sectrue`): a glitched comparison can make multiplication
-    // yield GARBAGE (neither sectrue nor secfalse); the ternary always emits a
-    // clean secbool, so this privilege gate can't leak a value a `!= secfalse`
-    // consumer would read as granted.
+    // FIH: ternary, not `* sectrue`, so a glitched compare cannot yield a
+    // garbage non-secfalse value.
     info->provisioning_access =
         (fw_tree.variant == FW_VARIANT_SEC_PRODTEST) ? sectrue : secfalse;
     info->allow_unlimited_run = sectrue;
     info->no_warning = sectrue;
     info->ui.no_red = sectrue;
-    // Official images never draw the warning screen; don't leave the UNSAFE
-    // logo dangling in the struct for a future consumer to pick up.
     info->ui.vendor_img = NULL;
     info->ui.vendor_img_len = 0;
     info->warn_delay = 0;

@@ -524,43 +524,24 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
 }
 #endif  // KERNEL_MODE
 
-// Gated on the SCHEME, not on the boot-header machinery.
-// boot_header_merkle.c is compiled for every `boot_ucb` model (see
-// sec/image/build.rs), so keying this off USE_BOOT_UCB would leave the parser
-// live in firmware that cannot install a Merkle-tree release at all: T3W1
-// declares boot_ucb independently of pq_secure_boot and is built BOTH ways
-// during the transition.
-//
-// A legacy build that parsed a tree preamble would go on to pass the vendor and
-// version checks -- the variant's display name matches the legacy vendor
-// string, and the offered release is newer -- then show the confirmation screen
-// and reboot, only for the legacy bootloader to refuse a consent digest it
-// cannot recompute. Refusing to parse it here turns that into an immediate
-// "Invalid firmware header.", before the user is asked and before any reboot.
+// Gated on the scheme, not on USE_BOOT_UCB: T3W1 declares boot_ucb with and
+// without pq_secure_boot, and a legacy build must reject a tree preamble here
+// rather than after the confirm screen and reboot.
 #if defined(PQ_SECURE_BOOT) && !defined(USE_BOOT_UCB)
 #error "pq_secure_boot needs boot_ucb (boot header is staged via the UCB)"
 #endif
 
 #ifdef PQ_SECURE_BOOT
 
-// Merkle-tree layout: `header` is a boot header PREFIX (authenticated part +
-// Merkle proof, WITHOUT the ~15.8 KB of signatures) immediately followed by the
-// firmware manifest region. It is exactly the preimage of the interaction-less
-// upgrade consent digest, so the host sends only a few hundred bytes.
-//
-// Runs UNPRIVILEGED, over host-supplied bytes, and that is deliberate: it holds
-// no secrets and reads no flash. The boot header SIGNATURE is NOT checked --
-// verifying it needs the new bootloader CODE, which only the bootloader ever
-// receives. So this is self-consistency (does this manifest belong to the
-// offered release?), not authenticity. A forged prefix+manifest pair is
-// displayed and then rejected by the bootloader, which recomputes the digest
-// itself; the cost is a wasted confirmation, never a bad install.
+// Merkle-tree layout: `header` is a boot header PREFIX (auth part + Merkle
+// proof, no signatures) followed by the firmware manifest region -- the
+// consent-digest preimage. Runs unprivileged over host bytes; the signature is
+// NOT checked (that needs the bootloader code), so this is self-consistency,
+// not authenticity -- the bootloader recomputes the digest before installing.
 static secbool check_tree_preamble(const uint8_t *preamble, size_t len,
                                    firmware_header_info_t *info) {
-  // The prefix is self-describing (auth_size, then the proof's node_count), so
-  // it locates the manifest that follows without a length being transmitted --
-  // and it locates it the SAME way the bootloader will, so the two digests
-  // agree.
+  // The prefix is self-describing, so the manifest is located the same way the
+  // bootloader will locate it.
   size_t prefix_len = 0;
   if (sectrue != boot_header_prefix_extent(preamble, len, &prefix_len)) {
     return secfalse;
@@ -587,8 +568,8 @@ static secbool check_tree_preamble(const uint8_t *preamble, size_t len,
     return secfalse;
   }
 
-  // Fold the variant leaf through the embedded co-path and require the prefix's
-  // own firmware_root. Reads no module code, so the bodies need not be present.
+  // Fold the variant leaf through the embedded co-path to the prefix's own
+  // firmware_root; reads no module code.
   merkle_proof_node_t root;
   memcpy(root.bytes, hdr->firmware_root.bytes, sizeof(root.bytes));
   const merkle_proof_node_t *proof = NULL;
@@ -600,16 +581,15 @@ static secbool check_tree_preamble(const uint8_t *preamble, size_t len,
     return secfalse;
   }
 
-  // Only the manifest itself is hashed, NOT its trailing proof -- the same
-  // extent the bootloader uses.
+  // Only the manifest is hashed, not its trailing proof -- same extent as the
+  // bootloader.
   merkle_proof_node_t consent;
   if (sectrue != boot_header_consent_digest(preamble, prefix_len, mh,
                                             manifest_len, &consent)) {
     return secfalse;
   }
 
-  // The variant is authenticated (it is inside the folded manifest), so the
-  // string shown names the release's real identity.
+  // The variant is authenticated (inside the folded manifest).
   const char *vendor = firmware_vendor_str(manifest->firmware_variant);
   info->vstr_len = MIN(sizeof(info->vstr), strlen(vendor));
   memcpy(info->vstr, vendor, info->vstr_len);
@@ -619,9 +599,8 @@ static secbool check_tree_preamble(const uint8_t *preamble, size_t len,
   info->ver_patch = manifest->firmware_version[2];
   info->ver_build = manifest->firmware_version[3];
 
-  // fingerprint: the release identity shown to the user (the bootloader's own
-  // confirm screen shows the same firmware_root). hash: the consent digest to
-  // hand to reboot_and_upgrade.
+  // fingerprint: firmware_root, as the bootloader's confirm screen shows it;
+  // hash: the consent digest for reboot_and_upgrade.
   memcpy(info->fingerprint, root.bytes, sizeof(info->fingerprint));
   memcpy(info->hash, consent.bytes, sizeof(info->hash));
 
@@ -637,12 +616,9 @@ secbool check_firmware_header(const uint8_t *header, size_t header_size,
   }
   memset(info, 0, sizeof(*info));
 
-  // Within a build that implements the Merkle-tree layout, the two are told
-  // apart by the blob itself rather than by a flag, so a device given the wrong
-  // kind fails cleanly instead of misparsing it. A tree preamble opens with the
-  // boot header's TRZQ magic; the legacy layout opens with a vendor header. A
-  // build without the scheme has no tree branch at all, and rejects a preamble
-  // as an unparseable vendor header.
+  // A tree preamble opens with the TRZQ magic, the legacy layout with a vendor
+  // header; a build without the scheme rejects a preamble as an unparseable
+  // vendor header.
 #ifdef PQ_SECURE_BOOT
   if (header_size >= sizeof(uint32_t) &&
       *(const uint32_t *)(const void *)header == BOOT_HEADER_MAGIC_TRZQ) {

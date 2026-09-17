@@ -28,46 +28,21 @@
 #include "protob/protob.h"
 #include "workflow_common.h"
 
-// FirmwareRequest.coprocessor_index value the nRF stream uses (0 = the primary
-// bootloader-code / firmware stream). Lets the host tell a phase-1 bl-code
-// request from an nRF request when both stream in one session.
+// FirmwareRequest.coprocessor_index of the nRF stream (0 = primary stream).
 #define NRF_OTA_REQUEST_INDEX 1
 
 /**
- * nRF (BLE co-processor) firmware OTA, driven by the nRF fields of
- * FirmwareBegin (phase 1). The nRF MCUboot image is a model-level leaf in the
- * founder tree, covered by THIS boot header's ONE signature -- there is no
- * separate nRF signature. Done by the CURRENT bootloader while it still
- * provides the (BLE) host link -- see the transport reasoning in
- * wf_firmware_update_pq.c. The bootloader:
- *   1. skips if the running nRF already matches `image_hash` (best-effort
- * hint);
- *   2. otherwise streams the image into NRF_STAGING_AREA (non-secure firmware
- *      scratch, capped short of STAGING_AREA so it can't erase the staged
- *      bootloader);
- *   3. founder-verifies it: the leaf -- H(0x00 || the 44-byte role-bound slot
- *      built from THIS device's model/kind/index and the image hash) -- folded
- *      through `co_path` must equal `model_root`. The image's model-id TLV is
- *      also compared against this device; since role binding that is defence in
- *      depth, because a foreign model's slot no longer folds;
- *   4. SMP-pushes the raw image to the nRF, whose own MCUboot is the last gate
- *      (Ed25519 for a classic image, founder SLH-DSA + Ed25519 for PQ-native).
+ * Phase-1 nRF OTA: fold-verifies the offered image hash, streams the image
+ * into NRF_STAGING_AREA, verifies it against `model_root` and stages it for
+ * the boot-time push (nrf_ota_resume_boot). Emits its own Failure + fail
+ * screen on error.
  *
- * @param iface        Protobuf I/O (also used to send failure messages).
- * @param model_root   The signature-verified modelRoot the boot header commits
- *                     to (from ucb_stage_verify). The nRF leaf is a peer under
- * it.
- * @param co_path      nRF leaf's model co-path, `co_path_len` bytes (multiple
- * of 32).
- * @param co_path_len  Length of `co_path` in bytes.
- * @param image_hash   SHA-256 of the offered nRF image (update-required hint);
- *                     may be NULL / `image_hash_len` 0 to always stream.
- * @param image_hash_len Length of `image_hash`: 32, or 0 for no hint. Anything
- *                       else is rejected rather than ignored.
- * @param nrf_length   Offered nRF image size in bytes (> 0).
- * @return WF_OK on success (including "already up to date, skipped"); WF_ERROR
- *         on any validation / transport failure (a wire Failure + fail screen
- *         are emitted first).
+ * @param model_root     signature-verified modelRoot (from ucb_stage_verify)
+ * @param co_path        nRF leaf co-path, `co_path_len` bytes (multiple of 32)
+ * @param image_hash     SHA-256 update-required hint; NULL / len 0 = no hint
+ * @param image_hash_len 32 or 0; anything else is rejected
+ * @param nrf_length     offered image size in bytes (> 0)
+ * @return WF_OK (including "already up to date"), WF_ERROR otherwise
  */
 workflow_result_t workflow_nrf_ota_update(
     protob_io_t *iface, const merkle_proof_node_t *model_root,
@@ -75,27 +50,10 @@ workflow_result_t workflow_nrf_ota_update(
     size_t image_hash_len, uint32_t nrf_length);
 
 /**
- * Boot-time deferred nRF push -- the autonomous, phase-2 half of a coupled
- * boot+nRF update. Call once on every bootloader boot, BEFORE any host/BLE data
- * transfer.
- *
- * A no-op unless a valid staged descriptor is present.
- * Otherwise it:
- *   1. re-verifies the staged image against the INSTALLED boot header's
- *      modelRoot (the authority after any bootloader swap) + model id, and
- *      DISCARDS a stale/aborted/foreign staging that does not fold (then boots
- *      normally);
- *   2. idempotently pushes the image to the nRF over the link-independent GPIO
- *      serial-recovery path (skipping if the live nRF already matches), driving
- *      the install progress bar;
- *   3. on success clears the staging; on a persistent push failure keeps the
- *      staging (so a power-cycle retries) and halts rather than continue to BLE
- *      with an incompatible co-processor.
- *
- * This is what makes an interrupted coupled update resumable and is mandatory
- * on a BLE-only device, where the push cannot run during a host connection (it
- * reboots the nRF, which IS the BLE link). See nrf_staging.h / the coproc-ota
- * design.
+ * Boot-time deferred nRF push; call on every boot before any host/BLE traffic.
+ * No-op without a valid staged descriptor. Re-verifies the staged image
+ * against the installed boot header (discarding a stale staging), pushes it
+ * idempotently, clears the staging on success and halts on persistent failure.
  */
 void nrf_ota_resume_boot(void);
 

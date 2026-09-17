@@ -1,25 +1,9 @@
 #!/usr/bin/env python3
-"""Attach founder signatures to a PREPARED release -- the last release stage.
+"""Attach founder signatures to a PREPARED release (prepare / sign / attach).
 
-    prepare   build every model, fold every tree, leave signatures zero
-    sign      32 bytes per model in, two hybrid signature pairs per model out
-    attach    <- this: patch those signatures into the prepared artifacts
-
-Attaching holds no key and computes no tree. It is a byte patch, and it is safe
-to do after the fact for one structural reason: **every signature lands in
-UNAUTHENTICATED space.** The boot header's `slh_signature[]` / `ec_signature[]`
-live in its unauth region, past `auth_size`, and the nRF's founder records live
-in unprotected TLVs whose SIZES were reserved before its leaf was computed. So
-no digest moves, and every leaf, co-path and `bundle.json` written by prepare
-stays valid. This is the same property that lets `firmware_type` be stamped into
-a signed bootloader without a key.
-
-What is checked, because a patch that lands on the wrong release is exactly the
-mistake worth catching: the prepared bootloader must fold to the `modelRoot` the
-signature set says it signed, the release must not already be signed, and the
-result must verify. A PQ-native nRF additionally gets the same signature bytes
-in its own TLVs -- the one founder signature covers the model tree, and the nRF
-is a leaf of it.
+Keyless byte patch: signatures land in unauthenticated space (boot header
+unauth region, nRF unprotected TLVs), so no digest moves. See
+docs/core/build/xtask.md.
 """
 
 from __future__ import annotations
@@ -50,11 +34,7 @@ def _attach_model(
             f"{sigs['model_root'][:16]}… but the prepared bootloader folds to "
             f"{root.hex()[:16]}… -- wrong release, or it was re-prepared"
         )
-    # The container records the selection so a ceremony can read it without
-    # parsing a boot header. It is a record, never an authority: the header's
-    # copy is inside the digest, so a disagreement means the container was
-    # edited or the bootloader replaced after preparing. Optional, so containers
-    # written before the field existed still attach.
+    # The container's sigmask is a record; the header's copy is authenticated.
     recorded = body["bootloader"].get("sigmask")
     if recorded is not None and recorded != bl.header.sigmask:
         raise SystemExit(
@@ -76,8 +56,7 @@ def _attach_model(
     for idx, sig in enumerate(ec):
         bl.unauth.ec_signatures[idx] = sig
 
-    # The whole premise of attaching late: patching unauth must not move the
-    # digest. Assert it rather than trust it.
+    # Patching unauth must not move the digest.
     if bl.merkle_root() != root:
         raise SystemExit(
             f"{model}: attaching moved the digest -- a signature was written "
@@ -87,7 +66,7 @@ def _attach_model(
     bl_path.write_bytes(bl.build())
     print(f"  {model:8} bootloader signed, signature verifies")
 
-    # The co-processor, when its own MCUboot verifies the founder tree itself.
+    # PQ-native co-processors embed the same signature bytes.
     for entry in body.get("coprocessors", []):
         path = model_dir / entry["file"]
         image = path.read_bytes()
@@ -96,8 +75,7 @@ def _attach_model(
             continue
         co_path = [bytes.fromhex(n) for n in entry["co_path"]]
         filled = nrf_tree.fill_pq_material(image, slh, ec, co_path)
-        # Reserved space, so the length must not move -- the recorded length and
-        # image_hash both describe the placeholder image.
+        # Reserved space: the recorded length and image_hash describe this size.
         if len(filled) != len(image):
             raise SystemExit(
                 f"{model}: filling the {entry['kind']} founder records changed "

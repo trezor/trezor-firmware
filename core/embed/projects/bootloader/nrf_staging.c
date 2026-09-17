@@ -31,10 +31,8 @@
 #define NRF_STAGING_DESC_MAGIC 0x5346524E  // "NRFS"
 #define NRF_STAGING_DESC_VERSION 1
 
-// The descriptor persisted in the LAST sector of NRF_STAGING_AREA. `tag` is a
-// SHA-256 over every preceding field and detects a torn write; it is NOT a
-// trust input (the resume driver re-folds the image to the modelRoot
-// regardless).
+// Descriptor in the last sector of NRF_STAGING_AREA; `tag` only detects a
+// torn write, it is not a trust input.
 typedef struct {
   uint32_t magic;
   uint32_t version;
@@ -49,15 +47,11 @@ static uint32_t nrf_staging_sector_size(void) {
   return (sectors != 0) ? flash_area_get_size(&NRF_STAGING_AREA) / sectors : 0;
 }
 
-// Byte offset of the reserved descriptor sector (the last sector of the area).
 static uint32_t nrf_staging_desc_offset(void) {
   return flash_area_get_size(&NRF_STAGING_AREA) - nrf_staging_sector_size();
 }
 
-uint32_t nrf_staging_image_capacity(void) {
-  // The image occupies [0, desc_offset); the last sector holds the descriptor.
-  return nrf_staging_desc_offset();
-}
+uint32_t nrf_staging_image_capacity(void) { return nrf_staging_desc_offset(); }
 
 const uint8_t *nrf_staging_image(uint32_t image_len) {
   if (image_len == 0 || image_len > nrf_staging_image_capacity()) {
@@ -67,14 +61,12 @@ const uint8_t *nrf_staging_image(uint32_t image_len) {
                                                  image_len);
 }
 
-// SHA-256 over the descriptor up to (not including) the `tag` field.
 static void nrf_staging_compute_tag(const nrf_staging_desc_t *desc,
                                     uint8_t out[SHA256_DIGEST_LENGTH]) {
   sha256_Raw((const uint8_t *)desc, offsetof(nrf_staging_desc_t, tag), out);
 }
 
-// Memory-mapped descriptor pointer if a structurally-valid descriptor is
-// present, NULL otherwise. Bounds `image_len` / `co_path_count` before any use.
+// Structurally valid descriptor or NULL; bounds image_len / co_path_count.
 static const nrf_staging_desc_t *nrf_staging_get_valid(void) {
   const nrf_staging_desc_t *desc =
       (const nrf_staging_desc_t *)flash_area_get_address(
@@ -108,7 +100,7 @@ bool nrf_staging_read(uint32_t *out_image_len,
     *out_image_len = desc->image_len;
   }
   if (out_co_path != NULL) {
-    *out_co_path = desc->co_path;  // stable, memory-mapped read-only flash
+    *out_co_path = desc->co_path;
   }
   if (out_co_path_count != NULL) {
     *out_co_path_count = desc->co_path_count;
@@ -125,8 +117,7 @@ secbool nrf_staging_write_desc(uint32_t image_len,
     return secfalse;
   }
 
-  // Build the descriptor in RAM; zero unused co-path slots so the tag is
-  // deterministic and no stale stack data reaches flash.
+  // Zero unused co-path slots so the tag is deterministic.
   nrf_staging_desc_t desc;
   memset(&desc, 0, sizeof(desc));
   desc.magic = NRF_STAGING_DESC_MAGIC;
@@ -159,8 +150,6 @@ secbool nrf_staging_write_desc(uint32_t image_len,
 }
 
 secbool nrf_staging_clear(void) {
-  // Erasing the descriptor sector drops the magic -> "nothing staged". The
-  // image bytes are left inert (overwritten by the next stage). Idempotent.
   uint32_t bytes_erased = 0;
   return flash_area_erase_partial(&NRF_STAGING_AREA, nrf_staging_desc_offset(),
                                   &bytes_erased);

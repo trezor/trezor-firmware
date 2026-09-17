@@ -1,12 +1,10 @@
 ENTRY(reset_handler)
 
-/* Merkle-tree layout: the firmware manifest occupies FW_MANIFEST_REGION at the
-   firmware start, before the secmon (first module). */
+/* Merkle-tree layout: manifest region, then the secmon module, then kernel+
+   coreapp. See docs/core/embed-arch/firmware-merkle-tree.md. */
 FW_MANIFEST_REGION = 0x400;
-/* Smart-hashing chunk size stamped into each manifest entry by manifest_header.S
-   (the code_hash chain folds chunks of this size; the last chunk may be partial).
-   NOT a layout/padding constant -- modules keep their natural FLASH_BLOCK_SIZE
-   alignment. Must match FW_CHUNK_SIZE in sec/boot_header.h. */
+/* Smart-hashing chunk size stamped into the manifest entries; not a padding
+   constant. Must match FW_CHUNK_SIZE in sec/boot_header.h. */
 FW_CHUNK_SIZE = 0x2000;
 
 MEMORY {
@@ -33,30 +31,20 @@ _codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data);
 _heap_start = ADDR(.heap);
 _heap_end = ADDR(.heap) + SIZEOF(.heap);
 
-/* Manifest directory entries self-describe each module's code region (offset
-   from the firmware start + size), emitted by manifest_header.S from these
-   symbols. The post-build step (headertool_pq) then fills only each entry's
-   code_hash over [addr, addr+size). There is no per-module header: the secmon
-   is the .secmon blob, the kernel+coreapp code is [.padding .. .data]. */
+/* Module code regions (offset from the firmware start + size) for the manifest
+   entries emitted by manifest_header.S; headertool_pq fills the code_hash. */
 _manifest_secmon_addr = ADDR(.secmon) - FIRMWARE_START;
 _manifest_secmon_size = SIZEOF(.secmon);
 _manifest_kernel_addr = ADDR(.padding) - FIRMWARE_START;
 _manifest_kernel_size = _codelen;
 
 SECTIONS {
-  /* Merkle-tree layout (pq_secure_boot feature). The secmon binary is prefixed
-     (its own module -- excluded from this module's hash and from _codelen) so
-     the kernel+coreapp code links at its real run address. There is no
-     per-module header: each module's code region is described directly by the
-     manifest directory entry (addr/size/code_hash). */
-  /* Firmware manifest ("firmware directory") at the very start of the image,
-     before the modules. Its static fields + per-entry addr/size come from
-     manifest_header.S; the post-build step (headertool_pq) fills each entry's
-     code_hash. The section is padded to FW_MANIFEST_REGION by manifest_header.S. */
+  /* Manifest, padded to FW_MANIFEST_REGION by manifest_header.S. */
   .manifest : ALIGN(CODE_ALIGNMENT) {
     KEEP(*(.manifest));
   } >FLASH AT>FLASH
 
+  /* Secmon module prefix; a separate module, excluded from _codelen. */
   .secmon : ALIGN(CODE_ALIGNMENT) {
     KEEP(*(.secmon));
   } >FLASH AT>FLASH

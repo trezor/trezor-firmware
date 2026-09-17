@@ -1,38 +1,9 @@
 """nRF firmware in the founder Merkle tree (pq_secure_boot).
 
-The nRF (BLE co-processor) firmware is committed as a **model-level leaf** in the
-founder tree, covered by the ONE existing boot-header signature -- there is no
-separate nRF signature. On T3W1 the nRF's own MCUboot (Ed25519) is unchanged;
-this layer is the STM-side founder gate that verifies an nRF image against the
-signed tree before pushing it (raw) to the nRF over SMP serial recovery.
-
-Leaf = H(0x00 || coproc_slot): the leaf commits a 44-byte role-bound record
-("TRZP" | model | kind | index | reserved | mcuboot_image_hash), so it names the
-image **directly**,
-so there is no separate nRF header to keep in sync -- the model id, version and
-hash already live in the image (imgtool header + custom TLV 0x00A3 = model tag,
-produced by nordic/trezor/scripts/build_sign_flash.sh). This is also forward-
-compatible with future PQ-on-nRF: adding an SLH-DSA signature TLV to the image
-just changes the committed bytes; the tree mechanism is unchanged.
-
-Tree shape (prepared for MULTIPLE models), one signed root:
-
-    modelRoot
-    ├── <model A> STM leaf (its boot header) ├── <model A> nRF leaf = H(0x00 || slot(A))
-    ├── <model B> STM leaf                   ├── <model B> nRF leaf
-    └── ... padded to 2^MODEL_TREE_DEPTH slots
-
-Each STM boot header carries the co-path for its model leaf; each nRF image ships
-its own co-path. The device folds nrf_leaf + co-path -> modelRoot.
-
-FIXED DEPTH keeps every co-path MODEL_TREE_DEPTH nodes long, so the boot header's
-auth padding (hence the model leaf) does not depend on how many models exist.
-
-hw_model BINDING IS LOAD-BEARING, and since role binding it lives in the SLOT:
-the 44-byte value carries the model, so another model's nRF computes a different
-slot and does not fold at all. The model id (TLV 0x00A3) read from the image and
-checked on-device is now a second statement of the same fact -- what it still
-catches on its own is a foreign image MISISSUED into this model's tree.
+The nRF image is a model-level leaf under the one boot-header signature:
+leaf = H(0x00 || coproc_slot), slot = "TRZP" | model | kind | index | rsvd | image hash.
+Fixed-depth tree, so every co-path is MODEL_TREE_DEPTH nodes; see
+docs/core/embed-arch/firmware-merkle-tree.md.
 """
 
 from __future__ import annotations
@@ -43,7 +14,7 @@ import struct
 from trezorlib import merkle_tree
 from trezorlib._internal import firmware_headers
 
-# 2^4 = 16 leaf slots (~8 models x [STM leaf, nRF leaf]); raise (re-signs all) if exceeded.
+# 2^4 = 16 leaf slots (~8 models x [STM, nRF]); raising it re-signs everything.
 MODEL_TREE_DEPTH = 4
 MODEL_TREE_LEAVES = 1 << MODEL_TREE_DEPTH
 
@@ -52,30 +23,18 @@ IMAGE_MAGIC = 0x96F3B83D
 TLV_INFO_MAGIC = 0x6907
 TLV_PROT_INFO_MAGIC = 0x6908
 TLV_MODEL_ID = 0x00A3  # custom TLV: 4-byte model tag, e.g. b"T3W1" (protected)
-# Which founder keys signed. PROTECTED (inside the image hash AND the leaf), shared
-# with MCUboot's own EXPECTED_SIGMASK_TLV -- identical semantics. The SIGNER stamps
-# it (set_protected_sigmask) before the leaf is computed, so the signature attests to
-# the signer set without binding the binary to one key selection.
+# Founder sigmask, PROTECTED (inside image hash and leaf); stamped by the signer.
 TLV_SIGMASK = 0x00A2
-# MCUboot's security counter (protected). Carries the STM boot header's
-# monotonic_version: ONE anti-rollback axis for the whole coupled release, not a
-# separate nRF counter -- see set_protected_monotonic.
+# MCUboot security counter (protected); carries the boot header's monotonic_version.
 TLV_SEC_CNT = 0x50
 
-# The CLASSIC (non-founder) scheme's own signature records: two Ed25519 signatures
-# over the image hash, in the UNPROTECTED area, inserted by insert_signatures.py
-# after imgtool has laid the image out. The 2-of-3 key selection is named by the
-# PROTECTED sigmask above, so both records always exist.
+# Classic scheme: two Ed25519 signatures over the image hash, UNPROTECTED area.
 LEGACY_TLV_SIG_0 = 0x00A0
 LEGACY_TLV_SIG_1 = 0x00A1
 LEGACY_SIG_LEN = 64
 
-# PQ material (unprotected): the founder signature over modelRoot + the Merkle
-# proof. It depends on the leaf, so it cannot be covered by the leaf -- which is why
-# it lives in the unprotected TLV area, outside MCUboot's image hash. Its position
-# and order within that area carry no meaning: the leaf boundary is MCUboot's own
-# (see nrf_leaf_value), not derived from these types. The records are contiguous
-# only because the signer allocates them that way, and the shape check pins that.
+# PQ material (unprotected): founder signature over modelRoot + co-path. It
+# depends on the leaf, so it cannot be inside it; record order carries no meaning.
 PQ_TLV_FIRST = 0x00A4
 PQ_TLV_LAST = 0x00A8
 PQ_TLV_SLH_SIG_0 = 0x00A4  # SLH-DSA over modelRoot
@@ -83,10 +42,7 @@ PQ_TLV_SLH_SIG_1 = 0x00A5
 PQ_TLV_EC_SIG_0 = 0x00A6  # Ed25519 over H(modelRoot || slh_sig)
 PQ_TLV_EC_SIG_1 = 0x00A7
 PQ_TLV_MERKLE_PROOF = 0x00A8  # leaf -> modelRoot ("co-path"), 32*N bytes
-# Mirrors the STM's BOOT_HEADER_PQ/EC_SIGNATURE_LEN (SPHINCS+-SHA2-128s / Ed25519).
-# NOTE: under the unified naming PQ is the SCHEME, so the halves are SLH and EC --
-# the STM's *_PQ_SIGNATURE_LEN / *_PQ_KEYS still use PQ for the SLH half (deferred
-# cleanup, see pq-tooling-integration-deferred).
+# Mirror BOOT_HEADER_PQ/EC_SIGNATURE_LEN (SPHINCS+-SHA2-128s / Ed25519).
 PQ_SLH_SIG_LEN = 7856
 PQ_EC_SIG_LEN = 64
 
@@ -121,13 +77,8 @@ def _tlv_areas(image: bytes) -> list[tuple[int, int]]:
 
 
 def mcuboot_find_prot_tlv(image: bytes, tlv_type: int) -> bytes | None:
-    """Find a TLV in the PROTECTED area only.
-
-    Mirrors the device's nrf_image_find_prot_tlv. Anything the signature or the
-    leaf must cover has to come from here: an unprotected copy of the same type
-    is outside the image hash and so attacker-controlled, and searching both
-    areas would silently accept one.
-    """
+    """Find a TLV in the PROTECTED area only (mirrors nrf_image_find_prot_tlv);
+    an unprotected copy is outside the image hash and must never be accepted."""
     areas = _tlv_areas(image)
     if not areas:
         return None
@@ -170,12 +121,7 @@ def mcuboot_version(image: bytes) -> tuple[int, int, int, int]:
 
 
 def mcuboot_prot_end(image: bytes | bytearray) -> int:
-    """End of MCUboot's protected region: hdr + payload + protected TLVs.
-
-    Exactly what the image hash -- hence the founder leaf -- covers. Everything at
-    or past this offset is the unprotected TLV area, which no hash and no signature
-    reaches; see nrf_leaf_value.
-    """
+    """End of MCUboot's hashed region (hdr + payload + protected TLVs)."""
     if len(image) < _MCUBOOT_HDR.size:
         raise ValueError("truncated MCUboot image")
     magic, _load, hdr, prot, imgsz, *_rest = _MCUBOOT_HDR.unpack_from(image)
@@ -191,12 +137,7 @@ def mcuboot_prot_end(image: bytes | bytearray) -> int:
 
 
 def pq_material_offset(image: bytes) -> int | None:
-    """Offset of the FIRST founder TLV record, or None if the image carries none.
-
-    Only a locator for the signer's own placeholders -- it says nothing about the
-    leaf, which is MCUboot's image hash regardless of what lives out here. A classic
-    image returns None; a PQ-native one returns where its founder records begin.
-    """
+    """Offset of the first founder TLV record, or None (classic image)."""
     prot_end = mcuboot_prot_end(image)
     if prot_end + 4 > len(image):
         return None
@@ -229,17 +170,9 @@ _COPROC_SLOT = struct.Struct("<4s4sBB2x32s")
 
 
 def coproc_slot_value(model_id: bytes, kind: int, index: int, digest: bytes) -> bytes:
-    """A co-processor's model-tree SLOT VALUE, role bound into the bytes.
-
-    A fold proves the founder committed to SOME artifact under this modelRoot,
-    never WHICH slot it is: the tree folds sorted pairs, so a proof carries no
-    direction and position is unrecoverable. The role therefore has to live in
-    the value, and this is it.
-
-    `kind` and `index` MUST come from the caller's own build configuration --
-    never from the image, never from the wire. An index taken from the artifact
-    would let a host re-tag it and the binding would be worth nothing.
-    """
+    """A co-processor's role-bound slot value. The sorted-pair fold discards
+    position, so the role lives in the value; kind/index come from the caller's
+    build config, never from the image or the wire."""
     if len(model_id) != 4:
         raise ValueError(f"model_id must be 4 bytes, got {len(model_id)!r}")
     if len(digest) != 32:
@@ -252,23 +185,10 @@ def coproc_slot_value(model_id: bytes, kind: int, index: int, digest: bytes) -> 
 
 
 def nrf_leaf_value(image: bytes, index: int = 0) -> bytes:
-    """The nRF's model-tree SLOT VALUE: a co-processor slot over its image hash.
+    """The nRF's slot value: a coproc slot over MCUboot's image hash (TLV 0x10 range).
 
-    The digest commits the image THROUGH MCUboot's own image hash (TLV 0x10:
-    SHA-256 over header + payload + protected TLVs) rather than a byte range we
-    derive. That range is exactly "everything except the unprotected TLV area",
-    which is the boundary the founder material needs -- it signs modelRoot, so
-    it cannot lie inside its own preimage -- and MCUboot defines it for us.
-    Committing a collision-resistant hash commits the bytes, and both verifiers
-    already compute this hash anyway.
-
-    The model id is read from the image's own MCUboot TLV, which is sound HERE
-    because this is the signer: it is stating what it is about to sign. A
-    VERIFIER must take the model from its build configuration and compare, which
-    is what the STM does.
-
-    Pass THIS -- never the raw image -- to build_model_tree / get_proof /
-    evaluate_proof, which all apply leaf_hash() to the value themselves.
+    Model id is read from the image because this is the signer; a verifier takes
+    it from its build config. Pass this, never the raw image, to build_model_tree.
     """
     model_id = mcuboot_model_id(image)
     if model_id is None:
@@ -279,8 +199,7 @@ def nrf_leaf_value(image: bytes, index: int = 0) -> bytes:
 
 
 def nrf_leaf(image: bytes) -> bytes:
-    """The nRF's model-tree leaf = H(0x00 || nrf_leaf_value(image)) -- the
-    44-byte role-bound slot, NOT the bare image hash."""
+    """The nRF's leaf = H(0x00 || nrf_leaf_value(image)), not the bare image hash."""
     return merkle_tree.leaf_hash(nrf_leaf_value(image))
 
 
@@ -289,18 +208,13 @@ def _placeholder_slot(i: int) -> bytes:
 
 
 def build_model_tree(slot_values: list[bytes]) -> tuple[bytes, list[list[bytes]]]:
-    """Fixed-depth model tree over the given leaf VALUES (model-leaf values and/or
-    nRF images), padded to 2^MODEL_TREE_DEPTH slots. Returns (modelRoot, proofs)
-    where proofs[i] is the MODEL_TREE_DEPTH-node co-path for slot_values[i]."""
+    """Fixed-depth tree over slot VALUES, padded to 2^MODEL_TREE_DEPTH.
+    Returns (modelRoot, proofs) with a MODEL_TREE_DEPTH-node co-path per value."""
     if len(slot_values) > MODEL_TREE_LEAVES:
         raise ValueError(
             f"{len(slot_values)} slots > {MODEL_TREE_LEAVES} (raise MODEL_TREE_DEPTH)"
         )
-    # Guardrail: an nRF slot value must be nrf_leaf_value(image) -- a 32-byte
-    # hash. MerkleTree hashes the value as given, so passing a raw image would
-    # silently build a leaf over the wrong bytes and produce an image no verifier
-    # accepts. An MCUboot magic at offset 0 is unambiguous evidence of that
-    # mistake, whatever the image's shape.
+    # A raw MCUboot image passed as a slot value would silently build a wrong leaf.
     for i, v in enumerate(slot_values):
         if len(v) >= _MCUBOOT_HDR.size and v[:4] == struct.pack("<I", IMAGE_MAGIC):
             raise ValueError(
@@ -318,9 +232,7 @@ def build_model_tree(slot_values: list[bytes]) -> tuple[bytes, list[list[bytes]]
 
 
 def _refit_auth_padding(bl: firmware_headers.BootloaderV2Image) -> None:
-    """Re-fit the maximized auth padding after the model-path length changed (the
-    path length steals from the auth padding, which is authenticated -> changes the
-    model leaf; fixed depth keeps it constant). Read the leaf only after this."""
+    """Re-fit the authenticated padding after the model path changed size."""
     bl.header.padding = b"\x00" * (bl.header.auth_len - bl.header._pre_padding_len)
 
 
@@ -334,15 +246,7 @@ def model_leaf_value(bl: firmware_headers.BootloaderV2Image) -> bytes:
 def place_bootloader_in_tree(
     bl: firmware_headers.BootloaderV2Image, model_copath: list[bytes]
 ) -> None:
-    """Seat the boot header in the model tree, WITHOUT signing it.
-
-    Everything here feeds the digest: the co-path decides the header's size and
-    `_refit_auth_padding` adjusts the authenticated padding to match. Signing is
-    deliberately a separate step, because a release is prepared in full and only
-    then signed as a whole -- which is the order a founder ceremony runs in, and
-    the only order in which the signing input (`bl.merkle_root()`) is final
-    before any key is touched.
-    """
+    """Seat the boot header in the model tree without signing (prepare-then-sign)."""
     if len(model_copath) != MODEL_TREE_DEPTH:
         raise ValueError("model co-path length must equal MODEL_TREE_DEPTH")
     bl.set_merkle_proof(model_copath)
@@ -354,16 +258,12 @@ def place_bootloader_in_tree(
 
 # --- Test-only OTA container ------------------------------------------------
 #
-# NOT a wire format. The device receives the co-path and the image as separate
-# FirmwareBegin fields (nrf_co_path / nrf_length), never as one blob. This
-# concatenation exists so a harness can hand one artifact to the C side and to
-# verify_nrf_ota below; gen_nrf_vector.py and this module's self-test are its
-# only callers. Do not reach for it when writing a host that talks to a device.
+# NOT a wire format: the device gets co-path and image as separate FirmwareBegin
+# fields. Used by gen_nrf_vector.py and the self-test only.
 
 
 def build_nrf_ota(image: bytes, co_path: list[bytes]) -> bytes:
-    """OTA payload: proof_count || co_path nodes || mcuboot_image. The STM verifies
-    it against modelRoot, then pushes the raw image to the nRF over SMP."""
+    """OTA payload: proof_count || co_path nodes || mcuboot_image."""
     return _PROOF_COUNT.pack(len(co_path)) + b"".join(co_path) + image
 
 
@@ -376,12 +276,8 @@ def parse_nrf_ota(artifact: bytes) -> tuple[list[bytes], bytes]:
 
 
 def verify_nrf_ota(model_root: bytes, artifact: bytes, device_model_id: bytes) -> dict:
-    """Host mirror of the device install check (no nRF signature):
-    1. leaf = H(0x00 || the role-bound slot over the founder-covered range) +
-       co-path folds to the (verified)
-       modelRoot -- the range excludes founder material, if any (see nrf_leaf),
-    2. the image's model-id TLV matches THIS device (defence in depth since
-       role binding; catches misissuance into this model's tree)."""
+    """Host mirror of the device install check: the slot over the MCUboot image
+    hash folds through the co-path to modelRoot, and the model-id TLV matches."""
     co_path, image = parse_nrf_ota(artifact)
     if merkle_tree.evaluate_proof(nrf_leaf_value(image), co_path) != model_root:
         raise ValueError("nRF image leaf + co-path does not fold to modelRoot")
@@ -399,44 +295,24 @@ def verify_nrf_ota(model_root: bytes, artifact: bytes, device_model_id: bytes) -
 
 
 def _fake_mcuboot_image(model_tag: bytes, body: bytes, founder: bool = False) -> bytes:
-    """Minimal MCUboot image (header + protected model-id TLV + unprotected TLVs).
+    """Minimal MCUboot image with the exact record set the shape whitelist expects.
 
-    Faithful to what the real signing flows emit, verified against a signed image:
-
-      PROTECTED    0x00A2 sigmask (1 B), 0x00A3 model id (4 B)
-      UNPROTECTED  0x0010 image hash (32 B), then the scheme's records --
-                   classic: 0x00A0 + 0x00A1, two Ed25519 signatures (64 B each)
-                   founder: 0x00A4..0x00A8, the founder material
-
-    The sigmask has to be PROTECTED (inside the image hash) or the acceptance
-    predicates would be reading an attacker-controlled key selection. Getting the
-    record set exactly right matters because the per-scheme shape whitelist demands
-    EXACTLY these and nothing else.
-
-    Both shapes are needed. The leaf rule is the same for both (H(0x00 || the
-    role-bound slot around the image hash)),
-    but the unprotected area differs, and it is the area that the per-scheme shape
-    whitelist and acceptance predicate act on.
+    PROTECTED    0x00A2 sigmask (1 B), 0x00A3 model id (4 B)
+    UNPROTECTED  0x0010 image hash, then classic 0x00A0+0x00A1 or founder 0x00A4..0x00A8
     """
     hdr_size, imgsz = 32, len(body)
-    # sigmask: 0x03 (keys 0 and 1) for classic, matching what build_sign_flash.sh
-    # passes; a 0x00 placeholder for founder, which the signer patches later.
+    # sigmask 0x03 for classic (as build_sign_flash.sh); 0x00 placeholder for founder.
     prot_tlvs = struct.pack("<HH", TLV_SIGMASK, 1) + bytes([0x00 if founder else 0x03])
     prot_tlvs += struct.pack("<HH", TLV_MODEL_ID, 4) + model_tag
     prot_area = struct.pack("<HH", TLV_PROT_INFO_MAGIC, 4 + len(prot_tlvs)) + prot_tlvs
     header = _MCUBOOT_HDR.pack(
         IMAGE_MAGIC, 0, hdr_size, len(prot_area), imgsz, 0, 9, 9, 9, 9, 0
     )
-    # The image-hash TLV must carry the REAL hash: the leaf is that value, so a
-    # stand-in here would make the fixture self-inconsistent in exactly the way
-    # MCUboot rejects. Computed over header+body+protected area, which is fully
-    # determined at this point.
+    # The 0x10 TLV must carry the real hash; the leaf is built over it.
     covered = header + b"\x00" * (hdr_size - _MCUBOOT_HDR.size) + body + prot_area
     unprot_tlvs = struct.pack("<HH", MCUBOOT_TLV_SHA256, 32) + _sha256(covered)
     if not founder:
-        # Two signatures: the classic scheme is 2-of-3, so both records always
-        # exist. Values are placeholders -- only the SHAPE is exercised here; the
-        # real Ed25519 verification is the signature harness's job.
+        # Placeholder values; only the shape is exercised here.
         unprot_tlvs += (
             struct.pack("<HH", LEGACY_TLV_SIG_0, LEGACY_SIG_LEN)
             + b"\xab" * LEGACY_SIG_LEN
@@ -446,9 +322,7 @@ def _fake_mcuboot_image(model_tag: bytes, body: bytes, founder: bool = False) ->
             + b"\xcd" * LEGACY_SIG_LEN
         )
     if founder:
-        # Founder material: the REAL record set at REAL sizes (so the shape check
-        # is exercised for what it will actually see), and LAST in the area with no
-        # slack -- slack would be smuggling room for a rogue TLV.
+        # Real sizes, last in the area, no slack.
         for t, ln in (
             (PQ_TLV_SLH_SIG_0, PQ_SLH_SIG_LEN),
             (PQ_TLV_SLH_SIG_1, PQ_SLH_SIG_LEN),
@@ -482,26 +356,15 @@ MCUBOOT_TLV_SHA256 = 0x10
 
 
 def mcuboot_image_hash(image: bytes) -> bytes:
-    """MCUboot's own image hash: SHA-256 over hdr + payload + protected TLVs.
-
-    Exactly the range bootutil_img_hash covers, and the value that belongs in TLV
-    0x10 (verified against the committed image in tests).
-    """
+    """MCUboot's image hash: SHA-256 over hdr + payload + protected TLVs (TLV 0x10)."""
     return _sha256(image[: mcuboot_prot_end(image)])
 
 
 def _patch_protected_tlv(image: bytes, tlv_type: int, value: bytes, what: str) -> bytes:
-    """Overwrite a PROTECTED TLV's value in place, keeping MCUboot's image hash valid.
+    """Overwrite a PROTECTED TLV's value in place and re-stamp TLV 0x10.
 
-    Shared by the signer-owned protected fields (founder sigmask, security
-    counter). Patching a protected TLV invalidates MCUboot's image hash, so TLV
-    0x10 is recomputed here; MCUboot would otherwise reject the image on its hash
-    check. Must be called BEFORE the leaf/tree is computed -- protected TLVs are
-    inside the leaf, so changing one afterwards invalidates the signature.
-
-    The record must already exist with the right size: the nRF build emits a
-    placeholder and the signer fills it. That keeps these fields a re-sign rather
-    than an nRF rebuild.
+    The record must already exist at the right size (build emits a placeholder).
+    Call before the leaf is computed: protected TLVs are inside the leaf.
     """
     out = bytearray(image)
     magic, _load, hdr, prot, imgsz, *_rest = _MCUBOOT_HDR.unpack_from(out)
@@ -510,8 +373,7 @@ def _patch_protected_tlv(image: bytes, tlv_type: int, value: bytes, what: str) -
     if prot == 0:
         raise ValueError(f"image has no protected TLV area to hold the {what}")
 
-    # PROTECTED area only: a same-typed record in the unprotected area would not
-    # be committed by the leaf, so it must never be used.
+    # Protected area only; an unprotected same-typed record is not in the leaf.
     prot_off = hdr + imgsz
     p, end = prot_off + 4, prot_off + prot
     while p + 4 <= end:
@@ -530,7 +392,7 @@ def _patch_protected_tlv(image: bytes, tlv_type: int, value: bytes, what: str) -
             "built with a placeholder for the signer to fill"
         )
 
-    # Re-stamp MCUboot's image hash over the (now modified) protected region.
+    # Re-stamp MCUboot's image hash over the modified protected region.
     digest = mcuboot_image_hash(bytes(out))
     info_magic, info_len = struct.unpack_from("<HH", out, prot_off + prot)
     if info_magic != TLV_INFO_MAGIC:
@@ -552,43 +414,18 @@ def _patch_protected_tlv(image: bytes, tlv_type: int, value: bytes, what: str) -
 
 
 def set_protected_sigmask(image: bytes, sigmask: int) -> bytes:
-    """Write the founder `sigmask` into the image's PROTECTED sigmask TLV.
-
-    The signer owns this field, exactly as it owns the STM boot header's sigmask: it
-    sets the value, THEN the leaf is computed, THEN it signs. Being protected, the
-    mask is inside MCUboot's image hash AND inside the founder leaf, so the founder
-    signature attests to WHICH keys signed rather than the verifier inferring it.
-    """
+    """Write the founder `sigmask` into the PROTECTED sigmask TLV (signer-owned;
+    set value -> compute leaf -> sign, as with the boot header's sigmask)."""
     if not 0 <= sigmask <= 0xFF:
         raise ValueError(f"sigmask {sigmask} out of range")
     return _patch_protected_tlv(image, TLV_SIGMASK, bytes([sigmask]), "sigmask")
 
 
 def set_protected_monotonic(image: bytes, monotonic_version: int) -> bytes:
-    """Write the release's `monotonic_version` into the PROTECTED security-counter TLV.
-
-    This is what keeps the nRF on the SAME anti-rollback axis as the STM instead of
-    giving it a second, independent one. The boot header's single-byte
-    monotonic_version is the axis for the whole coupled release (see
-    wf_firmware_update_pq.c); the STM enforces it in the boardloader against an NV
-    monoctr, and the nRF enforces the identical number against its own NV counter
-    (CONFIG_BOOT_PQ_ROLLBACK_PROT).
-
-    Two independent axes could drift into states neither side rejects -- notably a
-    forward STM paired with an nRF rolled back over serial recovery. One axis makes
-    that unreachable: any nRF image below the nRF's floor is refused, and the floor
-    advances with the same releases the STM's does.
-
-    Stamped by the SIGNER, not the nRF build, so the two cannot disagree by
-    construction -- there is no build-script coordination to get wrong. Protected,
-    so it is inside the founder leaf and cannot be raised without breaking the
-    founder signature.
-    """
-    # MONOCTR_MAX_VALUE in embed/sec/monoctr/inc/sec/monoctr.h. The STM stores the
-    # counter UNARY (value N = N written blocks), so its encoding -- not the
-    # uint8_t header field, and not the nRF's 240 slots -- is what bounds the
-    # shared axis. Refuse here so a release is caught at signing rather than by
-    # monoctr_write failing on device.
+    """Write the boot header's `monotonic_version` into the PROTECTED security
+    counter TLV, so STM and nRF share one anti-rollback axis
+    (CONFIG_BOOT_PQ_ROLLBACK_PROT)."""
+    # MONOCTR_MAX_VALUE (sec/monoctr.h): the STM's unary monoctr bounds the axis.
     if not 0 <= monotonic_version <= 63:
         raise ValueError(
             f"monotonic_version {monotonic_version} exceeds MONOCTR_MAX_VALUE (63), "
@@ -600,20 +437,10 @@ def set_protected_monotonic(image: bytes, monotonic_version: int) -> bytes:
 
 
 def add_pq_placeholders(image: bytes) -> bytes:
-    """Append ZEROED founder records to the image's unprotected TLV area, making it
-    PQ-NATIVE (its own MCUboot will verify the founder tree; see
-    CONFIG_BOOT_PQ_SECURE_BOOT).
+    """Append zeroed founder records to the unprotected TLV area (PQ-native image).
 
-    Placeholders first, values later, because the material is self-referential: the
-    founder signature covers modelRoot, which comes from the leaf, which covers
-    `it_tlv_tot` -- so the records' SIZES must already be in the image when the leaf
-    is computed, while their CONTENTS cannot be known until after signing. Hence
-    add_pq_placeholders() -> build tree -> sign -> fill_pq_material(),
-    the latter writing only bytes past the leaf cut.
-
-    The image's existing protected sigmask TLV (0x00A2) doubles as the founder
-    sigmask: it must already name the founder keys that will sign (it is protected,
-    so it cannot be changed here without invalidating the image's own hash).
+    Record SIZES are inside the leaf, contents come after signing: hence
+    add_pq_placeholders() -> build tree -> sign -> fill_pq_material().
     """
     magic, _load, hdr, prot, imgsz, *_rest = _MCUBOOT_HDR.unpack_from(image)
     if magic != IMAGE_MAGIC:
@@ -639,20 +466,14 @@ def add_pq_placeholders(image: bytes) -> bytes:
     out = bytearray(image[:area_end])
     struct.pack_into("<HH", out, prot_end, TLV_INFO_MAGIC, new_info_len)
     out += records
-    # Anything after the TLV area (padding) is dropped: it is outside both the leaf
-    # and MCUboot's view, and the bundle re-pads for flash alignment anyway.
+    # Trailing padding is dropped; the bundle re-pads for flash alignment.
     return bytes(out)
 
 
 def fill_pq_material(
     image: bytes, slh_sigs: list[bytes], ec_sigs: list[bytes], co_path: list[bytes]
 ) -> bytes:
-    """Write the founder signatures + co-path into the placeholders.
-
-    Must NOT change the leaf -- everything written lies in the unprotected TLV
-    area, outside MCUboot's image hash. Asserted, because the founder signs
-    modelRoot and so cannot appear inside its own preimage.
-    """
+    """Write the founder signatures + co-path into the placeholders (leaf unchanged)."""
     expect = _pq_record_sizes()
     values = [slh_sigs[0], slh_sigs[1], ec_sigs[0], ec_sigs[1], b"".join(co_path)]
 
@@ -687,13 +508,9 @@ def fill_pq_material(
 
 
 def legacy_key_slots(sigmask: int, key_count: int) -> tuple[int, int] | None:
-    """Which pool keys the sigmask names, or None if it is not a legal selection.
-
-    Mirror of nrf_image_legacy_sig_slots() in io/nrf/nrf_image.c and of
-    MCUboot's own expression. NOT the founder scheme's "i-th lowest set bit": this
-    is a bespoke 2-of-3 map, and getting it wrong makes the STM predict the wrong
-    keys. Cross-checked over all 256 masks by tests/fw_merkle.
-    """
+    """Which pool keys the sigmask names, or None if not a legal 2-of-3 selection.
+    Mirrors nrf_image_legacy_sig_slots() in io/nrf/nrf_image.c and MCUboot; NOT
+    the founder scheme's i-th-lowest-set-bit rule."""
     if bin(sigmask).count("1") != 2 or (sigmask & ~0x07) != 0:
         return None
     i0 = 0 if (sigmask & 0x01) else 1
@@ -704,16 +521,9 @@ def legacy_key_slots(sigmask: int, key_count: int) -> tuple[int, int] | None:
 
 
 def legacy_sign(image: bytes, secret_keys: list[bytes], sigmask: int) -> bytes:
-    """Sign a CLASSIC image the way the nRF's MCUboot will verify it.
-
-    The two Ed25519 records cover the MCUboot IMAGE HASH -- not the image bytes --
-    and the PROTECTED sigmask names which pool keys signed, by slot. Both records
-    must already exist as placeholders (see _fake_mcuboot_image): writing them does
-    not move the image hash, since they live in the unprotected area.
-
-    For FIXTURES only. Production classic images are signed by
-    nordic/trezor/scripts/insert_signatures.py from an offline key.
-    """
+    """Sign a CLASSIC fixture image: two Ed25519 records over the MCUboot image
+    hash, keys selected by the protected sigmask. Production images are signed
+    by nordic/trezor/scripts/insert_signatures.py."""
     from trezorlib import _ed25519
 
     image = set_protected_sigmask(image, sigmask)  # protected -> changes the hash
@@ -748,18 +558,8 @@ def _find_unprot_tlv_offset(image: bytes | bytearray, want: int) -> int:
 
 
 def corrupt_hash_tlv(image: bytes) -> bytes:
-    """Adversarial variant: flip one byte of the UNPROTECTED 0x10 hash record.
-
-    0x10 publishes the image hash but lives outside it, so the leaf, modelRoot
-    and every signature record are untouched -- the fold passes and the shape
-    check still sees a 32-byte 0x10 in the right place. Only comparing the
-    record against the hash the verifier computed itself catches this.
-
-    What makes it worth a vector rather than a shrug: MCUboot DOES check the
-    value, but only on the co-processor, after serial recovery has erased the
-    single slot. And nrf_update_required reads this record to decide whether a
-    push is needed, so a corrupt one always says yes.
-    """
+    """Adversarial fixture: flip a byte of the UNPROTECTED 0x10 hash record.
+    The fold and shape check still pass; only recomputing the hash catches it."""
     prot_end = mcuboot_prot_end(image)
     out = bytearray(image)
     for start, end in _tlv_areas(image):
@@ -776,24 +576,12 @@ def corrupt_hash_tlv(image: bytes) -> bytes:
 
 
 def smuggle_rogue_tlv(image: bytes) -> bytes:
-    """Adversarial variant: a ROGUE TLV hidden in the unprotected TLV area.
-
-    Splits a record into a shorter one plus a rogue record of the same TOTAL size,
-    so every byte below prot_end -- everything the image hash, and hence the leaf,
-    covers -- is unchanged. Therefore the leaf, modelRoot and the signature all
-    still verify, and so would a full signature re-verify -- yet the co-processor,
-    which whitelists unprotected TLV types, would REJECT the image. Only a shape
-    check catches this.
-
-    Works for BOTH schemes, since both now have a shape whitelist: it splits the
-    first founder record for a PQ-native image, or the first Ed25519 signature
-    record for a classic one.
-    """
+    """Adversarial fixture: split an unprotected record into a shorter one plus a
+    rogue TLV of the same total size. Leaf and signatures still verify; only the
+    per-scheme shape whitelist catches it."""
     cut = pq_material_offset(image)
     if cut is None:
-        # Classic image: no founder material, so target its first signature record.
-        # It must lie ABOVE prot_end -- a rogue inside the hashed range would change
-        # the leaf, which is a different (and already covered) test.
+        # Classic image: split its first signature record (above prot_end).
         prot_end = mcuboot_prot_end(image)
         for start, end in _tlv_areas(image):
             if start < prot_end:
@@ -832,7 +620,7 @@ def _demo(bl_path: str, img_path: str) -> None:
     pq_image = _fake_mcuboot_image(my_model, b"pq-native-nrf-body" * 400, founder=True)
 
     model_val = model_leaf_value(bl)  # sizes the model path, then reads the stable leaf
-    # Slot values are nrf_leaf_value(image), never the raw image (see nrf_leaf).
+    # Slot values are nrf_leaf_value(image), never the raw image.
     slots = [
         model_val,
         nrf_leaf_value(image),
@@ -879,15 +667,12 @@ def _demo(bl_path: str, img_path: str) -> None:
     img_off = _PROOF_COUNT.size + MODEL_TREE_DEPTH * _NODE
 
     ok = True
-    # CLASSIC image: tamper below prot_end is caught by the fold, because that range
-    # is what the image hash -- hence the leaf -- covers.
+    # Classic image: tamper below prot_end is caught by the fold.
     ok &= reject(
         "flipped byte in the body", flip(ota, img_off + mcuboot_prot_end(image) // 2)
     )
-    # Its own Ed25519 signature TLVs sit in the UNPROTECTED area, outside the hash,
-    # so tampering there still folds. Not a gap: the STM predicts the nRF's verdict
-    # on those records before pushing (nrf_image_legacy_accept_ok), which is a stronger
-    # statement than the fold could make. Shown so the boundary cannot drift.
+    # Unprotected-area tamper still folds by design; the STM checks those
+    # signatures itself before pushing (nrf_image_legacy_accept_ok).
     try:
         verify_nrf_ota(model_root, flip(ota, len(ota) - 1), my_model)
         print(
@@ -898,10 +683,7 @@ def _demo(bl_path: str, img_path: str) -> None:
         print(f"  !! FAIL: classic unprotected tamper broke the fold: {e}")
         ok = False
 
-    # PQ-NATIVE image: same boundary, same consequence. The founder material signs
-    # modelRoot, so it cannot lie inside its own preimage -> tampering there still
-    # folds, BY DESIGN. That is precisely why the STM must ALSO verify the founder
-    # material before overwriting a working nRF (no dual slot).
+    # PQ-native image: same boundary; founder material is outside the leaf.
     pq_ota = build_nrf_ota(pq_image, proofs[4])
     print(
         f"PQ-native image: hashed range {mcuboot_prot_end(pq_image)}"

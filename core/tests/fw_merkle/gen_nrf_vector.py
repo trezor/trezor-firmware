@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
-"""Emit a C test vector for nrf_crossvalidate.c.
+"""Emit the C test vector for nrf_crossvalidate.c.
 
-Builds two nRF MCUboot images (this model + another model) as leaves of one
-founder model tree, so the C side can check the COMBINED device verify:
-  * nrf_image_verify_in_tree (fold leaf+co-path -> modelRoot), and
-  * nrf_image_model_id (the model-id TLV pins the image to THIS model -- both
-    images fold to modelRoot, only the model id separates them).
-The other-model image is deliberately slotted under THIS device's model, since
-role binding otherwise rejects it at the fold and the model-id path is dead.
-Computed by the host nrf_tree module so C is checked against Python.
-
+Two nRF MCUboot images (this model + another model) as leaves of one founder
+model tree, plus adversarial variants, all computed by the host nrf_tree module.
 Usage: gen_nrf_vector.py <out.h>
 """
 
@@ -17,20 +10,15 @@ import struct
 import sys
 from pathlib import Path
 
-# Script-relative, not cwd-relative: this used to work only when run from the
-# repo root, i.e. only via run_nrf.sh.
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
 from trezor_core_tools import nrf_tree  # noqa: E402
 
 DEVICE_MODEL = b"T3W1"
 OTHER_MODEL = b"T3T2"
 
-# A classic-scheme key pool for the fixtures. Fixed seeds, so the vector is
-# reproducible; the C side is handed the PUBLIC halves as its MODEL_NRF_LEGACY_KEYS_*
-# and so verifies real signatures rather than a stub. Test-only, obviously -- the
-# real pool is the nRF's, mirrored in the model header.
+# Test-only classic key pool, fixed seeds; the C side gets the public halves.
 LEGACY_SECRET_KEYS = [b"nrf-legacy-test-key-%d" % i + b"\x00" * 10 for i in range(3)]
-LEGACY_SIGMASK = 0x03  # keys 0 and 1 -- what build_sign_flash.sh passes
+LEGACY_SIGMASK = 0x03  # keys 0 and 1, as build_sign_flash.sh passes
 
 
 def _carr(b: bytes) -> str:
@@ -62,13 +50,10 @@ def _tlv_tot_off(image: bytes) -> int:
 
 
 def _bounds_variants(image: bytes) -> list[tuple[str, bytes, str]]:
-    """The six adversarial length mutations, as (C name, image, description).
+    """Six adversarial length mutations, as (C name, image, description).
 
-    Every one of these lives in the UNPROTECTED area or the header -- so none of
-    them changes the image hash, hence none changes the leaf, hence the FOLD STILL
-    PASSES on all of them. They are unreachable through the fold by construction;
-    only the parser's bounds checks stand between them and an over-read. That is
-    what made them untestable while the leaf covered it_tlv_tot.
+    All live outside the hashed range, so the fold still passes on every one;
+    only the parser's bounds checks stand between them and an over-read.
     """
     prot_end = nrf_tree.mcuboot_prot_end(image)
     tot_off = _tlv_tot_off(image)
@@ -102,15 +87,14 @@ def _bounds_variants(image: bytes) -> list[tuple[str, bytes, str]]:
             "record length overruns tlv_end",
         )
     )
-    # 4. header lengths chosen so a 32-BIT sum of hdr+img+prot would wrap to a
-    #    small (passing) value. The parser sums in 64-bit, so it must reject.
+    # 4. header lengths whose 32-bit hdr+img+prot sum would wrap; the parser
+    #    sums in 64-bit, so it must reject
     wrapped = bytearray(image)
     struct.pack_into("<I", wrapped, 12, 0xFFFFFF00)  # ih_img_size
     out.append(
         ("HDR_WRAP", bytes(wrapped), "header lengths that would wrap a 32-bit sum")
     )
-    # 5. a 2-byte stub after the valid records: too small to be a record, and
-    #    silently stopping instead of failing would let one be appended
+    # 5. a 2-byte trailing stub: too small to be a record, must fail not stop
     out.append(
         (
             "STUB",
@@ -126,17 +110,15 @@ def _bounds_variants(image: bytes) -> list[tuple[str, bytes, str]]:
             "it_tlv_tot truncated below its records",
         )
     )
-    assert prot_end  # silence the unused-name lint; kept for readability above
+    assert prot_end  # silence the unused-name lint
     return out
 
 
 def main() -> None:
     out = sys.argv[1]
-    # Two shapes. The LEAF is the same rule for both (MCUboot's image hash), so
-    # what these exercise is everything downstream of it: which acceptance predicate
-    # applies, and what the shape check expects in the unprotected area.
-    #   NRF_IMAGE  -- CLASSIC    (no founder TLVs, its own Ed25519 records)
-    #   PQ_IMAGE   -- PQ-NATIVE  (founder signature + co-path records)
+    # Two shapes with the same leaf rule (MCUboot's image hash):
+    #   NRF_IMAGE  -- classic   (no founder TLVs, its own Ed25519 records)
+    #   PQ_IMAGE   -- PQ-native (founder signature + co-path records)
     nrf_image = nrf_tree._fake_mcuboot_image(DEVICE_MODEL, b"nrf-body-this-model" * 40)
     other_image = nrf_tree._fake_mcuboot_image(
         OTHER_MODEL, b"nrf-body-other-model" * 40
@@ -144,19 +126,13 @@ def main() -> None:
     pq_image = nrf_tree._fake_mcuboot_image(
         DEVICE_MODEL, b"nrf-body-pq-native" * 40, founder=True
     )
-    # Sign the CLASSIC fixtures for real, so the acceptance predicate is exercised
-    # end-to-end. Must happen BEFORE the tree is built: the sigmask is a PROTECTED
-    # TLV, so stamping it moves the image hash and hence the leaf.
+    # Sign the classic fixtures before building the tree: the sigmask is a
+    # protected TLV, so stamping it moves the leaf.
     nrf_image = nrf_tree.legacy_sign(nrf_image, LEGACY_SECRET_KEYS, LEGACY_SIGMASK)
     other_image = nrf_tree.legacy_sign(other_image, LEGACY_SECRET_KEYS, LEGACY_SIGMASK)
-    # Slot values are nrf_leaf_value(image), never the raw image (see nrf_leaf).
-    # The other-model image is slotted under THIS DEVICE's model, not its own.
-    # nrf_leaf_value() takes the model from the image's TLV, which since role
-    # binding would put it in a slot this device never computes -- so the fold
-    # would reject it and the model-id check it exists to exercise would never be
-    # reached. Slotting it here is the case the model id actually covers: the
-    # founder signed another model's image into THIS model's tree, so it folds
-    # and only the TLV separates it.
+    # Slot values are nrf_leaf_value(image), never the raw image. The other-model
+    # image is slotted under THIS device's model so the fold passes and only the
+    # model-id TLV separates it (the misissuance case).
     slots = [
         nrf_tree.nrf_leaf_value(nrf_image),
         nrf_tree.coproc_slot_value(
@@ -170,11 +146,8 @@ def main() -> None:
     ]
     model_root, proofs = nrf_tree.build_model_tree(slots)
 
-    # Roots over a slot set identical to the genuine one EXCEPT for the role
-    # fields. A verifier builds kind/index from its own build configuration, so
-    # neither of these may fold for it -- and nothing else in the system would
-    # catch them: the model-id check covers the wrong MODEL, while a wrong index
-    # or kind is exactly what role binding, and only role binding, rejects.
+    # Roots over the same slots except for the role fields; neither may fold for
+    # a verifier that builds kind/index from its own build configuration.
     wrong_index_root, wrong_index_proofs = nrf_tree.build_model_tree(
         [nrf_tree.nrf_leaf_value(nrf_image, index=1)] + slots[1:]
     )
@@ -190,12 +163,9 @@ def main() -> None:
         + slots[1:]
     )
 
-    # Fill the PQ-native fixture's material for real, now that the tree exists: the
-    # signatures are stand-ins (no host SLH-DSA), but the MERKLE PROOF must be the
-    # genuine one, because the STM's push gate folds with the copy carried in the
-    # IMAGE -- that is the copy the nRF's MCUboot uses. All of it lands past the leaf
-    # cut, so the leaf, the slot value and the proofs above stay valid (asserted
-    # inside fill_pq_material).
+    # Stand-in signatures (no host SLH-DSA) but the genuine Merkle proof: the
+    # STM's push gate folds with the copy carried in the image. All of it lies
+    # outside the leaf, so the slots and proofs above stay valid.
     pq_image = nrf_tree.fill_pq_material(
         pq_image,
         [
@@ -209,10 +179,8 @@ def main() -> None:
         proofs[2],
     )
 
-    # Full OTA artifacts (proof_count || co_path || image) -- the wire form the
-    # host sends. The device never parses this as one buffer: the bootloader
-    # streams it and keeps co_path/image_len in its staging descriptor. The
-    # harness unpacks it (harness_ota_gate) to reach the same two primitives.
+    # Wire-form OTA artifacts (proof_count || co_path || image); the harness
+    # unpacks them itself (harness_ota_gate), the bootloader never does.
     nrf_ota = nrf_tree.build_nrf_ota(nrf_image, proofs[0])
     other_ota = nrf_tree.build_nrf_ota(other_image, proofs[1])
     pq_ota = nrf_tree.build_nrf_ota(pq_image, proofs[2])
@@ -241,10 +209,8 @@ def main() -> None:
         _emit_image(f, "PQ_IMAGE", pq_image)
         _emit_proof(f, "PQ_PROOF", proofs[2])
         _emit_image(f, "PQ_OTA", pq_ota)
-        # Adversarial: a rogue TLV smuggled into the founder region. The leaf (and
-        # so modelRoot and the founder signature) is untouched, so the fold STILL
-        # PASSES -- MCUboot would reject it on its unprotected-TLV whitelist. Only a
-        # shape check catches it. Assert the premise, or the case proves nothing.
+        # Rogue TLV in the founder region: the leaf is intact, so the fold still
+        # passes and only the shape check catches it. Assert the premise.
         pq_rogue = nrf_tree.smuggle_rogue_tlv(pq_image)
         assert nrf_tree.nrf_leaf(pq_rogue) == nrf_tree.nrf_leaf(pq_image), (
             "rogue variant must keep the leaf intact (else it proves nothing)"
@@ -252,24 +218,17 @@ def main() -> None:
         assert len(pq_rogue) == len(pq_image)
         _emit_image(f, "PQ_IMAGE_ROGUE", pq_rogue)
         _emit_image(f, "PQ_OTA_ROGUE", nrf_tree.build_nrf_ota(pq_rogue, proofs[2]))
-        # The SAME attack against a CLASSIC image, which now has a shape whitelist
-        # of its own. Here the premise is even sharper: the two Ed25519 signatures
-        # cover the image hash, which the rogue record does not change, so the
-        # signatures verify AND the fold passes -- yet the nRF rejects on its
-        # allow-list, after the STM has already erased its only slot.
+        # Same attack on a classic image: its signatures verify and the fold
+        # passes, only the classic shape whitelist sees it.
         nrf_rogue = nrf_tree.smuggle_rogue_tlv(nrf_image)
         assert nrf_tree.nrf_leaf(nrf_rogue) == nrf_tree.nrf_leaf(nrf_image), (
             "classic rogue variant must keep the leaf intact (else it proves nothing)"
         )
         assert len(nrf_rogue) == len(nrf_image)
         _emit_image(f, "NRF_IMAGE_ROGUE", nrf_rogue)
-        # Adversarial: the unprotected 0x10 record no longer matches the hash the
-        # verifier computes. Everything the fold reaches is untouched, so the leaf,
-        # modelRoot and signatures all still verify and the shape check still finds
-        # a 32-byte 0x10 -- only comparing the record's VALUE catches it. Left
-        # unchecked it is a brick, not a bad boot: MCUboot rejects the image, but
-        # only after the STM has erased the nRF's only slot for it. Both schemes,
-        # since neither's signatures cover the record that publishes the hash.
+        # Unprotected 0x10 record not matching the computed hash: only
+        # comparing its value catches it; unchecked it bricks (MCUboot rejects
+        # after the STM erased the slot). Both schemes.
         pq_badhash = nrf_tree.corrupt_hash_tlv(pq_image)
         assert nrf_tree.nrf_leaf(pq_badhash) == nrf_tree.nrf_leaf(pq_image), (
             "bad-hash variant must keep the leaf intact (else it proves nothing)"
@@ -283,14 +242,11 @@ def main() -> None:
         assert len(nrf_badhash) == len(nrf_image)
         _emit_image(f, "NRF_IMAGE_BADHASH", nrf_badhash)
 
-        # Bounds discipline: six adversarial length mutations. The fold passes on
-        # every one of them (none touches the hashed range), so the parser's checks
-        # are the ONLY defence -- which is exactly what dropping the it_tlv_tot
-        # commitment made load-bearing.
+        # Bounds discipline: the fold passes on all six mutations, so the
+        # parser's checks are the only defence.
         variants = _bounds_variants(pq_image)
-        # The premise: these are invisible to the fold. Assert it for every mutation
-        # that leaves the header alone (HDR_WRAP deliberately breaks the hash range,
-        # which is the point of that one).
+        # Assert the premise for every mutation that leaves the header alone
+        # (HDR_WRAP deliberately breaks the hash range).
         for name, img, _d in variants:
             if name == "HDR_WRAP":
                 continue
@@ -309,8 +265,8 @@ def main() -> None:
             f.write(f'  {{PQ_IMAGE_{name}, PQ_IMAGE_{name}_LEN, "{desc}"}},\n')
         f.write("};\n")
 
-        # The classic acceptance predicate, end to end. The C side gets the PUBLIC
-        # pool and verifies these for real; each negative breaks exactly one thing.
+        # Classic acceptance predicate, end to end: the C side gets the public
+        # pool; each negative breaks exactly one thing.
         from trezorlib import _ed25519
 
         for i, sk in enumerate(LEGACY_SECRET_KEYS):
@@ -333,8 +289,7 @@ def main() -> None:
         _emit_image(
             f, "NRF_IMAGE_BADSIG1", _flip_sig(nrf_image, nrf_tree.LEGACY_TLV_SIG_1)
         )
-        # the two signatures exchanged: each is valid, but for the OTHER slot. Only
-        # the slot->key map catches it, which is the part most likely to drift.
+        # the two signatures exchanged: each valid, but for the other slot
         o0 = nrf_tree._find_unprot_tlv_offset(nrf_image, nrf_tree.LEGACY_TLV_SIG_0) + 4
         o1 = nrf_tree._find_unprot_tlv_offset(nrf_image, nrf_tree.LEGACY_TLV_SIG_1) + 4
         n = nrf_tree.LEGACY_SIG_LEN
@@ -354,14 +309,13 @@ def main() -> None:
         _emit_image(
             f, "NRF_IMAGE_OUTOFPOOL", nrf_tree.set_protected_sigmask(nrf_image, 0x09)
         )
-        # Offsets so the C side can tamper deliberately INSIDE vs OUTSIDE the range
-        # the leaf commits, for BOTH shapes. That range is MCUboot's protected
-        # region, so the boundary is the same rule for classic and PQ-native alike.
+        # Offsets so the C side can tamper inside vs outside the hashed range
+        # (MCUboot's protected region) for both shapes.
         img_off = nrf_tree._PROOF_COUNT.size + len(proofs[0]) * nrf_tree._NODE
         classic_prot_end = nrf_tree.mcuboot_prot_end(nrf_image)
         pq_prot_end = nrf_tree.mcuboot_prot_end(pq_image)
-        # Both shapes must have something OUTSIDE the hashed range, or the "tamper
-        # outside still folds" cases would silently degenerate into no-ops.
+        # Both shapes need an unprotected area, or the "tamper outside still
+        # folds" cases degenerate into no-ops.
         assert classic_prot_end < len(nrf_image), (
             "classic image has no unprotected area"
         )

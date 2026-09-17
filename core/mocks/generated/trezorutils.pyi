@@ -67,10 +67,8 @@ def firmware_hash(
 # upymod/modtrezorutils/modtrezorutils.c
 def firmware_vendor() -> str:
     """
-    Returns the firmware vendor string. For the legacy layout this is the
-    vendor-header string; for the Merkle-tree layout it is derived from the
-    boot header's firmware_type ("UNSAFE, DO NOT USE!" for a custom image,
-    otherwise the variant name).
+    Returns the firmware vendor string (legacy: from the vendor header;
+    Merkle tree: derived from the boot header's firmware_type).
     """
 
 
@@ -210,21 +208,9 @@ class FirmwareHeaderInfo(NamedTuple):
 def check_firmware_header(header : AnyBytes) -> FirmwareHeaderInfo:
     """Parses an incoming firmware header and returns information about it.
 
-    What `header` holds, and what the fields mean, depends on the image
-    layout this build uses.
-
-    Legacy: a vendor header followed by an image header. `vendor` is the
-    vendor string, `fingerprint` the image fingerprint, `hash` the hash of
-    both headers.
-
-    Merkle tree: the boot header PREFIX (authenticated part + Merkle proof,
-    WITHOUT the ~15.8 KB of signatures) followed by the firmware manifest
-    region. `vendor` is the offered variant's display name, `fingerprint` is
-    the release's firmware_root, and `hash` is the consent digest -- the
-    value to pass to `reboot_and_upgrade`, which the bootloader recomputes
-    over what the host actually delivers.
-
-    Either way `hash` is what binds the confirmation to this exact release.
+    Legacy: vendor header + image header. Merkle tree: boot header prefix
+    (without signatures) + firmware manifest region; `fingerprint` is the
+    firmware_root and `hash` the consent digest for `reboot_and_upgrade`.
     """
 
 
@@ -277,8 +263,7 @@ USE_BLE: bool
 USE_NFC: bool
 """Whether the hardware supports NFC."""
 USE_PQ_SECURE_BOOT: bool
-"""Whether this build uses the Merkle-tree (pq_secure_boot) image layout,
-rather than the legacy vendor + image headers."""
+"""Whether this build uses the Merkle-tree (pq_secure_boot) image layout."""
 USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
 USE_SERIAL_NUMBER: bool

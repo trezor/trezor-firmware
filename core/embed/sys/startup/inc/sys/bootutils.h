@@ -35,10 +35,8 @@ typedef struct {
   char title[64];
   char message[64];
   char footer[64];
-  // Also return the device to the UNPROVISIONED (empty) state, not just erase
-  // its data -- see `reboot_and_wipe`. Only `sectrue` asks for it; every other
-  // value, including the zero that `{0}` and a cleared bootargs region leave,
-  // keeps the device provisioned and its firmware bootable.
+  // sectrue also returns the device to the unprovisioned (empty) state;
+  // any other value (including zero) keeps it provisioned
   secbool unprovision;
 } bootutils_wipe_info_t;
 
@@ -72,15 +70,9 @@ void __attribute__((noreturn)) reboot_and_connect(void);
 // with the firmware installation.
 void __attribute__((noreturn)) reboot_and_upgrade(const uint8_t hash[32]);
 
-// Reboots the device and continues a two-phase install the bootloader staged
-// itself. Carries no arguments: what phase 2 installs is pinned in the staged
-// boot header, and deliberately NOT re-authorizing from bootargs is what keeps
-// the user's consent one-shot.
-//
-// Bootloader-internal: unlike reboot_and_upgrade this is never reachable from
-// firmware, so it has no syscall/smcall bridge. Kept distinct from
-// reboot_and_upgrade so the two cannot be confused at the boot-command
-// dispatch, where they need different gates on firmware validity.
+// Reboots the device and continues a two-phase install staged by the
+// bootloader itself. Bootloader-internal, no syscall/smcall bridge; what
+// phase 2 installs is pinned in the staged boot header, not in bootargs.
 void __attribute__((noreturn)) reboot_and_continue_upgrade(void);
 
 #ifdef USE_BOOTARGS_RSOD
@@ -92,14 +84,8 @@ void __attribute__((noreturn)) reboot_with_rsod(
 
 // Resets the device and wipes all the user data.
 // RSOD with wipe information is displayed.
-//
-// With `info->unprovision == sectrue` the device is instead returned to the
-// unprovisioned (empty) state a customer receives: the bootloader erases the
-// firmware and assets as well as the user data, and reboots straight into a
-// normal boot without a screen to acknowledge. Used at the end of factory
-// testing. Firmware cannot do this for itself -- it cannot erase the area it
-// runs from, and in the Merkle-tree layout the provisioning marker lives in the
-// write-protected boot header -- so asking here is the only way.
+// With `info->unprovision == sectrue` the bootloader also erases the firmware
+// and assets and reboots without an RSOD (end of factory testing).
 void __attribute__((noreturn)) reboot_and_wipe(
     const bootutils_wipe_info_t *info);
 

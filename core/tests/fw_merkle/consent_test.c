@@ -1,18 +1,12 @@
 /*
  * Cross-validation of the interaction-less upgrade consent digest.
  *
- * The digest is a contract between two different binaries: FIRMWARE computes it
- * over a boot header PREFIX it was handed over the wire, then the BOOTLOADER
- * recomputes it over the FULL header the host delivered -- and refuses to
- * install without asking the user unless the two agree. Both call the same
- * boot_header_merkle.c code, and this harness compiles that real source (never
- * a copy) to prove the two views produce identical bytes.
- *
- * The property that makes it work is that the digest covers the authenticated
- * part and the Merkle proof but stops before the unauthenticated part. That is
- * what makes it invariant under the firmware_type byte the bootloader REWRITES
- * while staging, and under signature substitution -- while still pinning
- * everything consent must pin.
+ * Firmware computes it over the boot header prefix received over the wire, the
+ * bootloader over the full header in flash; both call boot_header_merkle.c and
+ * must agree. The digest covers the authenticated part and the Merkle proof
+ * but stops before the unauthenticated part, so it is invariant under the
+ * firmware_type rewrite and signature substitution.
+ * See docs/core/embed-arch/firmware-merkle-tree.md.
  */
 #include <stddef.h>
 #include <stdint.h>
@@ -27,10 +21,10 @@
 #define PROOF (sizeof(boot_header_merkle_proof_t) + NODES * 32)
 #define HDRSZ (AUTH + PROOF + sizeof(boot_header_unauth_t))
 
-/* Offset of the byte phase 1 rewrites, derived rather than hardcoded. */
+/* Offset of the byte the bootloader rewrites while staging. */
 #define FW_TYPE_OFF \
   (AUTH + PROOF + offsetof(boot_header_unauth_t, firmware_type))
-/* A signature byte, likewise. */
+/* A signature byte. */
 #define SIG_OFF \
   (AUTH + PROOF + offsetof(boot_header_unauth_t, slh_signature) + 10)
 
@@ -43,7 +37,7 @@ static void ck(const char *what, int ok) {
 
 static uint8_t manifest[300];
 
-/* Digest as the BOOTLOADER computes it: from the full header in flash. */
+/* Digest as the bootloader computes it: from the full header in flash. */
 static secbool digest_bootloader(const uint8_t *hdr_full,
                                  merkle_proof_node_t *out) {
   const boot_header_auth_t *a = (const boot_header_auth_t *)hdr_full;
@@ -55,8 +49,8 @@ static secbool digest_bootloader(const uint8_t *hdr_full,
                                     sizeof(manifest), out);
 }
 
-/* Digest as FIRMWARE computes it: from one prefix||manifest blob off the wire,
- * splitting it itself -- no length is transmitted for the boundary. */
+/* Digest as firmware computes it: from one prefix||manifest blob off the wire,
+ * finding the boundary itself. */
 static secbool digest_firmware(const uint8_t *blob, size_t blob_len,
                                merkle_proof_node_t *out) {
   size_t extent = 0;
@@ -103,7 +97,7 @@ int main(int argc, char **argv) {
     hdr[AUTH + sizeof(*pr) + i] = (uint8_t)(i * 7 + 1);
   for (size_t i = 0; i < sizeof(boot_header_unauth_t); i++)
     hdr[AUTH + PROOF + i] = (uint8_t)(i * 13 + 5);
-  hdr[FW_TYPE_OFF] = 0; /* as transmitted: bootloader has not resolved it yet */
+  hdr[FW_TYPE_OFF] = 0; /* as transmitted: not yet resolved by the bootloader */
 
   for (size_t i = 0; i < sizeof(manifest); i++)
     manifest[i] = (uint8_t)(i ^ 0x5A);
@@ -132,7 +126,7 @@ int main(int argc, char **argv) {
 
   printf("== invariant under what the bootloader rewrites ==\n");
   merkle_proof_node_t after = {0};
-  hdr[FW_TYPE_OFF] = 0x42; /* phase 1: unauth->firmware_type = firmware_type */
+  hdr[FW_TYPE_OFF] = 0x42; /* the bootloader's firmware_type rewrite */
   digest_bootloader(hdr, &after);
   ck("unchanged by the firmware_type rewrite",
      memcmp(bl.bytes, after.bytes, 32) == 0);
@@ -216,10 +210,8 @@ int main(int argc, char **argv) {
   ck("reject: prefix with no manifest following",
      secfalse == digest_firmware(hdr, AUTH + PROOF, &after));
 
-  /* Hand the exact bytes and the resulting digest to the host cross-check, so
-   * trezor_core_tools' preamble builder is proven to derive the same boundary
-   * and the same digest from a header the device itself accepted. Inputs are
-   * back to their original values here (asserted above). */
+  /* Dump the vector for consent_host_check.py; inputs are back to their
+   * original values here (asserted above). */
   if (argc > 1) {
     merkle_proof_node_t final = {0};
     digest_bootloader(hdr, &final);

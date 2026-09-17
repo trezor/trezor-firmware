@@ -19,34 +19,16 @@
 
 /**
  * @file
- * @brief boot_header_merkle.c internals, exposed only for cross-validation.
- *
- * INTERNAL to sec/image/stm32 -- deliberately not under inc/sec/, so it is not
- * part of the module's API, and no production caller outside
- * boot_header_merkle.c uses any of it.
- *
- * These are the intermediate VALUES the cross-validation harnesses compare
- * against the Python signer's and the nRF's. Going through the public entry
- * points instead would only yield pass/fail, and a hash that differs from
- * theirs by one byte is exactly the failure that is otherwise silent -- images
- * simply stop verifying.
- *
- * Everything the fold needs beyond these stays static:
- * boot_header_internal_node() has no caller outside its own file now that the
- * nRF path folds through boot_header_verify_slot().
+ * @brief boot_header_merkle.c internals, exposed only so the cross-validation
+ *        harness (tests/fw_merkle) can compare intermediate values against the
+ *        Python signer and the nRF. Not under inc/sec/ -- not part of the API.
  */
 
 #pragma once
 
 /**
- * @brief Merkle LEAF hash: H(0x00 || data).
- *
- * Counterpart to boot_header_internal_node(). The 0x00/0x01 domain split is
- * what stops a leaf being replayed as an internal node, so the two belong
- * together; neither is nRF- or firmware-specific.
- *
- * Declared here rather than kept static because the cross-validation harness
- * compares this exact value against the nRF's and the host signer's.
+ * @brief Merkle LEAF hash H(0x00 || data); counterpart of the 0x01-tagged
+ *        internal node.
  *
  * @param data  bytes to commit
  * @param len   length of @p data
@@ -57,11 +39,6 @@ void merkle_leaf_hash(const uint8_t* data, size_t len,
 
 /**
  * @brief Smart-hashing chain over one firmware module's code.
- *
- * Declared here so the cross-validation harness can compare it against the
- * Python signer's chain directly -- that comparison is the whole point of the
- * harness, and going through firmware_verify_manifest() would only tell us
- * pass/fail.
  *
  * @param base        base address the module is mapped at
  * @param addr        module offset from @p base

@@ -20,20 +20,14 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-// Must sit at TOP LEVEL, not inside any #ifdef: it #undefs the model's flash
-// address constants so they resolve to the emulator's mapped addresses, and a
-// use further down the file that is NOT under the same condition would silently
-// get the device constant back -- a pointer to nothing on the host.
+// Must stay at top level: it #undefs the model's flash address constants.
 #ifdef TREZOR_EMULATOR
 #include "../emulator.h"
 #endif
 
 #ifdef PQ_SECURE_BOOT
 
-// PQ secure boot only supports lockable-bootloader models: unofficial
-// (custom / unknown-variant) firmware is permitted ONLY behind an unlockable
-// bootloader, so a PQ build without LOCKABLE_BOOTLOADER would have no safe gate
-// for it. Enforce the invariant at compile time and assume it below.
+// Unofficial firmware is gated on an unlocked bootloader, so PQ needs one.
 #ifndef LOCKABLE_BOOTLOADER
 #error "PQ_SECURE_BOOT requires LOCKABLE_BOOTLOADER"
 #endif
@@ -47,7 +41,7 @@
 #include <sys/flash_utils.h>
 #include <sys/systick.h>
 
-#include <sec/secret.h>  // secret_bootloader_locked() -- always present under PQ
+#include <sec/secret.h>
 #ifdef USE_BACKUP_RAM
 #include <sec/backup_ram.h>
 #endif
@@ -63,36 +57,22 @@
 #include "workflow.h"
 
 #ifdef USE_SMP
-#include "sha2.h"  // SHA256_DIGEST_LENGTH
+#include "sha2.h"
 #include "wf_nrf_ota.h"
 #endif
 
-// Target OTA transport block size in bytes. The actual block is the largest
-// WHOLE number of smart-hashing HASH chunks that fits this (T = n * chunk_size,
-// n = target / chunk_size), capped by the staging buffer (IMAGE_CHUNK_SIZE) and
-// floored to cover the header prefetch (FW_MANIFEST_REGION). Expressing the
-// lever in bytes (not a chunk count) keeps the transport block ~constant
-// regardless of the hash chunk size, which is what actually matters (RAM,
-// round-trips, early- reject granularity are all byte-denominated). Decouples
-// the transport/reject/ round-trip granularity (the block) from the hash chunk
-// (the commitment): one inline intermediate is sent per block, so a larger
-// target => fewer intermediates
-// + round-trips but coarser early-reject. See fwt_on_chunk / fwt_on_headers.
+// Target transport block size; the block is rounded to a whole number of
+// hash chunks, capped by IMAGE_CHUNK_SIZE and floored to FW_MANIFEST_REGION.
+// One inline intermediate hash is sent per block (see fwt_on_headers).
 #define FW_TRANSPORT_BLOCK_TARGET (64 * 1024)
 
-// The boot header is received into the upload engine's chunk_buffer (see
-// fw_begin_preamble). BOOT_HEADER_MAXSIZE bounds the receive, so the borrowed
-// buffer must be at least that large.
+// The boot header is received into the upload engine's chunk_buffer.
 #if BOOT_HEADER_MAXSIZE > IMAGE_CHUNK_SIZE
 #error "IMAGE_CHUNK_SIZE too small to receive a boot header"
 #endif
 
-// --- Phase-1 new-bootloader-code streaming (full bootloader update) ----------
-// When FirmwareBegin carries a new bootloader code_length, the code is
-// streamed into the staging area right after the already-staged boot header
-// (engine target_offset = header_size). The header arrived (with the resolved
-// firmware_type) in the message and was written first; the whole staged
-// [header|code] is then verified + handed to the boardloader in on_finish.
+// Phase-1 stream of new bootloader code into the staging area, right after
+// the staged boot header. Verified as a whole by ucb_stage_verify afterwards.
 
 static upload_status_t blcode_on_headers(image_upload_handler_t *base,
                                          protob_io_t *iface, const uint8_t *buf,
@@ -101,8 +81,6 @@ static upload_status_t blcode_on_headers(image_upload_handler_t *base,
   (void)iface;
   (void)buf;
   (void)len;
-  // Raw bootloader code (no header at the start); already confirmed in the
-  // preamble, so nothing to validate here.
   return UPLOAD_OK;
 }
 
@@ -117,7 +95,6 @@ static upload_status_t blcode_on_chunk(image_upload_handler_t *base,
   (void)data;
   (void)len;
   (void)prev_hash;
-  // Integrity is verified as a whole (Merkle root + signature) in on_finish.
   return UPLOAD_OK;
 }
 
@@ -125,10 +102,6 @@ static upload_status_t blcode_on_finish(image_upload_handler_t *base,
                                         protob_io_t *iface) {
   (void)base;
   (void)iface;
-  // The new bootloader [header|code] is fully staged. The commit (verify + UCB
-  // write, which also yields the modelRoot for co-processor verification) is
-  // done by the workflow after the stream returns, so it is uniform with the
-  // header-only path and the verified root is captured. Nothing to do here.
   return UPLOAD_OK;
 }
 
@@ -151,13 +124,8 @@ static const image_upload_ui_t blcode_upload_ui = {
     .fail = blcode_ui_fail,
 };
 
-// Firmware-update rejection exit: send the wire Failure AND draw the fail
-// screen, then return WF_ERROR. The bootloader's WF_ERROR path (main.c) only
-// delays ~10s and reboots -- it does NOT draw anything -- so a workflow MUST
-// render its own error UI first (as the phase-2 upload engine does via
-// ui->fail); otherwise the current screen just sits frozen through the delay.
-// Use this for every validation reject (both phases) so the user sees a failure
-// instead of a freeze.
+// Send the wire Failure and draw the fail screen; main.c's WF_ERROR path only
+// delays and reboots, so every workflow reject must render its own UI.
 static workflow_result_t fw_begin_fail(protob_io_t *iface,
                                        const char *message) {
   send_msg_failure(iface, FailureType_Failure_ProcessError, message);
@@ -165,42 +133,19 @@ static workflow_result_t fw_begin_fail(protob_io_t *iface,
   return WF_ERROR;
 }
 
-// Everything phase 1 still needs once the boot header has been staged.
-// Extracted BY VALUE on purpose: `fw_begin_preamble` receives the header into
-// the upload engine's chunk_buffer, which the bootloader-code / nRF streams
-// below then reuse, so no pointer into that buffer (bh_buf, hdr, manifest) may
-// outlive the preamble. Returning a struct makes that the compiler's job
-// instead of a reviewer's.
+// Phase-1 results returned by value: the preamble receives the header into
+// chunk_buffer, which the streams below reuse, so no pointer may outlive it.
 typedef struct {
   uint32_t header_size;     // staged header size (stream offset)
-  secbool full_bootloader;  // the bootloader CODE must be streamed
-  // Whether the seed survives this install. secfalse means the storage domain
-  // changes and the caller must erase -- see the erase site for why that work
-  // is deferred out of here.
-  secbool keep_seed;
+  secbool full_bootloader;  // the bootloader code must be streamed
+  secbool keep_seed;        // secfalse: storage domain changes, caller erases
 } fw_begin_staged_t;
 
-// Every module the engine streams must be FLASH_BLOCK_SIZE-aligned in addr AND
-// size.
-//
-// The install writes whole flash blocks, and under the tree layout the engine
-// streams ONE SEGMENT PER MODULE, taken straight from the manifest's addr/size
-// (fwt_plan_segments). A module whose size is not a multiple of the block makes
-// that segment's final block short, and the write asserts the alignment --
-// fatally, mid-install, after the user has confirmed and the device has already
-// rebooted into CONTINUE_UPGRADE. The declared total length says nothing about
-// it: that is a separate, block-aligned number.
-//
-// For the CUSTOM variant `size` is the creator's -- zeroed for the fold, so an
-// unaligned one authenticates -- which is what makes this reachable at all.
-// `addr` is founder-authenticated even there; it is checked for symmetry and to
-// catch a bad build.
-//
-// Lives here, not in firmware_manifest_layout_valid: FLASH_BLOCK_SIZE is
-// MCU-specific and sec/ is compiled into binaries that cannot see it. Called at
-// both points layout_valid is -- phase 1 before the confirm, and phase 2 before
-// any erase -- so the rejection is a wire Failure at the earliest point, never
-// a fatal error.
+// Every module must be FLASH_BLOCK_SIZE-aligned in addr and size, or the
+// per-module segment write asserts mid-install. Lives here rather than in
+// firmware_manifest_layout_valid because FLASH_BLOCK_SIZE is MCU-specific;
+// called wherever layout_valid is. The CUSTOM variant's app size is not
+// founder-authenticated, which is what makes this reachable.
 static secbool fwt_manifest_block_aligned(const firmware_manifest_t *manifest) {
   for (size_t i = 0; i < manifest->module_count; i++) {
     const firmware_manifest_entry_t *e = &manifest->entries[i];
@@ -212,104 +157,59 @@ static secbool fwt_manifest_block_aligned(const firmware_manifest_t *manifest) {
   return sectrue;
 }
 
-// Phase-1 preamble: receive FirmwareBegin (boot header + manifest region + the
-// optional nRF fields), validate and authenticate both, confirm with the user,
-// and stage the boot header. Nothing here is destructive: the seed erase the
-// confirm warned about is the caller's, once the delivered code has been
-// verified against the signed header.
-//
-// Returns WF_OK to continue; any other result is terminal and already rendered
-// its own UI (see fw_begin_fail). `msg` and `nrf_arg` are filled by the receive
-// and outlive this call -- they must NOT point into chunk_buffer. `out` is
-// written only on WF_OK.
+// Phase-1 preamble: receive FirmwareBegin, authenticate the boot header and
+// the manifest, confirm with the user, stage the boot header. Nothing here is
+// destructive. Any result other than WF_OK has already rendered its UI.
+// `msg` and `nrf_arg` outlive this call and must not point into chunk_buffer.
 static workflow_result_t fw_begin_preamble(protob_io_t *iface,
                                            FirmwareBegin *msg,
                                            firmware_begin_nrf_t *nrf_arg,
                                            fw_begin_staged_t *out) {
-  // Receive buffer for the manifest region (manifest + firmware Merkle proof)
-  // -- the same object phase 2 stores in fwt_upload_handler_t.manifest_buf, so
-  // it is bounded by the canonical FW_MANIFEST_REGION, not an ad-hoc size.
+  // Manifest region (manifest + proof); same bound as
+  // fwt_upload_handler_t.manifest_buf.
   static uint8_t module_headers[FW_MANIFEST_REGION];
-  // Boot header scratch, borrowed from the upload engine (see chunk_buffer in
-  // wf_image_upload.h). The receive is bounded by BOOT_HEADER_MAXSIZE, not by
-  // the buffer's own size, and the contents are valid only until the caller
-  // starts streaming -- which is what fw_begin_staged_t exists to respect.
+  // Boot header scratch borrowed from the upload engine; valid only until
+  // the caller starts streaming.
   uint8_t *bh_buf = (uint8_t *)chunk_buffer;
   size_t bh_len = 0;
   size_t mh_len = 0;
-  // Claimed digest of the incoming bootloader code (see the signature check
-  // below). Its own storage, not chunk_buffer: it is consumed before any
-  // stream, but the cost is 32 bytes and the lifetime rule is then trivial.
+  // Host-claimed digest of the incoming bootloader code.
   uint8_t code_hash[IMAGE_HASH_DIGEST_LENGTH] = {0};
   size_t ch_len = 0;
-  // Defense-in-depth: this static buffer persists across retries within one
-  // boot, so zero it before each receive. Consumers are already length-bounded
-  // (mh_len) and cryptographically authenticated (firmware_root), so this only
-  // guarantees any stale attacker bytes from a prior call read back as zero.
+  // The static buffer persists across retries within one boot.
   memset(module_headers, 0, sizeof(module_headers));
   if (sectrue !=
       recv_msg_firmware_begin(iface, msg, bh_buf, BOOT_HEADER_MAXSIZE, &bh_len,
                               module_headers, sizeof(module_headers), &mh_len,
                               code_hash, sizeof(code_hash), &ch_len, nrf_arg)) {
-    ui_screen_fail();  // recv already failed (no wire Failure to send); see
-                       // main.c
+    ui_screen_fail();  // recv already failed, no wire Failure to send
     return WF_ERROR;
   }
 
-  // --- Validate the new boot header (structure + model). ---
-  //     boot_header_auth_get() also enforces hw_model/hw_revision, so a
-  //     model mismatch is already rejected here as "Invalid boot header".
+  // boot_header_auth_get also enforces hw_model / hw_revision.
   const boot_header_auth_t *hdr = boot_header_auth_get((uintptr_t)bh_buf);
   if (hdr == NULL || hdr->header_size > bh_len) {
     return fw_begin_fail(iface, "Invalid boot header");
   }
-  // boot_header_auth_get bounds header_size on both sides but code_size only
-  // from below, and the very next thing we do is hash code_size bytes off
-  // BOOTLOADER_START. Bound it here, before that read: header + code must fit
-  // the bootloader area, which is also what the code stream enforces later
-  // (run_image_upload's max_size), so this only moves the same limit ahead of
-  // the first use. Subtraction, not addition, so the sum cannot wrap.
+  // Bound code_size before hashing that many bytes off BOOTLOADER_START.
+  // Subtraction so the sum cannot wrap.
   _Static_assert(BOOTLOADER_MAXSIZE >= SIZE_64K,
                  "bootloader area smaller than the maximum header size");
   if (hdr->code_size > BOOTLOADER_MAXSIZE - hdr->header_size) {
     return fw_begin_fail(iface, "Invalid boot header");
   }
 
-  // --- Anti-rollback (reject a downgrade UP FRONT, before confirming). ---
-  //     The tree couples the bootloader + firmware into ONE signed unit: the
-  //     boot header carries firmware_root, so the header's single-byte
-  //     monotonic_version is the anti-rollback axis for the whole coupled
-  //     release. (The manifest firmware_version is authenticated but
-  //     DISPLAY-ONLY; the monotonic byte is what a security release bumps.)
-  //     This is the SAME floor enforced at boot (check_bootloader_min_version)
-  //     and again at staging (ucb_stage_commit) and by the boardloader;
-  //     checking it here just avoids asking the user to confirm an install that
-  //     would be rejected anyway.
+  // Anti-rollback on the header's monotonic_version, before confirming. Same
+  // floor as check_bootloader_min_version at boot, ucb_stage_commit and the
+  // boardloader.
   if (sectrue != check_bootloader_min_version(hdr->monotonic_version)) {
     return fw_begin_fail(iface, "Firmware downgrade protection");
   }
 
-  // --- Upgrade floor: refuse a release that requires a newer predecessor
-  //     than the one installed. ---
-  //     `min_prev_version` runs the OPPOSITE direction from the monotonic
-  //     axis. Monotonic says how far back an install may go; this says how far
-  //     back the DEVICE may be and still take this release. It exists for a
-  //     release that must not reach a device except through a specific
-  //     predecessor -- a migration waypoint that has to run once, say. Every
-  //     other release leaves it 0.0.0.0, which nothing can fail.
-  //
-  //     Evaluated only when SET, and then it must be POSITIVELY satisfied: an
-  //     installed header we cannot parse fails the floor rather than passing
-  //     it. With no floor the path is byte-for-byte what it was before, so a
-  //     release that does not opt in cannot be affected by this at all.
-  //
-  //     Where it is enforced is the limit of what it can promise. Both sites
-  //     are in the BOOTLOADER -- here and at staging -- because the boardloader
-  //     is fixed at manufacture and cannot be taught the field. So the floor
-  //     binds only on a device whose INSTALLED bootloader already carries this
-  //     check, and a release relying on it must bump `monotonic_version` as
-  //     well: otherwise installing an older bootloader first removes the check,
-  //     and the floor with it.
+  // Upgrade floor: the installed bootloader must be >= min_prev_version when
+  // set. Enforced only in the bootloader (here and at staging), so a release
+  // relying on it must bump monotonic_version as well. An unparseable
+  // installed header fails the floor.
   if (boot_header_version_is_set(hdr->min_prev_version)) {
     const boot_header_auth_t *installed =
         boot_header_auth_get(BOOTLOADER_START);
@@ -320,44 +220,18 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
     }
   }
 
-  // --- Authenticate the boot header, and decide whether the CODE must be
-  //     streamed -- in that order, so NOTHING below runs on an unverified
-  //     header. ---
-  //     The signed leaf is H(0x00 || auth_part || H(code)), so the root needs
-  //     the code's DIGEST, not its bytes. Two ways to get one without a stream:
-  //
-  //       1. Fold over the CURRENT on-flash code. If that verifies, the new
-  //          header signs the code already installed -> header-only, and there
-  //          is nothing to stream.
-  //       2. Otherwise the code changes, and the host's claimed `code_hash`
-  //          supplies the digest. A claim is not a trust input on its own, but
-  //          it need not be: a wrong digest yields a root the founder never
-  //          signed, so the check below rejects it. What the claim CANNOT do is
-  //          make a forged header verify.
-  //
-  //     Either way the signature is checked HERE, before the confirm, the
-  //     vendor string, the manifest fold and the storage-domain verdict -- all
-  //     of which are therefore derived from a founder-signed header, as legacy
-  //     did by checking its two signatures before asking the user.
-  //
-  //     The claim binds only the root; what binds the DELIVERED code to it is
-  //     ucb_stage_verify, which recomputes the digest over the staged bytes
-  //     after the stream. A host that claims one hash and sends another fails
-  //     there, with nothing installed. (code_size is inside auth_size, so the
-  //     signed header already pins the length the digest is taken over.)
-  //
-  //     FIH: header-only requires a POSITIVE pass in step 1; anything else --
-  //     a real change, an unknown value, a glitched compare -- falls to the
-  //     full path, which must then produce its own POSITIVE pass in step 2. ---
+  // Authenticate the header before anything below uses it. The leaf commits
+  // to H(code): if the current on-flash code verifies, the install is
+  // header-only; otherwise the host's claimed code_hash must verify, and
+  // ucb_stage_verify later binds the delivered code to it.
+  // FIH: header-only needs a positive pass; everything else takes the full
+  // path, which needs its own positive pass.
   merkle_proof_node_t root;
   boot_header_calc_merkle_root(hdr, BOOTLOADER_START + hdr->header_size, &root);
   const secbool full_bootloader =
       (sectrue == boot_header_check_signature(hdr, &root)) ? secfalse : sectrue;
 
   if (sectrue == full_bootloader) {
-    // The code changes. Reject a host that did not offer it, or that offered
-    // no digest to verify the header against -- either way we would be asking
-    // the user to confirm an install we cannot yet authenticate.
     if (!msg->has_code_length || msg->code_length == 0) {
       return fw_begin_fail(
           iface, "Bootloader code changed; full bootloader not supplied");
@@ -367,50 +241,23 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
     }
     boot_header_calc_merkle_root_from_hash(hdr, code_hash, &root);
     if (sectrue != boot_header_check_signature(hdr, &root)) {
-      // Neither the current code nor the claimed one produces a signed root:
-      // the header is not founder-signed. This is the rejection that used to
-      // wait until after the stream -- and after the user had been asked.
       return fw_begin_fail(iface, "Invalid boot header signature");
     }
   }
 
 #ifdef USE_SMP
-  // --- A device WITH a co-processor requires every install to carry one. ---
-  //     Arming the UCB is what commits the bootloader swap, and it is done
-  //     last so an abort leaves the old BOOTLOADER whole with nothing
-  //     committed -- not the firmware, which the staging scratch has already
-  //     overwritten by then (see the arm-last comment). That ordering assumes
-  //     the co-processor leg has already run; a FirmwareBegin that simply
-  //     omits the nRF fields skips it and arms anyway, landing on exactly the
-  //     new-bootloader + old-co-processor pair the ordering exists to avoid.
-  //     Authenticating the update-required hint does not reach this: an absent
-  //     field is never compared with anything.
-  //
-  //     The requirement comes from THIS DEVICE's build, not from the release.
-  //     Nothing signed says a release carries a co-processor slot -- the model
-  //     tree is fixed-depth and its leaves are ordered by hash, so an occupied
-  //     slot is indistinguishable from padding in the co-path. But the
-  //     bootloader already knows it has an nRF, and that is the side of the
-  //     question that matters: a device with one must never install a release
-  //     that leaves it behind. Nothing to forge, and no header field to freeze.
-  //
-  //     Requiring the FIELD is not requiring a push: nrf_update_required still
-  //     skips a co-processor that already matches. This only denies the host
-  //     the option of not offering it -- the same contract code_length already
-  //     has.
+  // A device with a co-processor requires every install to carry its image;
+  // otherwise arm-last would land on new bootloader + old co-processor.
+  // The requirement comes from this build, not the release (an nRF slot is
+  // indistinguishable from padding in the co-path). An already-current nRF
+  // is still skipped by nrf_update_required.
   if (!msg->has_nrf_length || msg->nrf_length == 0) {
     return fw_begin_fail(iface, "Release carries no co-processor image");
   }
 #endif
 
-  // --- Authenticate the firmware manifest against the new firmware_root. ---
-  //     The preamble blob is the firmware image's manifest region:
-  //     [manifest || firmware_manifest_proof_t] -- the manifest ("firmware
-  //     directory") followed by the per-variant Merkle proof (co-path variant
-  //     leaf -> firmware_root), the exact bytes baked at the firmware image
-  //     start. Authenticate header-only (no bodies yet): the variant leaf,
-  //     folded through the proof, must equal firmware_root. A single-variant
-  //     firmware has an empty proof (variant leaf == firmware_root).
+  // Authenticate the manifest region [manifest || firmware_manifest_proof_t]:
+  // the variant leaf folded through the proof must equal firmware_root.
   merkle_proof_node_t firmware_root;
   memcpy(firmware_root.bytes, hdr->firmware_root.bytes,
          sizeof(firmware_root.bytes));
@@ -418,7 +265,6 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
       (const firmware_manifest_t *)module_headers;
   if (mh_len < sizeof(firmware_manifest_t) ||
       firmware_manifest_size(manifest) > mh_len) {
-    // malformed: too short for the fixed header, or entries run past the blob
     return fw_begin_fail(iface, "Invalid firmware manifest");
   }
   size_t manifest_len = firmware_manifest_size(manifest);
@@ -426,44 +272,17 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   size_t fw_proof_count = 0;
   if (sectrue != firmware_manifest_read_proof(manifest, mh_len, &fw_proof,
                                               &fw_proof_count)) {
-    // malformed proof region (too many nodes, or runs past the blob)
     return fw_begin_fail(iface, "Invalid firmware manifest proof");
   }
   if (sectrue != firmware_manifest_authentic(manifest, manifest_len, fw_proof,
                                              fw_proof_count, &firmware_root)) {
-    // structurally valid, but the variant leaf does not fold to firmware_root
     return fw_begin_fail(iface, "Firmware manifest not authentic");
   }
 
-  // --- Interaction-less upgrade: was THIS release confirmed in firmware? ---
-  //     The digest covers the boot header's authenticated part + Merkle proof
-  //     (bootloader version, monotonic_version, firmware_root, and the co-path
-  //     siblings -- so the nRF image too) and the manifest as received
-  //     (variant, firmware_version, every module code_hash). Recomputing it
-  //     over what the host actually delivered and comparing against the value
-  //     firmware stored in bootargs is what lets the confirm screen be skipped
-  //     -- but only together with an unchanged storage domain AND an official
-  //     variant, see `skip_confirm` below. The digest proves WHICH release the
-  //     running firmware named; that it showed the user anything is trust
-  //     placed in that firmware, which is why the skip is not extended to
-  //     unofficial builds.
-  //     FIH: `ilu` only ever flips on a POSITIVE match, so a skipped/glitched
-  //     check leaves the confirm shown.
-  //     Consent is ONE-SHOT: it authorizes the install the user asked for, not
-  //     every install until the next reboot. A second install is a second
-  //     event, and one tap must not authorize an unbounded series of them --
-  //     so a host that starts a SECOND upload is asked again, even for the
-  //     same release. Two things enforce that, covering the two ways a second
-  //     upload can arrive:
-  //       - across the phase-1 reboot: only the firmware-originated
-  //         INSTALL_UPGRADE is accepted here, and phase 1 carries no digest
-  //         into phase 2 (nothing there reads one), so a FirmwareBegin sent
-  //         instead of resuming phase 2 finds no consent at all;
-  //       - within this session: `consent_consumed` below. A successful phase 1
-  //         ends in a noreturn reboot, so this only bites when phase 1 already
-  //         used the consent and then failed -- the bootargs digest is still
-  //         sitting there, and without the flag a retry would re-authorize off
-  //         it silently. ---
+  // Interaction-less upgrade: the consent digest H(header prefix || manifest)
+  // must match the hash firmware left in bootargs under INSTALL_UPGRADE.
+  // Consent is one-shot: consumed here, and phase 1 carries no digest into
+  // phase 2. FIH: `ilu` flips only on a positive match.
   merkle_proof_node_t consent = {0};
   size_t prefix_len = 0;
   if (sectrue != boot_header_prefix_extent((const uint8_t *)hdr,
@@ -473,8 +292,6 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
                                             &consent)) {
     return fw_begin_fail(iface, "Invalid boot header");
   }
-  // Session-lifetime (zero-initialized every boot, which is the correct initial
-  // state: consent has not been used yet).
   static bool consent_consumed = false;
 
   secbool ilu = secfalse;
@@ -483,81 +300,42 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
     boot_args_t args = {0};
     bootargs_get_args(&args);
     if (memcmp(args.hash, consent.bytes, sizeof(consent.bytes)) != 0) {
-      // Confirmed one release, delivered another.
       return fw_begin_fail(iface, "Firmware mismatch");
     }
-    // The unattended path installs an UPGRADE only -- matching legacy, which
-    // refuses a non-upgrade here rather than trusting the host (`is_upgrade` in
-    // wf_firmware_update.c). Firmware checks this too, but that cannot
-    // substitute for it: the bootloader must not take firmware's word for the
-    // version. Its own anti-rollback axis (the boot header's monotonic_version)
-    // is coarser, so a downgrade WITHIN one monotonic version would otherwise
-    // install with nobody looking.
-    //
-    // A USER-CONFIRMED install may still be a downgrade -- the version is on
-    // the confirm screen and the user decides. So this gates only the
-    // interaction-less path, exactly as legacy does.
-    //
-    // The installed manifest is read unauthenticated, which is adequate for
-    // what this defends against: a host pushing a silent downgrade cannot
-    // rewrite flash, and anyone who can already owns the device by other means.
-    // An absent/garbage manifest means no installed firmware, and a fresh
-    // install is not a downgrade (legacy's `is_new` fallback).
+    // The unattended path installs an upgrade only (as `is_upgrade` in
+    // wf_firmware_update.c); a user-confirmed downgrade is still allowed.
+    // The installed manifest is read unauthenticated; no manifest means a
+    // fresh install, which is not a downgrade.
     const firmware_manifest_t *installed =
         (const firmware_manifest_t *)(uintptr_t)FIRMWARE_START;
     if (installed->magic == FW_MANIFEST_MAGIC &&
         memcmp(manifest->firmware_version, installed->firmware_version,
                sizeof(manifest->firmware_version)) <= 0) {
-      // Byte-wise over [major, minor, patch, build]: the array order IS the
-      // precedence order, so memcmp is the version comparison.
+      // [major, minor, patch, build] byte order is the precedence order.
       return fw_begin_fail(iface, "Not a firmware upgrade");
     }
-    // Spent before it is acted on: whatever happens to this install, the next
-    // upload asks the user again.
     consent_consumed = true;
     ilu = sectrue;
   }
 
-  // --- Validate the module layout NOW, before confirming + rebooting. ---
-  //     The same check runs in phase 2 (fwt_on_headers), but doing it here
-  //     means a malformed / hostile manifest (notably a CUSTOM variant's
-  //     unauthenticated app size, which folds fine but could run past the
-  //     firmware area) is rejected before the user is asked to confirm and
-  //     before the boot header is staged + the device reboots. The SAME shared
-  //     check also runs in phase 2 and at every boot (firmware_verify_tree).
-  //     ---
+  // Validate the module layout before confirming; the same checks run in
+  // phase 2 (fwt_on_headers) and at boot (firmware_verify_tree).
   if (sectrue != firmware_manifest_layout_valid(manifest, FIRMWARE_MAXSIZE) ||
       sectrue != fwt_manifest_block_aligned(manifest)) {
     return fw_begin_fail(iface, "Invalid firmware manifest");
   }
 
-  // --- Resolve the (authenticated) variant -> firmware_type. ---
   const fw_variant_sec_t variant = manifest->firmware_variant;
 
-  // Custom firmware is the authenticated FW_VARIANT_CUSTOM slot: its manifest
-  // leaf was founder-signed with the kernel+coreapp code_hash zeroed (see
-  // firmware_manifest_authentic above), so the variant field is authenticated
-  // and the app is founder-unbound (integrity-only). A custom install runs
-  // unprivileged, is storage-isolated (firmware_type == the variant feeds the
-  // storage salt), and is allowed ONLY on an UNLOCKED bootloader. FIH: gate on
-  // the POSITIVE is_official check -- anything not positively official (custom
-  // / none / unknown) requires an unlocked bootloader.
+  // CUSTOM is a founder-signed slot with the app code_hash zeroed in the
+  // leaf: authenticated variant, integrity-only app, storage-isolated via
+  // firmware_type, allowed only on an unlocked bootloader.
   secbool is_custom = fw_variant_is_custom(variant);
 
-  // FIH: the verdict is read TWICE, from the local copy and from the
-  // authenticated manifest again, and BOTH must be positively official for the
-  // gate to open. This is the asymmetric one: crossing the official<->custom
-  // storage boundary already has an independent re-derivation below
-  // (keep_seed), but the unlock gate rested on a single read -- and it is what
-  // decides whether founder-unbound code may install on a locked device. Two
-  // reads do not stop a persistent corruption of the buffer, which the fold
-  // already covers; they stop a single glitched read or comparison, which it
-  // does not.
+  // FIH: two independent reads, both must be positively official.
   const secbool official_1 = fw_variant_is_official(variant);
   const secbool official_2 = fw_variant_is_official(manifest->firmware_variant);
   if (official_1 != sectrue || official_2 != sectrue) {
-    // Unofficial firmware is allowed only on an UNLOCKED bootloader (guaranteed
-    // lockable under PQ -- see the LOCKABLE_BOOTLOADER static check above).
     if (secret_bootloader_locked() != secfalse) {
       return fw_begin_fail(
           iface, "Unlock the bootloader to install unofficial firmware");
@@ -565,11 +343,8 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   }
   const fw_variant_sec_t firmware_type = variant;
 
-  // FIH: default to the SAFE behaviour -- WIPE (keep_seed secfalse) and treat
-  // the device as NOT empty (require confirmation). Each flips to the
-  // permissive value only when its condition is POSITIVELY met, so a
-  // skipped/glitched check leaves the safe path (confirm shown, seed wiped),
-  // never a silent install or a seed kept across storage domains.
+  // FIH: defaults are the safe values (wipe, confirm); each flips only on a
+  // positive condition.
   secbool keep_seed = secfalse;
   secbool empty_device = secfalse;
   const boot_header_auth_t *cur = boot_header_auth_get(BOOTLOADER_START);
@@ -577,104 +352,47 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
       (cur != NULL) ? boot_header_unauth_get(cur) : NULL;
   if (cur != NULL && cur_unauth != NULL &&
       cur_unauth->firmware_type == FW_VARIANT_SEC_NONE) {
-    // POSITIVELY unprovisioned, and only that. This gate skips the install
-    // confirm for an official firmware, so it must not fire on INVALID: a
-    // zeroed, erased or torn-write field is a device in an unknown state, and
-    // "the header is garbage" is not consent. NONE is written deliberately --
-    // by the signer for a bare release and by the wipe path -- so requiring it
-    // positively means only a device that really is unprovisioned
-    // auto-confirms. (fw_check's header_present is the wider "is a variant
-    // installed" test: INVALID reads as absent there, which is right for
-    // display, but display is not consent.)
+    // Positively unprovisioned only; an INVALID field is not consent.
     empty_device = sectrue;
   } else if (cur_unauth != NULL && cur_unauth->firmware_type == firmware_type) {
-    // Same storage domain: BOTH the variant AND the official/custom flag match
-    // (the salt keys off the full firmware_type). An official<->custom switch
-    // at the same variant changes firmware_type -> different salt -> wipe.
+    // Same storage domain (the salt keys off the full firmware_type).
     keep_seed = sectrue;
   }
 
-  // Defense-in-depth for the official<->custom boundary: crossing it MUST wipe
-  // the seed, so switching to unofficial firmware (and back) can never recover
-  // a wallet provisioned under the other privilege level. This is an
-  // INDEPENDENT gate -- on a real transition the firmware_type equality above
-  // already left keep_seed false, but re-deriving the custom flag from the
-  // current header and forcing a wipe on mismatch means a single glitched
-  // equality cannot preserve the seed across the boundary. (Safe direction: any
-  // doubt -> wipe.)
+  // Independent gate: crossing the official<->custom boundary always wipes.
   if (cur_unauth != NULL &&
       fw_variant_is_custom(cur_unauth->firmware_type) != is_custom) {
     keep_seed = secfalse;
   }
 
-  // Storage-format floor. A release older than the INSTALLED header's
-  // fix_version may not keep the seed: that is what the field says, and legacy
-  // enforces it (wf_firmware_update.c). The tree layout had dropped it --
-  // keep_seed keyed only off the storage DOMAIN, so a downgrade across a
-  // storage format change handed the older firmware a seed it cannot read.
-  // Monotonic bounds this too, but only to the rung; fix_version is the finer
-  // axis and the one that names the format. Another independent gate that only
-  // forces the safe direction; inert at 0.0.0.0, which nothing sorts below.
+  // Storage-format floor: a release below the installed fix_version may not
+  // keep the seed. Must match wf_firmware_update.c.
   if (cur != NULL &&
       boot_header_version_compare(hdr->version, cur->fix_version) < 0) {
     keep_seed = secfalse;
   }
 
-  // --- Confirm -- UNLESS the device is (positively) empty AND the variant is
-  //     (positively) official. Like legacy, a fresh install of an OFFICIAL
-  //     firmware onto an empty device needs no consent (even though setup
-  //     erases storage); an unofficial one is always confirmed, however empty
-  //     the device. A provisioned device always confirms; a variant
-  //     (storage-domain) change passes !keep_seed so the single install-confirm
-  //     screen shows the "SEED WILL BE ERASED!" warning, so the user is never
-  //     surprised by losing their wallet. The confirm shows the firmware
-  //     variant (vendor string) and the firmware version (from the
-  //     authenticated manifest). TODO(pq_secure_boot): a dedicated tree-install
-  //     confirm screen; reuse the bootloader one for now. ---
-  // Vendor identity shown on the confirm: the variant name for an official
-  // install, or the loud UNSAFE marker for a custom one. FIH: official only on
-  // the POSITIVE is_official allow-list.
+  // Confirm unless the device is positively empty and the variant positively
+  // official; !keep_seed shows the seed-erase warning.
+  // TODO(pq_secure_boot): dedicated tree-install confirm screen.
   size_t vendor_len = 0;
   const secbool install_official = fw_variant_is_official(variant);
   const char *vendor = tree_vendor_str(variant, install_official, &vendor_len);
-  // Firmware version from the (authenticated) manifest, packed for format_ver.
-  // This is the FIRMWARE version, not the staged bootloader's TRZQ version.
+  // Firmware version from the manifest, not the staged bootloader version.
   const uint32_t fw_version = (uint32_t)manifest->firmware_version[0] |
                               ((uint32_t)manifest->firmware_version[1] << 8) |
                               ((uint32_t)manifest->firmware_version[2] << 16) |
                               ((uint32_t)manifest->firmware_version[3] << 24);
-  // An interaction-less install skips the confirm ONLY when the storage domain
-  // is unchanged. Crossing it erases the seed, and the warning the user must
-  // see for that ("SEED WILL BE ERASED!") lives on THIS screen -- the
-  // bootloader cannot verify that firmware's own confirm carried it. So a
-  // domain-changing interaction-less upgrade falls back to asking here rather
-  // than wiping silently.
-  //
-  // And the install must be OFFICIAL. The digest only proves the running
-  // firmware named this release; that it ASKED anyone is an assumption, and
-  // for an unofficial build it is an assumption about attacker-controlled
-  // code. Without this, a custom firmware could replace itself with another
-  // custom image -- same domain, so keep_seed holds -- and the owner would
-  // never see the one screen that says the code being installed is unofficial
-  // (the same reason skip_empty below is gated on it). Legacy refuses the
-  // interaction-less path for anything not full-trust, on top of refusing a
-  // vendor change; this is both halves of that.
-  //
-  // FIH: all three must be POSITIVELY true.
+  // Interaction-less skip requires an unchanged storage domain (the erase
+  // warning lives on this screen) and an official variant (the running
+  // firmware's own confirm is trusted only when it is official). FIH: all
+  // three positive.
   const secbool skip_confirm =
       (ilu == sectrue && keep_seed == sectrue && install_official == sectrue)
           ? sectrue
           : secfalse;
-  // An empty device auto-confirms ONLY an officially signed variant. Legacy
-  // takes the same position -- its auto-confirm requires VTRUST_NO_WARNING as
-  // well as a new install ("only allowed for full-trust images",
-  // wf_firmware_update.c) -- and for a reason the unlock gate above does not
-  // cover: "the device is empty" is a state anyone with physical access can
-  // CREATE by wiping it, so on its own it is not evidence of consent. Unlocking
-  // is persistent; this confirm is per-install, and it is the only place the
-  // owner is shown that what is going on is unofficial. FIH: both halves must
-  // be POSITIVELY true, so custom / unknown / glitched all fall through to
-  // asking.
+  // An empty device auto-confirms only an official variant; "empty" can be
+  // created by anyone with physical access. FIH: both positive.
   const secbool skip_empty =
       (empty_device == sectrue && install_official == sectrue) ? sectrue
                                                                : secfalse;
@@ -688,12 +406,9 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   }
   ui_screen_install_start(iface->wire->wireless);
 
-  // --- Set the resolved firmware_type into the (unauth) header, then stage it.
-  //     firmware_type is outside auth_size (does not affect the signature) and
-  //     the UCB hash covers it so it survives install. The firmware Merkle
-  //     proof is NOT written here -- it rides in the firmware image's manifest
-  //     region (installed in phase 2), so this write-protected header carries
-  //     only the storage-domain identity. ---
+  // firmware_type lives in the unauth part (outside auth_size, covered by the
+  // UCB hash). The firmware Merkle proof rides in the firmware image's
+  // manifest region, not here.
   boot_header_unauth_t *unauth =
       (boot_header_unauth_t *)(uintptr_t)boot_header_unauth_get(hdr);
   if (unauth == NULL) {
@@ -706,7 +421,6 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
     return fw_begin_fail(iface, "Staging failed");
   }
 
-  // Hand back only values -- every pointer into chunk_buffer dies here.
   out->header_size = header_size;
   out->full_bootloader = full_bootloader;
   out->keep_seed = keep_seed;
@@ -714,10 +428,7 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
 }
 
 workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
-  // nRF OTA fields (optional). Their own STABLE static buffers -- NOT
-  // chunk_buffer, which fw_begin_preamble borrows for the boot header and the
-  // bootloader-code / nRF streams then reuse -- so the co-path + hash survive
-  // until the nRF push below.
+  // nRF OTA fields need stable storage (not chunk_buffer) until the push.
 #ifdef USE_SMP
   static uint8_t
       nrf_co_path[MODEL_TREE_MAX_PROOF_NODES * sizeof(merkle_proof_node_t)];
@@ -740,23 +451,16 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   if (preamble != WF_OK) {
     return preamble;
   }
-  // chunk_buffer is now free for the streams below.
+  // chunk_buffer is free for the streams below.
   const uint32_t header_size = staged.header_size;
   const secbool full_bootloader = staged.full_bootloader;
   const secbool keep_seed = staged.keep_seed;
 
-  // --- Stage the new bootloader (streaming the code only if it changed) and
-  //     capture the signature-verified modelRoot the new header commits to.
-  //     model_root is valid for BOTH paths (header-only folds over the current
-  //     code, full over the staged new code) and is what the co-processor
-  //     leaves below fold against. ---
+  // Stage the new bootloader and capture the signature-verified model_root
+  // (valid for both the header-only and the full path).
   merkle_proof_node_t model_root;
   if (sectrue == full_bootloader) {
-    // Stream the new bootloader code into the staging area after the staged
-    // header. This is the point where chunk_buffer stops holding the received
-    // boot header; fw_begin_preamble already handed back everything still
-    // needed (by value) and staged the header into flash. The stream suppresses
-    // its own Success (the single terminal one is below).
+    // The stream suppresses its own Success; the single terminal one is below.
     image_upload_handler_t handler = {
         .target_area = &STAGING_AREA,
         .target_offset = header_size,
@@ -773,10 +477,7 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
       return WF_ERROR;
     }
   }
-  // Verify the staged bootloader (signature) and take the modelRoot it commits
-  // to -- but do NOT arm the install yet. Uniform for full (staged new code)
-  // and header-only (current code, possibly a staged copy on the ZERO_ADDR
-  // model).
+  // Verify the staged bootloader; the install is not armed yet.
   uint32_t ucb_code_address = 0;
   if (UPLOAD_OK !=
       ucb_stage_verify(&STAGING_AREA,
@@ -787,38 +488,12 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   }
 
 #ifdef USE_SMP
-  // --- nRF (BLE co-processor) OTA: DELIVERED and STAGED here by the CURRENT
-  //     (still-running) bootloader, over the current, compatible bootloader+nRF
-  //     link. The actual SMP push is DEFERRED to the next boot's resume driver
-  //     (nrf_ota_resume_boot), which pushes the staged image before phase 2
-  //     streams the firmware -- and before any BLE use.
-  //
-  //     Why deliver HERE: on a wireless update the host reaches the STM over
-  //     BLE *through the nRF*, so the image must arrive while the current,
-  //     compatible bootloader+nRF pair still provides the link. Why push LATER,
-  //     not here: on a BLE-only device the push reboots the nRF into DFU (= the
-  //     link), so it cannot run during this host connection (the Success below
-  //     could never be delivered); deferring it is also what makes an
-  //     interrupted coupled update resumable -- an autonomous,
-  //     power-loss-idempotent forward step driven from the staged image, no
-  //     host needed. See coproc-ota-phase-transport-design.
-  //
-  //     Staging fold-verifies the nRF leaf against model_root BEFORE arming, so
-  //     a mismatched image ABORTS before the point of no return: the UCB stays
-  //     unarmed and the staged bootloader is untouched, which the static_assert
-  //     on NRF_STAGING_AREA guarantees it cannot reach. The old FIRMWARE is NOT
-  //     intact by then -- the staging scratch IS the firmware region, so the
-  //     stream has already erased secmon and the front of the kernel. An abort
-  //     here leaves a working bootloader over a firmware phase 2 must
-  //     reinstall, which is the accepted cost of siting the scratch there (see
-  //     flash_layout_ucb.c). That the nRF's own MCUboot will accept the image
-  //     is NOT taken on trust: nrf_pq_gate re-checks at runtime, below,
-  //     everything that verifier will look at which the fold does not cover --
-  //     the image-side proof, this release's signature records, and the absence
-  //     of rogue TLVs -- precisely so a push never erases a working nRF for an
-  //     image it would refuse. The nRF leaf is a peer under model_root; an
-  //     already-current nRF is skipped with no wire traffic; the sub-stream
-  //     suppresses its own Success. ---
+  // nRF OTA: delivered and staged now, over the still-compatible link; the
+  // SMP push is deferred to the next boot (nrf_ota_resume_boot). The nRF leaf
+  // is fold-verified against model_root before arming, so an abort here
+  // leaves the UCB unarmed and the old bootloader intact -- but not the
+  // firmware, whose region the staging scratch already erased. See
+  // docs/core/embed-arch/firmware-merkle-tree.md.
   if (msg.has_nrf_length && msg.nrf_length > 0) {
     workflow_result_t nrf_res = workflow_nrf_ota_update(
         iface, &model_root, nrf_co_path, nrf_out.co_path_len, nrf_image_hash,
@@ -830,16 +505,8 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   }
 #endif
 
-  // --- Erase the seed on a storage-domain (variant) change -- HERE, not at the
-  //     confirm. The header the confirm ran on was founder-signed (the preamble
-  //     checks that before asking), but on the full path its signature covered
-  //     a code DIGEST the host merely claimed; only ucb_stage_verify above has
-  //     recomputed that digest over the bytes actually delivered. Erasing
-  //     before it would destroy a wallet for an install still capable of
-  //     failing. Doing it here also narrows the window in which a power loss
-  //     leaves storage erased with the install unarmed, and it is still before
-  //     the reboot into phase 2 -- the deadline that matters, since the new
-  //     firmware must never see the old domain's data.
+  // Erase the seed on a storage-domain change only after ucb_stage_verify
+  // has bound the delivered code, and before the reboot into phase 2.
   if (sectrue != keep_seed) {
 #ifdef USE_STORAGE_HWKEY
     secret_bhk_regenerate();
@@ -850,91 +517,39 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
 #endif
   }
 
-  // --- Arm the bootloader install LAST -- after the co-processor image is
-  // staged
-  //     and fold-verified. The coupled swap then completes autonomously on the
-  //     next boot: the boardloader installs the new bootloader, and the resume
-  //     driver pushes the staged nRF before anything uses the link. Arming last
-  //     means an interruption BEFORE this point leaves the working OLD
-  //     BOOTLOADER with nothing committed -- but not the firmware body. Both
-  //     staging areas are carved out of the firmware region: STAGING_AREA is
-  //     its tail (bootloader code) and NRF_STAGING_AREA its front (secmon and
-  //     the kernel front), so whichever legs ran have already erased what they
-  //     cover, and phase 2 must reinstall it. Only a header-only install with
-  //     no co-processor image leaves the firmware untouched. AFTER this point,
-  //     the forward-only resume drives to
-  //     new-bootloader + new-nRF (power-loss-idempotent, retried across
-  //     reboots), never stranding at "new bootloader + old co-processor" (the
-  //     brick). ---
+  // Arm last: before this point an interruption leaves the old bootloader
+  // with nothing committed (the firmware body is already erased and phase 2
+  // reinstalls it); after it the resume drives forward to new bootloader +
+  // new nRF across reboots.
   if (sectrue != ucb_stage_arm(&STAGING_AREA, ucb_code_address)) {
     return fw_begin_fail(iface, "Failed to arm bootloader install");
   }
 
-  // --- Single terminal Success for phase 1 (every sub-stream suppressed its
-  //     own -- the host can't disambiguate multiple, and skipped sub-streams
-  //     send none), then reboot. Give the transfer a moment to reach the host.
+  // Single terminal Success for phase 1 (sub-streams suppressed theirs).
   ui_screen_install_progress_upload(1000, iface->wire->wireless);
   send_msg_success(iface, NULL);
   systick_delay_ms(500);
 
-  // Reboot into the auto-update that installs the firmware modules (phase 2).
-  // reboot_and_continue_upgrade sets BOOT_COMMAND_CONTINUE_UPGRADE atomically
-  // as part of the reset (a plain reboot_device would overwrite it with
-  // BOOT_COMMAND_REBOOT via its own bootargs_set).
-  //
-  // A DISTINCT command from the firmware-originated INSTALL_UPGRADE: only this
-  // one may boot past an invalid firmware body -- which is the state staging a
-  // new bootloader through the UCB leaves behind -- so nothing unprivileged may
-  // select it.
-  //
-  // It carries no arguments: what phase 2 installs is constrained by the staged
-  // boot header (firmware_root + firmware_type), not by bootargs.
-  //
-  // How TIGHTLY depends on the variant. For an OFFICIAL one firmware_root pins
-  // the modules exactly -- every app code_hash is inside the leaf. For CUSTOM
-  // it pins the variant, the whole secmon entry and the app's placement, but
-  // NOT the app's size or code_hash: the fold zeroes that tail so any creator's
-  // app reaches the one founder-signed custom slot. So a self-consistent app
-  // other than the one confirmed in phase 1 also authenticates here. That is
-  // the custom slot working as designed -- the leaf cannot name a creator build
-  // and still be code-independent -- and the confirm the user saw says
-  // "unofficial" rather than naming an image. Not something this ordering could
-  // close.
-  //
-  // In particular it carries NO consent digest: phase 2 never reads one, and
-  // not leaving it behind is what keeps the user's consent one-shot -- a second
-  // upload finds no consent stored and is asked again. Noreturn.
+  // Reboot into phase 2. CONTINUE_UPGRADE is set atomically with the reset;
+  // it is distinct from the firmware-originated INSTALL_UPGRADE because only
+  // it may boot past an invalid firmware body, so nothing unprivileged may
+  // select it. It carries no arguments and no consent digest (consent is
+  // one-shot); phase 2 is constrained by the staged boot header alone. For
+  // CUSTOM that pins the variant and placement but not the app hash. Noreturn.
   reboot_and_continue_upgrade();
 }
 
-// ---------------------------------------------------------------------------
-// Phase 2: install the firmware modules into the firmware area.
-//
-// Runs in the freshly-booted bootloader (new boot header / firmware_root
-// already installed by the boardloader), auto-continued via
-// BOOT_COMMAND_CONTINUE_UPGRADE. The whole [secmon | kernel+coreapp] image is
-// streamed to the firmware area and then verified as a tree against the
-// installed firmware_root. It was already confirmed (and keep-seed decided) in
-// phase 1, so this installs without re-prompting. Authenticity is guaranteed by
-// the final firmware_verify_tree: modules that do not reduce to the signed
-// firmware_root are rejected.
-// ---------------------------------------------------------------------------
+// Phase 2: stream the whole [secmon | kernel+coreapp] image into the firmware
+// area under BOOT_COMMAND_CONTINUE_UPGRADE (new boot header already installed
+// by the boardloader) and verify it as a tree against firmware_root. No
+// re-prompt: confirmed and keep-seed decided in phase 1.
 
 typedef struct {
   image_upload_handler_t base;
-  // The firmware manifest, authenticated against firmware_root in on_headers
-  // and copied here (chunk_buffer, where it arrives, is reused for later
-  // chunks). Its trusted entries + chunk_size drive the streaming per-chunk
-  // verification.
+  // Manifest authenticated in on_headers, copied out of chunk_buffer.
   uint8_t manifest_buf[FW_MANIFEST_REGION];
   const firmware_manifest_t *manifest;
-  // Smart-hashing verify cursor (variant A, forward). Each module streams as
-  // its own segment in transport blocks of block_size (a whole number of hash
-  // chunks); each block's FirmwareUpload carries ONE inline H_prev (its
-  // trailing chunk's; the module's last block derives the seed), from which the
-  // device reverse-folds the block to verify -- so no hash blob is buffered,
-  // the cursor just tracks where in the manifest the next arriving block
-  // belongs.
+  // Streaming verify cursor (see fwt_on_chunk).
   size_t cur_module;   // module currently being verified
   uint32_t cur_chunk;  // next chunk index (within cur_module) to verify
   uint8_t
@@ -946,8 +561,7 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
                                       size_t len) {
   fwt_upload_handler_t *h = (fwt_upload_handler_t *)base;
 
-  // The image begins with the firmware manifest ("firmware directory", TRZD) at
-  // the firmware region start.
+  // The image starts with the firmware manifest (TRZD).
   const firmware_manifest_t *manifest = (const firmware_manifest_t *)buf;
   if (len < sizeof(firmware_manifest_t) ||
       manifest->magic != FW_MANIFEST_MAGIC) {
@@ -962,13 +576,8 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER;
   }
 
-  // Authenticate the streamed manifest against the firmware_root in our
-  // boardloader-verified boot header BEFORE writing anything -- the earliest
-  // possible rejection of a wrong/corrupt manifest. The per-variant proof is
-  // embedded in the streamed image's manifest region (right after the
-  // manifest); fold the variant leaf through it to firmware_root. Its
-  // (now-trusted) entries then drive the per-module verification as the modules
-  // stream in.
+  // Authenticate the manifest against the installed firmware_root before
+  // anything is written; the per-variant proof follows the manifest.
   const boot_header_auth_t *bl = boot_header_auth_get(BOOTLOADER_START);
   if (bl == NULL) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
@@ -988,15 +597,9 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
   }
 
-  // --- Bind the install to the VARIANT the user confirmed. ---
-  //     firmware_root is the root over EVERY variant of the release, so the
-  //     fold above admits any of them -- bitcoin-only in place of full, say.
-  //     Phase 1 resolved the confirmed variant into the boot header's
-  //     firmware_type before staging, and the boardloader has since installed
-  //     that header, so the installed firmware_type IS the confirmed variant
-  //     (it is trustworthy because the boot-header region is write-protected
-  //     from firmware). Phase 2 runs unattended, so this is the only thing
-  //     standing between an authenticated manifest and a variant swap. ---
+  // firmware_root admits every variant of the release; bind the install to
+  // the variant confirmed in phase 1 (the installed firmware_type, trusted
+  // because the boot-header region is write-protected from firmware).
   const boot_header_unauth_t *bl_unauth = boot_header_unauth_get(bl);
   if (bl_unauth == NULL) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
@@ -1009,27 +612,18 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER;
   }
 
-  // Keep the authenticated manifest and arm the streaming per-chunk verify.
   memcpy(h->manifest_buf, buf, manifest_len);
   h->manifest = (const firmware_manifest_t *)h->manifest_buf;
 
-  // Validate the module layout (same shared checks as phase 1 and boot; re-run
-  // here as defense-in-depth on the streamed manifest, before any erase/write).
-  // Bounds the CUSTOM variant's unauthenticated app size to the firmware area,
-  // and requires every module to be block-aligned so no segment's final write
-  // is short. See firmware_manifest_layout_valid + fwt_manifest_block_aligned.
+  // Same layout checks as phase 1 and boot, before any erase/write.
   if (sectrue != firmware_manifest_layout_valid(h->manifest, base->max_size) ||
       sectrue != fwt_manifest_block_aligned(h->manifest)) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Invalid firmware manifest");
     return UPLOAD_ERR_INVALID_IMAGE_HEADER;
   }
-  // Transport sizing (streaming only, so NOT part of the shared layout check).
-  // The per-module HASH chunk size `cs` is the commitment/padding granularity;
-  // it must be FLASH_BLOCK_SIZE-aligned (write granularity) and fit the staging
-  // buffer. chunk_size is PER MODULE, but the transport uses a SINGLE block
-  // size, so for now every module must share one chunk_size -- reject a
-  // mixed-size manifest (per-module transport cadence is a future addition).
+  // Hash chunk size: FLASH_BLOCK_SIZE-aligned, fits the staging buffer, and
+  // the same for every module (the transport uses a single block size).
   const uint32_t cs = h->manifest->entries[0].chunk_size;
   if (cs == 0 || cs > IMAGE_CHUNK_SIZE || (cs % FLASH_BLOCK_SIZE) != 0) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
@@ -1043,16 +637,9 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
       return UPLOAD_ERR_INVALID_IMAGE_HEADER;
     }
   }
-  // The TRANSPORT block is the largest WHOLE number of hash chunks that fits
-  // the byte target FW_TRANSPORT_BLOCK_TARGET, capped by the staging buffer and
-  // at least the header prefetch (FW_MANIFEST_REGION == the engine's
-  // init_chunk_size, which block_size must cover). This decouples the
-  // download/reject/round-trip granularity (the block) from the hash chunk
-  // `cs`: the host sends ONE inline intermediate per block (its trailing
-  // chunk's H_prev; the module's last block derives the seed) and the device
-  // reverse-folds the block's chunks to verify, so wire intermediates +
-  // round-trips drop ~(target/cs)-fold while the commitment stays at the small
-  // hash chunk cs.
+  // Transport block: whole hash chunks up to FW_TRANSPORT_BLOCK_TARGET, capped
+  // by IMAGE_CHUNK_SIZE, at least the header prefetch (FW_MANIFEST_REGION ==
+  // init_chunk_size).
   const uint32_t max_chunks =
       IMAGE_CHUNK_SIZE / cs;  // >= 1 (cs <= IMAGE_CHUNK_SIZE)
   uint32_t block_chunks =
@@ -1063,48 +650,29 @@ static upload_status_t fwt_on_headers(image_upload_handler_t *base,
     block_chunks++;  // ensure the block covers the header prefetch
   }
   base->block_size = block_chunks * cs;
-  // Inline per-chunk verification relies on the per-module segment plan (header
-  // segment + one per module), so the engine requests every chunk at its
-  // module-relative offset (block k == chunk k). More modules than the plan can
-  // hold would fall back to flat streaming, which cannot deliver chunk-aligned
-  // hashes -- reject explicitly rather than fail cryptically per chunk. (This
-  // is a streaming-capacity limit, hence not part of the shared layout check.)
+  // Inline verification needs one segment per module (+ header); more than
+  // the plan holds would fall back to flat streaming, so reject explicitly.
   if ((size_t)h->manifest->module_count + 1 > IMAGE_UPLOAD_MAX_SEGMENTS) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Too many firmware modules");
     return UPLOAD_ERR_INVALID_IMAGE_HEADER;
   }
-  // Init the per-chunk cursor at module 0 (expected = its code_hash).
   h->cur_module = 0;
   h->cur_chunk = 0;
   memcpy(h->expected, h->manifest->entries[0].code_hash.bytes,
          sizeof(h->expected));
 
-  // Pre-confirmed in phase 1 -> auto-accept.
+  // Pre-confirmed in phase 1.
   ui_screen_install_start(iface->wire->wireless);
   return UPLOAD_OK;
 }
 
-// Verify THIS transport block against the smart-hashing chain, BEFORE it is
-// written to flash. A block carries m = ceil(len/cs) HASH chunks (cs = this
-// module's chunk_size); all are cs bytes except a module's final chunk, which
-// may be partial (modules are not padded to a whole chunk). Blocks arrive in
-// strict module/chunk order, tracked by the cursor (cur_module, cur_chunk,
-// `expected` = the running chain value the block's first chunk must fold to;
-// starts at the module's code_hash).
-//
-// The host sends ONE inline intermediate per block: `prev_hash` = the value
-// AFTER the block (the trailing chunk's H_prev). For the module's LAST block
-// (which reaches the innermost chunk) that value is the derived seed
-// H(0x01||size), so no prev_hash is sent. From it the device reconstructs the
-// block's starting expected by folding the block's chunks LAST->FIRST
-// (E = step(E, C_j) for j = m-1..0), then checks E == `expected`. A single
-// check verifies all m chunks; `expected` then advances to the sent value for
-// the next block. Anchored at both ends (code_hash at the first block, seed at
-// the last; each sent intermediate is re-verified by the next block's fold), so
-// a forged intermediate can't pass without a hash collision. Rejects at block
-// granularity; the whole-tree verify in on_finish is the authoritative
-// backstop.
+// Verify one transport block against the module's hash chain before it is
+// written. A block is m = ceil(len/cs) chunks; only a module's final chunk may
+// be partial. `prev_hash` is the chain value after the block (the module's
+// last block derives it as the seed H(0x01||size) instead). The block is
+// folded last->first from that value and must reach `expected`; the
+// whole-tree verify in on_finish remains the authoritative backstop.
 static upload_status_t fwt_on_chunk(image_upload_handler_t *base,
                                     protob_io_t *iface, uint32_t image_offset,
                                     const uint8_t *data, size_t len,
@@ -1112,17 +680,12 @@ static upload_status_t fwt_on_chunk(image_upload_handler_t *base,
   fwt_upload_handler_t *h = (fwt_upload_handler_t *)base;
   const firmware_manifest_t *m = h->manifest;
 
-  // The manifest/header region [0, entries[0].addr) is authenticated by the
-  // leaf fold in on_headers, not chain-verified. It is segment 0 (a single
-  // block at offset 0), so let it through untouched.
+  // The manifest region (segment 0) is authenticated by the leaf fold.
   if (image_offset < m->entries[0].addr) {
     return UPLOAD_OK;
   }
 
-  // Every remaining block is one or more module chunks. It must land exactly
-  // where the cursor expects (the engine drives strict segment/chunk order) and
-  // be a whole number of chunks within the current module; anything else is a
-  // protocol/stream error -> fail closed.
+  // Blocks must arrive in strict module/chunk order.
   if (h->cur_module >= m->module_count) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "vtree: unexpected chunk");
@@ -1135,11 +698,7 @@ static upload_status_t fwt_on_chunk(image_upload_handler_t *base,
   const uint32_t off = h->cur_chunk * cs;  // module-relative block start
   const uint32_t remaining =
       e->size - off;  // bytes left (cur_chunk < n => > 0)
-  // The block must land where the cursor expects and stay within the module. It
-  // is whole hash chunks EXCEPT the block that reaches the module end, whose
-  // last chunk may be partial (size % cs != 0, since modules are no longer
-  // padded to a whole chunk). So a non-tail block must be a whole number of
-  // chunks; the tail block may be any length up to `remaining`.
+  // A non-tail block is whole chunks; the tail block may be any length.
   const bool tail =
       (len == remaining);  // block reaches the module's last chunk
   if (image_offset != e->addr + off || len == 0 || len > remaining ||
@@ -1150,10 +709,7 @@ static upload_status_t fwt_on_chunk(image_upload_handler_t *base,
   }
   const uint32_t mchunks = (len + cs - 1) / cs;  // chunks in this block (ceil)
 
-  // E_end = the chain value AFTER this block. The tail block reaches the
-  // module's innermost chunk, so E_end is the derived seed (binds the module
-  // length); otherwise the host sends it inline as prev_hash (the trailing
-  // chunk H_prev).
+  // Chain value after this block: derived seed for the tail, inline otherwise.
   uint8_t e_end[IMAGE_HASH_DIGEST_LENGTH];
   if (tail) {
     firmware_module_chain_seed(e->size, e_end);
@@ -1165,10 +721,7 @@ static upload_status_t fwt_on_chunk(image_upload_handler_t *base,
     }
     memcpy(e_end, prev_hash, sizeof(e_end));
   }
-  // Reconstruct the block's starting expected: fold its chunks LAST->FIRST from
-  // E_end (chain_step is in-place safe). Each chunk is cs bytes except the
-  // module's final chunk, which may be partial (clen = the module tail) --
-  // mirrors firmware_module_code_hash.
+  // Fold last->first; mirrors firmware_module_code_hash.
   uint8_t chain[IMAGE_HASH_DIGEST_LENGTH];
   memcpy(chain, e_end, sizeof(chain));
   for (uint32_t j = mchunks; j-- > 0;) {
@@ -1177,15 +730,10 @@ static upload_status_t fwt_on_chunk(image_upload_handler_t *base,
     firmware_module_chain_step(chain, data + (size_t)j * cs, clen, chain);
   }
   if (memcmp(chain, h->expected, sizeof(chain)) != 0) {
-    // Retryable (no message): a transient transport corruption of the block
-    // then recovers; a genuinely bad block fails terminally once retries are
-    // spent.
+    // Retryable: terminal once the engine's retries are spent.
     return UPLOAD_ERR_INVALID_CHUNK_HASH;
   }
 
-  // Block verified: advance the running expected to E_end and the cursor by
-  // mchunks; at the module end move to the next module (expected = its
-  // code_hash).
   memcpy(h->expected, e_end, sizeof(h->expected));
   h->cur_chunk += mchunks;
   if (h->cur_chunk >= n) {
@@ -1199,20 +747,9 @@ static upload_status_t fwt_on_chunk(image_upload_handler_t *base,
   return UPLOAD_OK;
 }
 
-// Plan the segments (called by the engine right after fwt_on_headers): segment
-// 0 is the manifest/header region [0, FW_MANIFEST_REGION) -- streamed + written
-// like any block but NOT chain-verified (on_chunk finds no module inside it; it
-// is authenticated by the leaf fold). Its length equals init_chunk_size, so the
-// engine's header prefetch fills it exactly. Segments 1.. are one per module,
-// each streamed from its own addr in transport blocks of block_size (a whole
-// number of hash chunks), so every block starts on a chunk boundary -- what the
-// per-block reverse-fold verify in fwt_on_chunk needs. Returns 0 (=> a single
-// whole-image segment, flat) if the count would exceed `max`. The engine calls
-// this only after fwt_on_headers succeeds, which has already validated every
-// entry's addr/size (ascending, non-overlapping, within the firmware area, and
-// FLASH_BLOCK_SIZE-aligned -- NOT chunk-aligned; a module's last chunk may be
-// partial) -- so the ranges below are safe even for a custom manifest whose app
-// size is not founder-authenticated.
+// Segment 0 is the manifest region (== init_chunk_size), segments 1.. one per
+// module so every block starts on a chunk boundary. Returns 0 (flat stream)
+// if the count exceeds `max`. Entry ranges were validated in fwt_on_headers.
 static size_t fwt_plan_segments(image_upload_handler_t *base,
                                 uint32_t image_size, image_segment_t *out,
                                 size_t max) {
@@ -1235,23 +772,16 @@ static size_t fwt_plan_segments(image_upload_handler_t *base,
 static upload_status_t fwt_on_finish(image_upload_handler_t *base,
                                      protob_io_t *iface) {
   fwt_upload_handler_t *h = (fwt_upload_handler_t *)base;
-  // Every module chunk was chain-verified inline as it streamed; the cursor
-  // must have consumed exactly all modules. A short stream (fewer chunks than
-  // the manifest declares) leaves it behind -> fail closed before the
-  // whole-tree verify.
+  // A short stream leaves the cursor behind.
   if (h->cur_module != h->manifest->module_count) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "vtree: incomplete firmware stream");
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
   }
-  // Authoritative whole-tree verify against the installed firmware_root
-  // (manifest fold + per-module code integrity), independent of the
-  // incremental checks -- the backstop.
+  // Authoritative whole-tree verify against the installed firmware_root.
   firmware_tree_info_t info = {0};
   if (sectrue != firmware_verify_tree(&info)) {
-    // Granular breakdown (prototype diagnostic): re-run the per-module checks
-    // the way firmware_verify_tree does, so the failure names the culprit -- a
-    // module (secmon/kernel) vs the manifest fold/authenticity.
+    // Diagnostic breakdown: name the failing module, else blame the fold.
     const firmware_manifest_t *man =
         (const firmware_manifest_t *)(uintptr_t)FIRMWARE_START;
     for (size_t i = 0; man->magic == FW_MANIFEST_MAGIC && i < man->module_count;
@@ -1265,8 +795,6 @@ static upload_status_t fwt_on_finish(image_upload_handler_t *base,
         return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
       }
     }
-    // Every module passes individually -> the manifest fold/authenticity (or
-    // the installed firmware_root) is the mismatch.
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "vtree: fold/authenticity failed");
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
@@ -1303,9 +831,8 @@ static const image_upload_ui_t fwt_upload_ui = {
 };
 
 workflow_result_t workflow_firmware_update(protob_io_t *iface) {
-  // Phase 2 only ever follows phase 1 (which armed CONTINUE_UPGRADE and
-  // installed the new firmware_root). Reject a bare install so a stray
-  // FirmwareErase does not erase a valid firmware.
+  // Phase 2 only follows phase 1; a bare FirmwareErase must not erase a valid
+  // firmware.
   if (bootargs_get_command() != BOOT_COMMAND_CONTINUE_UPGRADE) {
     return fw_begin_fail(iface,
                          "Firmware update must begin with FirmwareBegin");
@@ -1317,17 +844,8 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
     return WF_ERROR;
   }
 
-  // static: carries the copied manifest (FW_MANIFEST_REGION) and the per-chunk
-  // verify cursor; keeps it off the bootloader stack. The smart-hashing
-  // intermediate hashes are no longer buffered here -- each arrives inline on
-  // its chunk's FirmwareUpload (see fwt_on_chunk).
-  //
-  // Defense-in-depth: this static singleton persists across retries within one
-  // boot, so zero the WHOLE struct up front -- manifest_buf and the verify
-  // cursor -- clearing any stale (attacker-supplied) bytes from a prior call.
-  // Every consumer is already length-bounded and cryptographically
-  // authenticated (firmware_root / code_hash chain), so this is
-  // belt-and-suspenders; on_headers re-initializes the mutable state.
+  // Static to keep the manifest copy off the stack; zeroed because it
+  // persists across retries within one boot.
   static fwt_upload_handler_t handler;
   memset(&handler, 0, sizeof(handler));
   handler.base = (image_upload_handler_t){
@@ -1339,9 +857,8 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
       .on_chunk = fwt_on_chunk,
       .on_finish = fwt_on_finish,
       .plan_segments = fwt_plan_segments,
-      // The header prefetch only needs the manifest region (manifest + proof),
-      // a fixed size -- so don't over-prefetch into the first module (keeps it
-      // skippable later). block_size is set from chunk_size in fwt_on_headers.
+      // Prefetch only the manifest region; block_size is set in
+      // fwt_on_headers.
       .init_chunk_size = FW_MANIFEST_REGION,
   };
 

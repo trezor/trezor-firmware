@@ -1,10 +1,7 @@
 ENTRY(reset_handler)
 
-/* Merkle-tree layout: the firmware manifest occupies FW_MANIFEST_REGION at the
-   firmware start (reserved in SECTIONS below, mirroring kernel_pq.ld), so the
-   secmon (the first module) runs that many bytes later. _secmon_size spans from
-   ORIGIN (the manifest region) through the secmon code, so the secmon MPU region
-   [SECMON_START = FIRMWARE_START_S, +_secmon_size] covers both. */
+/* Merkle-tree layout: the manifest region precedes the secmon code;
+   _secmon_size spans both, and so does the secmon MPU region. */
 FW_MANIFEST_REGION = 0x400;
 
 MEMORY {
@@ -35,12 +32,8 @@ _codelen = _secmon_flash_end - _secmon_code_start;
 _secmon_size = _secmon_flash_end - ORIGIN(FLASH);
 
 SECTIONS {
-  /* Reserve the firmware manifest region at the firmware start (the manifest
-     itself is emitted by the firmware image, not the secmon; here it only shifts
-     the addresses so the secmon runs at its real address). Mirrors kernel_pq.ld.
-     Excluded from secmon.bin via the project's elf_sections, so the module image
-     is just the secmon code (no per-module header in the Merkle-tree scheme --
-     the firmware manifest entry commits the code directly). */
+  /* Manifest region placeholder (the firmware image emits the manifest);
+     excluded from secmon.bin via the project's elf_sections. */
   .manifest : ALIGN(CODE_ALIGNMENT) {
     _manifest_start = .;
     . = _manifest_start + FW_MANIFEST_REGION;

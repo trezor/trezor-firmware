@@ -25,54 +25,28 @@
 
 #include <sec/boot_header.h>  // merkle_proof_node_t, MODEL_TREE_MAX_PROOF_NODES
 
-// Persistent staging for the deferred (phase-2) nRF push.
-//
-// On a BLE-only device the nRF cannot be pushed during a host connection (the
-// push reboots the nRF into DFU, which IS the BLE link), so the image is only
-// STAGED while the host is connected and PUSHED autonomously by the next
-// bootloader boot -- which is also what makes an interrupted update resumable.
-// See docs / the coproc-ota design.
-//
-// Layout inside NRF_STAGING_AREA (firmware-region front, survives the
-// bootloader-swap reboot): the raw nRF image streams at offset 0; a descriptor
-// occupies the LAST sector. The descriptor is written LAST, as the validity
-// commit, so a half-staged image never presents as valid.
-//
-// The descriptor persists only what cannot be re-derived from the staged image:
-// the nRF leaf's co-path (its Merkle siblings). The MCUboot SHA-256
-// (idempotency check) and the model id are read back from the image itself at
-// push time. The descriptor is NOT a trust input -- the resume driver re-folds
-// the image to the installed boot header's modelRoot and re-checks the model id
-// regardless; the tag only detects a torn write and bounds image_len before
-// use.
+// Persistent staging for the deferred nRF push (nrf_ota_resume_boot).
+// Layout in NRF_STAGING_AREA: raw image at offset 0, descriptor (co-path only)
+// in the last sector, written last as the validity commit. The descriptor is
+// not a trust input; the resume driver re-folds the image regardless.
 
-// Largest nRF image (bytes) that may be staged: the area minus the reserved
-// descriptor sector. Runtime value (depends on the flash sector size).
+// Largest stageable image: the area minus the descriptor sector.
 uint32_t nrf_staging_image_capacity(void);
 
-// Memory-mapped pointer to the staged nRF image (offset 0), or NULL if
-// `image_len` is out of range.
+// Memory-mapped staged image, or NULL if `image_len` is out of range.
 const uint8_t *nrf_staging_image(uint32_t image_len);
 
-// Write the descriptor as the FINAL validity commit. Call only after the image
-// is fully staged into NRF_STAGING_AREA@0 and fold-verified. `image_len` must
-// be
-// <= nrf_staging_image_capacity() and `co_path_count` <=
-// MODEL_TREE_MAX_PROOF_NODES.
+// Write the descriptor; call only after the image is staged and verified.
 secbool nrf_staging_write_desc(uint32_t image_len,
                                const merkle_proof_node_t *co_path,
                                size_t co_path_count);
 
-// Read the validated descriptor. Returns false if none is valid. `out_co_path`
-// points into memory-mapped flash (stable, read-only) and is valid until the
-// staging area is erased.
+// Read the validated descriptor; `out_co_path` points into flash.
 bool nrf_staging_read(uint32_t *out_image_len,
                       const merkle_proof_node_t **out_co_path,
                       size_t *out_co_path_count);
 
-// Invalidate the staged descriptor (erases its sector). The image bytes are
-// left in place (inert without a valid descriptor; overwritten by the next
-// stage). Idempotent.
+// Erase the descriptor sector (image bytes left in place). Idempotent.
 secbool nrf_staging_clear(void);
 
 #endif  // PQ_SECURE_BOOT && USE_SMP

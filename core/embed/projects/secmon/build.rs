@@ -8,8 +8,7 @@ fn main() -> Result<()> {
 
         lib.add_source("main.c");
 
-        // Merkle-tree layout: the secmon module is just code (no per-module
-        // header -- the firmware manifest commits it); otherwise legacy TSEC.
+        // Merkle-tree layout: code only (no legacy TSEC header).
         if cfg!(not(feature = "pq_secure_boot")) {
             lib.add_source("header.S");
         }
@@ -19,8 +18,7 @@ fn main() -> Result<()> {
             ["smcall_dispatch.c", "smcall_probe.c", "smcall_verifiers.c"],
         );
 
-        // The Merkle-tree layout has no legacy vendor header (the secmon module
-        // header replaces it). Other builds keep the vendor header.
+        // No legacy vendor header in the Merkle-tree layout.
         if !cfg!(feature = "pq_secure_boot") {
             lib.embed_binary(
                 xbuild::vendor_header_path("../../models", "secmon")?,

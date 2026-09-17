@@ -1,38 +1,16 @@
 #!/usr/bin/env python3
-"""Generate a multi-variant, manifest-based firmware_root cross-validation vector.
+"""Generate the FWM3 multi-variant firmware_root cross-validation vector.
 
-Builds SYNTHETIC firmware images for several variants -- each image is
-[manifest | secmon code | kernel code], where the variant leaf is
-H(0x00 || manifest) and the manifest references each module directly by
-code_hash = the tagged smart-hashing CHAIN over the module code, not a flat
-SHA-256 of it (one commitment hop, no per-module header). Computes the founder firmware_root + per-variant proofs
-(firmware_module.build_founder_tree), self-checks the fold in Python, and writes
-a vector the C harness (crossvalidate.c) replays through the REAL device math
-(firmware_verify_manifest).
-
-Image layout (offsets authenticated via the manifest's addr fields):
-  0x000  manifest      (padded to MANIFEST_REGION)
-  MR     secmon code   (padded to CODE_ALIGNMENT)
-  ...    kernel code   (padded to CODE_ALIGNMENT)
+Synthetic images [manifest | secmon code | kernel code] per variant; the leaf is
+H(0x00 || manifest) and code_hash is the smart-hashing chain over the module
+code. Replayed by crossvalidate.c through the real firmware_verify_manifest.
 
 FWM3 layout (little-endian):
   "FWM3" | founder_root(32) | variant_count(u32)
-  per variant:
-    variant_id(u32)
-    image_len(u32) | image[image_len]
-    manifest_len(u32)
-    alt_len(u32) | alt_image[alt_len]   (custom only -- a DIFFERENT-size/version
-                                         app that must fold to the SAME slot; 0
-                                         for official variants)
-    proof_count(u32) | proof_node(32) * proof_count
-  then once, the no-APP case:
-    noapp_len(u32) | noapp_manifest[noapp_len] | noapp_leaf(32)
-
-A CUSTOM manifest with no APP entry is malformed -- there is nothing to zero --
-and both sides hash it VERBATIM, so it folds to no founder-signed slot. Nothing
-builds one, which is why it is carried as its own section rather than a variant:
-it is checked as a single-leaf tree (empty proof, root = leaf), which asserts the
-C leaf equals the Python leaf and nothing more.
+  per variant: variant_id(u32) | image_len(u32) | image | manifest_len(u32) |
+               alt_len(u32) | alt_image (custom only, else 0) |
+               proof_count(u32) | proof_node(32) * proof_count
+  then once: noapp_len(u32) | noapp_manifest | noapp_leaf(32)
 """
 
 from __future__ import annotations
@@ -47,17 +25,10 @@ from trezor_core_tools import firmware_module as fm  # noqa: E402
 MANIFEST_REGION = 0x400  # reserved region for the manifest at image start
 CODE_ALIGNMENT = 0x400
 CODE_SIZE = 0x100
-# Smart-hashing chunk size for the vector: 100 gives partial last chunks, so the
-# C/Python chain is compared on a short final chunk too. Deliberately NOT a
-# device-valid value -- an install requires FLASH_BLOCK_SIZE alignment and a cap
-# of IMAGE_CHUNK_SIZE -- because nothing here installs, and the awkward size is
-# the point.
+# 100 gives a partial last chunk; deliberately not a device-valid chunk size.
 CHUNK_SIZE_TEST = 100
 
-# Includes the CUSTOM variant (1): its manifest carries a REAL app code_hash
-# (the creator's), but variant_leaf zeroes it for the founder tree -- so the
-# device must accept any app under this slot (integrity-only), while an official
-# variant's app is founder-bound. crossvalidate.c exercises both.
+# Includes CUSTOM (1): its app code_hash is zeroed inside the founder leaf.
 VARIANTS = {1: "custom", 2: "universal", 3: "bitcoin-only", 4: "prodtest"}
 
 
@@ -71,21 +42,17 @@ def _build_variant_image(
     app_size: int = CODE_SIZE,
     app_byte: int | None = None,
 ):
-    """Lay out [manifest | secmon code | kernel code] and return
-    (image, manifest_bytes). Each manifest entry commits its module directly by
-    code_hash = the tagged smart-hashing chain over the module code, not a flat
-    SHA-256 of it (no per-module header). The secmon is
-    fixed (founder-bound); the app version/size/code vary per (custom) build."""
+    """Lay out [manifest | secmon code | kernel code]; return (image, manifest)."""
     secmon_code = b"\xaa" * CODE_SIZE
     kernel_code = bytes([vid & 0xFF if app_byte is None else app_byte]) * app_size
 
-    # Module code offsets. The app addr depends ONLY on the (fixed) secmon size,
-    # so it is stable across app sizes -- the founder commits it even for custom.
+    # The app addr depends only on the fixed secmon size, so it is stable
+    # across app sizes.
     sec_addr = MANIFEST_REGION
     ker_addr = _align(sec_addr + CODE_SIZE)
 
     entries = [
-        # secmon is the secure boot/entry module (FLAG_BOOT).
+        # secmon is the boot module (FLAG_BOOT).
         {
             "module_type": 1,
             "flags": fm.FW_MANIFEST_ENTRY_FLAG_BOOT,
@@ -103,8 +70,7 @@ def _build_variant_image(
             "code_hash": fm.module_code_hash(kernel_code, CHUNK_SIZE_TEST),
         },
     ]
-    # VARIANTS is keyed by the small fw_variant_t id (it is the name map); the
-    # manifest field itself carries the hardened codeword.
+    # VARIANTS is keyed by the small id; the manifest carries the hardened codeword.
     manifest = fm.build_manifest(
         fm.FW_VARIANT_SEC[vid], entries, firmware_version=version
     )
@@ -117,8 +83,7 @@ def _build_variant_image(
 
 
 def _build_noapp_manifest() -> bytes:
-    """A CUSTOM manifest carrying only a SECMON entry -- structurally valid
-    (magic, count, declared size all agree), but with no APP entry to zero."""
+    """A CUSTOM manifest with only a SECMON entry: valid, but nothing to zero."""
     secmon_code = b"\xaa" * CODE_SIZE
     entries = [
         {
@@ -139,10 +104,8 @@ def build():
     images, manifests, leaves, alts = {}, {}, {}, {}
     for vid in VARIANTS:
         if vid == fm.FW_VARIANT_CUSTOM:
-            # Custom slot: the founder leaf zeroes the app version/size/code_hash,
-            # so any creator app folds to it. Prove it -- build the primary and an
-            # ALT with a DIFFERENT app version + size + code, and assert identical
-            # leaves. The alt is replayed on-device (crossvalidate) too.
+            # The custom leaf zeroes app version/size/code_hash, so an alt app
+            # differing in all three must give the same leaf.
             image, manifest = _build_variant_image(
                 vid, version=b"\x02\x01\x00\x00", app_size=CODE_SIZE
             )
@@ -186,9 +149,8 @@ def emit(path: Path) -> None:
             buf += node
 
     noapp = _build_noapp_manifest()
-    # Deliberately NOT asserted here: whether this manifest is hashed verbatim is
-    # exactly what the C side is asked to agree about, and a Python self-check
-    # would fail first and hide the comparison that matters.
+    # Not asserted here: whether it is hashed verbatim is what the C side is
+    # asked to agree about.
     noapp_leaf = fm.variant_leaf(noapp)
     print(f"  no-APP custom manifest {len(noapp)}B leaf {noapp_leaf.hex()[:12]}")
     buf += struct.pack("<I", len(noapp)) + noapp + noapp_leaf

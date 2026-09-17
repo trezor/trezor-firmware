@@ -30,44 +30,18 @@
 #include "wf_image_upload.h"
 
 /**
- * Verify the boot-header image already staged in `staging_area` and arm the
- * boot update control block (UCB) so the boardloader installs it on the next
- * reboot. (This does NOT write to the staging area -- see
- * `ucb_stage_write_header` for that; here the header, and for a full update the
- * code, are already staged.)
+ * Verify the boot header (+ code for a full update) already staged in
+ * `staging_area`: downgrade check, Merkle root, founder signature. Does not
+ * arm the UCB; the caller arms last via ucb_stage_arm. A `firmware_type` set
+ * in the unauth header is outside `auth_size` and covered by the UCB hash.
  *
- * Runs the downgrade check, recomputes the Merkle root over the authenticated
- * header + code, verifies the founder signature over that root, and writes the
- * UCB (`boot_ucb_write`). Sends its own failure message on any error, unless
- * `iface` is NULL.
- *
- * A caller may set `firmware_type` in the staged (unauth) header before calling
- * this; that field is outside `auth_size` so it does not affect the signature
- * check, and it is covered by the UCB hash computed here.
- *
- * `header_only` means the bootloader code is unchanged (the caller has verified
- * the new header signs over the current code). On models whose field
- * boardloader mangles the code_address == 0 sentinel
- * (BOARDLOADER_UCB_ZERO_ADDR_BUG) a copy of the current code is staged and a
- * real code address recorded (the workaround); otherwise nothing is staged and
- * the UCB records the 0 sentinel (reuse current code). For a full update the
- * new code is expected staged right after the header.
- *
- * Split into VERIFY (validate + signature-check, yielding the modelRoot and the
- * code address to record) and ARM (write the UCB = the point of no return for
- * the bootloader swap). The caller arms LAST, only after any co-processor
- * updates succeed, so a partial update can never install a new bootloader
- * against an old, possibly-incompatible co-processor (a brick).
- *
- * @param staging_area Flash area holding the staged boot header (+ code).
- * @param header_only Bootloader code unchanged (reuse current code).
- * @param iface Protobuf I/O used to send failure messages, or NULL when the
- *              caller has no host link (the bootloader's own boot path).
- * @param out_root Receives the signature-verified modelRoot the new boot header
- *                 commits to (for verifying co-processor leaves).
- * @param out_code_address Receives the code address the UCB must record (pass
- * to ucb_stage_arm).
- * @return UPLOAD_OK on success, a negative upload_status_t otherwise.
+ * @param header_only code unchanged; on BOARDLOADER_UCB_ZERO_ADDR_BUG models a
+ *                    copy of the current code is staged instead of the 0
+ *                    sentinel
+ * @param iface       used for failure messages; NULL on the boot path
+ * @param out_root    signature-verified modelRoot of the new header
+ * @param out_code_address code address for ucb_stage_arm
+ * @return UPLOAD_OK, or a negative upload_status_t
  */
 upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
                                  bool header_only, protob_io_t *iface,
@@ -75,47 +49,26 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
                                  uint32_t *out_code_address);
 
 /**
- * Arm the boot update control block (the point of no return): the boardloader
- * installs the staged bootloader on the next boot. Call LAST, after
- * co-processor updates. `code_address` comes from ucb_stage_verify.
+ * Arm the UCB (point of no return); call last, after co-processor updates.
+ * `code_address` comes from ucb_stage_verify.
  */
 secbool ucb_stage_arm(const flash_area_t *staging_area, uint32_t code_address);
 
 /**
- * Write `len` bytes of a boot header from `data` to the start of the staging
- * area (erase + program). For the case where the boot header arrives whole (in
- * a message) rather than through the chunk stream, so it must be staged up
- * front. `data` must be 4-byte aligned and `len` a multiple of the flash write
- * granularity (the boot header's 8K-aligned `header_size` satisfies this).
+ * Erase the staging area and program `len` bytes of boot header at its start.
+ * `data` 4-byte aligned, `len` a multiple of the flash write granularity.
  * Fatal on flash error.
  */
 secbool ucb_stage_write_header(const uint8_t *data, uint32_t len);
 
 #ifdef PQ_SECURE_BOOT
 /**
- * Restage this device's OWN boot header with `firmware_type` cleared, so the
- * boardloader installs it on the next boot and the device then reads as
- * unprovisioned (empty) -- see `fw_check`, which decides "is this device
- * provisioned" from exactly that byte.
+ * Restage the device's own boot header with `firmware_type` cleared (device
+ * reads as unprovisioned after the next boot). Routed through the UCB because
+ * the header shares a flash page with the founder signatures. Borrows
+ * `chunk_buffer`. Does not check whether the caller may un-provision.
  *
- * Goes the long way round on purpose. `firmware_type` sits in the
- * write-protected boot header, which only the boardloader writes, and it shares
- * a flash page with the founder signatures -- so flipping the byte in place
- * would mean erasing and reprogramming the page that authenticates the
- * bootloader, and losing power mid-write would leave an unbootable device.
- * Restaging routes the change through the same verify-and-arm path an
- * over-the-wire update uses, where a power loss at any point leaves either the
- * old header or the new one installed.
- *
- * Nothing else about the header changes: the code is untouched (`header_only`),
- * the authenticated part is copied verbatim, so the founder signature still
- * covers it. Borrows `chunk_buffer` as scratch.
- *
- * Requires the caller to have decided this is allowed -- it does not police who
- * may un-provision a device.
- *
- * @return sectrue if the new header is staged and the UCB armed; the caller
- *         must then reboot for the boardloader to install it.
+ * @return sectrue if staged and armed; the caller must reboot
  */
 secbool ucb_stage_clear_firmware_type(void);
 #endif  // PQ_SECURE_BOOT

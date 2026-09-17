@@ -1,24 +1,9 @@
 //! Building a pq_secure (Merkle-tree) firmware release.
 //!
-//! A legacy firmware image is self-contained: build it, sign it, install it.
-//! A Merkle-tree release is not. Authenticity is the fold of a variant's
-//! manifest leaf up to the `firmware_root` that the SIGNED BOOT HEADER commits
-//! to, so a firmware image is only meaningful next to a bootloader whose header
-//! names the tree it belongs to. `xtask build firmware` on a tree model
-//! therefore produces a release directory rather than one binary.
-//!
-//! Two consequences shape everything here:
-//!
-//! * `firmware_root` is a root over the VARIANT SET. Building one variant is
-//!   not a subset of building four -- it yields a one-leaf tree with a
-//!   different root, and so a different boot header. Build scope and signing
-//!   are one decision, not two.
-//!
-//! * Re-signing rewrites the boot HEADER, not the bootloader CODE. So the
-//!   committed bootloader binary is reused as-is and only its header is folded
-//!   and re-signed; the emitted bootloader.bin still differs from the committed
-//!   one, and phase 1 of an OTA installs exactly that difference as a
-//!   header-only update. Nothing needs the bootloader recompiled.
+//! A tree firmware image is only installable next to a bootloader whose signed
+//! header commits to its `firmware_root`, so `xtask build firmware` on a tree
+//! model produces a release rather than one binary. Re-signing rewrites only
+//! the boot header, never the bootloader code. See docs/core/build/xtask.md.
 
 use std::path::{Path, PathBuf};
 use std::{fs, process};
@@ -33,51 +18,35 @@ use crate::options::ResolvedBuildArgs;
 use crate::{cargo, helpers};
 
 /// One variant of a release: one leaf of the founder firmware tree.
-///
-/// Also the value type of `--variant`, so clap validates the name and lists
-/// the choices.
 #[derive(ValueEnum, Clone, Copy, PartialEq, Eq, Debug)]
 #[value(rename_all = "kebab-case")]
 pub enum Variant {
     Universal,
     BtcOnly,
-    /// The unofficial slot. Its authenticity leaf zeroes the app's size,
-    /// code_hash and version, so any locally built app folds to the one
-    /// founder-signed custom leaf.
+    /// Unofficial slot: the leaf zeroes the app size, code_hash and version.
     Custom,
-    /// Its own project rather than a firmware variant -- a single secure module
-    /// -- but still a leaf of the same tree.
+    /// Its own project, not a firmware variant, but a leaf of the same tree.
     Prodtest,
 }
 
 /// Which bootloader binary a release folds its `firmware_root` into.
 ///
-/// Signing rewrites the boot HEADER, not the CODE, so this decides which code
-/// the release's header ends up vouching for -- and a device runs exactly that
-/// code. Whichever is chosen must have been built with the same key selection
-/// as the release is signed with (`--bootloader-devel`), or the device will
-/// trust a different set of founder keys than the release was signed with and
-/// verify nothing.
+/// Must have been built with the same key selection the release is signed
+/// with (`--bootloader-devel`); signing rewrites the header, not the code.
 #[derive(ValueEnum, Clone, Copy, PartialEq, Eq, Debug, Default)]
 #[value(rename_all = "kebab-case")]
 pub enum BootloaderSource {
-    /// The bootloader you last built for this model, falling back to the
-    /// committed binary when there is none.
+    /// The last built bootloader for this model, else the committed binary.
     #[default]
     Auto,
-    /// The bootloader you last built for this model
-    /// (`build/artifacts/<MODEL>/bootloader.bin`). Errors if absent -- it is
-    /// never built implicitly, so `xtask build bootloader` first.
+    /// `build/artifacts/<MODEL>/bootloader.bin`; an error if absent.
     Built,
-    /// The committed binary in `models/<MODEL>/bootloaders/`. What a production
-    /// release must fold: there the founder-signed bootloader is a released
-    /// artifact whose exact bytes have to be signed over, and a local rebuild
-    /// would be the wrong thing.
+    /// The committed binary in `models/<MODEL>/bootloaders/` -- what a
+    /// production release folds.
     Committed,
 }
 
-/// Every variant of a full release. The founder tree must contain all of them
-/// or a released co-path folds to nothing.
+/// Every variant of a full release; the founder tree must contain them all.
 pub const ALL_VARIANTS: [Variant; 4] = [
     Variant::Universal,
     Variant::BtcOnly,
@@ -101,8 +70,7 @@ impl Variant {
         ALL_VARIANTS.into_iter().find(|v| v.name() == name)
     }
 
-    /// Which project builds this variant, and so which `xtask flash <PROJECT>`
-    /// installs it.
+    /// Which project builds this variant.
     pub fn project(self) -> Project {
         match self {
             Variant::Prodtest => Project::Prodtest,
@@ -118,11 +86,7 @@ impl Variant {
         }
     }
 
-    /// Point a resolved arg set at this variant.
-    ///
-    /// Variant selection rides the EXISTING build flags rather than a new
-    /// `--variant`: `--btc-only` and `--unsafe-fw` already mean exactly this,
-    /// and a second way to say it would be a second thing to keep in sync.
+    /// Point a resolved arg set at this variant via the existing build flags.
     fn apply(self, args: &mut ResolvedBuildArgs) {
         args.project = self.project();
         args.btc_only = matches!(self, Variant::BtcOnly);
@@ -133,43 +97,22 @@ impl Variant {
 /// Where a model's release is assembled: `build-xtask/tree/<MODEL>/`, with the
 /// portable zip alongside it as `<MODEL>.zip`.
 pub fn release_dir(model: Model) -> Result<PathBuf> {
-    // Normalised, because cargo reports its target directory as
-    // `core/embed/../build-xtask` and every path printed from here -- the
-    // release dir, the zip -- would carry that `..` through and read as if it
-    // were somewhere else.
+    // Normalised: cargo reports the target dir as `core/embed/../build-xtask`.
     let build_dir = helpers::build_dir()?;
     let build_dir = build_dir.canonicalize().unwrap_or(build_dir);
     Ok(build_dir.join("tree").join(model.model_id()))
 }
 
-/// The release container's magic and the version of its layout.
-///
-/// `TRZL` is the token reserved for the release container across formats -- a
-/// future single-file container uses the same four bytes as its binary magic.
-/// Kept here as well as in the signer because xtask and the signer are separate
-/// programs; the container is the contract between them, so each states what it
-/// expects rather than importing it from the other.
+/// Release container magic and layout version; must match the signer
+/// (`firmware_pq_sign.py`), which states its own copy.
 const CONTAINER_MAGIC: &str = "TRZL";
 const CONTAINER_VERSION: u64 = 1;
 
-/// The name the release writer gives the bootloader inside a release.
-///
-/// Manifest-driven readers take the name from `bootloader.file` instead; this
-/// exists for the writer, and for the one probe that deliberately runs WITHOUT
-/// a manifest (a bare bootloader install, which needs no release at all).
+/// The bootloader's filename inside a release, as the writer names it.
 const DEFAULT_BOOTLOADER_FILE: &str = "bootloader.bin";
 
-/// Where a build assembles what it signs.
-///
-/// A plain `xtask build` has no use for a release directory: it produces ONE
-/// variant, and what it produces is installed from `artifacts/` like every
-/// other build output. Copying it into `tree/` first, signing there and copying
-/// the result back is scaffolding -- and it wrote `tree/<MODEL>.zip`, the file
-/// `xtask release` also overwrites, which made "did my build reach the device?"
-/// depend on which command wrote it last.
-///
-/// So a build signs IN PLACE, and `tree/` belongs to `xtask release` alone: a
-/// cut release, with per-model subtrees and the containers packed from them.
+/// Where a build assembles what it signs. A plain build signs in place;
+/// `tree/` belongs to `xtask release` alone.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Dest {
     /// `build/artifacts/<MODEL>/` -- the canonical install set.
@@ -178,13 +121,8 @@ pub enum Dest {
     Release,
 }
 
-/// Whether a release is signed as it is built, or prepared to be signed later.
-///
-/// A ceremony cannot run inside a build: the founder key is not there. So the
-/// release flow is three stages -- prepare everything, sign the whole thing,
-/// attach the signatures -- and this says which of the first two a given call
-/// performs. Standalone `xtask build firmware` still signs inline, because a
-/// developer wants one command and holds the development keys.
+/// Whether a release is signed as it is built, or prepared for a later
+/// ceremony (prepare / sign / attach, see docs/core/build/xtask.md).
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SignStage {
     /// Fold and sign in one step, with development keys.
@@ -193,20 +131,6 @@ pub enum SignStage {
     PrepareOnly,
 }
 
-/// The publishable, cross-model release container.
-///
-/// Deliberately model-free: a release covers every model, so naming it after
-/// one would misdescribe it. The models live in subtrees inside.
-///
-/// `release.zip` for production keys, `release-devel.zip` for development ones,
-/// so two cuts cannot share a filename and overwrite each other. **The packer
-/// picks the name, not xtask**: the key set is a property of the SIGNATURES in
-/// `bootloader.bin`, and xtask cannot verify them. Naming it here from
-/// `--bootloader-devel` instead would be naming it from intent rather than
-/// fact, and the two diverge today -- signing is always done with development
-/// keys, so a cut without that flag would take the production name while
-/// carrying devel signatures.
-
 /// One variant of a release, as the container records it.
 struct VariantEntry {
     variant: Variant,
@@ -214,34 +138,20 @@ struct VariantEntry {
     file: String,
 }
 
-/// What a signed release records about itself, read from its `bundle.json`.
-///
-/// The container carries no signature and needs none: the boot-header signature
-/// is the trust root, and the device pins the stamped `firmware_type` to the
-/// authenticated manifest variant. So everything here is routing -- which file
-/// is which, and where a field sits -- never authority.
+/// What a signed release records about itself, from its `bundle.json`.
+/// Routing only -- the boot-header signature is the trust root.
 pub struct ReleaseManifest {
-    /// Which model this release is for, from the signer's reading of the SIGNED
-    /// boot header. Recorded so a release directory is self-describing; the
-    /// per-model file used to say so only by being the value of a model-keyed
-    /// entry in the aggregate, which a presigned build then dropped.
+    /// Model id, from the signer's reading of the signed boot header.
     model: String,
     /// The bootloader image's name within the release.
     bootloader_file: String,
-    /// Every variant in the release: its hardened `firmware_type` codeword,
-    /// and the image's own filename. The name is RECORDED, not derived from the
-    /// variant -- a resigned build keeps the name it was built under
-    /// (`firmware.bin`), and deriving `<variant>.bin` would look for a file
-    /// nobody wrote.
+    /// Every variant: hardened `firmware_type` codeword and recorded filename.
     variants: Vec<VariantEntry>,
-    /// Where that field sits in the bootloader image, and how wide it is. Both
-    /// recorded by the signer, which locates the field by probing its own
-    /// build, so nothing here needs to know the boot-header layout -- or the
-    /// codewords, which stay in the device headers and the signer.
+    /// Where `firmware_type` sits in the bootloader image, probed by the
+    /// signer.
     firmware_type_offset: usize,
     firmware_type_len: usize,
-    /// The value a bare release carries. Read from the bundle rather than
-    /// known, so the codewords stay in the device headers and the signer.
+    /// The value a bare release carries.
     firmware_type_bare: u32,
 }
 
@@ -253,9 +163,7 @@ impl ReleaseManifest {
         let json: serde_json::Value = serde_json::from_str(&text)
             .with_context(|| format!("Failed to parse {}", path.display()))?;
 
-        // Identify the document BEFORE reading anything out of it. A release
-        // cut by an older tool is refused by version rather than diagnosed one
-        // missing field at a time, which is what used to happen.
+        // Identify the document before reading anything out of it.
         let format = json
             .get("format")
             .and_then(|v| v.as_str())
@@ -297,8 +205,6 @@ impl ReleaseManifest {
             .with_context(|| format!("{} names no bootloader file", path.display()))?
             .to_string();
 
-        // Grouped under the bootloader because they describe THAT binary: the
-        // offset is into it, and the bare value is what it currently carries.
         let ft = bootloader
             .get("firmware_type")
             .with_context(|| format!("{} records no firmware_type field", path.display()))?;
@@ -321,10 +227,6 @@ impl ReleaseManifest {
             .and_then(|v| v.as_array())
             .context("release bundle has no variants")?
         {
-            // The variant's own name, not its filename. Recovering identity by
-            // stripping `.bin` made the writer's naming a claim about what the
-            // image IS; the signer now records the name it derived from the
-            // folded manifest's codeword.
             let name = entry
                 .get("variant")
                 .and_then(|v| v.as_str())
@@ -402,13 +304,8 @@ impl ReleaseManifest {
             })
     }
 
-    /// Write a copy of the release bootloader provisioned for `variant`, and
-    /// return its path.
-    ///
-    /// This is the whole of "installing" a boot header by debugger:
-    /// `firmware_type` is unauthenticated, so stamping it needs no key and
-    /// leaves the signature intact -- it is the same byte the bootloader writes
-    /// for itself when it installs firmware over the wire.
+    /// Write a copy of the release bootloader stamped for `variant`.
+    /// `firmware_type` is unauthenticated, so this needs no key.
     pub fn stamp(&self, dir: &Path, variant: Variant) -> Result<PathBuf> {
         let firmware_type = self.firmware_type(variant)?;
         let src = dir.join(&self.bootloader_file);
@@ -428,8 +325,7 @@ impl ReleaseManifest {
         let current = u32::from_le_bytes(field.try_into()?);
         let bare = self.firmware_type_bare;
         let path = src.display();
-        // A release is signed bare, so anything else means the offset and the
-        // image disagree -- a stale bundle.json next to a different bootloader.
+        // A release is signed bare; anything else means a stale bundle.json.
         ensure!(
             current == bare,
             "{path} already carries firmware_type 0x{current:08X} at offset {at}, \
@@ -444,13 +340,9 @@ impl ReleaseManifest {
     }
 }
 
-/// The images a pq_secure release contributes to one install.
-///
-/// Bootloader and firmware come as a PAIR because they are one unit: the
-/// bootloader's signed header carries the `firmware_root` the firmware folds up
-/// to, and rebuilding the firmware changes that root -- so the bootloader
-/// already on a device vouches only for the previous build. Installing one
-/// without the other is not useful.
+/// The images a pq_secure release contributes to one install. Bootloader and
+/// firmware are a pair: the header vouches only for the root this firmware
+/// folds to.
 pub struct ReleaseInstall {
     /// The release bootloader, provisioned for `variant` when there is one.
     pub bootloader: PathBuf,
@@ -461,14 +353,8 @@ pub struct ReleaseInstall {
     pub variant: Option<Variant>,
 }
 
-/// Resolve what to install from a model's release, stamping the bootloader for
-/// the variant being installed.
-///
-/// `firmware_type` is the provisioning marker an over-the-wire install would
-/// have written; a debugger flash or a factory image has nobody to write it, so
-/// it is stamped here. Asking for the bootloader ALONE leaves it bare unless a
-/// variant is named -- bare is the legitimate state of a fresh device, which
-/// then takes its firmware over the wire.
+/// Resolve what to install from a model's release, stamping `firmware_type`
+/// into the bootloader for the variant being installed.
 pub fn resolve_install(
     model: Model,
     project: Project,
@@ -476,21 +362,9 @@ pub fn resolve_install(
 ) -> Result<ReleaseInstall> {
     let model_id = model.model_id();
 
-    // A BARE bootloader needs no release. The built binary is signed on its own
-    // and its `firmware_root` commits to nothing, which is the right state for a
-    // fresh device: it reads as unprovisioned and takes its firmware over the
-    // wire, which brings its own header. Only stamping a variant needs the
-    // bundle (for the codeword and the offset), and only firmware needs the
-    // tree. Prefer a release's folded bootloader when one is there -- the
-    // firmware beside it verifies against that header -- and otherwise fall back
-    // to the freshly built one rather than refusing.
+    // A bare bootloader needs no release; bare is the state of a fresh device.
     if project == Project::Bootloader && variant.is_none() {
-        // ONE canonical bootloader binary: whatever last wrote
-        // `artifacts/<MODEL>/bootloader.bin`. `xtask build bootloader` writes
-        // it, and cutting a release writes its folded+signed bootloader back
-        // over it, so "flash the bootloader" always means the last one
-        // produced -- with no source to choose and no way for a build to be
-        // silently ignored in favour of an older release copy.
+        // Whatever last wrote `artifacts/<MODEL>/bootloader.bin` is canonical.
         let bootloader = helpers::artifacts_dir(model)?.join("bootloader.bin");
         ensure!(
             bootloader.exists(),
@@ -504,17 +378,8 @@ pub fn resolve_install(
         });
     }
 
-    // Installed straight from the published artifacts -- no signing here.
-    // `xtask build` and `xtask release` both sign, and both publish the result
-    // to `artifacts/<MODEL>/`, so what is there IS the last thing produced.
-    // Signing a third time would re-cut a one-variant tree over an image that
-    // already folds correctly, and throw away a multi-variant release's proof
-    // doing it.
-    //
-    // `bundle.json` is the token saying these binaries form an installable SET:
-    // it is published together with them, and `xtask build bootloader` removes
-    // it, because a freshly built BARE bootloader no longer vouches for the
-    // firmware sitting beside it.
+    // No signing here: `bundle.json` marks the published binaries as a signed
+    // set, and `xtask build bootloader` removes it.
     let dir = helpers::artifacts_dir(model)?;
     ensure!(
         dir.join("bundle.json").exists(),
@@ -542,11 +407,8 @@ pub fn resolve_install(
     })
 }
 
-/// Which variant of a release to install.
-///
-/// An explicit choice wins. Otherwise the project names it -- prodtest is its
-/// own variant -- and a release holding a single firmware variant needs
-/// nothing.
+/// Which variant of a release to install: an explicit choice wins, then the
+/// project, then the release's only firmware variant.
 pub fn pick_variant(
     project: Project,
     requested: Option<Variant>,
@@ -582,8 +444,6 @@ pub fn pick_variant(
 
 /// Which variant the request as given selects.
 pub fn selected_variant(args: &ResolvedBuildArgs) -> Variant {
-    // Asking for prodtest names the variant outright -- it is a project, not a
-    // firmware build flag.
     if matches!(args.project, Project::Prodtest) {
         return Variant::Prodtest;
     }
@@ -596,33 +456,22 @@ pub fn selected_variant(args: &ResolvedBuildArgs) -> Variant {
     }
 }
 
-/// Whether this build produces a Merkle-tree release.
-///
-/// Emulator builds never do, whatever the model: there is no bootloader to
-/// carry a signed `firmware_root` and no flash for a tree to be installed into,
-/// so the unix binary is the whole artifact.
+/// Whether this build produces a Merkle-tree release (never for the emulator).
 pub fn applies(args: &ResolvedBuildArgs) -> Result<bool> {
     Ok(!args.emulator && args.model.config()?.has_feature("pq_secure_boot"))
 }
 
-/// Build, sign and bundle a release.
-///
-/// The dev path: sign locally with development keys over whatever variants were
-/// built. A release for a founder-keyed device cannot be signed here (no keys),
-/// and is a separate mode -- see the `--presigned` and `--production` work.
+/// Build, sign and bundle a release with development keys.
 pub fn build_release(
     args: &ResolvedBuildArgs,
     variants: &[Variant],
     bootloader: BootloaderSource,
     sign: SignStage,
     dest: Dest,
-    // None leaves the choice to the signer's own development default, so the
-    // value lives in exactly one place instead of being mirrored here.
+    // None: the signer's development default.
     sigmask: Option<u8>,
 ) -> Result<()> {
-    // Checked before anything is built: signing is the last step, and finding
-    // out then would waste four builds. Only an inline signature needs keys --
-    // PREPARING a release needs none, which is the whole point of the split.
+    // Only an inline signature needs keys; preparing needs none.
     if sign == SignStage::Inline && !args.bootloader_devel {
         bail!(
             "signing inline needs development keys -- pass --bootloader-devel, \
@@ -647,9 +496,7 @@ pub fn build_release(
             .join(", ")
     );
 
-    // Resolved before anything is built: it is only a path lookup, and finding
-    // out afterwards that there is no bootloader to fold would waste every
-    // firmware build.
+    // Resolved first: a missing bootloader should not cost four builds.
     let bootloader = release_bootloader(args, bootloader)?;
 
     let mut firmwares: Vec<PathBuf> = Vec::new();
@@ -665,19 +512,8 @@ pub fn build_release(
         );
         cargo::build_project(variant_args.clone())?;
 
-        // Keep the UNIVERSAL variant's secmon beside the release: it is the one
-        // promotion commits, and therefore the one a presigned custom build
-        // embeds. The custom slot's leaf commits the WHOLE secmon entry, so
-        // that build only folds if the secmon it embeds is byte-identical to
-        // the one the slot was signed over.
-        //
-        // The secmon is NOT variant-dependent -- nothing in it reads a variant
-        // -- so every variant now builds the same bytes and "universal's" is
-        // simply "the" secmon. It is pinned to universal anyway rather than
-        // left to whichever variant ran last: that is what silently broke
-        // before, when `artifacts/secmon.bin` held prodtest's by the time
-        // promotion copied it, and pinning keeps this correct if a future
-        // feature ever does reach the secmon.
+        // Keep universal's secmon beside the release: the custom slot's leaf
+        // commits to the whole secmon entry, so promotion needs these bytes.
         if *variant == Variant::Universal && dest == Dest::Release {
             for name in ["secmon.bin", "secmon_api.o"] {
                 let src = helpers::artifacts_dir(args.model)?.join(name);
@@ -694,10 +530,7 @@ pub fn build_release(
             }
         }
 
-        // A release builds several variants into ONE artifact slot, so each has
-        // to be copied out under its own name before the next overwrites it. A
-        // build produces one variant and signs it where it lies -- the container
-        // records each image's `file`, so it keeps its build name.
+        // Variants share one artifact slot; copy each out under its own name.
         let built = helpers::artifacts_dir(args.model)?.join(variant.artifact());
         let dst = match dest {
             Dest::Artifacts => built.clone(),
@@ -711,9 +544,7 @@ pub fn build_release(
         firmwares.push(dst);
     }
 
-    // Signing rewrites the header in place, so when the chosen bootloader
-    // already sits at the destination there is nothing to copy -- and copying a
-    // file onto itself would truncate it.
+    // fs::copy onto the same path truncates the file.
     let bootloader_out = out.join(DEFAULT_BOOTLOADER_FILE);
     if bootloader != bootloader_out {
         fs::copy(&bootloader, &bootloader_out).with_context(|| {
@@ -725,21 +556,17 @@ pub fn build_release(
         })?;
     }
 
-    // The nRF is a peer leaf of the same model tree, so it rides the one
-    // boot-header signature. Whether its own MCUboot verifies that tree is
-    // fixed per model, not chosen per build.
+    // The nRF is a peer leaf of the same model tree.
     let nrf = stage_nrf_image(args, &out)?;
     let nrf_pq_native = args.model.config()?.nrf_pq_native;
 
     run_signer(&out, &firmwares, nrf.as_deref(), nrf_pq_native, sign, sigmask)?;
     match dest {
-        // Signed where it lies: already the canonical set, nothing to publish.
-        // Pack the container `upload` installs so every consumer finds it.
+        // Signed in place; pack the container `upload` installs.
         Dest::Artifacts => {
             pack_install_zip(args.model)?;
         }
-        // A release PREPARES; it publishes once its signatures are attached,
-        // which `release()` does after the signing stage. Nothing to do here.
+        // A release publishes only once its signatures are attached.
         Dest::Release => {}
     }
 
@@ -750,18 +577,9 @@ pub fn build_release(
     Ok(())
 }
 
-/// Build a CUSTOM firmware and fold it into the committed, already-signed root.
-///
-/// A custom build never cuts a tree. Its leaf is code-independent -- the fold
-/// zeroes the firmware version and the app entry's `size` + `code_hash` -- so
-/// it belongs in the one founder-signed custom slot, and re-signing a fresh
-/// single-variant root would only produce something no field device accepts.
-/// This is also the only shape possible with production keys, so the dev flow
-/// runs the same path rather than a more permissive cousin of it.
-///
-/// The release directory is rebuilt from the COMMITTED set plus this one image:
-/// the promoted bootloader (it already carries the signed `firmware_root`), the
-/// committed bundle, the promoted co-processor images. Nothing here is signed.
+/// Build a CUSTOM firmware and fold it into the committed, already-signed
+/// root. A custom leaf is code-independent, so it belongs in the one
+/// founder-signed custom slot; nothing here is signed.
 pub fn build_presigned(args: &ResolvedBuildArgs) -> Result<()> {
     let models_dir = helpers::workspace_dir()?.join("models");
     let bundle_src = models_dir.join(bundle_name(args.bootloader_devel));
@@ -781,10 +599,7 @@ pub fn build_presigned(args: &ResolvedBuildArgs) -> Result<()> {
     let model_id = args.model.model_id();
     let body = read_model_entry(&bundle_src, model_id)?;
 
-    // Assembled in the artifacts directory, like every other build: the
-    // committed bundle it folds into is read where it lives, so there is
-    // nothing a scratch release directory would hold. It is NOT cleared --
-    // every other build output lives here -- and nothing is signed.
+    // Assembled in artifacts/ like every other build; nothing is signed.
     let out = helpers::artifacts_dir(args.model)?;
     fs::create_dir_all(&out)?;
 
@@ -801,12 +616,9 @@ pub fn build_presigned(args: &ResolvedBuildArgs) -> Result<()> {
     Variant::Custom.apply(&mut variant_args);
     cargo::build_project(variant_args)?;
 
-    // Folded where the build left it: the container records each image's
-    // `file`, so it keeps its build name.
     let firmware = out.join(Variant::Custom.artifact());
 
-    // The promoted bootloader, whose header already carries the root this image
-    // folds to. Copied unchanged -- a custom build has no key and needs none.
+    // The promoted bootloader already carries the root this image folds to.
     let bootloader = models_dir.join(model_id).join("bootloaders").join(format!(
         "bootloader_{model_id}{}.bin",
         if args.bootloader_devel { "_devel" } else { "" }
@@ -817,11 +629,7 @@ pub fn build_presigned(args: &ResolvedBuildArgs) -> Result<()> {
     copy_signed_coprocessors(model_id, &body, &out)?;
     presign(&firmware, &bundle_src, model_id)?;
 
-    // The COMMITTED body describes the release this image folds into, so it is
-    // what the published manifest is derived from -- trimmed to the one variant
-    // present and pointed at its build name. Writing a verbatim copy first, as
-    // a scratch release directory needed, would have described three images
-    // that are not here.
+    // Derived from the committed body, trimmed to the one variant present.
     publish_manifest(
         args.model,
         body,
@@ -829,13 +637,7 @@ pub fn build_presigned(args: &ResolvedBuildArgs) -> Result<()> {
         &[(Variant::Custom, Variant::Custom.artifact())],
     )?;
     pack_install_zip(args.model)?;
-
-    // Publish, exactly as a signed release does. Without this the presigned
-    // path was the one build that did NOT update the canonical artifacts, so
-    // `flash` kept installing the previous variant while `upload` -- which
-    // reads the zip this build did rewrite -- installed the custom one. The
-    // bootloader published here is the COMMITTED one this image folds to, not
-    // a re-signed copy: a custom build has no key and needs none.
+    // Publish like a signed release does, so `flash` and `upload` agree.
     publish_bootloader(args.model, &out)?;
     publish_images(
         args.model,
@@ -855,17 +657,9 @@ pub fn build_presigned(args: &ResolvedBuildArgs) -> Result<()> {
     Ok(())
 }
 
-/// Copy each co-processor image the committed body names into the release dir.
-///
-/// The PROMOTED image, not the bare one a release stages: the body records that
-/// file's `length` and `image_hash`, and on a PQ-native model signing rewrites
-/// the image, so staging the build output here would pack something the manifest
-/// beside it describes incorrectly. A custom build re-uses the committed fold
-/// wholesale, so the co-processor it ships has to be the folded one too.
-///
-/// Absent is an error rather than a skip: the body naming a co-processor is the
-/// statement that the set includes one, and shipping a manifest whose image is
-/// missing fails later, further from the cause.
+/// Copy each co-processor image the committed body names into the release
+/// dir. The promoted (signed) image, not the bare one: the body records its
+/// hash. Absent is an error, not a skip.
 fn copy_signed_coprocessors(model_id: &str, body: &serde_json::Value, out: &Path) -> Result<()> {
     for entry in body
         .get("coprocessors")
@@ -937,11 +731,8 @@ fn read_model_entry(bundle: &Path, model_id: &str) -> Result<serde_json::Value> 
         })
 }
 
-/// Fill the manifest, check the leaf against the signed slot, bake the co-path.
-///
-/// Keyless: the check is what makes it safe to do without one. A leaf that does
-/// not match the committed slot cannot fold, and left unchecked that surfaces
-/// only as a rejected install on the device.
+/// Fill the manifest, check the leaf against the committed custom slot and
+/// bake the co-path. Keyless.
 fn presign(firmware: &Path, bundle: &Path, model_id: &str) -> Result<()> {
     let tool = helpers::workspace_dir()?
         .join("../tools/trezor_core_tools/firmware_pq_presign.py")
@@ -963,37 +754,22 @@ fn presign(firmware: &Path, bundle: &Path, model_id: &str) -> Result<()> {
     Ok(())
 }
 
-/// Where the one cross-model bundle is written, and where it is promoted to.
-///
-/// `xtask release` cuts each model into its own `tree/<MODEL>/`, then merges
-/// the per-model bundles into `tree/bundle.json` keyed by model id. That merged
-/// file is what a presigned custom build reads, so it is the one that gets
-/// committed.
+/// The cross-model bundle `tree/bundle[_devel].json`, which promotion commits.
 fn tree_bundle(model_devel: bool) -> Result<PathBuf> {
     Ok(helpers::build_dir()?
         .join("tree")
         .join(bundle_name(model_devel)))
 }
 
-/// `bundle.json` for production keys, `bundle_devel.json` for development ones.
-/// Two files rather than one with both, so promoting a production set cannot
-/// touch the devel data or the reverse.
+/// `bundle.json` for production keys, `bundle_devel.json` for development.
 fn bundle_name(devel: bool) -> String {
     let suffix = if devel { "_devel" } else { "" };
     format!("bundle{suffix}.json")
 }
 
-/// Pack every released model into ONE publishable container.
-///
-/// The artifact carries no model in its name because a release is not a
-/// per-model thing: one source tag builds every model and the published set is
-/// the whole lot. The per-model `tree/<MODEL>.zip` stays as the thing a single
-/// device install consumes -- `xtask upload`, the OTA harness -- and this is
-/// what gets published.
-///
-/// Packed in Python for the same reason the signing step is there: it already
-/// owns archive writing, and xtask would otherwise take a zip dependency to do
-/// pure packaging.
+/// Pack every released model into one model-free publishable container. The
+/// packer (`release_pack.py`) names it `release[-devel].zip` from the
+/// signatures it finds, since xtask cannot verify them.
 fn write_release_container(set_path: &Path, devel_build: bool) -> Result<()> {
     let packer = helpers::workspace_dir()?
         .join("../tools/trezor_core_tools/release_pack.py")
@@ -1017,34 +793,16 @@ fn write_release_container(set_path: &Path, devel_build: bool) -> Result<()> {
     Ok(())
 }
 
-/// Copy a finished release's bootloader over the canonical build artifact.
-///
-/// Cutting a release does not rebuild the bootloader -- it folds
-/// `firmware_root` into an existing one and re-signs the header, leaving the
-/// code untouched -- so the result is strictly newer than what `xtask build
-/// bootloader` produced and belongs in the same place. That keeps ONE
-/// bootloader binary for `flash`/`upload` to use, instead of two that can
-/// disagree about which is current. (Same reasoning as promotion replacing the
-/// committed bootloader in place.)
-///
-/// Only ever called for a SIGNED release: an unsigned one must not become the
-/// flashable artifact, because the boardloader would refuse it and the failure
-/// would look like a broken device rather than an unfinished release.
+/// Publish a signed release's firmware images over the canonical build
+/// artifacts. Never called for an unsigned release.
 fn publish_images(
     model: Model,
     out: &Path,
     variants: &[Variant],
     release: &ReleaseManifest,
 ) -> Result<()> {
-    // Each variant's SIGNED image replaces the template the build left behind,
-    // so the artifacts directory holds installable images rather than folds
-    // that verify against nothing.
-    //
-    // universal, btc-only and custom share the `firmware.bin` slot, so only one
-    // can occupy it. The FIRST in ALL_VARIANTS order wins, which makes it
-    // universal -- without this the slot kept whichever was built last (custom),
-    // and `xtask release` followed by `xtask flash firmware` would quietly
-    // install the unofficial variant.
+    // Variants sharing a slot: the first in ALL_VARIANTS order (universal)
+    // wins.
     let mut taken: Vec<&str> = Vec::new();
     let mut published: Vec<(Variant, &str)> = Vec::new();
     for variant in variants {
@@ -1055,9 +813,7 @@ fn publish_images(
         taken.push(slot);
         let src = out.join(release.firmware_file(*variant)?);
         let dst = helpers::artifacts_dir(model)?.join(slot);
-        // Already in place when the build assembled there. Skipping is not an
-        // optimisation: `fs::copy` onto the same path TRUNCATES the file, so
-        // publishing over itself would destroy the image it means to publish.
+        // fs::copy onto the same path truncates the file.
         if src != dst {
             fs::copy(&src, &dst).with_context(|| {
                 format!("Failed to publish {} -> {}", src.display(), dst.display())
@@ -1074,20 +830,9 @@ fn publish_images(
     publish_manifest(model, doc, out, &published)
 }
 
-/// Publish the release's manifest, rewritten to describe what was PUBLISHED.
-///
-/// The artifacts directory is not the release: variants sharing a build slot
-/// cannot all be copied, and each image keeps its slot name rather than the
-/// release's. A manifest still listing the others would let an install pick a
-/// variant whose image is not there -- so it is filtered, and its filenames
-/// rewritten. The container recording `file` explicitly is what makes that
-/// possible.
-///
-/// `coprocessors` is KEPT, and their images published alongside: this set is
-/// the one canonical install source for BOTH paths, and the wire path installs
-/// the co-processor. Variant filtering does not affect their fold -- an nRF
-/// leaf hangs off the model tree of the same bootloader published here, so its
-/// recorded co-path still folds to the modelRoot that bootloader commits to.
+/// Publish the release manifest rewritten to what was published: variants
+/// filtered to those present, filenames rewritten to their slot names.
+/// `coprocessors` is kept and their images published alongside.
 fn publish_manifest(
     model: Model,
     mut doc: serde_json::Value,
@@ -1140,12 +885,8 @@ fn publish_manifest(
     Ok(())
 }
 
-/// Pack the published set into the container `xtask upload` installs.
-///
-/// `trezorctl firmware update -f` takes a FILE, while the canonical set is a
-/// directory -- so the directory is packed rather than a second set being kept
-/// in step with it. Same manifest and same deterministic writer as a release
-/// container, so the two cannot disagree about what the set contains.
+/// Pack the published set into `install.zip`, the file `xtask upload` hands
+/// to trezorctl.
 pub fn pack_install_zip(model: Model) -> Result<PathBuf> {
     let tool = helpers::workspace_dir()?
         .join("../tools/trezor_core_tools/release_pack.py")
@@ -1163,17 +904,9 @@ pub fn pack_install_zip(model: Model) -> Result<PathBuf> {
     Ok(out)
 }
 
-/// Invalidate the published install set after a BARE bootloader build.
-///
-/// `build bootloader` replaces the canonical bootloader with a freshly built,
-/// bare one whose `firmware_root` commits to nothing. The firmware still
-/// sitting beside it folds to the OLD root, so the pair no longer agrees -- and
-/// installing it would put a bootloader on the device that refuses the firmware
-/// installed with it.
-///
-/// Removing the manifest says exactly that: these binaries are no longer a
-/// signed set. Cheaper and more honest than re-deriving one, and it needs no
-/// boot-header parser here to notice the mismatch.
+/// Invalidate the published install set after a bare bootloader build: the
+/// firmware beside it folds to the old root, so removing `bundle.json` says
+/// they are no longer a signed set.
 pub fn invalidate_install_set(model: Model) -> Result<()> {
     let manifest = helpers::artifacts_dir(model)?.join("bundle.json");
     if manifest.exists() {
@@ -1203,11 +936,6 @@ fn publish_bootloader(model: Model, out: &Path) -> Result<()> {
 }
 
 /// Sign a prepared release with development keys -- the ceremony's stand-in.
-///
-/// Separate from preparing on purpose: this is the only step that touches a
-/// key, so it is the one a real release replaces with an airgapped ceremony.
-/// The prepared container is the signing request (each model records the
-/// `modelRoot` its header commits to), so nothing extra is handed over.
 fn devsign(bundle: &Path, tree: &Path, out: &Path) -> Result<()> {
     let tool = helpers::workspace_dir()?
         .join("../tools/trezor_core_tools/firmware_pq_devsign.py")
@@ -1224,10 +952,8 @@ fn devsign(bundle: &Path, tree: &Path, out: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Patch founder signatures into a prepared release.
-///
-/// Holds no key and recomputes no tree: signatures land in unauthenticated
-/// space, so this cannot invalidate anything the prepare stage folded.
+/// Patch founder signatures into a prepared release. Signatures land in
+/// unauthenticated space, so nothing the prepare stage folded is invalidated.
 fn attach(bundle: &Path, tree: &Path, signatures: &Path) -> Result<()> {
     let tool = helpers::workspace_dir()?
         .join("../tools/trezor_core_tools/firmware_pq_attach.py")
@@ -1244,11 +970,8 @@ fn attach(bundle: &Path, tree: &Path, signatures: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Merge every model's `bundle.json` into one cross-model file.
-///
-/// Keyed by model id because the models are INDEPENDENT trees -- each carries
-/// its own `firmware_root` and its own signature. Merging is a convenience for
-/// whoever reads the set, not a joint tree.
+/// Merge every model's `bundle.json` into one file keyed by model id. Models
+/// are independent trees, each with its own root and signature.
 fn write_aggregate_bundle(models: &[Model], devel: bool) -> Result<PathBuf> {
     let mut entries = serde_json::Map::new();
     for model in models {
@@ -1261,10 +984,8 @@ fn write_aggregate_bundle(models: &[Model], devel: bool) -> Result<PathBuf> {
     }
 
     let mut doc = serde_json::Map::new();
-    // The aggregate is its own document shape, so it says so separately -- the
-    // per-model bodies nested inside keep their own `format`/`format_version`
-    // because `build_presigned` lifts one out and writes it as a standalone
-    // release manifest, which then has to be self-describing on its own.
+    // Per-model bodies keep their own `format` tags: `build_presigned` lifts
+    // one out as a standalone manifest.
     doc.insert(
         "format".to_string(),
         serde_json::Value::String(format!("{CONTAINER_MAGIC}-set")),
@@ -1286,14 +1007,9 @@ fn write_aggregate_bundle(models: &[Model], devel: bool) -> Result<PathBuf> {
     Ok(path)
 }
 
-/// Copy a release into the tree, as the reference a presigned custom build
-/// reads.
-///
-/// The pieces only work together -- the bundle names a `firmware_root` that
-/// only this bootloader carries, and a custom leaf that only this secmon
-/// satisfies -- so they are copied as ONE step. Promoting a subset leaves a set
-/// that fails to fold, or a kernel that secure-faults, and neither shows up as
-/// a build error. `presigned_check` re-verifies the result afterwards.
+/// Copy a release into `models/` as the committed reference a presigned
+/// custom build reads. Bundle, bootloader, secmon pair and nRF image are
+/// copied together and re-verified by `presigned_check`.
 fn promote(models: &[Model], devel: bool) -> Result<()> {
     let models_dir = helpers::workspace_dir()?.join("models");
     let suffix = if devel { "_devel" } else { "" };
@@ -1313,9 +1029,7 @@ fn promote(models: &[Model], devel: bool) -> Result<()> {
         let out = release_dir(*model)?;
         let id = model.model_id();
 
-        // The SIGNED bootloader replaces the committed one. Signing rewrites the
-        // header and not the code, so the next release can fold this binary
-        // again -- there is no need to keep a separate bare copy.
+        // The signed bootloader replaces the committed one.
         let bl_dst = models_dir
             .join(id)
             .join("bootloaders")
@@ -1324,19 +1038,15 @@ fn promote(models: &[Model], devel: bool) -> Result<()> {
             .with_context(|| format!("Failed to write {}", bl_dst.display()))?;
         println!("  {id} bootloader -> {}", bl_dst.display());
 
-        // The secmon travels as a PAIR: the kernel links the veneer object and
-        // secure-faults if it drifts from the binary it was built against.
+        // The secmon travels as a pair: the kernel links the veneer object.
         let secmon_dir = models_dir.join(id).join("secmon");
         let (bin_name, api_name) = if devel {
             ("secmon_DEV.bin", "secmon_api_DEV.o")
         } else {
             ("secmon.bin", "secmon_api.o")
         };
-        // Taken from the RELEASE, not from `artifacts/`: the release kept the
-        // secmon its custom slot was signed over, while artifacts holds
-        // whichever variant built last. Committing the latter produced a set
-        // that could not fold -- caught only by `presigned_check`, and only
-        // after a creator's build had already failed.
+        // From the release, not `artifacts/`: the secmon the custom slot was
+        // signed over.
         for (src_name, dst_name) in [("secmon.bin", bin_name), ("secmon_api.o", api_name)] {
             let src = out.join(src_name);
             if !src.exists() {
@@ -1351,21 +1061,9 @@ fn promote(models: &[Model], devel: bool) -> Result<()> {
             println!("  {id} {dst_name} -> {}", dst.display());
         }
 
-        // The nRF image, for the same reason as the bootloader: on a PQ-NATIVE
-        // model signing REWRITES it -- the founder signature and co-path go into
-        // its own TLVs, and the protected sigmask and monotonic counter are
-        // stamped from the header being signed. The bundle's recorded image_hash
-        // describes THAT file, so leaving the build's unsigned output committed
-        // would promote a set whose nRF nothing can verify.
-        //
-        // Copied unconditionally: where the model is not PQ-native the signer
-        // only reads the image, so this is the same bytes and the copy is a
-        // no-op. Sourced from the release for the same reason the secmon is --
-        // it is the image the modelRoot was folded over.
-        //
-        // Lands beside `trezor-ble{suffix}-bare.bin`, never on it: the bare image
-        // is the next release's input, so the two have to stay separate files or a
-        // promote leaves the following release nothing signable to stage.
+        // On a PQ-native model signing rewrites the nRF image, so the release
+        // copy is committed. It lands beside `trezor-ble{suffix}-bare.bin`,
+        // never on it: the bare image is the next release's input.
         let nrf_suffix = if devel { "-dev" } else { "" };
         let nrf_name = format!("trezor-ble{nrf_suffix}.bin");
         let nrf_src = out.join(&nrf_name);
@@ -1377,12 +1075,8 @@ fn promote(models: &[Model], devel: bool) -> Result<()> {
         }
     }
 
-    // Verified here rather than suggested. The committed set is four artifacts
-    // that only mean anything together -- bundle, bootloader, secmon pair --
-    // and promoting the wrong combination is silent: nothing fails until a
-    // creator's presigned build cannot fold, which is both much later and much
-    // harder to read. `presigned_check` names that failure exactly, so it runs
-    // now, while the cause is one command away.
+    // Verified now; a wrong combination otherwise fails only at a later
+    // presigned build.
     println!("{}", "xtask: verifying the promoted set".bold().dimmed());
     let checker = helpers::workspace_dir()?
         .join("../tools/trezor_core_tools/presigned_check.py")
@@ -1412,12 +1106,7 @@ fn promote(models: &[Model], devel: bool) -> Result<()> {
 }
 
 /// The bootloader whose header this release folds `firmware_root` into.
-///
-/// Never built here: a release builds firmware, and quietly rebuilding the
-/// bootloader as a side effect of `build prodtest` would be a surprise. The
-/// choice is reported, with the file's age, because it decides which code the
-/// device ends up running -- a stale pick is the difference between testing
-/// your bootloader change and testing last week's.
+/// Never built here.
 fn release_bootloader(args: &ResolvedBuildArgs, source: BootloaderSource) -> Result<PathBuf> {
     let built = helpers::artifacts_dir(args.model)?.join("bootloader.bin");
 
@@ -1442,9 +1131,7 @@ fn release_bootloader(args: &ResolvedBuildArgs, source: BootloaderSource) -> Res
         }
     };
 
-    // The age is only meaningful for the artifact xtask wrote itself. On the
-    // committed binary the timestamp says when git last checked it out, which
-    // would read as if it had just been built.
+    // The age only means something for a file xtask wrote itself.
     let (which, age) = if chosen.starts_with(helpers::artifacts_dir(args.model)?) {
         ("built", file_age(&chosen))
     } else {
@@ -1459,26 +1146,9 @@ fn release_bootloader(args: &ResolvedBuildArgs, source: BootloaderSource) -> Res
     Ok(chosen)
 }
 
-/// Does the code we are about to fold trust the key pool this release is signed
-/// with?
-///
-/// Signing rewrites the header; it cannot touch the pool, which is a
-/// compile-time choice (`BOOTLOADER_DEVEL`) leaving no trace in the header. So
-/// the ceremony cannot see it, and neither can the flag check above: that one
-/// says which keys this RELEASE uses, not which keys the BINARY trusts. Get
-/// them out of step and the device runs code that verifies OTA boot headers
-/// against the other pool -- and the development private halves are in this
-/// repository, so a production release folding a devel build would accept
-/// firmware signed by anyone, while rejecting the real signer's.
-///
-/// One `xtask build bootloader --bootloader-devel` is enough to leave such a
-/// binary in artifacts/, where `BootloaderSource::Auto` prefers it from then
-/// on. Nothing rebuilds it here (a release builds firmware only), so the stale
-/// pick can outlive any memory of that build.
-///
-/// The digest is over the CODE, not the file: the file changes as soon as the
-/// header is re-signed, while the code digest is exactly what the signed leaf
-/// commits to, so it is the value a ceremony can pin and re-check afterwards.
+/// Fail closed unless the bootloader's compiled-in founder pool matches the
+/// keys this release is signed with. Signing rewrites the header and cannot
+/// touch the pool, so nothing downstream can catch a mismatch.
 fn check_bootloader_pool(bootloader: &Path, devel: bool) -> Result<()> {
     let script =
         helpers::workspace_dir()?.join("../tools/trezor_core_tools/bootloader_provenance.py");
@@ -1504,18 +1174,8 @@ fn check_bootloader_pool(bootloader: &Path, devel: bool) -> Result<()> {
 
     println!("xtask: bootloader founder pool `{pool}`, code sha256 {digest}");
 
-    // A production release must POSITIVELY carry the production pool. devel,
-    // mixed and unknown are all rejected, because none of them is evidence that
-    // the code trusts the keys this release is signed with -- and the whole
-    // point of the check is that nothing downstream can tell. `unknown` in
-    // particular is not a benign "old binary": a bootloader with no founder
-    // pool linked cannot verify an OTA boot header at all, so it is not a
-    // working production artifact regardless of the key question.
-    //
-    // A devel cut is only required not to carry the PRODUCTION pool. The
-    // asymmetry is deliberate: a devel release that turns out unverifiable is a
-    // developer's problem, discovered on their own bench, while a production
-    // one reaches users -- so only the latter has to justify itself.
+    // A production release must positively carry the production pool
+    // (`unknown` has no pool linked at all); a devel cut must merely not.
     if devel {
         ensure!(
             pool != "production",
@@ -1540,8 +1200,7 @@ fn check_bootloader_pool(bootloader: &Path, devel: bool) -> Result<()> {
     Ok(())
 }
 
-/// ` (built N minutes ago)`, or nothing if the age cannot be read. Only
-/// meaningful for a file xtask produced -- see the caller.
+/// ` (built N minutes ago)`, or nothing if the age cannot be read.
 fn file_age(path: &Path) -> String {
     let Ok(elapsed) = fs::metadata(path)
         .and_then(|m| m.modified())
@@ -1562,14 +1221,8 @@ fn file_age(path: &Path) -> String {
     }
 }
 
-/// The committed bootloader whose header this release folds into./// The
-/// committed bootloader whose header this release folds into.
-///
-/// Reused rather than rebuilt, which is sound because signing rewrites only the
-/// header. It does mean the committed binary must have been built with the same
-/// key selection as this firmware -- mixing them produces an image whose kernel
-/// SecureFaults on its first instruction, since the kernel embeds one secmon
-/// and the header vouches for another.
+/// The committed bootloader whose header this release folds into. It must
+/// have been built with the same key selection as this firmware.
 fn committed_bootloader(args: &ResolvedBuildArgs) -> Result<PathBuf> {
     let model_id = args.model.model_id();
     let suffix = if args.bootloader_devel { "_devel" } else { "" };
@@ -1589,10 +1242,8 @@ fn committed_bootloader(args: &ResolvedBuildArgs) -> Result<PathBuf> {
 }
 
 /// Fold `firmware_root` over the built variants into the bootloader header,
-/// re-sign it, and bake each variant's co-path into its own image.
-///
-/// The crypto stays in Python: this is the same relationship xtask already has
-/// with `headertool`, and the signer is what a founder ceremony runs too.
+/// re-sign it, and bake each variant's co-path into its image. The crypto
+/// stays in Python (`firmware_pq_sign.py`), as with `headertool`.
 fn run_signer(
     out: &Path,
     firmwares: &[PathBuf],
@@ -1606,8 +1257,7 @@ fn run_signer(
         .canonicalize()
         .context("Failed to locate firmware_pq_sign.py")?;
 
-    // The assembled paths, not names rebuilt from variants: a build signs each
-    // image where it lies, so the filename is the build's, not the variant's.
+    // The assembled paths: each image keeps its build name.
     let mut cmd = process::Command::new("python3");
     cmd.arg(&signer);
     for firmware in firmwares {
@@ -1621,16 +1271,11 @@ fn run_signer(
         "--manifest-out".as_ref(),
         out.join("bundle.json").as_os_str(),
     ]);
-    // Only when asked. `sigmask` is authenticated, so it is fixed here at
-    // PREPARE time whatever we do; passing nothing means the signer commits the
-    // development selection it documents, rather than one this side invented.
+    // `sigmask` is authenticated, so it is fixed at prepare time.
     if let Some(mask) = sigmask {
         cmd.args(["--sigmask", &format!("0x{mask:02x}")]);
     }
-    // No archive here. Packing is one job in one place -- `release_pack.py`,
-    // driven by `pack_install_zip` for an install set and by the release for
-    // its containers -- so an archive is never cut before the thing it packs is
-    // finished. Preparing additionally leaves the signature region zero.
+    // No archive here: `release_pack.py` packs once everything is finished.
     if stage == SignStage::PrepareOnly {
         cmd.arg("--unsigned");
     }
@@ -1654,21 +1299,13 @@ fn run_signer(
     Ok(())
 }
 
-/// Put the model's committed nRF image into the release, padded, and return it.
-///
-/// Padded to the 16-byte flash write block because the OTA upload engine needs
-/// a flash-aligned length while an MCUboot image is an arbitrary one. The
-/// padding is inert: MCUboot reads by its own header sizes and ignores trailing
-/// bytes, and the model-tree leaf covers only the signed region, so the fold
-/// does not depend on it. Copied rather than padded in place so the committed
-/// source is never modified.
+/// Copy the model's committed nRF image into the release, padded to the
+/// 16-byte flash write block the OTA upload engine needs. The padding is
+/// outside the signed region, so the fold does not depend on it.
 fn stage_nrf_image(args: &ResolvedBuildArgs, out: &Path) -> Result<Option<PathBuf>> {
     let suffix = if args.bootloader_devel { "-dev" } else { "" };
-    // The BARE image -- the nordic build output, carrying no founder material.
-    // Distinct from the signed `trezor-ble{suffix}.bin` a promote commits, because
-    // this file is a release INPUT: on a PQ-native model the signer appends the
-    // founder records, and handed back its own output it refuses the image as
-    // already carrying them.
+    // The `-bare` build output is the release input; the signer's output is
+    // committed under the signed name and would be refused as input.
     let committed = helpers::workspace_dir()?
         .join("models")
         .join(args.model.model_id())
@@ -1682,8 +1319,7 @@ fn stage_nrf_image(args: &ResolvedBuildArgs, out: &Path) -> Result<Option<PathBu
 
     let raw =
         fs::read(&committed).with_context(|| format!("Failed to read {}", committed.display()))?;
-    // Staged under the SIGNED name: it is the name the bundle records, so it is
-    // the one promote writes back and the presigned check looks for.
+    // Staged under the signed name, the one the bundle records.
     let padded = out.join(format!("trezor-ble{suffix}.bin"));
     let mut bytes = raw;
     bytes.resize(bytes.len().next_multiple_of(16), 0);
@@ -1696,12 +1332,8 @@ fn stage_nrf_image(args: &ResolvedBuildArgs, out: &Path) -> Result<Option<PathBu
     Ok(Some(padded))
 }
 
-/// Warn when a fresher nRF build is sitting in nordic/ unstaged.
-///
-/// Building the nRF does not update the committed image -- build_sign_flash.sh
-/// -d -s does that copy -- so it is entirely possible to sign a leaf weeks
-/// older than the image just built, with nothing to say so. That silence has
-/// already cost one debugging session.
+/// Warn when a fresher nRF build sits unstaged in nordic/; building the nRF
+/// does not update the committed image.
 fn warn_if_nrf_stale(committed: &Path) -> Result<()> {
     let built = helpers::workspace_dir()?
         .join("../../nordic/trezor/build/trezor-ble/zephyr/zephyr.trz.bin");
@@ -1728,16 +1360,8 @@ fn warn_if_nrf_stale(committed: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Cut a complete pq_secure release: every variant of every model using the
-/// layout, each in its own signed founder tree.
-///
-/// Models are independent, not joint: each carries its own firmware_root in its
-/// own signed bootloader header, so the trees never share a root -- which is
-/// what keeps one model's re-sign from touching another's signatures. They are
-/// nonetheless cut TOGETHER and only together, because a release is the thing
-/// that reaches devices and a partial one is a set nobody asked for: the
-/// promoted reference set spans models, so a release missing one leaves it
-/// folding against a bundle cut from a different source tag.
+/// Cut a complete pq_secure release: every variant of every tree model, each
+/// in its own signed founder tree. See docs/core/build/xtask.md.
 pub fn release(args: ReleaseArgs) -> Result<()> {
     let models: Vec<Model> = Model::value_variants()
         .iter()
@@ -1769,8 +1393,6 @@ pub fn release(args: ReleaseArgs) -> Result<()> {
             model,
             emulator: false,
             preset: args.preset.clone(),
-            // Not read from here: build_release takes the source directly, so
-            // the per-model BuildArgs only has to carry the build itself.
             bootloader: args.bootloader,
             options: args.options.clone(),
         };
@@ -1780,25 +1402,9 @@ pub fn release(args: ReleaseArgs) -> Result<()> {
             "{} does not use the Merkle-tree layout, so it has no release to cut",
             model.model_id()
         );
-        // The two flags select key sets on DIFFERENT axes, and exactly one
-        // pairing is dangerous. `--bootloader-devel` picks the founder pool the
-        // boot chain trusts (root_keys.h, on BOOTLOADER_DEVEL); `--production`
-        // picks the keys that sign translations and coin definitions (the
-        // dev_keys cargo feature). With NEITHER, a release carries production
-        // founder keys and DEVELOPMENT data keys: secure boot really is
-        // enforced, so it looks shippable, yet it accepts translations and
-        // definitions signed with private halves checked into this repository.
-        //
-        // The other three pairings are fine -- fully development, fully
-        // production, or devel founder keys with production data keys (which is
-        // incoherent, but a build carrying the devel pool has no secure boot to
-        // undermine anyway).
-        //
-        // Stated as a requirement rather than left to omission, because the
-        // dangerous case is the one you get by typing nothing. Checked for a
-        // RELEASE only: a release is the artifact that reaches real devices,
-        // while a local `xtask build` of one project is a development
-        // convenience that should not need ceremony flags.
+        // `--bootloader-devel` picks the founder pool, `--production` the
+        // translation/coin-definition keys. Neither would enforce secure boot
+        // while accepting data signed with keys from this repository.
         ensure!(
             resolved.bootloader_devel || resolved.production,
             "a release built without --bootloader-devel carries PRODUCTION \
@@ -1809,9 +1415,7 @@ pub fn release(args: ReleaseArgs) -> Result<()> {
              Pass --production to cut a real release, or --bootloader-devel \
              for a development one."
         );
-        // PREPARE. Every model is folded before any of them is signed, which
-        // is the order a ceremony runs in -- signing model 1 while model 2 has
-        // not been built yet is not a thing an airgapped step can do.
+        // Prepare: every model is folded before any is signed.
         build_release(
             &resolved,
             &ALL_VARIANTS,
@@ -1823,32 +1427,25 @@ pub fn release(args: ReleaseArgs) -> Result<()> {
         devel = Some(resolved.bootloader_devel);
     }
 
-    // Every model in one run is signed with the same key selection, so the
-    // aggregate belongs to that one key set.
+    // One run, one key selection.
     let devel = devel.context("no model was released")?;
     let set_path = write_aggregate_bundle(&models, devel)?;
     let tree = set_path
         .parent()
         .context("the cross-model bundle has no parent")?
         .to_path_buf();
-
-    // SIGN + ATTACH, but only for a development cut. A production release stops
-    // here, unsigned, because the founder key is not in this process -- the
-    // container it just wrote IS the signing request, and `attach` completes it
-    // once the ceremony returns a signature set.
+    // Sign + attach only for a development cut; a production release stops
+    // here unsigned, and `attach` completes it after the ceremony.
     if devel {
         let signatures = tree.join("signatures-devel.json");
         devsign(&set_path, &tree, &signatures)?;
         attach(&set_path, &tree, &signatures)?;
-        // Now that the signatures are on, each model's bootloader is the
-        // current one -- publish it so `flash`/`upload` see it.
+        // Publish each model's now-signed bootloader for `flash`/`upload`.
         for model in &models {
             let out = release_dir(*model)?;
             publish_bootloader(*model, &out)?;
             publish_images(*model, &out, &ALL_VARIANTS, &ReleaseManifest::load(&out)?)?;
-            // Repacked with them: `install.zip` is a view of the published set,
-            // and anything reading it directly -- the OTA harness -- would
-            // otherwise install whatever a previous build left there.
+            // Repacked: `install.zip` is a view of the published set.
             pack_install_zip(*model)?;
         }
     } else {
@@ -1862,15 +1459,10 @@ pub fn release(args: ReleaseArgs) -> Result<()> {
         );
     }
 
-    // Packed LAST, so every archive holds the finished artifacts. The packer
-    // names the container, because only it can read the signing state off the
-    // signatures.
+    // Packed last; the packer names the container from the signing state.
     write_release_container(&set_path, devel)?;
     if args.promote {
-        // Promotion commits the reference set a presigned custom build folds
-        // into, so it needs a SIGNED release. A production run deliberately
-        // stops before signing, so it cannot promote in the same command --
-        // promote after the ceremony's signatures have been attached.
+        // Promotion needs a signed release.
         ensure!(
             devel,
             "this release was prepared UNSIGNED, so there is nothing to \

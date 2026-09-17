@@ -50,11 +50,7 @@ fn main() -> Result<()> {
             lib.add_define("USE_BOOT_UCB", Some("1"));
         }
 
-        // Defined here rather than per project so that every translation unit
-        // in the build agrees on the firmware layout. The Merkle-tree scheme
-        // reaches into sec/, io/ and sys/ (storage salt, firmware vendor, the
-        // syscall/smcall surface), and a project that enables the feature but
-        // forgets its own -D would silently compile the legacy branch.
+        // Defined here so every translation unit agrees on the firmware layout.
         if cfg!(feature = "pq_secure_boot") {
             lib.add_define("PQ_SECURE_BOOT", Some("1"));
         }

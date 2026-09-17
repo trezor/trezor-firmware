@@ -1,29 +1,7 @@
 """Shared helpers for the Merkle-tree firmware layout (`pq_secure_boot`).
 
-A `firmware.bin` built with the `pq_secure_boot` feature begins with a firmware
-manifest ("firmware directory", magic 'TRZD') and the firmware Merkle proof, both
-inside FW_MANIFEST_REGION, followed by the module code blobs it describes:
-
-    [ manifest | firmware proof | secmon code | kernel+coreapp code ]
-
-The manifest's directory entry for each module carries the module's code offset
-(`addr`), `chunk_size`, `size`, and `code_hash` (a smart-hashing chain over the
-module code, chunked by that entry's own `chunk_size`; see module_code_hash).
-There is no separate per-module header -- the manifest entry IS the module's
-authenticated descriptor, so the commitment is a single hop
-(variant leaf -> manifest -> code_hash -> code). The variant leaf is
-H(0x00 || manifest); the founder firmware_root is the Merkle tree over the
-per-variant leaves.
-
-The firmware Merkle proof (co-path variant leaf -> firmware_root) sits right
-after the manifest, OUTSIDE the variant leaf, so the image carries its own proof
-and none is stored in the boot header (firmware_manifest_proof_t, sec/
-boot_header.h).
-
-`fill_manifest()` fills each entry's code_hash from the placed module code (a
-build step, see headertool_pq). `firmware_root_multi()` / `build_founder_tree()`
-compute the founder root + per-variant proofs; `install_manifest_proof()` bakes
-each variant's proof into its image (the signer, see firmware_pq_sign).
+Image layout: [ manifest | firmware proof | secmon code | kernel+coreapp code ].
+Variant leaf = H(0x00 || manifest); see docs/core/embed-arch/firmware-merkle-tree.md.
 """
 
 from __future__ import annotations
@@ -35,22 +13,14 @@ from trezorlib import merkle_tree
 from trezorlib.firmware import pq_secure
 
 CODE_ALIGNMENT = 0x400
-# Reserved region at the very start of the firmware image, holding the manifest
-# followed by the firmware Merkle proof (matches FW_MANIFEST_REGION in
-# sec/boot_header.h and the *_pq.ld scripts). Independent of DEFAULT_CHUNK_SIZE;
-# the first module (secmon) simply starts right after this region.
+# Manifest + proof region at the image start; must match FW_MANIFEST_REGION in
+# sec/boot_header.h and the *_pq.ld scripts.
 FW_MANIFEST_REGION = 0x400
-# Max firmware Merkle proof nodes reserved after the manifest (== FW_MANIFEST_
-# PROOF_MAX_NODES in sec/boot_header.h; covers up to 16 variants).
+# == FW_MANIFEST_PROOF_MAX_NODES in sec/boot_header.h (up to 16 variants).
 FW_MANIFEST_PROOF_MAX_NODES = 4
 
 TYPE_NAMES = {1: "secmon", 2: "app (kernel+coreapp)", 3: "prodtest"}
-# Variant vocabulary, keyed by the HARDENED codeword the manifest actually
-# carries (fw_variant_sec_t). The small vendor_fw_type_t numbers these replaced
-# survive only as the storage-KDF and legacy vendor-header form, so keying by
-# them here printed "variant1515870810" for a universal build. CUSTOM is a
-# FIRST-CLASS variant in the tree scheme -- the founder-signed unofficial-app
-# slot (see variant_leaf).
+# Keyed by the hardened codeword the manifest carries (fw_variant_sec_t).
 VARIANT_NAMES = {
     0x00000000: "invalid",
     0xCCCCCCCC: "none",
@@ -62,36 +32,20 @@ VARIANT_NAMES = {
 
 # --- Release container ('bundle.json') ---------------------------------------
 #
-# The container describes a signed release: which variants it holds, what each
-# folds to, and where the bootloader's firmware_type field lives. It carries NO
-# signature of its own and needs none -- the boot-header signature is the trust
-# root and the device pins the stamped firmware_type to the authenticated
-# manifest variant, so a tampered container is a fail-closed DoS, never a
-# forgery. Treat every field here as routing and diagnostics, not authority.
-#
-# TRZL is the token reserved for the release container across formats; a future
-# single-file container uses the same four bytes as its binary magic.
+# Unsigned by design: the boot-header signature is the trust root, so a tampered
+# container is a fail-closed DoS, never a forgery. Fields are routing, not
+# authority. See docs/core/build/xtask.md.
 CONTAINER_MAGIC = "TRZL"
-# Bump on ANY incompatible change; readers reject what they do not know rather
-# than guessing, which is the entire reason the field exists.
+# Bump on any incompatible change; readers reject unknown versions.
 CONTAINER_VERSION = 1
-# The cross-model set that `xtask release --promote` commits: the same per-model
-# bodies, keyed by model. A distinct shape, so it identifies itself distinctly --
-# handing one to a reader expecting the other should say so, not fail later on a
-# missing field.
+# The cross-model set written by `xtask release --promote`.
 CONTAINER_SET_MAGIC = f"{CONTAINER_MAGIC}-set"
-# The name the release writer gives the bootloader inside a release. Anything
-# holding a container takes the name from `bootloader.file` instead; this is for
-# the writer, and for probes that run BEFORE a container has been read.
+# Name the release writer gives the bootloader; readers use `bootloader.file`.
 CONTAINER_DEFAULT_BOOTLOADER = "bootloader.bin"
 
 
 def check_container(doc: dict, path, *, is_set: bool = False) -> dict:
-    """Reject a release container this code does not speak, and return it.
-
-    Version FIRST, before any field is read: a container cut by an older tool
-    should be refused by version, not diagnosed one absent field at a time.
-    """
+    """Reject a container of unknown format/version (checked first), return it."""
     want = CONTAINER_SET_MAGIC if is_set else CONTAINER_MAGIC
     got = doc.get("format")
     if got is None:
@@ -111,20 +65,12 @@ def check_container(doc: dict, path, *, is_set: bool = False) -> dict:
 
 
 def container_models(doc: dict, path) -> dict[str, dict]:
-    """Read a container as ``{model: body}``, accepting either shape.
-
-    A per-model body names its own model now, so the single-model case no longer
-    has to guess it from the nRF block -- which was silently unavailable for a
-    model with no co-processor, and which a presigned build dropped entirely.
-    """
+    """Read a container as ``{model: body}``, accepting either shape."""
     if "models" in doc:
         check_container(doc, path, is_set=True)
         out = {}
         for model, body in doc["models"].items():
             check_container(body, f"{path} [{model}]")
-            # The key and the body must name the same model. They come from one
-            # cut so they cannot drift, which is exactly why a disagreement
-            # means the set was assembled wrong rather than merely stale.
             if body.get("model") != model:
                 raise SystemExit(
                     f"{path}: the entry filed under {model} names model "
@@ -140,12 +86,8 @@ def container_models(doc: dict, path) -> dict[str, dict]:
 
 
 def container_coprocessor(body: dict, kind: str = "nrf", index: int = 0) -> dict | None:
-    """One co-processor entry by its (kind, index) slot, or None.
-
-    Slot addressing is ROUTING only -- it says which payload goes where. The
-    device takes kind and index from its own build configuration, never from
-    here; see the co-processor slot binding in sec/boot_header.h.
-    """
+    """One co-processor entry by (kind, index), or None. Routing only: the device
+    takes kind/index from its own build config (see coproc_slot_t, boot_header.h)."""
     for entry in body.get("coprocessors", []):
         if entry.get("kind") == kind and entry.get("index", 0) == index:
             return entry
@@ -159,13 +101,9 @@ FW_VARIANT_UNIVERSAL = 2
 FW_VARIANT_BITCOIN_ONLY = 3
 FW_VARIANT_PRODTEST = 4
 
-# Hardened variant codewords (FW_VARIANT_SEC_*, sec/boot_header.h). These are
-# what the manifest's firmware_variant field and the boot header's
-# firmware_type carry; the small values above stay the canonical form for the
-# storage KDF and the legacy vendor header. Reed-Muller RM(1,5): every pair,
-# INVALID included, is >= 16 bit flips apart, so no single fault moves between
-# variants -- which matters because the install-time unlock gate reads this
-# field out of a RAM buffer after the fold has already passed.
+# Hardened codewords (FW_VARIANT_SEC_*, sec/boot_header.h): what the manifest's
+# firmware_variant and the boot header's firmware_type carry. RM(1,5): every
+# pair, INVALID included, is >= 16 bit flips apart.
 FW_VARIANT_SEC_INVALID = 0x00000000
 FW_VARIANT_SEC_NONE = 0xCCCCCCCC
 FW_VARIANT_SEC_CUSTOM = 0x33333333
@@ -173,8 +111,7 @@ FW_VARIANT_SEC_UNIVERSAL = 0x5A5A5A5A
 FW_VARIANT_SEC_BITCOIN_ONLY = 0xA5A5A5A5
 FW_VARIANT_SEC_PRODTEST = 0x66666666
 
-# The signer is the ONLY place a variant name becomes a codeword; the device
-# never converts in this direction (see fw_variant_* in boot_header.h).
+# small id -> codeword; the signer is the only place this direction is used.
 FW_VARIANT_SEC = {
     FW_VARIANT_CUSTOM: FW_VARIANT_SEC_CUSTOM,
     FW_VARIANT_UNIVERSAL: FW_VARIANT_SEC_UNIVERSAL,
@@ -182,16 +119,8 @@ FW_VARIANT_SEC = {
     FW_VARIANT_PRODTEST: FW_VARIANT_SEC_PRODTEST,
 }
 
-# The canonical name of each variant, keyed by the codeword its manifest
-# carries. Must match Variant::name() in xtask's pq.rs, which is the other
-# half of this contract: the release manifest records the name from HERE, and
-# xtask parses it back with Variant::from_name.
-#
-# Keyed by the codeword rather than by filename because the codeword is
-# authenticated -- it is read out of the folded manifest -- while a filename is
-# just what the release writer happened to call the file. That is the whole
-# point of recording a typed variant: readers stop inferring identity from a
-# name they cannot verify.
+# Canonical variant names, keyed by the authenticated codeword. Must match
+# Variant::name() / Variant::from_name in xtask's pq.rs.
 FW_VARIANT_NAME = {
     FW_VARIANT_SEC_CUSTOM: "custom",
     FW_VARIANT_SEC_UNIVERSAL: "universal",
@@ -199,14 +128,12 @@ FW_VARIANT_NAME = {
     FW_VARIANT_SEC_PRODTEST: "prodtest",
 }
 
-# Module types (fw_module_type_t, sec/boot_header.h). APP is the non-secure
-# application (kernel+coreapp); PRODTEST is a standalone secure factory-test image.
+# Module types (fw_module_type_t, sec/boot_header.h).
 FW_MODULE_SECMON = 1
 FW_MODULE_APP = 2
 FW_MODULE_PRODTEST = 3
 
-# Manifest entry flags (firmware_manifest_entry_t.flags, sec/boot_header.h).
-# FLAG_BOOT marks the secure boot/entry module (exactly one per manifest).
+# firmware_manifest_entry_t.flags; BOOT marks the entry module (exactly one).
 FW_MANIFEST_ENTRY_FLAG_BOOT = 0x1
 
 
@@ -222,15 +149,7 @@ def _model_str(hw_model: int) -> str:
 
 
 def boot_header_model_id(header) -> str:
-    """The model id from a parsed boot header's AUTHENTICATED hw_model.
-
-    Taken from the header rather than passed in, so a release manifest cannot
-    claim a model the signature does not cover -- the same reason the manifest
-    records the variant codeword rather than a filename.
-
-    Handles all three shapes `hw_model` parses into across the tools: a raw u32,
-    a `Model` enum (whose `.value` is the 4 bytes), or the bytes themselves.
-    """
+    """Model id from the boot header's authenticated hw_model (u32, Model, or bytes)."""
     hw = header.hw_model
     if isinstance(hw, int):
         return _model_str(hw)
@@ -240,62 +159,39 @@ def boot_header_model_id(header) -> str:
 
 # --- Variant manifest ("firmware directory") ---------------------------------
 #
-# The variant leaf is a manifest: a directory of the variant's modules plus
-# variant-level authenticated fields (firmware_variant,
-# translations_root). Each directory entry references its module directly by
-# code_hash = the tagged smart-hashing CHAIN over the module code, not a flat
-# SHA-256 of it (see module_code_hash); there is no per-module TRZM header. The variant leaf is H(0x00 || manifest); the founder tree combines
-# variant leaves.
-#
 # Layout (little-endian), must byte-match the on-device manifest:
 #   magic 'TRZD' | firmware_variant u32 | firmware_version[4]
 #   | translations_root[32] | module_count u32 | entry[module_count]
 #   entry: module_type u32 | flags u32 | addr u32 | chunk_size u32 | size u32
 #          | code_hash[32]
-# firmware_version is major,minor,patch,build (mirrors the kernel+coreapp build);
-# it is authenticated in the variant leaf and lets the install confirm show the
-# firmware version in phase 1 (before the module code is streamed). chunk_size is
-# PER MODULE (each entry), placed before size+code_hash so the custom variant's
-# zeroed-for-fold tail (size+code_hash) is unchanged -- chunk_size stays
-# authenticated even for custom.
+# chunk_size precedes size+code_hash so the custom variant's zeroed-for-fold
+# tail leaves it authenticated.
 
 MANIFEST_MAGIC = b"TRZD"
 _MANIFEST_FIXED = struct.Struct("<4sI4s32sI")
 _MANIFEST_ENTRY = struct.Struct("<IIIII32s")
-# firmware_manifest_proof_t (sec/boot_header.h): u32 node_count + node_count
-# 32-byte nodes, placed right after the manifest, OUTSIDE the variant leaf.
+# firmware_manifest_proof_t: u32 node_count + nodes, right after the manifest,
+# outside the variant leaf.
 _PROOF_COUNT = struct.Struct("<I")
 _ZERO32 = b"\x00" * 32
 _ZERO4 = b"\x00" * 4
 
-# Smart-hashing chain domain tags: two DISTINCT tags separate the two
-# constructions -- 0x01 for the length-bound seed, 0x02 for each fold step.
-# See [[smart-module-hashing]].
+# Smart-hashing chain domain tags: 0x01 length-bound seed, 0x02 fold step.
 CHAIN_SEED_TAG = pq_secure.CHAIN_SEED_TAG
 CHAIN_STEP_TAG = pq_secure.CHAIN_STEP_TAG
-# Default per-module smart-hashing chunk size, fixed at build time (= FW_CHUNK_SIZE
-# in manifest_header.S / the *_pq.ld scripts and boot_header.h). The code_hash
-# chain folds chunks of this size; modules are NOT padded to a multiple of it, so
-# the last chunk of a module may be partial. A PER-MODULE manifest field
-# (firmware_manifest_entry_t.chunk_size), though every module currently uses this
-# same value; the OTA transport block is a whole multiple of it and (for now)
-# requires all modules to agree. The phase-2 streaming path requires
-# chunk_size <= IMAGE_CHUNK_SIZE (the staging buffer) and FLASH_BLOCK_SIZE align.
+# = FW_CHUNK_SIZE (manifest_header.S, *_pq.ld, boot_header.h). Per-module field;
+# modules are not padded to it, so the last chunk may be partial. Must be
+# <= IMAGE_CHUNK_SIZE and FLASH_BLOCK_SIZE-aligned for phase-2 streaming.
 DEFAULT_CHUNK_SIZE = pq_secure.DEFAULT_CHUNK_SIZE
 
 
 def module_code_hash(code: bytes | bytearray, chunk_size: int) -> bytes:
-    """Smart-hashing chain code_hash. See trezorlib.firmware.pq_secure.
-
-    Kept as a name here because the signer and the harnesses use it, but the
-    implementation lives in trezorlib so device, signer and host cannot drift.
-    """
+    """Smart-hashing chain code_hash; see trezorlib.firmware.pq_secure."""
     return pq_secure.module_code_hash(bytes(code), chunk_size)
 
 
 def module_chain_intermediates(code: bytes | bytearray, chunk_size: int) -> list[bytes]:
-    """The intermediate chain hashes for chunks 0 .. n-2, in consumption order.
-    See trezorlib.firmware.pq_secure."""
+    """Intermediate chain hashes for chunks 0 .. n-2, in consumption order."""
     return pq_secure.module_chain_intermediates(bytes(code), chunk_size)
 
 
@@ -305,14 +201,8 @@ def build_manifest(
     translations_root: bytes = _ZERO32,
     firmware_version: bytes = _ZERO4,
 ) -> bytes:
-    """Serialize a variant manifest. `firmware_variant` is the HARDENED
-    FW_VARIANT_SEC_* codeword (use FW_VARIANT_SEC[small_id]), matching what the
-    device reads and what manifest_header.S stamps into a real build.
-    `entries` is a list of dicts with keys
-    module_type, flags, addr, chunk_size, size, code_hash (32 bytes), in role
-    order. `firmware_version` is the 4-byte major,minor,patch,build. Each entry's
-    `chunk_size` is the per-module smart-hashing chunk size its code_hash chain
-    uses (defaults to DEFAULT_CHUNK_SIZE)."""
+    """Serialize a manifest. `firmware_variant` is the FW_VARIANT_SEC_* codeword;
+    entries carry module_type, flags, addr, chunk_size, size, code_hash."""
     buf = _MANIFEST_FIXED.pack(
         MANIFEST_MAGIC,
         firmware_variant,
@@ -333,8 +223,7 @@ def build_manifest(
 
 
 def read_manifest(fw: bytes | bytearray) -> bytes:
-    """Read the manifest bytes stored at the start of a firmware image (the
-    authenticated bytes the device hashes for the variant leaf)."""
+    """The manifest bytes at the image start (what the variant leaf hashes)."""
     magic, _v, _ver, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
     if magic != MANIFEST_MAGIC:
         raise ValueError("no manifest at the firmware image start")
@@ -342,8 +231,7 @@ def read_manifest(fw: bytes | bytearray) -> bytes:
 
 
 def _manifest_len(fw: bytes | bytearray) -> int:
-    """Byte length of the manifest at the image start (== the span the variant
-    leaf covers); the firmware Merkle proof begins right after it."""
+    """Byte length of the manifest; the proof begins right after it."""
     magic, _v, _ver, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
     if magic != MANIFEST_MAGIC:
         raise ValueError("no manifest at the firmware image start")
@@ -351,9 +239,7 @@ def _manifest_len(fw: bytes | bytearray) -> int:
 
 
 def build_manifest_proof(proof_nodes: list[bytes]) -> bytes:
-    """Serialize the firmware Merkle proof (firmware_manifest_proof_t): a u32
-    node_count followed by the co-path nodes. An empty proof (single-variant
-    tree) serializes to just a zero count."""
+    """Serialize firmware_manifest_proof_t (empty proof = zero count)."""
     if len(proof_nodes) > FW_MANIFEST_PROOF_MAX_NODES:
         raise ValueError(
             f"proof {len(proof_nodes)} > {FW_MANIFEST_PROOF_MAX_NODES} nodes"
@@ -362,8 +248,7 @@ def build_manifest_proof(proof_nodes: list[bytes]) -> bytes:
 
 
 def read_manifest_proof(fw: bytes | bytearray) -> list[bytes]:
-    """Read the embedded firmware Merkle proof nodes (the firmware_manifest_
-    proof_t right after the manifest) from a firmware image."""
+    """The embedded proof nodes following the manifest."""
     off = _manifest_len(fw)
     (count,) = _PROOF_COUNT.unpack_from(fw, off)
     if count > FW_MANIFEST_PROOF_MAX_NODES:
@@ -373,9 +258,7 @@ def read_manifest_proof(fw: bytes | bytearray) -> list[bytes]:
 
 
 def read_manifest_region(fw: bytes | bytearray) -> bytes:
-    """The firmware image's manifest-region prefix [manifest || proof struct] --
-    exactly the bytes the device parses at the image start and the OTA
-    FirmwareBegin preamble carries."""
+    """[manifest || proof struct]: the FirmwareBegin preamble bytes."""
     off = _manifest_len(fw)
     (count,) = _PROOF_COUNT.unpack_from(fw, off)
     if count > FW_MANIFEST_PROOF_MAX_NODES:
@@ -384,10 +267,7 @@ def read_manifest_region(fw: bytes | bytearray) -> bytes:
 
 
 def install_manifest_proof(fw: bytearray, proof_nodes: list[bytes]) -> bytearray:
-    """Bake the firmware Merkle proof into the image's manifest region, in place
-    (right after the manifest). Called by the signer once the founder
-    firmware_root -- and thus each variant's co-path -- is known. Validates the
-    manifest + proof fit within FW_MANIFEST_REGION."""
+    """Bake the proof into the manifest region in place (fits FW_MANIFEST_REGION)."""
     off = _manifest_len(fw)
     blob = build_manifest_proof(proof_nodes)
     if off + len(blob) > FW_MANIFEST_REGION:
@@ -400,9 +280,7 @@ def install_manifest_proof(fw: bytearray, proof_nodes: list[bytes]) -> bytearray
 
 
 def manifest_entries(fw: bytes | bytearray) -> list[dict]:
-    """Parse the manifest directory into a list of entry dicts (module_type,
-    flags, addr, chunk_size, size, code_hash), in manifest order. Replaces the
-    old TRZM module-chain scan -- the manifest IS the directory now."""
+    """Parse the manifest directory into entry dicts, in manifest order."""
     magic, _v, _ver, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
     if magic != MANIFEST_MAGIC:
         raise ValueError("no manifest at the firmware image start")
@@ -426,10 +304,7 @@ def manifest_entries(fw: bytes | bytearray) -> list[dict]:
 
 
 def format_manifest(manifest: bytes) -> str:
-    """Human-readable dump of the firmware manifest ("firmware directory", TRZD):
-    the authenticated variant + subtree roots and the per-module directory (each
-    entry's role/flags/addr/size and committed code_hash). A ZEROED
-    kernel+coreapp code_hash marks a custom/wildcard (unofficial) manifest."""
+    """Human-readable dump of a manifest."""
     magic, variant, ver, tr_root, mc = _MANIFEST_FIXED.unpack_from(manifest, 0)
     if magic != MANIFEST_MAGIC:
         return "(no manifest -- not a TRZD image)"
@@ -460,8 +335,7 @@ def format_manifest(manifest: bytes) -> str:
 
 
 def manifest_variant(manifest: bytes) -> int:
-    """The authenticated firmware_variant stored in a manifest: a hardened
-    FW_VARIANT_SEC_* codeword, not a small fw_variant_t value."""
+    """The manifest's firmware_variant (a FW_VARIANT_SEC_* codeword)."""
     magic, variant, _ver, _tr, _mc = _MANIFEST_FIXED.unpack_from(manifest, 0)
     if magic != MANIFEST_MAGIC:
         raise ValueError("not a manifest (bad magic)")
@@ -477,17 +351,11 @@ def manifest_version(manifest: bytes) -> tuple[int, int, int, int]:
 
 
 def build_chunk_prev_hashes(fw: bytes | bytearray) -> dict[int, bytes]:
-    """Map each outer chunk's END image byte offset -> its chain H_prev, for
-    inline delivery on FirmwareUpload.prev_hash. The device requests transport
-    BLOCKS of one or more hash chunks and needs, per block, ONLY the trailing
-    chunk's H_prev; keying by the chunk END offset means the block's end offset
-    (`request.offset + request.length`) looks it up directly, with no knowledge
-    of the block size. Chunk k of a module is [addr + k*cs, addr + (k+1)*cs), so
-    its END key is addr + (k+1)*cs. Only outer chunks (k = 0 .. n-2) have an
-    entry; the innermost chunk (k = n-1) derives the seed on-device (its end =
-    the module end -> absent -> the device folds the last block from the seed).
-    The header/manifest region carries no chunk (also absent). chunk_size is
-    per-module (entry field)."""
+    """Map each outer chunk's END offset -> its chain H_prev (FirmwareUpload.prev_hash).
+
+    Keyed by end offset so `request.offset + request.length` looks it up. The
+    innermost chunk has no entry (the device derives the seed).
+    """
     out: dict[int, bytes] = {}
     for e in manifest_entries(fw):
         cs = e["chunk_size"]
@@ -498,9 +366,7 @@ def build_chunk_prev_hashes(fw: bytes | bytearray) -> dict[int, bytes]:
 
 
 def is_custom_firmware(fw: bytes | bytearray) -> bool:
-    """True iff the firmware's authenticated variant is the CUSTOM slot
-    (FW_VARIANT_CUSTOM). Custom is a first-class variant now -- not a per-module
-    wildcard -- so this is a simple variant check."""
+    """True iff the firmware's authenticated variant is CUSTOM."""
     try:
         return manifest_variant(read_manifest(fw)) == FW_VARIANT_SEC_CUSTOM
     except ValueError:
@@ -508,18 +374,11 @@ def is_custom_firmware(fw: bytes | bytearray) -> bool:
 
 
 def fill_manifest(fw: bytearray) -> bytearray:
-    """Patch the compile-time manifest template (from manifest_header.S) in place.
+    """Fill each entry's code_hash in the compile-time manifest template in place.
 
-    The template already carries the static fields (magic, firmware_variant,
-    module_count, firmware_version) and each entry's module_type + flags + addr +
-    chunk_size + size (the latter three from linker symbols / the template). This
-    fills each entry's code_hash (the smart-hashing chain over the module code at
-    addr..addr+size, chunked by THAT entry's chunk_size) -- ALWAYS the real code
-    hash, including the kernel+coreapp of a CUSTOM variant (its real hash is the
-    creator's integrity hash). The custom slot's founder-signed leaf zeroes the
-    app hash only for the AUTHENTICITY fold (see variant_leaf), never in the
-    on-flash bytes. translations_root is left as set by the template
-    (0 until that subtree exists)."""
+    Always the real hash, including a CUSTOM variant's app: the founder-zeroing
+    happens only in the authenticity fold (variant_leaf), never on flash.
+    """
     magic, _variant, _ver, _tr, mc = _MANIFEST_FIXED.unpack_from(fw, 0)
     if magic != MANIFEST_MAGIC:
         raise ValueError(
@@ -527,9 +386,7 @@ def fill_manifest(fw: bytearray) -> bytearray:
         )
     for i in range(mc):
         eoff = _MANIFEST_FIXED.size + i * _MANIFEST_ENTRY.size
-        # Entry layout: module_type(4) flags(4) addr(4) chunk_size(4) size(4)
-        # code_hash(32). code_hash (at +20) is the smart-hashing chain over the
-        # module code, chunked by this entry's own chunk_size.
+        # code_hash is at entry offset +20 (after type, flags, addr, chunk_size, size).
         _mtype, _flags, addr, chunk_size, size, _ch = _MANIFEST_ENTRY.unpack_from(
             fw, eoff
         )
@@ -539,32 +396,23 @@ def fill_manifest(fw: bytearray) -> bytearray:
 
 
 def authenticity_manifest(manifest: bytes) -> bytes:
-    """The manifest bytes the variant leaf is computed over (custom-zeroed).
-    See trezorlib.firmware.pq_secure.authenticity_bytes."""
+    """The manifest bytes the variant leaf hashes (custom-zeroed)."""
     return pq_secure.authenticity_bytes(manifest)
 
 
 def variant_leaf(manifest: bytes) -> bytes:
-    """The variant's Merkle leaf: H(0x00 || authenticity_manifest).
-    See trezorlib.firmware.pq_secure.variant_leaf."""
+    """The variant's Merkle leaf: H(0x00 || authenticity_manifest)."""
     return pq_secure.variant_leaf(manifest)
 
 
 # --- Founder (multi-variant) firmware_root -----------------------------------
 #
-# firmware_root is a two-level Merkle tree:
-#   * per variant: variant leaf = H(0x00 || manifest)   (see variant_leaf)
-#   * founder:     firmware_root = tree over the variant leaves
-# The founder level combines the variant leaves AS NODE HASHES (sorted-pair
-# internal_hash), NOT re-leaf-hashed -- because the device folds its variant leaf
-# directly (firmware_manifest_authentic, no leaf_hash). trezorlib's MerkleTree
-# always leaf-hashes its inputs, so we build the founder level with a pre-hashed
-# leaf and reuse trezorlib's Node + the same sort/pair construction.
+# The founder level combines variant leaves AS NODE HASHES (sorted-pair
+# internal_hash), not re-leaf-hashed: the device folds its variant leaf directly.
 
 
 class _PreHashedLeaf:
-    """A founder-tree leaf whose tree_hash IS a precomputed variant leaf (not
-    leaf_hash(value)). Duck-types trezorlib.merkle_tree.NodeType."""
+    """A leaf whose tree_hash is a precomputed variant leaf; duck-types NodeType."""
 
     def __init__(self, node_hash: bytes) -> None:
         self.tree_hash = node_hash
@@ -575,8 +423,7 @@ class _PreHashedLeaf:
 
 
 def _fold_proof(node: bytes, proof: list[bytes]) -> bytes:
-    """Fold a variant leaf up to firmware_root, exactly as the device does
-    (firmware_manifest_authentic): sequential sorted-pair internal_hash."""
+    """Fold a variant leaf to firmware_root as the device does (sorted-pair)."""
     for sibling in proof:
         node = merkle_tree.internal_hash(node, sibling)
     return node
@@ -585,12 +432,7 @@ def _fold_proof(node: bytes, proof: list[bytes]) -> bytes:
 def build_founder_tree(
     variant_leaves: list[bytes],
 ) -> tuple[bytes, dict[bytes, list[bytes]]]:
-    """Build the founder firmware_root over per-variant leaves.
-
-    Returns (firmware_root, {variant_leaf: proof}). Each proof is the co-path of
-    that variant leaf, in the order the device folds it. variant_leaves must be
-    distinct (variants differ in their kernel+coreapp code_hash, so their
-    manifests -- and thus leaves -- do)."""
+    """Return (firmware_root, {variant_leaf: proof}); leaves must be distinct."""
     if not variant_leaves:
         raise ValueError("need at least one variant leaf")
     if len(set(variant_leaves)) != len(variant_leaves):
@@ -611,7 +453,6 @@ def build_founder_tree(
 
     root = level[0].tree_hash
     proofs = {r: entries[r].proof for r in variant_leaves}
-    # Self-consistency: every variant leaf must fold to the founder root.
     for r, proof in proofs.items():
         assert _fold_proof(r, proof) == root, "founder-tree proof mismatch"
     return root, proofs
@@ -620,9 +461,7 @@ def build_founder_tree(
 def firmware_root_multi(
     variant_images: dict[str, bytes],
 ) -> tuple[bytes, dict[str, tuple[bytes, list[bytes]]]]:
-    """Given {variant_name: firmware.bin (manifest-filled)}, return
-    (firmware_root, {variant_name: (variant_leaf, proof)}). The variant leaf is
-    the manifest leaf H(0x00 || manifest)."""
+    """{variant_name: firmware.bin} -> (firmware_root, {name: (leaf, proof)})."""
     leaves = {
         name: variant_leaf(read_manifest(fw)) for name, fw in variant_images.items()
     }

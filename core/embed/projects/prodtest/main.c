@@ -40,12 +40,8 @@
 #include "rust_ui_prodtest.h"
 #include "sys/sysevent.h"
 
-// The variant stamped into prodtest's manifest (prodtest/build.rs ->
-// FW_VARIANT, consumed by manifest_header.S) must be the hardened PRODTEST
-// codeword. manifest_header.S emits it with `.word`, which type-checks nothing,
-// so this assert is the only thing standing between a mistyped literal and a
-// prodtest image every device reads as unprovisioned -- and prodtest is where
-// that matters most, since is_manufacturing_mode keys off this variant.
+// FW_VARIANT (prodtest/build.rs -> manifest_header.S) must be the hardened
+// PRODTEST codeword; manifest_header.S emits it unchecked.
 #ifdef FW_VARIANT
 #include <sec/boot_header.h>
 _Static_assert(FW_VARIANT == FW_VARIANT_SEC_PRODTEST,

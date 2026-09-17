@@ -107,15 +107,11 @@ int firmware_hash_continue(uint8_t* hash, size_t hash_len) {
 }
 
 #ifdef PQ_SECURE_BOOT
-// Merkle-tree layout: the image starts with a firmware manifest, not a vendor
-// header, so there is nothing to read from the image. Only report a vendor when
-// a firmware image is actually present (manifest magic), and derive the
-// identity from the (write-protected, trusted) firmware_type the bootloader
-// persisted into the signed boot header. Custom-ness is not a flag: the variant
-// VALUE is either an official codeword or FW_VARIANT_SEC_CUSTOM, which is what
-// selects the UNSAFE marker. Mirrors the bootloader's
-// tree_vendor_str and the UNSAFE-prefix official test in
-// reboot_to_bootloader.py, so device and host agree on official-vs-custom.
+// Merkle-tree layout: no vendor header in the image. Report a vendor only when
+// a manifest is present, derived from the firmware_type the bootloader
+// persisted into the write-protected boot header. Must agree with the
+// bootloader's tree_vendor_str and the UNSAFE-prefix test in
+// reboot_to_bootloader.py.
 secbool firmware_get_vendor(char* buff, size_t buff_size) {
   const void* data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
@@ -125,15 +121,10 @@ secbool firmware_get_vendor(char* buff, size_t buff_size) {
     return secfalse;
   }
 
-  // The boot header lives in the bootloader flash area, which the secmon's
-  // default MPU mode does not map -- switch to MPU_MODE_BOOTLOADER for the read
-  // (same pattern as storage_salt_get).
+  // The bootloader area is unmapped in the secmon's default MPU mode.
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
-  // Reached through the flash area rather than BOOTLOADER_START: this file is
-  // in `sec/`, shared by every project, so it cannot use the bootloader's
-  // emulator address overrides -- the raw constant would be a pointer to
-  // nothing on the host. flash_area_get_address is the portable spelling and
-  // bounds-checks the read as well.
+  // Via the flash area, not BOOTLOADER_START: sec/ is shared with the emulator,
+  // where the raw constant is not a valid pointer.
   const boot_header_auth_t* bl =
       boot_header_auth_get((uintptr_t)flash_area_get_address(
           &BOOTLOADER_AREA, 0, sizeof(boot_header_auth_t)));

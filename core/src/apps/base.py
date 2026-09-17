@@ -107,9 +107,7 @@ def get_features() -> Features:
         unit_packaging=utils.unit_packaging(),
         bootloader_locked=utils.bootloader_locked(),
         max_passphrase_len=MAX_PASSPHRASE_LEN,
-        # Which release this firmware can be handed for an interaction-less
-        # upgrade. Reported unconditionally, so an absent field only ever means
-        # firmware predating the field -- which is legacy anyway.
+        # reported unconditionally: an absent field means firmware predating it
         firmware_scheme=(
             FirmwareScheme.PqSecure
             if utils.USE_PQ_SECURE_BOOT

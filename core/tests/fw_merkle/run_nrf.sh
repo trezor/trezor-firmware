@@ -1,17 +1,7 @@
 #!/usr/bin/env bash
-# Build + run the nRF founder-tree cross-validation harness.
-#
-# Compiles THREE implementations of the same construction against one another:
-#
-#   - the STM's  (embed/io/nrf/nrf_image.c) with a host SHA-256
-#   - the nRF's  (mcuboot boot/bootutil/src/image_pq.c, built with PQ_HOST_TEST so
-#                 it uses the same hash backend -- so this compares implementations,
-#                 not hash libraries)
-#   - the host signer's (tools/trezor_core_tools/nrf_tree.py), which produces the
-#                 vectors via gen_nrf_vector.py
-#
-# The leaf is MCUboot's own image hash, so all three must agree byte-for-byte; a
-# mismatch is otherwise silent (images just stop verifying).
+# Build + run the nRF founder-tree cross-validation: the STM's nrf_image.c, the
+# nRF's mcuboot image_pq.c (PQ_HOST_TEST, same host SHA-256) and the host
+# signer's vectors (gen_nrf_vector.py -> nrf_tree.py) must agree byte-for-byte.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,18 +22,15 @@ if [[ ! -f "$mcuboot/boot/bootutil/src/image_pq.c" ]]; then
   exit 1
 fi
 
-# sphincsplus' params.h needs PARAMS defined by any TU that includes it; mcuboot's
-# own build sets the same value (boot/zephyr/CMakeLists.txt).
+# sphincsplus' params.h needs PARAMS; must match boot/zephyr/CMakeLists.txt.
 params=sphincs-sha2-128s
 
 echo "== generating nRF vector =="
 PYTHONPATH="$core/tools" python "$here/gen_nrf_vector.py" "$vec"
 
 echo "== compiling nrf_crossvalidate =="
-# Ed25519 comes from the MONOREPO's trezor-crypto, not mcuboot's: the code under
-# test here is the STM's, and boot_header.c links exactly this copy on device.
-# --gc-sections: image_pq.c pulls in SLH-DSA for pq_image_verify, which this harness
-# does not call -- without it the link fails on that unused crypto.
+# Ed25519 is the monorepo's trezor-crypto, the copy boot_header.c links on device.
+# --gc-sections: image_pq.c pulls in SLH-DSA that this harness never calls.
 gcc -O2 -Wall -Wextra \
     -DPQ_HOST_TEST -DPARAMS="$params" -DMODEL_IDENTIFIER=0x31573354 \
     -ffunction-sections -fdata-sections \

@@ -38,20 +38,9 @@
   (const uint8_t *)"\xbd\xe7\x0a\x38\xee\xe6\x33\xd2\x6f\x43\x4e\xee\x2f\x53\x6d\xf4\x57\xb8\xde\xb8\xbd\x98\x82\x94\xf4\xa0\xc8\xd9\x05\x49\x03\xd2", \
   (const uint8_t *)"\xa8\x5b\x60\x1d\xfb\xda\x1d\x22\xcc\xb5\xdd\x49\x2d\x26\x03\x4d\x87\xf6\x7f\x2a\x0b\x85\x84\xb7\x77\x44\x39\x46\x1f\xc4\x71\xa9",
 
-/* The nRF co-processor's OWN Ed25519 key pool, for the classic (image-hash)
- * signing scheme its MCUboot uses. PER MODEL: these belong to this model's nRF,
- * unlike the founder/root keys in sec/root_keys.h, which are one ceremony for
- * every model.
- *
- * Mirrored from the nRF's MCUboot (boot/bootutil/src/image_validate.c,
- * BOOTLOADER_KEYS under !CONFIG_BOOT_PQ_SECURE_BOOT) so the STM can predict
- * whether the nRF will accept an image before erasing its only slot. A drift
- * between the two makes that prediction silently wrong.
- *
- * Only models whose nRF uses the classic scheme define these. A PQ-native nRF
- * (T3T2) has no legacy pool, and the STM correspondingly refuses classic images
- * for it -- see nrf_image_legacy_accept_ok in io/nrf/nrf_image.c.
- */
+// Ed25519 key pool of this model's nRF MCUboot (classic image-hash scheme).
+// Must match BOOTLOADER_KEYS in the nRF's boot/bootutil/src/image_validate.c.
+// Only models whose nRF uses the classic scheme define these (not T3T2).
 #define MODEL_NRF_LEGACY_KEYS_DEVEL \
   (const uint8_t *)"\xd7\x59\x79\x3b\xbc\x13\xa2\x81\x9a\x82\x7c\x76\xad\xb6\xfb\xa8\xa4\x9a\xee\x00\x7f\x49\xf2\xd0\x99\x2d\x99\xb8\x25\xad\x2c\x48", \
   (const uint8_t *)"\x63\x55\x69\x1c\x17\x8a\x8f\xf9\x10\x07\xa7\x47\x8a\xfb\x95\x5e\xf7\x35\x2c\x63\xe7\xb2\x57\x03\x98\x4c\xf7\x8b\x26\xe2\x1a\x56", \

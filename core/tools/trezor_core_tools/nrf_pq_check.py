@@ -1,22 +1,9 @@
 #!/usr/bin/env python3
-"""Check a PQ-native nRF image the way the nRF's MCUboot will, on the host.
+"""Check a PQ-native nRF image the way its MCUboot will (image_pq.c), on the host.
 
-Replays what image_pq.c:pq_image_verify() does -- image hash, leaf, fold to
-modelRoot, and the Ed25519 half of the hybrid signature -- and reports WHICH
-founder key pool the image verifies under (devel or production).
-
-Why this exists: a key-pool mismatch produces a perfectly well-formed image that
-simply will not boot, and the only symptom on device is a silent verification
-failure. Finding that by flashing costs a full build+flash cycle each time; this
-answers it in a second, and says explicitly which side is wrong.
-
-The SLH-DSA half is NOT checked (no host SLH-DSA in this environment). That is fine
-for the question this tool answers: the Ed25519 half signs SHA256(modelRoot ||
-slh_signature), so it already pins the modelRoot, the PQ signature bytes and the key
-identity -- if it verifies, the pool and the message construction are right.
-
-Usage:
-    nrf_pq_check.py <signed-nrf-image.bin>
+Verifies image hash, leaf, fold to modelRoot and the Ed25519 half of the hybrid
+signature (SLH-DSA is not checked), and reports which founder pool it verifies
+under. Usage: nrf_pq_check.py <signed-nrf-image.bin>
 """
 
 from __future__ import annotations
@@ -29,10 +16,7 @@ from trezor_core_tools import nrf_tree
 from trezorlib import _ed25519
 from trezorlib.firmware.models import ROOT_ED25519_KEYS, ROOT_ED25519_KEYS_DEV
 
-# Taken from trezorlib, which is what the signer uses -- not copied. A local copy
-# here could disagree with the keys an image was actually signed with, which would
-# make this checker confidently wrong about the very thing it exists to catch. The
-# DEVEL pool has two keys, production three.
+# From trezorlib (what the signer uses), not a copy. Devel has 2 keys, production 3.
 DEVEL_EC_KEYS = ROOT_ED25519_KEYS_DEV
 PRODUCTION_EC_KEYS = ROOT_ED25519_KEYS
 
@@ -57,8 +41,7 @@ def check(image: bytes) -> int:
         "(leaf = H(0x00 || the role-bound slot over that hash))"
     )
 
-    # MCUboot's own hash must match the protected region, or it rejects the image
-    # before founder verification is even reached.
+    # MCUboot rejects on its own hash check before founder verification.
     want = nrf_tree.mcuboot_image_hash(image)
     got = nrf_tree.mcuboot_find_tlv(image, nrf_tree.MCUBOOT_TLV_SHA256)
     if got != want:
@@ -70,9 +53,7 @@ def check(image: bytes) -> int:
     else:
         print(f"  image-hash TLV consistent ({want.hex()[:16]}...)")
 
-    # PROTECTED area only -- the device reads it that way (nrf_image_find_prot_tlv)
-    # because an unprotected copy is outside the image hash. Searching both areas
-    # would report an attacker-placed mask as "protected".
+    # Protected area only, as the device reads it (nrf_image_find_prot_tlv).
     sigmask = nrf_tree.mcuboot_find_prot_tlv(image, nrf_tree.TLV_SIGMASK)
     if sigmask is None or len(sigmask) != 1:
         print("  FAIL no protected sigmask TLV")
@@ -144,8 +125,7 @@ def check(image: bytes) -> int:
         return problems + 1
 
     pool_name, found = matched_pool
-    # The bootloader indexes keys by the sigmask, so the mask must name exactly the
-    # keys that actually verified, in slot order.
+    # The sigmask must name exactly the keys that verified, in slot order.
     if found != named:
         print(
             f"\nRESULT: verifies under {pool_name}, but the sigmask names {named} while"

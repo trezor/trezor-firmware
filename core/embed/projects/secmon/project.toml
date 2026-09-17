@@ -21,9 +21,8 @@ uses = [
 
 # ELF sections to be included in the final binary.
 # The order of sections is important.
-# ".secmon_header" is the legacy TSEC header; ".header" is the legacy image
-# header. Both are absent (no-ops) in the Merkle-tree layout, where the secmon is
-# just code committed directly by the firmware manifest.
+# ".secmon_header"/".header" are legacy headers, absent (no-ops) in the
+# Merkle-tree layout.
 elf_sections = [".secmon_header", ".header", ".flash", ".data", ".gnu.sgstubs"]
 
 # xtask build options mapped to the cargo features

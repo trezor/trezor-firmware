@@ -125,9 +125,8 @@ secbool boot_ucb_read(boot_ucb_t* ucb) {
 secbool boot_ucb_write(const void* header, uint32_t code_address) {
   boot_ucb_t ucb = {
       .magic = BOOT_UCB_MAGIC,
-      // Flash is memory-mapped at this address on the device, so the pointer
-      // the caller read the header through IS the address the boardloader will
-      // read it from.
+      // Flash is memory-mapped: the pointer is the address the boardloader
+      // reads.
       .header_address = (uint32_t)(uintptr_t)header,
       .code_address = code_address,
   };

@@ -20,10 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-// Must sit at TOP LEVEL, not inside any #ifdef: it #undefs the model's flash
-// address constants so they resolve to the emulator's mapped addresses, and a
-// use further down the file that is NOT under the same condition would silently
-// get the device constant back -- a pointer to nothing on the host.
+// Must stay at top level: it #undefs the model's flash address constants.
 #ifdef TREZOR_EMULATOR
 #include "../emulator.h"
 #endif
@@ -42,17 +39,9 @@
 #include "wf_image_upload.h"
 #include "wf_nrf_ota.h"
 
-// The nRF image streams as one flat blob (no header at the start): the founder
-// check (fold + model id) runs as a whole in on_finish, mirroring the
-// bootloader-code stream (blcode_* in wf_firmware_update_pq.c). Per-chunk hooks
-// are therefore no-ops.
-//
-// on_finish STAGES ONLY: it validates the image and persists its descriptor
-// (co-path) via nrf_staging.*; the actual SMP push to the nRF is DEFERRED to
-// the next bootloader boot's resume driver. On a BLE-only device the push
-// reboots the nRF into DFU (= the BLE link), so it cannot run during this host
-// connection; deferring it is also what makes an interrupted update resumable.
-// See nrf_staging.h / the coproc-ota design.
+// The nRF image streams as one flat blob and is verified as a whole in
+// on_finish, which only stages it; the SMP push is deferred to the next boot
+// (nrf_ota_resume_boot) because on a BLE-only device it reboots the link.
 typedef struct {
   image_upload_handler_t base;
   merkle_proof_node_t model_root;  // signed root (copied in)
@@ -68,7 +57,7 @@ static upload_status_t nrf_on_headers(image_upload_handler_t *base,
   (void)iface;
   (void)buf;
   (void)len;
-  return UPLOAD_OK;  // validated as a whole in on_finish
+  return UPLOAD_OK;
 }
 
 static upload_status_t nrf_on_chunk(image_upload_handler_t *base,
@@ -81,15 +70,12 @@ static upload_status_t nrf_on_chunk(image_upload_handler_t *base,
   (void)data;
   (void)len;
   (void)prev_hash;
-  return UPLOAD_OK;  // fold + model-id verified in on_finish
+  return UPLOAD_OK;
 }
 
-// Run the PQ-native push gate against the boot header at `boot_header` (the
-// one whose modelRoot we folded against). A classic image passes trivially; a
-// PQ-native one must additionally carry this release's founder signature
-// records, an image-side Merkle proof that folds, and no rogue TLVs --
-// otherwise its own MCUboot would reject it AFTER we had already erased the
-// only slot. See nrf_image_verify_for_push.
+// Everything the nRF's MCUboot will check that the fold does not cover, so a
+// push never erases a working nRF for an image it would refuse. A classic
+// image passes trivially.
 static secbool nrf_pq_gate(const uint8_t *image, size_t image_len,
                            const merkle_proof_node_t *model_root,
                            const void *boot_header) {
@@ -110,9 +96,7 @@ static secbool nrf_pq_gate(const uint8_t *image, size_t image_len,
 static upload_status_t nrf_on_finish(image_upload_handler_t *base,
                                      protob_io_t *iface) {
   nrf_upload_handler_t *h = (nrf_upload_handler_t *)base;
-  // The image was streamed into NRF_STAGING_AREA at offset 0; read it back
-  // through its memory-mapped address (it is at the FRONT of the firmware
-  // region, past the secmon -- do NOT assume FIRMWARE_START).
+  // NRF_STAGING_AREA is not at FIRMWARE_START; use its mapped address.
   const uint8_t *image = (const uint8_t *)flash_area_get_address(
       &NRF_STAGING_AREA, 0, h->image_len);
   if (image == NULL) {
@@ -121,9 +105,7 @@ static upload_status_t nrf_on_finish(image_upload_handler_t *base,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER;
   }
 
-  // 1. Founder commitment: the leaf (H(0x00 || this device's role-bound slot
-  //    around the image hash)) folds through the co-path to
-  //    the signature-verified modelRoot.
+  // Founder commitment: the role-bound leaf folds to model_root.
   if (nrf_image_verify_in_tree(image, h->image_len, h->co_path,
                                h->co_path_count, &h->model_root) != sectrue) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
@@ -131,12 +113,7 @@ static upload_status_t nrf_on_finish(image_upload_handler_t *base,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
   }
 
-  // 2. Model-id TLV must name THIS device. Defence in depth since role binding:
-  //    the slot the fold is computed over already carries MODEL_INTERNAL_NAME,
-  //    so another model's image does not fold at all. What this still catches
-  //    is misissuance -- a foreign image signed into THIS model's tree, which
-  //    folds and which only the TLV separates (see the nrf_crossvalidate
-  //    fixture).
+  // Model-id TLV must name this device (catches misissuance into this tree).
   uint8_t model_id[NRF_IMAGE_MODEL_ID_LEN];
   if (!nrf_image_model_id(image, h->image_len, model_id) ||
       memcmp(model_id, MODEL_INTERNAL_NAME, NRF_IMAGE_MODEL_ID_LEN) != 0) {
@@ -145,13 +122,7 @@ static upload_status_t nrf_on_finish(image_upload_handler_t *base,
     return UPLOAD_ERR_INVALID_IMAGE_MODEL;
   }
 
-  // 3. PQ-native gate: everything MCUboot will check that the fold above does
-  // not
-  //    cover -- the image-side Merkle proof, this release's signature records,
-  //    and the absence of rogue TLVs. Checked against the STAGED boot header,
-  //    since that is the header h->model_root came from (ucb_stage_verify). A
-  //    classic image passes trivially. Rejecting here means we never erase a
-  //    working nRF for an image its own MCUboot would refuse.
+  // PQ-native gate against the staged header (where model_root came from).
   const void *staged_hdr =
       flash_area_get_address(&STAGING_AREA, 0, sizeof(boot_header_auth_t));
   if (staged_hdr == NULL ||
@@ -161,12 +132,7 @@ static upload_status_t nrf_on_finish(image_upload_handler_t *base,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
   }
 
-  // 4. Persist the descriptor (co-path) as the FINAL staging commit. The push
-  //    itself is deferred to the boot-time resume driver (see the file header);
-  //    writing the descriptor last means a half-staged image never presents as
-  //    valid. The nRF's own MCUboot remains the last gate at push time --
-  //    Ed25519 for a classic image, the founder SLH-DSA + Ed25519 pair for a
-  //    PQ-native one.
+  // Descriptor last, so a half-staged image never presents as valid.
   if (nrf_staging_write_desc(h->image_len, h->co_path, h->co_path_count) !=
       sectrue) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
@@ -201,9 +167,7 @@ static workflow_result_t nrf_fail(protob_io_t *iface, const char *message) {
   return WF_ERROR;
 }
 
-// Progress of the STM->nRF SMP push during the autonomous boot-time resume ->
-// the install progress bar. `wireless` is false: this runs before any host
-// connection, so it is a local operation, not a host transfer.
+// Local operation, no host connection, hence wireless=false.
 static void nrf_resume_progress(uint32_t done, uint32_t total) {
   int permille = (total != 0) ? (int)(((uint64_t)done * 1000) / total) : 1000;
   ui_screen_install_progress_upload(permille, false);
@@ -214,7 +178,7 @@ void nrf_ota_resume_boot(void) {
   const merkle_proof_node_t *co_path = NULL;
   size_t co_path_count = 0;
   if (!nrf_staging_read(&image_len, &co_path, &co_path_count)) {
-    return;  // nothing staged -> normal boot (the common case)
+    return;  // nothing staged
   }
 
   const uint8_t *image = nrf_staging_image(image_len);
@@ -223,10 +187,7 @@ void nrf_ota_resume_boot(void) {
     return;
   }
 
-  // Recompute the modelRoot the INSTALLED boot header commits to (mirrors
-  // ucb_stage_verify's fixed-boardloader path). The boardloader already
-  // authenticated this header+code before running us, so recomputation is
-  // trusted.
+  // Recompute the model_root of the installed (boardloader-verified) header.
   const boot_header_auth_t *cur = boot_header_auth_get(BOOTLOADER_START);
   if (cur == NULL) {
     return;  // cannot verify -> keep staged, retry next boot
@@ -235,11 +196,8 @@ void nrf_ota_resume_boot(void) {
   boot_header_calc_merkle_root(cur, BOOTLOADER_START + cur->header_size,
                                &model_root);
 
-  // Founder commitment + model-id check against the INSTALLED root. A
-  // stale/aborted/foreign descriptor (e.g. staged for a bootloader we did NOT
-  // end up installing) will not fold -> discard and boot normally. This fold is
-  // the coupling between the two durable flags (UCB armed / staging valid):
-  // only a staging that matches the running bootloader's tree is acted on.
+  // Only a staging that folds under the running bootloader's tree is acted
+  // on; a stale or foreign descriptor is discarded.
   uint8_t model_id[NRF_IMAGE_MODEL_ID_LEN];
   if (nrf_image_verify_in_tree(image, image_len, co_path, co_path_count,
                                &model_root) != sectrue ||
@@ -249,27 +207,19 @@ void nrf_ota_resume_boot(void) {
     return;
   }
 
-  // PQ-native gate, now against the INSTALLED boot header (the swap has
-  // happened, so this is the release the staged nRF belongs to). Re-checked
-  // here and not just trusted from staging time: this runs after a reboot, and
-  // the push is what actually erases the nRF's only slot.
+  // Re-run the push gate against the installed header; the push is what
+  // erases the nRF's only slot.
   if (nrf_pq_gate(image, image_len, &model_root,
                   (const uint8_t *)(uintptr_t)BOOTLOADER_START) != sectrue) {
     nrf_staging_clear();
     return;
   }
 
-  // Set up the install progress screen before the (potentially ~30 s) push --
-  // ui_screen_install_progress_upload only updates a bar that install_start
-  // created; without this the push runs against a blank screen. `wireless` is
-  // false: this is an autonomous local operation, not a host transfer.
+  // install_start creates the bar the progress callback updates.
   ui_screen_install_start(false);
 
-  // Idempotent, forward-only push over the link-independent GPIO
-  // serial-recovery path. Skip if the live nRF already matches (resume after a
-  // push that completed before the staging was cleared);
-  // nrf_update_with_progress retries internally and the nRF's own MCUboot is
-  // the last gate (Ed25519 classic, founder SLH-DSA + Ed25519 PQ-native).
+  // Idempotent forward-only push over GPIO serial recovery; skipped if the
+  // live nRF already matches. MCUboot on the nRF remains the last gate.
   bool ok = true;
   if (nrf_update_required(image, image_len)) {
     ok = nrf_update_with_progress(image, image_len, nrf_resume_progress);
@@ -280,9 +230,8 @@ void nrf_ota_resume_boot(void) {
     return;
   }
 
-  // Persistent failure: do NOT clear the staging (a power-cycle re-enters this
-  // driver and re-pushes) and do NOT continue -- proceeding would boot with an
-  // incompatible co-processor and, on a BLE-only device, a dead host link.
+  // Keep the staging so a power-cycle re-pushes; do not boot with an
+  // incompatible co-processor.
   error_shutdown("nRF update failed");
 }
 
@@ -290,7 +239,6 @@ workflow_result_t workflow_nrf_ota_update(
     protob_io_t *iface, const merkle_proof_node_t *model_root,
     const uint8_t *co_path, size_t co_path_len, const uint8_t *image_hash,
     size_t image_hash_len, uint32_t nrf_length) {
-  // --- Validate the offered co-path + size up front. ---
   if (co_path == NULL || (co_path_len % sizeof(merkle_proof_node_t)) != 0) {
     return nrf_fail(iface, "Invalid nRF co-path");
   }
@@ -301,46 +249,14 @@ workflow_result_t workflow_nrf_ota_update(
   if (nrf_length == 0 || nrf_length > nrf_staging_image_capacity()) {
     return nrf_fail(iface, "nRF image size invalid");
   }
-  // A hint that is present but is not a SHA-256 is MALFORMED, not absent. The
-  // decoder accepts any length up to the buffer, so 1..31 arrives here; falling
-  // through would stream the image and leave the host believing its hint was
-  // honoured. Rejected like a malformed co-path above -- same function, same
-  // wire message, so the same treatment.
+  // A present hint that is not a SHA-256 is malformed, not absent.
   if (image_hash_len != 0 && image_hash_len != SHA256_DIGEST_LENGTH) {
     return nrf_fail(iface, "Invalid nRF image hash");
   }
 
-  // --- Update-required hint: if the running nRF already reports this image's
-  //     hash, skip the stream entirely. The hint DECIDES whether we stream, so
-  //     it is checked against the founder tree first -- it is a trust input,
-  //     not a free-form optimization.
-  //
-  //     Folding the hint (rather than only the streamed image) is what closes a
-  //     withholding hole: a host that names the hash the chip ALREADY has would
-  //     otherwise be believed, the stream skipped, and the device left on a new
-  //     bootloader with an old co-processor -- exactly the state the arm-last
-  //     ordering exists to prevent, reached by lying rather than by
-  //     interrupting. A hint that is not the one this release commits to cannot
-  //     fold, and a bad co-path cannot fold either, so both now abort the whole
-  //     upload before anything is staged or armed.
-  //
-  //     If the nRF cannot be queried we fall through and stream, which is the
-  //     safe direction. ---
-  // --- Key-set cross-check. The nRF DECLARES which key set it was built for;
-  //     if it does not match this bootloader's, the image we are about to push
-  //     is signed with keys its MCUboot will not accept. Refusing here turns a
-  //     push that bricks the link on a BLE-only device into a wire Failure with
-  //     a cause. The declaration is not trusted: the nRF verifies the image
-  //     against its own compiled pool afterwards regardless, so a lying byte
-  //     can only lose a push, never win one. The same byte covers the PQ-native
-  //     founder pool on T3T2 -- both pools follow the one prod.conf switch.
-  //
-  //     Queried once here and reused by the hint below. Two cases pass without
-  //     matching: a device that cannot be queried at all (refusing would strand
-  //     an nRF stuck where it cannot answer, and streaming is the safe
-  //     direction), and one declaring UNDECLARED, which every nRF built before
-  //     this existed does -- see NRF_KEY_SET_UNDECLARED. A value that is
-  //     neither undeclared nor ours is refused, unknown values included. ---
+  // Key-set cross-check: an nRF declaring a key set other than ours would
+  // refuse the pushed image. UNDECLARED (older nRF builds) and an unqueryable
+  // nRF fall through to streaming, the safe direction.
 #if BOOTLOADER_DEVEL
   const uint8_t want_key_set = NRF_KEY_SET_DEVEL;
 #else
@@ -353,6 +269,9 @@ workflow_result_t workflow_nrf_ota_update(
     return nrf_fail(iface, "nRF key set does not match this bootloader");
   }
 
+  // Update-required hint: skip the stream if the live nRF already reports
+  // this hash. The hint decides whether we stream, so it is fold-verified
+  // first; a hint that does not fold rejects the whole upload.
   if (image_hash != NULL && image_hash_len == SHA256_DIGEST_LENGTH) {
     if (nrf_image_verify_hash_in_tree(image_hash,
                                       (const merkle_proof_node_t *)co_path,
@@ -360,18 +279,13 @@ workflow_result_t workflow_nrf_ota_update(
       return nrf_fail(iface, "nRF image not in founder tree");
     }
     if (have_info && memcmp(info.hash, image_hash, SHA256_DIGEST_LENGTH) == 0) {
-      return WF_OK;  // already up to date -> nothing to push
+      return WF_OK;  // already up to date
     }
   }
 
-  // --- Stream into NRF_STAGING_AREA, then fold + model-id + persist descriptor
-  //     (push deferred to the boot-time resume driver). ---
-  // static: keeps the co-path copy + handler off the stack and stable across
-  // the streaming loop (run_image_upload reuses chunk_buffer, not this). Zero
-  // first (defense-in-depth across retries within one boot). Suppresses its own
-  // Success and tags its FirmwareRequests with NRF_OTA_REQUEST_INDEX so the
-  // host serves the nRF image (vs the bootloader code at index 0); the single
-  // terminal Success is sent by the phase-1 caller.
+  // Static to keep the co-path copy off the stack; zeroed across retries.
+  // Suppresses its own Success (the phase-1 caller sends the single terminal
+  // one) and tags requests with NRF_OTA_REQUEST_INDEX.
   static nrf_upload_handler_t handler;
   memset(&handler, 0, sizeof(handler));
   memcpy(&handler.model_root, model_root, sizeof(handler.model_root));

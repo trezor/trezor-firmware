@@ -22,23 +22,13 @@ def _fill_module_image(
     print_merkle_root: bool,
     echo: Any,
 ) -> None:
-    """Fill the manifest code hashes of a Merkle-tree firmware image.
+    """Fill the manifest code hashes of a Merkle-tree firmware image (build step).
 
-    This is the build-time step for `firmware.bin`: each manifest directory
-    entry's `code_hash` (the tagged smart-hashing chain over the module code at
-    addr..addr+size, NOT a flat SHA-256 of it)
-    is filled -- ALWAYS the real code hash, including a CUSTOM variant's
-    kernel+coreapp (its real hash is the creator's integrity hash). The
-    firmware_root is derived later (by the tree signer) from the filled image;
-    for the custom variant the signer zeroes the app hash only for the
-    authenticity leaf (variant_leaf), never on flash. The variant (incl. CUSTOM)
-    is baked into the manifest at build time, not chosen here.
+    Always the real hash, a CUSTOM variant's app included; the signer zeroes it
+    only in the authenticity leaf. firmware_root is derived later by the signer.
     """
     fw = bytearray(firmware_data)
 
-    # Patch the manifest template (from manifest_header.S) at the image start:
-    # fill each entry's code_hash from the placed module code (module_type /
-    # flags / addr / size are already set by the .S).
     firmware_module.fill_manifest(fw)
 
     manifest = firmware_module.read_manifest(fw)
@@ -50,16 +40,13 @@ def _fill_module_image(
 
     entries = firmware_module.manifest_entries(fw)
     echo(f"Detected image type: firmware manifest (TRZD), {len(entries)} modules")
-    # Show the FILLED manifest (post-fill), so build-time output has the real
-    # addr/size/code_hash values -- not the unfilled template.
     echo(firmware_module.format_manifest(manifest))
     if firmware_module.is_custom_firmware(fw):
         echo(
             "CUSTOM (unofficial) variant: kernel+coreapp is founder-UNbound "
             "(integrity-only); installs unprivileged, unlocked-bootloader-only."
         )
-    # The variant leaf = H(0x00 || manifest); the founder firmware_root that spans
-    # all variants is derived later by the signer.
+    # variant leaf = H(0x00 || manifest)
     echo(f"variant leaf   : {leaf.hex()}")
 
     if bytes(fw) == firmware_data:
@@ -109,16 +96,10 @@ def cli(
     legacy images are still supported by headertool.py.
 
     Run with no options on a file to dump information about that file.
-
-
     """
     firmware_data = firmware_file.read()
 
-    # Merkle-tree firmware image: fill the per-module code hashes in the manifest
-    # in place. This is the build step for firmware.bin; the firmware_root is
-    # folded into the bootloader header later by the tree signer. Detection: the
-    # image starts with the manifest ('TRZD') at offset 0 (emitted by
-    # manifest_header.S, even on a fresh build before code_hash fill).
+    # A Merkle-tree firmware image starts with the 'TRZD' manifest (manifest_header.S).
     is_tree = firmware_data[:4] == firmware_module.MANIFEST_MAGIC
     if is_tree:
         if quiet:
@@ -147,15 +128,8 @@ def cli(
 
     fw.set_merkle_proof(list(map(bytes.fromhex, merkle_proof)))
 
-    # A built bootloader is deliberately UNPROVISIONED, so say so: the field
-    # lives in the unauth part, which the .header section only zero-fills, and
-    # zero is FW_VARIANT_SEC_INVALID -- "not a variant" rather than "no firmware
-    # yet". The difference is not cosmetic: the install path skips its confirm
-    # only on a POSITIVE NONE, so a bootloader left at INVALID would make a
-    # fresh device ask before its first official install, unlike one flashed
-    # from a signed release. INVALID is then left to mean what it should --
-    # something went wrong. Signing does not cover the unauth part, so writing
-    # this here is free.
+    # Unprovisioned is NONE (0xCCCCCCCC), not the zero-fill INVALID (0): the
+    # install path auto-confirms only on a positive NONE. Unauth, so no re-sign.
     fw.unauth.firmware_type = firmware_module.FW_VARIANT_SEC_NONE
 
     if print_merkle_root:

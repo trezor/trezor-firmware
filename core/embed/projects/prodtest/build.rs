@@ -13,10 +13,8 @@ fn main() -> Result<()> {
         if cfg!(feature = "emulator") {
             lib.add_source("emulator.c");
         } else if cfg!(feature = "pq_secure_boot") {
-            // Merkle-tree layout: prodtest is a single secure module and its own
-            // variant. Emit the (single-entry) manifest that commits its code
-            // directly, and stamp the prodtest variant. No per-module header and
-            // no legacy vendor/image/secmon header.
+            // Merkle-tree layout: single-entry manifest, no legacy headers.
+            // FW_VARIANT must be the hardened codeword; static-asserted in main.c.
             lib.add_source("manifest_header.S");
             lib.add_define("FW_VARIANT", Some("0x66666666")); // FW_VARIANT_SEC_PRODTEST
         } else {
@@ -76,8 +74,7 @@ fn main() -> Result<()> {
                 ],
             );
 
-            // The Merkle-tree layout has no legacy vendor header (the module
-            // header + manifest replace it).
+            // No legacy vendor header in the Merkle-tree layout.
             if !cfg!(feature = "pq_secure_boot") {
                 lib.embed_binary(
                     xbuild::vendor_header_path("../../models", "prodtest")?,

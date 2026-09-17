@@ -14,22 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-"""Merkle-tree (``pq_secure_boot``) firmware images.
-
-A pq_secure release is not one file. The signed boot header lives at the start
-of ``bootloader.bin`` and carries ``firmware_root``; the firmware image
-(``<variant>.bin``) opens with a manifest that commits each module's code, plus
-the Merkle co-path folding that manifest up to ``firmware_root``. Neither half
-is meaningful alone, which is why:
-
-* :class:`PqSecureFirmware` deliberately has no ``verify()`` and no ``model()``
-  -- the manifest carries neither a signature nor a ``hw_model``.
-* :class:`PqSecureBundle` pairs it with the bootloader image and is the only
-  thing here that satisfies the ``FirmwareType`` protocol.
-
-Everything in this module reads and checks; nothing builds or signs. The signer
-lives in ``core/tools/trezor_core_tools`` and imports the shared parts from
-here, so device, signer and host cannot drift.
+"""Merkle-tree (``pq_secure_boot``) release images: firmware manifest, boot header
+prefix and the release bundle. Read and verify only; the signer in
+``core/tools/trezor_core_tools`` imports the shared parts from here.
+Design: docs/core/embed-arch/firmware-merkle-tree.md
 """
 
 from __future__ import annotations
@@ -75,33 +63,25 @@ __all__ = [
     "variant_leaf",
 ]
 
-#: Where a bundle can be read from: its directory, its zip, or an open stream
-#: of that zip.
+#: A bundle directory, a zip path, or an open stream of the zip.
 BundleSource = t.Union[str, Path, t.IO[bytes]]
 Reader = t.Callable[[str], bytes]
 Exists = t.Callable[[str], bool]
 
 MANIFEST_MAGIC = b"TRZD"
 
-# Fixed layout constants, mirrored from sec/image/inc/sec/boot_header.h. The
-# manifest region is a reserve, not a struct: manifest + proof, then padding out
-# to FW_MANIFEST_REGION, and the first module's code starts after it.
+# Manifest region reserve (manifest + proof, padded); must match boot_header.h.
 FW_MANIFEST_REGION = 0x400
 FW_MANIFEST_PROOF_MAX_NODES = 4
 
-# Smart-hashing chunk size (FW_CHUNK_SIZE). Per-module in the manifest, though
-# every module currently uses this value. Modules are NOT padded to a multiple
-# of it, so a module's last chunk may be partial.
+# FW_CHUNK_SIZE; modules are not padded to it, so a last chunk may be partial.
 DEFAULT_CHUNK_SIZE = 0x2000
 
-# Chain domain tags: distinct tags separate the two constructions -- 0x01 for the
-# length-bound seed, 0x02 for each fold step.
+# Chain domain tags: 0x01 for the length-bound seed, 0x02 for each fold step.
 CHAIN_SEED_TAG = b"\x01"
 CHAIN_STEP_TAG = b"\x02"
 
-# Byte sizes of the manifest header and one entry. Computed rather than derived
-# from SUBCON because the entry array is length-prefixed, so the struct has no
-# fixed size; checked against the parsed form in _manifest_span().
+# Manifest header/entry sizes; SUBCON has no fixed size (length-prefixed array).
 _MANIFEST_HEADER_SIZE = 4 + 4 + 4 + 32 + 4  # magic, variant, version, tr_root, count
 _MANIFEST_ENTRY_SIZE = 4 * 5 + 32
 _MANIFEST_COUNT_OFFSET = 4 + 4 + 4 + 32  # module_count, the last header field
@@ -109,14 +89,8 @@ _PROOF_COUNT_SIZE = 4
 
 
 class FirmwareVariant(IntEnum):
-    """``fw_variant_sec_t`` -- the hardened storage-separation axis.
-
-    These are the codewords the manifest's ``firmware_variant`` and the boot
-    header's ``firmware_type`` actually carry: Reed-Muller RM(1,5) values at
-    least 16 bit flips apart, so no single fault moves between variants. The
-    small ``fw_variant_t`` numbers they replace survive only as the storage-KDF
-    and legacy vendor-header form, which nothing here needs.
-    """
+    """``fw_variant_sec_t``: RM(1,5) codewords carried by the manifest and the boot
+    header's ``firmware_type``; no single bit flip moves between variants."""
 
     INVALID = 0x00000000
     NONE = 0xCCCCCCCC
@@ -134,7 +108,7 @@ class ModuleType(IntEnum):
     PRODTEST = 3
 
 
-#: The entry the bootloader hands control to. Exactly one per manifest.
+#: The entry the bootloader hands control to; exactly one per manifest.
 ENTRY_FLAG_BOOT = 0x1
 
 
@@ -143,14 +117,10 @@ def _sha256(data: bytes) -> bytes:
 
 
 def module_code_hash(code: bytes, chunk_size: int = DEFAULT_CHUNK_SIZE) -> bytes:
-    """The manifest's ``code_hash`` for a module's code.
+    """The manifest's ``code_hash``; must match ``firmware_module_code_hash()``.
 
-    Domain-tagged, length-bound, folded LAST chunk -> FIRST so that chunk 0 ends
-    up outermost and the device can verify chunks in the order it receives them.
-    Mirrors ``firmware_module_code_hash()`` byte for byte::
-
-        seed = H(0x01 || size_le32)
-        for k = n-1 .. 0:  H = H(0x02 || H || chunk_k)
+    ``H = H(0x01 || size_le32)``, then ``H = H(0x02 || H || chunk_k)`` for
+    k = n-1 .. 0, so chunk 0 is outermost and verifiable first.
     """
     if chunk_size <= 0:
         raise ValueError("chunk_size must be > 0")
@@ -164,14 +134,8 @@ def module_code_hash(code: bytes, chunk_size: int = DEFAULT_CHUNK_SIZE) -> bytes
 def module_chain_intermediates(
     code: bytes, chunk_size: int = DEFAULT_CHUNK_SIZE
 ) -> list[bytes]:
-    """The intermediate chain hashes for chunks 0 .. n-2, in consumption order.
-
-    Each rides inline on its chunk's ``FirmwareUpload.prev_hash``; the device
-    folds it with the chunk and compares against the running expected value,
-    starting from the authenticated ``code_hash``. The innermost chunk (n-1) is
-    absent because the device derives the seed itself, and a single-chunk module
-    needs nothing at all.
-    """
+    """Chain hashes for chunks 0 .. n-2 (``FirmwareUpload.prev_hash``), in
+    consumption order; the innermost chunk's seed is derived on-device."""
     if chunk_size <= 0:
         raise ValueError("chunk_size must be > 0")
     n = (len(code) + chunk_size - 1) // chunk_size
@@ -186,17 +150,11 @@ def module_chain_intermediates(
 
 
 def authenticity_bytes(manifest: bytes) -> bytes:
-    """The manifest bytes a variant leaf is computed over.
+    """The manifest bytes a variant leaf hashes; must match
+    ``boot_header_variant_leaf()`` byte for byte.
 
-    Identical to `manifest`, EXCEPT for the custom variant, where everything the
-    creator controls is zeroed so that any creator's app folds to the single
-    founder-signed custom slot: the firmware version, and the app entry's
-    ``size`` + ``code_hash``. The app's type, flags, addr and chunk_size stay
-    authenticated, as does the whole secmon entry -- chunk_size sits before the
-    zeroed tail precisely so it keeps being covered. Mirrors
-    ``boot_header_variant_leaf()`` byte for byte -- including a malformed custom
-    manifest (no APP entry, or an app tail outside the manifest or reaching into
-    the version), which is hashed verbatim and so matches no signed leaf.
+    Custom variant only: firmware_version and the APP entry's size + code_hash
+    are zeroed; a malformed custom manifest is hashed verbatim.
     """
     (variant,) = struct.unpack_from("<I", manifest, 4)
     if variant != FirmwareVariant.CUSTOM:
@@ -209,7 +167,7 @@ def authenticity_bytes(manifest: bytes) -> bytes:
         if module_type == ModuleType.APP:
             app_off = off
             break
-    # size (+16, 4 B) and code_hash (+20, 32 B) -- a contiguous tail.
+    # size (+16, 4 B) and code_hash (+20, 32 B) form a contiguous tail
     a_off = len(manifest) if app_off is None else app_off + 16
     a_len = 0 if app_off is None else 36
     if app_off is None or a_off + a_len > len(manifest) or a_off < 12:
@@ -221,11 +179,7 @@ def authenticity_bytes(manifest: bytes) -> bytes:
 
 
 def variant_leaf(manifest: bytes) -> bytes:
-    """A variant's Merkle leaf: ``H(0x00 || authenticity_bytes(manifest))``.
-
-    The node the founder tree combines and the device folds up to
-    ``firmware_root``.
-    """
+    """A variant's Merkle leaf: ``H(0x00 || authenticity_bytes(manifest))``."""
     return merkle_tree.leaf_hash(authenticity_bytes(manifest))
 
 
@@ -256,12 +210,8 @@ class ManifestEntry(SanityCheckedStruct):
 
 
 class PqSecureManifest(SanityCheckedStruct):
-    """The authenticated directory at the start of a firmware image.
-
-    Note what is NOT here: no signature, and no ``hw_model``. Authenticity comes
-    from folding this to the boot header's ``firmware_root``; the model comes
-    from the boot header.
-    """
+    """The authenticated module directory at the start of a firmware image; it
+    carries no signature and no ``hw_model``, both come from the boot header."""
 
     firmware_variant: FirmwareVariant | int
     firmware_version: tuple[int, int, int, int]
@@ -295,15 +245,8 @@ class PqSecureManifest(SanityCheckedStruct):
 
 
 class PqSecureFirmware:
-    """A pq_secure firmware image -- one variant's ``<variant>.bin``.
-
-    Held as raw bytes plus a parsed view, rather than as a single struct,
-    because the manifest addresses modules by offset INTO this image: the
-    device reads code at ``entry.addr``, so the bytes are the authority and a
-    rebuilt struct would not be.
-
-    Not verifiable on its own -- see the module docstring.
-    """
+    """One variant's ``<variant>.bin``: raw bytes (modules are addressed by offset
+    into them) plus the parsed manifest. Verifiable only via PqSecureBundle."""
 
     def __init__(self, data: bytes) -> None:
         self.data = data
@@ -311,10 +254,7 @@ class PqSecureFirmware:
             raise FirmwareIntegrityError("no firmware manifest at the image start")
         if len(data) < _MANIFEST_HEADER_SIZE:
             raise FirmwareIntegrityError("firmware image shorter than a manifest")
-        # Locate the manifest's end BEFORE parsing it, so the struct is handed
-        # exactly its own bytes. That makes SanityCheckedStruct's round-trip
-        # check meaningful: it then asserts the sizes above against the real
-        # layout, instead of failing trivially on the trailing image.
+        # hand the struct exactly its own bytes so the round-trip check is meaningful
         (module_count,) = struct.unpack_from("<I", data, _MANIFEST_COUNT_OFFSET)
         self._manifest_len = _MANIFEST_HEADER_SIZE + module_count * _MANIFEST_ENTRY_SIZE
         if self._manifest_len > len(data):
@@ -337,8 +277,7 @@ class PqSecureFirmware:
                 f"manifest region {self._region_len} B exceeds the "
                 f"{FW_MANIFEST_REGION} B reserve"
             )
-        #: The variant's Merkle co-path from its leaf up to ``firmware_root``.
-        #: Empty for a single-variant release.
+        #: Co-path from the variant leaf to ``firmware_root``; empty if single-variant.
         self.proof = [
             data[nodes_off + i * 32 : nodes_off + (i + 1) * 32] for i in range(count)
         ]
@@ -358,13 +297,13 @@ class PqSecureFirmware:
 
     @property
     def manifest_bytes(self) -> bytes:
-        """The manifest alone -- the span the variant leaf is computed over."""
+        """The manifest alone, the span the variant leaf is computed over."""
         return self.data[: self._manifest_len]
 
     @property
     def manifest_region(self) -> bytes:
-        """``[manifest || proof]`` -- what the device parses at the image start,
-        and the second half of the interaction-less consent preamble."""
+        """``[manifest || proof]``: what the device parses, and the second half of
+        the consent preamble."""
         return self.data[: self._region_len]
 
     def authenticity_bytes(self) -> bytes:
@@ -397,15 +336,9 @@ class PqSecureFirmware:
                 raise FirmwareIntegrityError(f"code_hash mismatch for module {name}")
 
     def chunk_prev_hashes(self) -> dict[int, bytes]:
-        """Map each chunk's END image offset to its chain hash, for
-        ``firmware.update(prev_hashes=...)``.
-
-        Keying by the END offset means a transport block spanning several chunks
-        is looked up directly by ``request.offset + request.length``, with no
-        host-side knowledge of the block size. An absent key is correct, not an
-        error: the innermost chunk of a module derives the seed on-device, and
-        the manifest region carries no chunk at all.
-        """
+        """Chunk END offset -> chain hash, for ``firmware.update(prev_hashes=...)``;
+        a block is looked up by ``offset + length``. Absent keys are expected
+        (innermost chunk of a module, manifest region)."""
         out: dict[int, bytes] = {}
         for entry in self.manifest.entries:
             code = self.module_code(entry)
@@ -415,12 +348,8 @@ class PqSecureFirmware:
 
 
 class PqSecureNrf(t.NamedTuple):
-    """The nRF co-processor payload a release may carry.
-
-    The image is a model-level leaf of the founder tree, covered by the same
-    boot-header signature, so ``co_path`` is unsigned metadata that the DEVICE
-    folds and checks -- carrying it in the clear is safe.
-    """
+    """The nRF co-processor payload of a release; ``co_path`` is unsigned metadata
+    the device folds and checks against the signed boot header."""
 
     image: bytes
     co_path: bytes  # concatenated 32-byte nodes, nRF leaf -> modelRoot
@@ -432,31 +361,18 @@ class PqSecureNrf(t.NamedTuple):
         return len(self.co_path) // 32
 
 
-# Mirrors BOOT_HEADER_MERKLE_PROOF_MAXLEN in sec/image/inc/sec/boot_header.h.
+# Must match BOOT_HEADER_MERKLE_PROOF_MAXLEN in sec/image/inc/sec/boot_header.h.
 BOOT_HEADER_MERKLE_PROOF_MAXLEN = 256
 
 
 def boot_header_prefix(header: bytes) -> bytes:
-    """The digest-relevant part of a boot header: the authenticated part plus
-    the Merkle proof, stopping before the unauthenticated part.
-
-    Takes raw bytes so the consent cross-validation harness -- which has a
-    header and a manifest and nothing else -- computes the boundary the same
-    way the install path does. The cut comes from parsed fields rather than
-    fixed offsets, but is applied to the ORIGINAL bytes: the device recomputes
-    the same boundary from the same content, so the two must agree exactly.
-
-    It stops before the unauth part because that holds the signatures and the
-    ``firmware_type`` the bootloader rewrites while staging; including either
-    would make the digest unreproducible from an installed header.
-    """
-    # SUBCON rather than BootHeader.parse: a bare header cannot round-trip the
-    # sanity rebuild (there is no code after it), and the warning would be noise.
+    """Authenticated part + Merkle proof of a raw boot header, cut before the
+    unauth part (signatures, and the ``firmware_type`` the bootloader rewrites);
+    must match the device's ``boot_header_prefix_extent()``."""
+    # SUBCON, not BootHeader.parse: a bare header cannot round-trip the sanity rebuild
     hdr = BootHeader.SUBCON.parse(header)
     node_count = int.from_bytes(header[hdr.auth_len : hdr.auth_len + 4], "little")
-    # The same ceiling boot_header_prefix_extent enforces. Without it the host
-    # accepts a boundary the device refuses, which is the one thing this function
-    # exists to keep identical.
+    # same 256-node ceiling as boot_header_prefix_extent() on the device
     if node_count > BOOT_HEADER_MERKLE_PROOF_MAXLEN:
         raise FirmwareIntegrityError(
             f"boot header Merkle proof has {node_count} nodes, over the "
@@ -472,40 +388,24 @@ def boot_header_prefix(header: bytes) -> bytes:
 
 
 def consent_preamble(header: bytes, manifest_region: bytes) -> bytes:
-    """The preimage of the interaction-less consent digest.
-
-    Firmware hashes this to identify what the user is confirming; the
-    bootloader recomputes the same digest over what is actually delivered and
-    installs without asking again only if they match.
-    """
+    """Preimage of the interaction-less consent digest; the bootloader recomputes
+    it over what is delivered and installs without asking again on a match."""
     return boot_header_prefix(header) + manifest_region
 
 
-#: The release container's magic, and the container layout this code speaks.
-#:
-#: Restated here rather than shared with the core tools because trezorlib ships
-#: on its own: the container is the contract between the signer and every
-#: reader, so each states what it expects. A mismatch must be a clear refusal,
-#: which is exactly what the version field is for.
+#: Release container (bundle.json) format this trezorlib speaks; must match
+#: core/tools/trezor_core_tools/firmware_module.py. Flow: docs/core/build/xtask.md
 CONTAINER_MAGIC = "TRZL"
-#: The cross-model container: one subtree per model, each self-contained. This
-#: is what gets published, because a release covers every model rather than one
-#: -- which is why the artifact carries no model in its name.
+#: Cross-model container: one self-contained per-model subtree each.
 CONTAINER_SET_MAGIC = "TRZL-set"
 CONTAINER_VERSION = 1
 
 
 def _check_container(meta: dict, *, is_set: bool = False) -> dict:
-    """Refuse a release container this trezorlib does not speak.
+    """Refuse a container of another format or version before reading any field.
 
-    Checked before any field is read, so an old release is refused by version
-    instead of surfacing as a confusing absent-field error later.
-
-    The container carries no signature and needs none -- the boot-header
-    signature is the trust root and the device pins the stamped
-    ``firmware_type`` to the authenticated manifest variant, so a tampered
-    container is a fail-closed DoS, never a forgery. Everything read from it is
-    routing: which file is which.
+    The container is unsigned by design: the boot header is the trust root, so a
+    tampered container is a fail-closed DoS, never a forgery.
     """
     want = CONTAINER_SET_MAGIC if is_set else CONTAINER_MAGIC
     got = meta.get("format")
@@ -528,13 +428,8 @@ def _check_container(meta: dict, *, is_set: bool = False) -> dict:
 
 
 def _check_set(root: dict) -> dict:
-    """Refuse a cross-model container that does not describe itself.
-
-    Each entry must be a container in its own right AND must agree with the key
-    it is filed under. Both come from one cut, so a disagreement means the set
-    was assembled wrong -- and left unchecked it would offer one model's
-    firmware under another model's name.
-    """
+    """Check a cross-model container: every entry is a container and names the
+    model it is filed under."""
     _check_container(root, is_set=True)
     for model, body in root.get("models", {}).items():
         _check_container(body)
@@ -546,13 +441,9 @@ def _check_set(root: dict) -> dict:
 
 
 class PqSecureBundle:
-    """A pq_secure release: a bootloader image, one variant's firmware, and an
-    optional nRF payload.
-
-    This is the unit the host installs and the only thing here that can be
-    verified, because authenticity crosses the two halves: the boot header is
-    signed and carries ``firmware_root``; the firmware folds to it.
-    """
+    """A pq_secure release: bootloader image, one variant's firmware and an optional
+    nRF payload. The only verifiable unit here: the boot header is signed and
+    carries ``firmware_root``; the firmware folds to it."""
 
     def __init__(
         self,
@@ -561,8 +452,7 @@ class PqSecureBundle:
         nrf: PqSecureNrf | None = None,
         variant_name: str | None = None,
     ) -> None:
-        #: Kept alongside the parsed form: the consent preamble and the
-        #: streamed code must be the bytes that were signed, not a rebuild.
+        #: Raw bytes kept: consent preamble and streamed code must be the signed bytes.
         self.bootloader_bytes = bootloader_bytes
         self.bootloader = BootableImage.parse(bootloader_bytes)
         self.firmware = firmware
@@ -580,13 +470,7 @@ class PqSecureBundle:
 
     @classmethod
     def _enter(cls, src: BundleSource, model: str | None) -> tuple[Reader, Exists]:
-        """Open a bundle, descending into one model's subtree if it is a SET.
-
-        A cross-model container holds `<MODEL>/bundle.json` beside each model's
-        members, so descending one level yields exactly the per-model layout
-        every reader below already understands -- the set adds a level, not a
-        second format.
-        """
+        """Open a bundle, descending into ``<MODEL>/`` when it is a cross-model set."""
         read, exists = cls._opener(src)
         if not exists("bundle.json"):
             raise FirmwareIntegrityError(
@@ -614,9 +498,7 @@ class PqSecureBundle:
             raise FirmwareIntegrityError(
                 f"the bundle lists {model} but holds no {model}/bundle.json"
             )
-        # The subtree must agree with the directory it lives in. Both come from
-        # one cut, so a disagreement means the container was assembled wrong --
-        # and it would otherwise install one model's firmware as another's.
+        # the subtree must name the model it is filed under
         subtree = _check_container(json.loads(scoped_read("bundle.json")))
         if subtree.get("model") != model:
             raise FirmwareIntegrityError(
@@ -626,7 +508,7 @@ class PqSecureBundle:
 
     @classmethod
     def models(cls, src: BundleSource) -> list[str]:
-        """The models a bundle covers -- one entry for a per-model bundle."""
+        """The models a bundle covers; one entry for a per-model bundle."""
         read, exists = cls._opener(src)
         if not exists("bundle.json"):
             return []
@@ -668,17 +550,10 @@ class PqSecureBundle:
         variant: str | None = None,
         model: str | None = None,
     ) -> PqSecureBundle:
-        """Load from an ``xtask release`` bundle.
+        """Load from an ``xtask release`` bundle (directory, zip path or open zip).
 
-        Accepts the bundle directory, the path to its zip, or an already-open
-        binary stream of that zip -- the CLI has the bytes in hand and should not
-        have to spill them to a file to read them.
-
-        Also accepts the CROSS-MODEL container (``release.zip``), which holds one
-        self-contained subtree per model; ``model`` says which to install and is
-        required only when it covers more than one. Neither ``variant`` nor
-        ``model`` is guessed here -- a library should not decide what to install.
-        The CLI picks both, from the flags and the device's own Features.
+        ``model`` is required only for a cross-model set covering several models.
+        Neither ``variant`` nor ``model`` is guessed here; the CLI picks both.
         """
         read, exists = cls._enter(src, model)
         meta = _check_container(json.loads(read("bundle.json")))
@@ -687,10 +562,7 @@ class PqSecureBundle:
         entry = next(v for v in meta["variants"] if v.get("variant") == variant)
         firmware = PqSecureFirmware.parse(read(entry["file"]))
 
-        # Addressed by its (kind, index) slot. That tuple is ROUTING -- it says
-        # which payload belongs in which slot when a model has more than one.
-        # The device derives kind and index from its own build configuration and
-        # never from here, so nothing read here is an authority claim.
+        # (kind, index) is routing only; the device derives its own from build config
         nrf = None
         nrf_meta = next(
             (
@@ -739,10 +611,7 @@ class PqSecureBundle:
                 )
             return cls._with_file(meta, requested, exists)
         if len(available) == 1:
-            # Checked here too: a lone variant is picked without the caller
-            # naming it, so nothing else establishes that its image is in the
-            # container. Without this a stale or truncated zip surfaces as a
-            # KeyError from the reader instead of a bundle defect.
+            # a lone variant is picked unasked, so check its file is present here too
             return cls._with_file(meta, available[0], exists)
         if not available:
             raise ValueError("bundle.json lists no variants; pass one explicitly")
@@ -754,16 +623,9 @@ class PqSecureBundle:
     # --- the FirmwareType protocol -----------------------------------------
 
     def verify(self, dev_keys: bool = False) -> None:
-        """Verify the release offline, end to end.
-
-        Checks the boot-header signature, that this variant folds to the
-        ``firmware_root`` THAT header commits to, and that every module's code
-        matches its authenticated ``code_hash``.
-
-        The nRF payload is only sanity-checked here: its fold to ``modelRoot``
-        is verified on-device against the signed header, and the host has no
-        independent root to check it against.
-        """
+        """Verify offline: boot-header signature, this variant folds to the header's
+        ``firmware_root``, every module's ``code_hash``. The nRF fold is only
+        verifiable on-device."""
         self.bootloader.verify(dev_keys=dev_keys)
         signed_root = bytes(self.bootloader.header.firmware_root)
         folded = self.firmware.firmware_root()
@@ -777,11 +639,8 @@ class PqSecureBundle:
             raise FirmwareIntegrityError("nRF payload has no co-path to fold")
 
     def digest(self) -> bytes:
-        """``firmware_root`` -- what the device shows as the fingerprint.
-
-        Deliberately the same value ``check_firmware_header`` reports, so a
-        ``--fingerprint`` given on the host means what the screen says.
-        """
+        """``firmware_root``: the fingerprint the device shows (same as
+        ``check_firmware_header``)."""
         return bytes(self.bootloader.header.firmware_root)
 
     def model(self) -> Model | None:
@@ -797,42 +656,17 @@ class PqSecureBundle:
 
     @property
     def bootloader_code(self) -> bytes:
-        """The bootloader code: exactly the extent the boot header signs.
-
-        `code_length` is inside the authenticated part, and the signed leaf
-        commits to the digest of precisely that many bytes -- so this is the
-        parsed field, not "the rest of the file". Anything past it is not
-        covered by the signature, and offering it would both misstate
-        `code_length` on the wire and produce a digest the device rejects.
-
-        Always offered to the device in phase 1; the DEVICE decides whether it
-        needs it (a header-only update requests nothing).
-        """
+        """Exactly ``code_length`` bytes of bootloader code, the extent the header
+        signs; offered in phase 1, the device decides whether it needs it."""
         return bytes(self.bootloader.code)
 
     def boot_header_prefix(self) -> bytes:
-        """The digest-relevant part of the boot header: authenticated part plus
-        the Merkle proof, stopping before the unauthenticated part.
-
-        The cut is derived from parsed fields rather than fixed offsets, but
-        applied to the ORIGINAL bytes -- the device recomputes the same boundary
-        from the same content, so the two must agree exactly.
-
-        It stops there because the unauth part holds the signatures and the
-        ``firmware_type`` byte that the bootloader itself rewrites while
-        staging; including either would make the digest unreproducible from an
-        installed header.
-        """
+        """See :func:`boot_header_prefix`."""
         return boot_header_prefix(self.bootloader_bytes)
 
     def consent_preamble(self) -> bytes:
-        """``RebootToBootloader.firmware_preamble`` for this release.
-
-        The preimage of the interaction-less consent digest: firmware hashes it
-        to identify what the user is confirming, and the bootloader recomputes
-        the same digest over what is actually delivered, installing without
-        asking again only if they match.
-        """
+        """``RebootToBootloader.firmware_preamble`` for this release; see
+        :func:`consent_preamble`."""
         return consent_preamble(self.bootloader_bytes, self.firmware.manifest_region)
 
     def chunk_prev_hashes(self) -> dict[int, bytes]:

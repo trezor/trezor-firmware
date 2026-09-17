@@ -17,24 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Flash areas used for STAGING an image the boardloader will install.
-//
-// These are not per-MCU. Where they sit is decided entirely by the model's
-// firmware region (FIRMWARE_SECTOR_START/END) and by the update scheme, so the
-// rule lives here once instead of being copied into each MCU's flash_layout.c
-// -- the boot_ucb scheme already spans two MCU families.
-//
-// The one thing that does come from the MCU is the page size, supplied as
-// FLASH_LAYOUT_PAGE_SIZE by the flash build script. The areas below need it at
-// compile time (they are `const` and statically asserted), and the HAL's
-// FLASH_PAGE_SIZE is not usable for that: trezor_bsp.h pulls the HAL in only
-// for device builds, while these areas are needed on the emulator too, because
-// a bootloader emulator stages a UCB exactly like the device does. Where the
-// HAL IS present the two are cross-checked below.
-//
-// This file is compiled only for boot_ucb models, all of which have a uniform
-// page size. An MCU with mixed sector sizes (STM32F4) could not express these
-// areas as a page count at all -- but no such model uses the scheme.
+// Staging areas for images the boardloader installs from the UCB. Shared by
+// all boot_ucb MCUs: placement follows the model's firmware region, the page
+// size comes from the flash build script (needed on emulator builds too).
 
 #ifdef KERNEL_MODE
 
@@ -54,18 +39,8 @@ _Static_assert(FLASH_PAGE_SIZE == FLASH_LAYOUT_PAGE_SIZE,
 
 #ifdef USE_BOOT_UCB
 
-// Staging area for images installed by the boardloader (currently bootloader
-// updates, possibly larger image types in the future). It is reserved at the
-// tail of the firmware area, so the firmware header (at the start of the
-// firmware area) is never touched; the firmware body may be overwritten while
-// staging. Lies in the (non-secure) kernel region, well past the secmon.
-//
-// The reservation is sized independently of, and larger than,
-// BOOTLOADER_MAXSIZE so bigger images can be staged later. Individual workflows
-// still bound their own uploads: the bootloader update is limited to
-// BOOTLOADER_MAXSIZE. Reserving more does not reduce FIRMWARE_MAXSIZE (the
-// descriptor overlaps the firmware tail); it only widens the region clobbered
-// during an actual staging op.
+// Tail of the firmware area, so the firmware header is never touched. Sized
+// independently of BOOTLOADER_MAXSIZE; each workflow bounds its own upload.
 #ifndef STAGING_MAXSIZE
 #define STAGING_MAXSIZE (64 * 8 * 1024)  // 512 kB
 #endif
@@ -84,25 +59,9 @@ const flash_area_t STAGING_AREA = {
         },
 };
 
-// nRF OTA staging scratch, at the FRONT of the firmware
-// region (compile-time const -- unlike FIRMWARE_AREA there is no secmon split
-// at this layer). Capped to NRF_STAGING_MAXSIZE so it sits far below
-// STAGING_AREA (the firmware tail): the upload engine erases to the END of its
-// target area, and STAGING_AREA overlaps that tail, so a full-FIRMWARE_AREA
-// scratch would erase the pending bootloader. The static_assert proves
-// NRF_STAGING_AREA and STAGING_AREA cannot overlap. The region holds old
-// firmware (secmon+kernel) that the coupled update reinstalls in phase 2, so
-// clobbering it is expected. Sized for the largest nRF image we actually stage,
-// with margin:
-//   ~174 kB  classic release image (Ed25519 only)
-//   ~191 kB  + founder material (2x SLH-DSA 7856 B + 2x Ed25519 + co-path)
-//   ~280 kB  DEBUG build of the same (RTT console + logging) + founder material
-// A debug PQ-native image at 279 kB overflowed the previous 256 kB cap (which
-// left only 248 kB usable, one sector going to the staging descriptor) and
-// phase 1 rejected it as "nRF image size invalid". 384 kB keeps headroom for
-// debug builds. There is room: the static_assert below allows ~345 sectors
-// before the bootloader staging tail. The extra cost is only that a few more
-// sectors of the old firmware get erased -- which phase 2 reinstalls anyway.
+// nRF OTA scratch at the front of the firmware area. Must stay clear of
+// STAGING_AREA (the upload engine erases to the end of its target area).
+// 384 kB fits a debug PQ-native nRF image (~280 kB) with margin.
 #ifndef NRF_STAGING_MAXSIZE
 #define NRF_STAGING_MAXSIZE (48 * 8 * 1024)  // 384 kB
 #endif

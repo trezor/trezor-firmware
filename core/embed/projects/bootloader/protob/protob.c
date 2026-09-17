@@ -104,11 +104,7 @@ secbool send_msg_features(protob_io_t *iface, const fw_check_info_t *fw) {
                         (secret_bootloader_locked() == sectrue));
 #endif
 
-  // Which kind of release this bootloader can install. Reported
-  // unconditionally, so an absent field only ever means a bootloader predating
-  // it -- which is legacy anyway. Lets a host refuse an incompatible bundle
-  // before it starts writing, instead of finding out from FirmwareBegin being
-  // rejected as an unknown message.
+  // Always reported; an absent field means a (legacy) bootloader predating it.
 #ifdef PQ_SECURE_BOOT
   MSG_SEND_ASSIGN_VALUE(firmware_scheme,
                         FirmwareScheme_FirmwareScheme_PqSecure);
@@ -168,9 +164,7 @@ secbool send_msg_request_firmware(protob_io_t *iface, uint32_t offset,
   MSG_SEND_INIT(FirmwareRequest);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, offset);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(length, length);
-  // 0 => the primary stream (bootloader code / firmware); the host omits it.
-  // 1 => the nRF image (NRF_OTA_REQUEST_INDEX) so the host serves its bytes. A
-  // routing tag, not a list index: FirmwareBegin has no co-processor array.
+  // 0 = primary stream (omitted on the wire), 1 = nRF image.
   if (coprocessor_index != 0) {
     MSG_SEND_ASSIGN_VALUE(coprocessor_index, coprocessor_index);
   }
@@ -235,7 +229,7 @@ typedef struct {
   size_t len;  // out: number of bytes decoded into buffer
 } buf_ctx_t;
 
-/* Decodes a bytes field straight into a caller-provided buffer. */
+// Decodes a bytes field straight into a caller-provided buffer.
 static bool read_into_buffer(pb_istream_t *stream, const pb_field_t *field,
                              void **arg) {
   (void)field;

@@ -62,10 +62,7 @@ secbool recv_msg_ping(protob_io_t *iface, Ping *msg);
 secbool recv_msg_firmware_erase(protob_io_t *iface, FirmwareErase *msg);
 
 #ifdef PQ_SECURE_BOOT
-// Optional nRF OTA outputs from FirmwareBegin (see wf_firmware_update_pq /
-// wf_nrf_ota). The two bytes fields are decoded into the caller's buffers; the
-// decoded lengths are returned in *_len (0 if the field is absent). Pass NULL
-// to recv_msg_firmware_begin to ignore the nRF fields.
+// Buffers for the optional nRF fields of FirmwareBegin; *_len is 0 if absent.
 typedef struct {
   uint8_t *co_path_buf;
   size_t co_path_size;
@@ -75,13 +72,9 @@ typedef struct {
   size_t image_hash_len;  // out
 } firmware_begin_nrf_t;
 
-// Receives a FirmwareBegin: the boot header (into bh_buf) and module headers
-// (into mh_buf) are decoded via nanopb callbacks; their lengths are returned in
-// *bh_len / *mh_len; the claimed bootloader-code digest goes to ch_buf with its
-// length in *ch_len (0 if absent). `msg` receives the scalar fields
-// (code_length, nrf_length). If `nrf` is non-NULL, the nRF co-path + image-hash
-// bytes fields are decoded into its buffers and their lengths returned in
-// nrf->*_len.
+// Receives a FirmwareBegin; the bytes fields are decoded into the caller's
+// buffers (boot header, manifest region, claimed code hash, optional nRF
+// fields when `nrf` != NULL), `msg` receives the scalars.
 secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
                                 uint8_t *bh_buf, size_t bh_size, size_t *bh_len,
                                 uint8_t *mh_buf, size_t mh_size, size_t *mh_len,

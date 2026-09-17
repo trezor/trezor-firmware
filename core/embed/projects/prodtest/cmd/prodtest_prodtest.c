@@ -82,16 +82,9 @@ static void prodtest_prodtest_wipe(cli_t* cli) {
   }
 #endif
 
-  // Hand the wipe to the bootloader: it erases the firmware and the user data,
-  // and returns the device to the unprovisioned (empty) state a customer
-  // receives. Firmware cannot do the last part itself -- in the Merkle-tree
-  // layout the provisioning marker lives in the write-protected boot header --
-  // and it cannot erase the firmware area it is running from either.
-  //
-  // Rebooting is the last thing this command does, so report success first and
-  // give the response time to reach the host, as the reboot commands do. The OK
-  // therefore means "wipe started", and a factory flow should confirm the end
-  // state rather than take it as proof the device is empty.
+  // The bootloader erases the firmware and user data and unprovisions the
+  // device (firmware cannot erase the area it runs from). Report OK before
+  // rebooting so the response reaches the host; OK means "wipe started".
   cli_trace(cli, "Rebooting to wipe and unprovision the device...");
 
   const char msg[] = "WIPED";

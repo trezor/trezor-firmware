@@ -1,34 +1,9 @@
 #!/usr/bin/env python3
 """Pack every model's signed release into ONE publishable container.
 
-A release is not a per-model thing. One source tag builds every model, the
-ceremony signs each model's `modelRoot`, and what gets published is the whole
-set -- so the artifact carries no model in its name:
-
-    release.zip
-    |-- bundle.json          the cross-model index (TRZL-set)
-    |-- T3W1/bundle.json     that model's own container (TRZL)
-    |-- T3W1/bootloader.bin
-    |-- T3W1/universal.bin
-    |-- T3W1/...
-    `-- <MODEL>/...          one subtree per model in the release
-
-Each model's subtree is SELF-CONTAINED: it holds its own `bundle.json`, so
-extracting one subtree gives a working per-model release and the ordinary
-per-model reader works on it unchanged. The root index says what the container
-holds without listing directories. The duplication between the two is
-deliberate and cannot drift -- both are written from the same cut.
-
-Members come from what each model's container NAMES (its bootloader, its
-variants, its co-processors), never from globbing the release directory. That
-directory also accumulates derived files -- `bootloader-<variant>.bin` written
-by `xtask flash`/`combine` when stamping -- and sweeping those in would put
-several near-copies of the bootloader in a published artifact.
-
-No signature covers this container, and none is needed: each model's boot-header
-signature is the trust root, and the device pins the stamped `firmware_type` to
-the authenticated manifest variant, so tampering is a fail-closed DoS and never
-a forgery.
+release.zip = bundle.json (TRZL-set index) + one self-contained <MODEL>/ subtree
+per model, each with its own bundle.json. Members come from what the container
+names, never from globbing. Unsigned by design; see docs/core/build/xtask.md.
 """
 
 from __future__ import annotations
@@ -43,28 +18,13 @@ from trezorlib._internal import firmware_headers
 
 #: The key sets a signed release can carry, and how each verifies.
 KEY_SETS = (("production", False), ("devel", True))
-#: A release that has not been signed yet. A real state, not an error: the
-#: release flow prepares everything first and signs it as a whole afterwards.
+#: A prepared-but-not-yet-signed release: a real state, not an error.
 UNSIGNED = "unsigned"
 
 
 def _state(bootloader: Path) -> str:
-    """Whether this bootloader is signed, and by which keys -- from the BYTES.
-
-    Read off the artifact rather than taken from a build flag, because a flag
-    states intent while the signature is fact, and the two diverge: signing is
-    always done with development keys today, so a release cut without
-    `--bootloader-devel` would otherwise be handed the production name while
-    carrying devel signatures.
-
-    The signatures live in the boot header's UNAUTHENTICATED region inside
-    `bootloader.bin` (`slh_signature[]` / `ec_signature[]`), so nothing extra
-    has to be recorded in the container for this to be answerable.
-    """
+    """Signing state read off the bootloader bytes (not a build flag)."""
     boot = firmware_headers.BootloaderV2Image.parse(bootloader.read_bytes())
-    # The canonical predicate, which covers BOTH signature families -- an
-    # open-coded zero check looking at only one of them would call a
-    # half-attached release unsigned.
     if not boot.signature_present():
         return UNSIGNED
     for name, dev_keys in KEY_SETS:
@@ -79,25 +39,15 @@ def _state(bootloader: Path) -> str:
 
 
 def _suffix(state: str, devel_build: bool) -> str:
-    """The container's name suffix for a release in `state`.
-
-    Signed: the key set decides, and the flag is ignored -- the signature is the
-    fact. Unsigned: there is no signature to read, so the only thing that
-    distinguishes a development bundle from a production candidate is how it was
-    built, and that is what `devel_build` carries.
-    """
+    """Container name suffix: from the key set when signed, from `devel_build`
+    only when there is no signature to read."""
     if state == UNSIGNED:
         return "-devel-unsigned" if devel_build else "-unsigned"
     return "" if state == "production" else f"-{state}"
 
 
 def _write_zip(out: Path, entries: list[tuple[str, bytes]]) -> None:
-    """One deterministic archive writer for every archive a release produces.
-
-    Identical inputs must give identical bytes so a container can be digested
-    and that digest published, which `ZipFile.write` defeats by stamping each
-    member's mtime. Fixed timestamp and mode, sorted order.
-    """
+    """Deterministic zip writer (fixed mtime and mode, sorted order)."""
     out.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zf:
         for name, data in sorted(entries, key=lambda e: e[0]):
@@ -126,14 +76,7 @@ def _members(body: dict, model_dir: Path) -> list[Path]:
 
 
 def pack_single(model_dir: Path, out: Path) -> None:
-    """Pack ONE model's published set into a container.
-
-    What `xtask upload` installs. `trezorctl firmware update -f` takes a FILE,
-    so the published directory -- which is what `flash` installs and therefore
-    the one canonical set -- has to be packed for it. Built from the same
-    manifest and the same deterministic writer as a release container, so the
-    two cannot describe the set differently.
-    """
+    """Pack ONE model's published set (what `xtask upload` / `trezorctl -f` install)."""
     bundle_path = model_dir / "bundle.json"
     body = firmware_module.check_container(
         json.loads(bundle_path.read_text()), bundle_path
@@ -165,30 +108,21 @@ def pack(set_path: Path, tree_dir: Path, out_dir: Path, devel_build: bool) -> No
             raise SystemExit(
                 f"{set_path} has an entry for {model} but {model_dir} is absent"
             )
-        # The model's own container first, so its subtree stands alone.
         per_model = model_dir / "bundle.json"
         model_entries: list[tuple[str, bytes]] = [
             ("bundle.json", per_model.read_bytes())
         ]
         for member in _members(body, model_dir):
             model_entries.append((member.name, member.read_bytes()))
-        # The per-model archive: what a single device install consumes, and what
-        # `trezorctl firmware update -f` takes. Written HERE rather than by the
-        # signer, because a release is packed only once it is finished -- an
-        # archive cut before signatures were attached would hold an unsigned
-        # bootloader while the directory beside it held a signed one.
+        # Per-model archive, written once the release is finished (signed).
         per_model_zip = tree_dir / f"{model}.zip"
         _write_zip(per_model_zip, model_entries)
-        # Announced, because this OVERWRITES the file `xtask upload` installs.
-        # Cutting a release replacing it silently made "did my build reach the
-        # device?" unanswerable from the log.
+        # Announced: this overwrites the file `xtask upload` installs.
         print(f"per-model     : {per_model_zip}")
         entries += [(f"{model}/{name}", data) for name, data in model_entries]
         states[model] = _state(model_dir / body["bootloader"]["file"])
 
-    # One run signs every model together, so a mixed set is not a release -- it
-    # is two half-releases sharing a directory, and naming the container after
-    # either half would be wrong.
+    # A mixed signing state is not a release.
     distinct = sorted(set(states.values()))
     if len(distinct) > 1:
         detail = ", ".join(f"{m}={k}" for m, k in sorted(states.items()))

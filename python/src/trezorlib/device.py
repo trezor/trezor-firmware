@@ -639,13 +639,10 @@ def reboot_to_bootloader(
 ) -> None:
     """Reboot the device into its bootloader.
 
-    For ``INSTALL_UPGRADE``, identify the release the user is being asked to
-    confirm so the bootloader can install it afterwards without asking again.
-    Which field to use depends on the device's image layout: pass
-    ``firmware_preamble`` for the Merkle-tree layout (the boot header prefix
-    followed by the manifest region) or ``firmware_header`` for the legacy one
-    (vendor header followed by image header). Passing the wrong one is refused by
-    the device.
+    For ``INSTALL_UPGRADE`` pass the release the user confirms, so the bootloader
+    installs it without asking again: ``firmware_preamble`` (Merkle-tree layout:
+    boot header prefix + manifest region) or ``firmware_header`` (legacy: vendor
+    header + image header).
     """
     session.call(
         messages.RebootToBootloader(

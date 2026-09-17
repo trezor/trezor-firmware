@@ -1,26 +1,9 @@
 #!/usr/bin/env python3
 """Report which founder key pool a bootloader binary trusts, and its code digest.
 
-The pool a bootloader verifies incoming boot headers against is a COMPILE-TIME
-choice (`BOOTLOADER_DEVEL` in sec/image/boot_header.c) and leaves no trace in
-the boot header. A release therefore cannot tell from the header whether the
-code it is about to fold trusts production keys or the development ones whose
-private halves are in this repository -- but the linked public keys are in the
-binary, so the artifact can be asked directly.
-
-Reads the keys from trezorlib rather than re-listing them: root_keys_check.py
-already proves that copy agrees with the STM header and the nRF's, so there is
-no fourth copy to drift.
-
-Also prints SHA-256 over the bootloader CODE -- the extent the signed leaf
-commits to, taken from the header's own `code_size`. That digest is what a
-ceremony can pin: it is stable across re-signing, whereas the file's digest
-changes the moment the header is rewritten.
-
-Output is two `key=value` lines on stdout:
-
-    pool=production|devel|mixed|unknown
-    code_sha256=<hex>
+The pool is a compile-time choice (BOOTLOADER_DEVEL) the boot header does not
+record, so it is read off the linked public keys. Prints `pool=` and
+`code_sha256=` (over the code the signed leaf commits to).
 """
 
 from __future__ import annotations
@@ -37,8 +20,7 @@ from trezorlib.firmware.models import (
     ROOT_SLH_DSA_KEYS_DEV_PUBLIC,
 )
 
-# Offsets into boot_header_auth_t (sec/image/inc/sec/boot_header.h). Only the
-# two sizes are needed, and both sit before any field that has ever moved.
+# Offsets into boot_header_auth_t (sec/image/inc/sec/boot_header.h).
 _HEADER_SIZE_OFF = 28
 _CODE_SIZE_OFF = 36
 _MAGIC = b"TRZQ"
@@ -60,13 +42,7 @@ def code_digest(image: bytes) -> str:
 
 
 def detect_pool(image: bytes) -> str:
-    """Which founder pool is linked into this binary.
-
-    Presence is decisive in one direction only: an unreferenced key array is not
-    emitted, so the pool the build selected is the one that appears. "unknown"
-    means neither was found -- a bootloader old enough to predate founder
-    verification, or one that does not link boot_header.c at all.
-    """
+    """Which founder pool is linked in; "unknown" if neither key array is found."""
     prod = [bytes(k) for k in (*ROOT_SLH_DSA_KEYS, *ROOT_ED25519_KEYS)]
     devel = [
         bytes(k) for k in (*ROOT_SLH_DSA_KEYS_DEV_PUBLIC, *ROOT_ED25519_KEYS_DEV)

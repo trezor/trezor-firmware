@@ -33,6 +33,7 @@
 void bootargs_get_args(boot_args_t *args) {
   smcall_invoke1((uint32_t)args, SMCALL_BOOTARGS_GET_ARGS);
 }
+
 #ifndef PQ_SECURE_BOOT
 
 // =============================================================================

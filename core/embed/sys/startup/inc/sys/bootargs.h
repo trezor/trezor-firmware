@@ -32,15 +32,10 @@ typedef enum {
   BOOT_COMMAND_STOP_AND_WAIT = 0x0FC35A96,
   // Stop in the bootloader and bring up the host link immediately
   BOOT_COMMAND_STOP_AND_CONNECT = 0x3B7E1C64,
-  // Do not ask anything, install an upgrade the user already confirmed in
-  // firmware. Set by firmware (via the reboot_and_upgrade syscall), so the
-  // firmware body was necessarily valid when it was set.
+  // Do not ask anything, install an upgrade the user confirmed in firmware
   BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
-  // Continue a two-phase install that the bootloader itself staged. Set by the
-  // bootloader, never by firmware: staging a new bootloader through the UCB can
-  // leave the installed firmware body invalid, which is exactly the state this
-  // command has to boot past -- see the boot-command dispatch in the
-  // bootloader's main().
+  // Continue a two-phase install staged by the bootloader itself (set by the
+  // bootloader only; the firmware body may be invalid at this point)
   BOOT_COMMAND_CONTINUE_UPGRADE = 0x6D2F84B1,
   // Show RSOD and wait for user input
   BOOT_COMMAND_SHOW_RSOD = 0x7CD945A0,
@@ -77,6 +72,8 @@ void bootargs_init(uint32_t r11_register);
 // Configures the boot command and associated arguments for the next reboot.
 // The arguments must adhere to the boot_args_t structure layout.
 // Args are optional, so NULL with size 0 is allowed.
+// Privileged only: there is no smcall for it, so unprivileged code cannot pick
+// a boot command (e.g. CONTINUE_UPGRADE).
 #ifdef SECURE_MODE
 void bootargs_set(boot_command_t command, const void* args, size_t args_size);
 #endif

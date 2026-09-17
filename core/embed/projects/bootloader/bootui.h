@@ -55,11 +55,9 @@ confirm_result_t ui_screen_install_confirm(const vendor_header* const vhdr,
                                            int version_cmp);
 
 #ifdef USE_BOOT_UCB
-// Confirmation for a UCB-staged install (a boot-header / bootloader update).
-// Reuses the firmware install-confirm screen, showing `fw_version` (packed
-// major|minor<<8|patch<<16|build<<24) and the given fingerprint. A false
-// keep-seed renders "SEED WILL BE ERASED!" and `is_newvendor` retitles it to a
-// vendor change, so this one screen also serves as the wipe confirm.
+// Install confirm for a UCB-staged (tree) install; `fw_version` is packed
+// major|minor<<8|patch<<16|build<<24. A false keep-seed shows the erase
+// warning.
 confirm_result_t ui_screen_install_confirm_bootloader(
     uint32_t fw_version, const uint8_t* const fingerprint,
     secbool should_keep_seed, secbool is_newvendor, const char* vendor,

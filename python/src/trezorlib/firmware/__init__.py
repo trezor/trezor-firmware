@@ -87,12 +87,8 @@ def update(
     if session.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")
 
-    # pq_secure_boot phase 2: `prev_hashes` maps a requested chunk's image offset
-    # to its smart-hashing chain H_prev, sent inline on that chunk's
-    # FirmwareUpload so the device verifies each chunk against the signed
-    # code_hash AS IT STREAMS. None for a non-tree (legacy) update, and any chunk
-    # not in the map (the innermost chunk of a module, and the manifest/header
-    # block) carries no prev_hash.
+    # pq_secure_boot phase 2: prev_hashes maps a chunk's end offset to its chain
+    # H_prev (see PqSecureFirmware.chunk_prev_hashes); None for a legacy update
     resp = session.call(messages.FirmwareErase(length=len(data)))
     _stream_firmware_upload(session, data, resp, progress_update, prev_hashes)
 
@@ -104,10 +100,8 @@ def _stream_firmware_upload(
     progress_update: t.Callable[[int], t.Any],
     prev_hashes: t.Optional[dict[int, bytes]] = None,
 ) -> protobuf.MessageType:
-    """Drive the FirmwareRequest/FirmwareUpload loop from the first response
-    (`resp`) to FirmwareErase; returns the final Success (raises otherwise).
-    `prev_hashes` (offset -> chain H_prev) is attached inline per chunk for a
-    pq_secure_boot tree update; None/absent for the rest."""
+    """Drive the FirmwareRequest/FirmwareUpload loop from the FirmwareErase
+    response `resp`; returns the final Success."""
     # TREZORv1 method
     if isinstance(resp, messages.Success):
         resp = session.call(
@@ -120,10 +114,7 @@ def _stream_firmware_upload(
         length = resp.length
         payload = data[resp.offset : resp.offset + length]
         digest = blake2s(payload).digest()
-        # pq smart-hashing: a requested block spans one or more hash chunks; the
-        # device needs only the block's TRAILING chunk H_prev, keyed by the
-        # block's END offset (offset+length). None => the block reaches a module's
-        # innermost chunk and the device derives the seed (or it's the header).
+        # keyed by the block's END offset; None for an innermost chunk or the header
         prev_hash = prev_hashes.get(resp.offset + length) if prev_hashes else None
         resp = session.call(
             messages.FirmwareUpload(payload=payload, hash=digest, prev_hash=prev_hash)
@@ -144,42 +135,12 @@ def firmware_begin(
     nrf_image_hash: t.Optional[bytes] = None,
     progress_update: t.Callable[[int], t.Any] = lambda _: None,
 ) -> dict[str, int]:
-    """Phase 1 of a Merkle-tree firmware update.
-
-    Sends the new signed boot header and the new firmware's module headers. The
-    device authenticates them, confirms with the user, decides keep-seed, stages
-    the boot header (with the resolved firmware_type) via the UCB and reboots.
-
-    Provide `code` (the new bootloader code -- the image bytes *after* the boot
-    header, i.e. bootloader.bin[header_size:]) so it is available if needed. The
-    DEVICE decides whether it is used: if the device's current bootloader code
-    already conforms to the new header it does a header-only update and requests
-    nothing; otherwise it requests + streams the code (full bootloader update).
-    If `code` is None the device can only do a header-only update and will fail
-    if the code actually changed.
-
-    Returns a dict of bytes actually streamed per image, keyed "code" and "nrf"
-    -- so the caller can tell a full-bootloader update (code > 0) from
-    header-only (code == 0), and whether the nRF was actually pushed (nrf > 0)
-    versus skipped by the device as already-current/absent (nrf == 0).
-
-    After the device reboots and the boardloader installs the new boot header,
-    reconnect and call `update()` with the firmware modules to run phase 2.
-
-    Custom (unofficial) firmware is a first-class authenticated variant
-    (FW_VARIANT_CUSTOM) in the manifest, so the device derives custom-ness from
-    the authenticated variant itself -- it requires an unlocked bootloader and
-    runs the firmware unprivileged with a boot warning, storage-isolated. No host
-    flag is needed.
-
-    Provide `nrf_image` + `nrf_co_path` (+ `nrf_image_hash`, an update-required
-    hint) to also OTA the nRF (BLE co-processor) firmware in the same session:
-    the nRF MCUboot image is a model-tree leaf under the same boot-header
-    signature, delivered while the current bootloader still provides the (BLE)
-    link. A phase-1 FirmwareRequest carries `coprocessor_index`: 0 = the
-    bootloader code, 1 = the nRF image -- so serve the matching source (the
-    device rejects nothing here; the two never overlap on offset). If the running
-    nRF is already current the device requests nothing for it.
+    """Phase 1 of a Merkle-tree firmware update: send the signed boot header and
+    the manifest region; the device authenticates them, confirms with the user,
+    stages the header and reboots. It requests `code` (bootloader code after the
+    header) only if its own code changed, and the nRF image only if the running
+    one is stale. Returns bytes streamed per image, keyed "code" and "nrf".
+    After the reboot, reconnect and call `update()` for phase 2.
     """
     if session.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")
@@ -189,10 +150,8 @@ def firmware_begin(
             boot_header=boot_header,
             module_headers=module_headers,
             code_length=len(code) if code else None,
-            # Lets the device verify the boot header's signature before asking
-            # the user anything: the code enters the signed leaf only as its
-            # digest. A wrong value just fails that check, and the device
-            # rehashes the bytes it actually receives.
+            # lets the device check the signature before the code streams; it
+            # rehashes what it receives
             code_hash=sha256(code).digest() if code else None,
             nrf_length=len(nrf_image) if nrf_image else None,
             nrf_co_path=nrf_co_path,
@@ -200,11 +159,7 @@ def firmware_begin(
         )
     )
 
-    # The device drives the request loop, tagging each FirmwareRequest with the
-    # image it wants: coprocessor_index 0 = the bootloader code (requested only if
-    # the current code does not conform to the new header), 1 = the nRF image.
-    # Track bytes served per image so the caller knows what the device actually
-    # pulled (an already-current nRF is simply never requested).
+    # coprocessor_index routes each request: 0 = bootloader code, 1 = nRF image
     served = {"code": 0, "nrf": 0}
     while isinstance(resp, messages.FirmwareRequest):
         is_nrf = (resp.coprocessor_index or 0) != 0

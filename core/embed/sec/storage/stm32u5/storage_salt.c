@@ -41,11 +41,9 @@ void storage_salt_get(storage_salt_t* salt) {
   memset(salt, 0, sizeof(*salt));
 
 #ifdef PQ_SECURE_BOOT
-  // Merkle-tree layout: there is no vendor header. The storage-domain identity
-  // is the firmware_type the bootloader persists into the signed boot header
-  // (trusted because that region is write-protected from firmware). The boot
-  // header lives in the bootloader flash area, which the secmon's default MPU
-  // mode does not map -- switch to MPU_MODE_BOOTLOADER for the read.
+  // Merkle-tree layout: no vendor header. The storage-domain identity is the
+  // firmware_type in the boot header (write-protected from firmware). The
+  // bootloader area is unmapped in the secmon's default MPU mode.
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
   const boot_header_auth_t* bl = boot_header_auth_get(BOOTLOADER_START);
   ensure((bl != NULL) * sectrue, "Invalid boot header");

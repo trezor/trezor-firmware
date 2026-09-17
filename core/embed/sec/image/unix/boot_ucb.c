@@ -26,20 +26,10 @@
 
 #define BOOT_UCB_MAGIC 0x5A8C7BF3
 
-// The UCB is a handoff to the boardloader, which the emulator does not have: it
-// boots the bootloader directly. So nothing here ever installs a staged image.
-// The block is still written for real, into the emulated BOOTUCB_AREA, so the
-// arming path is exercised end to end and an emulator boardloader could later
-// read it.
-//
-// The one thing that cannot carry over is the address fields. They are DEVICE
-// flash addresses, and the emulator's flash is an mmap at an address the kernel
-// chose, so what lands in those uint32_t fields is a narrowed host pointer --
-// meaningless, but also unread. The `hash` and `magic` are exact, which is what
-// makes the written block worth checking.
-//
-// No MPU reconfiguration, unlike the stm32 implementation: there is no MPU, and
-// the mapping is writable throughout.
+// The emulator has no boardloader, so nothing installs a staged image; the
+// block is still written into the emulated BOOTUCB_AREA so the arming path is
+// exercised. The address fields hold narrowed host pointers (never read);
+// magic and hash are exact. No MPU reconfiguration: the mapping is writable.
 
 secbool boot_ucb_write(const void* header, uint32_t code_address) {
   const boot_header_auth_t* hdr = (const boot_header_auth_t*)header;

@@ -92,13 +92,9 @@ confirm_result_t ui_screen_install_confirm_bootloader(
     secbool should_keep_seed, secbool is_newvendor, const char *vendor,
     size_t vendor_len) {
   char ver_str[VERSION_STRING_LEN];
-  // fw_version is the version to display, packed
-  // major|minor<<8|patch<<16|build<<24; the vendor string names what is being
-  // installed. Both are supplied by the caller.
   format_ver(fw_version, ver_str, sizeof(ver_str));
-  // Reuse the firmware install-confirm screen. A false keep-seed makes it show
-  // the "SEED WILL BE ERASED!" warning, so this one screen doubles as the wipe
-  // confirm on a storage-domain change.
+  // Reuses the firmware install-confirm screen; !keep_seed shows the erase
+  // warning.
   return screen_install_confirm(vendor, vendor_len, ver_str, fingerprint,
                                 should_keep_seed == sectrue,
                                 is_newvendor == sectrue,

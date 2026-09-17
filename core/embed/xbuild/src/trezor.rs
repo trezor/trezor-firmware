@@ -230,10 +230,8 @@ impl CLibrary {
 
             // Include the linker script that defines the layout of the
             // final binary according to the selected binary type. The
-            // Merkle-tree layout (pq_secure_boot feature) uses a separate
-            // `{binary_type}_pq.ld` variant so the legacy layout is preserved.
-            // Only the modules whose layout changes have a _pq variant; the
-            // bootloader keeps its layout (it only gains verification code).
+            // Merkle-tree layout (pq_secure_boot) uses `{binary_type}_pq.ld`
+            // for the modules whose layout changes.
             let ld_suffix = if has_feature("pq_secure_boot")
                 && matches!(binary_type, "firmware" | "secmon" | "kernel" | "prodtest")
             {
@@ -242,11 +240,7 @@ impl CLibrary {
                 ""
             };
             // One path expression for every MCU, so `ld_suffix` cannot be
-            // honoured for some and silently dropped for others -- which it was:
-            // only stm32u5g interpolated it, so a pq_secure_boot build on any
-            // other MCU linked against the LEGACY layout and produced an image
-            // with no manifest region. That builds and links cleanly and then
-            // fails verification on device, so make it a build error instead.
+            // dropped for some of them.
             let mcu_dir = if has_feature("mcu_stm32u5g") {
                 "stm32u5g"
             } else if has_feature("mcu_stm32u5a") {
@@ -260,11 +254,9 @@ impl CLibrary {
             };
             let target_ld = format!("sys/linker/{mcu_dir}/{binary_type}{ld_suffix}.ld");
             if !ld_suffix.is_empty() {
-                // `-T` paths are relative to the LINKER's cwd (embed/), not this
-                // build script's, so resolve against the nearest ancestor that
-                // actually holds sys/linker before testing existence. If no such
-                // ancestor is found, skip the check rather than fail a build that
-                // would otherwise have worked.
+                // `-T` paths are relative to the linker's cwd (embed/), so
+                // resolve against the ancestor holding sys/linker; skip the
+                // check if none is found.
                 let embed_root = env::var("CARGO_MANIFEST_DIR").ok().and_then(|dir| {
                     PathBuf::from(dir)
                         .ancestors()

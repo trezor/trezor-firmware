@@ -20,10 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-// Must sit at TOP LEVEL, not inside any #ifdef: it #undefs the model's flash
-// address constants so they resolve to the emulator's mapped addresses, and a
-// use further down the file that is NOT under the same condition would silently
-// get the device constant back -- a pointer to nothing on the host.
+// Must stay at top level: it #undefs the model's flash address constants.
 #ifdef TREZOR_EMULATOR
 #include "../emulator.h"
 #endif
@@ -38,32 +35,22 @@
 #include "wf_image_upload.h"  // chunk_buffer
 #include "wf_ucb_stage.h"
 
-// Report a staging failure to the host, if there is one. `ucb_stage_verify` is
-// also reached from the bootloader's own boot path, where nobody is listening
-// and `iface` is NULL -- MSG_SEND would dereference it.
+// `iface` is NULL on the bootloader's own boot path.
 static void stage_report_failure(protob_io_t *iface, const char *msg) {
   if (iface != NULL) {
     send_msg_failure(iface, FailureType_Failure_ProcessError, msg);
   }
 }
 
-// The UCB records DEVICE flash addresses: the boardloader reads the block from
-// flash on the next boot and dereferences them, so they must mean something to
-// it and not to us. On the MCU a pointer into flash IS that address and this is
-// the identity. On the emulator flash is an mmap of `trezor.flash`, so the two
-// are unrelated -- harmless there, since no boardloader ever reads the block,
-// but written out explicitly so the one place where "pointer" and "flash
-// address" stop being the same thing is visible rather than implied.
+// The UCB records device flash addresses for the boardloader; on the MCU a
+// flash pointer is that address (on the emulator it is not, but nothing
+// reads the block there).
 static uint32_t ucb_flash_address(const void *flash_ptr) {
   return (uint32_t)(uintptr_t)flash_ptr;
 }
 
 #ifdef BOARDLOADER_UCB_ZERO_ADDR_BUG
-// Copy `len` bytes of the currently installed bootloader code into the staging
-// area at `offset` (i.e. right after the staged header). Source is the running
-// bootloader's own code in flash; the destination is a distinct flash region.
-// Only needed for the code_address==0 sentinel workaround below (its sole
-// caller), so it is compiled only when that workaround is active.
+// Copy the installed bootloader code into the staging area at `offset`.
 static secbool stage_copy_current_code(uint32_t offset, uint32_t len) {
   const uint8_t *src = (const uint8_t *)(uintptr_t)(BOOTLOADER_START + offset);
   uint32_t remaining = len;
@@ -74,9 +61,8 @@ static secbool stage_copy_current_code(uint32_t offset, uint32_t len) {
     ensure(flash_area_erase_partial(&STAGING_AREA, pos, &bytes_erased), NULL);
 
     uint32_t chunk = MIN(bytes_erased, remaining);
-    // Flash writes are quad-word aligned; round the tail up. The extra source
-    // bytes past the code are don't-care -- only code_size bytes are ever
-    // hashed (Merkle root) or compared (bootloader_area_needs_update).
+    // Quad-word aligned writes; the extra source bytes past the code are
+    // never hashed or compared.
     uint32_t wlen = (chunk + 15u) & ~15u;
     if (wlen > bytes_erased) {
       wlen = bytes_erased;
@@ -97,7 +83,6 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
                                  bool header_only, protob_io_t *iface,
                                  merkle_proof_node_t *out_root,
                                  uint32_t *out_code_address) {
-  // The boot header is staged at the start of the staging area.
   const uint8_t *staged =
       flash_area_get_address(staging_area, 0, sizeof(boot_header_auth_t));
 
@@ -113,11 +98,8 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_VERSION;
   }
 
-  // The same upgrade floor phase 1 applied, re-checked on the STAGED header.
-  // Worth repeating: this is the header the boardloader will actually install,
-  // it has been signature-verified by now, and the staging path is reachable
-  // without a phase-1 preamble (ucb_stage_clear_firmware_type, a resumed
-  // install). Set => must be positively satisfied, as above.
+  // Upgrade floor, re-checked on the staged header; must match phase 1
+  // (fw_begin_preamble). Set => must be positively satisfied.
   if (boot_header_version_is_set(hdr->min_prev_version) &&
       (cur == NULL ||
        boot_header_version_compare(cur->version, hdr->min_prev_version) < 0)) {
@@ -125,22 +107,14 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_VERSION;
   }
 
-  // Resolve where the code to verify lives (`verify_code`) and what the
-  // UCB records (`ucb_code_address`; 0 is the "header-only -- reuse the current
-  // code" sentinel). For a full update the new code is already staged after the
-  // header. For header-only, the bootloader code is unchanged (the caller has
-  // verified the new header signs over the current code).
+  // Code to verify against, and the address the UCB records (0 = reuse the
+  // current code).
   const void *verify_code;
   uint32_t ucb_code_address;
   if (header_only) {
 #ifdef BOARDLOADER_UCB_ZERO_ADDR_BUG
-    // This model's field boardloader mangles the code_address == 0 sentinel:
-    // its boot_ucb_read() runs adjust_to_secure_flash() on code_address BEFORE
-    // the sentinel is checked, turning 0 into (FLASH_BASE_S - FLASH_BASE_NS)
-    // which is then rejected as out of range (see BOARDLOADER_UCB_ZERO_ADDR_BUG
-    // in the model header). Work around it: stage a copy of the current code
-    // and hand the boardloader a real, in-range address instead of the
-    // sentinel.
+    // The field boardloader mangles the 0 sentinel (adjust_to_secure_flash
+    // before the sentinel check), so stage a copy and record a real address.
     if (sectrue != stage_copy_current_code(hdr->header_size, hdr->code_size)) {
       stage_report_failure(iface, "Staging failed");
       return UPLOAD_ERR_COMMUNICATION;
@@ -148,8 +122,6 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
     verify_code = staged + hdr->header_size;
     ucb_code_address = ucb_flash_address(verify_code);
 #else
-    // Fixed boardloader: reuse the in-place current code (nothing to stage) --
-    // verify the new header against it and hand the boardloader the 0 sentinel.
     verify_code =
         (const uint8_t *)(uintptr_t)BOOTLOADER_START + hdr->header_size;
     ucb_code_address = 0;
@@ -159,9 +131,7 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
     ucb_code_address = ucb_flash_address(verify_code);
   }
 
-  // Verify: the Merkle root over the authenticated header + code, then the
-  // signature over that root. (firmware_type is outside auth_size, so a
-  // device-set firmware_type does not affect this check.)
+  // firmware_type is outside auth_size and does not affect this check.
   merkle_proof_node_t merkle_root;
   boot_header_calc_merkle_root(hdr, (uintptr_t)verify_code, &merkle_root);
 
@@ -170,26 +140,17 @@ upload_status_t ucb_stage_verify(const flash_area_t *staging_area,
     return UPLOAD_ERR_INVALID_IMAGE_HEADER_SIG;
   }
 
-  // Hand the signature-verified modelRoot back (the root the new boot header
-  // commits to): co-processor images are peer leaves under it, so this is what
-  // the caller folds them against -- valid for BOTH header-only (current code)
-  // and full (staged new code), always after the signature check above.
+  // Signature-verified modelRoot; co-processor leaves fold against it.
   if (out_root != NULL) {
     memcpy(out_root->bytes, merkle_root.bytes, sizeof(out_root->bytes));
   }
-  // The code address the UCB must record. The install itself is NOT armed here:
-  // the caller arms it (ucb_stage_arm) only AFTER any co-processor updates
-  // succeed, so a partial update can never leave the new bootloader installed
-  // against an old, possibly-incompatible co-processor (a brick). See
-  // wf_firmware_update_pq.
+  // Not armed here; the caller arms last (ucb_stage_arm).
   *out_code_address = ucb_code_address;
   return UPLOAD_OK;
 }
 
 secbool ucb_stage_arm(const flash_area_t *staging_area, uint32_t code_address) {
-  // Arm the boot update control block: the boardloader re-verifies and installs
-  // the staged bootloader on the next boot. This is the point of no return for
-  // the bootloader swap -- call it LAST, after co-processors are updated.
+  // Point of no return for the bootloader swap.
   const void *staged =
       flash_area_get_address(staging_area, 0, sizeof(boot_header_auth_t));
   return boot_ucb_write(staged, code_address);
@@ -232,10 +193,7 @@ secbool ucb_stage_clear_firmware_type(void) {
     return secfalse;
   }
 
-  // Copy the installed header verbatim, then rewrite the one field.
-  // Everything authenticated is preserved bit for bit, so the founder
-  // signature over it still verifies below; firmware_type is outside
-  // auth_size.
+  // Verbatim copy; the authenticated part stays bit for bit.
   uint8_t *staged = (uint8_t *)chunk_buffer;
   memcpy(staged, (const void *)(uintptr_t)BOOTLOADER_START, header_size);
 
@@ -250,25 +208,17 @@ secbool ucb_stage_clear_firmware_type(void) {
     return secfalse;
   }
   if (unauth->firmware_type == FW_VARIANT_SEC_NONE) {
-    // Already unprovisioned, and already the CANONICAL unprovisioned value --
-    // nothing to install, and arming the UCB for a no-op would spend a
-    // boardloader install for nothing.
-    return sectrue;
+    return sectrue;  // already the canonical unprovisioned value
   }
-  // Anything else is rewritten, INVALID included. INVALID also reads as
-  // unprovisioned, so it would be tempting to early-out on it too -- but the
-  // install path grants the empty-device auto-confirm only on a POSITIVE NONE,
-  // deliberately, so that garbage cannot earn it. Leaving INVALID here would
-  // therefore leave a wiped device asking for a confirmation it should not
-  // need. Normalise instead.
+  // INVALID is normalised too: the empty-device auto-confirm requires a
+  // positive NONE.
   unauth->firmware_type = FW_VARIANT_SEC_NONE;
 
   if (sectrue != ucb_stage_write_header(staged, header_size)) {
     return secfalse;
   }
 
-  // No iface: this runs from the bootloader's own boot path, not a host
-  // workflow, so a failure has nobody to report to over the wire.
+  // No iface: boot path, nobody to report to.
   uint32_t code_address = 0;
   if (UPLOAD_OK != ucb_stage_verify(&STAGING_AREA, /*header_only=*/true, NULL,
                                     NULL, &code_address)) {

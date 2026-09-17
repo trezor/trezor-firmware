@@ -1,8 +1,7 @@
 ENTRY(reset_handler)
 
-/* Merkle-tree layout: the firmware manifest occupies FW_MANIFEST_REGION at the
-   firmware start (before the secmon prefix), so the kernel code links at its
-   real, manifest-shifted run address. */
+/* Merkle-tree layout: the manifest region and the secmon prefix precede the
+   kernel code, so it links at its real run address. */
 FW_MANIFEST_REGION = 0x400;
 
 MEMORY {
@@ -26,23 +25,17 @@ _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-/* Kernel code length only -- excludes the secmon prefix, which is a separate
-   module not covered by this module's code hash. */
+/* Kernel code only -- the secmon prefix is a separate module. */
 _codelen = _kernel_flash_end - _kernel_flash_start;
 
 SECTIONS {
-  /* Reserve the firmware manifest region at the firmware start (the manifest
-     itself is emitted by the firmware image, not the kernel; here it only
-     shifts the addresses so the kernel code links at its real run address). */
+  /* Manifest region placeholder; the firmware image emits the manifest. */
   .manifest : ALIGN(CODE_ALIGNMENT) {
     _manifest_start = .;
     . = _manifest_start + FW_MANIFEST_REGION;
   } >FLASH AT>FLASH
 
-  /* Merkle-tree layout: the secmon binary is prefixed (a separate module,
-     excluded from this module's code hash) so the kernel links at its real run
-     address; the kernel code follows directly. There is no per-module header --
-     the firmware manifest entry commits the code directly. */
+  /* Secmon module prefix (separate module, not in this module's hash). */
   .secmon : ALIGN(CODE_ALIGNMENT) {
     KEEP(*(.secmon));
   } >FLASH AT>FLASH

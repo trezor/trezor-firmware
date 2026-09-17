@@ -12,9 +12,7 @@ pub fn upload(args: UploadArgs) -> Result<()> {
         args.project.binary_name()
     );
 
-    // On a tree model the per-project artifact is NOT installable: `xtask build`
-    // emits a manifest template there, with zero code_hashes and a leaf that
-    // folds to nothing. What installs is the signed release.
+    // On a tree model only the signed release is installable.
     if args.model.config()?.has_feature("pq_secure_boot") {
         return upload_release(&args);
     }
@@ -42,22 +40,11 @@ pub fn upload(args: UploadArgs) -> Result<()> {
     Ok(())
 }
 
-/// Install a pq_secure release bundle.
-///
-/// Deliberately without `-s`, unlike the single-image path above: the bundle
-/// carries a boot-header signature, every variant's fold to firmware_root and
-/// per-module code hashes, and checking those before touching the device is
-/// most of the reason the release is one file.
+/// Install a pq_secure release bundle via trezorctl. No `-s`: the bundle
+/// carries its own signatures, which trezorctl checks first.
 fn upload_release(args: &UploadArgs) -> Result<()> {
-    // Installed from the PUBLISHED set, the same one `xtask flash` uses, so a
-    // build cannot reach the device by one path and not the other. `trezorctl
-    // firmware update -f` takes a FILE, so that directory is packed here rather
-    // than a second copy of the release being kept in step with it.
-    //
-    // The cut release in `tree/` is a publishable artifact, not the install
-    // source: `xtask release` overwrites `tree/<MODEL>.zip` too, so installing
-    // from there made "did my last build reach the device?" depend on which
-    // command wrote that file last.
+    // From the published set, the same one `xtask flash` uses, packed because
+    // trezorctl takes a file.
     let dir = helpers::artifacts_dir(args.model)?;
     ensure!(
         dir.join("bundle.json").exists(),
@@ -71,12 +58,8 @@ fn upload_release(args: &UploadArgs) -> Result<()> {
 
     let release = pq::ReleaseManifest::load(&dir)?;
 
-    // An explicit choice, and `upload prodtest` (whose project names its own
-    // variant), are resolved against the release. Firmware without one is left
-    // to trezorctl, which picks btc-only vs universal from the device's own
-    // features -- but only after checking the release holds a firmware variant
-    // at all. Without that check trezorctl takes the bundle's only variant, so
-    // `upload firmware` against a prodtest-only release installed PRODTEST.
+    // Firmware without an explicit variant is left to trezorctl, after checking
+    // the release holds a firmware variant at all.
     let variant = match args.variant {
         Some(_) => Some(pq::pick_variant(args.project, args.variant, &release)?),
         None if args.project == Project::Prodtest => {

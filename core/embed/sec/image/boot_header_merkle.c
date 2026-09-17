@@ -16,32 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 /*
- * Firmware Merkle tree math + module/type helpers, shared verbatim by the
- * embedded build (boot_header.c) and the host cross-validation harness
- * (tests/fw_merkle/crossvalidate.c). One source guarantees the on-device and
- * host implementations are byte-identical.
- *
- * The functions it exports are declared in sec/boot_header.h. The few kept
- * non-static so the harness can compare intermediate values are declared in
+ * Firmware Merkle tree math and variant helpers, shared verbatim by the device
+ * build and the host cross-validation harness (tests/fw_merkle). Pure layout
+ * and hash math over caller-supplied buffers, so not secure-mode gated. The
+ * internals kept non-static for the harness are declared in
  * boot_header_merkle_internal.h.
  */
 
-/* Deliberately NOT secure-mode gated, unlike boot_header.c. Everything here is
- * pure layout + hash math over a caller-supplied buffer -- no keys, no flash,
- * no MPU-gated regions -- so it is equally valid unprivileged. The coreapp
- * needs it to derive the interaction-less upgrade consent digest from a
- * preamble the host sent (check_firmware_header), and doing that parse
- * unprivileged is the SAFER placement: a wrong digest can only get the install
- * refused by the bootloader, which recomputes it independently. gc-sections
- * drops whatever a given binary does not call.
- *
- * The cross-validation harness compiles this file too, against shimmed types
- * and a host SHA-256, which is what makes it cross-validation rather than a
- * reimplementation. */
-
-/* Under the harness these come from its shim header, forced in on the command
- * line; on device from the real ones. */
+// Under the harness these come from its shim header.
 #ifndef BOOT_HEADER_MERKLE_SHIMMED
 #include <string.h>
 
@@ -67,22 +51,11 @@ static void boot_header_internal_node(const merkle_proof_node_t* a,
   IMAGE_HASH_FINAL(&ctx, out->bytes);
 }
 
-// Computes the variant leaf: H(0x00 || manifest). The manifest (a firmware
-// directory) is the per-variant node of the firmware tree; this leaf folds via
-// the firmware Merkle proof up to the signed firmware_root.
-//
-// CUSTOM variant (firmware_variant == FW_VARIANT_CUSTOM): EVERYTHING the
-// creator controls is substituted with ZERO before hashing, so ANY creator app
-// (any code, size, or version) authenticates to the ONE founder-signed custom
-// slot:
-//   * the manifest firmware_version (the creator's app version), and
-//   * the app (FW_MODULE_APP) entry's size + code_hash (the contiguous tail of
-//     the entry -- chunk_size sits BEFORE it and is NOT zeroed).
-// The app entry's module_type/flags/addr/chunk_size and the ENTIRE secmon entry
-// stay real -- the founder still binds the secmon and the app's role +
-// placement + chunk_size (a layout param, not creator content). This is
-// the SINGLE place the zero-for-fold substitution happens (device + Python
-// signer in lockstep); the on-flash values are used only for integrity/display.
+// Variant leaf H(0x00 || manifest). For the CUSTOM variant the creator-owned
+// fields -- firmware_version and the APP entry's size + code_hash tail -- are
+// hashed as zero, so any creator app folds to the one founder-signed custom
+// slot. The only place this substitution happens; must match the Python
+// signer.
 static void boot_header_variant_leaf(const firmware_manifest_t* manifest,
                                      size_t len, merkle_proof_node_t* leaf) {
   static const uint8_t prefix0[] = {0x00};
@@ -106,8 +79,7 @@ static void boot_header_variant_leaf(const firmware_manifest_t* manifest,
       break;
     }
   }
-  // Region 1: firmware_version. Region 2: app entry [size .. end-of-entry]
-  // (size + code_hash are the entry's contiguous tail).
+  // Zeroed regions: firmware_version, and the app entry's [size .. end).
   size_t v_off = (size_t)((const uint8_t*)manifest->firmware_version - base);
   size_t v_len = sizeof(manifest->firmware_version);
   size_t a_off = app ? (size_t)((const uint8_t*)&app->size - base) : len;
@@ -142,13 +114,12 @@ secbool firmware_manifest_authentic(const firmware_manifest_t* manifest,
       manifest->module_count > BOOT_HEADER_MAX_MODULES) {
     return secfalse;
   }
-  // Sanity: the passed length must match the manifest's declared size.
+  // The passed length must match the manifest's declared size.
   if (manifest_len != firmware_manifest_size(manifest)) {
     return secfalse;
   }
 
-  // The variant leaf folds (via the proof) to the signed firmware_root. For the
-  // custom variant the leaf helper zeroes the app code_hash (see above).
+  // Fold the variant leaf through the proof to the signed firmware_root.
   merkle_proof_node_t node;
   boot_header_variant_leaf(manifest, manifest_len, &node);
   for (size_t i = 0; i < proof_count; i++) {
@@ -159,20 +130,12 @@ secbool firmware_manifest_authentic(const firmware_manifest_t* manifest,
              : secfalse;
 }
 
-// Smart-hashing "chain" code hash: the module code is split into chunk_size
-// chunks and folded into a single hash, so an OTA can authenticate each chunk
-// against code_hash as it streams (see docs). Here (boot / whole-module) we
-// recompute the whole chain over the placed code and compare to code_hash.
-//
-// Domain-tagged and length-bound, folded LAST chunk -> FIRST (variant A, so
-// chunk 0 ends up outermost -> forward-order streaming). Two DISTINCT tags
-// separate the two constructions: 0x01 for the seed, 0x02 for each fold step:
+// Smart-hashing chain (must match firmware_module.module_code_hash() in the
+// Python signer byte-for-byte):
 //   seed = H(0x01 || size_le32);  H = seed
-//   for k = n-1 .. 0:  H = H(0x02 || H || chunk_k)         (n = ceil(size/cs))
+//   for k = n-1 .. 0:  H = H(0x02 || H || chunk_k)   (n = ceil(size/cs))
 //   code_hash = H
-// Mirrors firmware_module.module_code_hash() in the Python signer
-// byte-for-byte. Chain seed = H(0x01 || size_le32) -- binds the total length
-// into the base.
+// Folded last -> first so chunk 0 is outermost and an OTA can verify forward.
 void firmware_module_chain_seed(uint32_t size, uint8_t* out) {
   static const uint8_t tag[1] = {0x01};
   const uint8_t size_le[4] = {(uint8_t)size, (uint8_t)(size >> 8),
@@ -185,7 +148,7 @@ void firmware_module_chain_seed(uint32_t size, uint8_t* out) {
 }
 
 // One chain fold: out = H(0x02 || h_prev || data). In-place safe (out ==
-// h_prev): h_prev is absorbed by UPDATE before FINAL overwrites out.
+// h_prev).
 void firmware_module_chain_step(const uint8_t* h_prev, const uint8_t* data,
                                 size_t len, uint8_t* out) {
   static const uint8_t tag[1] = {0x02};
@@ -199,17 +162,9 @@ void firmware_module_chain_step(const uint8_t* h_prev, const uint8_t* data,
 
 void firmware_module_code_hash(uintptr_t base, uint32_t addr, uint32_t size,
                                uint32_t chunk_size, uint8_t* out) {
-  // seed, then fold chunks last -> first (variant A) with the shared step, so
-  // the whole-module recompute and the streaming per-chunk verify use identical
-  // primitives.
   firmware_module_chain_seed(size, out);
-  // ceil(size / chunk_size) without the (size + chunk_size - 1) rounding trick,
-  // which overflows uint32_t once size + chunk_size exceeds 2^32 and yields 0
-  // -- no chunks folded, so the digest is the bare seed and the module is
-  // rejected. chunk_size is founder-signed and bounded at install, so that was
-  // never reachable; this form is correct for any chunk_size instead of relying
-  // on it. k * chunk_size cannot overflow either: k < n implies k * chunk_size
-  // < size.
+  // ceil(size / chunk_size) without the (size + chunk_size - 1) form, which
+  // overflows uint32_t for a large chunk_size. k * chunk_size < size, no wrap.
   uint32_t n = (chunk_size != 0)
                    ? size / chunk_size + ((size % chunk_size != 0) ? 1u : 0u)
                    : 0;
@@ -223,15 +178,8 @@ void firmware_module_code_hash(uintptr_t base, uint32_t addr, uint32_t size,
 
 secbool firmware_verify_manifest_entry(const firmware_manifest_entry_t* entry,
                                        uintptr_t firmware_base) {
-  // Integrity: the module code at firmware_base + entry->addr (entry->size
-  // bytes) must reduce to the entry's code_hash via the smart-hashing chain
-  // (firmware_module_code_hash), chunked by the entry's own chunk_size. For an
-  // official variant the entry is founder-authenticated
-  // (firmware_manifest_authentic), so this proves the code is both founder-
-  // committed and non-corrupt. For the CUSTOM variant the app's code_hash is
-  // the creator's (NOT founder-signed -- zeroed in the authenticity fold), so
-  // for the app this is a corruption check only; the secmon's code_hash is
-  // still founder-signed.
+  // For the CUSTOM app the code_hash is the creator's, so this is a corruption
+  // check only; every other entry is founder-authenticated by the manifest.
   uint8_t digest[IMAGE_HASH_DIGEST_LENGTH];
   firmware_module_code_hash(firmware_base, entry->addr, entry->size,
                             entry->chunk_size, digest);
@@ -242,31 +190,10 @@ secbool firmware_verify_manifest_entry(const firmware_manifest_entry_t* entry,
 
 secbool firmware_manifest_layout_valid(const firmware_manifest_t* manifest,
                                        uint32_t capacity) {
-  // The module code regions (addr/size) drive both the streamed erase+write
-  // (install) and the code hashing (install + EVERY boot). For an official
-  // variant addr/size are founder-authenticated, but for the CUSTOM variant the
-  // app entry's size is zeroed-for-fold (see boot_header_variant_leaf) -- so a
-  // tampered on-flash app size still authenticates, yet
-  // firmware_verify_manifest would hash `size` bytes at `addr`: an
-  // out-of-bounds read past the firmware area if unbounded. Validate the layout
-  // is well-formed + bounded FIRST:
-  //   * at least one module; per entry a non-zero chunk_size (the code_hash
-  //     chain modulus; the module need NOT be a whole number of chunks -- the
-  //     last chunk may be partial) and a non-zero size;
-  //   * modules ascending + non-overlapping, starting at/after the manifest
-  //     region (module addr/size keep their natural FLASH_BLOCK_SIZE build
-  //     alignment -- not enforced here, and NOT chunk-aligned);
-  //   * wholly inside [.., capacity] (the firmware-area size), overflow-safe.
-  // Shared by install (phase 1 pre-confirm, phase 2 pre-write) and boot
-  // (firmware_verify_tree), so a malformed/hostile manifest is rejected before
-  // any code read. Does NOT check chunk_size against the transport staging
-  // buffer -- that is a streaming concern the install path checks separately.
-  // Bound module_count BEFORE iterating entries[]: at boot this runs before
-  // firmware_manifest_authentic's own module_count<=BOOT_HEADER_MAX_MODULES
-  // check (which is inside firmware_verify_manifest, called after), and
-  // firmware_manifest_size()'s `module_count * sizeof(entry)` can wrap 32-bit
-  // for a crafted count -- so without this, iterating the raw count could read
-  // entries[] past the manifest region.
+  // The CUSTOM app size is zeroed for the fold, so a tampered on-flash size
+  // still authenticates -- bound every region before anything hashes or
+  // writes it. Bound module_count first: firmware_manifest_size can wrap.
+  // Alignment is not checked here (FLASH_BLOCK_SIZE is MCU-specific).
   if (manifest->module_count == 0 ||
       manifest->module_count > BOOT_HEADER_MAX_MODULES) {
     return secfalse;
@@ -290,25 +217,14 @@ secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
                                  const merkle_proof_node_t* proof,
                                  size_t proof_count,
                                  const merkle_proof_node_t* trusted_root) {
-  // 1. Authenticity: variant leaf (+ proof) == firmware_root. The variant leaf
-  //    covers the whole manifest -- incl. firmware_variant + the secmon's
-  //    code_hash -- so the secmon and manifest structure are ALWAYS founder-
-  //    authenticated. For the custom variant the app code_hash is zeroed in the
-  //    leaf (firmware_manifest_authentic), so the app is not founder-bound.
+  // 1. Authenticity: variant leaf (+ proof) == firmware_root.
   if (sectrue != firmware_manifest_authentic(manifest, manifest_len, proof,
                                              proof_count, trusted_root)) {
     return secfalse;
   }
 
-  // 2. Integrity: every module's code reduces to its directory entry's
-  // code_hash
-  //    (via the smart-hashing chain, chunked by the entry's own chunk_size).
-  //    For official variants that hash is founder-signed; for the custom app it
-  //    is the creator's (corruption check). No entry is skipped -- the custom
-  //    app is still verified against its own (creator) hash. A zero chunk_size
-  //    is handled safely by firmware_module_code_hash (n=0 -> digest !=
-  //    code_hash); the caller's firmware_manifest_layout_valid also rejects it
-  //    up front.
+  // 2. Integrity: every module hashes to its entry's code_hash (the custom app
+  //    against the creator's hash -- no entry is skipped).
   for (size_t i = 0; i < manifest->module_count; i++) {
     const firmware_manifest_entry_t* e = &manifest->entries[i];
     if (sectrue != firmware_verify_manifest_entry(e, firmware_base)) {
@@ -319,10 +235,7 @@ secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
   return sectrue;
 }
 
-// Generic Merkle leaf hash H(0x00 || data). The firmware variant leaf
-// (boot_header_variant_leaf) is the manifest-specific case; this is the plain
-// leaf, used for the nRF over its 44-byte coproc_slot_t -- the image hash is a
-// FIELD of that slot, not the hashed input here. See nrf_image_verify_in_tree.
+// Plain Merkle leaf H(0x00 || data); used for the 44-byte coproc_slot_t.
 void merkle_leaf_hash(const uint8_t* data, size_t len,
                       merkle_proof_node_t* out) {
   static const uint8_t prefix0[] = {0x00};
@@ -333,18 +246,8 @@ void merkle_leaf_hash(const uint8_t* data, size_t len,
   IMAGE_HASH_FINAL(&ctx, out->bytes);
 }
 
-// Fold a MODEL-tree slot value up to modelRoot.
-//
-// A slot value is the opaque byte string a co-processor (or anything else
-// sharing the model tree) is committed by -- for the nRF, the 44-byte
-// role-bound coproc_slot_t; this hashes it into a leaf and folds the co-path.
-// Nothing here knows what produced the value -- which is the point: every slot
-// folds identically, so adding a second co-processor needs no new fold.
-//
-// The caller must ALSO pin the value to the right device where that matters:
-// every model's slot hangs under the same modelRoot, so a passing fold proves
-// founder-commitment, not identity. Mirrors the firmware-variant fold
-// (firmware_manifest_authentic), one tree level up.
+// Fold a model-tree slot value up to modelRoot. Proves founder commitment
+// only; identity (model, kind, index) must be inside the value itself.
 secbool boot_header_verify_slot(const uint8_t* slot_value, size_t slot_len,
                                 const merkle_proof_node_t* proof,
                                 size_t proof_count,
@@ -357,9 +260,8 @@ secbool boot_header_verify_slot(const uint8_t* slot_value, size_t slot_len,
   for (size_t i = 0; i < proof_count; i++) {
     boot_header_internal_node(&node, &proof[i], &node);
   }
-  // ONE memcmp, not double-checked and not FIH_CALL'd -- and on T3W1 this is
-  // the only founder check the nRF image gets. A single glitched comparison
-  // here accepts an image the fold rejects.
+  // FIH: a single, unhardened memcmp -- on T3W1 the only founder check the
+  // nRF image gets.
   return (memcmp(node.bytes, trusted_model_root->bytes, sizeof(node.bytes)) ==
           0)
              ? sectrue
@@ -367,7 +269,6 @@ secbool boot_header_verify_slot(const uint8_t* slot_value, size_t slot_len,
 }
 
 uint8_t fw_variant_to_fw_type(fw_variant_sec_t variant) {
-  // The canonical small value the storage KDF and the legacy scheme share.
   // INVALID and NONE narrow to FW_VARIANT_NONE: an unusable variant must not
   // borrow another domain's salt.
   switch (variant) {
@@ -385,22 +286,10 @@ uint8_t fw_variant_to_fw_type(fw_variant_sec_t variant) {
 }
 
 secbool fw_variant_is_official(fw_variant_sec_t variant) {
-  // Positive allow-list; custom / none / unknown / INVALID yield secfalse.
-  //
-  // What this guarantees is the FAILURE DIRECTION: only an exact match on a
-  // listed codeword can produce sectrue, every caller tests `== sectrue`, and
-  // the codewords are >= 16 bit flips apart -- so a corrupted variant decodes
-  // to secfalse, never to "official".
-  //
-  // It does NOT guarantee the generated code, and the source cannot. `|` is
-  // written rather than `||` to keep every comparison live, but for T3W1
-  // (GCC 13.3, thumbv8m) the emitted form is `cmp; it ne; cmpne` -- the second
-  // comparison is predicated off when the first matches, so short-circuiting is
-  // back; `* sectrue` becomes `negs`+`and`, and in fw_variant_is_custom a plain
-  // conditional move of the literal. Checked, not assumed: there are no
-  // BRANCHES in any of the three, but that is this compiler's choice. Do not
-  // cite these as fault-hardened -- the one real double check on this value is
-  // the unlock gate in wf_firmware_update_pq.c.
+  // Positive allow-list: only an exact codeword match yields sectrue, so a
+  // corrupted variant fails toward restricted. `|` keeps every compare live in
+  // source, but GCC still predicates them -- not fault-hardened; the real
+  // double check is the unlock gate in wf_firmware_update_pq.c.
   return ((variant == FW_VARIANT_SEC_UNIVERSAL) |
           (variant == FW_VARIANT_SEC_BITCOIN_ONLY) |
           (variant == FW_VARIANT_SEC_PRODTEST)) *
@@ -413,8 +302,8 @@ secbool fw_variant_is_custom(fw_variant_sec_t variant) {
 }
 
 secbool fw_variant_is_provisioned(fw_variant_sec_t variant) {
-  // Positive allow-list over the real variants; NONE and INVALID yield
-  // secfalse. Failure direction and codegen caveat as above.
+  // NONE and INVALID yield secfalse. Failure direction and codegen caveat as
+  // above.
   return ((variant == FW_VARIANT_SEC_CUSTOM) |
           (variant == FW_VARIANT_SEC_UNIVERSAL) |
           (variant == FW_VARIANT_SEC_BITCOIN_ONLY) |
@@ -422,15 +311,9 @@ secbool fw_variant_is_provisioned(fw_variant_sec_t variant) {
          sectrue;
 }
 
-// Display identity for a hardened firmware variant. ONE definition shared by
-// the binaries in sec/: the secmon for the INSTALLED image
-// (firmware_get_vendor) and the coreapp for an OFFERED one
-// (check_firmware_header). The bootloader keeps its own tree_vendor_str -- it
-// cannot link this -- so the two must agree. So the string the user confirms
-// before rebooting is the string the device reports afterwards.
-//
-// FIH: assume UNSAFE. Only a POSITIVE custom == secfalse AND a known official
-// variant name a trusted vendor; a glitch or an unknown variant stays UNSAFE.
+// Shared by the secmon (installed image) and the coreapp (offered image); must
+// agree with the bootloader's tree_vendor_str.
+// FIH: assume UNSAFE unless a positive match names a trusted vendor.
 const char* firmware_vendor_str(fw_variant_sec_t variant) {
   if (fw_variant_is_custom(variant) != secfalse) {
     return "UNSAFE, DO NOT USE!";
@@ -449,11 +332,8 @@ const char* firmware_vendor_str(fw_variant_sec_t variant) {
 }
 
 // --- Interaction-less upgrade consent -------------------------------------
-// Lives here rather than in boot_header.c because it is pure layout + hash math
-// (no keys, no flash), and because BOTH sides of the consent handshake -- the
-// bootloader from a full header, firmware from just the prefix -- must compute
-// bit-identical results. That is exactly what this file's cross-validation
-// harness exists to prove.
+// Both sides (bootloader from a full header, firmware from just the prefix)
+// must compute bit-identical results; the harness checks that.
 
 secbool boot_header_prefix_extent(const uint8_t* data, size_t len,
                                   size_t* out_extent) {
@@ -468,8 +348,7 @@ secbool boot_header_prefix_extent(const uint8_t* data, size_t len,
   if (hdr->magic != BOOT_HEADER_MAGIC_TRZQ) {
     return secfalse;
   }
-  // Same floor boot_header_auth_get enforces: the authenticated part must cover
-  // at least the struct this build knows about.
+  // Same floor boot_header_auth_get enforces.
   if (hdr->auth_size < sizeof(boot_header_auth_t)) {
     return secfalse;
   }

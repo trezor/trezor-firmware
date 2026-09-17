@@ -1,47 +1,9 @@
 #!/usr/bin/env python3
-"""Prove a presigned release set still hangs together.
+"""Prove a presigned release set (bootloader, bundle, secmon pair, nRF) still agrees.
 
-A custom (unofficial) firmware is buildable without any founder key because the
-CUSTOM variant's Merkle leaf is code-independent: `authenticity_bytes()` zeroes
-the firmware version and the app entry's `size` + `code_hash`, so any creator's
-app folds to the one founder-signed custom slot. What the creator must be given
-is a *reference set*, and the pieces of it only work together:
-
-  * the signed bootloader   -- its header carries `firmware_root`, and its
-                               signature covers `modelRoot`. PER MODEL, since
-                               each model is its own tree.
-  * the bundle              -- `firmware_root` plus the custom co-path that a
-                               creator's image embeds. ONE file for every model,
-                               keyed by model id, at `models/bundle[_devel].json`.
-  * the secmon pair         -- secmon is founder-bound EVEN for custom (only the
-                               app is unbound), so its `code_hash` is inside the
-                               leaf; the veneer object must match the binary or
-                               the kernel secure-faults.
-  * the nRF image           -- its leaf hangs under the same signed `modelRoot`.
-
-Any pair of these can drift silently. Nothing fails at build time; the device
-refuses the install with a fold mismatch, or secure-faults on first boot. This
-check turns all of that into folds over committed inputs.
-
-Because one bundle covers every model, a PARTIAL promotion is expressible --
-model A's entry refreshed, model B's left behind, or an entry kept for a model
-that no longer uses the layout. Both directions are checked here, since that is
-the failure the shared file makes possible and a per-model layout would not.
-
-Checked, per model and per key set (devel and production):
-
-  1. the bootloader parses, and its signature verifies with THAT key set
-  2. bundle firmware_root         == bootloader header's firmware_root
-  3. bundle bootloader.signed_root == bootloader's modelRoot (what is signed)
-  4. the custom leaf recomputed from the COMMITTED secmon folds, through the
-     bundle's custom co-path, to firmware_root -- this is the check that binds
-     the secmon, and it needs the custom variant's authenticity manifest (see
-     `_custom_manifest`)
-  5. the nRF image hashes to the recorded image_hash and shares the modelRoot
-
-Exit 0 if everything present agrees, 1 on any disagreement. A set that has not
-been promoted yet is reported and skipped, not failed -- so this is safe to run
-in CI before any presigned release exists.
+Per model and key set: signature verifies, bundle roots match the header, the
+custom leaf recomputed from the committed secmon folds to firmware_root, the nRF
+hashes to the recorded image_hash. Not-yet-promoted sets are skipped, not failed.
 """
 
 from __future__ import annotations
@@ -59,10 +21,7 @@ from trezorlib.merkle_tree import evaluate_proof
 from . import firmware_module, nrf_tree
 from .common import MODELS_DIR
 
-# A key set: the suffix its committed artifacts carry, and whether signatures
-# verify against the development keys. `_devel` matches the bootloader naming
-# and the `bootloader_devel` build feature; the secmon pair predates it and uses
-# `_DEV`, which is why the secmon names are spelled out rather than derived.
+# Per key set: committed-artifact suffix, dev keys?, secmon pair (named `_DEV`).
 KEY_SETS: dict[str, dict[str, Any]] = {
     "production": {
         "suffix": "",
@@ -82,12 +41,7 @@ class Mismatch(Exception):
 
 
 def uses_pq_secure_boot(model_dir: Path) -> bool:
-    """Whether the model enables the Merkle-tree layout.
-
-    Same shape as `bootloader_hashes.model_uses_boot_ucb`: the model.toml
-    ``features`` list is authoritative, and it is line-scanned rather than
-    TOML-parsed to keep this runnable with nothing installed.
-    """
+    """Whether model.toml lists pq_secure_boot (line-scanned, no TOML dependency)."""
     model_toml = model_dir / "model.toml"
     if not model_toml.is_file():
         return False
@@ -113,15 +67,7 @@ def _short(value: bytes | str) -> str:
 
 
 def load_bundle(path: Path) -> dict[str, dict[str, Any]]:
-    """Read a bundle as a model -> body map, accepting either shape.
-
-    The committed bundle is cross-model (``{"models": {...}}``); a freshly cut
-    release directory writes one flat single-model bundle, which names its own
-    model. Both shapes are version-checked first.
-
-    A container this tool cannot speak is reported as a Mismatch rather than
-    raised, so one unreadable key set does not abandon the other.
-    """
+    """Read a bundle as a model -> body map; an unreadable container is a Mismatch."""
     raw = json.loads(path.read_text())
     try:
         return firmware_module.container_models(raw, path)
@@ -146,24 +92,14 @@ def _custom_entry(body: dict[str, Any], model: str) -> dict[str, Any]:
 
 
 def _custom_manifest(entry: dict[str, Any]) -> bytes | None:
-    """The custom variant's authenticity manifest, if the bundle carries it.
-
-    `leaf` + `proof` alone cannot bind the secmon: recomputing the leaf needs
-    the manifest (module count, and each entry's type / flags / addr /
-    chunk_size, plus the secmon's real size and code_hash). Storing those bytes
-    is what makes the committed set self-checking -- and it is the same template
-    a presigned custom build fills in, so it earns its place twice.
-    """
+    """The custom variant's authenticity manifest, if recorded (needed to
+    recompute the leaf and so bind the secmon)."""
     raw = entry.get("authenticity_manifest")
     return bytes.fromhex(raw) if raw else None
 
 
 def detect_key_set(bootloader: Path) -> str | None:
-    """Which key set signed this bootloader, or None if neither did.
-
-    A release directory does not record which keys were used, and guessing
-    wrong is exactly the mistake worth catching, so read it off the signature.
-    """
+    """Which key set signed this bootloader (read off the signature), or None."""
     if not bootloader.is_file():
         return None
     try:
@@ -198,9 +134,7 @@ def check_model(
 
     boot = BootableImage.parse(bl_path.read_bytes())
 
-    # 1. the signature must verify against THIS key set, not merely against one
-    #    of them -- a production bundle beside a devel-signed bootloader is the
-    #    mistake that puts the wrong founder keys on a device.
+    # 1. the signature must verify against THIS key set, not merely one of them.
     try:
         boot.verify(dev_keys=spec["dev_keys"])
     except Exception as e:
@@ -292,8 +226,7 @@ def check_model(
             f"    custom co-path folds to firmware_root ({len(custom['proof'])} nodes)"
         )
 
-    # 5. the nRF image, under the same signed modelRoot. Addressed by its
-    #    (kind, index) slot -- the routing tuple, not an authority claim.
+    # 5. the nRF image, under the same signed modelRoot.
     nrf = firmware_module.container_coprocessor(body, "nrf", 0)
     if not nrf:
         out.append("    SKIP  nRF: no nRF co-processor entry for this model")
@@ -303,8 +236,6 @@ def check_model(
             f"the nRF entry names modelRoot {_short(nrf['model_root'])}, but the "
             f"bootloader signs {_short(model_root)}"
         )
-    # The image's own TLV vs the model the bootloader is signed for. Both are
-    # recorded, so disagreement is visible here rather than at install time.
     if nrf.get("image_model_id") not in (None, model):
         raise Mismatch(
             f"the nRF entry under {model} names image_model_id {nrf['image_model_id']}"
@@ -313,12 +244,7 @@ def check_model(
     if not nrf_path.is_file():
         out.append(f"    SKIP  nRF: {nrf['file']} not found beside the set")
         return out
-    # Presence is not enough. On a PQ-NATIVE model signing rewrites the image --
-    # founder signature and co-path into its own TLVs, sigmask and monotonic
-    # stamped from the header -- and the entry's image_hash describes the SIGNED
-    # file. A promote that forgot to carry it over leaves the build's unsigned
-    # output here, which folds to nothing and which no later step would notice:
-    # the same silent shape the secmon pair already has a check for.
+    # image_hash describes the SIGNED file (PQ-native signing rewrites the image).
     recorded = nrf.get("image_hash")
     if recorded is None:
         out.append(
@@ -326,10 +252,7 @@ def check_model(
             "image_hash to check it against"
         )
         return out
-    # Recomputed over the protected region, not read back from TLV 0x10: the
-    # TLV is the image's own claim about itself, so an edited image that
-    # re-stamped it would still agree with itself. This range is the one the
-    # founder leaf is built over.
+    # Recomputed over the protected region, not read back from TLV 0x10.
     try:
         actual = nrf_tree.mcuboot_image_hash(nrf_path.read_bytes())
     except ValueError as e:
@@ -363,8 +286,7 @@ def run(key_set: str, release_dir: Path | None, only: str | None) -> tuple[bool,
         return True, True
 
     expected = tree_models()
-    # The shared file makes a partial promotion expressible, so say so in both
-    # directions rather than only checking what the file happens to contain.
+    # A partial promotion is expressible; check both directions.
     if only is None:
         for missing in sorted(set(expected) - set(models)):
             print(
@@ -386,14 +308,11 @@ def run(key_set: str, release_dir: Path | None, only: str | None) -> tuple[bool,
             continue
         print(f"  {model}")
         if release_dir is not None:
-            # The container names its own bootloader, so this stops assuming.
             bl_path = release_dir / models[model]["bootloader"]["file"]
             nrf_dir = release_dir
         else:
             suffix = KEY_SETS[key_set]["suffix"]
-            # Promotion replaces the committed bootloader in place: signing
-            # rewrites the header and not the code, so one binary serves both as
-            # the presigned reference and as the next release's input.
+            # Promotion replaces the committed bootloader in place.
             bl_path = (
                 MODELS_DIR / model / "bootloaders" / f"bootloader_{model}{suffix}.bin"
             )
@@ -434,7 +353,7 @@ def main() -> int:
         return 0
 
     if args.from_release is not None:
-        # Runs BEFORE any container is read, so it uses the writer's name.
+        # No container read yet, so use the writer's name.
         bl_name = firmware_module.CONTAINER_DEFAULT_BOOTLOADER
         detected = detect_key_set(args.from_release / bl_name)
         if detected is None:

@@ -1,16 +1,8 @@
 #!/usr/bin/env bash
-# Build + run the founder signature harness (pq_sig_test.c).
-#
-# End-to-end test of the nRF's own founder verification (mcuboot
-# boot/bootutil/src/image_pq.c) against REAL signatures: it generates its own key
-# pool, builds a PQ-native MCUboot image, signs modelRoot exactly as the founder
-# would, and checks pq_image_verify accepts it and rejects every tampering.
-#
-# Slow (~2 min): SLH-DSA keygen for 3 keypairs dominates.
-#
-# Unlike run_nrf.sh this needs the REAL crypto, and it deliberately uses MCUboot's
-# OWN vendored trezor-crypto rather than the monorepo's -- that is what the nRF
-# actually compiles, so a divergence between the two would show up here.
+# Build + run the founder signature harness (pq_sig_test.c): mcuboot's
+# pq_image_verify against real SLH-DSA + Ed25519 signatures. Slow (~2 min of
+# keygen). Links mcuboot's own vendored trezor-crypto, which is what the nRF
+# actually compiles.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -38,10 +30,8 @@ fi
 params=sphincs-sha2-128s
 
 echo "== compiling pq_sig_test =="
-# -w: the reference sphincsplus and MCUboot's FIH headers are noisy, and this
-# harness is not where we police their warnings.
-# --gc-sections: drops the curve25519 / rand paths ed25519-donna references but
-# this harness never calls.
+# -w: the reference sphincsplus and MCUboot's FIH headers are noisy.
+# --gc-sections: drops ed25519-donna's curve25519 / rand paths, never called here.
 gcc -O2 -w \
     -DPQ_HOST_TEST -DPARAMS="$params" -DMODEL_IDENTIFIER=0x31573354 \
     -ffunction-sections -fdata-sections \

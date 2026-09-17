@@ -1,20 +1,10 @@
 /*
  * Shims shared by the fw_merkle harnesses.
  *
- * The harnesses compile the REAL device sources (boot_header_merkle.c,
- * nrf_image.c) against these instead of the embedded include tree, so what
- * is tested is the shipping implementation rather than a copy of it. That is
- * why the types and IMAGE_HASH_* macros are minimal stand-ins and the hash is a
- * host SHA-256: only the backend changes, never the logic.
- *
- * Delivered to those sources with -include on the command line (see run.sh /
- * run_nrf.sh), which is what lets them keep their normal #include block for the
- * device build. Defining BOOT_HEADER_MERKLE_SHIMMED here rather than passing -D
- * keeps the two in one place.
- *
- * Previously duplicated verbatim in both harnesses; the manifest structs had
- * drifted apart in comments only, but there was nothing stopping them drifting
- * in layout.
+ * The harnesses compile the real device sources (boot_header_merkle.c,
+ * nrf_image.c) against these stand-ins for the embedded include tree, with a
+ * host SHA-256 as the hash backend. Delivered with -include (see run*.sh) so
+ * the sources keep their normal #include block for the device build.
  */
 
 #pragma once
@@ -41,12 +31,8 @@ typedef struct {
   uint8_t bytes[32];
 } merkle_proof_node_t;
 
-/* --- boot header, mirroring sec/boot_header.h -----------------------------
- * Needed because boot_header_prefix_extent walks the auth part and the Merkle
- * proof. LAYOUT-CRITICAL: these must match the real structs field for field, or
- * the consent-digest cross-validation proves the wrong thing. consent_test.c
- * derives every offset it pokes from these types (offsetof/sizeof) rather than
- * hardcoding, so a change here follows through to the test automatically. */
+/* Boot header, mirroring sec/boot_header.h. Must match the real structs field
+ * for field; consent_test.c derives every offset it pokes from these types. */
 #define BOOT_HEADER_MAGIC_TRZQ 0x515A5254 /* 'TRZQ' */
 #define BOOT_HEADER_MERKLE_PROOF_MAXLEN (256)
 #define BOOT_HEADER_SIGNATURE_COUNT 2
@@ -88,10 +74,7 @@ typedef struct __attribute__((packed)) {
                        [BOOT_HEADER_PQ_SIGNATURE_LEN];
   uint8_t ec_signature[BOOT_HEADER_SIGNATURE_COUNT]
                       [BOOT_HEADER_EC_SIGNATURE_LEN];
-  /* fw_variant_sec_t on device: a 32-bit RM(1,5) codeword, NOT a byte plus
-   * padding. Same four bytes either way, so nothing here moved -- but a shim
-   * that types it narrowly would let a host test set a value the device reads
-   * as INVALID. */
+  /* fw_variant_sec_t on device: a 32-bit RM(1,5) codeword, not a byte */
   uint32_t firmware_type;
 } boot_header_unauth_t;
 
@@ -111,12 +94,9 @@ static inline size_t boot_header_merkle_proof_size(
 #define FW_VARIANT_BITCOIN_ONLY 3
 #define FW_VARIANT_PRODTEST 4
 
-/* Hardened variant codewords -- what the manifest field and the boot header's
- * firmware_type carry. Mirrors FW_VARIANT_SEC_* in sec/boot_header.h; the
- * small values above survive only as the storage-KDF / legacy form. Keeping
- * both here is the point of the harness: it cross-validates the real
- * on-device math against Python, so a divergence in these constants shows up
- * as a fold mismatch rather than on a device. */
+/* Hardened variant codewords carried by the manifest field and the boot
+ * header's firmware_type; mirrors FW_VARIANT_SEC_* in sec/boot_header.h. The
+ * small values above are only the storage-KDF / legacy form. */
 typedef uint32_t fw_variant_sec_t;
 #define FW_VARIANT_SEC_INVALID 0x00000000U
 #define FW_VARIANT_SEC_NONE 0xCCCCCCCCU
@@ -132,7 +112,7 @@ typedef struct __attribute__((packed)) {
   uint32_t module_type;
   uint32_t flags;
   uint32_t addr;
-  uint32_t chunk_size; /* per-module smart-hashing chunk size (before size) */
+  uint32_t chunk_size; /* smart-hashing chunk size */
   uint32_t size;
   merkle_proof_node_t code_hash; /* smart-hashing chain over the module code */
 } firmware_manifest_entry_t;
@@ -146,22 +126,15 @@ typedef struct __attribute__((packed)) {
   firmware_manifest_entry_t entries[];
 } firmware_manifest_t;
 
-// Same wrap as the device's copy in sec/boot_header.h: module_count is
-// untrusted and size_t is 32-bit there, so it must be bounded before this is
-// trusted. Harmless in the harness (64-bit host, vectors are well-formed), kept
-// identical so the two do not drift.
+/* Same arithmetic as sec/boot_header.h: module_count is untrusted there, so
+ * keep the two identical. */
 static inline size_t firmware_manifest_size(const firmware_manifest_t* m) {
   return sizeof(firmware_manifest_t) +
          (size_t)m->module_count * sizeof(firmware_manifest_entry_t);
 }
 
-/* the real on-device algorithm, verbatim (we supply the shims above); the
- * SHIMMED marker is defined once at the top of this file */
-
-/* Declarations for the sources the harness links instead of textually
- * including. The public API normally comes from sec/boot_header.h, which cannot
- * be included here; these mirror it, plus the internal points the harness
- * compares directly. */
+/* Mirrors of the sec/boot_header.h API the harnesses link against, plus the
+ * internal points they compare directly. */
 secbool firmware_verify_manifest(const firmware_manifest_t* manifest,
                                  size_t manifest_len, uintptr_t firmware_base,
                                  const merkle_proof_node_t* proof,

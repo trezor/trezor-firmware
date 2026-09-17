@@ -15,8 +15,8 @@
 #define FIX_VERSION_PATCH 0
 #define FIX_VERSION_BUILD 0
 
-// Minimum bootloader version a device must ALREADY be running for this one to
-// install over it. 0.0.0.0 means no floor.
+// Minimum installed bootloader version this one may install over; 0.0.0.0 =
+// no floor.
 #define MIN_PREV_VERSION_MAJOR 0
 #define MIN_PREV_VERSION_MINOR 0
 #define MIN_PREV_VERSION_PATCH 0

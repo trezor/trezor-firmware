@@ -16,30 +16,18 @@ async def install_upgrade(firmware_header: AnyBytes) -> AnyBytes:
     from trezor import TR, utils, wire
     from trezor.ui.layouts import confirm_firmware_update
 
-    # check and parse received firmware header
-    #
-    # The payload is layout-specific -- a vendor+image header pair on the legacy
-    # scheme, the boot header prefix plus the firmware manifest on the Merkle-tree
-    # one -- but check_firmware_header normalises both to the same four fields, so
-    # everything below is scheme-agnostic. In particular `hdr.hash` is whatever
-    # the bootloader will recompute and compare before installing without asking
-    # again, and `hdr.vendor` is the identity that must not change (a change would
-    # cross a storage domain and erase the seed, so we refuse it here rather than
-    # let the bootloader fall back to prompting).
+    # check and parse received firmware header (layout-specific payload;
+    # check_firmware_header normalises both schemes to the same fields)
     try:
         hdr = utils.check_firmware_header(firmware_header)
     except Exception:
         raise wire.DataError("Invalid firmware header.")
 
-    # A vendor (variant) change crosses a storage domain, so it would erase the
-    # seed. Refusing here keeps that decision on the bootloader's confirm screen,
-    # which is the only place the "SEED WILL BE ERASED!" warning is shown.
+    # vendor must be the same: a change crosses a storage domain and erases the seed
     if hdr.vendor != utils.firmware_vendor():
         raise wire.DataError("Different firmware vendor.")
 
-    # Not an upgrade. The authoritative anti-rollback axis is the boot header's
-    # monotonic_version, enforced by the bootloader and the boardloader; this is
-    # the friendlier early rejection.
+    # firmware must be newer (real anti-rollback is the boot header's monotonic_version)
     if hdr.version <= utils.VERSION:
         raise wire.DataError("Not a firmware upgrade.")
 
@@ -68,14 +56,10 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
     # For convenience, we block unofficial firmwares from jumping to bootloader
     # this way, so that the user doesn't get mysterious "install failed" errors.
     # (It would be somewhat nicer if this was a compile-time flag, but oh well.)
-    # Any UNSAFE-prefixed vendor ("UNSAFE, DO NOT USE!" for custom images,
-    # "UNSAFE, FACTORY TEST ONLY" for prodtest) is not a field-official image.
+    # any UNSAFE-prefixed vendor (custom, prodtest) is not an official image
     is_official = not utils.firmware_vendor().startswith("UNSAFE")
-    # The two image layouts identify a release differently, so they travel in
-    # separate fields: `firmware_preamble` (Merkle tree) or `firmware_header`
-    # (legacy). Take whichever the host sent -- check_firmware_header parses only
-    # the layout this build actually uses, so a host that sends the wrong one gets
-    # a clean "Invalid firmware header." rather than a confusing install failure.
+    # firmware_preamble (Merkle tree) or firmware_header (legacy);
+    # check_firmware_header accepts only this build's layout
     offered = (
         msg.firmware_preamble
         if msg.firmware_preamble is not None

@@ -285,19 +285,15 @@ class BootHeaderUnauth(SanityCheckedStruct):
 
     # fmt: off
     SUBCON = c.Struct(
-        # Merkle proof (the BOOTLOADER's own co-path in the founder bootloader tree)
+        # Merkle proof (the bootloader's own co-path)
         "merkle_proof" / c.PrefixedArray(c.Int32ul, c.Bytes(32)),
 
         # Signatures
         "slh_signatures" / c.Bytes(7856)[2],
         "ec_signatures" / c.Bytes(64)[2],
 
-        # Other fields that are not part of the signature. The FIRMWARE Merkle
-        # proof is NOT here: in pq_secure_boot it lives in the firmware image's
-        # manifest region (firmware_manifest_proof_t), so this write-protected
-        # header only carries the storage-domain identity (firmware_type). Future
-        # unauth fields are appended AFTER this, bounded by the FixedSized unauth
-        # region (see BootableImage), so older bins/parsers stay compatible.
+        # Other fields that are not part of the signature. Future unauth fields
+        # go after this one, bounded by the FixedSized region in BootableImage.
         "firmware_type" / c.Int32ul,
     )
     # fmt: on
@@ -318,9 +314,7 @@ class BootableImage(SanityCheckedStruct):
 
     SUBCON = c.Struct(
         "header" / BootHeader.SUBCON,
-        # The unauth part occupies exactly header_len - auth_len bytes. Bounding it
-        # to that region locates the code at header_len regardless of which
-        # (future, optional) unauth fields a given bin carries.
+        # bounded so the code sits at header_len whatever unauth fields a bin carries
         "unauth"
         / c.FixedSized(
             c.this.header.header_len - c.this.header.auth_len,
@@ -399,17 +393,8 @@ class BootableImage(SanityCheckedStruct):
         return models.ROOT_ED25519_KEYS
 
     def verify(self, dev_keys: bool = False) -> None:
-        """Verify the boot header's hybrid founder signatures.
-
-        Both an SLH-DSA and an Ed25519 signature per selected key, over the
-        Merkle root this header folds to -- so a valid signature also pins the
-        header's own co-path, and with it `firmware_root`.
-
-        Lives on the public class, not in _internal, because verification is
-        something a HOST does: trezorctl checks a release before uploading it.
-        Signing stays in _internal, which is why only that side holds private
-        keys.
-        """
+        """Verify the hybrid (SLH-DSA + Ed25519) founder signatures over the Merkle
+        root this header folds to."""
         digest = self.merkle_root()
 
         hash_fn = self.get_hash_params().hash_function

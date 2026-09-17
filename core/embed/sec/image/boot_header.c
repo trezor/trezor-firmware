@@ -31,9 +31,8 @@
 #include <../vendor/sphincsplus/ref/api.h>
 #include <ed25519-donna/ed25519.h>
 
-// fw_variant_t shares the vendor_fw_type_t vocabulary (legacy vendor header /
-// model vendorheader JSONs) so a variant maps to the same firmware_type byte in
-// both schemes. Keep these in sync.
+// fw_variant_t must match vendor_fw_type_t so a variant maps to the same
+// firmware_type byte in both schemes.
 _Static_assert((int)FW_VARIANT_NONE == (int)VENDOR_FW_TYPE_RESERVED,
                "fw variant");
 _Static_assert((int)FW_VARIANT_CUSTOM == (int)VENDOR_FW_TYPE_CUSTOM,

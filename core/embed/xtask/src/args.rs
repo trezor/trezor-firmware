@@ -151,8 +151,7 @@ pub enum Cmd {
     Upload(UploadArgs),
     /// Combine multiple firmware projects into a single binary for flashing
     Combine(CombineArgs),
-    /// Build a complete pq_secure release: every variant, folded into one
-    /// signed founder tree
+    /// Build a complete pq_secure release: every variant of every tree model
     Release(ReleaseArgs),
     /// Print current version of specified project
     PrintVersion(PrintVersionArgs),
@@ -175,9 +174,8 @@ pub struct BuildArgs {
     #[arg(long, short = 'p')]
     pub preset: Option<String>,
 
-    /// Which bootloader binary a pq_secure release folds its firmware_root
-    /// into. The bootloader is never built implicitly; run `xtask build
-    /// bootloader` when you want a fresh one folded in.
+    /// Which existing bootloader binary a pq_secure release folds its
+    /// firmware_root into; the bootloader is never built implicitly
     #[arg(long, value_name = "SOURCE", default_value = "auto")]
     pub bootloader: BootloaderSource,
 
@@ -191,28 +189,18 @@ pub struct ReleaseArgs {
     #[arg(long, short = 'p')]
     pub preset: Option<String>,
 
-    /// Which bootloader binary a pq_secure release folds its firmware_root
-    /// into. The bootloader is never built implicitly; run `xtask build
-    /// bootloader` when you want a fresh one folded in.
+    /// Which existing bootloader binary a pq_secure release folds its
+    /// firmware_root into; the bootloader is never built implicitly
     #[arg(long, value_name = "SOURCE", default_value = "auto")]
     pub bootloader: BootloaderSource,
 
-    /// Copy the cut release into the tree as the committed presigned reference:
-    /// the cross-model bundle, each model's signed bootloader, the secmon pair
-    /// and the signed nRF image. They are copied together because a bundle only
-    /// folds against the artifacts it was signed over. The nRF lands under its
-    /// signed name, beside the `-bare` build output the next release stages.
+    /// Commit the cut release under models/ as the presigned reference set
+    /// (bundle, signed bootloaders, secmon pair, signed nRF image)
     #[arg(long)]
     pub promote: bool,
 
-    /// Which key slots sign this release, as a bitmask (e.g. 0x03 for slots 0
-    /// and 1).
-    ///
-    /// AUTHENTICATED: `sigmask` sits inside the boot header's signed part, so
-    /// it is committed while the release is PREPARED -- before any leaf exists
-    /// and before anyone holds a key. A founder ceremony signing with a
-    /// selection other than the development one has to say so here; omitted,
-    /// the signer keeps its development default.
+    /// Key slots that sign this release, as a bitmask (e.g. 0x03 for slots 0
+    /// and 1); authenticated, so fixed at prepare time
     #[arg(long, value_name = "MASK", value_parser = parse_sigmask)]
     pub sigmask: Option<u8>,
 
@@ -220,16 +208,10 @@ pub struct ReleaseArgs {
     pub options: BuildOptions,
 }
 
-/// Accepts the bitmask in whichever base the ceremony writes it -- `0x03`,
-/// `0b11` or `3` all name the same two slots.
-///
-/// The shape is checked here so a bad selection costs nothing: a release builds
-/// every variant before it signs, and finding out at the signer would waste all
-/// of it. The signer checks again -- it is the one the ceremony drives directly,
-/// and it knows things this side does not.
+/// Parses `0x03`, `0b11` or `3`; checked here so a bad mask does not cost a
+/// full build. The signer checks again.
 fn parse_sigmask(s: &str) -> Result<u8, String> {
-    /// BOOT_HEADER_SIGNATURE_COUNT: the header carries exactly this many
-    /// signatures, and the device requires every named slot to be used.
+    /// Must match BOOT_HEADER_SIGNATURE_COUNT.
     const SIGNATURE_COUNT: u32 = 2;
     /// _Static_assert(ARRAY_LENGTH(BOARDLOADER_PQ_KEYS) <= 3)
     const MAX_KEY_SLOTS: u32 = 3;
@@ -284,23 +266,13 @@ pub struct FlashArgs {
     #[arg(long, short = 'f', value_name = "FILE")]
     pub file: Option<PathBuf>,
 
-    /// Which variant of a pq_secure release to flash.
-    ///
-    /// Needed only when the release holds several firmware variants and the
-    /// project does not name one by itself. On `flash bootloader` it instead
-    /// says which variant to provision the device for; without it the
-    /// bootloader is flashed BARE, which is the state of a fresh device.
+    /// Which variant of a pq_secure release to flash; on `flash bootloader`,
+    /// which variant to provision for (default: bare)
     #[arg(long, value_name = "VARIANT")]
     pub variant: Option<Variant>,
 
-    /// Flash the combined image built by `xtask combine` -- the whole boot
-    /// chain, boardloader included, as one write.
-    ///
-    /// This is what puts a blank device into a working state. The image is
-    /// flashed exactly as combined, so what it contains (and, on a Merkle-tree
-    /// model, which variant it is provisioned for) was decided by `xtask
-    /// combine`. With `--file`, flashes that file as the combined image
-    /// instead of the one `xtask combine` wrote.
+    /// Flash the combined image built by `xtask combine`, which puts a blank
+    /// device into a working state. With `--file`, flashes that file instead
     #[arg(long)]
     pub combined: bool,
 }
@@ -340,11 +312,8 @@ pub struct UploadArgs {
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
 
-    /// Which variant of a pq_secure release to install.
-    ///
-    /// Unset lets trezorctl decide between the firmware variants: a release
-    /// holding one needs no choice, and otherwise it picks by the device's
-    /// bitcoin-only indicator. Uploading `prodtest` implies that variant.
+    /// Which variant of a pq_secure release to install; unset lets trezorctl
+    /// pick between firmware variants
     #[arg(long, value_name = "VARIANT")]
     pub variant: Option<Variant>,
 }
@@ -357,12 +326,8 @@ pub struct CombineArgs {
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
 
-    /// Which variant of a pq_secure release to combine.
-    ///
-    /// Needed only when the release holds several firmware variants and the
-    /// project does not name one by itself. On `combine bootloader` it instead
-    /// says which variant to provision the device for; without it the
-    /// bootloader is combined BARE.
+    /// Which variant of a pq_secure release to combine; on `combine
+    /// bootloader`, which variant to provision for (default: bare)
     #[arg(long, value_name = "VARIANT")]
     pub variant: Option<Variant>,
 }

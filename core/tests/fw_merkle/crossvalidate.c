@@ -1,20 +1,10 @@
 /*
  * Host cross-validation harness for the firmware Merkle root.
  *
- * Compiles the *real* on-device tree math (boot_header_merkle.c) with a host
- * SHA-256 and feeds it the exact manifest + module code produced by the Python
- * signer (tests/fw_merkle/gen_multivariant.py). It then asserts the C computes
- * the same firmware_root as Python and enforces the same accept/reject policy,
- * via the REAL device entry point firmware_verify_manifest.
- *
- * Build: run.sh, which is the authority -- it compiles the real
- * boot_header_merkle.c against shims.h:
- *   gcc -I tests/fw_merkle -I embed/sec/image -I embed/sec/image/inc \
- *       -I ../crypto -include tests/fw_merkle/shims.h \
- *       tests/fw_merkle/crossvalidate.c embed/sec/image/boot_header_merkle.c \
- *       ../crypto/sha2.c -o "$TMPDIR/crossvalidate"
- * The -include is load-bearing: without it the device sources pull the embedded
- * headers and do not build on a host.
+ * Compiles the real boot_header_merkle.c with a host SHA-256 and replays the
+ * FWM3 vector from gen_multivariant.py through firmware_verify_manifest,
+ * asserting the C computes the same firmware_root as Python and enforces the
+ * same accept/reject policy. Build: run.sh (the -include shims.h is required).
  */
 #include <stddef.h>
 #include <stdint.h>
@@ -24,25 +14,17 @@
 
 #include "sha2.h"
 
-/* --- shims the shared .h expects --------------------------------------- */
 #include "shims.h"
 
-
-/* --- harness ----------------------------------------------------------- */
 static void print_hex(const char *label, const uint8_t *b, size_t n) {
   printf("%s", label);
   for (size_t i = 0; i < n; i++) printf("%02x", b[i]);
   printf("\n");
 }
 
-/* Manifest-based multi-variant vector (FWM3): each variant is a full firmware
- * image [manifest | module code...], the variant leaf is H(0x00 || manifest),
- * and a real proof folds it to the founder firmware_root. Replays the REAL
- * device firmware_verify_manifest (authenticity fold + per-entry code_hash).
- * Layout: "FWM3" | founder_root(32) | variant_count(u32), then per variant:
- *   variant_id(u32) | image_len(u32) | image | manifest_len(u32) |
- *   proof_count(u32) | proof_node(32)...
- * then once: noapp_len(u32) | noapp_manifest | noapp_leaf(32). */
+/* FWM3 vector (layout in gen_multivariant.py): each variant is a full image
+ * [manifest | module code...], the leaf is H(0x00 || manifest), and a real
+ * proof folds it to the founder firmware_root. */
 static int run_manifest(const uint8_t *buf) {
   const uint8_t *p = buf + 4; /* skip "FWM3" */
   const uint8_t *founder_root = p;
@@ -55,7 +37,7 @@ static int run_manifest(const uint8_t *buf) {
 
   merkle_proof_node_t trusted;
   memcpy(trusted.bytes, founder_root, 32);
-  const char *names[] = {"none", "custom",       "universal",
+  const char *names[] = {"none",         "custom",   "universal",
                          "bitcoin-only", "prodtest", "CA"};
 
   int ok = 1;
@@ -72,7 +54,8 @@ static int run_manifest(const uint8_t *buf) {
     uint32_t alt_len;
     memcpy(&alt_len, p, 4);
     p += 4;
-    const uint8_t *alt_image = p; /* different-size/version custom app (or none) */
+    const uint8_t *alt_image =
+        p; /* different-size/version custom app (or none) */
     p += alt_len;
     memcpy(&proof_count, p, 4);
     p += 4;
@@ -102,18 +85,14 @@ static int run_manifest(const uint8_t *buf) {
 
     int is_custom = (variant_id == FW_VARIANT_CUSTOM);
 
-    /* 1) full verify: the variant leaf (for CUSTOM the app code_hash is zeroed
-     *    inside the fold) folds to the founder root, and every module's code
-     *    matches its manifest code_hash. Custom-ness is derived from the
-     *    manifest variant -- there is no caller flag. */
+    /* 1) full verify: the leaf folds to the founder root and every module's
+     *    code matches its manifest code_hash. */
     secbool r = firmware_verify_manifest(manifest, manifest_len, base, proof,
                                          proof_count, &trusted);
     int verify_ok = (r == sectrue);
 
-    /* 2) tamper an APP code byte WITHOUT updating its manifest code_hash -> the
-     *    integrity check must fail for EVERY variant, custom INCLUDED (the
-     *    custom app carries the creator's real hash and is corruption-checked;
-     *    this is the Mod 2 change from the old allow_custom skip). */
+    /* 2) app code byte flipped without updating its code_hash: rejected for
+     *    every variant, custom included. */
     int tamper_app_ok = 1;
     if (app_size > 0) {
       image[app_addr + app_size - 1] ^= 0xFF;
@@ -123,12 +102,8 @@ static int run_manifest(const uint8_t *buf) {
       image[app_addr + app_size - 1] ^= 0xFF;
     }
 
-    /* 3) SUBSTITUTE the app: change the app code AND rewrite its manifest
-     *    code_hash to match (a self-consistent DIFFERENT app). The CUSTOM slot
-     *    must still verify -- its app is founder-UNbound (the leaf zeroes it) --
-     *    while an OFFICIAL variant must now FAIL, because its app code_hash is
-     *    founder-signed and changing it breaks the fold. This is the core custom
-     *    property (accepts any integrity-consistent app; official does not). */
+    /* 3) self-consistent different app (code and code_hash rewritten): custom
+     *    must still verify (its app is founder-unbound), official must fail. */
     int substitute_ok = 1;
     if (app_size > 0) {
       firmware_manifest_t *m = (firmware_manifest_t *)image;
@@ -144,7 +119,7 @@ static int run_manifest(const uint8_t *buf) {
       uint8_t saved_hash[32];
       if (app_ch) memcpy(saved_hash, app_ch->bytes, 32);
       image[app_addr] ^= 0xFF; /* different app code */
-      if (app_ch) {            /* keep the manifest self-consistent (chain) */
+      if (app_ch) {            /* keep the manifest self-consistent */
         firmware_module_code_hash((uintptr_t)image, app_addr, app_size,
                                   app_e->chunk_size, app_ch->bytes);
       }
@@ -155,15 +130,14 @@ static int run_manifest(const uint8_t *buf) {
       if (app_ch) memcpy(app_ch->bytes, saved_hash, 32);
     }
 
-    /* 4) tamper a SECMON code byte -> reject for EVERY variant: the secure
-     *    monitor is always founder-bound, even for the custom slot. */
+    /* 4) secmon code byte flipped: rejected for every variant. */
     image[secmon_addr] ^= 0xFF;
     secbool r4 = firmware_verify_manifest(manifest, manifest_len, base, proof,
                                           proof_count, &trusted);
     int tamper_secmon_ok = (r4 == secfalse);
     image[secmon_addr] ^= 0xFF;
 
-    /* 5) tamper a proof node -> authenticity must fail. */
+    /* 5) proof node flipped: authenticity must fail. */
     int tamper_proof_ok = 1;
     if (proof_count > 0) {
       proof[0].bytes[0] ^= 0xFF;
@@ -173,10 +147,8 @@ static int run_manifest(const uint8_t *buf) {
       proof[0].bytes[0] ^= 0xFF;
     }
 
-    /* 6) app-agnostic slot (custom only): a DIFFERENT-size/version app (the alt
-     *    image) must fold to the SAME founder root + proof. Proves the custom
-     *    leaf zeroes the app version/size/code_hash, so it is not tied to one
-     *    specific creator build. */
+    /* 6) custom only: a different-size/version app folds to the same root
+     *    with the same proof. */
     int alt_ok = 1;
     if (alt_len > 0) {
       const firmware_manifest_t *am = (const firmware_manifest_t *)alt_image;
@@ -190,21 +162,22 @@ static int run_manifest(const uint8_t *buf) {
         "  variant %u (%-12s): verify %s, tamper-app %s, substitute-app %s, "
         "tamper-secmon %s, tamper-proof %s%s\n",
         variant_id, variant_id < 6 ? names[variant_id] : "?",
-        verify_ok ? "OK" : "FAIL", tamper_app_ok ? "rejected OK" : "ACCEPTED (bug!)",
-        substitute_ok ? (is_custom ? "accepted OK" : "rejected OK") : "WRONG (bug!)",
+        verify_ok ? "OK" : "FAIL",
+        tamper_app_ok ? "rejected OK" : "ACCEPTED (bug!)",
+        substitute_ok ? (is_custom ? "accepted OK" : "rejected OK")
+                      : "WRONG (bug!)",
         tamper_secmon_ok ? "rejected OK" : "ACCEPTED (bug!)",
         tamper_proof_ok ? "rejected OK" : "ACCEPTED (bug!)",
-        alt_len > 0 ? (alt_ok ? ", alt-app accepted OK" : ", alt-app REJECTED (bug!)")
-                    : "");
+        alt_len > 0
+            ? (alt_ok ? ", alt-app accepted OK" : ", alt-app REJECTED (bug!)")
+            : "");
     ok &= verify_ok & tamper_app_ok & substitute_ok & tamper_secmon_ok &
           tamper_proof_ok & alt_ok;
   }
 
-  /* A CUSTOM manifest with no APP entry: there is no app tail to zero, so both
-   * sides must hash it VERBATIM -- a mirror that zeroed firmware_version anyway
-   * would compute a different leaf here. Checked as a single-leaf tree (empty
-   * proof, root = the leaf the signer computed), so this asserts leaf equality
-   * and nothing about folding. */
+  /* A custom manifest with no APP entry is hashed verbatim on both sides.
+   * Checked as a single-leaf tree (empty proof, root = leaf), so this asserts
+   * leaf equality only. */
   {
     uint32_t noapp_len;
     memcpy(&noapp_len, p, 4);
@@ -223,32 +196,27 @@ static int run_manifest(const uint8_t *buf) {
     ok &= noapp_ok;
   }
 
-  /* The variant is a HARDENED codeword in both places it lives (the manifest
-   * field and the boot header's firmware_type), so there is no small<->wide
-   * conversion on the device -- only the narrowing for the storage KDF.
-   * Exercise the predicates plus the two things the codewords exist for:
-   * every pair is >= 16 bit flips apart, and a small fw_variant_t value is NOT
-   * a variant (so a legacy-shaped or truncated value cannot pass). */
+  /* Variant codeword predicates, plus the two properties the codewords exist
+   * for: pairwise distance >= 16 bit flips, and no small fw_variant_t value
+   * reads as a variant. */
   {
     const fw_variant_sec_t univ = FW_VARIANT_SEC_UNIVERSAL;
     const fw_variant_sec_t custom = FW_VARIANT_SEC_CUSTOM;
-    int h_ok = fw_variant_to_fw_type(univ) == FW_VARIANT_UNIVERSAL &&
-               fw_variant_to_fw_type(custom) == FW_VARIANT_CUSTOM &&
-               fw_variant_to_fw_type(FW_VARIANT_SEC_INVALID) ==
-                   FW_VARIANT_NONE &&
-               fw_variant_is_custom(custom) == sectrue &&
-               fw_variant_is_custom(univ) == secfalse &&
-               fw_variant_is_official(univ) == sectrue &&
-               fw_variant_is_official(custom) == secfalse &&
-               fw_variant_is_official(FW_VARIANT_SEC_NONE) == secfalse &&
-               fw_variant_is_official(FW_VARIANT_SEC_INVALID) == secfalse &&
-               fw_variant_is_provisioned(univ) == sectrue &&
-               fw_variant_is_provisioned(custom) == sectrue &&
-               fw_variant_is_provisioned(FW_VARIANT_SEC_NONE) == secfalse &&
-               fw_variant_is_provisioned(FW_VARIANT_SEC_INVALID) == secfalse;
+    int h_ok =
+        fw_variant_to_fw_type(univ) == FW_VARIANT_UNIVERSAL &&
+        fw_variant_to_fw_type(custom) == FW_VARIANT_CUSTOM &&
+        fw_variant_to_fw_type(FW_VARIANT_SEC_INVALID) == FW_VARIANT_NONE &&
+        fw_variant_is_custom(custom) == sectrue &&
+        fw_variant_is_custom(univ) == secfalse &&
+        fw_variant_is_official(univ) == sectrue &&
+        fw_variant_is_official(custom) == secfalse &&
+        fw_variant_is_official(FW_VARIANT_SEC_NONE) == secfalse &&
+        fw_variant_is_official(FW_VARIANT_SEC_INVALID) == secfalse &&
+        fw_variant_is_provisioned(univ) == sectrue &&
+        fw_variant_is_provisioned(custom) == sectrue &&
+        fw_variant_is_provisioned(FW_VARIANT_SEC_NONE) == secfalse &&
+        fw_variant_is_provisioned(FW_VARIANT_SEC_INVALID) == secfalse;
 
-    /* A small value must never read as a variant: that is what stops a
-     * truncated or legacy-shaped field from being accepted. */
     const uint32_t smalls[] = {FW_VARIANT_NONE, FW_VARIANT_CUSTOM,
                                FW_VARIANT_UNIVERSAL, FW_VARIANT_BITCOIN_ONLY,
                                FW_VARIANT_PRODTEST};
@@ -257,7 +225,7 @@ static int run_manifest(const uint8_t *buf) {
     }
 
     /* Minimum pairwise Hamming distance over the codeword set, INVALID
-     * included -- the property the whole scheme rests on. */
+     * included. */
     const fw_variant_sec_t cw[] = {
         FW_VARIANT_SEC_INVALID,      FW_VARIANT_SEC_NONE,
         FW_VARIANT_SEC_CUSTOM,       FW_VARIANT_SEC_UNIVERSAL,

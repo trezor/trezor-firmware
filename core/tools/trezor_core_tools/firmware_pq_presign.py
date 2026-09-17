@@ -1,32 +1,9 @@
 #!/usr/bin/env python3
 """Fold a custom firmware into an ALREADY-signed firmware_root. No keys.
 
-`firmware_pq_sign.py` cuts a new tree: it computes every variant's leaf, builds
-firmware_root over them, and re-signs the bootloader header. A custom
-(unofficial) build cannot do that -- it has no founder key -- and does not need
-to, because the CUSTOM variant's leaf is code-independent: the authenticity fold
-zeroes the firmware version and the app entry's `size` + `code_hash`, so any
-creator's app reaches the one founder-signed custom slot.
-
-So this tool does the keyless half of signing:
-
-  1. fill the manifest's code_hashes over the placed code (the build emits a
-     template with them zeroed),
-  2. recompute this image's custom leaf and CHECK it against the leaf the
-     committed bundle records -- the whole point, since a leaf that does not
-     match will not fold, and without this check that only surfaces as a
-     rejected install,
-  3. bake the committed co-path into the manifest region, so the image is
-     self-contained exactly as a signed one is.
-
-The bootloader is never touched: it already carries the signed firmware_root.
-
-What must match for step 2 to hold is everything the fold does NOT zero -- the
-module count, each entry's type / flags / addr / chunk_size, and the WHOLE
-secmon entry. The secmon is founder-bound even for custom, which is why a custom
-build has to embed the committed secmon rather than a freshly built one. When
-the leaf does not match, the diff is reported field by field instead of as a
-bare hash mismatch.
+The CUSTOM leaf is code-independent (the fold zeroes firmware version and the
+app entry's size + code_hash), so: fill code_hashes, check the leaf against the
+committed bundle, bake in the committed co-path. Bootloader untouched.
 """
 
 from __future__ import annotations
@@ -39,15 +16,8 @@ from pathlib import Path
 
 from trezor_core_tools import firmware_module
 
-# Manifest layout, mirroring trezorlib.firmware.pq_secure: a fixed header then
-# one entry per module. Used only to name the field that differs when a leaf
-# fails to match, so a creator is told WHICH input is wrong.
-# magic, variant, version, translations ROOT (a 32-byte hash, not a word), count.
-# Getting that width wrong is not a cosmetic error: it shortens the header by 28
-# bytes, so `module_count` is read from inside tr_root -- zero in practice -- and
-# the entry loop below never runs. The diagnostic then reports that no field
-# differs while an entry's code_hash is the only difference, which reads as an
-# impossibility instead of naming the secmon.
+# Manifest layout (mirrors trezorlib.firmware.pq_secure), used only to name the
+# differing field. translations_root is a 32-byte hash, not a word.
 _HEADER = struct.Struct("<4sII32sI")
 _ENTRY = struct.Struct("<IIIII32s")  # type, flags, addr, chunk_size, size, code_hash
 _MODULE_NAMES = {1: "secmon", 2: "app"}
@@ -99,9 +69,6 @@ def _describe_difference(mine: bytes, theirs: bytes) -> list[str]:
 def _custom_entry(bundle_path: Path, model: str | None) -> tuple[dict, str]:
     """The bundle's CUSTOM variant entry, from either bundle shape."""
     raw = json.loads(bundle_path.read_text())
-    # Version-checked, and keyed by the model each body names for itself -- the
-    # single-model case used to read that off the nRF block, which a model
-    # without a co-processor does not have.
     models = firmware_module.container_models(raw, bundle_path)
     if model is None:
         if len(models) != 1:
@@ -172,7 +139,7 @@ def main() -> int:
             "a fresh release"
         )
 
-    # 2. the check that makes this worth doing as a build step.
+    # 2. the leaf must match the committed one, or it will not fold.
     leaf = firmware_module.variant_leaf(manifest)
     if leaf != expected_leaf:
         mine = firmware_module.authenticity_manifest(manifest)

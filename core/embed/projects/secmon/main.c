@@ -162,9 +162,8 @@ static void secmon_panic(const systask_postmortem_t* pminfo) {
 extern uint32_t _secmon_size;
 #define SECMON_SIZE ((uint32_t)&_secmon_size)
 
-// Merkle-tree layout: the kernel+coreapp module code starts right after the
-// secmon module (no per-module header). _secmon_size spans the manifest region
-// plus the secmon code, i.e. exactly the offset to the kernel's vector table.
+// Merkle-tree layout: _secmon_size spans the manifest region plus the secmon
+// code, so the kernel's vector table follows directly.
 #define KERNEL_START (FIRMWARE_START + SECMON_SIZE)
 
 int main(void) {

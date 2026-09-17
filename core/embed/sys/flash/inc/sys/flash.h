@@ -50,10 +50,9 @@ extern const flash_area_t FIRMWARE_AREA;
 #ifdef USE_BOOT_UCB
 extern const flash_area_t BOOTUCB_AREA;
 extern const flash_area_t BOOTUPDATE_AREA;
-// Staging area for in-field bootloader updates (tail of the firmware area).
+// Staging area for boardloader-installed images (tail of the firmware area)
 extern const flash_area_t STAGING_AREA;
-// nRF OTA staging scratch, at the front of the firmware region, capped short of
-// STAGING_AREA (see flash.c).
+// nRF OTA staging scratch (front of the firmware area, clear of STAGING_AREA)
 extern const flash_area_t NRF_STAGING_AREA;
 #ifdef BOARDLOADER
 extern const flash_area_t NONBOARDLOADER_AREA;

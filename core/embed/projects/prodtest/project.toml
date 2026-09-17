@@ -49,11 +49,8 @@ uses = [
 
 # ELF sections to be included in the final binary.
 # The order of sections is important.
-# ".manifest" is the firmware manifest region at the image start in the
-# Merkle-tree layout (absent, thus a no-op, on legacy builds); in the tree layout
-# prodtest is just code committed directly by the manifest. ".vendorheader" and
-# ".header" are the legacy vendor + image headers (absent, thus no-ops, in the
-# tree layout).
+# ".manifest" exists only in the Merkle-tree layout, ".vendorheader"/".header"
+# only in the legacy one; absent sections are no-ops.
 elf_sections = [".manifest", ".vendorheader", ".header", ".flash", ".data"]
 
 secmon_body_sections   = [".secmon_header", ".flash", ".data"]

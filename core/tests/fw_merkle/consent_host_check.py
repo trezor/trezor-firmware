@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 """Host side of the consent-digest cross-validation.
 
-Reads the vector consent_test dumped straight out of the REAL device code and
-checks that trezorlib's preamble builder (trezorlib.firmware.pq_secure) -- the
-thing that will actually put bytes on the wire -- derives the same auth/proof
-boundary and the same digest.
-A disagreement here means a host would ask the user to confirm one release and the
-device would compute a different digest for it, so every interaction-less upgrade
-would be refused.
+Checks that trezorlib.firmware.pq_secure derives the same auth/proof boundary
+and the same digest as the device code (vector dumped by consent_test).
 """
 
 from __future__ import annotations
@@ -42,8 +37,7 @@ def main() -> int:
             fails += 1
 
     prefix = boot_header_prefix(header)
-    # The device stops the digest at auth_size + proof; anything the host includes
-    # beyond that (signatures, the rewritten firmware_type) would diverge.
+    # The device stops the digest at auth_size + proof, before the unauth part.
     auth_size = int.from_bytes(header[32:36], "little")
     node_count = int.from_bytes(header[auth_size : auth_size + 4], "little")
     ck(
@@ -58,7 +52,7 @@ def main() -> int:
     if got != want:
         print(f"    device: {want.hex()}\n    host:   {got.hex()}")
 
-    # The preamble the host puts on the wire must be exactly the preimage.
+    # The preamble put on the wire must be exactly the digest preimage.
     ck(
         "preamble == prefix || manifest",
         consent_preamble(header, manifest) == prefix + manifest,

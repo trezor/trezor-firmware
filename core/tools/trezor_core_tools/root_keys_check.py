@@ -1,27 +1,9 @@
 #!/usr/bin/env python3
 """Prove every copy of the root public keys still agrees.
 
-The root keys are ONE set for ALL models (the ceremony signs every model at
-once), but they necessarily exist in three places:
-
-  * trezorlib  python/src/trezorlib/firmware/models.py  ROOT_*      -- the signer
-  * STM        core/embed/sec/image/inc/sec/root_keys.h          -- the STM verifier
-  * nRF        <west>/bootloader/mcuboot .../image_validate.c       -- the nRF verifier
-
-The nRF copy cannot be avoided: MCUboot lives in its own repository and must build
-standalone, so it cannot include a monorepo header (the monorepo pins IT, and a
-pointer back would be a dependency cycle).
-
-A divergence between any two is INVISIBLE until a device refuses to boot: the
-signature is well-formed, just made by keys that verifier does not know. Worse, it
-can be asymmetric -- the STM accepts a bootloader the nRF then rejects, which on a
-BLE-only device costs the host link. Hence this check.
-
-Key ORDER matters as much as membership: the sigmask names keys by index, so a
-reordering invalidates every signature ever made while every set stays equal.
-
-Exit 0 if all three agree; 1 with a diff otherwise. Safe to run in CI; the nRF copy
-is skipped (not failed) when the west workspace is not checked out.
+Copies: trezorlib firmware/models.py (signer), sec/image/inc/sec/root_keys.h
+(STM), mcuboot image_validate.c (nRF, standalone repo). Order matters: the
+sigmask names keys by index. The nRF copy is skipped when not checked out.
 """
 
 from __future__ import annotations
@@ -42,12 +24,8 @@ REPO = MODELS_DIR.parents[2]  # core/embed/models -> repo root
 STM_HEADER = REPO / "core/embed/sec/image/inc/sec/root_keys.h"
 NRF_SOURCE = REPO / "nordic/bootloader/mcuboot/boot/bootutil/src/image_validate.c"
 
-# The co-processor's OWN legacy key pool -- a different set from the root keys, and
-# per model: these belong to that model's nRF. The STM mirrors them so it can
-# predict whether the nRF will accept an image before erasing its only slot
-# (nrf_image_legacy_accept_ok), which makes a drift here silently wrong in the worst
-# direction: the STM pushes, the nRF refuses, and on a BLE-only device the host
-# link is gone. Only models whose nRF uses the classic scheme have them.
+# Models whose nRF uses the classic scheme; the STM mirrors that per-model pool
+# to predict the nRF's verdict before pushing (nrf_image_legacy_accept_ok).
 LEGACY_MODELS = {"T3W1"}
 
 
@@ -76,16 +54,13 @@ def stm_pools(text: str) -> dict[str, list[str]]:
     ]
     out = {}
     for n in names:
-        # Whole-identifier match: "#define ROOT_SLH_DSA_KEYS" is a SUBSTRING of
-        # "#define ROOT_SLH_DSA_KEYS_DEV", which is defined first, so a plain
-        # str.index() silently reads the dev pool as the production one.
+        # Whole-identifier match: ROOT_SLH_DSA_KEYS is a prefix of ..._KEYS_DEV.
         m = re.search(rf"#define {re.escape(n)}\b", text)
         if m is None:
             out[n] = []
             continue
         i = m.start()
-        # the body runs to the next #define, or to the end of the macro block for
-        # the last one (hence the fallbacks, in order of preference)
+        # body runs to the next #define, else to the end of the macro block
         ends = [
             e
             for e in (
@@ -100,8 +75,7 @@ def stm_pools(text: str) -> dict[str, list[str]]:
 
 
 def nrf_pools(text: str) -> dict[str, list[str]]:
-    """The nRF's dev/production arrays. Its #ifndef MCUBOOT_PRODUCTION_KEY block is
-    the DEV pool and the #else block is production, so split on that."""
+    """The nRF's pools: #ifndef MCUBOOT_PRODUCTION_KEY is dev, #else production."""
     block = between(text, "#ifndef MCUBOOT_PRODUCTION_KEY", "#define PQ_KEY_N")
     dev, prod = block.split("#else", 1)
     return {
@@ -129,12 +103,8 @@ def legacy_stm_pools(text: str) -> dict[str, list[str]]:
 
 
 def legacy_nrf_pools(text: str) -> dict[str, list[str]]:
-    """MCUboot's BOOTLOADER_KEYS, dev and production.
-
-    They live under `#ifndef CONFIG_BOOT_PQ_SECURE_BOOT` -- the classic scheme --
-    with the dev pool in the `#ifndef MCUBOOT_PRODUCTION_KEY` arm and production in
-    the `#else`.
-    """
+    """MCUboot's classic BOOTLOADER_KEYS (under #ifndef CONFIG_BOOT_PQ_SECURE_BOOT),
+    dev in the #ifndef MCUBOOT_PRODUCTION_KEY arm, production in the #else."""
     i = text.index("#ifndef CONFIG_BOOT_PQ_SECURE_BOOT")
     block = text[i : text.index("#endif /* !CONFIG_BOOT_PQ_SECURE_BOOT */", i)]
     dev, prod = block.split("#else", 1)

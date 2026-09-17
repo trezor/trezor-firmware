@@ -1,28 +1,8 @@
 #!/usr/bin/env python3
-"""Sign a PREPARED release with development keys -- the ceremony's stand-in.
+"""Sign a PREPARED release with development keys (the ceremony's stand-in).
 
-This is the middle stage of the release flow, and the ONLY one that touches a
-key::
-
-    prepare   build every model, fold every tree, leave signatures zero
-    sign      32 bytes per model in, two hybrid signature pairs per model out
-    attach    patch those signatures into the prepared artifacts
-
-A real release replaces this stage with an airgapped ceremony. Everything the
-signer needs is already in the prepared container -- each model records the
-`modelRoot` its boot header commits to, and the header carries the `sigmask`
-naming the key slots -- so there is no separate request format to keep in step
-with the release. The container IS the request.
-
-What comes back is a signature set per model, which `firmware_pq_attach.py`
-patches in. Signatures land in UNAUTHENTICATED space (the boot header's unauth
-region, the nRF's unprotected TLVs), so attaching them changes no digest and
-cannot invalidate anything prepared earlier.
-
-The signing input is read from the prepared BOOTLOADER, not from the container's
-recorded value: the bootloader is what the device authenticates, so signing what
-it actually folds to removes any chance of signing a number that merely sits
-beside it. The two are cross-checked, and a disagreement is fatal.
+Reads each model's modelRoot from the prepared bootloader (cross-checked against
+the container) and writes a signature set for firmware_pq_attach.py.
 """
 
 from __future__ import annotations
@@ -41,8 +21,7 @@ def sign_release(bundle_path: Path, tree_dir: Path, out: Path) -> None:
 
     signatures: dict[str, dict] = {}
     for model, body in sorted(models.items()):
-        # A per-model release directory holds the members directly; a tree of
-        # them keys by model.
+        # A per-model release dir holds the members directly; a set keys by model.
         model_dir = tree_dir if "models" not in doc else tree_dir / model
         bl_path = model_dir / body["bootloader"]["file"]
         bl = firmware_headers.BootloaderV2Image.parse(bl_path.read_bytes())
@@ -63,11 +42,8 @@ def sign_release(bundle_path: Path, tree_dir: Path, out: Path) -> None:
                 f"inconsistent, re-prepare it"
             )
 
-        # `sign_with_devkeys` sets sigmask to the development selection. If
-        # prepare committed a DIFFERENT selection -- a production one -- that
-        # write moves an authenticated field and the digest with it, so the
-        # signature would not cover what was prepared. Caught here rather than
-        # discovered on a device.
+        # sign_with_devkeys sets sigmask; if prepare committed a different one
+        # the (authenticated) digest moves and the signature would not cover it.
         bl.sign_with_devkeys()
         if bl.merkle_root() != root:
             raise SystemExit(

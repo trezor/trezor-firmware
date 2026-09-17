@@ -128,37 +128,21 @@ typedef struct {
   fw_variant_sec_t variant; /**< hardened variant of the installed firmware */
   uint32_t version;        /**< firmware version (from kernel+coreapp module) */
   uintptr_t entry_address; /**< secmon code entry point (jump target) */
-  secbool is_official;     /**< sectrue ONLY if the kernel+coreapp matched the
-                                founder manifest. FIH: the field carries the safe
-                                default -- a zeroed/glitched struct reads secfalse
-                                (unofficial), never a spurious official. */
+  secbool is_official;     /**< sectrue only if the kernel+coreapp matched the
+                                founder manifest; zeroed reads secfalse (FIH) */
 } firmware_tree_info_t;
 
 /**
- * @brief Merkle-tree firmware verification (tree layout).
+ * @brief Verify the installed firmware tree against the boot header's
+ * firmware_root (manifest fold, variant pin, per-module code hashes).
  *
- * Walks the manifest's module directory (today secmon + kernel+coreapp, but the
- * count and roles come from the manifest, not from here) at the flash locations
- * it records, then verifies role-binding, authenticity (recomputed root ==
- * the firmware_root signed into this bootloader's own boot header) and
- * integrity (each module's code vs its chunk hashes). Replaces the legacy
- * vendor/image/ secmon-header verification. On success, fills `info` with the
- * firmware variant and the entry address (secmon code) to jump to.
- *
- * @return secbool -- sectrue iff the installed firmware tree is authentic.
+ * @return sectrue iff authentic; `info` is filled on success.
  */
 secbool firmware_verify_tree(firmware_tree_info_t *info);
 
 /**
- * @brief Vendor identity string for the tree layout (no vendor header).
- *
- * Returns "UNSAFE, DO NOT USE!" for a custom/unofficial image (is_official not
- * a positive sectrue), "UNSAFE, FACTORY TEST ONLY" for the founder-signed
- * prodtest variant, otherwise the official name for the variant ("Trezor" or
- * "Trezor Bitcoin-only"); an unknown variant also maps to UNSAFE. Shared by the
- * boot warning, intro, install confirm and Features vendor so all surfaces
- * agree. The returned pointer has static storage duration; `*out_len` receives
- * its length.
+ * @brief Vendor string for the tree layout (no vendor header); anything but
+ * a positive `is_official` yields the UNSAFE marker. Static storage.
  */
 const char *tree_vendor_str(fw_variant_sec_t variant, secbool is_official,
                             size_t *out_len);

@@ -133,20 +133,10 @@ static secbool is_manufacturing_mode(void) {
   unit_properties_init();
 
 #ifdef PQ_SECURE_BOOT
-  // Merkle-tree layout: there is no vendor header (so no
-  // VTRUST_ALLOW_PROVISIONING flag). The provisioning/factory image is the
-  // founder-signed prodtest variant; read that from the (write-protected,
-  // trusted) firmware_type the bootloader persisted into its own boot header.
-  // FIH: manufacturing mode disables touch + tamper enforcement, so require a
-  // POSITIVELY official prodtest variant -- anything else (custom, other
-  // variant, missing header, glitch) returns secfalse and stays in the
-  // fully-enforced state.
-  //
-  // The is_custom test is LOGICALLY redundant -- reaching the body already
-  // requires firmware_type == PRODTEST, which no custom codeword is -- and is
-  // kept on purpose: it is a second, independent COMPARISON of the same value,
-  // so a glitch in one comparison does not open manufacturing mode on its own.
-  // Do not simplify it away.
+  // Tree layout: manufacturing mode is the prodtest variant recorded in the
+  // write-protected boot header firmware_type.
+  // FIH: the is_custom test is redundant on purpose -- a second independent
+  // compare of the same value; do not simplify it away.
   const boot_header_auth_t *bl = boot_header_auth_get(BOOTLOADER_START);
   const boot_header_unauth_t *unauth =
       (bl != NULL) ? boot_header_unauth_get(bl) : NULL;
@@ -565,10 +555,7 @@ int bootloader_main(void) {
     boot_args_t args;
     bootargs_get_args(&args);
 
-    // Unprovisioning returns the device to the empty state it shipped in, so it
-    // takes the firmware and assets with it. A plain wipe erases the user's
-    // data and leaves the installed firmware bootable, which is what the
-    // wipe-code and PIN-attempt paths want.
+    // Unprovisioning erases the firmware too; a plain wipe keeps it bootable.
     const bool unprovision = (args.wipeinfo.unprovision == sectrue);
 
     if (unprovision) {
@@ -589,24 +576,13 @@ int bootloader_main(void) {
 
     if (unprovision) {
 #if defined(PQ_SECURE_BOOT) && defined(USE_BOOT_UCB)
-      // Erasing the firmware is what makes a LEGACY device read empty --
-      // `fw_check` looks for a valid vendor header in the firmware area. In the
-      // Merkle-tree layout it reads the boot header's firmware_type instead, so
-      // that byte has to be cleared too or the device would still claim to be
-      // provisioned, with its firmware merely missing.
-      //
-      // Staged and armed rather than written in place: the byte shares a flash
-      // page with the founder signatures, so editing it in place would mean
-      // reprogramming the page that authenticates the bootloader, and losing
-      // power midway would leave the device unbootable. The boardloader
-      // installs the cleared header on the reboot below.
+      // The tree layout reads "provisioned" from the boot header firmware_type,
+      // so clear it too (staged via the UCB; installed on the reboot below).
       if (sectrue != ucb_stage_clear_firmware_type()) {
         error_shutdown("Unprovision failed");
       }
 #endif
-      // Straight back to a normal boot, with no screen to acknowledge: the
-      // device is now empty, which is a state it can simply show, not an event
-      // to report. (It is also what installs the cleared boot header.)
+      // No wipe screen: an empty device is a state, not an event.
       reboot_device();
     }
 
@@ -623,11 +599,7 @@ int bootloader_main(void) {
 #endif
 
 #if defined(PQ_SECURE_BOOT) && defined(USE_SMP)
-  // Finish any interrupted coupled boot+nRF update BEFORE using the (BLE) host
-  // link: autonomously push a staged nRF image to the co-processor (a no-op on
-  // a normal boot). The push cannot run during a host connection on a BLE-only
-  // device (it reboots the nRF = the link), so it is deferred to here. See
-  // nrf_ota_resume_boot / nrf_staging.h.
+  // Push a staged nRF image before any BLE use (no-op on a normal boot).
   nrf_ota_resume_boot();
 #endif
 
@@ -657,21 +629,15 @@ int bootloader_main(void) {
       connect_to_host = sectrue;
       break;
     case BOOT_COMMAND_INSTALL_UPGRADE:
-      // Consent obtained in the FIRMWARE UI: firmware parsed what the host
-      // offered, asked the user, and rebooted here carrying the identity it
-      // confirmed. Firmware was therefore running when it set this, so its body
-      // was necessarily valid -- keep the strict gate. The pending hash in
-      // bootargs is the authorization, compared before anything is installed.
+      // Consent obtained in the firmware UI (hash in bootargs); firmware was
+      // running, so its body must still be valid.
       if (fw.firmware_present == sectrue) {
         auto_upgrade = sectrue;
       }
       break;
     case BOOT_COMMAND_CONTINUE_UPGRADE:
-      // The bootloader's own two-phase install: phase 1 armed the UCB and
-      // rebooted so the boardloader could install the new boot header. That
-      // swap can leave the installed firmware BODY invalid -- which is the
-      // whole point of phase 2 -- so a valid HEADER (a provisioned device) is
-      // all that can be required here.
+      // Phase 2 of the bootloader's own install: the firmware body may be
+      // invalid after the bootloader swap, so only a valid header is required.
       if (fw.header_present == sectrue) {
         auto_upgrade = sectrue;
       }
@@ -737,11 +703,7 @@ int bootloader_main(void) {
 #endif
 
     if (fw.header_present == sectrue) {
-      // Provisioned device (valid header). A pre-authorized update continues
-      // even if the firmware BODY is invalid/incomplete (mid-update, or
-      // invalidated by a bootloader update); otherwise show the bootloader
-      // menu. (Legacy also required firmware_present for the auto-update
-      // branch.)
+      // A pre-authorized update continues even with an invalid firmware body.
       if (auto_upgrade == sectrue) {
         result = workflow_auto_update(&fw);
       } else {

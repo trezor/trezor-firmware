@@ -30,7 +30,7 @@ sys.workspace = true
 asan = ["models/asan"]
 bootloader_devel = ["sec/bootloader_devel"]
 clippy = []
-# Merkle-tree layout: module header instead of the legacy vendor/image header.
+# Merkle-tree layout: code only, committed by the firmware manifest.
 pq_secure_boot = ["sec/pq_secure_boot"]
 emulator = ["sec/emulator"]
 dbg_console_swo = ["dbg_console", "sys/dbg_console_swo"]

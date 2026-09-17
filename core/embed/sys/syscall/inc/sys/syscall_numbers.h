@@ -58,9 +58,6 @@ typedef enum {
   SYSCALL_IPC_SEND,
 
 #ifndef PQ_SECURE_BOOT
-  // Legacy layout only: the firmware installs the bootloader it carries. Safe
-  // to renumber around, unlike the smcall table -- kernel and coreapp are
-  // always built together.
   SYSCALL_BOOT_IMAGE_CHECK,
   SYSCALL_BOOT_IMAGE_REPLACE,
 #endif
@@ -158,9 +155,7 @@ typedef enum {
   SYSCALL_BLE_GET_ENABLED,
 
 #ifndef PQ_SECURE_BOOT
-  // Legacy layout only -- the tree layout has the bootloader install the nRF.
-  // Safe to renumber around, unlike the smcall table: kernel and coreapp are
-  // always built together.
+  // Legacy layout only: the tree layout has the bootloader install the nRF.
   SYSCALL_NRF_UPDATE_REQUIRED,
   SYSCALL_NRF_UPDATE,
 #endif

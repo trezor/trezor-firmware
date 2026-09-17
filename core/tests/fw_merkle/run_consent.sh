@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
-# Build + run the interaction-less upgrade consent-digest cross-validation.
-#
-# Compiles the *real* on-device implementation (embed/sec/image/
-# boot_header_merkle.c) against a host SHA-256 and checks that the two views of
-# the same release agree: the BOOTLOADER's, computed from a full boot header in
-# flash, and FIRMWARE's, computed from just the prefix it receives over the wire.
-# Also pins the invariance that makes that possible -- the digest must not move
-# when the bootloader rewrites firmware_type while staging -- and that it still
-# changes with everything consent has to pin.
+# Build + run the consent-digest cross-validation: the real boot_header_merkle.c
+# (bootloader view vs firmware view), then trezorlib's host builder against it.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,8 +9,8 @@ crypto="$core/../crypto"
 out="${TMPDIR:-/tmp}/consent_test"
 
 echo "== compiling consent_test =="
-# The device source is COMPILED, not textually included: shims.h is forced in so
-# it keeps its normal include block for the real build.
+# shims.h is forced in with -include so the device source keeps its normal
+# include block for the real build.
 gcc -O2 -Wall -Wextra \
     -I "$here" -I "$core/embed/sec/image" -I "$crypto" \
     "$here/consent_test.c" \
@@ -30,7 +23,6 @@ mkdir -p "$vecdir"
 echo "== consent digest cross-validation (device code) =="
 "$out" "$vecdir"
 
-# The host builder must agree, or every interaction-less upgrade gets refused:
-# the host would confirm one release and the device would digest it differently.
+# A host/device disagreement here refuses every interaction-less upgrade.
 echo "== host builder vs device (trezorlib.firmware.pq_secure) =="
 python "$here/consent_host_check.py" "$vecdir"

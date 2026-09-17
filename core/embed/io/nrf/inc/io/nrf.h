@@ -44,20 +44,9 @@ typedef enum {
 } nrf_status_t;
 
 /** Key set an nRF build declares in its info response (`nrf_info_t.key_set`).
- *
- *  A DECLARATION, not a trust input. The STM refuses to push on a mismatch, but
- *  the image is still verified against the STM's compiled pool afterwards, so a
- *  lying nRF can only cost itself a push -- it cannot win an acceptance. The
- *  point is to turn "pushed, then rejected by the nRF's own MCUboot" (on a
- *  BLE-only device, the link) into a refusal with a cause.
- *
- *  ZERO IS UNDECLARED, not a key set. This byte was a hardcoded 0 before the
- *  declaration existed, so every already-deployed nRF sends it -- and the gate
- *  runs against the OLD nRF, before the new one is pushed. Reading 0 as a key
- *  set would refuse the first update such a device is offered and leave no way
- *  to correct the declaration, since correcting it needs the push it blocks.
- *  So 0 is passed through and the check binds only builds that declare.
- */
+ *  A declaration, not a trust input: a mismatch refuses the push, the image is
+ *  still verified afterwards. 0 is undeclared (builds predating this byte)
+ *  and passes the check; 1 is devel, 2 is production. */
 #define NRF_KEY_SET_UNDECLARED 0
 #define NRF_KEY_SET_DEVEL 1
 #define NRF_KEY_SET_PRODUCTION 2
@@ -76,8 +65,7 @@ typedef struct {
   uint8_t hash[SHA256_DIGEST_LENGTH];
 } nrf_info_t;
 
-// This struct IS the wire format -- the management response is memcpy'd onto it
-// (nrf_management_rx_cb), so a size change silently reinterprets every field.
+// Wire format: the management info response is memcpy'd onto this struct.
 _Static_assert(sizeof(nrf_info_t) == 4 + 4 + SHA256_DIGEST_LENGTH,
                "nrf_info_t must match the management info response layout");
 

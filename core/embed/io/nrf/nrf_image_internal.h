@@ -19,27 +19,13 @@
 
 /**
  * @file
- * @brief nrf_image.c internals, exposed only for cross-validation.
- *
- * INTERNAL to io/nrf -- deliberately not under inc/io/, so it is not part of
- * the module's API.
- *
- * These are the points the cross-validation harness compares against the nRF's
- * own implementation and the host signer's. Reaching them through
- * nrf_image_verify_in_tree would only yield pass/fail; the harness needs the
- * intermediate VALUES, because a leaf or an image hash that differs by one byte
- * from the nRF's is exactly the failure that is otherwise silent.
- *
- * They are declared rather than static purely so that comparison can happen. No
- * production caller outside nrf_image.c uses them.
+ * @brief nrf_image.c internals, exposed only for the cross-validation harness
+ * (tests/fw_merkle). Not part of the io/nrf API.
  */
 
 #pragma once
 
-/* ---- the MCUboot image format ------------------------------------------
- * Here rather than in inc/io/ because nothing outside this module parses
- * these images; the harness needs them to build fixtures and to assert the
- * expected record set. */
+/* ---- the MCUboot image format ------------------------------------------ */
 
 /** MCUboot image header magic */
 #define NRF_MCUBOOT_IMAGE_MAGIC 0x96F3B83DU
@@ -47,8 +33,7 @@
 #define NRF_MCUBOOT_TLV_INFO_MAGIC 0x6907U
 /** TLV-info magic marking the PROTECTED area (inside the image hash) */
 #define NRF_MCUBOOT_TLV_PROT_INFO_MAGIC 0x6908U
-/** SHA-256 over header + payload + protected TLVs; this value is the DIGEST
- *  FIELD of an nRF image's model-tree slot, not the slot itself */
+/** SHA-256 over header + payload + protected TLVs (the slot's digest field) */
 #define NRF_MCUBOOT_TLV_IMAGE_HASH 0x10U
 /** Custom TLV: 4-byte model tag, e.g. "T3W1" (protected) */
 #define NRF_MCUBOOT_TLV_MODEL_ID 0x00A3U
@@ -57,13 +42,8 @@
 #define NRF_MCUBOOT_HDR_MIN_LEN 16U
 
 /**
- * Founder TLV type range (MCUboot vendor range).
- *
- * These records carry the founder signature over modelRoot and the co-path,
- * i.e. material that DEPENDS on the leaf, so they live in the UNPROTECTED TLV
- * area -- outside the MCUboot image hash, which is what the leaf commits to.
- * Their order and position within that area carry no meaning: the leaf boundary
- * is MCUboot's own, not something derived from these types.
+ * Founder TLV types (MCUboot vendor range); unprotected, since they depend on
+ * the leaf. Order within the area carries no meaning.
  * @{
  */
 #define NRF_PQ_TLV_FIRST 0x00A4U     /**< first founder record type */
@@ -76,8 +56,7 @@
 #define NRF_PQ_TLV_LAST 0x00A8U /**< last founder record type */
 /** @} */
 
-/** SLH-DSA signature length in an nRF PQ record. Same value as the boot
- * header's; asserted equal where the real headers are present. */
+/** SLH-DSA signature length in an nRF PQ record; asserted == boot header's. */
 #define NRF_PQ_SLH_SIG_LEN 7856U
 /** Ed25519 signature length in an nRF PQ record. */
 #define NRF_PQ_EC_SIG_LEN 64U
@@ -86,11 +65,7 @@
 
 /**
  * @brief MCUboot's own image hash: SHA-256 over header + payload + protected
- * TLVs.
- *
- * This value is the digest field of the nRF's 44-byte model-tree slot
- * (coproc_slot_t); the founder leaf's preimage is that whole slot, not this
- * hash on its own.
+ * TLVs (the digest field of the model-tree slot, not the leaf itself).
  *
  * @param image      the signed MCUboot image
  * @param image_len  its length in bytes
@@ -101,11 +76,8 @@ secbool nrf_image_hash(const uint8_t* image, size_t image_len,
                        uint8_t out[SHA256_DIGEST_LENGTH]);
 
 /**
- * @brief Which pool keys a CLASSIC sigmask names.
- *
- * A bespoke 2-of-3 map, NOT the founder scheme's "i-th lowest set bit". Getting
- * it wrong makes the STM mispredict the nRF's verdict, so the harness
- * cross-checks it over all 256 masks.
+ * @brief Which pool keys a classic sigmask names (a bespoke 2-of-3 map, not the
+ * founder "i-th set bit" rule; cross-checked over all 256 masks).
  *
  * @param sigmask    the image's protected sigmask byte
  * @param key_count  size of this model's nRF key pool
@@ -116,11 +88,7 @@ secbool nrf_image_legacy_sig_slots(uint8_t sigmask, uint32_t key_count,
                                    int out_idx[2]);
 
 /**
- * @brief Read one TLV from the UNPROTECTED area only.
- *
- * Internal because a caller that wanted a TLV without caring which area it came
- * from would be asking the wrong question: a protected copy must never stand in
- * for an unprotected record.
+ * @brief Read one TLV from the unprotected area only.
  *
  * @param image      the signed MCUboot image
  * @param image_len  its length in bytes

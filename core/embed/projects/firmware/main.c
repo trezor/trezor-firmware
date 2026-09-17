@@ -59,14 +59,8 @@
 #include <io/nrf.h>
 #endif
 
-// The firmware carries and pushes an nRF image only on the legacy layout. Under
-// the Merkle-tree scheme the nRF is a model-level leaf of the founder tree and
-// the BOOTLOADER installs it (workflow_nrf_ota, itself gated on
-// PQ_SECURE_BOOT), so the firmware neither embeds a copy nor writes one.
-//
-// Both layouts are live for now: T3W1 still builds with pq_secure_boot off
-// during the transition, and in that configuration nothing else can update the
-// nRF.
+// The firmware carries and pushes an nRF image only on the legacy layout;
+// under the Merkle-tree scheme the bootloader installs it (workflow_nrf_ota).
 #if defined(USE_NRF) && !defined(PQ_SECURE_BOOT)
 #define FIRMWARE_UPDATES_NRF 1
 
@@ -76,21 +70,14 @@ extern const void nrf_app_size;
 
 #endif
 
-// Likewise for the bootloader: the legacy firmware carries one and installs it
-// when what is on the device does not match. The Merkle-tree layout installs
-// the bootloader through the bootloader's own OTA and the boardloader's UCB, so
-// the firmware neither carries a copy nor writes one -- see build.rs, which
-// also stops compiling boot_image_embdata.c.
+// Likewise for the bootloader: the Merkle-tree layout installs it through the
+// bootloader OTA and the boardloader's UCB, so the firmware carries no copy.
 #if !defined(PQ_SECURE_BOOT) && (PRODUCTION || FORCE_BOOTLOADER_UPGRADE)
 #define FIRMWARE_UPDATES_BOOTLOADER 1
 #endif
 
-// The firmware variant stamped into the manifest (firmware/build.rs ->
-// FW_VARIANT, consumed by manifest_header.S) must be a known hardened codeword.
-// This is the ONLY check on that value: manifest_header.S emits it with `.word`
-// and the assembler type-checks nothing, so without this a small fw_variant_t
-// value -- or a mistyped codeword -- would be stamped into the authenticated
-// manifest and every device would refuse the firmware as unprovisioned.
+// FW_VARIANT (firmware/build.rs -> manifest_header.S) must be a hardened
+// FW_VARIANT_SEC_* codeword; manifest_header.S emits it unchecked.
 #ifdef FW_VARIANT
 #include <sec/boot_header.h>
 _Static_assert(FW_VARIANT == FW_VARIANT_SEC_UNIVERSAL ||

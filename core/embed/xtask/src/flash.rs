@@ -14,17 +14,15 @@ pub fn flash(args: FlashArgs) -> Result<()> {
         args.project.binary_name()
     );
 
-    // A combined image already holds the whole boot chain, stamped and assembled
-    // by `xtask combine`, so it is written as-is from the boardloader address --
+    // A combined image already holds the whole boot chain, assembled by
+    // `xtask combine`, so it is written as-is from the boardloader address --
     // before any single-project binary is resolved, since it is not one.
     if args.combined {
         return flash_combined(&args);
     }
 
-    // A pq_secure release is what boots on a Merkle-tree model; the per-project
-    // artifacts are not installable. Boardloader and bootloader_ci are not part
-    // of a release, so they keep reading their own artifact. An explicit --file
-    // overrides the release: the caller named the exact bytes to write.
+    // On a Merkle-tree model the signed release is what installs; boardloader
+    // and bootloader_ci are not part of it, and --file overrides it.
     if args.file.is_none()
         && args.model.config()?.has_feature("pq_secure_boot")
         && matches!(
@@ -72,10 +70,9 @@ pub fn flash(args: FlashArgs) -> Result<()> {
 
 /// Flash the combined image: the whole boot chain in one write.
 ///
-/// The image is flashed byte for byte as `xtask combine` produced it, starting
-/// at the boardloader. Everything about its contents was decided there --
-/// which projects it holds and, on a Merkle-tree model, which variant its
-/// bootloader is provisioned for -- so nothing is resolved or stamped here.
+/// Written byte for byte as `xtask combine` produced it, starting at the
+/// boardloader; everything about its contents, variant included, was decided
+/// there.
 fn flash_combined(args: &FlashArgs) -> Result<()> {
     ensure!(
         combine::supported(args.project),
@@ -112,9 +109,7 @@ fn flash_combined(args: &FlashArgs) -> Result<()> {
         }
     };
 
-    // From the boardloader, not the project's own address: the project only
-    // names WHICH combined image, since the image starts at the bottom of the
-    // chain regardless.
+    // A combined image starts at the boardloader whatever the project.
     let address = project_address(args, Project::Boardloader)?;
     println!(
         "Flashing the combined `{}` image `{}` to address 0x{:08X}",
@@ -131,11 +126,8 @@ fn flash_combined(args: &FlashArgs) -> Result<()> {
     )
 }
 
-/// Flash a pq_secure release with a debugger.
-///
-/// Bootloader and firmware are written in ONE OpenOCD run, so the device is
-/// never left holding two halves of different builds -- see
-/// [`pq::resolve_install`] for why they belong together and what gets stamped.
+/// Flash a pq_secure release with a debugger: bootloader and firmware in one
+/// OpenOCD run, see [`pq::resolve_install`].
 fn flash_release(args: &FlashArgs) -> Result<()> {
     let install = pq::resolve_install(args.model, args.project, args.variant)?;
 
