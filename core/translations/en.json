@@ -1265,7 +1265,7 @@
     },
     "language__change_to_template": "Change language to {0}?",
     "language__changed": {
-      "Bolt": "Language changed successfully",
+      "Bolt": "Language changed successfully.",
       "Caesar": "Language changed successfully",
       "Delizia": "Language changed successfully.",
       "Eckhart": "Language changed successfully."
