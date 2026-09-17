@@ -72,10 +72,16 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(utils.truncate_utf8("➀➁➂", 0), "")
 
     def test_firmware_hash(self):
-        if utils.INTERNAL_MODEL in (  # pylint: disable=internal-model-tuple-comparison
-            "D002",
-            "T3W1",
-        ):
+        if utils.INTERNAL_MODEL == "T3W1":
+            self.assertEqual(
+                utils.firmware_hash(),
+                b"m_ *\x92\x92k0k-\xc0Ha|\x96Y_\x0e\xf6\xfa<\x89\r\x9c\xfa&\x11\xb2\x1dds\xa3",
+            )
+            self.assertEqual(
+                utils.firmware_hash(b"0123456789abcdef"),
+                b"\xcb\xa7\x0f\xfd\xf4\xa0\xf6\xf6\x11%\x0cb\xcf\x15\x8cH\x03l\x15E\xff\xdc\x12'\t\xf7\xb4N\x08)\xdf,",
+            )
+        elif utils.INTERNAL_MODEL == "D002":
             self.assertEqual(
                 utils.firmware_hash(),
                 b"od\xd6\x0f)\xda\xdd#\xf08<Q\xa0\xc5\x95\xb4\xa4\xd7\xda\x95*\x1f<z\x03\xde\x14\x9f\x1fz9L",
