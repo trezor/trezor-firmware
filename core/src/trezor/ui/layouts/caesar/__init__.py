@@ -1981,7 +1981,7 @@ if not utils.BITCOIN_ONLY:
             amount_label=display_amount_label,
             fee=display_fee,
             fee_label=display_fee_label,
-            account_items=account_items,
+            account_items=with_colon(account_items),
             account_title=TR.address_details__account_info,
         ) as layout:
             await raise_if_not_confirmed(

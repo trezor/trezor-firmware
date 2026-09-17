@@ -28,15 +28,15 @@ impl AddressDetails {
         qr_address: TString<'static>,
         case_sensitive: bool,
         details_title: TString<'static>,
-        account: Option<(TString<'static>, TString<'static>)>,
-        path: Option<(TString<'static>, TString<'static>)>,
+        labeled_account: Option<(TString<'static>, TString<'static>)>,
+        labeled_path: Option<(TString<'static>, TString<'static>)>,
     ) -> Result<Self, Error> {
         let mut para = ParagraphVecShort::new();
-        if let Some((label, account)) = account {
+        if let Some((label, account)) = labeled_account {
             para.add(Paragraph::new(&theme::TEXT_NORMAL, label));
             para.add(Paragraph::new(&theme::TEXT_MONO_DATA, account));
         }
-        if let Some((label, path)) = path {
+        if let Some((label, path)) = labeled_path {
             para.add(Paragraph::new(&theme::TEXT_NORMAL, label));
             para.add(Paragraph::new(&theme::TEXT_MONO_DATA, path));
         }
