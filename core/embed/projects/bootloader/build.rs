@@ -58,6 +58,12 @@ fn main() -> Result<()> {
             lib.add_source("workflow/wf_unlock_bootloader.c");
         }
 
+        // nRF OTA needs the SMP serial-recovery push.
+        if cfg!(feature = "pq_secure_boot") && cfg!(feature = "smp") {
+            lib.add_source("workflow/wf_nrf_ota.c");
+            lib.add_source("nrf_staging.c");
+        }
+
         if cfg!(feature = "disable_animation") {
             lib.add_define("DISABLE_ANIMATION", Some("1"));
         }
