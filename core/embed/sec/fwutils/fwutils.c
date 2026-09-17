@@ -23,9 +23,11 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/boot_header.h>
 #include <sec/fwutils.h>
 #include <sec/image.h>
 #include <sys/flash.h>
+#include <sys/mpu.h>
 #include <sys/systask.h>
 
 #include "blake2s.h"
@@ -104,6 +106,44 @@ int firmware_hash_continue(uint8_t* hash, size_t hash_len) {
   return (100 * ctx->fw_offset) / ctx->fw_size;
 }
 
+#ifdef PQ_SECURE_BOOT
+// Merkle-tree layout: no vendor header in the image. Report a vendor only when
+// a manifest is present, derived from the firmware_type the bootloader
+// persisted into the write-protected boot header. Must agree with the
+// bootloader's tree_vendor_str and the UNSAFE-prefix test in
+// reboot_to_bootloader.py.
+secbool firmware_get_vendor(char* buff, size_t buff_size) {
+  const void* data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
+
+  memset(buff, 0, buff_size);
+
+  if (data == NULL || *(const uint32_t*)data != FW_MANIFEST_MAGIC) {
+    return secfalse;
+  }
+
+  // The bootloader area is unmapped in the secmon's default MPU mode.
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
+  // Via the flash area, not BOOTLOADER_START: sec/ is shared with the emulator,
+  // where the raw constant is not a valid pointer.
+  const boot_header_auth_t* bl =
+      boot_header_auth_get((uintptr_t)flash_area_get_address(
+          &BOOTLOADER_AREA, 0, sizeof(boot_header_auth_t)));
+  const boot_header_unauth_t* unauth =
+      (bl != NULL) ? boot_header_unauth_get(bl) : NULL;
+  const fw_variant_sec_t variant =
+      (unauth != NULL) ? unauth->firmware_type : FW_VARIANT_SEC_INVALID;
+  mpu_restore(mpu_mode);
+
+  const char* vendor = firmware_vendor_str(variant);
+
+  size_t len = strlen(vendor);
+  if (buff_size < len + 1) {
+    return secfalse;
+  }
+  memcpy(buff, vendor, len);
+  return sectrue;
+}
+#else
 secbool firmware_get_vendor(char* buff, size_t buff_size) {
   const void* data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
@@ -124,22 +164,6 @@ secbool firmware_get_vendor(char* buff, size_t buff_size) {
 
   return sectrue;
 }
-
-void firmware_invalidate_header(void) {
-#ifdef STM32U5
-  // on stm32u5, we need to disable the instruction cache before erasing the
-  // firmware - otherwise, the write check will fail
-  ICACHE->CR &= ~ICACHE_CR_EN;
 #endif
-
-  // erase start of the firmware (metadata) -> invalidate FW
-  ensure(flash_unlock_write(), NULL);
-  for (int i = 0; i < (1024 / FLASH_BLOCK_SIZE); i++) {
-    flash_block_t data = {0};
-    ensure(flash_area_write_block(&FIRMWARE_AREA, i * FLASH_BLOCK_SIZE, data),
-           NULL);
-  }
-  ensure(flash_lock_write(), NULL);
-}
 
 #endif  // SECURE_MODE
