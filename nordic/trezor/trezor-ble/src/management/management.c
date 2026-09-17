@@ -62,6 +62,12 @@ typedef enum {
 
 void management_init(void) { k_sem_give(&management_ok); }
 
+/* Key set declared in the info response. 0 is UNDECLARED and is what every nRF
+ * built before this byte existed sends; keep these in step with NRF_KEY_SET_* in
+ * the STM's io/nrf.h, which is the other half of this wire format. */
+#define NRF_KEY_SET_DEVEL 1
+#define NRF_KEY_SET_PRODUCTION 2
+
 #define IMAGE_HASH_LEN 32
 #define IMAGE_TLV_SHA256 0x10
 
@@ -150,7 +156,16 @@ static void send_info(void) {
   data[2] = APP_VERSION_MINOR;
   data[3] = APP_PATCHLEVEL;
   data[4] = APP_TWEAK;
-  data[5] = 0;
+  /* Which key set this build belongs to (CONFIG_TREZOR_KEY_SET_PRODUCTION, set
+   * by prod.conf). A DECLARATION, not a trust input: the STM compares it with
+   * its own and refuses the push on a mismatch, but still verifies the image
+   * against its compiled pool afterwards -- so lying here can only lose a push,
+   * never win one.
+   *
+   * 0 is UNDECLARED, reserved for the builds that predate this byte. */
+
+  data[5] = IS_ENABLED(CONFIG_TREZOR_KEY_SET_PRODUCTION) ? NRF_KEY_SET_PRODUCTION
+                                                         : NRF_KEY_SET_DEVEL;
   data[6] = signals_is_stay_in_bootloader();
   data[7] = 0;
   data[8] = signals_out_get_reserved();

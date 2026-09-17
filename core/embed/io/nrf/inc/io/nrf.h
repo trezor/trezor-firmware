@@ -43,19 +43,43 @@ typedef enum {
   NRF_STATUS_ABORTED = 3,  // Packet was aborted
 } nrf_status_t;
 
+/** Key set an nRF build declares in its info response (`nrf_info_t.key_set`).
+ *
+ *  A DECLARATION, not a trust input. The STM refuses to push on a mismatch, but
+ *  the image is still verified against the STM's compiled pool afterwards, so a
+ *  lying nRF can only cost itself a push -- it cannot win an acceptance. The
+ *  point is to turn "pushed, then rejected by the nRF's own MCUboot" (on a
+ *  BLE-only device, the link) into a refusal with a cause.
+ *
+ *  ZERO IS UNDECLARED, not a key set. This byte was a hardcoded 0 before the
+ *  declaration existed, so every already-deployed nRF sends it -- and the gate
+ *  runs against the OLD nRF, before the new one is pushed. Reading 0 as a key
+ *  set would refuse the first update such a device is offered and leave no way
+ *  to correct the declaration, since correcting it needs the push it blocks.
+ *  So 0 is passed through and the check binds only builds that declare.
+ */
+#define NRF_KEY_SET_UNDECLARED 0
+#define NRF_KEY_SET_DEVEL 1
+#define NRF_KEY_SET_PRODUCTION 2
+
 typedef struct {
   uint8_t version_major;
   uint8_t version_minor;
   uint8_t version_patch;
   uint8_t version_tweak;
 
-  bool reserved;
+  uint8_t key_set;  // NRF_KEY_SET_*; any other value is an unknown build
   bool in_stay_in_bootloader;
   bool reserved2;
   bool out_wakeup;
 
   uint8_t hash[SHA256_DIGEST_LENGTH];
 } nrf_info_t;
+
+// This struct IS the wire format -- the management response is memcpy'd onto it
+// (nrf_management_rx_cb), so a size change silently reinterprets every field.
+_Static_assert(sizeof(nrf_info_t) == 4 + 4 + SHA256_DIGEST_LENGTH,
+               "nrf_info_t must match the management info response layout");
 
 /** Callback type invoked when data is received on a registered service */
 typedef void (*nrf_rx_callback_t)(const uint8_t *data, uint32_t len);

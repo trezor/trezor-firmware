@@ -320,14 +320,40 @@ workflow_result_t workflow_nrf_ota_update(
   //
   //     If the nRF cannot be queried we fall through and stream, which is the
   //     safe direction. ---
+  // --- Key-set cross-check. The nRF DECLARES which key set it was built for;
+  //     if it does not match this bootloader's, the image we are about to push
+  //     is signed with keys its MCUboot will not accept. Refusing here turns a
+  //     push that bricks the link on a BLE-only device into a wire Failure with
+  //     a cause. The declaration is not trusted: the nRF verifies the image
+  //     against its own compiled pool afterwards regardless, so a lying byte
+  //     can only lose a push, never win one. The same byte covers the PQ-native
+  //     founder pool on T3T2 -- both pools follow the one prod.conf switch.
+  //
+  //     Queried once here and reused by the hint below. Two cases pass without
+  //     matching: a device that cannot be queried at all (refusing would strand
+  //     an nRF stuck where it cannot answer, and streaming is the safe
+  //     direction), and one declaring UNDECLARED, which every nRF built before
+  //     this existed does -- see NRF_KEY_SET_UNDECLARED. A value that is neither
+  //     undeclared nor ours is refused, unknown values included. ---
+#if BOOTLOADER_DEVEL
+  const uint8_t want_key_set = NRF_KEY_SET_DEVEL;
+#else
+  const uint8_t want_key_set = NRF_KEY_SET_PRODUCTION;
+#endif
+  nrf_info_t info;
+  const bool have_info = nrf_get_info(&info);
+  if (have_info && info.key_set != NRF_KEY_SET_UNDECLARED &&
+      info.key_set != want_key_set) {
+    return nrf_fail(iface, "nRF key set does not match this bootloader");
+  }
+
   if (image_hash != NULL && image_hash_len == SHA256_DIGEST_LENGTH) {
     if (nrf_image_verify_hash_in_tree(image_hash,
                                       (const merkle_proof_node_t *)co_path,
                                       co_path_count, model_root) != sectrue) {
       return nrf_fail(iface, "nRF image not in founder tree");
     }
-    nrf_info_t info;
-    if (nrf_get_info(&info) &&
+    if (have_info &&
         memcmp(info.hash, image_hash, SHA256_DIGEST_LENGTH) == 0) {
       return WF_OK;  // already up to date -> nothing to push
     }
