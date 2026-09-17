@@ -17,6 +17,6 @@ manifest:
       import: true
     - name: mcuboot
       url: https://github.com/trezor/mcuboot
-      revision: 77e36dc737ef9ca0d30503a39f4b00a89d7b3de4 #tychovrahe/trezor-ncs3.3.0/pq2
+      revision: c7030ab407cf75deb0fe8757c5f647580740b1ff #tychovrahe/trezor-ncs3.3.0/pq2
       path: bootloader/mcuboot
 
