@@ -1737,6 +1737,21 @@
       "module": "tropic"
     },
     {
+      "code": 20160,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_CHECK_FW_READ",
+      "module": "tropic"
+    },
+    {
+      "code": 20161,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_FW_SESSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20162,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_FW_SLOT",
+      "module": "tropic"
+    },
+    {
       "code": 21010,
       "name": "PRODTEST_ERR_UNIT_TEST_FAILED",
       "module": "unit-test"

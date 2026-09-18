@@ -33,6 +33,14 @@
 #include <libtropic/cal/trezor_crypto/libtropic_trezor_crypto.h>
 #include <lt_l3_process.h>
 
+#ifdef SECURE_MODE
+// These define non-static arrays, so this must remain the only translation
+// unit in any binary that includes them.
+// libtropic's `fw_CPU*` symbols hold the RISC-V FW.
+#include "fw_CPU.h"
+#include "fw_SPECT.h"
+#endif
+
 #ifdef TREZOR_EMULATOR
 #include <arpa/inet.h>
 #include <libtropic/hal/posix/tcp/libtropic_port_posix_tcp.h>
@@ -108,6 +116,8 @@ static const uint8_t TROPIC_BATCHES_V1[][LT_MEMBER_SIZE(
 // How long we wait after `tropic_deinit()` before calling `tropic_init()`
 // again.
 #define TROPIC_RESTART_DELAY_MS 10
+
+#define TROPIC_FW_UPDATE_MAX_ATTEMPTS 3
 
 // clang-format off
 // Temporary address table for config objects, ordered to match lt_config_t.obj[].
@@ -992,6 +1002,370 @@ secbool tropic_ensure_configuration(void) {
   }
   return sectrue;
 }
+
+lt_ret_t tropic_flash_bundled_fw(void) {
+  return lt_do_mutable_fw_update(&g_tropic_driver.handle, fw_CPU,
+                                 sizeof(fw_CPU), fw_SPECT, sizeof(fw_SPECT));
+}
+
+// Version arrays are {reserved, patch, minor, major}; byte 0 is not compared.
+static bool fw_version_is_older(const uint8_t *have, const uint8_t *want) {
+  for (int i = 3; i >= 1; i--) {
+    if (have[i] != want[i]) {
+      return have[i] < want[i];
+    }
+  }
+  return false;
+}
+
+static bool tropic_read_fw_slot(uint8_t riscv[4], uint8_t spect[4],
+                                bool *present) {
+  uint8_t buf[TROPIC_FW_VERSION_SIZE] = {0};
+  uint16_t length = 0;
+  lt_ret_t ret =
+      lt_r_mem_data_read_retry(&g_tropic_driver.handle, TROPIC_FW_VERSION_SLOT,
+                               buf, sizeof(buf), &length);
+  if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
+    *present = false;
+    return true;
+  }
+  if (ret != LT_OK) {
+    return false;
+  }
+  if (length != sizeof(buf)) {
+    *present = false;
+    return true;
+  }
+
+  memcpy(riscv, buf, 4);
+  memcpy(spect, buf + 4, 4);
+  *present = true;
+  return true;
+}
+
+// Records that the bundled versions are written to all four banks. Call only
+// after a complete update.
+bool tropic_write_fw_slot(void) {
+  if (!tropic_session_start()) {
+    return false;
+  }
+  uint8_t buf[TROPIC_FW_VERSION_SIZE] = {0};
+  memcpy(buf, fw_CPU_ver, 4);
+  memcpy(buf + 4, fw_SPECT_ver, 4);
+  if (lt_r_mem_data_erase_write_retry(&g_tropic_driver.handle,
+                                      TROPIC_FW_VERSION_SLOT, buf,
+                                      sizeof(buf)) != LT_OK) {
+    return false;
+  }
+
+  uint8_t riscv[4] = {0};
+  uint8_t spect[4] = {0};
+  bool present = false;
+  return tropic_read_fw_slot(riscv, spect, &present) && present &&
+         memcmp(riscv, fw_CPU_ver, 4) == 0 &&
+         memcmp(spect, fw_SPECT_ver, 4) == 0;
+}
+
+static secbool tropic_fw_update_needed(bool *needed) {
+  uint8_t confirmed_riscv[4] = {0};
+  uint8_t confirmed_spect[4] = {0};
+  bool present = false;
+  if (!tropic_session_start() ||
+      !tropic_read_fw_slot(confirmed_riscv, confirmed_spect, &present)) {
+    return secfalse;
+  }
+
+  *needed = !present || fw_version_is_older(confirmed_riscv, fw_CPU_ver) ||
+            fw_version_is_older(confirmed_spect, fw_SPECT_ver);
+  return sectrue;
+}
+
+static bool tropic_erase_fw_slot(void) {
+  return lt_r_mem_data_erase_retry(&g_tropic_driver.handle,
+                                   TROPIC_FW_VERSION_SLOT) == LT_OK;
+}
+
+// Reset the configuration and restore the CFG version slots
+static secbool tropic_reset_configuration_after_update(void) {
+  lt_handle_t *handle = tropic_get_handle();
+  if (handle == NULL) {
+    return secfalse;
+  }
+
+  if (!tropic_session_start()) {
+    return secfalse;
+  }
+
+  // XXX: tady se vrátí Maintenance bit
+  // XXX: ty CFG sloty taky
+  tropic_expected_config_t expected_config = {0};
+  if (!get_expected_tropic_config(&expected_config)) {
+    return secfalse;
+  }
+  if (set_expected_config(&expected_config, TROPIC_R_CONFIG_WRITE_ALWAYS) !=
+      sectrue) {
+    return secfalse;
+  }
+  // Reboot tropic to apply R-Config changes
+  if (TROPIC_RETRY_COMMAND(lt_reboot(handle, TR01_REBOOT)) != LT_OK) {
+    return secfalse;
+  }
+
+  // The reboot forgot the session data on the chip. We need to do it as well.
+  tropic_session_forget();
+  return sectrue;
+}
+
+// XXX: Tohle je ta funkce, co se volá v obou případech
+// XXX: Tedy `udělej update` + `vypni ukazatele`
+// TODO: re-add ui progress
+static secbool tropic_update_fw(void) {
+  // XXX: úvodní kontrola
+  tropic_driver_t *drv = &g_tropic_driver;
+  if (!drv->initialized) {
+    return secfalse;
+  }
+
+  lt_ret_t ret = LT_FAIL;
+
+  // XXX: tohle je to podstatné
+  for (int i = 0; i < TROPIC_FW_UPDATE_MAX_ATTEMPTS; i++) {
+    ret = tropic_flash_bundled_fw();
+    if (ret == LT_OK) {
+      break;
+    }
+
+    // Maintenance forbidden, the FW is untouched.
+    if (ret == LT_L2_RESP_DISABLED) {
+      // Maintenance mode is disabled. We cannot update the FW -> RSOD
+      return secfalse;
+    }
+
+    // We restart the chip and try again.
+    tropic_deinit();
+    systick_delay_ms(TROPIC_RESTART_DELAY_MS);
+    if (tropic_init(NULL) != LT_OK) {
+      return secfalse;
+    }
+  }
+
+  // The update rebooted the chip. We clear stale session data.
+  tropic_session_forget();
+
+  // The driver is down after a failed re-init. We cannot reach the chip.
+  if (!drv->initialized) {
+    return secfalse;
+  }
+
+  if (ret == LT_OK) {
+    // XXX: tady se nastaví ty ukazatele
+    if (!tropic_session_start()) {
+      return secfalse;
+    }
+    // XXX: Maintenance bit + cfg sloty
+    // Reset the configuration. This includes the Maintenance bit and the
+    // slots
+    if (sectrue != tropic_reset_configuration_after_update()) {
+      return secfalse;
+    }
+
+    // XXX: Troic FW version slot
+    // We record the updated version in the R-memory.
+    tropic_write_fw_slot();
+    return sectrue;
+  }
+
+  return secfalse;
+}
+
+// Check if the Maintenance bit is enabled. Enable it if possible.
+static secbool tropic_get_maintenance_bit_on(void) {
+  lt_handle_t *handle = tropic_get_handle();
+  if (handle == NULL) {
+    return secfalse;
+  }
+
+  if (!tropic_session_start()) {
+    return secfalse;
+  }
+
+  // Read I-Config and check if Maintenance Mode is enabled.
+  uint32_t i_config_cfg_startup;
+  lt_ret_t ret = TROPIC_RETRY_COMMAND(
+      lt_i_config_read(handle, TR01_CFG_START_UP_ADDR, &i_config_cfg_startup));
+  if (ret != LT_OK) {
+    return secfalse;
+  }
+
+  if (!(i_config_cfg_startup &
+        BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK)) {
+    // Maintenance Mode is not enabled in I-Config -> FW Update cannot be
+    // performed
+    return secfalse;
+  }
+
+  // XXX: tady se nastaví ty CFG sloty na "in progress"
+  // XXX: I-config stejně nezměníme a chceme je mít nastavené, než se dotknu
+  // R-cfg
+  // XXX: prvně najdu, co se má napsat do backupu, a napíšu to tam
+  optional_u32_t distribution_version = {0};
+  if (!tropic_get_distribution_version(TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
+                                       &distribution_version)) {
+    return secfalse;
+  }
+  if (distribution_version.has_value) {
+    if (!set_backup_distribution_version_to(distribution_version.value)) {
+      return secfalse;
+    }
+  } else {
+    // XXX: ve version slotu hodnota nebyla, tak ji musíme sehant z batch_id
+    lt_chip_id_t chip_id = {0};
+    if (TROPIC_RETRY_COMMAND(
+            lt_get_info_chip_id(&g_tropic_driver.handle, &chip_id)) != LT_OK) {
+      return secfalse;
+    }
+    uint32_t expected_distribution_version = 0;
+    if (!get_expected_tropic_distribution_version_from_batch_id(
+            chip_id.batch_id, &expected_distribution_version)) {
+      return secfalse;
+    }
+    if (!set_backup_distribution_version_to(expected_distribution_version)) {
+      return secfalse;
+    }
+  }
+  // XXX: CFG version slot se každopádně vymaže
+  if (lt_r_mem_data_erase_retry(&g_tropic_driver.handle,
+                                TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT) !=
+      LT_OK) {
+    return secfalse;
+  }
+
+  // XXX: tady se nastaví ten bit
+  // Read R-Config and check if Maintenance Mode is enabled.
+  // The whole R-Config is read in case we need to modify it in case the bit is
+  // OFF
+  lt_config_t r_config;
+  ret = lt_read_whole_R_config_retry(handle, &r_config);
+  if (ret != LT_OK) {
+    return secfalse;
+  }
+
+  // Check if Maintenance Mode is enabled in R-Config[CFG_START_UP]
+  if (!(r_config.obj[TR01_CFG_START_UP_IDX] &
+        BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK)) {
+    // The bit is disabled so we enable it
+
+    // Flip the MAINTENANCE_ENA bit (do it now to shorten the erased window)
+    r_config.obj[TR01_CFG_START_UP_IDX] |=
+        BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK;
+
+    // Modify the R-config
+    ret = lt_erase_and_write_R_config_retry(handle, &r_config);
+    if (ret != LT_OK) {
+      return secfalse;
+    }
+
+    // Reboot tropic to apply R-Config changes
+    ret = TROPIC_RETRY_COMMAND(lt_reboot(handle, TR01_REBOOT));
+    if (ret != LT_OK) {
+      return secfalse;
+    }
+    // The reboot forgot the session data on the chip. We need to do it as well.
+    tropic_session_forget();
+  }
+  // the bit is ON
+  return sectrue;
+}
+
+static secbool tropic_is_fw_update_in_progress(bool *in_progress) {
+  // XXX: zkontroluju FW version slot. Když je prázdný, probíhá update nebo jsem
+  // čerstvě z továrny
+  // XXX: v obou případech chci dělat update
+
+  lt_handle_t *handle = &g_tropic_driver.handle;
+  lt_tr01_mode_t tr01_mode = LT_TR01_ALARM;
+  if (lt_get_tr01_mode(handle, &tr01_mode) != LT_OK) {
+    return secfalse;
+  }
+  if (tr01_mode == LT_TR01_MAINTENANCE) {
+    *in_progress = true;
+    return sectrue;
+  } else if (tr01_mode == LT_TR01_ALARM) {
+    return secfalse;
+  }
+
+  if (!tropic_session_start()) {
+    return secfalse;
+  }
+  uint8_t riscv_fw[4] = {0};
+  uint8_t spect_fw[4] = {0};
+  bool present = false;
+  if (!tropic_read_fw_slot(riscv_fw, spect_fw, &present)) {
+    return secfalse;
+  }
+  if (present) {
+    *in_progress = false;
+    return sectrue;
+  }
+
+  uint32_t r_config_cfg_startup = 0;
+  if (TROPIC_RETRY_COMMAND(lt_r_config_read(handle, TR01_CFG_START_UP_ADDR,
+                                            &r_config_cfg_startup)) != LT_OK) {
+    return secfalse;
+  }
+  // maintenance on and no FW version in slot = update in progress
+  *in_progress = (r_config_cfg_startup &
+                  BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0;
+
+  return sectrue;
+}
+
+// XXX: tohle je ta funkce, co se volá PO UNLOCKU
+secbool tropic_ensure_fw_updated(void) {
+  bool needed = {0};
+  if (sectrue != tropic_fw_update_needed(&needed)) {
+    return secfalse;
+  }
+  if (!needed) {
+    // No firmware update needed, return early.
+    return sectrue;
+  }
+
+  // XXX: tady se vymaže ten version slot
+  // Erased FW version slot indicates FW update in progress.
+  if (!tropic_erase_fw_slot()) {
+    return secfalse;
+  }
+
+  // XXX: součástí toho je i to nastavení slotů
+  // Set maintenance bit ON if it is not and adjust the confifuration slots.
+  if (sectrue != tropic_get_maintenance_bit_on()) {
+    return secfalse;
+  }
+
+  // Perform the firmware update + turn
+  if (sectrue != tropic_update_fw()) {
+    return secfalse;
+  }
+
+  return sectrue;
+}
+
+// XXX: talhe funkce se volá v rámci bootu
+//         => NESMÍ ZAPÍNAT MAINTENENACE BIT! NIKDY!!
+// XXX: tady se zkontroluje ten 3-ukazatel a kdyžtak se zavolá tropic_update_fw
+secbool tropic_check_and_restore_fw_update_in_progress(void) {
+  bool in_progress = false;
+  if (sectrue != tropic_is_fw_update_in_progress(&in_progress)) {
+    return secfalse;
+  }
+  if (in_progress) {
+    return tropic_update_fw();
+  }
+  return sectrue;
+}
+
+//                      OLD CODE
 
 #ifdef TREZOR_EMULATOR
 static uint16_t get_tropic_model_port(void) {

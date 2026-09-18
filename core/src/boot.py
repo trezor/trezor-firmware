@@ -25,6 +25,9 @@ from apps.common import lock_manager
 if utils.USE_OPTIGA:
     from trezor.crypto import optiga
 
+if utils.USE_TROPIC:
+    from trezor.crypto import tropic
+
 if utils.USE_POWER_MANAGER:
     from micropython import const
     from trezor import workflow
@@ -105,6 +108,8 @@ async def bootscreen() -> None:
                     io.rgb_led.rgb_led_set_enabled(storage.device.get_rgb_led())
                 await pin_unlock_sequence()
                 storage.init_unlocked()
+                if utils.USE_TROPIC:
+                    tropic.ensure_fw_updated()
                 allow_all_loader_messages()
                 break
             else:
@@ -112,6 +117,8 @@ async def bootscreen() -> None:
                 if not config.is_unlocked():
                     await verify_user_pin()
                 storage.init_unlocked()
+                if utils.USE_TROPIC:
+                    tropic.ensure_fw_updated()
                 enforce_welcome_screen_duration()
                 rotation = storage.device.get_rotation()
                 if utils.USE_TOUCH_WAKEUP:
