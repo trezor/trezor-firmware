@@ -28,18 +28,15 @@ def wrap_protobuf_load(
     expected_type: type[LoadedMessageType],
     is_message: bool = True,
 ) -> LoadedMessageType:
+    if __debug__ and utils.EMULATOR and utils.USE_THP:
+        log.debug(
+            __name__,
+            "Buffer to be parsed to a LoadedMessage: %s",
+            utils.hexlify_if_bytes(buffer),
+        )
+
     try:
-        if __debug__ and utils.EMULATOR and utils.USE_THP:
-            log.debug(
-                __name__,
-                "Buffer to be parsed to a LoadedMessage: %s",
-                utils.hexlify_if_bytes(buffer),
-            )
         msg = protobuf.decode(buffer, expected_type, EXPERIMENTAL_ENABLED)
-        if __debug__ and utils.EMULATOR:
-            what = "received message contents" if is_message else "decoded protobuf"
-            log.debug(__name__, "%s:\n%s", what, utils.dump_protobuf(msg))
-        return msg
     except Exception as e:
         what = "message" if is_message else "protobuf"
         if __debug__:
@@ -49,6 +46,11 @@ def wrap_protobuf_load(
                     f"Failed to decode {what}: " + " ".join(str(arg) for arg in e.args)
                 )
         raise DataError(f"Failed to decode {what}")
+
+    if __debug__ and utils.EMULATOR:
+        what = "received message contents" if is_message else "decoded protobuf"
+        log.debug(__name__, "%s:\n%s", what, utils.dump_protobuf(msg))
+    return msg
 
 
 async def handle_single_message(ctx: Context, msg: Message) -> bool:
