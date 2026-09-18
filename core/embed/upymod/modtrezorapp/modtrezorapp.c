@@ -248,14 +248,14 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_is_loaded_obj,
 static mp_obj_t mod_trezorapp_root_timestamp(mp_obj_t ring_obj) {
   mp_uint_t ring = mp_obj_get_uint(ring_obj);
 
-  uint32_t timestamp = 0;
+  int64_t timestamp = 0;
 
   ts_t status = app_root_get_timestamp(ring, &timestamp);
   if (ts_error(status)) {
     mp_raise_type(&mp_type_AppArenaError);
   }
 
-  return mp_obj_new_int(timestamp);
+  return mp_obj_new_int_from_ll(timestamp);
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_timestamp_obj,
                                  mod_trezorapp_root_timestamp);

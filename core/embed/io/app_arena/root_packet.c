@@ -28,8 +28,6 @@
 
 #include "root_packet.h"
 
-#include <stdlib.h>
-
 // Maximum allowed time difference between the root packet and its
 // higher-level root packet.
 #define ROOT_PACKET_MAX_DRIFT (90 * 86400)  // 90 days
@@ -238,15 +236,18 @@ ts_t root_packet_verify(const void* data, size_t size,
   TSH_CHECK(auth->version == ROOT_PACKET_VERSION, TS_EBADMSG);
   TSH_CHECK(auth->ring_mask != 0, TS_EBADMSG);
   TSH_CHECK(auth->ring_mask <= (1 << APP_RING_COUNT) - 1, TS_EBADMSG);
-  TSH_CHECK(auth->timestamp != 0, TS_EBADMSG);
+  TSH_CHECK(auth->timestamp > 0, TS_EBADMSG);
+  TSH_CHECK(auth->chain_timestamp >= 0, TS_EBADMSG);
 
   if (auth->ring_mask & (1 << APP_RING_0)) {
     // Ring #0 - no chain timestamp
     TSH_CHECK(auth->chain_timestamp == 0, TS_EBADMSG);
   } else {
     // Ring #1 and/or #2
-    int32_t diff = (int32_t)(auth->timestamp - auth->chain_timestamp);
-    TSH_CHECK(abs(diff) <= ROOT_PACKET_MAX_DRIFT, TS_EBADMSG);
+    // Both operands are non-negative, so the subtraction cannot overflow
+    int64_t diff = auth->timestamp - auth->chain_timestamp;
+    TSH_CHECK(diff >= -ROOT_PACKET_MAX_DRIFT && diff <= ROOT_PACKET_MAX_DRIFT,
+              TS_EBADMSG);
   }
 
   // Calculate the expected size of the authenticated part of the root packet

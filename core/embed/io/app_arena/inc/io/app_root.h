@@ -35,7 +35,7 @@ typedef enum {
  * @brief Hold persisted timestamps for each application ring
  */
 typedef struct {
-  uint32_t ring_timestamp[APP_RING_COUNT];
+  int64_t ring_timestamp[APP_RING_COUNT];
 } app_root_state_t;
 
 /**
@@ -86,12 +86,12 @@ bool app_root_is_loaded(app_ring_t ring);
  * @brief Retrieves the timestamp from the root packet for the given ring.
  *
  * @param ring The ring index to retrieve the timestamp from.
- * @param timestamp Pointer to a uint32_t variable to store the timestamp.
+ * @param timestamp Pointer to a int64_t variable to store the timestamp.
  *
  * @return TS_OK on success, or an error code on failure.
  *         TS_ENOENT if the root packet for the given ring does not exist.
  */
-ts_t app_root_get_timestamp(app_ring_t ring, uint32_t* timestamp);
+ts_t app_root_get_timestamp(app_ring_t ring, int64_t* timestamp);
 
 /**
  * @brief Retrieves the Merkle root from the root packet for the given ring.
