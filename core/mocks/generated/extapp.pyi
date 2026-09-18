@@ -2,21 +2,21 @@ from typing import *
 from buffer_types import *
 
 
-# upymod/modtrezorapp/modtrezorapp-image.h
+# upymod/modextapp/modextapp-image.h
 class AppError(Exception):
     """
-    Base exception for all trezorapp errors.
+    Base exception for all extapp errors.
     """
 
 
-# upymod/modtrezorapp/modtrezorapp-image.h
+# upymod/modextapp/modextapp-image.h
 class AppImageError(AppError):
     """
     Base exception for app image errors.
     """
 
 
-# upymod/modtrezorapp/modtrezorapp-image.h
+# upymod/modextapp/modextapp-image.h
 class AppImageNotFoundError(AppImageError):
     """
     Raised when the AppImage handle is invalid or the image no longer
@@ -24,28 +24,28 @@ class AppImageNotFoundError(AppImageError):
     """
 
 
-# upymod/modtrezorapp/modtrezorapp-image.h
+# upymod/modextapp/modextapp-image.h
 class AppImageMemoryError(AppImageError):
     """
     Raised when there is not enough memory in the app arena.
     """
 
 
-# upymod/modtrezorapp/modtrezorapp-image.h
+# upymod/modextapp/modextapp-image.h
 class AppImageVerificationError(AppImageError):
     """
     Raised when the app image data fails verification.
     """
 
 
-# upymod/modtrezorapp/modtrezorapp-image.h
+# upymod/modextapp/modextapp-image.h
 class AppArenaError(AppError):
     """
     Raised when an app arena operation fails.
     """
 
 
-# upymod/modtrezorapp/modtrezorapp-image.h
+# upymod/modextapp/modextapp-image.h
 class AppImage:
     """
     External application loaded in the app arena
@@ -150,7 +150,7 @@ class AppImage:
         """
 
 
-# upymod/modtrezorapp/modtrezorapp-root.h
+# upymod/modextapp/modextapp-root.h
 class AppRootState:
     """
     Represents the persisted state of root packets, including the minimum
@@ -171,7 +171,7 @@ class AppRootState:
         """
 
 
-# upymod/modtrezorapp/modtrezorapp.c
+# upymod/modextapp/modextapp.c
 def create_image(header: AnyBytes, proof: AnyBytes) -> AppImage:
     """
     Create a new application image from header and proof.
@@ -180,28 +180,28 @@ def create_image(header: AnyBytes, proof: AnyBytes) -> AppImage:
     """
 
 
-# upymod/modtrezorapp/modtrezorapp.c
+# upymod/modextapp/modextapp.c
 def images() -> Iterator[AppImage]:
     """
     Return an iterator over all app images in the app arena.
     """
 
 
-# upymod/modtrezorapp/modtrezorapp.c
+# upymod/modextapp/modextapp.c
 def image_by_handle(handle: int) -> AppImage:
     """
     Return the application image with the specified handle.
     """
 
 
-# upymod/modtrezorapp/modtrezorapp.c
+# upymod/modextapp/modextapp.c
 def clear_event() -> None:
     """
     Clear the pending event on the app arena, if any.
     """
 
 
-# upymod/modtrezorapp/modtrezorapp.c
+# upymod/modextapp/modextapp.c
 def image_count() -> int:
     """
     Return the number of application images currently
@@ -209,21 +209,21 @@ def image_count() -> int:
     """
 
 
-# upymod/modtrezorapp/modtrezorapp.c
+# upymod/modextapp/modextapp.c
 def mem_total() -> int:
     """
     Return the total memory available in the app arena.
     """
 
 
-# upymod/modtrezorapp/modtrezorapp.c
+# upymod/modextapp/modextapp.c
 def mem_free() -> int:
     """
     Return the free memory available in the app arena.
     """
 
 
-# upymod/modtrezorapp/modtrezorapp.c
+# upymod/modextapp/modextapp.c
 def root_update(root_packet: AnyBytes, state: AppRootState) -> None:
     """
     Update the root-of-trust storage with the provided root packet.
@@ -235,7 +235,7 @@ def root_update(root_packet: AnyBytes, state: AppRootState) -> None:
     """
 
 
-# upymod/modtrezorapp/modtrezorapp.c
+# upymod/modextapp/modextapp.c
 def root_is_loaded(ring: uint) -> bool:
     """
     Return True if a root-of-trust is present for the specified ring,
@@ -243,14 +243,14 @@ def root_is_loaded(ring: uint) -> bool:
     """
 
 
-# upymod/modtrezorapp/modtrezorapp.c
+# upymod/modextapp/modextapp.c
 def root_timestamp(ring: uint) -> int:
     """
     Return the timestamp of the root-of-trust for the specified ring.
     """
 
 
-# upymod/modtrezorapp/modtrezorapp.c
+# upymod/modextapp/modextapp.c
 def app_ring_from_header(header: AnyBytes) -> uint:
     """
     Return the application privilege ring from the provided header.

@@ -31,10 +31,10 @@
 
 #include "../trezorobj.h"
 
-#include "modtrezorapp-image.h"
-#include "modtrezorapp-root.h"
+#include "modextapp-image.h"
+#include "modextapp-root.h"
 
-/// package: trezorapp
+/// package: extapp
 
 /// def create_image(header: AnyBytes, proof: AnyBytes) -> AppImage:
 ///     """
@@ -42,7 +42,7 @@
 ///     The returned handle can be used to load the rest of the
 ///     image content and run it.
 ///     """
-static mp_obj_t mod_trezorapp_create_image(mp_obj_t header_obj,
+static mp_obj_t mod_extapp_create_image(mp_obj_t header_obj,
                                            mp_obj_t proof_obj) {
   mp_buffer_info_t header_buf;
   mp_get_buffer_raise(header_obj, &header_buf, MP_BUFFER_READ);
@@ -51,7 +51,7 @@ static mp_obj_t mod_trezorapp_create_image(mp_obj_t header_obj,
   mp_get_buffer_raise(proof_obj, &proof_buf, MP_BUFFER_READ);
 
   mp_obj_AppImage_t* o =
-      mp_obj_malloc(mp_obj_AppImage_t, &mod_trezorapp_AppImage_type);
+      mp_obj_malloc(mp_obj_AppImage_t, &mod_extapp_AppImage_type);
 
   ts_t status = app_arena_create_image(
       header_buf.buf, header_buf.len, proof_buf.buf, proof_buf.len, &o->handle);
@@ -66,15 +66,15 @@ static mp_obj_t mod_trezorapp_create_image(mp_obj_t header_obj,
 
   return MP_OBJ_FROM_PTR(o);
 }
-static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_create_image_obj,
-                                 mod_trezorapp_create_image);
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_extapp_create_image_obj,
+                                 mod_extapp_create_image);
 
 typedef struct {
   mp_obj_base_t base;
   app_image_iter_t state;
 } mp_obj_AppImageIter_t;
 
-static mp_obj_t mod_trezorapp_images_iternext(mp_obj_t self_in) {
+static mp_obj_t mod_extapp_images_iternext(mp_obj_t self_in) {
   mp_obj_AppImageIter_t* self = MP_OBJ_TO_PTR(self_in);
 
   app_image_handle_t handle = APP_IMAGE_HANDLE_INVALID;
@@ -88,35 +88,35 @@ static mp_obj_t mod_trezorapp_images_iternext(mp_obj_t self_in) {
   }
 
   mp_obj_AppImage_t* o =
-      mp_obj_malloc(mp_obj_AppImage_t, &mod_trezorapp_AppImage_type);
+      mp_obj_malloc(mp_obj_AppImage_t, &mod_extapp_AppImage_type);
   o->handle = handle;
   return MP_OBJ_FROM_PTR(o);
 }
 
 // clang-format off
-static MP_DEFINE_CONST_OBJ_TYPE(mod_trezorapp_AppImageIter_type,
+static MP_DEFINE_CONST_OBJ_TYPE(mod_extapp_AppImageIter_type,
   MP_QSTR_AppImageIter, MP_TYPE_FLAG_ITER_IS_ITERNEXT,
-  iter, mod_trezorapp_images_iternext);
+  iter, mod_extapp_images_iternext);
 // clang-format on
 
 /// def images() -> Iterator[AppImage]:
 ///     """
 ///     Return an iterator over all app images in the app arena.
 ///     """
-static mp_obj_t mod_trezorapp_images(void) {
+static mp_obj_t mod_extapp_images(void) {
   mp_obj_AppImageIter_t* o =
-      mp_obj_malloc(mp_obj_AppImageIter_t, &mod_trezorapp_AppImageIter_type);
+      mp_obj_malloc(mp_obj_AppImageIter_t, &mod_extapp_AppImageIter_type);
   o->state = APP_IMAGE_ITER_INIT;
   return MP_OBJ_FROM_PTR(o);
 }
-static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_images_obj,
-                                 mod_trezorapp_images);
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_extapp_images_obj,
+                                 mod_extapp_images);
 
 /// def image_by_handle(handle: int) -> AppImage:
 ///     """
 ///     Return the application image with the specified handle.
 ///     """
-static mp_obj_t mod_trezorapp_arena_image_by_handle(mp_obj_t handle_obj) {
+static mp_obj_t mod_extapp_arena_image_by_handle(mp_obj_t handle_obj) {
   app_image_handle_t handle = mp_obj_get_int(handle_obj);
 
   app_image_info_t info;
@@ -128,33 +128,33 @@ static mp_obj_t mod_trezorapp_arena_image_by_handle(mp_obj_t handle_obj) {
   }
 
   mp_obj_AppImage_t* o =
-      mp_obj_malloc(mp_obj_AppImage_t, &mod_trezorapp_AppImage_type);
+      mp_obj_malloc(mp_obj_AppImage_t, &mod_extapp_AppImage_type);
   o->handle = handle;
   return MP_OBJ_FROM_PTR(o);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_arena_image_by_handle_obj,
-                                 mod_trezorapp_arena_image_by_handle);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_arena_image_by_handle_obj,
+                                 mod_extapp_arena_image_by_handle);
 
 /// def clear_event() -> None:
 ///     """
 ///     Clear the pending event on the app arena, if any.
 ///     """
-static mp_obj_t mod_trezorapp_arena_clear_event(void) {
+static mp_obj_t mod_extapp_arena_clear_event(void) {
   ts_t status = app_arena_clear_event();
   if (ts_error(status)) {
     mp_raise_type(&mp_type_AppArenaError);
   }
   return mp_const_none;
 }
-static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_clear_event_obj,
-                                 mod_trezorapp_arena_clear_event);
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_extapp_arena_clear_event_obj,
+                                 mod_extapp_arena_clear_event);
 
 /// def image_count() -> int:
 ///     """
 ///     Return the number of application images currently
 ///     loaded in the app arena.
 ///     """
-static mp_obj_t mod_trezorapp_arena_image_count(void) {
+static mp_obj_t mod_extapp_arena_image_count(void) {
   app_arena_info_t info;
   ts_t status = app_arena_get_info(&info);
   if (ts_error(status)) {
@@ -163,14 +163,14 @@ static mp_obj_t mod_trezorapp_arena_image_count(void) {
 
   return mp_obj_new_int(info.image_count);
 }
-static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_image_count_obj,
-                                 mod_trezorapp_arena_image_count);
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_extapp_arena_image_count_obj,
+                                 mod_extapp_arena_image_count);
 
 /// def mem_total() -> int:
 ///     """
 ///     Return the total memory available in the app arena.
 ///     """
-static mp_obj_t mod_trezorapp_arena_mem_total(void) {
+static mp_obj_t mod_extapp_arena_mem_total(void) {
   app_arena_info_t info;
   ts_t status = app_arena_get_info(&info);
   if (ts_error(status)) {
@@ -179,14 +179,14 @@ static mp_obj_t mod_trezorapp_arena_mem_total(void) {
 
   return mp_obj_new_int(info.total_size);
 }
-static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_mem_total_obj,
-                                 mod_trezorapp_arena_mem_total);
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_extapp_arena_mem_total_obj,
+                                 mod_extapp_arena_mem_total);
 
 /// def mem_free() -> int:
 ///     """
 ///     Return the free memory available in the app arena.
 ///     """
-static mp_obj_t mod_trezorapp_arena_mem_free(void) {
+static mp_obj_t mod_extapp_arena_mem_free(void) {
   app_arena_info_t info;
   ts_t status = app_arena_get_info(&info);
   if (ts_error(status)) {
@@ -195,8 +195,8 @@ static mp_obj_t mod_trezorapp_arena_mem_free(void) {
 
   return mp_obj_new_int(info.free_size);
 }
-static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_mem_free_obj,
-                                 mod_trezorapp_arena_mem_free);
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_extapp_arena_mem_free_obj,
+                                 mod_extapp_arena_mem_free);
 
 /// def root_update(root_packet: AnyBytes, state: AppRootState) -> None:
 ///     """
@@ -207,12 +207,12 @@ static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorapp_arena_mem_free_obj,
 ///     raised. If the root packet timestamps are newer, `state` is updated
 ///     accordingly.
 ///     """
-static mp_obj_t mod_trezorapp_root_update(mp_obj_t root_packet_obj,
+static mp_obj_t mod_extapp_root_update(mp_obj_t root_packet_obj,
                                           mp_obj_t root_state_obj) {
   mp_buffer_info_t root_packet_buf;
   mp_get_buffer_raise(root_packet_obj, &root_packet_buf, MP_BUFFER_READ);
 
-  if (!mp_obj_is_type(root_state_obj, &mod_trezorapp_AppRootState_type)) {
+  if (!mp_obj_is_type(root_state_obj, &mod_extapp_AppRootState_type)) {
     mp_raise_TypeError(MP_ERROR_TEXT("AppRootState required"));
   }
 
@@ -226,26 +226,26 @@ static mp_obj_t mod_trezorapp_root_update(mp_obj_t root_packet_obj,
 
   return mp_const_none;
 }
-static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_root_update_obj,
-                                 mod_trezorapp_root_update);
+static MP_DEFINE_CONST_FUN_OBJ_2(mod_extapp_root_update_obj,
+                                 mod_extapp_root_update);
 
 /// def root_is_loaded(ring: uint) -> bool:
 ///     """
 ///     Return True if a root-of-trust is present for the specified ring,
 ///     otherwise return False.
 ///     """
-static mp_obj_t mod_trezorapp_root_is_loaded(mp_obj_t ring_obj) {
+static mp_obj_t mod_extapp_root_is_loaded(mp_obj_t ring_obj) {
   mp_uint_t ring = mp_obj_get_uint(ring_obj);
   return mp_obj_new_bool(app_root_is_loaded(ring));
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_is_loaded_obj,
-                                 mod_trezorapp_root_is_loaded);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_root_is_loaded_obj,
+                                 mod_extapp_root_is_loaded);
 
 /// def root_timestamp(ring: uint) -> int:
 ///     """
 ///     Return the timestamp of the root-of-trust for the specified ring.
 ///     """
-static mp_obj_t mod_trezorapp_root_timestamp(mp_obj_t ring_obj) {
+static mp_obj_t mod_extapp_root_timestamp(mp_obj_t ring_obj) {
   mp_uint_t ring = mp_obj_get_uint(ring_obj);
 
   int64_t timestamp = 0;
@@ -257,14 +257,14 @@ static mp_obj_t mod_trezorapp_root_timestamp(mp_obj_t ring_obj) {
 
   return mp_obj_new_int_from_ll(timestamp);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_root_timestamp_obj,
-                                 mod_trezorapp_root_timestamp);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_root_timestamp_obj,
+                                 mod_extapp_root_timestamp);
 
 /// def app_ring_from_header(header: AnyBytes) -> uint:
 ///     """
 ///     Return the application privilege ring from the provided header.
 ///     """
-static mp_obj_t mod_trezorapp_app_ring_from_header(mp_obj_t header_obj) {
+static mp_obj_t mod_extapp_app_ring_from_header(mp_obj_t header_obj) {
   mp_buffer_info_t header_buf;
   mp_get_buffer_raise(header_obj, &header_buf, MP_BUFFER_READ);
 
@@ -279,13 +279,13 @@ static mp_obj_t mod_trezorapp_app_ring_from_header(mp_obj_t header_obj) {
 
   return mp_obj_new_int(app_ring);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_app_ring_from_header_obj,
-                                 mod_trezorapp_app_ring_from_header);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_app_ring_from_header_obj,
+                                 mod_extapp_app_ring_from_header);
 
-static const mp_rom_map_elem_t mod_module_trezorapp_globals_table[] = {
-    {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorapp)},
-    {MP_ROM_QSTR(MP_QSTR_AppImage), MP_ROM_PTR(&mod_trezorapp_AppImage_type)},
-    {MP_ROM_QSTR(MP_QSTR_AppRootState), MP_ROM_PTR(&mod_trezorapp_AppRootState_type)},
+static const mp_rom_map_elem_t mod_module_extapp_globals_table[] = {
+    {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_extapp)},
+    {MP_ROM_QSTR(MP_QSTR_AppImage), MP_ROM_PTR(&mod_extapp_AppImage_type)},
+    {MP_ROM_QSTR(MP_QSTR_AppRootState), MP_ROM_PTR(&mod_extapp_AppRootState_type)},
     {MP_ROM_QSTR(MP_QSTR_AppError), MP_ROM_PTR(&mp_type_AppError)},
     {MP_ROM_QSTR(MP_QSTR_AppImageError), MP_ROM_PTR(&mp_type_AppImageError)},
     {MP_ROM_QSTR(MP_QSTR_AppImageNotFoundError),
@@ -296,35 +296,35 @@ static const mp_rom_map_elem_t mod_module_trezorapp_globals_table[] = {
      MP_ROM_PTR(&mp_type_AppImageVerificationError)},
     {MP_ROM_QSTR(MP_QSTR_AppArenaError), MP_ROM_PTR(&mp_type_AppArenaError)},
     {MP_ROM_QSTR(MP_QSTR_create_image),
-     MP_ROM_PTR(&mod_trezorapp_create_image_obj)},
-    {MP_ROM_QSTR(MP_QSTR_images), MP_ROM_PTR(&mod_trezorapp_images_obj)},
+     MP_ROM_PTR(&mod_extapp_create_image_obj)},
+    {MP_ROM_QSTR(MP_QSTR_images), MP_ROM_PTR(&mod_extapp_images_obj)},
     {MP_ROM_QSTR(MP_QSTR_image_count),
-     MP_ROM_PTR(&mod_trezorapp_arena_image_count_obj)},
+     MP_ROM_PTR(&mod_extapp_arena_image_count_obj)},
     {MP_ROM_QSTR(MP_QSTR_image_by_handle),
-     MP_ROM_PTR(&mod_trezorapp_arena_image_by_handle_obj)},
+     MP_ROM_PTR(&mod_extapp_arena_image_by_handle_obj)},
     {MP_ROM_QSTR(MP_QSTR_clear_event),
-     MP_ROM_PTR(&mod_trezorapp_arena_clear_event_obj)},
+     MP_ROM_PTR(&mod_extapp_arena_clear_event_obj)},
     {MP_ROM_QSTR(MP_QSTR_mem_total),
-     MP_ROM_PTR(&mod_trezorapp_arena_mem_total_obj)},
+     MP_ROM_PTR(&mod_extapp_arena_mem_total_obj)},
     {MP_ROM_QSTR(MP_QSTR_mem_free),
-     MP_ROM_PTR(&mod_trezorapp_arena_mem_free_obj)},
+     MP_ROM_PTR(&mod_extapp_arena_mem_free_obj)},
     {MP_ROM_QSTR(MP_QSTR_root_update),
-     MP_ROM_PTR(&mod_trezorapp_root_update_obj)},
+     MP_ROM_PTR(&mod_extapp_root_update_obj)},
     {MP_ROM_QSTR(MP_QSTR_root_is_loaded),
-     MP_ROM_PTR(&mod_trezorapp_root_is_loaded_obj)},
+     MP_ROM_PTR(&mod_extapp_root_is_loaded_obj)},
     {MP_ROM_QSTR(MP_QSTR_root_timestamp),
-     MP_ROM_PTR(&mod_trezorapp_root_timestamp_obj)},
+     MP_ROM_PTR(&mod_extapp_root_timestamp_obj)},
     {MP_ROM_QSTR(MP_QSTR_app_ring_from_header),
-     MP_ROM_PTR(&mod_trezorapp_app_ring_from_header_obj)},
+     MP_ROM_PTR(&mod_extapp_app_ring_from_header_obj)},
 };
-static MP_DEFINE_CONST_DICT(mp_module_trezorapp_globals,
-                            mod_module_trezorapp_globals_table);
+static MP_DEFINE_CONST_DICT(mp_module_extapp_globals,
+                            mod_module_extapp_globals_table);
 
-const mp_obj_module_t mp_module_trezorapp = {
+const mp_obj_module_t mp_module_extapp = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t*)&mp_module_trezorapp_globals,
+    .globals = (mp_obj_dict_t*)&mp_module_extapp_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_trezorapp, mp_module_trezorapp);
+MP_REGISTER_MODULE(MP_QSTR_extapp, mp_module_extapp);
 
 #endif  // USE_APP_LOADING

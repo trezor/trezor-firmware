@@ -118,7 +118,7 @@ cleanup:
 ///     """
 ///     Creates an AppRootState object.
 ///     """
-static mp_obj_t mod_trezorapp_AppRootState_make_new(const mp_obj_type_t *type,
+static mp_obj_t mod_extapp_AppRootState_make_new(const mp_obj_type_t *type,
                                                     size_t n_args, size_t n_kw,
                                                     const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 2, false);
@@ -155,7 +155,7 @@ static mp_obj_t mod_trezorapp_AppRootState_make_new(const mp_obj_type_t *type,
 ///     """
 ///     Serializes the AppRootState object to bytes.
 ///     """
-static mp_obj_t mod_trezorapp_AppRootState_serialize(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppRootState_serialize(mp_obj_t self) {
   mp_obj_AppRootState_t *o = MP_OBJ_TO_PTR(self);
 
   app_root_state_encoded_t encoded_state;
@@ -170,20 +170,20 @@ static mp_obj_t mod_trezorapp_AppRootState_serialize(mp_obj_t self) {
 
   return mp_obj_new_bytes((const byte *)&encoded_state, encoded_size);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppRootState_serialize_obj,
-                                 mod_trezorapp_AppRootState_serialize);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppRootState_serialize_obj,
+                                 mod_extapp_AppRootState_serialize);
 
-static const mp_rom_map_elem_t mod_trezorapp_AppRootState_locals_dict_table[] =
+static const mp_rom_map_elem_t mod_extapp_AppRootState_locals_dict_table[] =
     {
         {MP_ROM_QSTR(MP_QSTR_serialize),
-         MP_ROM_PTR(&mod_trezorapp_AppRootState_serialize_obj)},
+         MP_ROM_PTR(&mod_extapp_AppRootState_serialize_obj)},
 };
-static MP_DEFINE_CONST_DICT(mod_trezorapp_AppRootState_locals_dict,
-                            mod_trezorapp_AppRootState_locals_dict_table);
+static MP_DEFINE_CONST_DICT(mod_extapp_AppRootState_locals_dict,
+                            mod_extapp_AppRootState_locals_dict_table);
 
 // clang-format off
-static MP_DEFINE_CONST_OBJ_TYPE(mod_trezorapp_AppRootState_type,
+static MP_DEFINE_CONST_OBJ_TYPE(mod_extapp_AppRootState_type,
   MP_QSTR_AppRootState, MP_TYPE_FLAG_NONE,
-  make_new, mod_trezorapp_AppRootState_make_new,
-  locals_dict, &mod_trezorapp_AppRootState_locals_dict);
+  make_new, mod_extapp_AppRootState_make_new,
+  locals_dict, &mod_extapp_AppRootState_locals_dict);
 // clang-format on
