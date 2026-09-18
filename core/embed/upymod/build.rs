@@ -72,6 +72,10 @@ fn main() -> Result<()> {
             lib.add_define("USE_MINISCRIPT", Some("1"));
         }
 
+        if cfg!(feature = "tracked_allocator") {
+            lib.add_define("USE_TRACKED_ALLOCATOR", Some("1"));
+        }
+
         if cfg!(feature = "n1w1") {
             lib.add_define("USE_N1W1", Some("1"));
         }
