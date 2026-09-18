@@ -148,10 +148,10 @@ def main() -> None:
 
     # Roots over the same slots except for the role fields; neither may fold for
     # a verifier that builds kind/index from its own build configuration.
-    wrong_index_root, wrong_index_proofs = nrf_tree.build_model_tree(
+    wrong_index_root, _ = nrf_tree.build_model_tree(
         [nrf_tree.nrf_leaf_value(nrf_image, index=1)] + slots[1:]
     )
-    wrong_kind_root, wrong_kind_proofs = nrf_tree.build_model_tree(
+    wrong_kind_root, _ = nrf_tree.build_model_tree(
         [
             nrf_tree.coproc_slot_value(
                 DEVICE_MODEL,
