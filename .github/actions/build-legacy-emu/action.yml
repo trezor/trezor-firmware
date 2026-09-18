@@ -11,8 +11,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: ./.github/actions/environment
-
     - run: nix-shell --run "uv run legacy/script/cibuild"
       shell: sh
 

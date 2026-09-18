@@ -1,26 +1,56 @@
-name: 'Download dependencies'
+name: 'Clone repo and download dependencies'
 description: 'Nixpkgs and uv'
 inputs:
+  clone-shallow:
+    description: 'Fetch only the last commit instead of the entire history?'
+    required: false
+    default: true
+    type: boolean
+  clone-submodules:
+    description: 'Which submodules to clone?'
+    required: false
+    default: all
+    type: choice
+    options:
+      - none
+      - essential
+      - all
   full-deps:
     description: 'Pass --arg fullDeps true to nix-shell?'
     required: false
-    default: "false"
+    default: false
+    type: boolean
   pre-download:
     description: 'Download shell.nix and uv.lock dependencies upfront?'
     required: false
-    default: "true"
+    default: true
+    type: boolean
 runs:
   using: "composite"
+  env:
+    FETCH_DEPTH: ${{ inputs.clone-shallow && '1' || '0' }}
+    ESSENTIAL_SUBMODULES: vendor/ts-tvl vendor/QR-Code-generator
   steps:
+    - name: Clone the repository
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      with:
+        submodules: ${{ inputs.clone-submodules == 'all' && 'recursive' || 'false' }}
+        persist-credentials: false
+        fetch-depth: ${{ env.FETCH_DEPTH }}
+    - name: Clone essential submodules
+      if: inputs.clone-submodules == 'essential'
+      shell: sh
+      run: |
+        git submodule update --init --recursive --depth=$FETCH_DEPTH $ESSENTIAL_SUBMODULES
     - name: Install nix
       uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3  # cachix/install-nix-action@v31.10.6
       with:
         nix_path: nixpkgs=channel:nixos-unstable
     - name: Dependencies nixpkgs
-      if: inputs.pre-download == 'true'
+      if: inputs.pre-download
       run: timeout -v --kill-after=10 500 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "echo nixpkgs deps preinstalled" || echo "NIXPKGS PREINSTALL FAILURE"
       shell: sh
     - name: Dependencies uv
-      if: inputs.pre-download == 'true'
+      if: inputs.pre-download
       run: timeout -v --kill-after=10 200 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "uv sync"
       shell: sh

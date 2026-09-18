@@ -87,10 +87,6 @@ jobs:
       TT_UHUB_PORT: all
     timeout-minutes: 360  # 6h CI job timeout
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-          persist-credentials: false
       - uses: ./.github/actions/environment
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
@@ -135,13 +131,9 @@ jobs:
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2T1' && '0' || '1' }}
       TT_UHUB_PORT: all
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-          persist-credentials: false
       - uses: ./.github/actions/environment
         with:
-          full-deps: "true"
+          full-deps: true
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
       - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build-xtask/artifacts/latest/firmware.bin"
@@ -180,10 +172,6 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       DEBUG_LINK: 1
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-          persist-credentials: false
       - uses: ./.github/actions/environment
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run legacy/script/setup"

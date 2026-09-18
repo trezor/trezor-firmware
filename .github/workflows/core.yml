@@ -52,11 +52,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: $/.github/actions/environment
         with:
-          submodules: recursive
-          persist-credentials: false
-      - uses: ./.github/actions/environment
+          clone-submodules: essential
       - run: nix-shell --run "cd core/embed && cargo test -p xtask -p xbuild"
       - run: nix-shell --run "cd core/embed && cargo clippy -p xtask -p xbuild --all-targets -- -D warnings"
 
@@ -102,10 +100,7 @@ jobs:
       PRODUCTION: ${{ matrix.type == 'production' && '1' || '0' }}
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T3W1' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - if: matrix.coins == 'universal' && matrix.type != 'debuglink'
         run: |
           nix-shell --run "uv run make -C core build_boardloader"
@@ -170,10 +165,7 @@ jobs:
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - run: nix-shell --run "uv run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal' && matrix.asan == 'noasan'
       - run: nix-shell --run "uv run make -C core build_unix_frozen"
@@ -217,10 +209,7 @@ jobs:
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - run: nix-shell --run "uv run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal'
       - run: nix-shell --run "uv run make -C core build_unix_frozen"
@@ -247,11 +236,7 @@ jobs:
       PYTEST_TIMEOUT: 400
       TESTOPTS: "--durations 10"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-          persist-credentials: false
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - name: Build prodtest emulator
         run: nix-shell --run "uv run xtask build prodtest --model ${{ matrix.model }} --emulator"
       - name: Upload prodtest emulator artifact
@@ -282,10 +267,7 @@ jobs:
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       PYOPT: 0
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - run: nix-shell --run "uv run make -C core build_unix"
       - run: nix-shell --run "uv run make -C core test_emu_sanity"  # sanity check non-frozen emulator
       - name: Start Tropic model
@@ -313,10 +295,7 @@ jobs:
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       DISABLE_TROPIC: 1
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - run: nix-shell --run "uv run make -C core test_rust"
       - run: nix-shell --run "uv run make -C core clippy"
 
@@ -330,15 +309,14 @@ jobs:
       matrix:
         model: [T2T1, T3B1]
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: $/.github/actions/environment
         with:
-          submodules: recursive
+          clone-submodules: essential
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
-      - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run core/emu.py --headless -q --temporary-profile --slip0014 --command cargo test --manifest-path rust/trezor-client/Cargo.toml"
 
   # Device tests for Core. Running device tests and also comparing screens
@@ -382,15 +360,12 @@ jobs:
       TESTOPTS: "--durations 10 --session-timeout ${{ matrix.model == 'T3W1' && '3000' || '1800' }}"  # pytest global timeout
     timeout-minutes: ${{ matrix.model == 'T3W1' && 60 || 40 }}  # CI job timeout
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
+      - uses: $/.github/actions/environment
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-debuglink-${{ matrix.asan }}${{ matrix.miniscript && '-miniscript' || '' }}${{ matrix.n1w1 && '-n1w1' || '' }}
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
-      - uses: ./.github/actions/environment
       - name: Run device tests
         if: ${{ env.STABLE_FEATURES == 'true' }}
         run: nix-shell --run "uv run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"
@@ -405,14 +380,14 @@ jobs:
           path: tests/trezor*.log
           retention-days: 7
         if: always()
-      - uses: ./.github/actions/ui-report
+      - uses: $/.github/actions/ui-report
         with:
           model: ${{ matrix.model }}
           lang: ${{ matrix.lang }}
           status: ${{ job.status }}
         if: ${{ always() && env.ACTIONS_DO_UI_TEST == 'true' && env.STABLE_FEATURES == 'true' }}
         continue-on-error: true
-      - uses: ./.github/actions/upload-coverage
+      - uses: $/.github/actions/upload-coverage
         if: ${{ env.STABLE_FEATURES == 'true' }}
 
   # Click tests - UI.
@@ -437,15 +412,12 @@ jobs:
       TEST_LANG: ${{ matrix.lang }}
       TESTOPTS: "--durations 10"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
+      - uses: $/.github/actions/environment
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
-      - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run make -C core test_emu_click_ui_multicore"
         if: ${{ matrix.asan == 'noasan' }}
       - run: nix-shell --run "uv run make -C core test_emu_click"
@@ -456,14 +428,14 @@ jobs:
           path: tests/trezor*.log
           retention-days: 7
         if: always()
-      - uses: ./.github/actions/ui-report
+      - uses: $/.github/actions/ui-report
         with:
           model: ${{ matrix.model }}
           lang: ${{ matrix.lang }}
           status: ${{ job.status }}
         if: always()
         continue-on-error: true
-      - uses: ./.github/actions/upload-coverage
+      - uses: $/.github/actions/upload-coverage
 
   # Upgrade tests.
   # See [docs/tests/upgrade-tests](../tests/upgrade-tests.md) for more info.
@@ -485,9 +457,9 @@ jobs:
       TESTOPTS: "--durations 10"
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: $/.github/actions/environment
         with:
-          submodules: recursive
+          full-deps: true
       - name: Set upgrade selector
         run: |
           echo "TREZOR_UPGRADE_TEST=${{ matrix.model }}" >> "$GITHUB_ENV"
@@ -496,9 +468,6 @@ jobs:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
-      - uses: ./.github/actions/environment
-        with:
-          full-deps: "true"
       - run: nix-shell --arg fullDeps true --run "tests/download_emulators.sh ${{ matrix.model }}"
       - run: nix-shell --arg fullDeps true --run "uv run make -C core test_emu_upgrade"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -525,31 +494,26 @@ jobs:
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
+      TREZOR_UPGRADE_TEST: ${{ matrix.model }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-      - name: Set upgrade selector
-        run: |
-          echo "TREZOR_UPGRADE_TEST=${{ matrix.model }}" >> "$GITHUB_ENV"
+      - uses: $/.github/actions/environment
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
-      - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run make -C core test_emu_persistence_ui"
         if: ${{ matrix.asan == 'noasan' }}
       - run: nix-shell --run "uv run make -C core test_emu_persistence"
         if: ${{ matrix.asan == 'asan' }}
-      - uses: ./.github/actions/ui-report
+      - uses: $/.github/actions/ui-report
         with:
           model: ${{ matrix.model }}
           lang: en
           status: ${{ job.status }}
         if: always()
         continue-on-error: true
-      - uses: ./.github/actions/upload-coverage
+      - uses: $/.github/actions/upload-coverage
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-test-persistence-${{ matrix.model }}-${{ matrix.asan }}
@@ -570,17 +534,14 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1, T3W1]
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: $/.github/actions/environment
         with:
-          submodules: recursive
+          full-deps: true
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
-      - uses: ./.github/actions/environment
-        with:
-          full-deps: "true"
       - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
       - run: nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build-xtask/artifacts/latest/firmware-emu bitcoind"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -600,10 +561,7 @@ jobs:
       PYOPT: 0
       PYTEST_TIMEOUT: 900
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - run: nix-shell --run "uv run make -C core build_unix_frozen"
       - run: nix-shell --run "uv run make -C core test_emu"
       - run: nix-shell --run "mkdir core/prof/memperf-html"
@@ -631,14 +589,13 @@ jobs:
       matrix:
         model: [T2T1]  # FIXME: checker.py lacks awareness of U5 flash layout
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: $/.github/actions/environment
         with:
-          submodules: recursive
+          clone-submodules: essential
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-firmware-${{ matrix.model }}-universal-normal  # FIXME: s/normal/debuglink/
           path: core/build-xtask/artifacts
-      - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run core/tools/size/checker.py core/build-xtask/artifacts/latest/firmware.elf"
 
   # Monero tests.
@@ -658,17 +615,14 @@ jobs:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: $/.github/actions/environment
         with:
-          submodules: recursive
+          full-deps: true
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
-      - uses: ./.github/actions/environment
-        with:
-          full-deps: "true"
       - run: nix-shell --arg fullDeps true --run "uv run make -C core test_emu_monero"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
@@ -678,7 +632,7 @@ jobs:
             core/tests/trezor_monero_tests.log
           retention-days: 7
         if: always()
-      - uses: ./.github/actions/upload-coverage
+      - uses: $/.github/actions/upload-coverage
 
 
   # Tests for U2F and HID.
@@ -698,15 +652,12 @@ jobs:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
+      - uses: $/.github/actions/environment
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
-      - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run make -C tests/fido_tests/u2f-tests-hid"
       - run: nix-shell --run "uv run make -C core test_emu_u2f"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -715,7 +666,7 @@ jobs:
           path: tests/trezor*.log
           retention-days: 7
         if: always()
-      - uses: ./.github/actions/upload-coverage
+      - uses: $/.github/actions/upload-coverage
 
   # FIDO2 device tests.
   core_fido2_test:
@@ -734,15 +685,12 @@ jobs:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
+      - uses: $/.github/actions/environment
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build-xtask/artifacts/latest
       - run: chmod +x core/build-xtask/artifacts/latest/firmware-emu*
-      - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run make -C core test_emu_fido2"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
@@ -751,7 +699,7 @@ jobs:
             tests/trezor*.log
           retention-days: 7
         if: always()
-      - uses: ./.github/actions/upload-coverage
+      - uses: $/.github/actions/upload-coverage
 
   core_coverage_report:
     name: Coverage report
@@ -772,9 +720,7 @@ jobs:
     env:
       COVERAGE_THRESHOLD: 85
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
+      - uses: $/.github/actions/environment
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           pattern: core-coverage-${{ matrix.model }}-*
@@ -787,7 +733,6 @@ jobs:
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: core/build-xtask/artifacts/latest
-      - uses: ./.github/actions/environment
       # `make coverage` uses .i files downloaded above
       - run: nix-shell --run "uv run make -C core coverage"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -828,12 +773,15 @@ jobs:
     needs:
       - param
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: $/.github/actions/environment
+        with:
+          clone-submodules: none
+          pre-download: false
       - run: sleep 1m  # try avoiding github api rate limit
       - run: |
           python ci/make_pull_comment.py "${{ github.run_id }}" '${{ needs.param.outputs.test_lang }}' > ${{ env.PULL_COMMENT_PATH }}
           cat ${{ env.PULL_COMMENT_PATH }} >> $GITHUB_STEP_SUMMARY
-      - uses: ./.github/actions/ui-comment
+      - uses: $/.github/actions/ui-comment
         if: github.event_name == 'pull_request'
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
@@ -926,10 +874,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: $/.github/actions/environment
         with:
-          submodules: recursive
-      - uses: ./.github/actions/environment
+          clone-submodules: essential
       - run: nix-shell --run "uv run make -C core audit_rust"
       - run: nix-shell --run "uv run make -C core vet_rust"
 
@@ -940,11 +887,9 @@ jobs:
     timeout-minutes: 60
     needs: core_firmware
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: $/.github/actions/environment
         with:
-          submodules: recursive
-          persist-credentials: false
-      - uses: ./.github/actions/environment
+          clone-submodules: essential
       - name: Generate translation blobs
         run: nix-shell --run "uv run make -C core translations"
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
@@ -972,11 +917,9 @@ jobs:
     timeout-minutes: 20
     needs: core_firmware
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: $/.github/actions/environment
         with:
-          submodules: recursive
-          persist-credentials: false
-      - uses: ./.github/actions/environment
+          clone-submodules: essential
       - name: Generate translation blobs
         run: nix-shell --run "uv run make -C core translations"
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0

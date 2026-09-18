@@ -21,8 +21,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: ./.github/actions/environment
-
     - run: nix-shell --run "uv run make -C core build_bootloader_emu TREZOR_MODEL=${{ inputs.model }}"
       if: inputs.build-bootloader == 'true'
       shell: sh

@@ -47,9 +47,6 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "export PRODUCTION=1 && uv run legacy/script/cibuild"
       - run: nix-shell --run "uv run legacy/script/setup"
@@ -79,9 +76,6 @@ jobs:
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run legacy/script/cibuild"
       - run: cp legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-${{ matrix.coins }}
@@ -109,9 +103,6 @@ jobs:
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run legacy/script/cibuild"
       - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-arm-legacy-T1B1-${{ matrix.coins }}
@@ -135,15 +126,12 @@ jobs:
       EMULATOR: 1
       PYTEST_TIMEOUT: 120
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
+      - uses: ./.github/actions/environment
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: legacy-emu-${{ matrix.coins }}-debuglink-${{ matrix.asan }}
           path: legacy/firmware
       - run: chmod +x legacy/firmware/*.elf
-      - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run make -C legacy test_emu_ui"
         if: matrix.coins == 'universal'
       - run: nix-shell --run "uv run make -C legacy test_emu"
@@ -170,15 +158,12 @@ jobs:
       TREZOR_UPGRADE_TEST: T1B1
       PYTEST_TIMEOUT: 120
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-        with:
-          submodules: recursive
+      - uses: ./.github/actions/environment
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: legacy-emu-universal-debuglink-${{ matrix.asan }}
           path: legacy/firmware
       - run: chmod +x legacy/firmware/*.elf
-      - uses: ./.github/actions/environment
       - run: nix-shell --run "tests/download_emulators.sh T1B1"
       - run: nix-shell --run "uv run pytest tests/upgrade_tests"
 
@@ -192,17 +177,14 @@ jobs:
     env:
       EMULATOR: 1
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: ./.github/actions/environment
         with:
-          submodules: recursive
+          full-deps: true
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: legacy-emu-universal-debuglink-noasan
           path: legacy/firmware
       - run: chmod +x legacy/firmware/*.elf
-      - uses: ./.github/actions/environment
-        with:
-          full-deps: "true"
       - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
       - run: nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
 
