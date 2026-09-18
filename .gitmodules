@@ -1,46 +1,60 @@
 [submodule "vendor/micropython"]
 	path = vendor/micropython
 	url = https://github.com/trezor/micropython.git
+	shallow = true
 [submodule "vendor/QR-Code-generator"]
 	path = vendor/QR-Code-generator
 	url = https://github.com/nayuki/QR-Code-generator.git
 	ignore = untracked
+	shallow = true
 [submodule "vendor/secp256k1-zkp"]
 	path = vendor/secp256k1-zkp
 	url = https://github.com/bitcoin-core/secp256k1.git
+	shallow = true
 [submodule "crypto/tests/wycheproof"]
 	path = crypto/tests/wycheproof
 	url = https://github.com/google/wycheproof
+	shallow = true
 [submodule "legacy/libopencm3"]
 	path = vendor/libopencm3
 	url = https://github.com/libopencm3/libopencm3.git
+	shallow = true
 [submodule "legacy/vendor/nanopb"]
 	path = vendor/nanopb
 	url = https://github.com/nanopb/nanopb.git
 	ignore = untracked
+	shallow = true
 [submodule "vendor/fido2-tests"]
 	path = vendor/fido2-tests
 	url = https://github.com/trezor/fido2-tests.git
+	shallow = true
 [submodule "vendor/cmsis_device_u5"]
 	path = vendor/cmsis_device_u5
 	url = https://github.com/STMicroelectronics/cmsis_device_u5.git
+	shallow = true
 [submodule "vendor/cmsis_5"]
 	path = vendor/cmsis_5
 	url = https://github.com/ARM-software/CMSIS_5.git
+	shallow = true
 [submodule "vendor/stm32u5xx_hal_driver"]
 	path = vendor/stm32u5xx_hal_driver
 	url = https://github.com/trezor/stm32u5xx_hal_driver.git
+	shallow = true
 [submodule "vendor/libtropic"]
 	path = vendor/libtropic
 	url = https://github.com/tropicsquare/libtropic.git
+	shallow = true
 [submodule "vendor/ts-tvl"]
 	path = vendor/ts-tvl
 	url = https://github.com/tropicsquare/ts-tvl
+	shallow = true
 [submodule "vendor/sphincsplus"]
 	path = vendor/sphincsplus
 	url = https://github.com/sphincs/sphincsplus/
 	branch = consistent-basew
+	shallow = true
 [submodule "vendor/mldsa-native"]
 	path = vendor/mldsa-native
 	url = https://github.com/pq-code-package/mldsa-native.git
 	ignore = untracked
+	shallow = true
