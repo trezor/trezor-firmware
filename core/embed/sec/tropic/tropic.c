@@ -1029,8 +1029,12 @@ static bool tropic_read_fw_slot(uint8_t riscv[4], uint8_t spect[4],
     *present = false;
     return true;
   }
-  if (ret != LT_OK || length != sizeof(buf)) {
+  if (ret != LT_OK) {
     return false;
+  }
+  if (length != sizeof(buf)) {
+    *present = false;
+    return true;
   }
 
   memcpy(riscv, buf, 4);
@@ -1274,6 +1278,19 @@ secbool tropic_is_fw_update_in_progress(bool *in_progress) {
   // XXX: zkontroluju FW version slot. Když je prázdný, probíhá update nebo jsem
   // čerstvě z továrny
   // XXX: v obou případech chci dělat update
+
+  lt_handle_t* handle = &g_tropic_driver.handle;
+  lt_tr01_mode_t tr01_mode = LT_TR01_ALARM;
+  if (lt_get_tr01_mode(handle, &tr01_mode) != LT_OK) {
+    return secfalse;
+  }
+  if (tr01_mode == LT_TR01_MAINTENANCE) {
+    *in_progress = true;
+    return sectrue;
+  } else if (tr01_mode == LT_TR01_ALARM) {
+    return secfalse;
+  }
+
   tropic_session_start();
   uint8_t riscv_fw[4] = {0};
   uint8_t spect_fw[4] = {0};
@@ -1287,14 +1304,14 @@ secbool tropic_is_fw_update_in_progress(bool *in_progress) {
   }
 
   uint32_t r_config_cfg_startup = 0;
-  if (TROPIC_RETRY_COMMAND(lt_r_config_read(&g_tropic_driver.handle,
+  if (TROPIC_RETRY_COMMAND(lt_r_config_read(handle,
                                             TR01_CFG_START_UP_ADDR,
                                             &r_config_cfg_startup)) != LT_OK) {
     return secfalse;
   }
   // maintenance on and no FW version in slot = update in progress
-  *in_progress =
-      (r_config_cfg_startup & BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0;
+  *in_progress = (r_config_cfg_startup &
+                  BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0;
 
   return sectrue;
 }
