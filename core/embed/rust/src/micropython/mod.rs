@@ -30,6 +30,9 @@ pub use obj::Obj;
 #[cfg(feature = "miniscript")]
 mod miniscript;
 
+#[cfg(feature = "miniscript")]
+mod tracked_allocator;
+
 #[cfg(feature = "dbg_console")]
 pub mod logging;
 
