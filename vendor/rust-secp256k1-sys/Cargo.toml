@@ -1,0 +1,39 @@
+# Trezor fork of secp256k1-sys v0.10.1.
+#
+# Used via [patch.crates-io] in core/embed/rust/Cargo.toml. This fork drops
+# the bundled libsecp256k1 C build entirely and emits the
+# rust_secp_no_symbol_renaming cfg so the FFI bindings reference unprefixed
+# secp256k1_* symbols. Those symbols are provided at link time by the
+# vendored copy at vendor/secp256k1-zkp/, compiled by SCons.
+#
+# Keep this fork minimal — every miniscript bump that pulls a new
+# secp256k1-sys version needs the same patch reapplied.
+
+[package]
+edition = "2021"
+rust-version = "1.56.1"
+name = "secp256k1-sys"
+version = "0.10.1"
+authors = [
+    "Dawid Ciężarkiewicz <dpc@ucore.info>",
+    "Andrew Poelstra <apoelstra@wpsoftware.net>",
+    "Steven Roose <steven@stevenroose.org>",
+]
+build = "build.rs"
+description = "FFI for Pieter Wuille's `libsecp256k1` library (Trezor external-symbols fork)."
+license = "CC0-1.0"
+
+[features]
+alloc = []
+default = ["std"]
+lowmemory = []
+recovery = []
+std = ["alloc"]
+
+[lints.rust.unexpected_cfgs]
+level = "deny"
+priority = 0
+check-cfg = [
+    "cfg(rust_secp_no_symbol_renaming)",
+    "cfg(secp256k1_fuzz)",
+]
