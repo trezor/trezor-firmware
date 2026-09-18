@@ -1066,18 +1066,18 @@ bool tropic_write_fw_slot(void) {
          memcmp(spect, fw_SPECT_ver, 4) == 0;
 }
 
-static bool tropic_fw_update_needed(bool *needed) {
+static secbool tropic_fw_update_needed(bool *needed) {
   uint8_t confirmed_riscv[4] = {0};
   uint8_t confirmed_spect[4] = {0};
   bool present = false;
   if (!tropic_session_start() ||
       !tropic_read_fw_slot(confirmed_riscv, confirmed_spect, &present)) {
-    return false;
+    return secfalse;
   }
 
   *needed = !present || fw_version_is_older(confirmed_riscv, fw_CPU_ver) ||
             fw_version_is_older(confirmed_spect, fw_SPECT_ver);
-  return true;
+  return sectrue;
 }
 
 static bool tropic_erase_fw_slot(void) {
@@ -1086,7 +1086,7 @@ static bool tropic_erase_fw_slot(void) {
 }
 
 // Reset the configuration and restore the CFG version slots
-secbool tropic_reset_configuration_after_update(void) {
+static secbool tropic_reset_configuration_after_update(void) {
   lt_handle_t *handle = tropic_get_handle();
   if (handle == NULL) {
     return secfalse;
@@ -1119,7 +1119,7 @@ secbool tropic_reset_configuration_after_update(void) {
 // XXX: Tohle je ta funkce, co se volá v obou případech
 // XXX: Tedy `udělej update` + `vypni ukazatele`
 // TODO: re-add ui progress
-secbool tropic_update_fw(void) {
+static secbool tropic_update_fw(void) {
   // XXX: úvodní kontrola
   tropic_driver_t *drv = &g_tropic_driver;
   if (!drv->initialized) {
@@ -1179,7 +1179,7 @@ secbool tropic_update_fw(void) {
 }
 
 // Check if the Maintenance bit is enabled. Enable it if possible.
-secbool tropic_get_maintenance_bit_on(void) {
+static secbool tropic_get_maintenance_bit_on(void) {
   lt_handle_t *handle = tropic_get_handle();
   if (handle == NULL) {
     return secfalse;
@@ -1274,12 +1274,12 @@ secbool tropic_get_maintenance_bit_on(void) {
   return sectrue;
 }
 
-secbool tropic_is_fw_update_in_progress(bool *in_progress) {
+static secbool tropic_is_fw_update_in_progress(bool *in_progress) {
   // XXX: zkontroluju FW version slot. Když je prázdný, probíhá update nebo jsem
   // čerstvě z továrny
   // XXX: v obou případech chci dělat update
 
-  lt_handle_t* handle = &g_tropic_driver.handle;
+  lt_handle_t *handle = &g_tropic_driver.handle;
   lt_tr01_mode_t tr01_mode = LT_TR01_ALARM;
   if (lt_get_tr01_mode(handle, &tr01_mode) != LT_OK) {
     return secfalse;
@@ -1304,8 +1304,7 @@ secbool tropic_is_fw_update_in_progress(bool *in_progress) {
   }
 
   uint32_t r_config_cfg_startup = 0;
-  if (TROPIC_RETRY_COMMAND(lt_r_config_read(handle,
-                                            TR01_CFG_START_UP_ADDR,
+  if (TROPIC_RETRY_COMMAND(lt_r_config_read(handle, TR01_CFG_START_UP_ADDR,
                                             &r_config_cfg_startup)) != LT_OK) {
     return secfalse;
   }
@@ -1319,7 +1318,7 @@ secbool tropic_is_fw_update_in_progress(bool *in_progress) {
 // XXX: tohle je ta funkce, co se volá PO UNLOCKU
 secbool tropic_ensure_fw_updated(void) {
   bool needed = {0};
-  if (!tropic_fw_update_needed(&needed)) {
+  if (sectrue != tropic_fw_update_needed(&needed)) {
     return secfalse;
   }
   if (!needed) {
@@ -1352,7 +1351,7 @@ secbool tropic_ensure_fw_updated(void) {
 // XXX: tady se zkontroluje ten 3-ukazatel a kdyžtak se zavolá tropic_update_fw
 secbool tropic_check_and_restore_fw_update_in_progress(void) {
   bool in_progress = false;
-  if (!tropic_is_fw_update_in_progress(&in_progress)) {
+  if (sectrue != tropic_is_fw_update_in_progress(&in_progress)) {
     return secfalse;
   }
   if (in_progress) {
