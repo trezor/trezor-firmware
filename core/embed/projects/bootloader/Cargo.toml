@@ -111,7 +111,6 @@ default = [
     "crypto/ed25519_no_precomp",
 
     "trezor_lib/crypto",
-    "trezor_lib/ui",
     "trezor_lib/bootloader",
     "trezor_lib/usb",
     ]

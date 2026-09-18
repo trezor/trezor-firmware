@@ -5,7 +5,6 @@ use core::ptr;
 
 use super::ffi;
 use crate::trezorhal::ffi::bt_le_addr_t;
-#[cfg(feature = "ui")]
 use crate::ui::event::BLEEvent;
 
 pub const ADV_NAME_LEN: usize = ffi::BLE_ADV_NAME_LEN as usize;
@@ -32,7 +31,6 @@ pub fn res_to_result(res: bool) -> Result<(), BleError> {
     }
 }
 
-#[cfg(feature = "ui")]
 pub fn ble_parse_event(event: ffi::ble_event_t) -> BLEEvent {
     match event.type_ {
         ffi::ble_event_type_t_BLE_CONNECTED => BLEEvent::Connected,

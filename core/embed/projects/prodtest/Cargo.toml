@@ -126,7 +126,6 @@ default = [
     "crypto/noise",
 
     "trezor_lib/crypto",
-    "trezor_lib/ui",
     "trezor_lib/prodtest",
     "trezor_lib/usb",
 ]
