@@ -1271,21 +1271,31 @@ secbool tropic_get_maintenance_bit_on(void) {
 }
 
 secbool tropic_is_fw_update_in_progress(bool *in_progress) {
-  tropic_session_start();
   // XXX: zkontroluju FW version slot. Když je prázdný, probíhá update nebo jsem
   // čerstvě z továrny
   // XXX: v obou případech chci dělat update
+  tropic_session_start();
   uint8_t riscv_fw[4] = {0};
   uint8_t spect_fw[4] = {0};
   bool present = false;
   if (!tropic_read_fw_slot(riscv_fw, spect_fw, &present)) {
     return secfalse;
   }
-  if (!present) {
-    *in_progress = true;
+  if (present) {
+    *in_progress = false;
     return sectrue;
   }
-  *in_progress = false;
+
+  uint32_t r_config_cfg_startup = 0;
+  if (TROPIC_RETRY_COMMAND(lt_r_config_read(&g_tropic_driver.handle,
+                                            TR01_CFG_START_UP_ADDR,
+                                            &r_config_cfg_startup)) != LT_OK) {
+    return secfalse;
+  }
+  // maintenance on and no FW version in slot = update in progress
+  *in_progress =
+      (r_config_cfg_startup & BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0;
+
   return sectrue;
 }
 
