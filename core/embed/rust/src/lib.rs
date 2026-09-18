@@ -42,6 +42,8 @@ mod io;
 mod maybe_trace;
 #[cfg(feature = "micropython")]
 mod micropython;
+#[cfg(feature = "miniscript")]
+mod miniscript;
 #[cfg(feature = "protobuf")]
 mod protobuf;
 #[cfg(feature = "storage")]
