@@ -43,16 +43,19 @@ uint32_t chunk_buffer[IMAGE_CHUNK_SIZE / 4];
 // image-type-agnostic; type-specific state lives in the handler.
 typedef struct {
   uint32_t image_total;
-  uint32_t remaining;        // remaining bytes to upload
-  uint32_t block;            // index of currently processed block
-  uint32_t chunk_requested;  // requested chunk size
-  uint32_t erase_offset;     // offset of flash memory to erase
-  int32_t chunk_retry;       // retry counter
-  size_t read_offset;        // offset of the next read data in the chunk buffer
-  uint32_t chunk_size;       // size of already received chunk data
-  bool headers_parsed;      // true once the first chunk's headers are validated
-  bool confirmed;           // true once the upload is confirmed by the user
-  bool wireless_transport;  // whether the transport is over BLE
+  uint32_t remaining;  // remaining bytes to upload
+  uint32_t block;      // index of currently processed block
+  // Bytes the buffer must hold for the chunk to be complete, i.e. the whole
+  // block. Every request is derived from it: the block, or - once the block-0
+  // header prefetch has landed - the part of it not yet in the buffer.
+  uint32_t chunk_expected;
+  uint32_t erase_offset;  // offset of flash memory to erase
+  int32_t chunk_retry;    // retry counter
+  size_t read_offset;     // offset of the next read data in the chunk buffer
+  uint32_t chunk_size;    // size of already received chunk data
+  bool headers_parsed;  // true once the first chunk's headers are validated and
+                        // confirmed
+  bool wireless_transport;          // whether the transport is over BLE
   image_upload_handler_t *handler;  // active image-type handler
 } upload_engine_t;
 
@@ -61,7 +64,7 @@ static void upload_data_received(size_t len, void *ctx) {
 
   e->chunk_size += len;
   // update loader only after the update is confirmed
-  if (e->confirmed) {
+  if (e->headers_parsed) {
     e->handler->ui->progress(
         (int)(1000ULL * (e->block * IMAGE_CHUNK_SIZE + e->chunk_size) /
               e->image_total),
@@ -114,7 +117,7 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
                                &((uint8_t *)chunk_buffer)[e->read_offset],
                                sizeof(chunk_buffer) - e->read_offset);
 
-  if (sectrue != r || e->chunk_size != (e->chunk_requested + e->read_offset)) {
+  if (sectrue != r || e->chunk_size != e->chunk_expected) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Invalid chunk size");
     return UPLOAD_ERR_INVALID_CHUNK_SIZE;
@@ -132,25 +135,28 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
       }
 
       e->headers_parsed = true;
-      e->confirmed = true;
 
-      e->read_offset = IMAGE_INIT_CHUNK_SIZE;
+      // How much of block 0 the header prefetch already delivered
+      const uint32_t prefetched = e->chunk_size;
 
-      // request the rest of the first chunk
       uint32_t chunk_limit =
           (e->remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : e->remaining;
-      e->chunk_requested = chunk_limit - e->read_offset;
+      // The buffer is complete only once the whole block is in it.
+      e->chunk_expected = chunk_limit;
 
-      if (sectrue != send_msg_request_firmware(iface, e->read_offset,
-                                               e->chunk_requested)) {
-        return UPLOAD_ERR_COMMUNICATION;
-      }
-
-      e->remaining -= e->read_offset;
-      if (e->remaining > 0) {
+      if (chunk_limit > prefetched) {
+        // request the rest of the first block
+        e->read_offset = prefetched;
+        if (sectrue !=
+            send_msg_request_firmware(iface, e->read_offset,
+                                      e->chunk_expected - e->read_offset)) {
+          return UPLOAD_ERR_COMMUNICATION;
+        }
         return UPLOAD_IN_PROGRESS;
       }
-      return UPLOAD_OK;
+
+      // The prefetch already delivered the whole image
+      e->read_offset = 0;
     } else {
       // first block with the headers parsed -> the first chunk is now complete
       e->read_offset = 0;
@@ -160,7 +166,8 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
   // should not happen, but double-check
   if (flash_area_get_address(
           handler->target_area,
-          handler->target_offset + e->block * IMAGE_CHUNK_SIZE, 0) == NULL) {
+          handler->target_offset + e->block * IMAGE_CHUNK_SIZE,
+          e->chunk_size) == NULL) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Firmware too big");
     return UPLOAD_ERR_FIRMWARE_TOO_BIG;
@@ -177,16 +184,17 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
       // clear chunk buffer
       memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
       e->chunk_size = 0;
+      // Re-fetch the whole block from its start, not just the part that was
+      // outstanding: from offset 0 anything less would give on_chunk a
+      // truncated block.
+      e->read_offset = 0;
 
       if (sectrue != send_msg_request_firmware(iface,
                                                e->block * IMAGE_CHUNK_SIZE,
-                                               e->chunk_requested)) {
+                                               e->chunk_expected)) {
         return UPLOAD_ERR_COMMUNICATION;
       }
-      if (e->remaining > 0) {
-        return UPLOAD_IN_PROGRESS;
-      }
-      return UPLOAD_OK;
+      return UPLOAD_IN_PROGRESS;
     }
 
     send_msg_failure(iface, FailureType_Failure_ProcessError,
@@ -203,20 +211,20 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
                    handler->target_offset + e->block * IMAGE_CHUNK_SIZE,
                    chunk_buffer, e->chunk_size, &e->erase_offset);
 
-  e->remaining -= e->chunk_requested;
+  e->remaining -= e->chunk_size;
 
   if (e->remaining > 0) {
     // request the next block
     e->block++;
     e->chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT;
-    e->chunk_requested =
+    e->chunk_expected =
         (e->remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : e->remaining;
 
     // clear chunk buffer
     e->chunk_size = 0;
     memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
     if (sectrue != send_msg_request_firmware(iface, e->block * IMAGE_CHUNK_SIZE,
-                                             e->chunk_requested)) {
+                                             e->chunk_expected)) {
       return UPLOAD_ERR_COMMUNICATION;
     }
     return UPLOAD_IN_PROGRESS;
@@ -244,40 +252,35 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
 workflow_result_t run_image_upload(protob_io_t *iface,
                                    image_upload_handler_t *handler,
                                    uint32_t image_size) {
-  upload_engine_t e = {
-      .chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT,
-      .handler = handler,
-      // Start erasing at the base offset so an already-written prefix is
-      // preserved.
-      .erase_offset = handler->target_offset,
-  };
-
-  e.wireless_transport = iface->wire->wireless;
-
-  e.remaining = image_size;
-  e.image_total = image_size;
-  if ((e.remaining > 0) && ((e.remaining % FLASH_BLOCK_SIZE) == 0) &&
-      (e.remaining <= handler->max_size)) {
-    // clear chunk buffer
-    memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
-    e.chunk_size = 0;
-
-    // request new image
-    e.chunk_requested = (e.remaining > IMAGE_INIT_CHUNK_SIZE)
-                            ? IMAGE_INIT_CHUNK_SIZE
-                            : e.remaining;
-    if (sectrue != send_msg_request_firmware(iface, 0, e.chunk_requested)) {
-      handler->ui->fail(UPLOAD_ERR_COMMUNICATION);
-      return WF_ERROR;
-    }
-  } else {
-    // invalid image size
+  if ((image_size < IMAGE_INIT_CHUNK_SIZE) ||
+      ((image_size % FLASH_BLOCK_SIZE) != 0) ||
+      (image_size > handler->max_size)) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Wrong firmware size");
     return WF_ERROR;
   }
 
-  upload_status_t s = UPLOAD_IN_PROGRESS;
+  upload_engine_t e = {
+      .image_total = image_size,
+      .remaining = image_size,
+      // The size check above guarantees a full init chunk is available.
+      .chunk_expected = IMAGE_INIT_CHUNK_SIZE,
+      // Start erasing at the base offset so an already-written prefix is
+      // preserved.
+      .erase_offset = handler->target_offset,
+      .chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT,
+      .wireless_transport = iface->wire->wireless,
+      .handler = handler,
+  };
+
+  // clear chunk buffer
+  memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
+
+  // request the headers of the new image
+  if (sectrue != send_msg_request_firmware(iface, 0, e.chunk_expected)) {
+    handler->ui->fail(UPLOAD_ERR_COMMUNICATION);
+    return WF_ERROR;
+  }
 
   uint32_t msg_deadline = ticks_timeout(MESSAGE_RX_TIMEOUT);
 
@@ -304,21 +307,28 @@ workflow_result_t run_image_upload(protob_io_t *iface,
       // invalid header -> discard
       return WF_ERROR;
     }
-    s = process_upload_chunk(iface, handler, &e);
+    const upload_status_t s = process_upload_chunk(iface, handler, &e);
 
     msg_deadline = ticks_timeout(MESSAGE_RX_TIMEOUT);
 
-    if (s < 0 && s != UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
-      // the handler decides which failure screen to show (and may not return,
-      // e.g. for a locked-bootloader restriction)
-      handler->ui->fail(s);
-      return WF_ERROR;
-    } else if (s == UPLOAD_ERR_USER_ABORT) {
-      systick_delay_ms(100);
-      return WF_CANCELLED;
-    } else if (s == UPLOAD_OK) {  // last chunk received
-      handler->ui->success(e.wireless_transport);
-      return handler->success_result;
+    switch (s) {
+      case UPLOAD_OK:
+        // last chunk received
+        handler->ui->success(e.wireless_transport);
+        return handler->success_result;
+
+      case UPLOAD_IN_PROGRESS:
+        // wait for the next chunk
+        break;
+
+      case UPLOAD_ERR_USER_ABORT:
+        return WF_CANCELLED;
+
+      default:
+        // the handler decides which failure screen to show (and may not
+        // return, e.g. for a locked-bootloader restriction)
+        handler->ui->fail(s);
+        return WF_ERROR;
     }
   }
 }
