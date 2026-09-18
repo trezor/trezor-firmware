@@ -28,7 +28,7 @@
 
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
-#include "mlkem.h"
+#include "mlkem_embedded.h"
 #include "rand.h"
 #include "sha3.h"
 
@@ -86,8 +86,8 @@ static bool xwing_expand_private_key(
   uint8_t expanded[MLKEM768_KEY_PAIR_SEED_SIZE + XWING_X25519_KEY_SIZE] = {0};
   shake256(private_key, XWING_PRIVATE_KEY_SIZE, expanded, sizeof(expanded));
 
-  bool ret = mlkem768_generate_key_pair_from_seed(expanded, mlkem_private_key,
-                                                  mlkem_public_key);
+  bool ret = mlkem768_embedded_generate_key_pair_from_seed(
+      expanded, mlkem_private_key, mlkem_public_key);
   memcpy(x25519_private_key, expanded + MLKEM768_KEY_PAIR_SEED_SIZE,
          XWING_X25519_KEY_SIZE);
 
@@ -150,7 +150,7 @@ bool xwing_encapsulate_from_seed(
   uint8_t x25519_shared_secret[XWING_X25519_KEY_SIZE] = {0};
 
   // includes the encapsulation key check from FIPS 203, Section 7.2
-  bool ret = mlkem768_encapsulate_from_seed(
+  bool ret = mlkem768_embedded_encapsulate_from_seed(
       mlkem_seed, mlkem_public_key, mlkem_ciphertext, mlkem_shared_secret);
   if (ret) {
     curve25519_scalarmult_basepoint(x25519_ciphertext, x25519_private_key);
@@ -185,7 +185,7 @@ bool xwing_decapsulate(const uint8_t private_key[XWING_PRIVATE_KEY_SIZE],
   bool ret = xwing_expand_private_key(private_key, mlkem_private_key,
                                       mlkem_public_key, x25519_private_key);
   if (ret) {
-    ret = mlkem768_decapsulate(mlkem_private_key, mlkem_ciphertext,
+    ret = mlkem768_embedded_decapsulate(mlkem_private_key, mlkem_ciphertext,
                                mlkem_shared_secret);
   }
   if (ret) {
