@@ -134,6 +134,3 @@ class Progress:
                 raise wire.FirmwareError(
                     f"Transaction {operation} progress finished at {self.progress}/{self.steps}."
                 )
-
-
-progress = Progress()

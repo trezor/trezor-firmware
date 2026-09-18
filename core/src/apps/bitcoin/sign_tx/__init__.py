@@ -7,16 +7,7 @@ from ..keychain import with_keychain
 if TYPE_CHECKING:
     from typing import Protocol
 
-    from trezor.messages import (
-        SignTx,
-        TxAckInput,
-        TxAckOutput,
-        TxAckPrevExtraData,
-        TxAckPrevInput,
-        TxAckPrevMeta,
-        TxAckPrevOutput,
-        TxRequest,
-    )
+    from trezor.messages import SignTx, TxRequest
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
@@ -24,16 +15,9 @@ if TYPE_CHECKING:
     from ..authorization import CoinJoinAuthorization
     from . import approvers
 
-    TxAckType = (
-        TxAckInput
-        | TxAckOutput
-        | TxAckPrevMeta
-        | TxAckPrevInput
-        | TxAckPrevOutput
-        | TxAckPrevExtraData
-    )
-
     class SignerClass(Protocol):
+        tx_req: TxRequest
+
         def __init__(  # pylint: disable=super-init-not-called
             self,
             tx: SignTx,
@@ -53,13 +37,10 @@ async def sign_tx(
     authorization: CoinJoinAuthorization | None = None,
 ) -> TxRequest:
     from trezor import TR
-    from trezor.enums import RequestType
-    from trezor.messages import TxRequest
     from trezor.ui.layouts import show_continue_in_app
-    from trezor.wire.context import call
 
     from ..common import BITCOIN_NAMES
-    from . import approvers, bitcoin, helpers, progress
+    from . import approvers, bitcoin
 
     approver: approvers.Approver | None = None
     if authorization:
@@ -86,20 +67,7 @@ async def sign_tx(
 
             signer_class = bitcoinlike.Bitcoinlike
 
-    signer = signer_class(msg, keychain, coin, approver).signer()
-
-    res: TxAckType | bool | None = None
-    while True:
-        req = signer.send(res)
-        if isinstance(req, tuple):
-            request_class, req = req
-            assert TxRequest.is_type_of(req)
-            if req.request_type == RequestType.TXFINISHED:
-                show_continue_in_app(TR.send__transaction_signed)
-                return req
-            res = await call(req, request_class)
-        elif isinstance(req, helpers.UiConfirm):
-            res = await req.confirm_dialog()
-            progress.progress.report_init()
-        else:
-            raise TypeError("Invalid signing instruction")
+    signer = signer_class(msg, keychain, coin, approver)
+    await signer.signer()
+    show_continue_in_app(TR.send__transaction_signed)
+    return signer.tx_req

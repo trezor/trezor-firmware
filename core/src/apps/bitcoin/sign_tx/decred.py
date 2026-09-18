@@ -15,7 +15,6 @@ from ..writers import write_uint32
 from . import helpers
 from .approvers import BasicApprover
 from .bitcoin import Bitcoin
-from .progress import progress
 
 _DECRED_SERIALIZE_FULL = const(0 << 16)
 _DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
@@ -91,12 +90,14 @@ class DecredApprover(BasicApprover):
     async def add_decred_sstx_submission(
         self, txo: TxOutput, script_pubkey: AnyBytes
     ) -> None:
+        from .layout import confirm_decred_sstx_submission
+
         # NOTE: The following calls Approver.add_external_output(), not BasicApprover.add_external_output().
         # This is needed to skip calling helpers.confirm_output(), which is what BasicApprover would do.
         await super(BasicApprover, self).add_external_output(
             txo, script_pubkey, None, None
         )
-        await helpers.confirm_decred_sstx_submission(txo, self.coin, self.amount_unit)
+        await confirm_decred_sstx_submission(txo, self.coin, self.amount_unit)
 
 
 class DecredSigHasher:
@@ -212,7 +213,6 @@ class Decred(Bitcoin):
 
         from .. import multisig
         from ..common import SigHashType, ecdsa_sign
-        from .progress import progress
 
         inputs_count = self.tx_info.tx.inputs_count  # local_cache_attribute
         coin = self.coin  # local_cache_attribute
@@ -223,7 +223,7 @@ class Decred(Bitcoin):
         prefix_hash = self.h_prefix.get_digest()
 
         for i_sign in range(inputs_count):
-            progress.advance()
+            self.progress.advance()
 
             txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, coin)
 
@@ -294,9 +294,9 @@ class Decred(Bitcoin):
 
     async def step7_finish(self) -> None:
         if __debug__:
-            progress.assert_finished()
+            self.progress.assert_finished()
 
-        await helpers.request_tx_finish(self.tx_req)
+        helpers.request_tx_finish(self.tx_req)
 
     def check_prevtx_output(self, txo_bin: PrevOutput) -> None:
         if txo_bin.decred_script_version != 0:
@@ -349,7 +349,7 @@ class Decred(Bitcoin):
             raise DataError("Ticket has wrong number of outputs.")
 
         # SSTX submission
-        progress.advance()
+        self.progress.advance()
         txo = await helpers.request_tx_output(self.tx_req, 0, self.coin)
         if txo.address is None:
             raise DataError("Missing address.")
@@ -360,7 +360,7 @@ class Decred(Bitcoin):
             self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
         # SSTX commitment
-        progress.advance()
+        self.progress.advance()
         txo = await helpers.request_tx_output(self.tx_req, 1, self.coin)
         if txo.amount != approver.total_in:
             raise DataError("Wrong sstxcommitment amount.")
@@ -371,7 +371,7 @@ class Decred(Bitcoin):
             self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
         # SSTX change
-        progress.advance()
+        self.progress.advance()
         txo = await helpers.request_tx_output(self.tx_req, 2, self.coin)
         if txo.address is None:
             raise DataError("Missing address.")
