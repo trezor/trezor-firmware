@@ -292,7 +292,7 @@ fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
 
     use super::{build_flash_erase_instruction, build_flash_write_instruction, tcl_quote_path};
     use crate::args::FlashSection;
@@ -300,8 +300,7 @@ mod tests {
     #[test]
     fn builds_flash_write_instruction() {
         let instruction =
-            build_flash_write_instruction(&[(PathBuf::from("/tmp/fw.bin"), 0x0800_4000)])
-                .unwrap();
+            build_flash_write_instruction(&[(PathBuf::from("/tmp/fw.bin"), 0x0800_4000)]).unwrap();
 
         assert_eq!(
             instruction,
@@ -314,9 +313,11 @@ mod tests {
     /// words and `[...]` would be command substitution.
     #[test]
     fn quotes_paths_that_tcl_would_otherwise_reparse() {
-        let instruction =
-            build_flash_write_instruction(Path::new("/my builds/fw [v2].bin"), 0x0800_4000)
-                .unwrap();
+        let instruction = build_flash_write_instruction(&[(
+            PathBuf::from("/my builds/fw [v2].bin"),
+            0x0800_4000,
+        )])
+        .unwrap();
 
         assert_eq!(
             instruction,
@@ -370,13 +371,14 @@ mod tests {
         let instruction = build_flash_write_instruction(&[
             (PathBuf::from("/tmp/bootloader.bin"), 0x0C01_E000),
             (PathBuf::from("/tmp/universal.bin"), 0x0C06_E000),
-        ]);
+        ])
+        .unwrap();
 
         assert_eq!(
             instruction,
             "init; reset halt; \
-             flash write_image erase /tmp/bootloader.bin 0xC01E000; \
-             flash write_image erase /tmp/universal.bin 0xC06E000; exit"
+             flash write_image erase {/tmp/bootloader.bin} 0xC01E000; \
+             flash write_image erase {/tmp/universal.bin} 0xC06E000; exit"
         );
     }
 
