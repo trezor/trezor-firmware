@@ -2,17 +2,19 @@ use num_traits::ToPrimitive;
 
 use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuScreen, Homescreen,
-    HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
+    HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, NumberInput, PinKeyboard,
     PinKeyboardMsg, ProgressScreen, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg,
     SelectWordScreen, SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg,
     TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
 use crate::micropython::{Error, Obj};
+use crate::ui::component::MsgMap;
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{
     text::paragraphs::{ParagraphSource, Paragraphs},
     Component, Timeout,
 };
+use crate::ui::flow::FlowMsg;
 use crate::ui::layout::obj::ComponentMsgObj;
 use crate::ui::layout::result::{CANCELLED, CONFIRMED, INFO};
 
@@ -130,6 +132,24 @@ impl<T: ValueInput> ComponentMsgObj for ValueInputScreen<T> {
             ValueInputScreenMsg::Menu => unreachable!(),
             // changed value message is handled only in the flow
             ValueInputScreenMsg::Changed(_) => unreachable!(),
+        }
+    }
+}
+
+/// Layout returned by `request_number`: the number input screen with the
+/// "more info" menu button in the header.
+pub type RequestNumberScreen =
+    MsgMap<ValueInputScreen<NumberInput>, fn(ValueInputScreenMsg) -> Option<FlowMsg>>;
+
+impl ComponentMsgObj for RequestNumberScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        // Return not only the result, but also the currently displayed number,
+        // so that Python can e.g. show the corresponding "more info" text.
+        let value: u32 = self.inner().value();
+        match msg {
+            FlowMsg::Confirmed => Ok((CONFIRMED.as_obj(), value).try_into()?),
+            FlowMsg::Info => Ok((INFO.as_obj(), value).try_into()?),
+            msg => msg.try_into(),
         }
     }
 }
