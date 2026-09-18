@@ -118,7 +118,7 @@ fn main() -> Result<()> {
         ]);
 
         if cfg!(feature = "app_loading") {
-            lib.add_sources(["modtrezorapp/modtrezorapp.c"]);
+            lib.add_sources(["modextapp/modextapp.c"]);
         }
 
         if cfg!(feature = "sd_card") {
@@ -1205,7 +1205,7 @@ impl<'a> MpyBuilder<'a> {
         }
 
         if cfg!(feature = "app_loading") {
-            files.add(src, "apps/trezorapp/*.py")?;
+            files.add(src, "apps/extapp/*.py")?;
         }
 
         if cfg!(feature = "universal_fw") {

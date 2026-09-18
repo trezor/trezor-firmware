@@ -8,4 +8,4 @@ TR = translations.TR
 from . import utils
 
 if utils.USE_APP_LOADING:
-    import trezorapp as app  # noqa: F401
+    import extapp as app  # noqa: F401
