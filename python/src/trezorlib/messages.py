@@ -841,6 +841,16 @@ class MessageType(IntEnum):
     BenchmarkResult = 9103
     TelemetryGet = 1100
     Telemetry = 1101
+    ExtAppLoad = 9200
+    ExtAppLoaded = 9201
+    ExtAppHeaderRequest = 9202
+    ExtAppHeaderAck = 9203
+    ExtAppRootPacketRequest = 9204
+    ExtAppRootPacketAck = 9205
+    ExtAppDataChunkRequest = 9206
+    ExtAppDataChunkAck = 9207
+    ExtAppMessage = 9208
+    ExtAppResponse = 9209
 
 
 class BenchmarkListNames(protobuf.MessageType):
@@ -1049,6 +1059,29 @@ class PaymentRequest(protobuf.MessageType):
         self.signature = signature
         self.nonce = nonce
         self.amount = amount
+
+
+class Version(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("major", "uint32", repeated=False, required=True),
+        2: protobuf.Field("minor", "uint32", repeated=False, required=True),
+        3: protobuf.Field("patch", "uint32", repeated=False, required=False, default=0),
+        4: protobuf.Field("build", "uint32", repeated=False, required=False, default=0),
+    }
+
+    def __init__(
+        self,
+        *,
+        major: "int",
+        minor: "int",
+        patch: Optional["int"] = 0,
+        build: Optional["int"] = 0,
+    ) -> None:
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+        self.build = build
 
 
 class PaymentRequestMemo(protobuf.MessageType):
@@ -6243,6 +6276,163 @@ class EvoluIndexManagementResponse(protobuf.MessageType):
         rotation_index: Optional["int"] = None,
     ) -> None:
         self.rotation_index = rotation_index
+
+
+class ExtAppLoad(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9200
+    FIELDS = {
+        1: protobuf.Field("id", "string", repeated=False, required=True),
+        2: protobuf.Field("version", "Version", repeated=False, required=True),
+        3: protobuf.Field("fingerprint", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        id: "str",
+        version: "Version",
+        fingerprint: "bytes",
+    ) -> None:
+        self.id = id
+        self.version = version
+        self.fingerprint = fingerprint
+
+
+class ExtAppLoaded(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9201
+    FIELDS = {
+        1: protobuf.Field("instance_id", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        instance_id: "int",
+    ) -> None:
+        self.instance_id = instance_id
+
+
+class ExtAppHeaderRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9202
+
+
+class ExtAppHeaderAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9203
+    FIELDS = {
+        1: protobuf.Field("header", "bytes", repeated=False, required=True),
+        2: protobuf.Field("proof", "bytes", repeated=False, required=True),
+        3: protobuf.Field("root_packet_timestamp", "sint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        header: "bytes",
+        proof: "bytes",
+        root_packet_timestamp: "int",
+    ) -> None:
+        self.header = header
+        self.proof = proof
+        self.root_packet_timestamp = root_packet_timestamp
+
+
+class ExtAppRootPacketRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9204
+    FIELDS = {
+        1: protobuf.Field("app_ring", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        app_ring: "int",
+    ) -> None:
+        self.app_ring = app_ring
+
+
+class ExtAppRootPacketAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9205
+    FIELDS = {
+        1: protobuf.Field("root_packet", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        root_packet: "bytes",
+    ) -> None:
+        self.root_packet = root_packet
+
+
+class ExtAppDataChunkRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9206
+    FIELDS = {
+        1: protobuf.Field("index", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        index: "int",
+    ) -> None:
+        self.index = index
+
+
+class ExtAppDataChunkAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9207
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+        2: protobuf.Field("hash", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: "bytes",
+        hash: "bytes",
+    ) -> None:
+        self.data = data
+        self.hash = hash
+
+
+class ExtAppMessage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9208
+    FIELDS = {
+        1: protobuf.Field("instance_id", "uint32", repeated=False, required=True),
+        2: protobuf.Field("message_id", "uint32", repeated=False, required=True),
+        3: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        instance_id: "int",
+        message_id: "int",
+        data: "bytes",
+    ) -> None:
+        self.instance_id = instance_id
+        self.message_id = message_id
+        self.data = data
+
+
+class ExtAppResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9209
+    FIELDS = {
+        1: protobuf.Field("message_id", "uint32", repeated=False, required=True),
+        2: protobuf.Field("data", "bytes", repeated=False, required=True),
+        3: protobuf.Field("finished", "bool", repeated=False, required=False, default=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        message_id: "int",
+        data: "bytes",
+        finished: Optional["bool"] = False,
+    ) -> None:
+        self.message_id = message_id
+        self.data = data
+        self.finished = finished
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):

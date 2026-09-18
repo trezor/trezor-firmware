@@ -2,6 +2,7 @@ use crypto::{cosi, ed25519};
 
 use super::error::Error as DefinitionsError;
 use super::{blob, constants};
+use crate::definitions::generated;
 use crate::io::InputStream;
 use crate::micropython::buffer::get_buffer;
 use crate::micropython::exception::Exception;
@@ -64,6 +65,17 @@ extern "C" fn decode(n_args: usize, args: *const Obj) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
+extern "C" fn app_root_min_timestamp(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        if args.len() != 0 {
+            return Err(Error::TypeError);
+        }
+        generated::MIN_DATA_VERSION_V1.try_into()
+    };
+
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
 #[no_mangle]
 #[rustfmt::skip]
 pub static mp_module_trezordefinitions: Module = obj_module! {
@@ -80,4 +92,9 @@ pub static mp_module_trezordefinitions: Module = obj_module! {
     ///     """Parse a signed definition blob, verify its signature and decode it
     ///     into the specified message type."""
     Qstr::MP_QSTR_decode => obj_fn_var!(3, 3, decode).as_obj(),
+
+    /// def app_root_min_timestamp() -> int:
+    ///     """Return the minimum allowed timestamp for the app root. This timestamp is inferred 
+    ///        from the data version (generated::MIN_DATA_VERSION_V1)."""
+    Qstr::MP_QSTR_app_root_min_timestamp => obj_fn_var!(0, 0, app_root_min_timestamp).as_obj(),
 };

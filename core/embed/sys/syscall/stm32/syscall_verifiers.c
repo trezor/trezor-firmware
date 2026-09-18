@@ -1548,20 +1548,24 @@ access_violation:
 
 #ifdef USE_APP_LOADING
 
-ts_t app_root_update__verified(const void *root_packet,
-                               size_t root_packet_size) {
+ts_t app_root_update__verified(const void *root_packet, size_t root_packet_size,
+                               app_root_state_t *state) {
   if (!probe_read_access(root_packet, root_packet_size)) {
     goto access_violation;
   }
 
-  return app_root_update(root_packet, root_packet_size);
+  if (!probe_write_access(state, sizeof(*state))) {
+    goto access_violation;
+  }
+
+  return app_root_update(root_packet, root_packet_size, state);
 
 access_violation:
   apptask_access_violation();
   return TS_EACCES;
 }
 
-ts_t app_root_get_timestamp__verified(app_ring_t ring, uint32_t *timestamp) {
+ts_t app_root_get_timestamp__verified(app_ring_t ring, int64_t *timestamp) {
   if (!probe_write_access(timestamp, sizeof(*timestamp))) {
     goto access_violation;
   }

@@ -28,6 +28,12 @@
 
 #include "root_packet.h"
 
+#include <stdlib.h>
+
+// Maximum allowed time difference between the root packet and its
+// higher-level root packet.
+#define ROOT_PACKET_MAX_DRIFT (90 * 86400)  // 90 days
+
 static const mldsa44_public_key_t * const ROOT_PACKET_KEYS[] = {
 #if defined(BOOTLOADER_DEVEL) || defined(TREZOR_EMULATOR)
     (const mldsa44_public_key_t*)
@@ -233,6 +239,15 @@ ts_t root_packet_verify(const void* data, size_t size,
   TSH_CHECK(auth->ring_mask != 0, TS_EBADMSG);
   TSH_CHECK(auth->ring_mask <= (1 << APP_RING_COUNT) - 1, TS_EBADMSG);
   TSH_CHECK(auth->timestamp != 0, TS_EBADMSG);
+
+  if (auth->ring_mask & (1 << APP_RING_0)) {
+    // Ring #0 - no chain timestamp
+    TSH_CHECK(auth->chain_timestamp == 0, TS_EBADMSG);
+  } else {
+    // Ring #1 and/or #2
+    int64_t diff = (int64_t)(auth->timestamp - auth->chain_timestamp);
+    TSH_CHECK(llabs(diff) <= ROOT_PACKET_MAX_DRIFT, TS_EBADMSG);
+  }
 
   // Calculate the expected size of the authenticated part of the root packet
   size_t auth_part_size = sizeof(root_packet_auth_t) +
