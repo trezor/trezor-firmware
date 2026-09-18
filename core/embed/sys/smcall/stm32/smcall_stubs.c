@@ -395,6 +395,10 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
                               (uint32_t)size, SMCALL_TROPIC_DATA_READ);
 }
 
+secbool tropic_ensure_fw_updated(void) {
+  return (secbool)smcall_invoke0(SMCALL_TROPIC_ENSURE_FW_UPDATED);
+}
+
 #endif
 
 // =============================================================================

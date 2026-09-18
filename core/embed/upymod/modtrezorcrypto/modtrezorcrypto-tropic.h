@@ -175,6 +175,19 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_get_user_data_obj,
 /// FIDO_CERT_INDEX: int
 /// FIDO_KEY_SLOT: int
 
+/// def ensure_fw_updated() -> bool:
+///     """
+///     Ensure that the firmware on the Tropic Square chip is up to date.
+///     """
+static mp_obj_t mod_trezorcrypto_tropic_ensure_fw_updated(void) {
+  ensure(tropic_ensure_fw_updated(),
+         "Failed to ensure Tropic FW is up to date");
+  return mp_const_true;
+}
+
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_tropic_ensure_fw_updated_obj,
+                                 mod_trezorcrypto_tropic_ensure_fw_updated);
+
 static const mp_rom_map_elem_t mod_trezorcrypto_tropic_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_tropic)},
     {MP_ROM_QSTR(MP_QSTR_DEVICE_CERT_INDEX),
@@ -188,6 +201,8 @@ static const mp_rom_map_elem_t mod_trezorcrypto_tropic_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_tropic_sign_obj)},
     {MP_ROM_QSTR(MP_QSTR_get_user_data),
      MP_ROM_PTR(&mod_trezorcrypto_tropic_get_user_data_obj)},
+    {MP_ROM_QSTR(MP_QSTR_ensure_fw_updated),
+     MP_ROM_PTR(&mod_trezorcrypto_tropic_ensure_fw_updated_obj)},
     {MP_ROM_QSTR(MP_QSTR_TropicError), MP_ROM_PTR(&mp_type_TropicError)}};
 static MP_DEFINE_CONST_DICT(mod_trezorcrypto_tropic_globals,
                             mod_trezorcrypto_tropic_globals_table);
