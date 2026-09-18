@@ -593,12 +593,7 @@
     "coinjoin__max_mining_fee": "Max mining fee",
     "coinjoin__max_rounds": "Max rounds",
     "coinjoin__title": "Authorize coinjoin",
-    "coinjoin__title_progress": {
-      "Bolt": "Coinjoin in progress",
-      "Caesar": "Coinjoin in progress",
-      "Delizia": "Coinjoin in progress",
-      "Eckhart": "Coinjoin in progress..."
-    },
+    "coinjoin__title_progress": "Coinjoin in progress...",
     "coinjoin__waiting_for_others": "Waiting for others",
     "confirm_total__fee_rate": "Fee rate",
     "confirm_total__title_fee": "Fee info",
@@ -1270,12 +1265,7 @@
       "Delizia": "Language changed successfully.",
       "Eckhart": "Language changed successfully."
     },
-    "language__progress": {
-      "Bolt": "Changing language",
-      "Caesar": "Changing language",
-      "Delizia": "Changing language",
-      "Eckhart": "Changing language..."
-    },
+    "language__progress": "Changing language...",
     "language__title": "Language settings",
     "led__disable": {
       "Bolt": "",
@@ -1937,12 +1927,7 @@
       "Eckhart": ""
     },
     "progress__one_second_left": "1 second left",
-    "progress__please_wait": {
-      "Bolt": "Please wait",
-      "Caesar": "Please wait",
-      "Delizia": "Please wait",
-      "Eckhart": "Please wait..."
-    },
+    "progress__please_wait": "Please wait...",
     "progress__refreshing": "Refreshing...",
     "progress__signing_transaction": "Signing transaction...",
     "progress__syncing": "Syncing...",
@@ -2924,19 +2909,9 @@
     "stellar__valid_until_ledger": "Valid until ledger",
     "stellar__value_sha256": "Value (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Do you want to clear value key {0}?",
-    "storage_msg__processing": {
-      "Bolt": "Processing",
-      "Caesar": "Processing",
-      "Delizia": "Processing",
-      "Eckhart": "Processing..."
-    },
+    "storage_msg__processing": "Processing...",
     "storage_msg__starting": "Starting up",
-    "storage_msg__verifying_pin": {
-      "Bolt": "Verifying PIN",
-      "Caesar": "Verifying PIN",
-      "Delizia": "Verifying PIN",
-      "Eckhart": "Verifying PIN..."
-    },
+    "storage_msg__verifying_pin": "Verifying PIN...",
     "storage_msg__wrong_pin": "Wrong PIN",
     "suite_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
     "suite_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
