@@ -32,6 +32,13 @@ typedef enum {
 } app_ring_t;
 
 /**
+ * @brief Hold persisted timestamps for each application ring
+ */
+typedef struct {
+  int64_t ring_timestamp[APP_RING_COUNT];
+} app_root_state_t;
+
+/**
  * @brief Initializes the root-of-trust storage.
  *
  * @return TS_OK on success, or an error code on failure.
@@ -44,12 +51,19 @@ ts_t app_root_init(void);
  * Before storing, the function checks the integrity and validity of the
  * root packet, including its signature.
  *
+ * Root packets timestamps are compared against the provided state structure
+ * to ensure that the new root packet is more recent than the stored timestamps.
+ * state structure is updated with new values and caller is responsible
+ * for storing it for future reference.
+ *
  * @param root_packet Pointer to the root packet to store.
  * @param root_packet_size Size of the root packet in bytes.
+ * @param state Pointer to an app_root_state_t structure
  *
  * @return TS_OK on success, or an error code on failure.
  */
-ts_t app_root_update(const void* root_packet, size_t root_packet_size);
+ts_t app_root_update(const void* root_packet, size_t root_packet_size,
+                     app_root_state_t* state);
 
 /**
  * @brief Deletes all stored root packets
@@ -72,12 +86,12 @@ bool app_root_is_loaded(app_ring_t ring);
  * @brief Retrieves the timestamp from the root packet for the given ring.
  *
  * @param ring The ring index to retrieve the timestamp from.
- * @param timestamp Pointer to a uint32_t variable to store the timestamp.
+ * @param timestamp Pointer to a int64_t variable to store the timestamp.
  *
  * @return TS_OK on success, or an error code on failure.
  *         TS_ENOENT if the root packet for the given ring does not exist.
  */
-ts_t app_root_get_timestamp(app_ring_t ring, uint32_t* timestamp);
+ts_t app_root_get_timestamp(app_ring_t ring, int64_t* timestamp);
 
 /**
  * @brief Retrieves the Merkle root from the root packet for the given ring.

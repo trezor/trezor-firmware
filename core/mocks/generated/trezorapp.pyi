@@ -150,6 +150,26 @@ class AppImage:
         """
 
 
+# upymod/modtrezorapp/modtrezorapp-root.h
+class AppRootState:
+    """
+    Represents the persisted state of root packets, including the minimum
+    timestamps for the three rings. The structure is opaque to MicroPython
+    and can be accessed only through its encoded representation, which can
+    be retrieved from or stored in persistent storage.
+    """
+
+    def __init__(self, min_timestamp: int | None = None, state: bytes | None = None, /) -> None:
+        """
+        Creates an AppRootState object.
+        """
+
+    def serialize(self) -> bytes:
+        """
+        Serializes the AppRootState object to bytes.
+        """
+
+
 # upymod/modtrezorapp/modtrezorapp.c
 def create_image(header: AnyBytes, proof: AnyBytes) -> AppImage:
     """
@@ -203,11 +223,14 @@ def mem_free() -> int:
 
 
 # upymod/modtrezorapp/modtrezorapp.c
-def root_update(root_packet: AnyBytes) -> None:
+def root_update(root_packet: AnyBytes, state: AppRootState) -> None:
     """
     Update the root-of-trust storage with the provided root packet.
-    The root packet is verified for integrity and validity before being
-    stored. If the verification fails, an AppArenaError is raised.
+    The root packet is verified for integrity and validity, and its
+    timestamps are checked against the minimum timestamps in `state`
+    before being stored. If the verification fails, an AppArenaError is
+    raised. If the root packet timestamps are newer, `state` is updated
+    accordingly.
     """
 
 

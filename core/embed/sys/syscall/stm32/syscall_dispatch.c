@@ -1051,7 +1051,9 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_APP_ROOT_UPDATE: {
       const void *root_packet = (const void *)args[0];
       size_t root_packet_size = (size_t)args[1];
-      ts_t status = app_root_update__verified(root_packet, root_packet_size);
+      app_root_state_t *state = (app_root_state_t *)args[2];
+      ts_t status =
+          app_root_update__verified(root_packet, root_packet_size, state);
       args[0] = ts_code(status);
     } break;
 
@@ -1062,7 +1064,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_APP_ROOT_GET_TIMESTAMP: {
       app_ring_t ring = (app_ring_t)args[0];
-      uint32_t *timestamp = (uint32_t *)args[1];
+      int64_t *timestamp = (int64_t *)args[1];
       ts_t status = app_root_get_timestamp__verified(ring, timestamp);
       args[0] = ts_code(status);
     } break;
