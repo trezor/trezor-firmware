@@ -1486,6 +1486,8 @@ static void prodtest_tropic_keyfido_read(cli_t* cli) {
 #endif  // SECRET_KEY_MASKING
 }
 
+static bool privileged_session_start(cli_t* cli);
+
 static void prodtest_tropic_update_fw(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
