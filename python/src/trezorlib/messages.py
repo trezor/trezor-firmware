@@ -865,13 +865,16 @@ class BenchmarkRun(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9102
     FIELDS = {
         1: protobuf.Field("name", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("args", "string", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
+        args: Optional[Sequence["str"]] = None,
         name: Optional["str"] = None,
     ) -> None:
+        self.args: Sequence["str"] = args if args is not None else []
         self.name = name
 
 

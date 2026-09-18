@@ -27,13 +27,14 @@ message BenchmarkNames {
 }
 
 /**
- * Request: Ask device to run a benchmark
+ * Request: Ask device to run a benchmark (with optional string arguments)
  * @start
  * @next BenchmarkResult
  * @next Failure
  */
 message BenchmarkRun {
     optional string name = 1;
+    repeated string args = 2;
 }
 
 /**
