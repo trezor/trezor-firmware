@@ -83,6 +83,7 @@
 #include "sha2.h"
 #include "sha3.h"
 #include "shamir.h"
+#include "slh_ed25519.h"
 #include "slip39.h"
 #include "slip39_wordlist.h"
 #include "tls_prf.h"
@@ -6220,6 +6221,84 @@ START_TEST(test_xwing) {
   // A public key with an invalid ML-KEM part is rejected by encapsulation.
   memset(public_key, 0xff, 384);
   ck_assert(!xwing_encapsulate(public_key, ciphertext, shared_secret1));
+}
+END_TEST
+
+START_TEST(test_slh_ed25519) {
+  uint8_t private_key[SLH_ED25519_PRIVATE_KEY_SIZE] = {0};
+  uint8_t public_key[SLH_ED25519_PUBLIC_KEY_SIZE] = {0};
+  uint8_t public_key2[SLH_ED25519_PUBLIC_KEY_SIZE] = {0};
+  uint8_t other_public_key[SLH_ED25519_PUBLIC_KEY_SIZE] = {0};
+  uint8_t signature[SLH_ED25519_SIGNATURE_SIZE] = {0};
+  const uint8_t message[] = "Hybrid signature test message";
+
+  // Round trip: generate a key pair, sign and verify.
+  ck_assert(slh_ed25519_generate_key_pair(private_key, public_key));
+  ck_assert(slh_ed25519_sign(private_key, message, sizeof(message), signature));
+  ck_assert(
+      slh_ed25519_verify(public_key, message, sizeof(message), signature));
+
+  // Public key derivation is deterministic and consistent with the
+  // generation.
+  ck_assert(slh_ed25519_derive_public_key(private_key, public_key2));
+  ck_assert_mem_eq(public_key, public_key2, SLH_ED25519_PUBLIC_KEY_SIZE);
+
+  // A modified message fails to verify.
+  ck_assert(
+      !slh_ed25519_verify(public_key, message, sizeof(message) - 1, signature));
+
+  // A signature with a corrupted SPHINCS+ part fails to verify.
+  signature[0] ^= 0x01;
+  ck_assert(
+      !slh_ed25519_verify(public_key, message, sizeof(message), signature));
+  signature[0] ^= 0x01;
+
+  // A signature with a corrupted Ed25519 part fails to verify.
+  signature[SLH_ED25519_SIGNATURE_SIZE - 1] ^= 0x01;
+  ck_assert(
+      !slh_ed25519_verify(public_key, message, sizeof(message), signature));
+  signature[SLH_ED25519_SIGNATURE_SIZE - 1] ^= 0x01;
+
+  // A different public key fails to verify.
+  private_key[0] ^= 0x01;
+  ck_assert(slh_ed25519_derive_public_key(private_key, other_public_key));
+  ck_assert(!slh_ed25519_verify(other_public_key, message, sizeof(message),
+                                signature));
+}
+END_TEST
+
+START_TEST(test_slh_ed25519_2of2) {
+  uint8_t private_key1[SLH_ED25519_PRIVATE_KEY_SIZE] = {1};
+  uint8_t private_key2[SLH_ED25519_PRIVATE_KEY_SIZE] = {2};
+  uint8_t public_key1[SLH_ED25519_PUBLIC_KEY_SIZE] = {0};
+  uint8_t public_key2[SLH_ED25519_PUBLIC_KEY_SIZE] = {0};
+  uint8_t signature1[SLH_ED25519_SIGNATURE_SIZE] = {0};
+  uint8_t signature2[SLH_ED25519_SIGNATURE_SIZE] = {0};
+  const uint8_t message[] = "Hybrid multisignature test message";
+
+  ck_assert(slh_ed25519_derive_public_key(private_key1, public_key1));
+  ck_assert(slh_ed25519_derive_public_key(private_key2, public_key2));
+  ck_assert(
+      slh_ed25519_sign(private_key1, message, sizeof(message), signature1));
+  ck_assert(
+      slh_ed25519_sign(private_key2, message, sizeof(message), signature2));
+
+  // Both signatures are valid and ordered by the public keys.
+  ck_assert(slh_ed25519_verify_2of2(public_key1, public_key2, message,
+                                    sizeof(message), signature1, signature2));
+
+  // Swapped signatures fail to verify.
+  ck_assert(!slh_ed25519_verify_2of2(public_key1, public_key2, message,
+                                     sizeof(message), signature2, signature1));
+
+  // The same public key cannot be used twice.
+  ck_assert(!slh_ed25519_verify_2of2(public_key1, public_key1, message,
+                                     sizeof(message), signature1, signature1));
+
+  // A corrupted signature fails to verify.
+  signature2[0] ^= 0x01;
+  ck_assert(!slh_ed25519_verify_2of2(public_key1, public_key2, message,
+                                     sizeof(message), signature1, signature2));
 }
 END_TEST
 
@@ -14506,6 +14585,14 @@ Suite *test_suite(void) {
   tc = tcase_create("xwing");
   tcase_add_test(tc, test_xwing);
   tcase_add_test(tc, test_xwing_vectors);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("slh_ed25519");
+  // SPHINCS+ sha2-128s signing takes seconds, the default timeout of
+  // 4 seconds is not enough.
+  tcase_set_timeout(tc, 60);
+  tcase_add_test(tc, test_slh_ed25519);
+  tcase_add_test(tc, test_slh_ed25519_2of2);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("noise");
