@@ -130,6 +130,12 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len) {
   sha256_Final(&ctx, secret);
   reset_mnemonic = mnemonic_from_data(secret, strength / 8);
   memzero(secret, sizeof(secret));
+  if (!reset_mnemonic) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to generate mnemonic"));
+    reset_abort();
+    return;
+  }
   if (!entropy_check) {
     reset_finish();
     return;
