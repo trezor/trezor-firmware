@@ -27,20 +27,18 @@ inputs:
     type: boolean
 runs:
   using: "composite"
-  env:
-    FETCH_DEPTH: ${{ inputs.clone-shallow && '1' || '0' }}
   steps:
     - name: Clone the repository
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
       with:
         submodules: ${{ inputs.clone-submodules == 'all' && 'recursive' || 'false' }}
         persist-credentials: false
-        fetch-depth: ${{ env.FETCH_DEPTH }}
+        fetch-depth: ${{ inputs.clone-shallow && '1' || '0' }}
     - name: Clone essential submodules
       if: inputs.clone-submodules == 'essential'
       shell: sh
       run: |
-        git submodule update --init --recursive --depth=$FETCH_DEPTH $ESSENTIAL_SUBMODULES
+        git submodule update --init --recursive --depth=${{ inputs.clone-shallow && '1' || '0' }} $ESSENTIAL_SUBMODULES
       env:
         ESSENTIAL_SUBMODULES: 'vendor/ts-tvl vendor/QR-Code-generator'
     - name: Install nix
