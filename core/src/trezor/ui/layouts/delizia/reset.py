@@ -154,12 +154,6 @@ async def _prompt_number(
 ) -> int:
     from trezor.ui.layouts.menu import Menu, leaf_from_layout, show_menu
 
-    def info_layout(count: int) -> trezorui_api.LayoutContext[trezorui_api.UiResult]:
-        return trezorui_api.show_info_with_cancel(
-            title="",
-            items=[("", info(count), False)],
-        )
-
     with trezorui_api.request_number(
         title=title,
         count=count,
@@ -192,14 +186,14 @@ async def _prompt_number(
 
             if status is trezorui_api.INFO:
                 # shows the menu with the "more info" screen
-                menu = Menu(
-                    [
-                        leaf_from_layout(
-                            TR.buttons__more_info, lambda: info_layout(value)
-                        )
-                    ]
+                leaf = leaf_from_layout(
+                    TR.buttons__more_info,
+                    lambda: trezorui_api.show_info_with_cancel(
+                        title="",
+                        items=[("", info(value), False)],
+                    ),
                 )
-                await show_menu(menu)
+                await show_menu(Menu([leaf]))
             else:
                 raise RuntimeError
 
