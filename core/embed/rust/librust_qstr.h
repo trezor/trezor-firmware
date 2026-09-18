@@ -140,6 +140,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_amount_label;
   MP_QSTR_amount_new;
   MP_QSTR_app_name;
+  MP_QSTR_app_root_min_timestamp;
   MP_QSTR_area_bytesize;
   MP_QSTR_args;
   MP_QSTR_attach_timer_fn;
