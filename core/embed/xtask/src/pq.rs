@@ -560,7 +560,14 @@ pub fn build_release(
     let nrf = stage_nrf_image(args, &out)?;
     let nrf_pq_native = args.model.config()?.nrf_pq_native;
 
-    run_signer(&out, &firmwares, nrf.as_deref(), nrf_pq_native, sign, sigmask)?;
+    run_signer(
+        &out,
+        &firmwares,
+        nrf.as_deref(),
+        nrf_pq_native,
+        sign,
+        sigmask,
+    )?;
     match dest {
         // Signed in place; pack the container `upload` installs.
         Dest::Artifacts => {
