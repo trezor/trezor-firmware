@@ -14,6 +14,6 @@ async def run(msg: BenchmarkRun) -> BenchmarkResult:
         raise ValueError("Benchmark not found")
 
     benchmark = benchmarks[benchmark_name]
-    result = run_benchmark(benchmark)
+    result = run_benchmark(benchmark, *msg.args)
 
     return result
