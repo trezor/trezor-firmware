@@ -146,6 +146,7 @@ SRCS  += elligator2.c
 SRCS  += consteq.c
 SRCS  += fault_handler_noop.c
 SRCS  += mlkem.c
+SRCS  += mlkem_embedded.c
 SRCS  += xwing.c
 SRCS  += slh_ed25519.c
 

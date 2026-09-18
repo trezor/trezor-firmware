@@ -68,6 +68,7 @@
 #include "hmac_drbg.h"
 #include "memzero.h"
 #include "mlkem.h"
+#include "mlkem_embedded.h"
 #include "monero/monero.h"
 #include "nem.h"
 #include "nist256p1.h"
@@ -6033,6 +6034,69 @@ START_TEST(test_mlkem768) {
   memzero(public_key, MLKEM768_PUBLIC_KEY_SIZE);
   memset(public_key, 0xff, 384);
   ck_assert(!mlkem768_encapsulate(public_key, ciphertext, shared_secret1));
+}
+END_TEST
+
+// Differential test of the two ML-KEM-768 backends: mlkem-native (mlkem.c)
+// and the vendored low-memory implementation (mlkem_embedded.c) must produce
+// identical keys, ciphertexts and shared secrets for identical inputs.
+START_TEST(test_mlkem768_backends) {
+  uint8_t seed[MLKEM768_KEY_PAIR_SEED_SIZE] = {0};
+  uint8_t encapsulation_seed[MLKEM768_ENCAPSULATION_SEED_SIZE] = {0};
+  uint8_t private_key1[MLKEM768_PRIVATE_KEY_SIZE] = {0};
+  uint8_t private_key2[MLKEM768_PRIVATE_KEY_SIZE] = {0};
+  uint8_t public_key1[MLKEM768_PUBLIC_KEY_SIZE] = {0};
+  uint8_t public_key2[MLKEM768_PUBLIC_KEY_SIZE] = {0};
+  uint8_t ciphertext1[MLKEM768_CIPHERTEXT_SIZE] = {0};
+  uint8_t ciphertext2[MLKEM768_CIPHERTEXT_SIZE] = {0};
+  uint8_t shared_secret1[MLKEM768_SHARED_SECRET_SIZE] = {0};
+  uint8_t shared_secret2[MLKEM768_SHARED_SECRET_SIZE] = {0};
+
+  for (int i = 0; i < 10; i++) {
+    random_buffer(seed, sizeof(seed));
+    random_buffer(encapsulation_seed, sizeof(encapsulation_seed));
+
+    // Key pair generation matches.
+    ck_assert(
+        mlkem768_generate_key_pair_from_seed(seed, private_key1, public_key1));
+    ck_assert(mlkem768_embedded_generate_key_pair_from_seed(seed, private_key2,
+                                                            public_key2));
+    ck_assert_mem_eq(private_key1, private_key2, MLKEM768_PRIVATE_KEY_SIZE);
+    ck_assert_mem_eq(public_key1, public_key2, MLKEM768_PUBLIC_KEY_SIZE);
+
+    // Encapsulation matches.
+    ck_assert(mlkem768_encapsulate_from_seed(encapsulation_seed, public_key1,
+                                             ciphertext1, shared_secret1));
+    ck_assert(mlkem768_embedded_encapsulate_from_seed(
+        encapsulation_seed, public_key1, ciphertext2, shared_secret2));
+    ck_assert_mem_eq(ciphertext1, ciphertext2, MLKEM768_CIPHERTEXT_SIZE);
+    ck_assert_mem_eq(shared_secret1, shared_secret2,
+                     MLKEM768_SHARED_SECRET_SIZE);
+
+    // Cross decapsulation matches.
+    ck_assert(
+        mlkem768_decapsulate(private_key1, ciphertext2, shared_secret1));
+    ck_assert(mlkem768_embedded_decapsulate(private_key2, ciphertext1,
+                                            shared_secret2));
+    ck_assert_mem_eq(shared_secret1, shared_secret2,
+                     MLKEM768_SHARED_SECRET_SIZE);
+
+    // Implicit rejection values match on a corrupted ciphertext.
+    ciphertext1[i] ^= 0x01;
+    ck_assert(
+        mlkem768_decapsulate(private_key1, ciphertext1, shared_secret1));
+    ck_assert(mlkem768_embedded_decapsulate(private_key2, ciphertext1,
+                                            shared_secret2));
+    ck_assert_mem_eq(shared_secret1, shared_secret2,
+                     MLKEM768_SHARED_SECRET_SIZE);
+  }
+
+  // Both backends reject an invalid public key.
+  memset(public_key1, 0xff, 384);
+  ck_assert(
+      !mlkem768_encapsulate(public_key1, ciphertext1, shared_secret1));
+  ck_assert(!mlkem768_embedded_encapsulate(public_key1, ciphertext1,
+                                           shared_secret1));
 }
 END_TEST
 
@@ -14580,6 +14644,7 @@ Suite *test_suite(void) {
 
   tc = tcase_create("mlkem");
   tcase_add_test(tc, test_mlkem768);
+  tcase_add_test(tc, test_mlkem768_backends);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("xwing");
