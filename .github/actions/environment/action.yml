@@ -21,17 +21,22 @@ runs:
       uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3  # cachix/install-nix-action@v31.10.6
       with:
         nix_path: nixpkgs=channel:nixos-unstable
+    - name: Set up cachix
+      uses: cachix/cachix-action@v17
+      with:
+        name: trezor-firmware-test
+    # Due to how nix & uv2nix work, the whole repo is copied into /nix/store first. Nix recognizes that it is a git repo
+    # and skips .git, but unfortunately submodules get cloned over network, which is very slow. Using path:. instead of
+    # just . avoids that at the cost of copying .git directories and untracked files, which will also be very slow in
+    # non-shallow clones. Another possibility is to remove `inputs.self.submodules = true` from flake.nix but then
+    # uv2nix fails because ts-tvl is a submodule and will not get copied.
     - name: Set convenience variables
       run: |
-        echo NIX_RUN="nix develop .#${{ inputs.nix-dev-shell }} --command" >> $GITHUB_ENV
-        echo UV_RUN="nix develop .#${{ inputs.nix-dev-shell }} --command uv run" >> $GITHUB_ENV
+        echo NIX_RUN="nix develop "path:.#${{ inputs.nix-dev-shell }}-uv2nix" --command" >> $GITHUB_ENV
+        echo UV_RUN="nix develop "path:.#${{ inputs.nix-dev-shell }}-uv2nix" --command" >> $GITHUB_ENV
         cat $GITHUB_ENV
       shell: sh
     - name: Dependencies nixpkgs
       if: inputs.pre-download == 'true'
       run: timeout -v --kill-after=10 500 $NIX_RUN echo nixpkgs deps preinstalled || echo "NIXPKGS PREINSTALL FAILURE"
-      shell: sh
-    - name: Dependencies uv
-      if: inputs.pre-download == 'true'
-      run: timeout -v --kill-after=10 200 $NIX_RUN uv sync
       shell: sh
