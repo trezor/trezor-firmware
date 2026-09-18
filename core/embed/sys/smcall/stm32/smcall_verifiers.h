@@ -137,6 +137,8 @@ secbool firmware_get_vendor__verified(char *buff, size_t buff_size);
 // ---------------------------------------------------------------------
 #ifdef USE_TROPIC
 
+#include <sec/tropic.h>
+
 bool tropic_ping__verified(const uint8_t *msg_out, uint8_t *msg_in,
                            uint16_t msg_len);
 
@@ -147,6 +149,10 @@ bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
 
 bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
                                 uint16_t *size);
+
+secbool tropic_ensure_fw_updated__verified(void);
+
+tropic_fw_update_state_t tropic_get_update_state__verified(void);
 
 #endif
 

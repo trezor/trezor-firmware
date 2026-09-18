@@ -174,6 +174,34 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_get_user_data_obj,
 /// DEVICE_KEY_SLOT: int
 /// FIDO_CERT_INDEX: int
 /// FIDO_KEY_SLOT: int
+/// FW_UPDATE_UNFINISHED: int
+/// FW_UPDATE_OUTDATED: int
+/// FW_UPDATE_UP_TO_DATE: int
+/// FW_UPDATE_ERROR: int
+
+/// def ensure_fw_updated() -> bool:
+///     """
+///     Ensure that the firmware on the Tropic Square chip is up to date.
+///     """
+static mp_obj_t mod_trezorcrypto_tropic_ensure_fw_updated(void) {
+  ensure(tropic_ensure_fw_updated(),
+         "Failed to ensure Tropic FW is up to date");
+  return mp_const_true;
+}
+
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_tropic_ensure_fw_updated_obj,
+                                 mod_trezorcrypto_tropic_ensure_fw_updated);
+
+/// def get_update_state() -> int:
+///     """
+///     Return the FW update state of the Tropic Square chip.
+///     """
+static mp_obj_t mod_trezorcrypto_tropic_get_update_state(void) {
+  return mp_obj_new_int(tropic_get_update_state());
+}
+
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_tropic_get_update_state_obj,
+                                 mod_trezorcrypto_tropic_get_update_state);
 
 static const mp_rom_map_elem_t mod_trezorcrypto_tropic_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_tropic)},
@@ -188,6 +216,17 @@ static const mp_rom_map_elem_t mod_trezorcrypto_tropic_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_tropic_sign_obj)},
     {MP_ROM_QSTR(MP_QSTR_get_user_data),
      MP_ROM_PTR(&mod_trezorcrypto_tropic_get_user_data_obj)},
+    {MP_ROM_QSTR(MP_QSTR_ensure_fw_updated),
+     MP_ROM_PTR(&mod_trezorcrypto_tropic_ensure_fw_updated_obj)},
+    {MP_ROM_QSTR(MP_QSTR_FW_UPDATE_UNFINISHED),
+     MP_ROM_INT(TROPIC_FW_UPDATE_UNFINISHED)},
+    {MP_ROM_QSTR(MP_QSTR_FW_UPDATE_OUTDATED),
+     MP_ROM_INT(TROPIC_FW_UPDATE_OUTDATED)},
+    {MP_ROM_QSTR(MP_QSTR_FW_UPDATE_UP_TO_DATE),
+     MP_ROM_INT(TROPIC_FW_UPDATE_UP_TO_DATE)},
+    {MP_ROM_QSTR(MP_QSTR_FW_UPDATE_ERROR), MP_ROM_INT(TROPIC_FW_UPDATE_ERROR)},
+    {MP_ROM_QSTR(MP_QSTR_get_update_state),
+     MP_ROM_PTR(&mod_trezorcrypto_tropic_get_update_state_obj)},
     {MP_ROM_QSTR(MP_QSTR_TropicError), MP_ROM_PTR(&mp_type_TropicError)}};
 static MP_DEFINE_CONST_DICT(mod_trezorcrypto_tropic_globals,
                             mod_trezorcrypto_tropic_globals_table);

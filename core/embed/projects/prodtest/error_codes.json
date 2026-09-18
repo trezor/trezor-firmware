@@ -1332,11 +1332,6 @@
       "module": "tropic"
     },
     {
-      "code": 20076,
-      "name": "PRODTEST_ERR_TROPIC_UPDATE_NO_REVISION",
-      "module": "tropic"
-    },
-    {
       "code": 20078,
       "name": "PRODTEST_ERR_TROPIC_UPDATE_FW",
       "module": "tropic"
@@ -1739,6 +1734,21 @@
     {
       "code": 20159,
       "name": "PRODTEST_ERR_TROPIC_INIT",
+      "module": "tropic"
+    },
+    {
+      "code": 20160,
+      "name": "PRODTEST_ERR_TROPIC_LOCK_CHECK_FW_READ",
+      "module": "tropic"
+    },
+    {
+      "code": 20161,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_FW_SESSION",
+      "module": "tropic"
+    },
+    {
+      "code": 20162,
+      "name": "PRODTEST_ERR_TROPIC_UPDATE_FW_SLOT",
       "module": "tropic"
     },
     {

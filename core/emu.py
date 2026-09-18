@@ -26,7 +26,9 @@ except Exception:
 
 HERE = Path(__file__).resolve().parent
 MICROPYTHON = HERE / "build-xtask" / "artifacts" / "latest" / "firmware-emu"
-TROPIC_MODEL_CONFIG = HERE.parent / "tests" / "tropic_model" / "config.yml"
+TROPIC_MODEL_CONFIG = (
+    HERE.parent / "tests" / "tropic_model" / "firmware_config" / "current.yml"
+)
 SRC_DIR = HERE / "src"
 
 PROFILE_BASE = Path.home() / ".trezoremu"
