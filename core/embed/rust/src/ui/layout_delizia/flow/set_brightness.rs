@@ -46,11 +46,7 @@ impl FlowController for SetBrightness {
 
 static BRIGHTNESS: AtomicU8 = AtomicU8::new(0);
 
-fn footer_update_fn(
-    content: &NumberInputSliderDialog,
-    ctx: &mut EventCtx,
-    footer: &mut Footer<'static>,
-) {
+fn footer_update_fn(content: &NumberInputSliderDialog, ctx: &mut EventCtx, footer: &mut Footer) {
     if content.value() == content.init_value() || content.touching() {
         footer.update_instruction(ctx, TR::instructions__swipe_horizontally);
         footer.update_description(ctx, TR::setting__adjust);
