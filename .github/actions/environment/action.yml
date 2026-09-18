@@ -29,7 +29,6 @@ runs:
   using: "composite"
   env:
     FETCH_DEPTH: ${{ inputs.clone-shallow && '1' || '0' }}
-    ESSENTIAL_SUBMODULES: vendor/ts-tvl vendor/QR-Code-generator
   steps:
     - name: Clone the repository
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
@@ -42,6 +41,8 @@ runs:
       shell: sh
       run: |
         git submodule update --init --recursive --depth=$FETCH_DEPTH $ESSENTIAL_SUBMODULES
+      env:
+        ESSENTIAL_SUBMODULES: 'vendor/ts-tvl vendor/QR-Code-generator'
     - name: Install nix
       uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3  # cachix/install-nix-action@v31.10.6
       with:
