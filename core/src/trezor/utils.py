@@ -419,7 +419,7 @@ def hexlify_if_bytes(data: str | bytes | bytearray | memoryview) -> str:
 if __debug__:
 
     def dump_protobuf_lines(msg: MessageType, line_start: str = "") -> Iterator[str]:
-        msg_dict = msg.__dict__
+        msg_dict = {k: v for k, v in msg.__dict__.items() if v is not None and v != []}
         if not msg_dict:
             yield line_start + msg.MESSAGE_NAME + " {}"
             return
