@@ -25,11 +25,13 @@
 #include <noise_xxpsk3.h>
 #include <rtl/cli.h>
 #include <rtl/printf.h>
+#include <rust_ui_prodtest.h>
 #include <sys/rng.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 
 #include "memzero.h"
+#include "prodtest.h"
 #include "prodtest_error_codes.h"
 
 #define NFC_BACKUP_MAX_PIN_TRIALS 10
@@ -1195,6 +1197,76 @@ cleanup:
   TSH_RETURN;
 }
 
+// The card reports the oscillation frequency (kHz) of its MCU, which shifts
+// with how well the card is powered by the reader's field: a closely and
+// steadily tapped card runs its MCU near NFC_BACKUP_FREQ_BEST_KHZ (its
+// maximal frequency), while a barely-coupled card starves for power and its
+// MCU frequency drops down towards NFC_BACKUP_FREQ_WORST_KHZ (its minimal
+// frequency).
+#define NFC_BACKUP_FREQ_BEST_KHZ 100000u
+#define NFC_BACKUP_FREQ_WORST_KHZ 3000u
+
+static uint8_t nfc_backup_measure_quality_percent(uint32_t frequency_khz) {
+  uint32_t clamped = frequency_khz;
+  if (clamped > NFC_BACKUP_FREQ_BEST_KHZ) {
+    clamped = NFC_BACKUP_FREQ_BEST_KHZ;
+  }
+  if (clamped < NFC_BACKUP_FREQ_WORST_KHZ) {
+    clamped = NFC_BACKUP_FREQ_WORST_KHZ;
+  }
+
+  uint32_t range = NFC_BACKUP_FREQ_BEST_KHZ - NFC_BACKUP_FREQ_WORST_KHZ;
+  uint32_t offset = clamped - NFC_BACKUP_FREQ_WORST_KHZ;
+  return (uint8_t)((offset * 100u) / range);
+}
+
+static const char *nfc_backup_measure_quality_label(uint8_t percent) {
+  if (percent >= 80) {
+    return "EXCELLENT";
+  }
+  if (percent >= 60) {
+    return "GOOD";
+  }
+  if (percent >= 40) {
+    return "FAIR";
+  }
+  if (percent >= 20) {
+    return "POOR";
+  }
+  return "BAD";
+}
+
+static ts_t system_measure(cli_t *cli, uint32_t *frequency_khz) {
+  TSH_DECLARE;
+  ts_t status;
+
+  nfc_apdu_message_t cmd = {0};
+  nfc_apdu_message_t rsp = {0};
+
+  status = nfc_backup_compose_apdu(0x20, 0x01, 0x00, 0x00, NULL, 0, &cmd);
+  TSH_CHECK_OK(status);
+
+  status =
+      nfc_backup_transceive_logged(cli, "system-measure", 0x01, &cmd, &rsp);
+  TSH_CHECK_OK(status);
+
+  TSH_CHECK(rsp.data_len == (2 + sizeof(uint32_t)), TS_EINVAL);
+  TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
+                rsp.data[rsp.data_len - 1] == 0x00U,
+            TS_EINVAL);
+
+  *frequency_khz = (rsp.data[0] << 24) | (rsp.data[1] << 16) |
+                   (rsp.data[2] << 8) | (rsp.data[3]);
+  cli_trace(cli, "NFC card MCU frequency: %lu.%02lu MHz",
+            (unsigned long)(*frequency_khz / 1000U),
+            (unsigned long)((*frequency_khz % 1000U) / 10U));
+
+  goto cleanup;
+
+cleanup:
+  TSH_RETURN;
+}
+
 static ts_t nfc_backup_activate_flashloader(cli_t *cli) {
   TSH_DECLARE;
   ts_t status;
@@ -1492,6 +1564,47 @@ cleanup:
   TSH_RETURN;
 }
 
+static ts_t nfc_backup_measure(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    TSH_CHECK(false, TS_EINVAL);
+  }
+
+  uint32_t frequency_khz = 0;
+  while (true) {
+    if (cli_aborted(cli)) {
+      cli_trace(cli, "Aborted by operator.");
+      break;
+    }
+
+    status = system_measure(cli, &frequency_khz);
+    TSH_CHECK_OK(status);
+
+    uint8_t percent = nfc_backup_measure_quality_percent(frequency_khz);
+    const char *quality = nfc_backup_measure_quality_label(percent);
+    unsigned long freq_mhz_int = frequency_khz / 1000U;
+    unsigned long freq_mhz_frac = (frequency_khz % 1000U) / 10U;
+
+    char label[32] = {0};
+    snprintf_(label, sizeof(label), "%s / %lu.%02lu MHz", quality, freq_mhz_int,
+              freq_mhz_frac);
+
+    cli_progress(cli, "frequency=%lu.%02luMHz quality=%u%% (%s)", freq_mhz_int,
+                 freq_mhz_frac, (unsigned)percent, quality);
+
+    screen_prodtest_signal_meter(percent, label, strlen(label));
+
+    // systick_delay_ms(100);
+  }
+
+cleanup:
+  prodtest_show_homescreen();
+  TSH_RETURN;
+}
+
 // Transparent mode CLI: buffers incoming characters into a line and, once a
 // termination character (or a full buffer) is seen, dispatches it to one of
 // the registered command handlers below.
@@ -1750,6 +1863,10 @@ REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_activate_flashloader,
                         PRODTEST_ERR_NFC_BACKUP_ACTIVATE_FLASHLOADER_FAILED,
                         "NFC activate flashloader failed");
 
+REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_measure, &nfc_backup_measure,
+                        PRODTEST_ERR_NFC_BACKUP_MEASURE_FAILED,
+                        "NFC measure failed");
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -1842,5 +1959,12 @@ PRODTEST_CLI_CMD(
   .info = "Run nfc-backup tests",
   .args = ""
 );  
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-backup-measure",
+  .func = prodtest_nfc_backup_measure,
+  .info = "Run nfc-backup measure test",
+  .args = ""
+);
 
 #endif  // USE_NFC

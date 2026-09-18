@@ -54,6 +54,12 @@ extern "C" fn screen_prodtest_show_text(text: *const cty::c_char, text_len: u8) 
 }
 
 #[no_mangle]
+extern "C" fn screen_prodtest_signal_meter(percent: u8, label: *const cty::c_char, label_len: u8) {
+    let label = unsafe { CSlice::from_ptr_and_len(label, label_len as usize) };
+    ModelUI::screen_prodtest_signal_meter(percent, label.as_ascii_str().unwrap_or_default());
+}
+
+#[no_mangle]
 extern "C" fn screen_prodtest_border() {
     ModelUI::screen_prodtest_border();
 }
