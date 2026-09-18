@@ -71,6 +71,7 @@ easer = { version = "0.3.0", default-features = false, features = ["libm"] }
 heapless = { version = "0.9.2", features = ["ufmt"], default-features = false }
 log = { version = "0.4.29" }
 minicbor = { version = "1.0.0", default-features = false }
+miniscript = { git = "https://github.com/trezor/rust-miniscript", branch = "romanz/2610/min", features = [], default-features = false }
 num-derive = "0.4.2"
 num-traits = { version = "0.2.19", default-features = false, features = ["libm"] }
 pareen = { version = "0.3.3", path = "../../rust/pareen", default-features = false, features = ["libm", "easer"] }
@@ -116,3 +117,13 @@ toml = "0.8.23"
 zlib-rs = "0.6.3"
 
 xbuild = { path = "xbuild" }
+
+# Route secp256k1-sys (pulled in transitively via miniscript -> bitcoin ->
+# secp256k1) to a fork that skips its bundled libsecp256k1 build and uses
+# unprefixed FFI symbols. The symbols are provided at link time by the
+# vendored copy at vendor/secp256k1-zkp/, compiled by SCons. This avoids
+# linking two copies of libsecp256k1 (and two sets of ecmult tables) into
+# the firmware. The patch only takes effect when the `miniscript` feature
+# is enabled, since secp256k1-sys is not pulled in otherwise.
+[patch.crates-io]
+secp256k1-sys = { path = "../../vendor/rust-secp256k1-sys" }

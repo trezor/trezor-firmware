@@ -24,6 +24,7 @@ easer.workspace = true
 heapless.workspace = true
 log.workspace = true
 minicbor.workspace = true
+miniscript = { workspace = true, optional = true }
 num-derive.workspace = true
 num-traits.workspace = true
 pareen.workspace = true
@@ -37,6 +38,7 @@ ufmt.workspace = true
 unsize.workspace = true
 without-alloc.workspace = true
 zeroize = { workspace = true, optional = true }
+
 
 # crates in embed/ directory
 crypto.workspace = true
@@ -77,7 +79,7 @@ layout_caesar = []
 layout_delizia = []
 layout_eckhart = []
 micropython = ["dep:upymod"]
-miniscript = []
+miniscript = ["dep:miniscript"]
 n1w1 = []
 nrf = []
 optiga = []
