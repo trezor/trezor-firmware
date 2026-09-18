@@ -28,6 +28,7 @@ from .curve_benchmark import (
 )
 from .hash_benchmark import HashBenchmark
 from .log_benchmark import LogBenchmark
+from .miniscript_benchmark import MiniscriptBenchmark
 
 
 # This is a wrapper above the trezor.crypto.curve.ed25519 module that satisfies SignCurve protocol, the modules uses `message` instead of `digest` in `sign()` and `verify()`
@@ -98,4 +99,5 @@ benchmarks = {
     "crypto/curve/curve25519/publickey": PublickeyBenchmark(curve25519),
     "crypto/curve/curve25519/multiply": MultiplyBenchmark(curve25519),
     "log": LogBenchmark(),
+    "miniscript": MiniscriptBenchmark(),
 }

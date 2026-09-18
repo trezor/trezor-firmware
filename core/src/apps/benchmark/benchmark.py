@@ -7,17 +7,17 @@ if TYPE_CHECKING:
     from trezor.messages import BenchmarkResult
 
     class Benchmark(Protocol):
-        def prepare(self) -> None: ...
+        def prepare(self, *args: str) -> None: ...
 
         def run(self) -> None: ...
 
         def get_result(self, duration_us: int, repetitions: int) -> BenchmarkResult: ...
 
 
-def run_benchmark(benchmark: Benchmark) -> BenchmarkResult:
+def run_benchmark(benchmark: Benchmark, *args: str) -> BenchmarkResult:
     minimum_duration_s = 1
     minimum_duration_us = minimum_duration_s * 1000000
-    benchmark.prepare()
+    benchmark.prepare(*args)
     start_time_us = utime.ticks_us()
     repetitions = 0
     while True:

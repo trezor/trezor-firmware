@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from fnmatch import fnmatch
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import click
 
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from ..client import Session
 
 
-def list_names_patern(session: "Session", pattern: Optional[str] = None) -> list[str]:
+def list_names_patern(session: "Session", pattern: str | None = None) -> list[str]:
     names = list(benchmark.list_names(session).names)
     if pattern is None:
         return names
@@ -41,7 +41,7 @@ def cli() -> None:
 @cli.command()
 @click.argument("pattern", required=False)
 @with_session(passphrase=False)
-def list_names(session: "Session", pattern: Optional[str] = None) -> None:
+def list_names(session: "Session", pattern: str | None = None) -> None:
     """List names of all supported benchmarks"""
     names = list_names_patern(session, pattern)
     if len(names) == 0:
@@ -53,13 +53,14 @@ def list_names(session: "Session", pattern: Optional[str] = None) -> None:
 
 @cli.command()
 @click.argument("pattern", required=False)
+@click.argument("args", nargs=-1)
 @with_session(passphrase=False)
-def run(session: "Session", pattern: Optional[str]) -> None:
+def run(session: "Session", pattern: str | None, args: list[str]) -> None:
     """Run benchmark"""
     names = list_names_patern(session, pattern)
     if len(names) == 0:
         click.echo("No benchmark satisfies the pattern.")
     else:
         for name in names:
-            result = benchmark.run(session, name)
+            result = benchmark.run(session, name, args)
             click.echo(f"{name}: {result.value} {result.unit}")
