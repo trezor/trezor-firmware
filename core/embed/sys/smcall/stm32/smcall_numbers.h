@@ -113,5 +113,6 @@ typedef enum {
   SMCALL_TELEMETRY_GET,
 
   SMCALL_MLDSA44_VERIFY,
+  SMCALL_TROPIC_ENSURE_FW_UPDATED,
 
 } smcall_number_t;

@@ -42,3 +42,10 @@ DEVICE_CERT_INDEX: int
 DEVICE_KEY_SLOT: int
 FIDO_CERT_INDEX: int
 FIDO_KEY_SLOT: int
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-tropic.h
+def ensure_fw_updated() -> bool:
+    """
+    Ensure that the firmware on the Tropic Square chip is up to date.
+    """

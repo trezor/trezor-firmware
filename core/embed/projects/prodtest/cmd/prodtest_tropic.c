@@ -37,8 +37,6 @@
 #include "nist256p1.h"
 
 #include "common.h"
-#include "fw_CPU.h"
-#include "fw_SPECT.h"
 #include "libtropic.h"
 #include "libtropic_l2.h"
 
@@ -72,9 +70,9 @@ static tropic_handshake_state_t g_tropic_handshake_state =
 #define TROPIC_FIRST_UNPRIVILEGED_MCOUNTER 4
 
 // R-memory range used by the writable-slot test. Starts right after the
-// certificate slots (0-5) and Tropic config distribution version slots (6, 7),
-// which must not be overwritten.
-#define TROPIC_RMEM_TEST_FIRST 8
+// certificate slots (0-5), the Tropic config distribution version slots (6, 7)
+// and the FW version slot (8), which must not be overwritten.
+#define TROPIC_RMEM_TEST_FIRST 9
 #define TROPIC_RMEM_TEST_LAST TR01_R_MEM_DATA_SLOT_MAX
 #define TROPIC_RMEM_TEST_COUNT \
   (TROPIC_RMEM_TEST_LAST - TROPIC_RMEM_TEST_FIRST + 1)
@@ -327,6 +325,35 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli,
                 "`lt_r_mem_data_read()` failed with error '%s'",
                 lt_ret_verbose(ret));
       return TROPIC_LOCKED_ERROR;
+  }
+
+  uint8_t read_fw_version[TROPIC_FW_VERSION_SIZE] = {0};
+  uint16_t read_fw_version_length = 0;
+  ret =
+      lt_r_mem_data_read(tropic_handle, TROPIC_FW_VERSION_SLOT, read_fw_version,
+                         sizeof(read_fw_version), &read_fw_version_length);
+  if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
+    cli_trace(cli, "The FW version slot is empty.");
+    return TROPIC_LOCKED_FALSE;
+  } else if (ret != LT_OK) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_CHECK_FW_READ,
+              "`lt_r_mem_data_read()` failed with error '%s'",
+              lt_ret_verbose(ret));
+    return TROPIC_LOCKED_ERROR;
+  } else if (read_fw_version_length != sizeof(read_fw_version)) {
+    cli_trace(cli, "The FW version slot has an unexpected length.");
+    return TROPIC_LOCKED_FALSE;
+  } else {
+    cli_trace(cli, "FW versions: RISC-V %d.%d.%d, SPECT %d.%d.%d",
+              read_fw_version[3], read_fw_version[2], read_fw_version[1],
+              read_fw_version[7], read_fw_version[6], read_fw_version[5]);
+  }
+
+  if (tropic_fw_slot_is_outdated(read_fw_version)) {
+    cli_trace(cli,
+              "The FW versions recorded are older than the bundled FW "
+              "versions.");
+    return TROPIC_LOCKED_FALSE;
   }
 
   return TROPIC_LOCKED_TRUE;
@@ -1466,6 +1493,8 @@ static void prodtest_tropic_keyfido_read(cli_t* cli) {
 #endif  // SECRET_KEY_MASKING
 }
 
+static bool privileged_session_start(cli_t* cli);
+
 static void prodtest_tropic_update_fw(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -1490,31 +1519,11 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
             chip_id.silicon_rev[1], chip_id.silicon_rev[2],
             chip_id.silicon_rev[3]);
 
-#ifdef LT_SILICON_REV_ABAB
-  // CHIP_ID v0.0.0.1 has no silicon revision field (libtropic reports it as
-  // "N/A") and was used only on ABAB silicon, so the version alone identifies
-  // the chip. Newer ABAB chips spell the revision out.
-  const bool rev_is_abab = strncmp((char*)chip_id.silicon_rev, "ABAB", 4) == 0;
-  const bool chip_id_is_v0001 =
-      chip_id.chip_id_ver[0] == 0 && chip_id.chip_id_ver[1] == 0 &&
-      chip_id.chip_id_ver[2] == 0 && chip_id.chip_id_ver[3] == 1;
-
-  if (!rev_is_abab && !chip_id_is_v0001) {
+  if (!tropic_silicon_revision_matches(&chip_id)) {
     cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_WRONG_REVISION,
               "Wrong tropic chip silicon revision");
     return;
   }
-#elif defined(LT_SILICON_REV_ACAB)
-  if (strncmp((char*)chip_id.silicon_rev, "ACAB", 4) != 0) {
-    cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_WRONG_REVISION,
-              "Wrong tropic chip silicon revision");
-    return;
-  }
-#else
-  cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_NO_REVISION,
-            "Tropic chip silicon revision not set");
-  return;
-#endif  // LT_SILICON_REV_ABAB
 
   cli_trace(cli, "Updating RISC-V and SPECT FW");
   // We allow the libtropic's log to write to cli during the update, so that we
@@ -1522,8 +1531,7 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
 #ifdef USE_TROPIC_LOGGING
   tropic_set_log_sink(cli);
 #endif
-  lt_ret_t ret = lt_do_mutable_fw_update(h, fw_CPU, sizeof(fw_CPU), fw_SPECT,
-                                         sizeof(fw_SPECT));
+  lt_ret_t ret = tropic_flash_bundled_fw();
 #ifdef USE_TROPIC_LOGGING
   tropic_set_log_sink(NULL);
 #endif
@@ -1563,6 +1571,18 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
 
   // Tropic rebooted during the update, so the driver's session data is stale.
   tropic_session_forget();
+  if (!privileged_session_start(cli)) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_FW_SESSION,
+              "Failed to start privileged session");
+    goto cleanup;
+  }
+
+  // record the FW versions in R-memory
+  if (!tropic_write_fw_slot()) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_UPDATE_FW_SLOT,
+              "WARNING: could not record the FW versions in R-mem");
+    goto cleanup;
+  }
 
   cli_ok(cli, "");
 
