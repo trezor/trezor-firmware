@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import hashlib
 import struct
+from pathlib import Path
+from typing import Any
 
 from trezorlib import merkle_tree
 from trezorlib.firmware import pq_secure
@@ -44,7 +46,7 @@ CONTAINER_SET_MAGIC = f"{CONTAINER_MAGIC}-set"
 CONTAINER_DEFAULT_BOOTLOADER = "bootloader.bin"
 
 
-def check_container(doc: dict, path, *, is_set: bool = False) -> dict:
+def check_container(doc: dict, path: Path | str, *, is_set: bool = False) -> dict:
     """Reject a container of unknown format/version (checked first), return it."""
     want = CONTAINER_SET_MAGIC if is_set else CONTAINER_MAGIC
     got = doc.get("format")
@@ -64,7 +66,7 @@ def check_container(doc: dict, path, *, is_set: bool = False) -> dict:
     return doc
 
 
-def container_models(doc: dict, path) -> dict[str, dict]:
+def container_models(doc: dict, path: Path | str) -> dict[str, dict]:
     """Read a container as ``{model: body}``, accepting either shape."""
     if "models" in doc:
         check_container(doc, path, is_set=True)
@@ -148,7 +150,7 @@ def _model_str(hw_model: int) -> str:
     return text if text.isprintable() else f"0x{hw_model:08x}"
 
 
-def boot_header_model_id(header) -> str:
+def boot_header_model_id(header: Any) -> str:
     """Model id from the boot header's authenticated hw_model (u32, Model, or bytes)."""
     hw = header.hw_model
     if isinstance(hw, int):

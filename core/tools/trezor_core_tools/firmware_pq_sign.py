@@ -250,12 +250,8 @@ def build_bundle(
             "sigmask": bl.header.sigmask,
             # Code digest + founder pool: what a ceremony pins; the pool is a
             # compile-time choice (BOOTLOADER_DEVEL) the header does not record.
-            "code_sha256": bootloader_provenance.code_digest(
-                bootloader.read_bytes()
-            ),
-            "founder_pool": bootloader_provenance.detect_pool(
-                bootloader.read_bytes()
-            ),
+            "code_sha256": bootloader_provenance.code_digest(bootloader.read_bytes()),
+            "founder_pool": bootloader_provenance.detect_pool(bootloader.read_bytes()),
             # Where firmware_type sits, so a stamping tool needs no layout knowledge.
             "firmware_type": {
                 "offset": firmware_type_offset,

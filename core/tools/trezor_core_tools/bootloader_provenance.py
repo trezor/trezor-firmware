@@ -44,9 +44,7 @@ def code_digest(image: bytes) -> str:
 def detect_pool(image: bytes) -> str:
     """Which founder pool is linked in; "unknown" if neither key array is found."""
     prod = [bytes(k) for k in (*ROOT_SLH_DSA_KEYS, *ROOT_ED25519_KEYS)]
-    devel = [
-        bytes(k) for k in (*ROOT_SLH_DSA_KEYS_DEV_PUBLIC, *ROOT_ED25519_KEYS_DEV)
-    ]
+    devel = [bytes(k) for k in (*ROOT_SLH_DSA_KEYS_DEV_PUBLIC, *ROOT_ED25519_KEYS_DEV)]
     has_prod = any(k in image for k in prod)
     has_devel = any(k in image for k in devel)
     if has_prod and has_devel:
