@@ -222,6 +222,8 @@ typedef enum {
   SYSCALL_MCU_ATTESTATION_SIGN,
 
   SYSCALL_TELEMETRY_GET,
+  SYSCALL_TROPIC_ENSURE_FW_UPDATED,
+  SYSCALL_TROPIC_GET_UPDATE_STATE,
   // ------------------------------------------------------
   // Following syscalls are executed in kernel thread mode
 

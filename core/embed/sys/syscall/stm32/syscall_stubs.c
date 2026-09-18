@@ -978,6 +978,8 @@ bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t *bb) {
 
 #ifdef USE_TROPIC
 
+#include <sec/tropic.h>
+
 bool tropic_ping(const uint8_t *msg_in, uint8_t *msg_out, uint16_t msg_len) {
   return (bool)syscall_invoke3((uint32_t)msg_in, (uint32_t)msg_out, msg_len,
                                SYSCALL_TROPIC_PING);
@@ -997,6 +999,15 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
 bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
   return (bool)syscall_invoke3((uint32_t)udata_slot, (uint32_t)data,
                                (uint32_t)size, SYSCALL_TROPIC_DATA_READ);
+}
+
+secbool tropic_ensure_fw_updated(void) {
+  return (secbool)syscall_invoke0(SYSCALL_TROPIC_ENSURE_FW_UPDATED);
+}
+
+tropic_fw_update_state_t tropic_get_update_state(void) {
+  return (tropic_fw_update_state_t)syscall_invoke0(
+      SYSCALL_TROPIC_GET_UPDATE_STATE);
 }
 
 #endif

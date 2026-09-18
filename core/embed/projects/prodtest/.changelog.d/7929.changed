@@ -1,0 +1,1 @@
+Make `tropic-update-fw` record the FW versions in R-memory slot 8 and `tropic-lock-check` report `NO` while they are missing or outdated.

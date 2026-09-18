@@ -5,7 +5,7 @@ on:
     types: [opened, closed, synchronize]
     branches: [main]
     paths:
-      - tests/tropic_model/config.yml
+      - tests/tropic_model/firmware_config/current.yml
       - vendor/ts-tvl
 
 permissions:
@@ -17,13 +17,13 @@ concurrency:
 
 env:
   PULL_COMMENT: |
-    ⚠️ Looks like you modified `tests/tropic_model/config.yml` or updated the `ts-tvl` submodule. Please make a numbered copy and make sure recent upgrade tests use it and pass.
+    ⚠️ Looks like you modified `tests/tropic_model/firmware_config/current.yml` or updated the `ts-tvl` submodule. Please check whether any firmware has been released since the previous change to `current.yml`. If so, copy the previous content of `current.yml` to `tests/tropic_model/firmware_config/X_Y_Z.yml`, where X.Y.Z is the latest release made before this change (the copy covers all releases since the previous change), and make sure upgrade tests pass.
     <!-- -->
     After the PR is merged, an issue will be created in [trezor-user-env](https://github.com/trezor/trezor-user-env) to notify maintainers of the change.
   ISSUE_REPOSITORY: trezor-user-env
   ISSUE_TITLE: Tropic emulator config/version changed in trezor-firmware
   ISSUE_BODY: |
-    A change to `tests/tropic_model/config.yml` or `vendor/ts-tvl` has been merged to main branch in trezor-firmware: ${{ github.event.pull_request.html_url }}
+    A change to `tests/tropic_model/firmware_config/current.yml` or `vendor/ts-tvl` has been merged to main branch in trezor-firmware: ${{ github.event.pull_request.html_url }}
     <!-- -->
     Please make sure nightly emulators use this new configuration. Feel free to contact the PR author or **#tech_firmware** for help.
   ISSUE_BODY_PATH: ${{ github.workspace }}/tropic-emulator-issue.md
