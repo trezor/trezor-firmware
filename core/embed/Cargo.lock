@@ -45,6 +45,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
+name = "arrayvec"
+version = "0.7.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56"
+
+[[package]]
 name = "autocfg"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -81,6 +87,59 @@ dependencies = [
  "rustc-hash",
  "shlex",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "bitcoin"
+version = "0.32.102"
+source = "git+https://github.com/trezor/rust-bitcoin?rev=f06b8bdf96f5b36b1daae9e592ac6f5caa5fb0bd#f06b8bdf96f5b36b1daae9e592ac6f5caa5fb0bd"
+dependencies = [
+ "bitcoin-io",
+ "bitcoin-units",
+ "bitcoin_hashes",
+ "hex-conservative 0.2.3",
+]
+
+[[package]]
+name = "bitcoin-consensus-encoding"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9daa31138eb443d5751b207f3f64154e2bb09cd59960562ccc7a7112be38147f"
+dependencies = [
+ "bitcoin-internals",
+ "hex-conservative 1.3.0",
+ "serde",
+]
+
+[[package]]
+name = "bitcoin-internals"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8bea3a9f0cfece4564e37cb49a38cc245ca5184719e50d7d0dda3268722c4e2"
+
+[[package]]
+name = "bitcoin-io"
+version = "0.1.101"
+source = "git+https://github.com/trezor/rust-bitcoin?rev=f06b8bdf96f5b36b1daae9e592ac6f5caa5fb0bd#f06b8bdf96f5b36b1daae9e592ac6f5caa5fb0bd"
+dependencies = [
+ "bitcoin-consensus-encoding",
+]
+
+[[package]]
+name = "bitcoin-units"
+version = "0.1.101"
+source = "git+https://github.com/trezor/rust-bitcoin?rev=f06b8bdf96f5b36b1daae9e592ac6f5caa5fb0bd#f06b8bdf96f5b36b1daae9e592ac6f5caa5fb0bd"
+dependencies = [
+ "bitcoin-consensus-encoding",
+]
+
+[[package]]
+name = "bitcoin_hashes"
+version = "0.14.101"
+source = "git+https://github.com/trezor/rust-bitcoin?rev=f06b8bdf96f5b36b1daae9e592ac6f5caa5fb0bd#f06b8bdf96f5b36b1daae9e592ac6f5caa5fb0bd"
+dependencies = [
+ "bitcoin-io",
+ "hex-conservative 0.2.3",
 ]
 
 [[package]]
@@ -429,6 +488,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
+name = "hex-conservative"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db3fef046dca3ca91ee1408a8c1b80ab777e80a4d308d1bf4e7adb3fcb047e08"
+dependencies = [
+ "arrayvec",
+]
+
+[[package]]
+name = "hex-conservative"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "271e0d19bcb473b6675739a2b536076b24a082316cb5199ad918edce10c599e8"
+dependencies = [
+ "arrayvec",
+]
+
+[[package]]
 name = "indenter"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -539,6 +616,14 @@ name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
+
+[[package]]
+name = "miniscript"
+version = "13.1.0"
+source = "git+https://github.com/trezor/rust-miniscript?rev=1b417541fa009e44c5c89e46b74207b26c521631#1b417541fa009e44c5c89e46b74207b26c521631"
+dependencies = [
+ "bitcoin",
+]
 
 [[package]]
 name = "miniz_oxide"
@@ -1027,6 +1112,7 @@ dependencies = [
  "io",
  "log",
  "minicbor",
+ "miniscript",
  "models",
  "num-derive",
  "num-traits",
