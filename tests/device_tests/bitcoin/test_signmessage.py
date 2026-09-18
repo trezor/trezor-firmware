@@ -21,7 +21,7 @@ import pytest
 from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType, message_filters
-from trezorlib.exceptions import Cancelled
+from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...common import is_core
@@ -492,4 +492,175 @@ def test_signmessage_path_warning(session: Session):
             n=parse_path("m/86h/0h/0h/0/0"),
             message=message,
             script_type=messages.InputScriptType.SPENDWITNESS,
+        )
+
+
+MESSAGE = "This is an example of a signed message."
+
+
+VECTORS_BIP48_SIGNS = (  # path, script_type
+    # 0h is the legacy-multisig level; message signing is single-key, so it
+    # signs as p2pkh and trezorctl sends SPENDADDRESS rather than SPENDMULTISIG
+    pytest.param("m/48h/0h/0h/0h", S.SPENDADDRESS, id="account_0h-address"),
+    pytest.param("m/48h/0h/0h/0h", S.SPENDP2SHWITNESS, id="account_0h-p2shsegwit"),
+    pytest.param("m/48h/0h/0h/0h", S.SPENDWITNESS, id="account_0h-segwit"),
+    pytest.param("m/48h/0h/0h/0h/0/0", S.SPENDADDRESS, id="leaf_0h-address"),
+    # 1h is the P2SH-segwit level
+    pytest.param("m/48h/0h/0h/1h", S.SPENDADDRESS, id="account_1h-address"),
+    pytest.param("m/48h/0h/0h/1h", S.SPENDP2SHWITNESS, id="account_1h-p2shsegwit"),
+    pytest.param("m/48h/0h/0h/1h", S.SPENDWITNESS, id="account_1h-segwit"),
+    pytest.param("m/48h/0h/0h/1h/0/0", S.SPENDP2SHWITNESS, id="leaf_1h-p2shsegwit"),
+    # 2h is the native-segwit level
+    pytest.param("m/48h/0h/0h/2h", S.SPENDADDRESS, id="account_2h-address"),
+    pytest.param("m/48h/0h/0h/2h", S.SPENDP2SHWITNESS, id="account_2h-p2shsegwit"),
+    pytest.param("m/48h/0h/0h/2h", S.SPENDWITNESS, id="account_2h-segwit"),
+    pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDWITNESS, id="leaf_2h-segwit"),
+)
+VECTORS_BIP48_WARN = (  # path, script_type
+    # A leaf whose script type does not match the level it hangs under is
+    # below the export point, so it warns before signing
+    pytest.param("m/48h/0h/0h/0h/0/0", S.SPENDP2SHWITNESS, id="leaf_0h-p2shsegwit"),
+    pytest.param("m/48h/0h/0h/0h/0/0", S.SPENDWITNESS, id="leaf_0h-segwit"),
+    pytest.param("m/48h/0h/0h/1h/0/0", S.SPENDADDRESS, id="leaf_1h-address"),
+    pytest.param("m/48h/0h/0h/1h/0/0", S.SPENDWITNESS, id="leaf_1h-segwit"),
+    pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDADDRESS, id="leaf_2h-address"),
+    pytest.param("m/48h/0h/0h/2h/0/0", S.SPENDP2SHWITNESS, id="leaf_2h-p2shsegwit"),
+)
+
+
+def _sign_message(
+    session: Session,
+    path: str,
+    script_type: messages.InputScriptType,
+    warns: bool,
+):
+    expected_responses = [
+        (
+            warns,
+            message_filters.ButtonRequest(
+                code=messages.ButtonRequestType.UnknownDerivationPath
+            ),
+        ),
+        message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+        message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+        messages.MessageSignature,
+    ]
+
+    with session.test_ctx as client:
+        client.set_expected_responses(expected_responses)
+        if is_core(session):
+            IF = InputFlowConfirmAllWarnings(session)
+            client.set_input_flow(IF.get())
+        sig = btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=parse_path(path),
+            message=MESSAGE,
+            script_type=script_type,
+        )
+
+    assert sig.signature
+    return sig
+
+
+@pytest.mark.models("core")
+@pytest.mark.parametrize("path, script_type", VECTORS_BIP48_SIGNS)
+def test_signmessage_bip48_matrix_no_warning(
+    session: Session,
+    path: str,
+    script_type: messages.InputScriptType,
+):
+    _sign_message(session, path, script_type, warns=False)
+
+
+@pytest.mark.models("core")
+@pytest.mark.parametrize("path, script_type", VECTORS_BIP48_WARN)
+def test_signmessage_bip48_matrix_warning(
+    session: Session,
+    path: str,
+    script_type: messages.InputScriptType,
+):
+    _sign_message(session, path, script_type, warns=True)
+
+
+VECTORS_LENIENCY_SIGNS = (  # path, script_type
+    # The BIP-45 cosigner node: PATTERN_BIP45 is unhardened below m/45'
+    pytest.param("m/45h", S.SPENDADDRESS, id="cosigner_node-address"),
+    pytest.param("m/45h", S.SPENDP2SHWITNESS, id="cosigner_node-p2shsegwit"),
+    pytest.param("m/45h", S.SPENDWITNESS, id="cosigner_node-segwit"),
+    pytest.param("m/45h/0/0/0", S.SPENDADDRESS, id="bip45_leaf"),
+    # The Casa and Unchained-unhardened account level
+    pytest.param("m/45h/0/0", S.SPENDADDRESS, id="casa_account-address"),
+    pytest.param("m/45h/0/0", S.SPENDP2SHWITNESS, id="casa_account-p2shsegwit"),
+    pytest.param("m/45h/0/0", S.SPENDWITNESS, id="casa_account-segwit"),
+    # The Unchained hardened account level
+    pytest.param("m/45h/0h/0h", S.SPENDADDRESS, id="unchained_account-address"),
+    pytest.param("m/45h/0h/0h", S.SPENDP2SHWITNESS, id="unchained_account-p2shsegwit"),
+    pytest.param("m/45h/0h/0h", S.SPENDWITNESS, id="unchained_account-segwit"),
+    # Unchained, whose account level is hardened
+    pytest.param("m/45h/0h/0h/1000000/0/0", S.SPENDADDRESS, id="unchained_leaf"),
+    # An ordinary account node, where any wallet shares its xpub
+    pytest.param("m/44h/0h/0h", S.SPENDADDRESS, id="bip44_account"),
+    pytest.param("m/84h/0h/0h", S.SPENDWITNESS, id="bip84_account"),
+    # An export point is reached under any signable script type
+    pytest.param("m/44h/0h/0h", S.SPENDWITNESS, id="bip44_account-segwit"),
+)
+VECTORS_LENIENCY_FORBIDDEN = (  # path, script_type
+    # A pattern with no hardened component has no export point, so the root
+    # stays withheld
+    pytest.param("m", S.SPENDADDRESS, id="root"),
+)
+
+
+@pytest.mark.models("core")
+@pytest.mark.parametrize("path, script_type", VECTORS_LENIENCY_SIGNS)
+def test_signmessage_leniency(
+    session: Session,
+    path: str,
+    script_type: messages.InputScriptType,
+):
+    _sign_message(session, path, script_type, warns=False)
+
+
+@pytest.mark.models("core")
+@pytest.mark.parametrize("path, script_type", VECTORS_LENIENCY_FORBIDDEN)
+def test_signmessage_forbidden(
+    session: Session,
+    path: str,
+    script_type: messages.InputScriptType,
+):
+    with pytest.raises(TrezorFailure, match="Forbidden key path") as e:
+        btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=parse_path(path),
+            message=MESSAGE,
+            script_type=script_type,
+        )
+    assert e.value.code is messages.FailureType.DataError
+
+
+@pytest.mark.models("core")
+def test_signmessage_bip48_legacy_level_signs_as_p2pkh(session: Session):
+    # The path alone reads as SPENDMULTISIG, but there is no multisig message
+    # signature, so trezorctl sends the single-key analogue.
+    from trezorlib.cli.btc import guess_script_type_from_path
+
+    path = "m/48h/0h/0h/0h/0/0"
+    assert guess_script_type_from_path(parse_path(path)) is S.SPENDMULTISIG
+
+    sig = _sign_message(session, path, S.SPENDADDRESS, warns=False)
+    assert sig.address.startswith("1")
+
+
+@pytest.mark.models("core")
+def test_signmessage_slip25_requires_unlock_path(session: Session):
+    # The account-node grant must not reach the coinjoin account.
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        btc.sign_message(
+            session,
+            coin_name="Bitcoin",
+            n=parse_path("m/10025h/0h/0h/1h"),
+            message=MESSAGE,
+            script_type=S.SPENDTAPROOT,
         )
