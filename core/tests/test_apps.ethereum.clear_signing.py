@@ -5,6 +5,7 @@ import unittest
 
 if not utils.BITCOIN_ONLY:
     from ethereum_common import *
+    from trezor.enums import EthereumABIType
     from trezor.enums import EthereumABIType as EABIT
     from trezor.enums import EthereumERC7730FieldFormatterType as FT
     from trezor.messages import (
@@ -61,34 +62,38 @@ if not utils.BITCOIN_ONLY:
 FIVE_RANDOM_BYTES = b"\x1a\xf2\x03\x99\x10"
 SEVEN_RANDOM_BYTES = b"\xb2^\xa7\x064\x05\x01"
 
+_EVM_WORD_SIZE = 32  # in bytes
+
 
 def to_bytes(v: int) -> bytes:
-    return v.to_bytes(32, "big")
+    return v.to_bytes(_EVM_WORD_SIZE, "big")
 
 
 def pad_left(value: bytes) -> bytes:
     """Right-align a value in its word, like `address` or any numeric type."""
-    return b"\x00" * (32 - len(value)) + value
+    return b"\x00" * (-len(value) % _EVM_WORD_SIZE) + value
 
 
 def pad_right(value: bytes) -> bytes:
     """Left-align a value and pad the word out, like the body of `bytes`."""
-    return value + b"\x00" * (-len(value) % 32)
+    return value + b"\x00" * (-len(value) % _EVM_WORD_SIZE)
 
 
 # `EthereumABIValueInfo` builders, to keep the descriptor trees below readable.
 # Exactly one variant may be set on each node.
 
 
-def p_atomic(abi_type: int) -> "EthereumABIValueInfo":
+def p_atomic(abi_type: "EthereumABIType") -> "EthereumABIValueInfo":
     return EthereumABIValueInfo(atomic=abi_type)
 
 
-def p_dynamic(abi_type: int) -> "EthereumABIValueInfo":
+def p_dynamic(abi_type: "EthereumABIType") -> "EthereumABIValueInfo":
     return EthereumABIValueInfo(dynamic=abi_type)
 
 
-def p_tuple(fields: list, is_dynamic: bool) -> "EthereumABIValueInfo":
+def p_tuple(
+    fields: "list[EthereumABIValueInfo]", is_dynamic: bool
+) -> "EthereumABIValueInfo":
     return EthereumABIValueInfo(
         tuple=EthereumABITupleInfo(fields=fields, is_dynamic=is_dynamic)
     )
