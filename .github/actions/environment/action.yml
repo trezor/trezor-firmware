@@ -32,8 +32,8 @@ runs:
     # uv2nix fails because ts-tvl is a submodule and will not get copied.
     - name: Set convenience variables
       run: |
-        echo NIX_RUN="nix develop "path:.#${{ inputs.nix-dev-shell }}-uv2nix" --command" >> $GITHUB_ENV
-        echo UV_RUN="nix develop "path:.#${{ inputs.nix-dev-shell }}-uv2nix" --command" >> $GITHUB_ENV
+        echo NIX_RUN="nix develop ".?shallow=1#${{ inputs.nix-dev-shell }}-uv2nix" --command" >> $GITHUB_ENV
+        echo UV_RUN="nix develop ".?shallow=1#${{ inputs.nix-dev-shell }}-uv2nix" --command" >> $GITHUB_ENV
         cat $GITHUB_ENV
       shell: sh
     - name: Dependencies nixpkgs
