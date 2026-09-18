@@ -1081,8 +1081,8 @@ static secbool tropic_fw_update_needed(bool *needed) {
 }
 
 static bool tropic_erase_fw_slot(void) {
-  return lt_r_mem_data_erase(&g_tropic_driver.handle, TROPIC_FW_VERSION_SLOT) ==
-         LT_OK;
+  return lt_r_mem_data_erase_retry(&g_tropic_driver.handle,
+                                   TROPIC_FW_VERSION_SLOT) == LT_OK;
 }
 
 // Reset the configuration and restore the CFG version slots
@@ -1107,7 +1107,7 @@ static secbool tropic_reset_configuration_after_update(void) {
     return secfalse;
   }
   // Reboot tropic to apply R-Config changes
-  if (lt_reboot(handle, TR01_REBOOT) != LT_OK) {
+  if (TROPIC_RETRY_COMMAND(lt_reboot(handle, TR01_REBOOT)) != LT_OK) {
     return secfalse;
   }
 
@@ -1191,8 +1191,8 @@ static secbool tropic_get_maintenance_bit_on(void) {
 
   // Read I-Config and check if Maintenance Mode is enabled.
   uint32_t i_config_cfg_startup;
-  lt_ret_t ret =
-      lt_i_config_read(handle, TR01_CFG_START_UP_ADDR, &i_config_cfg_startup);
+  lt_ret_t ret = TROPIC_RETRY_COMMAND(
+      lt_i_config_read(handle, TR01_CFG_START_UP_ADDR, &i_config_cfg_startup));
   if (ret != LT_OK) {
     return secfalse;
   }
@@ -1209,10 +1209,14 @@ static secbool tropic_get_maintenance_bit_on(void) {
   // R-cfg
   // XXX: prvně najdu, co se má napsat do backupu, a napíšu to tam
   optional_u32_t distribution_version = {0};
-  tropic_get_distribution_version(TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
-                                  &distribution_version);
+  if (!tropic_get_distribution_version(TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
+                                       &distribution_version)) {
+    return secfalse;
+  }
   if (distribution_version.has_value) {
-    set_backup_distribution_version_to(distribution_version.value);
+    if (!set_backup_distribution_version_to(distribution_version.value)) {
+      return secfalse;
+    }
   } else {
     // XXX: ve version slotu hodnota nebyla, tak ji musíme sehant z batch_id
     lt_chip_id_t chip_id = {0};
@@ -1225,18 +1229,23 @@ static secbool tropic_get_maintenance_bit_on(void) {
             chip_id.batch_id, &expected_distribution_version)) {
       return secfalse;
     }
-    set_backup_distribution_version_to(expected_distribution_version);
+    if (!set_backup_distribution_version_to(expected_distribution_version)) {
+      return secfalse;
+    }
   }
   // XXX: CFG version slot se každopádně vymaže
-  lt_r_mem_data_erase_retry(&g_tropic_driver.handle,
-                            TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT);
+  if (lt_r_mem_data_erase_retry(&g_tropic_driver.handle,
+                                TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT) !=
+      LT_OK) {
+    return secfalse;
+  }
 
   // XXX: tady se nastaví ten bit
   // Read R-Config and check if Maintenance Mode is enabled.
   // The whole R-Config is read in case we need to modify it in case the bit is
   // OFF
   lt_config_t r_config;
-  ret = lt_read_whole_R_config(handle, &r_config);
+  ret = lt_read_whole_R_config_retry(handle, &r_config);
   if (ret != LT_OK) {
     return secfalse;
   }
@@ -1250,20 +1259,14 @@ static secbool tropic_get_maintenance_bit_on(void) {
     r_config.obj[TR01_CFG_START_UP_IDX] |=
         BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK;
 
-    // We need to erase the R-config in order to modify it
-    ret = lt_r_config_erase(handle);
-    if (ret != LT_OK) {
-      return secfalse;
-    }
-
-    // Write modified R-Config (with the flipped bit)
-    ret = lt_write_whole_R_config(handle, &r_config);
+    // Modify the R-config
+    ret = lt_erase_and_write_R_config_retry(handle, &r_config);
     if (ret != LT_OK) {
       return secfalse;
     }
 
     // Reboot tropic to apply R-Config changes
-    ret = lt_reboot(handle, TR01_REBOOT);
+    ret = TROPIC_RETRY_COMMAND(lt_reboot(handle, TR01_REBOOT));
     if (ret != LT_OK) {
       return secfalse;
     }
@@ -1291,7 +1294,9 @@ static secbool tropic_is_fw_update_in_progress(bool *in_progress) {
     return secfalse;
   }
 
-  tropic_session_start();
+  if (!tropic_session_start()) {
+    return secfalse;
+  }
   uint8_t riscv_fw[4] = {0};
   uint8_t spect_fw[4] = {0};
   bool present = false;
