@@ -164,7 +164,6 @@ default = [
     "trezor_lib/crypto",
     "trezor_lib/micropython",
     "trezor_lib/protobuf",
-    "trezor_lib/ui",
     "trezor_lib/storage",
     "trezor_lib/translations",
     "trezor_lib/usb",
