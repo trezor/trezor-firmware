@@ -1,10 +1,15 @@
 name: 'Download dependencies'
 description: 'Nixpkgs and uv'
 inputs:
-  full-deps:
-    description: 'Pass --arg fullDeps true to nix-shell?'
+  nix-dev-shell:
+    description: 'Nix flake devShells output attribute to use'
     required: false
-    default: "false"
+    default: "minimal"
+    type: "choice"
+    options:
+      - "minimal"
+      - "default"
+      - "everything"
   pre-download:
     description: 'Download shell.nix and uv.lock dependencies upfront?'
     required: false
@@ -16,11 +21,17 @@ runs:
       uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3  # cachix/install-nix-action@v31.10.6
       with:
         nix_path: nixpkgs=channel:nixos-unstable
+    - name: Set convenience variables
+      run: |
+        echo NIX_RUN="nix develop .#${{ inputs.nix-dev-shell }} --command" >> $GITHUB_ENV
+        echo UV_RUN="nix develop .#${{ inputs.nix-dev-shell }} --command uv run" >> $GITHUB_ENV
+        cat $GITHUB_ENV
+      shell: sh
     - name: Dependencies nixpkgs
       if: inputs.pre-download == 'true'
-      run: timeout -v --kill-after=10 500 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "echo nixpkgs deps preinstalled" || echo "NIXPKGS PREINSTALL FAILURE"
+      run: timeout -v --kill-after=10 500 $NIX_RUN echo nixpkgs deps preinstalled || echo "NIXPKGS PREINSTALL FAILURE"
       shell: sh
     - name: Dependencies uv
       if: inputs.pre-download == 'true'
-      run: timeout -v --kill-after=10 200 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "uv sync"
+      run: timeout -v --kill-after=10 200 $NIX_RUN uv sync
       shell: sh
