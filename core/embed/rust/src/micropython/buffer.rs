@@ -41,12 +41,8 @@ impl StrBuffer {
     // whole lifetime of the result, plus possible copies/clones/offsets.
     // This generally holds for GC-managed pointers and for static data.
     // Dangerous with anything else.
-    pub unsafe fn from_ptr_and_len(ptr: *const u8, len: usize) -> Self {
-        Self {
-            ptr,
-            len: unwrap!(len.try_into()),
-            off: 0,
-        }
+    pub unsafe fn from_ptr_and_len(ptr: *const u8, len: u16) -> Self {
+        Self { ptr, len, off: 0 }
     }
 
     pub fn alloc(val: &str) -> Result<Self, Error> {
@@ -59,6 +55,8 @@ impl StrBuffer {
     }
 
     pub fn alloc_with(len: usize, func: impl FnOnce(&mut [u8])) -> Result<Self, Error> {
+        let len_u16: u16 = len.try_into()?;
+
         // SAFETY:
         // We assume that if `gc_alloc` returns successfully, the result is a valid
         // pointer to GC-controlled memory of at least `val.len() + 1` bytes.
@@ -82,7 +80,7 @@ impl StrBuffer {
             // reflected in Rust-visible slice, the zero byte is after the end.
             raw.add(len).write(0);
             // SAFETY: pointer is GC-managed.
-            Ok(Self::from_ptr_and_len(raw, len))
+            Ok(Self::from_ptr_and_len(raw, len_u16))
         }
     }
 
@@ -133,8 +131,9 @@ impl TryFrom<Obj> for StrBuffer {
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
         if obj.is_str() {
             let bufinfo = get_buffer_info(obj, ffi::MP_BUFFER_READ)?;
+            let len: u16 = bufinfo.len.try_into()?;
             // SAFETY: bufinfo.buf should point to a GC head pointer or static data.
-            let new = unsafe { Self::from_ptr_and_len(bufinfo.buf as _, bufinfo.len) };
+            let new = unsafe { Self::from_ptr_and_len(bufinfo.buf as _, len) };
 
             // MicroPython _should_ ensure that values of type `str` are UTF-8.
             // Rust seems to be stricter in what it considers UTF-8 though.
@@ -176,7 +175,7 @@ impl From<&'static str> for StrBuffer {
     fn from(val: &'static str) -> Self {
         // SAFETY: Safe for &'static strs.
         // Do not try to do it with arbitrary &'a str.
-        unsafe { Self::from_ptr_and_len(val.as_ptr(), val.len()) }
+        unsafe { Self::from_ptr_and_len(val.as_ptr(), unwrap!(val.len().try_into())) }
     }
 }
 
@@ -294,8 +293,7 @@ mod tests {
         use super::StrBuffer;
 
         let data = "abcdef";
-        // SAFETY: data is static.
-        let buf = unsafe { StrBuffer::from_ptr_and_len(data.as_ptr(), data.len()) };
+        let buf = StrBuffer::from(data);
 
         assert_eq!(buf.prefix(0).as_ref(), "");
         assert_eq!(buf.prefix(3).as_ref(), "abc");
