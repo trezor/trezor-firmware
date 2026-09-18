@@ -24,11 +24,11 @@
 
 #include <io/app_arena.h>
 
-/// package: trezorapp
+/// package: extapp
 
 /// class AppError(Exception):
 ///     """
-///     Base exception for all trezorapp errors.
+///     Base exception for all extapp errors.
 ///     """
 MP_DEFINE_EXCEPTION(AppError, Exception)
 
@@ -86,18 +86,18 @@ static void app_image_get_info_or_raise(app_image_handle_t handle,
 ///     """
 ///     Return the image internal unique handle.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_handle(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_handle(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
   return mp_obj_new_int(o->handle);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_handle_obj,
-                                 mod_trezorapp_AppImage_handle);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_handle_obj,
+                                 mod_extapp_AppImage_handle);
 
 /// def task_id(self) -> int:
 ///     """
 ///     Return the task ID associated with the application image.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_task_id(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_task_id(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
@@ -109,14 +109,14 @@ static mp_obj_t mod_trezorapp_AppImage_task_id(mp_obj_t self) {
 
   return mp_obj_new_int(info.task_id);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_task_id_obj,
-                                 mod_trezorapp_AppImage_task_id);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_task_id_obj,
+                                 mod_extapp_AppImage_task_id);
 
 /// def is_running(self) -> bool:
 ///     """
 ///     Check if the application image is currently running.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_is_running(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_is_running(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
@@ -124,14 +124,14 @@ static mp_obj_t mod_trezorapp_AppImage_is_running(mp_obj_t self) {
 
   return mp_obj_new_bool(info.running);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_is_running_obj,
-                                 mod_trezorapp_AppImage_is_running);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_is_running_obj,
+                                 mod_extapp_AppImage_is_running);
 
 /// def is_ready(self) -> bool:
 ///     """
 ///     Check if the application image has been fully loaded and verified.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_is_ready(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_is_ready(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
@@ -139,14 +139,14 @@ static mp_obj_t mod_trezorapp_AppImage_is_ready(mp_obj_t self) {
 
   return mp_obj_new_bool(info.ready);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_is_ready_obj,
-                                 mod_trezorapp_AppImage_is_ready);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_is_ready_obj,
+                                 mod_extapp_AppImage_is_ready);
 
 /// def id(self) -> str:
 ///     """
 ///     Return the ID of the application image.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_id(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_id(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
@@ -154,14 +154,14 @@ static mp_obj_t mod_trezorapp_AppImage_id(mp_obj_t self) {
 
   return mp_obj_new_str(info.id, strnlen(info.id, sizeof(info.id)));
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_id_obj,
-                                 mod_trezorapp_AppImage_id);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_id_obj,
+                                 mod_extapp_AppImage_id);
 
 /// def size(self) -> int:
 ///     """
 ///     Return the size of the application image in bytes.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_size(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_size(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
@@ -169,14 +169,14 @@ static mp_obj_t mod_trezorapp_AppImage_size(mp_obj_t self) {
 
   return mp_obj_new_int(info.code_size);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_size_obj,
-                                 mod_trezorapp_AppImage_size);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_size_obj,
+                                 mod_extapp_AppImage_size);
 
 /// def chunk_size(self) -> int:
 ///     """
 ///     Return the expected size of each payload chunk in bytes.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_chunk_size(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_chunk_size(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
@@ -184,15 +184,15 @@ static mp_obj_t mod_trezorapp_AppImage_chunk_size(mp_obj_t self) {
 
   return mp_obj_new_int(info.chunk_size);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_chunk_size_obj,
-                                 mod_trezorapp_AppImage_chunk_size);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_chunk_size_obj,
+                                 mod_extapp_AppImage_chunk_size);
 
 /// def version(self) -> tuple[int, int, int, int]:
 ///     """
 ///     Return the version of the application image as a tuple (major, minor,
 ///     patch, build).
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_version(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_version(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
@@ -206,14 +206,14 @@ static mp_obj_t mod_trezorapp_AppImage_version(mp_obj_t self) {
 
   return mp_obj_new_tuple(4, version_tuple);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_version_obj,
-                                 mod_trezorapp_AppImage_version);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_version_obj,
+                                 mod_extapp_AppImage_version);
 
 /// def name(self) -> str:
 ///     """
 ///     Return the name of the application.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_name(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_name(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
@@ -221,14 +221,14 @@ static mp_obj_t mod_trezorapp_AppImage_name(mp_obj_t self) {
 
   return mp_obj_new_str(info.name, strnlen(info.name, sizeof(info.name)));
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_name_obj,
-                                 mod_trezorapp_AppImage_name);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_name_obj,
+                                 mod_extapp_AppImage_name);
 
 /// def vendor(self) -> str:
 ///     """
 ///     Return the vendor of the application.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_vendor(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_vendor(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
@@ -236,14 +236,14 @@ static mp_obj_t mod_trezorapp_AppImage_vendor(mp_obj_t self) {
 
   return mp_obj_new_str(info.vendor, strnlen(info.vendor, sizeof(info.vendor)));
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_vendor_obj,
-                                 mod_trezorapp_AppImage_vendor);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_vendor_obj,
+                                 mod_extapp_AppImage_vendor);
 
 /// def ring(self) -> int:
 ///     """
 ///     Return the privilege ring of the application.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_ring(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_ring(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
@@ -251,14 +251,14 @@ static mp_obj_t mod_trezorapp_AppImage_ring(mp_obj_t self) {
 
   return mp_obj_new_int(info.ring);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_ring_obj,
-                                 mod_trezorapp_AppImage_ring);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_ring_obj,
+                                 mod_extapp_AppImage_ring);
 
 /// def fingerprint(self) -> bytes:
 ///     """
 ///     Return the hash of the application image header.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_fingerprint(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_fingerprint(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   app_image_info_t info;
@@ -267,15 +267,15 @@ static mp_obj_t mod_trezorapp_AppImage_fingerprint(mp_obj_t self) {
   return mp_obj_new_bytes((const byte *)&info.fingerprint,
                           sizeof(info.fingerprint));
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_fingerprint_obj,
-                                 mod_trezorapp_AppImage_fingerprint);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_fingerprint_obj,
+                                 mod_extapp_AppImage_fingerprint);
 
 /// def write_chunk(self, data: AnyBytes, hash: AnyBytes) -> None:
 ///     """
 ///     Write a chunk of image data into app-arena memory.
 ///     Allowed only while the image is in the loading state.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_write_chunk(mp_obj_t self,
+static mp_obj_t mod_extapp_AppImage_write_chunk(mp_obj_t self,
                                                    mp_obj_t data_obj,
                                                    mp_obj_t hash_obj) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
@@ -304,8 +304,8 @@ static mp_obj_t mod_trezorapp_AppImage_write_chunk(mp_obj_t self,
 
   return mp_const_none;
 }
-static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorapp_AppImage_write_chunk_obj,
-                                 mod_trezorapp_AppImage_write_chunk);
+static MP_DEFINE_CONST_FUN_OBJ_3(mod_extapp_AppImage_write_chunk_obj,
+                                 mod_extapp_AppImage_write_chunk);
 
 /// def delete(self) -> None:
 ///     """
@@ -314,7 +314,7 @@ static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorapp_AppImage_write_chunk_obj,
 ///     deletion. After deletion, the AppImage object is invalid
 ///     and must not be used.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_delete(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_delete(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   ts_t status = app_image_delete(o->handle);
@@ -326,8 +326,8 @@ static mp_obj_t mod_trezorapp_AppImage_delete(mp_obj_t self) {
 
   return mp_const_none;
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_delete_obj,
-                                 mod_trezorapp_AppImage_delete);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_delete_obj,
+                                 mod_extapp_AppImage_delete);
 
 /// def run(self) -> int:
 ///     """
@@ -335,7 +335,7 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_delete_obj,
 ///     If the image is already running, the function returns its task ID.
 ///     Only ready images are runnable.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_run(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_run(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   systask_id_t task_id = 0;
@@ -348,15 +348,15 @@ static mp_obj_t mod_trezorapp_AppImage_run(mp_obj_t self) {
 
   return mp_obj_new_int(task_id);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_run_obj,
-                                 mod_trezorapp_AppImage_run);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_run_obj,
+                                 mod_extapp_AppImage_run);
 
 /// def stop(self) -> None:
 ///     """
 ///     Stop the running application image. If the image is not running,
 ///     this operation has no effect.
 ///     """
-static mp_obj_t mod_trezorapp_AppImage_stop(mp_obj_t self) {
+static mp_obj_t mod_extapp_AppImage_stop(mp_obj_t self) {
   mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
 
   ts_t status = app_image_stop(o->handle);
@@ -367,8 +367,8 @@ static mp_obj_t mod_trezorapp_AppImage_stop(mp_obj_t self) {
   }
   return mp_const_none;
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_stop_obj,
-                                 mod_trezorapp_AppImage_stop);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_AppImage_stop_obj,
+                                 mod_extapp_AppImage_stop);
 
 typedef struct {
   mp_obj_base_t base;
@@ -378,7 +378,7 @@ typedef struct {
   size_t offset;
 } mp_obj_AppCurveIter_t;
 
-static mp_obj_t mod_trezorapp_AppCurveIter_iternext(mp_obj_t self_in) {
+static mp_obj_t mod_extapp_AppCurveIter_iternext(mp_obj_t self_in) {
   mp_obj_AppCurveIter_t *self = MP_OBJ_TO_PTR(self_in);
 
   app_image_info_t info;
@@ -400,26 +400,26 @@ static mp_obj_t mod_trezorapp_AppCurveIter_iternext(mp_obj_t self_in) {
 }
 
 // clang-format off
-static MP_DEFINE_CONST_OBJ_TYPE(mod_trezorapp_AppCurveIter_type,
+static MP_DEFINE_CONST_OBJ_TYPE(mod_extapp_AppCurveIter_type,
   MP_QSTR_AppCurveIter, MP_TYPE_FLAG_ITER_IS_ITERNEXT,
-  iter, mod_trezorapp_AppCurveIter_iternext);
+  iter, mod_extapp_AppCurveIter_iternext);
 // clang-format on
 
 /// def allowed_curves(self) -> Iterator[str]:
 ///     """
 ///     Return an iterator over the allowed curves
 ///     """
-static mp_obj_t mod_trezorapp_allowed_curves(mp_obj_t self) {
+static mp_obj_t mod_extapp_allowed_curves(mp_obj_t self) {
   mp_obj_AppImage_t *image = MP_OBJ_TO_PTR(self);
 
   mp_obj_AppCurveIter_t *o =
-      mp_obj_malloc(mp_obj_AppCurveIter_t, &mod_trezorapp_AppCurveIter_type);
+      mp_obj_malloc(mp_obj_AppCurveIter_t, &mod_extapp_AppCurveIter_type);
   o->handle = image->handle;
   o->offset = 0;
   return MP_OBJ_FROM_PTR(o);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_allowed_curves_obj,
-                                 mod_trezorapp_allowed_curves);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_allowed_curves_obj,
+                                 mod_extapp_allowed_curves);
 
 typedef struct {
   mp_obj_base_t base;
@@ -429,7 +429,7 @@ typedef struct {
   size_t offset;
 } mp_obj_AppPathIter_t;
 
-static mp_obj_t mod_trezorapp_AppPathIter_iternext(mp_obj_t self_in) {
+static mp_obj_t mod_extapp_AppPathIter_iternext(mp_obj_t self_in) {
   mp_obj_AppPathIter_t *self = MP_OBJ_TO_PTR(self_in);
 
   app_image_info_t info;
@@ -451,64 +451,64 @@ static mp_obj_t mod_trezorapp_AppPathIter_iternext(mp_obj_t self_in) {
 }
 
 // clang-format off
-static MP_DEFINE_CONST_OBJ_TYPE(mod_trezorapp_AppPathIter_type,
+static MP_DEFINE_CONST_OBJ_TYPE(mod_extapp_AppPathIter_type,
   MP_QSTR_AppPathIter, MP_TYPE_FLAG_ITER_IS_ITERNEXT,
-  iter, mod_trezorapp_AppPathIter_iternext);
+  iter, mod_extapp_AppPathIter_iternext);
 // clang-format on
 
 /// def allowed_paths(self) -> Iterator[str]:
 ///     """
 ///     Return an iterator over the allowed BIP32 path prefixes.
 ///     """
-static mp_obj_t mod_trezorapp_allowed_paths(mp_obj_t self) {
+static mp_obj_t mod_extapp_allowed_paths(mp_obj_t self) {
   mp_obj_AppImage_t *image = MP_OBJ_TO_PTR(self);
 
   mp_obj_AppPathIter_t *o =
-      mp_obj_malloc(mp_obj_AppPathIter_t, &mod_trezorapp_AppPathIter_type);
+      mp_obj_malloc(mp_obj_AppPathIter_t, &mod_extapp_AppPathIter_type);
   o->handle = image->handle;
   o->offset = 0;
   return MP_OBJ_FROM_PTR(o);
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_allowed_paths_obj,
-                                 mod_trezorapp_allowed_paths);
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_extapp_allowed_paths_obj,
+                                 mod_extapp_allowed_paths);
 
-static const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
+static const mp_rom_map_elem_t mod_extapp_AppImage_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_handle),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_handle_obj)},
+     MP_ROM_PTR(&mod_extapp_AppImage_handle_obj)},
     {MP_ROM_QSTR(MP_QSTR_task_id),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_task_id_obj)},
+     MP_ROM_PTR(&mod_extapp_AppImage_task_id_obj)},
     {MP_ROM_QSTR(MP_QSTR_is_running),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_is_running_obj)},
+     MP_ROM_PTR(&mod_extapp_AppImage_is_running_obj)},
     {MP_ROM_QSTR(MP_QSTR_is_ready),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_is_ready_obj)},
-    {MP_ROM_QSTR(MP_QSTR_id), MP_ROM_PTR(&mod_trezorapp_AppImage_id_obj)},
-    {MP_ROM_QSTR(MP_QSTR_size), MP_ROM_PTR(&mod_trezorapp_AppImage_size_obj)},
+     MP_ROM_PTR(&mod_extapp_AppImage_is_ready_obj)},
+    {MP_ROM_QSTR(MP_QSTR_id), MP_ROM_PTR(&mod_extapp_AppImage_id_obj)},
+    {MP_ROM_QSTR(MP_QSTR_size), MP_ROM_PTR(&mod_extapp_AppImage_size_obj)},
     {MP_ROM_QSTR(MP_QSTR_chunk_size),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_chunk_size_obj)},
+     MP_ROM_PTR(&mod_extapp_AppImage_chunk_size_obj)},
     {MP_ROM_QSTR(MP_QSTR_version),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_version_obj)},
-    {MP_ROM_QSTR(MP_QSTR_name), MP_ROM_PTR(&mod_trezorapp_AppImage_name_obj)},
+     MP_ROM_PTR(&mod_extapp_AppImage_version_obj)},
+    {MP_ROM_QSTR(MP_QSTR_name), MP_ROM_PTR(&mod_extapp_AppImage_name_obj)},
     {MP_ROM_QSTR(MP_QSTR_vendor),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_vendor_obj)},
-    {MP_ROM_QSTR(MP_QSTR_ring), MP_ROM_PTR(&mod_trezorapp_AppImage_ring_obj)},
+     MP_ROM_PTR(&mod_extapp_AppImage_vendor_obj)},
+    {MP_ROM_QSTR(MP_QSTR_ring), MP_ROM_PTR(&mod_extapp_AppImage_ring_obj)},
     {MP_ROM_QSTR(MP_QSTR_fingerprint),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_fingerprint_obj)},
+     MP_ROM_PTR(&mod_extapp_AppImage_fingerprint_obj)},
     {MP_ROM_QSTR(MP_QSTR_write_chunk),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_write_chunk_obj)},
+     MP_ROM_PTR(&mod_extapp_AppImage_write_chunk_obj)},
     {MP_ROM_QSTR(MP_QSTR_delete),
-     MP_ROM_PTR(&mod_trezorapp_AppImage_delete_obj)},
-    {MP_ROM_QSTR(MP_QSTR_run), MP_ROM_PTR(&mod_trezorapp_AppImage_run_obj)},
-    {MP_ROM_QSTR(MP_QSTR_stop), MP_ROM_PTR(&mod_trezorapp_AppImage_stop_obj)},
+     MP_ROM_PTR(&mod_extapp_AppImage_delete_obj)},
+    {MP_ROM_QSTR(MP_QSTR_run), MP_ROM_PTR(&mod_extapp_AppImage_run_obj)},
+    {MP_ROM_QSTR(MP_QSTR_stop), MP_ROM_PTR(&mod_extapp_AppImage_stop_obj)},
     {MP_ROM_QSTR(MP_QSTR_allowed_curves),
-     MP_ROM_PTR(&mod_trezorapp_allowed_curves_obj)},
+     MP_ROM_PTR(&mod_extapp_allowed_curves_obj)},
     {MP_ROM_QSTR(MP_QSTR_allowed_paths),
-     MP_ROM_PTR(&mod_trezorapp_allowed_paths_obj)},
+     MP_ROM_PTR(&mod_extapp_allowed_paths_obj)},
 };
-static MP_DEFINE_CONST_DICT(mod_trezorapp_AppImage_locals_dict,
-                            mod_trezorapp_AppImage_locals_dict_table);
+static MP_DEFINE_CONST_DICT(mod_extapp_AppImage_locals_dict,
+                            mod_extapp_AppImage_locals_dict_table);
 
 // clang-format off
-static MP_DEFINE_CONST_OBJ_TYPE(mod_trezorapp_AppImage_type,
+static MP_DEFINE_CONST_OBJ_TYPE(mod_extapp_AppImage_type,
   MP_QSTR_AppImage, MP_TYPE_FLAG_NONE,
-  locals_dict, &mod_trezorapp_AppImage_locals_dict);
+  locals_dict, &mod_extapp_AppImage_locals_dict);
 // clang-format on
