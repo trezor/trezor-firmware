@@ -137,6 +137,7 @@ mod tests {
             model: Model::T3W1,
             emulator: true,
             preset: Some("test".to_string()),
+            bootloader: Default::default(),
             options: BuildOptions::default(),
         }
     }

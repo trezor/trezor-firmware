@@ -32,8 +32,11 @@ typedef enum {
   BOOT_COMMAND_STOP_AND_WAIT = 0x0FC35A96,
   // Stop in the bootloader and bring up the host link immediately
   BOOT_COMMAND_STOP_AND_CONNECT = 0x3B7E1C64,
-  // Do not ask anything, install an upgrade
+  // Do not ask anything, install an upgrade the user confirmed in firmware
   BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
+  // Continue a two-phase install staged by the bootloader itself (set by the
+  // bootloader only; the firmware body may be invalid at this point)
+  BOOT_COMMAND_CONTINUE_UPGRADE = 0x6D2F84B1,
   // Show RSOD and wait for user input
   BOOT_COMMAND_SHOW_RSOD = 0x7CD945A0,
   // Wipe the device
@@ -53,7 +56,7 @@ typedef union {
   uint8_t hash[32];
   // error information, BOOT_COMMAND_SHOW_RSOD
   systask_postmortem_t pminfo;
-  // wipe information, BOOT_COMMAND_WIPE
+  // wipe information (and whether to unprovision), BOOT_COMMAND_WIPE
   bootutils_wipe_info_t wipeinfo;
 } boot_args_t;
 

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <rtl/secbool.h>
 #include <sys/startup_args.h>
 #include <sys/systask.h>
 
@@ -34,6 +35,9 @@ typedef struct {
   char title[64];
   char message[64];
   char footer[64];
+  // sectrue also returns the device to the unprovisioned (empty) state;
+  // any other value (including zero) keeps it provisioned
+  secbool unprovision;
 } bootutils_wipe_info_t;
 
 // Immediately resets the device and initiates the normal boot sequence as if
@@ -66,6 +70,11 @@ void __attribute__((noreturn)) reboot_and_connect(void);
 // with the firmware installation.
 void __attribute__((noreturn)) reboot_and_upgrade(const uint8_t hash[32]);
 
+// Reboots the device and continues a two-phase install staged by the
+// bootloader itself. Bootloader-internal, no syscall/smcall bridge; what
+// phase 2 installs is pinned in the staged boot header, not in bootargs.
+void __attribute__((noreturn)) reboot_and_continue_upgrade(void);
+
 #ifdef USE_BOOTARGS_RSOD
 // Resets the device with post-mortem information in bootargs
 // so that the bootloader can display it.
@@ -75,6 +84,8 @@ void __attribute__((noreturn)) reboot_with_rsod(
 
 // Resets the device and wipes all the user data.
 // RSOD with wipe information is displayed.
+// With `info->unprovision == sectrue` the bootloader also erases the firmware
+// and assets and reboots without an RSOD (end of factory testing).
 void __attribute__((noreturn)) reboot_and_wipe(
     const bootutils_wipe_info_t *info);
 

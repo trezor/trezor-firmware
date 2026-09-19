@@ -86,6 +86,22 @@ confirm_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
                                 is_newinstall == sectrue, version_cmp);
 }
 
+#ifdef USE_BOOT_UCB
+confirm_result_t ui_screen_install_confirm_bootloader(
+    uint32_t fw_version, const uint8_t *const fingerprint,
+    secbool should_keep_seed, secbool is_newvendor, const char *vendor,
+    size_t vendor_len) {
+  char ver_str[VERSION_STRING_LEN];
+  format_ver(fw_version, ver_str, sizeof(ver_str));
+  // Reuses the firmware install-confirm screen; !keep_seed shows the erase
+  // warning.
+  return screen_install_confirm(vendor, vendor_len, ver_str, fingerprint,
+                                should_keep_seed == sectrue,
+                                is_newvendor == sectrue,
+                                /*is_newinstall=*/false, 0);
+}
+#endif
+
 void ui_screen_install_start(bool wireless) {
   screen_install_progress(0, true, initial_setup, wireless);
 }

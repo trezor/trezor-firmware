@@ -33,6 +33,9 @@
 #define RSOD_DEFAULT_FOOTER "Please visit trezor.io/rsod";
 #define RSOD_EXIT_MESSAGE "Exit "  // followed by exit code
 
+#define WIPE_DEFAULT_TITLE "Device wiped"
+#define WIPE_DEFAULT_FOOTER "Please visit trezor.io/rsod"
+
 #ifdef KERNEL_MODE
 
 #define RSOD_FG_COLOR COLOR_WHITE
@@ -114,6 +117,39 @@ void rsod_terminal(const systask_postmortem_t* pminfo) {
   display_set_backlight(255);
 }
 
+#ifndef FANCY_FATAL_ERROR
+
+void show_wipe_info(const bootutils_wipe_info_t* info) {
+  display_set_orientation(0);
+  term_set_color(RSOD_FG_COLOR, RSOD_BG_COLOR);
+
+  const char* title = WIPE_DEFAULT_TITLE;
+  const char* message = ALL_DATA_ERASED_MESSAGE;
+  const char* footer = WIPE_DEFAULT_FOOTER;
+
+  if (info->title[0] != '\0') {
+    title = info->title;
+  }
+  if (info->message[0] != '\0') {
+    message = info->message;
+  }
+  if (info->footer[0] != '\0') {
+    footer = info->footer;
+  }
+
+  term_print(title);
+  term_print("\n");
+  term_print("msg : ");
+  term_print(message);
+  term_print("\n");
+  term_print(footer);
+  term_print("\n");
+
+  display_set_backlight(255);
+}
+
+#endif  // !FANCY_FATAL_ERROR
+
 #endif  // KERNEL_MODE
 
 #ifdef FANCY_FATAL_ERROR
@@ -175,9 +211,9 @@ void rsod_gui(const systask_postmortem_t* pminfo) {
 }
 
 void show_wipe_info(const bootutils_wipe_info_t* info) {
-  const char* title = "Device wiped";
+  const char* title = WIPE_DEFAULT_TITLE;
   const char* message = ALL_DATA_ERASED_MESSAGE;
-  const char* footer = "Please visit trezor.io/rsod";
+  const char* footer = WIPE_DEFAULT_FOOTER;
 
   if (info->title[0] != '\0') {
     title = info->title;
