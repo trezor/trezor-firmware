@@ -1,9 +1,7 @@
 pub mod bip39;
-#[cfg(feature = "ui")]
 pub mod bitblt;
 #[cfg(feature = "ble")]
 pub mod ble;
-#[cfg(feature = "ui")]
 pub mod display;
 mod ffi;
 #[cfg(feature = "haptic")]
@@ -15,7 +13,7 @@ pub mod button;
 #[cfg(feature = "touch")]
 pub mod touch;
 
-#[cfg(all(feature = "ui", feature = "hw_jpeg_decoder"))]
+#[cfg(feature = "hw_jpeg_decoder")]
 pub mod jpegdec;
 pub mod model;
 pub mod random;
@@ -32,7 +30,6 @@ pub mod wordlist;
 
 pub mod secbool;
 
-#[cfg(feature = "ui")]
 pub mod sysevent;
 
 #[cfg(feature = "power_manager")]

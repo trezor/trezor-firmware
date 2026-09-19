@@ -96,7 +96,6 @@ touch = []
 touch_wakeup = []
 translations = ["crypto"]
 tropic = []
-ui = []
 ui_antialiasing = []
 ui_blurring = []
 ui_color_32bit = []
@@ -157,7 +156,6 @@ test = [
     "ui_image_buffer",
     "ui_jpeg",
     "ui_overlay",
-    "ui",
     "universal_fw",
 ]
 

@@ -20,7 +20,7 @@
     ),
     feature(lang_items)
 )]
-#![cfg_attr(all(feature = "ui", feature = "layout_bolt"), feature(trait_alias))]
+#![cfg_attr(feature = "layout_bolt", feature(trait_alias))]
 
 #[macro_use]
 extern crate num_derive;
@@ -54,7 +54,6 @@ mod trezorhal;
 // mod ui is `pub` because of the re-export pattern in individual models, which
 // would trigger a brickload of "unused symbol" warnings otherwise.
 // TODO: maybe get rid of the re-export pattern :shrugs:
-#[cfg(feature = "ui")]
 pub mod ui;
 
 pub mod util;
