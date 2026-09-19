@@ -1,4 +1,6 @@
 use heapless::Vec;
+#[cfg(all(feature = "haptic", feature = "power_manager"))]
+use io::haptic::{play, HapticEffect};
 #[cfg(feature = "power_manager")]
 use sys::time::{Duration, Instant};
 
@@ -9,8 +11,6 @@ use crate::trezorhal::bootloader::{bootloader_process_usb, BootloaderWFResult};
 use crate::trezorhal::bootloader::{
     debuglink_notify_layout_change, debuglink_process, DebuglinkResult,
 };
-#[cfg(all(feature = "haptic", feature = "power_manager"))]
-use crate::trezorhal::haptic::{play, HapticEffect};
 use crate::trezorhal::sysevent::{sysevents_poll, Syshandle};
 use crate::ui::component::base::AttachType;
 use crate::ui::component::{Component, Event, EventCtx};
@@ -26,6 +26,7 @@ use crate::{
     ui::display::fade_backlight_duration,
     ui::event::PhysicalButton,
 };
+
 #[cfg(feature = "power_manager")]
 const FADE_TIME: Duration = Duration::from_millis(30000);
 #[cfg(feature = "power_manager")]
