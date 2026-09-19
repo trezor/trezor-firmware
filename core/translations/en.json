@@ -48,12 +48,13 @@
       "Eckhart": "Public key confirmed"
     },
     "address__qr_code": "QR code",
-    "address__title_cosigner": "Cosigner",
+    "address__title_cosigner": "(cosigner)",
     "address__title_cosigner_template": "Cosigner {0}",
+    "address__title_multisig_xpub_template": "Multisig XPUB #{0} ",
     "address__title_provider_address": "Provider address",
     "address__title_receive_address": "Receive address",
     "address__title_refund_address": "Refund address",
-    "address__title_yours": "Yours",
+    "address__title_yours": "(yours)",
     "address__warning_not_yours": {
       "Bolt": "",
       "Caesar": "",

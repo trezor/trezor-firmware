@@ -182,7 +182,7 @@ def confirm_multisig_warning() -> Awaitable[None]:
 
 async def confirm_multisig_different_paths_warning() -> None:
     with trezorui_api.show_danger(
-        title=f"{TR.words__important}!",
+        title=TR.words__important,
         description=TR.send__multisig_different_paths,
     ) as layout:
         return await raise_if_not_confirmed(
@@ -329,11 +329,11 @@ async def show_address(
     chunkify: bool = False,
 ) -> None:
     def xpub_title(i: int) -> str:
-        result = f"Multisig XPUB #{i + 1}\n"
+        result = TR.address__title_multisig_xpub_template.format(i + 1)
         result += (
-            f"({TR.address__title_yours.lower()})"
+            TR.address__title_yours
             if i == multisig_index
-            else f"({TR.address__title_cosigner.lower()})"
+            else TR.address__title_cosigner
         )
         return result
 
