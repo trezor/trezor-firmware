@@ -5,10 +5,10 @@ use sys::time::Duration;
 use super::component::Button;
 use super::firmware::{
     ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header, HeaderMsg,
-    Hint, Homescreen, LabelInput, MnemonicKeyboard, PinKeyboard, ProgressScreen,
+    Hint, Homescreen, LabelInput, MnemonicKeyboard, NumberInput, PinKeyboard, ProgressScreen,
     SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, ShortMenuVec, Slip39Input,
-    StringKeyboard, TextScreen, TextScreenMsg, ValueInputScreen, VerticalMenu, VerticalMenuScreen,
-    VerticalMenuScreenMsg,
+    StringKeyboard, TextScreen, TextScreenMsg, ValueInputScreen, ValueInputScreenMsg, VerticalMenu,
+    VerticalMenuScreen, VerticalMenuScreenMsg,
 };
 use super::theme::firmware::{button_actionbar_danger, button_confirm};
 use super::theme::gradient::Gradient;
@@ -794,18 +794,30 @@ impl FirmwareUI for UIEckhart {
         min_count: u32,
         max_count: u32,
         description: Option<TString<'static>>,
-        more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
+        _more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let description = description.unwrap_or(TString::empty());
-        let flow = flow::request_number::new_request_number(
-            title,
-            count,
-            min_count,
-            max_count,
-            description,
-            unwrap!(more_info_callback),
-        )?;
-        Ok(flow)
+        // The "more info" content is driven from Python: the menu button in
+        // the header emits `FlowMsg::Info` and the layout returns the
+        // currently displayed number along with the result (see
+        // `ComponentMsgObj for RequestNumberScreen`).
+        let map_fn: fn(ValueInputScreenMsg) -> Option<FlowMsg> = |msg| match msg {
+            ValueInputScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+            ValueInputScreenMsg::Confirmed(_) => Some(FlowMsg::Confirmed),
+            ValueInputScreenMsg::Menu => Some(FlowMsg::Info),
+            ValueInputScreenMsg::Changed(_) => None,
+        };
+        let layout = RootComponent::new(
+            ValueInputScreen::new(
+                NumberInput::new(min_count, max_count, count),
+                description.unwrap_or(TString::empty()),
+            )
+            .with_header(Header::new(title).with_menu_button())
+            .with_action_bar(ActionBar::new_single(Button::with_text(
+                TR::buttons__confirm.into(),
+            )))
+            .map(map_fn),
+        );
+        Ok(layout)
     }
 
     fn request_duration(
@@ -1242,7 +1254,7 @@ impl FirmwareUI for UIEckhart {
         let paragraphs = PropsList::new_styled(
             items,
             &theme::TEXT_SMALL_LIGHT,
-            &theme::TEXT_MONO_MEDIUM_LIGHT,
+            &theme::TEXT_REGULAR,
             value_mono_font,
             theme::PROP_INNER_SPACING,
             theme::PROPS_SPACING,
