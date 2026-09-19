@@ -512,15 +512,41 @@ impl Input {
     fn render_shown<'s>(&self, target: &mut impl Renderer<'s>) {
         debug_assert_eq!(self.display_style, DisplayStyle::Shown);
 
-        Bar::new(self.shown_area)
+        let mut shown_area = self.shown_area;
+        let content = self.textbox.content();
+        let mut text = content;
+
+        if shown_area.clamp(SCREEN) != shown_area {
+            // The revealed passphrase overflows the screen. Clamp the overlay
+            // to the screen and show only the longest suffix of the
+            // passphrase that fits, so that the most recently entered
+            // characters stay visible and the beginning is hidden instead.
+            shown_area = shown_area.clamp(SCREEN);
+            let text_area = shown_area.inset(Self::SHOWN_INSETS);
+            for (i, _) in content.char_indices().skip(1) {
+                let suffix = &content[i..];
+                text = suffix;
+                let fits = matches!(
+                    TextLayout::new(Self::STYLE)
+                        .with_bounds(text_area)
+                        .fit_text(suffix),
+                    LayoutFit::Fitting { .. }
+                );
+                if fits {
+                    break;
+                }
+            }
+        }
+
+        Bar::new(shown_area)
             .with_bg(theme::GREY_EXTRA_DARK)
             .with_radius(12)
             .render(target);
 
         TextLayout::new(Self::STYLE)
             .with_align(Alignment::Start)
-            .with_bounds(self.shown_area.inset(Self::SHOWN_INSETS))
-            .render_text(self.textbox.content(), target, true);
+            .with_bounds(shown_area.inset(Self::SHOWN_INSETS))
+            .render_text(text, target, true);
     }
 
     fn render_hidden<'s>(&self, target: &mut impl Renderer<'s>) {
