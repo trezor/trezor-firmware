@@ -20,8 +20,23 @@
 #ifndef TREZORHAL_NPM1300_DEFS_H
 #define TREZORHAL_NPM1300_DEFS_H
 
+#include <trezor_types.h>
+
 // I2C address of the NPM1300 on the I2C bus.
 #define NPM1300_I2C_ADDRESS 0x6B
+
+// Buck voltage regulator mode. This is an npm1300-private control: it has no
+// cross-chip consumer, so it is not part of the public PMIC interface. If a
+// power-manager policy ever needs to control regulator mode, promote it to an
+// agnostic <io/pmic_regulator.h> instead of widening this driver header.
+typedef enum {
+  NPM1300_BUCK_MODE_AUTO,
+  NPM1300_BUCK_MODE_PWM,
+  NPM1300_BUCK_MODE_PFM,
+} npm1300_buck_mode_t;
+
+// Set the buck voltage regulator mode.
+bool npm1300_set_buck_mode(npm1300_buck_mode_t buck_mode);
 
 // Event and interrupt registers
 
