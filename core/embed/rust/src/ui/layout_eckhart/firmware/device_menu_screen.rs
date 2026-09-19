@@ -11,24 +11,25 @@ use super::super::firmware::{
 };
 use super::{theme, MediumMenuVec, ShortMenuVec};
 use crate::micropython::gc::GcBox;
+use crate::micropython::qstr::Qstr;
 use crate::micropython::{Error, Obj};
 use crate::strutil::TString;
 use crate::translations::TR;
-use crate::trezorhal::usb;
 use crate::ui::component::base::ParamsObj;
 use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
 };
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{Component, Event, EventCtx};
+#[cfg(feature = "ble")]
+use crate::ui::event::BLEEvent;
 use crate::ui::event::USBEvent;
 use crate::ui::geometry::{LinearPlacement, Rect};
 pub use crate::ui::layout::device_menu_result::DeviceMenuMsg;
 use crate::ui::layout::util::PropsList;
+use crate::ui::params_request::ParamsRequest;
 use crate::ui::shape::Renderer;
 use crate::ui::ui_firmware::{DeviceMenuParams, MAX_PAIRED_DEVICES};
-#[cfg(feature = "ble")]
-use crate::{trezorhal::ble, ui::event::BLEEvent};
 
 #[repr(u8)]
 #[derive(Copy, Clone, Default, FromPrimitive, ToPrimitive, PartialEq, Eq)]
@@ -290,6 +291,7 @@ impl DeviceMenuScreen {
             ble_enabled,
             paired_devices,
             connected_idx,
+            host_connected,
             pin_enabled,
             auto_lock,
             wipe_code_enabled,
@@ -336,12 +338,8 @@ impl DeviceMenuScreen {
         screen.register_settings_menu(ble_enabled);
         screen.register_power_menu();
 
-        let is_connected = usb::usb_configured();
-        #[cfg(feature = "ble")]
-        let is_connected = is_connected || ble::is_connected();
-
         let connected_subtext: Option<TString<'static>> =
-            is_connected.then_some(TR::words__connected.into());
+            host_connected.then_some(TR::words__connected.into());
 
         let mut submenu_indices: Vec<u8, MAX_PAIRED_DEVICES> = Vec::new();
         for (device_index, (mac, host_info)) in (0u8..).zip(paired_devices.iter()) {
@@ -1064,10 +1062,10 @@ impl Component for DeviceMenuScreen {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
-            // The connection status we display went stale -- ask the application
-            // layer to hand us fresh parameters. The layout keeps running.
+            // Connection state we display went stale -- name the parameters it
+            // feeds and ask for them. The layout keeps running.
             Event::USB(USBEvent::Configured | USBEvent::Deconfigured) => {
-                ctx.request_params();
+                ctx.request_params(ParamsRequest::new(&[Qstr::MP_QSTR_host_connected]));
                 return None;
             }
 
@@ -1075,7 +1073,11 @@ impl Component for DeviceMenuScreen {
             Event::BLE(
                 BLEEvent::Connected | BLEEvent::Disconnected | BLEEvent::ConnectionChanged,
             ) => {
-                ctx.request_params();
+                ctx.request_params(ParamsRequest::new(&[
+                    Qstr::MP_QSTR_host_connected,
+                    Qstr::MP_QSTR_connected_idx,
+                    Qstr::MP_QSTR_paired_devices,
+                ]));
                 return None;
             }
 

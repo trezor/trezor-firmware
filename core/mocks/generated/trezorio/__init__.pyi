@@ -108,6 +108,16 @@ class USB:
         """
         Cleans up the USB stack.
         """
+
+
+# upymod/modtrezorio/modtrezorio-usb.h
+def usb_configured() -> bool:
+    """
+    Whether a USB host has configured (enumerated) the device.
+
+    True only for a data connection to a host; a charger that supplies
+    power but never enumerates the device reads as False.
+    """
 from . import (
     app_cache,
     ble,
