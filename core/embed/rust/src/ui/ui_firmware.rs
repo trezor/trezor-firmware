@@ -47,7 +47,9 @@ impl SelectMenuItem {
 ///
 /// A refresh is always complete: the caller sends every field and the menu is
 /// rebuilt from it. Partial updates are not supported, so no field can mean
-/// "leave this one alone".
+/// "leave this one alone" -- a `ParamsRequest` names which fields went stale so
+/// the application layer recomputes only those, then sends the whole set.
+/// Applying a partial set here is a possible later improvement.
 pub struct DeviceMenuParams {
     pub init_submenu_idx: Option<u8>,
     pub init_submenu_offset: i16,
@@ -56,6 +58,10 @@ pub struct DeviceMenuParams {
     pub ble_enabled: bool,
     pub paired_devices: Vec<(TString<'static>, Option<[TString<'static>; 2]>), MAX_PAIRED_DEVICES>,
     pub connected_idx: Option<u8>,
+    /// Whether a host is connected over any transport -- USB enumerated us, or
+    /// a BLE peer is connected. Supplied by the application layer, like every
+    /// other fact the menu displays.
+    pub host_connected: bool,
     pub pin_enabled: Option<bool>,
     pub auto_lock: Option<[TString<'static>; 2]>,
     pub wipe_code_enabled: Option<bool>,
@@ -104,6 +110,7 @@ impl TryFrom<Obj> for DeviceMenuParams {
             ble_enabled: kwargs.get(Qstr::MP_QSTR_ble_enabled)?.try_into()?,
             paired_devices,
             connected_idx: kwargs.get(Qstr::MP_QSTR_connected_idx)?.try_into_option()?,
+            host_connected: kwargs.get(Qstr::MP_QSTR_host_connected)?.try_into()?,
             pin_enabled: kwargs.get(Qstr::MP_QSTR_pin_enabled)?.try_into_option()?,
             auto_lock: kwargs
                 .get(Qstr::MP_QSTR_auto_lock)?

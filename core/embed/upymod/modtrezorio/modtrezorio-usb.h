@@ -101,6 +101,22 @@ static mp_obj_t mod_trezorio_USB___del__(mp_obj_t self) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB___del___obj,
                                  mod_trezorio_USB___del__);
 
+/// mock:global
+/// def usb_configured() -> bool:
+///     """
+///     Whether a USB host has configured (enumerated) the device.
+///
+///     True only for a data connection to a host; a charger that supplies
+///     power but never enumerates the device reads as False.
+///     """
+static mp_obj_t mod_trezorio_usb_configured(void) {
+  usb_state_t state = {0};
+  usb_get_state(&state);
+  return mp_obj_new_bool(state.configured);
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_usb_configured_obj,
+                                 mod_trezorio_usb_configured);
+
 static const mp_rom_map_elem_t mod_trezorio_USB_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_open), MP_ROM_PTR(&mod_trezorio_USB_open_obj)},
     {MP_ROM_QSTR(MP_QSTR_close), MP_ROM_PTR(&mod_trezorio_USB_close_obj)},

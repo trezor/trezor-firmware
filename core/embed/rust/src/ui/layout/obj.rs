@@ -3,6 +3,7 @@ use core::convert::{TryFrom, TryInto};
 use core::marker::PhantomData;
 use core::ops::{Deref, DerefMut};
 
+use heapless::Vec;
 use num_traits::FromPrimitive;
 #[cfg(feature = "touch")]
 use num_traits::ToPrimitive;
@@ -19,6 +20,7 @@ use crate::micropython::map::Map;
 use crate::micropython::obj::{Obj, ObjBase};
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
+use crate::micropython::tuple::Tuple;
 use crate::micropython::typ::{FullType, Type};
 use crate::micropython::{util, Error};
 #[cfg(feature = "button")]
@@ -34,6 +36,7 @@ use crate::ui::event::ButtonEvent;
 #[cfg(feature = "power_manager")]
 use crate::ui::event::PMEvent;
 use crate::ui::event::USBEvent;
+use crate::ui::params_request::{ParamsRequest, MAX_PARAM_KEYS};
 use crate::ui::shape::render_on_display;
 #[cfg(any(feature = "rgb_led", feature = "ui_debug"))]
 use crate::ui::shape::Renderer;
@@ -198,7 +201,7 @@ struct LayoutObjInner {
     repaint: Repaint,
     transition_out: AttachType,
     button_request: Option<ButtonRequest>,
-    params_requested: bool,
+    params_request: Option<ParamsRequest>,
 }
 
 const NO_LAYOUT: Error = Error::RuntimeError(c"No layout");
@@ -217,7 +220,7 @@ impl LayoutObjInner {
             repaint: Repaint::Full,
             transition_out: AttachType::Initial,
             button_request: None,
-            params_requested: false,
+            params_request: None,
         };
 
         // invoke the initial placement
@@ -313,9 +316,13 @@ impl LayoutObjInner {
         }
 
         // Remember a request for fresh construction parameters, to be picked up by
-        // the application layer after this event is handled.
-        if self.event_ctx.params_requested() {
-            self.params_requested = true;
+        // the application layer after this event is handled. A request that is
+        // still waiting to be read is merged with, never replaced.
+        if let Some(request) = self.event_ctx.params_request() {
+            match &mut self.params_request {
+                Some(pending) => pending.merge(&request),
+                None => self.params_request = Some(request),
+            }
         }
 
         msg.try_into()
@@ -370,28 +377,26 @@ impl LayoutObjInner {
         }
     }
 
-    /// Whether a component is waiting for fresh construction parameters.
+    /// The parameter keys a component asked for, as a tuple of key names, or
+    /// `None` if none were asked for. An empty tuple asks for every parameter.
     ///
-    /// The request stays pending until `obj_update_params` serves it, so a
-    /// layout that asks while no parameters can be supplied keeps asking.
-    fn obj_needs_params_refresh(&self) -> Obj {
-        self.params_requested.into()
+    /// Taken out on read, like `obj_button_request`: whoever reads the request
+    /// is expected to serve it via `obj_update_params`.
+    fn obj_params_request(&mut self) -> Result<Obj, Error> {
+        match self.params_request.take() {
+            None => Ok(Obj::const_none()),
+            Some(request) => {
+                let mut keys: Vec<Obj, MAX_PARAM_KEYS> = Vec::new();
+                for key in request.keys() {
+                    unwrap!(keys.push(key.to_obj()), "too many param keys");
+                }
+                Ok(Tuple::alloc(&keys)?.into())
+            }
+        }
     }
 
     fn obj_update_params(&mut self, params: Obj) -> Result<Obj, Error> {
-        // A component may ask for another round while handling `UpdateParams`,
-        // and `obj_event` raises the flag at the end of the pass - so the
-        // pending request is cleared before the event is sent.
-        let pending = core::mem::replace(&mut self.params_requested, false);
-
-        let result = self.obj_event(Event::UpdateParams(ParamsObj::new(params)));
-
-        if result.is_err() {
-            // The pass did not complete, so the parameters were never delivered.
-            // Leave the request standing rather than dropping it silently.
-            self.params_requested = pending;
-        }
-        result
+        self.obj_event(Event::UpdateParams(ParamsObj::new(params)))
     }
 
     fn obj_get_transition_out(&self) -> Obj {
@@ -444,7 +449,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR___del__ => obj_fn_1!(ui_layout_delete).as_obj(),
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
                 Qstr::MP_QSTR_button_request => obj_fn_1!(ui_layout_button_request).as_obj(),
-                Qstr::MP_QSTR_needs_params_refresh => obj_fn_1!(ui_layout_needs_params_refresh).as_obj(),
+                Qstr::MP_QSTR_params_request => obj_fn_1!(ui_layout_params_request).as_obj(),
                 Qstr::MP_QSTR_update_params => obj_fn_2!(ui_layout_update_params).as_obj(),
                 Qstr::MP_QSTR_get_transition_out => obj_fn_1!(ui_layout_get_transition_out).as_obj(),
                 Qstr::MP_QSTR_return_value => obj_fn_1!(ui_layout_return_value).as_obj(),
@@ -700,11 +705,11 @@ extern "C" fn ui_layout_button_request(this: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn ui_layout_needs_params_refresh(this: Obj) -> Obj {
+extern "C" fn ui_layout_params_request(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        let requested = this.inner_mut().obj_needs_params_refresh();
-        Ok(requested)
+        let request = this.inner_mut().obj_params_request();
+        request
     };
     unsafe { util::try_or_raise(block) }
 }

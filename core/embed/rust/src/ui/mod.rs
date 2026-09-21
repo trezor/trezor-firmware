@@ -11,6 +11,7 @@ pub mod flow;
 pub mod geometry;
 pub mod lerp;
 pub mod notification;
+pub mod params_request;
 pub mod shape;
 pub mod util;
 
