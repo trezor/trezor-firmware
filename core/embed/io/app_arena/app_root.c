@@ -29,7 +29,7 @@
 // Information held for each application ring, derived from the root packet
 typedef struct {
   // Timestamp of the root packet the ring data was derived from
-  uint32_t timestamp;
+  int64_t timestamp;
   // Merkle root for this ring
   sha256_digest_t merkle_root;
 } app_ring_data_t;
@@ -148,7 +148,7 @@ bool app_root_is_loaded(app_ring_t ring) {
   return root->ring[ring].timestamp != 0;
 }
 
-ts_t app_root_get_timestamp(app_ring_t ring, uint32_t* timestamp) {
+ts_t app_root_get_timestamp(app_ring_t ring, int64_t* timestamp) {
   TSH_DECLARE;
 
   TSH_CHECK_ARG(timestamp != NULL);
