@@ -505,6 +505,31 @@ class DateFormatter(FieldFormatter):
         raise InvalidFormatDefinition
 
 
+class DurationFormatter(FieldFormatter):
+    """Duration in seconds. Formatted as HH:MM:ss"""
+
+    async def format(
+        self,
+        value: AnyValue,
+        _msg: MsgInSignTx,
+        _definitions: Definitions,
+        _path_walker: PathWalker,
+    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+        if value is None:
+            return None, None, None
+        if isinstance(value, bytes):
+            # a sliced word, e.g. `deadline.[-4:]`: big-endian seconds
+            value = int.from_bytes(value, "big")
+        if isinstance(value, int):
+            if value < 0:
+                # a negative duration has no sensible rendering
+                raise InvalidFormatDefinition
+            minutes, seconds = divmod(value, 60)
+            hours, minutes = divmod(minutes, 60)
+            return f"{hours:02d}:{minutes:02d}:{seconds:02d}", None, None
+        raise InvalidFormatDefinition
+
+
 class CalldataFormatter(RawFormatter):
     """ERC-7730 `calldata` format: the field's value is the embedded calldata
     of a nested call, rendered with the display format of the called contract
@@ -863,6 +888,8 @@ class FieldDefinition:
             formatter = RawFormatter
         elif fmt_type == FT.FORMATTER_DATE:
             formatter = DateFormatter
+        elif fmt_type == FT.FORMATTER_DURATION:
+            formatter = DurationFormatter
         elif fmt_type == FT.FORMATTER_CALLDATA:
             if info.callee_path is None:
                 raise InvalidFormatDefinition
