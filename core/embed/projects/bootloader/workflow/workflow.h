@@ -28,6 +28,11 @@
 
 workflow_result_t workflow_firmware_update(protob_io_t *iface);
 
+#ifdef PQ_SECURE_BOOT
+// Phase 1 of a tree firmware update (stage the boot header, reboot).
+workflow_result_t workflow_firmware_update_pq(protob_io_t *iface);
+#endif
+
 workflow_result_t workflow_wipe_device(protob_io_t *iface);
 
 #ifdef LOCKABLE_BOOTLOADER

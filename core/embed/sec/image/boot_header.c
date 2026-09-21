@@ -24,11 +24,25 @@
 
 #include <rtl/sizedefs.h>
 #include <sec/boot_header.h>
+#include <sec/image.h>
 #include <sec/image_hash_conf.h>
 #include <sec/root_keys.h>
 
 #include <../vendor/sphincsplus/ref/api.h>
 #include <ed25519-donna/ed25519.h>
+
+// fw_variant_t must match vendor_fw_type_t so a variant maps to the same
+// firmware_type byte in both schemes.
+_Static_assert((int)FW_VARIANT_NONE == (int)VENDOR_FW_TYPE_RESERVED,
+               "fw variant");
+_Static_assert((int)FW_VARIANT_CUSTOM == (int)VENDOR_FW_TYPE_CUSTOM,
+               "fw variant");
+_Static_assert((int)FW_VARIANT_UNIVERSAL == (int)VENDOR_FW_TYPE_UNIVERSAL,
+               "fw variant");
+_Static_assert((int)FW_VARIANT_BITCOIN_ONLY == (int)VENDOR_FW_TYPE_BTC_ONLY,
+               "fw variant");
+_Static_assert((int)FW_VARIANT_PRODTEST == (int)VENDOR_FW_TYPE_PRODTEST,
+               "fw variant");
 
 static const uint8_t* const BOARDLOADER_PQ_KEYS[] = {
 #if BOOTLOADER_DEVEL
@@ -105,12 +119,6 @@ secbool boot_header_check_signature(const boot_header_auth_t* hdr,
   }
 
   return sectrue;
-}
-
-static size_t boot_header_merkle_proof_size(
-    const boot_header_merkle_proof_t* proof) {
-  return sizeof(boot_header_merkle_proof_t) +
-         proof->node_count * sizeof(proof->nodes[0]);
 }
 
 static const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
@@ -224,15 +232,21 @@ const boot_header_unauth_t* boot_header_unauth_get(
 
 void boot_header_calc_merkle_root(const boot_header_auth_t* hdr, uintptr_t code,
                                   merkle_proof_node_t* root) {
+  uint8_t code_hash[IMAGE_HASH_DIGEST_LENGTH];
+  IMAGE_HASH_CALC((const uint8_t*)code, hdr->code_size, code_hash);
+  boot_header_calc_merkle_root_from_hash(hdr, code_hash, root);
+}
+
+void boot_header_calc_merkle_root_from_hash(
+    const boot_header_auth_t* hdr,
+    const uint8_t code_hash[IMAGE_HASH_DIGEST_LENGTH],
+    merkle_proof_node_t* root) {
   IMAGE_HASH_CTX ctx;
 
   static const uint8_t prefix0[] = {0x00};
   static const uint8_t prefix1[] = {0x01};
 
-  // Hash the bootloader code
-  IMAGE_HASH_INIT(&ctx);
-  IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)code, hdr->code_size);
-  IMAGE_HASH_FINAL(&ctx, root->bytes);
+  memcpy(root->bytes, code_hash, sizeof(root->bytes));
 
   // Hash the authenticated part of the header
   IMAGE_HASH_INIT(&ctx);

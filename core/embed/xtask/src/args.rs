@@ -6,6 +6,7 @@ use serde::Deserialize;
 
 pub use crate::model::Model;
 use crate::options::BuildOptions;
+use crate::pq::{BootloaderSource, Variant};
 
 #[derive(ValueEnum, Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -144,6 +145,8 @@ pub enum Cmd {
     Upload(UploadArgs),
     /// Combine multiple firmware projects into a single binary for flashing
     Combine(CombineArgs),
+    /// Build a complete pq_secure release: every variant of every tree model
+    Release(ReleaseArgs),
     /// Print current version of specified project
     PrintVersion(PrintVersionArgs),
 }
@@ -165,8 +168,73 @@ pub struct BuildArgs {
     #[arg(long, short = 'p')]
     pub preset: Option<String>,
 
+    /// Which existing bootloader binary a pq_secure release folds its
+    /// firmware_root into; the bootloader is never built implicitly
+    #[arg(long, value_name = "SOURCE", default_value = "auto")]
+    pub bootloader: BootloaderSource,
+
     #[command(flatten)]
     pub options: BuildOptions,
+}
+
+#[derive(Args, Debug)]
+pub struct ReleaseArgs {
+    /// Build preset
+    #[arg(long, short = 'p')]
+    pub preset: Option<String>,
+
+    /// Which existing bootloader binary a pq_secure release folds its
+    /// firmware_root into; the bootloader is never built implicitly
+    #[arg(long, value_name = "SOURCE", default_value = "auto")]
+    pub bootloader: BootloaderSource,
+
+    /// Commit the cut release under models/ as the presigned reference set
+    /// (bundle, signed bootloaders, secmon pair, signed nRF image)
+    #[arg(long)]
+    pub promote: bool,
+
+    /// Key slots that sign this release, as a bitmask (e.g. 0x03 for slots 0
+    /// and 1); authenticated, so fixed at prepare time
+    #[arg(long, value_name = "MASK", value_parser = parse_sigmask)]
+    pub sigmask: Option<u8>,
+
+    #[command(flatten)]
+    pub options: BuildOptions,
+}
+
+/// Parses `0x03`, `0b11` or `3`; checked here so a bad mask does not cost a
+/// full build. The signer checks again.
+fn parse_sigmask(s: &str) -> Result<u8, String> {
+    /// Must match BOOT_HEADER_SIGNATURE_COUNT.
+    const SIGNATURE_COUNT: u32 = 2;
+    /// _Static_assert(ARRAY_LENGTH(BOARDLOADER_PQ_KEYS) <= 3)
+    const MAX_KEY_SLOTS: u32 = 3;
+
+    let t = s.trim();
+    let (digits, radix) = match t.get(..2) {
+        Some("0x") | Some("0X") => (&t[2..], 16),
+        Some("0b") | Some("0B") => (&t[2..], 2),
+        _ => (t, 10),
+    };
+    let mask = u8::from_str_radix(digits, radix)
+        .map_err(|e| format!("invalid sigmask `{s}`: {e} (expected e.g. 0x03, 0b11 or 3)"))?;
+
+    if mask.count_ones() != SIGNATURE_COUNT {
+        return Err(format!(
+            "sigmask 0x{mask:02x} names {} key slot(s), but the boot header carries \
+             exactly {SIGNATURE_COUNT} signatures -- name exactly {SIGNATURE_COUNT}",
+            mask.count_ones()
+        ));
+    }
+    if mask.leading_zeros() < u8::BITS - MAX_KEY_SLOTS {
+        return Err(format!(
+            "sigmask 0x{mask:02x} names a slot above {}, but only {MAX_KEY_SLOTS} \
+             founder key slots exist (0..{})",
+            MAX_KEY_SLOTS - 1,
+            MAX_KEY_SLOTS - 1
+        ));
+    }
+    Ok(mask)
 }
 
 #[derive(Args, Debug)]
@@ -192,9 +260,13 @@ pub struct FlashArgs {
     #[arg(long, short = 'f', value_name = "FILE")]
     pub file: Option<PathBuf>,
 
-    /// Flash the combined image built by `xtask combine`. This puts a blank
-    /// device into a working state. With `--file`, flashes that file as the
-    /// combined image instead of the one `xtask combine` wrote.
+    /// Which variant of a pq_secure release to flash; on `flash bootloader`,
+    /// which variant to provision for (default: bare)
+    #[arg(long, value_name = "VARIANT")]
+    pub variant: Option<Variant>,
+
+    /// Flash the combined image built by `xtask combine`, which puts a blank
+    /// device into a working state. With `--file`, flashes that file instead
     #[arg(long)]
     pub combined: bool,
 }
@@ -233,6 +305,11 @@ pub struct UploadArgs {
     /// Build target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Which variant of a pq_secure release to install; unset lets trezorctl
+    /// pick between firmware variants
+    #[arg(long, value_name = "VARIANT")]
+    pub variant: Option<Variant>,
 }
 
 #[derive(Args, Debug)]
@@ -242,6 +319,11 @@ pub struct CombineArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Which variant of a pq_secure release to combine; on `combine
+    /// bootloader`, which variant to provision for (default: bare)
+    #[arg(long, value_name = "VARIANT")]
+    pub variant: Option<Variant>,
 }
 
 #[derive(Args, Debug)]

@@ -43,19 +43,31 @@ typedef enum {
   NRF_STATUS_ABORTED = 3,  // Packet was aborted
 } nrf_status_t;
 
+/** Key set an nRF build declares in its info response (`nrf_info_t.key_set`).
+ *  A declaration, not a trust input: a mismatch refuses the push, the image is
+ *  still verified afterwards. 0 is undeclared (builds predating this byte)
+ *  and passes the check; 1 is devel, 2 is production. */
+#define NRF_KEY_SET_UNDECLARED 0
+#define NRF_KEY_SET_DEVEL 1
+#define NRF_KEY_SET_PRODUCTION 2
+
 typedef struct {
   uint8_t version_major;
   uint8_t version_minor;
   uint8_t version_patch;
   uint8_t version_tweak;
 
-  bool reserved;
+  uint8_t key_set;  // NRF_KEY_SET_*; any other value is an unknown build
   bool in_stay_in_bootloader;
   bool reserved2;
   bool out_wakeup;
 
   uint8_t hash[SHA256_DIGEST_LENGTH];
 } nrf_info_t;
+
+// Wire format: the management info response is memcpy'd onto this struct.
+_Static_assert(sizeof(nrf_info_t) == 4 + 4 + SHA256_DIGEST_LENGTH,
+               "nrf_info_t must match the management info response layout");
 
 /** Callback type invoked when data is received on a registered service */
 typedef void (*nrf_rx_callback_t)(const uint8_t *data, uint32_t len);

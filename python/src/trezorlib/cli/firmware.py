@@ -14,9 +14,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import io
 import os
 import sys
 import time
+import zipfile
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, BinaryIO, Optional, Union
 from urllib.parse import urlparse
@@ -85,7 +87,9 @@ def _print_firmware_model(hw_model: Union[bytes, fw_models.Model]) -> None:
     click.echo(f"Suspicious hardware model code: {hw_model.hex()} ({hw_model!r})")
 
 
-def print_firmware_version(fw: "firmware.FirmwareType") -> None:
+def print_firmware_version(
+    fw: "Union[firmware.FirmwareType, firmware.PqSecureBundle]",
+) -> None:
     """Print out the firmware version and details."""
     if isinstance(fw, firmware.LegacyFirmware):
         if fw.embedded_v2:
@@ -102,6 +106,235 @@ def print_firmware_version(fw: "firmware.FirmwareType") -> None:
         vendor_version = "{}.{}".format(*fw.vendor_header.version)
         click.echo(f"Vendor header from {vendor}, version {vendor_version}")
         _print_version(fw.firmware.header.version)
+    elif isinstance(fw, firmware.PqSecureBundle):
+        _print_firmware_model(fw.bootloader.header.hw_model)
+        modules = ", ".join(
+            getattr(e.module_type, "name", str(e.module_type)).lower()
+            for e in fw.firmware.manifest.entries
+        )
+        variant = getattr(
+            fw.firmware.manifest.firmware_variant,
+            "name",
+            fw.firmware.manifest.firmware_variant,
+        )
+        click.echo(f"Merkle-tree release, variant {variant} ({modules})")
+        _print_version(fw.version)
+
+
+# The bundle variants --bitcoin-only/--universal select between; others need --variant.
+PQ_VARIANT_BITCOIN_ONLY = "btc-only"
+PQ_VARIANT_UNIVERSAL = "universal"
+
+
+def pq_pick_variant(
+    available: list[str],
+    variant: Optional[str],
+    bitcoin_only: Optional[bool],
+    features: messages.Features,
+) -> Optional[str]:
+    """Pick the bundle variant: explicit --variant, else the lone variant, else the
+    same bitcoin-only decision the download path makes."""
+    if variant is not None:
+        return variant
+    if len(available) == 1:
+        return available[0]
+    if bitcoin_only is None:
+        bitcoin_only = _should_use_bitcoin_only(features)
+    return PQ_VARIANT_BITCOIN_ONLY if bitcoin_only else PQ_VARIANT_UNIVERSAL
+
+
+def check_scheme_match(features: messages.Features, wants_pq: bool, what: str) -> None:
+    """Refuse a release of the wrong image layout before touching the device.
+
+    Advisory only: the device fails safe either way. An absent `firmware_scheme`
+    means unknown, not legacy (pre-field pq_secure builds exist), so defer to
+    the device.
+    """
+    scheme = features.firmware_scheme
+    if scheme is None:
+        return
+    if (scheme == messages.FirmwareScheme.PqSecure) == wants_pq:
+        return
+
+    where = "bootloader" if features.bootloader_mode else "firmware"
+    if wants_pq:
+        click.echo(
+            f"This is a pq_secure {what}, but the {where} on your device uses "
+            "the legacy image layout and cannot install it."
+        )
+    else:
+        click.echo(
+            f"This is a legacy {what}, but the {where} on your device uses the "
+            "pq_secure (Merkle-tree) layout and needs a release bundle."
+        )
+    sys.exit(3)
+
+
+def read_pq_bundle(
+    raw: bytes,
+    variant: Optional[str],
+    bitcoin_only: Optional[bool],
+    features: messages.Features,
+) -> Optional["firmware.PqSecureBundle"]:
+    """Load a pq_secure release from `raw`, or None if it is not a zip bundle."""
+    if not zipfile.is_zipfile(io.BytesIO(raw)):
+        return None
+    try:
+        # a cross-model container is narrowed by the device's own model
+        model = getattr(features, "internal_model", None)
+        available = firmware.PqSecureBundle.variants(io.BytesIO(raw), model=model)
+        chosen = pq_pick_variant(available, variant, bitcoin_only, features)
+        return firmware.PqSecureBundle.load(io.BytesIO(raw), chosen, model=model)
+    except (ValueError, KeyError, firmware.FirmwareIntegrityError) as e:
+        click.echo(f"Cannot read this firmware bundle: {_bundle_defect(e)}")
+        sys.exit(2)
+
+
+def _bundle_defect(e: Exception) -> str:
+    """Phrase a bundle defect for the user; a bare KeyError reads as noise."""
+    if isinstance(e, KeyError):
+        return f"bundle.json has no {e} field"
+    return str(e)
+
+
+def validate_pq_bundle(
+    bundle: "firmware.PqSecureBundle",
+    fingerprint: Optional[str] = None,
+    model: Optional[TrezorModel] = None,
+) -> None:
+    """The pq_secure counterpart of validate_firmware(); exits on failure."""
+    print_firmware_version(bundle)
+    try:
+        bundle.verify()
+    except (ValueError, firmware.FirmwareIntegrityError) as prod_error:
+        try:
+            bundle.verify(dev_keys=True)
+            click.echo("WARNING: Firmware for development kit only.")
+        except (ValueError, firmware.FirmwareIntegrityError) as dev_error:
+            # the dev-key failure names the real defect (production always
+            # fails on the signature for a dev-signed release)
+            click.echo(dev_error)
+            if str(dev_error) != str(prod_error):
+                click.echo(f"(production keys: {prod_error})")
+            click.echo("Firmware validation failed, aborting.")
+            sys.exit(4)
+
+    validate_fingerprint(bundle, fingerprint)
+
+    if model is not None:
+        # Model and TrezorModel are distinct types; compare names
+        image_model = bundle.model()
+        if image_model is None or image_model.name != model.internal_name:
+            found = image_model.name if image_model else "an unrecognized model"
+            click.echo(
+                f"This firmware is for {found}, but your device is "
+                f"{model.internal_name}. Aborting."
+            )
+            sys.exit(3)
+        click.echo("Firmware is appropriate for your device.")
+
+
+def verify_pq_bundle(
+    raw_bundle: bytes,
+    variant: Optional[str] = None,
+    fingerprint: Optional[str] = None,
+    model: Optional[TrezorModel] = None,
+) -> None:
+    """Verify a pq_secure release offline: every variant of every model it covers
+    (or only --variant); needs no device. Exits on failure."""
+    try:
+        # a per-model bundle yields one entry, so both shapes share the loop
+        models = firmware.PqSecureBundle.models(io.BytesIO(raw_bundle)) or [None]
+    except (ValueError, firmware.FirmwareIntegrityError) as e:
+        click.echo(f"Cannot read this firmware bundle: {e}")
+        sys.exit(2)
+
+    named = [m for m in models if m is not None]
+    if model is not None and named and model.internal_name not in named:
+        click.echo(
+            f"This release covers {', '.join(named)}, but your device is "
+            f"{model.internal_name}. Aborting."
+        )
+        sys.exit(3)
+    # a fingerprint identifies one model's firmware_root
+    if fingerprint is not None and len(named) > 1:
+        click.echo(
+            f"This release covers {', '.join(named)}; a fingerprint identifies "
+            "one model, so check it against that model's own bundle."
+        )
+        sys.exit(2)
+
+    dev_keys_used = False
+    for model_name in models:
+        dev_keys_used |= _verify_one_model(
+            raw_bundle, model_name, variant, fingerprint, len(named) > 1
+        )
+
+    if dev_keys_used:
+        click.echo("WARNING: Firmware for development kit only.")
+    if model is not None:
+        click.echo("Firmware is appropriate for your device.")
+
+
+def _verify_one_model(
+    raw_bundle: bytes,
+    model_name: Optional[str],
+    variant: Optional[str],
+    fingerprint: Optional[str],
+    several: bool,
+) -> bool:
+    """Verify every variant of one model. Returns whether dev keys were used."""
+    try:
+        available = firmware.PqSecureBundle.variants(
+            io.BytesIO(raw_bundle), model=model_name
+        )
+    except (ValueError, firmware.FirmwareIntegrityError) as e:
+        click.echo(f"Cannot read this firmware bundle: {e}")
+        sys.exit(2)
+
+    wanted = [variant] if variant else available
+    if not wanted:
+        click.echo("Bundle lists no variants to verify.")
+        sys.exit(2)
+
+    dev_keys_used = False
+    for index, name in enumerate(wanted):
+        try:
+            bundle = firmware.PqSecureBundle.load(
+                io.BytesIO(raw_bundle), name, model=model_name
+            )
+        except (ValueError, KeyError, firmware.FirmwareIntegrityError) as e:
+            click.echo(f"Cannot read variant {name}: {_bundle_defect(e)}")
+            sys.exit(2)
+
+        if index == 0:
+            # the boot header is shared by a model's variants: report it once per model
+            _print_firmware_model(bundle.bootloader.header.hw_model)
+            _print_version(bundle.version)
+            if not several:
+                validate_fingerprint(bundle, fingerprint)
+
+        try:
+            bundle.verify()
+        except (ValueError, firmware.FirmwareIntegrityError) as prod_error:
+            try:
+                bundle.verify(dev_keys=True)
+                dev_keys_used = True
+            except (ValueError, firmware.FirmwareIntegrityError) as dev_error:
+                # the dev-key failure names the real defect (production always
+                # fails on the signature for a dev-signed release)
+                click.echo(f"  {name}: FAILED -- {dev_error}")
+                if str(dev_error) != str(prod_error):
+                    click.echo(f"    (production keys: {prod_error})")
+                click.echo("Firmware validation failed, aborting.")
+                sys.exit(4)
+        modules = ", ".join(
+            getattr(e.module_type, "name", str(e.module_type)).lower()
+            for e in bundle.firmware.manifest.entries
+        )
+        click.echo(f"  {name}: folds to firmware_root, code intact ({modules})")
+
+    return dev_keys_used
 
 
 def validate_signatures(
@@ -147,7 +380,7 @@ def validate_signatures(
 
 
 def validate_fingerprint(
-    fw: "firmware.FirmwareType",
+    fw: "Union[firmware.FirmwareType, firmware.PqSecureBundle]",
     expected_fingerprint: Optional[str] = None,
 ) -> None:
     """Determine and validate the firmware fingerprint.
@@ -157,7 +390,7 @@ def validate_fingerprint(
     """
     fingerprint = fw.digest().hex()
     click.echo(f"Firmware fingerprint: {fingerprint}")
-    if firmware.is_onev2(fw):
+    if not isinstance(fw, firmware.PqSecureBundle) and firmware.is_onev2(fw):
         assert fw.embedded_v2 is not None
         fingerprint_onev2 = fw.embedded_v2.digest().hex()
         click.echo(f"Embedded v2 image fingerprint: {fingerprint_onev2}")
@@ -444,6 +677,177 @@ def upload_firmware_into_device(
         sys.exit(3)
 
 
+# How long to wait for the device to drop off the bus before assuming it came back.
+_REBOOT_DEPART_TIMEOUT = 5.0
+
+
+def _wait_for_device(obj: "TrezorConnection", message: str) -> None:
+    """Wait for the device to leave the bus and come back: the pre-reboot
+    enumeration still answers for a moment, and after phase 1 bootloader_mode is
+    the same on both sides of the reboot, so a reconnect could hit a rebooting
+    device."""
+    click.echo(message)
+    deadline = time.monotonic() + _REBOOT_DEPART_TIMEOUT
+    while time.monotonic() < deadline:
+        if not obj.is_present():
+            break
+        time.sleep(0.1)
+    while True:
+        time.sleep(0.5)
+        try:
+            obj.open()
+            break
+        except Exception:
+            pass
+
+
+def upload_pq_bundle(
+    obj: "TrezorConnection", bundle: "firmware.PqSecureBundle"
+) -> None:
+    """Two-phase install: phase 1 stages the boot header (plus whatever code or
+    nRF image the device requests) and reboots; phase 2 streams the firmware."""
+    available = len(bundle.bootloader_code)
+    if bundle.nrf is not None:
+        available += len(bundle.nrf.image)
+    click.echo(
+        f"Phase 1: authenticating the release "
+        f"({available} bytes available if the device asks for them)..."
+    )
+    with obj.client_context() as client:
+        session = client.get_session(passphrase=None)
+        try:
+            served = firmware.firmware_begin(
+                session,
+                bundle.boot_header,
+                bundle.firmware.manifest_region,
+                code=bundle.bootloader_code,
+                nrf_image=bundle.nrf.image if bundle.nrf else None,
+                nrf_co_path=bundle.nrf.co_path if bundle.nrf else None,
+                nrf_image_hash=bundle.nrf.image_hash if bundle.nrf else None,
+            )
+        except exceptions.Cancelled:
+            click.echo("Update aborted on device.")
+            return
+        except exceptions.TrezorException as e:
+            click.echo(f"Update failed: {e}")
+            sys.exit(3)
+
+    # report what the device actually pulled
+    if served["code"]:
+        click.echo(f"  bootloader: full update, {served['code']} bytes streamed")
+    else:
+        click.echo("  bootloader: header-only (its code is unchanged)")
+    if bundle.nrf is None:
+        pass
+    elif served["nrf"]:
+        click.echo(
+            f"  nRF: staged, {served['nrf']} bytes streamed "
+            "(pushed by the bootloader on the next boot)"
+        )
+    else:
+        click.echo("  nRF: skipped, the device reports it already current")
+
+    obj.close()
+    # the boardloader installs the staged header and may push the nRF first
+    # (tens of seconds)
+    _wait_for_device(obj, "Waiting for the device to install the bootloader...")
+
+    with obj.client_context() as client:
+        if not client.features.bootloader_mode:
+            click.echo("Device did not come back in bootloader mode, aborting.")
+            sys.exit(3)
+        session = client.get_session(passphrase=None)
+        try:
+            with click.progressbar(
+                label="Phase 2: firmware",
+                length=len(bundle.firmware.data),
+                show_eta=False,
+            ) as bar:
+                firmware.update(
+                    session,
+                    bundle.firmware.data,
+                    bar.update,
+                    prev_hashes=bundle.chunk_prev_hashes(),
+                )
+        except exceptions.Cancelled:
+            click.echo("Update aborted on device.")
+        except exceptions.TrezorException as e:
+            click.echo(f"Update failed: {e}")
+            sys.exit(3)
+        else:
+            # the bootloader reboots itself on success
+            click.echo("Firmware installed. The device is restarting into it.")
+
+
+def update_pq(
+    obj: "TrezorConnection",
+    raw_bundle: bytes,
+    *,
+    variant: Optional[str],
+    bitcoin_only: Optional[bool],
+    skip_check: bool,
+    fingerprint: Optional[str],
+    raw: bool,
+    dry_run: bool,
+) -> None:
+    """Install a pq_secure release from a bundle; owns its own connection
+    sequence because the device reboots midway."""
+    if raw:
+        click.echo(
+            "--raw cannot push a firmware bundle: a pq_secure install is a "
+            "two-phase flow, not a stream of image bytes."
+        )
+        sys.exit(1)
+
+    with obj.client_context() as client:
+        bundle = read_pq_bundle(raw_bundle, variant, bitcoin_only, client.features)
+        if bundle is None:
+            click.echo("Not a firmware bundle.")
+            sys.exit(2)
+        check_scheme_match(client.features, wants_pq=True, what="release")
+        if not skip_check:
+            validate_pq_bundle(bundle, fingerprint, client.model)
+        if dry_run:
+            click.echo("Dry run. Not uploading firmware to device.")
+            return
+        if not client.features.bootloader_mode:
+            pq_reboot_for_install(
+                client.get_session(passphrase=None), client.features, bundle
+            )
+            obj.close()
+            _wait_for_device(obj, "Waiting for bootloader...")
+
+    upload_pq_bundle(obj, bundle)
+
+
+def pq_reboot_for_install(
+    session: "Session",
+    features: messages.Features,
+    bundle: "firmware.PqSecureBundle",
+) -> None:
+    """Reboot into the bootloader, offering the release for consent in firmware
+    so the bootloader installs it without asking again; if the device declines,
+    fall back to a plain bootloader entry."""
+    current = (
+        features.major_version,
+        features.minor_version,
+        features.patch_version,
+        0,
+    )
+    if bundle.version > current:
+        try:
+            device.reboot_to_bootloader(
+                session,
+                boot_command=messages.BootCommand.INSTALL_UPGRADE,
+                firmware_preamble=bundle.consent_preamble(),
+            )
+            return
+        except exceptions.TrezorFailure as e:
+            click.echo(f"Device declined to pre-authorise the install: {e}")
+            click.echo("Entering the bootloader; you will confirm there instead.")
+    device.reboot_to_bootloader(session)
+
+
 def _is_strict_update(client: "TrezorClient", firmware_data: bytes) -> bool:
     """Check if the firmware is from the same vendor and the
     firmware is newer than the currently installed firmware.
@@ -491,6 +895,7 @@ def cli() -> None:
 @click.argument("filename", type=click.File("rb"))
 @click.option("-c", "--check-device", is_flag=True, help="Validate device compatibility")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
+@click.option("--variant", help="Verify only this variant of a pq_secure bundle (default: all)")
 @click.pass_obj
 # fmt: on
 def verify(
@@ -498,6 +903,7 @@ def verify(
     filename: BinaryIO,
     check_device: bool,
     fingerprint: Optional[str],
+    variant: Optional[str],
 ) -> None:
     """Verify the integrity of the firmware data stored in a file.
 
@@ -518,6 +924,11 @@ def verify(
         model = None
 
     firmware_data = filename.read()
+    # a pq_secure release is a zip bundle, recognised by content
+    if zipfile.is_zipfile(io.BytesIO(firmware_data)):
+        verify_pq_bundle(firmware_data, variant, fingerprint, model)
+        return
+
     validate_firmware(
         firmware_data=firmware_data,
         fingerprint=fingerprint,
@@ -596,6 +1007,7 @@ def download(
 @click.option("--bitcoin-only/--universal", is_flag=True, default=None, help="Download bitcoin-only or universal firmware (defaults to universal)")
 @click.option("--raw", is_flag=True, help="Push raw firmware data to Trezor")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
+@click.option("--variant", help="Which variant of a pq_secure bundle to install (e.g. custom, prodtest)")
 # fmt: on
 @click.pass_obj
 def update(
@@ -608,6 +1020,7 @@ def update(
     raw: bool,
     dry_run: bool,
     bitcoin_only: Optional[bool],
+    variant: Optional[str],
 ) -> None:
     """Upload new firmware to device.
 
@@ -619,7 +1032,27 @@ def update(
     If you provide a fingerprint via the --fingerprint option, it will be checked
     against downloaded firmware fingerprint. Otherwise fingerprint is checked
     against data.trezor.io information, if available.
+
+    A pq_secure (Merkle-tree) release is a zip bundle: pass it as the filename and
+    pick the variant with --variant or --bitcoin-only/--universal.
     """
+    # read the file before connecting: the bundle path runs its own connection sequence
+    prefetched: Optional[bytes] = None
+    if filename is not None:
+        prefetched = filename.read()
+        if zipfile.is_zipfile(io.BytesIO(prefetched)):
+            update_pq(
+                obj,
+                prefetched,
+                variant=variant,
+                bitcoin_only=bitcoin_only,
+                skip_check=skip_check,
+                fingerprint=fingerprint,
+                raw=raw,
+                dry_run=dry_run,
+            )
+            return
+
     with obj.client_context() as client:
         seedless_session = client.get_session(passphrase=None)
         if sum(bool(x) for x in (filename, url, version)) > 1:
@@ -627,7 +1060,8 @@ def update(
             sys.exit(1)
 
         if filename:
-            firmware_data = filename.read()
+            assert prefetched is not None
+            firmware_data = prefetched
         else:
             if not url:
                 url, fp = find_best_firmware_version(
@@ -637,6 +1071,10 @@ def update(
                     fingerprint = fp
 
             firmware_data = download_firmware_data(url)
+
+        # mirror of the bundle check: a legacy image on a pq_secure device
+        if not raw:
+            check_scheme_match(client.features, wants_pq=False, what="firmware image")
 
         if not raw and not skip_check:
             validate_firmware(
@@ -668,14 +1106,7 @@ def update(
                 device.reboot_to_bootloader(seedless_session)
 
             obj.close()
-            click.echo("Waiting for bootloader...")
-            while True:
-                time.sleep(0.5)
-                try:
-                    obj.open()
-                    break
-                except Exception:
-                    pass
+            _wait_for_device(obj, "Waiting for bootloader...")
 
     with obj.client_context() as client:
         if not client.features.bootloader_mode:

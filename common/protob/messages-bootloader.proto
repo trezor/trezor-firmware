@@ -15,12 +15,34 @@ message FirmwareErase {
 }
 
 /**
+ * Request: Begin a Merkle-tree (pq_secure_boot) firmware update, phase 1.
+ * The device authenticates the boot header and manifest, confirms with the user,
+ * stages the boot header and reboots; the bootloader then installs the firmware
+ * modules (phase 2, FirmwareErase/FirmwareUpload).
+ * @start
+ * @next FirmwareRequest
+ */
+message FirmwareBegin {
+    required bytes boot_header = 1;     // new signed boot header (TRZQ)
+    required bytes module_headers = 2;  // firmware manifest (TRZD) + per-variant Merkle proof, folds to firmware_root
+    optional uint32 code_length = 3;    // new bootloader code available to stream; omit/0 => header-only update
+    optional bytes code_hash = 8;       // SHA-256 of that code, required if code_length > 0; lets the device verify
+                                        // the signature before streaming (it rehashes the received bytes)
+    reserved 4;                         // was custom_install; custom is now an authenticated manifest variant
+    optional uint32 nrf_length = 5;     // nRF MCUboot image bytes available to stream; omit/0 => no nRF update
+    optional bytes nrf_co_path = 6;     // model-tree co-path (nRF leaf -> modelRoot), 32*depth bytes
+    optional bytes nrf_image_hash = 7;  // SHA-256 of the nRF image, "update required" hint; fold-verified by the
+                                        // device before it may skip the stream, a hint that does not fold is rejected
+}
+
+/**
  * Response: Ask for firmware chunk
  * @next FirmwareUpload
  */
 message FirmwareRequest {
-    required uint32 offset = 1;  // offset of requested firmware chunk
-    required uint32 length = 2;  // length of requested firmware chunk
+    required uint32 offset = 1;             // offset of requested firmware chunk
+    required uint32 length = 2;             // length of requested firmware chunk
+    optional uint32 coprocessor_index = 3;  // 0 (default) = primary stream (bootloader code / firmware), 1 = nRF image
 }
 
 /**
@@ -30,8 +52,10 @@ message FirmwareRequest {
  * @next Failure
  */
 message FirmwareUpload {
-    required bytes payload = 1;  // firmware to be loaded into device
-    optional bytes hash = 2;     // hash of the payload
+    required bytes payload = 1;    // firmware to be loaded into device
+    optional bytes hash = 2;       // hash of the payload
+    optional bytes prev_hash = 3;  // pq_secure_boot chain H_prev for this chunk; absent for a module's innermost
+                                   // chunk and for the header/manifest block
 }
 
 /**

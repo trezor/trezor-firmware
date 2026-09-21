@@ -147,6 +147,16 @@ message Features {
     optional bool wireless_connected = 60;                         // Wireless charger connected
     optional bool tap_to_wake = 63;                                // tap to wake is enabled (None = not supported)
     optional uint32 max_passphrase_len = 64 [default = 50];        // maximal passphrase length (in bytes)
+    optional FirmwareScheme firmware_scheme = 65;                  // image layout of the reporting binary (bootloader
+                                                                   // or firmware); absent means unknown, not Legacy
+
+    /// Firmware image layout, i.e. which kind of release the reporting binary can consume.
+    enum FirmwareScheme {
+        /// Vendor header + image header, signed with CoSi.
+        FirmwareScheme_Legacy = 0;
+        /// Merkle-tree (pq_secure_boot): signed boot header + manifest folding to firmware_root.
+        FirmwareScheme_PqSecure = 1;
+    }
 
     enum BackupAvailability {
         /// Device is already backed up, or a previous backup has failed.
@@ -687,9 +697,14 @@ message RebootToBootloader {
     // Action to be performed after rebooting to bootloader
     optional BootCommand boot_command = 1 [default = STOP_AND_WAIT];
     // Firmware header to be flashed after rebooting to bootloader
+    // (legacy image layout: vendor header followed by image header)
     optional bytes firmware_header = 2;
     // Deprecated (length of language blob to be installed before upgrading firmware)
     reserved 3;
+    // Merkle-tree image layout: boot header prefix (authenticated part + Merkle proof,
+    // no signatures) followed by the firmware manifest region; the consent-digest
+    // preimage the bootloader recomputes before installing without asking again
+    optional bytes firmware_preamble = 4;
 
     enum BootCommand {
         // Go to bootloader menu

@@ -57,11 +57,34 @@
 
 #ifdef USE_NRF
 #include <io/nrf.h>
+#endif
+
+// The firmware carries and pushes an nRF image only on the legacy layout;
+// under the Merkle-tree scheme the bootloader installs it (workflow_nrf_ota).
+#if defined(USE_NRF) && !defined(PQ_SECURE_BOOT)
+#define FIRMWARE_UPDATES_NRF 1
 
 extern const void nrf_app_start;
 extern const void nrf_app_end;
 extern const void nrf_app_size;
 
+#endif
+
+// Likewise for the bootloader: the Merkle-tree layout installs it through the
+// bootloader OTA and the boardloader's UCB, so the firmware carries no copy.
+#if !defined(PQ_SECURE_BOOT) && (PRODUCTION || FORCE_BOOTLOADER_UPGRADE)
+#define FIRMWARE_UPDATES_BOOTLOADER 1
+#endif
+
+// FW_VARIANT (firmware/build.rs -> manifest_header.S) must be a hardened
+// FW_VARIANT_SEC_* codeword; manifest_header.S emits it unchecked.
+#ifdef FW_VARIANT
+#include <sec/boot_header.h>
+_Static_assert(FW_VARIANT == FW_VARIANT_SEC_UNIVERSAL ||
+                   FW_VARIANT == FW_VARIANT_SEC_BITCOIN_ONLY ||
+                   FW_VARIANT == FW_VARIANT_SEC_CUSTOM,
+               "FW_VARIANT must be a hardened FW_VARIANT_SEC_* codeword (see "
+               "firmware/build.rs)");
 #endif
 
 LOG_DECLARE(coreapp_main)
@@ -77,13 +100,13 @@ int main_func(uint32_t cmd, void *arg) {
 
   bool update_required = false;
 
-#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
+#ifdef FIRMWARE_UPDATES_BOOTLOADER
   // Check if the bootloader is valid and replace it if not
   bool bl_update_required = boot_image_check(boot_image_get_embdata());
   update_required = update_required || bl_update_required;
 #endif
 
-#ifdef USE_NRF
+#ifdef FIRMWARE_UPDATES_NRF
   bool nrf_update_required_ =
       nrf_update_required(&nrf_app_start, (size_t)&nrf_app_size);
   update_required = update_required || nrf_update_required_;
@@ -93,20 +116,20 @@ int main_func(uint32_t cmd, void *arg) {
     screen_update();
     fading = true;
 
-#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
+#ifdef FIRMWARE_UPDATES_BOOTLOADER
     if (bl_update_required) {
       boot_image_replace(boot_image_get_embdata());
     }
 #endif
 
-#ifdef USE_NRF
+#ifdef FIRMWARE_UPDATES_NRF
     if (nrf_update_required_) {
       nrf_update(&nrf_app_start, (size_t)&nrf_app_size);
     }
 #endif
   }
 
-#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
+#ifdef FIRMWARE_UPDATES_BOOTLOADER
   if (bl_update_required) {
     reboot_device();
   }

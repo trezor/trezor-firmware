@@ -29,11 +29,42 @@
 #include "wf_image_upload.h"
 #include "workflow.h"
 
+/* A build with no segment-planning handler streams the image as ONE segment, so
+ * the plan collapses to constants and the crossing logic cannot fire. Spelling
+ * that out lets the compiler drop it -- it matters on a model whose bootloader
+ * region has no room for generality it never uses (T3T1). */
+#ifdef PQ_SECURE_BOOT
+#define SEG_BEGIN(e) ((e)->segments[(e)->seg_idx].offset)
+#define SEG_END(e) \
+  ((e)->segments[(e)->seg_idx].offset + (e)->segments[(e)->seg_idx].length)
+#else
+#define SEG_BEGIN(e) (0u)
+#define SEG_END(e) ((e)->image_total)
+#endif
+
+/* Three handler knobs only a PQ/nRF build ever sets: an image staged behind an
+ * already-written prefix (target_offset), a handler that draws its own success
+ * screen (suppress_success), and a smaller initial prefetch (init_chunk_size).
+ * Spelling out their constant values elsewhere lets those builds drop the reads
+ * and the branches they feed. */
+#ifdef PQ_SECURE_BOOT
+#define HANDLER_TARGET_OFFSET(h) ((h)->target_offset)
+#define HANDLER_SUPPRESS_SUCCESS(h) ((h)->suppress_success)
+#define HANDLER_INIT_CHUNK(h) ((h)->init_chunk_size)
+#else
+#define HANDLER_TARGET_OFFSET(h) (0u)
+#define HANDLER_SUPPRESS_SUCCESS(h) (false)
+#define HANDLER_INIT_CHUNK(h) (0u)
+#endif
+
 #define MESSAGE_RX_TIMEOUT 10000
 
 #define FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT 2
 
-// Staging buffer for the chunk in flight; see wf_image_upload.h.
+// Single staging buffer shared by the upload engine. One IMAGE_CHUNK_SIZE chunk
+// is received here, verified by the handler, and then written to flash. Also
+// lent out as pre-upload scratch -- see the declaration in wf_image_upload.h
+// for the lifetime rules that borrow carries.
 #ifndef TREZOR_EMULATOR
 __attribute__((section(".buf")))
 #endif
@@ -42,12 +73,9 @@ uint32_t chunk_buffer[IMAGE_CHUNK_SIZE / 4];
 // Transport-level state of an in-progress upload. Everything here is
 // image-type-agnostic; type-specific state lives in the handler.
 typedef struct {
-  uint32_t image_total;
-  uint32_t remaining;  // remaining bytes to upload
-  uint32_t block;      // index of currently processed block
-  // Bytes the buffer must hold for the chunk to be complete, i.e. the whole
-  // block. Every request is derived from it: the block, or - once the block-0
-  // header prefetch has landed - the part of it not yet in the buffer.
+  // Bytes the buffer must hold for the block to be complete, i.e. the whole
+  // block. Every request is derived from it: the block, or - once the header
+  // prefetch has landed - the part of it not yet in the buffer.
   uint32_t chunk_expected;
   uint32_t erase_offset;  // offset of flash memory to erase
   int32_t chunk_retry;    // retry counter
@@ -57,6 +85,26 @@ typedef struct {
                         // confirmed
   bool wireless_transport;          // whether the transport is over BLE
   image_upload_handler_t *handler;  // active image-type handler
+  // Bytes requested + written per block. Defaults to IMAGE_CHUNK_SIZE (the full
+  // staging buffer); a handler may lower it in on_headers (adopted below) to
+  // stream at a finer granularity. Always <= IMAGE_CHUNK_SIZE.
+  uint32_t block_size;
+  // Size of the first (header) prefetch. Defaults to IMAGE_INIT_CHUNK_SIZE; a
+  // handler may lower it via handler->init_chunk_size (resolved at start,
+  // before on_headers). <= block_size.
+  uint32_t init_chunk_size;
+  // Segment plan (see handler->plan_segments). The image is streamed as one or
+  // more segments, each with its OWN block cadence (blocks from
+  // segments[seg_idx].offset). With no plan the whole image is a single segment
+  // (flat streaming). stream_offset is the absolute image offset of the current
+  // block start within the current segment.
+#ifdef PQ_SECURE_BOOT
+  image_segment_t segments[IMAGE_UPLOAD_MAX_SEGMENTS];
+  size_t seg_count;
+  size_t seg_idx;
+#endif
+  uint32_t stream_offset;
+  uint32_t image_total;  // declared image size (validation + progress)
 } upload_engine_t;
 
 static void upload_data_received(size_t len, void *ctx) {
@@ -65,10 +113,10 @@ static void upload_data_received(size_t len, void *ctx) {
   e->chunk_size += len;
   // update loader only after the update is confirmed
   if (e->headers_parsed) {
-    e->handler->ui->progress(
-        (int)(1000ULL * (e->block * IMAGE_CHUNK_SIZE + e->chunk_size) /
-              e->image_total),
-        e->wireless_transport);
+    // absolute stream position (incl. the current partial) over the total image
+    uint32_t done = e->stream_offset + e->chunk_size;
+    uint32_t permille = e->image_total ? (1000 * done / e->image_total) : 1000;
+    e->handler->ui->progress(permille, e->wireless_transport);
   }
 }
 
@@ -123,59 +171,97 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
     return UPLOAD_ERR_INVALID_CHUNK_SIZE;
   }
 
-  if (e->block == 0) {
-    if (!e->headers_parsed) {
-      // first block and headers are not yet parsed -> let the handler validate
-      // all headers, signatures, versions and run user confirmation / policy
-      upload_status_t s = handler->on_headers(
-          handler, iface, (const uint8_t *)chunk_buffer, e->chunk_size);
-      if (s != UPLOAD_OK) {
-        // handler has already sent the failure / abort message
-        return s;
-      }
-
-      e->headers_parsed = true;
-
-      // How much of block 0 the header prefetch already delivered
-      const uint32_t prefetched = e->chunk_size;
-
-      uint32_t chunk_limit =
-          (e->remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : e->remaining;
-      // The buffer is complete only once the whole block is in it.
-      e->chunk_expected = chunk_limit;
-
-      if (chunk_limit > prefetched) {
-        // request the rest of the first block
-        e->read_offset = prefetched;
-        if (sectrue !=
-            send_msg_request_firmware(iface, e->read_offset,
-                                      e->chunk_expected - e->read_offset)) {
-          return UPLOAD_ERR_COMMUNICATION;
-        }
-        return UPLOAD_IN_PROGRESS;
-      }
-
-      // The prefetch already delivered the whole image
-      e->read_offset = 0;
-    } else {
-      // first block with the headers parsed -> the first chunk is now complete
-      e->read_offset = 0;
+  if (!e->headers_parsed) {
+    // FIRST message: the init prefetch (init_chunk_size bytes at image offset
+    // 0) holds all headers. Validate them, adopt a handler transport block
+    // size, and plan the segments; then finish filling segment 0's first block
+    // if the prefetch did not already cover it.
+    upload_status_t s = handler->on_headers(
+        handler, iface, (const uint8_t *)chunk_buffer, e->chunk_size);
+    if (s != UPLOAD_OK) {
+      // handler has already sent the failure / abort message
+      return s;
     }
+    e->headers_parsed = true;
+
+    // Adopt a handler-chosen transport block size (set in on_headers). Clamp to
+    // [init_chunk_size, IMAGE_CHUNK_SIZE]: never larger than the staging
+    // buffer, never smaller than the header prefetch already read. 0 keeps the
+    // default.
+    if (e->handler->block_size != 0) {
+      uint32_t bs = e->handler->block_size;
+      if (bs > IMAGE_CHUNK_SIZE) {
+        bs = IMAGE_CHUNK_SIZE;
+      }
+      if (bs >= e->init_chunk_size) {
+        e->block_size = bs;
+      }
+    }
+
+    // Plan the segments to stream. A handler may split the image into segments
+    // (e.g. a header region + one per firmware module), each streamed with its
+    // OWN block cadence -- blocks requested from segments[i].offset, so block k
+    // of a segment == chunk k. With no plan the whole image is ONE segment;
+    // flat streaming is just that degenerate case. Segment 0 always starts at
+    // offset 0 -- its head is the init prefetch just received.
+#ifdef PQ_SECURE_BOOT
+    if (handler->plan_segments != NULL) {
+      e->seg_count = handler->plan_segments(
+          handler, e->image_total, e->segments, IMAGE_UPLOAD_MAX_SEGMENTS);
+    } else {
+      e->seg_count = 1;
+      e->segments[0].offset = 0;
+      e->segments[0].length = e->image_total;
+    }
+    e->seg_idx = 0;
+#endif
+    e->stream_offset = SEG_BEGIN(e);  // == 0
+
+    // Finish segment 0's first block: its head (the init prefetch) is buffered;
+    // request the remainder if the block is larger. If the whole first block
+    // fit in the prefetch (a small segment 0, e.g. a manifest-region header),
+    // fall straight through to write it.
+    uint32_t seg0_end = SEG_END(e);
+    e->chunk_expected = MIN(e->block_size, seg0_end - e->stream_offset);
+    if (e->chunk_size < e->chunk_expected) {
+      e->read_offset = e->chunk_size;
+      if (sectrue !=
+          send_msg_request_firmware(iface, e->stream_offset + e->read_offset,
+                                    e->chunk_expected - e->read_offset,
+                                    handler->request_index)) {
+        return UPLOAD_ERR_COMMUNICATION;
+      }
+      return UPLOAD_IN_PROGRESS;
+    }
+    e->read_offset = 0;
+  } else if (e->read_offset != 0) {
+    // Second message of the first block: its head was the init prefetch and the
+    // remainder just arrived; reset the buffer offset for subsequent blocks.
+    e->read_offset = 0;
   }
 
+  // Absolute image offset of this block's start (== bytes already on flash).
+  const uint32_t image_off = e->stream_offset;
+
   // should not happen, but double-check
-  if (flash_area_get_address(
-          handler->target_area,
-          handler->target_offset + e->block * IMAGE_CHUNK_SIZE,
-          e->chunk_size) == NULL) {
+  if (flash_area_get_address(handler->target_area,
+                             HANDLER_TARGET_OFFSET(handler) + image_off,
+                             e->chunk_size) == NULL) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Firmware too big");
     return UPLOAD_ERR_FIRMWARE_TOO_BIG;
   }
 
-  // type-specific per-chunk integrity verification
-  upload_status_t cs = handler->on_chunk(
-      handler, iface, e->block, (const uint8_t *)chunk_buffer, e->chunk_size);
+  // type-specific per-chunk integrity verification (image_off = bytes already
+  // on flash before this block). Pass this block's optional chain H_prev (a
+  // 32-byte value on the FirmwareUpload) if present, else NULL.
+  const uint8_t *prev_hash =
+      (msg.has_prev_hash && msg.prev_hash.size == sizeof(msg.prev_hash.bytes))
+          ? msg.prev_hash.bytes
+          : NULL;
+  upload_status_t cs = handler->on_chunk(handler, iface, image_off,
+                                         (const uint8_t *)chunk_buffer,
+                                         e->chunk_size, prev_hash);
 
   if (cs == UPLOAD_ERR_INVALID_CHUNK_HASH) {
     if (e->chunk_retry > 0) {
@@ -189,9 +275,9 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
       // truncated block.
       e->read_offset = 0;
 
-      if (sectrue != send_msg_request_firmware(iface,
-                                               e->block * IMAGE_CHUNK_SIZE,
-                                               e->chunk_expected)) {
+      if (sectrue != send_msg_request_firmware(iface, image_off,
+                                               e->chunk_expected,
+                                               handler->request_index)) {
         return UPLOAD_ERR_COMMUNICATION;
       }
       return UPLOAD_IN_PROGRESS;
@@ -207,30 +293,45 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
 
   ensure((e->chunk_size % FLASH_BLOCK_SIZE == 0) * sectrue, NULL);
 
+  // erase (rolling cursor) + write this block
   write_image_data(handler->target_area,
-                   handler->target_offset + e->block * IMAGE_CHUNK_SIZE,
-                   chunk_buffer, e->chunk_size, &e->erase_offset);
+                   HANDLER_TARGET_OFFSET(handler) + image_off, chunk_buffer,
+                   e->chunk_size, &e->erase_offset);
 
-  e->remaining -= e->chunk_size;
+  // Advance the stream cursor within the current segment; cross into the next
+  // when consumed. Inter-segment padding was erased by the rolling cursor above
+  // but not written.
+  e->stream_offset += e->chunk_size;
+  e->chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT;
+  bool all_done = false;
+  if (e->stream_offset >= SEG_END(e)) {
+#ifdef PQ_SECURE_BOOT
+    e->seg_idx++;
+    if (e->seg_idx >= e->seg_count) {
+      all_done = true;
+    } else {
+      e->stream_offset = e->segments[e->seg_idx].offset;
+    }
+#else
+    all_done = true;
+#endif
+  }
 
-  if (e->remaining > 0) {
-    // request the next block
-    e->block++;
-    e->chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT;
-    e->chunk_expected =
-        (e->remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : e->remaining;
-
-    // clear chunk buffer
+  if (!all_done) {
+    uint32_t next_end = SEG_END(e);
+    e->chunk_expected = MIN(e->block_size, next_end - e->stream_offset);
     e->chunk_size = 0;
     memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
-    if (sectrue != send_msg_request_firmware(iface, e->block * IMAGE_CHUNK_SIZE,
-                                             e->chunk_expected)) {
+    if (sectrue != send_msg_request_firmware(iface, e->stream_offset,
+                                             e->chunk_expected,
+                                             handler->request_index)) {
       return UPLOAD_ERR_COMMUNICATION;
     }
     return UPLOAD_IN_PROGRESS;
   }
 
-  // the whole image is written -> erase the rest (unused part) of the area
+  // All segments streamed: erase the tail beyond the last one, then finalize
+  // (whole-image / whole-tree verify) and report success.
   uint32_t bytes_erased = 0;
   do {
     ensure(flash_area_erase_partial(handler->target_area, e->erase_offset,
@@ -238,22 +339,30 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
            NULL);
     e->erase_offset += bytes_erased;
   } while (bytes_erased > 0);
-
   upload_status_t fs = handler->on_finish(handler, iface);
   if (fs != UPLOAD_OK) {
     // handler has already sent its own failure message
     return fs;
   }
-  send_msg_success(iface, NULL);
-
+  // A sub-stream (e.g. the nRF image inside a header-only phase 1) defers the
+  // terminal Success to its caller so phase 1 emits exactly ONE Success -- the
+  // host can't disambiguate multiple, especially when a sub-stream is skipped.
+  if (!HANDLER_SUPPRESS_SUCCESS(handler)) {
+    send_msg_success(iface, NULL);
+  }
   return UPLOAD_OK;
 }
 
 workflow_result_t run_image_upload(protob_io_t *iface,
                                    image_upload_handler_t *handler,
                                    uint32_t image_size) {
-  if ((image_size < IMAGE_INIT_CHUNK_SIZE) ||
-      ((image_size % FLASH_BLOCK_SIZE) != 0) ||
+  // FLASH_BLOCK_SIZE, not just word alignment: every block this engine receives
+  // is written whole, and the write asserts that alignment further down. A
+  // length that is a multiple of 4 but not of a flash block makes the FINAL
+  // block short, which used to reach that ensure() and stop the device on a
+  // fatal error -- from nothing but a malformed declared length. Reject it here
+  // instead, as a wire Failure the host can act on.
+  if ((image_size == 0) || ((image_size % FLASH_BLOCK_SIZE) != 0) ||
       (image_size > handler->max_size)) {
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Wrong firmware size");
@@ -261,23 +370,29 @@ workflow_result_t run_image_upload(protob_io_t *iface,
   }
 
   upload_engine_t e = {
-      .image_total = image_size,
-      .remaining = image_size,
-      // The size check above guarantees a full init chunk is available.
-      .chunk_expected = IMAGE_INIT_CHUNK_SIZE,
-      // Start erasing at the base offset so an already-written prefix is
-      // preserved.
-      .erase_offset = handler->target_offset,
       .chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT,
-      .wireless_transport = iface->wire->wireless,
       .handler = handler,
+      // Start erasing at the base offset so an already-written prefix (e.g. a
+      // staged boot header) is preserved.
+      .erase_offset = HANDLER_TARGET_OFFSET(handler),
+      // Full staging buffer by default; a handler may shrink it in on_headers.
+      .block_size = IMAGE_CHUNK_SIZE,
+      // Header prefetch size; a handler may shrink it (used before on_headers).
+      .init_chunk_size = HANDLER_INIT_CHUNK(handler)
+                             ? HANDLER_INIT_CHUNK(handler)
+                             : IMAGE_INIT_CHUNK_SIZE,
+      .image_total = image_size,
+      .wireless_transport = iface->wire->wireless,
   };
 
   // clear chunk buffer
   memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
 
-  // request the headers of the new image
-  if (sectrue != send_msg_request_firmware(iface, 0, e.chunk_expected)) {
+  // request the header prefetch (segment 0's head)
+  e.chunk_expected =
+      (image_size > e.init_chunk_size) ? e.init_chunk_size : image_size;
+  if (sectrue != send_msg_request_firmware(iface, 0, e.chunk_expected,
+                                           handler->request_index)) {
     handler->ui->fail(UPLOAD_ERR_COMMUNICATION);
     return WF_ERROR;
   }

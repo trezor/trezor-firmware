@@ -36,16 +36,22 @@ fn embed_secmon_binary(lib: &mut CLibrary) -> Result<()> {
     let model_id = xbuild::current_model_id()?;
     let dir = PathBuf::from(format!("../../models/{}/secmon", model_id));
 
-    if cfg!(feature = "bootloader_devel") {
-        if cfg!(feature = "unsafe_fw") {
-            lib.add_object(dir.join("secmon_api_DEV.o"));
-            lib.embed_binary(dir.join("secmon_DEV.bin"), "secmon")?;
+    if cfg!(feature = "unsafe_fw") {
+        // A CUSTOM build is presigned, so it must embed the committed secmon its
+        // signed leaf covers. Which pair depends on the signing key set; the
+        // binary and its veneer object must travel together.
+        let (bin, api) = if cfg!(feature = "bootloader_devel") {
+            ("secmon_DEV.bin", "secmon_api_DEV.o")
         } else {
-            // Take recently built secmon from Cargo's profile directory
-            let dir = xbuild::cargo_profile_dir()?;
-            lib.add_object(dir.join("secmon_api.o"));
-            lib.embed_binary(dir.join("secmon.bin"), "secmon")?;
-        }
+            ("secmon.bin", "secmon_api.o")
+        };
+        lib.add_object(dir.join(api));
+        lib.embed_binary(dir.join(bin), "secmon")?;
+    } else if cfg!(feature = "bootloader_devel") {
+        // Take the freshly-built secmon from Cargo's profile directory.
+        let dir = xbuild::cargo_profile_dir()?;
+        lib.add_object(dir.join("secmon_api.o"));
+        lib.embed_binary(dir.join("secmon.bin"), "secmon")?;
     } else {
         // Take officially released secmon
         lib.add_object(dir.join("secmon_api.o"));
