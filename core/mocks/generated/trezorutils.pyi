@@ -256,6 +256,8 @@ USE_BLE: bool
 """Whether the hardware supports BLE."""
 USE_NFC: bool
 """Whether the hardware supports NFC."""
+USE_IPC: bool
+"""Whether the hardware supports IPC."""
 USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
 USE_SERIAL_NUMBER: bool
