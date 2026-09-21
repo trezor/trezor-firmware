@@ -19,11 +19,14 @@ from cryptography import exceptions
 
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.exceptions import DeviceLockedError
+from trezorlib.thp import control_byte
 from trezorlib.thp.channel import Channel
 from trezorlib.thp.client import TrezorClientThp
+from trezorlib.thp.exceptions import ThpError, ThpErrorCode
 from trezorlib.thp.message import Message
 from trezorlib.thp.pairing import PairingController
 
+from .common import LOW_ORDER_POINTS
 from .connect import prepare_channel_for_handshake
 
 PIN4 = "1234"
@@ -57,6 +60,40 @@ def test_read_malformed_response(test_ctx: TrezorTestContext) -> None:
     channel._read = _patched_read
     with pytest.raises(exceptions.InvalidTag):
         channel.open([], force_unlock=True)
+
+
+@pytest.mark.setup_client(pin=None)
+@pytest.mark.parametrize(
+    "key",
+    [
+        pytest.param(bytes.fromhex(point_hex), id=name)
+        for name, point_hex in LOW_ORDER_POINTS.items()
+    ],
+)
+def test_low_order_host_ephemeral_key(test_ctx: TrezorTestContext, key: bytes) -> None:
+    """Trezor must refuse to derive handshake keys from a small-order host key."""
+
+    channel = Channel.allocate(test_ctx.transport)
+    channel._init_noise()
+    original_send = channel._send_message
+
+    def _patched_send(message: Message) -> None:
+        if message.ctrl_byte == control_byte.HANDSHAKE_INIT_REQ:
+            # replace the host ephemeral pubkey with the small-order point
+            modified_data = key + message.data[32:]
+            message = Message(message.ctrl_byte, message.cid, modified_data)
+        original_send(message)
+
+    channel._send_message = _patched_send
+
+    # Trezor drops the channel
+    with pytest.raises(ThpError) as excinfo:
+        channel.open([], force_unlock=True)
+    assert excinfo.value.code is ThpErrorCode.UNALLOCATED_CHANNEL
+
+    # Trezor keeps handling new channels
+    prepare_channel_for_handshake(test_ctx)
+    test_ctx.channel.open([])
 
 
 def test_no_unlock(test_ctx: TrezorTestContext):

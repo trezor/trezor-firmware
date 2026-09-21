@@ -45,6 +45,7 @@ from trezorlib.thp import channel, curve25519
 from trezorlib.thp.credentials import StaticCredential
 from trezorlib.thp.pairing import CodeEntry, ControllerLifecycle, QrCode
 
+from .common import LOW_ORDER_POINTS
 from .connect import break_channel, prepare_channel_for_pairing
 
 if t.TYPE_CHECKING:
@@ -57,16 +58,6 @@ pytestmark = [pytest.mark.protocol("thp")]
 ignore_ephemeral_keypair_warning = pytest.mark.filterwarnings(
     "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
 )
-
-# Test vectors from https://www.ietf.org/archive/id/draft-irtf-cfrg-cpace-21.html#name-test-vectors-for-g_x25519sc.
-# Vector u3_256 is the vector u3 with last bit set to 1. This bit is ignored as specified in RFC 7748. More vectors
-# are tested in the CPace unit tests - they are not included here for performance reasons
-LOW_ORDER_POINTS = {
-    "u0": "0000000000000000000000000000000000000000000000000000000000000000",
-    "u1": "0100000000000000000000000000000000000000000000000000000000000000",
-    "u2": "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
-    "u3_256": "e0eb7a7c3b41b8ae1656e3faf19fc46ada098deb9c32b1fd866205165f49b880",
-}
 
 
 @contextmanager
