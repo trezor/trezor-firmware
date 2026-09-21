@@ -85,6 +85,7 @@
     "exact": [
       "buttons__disconnect",
       "buttons__forget",
+      "buttons__review",
       "wipe_code__change",
       "wipe_code__remove",
       "wipe_code__title",
@@ -198,6 +199,8 @@
       "backup__want_to_skip",
       "buttons__check_again",
       "buttons__confirm_all",
+      "passphrase__title_hide",
+      "passphrase__title_source",
       "reset__button_create",
       "reset__button_recover",
       "reset__continue_with_share_template",
@@ -216,10 +219,13 @@
   {
     "exact": [
       "ethereum__approve_revoke",
+      "ethereum__approve",
       "fido__title_reset",
+      "homescreen__title_no_usb_connection",
       "pin__enabled",
       "progress__locking_device",
       "recovery__enter_different_share",
+      "recovery__title_cancel_dry_run",
       "recovery__you_have_entered",
       "reset__more_info_at",
       "reset__select_word_x_of_y_template",
@@ -232,6 +238,8 @@
   },
   {
     "exact": [
+      "passphrase__title_settings",
+      "pin__info",
       "wipe_code__info"
     ],
     "allowedLayouts": [ "Bolt", "Caesar", "Eckhart" ],
@@ -281,7 +289,8 @@
   },
   {
     "exact": [
-      "buttons__show_next"
+      "buttons__show_next",
+      "stellar__token_info"
     ],
     "allowedLayouts": [ "Bolt", "Eckhart" ],
     "description": "These are specific to Bolt and Eckhart layouts"
@@ -360,6 +369,7 @@
       "instructions__tap_to_confirm",
       "instructions__tap_to_continue",
       "instructions__tap",
+      "passphrase__title_passphrase",
       "pin__cancel_description",
       "recovery__cancel_dry_run",
       "reset__cancel_create_wallet",
@@ -384,6 +394,7 @@
       "instructions__view_all_data",
       "pin__cancel_info",
       "pin__cancel_setup",
+      "send__cancel_sign",
       "send__incl_transaction_fee",
       "wipe_code__cancel_setup"
     ],
@@ -399,6 +410,8 @@
       "instructions__hold_to_continue",
       "instructions__shares_start_with_x_template",
       "lockscreen__unlock",
+      "passphrase__show",
+      "pin__change",
       "pin__setup_completed",
       "recovery__share_does_not_match",
       "recovery__share_from_group_entered_template",

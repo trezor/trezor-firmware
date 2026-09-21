@@ -833,7 +833,12 @@
       "Eckhart": ""
     },
     "ethereum__all_evms": "All EVMs",
-    "ethereum__approve": "Approve",
+    "ethereum__approve": {
+      "Bolt": "Approve",
+      "Caesar": "Approve",
+      "Delizia": "Approve",
+      "Eckhart": ""
+    },
     "ethereum__approve_amount_allowance": "Amount allowance",
     "ethereum__approve_chain_id": "Chain ID",
     "ethereum__approve_intro": "Review details to approve token spending.",
@@ -1092,7 +1097,12 @@
     "homescreen__title_backup_needed": "Backup needed",
     "homescreen__title_coinjoin_authorized": "Coinjoin authorized",
     "homescreen__title_experimental_mode": "Experimental mode",
-    "homescreen__title_no_usb_connection": "No USB connection",
+    "homescreen__title_no_usb_connection": {
+      "Bolt": "No USB connection",
+      "Caesar": "No USB connection",
+      "Delizia": "No USB connection",
+      "Eckhart": ""
+    },
     "homescreen__title_pin_not_set": "PIN not set",
     "homescreen__title_seedless": "Seedless",
     "homescreen__title_set": "Change wallpaper",
@@ -1795,13 +1805,38 @@
     "passphrase__next_screen_will_show_passphrase": "The next screen shows your passphrase.",
     "passphrase__please_enter": "Please enter your passphrase.",
     "passphrase__revoke_on_device": "Do you want to revoke the passphrase on device setting?",
-    "passphrase__show": "Show passphrase",
+    "passphrase__show": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Show passphrase"
+    },
     "passphrase__title_confirm": "Confirm passphrase",
     "passphrase__title_enter": "Enter passphrase",
-    "passphrase__title_hide": "Hide passphrase",
-    "passphrase__title_passphrase": "Passphrase",
-    "passphrase__title_settings": "Passphrase settings",
-    "passphrase__title_source": "Passphrase source",
+    "passphrase__title_hide": {
+      "Bolt": "Hide passphrase",
+      "Caesar": "Hide passphrase",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "passphrase__title_passphrase": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Passphrase",
+      "Eckhart": ""
+    },
+    "passphrase__title_settings": {
+      "Bolt": "Passphrase settings",
+      "Caesar": "Passphrase settings",
+      "Delizia": "",
+      "Eckhart": "Passphrase settings"
+    },
+    "passphrase__title_source": {
+      "Bolt": "Passphrase source",
+      "Caesar": "Passphrase source",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "passphrase__turn_off": "Turn off passphrase protection?",
     "passphrase__turn_on": "Turn on passphrase protection?",
     "passphrase__wallet": "Passphrase wallet",
@@ -1823,7 +1858,12 @@
       "Delizia": "Cancel PIN setup",
       "Eckhart": "Cancel PIN setup?"
     },
-    "pin__change": "Change PIN",
+    "pin__change": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Change PIN"
+    },
     "pin__change_question": "Change PIN?",
     "pin__changed": "PIN changed.",
     "pin__cursor_will_change": {
@@ -1846,7 +1886,7 @@
     "pin__info": {
       "Bolt": "PIN will be required to access this device.",
       "Caesar": "PIN will be required to access this device.",
-      "Delizia": "PIN will be required to access this device.",
+      "Delizia": "",
       "Eckhart": "The PIN will be required to access this device."
     },
     "pin__invalid_pin": "Invalid PIN",
@@ -1999,7 +2039,12 @@
     "recovery__share_num_template": "Share {0}",
     "recovery__start_entering": "Start entering",
     "recovery__title": "Recover wallet",
-    "recovery__title_cancel_dry_run": "Cancel backup check",
+    "recovery__title_cancel_dry_run": {
+      "Bolt": "Cancel backup check",
+      "Caesar": "Cancel backup check",
+      "Delizia": "Cancel backup check",
+      "Eckhart": ""
+    },
     "recovery__title_cancel_recovery": "Cancel recovery",
     "recovery__title_dry_run": "Backup check",
     "recovery__title_recover": "Recover wallet",
@@ -2896,7 +2941,12 @@
     "stellar__spender": "Spender",
     "stellar__to": "To",
     "stellar__token_contract": "Token contract",
-    "stellar__token_info": "Token info",
+    "stellar__token_info": {
+      "Bolt": "Token info",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Token info"
+    },
     "stellar__transaction_source": "Transaction source",
     "stellar__transaction_source_diff_warning": "Transaction source does not belong to this Trezor.",
     "stellar__transfer_token": "Transfer token",
