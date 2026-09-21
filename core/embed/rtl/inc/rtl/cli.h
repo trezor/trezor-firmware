@@ -169,7 +169,7 @@ size_t cli_arg_count(cli_t* cli);
  * Indexing starts at 0, meaning the first argument is at index 0.
  * Returns an empty string if the argument is not present.
  */
-const char* cli_nth_arg(cli_t* cli, int n);
+const char* cli_nth_arg(cli_t* cli, size_t n);
 
 /**
  * Returns the argument with the given name from the command line.
@@ -179,7 +179,7 @@ const char* cli_nth_arg(cli_t* cli, int n);
 const char* cli_arg(cli_t* cli, const char* name);
 
 /** Returns true if the n-th argument is present. */
-bool cli_has_nth_arg(cli_t* cli, int n);
+bool cli_has_nth_arg(cli_t* cli, size_t n);
 
 /** Returns true if the argument with the given name is present. */
 bool cli_has_arg(cli_t* cli, const char* name);

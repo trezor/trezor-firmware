@@ -6,6 +6,8 @@
 #include <sys/i2c_bus.h>
 #include <sys/irq.h>
 
+#include "sitronix.h"
+
 /** @addtogroup STM32U5x9J_DISCOVERY
  * @{
  */
@@ -658,8 +660,6 @@ SITRONIX_DetectTouch(SITRONIX_Object_t *pObj) {
   *
   ******************************************************************************
   */
-
-#include "sitronix.h"
 
 /* TS instances */
 #define TS_INSTANCES_NBR 1U

@@ -68,7 +68,7 @@ static void prodtest_sdcard_test(cli_t* cli) {
   for (int j = 1; j <= 2; j++) {
     cli_trace(cli, "Writing data to the SD card (attempt #%d)...", j);
 
-    for (int i = 0; i < BLOCK_SIZE / sizeof(uint32_t); i++) {
+    for (size_t i = 0; i < BLOCK_SIZE / sizeof(uint32_t); i++) {
       buf1[i] ^= 0xFFFFFFFF;
     }
 

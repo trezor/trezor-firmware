@@ -112,7 +112,7 @@ static mp_obj_t mp_obj_new_ge25519_r(mp_obj_t r) {
 static void mp_unpack_ge25519(ge25519 *r, const mp_obj_t arg, mp_int_t offset) {
   mp_buffer_info_t buff = {0};
   mp_get_buffer_raise(arg, &buff, MP_BUFFER_READ);
-  if (buff.len < 32 + offset) {
+  if (offset < 0 || buff.len < 32 + (size_t)offset) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of the EC point"));
   }
 
@@ -126,7 +126,7 @@ static void mp_unpack_scalar(bignum256modm r, const mp_obj_t arg,
                              mp_int_t offset) {
   mp_buffer_info_t buff = {0};
   mp_get_buffer_raise(arg, &buff, MP_BUFFER_READ);
-  if (buff.len < 32 + offset) {
+  if (offset < 0 || buff.len < 32 + (size_t)offset) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   expand256_modm(r, ((uint8_t *)buff.buf) + offset, 32);
@@ -433,7 +433,7 @@ static mp_obj_t mod_trezorcrypto_monero_encodeint_into(size_t n_args,
     mp_buffer_info_t bufm = {0};
     mp_get_buffer_raise(args[0], &bufm, MP_BUFFER_WRITE);
     const mp_int_t offset = n_args >= 3 ? mp_obj_get_int(args[2]) : 0;
-    if (bufm.len < 32 + offset) {
+    if (offset < 0 || bufm.len < 32 + (size_t)offset) {
       mp_raise_ValueError(MP_ERROR_TEXT("Buffer too small"));
     }
 
@@ -477,7 +477,7 @@ static mp_obj_t mod_trezorcrypto_monero_decodeint_into_noreduce(
 
   mp_buffer_info_t buff = {0};
   mp_get_buffer_raise(args[1], &buff, MP_BUFFER_READ);
-  if (buff.len != 32 + offset) {
+  if (offset < 0 || buff.len != 32 + (size_t)offset) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
 
@@ -693,7 +693,7 @@ static mp_obj_t mod_trezorcrypto_monero_encodepoint_into(size_t n_args,
     mp_buffer_info_t bufm = {0};
     mp_get_buffer_raise(args[0], &bufm, MP_BUFFER_WRITE);
     const mp_int_t offset = n_args >= 3 ? mp_obj_get_int(args[2]) : 0;
-    if (bufm.len < 32 + offset) {
+    if (offset < 0 || bufm.len < 32 + (size_t)offset) {
       mp_raise_ValueError(MP_ERROR_TEXT("Buffer too small"));
     }
 
@@ -826,11 +826,12 @@ static mp_obj_t mod_trezorcrypto_monero_fast_hash_into(size_t n_args,
 
   mp_buffer_info_t data = {0};
   mp_get_buffer_raise(args[1], &data, MP_BUFFER_READ);
-  mp_int_t length = n_args >= 3 ? mp_obj_get_int(args[2]) : data.len;
+  mp_int_t length = n_args >= 3 ? mp_obj_get_int(args[2]) : (mp_int_t)data.len;
   mp_int_t offset = n_args >= 4 ? mp_obj_get_int(args[3]) : 0;
   if (length < 0) length += data.len;
   if (offset < 0) offset += data.len;
-  if (length < 0 || offset < 0 || offset + length > data.len) {
+  if (length < 0 || offset < 0 || (size_t)offset > data.len ||
+      (size_t)length > data.len - (size_t)offset) {
     mp_raise_ValueError(MP_ERROR_TEXT("Illegal offset/length"));
   }
   xmr_fast_hash(buff_use, (const char *)data.buf + offset, length);
@@ -855,11 +856,12 @@ static mp_obj_t mod_trezorcrypto_monero_hash_to_point_into(
   mp_obj_t res = mp_obj_new_ge25519_r(args[0]);
   mp_buffer_info_t data = {0};
   mp_get_buffer_raise(args[1], &data, MP_BUFFER_READ);
-  mp_int_t length = n_args >= 3 ? mp_obj_get_int(args[2]) : data.len;
+  mp_int_t length = n_args >= 3 ? mp_obj_get_int(args[2]) : (mp_int_t)data.len;
   mp_int_t offset = n_args >= 4 ? mp_obj_get_int(args[3]) : 0;
   if (length < 0) length += data.len;
   if (offset < 0) offset += data.len;
-  if (length < 0 || offset < 0 || offset + length > data.len) {
+  if (length < 0 || offset < 0 || (size_t)offset > data.len ||
+      (size_t)length > data.len - (size_t)offset) {
     mp_raise_ValueError(MP_ERROR_TEXT("Illegal offset/length"));
   }
 
@@ -885,11 +887,12 @@ static mp_obj_t mod_trezorcrypto_monero_hash_to_scalar_into(
   mp_obj_t res = mp_obj_new_scalar_r(args[0]);
   mp_buffer_info_t data = {0};
   mp_get_buffer_raise(args[1], &data, MP_BUFFER_READ);
-  mp_int_t length = n_args >= 3 ? mp_obj_get_int(args[2]) : data.len;
+  mp_int_t length = n_args >= 3 ? mp_obj_get_int(args[2]) : (mp_int_t)data.len;
   mp_int_t offset = n_args >= 4 ? mp_obj_get_int(args[3]) : 0;
   if (length < 0) length += data.len;
   if (offset < 0) offset += data.len;
-  if (length < 0 || offset < 0 || offset + length > data.len) {
+  if (length < 0 || offset < 0 || (size_t)offset > data.len ||
+      (size_t)length > data.len - (size_t)offset) {
     mp_raise_ValueError(MP_ERROR_TEXT("Illegal offset/length"));
   }
   xmr_hash_to_scalar(MP_OBJ_SCALAR(res), (const char *)data.buf + offset,

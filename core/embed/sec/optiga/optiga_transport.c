@@ -436,7 +436,7 @@ optiga_result optiga_set_data_reg_len(size_t size) {
     return ret;
   }
 
-  if ((frame_buffer[0] << 8) + frame_buffer[1] != size) {
+  if ((size_t)((frame_buffer[0] << 8) + frame_buffer[1]) != size) {
     return OPTIGA_ERR_SIZE;
   }
   return OPTIGA_SUCCESS;

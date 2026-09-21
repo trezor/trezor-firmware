@@ -184,7 +184,7 @@ static mp_obj_t mod_trezorcrypto_ed25519_cosi_combine_publickeys(
   mp_buffer_info_t buf = {0};
   ed25519_public_key pks[pklen];
   memset(pks, 0, sizeof(pks));
-  for (int i = 0; i < pklen; i++) {
+  for (size_t i = 0; i < pklen; i++) {
     mp_get_buffer_raise(pkitems[i], &buf, MP_BUFFER_READ);
     if (buf.len != 32) {
       mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of public key"));
@@ -227,7 +227,7 @@ static mp_obj_t mod_trezorcrypto_ed25519_cosi_combine_signatures(
   mp_buffer_info_t buf = {0};
   ed25519_cosi_signature sigs[siglen];
   memset(sigs, 0, sizeof(sigs));
-  for (int i = 0; i < siglen; i++) {
+  for (size_t i = 0; i < siglen; i++) {
     mp_get_buffer_raise(sigitems[i], &buf, MP_BUFFER_READ);
     if (buf.len != 32) {
       mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of COSI signature"));

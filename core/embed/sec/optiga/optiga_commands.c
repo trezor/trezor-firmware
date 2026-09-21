@@ -111,7 +111,8 @@ static void operation_add_time(uint32_t *total_time_ms, uint8_t *optiga_sec,
 
 static optiga_result process_output(uint8_t **out_data, size_t *out_size) {
   // Check that there is no trailing output data in the response.
-  if (tx_size < 4 || (tx_buffer[2] << 8) + tx_buffer[3] != tx_size - 4) {
+  if (tx_size < 4 ||
+      ((size_t)(tx_buffer[2] << 8) + tx_buffer[3]) != tx_size - 4) {
     return OPTIGA_ERR_UNEXPECTED;
   }
 
@@ -217,7 +218,7 @@ optiga_result optiga_parse_metadata(const uint8_t *serialized,
   memzero(metadata, sizeof(*metadata));
 
   if (serialized_size < 2 || serialized[0] != 0x20 ||
-      serialized[1] + 2 != serialized_size) {
+      (size_t)(serialized[1] + 2) != serialized_size) {
     return OPTIGA_ERR_PARAM;
   }
 
@@ -229,7 +230,7 @@ optiga_result optiga_parse_metadata(const uint8_t *serialized,
 
     // Determine metadata type from tag.
     optiga_metadata_item *item = NULL;
-    for (int i = 0; i < METADATA_TAG_COUNT; ++i) {
+    for (size_t i = 0; i < METADATA_TAG_COUNT; ++i) {
       if (METADATA_OFFSET_TAG_MAP[i].tag == serialized[pos]) {
         item = (void *)((char *)metadata + METADATA_OFFSET_TAG_MAP[i].offset);
         break;
@@ -265,7 +266,7 @@ optiga_result optiga_serialize_metadata(const optiga_metadata *metadata,
   serialized[0] = 0x20;  // Metadata constructed TLV-Object tag.
   size_t pos = 2;        // Leave room for length byte.
 
-  for (int i = 0; i < METADATA_TAG_COUNT; ++i) {
+  for (size_t i = 0; i < METADATA_TAG_COUNT; ++i) {
     optiga_metadata_item *item =
         (void *)((char *)metadata + METADATA_OFFSET_TAG_MAP[i].offset);
     if (item->ptr == NULL) {
@@ -297,7 +298,7 @@ optiga_result optiga_serialize_metadata(const optiga_metadata *metadata,
 // metadata may have arbitrary value in the stored metadata.
 bool optiga_compare_metadata(const optiga_metadata *expected,
                              const optiga_metadata *stored) {
-  for (int i = 0; i < METADATA_TAG_COUNT; ++i) {
+  for (size_t i = 0; i < METADATA_TAG_COUNT; ++i) {
     const optiga_metadata_item *expected_item =
         (void *)((char *)expected + METADATA_OFFSET_TAG_MAP[i].offset);
     if (expected_item->ptr == NULL) {

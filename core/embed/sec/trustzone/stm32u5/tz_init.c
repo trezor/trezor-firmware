@@ -157,7 +157,7 @@ static void tz_configure_sram(void) {
   mpcbb.AttributeConfig.MPCBB_LockConfig_array[0] = 0x00000000U;
 
   // Set all blocks secured & privileged
-  for (int index = 0; index < GTZC_MPCBB_NB_VCTR_REG_MAX; index++) {
+  for (size_t index = 0; index < GTZC_MPCBB_NB_VCTR_REG_MAX; index++) {
     mpcbb.AttributeConfig.MPCBB_SecConfig_array[index] = 0xFFFFFFFFU;
     mpcbb.AttributeConfig.MPCBB_PrivConfig_array[index] = 0xFFFFFFFFU;
   }
@@ -192,7 +192,7 @@ static void tz_configure_flash(void) {
   FLASH_BBAttributesTypeDef flash_bb = {0};
 
   // Set all blocks as secured & privileged
-  for (int index = 0; index < FLASH_BLOCKBASED_NB_REG; index++) {
+  for (size_t index = 0; index < FLASH_BLOCKBASED_NB_REG; index++) {
     flash_bb.BBAttributes_array[index] = 0xFFFFFFFF;
   }
 

@@ -49,7 +49,6 @@ fn main() -> Result<()> {
             "-Wuninitialized",
             "-Wpointer-arith",
             "-Wno-unused-parameter",
-            "-Wno-sign-compare",
             "-Wno-type-limits",
             "-Wfloat-conversion",
             "-Wdouble-promotion",
