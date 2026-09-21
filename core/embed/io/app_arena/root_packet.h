@@ -43,6 +43,8 @@ typedef struct {
   uint8_t reserved[2];
   /** Root packet timestamp */
   uint32_t timestamp;
+  /** Timestamp of the higher-level root packet or 0 */
+  uint32_t chain_timestamp;
   /** Merkle roots for the rings in ring_mask. The roots are stored
    * in the order of the bits in ring_mask, from least significant to
    * most significant. */
