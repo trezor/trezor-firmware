@@ -21,7 +21,7 @@ if TYPE_CHECKING:
         EthereumERC7730FieldInfo,
         EthereumTokenInfo,
     )
-    from trezor.ui.layouts import StrPropertyType
+    from trezorui_api import StrPropertyType
     from trezor.ui.layouts.properties import AboveThreshold
     from typing_extensions import Self
 
@@ -346,6 +346,7 @@ class TokenAmountFormatter(FieldFormatter):
         defs: Definitions,
         path_walker: PathWalker,
     ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+        """Returns (formatted_value, token, token_address)"""
         from trezor.ui.layouts.properties import AboveThreshold
 
         from .tokens import UNKNOWN_TOKEN
@@ -370,7 +371,7 @@ class TokenAmountFormatter(FieldFormatter):
         # TODO: Dead code. We don't pull this externally but we should.
         if self.native_currency_address is not None:
             if token_address in self.native_currency_address:
-                if self.threshold is not None and amount > self.threshold:
+                if self.threshold is not None and amount >= self.threshold:
                     return (
                         AboveThreshold(self.threshold_message or TR.words__unlimited),
                         None,
@@ -394,7 +395,7 @@ class TokenAmountFormatter(FieldFormatter):
                 if received_definitions is not None:
                     token = received_definitions.get_token(token_address)
 
-        if self.threshold is not None and amount > self.threshold:
+        if self.threshold is not None and amount >= self.threshold:
             return (
                 AboveThreshold(self.threshold_message or TR.words__unlimited),
                 token,
