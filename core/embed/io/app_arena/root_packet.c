@@ -205,6 +205,7 @@ static const mldsa44_public_key_t * const ROOT_PACKET_KEYS[] = {
 #endif
 };
 
+// Returns the number of set bits in the given value.
 static int popcount(uint8_t value) {
   int count = 0;
   while (value != 0) {
@@ -214,6 +215,16 @@ static int popcount(uint8_t value) {
     value >>= 1;
   }
   return count;
+}
+
+// Returns true if the set bits in mask form a single contiguous run.
+// Assumes mask != 0
+static bool is_contiguous_mask(uint8_t mask) {
+  // mask | (mask - 1) sets all bits below the lowest set bit.
+  // For a contiguous run the result is 2^n - 1, so adding one yields
+  // a single power of two, i.e. x & (x - 1) == 0.
+  uint32_t x = (uint32_t)(mask | (mask - 1)) + 1;
+  return (x & (x - 1)) == 0;
 }
 
 ts_t root_packet_verify(const void* data, size_t size,
@@ -236,6 +247,7 @@ ts_t root_packet_verify(const void* data, size_t size,
   TSH_CHECK(auth->version == ROOT_PACKET_VERSION, TS_EBADMSG);
   TSH_CHECK(auth->ring_mask != 0, TS_EBADMSG);
   TSH_CHECK(auth->ring_mask <= (1 << APP_RING_COUNT) - 1, TS_EBADMSG);
+  TSH_CHECK(is_contiguous_mask(auth->ring_mask), TS_EBADMSG);
   TSH_CHECK(auth->timestamp > 0, TS_EBADMSG);
   TSH_CHECK(auth->chain_timestamp >= 0, TS_EBADMSG);
 

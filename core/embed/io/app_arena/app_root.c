@@ -63,6 +63,8 @@ ts_t app_root_init(void) {
   TSH_RETURN;
 }
 
+// Returns the index of the first set bit in the ring mask,
+// or -1 if no bits are set.
 static int first_updated_ring(uint8_t ring_mask) {
   for (int id = 0; id < APP_RING_COUNT; id++) {
     if (ring_mask & (1 << id)) {
