@@ -67,6 +67,10 @@
 #include "shared/runtime/pyexec.h"
 #include "stack_size.h"
 
+#ifdef USE_IPC
+#include <sys/ipc.h>
+#endif
+
 // Command line options, with their defaults
 bool mp_compile_only = false;
 static uint emit_opt = MP_EMIT_OPT_NONE;
@@ -787,7 +791,17 @@ MP_NOINLINE int main_(int argc, char **argv) {
   return ret & 0xff;
 }
 
+#if USE_IPC
+uint32_t ipc_buffer[IPC_BUFFER_SIZE / sizeof(uint32_t)];
+#endif
+
 int coreapp_emu(int argc, char **argv) {
+#if USE_IPC
+  // Registered once for the coreapp's lifetime; see the stm32 main.c for why
+  // this isn't repeated per extapp launch.
+  ipc_register(2, ipc_buffer, sizeof(ipc_buffer));
+#endif
+
 #if MICROPY_PY_THREAD
   mp_thread_init();
 #endif
