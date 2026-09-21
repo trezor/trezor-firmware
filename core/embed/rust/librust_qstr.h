@@ -827,7 +827,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_select_word_count;
   MP_QSTR_sell_amount;
   MP_QSTR_send__cancel_sign;
-  MP_QSTR_send__cancel_transaction;
   MP_QSTR_send__confirm_sending;
   MP_QSTR_send__from_multiple_accounts;
   MP_QSTR_send__incl_transaction_fee;

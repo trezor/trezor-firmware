@@ -3272,7 +3272,6 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             hi_prio = (
                 TR.buttons__cancel_and_exit,
                 TR.buttons__cancel_sign,
-                TR.send__cancel_transaction,
             )
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(self.debug.screen_buttons.menu())
@@ -3307,7 +3306,6 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             hi_prio = (
                 TR.buttons__cancel_and_exit,
                 TR.buttons__cancel_sign,
-                TR.send__cancel_transaction,
             )
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(self.debug.screen_buttons.menu())
