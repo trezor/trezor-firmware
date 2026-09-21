@@ -55,3 +55,7 @@ MP_REGISTER_MODULE(MP_QSTR_trezorlog, mp_module_trezorlog);
 #ifdef USE_MINISCRIPT
 MP_REGISTER_MODULE(MP_QSTR_trezorminiscript, mp_module_trezorminiscript);
 #endif
+
+#ifdef USE_WARD
+MP_REGISTER_MODULE(MP_QSTR_trezorward, mp_module_trezorward);
+#endif

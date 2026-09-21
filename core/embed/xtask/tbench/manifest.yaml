@@ -168,6 +168,13 @@ options:
     when: component(firmware)
     type: checkbox
 
+  - id: ward
+    name: WARD Support
+    description: Enables experimental WARD support.
+    group: Features
+    when: component(firmware)
+    type: checkbox
+
   - id: debug
     name: Debug Build
     description: Enables debug symbols and disables some optimizations.

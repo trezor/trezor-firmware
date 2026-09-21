@@ -294,6 +294,8 @@ USE_N1W1: bool
 """Whether N1W1 is supported."""
 USE_AES_GCM: bool
 """Whether the AES-GCM is supported."""
+USE_WARD: bool
+"""Whether WARD is supported."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str

@@ -32,6 +32,7 @@ spin.workspace = true
 static-alloc.workspace = true
 trezor-thp = { workspace = true, optional = true }
 trezor-tjpgdec.workspace = true
+trezor-ward = { workspace = true, optional = true }
 ufmt.workspace = true
 unsize.workspace = true
 without-alloc.workspace = true
@@ -109,6 +110,7 @@ ui_overlay = []
 ui_performance_overlay = []
 universal_fw = []
 usb = []
+ward = ["dep:trezor-ward"]
 
 # --------------------------------------------------------------------------
 # Unit test configuration
