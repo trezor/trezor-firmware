@@ -2704,7 +2704,6 @@
       "Delizia": "Cancel sign",
       "Eckhart": "Cancel sign?"
     },
-    "send__cancel_transaction": "Cancel transaction",
     "send__confirm_sending": "Sending amount",
     "send__from_multiple_accounts": "Sending from multiple accounts.",
     "send__incl_transaction_fee": {
