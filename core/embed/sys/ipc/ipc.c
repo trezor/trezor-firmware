@@ -139,7 +139,7 @@ bool ipc_try_receive(ipc_message_t *msg) {
     return false;
   }
 
-  if (queue->wptr - queue->rptr < sizeof(ipc_queue_item_t)) {
+  if (queue->wptr - queue->rptr < (ptrdiff_t)sizeof(ipc_queue_item_t)) {
     // No messages available
     return false;
   }

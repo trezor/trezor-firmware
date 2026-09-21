@@ -424,7 +424,7 @@ ts_t app_image_write_chunk(app_image_handle_t handle, const void* data,
   while (src < src_end) {
     uint8_t temp[256];
 
-    size_t bytes_to_copy = MIN(src_end - src, sizeof(temp));
+    size_t bytes_to_copy = MIN((size_t)(src_end - src), sizeof(temp));
 
     // We are copying data between two memory areas that are not
     // accessible at the same time due to MPU restrictions.

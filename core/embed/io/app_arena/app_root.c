@@ -99,7 +99,7 @@ ts_t app_root_reset(void) {
   app_root_t* root = &g_app_root;
   TSH_CHECK(root->initialized, TS_ENOINIT);
 
-  for (int i = 0; i < ARRAY_LENGTH(root->ring); i++) {
+  for (size_t i = 0; i < ARRAY_LENGTH(root->ring); i++) {
     memset(&root->ring[i], 0, sizeof(app_ring_data_t));
   }
 
