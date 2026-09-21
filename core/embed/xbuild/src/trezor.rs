@@ -263,17 +263,17 @@ impl CLibrary {
                         .find(|p| p.join("sys/linker").is_dir())
                         .map(PathBuf::from)
                 });
-                if let Some(root) = embed_root {
-                    if !root.join(&target_ld).exists() {
-                        bail!(
-                            "pq_secure_boot needs {target_ld}, which does not \
-                             exist. Falling back to \
-                             sys/linker/{mcu_dir}/{binary_type}.ld would link \
-                             {binary_type} with the legacy layout (no manifest \
-                             region) -- it would build and then fail verification \
-                             on device. Port the _pq variant for {mcu_dir} first."
-                        );
-                    }
+                if let Some(root) = embed_root
+                    && !root.join(&target_ld).exists()
+                {
+                    bail!(
+                        "pq_secure_boot needs {target_ld}, which does not \
+                         exist. Falling back to \
+                         sys/linker/{mcu_dir}/{binary_type}.ld would link \
+                         {binary_type} with the legacy layout (no manifest \
+                         region) -- it would build and then fail verification \
+                         on device. Port the _pq variant for {mcu_dir} first."
+                    );
                 }
             }
 
