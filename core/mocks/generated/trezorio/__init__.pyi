@@ -10,30 +10,13 @@ def ipc_send(remote: int, fn: int, data: AnyBytes) -> None:
 
 
 # upymod/modtrezorio/modtrezorio-ipc.h
-class IpcMessage:
+class IpcMessage(NamedTuple):
     """
     IPC message structure.
     """
-
-    def fn(self) -> int:
-        """
-        Returns the function number.
-        """
-
-    def remote(self) -> int:
-        """
-        Returns the remote task ID.
-        """
-
-    def free(self) -> None:
-        """
-        Frees the IPC message resources.
-        """
-
-    def data(self) -> bytes:
-        """
-        Returns the IPC message data as bytes.
-        """
+    remote: int
+    fn: int
+    data: AnyBytes
 
 
 # upymod/modtrezorio/modtrezorio-poll.h
