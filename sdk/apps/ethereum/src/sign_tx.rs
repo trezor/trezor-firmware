@@ -16,7 +16,8 @@ use crate::{
 };
 use primitive_types::U256;
 use trezor_app_sdk::{
-    Error, Result, ResultExt, crypto,
+    Error, Result, ResultExt,
+    crypto::{self, HashingAlgorithm, HasherExt},
     ui::{self, Property},
 };
 
@@ -114,7 +115,7 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
         None
     };
 
-    let mut hasher = crypto::sha3::Keccak256::new(None);
+    let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
     rlp::write_header(
         &mut hasher,
         get_total_length(
@@ -192,7 +193,7 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
         rlp::write(&mut hasher, field);
     }
 
-    let digest = hasher.digest();
+    let digest: [u8; 32] = hasher.finalize().as_slice().try_into().unwrap();
 
     // transaction data confirmed, proceed with signing
     let res = sign_digest(&msg, &digest).c()?;

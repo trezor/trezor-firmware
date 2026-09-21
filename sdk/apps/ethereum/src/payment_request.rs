@@ -2,7 +2,7 @@ use crate::{alloc_types::Vec, helpers::write_compact_size, proto::common::Paymen
 use primitive_types::U256;
 use trezor_app_sdk::{
     Error, Result,
-    crypto::{self, Hasher},
+    crypto::{self, BoxedHasher, EcCurve, HashingAlgorithm, HasherExt},
 };
 
 const SLIP44_ID_UNDEFINED: u32 = 0xFFFF_FFFF;
@@ -96,8 +96,8 @@ const DEBUG_PUBLIC_KEY: [u8; 33] = [
 pub struct PaymentRequestVerifier {
     amount: U256,
     expected_amount: Option<U256>,
-    h_outputs: crypto::sha2::Sha256,
-    h_pr: crypto::sha2::Sha256,
+    h_outputs: BoxedHasher,
+    h_pr: BoxedHasher,
     signature: Vec<u8>,
 }
 
@@ -107,8 +107,8 @@ impl PaymentRequestVerifier {
         sanitize_payment_request(payment_request)?;
         verify_payment_request_is_supported(payment_request)?;
 
-        let h_outputs = crypto::sha2::Sha256::new(None);
-        let mut h_pr = crypto::sha2::Sha256::new(None);
+        let h_outputs = crypto::get_hasher(HashingAlgorithm::Sha256);
+        let mut h_pr = crypto::get_hasher(HashingAlgorithm::Sha256);
 
         let expected_amount = if let Some(amount) = payment_request.amount.as_deref() {
             Some(parse_amount(amount)?)
@@ -229,17 +229,24 @@ impl PaymentRequestVerifier {
             return Err(Error::DataError("Invalid amount in payment request"))?;
         }
 
-        let hash_outputs = self.h_outputs.digest();
+        let hash_outputs = self.h_outputs.finalize();
         self.h_pr.update(&hash_outputs);
+        let h_pr_digest = self.h_pr.finalize();
 
         #[allow(unused_mut)]
         let mut result =
-            crypto::nist256p1::verify(&PUBLIC_KEY, &self.signature, &self.h_pr.digest());
+            crypto::ec_verify_recover_digest(EcCurve::Nist256p1, &PUBLIC_KEY, &self.signature, &h_pr_digest)
+                .is_ok();
 
         #[cfg(feature = "dev_keys")]
         if !result {
-            result =
-                crypto::nist256p1::verify(&DEBUG_PUBLIC_KEY, &self.signature, &self.h_pr.digest());
+            result = crypto::ec_verify_recover_digest(
+                EcCurve::Nist256p1,
+                &DEBUG_PUBLIC_KEY,
+                &self.signature,
+                &h_pr_digest,
+            )
+            .is_ok();
         }
 
         result = true;

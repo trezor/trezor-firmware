@@ -9,7 +9,7 @@ use crate::{
 };
 use trezor_app_sdk::{
     Result, ResultExt,
-    crypto::{self, Hasher},
+    crypto::{self, HashingAlgorithm, HasherExt},
 };
 
 /// Ethereum uses Bitcoin xpub format
@@ -49,7 +49,8 @@ pub fn message_digest(message: &[u8]) -> [u8; 32] {
     const SIGNED_MESSAGE_HEADER: &[u8] = b"\x19Ethereum Signed Message:\n";
 
     // Build the complete message to hash
-    let mut hasher = crypto::sha3::Keccak256::new(Some(SIGNED_MESSAGE_HEADER));
+    let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
+    hasher.update(SIGNED_MESSAGE_HEADER);
 
     // Add the message length as string
     let len_str = uformat!("{}", message.len());
@@ -59,5 +60,5 @@ pub fn message_digest(message: &[u8]) -> [u8; 32] {
     hasher.update(message);
 
     // Compute keccak256 hash
-    hasher.digest()
+    hasher.finalize().as_slice().try_into().unwrap()
 }

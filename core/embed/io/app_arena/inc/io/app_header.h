@@ -78,11 +78,16 @@ typedef struct {
   /** Allowed BIP32 path prefixes
    * (array of null-terminated strings, zero-padded) */
   char paths[APP_HEADER_PATHS_MAX_LEN];
+  /** Size, in bytes, of the IPC inbox Core registers for this app at launch.
+   * Allocated out of the app's own heap, so it must not exceed the heap the
+   * app reserved. Always a non-zero power of two, at most
+   * IPC_MAX_BUFFER_SIZE -- the build tool resolves the manifest default. */
+  uint32_t ipc_buffer_size;
 
 } app_header_t;
 
 _Static_assert(
-    sizeof(app_header_t) == 484,
+    sizeof(app_header_t) == 488,
     "app_header_t layout changed; the image format is not compatible");
 
 _Static_assert(sizeof(app_header_t) <= APP_HEADER_MAX_SIZE,

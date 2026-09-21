@@ -1,6 +1,6 @@
 use crate::alloc_types::Vec;
 use primitive_types::U256;
-use trezor_app_sdk::crypto::Hasher;
+use trezor_app_sdk::crypto::{BoxedHasher, HasherExt};
 
 pub const STRING_HEADER_BYTE: u8 = 0x80;
 pub const LIST_HEADER_BYTE: u8 = 0xC0;
@@ -20,7 +20,7 @@ impl RlpWriter for Vec<u8> {
     }
 }
 
-impl RlpWriter for trezor_app_sdk::crypto::sha3::Keccak256 {
+impl RlpWriter for BoxedHasher {
     fn write_bytes(&mut self, bytes: &[u8]) {
         self.update(bytes);
     }

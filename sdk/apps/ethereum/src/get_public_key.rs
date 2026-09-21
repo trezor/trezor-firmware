@@ -7,13 +7,19 @@ use crate::{
     },
     strutil::hex_encode,
 };
-use trezor_app_sdk::{Error, Result, ResultExt, crypto, ui, unwrap};
+use trezor_app_sdk::{
+    Error, Result, ResultExt,
+    crypto::{self, HashingAlgorithm, HasherExt},
+    ui, unwrap,
+};
 
 pub(crate) fn get_public_key(msg: GetPublicKey) -> Result<PublicKey> {
     const VERSION: u32 = 0x0488B21E;
 
     let dp = Bip32Path::from_slice(&msg.address_n);
     let xpub = crypto::get_xpub(&dp.as_slice(), VERSION).c()?;
+    let xpub =
+        String::from(core::str::from_utf8(&xpub).map_err(|_| Error::DataError("Invalid xpub"))?);
 
     let hdnode = HdNodeData::deserialize_public(&xpub, VERSION).c()?;
 
@@ -135,11 +141,13 @@ impl HdNodeData {
 
     /// Double SHA-256: SHA256(SHA256(data)), returns first 4 bytes as checksum.
     fn sha256d_checksum(data: &[u8]) -> [u8; 4] {
-        let mut hasher = crypto::sha2::Sha256::new(Some(data));
-        let first = hasher.digest();
+        let mut hasher = crypto::get_hasher(HashingAlgorithm::Sha256);
+        hasher.update(data);
+        let first = hasher.finalize();
 
-        let mut hasher = crypto::sha2::Sha256::new(Some(&first));
-        let second = hasher.digest();
+        let mut hasher = crypto::get_hasher(HashingAlgorithm::Sha256);
+        hasher.update(&first);
+        let second = hasher.finalize();
 
         [second[0], second[1], second[2], second[3]]
     }

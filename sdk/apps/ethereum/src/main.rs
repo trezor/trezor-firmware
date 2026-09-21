@@ -177,13 +177,11 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
 #[cfg(test)]
 pub(crate) mod test_init {
     use std::sync::Once;
-    use trezor_app_sdk::mock::{dummy_trezor_api_getter_t, sdk_init};
+    use trezor_app_sdk::mock::sdk_init;
     pub static INIT: Once = Once::new();
 
     pub fn init_sdk() {
-        INIT.call_once(|| unsafe {
-            sdk_init(Some(dummy_trezor_api_getter_t));
-        });
+        INIT.call_once(sdk_init);
     }
 }
 

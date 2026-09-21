@@ -920,8 +920,7 @@ impl<'a> ufmt::uDebug for TrezorCryptoResultRef<'a> {
 #[derive(Clone, PartialEq, Eq)]
 #[cfg(feature = "app")]
 pub enum TrezorCryptoResult {
-    Xpub([u8; 111]),
-    PublicKey(crate::alloc_types::Vec<u8>), // 32, 33 or 65 bytes depending on the curve
+    XpubBytes([u8; 33]),
     Signature([u8; 65]),
     AddressMac([u8; 32]),
     Boolean(bool),
@@ -934,8 +933,7 @@ impl ufmt::uDebug for TrezorCryptoResult {
         W: ufmt::uWrite,
     {
         match self {
-            Self::Xpub(xpub) => f.debug_tuple("Xpub")?.field(&&xpub[..])?.finish(),
-            Self::PublicKey(key) => f.debug_tuple("PublicKey")?.field(&key.as_slice())?.finish(),
+            Self::XpubBytes(xpub) => f.debug_tuple("XpubBytes")?.field(&&xpub[..])?.finish(),
             Self::Signature(sig) => f.debug_tuple("Signature")?.field(&&sig[..])?.finish(),
             Self::AddressMac(mac) => f.debug_tuple("AddressMac")?.field(mac)?.finish(),
             Self::Boolean(b) => f.debug_tuple("Boolean")?.field(b)?.finish(),

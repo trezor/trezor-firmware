@@ -10,7 +10,12 @@ id = "ethereum.trezor.com"
 name = "Ethereum"
 vendor = "SatoshiLabs"
 stack-size = 16384
-heap-size = 1024
+heap-size = 65536
+# Bytes of IPC inbox Core allocates out of the heap above and registers
+# at launch. Must be a power of two, at most 64 KiB, and no larger than
+# heap-size. Omit or set 0 to take the SDK default, which only covers
+# fixed API replies -- this app also receives host wire messages.
+ipc-buffer-size = 8192
 app-ring = 0
 curves = ["secp256k1"]
 paths = [

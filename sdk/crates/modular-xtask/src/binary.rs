@@ -74,6 +74,10 @@ struct AppHeader {
     /// Each path is a null-terminated string, and the array
     /// is zero-padded to a fixed size.
     paths: [u8; metadata::APP_PATHS_MAX_LEN],
+    /// Size, in bytes, of the IPC inbox Core registers for this app at
+    /// launch. Always resolved here -- a 0 in the manifest is replaced by
+    /// `metadata::IPC_BUFFER_DEFAULT_SIZE`, so the header never carries 0.
+    ipc_buffer_size: U32<LittleEndian>,
     // TODO logo
 }
 
@@ -126,6 +130,18 @@ pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf>
         arch => anyhow::bail!("Unsupported architecture: {:?}", arch),
     };
 
+    // The inbox is allocated out of the app's own heap at launch, so a
+    // manifest that asks for an inbox larger than the heap it reserved can
+    // never start. Catch it here rather than at load time on the device.
+    let ipc_buffer_size = metadata::ipc_buffer_size(package)?;
+    let heap_size = metadata::heap_size(package)?;
+    ensure!(
+        ipc_buffer_size <= heap_size,
+        "IPC buffer size ({ipc_buffer_size} B) exceeds the app's heap size \
+         ({heap_size} B); raise `heap-size` or lower `ipc-buffer-size` in \
+         [package.metadata.trezor]"
+    );
+
     let header = AppHeader {
         magic: U32::new(AppHeader::APP_HEADER_MAGIC),
         header_size: U32::new(AppHeader::APP_HEADER_SIZE as u32),
@@ -146,6 +162,7 @@ pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf>
         curves: metadata::curves(package)?,
         paths: metadata::paths(package)?,
         reserved2: [0; 2],
+        ipc_buffer_size: U32::new(ipc_buffer_size),
     };
 
     let bin_path = elf_path.with_extension("bin");

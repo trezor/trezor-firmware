@@ -28,12 +28,9 @@ use crate::{
     },
     uformat,
 };
+use trezor_app_sdk::{crypto, crypto::{HashingAlgorithm, HasherExt as _}, ui::{self, Property}};
 use prost::Message;
-use trezor_app_sdk::{Error, Result, WireEncode, unwrap, wire_request_raw};
-use trezor_app_sdk::{
-    ResultExt, crypto,
-    ui::{self, Property},
-};
+use trezor_app_sdk::{Error, Result, ResultExt, WireEncode, unwrap, wire_request_raw};
 
 // Maximum chain_id which returns the full signature_v (which must fit into an uint32).
 // chain_ids larger than this will only return one bit and the caller must recalculate
@@ -75,7 +72,9 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
     };
     let raw_tx_serialized = raw_tx.encode_to_vec();
 
-    let w_hash = crypto::sha2::Sha256::new(Some(&raw_tx_serialized)).digest();
+    let mut hasher = crypto::get_hasher(HashingAlgorithm::Sha256);
+    hasher.update(raw_tx_serialized.as_slice());
+    let w_hash: [u8; 32] = hasher.finalize().as_slice().try_into().unwrap();
 
     // https://tronprotocol.github.io/documentation-en/mechanism-algorithm/account/#algorithm
     let sig = crypto::sign_typed_hash(&msg.address_n, &w_hash, None, None, None, false).c()?;

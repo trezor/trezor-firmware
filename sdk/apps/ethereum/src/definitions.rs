@@ -9,7 +9,7 @@ use crate::{
 use prost::Message;
 use trezor_app_sdk::{
     Error, Result,
-    crypto::{self, Hasher},
+    crypto::{self, HashingAlgorithm, HasherExt},
 };
 
 const THRESHOLD: usize = 2;
@@ -190,9 +190,10 @@ pub(crate) fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<
     // at the end compute Merkle tree root hash using
     // provided leaf data (payload with prefix) and proof
 
-    let mut hasher = crypto::sha2::Sha256::new(Some(b"\x00"));
+    let mut hasher = crypto::get_hasher(HashingAlgorithm::Sha256);
+    hasher.update(b"\x00");
     hasher.update(&encoded[..offset]);
-    let mut hash = hasher.digest();
+    let mut hash: [u8; 32] = hasher.finalize().as_slice().try_into().unwrap();
 
     let proof_len = encoded[offset];
     offset += 1;
@@ -212,10 +213,11 @@ pub(crate) fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<
             (proof_entry, hash.as_slice())
         };
 
-        let mut hasher = crypto::sha2::Sha256::new(Some(b"\x01"));
+        let mut hasher = crypto::get_hasher(HashingAlgorithm::Sha256);
+        hasher.update(b"\x01");
         hasher.update(hash_a);
         hasher.update(hash_b);
-        hash = hasher.digest();
+        hash = hasher.finalize().as_slice().try_into().unwrap();
     }
 
     if remaining < 1 + 64 {
