@@ -475,7 +475,11 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         if !self.static_key_required() {
             return Err(Error::not_ready());
         }
-        self.send_initiation_response(static_privkey)?;
+        if let Err(e) = self.send_initiation_response(static_privkey) {
+            log::error!("[{:04x}] Initiation response failed.", self.channel_id());
+            self.state = HandshakeState::Failed;
+            return Err(e);
+        }
         self.state = HandshakeState::SendingInitiationResponse;
         Ok(())
     }

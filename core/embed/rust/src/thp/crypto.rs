@@ -65,7 +65,15 @@ impl DH for TrezorCryptoCurve25519 {
     }
 
     fn dh(privkey: &Self::Key, pubkey: &Self::Pubkey) -> Result<Self::Output, ()> {
-        Ok(pubkey.multiply(privkey))
+        if pubkey.is_zero() {
+            return Err(());
+        }
+        let output = pubkey.multiply(privkey);
+        if output.is_zero() {
+            // `output` is zeroized on drop.
+            return Err(());
+        }
+        Ok(output)
     }
 }
 
