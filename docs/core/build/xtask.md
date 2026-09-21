@@ -95,6 +95,7 @@ cannot be used bare:
 - `--apps` — enable external app loading.
 - `--n1w1` — enable N1W1 support.
 - `--miniscript` — enable experimental Miniscript support.
+- `--ward` — enable experimental WARD support.
 - `--unsafe-fw` — enable unsafe firmware features.
 - `--storage-insecure-testing-mode` — insecure storage test mode (forbidden with
   `--production`).

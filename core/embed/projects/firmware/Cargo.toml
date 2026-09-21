@@ -51,6 +51,7 @@ ui_debug_overlay = ["trezor_lib/ui_debug_overlay"]
 ui_performance_overlay = ["trezor_lib/ui_performance_overlay"]
 universal_fw = ["trezor_lib/universal_fw", "upymod/universal_fw"]
 unsafe_fw = []
+ward = ["trezor_lib/ward", "upymod/ward"]
 
 # --------------------------------------------------------------------------
 # MCU selection - only enable one of these at a time

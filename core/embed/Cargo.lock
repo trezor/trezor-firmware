@@ -1005,6 +1005,10 @@ name = "trezor-tjpgdec"
 version = "0.1.0"
 
 [[package]]
+name = "trezor-ward"
+version = "0.1.0"
+
+[[package]]
 name = "trezor_lib"
 version = "0.0.0"
 dependencies = [
@@ -1031,6 +1035,7 @@ dependencies = [
  "sys",
  "trezor-thp",
  "trezor-tjpgdec",
+ "trezor-ward",
  "ufmt",
  "unsize",
  "upymod",

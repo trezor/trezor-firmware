@@ -79,6 +79,7 @@ spin = { version = "0.9.9", features = ["rwlock", "spin_mutex", "lazy"], default
 static-alloc = "0.2.6"
 trezor-thp = { path = "../../rust/trezor-thp" }
 trezor-tjpgdec = { version = "0.1.0", path = "../../rust/trezor-tjpgdec" }
+trezor-ward = { path = "../../rust/trezor-ward" }
 ufmt = "0.2.0"
 unsize = "1.1.0"
 without-alloc = "0.2.2"
