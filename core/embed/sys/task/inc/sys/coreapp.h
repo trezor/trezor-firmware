@@ -39,12 +39,6 @@ typedef struct {
   mpu_area_t tls;
   // API interface getter
   void* api_getter;
-  // Unprivileged SAES input buffer
-  void* saes_input;
-  // Unprivileged SAES output buffer
-  void* saes_output;
-  // Unprivileged SAES callback
-  void* saes_callback;
 } coreapp_header_t;
 
 #ifdef TREZOR_EMULATOR

@@ -26,9 +26,6 @@
 #include <sec/secure_aes.h>
 #include <sys/systick.h>
 
-#if NORCOW_MIN_VERSION <= 5
-#include "secure_aes_unpriv.h"
-#endif
 
 #include "memzero.h"
 
@@ -52,7 +49,6 @@ static uint32_t get_keysel(secure_aes_keysel_t key) {
     case SECURE_AES_KEY_BHK:
       return CRYP_KEYSEL_SW;
     case SECURE_AES_KEY_XORK_SP:
-    case SECURE_AES_KEY_XORK_SN:
       return CRYP_KEYSEL_HSW;
     default:
       return 0;
@@ -72,13 +68,6 @@ static secbool is_key_supported(secure_aes_keysel_t key) {
 
 secbool secure_aes_ecb_encrypt_hw(const uint8_t* input, size_t size,
                                   uint8_t* output, secure_aes_keysel_t key) {
-#if NORCOW_MIN_VERSION <= 5
-#ifdef USE_APPLETS
-  if (key == SECURE_AES_KEY_XORK_SN) {
-    return secure_aes_unpriv_encrypt(input, size, output, key);
-  }
-#endif
-#endif
 
   if (sectrue != is_key_supported(key)) {
     return secfalse;

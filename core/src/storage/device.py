@@ -85,14 +85,6 @@ if utils.USE_POWER_MANAGER:
 SD_SALT_AUTH_KEY_LEN_BYTES = const(16)
 
 
-def is_version_stored() -> bool:
-    return bool(common.get(_NAMESPACE, _VERSION))
-
-
-def get_version() -> bytes | None:
-    return common.get(_NAMESPACE, _VERSION)
-
-
 def set_version(version: bytes) -> None:
     common.set(_NAMESPACE, _VERSION, version)
 
