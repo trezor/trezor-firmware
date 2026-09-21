@@ -173,10 +173,10 @@ typedef struct {
 
 #define OPTIGA_ECC_KEY_COUNT 4
 #define OPTIGA_CERT_COUNT 4
-#define OPTIGA_MAX_METADATA_SIZE 44
-#define OPTIGA_RANDOM_MIN_SIZE 8
-#define OPTIGA_RANDOM_MAX_SIZE 256
-#define OPTIGA_MAX_CERT_SIZE 1728
+#define OPTIGA_MAX_METADATA_SIZE 44U
+#define OPTIGA_RANDOM_MIN_SIZE 8U
+#define OPTIGA_RANDOM_MAX_SIZE 256U
+#define OPTIGA_MAX_CERT_SIZE 1728U
 
 // The throttling delay when the security event counter is at its maximum.
 #define OPTIGA_T_MAX_MS 5000

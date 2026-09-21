@@ -40,7 +40,7 @@ static bool usb_write(uint8_t* data, size_t size) {
   ssize_t r =
       syshandle_write_blocking(SYSHANDLE_USB_DEBUG, data, size, USB_TIMEOUT);
 
-  return r == size;
+  return (r >= 0) && ((size_t)r == size);
 }
 
 static int usb_read(uint8_t* buffer, size_t buffer_size) {

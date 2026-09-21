@@ -49,7 +49,7 @@ mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
   uint8_t share_indices[SHAMIR_MAX_SHARE_COUNT] = {0};
   const uint8_t *share_values[SHAMIR_MAX_SHARE_COUNT] = {0};
   size_t value_len = 0;
-  for (int i = 0; i < share_count; ++i) {
+  for (size_t i = 0; i < share_count; ++i) {
     mp_obj_t *share = NULL;
     mp_obj_get_array_fixed_n(share_items[i], 2, &share);
     share_indices[i] = trezor_obj_get_uint8(share[0]);

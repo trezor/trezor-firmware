@@ -116,7 +116,7 @@ secbool firmware_get_vendor(char* buff, size_t buff_size) {
     return secfalse;
   }
 
-  if (buff_size < vhdr.vstr_len + 1) {
+  if (buff_size < (size_t)(vhdr.vstr_len + 1)) {
     return secfalse;
   }
 
@@ -134,7 +134,7 @@ void firmware_invalidate_header(void) {
 
   // erase start of the firmware (metadata) -> invalidate FW
   ensure(flash_unlock_write(), NULL);
-  for (int i = 0; i < (1024 / FLASH_BLOCK_SIZE); i++) {
+  for (size_t i = 0; i < (1024 / FLASH_BLOCK_SIZE); i++) {
     flash_block_t data = {0};
     ensure(flash_area_write_block(&FIRMWARE_AREA, i * FLASH_BLOCK_SIZE, data),
            NULL);

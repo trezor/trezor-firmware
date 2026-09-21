@@ -150,7 +150,7 @@ bool syslog_start_record(const log_source_t* source, log_level_t level) {
     irq_unlock(irq_key);
 #endif
 
-    int name_len = (int)MIN(source->name_len, INT32_MAX);
+    int name_len = (int)MIN(source->name_len, (size_t)INT32_MAX);
 
     dbg_console_printf("%s%" PRIu32 ".%03" PRIu32 " " ESC_COLOR_SOURCE
                        "%.*s" ESC_COLOR_NORMAL " %s ",

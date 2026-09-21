@@ -117,7 +117,7 @@ static void prodtest_backup_ram_read(cli_t* cli) {
 
   size_t offset = 0;
   while (offset < data_size) {
-    size_t block_size = MIN(16, data_size - offset);
+    size_t block_size = MIN(16U, data_size - offset);
     char block_hex[16 * 2 + 1];
     if (!cstr_encode_hex(block_hex, sizeof(block_hex), &data[offset],
                          block_size)) {

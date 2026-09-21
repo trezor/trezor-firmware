@@ -85,7 +85,7 @@ static mp_obj_t mod_trezorio_USBIF_write(mp_obj_t self, mp_obj_t msg) {
 
   ssize_t r = syshandle_write(o->handle, buf.buf, buf.len);
 
-  if (r != buf.len) {
+  if (r < 0 || (size_t)r != buf.len) {
     mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT("Write failed"));
   }
 
@@ -104,7 +104,7 @@ static mp_obj_t mod_trezorio_USBIF_read(size_t n_args, const mp_obj_t *args) {
   mp_get_buffer_raise(args[1], &buf, MP_BUFFER_WRITE);
 
   int offset = 0;
-  if (n_args >= 2) {
+  if (n_args >= 3) {
     offset = mp_obj_get_int(args[2]);
   }
 
@@ -112,7 +112,7 @@ static mp_obj_t mod_trezorio_USBIF_read(size_t n_args, const mp_obj_t *args) {
     mp_raise_ValueError(MP_ERROR_TEXT("Negative offset not allowed"));
   }
 
-  if (offset > buf.len) {
+  if ((size_t)offset > buf.len) {
     mp_raise_ValueError(MP_ERROR_TEXT("Offset out of bounds"));
   }
 

@@ -296,7 +296,7 @@ bool ble_get_event(ble_event_t *event) {
   ssize_t r = sock_recvfrom(&drv->event_sock, buf, sizeof(buf));
   if (r <= 0) {
     return false;
-  } else if (r > sizeof(ble_event_t)) {
+  } else if ((size_t)r > sizeof(ble_event_t)) {
     LOG_ERR("event packet too long: %zd", r);
     return false;
   }

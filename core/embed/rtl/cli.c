@@ -282,7 +282,7 @@ static void cli_history_add(cli_t* cli, const char* line) {
 //
 // Returns NULL if there are no more commands
 static const char* cli_history_rev(cli_t* cli, int* idx, char* line,
-                                   int prefix) {
+                                   size_t prefix) {
   for (int i = *idx + 1; i <= CLI_HISTORY_DEPTH; i++) {
     const char* hist_line = cli->history[INDEX_ADD(cli->history_head, -i)];
     if (*hist_line == '\0') break;
@@ -301,7 +301,7 @@ static const char* cli_history_rev(cli_t* cli, int* idx, char* line,
 //
 // Returns NULL if there are no more commands
 static const char* cli_history_fwd(cli_t* cli, int* idx, char* line,
-                                   int prefix) {
+                                   size_t prefix) {
   for (int i = *idx - 1; i > 0; i--) {
     const char* hist_line = cli->history[INDEX_ADD(cli->history_head, -i)];
     if (strlen(hist_line) >= prefix && strncmp(hist_line, line, prefix) == 0) {
@@ -749,7 +749,7 @@ static int find_arg(const cli_command_t* cmd, const char* name) {
       p++;
     }
 
-    if (strlen(name) == (p - s) && strncmp(s, name, p - s) == 0) {
+    if ((ptrdiff_t)strlen(name) == (p - s) && strncmp(s, name, p - s) == 0) {
       return index;
     }
 
@@ -766,16 +766,14 @@ static int find_arg(const cli_command_t* cmd, const char* name) {
 
 size_t cli_arg_count(cli_t* cli) { return cli->args_count; }
 
-bool cli_has_nth_arg(cli_t* cli, int n) {
-  return n >= 0 && n < cli->args_count;
-}
+bool cli_has_nth_arg(cli_t* cli, size_t n) { return n < cli->args_count; }
 
 bool cli_has_arg(cli_t* cli, const char* name) {
   return cli_has_nth_arg(cli, find_arg(cli->current_cmd, name));
 }
 
-const char* cli_nth_arg(cli_t* cli, int n) {
-  if (n >= 0 && n < cli->args_count) {
+const char* cli_nth_arg(cli_t* cli, size_t n) {
+  if (n < cli->args_count) {
     return cli->args[n];
   } else {
     return "";

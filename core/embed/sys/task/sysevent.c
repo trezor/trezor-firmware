@@ -394,7 +394,8 @@ ssize_t syshandle_write_blocking(syshandle_t handle, const void *data,
       ssize_t written = syshandle_write(handle, ptr, remaining);
 
       if (written < 0) {
-        return remaining == data_size ? written : data_size - remaining;
+        return remaining == data_size ? written
+                                      : (ssize_t)(data_size - remaining);
       }
 
       ptr += written;

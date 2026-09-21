@@ -226,9 +226,9 @@ static secbool secret_record_present(uint32_t offset, uint32_t len) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
 
-  int secret_empty_bytes = 0;
+  uint32_t secret_empty_bytes = 0;
 
-  for (int i = 0; i < len; i++) {
+  for (uint32_t i = 0; i < len; i++) {
     // 0xFF being the default value of the flash memory (before any write)
     // 0x00 being the value of the flash memory after manual erase
     if (secret[i] == 0xFF || secret[i] == 0x00) {
@@ -269,9 +269,9 @@ secbool secret_key_writable(uint8_t slot) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
 
-  int secret_empty_bytes = 0;
+  uint32_t secret_empty_bytes = 0;
 
-  for (int i = 0; i < len; i++) {
+  for (uint32_t i = 0; i < len; i++) {
     // 0xFF being the default value of the flash memory (before any write)
     // 0x00 being the value of the flash memory after manual erase
     if (secret[i] == 0xFF) {
@@ -296,12 +296,12 @@ static void secret_key_cache(uint8_t slot) {
   volatile uint32_t *reg = &TAMP->BKP0R;
   reg += reg_offset;
   if (sectrue == ok) {
-    for (int i = 0; i < (len / sizeof(uint32_t)); i++) {
+    for (uint32_t i = 0; i < (len / sizeof(uint32_t)); i++) {
       *reg = secret[i];
       reg++;
     }
   } else {
-    for (int i = 0; i < (len / sizeof(uint32_t)); i++) {
+    for (uint32_t i = 0; i < (len / sizeof(uint32_t)); i++) {
       *reg = 0;
       reg++;
     }
@@ -351,7 +351,7 @@ secbool secret_key_get(uint8_t slot, uint8_t *dest, size_t len) {
 
   bool all_zero = true;
   volatile uint32_t *reg = &TAMP->BKP0R;
-  for (int i = 0; i < (len / sizeof(uint32_t)); i++) {
+  for (size_t i = 0; i < (len / sizeof(uint32_t)); i++) {
     secret[i] = reg[i + reg_offset];
 
     if (secret[i] != 0) {
@@ -376,7 +376,7 @@ __attribute__((unused)) static void secret_key_uncache(uint8_t slot) {
   uint32_t slot_len = secret_get_slot_len(slot);
 
   volatile uint32_t *reg = &TAMP->BKP0R;
-  for (int i = 0; i < slot_len / sizeof(uint32_t); i++) {
+  for (uint32_t i = 0; i < slot_len / sizeof(uint32_t); i++) {
     reg[i + reg_offset] = 0;
   }
 }
@@ -409,12 +409,12 @@ static void secret_bhk_load(void) {
 
   volatile uint32_t *reg1 = &TAMP->BKP0R;
   if (sectrue == ok) {
-    for (int i = 0; i < (SECRET_BHK_LEN / sizeof(uint32_t)); i++) {
+    for (size_t i = 0; i < (SECRET_BHK_LEN / sizeof(uint32_t)); i++) {
       *reg1 = ((uint32_t *)secret)[i];
       reg1++;
     }
   } else {
-    for (int i = 0; i < (SECRET_BHK_LEN / sizeof(uint32_t)); i++) {
+    for (size_t i = 0; i < (SECRET_BHK_LEN / sizeof(uint32_t)); i++) {
       *reg1 = 0;
       reg1++;
     }
@@ -429,7 +429,7 @@ void secret_bhk_regenerate(void) {
   ensure(flash_area_erase(&BHK_AREA, NULL), "Failed regenerating BHK");
   ensure(flash_unlock_write(), "Failed regenerating BHK");
   uint32_t val[8] = {0};
-  for (int j = 0; j < ARRAY_LENGTH(val); j++) {
+  for (size_t j = 0; j < ARRAY_LENGTH(val); j++) {
     val[j] = rng_get();
   }
   secbool res = flash_area_write_data(&BHK_AREA, 0, val, sizeof(val));

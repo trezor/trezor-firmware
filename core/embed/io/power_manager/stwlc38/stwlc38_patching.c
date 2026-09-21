@@ -324,7 +324,6 @@ static i2c_status_t stwlc38_nvm_write_sector(i2c_bus_t *i2c_bus,
                                              const uint8_t *data, size_t size,
                                              uint8_t sec_idx) {
   int32_t ret;
-  int32_t i;
   int32_t timeout = 1;
   uint8_t reg;
 
@@ -374,7 +373,7 @@ static i2c_status_t stwlc38_nvm_write_sector(i2c_bus_t *i2c_bus,
     return ret;
   }
 
-  for (i = 0; i < STWLC38_NVM_WRITE_TIMEOUT; i++) {
+  for (size_t i = 0; i < STWLC38_NVM_WRITE_TIMEOUT; i++) {
     systick_delay_ms(STWLC38_NVM_WRITE_INTERVAL_MS);
 
     ret = stwlc38_read_fw_register(i2c_bus, STWLC38_FWREG_SYS_CMD_REG, &reg);

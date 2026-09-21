@@ -76,7 +76,7 @@ static uint32_t check_sdcard(void) {
       return 0;
     }
 
-    for (int i = IMAGE_HASH_DIGEST_LENGTH; i < sizeof(hdr->hashes); i++) {
+    for (size_t i = IMAGE_HASH_DIGEST_LENGTH; i < sizeof(hdr->hashes); i++) {
       if (hdr->hashes[i] != 0) {
         return 0;
       }
