@@ -132,7 +132,6 @@
     "exact": [
       "ethereum__approve_revoke",
       "fido__title_reset",
-      "passphrase__access_wallet",
       "pin__enabled",
       "progress__locking_device",
       "recovery__enter_different_share",
@@ -350,7 +349,6 @@
       "instructions__menu_to_continue",
       "instructions__shares_start_with_x_template",
       "lockscreen__unlock",
-      "passphrase__access_hidden_wallet",
       "pin__setup_completed",
       "recovery__share_does_not_match",
       "recovery__share_from_group_entered_template",

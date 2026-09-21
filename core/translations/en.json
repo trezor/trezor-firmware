@@ -1776,17 +1776,11 @@
       "Eckhart": ""
     },
     "nostr__event_kind_template": "Event kind: {0}",
-    "passphrase__access_hidden_wallet": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Access Passphrase wallet"
-    },
     "passphrase__access_wallet": {
       "Bolt": "Access Passphrase wallet?",
       "Caesar": "Access Passphrase wallet?",
       "Delizia": "Access Passphrase wallet?",
-      "Eckhart": ""
+      "Eckhart": "Access Passphrase wallet"
     },
     "passphrase__always_on_device": "Always enter your passphrase on Trezor?",
     "passphrase__continue_with_empty_passphrase": "Continue with empty passphrase?",

@@ -226,7 +226,7 @@ async def confirm_hidden_passphrase_from_host() -> None:
         "passphrase_host1_hidden",
         TR.passphrase__wallet,
         description=TR.passphrase__from_host_not_shown,
-        verb=TR.passphrase__access_hidden_wallet,
+        verb=TR.passphrase__access_wallet,
     )
 
 
