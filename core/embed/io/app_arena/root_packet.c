@@ -258,9 +258,9 @@ ts_t root_packet_verify(const void* data, size_t size,
 
   TSH_CHECK(popcount(sigmask) == ARRAY_LENGTH(unauth->signature), TS_EBADMSG);
 
-  for (int sig_idx = 0; sig_idx < ARRAY_LENGTH(unauth->signature); sig_idx++) {
+  for (size_t sig_idx = 0; sig_idx < ARRAY_LENGTH(unauth->signature); sig_idx++) {
     // Get the index of the public key in the signature mask
-    int key_idx = __builtin_ctz(sigmask);
+    size_t key_idx = __builtin_ctz(sigmask);
     TSH_CHECK(key_idx < ARRAY_LENGTH(ROOT_PACKET_KEYS), TS_EBADMSG);
 
     secbool valid = secfalse;
