@@ -10,6 +10,21 @@
     "description": "THP related strings only in Eckhart"
   },
   {
+    "prefix": "n1w1__",
+    "allowedLayouts": [ "Eckhart" ],
+    "description": "N1W1 tag backup only in Eckhart"
+  },
+  {
+    "exact": [
+      "backup__type_create",
+      "backup__type_have",
+      "backup__type_n1w1",
+      "backup__type_wordlist"
+    ],
+    "allowedLayouts": [ "Eckhart" ],
+    "description": "Backup method selection only in Eckhart"
+  },
+  {
     "prefix": "sd_card__",
     "allowedLayouts": [ "Bolt", "Delizia" ],
     "description": "Only Bolt and Delizia have SD card support"
@@ -86,6 +101,7 @@
       "buttons__disconnect",
       "buttons__forget",
       "buttons__review",
+      "regulatory__title",
       "wipe_code__change",
       "wipe_code__remove",
       "wipe_code__title",
@@ -360,6 +376,7 @@
   {
     "exact": [
       "brightness__changed_title",
+      "ethereum__subtitle_input_data_bytes",
       "fido__more_credentials",
       "homescreen__settings_title",
       "instructions__hold_to_confirm",
@@ -386,8 +403,12 @@
       "address__public_key_confirmed",
       "buttons__continue_anyway",
       "buttons__view_all_data",
+      "ethereum__auth_done",
+      "ethereum__delegate_done",
+      "ethereum__revoke_done",
       "fido__select_intro",
       "homescreen__set_default",
+      "instructions__continue_holding",
       "instructions__continue_in_app",
       "instructions__enter_next_share",
       "instructions__hold_to_sign",
@@ -404,6 +425,7 @@
   {
     "exact": [
       "address__check_with_source",
+      "address__warning_not_yours",
       "backup__not_recommend",
       "buttons__authenticate",
       "homescreen__backup_needed_info",
