@@ -21,8 +21,8 @@ if TYPE_CHECKING:
         EthereumERC7730FieldInfo,
         EthereumTokenInfo,
     )
-    from trezorui_api import StrPropertyType
     from trezor.ui.layouts.properties import AboveThreshold
+    from trezorui_api import StrPropertyType
     from typing_extensions import Self
 
     from apps.common.payment_request import PaymentRequestVerifier
@@ -46,8 +46,17 @@ if TYPE_CHECKING:
     # Assumes that the memoryview contains just that value.
     Parser = Callable[[memoryview], Value]
 
-    # One displayed row: ((label, formatted value, is_mono), token, token_address)
-    DisplayedField = tuple[
+    # Output of a `FieldFormatter.format`
+    # (formatted value, token, token_address)
+    FormattedValue = tuple[
+        str | AboveThreshold | None,
+        EthereumTokenInfo | None,
+        AnyBytes | None,
+    ]
+
+    # Rendered value. 1st member is essentially StrPropertyType
+    # ((label, formatted value, is_mono), token, token_address)
+    RenderedField = tuple[
         tuple[str, str | AboveThreshold | None, bool | None],
         EthereumTokenInfo | None,
         AnyBytes | None,
@@ -280,7 +289,7 @@ class FieldFormatter:
         msg: MsgInSignTx,
         defs: Definitions,
         path_walker: PathWalker,
-    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> FormattedValue:
         """
         Format a field using the current formatter.
         Return the formatted value and optionally a token and a token address,
@@ -297,7 +306,7 @@ class AddressNameFormatter(FieldFormatter):
         _msg: MsgInSignTx,
         defs: Definitions,
         _path_walker: PathWalker,
-    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> FormattedValue:
         if address is None:
             return None, None, None
         elif isinstance(address, str):
@@ -315,7 +324,7 @@ class AmountFormatter(FieldFormatter):
         _msg: MsgInSignTx,
         defs: Definitions,
         _path_walker: PathWalker,
-    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> FormattedValue:
         if amount is None:
             return None, None, None
         else:
@@ -349,7 +358,7 @@ class TokenAmountFormatter(FieldFormatter):
         msg: MsgInSignTx,
         defs: Definitions,
         path_walker: PathWalker,
-    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> FormattedValue:
         """Returns (formatted_value, token, token_address)"""
         from trezor.ui.layouts.properties import AboveThreshold
 
@@ -425,7 +434,7 @@ class UnitFormatter(FieldFormatter):
         _msg: MsgInSignTx,
         _definitions: Definitions,
         _path_walker: PathWalker,
-    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> FormattedValue:
         if value is None:
             return None, None, None
         else:
@@ -471,7 +480,7 @@ class RawFormatter(FieldFormatter):
         _msg: MsgInSignTx,
         _definitions: Definitions,
         _path_walker: PathWalker,
-    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> FormattedValue:
         if value is None:
             return None, None, None
         elif isinstance(value, str):
@@ -497,7 +506,7 @@ class DateFormatter(FieldFormatter):
         _msg: MsgInSignTx,
         _definitions: Definitions,
         _path_walker: PathWalker,
-    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> FormattedValue:
         from trezor.strings import format_timestamp
 
         if value is None:
@@ -539,7 +548,7 @@ class EnumFormatter(FieldFormatter):
         _msg: MsgInSignTx,
         _definitions: Definitions,
         _path_walker: PathWalker,
-    ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+    ) -> FormattedValue:
         if value is None:
             return None, None, None
         if isinstance(value, (bytes, bytearray)):
@@ -559,7 +568,7 @@ async def _format_field_value(
     msg: MsgInSignTx,
     defs: Definitions,
     path_walker: PathWalker,
-) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
+) -> FormattedValue:
     """Format a field value.
 
     When the field's path resolves to an array (a `list`), the formatter is
@@ -942,8 +951,6 @@ class DisplayFormat:
         self.field_definitions = field_definitions
         self.provider_name = provider_name
 
-        self.parameters = []
-
     def matches_context(self, chain_id: int, address: bytes) -> bool:
         if self.binding_context is None:
             # applies to anything without context verification
@@ -963,8 +970,10 @@ class DisplayFormat:
         defs: Definitions,
         nested: bool = False,
         override_callee: bytes | None = None,
-    ) -> tuple[list[AnyValue], list[DisplayedField]]:
+    ) -> tuple[list[AnyValue], list[RenderedField]]:
         """Parse `calldata` (without the selector) and format the display fields.
+
+        Loosely speaking, it returns ([parameter = parsed value], [formatted value])
 
         `nested` marks the parse of an embedded subcall's calldata (see
         `_expand_calldata_field`): container paths other than `@.to` are
@@ -1058,7 +1067,7 @@ class DisplayFormat:
                     raise InvalidFormatDefinition
                 return p
 
-        fields: list[DisplayedField] = []
+        fields: list[RenderedField] = []
         for field_definition in self.field_definitions:
             try:
                 formatter = field_definition.get_formatter()
@@ -1187,7 +1196,7 @@ async def _expand_calldata_field(
     msg: MsgInSignTx,
     defs: Definitions,
     nested: bool,
-) -> list[DisplayedField]:
+) -> list[RenderedField]:
     """Expand one `calldata` field into display rows.
 
     The field's path resolves either to one `bytes` blob of embedded calldata
@@ -1211,7 +1220,7 @@ async def _expand_calldata_field(
         # Same callee for all subcalls
         callees = [callees] * len(blobs)
 
-    rows: list[DisplayedField] = []
+    rows: list[RenderedField] = []
     for i, (blob, callee) in enumerate(zip(blobs, callees)):
         rows.extend(
             await _expand_one_subcall(
@@ -1237,7 +1246,7 @@ async def _expand_one_subcall(
     defs: Definitions,
     nested: bool,
     index: int | None = None,
-) -> list[DisplayedField]:
+) -> list[RenderedField]:
     """Expand one embedded subcall into display rows.
 
     On success the rows are the subcall's provider and intent, followed by
@@ -1265,7 +1274,7 @@ async def _expand_one_subcall(
             callee, defs.network
         )
 
-    def raw_rows() -> list[DisplayedField]:
+    def raw_rows() -> list[RenderedField]:
         """No subparsing. Show the callee and the raw hex blob."""
         to_label = TR.ethereum__subcall_to
         blob_label = field_definition.label
@@ -1310,7 +1319,7 @@ async def _expand_one_subcall(
             )
         return raw_rows()
 
-    rows: list[DisplayedField] = [
+    rows: list[RenderedField] = [
         (
             (
                 f"({subcall}) {TR.words__provider}",
