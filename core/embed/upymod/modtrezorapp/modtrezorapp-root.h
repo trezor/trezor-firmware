@@ -38,14 +38,15 @@ typedef struct {
 
 // Version 1 of the AppRootState structure
 typedef struct {
-  // timestamp for the three rings
-  uint32_t timestamp[3];
+  // timestamp for the three rings (3 intentionally hardcoded for v1)
+  int64_t timestamp[3];
 } app_root_state_v1_t;
 
 // Encoded representation of the AppRootState structure
 typedef struct {
   // version of the encoded structure (v1 => 1)
   uint32_t version;
+  uint32_t reserved;
   union {
     app_root_state_v1_t v1;
   } data;
@@ -113,11 +114,12 @@ cleanup:
   TSH_RETURN;
 }
 
-/// def __init__(self, min_timestamp: uint | None, state: bytes | None = None)
-/// -> None:
+// clang-format off
+/// def __init__(self, min_timestamp: int | None = None, state: bytes | None = None, /) -> None:
 ///     """
 ///     Creates an AppRootState object.
 ///     """
+// clang-format on
 static mp_obj_t mod_trezorapp_AppRootState_make_new(const mp_obj_type_t *type,
                                                     size_t n_args, size_t n_kw,
                                                     const mp_obj_t *args) {
@@ -140,7 +142,7 @@ static mp_obj_t mod_trezorapp_AppRootState_make_new(const mp_obj_type_t *type,
 
   // Apply the minimum timestamp to the ring timestamps
   if (n_args >= 1 && args[0] != mp_const_none) {
-    mp_uint_t min_timestamp = mp_obj_get_uint(args[0]);
+    int64_t min_timestamp = mp_obj_get_ll(args[0]);
     for (size_t i = 0; i < APP_RING_COUNT; i++) {
       o->state.ring_timestamp[i] =
           MAX(min_timestamp, o->state.ring_timestamp[i]);

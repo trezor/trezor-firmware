@@ -796,7 +796,7 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutil_get_scm_revision_obj,
 ///     The JSON file can be decoded by analyze-memory-dump.py
 ///     """
 static mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
-  FILE* out = NULL;
+  FILE *out = NULL;
   if (filename != mp_const_none) {
     size_t fn_len = 0;
     out = fopen(mp_obj_str_get_data(filename, &fn_len), "w");

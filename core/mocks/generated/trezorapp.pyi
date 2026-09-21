@@ -159,8 +159,7 @@ class AppRootState:
     be retrieved from or stored in persistent storage.
     """
 
-    def __init__(self, min_timestamp: int | None, state: bytes | None = None)
-    -> None:
+    def __init__(self, min_timestamp: int | None = None, state: bytes | None = None, /) -> None:
         """
         Creates an AppRootState object.
         """

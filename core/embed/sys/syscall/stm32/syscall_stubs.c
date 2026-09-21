@@ -1015,7 +1015,7 @@ bool app_root_is_loaded(app_ring_t ring) {
   return (bool)syscall_invoke1(ring, SYSCALL_APP_ROOT_IS_LOADED);
 }
 
-ts_t app_root_get_timestamp(app_ring_t ring, uint32_t *timestamp) {
+ts_t app_root_get_timestamp(app_ring_t ring, int64_t *timestamp) {
   return ts_make(syscall_invoke2(ring, (uint32_t)timestamp,
                                  SYSCALL_APP_ROOT_GET_TIMESTAMP));
 }
