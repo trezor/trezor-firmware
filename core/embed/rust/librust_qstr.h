@@ -543,12 +543,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_paint;
   MP_QSTR_paired_devices;
   MP_QSTR_pairing_state;
-  MP_QSTR_passphrase__access_hidden_wallet;
   MP_QSTR_passphrase__access_wallet;
   MP_QSTR_passphrase__always_on_device;
   MP_QSTR_passphrase__continue_with_empty_passphrase;
   MP_QSTR_passphrase__from_host_not_shown;
-  MP_QSTR_passphrase__hidden_wallet;
   MP_QSTR_passphrase__hide;
   MP_QSTR_passphrase__next_screen_will_show_passphrase;
   MP_QSTR_passphrase__please_enter;
