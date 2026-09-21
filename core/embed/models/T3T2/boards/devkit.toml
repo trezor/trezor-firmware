@@ -2,8 +2,8 @@ header = "T3T2/boards/devkit.h"
 emulator_header = "T3T2/boards/unix.h"
 
 [display]
-driver = "io/display_mi0200aet1"
-panel = "io/display_panel_mi0200aet1"
+driver = "io/display_wf24ltyajdng10"
+panel = "io/display_panel_wf24ltyajdng10"
 
 [backlight]
 driver = "io/backlight_pwm"

@@ -17,19 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Shared display driver core for the ST7789V2-over-4-wire-SPI panel family
-// used on the T3T2 devkit board (AVNet/Multi-Inno MI0240AGT-5CP1-F and
-// MI0200AET-1). This is a self-contained SPI display driver (like vg-2864),
-// not a display_i8080 panel.
+// Shared display driver core for the 4-wire-SPI panel family used on the
+// T3T2 devkit board (AVNet/Multi-Inno MI0240AGT-5CP1-F and MI0200AET-1,
+// controller ST7789V2; AVNet/Winstar WF24LTYAJDNG10, controller ILI9341V).
+// This is a self-contained SPI display driver (like vg-2864), not a
+// display_i8080 panel.
 //
-// The two panels are electrically pin-compatible on this board (RESET, D/C
-// and the SPI2 bus pins are wired identically - see devkit.h) and share an
-// identical register-level init sequence, differing only in whether the
-// IM[2:0] mode-select pins are wired to the MCU. That difference - and the
-// per-panel register init sequence / orientation (MADCTL) handling - is
-// factored out into panels/*.c, dispatched below via the same
-// #ifdef DISPLAY_PANEL_* convention used by the display_i8080 driver family
-// (see i8080/display_panel.c).
+// All three panels are electrically pin-compatible on this board (RESET,
+// D/C and the SPI2 bus pins are wired identically - see devkit.h). The
+// st7789v2_cmd/st7789v2_data/st7789v2_data1 transport helpers below are
+// electrically generic 4-wire-SPI primitives (bit-banged CS/DC +
+// HAL_SPI_Transmit) with no ST7789V2-specific behavior, so WF24LTYAJDNG10
+// reuses them despite its different controller IC - see the file header
+// comment in panels/wf24ltyajdng10.c for the ST7789V2-vs-ILI9341V register
+// differences that file works around. The panels differ in their
+// register-level init sequence, orientation (MADCTL) handling, and whether
+// the IM[2:0] mode-select pins are wired to the MCU - factored out into
+// panels/*.c, dispatched below via the same #ifdef DISPLAY_PANEL_*
+// convention used by the display_i8080 driver family (see
+// i8080/display_panel.c).
 
 #pragma GCC optimize ("O0")
 
@@ -64,6 +70,13 @@
 #include "panels/mi0200aet1.h"
 #define PANEL_INIT_SEQ mi0200aet1_init_seq
 #define PANEL_ROTATE mi0200aet1_rotate
+
+#elif defined(DISPLAY_PANEL_WF24LTYAJDNG10)
+
+#include "panels/wf24ltyajdng10.h"
+#define PANEL_INIT_SEQ wf24ltyajdng10_init_seq
+#define PANEL_ROTATE wf24ltyajdng10_rotate
+#define PANEL_SELECT_INTERFACE_MODE wf24ltyajdng10_select_interface_mode
 
 #else
 #error "No display panel defined"
@@ -131,10 +144,12 @@ static bool display_init_spi(display_driver_t *drv) {
   return (HAL_OK == HAL_SPI_Init(&drv->spi)) ? true : false;
 }
 
-// Sends specified number of bytes to the display via SPI interface
+// Sends data to the display via SPI interface
 //
-// `len` must not exceed 65535 (HAL_SPI_Transmit's `Size` is a uint16_t) -
-// callers with larger buffers must split the transfer into chunks.
+// `len` is a count of SPI elements (bytes, or - while drv->spi is
+// configured for SPI_DATASIZE_16BIT - 16-bit words) and must not exceed
+// 65535 (HAL_SPI_Transmit's `Size` is a uint16_t) - callers with larger
+// buffers must split the transfer into chunks.
 static void display_send_bytes(display_driver_t *drv, const uint8_t *data,
                                size_t len) {
   if (HAL_OK != HAL_SPI_Transmit(&drv->spi, (uint8_t *)data, len, 1000)) {
@@ -177,18 +192,59 @@ static void display_sync_with_fb(display_driver_t *drv) {
   HAL_GPIO_WritePin(DISPLAY_DC_PORT, DISPLAY_DC_PIN, GPIO_PIN_SET);
   HAL_GPIO_WritePin(DISPLAY_SPI_CS_PORT, DISPLAY_SPI_CS_PIN, GPIO_PIN_RESET);
 
-  // Sent as-is (no byte-swap). Both panels' PANEL_INIT_SEQ() otherwise follow
-  // their vendor reference code verbatim, but each now explicitly writes
-  // RAMCTRL.ENDIAN=1 (Little Endian) rather than leaving it at the vendor
-  // reference's Big Endian - see each panel's file header NOTE for the
-  // hardware evidence (mi0240agt5cp1f's reference also has RM=1/DM=01, RGB
-  // interface, which produces a blank screen on this SPI-only-wired board
-  // and had to be deviated from regardless; mi0200aet1's reference never
-  // wrote RAMCTRL at all, silently leaving ENDIAN at its reset-default 0).
-  // ENDIAN=1 is required to match our framebuf's native little-endian
-  // uint16_t pixel storage (LSB first) - Big Endian expects the MSB of each
-  // pixel first and produces a color-channel-swap/gradient-stripe pattern
-  // instead, as confirmed on real hardware on both panels.
+  // ST7789V2 siblings (mi0240agt5cp1f, mi0200aet1): sent as-is (no
+  // byte-swap). Both panels' PANEL_INIT_SEQ() otherwise follow their vendor
+  // reference code verbatim, but each now explicitly writes RAMCTRL.ENDIAN=1
+  // (Little Endian) rather than leaving it at the vendor reference's Big
+  // Endian - see each panel's file header NOTE for the hardware evidence
+  // (mi0240agt5cp1f's reference also has RM=1/DM=01, RGB interface, which
+  // produces a blank screen on this SPI-only-wired board and had to be
+  // deviated from regardless; mi0200aet1's reference never wrote RAMCTRL at
+  // all, silently leaving ENDIAN at its reset-default 0). ENDIAN=1 is
+  // required to match our framebuf's native little-endian uint16_t pixel
+  // storage (LSB first) - Big Endian expects the MSB of each pixel first and
+  // produces a color-channel-swap/gradient-stripe pattern instead, as
+  // confirmed on real hardware on both panels.
+#ifdef DISPLAY_PANEL_WF24LTYAJDNG10
+  // WF24LTYAJDNG10 (controller ILI9341V): the controller always expects each
+  // pixel's high byte (R4-R0,G5-G3) first, low byte (G2-G0,B4-B0) second -
+  // datasheet section 7.6.2. ILI9341V's Interface Control (0xF6) ENDIAN bit
+  // is documented (datasheet section 8.3.28) as valid "only [for] 65K 8-bit
+  // and 9-bit MCU interface mode" - i.e. the parallel interface. This panel
+  // is wired for the 4-line 8-bit *serial* interface (see
+  // wf24ltyajdng10_select_interface_mode), so ENDIAN has no effect there
+  // regardless of its setting. This was confirmed on real hardware: an
+  // ENDIAN=1 IFCTL write (the ST7789V2-analog fix, mirroring RAMCTRL.ENDIAN
+  // above) made no difference to the symptom by itself - only toggling
+  // MADCTL_BGR changed anything, and neither MADCTL_BGR value alone
+  // produces correct color (0x48/BGR=1 gives a 3-way R/G/B channel
+  // rotation, 0x40/BGR=0 gives a G/B swap with R only coincidentally
+  // correct) because the real fault is a byte-order mismatch, not a
+  // channel-routing one. See wf24ltyajdng10.c's file header NOTE.
+  //
+  // Rather than software-copying the whole frame through a byte-swap
+  // buffer, get the SPI peripheral to do the reordering as a side effect of
+  // its own shift register: our framebuf already stores each pixel as a
+  // native little-endian uint16_t (low byte at the lower address), so a
+  // plain 16-bit-wide SPI transfer reads each pixel with a native memory
+  // load and - since FirstBit is MSB - clocks its high byte out first, then
+  // its low byte: exactly the order the controller wants, straight out of
+  // drv->framebuf, with no extra buffer or copy.
+  drv->spi.Init.DataSize = SPI_DATASIZE_16BIT;
+  HAL_SPI_Init(&drv->spi);
+
+  const uint8_t *src = drv->framebuf;
+  size_t remaining_px = FRAME_BUFFER_SIZE / sizeof(uint16_t);
+  while (remaining_px > 0) {
+    size_t n = (remaining_px < MAX_CHUNK) ? remaining_px : MAX_CHUNK;
+    display_send_bytes(drv, src, n);
+    src += n * sizeof(uint16_t);
+    remaining_px -= n;
+  }
+
+  drv->spi.Init.DataSize = SPI_DATASIZE_8BIT;
+  HAL_SPI_Init(&drv->spi);
+#else
   const uint8_t *src = drv->framebuf;
   size_t remaining = FRAME_BUFFER_SIZE;
   while (remaining > 0) {
@@ -197,6 +253,7 @@ static void display_sync_with_fb(display_driver_t *drv) {
     src += n;
     remaining -= n;
   }
+#endif
 
   HAL_GPIO_WritePin(DISPLAY_SPI_CS_PORT, DISPLAY_SPI_CS_PIN, GPIO_PIN_SET);
 

@@ -35,6 +35,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         add_driver_mi0240agt5cp1f(lib)?;
     } else if cfg!(feature = "display_mi0200aet1") {
         add_driver_mi0200aet1(lib)?;
+    } else if cfg!(feature = "display_wf24ltyajdng10") {
+        add_driver_wf24ltyajdng10(lib)?;
     } else if cfg!(feature = "display_stm32f429i_disc1") {
         add_driver_stm32f429i_disc1(lib)?;
     } else {
@@ -106,6 +108,14 @@ fn set_panel_mi0240agt5cp1f(lib: &mut CLibrary) {
 fn set_panel_mi0200aet1(lib: &mut CLibrary) {
     lib.add_defines([
         ("DISPLAY_PANEL_MI0200AET1", Some("1")),
+        ("DISPLAY_RESX", Some("240")),
+        ("DISPLAY_RESY", Some("320")),
+    ]);
+}
+
+fn set_panel_wf24ltyajdng10(lib: &mut CLibrary) {
+    lib.add_defines([
+        ("DISPLAY_PANEL_WF24LTYAJDNG10", Some("1")),
         ("DISPLAY_RESX", Some("240")),
         ("DISPLAY_RESY", Some("320")),
     ]);
@@ -308,6 +318,30 @@ fn add_driver_mi0200aet1(lib: &mut CLibrary) -> Result<()> {
     if cfg!(feature = "mcu_stm32u58") {
         lib.add_source("display/st7789v2_spi/display_driver.c");
         lib.add_source("display/st7789v2_spi/panels/mi0200aet1.c");
+    } else {
+        bail_unsupported!();
+    }
+    Ok(())
+}
+
+// AVNet/Winstar WF24LTYAJDNG10, 2.4" 240x320 TFT, ILI9341V controller wired
+// for 4-wire 8-bit serial (SPI) mode - electrically pin-compatible with
+// mi0240agt5cp1f above on this board (same RESET/DC/SPI2/IM[2:0] wiring and
+// same IM[2:0]=1,1,0 strapping - see devkit.h), despite the different
+// controller IC. Shares the st7789v2_spi driver core with mi0240agt5cp1f/
+// mi0200aet1 above (that core's transport helpers are electrically generic,
+// not ST7789V2-specific - see display/st7789v2_spi/display_driver.c) - see
+// display/st7789v2_spi/panels/wf24ltyajdng10.c for the panel-specific
+// register init sequence / orientation handling / IM-pin setup.
+fn add_driver_wf24ltyajdng10(lib: &mut CLibrary) -> Result<()> {
+    if cfg!(feature = "display_panel_wf24ltyajdng10") {
+        set_panel_wf24ltyajdng10(lib);
+    } else {
+        bail_unsupported!();
+    }
+    if cfg!(feature = "mcu_stm32u58") {
+        lib.add_source("display/st7789v2_spi/display_driver.c");
+        lib.add_source("display/st7789v2_spi/panels/wf24ltyajdng10.c");
     } else {
         bail_unsupported!();
     }
