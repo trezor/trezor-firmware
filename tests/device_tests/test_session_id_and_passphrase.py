@@ -484,7 +484,7 @@ def test_hide_passphrase_from_host(test_ctx: TrezorTestContext):
             assert any(
                 needle in title
                 for needle in [
-                    TR.passphrase__hidden_wallet,
+                    TR.passphrase__wallet,
                     TR.passphrase__title_confirm,
                 ]
             )
