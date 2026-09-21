@@ -104,14 +104,12 @@ async def bootscreen() -> None:
                 if utils.USE_RGB_LED:
                     io.rgb_led.rgb_led_set_enabled(storage.device.get_rgb_led())
                 await pin_unlock_sequence()
-                storage.init_unlocked()
                 allow_all_loader_messages()
                 break
             else:
                 # Even if PIN is not configured, storage needs to be unlocked, unless it has just been initialized.
                 if not config.is_unlocked():
                     await verify_user_pin()
-                storage.init_unlocked()
                 enforce_welcome_screen_duration()
                 rotation = storage.device.get_rotation()
                 if utils.USE_TOUCH_WAKEUP:

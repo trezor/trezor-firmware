@@ -47,9 +47,6 @@ void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv);
 // 8KB to cover the entire specified range.
 void tz_set_flash_unsecure(uint32_t start, uint32_t size, bool unsecure);
 
-// Sets unprivileged access to the SAES peripheral.
-void tz_set_saes_unpriv(bool unpriv);
-
 // Sets unprivileged access to the TAMP peripheral.
 void tz_set_tamper_unpriv(bool unpriv);
 

@@ -275,12 +275,6 @@ void tz_set_flash_unsecure(uint32_t start, uint32_t size, bool unsecure) {
   __ISB();
 }
 
-void tz_set_saes_unpriv(bool unpriv) {
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(
-      GTZC_PERIPH_SAES,
-      unpriv ? GTZC_TZSC_PERIPH_NPRIV : GTZC_TZSC_PERIPH_PRIV);
-}
-
 void tz_set_tamper_unpriv(bool unpriv) {
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_TAMP,

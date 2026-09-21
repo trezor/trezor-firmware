@@ -50,6 +50,6 @@
 #define RSOD_INFINITE_LOOP 1
 
 #define NORCOW_SECTOR_SIZE (8 * 8 * 1024)  // 64 kB
-#define NORCOW_MIN_VERSION 0x00000005
+#define NORCOW_MIN_VERSION 0x00000006
 
 #include "memory.h"

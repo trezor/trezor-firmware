@@ -18,15 +18,5 @@ coreapp_header:
   .word 0
 #endif
 
-#if USE_STORAGE_HWKEY
-  .word saes_unpriv_input
-  .word saes_unpriv_output
-  .word saes_unpriv_callback
-#else
-  .word 0
-  .word 0
-  .word 0
-#endif
-
 
   .end

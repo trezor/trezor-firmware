@@ -42,5 +42,6 @@
  * Current storage version.
  */
 #define NORCOW_VERSION ((uint32_t)0x00000006)
+#define NORCOW_MIN_VERSION 0x00000006
 
 #endif

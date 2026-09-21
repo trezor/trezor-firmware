@@ -21,26 +21,15 @@
 
 #include <trezor_types.h>
 
-#if defined(USE_APPLETS) && defined(KERNEL_MODE)
-#include <sys/applet.h>
-#endif
-
 // only some of the keys are supported depending on execution environment
 typedef enum {
   SECURE_AES_KEY_DHUK_SP,  // secure-privileged
   SECURE_AES_KEY_BHK,
   SECURE_AES_KEY_XORK_SP,  // secure-privileged
-  SECURE_AES_KEY_XORK_SN,  // secure-nonprivileged
 } secure_aes_keysel_t;
 
 // Initializes secure AES module
 secbool secure_aes_init(void);
-
-// Sets the applet to be used for AES operation
-// with unprivileged key (XORK_SN).
-#if defined(USE_APPLETS) && defined(KERNEL_MODE)
-void secure_aes_set_applet(applet_t* applet);
-#endif
 
 // Deinitializes secure AES module
 void secure_aes_deinit(void);

@@ -236,10 +236,6 @@ void drivers_init() {
 //
 // Returns when the coreapp task is terminated
 static void kernel_loop(applet_t *coreapp) {
-#if SECURE_MODE && USE_STORAGE_HWKEY
-  secure_aes_set_applet(coreapp);
-#endif
-
   do {
     sysevents_t awaited = {
         .read_ready = 1 << SYSHANDLE_SYSCALL,
