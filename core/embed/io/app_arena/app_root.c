@@ -63,8 +63,19 @@ ts_t app_root_init(void) {
   TSH_RETURN;
 }
 
-ts_t app_root_update(const void* root_packet_data,
-                     size_t root_packet_data_size) {
+// Returns the index of the first set bit in the ring mask,
+// or -1 if no bits are set.
+static int first_updated_ring(uint8_t ring_mask) {
+  for (int id = 0; id < APP_RING_COUNT; id++) {
+    if (ring_mask & (1 << id)) {
+      return id;
+    }
+  }
+  return -1;
+}
+
+ts_t app_root_update(const void* root_packet_data, size_t root_packet_data_size,
+                     app_root_state_t* state) {
   TSH_DECLARE;
   ts_t status;
 
@@ -78,11 +89,27 @@ ts_t app_root_update(const void* root_packet_data,
 
   TSH_CHECK(root_packet != NULL, TS_EBADMSG);
 
-  // !@# TODO: Consider downgrade protection
+  // Check that any updated ring is not downgraded
+  for (int id = 0; id < APP_RING_COUNT; id++) {
+    if (root_packet->ring_mask & (1 << id)) {
+      TSH_CHECK(root_packet->timestamp >= state->ring_timestamp[id],
+                TS_EBADMSG);
+    }
+  }
+
+  // Ensure that lower-priority rings (with higher id) are not older than
+  // higher-priority rings
+  int first_id = first_updated_ring(root_packet->ring_mask);
+  if (first_id > 0) {
+    TSH_CHECK(
+        root_packet->chain_timestamp >= state->ring_timestamp[first_id - 1],
+        TS_EBADMSG);
+  }
 
   int slot = 0;
   for (int id = 0; id < APP_RING_COUNT; id++) {
     if (root_packet->ring_mask & (1 << id)) {
+      state->ring_timestamp[id] = root_packet->timestamp;
       root->ring[id].timestamp = root_packet->timestamp;
       root->ring[id].merkle_root = root_packet->merkle_root[slot];
       ++slot;
