@@ -71,7 +71,7 @@ extern const void nrf_app_size;
 LOG_DECLARE(coreapp_main)
 
 #if USE_IPC
-uint32_t ipc_buffer[8192];
+uint32_t ipc_buffer[IPC_BUFFER_SIZE / sizeof(uint32_t)];
 #endif
 
 int main_func(uint32_t cmd, void *arg) {
@@ -82,7 +82,10 @@ int main_func(uint32_t cmd, void *arg) {
   }
 
 #if USE_IPC
-  ipc_register(2, ipc_buffer, sizeof(ipc_buffer));  // !@# test
+  // Registered once for the coreapp's lifetime: re-registering while an
+  // extapp is running would reset the queue under it, so this is not
+  // something extapp orchestration (e.g. run.py) is allowed to repeat.
+  ipc_register(2, ipc_buffer, sizeof(ipc_buffer));
 #endif
 
   bool fading = DISPLAY_JUMP_BEHAVIOR == DISPLAY_RESET_CONTENT;

@@ -26,6 +26,9 @@
 // Maximum size of the IPC message buffer that can be registered
 #define IPC_MAX_BUFFER_SIZE (64 * 1024)
 
+// Size of the IPC receive buffer registered by the coreapp
+#define IPC_BUFFER_SIZE (32 * 1024)
+
 typedef struct {
   systask_id_t remote;
   // Function code with flags (IPC_FN_xxx)
