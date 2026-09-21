@@ -146,6 +146,8 @@ pub enum Cmd {
     Combine(CombineArgs),
     /// Print current version of specified project
     PrintVersion(PrintVersionArgs),
+    /// Generate Rust Analyzer configuration for the specified model.
+    RaConfig(RaConfigArgs),
 }
 
 #[derive(Args, Debug, Clone)]
@@ -248,4 +250,26 @@ pub struct CombineArgs {
 #[command(hide = true)] // Should probably go under some kind of misc subcommand.
 pub struct PrintVersionArgs {
     pub project: Project,
+}
+
+#[derive(Args, Debug)]
+pub struct RaConfigArgs {
+    /// Target model
+    #[arg(long, short = 'm', ignore_case = true)]
+    pub model: Model,
+
+    /// Use emulator build
+    #[arg(long, short = 'e')]
+    pub emulator: bool,
+
+    /// Build preset
+    #[arg(long, short = 'p')]
+    pub preset: Option<String>,
+
+    #[command(flatten)]
+    pub options: BuildOptions,
+
+    /// Write the configuration to a file instead of stdout
+    #[arg(long)]
+    pub file: Option<PathBuf>,
 }
