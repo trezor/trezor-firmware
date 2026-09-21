@@ -176,8 +176,8 @@ message FirmwareBegin {
  * @next FirmwareUpload
  */
 message FirmwareRequest {
-    required uint32 offset = 1;  // offset of requested firmware chunk
-    required uint32 length = 2;  // length of requested firmware chunk
+    required uint32 offset = 1;             // offset of requested firmware chunk
+    required uint32 length = 2;             // length of requested firmware chunk
     optional uint32 coprocessor_index = 3;  // which image: 0 (default) = primary stream, 1 = nRF image
 }
 
