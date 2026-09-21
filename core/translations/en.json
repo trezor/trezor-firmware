@@ -1791,12 +1791,6 @@
     "passphrase__always_on_device": "Always enter your passphrase on Trezor?",
     "passphrase__continue_with_empty_passphrase": "Continue with empty passphrase?",
     "passphrase__from_host_not_shown": "Passphrase provided by connected app will be used but will not be displayed due to the device settings.",
-    "passphrase__hidden_wallet": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Passphrase wallet"
-    },
     "passphrase__hide": {
       "Bolt": "Hide passphrase coming from app?",
       "Caesar": "Hide passphrase coming from app?",
@@ -1815,12 +1809,7 @@
     "passphrase__title_source": "Passphrase source",
     "passphrase__turn_off": "Turn off passphrase protection?",
     "passphrase__turn_on": "Turn on passphrase protection?",
-    "passphrase__wallet": {
-      "Bolt": "Passphrase wallet",
-      "Caesar": "Passphrase wallet",
-      "Delizia": "Passphrase wallet",
-      "Eckhart": ""
-    },
+    "passphrase__wallet": "Passphrase wallet",
     "pin__cancel_description": {
       "Bolt": "",
       "Caesar": "",
