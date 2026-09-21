@@ -1,6 +1,6 @@
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
-use super::ffi;
+use super::{consteq, ffi};
 
 pub type Curve25519KeyBytes = ffi::curve25519_key;
 pub const CURVE25519_KEY_SIZE: usize = core::mem::size_of::<Curve25519KeyBytes>();
@@ -118,6 +118,10 @@ impl Point {
         res
     }
 
+    pub fn is_zero(&self) -> bool {
+        consteq(&self.bytes, &[0u8; CURVE25519_KEY_SIZE])
+    }
+
     // No need for validation, every 32 byte array represents a valid point.
     // See https://cr.yp.to/ecdh/curve25519-20060209.pdf
     pub fn from_bytes(bytes: Curve25519KeyBytes) -> Self {
@@ -193,6 +197,23 @@ mod test {
             let session2 = pk1.multiply(&sk2);
             assert_eq!(session1.to_bytes(), session2.to_bytes());
         }
+    }
+
+    #[test]
+    fn test_is_zero() {
+        assert!(Point::from_bytes([0u8; CURVE25519_KEY_SIZE]).is_zero());
+
+        let mut bytes = [0u8; CURVE25519_KEY_SIZE];
+        for i in 0..CURVE25519_KEY_SIZE {
+            bytes[i] = 1;
+            assert!(!Point::from_bytes(bytes).is_zero());
+            bytes[i] = 0;
+        }
+
+        assert!(!Point::from_secret(&generate_scalar()).is_zero());
+
+        let zero = Point::from_bytes([0u8; CURVE25519_KEY_SIZE]);
+        assert!(zero.multiply(&generate_scalar()).is_zero());
     }
 
     #[test]

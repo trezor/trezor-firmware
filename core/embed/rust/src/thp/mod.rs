@@ -673,14 +673,16 @@ impl ThpContext {
         let key = local_static_privkey
             .try_into()
             .map_err(|_| Error::InvalidKeyLength)?;
-        let mut first_err = None;
+        let mut failed = Vec::<u16, MAX_CHANNELS_OPENING>::new();
         for che in self.channel_opening.values_mut() {
             if che.iface_num != iface_num {
                 continue;
             }
             if che.channel.static_key_required() {
-                if let Err(e) = che.channel.set_static_key(key) {
-                    first_err.get_or_insert(e);
+                if che.channel.set_static_key(key).is_err() {
+                    // Only this channel is affected, keep serving the others.
+                    unwrap!(failed.push(che.channel.channel_id()));
+                    continue;
                 }
                 // Outgoing message is now ready, update last_write.
                 if let Some(0) = che.channel.sending_retry() {
@@ -688,7 +690,10 @@ impl ThpContext {
                 }
             }
         }
-        first_err.map_or(Ok(()), |e| Err(e.into()))
+        for cid in failed {
+            self.channel_close(cid);
+        }
+        Ok(())
     }
 
     /// Look up channel in pairing/credential/encrypted-transport phase by its
