@@ -36,6 +36,8 @@ app_loading = ["io/app_loading", "io/ipc"]
 backlight = ["io/backlight"]
 benchmark = []
 ble = ["io/ble"]
+# DEPRECATED: WARD's dedicated interface, off by default and expected to be removed.
+# See apps/ward/service.py. Do not build new work on this path.
 ward_service_channel = ["io/ward_service_channel"]
 ward_service_thp = ["ward_service_channel", "io/ward_service_thp"]
 button = ["io/button"]

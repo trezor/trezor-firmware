@@ -213,9 +213,16 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map n1w1: bool,
 
-    /// Build the WARD service channel (its own dedicated interface).
-    /// Off by default: without it the firmware serves WARD over the ordinary
-    /// connection. Cannot be combined with --btc-only, which has no WARD to serve.
+    /// DEPRECATED. Build the WARD service channel (its own dedicated interface).
+    ///
+    /// Off by default, and now deprecated rather than merely optional: the connect
+    /// transport is the one WARD is developed against, and the service path has
+    /// diverged from it in ways that are cheaper to delete than to keep level --
+    /// it has no rollback or recover route at all, and its sync is chain-only with
+    /// no fallback, so a daemon whose replica history is incomplete strands the
+    /// device with nothing to do about it. Expect removal; do not build new work on it.
+    ///
+    /// Cannot be combined with --btc-only, which has no WARD to serve.
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map enable_ward_service_channel: bool,
 
