@@ -54,7 +54,6 @@ async def flush_queue(
     from .attest import root_mac
     from .cas import auth_commit, sig_commit
     from .common import online, pull_leaf, require_initialized
-    from . import round as sync_round
     from .keys import (
         ENTRY_TYPE_ADDRESS,
         derive_k_auth,
@@ -193,14 +192,6 @@ async def flush_queue(
         return WardFlushQueueApplied(
             entry_key=entry_key, counter=counter, remaining=remaining
         )
-
-    # THE CANDIDATE IS NOW THE HOST'S, and this session can no longer say its own root is the
-    # current one: the host may hand this to the backend and move the head before anything
-    # re-adopts here. The device does not persist the candidate either, so it cannot even tell
-    # afterwards which happened. Drop the latch BEFORE handing it over, for the reason
-    # `round.mark_offline` gives -- clearing it after would leave the unknown window looking
-    # known. `adopt` sets it again, so the ordinary cost is one round trip.
-    sync_round.mark_offline()
 
     return WardFlushQueueAck(
         entry_key=entry_key,
