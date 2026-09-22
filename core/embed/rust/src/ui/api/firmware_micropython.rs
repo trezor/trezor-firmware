@@ -1262,6 +1262,7 @@ extern "C" fn new_tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
 extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+        let remote: u8 = kwargs.get(Qstr::MP_QSTR_remote)?.try_into()?;
 
         let archived =
             unsafe { access_unchecked::<Archived<TrezorUiEnum>>(unwrap!(get_buffer(obj))) };
@@ -1569,6 +1570,11 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             )?,
             m.br_code.to_native(),
             None,
+        )?,
+        Archived::<TrezorUiEnum>::ConfirmLong(m) => wrap(
+            ModelUI::confirm_long(tstr(&m.title), m.pages.to_native(), remote)?,
+            m.br_code.to_native(),
+            m.br_name.as_ref(),
         )?,
     };
 
@@ -2610,8 +2616,11 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def process_ipc_message(
     ///     *,
     ///     data: bytes,
+    ///     remote: int,
     /// ) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
-    ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
+    ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function.
+    ///     `remote` is the task id of the extapp that sent it, forwarded to layouts (e.g. confirm_long)
+    ///     that need to make further IPC requests back to it."""
     Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
 
     /// def send_ui_result(

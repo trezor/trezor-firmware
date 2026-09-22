@@ -7,6 +7,8 @@ use super::firmware::{
     SelectWordScreen, SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg,
     TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
+#[cfg(feature = "app_loading")]
+use super::firmware::{LongContentScreen, LongContentScreenMsg};
 use crate::micropython::{Error, Obj};
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{
@@ -87,6 +89,16 @@ impl ComponentMsgObj for Homescreen {
 impl ComponentMsgObj for ProgressScreen {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
+    }
+}
+
+#[cfg(feature = "app_loading")]
+impl ComponentMsgObj for LongContentScreen<'_> {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            LongContentScreenMsg::Confirmed => Ok(CONFIRMED.as_obj()),
+            LongContentScreenMsg::Cancelled => Ok(CANCELLED.as_obj()),
+        }
     }
 }
 

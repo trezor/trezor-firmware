@@ -195,6 +195,14 @@ impl FirmwareUI for UICaesar {
         Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
     }
 
+    fn confirm_long(
+        _title: TString<'static>,
+        _pages: u32,
+        _remote: u8,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
+    }
+
     fn confirm_homescreen(
         title: TString<'static>,
         image: BinaryData<'static>,

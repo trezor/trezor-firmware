@@ -5,11 +5,15 @@
 
 use core::marker::PhantomData;
 
+use rkyv::rancor::Failure;
+use rkyv::Archived;
 use ufmt::derive::uDebug;
 
 use crate::ipc::{IpcInbox, IpcMessage, RemoteSysTask};
+use crate::structs::{UtilEnum, UTIL_SERVICE_ID};
 use crate::sysevent::SysEvents;
 use crate::util::Timeout;
+use crate::unwrap;
 
 /// The remote system task identifier for the Core application service.
 pub const CORE_SERVICE_REMOTE: RemoteSysTask = RemoteSysTask::CoreApp;
@@ -25,9 +29,57 @@ pub enum CoreIpcService {
     Ui = 4,
     Progress = 5,
     Crypto = 6,
+    /// Utility messages sent by Core mid-call, outside the normal
+    /// request/response shape (currently just content paging — see
+    /// [`UtilHandler`]). Its numeric value is shared with Core's own IPC
+    /// dispatch via [`UTIL_SERVICE_ID`], since Core links only against
+    /// `structs`, not this enum.
+    Util = UTIL_SERVICE_ID,
     /// Catch-all variant for unrecognized service IDs.
     #[num_enum(catch_all)]
     Unknown(u16),
+}
+
+/// Context passed to a [`UtilHandler`] for an incoming utility message:
+/// where it came from, so the handler knows who and what to reply to.
+pub struct UtilContext {
+    pub service: u16,
+    pub id: u16,
+    pub remote: RemoteSysTask,
+}
+
+/// The result of [`UtilHandler::handle`].
+pub enum UtilHandleResult {
+    /// The message was handled; keep waiting for the original call's reply.
+    Continue,
+    /// The message wasn't one this handler expects.
+    Unexpected,
+}
+
+/// Handles [`CoreIpcService::Util`] messages that arrive while
+/// [`IpcRemote::call_with_util`] is waiting for its actual reply.
+pub trait UtilHandler {
+    /// Whether this handler expects utility messages at all — lets
+    /// [`IpcRemote::call_with_util`] skip the archive access entirely for
+    /// calls that never receive any (the common case).
+    fn expects_util_messages(&self) -> bool;
+
+    /// Handles one utility message, replying over `ctx` as needed.
+    fn handle(&self, ctx: &UtilContext, archived: &Archived<UtilEnum>) -> UtilHandleResult;
+}
+
+/// A [`UtilHandler`] for calls that never expect utility messages — any
+/// that arrive are treated as [`Error::UnexpectedResponse`].
+pub struct NoUtilHandler;
+
+impl UtilHandler for NoUtilHandler {
+    fn expects_util_messages(&self) -> bool {
+        false
+    }
+
+    fn handle(&self, _ctx: &UtilContext, _archived: &Archived<UtilEnum>) -> UtilHandleResult {
+        UtilHandleResult::Unexpected
+    }
 }
 
 /// A typed IPC remote endpoint for sending requests and receiving responses.
@@ -112,14 +164,49 @@ impl<'a, T: Into<u16> + Copy> IpcRemote<'a, T> {
         message: &IpcMessage,
         timeout: Timeout,
     ) -> Result<IpcMessage<'a>, Error<'a>> {
+        self.call_with_util(service, message, timeout, &NoUtilHandler)
+    }
+
+    /// Like [`call`](Self::call), but also handles [`CoreIpcService::Util`]
+    /// messages that arrive before the actual reply, via `util_handler`.
+    ///
+    /// Used by calls whose reply Core needs more data to produce than fits
+    /// in the initial request — e.g. paging in long content on demand,
+    /// where each [`UtilHandler::handle`] reply is a chunk of it, not the
+    /// call's own answer. Every `Util` message is handled and waited past;
+    /// only a non-`Util` message ends the loop.
+    pub fn call_with_util(
+        &self,
+        service: T,
+        message: &IpcMessage,
+        timeout: Timeout,
+        util_handler: &dyn UtilHandler,
+    ) -> Result<IpcMessage<'a>, Error<'a>> {
         let service_id = service.into();
         self.send(service, message)?;
-        let reply = self.receive(timeout)?;
+        loop {
+            let reply = self.receive(timeout)?;
 
-        if reply.service() != service_id {
-            Err(Error::UnexpectedService(reply))
-        } else {
-            Ok(reply)
+            if reply.service() == u16::from(CoreIpcService::Util)
+                && util_handler.expects_util_messages()
+            {
+                let util_ctx = UtilContext {
+                    service: reply.service(),
+                    id: reply.id(),
+                    remote: reply.remote(),
+                };
+                // Safe validation using bytecheck before accessing archived data
+                let archived = unwrap!(rkyv::access::<Archived<UtilEnum>, Failure>(reply.data()));
+
+                match util_handler.handle(&util_ctx, archived) {
+                    UtilHandleResult::Continue => continue,
+                    UtilHandleResult::Unexpected => return Err(Error::UnexpectedResponse(reply)),
+                }
+            } else if reply.service() != service_id {
+                return Err(Error::UnexpectedService(reply));
+            } else {
+                return Ok(reply);
+            }
         }
     }
 

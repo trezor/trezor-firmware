@@ -17,13 +17,14 @@ use rkyv::{Archived, to_bytes};
 
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
-use crate::service::CoreIpcService;
+use crate::service::{CoreIpcService, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler};
 pub use crate::structs::{
-    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
+    ConfirmAction, ConfirmLong, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
     ConfirmValueIntro, ConfirmWithInfo, Property, RequestNumber, SelectMenu, ShowAddress,
     ShowDanger, ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess,
     ShowWarning, StrExt, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
 };
+use crate::structs::UtilEnum;
 use crate::util::Timeout;
 use crate::{Error, unwrap};
 
@@ -38,10 +39,22 @@ type Result<T> = core::result::Result<T, Error>;
 pub type UiResult = Result<TrezorUiResult>;
 
 fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
+    ipc_ui_call_with_util(value, &NoUtilHandler)
+}
+
+/// Like [`ipc_ui_call`], but also lets `util_handler` answer
+/// [`crate::service::CoreIpcService::Util`] messages Core sends while the
+/// call is in flight — see [`confirm_long`] for the one case that needs it.
+fn ipc_ui_call_with_util(value: &TrezorUiEnum, util_handler: &dyn UtilHandler) -> UiResult {
     let bytes = to_bytes::<Failure>(value).map_err(|_| Error::ServiceError)?;
 
     let message = IpcMessage::new(0, bytes.as_ref());
-    let result = services_or_die().call(CoreIpcService::Ui, &message, Timeout::max())?;
+    let result = services_or_die().call_with_util(
+        CoreIpcService::Ui,
+        &message,
+        Timeout::max(),
+        util_handler,
+    )?;
 
     // Safe validation using bytecheck before accessing archived data
     let archived = unwrap!(rkyv::access::<Archived<TrezorUiResult>, Failure>(
@@ -541,6 +554,77 @@ pub fn confirm_summary<'a>(confirm_summary: ConfirmSummary<'a>) -> UiResult {
 /// ```
 pub fn confirm_action<'a>(confirm_action: ConfirmAction<'a>) -> UiResult {
     ipc_ui_call(&TrezorUiEnum::ConfirmAction(confirm_action))
+}
+
+/// The number of chars [`LongContentHandler`] slices `confirm_long`'s
+/// content into per page, matching the page size Core's `LongContentScreen`
+/// requests in.
+pub const CHARS_PER_PAGE: usize = 96;
+
+/// Answers Core's page requests for [`confirm_long`]'s `content` while its
+/// call is in flight. `content` never crosses the wire as a whole — only
+/// the page count does, in the initial [`ConfirmLong`] message — so Core
+/// pages it in [`CHARS_PER_PAGE`]-char chunks as the user scrolls.
+struct LongContentHandler<'a>(&'a str);
+
+impl<'a> LongContentHandler<'a> {
+    fn send_page(&self, ctx: &UtilContext, page_idx: usize) {
+        let content = self.0;
+
+        // Find the byte range of the requested char slice.
+        let mut chars = content.chars();
+        let start_byte = chars
+            .by_ref()
+            .take(page_idx * CHARS_PER_PAGE)
+            .map(|c| c.len_utf8())
+            .sum::<usize>();
+        let slice_len = chars
+            .take(CHARS_PER_PAGE)
+            .map(|c| c.len_utf8())
+            .sum::<usize>();
+        let slice = &content.as_bytes()[start_byte..start_byte + slice_len];
+
+        // Reply under the same service/id Core sent the request with; a
+        // failed send just leaves Core waiting out the call's timeout.
+        let _ = IpcMessage::new(ctx.id, slice).send(ctx.remote, ctx.service);
+    }
+}
+
+impl<'a> UtilHandler for LongContentHandler<'a> {
+    fn expects_util_messages(&self) -> bool {
+        true
+    }
+
+    fn handle(&self, ctx: &UtilContext, archived: &Archived<UtilEnum>) -> UtilHandleResult {
+        match archived {
+            Archived::<UtilEnum>::RequestPage { idx } => {
+                self.send_page(ctx, idx.to_native() as usize);
+                UtilHandleResult::Continue
+            }
+        }
+    }
+}
+
+/// Shows a confirmation screen for content too long to send over IPC in one
+/// message. Core pages `content` in on demand as the user scrolls, so this
+/// stays blocked (serving page requests) for as long as the screen is open.
+///
+/// ## Example
+///
+/// ```no_run
+/// use trezor_app_sdk::ui;
+/// ui::confirm_long("Message", "A very long message...", Some("confirm"), 1)?;
+/// # Ok::<(), trezor_app_sdk::Error>(())
+/// ```
+pub fn confirm_long<'a>(
+    title: &'a str,
+    content: &'a str,
+    br_name: Option<&'a str>,
+    br_code: i32,
+) -> UiResult {
+    let pages = content.chars().count().div_ceil(CHARS_PER_PAGE) as u32;
+    let value = TrezorUiEnum::ConfirmLong(ConfirmLong::new(title, pages, br_name, br_code));
+    ipc_ui_call_with_util(&value, &LongContentHandler(content))
 }
 
 fn select_menu<'a>(select_menu: SelectMenu<'a>, len: usize) -> UiResult {

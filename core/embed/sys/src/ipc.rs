@@ -2,7 +2,9 @@
 //!
 //! [`IpcInbox`] registers a receive buffer with the kernel and polls it for
 //! incoming messages; [`IpcMessage`] borrows from that buffer for as long as
-//! it's alive. [`send`] fires a message at another task directly.
+//! it's alive. [`send`] fires a message at another task directly, and the
+//! free [`try_receive`] polls a buffer registered elsewhere (e.g. by C code)
+//! without owning an [`IpcInbox`] for it.
 
 use core::ops::DerefMut;
 
@@ -32,6 +34,50 @@ pub fn send(remote: u8, service: u16, id: u16, data: &[u8]) -> bool {
             data.len(),
         )
     }
+}
+
+/// Polls `remote`'s already-registered inbox without owning it.
+///
+/// For callers that need to receive from a buffer registered elsewhere (e.g.
+/// the coreapp's own extapp-remote buffer, registered once at startup — see
+/// `main.c`) rather than through an [`IpcInbox`] they hold themselves. Since
+/// nothing here enforces exclusive access to `remote`'s buffer, callers must
+/// ensure no other code polls the same `remote` concurrently.
+///
+/// The `'static` lifetime reflects that the backing buffer is registered for
+/// the program's duration rather than borrowed from an `IpcInbox`.
+pub fn try_receive(remote: u8) -> Option<IpcMessage<'static>> {
+    try_receive_raw(remote)
+}
+
+fn try_receive_raw<'a>(remote: u8) -> Option<IpcMessage<'a>> {
+    let mut msg = ffi::ipc_message_t {
+        // `remote` doubles as an input: `ipc_try_receive` reads it to pick
+        // which origin's queue to check (see `ipc_try_receive` in
+        // `sys/ipc/ipc.c`), then overwrites it with the same value.
+        remote,
+        fn_: 0,
+        data: core::ptr::null(),
+        size: 0,
+    };
+    // SAFETY: `msg` is a valid in/out pointer for the duration of the call.
+    let ok = unsafe { ffi::ipc_try_receive(&mut msg) };
+    if !ok {
+        return None;
+    }
+    let (service, id) = from_fn(msg.fn_);
+    // SAFETY: the kernel just filled `msg` with a message addressed to
+    // `remote`'s registered buffer; `data`/`size` describe a slice valid
+    // until `ipc_message_free` is called (in `IpcMessage::drop`). The caller
+    // is responsible for not aliasing this receive with another one on the
+    // same `remote` while the message is alive.
+    let data = unsafe { core::slice::from_raw_parts(msg.data as *const u8, msg.size) };
+    Some(IpcMessage {
+        remote: msg.remote,
+        service,
+        id,
+        data,
+    })
 }
 
 /// A single incoming IPC message, borrowed from the [`IpcInbox`] that
@@ -123,33 +169,9 @@ impl<D: DerefMut<Target = [usize]>> IpcInbox<D> {
     /// The returned message borrows this inbox exclusively, so it must be
     /// dropped before the next call to `try_receive`.
     pub fn try_receive(&mut self) -> Option<IpcMessage<'_>> {
-        let mut msg = ffi::ipc_message_t {
-            // `remote` doubles as an input: `ipc_try_receive` reads it to
-            // pick which origin's queue to check (see `ipc_try_receive` in
-            // `sys/ipc/ipc.c`), then overwrites it with the same value.
-            remote: self.remote,
-            fn_: 0,
-            data: core::ptr::null(),
-            size: 0,
-        };
-        // SAFETY: `msg` is a valid in/out pointer for the duration of the call.
-        let ok = unsafe { ffi::ipc_try_receive(&mut msg) };
-        if !ok {
-            return None;
-        }
-        let (service, id) = from_fn(msg.fn_);
-        // SAFETY: the kernel just filled `msg` with a message addressed to
-        // this inbox's registered buffer; `data`/`size` describe a slice
-        // valid until `ipc_message_free` is called (in `IpcMessage::drop`),
-        // and the `&mut self` borrow above prevents re-registering or
-        // re-receiving into the same buffer while this message is alive.
-        let data = unsafe { core::slice::from_raw_parts(msg.data as *const u8, msg.size) };
-        Some(IpcMessage {
-            remote: msg.remote,
-            service,
-            id,
-            data,
-        })
+        // The `&mut self` borrow prevents re-registering or re-receiving
+        // into the same buffer while the returned message is alive.
+        try_receive_raw(self.remote)
     }
 
     /// The remote task this inbox is registered for.

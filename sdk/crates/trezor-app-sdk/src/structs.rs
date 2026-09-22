@@ -750,6 +750,32 @@ impl ConfirmWithInfo<'_> {
     }
 }
 
+/// A long-content confirmation screen, paged over IPC as the user scrolls,
+/// shown via [`crate::ui::confirm_long`].
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct ConfirmLong<'a> {
+    pub title: StrSlice<'a>,
+    pub pages: u32,
+    pub br_name: Option<StrSlice<'a>>,
+    pub br_code: i32,
+}
+
+impl<'a> ConfirmLong<'a> {
+    pub fn new(
+        title: &'a str,
+        pages: u32,
+        br_name: Option<&'a str>,
+        br_code: i32,
+    ) -> ConfirmLong<'a> {
+        ConfirmLong {
+            title: title.into(),
+            pages,
+            br_name: br_name.map(|s| s.into()),
+            br_code,
+        }
+    }
+}
+
 /// An address display screen, shown via [`crate::ui::show_address`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowAddress<'a> {
@@ -816,6 +842,7 @@ pub enum TrezorUiEnum<'a> {
     ShowInfoWithCancel(ShowInfoWithCancel<'a>),
     ConfirmWithInfo(ConfirmWithInfo<'a>),
     ShowAddress(ShowAddress<'a>),
+    ConfirmLong(ConfirmLong<'a>),
 }
 
 /// Result returned by the Core task after a UI interaction.
@@ -969,6 +996,25 @@ impl<'a> TrezorProgressEnum<'a> {
             TrezorProgressEnum::End => 2,
         }
     }
+}
+
+/// The `CoreIpcService::Util` numeric ID.
+///
+/// Kept here, not in `service::CoreIpcService`, because Core's own IPC
+/// dispatch (in `core/embed/rust`) links only against `structs` — the rest
+/// of this crate (including `service`) is gated behind the `app` feature,
+/// which is off for that build. Core still needs to agree with the app on
+/// this number to talk `UtilEnum` over the same wire.
+pub const UTIL_SERVICE_ID: u16 = 7;
+
+/// Utility messages sent from Core back to the app mid-call, outside the
+/// normal request/response shape — currently just paging for
+/// [`ConfirmLong`]. Sent under [`UTIL_SERVICE_ID`].
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub enum UtilEnum {
+    /// Requests page `idx` (0-based) of the content passed to
+    /// `ui::confirm_long`, in fixed-size char chunks (see `ui::CHARS_PER_PAGE`).
+    RequestPage { idx: u32 },
 }
 
 #[cfg(test)]

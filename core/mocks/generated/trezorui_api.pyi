@@ -881,8 +881,11 @@ def tutorial() -> LayoutContext[UiResult]:
 def process_ipc_message(
     *,
     data: bytes,
+    remote: int,
 ) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
-    """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
+    """Process an IPC message by deserializing it and dispatching to the appropriate UI function.
+    `remote` is the task id of the extapp that sent it, forwarded to layouts (e.g. confirm_long)
+    that need to make further IPC requests back to it."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

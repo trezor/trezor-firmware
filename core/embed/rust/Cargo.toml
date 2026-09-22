@@ -54,7 +54,7 @@ upymod = { workspace = true, optional = true }
 # Selectable components
 # --------------------------------------------------------------------------
 
-app_loading = ["dep:trezor-app-sdk", "dep:rkyv"]
+app_loading = ["dep:trezor-app-sdk", "dep:rkyv", "sys/ipc"]
 backlight = []
 ble = []
 boot_ucb = []

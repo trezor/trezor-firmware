@@ -56,7 +56,8 @@ pub mod crypto;
 #[cfg(not(feature = "app"))]
 pub mod ui {
     pub use crate::structs::{
-        Property, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
+        ConfirmLong, Property, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum,
+        TrezorUiResult, UTIL_SERVICE_ID, UtilEnum,
     };
 }
 

@@ -10,6 +10,8 @@ use super::firmware::{
     StringKeyboard, TextScreen, TextScreenMsg, ValueInputScreen, VerticalMenu, VerticalMenuScreen,
     VerticalMenuScreenMsg,
 };
+#[cfg(feature = "app_loading")]
+use super::firmware::LongContentScreen;
 use super::theme::firmware::{button_actionbar_danger, button_confirm};
 use super::theme::gradient::Gradient;
 use super::theme::{self};
@@ -129,6 +131,26 @@ impl FirmwareUI for UIEckhart {
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
+    }
+
+    #[cfg(feature = "app_loading")]
+    fn confirm_long(
+        title: TString<'static>,
+        pages: u32,
+        remote: u8,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let screen = LongContentScreen::new(title, pages, remote);
+        let layout = RootComponent::new(screen);
+        Ok(layout)
+    }
+
+    #[cfg(not(feature = "app_loading"))]
+    fn confirm_long(
+        _title: TString<'static>,
+        _pages: u32,
+        _remote: u8,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_homescreen(

@@ -163,7 +163,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
 
         if service == _SERVICE_UI:
             main_layout_obj, br_code, br_name = trezorui_api.process_ipc_message(
-                data=bytes(msg.data)
+                data=bytes(msg.data), remote=msg.remote
             )
 
             result = await interact(

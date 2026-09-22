@@ -202,6 +202,15 @@ pub trait FirmwareUI {
         chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
+    /// A confirmation screen for content too long to pass over IPC in one
+    /// message — `pages` is paged in on demand from `remote` (the sending
+    /// extapp's task id) as the user scrolls.
+    fn confirm_long(
+        title: TString<'static>,
+        pages: u32,
+        remote: u8,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
     fn confirm_homescreen(
         title: TString<'static>,
         image: BinaryData<'static>,
