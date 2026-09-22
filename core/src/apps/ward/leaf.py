@@ -425,12 +425,51 @@ def make_leaf_content(part: "Part | None") -> "Any":
     )
 
 
+# Nonce and tag are fixed by the AEAD, not negotiable per message; pinning them here keeps a
+# malformed sealed part from reaching the cipher at all.
+_NONCE_LEN = 12
+_TAG_LEN = 16
+
+
+def _require_canonical(encoding: "Any", sealed: "Any", clear: "Any") -> int:
+    """Read the discriminator of a manual oneof, strictly, and return it.
+
+    The codegen has no `oneof`, so `encoding` is a plain field and mutual exclusivity is a code
+    invariant rather than a wire one. That left two ways for two implementations to disagree about
+    the same bytes, and BOTH of them land on the commit preimage -- the one value the whole trie
+    hashes -- so a disagreement is a different leaf and a different root:
+
+      an UNKNOWN encoding was normalised. `(encoding or ENC_ENCRYPTED) == ENC_PLAINTEXT` reads 2 as
+        "not plaintext", i.e. as sealed. A later build that adds encoding 2 would frame those bytes
+        differently and compute a different commit for a message this one already accepted;
+
+      BOTH arms set was accepted. Firmware dispatched on the discriminator while the host twins
+        dispatch on field presence (`tests/ward_trie._part_bytes`, `trezorlib.ward.leaf_is_delete`),
+        so `encoding=0` plus a `plaintext` submessage framed one way here and the other way there.
+
+    Neither is a forgery -- the device computes its own commit and trusts only its own root, so a
+    host cannot make a proof verify that should not. Both are divergence: the host serves a proof
+    the device cannot reproduce, or rebuilds a root the device will not adopt. Fail-closed, and
+    unnecessary. The host twins dispatch on `encoding` too, or this only moves the disagreement.
+    """
+    from trezor.wire import DataError
+
+    e = encoding if encoding is not None else ENC_ENCRYPTED
+    if e not in (ENC_ENCRYPTED, ENC_PLAINTEXT):
+        raise DataError("WARD: unknown leaf part encoding")
+    if sealed is not None and clear is not None:
+        raise DataError("WARD: leaf part sets both encodings")
+    return e
+
+
 def read_leaf_content(content: "Any") -> "Part | None":
     from trezor.wire import DataError
 
     if content is None:
         return None
-    if (content.encoding or ENC_ENCRYPTED) == ENC_PLAINTEXT:
+    if _require_canonical(content.encoding, content.encrypted, content.plaintext) == (
+        ENC_PLAINTEXT
+    ):
         p = content.plaintext
         body = p.content if (p is not None and p.content is not None) else b""
         # An EMPTY body is a delete and carries nothing, so its encoding byte is
@@ -444,6 +483,8 @@ def read_leaf_content(content: "Any") -> "Part | None":
     e = content.encrypted
     if e is None:
         return None
+    if len(e.nonce or b"") != _NONCE_LEN or len(e.tag or b"") != _TAG_LEN:
+        raise DataError("WARD: sealed content has a malformed nonce or tag")
     return (ENC_ENCRYPTED, e.nonce or b"", e.tag or b"", e.ct or b"")
 
 
@@ -478,7 +519,9 @@ def read_leaf_identity(identity: "Any") -> "tuple[str | None, Part | None]":
     if identity is None:
         return None, None
     key_type = identity.key_type or ENTRY_TYPE_ADDRESS
-    if (identity.encoding or ENC_ENCRYPTED) == ENC_PLAINTEXT:
+    if _require_canonical(identity.encoding, identity.encrypted, identity.plain) == (
+        ENC_PLAINTEXT
+    ):
         p = identity.plain
         if p is None or p.identifier is None:
             # No body: a delete's empty part, acceptable in either mode -- see the same
@@ -493,4 +536,6 @@ def read_leaf_identity(identity: "Any") -> "tuple[str | None, Part | None]":
     e = identity.encrypted
     if e is None:
         return key_type, None
+    if len(e.nonce or b"") != _NONCE_LEN or len(e.tag or b"") != _TAG_LEN:
+        raise DataError("WARD: sealed identity has a malformed nonce or tag")
     return key_type, (ENC_ENCRYPTED, e.nonce or b"", e.tag or b"", e.ct or b"")

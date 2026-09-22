@@ -639,7 +639,52 @@ async def mark_offered(entry: StoredEntry, counter: int, auth_commit: bytes) -> 
     await _set_flags(entry, True, True)
 
 
-async def reconcile_pending(adopted: int, landed_commits: "list | None" = None) -> None:
+async def _claim_produced(
+    claimed: int, adopted: int, adopted_root: bytes | None, auth_commit: bytes
+) -> bool:
+    """Did THIS claim's transition produce the head being adopted?
+
+    The counter alone cannot answer it -- another device of the same wallet reaches the same
+    counter with a different change. The claim's `auth_commit` can: it was minted over
+    (claimed - 1, from_root, claimed, to_root), so re-deriving it against the head now being
+    adopted answers "is the adopted root the one my authorisation names" rather than "did the
+    head reach my number".
+
+    Three things must hold, and each is a way of not knowing rather than a way of failing:
+
+      the adopted counter IS the claimed one -- a jump past it leaves the claim somewhere inside
+        a range one root cannot resolve;
+      our stored head is still the claim's FROM state -- otherwise something was adopted since
+        the offer and this claim should already have been settled by it;
+      the authorisation re-derives over (claim's from-state -> adopted head).
+
+    Called only where `landed_commits` is absent, so a false answer means "offer it again", never
+    "discard it".
+    """
+    if adopted_root is None or claimed != adopted:
+        return False
+
+    from .cas import verify_auth_commit
+    from .keys import derive_k_auth, derive_ward_id
+    from .root import get_counter, get_root
+
+    if await get_counter() != claimed - 1:
+        return False
+
+    return verify_auth_commit(
+        await derive_k_auth(),
+        await derive_ward_id(),
+        claimed - 1,
+        await get_root(),
+        claimed,
+        adopted_root,
+        auth_commit,
+    )
+
+
+async def reconcile_pending(
+    adopted: int, adopted_root: bytes | None, landed_commits: "list | None" = None
+) -> None:
     """Settle every offered-but-unconfirmed write against the head just adopted.
 
     This is the ONLY place a queued write stops being queued, and it runs at the same boundary an
@@ -655,8 +700,12 @@ async def reconcile_pending(adopted: int, landed_commits: "list | None" = None) 
                                change is what made it N".
 
       `landed_commits` None  -- `reconcile` adopts by binding a root to an attested mac and folds no
-                               links, so there is nothing to match against and the counter is all
-                               there is: claimed <= adopted. See the limitation below.
+                               links, so there is no list to match against. It is still not reduced
+                               to the counter: a claim carries the `auth_commit` of the transition
+                               it was filed for, and that authorisation names a TO-ROOT. So the
+                               claim landed exactly when the adopted head reproduces it --
+                               `verify_auth_commit(claimed - 1, our head, claimed, adopted_root)`.
+                               Anything else is "cannot tell", which settles as NOT landed.
 
     AND THE RECORD MUST STILL BE THE ONE THAT WAS OFFERED. Slots are reused and a queued value can
     be replaced in place, so the claim's `record_commit` is compared against whatever occupies the
@@ -679,11 +728,27 @@ async def reconcile_pending(adopted: int, landed_commits: "list | None" = None) 
     is scoped by wallet_id, which is what stops one wallet's reconciliation from rewriting another
     wallet's queued records.
 
-    KNOWN LIMITATION, ON THE COUNTER PATH ONLY. "The head reached N" is not quite "my change is what
-    made it N": if another device of this wallet advanced the counter first, this clears a record
-    whose change did not land, and the value survives only as a cached copy. The divergence itself
-    is caught by reconcile's same-counter-different-root check. The chain path above does not have
-    this problem, which is the better reason to prefer it.
+    WHY NOT `claimed <= adopted`, WHICH IS WHAT THIS USED TO DO. "The head reached N" is not "MY
+    change is what made it N". Two devices of one wallet both sitting at 41 each build a candidate
+    42; the WM takes one; the loser reconciles to the winner's 42 and, on a counter comparison,
+    clears its own queued change as landed. It never entered the tree. That is silent loss of a
+    change the user approved, from ordinary concurrent use, and reconcile's same-counter check does
+    not catch it: the loser's persisted head is still 41, so it sees an ordinary 41 -> 42 forward
+    adoption, not a fork.
+
+    AND WHY NOT SIMPLY "NEVER SETTLE WITHOUT A CHAIN", which is the obvious other answer. The claim
+    would go back to PENDING, `flush_queue` would offer it again, that publication would file a new
+    claim, and the next counter-path reconcile could not settle that one either -- a republish loop
+    for any host that only ever calls `WardReconcile`, re-applying a change that already landed. The
+    root check above terminates: when the change did land, the adopted root reproduces its
+    authorisation and the claim is settled exactly once.
+
+    WHAT IS STILL NOT DECIDABLE HERE is a multi-step jump -- the head moved several counters and
+    this claim may be anywhere inside. One root cannot say, so it resolves as NOT landed and the
+    change is offered again, which republishes something that may already be in the tree. That is
+    the safe direction (a redundant write, against silent loss) and it converges: the republish is
+    filed from the new head, so the next adoption is the single step this can decide. Verifying a
+    chain resolves it exactly and remains the better route.
     """
     from storage import ward as ward_store
 
@@ -709,7 +774,7 @@ async def reconcile_pending(adopted: int, landed_commits: "list | None" = None) 
             if landed_commits is not None:
                 landed = auth_commit in landed_commits
             else:
-                landed = claimed <= adopted
+                landed = await _claim_produced(claimed, adopted, adopted_root, auth_commit)
             await _set_flags(entry, not landed, False)
 
         ward_store.claim_delete(index)

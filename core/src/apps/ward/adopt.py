@@ -131,8 +131,9 @@ async def adopt(
       THEN CLOSE THE ROUND, so one attestation can never be replayed into a second adoption.
 
     `landed_commits`, when given, is every transition the caller proved it crossed; a claim landed
-    exactly when its own authorisation is among them. Without it, settlement falls back to the
-    counter comparison -- see `offline_store.reconcile_pending`.
+    exactly when its own authorisation is among them. Without it, settlement asks whether the head
+    being adopted is the one that claim's authorisation names -- see
+    `offline_store.reconcile_pending`.
     """
     from trezor.wire import DataError
 
@@ -140,7 +141,10 @@ async def adopt(
     from .offline_store import reconcile_pending
     from .root import set_root
 
-    await reconcile_pending(counter, landed_commits=landed_commits)
+    # BEFORE `set_root`, and that ordering is now load-bearing twice over: settling has always had
+    # to precede persistence (above), and the counter-path check reads the head this adoption is
+    # about to replace -- the FROM state a claim's authorisation was minted over.
+    await reconcile_pending(counter, root, landed_commits=landed_commits)
 
     if not await set_root(root, counter):
         raise DataError(

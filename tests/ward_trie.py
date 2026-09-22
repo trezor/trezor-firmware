@@ -59,20 +59,40 @@ def addr_bit(entry_key: bytes, bit: int) -> int:
 
 
 def _part_bytes(part) -> bytes:
-    """A wire WardLeafContent/WardLeafIdentity submessage -> its canonical framing."""
+    """A wire WardLeafContent/WardLeafIdentity submessage -> its canonical framing.
+
+    DISPATCHES ON `encoding`, NOT ON FIELD PRESENCE. This computes the commit preimage, so a
+    disagreement with the firmware about which arm a message is produces a different leaf and a
+    different root -- the host then serves proofs the device cannot reproduce. Presence-based
+    dispatch disagreed for exactly the messages `leaf._require_canonical` now rejects: an unknown
+    encoding, and both arms set at once. Those raise here too, so the two implementations refuse
+    the same bytes rather than framing them differently.
+    """
     if part is None:
         return bytes([1, 0, 0]) + _u32(0)  # the empty (deleted) part
-    if getattr(part, "plaintext", None) is not None:
-        body = part.plaintext.content or b""
-        return bytes([1, 0, 0]) + _u32(len(body)) + body
-    if getattr(part, "plain", None) is not None:
+
+    encoding = getattr(part, "encoding", None)
+    encoding = 0 if encoding is None else encoding
+    if encoding not in (0, 1):
+        raise ValueError("unknown leaf part encoding: %r" % (encoding,))
+    clear = getattr(part, "plaintext", None)
+    if clear is None:
+        clear = getattr(part, "plain", None)
+    sealed = getattr(part, "encrypted", None)
+    if sealed is not None and clear is not None:
+        raise ValueError("leaf part sets both encodings")
+
+    if encoding == 1:
+        if clear is None:
+            return bytes([1, 0, 0]) + _u32(0)
         # a plaintext identity carries structured fields, not a body; only the empty
         # form ever reaches the trie in practice (a delete)
+        body = getattr(clear, "content", None) or b""
+        return bytes([1, 0, 0]) + _u32(len(body)) + body
+
+    if sealed is None:
         return bytes([1, 0, 0]) + _u32(0)
-    e = part.encrypted
-    if e is None:
-        return bytes([1, 0, 0]) + _u32(0)
-    nonce, tag, ct = e.nonce or b"", e.tag or b"", e.ct or b""
+    nonce, tag, ct = sealed.nonce or b"", sealed.tag or b"", sealed.ct or b""
     return bytes([0, len(nonce)]) + nonce + bytes([len(tag)]) + tag + _u32(len(ct)) + ct
 
 

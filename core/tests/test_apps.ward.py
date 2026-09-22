@@ -1002,6 +1002,44 @@ class TestWardCas(unittest.TestCase):
     def _link(self, f, fr, t, tr):
         return (f, fr, t, tr, CAS.auth_commit(self.K_AUTH, self.WARD_ID, f, fr, t, tr))
 
+    def test_a_claim_distinguishes_two_candidates_at_one_counter(self):
+        """What the counter-path settlement in `offline_store.reconcile_pending` now rests on.
+
+        Two devices of one wallet both sitting at 41 each build a candidate 42. Settling on
+        `claimed <= adopted` cannot tell them apart, so the loser cleared its own queued change as
+        landed when it reconciled to the winner's head -- silent loss of a change the user
+        approved, from ordinary concurrent use.
+
+        The claim already carries the `auth_commit` of the transition it was filed for, and that
+        names a TO-ROOT. So the question "did MY change produce this head" is answerable without a
+        chain: re-derive the authorisation over (41, our root) -> (42, adopted root) and see
+        whether it reproduces. This pins that it discriminates -- same counters, same from-root,
+        different to-root must not verify -- because if it did not, the new check would be the old
+        one wearing a hash.
+        """
+        mine = CAS.auth_commit(self.K_AUTH, self.WARD_ID, 41, self.R1, 42, self.R2)
+        theirs_root = bytes([3]) * 32
+
+        # the winner's head at the same counter does not reproduce my authorisation
+        self.assertFalse(
+            CAS.verify_auth_commit(
+                self.K_AUTH, self.WARD_ID, 41, self.R1, 42, theirs_root, mine
+            )
+        )
+        # ...and my own head does
+        self.assertTrue(
+            CAS.verify_auth_commit(
+                self.K_AUTH, self.WARD_ID, 41, self.R1, 42, self.R2, mine
+            )
+        )
+        # the from-state is bound too, so a claim filed from a different head cannot be
+        # re-read as one filed from this one
+        self.assertFalse(
+            CAS.verify_auth_commit(
+                self.K_AUTH, self.WARD_ID, 41, theirs_root, 42, self.R2, mine
+            )
+        )
+
     def test_empty_root_sentinel(self):
         """A root inside a preimage is fixed-width, so the empty tree needs an encoding no
         real root can take. sha256(0x03), domain-separated from the leaf/internal/commit
@@ -1302,6 +1340,66 @@ class TestWardRecordCommit(unittest.TestCase):
         match the record it was filed for."""
         self.assertEqual(OS.record_commit(self._rec()), OS.record_commit(self._rec()))
         self.assertEqual(len(OS.record_commit(self._rec())), 32)
+
+
+class TestWardLeafOneofIsStrict(unittest.TestCase):
+    """`leaf.read_leaf_*`: the manual oneof is read canonically, or refused.
+
+    The codegen has no `oneof`, so `encoding` is a plain field. Two implementations could
+    therefore disagree about which arm a message is -- and the disagreement lands on the commit
+    preimage, which is what the trie hashes, so it is a different leaf and a different root.
+    Not a forgery: the device computes its own commit and trusts only its own root. It is
+    divergence, and divergence here is a proof the device cannot reproduce.
+    """
+
+    class _Sealed:
+        def __init__(self, nonce=None, tag=None, ct=b"x"):
+            self.nonce = b"\x00" * 12 if nonce is None else nonce
+            self.tag = b"\x00" * 16 if tag is None else tag
+            self.ct = ct
+
+    class _Clear:
+        def __init__(self, content=b"v"):
+            self.content = content
+
+    class _Content:
+        def __init__(self, encoding=None, encrypted=None, plaintext=None):
+            self.encoding = encoding
+            self.encrypted = encrypted
+            self.plaintext = plaintext
+
+    def test_an_unknown_encoding_is_refused_rather_than_normalised(self):
+        """It used to read as "not plaintext" and therefore as sealed. A later build that gives
+        encoding 2 a meaning would frame those bytes differently and commit to a different leaf
+        for a message this build had already accepted."""
+        msg = self._Content(encoding=2, encrypted=self._Sealed())
+        with self.assertRaises(DataError):
+            L.read_leaf_content(msg)
+
+    def test_setting_both_arms_is_refused(self):
+        """Firmware dispatched on the discriminator, the host twins on field presence, so this
+        framed one way on the device and the other way on the host."""
+        msg = self._Content(encoding=0, encrypted=self._Sealed(), plaintext=self._Clear())
+        with self.assertRaises(DataError):
+            L.read_leaf_content(msg)
+
+    def test_a_sealed_part_must_carry_a_real_nonce_and_tag(self):
+        """Both are fixed by the AEAD. A short one reached the cipher before."""
+        for bad in (self._Sealed(nonce=b"\x00" * 11), self._Sealed(tag=b"\x00" * 15)):
+            with self.assertRaises(DataError):
+                L.read_leaf_content(self._Content(encoding=0, encrypted=bad))
+
+    def test_the_canonical_forms_still_read(self):
+        """The strictness must not cost the two shapes that actually travel: a sealed part, and
+        the empty content that is how a delete is represented."""
+        part = L.read_leaf_content(self._Content(encoding=0, encrypted=self._Sealed()))
+        self.assertEqual(part[0], L.ENC_ENCRYPTED)
+        self.assertEqual(part[3], b"x")
+
+        empty = L.read_leaf_content(self._Content(encoding=1, plaintext=self._Clear(b"")))
+        self.assertTrue(L.is_delete(empty))
+
+        self.assertEqual(L.read_leaf_content(None), None)
 
 
 if __name__ == "__main__":
