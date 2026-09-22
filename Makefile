@@ -271,13 +271,22 @@ EMU_LOG_FILE ?= tests/trezor.log
 EMU_TEST_ARGS = --disable-animation --headless --output=$(EMU_LOG_FILE) --temporary-profile
 EMU_TEST = $(EMU) $(EMU_TEST_ARGS) -c
 
+# Please only add options used by CI, otherwise just run xtask directly.
+XTASK_BUILD_OPTS ?=
+XTASK_BUILD_OPTS += -p $(EXTAPP)
+XTASK_BUILD_OPTS += -m $(EXTAPP_MODEL)
+XTASK_BUILD_OPTS += --lang $(EXTAPP_LANG)
+ifeq ($(PRODUCTION),1)
+XTASK_BUILD_OPTS += --production
+endif
+
 extapp_build_firmware: ## build an extapp's firmware (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
 	@echo [EXTAPP-BUILD-FIRMWARE]
-	@xtask modular build -p $(EXTAPP) -m $(EXTAPP_MODEL) --lang $(EXTAPP_LANG)
+	@xtask modular build $(XTASK_BUILD_OPTS)
 
 extapp_build_emu: ## build an extapp's emulator (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
 	@echo [EXTAPP-BUILD-EMU]
-	@xtask modular build -p $(EXTAPP) -m $(EXTAPP_MODEL) --lang $(EXTAPP_LANG) -e
+	@xtask modular build $(XTASK_BUILD_OPTS) -e
 
 extapp_unit_tests: ## run unit tests for an extapp (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
 	@echo [EXTAPP-UNIT-TESTS]
