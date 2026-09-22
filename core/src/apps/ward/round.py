@@ -132,12 +132,24 @@ def mark_offline() -> None:
     request rather than after the failure. Clearing it afterwards would leave the whole window in
     which the answer is unknown looking like the window in which it is known.
 
-    CONNECT MODE NEEDS IT TOO, which this used to deny. A connect build does not publish, but
-    `set_entry` / `delete_entry` / `flush_queue` hand the host a candidate with its authenticators
-    and return; the device does NOT persist that candidate. From that moment the host can move the
-    backend's head to it while this session still believes its older root is the current one --
-    cryptographically sound proofs against a head that has been superseded. The device cannot know
-    which happened, so it says so, and reads route to the offline store until something re-adopts.
+    CONNECT MODE HAS THE SAME WINDOW AND DOES NOT DROP THE LATCH, which is a decision rather than
+    an oversight -- the reason this used to give ("nothing there moves the backend's head without
+    the device having adopted the result in the same breath") is simply wrong. `set_entry` /
+    `delete_entry` / `flush_queue` hand the host a candidate and return without persisting it, so
+    from that moment the host may move the backend's head while this session still believes its
+    older root is current.
+
+    WHAT STOPS IT BEING THE SAME FIX. A service build closes its own window: it publishes and
+    adopts the answer, so the gap is one round trip and the device ends it. A connect build cannot
+    -- only the host can re-establish a head here -- so dropping the latch does not narrow a window,
+    it ends the session's ability to act until the host reconciles. Measured: it fails the queue
+    drain loop (`remaining > 0` issues a second mutation), the lost-response delete retry, and a
+    read after a write. Seven device tests, all of them legitimate flows.
+
+    So the honest statement is that a connect session can hold a superseded head, that the screens
+    already say a value is not proven current, and that the fix is per-use freshness rather than a
+    latch -- a WM attestation taken immediately before a decision that needs one. A latch cannot
+    express "still current"; it only ever meant "this session reconciled once".
 
     NOT A FAILURE PATH. `adopt` sets the latch again as the last thing it does, so the ordinary
     outcome is a gap of one round trip.
