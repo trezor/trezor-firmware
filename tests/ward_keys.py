@@ -186,7 +186,7 @@ def auth_commit(
 # code with the firmware would agree with it by construction and prove nothing.
 
 _TAG_WM_HEAD = b"WARD WM HEAD v1"
-_TAG_WM_HEAD_INIT = b"WARD WM HEAD INIT v1"
+_TAG_WM_INIT = b"WARD WM INIT v1"
 
 
 def wm_head_preimage(
@@ -263,7 +263,7 @@ def head_init_sig(k_sig: bytes, ward_id: bytes, current_mac: bytes) -> bytes:
     from trezorlib import _ed25519
 
     return _ed25519.signature_unsafe(
-        wm_head_preimage(_TAG_WM_HEAD_INIT, ward_id, 0, current_mac, 0, current_mac),
+        wm_head_preimage(_TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac),
         k_sig,
         ward_id,
     )
@@ -276,7 +276,7 @@ def verify_head_init_sig(ward_id: bytes, current_mac: bytes, sig: bytes) -> bool
         _ed25519.checkvalid(
             sig,
             wm_head_preimage(
-                _TAG_WM_HEAD_INIT, ward_id, 0, current_mac, 0, current_mac
+                _TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac
             ),
             ward_id,
         )
