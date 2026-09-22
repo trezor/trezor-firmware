@@ -43,7 +43,7 @@
 //!
 //! A block file is otherwise dull on purpose: params in, one `UiOutcome` out,
 //! and the wire call in between. Anything cleverer than that belongs in a
-//! shared helper (`paged`, `details`) so that no single block owns behaviour
+//! shared helper (`paged`, `menu`) so that no single block owns behaviour
 //! the others should have too.
 //!
 //! Each file opens with its own `# Example`; the ones below show the shape all
@@ -64,7 +64,8 @@
 //!         Some("Recipient"),
 //!         None,
 //!         None,
-//!         None,
+//!         &[],
+//!         true,
 //!     ))?
 //!     .confirmed()?;
 //!
@@ -73,14 +74,15 @@
 //!         "Sign the transaction?",
 //!         None,
 //!         None,
-//!         None,
+//!         &[],
+//!         true,
 //!     ))?
 //!     .confirmed()
 //! }
 //!
 //! // Or handle the cancel yourself, when leaving is not an error.
 //! fn offer_details(address: &str) -> trezor_app_sdk::Result<bool> {
-//!     let params = ConfirmValue::new("Send", address, ValueKind::Address, None, None, None, None);
+//!     let params = ConfirmValue::new("Send", address, ValueKind::Address, None, None, None, &[], true);
 //!     Ok(ui::confirm_value(params)?.is_confirmed())
 //! }
 //! ```
@@ -93,7 +95,8 @@ mod confirm_data;
 mod confirm_properties;
 mod confirm_summary;
 mod confirm_value;
-mod details;
+mod extra;
+mod menu;
 mod paged;
 mod show_address;
 mod show_notice;
@@ -104,6 +107,7 @@ pub use confirm_data::{ConfirmData, confirm_data};
 pub use confirm_properties::{ConfirmProperties, confirm_properties};
 pub use confirm_summary::{ConfirmSummary, confirm_summary};
 pub use confirm_value::{ConfirmValue, Footer, ValueKind, confirm_value};
+pub use extra::{Extra, ExtraItem};
 use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::{Archived, to_bytes};
@@ -115,7 +119,7 @@ use ufmt::derive::uDebug;
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
 use crate::service::CoreIpcService;
-/// A key/value fact, as shown in a list or on a details page.
+/// A key/value fact, as shown in a list or on a page of extras.
 pub use crate::structs::Property;
 use crate::structs::{TrezorUiEnum, TrezorUiResult};
 use crate::util::Timeout;
@@ -177,15 +181,27 @@ fn call_raw(request: &TrezorUiEnum) -> Result<TrezorUiResult> {
     deserialize::<TrezorUiResult, Failure>(archived).map_err(|_| Error::InvalidMessage)
 }
 
-/// Sends a single-screen block and maps the reply to an outcome.
-fn call(request: &TrezorUiEnum) -> Result<UiOutcome> {
-    match call_raw(request)? {
-        TrezorUiResult::Confirmed => Ok(UiOutcome::Confirmed),
-        TrezorUiResult::Cancelled => Ok(UiOutcome::Cancelled),
-        // A single-screen block never asks for navigation and never returns a
-        // number, so core producing one is a protocol violation, not a gesture.
-        TrezorUiResult::Back | TrezorUiResult::Info | TrezorUiResult::Integer(_) => {
-            Err(Error::InvalidMessage)
+/// Sends a block and returns what the user did with it.
+///
+/// When a block offers extras, looking at them and coming back brings the same
+/// screen up again, so the request is simply re-sent. That is invisible to the
+/// caller: the block is still one call and one answer.
+fn call(request: &TrezorUiEnum, extras: &[ExtraItem<'_>], cancel: bool) -> Result<UiOutcome> {
+    loop {
+        match call_raw(request)? {
+            TrezorUiResult::Confirmed => return Ok(UiOutcome::Confirmed),
+            TrezorUiResult::Cancelled => return Ok(UiOutcome::Cancelled),
+            // The user asked for the extras. A block that offered none cannot
+            // produce this, so it is a protocol violation rather than a gesture.
+            TrezorUiResult::Info => {
+                if let Some(outcome) = menu::open(extras, cancel)? {
+                    return Ok(outcome);
+                }
+            }
+            // A block never asks for back-navigation and never returns a number.
+            TrezorUiResult::Back | TrezorUiResult::Integer(_) => {
+                return Err(Error::InvalidMessage);
+            }
         }
     }
 }

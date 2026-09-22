@@ -31,14 +31,19 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
             Some(subtitle.as_str()),
             Some(account_name.as_str()),
             Some(&dp.format_path()),
+            &[],
+            false,
         ))
         .c()?
         .confirmed()
         .c()?;
 
-        modui::show_success(ShowSuccess::new(
+        // Nothing hangs on how the success screen went away.
+        let _ = modui::show_success(ShowSuccess::new(
             tr!("words__title_done"),
             tr!("address__confirmed"),
+            &[],
+            false,
         ))
         .c()?;
     }

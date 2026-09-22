@@ -10,8 +10,8 @@ use primitive_types::U256;
 use trezor_app_sdk::{
     Error, Result, ResultExt,
     modui::{
-        self, ConfirmAction, ConfirmData, ConfirmProperties, ConfirmSummary, ConfirmValue, Footer,
-        Property, Severity, ShowNotice, ValueKind,
+        self, ConfirmAction, ConfirmData, ConfirmProperties, ConfirmSummary, ConfirmValue,
+        ExtraItem, Footer, Property, Severity, ShowNotice, ValueKind,
     },
 };
 
@@ -31,7 +31,8 @@ pub(crate) fn confirm_message_hash(hash: &[u8]) -> Result<()> {
         None,
         None,
         None,
-        None,
+        &[],
+        true,
     ))
     .c()?
     .confirmed()
@@ -63,7 +64,8 @@ pub(crate) fn confirm_typed_data_final() -> Result<()> {
         tr!("ethereum__sign_eip712"),
         None,
         None,
-        None,
+        &[],
+        true,
     ))
     .c()?
     .confirmed()
@@ -78,7 +80,8 @@ pub(crate) fn confirm_empty_typed_message() -> Result<()> {
         None,
         Some(tr!("ethereum__no_message_field")),
         None,
-        None,
+        &[],
+        true,
     ))
     .c()?
     .confirmed()
@@ -116,7 +119,8 @@ pub fn confirm_note(note: &str) -> Result<()> {
         None,
         None,
         None,
-        None,
+        &[],
+        true,
     ))
     .c()?
     .confirmed()
@@ -137,7 +141,8 @@ pub fn confirm_freeze_operations(
         None,
         None,
         None,
-        None,
+        &[],
+        true,
     ))
     .c()?
     .confirmed()
@@ -157,6 +162,8 @@ pub fn confirm_freeze_operations(
             Property::new(tr!("words__resource"), resource, false),
         ],
         None,
+        &[],
+        false,
     ))
     .c()?
     .confirmed()
@@ -180,7 +187,8 @@ pub fn confirm_claim(
             None,
             Some(tr!("tron__owner_address")),
             Some(Footer::Warning(tr!("address__warning_not_yours"))),
-            None,
+            &[],
+            true,
         ))
         .c()?
         .confirmed()
@@ -215,19 +223,23 @@ pub fn confirm_tron_claim(
 ) -> Result<()> {
     let account_properties = get_account_info_items(account, account_path);
 
-    let details = (!account_properties.is_empty()).then(|| {
-        (
-            tr!("address_details__account_info"),
-            account_properties.as_slice(),
-        )
-    });
+    let extras = [ExtraItem::simple(
+        tr!("address_details__account_info"),
+        account_properties.as_slice(),
+    )];
+    let extras = if account_properties.is_empty() {
+        &extras[..0]
+    } else {
+        &extras[..]
+    };
 
     modui::confirm_action(ConfirmAction::new(
         title,
         intro_question,
         None,
         None,
-        details,
+        extras,
+        true,
     ))
     .c()?
     .confirmed()
@@ -254,6 +266,8 @@ fn confirm_tron_summary(
         account_items
             .as_deref()
             .map(|items| (tr!("address_details__account_info"), items)),
+        &[],
+        false,
     ))
     .c()?
     .confirmed()
@@ -270,6 +284,10 @@ fn confirm_tron_send(
         Property::plain(tr!("words__account"), account_details.0.unwrap_or("")),
         Property::plain(tr!("address_details__derivation_path"), account_details.1),
     ];
+    let extras = [ExtraItem::simple(
+        tr!("address_details__account_info"),
+        &account_items,
+    )];
 
     modui::confirm_value(ConfirmValue::new(
         tr!("words__send"),
@@ -278,7 +296,8 @@ fn confirm_tron_send(
         Some(tr!("words__recipient")),
         None,
         Some(Footer::Hint(tr!("address__check_with_source"))),
-        Some((tr!("address_details__account_info"), &account_items)),
+        &extras,
+        true,
     ))
     .c()?
     .confirmed()
@@ -301,7 +320,8 @@ pub fn confirm_tron_transfer(
         Some(tr!("words__recipient")),
         None,
         None,
-        None,
+        &[],
+        true,
     ))
     .c()?
     .confirmed()
@@ -314,6 +334,8 @@ pub fn confirm_tron_transfer(
             Property::new(tr!("words__chain"), "Tron", true),
         ],
         None,
+        &[],
+        false,
     ))
     .c()?
     .confirmed()
@@ -324,6 +346,8 @@ pub fn confirm_tron_transfer(
         None,
         Some((tr!("words__fee_limit"), maximum_fee)),
         None,
+        &[],
+        false,
     ))
     .c()?
     .confirmed()
@@ -352,10 +376,17 @@ fn confirm_tron_approve(
         )
     };
 
-    modui::confirm_action(ConfirmAction::new(title, action_subtitle, None, None, None))
-        .c()?
-        .confirmed()
-        .c()?;
+    modui::confirm_action(ConfirmAction::new(
+        title,
+        action_subtitle,
+        None,
+        None,
+        &[],
+        true,
+    ))
+    .c()?
+    .confirmed()
+    .c()?;
 
     modui::confirm_value(ConfirmValue::new(
         title,
@@ -364,7 +395,8 @@ fn confirm_tron_approve(
         Some(value_subtitle),
         None,
         None,
-        None,
+        &[],
+        true,
     ))
     .c()?
     .confirmed()
@@ -377,6 +409,8 @@ fn confirm_tron_approve(
             Property::new(tr!("words__chain"), "Tron", true),
         ],
         None,
+        &[],
+        false,
     ))
     .c()?
     .confirmed()
@@ -387,6 +421,8 @@ fn confirm_tron_approve(
         None,
         Some((tr!("words__fee_limit"), maximum_fee)),
         None,
+        &[],
+        false,
     ))
     .c()?
     .confirmed()
@@ -398,6 +434,8 @@ pub fn confirm_tron_voting<'a>(items: &[Property<'a>]) -> Result<()> {
         tr!("words__review"),
         items,
         Some(tr!("words__voting")),
+        &[],
+        false,
     ))
     .c()?
     .confirmed()
@@ -415,6 +453,8 @@ fn confirm_ethereum_unknown_contract_warning() -> Result<()> {
         Severity::Danger,
         tr!("words__important"),
         &content,
+        &[],
+        false,
     ))
     .c()?
     .confirmed()
@@ -435,7 +475,8 @@ pub fn confirm_unknown_smart_contract(
         None,
         None,
         None,
-        None,
+        &[],
+        true,
     ))
     .c()?
     .confirmed()
@@ -447,6 +488,8 @@ pub fn confirm_unknown_smart_contract(
         tr!("ethereum__title_input_data"),
         &contract.data,
         None,
+        &[],
+        true,
     ))
     .c()?
     .confirmed()

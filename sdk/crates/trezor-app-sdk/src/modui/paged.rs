@@ -15,7 +15,7 @@
 //! // A block supplies only "render page N"; the loop belongs here:
 //! paged::confirm_in_pages(page_count, |ctx| {
 //!     let slice = page_of(data, ctx.index);
-//!     show_page(&params, slice, &ctx) // uses ctx.verb(), ctx.verb_skip()
+//!     show_page(&params, slice, &ctx) // uses ctx.verb(), ctx.verb_secondary()
 //! })
 //! ```
 
@@ -47,6 +47,10 @@ pub(super) enum Page {
     Advance,
     /// Accept the remainder without reading it.
     ConfirmAll,
+    /// Show the same page again — the user went somewhere and came back.
+    Stay,
+    /// Something ended the block outright, such as a menu entry.
+    Decided(UiOutcome),
     Cancelled,
 }
 
@@ -67,9 +71,15 @@ impl PageCtx {
         }
     }
 
-    /// Shortcut past the remaining pages; meaningless on the last one.
-    pub fn verb_skip(&self) -> Option<&'static str> {
-        if self.is_last {
+    /// Label of the screen's secondary button, if it has one.
+    ///
+    /// The wire gives a paged screen exactly one secondary button, so it can
+    /// either skip ahead or open the menu, never both. A menu wins, because
+    /// skipping is a convenience and the menu may hold the way out.
+    pub fn verb_secondary(&self, has_menu: bool) -> Option<&'static str> {
+        if has_menu {
+            Some("Menu")
+        } else if self.is_last {
             None
         } else {
             Some("Confirm all")
@@ -90,15 +100,17 @@ where
 {
     // Empty content still gets one screen, or the user confirms nothing.
     let page_count = page_count.max(1);
+    let mut index = 0;
 
-    for index in 0..page_count {
+    while index < page_count {
         let is_last = index + 1 == page_count;
-        let ctx = PageCtx { index, is_last };
 
-        match show(ctx)? {
+        match show(PageCtx { index, is_last })? {
             Page::Advance if is_last => break,
-            Page::Advance => (),
+            Page::Advance => index += 1,
             Page::ConfirmAll => break,
+            Page::Stay => (),
+            Page::Decided(outcome) => return Ok(outcome),
             Page::Cancelled => return Ok(UiOutcome::Cancelled),
         }
     }
