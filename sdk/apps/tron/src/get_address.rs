@@ -1,13 +1,13 @@
 use crate::{
     common::{COIN, SLIP44_ID, get_encoded_address, get_pubkey_hash},
     paths::{Bip32Path, PATTERNS_ADDRESS},
-    proto::{
-        common::button_request::ButtonRequestType,
-        tron::{Address, GetAddress},
-    },
+    proto::tron::{Address, GetAddress},
     uformat,
 };
-use trezor_app_sdk::{Result, ResultExt, crypto, ui};
+use trezor_app_sdk::{
+    Result, ResultExt, crypto,
+    modui::{self, ShowAddress, ShowSuccess},
+};
 
 pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
     let dp: Bip32Path = Bip32Path::from_slice(&msg.address_n);
@@ -26,30 +26,19 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
             .get_account_name(COIN, &PATTERNS_ADDRESS, SLIP44_ID)
             .ok_or(crate::Error::DataError("Failed to get account name"))
             .c()?;
-        ui::error_if_not_confirmed(
-            ui::show_address(ui::ShowAddress::new(
-                &address,
-                &address,
-                None,
-                Some(subtitle.as_str()),
-                Some(account_name.as_str()),
-                Some(&dp.format_path()),
-                &[],
-                msg.chunkify(),
-                ButtonRequestType::Other.into(),
-                true,
-            ))
-            .c()?,
-        )
+        modui::show_address(ShowAddress::new(
+            &address,
+            Some(subtitle.as_str()),
+            Some(account_name.as_str()),
+            Some(&dp.format_path()),
+        ))
+        .c()?
+        .confirmed()
         .c()?;
 
-        ui::show_success(ui::ShowSuccess::new(
+        modui::show_success(ShowSuccess::new(
             tr!("words__title_done"),
             tr!("address__confirmed"),
-            tr!("instructions__continue_in_app"),
-            Some(3200),
-            None,
-            ButtonRequestType::Other.into(),
         ))
         .c()?;
     }
