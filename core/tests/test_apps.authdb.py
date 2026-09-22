@@ -489,7 +489,7 @@ class TestWardProofSoundness(unittest.TestCase):
         return split_bit.to_bytes(2, "big") + sibling
 
     def test_nonmembership_rejects_relabelled_witness_path(self):
-        from apps.ward import service
+        from apps.ward import leaf, trie
 
         target = bytes([0x40]) + b"\x00" * 31   # 0100....
         witness = bytes([0x60]) + b"\x00" * 31  # 0110....
@@ -499,19 +499,19 @@ class TestWardProofSoundness(unittest.TestCase):
         witness_commit = b"W" * 32
         other_commit = b"B" * 32
 
-        target_leaf = service.leaf_hash_of(target, target_commit)
-        witness_leaf = service.leaf_hash_of(witness, witness_commit)
-        other_leaf = service.leaf_hash_of(other, other_commit)
+        target_leaf = leaf.leaf_hash_of(target, target_commit)
+        witness_leaf = leaf.leaf_hash_of(witness, witness_commit)
+        other_leaf = leaf.leaf_hash_of(other, other_commit)
 
-        left = service.internal_hash(2, target_leaf, witness_leaf)
-        root = service.internal_hash(0, left, other_leaf)
+        left = trie.internal_hash(2, target_leaf, witness_leaf)
+        root = trie.internal_hash(0, left, other_leaf)
 
         honest_proof = [
             self._proof_elem(2, target_leaf),
             self._proof_elem(0, other_leaf),
         ]
         self.assertFalse(
-            service.verify_nonmembership(target, witness, witness_commit, honest_proof, root)
+            trie.verify_nonmembership(target, witness, witness_commit, honest_proof, root)
         )
 
         forged_proof = [
@@ -519,11 +519,11 @@ class TestWardProofSoundness(unittest.TestCase):
             self._proof_elem(0, other_leaf),
         ]
         self.assertFalse(
-            service.verify_nonmembership(target, witness, witness_commit, forged_proof, root)
+            trie.verify_nonmembership(target, witness, witness_commit, forged_proof, root)
         )
 
     def test_insert_rejects_forged_nonmembership_witness(self):
-        from apps.ward import service
+        from apps.ward import leaf, trie
 
         target = bytes([0x40]) + b"\x00" * 31   # actually present in the tree
         witness = bytes([0x60]) + b"\x00" * 31
@@ -533,12 +533,12 @@ class TestWardProofSoundness(unittest.TestCase):
         witness_commit = b"W" * 32
         other_commit = b"B" * 32
 
-        target_leaf = service.leaf_hash_of(target, target_commit)
-        witness_leaf = service.leaf_hash_of(witness, witness_commit)
-        other_leaf = service.leaf_hash_of(other, other_commit)
+        target_leaf = leaf.leaf_hash_of(target, target_commit)
+        witness_leaf = leaf.leaf_hash_of(witness, witness_commit)
+        other_leaf = leaf.leaf_hash_of(other, other_commit)
 
-        left = service.internal_hash(2, target_leaf, witness_leaf)
-        root = service.internal_hash(0, left, other_leaf)
+        left = trie.internal_hash(2, target_leaf, witness_leaf)
+        root = trie.internal_hash(0, left, other_leaf)
 
         forged_proof = [
             self._proof_elem(1, target_leaf),
@@ -547,7 +547,7 @@ class TestWardProofSoundness(unittest.TestCase):
 
         new_leaf = (b"N" * 12, b"G" * 16, b"ciphertext")
         with self.assertRaises(ValueError):
-            service.compute_new_root(
+            trie.compute_new_root(
                 target,
                 None,
                 new_leaf,
@@ -565,13 +565,15 @@ class TestWardProofSoundness(unittest.TestCase):
     # derived a root no rebuilder agreed with, after which nothing in the tree
     # verified against the root the device had stored.
 
-    def _tree_bc(self, service):
+    def _tree_bc(self):
         """{b, c}: both start 0b01, so they part at bit 2. root = internal(2, b, c)."""
+        from apps.ward import leaf, trie
+
         b = bytes([0x40]) + b"\x00" * 31        # 0b01000000...
         c = bytes([0x60]) + b"\x00" * 31        # 0b01100000...
-        lb = service.leaf_hash_of(b, b"B" * 32)
-        lc = service.leaf_hash_of(c, b"C" * 32)
-        return b, c, lb, lc, service.internal_hash(2, lb, lc)
+        lb = leaf.leaf_hash_of(b, b"B" * 32)
+        lc = leaf.leaf_hash_of(c, b"C" * 32)
+        return b, c, lb, lc, trie.internal_hash(2, lb, lc)
 
     def test_delete_promotes_a_branch_sibling_unchanged(self):
         """The sibling that takes the collapsing branch's place is a BRANCH here.
@@ -579,21 +581,21 @@ class TestWardProofSoundness(unittest.TestCase):
         Its hash no longer names the depth it just left, so it promotes as-is and the
         derived root is exactly the canonical tree over what remains. Under the old
         format it carried a skiplen measured from the parent that had just gone."""
-        from apps.ward import service
+        from apps.ward import leaf, trie
 
-        b, c, lb, lc, sub = self._tree_bc(service)
+        b, c, lb, lc, sub = self._tree_bc()
         a = b"\x00" * 32                        # 0b000...; parts from b at bit 1
         a_leaf = ("address", None, (1, b"", b"", b"A" * 32))
-        la = service.leaf_hash_of(a, service.commit_of(*a_leaf))
-        root = service.internal_hash(1, la, sub)
+        la = leaf.leaf_hash_of(a, leaf.commit_of(*a_leaf))
+        root = trie.internal_hash(1, la, sub)
 
         proof = [self._proof_elem(1, sub)]      # a's membership proof, leaf-to-root
-        derived = service.compute_new_root(a, a_leaf, None, proof, root)
+        derived = trie.compute_new_root(a, a_leaf, None, proof, root)
         # what a rebuilder computes for the surviving {b, c}: the promoted subtree
         self.assertEqual(derived, sub)
         # and the survivors still verify against it
-        self.assertEqual(service.reconstruct(lb, [self._proof_elem(2, lc)], b), derived)
-        self.assertEqual(service.reconstruct(lc, [self._proof_elem(2, lb)], c), derived)
+        self.assertEqual(trie.reconstruct(lb, [self._proof_elem(2, lc)], b), derived)
+        self.assertEqual(trie.reconstruct(lc, [self._proof_elem(2, lb)], c), derived)
 
     def test_insert_splices_above_an_existing_branch(self):
         """The new key parts from its witness INSIDE a compressed run.
@@ -602,21 +604,21 @@ class TestWardProofSoundness(unittest.TestCase):
         ABOVE the existing one and re-parents it. That was an outright refusal
         ("insert split_bit must be below the witness path") and is the ordinary case
         for a random key, not a corner one."""
-        from apps.ward import service
+        from apps.ward import leaf, trie
 
-        b, c, lb, lc, root = self._tree_bc(service)
+        b, c, lb, lc, root = self._tree_bc()
         a = b"\x00" * 32
         a_part = (1, b"", b"", b"A" * 32)
 
         # the lookup for `a` descends to b, which is therefore the witness
         proof = [self._proof_elem(2, lc)]
-        derived = service.compute_new_root(
+        derived = trie.compute_new_root(
             a, None, ("address", None, a_part), proof, root,
             witness_entry_key=b, witness_commit=b"B" * 32,
         )
 
-        la = service.leaf_hash_of(a, service.commit_of("address", None, a_part))
-        self.assertEqual(derived, service.internal_hash(1, la, root))
+        la = leaf.leaf_hash_of(a, leaf.commit_of("address", None, a_part))
+        self.assertEqual(derived, trie.internal_hash(1, la, root))
 
     def test_false_absence_by_boundary_shift_is_rejected(self):
         """A PRESENT key proved absent, using its own membership proof.
@@ -625,10 +627,10 @@ class TestWardProofSoundness(unittest.TestCase):
         nothing marking the boundary, so (K, C) and (K || C[0], C[1:]) hash alike. The
         shifted key differs from the target and routes identically -- bits 0..255 read
         only the first 32 bytes -- so the other two checks pass it."""
-        from apps.ward import service
+        from apps.ward import leaf, trie
         from trezor.wire import DataError
 
-        b, c, lb, lc, root = self._tree_bc(service)
+        b, c, lb, lc, root = self._tree_bc()
         commit = b"B" * 32
         proof = [self._proof_elem(2, lc)]       # b's genuine MEMBERSHIP proof
         shifted_key, shifted_commit = b + commit[:1], commit[1:]
@@ -636,9 +638,9 @@ class TestWardProofSoundness(unittest.TestCase):
         self.assertEqual(shifted_key + shifted_commit, b + commit)
 
         with self.assertRaises(DataError):
-            service.leaf_hash_of(shifted_key, shifted_commit)
+            leaf.leaf_hash_of(shifted_key, shifted_commit)
         with self.assertRaises(DataError):
-            service.verify_nonmembership(b, shifted_key, shifted_commit, proof, root)
+            trie.verify_nonmembership(b, shifted_key, shifted_commit, proof, root)
 
 
 if __name__ == "__main__":

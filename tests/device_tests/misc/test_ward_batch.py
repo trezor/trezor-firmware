@@ -11,7 +11,7 @@ The WARD Manager's final attestation is signed locally with the debug WM key
 
 KNOWN LIMITATION exercised by ``test_ward_batch_multi_commit`` (xfail): the device
 pulls every pre-state proof against the STATIC pre-batch root, but the current
-``service.compute_batch_root`` verifies each leaf against the running root, so a batch
+``trie.compute_batch_root`` verifies each leaf against the running root, so a batch
 of >=2 leaves is rejected. It needs a real streaming multiproof over the pre-batch
 root (ward-design §4.2). Single-leaf batches and rollback are unaffected.
 """

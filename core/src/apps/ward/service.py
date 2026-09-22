@@ -1,25 +1,66 @@
-"""WARD service — the on-device trust anchor (TW), as a single module.
+"""WARD service — the on-device trust anchor (TW): orchestration and authorisation.
 
-Consolidates the WARD trust-anchor logic that was previously split across
-apps.authdb._mpt (MPT proof/root primitives), apps.authdb._qm (WM attestation
-verification), apps.authdb.__init__ (wallet/MAC derivation) and apps.ward.__init__
-(queue + root helpers), plus the write/lookup orchestration that used to live
-inline in the message handlers.
+What is left here after the split is everything that needs the DEVICE: storage, the
+user, the WM, and the ordering rules between them. The three things that do not are
+their own modules, and this one imports them:
+
+    keys    the seed-derived key schedule, and the keyed path an identifier maps to
+    leaf    the two-part sealed leaf and its keyless commitment
+    trie    proof verification and root derivation -- pure, total, stateless
+
+The split is along what each part needs to be TRUSTED for, not merely along file size.
+`trie` takes bytes and returns bytes: it can be checked against published vectors with
+no wallet, no storage and no screen in play, which is what makes its soundness
+argument reviewable on its own. `leaf` holds the encoding and the AEAD but no key
+schedule -- keys arrive as arguments. `keys` holds the schedule and nothing that uses
+it. Only this module combines them, and only this module can therefore get the
+COMBINATION wrong, which is where the interesting failures live.
+
+What remains here:
+  - the WM attestation and the CAS/AuthCommit chain -- who may advance the head
+  - the ACL and the trusted screens -- what the user actually approved
+  - the queue/perform/finalize state machine, single and batch, and the revert path
+  - sync, ingest, reconcile, verify_chain
 
 Layering:
   - persistence  -> storage.ward_store (counter, authenticated root, queue, sync ctx)
   - callers      -> apps.common.ward (Core capability boundary) and the thin
                     host-facing protobuf handlers in apps.ward.*
 
-The authenticity/freshness primitives are implemented and audited exactly once
-here; production firmware never accepts a host-supplied root.
+Production firmware never accepts a host-supplied root.
 """
-
 from micropython import const
 from typing import TYPE_CHECKING
 
+from .keys import (
+    ENTRY_TYPE_ADDRESS,
+    compute_mac,
+    derive_k_data,
+    derive_k_ident,
+    derive_k_path,
+    derive_mac_key,
+    derive_ward_key,
+    entry_key,
+    get_wallet_id,
+    get_ward_id,
+    k_sig_pubkey,
+)
+from .leaf import EMPTY_PART, decode_content, encode_content, encode_identity
+from .trie import (
+    compute_batch_root,
+    compute_new_root,
+    verify_nonmembership,
+    verify_proof,
+)
+
 if TYPE_CHECKING:
     pass
+
+
+def sha256d(data: bytes) -> bytes:
+    from trezor.crypto.hashlib import sha256
+
+    return sha256(data).digest()
 
 # ---------------------------------------------------------------------------
 # WM (WARD Manager / QM) Ed25519 attestation keys + domains.
@@ -32,6 +73,7 @@ if TYPE_CHECKING:
 #   - final/install (WARDConfirmedByWM):
 #       b"WARD FINAL v1" || wallet_id || counter(4B BE) || mac
 # ---------------------------------------------------------------------------
+
 
 # PLACEHOLDER production key (all-zero): production firmware rejects every WM
 # signature until a real WM public key is provisioned here.
@@ -57,722 +99,6 @@ _WARD_FINAL_DOMAIN = b"WARD FINAL v1"
 _WARD_VERSION = const(1)
 # All-zero MAC == the candidate/attested state that empties the tree.
 _ZERO_MAC = b"\x00" * 32
-
-
-# ---------------------------------------------------------------------------
-# MPT hash / proof primitives (formerly apps.authdb._mpt).
-#
-# A leaf is TWO independently encoded parts, each with its own key, plus the clear
-# key_type that selects both (ToDo-leaf_structure.md):
-#
-#   LeafIdentity   identifier, app_id, device_id       sealed under K_ident(key_type)
-#   LeafContent    C_leaf, value                       sealed under K_data(key_type)
-#
-#   entry_key = HMAC-SHA256(K_path, scope || identifier)      (== LeafIdentityMAC)
-#   part(p)   = encoding(1B)||len8(nonce)||nonce||len8(tag)||tag||len32(body)||body
-#   commit    = sha256(0x02 || len8(key_type)||key_type
-#                           || len32(id_part)||id_part || len32(val_part)||val_part)
-#   leaf      = sha256(0x00 || entry_key || commit)
-#
-# C_leaf is the GLOBAL root counter stamped onto the leaf on change; it lives inside
-# the content part (never in entry_key, so an entry keeps one stable path across
-# versions). Storing the identity in the leaf is what lets any holder recover the MAC
-# preimage and check that a stored MAC really is its MAC. compute_new_root() is the
-# single INIT/INSERT/UPDATE/DELETE state machine; it does not enforce the
-# per-generation +1 rule -- update_entry() does.
-# ---------------------------------------------------------------------------
-
-
-def sha256d(data: bytes) -> bytes:
-    from trezor.crypto.hashlib import sha256
-
-    return sha256(data).digest()
-
-
-# Default entry type. key_type is a real wire/storage field now (it selects both
-# K_ident and K_data); this is only the default when a caller omits it.
-_ENTRY_TYPE_ADDRESS = "address"
-
-
-def entry_key(
-    k_path: bytes,
-    app_id,
-    identifier: bytes,
-    key_type: str = _ENTRY_TYPE_ADDRESS,
-    device_id: int = 0,
-) -> bytes:
-    """Keyed 32-byte trie path, a.k.a. LeafIdentityMAC (ward-design.md §1/§3):
-
-        scope     = app_id || 0x00 || key_type || 0x00 || device_id(1B)
-        entry_key = HMAC-SHA256(K_path, scope || identifier)
-
-    A PRF-derived path, NOT an authenticator (§2.5): only a holder of K_path can
-    compute it, so the host cannot forge a path or brute-force a low-entropy
-    identifier. `device_id`=0 is a global entry; >0 is a device slot (§5). Must stay
-    byte-for-byte identical to trezorlib `ward_crypto.leaf_identity_mac` and the
-    host. Note the host does not need to derive this to *serve* a proof -- the MAC is
-    stored alongside the leaf; K_path is for checking a stored MAC against its stored
-    identity, or computing a MAC for an identity not in the store."""
-    from trezor.crypto import hmac as crypto_hmac
-
-    if app_id is None:
-        app_id = b""
-    elif isinstance(app_id, str):
-        app_id = app_id.encode()
-    scope = app_id + b"\x00" + key_type.encode() + b"\x00" + bytes([device_id & 0xFF])
-    return crypto_hmac(crypto_hmac.SHA256, k_path, scope + identifier).digest()
-
-
-# Per-part leaf mode (dev switch). False = encrypted (production); True = plaintext
-# (host-inspectable; debug/emulator builds only). The two parts are INDEPENDENT: a
-# build may seal the identity and leave the content readable, or vice versa. The wire
-# is a self-describing oneof either way (LeafIdentity / LeafContent), and each part's
-# encoding byte is inside the commit, so the modes can never collide.
-# FIXME(ward, INACTIVE): both flags are False in every shipped build, so the plaintext
-# branches below are unreachable. They are a deliberate dev/emulator switch, not dead
-# code -- the wire is self-describing per part either way.
-WARD_PLAINTEXT_IDENTITY = False
-WARD_PLAINTEXT_CONTENT = False
-
-# The plaintext codecs are compiled in only under __debug__, so a release build
-# cannot produce or read a plaintext part -- fail loudly at import, not at first write.
-if (WARD_PLAINTEXT_IDENTITY or WARD_PLAINTEXT_CONTENT) and not __debug__:
-    raise RuntimeError("WARD plaintext leaf parts require a __debug__ build")
-
-# part encodings (the byte that goes into the commit)
-ENC_ENCRYPTED = const(0)
-ENC_PLAINTEXT = const(1)
-
-# An absent/empty part: (encoding, nonce, tag, body). An empty CONTENT body is a
-# delete; the identity part survives it, so a tombstone stays self-describing.
-EMPTY_PART = (ENC_PLAINTEXT, b"", b"", b"")
-
-
-def part_is_empty(part) -> bool:
-    return part is None or len(part[3]) == 0
-
-
-def _part_bytes(part) -> bytes:
-    """encoding(1B) || len8(nonce) || nonce || len8(tag) || tag || len32(body) || body"""
-    encoding, nonce, tag, body = part if part is not None else EMPTY_PART
-    return (
-        bytes([encoding])
-        + bytes([len(nonce)])
-        + nonce
-        + bytes([len(tag)])
-        + tag
-        + len(body).to_bytes(4, "big")
-        + body
-    )
-
-
-def commit_of(key_type: str, id_part, val_part) -> bytes:
-    """Keyless leaf commitment (§2.2) over both parts and the clear key_type. A host
-    with no keys can still recompute it whatever each part's encoding is; an empty
-    val_part body is a delete."""
-    kt = key_type.encode()
-    id_bytes = _part_bytes(id_part)
-    val_bytes = _part_bytes(val_part)
-    return sha256d(
-        b"\x02"
-        + bytes([len(kt)])
-        + kt
-        + len(id_bytes).to_bytes(4, "big")
-        + id_bytes
-        + len(val_bytes).to_bytes(4, "big")
-        + val_bytes
-    )
-
-
-def leaf_hash_of(entry_key_: bytes, commit: bytes) -> bytes:
-    """Leaf: sha256(0x00 || entry_key || commit) (§2.2). Takes the commitment
-    directly, so a verifier can rebuild a witness leaf from (entry_key, commit).
-
-    THE LENGTHS ARE THE SECURITY. The preimage concatenates two byte strings with
-    nothing marking the boundary, so without a fixed width the split is ambiguous:
-    (K, C) and (K || C[0], C[1:]) produce IDENTICAL hashes, with no attack on
-    SHA-256 involved.
-
-    That was a live proof-soundness break, not a theoretical one. A non-membership
-    witness is host-supplied, and the only checks on it were "differs from the
-    target" and "agrees at every branch bit". A 33-byte witness key K || C[0]
-    differs from K, routes identically (routing reads bits 0..255, i.e. the first
-    32 bytes), and hashes to the target's own leaf -- so a host could take the
-    target's genuine MEMBERSHIP proof and have it accepted as proof of ABSENCE,
-    hiding any present entry on every read.
-
-    Enforced HERE rather than at each call site so no future caller can reintroduce
-    it by forgetting. Every firmware caller already passes 32-byte operands
-    (`entry_key` is an HMAC, `commit_of` a SHA-256), so this only ever fires on
-    something the host made up."""
-    from trezor.wire import DataError
-
-    if len(entry_key_) != 32 or len(commit) != 32:
-        raise DataError("WARD: leaf operands must be 32 bytes")
-    return sha256d(b"\x00" + entry_key_ + commit)
-
-
-def leaf_hash(entry_key_: bytes, key_type: str, id_part, val_part) -> bytes:
-    """Leaf hash from the two parts: leaf_hash_of(entry_key, commit_of(...))."""
-    return leaf_hash_of(entry_key_, commit_of(key_type, id_part, val_part))
-
-
-# --- AEAD plumbing (ChaCha20-Poly1305 RFC-7539, 12-byte nonce, §2.1) ---
-
-_AEAD_BUCKETS = (64, 256, 1024, 4096)
-
-_AAD_IDENTITY = b"\x03"
-_AAD_CONTENT = b"\x02"
-
-
-def _aead_aad(domain: bytes, entry_key_: bytes, key_type: str) -> bytes:
-    """Binds a part to its leaf, its key_type and its part domain, so a part can
-    never be consumed as the other part or moved to another path."""
-    return domain + entry_key_ + key_type.encode()
-
-
-def _pad_bucket(pt: bytes) -> bytes:
-    for b in _AEAD_BUCKETS:
-        if len(pt) <= b:
-            return pt + b"\x00" * (b - len(pt))
-    rem = (-len(pt)) % _AEAD_BUCKETS[-1]
-    return pt + b"\x00" * rem
-
-
-def _seal(key: bytes, domain: bytes, entry_key_: bytes, key_type: str, pt: bytes):
-    """Return an encrypted part (ENC_ENCRYPTED, nonce, tag, ct). The nonce is
-    fresh-random per part per write -- never derived (§4.5: rollback can recur
-    (entry_key, C_leaf) pairs)."""
-    from trezor.crypto import chacha20poly1305_encrypt, random
-
-    nonce = random.bytes(12)
-    cipher = chacha20poly1305_encrypt(key, nonce)
-    cipher.auth(_aead_aad(domain, entry_key_, key_type))
-    ct = cipher.encrypt(_pad_bucket(pt))
-    return (ENC_ENCRYPTED, nonce, cipher.finish(), ct)
-
-
-def _open(key: bytes, domain: bytes, entry_key_: bytes, key_type: str, part) -> bytes:
-    """Return a part's plaintext. Raises on tag mismatch (hard abort, §3.1)."""
-    from trezor.crypto import AuthenticationError, chacha20poly1305_decrypt
-
-    encoding, nonce, tag, body = part
-    if encoding == ENC_PLAINTEXT:
-        return body
-    cipher = chacha20poly1305_decrypt(key, nonce)
-    cipher.auth(_aead_aad(domain, entry_key_, key_type))
-    pt = cipher.decrypt(body)
-    try:
-        cipher.finish(tag)
-    except AuthenticationError:
-        raise ValueError("WARD leaf AEAD tag mismatch")
-    return pt
-
-
-# --- LeafIdentity part: the whole entry_key preimage ---
-
-
-def pack_identity(identifier: bytes, app_id, device_id: int = 0) -> bytes:
-    """len16(identifier) || identifier || len8(app_id) || app_id || device_id(1B).
-    The single source of canonicalization -- both the commit and the AEAD go
-    through it."""
-    if app_id is None:
-        app_id = b""
-    elif isinstance(app_id, str):
-        app_id = app_id.encode()
-    return (
-        len(identifier).to_bytes(2, "big")
-        + identifier
-        + bytes([len(app_id)])
-        + app_id
-        + bytes([device_id & 0xFF])
-    )
-
-
-def unpack_identity(pt: bytes) -> tuple:
-    """Return (identifier, app_id, device_id). Tolerates bucket padding past the end."""
-    id_len = int.from_bytes(pt[0:2], "big")
-    off = 2 + id_len
-    identifier = pt[2:off]
-    aid_len = pt[off]
-    off += 1
-    app_id = pt[off : off + aid_len]
-    off += aid_len
-    return identifier, app_id, pt[off]
-
-
-def encode_identity(
-    k_ident: bytes, entry_key_: bytes, key_type: str, identifier: bytes, app_id,
-    device_id: int = 0,
-):
-    """Build the LeafIdentity part for this build's mode."""
-    pt = pack_identity(identifier, app_id, device_id)
-    if WARD_PLAINTEXT_IDENTITY:
-        return (ENC_PLAINTEXT, b"", b"", pt)
-    return _seal(k_ident, _AAD_IDENTITY, entry_key_, key_type, pt)
-
-
-# FIXME(ward, PUSH-ONLY): no on-device caller. The identity part is written on every
-# write but never read back here, so firmware does NOT verify that a leaf's
-# (identifier, app_id, device_id) matches the entry_key it derived -- the identity
-# contributes only its bytes to commit_of. It is host-consumed via exported K_ident.
-def decode_identity(k_ident: bytes, entry_key_: bytes, key_type: str, part) -> tuple:
-    """Return (identifier, app_id, device_id) from a LeafIdentity part."""
-    return unpack_identity(_open(k_ident, _AAD_IDENTITY, entry_key_, key_type, part))
-
-
-# --- LeafContent part: C_leaf + value ---
-
-
-def pack_content(c_leaf: int, value: bytes) -> bytes:
-    """C_leaf(4B BE) || len32(value) || value. The identifier used to live here; it
-    is in the identity part now."""
-    return c_leaf.to_bytes(4, "big") + len(value).to_bytes(4, "big") + value
-
-
-def unpack_content(pt: bytes) -> tuple:
-    """Return (c_leaf, value). Tolerates bucket padding past the end."""
-    c_leaf = int.from_bytes(pt[0:4], "big")
-    val_len = int.from_bytes(pt[4:8], "big")
-    return c_leaf, pt[8 : 8 + val_len]
-
-
-def encode_content(k_data: bytes, entry_key_: bytes, key_type: str, c_leaf: int, value: bytes):
-    """Build the LeafContent part for this build's mode. An empty value is a delete."""
-    if len(value) == 0:
-        return EMPTY_PART
-    pt = pack_content(c_leaf, value)
-    if WARD_PLAINTEXT_CONTENT:
-        return (ENC_PLAINTEXT, b"", b"", pt)
-    return _seal(k_data, _AAD_CONTENT, entry_key_, key_type, pt)
-
-
-def decode_content(k_data: bytes, entry_key_: bytes, key_type: str, part) -> tuple:
-    """Return (c_leaf, value) from a LeafContent part; (0, b"") for a delete."""
-    if part_is_empty(part):
-        return 0, b""
-    return unpack_content(_open(k_data, _AAD_CONTENT, entry_key_, key_type, part))
-
-
-def addr_bit(entry_key_: bytes, bit: int) -> int:
-    return (entry_key_[bit // 8] >> (7 - (bit % 8))) & 1
-
-
-def _u16be(n: int) -> bytes:
-    return n.to_bytes(2, "big")
-
-
-# internal = sha256(0x01 || u16be(split_bit) || left || right)
-#
-# WHY split_bit IS IN THE HASH. Without it the bit each hop claims to test is not
-# committed to by the node hash, so a host can relabel the hops while the chain still
-# folds to the same root. That defeats non-membership: absence is proved by exhibiting a
-# witness leaf that occupies the target's path, and "occupies the path" is judged by
-# comparing bits at the positions the proof claims.
-#
-# AND WHY skiplen IS NOT, though it used to be. It is a FUNCTION of already-committed
-# data: walking a proof root-to-leaf it is exactly split_bit - (previous split_bit + 1),
-# which `_proof_steps_root_to_leaf` recomputed and compared rather than verifying against
-# anything independent. Committing to a value the verifier derives binds nothing.
-#
-# Removing it is not tidiness. It makes a node's hash INDEPENDENT OF ITS DEPTH, so a
-# subtree that re-parents keeps its hash -- and that is what fixes the two bugs this
-# change is really about:
-#
-#   DELETE promoted the collapsing sibling unchanged. Correct for a leaf; for a BRANCH
-#   the hash still committed to the depth it had just left, so the device derived a root
-#   no honest rebuilder reproduces. Worse, `_proof_steps_root_to_leaf` then rejected every
-#   proof through the re-parented node: one delete in three left the whole remaining tree
-#   unverifiable on that device.
-#
-#   INSERT refused to splice above an existing branch, because splicing there re-parents
-#   the branch below and its hash would have gone stale. Path compression means two keys
-#   are only compared at the bits the tree actually branches on, so they can agree at all
-#   of those and still part inside a compressed run -- the ordinary case for a random key.
-#   Roughly a third of inserts were refused outright.
-#
-# Both are gone once the hash stops naming a depth: the spliced-off subtree and the
-# promoted sibling both fold unchanged.
-def internal_hash(split_bit: int, left: bytes, right: bytes) -> bytes:
-    return sha256d(b"\x01" + _u16be(split_bit) + left + right)
-
-
-PROOF_ELEM_LEN = 34  # u16be(split_bit) || sibling(32B); was 36 with skiplen
-
-
-def _parse_proof_elem(elem: bytes) -> tuple:
-    if len(elem) != PROOF_ELEM_LEN:
-        raise ValueError("invalid proof element length")
-    return int.from_bytes(elem[0:2], "big"), bytes(elem[2:])
-
-
-def _proof_steps_root_to_leaf(proof: list) -> list:
-    """Check the proof describes a well-formed root-to-leaf path, and return its steps.
-
-    Walking ROOT to leaf, the split bits must strictly increase. A proof that is reordered
-    or has its bit claims shifted fails here before a single hash is computed. This also
-    bounds the work: split_bit strictly increases and stays below 256, so no valid proof
-    exceeds 256 elements however many the host sends.
-
-    The skiplen consistency check that used to live here is gone with the field itself --
-    it compared a host-supplied number against one derived from exactly these split bits.
-    """
-    steps = []
-    start_bit = 0
-    for elem in reversed(proof):
-        split_bit, sibling = _parse_proof_elem(elem)
-        if split_bit >= 256:
-            raise ValueError("proof split_bit out of range")
-        if split_bit < start_bit:
-            raise ValueError("proof split bits are not strictly increasing")
-        steps.append((split_bit, sibling))
-        start_bit = split_bit + 1
-    return steps
-
-
-def reconstruct(start_hash: bytes, proof: list, entry_key_: bytes) -> bytes:
-    """Walk proof from leaf toward root, rebuilding hashes. entry_key_ is the 32-byte
-    trie path of the leaf the walk starts from."""
-    _proof_steps_root_to_leaf(proof)
-    node = start_hash
-    for elem in proof:
-        split_bit, sibling = _parse_proof_elem(elem)
-        if addr_bit(entry_key_, split_bit) == 0:
-            node = internal_hash(split_bit, node, sibling)
-        else:
-            node = internal_hash(split_bit, sibling, node)
-    return node
-
-
-def verify_proof(
-    entry_key_: bytes,
-    key_type: str,
-    id_part,
-    val_part,
-    proof: list,
-    expected_root: bytes,
-) -> bool:
-    """Verify an MPT membership proof for the leaf (key_type, id_part, val_part) at
-    entry_key against expected_root. The device forms the leaf from the two encoded
-    parts it holds (commit -> leaf); no key is needed for this."""
-    node = leaf_hash(entry_key_, key_type, id_part, val_part)
-    node = reconstruct(node, proof, entry_key_)
-    return node == expected_root
-
-
-def verify_nonmembership(
-    entry_key_: bytes,
-    witness_entry_key: bytes,
-    witness_commit: bytes,
-    proof: list,
-    expected_root: bytes,
-) -> bool:
-    """Verify that entry_key is NOT in the tree.
-
-    The witness leaf is supplied as two hashes -- (witness_entry_key,
-    witness_commit) -- that occupies entry_key's path, revealing nothing about the
-    witness's plaintext identifier or value. We verify: (0) every operand is exactly
-    32 bytes; (1) the witness leaf rebuilt from the two hashes is in the tree;
-    (2) witness_entry_key != entry_key; (3) both share the same bit at every proof
-    position (closest leaf).
-
-    (0) IS LOAD-BEARING and comes first. Checks (2) and (3) are both satisfied by a
-    witness key that is the target with extra bytes glued on: it differs from the
-    target, and routing reads bits 0..255 so it agrees at every branch bit. Since
-    the leaf preimage concatenates key and commit with no boundary marker, K || C[0]
-    with commit C[1:] hashes to the TARGET'S OWN leaf -- so the target's genuine
-    membership proof passes as proof of its absence, and a host could hide any
-    present entry on every read. `leaf_hash_of` refuses that too; rejecting it here
-    stops the comparisons below from passing and reading as though the witness
-    relationship were real.
-
-    A wrong-width operand RAISES rather than returning False: it is a malformed
-    message, not a claim that failed, and the two must not read alike."""
-    from trezor.wire import DataError
-
-    if (
-        len(entry_key_) != 32
-        or len(witness_entry_key) != 32
-        or len(witness_commit) != 32
-    ):
-        raise DataError("WARD: witness operands must be 32 bytes")
-
-    if witness_entry_key == entry_key_:
-        return False
-
-    try:
-        steps = _proof_steps_root_to_leaf(proof)
-    except ValueError:
-        return False
-
-    for split_bit, _sibling in steps:
-        if addr_bit(entry_key_, split_bit) != addr_bit(witness_entry_key, split_bit):
-            return False
-
-    witness_leaf = leaf_hash_of(witness_entry_key, witness_commit)
-    return reconstruct(witness_leaf, proof, witness_entry_key) == expected_root
-
-
-def compute_new_root(
-    entry_key_: bytes,
-    old_leaf,
-    new_leaf,
-    proof: list,
-    stored_root,
-    witness_entry_key=None,
-    witness_commit=None,
-):
-    """Verify the old state (old_leaf, proof) against stored_root, then compute the
-    new root. `old_leaf`/`new_leaf` are (key_type, id_part, val_part) tuples the
-    device produced, or None: old_leaf=None => INSERT, new_leaf=None => DELETE. Returns the new root
-    (None if the tree becomes/stays empty), or raises ValueError if the old-state
-    proof does not verify. INSERT's witness neighbour may belong to another app, so
-    it is supplied privacy-preservingly as (witness_entry_key, witness_commit)."""
-    inserting = old_leaf is None
-    deleting = new_leaf is None
-    if inserting and deleting:
-        raise ValueError("old_leaf and new_leaf cannot both be empty")
-
-    if inserting:
-        if len(proof) == 0 and witness_entry_key is None:
-            # INIT: tree was empty
-            if stored_root is not None:
-                raise ValueError("Tree is not empty; supply non-membership proof")
-            return leaf_hash(entry_key_, new_leaf[0], new_leaf[1], new_leaf[2])
-
-        if witness_entry_key is None or witness_commit is None:
-            raise ValueError("witness_entry_key/witness_commit required for INSERT")
-
-        # Lengths BEFORE any routing, on the same three operands and for the same reason
-        # as verify_nonmembership. `addr_bit` indexes the key directly, so a short witness
-        # raises IndexError out of the loop below -- an untyped crash where a protocol
-        # error is the honest answer. `leaf_hash_of` does catch it, but only after that
-        # loop has run.
-        if (
-            len(entry_key_) != 32
-            or len(witness_entry_key) != 32
-            or len(witness_commit) != 32
-        ):
-            raise ValueError("INSERT operands must be 32 bytes")
-
-        if witness_entry_key == entry_key_:
-            raise ValueError("witness_entry_key must differ from entry_key")
-
-        steps = _proof_steps_root_to_leaf(proof)
-        for split_bit, _sibling in steps:
-            if addr_bit(entry_key_, split_bit) != addr_bit(witness_entry_key, split_bit):
-                raise ValueError("Witness does not occupy target's path")
-
-        witness_leaf = leaf_hash_of(witness_entry_key, witness_commit)
-        witness_in_tree = reconstruct(witness_leaf, proof, witness_entry_key)
-        if witness_in_tree != stored_root:
-            raise ValueError("Non-membership proof invalid: witness not in tree")
-
-        # Where the two paths part is computed HERE, never taken from the host: it decides
-        # where the new leaf is spliced in, so a host-chosen value would let it graft the
-        # entry somewhere structurally inconsistent with the rest of the tree.
-        split_bit = None
-        for b in range(256):
-            if addr_bit(entry_key_, b) != addr_bit(witness_entry_key, b):
-                split_bit = b
-                break
-        if split_bit is None:
-            raise ValueError("entry_key and witness_entry_key are equal")
-
-        # The new branch goes at `split_bit`, which is NOT necessarily below every branch
-        # on the witness's path -- see the note on internal_hash. Everything the proof
-        # branches on BELOW the splice point belongs to the subtree that re-parents under
-        # the new branch, so fold it first; a node's hash no longer names its depth, so it
-        # folds unchanged. This used to be an outright refusal.
-        below = []
-        idx = 0
-        while idx < len(proof):
-            sb, _sib = _parse_proof_elem(proof[idx])
-            if sb == split_bit:
-                # Unreachable: the agreement loop above rejects a proof that branches
-                # where the keys differ, and split_bit is the first such bit. Explicit
-                # because the silent alternative is two branches at one bit.
-                raise ValueError("witness path already branches at the split bit")
-            if sb < split_bit:
-                break
-            below.append(proof[idx])
-            idx += 1
-
-        node = witness_leaf
-        for elem in below:
-            sb, sib = _parse_proof_elem(elem)
-            if addr_bit(witness_entry_key, sb) == 0:
-                node = internal_hash(sb, node, sib)
-            else:
-                node = internal_hash(sb, sib, node)
-
-        new_leaf_t = leaf_hash(entry_key_, new_leaf[0], new_leaf[1], new_leaf[2])
-        if addr_bit(entry_key_, split_bit) == 0:
-            new_branch = internal_hash(split_bit, new_leaf_t, node)
-        else:
-            new_branch = internal_hash(split_bit, node, new_leaf_t)
-
-        # above the splice the two keys agree, so folding by either path is the same
-        return reconstruct(new_branch, proof[idx:], witness_entry_key)
-
-    if deleting:
-        if stored_root is None:
-            raise ValueError("No Merkle root stored on device")
-        current_leaf = leaf_hash(entry_key_, old_leaf[0], old_leaf[1], old_leaf[2])
-        if reconstruct(current_leaf, proof, entry_key_) != stored_root:
-            raise ValueError("Old value proof invalid")
-        if len(proof) == 0:
-            return None
-        # The branch above collapses and the sibling takes its place -- UNCHANGED,
-        # whatever it is. A node's hash no longer depends on its depth, so a re-parented
-        # subtree keeps the hash the proof already committed to, and a leaf and a branch
-        # behave identically here. Under the old format a branch sibling's hash went
-        # stale the instant it moved, which is what made a third of deletes derive a root
-        # no rebuilder agreed with.
-        _split_bit, sibling_hash = _parse_proof_elem(proof[0])
-        return reconstruct(sibling_hash, proof[1:], entry_key_)
-
-    # UPDATE
-    if stored_root is None:
-        raise ValueError("No Merkle root stored on device")
-    current_leaf = leaf_hash(entry_key_, old_leaf[0], old_leaf[1], old_leaf[2])
-    if reconstruct(current_leaf, proof, entry_key_) != stored_root:
-        raise ValueError("Old value proof invalid")
-    new_leaf_h = leaf_hash(entry_key_, new_leaf[0], new_leaf[1], new_leaf[2])
-    return reconstruct(new_leaf_h, proof, entry_key_)
-
-
-def _multiproof_root(items, stored_root):
-    """Recompute the trie root over a set of UPDATE items against `stored_root`, and
-    return the new root, via a shape-preserving Merkle multiproof (§4.2).
-
-    Each item is `(entry_key, old_leaf_hash, new_leaf_hash, proof)` where `proof` is
-    the membership proof (bit, sibling) leaf→root of the OLD leaf against
-    `stored_root`. All items must be UPDATES of leaves that already exist, so the
-    trie SHAPE is unchanged and only leaf hashes move — the shared structure of the k
-    proof paths is overlaid into one partial tree, external (boundary) siblings come
-    from the proofs, and internal nodes shared by two batch leaves are recomputed from
-    their children (never from a now-stale proof sibling).
-
-    Crucially this uses proofs against the SINGLE common `stored_root` (exactly what
-    the host serves for the whole batch), not per-leaf running roots. It VERIFIES by
-    recomputing the old root from the overlay and requiring it to equal `stored_root`,
-    then returns the new root with the new leaf hashes substituted. Raises ValueError
-    on any inconsistency (mismatched branch bit / sibling / root)."""
-    # Partial tree keyed by path = tuple of (bit, dir) taken from the root.
-    branch = {}  # path -> branch_bit
-    occupied = set()  # paths on some item's root→leaf walk (real nodes)
-    old_leaf = {}  # path -> old leaf hash
-    new_leaf = {}  # path -> new leaf hash
-    sib_seen = {}  # path -> list of boundary sibling hashes recorded for it
-
-    for ek, oh, nh, proof in items:
-        path = ()
-        occupied.add(path)
-        for elem in reversed(proof):  # root → leaf order
-            b, sib = _parse_proof_elem(elem)
-            d = addr_bit(ek, b)
-            if path in branch:
-                if branch[path] != b:
-                    raise ValueError("inconsistent branch metadata in batch multiproof")
-            else:
-                # The skiplen agreement that used to be checked here compared a
-                # host-supplied number against one derived from the split bits either
-                # side of it; `_proof_steps_root_to_leaf` (via reconstruct) already
-                # enforces that those bits strictly increase, which is the whole of it.
-                branch[path] = b
-            sib_path = path + ((b, 1 - d),)
-            sib_seen.setdefault(sib_path, []).append(sib)
-            path = path + ((b, d),)
-            occupied.add(path)
-        old_leaf[path] = oh
-        new_leaf[path] = nh
-
-    # A non-occupied sibling is an EXTERNAL subtree: every proof that named it must
-    # agree on its hash (this is the cross-proof consistency / verification step).
-    for sib_path, sibs in sib_seen.items():
-        if sib_path in occupied:
-            continue
-        for s in sibs:
-            if s != sibs[0]:
-                raise ValueError("inconsistent boundary sibling in batch multiproof")
-
-    def child_hash(path, leaf_map):
-        if path in occupied:
-            return node_hash(path, leaf_map)
-        sibs = sib_seen.get(path)
-        if not sibs:
-            raise ValueError("missing sibling in batch multiproof")
-        return sibs[0]
-
-    def node_hash(path, leaf_map):
-        if path in leaf_map:
-            return leaf_map[path]
-        if path in branch:
-            b = branch[path]
-            left = child_hash(path + ((b, 0),), leaf_map)
-            right = child_hash(path + ((b, 1),), leaf_map)
-            return internal_hash(b, left, right)
-        raise ValueError("dangling node in batch multiproof")
-
-    if node_hash((), old_leaf) != stored_root:
-        raise ValueError("batch pre-state proofs do not reconstruct the stored root")
-    return node_hash((), new_leaf)
-
-
-def compute_batch_root(stored_root, ops):
-    """Apply a batch of leaf changes to `stored_root` and return the new root (`None`
-    if the tree ends empty). Rejects a duplicate `entry_key` within the batch (§4.2).
-
-    Each op is a 6-tuple `(entry_key, old_leaf, new_leaf, proof, witness_entry_key,
-    witness_commit)` with the same semantics as `compute_new_root` (old_leaf=None =>
-    INSERT, new_leaf=None => DELETE), and `proof` is the pre-state proof against
-    `stored_root` (the single common base the host serves for the whole batch).
-
-    - A single-op batch (n=1) delegates to the audited `compute_new_root`, so INIT /
-      INSERT / UPDATE / DELETE all keep full generality.
-    - A multi-op batch (n>1) currently supports **UPDATES only** (the trie shape is
-      unchanged) and is folded by a shape-preserving multiproof (`_multiproof_root`)
-      over the common `stored_root` — NOT a sequential running-root apply, which would
-      wrongly reject leaf k's `stored_root`-proof. Insert/delete inside a multi-leaf
-      batch is rejected here; use single-leaf commits for those until the general
-      (shape-changing) multiproof lands.
-
-    Per-leaf counter monotonicity (`C_new > C_old`, §4.5/F12) is enforced by the
-    caller (`perform_batch`), not here."""
-    seen = []
-    for op in ops:
-        ek = op[0]
-        for prev in seen:
-            if prev == ek:
-                raise ValueError("duplicate entry_key in batch")
-        seen.append(ek)
-
-    if len(ops) == 1:
-        op = ops[0]
-        return compute_new_root(
-            op[0], op[1], op[2], op[3], stored_root,
-            witness_entry_key=op[4], witness_commit=op[5],
-        )
-
-    items = []
-    for ek, old_leaf, new_leaf, proof, w_ek, w_commit in ops:
-        if old_leaf is None or new_leaf is None or w_ek is not None:
-            raise ValueError(
-                "multi-leaf batch supports UPDATES only; use single-leaf commits "
-                "for insert/delete"
-            )
-        items.append(
-            (
-                ek,
-                leaf_hash(ek, old_leaf[0], old_leaf[1], old_leaf[2]),
-                leaf_hash(ek, new_leaf[0], new_leaf[1], new_leaf[2]),
-                proof,
-            )
-        )
-    if stored_root is None:
-        raise ValueError("multi-leaf update batch requires a non-empty tree")
-    return _multiproof_root(items, stored_root)
 
 
 # ---------------------------------------------------------------------------
@@ -807,7 +133,7 @@ def verify_wm_attestation(
 
         b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac
 
-    `ward_id` is the SLIP21-derived WM-facing anchor (see `_get_ward_id`), NOT the
+    `ward_id` is the SLIP21-derived WM-facing anchor (see `get_ward_id`), NOT the
     20-byte local `wallet_id`; the WM only ever signs over `ward_id`.
     """
     message = (
@@ -828,114 +154,10 @@ def verify_ward_final(
 
         b"WARD FINAL v1" || ward_id || counter(4B BE) || mac
 
-    `ward_id` is the SLIP21-derived WM-facing anchor (see `_get_ward_id`).
+    `ward_id` is the SLIP21-derived WM-facing anchor (see `get_ward_id`).
     """
     message = _WARD_FINAL_DOMAIN + ward_id + counter.to_bytes(4, "big") + mac
     return _verify(message, signature)
-
-
-# ---------------------------------------------------------------------------
-# Wallet identity + MAC derivation (formerly apps.authdb.__init__).
-# ---------------------------------------------------------------------------
-
-
-async def _get_wallet_id() -> bytes:
-    """wallet_id = RIPEMD160(SHA256(compressed master public key)) -- 20 bytes.
-
-    The BIP32 identifier (Hash160) of the wallet's master xpub, derived from the
-    passphrase-including seed, so distinct hidden wallets get distinct trees.
-    """
-    from trezor.crypto import bip32
-    from trezor.crypto.scripts import sha256_ripemd160
-    from apps.common import seed as seed_module
-
-    s = await seed_module.get_seed()
-    node = bip32.from_seed(s, "secp256k1")
-    return sha256_ripemd160(node.public_key()).digest()
-
-
-async def _get_ward_id() -> bytes:
-    """ward_id = SLIP21(seed, [b"TREZOR", b"WARDID", b"wallet_id", wallet_id]).key()
-    -- 32 bytes.
-
-    The WM-facing anti-rollback / anti-fork anchor (spec §5). Distinct from the
-    20-byte local `wallet_id`: it is what the WM signs over in every ATTEST/FINAL
-    preimage, is derived from the seed (so it is wallet-stable and independent of
-    the mutable Evolu `ownerId`), and is verifiable by the device. The device
-    derives it and forwards it to the host; the host MUST NOT invent or substitute
-    it.
-    """
-    from apps.common import seed as seed_module
-    from apps.common.seed import Slip21Node
-
-    wallet_id = await _get_wallet_id()
-    s = await seed_module.get_seed()
-    node = Slip21Node(s)
-    node.derive_path([b"TREZOR", b"WARDID", b"wallet_id", wallet_id])
-    return node.key()
-
-
-async def _derive_mac_key(domain: bytes) -> bytes:
-    """mac_key = HMAC-SHA256(SLIP21(seed, [b"AUTHDB MAC v1", domain]).key(), wallet_id).
-
-    `domain` (currently only b"root_mac") is folded into the SLIP-21 path so each
-    purpose gets a distinct base key; bound to wallet_id so a MAC minted for one
-    hidden wallet never validates against another's tree.
-    """
-    from trezor.crypto import hmac as crypto_hmac
-
-    wallet_id = await _get_wallet_id()
-
-    from apps.common import seed as seed_module
-    from apps.common.seed import Slip21Node
-
-    s = await seed_module.get_seed()
-    node = Slip21Node(s)
-    node.derive_path([b"AUTHDB MAC v1", domain])
-    base_key = node.key()
-
-    return crypto_hmac(crypto_hmac.SHA256, base_key, wallet_id).digest()
-
-
-async def _derive_slip21(path: list) -> bytes:
-    from apps.common import seed as seed_module
-    from apps.common.seed import Slip21Node
-
-    s = await seed_module.get_seed()
-    node = Slip21Node(s)
-    node.derive_path(path)
-    return node.key()
-
-
-async def _derive_k_path() -> bytes:
-    """K_path = SLIP21(seed, [b"ward", b"K_path"]).key() -- the HMAC key that derives
-    every entry_key (LeafIdentityMAC) path (§1). Seed-scoped and shared across the
-    wallet's devices; the per-device axis lives in the entry_key scope, not the key."""
-    return await _derive_slip21([b"ward", b"K_path"])
-
-
-async def _derive_k_ident(key_type: str) -> bytes:
-    """K_ident(key_type) = SLIP21(seed, [b"ward", b"K_ident", key_type]).key() -- the
-    AEAD key sealing the LeafIdentity part. Separate from K_data so identities and
-    values are independently discloseable. Must match ward_crypto.derive_k_ident."""
-    return await _derive_slip21([b"ward", b"K_ident", key_type.encode()])
-
-
-async def _derive_k_data(key_type: str) -> bytes:
-    """K_data(key_type) = SLIP21(seed, [b"ward", b"K_data", key_type]).key() -- the
-    AEAD key sealing the LeafContent part, per entry type (§1), so a PUSH export can
-    hand a host only the types it may decrypt. Must match ward_crypto.derive_k_data."""
-    return await _derive_slip21([b"ward", b"K_data", key_type.encode()])
-
-
-async def entry_key_for(
-    app_id, identifier: bytes, key_type: str = _ENTRY_TYPE_ADDRESS, device_id: int = 0
-) -> bytes:
-    """Compute the opaque entry_key path for (app_id, identifier) under the active
-    wallet's K_path. Used by the Core gateway to build a WARDProofRequest without
-    leaking the identifier to the host."""
-    k_path = await _derive_k_path()
-    return entry_key(k_path, app_id, identifier, key_type, device_id)
 
 
 async def _confirm_export_keys(key_type: str) -> None:
@@ -959,27 +181,17 @@ async def _confirm_export_keys(key_type: str) -> None:
     )
 
 
-async def export_keys(key_type: str = _ENTRY_TYPE_ADDRESS) -> tuple:
+async def export_keys(key_type: str = ENTRY_TYPE_ADDRESS) -> tuple:
     """PUSH key export: after user confirmation, return
     (K_path, K_data(key_type), K_ident(key_type)). K_sig is never exported. The three
     are independent capabilities: K_path resolves identifier -> path, K_ident reads
     identities, K_data reads values -- so an export can grant indexing without
     granting value reads."""
     await _confirm_export_keys(key_type)
-    k_path = await _derive_k_path()
-    k_data = await _derive_k_data(key_type)
-    k_ident = await _derive_k_ident(key_type)
+    k_path = await derive_k_path()
+    k_data = await derive_k_data(key_type)
+    k_ident = await derive_k_ident(key_type)
     return k_path, k_data, k_ident
-
-
-def _compute_mac(key: bytes, *parts: bytes) -> bytes:
-    """HMAC-SHA256(key, concatenation of parts)."""
-    from trezor.crypto import hmac as crypto_hmac
-
-    h = crypto_hmac(crypto_hmac.SHA256, key)
-    for p in parts:
-        h.update(p)
-    return h.digest()
 
 
 # ---------------------------------------------------------------------------
@@ -1030,24 +242,11 @@ def _root_or_empty(root) -> bytes:
     return EMPTY_ROOT_HASH if root is None else root
 
 
-async def _derive_ward_key(leaf: bytes) -> bytes:
-    """SLIP21(seed, [b"ward", leaf]).key() -- the shared m/"ward" key family
-    (K_head/K_auth/K_sig). Seed-scoped; the wallet binding is ward_id inside each
-    preimage. Mirrors `_derive_k_path`/`_derive_k_data`."""
-    from apps.common import seed as seed_module
-    from apps.common.seed import Slip21Node
-
-    s = await seed_module.get_seed()
-    node = Slip21Node(s)
-    node.derive_path([b"ward", leaf])
-    return node.key()
-
-
 def head_mac(k_head: bytes, ward_id: bytes, counter: int, root) -> bytes:
     """head_mac = MAC(K_head, TAG_HEAD || ward_id || counter(4B BE) || root). An
     integrity token for the head tuple, NOT a freshness token (freshness is the WM
     nonce challenge) -- always verify it bound to the counter, never by root alone."""
-    return _compute_mac(
+    return compute_mac(
         k_head, _TAG_HEAD, ward_id, counter.to_bytes(4, "big"), _root_or_empty(root)
     )
 
@@ -1079,7 +278,7 @@ def auth_commit(
     to_root,
 ) -> bytes:
     """AuthCommit MAC over the forward transition (no batch_digest, D4)."""
-    return _compute_mac(
+    return compute_mac(
         k_auth,
         _transition_preimage(
             _TAG_COMMIT, ward_id, from_counter, from_root, to_counter, to_root
@@ -1097,7 +296,7 @@ def auth_revert(
 ) -> bytes:
     """AuthRevert MAC over a one-step rollback. to_counter = from_counter + 1
     (forward-increment, F1); to_root is the restored predecessor root."""
-    return _compute_mac(
+    return compute_mac(
         k_auth,
         _transition_preimage(
             _TAG_REVERT, ward_id, from_counter, from_root, to_counter, to_root
@@ -1177,12 +376,6 @@ def sig_commit(k_sig_secret: bytes, preimage: bytes) -> bytes:
     return ed25519.sign(k_sig_secret, preimage)
 
 
-def k_sig_pubkey(k_sig_secret: bytes) -> bytes:
-    from trezor.crypto.curve import ed25519
-
-    return ed25519.publickey(k_sig_secret)
-
-
 async def _resolve_pending_id(wallet_id: bytes, pending_id: int | None) -> int:
     """Resolve which queued candidate an operation targets.
 
@@ -1220,7 +413,7 @@ async def discard(
     """
     import storage.ward_store as ward_store
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
 
     if pending_id is None:
         dropped = ward_store.queue_drop_all(wallet_id)
@@ -1260,7 +453,7 @@ async def lookup_label(
     id_part,
     val_part,
     proof: list[bytes],
-    key_type: str = _ENTRY_TYPE_ADDRESS,
+    key_type: str = ENTRY_TYPE_ADDRESS,
     device_id: int = 0,
 ) -> bytes | None:
     """On-device membership label lookup: authenticate the leaf (key_type, id_part,
@@ -1270,15 +463,15 @@ async def lookup_label(
     """
     import storage.ward_head as ward_head
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
     present, stored_root = ward_head.root_get(wallet_id)
     if not present or stored_root is None:
         return None
-    k_path = await _derive_k_path()
+    k_path = await derive_k_path()
     ek = entry_key(k_path, app_id, address, key_type, device_id)
     if not verify_proof(ek, key_type, id_part, val_part, proof, stored_root):
         return None
-    k_data = await _derive_k_data(key_type)
+    k_data = await derive_k_data(key_type)
     _c, value = decode_content(k_data, ek, key_type, val_part)
     return value
 
@@ -1357,7 +550,7 @@ async def queue(
     app_id,
     address: bytes,
     new_value: bytes,
-    key_type: str = _ENTRY_TYPE_ADDRESS,
+    key_type: str = ENTRY_TYPE_ADDRESS,
     device_id: int = 0,
 ) -> tuple[int, bytes]:
     """Queue an edit INTENT (pull model) for the domain named by app_id. Checks the
@@ -1379,7 +572,7 @@ async def queue(
         raise DataError("app not authorized for WARD update")
     app_id_b = app_id.encode() if isinstance(app_id, str) else (app_id or b"")
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
 
     # Multi-slot queue: several intents may be in flight per wallet, bounded by the
     # storage cap. Committing stays serialized by counter (see finalize).
@@ -1433,7 +626,7 @@ async def lookup(
     id_part,
     val_part,
     proof: list[bytes],
-    key_type: str = _ENTRY_TYPE_ADDRESS,
+    key_type: str = ENTRY_TYPE_ADDRESS,
     device_id: int = 0,
     witness_entry_key: bytes | None = None,
     witness_commit: bytes | None = None,
@@ -1452,8 +645,8 @@ async def lookup(
 
     membership_query = witness_entry_key is None and val_part is not None
 
-    wallet_id = await _get_wallet_id()
-    ward_id = await _get_ward_id()
+    wallet_id = await get_wallet_id()
+    ward_id = await get_ward_id()
     present, stored_root = ward_head.root_get(wallet_id)
     if not present:
         raise DataError("no authenticated root in session")
@@ -1468,7 +661,7 @@ async def lookup(
             ward_id,
         )
 
-    k_path = await _derive_k_path()
+    k_path = await derive_k_path()
     ek = entry_key(k_path, app_id, address, key_type, device_id)
     if not membership_query:
         if witness_commit is None:
@@ -1509,15 +702,15 @@ async def intent(pending_id: int | None) -> tuple[int, bytes]:
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
     pid = await _resolve_pending_id(wallet_id, pending_id)
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no queued intent to perform")
     _counter, _state, address, _nv, _root, _mac, app_id, kt, device_id = rec
-    key_type = kt.decode() if kt else _ENTRY_TYPE_ADDRESS
+    key_type = kt.decode() if kt else ENTRY_TYPE_ADDRESS
 
-    k_path = await _derive_k_path()
+    k_path = await derive_k_path()
     ek = entry_key(k_path, app_id, address, key_type, device_id)
 
     if __debug__:
@@ -1558,15 +751,15 @@ async def perform(
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
     pid = await _resolve_pending_id(wallet_id, pending_id)
 
     rec = ward_store.queue_get(wallet_id, pid)
     if rec is None:
         raise DataError("no queued intent to perform")
     _counter, _state, address, new_value, _root, _mac, app_id, kt, device_id = rec
-    key_type = kt.decode() if kt else _ENTRY_TYPE_ADDRESS
-    k_path = await _derive_k_path()
+    key_type = kt.decode() if kt else ENTRY_TYPE_ADDRESS
+    k_path = await derive_k_path()
     # Bind the candidate to its domain/scope: entry_key = HMAC(K_path, scope||id),
     # so this write can only ever produce a leaf under the scope the user approved.
     ek = entry_key(k_path, app_id, address, key_type, device_id)
@@ -1597,8 +790,8 @@ async def perform(
         out_id_part = EMPTY_PART
         out_val_part = EMPTY_PART
     else:
-        k_ident = await _derive_k_ident(key_type)
-        k_data = await _derive_k_data(key_type)
+        k_ident = await derive_k_ident(key_type)
+        k_data = await derive_k_data(key_type)
         out_id_part = encode_identity(k_ident, ek, key_type, address, app_id, device_id)
         out_val_part = encode_content(k_data, ek, key_type, counter_t, new_value)
         new_leaf = (key_type, out_id_part, out_val_part)
@@ -1617,8 +810,8 @@ async def perform(
         raise DataError(str(e))
 
     if root_t is not None:
-        mac_key = await _derive_mac_key(b"root_mac")
-        mac_t = _compute_mac(mac_key, wallet_id, counter_t.to_bytes(4, "big"), root_t)
+        mac_key = await derive_mac_key(b"root_mac")
+        mac_t = compute_mac(mac_key, wallet_id, counter_t.to_bytes(4, "big"), root_t)
     else:
         mac_t = None
 
@@ -1636,7 +829,7 @@ async def perform(
             "EMPTY" if root_t is None else "set",
         )
 
-    ward_id = await _get_ward_id()
+    ward_id = await get_ward_id()
     return (
         counter_t,
         root_t,
@@ -1674,7 +867,7 @@ async def finalize(
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
     pid = await _resolve_pending_id(wallet_id, pending_id)
 
     rec = ward_store.queue_get(wallet_id, pid)
@@ -1704,7 +897,7 @@ async def finalize(
             "yes" if mac_msg is not None else "no",
         )
 
-    ward_id = await _get_ward_id()
+    ward_id = await get_ward_id()
     if not verify_ward_final(ward_id, counter, candidate_mac, wm_signature):
         raise DataError("WM final attestation verification failed")
 
@@ -1760,7 +953,7 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
     if not pending_ids or len(pending_ids) != len(acks):
         raise DataError("empty or mismatched batch")
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
     from_counter = ward_store.get_counter(wallet_id)
     to_counter = from_counter + 1  # whole batch = one transition (uniform +1)
 
@@ -1772,7 +965,7 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
         else:
             raise DataError("no authenticated root in session")
 
-    k_path = await _derive_k_path()
+    k_path = await derive_k_path()
 
     ops = []  # (entry_key, old_leaf, new_leaf, proof, witness_ek, witness_commit)
     leaves = []  # (entry_key, key_type, id_part, val_part) to return to the host
@@ -1791,7 +984,7 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
         if rec is None:
             raise DataError("no queued intent to perform in batch")
         _c, _s, address, new_value, _r, _m, app_id, kt, device_id = rec
-        key_type = kt.decode() if kt else _ENTRY_TYPE_ADDRESS
+        key_type = kt.decode() if kt else ENTRY_TYPE_ADDRESS
         ek = entry_key(k_path, app_id, address, key_type, device_id)
 
         # membership ack (UPDATE/DELETE) carries the old leaf's parts; witness => INSERT.
@@ -1802,7 +995,7 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
             # leaf's content part and require the new stamp to strictly exceed the old
             # one. With the whole batch at to_counter, this holds iff the old leaf
             # predates the head.
-            k_data_old = await _derive_k_data(key_type)
+            k_data_old = await derive_k_data(key_type)
             c_old, _v_old = decode_content(k_data_old, ek, key_type, ack_val_part)
             if to_counter <= c_old:
                 raise DataError("C_new is not ahead of C_old (stale leaf)")
@@ -1814,8 +1007,8 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
             out_id_part = EMPTY_PART
             out_val_part = EMPTY_PART
         else:
-            k_ident = await _derive_k_ident(key_type)
-            k_data = await _derive_k_data(key_type)
+            k_ident = await derive_k_ident(key_type)
+            k_data = await derive_k_data(key_type)
             out_id_part = encode_identity(k_ident, ek, key_type, address, app_id, device_id)
             out_val_part = encode_content(k_data, ek, key_type, to_counter, new_value)
             new_leaf = (key_type, out_id_part, out_val_part)
@@ -1832,19 +1025,19 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
 
     # Root MAC the WM co-signs at finalize (None root => empty tree => all-zero MAC).
     if to_root is not None:
-        mac_key = await _derive_mac_key(b"root_mac")
-        mac_t = _compute_mac(mac_key, wallet_id, to_counter.to_bytes(4, "big"), to_root)
+        mac_key = await derive_mac_key(b"root_mac")
+        mac_t = compute_mac(mac_key, wallet_id, to_counter.to_bytes(4, "big"), to_root)
     else:
         mac_t = None
 
     # Transition authentication. Roots are folded to their 32-byte MAC-preimage form
     # (EMPTY_ROOT_HASH for empty) and stored in that form, so a verifying device reads
     # exactly what was MAC'd.
-    ward_id = await _get_ward_id()
+    ward_id = await get_ward_id()
     from_root_b = _root_or_empty(stored_root)
     to_root_b = _root_or_empty(to_root)
-    k_head = await _derive_ward_key(b"K_head")
-    k_auth = await _derive_ward_key(b"K_auth")
+    k_head = await derive_ward_key(b"K_head")
+    k_auth = await derive_ward_key(b"K_auth")
     # FIXME(ward): head_mac is emitted on the ack for an external consumer (the WM, or
     # another device fast-forwarding per design 3.1) but NOTHING verifies it today --
     # the WM emulator keeps auth_commit and ignores this. It is deliberately not
@@ -1856,7 +1049,7 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
     )
     sig = b""
     if WARD_KSIG:
-        k_sig = await _derive_ward_key(b"K_sig")
+        k_sig = await derive_ward_key(b"K_sig")
         preimage = _transition_preimage(
             _TAG_COMMIT, ward_id, from_counter, from_root_b, to_counter, to_root_b
         )
@@ -1918,7 +1111,7 @@ async def finalize_batch(
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
     env = ward_store.batch_get(wallet_id)
     if env is None:
         raise DataError("no committed batch to finalize")
@@ -1933,12 +1126,12 @@ async def finalize_batch(
     if counter_msg != to_counter or msg_mac != mac:
         raise DataError("confirmation does not match the committed batch")
 
-    ward_id = await _get_ward_id()
+    ward_id = await get_ward_id()
     if not verify_ward_final(ward_id, to_counter, mac, wm_signature):
         raise DataError("WM final attestation verification failed")
 
     # Re-verify the transition authorization (F7: AuthCommit binds from->to).
-    k_auth = await _derive_ward_key(b"K_auth")
+    k_auth = await derive_ward_key(b"K_auth")
     if not verify_auth_commit(
         k_auth,
         ward_id,
@@ -2005,8 +1198,8 @@ async def perform_revert(
     if stuck_counter < 1:
         raise DataError("cannot roll back the genesis head")
 
-    wallet_id = await _get_wallet_id()
-    ward_id = await _get_ward_id()
+    wallet_id = await get_wallet_id()
+    ward_id = await get_ward_id()
 
     # The stuck head MUST be exactly the current authenticated head — bind the COUNTER,
     # not just the root (roots are content-addressed and repeat; §2.4/§8.2 point 2).
@@ -2018,7 +1211,7 @@ async def perform_revert(
     # Verify the forward AuthCommit (stuck_counter-1, prev_root) -> (stuck_counter,
     # stuck_root). Its validity proves prev_root is the immediate predecessor and
     # fixes the demotion target — it is not a host-named free-form root (§8.2 point 3).
-    k_auth = await _derive_ward_key(b"K_auth")
+    k_auth = await derive_ward_key(b"K_auth")
     if not verify_auth_commit(
         k_auth,
         ward_id,
@@ -2034,13 +1227,13 @@ async def perform_revert(
     to_root = None if prev_root == EMPTY_ROOT_HASH else prev_root
 
     if to_root is not None:
-        mac_key = await _derive_mac_key(b"root_mac")
-        mac_t = _compute_mac(mac_key, wallet_id, to_counter.to_bytes(4, "big"), to_root)
+        mac_key = await derive_mac_key(b"root_mac")
+        mac_t = compute_mac(mac_key, wallet_id, to_counter.to_bytes(4, "big"), to_root)
     else:
         mac_t = None
 
     auth_revert_v = auth_revert(k_auth, ward_id, stuck_counter, stuck_root, to_counter, prev_root)
-    k_head = await _derive_ward_key(b"K_head")
+    k_head = await derive_ward_key(b"K_head")
     # FIXME(ward): head_mac is emitted on the ack for an external consumer (the WM, or
     # another device fast-forwarding per design 3.1) but NOTHING verifies it today --
     # the WM emulator keeps auth_commit and ignores this. It is deliberately not
@@ -2049,7 +1242,7 @@ async def perform_revert(
     head_mac_v = head_mac(k_head, ward_id, to_counter, to_root)
     sig = b""
     if WARD_KSIG:
-        k_sig = await _derive_ward_key(b"K_sig")
+        k_sig = await derive_ward_key(b"K_sig")
         sig = sig_commit(
             k_sig,
             _transition_preimage(
@@ -2107,7 +1300,7 @@ async def finalize_revert(
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
     env = ward_store.batch_get(wallet_id)
     if env is None:
         raise DataError("no committed rollback to finalize")
@@ -2122,11 +1315,11 @@ async def finalize_revert(
     if counter_msg != to_counter or msg_mac != mac:
         raise DataError("confirmation does not match the committed rollback")
 
-    ward_id = await _get_ward_id()
+    ward_id = await get_ward_id()
     if not verify_ward_final(ward_id, to_counter, mac, wm_signature):
         raise DataError("WM final attestation verification failed")
 
-    k_auth = await _derive_ward_key(b"K_auth")
+    k_auth = await derive_ward_key(b"K_auth")
     if not verify_auth_revert(
         k_auth,
         ward_id,
@@ -2169,8 +1362,8 @@ async def sync() -> tuple[bytes, int, bytes, bytes]:
     import storage.ward_head as ward_head
     from trezor.crypto import random
 
-    wallet_id = await _get_wallet_id()
-    ward_id = await _get_ward_id()
+    wallet_id = await get_wallet_id()
+    ward_id = await get_ward_id()
     nonce = random.bytes(ward_head.NONCE_LENGTH)
     ward_head.sync_begin(wallet_id, nonce)
 
@@ -2192,14 +1385,14 @@ async def ingest(
     import storage.ward_head as ward_head
     from trezor.wire import DataError
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
 
     ctx = ward_head.sync_get(wallet_id)
     if ctx is None:
         raise DataError("no sync round in progress")
     nonce, _state, _counter, _mac = ctx
 
-    ward_id = await _get_ward_id()
+    ward_id = await get_ward_id()
     mac = mac_msg if mac_msg is not None else _ZERO_MAC
     if not verify_wm_attestation(ward_id, nonce, counter, mac, wm_signature):
         raise DataError("WM attestation verification failed")
@@ -2234,7 +1427,7 @@ async def reconcile(
     import storage.ward_head as ward_head
     from trezor.wire import DataError
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
 
     ctx = ward_head.sync_get(wallet_id)
     if ctx is None or ctx[1] != ward_head.SYNC_ATTESTED:
@@ -2250,8 +1443,8 @@ async def reconcile(
             raise DataError("attested tree is non-empty but no root was supplied")
         if len(root) != ward_store.ROOT_LENGTH:
             raise DataError("root must be exactly 32 bytes")
-        mac_key = await _derive_mac_key(b"root_mac")
-        computed = _compute_mac(mac_key, wallet_id, counter_ext.to_bytes(4, "big"), root)
+        mac_key = await derive_mac_key(b"root_mac")
+        computed = compute_mac(mac_key, wallet_id, counter_ext.to_bytes(4, "big"), root)
         if computed != mac_ext:
             raise DataError("root does not match the attested mac")
 
@@ -2291,15 +1484,15 @@ async def verify_chain(links: list) -> tuple:
     import storage.ward_store as ward_store
     from trezor.wire import DataError
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
     ctx = ward_head.sync_get(wallet_id)
     if ctx is None or ctx[1] != ward_head.SYNC_ATTESTED:
         raise DataError("no attested sync round to verify against")
     _nonce, _state, counter_ext, mac_ext = ctx
 
-    ward_id = await _get_ward_id()
-    k_auth = await _derive_ward_key(b"K_auth")
-    k_sig_pub = k_sig_pubkey(await _derive_ward_key(b"K_sig")) if WARD_KSIG else None
+    ward_id = await get_ward_id()
+    k_auth = await derive_ward_key(b"K_auth")
+    k_sig_pub = k_sig_pubkey(await derive_ward_key(b"K_sig")) if WARD_KSIG else None
 
     # Trusted baseline = the device's current installed head (fresh device: genesis).
     present, base_root = ward_head.root_get(wallet_id)
@@ -2335,8 +1528,8 @@ async def verify_chain(links: list) -> tuple:
     else:
         if root_head is None:
             raise DataError("attested tree is non-empty but chain reached the empty tree")
-        mac_key = await _derive_mac_key(b"root_mac")
-        computed = _compute_mac(
+        mac_key = await derive_mac_key(b"root_mac")
+        computed = compute_mac(
             mac_key, wallet_id, counter_ext.to_bytes(4, "big"), root_head
         )
         if computed != mac_ext:
@@ -2366,8 +1559,8 @@ async def pending() -> tuple[list[int], list[bytes], bytes, bytes]:
     parallel). ward_id lets a host resolve the WM-facing anchor up front."""
     import storage.ward_store as ward_store
 
-    wallet_id = await _get_wallet_id()
-    ward_id = await _get_ward_id()
+    wallet_id = await get_wallet_id()
+    ward_id = await get_ward_id()
 
     pending_ids = []  # type: list[int]
     addresses = []  # type: list[bytes]
@@ -2394,14 +1587,14 @@ async def debug_set_root(
     if len(root) != ward_store.ROOT_LENGTH:
         raise DataError("root must be exactly 32 bytes")
 
-    wallet_id = await _get_wallet_id()
+    wallet_id = await get_wallet_id()
     counter = ward_store.bump_counter(wallet_id)
     ward_head.root_set(wallet_id, root)
 
-    mac_key = await _derive_mac_key(b"root_mac")
+    mac_key = await derive_mac_key(b"root_mac")
     new_root = root
     root_mac = (
-        _compute_mac(mac_key, wallet_id, counter.to_bytes(4, "big"), new_root)
+        compute_mac(mac_key, wallet_id, counter.to_bytes(4, "big"), new_root)
         if new_root is not None
         else None
     )

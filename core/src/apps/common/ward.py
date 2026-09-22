@@ -37,7 +37,7 @@ def _authorize(app_id: str, capability: str) -> None:
 # firmware works internally on a `part` tuple (encoding, nonce, tag, body). These
 # helpers are the only place that maps between the two, and they enforce that a
 # received encoding matches this build's mode for that part (an encrypted-only
-# release rejects a plaintext part). See service.WARD_PLAINTEXT_IDENTITY /
+# release rejects a plaintext part). See leaf.WARD_PLAINTEXT_IDENTITY /
 # WARD_PLAINTEXT_CONTENT.
 
 
@@ -45,10 +45,10 @@ def make_leaf_content(part):
     """Build a LeafContent from an internal content part."""
     from trezor.messages import EncryptedLeaf, LeafContent, PlaintextLeaf
 
-    from apps.ward import service
+    from apps.ward import leaf
 
-    encoding, nonce, tag, body = part if part is not None else service.EMPTY_PART
-    if encoding == service.ENC_PLAINTEXT:
+    encoding, nonce, tag, body = part if part is not None else leaf.EMPTY_PART
+    if encoding == leaf.ENC_PLAINTEXT:
         return LeafContent(encoding=1, plaintext=PlaintextLeaf(content=body))
     return LeafContent(encoding=0, encrypted=EncryptedLeaf(nonce=nonce, tag=tag, ct=body))
 
@@ -59,7 +59,7 @@ def read_leaf_content(content):
     Rejects a part whose encoding does not match this build."""
     from trezor.wire import DataError
 
-    from apps.ward import service
+    from apps.ward import leaf
 
     if content is None:
         return None
@@ -68,15 +68,15 @@ def read_leaf_content(content):
         body = p.content if (p is not None and p.content is not None) else b""
         # An EMPTY body is the DELETE sentinel and is mode-agnostic -- there is nothing
         # to decrypt, so an encrypted-only build must still accept it.
-        if len(body) > 0 and not service.WARD_PLAINTEXT_CONTENT:
+        if len(body) > 0 and not leaf.WARD_PLAINTEXT_CONTENT:
             raise DataError("WARD: plaintext leaf but firmware is encrypted-only")
-        return (service.ENC_PLAINTEXT, b"", b"", body)
-    if service.WARD_PLAINTEXT_CONTENT:
+        return (leaf.ENC_PLAINTEXT, b"", b"", body)
+    if leaf.WARD_PLAINTEXT_CONTENT:
         raise DataError("WARD: encrypted leaf but firmware is plaintext-only")
     e = content.encrypted
     if e is None:
         return None
-    return (service.ENC_ENCRYPTED, e.nonce or b"", e.tag or b"", e.ct or b"")
+    return (leaf.ENC_ENCRYPTED, e.nonce or b"", e.tag or b"", e.ct or b"")
 
 
 def make_leaf_identity(key_type: str, part):
@@ -85,13 +85,13 @@ def make_leaf_identity(key_type: str, part):
     leaf no longer exists, so there is no identity to describe."""
     from trezor.messages import EncryptedIdentity, LeafIdentity, PlainIdentity
 
-    from apps.ward import service
+    from apps.ward import leaf
 
-    if service.part_is_empty(part):
+    if leaf.part_is_empty(part):
         return None
     encoding, nonce, tag, body = part
-    if encoding == service.ENC_PLAINTEXT:
-        identifier, app_id, device_id = service.unpack_identity(body)
+    if encoding == leaf.ENC_PLAINTEXT:
+        identifier, app_id, device_id = leaf.unpack_identity(body)
         return LeafIdentity(
             encoding=1,
             key_type=key_type,
@@ -111,27 +111,27 @@ def read_leaf_identity(identity):
     (None, None). Rejects a part whose encoding does not match this build."""
     from trezor.wire import DataError
 
-    from apps.ward import service
+    from apps.ward import keys, leaf
 
     if identity is None:
         return None, None
-    key_type = identity.key_type or service._ENTRY_TYPE_ADDRESS
+    key_type = identity.key_type or keys.ENTRY_TYPE_ADDRESS
     if (identity.encoding or 0) == 1:
-        if not service.WARD_PLAINTEXT_IDENTITY:
+        if not leaf.WARD_PLAINTEXT_IDENTITY:
             raise DataError("WARD: plaintext identity but firmware is encrypted-only")
         p = identity.plain
         if p is None:
             return key_type, None
-        body = service.pack_identity(
+        body = leaf.pack_identity(
             p.identifier or b"", p.app_id or b"", p.device_id or 0
         )
-        return key_type, (service.ENC_PLAINTEXT, b"", b"", body)
-    if service.WARD_PLAINTEXT_IDENTITY:
+        return key_type, (leaf.ENC_PLAINTEXT, b"", b"", body)
+    if leaf.WARD_PLAINTEXT_IDENTITY:
         raise DataError("WARD: encrypted identity but firmware is plaintext-only")
     e = identity.encrypted
     if e is None:
         return key_type, None
-    return key_type, (service.ENC_ENCRYPTED, e.nonce or b"", e.tag or b"", e.ct or b"")
+    return key_type, (leaf.ENC_ENCRYPTED, e.nonce or b"", e.tag or b"", e.ct or b"")
 
 
 async def _classify_label(
@@ -223,10 +223,10 @@ async def resolve_label(
     from trezor.messages import WARDProofAck, WARDProofRequest
     from trezor.wire import context
 
-    from apps.ward import service
+    from apps.ward import keys
 
     domain = domain if domain is not None else app_id
-    ek = await service.entry_key_for(domain, address, key_type, device_id)
+    ek = await keys.entry_key_for(domain, address, key_type, device_id)
     log.debug(
         __name__,
         "resolve_label: pulling proof for domain=%s key_type=%s (entry_key computed)",
@@ -317,9 +317,9 @@ async def lookup_pull(
     from trezor.messages import WARDProofAck, WARDProofRequest
     from trezor.wire import context
 
-    from apps.ward import service
+    from apps.ward import keys, service
 
-    ek = await service.entry_key_for(app_id, address, key_type, device_id)
+    ek = await keys.entry_key_for(app_id, address, key_type, device_id)
     ack = await context.call(WARDProofRequest(entry_key=ek), WARDProofAck)
     a_val = read_leaf_content(ack.content)
     _a_kt, a_id = read_leaf_identity(ack.identity)
