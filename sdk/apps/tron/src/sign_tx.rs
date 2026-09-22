@@ -9,12 +9,11 @@ use crate::{
     common::{COIN, SLIP44_ID, get_encoded_address},
     consts::{TYPE_URL_TEMPLATE, token_by_address},
     layout::{
-        confirm_blob, confirm_claim, confirm_freeze_operations, confirm_known_trc20_smart_contract,
+        confirm_claim, confirm_freeze_operations, confirm_known_trc20_smart_contract, confirm_note,
         confirm_tron_voting, confirm_trx_transfer, confirm_unknown_smart_contract,
     },
     paths::{Bip32Path, PATTERNS_ADDRESS},
     proto::{
-        common::button_request::ButtonRequestType,
         messages::MessageType,
         tron::{
             ContractRequest, FreezeBalanceV2Contract, RawTransaction, ResourceCode, SignTx,
@@ -32,7 +31,7 @@ use prost::Message;
 use trezor_app_sdk::{Error, Result, WireEncode, unwrap, wire_request_raw};
 use trezor_app_sdk::{
     ResultExt, crypto,
-    ui::{self, Property},
+    modui::{self, Property, ShowSuccess},
 };
 
 // Maximum chain_id which returns the full signature_v (which must fit into an uint32).
@@ -60,7 +59,6 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
         fee_limit,
         (account_name.as_deref(), account_str.as_str()),
         &get_encoded_address(&signer_address).c()?,
-        msg.chunkify.unwrap_or(false),
     )
     .c()?;
 
@@ -84,13 +82,9 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
     signature.extend_from_slice(&sig[1..65]);
     signature.push(sig[0]);
 
-    ui::show_success(ui::ShowSuccess::new(
+    modui::show_success(ShowSuccess::new(
         tr!("words__title_done"),
         tr!("send__transaction_signed"),
-        tr!("instructions__continue_in_app"),
-        Some(3200),
-        None,
-        ButtonRequestType::Other.into(),
     ))
     .c()?;
 
@@ -115,21 +109,7 @@ fn validate_tx_fields(msg: &SignTx) -> Result<()> {
                 return Err(Error::DataError("Tron: data field too long"));
             }
 
-            confirm_blob(
-                tr!("words__note"),
-                String::from_utf8_lossy(data).as_ref(),
-                None,
-                None,
-                "tron/note",
-                ButtonRequestType::Other.into(),
-                false,
-                Some(tr!("buttons__continue")),
-                None,
-                false,
-                false,
-                false,
-            )
-            .c()?;
+            confirm_note(String::from_utf8_lossy(data).as_ref()).c()?;
         }
     }
 
@@ -142,7 +122,6 @@ fn process_contract(
     fee_limit: u64,
     account_details: (Option<&str>, &str),
     signer_address: &str,
-    chunkify: bool,
 ) -> Result<RawContract> {
     let value = match contract_type {
         RawContractType::TransferContract => {
@@ -154,14 +133,14 @@ fn process_contract(
             if c.amount > INT64_MAX {
                 return Err(Error::DataError("Tron: invalid transfer amount"));
             }
-            confirm_trx_transfer(&c, account_details, chunkify)?;
+            confirm_trx_transfer(&c, account_details)?;
             contract_bytes
         }
         RawContractType::TriggerSmartContract => {
             let c = TriggerSmartContract::decode(contract_bytes.as_slice())
                 .map_err(|_| Error::DataError("Tron: failed to decode TriggerSmartContract"))
                 .c()?;
-            process_smart_contract(&c, fee_limit, chunkify)?;
+            process_smart_contract(&c, fee_limit)?;
             contract_bytes
         }
 
@@ -175,7 +154,6 @@ fn process_contract(
                 c.balance,
                 c.resource().into(),
                 tr!("ethereum__staking_stake"),
-                chunkify,
             )
             .c()?;
 
@@ -198,7 +176,6 @@ fn process_contract(
                 c.balance,
                 c.resource().into(),
                 tr!("ethereum__staking_unstake"),
-                chunkify,
             )
             .c()?;
             // TRON protocol uses proto3, which omits fields with default values from
@@ -225,7 +202,6 @@ fn process_contract(
                 },
                 account_details,
                 tr!("tron__claim_unfrozen_balance"),
-                chunkify,
             )
             .c()?;
             contract_bytes
@@ -245,7 +221,6 @@ fn process_contract(
                 },
                 account_details,
                 tr!("tron__claim_voting_rewards"),
-                chunkify,
             )
             .c()?;
             contract_bytes
@@ -290,25 +265,17 @@ pub(crate) fn request_contract() -> Result<(RawContractType, Vec<u8>)> {
     Ok((contract_type, data))
 }
 
-fn process_smart_contract(
-    contract: &TriggerSmartContract,
-    fee_limit: u64,
-    chunkify: bool,
-) -> Result<()> {
-    if process_known_trc20_contract(contract, fee_limit, chunkify).c()? {
+fn process_smart_contract(contract: &TriggerSmartContract, fee_limit: u64) -> Result<()> {
+    if process_known_trc20_contract(contract, fee_limit).c()? {
         return Ok(());
     } else {
-        confirm_unknown_smart_contract(&contract, fee_limit, chunkify).c()?;
+        confirm_unknown_smart_contract(&contract, fee_limit).c()?;
         Ok(())
     }
 }
 
 /// Returns false when the contract is unrecoginsed. i.e. not (Transfer and known TRC-20)
-fn process_known_trc20_contract(
-    contract: &TriggerSmartContract,
-    fee_limit: u64,
-    chunkify: bool,
-) -> Result<bool> {
+fn process_known_trc20_contract(contract: &TriggerSmartContract, fee_limit: u64) -> Result<bool> {
     let token_info = token_by_address(&contract.contract_address);
     if token_info.is_none() || contract.data.len() != (SC_ARGUMENT_BYTES * 2 + SC_FUNC_SIG_BYTES) {
         return Ok(false);
@@ -346,7 +313,6 @@ fn process_known_trc20_contract(
         fee_limit,
         token_decimals,
         token_symbol,
-        chunkify,
     )
     .c()?;
 

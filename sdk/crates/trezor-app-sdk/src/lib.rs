@@ -64,6 +64,12 @@ pub mod ui {
 #[cfg(feature = "app")]
 pub mod ui;
 
+// Building-block UI library: the replacement for `ui` above. Both are exposed
+// only while the apps are being ported; `ui` is then deleted and this takes its
+// name.
+#[cfg(feature = "app")]
+pub mod modui;
+
 #[cfg(feature = "app")]
 pub mod log;
 
