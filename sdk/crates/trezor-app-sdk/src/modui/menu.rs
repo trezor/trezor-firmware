@@ -9,9 +9,11 @@
 //! Core's own UI machinery drives generic menus with callbacks. This is the
 //! thin piece that builds one out of what an app is allowed to say.
 
+use super::UiOutcome;
 use super::extra::{Extra, ExtraItem};
-use super::{UiOutcome, call_raw};
-use crate::structs::{SelectMenu, ShowProperties, StrSlice, TrezorUiEnum, TrezorUiResult};
+use super::screen::{Screen, call_once};
+use crate::alloc_types::String;
+use crate::structs::{SelectMenu, ShowProperties, StrSlice, TrezorUiEnum, UiReply};
 use crate::{Error, Result};
 
 // ============================================================================
@@ -21,8 +23,11 @@ use crate::{Error, Result};
 /// Entries the renderer can show at once, counting the way out.
 pub(super) const MAX_ENTRIES: usize = 6;
 
-/// Label of the entry that abandons the block.
-const LEAVE: &str = "Cancel";
+/// Appended to the block's step name for the list of extras.
+const STEP_MENU: &str = "/menu";
+
+/// Appended to the block's step name for one extra's own screen.
+const STEP_DETAILS: &str = "/details";
 
 // ============================================================================
 // Entry point
@@ -30,9 +35,13 @@ const LEAVE: &str = "Cancel";
 
 /// Shows what a block offers besides its main screen.
 ///
-/// `Some` means the user decided the block from here; `None` means they merely
+/// `Some` means the person decided the block from here; `None` means they merely
 /// looked, and the main screen should come back.
-pub(super) fn open(extras: &[ExtraItem<'_>], cancel: bool) -> Result<Option<UiOutcome>> {
+pub(super) fn open(
+    extras: &[ExtraItem<'_>],
+    cancel: bool,
+    br: Option<&str>,
+) -> Result<Option<UiOutcome>> {
     let count = extras.len() + usize::from(cancel);
     if count == 0 || count > MAX_ENTRIES {
         return Err(Error::ValueError("too many extras for one screen"));
@@ -43,17 +52,44 @@ pub(super) fn open(extras: &[ExtraItem<'_>], cancel: bool) -> Result<Option<UiOu
         *slot = extra.label.into();
     }
     if cancel {
-        titles[extras.len()] = LEAVE.into();
+        // Another word this library should not be choosing; see the note
+        // in `confirm_data`. The way out is an ordinary entry because the
+        // renderer ignores `SelectMenu`'s own `cancel` field.
+        titles[extras.len()] = "Cancel".into();
     }
 
-    loop {
-        let request = TrezorUiEnum::SelectMenu(SelectMenu::new(&titles[..count], None, 0));
+    // These screens exist only because a block offered extras, so their names
+    // hang off the block's. The app never writes them: it names its step, and
+    // the library says which part of that step the person is looking at. A block
+    // that announces nothing passes that silence down rather than naming a
+    // step of nothing.
+    let menu_step = br.map(|br| step(br, STEP_MENU));
+    let details_step = br.map(|br| step(br, STEP_DETAILS));
 
-        match call_raw(&request)? {
-            TrezorUiResult::Integer(chosen) => {
+    let request = TrezorUiEnum::SelectMenu(SelectMenu::new(
+        &titles[..count],
+        None,
+        menu_step.as_deref(),
+        0,
+    ));
+    let screen = Screen::new();
+    let mut first = true;
+
+    loop {
+        // Looking at an extra and coming back should land on the entry that
+        // was chosen, not at the top of the list, so the menu is reopened.
+        let reply = if first {
+            first = false;
+            screen.show(&request)?
+        } else {
+            screen.reshow(&request)?
+        };
+
+        match reply {
+            UiReply::Choice(chosen) => {
                 let chosen = chosen as usize;
                 match extras.get(chosen) {
-                    Some(extra) => show(extra)?,
+                    Some(extra) => show(extra, details_step.as_deref())?,
                     // Past the extras lies the way out, which exists only when
                     // the block asked for one.
                     None if cancel && chosen == extras.len() => {
@@ -63,7 +99,7 @@ pub(super) fn open(extras: &[ExtraItem<'_>], cancel: bool) -> Result<Option<UiOu
                 }
             }
             // Closed without choosing: back to the main screen.
-            TrezorUiResult::Confirmed | TrezorUiResult::Cancelled => return Ok(None),
+            UiReply::Confirmed | UiReply::Cancelled => return Ok(None),
             _ => return Err(Error::InvalidMessage),
         }
     }
@@ -73,12 +109,20 @@ pub(super) fn open(extras: &[ExtraItem<'_>], cancel: bool) -> Result<Option<UiOu
 // Internals
 // ============================================================================
 
+/// The block's step name with a suffix naming which part of it this is.
+fn step(br: &str, suffix: &str) -> String {
+    let mut name = String::with_capacity(br.len() + suffix.len());
+    name.push_str(br);
+    name.push_str(suffix);
+    name
+}
+
 /// Shows one extra. Dismissing it comes back here, so it carries no decision.
-fn show(extra: &ExtraItem<'_>) -> Result<()> {
+fn show(extra: &ExtraItem<'_>, br: Option<&str>) -> Result<()> {
     match extra.value {
         Extra::Simple(props) => {
-            let request = ShowProperties::new(extra.label, props, None, None, 0);
-            call_raw(&TrezorUiEnum::ShowProperties(request))?;
+            let request = ShowProperties::new(extra.label, props, None, br, 0);
+            call_once(&TrezorUiEnum::ShowProperties(request))?;
         }
         // Paging is unsolved; this is where the fetch loop belongs once its
         // shape is settled. Refusing is wrong, but it is honestly wrong rather

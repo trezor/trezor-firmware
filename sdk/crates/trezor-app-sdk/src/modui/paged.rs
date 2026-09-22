@@ -15,12 +15,14 @@
 //! // A block supplies only "render page N"; the loop belongs here:
 //! paged::confirm_in_pages(page_count, |ctx| {
 //!     let slice = page_of(data, ctx.index);
-//!     show_page(&params, slice, &ctx) // uses ctx.verb(), ctx.verb_secondary()
+//!     show_page(&params, slice, &ctx)
 //! })
 //! ```
 
 use super::UiOutcome;
 use crate::Result;
+#[cfg(doc)]
+use crate::structs::UiReply;
 
 // ============================================================================
 // Constants
@@ -38,82 +40,78 @@ pub(super) const BYTES_PER_PAGE: usize = 81; // 9 rows of 18 hex digits
 // Data types
 // ============================================================================
 
-/// What the user chose on a single page.
+/// What should happen after one page was shown.
 ///
-/// Private on purpose: the public outcome has no notion of pages, so this
-/// never escapes the crate.
+/// # Who uses this
+///
+/// - **Written by a block**, in the closure it hands to
+///   [`confirm_in_pages`]. The block
+///   turns a [`UiReply`] into this, adding what the reply cannot say: whether
+///   a screen with no extras meant the skip-ahead, and what came of a trip
+///   through the extras.
+/// - **Read by [`confirm_in_pages`]**, which owns the index and decides what
+///   to send next.
+/// - **Never crosses IPC, and never reaches an app.** The public
+///   [`UiOutcome`] has no notion of pages, which is the whole point: an app
+///   cannot learn that its value was shown in more than one piece.
 pub(super) enum Page {
     /// Move to the next page, or finish if this was the last.
     Advance,
+    /// Go back to the page before, or stay put if this was the first.
+    ///
+    /// WIP: nothing produces this yet. Core cannot tell it is at the start of
+    /// what it was given, so no screen offers the gesture — see the note in
+    /// `send_ui_result`. The loop handles it so that the day it can, only the
+    /// block changes.
+    Retreat,
     /// Accept the remainder without reading it.
     ConfirmAll,
-    /// Show the same page again — the user went somewhere and came back.
-    Stay,
     /// Something ended the block outright, such as a menu entry.
     Decided(UiOutcome),
     Cancelled,
 }
 
-/// Where the user is in the sequence, and the chrome that follows from it.
+/// Where the person is in the sequence, and the chrome that follows from it.
 pub(super) struct PageCtx {
     /// Zero-based page index, used to slice the content.
     pub index: usize,
     pub is_last: bool,
 }
 
-impl PageCtx {
-    /// Main button: advances, or completes the block on the last page.
-    pub fn verb(&self) -> &'static str {
-        if self.is_last {
-            "Continue"
-        } else {
-            "Show next"
-        }
-    }
-
-    /// Label of the screen's secondary button, if it has one.
-    ///
-    /// The wire gives a paged screen exactly one secondary button, so it can
-    /// either skip ahead or open the menu, never both. A menu wins, because
-    /// skipping is a convenience and the menu may hold the way out.
-    pub fn verb_secondary(&self, has_menu: bool) -> Option<&'static str> {
-        if has_menu {
-            Some("Menu")
-        } else if self.is_last {
-            None
-        } else {
-            Some("Confirm all")
-        }
-    }
-}
-
 // ============================================================================
 // Entry point
 // ============================================================================
 
-/// Shows up to `page_count` pages in order, stopping as soon as the user decides.
+/// Shows up to `page_count` pages in order, stopping as soon as the person decides.
 ///
-/// `show` renders one page and reports what the user did with it.
+/// `show` renders one page and reports what the person did with it.
 pub(super) fn confirm_in_pages<F>(page_count: usize, mut show: F) -> Result<UiOutcome>
 where
     F: FnMut(PageCtx) -> Result<Page>,
 {
-    // Empty content still gets one screen, or the user confirms nothing.
+    // Empty content still gets one screen, or the person confirms nothing.
     let page_count = page_count.max(1);
     let mut index = 0;
 
-    while index < page_count {
+    // Every way out of this loop is a `return` beside the reason for it, and
+    // the loop itself cannot end. That is deliberate: a confirmation must
+    // never be what a loop yields by running out. `break` here, or a
+    // trailing `Ok(Confirmed)` below, would mean an edit that changed how the
+    // loop finishes could turn into a silent yes on a signing device.
+    loop {
         let is_last = index + 1 == page_count;
 
         match show(PageCtx { index, is_last })? {
-            Page::Advance if is_last => break,
+            // Accepting the last page is the only way to a yes by reading.
+            Page::Advance if is_last => return Ok(UiOutcome::Confirmed),
             Page::Advance => index += 1,
-            Page::ConfirmAll => break,
-            Page::Stay => (),
+            // Already at the start: there is nowhere to go, so show it again.
+            Page::Retreat => index = index.saturating_sub(1),
+            // And this is the only way to a yes without reading — which is
+            // why it is its own variant rather than an early exit.
+            Page::ConfirmAll => return Ok(UiOutcome::Confirmed),
             Page::Decided(outcome) => return Ok(outcome),
             Page::Cancelled => return Ok(UiOutcome::Cancelled),
         }
     }
-
-    Ok(UiOutcome::Confirmed)
 }

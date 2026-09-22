@@ -6,7 +6,7 @@ use crate::{
 };
 use trezor_app_sdk::{
     Result, ResultExt, crypto,
-    modui::{self, ShowAddress, ShowSuccess},
+    modui::{self, Severity, ShowAddress, ShowNotice},
 };
 
 pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
@@ -31,6 +31,7 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
             Some(subtitle.as_str()),
             Some(account_name.as_str()),
             Some(&dp.format_path()),
+            "tron/address",
             &[],
             false,
         ))
@@ -38,10 +39,12 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
         .confirmed()
         .c()?;
 
-        // Nothing hangs on how the success screen went away.
-        let _ = modui::show_success(ShowSuccess::new(
+        // The last screen of the flow: nothing hangs on how it went away.
+        let _ = modui::show_notice(ShowNotice::new(
+            Severity::Done,
             tr!("words__title_done"),
             tr!("address__confirmed"),
+            "tron/address/confirmed",
             &[],
             false,
         ))
