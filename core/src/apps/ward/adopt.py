@@ -9,7 +9,9 @@ FOUR HANDLERS TOUCH THE SYNC ROUND, in two pairs, and each pair duplicated a seq
     reconcile / verify_chain    bind a root to the attested mac, settle queued writes against it,
                                persist it, and latch the session online. They differ ONLY in how
                                they establish the root: reconcile takes the host's and checks the
-                               mac; verify_chain folds authorised links from the device's own head.
+                               mac; verify_chain anchors at the attested head and walks authorised
+                               links BACK to the device's own, so the root it adopts is the
+                               anchor's and the walk proves the device descends to it.
 
 Factored out because the sequences are security-relevant and were drifting: the online latch was
 added to `reconcile` and forgotten in `verify_chain`, and the check that a root was actually stored
@@ -17,7 +19,7 @@ had to be added to both. A third route -- a device-initiated sync over a service
 want the same tail, and copying it a third time is how the next asymmetry gets introduced.
 
 WHAT IS DELIBERATELY NOT FACTORED. The route-specific proof stays with its handler: reconcile's
-"one counter names one state" comparison and verify_chain's link fold are what distinguish the two,
+"one counter names one state" comparison and verify_chain's backward walk are what distinguish them,
 and hiding either behind a shared helper would make the weaker route look like the stronger one.
 The ORDER of the remaining steps is load-bearing rather than incidental, which is why `verify_head_mac`
 and `adopt` are separate: reconcile has a check that must run between them.
@@ -94,7 +96,7 @@ async def verify_head_mac(
 
     `subject` names what failed, because the two routes arrive here having established the root
     differently and the distinction is worth keeping in the error: a host-supplied root that does
-    not match is a different problem from a chain that folded to a head the WM never vouched for.
+    not match is a different problem from a walk that did not reach the head this device holds.
     """
     from trezor.wire import DataError
 
@@ -110,7 +112,7 @@ async def adopt(
     counter: int,
     root: bytes | None,
     landed_commits: "list | None" = None,
-    staged: bool = False,
+    current: bool = True,
 ) -> None:
     """Take the head: settle queued writes, persist it, latch online, close the round.
 
@@ -128,10 +130,15 @@ async def adopt(
       exist, and `common.verify_leaf_against_root` reads an absent root at counter 0 as "nothing
       was ever written" and stops checking proofs at all.
 
-      THEN LATCH. Reads may go to the host only once a WM attestation has been bound to a tree the
-      device actually holds.
+      THEN LATCH -- but only when `current`. Reads may go to the host once a WM attestation has
+      been bound to a tree the device actually holds AND that attestation answers a nonce from
+      this round. A head proved genuine by an archived attestation is adopted and settled without
+      latching; see below.
 
       THEN CLOSE THE ROUND, so one attestation can never be replayed into a second adoption.
+
+    `current` says whether the head being adopted is the one the backend holds NOW, which only a
+    nonce-bound attestation can establish. False adopts and settles without claiming currency.
 
     `landed_commits`, when given, is every transition the caller proved it crossed; a claim landed
     exactly when its own authorisation is among them. Without it, settlement asks whether the head
@@ -154,16 +161,23 @@ async def adopt(
             "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
         )
 
-    if staged:
-        # A STAGED ADOPTION STOPS HERE, and the two omissions are the whole point.
+    if not current:
+        # ADOPTED BUT NOT CURRENT, and the two omissions are the whole point.
         #
-        # NO LATCH. This head was proved genuine -- descent from our own head, and an archived
-        # attestation saying the WM really held it -- but it is NOT current: the device is
-        # catching up in batches precisely because it is far behind. Latching would claim it
-        # shares a head with the backend, which is the one thing it knows to be false.
+        # An anchor has two properties and they come apart. GENUINE -- the WM really held this
+        # head -- is what descent needs, and an ARCHIVED attestation carries it in full. FRESH --
+        # this is the head NOW -- only a nonce this round minted can carry, because `round.clear`
+        # zeroes the slot and the device cannot tell a nonce it minted last week from arbitrary
+        # bytes. A walk anchored on an archive proves the first and says nothing about the second.
         #
-        # ROUND STAYS OPEN, because the next batch continues from the head just persisted and
-        # `round.begin` would discard it. Closing is the final batch's job, along with the latch.
+        # NO LATCH, therefore. `round.is_online` decides whether reads are served from the
+        # backend, so latching here would let a host replay an old attestation, freeze the device
+        # at an old head and have those values presented as current -- the eclipse the nonce
+        # exists to close.
+        #
+        # AND NO `clear`, because there may be no round to clear: this path runs without one.
+        # Clearing a round this adoption did not consume would retire an attestation some other
+        # exchange is still entitled to.
         return
 
     sync_round.mark_online()

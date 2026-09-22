@@ -8436,18 +8436,20 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardVerifyChain(protobuf.MessageType):
-        links: "list[WardChainLink]"
+        head_root: "AnyBytes | None"
         nonce: "AnyBytes | None"
         timestamp: "int | None"
         wm_signature: "AnyBytes | None"
+        anchor_counter: "int | None"
 
         def __init__(
             self,
             *,
-            links: "list[WardChainLink] | None" = None,
+            head_root: "AnyBytes | None" = None,
             nonce: "AnyBytes | None" = None,
             timestamp: "int | None" = None,
             wm_signature: "AnyBytes | None" = None,
+            anchor_counter: "int | None" = None,
         ) -> None:
             pass
 
@@ -8455,15 +8457,47 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WardVerifyChain"]:
             return isinstance(msg, cls)
 
+    class WardChainRequest(protobuf.MessageType):
+        to_counter: "int | None"
+        to_root: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            to_counter: "int | None" = None,
+            to_root: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardChainRequest"]:
+            return isinstance(msg, cls)
+
+    class WardChainLinkAck(protobuf.MessageType):
+        links: "list[WardChainLink]"
+
+        def __init__(
+            self,
+            *,
+            links: "list[WardChainLink] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardChainLinkAck"]:
+            return isinstance(msg, cls)
+
     class WardVerifyChainAck(protobuf.MessageType):
         counter: "int | None"
         new_root: "AnyBytes | None"
+        reverts_crossed: "int | None"
 
         def __init__(
             self,
             *,
             counter: "int | None" = None,
             new_root: "AnyBytes | None" = None,
+            reverts_crossed: "int | None" = None,
         ) -> None:
             pass
 

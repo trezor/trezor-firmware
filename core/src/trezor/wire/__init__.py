@@ -118,7 +118,7 @@ if utils.USE_WARD_SERVICE_CHANNEL:
     # AND HARD CEILINGS, WHICH ARE NOT THE SAME AS BUFFER SIZES. Above `capacity()` the codec has
     # always fallen back to the heap, so without these an unauthenticated endpoint could turn an
     # advertised uint32 into an allocation attempt. `PROTOBUF_BUFFER_SIZE` is the real protocol
-    # bound -- what a chain fold has to fit in.
+    # bound -- what one chain ack has to fit in.
     _WARD_BOOTSTRAP_MAX_MESSAGE = _WARD_BOOTSTRAP_BUFFER_SIZE
     _WARD_RPC_MAX_MESSAGE = PROTOBUF_BUFFER_SIZE
 
@@ -299,7 +299,7 @@ else:
     #
     # Reallocated once per session, as before. Now `PROTOBUF_BUFFER_SIZE` rather than the V1
     # codec's historical 8192: the two transports share `SharedBuffer`/`BufferSource` and the
-    # WARD chain fold is capped by whichever of them a build happens to have, so two sizes meant
+    # chain ack is capped by whichever of them a build happens to have, so two sizes meant
     # the same protocol bound differed by transport for no reason anyone could state.
     _WIRE_BUFFER_SIZE = PROTOBUF_BUFFER_SIZE
     _SHARED_WIRE_BUFFER = SharedBuffer(_WIRE_BUFFER_SIZE)
