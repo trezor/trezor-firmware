@@ -43,7 +43,7 @@ TAG_REVERT = b"WARD REVERT v1"
 
 # The WM's own authorisation, over MAC HEADS rather than roots -- see `wm_head_preimage`.
 TAG_WM_HEAD = b"WARD WM HEAD v1"
-TAG_WM_HEAD_INIT = b"WARD WM HEAD INIT v1"
+TAG_WM_INIT = b"WARD WM INIT v1"
 
 
 def transition_preimage(
@@ -358,11 +358,12 @@ def wm_head_preimage(
     """The bytes the WM's authorisation covers: one mac head to the next.
 
     THE TAG IS LENGTH-PREFIXED, unlike `transition_preimage`. That one is safe as it stands
-    because both of its tags are the same length, so neither can be re-split into the other. These
-    tags are a different length again, and concatenating variable-length fields with nothing
-    marking the boundary is exactly the ambiguity `leaf.leaf_hash_of` documents -- so rather than
-    rely on the lengths happening not to line up, the prefix makes a cross-domain collision
-    impossible by construction.
+    because both of its tags are the same length, so neither can be re-split into the other. This
+    family does NOT have that property to lean on -- the tags here have differed in length before
+    and will again -- and concatenating variable-length fields with nothing marking the boundary is
+    exactly the ambiguity `leaf.leaf_hash_of` documents. So rather than rely on the lengths
+    happening not to line up, which is a property that changes every time a tag is added or
+    renamed, the prefix makes a cross-domain collision impossible by construction.
 
     Both endpoints are named for the same reason as a root transition: binding only the
     destination would let an authorisation be lifted out of its place and replayed after a
@@ -450,7 +451,7 @@ def head_init_sig(k_sig: bytes, ward_id: bytes, current_mac: bytes) -> bytes:
     from trezor.crypto.curve import ed25519
 
     return ed25519.sign(
-        k_sig, wm_head_preimage(TAG_WM_HEAD_INIT, ward_id, 0, current_mac, 0, current_mac)
+        k_sig, wm_head_preimage(TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac)
     )
 
 
@@ -465,7 +466,7 @@ def verify_head_init_sig(ward_id: bytes, current_mac: bytes, signature: bytes) -
             ward_id,
             signature,
             wm_head_preimage(
-                TAG_WM_HEAD_INIT, ward_id, 0, current_mac, 0, current_mac
+                TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac
             ),
         )
     except Exception:

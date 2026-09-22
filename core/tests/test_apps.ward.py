@@ -1233,7 +1233,7 @@ class TestWardWmAuthorisation(unittest.TestCase):
         self.assertNotEqual(
             head,
             CAS.wm_head_preimage(
-                CAS.TAG_WM_HEAD_INIT, wid, 41, self._MAC_A, 42, self._MAC_B
+                CAS.TAG_WM_INIT, wid, 41, self._MAC_A, 42, self._MAC_B
             ),
         )
 
@@ -1275,11 +1275,22 @@ class TestWardWmAuthorisation(unittest.TestCase):
                 "61edf0906c56b8dbdf01706339635d01c30af75d94d9aafece901448dc3ba307"
             ),
         )
+        # The INIT preimage is pinned as well as its signature, so a change to the tag fails
+        # with a readable diff rather than an opaque 64-byte mismatch. `0f` is len("WARD WM
+        # INIT v1"); both endpoints are (0, current_mac), there being no predecessor to name.
+        self.assertEqual(
+            CAS.wm_head_preimage(CAS.TAG_WM_INIT, wid, 0, self._MAC_A, 0, self._MAC_A),
+            bytes.fromhex(
+                "0f5741524420574d20494e4954207631"
+                "d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"
+                "00000000" + "aa" * 32 + "00000000" + "aa" * 32
+            ),
+        )
         self.assertEqual(
             CAS.head_init_sig(self._K_SIG, wid, self._MAC_A),
             bytes.fromhex(
-                "73aa013c03370d5bb524e5cf6ea4c84535aa018b9c22f5619073059f3af8c3c4"
-                "dbd73b14d5ee9274e0f3340fd446a2da70e73a7f39031ce54aafb36c409ea00b"
+                "abf7c0028b8d9a9dd8d3b21bab5f5fd2c163e8b280f5ec395dbc1674c1f3d8e4"
+                "dfc5bb3dbeeb516483862dc184e17241722b79eafd56045fc9d2c4d80af27506"
             ),
         )
 
