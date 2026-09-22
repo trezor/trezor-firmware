@@ -201,7 +201,7 @@
     "bitcoin__locktime_set_to": "Locktime set to",
     "bitcoin__locktime_set_to_blockheight": "Locktime set to blockheight",
     "bitcoin__lot_of_change_outputs": {
-      "Bolt": "A lot of change-outputs",
+      "Bolt": "A lot of change-outputs.",
       "Caesar": "A lot of change-outputs",
       "Delizia": "A lot of change-outputs.",
       "Eckhart": "A lot of change-outputs."
@@ -594,12 +594,7 @@
     "coinjoin__max_mining_fee": "Max mining fee",
     "coinjoin__max_rounds": "Max rounds",
     "coinjoin__title": "Authorize coinjoin",
-    "coinjoin__title_progress": {
-      "Bolt": "Coinjoin in progress",
-      "Caesar": "Coinjoin in progress",
-      "Delizia": "Coinjoin in progress",
-      "Eckhart": "Coinjoin in progress..."
-    },
+    "coinjoin__title_progress": "Coinjoin in progress...",
     "coinjoin__waiting_for_others": "Waiting for others",
     "confirm_total__fee_rate": "Fee rate",
     "confirm_total__title_fee": "Fee info",
@@ -1174,7 +1169,7 @@
     },
     "instructions__hold_to_confirm": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Hold to confirm",
       "Delizia": "Hold to confirm",
       "Eckhart": ""
     },
@@ -1276,17 +1271,12 @@
     },
     "language__change_to_template": "Change language to {0}?",
     "language__changed": {
-      "Bolt": "Language changed successfully",
+      "Bolt": "Language changed successfully.",
       "Caesar": "Language changed successfully",
       "Delizia": "Language changed successfully.",
       "Eckhart": "Language changed successfully."
     },
-    "language__progress": {
-      "Bolt": "Changing language",
-      "Caesar": "Changing language",
-      "Delizia": "Changing language",
-      "Eckhart": "Changing language..."
-    },
+    "language__progress": "Changing language...",
     "language__title": "Language settings",
     "led__disable": {
       "Bolt": "",
@@ -1873,24 +1863,29 @@
       "Eckhart": ""
     },
     "pin__diff_from_wipe_code": "The new PIN must be different from your wipe code.",
-    "pin__disabled": "PIN protection\nturned off.",
+    "pin__disabled": "PIN protection turned off.",
     "pin__enabled": {
-      "Bolt": "PIN protection\nturned on.",
-      "Caesar": "PIN protection\nturned on.",
-      "Delizia": "PIN protection\nturned on.",
+      "Bolt": "PIN protection turned on.",
+      "Caesar": "PIN protection turned on.",
+      "Delizia": "PIN protection turned on.",
       "Eckhart": ""
     },
     "pin__enter": "Enter PIN",
     "pin__enter_new": "Enter new PIN",
     "pin__entered_not_valid": "The PIN you have entered is not valid.",
     "pin__info": {
-      "Bolt": "PIN will be required to access this device.",
-      "Caesar": "PIN will be required to access this device.",
+      "Bolt": "A PIN will be required to access this device.",
+      "Caesar": "A PIN will be required to access this device.",
       "Delizia": "",
-      "Eckhart": "The PIN will be required to access this device."
+      "Eckhart": "A PIN will be required to access this device."
     },
     "pin__invalid_pin": "Invalid PIN",
-    "pin__last_attempt": "Last attempt",
+    "pin__last_attempt": {
+      "Bolt": "Last",
+      "Caesar": "Last attempt",
+      "Delizia": "Last attempt",
+      "Eckhart": "Last attempt"
+    },
     "pin__mismatch": "Entered PINs do not match!",
     "pin__pin_mismatch": "PIN mismatch",
     "pin__please_check_again": {
@@ -1960,12 +1955,7 @@
       "Eckhart": ""
     },
     "progress__one_second_left": "1 second left",
-    "progress__please_wait": {
-      "Bolt": "Please wait",
-      "Caesar": "Please wait",
-      "Delizia": "Please wait",
-      "Eckhart": "Please wait..."
-    },
+    "progress__please_wait": "Please wait...",
     "progress__refreshing": "Refreshing...",
     "progress__signing_transaction": "Signing transaction...",
     "progress__syncing": "Syncing...",
@@ -2958,19 +2948,9 @@
     "stellar__value_sha256": "Value (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Do you want to clear value key {0}?",
     "stellar__wasm_hash": "Wasm hash",
-    "storage_msg__processing": {
-      "Bolt": "Processing",
-      "Caesar": "Processing",
-      "Delizia": "Processing",
-      "Eckhart": "Processing..."
-    },
+    "storage_msg__processing": "Processing...",
     "storage_msg__starting": "Starting up",
-    "storage_msg__verifying_pin": {
-      "Bolt": "Verifying PIN",
-      "Caesar": "Verifying PIN",
-      "Delizia": "Verifying PIN",
-      "Eckhart": "Verifying PIN..."
-    },
+    "storage_msg__verifying_pin": "Verifying PIN...",
     "storage_msg__wrong_pin": "Wrong PIN",
     "suite_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
     "suite_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
