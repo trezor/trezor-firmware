@@ -137,13 +137,13 @@ ts_t nfc_transceive(const nfc_apdu_message_t *cmd, nfc_apdu_message_t *resp);
  * size.
  *
  * @param pcd_psk [in] Pointer to the PSK message to transmit.
- * @param pcd_psk_max_len [in] Length of the PSK message to transmit.
+ * @param pcd_psk_len [in] Length of the PSK message to transmit.
  * @param picc_psk [out] Pointer to the buffer to store received PSK message.
  * @param picc_psk_max_len [in] Capacity of the receive buffer.
  * @param picc_psk_len [in/out] Pointer to the length of the received PSK
  * message.
  * @return TS_OK when the function pass, otherwise an error.
  */
-ts_t nfc_transceive_psk(uint8_t *pcd_psk, size_t pcd_psk_max_len,
+ts_t nfc_transceive_psk(const uint8_t *pcd_psk, size_t pcd_psk_len,
                         uint8_t *picc_psk, size_t picc_psk_max_len,
                         uint16_t *picc_psk_len);
