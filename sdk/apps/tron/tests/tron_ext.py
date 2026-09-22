@@ -202,6 +202,21 @@ def get_authenticated_address(
     )
 
 
+def confirm_long(
+    session: "Session",
+    instance_id: int,
+    title: str,
+    content: str,
+) -> tron_messages.ConfirmLongAck:
+    """TMP: exercise trezor_app_sdk::ui::confirm_long via the tron app's demo handler."""
+    return call_ext(
+        session,
+        instance_id,
+        msg_data=tron_messages.ConfirmLong(title=title, content=content),
+        expect=[tron_messages.ConfirmLongAck],
+    )
+
+
 def sign_tx(
     session: "Session",
     instance_id: int,

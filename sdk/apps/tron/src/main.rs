@@ -21,6 +21,7 @@ pub(crate) mod translations;
 
 pub(crate) mod alloc_types;
 mod common;
+mod confirm_long; // TMP: confirm_long demo
 mod consts;
 mod get_address;
 mod helpers;
@@ -32,7 +33,7 @@ mod strutil;
 
 use proto::{
     messages::MessageType,
-    tron::{GetAddress, SignTx},
+    tron::{ConfirmLong, GetAddress, SignTx}, // TMP: ConfirmLong
 };
 
 pub(crate) fn wire_request<Req, Resp>(req: &Req, id: MessageType) -> Result<Resp>
@@ -77,6 +78,14 @@ wire_handler!(
     MessageType::Signature,
     sign_tx::sign_tx
 );
+// TMP: confirm_long demo
+wire_handler!(
+    handle_confirm_long,
+    ProstCodec,
+    ConfirmLong,
+    MessageType::ConfirmLongAck,
+    confirm_long::confirm_long
+);
 
 // Application entry point - receives raw bytes, returns raw bytes
 #[unsafe(no_mangle)]
@@ -95,6 +104,7 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
     match id.try_into() {
         Ok(MessageType::GetAddress) => handle_get_address(data),
         Ok(MessageType::SignTx) => handle_sign_tx(data),
+        Ok(MessageType::ConfirmLong) => handle_confirm_long(data), // TMP: confirm_long demo
         Ok(_) => {
             error!("Invalid function: {:?}", id);
             Err(Error::InvalidFunction)

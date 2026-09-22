@@ -241,6 +241,45 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
             br = yield
 
 
+class InputFlowConfirmLong(InputFlowBase):
+    """TMP: pages through a confirm_long screen.
+
+    LongContentScreen paginates its content on its own (fetched over IPC as
+    the user scrolls), not through the usual static multi-page ButtonRequest
+    -- `br.pages` always comes back as 1 for it. So the page count is instead
+    derived here from `content`, hardcoded to what actually fits on one
+    Eckhart screen: 16 monospace columns * 6 rows = 96 chars (matches
+    trezor_app_sdk::ui::CHARS_PER_PAGE). Each page's content is asserted
+    directly against the corresponding slice of `content`.
+    """
+
+    CHARS_PER_SCREEN = 16 * 6
+
+    def __init__(self, client: Client | DebugSession, content: str):
+        super().__init__(client)
+        self.content = content
+
+    def input_flow(self) -> BRGeneratorType:
+        br = yield  # confirm_long
+        assert br.name == "confirm_long"
+
+        screens = [
+            self.content[i : i + self.CHARS_PER_SCREEN]
+            for i in range(0, len(self.content), self.CHARS_PER_SCREEN)
+        ] or [""]
+
+        for i, expected in enumerate(screens):
+            # Each page is paged in from the extapp over IPC and arrives a
+            # beat after the screen itself renders (screen starts blank) --
+            # wait for it instead of asserting on whatever's on screen yet.
+            self.debug.synchronize_at(expected)
+
+            if i < len(screens) - 1:
+                self.debug.click(self.debug.screen_buttons.ok())
+
+        self.debug.press_yes()
+
+
 class InputFlowSignMessageInfo(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)

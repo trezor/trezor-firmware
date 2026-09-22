@@ -28,6 +28,24 @@ message Address {
 }
 
 /**
+ * TMP: Request: Show a long confirmation screen, paged in from the host on demand.
+ * @start
+ * @next ConfirmLongAck
+ * @next Failure
+ */
+message ConfirmLong {
+    required string title = 1;    // Screen title
+    required string content = 2;  // Long text to display, paged in as the user scrolls
+}
+
+/**
+ * TMP: Response: User confirmed the long content screen
+ * @end
+ */
+message ConfirmLongAck {
+}
+
+/**
  * Request: Ask device to sign Tron transaction. Provides mandatory contract-agnostic transaction details.
  * @start
  * @next ContractRequest

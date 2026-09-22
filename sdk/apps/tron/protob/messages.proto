@@ -21,4 +21,7 @@ enum MessageType {
     MessageType_WithdrawUnfreeze = 9;
     MessageType_VoteWitnessContract = 10;
     MessageType_WithdrawBalance = 11;
+    // TMP: confirm_long demo
+    MessageType_ConfirmLong = 12;
+    MessageType_ConfirmLongAck = 13;
 }
