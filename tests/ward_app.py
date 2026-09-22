@@ -75,10 +75,32 @@ _REVEALING_MESSAGES = frozenset(
     )
 )
 
-# Set per test by `ward_app_pinned` below. A module global rather than a parameter because the
-# alternative is threading "which transport is this" through every `set_expected_responses` call
-# site in the WARD suite, and it cannot change within a test.
-_is_v1 = False
+# Set per test by `ward_app_pinned` below, and CLEARED when that test ends. A module global rather
+# than a parameter because the alternative is threading "which transport is this" through every
+# `set_expected_responses` call site in the WARD suite, and it cannot change within a test.
+#
+# None rather than False when unset, and `_transport_is_v1` raises on it. The default used to be
+# False, which made a module that forgot the fixture silently omit the v1 reveal screens from its
+# expected responses -- and, because the value LEAKED from whichever module ran last, do so only
+# sometimes. `test_display_address.py` borrowed `_pin` from `test_ward.py` without importing the
+# fixture and failed exactly this way: a real screen the firmware raises, missing from the
+# expectation, with the outcome depending on test order.
+_is_v1: "bool | None" = None
+
+
+def _transport_is_v1() -> bool:
+    """Whether this test's transport reveals on request, or a loud failure if nobody said.
+
+    Answering False here when the fixture never ran is the shape of bug this exists to prevent:
+    it does not fail, it quietly asserts the wrong sequence.
+    """
+    if _is_v1 is None:
+        raise RuntimeError(
+            "ward_app_pinned is not active for this module. Import it -- "
+            "`from ...ward_app import ward_app_pinned  # noqa: F401` -- or every "
+            "set_expected_responses below silently omits the v1 reveal screens."
+        )
+    return _is_v1
 
 
 def session_switch_prefix() -> list:
@@ -91,7 +113,7 @@ def session_switch_prefix() -> list:
     """
     from trezorlib import messages as m
 
-    return [m.Features] if _is_v1 else []
+    return [m.Features] if _transport_is_v1() else []
 
 
 def reveal_prefix(msg: type | None = None) -> list:
@@ -108,7 +130,7 @@ def reveal_prefix(msg: type | None = None) -> list:
     """
     from trezorlib import messages as m
 
-    if _is_v1 and msg is not None and msg.__name__ in _REVEALING_MESSAGES:
+    if _transport_is_v1() and msg is not None and msg.__name__ in _REVEALING_MESSAGES:
         return [m.ButtonRequest(name=REVEAL_BR)]
     return []
 
@@ -132,7 +154,7 @@ def take_ward_app_role(session: Session) -> None:
 
 
 @pytest.fixture(autouse=True)
-def ward_app_pinned(session: Session) -> None:
+def ward_app_pinned(session: Session) -> t.Iterator[None]:
     """Grant the test's host the WARD app role before its own assertions begin.
 
     On a device with no app role there is nothing to grant and the throwaway request below simply
@@ -143,6 +165,10 @@ def ward_app_pinned(session: Session) -> None:
 
     _is_v1 = session.test_ctx.protocol_version.value == "v1"
     take_ward_app_role(session)
+    yield
+    # CLEARED, so the next module cannot read this one's answer. Without this the global outlives
+    # the test that set it and a module missing the fixture inherits whatever ran before it.
+    _is_v1 = None
 
 
 class _RejectFlow(InputFlowBase):

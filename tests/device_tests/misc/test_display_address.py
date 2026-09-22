@@ -41,8 +41,14 @@ from trezorlib import ward
 from trezorlib.debuglink import DebugSession as Session
 
 from ...input_flows import InputFlowConfirmAllWarnings
+from ...ward_app import ward_app_pinned  # noqa: F401  -- autouse fixture, see below
 from ...ward_trie import WardTrie
 from .test_ward import _APP, _go_online, _pin, _Recorded, _seed
+
+# `ward_app_pinned` is IMPORTED, NOT INHERITED. An autouse fixture applies only to the module that
+# defines it, imports it, or gets it from a conftest -- and there is none under device_tests. This
+# module borrows `_pin` from test_ward.py, which brings the helper but not the fixture, so without
+# this line the v1 reveal screens are missing from every expected-response sequence here.
 
 # `DisplayAddress` is registered behind the same `BITCOIN_ONLY` guard as WARD itself, so a
 # BTC-only build has no handler for it and no such message type at all.
