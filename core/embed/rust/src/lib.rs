@@ -3,6 +3,7 @@
 #![deny(clippy::cast_lossless)]
 #![allow(clippy::new_without_default)]
 #![allow(clippy::ptr_offset_with_cast)] // workaround https://github.com/rust-lang/rust-bindgen/issues/3053
+#![deny(unused_imports)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![allow(internal_features)]
 // Allowing dead code not to cause a lot of warnings when building for a specific target
