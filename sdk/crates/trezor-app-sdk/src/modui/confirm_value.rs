@@ -13,16 +13,17 @@
 //!         Some("Recipient"),
 //!         None,
 //!         Some(Footer::Hint("Check with the source.")),
-//!         None,
+//!         &[],
+//!         true,
 //!     ))?
 //!     .confirmed()
 //! }
 //! ```
 
-use super::details::{self, Details};
-use super::{UiOutcome, call_raw};
+use super::extra::ExtraItem;
+use super::{UiOutcome, call};
 use crate::Result;
-use crate::structs::{ConfirmValue as WireConfirmValue, Property, TrezorUiEnum};
+use crate::structs::{ConfirmValue as WireConfirmValue, TrezorUiEnum};
 
 // ============================================================================
 // Data types
@@ -61,14 +62,21 @@ pub struct ConfirmValue<'a> {
     subtitle: Option<&'a str>,
     description: Option<&'a str>,
     footer: Option<Footer<'a>>,
-    details: Option<Details<'a>>,
+    extras: &'a [ExtraItem<'a>],
+    cancel: bool,
 }
 
 impl<'a> ConfirmValue<'a> {
     /// Confirms one `value` of the given kind under `title`.
     ///
-    /// `details` is an extra page of facts, titled and listed, reachable from
-    /// the block's menu.
+    /// Deliberately one constructor carrying every parameter: the API is meant
+    /// to be obvious rather than clever, so there is a single way to build this
+    /// and no builders to learn.
+    ///
+    /// `extras` are labelled pieces the screen can also offer; `cancel` says
+    /// whether the block may be abandoned from there. How either is presented
+    /// is the library's choice, not the caller's.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         title: &'a str,
         value: &'a str,
@@ -76,7 +84,8 @@ impl<'a> ConfirmValue<'a> {
         subtitle: Option<&'a str>,
         description: Option<&'a str>,
         footer: Option<Footer<'a>>,
-        details: Option<(&'a str, &'a [Property<'a>])>,
+        extras: &'a [ExtraItem<'a>],
+        cancel: bool,
     ) -> Self {
         Self {
             title,
@@ -85,8 +94,14 @@ impl<'a> ConfirmValue<'a> {
             subtitle,
             description,
             footer,
-            details,
+            extras,
+            cancel,
         }
+    }
+
+    /// Whether the screen has anything to offer besides its main content.
+    fn offers_more(&self) -> bool {
+        !self.extras.is_empty() || self.cancel
     }
 }
 
@@ -101,25 +116,23 @@ pub fn confirm_value(params: ConfirmValue<'_>) -> Result<UiOutcome> {
         Footer::Warning(text) => (text, true),
     });
 
-    details::confirm(params.details, || {
-        let request = WireConfirmValue::new(
-            params.title,
-            params.value,
-            params.description,
-            None, // ButtonRequest: emitted on the trusted side, not from here
-            0,
-            true, // is_data: values are shown verbatim, not prose
-            None, // verb: the label follows the gesture, which the block owns
-            params.subtitle,
-            false, // info: the menu button is the external one below
-            false, // hold: derived from the block
-            params.kind == ValueKind::Address,
-            false, // page_counter
-            false, // cancel
-            true,  // external_menu: how the details menu is reached
-            footer,
-        );
+    let request = TrezorUiEnum::ConfirmValue(WireConfirmValue::new(
+        params.title,
+        params.value,
+        params.description,
+        None, // ButtonRequest: emitted on the trusted side, not from here
+        0,
+        true, // is_data: values are shown verbatim, not prose
+        None, // verb: the label follows the gesture, which the block owns
+        params.subtitle,
+        false, // info: the menu button is the external one below
+        false, // hold: derived from the block
+        params.kind == ValueKind::Address,
+        false,                // page_counter
+        false,                // cancel
+        params.offers_more(), // external_menu: how the menu is reached
+        footer,
+    ));
 
-        call_raw(&TrezorUiEnum::ConfirmValue(request))
-    })
+    call(&request, params.extras, params.cancel)
 }
