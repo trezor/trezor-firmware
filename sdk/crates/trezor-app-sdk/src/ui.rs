@@ -22,12 +22,12 @@ pub use crate::structs::{
     ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
     ConfirmValueIntro, ConfirmWithInfo, Property, RequestNumber, SelectMenu, ShowAddress,
     ShowDanger, ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess,
-    ShowWarning, StrExt, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
+    ShowWarning, StrExt, TrezorProgressEnum, TrezorUiEnum, UiReply,
 };
 use crate::util::Timeout;
 use crate::{Error, unwrap};
 
-// pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
+// pub type ArchivedUiReply = Archived<UiReply>;
 // pub type ArchivedTrezorUiEnum<'a> = Archived<TrezorUiEnum<'a>>;
 
 // ============================================================================
@@ -35,7 +35,7 @@ use crate::{Error, unwrap};
 // ============================================================================
 
 type Result<T> = core::result::Result<T, Error>;
-pub type UiResult = Result<TrezorUiResult>;
+pub type UiResult = Result<UiReply>;
 
 fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
     let bytes = to_bytes::<Failure>(value).map_err(|_| Error::ServiceError)?;
@@ -44,19 +44,17 @@ fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
     let result = services_or_die().call(CoreIpcService::Ui, &message, Timeout::max())?;
 
     // Safe validation using bytecheck before accessing archived data
-    let archived = unwrap!(rkyv::access::<Archived<TrezorUiResult>, Failure>(
-        result.data()
-    ));
+    let archived = unwrap!(rkyv::access::<Archived<UiReply>, Failure>(result.data()));
 
-    let deserialized = unwrap!(deserialize::<TrezorUiResult, Failure>(archived));
+    let deserialized = unwrap!(deserialize::<UiReply, Failure>(archived));
     Ok(deserialized)
 }
 
 /// Send a UI call and expect a boolean confirmation result
 fn ipc_ui_call_confirm(value: &TrezorUiEnum) -> UiResult {
     match ipc_ui_call(value) {
-        Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
-        Ok(_) => Ok(TrezorUiResult::Cancelled),
+        Ok(UiReply::Confirmed) => Ok(UiReply::Confirmed),
+        Ok(_) => Ok(UiReply::Cancelled),
         Err(e) => Err(e),
     }
 }
@@ -146,11 +144,11 @@ pub fn end_progress() -> Result<()> {
 /// Runs a sequence of confirmation screens in order, supporting back navigation.
 ///
 /// - Each factory in `confirm_factories` is called in order.
-/// - [`TrezorUiResult::Confirmed`] advances to the next step.
-/// - [`TrezorUiResult::Back`] returns to the previous step (if any).
-/// - [`TrezorUiResult::Cancelled`] aborts the whole flow.
+/// - [`UiReply::Confirmed`] advances to the next step.
+/// - [`UiReply::Backward`] returns to the previous step (if any).
+/// - [`UiReply::Cancelled`] aborts the whole flow.
 ///
-/// Returns [`TrezorUiResult::Confirmed`] when all steps are confirmed.
+/// Returns [`UiReply::Confirmed`] when all steps are confirmed.
 ///
 /// ## Example
 ///
@@ -170,14 +168,14 @@ pub fn confirm_linear_flow(confirm_factories: &[&dyn Fn() -> UiResult]) -> UiRes
         let res = (confirm_factories[i])()?;
 
         match res {
-            TrezorUiResult::Confirmed => {
+            UiReply::Confirmed => {
                 i += 1;
             }
-            TrezorUiResult::Back if i > 0 => {
+            UiReply::Backward if i > 0 => {
                 i -= 1;
             }
-            TrezorUiResult::Cancelled => {
-                return Ok(TrezorUiResult::Cancelled);
+            UiReply::Cancelled => {
+                return Ok(UiReply::Cancelled);
             }
             _ => {
                 // TODO: proper error type
@@ -186,10 +184,10 @@ pub fn confirm_linear_flow(confirm_factories: &[&dyn Fn() -> UiResult]) -> UiRes
         }
     }
 
-    Ok(TrezorUiResult::Confirmed)
+    Ok(UiReply::Confirmed)
 }
 
-/// Converts a [`TrezorUiResult`] into `Ok(())` if confirmed, or [`Error::Cancelled`] otherwise.
+/// Converts a [`UiReply`] into `Ok(())` if confirmed, or [`Error::Cancelled`] otherwise.
 ///
 /// Useful as the outermost check after a UI flow.
 ///
@@ -203,8 +201,8 @@ pub fn confirm_linear_flow(confirm_factories: &[&dyn Fn() -> UiResult]) -> UiRes
 /// )?;
 /// # Ok::<(), trezor_app_sdk::Error>(())
 /// ```
-pub fn error_if_not_confirmed(result: TrezorUiResult) -> core::result::Result<(), crate::Error> {
-    if matches!(result, TrezorUiResult::Confirmed) {
+pub fn error_if_not_confirmed(result: UiReply) -> core::result::Result<(), crate::Error> {
+    if matches!(result, UiReply::Confirmed) {
         Ok(())
     } else {
         Err(crate::Error::Cancelled)
@@ -213,11 +211,11 @@ pub fn error_if_not_confirmed(result: TrezorUiResult) -> core::result::Result<()
 
 /// Runs a main layout paired with an optional info layout, looping until confirmed or cancelled.
 ///
-/// - The main layout is called repeatedly until it returns [`TrezorUiResult::Confirmed`] or
-///   [`TrezorUiResult::Cancelled`].
-/// - If the main layout returns [`TrezorUiResult::Info`], the info layout is opened.
+/// - The main layout is called repeatedly until it returns [`UiReply::Confirmed`] or
+///   [`UiReply::Cancelled`].
+/// - If the main layout returns [`UiReply::WantsMore`], the info layout is opened.
 /// - If `info_layout_can_confirm` is `true` and the info layout returns
-///   [`TrezorUiResult::Confirmed`], the whole flow is confirmed.
+///   [`UiReply::Confirmed`], the whole flow is confirmed.
 /// - `br_name` is sent on the first call; subsequent calls use `None` unless
 ///   `repeat_button_request` is `true`.
 ///
@@ -258,21 +256,21 @@ pub fn interact_with_info_flow(
 
         first_br = next_br;
         match main_res {
-            TrezorUiResult::Confirmed => {
-                return Ok(TrezorUiResult::Confirmed);
+            UiReply::Confirmed => {
+                return Ok(UiReply::Confirmed);
             }
-            TrezorUiResult::Info => {
+            UiReply::WantsMore => {
                 let info_res = info_layout(next_br)?;
 
-                if info_layout_can_confirm && matches!(info_res, TrezorUiResult::Confirmed) {
-                    return Ok(TrezorUiResult::Confirmed);
+                if info_layout_can_confirm && matches!(info_res, UiReply::Confirmed) {
+                    return Ok(UiReply::Confirmed);
                 } else {
                     // Return to the same main step after info flow.
                     continue;
                 }
             }
-            TrezorUiResult::Cancelled => {
-                return Ok(TrezorUiResult::Cancelled);
+            UiReply::Cancelled => {
+                return Ok(UiReply::Cancelled);
             }
             _ => {
                 // TODO: proper error type
@@ -366,7 +364,7 @@ impl<'a> Menu<'a> {
     pub fn interact(&self) -> UiResult {
         if self.children.is_empty() && self.cancel.is_none() {
             // TODO: maybe raise error instead
-            return Ok(TrezorUiResult::Confirmed);
+            return Ok(UiReply::Confirmed);
         }
 
         if self.children.len() > Self::MAX_MENU_ITEMS {
@@ -386,26 +384,27 @@ impl<'a> Menu<'a> {
                 SelectMenu::new(
                     &items[..self.children.len()],
                     self.cancel.as_ref().map(|c| c.title),
+                    None,
                     1,
                 ),
                 self.children.len(),
             )?;
 
             match choice {
-                TrezorUiResult::Integer(idx) if (idx as usize) < self.children.len() => {
+                UiReply::Choice(idx) if (idx as usize) < self.children.len() => {
                     // Same behavior as Python: open details, ignore its result, return to menu.
                     self.children[idx as usize].interact()?;
                     continue;
                 }
-                TrezorUiResult::Confirmed => {
-                    return Ok(TrezorUiResult::Confirmed);
+                UiReply::Confirmed => {
+                    return Ok(UiReply::Confirmed);
                 }
-                TrezorUiResult::Cancelled => {
+                UiReply::Cancelled => {
                     if let Some(cancel) = self.cancel.as_ref() {
                         let r = cancel.interact()?;
                         match r {
-                            TrezorUiResult::Confirmed => return Ok(TrezorUiResult::Cancelled),
-                            TrezorUiResult::Cancelled => continue,
+                            UiReply::Confirmed => return Ok(UiReply::Cancelled),
+                            UiReply::Cancelled => continue,
                             // TODO: proper error type
                             _ => return Err(Error::Cancelled),
                         }
@@ -420,10 +419,10 @@ impl<'a> Menu<'a> {
 
 /// Runs a main UI layout in a loop, opening a [`Menu`] when the user requests more info.
 ///
-/// - The main layout is called repeatedly until it returns [`TrezorUiResult::Confirmed`] or
-///   [`TrezorUiResult::Cancelled`].
-/// - If the main layout returns [`TrezorUiResult::Info`], the menu is opened.
-///   - If the menu returns [`TrezorUiResult::Cancelled`] (user cancelled from menu), the whole
+/// - The main layout is called repeatedly until it returns [`UiReply::Confirmed`] or
+///   [`UiReply::Cancelled`].
+/// - If the main layout returns [`UiReply::WantsMore`], the menu is opened.
+///   - If the menu returns [`UiReply::Cancelled`] (user cancelled from menu), the whole
 ///     flow is cancelled.
 ///   - Otherwise the main layout is shown again.
 /// - `br_name` is passed only on the first call to the main layout (button request sent once).
@@ -464,10 +463,10 @@ pub fn interact_with_menu_flow<'a>(
         let result = main_layout(first_br)?;
         first_br = None; // ButtonRequest should be sent once (for the main layout)
 
-        if matches!(result, TrezorUiResult::Info) {
+        if matches!(result, UiReply::WantsMore) {
             let menu_res = menu.interact()?;
-            if matches!(menu_res, TrezorUiResult::Cancelled) {
-                return Ok(TrezorUiResult::Cancelled);
+            if matches!(menu_res, UiReply::Cancelled) {
+                return Ok(UiReply::Cancelled);
             }
             continue;
         }
@@ -518,7 +517,7 @@ pub fn confirm_value_intro<'a>(confirm_value_intro: ConfirmValueIntro<'a>) -> Ui
 /// ```no_run
 /// use trezor_app_sdk::ui::{self, ConfirmSummary};
 /// ui::confirm_summary(ConfirmSummary::new(
-///     "Summary", None, None, "Total: 1.5 ETH", "Send", None, None, Some("confirm"), None, false, None, 1,
+///     "Summary", None, None, "Total: 1.5 ETH", "Send", None, None, Some("confirm"), None, false, false, None, 1,
 /// ))?;
 /// # Ok::<(), trezor_app_sdk::Error>(())
 /// ```
@@ -528,7 +527,7 @@ pub fn confirm_summary<'a>(confirm_summary: ConfirmSummary<'a>) -> UiResult {
 
 /// Shows a generic action confirmation dialog.
 ///
-/// Returns [`TrezorUiResult::Confirmed`] or [`TrezorUiResult::Cancelled`].
+/// Returns [`UiReply::Confirmed`] or [`UiReply::Cancelled`].
 ///
 /// ## Example
 ///
@@ -545,11 +544,9 @@ pub fn confirm_action<'a>(confirm_action: ConfirmAction<'a>) -> UiResult {
 
 fn select_menu<'a>(select_menu: SelectMenu<'a>, len: usize) -> UiResult {
     match ipc_ui_call(&TrezorUiEnum::SelectMenu(select_menu)) {
-        Ok(TrezorUiResult::Integer(idx)) if (idx as usize) < len => {
-            Ok(TrezorUiResult::Integer(idx))
-        }
-        Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
-        Ok(_) => Ok(TrezorUiResult::Cancelled),
+        Ok(UiReply::Choice(idx)) if (idx as usize) < len => Ok(UiReply::Choice(idx)),
+        Ok(UiReply::Confirmed) => Ok(UiReply::Confirmed),
+        Ok(_) => Ok(UiReply::Cancelled),
         Err(e) => Err(e),
     }
 }
@@ -600,7 +597,7 @@ pub fn show_warning<'a>(show_warning: ShowWarning<'a>) -> Result<()> {
 
 /// Shows an info screen with a cancel button.
 ///
-/// Returns [`TrezorUiResult::Confirmed`] if the user proceeds, [`TrezorUiResult::Cancelled`]
+/// Returns [`UiReply::Confirmed`] if the user proceeds, [`UiReply::Cancelled`]
 /// if the user cancels.
 ///
 /// ## Example
@@ -617,8 +614,8 @@ pub fn show_info_with_cancel<'a>(show_info_with_cancel: ShowInfoWithCancel<'a>) 
 
 /// Shows a mismatch warning screen (e.g. address mismatch).
 ///
-/// Returns [`TrezorUiResult::Confirmed`] if the user acknowledges,
-/// [`TrezorUiResult::Cancelled`] otherwise.
+/// Returns [`UiReply::Confirmed`] if the user acknowledges,
+/// [`UiReply::Cancelled`] otherwise.
 ///
 /// ## Example
 ///
@@ -672,23 +669,23 @@ pub fn show_success<'a>(show_success: ShowSuccess<'a>) -> Result<()> {
 
 /// Shows a numeric input screen and returns the chosen number.
 ///
-/// Returns [`TrezorUiResult::Integer`] with the selected value, or
-/// [`TrezorUiResult::Cancelled`] if the user cancels.
+/// Returns [`UiReply::Choice`] with the selected value, or
+/// [`UiReply::Cancelled`] if the user cancels.
 ///
 /// ## Example
 ///
 /// ```no_run
-/// use trezor_app_sdk::ui::{self, RequestNumber, TrezorUiResult};
+/// use trezor_app_sdk::ui::{self, RequestNumber, UiReply};
 /// let res = ui::request_number(RequestNumber::new("Count", "items", 1, 10, 1, 1))?;
-/// if let TrezorUiResult::Integer(n) = res {
+/// if let UiReply::Choice(n) = res {
 ///     // use n
 /// }
 /// # Ok::<(), trezor_app_sdk::Error>(())
 /// ```
 pub fn request_number<'a>(request_number: RequestNumber<'a>) -> UiResult {
     match ipc_ui_call(&TrezorUiEnum::RequestNumber(request_number))? {
-        result @ TrezorUiResult::Integer(_) => Ok(result),
-        _ => Ok(TrezorUiResult::Cancelled),
+        result @ UiReply::Choice(_) => Ok(result),
+        _ => Ok(UiReply::Cancelled),
     }
 }
 
@@ -707,8 +704,8 @@ pub fn show_public_key<'a>(show_public_key: ShowPublicKey<'a>) -> UiResult {
 
 /// Shows a confirmation screen with an additional info button.
 ///
-/// Returns [`TrezorUiResult::Confirmed`], [`TrezorUiResult::Info`], or
-/// [`TrezorUiResult::Cancelled`].
+/// Returns [`UiReply::Confirmed`], [`UiReply::WantsMore`], or
+/// [`UiReply::Cancelled`].
 ///
 /// ## Example
 ///
@@ -729,7 +726,7 @@ pub fn confirm_with_info<'a>(confirm_with_info: ConfirmWithInfo<'a>) -> UiResult
 /// ```no_run
 /// use trezor_app_sdk::ui::{self, ShowAddress, Property};
 /// let props: &[Property] = &[];
-/// ui::show_address(ShowAddress::new("Receive", "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq", None, None, None, Some("show_addr"), props, false, 1, false))?;
+/// ui::show_address(ShowAddress::new("Receive", "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq", None, None, None, Some("show_addr"), props, false, None, 1, false))?;
 /// # Ok::<(), trezor_app_sdk::Error>(())
 /// ```
 pub fn show_address<'a>(show_address: ShowAddress<'a>) -> UiResult {
@@ -769,8 +766,8 @@ pub fn should_show_more<'a>(
         br_name,
         br_code,
     )) {
-        Ok(TrezorUiResult::Confirmed) => Ok(false),
-        Ok(TrezorUiResult::Info) => Ok(true),
+        Ok(UiReply::Confirmed) => Ok(false),
+        Ok(UiReply::WantsMore) => Ok(true),
         _ => Err(Error::Cancelled),
     }
 }

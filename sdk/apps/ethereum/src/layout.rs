@@ -265,6 +265,7 @@ fn confirm_ethereum_approve<'a>(
         Some(tr!("confirm_total__title_fee")),
         Some(fee_info_items),
         false,
+        false,
         Some("confirm_total"),
         ButtonRequestType::Other.into(),
     ))?)?;
@@ -331,6 +332,7 @@ fn confirm_ethereum_clear_signing(
         None,
         None,
         None,
+        false,
         false,
         Some("confirm_ethereum_tx"),
         ButtonRequestType::Other.into(),
@@ -457,6 +459,7 @@ fn confirm_ethereum_tx<'a>(
                 Some(tr!("confirm_total__title_fee")),
                 Some(fee_info_items),
                 true,
+                false,
                 Some(br_name),
                 br_code,
             ))
@@ -701,7 +704,7 @@ fn confirm_payment_request<'a>(
                         extra_menu_items,
                         can_go_back_from_trade,
                     )?,
-                    ui::TrezorUiResult::Back
+                    ui::UiReply::Backward
                 ) {
                     back_from_confirm_trade = true;
                     break;
@@ -725,10 +728,11 @@ fn confirm_payment_request<'a>(
                         Some(tr!("confirm_total__title_fee")),
                         fee_info_items,
                         true,
+                        false,
                         Some("confirm_payment_request"),
                         ButtonRequestType::SignTx.into(),
                     ))?,
-                    ui::TrezorUiResult::Back
+                    ui::UiReply::Backward
                 ) {
                     continue;
                 } else {
@@ -990,6 +994,7 @@ fn confirm_ethereum_vault_tx(
                     Some(tr!("confirm_total__title_fee")),
                     Some(info_items),
                     false,
+                    false,
                     name,
                     br_code,
                 ))
@@ -1108,6 +1113,7 @@ fn confirm_ethereum_vault_claim(
                         Some(tr!("confirm_total__title_fee")),
                         Some(info_items),
                         false,
+                        false,
                         name,
                         br_code,
                     ))
@@ -1217,6 +1223,7 @@ fn confirm_ethereum_staking_tx<'a>(
                 Some(tr!("confirm_total__title_fee")),
                 Some(info_items),
                 true,
+                false,
                 Some("confirm_total"),
                 br_code,
             ))
@@ -1680,7 +1687,7 @@ pub(crate) fn confirm_signverify(
                         "Address mismatch?",
                         ButtonRequestType::Other.into()
                     )),
-                    Ok(ui::TrezorUiResult::Confirmed)
+                    Ok(ui::UiReply::Confirmed)
                 ) {
                     return Err(Error::Cancelled);
                 } else {
@@ -1910,8 +1917,8 @@ pub(crate) fn confirm_blob_intro(
     ))?;
 
     match res {
-        ui::TrezorUiResult::Confirmed => Ok(true),
-        ui::TrezorUiResult::Info => Ok(false),
+        ui::UiReply::Confirmed => Ok(true),
+        ui::UiReply::WantsMore => Ok(false),
         _ => Err(Error::Cancelled)?,
     }
 }

@@ -6,10 +6,9 @@ import trezorui_api
 import ustruct  # pyright: ignore[reportMissingImports]
 from storage import cache_common as cc
 from storage.cache import get_sessionless_cache
-from trezor import app, io, loop
+from trezor import app, io, loop, ui, workflow
 from trezor.messages import ExtAppMessage, ExtAppResponse, Failure
 from trezor.ui import ProgressLayout
-from trezor.ui.layouts.common import interact
 from trezor.ui.layouts.progress import progress
 from trezor.wire import context
 from trezor.wire.errors import DataError
@@ -23,7 +22,9 @@ if __debug__:
 
 if TYPE_CHECKING:
     from trezorio import IpcMessage
-    from typing import NoReturn
+    from typing import Any, NoReturn
+
+    from trezor.enums import ButtonRequestType
 
 _SERVICE_WIRE_START = const(0)
 _SERVICE_WIRE_CONTINUE = const(1)
@@ -32,6 +33,20 @@ _SERVICE_WIRE_ERROR = const(3)
 _SERVICE_UI = const(4)
 _SERVICE_PROGRESS = const(5)
 _SERVICE_CRYPTO = const(6)
+
+# A UI message id packs an operation and a screen handle, so that a layout can
+# outlive the answer it gave. The old UI API never opens a screen and always
+# sends `_UI_OP_ONE_SHOT` with handle 0, so it is unaffected.
+_UI_HANDLE_BITS = const(12)
+_UI_HANDLE_MASK = const((1 << 12) - 1)
+
+_UI_OP_ONE_SHOT = const(0)  # build, show, forget
+_UI_OP_OPEN = const(1)  # build, show, keep under the handle
+_UI_OP_REOPEN = const(2)  # show what is already held, without rebuilding
+_UI_OP_CLOSE = const(3)  # drop what is held, show nothing
+
+# An app nests only a few screens at a time; anything beyond this is a leak.
+_UI_MAX_SCREENS = const(8)
 
 _SERVICE_PROGRESS_INIT = const(0)
 _SERVICE_PROGRESS_REPORT = const(1)
@@ -52,6 +67,44 @@ def fn_id(service: int, message_id: int) -> int:
 
 def from_fn_id(fn_id: int) -> tuple[int, int]:
     return ((fn_id >> 16) & 0xFFFF, fn_id & 0xFFFF)
+
+
+def from_ui_message_id(message_id: int) -> tuple[int, int]:
+    """Split a UI message id into the operation and the screen handle."""
+    return (message_id >> _UI_HANDLE_BITS, message_id & _UI_HANDLE_MASK)
+
+
+async def _show_new_layout(
+    layout_obj: Any, br_code: ButtonRequestType, br_name: str | None
+) -> tuple[ui.Layout, Any]:
+    """Show a freshly built layout, and wait for the answer.
+
+    Returns the layout as well, so that a caller which means to show it again
+    can keep it instead of paying for a second one.
+    """
+    # The body of `interact()`, unrolled because the layout itself is needed
+    # and `interact()` only hands back the result.
+    workflow.close_others()
+    layout = ui.Layout(layout_obj)
+    layout.start()
+    if br_name is not None:
+        layout.put_button_request((br_code, br_name))
+    return layout, await layout.get_result()
+
+
+async def _run_layout(layout: ui.Layout) -> Any:
+    """Show a layout that is already built, and wait for the user to answer.
+
+    The layout keeps whatever state it had — which page it was on, how far it
+    was scrolled — because it is started again rather than constructed again.
+    """
+    # Same courtesy `interact()` does: nobody else should be drawing.
+    workflow.close_others()
+    # The user has seen this screen before, so it should return rather than
+    # arrive.
+    layout.should_resume = True
+    layout.start()
+    return await layout.get_result()
 
 
 def _extract_slip44_id(patterns: list[str]) -> int:
@@ -141,6 +194,9 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
         die(DataError(f"Failed to send IPC message: {e}"))
 
     progress_obj: ProgressLayout | None = None
+    # Layouts the app asked to keep, so that showing one again does not build a
+    # second copy of it. Emptied when the task ends, with the task's memory.
+    screens: dict[int, ui.Layout] = {}
 
     def crypto_resp_cb(data: bytes) -> None:
         log.debug(__name__, "Sending crypto result")
@@ -162,16 +218,39 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
         service, message_id = from_fn_id(msg.fn)
 
         if service == _SERVICE_UI:
-            main_layout_obj, br_code, br_name = trezorui_api.process_ipc_message(
-                data=bytes(msg.data)
-            )
+            op, handle = from_ui_message_id(message_id)
 
-            result = await interact(
-                main_layout_obj, br_name, br_code, raise_on_cancel=None
-            )
+            if op == _UI_OP_CLOSE:
+                # Nothing is shown; the app is only saying it is done with the
+                # screen. Answering keeps the app's blocking call symmetric.
+                screens.pop(handle, None)
+                result = trezorui_api.CANCELLED
+            elif op == _UI_OP_REOPEN and handle in screens:
+                result = await _run_layout(screens[handle])
+            else:
+                # Either a fresh screen, or a reopen of one we no longer hold —
+                # in which case the app sent the payload again precisely so it
+                # can be rebuilt rather than fail.
+                try:
+                    layout_obj, br_code, br_name = trezorui_api.process_ipc_message(
+                        data=bytes(msg.data)
+                    )
+                except Exception as e:
+                    # The request cannot be drawn. Answering would leave the app
+                    # waiting on a screen that never existed, so the app stops.
+                    die(DataError(f"Cannot show the app's screen: {e}"))
+                layout, result = await _show_new_layout(layout_obj, br_code, br_name)
+                if op != _UI_OP_ONE_SHOT:
+                    if handle not in screens and len(screens) >= _UI_MAX_SCREENS:
+                        die(DataError("Too many open screens"))
+                    screens[handle] = layout
+
             log.debug(__name__, f"UI interaction result: {result}")
             # Serialize and send the result back
-            trezorui_api.send_ui_result(result=result, ipc_cb=ui_resp_cb)
+            try:
+                trezorui_api.send_ui_result(result=result, ipc_cb=ui_resp_cb)
+            except Exception as e:
+                die(DataError(f"Cannot send the screen's result: {e}"))
 
         elif service == _SERVICE_CRYPTO:
             try:

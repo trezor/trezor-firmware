@@ -29,9 +29,6 @@
 // Always available: shared API structs used by both core app and extapps
 mod structs;
 
-// The new UI wire, shared by the app and the core dispatcher.
-pub mod ui_wire;
-
 // Full app runtime — only compiled when `app` feature is enabled
 #[cfg(feature = "app")]
 mod alloc_types;
@@ -59,7 +56,7 @@ pub mod crypto;
 #[cfg(not(feature = "app"))]
 pub mod ui {
     pub use crate::structs::{
-        Property, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
+        Property, Severity, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum, UiReply,
     };
 }
 

@@ -15,7 +15,8 @@ use rkyv::{
 };
 #[cfg(feature = "app_loading")]
 use trezor_app_sdk::ui::{
-    Property, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
+    Property, Severity as WireSeverity, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum,
+    UiReply,
 };
 
 use crate::io::BinaryData;
@@ -46,6 +47,8 @@ use crate::ui::layout::obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ};
 use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 use crate::ui::layout::util::{upy_disable_animation, RecoveryType};
 use crate::ui::notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ};
+#[cfg(feature = "app_loading")]
+use crate::ui::ui_firmware::Severity;
 use crate::ui::ui_firmware::{
     FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
     MAX_WORD_QUIZ_ITEMS,
@@ -1337,7 +1340,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             wrap(
                 ModelUI::select_menu(vec, 0)?,
                 m.br_code.to_native(),
-                None,
+                m.br_name.as_ref(),
             )?
         }
         Archived::<TrezorUiEnum>::ConfirmTrade(m) => wrap(
@@ -1410,7 +1413,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 tstr_opt(&m.extra_title),
                 None,
                 m.back_button,
-                false,
+                m.external_menu,
             )?,
             m.br_code.to_native(),
             m.br_name.as_ref(),
@@ -1483,6 +1486,30 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 None => Obj::const_none(),
             },
         ),
+        Archived::<TrezorUiEnum>::ShowNotice(m) => {
+            // The app said what kind of news this is; the model decides what
+            // that looks like. This only translates the wire's word for it.
+            let severity = match m.severity {
+                Archived::<WireSeverity>::Success => Severity::Success,
+                Archived::<WireSeverity>::Done => Severity::Done,
+                Archived::<WireSeverity>::Info => Severity::Info,
+                Archived::<WireSeverity>::Warning => Severity::Warning,
+                Archived::<WireSeverity>::Danger => Severity::Danger,
+            };
+            (
+                ModelUI::show_notice(
+                    severity,
+                    tstr(&m.title),
+                    tstr(&m.content),
+                    m.external_menu,
+                )?,
+                m.br_code.to_native(),
+                match m.br_name.as_ref() {
+                    Some(s) => Obj::try_from(s.as_ref())?,
+                    None => Obj::const_none(),
+                },
+            )
+        }
         Archived::<TrezorUiEnum>::RequestNumber(m) => wrap(
             ModelUI::request_number(
                 tstr(&m.title),
@@ -1568,7 +1595,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 "show_address".into(),
             )?,
             m.br_code.to_native(),
-            None,
+            m.br_name.as_ref(),
         )?,
     };
 
@@ -1603,23 +1630,31 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
             }
         }));
 
-        // Map MicroPython UiResult object to Rust enum for serialization
+        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
+        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
+
+        // Say what the person did, rather than naming the button that did it.
+        //
+        // WIP: `UiReply::Forward` has no producer here yet, and `Backward` is
+        // only ever the flow-level back button. Both should also come from a
+        // *paged* screen reaching the edge of the content it was given — but a
+        // layout cannot tell it is at an edge until the request carries the
+        // window's offset and the total length, which it does not. Until then
+        // a paged block reads `Confirmed` as "next page" and cannot page back
+        // at all.
         let msg = if obj == CONFIRMED.as_obj() {
-            TrezorUiResult::Confirmed
+            UiReply::Confirmed
         } else if obj == CANCELLED.as_obj() {
-            TrezorUiResult::Cancelled
-        } else if obj == BACK.as_obj() {
-            TrezorUiResult::Back
+            UiReply::Cancelled
         } else if obj == INFO.as_obj() {
-            TrezorUiResult::Info
+            UiReply::WantsMore
+        } else if obj == BACK.as_obj() {
+            UiReply::Backward
         } else if let Ok(val) = u32::try_from(obj) {
-            TrezorUiResult::Integer(val)
+            UiReply::Choice(u16::try_from(val).map_err(|_| Error::TypeError)?)
         } else {
             return Err(Error::TypeError);
         };
-
-        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
-        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
 
         let bytes = to_bytes_in_with_alloc::<_, _, Failure>(
             &msg,

@@ -1,23 +1,9 @@
-//! Extra data a screen can offer beyond the thing it is confirming.
+//! Extra data a screen can offer beyond the thing it is confirming. The public
+//! docs live on [`ExtraItem`].
 //!
-//! A block takes a list of labelled extras. Each one says *how its content is
-//! obtained* — already in hand, or fetched on demand — and nothing about how it
-//! should look. Whether the library shows them as a menu, as extra pages, or
-//! folds them into the screen is not the app's concern, and deliberately not
-//! expressible from here.
-//!
+//! Each extra says how its content is obtained, and nothing about how it looks.
 //! That is the whole vocabulary: no menus, no trees, no callbacks deciding
-//! outcomes. An app lists what it has and gets one answer back.
-//!
-//! # Example
-//!
-//! ```no_run
-//! use trezor_app_sdk::modui::{ExtraItem, Property};
-//!
-//! fn account_extras<'a>(props: &'a [Property<'a>]) -> [ExtraItem<'a>; 1] {
-//!     [ExtraItem::simple("Account info", props)]
-//! }
-//! ```
+//! outcomes.
 
 use crate::structs::Property;
 
@@ -25,10 +11,10 @@ use crate::structs::Property;
 // Data types
 // ============================================================================
 
-/// How a piece of extra data supplies what it shows.
+/// Where a piece of extra data comes from.
 ///
-/// The variants differ only in where the content comes from. Adding a kind
-/// means adding a variant here, and every block gains it at once.
+/// The variants differ only in how the content is obtained, never in how it
+/// looks. Most apps only need [`ExtraItem::simple`].
 pub enum Extra<'a> {
     /// Content the app already holds.
     Simple(&'a [Property<'a>]),
@@ -39,10 +25,11 @@ pub enum Extra<'a> {
     /// were written, where fewer than the buffer's length means the end has
     /// been reached.
     ///
-    /// This closure is Rust-side only and never crosses IPC — it is called by
-    /// the library, in the app's own address space. **Provisional**: how paging
-    /// should work is still an open question, and this signature is the
-    /// starting point for exploring it rather than a settled answer.
+    /// The closure runs inside the app and never crosses IPC.
+    ///
+    /// **Not implemented yet**: a block given one returns
+    /// [`crate::Error::ValueError`] when the person opens it. The signature is
+    /// provisional and may change.
     Paginated(&'a dyn Fn(usize, &mut [u8]) -> usize),
     //
     // Other kinds belong here as they are needed, each differing only in how it
@@ -50,19 +37,34 @@ pub enum Extra<'a> {
     // Deliberately absent until something asks for one.
 }
 
-/// One labelled piece of extra data.
+/// One labelled piece of extra data, offered by a block's screen.
+///
+/// The label is what the person picks it by; the content is shown when they
+/// do, and the block comes back as they left it when they are done. How the
+/// extras are presented is the library's choice. See
+/// [extras](crate::modui#extras-and-the-way-out).
+///
+/// # Example
+///
+/// ```no_run
+/// use trezor_app_sdk::modui::{ExtraItem, Property};
+///
+/// fn account_extras<'a>(props: &'a [Property<'a>]) -> [ExtraItem<'a>; 1] {
+///     [ExtraItem::simple("Account info", props)]
+/// }
+/// ```
 pub struct ExtraItem<'a> {
     pub(super) label: &'a str,
     pub(super) value: Extra<'a>,
 }
 
 impl<'a> ExtraItem<'a> {
-    /// An extra of the given kind, named by `label`.
+    /// An extra labelled `label`, whose content comes from `value`.
     pub fn new(label: &'a str, value: Extra<'a>) -> Self {
         Self { label, value }
     }
 
-    /// The common case: facts the app already has.
+    /// The common case: key/value facts the app already has, labelled `label`.
     pub fn simple(label: &'a str, props: &'a [Property<'a>]) -> Self {
         Self::new(label, Extra::Simple(props))
     }

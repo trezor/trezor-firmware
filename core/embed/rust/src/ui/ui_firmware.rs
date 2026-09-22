@@ -24,6 +24,25 @@ pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in 
 /// Maximum IPC message size in bytes for serialized data
 pub const MAX_IPC_SIZE: usize = 1024;
 
+/// What kind of news a notice is.
+///
+/// The only thing the caller decides about a notice. The screen, its button
+/// words and its timeout follow from it, per model, in
+/// [`FirmwareUI::show_notice`].
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum Severity {
+    /// A step worked, and the flow continues after this screen.
+    Success,
+    /// The flow finished; the person goes back to the host.
+    Done,
+    /// Something to read before going on. Nothing is at stake.
+    Info,
+    /// Something to consider before going on.
+    Warning,
+    /// Going on is risky; the person has to choose it deliberately.
+    Danger,
+}
+
 /// One entry of `select_menu()`: its label plus what the entry means.
 ///
 /// TODO: named after `select_menu` only to avoid colliding with the existing
@@ -501,6 +520,20 @@ pub trait FirmwareUI {
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_mismatch(title: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
+
+    /// A notice of the given [`Severity`].
+    ///
+    /// The model picks the screen, its button words and its timeout, so the
+    /// same severity looks the same wherever it comes from. `external_menu`
+    /// asks for a menu button the caller drives; a model whose screen for this
+    /// severity cannot draw one returns `NotImplementedError` rather than a
+    /// notice with a menu nobody can open.
+    fn show_notice(
+        severity: Severity,
+        title: TString<'static>,
+        content: TString<'static>,
+        external_menu: bool,
+    ) -> Result<Gc<LayoutObj>, Error>;
 
     fn show_progress(
         description: TString<'static>,

@@ -32,8 +32,8 @@ use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    DeviceMenuParams, FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-    MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
+    DeviceMenuParams, FirmwareUI, SelectMenuItem, Severity, MAX_CHECKLIST_ITEMS,
+    MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::{geometry, ModelUI};
 
@@ -1080,6 +1080,50 @@ impl FirmwareUI for UIBolt {
         );
 
         Ok(layout)
+    }
+
+    fn show_notice(
+        severity: Severity,
+        title: TString<'static>,
+        content: TString<'static>,
+        external_menu: bool,
+    ) -> Result<Gc<LayoutObj>, Error> {
+        match severity {
+            // Refuses the menu itself: this model's info screen has none.
+            Severity::Info => Self::show_info(
+                title,
+                content,
+                Some((TR::buttons__continue.into(), true)),
+                0,
+                external_menu,
+            ),
+            // WIP: no other screen here can show a menu the caller drives.
+            _ if external_menu => Err(Error::NotImplementedError),
+            // This model has no "continue in the app" screen — its own
+            // `show_continue_in_app` shows nothing — so the end of a flow looks
+            // like any other success and waits to be dismissed.
+            Severity::Success | Severity::Done => {
+                Self::show_success(title, TR::buttons__continue.into(), content, false, 0)
+            }
+            Severity::Warning => Self::show_warning(
+                Some(title),
+                TR::buttons__continue.into(),
+                TString::empty(),
+                content,
+                true, // allow_cancel: like core's own warnings
+                false,
+            ),
+            // No danger screen on this model: a warning that asks whether to
+            // go on, as its own `show_danger` does.
+            Severity::Danger => Self::show_warning(
+                Some(title),
+                TR::buttons__continue.into(),
+                content,
+                TR::words__continue_anyway_question.into(),
+                true, // allow_cancel: danger can always be refused
+                true,
+            ),
+        }
     }
 
     fn show_progress(

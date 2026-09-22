@@ -40,6 +40,7 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
             Some(&dp.format_path()),
             &[],
             chunkify,
+            Some("ethereum/address"),
             ButtonRequestType::Other.into(),
             false,
         ))?)

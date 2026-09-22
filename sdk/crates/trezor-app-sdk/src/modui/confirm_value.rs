@@ -1,27 +1,7 @@
-//! Confirming a single value.
-//!
-//! # Example
-//!
-//! ```no_run
-//! use trezor_app_sdk::modui::{self as ui, ConfirmValue, Footer, ValueKind};
-//!
-//! fn confirm_recipient(address: &str) -> trezor_app_sdk::Result<()> {
-//!     ui::confirm_value(ConfirmValue::new(
-//!         "Send",
-//!         address,
-//!         ValueKind::Address,
-//!         Some("Recipient"),
-//!         None,
-//!         Some(Footer::Hint("Check with the source.")),
-//!         &[],
-//!         true,
-//!     ))?
-//!     .confirmed()
-//! }
-//! ```
+//! Confirming a single value. The public docs live on [`confirm_value`].
 
 use super::extra::ExtraItem;
-use super::{UiOutcome, call};
+use super::{BR_CODE_OTHER, UiOutcome, call};
 use crate::Result;
 use crate::structs::{ConfirmValue as WireConfirmValue, TrezorUiEnum};
 
@@ -50,11 +30,11 @@ pub enum ValueKind {
 pub enum Footer<'a> {
     /// Ordinary guidance.
     Hint(&'a str),
-    /// Something the user should weigh before confirming.
+    /// Something the person should weigh before confirming.
     Warning(&'a str),
 }
 
-/// Parameters for [`confirm_value`].
+/// Parameters for [`confirm_value`], built by [`ConfirmValue::new`].
 pub struct ConfirmValue<'a> {
     title: &'a str,
     value: &'a str,
@@ -62,20 +42,23 @@ pub struct ConfirmValue<'a> {
     subtitle: Option<&'a str>,
     description: Option<&'a str>,
     footer: Option<Footer<'a>>,
+    br: &'a str,
     extras: &'a [ExtraItem<'a>],
-    cancel: bool,
 }
 
 impl<'a> ConfirmValue<'a> {
     /// Confirms one `value` of the given kind under `title`.
     ///
-    /// Deliberately one constructor carrying every parameter: the API is meant
-    /// to be obvious rather than clever, so there is a single way to build this
-    /// and no builders to learn.
-    ///
-    /// `extras` are labelled pieces the screen can also offer; `cancel` says
-    /// whether the block may be abandoned from there. How either is presented
-    /// is the library's choice, not the caller's.
+    /// - `title` — the screen's heading, such as `"Send"`.
+    /// - `value` — the value itself, shown verbatim.
+    /// - `kind` — what the value is, which decides how it is formatted.
+    /// - `subtitle` — optional line under the heading, such as `"Recipient"`.
+    /// - `description` — optional text above the value.
+    /// - `footer` — optional note along the bottom of the screen.
+    /// - `br` — the step name the host sees; see
+    ///   [step names](crate::modui#step-names).
+    /// - `extras` — more the person can look at from this screen; see
+    ///   [extras](crate::modui#extras-and-the-way-out).
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         title: &'a str,
@@ -84,8 +67,8 @@ impl<'a> ConfirmValue<'a> {
         subtitle: Option<&'a str>,
         description: Option<&'a str>,
         footer: Option<Footer<'a>>,
+        br: &'a str,
         extras: &'a [ExtraItem<'a>],
-        cancel: bool,
     ) -> Self {
         Self {
             title,
@@ -94,14 +77,14 @@ impl<'a> ConfirmValue<'a> {
             subtitle,
             description,
             footer,
+            br,
             extras,
-            cancel,
         }
     }
 
     /// Whether the screen has anything to offer besides its main content.
     fn offers_more(&self) -> bool {
-        !self.extras.is_empty() || self.cancel
+        !self.extras.is_empty()
     }
 }
 
@@ -109,7 +92,34 @@ impl<'a> ConfirmValue<'a> {
 // Entry point
 // ============================================================================
 
-/// Shows one value for confirmation.
+/// Asks the person to confirm one value, and waits for the answer.
+///
+/// The person can always refuse: the screen has its own way out, so the block
+/// takes no `cancel`.
+///
+/// # Errors
+///
+/// See [errors](crate::modui#errors).
+///
+/// # Example
+///
+/// ```no_run
+/// use trezor_app_sdk::modui::{self as ui, ConfirmValue, Footer, ValueKind};
+///
+/// fn confirm_recipient(address: &str) -> trezor_app_sdk::Result<()> {
+///     ui::confirm_value(ConfirmValue::new(
+///         "Send",
+///         address,
+///         ValueKind::Address,
+///         Some("Recipient"),
+///         None,
+///         Some(Footer::Hint("Check with the source.")),
+///         "app/send/recipient",
+///         &[],
+///     ))?
+///     .confirmed()
+/// }
+/// ```
 pub fn confirm_value(params: ConfirmValue<'_>) -> Result<UiOutcome> {
     let footer = params.footer.map(|f| match f {
         Footer::Hint(text) => (text, false),
@@ -120,19 +130,20 @@ pub fn confirm_value(params: ConfirmValue<'_>) -> Result<UiOutcome> {
         params.title,
         params.value,
         params.description,
-        None, // ButtonRequest: emitted on the trusted side, not from here
-        0,
-        true, // is_data: values are shown verbatim, not prose
-        None, // verb: the label follows the gesture, which the block owns
+        Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
+        BR_CODE_OTHER,   // legacy field; see the constant
+        true,            // is_data: values are shown verbatim, not prose
+        None,            // verb: the label follows the gesture, which the block owns
         params.subtitle,
         false, // info: the menu button is the external one below
         false, // hold: derived from the block
         params.kind == ValueKind::Address,
         false,                // page_counter
-        false,                // cancel
+        true,                 // cancel: refusing is never the app's to switch off
         params.offers_more(), // external_menu: how the menu is reached
         footer,
     ));
 
-    call(&request, params.extras, params.cancel)
+    // The screen has its own way out, so the extras need not offer one.
+    call(&request, params.extras, false, Some(params.br))
 }

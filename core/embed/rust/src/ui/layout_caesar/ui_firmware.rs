@@ -30,8 +30,8 @@ use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    DeviceMenuParams, FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-    MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
+    DeviceMenuParams, FirmwareUI, SelectMenuItem, Severity, MAX_CHECKLIST_ITEMS,
+    MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::{geometry, ModelUI};
 
@@ -1223,6 +1223,59 @@ impl FirmwareUI for UICaesar {
 
         let obj = RootComponent::new(Flow::new(pages));
         Ok(obj)
+    }
+
+    fn show_notice(
+        severity: Severity,
+        title: TString<'static>,
+        content: TString<'static>,
+        external_menu: bool,
+    ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: no screen on this model can show a menu the caller drives, and
+        // `confirm_action` would drop the request silently rather than refuse.
+        if external_menu {
+            return Err(Error::NotImplementedError);
+        }
+        match severity {
+            // This model's info screen has no button and never answers, and it
+            // has no success screen at all: its own `show_success` is a plain
+            // confirmation with a single Continue. So all three are that.
+            // There is no "continue in the app" screen either — its own
+            // `show_continue_in_app` shows nothing — so the end of a flow waits
+            // to be dismissed like the rest.
+            Severity::Info | Severity::Success | Severity::Done => {
+                LayoutObj::new_root(Self::confirm_action(
+                    title,
+                    None,
+                    Some(content),
+                    None,
+                    Some(TR::buttons__continue.into()),
+                    false,
+                    None,
+                    false,
+                    false,
+                    false,
+                    false,
+                    None,
+                    false,
+                )?)
+            }
+            Severity::Warning => Self::show_warning(
+                Some(title),
+                TR::buttons__continue.into(),
+                content,
+                TString::empty(),
+                true, // allow_cancel: like core's own warnings
+                false,
+            ),
+            Severity::Danger => LayoutObj::new_root(Self::show_danger(
+                title,
+                content,
+                TString::empty(),
+                None,
+                Some(TR::buttons__cancel.into()),
+            )?),
+        }
     }
 
     fn show_progress(
