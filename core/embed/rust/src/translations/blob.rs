@@ -676,7 +676,13 @@ mod tests {
             ENGLISH_CHUNK.offsets.iter().copied(),
         )
         .expect("offsets are valid");
-        assert!(ENGLISH_CHUNK.strings.is_ascii());
+        // NBSP is the one non-ASCII character allowed in English strings:
+        // `Font::get_glyph` maps it to a plain space, so it renders from the
+        // built-in 0x20..0x7E glyph table without needing a translation blob.
+        assert!(ENGLISH_CHUNK
+            .strings
+            .chars()
+            .all(|c| c.is_ascii() || c == '\u{00a0}'));
         for i in 0..ENGLISH_CHUNK.len() {
             ENGLISH_CHUNK.get(i).expect("valid index");
         }
