@@ -61,7 +61,7 @@ def _find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.RebootToBootloader:
         return "apps.management.reboot_to_bootloader"
 
-    if utils.UI_LAYOUT != "BOLT" and msg_type == MessageType.ShowDeviceTutorial:
+    if utils.INTERNAL_MODEL != "T2T1" and msg_type == MessageType.ShowDeviceTutorial:
         return "apps.management.show_tutorial"
 
     if utils.USE_TELEMETRY and msg_type == MessageType.TelemetryGet:
