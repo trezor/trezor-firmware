@@ -578,12 +578,14 @@ class TestWardTrie(unittest.TestCase):
         with self.assertRaises(DataError):
             leaf_hash_of(shifted_key, shifted_commit)
 
-        # ...and the witness is refused before the comparisons that would have passed
-        self.assertFalse(
+        # ...and the witness is refused before the comparisons that would have passed.
+        # A malformed operand RAISES rather than reading as a failed claim: returning
+        # False here surfaced as "absence does not match the trusted root", which blames
+        # the host's tree for what is a malformed message.
+        with self.assertRaises(DataError):
             verify_nonmembership(
                 self.MEMBER, shifted_key, shifted_commit, self.PROOF, self.ROOT
             )
-        )
 
     def test_preimage_operands_are_fixed_width(self):
         """The same ambiguity, in every other preimage that concatenates opaque bytes.
