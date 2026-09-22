@@ -359,10 +359,26 @@ class WARDTree:
         proof: List[bytes],
         root: bytes,
     ) -> bool:
-        """Verify *entry_key* is absent. Pass None witnesses for an empty tree."""
+        """Verify *entry_key* is absent. Pass None witnesses for an empty tree.
+
+        The width check is load-bearing and comes first, for the reason
+        ``ward_crypto.leaf_hash_of`` gives: the two checks below are both satisfied by
+        a witness key that is the target with extra bytes glued on -- it differs from
+        the target, and routing reads bits 0..255 so it agrees at every branch bit --
+        while K || C[0] with commit C[1:] hashes to the target's own leaf. Without
+        this, the target's genuine membership proof passes as proof of its absence.
+        """
         if witness_entry_key is None:
             return len(proof) == 0 and root == EMPTY_ROOT
-        if witness_commit is None or witness_entry_key == entry_key:
+        if witness_commit is None:
+            return False
+        if (
+            len(entry_key) != 32
+            or len(witness_entry_key) != 32
+            or len(witness_commit) != 32
+        ):
+            raise ValueError("witness operands must be 32 bytes")
+        if witness_entry_key == entry_key:
             return False
         steps = _proof_steps_root_to_leaf(proof)
         if steps is None:

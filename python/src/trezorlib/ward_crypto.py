@@ -197,7 +197,15 @@ def commit_of(leaf: LeafBlob) -> bytes:
 
 
 def leaf_hash_of(mac: bytes, commit: bytes) -> bytes:
-    """leaf = SHA-256(0x00 || LeafIdentityMAC || commit) (§2.2)."""
+    """leaf = SHA-256(0x00 || LeafIdentityMAC || commit) (§2.2).
+
+    Both operands are exactly 32 bytes, and that is a security property rather than
+    tidiness: the preimage concatenates them with nothing marking the boundary, so
+    (K, C) and (K || C[0], C[1:]) hash identically. See the firmware twin in
+    `apps.ward.service.leaf_hash_of` for what that cost on the verifying side.
+    """
+    if len(mac) != 32 or len(commit) != 32:
+        raise ValueError("leaf operands must be 32 bytes")
     return sha256(b"\x00" + mac + commit)
 
 

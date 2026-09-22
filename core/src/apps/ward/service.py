@@ -186,7 +186,29 @@ def commit_of(key_type: str, id_part, val_part) -> bytes:
 
 def leaf_hash_of(entry_key_: bytes, commit: bytes) -> bytes:
     """Leaf: sha256(0x00 || entry_key || commit) (§2.2). Takes the commitment
-    directly, so a verifier can rebuild a witness leaf from (entry_key, commit)."""
+    directly, so a verifier can rebuild a witness leaf from (entry_key, commit).
+
+    THE LENGTHS ARE THE SECURITY. The preimage concatenates two byte strings with
+    nothing marking the boundary, so without a fixed width the split is ambiguous:
+    (K, C) and (K || C[0], C[1:]) produce IDENTICAL hashes, with no attack on
+    SHA-256 involved.
+
+    That was a live proof-soundness break, not a theoretical one. A non-membership
+    witness is host-supplied, and the only checks on it were "differs from the
+    target" and "agrees at every branch bit". A 33-byte witness key K || C[0]
+    differs from K, routes identically (routing reads bits 0..255, i.e. the first
+    32 bytes), and hashes to the target's own leaf -- so a host could take the
+    target's genuine MEMBERSHIP proof and have it accepted as proof of ABSENCE,
+    hiding any present entry on every read.
+
+    Enforced HERE rather than at each call site so no future caller can reintroduce
+    it by forgetting. Every firmware caller already passes 32-byte operands
+    (`entry_key` is an HMAC, `commit_of` a SHA-256), so this only ever fires on
+    something the host made up."""
+    from trezor.wire import DataError
+
+    if len(entry_key_) != 32 or len(commit) != 32:
+        raise DataError("WARD: leaf operands must be 32 bytes")
     return sha256d(b"\x00" + entry_key_ + commit)
 
 
@@ -405,9 +427,32 @@ def verify_nonmembership(
 
     The witness leaf is supplied as two hashes -- (witness_entry_key,
     witness_commit) -- that occupies entry_key's path, revealing nothing about the
-    witness's plaintext identifier or value. We verify: (1) the witness leaf
-    rebuilt from the two hashes is in the tree; (2) witness_entry_key != entry_key;
-    (3) both share the same bit at every proof position (closest leaf)."""
+    witness's plaintext identifier or value. We verify: (0) every operand is exactly
+    32 bytes; (1) the witness leaf rebuilt from the two hashes is in the tree;
+    (2) witness_entry_key != entry_key; (3) both share the same bit at every proof
+    position (closest leaf).
+
+    (0) IS LOAD-BEARING and comes first. Checks (2) and (3) are both satisfied by a
+    witness key that is the target with extra bytes glued on: it differs from the
+    target, and routing reads bits 0..255 so it agrees at every branch bit. Since
+    the leaf preimage concatenates key and commit with no boundary marker, K || C[0]
+    with commit C[1:] hashes to the TARGET'S OWN leaf -- so the target's genuine
+    membership proof passes as proof of its absence, and a host could hide any
+    present entry on every read. `leaf_hash_of` refuses that too; rejecting it here
+    stops the comparisons below from passing and reading as though the witness
+    relationship were real.
+
+    A wrong-width operand RAISES rather than returning False: it is a malformed
+    message, not a claim that failed, and the two must not read alike."""
+    from trezor.wire import DataError
+
+    if (
+        len(entry_key_) != 32
+        or len(witness_entry_key) != 32
+        or len(witness_commit) != 32
+    ):
+        raise DataError("WARD: witness operands must be 32 bytes")
+
     if witness_entry_key == entry_key_:
         return False
 
@@ -453,6 +498,19 @@ def compute_new_root(
 
         if witness_entry_key is None or witness_commit is None:
             raise ValueError("witness_entry_key/witness_commit required for INSERT")
+
+        # Lengths BEFORE any routing, on the same three operands and for the same reason
+        # as verify_nonmembership. `addr_bit` indexes the key directly, so a short witness
+        # raises IndexError out of the loop below -- an untyped crash where a protocol
+        # error is the honest answer. `leaf_hash_of` does catch it, but only after that
+        # loop has run.
+        if (
+            len(entry_key_) != 32
+            or len(witness_entry_key) != 32
+            or len(witness_commit) != 32
+        ):
+            raise ValueError("INSERT operands must be 32 bytes")
+
         if witness_entry_key == entry_key_:
             raise ValueError("witness_entry_key must differ from entry_key")
 
