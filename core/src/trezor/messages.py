@@ -8392,7 +8392,6 @@ if TYPE_CHECKING:
         counter: "int | None"
         mac: "AnyBytes | None"
         auth_commit: "AnyBytes | None"
-        auth_sig: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8403,7 +8402,6 @@ if TYPE_CHECKING:
             counter: "int | None" = None,
             mac: "AnyBytes | None" = None,
             auth_commit: "AnyBytes | None" = None,
-            auth_sig: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8418,7 +8416,6 @@ if TYPE_CHECKING:
         counter: "int | None"
         mac: "AnyBytes | None"
         auth_commit: "AnyBytes | None"
-        auth_sig: "AnyBytes | None"
         remaining: "int"
 
         def __init__(
@@ -8431,7 +8428,6 @@ if TYPE_CHECKING:
             counter: "int | None" = None,
             mac: "AnyBytes | None" = None,
             auth_commit: "AnyBytes | None" = None,
-            auth_sig: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8583,7 +8579,7 @@ if TYPE_CHECKING:
         counter: "int | None"
         new_root: "AnyBytes | None"
         auth_commit: "AnyBytes | None"
-        auth_sig: "AnyBytes | None"
+        wm_sig: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8591,7 +8587,7 @@ if TYPE_CHECKING:
             counter: "int | None" = None,
             new_root: "AnyBytes | None" = None,
             auth_commit: "AnyBytes | None" = None,
-            auth_sig: "AnyBytes | None" = None,
+            wm_sig: "AnyBytes | None" = None,
         ) -> None:
             pass
 

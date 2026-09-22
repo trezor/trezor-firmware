@@ -34,7 +34,7 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     from .adopt import adopt, require_attested_round, verify_head_mac
     from .cas import verify_chain_step
     from .common import require_initialized
-    from .keys import derive_k_auth, derive_ward_id
+    from .keys import derive_k_auth, derive_k_mac, derive_ward_id
     from .root import get_counter, get_root
 
     require_initialized()
@@ -43,6 +43,7 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
 
     ward_id = await derive_ward_id()
     k_auth = await derive_k_auth()
+    k_mac = await derive_k_mac()
 
     # The baseline is the device's OWN head, not anything the host names. A host-chosen
     # starting point would let the walk begin at a state this device never reached.
@@ -53,9 +54,14 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     # landed: a claim filed by `flush_queue` carries the `auth_commit` of its own transition, so
     # matching against this list distinguishes "the head reached N" from "MY change made it N".
     crossed = []
+    # Counted, not just accepted. A history containing demotions means changes this device once
+    # saw as committed have been undone, and a catch-up that cannot say so has lost the one thing
+    # the REVERT tag carries.
+    reverts = 0
     for link in msg.links:
-        running_counter, running_root = verify_chain_step(
+        running_counter, running_root, reverted = verify_chain_step(
             k_auth,
+            k_mac,
             ward_id,
             running_counter,
             running_root,
@@ -69,6 +75,15 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
         )
         # After the step verified, never before: an unverified commitment is a host's claim.
         crossed.append(link.auth_commit)
+        if reverted:
+            reverts += 1
+
+    if __debug__:
+        from trezor import log
+
+        log.debug(
+            __name__, "chain: %d links, %d of them reverts", len(msg.links), reverts
+        )
 
     if running_counter != counter:
         raise DataError("chain does not end at the attested counter")

@@ -60,7 +60,8 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
 
     THE WM NEEDS NO SPECIAL HANDLING and no operator does anything. The revert lands at
     counter + 1 carrying the older root, which the WM accepts as an ordinary forward advance,
-    verifying the auth_sig below under ward_id exactly as it would for a write. Other devices
+    accepting it as it would any write. (The WM-facing authorisation for this path is not wired
+    up yet -- see the connect-mode gap.) Other devices
     then sync to the reverted state through the normal round. Not to be confused with
     `WardRecoverCounter`, which is the only path accepting a LOWER counter and exists for the
     WM's own register or clock regressing -- a different failure, where the WM's state is the
@@ -70,9 +71,9 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from .cas import TAG_REVERT, auth_commit, sig_commit, verify_auth_commit
+    from .cas import TAG_REVERT, TAG_WM_REVERT, auth_commit, verify_auth_commit, wm_sig
     from .common import WARNING_UNVERIFIED, require_initialized
-    from .keys import derive_k_auth, derive_k_sig, derive_ward_id
+    from .keys import derive_k_auth, derive_k_mac, derive_k_sig, derive_ward_id
     from .root import get_counter, get_root
 
     require_initialized()
@@ -99,13 +100,14 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
 
     ward_id = await derive_ward_id()
     k_auth = await derive_k_auth()
+    k_mac = await derive_k_mac()
 
     # The check that does the work: this authorisation must describe the transition that
     # PRODUCED the target state. Only a device of this wallet can mint it, so the target
     # cannot be invented -- and because to_counter is inside the preimage, the discarded
     # count derived from it below is authenticated too.
     if not verify_auth_commit(
-        k_auth, ward_id, from_counter, from_root, to_counter, to_root, supplied
+        k_auth, k_mac, ward_id, from_counter, from_root, to_counter, to_root, supplied
     ):
         raise DataError("auth_commit does not describe the target state")
 
@@ -140,19 +142,31 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     # the head moves at `reconcile`.
     new_counter = counter + 1
 
+    # BOTH authorisations, because the demotion has two audiences. `auth_commit` under
+    # TAG_REVERT is what another device of this wallet folds when it walks the history;
+    # `wm_sig` under TAG_WM_REVERT is what the WM checks before moving its head.
+    #
+    # The WM one needs its own tag for a reason the operands cannot supply: a revert advances
+    # the head exactly like a write -- forward one counter, carrying an OLDER root -- so
+    # without the tag the WM cannot tell a demotion from an ordinary advance, and cannot
+    # apply policy to one. It buys no replay protection; the destination mac already binds
+    # uniquely to this (counter, root) pair.
+    # BOTH take the same (counter, root) endpoints and derive their own macs, so the two
+    # authorisations cannot come to disagree about which moment this demotion re-dates.
     return WardRollbackAck(
         counter=new_counter,
         new_root=to_root,
         auth_commit=auth_commit(
-            k_auth, ward_id, counter, head, new_counter, to_root, TAG_REVERT
+            k_auth, k_mac, ward_id, counter, head, new_counter, to_root, TAG_REVERT
         ),
-        auth_sig=sig_commit(
+        wm_sig=wm_sig(
             await derive_k_sig(),
+            k_mac,
             ward_id,
             counter,
             head,
             new_counter,
             to_root,
-            TAG_REVERT,
+            TAG_WM_REVERT,
         ),
     )

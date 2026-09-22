@@ -53,8 +53,8 @@ __all__ = [
     "open_identity",
     "unpack_content",
     "unpack_identity",
-    "wm_head_preimage",
     "wm_sig",
+    "wm_sig_over_macs",
     "verify_wm_sig",
     "head_init_sig",
     "verify_head_init_sig",
@@ -99,17 +99,6 @@ def derive_ward_id(seed: bytes) -> bytes:
     return _ed25519.publickey_unsafe(derive_k_sig(seed))
 
 
-def verify_sig_commit(ward_id: bytes, preimage: bytes, sig: bytes) -> bool:
-    """Check a transition signature the way a WM would: with no secret at all."""
-    from trezorlib import _ed25519
-
-    try:
-        _ed25519.checkvalid(sig, preimage, ward_id)
-        return True
-    except Exception:
-        return False
-
-
 def derive_k_mac(seed: bytes) -> bytes:
     """K_mac, which MACs the root the WM attests. A real host has neither this nor a way
     to obtain it -- that is what stops the WM fabricating state."""
@@ -139,57 +128,11 @@ def derive_k_auth(seed: bytes) -> bytes:
     return slip21_key(seed, [b"ward", b"K_auth"])
 
 
+TAG_COMMIT = b"WARD COMMIT v2"
+TAG_REVERT = b"WARD REVERT v2"
+
+
 def transition_preimage(
-    ward_id: bytes,
-    from_counter: int,
-    from_root,
-    to_counter: int,
-    to_root,
-    tag: bytes = b"WARD COMMIT v1",
-) -> bytes:
-    """tag || ward_id || from_counter || from_root || to_counter || to_root.
-
-    Both authenticators cover exactly these bytes: the MAC a device checks, and the Ed25519
-    signature the WM checks. Kept as one function so a test cannot verify one against a
-    layout the other does not use.
-    """
-    return (
-        tag
-        + ward_id
-        + from_counter.to_bytes(4, "big")
-        + _root_or_empty(from_root)
-        + to_counter.to_bytes(4, "big")
-        + _root_or_empty(to_root)
-    )
-
-
-def auth_commit(
-    k_auth: bytes,
-    ward_id: bytes,
-    from_counter: int,
-    from_root,
-    to_counter: int,
-    to_root,
-    tag: bytes = b"WARD COMMIT v1",
-) -> bytes:
-    """HMAC(K_auth, tag || ward_id || from_counter || from_root || to_counter || to_root)."""
-    return hmac.new(
-        k_auth,
-        transition_preimage(ward_id, from_counter, from_root, to_counter, to_root, tag),
-        hashlib.sha256,
-    ).digest()
-
-
-# --- the WM's authorisation, over MAC HEADS ------------------------------------------------
-#
-# Written out here rather than imported, like everything else in this file: an oracle that shared
-# code with the firmware would agree with it by construction and prove nothing.
-
-_TAG_WM_HEAD = b"WARD WM HEAD v1"
-_TAG_WM_INIT = b"WARD WM INIT v1"
-
-
-def wm_head_preimage(
     tag: bytes,
     ward_id: bytes,
     from_counter: int,
@@ -199,9 +142,12 @@ def wm_head_preimage(
 ) -> bytes:
     """len8(tag) || tag || ward_id || from_counter || from_mac || to_counter || to_mac.
 
-    MACS, NOT ROOTS. This is what the WM stores, so signing it means the WM never has to be sent
-    a root to check an authorisation. The tag is length-prefixed so this cannot be re-split into
-    a root transition's preimage, whose tags are a different length.
+    ONE preimage for both authenticators: the MAC a device checks under K_auth, and the
+    Ed25519 signature the WM checks under K_sig. They differ only in tag, key and algorithm.
+
+    MAC HEADS, NOT ROOTS. The mac is a commitment to the root under a device-only key, so
+    binding it binds the root transitively -- and it means the WM never has to be sent a root
+    to check an authorisation, nor can it fabricate a head it could not compute a mac for.
     """
     return (
         bytes([len(tag)])
@@ -214,21 +160,89 @@ def wm_head_preimage(
     )
 
 
+def transition_macs(
+    k_mac: bytes, ward_id: bytes, from_counter: int, from_root, to_counter: int, to_root
+):
+    """The two mac heads a root transition authorises over."""
+    return (
+        root_mac(k_mac, ward_id, from_counter, from_root),
+        root_mac(k_mac, ward_id, to_counter, to_root),
+    )
+
+
+def auth_commit(
+    k_auth: bytes,
+    k_mac: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_root,
+    to_counter: int,
+    to_root,
+    tag: bytes = TAG_COMMIT,
+) -> bytes:
+    """HMAC(K_auth, transition_preimage(tag, ..., macs of these roots))."""
+    from_mac, to_mac = transition_macs(
+        k_mac, ward_id, from_counter, from_root, to_counter, to_root
+    )
+    return hmac.new(
+        k_auth,
+        transition_preimage(tag, ward_id, from_counter, from_mac, to_counter, to_mac),
+        hashlib.sha256,
+    ).digest()
+
+
+# --- the WM's authorisation, over MAC HEADS ------------------------------------------------
+#
+# Written out here rather than imported, like everything else in this file: an oracle that shared
+# code with the firmware would agree with it by construction and prove nothing.
+
+TAG_WM_HEAD = b"WARD WM COMMIT v1"
+TAG_WM_INIT = b"WARD WM INIT v1"
+TAG_WM_REVERT = b"WARD WM REVERT v1"
+
+
 def wm_sig(
+    k_sig: bytes,
+    k_mac: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_root,
+    to_counter: int,
+    to_root,
+    tag: bytes = TAG_WM_HEAD,
+) -> bytes:
+    """The signature a WM checks before letting a head advance.
+
+    Takes ROOTS, though the WM verifies from MACS: the signer holds roots, the verifier only
+    ever holds macs. `transition_macs` is then the one place a counter meets a root.
+    """
+    from_mac, to_mac = transition_macs(
+        k_mac, ward_id, from_counter, from_root, to_counter, to_root
+    )
+    return wm_sig_over_macs(
+        k_sig, ward_id, from_counter, from_mac, to_counter, to_mac, tag
+    )
+
+
+def wm_sig_over_macs(
     k_sig: bytes,
     ward_id: bytes,
     from_counter: int,
     from_mac: bytes,
     to_counter: int,
     to_mac: bytes,
+    tag: bytes = TAG_WM_HEAD,
 ) -> bytes:
-    """The signature a WM checks before letting a head advance."""
+    """`wm_sig` from the WM's vantage point, where only macs exist.
+
+    The firmware has no equivalent and should not: a device always holds the roots, so letting
+    it pair a counter with a mac by hand is the drift `transition_macs` exists to prevent. Here
+    the macs ARE the subject -- a WM-side test has no roots to derive them from.
+    """
     from trezorlib import _ed25519
 
     return _ed25519.signature_unsafe(
-        wm_head_preimage(
-            _TAG_WM_HEAD, ward_id, from_counter, from_mac, to_counter, to_mac
-        ),
+        transition_preimage(tag, ward_id, from_counter, from_mac, to_counter, to_mac),
         k_sig,
         ward_id,
     )
@@ -241,6 +255,7 @@ def verify_wm_sig(
     to_counter: int,
     to_mac: bytes,
     sig: bytes,
+    tag: bytes = TAG_WM_HEAD,
 ) -> bool:
     """What a WM does: verify with `ward_id` alone, holding no secret."""
     from trezorlib import _ed25519
@@ -248,9 +263,7 @@ def verify_wm_sig(
     try:
         _ed25519.checkvalid(
             sig,
-            wm_head_preimage(
-                _TAG_WM_HEAD, ward_id, from_counter, from_mac, to_counter, to_mac
-            ),
+            transition_preimage(tag, ward_id, from_counter, from_mac, to_counter, to_mac),
             ward_id,
         )
         return True
@@ -263,7 +276,7 @@ def head_init_sig(k_sig: bytes, ward_id: bytes, current_mac: bytes) -> bytes:
     from trezorlib import _ed25519
 
     return _ed25519.signature_unsafe(
-        wm_head_preimage(_TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac),
+        transition_preimage(TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac),
         k_sig,
         ward_id,
     )
@@ -275,8 +288,8 @@ def verify_head_init_sig(ward_id: bytes, current_mac: bytes, sig: bytes) -> bool
     try:
         _ed25519.checkvalid(
             sig,
-            wm_head_preimage(
-                _TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac
+            transition_preimage(
+                TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac
             ),
             ward_id,
         )
