@@ -167,7 +167,9 @@ def verify_nonmembership(
     leaf that already occupies the path the target would take. Three things must hold,
     and dropping any one of them makes the proof forgeable:
 
-      0. every operand is exactly 32 bytes -- see the comment below, this one is load-bearing;
+      0. every operand is exactly 32 bytes -- see the comment below, this one is load-bearing,
+         and it RAISES where the rest return False, being a malformed message rather than a
+         failed claim;
       1. the witness is a different key -- otherwise it proves presence, not absence;
       2. the witness is really in the tree, i.e. its leaf folds up to `expected_root`;
       3. the witness shares the target's path: the two agree at EVERY bit the proof
@@ -188,12 +190,19 @@ def verify_nonmembership(
     # MEMBERSHIP proof off as proof of absence. `leaf.leaf_hash_of` refuses that too; this
     # rejects it before the comparisons below, which would otherwise pass and read as though
     # the witness relationship were real.
+    #
+    # RAISES rather than returning False, unlike the checks after it: a wrong-width operand
+    # is a malformed message, not a claim that failed, and the two must not read alike. As
+    # a False it surfaced as "absence does not match the trusted root" -- which says the
+    # host's tree disagrees, when what happened is that the host sent garbage.
+    from trezor.wire import DataError
+
     if (
         len(entry_key) != 32
         or len(witness_entry_key) != 32
         or len(witness_commit) != 32
     ):
-        return False
+        raise DataError("WARD: witness operands must be 32 bytes")
 
     if witness_entry_key == entry_key:
         return False
@@ -267,6 +276,21 @@ def compute_new_root(
 
         if witness_entry_key is None or witness_commit is None:
             raise DataError("WARD: insert needs a non-membership witness")
+
+        # Lengths BEFORE any routing, on the same three operands and for the same reason as
+        # `verify_nonmembership`. `addr_bit` indexes the key directly, so a short witness
+        # raises IndexError out of the loop below -- an untyped crash where a protocol error
+        # is the honest answer. `leaf_hash_of` does catch it, but only after that loop has
+        # run, and the read path that would have caught it first is SKIPPED in the two states
+        # that reach here with a host-supplied witness: a fresh device (no root, counter 0)
+        # and an emptied tree (`common.verify_leaf_against_root` returns early for both).
+        if (
+            len(entry_key) != 32
+            or len(witness_entry_key) != 32
+            or len(witness_commit) != 32
+        ):
+            raise DataError("WARD: insert operands must be 32 bytes")
+
         if witness_entry_key == entry_key:
             raise DataError("WARD: witness must differ from entry_key")
 
@@ -302,7 +326,12 @@ def compute_new_root(
         idx = 0
         while idx < len(proof):
             sb, _sib = _parse_proof_elem(proof[idx])
-            if sb <= split_bit:
+            if sb == split_bit:
+                # Unreachable -- the agreement loop above rejects a proof that branches
+                # where the keys differ, and split_bit is the first such bit. Explicit
+                # because the silent alternative is two branches at one bit.
+                raise DataError("WARD: witness path already branches at the split bit")
+            if sb < split_bit:
                 break
             below.append(proof[idx])
             idx += 1

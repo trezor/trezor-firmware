@@ -228,7 +228,17 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     val_part = read_leaf_content(ack.content)
     wire_key_type, id_part = read_leaf_identity(ack.identity)
     present = val_part is not None and not is_delete(val_part)
-    leaf_key_type = wire_key_type or key_type
+
+    # The host does not get to name the key_type. It is an input to `entry_key`, so the
+    # device already knows the only value a leaf at this path can legitimately carry -- and
+    # it goes into the commit, hence into the leaf hash. A wrong one fails the membership
+    # proof anyway; refusing it here keeps a host-chosen field out of a hashed preimage and
+    # says what is actually wrong instead of blaming the root.
+    if wire_key_type is not None and wire_key_type != key_type:
+        from trezor.wire import DataError
+
+        raise DataError("WARD: leaf key_type does not match the requested path")
+    leaf_key_type = key_type
 
     # Check the answer against the root the device trusts, BEFORE opening anything. A host
     # that says "no such entry" has to prove it, or it could hide any entry it dislikes
