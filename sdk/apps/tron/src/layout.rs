@@ -31,8 +31,8 @@ pub(crate) fn confirm_message_hash(hash: &[u8]) -> Result<()> {
         None,
         None,
         None,
+        "tron/message_hash",
         &[],
-        true,
     ))
     .c()?
     .confirmed()
@@ -64,6 +64,7 @@ pub(crate) fn confirm_typed_data_final() -> Result<()> {
         tr!("ethereum__sign_eip712"),
         None,
         None,
+        "tron/typed_data",
         &[],
         true,
     ))
@@ -80,8 +81,8 @@ pub(crate) fn confirm_empty_typed_message() -> Result<()> {
         None,
         Some(tr!("ethereum__no_message_field")),
         None,
+        "tron/message",
         &[],
-        true,
     ))
     .c()?
     .confirmed()
@@ -119,8 +120,8 @@ pub fn confirm_note(note: &str) -> Result<()> {
         None,
         None,
         None,
+        "tron/note",
         &[],
-        true,
     ))
     .c()?
     .confirmed()
@@ -141,8 +142,8 @@ pub fn confirm_freeze_operations(
         None,
         None,
         None,
+        "tron/freeze/owner",
         &[],
-        true,
     ))
     .c()?
     .confirmed()
@@ -162,6 +163,7 @@ pub fn confirm_freeze_operations(
             Property::new(tr!("words__resource"), resource, false),
         ],
         None,
+        "tron/freeze",
         &[],
         false,
     ))
@@ -309,8 +311,8 @@ pub fn confirm_claim(
             None,
             Some(tr!("tron__owner_address")),
             Some(Footer::Warning(tr!("address__warning_not_yours"))),
+            "tron/claim/owner",
             &[],
-            true,
         ))
         .c()?
         .confirmed()
@@ -360,6 +362,7 @@ pub fn confirm_tron_claim(
         intro_question,
         None,
         None,
+        "tron/claim",
         extras,
         true,
     ))
@@ -380,16 +383,17 @@ fn confirm_tron_summary(
             Property::new(tr!("address_details__derivation_path"), path, false),
         ]
     });
+    let account_extra = account_items
+        .as_deref()
+        .map(|items| ExtraItem::simple(tr!("address_details__account_info"), items));
+    let extras = account_extra.as_slice();
 
     modui::confirm_summary(ConfirmSummary::new(
         title.unwrap_or(tr!("words__send")),
         amount.map(|a| (tr!("words__amount"), a)),
         fee.map(|f| (tr!("words__fee_limit"), f)),
-        account_items
-            .as_deref()
-            .map(|items| (tr!("address_details__account_info"), items)),
-        &[],
-        false,
+        "tron/summary",
+        extras,
     ))
     .c()?
     .confirmed()
@@ -418,8 +422,8 @@ fn confirm_tron_send(
         Some(tr!("words__recipient")),
         None,
         Some(Footer::Hint(tr!("address__check_with_source"))),
+        "tron/send",
         &extras,
-        true,
     ))
     .c()?
     .confirmed()
@@ -442,8 +446,8 @@ pub fn confirm_tron_transfer(
         Some(tr!("words__recipient")),
         None,
         None,
+        "tron/transfer",
         &[],
-        true,
     ))
     .c()?
     .confirmed()
@@ -456,6 +460,7 @@ pub fn confirm_tron_transfer(
             Property::new(tr!("words__chain"), "Tron", true),
         ],
         None,
+        "tron/transfer/amount",
         &[],
         false,
     ))
@@ -467,9 +472,8 @@ pub fn confirm_tron_transfer(
         title,
         None,
         Some((tr!("words__fee_limit"), maximum_fee)),
-        None,
+        "tron/transfer/summary",
         &[],
-        false,
     ))
     .c()?
     .confirmed()
@@ -503,6 +507,7 @@ fn confirm_tron_approve(
         action_subtitle,
         None,
         None,
+        "tron/approve",
         &[],
         true,
     ))
@@ -517,8 +522,8 @@ fn confirm_tron_approve(
         Some(value_subtitle),
         None,
         None,
+        "tron/approve/spender",
         &[],
-        true,
     ))
     .c()?
     .confirmed()
@@ -531,6 +536,7 @@ fn confirm_tron_approve(
             Property::new(tr!("words__chain"), "Tron", true),
         ],
         None,
+        "tron/approve/amount",
         &[],
         false,
     ))
@@ -542,9 +548,8 @@ fn confirm_tron_approve(
         title,
         None,
         Some((tr!("words__fee_limit"), maximum_fee)),
-        None,
+        "tron/approve/summary",
         &[],
-        false,
     ))
     .c()?
     .confirmed()
@@ -556,6 +561,7 @@ pub fn confirm_tron_voting<'a>(items: &[Property<'a>]) -> Result<()> {
         tr!("words__review"),
         items,
         Some(tr!("words__voting")),
+        "tron/vote",
         &[],
         false,
     ))
@@ -575,6 +581,7 @@ fn confirm_ethereum_unknown_contract_warning() -> Result<()> {
         Severity::Danger,
         tr!("words__important"),
         &content,
+        "tron/unknown_contract",
         &[],
         false,
     ))
@@ -597,8 +604,8 @@ pub fn confirm_unknown_smart_contract(
         None,
         None,
         None,
+        "tron/contract",
         &[],
-        true,
     ))
     .c()?
     .confirmed()
@@ -610,6 +617,7 @@ pub fn confirm_unknown_smart_contract(
         tr!("ethereum__title_input_data"),
         &contract.data,
         None,
+        "tron/contract/data",
         &[],
         true,
     ))
