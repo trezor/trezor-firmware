@@ -51,6 +51,9 @@ class MockWM:
     def __init__(self, seed: bytes = DEBUG_WM_SEED) -> None:
         self._seed = seed
         self._pub = _ed25519.publickey_unsafe(seed)
+        # How many demotions this WM has been asked to accept. A real one would apply policy
+        # here; recording it is how a test shows the REVERT tag actually reached the WM.
+        self.reverts_seen = 0
         # ward_id -> (counter, mac, timestamp). Deliberately not a root: a real WM never
         # sees one, and could not compute a mac if it did.
         self._heads: dict[bytes, tuple[int, bytes, int]] = {}
@@ -150,10 +153,24 @@ class MockWM:
         if to_counter != from_counter + 1:
             raise ValueError("a head advances by exactly one")
 
-        if not verify_wm_sig(
-            ward_id, from_counter, from_mac, to_counter, to_mac, wm_sig
+        # EITHER TAG, AND WHICH ONE IS THE POINT. A revert advances the head exactly like a
+        # write -- forward one counter, carrying a mac over an OLDER root -- so the operands
+        # cannot tell them apart. The tag can, and a real WM is where a policy on demotions
+        # would live: rate-limit them, alert on them, require a second factor. This mock only
+        # records the distinction, which is enough to prove the wire carries it.
+        from .ward_keys import TAG_WM_HEAD, TAG_WM_REVERT
+
+        if verify_wm_sig(
+            ward_id, from_counter, from_mac, to_counter, to_mac, wm_sig, TAG_WM_HEAD
         ):
+            is_revert = False
+        elif verify_wm_sig(
+            ward_id, from_counter, from_mac, to_counter, to_mac, wm_sig, TAG_WM_REVERT
+        ):
+            is_revert = True
+        else:
             raise ValueError("transition is not authorised by this wallet")
+        self.reverts_seen += int(is_revert)
 
         self._heads[ward_id] = (to_counter, to_mac, timestamp)
         return (

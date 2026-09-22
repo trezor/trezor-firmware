@@ -602,10 +602,16 @@ async def sync() -> None:
     running_counter = counter
     running_root = root
     k_auth = await derive_k_auth()
+    k_mac = await derive_k_mac()
     crossed = []
+    # Counted, not just accepted. A history containing demotions means changes this device once
+    # saw as committed have been undone, and a catch-up that cannot say so has lost the one thing
+    # the REVERT tag carries.
+    reverts = 0
     for link in answer.links:
-        running_counter, running_root = verify_chain_step(
+        running_counter, running_root, reverted = verify_chain_step(
             k_auth,
+            k_mac,
             ward_id,
             running_counter,
             running_root,
@@ -619,6 +625,11 @@ async def sync() -> None:
         )
         # After the step verified, never before: an unverified commitment is just a claim.
         crossed.append(link.auth_commit)
+        if reverted:
+            reverts += 1
+
+    if __debug__:
+        log.debug(__name__, "sync: %d links, %d of them reverts", len(answer.links), reverts)
 
     if running_counter != attested_counter:
         raise DataError("chain does not end at the attested counter")
@@ -756,10 +767,10 @@ async def publish(
     ward_id = await derive_ward_id()
     k_mac = await derive_k_mac()
 
-    # BOTH HEADS ARE COMPUTED HERE, from the device's own key, and `to_mac` is the value the
-    # attestation below is required to name. A mac passed in by the caller would be a mac the check
-    # merely echoes.
-    from_mac = root_mac(k_mac, ward_id, counter - 1, from_root)
+    # COMPUTED HERE, from the device's own key: `to_mac` is the value the attestation below is
+    # required to name, and a mac passed in by the caller would be a mac the check merely echoes.
+    # The FROM head is not computed here any more -- `wm_sig` takes roots and derives both, so
+    # `transition_macs` stays the one place a counter is paired with a root.
     to_mac = root_mac(k_mac, ward_id, counter, new_root)
 
     nonce = random.bytes(NONCE_LENGTH)
@@ -778,7 +789,13 @@ async def publish(
             # shown. The device authorises the advance without the freshness authority learning
             # anything about the tree.
             wm_sig=wm_sig(
-                await derive_k_sig(), ward_id, counter - 1, from_mac, counter, to_mac
+                await derive_k_sig(),
+                k_mac,
+                ward_id,
+                counter - 1,
+                from_root,
+                counter,
+                new_root,
             ),
             nonce=nonce,
         ),

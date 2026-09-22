@@ -81,10 +81,12 @@ message WardLeafAck {
     // Ed25519 over exactly the bytes auth_commit MACs, under K_sig, verifiable against
     // ward_id (which IS that key's public half). Complementary, not a replacement: the MAC
     // is what another device of this wallet checks and remains the authority on
-    // authenticity; this exists so the WM -- holding no secret of ours, and trusted for
-    // freshness only -- can still tell a real device's transition from anyone else's.
-    // Without it a WM that arbitrates ordering is a denial-of-service oracle.
-    optional bytes auth_sig = 7;
+    // 7 was `auth_sig`: Ed25519 under K_sig over the ROOT transition. Removed rather than
+    // kept. Nothing verified it -- not the firmware, not the mock WM -- and nothing safely
+    // could: the WM compare-and-swaps on (counter, mac), which a root-naming signature does
+    // not bind, so a host could have paired a genuine signature with any mac it liked. The
+    // WM-facing authorisation is `wm_sig` over mac heads; see cas.transition_preimage.
+    reserved 7;
 
     // 8 and 9 were `queued` and `remaining`, which only ever applied to the OFFLINE QUEUE.
     // They now live on WardQueueAck, which is a separate message precisely so that neither
@@ -116,7 +118,7 @@ message WardFlushQueueAck {
     optional bytes  mac     = 5;  // mac over (new root, counter); the WM signs it blind
 
     optional bytes auth_commit = 6;  // authorises this transition; see WardLeafAck.auth_commit
-    optional bytes auth_sig    = 7;  // Ed25519 over the same preimage; see WardLeafAck.auth_sig
+    reserved 7;                      // was auth_sig; see WardLeafAck
 
     // How many queued changes remain after this one. The host loops until it reads zero. One
     // intent per round-trip, so a failure costs one step rather than a batch -- see the
@@ -317,7 +319,12 @@ message WardRollbackAck {
     optional uint32 counter     = 1;  // the OLD counter plus one -- never reused
     optional bytes  new_root    = 2;  // absent if the wallet is now empty
     optional bytes  auth_commit = 3;  // a REVERT link, for the host to record
-    optional bytes  auth_sig    = 4;  // as WardLeafAck.auth_sig, over the REVERT preimage
+    reserved 4;                       // was auth_sig; see WardLeafAck
+    // The WM-facing authorisation for the demotion, under "WARD WM REVERT v1". A revert
+    // advances the head like any write -- forward, carrying an OLDER root -- so without its
+    // own tag the WM cannot tell a demotion from an ordinary advance and cannot apply policy
+    // to one. Same preimage shape as an ordinary wm_sig; only the tag differs.
+    optional bytes  wm_sig      = 5;
 }
 
 /**

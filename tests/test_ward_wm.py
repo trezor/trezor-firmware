@@ -27,7 +27,7 @@ import pytest
 
 from trezorlib import _ed25519
 
-from .ward_keys import head_init_sig, wm_sig
+from .ward_keys import head_init_sig, wm_sig_over_macs as wm_sig
 from .ward_wm import MockWM
 
 K_SIG = b"\x11" * 32
@@ -38,17 +38,14 @@ MAC_2 = b"\xbb" * 32
 NONCE = b"\x99" * 32
 
 
-def _advance(wm, frm, from_mac, to, to_mac, **kw):
+def _advance(wm, frm, from_mac, to, to_mac, tag=None, **kw):
+    sig = (
+        wm_sig(K_SIG, WARD_ID, frm, from_mac, to, to_mac)
+        if tag is None
+        else wm_sig(K_SIG, WARD_ID, frm, from_mac, to, to_mac, tag)
+    )
     return wm.publish_and_attest(
-        WARD_ID,
-        NONCE,
-        frm,
-        from_mac,
-        to,
-        to_mac,
-        wm_sig(K_SIG, WARD_ID, frm, from_mac, to, to_mac),
-        timestamp=1000,
-        **kw,
+        WARD_ID, NONCE, frm, from_mac, to, to_mac, sig, timestamp=1000, **kw
     )
 
 
@@ -181,3 +178,39 @@ def test_a_read_only_bootstrap_is_authorised_too():
     wm = MockWM()
     with pytest.raises(ValueError, match="head-init"):
         wm.attest_head(WARD_ID, NONCE, MAC_0, head_init_sig(b"\x22" * 32, WARD_ID, MAC_0))
+
+
+def test_a_revert_is_authorised_but_distinguishable():
+    """The WM accepts a demotion and can TELL it was one.
+
+    A revert advances the head exactly like a write -- forward one counter, carrying a mac over
+    an OLDER root -- so nothing in the operands separates them. Only the tag does, which is why
+    it exists: a WM that could not distinguish them could not apply policy to demotions.
+    """
+    from .ward_keys import TAG_WM_REVERT
+
+    wm = _opened()
+    assert wm.reverts_seen == 0
+
+    _advance(wm, 1, MAC_1, 2, MAC_2, tag=TAG_WM_REVERT)
+
+    assert wm.reverts_seen == 1
+    assert wm.head(WARD_ID)[:2] == (2, MAC_2)
+
+
+def test_a_revert_signature_is_not_accepted_as_an_ordinary_advance():
+    """The two tags are not interchangeable in either direction.
+
+    Sharing one would let a demotion be replayed as a write, or a write drive a rollback.
+    """
+    from .ward_keys import TAG_WM_REVERT, verify_wm_sig
+
+    revert = wm_sig(K_SIG, WARD_ID, 1, MAC_1, 2, MAC_2, TAG_WM_REVERT)
+    ordinary = wm_sig(K_SIG, WARD_ID, 1, MAC_1, 2, MAC_2)
+    assert revert != ordinary
+
+    # each verifies only under its own tag
+    assert verify_wm_sig(WARD_ID, 1, MAC_1, 2, MAC_2, revert, TAG_WM_REVERT)
+    assert not verify_wm_sig(WARD_ID, 1, MAC_1, 2, MAC_2, revert)
+    assert verify_wm_sig(WARD_ID, 1, MAC_1, 2, MAC_2, ordinary)
+    assert not verify_wm_sig(WARD_ID, 1, MAC_1, 2, MAC_2, ordinary, TAG_WM_REVERT)

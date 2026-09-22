@@ -82,7 +82,7 @@ from ...ward_keys import (
     transition_preimage,
     unpack_content,
     unpack_identity,
-    verify_sig_commit,
+    TAG_COMMIT,
 )
 from ...ward_trie import WardTrie, addr_bit
 from ...ward_wm import MockWM
@@ -1424,7 +1424,9 @@ def _link(from_counter, from_root, to_counter, to_root):
         from_root,
         to_counter,
         to_root,
-        auth_commit(_K_AUTH, _WARD_ID, from_counter, from_root, to_counter, to_root),
+        auth_commit(
+            _K_AUTH, _K_MAC, _WARD_ID, from_counter, from_root, to_counter, to_root
+        ),
     )
 
 
@@ -2167,20 +2169,21 @@ def test_ward_sync_counter_reports_the_confirmed_head(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ward_write_is_signed_for_a_verifier_holding_no_secret(session: Session):
-    """Every transition carries an Ed25519 signature the WM can check with nothing secret.
+def test_ward_write_authorises_its_transition_over_mac_heads(session: Session):
+    """Every write carries an authorisation over the transition it made.
 
-    This is what lets the WM arbitrate ordering while being trusted for FRESHNESS ONLY.
-    Without it, a WM that refuses out-of-order updates is a denial-of-service oracle:
-    whoever knows ward_id could advance the counter and have every genuine device refused
-    from then on.
+    WHAT THIS USED TO ASSERT. The ack also carried `auth_sig` -- Ed25519 under K_sig over the
+    ROOT transition, nominally for the WM. It was removed: nothing verified it, in firmware or
+    in the mock WM, and nothing safely could. The WM compare-and-swaps on `(counter, mac)`,
+    which a root-naming signature does not bind, so a host could have paired a genuine
+    signature with any mac it liked. The WM-facing authorisation is `wm_sig` over mac heads,
+    which the connect path does not carry yet.
 
-    COMPLEMENTARY to the mac, not a replacement -- both cover exactly the same preimage, and
-    the test checks that by verifying the signature against the very bytes the mac is taken
-    over. The device-side authority remains K_auth's HMAC, which is asserted separately by
-    the chain and rollback tests.
-
-    Verified here the way a WM must: from ward_id alone, which IS the public half of K_sig.
+    WHAT REMAINS, AND WHY IT IS THE INTERESTING HALF. `auth_commit` under K_auth is what
+    another device of this wallet folds when it walks the history, and it now covers MAC
+    HEADS rather than roots -- `mac = root_mac(K_mac, ward_id, counter, root)` -- so the WM
+    never needs a root to check an authorisation and cannot fabricate a head whose mac it
+    could not compute.
     """
     store = WardTrie()
     _go_online(session, store)
@@ -2191,29 +2194,36 @@ def test_ward_write_is_signed_for_a_verifier_holding_no_secret(session: Session)
         "ward_set_entry",
     )
 
-    assert res.auth_sig is not None
-    assert len(res.auth_sig) == 64
+    assert res.auth_commit is not None
+    assert len(res.auth_commit) == 32
 
     from_root = None  # the first write starts from an empty tree
     ward.apply(store, res)  # so the store can tell us the root the transition landed on
-    preimage = transition_preimage(
-        _WARD_ID, res.counter - 1, from_root, res.counter, store.root()
-    )
-    assert verify_sig_commit(_WARD_ID, preimage, res.auth_sig)
 
-    # the mac covers the SAME bytes -- one preimage, two authenticators for two verifiers
     assert res.auth_commit == auth_commit(
-        _K_AUTH, _WARD_ID, res.counter - 1, from_root, res.counter, store.root()
+        _K_AUTH, _K_MAC, _WARD_ID, res.counter - 1, from_root, res.counter, store.root()
     )
 
-    # ...and the signature is bound to those bytes: a different transition does not verify
-    assert not verify_sig_commit(
+    # ...and it is bound to those endpoints: a different destination does not reproduce it
+    assert res.auth_commit != auth_commit(
+        _K_AUTH,
+        _K_MAC,
         _WARD_ID,
-        transition_preimage(
-            _WARD_ID, res.counter - 1, from_root, res.counter + 1, store.root()
-        ),
-        res.auth_sig,
+        res.counter - 1,
+        from_root,
+        res.counter + 1,
+        store.root(),
     )
+
+    # the preimage really does name macs, not roots
+    assert transition_preimage(
+        TAG_COMMIT,
+        _WARD_ID,
+        res.counter - 1,
+        root_mac(_K_MAC, _WARD_ID, res.counter - 1, from_root),
+        res.counter,
+        root_mac(_K_MAC, _WARD_ID, res.counter, store.root()),
+    )[1 + len(TAG_COMMIT) :].startswith(_WARD_ID)
 
 
 # --- the offline store ------------------------------------------------------------
