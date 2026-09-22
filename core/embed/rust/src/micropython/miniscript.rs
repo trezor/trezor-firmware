@@ -71,7 +71,7 @@ extern "C" fn upy_compile(desc_obj: Obj, internal_obj: Obj, index_obj: Obj) -> O
 pub static mp_module_trezorminiscript: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorminiscript.to_obj(),
 
-    /// def compile(descriptor: str, internal: bool, index: int) -> None:
-    ///     """Parse a Miniscript descriptor."""
+    /// def compile(descriptor: str, internal: bool, index: int) -> bytes:
+    ///     """Compile a Miniscript multipath descriptor into an explicit script."""
     Qstr::MP_QSTR_compile => obj_fn_3!(upy_compile).as_obj(),
 };
