@@ -259,7 +259,7 @@ message WARDReconcileAck {
 message WARDLookup {
     required bytes  address            = 1;  // identifier; device forms entry_key = HMAC(K_path, app_id||0x00||key_type||0x00||device_id||identifier)
     reserved 2;                              // was plaintext value; membership now carries (nonce,tag,ct)
-    repeated bytes  proof              = 3;  // sibling hashes, leaf-to-root order (33 bytes each)
+    repeated bytes  proof              = 3;  // leaf-to-root; 34B each: u16be(split_bit) || sibling(32B)
     optional bytes  witness_entry_key  = 4;  // non-membership: witness leaf entry_key (32B; reveals no plaintext)
     optional bytes  witness_commit     = 5;  // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
     reserved 6;                              // was counter; C_leaf now lives inside ct
@@ -335,7 +335,7 @@ message WARDProofRequest {
  */
 message WARDProofAck {
     reserved 1;                              // was plaintext value; membership now carries (nonce,tag,ct)
-    repeated bytes  proof             = 2;   // sibling hashes, leaf-to-root order (33 bytes each)
+    repeated bytes  proof             = 2;   // leaf-to-root; 34B each: u16be(split_bit) || sibling(32B)
     reserved 3;                              // was counter; C_leaf now lives inside ct
     optional bytes  witness_entry_key = 4;   // non-membership: witness leaf entry_key (32B; reveals no plaintext)
     optional bytes  witness_commit    = 5;   // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)

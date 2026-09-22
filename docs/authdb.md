@@ -51,14 +51,35 @@ device that has unlocked a given wallet.
 
 ### Why MPT instead of a sparse Merkle tree (SMT)?
 
-A fixed-depth 256-level SMT produces proofs of exactly 256 × 33 = 8 448 bytes.  This exceeds the 8 704-byte firmware wire buffer when combined with message framing.  The MPT is path-compressed: only branch points where leaves actually diverge are stored.  For N entries the proof has O(log N) elements, each 33 bytes (1-byte bit-position + 32-byte sibling hash).
+A fixed-depth 256-level SMT produces proofs of exactly 256 × 34 = 8 704 bytes, which leaves nothing for message framing inside the 8 704-byte firmware wire buffer.  The MPT is path-compressed: only branch points where leaves actually diverge are stored.  For N entries the proof has O(log N) elements, each 34 bytes (2-byte split_bit + 32-byte sibling hash).
 
 ### Hashing scheme
 
 ```
-leaf_hash(address, counter, value) = SHA-256(b"\x00" + address + counter(4B BE) + value)
-internal_hash(left, right)         = SHA-256(b"\x01" + left + right)   # positional, not sorted
+leaf_hash(entry_key, commit)  = SHA-256(b"\x00" + entry_key + commit)   # both operands 32B
+internal_hash(split_bit, L, R) = SHA-256(b"\x01" + u16be(split_bit) + L + R)
+                                                          # positional, not sorted
 ```
+
+Both leaf operands are **exactly 32 bytes**, and that is a security property: the
+preimage concatenates them with nothing marking the boundary, so `(K, C)` and
+`(K || C[0], C[1:])` would otherwise hash identically and a present entry's
+membership proof would pass as proof of its absence.
+
+`split_bit` — the bit the node branches on — is inside the node hash. Without it a
+host can relabel which bit each hop claims to test while the chain still folds to the
+same root, which defeats non-membership: "the witness occupies the target's path" is
+judged by comparing bits at exactly the positions the proof claims.
+
+A `skiplen` field used to sit beside it in both the hash and the proof element. It was
+removed: it is a function of the split bits either side of it, so committing to it
+bound nothing, while it made a node's hash depend on its DEPTH — which broke every
+re-parenting operation (a delete promoting a branch sibling, an insert splicing above
+an existing branch).
+
+> The leaf/counter prose below predates the two-part sealed leaf; `commit` is now
+> `commit_of(key_type, id_part, val_part)` and the per-leaf counter lives inside the
+> sealed content part. That section has not been rewritten here.
 
 `counter` is the address's **leaf counter** (see "Counter" below): a first-class,
 cryptographically-committed per-address version number, not just text embedded in the
@@ -75,9 +96,12 @@ The path through the tree for an address is the bit sequence of `SHA-256(address
 
 ### Proof format
 
-Each proof element is **33 bytes**:
-- byte 0: bit-position in the SHA-256(address) path (0–255)
-- bytes 1–32: 32-byte sibling hash
+Each proof element is **34 bytes**:
+- bytes 0–1: `split_bit`, the bit this node branches on, u16 big-endian (0–255)
+- bytes 2–33: 32-byte sibling hash
+
+Walking a valid proof root-to-leaf the split bits **strictly increase**, which a
+verifier checks before hashing anything; that also bounds a proof to 256 elements.
 
 Elements are ordered **leaf-to-root**.
 
@@ -86,11 +110,11 @@ Elements are ordered **leaf-to-root**.
 ```
 addr_hash = SHA-256(address)
 node      = SHA-256(b"\x00" + address + counter(4B BE) + value)   # leaf hash
-for (bit, sibling) in proof:                      # leaf-to-root
-    if addr_hash[bit] == 0:
-        node = SHA-256(b"\x01" + node + sibling)
+for (split_bit, sibling) in proof:                # leaf-to-root
+    if addr_hash[split_bit] == 0:
+        node = SHA-256(b"\x01" + u16be(split_bit) + node + sibling)
     else:
-        node = SHA-256(b"\x01" + sibling + node)
+        node = SHA-256(b"\x01" + u16be(split_bit) + sibling + node)
 return node == stored_root
 ```
 
@@ -165,7 +189,7 @@ Verify a membership or non-membership proof.
 AuthDbLookup {
     required bytes  address         = 1;
     optional bytes  value           = 2;  // required for membership
-    repeated bytes  proof           = 3;  // 33 bytes each, leaf-to-root
+    repeated bytes  proof           = 3;  // 34 bytes each, leaf-to-root
     optional bytes  witness_address = 4;  // non-membership: witness leaf address
     optional bytes  witness_value   = 5;  // non-membership: witness leaf value
     optional uint32 counter         = 6;  // membership: target leaf's counter
@@ -187,7 +211,7 @@ AuthDbUpdateLeaf {
     required bytes  address         = 1;
     required bytes  old_value       = 2;  // empty = address absent
     required bytes  new_value       = 3;  // empty = delete
-    repeated bytes  proof           = 4;  // 33 bytes each, leaf-to-root
+    repeated bytes  proof           = 4;  // 34 bytes each, leaf-to-root
     optional bytes  witness_address = 5;  // INSERT: non-membership witness
     optional bytes  witness_value   = 6;  // INSERT: non-membership witness
     optional uint32 old_counter     = 9;  // absent/0 on INSERT/INIT

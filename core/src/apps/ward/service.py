@@ -362,26 +362,70 @@ def _u16be(n: int) -> bytes:
     return n.to_bytes(2, "big")
 
 
-def internal_hash(split_bit: int, skiplen: int, left: bytes, right: bytes) -> bytes:
-    return sha256d(b"\x01" + _u16be(split_bit) + _u16be(skiplen) + left + right)
+# internal = sha256(0x01 || u16be(split_bit) || left || right)
+#
+# WHY split_bit IS IN THE HASH. Without it the bit each hop claims to test is not
+# committed to by the node hash, so a host can relabel the hops while the chain still
+# folds to the same root. That defeats non-membership: absence is proved by exhibiting a
+# witness leaf that occupies the target's path, and "occupies the path" is judged by
+# comparing bits at the positions the proof claims.
+#
+# AND WHY skiplen IS NOT, though it used to be. It is a FUNCTION of already-committed
+# data: walking a proof root-to-leaf it is exactly split_bit - (previous split_bit + 1),
+# which `_proof_steps_root_to_leaf` recomputed and compared rather than verifying against
+# anything independent. Committing to a value the verifier derives binds nothing.
+#
+# Removing it is not tidiness. It makes a node's hash INDEPENDENT OF ITS DEPTH, so a
+# subtree that re-parents keeps its hash -- and that is what fixes the two bugs this
+# change is really about:
+#
+#   DELETE promoted the collapsing sibling unchanged. Correct for a leaf; for a BRANCH
+#   the hash still committed to the depth it had just left, so the device derived a root
+#   no honest rebuilder reproduces. Worse, `_proof_steps_root_to_leaf` then rejected every
+#   proof through the re-parented node: one delete in three left the whole remaining tree
+#   unverifiable on that device.
+#
+#   INSERT refused to splice above an existing branch, because splicing there re-parents
+#   the branch below and its hash would have gone stale. Path compression means two keys
+#   are only compared at the bits the tree actually branches on, so they can agree at all
+#   of those and still part inside a compressed run -- the ordinary case for a random key.
+#   Roughly a third of inserts were refused outright.
+#
+# Both are gone once the hash stops naming a depth: the spliced-off subtree and the
+# promoted sibling both fold unchanged.
+def internal_hash(split_bit: int, left: bytes, right: bytes) -> bytes:
+    return sha256d(b"\x01" + _u16be(split_bit) + left + right)
+
+
+PROOF_ELEM_LEN = 34  # u16be(split_bit) || sibling(32B); was 36 with skiplen
 
 
 def _parse_proof_elem(elem: bytes) -> tuple:
-    if len(elem) != 36:
+    if len(elem) != PROOF_ELEM_LEN:
         raise ValueError("invalid proof element length")
-    return int.from_bytes(elem[0:2], "big"), int.from_bytes(elem[2:4], "big"), bytes(elem[4:])
+    return int.from_bytes(elem[0:2], "big"), bytes(elem[2:])
 
 
 def _proof_steps_root_to_leaf(proof: list) -> list:
+    """Check the proof describes a well-formed root-to-leaf path, and return its steps.
+
+    Walking ROOT to leaf, the split bits must strictly increase. A proof that is reordered
+    or has its bit claims shifted fails here before a single hash is computed. This also
+    bounds the work: split_bit strictly increases and stays below 256, so no valid proof
+    exceeds 256 elements however many the host sends.
+
+    The skiplen consistency check that used to live here is gone with the field itself --
+    it compared a host-supplied number against one derived from exactly these split bits.
+    """
     steps = []
     start_bit = 0
     for elem in reversed(proof):
-        split_bit, skiplen, sibling = _parse_proof_elem(elem)
+        split_bit, sibling = _parse_proof_elem(elem)
         if split_bit >= 256:
             raise ValueError("proof split_bit out of range")
-        if split_bit < start_bit or skiplen != split_bit - start_bit:
-            raise ValueError("proof skiplen inconsistent with branch position")
-        steps.append((split_bit, skiplen, sibling))
+        if split_bit < start_bit:
+            raise ValueError("proof split bits are not strictly increasing")
+        steps.append((split_bit, sibling))
         start_bit = split_bit + 1
     return steps
 
@@ -392,11 +436,11 @@ def reconstruct(start_hash: bytes, proof: list, entry_key_: bytes) -> bytes:
     _proof_steps_root_to_leaf(proof)
     node = start_hash
     for elem in proof:
-        split_bit, skiplen, sibling = _parse_proof_elem(elem)
+        split_bit, sibling = _parse_proof_elem(elem)
         if addr_bit(entry_key_, split_bit) == 0:
-            node = internal_hash(split_bit, skiplen, node, sibling)
+            node = internal_hash(split_bit, node, sibling)
         else:
-            node = internal_hash(split_bit, skiplen, sibling, node)
+            node = internal_hash(split_bit, sibling, node)
     return node
 
 
@@ -461,7 +505,7 @@ def verify_nonmembership(
     except ValueError:
         return False
 
-    for split_bit, _skiplen, _sibling in steps:
+    for split_bit, _sibling in steps:
         if addr_bit(entry_key_, split_bit) != addr_bit(witness_entry_key, split_bit):
             return False
 
@@ -515,7 +559,7 @@ def compute_new_root(
             raise ValueError("witness_entry_key must differ from entry_key")
 
         steps = _proof_steps_root_to_leaf(proof)
-        for split_bit, _skiplen, _sibling in steps:
+        for split_bit, _sibling in steps:
             if addr_bit(entry_key_, split_bit) != addr_bit(witness_entry_key, split_bit):
                 raise ValueError("Witness does not occupy target's path")
 
@@ -524,6 +568,9 @@ def compute_new_root(
         if witness_in_tree != stored_root:
             raise ValueError("Non-membership proof invalid: witness not in tree")
 
+        # Where the two paths part is computed HERE, never taken from the host: it decides
+        # where the new leaf is spliced in, so a host-chosen value would let it graft the
+        # entry somewhere structurally inconsistent with the rest of the tree.
         split_bit = None
         for b in range(256):
             if addr_bit(entry_key_, b) != addr_bit(witness_entry_key, b):
@@ -531,17 +578,42 @@ def compute_new_root(
                 break
         if split_bit is None:
             raise ValueError("entry_key and witness_entry_key are equal")
-        parent_split = _parse_proof_elem(proof[0])[0] if len(proof) > 0 else -1
-        if split_bit <= parent_split:
-            raise ValueError("insert split_bit must be below the witness path")
-        new_skiplen = split_bit - (parent_split + 1)
+
+        # The new branch goes at `split_bit`, which is NOT necessarily below every branch
+        # on the witness's path -- see the note on internal_hash. Everything the proof
+        # branches on BELOW the splice point belongs to the subtree that re-parents under
+        # the new branch, so fold it first; a node's hash no longer names its depth, so it
+        # folds unchanged. This used to be an outright refusal.
+        below = []
+        idx = 0
+        while idx < len(proof):
+            sb, _sib = _parse_proof_elem(proof[idx])
+            if sb == split_bit:
+                # Unreachable: the agreement loop above rejects a proof that branches
+                # where the keys differ, and split_bit is the first such bit. Explicit
+                # because the silent alternative is two branches at one bit.
+                raise ValueError("witness path already branches at the split bit")
+            if sb < split_bit:
+                break
+            below.append(proof[idx])
+            idx += 1
+
+        node = witness_leaf
+        for elem in below:
+            sb, sib = _parse_proof_elem(elem)
+            if addr_bit(witness_entry_key, sb) == 0:
+                node = internal_hash(sb, node, sib)
+            else:
+                node = internal_hash(sb, sib, node)
 
         new_leaf_t = leaf_hash(entry_key_, new_leaf[0], new_leaf[1], new_leaf[2])
         if addr_bit(entry_key_, split_bit) == 0:
-            new_branch = internal_hash(split_bit, new_skiplen, new_leaf_t, witness_leaf)
+            new_branch = internal_hash(split_bit, new_leaf_t, node)
         else:
-            new_branch = internal_hash(split_bit, new_skiplen, witness_leaf, new_leaf_t)
-        return reconstruct(new_branch, proof, witness_entry_key)
+            new_branch = internal_hash(split_bit, node, new_leaf_t)
+
+        # above the splice the two keys agree, so folding by either path is the same
+        return reconstruct(new_branch, proof[idx:], witness_entry_key)
 
     if deleting:
         if stored_root is None:
@@ -551,7 +623,13 @@ def compute_new_root(
             raise ValueError("Old value proof invalid")
         if len(proof) == 0:
             return None
-        _split_bit, _skiplen, sibling_hash = _parse_proof_elem(proof[0])
+        # The branch above collapses and the sibling takes its place -- UNCHANGED,
+        # whatever it is. A node's hash no longer depends on its depth, so a re-parented
+        # subtree keeps the hash the proof already committed to, and a leaf and a branch
+        # behave identically here. Under the old format a branch sibling's hash went
+        # stale the instant it moved, which is what made a third of deletes derive a root
+        # no rebuilder agreed with.
+        _split_bit, sibling_hash = _parse_proof_elem(proof[0])
         return reconstruct(sibling_hash, proof[1:], entry_key_)
 
     # UPDATE
@@ -582,7 +660,7 @@ def _multiproof_root(items, stored_root):
     then returns the new root with the new leaf hashes substituted. Raises ValueError
     on any inconsistency (mismatched branch bit / sibling / root)."""
     # Partial tree keyed by path = tuple of (bit, dir) taken from the root.
-    branch = {}  # path -> (branch_bit, skiplen)
+    branch = {}  # path -> branch_bit
     occupied = set()  # paths on some item's root→leaf walk (real nodes)
     old_leaf = {}  # path -> old leaf hash
     new_leaf = {}  # path -> new leaf hash
@@ -592,16 +670,17 @@ def _multiproof_root(items, stored_root):
         path = ()
         occupied.add(path)
         for elem in reversed(proof):  # root → leaf order
-            b, skiplen, sib = _parse_proof_elem(elem)
+            b, sib = _parse_proof_elem(elem)
             d = addr_bit(ek, b)
             if path in branch:
-                if branch[path] != (b, skiplen):
+                if branch[path] != b:
                     raise ValueError("inconsistent branch metadata in batch multiproof")
             else:
-                exp_start = path[-1][0] + 1 if path else 0
-                if skiplen != b - exp_start:
-                    raise ValueError("inconsistent skiplen in batch multiproof")
-                branch[path] = (b, skiplen)
+                # The skiplen agreement that used to be checked here compared a
+                # host-supplied number against one derived from the split bits either
+                # side of it; `_proof_steps_root_to_leaf` (via reconstruct) already
+                # enforces that those bits strictly increase, which is the whole of it.
+                branch[path] = b
             sib_path = path + ((b, 1 - d),)
             sib_seen.setdefault(sib_path, []).append(sib)
             path = path + ((b, d),)
@@ -630,10 +709,10 @@ def _multiproof_root(items, stored_root):
         if path in leaf_map:
             return leaf_map[path]
         if path in branch:
-            b, skiplen = branch[path]
+            b = branch[path]
             left = child_hash(path + ((b, 0),), leaf_map)
             right = child_hash(path + ((b, 1),), leaf_map)
-            return internal_hash(b, skiplen, left, right)
+            return internal_hash(b, left, right)
         raise ValueError("dangling node in batch multiproof")
 
     if node_hash((), old_leaf) != stored_root:
