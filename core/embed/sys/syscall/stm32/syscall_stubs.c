@@ -839,9 +839,22 @@ ts_t nfc_get_device_info(nfc_dev_info_t *dev_info) {
       syscall_invoke1((uint32_t)dev_info, SYSCALL_NFC_GET_DEVICE_INFO));
 }
 
+bool nfc_get_state() {
+  return (bool)syscall_invoke0(SYSCALL_NFC_GET_STATE);
+}
+
 ts_t nfc_transceive(const nfc_apdu_message_t *cmd, nfc_apdu_message_t *resp) {
   return ts_make(
       syscall_invoke2((uint32_t)cmd, (uint32_t)resp, SYSCALL_NFC_TRANSCEIVE));
+}
+
+ts_t nfc_transceive_psk(const uint8_t *pcd_psk, size_t pcd_psk_len,
+                        uint8_t *picc_psk, size_t picc_psk_max_len,
+                        uint16_t *picc_psk_len) {
+  return ts_make(syscall_invoke5((uint32_t)pcd_psk, (uint32_t)pcd_psk_len,
+                                 (uint32_t)picc_psk, (uint32_t)picc_psk_max_len,
+                                 (uint32_t)picc_psk_len,
+                                 SYSCALL_NFC_TRANSCEIVE_PSK));
 }
 
 #endif
