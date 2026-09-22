@@ -8437,11 +8437,17 @@ if TYPE_CHECKING:
 
     class WardVerifyChain(protobuf.MessageType):
         links: "list[WardChainLink]"
+        nonce: "AnyBytes | None"
+        timestamp: "int | None"
+        wm_signature: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             links: "list[WardChainLink] | None" = None,
+            nonce: "AnyBytes | None" = None,
+            timestamp: "int | None" = None,
+            wm_signature: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8559,6 +8565,9 @@ if TYPE_CHECKING:
         from_counter: "int | None"
         from_root: "AnyBytes | None"
         to_counter: "int | None"
+        nonce: "AnyBytes | None"
+        timestamp: "int | None"
+        wm_signature: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8568,6 +8577,9 @@ if TYPE_CHECKING:
             from_counter: "int | None" = None,
             from_root: "AnyBytes | None" = None,
             to_counter: "int | None" = None,
+            nonce: "AnyBytes | None" = None,
+            timestamp: "int | None" = None,
+            wm_signature: "AnyBytes | None" = None,
         ) -> None:
             pass
 

@@ -139,6 +139,34 @@ def attestation_preimage(
     )
 
 
+# ---------------------------------------------------------------------------
+# TWO VERIFICATION PATHS, AND THE SECOND IS NOT A GENERALISATION OF THE FIRST.
+#
+# `verify_attestation` answers "IS THIS THE HEAD NOW". Its nonce comes from the open round and
+# from nowhere else -- `adopt.verify_round_attestation` is its only non-test caller -- and that
+# ordering is the whole anti-eclipse argument: the device mints a nonce before the host talks to
+# the WM, so the WM must sign a value nobody could know in advance and a host cannot keep a
+# drawer of previously-signed anchors and serve whichever suits it.
+#
+# `verify_archived_attestation` answers "WAS THIS EVER A HEAD". It takes the nonce as DATA, which
+# is precisely that drawer. It is admitted because it is asked a different question:
+#
+#     currency  -- only ever established by the round-bound path, never by this one
+#     history   -- established by this one, and it can say nothing about what is current
+#
+# THE NONCE IS INERT HERE. `round.clear` zeroes the slot, so the device retains no past nonces
+# and cannot tell one it minted from arbitrary bytes. Security rests entirely on the WM's
+# signature over (ward_id, counter, mac): a host may choose freely among every attestation it has
+# ever seen for this wallet, and can forge none of them. What stops that mattering is that the
+# counter is inside `root_mac`, so an archived (counter, mac) can only ever be satisfied by the
+# root that genuinely held that counter -- it cannot be re-dated onto another.
+#
+# IF THIS PATH EVER ANSWERS THE FIRST QUESTION, THE ECLIPSE PROTECTION IS GONE. Callers are
+# therefore enumerated deliberately: rollback, and staged catch-up. Not `ingest`, not `recover`,
+# not `service.sync`, not `service.publish` -- each of those decides currency.
+# ---------------------------------------------------------------------------
+
+
 def verify_attestation(
     ward_id: bytes,
     nonce: bytes,
@@ -147,7 +175,35 @@ def verify_attestation(
     timestamp: int,
     signature: bytes,
 ) -> bool:
-    """Is this a WM attestation of (counter, mac, timestamp) for this wallet, this round?"""
+    """Is this a WM attestation of (counter, mac, timestamp) for this wallet, this round?
+
+    The nonce must be the open round's -- see the note above. Callers get it from
+    `round.get()`, never from a message.
+    """
+    return _verify(
+        attestation_preimage(ward_id, nonce, counter, mac, timestamp), signature
+    )
+
+
+def verify_archived_attestation(
+    ward_id: bytes,
+    nonce: bytes,
+    counter: int,
+    mac: bytes,
+    timestamp: int,
+    signature: bytes,
+) -> bool:
+    """Was (counter, mac) EVER this wallet's head, under some round the host kept?
+
+    Deliberately a second function rather than a parameter on the first. The two answer different
+    questions, only one of them establishes currency, and a boolean flag on a shared entry point
+    is exactly the kind of thing a later caller passes wrongly. See the note above for the full
+    argument; the short form is that this one may not decide what is current.
+
+    Cryptographically identical to `verify_attestation` -- same preimage, same key. Everything
+    that makes the two different is WHERE THE NONCE COMES FROM and WHAT THE ANSWER MAY BE USED
+    FOR, neither of which is visible in the bytes.
+    """
     return _verify(
         attestation_preimage(ward_id, nonce, counter, mac, timestamp), signature
     )

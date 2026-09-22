@@ -32,6 +32,7 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     from trezor.wire import DataError
 
     from .adopt import adopt, require_attested_round, verify_head_mac
+    from .attest import root_mac
     from .cas import verify_chain_step
     from .common import require_initialized
     from .keys import derive_k_auth, derive_k_mac, derive_ward_id
@@ -39,7 +40,20 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
 
     require_initialized()
 
-    counter, mac = require_attested_round("verify against")
+    # WHICH HEAD THIS BATCH ENDS AT. Normally the one attested in this round -- the live,
+    # nonce-bound answer to "what is current". But a device far behind cannot express its
+    # catch-up in one message: links are an unchunked repeated field in an 8704-byte buffer and
+    # a link costs ~112 bytes, so about 77 fit. Such a device instead walks in batches, each
+    # terminating at an ARCHIVED head whose attestation the host kept.
+    #
+    # The archived form NEVER decides currency -- see `attest.verify_archived_attestation`. It
+    # says only that the WM once held this head, which is exactly what stops a batch being
+    # walked onto a fork: descent alone cannot tell one branch from another.
+    staged = msg.wm_signature is not None
+    # The live attested head is read either way: for an ordinary batch it is the target, and for
+    # a staged one it is the CEILING -- a batch may stop short of the current head but never past
+    # it.
+    live_counter, live_mac = require_attested_round("verify against")
 
     ward_id = await derive_ward_id()
     k_auth = await derive_k_auth()
@@ -85,16 +99,73 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
             __name__, "chain: %d links, %d of them reverts", len(msg.links), reverts
         )
 
-    if running_counter != counter:
-        raise DataError("chain does not end at the attested counter")
+    if staged:
+        # THE TARGET IS WHERE THE FOLD ARRIVED, and the device computes its mac itself rather
+        # than being told one -- `root_mac` over the running head. So a host cannot name a
+        # counter or a mac at all here; it can only supply a signature, which either covers what
+        # the fold produced or does not.
+        counter = running_counter
+        mac = root_mac(k_mac, ward_id, running_counter, running_root)
+        await _check_staged_target(
+            ward_id, counter, mac, live_counter, msg, await get_counter()
+        )
+    else:
+        counter, mac = live_counter, live_mac
+        if running_counter != counter:
+            raise DataError("chain does not end at the attested counter")
+        # ...and the state it ends in must be the state that was attested. Without this the
+        # chain could authorise a walk to a head the WM never vouched for.
+        await verify_head_mac(counter, mac, running_root, subject="chain end")
 
-    # ...and the state it ends in must be the state that was attested. Without this the
-    # chain could authorise a walk to a head the WM never vouched for.
-    await verify_head_mac(counter, mac, running_root, subject="chain end")
-
-    # The shared tail -- settle, persist, latch, close -- see `adopt`. This route settles by the
-    # transitions it actually CROSSED rather than by the counter, so it does not clear a record
-    # whose change another device's write happened to advance past.
-    await adopt(counter, running_root, landed_commits=crossed)
+    # The shared tail -- settle, persist, and (unless staged) latch and close -- see `adopt`.
+    # This route settles by the transitions it actually CROSSED rather than by the counter, so it
+    # does not clear a record whose change another device's write happened to advance past.
+    await adopt(counter, running_root, landed_commits=crossed, staged=staged)
 
     return WardVerifyChainAck(counter=counter, new_root=running_root)
+
+
+async def _check_staged_target(
+    ward_id: bytes,
+    counter: int,
+    mac: bytes,
+    live_counter: int,
+    msg: WardVerifyChain,
+    stored: int,
+) -> None:
+    """May this batch stop here, and did the WM ever hold this head?
+
+    `counter` and `mac` are the device's OWN -- where its fold arrived, and the mac it computed
+    over that state. The host supplies only a signature, so it cannot name a destination; it can
+    only fail to have one for the destination the links produced.
+
+    THREE RULES, each closing a distinct way of abusing a replayed attestation:
+
+      progress -- the target must be above our stored head. Below it would be a demotion, which
+        is `WardRollback`'s business and needs the user's consent;
+      a ceiling -- not above the head attested in this round, or a batch could adopt something
+        the WM has not reached. Neither existing rule covers this range: `ingest` refuses
+        anything under the floor and `recover` refuses anything not going backwards, so an
+        intermediate is today accepted by no path at all;
+      the WM really held it -- the archived signature over (ward_id, counter, mac). Unforgeable,
+        so the host can only choose among heads that genuinely existed, and `root_mac` binds the
+        counter so the pair admits exactly one root.
+    """
+    from trezor.wire import DataError
+
+    from .attest import verify_archived_attestation
+
+    nonce = msg.nonce
+    signature = msg.wm_signature
+    if nonce is None or signature is None:
+        raise DataError("a staged batch needs the archived attestation for its target")
+
+    if counter <= stored:
+        raise DataError("a staged target must be ahead of this device's head")
+    if counter > live_counter:
+        raise DataError("a staged target cannot be ahead of the attested head")
+
+    if not verify_archived_attestation(
+        ward_id, nonce, counter, mac, msg.timestamp or 0, signature
+    ):
+        raise DataError("the WM never attested this staged target as its head")

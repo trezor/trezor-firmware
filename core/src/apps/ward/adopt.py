@@ -107,7 +107,10 @@ async def verify_head_mac(
 
 
 async def adopt(
-    counter: int, root: bytes | None, landed_commits: "list | None" = None
+    counter: int,
+    root: bytes | None,
+    landed_commits: "list | None" = None,
+    staged: bool = False,
 ) -> None:
     """Take the head: settle queued writes, persist it, latch online, close the round.
 
@@ -150,6 +153,18 @@ async def adopt(
         raise DataError(
             "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
         )
+
+    if staged:
+        # A STAGED ADOPTION STOPS HERE, and the two omissions are the whole point.
+        #
+        # NO LATCH. This head was proved genuine -- descent from our own head, and an archived
+        # attestation saying the WM really held it -- but it is NOT current: the device is
+        # catching up in batches precisely because it is far behind. Latching would claim it
+        # shares a head with the backend, which is the one thing it knows to be false.
+        #
+        # ROUND STAYS OPEN, because the next batch continues from the head just persisted and
+        # `round.begin` would discard it. Closing is the final batch's job, along with the latch.
+        return
 
     sync_round.mark_online()
     sync_round.clear()

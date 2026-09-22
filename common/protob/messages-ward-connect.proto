@@ -150,6 +150,26 @@ message WardFlushQueueAck {
  */
 message WardVerifyChain {
     repeated WardChainLink links = 1;  // ordered, starting at the device's current head
+
+    // STAGED CATCH-UP. Links are one unchunked repeated field in an 8704-byte buffer and a link
+    // costs ~112 bytes, so about 77 fit. A device further behind than that cannot express its
+    // catch-up at all -- which is why the batch may instead terminate at an ARCHIVED head: the
+    // attestation the WM issued when that head was current, which the host kept.
+    //
+    // Supplying these three says "end this batch at the head they name" instead of "end at the
+    // head attested in this round". The device folds descent as always, persists the result and
+    // STAYS OFFLINE, because an intermediate is by definition not current. The final batch omits
+    // them and terminates at the live attested head, which is what latches online.
+    //
+    // Absent = today's behaviour exactly, so this is additive.
+    //
+    // Safe only because all three hold: the archived attestation proves the WM really held that
+    // head (so a batch cannot be walked onto a fork), the chain stays mandatory and contiguous
+    // (so no transition can be skipped), and `root_mac` binds the counter (so an archived
+    // (counter, mac) cannot be re-dated onto another root).
+    optional bytes  nonce        = 2;  // the nonce that attestation was minted under
+    optional uint64 timestamp    = 3;
+    optional bytes  wm_signature = 4;
 }
 
 /**
@@ -309,6 +329,22 @@ message WardRollback {
     optional uint32 from_counter = 3;
     optional bytes  from_root    = 4;  // absent means the empty tree
     optional uint32 to_counter   = 5;
+
+    // THE PROOF THAT THE TARGET WAS EVER THE HEAD, and it is REQUIRED. `auth_commit` above says
+    // a holder of this wallet's K_auth authorised the target; it does not say the target was
+    // ever authoritative, so a host could present a link from an orphaned fork. These three are
+    // the attestation the WM issued when the target was current, kept by the host and replayed
+    // here: the device checks the signature and that root_mac(to_counter, to_root) is the mac it
+    // names, which together say the WM actually held this state.
+    //
+    // A HOST THAT DID NOT ARCHIVE CANNOT ROLL BACK. That is a deliberate narrowing of an escape
+    // hatch this message's own docstring once said should need no attestation -- the reasoning
+    // there was aimed at a LIVE attestation, which would need the WM reachable in the very
+    // situation rollback exists for. An archived one does not, but it does need to have been
+    // kept, so hosts must begin archiving at their first sync after upgrade.
+    optional bytes  nonce        = 6;  // the nonce that attestation was minted under
+    optional uint64 timestamp    = 7;
+    optional bytes  wm_signature = 8;
 }
 
 /**

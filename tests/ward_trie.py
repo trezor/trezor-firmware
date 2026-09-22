@@ -133,6 +133,34 @@ class WardTrie:
         # Opaque to the host, which is the point -- it cannot forge a step, and cannot
         # check one either; only a device of this wallet can.
         self.links: list = []
+        # THE ATTESTATION ARCHIVE: counter -> (nonce, counter, mac, timestamp, wm_signature).
+        #
+        # Every one of these was already received and then thrown away -- the sync helpers
+        # ingested the attestation and dropped the signature. Keeping them is what makes two
+        # things possible, and neither needs the WM to change:
+        #
+        #   ROLLBACK can prove its target was ever the head. The link into a target says a
+        #   device of this wallet authorised it; only the WM's attestation says the WM held it,
+        #   and without that a host may present a link from an orphaned fork.
+        #
+        #   STAGED CATCH-UP can stop part-way. Links are one unchunked field in an 8704-byte
+        #   buffer, so a device more than ~77 transitions behind cannot catch up in one message;
+        #   a batch ending at an archived head lets it walk there in stages without being
+        #   walkable onto a fork.
+        #
+        # The archive can only ever say "this WAS a head" -- currency still comes from a fresh,
+        # nonce-bound attestation, which is the line `attest.verify_archived_attestation` keeps.
+        self.attestations: dict = {}
+
+    def archive_attestation(
+        self, nonce: bytes, counter: int, mac: bytes, timestamp: int, signature: bytes
+    ) -> None:
+        """Keep what the WM just attested. A real host does this at every sync and publish."""
+        self.attestations[counter] = (nonce, counter, mac, timestamp, signature)
+
+    def attestation_for(self, counter: int):
+        """The archived tuple for a head, or None if this host never kept one."""
+        return self.attestations.get(counter)
 
     # --- store ---
 
