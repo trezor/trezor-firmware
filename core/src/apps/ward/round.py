@@ -132,8 +132,12 @@ def mark_offline() -> None:
     request rather than after the failure. Clearing it afterwards would leave the whole window in
     which the answer is unknown looking like the window in which it is known.
 
-    No connect-mode route needs this: nothing there moves the backend's head without the device
-    having adopted the result in the same breath.
+    CONNECT MODE NEEDS IT TOO, which this used to deny. A connect build does not publish, but
+    `set_entry` / `delete_entry` / `flush_queue` hand the host a candidate with its authenticators
+    and return; the device does NOT persist that candidate. From that moment the host can move the
+    backend's head to it while this session still believes its older root is the current one --
+    cryptographically sound proofs against a head that has been superseded. The device cannot know
+    which happened, so it says so, and reads route to the offline store until something re-adopts.
 
     NOT A FAILURE PATH. `adopt` sets the latch again as the last thing it does, so the ordinary
     outcome is a gap of one round trip.

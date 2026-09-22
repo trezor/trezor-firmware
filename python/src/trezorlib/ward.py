@@ -523,15 +523,23 @@ def apply_rollback(store, ack: messages.WardRollbackAck) -> None:
 
 
 def leaf_is_delete(leaf: Optional[Leaf]) -> bool:
-    """A leaf whose content body is empty is a deletion, not an empty-valued entry."""
+    """A leaf whose content body is empty is a deletion, not an empty-valued entry.
+
+    Dispatches on `encoding` for the reason `ward_trie._part_bytes` gives: the firmware reads the
+    discriminator, and a host that reads field presence instead disagrees about which arm a
+    message is -- on the commit preimage, where a disagreement is a different root.
+    """
     if leaf is None or leaf.content is None:
         return True
     content = leaf.content
-    if content.plaintext is not None:
-        return not content.plaintext.content
-    if content.encrypted is not None:
-        return not content.encrypted.ct
-    return True
+    encoding = 0 if content.encoding is None else content.encoding
+    if encoding not in (0, 1):
+        raise ValueError(f"unknown leaf content encoding: {encoding!r}")
+    if content.encrypted is not None and content.plaintext is not None:
+        raise ValueError("leaf content sets both encodings")
+    if encoding == 1:
+        return not (content.plaintext is not None and content.plaintext.content)
+    return not (content.encrypted is not None and content.encrypted.ct)
 
 
 def store_provider(store) -> EntryProvider:
