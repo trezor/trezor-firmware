@@ -127,49 +127,97 @@ message WardFlushQueueAck {
 }
 
 /**
- * Request: adopt the attested head by proving it DESCENDS from the head this device
- * already holds, rather than by being handed a root and told to trust it.
+ * Request: adopt the attested head by proving the device's OWN head is an ANCESTOR of it.
  *
- * Runs after WardIngestAttestation, in place of WardReconcile. The device folds the links
- * from its own head forward, checking at each step that the counter and root are
- * contiguous, that the counter advances by exactly one, and that the step was authorised.
- * The chain must terminate at the attested counter, and its final root must reproduce the
- * attested mac.
+ * Runs after WardIngestAttestation, in place of WardReconcile, and it is the one connect
+ * flow the DEVICE drives: it anchors at the attested head and then pulls predecessors with
+ * WardChainRequest until it arrives at the head it already holds.
  *
- * This is what a device needs when it has fallen more than one step behind -- another
- * device of the wallet wrote while it was away. Reconcile alone would accept the new head
- * on the WM's word; this additionally establishes that every intervening step was made by
- * a device holding the seed, and that no step was skipped, which is how a fork would
- * otherwise stay invisible.
+ * WHY BACKWARD, AND NOT FORWARD FROM THE DEVICE'S HEAD. Folding forward, the endpoint is
+ * wherever the host walks the device, and only a terminal check catches a wrong one -- so an
+ * intermediate reached along the way is proved by DESCENT alone, and descent cannot tell one
+ * branch from another. Every device hands out an `auth_commit` on WardLeafAck before knowing
+ * whether the write landed (see WardLeafAck), so a merely retentive host holds genuine links
+ * for transitions the WM never accepted, and a forward fold will walk onto one.
  *
- * Descent is not currency: the WM attestation supplies that, and the two are joined by
- * requiring the chain to end exactly where the attestation says.
+ * Anchoring at the attested head inverts that. Every state the walk reaches is an ANCESTOR of
+ * a head the WM vouched for, so it cannot be on a fork BY CONSTRUCTION rather than by a rule:
+ * each request names the `to` end it wants, and a link that ends anywhere else is refused
+ * before its MAC is even checked.
+ *
+ * It also removes the ceiling that made staged batching necessary. Links no longer travel as
+ * one unchunked repeated field, so the 8704-byte buffer bounds a single WardChainLinkAck
+ * rather than the catch-up distance, and a device arbitrarily far behind catches up in one
+ * workflow with nothing persisted until it completes.
+ *
+ * Descent is not currency: the WM attestation supplies that. See the anchor fields below.
  * @start
+ * @next WardChainRequest
  * @next WardVerifyChainAck
  * @next Failure
  */
 message WardVerifyChain {
-    repeated WardChainLink links = 1;  // ordered, starting at the device's current head
+    reserved 1;  // was `repeated WardChainLink links`; the device pulls them one ack at a time
 
-    // STAGED CATCH-UP. Links are one unchunked repeated field in an 8704-byte buffer and a link
-    // costs ~112 bytes, so about 77 fit. A device further behind than that cannot express its
-    // catch-up at all -- which is why the batch may instead terminate at an ARCHIVED head: the
-    // attestation the WM issued when that head was current, which the host kept.
+    // THE ANCHOR'S ROOT. The device holds only a `mac` for the attested head -- the WM is
+    // root-blind -- so the root has to come from here, and is accepted only because
+    // root_mac(K_mac, ward_id, counter, head_root) reproduces the mac that was attested. That
+    // binding is the same one WardReconcile rests on, and it admits exactly one root per
+    // attested (counter, mac). Absent means the empty tree.
+    optional bytes head_root = 5;
+
+    // AN ARCHIVED ANCHOR, instead of the head attested in this round. These three are the
+    // attestation the WM issued when some earlier head was current, which the host kept.
     //
-    // Supplying these three says "end this batch at the head they name" instead of "end at the
-    // head attested in this round". The device folds descent as always, persists the result and
-    // STAYS OFFLINE, because an intermediate is by definition not current. The final batch omits
-    // them and terminates at the live attested head, which is what latches online.
+    // The two properties of an anchor come apart, and only one of them descent needs:
     //
-    // Absent = today's behaviour exactly, so this is additive.
+    //   GENUINE gives branch-correctness -- an ancestor of a head the WM really held is on the
+    //     authoritative line, whether or not that head is still current. An archived
+    //     attestation carries this in full.
+    //   FRESH gives currency -- this head is the head NOW. Only this round's nonce carries it.
     //
-    // Safe only because all three hold: the archived attestation proves the WM really held that
-    // head (so a batch cannot be walked onto a fork), the chain stays mandatory and contiguous
-    // (so no transition can be skipped), and `root_mac` binds the counter (so an archived
-    // (counter, mac) cannot be re-dated onto another root).
-    optional bytes  nonce        = 2;  // the nonce that attestation was minted under
+    // So a walk anchored on an archive is a complete proof of descent and no claim of currency:
+    // the device adopts and settles, and STAYS OFFLINE, because a host replaying an old
+    // attestation must never be able to freeze a device at an old head while it serves those
+    // values as current. Omit all three to anchor on this round's attestation, which is what
+    // latches online.
+    optional bytes  nonce        = 2;
     optional uint64 timestamp    = 3;
     optional bytes  wm_signature = 4;
+
+    // Which head the archive attests. Only the COUNTER is named: the device derives the mac
+    // itself as root_mac(K_mac, ward_id, anchor_counter, head_root), so a host cannot present a
+    // mac at all -- it can only fail to hold a signature over the one the device computed. That
+    // is also what binds head_root on this path, in place of the round's attested mac.
+    optional uint32 anchor_counter = 6;
+}
+
+/**
+ * Response: the device asks for the link that ENDS at a state it has already established.
+ *
+ * Sent repeatedly during WardVerifyChain, walking backwards, until the device reaches its own
+ * head. The pair it names is not a hint the host may improve on: a returned link whose `to` end
+ * differs is refused, which is what keeps an orphaned branch out of the walk.
+ * @next WardChainLinkAck
+ */
+message WardChainRequest {
+    optional uint32 to_counter = 1;
+    optional bytes  to_root    = 2;  // absent means the empty tree
+}
+
+/**
+ * Request: the predecessors the device asked for, NEWEST FIRST.
+ *
+ * More than one may be sent -- each link's `to` end must match the `from` end of the one before
+ * it, so a full ack is a contiguous run walking backwards from the requested state. Sending as
+ * many as fit is the fast path; sending one is always correct. An empty ack ends the walk with a
+ * failure, which is the honest answer when the host does not hold the range.
+ * @next WardChainRequest
+ * @next WardVerifyChainAck
+ * @next Failure
+ */
+message WardChainLinkAck {
+    repeated WardChainLink links = 1;
 }
 
 /**
@@ -179,6 +227,17 @@ message WardVerifyChain {
 message WardVerifyChainAck {
     optional uint32 counter  = 1;
     optional bytes  new_root = 2;  // absent if the adopted tree is empty
+
+    // How many of the transitions crossed were DEMOTIONS -- steps carrying an older root, issued
+    // by another device's rollback. The device already warns on screen; this is the same fact for
+    // a host that wants to say it in its own UI, and for a build with no screen at all.
+    //
+    // A COUNT IS THE WHOLE ANSWER, not a first approximation of one. Naming which entries were
+    // discarded would need the counter the restored root originally belonged to, and that is not
+    // on WardChainLink -- putting it there means binding it into auth_commit's preimage, since
+    // anything outside the MAC is forgeable. Decided as not worth it: what a user or a host has
+    // to act on is that the wallet went backwards and by how many steps, which this carries.
+    optional uint32 reverts_crossed = 3;
 }
 
 /**

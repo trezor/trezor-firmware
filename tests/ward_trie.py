@@ -143,10 +143,9 @@ class WardTrie:
         #   device of this wallet authorised it; only the WM's attestation says the WM held it,
         #   and without that a host may present a link from an orphaned fork.
         #
-        #   STAGED CATCH-UP can stop part-way. Links are one unchunked field in an 8704-byte
-        #   buffer, so a device more than ~77 transitions behind cannot catch up in one message;
-        #   a batch ending at an archived head lets it walk there in stages without being
-        #   walkable onto a fork.
+        #   CATCH-UP CAN RUN WITHOUT A LIVE ROUND. A walk anchored on an archived head proves
+        #   descent in full -- an ancestor of a head the WM really held is on the authoritative
+        #   line -- and claims no currency, so the device adopts and stays offline.
         #
         # The archive can only ever say "this WAS a head" -- currency still comes from a fresh,
         # nonce-bound attestation, which is the line `attest.verify_archived_attestation` keeps.
@@ -161,6 +160,30 @@ class WardTrie:
     def attestation_for(self, counter: int):
         """The archived tuple for a head, or None if this host never kept one."""
         return self.attestations.get(counter)
+
+    def links_ending_at(self, to_counter: int, to_root, limit: int = 64) -> list:
+        """The predecessors of a state, NEWEST FIRST, for the device's backward walk.
+
+        A host serving a catch-up answers exactly this question, repeatedly: "the link that ends
+        at (counter, root), and then the one that ends where that one began". A real host would
+        index `evolu_history` by its `to` end; here the log is short enough to scan.
+
+        NOT A SUGGESTION THE DEVICE MAY IMPROVE ON. It refuses a link ending anywhere but the pair
+        it named, so this returning the wrong branch is a refusal rather than a wrong adoption --
+        which is what makes an orphaned candidate unusable even though the host holds one.
+        """
+        out: list = []
+        counter, root = to_counter, to_root
+        while len(out) < limit:
+            for link in self.links:
+                fc, fr, tc, tr, _ac = link
+                if tc == counter and (tr or None) == (root or None):
+                    out.append(link)
+                    counter, root = fc, fr
+                    break
+            else:
+                break
+        return out
 
     # --- store ---
 

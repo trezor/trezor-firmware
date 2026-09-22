@@ -931,14 +931,16 @@ impl ::protobuf::reflect::ProtobufValue for WardFlushQueueAck {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WardVerifyChain {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChain.links)
-    pub links: ::std::vec::Vec<super::messages_ward::WardChainLink>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChain.head_root)
+    pub head_root: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChain.nonce)
     pub nonce: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChain.timestamp)
     pub timestamp: ::std::option::Option<u64>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChain.wm_signature)
     pub wm_signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChain.anchor_counter)
+    pub anchor_counter: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardVerifyChain.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -953,6 +955,42 @@ impl<'a> ::std::default::Default for &'a WardVerifyChain {
 impl WardVerifyChain {
     pub fn new() -> WardVerifyChain {
         ::std::default::Default::default()
+    }
+
+    // optional bytes head_root = 5;
+
+    pub fn head_root(&self) -> &[u8] {
+        match self.head_root.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_head_root(&mut self) {
+        self.head_root = ::std::option::Option::None;
+    }
+
+    pub fn has_head_root(&self) -> bool {
+        self.head_root.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_head_root(&mut self, v: ::std::vec::Vec<u8>) {
+        self.head_root = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_head_root(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.head_root.is_none() {
+            self.head_root = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.head_root.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_head_root(&mut self) -> ::std::vec::Vec<u8> {
+        self.head_root.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     // optional bytes nonce = 2;
@@ -1046,13 +1084,32 @@ impl WardVerifyChain {
         self.wm_signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional uint32 anchor_counter = 6;
+
+    pub fn anchor_counter(&self) -> u32 {
+        self.anchor_counter.unwrap_or(0)
+    }
+
+    pub fn clear_anchor_counter(&mut self) {
+        self.anchor_counter = ::std::option::Option::None;
+    }
+
+    pub fn has_anchor_counter(&self) -> bool {
+        self.anchor_counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_anchor_counter(&mut self, v: u32) {
+        self.anchor_counter = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(5);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
-            "links",
-            |m: &WardVerifyChain| { &m.links },
-            |m: &mut WardVerifyChain| { &mut m.links },
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "head_root",
+            |m: &WardVerifyChain| { &m.head_root },
+            |m: &mut WardVerifyChain| { &mut m.head_root },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "nonce",
@@ -1068,6 +1125,11 @@ impl WardVerifyChain {
             "wm_signature",
             |m: &WardVerifyChain| { &m.wm_signature },
             |m: &mut WardVerifyChain| { &mut m.wm_signature },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "anchor_counter",
+            |m: &WardVerifyChain| { &m.anchor_counter },
+            |m: &mut WardVerifyChain| { &mut m.anchor_counter },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardVerifyChain>(
             "WardVerifyChain",
@@ -1087,8 +1149,8 @@ impl ::protobuf::Message for WardVerifyChain {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
-                10 => {
-                    self.links.push(is.read_message()?);
+                42 => {
+                    self.head_root = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 18 => {
                     self.nonce = ::std::option::Option::Some(is.read_bytes()?);
@@ -1098,6 +1160,9 @@ impl ::protobuf::Message for WardVerifyChain {
                 },
                 34 => {
                     self.wm_signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                48 => {
+                    self.anchor_counter = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -1111,10 +1176,9 @@ impl ::protobuf::Message for WardVerifyChain {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        for value in &self.links {
-            let len = value.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-        };
+        if let Some(v) = self.head_root.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(5, &v);
+        }
         if let Some(v) = self.nonce.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
@@ -1124,15 +1188,18 @@ impl ::protobuf::Message for WardVerifyChain {
         if let Some(v) = self.wm_signature.as_ref() {
             my_size += ::protobuf::rt::bytes_size(4, &v);
         }
+        if let Some(v) = self.anchor_counter {
+            my_size += ::protobuf::rt::uint32_size(6, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        for v in &self.links {
-            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
-        };
+        if let Some(v) = self.head_root.as_ref() {
+            os.write_bytes(5, v)?;
+        }
         if let Some(v) = self.nonce.as_ref() {
             os.write_bytes(2, v)?;
         }
@@ -1141,6 +1208,9 @@ impl ::protobuf::Message for WardVerifyChain {
         }
         if let Some(v) = self.wm_signature.as_ref() {
             os.write_bytes(4, v)?;
+        }
+        if let Some(v) = self.anchor_counter {
+            os.write_uint32(6, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1159,19 +1229,21 @@ impl ::protobuf::Message for WardVerifyChain {
     }
 
     fn clear(&mut self) {
-        self.links.clear();
+        self.head_root = ::std::option::Option::None;
         self.nonce = ::std::option::Option::None;
         self.timestamp = ::std::option::Option::None;
         self.wm_signature = ::std::option::Option::None;
+        self.anchor_counter = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static WardVerifyChain {
         static instance: WardVerifyChain = WardVerifyChain {
-            links: ::std::vec::Vec::new(),
+            head_root: ::std::option::Option::None,
             nonce: ::std::option::Option::None,
             timestamp: ::std::option::Option::None,
             wm_signature: ::std::option::Option::None,
+            anchor_counter: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1195,6 +1267,324 @@ impl ::protobuf::reflect::ProtobufValue for WardVerifyChain {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardChainRequest)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardChainRequest {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardChainRequest.to_counter)
+    pub to_counter: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardChainRequest.to_root)
+    pub to_root: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardChainRequest.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardChainRequest {
+    fn default() -> &'a WardChainRequest {
+        <WardChainRequest as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardChainRequest {
+    pub fn new() -> WardChainRequest {
+        ::std::default::Default::default()
+    }
+
+    // optional uint32 to_counter = 1;
+
+    pub fn to_counter(&self) -> u32 {
+        self.to_counter.unwrap_or(0)
+    }
+
+    pub fn clear_to_counter(&mut self) {
+        self.to_counter = ::std::option::Option::None;
+    }
+
+    pub fn has_to_counter(&self) -> bool {
+        self.to_counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_to_counter(&mut self, v: u32) {
+        self.to_counter = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes to_root = 2;
+
+    pub fn to_root(&self) -> &[u8] {
+        match self.to_root.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_to_root(&mut self) {
+        self.to_root = ::std::option::Option::None;
+    }
+
+    pub fn has_to_root(&self) -> bool {
+        self.to_root.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_to_root(&mut self, v: ::std::vec::Vec<u8>) {
+        self.to_root = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_to_root(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.to_root.is_none() {
+            self.to_root = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.to_root.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_to_root(&mut self) -> ::std::vec::Vec<u8> {
+        self.to_root.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "to_counter",
+            |m: &WardChainRequest| { &m.to_counter },
+            |m: &mut WardChainRequest| { &mut m.to_counter },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "to_root",
+            |m: &WardChainRequest| { &m.to_root },
+            |m: &mut WardChainRequest| { &mut m.to_root },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardChainRequest>(
+            "WardChainRequest",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardChainRequest {
+    const NAME: &'static str = "WardChainRequest";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.to_counter = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                18 => {
+                    self.to_root = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.to_counter {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.to_root.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.to_counter {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.to_root.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardChainRequest {
+        WardChainRequest::new()
+    }
+
+    fn clear(&mut self) {
+        self.to_counter = ::std::option::Option::None;
+        self.to_root = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardChainRequest {
+        static instance: WardChainRequest = WardChainRequest {
+            to_counter: ::std::option::Option::None,
+            to_root: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardChainRequest {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardChainRequest").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardChainRequest {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardChainRequest {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardChainLinkAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardChainLinkAck {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardChainLinkAck.links)
+    pub links: ::std::vec::Vec<super::messages_ward::WardChainLink>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardChainLinkAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardChainLinkAck {
+    fn default() -> &'a WardChainLinkAck {
+        <WardChainLinkAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardChainLinkAck {
+    pub fn new() -> WardChainLinkAck {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "links",
+            |m: &WardChainLinkAck| { &m.links },
+            |m: &mut WardChainLinkAck| { &mut m.links },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardChainLinkAck>(
+            "WardChainLinkAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardChainLinkAck {
+    const NAME: &'static str = "WardChainLinkAck";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.links.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.links {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.links {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardChainLinkAck {
+        WardChainLinkAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.links.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardChainLinkAck {
+        static instance: WardChainLinkAck = WardChainLinkAck {
+            links: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardChainLinkAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardChainLinkAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardChainLinkAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardChainLinkAck {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.ward.WardVerifyChainAck)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WardVerifyChainAck {
@@ -1203,6 +1593,8 @@ pub struct WardVerifyChainAck {
     pub counter: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChainAck.new_root)
     pub new_root: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChainAck.reverts_crossed)
+    pub reverts_crossed: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardVerifyChainAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1274,8 +1666,27 @@ impl WardVerifyChainAck {
         self.new_root.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional uint32 reverts_crossed = 3;
+
+    pub fn reverts_crossed(&self) -> u32 {
+        self.reverts_crossed.unwrap_or(0)
+    }
+
+    pub fn clear_reverts_crossed(&mut self) {
+        self.reverts_crossed = ::std::option::Option::None;
+    }
+
+    pub fn has_reverts_crossed(&self) -> bool {
+        self.reverts_crossed.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_reverts_crossed(&mut self, v: u32) {
+        self.reverts_crossed = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "counter",
@@ -1286,6 +1697,11 @@ impl WardVerifyChainAck {
             "new_root",
             |m: &WardVerifyChainAck| { &m.new_root },
             |m: &mut WardVerifyChainAck| { &mut m.new_root },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "reverts_crossed",
+            |m: &WardVerifyChainAck| { &m.reverts_crossed },
+            |m: &mut WardVerifyChainAck| { &mut m.reverts_crossed },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardVerifyChainAck>(
             "WardVerifyChainAck",
@@ -1311,6 +1727,9 @@ impl ::protobuf::Message for WardVerifyChainAck {
                 18 => {
                     self.new_root = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                24 => {
+                    self.reverts_crossed = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1329,6 +1748,9 @@ impl ::protobuf::Message for WardVerifyChainAck {
         if let Some(v) = self.new_root.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.reverts_crossed {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1340,6 +1762,9 @@ impl ::protobuf::Message for WardVerifyChainAck {
         }
         if let Some(v) = self.new_root.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.reverts_crossed {
+            os.write_uint32(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1360,6 +1785,7 @@ impl ::protobuf::Message for WardVerifyChainAck {
     fn clear(&mut self) {
         self.counter = ::std::option::Option::None;
         self.new_root = ::std::option::Option::None;
+        self.reverts_crossed = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -1367,6 +1793,7 @@ impl ::protobuf::Message for WardVerifyChainAck {
         static instance: WardVerifyChainAck = WardVerifyChainAck {
             counter: ::std::option::Option::None,
             new_root: ::std::option::Option::None,
+            reverts_crossed: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3754,13 +4181,18 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     zor.messages.ward.WardLeafContentR\x07content\x12\x18\n\x07counter\x18\
     \x04\x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x05\x20\x01(\x0cR\x03ma\
     c\x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauthCommit\x12\x1c\n\t\
-    remaining\x18\x08\x20\x02(\rR\tremainingJ\x04\x08\x07\x10\x08\"\xa6\x01\
-    \n\x0fWardVerifyChain\x12<\n\x05links\x18\x01\x20\x03(\x0b2&.hw.trezor.m\
-    essages.ward.WardChainLinkR\x05links\x12\x14\n\x05nonce\x18\x02\x20\x01(\
-    \x0cR\x05nonce\x12\x1c\n\ttimestamp\x18\x03\x20\x01(\x04R\ttimestamp\x12\
-    !\n\x0cwm_signature\x18\x04\x20\x01(\x0cR\x0bwmSignature\"I\n\x12WardVer\
-    ifyChainAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\
-    \n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\n\n\x08WardSync\"V\n\
+    remaining\x18\x08\x20\x02(\rR\tremainingJ\x04\x08\x07\x10\x08\"\xb2\x01\
+    \n\x0fWardVerifyChain\x12\x1b\n\thead_root\x18\x05\x20\x01(\x0cR\x08head\
+    Root\x12\x14\n\x05nonce\x18\x02\x20\x01(\x0cR\x05nonce\x12\x1c\n\ttimest\
+    amp\x18\x03\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_signature\x18\x04\x20\
+    \x01(\x0cR\x0bwmSignature\x12%\n\x0eanchor_counter\x18\x06\x20\x01(\rR\r\
+    anchorCounterJ\x04\x08\x01\x10\x02\"J\n\x10WardChainRequest\x12\x1d\n\nt\
+    o_counter\x18\x01\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x02\
+    \x20\x01(\x0cR\x06toRoot\"P\n\x10WardChainLinkAck\x12<\n\x05links\x18\
+    \x01\x20\x03(\x0b2&.hw.trezor.messages.ward.WardChainLinkR\x05links\"r\n\
+    \x12WardVerifyChainAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07count\
+    er\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12'\n\x0freve\
+    rts_crossed\x18\x03\x20\x01(\rR\x0erevertsCrossed\"\n\n\x08WardSync\"V\n\
     \x0bWardSyncAck\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\
     \x17\n\x07ward_id\x18\x02\x20\x01(\x0cR\x06wardId\x12\x18\n\x07counter\
     \x18\x03\x20\x01(\rR\x07counter\"\x84\x01\n\x15WardIngestAttestation\x12\
@@ -3805,11 +4237,13 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_ward::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(15);
+            let mut messages = ::std::vec::Vec::with_capacity(17);
             messages.push(WardEntryRequest::generated_message_descriptor_data());
             messages.push(WardLeafAck::generated_message_descriptor_data());
             messages.push(WardFlushQueueAck::generated_message_descriptor_data());
             messages.push(WardVerifyChain::generated_message_descriptor_data());
+            messages.push(WardChainRequest::generated_message_descriptor_data());
+            messages.push(WardChainLinkAck::generated_message_descriptor_data());
             messages.push(WardVerifyChainAck::generated_message_descriptor_data());
             messages.push(WardSync::generated_message_descriptor_data());
             messages.push(WardSyncAck::generated_message_descriptor_data());

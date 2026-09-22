@@ -245,6 +245,71 @@ def verify_chain_step(
     raise DataError("WARD: chain link is not authorised")
 
 
+def verify_chain_step_back(
+    k_auth: bytes,
+    k_mac: bytes,
+    ward_id: bytes,
+    running_counter: int,
+    running_root: "bytes | None",
+    link: "tuple",
+) -> "tuple[int, bytes | None, bool]":
+    """Fold one link backwards off the running head, or raise. Returns its PREDECESSOR.
+
+    The mirror of `verify_chain_step`, and deliberately a separate function rather than a flag:
+    which end is pinned is the whole security content of a walk, and a caller must not be able to
+    get it wrong by passing False.
+
+    WHY THE BACKWARD DIRECTION IS THE STRONGER ONE. Folding forward, the `from` end is pinned and
+    the `to` end is whatever the host supplies, so the walk's destination is the host's choice
+    until a terminal check catches it. Every device hands out an `auth_commit` on `WardLeafAck`
+    before it knows whether the write landed, so a host holds genuine links for transitions the
+    WM never accepted -- and a forward fold will follow one onto an orphaned branch, from which
+    nothing recovers: the counter cannot go back, no later chain from the real line reconnects,
+    and `rollback` needs an attestation that branch never had.
+
+    Backwards the `to` end is pinned by a state the caller has ALREADY established -- ultimately
+    by the WM's attestation of the head the walk anchored at. So every state reached is an
+    ancestor of a head the WM vouched for, and an orphan is refused here, on the root check,
+    before its MAC is ever computed. Not a rule that has to be remembered; the shape of the walk.
+
+    `link` is (from_counter, from_root, to_counter, to_root, auth_commit), as on the wire.
+    """
+    from trezor.wire import DataError
+
+    from .attest import root_or_empty
+
+    from_counter, from_root, to_counter, to_root, mac = link
+
+    # THE PINNED END. `verify_chain_step` checks these two against `from`; here they are `to`,
+    # and that inversion is the entire difference between the two directions.
+    if to_counter != running_counter:
+        raise DataError("WARD: chain link does not end at the running counter")
+    if root_or_empty(to_root) != root_or_empty(running_root):
+        raise DataError("WARD: chain link does not end at the running root")
+    if from_counter != running_counter - 1:
+        raise DataError("WARD: chain link must step the counter back by exactly one")
+
+    # Either tag, for the reason given above `verify_chain_step`: a demotion is a real transition
+    # and a history containing one must still be walkable. Reported, not swallowed.
+    if verify_auth_commit(
+        k_auth, k_mac, ward_id, from_counter, from_root, to_counter, to_root, mac
+    ):
+        return from_counter, from_root, False
+    if verify_auth_commit(
+        k_auth,
+        k_mac,
+        ward_id,
+        from_counter,
+        from_root,
+        to_counter,
+        to_root,
+        mac,
+        TAG_REVERT,
+    ):
+        return from_counter, from_root, True
+    raise DataError("WARD: chain link is not authorised")
+
+
 # --- the queued INTENT ---------------------------------------------------------------------
 #
 # A queued change can be exported for BACKUP and handed back later. What comes back is host-held

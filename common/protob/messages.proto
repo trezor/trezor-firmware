@@ -452,6 +452,12 @@ enum MessageType {
 
     // Retiring the pin on the APP side of the same argument. In messages-ward.proto rather than the
     // service file: which app may operate WARD is a question both builds have.
+    // The BACKWARD WALK's pull loop. `wire_out` is "the device asks" here, as on the service
+    // channel -- catch-up is the one connect flow the device drives, because the anchor has to be
+    // established before it knows which link to ask for.
+    MessageType_WardChainRequest = 2345 [(wire_out) = true];
+    MessageType_WardChainLinkAck = 2346 [(wire_in) = true];
+
     MessageType_WardResetApp = 2343 [(wire_in) = true];
     MessageType_WardResetAppAck = 2344 [(wire_out) = true];
 

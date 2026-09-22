@@ -872,6 +872,8 @@ class MessageType(IntEnum):
     WardFlushQueueApplied = 2340
     WardResetService = 2341
     WardResetServiceAck = 2342
+    WardChainRequest = 2345
+    WardChainLinkAck = 2346
     WardResetApp = 2343
     WardResetAppAck = 2344
     DisplayAddress = 2322
@@ -10567,24 +10569,58 @@ class WardFlushQueueAck(protobuf.MessageType):
 class WardVerifyChain(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2313
     FIELDS = {
-        1: protobuf.Field("links", "WardChainLink", repeated=True, required=False, default=None),
+        5: protobuf.Field("head_root", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
         4: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("anchor_counter", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        head_root: Optional["bytes"] = None,
+        nonce: Optional["bytes"] = None,
+        timestamp: Optional["int"] = None,
+        wm_signature: Optional["bytes"] = None,
+        anchor_counter: Optional["int"] = None,
+    ) -> None:
+        self.head_root = head_root
+        self.nonce = nonce
+        self.timestamp = timestamp
+        self.wm_signature = wm_signature
+        self.anchor_counter = anchor_counter
+
+
+class WardChainRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2345
+    FIELDS = {
+        1: protobuf.Field("to_counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        to_counter: Optional["int"] = None,
+        to_root: Optional["bytes"] = None,
+    ) -> None:
+        self.to_counter = to_counter
+        self.to_root = to_root
+
+
+class WardChainLinkAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2346
+    FIELDS = {
+        1: protobuf.Field("links", "WardChainLink", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         links: Optional[Sequence["WardChainLink"]] = None,
-        nonce: Optional["bytes"] = None,
-        timestamp: Optional["int"] = None,
-        wm_signature: Optional["bytes"] = None,
     ) -> None:
         self.links: Sequence["WardChainLink"] = links if links is not None else []
-        self.nonce = nonce
-        self.timestamp = timestamp
-        self.wm_signature = wm_signature
 
 
 class WardVerifyChainAck(protobuf.MessageType):
@@ -10592,6 +10628,7 @@ class WardVerifyChainAck(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("reverts_crossed", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10599,9 +10636,11 @@ class WardVerifyChainAck(protobuf.MessageType):
         *,
         counter: Optional["int"] = None,
         new_root: Optional["bytes"] = None,
+        reverts_crossed: Optional["int"] = None,
     ) -> None:
         self.counter = counter
         self.new_root = new_root
+        self.reverts_crossed = reverts_crossed
 
 
 class WardSync(protobuf.MessageType):

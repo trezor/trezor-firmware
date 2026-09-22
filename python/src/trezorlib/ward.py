@@ -85,6 +85,10 @@ class Answer(NamedTuple):
 # Answers a device pull, keyed by the opaque path.
 EntryProvider = Callable[[bytes], Answer]
 
+# (to_counter, to_root, limit) -> up to `limit` links ending at that state, NEWEST FIRST.
+# A link is (from_counter, from_root, to_counter, to_root, auth_commit).
+LinkSource = Callable[[int, Optional[bytes], int], list]
+
 
 class WardResult(NamedTuple):
     """What a WARD call returns.
@@ -447,45 +451,71 @@ def reconcile(session: "Session", root: Optional[bytes]) -> messages.WardReconci
 
 
 def verify_chain(
-    session: "Session", links, attestation: Optional[tuple] = None
+    session: "Session",
+    head_root: Optional[bytes],
+    link_source: LinkSource,
+    attestation: Optional[tuple] = None,
+    max_links_per_ack: int = 64,
 ) -> messages.WardVerifyChainAck:
-    """Adopt the attested head by proving it descends from the device's current one.
+    """Adopt a WM-attested head by proving the device's own head is an ANCESTOR of it.
 
-    Used instead of `reconcile` when the device has fallen more than a step behind.
-    `links` are ordered from the device's own head forward.
+    Used instead of `reconcile` when the device has fallen more than a step behind. THE DEVICE
+    DRIVES: it anchors at the attested head and then asks for predecessors, walking backwards,
+    until it reaches the head it already holds. This function is the host half of that loop --
+    the same shape as `btc.sign_tx`'s TxRequest exchange.
 
-    `attestation` makes this a STAGED batch: the archived
-    `(nonce, counter, mac, timestamp, wm_signature)` for the head these links arrive at, rather
-    than the one attested in this round. The device folds descent as always, persists the
-    result and STAYS OFFLINE -- an intermediate is not current. Needed because links are one
-    unchunked field in an 8704-byte buffer, so roughly 77 fit and a device further behind than
-    that cannot catch up in a single message. Omit it for the final batch, which ends at the
-    live head and latches online.
+    `head_root` is the root at the anchored head. The device accepts it only because it
+    reproduces the mac the WM signed, so a wrong one fails rather than being followed.
 
-    The device names its own destination: it computes the counter and mac from where the fold
-    arrived, so only the signature comes from here.
+    `link_source(to_counter, to_root, limit)` must return up to `limit` links ending at that exact
+    state, NEWEST FIRST and contiguous -- each one's `from` end being the next one's `to` end.
+    Links are the usual `(from_counter, from_root, to_counter, to_root, auth_commit)` 5-tuples.
+    Returning fewer is always fine; returning none ends the walk with a failure, which is the
+    honest answer when the host does not hold that range.
+
+    `attestation` anchors the walk on an ARCHIVED head instead of the one attested in this round:
+    the `(nonce, counter, mac, timestamp, wm_signature)` the host kept from when that head was
+    current. Descent is then proved in full and currency is not claimed at all -- the device
+    adopts, settles, and stays OFFLINE. Omit it to anchor on this round's attestation, which is
+    what latches online.
+
+    The device names no mac either way. On the archived path it derives one from `head_root`
+    itself, so the host can only fail to hold a signature over what the device computed.
     """
-    nonce = timestamp = wm_signature = None
+    nonce = timestamp = wm_signature = anchor_counter = None
     if attestation is not None:
-        nonce, _counter, _mac, timestamp, wm_signature = attestation
-    return session.call(
+        nonce, anchor_counter, _mac, timestamp, wm_signature = attestation
+
+    res = session.call(
         messages.WardVerifyChain(
+            head_root=head_root,
             nonce=nonce,
             timestamp=timestamp,
             wm_signature=wm_signature,
-            links=[
-                messages.WardChainLink(
-                    from_counter=fc,
-                    from_root=fr,
-                    to_counter=tc,
-                    to_root=tr,
-                    auth_commit=ac,
-                )
-                for (fc, fr, tc, tr, ac) in links
-            ]
-        ),
-        expect=messages.WardVerifyChainAck,
+            anchor_counter=anchor_counter,
+        )
     )
+
+    while isinstance(res, messages.WardChainRequest):
+        links = link_source(res.to_counter, res.to_root, max_links_per_ack)
+        res = session.call(
+            messages.WardChainLinkAck(
+                links=[
+                    messages.WardChainLink(
+                        from_counter=fc,
+                        from_root=fr,
+                        to_counter=tc,
+                        to_root=tr,
+                        auth_commit=ac,
+                    )
+                    for (fc, fr, tc, tr, ac) in links
+                ]
+            )
+        )
+
+    if not isinstance(res, messages.WardVerifyChainAck):
+        raise RuntimeError(f"unexpected response to the chain walk: {res}")
+    return res
 
 
 def rollback(

@@ -162,8 +162,15 @@ def attestation_preimage(
 # root that genuinely held that counter -- it cannot be re-dated onto another.
 #
 # IF THIS PATH EVER ANSWERS THE FIRST QUESTION, THE ECLIPSE PROTECTION IS GONE. Callers are
-# therefore enumerated deliberately: rollback, and staged catch-up. Not `ingest`, not `recover`,
-# not `service.sync`, not `service.publish` -- each of those decides currency.
+# therefore enumerated deliberately: `rollback`, and `verify_chain` when a walk is anchored on an
+# ARCHIVED head. Not `ingest`, not `recover`, not `service.sync`, not `service.publish` -- each of
+# those decides currency.
+#
+# The second caller is the one to watch, because it looks like adoption and adoption normally does
+# decide currency. It does not here: an archived anchor proves the WM really held that head, which
+# is all DESCENT needs, and `adopt(current=False)` is what keeps the walk from latching on the
+# strength of it. Descent from a genuine past head is a complete proof of lineage and no claim at
+# all about the present.
 # ---------------------------------------------------------------------------
 
 

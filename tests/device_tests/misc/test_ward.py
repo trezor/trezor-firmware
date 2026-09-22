@@ -62,6 +62,7 @@ from ...ward_app import (  # noqa: F401  -- ward_app_pinned is an autouse fixtur
     ward_app_pinned,
 )
 from ...ward_keys import derive_k_sig  # noqa: F401  -- asserted via ward_id below
+from ...ward_keys import TAG_REVERT
 from ...ward_keys import (
     auth_commit,
     bip39_seed,
@@ -1434,6 +1435,58 @@ def _link(from_counter, from_root, to_counter, to_root):
     )
 
 
+def _revert_link(from_counter, from_root, to_counter, to_root):
+    """A DEMOTION minted by "another device of this wallet".
+
+    The counter still moves FORWARD -- `rollback` emits (c, head) -> (c+1, an older root), so a
+    revert is a real transition and the history containing it stays walkable. What makes it a
+    revert is the tag, which is the only thing telling the WM (and a catching-up device) that the
+    state it carries is being restored rather than written.
+    """
+    return (
+        from_counter,
+        from_root,
+        to_counter,
+        to_root,
+        auth_commit(
+            _K_AUTH,
+            _K_MAC,
+            _WARD_ID,
+            from_counter,
+            from_root,
+            to_counter,
+            to_root,
+            TAG_REVERT,
+        ),
+    )
+
+
+def _serves(links):
+    """A `link_source` for `ward.verify_chain` backed by a fixed list of links.
+
+    The device walks BACKWARDS from the anchored head, asking for the link that ends at a
+    specific (counter, root) -- so this answers by the `to` end, newest first, exactly as a host
+    indexing its transition log would. A real host uses `WardTrie.links_ending_at`; these tests
+    build their links by hand, so they need the same lookup over a plain list.
+    """
+
+    def source(to_counter, to_root, limit):
+        out = []
+        counter, root = to_counter, to_root
+        while len(out) < limit:
+            for link in links:
+                fc, fr, tc, tr, _ac = link
+                if tc == counter and (tr or None) == (root or None):
+                    out.append(link)
+                    counter, root = fc, fr
+                    break
+            else:
+                break
+        return out
+
+    return source
+
+
 @pytest.mark.models("core")
 def test_ward_catches_up_across_transitions_it_never_saw(session: Session):
     """The device adopts a head two steps ahead, by verifying each step.
@@ -1461,7 +1514,7 @@ def test_ward_catches_up_across_transitions_it_never_saw(session: Session):
     mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
     sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
     ward.ingest_attestation(session, target, mac, sig, _T0 + target)
-    res = ward.verify_chain(session, links)
+    res = ward.verify_chain(session, head.root(), _serves(links))
 
     assert res.counter == target
     assert res.new_root == head.root()
@@ -1470,6 +1523,166 @@ def test_ward_catches_up_across_transitions_it_never_saw(session: Session):
     head.counter = target
     _res, rec = _read(session, head, lambda p: ward.get_entry(session, _APP, b"b", p))
     assert "two" in rec.text
+
+
+@pytest.mark.models("core")
+def test_ward_catches_up_further_than_one_ack_can_carry(session: Session):
+    """THE REASON THE WALK IS A PULL, and the case the old forward push could not express.
+
+    Links used to travel as one unchunked repeated field in an 8704-byte buffer -- about 77 of
+    them -- so a device further behind than that could not catch up in a single message at all,
+    and the workaround was to persist intermediate heads proved by archived attestations. Pulling
+    them instead moves that ceiling from the WALK to one ACK: the device asks again, and again,
+    and nothing is persisted until it arrives.
+
+    `max_links_per_ack=2` here stands in for the buffer. Five transitions therefore take three
+    round trips, and the call count is asserted rather than assumed -- a walk that silently fitted
+    everything into one ack would pass every other assertion in this test.
+    """
+    store = WardTrie()
+    k1 = _seed(session, store, b"a", b"one")
+    k2 = _seed(session, store, b"b", b"two")
+    k3 = _seed(session, store, b"c", b"three")
+    base_counter, base_root = store.counter, store.root()
+
+    # five transitions made elsewhere while this device was away; distinct leaf sets, so
+    # distinct roots -- a repeat would let a step be satisfied by the wrong link
+    states = [
+        _subset(store, [k1]),
+        _subset(store, [k1, k2]),
+        _subset(store, [k2, k3]),
+        _subset(store, [k1, k2, k3]),
+        _subset(store, [k3]),
+    ]
+    assert len({st.root() for st in states}) == len(states)
+
+    links = []
+    counter, root = base_counter, base_root
+    for st in states:
+        links.append(_link(counter, root, counter + 1, st.root()))
+        counter, root = counter + 1, st.root()
+    head, target = states[-1], counter
+
+    wm = MockWM()
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
+    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
+
+    asked = []
+    serve = _serves(links)
+
+    def counting(to_counter, to_root, limit):
+        asked.append(to_counter)
+        return serve(to_counter, to_root, limit)
+
+    res = ward.verify_chain(session, head.root(), counting, max_links_per_ack=2)
+
+    assert res.counter == target
+    assert res.new_root == head.root()
+    # THE PULL ACTUALLY LOOPED: three acks for five links, each request naming the state whose
+    # predecessor it wants -- walking DOWN from the anchored head, not up from our own.
+    assert asked == [target, target - 2, target - 4]
+
+    # ...and the tree it adopted is the one it now verifies reads against
+    head.counter = target
+    _res, rec = _read(session, head, lambda p: ward.get_entry(session, _APP, b"c", p))
+    assert "three" in rec.text
+
+
+@pytest.mark.models("core")
+def test_ward_catches_up_across_a_revert_to_a_state_below_its_own_head(session: Session):
+    """The walk crosses a DEMOTION, and the state it restores is one from below this device.
+
+    Another device rolled the wallet back while this one was away. The counter still moved
+    forward -- `rollback` emits (c, head) -> (c+1, an older root) -- so the history is walkable
+    and the backward chain reaches this device's head exactly as it would across ordinary writes.
+    What comes out the far end is a HIGHER counter carrying an OLDER tree: the adopted root here
+    is the one the wallet had before this device's own last write.
+
+    That combination is what makes a revert different from everything else the walk can cross. An
+    ordinary catch-up only ever adds; this one takes away, and what it takes away is a change this
+    device already saw as committed.
+
+    SO THE DEVICE SAYS SO, AND ONLY SAYS SO. `_warn_reached_by_revert` shows a warning after the
+    adoption. Not a confirmation: the demotion already happened, a holder of this wallet's K_auth
+    issued it behind a hold-to-confirm screen, and the WM accepted it. This device is catching up
+    to what the wallet already is, and refusing would not undo anything -- it would only leave the
+    device unable to sync. A prompt answerable one way is an obstacle, not consent.
+
+    DELIBERATELY NOT DONE: re-queuing the discarded changes. A rollback is a deliberate act, and
+    republishing what it discarded is this device overruling another's decision -- with two
+    devices it does not even terminate, since A reverts, B republishes and A reverts again.
+
+    A COUNT IS THE WHOLE ANSWER, decided rather than settled for. Naming the discarded entries
+    would need the counter the restored root originally belonged to, which is not on
+    `WardChainLink` and could only be put there inside `auth_commit`'s preimage -- anything
+    outside the MAC is forgeable. What a user acts on is that the wallet went backwards and by how
+    many steps; the entries themselves are what the next read shows against the restored tree.
+    """
+    store = WardTrie()
+    k1 = _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+    here_counter, here_root = store.counter, store.root()
+
+    # The state the wallet held BEFORE this device's last write -- a1 alone. This is what the
+    # demotion restores, and it sits below `here_counter`.
+    restored = _subset(store, [k1])
+    assert restored.root() != here_root
+
+    # elsewhere: one ordinary write, then a demotion back past both of them
+    mid = _subset(store, [])
+    links = [
+        _link(here_counter, here_root, here_counter + 1, mid.root()),
+        _revert_link(
+            here_counter + 1, mid.root(), here_counter + 2, restored.root()
+        ),
+    ]
+    target = here_counter + 2
+
+    wm = MockWM()
+    ack = ward.sync(session)
+    mac = root_mac(_K_MAC, _WARD_ID, target, restored.root())
+    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
+    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
+
+    # ONE REQUEST: the host serves both predecessors in a single ack, since `_serves` walks the
+    # chain it was given. Then the WARNING, then the ack.
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            [
+                m.WardChainRequest,
+                m.ButtonRequest(name="ward_chain_revert"),
+                m.WardVerifyChainAck,
+            ]
+        )
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        res = ward.verify_chain(session, restored.root(), _serves(links))
+
+    # THE SCREEN IS THE POINT. Adoption already happened and cannot be refused -- declining would
+    # not undo the demotion, only leave this device unable to sync -- so this is told, not asked.
+    # What must not happen is silence: a change the user approved is gone.
+    assert "discarded" in rec.text
+    assert "1 change" in rec.text
+    # ...and the same count goes back to the host, for a UI that wants to say it too
+    assert res.reverts_crossed == 1
+
+    # A HIGHER COUNTER CARRYING AN OLDER TREE. Both halves matter: the counter must advance or the
+    # device would be going backwards, and the root must be the old one or nothing was restored.
+    assert res.counter == target
+    assert res.new_root == restored.root()
+    assert res.new_root != here_root
+
+    # the restored tree is what reads verify against now, and the entry that survived the
+    # demotion still opens
+    restored.counter = target
+    _res, rec = _read(
+        session, restored, lambda p: ward.get_entry(session, _APP, b"a", p)
+    )
+    assert "one" in rec.text
 
 
 @pytest.mark.models("core")
@@ -1507,7 +1720,7 @@ def test_ward_verify_chain_brings_a_fresh_session_online(session: Session):
     _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
     ward.ingest_attestation(fresh, store.counter, mac, sig, _T0 + store.counter)
 
-    res = ward.verify_chain(fresh, [])
+    res = ward.verify_chain(fresh, store.root(), _serves([]))
     assert res.counter == store.counter
     assert res.new_root == store.root()
 
@@ -1539,7 +1752,7 @@ def test_ward_refuses_a_chain_with_a_gap(session: Session):
     ward.ingest_attestation(session, target, mac, sig, _T0 + target)
 
     with pytest.raises(exceptions.TrezorFailure, match="exactly one"):
-        ward.verify_chain(session, links)
+        ward.verify_chain(session, head.root(), _serves(links))
 
 
 @pytest.mark.models("core")
@@ -1564,9 +1777,9 @@ def test_ward_refuses_a_chain_that_does_not_start_at_its_own_head(session: Sessi
     ward.ingest_attestation(session, target, mac, sig, _T0 + target)
 
     with pytest.raises(
-        exceptions.TrezorFailure, match="does not follow the running root"
+        exceptions.TrezorFailure, match="does not descend from this device's head"
     ):
-        ward.verify_chain(session, links)
+        ward.verify_chain(session, head.root(), _serves(links))
 
 
 @pytest.mark.models("core")
@@ -1587,7 +1800,7 @@ def test_ward_refuses_an_unauthorised_link(session: Session):
     ward.ingest_attestation(session, target, mac, sig, _T0 + target)
 
     with pytest.raises(exceptions.TrezorFailure, match="not authorised"):
-        ward.verify_chain(session, forged)
+        ward.verify_chain(session, head.root(), _serves(forged))
 
 
 @pytest.mark.models("core")
@@ -1616,7 +1829,7 @@ def test_ward_refuses_a_chain_that_ends_somewhere_else(session: Session):
     with pytest.raises(
         exceptions.TrezorFailure, match="does not match the attested mac"
     ):
-        ward.verify_chain(session, links)
+        ward.verify_chain(session, elsewhere.root(), _serves(links))
 
 
 @pytest.mark.models("core")

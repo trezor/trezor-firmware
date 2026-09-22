@@ -1198,6 +1198,97 @@ class TestWardCas(unittest.TestCase):
             )
         self.assertEqual((counter, root), (2, self.R2))
 
+    def test_a_genuine_chain_folds_BACKWARDS_to_its_tail(self):
+        """The direction `verify_chain` actually walks.
+
+        Anchored at the head and stepping back, each link's `to` end is pinned by a state already
+        established -- ultimately by the WM's attestation of the anchor -- rather than its `from`
+        end being pinned and its `to` end left to the host.
+        """
+        counter, root = 2, self.R2
+        for link in (
+            self._link(1, self.R1, 2, self.R2),
+            self._link(0, None, 1, self.R1),
+        ):
+            counter, root, _reverted = CAS.verify_chain_step_back(
+                self.K_AUTH, self.K_MAC, self.WARD_ID, counter, root, link
+            )
+        self.assertEqual((counter, root), (0, None))
+
+    def test_the_backward_chain_refuses_an_ORPHANED_candidate(self):
+        """THE PROPERTY THE BACKWARD WALK EXISTS FOR, and the forward fold does not have.
+
+        A device hands out an `auth_commit` on WardLeafAck before it knows whether the write
+        landed, so a host holds genuine links for transitions the WM never accepted. R1 and R2
+        here are two such candidates for counter 1: both authorised, only one of them history.
+
+        Folding FORWARD from (0, None) either is accepted, because the `to` end is the host's to
+        choose. Walking BACK from the head the WM attested, the orphan is refused on the root
+        check before its MAC is ever computed -- not by a rule that has to be remembered, but
+        because the walk asked for the link ending somewhere else.
+        """
+        orphan = self._link(0, None, 1, self.R2)  # authorised, and never the head
+        real = self._link(0, None, 1, self.R1)  # the branch the WM took
+
+        # forward, the orphan is indistinguishable: both fold cleanly off (0, None)
+        for candidate in (orphan, real):
+            CAS.verify_chain_step(
+                self.K_AUTH, self.K_MAC, self.WARD_ID, 0, None, candidate
+            )
+
+        # backward, anchored at (1, R1), only the real one is admissible
+        counter, root, _r = CAS.verify_chain_step_back(
+            self.K_AUTH, self.K_MAC, self.WARD_ID, 1, self.R1, real
+        )
+        self.assertEqual((counter, root), (0, None))
+        with self.assertRaises(DataError):
+            CAS.verify_chain_step_back(
+                self.K_AUTH, self.K_MAC, self.WARD_ID, 1, self.R1, orphan
+            )
+
+    def test_the_backward_chain_refuses_every_way_of_lying_with_real_links(self):
+        """The mirror of the forward case: authentic links, wrong placement."""
+        # a gap
+        with self.assertRaises(DataError):
+            CAS.verify_chain_step_back(
+                self.K_AUTH,
+                self.K_MAC,
+                self.WARD_ID,
+                2,
+                self.R2,
+                self._link(0, None, 2, self.R2),
+            )
+        # a link ending at another branch's root at the right counter
+        with self.assertRaises(DataError):
+            CAS.verify_chain_step_back(
+                self.K_AUTH,
+                self.K_MAC,
+                self.WARD_ID,
+                2,
+                self.R1,
+                self._link(1, self.R1, 2, self.R2),
+            )
+        # a link ending at a counter the walk is not at
+        with self.assertRaises(DataError):
+            CAS.verify_chain_step_back(
+                self.K_AUTH,
+                self.K_MAC,
+                self.WARD_ID,
+                5,
+                self.R2,
+                self._link(1, self.R1, 2, self.R2),
+            )
+        # and one that was never authorised at all
+        with self.assertRaises(DataError):
+            CAS.verify_chain_step_back(
+                self.K_AUTH,
+                self.K_MAC,
+                self.WARD_ID,
+                1,
+                self.R1,
+                (0, None, 1, self.R1, bytes(32)),
+            )
+
     def test_the_chain_refuses_every_way_of_lying_with_real_links(self):
         """Each link here is individually authentic; only its placement is wrong. That is
         the interesting case -- forged links are the easy half."""
