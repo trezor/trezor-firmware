@@ -10568,14 +10568,23 @@ class WardVerifyChain(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2313
     FIELDS = {
         1: protobuf.Field("links", "WardChainLink", repeated=True, required=False, default=None),
+        2: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
+        4: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         links: Optional[Sequence["WardChainLink"]] = None,
+        nonce: Optional["bytes"] = None,
+        timestamp: Optional["int"] = None,
+        wm_signature: Optional["bytes"] = None,
     ) -> None:
         self.links: Sequence["WardChainLink"] = links if links is not None else []
+        self.nonce = nonce
+        self.timestamp = timestamp
+        self.wm_signature = wm_signature
 
 
 class WardVerifyChainAck(protobuf.MessageType):
@@ -10695,6 +10704,9 @@ class WardRollback(protobuf.MessageType):
         3: protobuf.Field("from_counter", "uint32", repeated=False, required=False, default=None),
         4: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
         5: protobuf.Field("to_counter", "uint32", repeated=False, required=False, default=None),
+        6: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
+        8: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10705,12 +10717,18 @@ class WardRollback(protobuf.MessageType):
         from_counter: Optional["int"] = None,
         from_root: Optional["bytes"] = None,
         to_counter: Optional["int"] = None,
+        nonce: Optional["bytes"] = None,
+        timestamp: Optional["int"] = None,
+        wm_signature: Optional["bytes"] = None,
     ) -> None:
         self.to_root = to_root
         self.auth_commit = auth_commit
         self.from_counter = from_counter
         self.from_root = from_root
         self.to_counter = to_counter
+        self.nonce = nonce
+        self.timestamp = timestamp
+        self.wm_signature = wm_signature
 
 
 class WardRollbackAck(protobuf.MessageType):

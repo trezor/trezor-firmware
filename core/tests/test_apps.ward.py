@@ -878,6 +878,87 @@ class TestWardAttestation(unittest.TestCase):
 
         return ed25519.sign(seed or self.WM_SEED, message)
 
+    # --- the two verification paths, and the line between them ---------------------
+
+    def test_an_archived_attestation_cannot_answer_the_live_question(self):
+        """THE PROPERTY THAT REPLACES THE NONCE'S ANTI-STOCKPILING GUARANTEE.
+
+        The nonce exists so a host cannot keep "a drawer of previously-signed anchors and serve
+        whichever suits it" -- the device mints it before the host reaches the WM, so the WM must
+        sign a value nobody could know in advance. An archive of attestations IS that drawer, and
+        it is admitted only because it answers a different question: not "is this the head now"
+        but "was this ever a head".
+
+        This pins the line. A tuple signed under one round's nonce must NOT verify against
+        another round's -- which is what keeps the archive out of every path that decides
+        currency, without those paths needing to know the archive exists.
+        """
+        archived_nonce = bytes([0xA1]) * 32
+        live_nonce = self.NONCE
+        self.assertNotEqual(archived_nonce, live_nonce)
+
+        mac = A.root_mac(self.K_MAC, self.WARD_ID, 41, self.ROOT)
+        sig = self._sign(
+            A.attestation_preimage(self.WARD_ID, archived_nonce, 41, mac, self.TIME)
+        )
+
+        # it verifies as HISTORY, under the nonce it was minted for...
+        self.assertTrue(
+            A.verify_archived_attestation(
+                self.WARD_ID, archived_nonce, 41, mac, self.TIME, sig
+            )
+        )
+        # ...and is refused as CURRENCY by the round-bound path, which only ever offers the
+        # nonce of the round actually open. This is the whole separation, in one assertion.
+        self.assertFalse(
+            A.verify_attestation(self.WARD_ID, live_nonce, 41, mac, self.TIME, sig)
+        )
+
+    def test_the_archived_path_is_not_a_weaker_check(self):
+        """It refuses forgeries exactly as the live path does -- the difference is the QUESTION,
+        not the rigour. A tuple the WM never signed is refused whichever door it arrives at."""
+        mac = A.root_mac(self.K_MAC, self.WARD_ID, 41, self.ROOT)
+        genuine = self._sign(
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 41, mac, self.TIME)
+        )
+
+        # wrong signer
+        forged = self._sign(
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 41, mac, self.TIME),
+            seed=b"NOT THE WARD MANAGER DEBUG KEY!!",
+        )
+        self.assertFalse(
+            A.verify_archived_attestation(
+                self.WARD_ID, self.NONCE, 41, mac, self.TIME, forged
+            )
+        )
+        # every operand is bound: a different counter or mac does not verify
+        self.assertFalse(
+            A.verify_archived_attestation(
+                self.WARD_ID, self.NONCE, 42, mac, self.TIME, genuine
+            )
+        )
+        self.assertFalse(
+            A.verify_archived_attestation(
+                self.WARD_ID, self.NONCE, 41, bytes(32), self.TIME, genuine
+            )
+        )
+
+    def test_an_archived_mac_cannot_be_re_dated(self):
+        """WHY THE COUNTER LIVES INSIDE root_mac, stated as the attack it prevents.
+
+        If a mac committed only to the root, a host holding an old attestation could pair it
+        with any counter: the WM's signature covers the counter, but nothing would tie that
+        counter to the root supplied at adoption. The device would take a year-old tree as
+        today's state -- a silent rollback that reads as forward progress.
+
+        Because the counter IS inside the mac, an archived (counter, mac) is satisfiable by
+        exactly one root at exactly one moment.
+        """
+        mac_at_41 = A.root_mac(self.K_MAC, self.WARD_ID, 41, self.ROOT)
+        mac_at_99 = A.root_mac(self.K_MAC, self.WARD_ID, 99, self.ROOT)
+        self.assertNotEqual(mac_at_41, mac_at_99)
+
     def test_debug_key_matches_its_seed(self):
         """The compiled debug pubkey really is this seed's, or every test below is vacuous."""
         from trezor.crypto.curve import ed25519

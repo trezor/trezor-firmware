@@ -7,9 +7,17 @@ if TYPE_CHECKING:
 async def rollback(msg: WardRollback) -> WardRollbackAck:
     """Demote the head to an earlier state of this wallet, with the user's consent.
 
-    This is the escape from a wallet no host can serve, and it deliberately needs NO
-    attestation -- requiring one would make the escape unavailable in the situation it
-    exists for.
+    This is the escape from a wallet no host can serve. It once needed NO attestation at all,
+    on the reasoning that requiring one would make the escape unavailable in the very situation
+    it exists for. That reasoning was aimed at a LIVE attestation, which would need the WM
+    reachable; it does not apply to an ARCHIVED one, which the host already holds.
+
+    SO A DEMOTION NOW REQUIRES THE ARCHIVED ATTESTATION FOR ITS TARGET, and the trade is
+    deliberate: it closes the orphaned-fork gap described below, at the cost of narrowing the
+    escape to hosts that kept their attestations. A host that never archived, or lost the
+    archive, cannot roll back -- and since nothing archived them before this change, every head
+    predating it is un-rollback-able until the host has synced once more. The refusal says so
+    rather than failing opaquely.
 
     WHY, PRECISELY. The freshness authority and the data store are DIFFERENT SYSTEMS. The WM
     vouches for (counter, mac); the leaves live in an eventually-consistent store. A host
@@ -34,10 +42,20 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     matters more than it sounds: it is what lets the screen state a number the user can act
     on.
 
-    WHAT IS NOT PROVEN, AND MUST NOT BE IMPLIED. The target is no longer required to be the
-    immediate predecessor of the current head, so:
+    WHAT THE ARCHIVED ATTESTATION ADDS. The link above proves a holder of K_auth authorised the
+    target; it says nothing about whether the target was ever AUTHORITATIVE. The attestation the
+    WM issued when that head was current does, and the two together are the full claim: a device
+    of this wallet built it, and the WM actually held it. Checked with
+    `attest.verify_archived_attestation` -- a deliberately separate entry point, because its
+    nonce comes from the host rather than an open round and it must therefore never be able to
+    decide what is CURRENT. See the note above that function.
 
-      a host may present ANY historical link, including one from an orphaned fork;
+    Re-dating is what makes the replay safe: `root_mac` binds the counter, so the archived
+    (counter, mac) can only be satisfied by the root that genuinely held that counter.
+
+    WHAT IS STILL NOT PROVEN, AND MUST NOT BE IMPLIED. The target is no longer required to be
+    the immediate predecessor of the current head, so:
+
       rollbacks can now CHAIN, which they could not before -- a rollback's own transition is
         authorised as a REVERT and this check demands a COMMIT, so the presented link is
         always a historical COMMIT and nothing stops a second demotion.
@@ -111,6 +129,30 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     ):
         raise DataError("auth_commit does not describe the target state")
 
+    # ...AND THE TARGET WAS ACTUALLY THE HEAD, not merely a state some device authorised. The
+    # check above cannot tell an orphaned fork from the real line; this one can, because only
+    # the WM could have signed it and it signs what it actually held.
+    #
+    # `verify_archived_attestation`, never `verify_round_attestation`: the nonce is the host's,
+    # so this may establish HISTORY and must never establish CURRENCY. Rollback is a demotion --
+    # the counter still moves forward and the user still holds to confirm -- so nothing here
+    # claims the target is current.
+    from .attest import root_mac, verify_archived_attestation
+
+    archived_nonce = msg.nonce
+    archived_sig = msg.wm_signature
+    if archived_nonce is None or archived_sig is None:
+        raise DataError(
+            "no confirmed-head proof for this target; the host must supply the attestation it "
+            "archived for that counter"
+        )
+
+    target_mac = root_mac(k_mac, ward_id, to_counter, to_root)
+    if not verify_archived_attestation(
+        ward_id, archived_nonce, to_counter, target_mac, msg.timestamp or 0, archived_sig
+    ):
+        raise DataError("the WM never attested this target as its head")
+
     # Both numbers come from authenticated values: `counter` is the device's own, and
     # `to_counter` is covered by the MAC just verified.
     #
@@ -127,6 +169,10 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
         ),
     ]
     props.append(("Restoring", "change #%d" % to_counter, False))
+    # SAYS WHAT WAS PROVEN, now that it is proven. The target is not merely a state some device
+    # of this wallet once authorised -- the WM confirmed it as its head, and the line above is
+    # the only place the user learns which of those two it is.
+    props.append(("Target", "Confirmed by the WARD Manager.", False))
     props.append(("Warning", "Discarded changes cannot be recovered.", False))
     props.append(WARNING_UNVERIFIED)
 

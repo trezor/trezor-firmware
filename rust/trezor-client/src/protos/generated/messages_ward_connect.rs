@@ -933,6 +933,12 @@ pub struct WardVerifyChain {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChain.links)
     pub links: ::std::vec::Vec<super::messages_ward::WardChainLink>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChain.nonce)
+    pub nonce: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChain.timestamp)
+    pub timestamp: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardVerifyChain.wm_signature)
+    pub wm_signature: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardVerifyChain.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -949,13 +955,119 @@ impl WardVerifyChain {
         ::std::default::Default::default()
     }
 
+    // optional bytes nonce = 2;
+
+    pub fn nonce(&self) -> &[u8] {
+        match self.nonce.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_nonce(&mut self) {
+        self.nonce = ::std::option::Option::None;
+    }
+
+    pub fn has_nonce(&self) -> bool {
+        self.nonce.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_nonce(&mut self, v: ::std::vec::Vec<u8>) {
+        self.nonce = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_nonce(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.nonce.is_none() {
+            self.nonce = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.nonce.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_nonce(&mut self) -> ::std::vec::Vec<u8> {
+        self.nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional uint64 timestamp = 3;
+
+    pub fn timestamp(&self) -> u64 {
+        self.timestamp.unwrap_or(0)
+    }
+
+    pub fn clear_timestamp(&mut self) {
+        self.timestamp = ::std::option::Option::None;
+    }
+
+    pub fn has_timestamp(&self) -> bool {
+        self.timestamp.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_timestamp(&mut self, v: u64) {
+        self.timestamp = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes wm_signature = 4;
+
+    pub fn wm_signature(&self) -> &[u8] {
+        match self.wm_signature.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_wm_signature(&mut self) {
+        self.wm_signature = ::std::option::Option::None;
+    }
+
+    pub fn has_wm_signature(&self) -> bool {
+        self.wm_signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_wm_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.wm_signature = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_wm_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.wm_signature.is_none() {
+            self.wm_signature = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.wm_signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_wm_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.wm_signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "links",
             |m: &WardVerifyChain| { &m.links },
             |m: &mut WardVerifyChain| { &mut m.links },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "nonce",
+            |m: &WardVerifyChain| { &m.nonce },
+            |m: &mut WardVerifyChain| { &mut m.nonce },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "timestamp",
+            |m: &WardVerifyChain| { &m.timestamp },
+            |m: &mut WardVerifyChain| { &mut m.timestamp },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "wm_signature",
+            |m: &WardVerifyChain| { &m.wm_signature },
+            |m: &mut WardVerifyChain| { &mut m.wm_signature },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardVerifyChain>(
             "WardVerifyChain",
@@ -978,6 +1090,15 @@ impl ::protobuf::Message for WardVerifyChain {
                 10 => {
                     self.links.push(is.read_message()?);
                 },
+                18 => {
+                    self.nonce = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                24 => {
+                    self.timestamp = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                34 => {
+                    self.wm_signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -994,6 +1115,15 @@ impl ::protobuf::Message for WardVerifyChain {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         };
+        if let Some(v) = self.nonce.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.timestamp {
+            my_size += ::protobuf::rt::uint64_size(3, v);
+        }
+        if let Some(v) = self.wm_signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1003,6 +1133,15 @@ impl ::protobuf::Message for WardVerifyChain {
         for v in &self.links {
             ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
         };
+        if let Some(v) = self.nonce.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.timestamp {
+            os.write_uint64(3, v)?;
+        }
+        if let Some(v) = self.wm_signature.as_ref() {
+            os.write_bytes(4, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -1021,12 +1160,18 @@ impl ::protobuf::Message for WardVerifyChain {
 
     fn clear(&mut self) {
         self.links.clear();
+        self.nonce = ::std::option::Option::None;
+        self.timestamp = ::std::option::Option::None;
+        self.wm_signature = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static WardVerifyChain {
         static instance: WardVerifyChain = WardVerifyChain {
             links: ::std::vec::Vec::new(),
+            nonce: ::std::option::Option::None,
+            timestamp: ::std::option::Option::None,
+            wm_signature: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2391,6 +2536,12 @@ pub struct WardRollback {
     pub from_root: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.to_counter)
     pub to_counter: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.nonce)
+    pub nonce: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.timestamp)
+    pub timestamp: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.wm_signature)
+    pub wm_signature: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardRollback.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2553,8 +2704,99 @@ impl WardRollback {
         self.to_counter = ::std::option::Option::Some(v);
     }
 
+    // optional bytes nonce = 6;
+
+    pub fn nonce(&self) -> &[u8] {
+        match self.nonce.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_nonce(&mut self) {
+        self.nonce = ::std::option::Option::None;
+    }
+
+    pub fn has_nonce(&self) -> bool {
+        self.nonce.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_nonce(&mut self, v: ::std::vec::Vec<u8>) {
+        self.nonce = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_nonce(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.nonce.is_none() {
+            self.nonce = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.nonce.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_nonce(&mut self) -> ::std::vec::Vec<u8> {
+        self.nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional uint64 timestamp = 7;
+
+    pub fn timestamp(&self) -> u64 {
+        self.timestamp.unwrap_or(0)
+    }
+
+    pub fn clear_timestamp(&mut self) {
+        self.timestamp = ::std::option::Option::None;
+    }
+
+    pub fn has_timestamp(&self) -> bool {
+        self.timestamp.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_timestamp(&mut self, v: u64) {
+        self.timestamp = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes wm_signature = 8;
+
+    pub fn wm_signature(&self) -> &[u8] {
+        match self.wm_signature.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_wm_signature(&mut self) {
+        self.wm_signature = ::std::option::Option::None;
+    }
+
+    pub fn has_wm_signature(&self) -> bool {
+        self.wm_signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_wm_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.wm_signature = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_wm_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.wm_signature.is_none() {
+            self.wm_signature = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.wm_signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_wm_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.wm_signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut fields = ::std::vec::Vec::with_capacity(8);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "to_root",
@@ -2580,6 +2822,21 @@ impl WardRollback {
             "to_counter",
             |m: &WardRollback| { &m.to_counter },
             |m: &mut WardRollback| { &mut m.to_counter },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "nonce",
+            |m: &WardRollback| { &m.nonce },
+            |m: &mut WardRollback| { &mut m.nonce },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "timestamp",
+            |m: &WardRollback| { &m.timestamp },
+            |m: &mut WardRollback| { &mut m.timestamp },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "wm_signature",
+            |m: &WardRollback| { &m.wm_signature },
+            |m: &mut WardRollback| { &mut m.wm_signature },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardRollback>(
             "WardRollback",
@@ -2614,6 +2871,15 @@ impl ::protobuf::Message for WardRollback {
                 40 => {
                     self.to_counter = ::std::option::Option::Some(is.read_uint32()?);
                 },
+                50 => {
+                    self.nonce = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                56 => {
+                    self.timestamp = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                66 => {
+                    self.wm_signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2641,6 +2907,15 @@ impl ::protobuf::Message for WardRollback {
         if let Some(v) = self.to_counter {
             my_size += ::protobuf::rt::uint32_size(5, v);
         }
+        if let Some(v) = self.nonce.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(6, &v);
+        }
+        if let Some(v) = self.timestamp {
+            my_size += ::protobuf::rt::uint64_size(7, v);
+        }
+        if let Some(v) = self.wm_signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(8, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2661,6 +2936,15 @@ impl ::protobuf::Message for WardRollback {
         }
         if let Some(v) = self.to_counter {
             os.write_uint32(5, v)?;
+        }
+        if let Some(v) = self.nonce.as_ref() {
+            os.write_bytes(6, v)?;
+        }
+        if let Some(v) = self.timestamp {
+            os.write_uint64(7, v)?;
+        }
+        if let Some(v) = self.wm_signature.as_ref() {
+            os.write_bytes(8, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2684,6 +2968,9 @@ impl ::protobuf::Message for WardRollback {
         self.from_counter = ::std::option::Option::None;
         self.from_root = ::std::option::Option::None;
         self.to_counter = ::std::option::Option::None;
+        self.nonce = ::std::option::Option::None;
+        self.timestamp = ::std::option::Option::None;
+        self.wm_signature = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2694,6 +2981,9 @@ impl ::protobuf::Message for WardRollback {
             from_counter: ::std::option::Option::None,
             from_root: ::std::option::Option::None,
             to_counter: ::std::option::Option::None,
+            nonce: ::std::option::Option::None,
+            timestamp: ::std::option::Option::None,
+            wm_signature: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3464,35 +3754,39 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     zor.messages.ward.WardLeafContentR\x07content\x12\x18\n\x07counter\x18\
     \x04\x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x05\x20\x01(\x0cR\x03ma\
     c\x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauthCommit\x12\x1c\n\t\
-    remaining\x18\x08\x20\x02(\rR\tremainingJ\x04\x08\x07\x10\x08\"O\n\x0fWa\
-    rdVerifyChain\x12<\n\x05links\x18\x01\x20\x03(\x0b2&.hw.trezor.messages.\
-    ward.WardChainLinkR\x05links\"I\n\x12WardVerifyChainAck\x12\x18\n\x07cou\
-    nter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\
-    \x01(\x0cR\x07newRoot\"\n\n\x08WardSync\"V\n\x0bWardSyncAck\x12\x14\n\
-    \x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x17\n\x07ward_id\x18\x02\
-    \x20\x01(\x0cR\x06wardId\x12\x18\n\x07counter\x18\x03\x20\x01(\rR\x07cou\
-    nter\"\x84\x01\n\x15WardIngestAttestation\x12\x18\n\x07counter\x18\x01\
-    \x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\
-    \x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwmSignature\x12\x1c\n\t\
-    timestamp\x18\x04\x20\x01(\x04R\ttimestamp\"4\n\x18WardIngestAttestation\
-    Ack\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\"#\n\rWardReconc\
-    ile\x12\x12\n\x04root\x18\x01\x20\x01(\x0cR\x04root\"G\n\x10WardReconcil\
-    eAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08ne\
-    w_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\xa7\x01\n\x0cWardRollback\x12\
-    \x17\n\x07to_root\x18\x01\x20\x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_comm\
-    it\x18\x02\x20\x01(\x0cR\nauthCommit\x12!\n\x0cfrom_counter\x18\x03\x20\
-    \x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\x04\x20\x01(\x0cR\x08fr\
-    omRoot\x12\x1d\n\nto_counter\x18\x05\x20\x01(\rR\ttoCounter\"\x84\x01\n\
-    \x0fWardRollbackAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\
-    \x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1f\n\x0baut\
-    h_commit\x18\x03\x20\x01(\x0cR\nauthCommit\x12\x15\n\x06wm_sig\x18\x05\
-    \x20\x01(\x0cR\x05wmSigJ\x04\x08\x04\x10\x05\"\x81\x01\n\x12WardRecoverC\
-    ounter\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x10\n\x03\
-    mac\x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x01(\
-    \x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimesta\
-    mp\"1\n\x15WardRecoverCounterAck\x12\x18\n\x07counter\x18\x01\x20\x01(\r\
-    R\x07counterB?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageWa\
-    rdConnect\
+    remaining\x18\x08\x20\x02(\rR\tremainingJ\x04\x08\x07\x10\x08\"\xa6\x01\
+    \n\x0fWardVerifyChain\x12<\n\x05links\x18\x01\x20\x03(\x0b2&.hw.trezor.m\
+    essages.ward.WardChainLinkR\x05links\x12\x14\n\x05nonce\x18\x02\x20\x01(\
+    \x0cR\x05nonce\x12\x1c\n\ttimestamp\x18\x03\x20\x01(\x04R\ttimestamp\x12\
+    !\n\x0cwm_signature\x18\x04\x20\x01(\x0cR\x0bwmSignature\"I\n\x12WardVer\
+    ifyChainAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\
+    \n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\n\n\x08WardSync\"V\n\
+    \x0bWardSyncAck\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\
+    \x17\n\x07ward_id\x18\x02\x20\x01(\x0cR\x06wardId\x12\x18\n\x07counter\
+    \x18\x03\x20\x01(\rR\x07counter\"\x84\x01\n\x15WardIngestAttestation\x12\
+    \x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\
+    \x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\
+    \x0bwmSignature\x12\x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimestamp\"4\
+    \n\x18WardIngestAttestationAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\
+    \x07counter\"#\n\rWardReconcile\x12\x12\n\x04root\x18\x01\x20\x01(\x0cR\
+    \x04root\"G\n\x10WardReconcileAck\x12\x18\n\x07counter\x18\x01\x20\x01(\
+    \rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\
+    \xfe\x01\n\x0cWardRollback\x12\x17\n\x07to_root\x18\x01\x20\x01(\x0cR\
+    \x06toRoot\x12\x1f\n\x0bauth_commit\x18\x02\x20\x01(\x0cR\nauthCommit\
+    \x12!\n\x0cfrom_counter\x18\x03\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfr\
+    om_root\x18\x04\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counter\x18\x05\
+    \x20\x01(\rR\ttoCounter\x12\x14\n\x05nonce\x18\x06\x20\x01(\x0cR\x05nonc\
+    e\x12\x1c\n\ttimestamp\x18\x07\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_sig\
+    nature\x18\x08\x20\x01(\x0cR\x0bwmSignature\"\x84\x01\n\x0fWardRollbackA\
+    ck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_\
+    root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1f\n\x0bauth_commit\x18\x03\
+    \x20\x01(\x0cR\nauthCommit\x12\x15\n\x06wm_sig\x18\x05\x20\x01(\x0cR\x05\
+    wmSigJ\x04\x08\x04\x10\x05\"\x81\x01\n\x12WardRecoverCounter\x12\x18\n\
+    \x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\
+    \x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwmSign\
+    ature\x12\x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimestamp\"1\n\x15Ward\
+    RecoverCounterAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counterB?\
+    \n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageWardConnect\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

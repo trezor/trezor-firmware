@@ -1132,6 +1132,10 @@ def _attest(
     ward.reconcile(session, store.root())
     store.counter = counter  # device and store now agree
     store.timestamp = timestamp
+    # ARCHIVED, where it used to be dropped. A real host keeps every attestation it is handed;
+    # rollback and staged catch-up both replay one later, and neither can be tested against a
+    # host that throws them away -- which is what this helper did until now.
+    store.archive_attestation(ack.nonce, counter, mac, timestamp, sig)
 
 
 @pytest.mark.models("core")
@@ -1664,8 +1668,72 @@ def _rollback(session: Session, store: WardTrie, to_counter: int | None = None):
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
-        ack = ward.rollback(session, link)
+        ack = ward.rollback(
+            session, link, attestation=store.attestation_for(to_counter)
+        )
     return ack, rec
+
+
+@pytest.mark.models("core")
+def test_ward_rollback_refuses_a_target_with_no_confirmed_head_proof(session: Session):
+    """A LINK IS NOT ENOUGH, and this is what the archived attestation adds.
+
+    `auth_commit` proves a holder of this wallet's K_auth authorised the target. It says nothing
+    about whether the target was ever AUTHORITATIVE, so a host may present a link from an
+    orphaned fork -- a candidate some device built and the WM never took. The attestation the WM
+    issued when that head was current is the missing half, and a demotion now requires it.
+
+    The cost is deliberate and worth seeing in a test: a host that archived nothing cannot roll
+    back at all. Every head predating this change is in that position until the host syncs once
+    more.
+    """
+    store = WardTrie()
+    _go_online(session, store)
+    _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+
+    target = store.counter - 1
+    fc, fr, tc, tr, ac = _link_into(store, target)
+
+    # SENT RAW, PAST trezorlib. The library refuses a missing attestation with a ValueError of
+    # its own, which is good ergonomics and worthless as a security assertion -- an attacker
+    # does not call trezorlib. What has to refuse this is the FIRMWARE, so the message goes on
+    # the wire with the proof fields simply absent, exactly as an old or hostile host would send
+    # it.
+    with pytest.raises(exceptions.TrezorFailure, match="no confirmed-head proof"):
+        session.call(
+            m.WardRollback(
+                to_root=tr,
+                auth_commit=ac,
+                from_counter=fc,
+                from_root=fr,
+                to_counter=tc,
+            ),
+            expect=m.WardRollbackAck,
+        )
+
+    # ...and with the archive it goes through
+    ack, _rec = _rollback(session, store, target)
+    assert ack.counter == store.counter + 1
+
+
+@pytest.mark.models("core")
+def test_ward_rollback_refuses_an_attestation_for_a_different_head(session: Session):
+    """The proof has to be for THIS target. An archive full of genuine attestations is still
+    only useful for the heads they name -- `root_mac` binds the counter, so the pair admits
+    exactly one root and a neighbouring attestation cannot stand in."""
+    store = WardTrie()
+    _go_online(session, store)
+    _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+    _seed(session, store, b"c", b"three")
+
+    target = store.counter - 1
+    wrong = store.attestation_for(store.counter - 2)
+    assert wrong is not None  # genuine, just for the wrong head
+
+    with pytest.raises(exceptions.TrezorFailure, match="never attested this target"):
+        ward.rollback(session, _link_into(store, target), attestation=wrong)
 
 
 @pytest.mark.models("core")
@@ -1715,7 +1783,11 @@ def test_ward_rollback_refuses_a_target_the_host_invents(session: Session):
     with pytest.raises(
         exceptions.TrezorFailure, match="does not describe the target state"
     ):
-        ward.rollback(session, (fc, fr, tc, invented.root(), ac))
+        ward.rollback(
+            session,
+            (fc, fr, tc, invented.root(), ac),
+            attestation=store.attestation_for(tc),
+        )
 
 
 @pytest.mark.models("core")
@@ -1746,6 +1818,7 @@ def test_ward_rollback_count_cannot_be_understated(session: Session):
         ward.rollback(
             session,
             (store.counter - 2, from_root, store.counter - 1, to_root, ac),
+            attestation=store.attestation_for(store.counter - 1),
         )
 
 

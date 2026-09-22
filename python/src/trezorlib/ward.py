@@ -446,14 +446,33 @@ def reconcile(session: "Session", root: Optional[bytes]) -> messages.WardReconci
     )
 
 
-def verify_chain(session: "Session", links) -> messages.WardVerifyChainAck:
+def verify_chain(
+    session: "Session", links, attestation: Optional[tuple] = None
+) -> messages.WardVerifyChainAck:
     """Adopt the attested head by proving it descends from the device's current one.
 
     Used instead of `reconcile` when the device has fallen more than a step behind.
     `links` are ordered from the device's own head forward.
+
+    `attestation` makes this a STAGED batch: the archived
+    `(nonce, counter, mac, timestamp, wm_signature)` for the head these links arrive at, rather
+    than the one attested in this round. The device folds descent as always, persists the
+    result and STAYS OFFLINE -- an intermediate is not current. Needed because links are one
+    unchunked field in an 8704-byte buffer, so roughly 77 fit and a device further behind than
+    that cannot catch up in a single message. Omit it for the final batch, which ends at the
+    live head and latches online.
+
+    The device names its own destination: it computes the counter and mac from where the fold
+    arrived, so only the signature comes from here.
     """
+    nonce = timestamp = wm_signature = None
+    if attestation is not None:
+        nonce, _counter, _mac, timestamp, wm_signature = attestation
     return session.call(
         messages.WardVerifyChain(
+            nonce=nonce,
+            timestamp=timestamp,
+            wm_signature=wm_signature,
             links=[
                 messages.WardChainLink(
                     from_counter=fc,
@@ -469,7 +488,9 @@ def verify_chain(session: "Session", links) -> messages.WardVerifyChainAck:
     )
 
 
-def rollback(session: "Session", link: tuple) -> messages.WardRollbackAck:
+def rollback(
+    session: "Session", link: tuple, attestation: Optional[tuple] = None
+) -> messages.WardRollbackAck:
     """Revert the device to an earlier state of this wallet, possibly several steps back.
 
     `link` is `(from_counter, from_root, to_counter, to_root, auth_commit)` -- the entry of
@@ -484,8 +505,20 @@ def rollback(session: "Session", link: tuple) -> messages.WardRollbackAck:
 
     The earliest reachable target is counter 1: every target is authorised by the link that
     produced it, and genesis has none.
+
+    `attestation` is the tuple the caller ARCHIVED when the target was the head --
+    `(nonce, counter, mac, timestamp, wm_signature)` -- and it is required. The link alone
+    proves a device of this wallet authorised the target; only the attestation proves the WM
+    ever held it, so without one a caller could present a link from an orphaned fork. A caller
+    that kept none cannot roll back.
     """
     from_counter, from_root, to_counter, to_root, auth_commit = link
+    if attestation is None:
+        raise ValueError(
+            "rollback needs the attestation archived for the target counter; a caller that "
+            "kept none cannot prove the target was ever the WM's head"
+        )
+    nonce, _counter, _mac, timestamp, wm_signature = attestation
     return session.call(
         messages.WardRollback(
             to_root=to_root,
@@ -493,6 +526,9 @@ def rollback(session: "Session", link: tuple) -> messages.WardRollbackAck:
             from_counter=from_counter,
             from_root=from_root,
             to_counter=to_counter,
+            nonce=nonce,
+            timestamp=timestamp,
+            wm_signature=wm_signature,
         ),
         expect=messages.WardRollbackAck,
     )
