@@ -1,7 +1,7 @@
 use core::mem;
 
 use super::super::cshape::{render_loader, LoaderRange};
-use super::super::{constant, fonts, theme};
+use super::super::{constant, theme};
 use crate::strutil::TString;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
 use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad, TextLayout};
