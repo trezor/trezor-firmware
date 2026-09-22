@@ -289,6 +289,10 @@ ts_t nfc_get_device_info__verified(nfc_dev_info_t *dev_info);
 ts_t nfc_transceive__verified(const nfc_apdu_message_t *cmd,
                               nfc_apdu_message_t *resp);
 
+ts_t nfc_transceive_psk__verified(const uint8_t *pcd_psk, size_t pcd_psk_len,
+                                  uint8_t *picc_psk, size_t picc_psk_max_len,
+                                  uint16_t *picc_psk_len);
+
 #endif
 
 // ---------------------------------------------------------------------
