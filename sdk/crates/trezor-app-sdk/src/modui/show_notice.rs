@@ -15,14 +15,17 @@
 //!         Severity::Danger,
 //!         "Important",
 //!         "Unknown contract address.",
+//!         &[],
+//!         false,
 //!     ))?
 //!     .confirmed()
 //! }
 //! ```
 
+use super::extra::ExtraItem;
 use super::{UiOutcome, call};
-use crate::Result;
 use crate::structs::{ShowDanger, TrezorUiEnum};
+use crate::{Error, Result};
 
 // ============================================================================
 // Data types
@@ -44,16 +47,31 @@ pub struct ShowNotice<'a> {
     severity: Severity,
     title: &'a str,
     content: &'a str,
+    extras: &'a [ExtraItem<'a>],
+    cancel: bool,
 }
 
 impl<'a> ShowNotice<'a> {
     /// A notice of the given severity.
-    pub fn new(severity: Severity, title: &'a str, content: &'a str) -> Self {
+    pub fn new(
+        severity: Severity,
+        title: &'a str,
+        content: &'a str,
+        extras: &'a [ExtraItem<'a>],
+        cancel: bool,
+    ) -> Self {
         Self {
             severity,
             title,
             content,
+            extras,
+            cancel,
         }
+    }
+
+    /// Whether the screen has anything to offer besides its main content.
+    fn offers_more(&self) -> bool {
+        !self.extras.is_empty() || self.cancel
     }
 }
 
@@ -68,6 +86,11 @@ impl<'a> ShowNotice<'a> {
 /// what this block needs. Severity is therefore not yet visible to the
 /// renderer — the first thing to fix when the wire is rewritten.
 pub fn show_notice(params: ShowNotice<'_>) -> Result<UiOutcome> {
+    // This block's wire has no menu button yet, so anything behind one would
+    // be silently unreachable. Refusing is worse to use and better to debug.
+    if !params.extras.is_empty() {
+        return Err(Error::ValueError("extras not yet supported by this block"));
+    }
     let _ = params.severity;
 
     let request = ShowDanger::new(
@@ -76,8 +99,12 @@ pub fn show_notice(params: ShowNotice<'_>) -> Result<UiOutcome> {
         None, // ButtonRequest: emitted on the trusted side, not from here
         0,
         None, // verb_cancel: chrome, follows the severity
-        None, // menu_title: menus are their own block
+        None, // menu_title: the library decides how extras are shown
     );
 
-    call(&TrezorUiEnum::ShowDanger(request))
+    call(
+        &TrezorUiEnum::ShowDanger(request),
+        params.extras,
+        params.cancel,
+    )
 }

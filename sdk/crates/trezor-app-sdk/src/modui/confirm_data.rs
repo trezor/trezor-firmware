@@ -11,12 +11,13 @@
 //! use trezor_app_sdk::modui::{self as ui, ConfirmData};
 //!
 //! fn confirm_calldata(calldata: &[u8]) -> trezor_app_sdk::Result<()> {
-//!     ui::confirm_data(ConfirmData::new("Transaction data", calldata, None))?.confirmed()
+//!     ui::confirm_data(ConfirmData::new("Transaction data", calldata, None, &[], true))?.confirmed()
 //! }
 //! ```
 
+use super::extra::ExtraItem;
 use super::paged::{self, BYTES_PER_PAGE, Page, PageCtx};
-use super::{UiOutcome, call_raw};
+use super::{UiOutcome, call_raw, menu};
 use crate::alloc_types::String;
 use crate::structs::{ConfirmWithInfo, StrExt, TrezorUiEnum, TrezorUiResult};
 use crate::{Error, Result};
@@ -30,16 +31,31 @@ pub struct ConfirmData<'a> {
     title: &'a str,
     data: &'a [u8],
     subtitle: Option<&'a str>,
+    extras: &'a [ExtraItem<'a>],
+    cancel: bool,
 }
 
 impl<'a> ConfirmData<'a> {
     /// Confirms `data`, rendered as hex across as many pages as it takes.
-    pub fn new(title: &'a str, data: &'a [u8], subtitle: Option<&'a str>) -> Self {
+    pub fn new(
+        title: &'a str,
+        data: &'a [u8],
+        subtitle: Option<&'a str>,
+        extras: &'a [ExtraItem<'a>],
+        cancel: bool,
+    ) -> Self {
         Self {
             title,
             data,
             subtitle,
+            extras,
+            cancel,
         }
+    }
+
+    /// Whether the screen has anything to offer besides its main content.
+    fn offers_more(&self) -> bool {
+        !self.extras.is_empty() || self.cancel
     }
 }
 
@@ -74,14 +90,22 @@ fn show_page(params: &ConfirmData<'_>, hex: &str, ctx: &PageCtx) -> Result<Page>
         params.subtitle,
         &items,
         ctx.verb(),
-        ctx.verb_skip(),
+        ctx.verb_secondary(params.offers_more()),
         None, // ButtonRequest: emitted on the trusted side, not from here
         0,
     );
 
     match call_raw(&TrezorUiEnum::ConfirmWithInfo(request))? {
         TrezorUiResult::Confirmed => Ok(Page::Advance),
-        TrezorUiResult::Info => Ok(Page::ConfirmAll),
+        // The secondary button is the menu when there is one, and the
+        // skip-ahead shortcut otherwise.
+        TrezorUiResult::Info => {
+            if params.offers_more() {
+                Ok(menu::open(params.extras, params.cancel)?.map_or(Page::Stay, Page::Decided))
+            } else {
+                Ok(Page::ConfirmAll)
+            }
+        }
         TrezorUiResult::Cancelled => Ok(Page::Cancelled),
         TrezorUiResult::Back | TrezorUiResult::Integer(_) => Err(Error::InvalidMessage),
     }

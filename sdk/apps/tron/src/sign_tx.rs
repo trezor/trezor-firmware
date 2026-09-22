@@ -82,9 +82,12 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
     signature.extend_from_slice(&sig[1..65]);
     signature.push(sig[0]);
 
-    modui::show_success(ShowSuccess::new(
+    // Nothing hangs on how the success screen went away.
+    let _ = modui::show_success(ShowSuccess::new(
         tr!("words__title_done"),
         tr!("send__transaction_signed"),
+        &[],
+        false,
     ))
     .c()?;
 
