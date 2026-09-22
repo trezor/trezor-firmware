@@ -951,7 +951,7 @@ static ts_t api_read_success_log(cli_t *cli, uint8_t *success_log,
                 rsp.data[rsp.data_len - 1] == 0x00U,
             TS_EINVAL);
   TSH_CHECK(rsp.data_len - 2 <= NFC_BACKUP_LOG_RECORD_SIZE, TS_EINVAL);
-  TSH_CHECK(success_log_buf_size >= (rsp.data_len - 2), TS_EINVAL);
+  TSH_CHECK((int)success_log_buf_size >= (rsp.data_len - 2), TS_EINVAL);
 
   *success_log_len = rsp.data_len - 2;
 
@@ -992,7 +992,7 @@ static ts_t api_read_failure_logs(cli_t *cli, uint8_t *failure_log,
   TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
                 rsp.data[rsp.data_len - 1] == 0x00U,
             TS_EINVAL);
-  TSH_CHECK(failure_log_buf_size >= (rsp.data_len - 2), TS_EINVAL);
+  TSH_CHECK((int)failure_log_buf_size >= (rsp.data_len - 2), TS_EINVAL);
   TSH_CHECK((rsp.data_len - 2) % NFC_BACKUP_LOG_RECORD_SIZE == 0, TS_EINVAL);
 
   *failure_log_len = rsp.data_len - 2;
@@ -1034,7 +1034,7 @@ static ts_t api_read_seed_metadata(cli_t *cli, uint8_t *seed_metadata,
   TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
                 rsp.data[rsp.data_len - 1] == 0x00U,
             TS_EINVAL);
-  TSH_CHECK(seed_metadata_buf_size >= (rsp.data_len - 2), TS_EINVAL);
+  TSH_CHECK((int)seed_metadata_buf_size >= (rsp.data_len - 2), TS_EINVAL);
 
   *seed_metadata_len = rsp.data_len - 2;
 
