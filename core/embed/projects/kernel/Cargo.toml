@@ -55,6 +55,8 @@ mcu_stm32u5a = ["io/mcu_stm32u5a", "mcu_stm32u5"]
 backlight = ["io/backlight"]
 backup_ram = ["sec/backup_ram"]
 ble = ["io/ble", "nrf", "nrf_auth"]
+# DEPRECATED: WARD's dedicated interface, off by default and expected to be removed.
+# See apps/ward/service.py. Do not build new work on this path.
 ward_service_channel = ["io/ward_service_channel"]
 ward_service_thp = ["ward_service_channel", "io/ward_service_thp"]
 boot_ucb = ["sec/boot_ucb"]

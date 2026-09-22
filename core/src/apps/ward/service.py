@@ -1,5 +1,25 @@
 """The WARD service channel: a daemon that owns the replica, on an interface of its own.
 
+DEPRECATED, AND OFF BY DEFAULT. Built only behind `--enable-ward-service-channel`, and now
+deprecated rather than merely optional: expect removal, and do not build new work on this path.
+
+WHY, RECORDED HERE BECAUSE THE REASONING IS NOT OBVIOUS FROM THE CODE. The connect transport is
+the one WARD is developed and tested against, and the two have diverged in ways that are cheaper
+to delete than to keep level:
+
+  no recovery at all. `WardRollback` and `WardRecoverCounter` are connect-only, and `sync` here
+  is chain-only with no `reconcile` fallback. A daemon whose replica history is incomplete leaves
+  the device with "WARD service reports this device is out of sync" and nothing to do about it --
+  the one transport with no escape hatch is the one whose owner is most likely to lose history;
+
+  the authorisation surfaces have drifted apart in both directions. This path carries `wm_sig`
+  and `head_init_sig` for writes and has no revert to authorise; connect carries the revert
+  authorisation and no write authorisation. Bringing them level is work on both sides, and only
+  one of them is the target.
+
+What it was FOR remains true and is worth keeping in view if the capability is ever rebuilt: the
+device can ask rather than only answer, which is what the rest of this docstring describes.
+
 WHY A SECOND CHANNEL EXISTS AT ALL. A WARD read goes through `context.call()`, which reaches
 CURRENT_CONTEXT -- the workflow currently executing. On a connect build that makes WARD's store
 structurally the calling APP's store, and a read can only happen while that app is answering. A

@@ -1,5 +1,15 @@
 # WARD: who talks to whom
 
+> **The service channel is DEPRECATED and off by default.** It is built only behind
+> `--enable-ward-service-channel`; expect removal, and do not build new work on it. The connect
+> transport — everything below marked "wallet channel" — is the one WARD is developed and tested
+> against. The service path has no `WardRollback` or `WardRecoverCounter` at all and its sync is
+> chain-only with no `reconcile` fallback, so a daemon with incomplete replica history strands the
+> device; and the two transports' WM authorisation surfaces have drifted apart in opposite
+> directions. See `apps/ward/service.py` for the full reasoning. The document is kept because the
+> split it describes is still what the code does, and because what the second channel was *for*
+> matters if the capability is ever rebuilt.
+
 WARD splits its two conversations across two channels, and which conversation goes where is the whole
 of this document.
 

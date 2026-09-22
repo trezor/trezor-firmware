@@ -76,8 +76,11 @@ cannot be used bare:
 - `--debug-link` — enable debug link (on by default when `pyopt` is off).
 - `--dbg-console <none|vcp|swo|system-view>` — debug console backend.
 - `--disable-animation` — disable UI animations.
-- `--enable-ward-service-channel` — build WARD's own dedicated interface. Off by
-  default; without it the firmware serves WARD over the ordinary connection.
+- `--enable-ward-service-channel` — **DEPRECATED**, expect removal. Builds WARD's own
+  dedicated interface. Off by default; without it the firmware serves WARD over the
+  ordinary connection, which is the transport WARD is developed and tested against.
+  The service path has no rollback or recover route, and its sync is chain-only with no
+  fallback, so an incomplete daemon replica strands the device. Do not build new work on it.
   Refused with `--btc-only`, which carries no WARD to serve, and refused on a
   hardware build that also wants `--dbg-console vcp --debug-link`: that
   configuration is already at the USB endpoint budget and the interface is one over.
