@@ -450,7 +450,7 @@ cleanup:
   TSH_RETURN;
 }
 
-ts_t nfc_transceive_psk(uint8_t *pcd_psk, size_t pcd_psk_max_len,
+ts_t nfc_transceive_psk(const uint8_t *pcd_psk, size_t pcd_psk_len,
                         uint8_t *picc_psk, size_t picc_psk_max_len,
                         uint16_t *picc_psk_len) {
   TSH_DECLARE;
@@ -460,7 +460,7 @@ ts_t nfc_transceive_psk(uint8_t *pcd_psk, size_t pcd_psk_max_len,
   TSH_CHECK(drv->initialized, TS_ENOINIT);
 
   TSH_CHECK_ARG(pcd_psk != NULL);
-  TSH_CHECK_ARG(pcd_psk_max_len == NFC_PSK_SHARE_LEN);
+  TSH_CHECK_ARG(pcd_psk_len == NFC_PSK_SHARE_LEN);
   TSH_CHECK_ARG(picc_psk_max_len >= NFC_PSK_SHARE_LEN);
   TSH_CHECK_ARG(picc_psk != NULL);
   TSH_CHECK_ARG(picc_psk_len != NULL);
@@ -473,7 +473,7 @@ ts_t nfc_transceive_psk(uint8_t *pcd_psk, size_t pcd_psk_max_len,
 
   uint8_t cust_cmd[NFC_PSK_FRAME_PAYLOAD_LEN + 4] = {0};
   uint16_t cust_cmd_bits =
-      nfc_build_psk_frame(pcd_psk, pcd_psk_max_len, cust_cmd, sizeof(cust_cmd));
+      nfc_build_psk_frame(pcd_psk, pcd_psk_len, cust_cmd, sizeof(cust_cmd));
 
   uint8_t cust_resp[NFC_PSK_FRAME_PAYLOAD_LEN + 4] = {0};
   uint16_t cust_resp_bits = 0;
