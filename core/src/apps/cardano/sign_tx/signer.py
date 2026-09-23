@@ -470,12 +470,7 @@ class Signer:
 
         if self._is_simple_change_output(output):
             # Show change output only if showing details and if it contains plutus data
-            has_plutus_data = (
-                output.datum_hash is not None
-                or output.inline_datum_size > 0
-                or output.reference_script_size > 0
-            )
-            return self.should_show_details and has_plutus_data
+            return self.should_show_details and self._output_has_plutus_data(output)
 
         return True
 
@@ -489,6 +484,13 @@ class Signer:
 
         return output.address_parameters is not None and not should_show_credentials(
             output.address_parameters
+        )
+
+    def _output_has_plutus_data(self, output: CardanoTxOutput) -> bool:
+        return (
+            output.datum_hash is not None
+            or output.inline_datum_size > 0
+            or output.reference_script_size > 0
         )
 
     async def _process_legacy_output(

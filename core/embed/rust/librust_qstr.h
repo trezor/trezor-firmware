@@ -1187,6 +1187,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__no_output_tx;
   MP_QSTR_cardano__nonce;
   MP_QSTR_cardano__other;
+  MP_QSTR_cardano__output_contains_datum_or_ref_script;
   MP_QSTR_cardano__path;
   MP_QSTR_cardano__pledge;
   MP_QSTR_cardano__pointer;
