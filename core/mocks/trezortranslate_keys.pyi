@@ -78,7 +78,6 @@ class TR:
     bitcoin__title_purchase_ticket: str = "Purchase ticket"
     bitcoin__title_update_transaction: str = "Update transaction"
     bitcoin__unknown_path: str = "Unknown path"
-    bitcoin__unknown_transaction: str = "Unknown transaction"
     bitcoin__unusually_high_fee: str = "Unusually high fee."
     bitcoin__unverified_external_inputs: str = "The transaction contains unverified external inputs."
     bitcoin__valid_signature: str = "The signature is valid."
