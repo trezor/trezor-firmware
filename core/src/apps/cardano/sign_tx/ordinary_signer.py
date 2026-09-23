@@ -51,6 +51,7 @@ class OrdinarySigner(Signer):
             msg.minting_asset_groups_count > 0
             or msg.required_signers_count > 0
             or msg.has_auxiliary_data
+            or msg.script_data_hash is not None
         ):
             # transaction has more advanced features
             return SuiteTxType.NOT_SUITE_TX
