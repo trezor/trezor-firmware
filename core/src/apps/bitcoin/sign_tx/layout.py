@@ -5,7 +5,6 @@ from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount, format_amount_unit
 from trezor.ui import layouts
-from trezor.ui.layouts import confirm_metadata
 
 from apps.common.paths import address_n_to_str
 
@@ -68,28 +67,16 @@ async def confirm_output(
 ) -> None:
     from trezor.enums import OutputScriptType
 
-    from . import omni
-
     if output.script_type == OutputScriptType.PAYTOOPRETURN:
         data = output.op_return_data
         assert data is not None
-        if omni.is_valid(data):
-            # OMNI transaction
-            layout = confirm_metadata(
-                "omni_transaction",
-                "OMNI transaction",
-                omni.parse(data),
-                verb=TR.buttons__confirm,
-                br_code=ButtonRequestType.ConfirmOutput,
-            )
-        else:
-            # generic OP_RETURN
-            layout = layouts.confirm_blob(
-                "op_return",
-                "OP_RETURN",
-                data,
-                br_code=ButtonRequestType.ConfirmOutput,
-            )
+        # generic OP_RETURN
+        layout = layouts.confirm_blob(
+            "op_return",
+            "OP_RETURN",
+            data,
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
     else:
         assert output.address is not None
         address_short = addresses.address_short(coin, output.address)

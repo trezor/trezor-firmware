@@ -132,7 +132,7 @@ def test_opreturn_address(session: Session):
     out1 = messages.TxOutputType(
         address_n=parse_path("m/44h/0h/0h/1/2"),
         amount=0,
-        op_return_data=b"OMNI TRANSACTION GOES HERE",
+        op_return_data=b"OP RETURN DATA",
         script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
