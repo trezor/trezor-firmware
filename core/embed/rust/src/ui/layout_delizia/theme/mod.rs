@@ -424,6 +424,33 @@ pub const fn button_keyboard_cancel() -> ButtonStyleSheet {
     }
 }
 
+// used for ActionBar buttons, behaves like the keyboard buttons
+pub const fn button_actionbar() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_DEMIBOLD,
+            text_color: GREY_LIGHT,
+            button_color: GREY_EXTRA_DARK,
+            icon_color: GREY_LIGHT,
+            background_color: GREY_EXTRA_DARK,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_DEMIBOLD,
+            text_color: BG,
+            button_color: GREY_LIGHT,
+            icon_color: BG,
+            background_color: GREY_LIGHT,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_DEMIBOLD,
+            text_color: GREY_DARK,
+            button_color: BG, // so there is no "button" itself, just the icon
+            icon_color: GREY_DARK,
+            background_color: BG,
+        },
+    }
+}
+
 pub const fn button_keyboard_erase() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
