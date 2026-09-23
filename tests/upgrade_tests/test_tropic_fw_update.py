@@ -191,6 +191,20 @@ TROPIC_FW_UPDATE_SCENARIOS = [
         expected_fw_version_slot=BUNDLED_FW_VERSION_SLOT,
     ),
     TropicFwUpdateScenario(
+        id="older-version-maintenance-on",
+        chip_distribution=0,
+        initial_i_config=0,
+        initial_r_config=0,
+        distribution_slot=0,
+        backup_slot=None,
+        fw_version_slot=OLDER_FW_VERSION_SLOT,
+        expect_failure=False,
+        expected_i_version=0,
+        expected_r_version=1,
+        expected_distribution_version=0,
+        expected_fw_version_slot=BUNDLED_FW_VERSION_SLOT,
+    ),
+    TropicFwUpdateScenario(
         id="interrupted-update",
         chip_distribution=0,
         initial_i_config=0,
@@ -219,6 +233,34 @@ TROPIC_FW_UPDATE_SCENARIOS = [
         expected_fw_version_slot=BUNDLED_FW_VERSION_SLOT,
     ),
     TropicFwUpdateScenario(
+        id="distribution-ahead",
+        chip_distribution=0,
+        initial_i_config=1,
+        initial_r_config=1,
+        distribution_slot=1,
+        backup_slot=None,
+        fw_version_slot=OLDER_FW_VERSION_SLOT,
+        expect_failure=False,
+        expected_i_version=1,
+        expected_r_version=1,
+        expected_distribution_version=1,
+        expected_fw_version_slot=BUNDLED_FW_VERSION_SLOT,
+    ),
+    TropicFwUpdateScenario(
+        id="interrupted-update-distribution-ahead",
+        chip_distribution=0,
+        initial_i_config=1,
+        initial_r_config=0,
+        distribution_slot=None,
+        backup_slot=1,
+        fw_version_slot=None,
+        expect_failure=False,
+        expected_i_version=1,
+        expected_r_version=1,
+        expected_distribution_version=1,
+        expected_fw_version_slot=BUNDLED_FW_VERSION_SLOT,
+    ),
+    TropicFwUpdateScenario(
         id="maintenance-forbidden",
         chip_distribution=0,
         initial_i_config=MAINTENANCE_FORBIDDEN_I_CONFIG,
@@ -233,6 +275,17 @@ TROPIC_FW_UPDATE_SCENARIOS = [
         chip_distribution=0,
         initial_i_config=0,
         initial_r_config=1,
+        distribution_slot=0,
+        backup_slot=None,
+        fw_version_slot=None,
+        expect_failure=True,
+        silicon_revision=SILICON_REV_ABAB,
+    ),
+    TropicFwUpdateScenario(
+        id="wrong-silicon-revision-maintenance-on",
+        chip_distribution=0,
+        initial_i_config=0,
+        initial_r_config=0,
         distribution_slot=0,
         backup_slot=None,
         fw_version_slot=None,
@@ -301,6 +354,23 @@ def _check_tropic_model_output(
     )
 
 
+def _check_tropic_model_unchanged(output_path: Path, initial_config: dict) -> None:
+    output = yaml.safe_load(output_path.read_text())
+    assert output["i_config"] == initial_config["i_config"]
+    assert output["r_config"] == initial_config["r_config"]
+
+    for slot in (
+        TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
+        TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
+        TROPIC_FW_VERSION_SLOT,
+    ):
+        initial_value = slot_value(initial_config, slot)
+        if initial_value is None:
+            assert slot_is_erased(output, slot)
+        else:
+            assert slot_value(output, slot) == initial_value
+
+
 @model_only("T3W1")
 @pytest.mark.parametrize("scenario", TROPIC_FW_UPDATE_SCENARIOS, ids=lambda s: s.id)
 def test_tropic_fw_update(scenario: TropicFwUpdateScenario) -> None:
@@ -309,9 +379,8 @@ def test_tropic_fw_update(scenario: TropicFwUpdateScenario) -> None:
     ) as temp_dir:
         config_path = Path(temp_dir) / "tropic_model_config.yml"
         output_path = Path(temp_dir) / "tropic_model_config_output.yml"
-        config_path.write_text(
-            yaml.safe_dump(_build_tropic_model_config(scenario), sort_keys=False)
-        )
+        initial_config = _build_tropic_model_config(scenario)
+        config_path.write_text(yaml.safe_dump(initial_config, sort_keys=False))
 
         with TropicModel(
             profile_dir=temp_dir,
@@ -339,5 +408,7 @@ def test_tropic_fw_update(scenario: TropicFwUpdateScenario) -> None:
                 # wait for start, then exit immediately
                 pass
 
-        if not scenario.expect_failure:
+        if scenario.expect_failure:
+            _check_tropic_model_unchanged(output_path, initial_config)
+        else:
             _check_tropic_model_output(output_path, scenario)
