@@ -1,8 +1,10 @@
+from typing import TYPE_CHECKING
+
 import storage.device as storage_device
 import ustruct  # pyright: ignore[reportMissingImports]
 from storage import cache_common as cc
 from storage.cache import get_sessionless_cache
-from trezor import app, log
+from trezor import log
 from trezor.crypto import random
 from trezor.messages import (
     ExtAppDataChunkAck,
@@ -17,6 +19,9 @@ from trezor.messages import (
 from trezor.wire import context
 from trezor.wire.errors import DataError
 from trezordefinitions import app_root_min_timestamp
+
+if TYPE_CHECKING:
+    from trezor import app
 
 
 def image_matches(image: app.AppImage, msg: ExtAppLoad) -> bool:
