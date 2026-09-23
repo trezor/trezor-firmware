@@ -205,11 +205,11 @@ async def show_script_hash(
         )
 
 
-async def show_tx_init(title: str) -> bool:
+async def should_show_details(intro: str) -> bool:
     should_show_details = await layouts.should_show_more(
         TR.cardano__confirm_transaction,
         (
-            (title, False),
+            (intro, False),
             (TR.cardano__choose_level_of_details, False),
         ),
         TR.buttons__show_all,
