@@ -486,48 +486,6 @@ void layoutConfirmOutput(const CoinInfo *coin, AmountUnit amount_unit,
                         extra_line);
 }
 
-void layoutConfirmOmni(const uint8_t *data, uint32_t size) {
-  const char *desc = NULL;
-  char str_out[32] = {0};
-  uint32_t tx_type = 0, currency = 0;
-  REVERSE32(*(const uint32_t *)(data + 4), tx_type);
-  if (tx_type == 0x00000000 && size == 20) {  // OMNI simple send
-    desc = _("Simple send of ");
-    REVERSE32(*(const uint32_t *)(data + 8), currency);
-    const char *suffix = " UNKN";
-    bool divisible = false;
-    switch (currency) {
-      case 1:
-        suffix = " OMNI";
-        divisible = true;
-        break;
-      case 2:
-        suffix = " tOMNI";
-        divisible = true;
-        break;
-      case 3:
-        suffix = " MAID";
-        divisible = false;
-        break;
-      case 31:
-        suffix = " USDT";
-        divisible = true;
-        break;
-    }
-    uint64_t amount_be = 0, amount = 0;
-    memcpy(&amount_be, data + 12, sizeof(uint64_t));
-    REVERSE64(amount_be, amount);
-    bn_format_amount(amount, NULL, suffix, divisible ? 8 : 0, str_out,
-                     sizeof(str_out));
-  } else {
-    desc = _("Unknown transaction");
-    str_out[0] = 0;
-  }
-  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                    _("Confirm OMNI Transaction:"), NULL, desc, NULL, str_out,
-                    NULL);
-}
-
 bool is_valid_ascii(const uint8_t *data, uint32_t size) {
   for (uint32_t i = 0; i < size; i++) {
     if (data[i] < ' ' || data[i] > '~') {
