@@ -72,9 +72,6 @@
             "output_script_p2pkh",
             "output_script_p2sh"
         ],
-        "src/apps/bitcoin/sign_tx/omni.py": [
-            "is_valid"
-        ],
         "src/apps/bitcoin/sign_tx/progress.py": [
             "report_init"
         ],
