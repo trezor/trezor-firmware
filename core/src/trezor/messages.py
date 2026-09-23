@@ -466,7 +466,7 @@ if TYPE_CHECKING:
         coin_name: "str"
         show_display: "bool | None"
         multisig: "MultisigRedeemScriptType | None"
-        miniscript: "MiniscriptDescriptor | None"
+        policy: "MiniscriptDescriptor | None"
         script_type: "InputScriptType"
         ignore_xpub_magic: "bool | None"
         chunkify: "bool | None"
@@ -478,7 +478,7 @@ if TYPE_CHECKING:
             coin_name: "str | None" = None,
             show_display: "bool | None" = None,
             multisig: "MultisigRedeemScriptType | None" = None,
-            miniscript: "MiniscriptDescriptor | None" = None,
+            policy: "MiniscriptDescriptor | None" = None,
             script_type: "InputScriptType | None" = None,
             ignore_xpub_magic: "bool | None" = None,
             chunkify: "bool | None" = None,
@@ -616,6 +616,7 @@ if TYPE_CHECKING:
         serialize: "bool"
         coinjoin_request: "CoinJoinRequest | None"
         chunkify: "bool | None"
+        policy: "MiniscriptDescriptor | None"
 
         def __init__(
             self,
@@ -634,6 +635,7 @@ if TYPE_CHECKING:
             serialize: "bool | None" = None,
             coinjoin_request: "CoinJoinRequest | None" = None,
             chunkify: "bool | None" = None,
+            policy: "MiniscriptDescriptor | None" = None,
         ) -> None:
             pass
 
@@ -667,7 +669,6 @@ if TYPE_CHECKING:
         sequence: "int"
         script_type: "InputScriptType"
         multisig: "MultisigRedeemScriptType | None"
-        miniscript: "MiniscriptDescriptor | None"
         amount: "int"
         decred_tree: "int | None"
         witness: "AnyBytes | None"
@@ -690,7 +691,6 @@ if TYPE_CHECKING:
             sequence: "int | None" = None,
             script_type: "InputScriptType | None" = None,
             multisig: "MultisigRedeemScriptType | None" = None,
-            miniscript: "MiniscriptDescriptor | None" = None,
             decred_tree: "int | None" = None,
             witness: "AnyBytes | None" = None,
             ownership_proof: "AnyBytes | None" = None,

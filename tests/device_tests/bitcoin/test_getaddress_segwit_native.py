@@ -247,12 +247,12 @@ def test_miniscript_show_multisig_3(session: Session):
         for index in range(1, 4)
     ]
     items = (f"{node.xpub}/<0;1>/*" for node in nodes)
-    desc = messages.MiniscriptDescriptor(
+    policy = messages.MiniscriptDescriptor(
         name="2-of-3",
         descriptor=f"wsh(multi(2,{','.join(items)}))",
         coin_name="Testnet",
     )
-    session.call(desc, expect=messages.Success)
+    session.call(msg=policy, expect=messages.Success)
     for index, expected in enumerate(
         [
             "tb1qgvn67p4twmpqhs8c39tukmu9geamtf7x0z3flwf9rrw4ff3h6d2qt0czq3",
@@ -263,7 +263,7 @@ def test_miniscript_show_multisig_3(session: Session):
             session,
             coin_name="Testnet",
             n=[0, index],
-            miniscript=desc,
+            policy=policy,
         )
         assert actual == expected
 

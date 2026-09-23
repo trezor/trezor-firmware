@@ -131,7 +131,7 @@ message GetAddress {
     optional bool show_display = 3;                       // optionally show on display before sending the result
 
     optional MultisigRedeemScriptType multisig = 4;  // filled if we are showing a multisig (non-miniscript) address
-    optional MiniscriptDescriptor miniscript = 8
+    optional MiniscriptDescriptor policy = 8
         [(experimental_field) = true];               // filled if we are showing a miniscript-derived address.
 
     optional InputScriptType script_type = 5
@@ -235,6 +235,8 @@ message SignTx {
         [default = true];  // serialize the full transaction, as opposed to only outputting the signatures
     optional CoinJoinRequest coinjoin_request = 14;  // only for preauthorized CoinJoins
     optional bool chunkify = 15;                     // display the address in chunks of 4 characters
+
+    optional MiniscriptDescriptor policy = 16 [(experimental_field) = true];
 
     /**
      * Signing request for a CoinJoin transaction.
@@ -345,14 +347,11 @@ message TxAck {
             optional uint32 sequence = 5 [default = 4294967295];                // sequence (default=0xffffffff)
             optional InputScriptType script_type = 6 [default = SPENDADDRESS];  // defines template of input script
 
-            optional MultisigRedeemScriptType multisig =
-                7;                              // Filled if input is going to spend multisig (non-miniscript) output
-            optional MiniscriptDescriptor miniscript = 21
-                [(experimental_field) = true];  // Filled if input is going to spend miniscript output
+            optional MultisigRedeemScriptType multisig = 7;  // Filled if input is going to spend multisig output
 
-            optional uint64 amount = 8;         // amount of previous transaction output (for segwit only)
-            optional uint32 decred_tree = 9;    // only for Decred, 0 is a normal transaction
-                                                // while 1 is a stake transaction
+            optional uint64 amount = 8;                      // amount of previous transaction output (for segwit only)
+            optional uint32 decred_tree = 9;                 // only for Decred, 0 is a normal transaction
+                                                             // while 1 is a stake transaction
             // optional uint32 decred_script_version = 10;   // only for  Decred  // deprecated -> only 0 is supported
             // optional bytes prev_block_hash_bip115 = 11;   // BIP-115 support dropped
             // optional uint32 prev_block_height_bip115 = 12;// BIP-115 support dropped
@@ -416,11 +415,9 @@ message TxInput {
     optional uint32 sequence = 5 [default = 0xffffffff];  // sequence
     optional InputScriptType script_type = 6 [default = SPENDADDRESS];  // defines template of input script
 
-    optional MultisigRedeemScriptType multisig = 7;  // Filled if input is going to spend multisig (non-miniscript) tx
-    optional MiniscriptDescriptor miniscript = 21
-        [(experimental_field) = true];               // Filled if input is going to spend miniscript tx
+    optional MultisigRedeemScriptType multisig = 7;                     // Filled if input is going to spend multisig tx
 
-    required uint64 amount = 8;                      // amount of previous transaction output
+    required uint64 amount = 8;                                         // amount of previous transaction output
     optional uint32 decred_tree = 9;      // only for Decred, 0 is a normal transaction while 1 is a stake transaction
     reserved 10, 11, 12;                  // fields which are in use, or have been in the past, in TxInputType
     optional bytes witness = 13;          // witness data, only set for EXTERNAL inputs

@@ -1270,7 +1270,7 @@ class GetAddress(protobuf.MessageType):
         2: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Bitcoin'),
         3: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
         4: protobuf.Field("multisig", "MultisigRedeemScriptType", repeated=False, required=False, default=None),
-        8: protobuf.Field("miniscript", "MiniscriptDescriptor", repeated=False, required=False, default=None),
+        8: protobuf.Field("policy", "MiniscriptDescriptor", repeated=False, required=False, default=None),
         5: protobuf.Field("script_type", "InputScriptType", repeated=False, required=False, default=InputScriptType.SPENDADDRESS),
         6: protobuf.Field("ignore_xpub_magic", "bool", repeated=False, required=False, default=None),
         7: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
@@ -1283,7 +1283,7 @@ class GetAddress(protobuf.MessageType):
         coin_name: Optional["str"] = 'Bitcoin',
         show_display: Optional["bool"] = None,
         multisig: Optional["MultisigRedeemScriptType"] = None,
-        miniscript: Optional["MiniscriptDescriptor"] = None,
+        policy: Optional["MiniscriptDescriptor"] = None,
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
         ignore_xpub_magic: Optional["bool"] = None,
         chunkify: Optional["bool"] = None,
@@ -1292,7 +1292,7 @@ class GetAddress(protobuf.MessageType):
         self.coin_name = coin_name
         self.show_display = show_display
         self.multisig = multisig
-        self.miniscript = miniscript
+        self.policy = policy
         self.script_type = script_type
         self.ignore_xpub_magic = ignore_xpub_magic
         self.chunkify = chunkify
@@ -1442,6 +1442,7 @@ class SignTx(protobuf.MessageType):
         13: protobuf.Field("serialize", "bool", repeated=False, required=False, default=True),
         14: protobuf.Field("coinjoin_request", "CoinJoinRequest", repeated=False, required=False, default=None),
         15: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        16: protobuf.Field("policy", "MiniscriptDescriptor", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1462,6 +1463,7 @@ class SignTx(protobuf.MessageType):
         serialize: Optional["bool"] = True,
         coinjoin_request: Optional["CoinJoinRequest"] = None,
         chunkify: Optional["bool"] = None,
+        policy: Optional["MiniscriptDescriptor"] = None,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -1478,6 +1480,7 @@ class SignTx(protobuf.MessageType):
         self.serialize = serialize
         self.coinjoin_request = coinjoin_request
         self.chunkify = chunkify
+        self.policy = policy
 
 
 class TxRequest(protobuf.MessageType):
@@ -1524,7 +1527,6 @@ class TxInput(protobuf.MessageType):
         5: protobuf.Field("sequence", "uint32", repeated=False, required=False, default=4294967295),
         6: protobuf.Field("script_type", "InputScriptType", repeated=False, required=False, default=InputScriptType.SPENDADDRESS),
         7: protobuf.Field("multisig", "MultisigRedeemScriptType", repeated=False, required=False, default=None),
-        21: protobuf.Field("miniscript", "MiniscriptDescriptor", repeated=False, required=False, default=None),
         8: protobuf.Field("amount", "uint64", repeated=False, required=True),
         9: protobuf.Field("decred_tree", "uint32", repeated=False, required=False, default=None),
         13: protobuf.Field("witness", "bytes", repeated=False, required=False, default=None),
@@ -1548,7 +1550,6 @@ class TxInput(protobuf.MessageType):
         sequence: Optional["int"] = 4294967295,
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
         multisig: Optional["MultisigRedeemScriptType"] = None,
-        miniscript: Optional["MiniscriptDescriptor"] = None,
         decred_tree: Optional["int"] = None,
         witness: Optional["bytes"] = None,
         ownership_proof: Optional["bytes"] = None,
@@ -1567,7 +1568,6 @@ class TxInput(protobuf.MessageType):
         self.sequence = sequence
         self.script_type = script_type
         self.multisig = multisig
-        self.miniscript = miniscript
         self.decred_tree = decred_tree
         self.witness = witness
         self.ownership_proof = ownership_proof
@@ -2018,7 +2018,6 @@ class TxInputType(protobuf.MessageType):
         5: protobuf.Field("sequence", "uint32", repeated=False, required=False, default=4294967295),
         6: protobuf.Field("script_type", "InputScriptType", repeated=False, required=False, default=InputScriptType.SPENDADDRESS),
         7: protobuf.Field("multisig", "MultisigRedeemScriptType", repeated=False, required=False, default=None),
-        21: protobuf.Field("miniscript", "MiniscriptDescriptor", repeated=False, required=False, default=None),
         8: protobuf.Field("amount", "uint64", repeated=False, required=False, default=None),
         9: protobuf.Field("decred_tree", "uint32", repeated=False, required=False, default=None),
         13: protobuf.Field("witness", "bytes", repeated=False, required=False, default=None),
@@ -2041,7 +2040,6 @@ class TxInputType(protobuf.MessageType):
         sequence: Optional["int"] = 4294967295,
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
         multisig: Optional["MultisigRedeemScriptType"] = None,
-        miniscript: Optional["MiniscriptDescriptor"] = None,
         amount: Optional["int"] = None,
         decred_tree: Optional["int"] = None,
         witness: Optional["bytes"] = None,
@@ -2060,7 +2058,6 @@ class TxInputType(protobuf.MessageType):
         self.sequence = sequence
         self.script_type = script_type
         self.multisig = multisig
-        self.miniscript = miniscript
         self.amount = amount
         self.decred_tree = decred_tree
         self.witness = witness

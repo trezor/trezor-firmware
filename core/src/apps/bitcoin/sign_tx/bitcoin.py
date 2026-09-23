@@ -1,7 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import workflow
+from trezor import utils, workflow
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import HashWriter, empty_bytearray, ensure
@@ -682,8 +682,6 @@ class Bitcoin:
         else:
             public_key, signature = self.sign_bip143_input(i, txi)
             if self.serialize:
-                if txi.miniscript:
-                    raise ProcessError("No serialization support for miniscript")
                 if txi.multisig:
                     # find out place of our signature based on the pubkey
                     signature_index = multisig.multisig_pubkey_index(
@@ -957,8 +955,8 @@ class Bitcoin:
         if node is None:
             node = self.keychain.derive(txi.address_n)
 
-        if txi.miniscript is not None:
-            script = scripts.derive_miniscript(txi, self.coin)
+        if utils.USE_MINISCRIPT and (policy := self.tx_info.tx.policy) is not None:
+            script = scripts.derive_miniscript(txi, policy, self.coin)
 
             assert self.coin.bech32_prefix is not None
             address = addresses._address_p2wsh(

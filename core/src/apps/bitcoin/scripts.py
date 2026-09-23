@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Sequence
 
-    from trezor.messages import MultisigRedeemScriptType, TxInput
+    from trezor.messages import MiniscriptDescriptor, MultisigRedeemScriptType, TxInput
 
     from apps.common.coininfo import CoinInfo
 
@@ -136,12 +136,6 @@ def write_bip143_script_code_prefixed(
         write_output_script_multisig(w, public_keys, threshold, prefixed=True)
         return
 
-    if txi.miniscript is not None:
-        script = derive_miniscript(txi, coin)
-        write_compact_size(w, len(script))
-        w.extend(script)
-        return
-
     p2pkh = txi.script_type in (
         InputScriptType.SPENDWITNESS,
         InputScriptType.SPENDP2SHWITNESS,
@@ -158,20 +152,22 @@ def write_bip143_script_code_prefixed(
         raise DataError("Unknown input script type for bip143 script code")
 
 
-def derive_miniscript(txi: TxInput, coin: CoinInfo) -> bytes:
-    # TODO: only `wsh()` is supported
-    if txi.script_type != InputScriptType.SPENDWITNESS:
-        raise DataError("Invalid script type")
-    if txi.miniscript is None:
-        raise DataError("Missing miniscript")
+if utils.USE_MINISCRIPT:
 
-    from . import register_policy
+    def derive_miniscript(
+        txi: TxInput, policy: MiniscriptDescriptor, coin: CoinInfo
+    ) -> bytes:
+        # TODO: only `wsh()` is supported
+        if txi.script_type != InputScriptType.SPENDWITNESS:
+            raise DataError("Invalid script type")
 
-    return register_policy.derive_miniscript(
-        txi.miniscript,
-        coin,
-        address_n=txi.address_n,
-    )
+        from . import register_policy
+
+        return register_policy.derive_miniscript(
+            policy,
+            coin,
+            address_n=txi.address_n,
+        )
 
 
 # P2PKH, P2SH

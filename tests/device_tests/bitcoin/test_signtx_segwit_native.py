@@ -679,7 +679,6 @@ def test_miniscript_send_multisig_2(session: Session):
         prev_hash=TXHASH_b9abfa,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDWITNESS,
-        miniscript=desc,
         amount=100_000,
     )
 
@@ -714,8 +713,9 @@ def test_miniscript_send_multisig_2(session: Session):
             "Testnet",
             [inp1],
             [out1],
-            prev_txes=TX_API_TESTNET,
+            policy=desc,
             serialize=False,
+            prev_txes=TX_API_TESTNET,
         )
 
     assert (
@@ -735,6 +735,7 @@ def test_miniscript_send_multisig_2(session: Session):
             "Testnet",
             [inp1],
             [out1],
+            policy=desc,
             prev_txes=TX_API_TESTNET,
             serialize=False,
         )

@@ -489,6 +489,10 @@ def _clear_tx_request(tx_req: TxRequest) -> None:
 
 
 def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
+    if utils.USE_MINISCRIPT:
+        if tx.policy is not None and tx.serialize:
+            raise DataError("Serialization is not supported")
+
     if coin.decred or coin.overwintered:
         tx.expiry = tx.expiry if tx.expiry is not None else 0
     elif tx.expiry:

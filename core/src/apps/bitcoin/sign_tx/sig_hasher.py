@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
+
 from ..writers import (
     TX_HASH_SIZE,
     write_bytes_fixed,
@@ -82,10 +84,11 @@ class BitcoinSigHasher:
         hash_type: int,
     ) -> bytes:
         from trezor.crypto.hashlib import sha256
+        from trezor.messages import SignTx
         from trezor.utils import HashWriter
 
         from .. import scripts
-        from ..writers import get_tx_hash
+        from ..writers import get_tx_hash, write_compact_size
 
         h_preimage = HashWriter(sha256())
 
@@ -105,9 +108,14 @@ class BitcoinSigHasher:
         write_uint32(h_preimage, txi.prev_index)
 
         # scriptCode
-        scripts.write_bip143_script_code_prefixed(
-            h_preimage, txi, public_keys, threshold, coin
-        )
+        if utils.USE_MINISCRIPT and SignTx.is_type_of(tx) and tx.policy is not None:
+            script = scripts.derive_miniscript(txi, tx.policy, coin)
+            write_compact_size(h_preimage, len(script))
+            h_preimage.extend(script)
+        else:
+            scripts.write_bip143_script_code_prefixed(
+                h_preimage, txi, public_keys, threshold, coin
+            )
 
         # amount
         write_uint64(h_preimage, txi.amount)

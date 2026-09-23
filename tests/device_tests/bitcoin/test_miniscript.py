@@ -54,24 +54,24 @@ VECTORS = (  # coin, path, script_type, address
 )
 
 
-@pytest.mark.parametrize("coin, miniscript, n, address", VECTORS)
+@pytest.mark.parametrize("coin, desc, n, address", VECTORS)
 def test_miniscript_get_address(
     session: Session,
     coin: str,
-    miniscript: str,
+    desc: str,
     n: list[int],
     address: str,
 ):
-    desc = messages.MiniscriptDescriptor(
-        name="Policy name", descriptor=miniscript, coin_name=coin
+    policy = messages.MiniscriptDescriptor(
+        name="Policy name", descriptor=desc, coin_name=coin
     )
-    session.call(desc, expect=messages.Success)
+    session.call(msg=policy, expect=messages.Success)
     assert (
         btc.get_address(
             session,
             coin,
             n=n,
-            miniscript=desc,
+            policy=policy,
         )
         == address
     )
@@ -99,15 +99,12 @@ def test_miniscript_spend(session: Session):
         == TPUBS[0]
     )
 
-    desc = messages.MiniscriptDescriptor(
+    policy = messages.MiniscriptDescriptor(
         name="Policy name", descriptor=DESC, coin_name=COIN
     )
-    session.call(
-        desc,
-        expect=messages.Success,
-    )
+    session.call(msg=policy, expect=messages.Success)
     assert (
-        btc.get_address(session, n=[0, 2], miniscript=desc, coin_name=COIN)
+        btc.get_address(session, n=[0, 2], policy=policy, coin_name=COIN)
         == "tb1qerjma9tcyn6qh5yt7wdqqm3q8sz7ft6dn7pratjclzc8pha27rcsgjn0sp"
     )
 
@@ -120,7 +117,6 @@ def test_miniscript_spend(session: Session):
         prev_hash=TXHASH_5694f1,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDWITNESS,
-        miniscript=desc,
         amount=10_000,
     )
 
@@ -135,8 +131,9 @@ def test_miniscript_spend(session: Session):
         "Testnet",
         [inp1],
         [out1],
-        prev_txes=TX_CACHE_SIGNET,
+        policy=policy,
         serialize=False,
+        prev_txes=TX_CACHE_SIGNET,
     )
 
     assert (
@@ -174,7 +171,7 @@ def test_miniscript_spend_liana(session: Session):
     )
     session.call(desc, expect=messages.Success)
     assert (
-        btc.get_address(session, n=[0, 1], miniscript=desc, coin_name=COIN)
+        btc.get_address(session, n=[0, 1], policy=desc, coin_name=COIN)
         == "tb1qx54dhwjrq3ay3zwvuazfa4k32lkhh20f9mqhtjvwc8n28z6ahrgq3pejk2"
     )
 
@@ -189,7 +186,6 @@ def test_miniscript_spend_liana(session: Session):
         prev_hash=TXHASH_d4be22,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
-        miniscript=desc,
         amount=8756,
         sequence=4294967293,
     )
@@ -205,10 +201,11 @@ def test_miniscript_spend_liana(session: Session):
         "Testnet",
         [inp1],
         [out1],
-        prev_txes=TX_CACHE_SIGNET,
         version=2,
         lock_time=304036,
+        policy=desc,
         serialize=False,
+        prev_txes=TX_CACHE_SIGNET,
     )
     # 657c7c72f8e29eb0f9e97cb6418b8f5a228c2b05148f1b10c0f72982f7d3e38a on signet (height=304038)
     assert (
