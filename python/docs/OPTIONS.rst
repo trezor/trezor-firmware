@@ -46,7 +46,6 @@ on one page here.
     crypto             Miscellaneous cryptography features.
     debug              Miscellaneous debug features.
     device             Device management commands - setup, recover seed, wipe, etc.
-    eos                EOS commands.
     ethereum           Ethereum commands.
     evolu              Evolu commands.
     fido               FIDO2, U2F and WebAuthN management commands.
@@ -55,7 +54,6 @@ on one page here.
     get-session        Get a session ID for subsequent commands.
     list               List connected Trezor devices.
     monero             Monero commands.
-    nem                NEM commands.
     nostr              Nostr commands.
     ping               Send ping message.
     ripple             Ripple commands.
@@ -231,26 +229,6 @@ Device management commands - setup, recover seed, wipe, etc.
     unlock-bootloader     Unlocks bootloader.
     wipe                  Reset device to factory defaults and remove all private data.
 
-EOS commands.
-~~~~~~~~~~~~~
-
-.. code::
-
-  trezorctl eos --help
-
-.. code::
-
-  Usage: trezorctl eos [OPTIONS] COMMAND [ARGS]...
-
-    EOS commands.
-
-  Options:
-    --help  Show this message and exit.
-
-  Commands:
-    get-public-key    Get Eos public key in base58 encoding.
-    sign-transaction  Sign EOS transaction.
-
 Ethereum commands.
 ~~~~~~~~~~~~~~~~~~
 
@@ -377,26 +355,6 @@ Monero commands.
   Commands:
     get-address    Get Monero address for specified path.
     get-watch-key  Get Monero watch key for specified path.
-
-NEM commands.
-~~~~~~~~~~~~~
-
-.. code::
-
-  trezorctl nem --help
-
-.. code::
-
-  Usage: trezorctl nem [OPTIONS] COMMAND [ARGS]...
-
-    NEM commands.
-
-  Options:
-    --help  Show this message and exit.
-
-  Commands:
-    get-address  Get NEM address for specified path.
-    sign-tx      Sign (and optionally broadcast) NEM transaction.
 
 Nostr commands.
 ~~~~~~~~~~~~~~~

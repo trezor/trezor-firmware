@@ -10,6 +10,4 @@ features = [
 
     # Legacy coin support
     "decred",
-    "eos",
-    "nem",
 ]

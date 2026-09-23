@@ -184,12 +184,6 @@ def _find_message_handler_module(msg_type: int) -> str:
         if __debug__ and msg_type == MessageType.DebugMoneroDiagRequest:
             return "apps.monero.diag"
 
-        # nem
-        if msg_type == MessageType.NEMGetAddress:
-            return "apps.nem.get_address"
-        if msg_type == MessageType.NEMSignTx:
-            return "apps.nem.sign_tx"
-
         # stellar
         if msg_type == MessageType.StellarGetAddress:
             return "apps.stellar.get_address"
@@ -223,12 +217,6 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.tezos.sign_tx"
         if msg_type == MessageType.TezosGetPublicKey:
             return "apps.tezos.get_public_key"
-
-        # eos
-        if msg_type == MessageType.EosGetPublicKey:
-            return "apps.eos.get_public_key"
-        if msg_type == MessageType.EosSignTx:
-            return "apps.eos.sign_tx"
 
         # solana
         if msg_type == MessageType.SolanaGetPublicKey:

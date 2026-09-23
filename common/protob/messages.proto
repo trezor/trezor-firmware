@@ -179,12 +179,16 @@ enum MessageType {
     reserved 473 to 474;
 
     // NEM
+    /*
     MessageType_NEMGetAddress = 67 [(wire_in) = true];
     MessageType_NEMAddress = 68 [(wire_out) = true];
     MessageType_NEMSignTx = 69 [(wire_in) = true];
     MessageType_NEMSignedTx = 70 [(wire_out) = true];
     MessageType_NEMDecryptMessage = 75 [(wire_in) = true];
     MessageType_NEMDecryptedMessage = 76 [(wire_out) = true];
+    */
+    reserved 67 to 70;
+    reserved 75 to 76;
 
     // Lisk
     /*
@@ -331,12 +335,15 @@ enum MessageType {
     MessageType_MoneroLiveRefreshFinalAck = 557 [(wire_out) = true];
 
     // EOS
+    /*
     MessageType_EosGetPublicKey = 600 [(wire_in) = true];
     MessageType_EosPublicKey = 601 [(wire_out) = true];
     MessageType_EosSignTx = 602 [(wire_in) = true];
     MessageType_EosTxActionRequest = 603 [(wire_out) = true];
     MessageType_EosTxActionAck = 604 [(wire_in) = true];
     MessageType_EosSignedTx = 605 [(wire_out) = true];
+    */
+    reserved 600 to 605;
 
     // BNB Beacon Chain (deprecated)
     reserved 700 to 709;
