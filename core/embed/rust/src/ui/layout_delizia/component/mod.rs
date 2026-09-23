@@ -1,3 +1,5 @@
+#[cfg(feature = "translations")]
+mod action_bar;
 #[cfg(all(feature = "micropython", feature = "translations"))]
 mod address_details;
 #[cfg(feature = "ui_overlay")]
@@ -41,6 +43,8 @@ mod trade_screen;
 mod updatable_more_info;
 mod welcome_screen;
 
+#[cfg(feature = "translations")]
+pub use action_bar::{ActionBar, ActionBarMsg};
 #[cfg(all(feature = "micropython", feature = "translations"))]
 pub use address_details::AddressDetails;
 #[cfg(feature = "ui_overlay")]
