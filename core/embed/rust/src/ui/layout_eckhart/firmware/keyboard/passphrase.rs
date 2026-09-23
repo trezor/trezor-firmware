@@ -92,13 +92,14 @@ impl PassphraseInput {
             for (i, _) in content.char_indices().skip(1) {
                 let suffix = &content[i..];
                 text = suffix;
-                let fits = matches!(
-                    TextLayout::new(Self::STYLE)
-                        .with_bounds(text_area)
-                        .fit_text(suffix),
-                    LayoutFit::Fitting { .. }
-                );
-                if fits {
+                let fit = TextLayout::new(Self::STYLE)
+                    .with_bounds(text_area)
+                    .fit_text(suffix);
+                if let LayoutFit::Fitting { height, .. } = fit {
+                    // Shrink the overlay to the height of the rendered text so
+                    // that no empty line is left at the bottom.
+                    shown_area =
+                        shown_area.with_height(height + SHOWN_INSETS.top + SHOWN_INSETS.bottom);
                     break;
                 }
             }
