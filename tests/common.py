@@ -360,10 +360,8 @@ def click_info_button_delizia_eckhart(debug: "DebugLink"):
 
     # Go through the info screen pages
     for _ in range(layout.page_count() - 1):
-        if debug.layout_type is LayoutType.Delizia:
-            debug.swipe_up()
-        elif debug.layout_type is LayoutType.Eckhart:
-            debug.click(debug.screen_buttons.ok())
+        if debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+            debug.click(debug.screen_buttons.actionbar_right())
 
     # Close info screen
     debug.click(debug.screen_buttons.menu())

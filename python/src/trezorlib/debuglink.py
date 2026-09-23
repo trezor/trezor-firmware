@@ -2090,6 +2090,20 @@ class ScreenButtons:
         else:
             raise ValueError("Wrong layout type")
 
+    def actionbar_left(self) -> Coords:
+        """Left button of the ActionBar."""
+        if self.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+            return (self._left(), self._bottom())
+        else:
+            raise ValueError("Wrong layout type")
+
+    def actionbar_right(self) -> Coords:
+        """Right button of the ActionBar."""
+        if self.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+            return (self._right(), self._bottom())
+        else:
+            raise ValueError("Wrong layout type")
+
     # Pin/passphrase keyboards
     def pin_passphrase_index(self, idx: int) -> Coords:
         assert idx < 10

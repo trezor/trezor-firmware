@@ -107,10 +107,7 @@ def set_selection(debug: "DebugLink", diff: int) -> None:
 
         for _ in range(diff):
             debug.click(button)
-        if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
-            debug.click(debug.screen_buttons.ok())
-        else:
-            debug.swipe_up()
+        debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Caesar:
         layout = debug.read_layout()
         if (
