@@ -1298,5 +1298,6 @@
   "1296": "address__title_multisig_xpub_template",
   "1297": "stellar__deploy_contract",
   "1298": "stellar__wasm_hash",
-  "1299": "ethereum__vault_owner_address"
+  "1299": "ethereum__vault_owner_address",
+  "1300": "cardano__output_contains_datum_or_ref_script"
 }

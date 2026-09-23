@@ -218,6 +218,7 @@ class TR:
     cardano__no_output_tx: str = "Transaction has no outputs, network cannot be verified."
     cardano__nonce: str = "Nonce"
     cardano__other: str = "Other"
+    cardano__output_contains_datum_or_ref_script: str = "Output contains a datum or reference script."
     cardano__path: str = "path"
     cardano__pledge: str = "Pledge"
     cardano__pointer: str = "pointer"

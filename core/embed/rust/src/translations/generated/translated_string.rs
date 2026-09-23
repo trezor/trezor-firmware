@@ -1682,6 +1682,8 @@ pub enum TranslatedString {
     stellar__wasm_hash = 1298,  // "Wasm hash"
     #[cfg(feature = "universal_fw")]
     ethereum__vault_owner_address = 1299,  // "Owner address"
+    #[cfg(feature = "universal_fw")]
+    cardano__output_contains_datum_or_ref_script = 1300,  // "Output contains a datum or reference script."
 }
 
 impl TranslatedString {
@@ -2989,6 +2991,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4294,6 +4297,7 @@ impl TranslatedString {
                 19056,
                 19065,
                 19078,
+                19122,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5598,6 +5602,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6903,6 +6908,7 @@ impl TranslatedString {
                 19056,
                 19065,
                 19078,
+                19122,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8207,6 +8213,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9512,6 +9519,7 @@ impl TranslatedString {
                 19056,
                 19065,
                 19078,
+                19122,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10816,6 +10824,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12121,6 +12130,7 @@ impl TranslatedString {
                 19056,
                 19065,
                 19078,
+                19122,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13426,6 +13436,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14731,6 +14742,7 @@ impl TranslatedString {
                 16928,
                 16937,
                 16950,
+                16994,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16035,6 +16047,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17340,6 +17353,7 @@ impl TranslatedString {
                 16928,
                 16937,
                 16950,
+                16994,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18644,6 +18658,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19949,6 +19964,7 @@ impl TranslatedString {
                 16928,
                 16937,
                 16950,
+                16994,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21253,6 +21269,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22558,6 +22575,7 @@ impl TranslatedString {
                 16928,
                 16937,
                 16950,
+                16994,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23863,6 +23881,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25168,6 +25187,7 @@ impl TranslatedString {
                 18909,
                 18918,
                 18931,
+                18975,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26472,6 +26492,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27777,6 +27798,7 @@ impl TranslatedString {
                 18909,
                 18918,
                 18931,
+                18975,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29081,6 +29103,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30386,6 +30409,7 @@ impl TranslatedString {
                 18909,
                 18918,
                 18931,
+                18975,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31690,6 +31714,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32995,6 +33020,7 @@ impl TranslatedString {
                 18909,
                 18918,
                 18931,
+                18975,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -34300,6 +34326,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -35605,6 +35632,7 @@ impl TranslatedString {
                 20380,
                 20389,
                 20402,
+                20446,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36909,6 +36937,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -38214,6 +38243,7 @@ impl TranslatedString {
                 20380,
                 20389,
                 20402,
+                20446,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39518,6 +39548,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -40823,6 +40854,7 @@ impl TranslatedString {
                 20380,
                 20389,
                 20402,
+                20446,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42127,6 +42159,7 @@ impl TranslatedString {
                 "Deploy contract",
                 "Wasm hash",
                 "Owner address",
+                "Output contains a datum or reference script.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -43432,6 +43465,7 @@ impl TranslatedString {
                 20380,
                 20389,
                 20402,
+                20446,
             ];
 
         }
@@ -43716,6 +43750,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_cardano__nonce, Self::cardano__nonce),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__other, Self::cardano__other),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__output_contains_datum_or_ref_script, Self::cardano__output_contains_datum_or_ref_script),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__path, Self::cardano__path),
         #[cfg(feature = "universal_fw")]
