@@ -174,19 +174,6 @@ class TestPaymentRequestVerfier(unittest.TestCase):
         )
 
     @patch_prod
-    def test_payment_requests_unsupported_in_prod_sell(self):
-        with self.assertRaises(wire.DataError) as e:
-            PaymentRequestVerifier(
-                payment_request=_get_sell_payment_request(),
-                slip44_id=1,
-                keychain=_get_test_keychain(),
-                amount_size_bytes=12345,
-            )
-        self.assertEqual(
-            e.value.message, "Only COIN SWAP payment requests are supported."
-        )
-
-    @patch_prod
     def test_payment_requests_unsupported_in_prod_coin_purchase_memo_only(self):
         with self.assertRaises(wire.DataError) as e:
             PaymentRequestVerifier(
@@ -196,7 +183,7 @@ class TestPaymentRequestVerfier(unittest.TestCase):
                 amount_size_bytes=12345,
             )
         self.assertEqual(
-            e.value.message, "Only COIN SWAP payment requests are supported."
+            e.value.message, "Supported payment requests are SELL and SWAP."
         )
 
     @patch_prod
@@ -209,13 +196,27 @@ class TestPaymentRequestVerfier(unittest.TestCase):
                 amount_size_bytes=12345,
             )
         self.assertEqual(
-            e.value.message, "Only COIN SWAP payment requests are supported."
+            e.value.message, "Supported payment requests are SELL and SWAP."
         )
 
     @patch_prod
     def test_payment_requests_supported_in_prod_coin_swap(self):
         verifier = PaymentRequestVerifier(
             payment_request=_get_coin_swap_request(),
+            slip44_id=1,
+            keychain=_get_test_keychain(),
+            amount_size_bytes=12345,
+        )
+
+        # Verify signature - should fail, as PROD key should be used for verification
+        with self.assertRaises(wire.DataError) as e:
+            verifier.verify()
+        self.assertEqual(e.value.message, "Invalid signature in payment request.")
+
+    @patch_prod
+    def test_payment_requests_supported_in_prod_sell(self):
+        verifier = PaymentRequestVerifier(
+            payment_request=_get_sell_payment_request(),
             slip44_id=1,
             keychain=_get_test_keychain(),
             amount_size_bytes=12345,
