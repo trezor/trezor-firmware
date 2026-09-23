@@ -98,60 +98,60 @@ def _get_patterns_for_script_type(
     script_type: InputScriptType,
     multisig: bool,
     include_fw_signing: bool = False,
-) -> list[str]:
-    patterns: list[str] = []
-    append = patterns.append  # local_cache_attribute
+) -> set[str]:
+    patterns: set[str] = set()
+    add = patterns.add  # local_cache_attribute
     slip44 = coin.slip44  # local_cache_attribute
 
     if script_type == InputScriptType.SPENDADDRESS and not multisig:
-        append(PATTERN_BIP44)
+        add(PATTERN_BIP44)
         if slip44 == SLIP44_BITCOIN:
-            append(PATTERN_GREENADDRESS_A)
-            append(PATTERN_GREENADDRESS_B)
+            add(PATTERN_GREENADDRESS_A)
+            add(PATTERN_GREENADDRESS_B)
 
         if include_fw_signing:
-            append(PATTERN_SLIP26_T1_FW)
+            add(PATTERN_SLIP26_T1_FW)
     elif (
         script_type in (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG)
         and multisig
     ):
-        append(PATTERN_BIP48_RAW)
+        add(PATTERN_BIP48_RAW)
         if slip44 == SLIP44_BITCOIN or (
             coin.fork_id is not None and slip44 != SLIP44_TESTNET
         ):
-            append(PATTERN_BIP45)
+            add(PATTERN_BIP45)
         if slip44 == SLIP44_BITCOIN:
-            append(PATTERN_GREENADDRESS_A)
-            append(PATTERN_GREENADDRESS_B)
+            add(PATTERN_GREENADDRESS_A)
+            add(PATTERN_GREENADDRESS_B)
         if coin.coin_name in BITCOIN_NAMES:
-            append(PATTERN_UNCHAINED_HARDENED)
-            append(PATTERN_UNCHAINED_UNHARDENED)
+            add(PATTERN_UNCHAINED_HARDENED)
+            add(PATTERN_UNCHAINED_UNHARDENED)
 
     elif coin.segwit and script_type == InputScriptType.SPENDP2SHWITNESS:
-        append(PATTERN_BIP49)
-        append(PATTERN_CASA)
+        add(PATTERN_BIP49)
+        add(PATTERN_CASA)
         if multisig:
-            append(PATTERN_BIP48_P2SHSEGWIT)
+            add(PATTERN_BIP48_P2SHSEGWIT)
         if slip44 == SLIP44_BITCOIN:
-            append(PATTERN_GREENADDRESS_A)
-            append(PATTERN_GREENADDRESS_B)
+            add(PATTERN_GREENADDRESS_A)
+            add(PATTERN_GREENADDRESS_B)
         if coin.coin_name in BITCOIN_NAMES:
-            append(PATTERN_CASA_UNHARDENED)
+            add(PATTERN_CASA_UNHARDENED)
 
     elif coin.segwit and script_type == InputScriptType.SPENDWITNESS:
-        append(PATTERN_BIP84)
+        add(PATTERN_BIP84)
         if multisig:
-            append(PATTERN_BIP48_SEGWIT)
+            add(PATTERN_BIP48_SEGWIT)
         if slip44 == SLIP44_BITCOIN:
-            append(PATTERN_GREENADDRESS_A)
-            append(PATTERN_GREENADDRESS_B)
+            add(PATTERN_GREENADDRESS_A)
+            add(PATTERN_GREENADDRESS_B)
         if coin.coin_name in BITCOIN_NAMES and multisig:
-            append(PATTERN_UNCHAINED_HARDENED)
-            append(PATTERN_UNCHAINED_UNHARDENED)
+            add(PATTERN_UNCHAINED_HARDENED)
+            add(PATTERN_UNCHAINED_UNHARDENED)
 
     elif coin.taproot and script_type == InputScriptType.SPENDTAPROOT:
-        append(PATTERN_BIP86)
-        append(PATTERN_SLIP25_TAPROOT)
+        add(PATTERN_BIP86)
+        add(PATTERN_SLIP25_TAPROOT)
 
     return patterns
 
@@ -177,8 +177,10 @@ def validate_path_against_script_type(
     )
 
     if SignMessage.is_type_of(msg):
-        patterns += _get_patterns_for_script_type(coin, script_type, multisig=True)
-        patterns += _sign_message_export_patterns(coin)
+        patterns |= _get_patterns_for_script_type(coin, script_type, multisig=True)
+        # Export points of every script type, since signing hosts may send
+        # none. Removes a warning.
+        patterns |= _sign_message_export_patterns(coin)
 
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
@@ -188,20 +190,18 @@ def validate_path_against_script_type(
 def _xpub_export_patterns(
     coin: coininfo.CoinInfo,
     script_type: InputScriptType,
-) -> list[str]:
+) -> set[str]:
     """Prefixes of the supported patterns at which an xpub may be exported.
 
     A prefix ending at the deepest hardened level, or at the account level
     where that is deeper.
     """
     patterns = _get_patterns_for_script_type(coin, script_type, multisig=False)
-    patterns += _get_patterns_for_script_type(coin, script_type, multisig=True)
+    patterns |= _get_patterns_for_script_type(coin, script_type, multisig=True)
 
-    export_patterns: list[str] = []
+    export_patterns: set[str] = set()
     for pattern in patterns:
-        for prefix in _pattern_export_points(pattern):
-            if prefix not in export_patterns:
-                export_patterns.append(prefix)
+        export_patterns.update(_pattern_export_points(pattern))
 
     return export_patterns
 
@@ -221,26 +221,22 @@ def _pattern_export_points(pattern: str) -> list[str]:
     if deepest_hardened == 0:
         return []
 
-    prefixes: list[str] = []
-    for depth in (deepest_hardened, max(deepest_hardened, account)):
-        prefix = "m/" + "/".join(components[:depth])
-        if prefix not in prefixes:
-            prefixes.append(prefix)
+    prefixes = ["m/" + "/".join(components[:deepest_hardened])]
+    if account > deepest_hardened:
+        prefixes.append("m/" + "/".join(components[:account]))
 
     return prefixes
 
 
-def _sign_message_export_patterns(coin: coininfo.CoinInfo) -> list[str]:
+def _sign_message_export_patterns(coin: coininfo.CoinInfo) -> set[str]:
     """Export points of every script type sign_message() can sign with."""
-    patterns: list[str] = []
+    patterns: set[str] = set()
     for script_type in (
         InputScriptType.SPENDADDRESS,
         InputScriptType.SPENDP2SHWITNESS,
         InputScriptType.SPENDWITNESS,
     ):
-        for pattern in _xpub_export_patterns(coin, script_type):
-            if pattern not in patterns:
-                patterns.append(pattern)
+        patterns.update(_xpub_export_patterns(coin, script_type))
 
     return patterns
 
