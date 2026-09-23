@@ -55,7 +55,13 @@ def _is_sell(payment_request: PaymentRequest) -> bool:
 
 
 class PaymentRequestVerifier:
-    PUBLIC_KEY = b"\x02\xaa\x9b\x94\xb3\x06\xf1\xb5\x0c\x19\xb4\xb9\x53\xb6\xac\xdf\x2d\x3a\xc0\x9e\xca\x5e\x53\x44\xa2\xbb\x2f\xbf\x19\x49\x5d\x55\x0c"
+    # nist256p1 public keys trusted to sign payment requests.
+    PUBLIC_KEYS = (
+        # Trezor production key
+        b"\x02\xaa\x9b\x94\xb3\x06\xf1\xb5\x0c\x19\xb4\xb9\x53\xb6\xac\xdf\x2d\x3a\xc0\x9e\xca\x5e\x53\x44\xa2\xbb\x2f\xbf\x19\x49\x5d\x55\x0c",
+        # Swapkit production key
+        b"\x03\x23\x8e\x28\x1e\x1d\xa7\x08\xc8\x4d\x72\xab\xf6\x5e\xdb\x68\x08\xda\xf9\xca\x2c\x19\x65\xed\x94\xa3\x10\xae\x41\x55\xe4\x8e\xbb",
+    )
 
     def verify_payment_request_is_supported(
         self, payment_request: PaymentRequest
@@ -79,10 +85,14 @@ class PaymentRequestVerifier:
     if __debug__:
 
         def _use_debug_key(self) -> None:
-            # nist256p1 public key of m/0h for "all all ... all" seed.
-            # Corresponding private key: b"\x05\x62\x35\xb0\x47\x6f\x05\x7f\x27\x65\x21\x97\x24\xf7\xf1\x80\x7d\x58\x80\x2b\x55\x0e\xd5\xbf\x6f\x73\x05\x0a\xf5\x45\x63\x00"
-            # keeping it here for reference in case tests need to be updated!
-            self.PUBLIC_KEY = b"\x03\xd9\xd9\x3f\x89\xc6\x96\x3b\x94\xbb\xd7\xa5\x11\x88\x28\xe4\x4c\x1c\x39\x59\x15\xac\xe8\x48\x88\x71\x7f\x56\x8c\xb0\x19\x74\xc3"
+            self.PUBLIC_KEYS = (
+                # nist256p1 public key of m/0h for "all all ... all" seed.
+                # Corresponding private key: b"\x05\x62\x35\xb0\x47\x6f\x05\x7f\x27\x65\x21\x97\x24\xf7\xf1\x80\x7d\x58\x80\x2b\x55\x0e\xd5\xbf\x6f\x73\x05\x0a\xf5\x45\x63\x00"
+                # keeping it here for reference in case tests need to be updated!
+                b"\x03\xd9\xd9\x3f\x89\xc6\x96\x3b\x94\xbb\xd7\xa5\x11\x88\x28\xe4\x4c\x1c\x39\x59\x15\xac\xe8\x48\x88\x71\x7f\x56\x8c\xb0\x19\x74\xc3",
+                # Swapkit staging key
+                b"\x03\x9e\x00\x94\xc3\x05\x1c\x71\x1f\x7a\xdf\xed\x7c\xaa\xaa\x57\x09\x65\xdb\x7a\x50\x0b\x64\x05\xcc\xa2\x89\x65\xed\x58\xd8\x61\x72",
+            )
 
         def _use_debug_verification(self) -> None:
             self.verify_payment_request_is_supported = lambda payment_request: None
@@ -197,9 +207,11 @@ class PaymentRequestVerifier:
         hash_outputs = self.h_outputs.get_digest()
         writers.write_bytes_fixed(self.h_pr, hash_outputs, 32)
 
-        if not nist256p1.verify(
-            self.PUBLIC_KEY, self.signature, self.h_pr.get_digest()
-        ):
+        digest = self.h_pr.get_digest()
+        for public_key in self.PUBLIC_KEYS:
+            if nist256p1.verify(public_key, self.signature, digest):
+                break
+        else:
             raise DataError("Invalid signature in payment request.")
 
     def add_output(self, amount: int, address: str, change: bool = False) -> None:
