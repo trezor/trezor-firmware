@@ -79,7 +79,7 @@ class OrdinarySigner(Signer):
         # super() omitted intentionally
         # for OrdinarySigner, we do not show the prompt to choose level of details
         if self.suite_tx_type is SuiteTxType.NOT_SUITE_TX:
-            self.should_show_details = await layout.show_tx_init(
+            self.should_show_details = await layout.should_show_details(
                 self.signing_mode_title
             )
         else:

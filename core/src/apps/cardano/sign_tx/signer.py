@@ -269,7 +269,9 @@ class Signer:
         validate_network_info(msg.network_id, msg.protocol_magic)
 
     async def _show_tx_init(self) -> None:
-        self.should_show_details = await layout.show_tx_init(self.signing_mode_title)
+        self.should_show_details = await layout.should_show_details(
+            self.signing_mode_title
+        )
 
         if not self._is_network_id_verifiable():
             await layout.warn_tx_network_unverifiable()
