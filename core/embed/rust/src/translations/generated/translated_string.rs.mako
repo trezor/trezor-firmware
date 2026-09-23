@@ -106,12 +106,12 @@ def filter_by_features(values: list[str], keep_debug: bool, keep_altcoin: bool) 
     [encoded] = TranslatedStringsChunk.from_items(filter_by_features(layout_data, *enabled_features))
 
     # Emit one string per line (to minimize merge conflicts)
-    concat_strings = encoded.strings.decode()
+    # Offsets are byte offsets, so slice the UTF-8 bytes before decoding
     strings = [
-        concat_strings[begin:end]
+        encoded.strings[begin:end].decode()
         for begin, end in zip(encoded.offsets[:-1], encoded.offsets[1:])
     ]
-    assert "".join(strings) == concat_strings
+    assert "".join(strings) == encoded.strings.decode()
 %>\
             ${cfg_line}
             pub const ENGLISH_STRINGS: &'static str = concat!(
