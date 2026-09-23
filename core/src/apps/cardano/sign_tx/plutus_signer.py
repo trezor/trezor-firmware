@@ -71,7 +71,7 @@ class PlutusSigner(Signer):
             show_both_credentials,
         )
 
-    def _should_show_output(self, output: messages.CardanoTxOutput) -> bool:
+    async def _should_show_output(self, output: messages.CardanoTxOutput) -> bool:
         # super() omitted intentionally
         # All outputs need to be shown (even device-owned), because they might influence
         # the script evaluation.

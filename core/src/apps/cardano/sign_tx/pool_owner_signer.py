@@ -63,7 +63,7 @@ class PoolOwnerSigner(Signer):
         ):
             raise ProcessError("Invalid output")
 
-    def _should_show_output(self, output: messages.CardanoTxOutput) -> bool:
+    async def _should_show_output(self, output: messages.CardanoTxOutput) -> bool:
         # super() omitted intentionally
         # There are no spending witnesses, it is thus safe to hide outputs.
         return False

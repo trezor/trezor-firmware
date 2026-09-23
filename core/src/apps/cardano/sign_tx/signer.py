@@ -320,7 +320,7 @@ class Signer:
         self, outputs_list: HashBuilderList, output: CardanoTxOutput, output_index: int
     ) -> None:
         self._validate_output(output)
-        should_show = self._should_show_output(output)
+        should_show = await self._should_show_output(output)
         if should_show:
             await self._show_output_init(output, output_index)
 
@@ -453,7 +453,7 @@ class Signer:
             Credential.stake_credential(address_parameters),
         )
 
-    def _should_show_output(self, output: CardanoTxOutput) -> bool:
+    async def _should_show_output(self, output: CardanoTxOutput) -> bool:
         """
         Determines whether the output should be shown. Extracted from _show_output
         because of readability.
