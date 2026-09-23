@@ -534,6 +534,7 @@
     "cardano__no_output_tx": "Transaction has no outputs, network cannot be verified.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Other",
+    "cardano__output_contains_datum_or_ref_script": "Output contains a datum or reference script.",
     "cardano__path": "path",
     "cardano__pledge": "Pledge",
     "cardano__pointer": "pointer",
