@@ -113,9 +113,13 @@ class WardResult(NamedTuple):
     # What a write produced. The caller must publish these to the WM, or the device is
     # ahead of it and its next sync is refused as a rollback.
     counter: Optional[int] = None
-    mac: Optional[bytes] = None
-    # Authorises this write's transition. The caller stores it with the link so another
-    # device of the wallet can later verify the step without having witnessed it.
+    # Authorises this write's transition, and is the ONLY authenticator the device hands back --
+    # the separate `mac` alongside it is gone with K_mac. What the caller publishes to the WM is
+    # `(counter, new_root)`, the root being one it derived itself.
+    #
+    # The caller also stores it with the link, so another device of the wallet can later verify
+    # the step without having witnessed it. That is now load-bearing rather than merely useful:
+    # nothing else proves a head is a state this wallet really produced.
     auth_commit: Optional[bytes] = None
     # `flush_queue` only (so, `WardFlushQueueAck` only): queued changes still waiting to be
     # handed over after this one. Loop until it reads zero. There is no `queued` field: a queued
@@ -169,7 +173,6 @@ def _call_answering_pulls(
             res.entry_key or entry_key,
             Leaf(res.identity, res.content),
             res.counter,
-            res.mac,
             res.auth_commit,
             getattr(res, "remaining", None),
         )
@@ -409,15 +412,27 @@ def sync(session: "Session") -> messages.WardSyncAck:
 
 def ingest_attestation(
     session: "Session",
-    counter: int,
-    mac: bytes,
+    from_counter: int,
+    from_root: Optional[bytes],
+    to_counter: int,
+    to_root: Optional[bytes],
     wm_signature: bytes,
     timestamp: int = 0,
 ) -> messages.WardIngestAttestationAck:
-    """Deliver the WM's signed (counter, mac, timestamp) for the open round."""
+    """Deliver the WM's signed TRANSITION for the open round.
+
+    The WM attests the step that reached the current head, not the head alone -- the same
+    statement the device's own `auth_commit` covers. At counter 0 the step is `(0, empty) ->
+    (0, empty)`: nothing produced genesis, so it attests itself.
+    """
     return session.call(
         messages.WardIngestAttestation(
-            counter=counter, mac=mac, wm_signature=wm_signature, timestamp=timestamp
+            from_counter=from_counter,
+            from_root=from_root,
+            to_counter=to_counter,
+            to_root=to_root,
+            wm_signature=wm_signature,
+            timestamp=timestamp,
         ),
         expect=messages.WardIngestAttestationAck,
     )
@@ -425,8 +440,10 @@ def ingest_attestation(
 
 def recover_counter(
     session: "Session",
-    counter: int,
-    mac: bytes,
+    from_counter: int,
+    from_root: Optional[bytes],
+    to_counter: int,
+    to_root: Optional[bytes],
     wm_signature: bytes,
     timestamp: int = 0,
 ) -> messages.WardRecoverCounterAck:
@@ -437,22 +454,48 @@ def recover_counter(
     """
     return session.call(
         messages.WardRecoverCounter(
-            counter=counter, mac=mac, wm_signature=wm_signature, timestamp=timestamp
+            from_counter=from_counter,
+            from_root=from_root,
+            to_counter=to_counter,
+            to_root=to_root,
+            wm_signature=wm_signature,
+            timestamp=timestamp,
         ),
         expect=messages.WardRecoverCounterAck,
     )
 
 
-def reconcile(session: "Session", root: Optional[bytes]) -> messages.WardReconcileAck:
-    """Supply the root and adopt it, if it matches what was attested."""
+def reconcile(
+    session: "Session",
+    link: Optional[tuple] = None,
+) -> messages.WardReconcileAck:
+    """Adopt the attested head by authorising the step the WM attested.
+
+    NOTHING BUT 32 BYTES TRAVELS. The WM attests the whole transition, so both counters and both
+    roots arrive inside the signature the device verified this round; a host names none of them.
+    What it contributes is the `auth_commit` over that same step, which only a device of this
+    wallet could mint. `link` is still taken as the usual
+    `(from_counter, from_root, to_counter, to_root, auth_commit)` 5-tuple for callers' convenience
+    -- only its last element is sent, and the rest is a cross-check the caller may do itself.
+
+    Pass `link=None` only at counter 0, where the tree is empty and no transition produced it.
+
+    Prefer `verify_chain`: this proves one step, not that the attested predecessor descends from
+    the device's own head, so a WM colluding with a host can still attest a step off the
+    authoritative line. The walk rules that out.
+    """
+    auth_commit = None
+    if link is not None:
+        auth_commit = link[4]
+
     return session.call(
-        messages.WardReconcile(root=root), expect=messages.WardReconcileAck
+        messages.WardReconcile(auth_commit=auth_commit),
+        expect=messages.WardReconcileAck,
     )
 
 
 def verify_chain(
     session: "Session",
-    head_root: Optional[bytes],
     link_source: LinkSource,
     attestation: Optional[tuple] = None,
     max_links_per_ack: int = 64,
@@ -464,9 +507,6 @@ def verify_chain(
     until it reaches the head it already holds. This function is the host half of that loop --
     the same shape as `btc.sign_tx`'s TxRequest exchange.
 
-    `head_root` is the root at the anchored head. The device accepts it only because it
-    reproduces the mac the WM signed, so a wrong one fails rather than being followed.
-
     `link_source(to_counter, to_root, limit)` must return up to `limit` links ending at that exact
     state, NEWEST FIRST and contiguous -- each one's `from` end being the next one's `to` end.
     Links are the usual `(from_counter, from_root, to_counter, to_root, auth_commit)` 5-tuples.
@@ -474,17 +514,30 @@ def verify_chain(
     honest answer when the host does not hold that range.
 
     `attestation` anchors the walk on an ARCHIVED head instead of the one attested in this round:
-    the `(nonce, counter, mac, timestamp, wm_signature)` the host kept from when that head was
-    current. Descent is then proved in full and currency is not claimed at all -- the device
+    the tuple the host kept from when that head was current. Descent is then proved in full and currency is not claimed at all -- the device
     adopts, settles, and stays OFFLINE. Omit it to anchor on this round's attestation, which is
     what latches online.
 
-    The device names no mac either way. On the archived path it derives one from `head_root`
-    itself, so the host can only fail to hold a signature over what the device computed.
+    THE ANCHOR IS ONLY EVER PASSED ON THE ARCHIVED PATH, and comes from the attestation tuple
+    itself. On the live path the device takes the whole step from this round's attestation and
+    REFUSES any anchor field supplied here -- a field that is load-bearing on one path and
+    decorative on the other is how the two come to be confused.
+
+    The archived tuple is
+    `(nonce, from_counter, from_root, to_counter, to_root, timestamp, wm_signature)`.
     """
-    nonce = timestamp = wm_signature = anchor_counter = None
+    nonce = timestamp = wm_signature = None
+    anchor_counter = head_root = anchor_from_counter = anchor_from_root = None
     if attestation is not None:
-        nonce, anchor_counter, _mac, timestamp, wm_signature = attestation
+        (
+            nonce,
+            anchor_from_counter,
+            anchor_from_root,
+            anchor_counter,
+            head_root,
+            timestamp,
+            wm_signature,
+        ) = attestation
 
     res = session.call(
         messages.WardVerifyChain(
@@ -493,6 +546,8 @@ def verify_chain(
             timestamp=timestamp,
             wm_signature=wm_signature,
             anchor_counter=anchor_counter,
+            anchor_from_counter=anchor_from_counter,
+            anchor_from_root=anchor_from_root,
         )
     )
 
@@ -537,7 +592,8 @@ def rollback(
     produced it, and genesis has none.
 
     `attestation` is the tuple the caller ARCHIVED when the target was the head --
-    `(nonce, counter, mac, timestamp, wm_signature)` -- and it is required. The link alone
+    `(nonce, from_counter, from_root, to_counter, to_root, timestamp, wm_signature)` -- and it is
+    required. It must name the SAME transition as `link`, not merely end in the same place. The link alone
     proves a device of this wallet authorised the target; only the attestation proves the WM
     ever held it, so without one a caller could present a link from an orphaned fork. A caller
     that kept none cannot roll back.
@@ -548,7 +604,7 @@ def rollback(
             "rollback needs the attestation archived for the target counter; a caller that "
             "kept none cannot prove the target was ever the WM's head"
         )
-    nonce, _counter, _mac, timestamp, wm_signature = attestation
+    nonce, _afc, _afr, _atc, _atr, timestamp, wm_signature = attestation
     return session.call(
         messages.WardRollback(
             to_root=to_root,
@@ -732,7 +788,7 @@ def flush_queue(
     """Publish ONE queued change, sealed and re-derived against current state.
 
     Returns a result whose `remaining` says how many are still waiting; call again while it
-    is non-zero. `apply` the leaf and publish (counter, mac) to the WM exactly as for a
+    is non-zero. `apply` the leaf and publish (counter, root) to the WM exactly as for a
     write -- the change does not take effect until the WM confirms that counter, and until
     then the device keeps it queued and will offer it again.
 

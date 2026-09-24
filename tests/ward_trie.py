@@ -133,7 +133,8 @@ class WardTrie:
         # Opaque to the host, which is the point -- it cannot forge a step, and cannot
         # check one either; only a device of this wallet can.
         self.links: list = []
-        # THE ATTESTATION ARCHIVE: counter -> (nonce, counter, mac, timestamp, wm_signature).
+        # THE ATTESTATION ARCHIVE, keyed by the `to` counter:
+        #   counter -> (nonce, from_counter, from_root, to_counter, to_root, ts, wm_signature)
         #
         # Every one of these was already received and then thrown away -- the sync helpers
         # ingested the attestation and dropped the signature. Keeping them is what makes two
@@ -152,10 +153,30 @@ class WardTrie:
         self.attestations: dict = {}
 
     def archive_attestation(
-        self, nonce: bytes, counter: int, mac: bytes, timestamp: int, signature: bytes
+        self,
+        nonce: bytes,
+        from_counter: int,
+        from_root,
+        to_counter: int,
+        to_root,
+        timestamp: int,
+        signature: bytes,
     ) -> None:
-        """Keep what the WM just attested. A real host does this at every sync and publish."""
-        self.attestations[counter] = (nonce, counter, mac, timestamp, signature)
+        """Keep what the WM just attested. A real host does this at every sync and publish.
+
+        Keyed by the `to` counter, which still identifies one head -- the WM attests one step per
+        counter. The whole step is kept because `rollback` must present an attestation naming the
+        SAME transition as its link, not merely one ending in the same place.
+        """
+        self.attestations[to_counter] = (
+            nonce,
+            from_counter,
+            from_root,
+            to_counter,
+            to_root,
+            timestamp,
+            signature,
+        )
 
     def attestation_for(self, counter: int):
         """The archived tuple for a head, or None if this host never kept one."""

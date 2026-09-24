@@ -107,7 +107,6 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from .attest import root_mac
     from .cas import auth_commit
     from .common import (
         WARNING_UNVERIFIED,
@@ -119,7 +118,6 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
     from .keys import (
         ENTRY_TYPE_ADDRESS,
         derive_k_auth,
-        derive_k_mac,
         derive_ward_id,
         entry_key_for,
     )
@@ -160,9 +158,6 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
             identity=make_leaf_identity(key_type, EMPTY_PART),
             content=make_leaf_content(EMPTY_PART),
             counter=counter,
-            mac=root_mac(
-                await derive_k_mac(), await derive_ward_id(), counter, await get_root()
-            ),
         )
 
     props = [
@@ -200,7 +195,6 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
     content = make_leaf_content(EMPTY_PART)
     step = auth_commit(
         await derive_k_auth(),
-        await derive_k_mac(),
         await derive_ward_id(),
         counter - 1,
         from_root,
@@ -222,6 +216,5 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
         identity=identity,
         content=content,
         counter=counter,
-        mac=root_mac(await derive_k_mac(), await derive_ward_id(), counter, new_root),
         auth_commit=step,
     )

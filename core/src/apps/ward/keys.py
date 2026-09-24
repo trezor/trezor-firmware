@@ -59,7 +59,7 @@ async def derive_k_sig() -> bytes:
     wallet verifies, and it stays the authority on authenticity; K_sig exists so a party
     holding no secret -- the WM -- can also check that a transition came from a real device
     of this wallet, which is what lets it arbitrate ordering without being trusted for
-    anything but freshness. See `cas.sig_commit`.
+    anything but freshness. Both now sign the identical bytes; see `cas.transition_preimage`.
     """
     return await _derive_slip21([b"ward", b"K_sig"])
 
@@ -82,21 +82,20 @@ async def derive_ward_id() -> bytes:
     return ed25519.publickey(await derive_k_sig())
 
 
-async def derive_k_mac() -> bytes:
-    """K_mac, which MACs the root the WM attests. Never leaves the device.
-
-    Its whole purpose is that the WM cannot compute one: it can sign a mac, so it can
-    replay a state this wallet reached, but it can never fabricate one.
-    """
-    return await _derive_slip21([b"ward", b"K_mac"])
-
-
 async def derive_k_auth() -> bytes:
     """K_auth, which authorises a transition from one root to the next.
 
     Seed-derived, so every device of the wallet holds it -- which is the point: a
     transition needs to be verifiable by the other devices that share this tree, and by
     nobody else. See `cas.py` for why a MAC rather than a signature.
+
+    THE SOLE AUTHORITY ON STATE, now that K_mac is gone. There was a second leaf,
+    `[b"ward", b"K_mac"]`, which MAC'd the `(counter, root)` the WM attested so that the WM
+    could neither see a root nor fabricate a head. The WM holds roots in the clear today and
+    `cas.auth_commit` is the only keyed statement left, so descent -- not a commitment the WM
+    cannot compute -- is what proves a head is real. THAT LEAF IS RETIRED AND MUST NOT BE
+    REUSED: a future key derived at the same path would collide with whatever an older build
+    wrote under it.
     """
     return await _derive_slip21([b"ward", b"K_auth"])
 

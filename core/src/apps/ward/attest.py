@@ -1,19 +1,46 @@
-"""WM attestation: the freshness authority's signature, and the root MAC it signs.
+"""WM attestation: the freshness authority's signature over a TRANSITION.
 
-The WM (WARD Manager) is an external service that keeps the authoritative
-`(counter, mac)` per wallet. It is NOT trusted with contents:
+The WM (WARD Manager) is an external service that keeps the authoritative head per wallet and
+signs it on demand. What it signs is the STEP that reached that head, not the head alone:
 
-    mac = HMAC-SHA256(K_mac, b"WARD ROOT v1" || ward_id || counter(4B BE) || root)
+    from_counter, from_root  ->  to_counter, to_root
 
-K_mac is seed-derived, so only the device family can compute a mac. The WM signs one
-without being able to produce one, which bounds a malicious WM to REPLAYING a
-`(counter, mac)` pair this wallet genuinely reached -- it cannot fabricate a state. The
-counter floor then bounds which replays are acceptable. That pair of properties is the
-whole freshness story, and it is why the mac exists rather than the WM signing the root
-directly: a WM that signed roots would learn the entire history of every wallet it serves.
+which is exactly the statement `cas.auth_commit` MACs. Two verifiers, two secrets, one statement
+-- the shape `auth_commit` and `wm_sig` already share, now extended to the third authenticator.
+
+WHY THE STEP AND NOT THE STATE. A bare state left the PREDECESSOR for the host to choose: it
+could present any link it held whose `to` end was the attested head, and two such links can exist
+at once, because roots are content-addressed and a write and a revert can land on the same root at
+the same counter. Nothing was forgeable that way -- the destination was pinned either way -- but
+the device credited the wrong transition in `offline_store.reconcile_pending`, so a queued change
+was settled or re-offered wrongly, and the "another device discarded N changes" warning could be
+raised or suppressed. Naming the step removes that choice. `rollback`'s archived proof had the
+same ambiguity and loses it for the same reason.
+
+WHAT IT DOES NOT DO. A WM colluding with a host can still name a transition off the authoritative
+line; nothing an attestation says can prevent that, because the WM's whole job is to assert which
+state is current. Only `verify_chain`'s walk back to a state this device already holds rules it
+out.
+
+IT SIGNS THE ROOT ITSELF. There used to be a keyed indirection here -- `root_mac` under a
+seed-derived K_mac, which the WM stored and attested without being able to compute one. That
+bought two things: the WM stayed blind to roots, and it was bounded to REPLAYING a state the
+wallet genuinely reached rather than naming a fabricated one. Both are gone, deliberately, and
+the second is the one worth being honest about: a malicious WM can now attest a root this
+wallet never held.
+
+WHAT MAKES THAT SURVIVABLE. An attestation is a claim about FRESHNESS and ORDERING, and about
+nothing else. What turns it into a claim about state is DESCENT: `verify_chain` anchors on the
+attested head and walks `cas.auth_commit`-authorised links BACK to the device's own head, and
+no invented root has such a chain into it -- minting one link needs K_auth, which the WM does
+not hold. So the WM decides WHICH of this wallet's genuine states is current; it does not get
+to decide what a state is. The counter floor bounds it further, refusing anything below what
+this device has already accepted.
 
     attestation = b"WARD ATTEST v1" || version(1B) || nonce || ward_id(32B)
-                                    || counter(4B BE) || mac(32B) || timestamp(8B BE)
+                                    || from_counter(4B BE) || from_root(32B)
+                                    || to_counter(4B BE)   || to_root(32B)
+                                    || timestamp(8B BE)
 
 signed Ed25519 under the WM key. The nonce is minted by the device per round and must
 come back inside the signature, so the host cannot stockpile signed anchors and replay
@@ -34,11 +61,16 @@ if TYPE_CHECKING:
     pass
 
 _ATTEST_DOMAIN = b"WARD ATTEST v1"
-# Bumped when the preimage layout changed to carry a timestamp. The version byte exists
-# for exactly this: changing the layout while leaving the version at 1 would let a v1
-# signer and a v2 verifier disagree about what was signed, silently.
-_ATTEST_VERSION = 2
-_ROOT_MAC_DOMAIN = b"WARD ROOT v1"
+# 2 when the preimage grew a timestamp; 3 when the 32-byte field stopped being a mac over the
+# root and became the root; 4 when it stopped naming a state and started naming a transition.
+#
+# The v2->v3 bump was the one that mattered most, and it is worth keeping the reason written down:
+# THE LAYOUT DID NOT MOVE. Same offsets, same widths -- so nothing about the bytes would have told
+# a v2 signer and a v3 verifier they disagreed about what the field meant, and a root accepted as
+# a mac (or the reverse) fails open, not closed. This bump adds 36 bytes, so a stale signature
+# cannot even parse; the version still moves, because relying on a length accident is how the
+# next change that happens to preserve one gets missed.
+_ATTEST_VERSION = 4
 
 NONCE_LENGTH = 32
 
@@ -54,12 +86,6 @@ EMPTY_ROOT = (
     b"\x08\x4f\xed\x08\xb9\x78\xaf\x4d\x7d\x19\x6a\x74\x46\xa8\x6b\x58"
     b"\x00\x9e\x63\x6b\x61\x1d\xb1\x62\x11\xb6\x5a\x9a\xad\xff\x29\xc5"
 )
-
-
-# GAP(ward): whether the WM may hold ROOTS is deferred. Serving them would let a device
-# reconcile without the host supplying one, at the cost of the blindness above -- the WM would
-# learn the root sequence. Safe only while it still attests (counter, mac): a WM that attested
-# roots directly could name a state the wallet never reached.
 
 
 def root_or_empty(root: bytes | None) -> bytes:
@@ -115,26 +141,51 @@ def _verify(message: bytes, signature: bytes) -> bool:
 
 
 def attestation_preimage(
-    ward_id: bytes, nonce: bytes, counter: int, mac: bytes, timestamp: int
+    ward_id: bytes,
+    nonce: bytes,
+    from_counter: int,
+    from_root: "bytes | None",
+    to_counter: int,
+    to_root: "bytes | None",
+    timestamp: int,
 ) -> bytes:
-    """domain || version(1B) || nonce || ward_id || counter(4B BE) || mac || ts(8B BE).
+    """domain || version(1B) || nonce || ward_id || from(4B BE || 32B) || to(4B BE || 32B) || ts.
 
-    Fixed widths, per `leaf.leaf_hash_of`: `mac` arrives from the host, and mac || timestamp
-    is re-splittable if its length is not pinned. The WM signature over the whole preimage
-    makes that unexploitable by a host, but the check belongs here rather than in that
-    argument.
+    Fixed widths, per `leaf.leaf_hash_of`: the roots arrive from the host, and adjacent
+    variable-length fields are re-splittable if their lengths are not pinned. The WM signature
+    over the whole preimage makes that unexploitable by a host, but the check belongs here rather
+    than in that argument.
+
+    AN ABSENT ROOT IS THE EMPTY TREE and encodes as `EMPTY_ROOT`, at either end. The empty tree is
+    a state a wallet genuinely reaches -- at counter 0, and again whenever it is drained -- so it
+    has to be attestable rather than unrepresentable.
+
+    GENESIS IS THE SELF-TRANSITION `(0, EMPTY_ROOT) -> (0, EMPTY_ROOT)`. Counter 0 has no
+    predecessor and no step produced it, so there is nothing else honest to name. It cannot be
+    confused with a real transition: every one of those advances the counter by exactly one, so
+    no genuine step has `from == to`. `cas.head_init_sig` uses the same shape one layer up, for
+    the same reason.
     """
     from trezor.wire import DataError
 
-    if len(nonce) != NONCE_LENGTH or len(ward_id) != 32 or len(mac) != 32:
+    from_root = root_or_empty(from_root)
+    to_root = root_or_empty(to_root)
+    if (
+        len(nonce) != NONCE_LENGTH
+        or len(ward_id) != 32
+        or len(from_root) != 32
+        or len(to_root) != 32
+    ):
         raise DataError("WARD: attestation operands have the wrong length")
     return (
         _ATTEST_DOMAIN
         + bytes([_ATTEST_VERSION])
         + nonce
         + ward_id
-        + counter.to_bytes(4, "big")
-        + mac
+        + from_counter.to_bytes(4, "big")
+        + from_root
+        + to_counter.to_bytes(4, "big")
+        + to_root
         + timestamp.to_bytes(8, "big")
     )
 
@@ -156,10 +207,12 @@ def attestation_preimage(
 #
 # THE NONCE IS INERT HERE. `round.clear` zeroes the slot, so the device retains no past nonces
 # and cannot tell one it minted from arbitrary bytes. Security rests entirely on the WM's
-# signature over (ward_id, counter, mac): a host may choose freely among every attestation it has
-# ever seen for this wallet, and can forge none of them. What stops that mattering is that the
-# counter is inside `root_mac`, so an archived (counter, mac) can only ever be satisfied by the
-# root that genuinely held that counter -- it cannot be re-dated onto another.
+# signature over the transition: a host may choose freely among every attestation it has ever
+# seen for this wallet, and can forge none of them. What stops that mattering is that the whole
+# step is inside the signed preimage, so an archived attestation names one MOMENT and one
+# PREDECESSOR -- it cannot be re-dated onto another counter, and it cannot be paired with a
+# different link that happens to end at the same place. Roots repeat when content repeats;
+# transitions carrying their counters do not.
 #
 # IF THIS PATH EVER ANSWERS THE FIRST QUESTION, THE ECLIPSE PROTECTION IS GONE. Callers are
 # therefore enumerated deliberately: `rollback`, and `verify_chain` when a walk is anchored on an
@@ -177,30 +230,37 @@ def attestation_preimage(
 def verify_attestation(
     ward_id: bytes,
     nonce: bytes,
-    counter: int,
-    mac: bytes,
+    from_counter: int,
+    from_root: "bytes | None",
+    to_counter: int,
+    to_root: "bytes | None",
     timestamp: int,
     signature: bytes,
 ) -> bool:
-    """Is this a WM attestation of (counter, mac, timestamp) for this wallet, this round?
+    """Is this a WM attestation of this transition for this wallet, this round?
 
     The nonce must be the open round's -- see the note above. Callers get it from
     `round.get()`, never from a message.
     """
     return _verify(
-        attestation_preimage(ward_id, nonce, counter, mac, timestamp), signature
+        attestation_preimage(
+            ward_id, nonce, from_counter, from_root, to_counter, to_root, timestamp
+        ),
+        signature,
     )
 
 
 def verify_archived_attestation(
     ward_id: bytes,
     nonce: bytes,
-    counter: int,
-    mac: bytes,
+    from_counter: int,
+    from_root: "bytes | None",
+    to_counter: int,
+    to_root: "bytes | None",
     timestamp: int,
     signature: bytes,
 ) -> bool:
-    """Was (counter, mac) EVER this wallet's head, under some round the host kept?
+    """Was this transition EVER taken by this wallet, under some round the host kept?
 
     Deliberately a second function rather than a parameter on the first. The two answer different
     questions, only one of them establishes currency, and a boolean flag on a shared entry point
@@ -212,32 +272,8 @@ def verify_archived_attestation(
     FOR, neither of which is visible in the bytes.
     """
     return _verify(
-        attestation_preimage(ward_id, nonce, counter, mac, timestamp), signature
+        attestation_preimage(
+            ward_id, nonce, from_counter, from_root, to_counter, to_root, timestamp
+        ),
+        signature,
     )
-
-
-def root_mac(k_mac: bytes, ward_id: bytes, counter: int, root: bytes | None) -> bytes:
-    """mac = HMAC-SHA256(K_mac, domain || ward_id || counter(4B BE) || root).
-
-    An ABSENT root -- the empty tree -- macs the EMPTY_ROOT stand-in rather than being
-    skipped, so the empty tree still has a distinct, attestable mac at every counter.
-    Leaving it unbound would let a WM attest "empty" for any counter it liked.
-
-    The counter is inside the mac, and that is load-bearing rather than tidy: roots are
-    content-addressed and therefore REPEAT whenever contents repeat -- change a label and
-    change it back and the root returns. Any check that identifies a state by its root
-    alone can be fed an old signature naming today's root. Binding the counter is what
-    makes a mac name one moment instead of one shape, and the same rule applies to every
-    other comparison in this subsystem that starts from a root.
-    """
-    from trezor.crypto import hmac
-    from trezor.wire import DataError
-
-    root = root_or_empty(root)
-    if len(ward_id) != 32 or len(root) != 32:
-        raise DataError("WARD: root mac operands must be 32 bytes")
-    return hmac(
-        hmac.SHA256,
-        k_mac,
-        _ROOT_MAC_DOMAIN + ward_id + counter.to_bytes(4, "big") + root,
-    ).digest()

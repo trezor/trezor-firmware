@@ -6,16 +6,26 @@ module a workflow imported once that workflow ends. It lives in the session cach
 is also the right lifetime: an unfinished round should not outlive the connection that
 started it.
 
-Layout: state(1B) || nonce(32B) || counter(4B BE) || mac(32B).
+Layout: state(1B) || nonce(32B) || from_counter(4B BE) || from_root(32B)
+                                 || to_counter(4B BE)   || to_root(32B).
+
+BOTH ENDS, because the WM attests a TRANSITION -- see `attest.attestation_preimage`. The `from`
+pair is what `reconcile` recomputes the link's `auth_commit` over, so it has to survive the host
+turn between `WardIngestAttestation` and the adoption that consumes it.
 """
 
 from micropython import const
 
 _OPEN = const(1)  # nonce minted, nothing attested yet
-_ATTESTED = const(2)  # the WM's (counter, mac) has been verified for this nonce
+_ATTESTED = const(2)  # the WM's transition has been verified for this nonce
 
 _NONCE_LEN = const(32)
-_MAC_LEN = const(32)
+_ROOT_LEN = const(32)
+# state + nonce + (counter, root) twice. DUPLICATED in the cache field tables --
+# `storage/cache_codec.py` and `storage/cache_thp.py` both declare this width, and a mismatch
+# there is silent: the store's length check is `<=`, so a short write simply reads back as an
+# unopened round.
+_RECORD_LEN = const(105)
 
 
 def begin(nonce: bytes) -> None:
@@ -26,12 +36,13 @@ def begin(nonce: bytes) -> None:
     from trezor.wire import context
 
     context.cache_set(
-        APP_WARD_SYNC, bytes([_OPEN]) + nonce + bytes(4) + bytes(_MAC_LEN)
+        APP_WARD_SYNC,
+        bytes([_OPEN]) + nonce + (bytes(4) + bytes(_ROOT_LEN)) * 2,
     )
 
 
-def get() -> "tuple[int, bytes, int, bytes] | None":
-    """(state, nonce, counter, mac), or None if no round is open."""
+def get() -> "tuple[int, bytes, int, bytes, int, bytes] | None":
+    """(state, nonce, from_counter, from_root, to_counter, to_root), or None if none is open."""
     from storage.cache_common import APP_WARD_SYNC
     from trezor.wire import context
 
@@ -40,13 +51,16 @@ def get() -> "tuple[int, bytes, int, bytes] | None":
         return None
     nonce = raw[1 : 1 + _NONCE_LEN]
     off = 1 + _NONCE_LEN
-    counter = int.from_bytes(raw[off : off + 4], "big")
-    mac = raw[off + 4 : off + 4 + _MAC_LEN]
-    return raw[0], nonce, counter, mac
+    from_counter = int.from_bytes(raw[off : off + 4], "big")
+    from_root = raw[off + 4 : off + 4 + _ROOT_LEN]
+    off += 4 + _ROOT_LEN
+    to_counter = int.from_bytes(raw[off : off + 4], "big")
+    to_root = raw[off + 4 : off + 4 + _ROOT_LEN]
+    return raw[0], nonce, from_counter, from_root, to_counter, to_root
 
 
-def get_attested() -> "tuple[int, bytes] | None":
-    """(counter, mac) if this round reached ATTESTED, else None.
+def get_attested() -> "tuple[int, bytes, int, bytes] | None":
+    """The attested transition if this round reached ATTESTED, else None.
 
     The state constants are `const()`-folded and therefore absent from the module at runtime, so
     the ATTESTED test has to live here rather than in the caller.
@@ -54,21 +68,32 @@ def get_attested() -> "tuple[int, bytes] | None":
     ctx = get()
     if ctx is None or ctx[0] != _ATTESTED:
         return None
-    _state, _nonce, counter, mac = ctx
-    return counter, mac
+    _state, _nonce, from_counter, from_root, to_counter, to_root = ctx
+    return from_counter, from_root, to_counter, to_root
 
 
-def set_attested(counter: int, mac: bytes) -> None:
-    """Record what the WM attested, keeping the round's nonce."""
+def set_attested(
+    from_counter: int, from_root: bytes, to_counter: int, to_root: bytes
+) -> None:
+    """Record the transition the WM attested, keeping the round's nonce.
+
+    Both roots arrive in PREIMAGE FORM -- an empty tree as EMPTY_ROOT -- because that is what the
+    signature covered and what a later recomputation has to reproduce.
+    """
     from storage.cache_common import APP_WARD_SYNC
     from trezor.wire import context
 
     ctx = get()
     assert ctx is not None
-    _state, nonce, _c, _m = ctx
+    _state, nonce, _fc, _fr, _tc, _tr = ctx
     context.cache_set(
         APP_WARD_SYNC,
-        bytes([_ATTESTED]) + nonce + counter.to_bytes(4, "big") + mac,
+        bytes([_ATTESTED])
+        + nonce
+        + from_counter.to_bytes(4, "big")
+        + from_root
+        + to_counter.to_bytes(4, "big")
+        + to_root,
     )
 
 
@@ -78,7 +103,7 @@ def clear() -> None:
     from storage.cache_common import APP_WARD_SYNC
     from trezor.wire import context
 
-    context.cache_set(APP_WARD_SYNC, bytes(69))
+    context.cache_set(APP_WARD_SYNC, bytes(_RECORD_LEN))
 
 
 # --- the online latch -------------------------------------------------------------
@@ -90,7 +115,7 @@ def clear() -> None:
 #
 # So this is a LATCH SET BY ADOPTION ALONE, which is `reconcile` and `verify_chain` and nothing
 # else. `WardSync` mints a nonce and proves nothing; `WardIngestAttestation` verifies a signature
-# over a counter and a mac but adopts neither. Neither may flip it.
+# over a transition but adopts neither end of it. Neither may flip it.
 #
 # `verify_chain` latches for the same reason `reconcile` does, and it is the stricter of the two:
 # it additionally proves authorised descent from the head this device already held. Leaving it

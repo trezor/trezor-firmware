@@ -52,22 +52,22 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     from .adopt import adopt
     from .attest import root_or_empty
     from .common import require_initialized
-    from .keys import derive_k_auth, derive_k_mac, derive_ward_id
+    from .keys import derive_k_auth, derive_ward_id
     from .root import get_counter, get_root
 
     require_initialized()
 
     ward_id = await derive_ward_id()
     k_auth = await derive_k_auth()
-    k_mac = await derive_k_mac()
 
-    # THE ANCHOR'S ROOT comes from the host, and is accepted only because it reproduces a mac
-    # the WM signed. `root_mac` binds the counter, so an attested (counter, mac) admits exactly
-    # one root -- the same binding `reconcile` rests on, applied at the far end of a walk rather
-    # than in place of one. Which KIND of anchor it is decides one thing only: whether this walk
-    # may claim CURRENCY at the end. See `_anchor`.
-    anchor_root = msg.head_root or None
-    anchor_counter, archived = await _anchor(ward_id, k_mac, anchor_root, msg)
+    # THE ANCHOR'S ROOT IS SIGNED, not supplied. The WM attests `(counter, root)` in the clear, so
+    # on the live path the root comes straight out of this round's attestation and the host names
+    # nothing; on the archived path it comes from `head_root` and the signature over it is what
+    # admits it. Which KIND of anchor it is decides one thing only: whether this walk may claim
+    # CURRENCY at the end. See `_anchor`.
+    anchor_from_counter, anchor_from_root, anchor_counter, anchor_root, archived = (
+        await _anchor(ward_id, msg)
+    )
 
     # The baseline is the device's OWN head, not anything the host names. A host-chosen target
     # would let the walk stop at a state this device never reached.
@@ -89,15 +89,21 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     # the REVERT tag carries.
     reverts = 0
 
+    # THE FIRST LINK MUST BEGIN WHERE THE WM SAID IT DID -- passed down so the check happens as
+    # that link is folded, not after the batch. A host serving several links at once would
+    # otherwise walk straight past it.
+    expect_from = (anchor_from_counter, anchor_from_root)
+
     while running_counter > target_counter:
         running_counter, running_root, stepped = await _pull_batch(
             k_auth,
-            k_mac,
             ward_id,
             running_counter,
             running_root,
             target_counter,
+            expect_from,
         )
+        expect_from = None
         crossed.extend(stepped[0])
         reverts += stepped[1]
 
@@ -127,14 +133,14 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     )
 
     if reverts:
-        await _warn_reached_by_revert(reverts)
+        await warn_reached_by_revert(reverts)
 
     return WardVerifyChainAck(
         counter=anchor_counter, new_root=anchor_root, reverts_crossed=reverts
     )
 
 
-async def _warn_reached_by_revert(reverts: int) -> None:
+async def warn_reached_by_revert(reverts: int) -> None:
     """Tell the user the head just adopted was reached by discarding changes.
 
     INFORMATIONAL, NOT A GATE, and the difference is the whole design of this screen.
@@ -177,11 +183,9 @@ async def _warn_reached_by_revert(reverts: int) -> None:
 
 async def _anchor(
     ward_id: bytes,
-    k_mac: bytes,
-    head_root: "bytes | None",
     msg: WardVerifyChain,
-) -> "tuple[int, bool]":
-    """The head this walk descends to, and whether it is a CURRENT one.
+) -> "tuple[int, bytes | None, bool]":
+    """The head this walk descends to, its root, and whether it is a CURRENT one.
 
     An anchor has two properties and they come apart:
 
@@ -199,47 +203,84 @@ async def _anchor(
     values are presented as current. That is the eclipse the nonce exists to close, and the
     returned flag is what keeps this path out of it.
 
-    EITHER WAY THE HOST NAMES NO MAC. On the live path the mac is the round's, and `head_root` is
-    bound to it. On the archived path the device computes the mac from `head_root` itself, so the
-    host can only fail to hold a signature over what the device derived. Both reduce to the same
-    statement: the WM signed a mac, and exactly one root reproduces it at that counter.
+    THE HOST NAMES NOTHING ON THE LIVE PATH. The round's attestation carries the whole step, so
+    `head_root` and the anchor-from fields are refused there rather than ignored -- a field that
+    is sometimes load-bearing and sometimes decorative is how the two paths come to be confused.
+    On the archived path they are required, and the WM's signature over them is what admits them.
 
-    Returns (counter, archived).
+    THE ANCHOR'S PREDECESSOR IS RETURNED TOO, because the attestation names it and the walk can
+    then check that the FIRST link it pulls begins where the WM says it did -- a binding the host
+    cannot satisfy with some other link that merely ends in the right place.
+
+    WHAT AN ANCHOR NO LONGER PROVES. The WM signs roots in the clear now, so a malicious WM could
+    anchor this walk at a root the wallet never held. The walk is what refuses it: no genuine
+    chain of `auth_commit`s runs from an invented root down to a state this device already holds,
+    and minting one needs K_auth. So an anchor supplies the COUNTER and the direction; the links
+    supply the truth.
+
+    Returns (from_counter, from_root, counter, root, archived).
     """
     from trezor.wire import DataError
 
-    from .adopt import require_attested_round, verify_head_mac
-    from .attest import root_mac, verify_archived_attestation
+    from .adopt import require_attested_round
+    from .attest import EMPTY_ROOT, verify_archived_attestation
 
     nonce = msg.nonce
     signature = msg.wm_signature
     if nonce is None and signature is None:
-        counter, mac = require_attested_round("verify against")
-        await verify_head_mac(counter, mac, head_root, subject="chain anchor")
-        return counter, False
+        if (
+            msg.head_root is not None
+            or msg.anchor_counter is not None
+            or msg.anchor_from_counter is not None
+            or msg.anchor_from_root is not None
+        ):
+            raise DataError(
+                "WARD: a live anchor comes from the attestation; do not supply one"
+            )
+        from_counter, from_root, counter, root = require_attested_round("verify against")
+        return (
+            from_counter,
+            None if from_root == EMPTY_ROOT else from_root,
+            counter,
+            None if root == EMPTY_ROOT else root,
+            False,
+        )
 
     if nonce is None or signature is None:
         raise DataError("WARD: an archived anchor needs both a nonce and a signature")
 
     counter = msg.anchor_counter
-    if counter is None:
-        raise DataError("WARD: an archived anchor needs the counter it attests")
+    from_counter = msg.anchor_from_counter
+    if counter is None or from_counter is None:
+        raise DataError("WARD: an archived anchor needs both ends of the step it attests")
 
-    mac = root_mac(k_mac, ward_id, counter, head_root)
+    head_root = msg.head_root or None
+    from_root = msg.anchor_from_root or None
+    for r in (head_root, from_root):
+        if r is not None and len(r) != 32:
+            raise DataError("WARD: the anchored roots must be 32 bytes")
+
     if not verify_archived_attestation(
-        ward_id, nonce, counter, mac, msg.timestamp or 0, signature
+        ward_id,
+        nonce,
+        from_counter,
+        from_root,
+        counter,
+        head_root,
+        msg.timestamp or 0,
+        signature,
     ):
         raise DataError("WARD: the WM never attested this head")
-    return counter, True
+    return from_counter, from_root, counter, head_root, True
 
 
 async def _pull_batch(
     k_auth: bytes,
-    k_mac: bytes,
     ward_id: bytes,
     running_counter: int,
     running_root: "bytes | None",
     target_counter: int,
+    expect_from: "tuple | None" = None,
 ) -> "tuple[int, bytes | None, tuple]":
     """Ask the host for the predecessors of the running head and fold as many as apply.
 
@@ -247,10 +288,15 @@ async def _pull_batch(
     wants. The host cannot answer with a link ending elsewhere -- that is refused in
     `verify_chain_step_back` before the MAC is computed -- so batching is a transport convenience
     with no security content: sending one link is as correct as sending seventy.
+
+    `expect_from`, given only for the walk's FIRST link, is the predecessor the WM's attestation
+    named. Checked here rather than after the batch returns, because a host serving several links
+    in one ack would otherwise carry the walk past the one step this binds.
     """
     from trezor.messages import WardChainLinkAck, WardChainRequest
     from trezor.wire import DataError, context
 
+    from .attest import root_or_empty
     from .cas import verify_chain_step_back
 
     ack = await context.call(
@@ -269,7 +315,6 @@ async def _pull_batch(
     for link in links:
         running_counter, running_root, reverted = verify_chain_step_back(
             k_auth,
-            k_mac,
             ward_id,
             running_counter,
             running_root,
@@ -281,7 +326,16 @@ async def _pull_batch(
                 link.auth_commit,
             ),
         )
-        # After the step verified, never before: an unverified commitment is a host's claim.
+        # AFTER the MAC verified, never before: an unverified commitment is a host's claim.
+        if expect_from is not None:
+            want_counter, want_root = expect_from
+            expect_from = None
+            if running_counter != want_counter or root_or_empty(
+                running_root
+            ) != root_or_empty(want_root):
+                raise DataError(
+                    "WARD: the first link does not begin at the attested predecessor"
+                )
         crossed.append(link.auth_commit)
         if reverted:
             reverts += 1

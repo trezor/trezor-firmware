@@ -51,7 +51,6 @@ async def flush_queue(
     from trezor.wire import DataError
 
     from . import offline_store
-    from .attest import root_mac
     from .cas import auth_commit
     from .common import online, pull_leaf, require_initialized
     from .keys import (
@@ -59,7 +58,6 @@ async def flush_queue(
         derive_k_auth,
         derive_k_data,
         derive_k_ident,
-        derive_k_mac,
         derive_ward_id,
         entry_key_for,
     )
@@ -158,7 +156,6 @@ async def flush_queue(
     # rather than inferring it from the counter alone.
     step = auth_commit(
         await derive_k_auth(),
-        await derive_k_mac(),
         await derive_ward_id(),
         counter - 1,
         from_root,
@@ -198,7 +195,6 @@ async def flush_queue(
         identity=identity,
         content=content,
         counter=counter,
-        mac=root_mac(await derive_k_mac(), await derive_ward_id(), counter, new_root),
         auth_commit=step,
         # Counts only records NOT YET HANDED OVER, so this one is excluded -- it is marked offered
         # now. The host loops while this is non-zero; a record that was sent but never confirmed

@@ -665,7 +665,7 @@ async def _claim_produced(
         return False
 
     from .cas import verify_auth_commit
-    from .keys import derive_k_auth, derive_k_mac, derive_ward_id
+    from .keys import derive_k_auth, derive_ward_id
     from .root import get_counter, get_root
 
     if await get_counter() != claimed - 1:
@@ -673,7 +673,6 @@ async def _claim_produced(
 
     return verify_auth_commit(
         await derive_k_auth(),
-        await derive_k_mac(),
         await derive_ward_id(),
         claimed - 1,
         await get_root(),

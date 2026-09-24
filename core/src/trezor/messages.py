@@ -8390,7 +8390,6 @@ if TYPE_CHECKING:
         identity: "WardLeafIdentity | None"
         content: "WardLeafContent | None"
         counter: "int | None"
-        mac: "AnyBytes | None"
         auth_commit: "AnyBytes | None"
 
         def __init__(
@@ -8400,7 +8399,6 @@ if TYPE_CHECKING:
             identity: "WardLeafIdentity | None" = None,
             content: "WardLeafContent | None" = None,
             counter: "int | None" = None,
-            mac: "AnyBytes | None" = None,
             auth_commit: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -8414,7 +8412,6 @@ if TYPE_CHECKING:
         identity: "WardLeafIdentity | None"
         content: "WardLeafContent | None"
         counter: "int | None"
-        mac: "AnyBytes | None"
         auth_commit: "AnyBytes | None"
         remaining: "int"
 
@@ -8426,7 +8423,6 @@ if TYPE_CHECKING:
             identity: "WardLeafIdentity | None" = None,
             content: "WardLeafContent | None" = None,
             counter: "int | None" = None,
-            mac: "AnyBytes | None" = None,
             auth_commit: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -8441,6 +8437,8 @@ if TYPE_CHECKING:
         timestamp: "int | None"
         wm_signature: "AnyBytes | None"
         anchor_counter: "int | None"
+        anchor_from_counter: "int | None"
+        anchor_from_root: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8450,6 +8448,8 @@ if TYPE_CHECKING:
             timestamp: "int | None" = None,
             wm_signature: "AnyBytes | None" = None,
             anchor_counter: "int | None" = None,
+            anchor_from_counter: "int | None" = None,
+            anchor_from_root: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8530,18 +8530,22 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardIngestAttestation(protobuf.MessageType):
-        counter: "int | None"
-        mac: "AnyBytes | None"
         wm_signature: "AnyBytes | None"
         timestamp: "int | None"
+        to_counter: "int | None"
+        to_root: "AnyBytes | None"
+        from_counter: "int | None"
+        from_root: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            counter: "int | None" = None,
-            mac: "AnyBytes | None" = None,
             wm_signature: "AnyBytes | None" = None,
             timestamp: "int | None" = None,
+            to_counter: "int | None" = None,
+            to_root: "AnyBytes | None" = None,
+            from_counter: "int | None" = None,
+            from_root: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8564,12 +8568,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardReconcile(protobuf.MessageType):
-        root: "AnyBytes | None"
+        auth_commit: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            root: "AnyBytes | None" = None,
+            auth_commit: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8642,18 +8646,22 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardRecoverCounter(protobuf.MessageType):
-        counter: "int | None"
-        mac: "AnyBytes | None"
         wm_signature: "AnyBytes | None"
         timestamp: "int | None"
+        to_counter: "int | None"
+        to_root: "AnyBytes | None"
+        from_counter: "int | None"
+        from_root: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            counter: "int | None" = None,
-            mac: "AnyBytes | None" = None,
             wm_signature: "AnyBytes | None" = None,
             timestamp: "int | None" = None,
+            to_counter: "int | None" = None,
+            to_root: "AnyBytes | None" = None,
+            from_counter: "int | None" = None,
+            from_root: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8700,7 +8708,6 @@ if TYPE_CHECKING:
         ward_id: "AnyBytes | None"
         current_counter: "int | None"
         current_root: "AnyBytes | None"
-        current_mac: "AnyBytes | None"
         head_init_sig: "AnyBytes | None"
 
         def __init__(
@@ -8710,7 +8717,6 @@ if TYPE_CHECKING:
             ward_id: "AnyBytes | None" = None,
             current_counter: "int | None" = None,
             current_root: "AnyBytes | None" = None,
-            current_mac: "AnyBytes | None" = None,
             head_init_sig: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -8720,20 +8726,24 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardSyncResponse(protobuf.MessageType):
-        counter: "int | None"
-        mac: "AnyBytes | None"
         timestamp: "int | None"
         wm_signature: "AnyBytes | None"
         links: "list[WardChainLink]"
+        to_counter: "int | None"
+        to_root: "AnyBytes | None"
+        from_counter: "int | None"
+        from_root: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             links: "list[WardChainLink] | None" = None,
-            counter: "int | None" = None,
-            mac: "AnyBytes | None" = None,
             timestamp: "int | None" = None,
             wm_signature: "AnyBytes | None" = None,
+            to_counter: "int | None" = None,
+            to_root: "AnyBytes | None" = None,
+            from_counter: "int | None" = None,
+            from_root: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8770,10 +8780,11 @@ if TYPE_CHECKING:
         identity: "WardLeafIdentity | None"
         content: "WardLeafContent | None"
         counter: "int | None"
-        mac: "AnyBytes | None"
         auth_commit: "AnyBytes | None"
         wm_sig: "AnyBytes | None"
         nonce: "AnyBytes | None"
+        from_root: "AnyBytes | None"
+        new_root: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8782,10 +8793,11 @@ if TYPE_CHECKING:
             identity: "WardLeafIdentity | None" = None,
             content: "WardLeafContent | None" = None,
             counter: "int | None" = None,
-            mac: "AnyBytes | None" = None,
             auth_commit: "AnyBytes | None" = None,
             wm_sig: "AnyBytes | None" = None,
             nonce: "AnyBytes | None" = None,
+            from_root: "AnyBytes | None" = None,
+            new_root: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8794,16 +8806,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardPublishAck(protobuf.MessageType):
-        counter: "int | None"
-        mac: "AnyBytes | None"
         timestamp: "int | None"
         wm_signature: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            counter: "int | None" = None,
-            mac: "AnyBytes | None" = None,
             timestamp: "int | None" = None,
             wm_signature: "AnyBytes | None" = None,
         ) -> None:

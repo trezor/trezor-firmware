@@ -17,12 +17,15 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
     stored counter locks out and nothing can sync again. This is the way back, and it is
     the ONLY path that accepts a lower counter or an older time.
 
-    Everything here is still cryptographically genuine. The WM signature is checked
-    against this round's nonce as always, and the mac must match the root supplied at
-    reconcile -- and since only a device holding K_mac can produce a mac, a replayed
-    (counter, mac) pair is itself proof that this wallet really did reach that state. That
-    is the design's requirement that recovery target "a root the Trezor holds its own
-    prior signature for", satisfied without a second mechanism.
+    Everything here is still cryptographically genuine: the WM signature is checked against this
+    round's nonce as always. What it is NO LONGER proof of is that the wallet ever reached the
+    state it names. That used to follow for free -- the attested value was a mac only a
+    seed-holding device could produce, so a replay was self-evidently of real history -- and with
+    the WM attesting roots in the clear, it does not. The proof has moved to where every other
+    proof of state now lives: the adoption that follows must fold an authorised LINK into the
+    recovered head (`reconcile`) or walk the chain to it (`verify_chain`), and a host that cannot
+    produce one cannot complete a recovery. Fail-closed, and it is the same requirement the design
+    stated as targeting "a root the Trezor holds its own prior signature for".
 
     What cannot be checked is INTENT. Nothing distinguishes a genuine operator recovery
     from an attacker replaying old state, because both present the same authentic
@@ -46,7 +49,14 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
 
     require_initialized()
 
-    counter, mac = await verify_round_attestation(msg)
+    from_counter, from_root, counter, root = await verify_round_attestation(
+        msg.from_counter,
+        msg.from_root or None,
+        msg.to_counter,
+        msg.to_root or None,
+        msg.timestamp or 0,
+        msg.wm_signature,
+    )
 
     stored_counter = await get_counter()
 
@@ -73,5 +83,5 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
         hold=True,
     )
 
-    sync_round.set_attested(counter, mac)
+    sync_round.set_attested(from_counter, from_root, counter, root)
     return WardRecoverCounterAck(counter=counter)

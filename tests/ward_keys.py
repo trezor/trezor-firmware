@@ -43,8 +43,6 @@ __all__ = [
     "derive_k_ident",
     "derive_k_data",
     "derive_ward_id",
-    "derive_k_mac",
-    "root_mac",
     "derive_k_auth",
     "auth_commit",
     "EMPTY_ROOT",
@@ -54,7 +52,6 @@ __all__ = [
     "unpack_content",
     "unpack_identity",
     "wm_sig",
-    "wm_sig_over_macs",
     "verify_wm_sig",
     "head_init_sig",
     "verify_head_init_sig",
@@ -99,12 +96,6 @@ def derive_ward_id(seed: bytes) -> bytes:
     return _ed25519.publickey_unsafe(derive_k_sig(seed))
 
 
-def derive_k_mac(seed: bytes) -> bytes:
-    """K_mac, which MACs the root the WM attests. A real host has neither this nor a way
-    to obtain it -- that is what stops the WM fabricating state."""
-    return slip21_key(seed, [b"ward", b"K_mac"])
-
-
 # The empty-tree stand-in used wherever a root appears in a preimage: sha256(0x03),
 # domain-separated from the leaf/internal/commit tags. Mirrors apps.ward.attest.EMPTY_ROOT.
 EMPTY_ROOT = hashlib.sha256(b"\x03").digest()
@@ -114,65 +105,49 @@ def _root_or_empty(root):
     return root if root is not None else EMPTY_ROOT
 
 
-def root_mac(k_mac: bytes, ward_id: bytes, counter: int, root) -> bytes:
-    """HMAC(K_mac, b"WARD ROOT v1" || ward_id || counter(4B BE) || root)."""
-    return hmac.new(
-        k_mac,
-        b"WARD ROOT v1" + ward_id + counter.to_bytes(4, "big") + _root_or_empty(root),
-        hashlib.sha256,
-    ).digest()
-
-
 def derive_k_auth(seed: bytes) -> bytes:
     """K_auth, which authorises a transition. Every device of the wallet holds it."""
     return slip21_key(seed, [b"ward", b"K_auth"])
 
 
-TAG_COMMIT = b"WARD COMMIT v2"
-TAG_REVERT = b"WARD REVERT v2"
+TAG_COMMIT = b"WARD COMMIT v3"
+TAG_REVERT = b"WARD REVERT v3"
 
 
 def transition_preimage(
     tag: bytes,
     ward_id: bytes,
     from_counter: int,
-    from_mac: bytes,
+    from_root,
     to_counter: int,
-    to_mac: bytes,
+    to_root,
 ) -> bytes:
-    """len8(tag) || tag || ward_id || from_counter || from_mac || to_counter || to_mac.
+    """len8(tag) || tag || ward_id || from_counter || from_root || to_counter || to_root.
 
     ONE preimage for both authenticators: the MAC a device checks under K_auth, and the
     Ed25519 signature the WM checks under K_sig. They differ only in tag, key and algorithm.
 
-    MAC HEADS, NOT ROOTS. The mac is a commitment to the root under a device-only key, so
-    binding it binds the root transitively -- and it means the WM never has to be sent a root
-    to check an authorisation, nor can it fabricate a head it could not compute a mac for.
+    ROOTS, NOT MAC HEADS. There used to be a second key, K_mac, whose output these operands
+    were -- it kept the WM blind to roots and made a head unforgeable by it. Both are gone: the
+    WM holds `(counter, root)` in the clear, and what proves a head real is folding these MACs
+    into a chain, not a commitment the WM could not compute.
+
+    An absent root is the empty tree and encodes as EMPTY_ROOT, so the preimage stays
+    fixed-width at either end.
     """
     return (
         bytes([len(tag)])
         + tag
         + ward_id
         + from_counter.to_bytes(4, "big")
-        + from_mac
+        + _root_or_empty(from_root)
         + to_counter.to_bytes(4, "big")
-        + to_mac
-    )
-
-
-def transition_macs(
-    k_mac: bytes, ward_id: bytes, from_counter: int, from_root, to_counter: int, to_root
-):
-    """The two mac heads a root transition authorises over."""
-    return (
-        root_mac(k_mac, ward_id, from_counter, from_root),
-        root_mac(k_mac, ward_id, to_counter, to_root),
+        + _root_or_empty(to_root)
     )
 
 
 def auth_commit(
     k_auth: bytes,
-    k_mac: bytes,
     ward_id: bytes,
     from_counter: int,
     from_root,
@@ -180,30 +155,26 @@ def auth_commit(
     to_root,
     tag: bytes = TAG_COMMIT,
 ) -> bytes:
-    """HMAC(K_auth, transition_preimage(tag, ..., macs of these roots))."""
-    from_mac, to_mac = transition_macs(
-        k_mac, ward_id, from_counter, from_root, to_counter, to_root
-    )
+    """HMAC(K_auth, transition_preimage(tag, ward_id, from..., to...))."""
     return hmac.new(
         k_auth,
-        transition_preimage(tag, ward_id, from_counter, from_mac, to_counter, to_mac),
+        transition_preimage(tag, ward_id, from_counter, from_root, to_counter, to_root),
         hashlib.sha256,
     ).digest()
 
 
-# --- the WM's authorisation, over MAC HEADS ------------------------------------------------
+# --- the WM's authorisation, over the SAME BYTES -------------------------------------------
 #
 # Written out here rather than imported, like everything else in this file: an oracle that shared
 # code with the firmware would agree with it by construction and prove nothing.
 
-TAG_WM_HEAD = b"WARD WM COMMIT v1"
-TAG_WM_INIT = b"WARD WM INIT v1"
-TAG_WM_REVERT = b"WARD WM REVERT v1"
+TAG_WM_HEAD = b"WARD WM COMMIT v2"
+TAG_WM_INIT = b"WARD WM INIT v2"
+TAG_WM_REVERT = b"WARD WM REVERT v2"
 
 
 def wm_sig(
     k_sig: bytes,
-    k_mac: bytes,
     ward_id: bytes,
     from_counter: int,
     from_root,
@@ -213,36 +184,15 @@ def wm_sig(
 ) -> bytes:
     """The signature a WM checks before letting a head advance.
 
-    Takes ROOTS, though the WM verifies from MACS: the signer holds roots, the verifier only
-    ever holds macs. `transition_macs` is then the one place a counter meets a root.
-    """
-    from_mac, to_mac = transition_macs(
-        k_mac, ward_id, from_counter, from_root, to_counter, to_root
-    )
-    return wm_sig_over_macs(
-        k_sig, ward_id, from_counter, from_mac, to_counter, to_mac, tag
-    )
-
-
-def wm_sig_over_macs(
-    k_sig: bytes,
-    ward_id: bytes,
-    from_counter: int,
-    from_mac: bytes,
-    to_counter: int,
-    to_mac: bytes,
-    tag: bytes = TAG_WM_HEAD,
-) -> bytes:
-    """`wm_sig` from the WM's vantage point, where only macs exist.
-
-    The firmware has no equivalent and should not: a device always holds the roots, so letting
-    it pair a counter with a mac by hand is the drift `transition_macs` exists to prevent. Here
-    the macs ARE the subject -- a WM-side test has no roots to derive them from.
+    EXACTLY THE BYTES `auth_commit` MACs. The WM holds roots now, so there is no vantage point
+    from which only macs exist and no second entry point for one -- `wm_sig_over_macs` is gone
+    with the key that made it necessary. Both roots are inside what the WM verifies, which is
+    also what it compare-and-swaps on and attests.
     """
     from trezorlib import _ed25519
 
     return _ed25519.signature_unsafe(
-        transition_preimage(tag, ward_id, from_counter, from_mac, to_counter, to_mac),
+        transition_preimage(tag, ward_id, from_counter, from_root, to_counter, to_root),
         k_sig,
         ward_id,
     )
@@ -251,9 +201,9 @@ def wm_sig_over_macs(
 def verify_wm_sig(
     ward_id: bytes,
     from_counter: int,
-    from_mac: bytes,
+    from_root,
     to_counter: int,
-    to_mac: bytes,
+    to_root,
     sig: bytes,
     tag: bytes = TAG_WM_HEAD,
 ) -> bool:
@@ -263,7 +213,9 @@ def verify_wm_sig(
     try:
         _ed25519.checkvalid(
             sig,
-            transition_preimage(tag, ward_id, from_counter, from_mac, to_counter, to_mac),
+            transition_preimage(
+                tag, ward_id, from_counter, from_root, to_counter, to_root
+            ),
             ward_id,
         )
         return True
@@ -271,26 +223,28 @@ def verify_wm_sig(
         return False
 
 
-def head_init_sig(k_sig: bytes, ward_id: bytes, current_mac: bytes) -> bytes:
-    """Authorises the first head a WM ever holds for this wallet."""
+def head_init_sig(k_sig: bytes, ward_id: bytes, counter: int, root) -> bytes:
+    """Authorises the first head a WM ever holds for this wallet.
+
+    A self-transition `(counter, root) -> (counter, root)` under its own tag, so it can never be
+    replayed as an advance.
+    """
     from trezorlib import _ed25519
 
     return _ed25519.signature_unsafe(
-        transition_preimage(TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac),
+        transition_preimage(TAG_WM_INIT, ward_id, counter, root, counter, root),
         k_sig,
         ward_id,
     )
 
 
-def verify_head_init_sig(ward_id: bytes, current_mac: bytes, sig: bytes) -> bool:
+def verify_head_init_sig(ward_id: bytes, counter: int, root, sig: bytes) -> bool:
     from trezorlib import _ed25519
 
     try:
         _ed25519.checkvalid(
             sig,
-            transition_preimage(
-                TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac
-            ),
+            transition_preimage(TAG_WM_INIT, ward_id, counter, root, counter, root),
             ward_id,
         )
         return True

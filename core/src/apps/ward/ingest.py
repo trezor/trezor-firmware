@@ -5,11 +5,13 @@ if TYPE_CHECKING:
 
 
 async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
-    """Verify the WM's attestation of the current (counter, mac) for this round.
+    """Verify the WM's attestation of the transition that reached the current head.
 
-    Adopts nothing: the root has not been seen yet. This step establishes only that some
-    authority the device trusts says a particular (counter, mac) is current, and that the
-    statement was made in response to THIS round's nonce.
+    ADOPTS NOTHING, and the root arriving here changes none of that. The attestation says a
+    trusted authority calls this head current; it does not say the wallet ever produced it, since
+    the WM signs roots in the clear and could sign one it invented. What turns it into a statement
+    about state is the LINK or the CHAIN folded against it later, in `reconcile` or `verify_chain`.
+    This step establishes freshness and nothing else.
     """
     from trezor.messages import WardIngestAttestationAck
     from trezor.wire import DataError
@@ -21,15 +23,22 @@ async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
 
     require_initialized()
 
-    counter, mac = await verify_round_attestation(msg)
+    from_counter, from_root, counter, root = await verify_round_attestation(
+        msg.from_counter,
+        msg.from_root or None,
+        msg.to_counter,
+        msg.to_root or None,
+        msg.timestamp or 0,
+        msg.wm_signature,
+    )
 
     # Anti-rollback, and the reason this rule lives HERE rather than in the shared check:
     # `recover` needs the opposite one. The attested counter may not precede the floor this
     # wallet has already accepted; equality is fine, since re-reading the same state is a no-op.
-    # A malicious WM cannot forge a mac, so its entire remaining freedom is to replay a state
-    # this wallet genuinely reached -- and this is what bounds which ones.
+    # It is also the only bound left on a WM that lies: it can now name a root this wallet never
+    # held, so the floor is what stops it naming an OLD one and freezing the device there.
     if counter < await get_counter():
         raise DataError("attested counter is older than the stored counter")
 
-    sync_round.set_attested(counter, mac)
+    sync_round.set_attested(from_counter, from_root, counter, root)
     return WardIngestAttestationAck(counter=counter)

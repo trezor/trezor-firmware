@@ -72,7 +72,6 @@ class TestWardServiceMessages(unittest.TestCase):
                 ward_id=b"\x22" * 32,
                 current_counter=41,
                 current_root=b"\x33" * 32,
-                current_mac=b"\x44" * 32,
                 head_init_sig=b"\x55" * 64,
             )
         )
@@ -83,8 +82,10 @@ class TestWardServiceMessages(unittest.TestCase):
         resp = _roundtrip(
             WardSyncResponse,
             WardSyncResponse(
-                counter=43,
-                mac=b"\x66" * 32,
+                from_counter=42,
+                from_root=b"\x02" * 32,
+                to_counter=43,
+                to_root=b"\x04" * 32,
                 timestamp=1700000000,
                 wm_signature=b"\x77" * 64,
                 links=[
@@ -105,14 +106,24 @@ class TestWardServiceMessages(unittest.TestCase):
                 ],
             )
         )
-        self.assertEqual(resp.counter, 43)
+        self.assertEqual(resp.to_counter, 43)
+        # THE STEP, both ends -- the attestation names a transition now, so the `from` pair has
+        # to survive the round trip beside the `to` pair.
+        self.assertEqual(resp.from_counter, 42)
         self.assertEqual(len(resp.links), 2)
         self.assertEqual(resp.links[1].auth_commit, b"\x05" * 32)
 
     def test_an_empty_chain_is_distinguishable(self):
         """No links is the ordinary "nothing changed" answer, not a malformed one."""
         resp = _roundtrip(
-            WardSyncResponse, WardSyncResponse(counter=41, mac=b"\x66" * 32, wm_signature=b"\x77" * 64)
+            WardSyncResponse,
+            WardSyncResponse(
+                from_counter=40,
+                from_root=b"\x05" * 32,
+                to_counter=41,
+                to_root=b"\x06" * 32,
+                wm_signature=b"\x77" * 64,
+            ),
         )
         self.assertEqual(resp.links, [])
 
@@ -136,31 +147,35 @@ class TestWardServiceMessages(unittest.TestCase):
         _roundtrip(WardSyncRequired, WardSyncRequired())
 
     def test_a_publish_carries_both_authenticators(self):
-        """`auth_commit` is for another device of this wallet; `wm_sig` is for the WM, which never
-        receives a root. Both travel, and they are not interchangeable."""
+        """`auth_commit` is for another device of this wallet; `wm_sig` is for the WM. Both cover
+        the same root transition, and they are not interchangeable."""
         got = _roundtrip(
             WardPublish,
             WardPublish(
                 entry_key=b"\xa1" * 32,
                 counter=42,
-                mac=b"\xa2" * 32,
+                from_root=b"\xa6" * 32,
+                new_root=b"\xa2" * 32,
                 auth_commit=b"\xa3" * 32,
                 wm_sig=b"\xa4" * 64,
                 nonce=b"\xa5" * 32,
             )
         )
+        self.assertEqual(got.from_root, b"\xa6" * 32)
+        self.assertEqual(got.new_root, b"\xa2" * 32)
         self.assertEqual(got.auth_commit, b"\xa3" * 32)
         self.assertEqual(got.wm_sig, b"\xa4" * 64)
         self.assertEqual(got.nonce, b"\xa5" * 32)
 
     def test_a_publish_outcome_round_trips_either_way(self):
+        # NO HEAD ON THE ACK. The device rebuilds the attested transition from what it just
+        # published -- both ends are its own -- so a head named here would be a value the check
+        # merely echoed. All that comes back is the signature and the clock.
         ack = _roundtrip(
             WardPublishAck,
-            WardPublishAck(
-                counter=42, mac=b"\xb1" * 32, timestamp=1, wm_signature=b"\xb2" * 64
-            )
+            WardPublishAck(timestamp=1, wm_signature=b"\xb2" * 64)
         )
-        self.assertEqual(ack.counter, 42)
+        self.assertEqual(ack.wm_signature, b"\xb2" * 64)
 
         conflict = _roundtrip(WardPublishConflict, WardPublishConflict(head_counter=43))
         self.assertEqual(conflict.head_counter, 43)
