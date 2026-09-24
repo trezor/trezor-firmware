@@ -177,12 +177,16 @@ pub trait CryptoV1: Send + Sync {
         public_keys: Slice<'a, [u8; 32]>,
     ) -> FastResult<[u8; 32], CryptoError>;
 
-    extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> String;
+    /// Base58-encodes `data`.
+    extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> FastResult<String, CryptoError>;
     extern "C" fn base58_decode<'a>(
         &self,
         data: Str<'a>,
     ) -> FastResult<BoxedSlice<u8>, CryptoError>;
-    extern "C" fn base58check_encode<'a>(&self, data: Slice<'a, u8>) -> String;
+    extern "C" fn base58check_encode<'a>(
+        &self,
+        data: Slice<'a, u8>,
+    ) -> FastResult<String, CryptoError>;
     extern "C" fn base58check_decode<'a>(
         &self,
         data: Str<'a>,
