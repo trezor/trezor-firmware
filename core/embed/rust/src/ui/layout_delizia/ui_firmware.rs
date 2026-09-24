@@ -982,13 +982,15 @@ impl FirmwareUI for UIDelizia {
         _time_ms: u32,
         external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<Gc<LayoutObj>, Error> {
-        if external_menu {
-            return Err(Error::NotImplementedError);
-        }
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
+        let header = Header::left_aligned(title);
+        let header = if external_menu {
+            header.with_menu_button()
+        } else {
+            header
+        };
         let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::with_header(Header::left_aligned(title), SwipeContent::new(content))
-                .with_swipeup_footer(None),
+            Frame::with_header(header, SwipeContent::new(content)).with_swipeup_footer(None),
         ))?;
         Ok(obj)
     }
@@ -1057,11 +1059,25 @@ impl FirmwareUI for UIDelizia {
         content: TString<'static>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: only the info and warning notices have a menu a caller can
+        // drive. The others are drawn without it, so the caller's extras are
+        // unreachable there.
+        if external_menu && !matches!(severity, Severity::Info | Severity::Warning) {
+            log::warn!("show_notice: external_menu is not supported for this severity, ignored");
+        }
         match severity {
-            // Refuses the menu itself: this model's info screen has none.
             Severity::Info => Self::show_info(title, content, None, 0, external_menu),
-            // WIP: no other screen here can show a menu the caller drives.
-            _ if external_menu => Err(Error::NotImplementedError),
+            Severity::Warning if external_menu => {
+                let content =
+                    Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, content));
+                LayoutObj::new(SwipeUpScreen::new(
+                    Frame::with_header(
+                        Header::left_aligned(title).with_menu_button(),
+                        SwipeContent::new(content),
+                    )
+                    .with_swipeup_footer(Some(TR::buttons__continue.into())),
+                ))
+            }
             // This model's success screen has a fixed header, and the message
             // is the status text itself, as in its own `show_success`. The
             // caller's title has nowhere to go.

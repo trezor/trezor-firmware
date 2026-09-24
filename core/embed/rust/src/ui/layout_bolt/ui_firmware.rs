@@ -1103,8 +1103,15 @@ impl FirmwareUI for UIBolt {
         content: TString<'static>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: no notice screen on this model has a menu a caller can drive. The notice
+        // is drawn without it, so the caller's extras are unreachable here.
+        let external_menu = if external_menu {
+            log::warn!("show_notice: external_menu is not supported on this model, ignored");
+            false
+        } else {
+            external_menu
+        };
         match severity {
-            // Refuses the menu itself: this model's info screen has none.
             Severity::Info => Self::show_info(
                 title,
                 content,
@@ -1112,8 +1119,6 @@ impl FirmwareUI for UIBolt {
                 0,
                 external_menu,
             ),
-            // WIP: no other screen here can show a menu the caller drives.
-            _ if external_menu => Err(Error::NotImplementedError),
             // This model has no "continue in the app" screen — its own
             // `show_continue_in_app` shows nothing — so the end of a flow looks
             // like any other success and waits to be dismissed.
@@ -1177,11 +1182,17 @@ impl FirmwareUI for UIBolt {
     }
 
     fn show_properties(
-        _title: TString<'static>,
-        _subtitle: Option<TString<'static>>,
-        _value: Obj,
+        title: TString<'static>,
+        subtitle: Option<TString<'static>>,
+        value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
+        // WIP: this model has no properties screen of its own. The info screen
+        // shows the same facts, and dismissing it answers the same way; only
+        // the subtitle has nowhere to go.
+        if subtitle.is_some() {
+            log::warn!("show_properties: subtitle is not supported on this model, ignored");
+        }
+        Self::show_info_with_cancel(title, value, false, false)
     }
 
     fn show_share_words(

@@ -68,7 +68,6 @@ pub(crate) fn confirm_typed_data_final() -> Result<()> {
         Commitment::Final,
         "tron/typed_data",
         &[],
-        true,
     ))
     .c()?
     .confirmed()
@@ -250,7 +249,6 @@ pub fn confirm_tron_claim(
         Commitment::Final,
         "tron/claim",
         extras,
-        true,
     ))
     .c()?
     .confirmed()
@@ -399,7 +397,6 @@ fn confirm_tron_approve(
         Commitment::Step,
         "tron/approve",
         &[],
-        true,
     ))
     .c()?
     .confirmed()
@@ -505,8 +502,8 @@ pub fn confirm_unknown_smart_contract(
     .confirmed()
     .c()?;
 
-    // The app hands over the raw calldata and gets one outcome; hex rendering,
-    // paging and the button labels belong to the library.
+    // The app hands over the raw calldata and gets one outcome; the hex, how it
+    // is split up, and the button labels are not the app's.
     modui::confirm_data(ConfirmData::new(
         tr!("ethereum__title_input_data"),
         &contract.data,

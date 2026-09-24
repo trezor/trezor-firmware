@@ -3,14 +3,14 @@
 //! This block exists because of *what* it shows — raw bytes with no meaning
 //! the device can interpret, rendered as hex — and not because of how much of
 //! it there is. Length is not the caller's problem: a blob of any size is one
-//! call returning one outcome, and `paged` handles the rest.
+//! call returning one outcome, and `chunked` handles the rest.
 
+use super::chunked::{self, AfterChunk, BYTES_PER_CHUNK};
 use super::extra::ExtraItem;
-use super::paged::{self, BYTES_PER_PAGE, Page, PageCtx};
 use super::screen::Screen;
 use super::{BR_CODE_OTHER, UiOutcome, menu};
 use crate::alloc_types::String;
-use crate::structs::{ConfirmWithInfo, StrExt, TrezorUiEnum, UiReply};
+use crate::structs::{ConfirmValue as WireConfirmValue, TrezorUiEnum, UiReply};
 use crate::{Error, Result};
 
 // ============================================================================
@@ -28,9 +28,9 @@ pub struct ConfirmData<'a> {
 }
 
 impl<'a> ConfirmData<'a> {
-    /// Confirms `data`, rendered as hex across as many pages as it takes.
+    /// Confirms `data`, shown as hex however long it is.
     ///
-    /// - `title` — the heading of every page.
+    /// - `title` — the heading of every screen.
     /// - `data` — the bytes, of any length.
     /// - `subtitle` — optional line under the heading.
     /// - `br` — the step name the host sees; see
@@ -69,13 +69,11 @@ impl<'a> ConfirmData<'a> {
 /// Asks the person to confirm raw bytes, and waits for the answer.
 ///
 /// For data the device cannot interpret, such as contract call data. The
-/// bytes are shown as hex, one page at a time, and a blob of any length is
-/// still one call with one outcome: the app never sees the pages.
+/// bytes are shown as hex, a screen at a time, and a blob of any length is
+/// still one call with one outcome: the app never sees how it was split.
 ///
-/// The person can accept the pages they have not reached yet without reading
-/// them, and that is still `Confirmed`. Use this block only where skipping the
-/// rest is acceptable; anything the person must read belongs in a block that
-/// shows it whole.
+/// `Confirmed` means the person went through all of it: there is no way to
+/// accept the rest unread.
 ///
 /// # Errors
 ///
@@ -98,19 +96,20 @@ pub fn confirm_data(params: ConfirmData<'_>) -> Result<UiOutcome> {
     if params.br.is_empty() {
         return Err(Error::ValueError("a step name must not be empty"));
     }
+    menu::check_extras(params.extras, params.cancel)?;
 
-    // One buffer reused for every page rather than an allocation per page.
-    let mut hex = String::with_capacity(BYTES_PER_PAGE * 2);
-    // One screen for the whole sequence: each page rebuilds it, because its
+    // One buffer reused for every chunk rather than an allocation per chunk.
+    let mut hex = String::with_capacity(BYTES_PER_CHUNK * 2);
+    // One screen for the whole sequence: each chunk rebuilds it, because its
     // content changed, but a trip through the extras and back does not.
     let screen = Screen::new();
 
-    paged::confirm_in_pages(params.data.len().div_ceil(BYTES_PER_PAGE), |ctx| {
-        let start = ctx.index * BYTES_PER_PAGE;
-        let end = (start + BYTES_PER_PAGE).min(params.data.len());
+    chunked::confirm_in_chunks(params.data.len().div_ceil(BYTES_PER_CHUNK), |ctx| {
+        let start = ctx.index * BYTES_PER_CHUNK;
+        let end = (start + BYTES_PER_CHUNK).min(params.data.len());
 
         encode_hex(&params.data[start..end], &mut hex);
-        show_page(&params, &hex, &ctx, &screen)
+        show_chunk(&params, &hex, &screen)
     })
 }
 
@@ -118,60 +117,54 @@ pub fn confirm_data(params: ConfirmData<'_>) -> Result<UiOutcome> {
 // Internals
 // ============================================================================
 
-/// Renders one page and waits for the person, showing the same page until
+/// Sends one chunk and waits for the person, showing the same chunk until
 /// they leave it.
-fn show_page(params: &ConfirmData<'_>, hex: &str, ctx: &PageCtx, screen: &Screen) -> Result<Page> {
-    let items = [StrExt::mono(hex)];
-
-    let request = TrezorUiEnum::ConfirmWithInfo(ConfirmWithInfo::new(
+///
+/// A chunk goes as a value, the screen every model pages: core splits it across
+/// as many screens as it takes, and the person answers only once they have
+/// seen all of it.
+fn show_chunk(params: &ConfirmData<'_>, hex: &str, screen: &Screen) -> Result<AfterChunk> {
+    let request = TrezorUiEnum::ConfirmValue(WireConfirmValue::new(
         params.title,
-        params.subtitle,
-        &items,
-        // Button words, which this library has no business choosing. What it
-        // knows is semantic — this is page `ctx.index`, there are more or there
-        // are not, and the screen has extras or it does not — and the trusted
-        // side should turn that into buttons in the person's own language. The
-        // wire has no field for any of it, only for the labels themselves, so
-        // they are written here, in English, at the one point that cannot
-        // avoid them. They go the moment the wire carries the facts instead.
-        if ctx.is_last { "Continue" } else { "Show next" },
-        match (params.offers_more(), ctx.is_last) {
-            (true, _) => Some("Menu"),
-            (false, false) => Some("Confirm all"),
-            (false, true) => None,
-        },
-        Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
+        hex,
+        None,            // description
+        Some(params.br), // br_name: the step's name; the app owns it
         BR_CODE_OTHER,   // legacy field; see the constant
+        true,            // is_data: raw data, shown verbatim
+        None,            // verb: the model's own
+        params.subtitle,
+        false,                // info: the menu button is the external one below
+        false,                // hold
+        false,                // chunkify: hex, not an address to compare by eye
+        true,                 // page_counter: where the person is within the chunk
+        true,                 // cancel: the screen's own way out
+        params.offers_more(), // external_menu: how the extras are reached
+        None,                 // footer
     ));
 
-    // This page's content is new, so the screen is built rather than reopened.
+    // This chunk's content is new, so the screen is built rather than reopened.
     let mut reply = screen.show(&request)?;
 
     loop {
         match reply {
-            // What "next page" will be once core can tell it is at the edge
-            // of the window it was given. Nothing sends it yet.
-            UiReply::Forward => return Ok(Page::Advance),
-            UiReply::Backward => return Ok(Page::Retreat),
-            // How "next page" arrives today, and the reason the two words in
-            // the request above have to exist: this also means "done" on the
-            // last page, and only `ctx` tells them apart.
-            UiReply::Confirmed => return Ok(Page::Advance),
-            UiReply::ConfirmedAll => return Ok(Page::ConfirmAll),
-            // The extras, which is all this should ever mean.
+            // What "next chunk" will be once core can tell it has paged to the
+            // edge of the chunk it was given. Nothing sends it yet.
+            UiReply::Forward => return Ok(AfterChunk::Advance),
+            UiReply::Backward => return Ok(AfterChunk::Retreat),
+            // Core pages within the chunk, so a yes means the person has seen
+            // all of it. Whether that finishes the block is the loop's to say.
+            UiReply::Confirmed => return Ok(AfterChunk::Advance),
+            UiReply::ConfirmedAll => return Ok(AfterChunk::ConfirmAll),
+            // The extras, which is all this can mean: the screen has no other
+            // secondary button.
             UiReply::WantsMore if params.offers_more() => {
                 match menu::open(params.extras, params.cancel, Some(params.br))? {
-                    Some(outcome) => return Ok(Page::Decided(outcome)),
-                    // Back to the page the person was reading, as they left it.
+                    Some(outcome) => return Ok(AfterChunk::Decided(outcome)),
+                    // Back to the chunk the person was reading, as they left it.
                     None => reply = screen.reshow(&request)?,
                 }
             }
-            // Scaffolding, and the second half of the overload `ConfirmedAll`
-            // exists to end: a paged screen has one secondary button, so when
-            // there are no extras this library makes it the skip-ahead and
-            // core has no way to say so.
-            UiReply::WantsMore => return Ok(Page::ConfirmAll),
-            UiReply::Cancelled => return Ok(Page::Cancelled),
+            UiReply::Cancelled => return Ok(AfterChunk::Cancelled),
             _ => return Err(Error::InvalidMessage),
         }
     }
