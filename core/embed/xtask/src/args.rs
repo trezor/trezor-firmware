@@ -1,3 +1,4 @@
+use std::ffi::OsString;
 use std::path::PathBuf;
 
 use anyhow::{Result, anyhow};
@@ -152,6 +153,8 @@ pub enum Cmd {
     Combine(CombineArgs),
     /// Print current version of specified project
     PrintVersion(PrintVersionArgs),
+    /// Run the Trezor App Tool command
+    Apps(AppsArgs),
 }
 
 #[derive(Args, Debug, Clone, Default)]
@@ -254,4 +257,10 @@ pub struct CombineArgs {
 #[command(hide = true)] // Should probably go under some kind of misc subcommand.
 pub struct PrintVersionArgs {
     pub project: Project,
+}
+
+#[derive(Args, Debug)]
+pub struct AppsArgs {
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+    pub args: Vec<OsString>,
 }
