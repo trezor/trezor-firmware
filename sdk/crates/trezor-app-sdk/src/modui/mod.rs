@@ -172,6 +172,15 @@
 //! A block that cannot show extras yet refuses a non-empty list rather than
 //! draw a screen whose extras nobody can open; see the table above.
 //!
+//! # Progress
+//!
+//! Not everything the app shows waits for the person. While the app works —
+//! hashing, fetching, signing — it can hold up a progress, so the person
+//! sees that the device has not stalled. A progress is not a block: it asks
+//! nothing, answers nothing, and never blocks. It appears when the work
+//! starts and disappears when it ends, including through `?`, because the
+//! app never ends one by hand. See [`progress`] and [`Progress`].
+//!
 //! # Errors
 //!
 //! A block returns `Err` only when it could not ask the question at all. The
@@ -287,6 +296,7 @@ mod confirm_summary;
 mod confirm_value;
 mod extra;
 mod menu;
+mod progress;
 mod screen;
 mod show_notice;
 
@@ -296,6 +306,7 @@ pub use confirm_properties::{ConfirmProperties, confirm_properties};
 pub use confirm_summary::{ConfirmSummary, confirm_summary};
 pub use confirm_value::{ConfirmValue, Footer, ValueKind, confirm_value};
 pub use extra::{Extra, ExtraItem};
+pub use progress::{Progress, Total, progress, progress_with};
 use screen::Screen;
 pub use show_notice::{Severity, ShowNotice, show_notice};
 use ufmt::derive::uDebug;
