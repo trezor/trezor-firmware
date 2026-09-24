@@ -34,4 +34,5 @@ elf_sections = [".header", ".flash", ".data"]
 asan             = { true = ["asan"] }
 bootloader-devel = { true = ["bootloader_devel"] }
 dbg-console      = { vcp = ["dbg_console_vcp"], swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
+log-external     = { true = ["sys/log_external"] }
 production       = { true = ["production"] }

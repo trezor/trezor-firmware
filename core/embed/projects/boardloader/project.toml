@@ -27,3 +27,4 @@ asan             = { true = ["asan"] }
 production       = { true = ["production"] }
 bootloader-devel = { true = ["bootloader_devel"] }
 dbg-console      = { swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
+log-external     = { true = ["sys/log_external"] }

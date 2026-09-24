@@ -906,6 +906,7 @@ dependencies = [
  "color-eyre",
  "crypto",
  "cty",
+ "log",
  "models",
  "rtl",
  "spin",

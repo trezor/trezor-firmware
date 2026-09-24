@@ -94,3 +94,8 @@ pub fn log_simple(module: &str, level: LogLevel, message: &str) {
         syslog_write_chunk(message, true).ok();
     }
 }
+
+pub fn init_external_logging() {
+    #[cfg(feature = "log_external")]
+    crate::log_external::init()
+}
