@@ -328,7 +328,7 @@ message TxAck {
             optional bytes script_sig = 4;   // script signature, unset for tx to sign
             optional uint32 sequence = 5 [default = 4294967295];                // sequence (default=0xffffffff)
             optional InputScriptType script_type = 6 [default = SPENDADDRESS];  // defines template of input script
-            optional MultisigRedeemScriptType multisig = 7;  // Filled if input is going to spend multisig tx
+            optional MultisigRedeemScriptType multisig = 7;  // Filled if input is going to spend multisig output
             optional uint64 amount = 8;                      // amount of previous transaction output (for segwit only)
             optional uint32 decred_tree = 9;                 // only for Decred, 0 is a normal transaction
                                                              // while 1 is a stake transaction
@@ -394,8 +394,8 @@ message TxInput {
     optional bytes script_sig = 4;                        // script signature, only set for EXTERNAL inputs
     optional uint32 sequence = 5 [default = 0xffffffff];  // sequence
     optional InputScriptType script_type = 6 [default = SPENDADDRESS];  // defines template of input script
-    optional MultisigRedeemScriptType multisig = 7;                     // Filled if input is going to spend multisig tx
-    required uint64 amount = 8;                                         // amount of previous transaction output
+    optional MultisigRedeemScriptType multisig = 7;  // Filled if input is going to spend multisig output
+    required uint64 amount = 8;                      // amount of previous transaction output
     optional uint32 decred_tree = 9;      // only for Decred, 0 is a normal transaction while 1 is a stake transaction
     reserved 10, 11, 12;                  // fields which are in use, or have been in the past, in TxInputType
     optional bytes witness = 13;          // witness data, only set for EXTERNAL inputs
