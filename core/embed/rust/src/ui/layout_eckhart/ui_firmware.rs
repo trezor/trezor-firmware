@@ -1306,6 +1306,14 @@ impl FirmwareUI for UIEckhart {
         content: TString<'static>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: only the info screen has a menu a caller can drive. The notice is drawn
+        // without it, so the caller's extras are unreachable here.
+        let external_menu = if external_menu && severity != Severity::Info {
+            log::warn!("show_notice: external_menu is not supported for this severity, ignored");
+            false
+        } else {
+            external_menu
+        };
         match severity {
             Severity::Info => Self::show_info(
                 title,
@@ -1314,10 +1322,6 @@ impl FirmwareUI for UIEckhart {
                 0,
                 external_menu,
             ),
-            // WIP: only the info screen can show a menu the caller drives. The
-            // danger screen keeps its own, inside a `SwipeFlow`, and the rest
-            // have none.
-            _ if external_menu => Err(Error::NotImplementedError),
             // Mid-flow: the person reads it and moves on themselves.
             Severity::Success => {
                 Self::show_success(title, TR::buttons__continue.into(), content, false, 0)

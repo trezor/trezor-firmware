@@ -932,8 +932,8 @@ pub enum UiReply {
     /// is not an answer at all but a request for the next part.
     ///
     /// Scaffolding: until `Forward` has a producer, this *also* arrives from
-    /// every page of a paged screen, so a caller mid-content cannot take it at
-    /// face value. Only a paged block in the app SDK has to care.
+    /// every chunk of a chunked block, so a caller mid-content cannot take it
+    /// at face value. Only a chunked block in the app SDK has to care.
     Confirmed,
 
     /// The person refused, or left without answering.
@@ -954,7 +954,7 @@ pub enum UiReply {
     /// the same. Both can be on one screen at once, which is why they are two
     /// variants and not one.
     ///
-    /// Scaffolding: on a paged screen with no extras this currently means the
+    /// Scaffolding: on a chunk's screen with no extras this currently means the
     /// skip-ahead instead, because such a screen has one secondary button and
     /// the app SDK picks what it does. [`UiReply::ConfirmedAll`] is what that
     /// becomes once core owns the buttons.
@@ -978,7 +978,7 @@ pub enum UiReply {
 
     /// The person wants what came before this, and core cannot supply it.
     ///
-    /// The mirror of [`UiReply::Forward`]: an earlier page than core holds, or
+    /// The mirror of [`UiReply::Forward`]: an earlier chunk than core holds, or
     /// an earlier step of a flow. Which of those it is follows from what the
     /// caller was doing, since only it knows whether it is mid-content.
     Backward,
@@ -988,7 +988,7 @@ pub enum UiReply {
     /// Distinct from [`UiReply::Confirmed`], which is the person reaching the end
     /// and agreeing: this is the shortcut past whatever remains. Distinct from
     /// [`UiReply::WantsMore`] for the reason it exists at all — the skip-ahead
-    /// used to arrive as that, because a paged screen has one secondary button
+    /// used to arrive as that, because a chunk's screen has one secondary button
     /// and the app SDK was choosing what it meant.
     ///
     /// WIP: no producer yet, for that same reason. Core cannot offer both the

@@ -1052,11 +1052,16 @@ impl FirmwareUI for UIDelizia {
         content: TString<'static>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: no notice screen on this model has a menu a caller can drive. The notice
+        // is drawn without it, so the caller's extras are unreachable here.
+        let external_menu = if external_menu {
+            log::warn!("show_notice: external_menu is not supported on this model, ignored");
+            false
+        } else {
+            external_menu
+        };
         match severity {
-            // Refuses the menu itself: this model's info screen has none.
             Severity::Info => Self::show_info(title, content, None, 0, external_menu),
-            // WIP: no other screen here can show a menu the caller drives.
-            _ if external_menu => Err(Error::NotImplementedError),
             // This model's success screen has a fixed header, and the message
             // is the status text itself, as in its own `show_success`. The
             // caller's title has nowhere to go.

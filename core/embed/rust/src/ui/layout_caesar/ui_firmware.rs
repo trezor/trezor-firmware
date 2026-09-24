@@ -1236,10 +1236,11 @@ impl FirmwareUI for UICaesar {
         content: TString<'static>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        // WIP: no screen on this model can show a menu the caller drives, and
-        // `confirm_action` would drop the request silently rather than refuse.
+        // WIP: no notice screen on this model has a menu a caller can drive.
+        // The notice is drawn without one, so the caller's extras are
+        // unreachable here.
         if external_menu {
-            return Err(Error::NotImplementedError);
+            log::warn!("show_notice: external_menu is not supported on this model, ignored");
         }
         match severity {
             // This model's info screen has no button and never answers, and it
@@ -1545,7 +1546,16 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     } else {
         None
     };
-    if hold && !external_menu {
+    // WIP: this page cannot hold and show a menu at once. It keeps the hold,
+    // the stronger promise to the person, and drops the menu, so the caller's
+    // extras are unreachable here.
+    let external_menu = if hold && external_menu {
+        log::warn!("confirm: external_menu is not supported together with hold, ignored");
+        false
+    } else {
+        external_menu
+    };
+    if hold {
         confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
     }
 

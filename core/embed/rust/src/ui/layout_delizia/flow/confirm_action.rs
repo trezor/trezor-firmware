@@ -309,11 +309,17 @@ pub fn new_confirm_action(
         paragraphs.into_paragraphs()
     };
 
-    if external_menu && (prompt_screen || hold || hold_danger) {
-        return Err(Error::ValueError(
-            c"external_menu currently not supported in tandem with prompt_screen/hold",
-        ));
-    }
+    // WIP: this flow cannot show a menu together with a prompt or a hold. It
+    // keeps the gesture, the stronger promise to the person, and drops the
+    // menu, so the caller's extras are unreachable here.
+    let external_menu = if external_menu && (prompt_screen || hold || hold_danger) {
+        log::warn!(
+            "confirm_action: external_menu is not supported with prompt_screen/hold, ignored"
+        );
+        false
+    } else {
+        external_menu
+    };
 
     let mut options = ConfirmActionOptions::new();
     options = if hold_danger {

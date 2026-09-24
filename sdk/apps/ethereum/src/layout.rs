@@ -696,18 +696,19 @@ fn confirm_payment_request<'a>(
             let can_go_back_from_trade = trades.len() == 1;
 
             for trade in trades {
-                if matches!(
-                    trade_flow(
-                        title,
-                        tr!("words__assets"),
-                        trade,
-                        extra_menu_items,
-                        can_go_back_from_trade,
-                    )?,
-                    ui::UiReply::Backward
-                ) {
-                    back_from_confirm_trade = true;
-                    break;
+                match trade_flow(
+                    title,
+                    tr!("words__assets"),
+                    trade,
+                    extra_menu_items,
+                    can_go_back_from_trade,
+                )? {
+                    ui::UiReply::Backward => {
+                        back_from_confirm_trade = true;
+                        break;
+                    }
+                    // Refusing any trade refuses the whole payment.
+                    reply => ui::error_if_not_confirmed(reply)?,
                 }
             }
 
@@ -716,27 +717,27 @@ fn confirm_payment_request<'a>(
             }
 
             if let Some(transaction_fee) = transaction_fee {
-                if matches!(
-                    ui::confirm_summary(ui::ConfirmSummary::new(
-                        summary_title,
-                        None,
-                        None,
-                        transaction_fee,
-                        tr!("words__transaction_fee"),
-                        None,
-                        Some(account_items),
-                        Some(tr!("confirm_total__title_fee")),
-                        fee_info_items,
-                        true,
-                        false,
-                        Some("confirm_payment_request"),
-                        ButtonRequestType::SignTx.into(),
-                    ))?,
-                    ui::UiReply::Backward
-                ) {
-                    continue;
-                } else {
-                    break;
+                match ui::confirm_summary(ui::ConfirmSummary::new(
+                    summary_title,
+                    None,
+                    None,
+                    transaction_fee,
+                    tr!("words__transaction_fee"),
+                    None,
+                    Some(account_items),
+                    Some(tr!("confirm_total__title_fee")),
+                    fee_info_items,
+                    true,
+                    false,
+                    Some("confirm_payment_request"),
+                    ButtonRequestType::SignTx.into(),
+                ))? {
+                    ui::UiReply::Backward => continue,
+                    // Anything but a yes here must not reach the signature.
+                    reply => {
+                        ui::error_if_not_confirmed(reply)?;
+                        break;
+                    }
                 }
             } else {
                 break;

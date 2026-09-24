@@ -1640,11 +1640,11 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
         //
         // WIP: `UiReply::Forward` has no producer here yet, and `Backward` is
         // only ever the flow-level back button. Both should also come from a
-        // *paged* screen reaching the edge of the content it was given — but a
+        // screen paging to the edge of the chunk of data it was given — but a
         // layout cannot tell it is at an edge until the request carries the
-        // window's offset and the total length, which it does not. Until then
-        // a paged block reads `Confirmed` as "next page" and cannot page back
-        // at all.
+        // chunk's offset and the total length, which it does not. Until then
+        // a chunked block reads `Confirmed` as "next chunk" and cannot go back
+        // a chunk at all.
         let msg = if obj == CONFIRMED.as_obj() {
             UiReply::Confirmed
         } else if obj == CANCELLED.as_obj() {
