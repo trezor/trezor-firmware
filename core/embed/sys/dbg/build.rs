@@ -58,11 +58,9 @@ fn def_system_view(lib: &mut CLibrary) {
 
 fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
     let builder = builder
-        .header("inc/sys/logging.h")
+        .allowlist_type("log_source_t")
         .header("dbg/inc/sys/syslog.h")
         .allowlist_function("syslog_start_record")
-        .allowlist_function("syslog_write_chunk")
-        .allowlist_type("log_source_t")
-        .allowlist_type("log_level_t");
+        .allowlist_function("syslog_write_chunk");
     Ok(builder)
 }

@@ -53,5 +53,6 @@ dbg-console       = { vcp = ["dbg_console_vcp"], swo = ["dbg_console_swo"], syst
 debug-link        = { true = ["debuglink", "ui_debug"] }
 disable-animation = { true = ["disable_animation"] }
 log-external      = { true = ["sys/log_external"] }
+log-level         = { off = ["sys/log_max_off"], error = ["sys/log_max_error"], warn = ["sys/log_max_warn"], info = ["sys/log_max_info"], debug = ["sys/log_max_debug"] }
 perf-overlay      = { true = ["ui_performance_overlay"] }
 production        = { true = ["production"] }

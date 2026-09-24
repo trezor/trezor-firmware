@@ -28,3 +28,4 @@ production       = { true = ["production"] }
 bootloader-devel = { true = ["bootloader_devel"] }
 dbg-console      = { swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 log-external     = { true = ["sys/log_external"] }
+log-level        = { off = ["sys/log_max_off"], error = ["sys/log_max_error"], warn = ["sys/log_max_warn"], info = ["sys/log_max_info"], debug = ["sys/log_max_debug"] }

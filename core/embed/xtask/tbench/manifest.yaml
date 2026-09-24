@@ -195,6 +195,28 @@ options:
     when: component(firmware)
     type: checkbox
 
+  - id: log-level
+    name: Maximum Log Level
+    description: Logging calls above this level are optimized out.
+    group: Debugging
+    type: multistate
+    states:
+      - value: "off"
+        name: "Off"
+        description: No logging.
+      - value: "error"
+        name: "Error"
+        description: Only Error level.
+      - value: "warn"
+        name: "Warning"
+        description: Only Error and Warning levels.
+      - value: "info"
+        name: "Info"
+        description: Only Error, Warning and Info levels.
+      - value: "debug"
+        name: "Debug"
+        description: All log levels enabled.
+
   - id: log-external
     name: External Crate Logs
     description: Enable logs from dependencies that use the 'log' crate, increases code size.

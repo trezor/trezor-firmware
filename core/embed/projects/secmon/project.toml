@@ -30,6 +30,7 @@ bootloader-devel              = { true = ["bootloader_devel"] }
 dbg-console                   = { swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 log-external                  = { true = ["sys/log_external"] }
+log-level                     = { off = ["sys/log_max_off"], error = ["sys/log_max_error"], warn = ["sys/log_max_warn"], info = ["sys/log_max_info"], debug = ["sys/log_max_debug"] }
 production                    = { true = ["production"] }
 pyopt                         = { false = ["optiga_testing"] }
 storage-insecure-testing-mode = { true = ["storage_insecure_testing_mode"] }
