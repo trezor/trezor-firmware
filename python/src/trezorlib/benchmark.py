@@ -31,7 +31,7 @@ def list_names(
 
 
 @workflow()
-def run(session: "Session", name: str) -> messages.BenchmarkResult:
+def run(session: "Session", name: str, args: list[str]) -> messages.BenchmarkResult:
     return session.call(
-        messages.BenchmarkRun(name=name), expect=messages.BenchmarkResult
+        messages.BenchmarkRun(name=name, args=args), expect=messages.BenchmarkResult
     )

@@ -255,6 +255,8 @@ pub struct BenchmarkRun {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.BenchmarkRun.name)
     pub name: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.BenchmarkRun.args)
+    pub args: ::std::vec::Vec<::std::string::String>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.BenchmarkRun.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -308,12 +310,17 @@ impl BenchmarkRun {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "name",
             |m: &BenchmarkRun| { &m.name },
             |m: &mut BenchmarkRun| { &mut m.name },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "args",
+            |m: &BenchmarkRun| { &m.args },
+            |m: &mut BenchmarkRun| { &mut m.args },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<BenchmarkRun>(
             "BenchmarkRun",
@@ -336,6 +343,9 @@ impl ::protobuf::Message for BenchmarkRun {
                 10 => {
                     self.name = ::std::option::Option::Some(is.read_string()?);
                 },
+                18 => {
+                    self.args.push(is.read_string()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -351,6 +361,9 @@ impl ::protobuf::Message for BenchmarkRun {
         if let Some(v) = self.name.as_ref() {
             my_size += ::protobuf::rt::string_size(1, &v);
         }
+        for value in &self.args {
+            my_size += ::protobuf::rt::string_size(2, &value);
+        };
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -360,6 +373,9 @@ impl ::protobuf::Message for BenchmarkRun {
         if let Some(v) = self.name.as_ref() {
             os.write_string(1, v)?;
         }
+        for v in &self.args {
+            os.write_string(2, &v)?;
+        };
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -378,12 +394,14 @@ impl ::protobuf::Message for BenchmarkRun {
 
     fn clear(&mut self) {
         self.name = ::std::option::Option::None;
+        self.args.clear();
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static BenchmarkRun {
         static instance: BenchmarkRun = BenchmarkRun {
             name: ::std::option::Option::None,
+            args: ::std::vec::Vec::new(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -622,11 +640,11 @@ impl ::protobuf::reflect::ProtobufValue for BenchmarkResult {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x18messages-benchmark.proto\x12\x1ahw.trezor.messages.bitcoin\x1a\rop\
     tions.proto\"\x14\n\x12BenchmarkListNames\"&\n\x0eBenchmarkNames\x12\x14\
-    \n\x05names\x18\x01\x20\x03(\tR\x05names\"\"\n\x0cBenchmarkRun\x12\x12\n\
-    \x04name\x18\x01\x20\x01(\tR\x04name\";\n\x0fBenchmarkResult\x12\x14\n\
-    \x05value\x18\x01\x20\x01(\tR\x05value\x12\x12\n\x04unit\x18\x03\x20\x01\
-    (\tR\x04unitBA\n#com.satoshilabs.trezor.lib.protobufB\x16TrezorMessageBe\
-    nchmark\x80\xa6\x1d\x01\
+    \n\x05names\x18\x01\x20\x03(\tR\x05names\"6\n\x0cBenchmarkRun\x12\x12\n\
+    \x04name\x18\x01\x20\x01(\tR\x04name\x12\x12\n\x04args\x18\x02\x20\x03(\
+    \tR\x04args\";\n\x0fBenchmarkResult\x12\x14\n\x05value\x18\x01\x20\x01(\
+    \tR\x05value\x12\x12\n\x04unit\x18\x03\x20\x01(\tR\x04unitBA\n#com.satos\
+    hilabs.trezor.lib.protobufB\x16TrezorMessageBenchmark\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

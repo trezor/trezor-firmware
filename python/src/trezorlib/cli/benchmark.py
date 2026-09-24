@@ -53,13 +53,14 @@ def list_names(session: "Session", pattern: Optional[str] = None) -> None:
 
 @cli.command()
 @click.argument("pattern", required=False)
+@click.argument("args", nargs=-1)
 @with_session(passphrase=False)
-def run(session: "Session", pattern: Optional[str]) -> None:
+def run(session: "Session", pattern: Optional[str], args: list[str]) -> None:
     """Run benchmark"""
     names = list_names_patern(session, pattern)
     if len(names) == 0:
         click.echo("No benchmark satisfies the pattern.")
     else:
         for name in names:
-            result = benchmark.run(session, name)
+            result = benchmark.run(session, name, args)
             click.echo(f"{name}: {result.value} {result.unit}")

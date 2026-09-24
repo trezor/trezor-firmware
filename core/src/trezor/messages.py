@@ -107,10 +107,12 @@ if TYPE_CHECKING:
 
     class BenchmarkRun(protobuf.MessageType):
         name: "str | None"
+        args: "list[str]"
 
         def __init__(
             self,
             *,
+            args: "list[str] | None" = None,
             name: "str | None" = None,
         ) -> None:
             pass

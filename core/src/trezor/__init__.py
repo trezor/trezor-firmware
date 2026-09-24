@@ -9,3 +9,6 @@ from . import utils
 
 if utils.USE_APP_LOADING:
     import trezorapp as app  # noqa: F401
+
+if utils.USE_MINISCRIPT:
+    import trezorminiscript as miniscript  # noqa: F401
