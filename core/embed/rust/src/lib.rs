@@ -32,6 +32,7 @@ mod macros;
 mod align;
 #[cfg(feature = "debug")]
 mod coverage;
+mod crypto_api;
 #[cfg(feature = "universal_fw")]
 mod definitions;
 mod io;
