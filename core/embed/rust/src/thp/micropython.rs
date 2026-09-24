@@ -1,4 +1,5 @@
 use spin::mutex::MutexGuard;
+use sys::ulog;
 use trezor_thp::channel::{
     Phase, APP_HEADER_LEN, MAX_CREDENTIAL_LEN, MAX_DEVICE_PROPERTIES_LEN, SEND_BUFFER_OVERHEAD,
 };
@@ -31,7 +32,7 @@ extern "C" fn thp_init(iface_num: Obj, device_properties: Obj) -> Obj {
 
         #[cfg(feature = "debug")]
         if thp.message_out_ready(iface_num).is_some() {
-            log::error!("Message ready from previous event loop session but buffer is lost, waiting for retransmission.");
+            ulog::error!("Message ready from previous event loop session but buffer is lost, waiting for retransmission.");
         }
 
         Ok(Obj::const_none())
