@@ -100,6 +100,22 @@ KNOWN_ADDRESSES = [
     (1, "15c2b3adca66e26b6f230b4023f52a285b7f9995", "yield.xyz"),
 ]
 
+# (chain_id, address) pairs for ETH staking pool (stake/unstake) contracts.
+STAKING_ADDRESSES_POOL = [
+    # https://etherscan.io/address/0xd523794c879d9ec028960a231f866758e405be34
+    (1, "d523794c879d9ec028960a231f866758e405be34"),  # mainnet
+    # https://hoodi.etherscan.io/address/0xafa848357154a6a624686b348303ef9a13f63264
+    (560048, "afa848357154a6a624686b348303ef9a13f63264"),  # Hoodi testnet
+]
+
+# (chain_id, address) pairs for ETH staking accounting (claim) contracts.
+STAKING_ADDRESSES_ACCOUNTING = [
+    # https://etherscan.io/address/0x7a7f0b3c23c23a31cfcb0c44709be70d4d545c6e
+    (1, "7a7f0b3c23c23a31cfcb0c44709be70d4d545c6e"),  # mainnet
+    # https://hoodi.etherscan.io/address/0x624087dd1904ab122a32878ce9e933c7071f53b9
+    (560048, "624087dd1904ab122a32878ce9e933c7071f53b9"),  # Hoodi testnet
+]
+
 # Canonical WETH (Wrapped Ether) contracts holding the chain's native currency.
 WETH_DEPLOYMENTS = [
     # https://etherscan.io/address/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
@@ -146,6 +162,21 @@ def weth_deployments() -> Iterator[tuple[int, bytes]]:
 % for chain_id, addr in WETH_DEPLOYMENTS:
     yield (${chain_id}, ${fmt_addr(addr)})
 % endfor
+
+
+# (chain_id, address) pairs for ETH staking pool (stake/unstake) contracts.
+STAKING_ADDRESSES_POOL = (
+% for chain_id, addr in STAKING_ADDRESSES_POOL:
+    (${chain_id}, ${fmt_addr(addr)}),
+% endfor
+)
+
+# (chain_id, address) pairs for ETH staking accounting (claim) contracts.
+STAKING_ADDRESSES_ACCOUNTING = (
+% for chain_id, addr in STAKING_ADDRESSES_ACCOUNTING:
+    (${chain_id}, ${fmt_addr(addr)}),
+% endfor
+)
 
 <%
 _EIP7702_ADDRESSES = {

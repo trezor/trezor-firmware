@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from trezor.utils import BufferReader
 from trezor.wire import DataError
 
+from .sc_constants import STAKING_ADDRESSES_ACCOUNTING, STAKING_ADDRESSES_POOL
+
 if TYPE_CHECKING:
     from collections.abc import Coroutine, Iterable
     from typing import Any
@@ -16,28 +18,6 @@ if TYPE_CHECKING:
 FUNC_SIG_STAKE = b"\x3a\x29\xdb\xae"
 FUNC_SIG_UNSTAKE = b"\x76\xec\x87\x1c"
 FUNC_SIG_CLAIM = b"\x33\x98\x6f\xfa"
-
-# (chain_id, address) pairs for pool (stake/unstake) and accounting (claim) operations
-ADDRESSES_POOL = (
-    (
-        1,
-        b"\xd5\x23\x79\x4c\x87\x9d\x9e\xc0\x28\x96\x0a\x23\x1f\x86\x67\x58\xe4\x05\xbe\x34",
-    ),  # mainnet
-    (
-        560048,
-        b"\xaf\xa8\x48\x35\x71\x54\xa6\xa6\x24\x68\x6b\x34\x83\x03\xef\x9a\x13\xf6\x32\x64",
-    ),  # Hoodi testnet
-)
-ADDRESSES_ACCOUNTING = (
-    (
-        1,
-        b"\x7a\x7f\x0b\x3c\x23\xc2\x3a\x31\xcf\xcb\x0c\x44\x70\x9b\xe7\x0d\x4d\x54\x5c\x6e",
-    ),  # mainnet
-    (
-        560048,
-        b"\x62\x40\x87\xdd\x19\x04\xab\x12\x2a\x32\x87\x8c\xe9\xe9\x33\xc7\x07\x1f\x53\xb9",
-    ),  # Hoodi testnet
-)
 
 
 def get_approver(
@@ -67,7 +47,7 @@ def get_approver(
         return None
 
     func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
-    if (network.chain_id, address_bytes) in ADDRESSES_POOL:
+    if (network.chain_id, address_bytes) in STAKING_ADDRESSES_POOL:
         if func_sig == FUNC_SIG_STAKE:
             return _handle_staking_tx_stake(
                 data_reader, msg, network, address_bytes, maximum_fee, fee_items
@@ -77,7 +57,7 @@ def get_approver(
                 data_reader, msg, network, address_bytes, maximum_fee, fee_items
             )
 
-    if (network.chain_id, address_bytes) in ADDRESSES_ACCOUNTING:
+    if (network.chain_id, address_bytes) in STAKING_ADDRESSES_ACCOUNTING:
         if func_sig == FUNC_SIG_CLAIM:
             return _handle_staking_tx_claim(
                 data_reader,
