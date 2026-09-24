@@ -237,6 +237,42 @@ def test_show_multisig_3(session: Session):
         )
 
 
+@pytest.mark.capabilities(messages.Capability.Miniscript)
+@pytest.mark.experimental
+def test_miniscript_show_multisig_3(session: Session):
+    nodes = [
+        btc.get_public_node(
+            session, parse_path(f"m/84h/1h/{index}h"), coin_name="Testnet"
+        ).node
+        for index in range(1, 4)
+    ]
+    items = (f"@{i}/<0;1>/*" for i in range(len(nodes)))
+    policy = messages.MiniscriptPolicy(
+        descriptor=f"wsh(multi(2,{','.join(items)}))", nodes=nodes
+    )
+    reg = messages.MiniscriptRegisterPolicy(
+        name="2-of-3", policy=policy, coin_name="Testnet"
+    )
+    session.call(msg=reg, expect=messages.Success)
+    for index, expected in enumerate(
+        [
+            "tb1qgvn67p4twmpqhs8c39tukmu9geamtf7x0z3flwf9rrw4ff3h6d2qt0czq3",
+            "tb1qauuv4e2pwjkr4ws5f8p20hu562jlqpe5h74whxqrwf7pufsgzcms9y8set",
+        ]
+    ):
+        redeem = messages.MiniscriptRedeemPolicyType(
+            policy=policy, internal=False, index=index
+        )
+        actual = btc.get_address(
+            session,
+            n=parse_path(f"m/84h/1h/{index}h/0/0"),
+            script_type=messages.InputScriptType.SPENDWITNESS,
+            miniscript=redeem,
+            coin_name="Testnet",
+        )
+        assert actual == expected
+
+
 @pytest.mark.multisig
 @pytest.mark.parametrize("show_display", (True, False))
 def test_multisig_missing(session: Session, show_display: bool):

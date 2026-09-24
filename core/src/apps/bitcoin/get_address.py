@@ -8,7 +8,11 @@ from .common import multisig_uses_single_path
 from .keychain import with_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import Address, GetAddress, HDNodeType
+    from trezor.messages import (
+        Address,
+        GetAddress,
+        HDNodeType,
+    )
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
@@ -61,6 +65,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
     )
     from .multisig import multisig_xpub_index
 
+    miniscript = msg.miniscript  # local_cache_attribute
     multisig = msg.multisig  # local_cache_attribute
     address_n = msg.address_n  # local_cache_attribute
     script_type = msg.script_type  # local_cache_attribute
@@ -75,7 +80,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
 
     node = keychain.derive(address_n)
 
-    address = addresses.get_address(script_type, coin, node, multisig)
+    address = addresses.get_address(script_type, coin, node, multisig, miniscript)
     address_short = addresses.address_short(coin, address)
 
     address_case_sensitive = True
@@ -89,7 +94,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
 
     mac: bytes | None = None
     multisig_xpub_magic = coin.xpub_magic
-    if multisig:
+    if multisig or miniscript:
         if coin.segwit and not msg.ignore_xpub_magic:
             if (
                 script_type == InputScriptType.SPENDWITNESS
@@ -150,6 +155,19 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
                 case_sensitive=address_case_sensitive,
                 path=path,
                 multisig_index=multisig_index,
+                xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
+                account=account,
+                chunkify=bool(msg.chunkify),
+            )
+        elif miniscript:
+            account = miniscript.policy.descriptor
+            pubnodes = miniscript.policy.nodes
+            await show_address(
+                address_short,
+                subtitle=subtitle,
+                case_sensitive=address_case_sensitive,
+                path=path,
+                multisig_index=1,  # TODO: correct
                 xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
                 account=account,
                 chunkify=bool(msg.chunkify),
