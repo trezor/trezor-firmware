@@ -50,3 +50,6 @@
 [submodule "vendor/cmsis_device_h5"]
 	path = vendor/cmsis_device_h5
 	url = https://github.com/STMicroelectronics/cmsis_device_h5.git
+[submodule "vendor/stabby"]
+	path = vendor/stabby
+	url = https://github.com/trezor/stabby
