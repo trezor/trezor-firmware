@@ -34,6 +34,7 @@ unsafe impl GlobalAlloc for TrackedAllocator {
             TOTAL.fetch_add(size, Ordering::Relaxed),
             size
         );
+        ensure!(raw.is_aligned_to(layout.align()), "Unaligned allocation");
         raw as _
     }
     unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {

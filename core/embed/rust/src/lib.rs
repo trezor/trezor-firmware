@@ -11,6 +11,7 @@
 #![allow(dead_code)]
 #![feature(const_trait_impl)]
 #![feature(custom_test_frameworks)]
+#![feature(pointer_is_aligned_to)]
 #![no_main]
 #![reexport_test_harness_main = "test_main"]
 #![cfg_attr(
