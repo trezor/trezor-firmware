@@ -54,7 +54,7 @@ def split() -> None:
 @click.option(
     "--source-only",
     is_flag=True,
-    help=f"Merge back only {SOURCE_LANG}.json, e.g. after applying blanking rules.",
+    help=f"Merge back only {SOURCE_LANG} layout files, e.g. after applying blanking rules.",
 )
 def merge(source_only: bool) -> None:
     """Merge back translation files downloaded from Crowdin.
