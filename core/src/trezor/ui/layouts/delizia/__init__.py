@@ -2226,26 +2226,30 @@ async def confirm_signverify(
         external_menu=True,
     )
 
-    items: list[MenuLeaf] = [
-        cancel_leaf(
-            TR.buttons__cancel,
-            confirm=lambda: trezorui_api.show_mismatch(
-                title=TR.addr_mismatch__mismatch
-            ),
-        )
-    ]
+    info_items: list[StrPropertyType] = []
     if account is not None:
-        items.append(create_info_menu_leaf(TR.words__account, account))
+        info_items.append((TR.words__account, account, False))
     if path is not None:
-        items.append(create_info_menu_leaf(TR.address_details__derivation_path, path))
-    items.append(
-        create_info_menu_leaf(
+        info_items.append((TR.address_details__derivation_path, path, False))
+    info_items.append(
+        (
             TR.sign_message__message_size,
             TR.sign_message__bytes_template.format(len(message)),
+            False,
         )
     )
 
-    menu = Menu(items)
+    menu = Menu(
+        [
+            create_info_menu_leaf(TR.buttons__more_info, info_items),
+            cancel_leaf(
+                TR.buttons__cancel,
+                confirm=lambda: trezorui_api.show_mismatch(
+                    title=TR.addr_mismatch__mismatch
+                ),
+            ),
+        ]
+    )
 
     with address_ctx as address_layout:
         await confirm_with_menu(address_layout, menu, br_name, br_code=BR_CODE_OTHER)

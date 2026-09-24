@@ -1276,21 +1276,19 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_mismatch(title: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        let description: TString = TR::addr_mismatch__contact_support_at.into();
-        let url: TString = TR::addr_mismatch__support_url.into();
-        let button: TString = TR::buttons__quit.into();
+        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, TR::addr_mismatch__mismatch)
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical());
 
-        let text_style = theme::TEXT_REGULAR;
-        let mut ops = OpTextLayout::new(text_style);
-        ops.add_text_with_font(description, text_style.text_font)
-            .add_newline()
-            .add_text_with_font(url, theme::TEXT_MONO_MEDIUM.text_font);
-
-        let screen = TextScreen::new(FormattedText::new(ops))
+        let screen = TextScreen::new(paragraphs)
             .with_header(Header::new(title))
+            .with_hint(Hint::new_instruction(
+                TR::address__cancel_contact_support,
+                Some(theme::ICON_WARNING),
+            ))
             .with_action_bar(ActionBar::new_double(
-                Button::with_icon(theme::ICON_CROSS),
-                Button::with_text(button),
+                Button::with_icon(theme::ICON_CHEVRON_LEFT),
+                Button::with_text(TR::buttons__cancel.into()).styled(theme::button_cancel()),
             ));
 
         let layout = RootComponent::new(screen);

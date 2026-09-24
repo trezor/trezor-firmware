@@ -2337,6 +2337,12 @@ async def confirm_signverify(
     account: str | None = None,
     chunkify: bool = False,
 ) -> None:
+    from trezor.ui.layouts.menu import (
+        Menu,
+        cancel_leaf,
+        confirm_with_menu,
+    )
+
     if verify:
         address_title = TR.sign_message__verify_address
         br_name = "verify_message"
@@ -2344,58 +2350,40 @@ async def confirm_signverify(
         address_title = TR.sign_message__confirm_address
         br_name = "sign_message"
 
-    address_ctx = trezorui_api.confirm_value(
-        title=address_title,
-        value=address,
-        description=None,
-        is_data=True,
-        verb=TR.buttons__continue,
-        info=True,
-        chunkify=chunkify,
-        cancel=True,
-    )
-
-    items: list[StrPropertyType] = []
+    info_items: list[StrPropertyType] = []
     if account is not None:
-        items.append((TR.words__account, account, True))
+        info_items.append((TR.words__account, account, False))
     if path is not None:
-        items.append((TR.address_details__derivation_path, path, True))
-    items.append(
+        info_items.append((TR.address_details__derivation_path, path, True))
+    info_items.append(
         (
             TR.sign_message__message_size,
             TR.sign_message__bytes_template.format(len(message)),
             True,
         )
     )
-
-    info_ctx = trezorui_api.show_info_with_cancel(
-        title=TR.words__title_information,
-        items=items,
-        horizontal=True,
+    menu = Menu(
+        [
+            create_info_menu_leaf(TR.buttons__more_info, info_items),
+            cancel_leaf(
+                TR.buttons__cancel,
+                confirm=lambda: trezorui_api.show_mismatch(title=address_title),
+            ),
+        ]
     )
 
-    with address_ctx as address_layout, info_ctx as info_layout:
-        while True:
-            try:
-                await with_info(
-                    address_layout, info_layout, br_name, br_code=BR_CODE_OTHER
-                )
-            except ActionCancelled:
-                with trezorui_api.show_mismatch(
-                    title=TR.addr_mismatch__mismatch
-                ) as layout:
-                    result = await interact(
-                        layout,
-                        None,
-                        raise_on_cancel=None,
-                    )
-                    assert result in (CONFIRMED, CANCELLED)
-                    # Right button aborts action, left goes back to showing address.
-                    if result is CONFIRMED:
-                        raise
-                    continue
-            else:
-                break
+    address_ctx = trezorui_api.confirm_value(
+        title=address_title,
+        value=address,
+        description=None,
+        is_data=True,
+        verb=TR.buttons__continue,
+        chunkify=chunkify,
+        external_menu=True,
+    )
+
+    with address_ctx as address_layout:
+        await confirm_with_menu(address_layout, menu, br_name, BR_CODE_OTHER)
 
     with trezorui_api.confirm_value(
         title=TR.sign_message__confirm_message,
@@ -2405,10 +2393,10 @@ async def confirm_signverify(
         prompt_screen=True,
         hold=not verify,
         info=False,
-        cancel=True,
+        external_menu=True,
     ) as message_layout:
         if message_layout.page_count() <= LONG_MSG_PAGE_THRESHOLD:
-            await interact(message_layout, br_name, BR_CODE_OTHER)
+            await confirm_with_menu(message_layout, menu, br_name, BR_CODE_OTHER)
         else:
             await confirm_blob(
                 br_name,

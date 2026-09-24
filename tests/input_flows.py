@@ -506,21 +506,22 @@ class InputFlowSignMessageInfo(InputFlowBase):
         self.client.ui.visit_menu_items()
         # cancel signature
         self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.button_actions.navigate_to_menu_item(0)
+        self.debug.button_actions.navigate_to_menu_item(1)
         # address mismatch? yes!
         self.debug.swipe_up()
         yield
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         yield
-        # go to info menu
+        # show address/message info (visits "More info", skips "Cancel")
+        self.client.ui.visit_menu_items()
+        # cancel signature
         self.debug.click(self.debug.screen_buttons.menu())
-        # close menu
-        self.debug.click(self.debug.screen_buttons.menu())
-        # cancel flow
-        self.debug.press_no()
-        # confirm cancel
-        self.debug.press_yes()
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.button_actions.navigate_to_menu_item(1)
+        # address mismatch? - "Quit" button aborts the flow
+        self.debug.synchronize_at("TextScreen")
+        self.debug.click(self.debug.screen_buttons.ok())
         yield
 
 
