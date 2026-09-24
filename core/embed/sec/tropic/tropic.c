@@ -1254,7 +1254,7 @@ static secbool tropic_get_maintenance_bit_on(void) {
   // Read R-Config and check if Maintenance Mode is enabled.
   // The whole R-Config is read in case we need to modify it in case the bit is
   // OFF
-  lt_config_t r_config;
+  lt_config_t r_config = {0};
   if (lt_read_whole_R_config_retry(handle, &r_config) != LT_OK) {
     return secfalse;
   }
