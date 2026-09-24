@@ -32,11 +32,13 @@ from trezorlib._internal.emulator import TropicModel
 
 from . import model_only
 from .tropic_common import (
+    SILICON_REV_ABAB,
+    SILICON_REV_ACAB,
     TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
     TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
     expected_config,
     set_chip_distribution,
-    set_chip_id_field,
+    set_chip_revision,
     set_slot,
     set_version_slot,
     slot_is_erased,
@@ -44,9 +46,6 @@ from .tropic_common import (
 )
 
 TROPIC_FW_VERSION_SLOT = 8
-CHIP_ID_SILICON_REV_OFFSET = 28
-SILICON_REV_ACAB = b"ACAB"
-SILICON_REV_ABAB = b"ABAB"
 
 MAINTENANCE_ENA_BIT = 3
 MAINTENANCE_FORBIDDEN_I_CONFIG = "maintenance_forbidden_i"
@@ -310,7 +309,7 @@ def _initial_i_config(version_or_name: int | str) -> dict[str, int]:
 def _build_tropic_model_config(scenario: TropicFwUpdateScenario) -> dict:
     config = yaml.safe_load(TROPIC_MODEL_CONFIGFILE.read_text())
     set_chip_distribution(config, scenario.chip_distribution)
-    set_chip_id_field(config, CHIP_ID_SILICON_REV_OFFSET, scenario.silicon_revision)
+    set_chip_revision(config, scenario.silicon_revision)
     config["i_config"] = _initial_i_config(scenario.initial_i_config)
     config["r_config"] = expected_config(
         "reversible_configurations", scenario.initial_r_config

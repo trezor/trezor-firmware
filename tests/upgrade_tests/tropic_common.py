@@ -29,6 +29,10 @@ CHIP_ID_BATCH_ID_OFFSET = 96
 BATCH_ID_V0 = bytes([0x19, 0x0A, 0x08, 0x10, 0x10])
 BATCH_ID_V1 = bytes([0x19, 0x07, 0x1F, 0x0A, 0x04])
 
+CHIP_ID_SILICON_REV_OFFSET = 28
+SILICON_REV_ABAB = b"ABAB"
+SILICON_REV_ACAB = b"ACAB"
+
 
 def _config_to_numbers(config: dict, irreversible: bool) -> dict[str, int]:
     numbers = {}
@@ -77,6 +81,10 @@ def set_chip_id_field(config: dict, offset: int, value: bytes) -> None:
 def set_chip_distribution(config: dict, distribution_version: int) -> None:
     batch_id = BATCH_ID_V1 if distribution_version == 1 else BATCH_ID_V0
     set_chip_id_field(config, CHIP_ID_BATCH_ID_OFFSET, batch_id)
+
+
+def set_chip_revision(config: dict, silicon_revision: bytes) -> None:
+    set_chip_id_field(config, CHIP_ID_SILICON_REV_OFFSET, silicon_revision)
 
 
 def set_slot(config: dict, slot: int, value: bytes | None) -> None:
