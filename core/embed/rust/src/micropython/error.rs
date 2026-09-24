@@ -7,7 +7,7 @@ use super::obj::Obj;
 use super::qstr::Attribute;
 
 #[allow(clippy::enum_variant_names)] // We mimic the Python exception classnames here.
-#[derive(Debug)]
+#[cfg_attr(test, derive(Debug))]
 pub enum Error {
     TypeError,
     OutOfRange,

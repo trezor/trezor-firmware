@@ -665,8 +665,9 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
 
         let more_info_cb = more_info_callback.map(|callback| {
             move |n: u32| {
-                let text = callback.call_with_n_args(&[n.try_into().unwrap()]).unwrap();
-                TString::try_from(text).unwrap()
+                let n: Obj = unwrap!(n.try_into());
+                let text = unwrap!(callback.call_with_n_args(&[n]));
+                unwrap!(TString::try_from(text))
             }
         });
 
