@@ -4,7 +4,14 @@ from multiprocessing import Pool
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
+# Optional first arg: path (relative to ROOT) of the app whose `tests/ui_tests`
+# package to prepare. Defaults to the repo root, i.e. Core's own tests. Used to
+# also prepare reports for a modular app's tests (e.g. `sdk/apps/tron`), whose
+# `tests/ui_tests/common.py` is a self-contained copy with a simpler fixtures
+# schema (no `group` level).
+APP_ROOT = (ROOT / sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT
+
+sys.path.insert(0, str(APP_ROOT))
 from tests.ui_tests.common import TestResult, get_current_fixtures  # isort:skip
 
 FIXTURES = get_current_fixtures()
@@ -16,11 +23,11 @@ def compute_hash(result: TestResult) -> TestResult | None:
         return None
 
     actual_hash = result.actual_hash
-    expected_hash = (
-        FIXTURES.get(result.test.model, {})
-        .get(result.test.group, {})
-        .get(result.test.fixtures_name)
-    )
+    model_fixtures = FIXTURES.get(result.test.model, {})
+    group = getattr(result.test, "group", None)
+    if group is not None:
+        model_fixtures = model_fixtures.get(group, {})
+    expected_hash = model_fixtures.get(result.test.fixtures_name)
     assert result.expected_hash == actual_hash
     assert expected_hash == actual_hash
     return result
