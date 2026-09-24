@@ -2162,7 +2162,7 @@ async def confirm_modify_fee(
     )
     items: list[StrPropertyType] = []
     if fee_rate_amount:
-        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount, None))
+        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount, True))
     info_ctx = trezorui_api.show_info_with_cancel(
         title=TR.confirm_total__title_fee,
         items=items,
