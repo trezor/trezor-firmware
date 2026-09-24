@@ -1,7 +1,7 @@
 //! Confirming a single value. The public docs live on [`confirm_value`].
 
 use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, UiOutcome, call};
+use super::{BR_CODE_OTHER, Commitment, UiOutcome, call};
 use crate::Result;
 use crate::structs::{ConfirmValue as WireConfirmValue, TrezorUiEnum};
 
@@ -42,6 +42,7 @@ pub struct ConfirmValue<'a> {
     subtitle: Option<&'a str>,
     description: Option<&'a str>,
     footer: Option<Footer<'a>>,
+    commitment: Commitment,
     br: &'a str,
     extras: &'a [ExtraItem<'a>],
 }
@@ -55,6 +56,8 @@ impl<'a> ConfirmValue<'a> {
     /// - `subtitle` — optional line under the heading, such as `"Recipient"`.
     /// - `description` — optional text above the value.
     /// - `footer` — optional note along the bottom of the screen.
+    /// - `commitment` — whether confirming this is the person's final yes; see
+    ///   [`Commitment`].
     /// - `br` — the step name the host sees; see
     ///   [step names](crate::modui#step-names).
     /// - `extras` — more the person can look at from this screen; see
@@ -67,6 +70,7 @@ impl<'a> ConfirmValue<'a> {
         subtitle: Option<&'a str>,
         description: Option<&'a str>,
         footer: Option<Footer<'a>>,
+        commitment: Commitment,
         br: &'a str,
         extras: &'a [ExtraItem<'a>],
     ) -> Self {
@@ -77,6 +81,7 @@ impl<'a> ConfirmValue<'a> {
             subtitle,
             description,
             footer,
+            commitment,
             br,
             extras,
         }
@@ -104,7 +109,7 @@ impl<'a> ConfirmValue<'a> {
 /// # Example
 ///
 /// ```no_run
-/// use trezor_app_sdk::modui::{self as ui, ConfirmValue, Footer, ValueKind};
+/// use trezor_app_sdk::modui::{self as ui, Commitment, ConfirmValue, Footer, ValueKind};
 ///
 /// fn confirm_recipient(address: &str) -> trezor_app_sdk::Result<()> {
 ///     ui::confirm_value(ConfirmValue::new(
@@ -114,6 +119,7 @@ impl<'a> ConfirmValue<'a> {
 ///         Some("Recipient"),
 ///         None,
 ///         Some(Footer::Hint("Check with the source.")),
+///         Commitment::Step,
 ///         "app/send/recipient",
 ///         &[],
 ///     ))?
@@ -136,7 +142,7 @@ pub fn confirm_value(params: ConfirmValue<'_>) -> Result<UiOutcome> {
         None,            // verb: the label follows the gesture, which the block owns
         params.subtitle,
         false, // info: the menu button is the external one below
-        false, // hold: derived from the block
+        params.commitment == Commitment::Final, // hold: follows from the commitment
         params.kind == ValueKind::Address,
         false,                // page_counter
         true,                 // cancel: refusing is never the app's to switch off

@@ -1,7 +1,7 @@
 //! The generic yes/no block. The public docs live on [`confirm_action`].
 
 use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, UiOutcome, call};
+use super::{BR_CODE_OTHER, Commitment, UiOutcome, call};
 use crate::Result;
 use crate::structs::{ConfirmAction as WireConfirmAction, TrezorUiEnum};
 
@@ -18,9 +18,9 @@ pub struct ConfirmAction<'a> {
     action: &'a str,
     description: Option<&'a str>,
     subtitle: Option<&'a str>,
+    commitment: Commitment,
     br: &'a str,
     extras: &'a [ExtraItem<'a>],
-    cancel: bool,
 }
 
 impl<'a> ConfirmAction<'a> {
@@ -30,34 +30,35 @@ impl<'a> ConfirmAction<'a> {
     /// - `action` — what the person is being asked to confirm.
     /// - `description` — optional text below the action.
     /// - `subtitle` — optional line under the heading.
+    /// - `commitment` — whether confirming this is the person's final yes; see
+    ///   [`Commitment`].
     /// - `br` — the step name the host sees; see
     ///   [step names](crate::modui#step-names).
     /// - `extras` — more the person can look at from this screen; see
     ///   [extras](crate::modui#extras-and-the-way-out).
-    /// - `cancel` — whether the extras also offer a way to abandon the block.
     pub fn new(
         title: &'a str,
         action: &'a str,
         description: Option<&'a str>,
         subtitle: Option<&'a str>,
+        commitment: Commitment,
         br: &'a str,
         extras: &'a [ExtraItem<'a>],
-        cancel: bool,
     ) -> Self {
         Self {
             title,
             action,
             description,
             subtitle,
+            commitment,
             br,
             extras,
-            cancel,
         }
     }
 
     /// Whether the screen has anything to offer besides its main content.
     fn offers_more(&self) -> bool {
-        !self.extras.is_empty() || self.cancel
+        !self.extras.is_empty()
     }
 }
 
@@ -67,7 +68,8 @@ impl<'a> ConfirmAction<'a> {
 
 /// Asks the person to confirm an action, and waits for the answer.
 ///
-/// The person can always refuse from this screen, whatever `cancel` says.
+/// The person can always refuse: the screen has its own way out, so the block
+/// takes no `cancel`.
 ///
 /// # Errors
 ///
@@ -76,7 +78,7 @@ impl<'a> ConfirmAction<'a> {
 /// # Example
 ///
 /// ```no_run
-/// use trezor_app_sdk::modui::{self as ui, ConfirmAction, ExtraItem, Property};
+/// use trezor_app_sdk::modui::{self as ui, Commitment, ConfirmAction, ExtraItem, Property};
 ///
 /// fn confirm_sign(account: &str, path: &str) -> trezor_app_sdk::Result<()> {
 ///     let account_facts = [
@@ -90,9 +92,9 @@ impl<'a> ConfirmAction<'a> {
 ///         "Sign the transaction?",
 ///         None,
 ///         None,
+///         Commitment::Step,
 ///         "app/sign",
 ///         &extras,
-///         true, // the signing can also be abandoned from the extras
 ///     ))?
 ///     .confirmed()
 /// }
@@ -103,13 +105,14 @@ pub fn confirm_action(params: ConfirmAction<'_>) -> Result<UiOutcome> {
         params.action,
         params.description,
         params.subtitle,
-        false,                // hold: derived from the block, not the app
-        None,                 // verb: the label follows the gesture
-        true,                 // cancel: the person can always leave
-        Some(params.br),      // br_name: the step's name; the app owns it (see the field docs)
-        BR_CODE_OTHER,        // legacy field; see the constant
+        params.commitment == Commitment::Final, // hold: follows from the commitment
+        None,                                   // verb: the label follows the gesture
+        true,                                   // cancel: the person can always leave
+        Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
+        BR_CODE_OTHER,   // legacy field; see the constant
         params.offers_more(), // external_menu: how the menu is reached
     ));
 
-    call(&request, params.extras, params.cancel, Some(params.br))
+    // The screen has its own way out, so the extras need not offer one.
+    call(&request, params.extras, false, Some(params.br))
 }
