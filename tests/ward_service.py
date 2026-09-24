@@ -232,6 +232,12 @@ class MockWardService:
         # longer the WM's ONLY freedom -- it holds roots in the clear and could name one the
         # wallet never reached -- but it is the freedom the device-side check here is about.
         self.publish_ack_override: tuple[int, bytes] | None = None
+        # Move the WM's head between this device's sync and its publish, so the publish loses the
+        # compare-and-swap. THE ONLY PLACE A CONFLICT IS REACHABLE: a device re-syncs before every
+        # write, so any divergence that exists beforehand is caught there instead -- by the chain
+        # check, since a daemon cannot explain a head it has no links for. A genuine conflict is a
+        # RACE, and this is where the race has to be staged.
+        self.steal_head_before_publish: tuple[int, bytes] | None = None
 
         self._stop = False
         self.error: Exception | None = None
@@ -412,15 +418,21 @@ class MockWardService:
             )
         wm_head = self.wm.head(ward_id)
         assert wm_head is not None  # just bootstrapped above if it was not there
-        if counter != wm_head[0]:
-            # A head the WM does not hold yet. In production a device's publish would have put it
-            # there; here the fixture is standing in for that device -- including telling it which
-            # step arrived, which is what the attestation names.
+        if counter > wm_head[0]:
+            # THE REPLICA IS AHEAD OF THE WM. In production a device's publish would have put this
+            # head there; here the fixture stands in for that device, including naming the step
+            # that arrived, which is what the attestation covers.
+            #
+            # STRICTLY AHEAD, not merely different. When the WM is AHEAD instead -- somebody else
+            # advanced it behind this daemon's back, which is what the conflict test arranges --
+            # there is nothing to install and forcing one would invent a BACKWARD step, an
+            # attestation claiming a head at counter N was reached from counter N+1. The device
+            # rejects that as malformed, which hid the real outcome the test was after.
             prev = self.store.links_ending_at(counter, self.store.root(), 1)
             from_counter, from_root = (
-                (prev[0][0], prev[0][1]) if prev else (wm_head[0], wm_head[1])
+                (prev[0][0], prev[0][1]) if prev else (counter - 1, None)
             )
-            self.wm.publish(
+            self.wm.install_unauthenticated(
                 ward_id, counter, root, timestamp, from_counter, from_root or EMPTY_ROOT
             )
 
@@ -511,6 +523,18 @@ class MockWardService:
 
         assert self.store is not None and self.wm is not None
         assert self.ward_id is not None, "a publish before any sync: no wallet established"
+
+        if self.steal_head_before_publish is not None:
+            # A second device won the race. It advanced the WM after this one synced, so the head
+            # this publish was built on is no longer the head the WM holds.
+            stolen_counter, stolen_root = self.steal_head_before_publish
+            self.steal_head_before_publish = None
+            self.wm.install_unauthenticated(
+                self.ward_id,
+                stolen_counter,
+                stolen_root,
+                self.timestamp_base + stolen_counter,
+            )
         ward_id = self.ward_id
 
         head = self.wm.head(ward_id)

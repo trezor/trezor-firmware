@@ -87,10 +87,9 @@ message WardLeafAck {
     // its own now proves freshness and nothing more.
     optional bytes auth_commit = 6;
 
-    // 7 was `auth_sig`: Ed25519 under K_sig over the ROOT transition. Removed rather than kept,
-    // because nothing verified it -- not the firmware, not the mock WM. The WM-facing
-    // authorisation is `wm_sig`, which covers exactly the bytes `auth_commit` MACs and names the
-    // same two roots the WM compare-and-swaps and attests; see cas.transition_preimage.
+    // 7 was `auth_sig`: Ed25519 under K_sig over the ROOT transition. Removed because nothing
+    // verified it -- not the firmware, not the mock WM. Its replacement is `wm_sig` at field 10,
+    // which covers exactly the bytes `auth_commit` MACs.
     reserved 7;
 
     // 8 and 9 were `queued` and `remaining`, which only ever applied to the OFFLINE QUEUE.
@@ -98,6 +97,21 @@ message WardLeafAck {
     // field can appear on an ack that carries a real leaf. Reserved rather than reused, so a
     // stale host cannot have an old field silently reinterpreted.
     reserved 8, 9;
+
+    // THE WM-FACING AUTHORISATION for this same transition: Ed25519 under K_sig over exactly the
+    // bytes `auth_commit` MACs, verifiable against `ward_id` (which IS that key's public half).
+    // The host forwards it with `(counter, root)` when it publishes, and the WM refuses an
+    // advance without it.
+    //
+    // WHY IT HAS TO BE HERE. Without it a WM has nothing to check, so whoever knows `ward_id`
+    // can advance the counter and have every genuine device refused from then on -- the WM
+    // becomes a denial-of-service oracle. The service channel has carried this since it existed;
+    // connect, the transport that is actually developed, did not, so the authenticated
+    // compare-and-swap the design rests on was performed nowhere.
+    //
+    // ABSENT ON A NO-OP. An idempotent delete of a path that already held nothing produced no
+    // transition, so it carries neither this nor `auth_commit`.
+    optional bytes wm_sig = 10;
 }
 
 /**
@@ -129,6 +143,8 @@ message WardFlushQueueAck {
     // intent per round-trip, so a failure costs one step rather than a batch -- see the
     // atomicity note in the device's storage/ward.py.
     required uint32 remaining = 8;
+
+    optional bytes wm_sig = 9;  // for the WM; see WardLeafAck.wm_sig
 }
 
 /**
@@ -294,6 +310,24 @@ message WardSyncAck {
     // Not secret. The WM holds it already, and it reveals only how many changes this wallet
     // has made -- never what any of them were.
     optional uint32 counter = 3;
+
+    // THE OPENING HEAD, AND ITS AUTHORISATION -- how a connect host seeds a WM that has never
+    // seen this wallet, or re-seeds one whose register was lost.
+    //
+    // A compare-and-swap needs something to compare against, and a WM with no record of this
+    // wallet has nothing. The first head therefore has to come from the device and be
+    // authenticated, or it is a value anyone who knows `ward_id` could set -- which is the same
+    // denial of service `wm_sig` closes for ordinary advances.
+    //
+    // `head_init_sig` is Ed25519 under K_sig over the SELF-TRANSITION (counter, root) ->
+    // (counter, root) under b"WARD WM INIT v2". Its own tag, so it can never be replayed as an
+    // advance. SENT ALWAYS, not only when the device believes the WM is new: the device cannot
+    // know the WM's state, and guessing "it knows us" strands a wallet that nothing can open.
+    // The WM ignores it once it holds a head, so the cost is one signature per round.
+    //
+    // `root` is not secret on this transport -- a connect host holds the whole tree already.
+    optional bytes root          = 4;  // absent means the empty tree
+    optional bytes head_init_sig = 5;  // 64B Ed25519
 }
 
 /**

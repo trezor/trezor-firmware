@@ -18,6 +18,15 @@ from micropython import const
 
 _OPEN = const(1)  # nonce minted, nothing attested yet
 _ATTESTED = const(2)  # the WM's transition has been verified for this nonce
+# A verified transition that goes BACKWARD, reached only through `WardRecoverCounter` and only
+# after the user held to confirm losing the changes in between.
+#
+# A SEPARATE STATE RATHER THAN AN INFERENCE. `reconcile` could compare the attested counter with
+# the stored one and conclude "this must have been a recovery", but that reasons from the shape
+# of the data to the consent behind it -- and the consent is the whole of what makes a demotion
+# acceptable. Recording it means a future route that reaches an attested round some other way
+# cannot inherit the exemption by accident.
+_ATTESTED_BACKWARD = const(3)
 
 _NONCE_LEN = const(32)
 _ROOT_LEN = const(32)
@@ -47,7 +56,7 @@ def get() -> "tuple[int, bytes, int, bytes, int, bytes] | None":
     from trezor.wire import context
 
     raw = context.cache_get(APP_WARD_SYNC)
-    if not raw or raw[0] not in (_OPEN, _ATTESTED):
+    if not raw or raw[0] not in (_OPEN, _ATTESTED, _ATTESTED_BACKWARD):
         return None
     nonce = raw[1 : 1 + _NONCE_LEN]
     off = 1 + _NONCE_LEN
@@ -60,25 +69,46 @@ def get() -> "tuple[int, bytes, int, bytes, int, bytes] | None":
 
 
 def get_attested() -> "tuple[int, bytes, int, bytes] | None":
-    """The attested transition if this round reached ATTESTED, else None.
+    """The attested transition if this round reached either ATTESTED state, else None.
 
     The state constants are `const()`-folded and therefore absent from the module at runtime, so
-    the ATTESTED test has to live here rather than in the caller.
+    the ATTESTED test has to live here rather than in the caller. Which KIND of attested round it
+    is comes from `attested_is_backward`; this answers only "is there one".
     """
     ctx = get()
-    if ctx is None or ctx[0] != _ATTESTED:
+    if ctx is None or ctx[0] not in (_ATTESTED, _ATTESTED_BACKWARD):
         return None
     _state, _nonce, from_counter, from_root, to_counter, to_root = ctx
     return from_counter, from_root, to_counter, to_root
 
 
+def attested_is_backward() -> bool:
+    """Did this round's attestation go BACKWARD, with the user's confirmation?
+
+    `reconcile` asks because the rule it applies differs: a forward adoption must be one step from
+    the head this device already holds, and a demotion cannot be -- its predecessor is historical.
+    False for a round that is merely open, which is the safe answer: the exemption is granted, not
+    assumed.
+    """
+    ctx = get()
+    return ctx is not None and ctx[0] == _ATTESTED_BACKWARD
+
+
 def set_attested(
-    from_counter: int, from_root: bytes, to_counter: int, to_root: bytes
+    from_counter: int,
+    from_root: bytes,
+    to_counter: int,
+    to_root: bytes,
+    backward: bool = False,
 ) -> None:
     """Record the transition the WM attested, keeping the round's nonce.
 
     Both roots arrive in PREIMAGE FORM -- an empty tree as EMPTY_ROOT -- because that is what the
     signature covered and what a later recomputation has to reproduce.
+
+    `backward` is set by `recover` alone, after the user has held to confirm. It is what lets
+    `reconcile` adopt a head BELOW the stored one, and defaults to False so that a caller which
+    forgets it gets the strict rule rather than the exemption.
     """
     from storage.cache_common import APP_WARD_SYNC
     from trezor.wire import context
@@ -88,7 +118,7 @@ def set_attested(
     _state, nonce, _fc, _fr, _tc, _tr = ctx
     context.cache_set(
         APP_WARD_SYNC,
-        bytes([_ATTESTED])
+        bytes([_ATTESTED_BACKWARD if backward else _ATTESTED])
         + nonce
         + from_counter.to_bytes(4, "big")
         + from_root

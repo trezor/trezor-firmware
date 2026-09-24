@@ -51,11 +51,12 @@ async def flush_queue(
     from trezor.wire import DataError
 
     from . import offline_store
-    from .cas import auth_commit
+    from .cas import auth_commit, wm_sig
     from .common import online, pull_leaf, require_initialized
     from .keys import (
         ENTRY_TYPE_ADDRESS,
         derive_k_auth,
+        derive_k_sig,
         derive_k_data,
         derive_k_ident,
         derive_ward_id,
@@ -163,6 +164,19 @@ async def flush_queue(
         new_root,
     )
 
+    # THE WM-FACING AUTHORISATION for the same transition, under K_sig rather than K_auth. Same
+    # operands, same builder -- one statement to two verifiers. Without it the WM has nothing to
+    # check when the host publishes, and whoever knows `ward_id` could advance the counter and
+    # have every genuine device refused from then on.
+    advance = wm_sig(
+        await derive_k_sig(),
+        await derive_ward_id(),
+        counter - 1,
+        from_root,
+        counter,
+        new_root,
+    )
+
     # Mark the record OFFERED, keeping it PENDING. That flag is what stops this loop offering the
     # same change forever, and the claim beside it is what a later adoption settles it by. Both are
     # written before the ack goes out, so a lost response cannot leave the device offering it again
@@ -196,6 +210,7 @@ async def flush_queue(
         content=content,
         counter=counter,
         auth_commit=step,
+        wm_sig=advance,
         # Counts only records NOT YET HANDED OVER, so this one is excluded -- it is marked offered
         # now. The host loops while this is non-zero; a record that was sent but never confirmed
         # comes back only through `reconcile_pending`, which is the point at which the device can

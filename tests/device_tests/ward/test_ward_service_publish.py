@@ -153,10 +153,17 @@ def test_a_write_is_published_and_adopted(client: Client) -> None:
 def test_an_attestation_for_another_head_is_refused(client: Client) -> None:
     """The check that makes this route stronger than reconcile.
 
-    The WM's remaining freedom is not forgery -- it cannot compute a mac -- it is to answer a
-    question that was not asked: to attest some other head, authentically, in reply to this nonce.
-    The device minted the counter and the mac itself, so it can refuse on identity rather than on
-    verifiability.
+    The WM's freedom here is to answer a question that was not asked: to attest some other head,
+    authentically, in reply to this nonce. The device built the transition itself, so it does not
+    take the attested head off the wire at all -- it reconstructs the preimage from what it just
+    published and verifies the signature against THAT.
+
+    SO THIS FAILS AS "verification failed", not as a mismatch noticed afterwards. There used to be
+    a comparison of the attested counter and root against the published ones; once the device
+    feeds its own operands into the check, that comparison can never fail and was removed rather
+    than left standing as a check that reads like one and is not. The refusal moved a layer down,
+    which is stricter: a WM attesting another head is now signing bytes the device never asks
+    about.
 
     THAT THE HEAD DID NOT MOVE is asserted by what happens next rather than by reading it back.
     Had the device adopted the attested counter 2, the following sync would fail its own
@@ -171,7 +178,7 @@ def test_an_attestation_for_another_head_is_refused(client: Client) -> None:
         with wardd.serving():
             with pytest.raises(exceptions.TrezorFailure) as err:
                 _write(session, b"addr1", b"value1")
-            assert "does not name the head this device published" in str(err.value)
+            assert "attestation verification failed" in str(err.value)
 
             wardd.publish_ack_override = None
             assert _read(session, b"addr1").response.message == "WARD entry shown"
@@ -199,9 +206,13 @@ def test_a_conflict_is_definitive_and_keeps_the_channel(client: Client) -> None:
             # A sync first, so the WM holds this wallet's opening head at 0.
             _read(session, b"addr1")
 
-            # ...and now somebody else advances it. The mac is not one this device minted, which is
-            # exactly the situation: the device cannot explain the WM's head any more.
-            wm.publish(_WARD_ID, 1, b"\xbb" * 32, 1)
+            # ...and now somebody else advances it, BETWEEN this device's sync and its publish.
+            # That window is the only place a conflict is reachable: a device re-syncs before
+            # every write, so a head that had already diverged would be caught by the chain check
+            # instead -- the daemon has no links for a head it did not produce, and the device
+            # refuses to adopt what cannot be explained. A conflict is a race, so it is staged as
+            # one.
+            wardd.steal_head_before_publish = (1, b"\xbb" * 32)
 
             with pytest.raises(exceptions.TrezorFailure) as err:
                 _write(session, b"addr1", b"value1")
@@ -214,13 +225,20 @@ def test_a_conflict_is_definitive_and_keeps_the_channel(client: Client) -> None:
             assert len(store) == 0
 
             # THE CHANNEL IS STILL THERE, which is the claim this test exists for: the device can
-            # still ask and the daemon still answers, so a conflict costs one operation rather than
-            # the conversation. Asserted on the requests SERVED and deliberately not on what the
-            # next operation returns -- the fixture's sync republishes the head it holds, so the
-            # recovery here is the mock's rather than the protocol's and is not what is being
-            # claimed. (A real WM compare-and-swaps; `MockWM.publish` does not, by design.)
+            # still ask and the daemon still answers, so a conflict costs one OPERATION rather
+            # than the conversation. Asserted on the requests SERVED, not on what the next
+            # operation returns.
+            #
+            # AND THE NEXT OPERATION DOES FAIL, which is a different fact and not this test's
+            # subject. The winner's head is the WM's now, and this daemon's replica holds no link
+            # into it -- so the device refuses to adopt a head nobody can explain. That is the
+            # service path's documented deficiency (see `--enable-ward-service-channel`: its sync
+            # is chain-only with no fallback), not a consequence of the conflict, and a real
+            # deployment resolves it when the daemon catches up with the winner's transition.
             before = len(wardd.served)
-            _read(session, b"addr1")
+            with pytest.raises(exceptions.TrezorFailure) as stranded:
+                _read(session, b"addr1")
+            assert "does not end at the attested counter" in str(stranded.value)
             assert len(wardd.served) > before
     finally:
         wardd.close()

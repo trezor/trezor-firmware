@@ -8391,6 +8391,7 @@ if TYPE_CHECKING:
         content: "WardLeafContent | None"
         counter: "int | None"
         auth_commit: "AnyBytes | None"
+        wm_sig: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8400,6 +8401,7 @@ if TYPE_CHECKING:
             content: "WardLeafContent | None" = None,
             counter: "int | None" = None,
             auth_commit: "AnyBytes | None" = None,
+            wm_sig: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8414,6 +8416,7 @@ if TYPE_CHECKING:
         counter: "int | None"
         auth_commit: "AnyBytes | None"
         remaining: "int"
+        wm_sig: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8424,6 +8427,7 @@ if TYPE_CHECKING:
             content: "WardLeafContent | None" = None,
             counter: "int | None" = None,
             auth_commit: "AnyBytes | None" = None,
+            wm_sig: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8515,6 +8519,8 @@ if TYPE_CHECKING:
         nonce: "AnyBytes | None"
         ward_id: "AnyBytes | None"
         counter: "int | None"
+        root: "AnyBytes | None"
+        head_init_sig: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8522,6 +8528,8 @@ if TYPE_CHECKING:
             nonce: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
             counter: "int | None" = None,
+            root: "AnyBytes | None" = None,
+            head_init_sig: "AnyBytes | None" = None,
         ) -> None:
             pass
 

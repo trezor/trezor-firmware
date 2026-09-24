@@ -29,7 +29,7 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from .cas import auth_commit
+    from .cas import auth_commit, wm_sig
     from .common import (
         WARNING_UNVERIFIED,
         display_bytes,
@@ -40,6 +40,7 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
     from .keys import (
         ENTRY_TYPE_ADDRESS,
         derive_k_auth,
+        derive_k_sig,
         derive_k_data,
         derive_k_ident,
         derive_ward_id,
@@ -132,6 +133,19 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
         new_root,
     )
 
+    # THE WM-FACING AUTHORISATION for the same transition, under K_sig rather than K_auth. Same
+    # operands, same builder -- one statement to two verifiers. Without it the WM has nothing to
+    # check when the host publishes, and whoever knows `ward_id` could advance the counter and
+    # have every genuine device refused from then on.
+    advance = wm_sig(
+        await derive_k_sig(),
+        await derive_ward_id(),
+        counter - 1,
+        from_root,
+        counter,
+        new_root,
+    )
+
     if utils.USE_WARD_SERVICE_CHANNEL:
         # THE ONE POINT WHERE THIS HANDLER'S TRANSPORT SHOWS. Everything above -- the pull, the
         # screen, the sealing, the derived root -- is the same work in both builds; what differs is
@@ -152,4 +166,5 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
         content=content,
         counter=counter,
         auth_commit=step,
+        wm_sig=advance,
     )

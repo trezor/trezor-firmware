@@ -10513,6 +10513,7 @@ class WardLeafAck(protobuf.MessageType):
         3: protobuf.Field("content", "WardLeafContent", repeated=False, required=False, default=None),
         4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
+        10: protobuf.Field("wm_sig", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10523,12 +10524,14 @@ class WardLeafAck(protobuf.MessageType):
         content: Optional["WardLeafContent"] = None,
         counter: Optional["int"] = None,
         auth_commit: Optional["bytes"] = None,
+        wm_sig: Optional["bytes"] = None,
     ) -> None:
         self.entry_key = entry_key
         self.identity = identity
         self.content = content
         self.counter = counter
         self.auth_commit = auth_commit
+        self.wm_sig = wm_sig
 
 
 class WardFlushQueueAck(protobuf.MessageType):
@@ -10540,6 +10543,7 @@ class WardFlushQueueAck(protobuf.MessageType):
         4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
         8: protobuf.Field("remaining", "uint32", repeated=False, required=True),
+        9: protobuf.Field("wm_sig", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10551,6 +10555,7 @@ class WardFlushQueueAck(protobuf.MessageType):
         content: Optional["WardLeafContent"] = None,
         counter: Optional["int"] = None,
         auth_commit: Optional["bytes"] = None,
+        wm_sig: Optional["bytes"] = None,
     ) -> None:
         self.remaining = remaining
         self.entry_key = entry_key
@@ -10558,6 +10563,7 @@ class WardFlushQueueAck(protobuf.MessageType):
         self.content = content
         self.counter = counter
         self.auth_commit = auth_commit
+        self.wm_sig = wm_sig
 
 
 class WardVerifyChain(protobuf.MessageType):
@@ -10653,6 +10659,8 @@ class WardSyncAck(protobuf.MessageType):
         1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("head_init_sig", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10661,10 +10669,14 @@ class WardSyncAck(protobuf.MessageType):
         nonce: Optional["bytes"] = None,
         ward_id: Optional["bytes"] = None,
         counter: Optional["int"] = None,
+        root: Optional["bytes"] = None,
+        head_init_sig: Optional["bytes"] = None,
     ) -> None:
         self.nonce = nonce
         self.ward_id = ward_id
         self.counter = counter
+        self.root = root
+        self.head_init_sig = head_init_sig
 
 
 class WardIngestAttestation(protobuf.MessageType):

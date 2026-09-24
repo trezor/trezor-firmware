@@ -17,16 +17,22 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     it: a WM that invented a transition would be believed on its own word. The MAC is what makes
     it a statement about this wallet.
 
-    STILL THE WEAKER OF THE TWO ROUTES. Not because the host can substitute anything -- it cannot
-    any more -- but because one step is all this proves. It does not show that the attested
-    predecessor descends from THIS device's head, so a WM colluding with a host can attest a step
-    off the authoritative line and this handler will take it. `verify_chain` walks back to a state
-    the device already holds and rules that out by construction. Prefer it; this exists for the
-    one-step case.
+    ONE STEP, AND ONLY FROM WHERE THIS DEVICE STANDS. The attested predecessor must BE the
+    device's stored head, so the distance this route can move the head is zero or one. It used to
+    accept any counter at or above the stored one, which made the WM an authority on lineage --
+    a device could be carried across dozens of transitions it never saw, on one link. See the
+    rules below.
+
+    STILL THE WEAKER OF THE TWO ROUTES, even so. One step is one step: a WM colluding with a host
+    can attest a single transition off the authoritative line, and this handler will take it,
+    because from the device's own head that step is indistinguishable from the real one. Only
+    `verify_chain`'s walk back through every intervening link rules that out. What is gone is the
+    ability to smuggle a whole HISTORY in behind one authorised step.
     """
     from trezor.messages import WardReconcileAck
     from trezor.wire import DataError
 
+    from . import round as sync_round
     from .adopt import adopt, require_attested_round, verify_inbound_link
     from .attest import root_or_empty
     from .common import require_initialized
@@ -49,33 +55,54 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     if root == EMPTY_ROOT:
         root = None
 
-    # One counter names one state. If the WM attests the counter this device already
-    # holds, the state it names must be the state this device already has -- otherwise one
-    # of the two is wrong and adopting either silently discards the other.
+    # HOW FAR THIS ROUTE MAY MOVE THE HEAD: nowhere, one step, or backwards with consent.
     #
-    # A strictly greater counter is adopted, and that is now safe: writes advance the
-    # counter too, so a device with unpublished writes is AHEAD of the WM and its
-    # attestation is refused by the floor check rather than superseding them. The device
-    # is then unable to sync until the host publishes the (counter, root) it was handed --
-    # fail-closed and recoverable, rather than a silent loss.
+    # It used to adopt ANY attested counter at or above the stored one while verifying a single
+    # transition -- so a device at 10 could be moved to 40 on the strength of one link, with
+    # 11..39 taken on the WM's word. That made the WM an authority on LINEAGE, which it is not
+    # and must not be: an attestation establishes freshness and ordering, and DESCENT is what
+    # establishes state. `verify_chain` proves descent; this route cannot, so it is now confined
+    # to the distance over which there is nothing to prove.
     #
-    # A LOWER counter is adopted here without further ceremony, and that is not a hole: the
-    # only way one reaches an attested round is through WardRecoverCounter, which refuses
-    # anything that is not going backwards and holds for confirmation first. Re-asking here
-    # would be asking about a decision already made.
-    # This is also what makes BATCHING WM confirmations free today, which is worth stating
-    # because it looks like missing work: a write commits its root with no WM involvement at
-    # all, and any counter above the stored one is adopted here, so ten writes followed by one
-    # sync round is already the supported shape. Batching only becomes real work if writes ever
-    # commit solely on WM confirmation -- then each needs its own round, and amortising them is
-    # part of that change rather than a prerequisite for it. See `storage/ward.py`.
+    # BATCHING IS UNAFFECTED, which is worth saying because the old comment here claimed the
+    # opposite. Ten writes followed by one sync round still work -- the host publishes each
+    # transition as it is made, so the WM advances one step per write and the device adopts the
+    # final one from the head immediately before it. What is refused is adopting a head the
+    # device never had a predecessor for, which is a gap in the history rather than a batch.
     stored_counter = await get_counter()
-    if counter == stored_counter:
-        current = await get_root()
-        # Compared in preimage form: an empty tree is stored as EMPTY_ROOT but is held as None
-        # here, and the two must still recognise each other.
-        if current is not None and current != root_or_empty(root):
+    stored_root = await get_root()
+
+    if sync_round.attested_is_backward():
+        # A DEMOTION, already confirmed. `recover` refuses anything that is not going backwards
+        # and holds for confirmation before marking the round, so re-asking here would be asking
+        # about a decision already made. The attested predecessor is historical by definition and
+        # cannot be this device's head -- which is precisely why the forward rule cannot apply.
+        if counter >= stored_counter:
+            raise DataError("WARD: a backward round must lower the counter")
+
+    elif counter == stored_counter:
+        # NOTHING NEW. The WM names the head this device already holds, so the only question is
+        # whether the two agree about what that head IS. Compared in preimage form: an empty tree
+        # is stored as EMPTY_ROOT but is held as None here, and the two must still recognise
+        # each other.
+        if stored_root is not None and stored_root != root_or_empty(root):
             raise DataError("attested counter matches but the root differs")
+
+    elif counter == stored_counter + 1:
+        # ONE STEP, FROM WHERE THIS DEVICE STANDS. The link was verified above against the
+        # attested predecessor; this is what ties that predecessor to the device's own head, and
+        # without it the step could be one taken from somewhere this device has never been.
+        if from_counter != stored_counter or root_or_empty(from_root) != root_or_empty(
+            stored_root
+        ):
+            raise DataError("WARD: the attested step does not start at this device's head")
+
+    else:
+        # A GAP. Refused by name, because the alternative exists and is strictly stronger: the
+        # backward walk pulls every intervening link and proves each was authorised.
+        raise DataError(
+            "WARD: reconcile adopts at most one step; use WardVerifyChain to catch up"
+        )
 
     # Everything after this point is shared with `verify_chain` -- settle, persist, latch, close
     # -- and the order within it is load-bearing. See `adopt`.
