@@ -1,6 +1,8 @@
 use super::theme::{self, TITLE_HEIGHT};
 use super::{ActionBar, ActionBarMsg, Header};
 use crate::strutil::TString;
+#[cfg(feature = "micropython")]
+use crate::ui::component::swipe_detect::SwipeConfig;
 use crate::ui::component::text::paragraphs::{ParagraphSource, Paragraphs};
 use crate::ui::component::{Component, Event, EventCtx, FlowMsg, Paginate};
 use crate::ui::geometry::{Insets, Rect};
@@ -126,6 +128,22 @@ where
 
     fn change_page(&mut self, active_page: u16) {
         self.paragraphs.change_page(active_page);
+    }
+}
+
+#[cfg(feature = "micropython")]
+impl<T> crate::ui::flow::Swipable for MoreInfoScreen<T>
+where
+    T: ParagraphSource<'static>,
+{
+    fn get_swipe_config(&self) -> SwipeConfig {
+        // No swipe navigation: the content is paginated via the action bar
+        // buttons and the screen is dismissed via the header close button.
+        SwipeConfig::default()
+    }
+
+    fn get_pager(&self) -> Pager {
+        self.pager()
     }
 }
 

@@ -9,9 +9,12 @@ use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::swipe_detect::SwipeSettings;
+use crate::ui::component::text::paragraphs::{
+    Paragraph, ParagraphSource, ParagraphVecLong, VecExt,
+};
 use crate::ui::component::ComponentExt;
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
-use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
 use crate::ui::geometry::Direction;
 
 const MENU_ITEM_CANCEL: usize = 0;
@@ -58,8 +61,13 @@ impl FlowController for ConfirmSummary {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn new_confirm_summary(
-    summary_params: ShowInfoParams,
+    title: TString<'static>,
+    amount: Option<TString<'static>>,
+    amount_label: Option<TString<'static>>,
+    fee: TString<'static>,
+    fee_label: TString<'static>,
     account_params: Option<ShowInfoParams>,
     account_title: Option<TString<'static>>,
     extra_params: Option<ShowInfoParams>,
@@ -68,12 +76,31 @@ pub fn new_confirm_summary(
     can_go_back: bool,
 ) -> Result<SwipeFlow, Error> {
     // Summary
-    let mut content_summary = summary_params.with_flow_menu(true);
-    if can_go_back {
-        content_summary = content_summary.with_swipe_down();
+    let mut summary_paragraphs = ParagraphVecLong::new();
+    if let (Some(amount_label), Some(amount)) = (amount_label, amount) {
+        summary_paragraphs.add(Paragraph::new(&theme::TEXT_SUB_GREY, amount_label).no_break());
+        summary_paragraphs.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, amount));
+        summary_paragraphs.add(Paragraph::new::<TString<'static>>(
+            &theme::TEXT_SUB_GREY,
+            " ".into(),
+        ));
     }
-    let content_summary = content_summary
-        .into_layout()?
+    summary_paragraphs.add(Paragraph::new(&theme::TEXT_SUB_GREY, fee_label).no_break());
+    summary_paragraphs.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, fee));
+
+    let mut summary_frame = Frame::with_header(
+        Header::left_aligned(title).with_menu_button(),
+        SwipeContent::new(SwipePage::vertical(summary_paragraphs.into_paragraphs())),
+    )
+    .with_footer(TR::instructions__tap_to_continue.into(), None)
+    .with_swipe(Direction::Up, SwipeSettings::Default)
+    .with_flow_menu();
+    if can_go_back {
+        summary_frame = summary_frame.with_swipe(Direction::Down, SwipeSettings::Default);
+    }
+    let content_summary = summary_frame
+        .with_vertical_pages()
+        .map_to_button_msg()
         // Summary(1) + Hold(1)
         .with_pages(|summary_pages| summary_pages + 1);
 

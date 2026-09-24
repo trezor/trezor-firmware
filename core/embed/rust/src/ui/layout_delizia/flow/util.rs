@@ -1,7 +1,7 @@
 use heapless::Vec;
 
 use super::super::component::{
-    Frame, Header, PromptMsg, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+    Frame, Header, MoreInfoScreen, PromptMsg, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
 };
 use super::super::{flow, theme};
 use super::{
@@ -289,30 +289,14 @@ impl ConfirmValue {
 
 pub struct ShowInfoParams {
     title: TString<'static>,
-    subtitle: Option<TString<'static>>,
-    menu_button: bool,
-    cancel_button: bool,
-    footer_instruction: Option<TString<'static>>,
-    footer_description: Option<TString<'static>>,
-    swipe_up: bool,
-    swipe_down: bool,
     items: Vec<(TString<'static>, TString<'static>), 4>,
-    flow_menu: bool,
 }
 
 impl ShowInfoParams {
     pub const fn new(title: TString<'static>) -> Self {
         Self {
             title,
-            subtitle: None,
-            menu_button: false,
-            cancel_button: false,
-            footer_instruction: None,
-            footer_description: None,
-            swipe_up: false,
-            swipe_down: false,
             items: Vec::new(),
-            flow_menu: false,
         }
     }
 
@@ -322,62 +306,6 @@ impl ShowInfoParams {
         } else {
             None
         }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.items.is_empty()
-    }
-
-    #[inline(never)]
-    pub const fn with_subtitle(mut self, subtitle: Option<TString<'static>>) -> Self {
-        self.subtitle = subtitle;
-        self
-    }
-
-    #[inline(never)]
-    pub const fn with_menu_button(mut self) -> Self {
-        self.menu_button = true;
-        self
-    }
-
-    #[inline(never)]
-    pub const fn with_cancel_button(mut self) -> Self {
-        self.cancel_button = true;
-        self
-    }
-
-    #[inline(never)]
-    pub const fn with_footer(
-        mut self,
-        instruction: TString<'static>,
-        description: Option<TString<'static>>,
-    ) -> Self {
-        self.footer_instruction = Some(instruction);
-        self.footer_description = description;
-        self
-    }
-
-    pub const fn with_swipeup_footer(self, description: Option<TString<'static>>) -> Self {
-        self.with_footer(
-            TString::from_translation(TR::instructions__tap_to_continue),
-            description,
-        )
-        .with_swipe_up()
-    }
-
-    pub const fn with_swipe_up(mut self) -> Self {
-        self.swipe_up = true;
-        self
-    }
-
-    pub const fn with_swipe_down(mut self) -> Self {
-        self.swipe_down = true;
-        self
-    }
-
-    pub const fn with_flow_menu(mut self, flow_menu: bool) -> Self {
-        self.flow_menu = flow_menu;
-        self
     }
 
     #[inline(never)]
@@ -399,41 +327,10 @@ impl ShowInfoParams {
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, item.1));
         }
 
-        let mut header = Header::left_aligned(self.title);
-        if let Some(subtitle) = self.subtitle {
-            header = header.with_subtitle(subtitle);
-        }
-        if self.cancel_button {
-            header = header.with_cancel_button()
-        } else if self.menu_button {
-            header = header.with_menu_button()
-        }
-
-        let mut frame = Frame::with_header(
-            header,
-            SwipeContent::new(SwipePage::vertical(paragraphs.into_paragraphs())),
-        );
-        if self.cancel_button {
-            frame = frame.with_swipe(Direction::Right, SwipeSettings::Immediate);
-        }
-        if let Some(instruction) = self.footer_instruction {
-            frame = frame.with_footer(instruction, self.footer_description);
-        }
-        if self.flow_menu {
-            frame = frame.with_flow_menu();
-        }
-
-        if self.swipe_up {
-            frame = frame.with_swipe(Direction::Up, SwipeSettings::Default);
-        }
-
-        if self.swipe_down {
-            frame = frame.with_swipe(Direction::Down, SwipeSettings::Default);
-        }
-
-        frame = frame.with_vertical_pages();
-
-        Ok(frame.map_to_button_msg())
+        Ok(MoreInfoScreen::new(
+            self.title,
+            paragraphs.into_paragraphs(),
+        ))
     }
 }
 
