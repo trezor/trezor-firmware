@@ -2,7 +2,7 @@
 //! [`confirm_summary`].
 
 use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, UiOutcome, call};
+use super::{BR_CODE_OTHER, UiReply, call};
 use crate::Result;
 use crate::structs::{ConfirmSummary as WireConfirmSummary, TrezorUiEnum};
 
@@ -85,7 +85,7 @@ impl<'a> ConfirmSummary<'a> {
 ///     .confirmed()
 /// }
 /// ```
-pub fn confirm_summary(params: ConfirmSummary<'_>) -> Result<UiOutcome> {
+pub fn confirm_summary(params: ConfirmSummary<'_>) -> Result<UiReply> {
     let request = WireConfirmSummary::new(
         params.title,
         params.amount.map(|(_, value)| value),

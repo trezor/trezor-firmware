@@ -25,7 +25,7 @@
 //! And the words for what moves between them:
 //!
 //! - **a block** — one typed function of this library: one call, one
-//!   question, one [`UiOutcome`], and the call does not return until the
+//!   question, one [`UiReply`], and the call does not return until the
 //!   person has answered. The app's only way to show anything.
 //! - **a screen** — what the person sees at one moment. A block may show
 //!   several — its own, the extras menu, pages of content; the app never
@@ -63,8 +63,6 @@
 //!                    no-app-menus rule — decide that boundary explicitly
 //! ```
 //!
-//! Each returns its own outcome type with the same semantics; see the WIP
-//! note under [outcomes](#outcomes).
 //!
 //! # Showing an address
 //!
@@ -109,24 +107,35 @@
 //!
 //! # Outcomes
 //!
-//! Every block returns [`UiOutcome`]: the person either confirmed or did not.
-//! Cancelling is an answer, not a failure, so it arrives as `Ok`:
+//! A block returns [`UiReply`]: the person's answer as it crossed the
+//! wire, not a translation of it. Cancelling is an answer, not a failure,
+//! so it arrives as `Ok`. How the person got there — which page they were
+//! on, whether they opened the extras, which button they pressed — is
+//! never reported.
 //!
-//! - call [`UiOutcome::confirmed`] when the flow cannot go on without a yes;
-//! - call [`UiOutcome::is_confirmed`] when leaving is a normal choice.
+//! Which replies can arrive is fixed by the parameters, not by filtering
+//! after the fact: a screen renders a back affordance only when its block
+//! takes `back`, a Cancel entry only when it takes `cancel`, and a reply
+//! the parameters could not produce — a `Backward` from a block that
+//! shows no way back — is a protocol violation, answered with
+//! [`crate::Error::InvalidMessage`]. What the library answers itself — a
+//! `WantsMore` by opening the extras, page turns inside one chunk — never
+//! reaches the caller; `ConfirmedAll` does, from chunked content the
+//! person accepted without reading: a yes, with that fact attached.
 //!
-//! How the person got there — which page they were on, whether they opened
-//! the extras, which button they pressed — is never reported.
+//! Reading the answer is a `match`; the caller decides what each answer
+//! means. For the most common case — a screen that must be a yes —
+//! `.confirmed()` and `.is_confirmed()` are sugar for that decision, so a
+//! refusal needs no arm of its own.
 //!
-//! WIP: outcome types are a family, not a hierarchy. A block that asks for
-//! something other than a yes — a value, a pick from a list — gets its own
-//! type with the same semantics, written when the first one exists rather
-//! than generalizing `UiOutcome` upfront:
+//! `Backward` is the one answer no block can give yet: the wire has no
+//! `back` parameter, so no screen offers the gesture. It arrives with
+//! [going back](#going-back).
 //!
-//! ```text
-//! enum UiInput<u32> { Value(u32), Cancelled }   // .value()?  -> Ok(u32)    | Err(Cancelled)
-//! enum UiChoice     { Picked(usize), Cancelled } // .picked()? -> Ok(usize) | Err(Cancelled)
-//! ```
+//! WIP: with the raw reply public, sibling outcome types are subsumed:
+//! `Choice` already rides the wire for a pick from a list, and an input
+//! block adds its variant there — carrying its value — rather than a
+//! parallel enum family. Written when the first such block exists.
 //!
 //! ## The `confirmed()?` idiom
 //!
@@ -136,13 +145,34 @@
 //! ui::confirm_action(params)?.confirmed()?;
 //! ```
 //!
-//! The first `?` unwraps the block's result; `.confirmed()` turns
-//! `Cancelled` into [`crate::Error::Cancelled`], which the trailing `?`
+//! The first `?` unwraps the block's result; `.confirmed()` turns every
+//! answer that is not a yes into [`crate::Error::Cancelled`], which the
+//! trailing `?`
 //! returns from the function at once — nothing after it runs, and the host
 //! sees the session ending with the person's refusal. Do not drop the
 //! trailing `?` on a screen that must be a yes: a refusal would be ignored,
 //! with the flow carrying on as if the person had confirmed. Omit it only
 //! when the `Result` itself is the function's return value.
+//!
+//! # Going back
+//!
+//! Back is a parameter, like the way out. A block that takes `back` — off
+//! by default — renders a back affordance on its screen, and only such a
+//! block answers `Backward`. A lone block has nothing to go back to; it
+//! leaves `back` off, and the answer cannot even arrive.
+//!
+//! Sequences are where it matters. A sequence that wants earlier steps
+//! revisitable sets `back` on every step after the first, and answers
+//! `Backward` by showing the previous step again. `confirm_linear_flow`
+//! is that, library-owned: the app hands over the steps, the flow sets
+//! `back` itself — never on the first — and returns when the last step
+//! is confirmed or any is refused. A sequence of another shape — a
+//! review-and-edit loop, a branch — matches on `Backward` itself; the
+//! raw replies are public for exactly that.
+//!
+//! WIP: settled design, not built. No block takes `back` yet and
+//! `confirm_linear_flow` does not exist; both land together, with the
+//! ethereum port that needs them.
 //!
 //! # Step names
 //!
@@ -179,7 +209,25 @@
 //! sees that the device has not stalled. A progress is not a block: it asks
 //! nothing, answers nothing, and never blocks. It appears when the work
 //! starts and disappears when it ends, including through `?`, because the
-//! app never ends one by hand. See [`progress`] and [`Progress`].
+//! app never ends one by hand: the library owns the ending, the same way it
+//! owns a block's screens.
+//!
+//! Two forms cover the usual cases, both closures: [`progress`] for work
+//! that needs no step reporting, [`progress_with`] for work that does —
+//! [`Progress::step`] along the way, in whatever unit the app counts. The
+//! percent is never the app's arithmetic: the library computes it from the
+//! [`Total`] given at the start, and a step past the total pins the bar
+//! full rather than wrapping it. [`Total::Unknown`] shows motion without
+//! a fill, and steps on it do nothing.
+//!
+//! A step is deliberately infallible. It is a status note, not a step of
+//! the work: an update that cannot be delivered must not abort the work it
+//! describes, so the person at worst sees a stale bar until the next one.
+//!
+//! [`Progress::start`] is the escape hatch for work that cannot be a
+//! closure, and carries the one trap: the binding must hold the value,
+//! because dropping it is what ends the progress. `let _ = ...` ends it
+//! at once.
 //!
 //! # Errors
 //!
@@ -191,7 +239,8 @@
 //!   step name, more extras than one screen can offer, extras on a block that
 //!   cannot show them yet, or an extra of a kind not implemented yet.
 //! - [`crate::Error::InvalidMessage`] — the device answered with something
-//!   that makes no sense for this screen.
+//!   that makes no sense for this screen, including a reply its parameters
+//!   could not have produced.
 //! - Any other error — the request could not reach the device.
 //!
 //! Core also checks what it is asked to draw, per model, and the same call
@@ -279,7 +328,7 @@
 // Every file is laid out the same way, each section skipped when empty:
 // `Constants` (what the block fixes and the app cannot choose), `Data types`
 // (the params struct), `Entry point` (the one public function), `Internals`.
-// A block file is dull on purpose: params in, one `UiOutcome` out, the wire
+// A block file is dull on purpose: params in, one `UiReply` out, the wire
 // call in between. Anything cleverer belongs in a shared helper (`chunked`,
 // `menu`) so that no single block owns behaviour the others should have too.
 // Each block's own example lives on its entry point, where rustdoc shows it:
@@ -313,7 +362,9 @@ use ufmt::derive::uDebug;
 
 /// A key/value fact, as shown in a list or on an extra's screen.
 pub use crate::structs::Property;
-use crate::structs::{TrezorUiEnum, UiReply};
+use crate::structs::TrezorUiEnum;
+/// The person's answer to a block: the wire reply, as it came.
+pub use crate::structs::UiReply;
 use crate::{Error, Result};
 
 // ============================================================================
@@ -352,49 +403,32 @@ pub enum Commitment {
     Final,
 }
 
-/// What the person did with a confirmation block.
+/// The common readings of a block's answer.
 ///
-/// # Who uses this
-///
-/// - **Written by every confirmation block**, as the last thing it does, from
-///   a [`UiReply`] and whatever the block knows that the reply does not.
-/// - **Read by the modular app**, as the answer to a question that has only
-///   yes and no.
-/// - **Never crosses IPC.** It is deliberately narrower than the wire: no
-///   chunks, no menu indices, no navigation. A block asked a question and this
-///   is the answer.
-///
-/// A block that asks for something other than a yes — a value, a pick from
-/// a list — returns a different type with the same semantics, when the first
-/// one exists.
-///
-/// `Cancelled` is an ordinary value, so it is easy to ignore by accident —
-/// hence `#[must_use]` and [`UiOutcome::confirmed`], which is the idiomatic
-/// way to require confirmation.
-#[must_use]
-#[derive(uDebug, Copy, Clone, PartialEq, Eq)]
-pub enum UiOutcome {
-    /// The person confirmed.
-    Confirmed,
-    /// The person left the block without confirming.
-    Cancelled,
-}
-
-impl UiOutcome {
-    /// Discharges the outcome, turning `Cancelled` into [`Error::Cancelled`].
+/// The reply itself is the wire's — one variant per gesture, defined beside
+/// the other wire types — and every variant an app can receive is one the
+/// block's parameters asked for; see [outcomes](crate::modui#outcomes).
+/// These methods are the readings most callers want, so a refusal needs no
+/// arm of its own.
+impl UiReply {
+    /// Discharges the answer, turning every reply that is not a yes into
+    /// [`Error::Cancelled`].
     ///
     /// Use this when the caller cannot proceed without confirmation:
     /// `ui::confirm_action(params)?.confirmed()?`.
     pub fn confirmed(self) -> Result<()> {
         match self {
-            Self::Confirmed => Ok(()),
-            Self::Cancelled => Err(Error::Cancelled),
+            Self::Confirmed | Self::ConfirmedAll => Ok(()),
+            _ => Err(Error::Cancelled),
         }
     }
 
     /// Returns `true` if the person confirmed.
+    ///
+    /// A `ConfirmedAll` counts: the person accepted the rest without reading
+    /// it, which is still a yes.
     pub fn is_confirmed(self) -> bool {
-        matches!(self, Self::Confirmed)
+        matches!(self, Self::Confirmed | Self::ConfirmedAll)
     }
 }
 
@@ -413,7 +447,7 @@ fn call(
     extras: &[ExtraItem<'_>],
     cancel: bool,
     br: Option<&str>,
-) -> Result<UiOutcome> {
+) -> Result<UiReply> {
     // `None` is a block that announces nothing, which is the block's own
     // nature. An empty name is neither that nor a name, so it is a mistake:
     // the host would see a step with no identity, which is worse than silence.
@@ -434,18 +468,20 @@ fn call(
         };
 
         match reply {
-            UiReply::Confirmed => return Ok(UiOutcome::Confirmed),
-            UiReply::Cancelled => return Ok(UiOutcome::Cancelled),
+            // The answers, passed on as they came. `ConfirmedAll` is a yes
+            // with the fact that the rest was skipped attached, for screens
+            // that offer the skip.
+            UiReply::Confirmed | UiReply::Cancelled | UiReply::ConfirmedAll => return Ok(reply),
             // The person asked for the extras. A block that offered none cannot
             // produce this, so it is a protocol violation rather than a gesture.
             UiReply::WantsMore => {
-                if let Some(outcome) = menu::open(extras, cancel, br)? {
-                    return Ok(outcome);
+                if let Some(reply) = menu::open(extras, cancel, br)? {
+                    return Ok(reply);
                 }
             }
-            // A block is a question with two answers. Anything else answers a
-            // screen this is not — including a variant added to the wire after
-            // this was written.
+            // The rest answer a screen this is not — a page turn, a pick from
+            // a list, a way back no block offers — including a variant added
+            // to the wire after this was written.
             _ => return Err(Error::InvalidMessage),
         }
     }

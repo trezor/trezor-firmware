@@ -2,7 +2,7 @@
 //! [`confirm_properties`].
 
 use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, Commitment, UiOutcome, call};
+use super::{BR_CODE_OTHER, Commitment, UiReply, call};
 use crate::structs::{ConfirmProperties as WireConfirmProperties, Property, TrezorUiEnum};
 use crate::{Error, Result};
 
@@ -87,7 +87,7 @@ impl<'a> ConfirmProperties<'a> {
 ///         .confirmed()
 /// }
 /// ```
-pub fn confirm_properties(params: ConfirmProperties<'_>) -> Result<UiOutcome> {
+pub fn confirm_properties(params: ConfirmProperties<'_>) -> Result<UiReply> {
     // This block's wire has no menu button yet, so anything behind one would
     // be silently unreachable. Refusing is worse to use and better to debug.
     if !params.extras.is_empty() {

@@ -13,6 +13,52 @@
 //! at a bar for work that stopped, which is precisely what a scope is for;
 //! the same reasoning that closes a [`Screen`](super::screen::Screen) on drop.
 //!
+//! # Forms
+//!
+//! Three entry points, one rule of choice: if the work can be written as one
+//! closure, use a closure; if it cannot, take the handle and keep it bound
+//! until the work is done.
+//!
+//! Work with no intermediate steps to report — one long operation, or waiting
+//! on the host:
+//!
+//! ```text
+//! let key = ui::progress("Deriving key", Total::Unknown, || derive())?;
+//! ```
+//!
+//! Work in steps, each reported; the total is declared once, in whatever unit
+//! the app counts, and the percent is never the app's arithmetic:
+//!
+//! ```text
+//! let digest = ui::progress_with("Signing", Total::Units(data.len() as u32), |prog| {
+//!     let mut hasher = Hasher::new();
+//!     for chunk in data.chunks(1024) {
+//!         hasher.update(chunk);
+//!         prog.step(chunk.len() as u32);
+//!     }
+//!     hasher.finalize()
+//! })?;
+//! ```
+//!
+//! Work a closure cannot span — phases spread across calls, a handle held in a
+//! struct. There is no `finish` to call: dropping the value *is* finishing,
+//! so it must stay bound for as long as the work runs, and scope exit ends
+//! it however the function left — `Ok`, `Err`, or `?` in between:
+//!
+//! ```text
+//! let mut prog = ui::Progress::start("Signing", Total::Units(2))?;
+//! let digest = hash(tx)?;                    // early exit: prog drops, bar ends
+//! prog.step(1);
+//! confirm_the_person()?;                     // refusal: same
+//! let sig = sign(&digest);
+//! prog.step(1);
+//! Ok(sig)                                    // scope exit: prog drops, bar ends
+//! ```
+//!
+//! The trap of this form, stated plainly: `let _ = Progress::start(..)`
+//! drops the value at the end of that statement, ending the progress before
+//! any work runs. Bind it to a name and let the scope do the rest.
+//!
 //! # Example
 //!
 //! ```text

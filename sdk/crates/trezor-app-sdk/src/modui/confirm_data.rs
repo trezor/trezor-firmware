@@ -8,7 +8,7 @@
 use super::chunked::{self, AfterChunk, BYTES_PER_CHUNK};
 use super::extra::ExtraItem;
 use super::screen::Screen;
-use super::{BR_CODE_OTHER, UiOutcome, menu};
+use super::{BR_CODE_OTHER, menu};
 use crate::alloc_types::String;
 use crate::structs::{ConfirmValue as WireConfirmValue, TrezorUiEnum, UiReply};
 use crate::{Error, Result};
@@ -89,7 +89,7 @@ impl<'a> ConfirmData<'a> {
 ///         .confirmed()
 /// }
 /// ```
-pub fn confirm_data(params: ConfirmData<'_>) -> Result<UiOutcome> {
+pub fn confirm_data(params: ConfirmData<'_>) -> Result<UiReply> {
     // This block drives its own screens, so it makes the check `call` makes for
     // every other one: a step with no identity is worse for the host than a
     // block that deliberately announces nothing.
@@ -159,7 +159,7 @@ fn show_chunk(params: &ConfirmData<'_>, hex: &str, screen: &Screen) -> Result<Af
             // secondary button.
             UiReply::WantsMore if params.offers_more() => {
                 match menu::open(params.extras, params.cancel, Some(params.br))? {
-                    Some(outcome) => return Ok(AfterChunk::Decided(outcome)),
+                    Some(reply) => return Ok(AfterChunk::Decided(reply)),
                     // Back to the chunk the person was reading, as they left it.
                     None => reply = screen.reshow(&request)?,
                 }
