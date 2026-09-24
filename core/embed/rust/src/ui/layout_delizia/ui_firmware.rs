@@ -10,8 +10,8 @@ use super::component::{
     VerticalMenuItem, VerticalMenuItems,
 };
 use super::flow::{
-    self, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
-    ConfirmActionOptions, ConfirmActionStrings, ConfirmValue, ShowInfoParams,
+    self, new_confirm_action_simple, show_info_screen, ConfirmActionExtra,
+    ConfirmActionMenuStrings, ConfirmActionOptions, ConfirmActionStrings, ConfirmValue,
 };
 use super::{fonts, theme, UIDelizia};
 use crate::io::BinaryData;
@@ -398,25 +398,29 @@ impl FirmwareUI for UIDelizia {
         _external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
-        let account_params = if let Some(items) = account_items {
-            let account_title = account_title.unwrap_or(TR::send__send_from.into());
-            let mut account_params = ShowInfoParams::new(account_title);
+        let account_info = if let Some(items) = account_items {
+            let mut pairs = Vec::<(TString<'static>, TString<'static>), 4>::new();
             for pair in IterBuf::new().try_iterate(items)? {
                 let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(pair)?;
-                account_params = unwrap!(account_params.add(key.try_into()?, value.try_into()?));
+                unwrap!(pairs.push((key.try_into()?, value.try_into()?)));
             }
-            Some(account_params)
+            Some(show_info_screen(
+                account_title.unwrap_or(TR::send__send_from.into()),
+                pairs,
+            ))
         } else {
             None
         };
-        let extra_params = if let Some(items) = extra_items {
-            let extra_title = extra_title.unwrap_or(TR::buttons__more_info.into());
-            let mut extra_params = ShowInfoParams::new(extra_title);
+        let extra_info = if let Some(items) = extra_items {
+            let mut pairs = Vec::<(TString<'static>, TString<'static>), 4>::new();
             for pair in IterBuf::new().try_iterate(items)? {
                 let [label, value, _is_data]: [Obj; 3] = util::iter_into_array(pair)?;
-                extra_params = unwrap!(extra_params.add(label.try_into()?, value.try_into()?));
+                unwrap!(pairs.push((label.try_into()?, value.try_into()?)));
             }
-            Some(extra_params)
+            Some(show_info_screen(
+                extra_title.unwrap_or(TR::buttons__more_info.into()),
+                pairs,
+            ))
         } else {
             None
         };
@@ -427,9 +431,9 @@ impl FirmwareUI for UIDelizia {
             amount_label,
             fee,
             fee_label,
-            account_params,
+            account_info,
             account_title,
-            extra_params,
+            extra_info,
             extra_title,
             verb_cancel,
             back_button,
@@ -1109,11 +1113,7 @@ impl FirmwareUI for UIDelizia {
             let layout = confirm.into_layout()?;
             flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)))
         } else {
-            let mut params = ShowInfoParams::new(title);
-            for (header, text, _is_data) in items {
-                params = unwrap!(params.add(header, text));
-            }
-            let layout = params.into_layout()?;
+            let layout = show_info_screen(title, items.into_iter().map(|(h, t, _is_data)| (h, t)));
             flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)))
         }
     }

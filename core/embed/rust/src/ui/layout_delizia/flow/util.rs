@@ -1,5 +1,3 @@
-use heapless::Vec;
-
 use super::super::component::{
     Frame, Header, MoreInfoScreen, PromptMsg, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
 };
@@ -287,51 +285,32 @@ impl ConfirmValue {
     }
 }
 
-pub struct ShowInfoParams {
+pub type ShowInfoScreen = MoreInfoScreen<ParagraphVecLong<'static>>;
+
+/// Simple read-only screen showing a list of key-value pairs with a close
+/// button. Paginates automatically via action bar buttons when the content
+/// does not fit on a single page.
+#[inline(never)]
+pub fn show_info_screen(
     title: TString<'static>,
-    items: Vec<(TString<'static>, TString<'static>), 4>,
-}
-
-impl ShowInfoParams {
-    pub const fn new(title: TString<'static>) -> Self {
-        Self {
-            title,
-            items: Vec::new(),
+    items: impl IntoIterator<Item = (TString<'static>, TString<'static>)>,
+) -> ShowInfoScreen {
+    let mut paragraphs = ParagraphVecLong::new();
+    let mut first: bool = true;
+    for (key, value) in items {
+        // FIXME: padding:
+        if !first {
+            paragraphs.add(Paragraph::new::<TString<'static>>(
+                &theme::TEXT_SUB_GREY,
+                " ".into(),
+            ));
         }
+        first = false;
+        paragraphs.add(Paragraph::new(&theme::TEXT_SUB_GREY, key).no_break());
+        paragraphs.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, value));
     }
 
-    pub fn add(mut self, key: TString<'static>, value: TString<'static>) -> Option<Self> {
-        if self.items.push((key, value)).is_ok() {
-            Some(self)
-        } else {
-            None
-        }
-    }
-
-    #[inline(never)]
-    pub fn into_layout(
-        self,
-    ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
-        let mut paragraphs = ParagraphVecLong::new();
-        let mut first: bool = true;
-        for item in self.items {
-            // FIXME: padding:
-            if !first {
-                paragraphs.add(Paragraph::new::<TString<'static>>(
-                    &theme::TEXT_SUB_GREY,
-                    " ".into(),
-                ));
-            }
-            first = false;
-            paragraphs.add(Paragraph::new(&theme::TEXT_SUB_GREY, item.0).no_break());
-            paragraphs.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, item.1));
-        }
-
-        Ok(MoreInfoScreen::new(
-            self.title,
-            paragraphs.into_paragraphs(),
-        ))
-    }
+    MoreInfoScreen::new(title, paragraphs.into_paragraphs())
 }
 
 pub fn map_to_confirm(msg: PromptMsg) -> Option<FlowMsg> {
