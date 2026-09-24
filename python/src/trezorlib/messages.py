@@ -10568,34 +10568,6 @@ class WardFlushQueueAck(protobuf.MessageType):
 
 class WardVerifyChain(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2313
-    FIELDS = {
-        5: protobuf.Field("head_root", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
-        4: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
-        6: protobuf.Field("anchor_counter", "uint32", repeated=False, required=False, default=None),
-        7: protobuf.Field("anchor_from_counter", "uint32", repeated=False, required=False, default=None),
-        8: protobuf.Field("anchor_from_root", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        head_root: Optional["bytes"] = None,
-        nonce: Optional["bytes"] = None,
-        timestamp: Optional["int"] = None,
-        wm_signature: Optional["bytes"] = None,
-        anchor_counter: Optional["int"] = None,
-        anchor_from_counter: Optional["int"] = None,
-        anchor_from_root: Optional["bytes"] = None,
-    ) -> None:
-        self.head_root = head_root
-        self.nonce = nonce
-        self.timestamp = timestamp
-        self.wm_signature = wm_signature
-        self.anchor_counter = anchor_counter
-        self.anchor_from_counter = anchor_from_counter
-        self.anchor_from_root = anchor_from_root
 
 
 class WardChainRequest(protobuf.MessageType):

@@ -33,6 +33,27 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
     the strongest social-engineering target in the protocol, so the prompt names both
     counters, says how far back the state is, and holds -- and says plainly what is lost.
 
+    AND LOWERING THE COUNTER RE-OPENS EVERY COUNTER ABOVE IT. `auth_commit` binds
+    `(from_counter, from_root, to_counter, to_root)` and nothing outside that, so once the head is
+    back at 10 the wallet's own genuine links 10->11->...->57 are replayable, as is any FORK that
+    was ever authorised at those counters: two different roots at counter 11 may each have a real
+    authorisation from (10, R10), and nothing in a link says which one the wallet went on to keep.
+    That is inherent to going backwards -- a counter is what makes an authorisation name one
+    moment, and this is the operation that gives a moment back.
+
+    WHAT BOUNDS IT is that replaying any of it requires the WM to attest each step, and the WM is
+    where the operator is. A host alone cannot re-drive the wallet: the floor only moves up on a
+    LIVE, nonce-bound attestation, and since the archived anchor was removed from
+    `WardVerifyChain` there is no path that raises the stored counter without one. So the exposure
+    is "a recovered wallet can be walked forward again through history the WM agrees to", not
+    "any host holding old links can undo the recovery".
+
+    GAP(ward): nothing yet distinguishes the wallet's real line from a fork at a re-opened
+    counter. Doing so needs something monotonic that a recovery does NOT reset -- an epoch beside
+    the counter, bumped on every recovery and bound into the preimage, so authorisations from
+    before it stop verifying. That is a wire break and a WM change, deferred deliberately rather
+    than overlooked.
+
     "How far back" is a COUNT, not a duration. The device has no clock, and the stored time it
     once compared against is gone with the rest of the timestamp: it was never a security
     signal, since a malicious WM lies about the clock freely. The count is authenticated --

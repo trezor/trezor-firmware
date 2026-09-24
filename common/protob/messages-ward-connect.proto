@@ -180,38 +180,25 @@ message WardFlushQueueAck {
 message WardVerifyChain {
     reserved 1;  // was `repeated WardChainLink links`; the device pulls them one ack at a time
 
-    // THE ARCHIVED ANCHOR'S DESTINATION ROOT, and ONLY that. On the live path the device takes
-    // the whole step straight out of this round's attestation, so supplying any anchor field
-    // here is REFUSED rather than ignored: a field that is load-bearing on one path and
-    // decorative on the other is how the two come to be confused. Absent means the empty tree.
-    // Required with the archive fields below, forbidden without them.
-    optional bytes head_root = 5;
+    // 2-8 were the ARCHIVED ANCHOR: nonce, timestamp, wm_signature, head_root, anchor_counter,
+    // anchor_from_counter, anchor_from_root. A walk could anchor on an attestation the host had
+    // KEPT from when an earlier head was current, adopting without claiming currency.
+    //
+    // REMOVED, because it raised the persisted counter with no freshness and no consent. After a
+    // user-confirmed WardRecoverCounter lowered the head from 57 to 10, a host still holding the
+    // archived attestation for 57 and the links up to it walked the device straight back -- the
+    // device persists the counter before it decides about latching, so the recovery was undone
+    // silently and the wallet stranded again. It also no longer bought anything: it existed for
+    // staged catch-up, from when links travelled as one repeated field and the buffer bounded the
+    // catch-up DISTANCE, and the backward pull removed that ceiling. Nothing tested it.
+    //
+    // The archived attestation still exists where it answers its own question -- WardRollback,
+    // where the counter moves FORWARD and the user holds to confirm.
+    reserved 2, 3, 4, 5, 6, 7, 8;
 
-    // AN ARCHIVED ANCHOR, instead of the head attested in this round. These three are the
-    // attestation the WM issued when some earlier head was current, which the host kept.
-    //
-    // The two properties of an anchor come apart, and only one of them descent needs:
-    //
-    //   GENUINE gives branch-correctness -- an ancestor of a head the WM really held is on the
-    //     authoritative line, whether or not that head is still current. An archived
-    //     attestation carries this in full.
-    //   FRESH gives currency -- this head is the head NOW. Only this round's nonce carries it.
-    //
-    // So a walk anchored on an archive is a complete proof of descent and no claim of currency:
-    // the device adopts and settles, and STAYS OFFLINE, because a host replaying an old
-    // attestation must never be able to freeze a device at an old head while it serves those
-    // values as current. Omit all three to anchor on this round's attestation, which is what
-    // latches online.
-    optional bytes  nonce        = 2;
-    optional uint64 timestamp    = 3;
-    optional bytes  wm_signature = 4;
-
-    // Which STEP the archive attests. The device verifies the signature over all four operands
-    // directly, so the host can only fail to hold one over the transition it is presenting. That
-    // is what admits these on this path, in place of the round's attestation on the live one.
-    optional uint32 anchor_counter      = 6;  // the `to` counter, paired with head_root
-    optional uint32 anchor_from_counter = 7;
-    optional bytes  anchor_from_root    = 8;  // absent means the empty tree
+    // NO FIELDS AT ALL. The anchor is this round's attestation, which the device already holds:
+    // the WM names both ends of the step in the clear, so there is nothing for a host to supply
+    // and nothing for it to choose. Run WardIngestAttestation first.
 }
 
 /**

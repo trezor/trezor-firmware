@@ -186,7 +186,6 @@ async def adopt(
     counter: int,
     root: bytes | None,
     landed_commits: "list | None" = None,
-    current: bool = True,
 ) -> None:
     """Take the head: settle queued writes, persist it, latch online, close the round.
 
@@ -204,15 +203,20 @@ async def adopt(
       exist, and `common.verify_leaf_against_root` reads an absent root at counter 0 as "nothing
       was ever written" and stops checking proofs at all.
 
-      THEN LATCH -- but only when `current`. Reads may go to the host once a WM attestation has
-      been bound to a tree the device actually holds AND that attestation answers a nonce from
-      this round. A head proved genuine by an archived attestation is adopted and settled without
-      latching; see below.
+      THEN LATCH. Reads may go to the host once a WM attestation has been bound to a tree the
+      device actually holds AND that attestation answers a nonce from this round. Every caller
+      now arrives with both -- see below.
 
       THEN CLOSE THE ROUND, so one attestation can never be replayed into a second adoption.
 
-    `current` says whether the head being adopted is the one the backend holds NOW, which only a
-    nonce-bound attestation can establish. False adopts and settles without claiming currency.
+    THERE USED TO BE A `current=False` MODE, for a walk anchored on an ARCHIVED attestation: it
+    adopted and settled without latching, on the reasoning that descent needs only a head the WM
+    genuinely held while currency needs a nonce from this round. The distinction was sound and the
+    mode still had to go, because it PERSISTED THE COUNTER -- the `set_root` above runs before the
+    latch decision -- which let a host undo a user-confirmed `WardRecoverCounter` by replaying the
+    attestation it had kept for the old head. `verify_chain` no longer offers that anchor; see
+    `verify_chain._anchor`. Every adoption is now nonce-bound, so there is no second mode to get
+    wrong.
 
     `landed_commits`, when given, is every transition the caller proved it crossed; a claim landed
     exactly when its own authorisation is among them. Without it, settlement asks whether the head
@@ -234,25 +238,6 @@ async def adopt(
         raise DataError(
             "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
         )
-
-    if not current:
-        # ADOPTED BUT NOT CURRENT, and the two omissions are the whole point.
-        #
-        # An anchor has two properties and they come apart. GENUINE -- the WM really held this
-        # head -- is what descent needs, and an ARCHIVED attestation carries it in full. FRESH --
-        # this is the head NOW -- only a nonce this round minted can carry, because `round.clear`
-        # zeroes the slot and the device cannot tell a nonce it minted last week from arbitrary
-        # bytes. A walk anchored on an archive proves the first and says nothing about the second.
-        #
-        # NO LATCH, therefore. `round.is_online` decides whether reads are served from the
-        # backend, so latching here would let a host replay an old attestation, freeze the device
-        # at an old head and have those values presented as current -- the eclipse the nonce
-        # exists to close.
-        #
-        # AND NO `clear`, because there may be no round to clear: this path runs without one.
-        # Clearing a round this adoption did not consume would retire an attestation some other
-        # exchange is still entitled to.
-        return
 
     sync_round.mark_online()
     sync_round.clear()

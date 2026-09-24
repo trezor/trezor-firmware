@@ -23,11 +23,17 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     a device could be carried across dozens of transitions it never saw, on one link. See the
     rules below.
 
-    STILL THE WEAKER OF THE TWO ROUTES, even so. One step is one step: a WM colluding with a host
-    can attest a single transition off the authoritative line, and this handler will take it,
-    because from the device's own head that step is indistinguishable from the real one. Only
-    `verify_chain`'s walk back through every intervening link rules that out. What is gone is the
-    ability to smuggle a whole HISTORY in behind one authorised step.
+    NOT WEAKER THAN A ONE-LINK `verify_chain`, which is worth saying because this docstring used
+    to claim it was. At one step the two prove the same thing by the same means: both take the
+    attested step from the round, both require an `auth_commit` over exactly it, and both end at
+    the device's own head -- `verify_chain` by arriving there, this by starting there. The walk's
+    advantage is RANGE, not strength; it is the only route that can cross a gap at all, and this
+    one refuses to.
+
+    WHAT NEITHER RULES OUT is a WM colluding with a host to attest a single transition off the
+    authoritative line: from the device's own head that step is indistinguishable from the real
+    one, whichever route carries it. Depth is what separates them -- a walk of N links makes the
+    collusion N times as expensive, and this route offers exactly one.
     """
     from trezor.messages import WardReconcileAck
     from trezor.wire import DataError

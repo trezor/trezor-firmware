@@ -8436,26 +8436,6 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardVerifyChain(protobuf.MessageType):
-        head_root: "AnyBytes | None"
-        nonce: "AnyBytes | None"
-        timestamp: "int | None"
-        wm_signature: "AnyBytes | None"
-        anchor_counter: "int | None"
-        anchor_from_counter: "int | None"
-        anchor_from_root: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            head_root: "AnyBytes | None" = None,
-            nonce: "AnyBytes | None" = None,
-            timestamp: "int | None" = None,
-            wm_signature: "AnyBytes | None" = None,
-            anchor_counter: "int | None" = None,
-            anchor_from_counter: "int | None" = None,
-            anchor_from_root: "AnyBytes | None" = None,
-        ) -> None:
-            pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WardVerifyChain"]:
