@@ -252,7 +252,7 @@ fn generate_trezorhal_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_function("systick_us")
             // toif
             .allowlist_type("toif_format_t")
-            //usb
+            // usb
             .allowlist_type("usb_event_t")
             .allowlist_function("usb_get_state")
             // ble
@@ -284,6 +284,21 @@ fn generate_trezorhal_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_type("ble_state_t")
             .allowlist_type("ble_event_t")
             .allowlist_type("bt_le_addr_t")
+            // nfc
+            .allowlist_var("NFC_MAX_APDU_LEN")
+            .allowlist_function("nfc_start_discovery")
+            .allowlist_function("nfc_stop_discovery")
+            .allowlist_function("nfc_get_event")
+            .allowlist_function("nfc_get_state")
+            .allowlist_function("nfc_get_device_info")
+            .allowlist_function("nfc_transceive")
+            .allowlist_function("nfc_transceive_psk")
+            .allowlist_type("nfc_dev_type_t")
+            .allowlist_type("nfc_dev_interface_t")
+            .allowlist_type("nfc_nfca_listen_device_type_t")
+            .allowlist_type("nfc_event_t")
+            .allowlist_type("nfc_dev_info_t")
+            .allowlist_type("nfc_apdu_message_t")
             // touch
             .allowlist_function("touch_get_event")
             // button

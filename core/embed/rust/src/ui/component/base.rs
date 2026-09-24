@@ -9,6 +9,8 @@ use crate::ui::component::{MsgMap, PageMap};
 use crate::ui::event::BLEEvent;
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
+#[cfg(feature = "n1w1")]
+use crate::ui::event::NfcEvent;
 #[cfg(feature = "power_manager")]
 use crate::ui::event::PMEvent;
 use crate::ui::event::USBEvent;
@@ -362,6 +364,8 @@ pub enum Event {
     Touch(TouchEvent),
     #[cfg(feature = "ble")]
     BLE(BLEEvent),
+    #[cfg(feature = "n1w1")]
+    NFC(NfcEvent),
     #[cfg(feature = "power_manager")]
     PM(PMEvent),
     USBWire,

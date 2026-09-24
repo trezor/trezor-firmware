@@ -9,3 +9,26 @@
 #![allow(clippy::cast_lossless)]
 
 include!(concat!(env!("OUT_DIR"), "/trezorhal.rs"));
+
+// FIXME should go into rtl/ somehow
+pub type Status = ts_t;
+pub struct StatusError {
+    pub code: core::num::NonZeroI32,
+}
+
+impl Status {
+    pub fn code(&self) -> i32 {
+        self.code
+    }
+
+    pub fn is_ok(&self) -> bool {
+        self.code == 0
+    }
+
+    pub fn ok(&self) -> Result<(), StatusError> {
+        match core::num::NonZeroI32::new(self.code()) {
+            Some(code) => Err(StatusError { code }),
+            None => Ok(()),
+        }
+    }
+}

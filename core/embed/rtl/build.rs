@@ -58,6 +58,9 @@ fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
         .header("inc/rtl/sysexit.h")
         .allowlist_function("system_exit")
         .allowlist_function("system_exit_error_ex")
-        .allowlist_function("system_exit_fatal_ex");
+        .allowlist_function("system_exit_fatal_ex")
+        .header("inc/rtl/error_handling.h")
+        .allowlist_var("TS_OK")
+        .allowlist_type("ts_t");
     Ok(builder)
 }

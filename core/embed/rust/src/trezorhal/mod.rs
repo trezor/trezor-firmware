@@ -16,6 +16,8 @@ pub mod touch;
 #[cfg(feature = "hw_jpeg_decoder")]
 pub mod jpegdec;
 pub mod model;
+#[cfg(feature = "n1w1")]
+pub mod nfc;
 pub mod random;
 #[cfg(feature = "rgb_led")]
 pub mod rgb_led;

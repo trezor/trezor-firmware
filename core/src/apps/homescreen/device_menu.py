@@ -249,34 +249,11 @@ async def handle_DisconnectDevice() -> None:
 
 
 async def handle_PairDevice() -> None:
-    from trezor.ui.layouts import show_warning
-    from trezor.wire.thp import paired_cache
+    from trezornfc import run
 
-    from apps.management.ble.pair_new_device import pair_new_device
-
-    # Show warning if Bluetooth is not enabled
-    if not ble.get_enabled():
-        with trezorui_api.show_warning(
-            title=TR.words__important,
-            description=TR.ble__must_be_enabled,
-            button=TR.buttons__turn_on,
-            allow_cancel=True,
-            danger=False,
-        ) as layout:
-            await interact(layout, "enable_bluetooth")
-        ble_enable(True)
-
-    hostname_map = {e.mac_addr: e for e in paired_cache.load()}
-    paired_devices = [_get_hostinfo(bond, hostname_map) for bond in ble.get_bonds()]
-    if len(paired_devices) < ble.MAX_BONDS:
-        await pair_new_device()
-        raise ExitDeviceMenu  # return to homescreen
-    else:
-        await show_warning(
-            "device_pair",
-            TR.ble__limit_reached,
-            button=TR.buttons__confirm,
-        )
+    print("run start")
+    run()
+    print("run done")
 
 
 async def handle_UnpairAllDevices() -> None:

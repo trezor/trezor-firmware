@@ -795,6 +795,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_rotation__south;
   MP_QSTR_rotation__title_change;
   MP_QSTR_rotation__west;
+  MP_QSTR_run;
   MP_QSTR_safety_checks__approve_unsafe_always;
   MP_QSTR_safety_checks__approve_unsafe_temporary;
   MP_QSTR_safety_checks__enforce_strict;
@@ -892,8 +893,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_skip_first_paint;
   MP_QSTR_sn__action;
   MP_QSTR_sn__title;
+  MP_QSTR_start;
   MP_QSTR_start_advertising;
   MP_QSTR_start_comm;
+  MP_QSTR_stop;
   MP_QSTR_storage_msg__processing;
   MP_QSTR_storage_msg__starting;
   MP_QSTR_storage_msg__verifying_pin;
@@ -935,6 +938,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_trezorble;
   MP_QSTR_trezorlog;
   MP_QSTR_trezorminiscript;
+  MP_QSTR_trezornfc;
   MP_QSTR_trezorproto;
   MP_QSTR_trezorthp;
   MP_QSTR_trezorui_api;

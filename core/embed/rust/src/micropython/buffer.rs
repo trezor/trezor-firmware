@@ -281,7 +281,9 @@ pub fn hexlify_bytes(obj: Obj, offset: usize, max_len: usize) -> Result<StrBuffe
 
     let max_len = max_len & !1;
     let hex_len = (bin_slice.len() * 2).min(max_len);
-    let result = StrBuffer::alloc_with(hex_len, move |buffer| hexlify(bin_slice, buffer))?;
+    let result = StrBuffer::alloc_with(hex_len, move |buffer| {
+        hexlify(bin_slice, buffer);
+    })?;
     Ok(result.skip_prefix(hex_off))
 }
 

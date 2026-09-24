@@ -166,6 +166,7 @@ static ts_t nfc_backup_transceive_logged(cli_t *cli, const char *api_name,
             (unsigned)cmd->data_len);
 
   status = nfc_transceive(cmd, rsp);
+  cli_trace(cli, "nfc_transceive %lu %lu", timing_blocking, timing);
   if (ts_error(status)) {
     cli_trace(cli, "APDU %s: transceive failed (%s/%d)", api_name,
               ts_string(status), ts_code(status));
@@ -672,6 +673,7 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
   TSH_CHECK_OK(status);
 
   status = nfc_transceive(&cmd, &rsp);
+  cli_trace(cli, "nfc_transceive %lu %lu", timing_blocking, timing);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(rsp.data_len >= 2U, TS_EINVAL);
@@ -707,6 +709,7 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
   TSH_CHECK_OK(status);
 
   status = nfc_transceive(&cmd, &rsp);
+  cli_trace(cli, "nfc_transceive %lu %lu", timing_blocking, timing);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(rsp.data_len >= 2U, TS_EINVAL);
@@ -745,6 +748,7 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
   nfc_apdu_message_t resp = {0};
 
   status = nfc_transceive(&cmd, &resp);
+  cli_trace(cli, "nfc_transceive %lu %lu", timing_blocking, timing);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(resp.data_len == 2U, TS_EINVAL);
@@ -1154,6 +1158,7 @@ static ts_t nfc_backup_activate_flashloader(cli_t *cli) {
   nfc_apdu_message_t rsp = {0};
 
   status = nfc_transceive(&cmd, &rsp);
+  cli_trace(cli, "nfc_transceive %lu %lu", timing_blocking, timing);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(rsp.data_len == 2U, TS_EINVAL);

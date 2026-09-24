@@ -30,6 +30,8 @@
  */
 #define NFC_MAX_APDU_LEN 512
 
+extern uint32_t timing; extern uint32_t timing_blocking;
+
 /** @brief Supported NFC types. **/
 typedef enum {
   NFC_DEV_TYPE_A,

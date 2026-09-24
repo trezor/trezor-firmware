@@ -8,16 +8,45 @@ use crate::translations::TR;
 /// Unified-length String type, long enough for most simple use-cases.
 pub type ShortString = String<128>;
 
-pub fn hexlify(data: &[u8], buffer: &mut [u8]) {
+fn hexbyte(b: u8) -> (u8, u8) {
     const HEX_LOWER: [u8; 16] = *b"0123456789abcdef";
+    let hi: usize = ((b & 0xf0) >> 4).into();
+    let lo: usize = (b & 0x0f).into();
+    (HEX_LOWER[hi], HEX_LOWER[lo])
+}
+
+pub fn hexlify<'a>(data: &[u8], buffer: &'a mut [u8]) -> &'a str {
     let mut i: usize = 0;
     for b in data.iter().take(buffer.len() / 2) {
-        let hi: usize = ((b & 0xf0) >> 4).into();
-        let lo: usize = (b & 0x0f).into();
-        buffer[i] = HEX_LOWER[hi];
-        buffer[i + 1] = HEX_LOWER[lo];
+        let (hi, lo) = hexbyte(*b);
+        buffer[i] = hi;
+        buffer[i + 1] = lo;
         i += 2;
     }
+    unsafe { str::from_utf8_unchecked(&buffer[..i]) }
+}
+
+pub struct HexBytes<'a>(pub &'a [u8]);
+
+impl<'a> ufmt::uDisplay for HexBytes<'a> {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        for b in self.0.iter() {
+            let (hi, lo) = hexbyte(*b);
+            f.write_char(hi.into())?;
+            f.write_char(lo.into())?;
+        }
+        Ok(())
+    }
+}
+
+pub fn hex_bytes<'a, T>(bytes: &'a T) -> HexBytes<'a>
+where
+    T: AsRef<[u8]> + ?Sized,
+{
+    HexBytes(bytes.as_ref())
 }
 
 pub fn format_i64(num: i64, buffer: &mut [u8]) -> Option<&str> {

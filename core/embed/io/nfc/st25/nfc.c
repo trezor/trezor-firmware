@@ -50,6 +50,9 @@
 #define NFC_CRC_A_PRELOAD 0x6363U
 #define NFC_CRC_A_POLY 0x8408U
 
+uint32_t timing;
+uint32_t timing_blocking;
+
 typedef struct {
   bool initialized;
   bool rfal_initialized;
@@ -433,7 +436,9 @@ bool nfc_check_connection(nfc_dev_info_t *dev_info) {
   }
 }
 
+// XXX instrument timestamps
 ts_t nfc_transceive(const nfc_apdu_message_t *cmd, nfc_apdu_message_t *resp) {
+  uint32_t atstart = systick_ms();
   TSH_DECLARE;
   st25_driver_t *drv = &g_st25_driver;
   TSH_CHECK(drv->initialized, TS_ENOINIT);
@@ -445,6 +450,7 @@ ts_t nfc_transceive(const nfc_apdu_message_t *cmd, nfc_apdu_message_t *resp) {
   }
 
   TSH_CHECK_OK(nfc_transceive_blocking(cmd, resp));
+  timing = systick_ms() - atstart;
 
 cleanup:
   TSH_RETURN;
@@ -597,9 +603,11 @@ static ts_t nfc_transceive_blocking(const nfc_apdu_message_t *cmd,
   TSH_CHECK(err != RFAL_ERR_WRONG_STATE, TS_ENOSTATE);
   TSH_CHECK(err != RFAL_ERR_PARAM, TS_EINVAL);
 
+  timing_blocking = 0;
   do {
     rfalNfcWorker();
     err = rfalNfcDataExchangeGetStatus();
+    timing_blocking++;
   } while (err == RFAL_ERR_BUSY);
   TSH_CHECK(err == RFAL_ERR_NONE, TS_ENOEN);
 

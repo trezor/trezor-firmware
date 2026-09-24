@@ -1,3 +1,4 @@
+// TODO: drop file
 /*
  * This file is part of the Trezor project, https://trezor.io/
  *

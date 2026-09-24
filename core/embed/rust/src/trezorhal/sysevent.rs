@@ -12,6 +12,8 @@ use crate::trezorhal::ble::ble_parse_event;
 use crate::trezorhal::button::button_parse_event;
 #[cfg(feature = "button")]
 use crate::trezorhal::ffi::button_get_event;
+#[cfg(feature = "n1w1")]
+use crate::trezorhal::nfc::{nfc_get_event, nfc_parse_event};
 #[cfg(feature = "power_manager")]
 use crate::trezorhal::power_manager::pm_parse_event;
 #[cfg(feature = "touch")]
@@ -21,6 +23,8 @@ use crate::ui::component::Event;
 use crate::ui::event::BLEEvent;
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
+#[cfg(feature = "n1w1")]
+use crate::ui::event::NfcEvent;
 #[cfg(feature = "power_manager")]
 use crate::ui::event::PMEvent;
 #[cfg(feature = "touch")]
@@ -39,6 +43,7 @@ pub enum Syshandle {
     Usb = ffi::syshandle_t_SYSHANDLE_USB as _,
     Ble = ffi::syshandle_t_SYSHANDLE_BLE as _,
     Syscall = ffi::syshandle_t_SYSHANDLE_SYSCALL as _,
+    Nfc = ffi::syshandle_t_SYSHANDLE_NFC as _,
 }
 
 impl Syshandle {
@@ -115,6 +120,13 @@ pub fn parse_event(signalled: &sysevents_t) -> Option<Event> {
         if let Some(button_event) = ffi::button_event_t::get() {
             let (btn, evt) = button_parse_event(button_event);
             return Some(Event::Button(ButtonEvent::new(evt, btn)));
+        }
+    }
+    #[cfg(feature = "n1w1")]
+    if Syshandle::Nfc.is_set_in(&signalled.read_ready) {
+        if let Some(nfc_event) = nfc_get_event() {
+            let nfc_event = nfc_parse_event(nfc_event);
+            return Some(Event::NFC(nfc_event));
         }
     }
     #[cfg(feature = "touch")]
