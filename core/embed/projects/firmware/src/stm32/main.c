@@ -57,6 +57,8 @@
 
 #ifdef USE_IPC
 #include <sys/ipc.h>
+
+#include "../coreapp_ipc.h"
 #endif
 
 #ifdef USE_NRF
@@ -85,7 +87,7 @@ int main_func(uint32_t cmd, void *arg) {
   // Registered once for the coreapp's lifetime: re-registering while an
   // extapp is running would reset the queue under it, so this is not
   // something extapp orchestration (e.g. run.py) is allowed to repeat.
-  ipc_register(2, ipc_buffer, sizeof(ipc_buffer));
+  ipc_register(IPC_REMOTE_EXTAPP, ipc_buffer, sizeof(ipc_buffer));
 #endif
 
   bool fading = DISPLAY_JUMP_BEHAVIOR == DISPLAY_RESET_CONTENT;
