@@ -18,7 +18,7 @@ if utils.USE_DBG_CONSOLE:
     _levels = [debug, info, warning, error]
     _min_level = 0  # can be used for manually disabling low-priority logging levels
     debug, info, warning, error = [_no_op] * _min_level + _levels[_min_level:]
-    init(_min_level)  # initialize rust logging connector
+    init()  # initialize rust logging connector
 else:
     debug = warning = info = error = _no_op
 
