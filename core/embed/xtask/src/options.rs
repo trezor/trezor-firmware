@@ -186,6 +186,10 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map source_lines: bool,
 
+    /// Enable logging via 'log' crate
+    #[arg(long, num_args = 0..=1, default_missing_value = "false")]
+    map log_crate: bool,
+
     /// Optimize MicroPython bytecode
     #[arg(long, num_args = 0..=1, default_missing_value = "true", overrides_with = "pyopt")]
     map pyopt: bool,
