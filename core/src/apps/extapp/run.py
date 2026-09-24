@@ -489,6 +489,9 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                     indeterminate=indeterminate,
                     danger=danger,
                 )
+                # The layout only appears on its first report, and an
+                # indeterminate progress never reports: show it now.
+                progress_obj.report(0)
             elif message_id == _SERVICE_PROGRESS_REPORT:
                 if progress_obj is None:
                     die(DataError("Progress not initialized"))
