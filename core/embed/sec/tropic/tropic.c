@@ -1092,15 +1092,14 @@ static secbool tropic_fw_update_needed(secbool *needed) {
   uint8_t confirmed_riscv[4] = {0};
   uint8_t confirmed_spect[4] = {0};
   bool present = false;
-  if (!tropic_session_start() ||
-      !tropic_read_fw_slot(confirmed_riscv, confirmed_spect, &present)) {
+  if (!tropic_session_start()) {
     return secfalse;
   }
-
+  if (!tropic_read_fw_slot(confirmed_riscv, confirmed_spect, &present)) {
+    return secfalse;
+  }
   *needed = !present || fw_version_is_older(confirmed_riscv, fw_CPU_ver) ||
-                    fw_version_is_older(confirmed_spect, fw_SPECT_ver)
-                ? sectrue
-                : secfalse;
+                    fw_version_is_older(confirmed_spect, fw_SPECT_ver);
   return sectrue;
 }
 
