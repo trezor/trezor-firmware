@@ -29,6 +29,9 @@ extern crate num_derive;
 #[macro_use]
 mod macros;
 
+#[cfg(all(feature = "tracked_allocator", feature = "micropython"))]
+mod allocator;
+
 mod align;
 #[cfg(feature = "debug")]
 mod coverage;
