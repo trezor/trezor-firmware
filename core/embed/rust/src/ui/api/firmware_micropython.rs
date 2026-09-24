@@ -1591,11 +1591,14 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 tstr_opt(&m.account),
                 tstr_opt(&m.path),
                 obj_from_proplist(&m.xpubs),
-                10,
-                "show_address".into(),
+                // The flow announces itself, so the step's name goes to it and
+                // not to `wrap`: announcing it here too would be a second
+                // ButtonRequest for one screen.
+                u16::try_from(m.br_code.to_native()).map_err(|_| Error::TypeError)?,
+                tstr_opt(&m.br_name).unwrap_or("show_address".into()),
             )?,
             m.br_code.to_native(),
-            m.br_name.as_ref(),
+            None,
         )?,
     };
 

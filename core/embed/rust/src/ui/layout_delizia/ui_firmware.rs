@@ -398,8 +398,13 @@ impl FirmwareUI for UIDelizia {
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         back_button: bool,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        if external_menu {
+            // WIP: this screen has no menu a caller can drive. It is drawn as
+            // before, without one, so the caller's extras are unreachable here.
+            log::warn!("confirm_summary: external_menu is not supported on this model, ignored");
+        }
         let mut summary_params = ShowInfoParams::new(title.unwrap_or(TString::empty()))
             .with_menu_button()
             .with_swipeup_footer(None);

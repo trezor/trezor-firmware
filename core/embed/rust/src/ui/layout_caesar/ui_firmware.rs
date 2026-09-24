@@ -42,14 +42,14 @@ impl FirmwareUI for UICaesar {
         description: Option<TString<'static>>,
         _subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
-        _cancel: bool,
+        cancel: bool,
         verb_cancel: Option<TString<'static>>,
         hold: bool,
         _hold_danger: bool,
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = {
             let action = action.unwrap_or("".into());
@@ -70,10 +70,13 @@ impl FirmwareUI for UICaesar {
         content_in_button_page(
             title,
             paragraphs,
-            verb.unwrap_or(TString::empty()),
-            verb_cancel,
+            // A caller that names no verb still wants the screen answerable.
+            verb.unwrap_or(TR::buttons__confirm.into()),
+            // This model draws a cancel button only for a label; `""` is its
+            // icon. Core's own layouts pass the label, or turn `cancel` off.
+            verb_cancel.or(cancel.then(TString::empty)),
             hold,
-            false,
+            external_menu,
         )
     }
 
@@ -150,10 +153,10 @@ impl FirmwareUI for UICaesar {
         chunkify: bool,
         _page_counter: bool,
         _prompt_screen: bool,
-        _cancel: bool,
+        cancel: bool,
         _back_button: bool,
         _footer: Option<(TString<'static>, bool)>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
@@ -176,9 +179,11 @@ impl FirmwareUI for UICaesar {
             title,
             paragraphs,
             verb.unwrap_or(TR::buttons__confirm.into()),
-            verb_cancel,
+            // This model draws a cancel button only for a label; `""` is its
+            // icon.
+            verb_cancel.or(cancel.then(TString::empty)),
             hold,
-            false,
+            external_menu,
         )
     }
 

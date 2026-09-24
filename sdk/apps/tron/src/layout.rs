@@ -10,8 +10,8 @@ use primitive_types::U256;
 use trezor_app_sdk::{
     Error, Result, ResultExt,
     modui::{
-        self, ConfirmAction, ConfirmData, ConfirmProperties, ConfirmSummary, ConfirmValue,
-        ExtraItem, Footer, Property, Severity, ShowNotice, ValueKind,
+        self, Commitment, ConfirmAction, ConfirmData, ConfirmProperties, ConfirmSummary,
+        ConfirmValue, ExtraItem, Footer, Property, Severity, ShowNotice, ValueKind,
     },
 };
 
@@ -31,6 +31,7 @@ pub(crate) fn confirm_message_hash(hash: &[u8]) -> Result<()> {
         None,
         None,
         None,
+        Commitment::Step,
         "tron/message_hash",
         &[],
     ))
@@ -64,6 +65,7 @@ pub(crate) fn confirm_typed_data_final() -> Result<()> {
         tr!("ethereum__sign_eip712"),
         None,
         None,
+        Commitment::Final,
         "tron/typed_data",
         &[],
         true,
@@ -81,6 +83,7 @@ pub(crate) fn confirm_empty_typed_message() -> Result<()> {
         None,
         Some(tr!("ethereum__no_message_field")),
         None,
+        Commitment::Step,
         "tron/message",
         &[],
     ))
@@ -120,6 +123,7 @@ pub fn confirm_note(note: &str) -> Result<()> {
         None,
         None,
         None,
+        Commitment::Step,
         "tron/note",
         &[],
     ))
@@ -142,6 +146,7 @@ pub fn confirm_freeze_operations(
         None,
         None,
         None,
+        Commitment::Step,
         "tron/freeze/owner",
         &[],
     ))
@@ -163,6 +168,7 @@ pub fn confirm_freeze_operations(
             Property::new(tr!("words__resource"), resource, false),
         ],
         None,
+        Commitment::Final,
         "tron/freeze",
         &[],
         false,
@@ -189,6 +195,7 @@ pub fn confirm_claim(
             None,
             Some(tr!("tron__owner_address")),
             Some(Footer::Warning(tr!("address__warning_not_yours"))),
+            Commitment::Step,
             "tron/claim/owner",
             &[],
         ))
@@ -240,6 +247,7 @@ pub fn confirm_tron_claim(
         intro_question,
         None,
         None,
+        Commitment::Final,
         "tron/claim",
         extras,
         true,
@@ -300,6 +308,7 @@ fn confirm_tron_send(
         Some(tr!("words__recipient")),
         None,
         Some(Footer::Hint(tr!("address__check_with_source"))),
+        Commitment::Step,
         "tron/send",
         &extras,
     ))
@@ -324,6 +333,7 @@ pub fn confirm_tron_transfer(
         Some(tr!("words__recipient")),
         None,
         None,
+        Commitment::Step,
         "tron/transfer",
         &[],
     ))
@@ -338,6 +348,7 @@ pub fn confirm_tron_transfer(
             Property::new(tr!("words__chain"), "Tron", true),
         ],
         None,
+        Commitment::Step,
         "tron/transfer/amount",
         &[],
         false,
@@ -385,6 +396,7 @@ fn confirm_tron_approve(
         action_subtitle,
         None,
         None,
+        Commitment::Step,
         "tron/approve",
         &[],
         true,
@@ -400,6 +412,7 @@ fn confirm_tron_approve(
         Some(value_subtitle),
         None,
         None,
+        Commitment::Step,
         "tron/approve/spender",
         &[],
     ))
@@ -414,6 +427,7 @@ fn confirm_tron_approve(
             Property::new(tr!("words__chain"), "Tron", true),
         ],
         None,
+        Commitment::Step,
         "tron/approve/amount",
         &[],
         false,
@@ -439,6 +453,7 @@ pub fn confirm_tron_voting<'a>(items: &[Property<'a>]) -> Result<()> {
         tr!("words__review"),
         items,
         Some(tr!("words__voting")),
+        Commitment::Final,
         "tron/vote",
         &[],
         false,
@@ -482,6 +497,7 @@ pub fn confirm_unknown_smart_contract(
         None,
         None,
         None,
+        Commitment::Step,
         "tron/contract",
         &[],
     ))

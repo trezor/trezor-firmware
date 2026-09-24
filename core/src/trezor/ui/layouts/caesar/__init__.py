@@ -82,6 +82,8 @@ async def confirm_action(
         subtitle=subtitle,
         verb=verb,
         verb_cancel=verb_cancel,
+        # This model's cancel button is its label: no label, no cancel.
+        cancel=verb_cancel is not None,
         hold=hold,
         reverse=reverse,
     ) as layout:
