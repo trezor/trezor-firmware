@@ -70,22 +70,27 @@ message WardLeafAck {
     // WM and its next sync will be REFUSED as a rollback: fail-closed, and recoverable by
     // publishing, which is the right way round compared with silently losing the write.
     optional uint32 counter = 4;
-    optional bytes  mac     = 5;  // mac over (new root, counter); the WM signs it blind
 
-    // Authorises THIS transition: HMAC(K_auth, tag || ward_id || from_counter ||
+    // 5 was `mac`: HMAC(K_mac, ...) over (counter, new_root), the value the WM stored and
+    // attested. K_mac is gone -- the WM now holds `(counter, root)` in the clear, so the pair
+    // the host publishes is the counter above and the root it already derived. Reserved rather
+    // than reused, so a stale host's field 5 cannot be read as something else.
+    reserved 5;
+
+    // Authorises THIS transition: HMAC(K_auth, len8(tag) || tag || ward_id || from_counter ||
     // from_root || to_counter || to_root). The host stores it with the link -- it knows
     // both endpoints, having held the tree before and after -- so that another device of
     // this wallet can later verify the step without having witnessed it.
+    //
+    // THE ONLY AUTHENTICATOR LEFT, and therefore the only thing standing between a wallet and a
+    // WM that names a state it invented. Descent is proved by folding these; an attestation on
+    // its own now proves freshness and nothing more.
     optional bytes auth_commit = 6;
 
-    // Ed25519 over exactly the bytes auth_commit MACs, under K_sig, verifiable against
-    // ward_id (which IS that key's public half). Complementary, not a replacement: the MAC
-    // is what another device of this wallet checks and remains the authority on
-    // 7 was `auth_sig`: Ed25519 under K_sig over the ROOT transition. Removed rather than
-    // kept. Nothing verified it -- not the firmware, not the mock WM -- and nothing safely
-    // could: the WM compare-and-swaps on (counter, mac), which a root-naming signature does
-    // not bind, so a host could have paired a genuine signature with any mac it liked. The
-    // WM-facing authorisation is `wm_sig` over mac heads; see cas.transition_preimage.
+    // 7 was `auth_sig`: Ed25519 under K_sig over the ROOT transition. Removed rather than kept,
+    // because nothing verified it -- not the firmware, not the mock WM. The WM-facing
+    // authorisation is `wm_sig`, which covers exactly the bytes `auth_commit` MACs and names the
+    // same two roots the WM compare-and-swaps and attests; see cas.transition_preimage.
     reserved 7;
 
     // 8 and 9 were `queued` and `remaining`, which only ever applied to the OFFLINE QUEUE.
@@ -115,7 +120,7 @@ message WardFlushQueueAck {
     // The state this publication claimed, as on WardLeafAck: the device derived the new root and
     // stamped the next counter, and the host must publish the pair to the WM.
     optional uint32 counter = 4;
-    optional bytes  mac     = 5;  // mac over (new root, counter); the WM signs it blind
+    reserved 5;                      // was `mac`; see WardLeafAck
 
     optional bytes auth_commit = 6;  // authorises this transition; see WardLeafAck.auth_commit
     reserved 7;                      // was auth_sig; see WardLeafAck
@@ -159,11 +164,11 @@ message WardFlushQueueAck {
 message WardVerifyChain {
     reserved 1;  // was `repeated WardChainLink links`; the device pulls them one ack at a time
 
-    // THE ANCHOR'S ROOT. The device holds only a `mac` for the attested head -- the WM is
-    // root-blind -- so the root has to come from here, and is accepted only because
-    // root_mac(K_mac, ward_id, counter, head_root) reproduces the mac that was attested. That
-    // binding is the same one WardReconcile rests on, and it admits exactly one root per
-    // attested (counter, mac). Absent means the empty tree.
+    // THE ARCHIVED ANCHOR'S DESTINATION ROOT, and ONLY that. On the live path the device takes
+    // the whole step straight out of this round's attestation, so supplying any anchor field
+    // here is REFUSED rather than ignored: a field that is load-bearing on one path and
+    // decorative on the other is how the two come to be confused. Absent means the empty tree.
+    // Required with the archive fields below, forbidden without them.
     optional bytes head_root = 5;
 
     // AN ARCHIVED ANCHOR, instead of the head attested in this round. These three are the
@@ -185,11 +190,12 @@ message WardVerifyChain {
     optional uint64 timestamp    = 3;
     optional bytes  wm_signature = 4;
 
-    // Which head the archive attests. Only the COUNTER is named: the device derives the mac
-    // itself as root_mac(K_mac, ward_id, anchor_counter, head_root), so a host cannot present a
-    // mac at all -- it can only fail to hold a signature over the one the device computed. That
-    // is also what binds head_root on this path, in place of the round's attested mac.
-    optional uint32 anchor_counter = 6;
+    // Which STEP the archive attests. The device verifies the signature over all four operands
+    // directly, so the host can only fail to hold one over the transition it is presenting. That
+    // is what admits these on this path, in place of the round's attestation on the live one.
+    optional uint32 anchor_counter      = 6;  // the `to` counter, paired with head_root
+    optional uint32 anchor_from_counter = 7;
+    optional bytes  anchor_from_root    = 8;  // absent means the empty tree
 }
 
 /**
@@ -244,17 +250,23 @@ message WardVerifyChainAck {
  * The SYNC ROUND: how a device learns which tree is current.
  *
  *   WardSync              device mints a nonce for this round
- *   WardIngestAttestation host delivers the WM's signed (counter, mac); device checks it
- *   WardReconcile         host supplies the root; device binds it to the attested mac
- *                         and adopts it
+ *   WardIngestAttestation host delivers the WM's signed (counter, root); device checks it
+ *   WardReconcile         host presents the link into that head; device folds it and adopts
  *
  * Three messages rather than one because the nonce must be minted BEFORE the host talks
  * to the WM -- that is what stops a host stockpiling signed anchors and replaying an old
  * one. The WM must sign a value it could not have known in advance.
  *
- * The WM is not trusted with contents. It signs a `mac` it cannot compute (see
- * WardIngestAttestation), so a malicious WM can only replay a state this wallet genuinely
- * reached, never invent one; the counter floor bounds which replays are accepted.
+ * WHAT THE WM IS AND IS NOT TRUSTED FOR. It is the authority on FRESHNESS and ORDERING: which of
+ * this wallet's states is current. It is not an authority on state at all -- it signs roots in
+ * the clear, so nothing in its signature stops it naming a root this wallet never held. What
+ * stops that mattering is that every adoption also folds an `auth_commit`, which needs K_auth,
+ * which the WM does not have: WardReconcile folds the one link into the attested head,
+ * WardVerifyChain walks the whole way back to a state the device already holds. The counter
+ * floor bounds it further, refusing anything below what this device has accepted.
+ *
+ * It used to be bounded more tightly -- it attested a MAC it could not compute, so it could only
+ * ever replay real history. That key is gone; descent replaces it.
  */
 
 /**
@@ -285,11 +297,12 @@ message WardSyncAck {
 }
 
 /**
- * Request: deliver the WM's attestation of the current (counter, mac).
+ * Request: deliver the WM's attestation of the current (counter, root).
  *
  * The device verifies an Ed25519 signature over
  *
- *   b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac
+ *   b"WARD ATTEST v1" || version(1B=4) || nonce || ward_id
+ *                   || from_counter(4B BE) || from_root || to_counter(4B BE) || to_root
  *                   || timestamp(8B BE)
  *
  * under the provisioned WM key, requires the nonce to be this round's, and requires BOTH
@@ -303,17 +316,37 @@ message WardSyncAck {
  * hostile WM, which simply lies about the time. The device has no clock and needs none --
  * this is a stored-value comparison, the same cost as the counter check.
  *
- * `mac` is HMAC(K_mac, ...) over the root; K_mac never leaves the device, so the WM signs
- * this without being able to produce it.
+ * IT NAMES THE STEP, not the head alone -- the same statement `auth_commit` MACs. A bare state
+ * left the PREDECESSOR for the host to choose among any links it held ending at the attested
+ * head, and two can coexist because a write and a revert may land on the same root at the same
+ * counter. Nothing was forgeable that way, but the device credited the wrong transition when
+ * settling queued writes. Naming the step removes the choice.
+ *
+ * The roots are in the clear. There used to be a keyed indirection -- HMAC(K_mac, ...) -- which
+ * kept the WM blind and bounded it to replaying states this wallet genuinely reached. Both are
+ * gone: a malicious WM can name a transition the wallet never took, and what refuses it is the
+ * link or the chain folded against this attestation afterwards, never the attestation itself.
  * @start
  * @next WardIngestAttestationAck
  * @next Failure
  */
 message WardIngestAttestation {
-    optional uint32 counter      = 1;  // the counter the WM claims is current
-    optional bytes  mac          = 2;  // 32B mac over the root at that counter
+    // 1 and 2 were `counter` and `root`, naming the head alone. Both ends travel now, under the
+    // from/to naming the rest of this file uses for a transition. Reserved rather than widened in
+    // place, so a stale host cannot have `counter` read as one end of a step it never meant.
+    reserved 1, 2;
+
     optional bytes  wm_signature = 3;  // 64B Ed25519 over the preimage above
-    optional uint64 timestamp    = 4;  // WM's clock, seconds; signed, and compared to t_last
+    optional uint64 timestamp    = 4;  // WM's clock, seconds; signed, never compared
+
+    optional uint32 to_counter   = 5;  // the head the WM claims is current...
+    optional bytes  to_root      = 6;  // ...absent means the empty tree
+    optional uint32 from_counter = 7;  // the head it advanced from; to_counter - 1
+    optional bytes  from_root    = 8;  // absent means the empty tree
+
+    // GENESIS ATTESTS ITSELF: at counter 0 nothing produced the head, so the two ends are equal
+    // and the empty tree stands on both. No real step has from == to, so the two cannot be
+    // confused -- see apps/ward/attest.attestation_preimage.
 }
 
 /**
@@ -325,20 +358,36 @@ message WardIngestAttestationAck {
 }
 
 /**
- * Request: supply the root, and adopt it.
+ * Request: adopt the attested head, presenting the link that produced it.
  *
- * The device recomputes the mac over this root at the attested counter and requires it to
- * equal what the WM signed. That is what binds the freshness authority's claim to actual
- * contents: the host cannot substitute a different tree, because it cannot produce a mac.
+ * THE HOST NO LONGER SUPPLIES THE ROOT. The WM attests `(counter, root)` in the clear, so the
+ * root arrives inside the signature the round already verified; there is nothing left for the
+ * host to name and nothing to bind it with. Field 1 carried that root and is reserved.
  *
- * An absent root means the empty tree, which has its own mac at each counter rather than
- * being unbound -- otherwise a WM could attest "empty" for any counter it liked.
+ * WHAT THE HOST SUPPLIES INSTEAD is the transition INTO the attested head:
+ * `(counter - 1, from_root) -> (counter, attested root)` with its `auth_commit`. That is what
+ * makes the attestation a statement about this wallet rather than about whatever the WM chose
+ * to sign -- only a holder of K_auth can mint one.
+ *
+ * STILL THE WEAKER OF THE TWO ADOPTION ROUTES. One link proves the step was authorised; it does
+ * not prove the predecessor was on the authoritative line, so a host holding a genuine link from
+ * an abandoned branch satisfies this. WardVerifyChain walks back to a state the device already
+ * holds and rules that out. Prefer it; this is for the one-step case.
+ *
+ * At counter 0 there is no transition to present: the three fields must be absent and the
+ * attested root must be the empty tree.
  * @start
  * @next WardReconcileAck
  * @next Failure
  */
 message WardReconcile {
-    optional bytes root = 1;  // 32B, or absent for the empty tree
+    reserved 1;     // was `root`; the attested root is the WM's, not the host's
+    reserved 2, 3;  // were `from_counter`/`from_root`; the attestation names the step now
+
+    // THE ONLY FIELD LEFT, and the only thing the host contributes to an adoption: a COMMIT or
+    // REVERT authorisation over the transition the WM attested. Both ends come from that
+    // signature, so there is nothing here for a host to choose.
+    optional bytes auth_commit = 4;
 }
 
 /**
@@ -393,8 +442,9 @@ message WardRollback {
     // a holder of this wallet's K_auth authorised the target; it does not say the target was
     // ever authoritative, so a host could present a link from an orphaned fork. These three are
     // the attestation the WM issued when the target was current, kept by the host and replayed
-    // here: the device checks the signature and that root_mac(to_counter, to_root) is the mac it
-    // names, which together say the WM actually held this state.
+    // here: the device checks the signature over ALL FOUR operands above -- the very transition
+    // `auth_commit` names -- which together say the WM actually took this step. An attestation
+    // that merely ended in the same place no longer satisfies it.
     //
     // A HOST THAT DID NOT ARCHIVE CANNOT ROLL BACK. That is a deliberate narrowing of an escape
     // hatch this message's own docstring once said should need no attestation -- the reasoning
@@ -415,7 +465,7 @@ message WardRollbackAck {
     optional bytes  new_root    = 2;  // absent if the wallet is now empty
     optional bytes  auth_commit = 3;  // a REVERT link, for the host to record
     reserved 4;                       // was auth_sig; see WardLeafAck
-    // The WM-facing authorisation for the demotion, under "WARD WM REVERT v1". A revert
+    // The WM-facing authorisation for the demotion, under "WARD WM REVERT v2". A revert
     // advances the head like any write -- forward, carrying an OLDER root -- so without its
     // own tag the WM cannot tell a demotion from an ordinary advance and cannot apply policy
     // to one. Same preimage shape as an ordinary wm_sig; only the tag differs.
@@ -430,9 +480,9 @@ message WardRollbackAck {
  * service against the owner. This is the way back.
  *
  * The device still requires a valid WM signature over this round's nonce, and still
- * requires the mac to match the root supplied afterwards -- so the state being adopted is
- * one this wallet genuinely reached. Only a device holding K_mac can produce a mac, so a
- * replayed (counter, mac) pair is proof of past presence, which is exactly the "root the
+ * requires the link folded afterwards to name it -- so the state being adopted is
+ * one this wallet genuinely reached. Only a device holding K_auth can produce that link, so a
+ * replayed attestation plus a genuine link is proof of past presence, which is exactly the "root the
  * Trezor holds its own prior signature for" that recovery is supposed to demand.
  *
  * What it cannot check is INTENT. Everything here is cryptographically genuine; the
@@ -445,10 +495,15 @@ message WardRollbackAck {
  * @next Failure
  */
 message WardRecoverCounter {
-    optional uint32 counter      = 1;
-    optional bytes  mac          = 2;
+    reserved 1, 2;                     // were `counter` and `root`; see WardIngestAttestation
+
     optional bytes  wm_signature = 3;
     optional uint64 timestamp    = 4;
+
+    optional uint32 to_counter   = 5;
+    optional bytes  to_root      = 6;  // absent means the empty tree
+    optional uint32 from_counter = 7;
+    optional bytes  from_root    = 8;  // absent means the empty tree
 }
 
 /**

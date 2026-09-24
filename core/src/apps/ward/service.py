@@ -544,9 +544,9 @@ async def fetch(entry_key: bytes, retry: bool = True) -> "WardEntryAck":
 #
 # CHAIN-ONLY, which REMOVES a weaker path rather than adding one. The daemon owns the replica and
 # its history, so it can always produce the links; there is no reason to accept a head on the WM's
-# word plus a mac when descent from this device's own head is available. The two guarantees are
+# word when descent from this device's own head is available. The two guarantees are
 # complementary -- the chain gives descent, the attestation gives currency -- and they are joined
-# by requiring the fold to end exactly at the attested counter with a root reproducing its mac.
+# by requiring the fold to end exactly at the attested counter, on the attested root.
 
 
 async def sync() -> None:
@@ -566,16 +566,11 @@ async def sync() -> None:
     from trezor.wire import DataError
 
     from . import round as sync_round
-    from .adopt import (
-        adopt,
-        require_attested_round,
-        verify_head_mac,
-        verify_round_attestation,
-    )
-    from .attest import NONCE_LENGTH, root_mac
+    from .adopt import adopt, require_attested_round, verify_round_attestation
+    from .attest import NONCE_LENGTH, root_or_empty
     from .cas import head_init_sig, verify_chain_step
     from .common import require_initialized
-    from .keys import derive_k_auth, derive_k_mac, derive_k_sig, derive_ward_id
+    from .keys import derive_k_auth, derive_k_sig, derive_ward_id
     from .root import get_counter, get_root
 
     require_initialized()
@@ -584,12 +579,10 @@ async def sync() -> None:
     counter = await get_counter()
     root = await get_root()
 
-    # The mac of the head the device ALREADY holds -- the opening head a WM that has never seen
-    # this wallet has nothing to compare against. It cannot compute one itself, holding no key of
-    # ours, so it has to be supplied and authorised or a wallet's first head is whatever the first
-    # speaker claims.
-    current_mac = root_mac(await derive_k_mac(), ward_id, counter, root)
-
+    # THE OPENING HEAD, for a WM that has never seen this wallet and so has nothing to compare
+    # against. It is `(counter, root)` -- the device's own, and the WM holds roots now, so there
+    # is nothing to derive. It still has to be AUTHORISED, or a wallet's first head is whatever
+    # the first speaker claims; that is `head_init_sig` below.
     nonce = random.bytes(NONCE_LENGTH)
     sync_round.begin(nonce)
 
@@ -599,30 +592,47 @@ async def sync() -> None:
             ward_id=ward_id,
             current_counter=counter,
             current_root=root,
-            current_mac=current_mac,
-            head_init_sig=head_init_sig(await derive_k_sig(), ward_id, current_mac),
+            head_init_sig=head_init_sig(
+                await derive_k_sig(), ward_id, counter, root
+            ),
         ),
         WardSyncResponse,
     )
 
     # Same verification as `ingest`, and deliberately the same code: the attestation must be
     # bound to THIS round's nonce, and nothing here adopts on the strength of it alone.
-    attested_counter, attested_mac = await verify_round_attestation(answer)
+    # THE DAEMON SERVES THE WHOLE STEP. The device's own head is a candidate predecessor but not
+    # the right one: the WM may be several transitions ahead, and the step it attests is the last
+    # of them. So the `from` end comes off the answer like the `to` end does.
+    (
+        attested_from_counter,
+        attested_from_root,
+        attested_counter,
+        attested_root,
+    ) = await verify_round_attestation(
+        answer.from_counter,
+        answer.from_root or None,
+        answer.to_counter,
+        answer.to_root or None,
+        answer.timestamp or 0,
+        answer.wm_signature,
+    )
     if attested_counter < counter:
         # Anti-rollback. A malicious WM cannot forge a mac, so its entire remaining freedom is to
         # replay a state this wallet genuinely reached; this is what bounds which ones. Equality
         # is fine -- re-reading the same head is a no-op.
         raise DataError("attested counter is older than the stored counter")
-    sync_round.set_attested(attested_counter, attested_mac)
+    sync_round.set_attested(
+        attested_from_counter, attested_from_root, attested_counter, attested_root
+    )
 
-    attested_counter, attested_mac = require_attested_round("sync")
+    _fc, _fr, attested_counter, attested_root = require_attested_round("sync")
 
     # THE BASELINE IS THE DEVICE'S OWN HEAD, never one the answer names. A backend-chosen starting
     # point would let the walk begin at a state this device never reached.
     running_counter = counter
     running_root = root
     k_auth = await derive_k_auth()
-    k_mac = await derive_k_mac()
     crossed = []
     # Counted, not just accepted. A history containing demotions means changes this device once
     # saw as committed have been undone, and a catch-up that cannot say so has lost the one thing
@@ -631,7 +641,6 @@ async def sync() -> None:
     for link in answer.links:
         running_counter, running_root, reverted = verify_chain_step(
             k_auth,
-            k_mac,
             ward_id,
             running_counter,
             running_root,
@@ -654,7 +663,11 @@ async def sync() -> None:
     if running_counter != attested_counter:
         raise DataError("chain does not end at the attested counter")
 
-    await verify_head_mac(attested_counter, attested_mac, running_root, subject="chain end")
+    # AND ON THE ATTESTED ROOT. The counter alone would let the fold arrive at some other state
+    # sitting at the same number -- which is precisely a fork. Compared in preimage form, since
+    # an empty tree is EMPTY_ROOT inside the attestation and None here.
+    if root_or_empty(running_root) != attested_root:
+        raise DataError("chain end does not match the attested root")
 
     # The shared tail -- settle, persist, latch, close. The crossed commitments are passed so
     # settlement is exact: a claim landed when its OWN authorisation is among them, which is not
@@ -780,18 +793,11 @@ async def publish(
 
     from . import round as sync_round
     from .adopt import adopt, verify_round_attestation
-    from .attest import NONCE_LENGTH, root_mac
+    from .attest import NONCE_LENGTH
     from .cas import wm_sig
-    from .keys import derive_k_mac, derive_k_sig, derive_ward_id
+    from .keys import derive_k_sig, derive_ward_id
 
     ward_id = await derive_ward_id()
-    k_mac = await derive_k_mac()
-
-    # COMPUTED HERE, from the device's own key: `to_mac` is the value the attestation below is
-    # required to name, and a mac passed in by the caller would be a mac the check merely echoes.
-    # The FROM head is not computed here any more -- `wm_sig` takes roots and derives both, so
-    # `transition_macs` stays the one place a counter is paired with a root.
-    to_mac = root_mac(k_mac, ward_id, counter, new_root)
 
     nonce = random.bytes(NONCE_LENGTH)
     sync_round.begin(nonce)
@@ -803,14 +809,14 @@ async def publish(
             identity=identity,
             content=content,
             counter=counter,
-            mac=to_mac,
+            from_root=from_root,
+            new_root=new_root,
             auth_commit=step,
-            # OVER MAC HEADS, never roots: it is what the WM stores, and it is all the WM is ever
-            # shown. The device authorises the advance without the freshness authority learning
-            # anything about the tree.
+            # OVER THE SAME BYTES `auth_commit` MACs, differing only in tag, key and algorithm.
+            # The WM compare-and-swaps on `from_root` and attests `new_root`, and both are inside
+            # what it verifies -- so a host cannot pair this signature with operands of its own.
             wm_sig=wm_sig(
                 await derive_k_sig(),
-                k_mac,
                 ward_id,
                 counter - 1,
                 from_root,
@@ -827,17 +833,28 @@ async def publish(
     if answer.MESSAGE_WIRE_TYPE == WardPublishConflict.MESSAGE_WIRE_TYPE:
         raise DataError("WARD: another writer moved the head first; retry")
 
-    # The nonce binding, checked by the same code the sync route uses. What it does NOT check is
-    # which head was attested -- that is the next two lines, and it is the whole strength of this
-    # route.
-    attested_counter, attested_mac = await verify_round_attestation(answer)
-    if attested_counter != counter or attested_mac != to_mac:
-        # The WM vouched for something, but not for this. No `require_attested_round` here and no
-        # intermediate ATTESTED state: that machinery exists so a route which establishes its root
-        # SEPARATELY can be joined to an attestation across a host turn, and this route has neither
-        # a separate root nor a turn to cross -- the counter and mac are the device's own and are
-        # compared directly, which is stricter than anything the state could add.
-        raise DataError("the attestation does not name the head this device published")
+    # EVERY OPERAND IS THE DEVICE'S OWN, and that is now the whole check rather than the prelude
+    # to one. The transition being attested is the one this handler just built, so both ends come
+    # from local scope and the signature is verified against THEM -- a WM that attested some other
+    # head fails here as "verification failed", because the bytes it signed are not the bytes the
+    # device just reconstructed.
+    #
+    # There used to be a comparison after this call, back when the attested counter and root
+    # arrived on the wire and could disagree with what was published. Feeding the device's own
+    # values in makes that comparison vacuous -- it can no longer fail -- so it is gone rather
+    # than left standing as a check that reads like one and is not.
+    #
+    # No `require_attested_round` and no intermediate ATTESTED state: that machinery exists so a
+    # route which establishes its root SEPARATELY can be joined to an attestation across a host
+    # turn, and this route has neither a separate root nor a turn to cross.
+    await verify_round_attestation(
+        counter - 1,
+        from_root,
+        counter,
+        new_root,
+        answer.timestamp or 0,
+        answer.wm_signature,
+    )
 
     # Settle, then a checked `set_root`, then latch, then close -- see `adopt`. The crossed
     # commitment is this transition's own, so a queued change is settled by ITS authorisation

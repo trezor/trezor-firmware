@@ -29,7 +29,6 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from .attest import root_mac
     from .cas import auth_commit
     from .common import (
         WARNING_UNVERIFIED,
@@ -43,7 +42,6 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
         derive_k_auth,
         derive_k_data,
         derive_k_ident,
-        derive_k_mac,
         derive_ward_id,
         entry_key_for,
     )
@@ -127,7 +125,6 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
     content = make_leaf_content(val_part)
     step = auth_commit(
         await derive_k_auth(),
-        await derive_k_mac(),
         await derive_ward_id(),
         counter - 1,
         from_root,
@@ -154,6 +151,5 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
         identity=identity,
         content=content,
         counter=counter,
-        mac=root_mac(await derive_k_mac(), await derive_ward_id(), counter, new_root),
         auth_commit=step,
     )

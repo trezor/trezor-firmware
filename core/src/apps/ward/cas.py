@@ -1,15 +1,34 @@
-"""CAS: authorising a transition from one root to the next.
+"""CAS: authorising a transition from one root to the next. The ONLY authority in WARD.
 
 Every write moves the tree from `(from_counter, from_root)` to `(to_counter, to_root)`.
 This authenticates that step:
 
-    preimage = tag || ward_id || from_counter(4B BE) || from_root(32B)
-                              || to_counter(4B BE)   || to_root(32B)
+    preimage   = len8(tag) || tag || ward_id || from_counter(4B BE) || from_root(32B)
+                                             || to_counter(4B BE)   || to_root(32B)
     AuthCommit = HMAC-SHA256(K_auth, preimage)
 
-with `tag` = b"WARD COMMIT v1" for an ordinary write and b"WARD REVERT v1" for a
-one-step rollback. Roots appear in their preimage form, so an empty tree is the
-`EMPTY_ROOT` stand-in rather than an absent field.
+with `tag` = b"WARD COMMIT v3" for an ordinary write and b"WARD REVERT v3" for a
+rollback. Roots appear in their preimage form, so an empty tree is the `EMPTY_ROOT`
+stand-in rather than an absent field.
+
+THIS IS THE ONLY KEYED CONSTRUCTION LEFT. There used to be a second, `root_mac` under a separate
+K_mac: a commitment to `(counter, root)` that the WM stored, compare-and-swapped on and attested,
+and that the transition preimage named in place of the roots themselves. Its purpose was to keep
+the WM blind to roots and to make a head unforgeable by the WM. It is gone, and the WM now holds
+`(counter, root)` in the clear.
+
+WHAT THAT COSTS, STATED PLAINLY RATHER THAN QUIETLY DROPPED. The WM sees the root sequence, and
+roots are content-addressed, so it can watch a wallet return to a state it held before. And it
+can now NAME A STATE THIS WALLET NEVER REACHED: it could not compute a mac, but it can certainly
+attest a root it invented. A malicious WM used to be bounded to replaying genuine history; it is
+no longer.
+
+WHAT CATCHES THAT INSTEAD, AND WHY IT IS ENOUGH. Descent. `verify_chain` anchors on the attested
+head and walks authorised links BACK to the device's own, so an invented root has no chain into
+it -- forging one needs K_auth, which the WM does not have. A WM's attestation is therefore a
+claim about FRESHNESS and ordering only, and the chain is what makes it a claim about state. The
+weaker route, `reconcile`, folds a single link for the same reason rather than taking the root on
+the WM's word: see the note there about what one link does and does not prove.
 
 WHY A MAC AND NOT A SIGNATURE. K_auth is seed-derived, so every device of a wallet holds
 it -- which is exactly the set of parties that need to verify a transition. Another
@@ -22,8 +41,8 @@ with the Ed25519 path switched off.
 THAT NON-SEED-HOLDER NOW EXISTS: a WM that arbitrates ordering has to be able to tell a real
 device's write from anyone else's, or whoever knows `ward_id` could advance the counter and have
 every genuine device refused thereafter. Its authorisation is at the bottom of this file, and it
-does NOT reuse the bytes above -- it binds MAC HEADS, which is what a WM stores, so the WM is
-never sent a root it has no business holding.
+covers EXACTLY THE BYTES ABOVE -- the same statement, made to a verifier holding a different
+secret. The WM is therefore sent the two roots, and sees them.
 
 WHAT A CHAIN OF THESE PROVES, AND WHAT IT DOES NOT. Folding links from a trusted baseline
 to a claimed head shows each step was authorised by a device holding the seed, that the
@@ -38,27 +57,27 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     pass
 
-TAG_COMMIT = b"WARD COMMIT v2"  # v2: the preimage now names mac heads, not roots
-TAG_REVERT = b"WARD REVERT v2"  # v2: as TAG_COMMIT
+TAG_COMMIT = b"WARD COMMIT v3"  # v3: the preimage names ROOTS again; K_mac is gone
+TAG_REVERT = b"WARD REVERT v3"  # v3: as TAG_COMMIT
 
 # The WM's own authorisation. Same preimage as `auth_commit` -- see `transition_preimage`.
-TAG_WM_HEAD = b"WARD WM COMMIT v1"
-TAG_WM_INIT = b"WARD WM INIT v1"
+TAG_WM_HEAD = b"WARD WM COMMIT v2"  # v2: roots, as TAG_COMMIT
+TAG_WM_INIT = b"WARD WM INIT v2"  # v2: its own preimage now; see `head_init_sig`
 # A revert advances the WM head like any write -- forward, carrying an OLDER root -- so the WM
 # could not otherwise tell one from an ordinary advance. The tag does not add replay protection
 # (the destination mac already binds uniquely to that (counter, root) pair); it exists so a WM
 # can apply policy to demotions -- rate-limit them, alert on them -- rather than having the wire
 # decide for it. Mirrors TAG_COMMIT/TAG_REVERT one layer down.
-TAG_WM_REVERT = b"WARD WM REVERT v1"
+TAG_WM_REVERT = b"WARD WM REVERT v2"
 
 
 def transition_preimage(
     tag: bytes,
     ward_id: bytes,
     from_counter: int,
-    from_mac: bytes,
+    from_root: "bytes | None",
     to_counter: int,
-    to_mac: bytes,
+    to_root: "bytes | None",
 ) -> bytes:
     """The bytes a transition is authorised over -- ONE builder for both authenticators.
 
@@ -66,33 +85,31 @@ def transition_preimage(
     lifted out of its place in the history and replayed after a different predecessor, which is
     the whole point of a chain.
 
-    THE ENDPOINTS ARE MAC HEADS, NOT ROOTS, and that is the single decision this module turns on.
-    `auth_commit` (HMAC under K_auth, checked by another device) and `wm_sig` (Ed25519 under
-    K_sig, checked by the WM) now cover IDENTICAL bytes and differ only in tag, key and
-    algorithm -- the same statement made to two verifiers who hold different secrets. They used
-    to cover different operands, which made a single builder impossible and invited the question
-    of whether one of them was redundant. It is not; see below.
+    THE ENDPOINTS ARE ROOTS. `auth_commit` (HMAC under K_auth, checked by another device) and
+    `wm_sig` (Ed25519 under K_sig, checked by the WM) cover IDENTICAL bytes and differ only in
+    tag, key and algorithm -- the same statement made to two verifiers who hold different
+    secrets. They are not redundant: the verifier sets are disjoint, and neither party can check
+    the other's authenticator. See the WM section at the bottom of this file.
 
-    WHY MACS AND NOT ROOTS. `mac = root_mac(K_mac, ward_id, counter, root)` is a deterministic
-    commitment to the root under a key only the device family holds, so binding the mac binds the
-    root transitively and loses nothing. What it buys is two properties a root-based preimage
-    cannot have:
+    THE ENDPOINTS USED TO BE MAC HEADS, under a second key K_mac, so that a WM verifying a
+    `wm_sig` never had to be shown a root. That indirection is gone -- see the module docstring
+    for what it cost and what carries the weight instead. The consequence here is the one that
+    matters for this function: the WM compare-and-swaps on `from_root` and attests `to_root`,
+    and BOTH ARE INSIDE THE BYTES IT VERIFIES. Were the signature to name anything the WM does
+    not itself hold, a host could pair a genuine signature with an operand of its choosing and
+    strand the wallet at a head no device will accept.
 
-      THE WM STAYS ROOT-BLIND. Roots are content-addressed and therefore REPEAT whenever content
-      repeats -- change a label and change it back and the root returns. A WM accumulating roots
-      could see a wallet return to a state it had seen before, and fingerprint its activity. It
-      is trusted for freshness and ordering, and for nothing else.
-
-      A MALICIOUS WM CANNOT FABRICATE A STATE, only replay one. It cannot compute a mac, so the
-      worst it can attest is a `(counter, mac)` pair this wallet genuinely reached; the counter
-      floor then bounds which replays land. Were the WM to hold roots instead, `reconcile` -- whose
-      entire binding is `root_mac(root) == attested mac` -- would have nothing left to check, and
-      a WM colluding with the host could substitute a wholly fabricated tree. That is the property
-      the mac layer exists for, and it is worth more than the symmetry of signing roots directly.
+    AN ABSENT ROOT IS THE EMPTY TREE and encodes as `EMPTY_ROOT`, a real 32-byte value. This
+    normalisation used to happen one layer down in `root_mac`; with that layer gone it belongs
+    here, and it is what keeps the preimage fixed-width when the tree is empty at either end.
     """
     from trezor.wire import DataError
 
-    if len(ward_id) != 32 or len(from_mac) != 32 or len(to_mac) != 32:
+    from .attest import root_or_empty
+
+    from_root = root_or_empty(from_root)
+    to_root = root_or_empty(to_root)
+    if len(ward_id) != 32 or len(from_root) != 32 or len(to_root) != 32:
         raise DataError("WARD: transition operands must be 32 bytes")
 
     # THE TAG IS LENGTH-PREFIXED. Concatenating variable-length fields leaves the boundary
@@ -104,37 +121,14 @@ def transition_preimage(
         + tag
         + ward_id
         + from_counter.to_bytes(4, "big")
-        + from_mac
+        + from_root
         + to_counter.to_bytes(4, "big")
-        + to_mac
-    )
-
-
-def transition_macs(
-    k_mac: bytes,
-    ward_id: bytes,
-    from_counter: int,
-    from_root: bytes | None,
-    to_counter: int,
-    to_root: bytes | None,
-) -> "tuple[bytes, bytes]":
-    """The two mac heads a root transition authorises over.
-
-    Callers hold ROOTS -- that is what a trie operation produces -- so the conversion lives here
-    rather than at each of them. One derivation point means a call site cannot pair a transition
-    with the wrong mac, which is the mistake a mac-taking API would invite.
-    """
-    from .attest import root_mac
-
-    return (
-        root_mac(k_mac, ward_id, from_counter, from_root),
-        root_mac(k_mac, ward_id, to_counter, to_root),
+        + to_root
     )
 
 
 def auth_commit(
     k_auth: bytes,
-    k_mac: bytes,
     ward_id: bytes,
     from_counter: int,
     from_root: bytes | None,
@@ -144,23 +138,22 @@ def auth_commit(
 ) -> bytes:
     """Authorise a transition. Only a device holding the seed can produce this.
 
-    Takes ROOTS and derives the macs, so every caller states what it actually did.
+    Takes ROOTS, which is what a trie operation produces, so every caller states what it actually
+    did. There is no longer a conversion step between what a caller holds and what gets signed --
+    `transition_macs` was that step, and deleting it deletes the only place in the subsystem where
+    a counter could be paired with the wrong root.
     """
     from trezor.crypto import hmac
 
-    from_mac, to_mac = transition_macs(
-        k_mac, ward_id, from_counter, from_root, to_counter, to_root
-    )
     return hmac(
         hmac.SHA256,
         k_auth,
-        transition_preimage(tag, ward_id, from_counter, from_mac, to_counter, to_mac),
+        transition_preimage(tag, ward_id, from_counter, from_root, to_counter, to_root),
     ).digest()
 
 
 def verify_auth_commit(
     k_auth: bytes,
-    k_mac: bytes,
     ward_id: bytes,
     from_counter: int,
     from_root: bytes | None,
@@ -171,7 +164,7 @@ def verify_auth_commit(
 ) -> bool:
     """Was this exact transition authorised by a holder of this wallet's K_auth?"""
     expected = auth_commit(
-        k_auth, k_mac, ward_id, from_counter, from_root, to_counter, to_root, tag
+        k_auth, ward_id, from_counter, from_root, to_counter, to_root, tag
     )
     # Length-independent comparison is not needed -- both sides are locally computed and
     # the attacker learns nothing from timing here -- but equality on bytes is constant
@@ -181,7 +174,6 @@ def verify_auth_commit(
 
 def verify_chain_step(
     k_auth: bytes,
-    k_mac: bytes,
     ward_id: bytes,
     running_counter: int,
     running_root: bytes | None,
@@ -227,12 +219,11 @@ def verify_chain_step(
     # carry that distinction was discarded the moment it was checked. Reporting it does not
     # make the step more or less acceptable; it stops the fact being lost.
     if verify_auth_commit(
-        k_auth, k_mac, ward_id, from_counter, from_root, to_counter, to_root, mac
+        k_auth, ward_id, from_counter, from_root, to_counter, to_root, mac
     ):
         return to_counter, to_root, False
     if verify_auth_commit(
         k_auth,
-        k_mac,
         ward_id,
         from_counter,
         from_root,
@@ -247,7 +238,6 @@ def verify_chain_step(
 
 def verify_chain_step_back(
     k_auth: bytes,
-    k_mac: bytes,
     ward_id: bytes,
     running_counter: int,
     running_root: "bytes | None",
@@ -292,12 +282,11 @@ def verify_chain_step_back(
     # Either tag, for the reason given above `verify_chain_step`: a demotion is a real transition
     # and a history containing one must still be walkable. Reported, not swallowed.
     if verify_auth_commit(
-        k_auth, k_mac, ward_id, from_counter, from_root, to_counter, to_root, mac
+        k_auth, ward_id, from_counter, from_root, to_counter, to_root, mac
     ):
         return from_counter, from_root, False
     if verify_auth_commit(
         k_auth,
-        k_mac,
         ward_id,
         from_counter,
         from_root,
@@ -431,8 +420,8 @@ def verify_intent_mac(
 
 # --- the WM's authorisation -------------------------------------------------------------
 #
-# A SECOND AUTHENTICATOR, FOR A DIFFERENT VERIFIER, OVER THE SAME OPERANDS. `auth_commit` above is
-# checked by another DEVICE of this wallet; these are checked by the WM. Both now cover exactly
+# A SECOND AUTHENTICATOR, FOR A DIFFERENT VERIFIER, OVER THE SAME BYTES. `auth_commit` above is
+# checked by another DEVICE of this wallet; these are checked by the WM. Both cover exactly
 # `transition_preimage` -- the same statement, made to two verifiers holding different secrets --
 # and differ only in tag, key and algorithm.
 #
@@ -447,16 +436,16 @@ def verify_intent_mac(
 # oracle. `ward_id` IS the K_sig public key, so the WM verifies with the identifier it already
 # keys by; there is no enrolment step and no second value to keep in step.
 #
-# An earlier design had a third, `sig_commit`/`auth_sig`: Ed25519 under K_sig over the ROOT
-# transition. It was removed rather than kept alongside. It named roots, so verifying it would
-# have required sending the WM roots it does not store -- and worse, the WM compare-and-swaps on
-# `(counter, mac)`, which a root-naming signature does not bind, so a host could have paired a
-# genuine signature with any mac it liked. Nothing verified it in firmware or in the mock WM.
+# EVERY OPERAND THE WM ACTS ON IS INSIDE THESE BYTES, and that is load-bearing rather than tidy.
+# It compare-and-swaps on `(from_counter, from_root)` and attests `(to_counter, to_root)`; all
+# four are signed. An earlier shape had the signature name mac heads while the WM stored
+# something else, and a shape where the two diverge lets a host pair a genuine signature with an
+# operand of its own choosing -- which cannot forge state, but can strand the wallet at a head no
+# device will ever accept. Keep them the same set.
 
 
 def wm_sig(
     k_sig: bytes,
-    k_mac: bytes,
     ward_id: bytes,
     from_counter: int,
     from_root: bytes | None,
@@ -470,33 +459,23 @@ def wm_sig(
     (TAG_WM_REVERT). Both move the head forward by one counter, so the WM cannot tell them apart
     from the operands -- see TAG_WM_REVERT.
 
-    TAKES ROOTS, LIKE `auth_commit`, THOUGH THE WM VERIFIES FROM MACS. The asymmetry is the
-    design stating itself: the signer holds roots, and the verifier only ever holds macs. Keeping
-    it means `transition_macs` is the ONE place in the codebase where a counter meets a root, so
-    a caller cannot pair counter N with the mac of counter N-1 -- a drift that would be invisible
-    in review and fatal in a revert, where the whole point is that an old root is being re-dated
-    to a new counter.
-
     Not a generic signing API: the preimage is built here from typed arguments, so this can never
     be pointed at bytes a caller chose.
     """
     from trezor.crypto.curve import ed25519
 
-    from_mac, to_mac = transition_macs(
-        k_mac, ward_id, from_counter, from_root, to_counter, to_root
-    )
     return ed25519.sign(
         k_sig,
-        transition_preimage(tag, ward_id, from_counter, from_mac, to_counter, to_mac),
+        transition_preimage(tag, ward_id, from_counter, from_root, to_counter, to_root),
     )
 
 
 def verify_wm_sig(
     ward_id: bytes,
     from_counter: int,
-    from_mac: bytes,
+    from_root: bytes | None,
     to_counter: int,
-    to_mac: bytes,
+    to_root: bytes | None,
     signature: bytes,
     tag: bytes = TAG_WM_HEAD,
 ) -> bool:
@@ -516,31 +495,41 @@ def verify_wm_sig(
         return ed25519.verify(
             ward_id,
             signature,
-            transition_preimage(tag, ward_id, from_counter, from_mac, to_counter, to_mac),
+            transition_preimage(
+                tag, ward_id, from_counter, from_root, to_counter, to_root
+            ),
         )
     except Exception:
         return False
 
 
-def head_init_sig(k_sig: bytes, ward_id: bytes, current_mac: bytes) -> bytes:
+def head_init_sig(
+    k_sig: bytes, ward_id: bytes, counter: int, root: bytes | None
+) -> bytes:
     """Authorise the FIRST head the WM ever holds for this wallet.
 
     A compare-and-swap needs something to compare against, and a WM that has never seen this
-    wallet has nothing -- it cannot compute a mac, having no key of ours, so the first head has to
-    be supplied by the device and authenticated or it would be a value anyone could set.
+    wallet has nothing. The first head therefore has to be supplied by the device and
+    authenticated, or it would be a value anyone who knows `ward_id` could set.
 
-    Separate from `wm_sig` rather than a transition from a zero head: there is no predecessor to
-    name, and inventing one would give a genuine-looking authorisation for a transition that never
-    happened. Its own tag, so it can never be replayed as an advance.
+    A SELF-TRANSITION, `(counter, root) -> (counter, root)`, under its own tag. Separate from
+    `wm_sig` rather than an advance from a zero head: there is no predecessor to name, and
+    inventing one would give a genuine-looking authorisation for a transition that never
+    happened. The tag is what stops these bytes being replayed as an advance; `from == to` would
+    also give it away, but relying on that is relying on an accident of the operands rather than
+    on domain separation.
     """
     from trezor.crypto.curve import ed25519
 
     return ed25519.sign(
-        k_sig, transition_preimage(TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac)
+        k_sig,
+        transition_preimage(TAG_WM_INIT, ward_id, counter, root, counter, root),
     )
 
 
-def verify_head_init_sig(ward_id: bytes, current_mac: bytes, signature: bytes) -> bool:
+def verify_head_init_sig(
+    ward_id: bytes, counter: int, root: bytes | None, signature: bytes
+) -> bool:
     """What the WM checks before adopting a wallet it has never seen."""
     from trezor.crypto.curve import ed25519
 
@@ -550,9 +539,7 @@ def verify_head_init_sig(ward_id: bytes, current_mac: bytes, signature: bytes) -
         return ed25519.verify(
             ward_id,
             signature,
-            transition_preimage(
-                TAG_WM_INIT, ward_id, 0, current_mac, 0, current_mac
-            ),
+            transition_preimage(TAG_WM_INIT, ward_id, counter, root, counter, root),
         )
     except Exception:
         return False

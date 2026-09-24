@@ -6,12 +6,11 @@ FOUR HANDLERS TOUCH THE SYNC ROUND, in two pairs, and each pair duplicated a seq
                                opposite counter rules to it -- forward-only for the ordinary path,
                                backwards-only for the recovery one.
 
-    reconcile / verify_chain    bind a root to the attested mac, settle queued writes against it,
-                               persist it, and latch the session online. They differ ONLY in how
-                               they establish the root: reconcile takes the host's and checks the
-                               mac; verify_chain anchors at the attested head and walks authorised
-                               links BACK to the device's own, so the root it adopts is the
-                               anchor's and the walk proves the device descends to it.
+    reconcile / verify_chain    take the attested root, settle queued writes against it, persist
+                               it, and latch the session online. They differ ONLY in how much of
+                               the history they prove: reconcile folds the SINGLE link into the
+                               attested head; verify_chain anchors there and walks authorised
+                               links BACK to the device's own, proving every step between.
 
 Factored out because the sequences are security-relevant and were drifting: the online latch was
 added to `reconcile` and forgotten in `verify_chain`, and the check that a root was actually stored
@@ -21,42 +20,72 @@ want the same tail, and copying it a third time is how the next asymmetry gets i
 WHAT IS DELIBERATELY NOT FACTORED. The route-specific proof stays with its handler: reconcile's
 "one counter names one state" comparison and verify_chain's backward walk are what distinguish them,
 and hiding either behind a shared helper would make the weaker route look like the stronger one.
-The ORDER of the remaining steps is load-bearing rather than incidental, which is why `verify_head_mac`
+The ORDER of the remaining steps is load-bearing rather than incidental, which is why `verify_inbound_link`
 and `adopt` are separate: reconcile has a check that must run between them.
 """
 
-from typing import Any
 
+async def verify_round_attestation(
+    from_counter: "int | None",
+    from_root: "bytes | None",
+    to_counter: "int | None",
+    to_root: "bytes | None",
+    timestamp: int,
+    signature: "bytes | None",
+) -> "tuple[int, bytes, int, bytes]":
+    """Check a WM attestation against the OPEN round, and return the transition it names.
 
-async def verify_round_attestation(msg: Any) -> "tuple[int, bytes]":
-    """Check a WM attestation against the OPEN round, and return its (counter, mac).
+    Verifies only that some authority the device trusts said this STEP is current, and said it in
+    answer to THIS round's nonce. Adopts nothing, and applies NO counter rule, because the two
+    callers want opposite ones: `ingest` refuses anything older than the stored floor, `recover`
+    refuses anything that is not older. Putting either rule here would let the other route reach
+    the wrong one.
 
-    Verifies only that some authority the device trusts said this (counter, mac) is current, and
-    said it in answer to THIS round's nonce. Adopts nothing -- no root has been seen yet -- and
-    applies NO counter rule, because the two callers want opposite ones: `ingest` refuses anything
-    older than the stored floor, `recover` refuses anything that is not older. Putting either rule
-    here would let the other route reach the wrong one.
+    TAKES VALUES, NOT A MESSAGE. It used to be duck-typed over `WardIngestAttestation`,
+    `WardRecoverCounter`, `WardSyncResponse` and `WardPublishAck` -- four messages that had to
+    keep identical field names forever, silently, or this would read `None` off one of them and
+    fail as "verification failed". Two of those callers hold the `from` end in local scope and
+    never had it on the wire at all, which is what made the duck-typing untenable rather than
+    merely fragile.
+
+    RETURNS BOTH ROOTS IN PREIMAGE FORM -- EMPTY_ROOT for the empty tree -- since that is what the
+    signature covered and what `round.set_attested` must store for a later recomputation.
     """
     from trezor.wire import DataError
 
     from . import round as sync_round
-    from .attest import verify_attestation
+    from .attest import root_or_empty, verify_attestation
     from .keys import derive_ward_id
 
     ctx = sync_round.get()
     if ctx is None:
         raise DataError("no sync round in progress")
-    _state, nonce, _c, _m = ctx
+    _state, nonce, _fc, _fr, _tc, _tr = ctx
 
-    counter = msg.counter
-    mac = msg.mac
-    signature = msg.wm_signature
-    timestamp = msg.timestamp or 0
-    if counter is None or mac is None or signature is None:
-        raise DataError("counter, mac and wm_signature are required")
+    if to_counter is None or from_counter is None or signature is None:
+        raise DataError("both ends of the transition and wm_signature are required")
+    for r in (from_root, to_root):
+        if r is not None and len(r) != 32:
+            raise DataError("attested roots must be 32 bytes")
+
+    # THE STEP MUST BE ONE STEP, checked on the WM's own claim rather than on the host's link.
+    # Genesis is the exception and the only one: counter 0 has no predecessor, so it attests
+    # itself -- see `attest.attestation_preimage`.
+    if to_counter == 0:
+        if from_counter != 0 or root_or_empty(from_root) != root_or_empty(to_root):
+            raise DataError("WARD: counter 0 must attest itself")
+    elif to_counter != from_counter + 1:
+        raise DataError("WARD: an attested transition advances the counter by exactly one")
 
     if not verify_attestation(
-        await derive_ward_id(), nonce, counter, mac, timestamp, signature
+        await derive_ward_id(),
+        nonce,
+        from_counter,
+        from_root,
+        to_counter,
+        to_root,
+        timestamp,
+        signature,
     ):
         raise DataError("WM attestation verification failed")
 
@@ -66,11 +95,11 @@ async def verify_round_attestation(msg: Any) -> "tuple[int, bytes]":
     # was never an attack. Storing a time to compare against bought nothing, so the device stops
     # storing one -- see `storage.ward`. The field stays on the wire because removing it from the
     # preimage would be a version bump for no gain today.
-    return counter, mac
+    return from_counter, root_or_empty(from_root), to_counter, root_or_empty(to_root)
 
 
-def require_attested_round(what: str) -> "tuple[int, bytes]":
-    """The (counter, mac) this round attested, or refuse.
+def require_attested_round(what: str) -> "tuple[int, bytes, int, bytes]":
+    """The transition this round attested, or refuse.
 
     An adoption route may only run against a round that reached ATTESTED: the nonce alone proves
     nothing, and a verified signature that was never bound to a tree adopts nothing either.
@@ -85,27 +114,72 @@ def require_attested_round(what: str) -> "tuple[int, bytes]":
     return attested
 
 
-async def verify_head_mac(
-    counter: int, mac: bytes, root: bytes | None, subject: str = "root"
-) -> None:
-    """Require that this root is the one the attested mac was made for.
+async def verify_inbound_link(
+    from_counter: int,
+    from_root: "bytes | None",
+    to_counter: int,
+    to_root: "bytes | None",
+    supplied: "bytes | None",
+    subject: str = "attested head",
+) -> bool:
+    """Require that a device of this wallet authorised the attested step. Returns whether it
+    reverted.
 
-    K_mac never leaves the device, so a host cannot produce a mac for a tree of its choosing: the
-    only root that reproduces the attested mac is the one it was computed over. That is what lets
-    a device adopt a tree it did not build.
+    THE HOST SUPPLIES ONLY 32 BYTES. All four operands come from the WM's attestation; the host
+    contributes the `auth_commit` and nothing else. It used to name the predecessor as well, and
+    could choose among any links it held ending at the attested head -- two can coexist, since a
+    write and a revert may land on the same root at the same counter. That choice decided which
+    transition `offline_store.reconcile_pending` credited and whether the revert warning fired, so
+    removing it removes a way for a host to mis-settle a queued change without forging anything.
 
-    `subject` names what failed, because the two routes arrive here having established the root
-    differently and the distinction is worth keeping in the error: a host-supplied root that does
-    not match is a different problem from a walk that did not reach the head this device holds.
+    WHAT THIS PROVES, AND WHAT IT DOES NOT. The WM signs that this step is current; only a holder
+    of K_auth can mint the MAC over it, so together they say the wallet really took it. They do
+    NOT say the predecessor descends from THIS device's head -- a WM colluding with a host can
+    attest a step off the authoritative line, and only `verify_chain`'s walk back to a state this
+    device already holds rules that out. That is why reconcile remains the weaker route.
+
+    EITHER TAG IS ACCEPTED, and which it was is RETURNED rather than swallowed. A demotion is as
+    real a transition as a write, and a device catching up across one must be able to say so.
+
+    GENESIS HAS NO LINK. Counter 0 attests itself, no step produced it, and `auth_commit` must
+    therefore be absent -- accepting one would mean accepting an authorisation for a transition
+    that cannot exist.
     """
     from trezor.wire import DataError
 
-    from .attest import root_mac
-    from .keys import derive_k_mac, derive_ward_id
+    from .attest import EMPTY_ROOT, root_or_empty
+    from .cas import TAG_REVERT, verify_auth_commit
+    from .keys import derive_k_auth, derive_ward_id
 
-    expected = root_mac(await derive_k_mac(), await derive_ward_id(), counter, root)
-    if expected != mac:
-        raise DataError(subject + " does not match the attested mac")
+    if to_counter == 0:
+        if supplied is not None:
+            raise DataError("WARD: counter 0 has no transition into it")
+        if root_or_empty(to_root) != EMPTY_ROOT:
+            raise DataError("WARD: counter 0 must be the empty tree")
+        return False
+
+    if supplied is None:
+        raise DataError("WARD: the link into the " + subject + " is required")
+
+    ward_id = await derive_ward_id()
+    k_auth = await derive_k_auth()
+
+    if verify_auth_commit(
+        k_auth, ward_id, from_counter, from_root, to_counter, to_root, supplied
+    ):
+        return False
+    if verify_auth_commit(
+        k_auth,
+        ward_id,
+        from_counter,
+        from_root,
+        to_counter,
+        to_root,
+        supplied,
+        TAG_REVERT,
+    ):
+        return True
+    raise DataError("WARD: the link into the " + subject + " is not authorised")
 
 
 async def adopt(

@@ -602,9 +602,7 @@ class TestWardTrie(unittest.TestCase):
             with self.assertRaises(DataError):
                 CAS.transition_preimage(CAS.TAG_COMMIT, ok, 1, bad, 2, ok)
             with self.assertRaises(DataError):
-                A.root_mac(bytes(32), bad, 1, None)
-            with self.assertRaises(DataError):
-                A.attestation_preimage(bytes(32), bytes(32), 1, bad, 0)
+                A.attestation_preimage(bytes(32), bytes(32), 0, ok, 1, bad, 0)
 
         # and a shifted (from_mac, to_counter, to_mac) can no longer reproduce a genuine
         # authorisation, which it could byte-for-byte before
@@ -856,19 +854,25 @@ class TestWardComputeNewRoot(unittest.TestCase):
 
 
 class TestWardAttestation(unittest.TestCase):
-    """The WM's freshness signature and the root MAC it signs.
+    """The WM's freshness signature over (counter, root).
 
-    The WM cannot compute a mac -- K_mac never leaves the device -- so it can only ever
-    REPLAY a (counter, mac) pair this wallet genuinely reached. That, plus a counter
-    floor, is the entire freshness guarantee; the tests below pin both halves.
+    IT SIGNS THE ROOT ITSELF. There used to be a keyed indirection -- `root_mac` under K_mac --
+    which bounded the WM to REPLAYING a pair this wallet genuinely reached. It is gone, so a
+    malicious WM can now name a root the wallet never held, and nothing in this class refuses
+    that: `TestWardCas` does, by folding an `auth_commit` the WM cannot mint.
+
+    What these tests still pin is the nonce binding, the signer, and the line between the live
+    and archived verification paths -- which is the whole of what an attestation is now for.
     """
 
     # The well-known debug WM seed. Its public key is compiled into attest.py.
     WM_SEED = b"AUTHDB QM DEBUG KEY SEED v1 ...."
     WARD_ID = bytes(range(32))
     NONCE = bytes(range(32, 64))
-    K_MAC = bytes(range(64, 96))
     ROOT = bytes([7]) * 32
+    # The head this step advanced FROM. The attestation names a transition, so every preimage
+    # below has two ends; this is the one that is not under test.
+    PREV = bytes([6]) * 32
     # A wall-clock second that is not a round number and not zero: a layout bug that
     # dropped the field or wrote it at the wrong width would still pass against 0.
     TIME = 0x0102030405060708
@@ -897,67 +901,67 @@ class TestWardAttestation(unittest.TestCase):
         live_nonce = self.NONCE
         self.assertNotEqual(archived_nonce, live_nonce)
 
-        mac = A.root_mac(self.K_MAC, self.WARD_ID, 41, self.ROOT)
+        mac = self.ROOT  # the attested 32 bytes ARE the root now
         sig = self._sign(
-            A.attestation_preimage(self.WARD_ID, archived_nonce, 41, mac, self.TIME)
+            A.attestation_preimage(self.WARD_ID, archived_nonce, 40, self.PREV, 41, mac, self.TIME)
         )
 
         # it verifies as HISTORY, under the nonce it was minted for...
         self.assertTrue(
             A.verify_archived_attestation(
-                self.WARD_ID, archived_nonce, 41, mac, self.TIME, sig
+                self.WARD_ID, archived_nonce, 40, self.PREV, 41, mac, self.TIME, sig
             )
         )
         # ...and is refused as CURRENCY by the round-bound path, which only ever offers the
         # nonce of the round actually open. This is the whole separation, in one assertion.
         self.assertFalse(
-            A.verify_attestation(self.WARD_ID, live_nonce, 41, mac, self.TIME, sig)
+            A.verify_attestation(self.WARD_ID, live_nonce, 40, self.PREV, 41, mac, self.TIME, sig)
         )
 
     def test_the_archived_path_is_not_a_weaker_check(self):
         """It refuses forgeries exactly as the live path does -- the difference is the QUESTION,
         not the rigour. A tuple the WM never signed is refused whichever door it arrives at."""
-        mac = A.root_mac(self.K_MAC, self.WARD_ID, 41, self.ROOT)
+        mac = self.ROOT  # the attested 32 bytes ARE the root now
         genuine = self._sign(
-            A.attestation_preimage(self.WARD_ID, self.NONCE, 41, mac, self.TIME)
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 40, self.PREV, 41, mac, self.TIME)
         )
 
         # wrong signer
         forged = self._sign(
-            A.attestation_preimage(self.WARD_ID, self.NONCE, 41, mac, self.TIME),
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 40, self.PREV, 41, mac, self.TIME),
             seed=b"NOT THE WARD MANAGER DEBUG KEY!!",
         )
         self.assertFalse(
             A.verify_archived_attestation(
-                self.WARD_ID, self.NONCE, 41, mac, self.TIME, forged
+                self.WARD_ID, self.NONCE, 40, self.PREV, 41, mac, self.TIME, forged
             )
         )
         # every operand is bound: a different counter or mac does not verify
         self.assertFalse(
             A.verify_archived_attestation(
-                self.WARD_ID, self.NONCE, 42, mac, self.TIME, genuine
+                self.WARD_ID, self.NONCE, 41, self.PREV, 42, mac, self.TIME, genuine
             )
         )
         self.assertFalse(
             A.verify_archived_attestation(
-                self.WARD_ID, self.NONCE, 41, bytes(32), self.TIME, genuine
+                self.WARD_ID, self.NONCE, 40, self.PREV, 41, bytes(32), self.TIME, genuine
             )
         )
 
-    def test_an_archived_mac_cannot_be_re_dated(self):
-        """WHY THE COUNTER LIVES INSIDE root_mac, stated as the attack it prevents.
+    def test_an_archived_attestation_cannot_be_re_dated(self):
+        """WHY THE COUNTER SITS BESIDE THE ROOT, stated as the attack it prevents.
 
-        If a mac committed only to the root, a host holding an old attestation could pair it
-        with any counter: the WM's signature covers the counter, but nothing would tie that
-        counter to the root supplied at adoption. The device would take a year-old tree as
-        today's state -- a silent rollback that reads as forward progress.
+        Roots are content-addressed and REPEAT whenever content repeats -- change a label and
+        change it back and the root returns. If a signature committed only to the root, a host
+        holding an old attestation could present it for today's identical shape and the device
+        would take a year-old tree as current: a silent rollback that reads as forward progress.
 
-        Because the counter IS inside the mac, an archived (counter, mac) is satisfiable by
-        exactly one root at exactly one moment.
+        Both are in the one signed preimage, so an archived attestation names one MOMENT rather
+        than one shape.
         """
-        mac_at_41 = A.root_mac(self.K_MAC, self.WARD_ID, 41, self.ROOT)
-        mac_at_99 = A.root_mac(self.K_MAC, self.WARD_ID, 99, self.ROOT)
-        self.assertNotEqual(mac_at_41, mac_at_99)
+        at_41 = A.attestation_preimage(self.WARD_ID, self.NONCE, 40, self.PREV, 41, self.ROOT, self.TIME)
+        at_99 = A.attestation_preimage(self.WARD_ID, self.NONCE, 98, self.PREV, 99, self.ROOT, self.TIME)
+        self.assertNotEqual(at_41, at_99)
 
     def test_debug_key_matches_its_seed(self):
         """The compiled debug pubkey really is this seed's, or every test below is vacuous."""
@@ -970,77 +974,104 @@ class TestWardAttestation(unittest.TestCase):
         whoever offered one would be checking freshness against an adversary's clock."""
         self.assertEqual(A._WM_PUBKEY, bytes(32))
 
-    def test_root_mac_binds_everything_it_names(self):
-        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
-        self.assertEqual(len(mac), 32)
-        # the counter, which is the point: roots repeat whenever contents repeat, so a mac
-        # over the root alone would name a shape rather than a moment
-        self.assertNotEqual(mac, A.root_mac(self.K_MAC, self.WARD_ID, 6, self.ROOT))
-        self.assertNotEqual(
-            mac, A.root_mac(self.K_MAC, self.WARD_ID, 5, bytes([8]) * 32)
-        )
-        self.assertNotEqual(mac, A.root_mac(self.K_MAC, bytes(32), 5, self.ROOT))
-        self.assertNotEqual(mac, A.root_mac(bytes(32), self.WARD_ID, 5, self.ROOT))
-
     def test_the_empty_tree_is_attestable_too(self):
-        """An absent root macs the all-zero root rather than being skipped, so "empty" is
-        still bound to a counter -- otherwise a WM could attest empty at any counter."""
-        empty5 = A.root_mac(self.K_MAC, self.WARD_ID, 5, None)
-        self.assertNotEqual(empty5, A.root_mac(self.K_MAC, self.WARD_ID, 6, None))
-        self.assertNotEqual(empty5, A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT))
+        """An absent root encodes as EMPTY_ROOT rather than being skipped, so "empty" is still
+        a state the WM can attest at a given counter -- otherwise it could not name one at all,
+        and a wallet with nothing in it could never be synced."""
+        empty5 = A.attestation_preimage(self.WARD_ID, self.NONCE, 4, self.PREV, 5, None, self.TIME)
+        self.assertEqual(
+            empty5,
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 4, self.PREV, 5, A.EMPTY_ROOT, self.TIME),
+        )
+        self.assertNotEqual(
+            empty5, A.attestation_preimage(self.WARD_ID, self.NONCE, 5, self.PREV, 6, None, self.TIME)
+        )
+        self.assertNotEqual(
+            empty5,
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 4, self.PREV, 5, self.ROOT, self.TIME),
+        )
 
     def test_attestation_preimage_layout(self):
-        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        """Both ends, in order, at fixed width -- and the version byte that says so."""
+        mac = self.ROOT
         self.assertEqual(
-            A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME),
+            A.attestation_preimage(
+                self.WARD_ID, self.NONCE, 4, self.PREV, 5, mac, self.TIME
+            ),
             b"WARD ATTEST v1"
-            + bytes([2])
+            + bytes([4])
             + self.NONCE
             + self.WARD_ID
+            + (4).to_bytes(4, "big")
+            + self.PREV
             + (5).to_bytes(4, "big")
             + mac
             + self.TIME.to_bytes(8, "big"),
         )
 
+    def test_the_predecessor_is_bound_too(self):
+        """The whole point of naming a step rather than a head: an attestation for the same
+        destination but a different origin is a different statement, so a host cannot pair one
+        with a link that merely ends in the right place."""
+        self.assertNotEqual(
+            A.attestation_preimage(
+                self.WARD_ID, self.NONCE, 4, self.PREV, 5, self.ROOT, self.TIME
+            ),
+            A.attestation_preimage(
+                self.WARD_ID, self.NONCE, 4, bytes([9]) * 32, 5, self.ROOT, self.TIME
+            ),
+        )
+
+    def test_genesis_attests_itself(self):
+        """Counter 0 has no predecessor, so the step is `(0, empty) -> (0, empty)`. It cannot be
+        confused with a real transition: every one of those advances the counter by exactly one,
+        so no genuine step has from == to."""
+        self.assertEqual(
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 0, None, 0, None, self.TIME),
+            A.attestation_preimage(
+                self.WARD_ID, self.NONCE, 0, A.EMPTY_ROOT, 0, A.EMPTY_ROOT, self.TIME
+            ),
+        )
+
     def test_a_genuine_attestation_verifies(self):
-        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        mac = self.ROOT  # the attested 32 bytes ARE the root now
         sig = self._sign(
-            A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME)
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 4, self.PREV, 5, mac, self.TIME)
         )
         self.assertTrue(
-            A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig)
+            A.verify_attestation(self.WARD_ID, self.NONCE, 4, self.PREV, 5, mac, self.TIME, sig)
         )
 
     def test_every_signed_field_is_bound(self):
         """Changing anything the signature covers must break it -- notably the nonce, which
         is what stops a host stockpiling anchors and replaying one later."""
-        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        mac = self.ROOT  # the attested 32 bytes ARE the root now
         sig = self._sign(
-            A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME)
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 4, self.PREV, 5, mac, self.TIME)
         )
 
         self.assertFalse(
-            A.verify_attestation(self.WARD_ID, bytes(32), 5, mac, self.TIME, sig)
+            A.verify_attestation(self.WARD_ID, bytes(32), 4, self.PREV, 5, mac, self.TIME, sig)
         )
         self.assertFalse(
-            A.verify_attestation(self.WARD_ID, self.NONCE, 6, mac, self.TIME, sig)
+            A.verify_attestation(self.WARD_ID, self.NONCE, 5, self.PREV, 6, mac, self.TIME, sig)
         )
         self.assertFalse(
-            A.verify_attestation(self.WARD_ID, self.NONCE, 5, bytes(32), self.TIME, sig)
+            A.verify_attestation(self.WARD_ID, self.NONCE, 4, self.PREV, 5, bytes(32), self.TIME, sig)
         )
         self.assertFalse(
-            A.verify_attestation(bytes(32), self.NONCE, 5, mac, self.TIME, sig)
+            A.verify_attestation(bytes(32), self.NONCE, 4, self.PREV, 5, mac, self.TIME, sig)
         )
         self.assertFalse(
-            A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME + 1, sig)
+            A.verify_attestation(self.WARD_ID, self.NONCE, 4, self.PREV, 5, mac, self.TIME + 1, sig)
         )
 
     def test_another_signer_is_refused(self):
-        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
-        pre = A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME)
+        mac = self.ROOT  # the attested 32 bytes ARE the root now
+        pre = A.attestation_preimage(self.WARD_ID, self.NONCE, 4, self.PREV, 5, mac, self.TIME)
         sig = self._sign(pre, seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
         self.assertFalse(
-            A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig)
+            A.verify_attestation(self.WARD_ID, self.NONCE, 4, self.PREV, 5, mac, self.TIME, sig)
         )
 
     def test_a_zero_signature_never_verifies(self):
@@ -1050,22 +1081,22 @@ class TestWardAttestation(unittest.TestCase):
         all. Both halves are refused: the zero signature, and verifying against the
         placeholder key.
         """
-        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        mac = self.ROOT  # the attested 32 bytes ARE the root now
         self.assertFalse(
-            A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, bytes(64))
+            A.verify_attestation(self.WARD_ID, self.NONCE, 4, self.PREV, 5, mac, self.TIME, bytes(64))
         )
 
     def test_a_malformed_signature_is_refused(self):
-        mac = A.root_mac(self.K_MAC, self.WARD_ID, 5, self.ROOT)
+        mac = self.ROOT  # the attested 32 bytes ARE the root now
         sig = self._sign(
-            A.attestation_preimage(self.WARD_ID, self.NONCE, 5, mac, self.TIME)
+            A.attestation_preimage(self.WARD_ID, self.NONCE, 4, self.PREV, 5, mac, self.TIME)
         )
         self.assertFalse(
-            A.verify_attestation(self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig[:63])
+            A.verify_attestation(self.WARD_ID, self.NONCE, 4, self.PREV, 5, mac, self.TIME, sig[:63])
         )
         self.assertFalse(
             A.verify_attestation(
-                self.WARD_ID, self.NONCE, 5, mac, self.TIME, sig + b"\x00"
+                self.WARD_ID, self.NONCE, 4, self.PREV, 5, mac, self.TIME, sig + b"\x00"
             )
         )
 
@@ -1079,13 +1110,12 @@ class TestWardCas(unittest.TestCase):
     """
 
     K_AUTH = bytes(range(32))
-    K_MAC = bytes(range(64, 96))
     WARD_ID = bytes(range(32, 64))
     R1 = bytes([1]) * 32
     R2 = bytes([2]) * 32
 
     def _link(self, f, fr, t, tr):
-        return (f, fr, t, tr, CAS.auth_commit(self.K_AUTH, self.K_MAC, self.WARD_ID, f, fr, t, tr))
+        return (f, fr, t, tr, CAS.auth_commit(self.K_AUTH, self.WARD_ID, f, fr, t, tr))
 
     def test_a_claim_distinguishes_two_candidates_at_one_counter(self):
         """What the counter-path settlement in `offline_store.reconcile_pending` now rests on.
@@ -1102,26 +1132,26 @@ class TestWardCas(unittest.TestCase):
         different to-root must not verify -- because if it did not, the new check would be the old
         one wearing a hash.
         """
-        mine = CAS.auth_commit(self.K_AUTH, self.K_MAC, self.WARD_ID, 41, self.R1, 42, self.R2)
+        mine = CAS.auth_commit(self.K_AUTH, self.WARD_ID, 41, self.R1, 42, self.R2)
         theirs_root = bytes([3]) * 32
 
         # the winner's head at the same counter does not reproduce my authorisation
         self.assertFalse(
             CAS.verify_auth_commit(
-                self.K_AUTH, self.K_MAC, self.WARD_ID, 41, self.R1, 42, theirs_root, mine
+                self.K_AUTH, self.WARD_ID, 41, self.R1, 42, theirs_root, mine
             )
         )
         # ...and my own head does
         self.assertTrue(
             CAS.verify_auth_commit(
-                self.K_AUTH, self.K_MAC, self.WARD_ID, 41, self.R1, 42, self.R2, mine
+                self.K_AUTH, self.WARD_ID, 41, self.R1, 42, self.R2, mine
             )
         )
         # the from-state is bound too, so a claim filed from a different head cannot be
         # re-read as one filed from this one
         self.assertFalse(
             CAS.verify_auth_commit(
-                self.K_AUTH, self.K_MAC, self.WARD_ID, 41, theirs_root, 42, self.R2, mine
+                self.K_AUTH, self.WARD_ID, 41, theirs_root, 42, self.R2, mine
             )
         )
 
@@ -1149,41 +1179,45 @@ class TestWardCas(unittest.TestCase):
             + (5).to_bytes(4, "big")
             + m1,
         )
-        # The endpoints are MAC HEADS now, so the empty tree is encoded one layer down -- in
-        # `root_mac`, which macs the EMPTY_ROOT stand-in rather than skipping an absent root.
+        # The endpoints are ROOTS again, so the empty tree is encoded HERE -- an absent root
+        # becomes the EMPTY_ROOT stand-in rather than being skipped, which is what keeps the
+        # preimage fixed-width when the tree is empty at either end. That normalisation used to
+        # live one layer down, in `root_mac`.
         self.assertEqual(
-            A.root_mac(self.K_MAC, self.WARD_ID, 0, None),
-            A.root_mac(self.K_MAC, self.WARD_ID, 0, A.EMPTY_ROOT),
+            CAS.transition_preimage(CAS.TAG_COMMIT, self.WARD_ID, 0, None, 1, m1),
+            CAS.transition_preimage(
+                CAS.TAG_COMMIT, self.WARD_ID, 0, A.EMPTY_ROOT, 1, m1
+            ),
         )
 
     def test_every_field_is_bound(self):
-        mac = CAS.auth_commit(self.K_AUTH, self.K_MAC, self.WARD_ID, 4, self.R1, 5, self.R2)
+        mac = CAS.auth_commit(self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2)
         self.assertTrue(
             CAS.verify_auth_commit(
-                self.K_AUTH, self.K_MAC, self.WARD_ID, 4, self.R1, 5, self.R2, mac
+                self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, mac
             )
         )
         for args in (
-            (self.K_AUTH, self.K_MAC, self.WARD_ID, 3, self.R1, 5, self.R2),
-            (self.K_AUTH, self.K_MAC, self.WARD_ID, 4, self.R2, 5, self.R2),
-            (self.K_AUTH, self.K_MAC, self.WARD_ID, 4, self.R1, 6, self.R2),
-            (self.K_AUTH, self.K_MAC, self.WARD_ID, 4, self.R1, 5, self.R1),
-            (self.K_AUTH, self.K_MAC, bytes(32), 4, self.R1, 5, self.R2),
-            (bytes(32), self.K_MAC, self.WARD_ID, 4, self.R1, 5, self.R2),
+            (self.K_AUTH, self.WARD_ID, 3, self.R1, 5, self.R2),
+            (self.K_AUTH, self.WARD_ID, 4, self.R2, 5, self.R2),
+            (self.K_AUTH, self.WARD_ID, 4, self.R1, 6, self.R2),
+            (self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R1),
+            (self.K_AUTH, bytes(32), 4, self.R1, 5, self.R2),
+            (bytes(32), self.WARD_ID, 4, self.R1, 5, self.R2),
         ):
             self.assertFalse(CAS.verify_auth_commit(*args, mac))
 
     def test_a_revert_is_not_a_commit(self):
         """Same endpoints, different meaning. Sharing a tag would let a rollback be
         replayed as an ordinary write, or the reverse."""
-        commit = CAS.auth_commit(self.K_AUTH, self.K_MAC, self.WARD_ID, 4, self.R1, 5, self.R2)
+        commit = CAS.auth_commit(self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2)
         revert = CAS.auth_commit(
-            self.K_AUTH, self.K_MAC, self.WARD_ID, 4, self.R1, 5, self.R2, CAS.TAG_REVERT
+            self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, CAS.TAG_REVERT
         )
         self.assertNotEqual(commit, revert)
         self.assertFalse(
             CAS.verify_auth_commit(
-                self.K_AUTH, self.K_MAC, self.WARD_ID, 4, self.R1, 5, self.R2, revert
+                self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, revert
             )
         )
 
@@ -1194,7 +1228,7 @@ class TestWardCas(unittest.TestCase):
             self._link(1, self.R1, 2, self.R2),
         ):
             counter, root, _reverted = CAS.verify_chain_step(
-                self.K_AUTH, self.K_MAC, self.WARD_ID, counter, root, link
+                self.K_AUTH, self.WARD_ID, counter, root, link
             )
         self.assertEqual((counter, root), (2, self.R2))
 
@@ -1211,7 +1245,7 @@ class TestWardCas(unittest.TestCase):
             self._link(0, None, 1, self.R1),
         ):
             counter, root, _reverted = CAS.verify_chain_step_back(
-                self.K_AUTH, self.K_MAC, self.WARD_ID, counter, root, link
+                self.K_AUTH, self.WARD_ID, counter, root, link
             )
         self.assertEqual((counter, root), (0, None))
 
@@ -1233,17 +1267,17 @@ class TestWardCas(unittest.TestCase):
         # forward, the orphan is indistinguishable: both fold cleanly off (0, None)
         for candidate in (orphan, real):
             CAS.verify_chain_step(
-                self.K_AUTH, self.K_MAC, self.WARD_ID, 0, None, candidate
+                self.K_AUTH, self.WARD_ID, 0, None, candidate
             )
 
         # backward, anchored at (1, R1), only the real one is admissible
         counter, root, _r = CAS.verify_chain_step_back(
-            self.K_AUTH, self.K_MAC, self.WARD_ID, 1, self.R1, real
+            self.K_AUTH, self.WARD_ID, 1, self.R1, real
         )
         self.assertEqual((counter, root), (0, None))
         with self.assertRaises(DataError):
             CAS.verify_chain_step_back(
-                self.K_AUTH, self.K_MAC, self.WARD_ID, 1, self.R1, orphan
+                self.K_AUTH, self.WARD_ID, 1, self.R1, orphan
             )
 
     def test_the_backward_chain_refuses_every_way_of_lying_with_real_links(self):
@@ -1252,7 +1286,6 @@ class TestWardCas(unittest.TestCase):
         with self.assertRaises(DataError):
             CAS.verify_chain_step_back(
                 self.K_AUTH,
-                self.K_MAC,
                 self.WARD_ID,
                 2,
                 self.R2,
@@ -1262,7 +1295,6 @@ class TestWardCas(unittest.TestCase):
         with self.assertRaises(DataError):
             CAS.verify_chain_step_back(
                 self.K_AUTH,
-                self.K_MAC,
                 self.WARD_ID,
                 2,
                 self.R1,
@@ -1272,7 +1304,6 @@ class TestWardCas(unittest.TestCase):
         with self.assertRaises(DataError):
             CAS.verify_chain_step_back(
                 self.K_AUTH,
-                self.K_MAC,
                 self.WARD_ID,
                 5,
                 self.R2,
@@ -1282,7 +1313,6 @@ class TestWardCas(unittest.TestCase):
         with self.assertRaises(DataError):
             CAS.verify_chain_step_back(
                 self.K_AUTH,
-                self.K_MAC,
                 self.WARD_ID,
                 1,
                 self.R1,
@@ -1296,7 +1326,6 @@ class TestWardCas(unittest.TestCase):
         with self.assertRaises(DataError):
             CAS.verify_chain_step(
                 self.K_AUTH,
-                self.K_MAC,
                 self.WARD_ID,
                 0,
                 None,
@@ -1306,7 +1335,6 @@ class TestWardCas(unittest.TestCase):
         with self.assertRaises(DataError):
             CAS.verify_chain_step(
                 self.K_AUTH,
-                self.K_MAC,
                 self.WARD_ID,
                 1,
                 self.R1,
@@ -1316,7 +1344,6 @@ class TestWardCas(unittest.TestCase):
         with self.assertRaises(DataError):
             CAS.verify_chain_step(
                 self.K_AUTH,
-                self.K_MAC,
                 self.WARD_ID,
                 5,
                 self.R1,
@@ -1326,7 +1353,6 @@ class TestWardCas(unittest.TestCase):
         with self.assertRaises(DataError):
             CAS.verify_chain_step(
                 self.K_AUTH,
-                self.K_MAC,
                 self.WARD_ID,
                 0,
                 None,
@@ -1335,25 +1361,17 @@ class TestWardCas(unittest.TestCase):
 
 
 class TestWardWmAuthorisation(unittest.TestCase):
-    """The authorisation a WM checks: over MAC HEADS, never roots.
+    """The authorisation a WM checks: over ROOTS, the identical bytes `auth_commit` MACs.
 
-    A WM stores `(counter, mac)` and nothing else, so signing what it stores means it never has to
-    be sent a root to verify an advance. That is the whole reason this is not `sig_commit`, which
-    covers the same bytes as `auth_commit` and therefore names roots.
+    A WM stores `(counter, root)` and compare-and-swaps on the `from` end, so signing the root
+    transition means every operand it acts on is inside what it verifies. There used to be a mac
+    layer between the two -- `root_mac` under K_mac, which these operands were -- and its removal
+    is why the tags below are at v2.
     """
 
     _K_SIG = b"\x11" * 32
-    _K_MAC = b"\x33" * 32
-    # The signing path takes ROOTS -- `transition_macs` is the one place a counter meets a root,
-    # so a test that handed `wm_sig` macs directly would be exercising a path no caller has.
     _ROOT_A = b"\x55" * 32
     _ROOT_B = b"\x66" * 32
-    _MAC_A = b"\xaa" * 32
-    _MAC_B = b"\xbb" * 32
-
-    def _mac(self, counter, root):
-        """What the WM would hold for this (counter, root) -- the verifier's vantage point."""
-        return A.root_mac(self._K_MAC, self._ward_id(), counter, root)
 
     def _ward_id(self):
         from trezor.crypto.curve import ed25519
@@ -1364,10 +1382,10 @@ class TestWardWmAuthorisation(unittest.TestCase):
         """`ward_id` IS the verifying key, so a WM needs nothing but the identifier it keys by."""
         wid = self._ward_id()
         sig = CAS.wm_sig(
-            self._K_SIG, self._K_MAC, wid, 41, self._ROOT_A, 42, self._ROOT_B
+            self._K_SIG, wid, 41, self._ROOT_A, 42, self._ROOT_B
         )
         self.assertTrue(
-            CAS.verify_wm_sig(wid, 41, self._mac(41, self._ROOT_A), 42, self._mac(42, self._ROOT_B), sig)
+            CAS.verify_wm_sig(wid, 41, self._ROOT_A, 42, self._ROOT_B, sig)
         )
 
     def test_it_binds_both_endpoints(self):
@@ -1375,22 +1393,22 @@ class TestWardWmAuthorisation(unittest.TestCase):
         replayed after a different predecessor -- exactly what a compare-and-swap must prevent."""
         wid = self._ward_id()
         sig = CAS.wm_sig(
-            self._K_SIG, self._K_MAC, wid, 41, self._ROOT_A, 42, self._ROOT_B
+            self._K_SIG, wid, 41, self._ROOT_A, 42, self._ROOT_B
         )
 
         # a different predecessor
         self.assertFalse(
-            CAS.verify_wm_sig(wid, 40, self._MAC_A, 42, self._MAC_B, sig)
+            CAS.verify_wm_sig(wid, 40, self._ROOT_A, 42, self._ROOT_B, sig)
         )
         self.assertFalse(
-            CAS.verify_wm_sig(wid, 41, self._MAC_B, 42, self._MAC_B, sig)
+            CAS.verify_wm_sig(wid, 41, self._ROOT_B, 42, self._ROOT_B, sig)
         )
         # a different destination
         self.assertFalse(
-            CAS.verify_wm_sig(wid, 41, self._MAC_A, 43, self._MAC_B, sig)
+            CAS.verify_wm_sig(wid, 41, self._ROOT_A, 43, self._ROOT_B, sig)
         )
         self.assertFalse(
-            CAS.verify_wm_sig(wid, 41, self._MAC_A, 42, self._MAC_A, sig)
+            CAS.verify_wm_sig(wid, 41, self._ROOT_A, 42, self._ROOT_A, sig)
         )
 
     def test_another_wallet_cannot_use_it(self):
@@ -1398,26 +1416,26 @@ class TestWardWmAuthorisation(unittest.TestCase):
         from trezor.crypto.curve import ed25519
 
         sig = CAS.wm_sig(
-            self._K_SIG, self._K_MAC, wid, 41, self._ROOT_A, 42, self._ROOT_B
+            self._K_SIG, wid, 41, self._ROOT_A, 42, self._ROOT_B
         )
         other = ed25519.publickey(b"\x22" * 32)
         self.assertFalse(
-            CAS.verify_wm_sig(other, 41, self._MAC_A, 42, self._MAC_B, sig)
+            CAS.verify_wm_sig(other, 41, self._ROOT_A, 42, self._ROOT_B, sig)
         )
 
     def test_head_init_cannot_be_replayed_as_an_advance(self):
         """Its own tag, so the authorisation that opens a wallet's history cannot be re-presented
         as a step within it."""
         wid = self._ward_id()
-        init = CAS.head_init_sig(self._K_SIG, wid, self._MAC_A)
-        self.assertTrue(CAS.verify_head_init_sig(wid, self._MAC_A, init))
+        init = CAS.head_init_sig(self._K_SIG, wid, 0, self._ROOT_A)
+        self.assertTrue(CAS.verify_head_init_sig(wid, 0, self._ROOT_A, init))
         # the same bytes, offered as a 0 -> 0 advance
         self.assertFalse(
-            CAS.verify_wm_sig(wid, 0, self._MAC_A, 0, self._MAC_A, init)
+            CAS.verify_wm_sig(wid, 0, self._ROOT_A, 0, self._ROOT_A, init)
         )
 
-        advance = CAS.wm_sig(self._K_SIG, self._K_MAC, wid, 0, self._ROOT_A, 0, self._ROOT_A)
-        self.assertFalse(CAS.verify_head_init_sig(wid, self._MAC_A, advance))
+        advance = CAS.wm_sig(self._K_SIG, wid, 0, self._ROOT_A, 0, self._ROOT_A)
+        self.assertFalse(CAS.verify_head_init_sig(wid, 0, self._ROOT_A, advance))
 
     def test_the_tag_is_the_only_thing_separating_the_two_authenticators(self):
         """WHAT CHANGED, AND WHY THIS TEST STILL MATTERS.
@@ -1434,19 +1452,19 @@ class TestWardWmAuthorisation(unittest.TestCase):
         """
         wid = self._ward_id()
         commit = CAS.transition_preimage(
-            CAS.TAG_COMMIT, wid, 41, self._MAC_A, 42, self._MAC_B
+            CAS.TAG_COMMIT, wid, 41, self._ROOT_A, 42, self._ROOT_B
         )
         for other in (CAS.TAG_REVERT, CAS.TAG_WM_HEAD, CAS.TAG_WM_INIT):
             self.assertNotEqual(
                 commit,
-                CAS.transition_preimage(other, wid, 41, self._MAC_A, 42, self._MAC_B),
+                CAS.transition_preimage(other, wid, 41, self._ROOT_A, 42, self._ROOT_B),
             )
 
         # ...and the operands really are identical now, which is the point of the change: an
         # auth_commit and a wm_sig over the same transition cover the same bytes.
         self.assertEqual(
             CAS.transition_preimage(
-                CAS.TAG_WM_HEAD, wid, 41, self._MAC_A, 42, self._MAC_B
+                CAS.TAG_WM_HEAD, wid, 41, self._ROOT_A, 42, self._ROOT_B
             )[1 + len(CAS.TAG_WM_HEAD) :],
             commit[1 + len(CAS.TAG_COMMIT) :],
         )
@@ -1455,11 +1473,11 @@ class TestWardWmAuthorisation(unittest.TestCase):
         """Same reason as everywhere else in WARD: a short operand lets the preimage be re-split."""
         wid = self._ward_id()
         with self.assertRaises(DataError):
-            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid[:31], 0, self._MAC_A, 1, self._MAC_B)
+            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid[:31], 0, self._ROOT_A, 1, self._ROOT_B)
         with self.assertRaises(DataError):
-            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid, 0, self._MAC_A[:31], 1, self._MAC_B)
+            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid, 0, self._ROOT_A[:31], 1, self._ROOT_B)
         with self.assertRaises(DataError):
-            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid, 0, self._MAC_A, 1, self._MAC_B + b"\x00")
+            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid, 0, self._ROOT_A, 1, self._ROOT_B + b"\x00")
 
     def test_known_answer(self):
         """Fixed vectors, so this agrees with `tests/ward_keys.py` -- which implements the same
@@ -1475,49 +1493,49 @@ class TestWardWmAuthorisation(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid, 41, self._MAC_A, 42, self._MAC_B),
+            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid, 41, self._ROOT_A, 42, self._ROOT_B),
             bytes.fromhex(
-                "115741524420574d20434f4d4d4954207631"
+                "115741524420574d20434f4d4d4954207632"
                 "d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"
-                "00000029" + "aa" * 32 + "0000002a" + "bb" * 32
+                "00000029" + "55" * 32 + "0000002a" + "66" * 32
             ),
         )
         self.assertEqual(
             CAS.wm_sig(
-            self._K_SIG, self._K_MAC, wid, 41, self._ROOT_A, 42, self._ROOT_B
+            self._K_SIG, wid, 41, self._ROOT_A, 42, self._ROOT_B
         ),
             bytes.fromhex(
-                "ec1bf2e467728ac99a5f380895121e58d176ef5a93cf6ae5266875571d71610e"
-                "07e00ffe1ad4fdb3adcf4d7366234232645d41a40be168c797bfa02e17206309"
+                "233621434e086aebd6b73dbf49e583dff8d623e72d7137100080eb0d5e4fff6b"
+                "e950519892655d0c9ccff4717231c41d22cf5829825df23b7eea9b875ab8420f"
             ),
         )
         # The INIT preimage is pinned as well as its signature, so a change to the tag fails
         # with a readable diff rather than an opaque 64-byte mismatch. `0f` is len("WARD WM
-        # INIT v1"); both endpoints are (0, current_mac), there being no predecessor to name.
+        # INIT v2"); both endpoints are (0, root), there being no predecessor to name.
         self.assertEqual(
-            CAS.transition_preimage(CAS.TAG_WM_INIT, wid, 0, self._MAC_A, 0, self._MAC_A),
+            CAS.transition_preimage(CAS.TAG_WM_INIT, wid, 0, self._ROOT_A, 0, self._ROOT_A),
             bytes.fromhex(
-                "0f5741524420574d20494e4954207631"
+                "0f5741524420574d20494e4954207632"
                 "d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"
-                "00000000" + "aa" * 32 + "00000000" + "aa" * 32
+                "00000000" + "55" * 32 + "00000000" + "55" * 32
             ),
         )
         self.assertEqual(
-            CAS.head_init_sig(self._K_SIG, wid, self._MAC_A),
+            CAS.head_init_sig(self._K_SIG, wid, 0, self._ROOT_A),
             bytes.fromhex(
-                "abf7c0028b8d9a9dd8d3b21bab5f5fd2c163e8b280f5ec395dbc1674c1f3d8e4"
-                "dfc5bb3dbeeb516483862dc184e17241722b79eafd56045fc9d2c4d80af27506"
+                "109168860356949d22e31c0448527960cf857e2baeb6faae6ead209fc2a244d5"
+                "a95ad9412364a39e280b58cc8d417160b82a5c12fbb4685ad4115a2b590a2f0b"
             ),
         )
 
     def test_a_malformed_signature_is_refused_not_raised(self):
         wid = self._ward_id()
-        self.assertFalse(CAS.verify_wm_sig(wid, 0, self._MAC_A, 1, self._MAC_B, b""))
+        self.assertFalse(CAS.verify_wm_sig(wid, 0, self._ROOT_A, 1, self._ROOT_B, b""))
         self.assertFalse(
-            CAS.verify_wm_sig(wid, 0, self._MAC_A, 1, self._MAC_B, b"\x00" * 63)
+            CAS.verify_wm_sig(wid, 0, self._ROOT_A, 1, self._ROOT_B, b"\x00" * 63)
         )
         self.assertFalse(
-            CAS.verify_wm_sig(wid, 0, self._MAC_A, 1, self._MAC_B, b"\x00" * 64)
+            CAS.verify_wm_sig(wid, 0, self._ROOT_A, 1, self._ROOT_B, b"\x00" * 64)
         )
 
 

@@ -69,7 +69,6 @@ from ...ward_keys import (
     derive_k_auth,
     derive_k_data,
     derive_k_ident,
-    derive_k_mac,
     derive_k_path,
     derive_ward_id,
 )
@@ -77,7 +76,6 @@ from ...ward_keys import entry_key as expected_entry_key
 from ...ward_keys import (
     open_content,
     open_identity,
-    root_mac,
     seal_content,
     seal_identity,
     transition_preimage,
@@ -103,7 +101,6 @@ _SEED = bip39_seed(_MNEMONIC)
 _K_PATH = derive_k_path(_SEED)
 _K_IDENT = derive_k_ident(_SEED)
 _K_DATA = derive_k_data(_SEED)
-_K_MAC = derive_k_mac(_SEED)
 _K_AUTH = derive_k_auth(_SEED)
 
 # A fixed wall-clock base for attestations. The device has no clock; it only ever compares
@@ -213,21 +210,31 @@ def _read(session: Session, store: WardTrie, call) -> tuple:
     return res, rec
 
 
-def _publish(wm: MockWM, res) -> None:
+def _publish(wm: MockWM, res, store: WardTrie) -> None:
     """Hand the WM what the write produced.
 
     A real host does exactly this: the device is the counter authority and the WM records
     what it is told. Since writes commit only on WM confirmation, skipping this means the
     write never takes effect at all -- the device's head simply does not move.
     """
-    wm.publish(_WARD_ID, res.counter, res.mac, _T0 + res.counter)
+    # THE WHOLE STEP, not just the head it reaches. The WM attests a transition, so it has to be
+    # told the predecessor it advanced from -- which a real one already holds, having
+    # compare-and-swapped on it. Both roots are the host's own: it derived them by applying the
+    # leaf the device handed back, so no device-only value is in this exchange any more.
+    root = store.root()
+    wm.publish(
+        _WARD_ID,
+        res.counter,
+        root,
+        _T0 + res.counter,
+        *_step_into(store, res.counter, root),
+    )
 
 
 def _go_online(
     session: Session,
     store: WardTrie,
     wm: "MockWM | None" = None,
-    k_mac: bytes | None = None,
 ) -> None:
     """Bring the session out of offline mode by completing one sync round.
 
@@ -240,7 +247,7 @@ def _go_online(
     Adopting the head the host already holds, at the counter it already has, so this changes
     no state -- it only tells the device that what it has is confirmed.
     """
-    _attest(session, wm or MockWM(), store, k_mac=k_mac)
+    _attest(session, wm or MockWM(), store)
 
 
 def _seed(
@@ -248,7 +255,6 @@ def _seed(
     store: WardTrie,
     identifier: bytes,
     value: bytes,
-    k_mac: bytes | None = None,
 ) -> bytes:
     """Create an entry the only way a host can: ask the device to build the leaf.
 
@@ -264,7 +270,7 @@ def _seed(
     because with no host to pull from there is no current state to derive a root against. Holding
     the change instead is `WardQueueSetEntry`, a different request with a different ack.
     """
-    _go_online(session, store, k_mac=k_mac)
+    _go_online(session, store)
     res, _rec = _write(
         session,
         store,
@@ -272,7 +278,7 @@ def _seed(
         "ward_set_entry",
     )
     ward.apply(store, res)
-    _confirm(session, store, k_mac=k_mac)
+    _confirm(session, store)
     return res.entry_key
 
 
@@ -280,15 +286,14 @@ def _confirm(
     session: Session,
     store: WardTrie,
     wm: "MockWM | None" = None,
-    k_mac: bytes | None = None,
 ) -> None:
     """Run the WM round that makes the device adopt the head the host now holds.
 
     A throwaway MockWM is fine when the test has no opinion about the WM: it only has to
-    hold the (counter, mac) for the length of one round. Tests that assert on the WM's own
+    hold the (counter, root) for the length of one round. Tests that assert on the WM's own
     state pass theirs.
     """
-    _attest(session, wm or MockWM(), store, k_mac=k_mac)
+    _attest(session, wm or MockWM(), store)
 
 
 # --- the keyed path --------------------------------------------------------------
@@ -739,7 +744,6 @@ def test_ward_delete_entry_is_idempotent_on_a_proved_absence(session: Session):
     # ...but nothing moved: no transition happened, so none was authorised
     assert res.auth_commit is None
     assert res.counter == before
-    assert res.mac is not None  # the device still states where it is
 
     ward.apply(store, res)
     _confirm(session, store)
@@ -1045,21 +1049,21 @@ def test_ward_is_isolated_per_hidden_wallet(test_ctx: TrezorTestContext):
       one wallet's leaf is refused by the other, since their roots are independent;
       the counters advance independently.
     """
-    _SEED_ALPHA = bip39_seed(_MNEMONIC, "alpha")
-    _SEED_BETA = bip39_seed(_MNEMONIC, "beta")
     alpha = test_ctx.get_session(passphrase="alpha")
     beta = test_ctx.get_session(passphrase="beta")
 
+    _SEED_ALPHA = bip39_seed(_MNEMONIC, "alpha")
+    _SEED_BETA = bip39_seed(_MNEMONIC, "beta")
     k_alpha = derive_k_path(_SEED_ALPHA)
     k_beta = derive_k_path(_SEED_BETA)
     assert k_alpha != k_beta  # the oracle's own premise, cheap to state
 
     store_a, store_b = WardTrie(), WardTrie()
     key_a = _seed(
-        alpha, store_a, b"addr1", b"alpha_value", k_mac=derive_k_mac(_SEED_ALPHA)
+        alpha, store_a, b"addr1", b"alpha_value"
     )
     key_b = _seed(
-        beta, store_b, b"addr1", b"beta_value", k_mac=derive_k_mac(_SEED_BETA)
+        beta, store_b, b"addr1", b"beta_value"
     )
 
     # SAME app_id and identifier, different paths -- and each is the right one
@@ -1074,8 +1078,8 @@ def test_ward_is_isolated_per_hidden_wallet(test_ctx: TrezorTestContext):
         ward.get_entry(alpha, _APP, b"addr1", ward.store_provider(store_b))
 
     # and the counters are each wallet's own
-    _seed(alpha, store_a, b"addr2", b"more", k_mac=derive_k_mac(_SEED_ALPHA))
-    _seed(alpha, store_a, b"addr3", b"more", k_mac=derive_k_mac(_SEED_ALPHA))
+    _seed(alpha, store_a, b"addr2", b"more")
+    _seed(alpha, store_a, b"addr3", b"more")
     assert ward.sync(alpha).counter == store_a.counter
     assert ward.sync(beta).counter == store_b.counter
     assert store_a.counter > store_b.counter  # 3 writes vs 1
@@ -1096,10 +1100,65 @@ def _subset(store: WardTrie, keys) -> WardTrie:
     for k in keys:
         out.set(k, store.blobs[k])
     out.counter = store.counter
+    # THE TRANSITION LOG AND THE ARCHIVE COME ALONG, because a subset is still the same HOST
+    # holding the same history -- only its view of the tree differs. Leaving them behind was
+    # invisible while a sync round needed nothing but a root; now `_attest` folds the link into
+    # the head it adopts, so a subset without `links` cannot complete one and fails inside the
+    # helper rather than at the device.
+    out.links = list(store.links)
+    out.attestations = dict(store.attestations)
     # NOTE: a subset holding every leaf of its source has the SAME root. Where a test
     # needs a genuinely different tree, assert that -- otherwise it can silently become a
     # test of the identical tree, which passes for the wrong reason.
     return out
+
+
+def _step_into(store: WardTrie, to_counter: int, to_root, links=()):
+    """The step a WM would attest for `(to_counter, to_root)` -- its `from` end.
+
+    Taken from the transition log, which is where a real WM's predecessor comes from too: it
+    compare-and-swapped on that end before installing this head.
+
+    `links` is searched FIRST, for the catch-up tests that mint a history "made elsewhere while
+    this device was away". Those steps never entered this host's own log, but they are the real
+    ones -- and since the device now checks that the walk's first link begins where the
+    attestation said it did, naming anything else would make the fixture, not the firmware, the
+    thing under test.
+
+    A SYNTHETIC head -- a counter no transition produced, which a few tests attest deliberately to
+    reach the device's counter rules -- has no entry anywhere, so it falls back to naming the
+    state one counter back. That satisfies contiguity without claiming a link exists.
+
+    Genesis attests itself: counter 0 had no predecessor.
+    """
+    if to_counter == 0:
+        return 0, to_root
+    for fc, fr, tc, tr, _ac in list(links) + list(store.links):
+        if tc == to_counter and (tr or None) == (to_root or None):
+            return fc, fr
+    return to_counter - 1, None
+
+
+def _link_into(store: WardTrie, to_counter: int):
+    """The transition log entry that PRODUCED the state at `to_counter`, or None at genesis.
+
+    Note it is the link INTO the target, not the one out of it: the device authorises the
+    target by the transition that created it, which is what lets a caller jump back past
+    steps whose own links it never received.
+
+    NONE AT COUNTER 0. The tree is empty there and no transition made it, so there is nothing to
+    authorise -- which `reconcile` requires rather than merely tolerates, since a link claiming
+    to produce counter 0 would be describing a transition that cannot exist.
+    """
+    if to_counter == 0:
+        return None
+    for link in store.links:
+        if link[2] == to_counter:
+            return link
+    raise AssertionError("no link produces counter %d" % to_counter)
+
+
+_DERIVE_LINK = object()
 
 
 def _attest(
@@ -1108,13 +1167,20 @@ def _attest(
     store: WardTrie,
     counter: int | None = None,
     timestamp: int | None = None,
-    k_mac: bytes | None = None,
+    link=_DERIVE_LINK,
 ) -> None:
-    """Run a full sync round: nonce, WM attestation, root.
+    """Run a full sync round: nonce, WM attestation, the link into the head.
 
-    The WM is told the mac rather than computing it -- it holds no key and could not. That
-    asymmetry is the whole point, so the helper preserves it rather than reaching into the
-    store on the WM's behalf.
+    THE WM IS TOLD THE ROOT. It holds `(counter, root)` in the clear, so nothing here needs a key
+    of the wallet's -- which is why the `k_mac` this helper used to thread through every fixture
+    is gone. What the device will not take on the WM's word is that the state is REAL, so the
+    reconcile below also hands it the authorised link into that head.
+
+    `link` OVERRIDES the one taken from the host's log, and exists for the tests that attest a
+    SYNTHETIC head -- a counter no transition ever produced, used to reach the device's counter
+    rules. The host's log cannot hold a link into a state that never happened, so those tests mint
+    one with `_link`, which they can do because the oracle holds K_auth. Pass nothing and the real
+    link is used, which is what every ordinary fixture wants.
     """
     if counter is None:
         counter = store.counter
@@ -1123,20 +1189,31 @@ def _attest(
             _T0 + counter
         )  # time moves with the counter, as it would in practice
     ack = ward.sync(session)
-    # ward_id comes from the DEVICE, and k_mac from whichever wallet this session opened --
-    # both are passphrase-dependent, so hardcoding the default wallet's values here works
-    # only for as long as nothing else attests.
-    mac = root_mac(k_mac or _K_MAC, ack.ward_id, counter, store.root())
-    wm.publish(ack.ward_id, counter, mac, timestamp)
-    _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(session, counter, mac, sig, timestamp)
-    ward.reconcile(session, store.root())
+    # ward_id comes from the DEVICE, since it is passphrase-dependent and this helper is used by
+    # more than the default wallet. The root is the host's own -- no wallet key involved.
+    root = store.root()
+    # THE STEP THE WM ATTESTS, not the head alone. Taken from the link being presented below, so
+    # the two descriptions of this transition agree -- which is the whole point of the attestation
+    # naming one. `link` overrides it for the synthetic-head tests, which have no real link.
+    into = _link_into(store, counter) if link is _DERIVE_LINK else link
+    from_counter, from_root = (into[0], into[1]) if into is not None else (0, None)
+    wm.publish(ack.ward_id, counter, root, timestamp, from_counter, from_root)
+    _fc, _fr, _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(
+        session, from_counter, from_root, counter, root, sig, timestamp
+    )
+    # THE LINK INTO THE HEAD, which reconcile now requires: an attestation says the WM calls this
+    # head current, and only the link says a device of this wallet ever produced it. None at
+    # counter 0, where the tree is empty and no transition made it.
+    ward.reconcile(session, into)
     store.counter = counter  # device and store now agree
     store.timestamp = timestamp
     # ARCHIVED, where it used to be dropped. A real host keeps every attestation it is handed;
     # rollback and staged catch-up both replay one later, and neither can be tested against a
     # host that throws them away -- which is what this helper did until now.
-    store.archive_attestation(ack.nonce, counter, mac, timestamp, sig)
+    store.archive_attestation(
+        ack.nonce, from_counter, from_root, counter, root, timestamp, sig
+    )
 
 
 @pytest.mark.models("core")
@@ -1162,7 +1239,16 @@ def test_ward_adopts_an_attested_tree_it_never_built(session: Session):
     foreign = _subset(store, [foreign_key])
 
     wm = MockWM()
-    _attest(session, wm, foreign, counter=store.counter + 1)
+    # A MINTED LINK, because no real one exists: this head is synthetic -- nobody ever wrote the
+    # transition that would have produced it. The oracle holds K_auth, so it can authorise one,
+    # which is exactly what a second device of this wallet would have done.
+    _attest(
+        session,
+        wm,
+        foreign,
+        counter=store.counter + 1,
+        link=_link(store.counter, store.root(), store.counter + 1, foreign.root()),
+    )
 
     _res, rec = _read(
         session, foreign, lambda p: ward.get_entry(session, _APP, b"elsewhere", p)
@@ -1188,13 +1274,13 @@ def test_ward_refuses_an_attestation_from_the_wrong_signer(session: Session):
     impostor = MockWM(seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
     counter = store.counter
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, ack.ward_id, counter, store.root())
-    sig = impostor.sign(ack.ward_id, ack.nonce, counter, mac, _T0 + counter)
+    root = store.root()
+    sig = impostor.sign(ack.ward_id, ack.nonce, *_step_into(store, counter, root), counter, root, _T0 + counter)
 
     with pytest.raises(
         exceptions.TrezorFailure, match="attestation verification failed"
     ):
-        ward.ingest_attestation(session, counter, mac, sig, _T0 + counter)
+        ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, _T0 + counter)
 
 
 @pytest.mark.models("core")
@@ -1212,62 +1298,75 @@ def test_ward_refuses_an_attestation_bound_to_another_nonce(session: Session):
     # an anchor signed against an earlier round's nonce
     counter = store.counter
     stale_ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, counter, store.root())
-    stale_sig = wm.sign(stale_ack.ward_id, stale_ack.nonce, counter, mac, _T0 + counter)
+    root = store.root()
+    stale_sig = wm.sign(stale_ack.ward_id, stale_ack.nonce, *_step_into(store, counter, root), counter, root, _T0 + counter)
 
     ward.sync(session)  # a new round, a new nonce
     with pytest.raises(
         exceptions.TrezorFailure, match="attestation verification failed"
     ):
-        ward.ingest_attestation(session, counter, mac, stale_sig, _T0 + counter)
+        ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, stale_sig, _T0 + counter)
 
 
 @pytest.mark.models("core")
-def test_ward_refuses_a_root_that_does_not_match_the_attested_mac(session: Session):
-    """The mac is what binds the WM's claim to actual contents.
+def test_ward_refuses_a_link_into_a_head_the_wm_did_not_attest(session: Session):
+    """The LINK is what binds the WM's claim to actual contents.
 
-    The attestation here is genuine and current; only the root is swapped. The host cannot
-    produce a mac for a tree of its choosing -- K_mac never leaves the device -- so this is
-    the substitution the mac exists to catch.
+    The attestation here is genuine and current, and it names the real root -- the WM signs
+    `(counter, root)` in the clear now, so there is no root for the host to substitute on the
+    wire. What a host CAN still try is to present the link into a different head, and that is
+    what fails: `auth_commit` needs K_auth, which never leaves the device.
     """
     store = WardTrie()
     _seed(session, store, b"addr1", b"v")
     other_key = _seed(session, store, b"addr2", b"w")
-    other = _subset(store, [other_key])  # a different root; reconcile fails on the mac
+    other = _subset(store, [other_key])  # a different root; reconcile fails on the link
 
     wm = MockWM()
     counter = store.counter
     ack = ward.sync(session)
-    # ward_id comes from the DEVICE, and k_mac from whichever wallet this session opened --
-    # both are passphrase-dependent, so hardcoding the default wallet's values here works
-    # only for as long as nothing else attests.
-    mac = root_mac(_K_MAC, ack.ward_id, counter, store.root())
-    wm.publish(ack.ward_id, counter, mac, _T0 + counter)
-    _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(session, counter, mac, sig, _T0 + counter)
+    # ward_id comes from the DEVICE, being passphrase-dependent. The root is the host's own.
+    root = store.root()
+    wm.publish(ack.ward_id, counter, root, _T0 + counter, *_step_into(store, counter, root))
+    _fc, _fr, _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, _T0 + counter)
 
-    with pytest.raises(
-        exceptions.TrezorFailure, match="does not match the attested mac"
-    ):
-        ward.reconcile(session, other.root())
+    # A LINK AUTHORISED FOR A DIFFERENT DESTINATION. Rewriting the `to_root` of a genuine link
+    # would prove nothing -- `WardReconcile` does not carry that field, so the edit never reaches
+    # the wire and the device recomputes over the attested root regardless. So the oracle mints a
+    # real `auth_commit` ending at `other`, which is the strongest thing a host could hold, and
+    # the device still refuses: what it recomputes is the transition into the head the WM named.
+    bogus = _link(counter - 1, store.root(), counter, other.root())
+    with pytest.raises(exceptions.TrezorFailure, match="is not authorised"):
+        ward.reconcile(session, bogus)
 
 
 @pytest.mark.models("core")
 def test_ward_refuses_an_attested_counter_below_the_floor(session: Session):
-    """Anti-rollback. A WM cannot forge a mac, so its remaining freedom is to replay a
-    state this wallet really did reach -- and the counter floor is what bounds which."""
+    """Anti-rollback. The floor is what stops a WM replaying an old head and freezing the
+    device there -- and since the WM now attests roots in the clear, it is the ONLY bound left
+    on a WM that lies about which state is current."""
     store = WardTrie()
     _seed(session, store, b"addr1", b"v")
     wm = MockWM()
 
-    _attest(session, wm, store, counter=store.counter + 5)  # raise the floor
+    # A MINTED LINK: the head five counters ahead is synthetic and no real transition produced
+    # it. Same root, so only the counter moves -- which is all this test needs to raise the floor.
+    ahead = store.counter + 5
+    _attest(
+        session,
+        wm,
+        store,
+        counter=ahead,
+        link=_link(ahead - 1, store.root(), ahead, store.root()),
+    )
 
     behind = store.counter - 1
     ack = ward.sync(session)
-    old_mac = root_mac(_K_MAC, _WARD_ID, behind, store.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, behind, old_mac, _T0 + behind)
+    old_root = store.root()
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, behind, old_root), behind, old_root, _T0 + behind)
     with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
-        ward.ingest_attestation(session, behind, old_mac, sig, _T0 + behind)
+        ward.ingest_attestation(session, *_step_into(store, behind, old_root), behind, old_root, sig, _T0 + behind)
 
 
 @pytest.mark.models("core")
@@ -1290,13 +1389,18 @@ def test_ward_refuses_a_different_state_at_the_same_counter(session: Session):
     counter = store.counter
 
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, counter, divergent.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, counter, mac, _T0 + counter)
-    ward.ingest_attestation(session, counter, mac, sig, _T0 + counter)
+    root = divergent.root()
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, counter, root), counter, root, _T0 + counter)
+    ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, _T0 + counter)
+    # THE LINK IS GENUINE, and minted over EXACTLY the step the attestation names -- the same
+    # `_step_into` both sides use -- so `verify_inbound_link` passes. What refuses this is the
+    # SECOND gate: the device already stands at this counter holding a different root, and one
+    # counter names one state. Both gates are real; this test is about that one.
+    fc, fr = _step_into(store, counter, root)
     with pytest.raises(
-        exceptions.TrezorFailure, match="counter matches but the root differs"
+        exceptions.TrezorFailure, match="attested counter matches but the root differs"
     ):
-        ward.reconcile(session, divergent.root())
+        ward.reconcile(session, _link(fc, fr, counter, root))
 
 
 @pytest.mark.models("core")
@@ -1307,7 +1411,7 @@ def test_ward_reconcile_needs_an_attestation_first(session: Session):
 
     ward.sync(session)  # round open, nothing attested
     with pytest.raises(exceptions.TrezorFailure, match="no attested sync round"):
-        ward.reconcile(session, store.root())
+        ward.reconcile(session, _link_into(store, store.counter))
 
 
 @pytest.mark.models("core")
@@ -1319,7 +1423,7 @@ def test_ward_an_attestation_cannot_be_adopted_twice(session: Session):
     _attest(session, wm, store)
 
     with pytest.raises(exceptions.TrezorFailure, match="no attested sync round"):
-        ward.reconcile(session, store.root())
+        ward.reconcile(session, _link_into(store, store.counter))
 
 
 # --- writes advance the counter -----------------------------------------------------
@@ -1346,7 +1450,6 @@ def test_ward_a_write_does_not_move_the_head_until_confirmed(session: Session):
         "ward_set_entry",
     )
     assert res.counter == before + 1  # the ack names the next counter...
-    assert res.mac is not None
     assert ward.sync(session).counter == before  # ...and the device has NOT taken it
 
     ward.apply(store, res)
@@ -1373,12 +1476,14 @@ def test_ward_a_published_write_syncs_cleanly(session: Session):
     _confirm(session, store)
 
     wm = MockWM()
-    _publish(wm, res)
+    _publish(wm, res, store)
 
     ack = ward.sync(session)
-    counter, mac, ts, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(session, counter, mac, sig, ts)
-    ward.reconcile(session, store.root())
+    # RELAYED, not recomputed: the host forwards the step the WM signed. Deriving it again here
+    # would be the fixture agreeing with itself, and would break the moment the two disagreed.
+    fc, fr, counter, root, ts, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(session, fc, fr, counter, root, sig, ts)
+    ward.reconcile(session, _link_into(store, counter))
     store.counter = counter  # device and store now agree
 
     # the entry survived the round trip
@@ -1430,7 +1535,7 @@ def _link(from_counter, from_root, to_counter, to_root):
         to_counter,
         to_root,
         auth_commit(
-            _K_AUTH, _K_MAC, _WARD_ID, from_counter, from_root, to_counter, to_root
+            _K_AUTH, _WARD_ID, from_counter, from_root, to_counter, to_root
         ),
     )
 
@@ -1450,7 +1555,6 @@ def _revert_link(from_counter, from_root, to_counter, to_root):
         to_root,
         auth_commit(
             _K_AUTH,
-            _K_MAC,
             _WARD_ID,
             from_counter,
             from_root,
@@ -1511,10 +1615,10 @@ def test_ward_catches_up_across_transitions_it_never_saw(session: Session):
 
     wm = MockWM()
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
-    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
-    res = ward.verify_chain(session, head.root(), _serves(links))
+    root = head.root()
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), target, root, _T0 + target)
+    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, _T0 + target)
+    res = ward.verify_chain(session, _serves(links))
 
     assert res.counter == target
     assert res.new_root == head.root()
@@ -1565,9 +1669,9 @@ def test_ward_catches_up_further_than_one_ack_can_carry(session: Session):
 
     wm = MockWM()
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
-    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
+    root = head.root()
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), target, root, _T0 + target)
+    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, _T0 + target)
 
     asked = []
     serve = _serves(links)
@@ -1576,7 +1680,7 @@ def test_ward_catches_up_further_than_one_ack_can_carry(session: Session):
         asked.append(to_counter)
         return serve(to_counter, to_root, limit)
 
-    res = ward.verify_chain(session, head.root(), counting, max_links_per_ack=2)
+    res = ward.verify_chain(session, counting, max_links_per_ack=2)
 
     assert res.counter == target
     assert res.new_root == head.root()
@@ -1642,9 +1746,9 @@ def test_ward_catches_up_across_a_revert_to_a_state_below_its_own_head(session: 
 
     wm = MockWM()
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, target, restored.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
-    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
+    root = restored.root()
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), target, root, _T0 + target)
+    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, _T0 + target)
 
     # ONE REQUEST: the host serves both predecessors in a single ack, since `_serves` walks the
     # chain it was given. Then the WARNING, then the ack.
@@ -1660,7 +1764,7 @@ def test_ward_catches_up_across_a_revert_to_a_state_below_its_own_head(session: 
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
-        res = ward.verify_chain(session, restored.root(), _serves(links))
+        res = ward.verify_chain(session, _serves(links))
 
     # THE SCREEN IS THE POINT. Adoption already happened and cannot be refused -- declining would
     # not undo the demotion, only leave this device unable to sync -- so this is told, not asked.
@@ -1711,16 +1815,22 @@ def test_ward_verify_chain_brings_a_fresh_session_online(session: Session):
 
     # Confirm the head the device already holds, by the chain route rather than reconcile.
     # NO LINKS: the attested head IS the device's head, so there is nothing to fold. The empty
-    # chain is the "what I hold is current" case, and the terminal counter and mac checks still
+    # chain is the "what I hold is current" case, and the terminal counter and root checks still
     # have to agree -- so this exercises adoption without needing transitions to invent.
     wm = MockWM()
     ack = ward.sync(fresh)
-    mac = root_mac(_K_MAC, ack.ward_id, store.counter, store.root())
-    wm.publish(ack.ward_id, store.counter, mac, _T0 + store.counter)
-    _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(fresh, store.counter, mac, sig, _T0 + store.counter)
+    root = store.root()
+    wm.publish(
+        ack.ward_id,
+        store.counter,
+        root,
+        _T0 + store.counter,
+        *_step_into(store, store.counter, root),
+    )
+    fc, fr, c, r, _t, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(fresh, fc, fr, c, r, sig, _T0 + store.counter)
 
-    res = ward.verify_chain(fresh, store.root(), _serves([]))
+    res = ward.verify_chain(fresh, _serves([]))
     assert res.counter == store.counter
     assert res.new_root == store.root()
 
@@ -1747,12 +1857,20 @@ def test_ward_refuses_a_chain_with_a_gap(session: Session):
     wm = MockWM()
     ack = ward.sync(session)
     target = base_counter + 2
-    mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
-    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
+    root = head.root()
+    # THE ATTESTATION IS CONTIGUOUS, deliberately -- a WM only ever advances its head one counter
+    # at a time, so it would never sign the jump itself, and an attestation that did is refused at
+    # ingest rather than in the walk. Naming `target - 1` puts the gap where this test wants it:
+    # in the LINK, so `verify_chain_step_back` is the thing that refuses it.
+    sig = wm.sign(
+        ack.ward_id, ack.nonce, target - 1, base_root, target, root, _T0 + target
+    )
+    ward.ingest_attestation(
+        session, target - 1, base_root, target, root, sig, _T0 + target
+    )
 
     with pytest.raises(exceptions.TrezorFailure, match="exactly one"):
-        ward.verify_chain(session, head.root(), _serves(links))
+        ward.verify_chain(session, _serves(links))
 
 
 @pytest.mark.models("core")
@@ -1772,14 +1890,14 @@ def test_ward_refuses_a_chain_that_does_not_start_at_its_own_head(session: Sessi
 
     wm = MockWM()
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
-    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
+    root = head.root()
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), target, root, _T0 + target)
+    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, _T0 + target)
 
     with pytest.raises(
         exceptions.TrezorFailure, match="does not descend from this device's head"
     ):
-        ward.verify_chain(session, head.root(), _serves(links))
+        ward.verify_chain(session, _serves(links))
 
 
 @pytest.mark.models("core")
@@ -1795,12 +1913,19 @@ def test_ward_refuses_an_unauthorised_link(session: Session):
 
     wm = MockWM()
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, target, head.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
-    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
+    root = head.root()
+    sig = wm.sign(
+        ack.ward_id, ack.nonce, *_step_into(store, target, root, forged), target, root, _T0 + target
+    )
+    ward.ingest_attestation(
+        session, *_step_into(store, target, root, forged), target, root, sig, _T0 + target
+    )
 
+    # The attestation names the step this forged link claims, so the walk gets as far as the MAC
+    # -- which is the check under test. Naming anything else would refuse it a gate earlier, on
+    # the predecessor, and this test would stop exercising `verify_chain_step_back`.
     with pytest.raises(exceptions.TrezorFailure, match="not authorised"):
-        ward.verify_chain(session, head.root(), _serves(forged))
+        ward.verify_chain(session, _serves(forged))
 
 
 @pytest.mark.models("core")
@@ -1820,16 +1945,17 @@ def test_ward_refuses_a_chain_that_ends_somewhere_else(session: Session):
 
     wm = MockWM()
     ack = ward.sync(session)
-    mac = root_mac(
-        _K_MAC, _WARD_ID, target, attested.root()
-    )  # attests a different root
-    sig = wm.sign(ack.ward_id, ack.nonce, target, mac, _T0 + target)
-    ward.ingest_attestation(session, target, mac, sig, _T0 + target)
+    root = attested.root()  # attests a different root than the walk will reach
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), target, root, _T0 + target)
+    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, _T0 + target)
 
-    with pytest.raises(
-        exceptions.TrezorFailure, match="does not match the attested mac"
-    ):
-        ward.verify_chain(session, elsewhere.root(), _serves(links))
+    # SERVED UNCONDITIONALLY, not through `_serves`. The anchor is the ATTESTED root now, so an
+    # HONEST host would filter this link out -- it ends somewhere the device never asked about --
+    # and the walk would die on "the host cannot continue the chain" without the firmware's
+    # end-of-link check ever running. A MISBEHAVING host is exactly what that check exists for,
+    # so the source here answers every request with the same wrong link.
+    with pytest.raises(exceptions.TrezorFailure, match="does not end at the running root"):
+        ward.verify_chain(session, lambda _tc, _tr, _limit: links)
 
 
 @pytest.mark.models("core")
@@ -1853,19 +1979,6 @@ def test_ward_a_write_emits_its_own_authorisation(session: Session):
 
 
 # --- rollback: the escape from a stuck wallet ----------------------------------------
-
-
-def _link_into(store: WardTrie, to_counter: int):
-    """The transition log entry that PRODUCED the state at `to_counter`.
-
-    Note it is the link INTO the target, not the one out of it: the device authorises the
-    target by the transition that created it, which is what lets a caller jump back past
-    steps whose own links it never received.
-    """
-    for link in store.links:
-        if link[2] == to_counter:
-            return link
-    raise AssertionError("no link produces counter %d" % to_counter)
 
 
 def _rollback(session: Session, store: WardTrie, to_counter: int | None = None):
@@ -1933,8 +2046,9 @@ def test_ward_rollback_refuses_a_target_with_no_confirmed_head_proof(session: Se
 @pytest.mark.models("core")
 def test_ward_rollback_refuses_an_attestation_for_a_different_head(session: Session):
     """The proof has to be for THIS target. An archive full of genuine attestations is still
-    only useful for the heads they name -- `root_mac` binds the counter, so the pair admits
-    exactly one root and a neighbouring attestation cannot stand in."""
+    only useful for the heads they name -- the counter sits beside the root inside the signed
+    preimage, so the pair admits exactly one root and a neighbouring attestation cannot stand
+    in."""
     store = WardTrie()
     _go_online(session, store)
     _seed(session, store, b"a", b"one")
@@ -1958,7 +2072,7 @@ def test_ward_rollback_undoes_the_last_write(session: Session):
     """
     store = WardTrie()
     _seed(session, store, b"a", b"one")
-    before_root, before_counter = store.root(), store.counter
+    before_root = store.root()
     key = _seed(session, store, b"b", b"two")
 
     ack, rec = _rollback(session, store)
@@ -1969,8 +2083,11 @@ def test_ward_rollback_undoes_the_last_write(session: Session):
     assert "cannot be recovered" in rec.text.lower()
 
     # the device now verifies against the earlier tree, and the undone entry is gone
-    rewound = _subset(store, [k for k in store.blobs if k != key])
+    # AFTER `apply_rollback`, not before: that is what appends the REVERT link to the host's log,
+    # and `_confirm` below now has to hand that very link to the device. A subset taken first
+    # carries every link except the one this round is about.
     ward.apply_rollback(store, ack)
+    rewound = _subset(store, [k for k in store.blobs if k != key])
     rewound.counter = ack.counter
     _confirm(
         session, rewound
@@ -2061,8 +2178,11 @@ def test_ward_rollback_may_discard_changes_the_wm_confirmed(session: Session):
 
     assert "1change" in rec.squashed  # one discarded
 
-    rewound = _subset(store, [key_a])
+    # AFTER `apply_rollback`, not before: that is what appends the REVERT link to the host's log,
+    # and `_confirm` below now has to hand that very link to the device. A subset taken first
+    # carries every link except the one this round is about.
     ward.apply_rollback(store, ack)
+    rewound = _subset(store, [key_a])
     rewound.counter = ack.counter
     _confirm(
         session, rewound
@@ -2095,8 +2215,11 @@ def test_ward_rollback_reverts_several_steps_at_once(session: Session):
     assert "3changes" in rec.squashed
     assert ack.counter == store.counter + 1  # forward, though the head moves back
 
-    rewound = _subset(store, [key_a])
+    # AFTER `apply_rollback`, not before: that is what appends the REVERT link to the host's log,
+    # and `_confirm` below now has to hand that very link to the device. A subset taken first
+    # carries every link except the one this round is about.
     ward.apply_rollback(store, ack)
+    rewound = _subset(store, [key_a])
     rewound.counter = ack.counter
     _confirm(
         session, rewound
@@ -2122,10 +2245,26 @@ def test_ward_rollback_reverts_several_steps_at_once(session: Session):
 # the confirmed head, which is a different failure and is covered by the tests above.
 
 
-def _recover(session: Session, wm: MockWM, counter: int, mac: bytes, timestamp: int):
-    """Walk the recovery confirmation and return (ack, recorder)."""
+def _recover(
+    session: Session,
+    wm: MockWM,
+    store: WardTrie,
+    counter: int,
+    root: bytes,
+    timestamp: int,
+):
+    """Walk the recovery confirmation and return (ack, recorder).
+
+    TAKES THE STORE, because the attestation names a STEP and the step comes from the host's
+    transition log. A recovery target is an OLD head, so the log is exactly where its predecessor
+    is to be found -- and a host that kept no links cannot recover, which is the same fail-closed
+    property `reconcile` has.
+    """
     ack_sync = ward.sync(session)
-    sig = wm.sign(ack_sync.ward_id, ack_sync.nonce, counter, mac, timestamp)
+    step = _step_into(store, counter, root)
+    sig = wm.sign(
+        ack_sync.ward_id, ack_sync.nonce, *step, counter, root, timestamp
+    )
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
@@ -2134,7 +2273,7 @@ def _recover(session: Session, wm: MockWM, counter: int, mac: bytes, timestamp: 
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
-        ack = ward.recover_counter(session, counter, mac, sig, timestamp)
+        ack = ward.recover_counter(session, *step, counter, root, sig, timestamp)
     return ack, rec
 
 
@@ -2159,7 +2298,7 @@ def test_ward_recover_counter_accepts_a_backward_attestation(session: Session):
     wm = MockWM()
     _attest(session, wm, store)
     old_counter, old_root, old_time = store.counter, store.root(), store.timestamp
-    old_mac = root_mac(_K_MAC, _WARD_ID, old_counter, old_root)
+    old_root = old_root
 
     res, _rec = _write(
         session,
@@ -2173,11 +2312,13 @@ def test_ward_recover_counter_accepts_a_backward_attestation(session: Session):
     assert store.counter > old_counter
 
     # the WM comes back from a backup: it now says the old head is current
-    ack, _rec = _recover(session, wm, old_counter, old_mac, old_time - 3600)
+    ack, _rec = _recover(session, wm, store, old_counter, old_root, old_time - 3600)
     assert ack.counter == old_counter
 
-    # ...and the device adopts it, so the wallet is usable again
-    ward.reconcile(session, old_root)
+    # ...and the device adopts it, so the wallet is usable again -- with the link into that
+    # older head, which the host still holds because it archives every one it is handed. A host
+    # that kept none could not complete a recovery, and that is fail-closed by design.
+    ward.reconcile(session, _link_into(store, old_counter))
     rewound = _subset(store, [expected_entry_key(_K_PATH, _APP, b"a")])
     assert rewound.root() == old_root
     _res, rec = _read(
@@ -2202,10 +2343,10 @@ def test_ward_recover_counter_refuses_an_attestation_that_is_not_older(
     _attest(session, wm, store)
 
     ack = ward.sync(session)
-    mac = root_mac(_K_MAC, _WARD_ID, store.counter, store.root())
-    sig = wm.sign(ack.ward_id, ack.nonce, store.counter, mac, store.timestamp)
+    root = store.root()
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, store.counter, root), store.counter, root, store.timestamp)
     with pytest.raises(exceptions.TrezorFailure, match="not older"):
-        ward.recover_counter(session, store.counter, mac, sig, store.timestamp)
+        ward.recover_counter(session, *_step_into(store, store.counter, root), store.counter, root, sig, store.timestamp)
 
 
 @pytest.mark.models("core")
@@ -2221,15 +2362,15 @@ def test_ward_recover_counter_still_requires_a_genuine_attestation(session: Sess
     wm = MockWM()
     _attest(session, wm, store)
     behind = store.counter - 1
-    mac = root_mac(_K_MAC, _WARD_ID, behind, store.root())
+    root = store.root()
 
     impostor = MockWM(seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
     ack = ward.sync(session)
-    sig = impostor.sign(ack.ward_id, ack.nonce, behind, mac, store.timestamp - 3600)
+    sig = impostor.sign(ack.ward_id, ack.nonce, *_step_into(store, behind, root), behind, root, store.timestamp - 3600)
     with pytest.raises(
         exceptions.TrezorFailure, match="attestation verification failed"
     ):
-        ward.recover_counter(session, behind, mac, sig, store.timestamp - 3600)
+        ward.recover_counter(session, *_step_into(store, behind, root), behind, root, sig, store.timestamp - 3600)
 
 
 @pytest.mark.models("core")
@@ -2239,7 +2380,7 @@ def test_ward_recover_counter_screen_names_both_counters_and_the_distance(
     """The screen has to carry the decision, because the crypto cannot.
 
     Everything presented here is authentic whether the operator is recovering or an
-    attacker is rewinding -- a replayed (counter, mac) pair is proof this wallet really did
+    attacker is rewinding -- a replayed (counter, root) pair is proof this wallet really did
     reach that state, and says nothing about who is replaying it. The only thing that
     separates the two cases is whether the user means it, so the prompt names where the
     wallet is, where it is going, and how far back that is.
@@ -2249,9 +2390,9 @@ def test_ward_recover_counter_screen_names_both_counters_and_the_distance(
     wm = MockWM()
     _attest(session, wm, store)
     behind = store.counter - 1
-    mac = root_mac(_K_MAC, _WARD_ID, behind, store.root())
+    root = store.root()
 
-    _ack, rec = _recover(session, wm, behind, mac, store.timestamp - 7200)
+    _ack, rec = _recover(session, wm, store, behind, root, store.timestamp - 7200)
 
     assert "reset sync counter" in rec.title
     assert "#%d" % store.counter in rec.squashed  # where it is
@@ -2461,15 +2602,13 @@ def test_ward_write_authorises_its_transition_over_mac_heads(session: Session):
     WHAT THIS USED TO ASSERT. The ack also carried `auth_sig` -- Ed25519 under K_sig over the
     ROOT transition, nominally for the WM. It was removed: nothing verified it, in firmware or
     in the mock WM, and nothing safely could. The WM compare-and-swaps on `(counter, mac)`,
-    which a root-naming signature does not bind, so a host could have paired a genuine
-    signature with any mac it liked. The WM-facing authorisation is `wm_sig` over mac heads,
-    which the connect path does not carry yet.
+    which a root-naming signature did not bind. The WM-facing authorisation is `wm_sig`, which
+    the connect path does not carry yet.
 
-    WHAT REMAINS, AND WHY IT IS THE INTERESTING HALF. `auth_commit` under K_auth is what
-    another device of this wallet folds when it walks the history, and it now covers MAC
-    HEADS rather than roots -- `mac = root_mac(K_mac, ward_id, counter, root)` -- so the WM
-    never needs a root to check an authorisation and cannot fabricate a head whose mac it
-    could not compute.
+    WHAT REMAINS, AND WHY IT IS NOW THE WHOLE STORY. `auth_commit` under K_auth is what another
+    device of this wallet folds when it walks the history, and it covers the ROOT transition
+    directly -- K_mac and the mac-head layer are gone. It is also the only thing that can refuse
+    a WM naming a state this wallet never reached, since minting one needs the seed.
     """
     store = WardTrie()
     _go_online(session, store)
@@ -2487,13 +2626,12 @@ def test_ward_write_authorises_its_transition_over_mac_heads(session: Session):
     ward.apply(store, res)  # so the store can tell us the root the transition landed on
 
     assert res.auth_commit == auth_commit(
-        _K_AUTH, _K_MAC, _WARD_ID, res.counter - 1, from_root, res.counter, store.root()
+        _K_AUTH, _WARD_ID, res.counter - 1, from_root, res.counter, store.root()
     )
 
     # ...and it is bound to those endpoints: a different destination does not reproduce it
     assert res.auth_commit != auth_commit(
         _K_AUTH,
-        _K_MAC,
         _WARD_ID,
         res.counter - 1,
         from_root,
@@ -2501,15 +2639,12 @@ def test_ward_write_authorises_its_transition_over_mac_heads(session: Session):
         store.root(),
     )
 
-    # the preimage really does name macs, not roots
-    assert transition_preimage(
-        TAG_COMMIT,
-        _WARD_ID,
-        res.counter - 1,
-        root_mac(_K_MAC, _WARD_ID, res.counter - 1, from_root),
-        res.counter,
-        root_mac(_K_MAC, _WARD_ID, res.counter, store.root()),
-    )[1 + len(TAG_COMMIT) :].startswith(_WARD_ID)
+    # the preimage really does name ROOTS, and the empty tree as EMPTY_ROOT
+    pre = transition_preimage(
+        TAG_COMMIT, _WARD_ID, res.counter - 1, from_root, res.counter, store.root()
+    )
+    assert pre[1 + len(TAG_COMMIT) :].startswith(_WARD_ID)
+    assert pre.endswith(store.root())
 
 
 # --- the offline store ------------------------------------------------------------
@@ -2535,8 +2670,6 @@ def _pin(session: Session, store: WardTrie, identifier: bytes, br_name: str) -> 
             session, _APP, identifier, ward.store_provider(store)
         )
     return res, rec
-
-
 
 
 def _offline_read(session: Session, identifier: bytes) -> "_Recorded":
@@ -2939,7 +3072,7 @@ def test_ward_flush_publishes_the_queued_change_sealed(session: Session):
     # carries `remaining` -- which a direct write has nothing to count and therefore never has.
     assert isinstance(res.response, m.WardFlushQueueAck)
     assert res.counter is not None
-    assert res.mac is not None
+    assert res.auth_commit is not None
     assert res.remaining == 0
 
     # the content really is sealed, and opens to what was queued
@@ -3008,7 +3141,7 @@ def test_ward_an_offered_change_settles_in_a_later_session(session: Session):
     _go_online(session, store)
     res = ward.flush_queue(session, ward.store_provider(store))
     ward.apply(store, res)
-    _publish(MockWM(), res)
+    _publish(MockWM(), res, store)
 
     # A NEW SESSION adopts the head the change is in. It shares the device's flash and nothing
     # of the session that offered the change.
@@ -3040,12 +3173,8 @@ def test_ward_one_wallet_does_not_settle_anothers_queued_change(
     "offline copy" of something never written. Beta's counter is pushed past alpha's precisely
     so a counter comparison alone would say "landed".
     """
-    _SEED_ALPHA = bip39_seed(_MNEMONIC, "alpha")
-    _SEED_BETA = bip39_seed(_MNEMONIC, "beta")
     alpha = test_ctx.get_session(passphrase="alpha")
     beta = test_ctx.get_session(passphrase="beta")
-    k_mac_a = derive_k_mac(_SEED_ALPHA)
-    k_mac_b = derive_k_mac(_SEED_BETA)
 
     store_a, store_b = WardTrie(), WardTrie()
 
@@ -3053,16 +3182,16 @@ def test_ward_one_wallet_does_not_settle_anothers_queued_change(
     with test_ctx as ctx:
         ctx.set_input_flow(InputFlowConfirmAllWarnings(alpha).get())
         ward.queue_set_entry(alpha, _APP, b"addr1", b"alphas_change")
-    _go_online(alpha, store_a, k_mac=k_mac_a)
+    _go_online(alpha, store_a)
     ward.flush_queue(alpha, ward.store_provider(store_a))
 
     # Beta then advances its OWN head well past alpha's counter.
     for i in range(3):
-        _seed(beta, store_b, b"b%d" % i, b"beta_value", k_mac=k_mac_b)
+        _seed(beta, store_b, b"b%d" % i, b"beta_value")
     assert store_b.counter > store_a.counter
 
     # Beta's adoption must leave alpha's record exactly as it was.
-    _confirm(beta, store_b, k_mac=k_mac_b)
+    _confirm(beta, store_b)
 
     rec = _offline_read(test_ctx.get_session(passphrase="alpha"), b"addr1")
     assert "queued change" in rec.title
@@ -3083,7 +3212,7 @@ def test_ward_a_confirmed_change_becomes_an_offline_copy(session: Session):
     _go_online(session, store)
     res = ward.flush_queue(session, ward.store_provider(store))
     ward.apply(store, res)
-    _publish(MockWM(), res)
+    _publish(MockWM(), res, store)
     _confirm(session, store)
 
     rec = _offline_read(session.test_ctx.get_session(), b"addr1")

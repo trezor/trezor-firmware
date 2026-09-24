@@ -47,7 +47,7 @@ from trezorlib.ward_service import (  # noqa: F401
 from trezorlib.ward_service import service_speaks_codec
 from trezorlib.ward_service import ward_transport as _ward_interface_of
 
-from .ward_keys import EMPTY_ROOT, bip39_seed, derive_k_mac, derive_ward_id, root_mac
+from .ward_keys import EMPTY_ROOT, bip39_seed, derive_ward_id
 
 if t.TYPE_CHECKING:
     from trezorlib.debuglink import TrezorTestContext
@@ -57,7 +57,6 @@ if t.TYPE_CHECKING:
     from .ward_wm import MockWM
 
 __all__ = [
-    "DEFAULT_K_MAC",
     "DEFAULT_SEED",
     "DEFAULT_WARD_ID",
     "PROTOCOL_VERSION",
@@ -68,11 +67,10 @@ __all__ = [
     "ward_transport",
 ]
 
-# The keys of the wallet a default-set-up device holds: the default mnemonic and no passphrase
-# (`SetupParams` in conftest.py). A daemon has to be able to reproduce the device's macs, since the
-# WM cannot compute one -- so the fixture stands in for a device that already published.
+# The wallet a default-set-up device holds: the default mnemonic and no passphrase
+# (`SetupParams` in conftest.py). Only `ward_id` is needed here -- the WM's head is
+# `(counter, root)` and the replica has the root, so this file holds no wallet secret.
 DEFAULT_SEED = bip39_seed(" ".join(["all"] * 12))
-DEFAULT_K_MAC = derive_k_mac(DEFAULT_SEED)
 DEFAULT_WARD_ID = derive_ward_id(DEFAULT_SEED)
 
 # Answered once per session by `ward_service_transport`.
@@ -182,9 +180,10 @@ def ward_transport(client: TrezorTestContext) -> UdpTransport:
 class MockWardService:
     """A replica, a WM, and the knobs that make each failure mode reproducible.
 
-    THE WM IS NEVER ASKED TO COMPUTE A MAC, and preserving that asymmetry is most of the point of
-    this mock. A real WM holds only (counter, mac) and no key of this wallet, so every mac it stores
-    was handed to it -- by a device in production, and by the oracle's `root_mac` here.
+    THE MOCK HOLDS NO WALLET SECRET AT ALL, which is a fidelity improvement rather than a
+    simplification: it used to need `DEFAULT_K_MAC` to compute the head macs a WM stored, and a
+    real daemon could never have had one. The WM now holds `(counter, root)`, and a root is
+    something the replica genuinely has.
     """
 
     def __init__(self, client: TrezorTestContext) -> None:
@@ -215,7 +214,6 @@ class MockWardService:
         # which is the state a freshly started one is in.
         self.store: WardTrie | None = None
         self.wm: MockWM | None = None
-        self.k_mac = b""
         self.timestamp_base = 1_700_000_000
         # The wallet this daemon is answering for, learned from the first sync. `WardServiceFetch`
         # and `WardPublish` do not carry it, because one logical service fronts one replica -- so
@@ -229,9 +227,10 @@ class MockWardService:
         # Apply and publish a mutation, then say nothing. The ambiguous failure the write-ahead
         # journal exists for: the write DID land and the device cannot know it.
         self.drop_publish_ack = False
-        # Attest a DIFFERENT (counter, mac) than the one that was published, signed properly. Models
-        # a WM that is authentic but not answering the question asked -- which is the only freedom a
-        # WM has, since it cannot forge a mac.
+        # Attest a DIFFERENT (counter, root) than the one that was published, signed properly.
+        # Models a WM that is authentic but not answering the question asked. Note this is no
+        # longer the WM's ONLY freedom -- it holds roots in the clear and could name one the
+        # wallet never reached -- but it is the freedom the device-side check here is about.
         self.publish_ack_override: tuple[int, bytes] | None = None
 
         self._stop = False
@@ -387,37 +386,52 @@ class MockWardService:
     def _sync_response(self, request):
         """The current head, attested, with the links from the device's head forward.
 
-        THE WM IS TOLD THE MAC, never asked to compute one: it holds no key of ours and could not.
-        Preserving that asymmetry is the point of the mock, so the mac comes from the oracle's
-        `root_mac` here exactly as it would come from a device in production.
+        The head is `(counter, root)` off the replica this daemon owns -- no derivation, and no
+        key of the wallet's involved anywhere in this file.
 
         A wallet the WM has never seen bootstraps from the device's own authorised opening head --
-        which is why `current_mac` and `head_init_sig` are on the request at all.
+        which is why `head_init_sig` is on the request at all.
         """
         assert self.store is not None and self.wm is not None
         ward_id = request.ward_id
         self.ward_id = ward_id
 
         counter = self.store.counter
-        mac = root_mac(self.k_mac, ward_id, counter, self.store.root())
+        root = self.store.root() or EMPTY_ROOT
         timestamp = self.timestamp_base + counter
 
         if self.wm.head(ward_id) is None:
             # First contact: adopt the head the device says it holds, authorised by its own
             # signature over it, and attest that.
             self.wm.attest_head(
-                ward_id, request.nonce, request.current_mac, request.head_init_sig
+                ward_id,
+                request.nonce,
+                request.current_counter or 0,
+                request.current_root or EMPTY_ROOT,
+                request.head_init_sig,
             )
         wm_head = self.wm.head(ward_id)
         assert wm_head is not None  # just bootstrapped above if it was not there
         if counter != wm_head[0]:
             # A head the WM does not hold yet. In production a device's publish would have put it
-            # there; here the fixture is standing in for that device.
-            self.wm.publish(ward_id, counter, mac, timestamp)
+            # there; here the fixture is standing in for that device -- including telling it which
+            # step arrived, which is what the attestation names.
+            prev = self.store.links_ending_at(counter, self.store.root(), 1)
+            from_counter, from_root = (
+                (prev[0][0], prev[0][1]) if prev else (wm_head[0], wm_head[1])
+            )
+            self.wm.publish(
+                ward_id, counter, root, timestamp, from_counter, from_root or EMPTY_ROOT
+            )
 
-        att_counter, att_mac, att_timestamp, signature = self.wm.attest(
-            ward_id, request.nonce
-        )
+        (
+            att_from_counter,
+            att_from_root,
+            att_counter,
+            att_root,
+            att_timestamp,
+            signature,
+        ) = self.wm.attest(ward_id, request.nonce)
 
         links = [
             messages.WardChainLink(
@@ -432,8 +446,10 @@ class MockWardService:
         ]
 
         return messages.WardSyncResponse(
-            counter=att_counter,
-            mac=att_mac,
+            from_counter=att_from_counter,
+            from_root=att_from_root,
+            to_counter=att_counter,
+            to_root=att_root,
             timestamp=att_timestamp,
             wm_signature=signature,
             links=links,
@@ -499,16 +515,23 @@ class MockWardService:
 
         head = self.wm.head(ward_id)
         assert head is not None, "the sync bootstraps the WM, so a head must exist by now"
-        _head_counter, head_mac, _ts = head
+        _head_counter, head_root, _ts = head
 
         try:
-            counter, mac, timestamp, signature = self.wm.publish_and_attest(
+            (
+                _afc,
+                _afr,
+                counter,
+                root,
+                timestamp,
+                signature,
+            ) = self.wm.publish_and_attest(
                 ward_id,
                 request.nonce,
                 request.counter - 1,
-                head_mac,
+                head_root,
                 request.counter,
-                request.mac,
+                request.new_root or EMPTY_ROOT,
                 request.wm_sig,
                 self.timestamp_base + request.counter,
             )
@@ -523,12 +546,15 @@ class MockWardService:
             return None
 
         if self.publish_ack_override is not None:
-            counter, mac = self.publish_ack_override
-            signature = self.wm.sign(ward_id, request.nonce, counter, mac, timestamp)
+            # A WM that answers a question nobody asked: same nonce, same key, a different step.
+            # The device rebuilds the preimage from what it published, so this now fails as a
+            # verification failure rather than as a mismatch it noticed afterwards.
+            counter, root = self.publish_ack_override
+            signature = self.wm.sign(
+                ward_id, request.nonce, counter - 1, head_root, counter, root, timestamp
+            )
 
-        return messages.WardPublishAck(
-            counter=counter, mac=mac, timestamp=timestamp, wm_signature=signature
-        )
+        return messages.WardPublishAck(timestamp=timestamp, wm_signature=signature)
 
     def _commit(self, request) -> None:
         """Apply the published mutation to this daemon's replica.
@@ -554,7 +580,6 @@ def bound_daemon(
     client: TrezorTestContext,
     store: "WardTrie | None" = None,
     wm: "MockWM | None" = None,
-    k_mac: bytes | None = None,
     host_static_privkey: bytes | None = None,
 ) -> MockWardService:
     """A connected, bound daemon serving `store` -- the starting state of every service test.
@@ -564,7 +589,7 @@ def bound_daemon(
     when a WARD operation first needs one.
 
     A throwaway `MockWM` is fine when the test has no opinion about the WM -- it only has to hold
-    one (counter, mac) pair for the length of the test. Tests that assert on the WM's own state, or
+    one (counter, root) pair for the length of the test. Tests that assert on the WM's own state, or
     that move its head behind the device's back, pass their own.
     """
     from .ward_trie import WardTrie as _WardTrie
@@ -576,5 +601,4 @@ def bound_daemon(
     assert isinstance(ack, messages.WardServiceOpenAck), f"bind refused: {ack}"
     wardd.store = store if store is not None else _WardTrie()
     wardd.wm = wm if wm is not None else _MockWM()
-    wardd.k_mac = k_mac if k_mac is not None else DEFAULT_K_MAC
     return wardd

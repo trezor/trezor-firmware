@@ -50,8 +50,10 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     nonce comes from the host rather than an open round and it must therefore never be able to
     decide what is CURRENT. See the note above that function.
 
-    Re-dating is what makes the replay safe: `root_mac` binds the counter, so the archived
-    (counter, mac) can only be satisfied by the root that genuinely held that counter.
+    Re-dating is what makes the replay safe: the WHOLE STEP is inside the signed attestation, so
+    an archived one names one moment and one predecessor. It cannot be moved onto another counter,
+    and it cannot be paired with a different link that happens to end in the same place. Roots
+    repeat when content repeats; transitions carrying their counters do not.
 
     WHAT IS STILL NOT PROVEN, AND MUST NOT BE IMPLIED. The target is no longer required to be
     the immediate predecessor of the current head, so:
@@ -91,7 +93,7 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
 
     from .cas import TAG_REVERT, TAG_WM_REVERT, auth_commit, verify_auth_commit, wm_sig
     from .common import WARNING_UNVERIFIED, require_initialized
-    from .keys import derive_k_auth, derive_k_mac, derive_k_sig, derive_ward_id
+    from .keys import derive_k_auth, derive_k_sig, derive_ward_id
     from .root import get_counter, get_root
 
     require_initialized()
@@ -118,14 +120,13 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
 
     ward_id = await derive_ward_id()
     k_auth = await derive_k_auth()
-    k_mac = await derive_k_mac()
 
     # The check that does the work: this authorisation must describe the transition that
     # PRODUCED the target state. Only a device of this wallet can mint it, so the target
     # cannot be invented -- and because to_counter is inside the preimage, the discarded
     # count derived from it below is authenticated too.
     if not verify_auth_commit(
-        k_auth, k_mac, ward_id, from_counter, from_root, to_counter, to_root, supplied
+        k_auth, ward_id, from_counter, from_root, to_counter, to_root, supplied
     ):
         raise DataError("auth_commit does not describe the target state")
 
@@ -137,7 +138,7 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     # so this may establish HISTORY and must never establish CURRENCY. Rollback is a demotion --
     # the counter still moves forward and the user still holds to confirm -- so nothing here
     # claims the target is current.
-    from .attest import root_mac, verify_archived_attestation
+    from .attest import verify_archived_attestation
 
     archived_nonce = msg.nonce
     archived_sig = msg.wm_signature
@@ -147,9 +148,20 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
             "archived for that counter"
         )
 
-    target_mac = root_mac(k_mac, ward_id, to_counter, to_root)
+    # THE SAME TRANSITION THE LINK JUST NAMED -- all four operands, not merely the destination.
+    # An attestation that ended at the same place but began somewhere else used to satisfy this,
+    # and two such can coexist because a write and a revert may land on the same root at the same
+    # counter. Now the archived proof and the authorisation describe one step or the demotion is
+    # refused.
     if not verify_archived_attestation(
-        ward_id, archived_nonce, to_counter, target_mac, msg.timestamp or 0, archived_sig
+        ward_id,
+        archived_nonce,
+        from_counter,
+        from_root,
+        to_counter,
+        to_root,
+        msg.timestamp or 0,
+        archived_sig,
     ):
         raise DataError("the WM never attested this target as its head")
 
@@ -197,17 +209,16 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     # without the tag the WM cannot tell a demotion from an ordinary advance, and cannot
     # apply policy to one. It buys no replay protection; the destination mac already binds
     # uniquely to this (counter, root) pair.
-    # BOTH take the same (counter, root) endpoints and derive their own macs, so the two
-    # authorisations cannot come to disagree about which moment this demotion re-dates.
+    # BOTH cover the identical bytes -- one preimage, differing only in tag, key and algorithm --
+    # so the two authorisations cannot come to disagree about which moment this demotion re-dates.
     return WardRollbackAck(
         counter=new_counter,
         new_root=to_root,
         auth_commit=auth_commit(
-            k_auth, k_mac, ward_id, counter, head, new_counter, to_root, TAG_REVERT
+            k_auth, ward_id, counter, head, new_counter, to_root, TAG_REVERT
         ),
         wm_sig=wm_sig(
             await derive_k_sig(),
-            k_mac,
             ward_id,
             counter,
             head,

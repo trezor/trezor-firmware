@@ -474,7 +474,7 @@ class WardServiceClientV1:
     key for the device to pin and no credential to store -- `WardServiceOpen` establishes only that
     a process is listening on the dedicated interface. That is the whole of the transport-level
     authentication, deliberately: WARD's own guarantees do not rest on it. Leaf authenticity, the
-    MPT proof, the WM attestation and the device-minted nonce/counter/mac are what accept an answer,
+    MPT proof, the WM attestation and the device-minted nonce/counter/root are what accept an answer,
     and none of them ask who sent it.
 
     So a hostile process that can open this interface can fail an operation, answer wrongly or force

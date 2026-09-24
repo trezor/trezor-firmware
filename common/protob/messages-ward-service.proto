@@ -87,10 +87,11 @@ message WardServiceOpenAck {
  * exactly there, so what comes back proves descent from a state this device actually reached
  * rather than from one it is told about.
  *
- * current_mac and head_init_sig are present only when the WM may not know this wallet yet. The WM
- * cannot compute a mac -- it holds no key of ours -- so a wallet's first ever head has to be
- * supplied and authenticated by the device, or there is nothing for a later CAS to compare
- * against. They are ignored once the WM has a head.
+ * head_init_sig matters only when the WM may not know this wallet yet: a compare-and-swap needs
+ * something to compare against, and a WM that has never seen this wallet has nothing. The opening
+ * head is `(current_counter, current_root)` above -- the WM holds roots, so there is nothing to
+ * derive -- and this authorises it, or a wallet's first head is whatever the first speaker claims.
+ * Ignored once the WM has a head.
  */
 message WardSyncRequest {
     optional bytes  nonce           = 1;  // 32B, minted by the device for this exchange
@@ -98,8 +99,12 @@ message WardSyncRequest {
     optional uint32 current_counter = 3;  // the head the device holds...
     optional bytes  current_root    = 4;  // ...absent root means the empty tree
 
-    // Only for a wallet the WM has never seen. See above.
-    optional bytes  current_mac     = 5;
+    // 5 was `current_mac`: HMAC(K_mac, ...) over the pair above, back when the WM stored macs
+    // rather than roots. K_mac is gone; the opening head is `current_counter, current_root`.
+    reserved 5;
+
+    // Only for a wallet the WM has never seen. See above. Ed25519 under K_sig over the
+    // self-transition (counter, root) -> (counter, root) under b"WARD WM INIT v2".
     optional bytes  head_init_sig   = 6;
 }
 
@@ -107,7 +112,7 @@ message WardSyncRequest {
  * Request: service -> device. The attested head, and the authorised steps from the device's own
  * head to it.
  *
- * CHAIN-ONLY, with no root-and-mac shortcut. The service owns the replica AND its history, so it
+ * CHAIN-ONLY, with no one-link shortcut. The service owns the replica AND its history, so it
  * can always show the steps -- and every adoption then proves two separate things: DESCENT, that
  * each intervening transition was authorised by a device of this wallet and none was skipped, and
  * CURRENCY, that the WM vouches for where it ends. Connect mode has a weaker route that takes the
@@ -118,12 +123,20 @@ message WardSyncRequest {
  * another device of the wallet has written in the meantime.
  */
 message WardSyncResponse {
-    optional uint32 counter      = 1;  // the head the WM attests
-    optional bytes  mac          = 2;  // ...and the mac it signed for it
+    reserved 1, 2;  // were `counter` and `root`; the attestation names a STEP now
+
     optional uint64 timestamp    = 3;
     optional bytes  wm_signature = 4;  // over the nonce from the request, so it cannot be replayed
 
     repeated WardChainLink links = 5;  // ordered, starting at the device's current head
+
+    // The transition the WM attests: the LAST of the links above, when there are any. Not
+    // derivable from the device's own head -- the WM may be several steps ahead, and it is the
+    // final step it vouches for.
+    optional uint32 to_counter   = 6;
+    optional bytes  to_root      = 7;  // absent means the empty tree
+    optional uint32 from_counter = 8;
+    optional bytes  from_root    = 9;  // absent means the empty tree
 }
 
 /**
@@ -159,34 +172,48 @@ message WardSyncRequired {
  * store and publish.
  *
  * THE DEVICE HAS NOT ADOPTED IT YET. The head moves only once the WM attests this exact counter
- * and mac, which is what WardPublishAck carries back -- so a publication that is lost leaves the
+ * and root, which is what WardPublishAck carries back -- so a publication that is lost leaves the
  * device where it was rather than ahead of the service.
  *
- * wm_sig is what lets the WM authorise the write without being trusted with contents: it signs
- * the transition between MAC HEADS, which is exactly what the WM stores, so the WM never receives
- * a root. auth_commit remains the authenticator another DEVICE of this wallet checks.
+ * wm_sig is what lets the WM require that only a holder of this wallet's K_sig may advance its
+ * head. It covers EXACTLY the bytes auth_commit MACs -- the root transition -- so the two roots
+ * the WM compare-and-swaps on and attests are both inside what it verifies, and a host cannot
+ * pair a genuine signature with operands of its own. auth_commit remains the authenticator
+ * another DEVICE of this wallet checks, and the only proof that a state is real.
  */
 message WardPublish {
     optional bytes  entry_key   = 1;
     optional WardLeafIdentity identity = 2;
     optional WardLeafContent  content  = 3;
     optional uint32 counter     = 4;   // the counter this transition reaches
-    optional bytes  mac         = 5;   // the mac of the state it reaches
+
+    // 5 was `mac`, the K_mac commitment to the state reached. The WM holds roots now, and the
+    // two below are what it compare-and-swaps on and attests.
+    reserved 5;
+
     optional bytes  auth_commit = 6;   // for another device of this wallet
-    optional bytes  wm_sig      = 7;   // for the WM: over the mac heads, never the roots
+    optional bytes  wm_sig      = 7;   // for the WM: over exactly the bytes auth_commit MACs
     optional bytes  nonce       = 8;   // 32B, so the attestation that comes back is for THIS write
+
+    // The two ends of the transition, because the WM verifies `wm_sig` over them and
+    // compare-and-swaps on `from_root`. Absent means the empty tree.
+    optional bytes  from_root   = 9;
+    optional bytes  new_root    = 10;
 }
 
 /**
  * Request: service -> device. The WM attested the published head.
  *
- * Checked against what the device just sent, not merely verified: the counter and mac must be the
- * ones this device computed. That is stronger than connect-mode reconcile, where the device
- * accepts any root reproducing an attested mac -- here it minted the mac itself.
+ * Checked against what the device just sent, not merely verified: the counter and root must be
+ * the ones this device computed. That is stronger than connect-mode reconcile, which folds a
+ * single host-supplied link -- here the device derived the root itself and compares directly.
  */
 message WardPublishAck {
-    optional uint32 counter      = 1;
-    optional bytes  mac          = 2;
+    // 1 and 2 were `counter` and `root`. The device reconstructs the attested transition from
+    // what it just published -- both ends are its own -- and verifies the signature against
+    // that, so a head named here would be a value the check merely echoed.
+    reserved 1, 2;
+
     optional uint64 timestamp    = 3;
     optional bytes  wm_signature = 4;  // over the nonce from WardPublish
 }
