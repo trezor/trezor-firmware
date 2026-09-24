@@ -913,8 +913,8 @@ pub enum TrezorUiEnum<'a> {
 /// - **Written by core**, from whatever the Python layout returned. Core is
 ///   the only producer; an app never constructs one.
 /// - **Read by the app SDK**, which decodes it and hands it to the block that
-///   sent the request. No app sees it: a block turns it into its own
-///   `UiOutcome` first.
+///   sent the request, which answers what the library consumes itself and
+///   passes the rest on to the app.
 /// - **Crosses IPC**, so it is the one vocabulary both sides must agree on.
 ///
 /// Variants say what the person *did*, rather than naming the button that did it.
@@ -923,6 +923,11 @@ pub enum TrezorUiEnum<'a> {
 /// something in answer to a list, `Backward` only where a screen offered it —
 /// so a caller that cannot use a reply treats it as a protocol violation. The
 /// fix for that is pairing replies to requests, which this enum does not do.
+///
+/// An answer is an ordinary value, easy to ignore by accident — hence
+/// `#[must_use]` and [`UiReply::confirmed`], the idiomatic way to require
+/// a yes; see the `modui` module for what a block can answer.
+#[must_use]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum UiReply {
     /// The person pressed the screen's affirmative, having seen all of it.
@@ -1114,6 +1119,12 @@ impl ufmt::uDebug for TrezorCryptoResult {
 /// Progress bar operations that can be requested from the app via IPC.
 ///
 /// Constructed by the higher-level `progress` module — do not construct variants directly.
+///
+/// The three variants are one lifecycle: `Init` opens the progress, `Update`
+/// moves its fill — a percent, which the app SDK computes; core only draws —
+/// and `End` closes it. The app SDK pairs them with a guard that sends `End`
+/// on drop, so an app cannot leave a progress on screen for work that
+/// stopped; see the `modui` progress docs.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum TrezorProgressEnum<'a> {
     Init {

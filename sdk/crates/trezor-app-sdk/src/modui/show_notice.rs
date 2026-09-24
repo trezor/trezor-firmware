@@ -4,7 +4,7 @@
 //! [`Severity`].
 
 use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, UiOutcome, call};
+use super::{BR_CODE_OTHER, UiReply, call};
 use crate::Result;
 pub use crate::structs::Severity;
 use crate::structs::{ShowNotice as WireShowNotice, TrezorUiEnum};
@@ -71,7 +71,7 @@ impl<'a> ShowNotice<'a> {
 /// from every app.
 ///
 /// A [`Severity::Danger`] notice can always be refused, and a
-/// [`Severity::Warning`] can on most models; call [`UiOutcome::confirmed`] on
+/// [`Severity::Warning`] can on most models; call [`UiReply::confirmed`] on
 /// both. The other severities only ever answer `Confirmed`, which apps usually
 /// ignore.
 ///
@@ -115,7 +115,7 @@ impl<'a> ShowNotice<'a> {
 ///     Ok(())
 /// }
 /// ```
-pub fn show_notice(params: ShowNotice<'_>) -> Result<UiOutcome> {
+pub fn show_notice(params: ShowNotice<'_>) -> Result<UiReply> {
     let request = WireShowNotice::new(
         params.severity,
         params.title,
