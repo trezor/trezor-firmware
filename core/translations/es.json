@@ -82,6 +82,7 @@
     "address__qr_code": "Código QR",
     "address__title_cosigner": "Cofirmante",
     "address__title_cosigner_template": "Cofirmante {0}",
+    "address__title_multisig_xpub_template": "",
     "address__title_provider_address": {
       "Bolt": "Dirección de proveedor",
       "Caesar": "Dirección del proveedor",
@@ -105,7 +106,6 @@
     },
     "address_details__account_info": "Info. cuenta",
     "address_details__derivation_path": "Ruta de derivación",
-    "address_details__derivation_path_colon": "Ruta de derivación:",
     "address_details__title_receive_address": "Dirección destino",
     "authenticate__confirm_template": "¿Permitir que la aplicación conectada verifique que tu {0} es original?",
     "authenticate__header": "Autenticar dispositivo",
@@ -141,9 +141,9 @@
       "Delizia": "Crea una c. seg. para evitar perder el acceso a tus fondos.",
       "Eckhart": "Crea una c. seg. para evitar perder el acceso a tus fondos."
     },
-    "backup__info_multi_group_backup": "La c. seg. de la billetera contiene {0} grupos con un umbral de grupo de {1}.",
+    "backup__info_multi_group_backup": "",
     "backup__info_multi_share_backup": "La c. seg. de la billetera contiene varias listas de palabras en un orden concreto (partes).",
-    "backup__info_n_of_m_template": "{0}-de-{1}",
+    "backup__info_n_of_m_template": "",
     "backup__info_single_share_backup": "La c. seg. de la billetera contiene {0} palabras en un orden concreto.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Debes realizar una c. seg. de tu billetera.",
@@ -217,7 +217,12 @@
     "bitcoin__locktime_no_effect": "Tiempo de bloqueo definido pero no afectará.",
     "bitcoin__locktime_set_to": "Tiempo de bloqueo es",
     "bitcoin__locktime_set_to_blockheight": "Tiempo de bloqueo es alt. bloque",
-    "bitcoin__lot_of_change_outputs": "Muchas salidas de cambio.",
+    "bitcoin__lot_of_change_outputs": {
+      "Bolt": "Muchas salidas de cambio.",
+      "Caesar": "Muchas salidas de cambio",
+      "Delizia": "Muchas salidas de cambio.",
+      "Eckhart": "Muchas salidas de cambio."
+    },
     "bitcoin__multiple_accounts": "Múltiples cuentas",
     "bitcoin__new_fee_rate": "Nueva tasa de comisión",
     "bitcoin__simple_send_of": "Envío simple de",
@@ -440,7 +445,12 @@
     },
     "buttons__format": "Formatear",
     "buttons__go_back": "Atrás",
-    "buttons__hold_to_confirm": "Mantén y conf.",
+    "buttons__hold_to_confirm": {
+      "Bolt": "Mantén para confirmar",
+      "Caesar": "Mantén p/ confirmar",
+      "Delizia": "Mantén para confirmar",
+      "Eckhart": "Mantén para confirmar"
+    },
     "buttons__info": "Info.",
     "buttons__install": "Instalar",
     "buttons__more_info": "Más info.",
@@ -449,6 +459,12 @@
     "buttons__quit": "Salir",
     "buttons__restart": "Reiniciar",
     "buttons__retry": "Reintentar",
+    "buttons__review": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Revisar"
+    },
     "buttons__select": "Seleccionar",
     "buttons__set": "Ajustar",
     "buttons__show_all": "Mostrar todo",
@@ -859,7 +875,12 @@
       "Eckhart": ""
     },
     "ethereum__all_evms": "Todas EVMs",
-    "ethereum__approve": "Aprobar",
+    "ethereum__approve": {
+      "Bolt": "Aprobar",
+      "Caesar": "Aprobar",
+      "Delizia": "Aprobar",
+      "Eckhart": ""
+    },
     "ethereum__approve_amount_allowance": "Importe autorizado",
     "ethereum__approve_chain_id": "ID de cadena",
     "ethereum__approve_intro": "Revisa los detalles para permitir el gasto de tokens.",
@@ -986,7 +1007,7 @@
     "ethereum__to": "A",
     "ethereum__token_contract": {
       "Bolt": "Dirección del contrato del token",
-      "Caesar": "Contrato de token",
+      "Caesar": "Contrato del token",
       "Delizia": "Dirección del contrato del token",
       "Eckhart": "Dirección del contrato del token"
     },
@@ -995,7 +1016,7 @@
       "Bolt": "Dirección de contrato desconocida.",
       "Caesar": "Dirección de contrato desconocida",
       "Delizia": "Dirección de contrato desconocida.",
-      "Eckhart": "Dirección de contrato desconocida"
+      "Eckhart": "Dirección de contrato de token desconocida."
     },
     "ethereum__unknown_token": "Token desconocido",
     "ethereum__valid_signature": "La firma es válida.",
@@ -1082,8 +1103,8 @@
     "haptic_feedback__subtitle": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Ajustes",
-      "Eckhart": "Ajustes"
+      "Delizia": "Configuración",
+      "Eckhart": "Configuración"
     },
     "haptic_feedback__title": {
       "Bolt": "",
@@ -1128,7 +1149,12 @@
     "homescreen__title_backup_needed": "C. seg. necesaria",
     "homescreen__title_coinjoin_authorized": "Coinjoin autorizado",
     "homescreen__title_experimental_mode": "Modo experimental",
-    "homescreen__title_no_usb_connection": "Sin conexión USB",
+    "homescreen__title_no_usb_connection": {
+      "Bolt": "Sin conexión USB",
+      "Caesar": "Sin conexión USB",
+      "Delizia": "Sin conexión USB",
+      "Eckhart": ""
+    },
     "homescreen__title_pin_not_set": "PIN no configurado",
     "homescreen__title_seedless": "Sin semilla",
     "homescreen__title_set": "Cambiar fondo de pantalla",
@@ -1200,7 +1226,7 @@
     },
     "instructions__hold_to_confirm": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Mantén para confirmar",
       "Delizia": "Mantén para confirmar",
       "Eckhart": ""
     },
@@ -1302,7 +1328,7 @@
     },
     "language__change_to_template": "¿Cambiar el idioma a {0}?",
     "language__changed": {
-      "Bolt": "El idioma cambió con éxito",
+      "Bolt": "El idioma cambió con éxito.",
       "Caesar": "El idioma cambió con éxito",
       "Delizia": "El idioma cambió con éxito.",
       "Eckhart": "El idioma cambió con éxito."
@@ -1313,7 +1339,7 @@
       "Delizia": "Cambiando lenguaje",
       "Eckhart": "Cambiando lenguaje..."
     },
-    "language__title": "Ajustes de idioma",
+    "language__title": "Configuración de idioma",
     "led__disable": {
       "Bolt": "",
       "Caesar": "",
@@ -1753,27 +1779,15 @@
       "Eckhart": ""
     },
     "nostr__event_kind_template": "Tipo de evento: {0}",
-    "passphrase__access_hidden_wallet": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Acceder a la Billetera con passphrase"
-    },
     "passphrase__access_wallet": {
       "Bolt": "¿Acceder a la Billetera con passphrase?",
       "Caesar": "¿Acceder a la Billetera con passphrase?",
       "Delizia": "¿Acceder a la Billetera con passphrase?",
-      "Eckhart": ""
+      "Eckhart": "Acceder a la Billetera con passphrase"
     },
     "passphrase__always_on_device": "¿Introducir siempre la passphrase en Trezor?",
     "passphrase__continue_with_empty_passphrase": "¿Continuar con la passphrase vacía?",
     "passphrase__from_host_not_shown": "Se usará la passphrase proveída por la aplicación conectada, pero no se verá debido a la configuración.",
-    "passphrase__hidden_wallet": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Billetera con passphrase"
-    },
     "passphrase__hide": {
       "Bolt": "¿Ocultar la passphrase que viene de la aplicación?",
       "Caesar": "¿Ocultar la passphrase que viene de la aplicación?",
@@ -1783,13 +1797,38 @@
     "passphrase__next_screen_will_show_passphrase": "La siguiente pantalla muestra tu passphrase.",
     "passphrase__please_enter": "Escribe tu passphrase.",
     "passphrase__revoke_on_device": "¿Quieres revocar la config. de passphrase en el dispositivo?",
-    "passphrase__show": "Mostrar passphrase",
+    "passphrase__show": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Mostrar passphrase"
+    },
     "passphrase__title_confirm": "Confirmar passphrase",
     "passphrase__title_enter": "Ingresa passphrase",
-    "passphrase__title_hide": "Ocultar passphrase",
-    "passphrase__title_passphrase": "Passphrase",
-    "passphrase__title_settings": "Config. passphrase",
-    "passphrase__title_source": "Origen passphrase",
+    "passphrase__title_hide": {
+      "Bolt": "Ocultar passphrase",
+      "Caesar": "Ocultar passphrase",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "passphrase__title_passphrase": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Passphrase",
+      "Eckhart": ""
+    },
+    "passphrase__title_settings": {
+      "Bolt": "Config. passphrase",
+      "Caesar": "Config. passphrase",
+      "Delizia": "",
+      "Eckhart": "Config. passphrase"
+    },
+    "passphrase__title_source": {
+      "Bolt": "Origen passphrase",
+      "Caesar": "Origen passphrase",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "passphrase__turn_off": "¿Desactivar protección con passphrase?",
     "passphrase__turn_on": {
       "Bolt": "¿Activar la protección con passphrase?",
@@ -1797,12 +1836,7 @@
       "Delizia": "¿Activar la protección con passphrase?",
       "Eckhart": "¿Activar la protección por passphrase?"
     },
-    "passphrase__wallet": {
-      "Bolt": "Billetera con passphrase",
-      "Caesar": "Billetera con passphrase",
-      "Delizia": "Billetera con passphrase",
-      "Eckhart": ""
-    },
+    "passphrase__wallet": "Billetera con passphrase",
     "pin__cancel_description": {
       "Bolt": "",
       "Caesar": "",
@@ -1818,10 +1852,15 @@
     "pin__cancel_setup": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Cancelar config. de PIN",
+      "Delizia": "Cancelar configuración de PIN",
       "Eckhart": "¿Cancelar configuración de PIN?"
     },
-    "pin__change": "Cambiar PIN",
+    "pin__change": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Cambiar PIN"
+    },
     "pin__change_question": "¿Cambiar PIN?",
     "pin__changed": "PIN cambiado.",
     "pin__cursor_will_change": {
@@ -1838,18 +1877,18 @@
       "Delizia": "Protección con PIN\nactivada.",
       "Eckhart": ""
     },
-    "pin__enter": "Ingr. el PIN",
-    "pin__enter_new": "Intr. un nuevo PIN",
-    "pin__entered_not_valid": "El PIN introducido no es válido.",
+    "pin__enter": "Ingresar el PIN",
+    "pin__enter_new": "Ingresa el nuevo PIN",
+    "pin__entered_not_valid": "El PIN ingresado no es válido.",
     "pin__info": {
       "Bolt": "Necesitarás un PIN para acceder al dispositivo.",
       "Caesar": "Necesitarás un PIN para acceder al dispositivo.",
-      "Delizia": "Necesitarás un PIN para acceder al dispositivo.",
-      "Eckhart": "El PIN será necesario para acceder al dispositivo."
+      "Delizia": "",
+      "Eckhart": "Necesitarás un PIN para acceder al dispositivo."
     },
     "pin__invalid_pin": "PIN inválido",
     "pin__last_attempt": "Último intento",
-    "pin__mismatch": "¡Los PIN introducidos no coinciden!",
+    "pin__mismatch": "¡Los PIN ingresados no coinciden!",
     "pin__pin_mismatch": "El PIN no coincide.",
     "pin__please_check_again": {
       "Bolt": "",
@@ -1857,8 +1896,8 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "pin__reenter": "Reintroducir PIN",
-    "pin__reenter_new": "Reintroducir PIN",
+    "pin__reenter": "Reingresar el PIN",
+    "pin__reenter_new": "Reingresar el nuevo PIN",
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Reingresa el PIN para confirmar.",
@@ -1874,7 +1913,7 @@
     },
     "pin__should_be_long": {
       "Bolt": "",
-      "Caesar": "El PIN debe tener 4-50 dígitos.",
+      "Caesar": "El PIN debería tener 4-50 dígitos.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -1885,9 +1924,14 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "pin__title_settings": "Config. PIN",
+    "pin__title_settings": "Configuración del PIN",
     "pin__title_wrong_pin": "PIN incorrecto",
-    "pin__tries_left": "rest.",
+    "pin__tries_left": {
+      "Bolt": "rest.",
+      "Caesar": "intentos restantes",
+      "Delizia": "rest.",
+      "Eckhart": "intentos"
+    },
     "pin__turn_off": "¿Quieres desactivar la protección con PIN?",
     "pin__turn_on": "¿Activar la protección con PIN?",
     "pin__wipe_code_exists_description": "El cód. borrar debe ser desactivado antes de desactivar el PIN.",
@@ -1905,7 +1949,7 @@
     "plurals__x_shares_needed": "parte|partes",
     "progress__authenticity_check": "Verificando autenticidad...",
     "progress__done": "Listo",
-    "progress__loading_transaction": "Cargando transacc...",
+    "progress__loading_transaction": "Cargando transacción...",
     "progress__locking_device": {
       "Bolt": "Bloq. el dispositivo...",
       "Caesar": "Bloq. el dispositivo...",
@@ -1914,10 +1958,10 @@
     },
     "progress__one_second_left": "Queda 1 segundo",
     "progress__please_wait": {
-      "Bolt": "Espera",
-      "Caesar": "Espera",
-      "Delizia": "Espera",
-      "Eckhart": "Espera..."
+      "Bolt": "Espera, por favor",
+      "Caesar": "Espera, por favor",
+      "Delizia": "Espera, por favor",
+      "Eckhart": "Espera, por favor..."
     },
     "progress__refreshing": "Actualizando...",
     "progress__signing_transaction": "Firmando transacción...",
@@ -1991,7 +2035,7 @@
       "Bolt": "Canc. verif. c. seg",
       "Caesar": "Cancelar verif. c. seg.",
       "Delizia": "Cancelar verif. c. seg.",
-      "Eckhart": "Cancelar verif. c. seg."
+      "Eckhart": ""
     },
     "recovery__title_cancel_recovery": "Anular recuperación",
     "recovery__title_dry_run": "Verif. c. seg.",
@@ -2002,7 +2046,7 @@
     "recovery__unlock_repeated_backup": "¿Crear copia de seguridad adicional?",
     "recovery__unlock_repeated_backup_verb": "Crear c. seg",
     "recovery__wallet_recovered": {
-      "Bolt": "Recuperación de la billetera completada",
+      "Bolt": "Recuperación de la billetera completada.",
       "Caesar": "Recuperación de la billetera completada",
       "Delizia": "Recuperación de la billetera completada.",
       "Eckhart": "Recuperación de la billetera completada."
@@ -2207,7 +2251,7 @@
     },
     "reset__never_make_digital_copy": "Nunca guardes tu c. seg. de forma digital.",
     "reset__num_of_share_holders_template": {
-      "Bolt": "{0} personas o ubicaciones tendrán una parte cada una.",
+      "Bolt": "{0} partes, una por persona o sitio.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2311,9 +2355,9 @@
       "Eckhart": "Selecciona la palabra {0} de la c. seg. de tu billetera"
     },
     "reset__select_word_x_of_y_template": {
-      "Bolt": "Palabra {0} de {1}:",
-      "Caesar": "Palabra {0} de {1}:",
-      "Delizia": "Selec. palabra {0} de {1}",
+      "Bolt": "La palabra {0} de {1} es:",
+      "Caesar": "Palabra {0} de {1}",
+      "Delizia": "La palabra {0} de {1} es",
       "Eckhart": ""
     },
     "reset__set_it_to_count_template": {
@@ -2685,9 +2729,8 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Cancelar firma",
-      "Eckhart": "Cancelar firma?"
+      "Eckhart": "Cancelar firma"
     },
-    "send__cancel_transaction": "Cancelar transacción",
     "send__confirm_sending": "Enviando importe",
     "send__from_multiple_accounts": "Enviando desde varias cuentas.",
     "send__incl_transaction_fee": {
@@ -2824,6 +2867,7 @@
     "stellar__add_trust": "Añadir Trust",
     "stellar__all_will_be_sent_to": "Todos los XLM se enviarán a",
     "stellar__allow_trust": "Permitir Trust",
+    "stellar__approve_token": "",
     "stellar__balance_id": "ID saldo",
     "stellar__bump_sequence": "Incrementar secuencia",
     "stellar__buying": "Comprando",
@@ -2837,11 +2881,13 @@
     "stellar__delete": "Eliminar",
     "stellar__delete_passive_offer": "Eliminar oferta pasiva",
     "stellar__delete_trust": "Eliminar Trust",
+    "stellar__deploy_contract": "",
     "stellar__destination": "Destino",
     "stellar__exchanges_require_memo": "Memo no definido. Normalmente es necesario cuando envías a exchanges.",
     "stellar__ext_auth": "Autorizaciones Externas",
     "stellar__ext_auth_message": "La transacción contiene invocaciones adicionales autorizadas por métodos externos.",
     "stellar__final_confirm": "Confirmación final",
+    "stellar__from": "",
     "stellar__hash": "Hash",
     "stellar__high": "Alto",
     "stellar__home_domain": "Dominio de origen",
@@ -2870,6 +2916,7 @@
     "stellar__preauth_transaction": "Transacción pre-autorizada",
     "stellar__price_per_template": "Precio por {0}",
     "stellar__remove_signer": "Eliminar firmante",
+    "stellar__revoke_approval": "",
     "stellar__revoke_trust": "Revocar Trust",
     "stellar__selling": "Vendiendo",
     "stellar__set_data": "Configurar datos",
@@ -2878,9 +2925,18 @@
     "stellar__sign_authorization": "Firmar autorización",
     "stellar__sign_with": "Firmar con",
     "stellar__source_account": "Cuenta origen",
-    "stellar__token_info": "Info del token",
+    "stellar__spender": "",
+    "stellar__to": "",
+    "stellar__token_contract": "Contrato del token",
+    "stellar__token_info": {
+      "Bolt": "Info del token",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Info del token"
+    },
     "stellar__transaction_source": "Fuente de transacción",
     "stellar__transaction_source_diff_warning": "La fuente de la transacción no pertenece a este Trezor.",
+    "stellar__transfer_token": "",
     "stellar__trusted_account": "Cuenta de confianza",
     "stellar__update": "Actualizar",
     "stellar__valid_from": "Válido desde (UTC)",
@@ -2888,6 +2944,7 @@
     "stellar__valid_until_ledger": "Válida hasta el ledger",
     "stellar__value_sha256": "Valor (SHA-256)",
     "stellar__wanna_clean_value_key_template": "¿Quieres borrar la clave de valor {0}?",
+    "stellar__wasm_hash": "",
     "storage_msg__processing": {
       "Bolt": "Procesando",
       "Caesar": "Procesando",
@@ -3010,7 +3067,12 @@
     },
     "tron__claim_unfrozen_balance": "¿Reclamar balance descongelado?",
     "tron__claim_voting_rewards": "¿Reclamar recompensas de voto?",
+    "tron__delegate_resource": "",
+    "tron__lock_period": "",
+    "tron__lockperiod_blocks": "",
+    "tron__lockperiod_time": "",
     "tron__owner_address": "Dirección del propietario",
+    "tron__undelegate_resource": "",
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3219,7 +3281,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Bienvenido al\nTrezor \nSafe 7"
+      "Eckhart": "Bienvenido\nal Trezor\nSafe 7"
     },
     "tutorial__what_is_tropic": {
       "Bolt": "",
@@ -3340,7 +3402,6 @@
     "word_count__title": "Núm. de palabras",
     "words__about": "Acerca de",
     "words__account": "Cuenta",
-    "words__account_colon": "Cuenta:",
     "words__account_deletion": "Eliminar cuenta",
     "words__address": "Dirección",
     "words__amount": "Importe",
@@ -3382,12 +3443,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "words__delegate": {
-      "Bolt": "Delegar",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
+    "words__delegate": "Delegar",
     "words__deposit": "Depósito",
     "words__device": "Dispositivo",
     "words__disabled": {
@@ -3417,12 +3473,7 @@
       "Delizia": "del",
       "Eckhart": ""
     },
-    "words__from_title": {
-      "Bolt": "De",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
+    "words__from_title": "",
     "words__function": "Función",
     "words__important": "Importante",
     "words__instructions": "Instrucciones",
@@ -3567,12 +3618,7 @@
       "Delizia": "Reintentar.",
       "Eckhart": "Reintentar."
     },
-    "words__undelegate": {
-      "Bolt": "Anular delegación",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": ""
-    },
+    "words__undelegate": "Anular delegación",
     "words__unknown": "Desconocido",
     "words__unlimited": "Ilimitado",
     "words__unlocked": {
