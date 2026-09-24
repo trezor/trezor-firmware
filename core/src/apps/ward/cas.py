@@ -506,11 +506,25 @@ def verify_wm_sig(
 def head_init_sig(
     k_sig: bytes, ward_id: bytes, counter: int, root: bytes | None
 ) -> bytes:
-    """Authorise the FIRST head the WM ever holds for this wallet.
+    """Authorise the FIRST head the WM ever holds for this wallet. ENROLMENT, not recovery.
 
     A compare-and-swap needs something to compare against, and a WM that has never seen this
     wallet has nothing. The first head therefore has to be supplied by the device and
     authenticated, or it would be a value anyone who knows `ward_id` could set.
+
+    WHAT IT PROVES, AND WHAT IT CANNOT. It proves the head it names was a GENUINE STATE OF THIS
+    WALLET -- only a holder of K_sig can mint one. It does NOT prove that head is the LATEST
+    state, and no signature a single device can produce ever could: every device of the wallet
+    holds an authentic one over its own head, and they disagree whenever one is behind. So a WM
+    may accept this only at COUNTER 0, where there is nothing to choose between; enrolling at an
+    arbitrary counter would grant whichever device reached an empty WM first the power to pin the
+    head to older state. `adopt.verify_round_attestation` enforces the other half of that rule --
+    only counter 0 may attest itself -- so a WM that ignored it would produce attestations no
+    device accepts.
+
+    GAP(ward): RE-SEEDING A WM THAT LOST ITS REGISTER is therefore out of scope here, and
+    deliberately: it needs the WM's own persisted head restored, or a named recovery operation
+    with a policy for which device's claim wins. Do not widen this to cover it.
 
     A SELF-TRANSITION, `(counter, root) -> (counter, root)`, under its own tag. Separate from
     `wm_sig` rather than an advance from a zero head: there is no predecessor to name, and

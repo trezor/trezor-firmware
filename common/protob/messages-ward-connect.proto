@@ -311,13 +311,21 @@ message WardSyncAck {
     // has made -- never what any of them were.
     optional uint32 counter = 3;
 
-    // THE OPENING HEAD, AND ITS AUTHORISATION -- how a connect host seeds a WM that has never
-    // seen this wallet, or re-seeds one whose register was lost.
+    // THE OPENING HEAD, AND ITS AUTHORISATION -- how a connect host ENROLS a wallet with a WM
+    // that has never seen it. NOT a way to re-seed a WM that lost its register; see below.
     //
     // A compare-and-swap needs something to compare against, and a WM with no record of this
     // wallet has nothing. The first head therefore has to come from the device and be
     // authenticated, or it is a value anyone who knows `ward_id` could set -- which is the same
     // denial of service `wm_sig` closes for ordinary advances.
+    //
+    // ENROLMENT IS GENESIS ONLY. `head_init_sig` proves the head it names was a genuine state of
+    // this wallet; it does not prove that head is the LATEST one, and nothing one device holds
+    // could. Two devices at counters 40 and 57 both hold authentic signatures over their own
+    // heads, so a WM enrolling at an arbitrary counter would let whichever reached it first pin
+    // the head there and have the other refused against older state. At counter 0 there is
+    // nothing to choose between. The device enforces the same rule when the attestation comes
+    // back: only counter 0 may attest itself.
     //
     // `head_init_sig` is Ed25519 under K_sig over the SELF-TRANSITION (counter, root) ->
     // (counter, root) under b"WARD WM INIT v2". Its own tag, so it can never be replayed as an

@@ -191,6 +191,46 @@ def test_a_read_only_first_use_can_attest_without_publishing():
     assert wm.head(WARD_ID)[:2] == (1, ROOT_1)
 
 
+def test_enrolment_is_genesis_only():
+    """A WM MAY BE ENROLLED AT COUNTER 0 AND NOWHERE ELSE, on either entry point.
+
+    `head_init_sig` proves the head it names was a genuine state of this wallet. It does not
+    prove that head is the LATEST one, and no signature one device can produce ever could --
+    every device holds an authentic one over its own head, and they disagree whenever one is
+    behind. So enrolling at an arbitrary counter would hand whichever device reached an empty WM
+    first the power to pin the head to older state, and refuse the others against it from then on.
+
+    THE FIRMWARE ENFORCES THE OTHER HALF, which is what makes this more than a policy choice: an
+    attestation may only be a self-transition at counter 0 (`adopt.verify_round_attestation`), so
+    a WM that enrolled at 57 would install `57 -> 57` and emit attestations no device can accept.
+    The mock used to do exactly that on `attest_head` while `advance` refused it -- two paths
+    disagreeing about the same rule.
+
+    RE-SEEDING A WM THAT LOST ITS REGISTER is therefore not this, and is deliberately absent. It
+    needs the WM's persisted head restored, or a named recovery operation with a policy for which
+    device's claim wins.
+    """
+    from .ward_keys import head_init_sig as _init
+
+    at57 = _init(K_SIG, WARD_ID, 57, ROOT_1)
+
+    wm = MockWM()
+    with pytest.raises(ValueError, match="counter 0"):
+        wm.attest_head(WARD_ID, NONCE, 57, ROOT_1, at57)
+
+    # ...and the authenticated path has always said so.
+    wm2 = MockWM()
+    with pytest.raises(ValueError, match="counter 0"):
+        _advance(wm2, 57, ROOT_1, 58, ROOT_2, head_init_sig=at57)
+
+    # Genesis still enrols, which is the case that has to keep working.
+    wm3 = MockWM()
+    fc, fr, tc, tr, _ts, _sig = wm3.attest_head(
+        WARD_ID, NONCE, 0, ROOT_0, head_init_sig(K_SIG, WARD_ID, 0, ROOT_0)
+    )
+    assert (fc, fr, tc, tr) == (0, ROOT_0, 0, ROOT_0)
+
+
 def test_a_read_only_bootstrap_is_authorised_too():
     wm = MockWM()
     with pytest.raises(ValueError, match="head-init"):
