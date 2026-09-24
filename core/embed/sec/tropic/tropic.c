@@ -1283,7 +1283,7 @@ static secbool tropic_get_maintenance_bit_on(void) {
       return secfalse;
     }
 
-    // Flip the MAINTENANCE_ENA bit (do it now to shorten the erased window)
+    // Flip the MAINTENANCE_ENA bit
     r_config.obj[TR01_CFG_START_UP_IDX] |=
         BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK;
 
