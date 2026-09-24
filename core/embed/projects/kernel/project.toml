@@ -53,6 +53,7 @@ dbg-console                   = { vcp = ["dbg_console_vcp"], swo = ["dbg_console
 debug-link                    = { true = ["debuglink"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 log-external                  = { true = ["sys/log_external"] }
+log-level                     = { off = ["sys/log_max_off"], error = ["sys/log_max_error"], warn = ["sys/log_max_warn"], info = ["sys/log_max_info"], debug = ["sys/log_max_debug"] }
 n1w1                          = { true = ["nfc"] }  # TODO: move back to `uses` section (after stabilization)
 production                    = { true = ["production"] }
 pyopt                         = { false = ["optiga_testing"] }

@@ -60,5 +60,6 @@ bootloader-devel = { true = ["bootloader_devel"] }
 dbg-console      = { swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 debug-link       = { true = ["debuglink", "ui_debug"] }
 log-external     = { true = ["sys/log_external"] }
+log-level        = { off = ["sys/log_max_off"], error = ["sys/log_max_error"], warn = ["sys/log_max_warn"], info = ["sys/log_max_info"], debug = ["sys/log_max_debug"] }
 perf-overlay     = { true = ["ui_performance_overlay"] }
 production       = { true = ["production"] }

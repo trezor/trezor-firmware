@@ -112,6 +112,17 @@ pub enum ConsoleType {
     SystemView,
 }
 
+#[derive(ValueEnum, Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum LogLevel {
+    #[default]
+    Off,
+    Error,
+    Warn,
+    Info,
+    Debug,
+}
+
 #[derive(Parser, Debug)]
 #[command(name = "xtask")]
 #[command(about = "Trezor workspace automation tasks")]
