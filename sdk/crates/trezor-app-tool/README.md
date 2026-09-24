@@ -2,7 +2,7 @@
 
 This crate provides a robust workflow for building, testing, and analyzing modular applications—especially those targeting embedded hardware.
 **Do not use pure Cargo for these tasks.**
-Always use `cargo xtask ...` commands, as they create proper Cargo invocations and workflows, which can be quite complex.
+Always use `cargo app-tool ...` commands, as they create proper Cargo invocations and workflows, which can be quite complex.
 
 ---
 
@@ -16,7 +16,7 @@ Always use `cargo xtask ...` commands, as they create proper Cargo invocations a
 > While Nix is not a strict prerequisite, entering the provided Nix shell (`nix-shell`) will ensure all dependencies are available and correctly configured.
 
 Additionally, the environment includes **uv** for Python-related tasks.
-`uv` requires a `.venv` virtual environment to be created, but you do not need to activate it manually—`xtask` will call `uv run` commands as needed.
+`uv` requires a `.venv` virtual environment to be created, but you do not need to activate it manually—`app-tool` will call `uv run` commands as needed.
 
 ---
 
@@ -25,7 +25,7 @@ Additionally, the environment includes **uv** for Python-related tasks.
 All commands are invoked via:
 
 ```sh
-cargo xtask <command> [options]
+cargo app-tool <command> [options]
 ```
 
 ### Build
@@ -66,13 +66,13 @@ cargo xtask <command> [options]
 - List all commands:
 
   ```sh
-  cargo xtask --help
+  cargo app-tool --help
   ```
 
 - List options for a specific command:
 
   ```sh
-  cargo xtask <command> --help
+  cargo app-tool <command> --help
   ```
 
 ---
@@ -80,7 +80,7 @@ cargo xtask <command> [options]
 ## Common Arguments
 
 - `--project` (or `-p`): The workspace member (app) to build or test.
-  **Note:** You should specify the application crate; do not build `xtask` itself.
+  **Note:** You should specify the application crate; do not build `app-tool` itself.
 - `--model` (e.g., `t3w1`, `t3t1`): Model-specific translations/definitions (e.g., tokens)
 - `--lang`: Selects language for the binary
 - `--log-level`: Sets the log level for the built firmware (e.g., `error`, `warn`, `info`, `debug`, `trace`)
@@ -96,7 +96,7 @@ cargo xtask <command> [options]
 - Device tests currently run only on the emulator.
 - Python scripts are used for test orchestration and UI result processing.
 - The Trezor SDK is currently a local dependency; you must provide the correct path to it.
-- Running `cargo xtask clean` removes all workspace builds, including any builds performed by `xtask build`.
+- Running `cargo app-tool clean` removes all workspace builds, including any builds performed by `app-tool build`.
 
 ---
 
@@ -104,9 +104,9 @@ cargo xtask <command> [options]
 
 ```sh
 nix-shell
-cargo xtask build -p funnycoin --model t3w1 --lang en --log-level trace --emulator
-cargo xtask unit-tests -p funnycoin --model t3t1 --lang cs
-cargo xtask clippy
-cargo xtask device-tests -p funnycoin -m t3w1
-cargo xtask py-style-check
+cargo app-tool build -p funnycoin --model t3w1 --lang en --log-level trace --emulator
+cargo app-tool unit-tests -p funnycoin --model t3t1 --lang cs
+cargo app-tool clippy
+cargo app-tool device-tests -p funnycoin -m t3w1
+cargo app-tool py-style-check
 ```

@@ -5,7 +5,7 @@
 //! specific executable binary.
 
 use anyhow::{Context, Result, ensure};
-use cargo_metadata::Package;
+use cargo_metadata::{Package, semver::Version};
 use object::Object;
 use sha2::Digest;
 use std::{
@@ -17,12 +17,20 @@ use std::{
 use zerocopy::{IntoBytes, LittleEndian, U16, U32};
 use zerocopy_derive::{Immutable, IntoBytes};
 
-use crate::{armv8m, metadata};
+use crate::args::{Model, TargetArch};
 
-#[repr(u32)]
-enum AppBinaryType {
-    ARMV8M = 0,
-    X86_64 = 1,
+mod armv8m;
+mod metadata;
+
+impl TargetArch {
+    /// Returns the architecture identifier stored in the app header.
+    pub fn id(&self) -> u8 {
+        match self {
+            TargetArch::Armv8m => 0,
+            TargetArch::LinuxX86_64 => 1,
+            TargetArch::MacosAarch64 => 2,
+        }
+    }
 }
 
 /// The app header is a fixed-size structure at the beginning of the application image
@@ -36,11 +44,11 @@ struct AppHeader {
     /// Header size in bytes (contains AppHeader::APP_HEADER_SIZE)
     header_size: U32<LittleEndian>,
     /// Unique identifier of the app (utf-8 encoded, zero-padded)
-    id: [u8; metadata::APP_ID_MAX_LEN],
+    id: [u8; AppHeader::APP_ID_MAX_LEN],
     /// App name (utf-8 encoded, zero-padded)
-    app_name: [u8; metadata::APP_NAME_MAX_LEN],
+    app_name: [u8; AppHeader::APP_NAME_MAX_LEN],
     /// Vendor name (utf-8 encoded, zero-padded)
-    vendor_name: [u8; metadata::APP_VENDOR_MAX_LEN],
+    vendor_name: [u8; AppHeader::APP_VENDOR_MAX_LEN],
     /// Target model identifier (or zeroed for universal apps)
     model: [u8; 4],
     /// App version in the format major.minor.patch.build, each as a byte
@@ -69,11 +77,11 @@ struct AppHeader {
     reserved2: [u8; 2],
     /// Curves used for the app (e.g., secp256k1, ed25519)
     /// (utf-8 encoded, zero-padded)
-    curves: [u8; metadata::APP_CURVES_MAX_LEN],
+    curves: [u8; AppHeader::APP_CURVES_MAX_LEN],
     /// Allowed BIP32 path prefixes
     /// Each path is a null-terminated string, and the array
     /// is zero-padded to a fixed size.
-    paths: [u8; metadata::APP_PATHS_MAX_LEN],
+    paths: [u8; AppHeader::APP_PATHS_MAX_LEN],
     // TODO logo
 }
 
@@ -84,6 +92,16 @@ impl AppHeader {
     const APP_HEADER_MAGIC: u32 = 0x415A5254; // TRZA
     /// Chunk size used for hashing the payload in bytes.
     const CHUNK_SIZE: usize = 2048;
+    /// Maximum length, in bytes, of the packed app identifier.
+    const APP_ID_MAX_LEN: usize = 32;
+    /// Maximum length, in bytes, of the packed app name.
+    const APP_NAME_MAX_LEN: usize = 32;
+    /// Maximum length, in bytes, of the packed vendor name.
+    const APP_VENDOR_MAX_LEN: usize = 32;
+    /// Maximum total length, in bytes, of the packed, null-terminated curve list.
+    const APP_CURVES_MAX_LEN: usize = 64;
+    /// Maximum total length, in bytes, of the packed, null-terminated path list.
+    const APP_PATHS_MAX_LEN: usize = 256;
 
     fn to_padded_bytes(&self) -> [u8; AppHeader::APP_HEADER_SIZE] {
         let mut bytes = [0u8; AppHeader::APP_HEADER_SIZE];
@@ -99,7 +117,11 @@ impl AppHeader {
 /// [`crate::armv8m`] for a hardware build, or the raw ELF bytes as-is for an
 /// x86-64 emulator build. Writes the result next to `elf_path` and returns
 /// its path.
-pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf> {
+pub fn convert_elf_to_bin(
+    elf_path: &Path,
+    package: &Package,
+    model: Option<Model>,
+) -> Result<PathBuf> {
     let raw_elf = fs::read(elf_path)
         .with_context(|| format!("Failed to read the elf file {:?}", elf_path))?;
 
@@ -117,34 +139,35 @@ pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf>
             let arm_binary = armv8m::Armv8mBinary::from_object_file(&elf, package)?;
             arm_binary.print_info();
             (
-                AppBinaryType::ARMV8M,
+                TargetArch::Armv8m,
                 arm_binary.to_bytes()?,
                 arm_binary.ram_size(),
             )
         }
-        object::Architecture::X86_64 => (AppBinaryType::X86_64, raw_elf, 0),
+        object::Architecture::X86_64 => (TargetArch::LinuxX86_64, raw_elf, 0),
+        object::Architecture::Aarch64 => (TargetArch::MacosAarch64, raw_elf, 0),
         arch => anyhow::bail!("Unsupported architecture: {:?}", arch),
     };
 
     let header = AppHeader {
         magic: U32::new(AppHeader::APP_HEADER_MAGIC),
         header_size: U32::new(AppHeader::APP_HEADER_SIZE as u32),
-        id: metadata::app_identifier(package)?,
-        app_name: metadata::app_name(package)?,
-        vendor_name: metadata::vendor_name(package)?,
-        model: [0; 4],
-        version: metadata::app_version(package)?,
+        id: pack_str(&metadata::app_identifier(package)?, "App identifier")?,
+        app_name: pack_str(&metadata::app_name(package)?, "App name")?,
+        vendor_name: pack_str(&metadata::vendor_name(package)?, "Vendor name")?,
+        model: model.map_or([0; 4], |m| m.model_id_bytes()),
+        version: pack_version(metadata::app_version(package))?,
         sdk_version: [0; 4],
         abi_version: 1,
-        target_arch: target_arch as u8,
+        target_arch: target_arch.id(),
         app_ring: metadata::app_ring(package)?,
         reserved1: [0; 1],
         code_size: U32::new(code.len() as u32),
         chunk_hash: hash_payload(&code, AppHeader::CHUNK_SIZE),
         data_size: U32::new(data_size),
         chunk_size: U16::new(AppHeader::CHUNK_SIZE as u16),
-        curves: metadata::curves(package)?,
-        paths: metadata::paths(package)?,
+        curves: pack_str_array(&metadata::curves(package)?, "curves")?,
+        paths: pack_str_array(&metadata::paths(package)?, "paths")?,
         reserved2: [0; 2],
     };
 
@@ -164,6 +187,63 @@ pub fn convert_elf_to_bin(elf_path: &Path, package: &Package) -> Result<PathBuf>
         .context("Failed to write the app binary data to the output file")?;
 
     Ok(bin_path)
+}
+
+/// Converts a semver version into the 4-byte `[major, minor, patch, 0]` header form.
+fn pack_version(version: &Version) -> Result<[u8; 4]> {
+    Ok([
+        version
+            .major
+            .try_into()
+            .context("Failed to convert major version to u8")?,
+        version
+            .minor
+            .try_into()
+            .context("Failed to convert minor version to u8")?,
+        version
+            .patch
+            .try_into()
+            .context("Failed to convert patch version to u8")?,
+        0,
+    ])
+}
+
+/// Packs a string into a fixed-size, zero-padded byte array.
+fn pack_str<const MAX_LEN: usize>(string: &str, label: &str) -> Result<[u8; MAX_LEN]> {
+    let bytes = string.as_bytes();
+
+    ensure!(
+        bytes.len() <= MAX_LEN,
+        "{label} '{string}' is too long (max {MAX_LEN} bytes)"
+    );
+
+    let mut result = [0u8; MAX_LEN];
+    result[..bytes.len()].copy_from_slice(bytes);
+
+    Ok(result)
+}
+
+/// Packs a list of strings into a fixed-size byte array, each string
+/// null-terminated and the remainder zero-padded.
+fn pack_str_array<const MAX_LEN: usize>(strings: &[String], label: &str) -> Result<[u8; MAX_LEN]> {
+    let mut result = [0u8; MAX_LEN];
+    let mut offset = 0;
+
+    for string in strings {
+        let string_bytes = string.as_bytes();
+
+        ensure!(
+            offset + string_bytes.len() < MAX_LEN,
+            "{label} are too long (max {MAX_LEN} bytes)"
+        );
+
+        result[offset..offset + string_bytes.len()].copy_from_slice(string_bytes);
+        offset += string_bytes.len();
+        result[offset] = 0; // Null terminator
+        offset += 1;
+    }
+
+    Ok(result)
 }
 
 /// Computes the SHA256 hash of the payload in chunks, processing them in reverse order.
@@ -190,6 +270,73 @@ mod tests {
         hasher.update(prev_hash);
         hasher.update(chunk);
         hasher.finalize().into()
+    }
+
+    fn strings(items: &[&str]) -> Vec<String> {
+        items.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn pack_str_zero_pads() {
+        let packed: [u8; 8] = pack_str("abc", "App name").unwrap();
+        assert_eq!(packed, *b"abc\0\0\0\0\0");
+    }
+
+    #[test]
+    fn pack_str_exact_fit_is_allowed() {
+        let packed: [u8; 3] = pack_str("abc", "App name").unwrap();
+        assert_eq!(packed, *b"abc");
+    }
+
+    #[test]
+    fn pack_str_rejects_too_long() {
+        let err = pack_str::<2>("abc", "App name").unwrap_err();
+        assert!(err.to_string().contains("App name 'abc' is too long"));
+    }
+
+    #[test]
+    fn packs_strings_null_terminated_in_order() {
+        let packed: [u8; 32] =
+            pack_str_array(&strings(&["secp256k1", "ed25519"]), "curves").unwrap();
+
+        assert_eq!(&packed[..10], b"secp256k1\0");
+        assert_eq!(&packed[10..17], b"ed25519");
+        assert_eq!(packed[17], 0);
+        // Everything past the last terminator stays zero-padded.
+        assert!(packed[18..].iter().all(|&b| b == 0));
+    }
+
+    #[test]
+    fn empty_list_packs_to_all_zeros() {
+        let packed: [u8; 8] = pack_str_array(&[], "curves").unwrap();
+        assert_eq!(packed, [0u8; 8]);
+    }
+
+    #[test]
+    fn rejects_when_total_length_exceeds_max_len() {
+        // "secp256k1\0" is 10 bytes; MAX_LEN=9 can't fit it plus the terminator.
+        let err = pack_str_array::<9>(&strings(&["secp256k1"]), "curves").unwrap_err();
+        assert!(err.to_string().contains("too long"));
+    }
+
+    #[test]
+    fn exact_fit_is_allowed() {
+        // "ab\0" is exactly 3 bytes for MAX_LEN=3 -- the boundary must not
+        // be off by one in either direction.
+        let packed: [u8; 3] = pack_str_array(&strings(&["ab"]), "curves").unwrap();
+        assert_eq!(packed, *b"ab\0");
+    }
+
+    #[test]
+    fn version_bytes_layout() {
+        let v = Version::new(1, 2, 3);
+        assert_eq!(pack_version(&v).unwrap(), [1, 2, 3, 0]);
+    }
+
+    #[test]
+    fn version_bytes_rejects_component_over_u8() {
+        let v = Version::new(256, 0, 0);
+        assert!(pack_version(&v).is_err());
     }
 
     #[test]

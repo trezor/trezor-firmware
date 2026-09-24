@@ -1,8 +1,8 @@
 [package]
-name = "modular-xtask"
+name = "trezor-app-tool"
 version = "0.1.0"
 edition = "2024"
-description = "Build/test driver for Trezor modular apps (extapps)"
+description = "Build and test tool for Trezor external apps"
 license = "GPL-3.0-only"
 exclude = ["supply-chain/"]
 

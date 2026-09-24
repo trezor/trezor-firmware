@@ -24,7 +24,7 @@ xtask modular --help
 
 ## Commands
 
-All commands require `-p <app>` to specify the target app (e.g. `-p ethereum`).
+Commands accept `-p <app>` to select the target app (e.g. `-p ethereum`); it may be repeated. Without `-p`, every app in the workspace is processed. Device tests run a single app, so they need `-p` whenever the workspace contains more than one.
 
 ### Build
 

@@ -25,7 +25,7 @@ const MEMORY_X: &str = include_str!("../memory.x");
 /// returns its absolute path, for [`crate::args::BuildArgs::configure_cargo`]
 /// to pass to `ld` as `-T`. Rewritten only when its content actually
 /// changed, so repeated builds don't keep touching a file the linker reads.
-pub fn memory_x() -> Result<PathBuf> {
+pub fn prepare_linker_script() -> Result<PathBuf> {
     let build_dir = helpers::build_dir()?;
     helpers::ensure_directory(&build_dir)?;
 

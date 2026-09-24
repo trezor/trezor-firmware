@@ -19,7 +19,7 @@ use std::{borrow::Cow, fmt, io::Write, mem::size_of};
 use zerocopy::{IntoBytes, LittleEndian, U32};
 use zerocopy_derive::{Immutable, IntoBytes};
 
-use crate::metadata;
+use super::metadata;
 
 const MPU_ALIGNMENT: usize = 32;
 const STACK_ALIGNMENT: usize = 8;

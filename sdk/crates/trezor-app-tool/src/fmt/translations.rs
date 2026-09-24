@@ -4,10 +4,8 @@
 
 use std::{collections::BTreeMap, fs};
 
-use anyhow::{Result, bail, ensure};
+use anyhow::{Result, bail};
 use serde_json::Value;
-
-use crate::{args::ProjectArgs, helpers};
 
 enum FileStatus {
     Ok,
@@ -15,22 +13,13 @@ enum FileStatus {
     FatalError,
 }
 
-/// Formats (or, with `check_only`, just checks the formatting of) every
-/// `*.json` file directly under the app's `translations/` directory.
-pub fn run(args: &ProjectArgs, check_only: bool) -> Result<()> {
-    let mut project_dir = helpers::root_dir()?;
-    if helpers::is_workspace()? {
-        ensure!(
-            !args.project.is_empty(),
-            "Project name must be specified when running py-style in a workspace"
-        );
-        project_dir = project_dir.join(&args.project);
-    }
-    let translation_dir = project_dir.join("translations");
-
+/// Formats all JSON translation files in the given directory.
+/// If `check_only` is `true`, it will only check for formatting
+/// issues without modifying files.
+pub fn format(dir: std::path::PathBuf, check_only: bool) -> Result<()> {
     let mut errors: Vec<std::path::PathBuf> = Vec::new();
 
-    for entry in fs::read_dir(&translation_dir)? {
+    for entry in fs::read_dir(&dir)? {
         let entry = entry?;
         let path = entry.path();
 

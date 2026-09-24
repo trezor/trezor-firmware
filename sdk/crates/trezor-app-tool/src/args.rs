@@ -1,11 +1,12 @@
 //! CLI argument types for `xtask modular <cmd>`, parsed with `clap`.
 
-use anyhow::{Result, ensure};
+use anyhow::Result;
+use cargo_metadata::Package;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
 use std::process;
 
-use crate::{helpers, linker};
+use crate::prebuild;
 
 /// A Trezor hardware model a modular app can be built for.
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
@@ -27,6 +28,41 @@ pub enum Language {
     /// Czech.
     #[value(name = "cs")]
     CS,
+}
+
+/// A CPU architecture a modular app can be built for. The emulator
+/// architectures are host-only, so they are skipped on the command line
+/// and resolved by [`crate::helpers::emulator_target_arch`] instead.
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TargetArch {
+    /// ARMv8-M (physical device).
+    #[value(name = "armv8m")]
+    Armv8m,
+    /// Linux emulator on x86_64.
+    #[value(skip)]
+    LinuxX86_64,
+    /// macOS emulator on Apple silicon.
+    #[value(skip)]
+    MacosAarch64,
+}
+
+impl TargetArch {
+    /// Returns the architecture name used in artifact naming.
+    pub fn name(self) -> &'static str {
+        match self {
+            TargetArch::Armv8m => "armv8m",
+            TargetArch::LinuxX86_64 => "linux-x86_64",
+            TargetArch::MacosAarch64 => "macos-aarch64",
+        }
+    }
+
+    /// Returns true for host (emulator) architectures.
+    pub fn is_emulator(self) -> bool {
+        match self {
+            TargetArch::Armv8m => false,
+            TargetArch::LinuxX86_64 | TargetArch::MacosAarch64 => true,
+        }
+    }
 }
 
 /// Verbosity of an app's runtime logging, baked in at build time via a
@@ -51,7 +87,7 @@ impl Model {
     /// Returns the cargo feature name corresponding to the model.
     ///
     /// ```
-    /// use modular_xtask::args::Model;
+    /// use modular_app-tool::args::Model;
     ///
     /// assert_eq!(Model::T3T1.feature_name(), "model_t3t1");
     /// assert_eq!(Model::T3W1.feature_name(), "model_t3w1");
@@ -71,18 +107,37 @@ impl Model {
         }
     }
 
+    /// Returns the CPU architecture of the model's firmware (i.e.
+    /// non-emulator) build.
+    pub fn target_arch(self) -> TargetArch {
+        match self {
+            Model::T3T1 | Model::T3W1 => TargetArch::Armv8m,
+        }
+    }
+
     /// Returns the model ID used in artifact/directory naming.
     ///
     /// ```
-    /// use modular_xtask::args::Model;
+    /// use modular_app-tool::args::Model;
     ///
     /// assert_eq!(Model::T3W1.model_id(), "t3w1");
     /// ```
     pub fn model_id(self) -> &'static str {
         match self {
-            Model::T3T1 => "t3t1",
-            Model::T3W1 => "t3w1",
+            Model::T3T1 => "T3T1",
+            Model::T3W1 => "T3W1",
         }
+    }
+
+    /// Returns the 4-byte ASCII representation of the model ID.
+    ///
+    /// ```
+    /// use modular_app-tool::args::Model;
+    ///
+    /// assert_eq!(Model::T3W1.model_id_bytes(), *b"T3W1");
+    /// ```
+    pub fn model_id_bytes(self) -> [u8; 4] {
+        self.model_id().as_bytes().try_into().unwrap()
     }
 }
 
@@ -90,7 +145,7 @@ impl Language {
     /// Returns the cargo feature name corresponding to the language.
     ///
     /// ```
-    /// use modular_xtask::args::Language;
+    /// use modular_app-tool::args::Language;
     ///
     /// assert_eq!(Language::EN.feature_name(), "lang_en");
     /// assert_eq!(Language::CS.feature_name(), "lang_cs");
@@ -99,6 +154,13 @@ impl Language {
         match self {
             Language::EN => "lang_en",
             Language::CS => "lang_cs",
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Language::EN => "en",
+            Language::CS => "cs",
         }
     }
 }
@@ -137,25 +199,13 @@ pub enum Cmd {
     /// Display size information of the built binary
     Size(BuildArgs),
     /// Run unit tests of specified package
-    UnitTests(UnitTestArgs),
+    Test(TestArgs),
     /// Run device tests of specified package
-    DeviceTests(DeviceTestsArgs),
+    DeviceTest(DeviceTestArgs),
+    /// Format code
+    Fmt(FmtArgs),
     /// Clean build artifacts
     Clean,
-    /// Format code with rustfmt
-    Fmt,
-    /// Check code formatting with rustfmt
-    FmtCheck,
-    /// Upload firmware to device
-    Upload(UploadArgs),
-    /// Run Python style tools
-    PyStyle(ProjectArgs),
-    /// Run Python style checks
-    PyStyleCheck(ProjectArgs),
-    /// Run translation style tools
-    TranslationStyle(ProjectArgs),
-    /// Run translation style checks
-    TranslationStyleCheck(ProjectArgs),
 }
 
 /// Arguments for `xtask modular build`/`clippy`/`check`/`size`, i.e.
@@ -164,17 +214,26 @@ pub enum Cmd {
 /// and [`BuildArgs::configure_cargo`].
 #[derive(Args, Debug, Clone)]
 #[command(
-    override_usage = "xtask build --project <PROJECT> --model <MODEL> --language <LANGUAGE> --log_level <LOG_LEVEL> [OPTIONS]"
+    override_usage = "xtask build [-p <PACKAGE>]... --model <MODEL> --language <LANGUAGE> --log_level <LOG_LEVEL> [OPTIONS]"
 )]
 pub struct BuildArgs {
-    /// Name of the app package to build (required when run in a workspace,
-    /// ignored for a standalone app).
-    #[arg(long, short = 'p', ignore_case = true, default_value = "")]
-    pub project: String,
+    /// App package(s) to build; may be repeated. Defaults to every app
+    /// package in the workspace.
+    #[arg(long, short = 'p')]
+    pub package: Vec<String>,
 
     /// Build target model
-    #[arg(long, short = 'm', ignore_case = true, default_value = "t3w1")]
-    pub model: Model,
+    #[arg(long, short = 'm', ignore_case = true)]
+    pub model: Option<Model>,
+
+    /// Build target architecture (defaults to the model's; required when
+    /// no model is given for a non-emulator build)
+    #[arg(long, ignore_case = true)]
+    pub arch: Option<TargetArch>,
+
+    /// Use emulator build
+    #[arg(long, short = 'e')]
+    pub emulator: bool,
 
     /// Build target language
     #[arg(long, ignore_case = true, default_value = "en")]
@@ -183,10 +242,6 @@ pub struct BuildArgs {
     /// Log level for the built firmware
     #[arg(long, ignore_case = true, default_value = "info")]
     pub log_level: LogLevel,
-
-    /// Use emulator build
-    #[arg(long, short = 'e')]
-    pub emulator: bool,
 
     /// Use the `debug-fw` cargo profile instead of `release-fw`.
     #[arg(long, short = 'd', default_value = "false")]
@@ -208,10 +263,10 @@ impl BuildArgs {
     /// unless this is a `--production` build.
     ///
     /// ```
-    /// use modular_xtask::args::{BuildArgs, Language, LogLevel, Model};
+    /// use modular_app-tool::args::{BuildArgs, Language, LogLevel, Model};
     ///
     /// let args = BuildArgs {
-    ///     project: "tron".into(),
+    ///     package: vec!["tron".into()],
     ///     model: Model::T3W1,
     ///     lang: Language::EN,
     ///     log_level: LogLevel::Info,
@@ -228,11 +283,11 @@ impl BuildArgs {
     /// );
     /// ```
     pub fn resolve_features(&self) -> Result<Vec<&'static str>> {
-        let mut features = vec![
-            self.model.feature_name(),
-            self.lang.feature_name(),
-            self.log_level.feature_name(),
-        ];
+        let mut features = vec![self.lang.feature_name(), self.log_level.feature_name()];
+
+        if let Some(model) = &self.model {
+            features.push(model.feature_name());
+        }
 
         if self.emulator {
             features.push("emulator");
@@ -250,14 +305,10 @@ impl BuildArgs {
     }
 
     /// Configures the cargo command with the appropriate arguments and features
-    /// based on the provided cli arguments
-    pub fn configure_cargo(&self, cmd: &mut process::Command) -> Result<()> {
-        if helpers::is_workspace()? {
-            ensure!(
-                !self.project.is_empty(),
-                "Project name must be specified when running in a workspace"
-            );
-            cmd.arg("-p").arg(&self.project);
+    /// based on the provided cli arguments, restricted to `packages`.
+    pub fn configure_cargo(&self, cmd: &mut process::Command, packages: &[Package]) -> Result<()> {
+        for package in packages {
+            cmd.arg("-p").arg(&package.name);
         }
 
         let features = self.resolve_features()?;
@@ -272,12 +323,16 @@ impl BuildArgs {
         }
 
         if !self.emulator {
+            // !@# TODO introduce --target option
+            let target = self
+                .model
+                .map_or(Model::T3W1.target_triple(), |m| m.target_triple());
             // Not a file in the app's own source tree: the layout is fixed
             // by Core's loader and identical for every app, so the script
             // ships with this crate and gets written into the build
             // directory here -- see `crate::linker`.
-            let linker_script = linker::memory_x()?;
-            cmd.args(["--target", self.model.target_triple()]);
+            let linker_script = prebuild::prepare_linker_script()?;
+            cmd.args(["--target", target]);
             cmd.env(
                 "RUSTFLAGS",
                 format!(
@@ -297,18 +352,30 @@ impl BuildArgs {
 
         Ok(())
     }
+
+    /// Returns the Rust target triple used when building firmware (i.e.
+    /// non-emulator) for the model.
+    pub fn target_triple(&self) -> Option<&'static str> {
+        if self.emulator {
+            None
+        } else if let Some(model) = &self.model {
+            Some(model.target_triple())
+        } else {
+            Some(Model::T3W1.target_triple())
+        }
+    }
 }
 
 /// Arguments for `xtask modular unit-tests`.
 #[derive(Args, Debug)]
 #[command(
-    override_usage = "cargo xtask unit-tests --project <PROJECT> --model <MODEL> --language <LANGUAGE> [OPTIONS]"
+    override_usage = "cargo xtask unit-tests [-p <PACKAGE>]... --model <MODEL> --language <LANGUAGE> [OPTIONS]"
 )]
-pub struct UnitTestArgs {
-    /// Name of the app package to test (required when run in a workspace,
-    /// ignored for a standalone app).
-    #[arg(long, short = 'p', ignore_case = true, default_value = "")]
-    pub project: String,
+pub struct TestArgs {
+    /// App package(s) to test; may be repeated. Defaults to every app
+    /// package in the workspace.
+    #[arg(long, short = 'p')]
+    pub package: Vec<String>,
 
     /// Build target model
     #[arg(long, short = 'm', ignore_case = true, default_value = "t3w1")]
@@ -323,68 +390,36 @@ pub struct UnitTestArgs {
     pub test: String,
 }
 
-/// Arguments for `xtask modular upload`.
-#[derive(Args, Debug)]
-#[command(override_usage = "cargo xtask upload --project <PROJECT> --model <MODEL> [OPTIONS]")]
-pub struct UploadArgs {
-    /// Name of the app package to upload (required when run in a workspace,
-    /// ignored for a standalone app).
-    #[arg(long, short = 'p', ignore_case = true, default_value = "")]
-    pub project: String,
-
-    /// Target model the build being uploaded was built for.
-    #[arg(long, short = 'm', ignore_case = true)]
-    pub model: Model,
-
-    /// Upload to the emulator instead of a physical device.
-    #[arg(long, short = 'e')]
-    pub emulator: bool,
-}
-
 /// Arguments for `xtask modular device-tests`.
 #[derive(Args, Debug)]
-#[command(
-    override_usage = "cargo xtask device-tests --project <PROJECT> --model <MODEL> [OPTIONS]"
-)]
-pub struct DeviceTestsArgs {
-    /// Name of the app package to test (required when run in a workspace,
-    /// ignored for a standalone app).
-    #[arg(long, short = 'p', ignore_case = true, default_value = "")]
-    pub project: String,
+#[command(override_usage = "cargo xtask device-tests [-p <PACKAGE>] --model <MODEL> [OPTIONS]")]
+pub struct DeviceTestArgs {
+    #[command(flatten)]
+    pub build: BuildArgs,
 
-    /// Target model the build under test was built for.
-    #[arg(long, short = 'm', ignore_case = true)]
-    pub model: Model,
-
-    /// Run against the emulator instead of a physical device.
-    #[arg(long, short = 'e')]
-    pub emulator: bool,
-
-    /// Test to run (defaults to all tests in the package)
+    /// Test to run (defaults to all tests in the package).
     #[arg(long, short = 't', default_value = "")]
     pub test: String,
 
-    /// Run with UI screenshot testing enabled (passes `--ui=test
-    /// --ui-check-missing --do-master-diff` to pytest), independent of
-    /// `--emulator`, matching core's own `test_emu` vs `test_emu_ui` split.
+    /// Run with UI screenshot testing enabled.
     #[arg(long)]
     pub ui: bool,
 
-    /// Language the running Core device/emulator's own UI should use for
-    /// this test run -- independent of the language the app itself was
-    /// built with (see `xtask modular build --lang`).
-    #[arg(long, default_value = "en")]
-    pub lang: String,
+    /// Language of the device UI for this test run.
+    #[arg(long)]
+    pub device_lang: Option<Language>,
 }
 
-/// Arguments for the Python-style and translation-style subcommands, which
-/// only need to know which app package to operate on.
 #[derive(Args, Debug)]
-pub struct ProjectArgs {
-    /// Name of the app package (required when run in a workspace, ignored
-    /// for a standalone app).
-    #[arg(long, short = 'p', default_value = "")]
-    pub project: String,
+pub struct FmtArgs {
+    /// App package(s) to format; may be repeated. Defaults to every app
+    /// package in the workspace.
+    #[arg(long, short = 'p')]
+    pub package: Vec<String>,
+
+    /// Run `cargo fmt` in check mode (does not modify files)
+    #[arg(long)]
+    pub check: bool,
 }
 
 #[cfg(test)]
@@ -424,8 +459,9 @@ mod tests {
 
     fn build_args(emulator: bool, debug: bool, production: bool) -> BuildArgs {
         BuildArgs {
-            project: "tron".into(),
-            model: Model::T3W1,
+            package: vec!["tron".into()],
+            arch: None,
+            model: Some(Model::T3W1),
             lang: Language::EN,
             log_level: LogLevel::Info,
             emulator,
