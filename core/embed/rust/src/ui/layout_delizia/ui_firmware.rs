@@ -397,20 +397,10 @@ impl FirmwareUI for UIDelizia {
         back_button: bool,
         _external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut summary_params = ShowInfoParams::new(title.unwrap_or(TString::empty()))
-            .with_menu_button()
-            .with_swipeup_footer(None);
-        if let Some(amount) = amount {
-            if let Some(amount_label) = amount_label {
-                summary_params = unwrap!(summary_params.add(amount_label, amount));
-            }
-        }
-        summary_params = unwrap!(summary_params.add(fee_label, fee));
-
         // collect available info
         let account_params = if let Some(items) = account_items {
             let account_title = account_title.unwrap_or(TR::send__send_from.into());
-            let mut account_params = ShowInfoParams::new(account_title).with_cancel_button();
+            let mut account_params = ShowInfoParams::new(account_title);
             for pair in IterBuf::new().try_iterate(items)? {
                 let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(pair)?;
                 account_params = unwrap!(account_params.add(key.try_into()?, value.try_into()?));
@@ -421,7 +411,7 @@ impl FirmwareUI for UIDelizia {
         };
         let extra_params = if let Some(items) = extra_items {
             let extra_title = extra_title.unwrap_or(TR::buttons__more_info.into());
-            let mut extra_params = ShowInfoParams::new(extra_title).with_cancel_button();
+            let mut extra_params = ShowInfoParams::new(extra_title);
             for pair in IterBuf::new().try_iterate(items)? {
                 let [label, value, _is_data]: [Obj; 3] = util::iter_into_array(pair)?;
                 extra_params = unwrap!(extra_params.add(label.try_into()?, value.try_into()?));
@@ -432,7 +422,11 @@ impl FirmwareUI for UIDelizia {
         };
 
         let flow = flow::new_confirm_summary(
-            summary_params,
+            title.unwrap_or(TString::empty()),
+            amount,
+            amount_label,
+            fee,
+            fee_label,
             account_params,
             account_title,
             extra_params,
@@ -1115,7 +1109,7 @@ impl FirmwareUI for UIDelizia {
             let layout = confirm.into_layout()?;
             flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)))
         } else {
-            let mut params = ShowInfoParams::new(title).with_cancel_button();
+            let mut params = ShowInfoParams::new(title);
             for (header, text, _is_data) in items {
                 params = unwrap!(params.add(header, text));
             }
