@@ -1088,7 +1088,7 @@ bool tropic_write_fw_slot(void) {
          memcmp(spect, fw_SPECT_ver, 4) == 0;
 }
 
-static secbool tropic_fw_update_needed(secbool *needed) {
+static secbool tropic_fw_update_needed(bool *needed) {
   uint8_t confirmed_riscv[4] = {0};
   uint8_t confirmed_spect[4] = {0};
   bool present = false;
@@ -1363,11 +1363,11 @@ static secbool tropic_check_i_config_maintenance(bool *enabled) {
 
 // XXX: tohle je ta funkce, co se volá PO UNLOCKU
 secbool tropic_ensure_fw_updated(void) {
-  secbool needed = secfalse;
+  bool needed = secfalse;
   if (sectrue != tropic_fw_update_needed(&needed)) {
     return secfalse;
   }
-  if (sectrue != needed) {
+  if (!needed) {
     // No firmware update needed, return early.
     return sectrue;
   }
