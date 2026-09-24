@@ -29,6 +29,7 @@ asan                          = { true = ["asan"] }
 bootloader-devel              = { true = ["bootloader_devel"] }
 dbg-console                   = { swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
+log-external                  = { true = ["sys/log_external"] }
 production                    = { true = ["production"] }
 pyopt                         = { false = ["optiga_testing"] }
 storage-insecure-testing-mode = { true = ["storage_insecure_testing_mode"] }

@@ -16,6 +16,7 @@ when = { emulator = true }
 dbg-console = "swo" # required by prodtest test
 debug = true
 source-lines = true # required by test coverage
+log-external = true
 
 [[defaults]]
 when = { emulator = false }

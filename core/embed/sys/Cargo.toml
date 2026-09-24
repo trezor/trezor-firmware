@@ -13,6 +13,7 @@ xbuild.workspace = true
 crypto.workspace = true
 cty.workspace = true
 rtl.workspace = true
+log = { workspace = true, optional = true }
 models.workspace = true
 spin.workspace = true
 ufmt.workspace = true
@@ -53,6 +54,7 @@ emulator = ["rtl/emulator", "crypto/emulator"]
 i2c_bus = []
 ipc = []
 lockable_bootloader = []
+log_external = ["log"]
 production = ["rtl/production"]
 pvd = []
 rtc = []

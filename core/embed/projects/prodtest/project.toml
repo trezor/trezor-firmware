@@ -59,5 +59,6 @@ asan             = { true = ["asan"] }
 bootloader-devel = { true = ["bootloader_devel"] }
 dbg-console      = { swo = ["dbg_console_swo"], system-view = ["dbg_console_system_view"] }
 debug-link       = { true = ["debuglink", "ui_debug"] }
+log-external     = { true = ["sys/log_external"] }
 perf-overlay     = { true = ["ui_performance_overlay"] }
 production       = { true = ["production"] }

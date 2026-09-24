@@ -23,7 +23,7 @@ def error(name: str, msg: str, *args: Any, *, iface: WireInterface | None = None
 
 
 # rust/src/micropython/logging.rs
-def init(level: int) -> None:
+def init() -> None:
     """
     Initialize Rust logging connector.
     """

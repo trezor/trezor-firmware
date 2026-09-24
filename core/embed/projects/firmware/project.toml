@@ -67,6 +67,7 @@ debug-link                    = { true = ["debuglink", "ui_debug"] }
 disable-animation             = { true = ["disable_animation"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 frozen                        = { true = ["frozen"] }
+log-external                  = { true = ["sys/log_external"] }
 log-stack-usage               = { true = ["log_stack_usage"] }
 mem-perf                      = { true = ["memperf"] }
 miniscript                    = { true = ["miniscript"] }
