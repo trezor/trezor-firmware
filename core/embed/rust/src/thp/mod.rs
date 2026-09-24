@@ -14,6 +14,7 @@ use heapless::linear_map::{Entry, LinearMap, LinearMapView};
 use heapless::Vec;
 use spin::{Lazy, Mutex};
 use sys::time::Instant;
+use sys::ulog;
 use time::{least_recently_used, ChannelTiming};
 use trezor_thp::channel::device::{Channel, ChannelIdAllocator, ChannelOpen, Mux};
 use trezor_thp::channel::{
@@ -150,7 +151,7 @@ impl ThpContext {
                         });
                     }
                 }
-                log::debug!(
+                ulog::debug!(
                     "[{:04x}] Received packet for unallocated channel.",
                     channel_id
                 );
@@ -249,7 +250,7 @@ impl ThpContext {
             PacketInResult::Accepted { .. } => TrezorInResult::None,
             PacketInResult::Ignored { .. } => TrezorInResult::None,
             PacketInResult::Failed { .. } => {
-                log::error!("[{:04x}] Handshake failed.", channel_id);
+                ulog::error!("[{:04x}] Handshake failed.", channel_id);
                 self.channel_close(channel_id);
                 // micropython doesn't know about the channel, no point returning Failure
                 return Ok(TrezorInResult::None);
@@ -434,14 +435,14 @@ impl ThpContext {
         };
         match retry {
             None => {
-                log::error!(
+                ulog::error!(
                     "[{:04x}] Requested to retransmit but not currently sending.",
                     channel_id
                 );
                 Ok(true)
             }
             Some(r) if r > MAX_RETRANSMISSION_COUNT => {
-                log::warn!(
+                ulog::warning!(
                     "[{:04x}] Closing channel after too many retransmissions.",
                     channel_id
                 );
@@ -494,12 +495,12 @@ impl ThpContext {
     /// with the same host static public key exists, it is closed and its ID
     /// is returned so that micropython app can migrate the channel's sessions.
     pub fn channel_paired(&mut self, channel_id: u16) -> Result<Option<u16>, Error> {
-        log::debug!("[{:04x}] Pairing/credential phase complete.", channel_id);
+        ulog::debug!("[{:04x}] Pairing/credential phase complete.", channel_id);
         let ChannelEntry {
             channel, iface_num, ..
         } = self.lookup_channel_mut(channel_id)?;
         if channel.is_encrypted_transport() {
-            log::error!(
+            ulog::error!(
                 "[{:04x}] Channel is already in encrypted transport state!",
                 channel_id
             );
@@ -536,7 +537,7 @@ impl ThpContext {
 
     /// Remove a channel and any associated state.
     pub fn channel_close(&mut self, channel_id: u16) {
-        log::debug!("[{:04x}] Closing channel.", channel_id);
+        ulog::debug!("[{:04x}] Closing channel.", channel_id);
         if let Some(ChannelEntry { channel, .. }) = self.channel_appdata.remove(&channel_id) {
             // Pairing/credential channels don't need notification
             // because they don't have sessions.
@@ -557,7 +558,7 @@ impl ThpContext {
     /// cleared, micropython is responsible for removing sessions of all
     /// affected channels.
     pub fn channel_close_all(&mut self, exclude: Option<u16>) {
-        log::warn!("Close all");
+        ulog::warning!("Close all");
         for mux in self.ifaces.values_mut() {
             mux.reset();
         }
@@ -777,7 +778,7 @@ impl ThpContext {
 fn insert_replace_queue<T>(queue: &mut DequeView<T>, elem: T) {
     if queue.is_full() {
         queue.pop_front();
-        log::error!("THP queue full.")
+        ulog::error!("THP queue full.")
     }
     unwrap!(queue.push_back(elem));
 }
@@ -811,13 +812,13 @@ impl TrezorCredentialVerifier {
 
 impl CredentialVerifier for TrezorCredentialVerifier {
     fn verify(&self, remote_static_pubkey: &[u8], credential: &[u8]) -> PairingState {
-        log::debug!("[{:04x}] TrezorCredentialVerifier::verify", self.channel_id);
+        ulog::debug!("[{:04x}] TrezorCredentialVerifier::verify", self.channel_id);
         let func = || -> Result<PairingState, MpyError> {
             if self.verify_fn == Obj::const_none()
                 || credential.is_empty()
                 || remote_static_pubkey.is_empty()
             {
-                log::info!("No credential, skipping verification.");
+                ulog::info!("No credential, skipping verification.");
                 return Ok(PairingState::Unpaired);
             }
             let res = self
@@ -837,15 +838,11 @@ impl CredentialVerifier for TrezorCredentialVerifier {
         let res = func();
         match res {
             Ok(ps) => {
-                log::debug!("[{:04x}] Result: {}", self.channel_id, ps as u8);
+                ulog::debug!("[{:04x}] Result: {}", self.channel_id, ps as u8);
                 ps
             }
-            Err(e) => {
-                log::error!(
-                    "[{:04x}] Credential verification error: {:?}",
-                    self.channel_id,
-                    e
-                );
+            Err(_) => {
+                ulog::error!("[{:04x}] Credential verification error", self.channel_id);
                 PairingState::Unpaired
             }
         }
@@ -907,7 +904,7 @@ impl ThpAuxiliaryInfo {
 
     pub fn add_credential(&mut self, channel_id: u16, credential: &[u8]) {
         let Ok(credential) = Vec::from_slice(credential) else {
-            log::error!(
+            ulog::error!(
                 "[{:04x}] Credential too long: {}",
                 channel_id,
                 credential.len()
