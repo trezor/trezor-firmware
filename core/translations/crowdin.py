@@ -15,6 +15,9 @@ HERE = Path(__file__).parent
 # staging directory for layout-specific translation JSON files
 CROWDIN_DIR = HERE / "crowdin"
 
+# source language, which is uploaded to Crowdin
+SOURCE_LANG = "en"
+
 
 @click.group()
 def cli() -> None:
@@ -48,8 +51,17 @@ def split() -> None:
 
 
 @cli.command()
-def merge() -> None:
-    """Merge back translation files downloaded from Crowdin."""
+@click.option(
+    "--source-only",
+    is_flag=True,
+    help=f"Merge back only {SOURCE_LANG}.json, e.g. after applying blanking rules.",
+)
+def merge(source_only: bool) -> None:
+    """Merge back translation files downloaded from Crowdin.
+
+    By default all languages except the source one are merged, as Crowdin never
+    translates the source language.
+    """
     tdir = TranslationsDir()
 
     def clean_translation(text: str) -> str:
@@ -62,7 +74,14 @@ def merge() -> None:
         text = text.replace("\n\n", "\n\r")
         return text
 
-    for lang in sorted(tdir.all_languages()):
+    if source_only:
+        languages = [SOURCE_LANG]
+    else:
+        languages = [
+            lang for lang in sorted(tdir.all_languages()) if lang != SOURCE_LANG
+        ]
+
+    for lang in languages:
         merged_translations: dict[str, str | dict[str, str]] = collections.defaultdict(
             dict
         )
