@@ -2,6 +2,7 @@ use core::alloc::{GlobalAlloc, Layout};
 use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use cty::c_void;
+use sys::ulog;
 
 use super::ffi;
 
@@ -28,7 +29,7 @@ where
 
     let result = f();
 
-    log::trace!("Peak heap usage: {}", PEAK.load(Ordering::Relaxed));
+    ulog::debug!("Peak heap usage: {}", PEAK.load(Ordering::Relaxed));
     ensure!(
         ENABLE.swap(false, Ordering::Relaxed),
         "Allocator must be enabled"
