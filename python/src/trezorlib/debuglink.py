@@ -1071,6 +1071,10 @@ class DebugUI:
                 continue  # visit only idempotent entries (e.g. for showing more information)
             self.debuglink.click(item_button)
             gen = _step(gen)
+            layout = self.debuglink.read_layout()
+            for _ in range(layout.page_count() - 1):
+                # Go through the info screen pages
+                self.debuglink.click(self.debuglink.screen_buttons.actionbar_right())
             self.debuglink.click(close_button)
         assert gen is None
 
@@ -1095,6 +1099,12 @@ class DebugUI:
                     continue  # don't click cancel
                 self.debuglink.click(item_button)
                 gen = _step(gen)
+                layout = self.debuglink.read_layout()
+                for _ in range(layout.page_count() - 1):
+                    # Go through the info screen pages
+                    self.debuglink.click(
+                        self.debuglink.screen_buttons.actionbar_right()
+                    )
                 self.debuglink.click(close_button)
             if not menu_items["has_next"]:
                 break
@@ -1165,6 +1175,7 @@ class DebugUI:
         pages: int | None,
         on_page: t.Callable[["LayoutContent"], None] | None = None,
     ) -> None:
+        # TODO: we should check for `debuglink.layout` instead of `debuglink.model` but it fails emu sanity check of T3W1
         if pages is None:
             pages = self.debuglink.read_layout().page_count()
 
@@ -1173,8 +1184,8 @@ class DebugUI:
             layout = self.visit_menu_items()
             if on_page is not None:
                 on_page(layout)
-            if self.debuglink.model is models.T3W1:
-                self.debuglink.click(self.debuglink.screen_buttons.ok())
+            if self.debuglink.model in (models.T3T1, models.T3W1):
+                self.debuglink.click(self.debuglink.screen_buttons.actionbar_right())
             else:
                 self.debuglink.swipe_up()
 
