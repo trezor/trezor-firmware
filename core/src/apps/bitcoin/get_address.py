@@ -42,7 +42,7 @@ def _get_xpubs(
 
 @with_keychain
 async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Address:
-    from trezor import TR
+    from trezor import TR, utils
     from trezor.enums import InputScriptType
     from trezor.messages import Address
     from trezor.ui.layouts import (
@@ -64,6 +64,21 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
     multisig = msg.multisig  # local_cache_attribute
     address_n = msg.address_n  # local_cache_attribute
     script_type = msg.script_type  # local_cache_attribute
+
+    if utils.USE_MINISCRIPT and msg.policy is not None:
+        from trezor.crypto.hashlib import sha256
+
+        from .register_policy import derive_miniscript
+
+        # TODO: only `wsh()` is supported
+        # TODO: make sure our key is included
+        # TODO: `policy` should match `coin`
+        script = derive_miniscript(msg.policy, address_n)
+
+        assert coin.bech32_prefix is not None
+        address = addresses._address_p2wsh(sha256(script).digest(), coin.bech32_prefix)
+        # TODO: support `show_display`
+        return Address(address=address)
 
     if msg.show_display:
         # skip soft-validation for silent calls
