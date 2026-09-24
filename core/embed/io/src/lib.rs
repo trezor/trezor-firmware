@@ -10,6 +10,18 @@ pub mod nrf;
 #[cfg(feature = "smp")]
 pub mod smp;
 
+/// Returns the heap pointer/size the loader carved out for the currently
+/// active applet, sized per its manifest-declared `heap-size`.
+#[cfg(feature = "app_loading")]
+pub fn get_heap() -> (*mut u8, usize) {
+    let mut ptr: *mut core::ffi::c_void = core::ptr::null_mut();
+    let mut size = 0usize;
+    // SAFETY: `ptr`/`size` are valid out-pointers for the duration of the call.
+    let status = unsafe { ffi::app_get_heap(&mut ptr, &mut size) };
+    assert!(status.code == 0, "app_get_heap failed");
+    (ptr.cast(), size)
+}
+
 #[cfg(test)]
 #[unsafe(no_mangle)]
 pub fn main() -> i32 {
