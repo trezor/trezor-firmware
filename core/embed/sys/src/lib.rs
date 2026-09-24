@@ -20,4 +20,7 @@ pub mod task;
 #[cfg(all(feature = "dbg_console", not(feature = "log_crate_disabled")))]
 pub mod log_crate;
 
+#[cfg(feature = "dbg_console")]
+pub mod ulog;
+
 pub mod time;
