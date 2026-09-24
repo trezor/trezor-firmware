@@ -174,6 +174,13 @@ typedef enum {
   TROPIC_CONFIG_STRICTNESS_INCOMPARABLE,
 } tropic_config_strictness_t;
 
+typedef enum {
+  TROPIC_FW_UPDATE_UNFINISHED,
+  TROPIC_FW_UPDATE_OUTDATED,
+  TROPIC_FW_UPDATE_UP_TO_DATE,
+  TROPIC_FW_UPDATE_ERROR
+} tropic_fw_update_state_t;
+
 #ifdef TREZOR_EMULATOR
 #define TROPIC_RETRY_COMMAND(command) command
 #else
@@ -1088,28 +1095,13 @@ bool tropic_write_fw_slot(void) {
          memcmp(spect, fw_SPECT_ver, 4) == 0;
 }
 
-static secbool tropic_fw_update_needed(bool *needed) {
-  uint8_t confirmed_riscv[4] = {0};
-  uint8_t confirmed_spect[4] = {0};
-  bool present = false;
-  if (!tropic_session_start()) {
-    return secfalse;
-  }
-  if (!tropic_read_fw_slot(confirmed_riscv, confirmed_spect, &present)) {
-    return secfalse;
-  }
-  *needed = !present || fw_version_is_older(confirmed_riscv, fw_CPU_ver) ||
-            fw_version_is_older(confirmed_spect, fw_SPECT_ver);
-  return sectrue;
-}
-
 static bool tropic_erase_fw_slot(void) {
   return lt_r_mem_data_erase_retry(&g_tropic_driver.handle,
                                    TROPIC_FW_VERSION_SLOT) == LT_OK;
 }
 
 // Reset the configuration and restore the CFG version slots
-static secbool tropic_reset_configuration_after_update(void) {
+static secbool tropic_cleanup_update_config(void) {
   lt_handle_t *handle = tropic_get_handle();
   if (handle == NULL) {
     return secfalse;
@@ -1157,8 +1149,7 @@ static secbool tropic_reset_configuration_after_update(void) {
 
 // XXX: Tohle je ta funkce, co se volá v obou případech
 // XXX: Tedy `udělej update` + `vypni ukazatele`
-// TODO: re-add ui progress
-static secbool tropic_update_fw(void) {
+static secbool tropic_finish_update(void) {
   // XXX: úvodní kontrola
   tropic_driver_t *drv = &g_tropic_driver;
   if (!drv->initialized) {
@@ -1204,7 +1195,7 @@ static secbool tropic_update_fw(void) {
     // XXX: Maintenance bit + cfg sloty
     // Reset the configuration. This includes the Maintenance bit and the
     // slots
-    if (sectrue != tropic_reset_configuration_after_update()) {
+    if (sectrue != tropic_cleanup_update_config()) {
       return secfalse;
     }
 
@@ -1217,29 +1208,8 @@ static secbool tropic_update_fw(void) {
   return secfalse;
 }
 
-static secbool tropic_check_silicon_revision(bool *correct_revision) {
-  lt_handle_t *handle = tropic_get_handle();
-  if (handle == NULL) {
-    return secfalse;
-  }
-
-  // XXX: zkontroluju ještě, že mám správnou revizi
-  lt_chip_id_t chip_id = {0};
-  if (TROPIC_RETRY_COMMAND(lt_get_info_chip_id(handle, &chip_id)) != LT_OK) {
-    return secfalse;
-  }
-
-  if (!tropic_silicon_revision_matches(&chip_id)) {
-    *correct_revision = false;
-    return sectrue;
-  }
-
-  *correct_revision = true;
-  return sectrue;
-}
-
 // Check if the Maintenance bit is enabled. Enable it if possible.
-static secbool tropic_get_maintenance_bit_on(void) {
+static secbool tropic_prepare_update_config(void) {
   lt_handle_t *handle = tropic_get_handle();
   if (handle == NULL) {
     return secfalse;
@@ -1302,51 +1272,79 @@ static secbool tropic_get_maintenance_bit_on(void) {
   return sectrue;
 }
 
-static secbool tropic_is_fw_update_in_progress(bool *in_progress) {
-  // XXX: zkontroluju FW version slot. Když je prázdný, probíhá update nebo jsem
-  // čerstvě z továrny
-  // XXX: v obou případech chci dělat update
-
+static tropic_fw_update_state_t tropic_get_update_state(void)  {
   lt_handle_t *handle = &g_tropic_driver.handle;
   lt_tr01_mode_t tr01_mode = LT_TR01_ALARM;
   if (TROPIC_RETRY_COMMAND(lt_get_tr01_mode(handle, &tr01_mode)) != LT_OK) {
-    return secfalse;
+    return TROPIC_FW_UPDATE_ERROR;
   }
+  // if chip_mode == MAINTENANCE:
   if (tr01_mode == LT_TR01_MAINTENANCE) {
-    *in_progress = true;
-    return sectrue;
+    return TROPIC_FW_UPDATE_UNFINISHED;
+  // if chip_mode == ALARM:
   } else if (tr01_mode == LT_TR01_ALARM) {
-    return secfalse;
+    return TROPIC_FW_UPDATE_ERROR;
   }
 
   if (!tropic_session_start()) {
-    return secfalse;
+    return TROPIC_FW_UPDATE_ERROR;
   }
   uint8_t riscv_fw[4] = {0};
   uint8_t spect_fw[4] = {0};
   bool present = false;
   if (!tropic_read_fw_slot(riscv_fw, spect_fw, &present)) {
+    return TROPIC_FW_UPDATE_ERROR;
+  }
+  // if slot_fw is None:
+  if (!present) {
+    uint32_t r_config_cfg_startup = 0;
+    if (TROPIC_RETRY_COMMAND(lt_r_config_read(handle, TR01_CFG_START_UP_ADDR,
+                                              &r_config_cfg_startup)) != LT_OK) {
+      return TROPIC_FW_UPDATE_ERROR;
+    }
+    // maintenance on and no FW version in slot = update in progress
+    if ((r_config_cfg_startup &
+                    BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0) {
+      return TROPIC_FW_UPDATE_UNFINISHED;
+    } else {
+      return TROPIC_FW_UPDATE_OUTDATED;
+    }
+  }
+
+  // if slot_fw >= BUNDLED_VERSIONS:             # po složkách
+   if (fw_version_is_older(riscv_fw, fw_CPU_ver) ||
+            fw_version_is_older(spect_fw, fw_SPECT_ver)) {
+     return TROPIC_FW_UPDATE_OUTDATED;
+   } else {
+     return TROPIC_FW_UPDATE_UP_TO_DATE;
+   }
+}
+
+static secbool tropic_update_possible(bool * possible) {
+  *possible = false;
+  lt_handle_t *handle = tropic_get_handle();
+  if (handle == NULL) {
     return secfalse;
   }
-  if (present) {
-    *in_progress = false;
+
+  // XXX: zkontroluju, že mám správnou revizi
+  lt_chip_id_t chip_id = {0};
+  if (TROPIC_RETRY_COMMAND(lt_get_info_chip_id(handle, &chip_id)) != LT_OK) {
+    return secfalse;
+  }
+  if (!tropic_silicon_revision_matches(&chip_id)) {
+    *possible = false;
     return sectrue;
   }
 
-  uint32_t r_config_cfg_startup = 0;
-  if (TROPIC_RETRY_COMMAND(lt_r_config_read(handle, TR01_CFG_START_UP_ADDR,
-                                            &r_config_cfg_startup)) != LT_OK) {
+  lt_tr01_mode_t tr01_mode = LT_TR01_ALARM;
+  if (TROPIC_RETRY_COMMAND(lt_get_tr01_mode(handle, &tr01_mode)) != LT_OK) {
     return secfalse;
   }
-  // maintenance on and no FW version in slot = update in progress
-  *in_progress = (r_config_cfg_startup &
-                  BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0;
-
-  return sectrue;
-}
-
-static secbool tropic_check_i_config_maintenance(bool *enabled) {
-  lt_handle_t *handle = &g_tropic_driver.handle;
+  if (tr01_mode == LT_TR01_MAINTENANCE) {
+    *possible = true;
+    return sectrue;
+  }
 
   if (!tropic_session_start()) {
     return secfalse;
@@ -1356,85 +1354,72 @@ static secbool tropic_check_i_config_maintenance(bool *enabled) {
                                             &i_config_cfg_startup)) != LT_OK) {
     return secfalse;
   }
-  *enabled = (i_config_cfg_startup &
+  *possible = (i_config_cfg_startup &
               BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0;
   return sectrue;
 }
 
-// XXX: tohle je ta funkce, co se volá PO UNLOCKU
-secbool tropic_ensure_fw_updated(void) {
-  bool needed = secfalse;
-  if (sectrue != tropic_fw_update_needed(&needed)) {
-    return secfalse;
-  }
-  if (!needed) {
-    // No firmware update needed, return early.
-    return sectrue;
-  }
-
-  bool bit_enabled = false;
-  if (sectrue != tropic_check_i_config_maintenance(&bit_enabled)) {
-    return secfalse;
-  }
-  if (!bit_enabled) {
-    // Maintenance bit is not enabled in I-Config -> FW Update cannot be
-    // performed
-    return secfalse;
-  }
-
-  bool correct_revision = false;
-  if (sectrue != tropic_check_silicon_revision(&correct_revision)) {
-    return secfalse;
-  }
-  if (!correct_revision) {
-    // update is not possible due to silicon mismatch
-    return secfalse;
-  }
-
-  // XXX: tady se vymaže ten version slot
-  // Erased FW version slot indicates FW update in progress.
+static secbool tropic_update(void) {
   if (!tropic_erase_fw_slot()) {
     return secfalse;
   }
-
-  // XXX: součástí toho je i to nastavení slotů
-  // Set maintenance bit ON if it is not and adjust the confifuration slots.
-  if (sectrue != tropic_get_maintenance_bit_on()) {
+  if (sectrue != tropic_prepare_update_config()) {
     return secfalse;
   }
+  return tropic_finish_update();
+}
 
-  // Perform the firmware update + turn
-  if (sectrue != tropic_update_fw()) {
+// XXX: tohle je ta funkce, co se volá PO UNLOCKU
+secbool tropic_ensure_fw_updated(void) {
+  tropic_fw_update_state_t state = tropic_get_update_state();
+  if (state == TROPIC_FW_UPDATE_ERROR) {
     return secfalse;
   }
+  if (state == TROPIC_FW_UPDATE_UP_TO_DATE) {
+    return sectrue;
+  }
+  bool possible = false;
+  if (sectrue != tropic_update_possible(&possible)) {
+    return secfalse;
+  }
+  if (!possible) {
+    // TODO: LOGOVÁNÍ?? nebo tady secfalse?
+    return sectrue;
+  }
 
-  return sectrue;
+  if (state == TROPIC_FW_UPDATE_OUTDATED) {
+    return tropic_update();
+  }
+
+  if (state == TROPIC_FW_UPDATE_UNFINISHED) {
+    return tropic_finish_update();
+  }
+
+  return secfalse;
 }
 
 // XXX: talhe funkce se volá v rámci bootu
 //         => NESMÍ ZAPÍNAT MAINTENENACE BIT! NIKDY!!
-// XXX: tady se zkontroluje ten 3-ukazatel a kdyžtak se zavolá tropic_update_fw
+// XXX: tady se zkontroluje ten 3-ukazatel a kdyžtak se zavolá tropic_finish_update
 secbool tropic_check_and_restore_fw_update_in_progress(void) {
-  bool in_progress = false;
-  if (sectrue != tropic_is_fw_update_in_progress(&in_progress)) {
+  tropic_fw_update_state_t state = tropic_get_update_state();
+  if (state == TROPIC_FW_UPDATE_ERROR) {
     return secfalse;
   }
-  if (in_progress) {
-    bool correct_revision = false;
-    if (sectrue != tropic_check_silicon_revision(&correct_revision)) {
-      return secfalse;
-    }
-    if (!correct_revision) {
-      // update is not possible due to silicon mismatch
-      return secfalse;
-    }
 
-    return tropic_update_fw();
+  if (state != TROPIC_FW_UPDATE_UNFINISHED) {
+    return sectrue;
   }
-  return sectrue;
-}
+  bool possible = false;
+  if (sectrue != tropic_update_possible(&possible)) {
+    return secfalse;
+  }
+  if (!possible) {
+    return secfalse;
+  }
 
-//                      OLD CODE
+  return tropic_finish_update();
+}
 
 #ifdef TREZOR_EMULATOR
 static uint16_t get_tropic_model_port(void) {
