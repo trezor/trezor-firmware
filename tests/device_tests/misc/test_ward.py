@@ -2541,6 +2541,18 @@ def test_ward_recover_counter_accepts_a_backward_attestation(session: Session):
     )
     assert "one" in rec.text
 
+    # AND THE RECOVERY STICKS. The host still holds the archived attestation for the head it was
+    # just moved off, and every link up to it -- it archives both by design, because `rollback`
+    # needs them. There used to be a way to spend that: anchor a chain walk on the archived
+    # attestation, descend to the device's current head, and have the device persist the OLD
+    # counter again. No freshness, no screen, recovery undone, wallet stranded exactly as before.
+    #
+    # `WardVerifyChain` no longer takes an anchor at all, so the only way back up is a LIVE
+    # attestation from a WM that has caught up -- which is the operator action the recovery was
+    # for. Asserted on the counter the device reports, since that is the floor at stake.
+    assert store.attestation_for(store.counter) is not None  # the host really did keep it
+    assert ward.sync(session).counter == old_counter
+
 
 @pytest.mark.models("core")
 def test_ward_recover_counter_refuses_an_attestation_that_is_not_older(

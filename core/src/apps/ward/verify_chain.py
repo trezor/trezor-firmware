@@ -60,13 +60,11 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     ward_id = await derive_ward_id()
     k_auth = await derive_k_auth()
 
-    # THE ANCHOR'S ROOT IS SIGNED, not supplied. The WM attests `(counter, root)` in the clear, so
-    # on the live path the root comes straight out of this round's attestation and the host names
-    # nothing; on the archived path it comes from `head_root` and the signature over it is what
-    # admits it. Which KIND of anchor it is decides one thing only: whether this walk may claim
-    # CURRENCY at the end. See `_anchor`.
-    anchor_from_counter, anchor_from_root, anchor_counter, anchor_root, archived = (
-        await _anchor(ward_id, msg)
+    # THE ANCHOR IS THIS ROUND'S ATTESTATION, and nothing else. The WM attests the whole step in
+    # the clear, so both ends come out of the round and the host names none of them -- see
+    # `_anchor` for why the archived alternative was removed rather than kept alongside.
+    anchor_from_counter, anchor_from_root, anchor_counter, anchor_root = await _anchor(
+        msg
     )
 
     # The baseline is the device's OWN head, not anything the host names. A host-chosen target
@@ -118,19 +116,16 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
 
         log.debug(
             __name__,
-            "chain: %d links to counter %d, %d of them reverts, archived=%s",
+            "chain: %d links to counter %d, %d of them reverts",
             len(crossed),
             anchor_counter,
             reverts,
-            archived,
         )
 
-    # The shared tail -- settle, persist, and (unless archived) latch and close -- see `adopt`.
-    # Settling by the transitions actually CROSSED rather than by the counter is what stops a
-    # record being cleared because another device's write happened to advance past it.
-    await adopt(
-        anchor_counter, anchor_root, landed_commits=crossed, current=not archived
-    )
+    # The shared tail -- settle, persist, latch, close -- see `adopt`. Settling by the
+    # transitions actually CROSSED rather than by the counter is what stops a record being
+    # cleared because another device's write happened to advance past it.
+    await adopt(anchor_counter, anchor_root, landed_commits=crossed)
 
     if reverts:
         await warn_reached_by_revert(reverts)
@@ -181,97 +176,53 @@ async def warn_reached_by_revert(reverts: int) -> None:
     )
 
 
-async def _anchor(
-    ward_id: bytes,
-    msg: WardVerifyChain,
-) -> "tuple[int, bytes | None, bool]":
-    """The head this walk descends to, its root, and whether it is a CURRENT one.
+async def _anchor(msg: WardVerifyChain) -> "tuple[int, bytes | None, int, bytes | None]":
+    """The step this walk descends from: the head the WM attested THIS ROUND, and its predecessor.
 
-    An anchor has two properties and they come apart:
+    LIVE ONLY, and the host names nothing: `WardVerifyChain` carries no fields at all. The
+    anchor fields are reserved on the wire, so a stale host's are dropped by the decoder rather
+    than checked here -- one fewer rule that can be forgotten.
 
-      GENUINE -- the WM really held this head. An ancestor of a head the WM held is on the
-        authoritative line, so this is what makes descent mean anything, and an ARCHIVED
-        attestation carries it in full;
-      FRESH -- this head is the head NOW. Only this round's nonce carries it, because
-        `round.clear` zeroes the slot and the device cannot tell a nonce it minted last week
-        from arbitrary bytes.
+    THERE USED TO BE AN ARCHIVED PATH, and removing it is what this function is really about.
+    It let a walk anchor on an attestation the host had KEPT from when some earlier head was
+    current, on the reasoning that descent needs only GENUINE ("the WM really held this") and not
+    FRESH ("this is the head now"), so such a walk could adopt without claiming currency and
+    without latching online.
 
-    Descent needs only the first, which is why a walk can be anchored on an archive and run with
-    no round at all. Currency needs the second, and `mark_online` is what must not be reached
-    without it -- `round.is_online` decides whether reads are served from the backend, and a host
-    replaying an old attestation must never be able to freeze a device at an old head while those
-    values are presented as current. That is the eclipse the nonce exists to close, and the
-    returned flag is what keeps this path out of it.
+    IT WAS A WAY TO RAISE THE STORED COUNTER WITH NO FRESHNESS AND NO CONSENT, which defeats
+    `WardRecoverCounter`. After an operator lowers the head from 57 to 10 -- a screen the user
+    holds to confirm, for the one situation where the WM's register was lost -- a host still
+    holding the archived attestation for 57, and the links from 10 up to it, could walk the device
+    straight back to 57. `adopt` persists the counter before it decides about latching, so the
+    recovery was undone silently, the floor was back above what the WM could attest, and the
+    wallet was stranded again with no screen and no WM involvement.
 
-    THE HOST NAMES NOTHING ON THE LIVE PATH. The round's attestation carries the whole step, so
-    `head_root` and the anchor-from fields are refused there rather than ignored -- a field that
-    is sometimes load-bearing and sometimes decorative is how the two paths come to be confused.
-    On the archived path they are required, and the WM's signature over them is what admits them.
+    AND IT WAS NO LONGER BUYING ANYTHING. Its purpose was staged catch-up, from when links
+    travelled as one repeated field and the 8704-byte buffer bounded the catch-up DISTANCE. The
+    backward walk pulls them one ack at a time, so a device arbitrarily far behind catches up in
+    a single workflow -- see the note above. Nothing exercised the archived path either: it had
+    no test in the tree.
 
-    THE ANCHOR'S PREDECESSOR IS RETURNED TOO, because the attestation names it and the walk can
-    then check that the FIRST link it pulls begins where the WM says it did -- a binding the host
-    cannot satisfy with some other link that merely ends in the right place.
+    The archived attestation itself is not gone. `rollback` still requires one, which is the
+    question it genuinely answers -- "was this target EVER the head" -- and there the counter
+    moves FORWARD and the user holds to confirm. See `attest.verify_archived_attestation`.
 
-    WHAT AN ANCHOR NO LONGER PROVES. The WM signs roots in the clear now, so a malicious WM could
-    anchor this walk at a root the wallet never held. The walk is what refuses it: no genuine
-    chain of `auth_commit`s runs from an invented root down to a state this device already holds,
-    and minting one needs K_auth. So an anchor supplies the COUNTER and the direction; the links
-    supply the truth.
-
-    Returns (from_counter, from_root, counter, root, archived).
+    Returns (from_counter, from_root, to_counter, to_root), the roots in app form.
     """
-    from trezor.wire import DataError
-
     from .adopt import require_attested_round
-    from .attest import EMPTY_ROOT, verify_archived_attestation
+    from .attest import EMPTY_ROOT
 
-    nonce = msg.nonce
-    signature = msg.wm_signature
-    if nonce is None and signature is None:
-        if (
-            msg.head_root is not None
-            or msg.anchor_counter is not None
-            or msg.anchor_from_counter is not None
-            or msg.anchor_from_root is not None
-        ):
-            raise DataError(
-                "WARD: a live anchor comes from the attestation; do not supply one"
-            )
-        from_counter, from_root, counter, root = require_attested_round("verify against")
-        return (
-            from_counter,
-            None if from_root == EMPTY_ROOT else from_root,
-            counter,
-            None if root == EMPTY_ROOT else root,
-            False,
-        )
-
-    if nonce is None or signature is None:
-        raise DataError("WARD: an archived anchor needs both a nonce and a signature")
-
-    counter = msg.anchor_counter
-    from_counter = msg.anchor_from_counter
-    if counter is None or from_counter is None:
-        raise DataError("WARD: an archived anchor needs both ends of the step it attests")
-
-    head_root = msg.head_root or None
-    from_root = msg.anchor_from_root or None
-    for r in (head_root, from_root):
-        if r is not None and len(r) != 32:
-            raise DataError("WARD: the anchored roots must be 32 bytes")
-
-    if not verify_archived_attestation(
-        ward_id,
-        nonce,
+    # NOTHING IS READ OFF `msg`, and there is nothing to read: WardVerifyChain carries no fields
+    # at all now. The anchor fields are RESERVED on the wire rather than merely unused, so a
+    # stale host that still sends them has them dropped by the decoder instead of reaching a
+    # check here -- which is the stronger arrangement, since it cannot be forgotten.
+    from_counter, from_root, counter, root = require_attested_round("verify against")
+    return (
         from_counter,
-        from_root,
+        None if from_root == EMPTY_ROOT else from_root,
         counter,
-        head_root,
-        msg.timestamp or 0,
-        signature,
-    ):
-        raise DataError("WARD: the WM never attested this head")
-    return from_counter, from_root, counter, head_root, True
+        None if root == EMPTY_ROOT else root,
+    )
 
 
 async def _pull_batch(

@@ -41,11 +41,16 @@ async def sync(msg: WardSync) -> WardSyncAck:
     deciding which device's claim wins. Overloading enrolment with it would make the rollback
     above the supported path rather than an attack.
 
-    SENT ALWAYS, not only when the device believes the WM is new. The device cannot know the WM's
-    state -- that is the WM's business -- and guessing "it already knows us" strands a genesis
-    wallet with no way to open its history. The WM ignores it once it holds a head, so the cost
-    is one signature per round. The service channel has always worked this way; this brings
-    connect level with it.
+    MINTED ONLY AT COUNTER 0, which follows from the rule above rather than optimising anything.
+    A signature over a non-zero head is one no WM may act on -- enrolment there is refused, and
+    `adopt.verify_round_attestation` would reject the resulting self-attestation anyway -- so
+    issuing one every round would hand out, on request, exactly the credential the cross-device
+    rollback above needs: an authentic enrolment for THIS device's head, ready for whoever reaches
+    an empty WM first. The device cannot know the WM's state, but it does know its own, and at a
+    non-zero counter the honest answer is to offer nothing.
+
+    Above genesis both fields are therefore absent, and a WM with no record of the wallet stays
+    without one until an operator recovers it deliberately.
     """
     from trezor.crypto import random
     from trezor.messages import WardSyncAck
@@ -66,10 +71,16 @@ async def sync(msg: WardSync) -> WardSyncAck:
     counter = await get_counter()
     root = await get_root()
 
+    # See the docstring: enrolment is genesis-only, so a signature above it is one nothing may
+    # act on and everything could misuse.
+    init = None
+    if counter == 0:
+        init = head_init_sig(await derive_k_sig(), ward_id, counter, root)
+
     return WardSyncAck(
         nonce=nonce,
         ward_id=ward_id,
         counter=counter,
-        root=root,
-        head_init_sig=head_init_sig(await derive_k_sig(), ward_id, counter, root),
+        root=root if counter == 0 else None,
+        head_init_sig=init,
     )

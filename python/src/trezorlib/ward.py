@@ -505,15 +505,15 @@ def reconcile(
 def verify_chain(
     session: "Session",
     link_source: LinkSource,
-    attestation: Optional[tuple] = None,
     max_links_per_ack: int = 64,
 ) -> messages.WardVerifyChainAck:
     """Adopt a WM-attested head by proving the device's own head is an ANCESTOR of it.
 
-    Used instead of `reconcile` when the device has fallen more than a step behind. THE DEVICE
-    DRIVES: it anchors at the attested head and then asks for predecessors, walking backwards,
-    until it reaches the head it already holds. This function is the host half of that loop --
-    the same shape as `btc.sign_tx`'s TxRequest exchange.
+    Used instead of `reconcile` when the device is more than one step behind -- which, since
+    reconcile became one-step-only, is every catch-up. THE DEVICE DRIVES: it anchors at the head
+    attested in this round and then asks for predecessors, walking backwards, until it reaches the
+    head it already holds. This function is the host half of that loop -- the same shape as
+    `btc.sign_tx`'s TxRequest exchange.
 
     `link_source(to_counter, to_root, limit)` must return up to `limit` links ending at that exact
     state, NEWEST FIRST and contiguous -- each one's `from` end being the next one's `to` end.
@@ -521,43 +521,13 @@ def verify_chain(
     Returning fewer is always fine; returning none ends the walk with a failure, which is the
     honest answer when the host does not hold that range.
 
-    `attestation` anchors the walk on an ARCHIVED head instead of the one attested in this round:
-    the tuple the host kept from when that head was current. Descent is then proved in full and currency is not claimed at all -- the device
-    adopts, settles, and stays OFFLINE. Omit it to anchor on this round's attestation, which is
-    what latches online.
-
-    THE ANCHOR IS ONLY EVER PASSED ON THE ARCHIVED PATH, and comes from the attestation tuple
-    itself. On the live path the device takes the whole step from this round's attestation and
-    REFUSES any anchor field supplied here -- a field that is load-bearing on one path and
-    decorative on the other is how the two come to be confused.
-
-    The archived tuple is
-    `(nonce, from_counter, from_root, to_counter, to_root, timestamp, wm_signature)`.
+    THE REQUEST CARRIES NOTHING. The anchor is the attestation ingested this round, which the
+    device already holds. There used to be an `attestation` argument for anchoring on an ARCHIVED
+    one instead; it is gone, because it let a host raise the device's persisted counter with no
+    freshness and no confirmation -- undoing a user-confirmed `recover_counter` by replaying the
+    attestation it had kept. See the note in the firmware's `verify_chain._anchor`.
     """
-    nonce = timestamp = wm_signature = None
-    anchor_counter = head_root = anchor_from_counter = anchor_from_root = None
-    if attestation is not None:
-        (
-            nonce,
-            anchor_from_counter,
-            anchor_from_root,
-            anchor_counter,
-            head_root,
-            timestamp,
-            wm_signature,
-        ) = attestation
-
-    res = session.call(
-        messages.WardVerifyChain(
-            head_root=head_root,
-            nonce=nonce,
-            timestamp=timestamp,
-            wm_signature=wm_signature,
-            anchor_counter=anchor_counter,
-            anchor_from_counter=anchor_from_counter,
-            anchor_from_root=anchor_from_root,
-        )
-    )
+    res = session.call(messages.WardVerifyChain())
 
     while isinstance(res, messages.WardChainRequest):
         links = link_source(res.to_counter, res.to_root, max_links_per_ack)
