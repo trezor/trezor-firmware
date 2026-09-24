@@ -348,6 +348,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_credential;
   MP_QSTR_current;
   MP_QSTR_danger;
+  MP_QSTR_data;
   MP_QSTR_data_hash;
   MP_QSTR_data_len;
   MP_QSTR_debug;
@@ -355,6 +356,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_deinit;
   MP_QSTR_delete;
   MP_QSTR_description;
+  MP_QSTR_deserialize_crypto_message;
+  MP_QSTR_deserialize_progress_message;
   MP_QSTR_details_title;
   MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
@@ -621,6 +624,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pm_event;
   MP_QSTR_prefill;
   MP_QSTR_prefill_word;
+  MP_QSTR_process_ipc_message;
   MP_QSTR_production_year;
   MP_QSTR_progress__authenticity_check;
   MP_QSTR_progress__done;
@@ -793,6 +797,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__wrong_word_selected;
   MP_QSTR_reset__you_need_one_share;
   MP_QSTR_reset__your_backup_is_done;
+  MP_QSTR_result;
   MP_QSTR_return_value;
   MP_QSTR_reverse;
   MP_QSTR_rotation__change_template;
@@ -856,6 +861,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
   MP_QSTR_send_transport_busy;
+  MP_QSTR_serialize_crypto_result;
+  MP_QSTR_serialize_ui_result;
   MP_QSTR_set;
   MP_QSTR_set_brightness;
   MP_QSTR_set_enabled;
@@ -940,6 +947,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_touch_event;
   MP_QSTR_trace;
   MP_QSTR_trezorble;
+  MP_QSTR_trezorcrypto_api;
   MP_QSTR_trezorlog;
   MP_QSTR_trezorminiscript;
   MP_QSTR_trezorproto;

@@ -23,6 +23,7 @@
 #include <trezor_rtl.h>
 
 #include <io/app_arena.h>
+#include <sys/systask.h>
 
 /// package: trezorapp
 
@@ -126,6 +127,28 @@ static mp_obj_t mod_trezorapp_AppImage_is_running(mp_obj_t self) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_is_running_obj,
                                  mod_trezorapp_AppImage_is_running);
+
+/// def exited_normally(self) -> bool:
+///     """
+///     Check if the application's task ended by exiting on its own. Only
+///     meaningful once the task has ended, and not after `stop()`.
+///     """
+static mp_obj_t mod_trezorapp_AppImage_exited_normally(mp_obj_t self) {
+  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+
+  systask_postmortem_t pminfo;
+  ts_t status = app_image_get_pminfo(o->handle, &pminfo);
+  if (ts_eq(status, TS_ENOENT)) {
+    mp_raise_type(&mp_type_AppImageNotFoundError);
+  } else if (ts_error(status)) {
+    mp_raise_type(&mp_type_AppImageError);
+  }
+
+  return mp_obj_new_bool(pminfo.reason == TASK_TERM_REASON_EXIT &&
+                         pminfo.exit.code == 0);
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppImage_exited_normally_obj,
+                                 mod_trezorapp_AppImage_exited_normally);
 
 /// def is_ready(self) -> bool:
 ///     """
@@ -479,6 +502,8 @@ static const mp_rom_map_elem_t mod_trezorapp_AppImage_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorapp_AppImage_task_id_obj)},
     {MP_ROM_QSTR(MP_QSTR_is_running),
      MP_ROM_PTR(&mod_trezorapp_AppImage_is_running_obj)},
+    {MP_ROM_QSTR(MP_QSTR_exited_normally),
+     MP_ROM_PTR(&mod_trezorapp_AppImage_exited_normally_obj)},
     {MP_ROM_QSTR(MP_QSTR_is_ready),
      MP_ROM_PTR(&mod_trezorapp_AppImage_is_ready_obj)},
     {MP_ROM_QSTR(MP_QSTR_id), MP_ROM_PTR(&mod_trezorapp_AppImage_id_obj)},

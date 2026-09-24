@@ -66,6 +66,12 @@ class AppImage:
         Check if the application image is currently running.
         """
 
+    def exited_normally(self) -> bool:
+        """
+        Check if the application's task ended by exiting on its own. Only
+        meaningful once the task has ended, and not after `stop()`.
+        """
+
     def is_ready(self) -> bool:
         """
         Check if the application image has been fully loaded and verified.
