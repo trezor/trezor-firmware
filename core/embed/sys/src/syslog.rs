@@ -94,3 +94,8 @@ pub fn log_simple(module: &str, level: LogLevel, message: &str) {
         syslog_write_chunk(message, true).ok();
     }
 }
+
+pub fn init_log_crate() {
+    #[cfg(not(feature = "log_crate_disabled"))]
+    crate::log_crate::init()
+}

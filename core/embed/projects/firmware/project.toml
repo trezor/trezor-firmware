@@ -68,6 +68,7 @@ disable-animation             = { true = ["disable_animation"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 frozen                        = { true = ["frozen"] }
 log-stack-usage               = { true = ["log_stack_usage"] }
+log-crate                     = { false = ["log_crate_disabled"] }
 mem-perf                      = { true = ["memperf"] }
 miniscript                    = { true = ["miniscript"] }
 n1w1                          = { true = ["n1w1"] }  # TODO: move back to `uses` section (after stabilization)
