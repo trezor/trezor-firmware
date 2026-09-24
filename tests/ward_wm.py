@@ -295,20 +295,42 @@ class MockWM:
         current_root: bytes,
         head_init_sig: bytes,
     ) -> tuple[int, bytes, int, bytes]:
-        """Attest the current head, adopting the wallet's opening head if it is unknown.
+        """Attest the current head, ENROLLING the wallet at genesis if it is unknown.
 
         What a read-only first use needs: a device asks for the current head before it has ever
-        written, so there may be nothing to attest yet. Same authorisation as above -- an opening
-        head is a value anyone who knows `ward_id` could otherwise set.
+        written, so there may be nothing to attest yet. Same authorisation as `advance` -- an
+        opening head is a value anyone who knows `ward_id` could otherwise set.
+
+        GENESIS ONLY, and the same rule `advance` enforces. A `head_init_sig` proves the named
+        head was a GENUINE STATE OF THIS WALLET; it does not prove it is the LATEST one, and
+        nothing a single device holds could. So enrolling a WM at an arbitrary counter would let
+        whoever reaches an empty WM first pin the head there: two devices at C40 and C57 both hold
+        authentic signatures over their own heads, and the slower one would be refused from then
+        on against a head older than the wallet's real state.
+
+        At counter 0 there is nothing to choose between -- the empty tree is the empty tree -- so
+        enrolment is safe exactly there and nowhere else.
+
+        GAP(ward): RE-SEEDING A WM THAT LOST ITS REGISTER IS NOT THIS, and is deliberately not
+        implemented. It is an operator action -- restore the WM's persisted head, or introduce a
+        named recovery mechanism with a policy about which device's claim wins -- and overloading
+        enrolment with it would silently turn the rollback above into the supported path.
         """
         from .ward_keys import verify_head_init_sig
 
         if ward_id not in self._heads:
+            if current_counter != 0:
+                raise ValueError(
+                    "a wallet's first head must start at counter 0; a WM that lost its "
+                    "register cannot be re-seeded from a device's current head"
+                )
             if not verify_head_init_sig(
                 ward_id, current_counter, current_root, head_init_sig
             ):
                 raise ValueError("head-init authorisation does not verify")
-            # Attests itself: this is an opening head, not a step.
+            # Attests itself, which only genesis may do -- see the firmware's matching rule in
+            # `adopt.verify_round_attestation`. A non-zero self-transition is rejected there, so a
+            # mock that installed one would be handing the device something it can never accept.
             self._heads[ward_id] = (
                 current_counter,
                 _or_empty(current_root),
