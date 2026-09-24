@@ -4,8 +4,9 @@
 use core::fmt::Write as _;
 use core::sync::atomic::{AtomicBool, Ordering};
 
-use log::{set_logger, set_max_level, Level, LevelFilter, Log, Metadata, Record};
-use sys::syslog;
+use log::{Level, LevelFilter, Log, Metadata, Record, set_logger, set_max_level};
+
+use crate::syslog;
 
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
@@ -42,19 +43,10 @@ impl Log for SysLogger {
     fn flush(&self) {}
 }
 
-fn to_filter(val: u8) -> LevelFilter {
-    match val {
-        0 => LevelFilter::Trace, // corresponds to debug in micropython
-        1 => LevelFilter::Info,
-        2 => LevelFilter::Warn,
-        3 => LevelFilter::Error,
-        _ => LevelFilter::Off,
-    }
-}
-
-pub fn init_rust_logging(level: u8) {
+pub fn init() {
+    #[cfg(not(feature = "log_crate_disabled"))]
     if !INITIALIZED.swap(true, Ordering::Relaxed) {
         let _ = set_logger(&SysLogger);
-        set_max_level(to_filter(level));
+        set_max_level(LevelFilter::Trace);
     }
 }

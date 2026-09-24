@@ -1,11 +1,10 @@
-use sys::syslog::{log, LogLevel};
+use sys::syslog::{init_log_crate, log, LogLevel};
 
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::{util, Error, Obj};
-use crate::util::logger::init_rust_logging;
 
 fn _log(level: LogLevel, args: &[Obj], kwargs: &Map) -> Result<Obj, Error> {
     let [module, fmt, fmt_args @ ..] = args else {
@@ -66,9 +65,9 @@ extern "C" fn py_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
     Obj::const_none()
 }
 
-extern "C" fn py_init(level: Obj) -> Obj {
+extern "C" fn py_init() -> Obj {
     let block = || {
-        init_rust_logging(level.try_into()?);
+        init_log_crate();
         Ok(())
     };
     unsafe {
@@ -100,9 +99,9 @@ pub static mp_module_trezorlog: Module = obj_module! {
     ///     ...
     Qstr::MP_QSTR_error => obj_fn_kw!(2, py_error).as_obj(),
 
-    /// def init(level: int) -> None:
+    /// def init() -> None:
     ///     """
     ///     Initialize Rust logging connector.
     ///     """
-    Qstr::MP_QSTR_init => obj_fn_1!(py_init).as_obj(),
+    Qstr::MP_QSTR_init => obj_fn_0!(py_init).as_obj(),
 };

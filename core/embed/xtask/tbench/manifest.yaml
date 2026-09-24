@@ -195,6 +195,13 @@ options:
     when: component(firmware)
     type: checkbox
 
+  - id: log-crate
+    name: Enable logging through 'log' crate
+    description: Useful with 3rd-party crates that use the standard macros but increases code size.
+    group: Debugging
+    when: component(firmware)
+    type: checkbox
+
   - id: frozen
     name: Frozen Modules
     description: Embeds frozen MicroPython modules.
