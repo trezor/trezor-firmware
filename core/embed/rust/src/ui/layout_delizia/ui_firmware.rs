@@ -399,8 +399,13 @@ impl FirmwareUI for UIDelizia {
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         back_button: bool,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        if external_menu {
+            // WIP: this screen has no menu a caller can drive. It is drawn as
+            // before, without one, so the caller's extras are unreachable here.
+            log::warn!("confirm_summary: external_menu is not supported on this model, ignored");
+        }
         // collect available info
         let account_info = if let Some(items) = account_items {
             let mut pairs = Vec::<(TString<'static>, TString<'static>), 4>::new();

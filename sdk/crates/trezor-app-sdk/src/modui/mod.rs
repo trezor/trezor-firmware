@@ -56,11 +56,10 @@
 //! as the person left it. How they are presented is the library's choice and
 //! may change without any signature changing.
 //!
-//! `cancel` offers a way to abandon the block, alongside the extras. Some
-//! screens have a way out of their own as well, and each block says so where
-//! it does. Where it does not, `cancel: false` with no extras leaves the
-//! person able only to confirm — so pass `false` only for a step that has
-//! nothing to refuse.
+//! Every confirmation can be refused from its own screen, and that is never the
+//! app's to switch off. A block whose screen always has a way out takes no
+//! `cancel`. Where a block does take one, `cancel: true` adds a Cancel entry to
+//! its extras that abandons the whole block.
 //!
 //! A block that cannot show extras yet refuses a non-empty list rather than
 //! draw a screen whose extras nobody can open; see the table above.
@@ -96,7 +95,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use trezor_app_sdk::modui::{self as ui, ConfirmAction, ConfirmValue, ValueKind};
+//! use trezor_app_sdk::modui::{self as ui, Commitment, ConfirmAction, ConfirmValue, ValueKind};
 //!
 //! // A sequence of blocks is just a sequence of calls. Cancelling any one of
 //! // them stops the flow, because `confirmed()` turns it into an error.
@@ -108,6 +107,7 @@
 //!         Some("Recipient"),
 //!         None,
 //!         None,
+//!         Commitment::Step,
 //!         "app/send/recipient",
 //!         &[],
 //!     ))?
@@ -118,16 +118,16 @@
 //!         "Sign the transaction?",
 //!         None,
 //!         None,
+//!         Commitment::Step,
 //!         "app/send/confirm",
 //!         &[],
-//!         true,
 //!     ))?
 //!     .confirmed()
 //! }
 //!
 //! // Or handle the cancel yourself, when leaving is not an error.
 //! fn offer_details(address: &str) -> trezor_app_sdk::Result<bool> {
-//!     let params = ConfirmValue::new("Send", address, ValueKind::Address, None, None, None, "app/send", &[]);
+//!     let params = ConfirmValue::new("Send", address, ValueKind::Address, None, None, None, Commitment::Step, "app/send", &[]);
 //!     Ok(ui::confirm_value(params)?.is_confirmed())
 //! }
 //! ```
@@ -214,6 +214,20 @@ const BR_CODE_OTHER: i32 = 1;
 // ============================================================================
 // Data types
 // ============================================================================
+
+/// What confirming a block commits the person to.
+///
+/// The app knows which of its screens is the one that signs; the library does
+/// not. The app says so here, and the library turns it into the gesture —
+/// today a hold rather than a tap — so the person's last yes is harder to give
+/// by accident. The gesture itself is not the app's to name.
+#[derive(uDebug, Copy, Clone, PartialEq, Eq)]
+pub enum Commitment {
+    /// One step of a longer flow. Confirming it only moves on.
+    Step,
+    /// The last confirmation before the app signs or otherwise acts.
+    Final,
+}
 
 /// What the person did with a block.
 ///

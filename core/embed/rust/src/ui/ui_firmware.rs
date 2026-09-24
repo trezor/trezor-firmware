@@ -154,6 +154,20 @@ impl TryFrom<Obj> for DeviceMenuParams {
 }
 
 pub trait FirmwareUI {
+    /// How the confirmation screens read their buttons and menu.
+    ///
+    /// Shared by `confirm_action` and `confirm_value`, and the same wherever a
+    /// method takes these parameters:
+    ///
+    /// - `verb` — the confirm button's label; `None` means the model's own.
+    /// - `cancel` — whether the screen offers a way out.
+    /// - `verb_cancel` — the way out's label; `None` means the model's own.
+    /// - `external_menu` — draw a menu button that answers `INFO`, for a menu
+    ///   the caller drives. A model that cannot draw one says so, and never
+    ///   hides a way out behind it.
+    ///
+    /// Not every model honours all of these yet; each one that does not says
+    /// so where it ignores them.
     #[allow(clippy::too_many_arguments)]
     fn confirm_action(
         title: TString<'static>,
@@ -188,6 +202,8 @@ pub trait FirmwareUI {
         back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    /// Reads `verb`, `cancel`, `verb_cancel` and `external_menu` as
+    /// [`FirmwareUI::confirm_action`] does.
     #[allow(clippy::too_many_arguments)]
     fn confirm_value(
         title: TString<'static>,

@@ -2,7 +2,7 @@
 //! [`confirm_properties`].
 
 use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, UiOutcome, call};
+use super::{BR_CODE_OTHER, Commitment, UiOutcome, call};
 use crate::structs::{ConfirmProperties as WireConfirmProperties, Property, TrezorUiEnum};
 use crate::{Error, Result};
 
@@ -15,6 +15,7 @@ pub struct ConfirmProperties<'a> {
     title: &'a str,
     props: &'a [Property<'a>],
     subtitle: Option<&'a str>,
+    commitment: Commitment,
     br: &'a str,
     extras: &'a [ExtraItem<'a>],
     cancel: bool,
@@ -26,6 +27,8 @@ impl<'a> ConfirmProperties<'a> {
     /// - `title` — the screen's heading.
     /// - `props` — the facts, in the order they are shown.
     /// - `subtitle` — optional line under the heading.
+    /// - `commitment` — whether confirming this is the person's final yes; see
+    ///   [`Commitment`].
     /// - `br` — the step name the host sees; see
     ///   [step names](crate::modui#step-names).
     /// - `extras` — more the person can look at from this screen; see
@@ -36,6 +39,7 @@ impl<'a> ConfirmProperties<'a> {
         title: &'a str,
         props: &'a [Property<'a>],
         subtitle: Option<&'a str>,
+        commitment: Commitment,
         br: &'a str,
         extras: &'a [ExtraItem<'a>],
         cancel: bool,
@@ -44,6 +48,7 @@ impl<'a> ConfirmProperties<'a> {
             title,
             props,
             subtitle,
+            commitment,
             br,
             extras,
             cancel,
@@ -71,14 +76,14 @@ impl<'a> ConfirmProperties<'a> {
 /// # Example
 ///
 /// ```no_run
-/// use trezor_app_sdk::modui::{self as ui, ConfirmProperties, Property};
+/// use trezor_app_sdk::modui::{self as ui, Commitment, ConfirmProperties, Property};
 ///
 /// fn confirm_stake(amount: &str) -> trezor_app_sdk::Result<()> {
 ///     let props = [
 ///         Property::plain("Amount", amount),
 ///         Property::plain("Resource", "Energy"),
 ///     ];
-///     ui::confirm_properties(ConfirmProperties::new("Summary", &props, None, "app/stake", &[], true))?
+///     ui::confirm_properties(ConfirmProperties::new("Summary", &props, None, Commitment::Step, "app/stake", &[], true))?
 ///         .confirmed()
 /// }
 /// ```
@@ -92,10 +97,10 @@ pub fn confirm_properties(params: ConfirmProperties<'_>) -> Result<UiOutcome> {
         params.title,
         params.props,
         params.subtitle,
-        None,            // verb: the label follows the gesture, which the block owns
-        false,           // hold: derived from the block
+        None, // verb: the label follows the gesture, which the block owns
+        params.commitment == Commitment::Final, // hold: follows from the commitment
         Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
-        BR_CODE_OTHER,   // legacy field; see the constant
+        BR_CODE_OTHER, // legacy field; see the constant
     );
 
     call(

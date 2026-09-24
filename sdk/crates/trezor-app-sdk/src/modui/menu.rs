@@ -9,9 +9,9 @@
 //! Core's own UI machinery drives generic menus with callbacks. This is the
 //! thin piece that builds one out of what an app is allowed to say.
 
-use super::UiOutcome;
 use super::extra::{Extra, ExtraItem};
 use super::screen::{Screen, call_once};
+use super::{BR_CODE_OTHER, UiOutcome};
 use crate::alloc_types::String;
 use crate::structs::{SelectMenu, ShowProperties, StrSlice, TrezorUiEnum, UiReply};
 use crate::{Error, Result};
@@ -70,7 +70,7 @@ pub(super) fn open(
         &titles[..count],
         None,
         menu_step.as_deref(),
-        0,
+        BR_CODE_OTHER,
     ));
     let screen = Screen::new();
     let mut first = true;
@@ -121,7 +121,7 @@ fn step(br: &str, suffix: &str) -> String {
 fn show(extra: &ExtraItem<'_>, br: Option<&str>) -> Result<()> {
     match extra.value {
         Extra::Simple(props) => {
-            let request = ShowProperties::new(extra.label, props, None, br, 0);
+            let request = ShowProperties::new(extra.label, props, None, br, BR_CODE_OTHER);
             call_once(&TrezorUiEnum::ShowProperties(request))?;
         }
         // Paging is unsolved; this is where the fetch loop belongs once its

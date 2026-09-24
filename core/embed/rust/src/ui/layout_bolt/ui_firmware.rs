@@ -51,8 +51,13 @@ impl FirmwareUI for UIBolt {
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        if external_menu {
+            // WIP: this screen has no menu a caller can drive. It is drawn as
+            // before, without one, so the caller's extras are unreachable here.
+            log::warn!("confirm_action: external_menu is not supported on this model, ignored");
+        }
         let paragraphs = {
             let action = action.unwrap_or("".into());
             let description = description.unwrap_or("".into());
@@ -124,8 +129,13 @@ impl FirmwareUI for UIBolt {
         _cancel: bool,
         _back_button: bool,
         _footer: Option<(TString<'static>, bool)>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        if external_menu {
+            // WIP: this screen has no menu a caller can drive. It is drawn as
+            // before, without one, so the caller's extras are unreachable here.
+            log::warn!("confirm_value: external_menu is not supported on this model, ignored");
+        }
         let frame = ConfirmValue::new(title, value, description, verb, verb_cancel, hold)
             .with_text_mono(is_data)
             .with_subtitle(subtitle)
@@ -455,8 +465,13 @@ impl FirmwareUI for UIBolt {
         _extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         _back_button: bool,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        if external_menu {
+            // WIP: this screen has no menu a caller can drive. It is drawn as
+            // before, without one, so the caller's extras are unreachable here.
+            log::warn!("confirm_summary: external_menu is not supported on this model, ignored");
+        }
         let info_button: bool = account_items.is_some() || extra_items.is_some();
         let mut paragraphs = ParagraphVecShort::new();
         if let Some(amount) = amount {
