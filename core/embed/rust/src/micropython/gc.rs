@@ -35,7 +35,6 @@ impl<T> Gc<T> {
             layout.size() > 0,
             "Zero-sized allocations are not supported"
         );
-        // TODO: Assert that `layout.align()` is the same as the GC alignment.
         // SAFETY:
         //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does
         //    not support custom alignment.
@@ -47,7 +46,8 @@ impl<T> Gc<T> {
             if raw.is_null() {
                 return Err(Error::AllocationFailed);
             }
-            let typed = raw.cast();
+            let typed: *mut T = raw.cast();
+            ensure!(typed.is_aligned(), "Unaligned allocation");
             ptr::write(typed, v);
             Ok(Self::from_raw(typed))
         }
@@ -83,7 +83,6 @@ impl<T: Default> Gc<[T]> {
     /// and fill with default values.
     pub fn new_slice(len: usize) -> Result<Self, Error> {
         let layout = Layout::array::<T>(len).unwrap();
-        // TODO: Assert that `layout.align()` is the same as the GC alignment.
         // SAFETY:
         //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does
         //    not support custom alignment.
@@ -96,6 +95,7 @@ impl<T: Default> Gc<[T]> {
                 return Err(Error::AllocationFailed);
             }
             let typed: *mut T = raw.cast();
+            ensure!(typed.is_aligned(), "Unaligned allocation");
             for i in 0..len {
                 ptr::write(typed.add(i), T::default());
             }
