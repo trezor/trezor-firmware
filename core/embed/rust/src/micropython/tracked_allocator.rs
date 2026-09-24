@@ -36,11 +36,11 @@ unsafe impl GlobalAlloc for TrackedAllocator {
         );
         raw as _
     }
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
         let raw: *mut c_void = ptr as _;
         #[cfg(feature = "debug")]
         {
-            let size = layout.size();
+            let size = _layout.size();
             log::trace!(
                 "{:?} = {} : -{}",
                 raw,
