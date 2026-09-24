@@ -19,7 +19,8 @@ pub enum Extra<'a> {
     /// Content the app already holds.
     Simple(&'a [Property<'a>]),
 
-    /// Content fetched on demand, so it need never be held whole.
+    /// Content fetched on demand, a chunk at a time, so it need never be held
+    /// whole. Core pages each chunk on its own.
     ///
     /// Called with a byte offset and a buffer to fill; returns how many bytes
     /// were written, where fewer than the buffer's length means the end has
@@ -28,9 +29,9 @@ pub enum Extra<'a> {
     /// The closure runs inside the app and never crosses IPC.
     ///
     /// **Not implemented yet**: a block given one returns
-    /// [`crate::Error::ValueError`] when the person opens it. The signature is
-    /// provisional and may change.
-    Paginated(&'a dyn Fn(usize, &mut [u8]) -> usize),
+    /// [`crate::Error::ValueError`] as soon as it is called, before anything is
+    /// shown. The signature is provisional and may change.
+    Chunked(&'a dyn Fn(usize, &mut [u8]) -> usize),
     //
     // Other kinds belong here as they are needed, each differing only in how it
     // obtains what it shows — a QR rendering of a string, for instance.

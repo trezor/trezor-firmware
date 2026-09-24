@@ -13,8 +13,7 @@
 //! the `Screen` is dropped.
 //!
 //! The handle and the operation ride in the IPC message id rather than in the
-//! payload, so the request itself is unchanged and [`crate::ui`] — which never
-//! opens a screen and always sends `OP_ONCE` — needs nothing from this.
+//! payload, so the request itself describes only the screen.
 
 use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
@@ -31,7 +30,7 @@ use crate::{Error, Result};
 // Constants
 // ============================================================================
 
-/// Build the layout, show it, and forget it. Also what [`crate::ui`] sends.
+/// Build the layout, show it, and forget it.
 const OP_ONCE: u16 = 0;
 /// Build the layout and keep it alive under the handle.
 const OP_OPEN: u16 = 1;
@@ -67,7 +66,7 @@ impl Screen {
 
     /// Builds the screen from `request` and blocks until the person acts on it.
     ///
-    /// Use this for content the person has not seen, including the next page of
+    /// Use this for content the person has not seen, including the next chunk of
     /// something they have: the trusted side rebuilds the layout, so whatever
     /// the previous request said is gone.
     pub fn show(&self, request: &TrezorUiEnum) -> Result<UiReply> {

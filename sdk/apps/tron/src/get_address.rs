@@ -6,7 +6,7 @@ use crate::{
 };
 use trezor_app_sdk::{
     Result, ResultExt, crypto,
-    modui::{self, Severity, ShowAddress, ShowNotice},
+    modui::{self, Commitment, ConfirmValue, ExtraItem, Property, Severity, ShowNotice, ValueKind},
 };
 
 pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
@@ -26,14 +26,24 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
             .get_account_name(COIN, &PATTERNS_ADDRESS, SLIP44_ID)
             .ok_or(crate::Error::DataError("Failed to get account name"))
             .c()?;
-        modui::show_address(ShowAddress::new(
+        let path = dp.format_path();
+        let account_facts = [
+            Property::plain(tr!("words__account"), account_name.as_str()),
+            Property::plain(tr!("address_details__derivation_path"), &path),
+        ];
+        modui::confirm_value(ConfirmValue::new(
+            &subtitle,
             &address,
-            Some(subtitle.as_str()),
-            Some(account_name.as_str()),
-            Some(&dp.format_path()),
+            ValueKind::Address,
+            None,
+            None,
+            None,
+            Commitment::Step,
             "tron/address",
-            &[],
-            false,
+            &[ExtraItem::simple(
+                tr!("address_details__account_info"),
+                &account_facts,
+            )],
         ))
         .c()?
         .confirmed()

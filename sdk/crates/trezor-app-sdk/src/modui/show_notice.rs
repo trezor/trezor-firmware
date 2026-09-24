@@ -1,7 +1,7 @@
 //! Telling the person something. The public docs live on [`show_notice`].
 //!
-//! One block for every callout, where there used to be a function per kind.
-//! Failures are not among them; see [`Severity`].
+//! One block for every callout. Failures are not among them; see
+//! [`Severity`].
 
 use super::extra::ExtraItem;
 use super::{BR_CODE_OTHER, UiOutcome, call};

@@ -1,40 +1,148 @@
 //! Building-block UI library: one typed function per screen an app can show.
 //!
 //! An app decides which blocks to call and in what order, and what each one
-//! says. It does not decide how anything looks or behaves: the confirm
-//! gesture, the button words, the styling and the paging all follow from the
-//! block, and are the same whichever app calls it.
+//! says. It does not decide how anything looks or behaves: that is an
+//! implementation detail of this library and core, invisible to the app.
 //!
-//! This module replaces [`crate::ui`]. The two exist side by side only while
-//! apps are being ported; new code should use this one.
+//! # Who is who
+//!
+//! - **the person** — the human holding the device, and the only one who
+//!   confirms anything. Never "the user", which could equally mean the
+//!   developer reading this.
+//! - **the host** — the wallet or other software on the other end of the
+//!   cable. The app serves the host's requests; step names and errors are
+//!   reported to it.
+//! - **the device** — the Trezor. Core runs on it, every screen is drawn
+//!   on it, and the app is loaded onto it as data.
+//! - **the app** — the modular app (an *extapp*) calling these functions.
+//!   Low-trust: signed and verified before loading, but nothing here
+//!   assumes it behaves.
+//! - **this library** — `modui`, which turns the app's calls into screens.
+//!   It runs inside the app, on the low-trust side.
+//! - **core** — the firmware past the IPC boundary, which draws the screens.
+//!   Trusted.
+//!
+//! And the words for what moves between them:
+//!
+//! - **a block** — one typed function of this library: one call, one
+//!   question, one [`UiOutcome`], and the call does not return until the
+//!   person has answered. The app's only way to show anything.
+//! - **a screen** — what the person sees at one moment. A block may show
+//!   several — its own, the extras menu, pages of content; the app never
+//!   counts them.
+//! - **the flow** — the app's sequence of blocks, in the order it calls
+//!   them. The app owns it; this library never sees past one block.
+//! - **a step name** — the `br` string naming one step of the flow for the
+//!   host; see [step names](#step-names).
+//! - **extras** — labelled pieces of additional information reachable from
+//!   a block's screen; see [extras](#extras-and-the-way-out).
+//! - **a session** — one run of the app, from the host's request to its
+//!   response. A refusal ends it.
 //!
 //! # Blocks
 //!
 //! | Block | Shows | Extras |
 //! |---|---|---|
 //! | [`confirm_action`] | a question about an action | yes |
-//! | [`confirm_value`] | one value, such as an address or an amount | yes |
+//! | [`confirm_value`] | one value, e.g. an address or an amount | yes |
 //! | [`confirm_properties`] | a list of key/value facts | not yet |
-//! | [`confirm_data`] | raw bytes, as hex, over as many pages as needed | yes |
-//! | [`confirm_summary`] | the closing amount and fee of a transaction | yes |
-//! | [`show_address`] | an address and its QR code, to check | not yet |
+//! | [`confirm_data`] | raw bytes, as hex, of any length - supports chunking | yes |
+//! | [`confirm_summary`] | the closing amount and fee of a transaction - special commonly used case | yes |
 //! | [`show_notice`] | a notice of some [`Severity`] | depends on the severity |
 //!
 //! Every block takes a params struct built by one constructor carrying every
 //! parameter, and blocks until the person answers.
+//!
+//! WIP: possible additional blocks, none decided:
+//!
+//! ```text
+//! show_qr          — a value as a QR code, to scan (needs a wire extension)
+//! request_number   — the person enters a number (RequestNumber exists on the wire)
+//! choose           — the person picks one of a list; a decisive screen, not
+//!                    the navigational extras menu, and collides with the
+//!                    no-app-menus rule — decide that boundary explicitly
+//! ```
+//!
+//! Each returns its own outcome type with the same semantics; see the WIP
+//! note under [outcomes](#outcomes).
+//!
+//! # Showing an address
+//!
+//! There is no `show_address` block: an app shows an address as
+//! [`confirm_value`] with [`ValueKind::Address`], passing the account and
+//! derivation path in `extras`.
+//!
+//! WIP: deliberate, and open to discussion. An address is a special case:
+//! core's own receive screen is a multi-screen flow — chunked address, QR,
+//! account info — whose refusal means a suspected mismatch, not a change of
+//! mind. This library cannot express that flow, and refuses to imply it. The
+//! QR view is therefore unsupported for now; it returns when the wire can
+//! carry a QR view of its own.
+//!
+//! # Long content
+//!
+//! Content can be longer than one screen, and two different things split it,
+//! each for its own reason:
+//!
+//! - **Chunking** is this library's, and exists because memory is limited. A
+//!   request to core has to fit in one IPC message, on the order of a
+//!   kilobyte, so data longer than that — the bytes given to [`confirm_data`],
+//!   an [`Extra::Chunked`] extra — is cut into chunks, and each chunk is sent
+//!   to core as a request of its own.
+//! - **Pagination** is core's, and exists because the screen is small. Core
+//!   splits whatever one request carries across as many screens as it takes
+//!   — a screen holds a few hundred bytes at most, on the largest model — as
+//!   the person scrolls. This library never sees it and never asks for it.
+//!
+//! Neither is the app's: an app hands over the whole value and gets one
+//! outcome, and never learns how many chunks or pages it took.
+//!
+//! WIP: today the two meet only at a chunk's edge — each chunk is shown on
+//! its own, core pages within it, and the person's yes on its last page
+//! moves to the next chunk. The direction is one continuous read: the screen
+//! says when it is paging towards the edge of the chunk it holds, and this
+//! library fetches the next chunk before the person gets there — from the
+//! app, or through the app from the host — so content of any length reads
+//! as one document. That needs the total length known upfront, so core can
+//! count pages across chunks, and a way for the screen to ask for more;
+//! neither exists yet. The `chunked` module holds the details.
 //!
 //! # Outcomes
 //!
 //! Every block returns [`UiOutcome`]: the person either confirmed or did not.
 //! Cancelling is an answer, not a failure, so it arrives as `Ok`:
 //!
-//! - call [`UiOutcome::confirmed`] when the flow cannot go on without a yes —
-//!   it turns [`UiOutcome::Cancelled`] into [`crate::Error::Cancelled`], which
-//!   `?` then carries out of the handler;
+//! - call [`UiOutcome::confirmed`] when the flow cannot go on without a yes;
 //! - call [`UiOutcome::is_confirmed`] when leaving is a normal choice.
 //!
 //! How the person got there — which page they were on, whether they opened
 //! the extras, which button they pressed — is never reported.
+//!
+//! WIP: outcome types are a family, not a hierarchy. A block that asks for
+//! something other than a yes — a value, a pick from a list — gets its own
+//! type with the same semantics, written when the first one exists rather
+//! than generalizing `UiOutcome` upfront:
+//!
+//! ```text
+//! enum UiInput<u32> { Value(u32), Cancelled }   // .value()?  -> Ok(u32)    | Err(Cancelled)
+//! enum UiChoice     { Picked(usize), Cancelled } // .picked()? -> Ok(usize) | Err(Cancelled)
+//! ```
+//!
+//! ## The `confirmed()?` idiom
+//!
+//! Most screens must be a yes:
+//!
+//! ```text
+//! ui::confirm_action(params)?.confirmed()?;
+//! ```
+//!
+//! The first `?` unwraps the block's result; `.confirmed()` turns
+//! `Cancelled` into [`crate::Error::Cancelled`], which the trailing `?`
+//! returns from the function at once — nothing after it runs, and the host
+//! sees the session ending with the person's refusal. Do not drop the
+//! trailing `?` on a screen that must be a yes: a refusal would be ignored,
+//! with the flow carrying on as if the person had confirmed. Omit it only
+//! when the `Result` itself is the function's return value.
 //!
 //! # Step names
 //!
@@ -66,7 +174,9 @@
 //!
 //! # Errors
 //!
-//! A block returns `Err` only when it could not ask the question at all:
+//! A block returns `Err` only when it could not ask the question at all. The
+//! parameters are checked as the block is called, before anything is shown,
+//! so a bad list of extras never fails halfway through a flow:
 //!
 //! - [`crate::Error::ValueError`] — the parameters cannot be shown: an empty
 //!   step name, more extras than one screen can offer, extras on a block that
@@ -75,22 +185,23 @@
 //!   that makes no sense for this screen.
 //! - Any other error — the request could not reach the device.
 //!
-//! Core also checks what it is asked to draw, and ends the app's session
-//! instead of answering if it cannot draw it — for example a notice with
-//! extras on a model whose notice screens have no menu.
+//! Core also checks what it is asked to draw, per model, and the same call
+//! may fare differently on each. What a model cannot draw at all — a screen
+//! it has no implementation of — ends the session. What it can draw only
+//! partially — a menu button it has no place for — it draws without, with a
+//! warning, and the flow continues: on such a model the extras are
+//! unreachable, but the app is not told.
 //!
-//! # Who is who
-//!
-//! Throughout these docs:
-//!
-//! - **the person** — the human holding the device, and the only one who
-//!   confirms anything. Never "the user", which could equally mean the
-//!   developer reading this.
-//! - **the app** — the modular app calling these functions.
-//! - **this library** — `modui`, which turns those calls into screens. It runs
-//!   inside the app, on the untrusted side.
-//! - **core** — the firmware past the IPC boundary, which draws the screens.
-//!   Trusted.
+//! WIP: both of those outcomes are under discussion. A screen core cannot
+//! draw kills the app's task outright — the blocking call never returns,
+//! not even with an `Err`. Bluntly: there is no proper error path from core
+//! to the app. The app can receive a service reply or nothing, and core's
+//! only failure mode toward the app is stopping its task; errors flow to
+//! the host, never to the app. The cheap fix is a `UiReply` failure variant
+//! mapped to `Err` in `screen`; a fuller one is an error-report service
+//! covering crypto and progress too. Likewise, a silently dropped menu
+//! leaves the app believing its extras exist on every model; whether to
+//! tell it is open.
 //!
 //! # Example
 //!
@@ -134,6 +245,9 @@
 
 // For maintainers of this module; none of this is the app's concern.
 //
+// `WIP:` paragraphs in the docs above mark open thoughts and discussion
+// points, and are removed before merge.
+//
 // The public surface above is the design; what carries it is scaffolding.
 // Today that means serializing onto the existing `TrezorUiEnum` wire and
 // borrowing `crate::Error` for failures. Both get rewritten as core is built
@@ -157,7 +271,7 @@
 // `Constants` (what the block fixes and the app cannot choose), `Data types`
 // (the params struct), `Entry point` (the one public function), `Internals`.
 // A block file is dull on purpose: params in, one `UiOutcome` out, the wire
-// call in between. Anything cleverer belongs in a shared helper (`paged`,
+// call in between. Anything cleverer belongs in a shared helper (`chunked`,
 // `menu`) so that no single block owns behaviour the others should have too.
 // Each block's own example lives on its entry point, where rustdoc shows it:
 // the block modules are private, so their `//!` docs are for maintainers.
@@ -165,6 +279,7 @@
 // One file per block, plus the helpers they share. This list is the inventory;
 // the re-exports below are grouped by rustfmt (`group_imports`), so do not try
 // to arrange them by hand.
+mod chunked;
 mod confirm_action;
 mod confirm_data;
 mod confirm_properties;
@@ -172,9 +287,7 @@ mod confirm_summary;
 mod confirm_value;
 mod extra;
 mod menu;
-mod paged;
 mod screen;
-mod show_address;
 mod show_notice;
 
 pub use confirm_action::{ConfirmAction, confirm_action};
@@ -184,11 +297,10 @@ pub use confirm_summary::{ConfirmSummary, confirm_summary};
 pub use confirm_value::{ConfirmValue, Footer, ValueKind, confirm_value};
 pub use extra::{Extra, ExtraItem};
 use screen::Screen;
-pub use show_address::{ShowAddress, show_address};
 pub use show_notice::{Severity, ShowNotice, show_notice};
 use ufmt::derive::uDebug;
 
-/// A key/value fact, as shown in a list or on a page of extras.
+/// A key/value fact, as shown in a list or on an extra's screen.
 pub use crate::structs::Property;
 use crate::structs::{TrezorUiEnum, UiReply};
 use crate::{Error, Result};
@@ -229,21 +341,25 @@ pub enum Commitment {
     Final,
 }
 
-/// What the person did with a block.
+/// What the person did with a confirmation block.
 ///
 /// # Who uses this
 ///
-/// - **Written by every block**, as the last thing it does, from a
-///   [`UiReply`] and whatever the block knows that the reply does not.
-/// - **Read by the modular app** — the only result type an app ever sees,
-///   and the only one that is public.
+/// - **Written by every confirmation block**, as the last thing it does, from
+///   a [`UiReply`] and whatever the block knows that the reply does not.
+/// - **Read by the modular app**, as the answer to a question that has only
+///   yes and no.
 /// - **Never crosses IPC.** It is deliberately narrower than the wire: no
-///   pages, no menu indices, no navigation. A block asked a question and this
+///   chunks, no menu indices, no navigation. A block asked a question and this
 ///   is the answer.
 ///
-/// One shape for every block. `Cancelled` is an ordinary value, so it is easy
-/// to ignore by accident — hence `#[must_use]` and [`UiOutcome::confirmed`],
-/// which is the idiomatic way to require confirmation.
+/// A block that asks for something other than a yes — a value, a pick from
+/// a list — returns a different type with the same semantics, when the first
+/// one exists.
+///
+/// `Cancelled` is an ordinary value, so it is easy to ignore by accident —
+/// hence `#[must_use]` and [`UiOutcome::confirmed`], which is the idiomatic
+/// way to require confirmation.
 #[must_use]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq)]
 pub enum UiOutcome {
@@ -293,6 +409,7 @@ fn call(
     if br == Some("") {
         return Err(Error::ValueError("a step name must not be empty"));
     }
+    menu::check_extras(extras, cancel)?;
 
     let screen = Screen::new();
     let mut first = true;

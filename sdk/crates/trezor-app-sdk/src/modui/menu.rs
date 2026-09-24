@@ -33,6 +33,23 @@ const STEP_DETAILS: &str = "/details";
 // Entry point
 // ============================================================================
 
+/// Checks that a block's extras can be offered, before anything is shown.
+///
+/// Every block calls this first, so a list that cannot be shown fails as the
+/// block is called, not later, when the person opens the menu mid-flow.
+pub(super) fn check_extras(extras: &[ExtraItem<'_>], cancel: bool) -> Result<()> {
+    if extras.len() + usize::from(cancel) > MAX_ENTRIES {
+        return Err(Error::ValueError("too many extras for one screen"));
+    }
+    if extras
+        .iter()
+        .any(|extra| matches!(extra.value, Extra::Chunked(_)))
+    {
+        return Err(Error::ValueError("chunked extras not implemented"));
+    }
+    Ok(())
+}
+
 /// Shows what a block offers besides its main screen.
 ///
 /// `Some` means the person decided the block from here; `None` means they merely
@@ -42,9 +59,11 @@ pub(super) fn open(
     cancel: bool,
     br: Option<&str>,
 ) -> Result<Option<UiOutcome>> {
+    // `check_extras` has already refused a list that cannot be shown, so an empty one
+    // here means core answered "show more" for a screen that offered nothing.
     let count = extras.len() + usize::from(cancel);
-    if count == 0 || count > MAX_ENTRIES {
-        return Err(Error::ValueError("too many extras for one screen"));
+    if count == 0 {
+        return Err(Error::InvalidMessage);
     }
 
     let mut titles = [StrSlice::default(); MAX_ENTRIES];
@@ -124,10 +143,10 @@ fn show(extra: &ExtraItem<'_>, br: Option<&str>) -> Result<()> {
             let request = ShowProperties::new(extra.label, props, None, br, BR_CODE_OTHER);
             call_once(&TrezorUiEnum::ShowProperties(request))?;
         }
-        // Paging is unsolved; this is where the fetch loop belongs once its
-        // shape is settled. Refusing is wrong, but it is honestly wrong rather
-        // than quietly wrong.
-        Extra::Paginated(_) => return Err(Error::ValueError("paginated extras not implemented")),
+        // Fetching chunk by chunk is unsolved; this is where that loop belongs
+        // once its shape is settled. `check_extras` refuses these before anything is
+        // shown, so this arm is only reached if that check is bypassed.
+        Extra::Chunked(_) => return Err(Error::ValueError("chunked extras not implemented")),
     }
 
     Ok(())
