@@ -147,6 +147,7 @@ def get_authenticated_address(
     n: "Address",
     show_display: bool = False,
     multisig: Optional[messages.MultisigRedeemScriptType] = None,
+    miniscript: Optional[messages.MiniscriptRedeemPolicyType] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     ignore_xpub_magic: bool = False,
     unlock_path: Optional[list[int]] = None,
@@ -165,6 +166,7 @@ def get_authenticated_address(
             coin_name=coin_name,
             show_display=show_display,
             multisig=multisig,
+            miniscript=miniscript,
             script_type=script_type,
             ignore_xpub_magic=ignore_xpub_magic,
             chunkify=chunkify,
@@ -423,6 +425,24 @@ def sign_tx(
             raise exceptions.TrezorException("Some signatures are missing!")
 
     return signatures, serialized_tx
+
+
+@workflow(capabilities={messages.Capability.Bitcoin, messages.Capability.Miniscript})
+def register_policy(
+    session: "Session",
+    name: str,
+    descriptor: str,
+    nodes: Sequence[messages.HDNodeType],
+    coin_name: str,
+) -> messages.MiniscriptPolicy:
+    policy = messages.MiniscriptPolicy(descriptor=descriptor, nodes=nodes)
+    session.call(
+        messages.MiniscriptRegisterPolicy(
+            policy=policy, name=name, coin_name=coin_name
+        ),
+        expect=messages.Success,
+    )
+    return policy
 
 
 @workflow(capability=messages.Capability.Bitcoin)

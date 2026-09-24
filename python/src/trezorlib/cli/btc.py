@@ -162,6 +162,7 @@ def cli() -> None:
 @click.option("-d", "--show-display", is_flag=True)
 @click.option("-x", "--multisig-xpub", multiple=True, help="XPUBs of multisig owners")
 @click.option("-m", "--multisig-threshold", type=int, help="Number of signatures")
+@click.option("--descriptor", type=str, help="Miniscript BIP-389 descriptor")
 @click.option(
     "-N",
     "--multisig-suffix-length",
@@ -187,6 +188,7 @@ def get_address(
     multisig_threshold: int | None,
     multisig_suffix_length: int,
     multisig_sort_pubkeys: bool,
+    descriptor: str | None,
     chunkify: bool,
 ) -> str:
     """Get address for specified path.
@@ -214,7 +216,7 @@ def get_address(
         script_type = guess_script_type_from_path(address_n)
 
     multisig: Optional[messages.MultisigRedeemScriptType]
-    if multisig_xpub:
+    if multisig_xpub and multisig_threshold:
         if multisig_threshold is None:
             raise click.ClickException("Please specify signature threshold")
 
@@ -236,6 +238,18 @@ def get_address(
     else:
         multisig = None
 
+    miniscript = None
+    if multisig_xpub and descriptor:
+        nodes = [xpub_deserialize(x)[1] for x in multisig_xpub]
+        miniscript = messages.MiniscriptRedeemPolicyType(
+            policy=messages.MiniscriptPolicy(
+                descriptor=descriptor,
+                nodes=nodes,
+            ),
+            internal=bool(address_n[-2] % 2),
+            index=address_n[-1],
+        )
+
     return btc.get_address(
         session,
         coin,
@@ -243,8 +257,10 @@ def get_address(
         show_display,
         script_type=script_type,
         multisig=multisig,
+        miniscript=miniscript,
         unlock_path=get_unlock_path(address_n),
         chunkify=chunkify,
+        ignore_xpub_magic=True,
     )
 
 
@@ -433,6 +449,20 @@ def sign_tx(session: "Session", json_file: TextIO, chunkify: bool) -> None:
     click.echo()
     click.echo("Signed Transaction:")
     click.echo(serialized_tx.hex())
+
+
+@cli.command()
+@click.option("-c", "--coin", type=str)
+@click.argument("name", type=str)
+@click.argument("descriptor", type=str)
+@with_session
+def register_policy(session: "Session", coin: str, name: str, descriptor: str) -> None:
+    """Register a descriptor on the device."""
+    descriptor, *xpubs = descriptor.split("\n")
+    nodes = [xpub_deserialize(x.split("]")[1])[1] for x in xpubs]
+    btc.register_policy(
+        session, name=name, descriptor=descriptor, nodes=nodes, coin_name=coin
+    )
 
 
 #

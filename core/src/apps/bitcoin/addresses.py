@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from trezor.crypto import bip32
-    from trezor.messages import MultisigRedeemScriptType
+    from trezor.messages import MiniscriptRedeemPolicyType, MultisigRedeemScriptType
 
     from apps.common.coininfo import CoinInfo
 
@@ -27,7 +27,11 @@ def get_address(
     coin: CoinInfo,
     node: bip32.HDNode,
     multisig: MultisigRedeemScriptType | None = None,
+    miniscript: MiniscriptRedeemPolicyType | None = None,
 ) -> str:
+    if miniscript is not None and multisig is not None:
+        raise ProcessError("Cannot set both miniscript and multisig")
+
     node_public_key = node.public_key()  # result_cache
 
     if multisig:
@@ -60,6 +64,15 @@ def get_address(
         if multisig is not None:
             pubkeys = multisig_get_pubkeys(multisig)
             return _address_multisig_p2wsh(pubkeys, multisig.m, coin.bech32_prefix)
+        # wsh miniscript
+        if miniscript is not None:
+            from .register_policy import derive_miniscript
+
+            # TODO: only `wsh()` is supported
+            # TODO: make sure our key is included
+            script = derive_miniscript(miniscript)
+            script_hash = sha256(script).digest()
+            return _address_p2wsh(script_hash, coin.bech32_prefix)
 
         # native p2wpkh
         return address_p2wpkh(node_public_key, coin)
