@@ -194,6 +194,12 @@ pub fn print_version(args: PrintVersionArgs) -> Result<()> {
     Ok(())
 }
 
+pub fn command_args_to_string(cmd: &std::process::Command) -> String {
+    let mut parts = vec![cmd.get_program().to_string_lossy().into_owned()];
+    parts.extend(cmd.get_args().map(|arg| arg.to_string_lossy().into_owned()));
+    parts.join(" ")
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs;
