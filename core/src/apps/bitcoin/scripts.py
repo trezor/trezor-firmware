@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Sequence
 
-    from trezor.messages import MultisigRedeemScriptType, TxInput
+    from trezor.messages import MiniscriptPolicy, MultisigRedeemScriptType, TxInput
 
     from apps.common.coininfo import CoinInfo
 
@@ -150,6 +150,18 @@ def write_bip143_script_code_prefixed(
         )
     else:
         raise DataError("Unknown input script type for bip143 script code")
+
+
+if utils.USE_MINISCRIPT:
+
+    def derive_miniscript(policy: MiniscriptPolicy, txi: TxInput) -> bytes:
+        # TODO: only `wsh()` is supported
+        if txi.script_type != InputScriptType.SPENDWITNESS:
+            raise DataError("Invalid script type")
+
+        from . import register_policy
+
+        return register_policy.derive_miniscript(policy, txi.address_n)
 
 
 # P2PKH, P2SH
