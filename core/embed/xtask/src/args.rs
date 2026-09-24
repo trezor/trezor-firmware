@@ -2,7 +2,6 @@ use std::path::PathBuf;
 
 use anyhow::{Result, anyhow};
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use modular_xtask::args::Cmd as ModularCmd;
 use serde::Deserialize;
 
 pub use crate::model::Model;
@@ -153,14 +152,6 @@ pub enum Cmd {
     Combine(CombineArgs),
     /// Print current version of specified project
     PrintVersion(PrintVersionArgs),
-    Modular(ModularArgs),
-    ApiBindings(ApiArgs),
-}
-
-#[derive(Args, Debug)]
-pub struct ModularArgs {
-    #[command(subcommand)]
-    pub command: ModularCmd,
 }
 
 #[derive(Args, Debug, Clone, Default)]
@@ -263,10 +254,4 @@ pub struct CombineArgs {
 #[command(hide = true)] // Should probably go under some kind of misc subcommand.
 pub struct PrintVersionArgs {
     pub project: Project,
-}
-
-#[derive(Args, Debug)]
-pub struct ApiArgs {
-    #[arg(long, default_value = "false")]
-    pub check_only: bool,
 }

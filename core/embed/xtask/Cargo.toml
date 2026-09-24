@@ -19,8 +19,6 @@ serde_json.workspace = true
 owo-colors.workspace = true
 toml.workspace = true
 tempfile.workspace = true
-modular-xtask = { path = "../../../sdk/crates/modular-xtask" }
-
 
 [dev-dependencies]
 tempfile.workspace = true
