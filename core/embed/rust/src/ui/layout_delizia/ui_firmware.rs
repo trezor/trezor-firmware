@@ -1137,7 +1137,9 @@ impl FirmwareUI for UIDelizia {
                 .try_into_option::<TString>()?
                 .unwrap_or_else(TString::empty);
             let is_data = is_data.try_into_option::<bool>()?.unwrap_or(false);
-            unwrap!(items.push((header, text, is_data)));
+            items
+                .push((header, text, is_data))
+                .map_err(|_| Error::ValueError(c"Too many properties"))?;
         }
 
         if items.len() == 1 {

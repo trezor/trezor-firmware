@@ -45,6 +45,7 @@ message Failure {
         Failure_InvalidProtocol = 17;
         reserved 18;
         Failure_InProgress = 19;
+        Failure_AppError = 20;
         Failure_FirmwareError = 99;
     }
 }
