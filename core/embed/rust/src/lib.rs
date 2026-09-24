@@ -87,7 +87,7 @@ pub fn main() -> i32 {
     }
 
     match std::env::var("RUST_LOG") {
-        Ok(s) if s != "0" => crate::util::logger::init_rust_logging(0),
+        Ok(s) if s != "0" => sys::syslog::init_log_crate(),
         _ => eprintln!("Set RUST_LOG=1 to enable logs."),
     }
 

@@ -13,4 +13,7 @@ mod panic;
 #[cfg(feature = "dbg_console")]
 pub mod syslog;
 
+#[cfg(all(feature = "dbg_console", not(feature = "log_crate_disabled")))]
+pub mod log_crate;
+
 pub mod time;
