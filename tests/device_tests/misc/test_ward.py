@@ -61,7 +61,7 @@ from ...ward_app import (  # noqa: F401  -- ward_app_pinned is an autouse fixtur
     session_switch_prefix,
     ward_app_pinned,
 )
-from ...ward_keys import derive_k_sig  # noqa: F401  -- asserted via ward_id below
+from ...ward_keys import derive_k_sig
 from ...ward_keys import TAG_REVERT
 from ...ward_keys import (
     auth_commit,
@@ -210,24 +210,45 @@ def _read(session: Session, store: WardTrie, call) -> tuple:
     return res, rec
 
 
-def _publish(wm: MockWM, res, store: WardTrie) -> None:
-    """Hand the WM what the write produced.
+def _head_init_for(counter: int, root):
+    """The opening-head authorisation a connect host relays from `WardSyncAck`.
 
-    A real host does exactly this: the device is the counter authority and the WM records
-    what it is told. Since writes commit only on WM confirmation, skipping this means the
-    write never takes effect at all -- the device's head simply does not move.
+    A WM with no record of this wallet has nothing to compare against, so the first head it holds
+    must be supplied by the device and signed. In production this comes off `WardSyncAck`; here
+    the oracle mints it, which is the same statement made by the same key.
     """
-    # THE WHOLE STEP, not just the head it reaches. The WM attests a transition, so it has to be
-    # told the predecessor it advanced from -- which a real one already holds, having
-    # compare-and-swapped on it. Both roots are the host's own: it derived them by applying the
-    # leaf the device handed back, so no device-only value is in this exchange any more.
+    from ...ward_keys import head_init_sig as _oracle_head_init
+
+    return _oracle_head_init(derive_k_sig(_SEED), _WARD_ID, counter, root)
+
+
+def _publish(wm: MockWM, res, store: WardTrie) -> None:
+    """Hand the WM what the write produced, WITH the device's authorisation for it.
+
+    A real host does exactly this: the device is the counter authority, and the WM takes the
+    advance only from a party that can prove a holder of this wallet's K_sig authorised it.
+    Skipping the publish means the write never takes effect -- the device's head simply does not
+    move -- and skipping the SIGNATURE means the WM refuses it outright, which is the property
+    `wm_sig` exists for.
+
+    THE AUTHENTICATED PATH, deliberately, because this is where connect-mode `wm_sig` gets
+    exercised at all. `MockWM.install_unauthenticated` would also work and would test nothing:
+    it is there for fixtures standing in for history, not for a write this test just made.
+    """
+    # THE WHOLE STEP, not just the head it reaches. Both roots are the host's own -- it derived
+    # them by applying the leaf the device handed back -- and the predecessor is what the WM
+    # compare-and-swaps on.
     root = store.root()
-    wm.publish(
+    from_counter, from_root = _step_into(store, res.counter, root)
+    wm.advance(
         _WARD_ID,
+        from_counter,
+        from_root,
         res.counter,
         root,
+        res.wm_sig,
         _T0 + res.counter,
-        *_step_into(store, res.counter, root),
+        head_init_sig=_head_init_for(from_counter, from_root),
     )
 
 
@@ -1197,7 +1218,7 @@ def _attest(
     # naming one. `link` overrides it for the synthetic-head tests, which have no real link.
     into = _link_into(store, counter) if link is _DERIVE_LINK else link
     from_counter, from_root = (into[0], into[1]) if into is not None else (0, None)
-    wm.publish(ack.ward_id, counter, root, timestamp, from_counter, from_root)
+    wm.install_unauthenticated(ack.ward_id, counter, root, timestamp, from_counter, from_root)
     _fc, _fr, _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
     ward.ingest_attestation(
         session, from_counter, from_root, counter, root, sig, timestamp
@@ -1327,7 +1348,7 @@ def test_ward_refuses_a_link_into_a_head_the_wm_did_not_attest(session: Session)
     ack = ward.sync(session)
     # ward_id comes from the DEVICE, being passphrase-dependent. The root is the host's own.
     root = store.root()
-    wm.publish(ack.ward_id, counter, root, _T0 + counter, *_step_into(store, counter, root))
+    wm.install_unauthenticated(ack.ward_id, counter, root, _T0 + counter, *_step_into(store, counter, root))
     _fc, _fr, _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
     ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, _T0 + counter)
 
@@ -1350,16 +1371,19 @@ def test_ward_refuses_an_attested_counter_below_the_floor(session: Session):
     _seed(session, store, b"addr1", b"v")
     wm = MockWM()
 
-    # A MINTED LINK: the head five counters ahead is synthetic and no real transition produced
-    # it. Same root, so only the counter moves -- which is all this test needs to raise the floor.
-    ahead = store.counter + 5
-    _attest(
-        session,
-        wm,
-        store,
-        counter=ahead,
-        link=_link(ahead - 1, store.root(), ahead, store.root()),
-    )
+    # RAISED ONE STEP AT A TIME, because reconcile adopts at most one. It used to accept the
+    # whole jump in a single round, which is exactly the finding that closed: a device cannot be
+    # carried across counters it has no predecessor for. Each step keeps the same root, so only
+    # the counter moves -- all this test needs is a floor well above where it will aim next.
+    for _ in range(5):
+        at = store.counter + 1
+        _attest(
+            session,
+            wm,
+            store,
+            counter=at,
+            link=_link(at - 1, store.root(), at, store.root()),
+        )
 
     behind = store.counter - 1
     ack = ward.sync(session)
@@ -1367,6 +1391,197 @@ def test_ward_refuses_an_attested_counter_below_the_floor(session: Session):
     sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, behind, old_root), behind, old_root, _T0 + behind)
     with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
         ward.ingest_attestation(session, *_step_into(store, behind, old_root), behind, old_root, sig, _T0 + behind)
+
+
+@pytest.mark.models("core")
+def test_ward_reconcile_refuses_a_multi_step_jump(session: Session):
+    """RECONCILE ADOPTS AT MOST ONE STEP, and names the route that adopts more.
+
+    It used to take any attested counter at or above the stored one while verifying a single
+    transition -- so a device at 10 could be moved to 40 on the strength of one link, with
+    11..39 taken on the WM's word alone. That made the WM an authority on LINEAGE, which it is
+    not: an attestation establishes freshness and ordering, and DESCENT establishes state.
+
+    Everything here is cryptographically genuine -- the attestation verifies, the link verifies,
+    both under the real keys. What is refused is the GAP between them and this device's head.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    wm = MockWM()
+
+    target = store.counter + 2
+    root = store.root()
+    ack = ward.sync(session)
+    # A genuine attested step, two counters ahead: contiguous with ITSELF, which is all the
+    # attestation check asks, and disconnected from where this device stands, which is what the
+    # handler now asks as well.
+    sig = wm.sign(
+        ack.ward_id, ack.nonce, target - 1, root, target, root, _T0 + target
+    )
+    ward.ingest_attestation(
+        session, target - 1, root, target, root, sig, _T0 + target
+    )
+
+    with pytest.raises(exceptions.TrezorFailure, match="use WardVerifyChain"):
+        ward.reconcile(session, _link(target - 1, root, target, root))
+
+
+@pytest.mark.models("core")
+def test_ward_reconcile_refuses_a_step_from_elsewhere(session: Session):
+    """ONE STEP IS NOT ENOUGH; it has to be one step FROM HERE.
+
+    The counter advances by exactly one and the link is genuine -- but the predecessor the WM
+    attested is not the head this device holds. Accepting it would mean adopting a state whose
+    parent this device has never been at, which is a one-counter fork rather than a catch-up.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    other_key = _seed(session, store, b"addr2", b"w")
+    elsewhere = _subset(store, [other_key])
+    assert elsewhere.root() != store.root()
+
+    wm = MockWM()
+    target = store.counter + 1
+    root = store.root()
+    ack = ward.sync(session)
+    sig = wm.sign(
+        ack.ward_id, ack.nonce, target - 1, elsewhere.root(), target, root, _T0 + target
+    )
+    ward.ingest_attestation(
+        session, target - 1, elsewhere.root(), target, root, sig, _T0 + target
+    )
+
+    with pytest.raises(
+        exceptions.TrezorFailure, match="does not start at this device's head"
+    ):
+        ward.reconcile(
+            session, _link(target - 1, elsewhere.root(), target, root)
+        )
+
+
+@pytest.mark.models("core")
+def test_ward_reconcile_refuses_a_lower_counter_outside_recovery(session: Session):
+    """A DEMOTION NEEDS THE USER, and the round is where that consent is recorded.
+
+    `WardRecoverCounter` refuses anything not going backwards and holds for confirmation before
+    marking the round. Reaching an attested round any other way and then naming a lower counter
+    must not inherit that exemption -- and cannot, because the exemption lives in the round's
+    state rather than being inferred from the shape of the counters.
+
+    The floor in `ingest` is what refuses it here; this test pins that the two rules together
+    leave no way to lower the head without the screen.
+    """
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+    wm = MockWM()
+
+    behind = store.counter - 1
+    root = store.root()
+    ack = ward.sync(session)
+    sig = wm.sign(
+        ack.ward_id, ack.nonce, behind - 1, root, behind, root, _T0 + behind
+    )
+    with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
+        ward.ingest_attestation(
+            session, behind - 1, root, behind, root, sig, _T0 + behind
+        )
+
+
+@pytest.mark.models("core")
+def test_ward_a_write_authorises_its_advance_to_the_wm(session: Session):
+    """CONNECT-MODE WRITES CARRY `wm_sig`, which is what lets a WM refuse an unauthorised advance.
+
+    Without it the WM has nothing to check when a host publishes `(counter, root)`, so whoever
+    knows `ward_id` can advance the counter and have every genuine device refused from then on --
+    the WM becomes a denial-of-service oracle. The service channel carried this from the start;
+    connect, the transport that is actually developed, did not.
+
+    Pinned against the ORACLE, which implements the preimage independently: a device that signed
+    different bytes would be caught here rather than at a WM that cannot tell us why.
+    """
+    from ...ward_keys import TAG_WM_REVERT, verify_wm_sig
+
+    store = WardTrie()
+    _go_online(session, store)
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr1", b"v", p),
+        "ward_set_entry",
+    )
+
+    assert res.wm_sig is not None
+    assert len(res.wm_sig) == 64
+
+    from_root = None  # the first write starts from an empty tree
+    ward.apply(store, res)
+
+    # It verifies against `ward_id` -- which IS the public half of K_sig, so a WM needs no
+    # enrolment and no second per-wallet value -- over exactly the transition that happened.
+    assert verify_wm_sig(
+        _WARD_ID, res.counter - 1, from_root, res.counter, store.root(), res.wm_sig
+    )
+    # ...and only under the ORDINARY tag. A write is not a demotion, and a WM that could not
+    # tell them apart could not apply policy to one.
+    assert not verify_wm_sig(
+        _WARD_ID,
+        res.counter - 1,
+        from_root,
+        res.counter,
+        store.root(),
+        res.wm_sig,
+        TAG_WM_REVERT,
+    )
+
+
+@pytest.mark.models("core")
+def test_ward_the_wm_refuses_an_unauthorised_advance(session: Session):
+    """The other half of the same property, asserted where it bites: at the WM.
+
+    A host that publishes without the device's signature, or with one minted by another key, is
+    refused. This is the denial of service `wm_sig` closes, demonstrated rather than described.
+    """
+    store = WardTrie()
+    _go_online(session, store)
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr2", b"v", p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res)
+
+    wm = MockWM()
+    from_counter, from_root = _step_into(store, res.counter, store.root())
+    init = _head_init_for(from_counter, from_root)
+
+    with pytest.raises(ValueError, match="not authorised"):
+        wm.advance(
+            _WARD_ID,
+            from_counter,
+            from_root,
+            res.counter,
+            store.root(),
+            bytes(64),  # no signature at all
+            _T0 + res.counter,
+            head_init_sig=init,
+        )
+
+    # ...and one from a wallet that is not this one is no better.
+    other = _link(from_counter, from_root, res.counter, store.root())
+    assert other  # the oracle's K_auth MAC, not an Ed25519 signature over this transition
+    with pytest.raises(ValueError, match="not authorised"):
+        wm.advance(
+            _WARD_ID,
+            from_counter,
+            from_root,
+            res.counter,
+            store.root(),
+            other[4] + other[4],  # 64 bytes of the wrong thing
+            _T0 + res.counter,
+            head_init_sig=init,
+        )
 
 
 @pytest.mark.models("core")
@@ -1820,7 +2035,7 @@ def test_ward_verify_chain_brings_a_fresh_session_online(session: Session):
     wm = MockWM()
     ack = ward.sync(fresh)
     root = store.root()
-    wm.publish(
+    wm.install_unauthenticated(
         ack.ward_id,
         store.counter,
         root,

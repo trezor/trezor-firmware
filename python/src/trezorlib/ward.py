@@ -113,14 +113,21 @@ class WardResult(NamedTuple):
     # What a write produced. The caller must publish these to the WM, or the device is
     # ahead of it and its next sync is refused as a rollback.
     counter: Optional[int] = None
-    # Authorises this write's transition, and is the ONLY authenticator the device hands back --
-    # the separate `mac` alongside it is gone with K_mac. What the caller publishes to the WM is
-    # `(counter, new_root)`, the root being one it derived itself.
-    #
-    # The caller also stores it with the link, so another device of the wallet can later verify
-    # the step without having witnessed it. That is now load-bearing rather than merely useful:
-    # nothing else proves a head is a state this wallet really produced.
+    # Authorises this write's transition for another DEVICE of this wallet. The caller stores it
+    # with the link so a device catching up later can verify the step without having witnessed
+    # it -- load-bearing rather than merely useful, since nothing else proves a head is a state
+    # this wallet really produced.
     auth_commit: Optional[bytes] = None
+    # The same transition, authorised for the WM: Ed25519 under K_sig over exactly the bytes
+    # `auth_commit` MACs. What the caller publishes to the WM is `(counter, new_root)` -- the
+    # root being one it derived itself -- TOGETHER WITH THIS. A WM that is handed the pair
+    # without it has nothing to verify, and then whoever knows `ward_id` can advance the counter
+    # and strand every genuine device.
+    #
+    # Both are absent when no transition happened, which is the shape of an idempotent delete of
+    # a path that already held nothing. Branch on that rather than on the counter, which equals
+    # the stored one in that case.
+    wm_sig: Optional[bytes] = None
     # `flush_queue` only (so, `WardFlushQueueAck` only): queued changes still waiting to be
     # handed over after this one. Loop until it reads zero. There is no `queued` field: a queued
     # change is not a WardResult at all, because the queue requests answer their own ack types.
@@ -174,6 +181,7 @@ def _call_answering_pulls(
             Leaf(res.identity, res.content),
             res.counter,
             res.auth_commit,
+            res.wm_sig,
             getattr(res, "remaining", None),
         )
 
@@ -626,6 +634,12 @@ def apply_rollback(store, ack: messages.WardRollbackAck) -> None:
     The store must be able to reproduce the demoted tree, so this only rewinds the
     bookkeeping -- restoring the leaves themselves is the caller's business, since only it
     knows what the earlier tree held.
+
+    THE WM AUTHORISATION IS KEPT, not dropped. A demotion advances the WM's head like any other
+    write -- forward one counter, carrying an older root -- so the WM needs `wm_sig` to accept it,
+    under the REVERT tag so it can tell a demotion from an ordinary advance and apply policy to
+    one. This used to read `counter`, `new_root` and `auth_commit` and discard the signature, so
+    the only authorisation the connect path ever minted for a WM reached nobody.
     """
     store.links.append(
         (
@@ -636,6 +650,7 @@ def apply_rollback(store, ack: messages.WardRollbackAck) -> None:
             ack.auth_commit,
         )
     )
+    store.wm_sigs[ack.counter] = ack.wm_sig
     store.counter = ack.counter
 
 
@@ -734,6 +749,10 @@ def apply(store, result: WardResult) -> None:
                 result.auth_commit,
             )
         )
+        # AND THE WM'S COPY of the same authorisation, kept beside it because the host is the
+        # only party that ever holds both: it publishes `(counter, root)` to the WM and must hand
+        # this over with them, or the WM has nothing to verify the advance against.
+        store.wm_sigs[result.counter] = result.wm_sig
         store.counter = result.counter
 
 

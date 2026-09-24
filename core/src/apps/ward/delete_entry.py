@@ -107,7 +107,7 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from .cas import auth_commit
+    from .cas import auth_commit, wm_sig
     from .common import (
         WARNING_UNVERIFIED,
         display_bytes,
@@ -118,6 +118,7 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
     from .keys import (
         ENTRY_TYPE_ADDRESS,
         derive_k_auth,
+        derive_k_sig,
         derive_ward_id,
         entry_key_for,
     )
@@ -153,6 +154,10 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
 
             return WardMutationApplied(entry_key=entry_key, counter=counter)
 
+        # NO AUTHORISATION OF EITHER KIND, and that absence is the message: nothing happened,
+        # so there is no transition for a device or a WM to authorise. A host branches on the
+        # missing `auth_commit` rather than on the counter, which is equal to the stored one here
+        # and cannot be compared without already knowing the two are in sync.
         return WardLeafAck(
             entry_key=entry_key,
             identity=make_leaf_identity(key_type, EMPTY_PART),
@@ -202,6 +207,17 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
         new_root,
     )
 
+    # THE WM-FACING AUTHORISATION for the same transition, under K_sig rather than K_auth. Same
+    # operands, same builder -- one statement to two verifiers. See `set_entry`.
+    advance = wm_sig(
+        await derive_k_sig(),
+        await derive_ward_id(),
+        counter - 1,
+        from_root,
+        counter,
+        new_root,
+    )
+
     if utils.USE_WARD_SERVICE_CHANNEL:
         # The single transport branch -- see `set_entry` for what it costs and does not.
         from trezor.messages import WardMutationApplied
@@ -217,4 +233,5 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
         content=content,
         counter=counter,
         auth_commit=step,
+        wm_sig=advance,
     )

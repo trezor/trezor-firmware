@@ -133,6 +133,12 @@ class WardTrie:
         # Opaque to the host, which is the point -- it cannot forge a step, and cannot
         # check one either; only a device of this wallet can.
         self.links: list = []
+        # counter -> the device's `wm_sig` for the transition that REACHED it. A separate map
+        # rather than a sixth element on the link, because the two have different audiences: a
+        # link is folded by another DEVICE of this wallet, and this is handed to the WM. A host
+        # that lost these cannot advance the WM's head at all, which is the intended failure --
+        # an unauthenticated advance is what it exists to prevent.
+        self.wm_sigs: dict = {}
         # THE ATTESTATION ARCHIVE, keyed by the `to` counter:
         #   counter -> (nonce, from_counter, from_root, to_counter, to_root, ts, wm_signature)
         #

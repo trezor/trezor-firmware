@@ -80,7 +80,7 @@ class MockWM:
     def pubkey(self) -> bytes:
         return self._pub
 
-    def publish(
+    def install_unauthenticated(
         self,
         ward_id: bytes,
         counter: int,
@@ -93,11 +93,14 @@ class MockWM:
         # and ingest at another; the signature then covers a different timestamp than the
         # message carries, and the test fails as "verification failed" -- which reads like a
         # firmware bug rather than a test bug. Make the omission impossible instead.
-        """Record what the wallet says is current, and the step that reached it.
+        """Force a head in with NO authorisation. Not what a real WM does, and named to say so.
 
-        A real WM would take this from a device-authenticated write. It records what it is told,
-        and its signature means only "this is what I was told, and it is the latest I hold" --
-        never "the wallet really reached this". Nothing here can establish the latter.
+        A real WM takes its head from `advance`, which compare-and-swaps and verifies `wm_sig`.
+        This exists only to model a WM that has been told something by a party holding no
+        signature -- a broken operator, a fixture standing in for history that predates the test,
+        a hostile WM inventing state. An ordinary test should never reach for it: it is the thing
+        the authorisation exists to prevent, and using it by habit would leave `wm_sig` untested
+        while every test still passed.
 
         The `from` end DEFAULTS to the head being displaced, which is what an ordinary advance
         means; pass it explicitly to model a WM whose predecessor is something else. At counter 0
@@ -159,10 +162,9 @@ class MockWM:
             super().__init__(f"WM head is at {head_counter}")
             self.head_counter = head_counter
 
-    def publish_and_attest(
+    def advance(
         self,
         ward_id: bytes,
-        nonce: bytes,
         from_counter: int,
         from_root: bytes,
         to_counter: int,
@@ -170,22 +172,17 @@ class MockWM:
         wm_sig: bytes,
         timestamp: int,
         head_init_sig: Optional[bytes] = None,
-    ) -> tuple[int, bytes, int, bytes]:
-        """Install a head and attest the step that reached it, atomically.
+    ) -> bool:
+        """Compare-and-swap the head, verifying the wallet's authorisation. Returns is_revert.
 
-        Returns (from_counter, from_root, to_counter, to_root, timestamp, signature).
+        THE AUTHENTICATED WAY IN, and the only one a real host has. Connect mode reaches it on its
+        own -- a write is published in one exchange and attested in a later round -- which is why
+        this is separate from `attest` rather than folded into it the way the service path needs.
 
-        ONE OPERATION, NOT TWO, and that is the point of replacing `publish` + `attest`. Between a
-        separate CAS and a separate attest another device can win: D1 advances 41->42, D2 advances
-        42->43, and D1's attest then describes 43 -- a head D1 did not publish. The device would
-        reject it, having minted neither that counter nor that root, but its own write would already
-        have landed with no way to learn so. Attesting the head THIS call created removes the
-        window rather than detecting it afterwards.
-
-        THE SIGNATURE IS OVER THE TWO ROOTS, which are exactly what this CASes on and attests --
-        so a host cannot pair a genuine signature with operands of its own choosing. It is checked
-        against `ward_id`, which IS the verifying key, so there is no enrolment and no second
-        per-wallet value.
+        THE SIGNATURE IS OVER THE TWO ROOTS, which are exactly what this CASes on and what the
+        attestation will name -- so a host cannot pair a genuine signature with operands of its
+        own choosing. It is checked against `ward_id`, which IS the verifying key, so there is no
+        enrolment and no second per-wallet value.
 
         A wallet the WM has never seen has no head to compare against, so the first call must carry
         `head_init_sig` authorising the starting pair. Anyone could otherwise claim a wallet's
@@ -249,16 +246,46 @@ class MockWM:
             _or_empty(to_root),
             timestamp,
         )
-        return (
+        return is_revert
+
+    def publish_and_attest(
+        self,
+        ward_id: bytes,
+        nonce: bytes,
+        from_counter: int,
+        from_root: bytes,
+        to_counter: int,
+        to_root: bytes,
+        wm_sig: bytes,
+        timestamp: int,
+        head_init_sig: Optional[bytes] = None,
+    ) -> tuple:
+        """`advance` then `attest`, as ONE operation. What the service path needs.
+
+        Returns (from_counter, from_root, to_counter, to_root, timestamp, signature).
+
+        ONE OPERATION, NOT TWO, and for the service path that is the point. Between a separate CAS
+        and a separate attest another device can win: D1 advances 41->42, D2 advances 42->43, and
+        D1's attest then describes 43 -- a head D1 did not publish. The device would reject it,
+        having minted neither that counter nor that root, but its own write would already have
+        landed with no way to learn so. Attesting the head THIS call created removes the window
+        rather than detecting it afterwards.
+
+        CONNECT MODE CANNOT USE IT, which is why `advance` exists on its own: there a write is
+        published in one exchange and attested in a later sync round, so the window is real and is
+        closed by the device comparing what came back against what it holds.
+        """
+        self.advance(
+            ward_id,
             from_counter,
-            _or_empty(from_root),
+            from_root,
             to_counter,
-            _or_empty(to_root),
+            to_root,
+            wm_sig,
             timestamp,
-            self.sign(
-                ward_id, nonce, from_counter, from_root, to_counter, to_root, timestamp
-            ),
+            head_init_sig,
         )
+        return self.attest(ward_id, nonce)
 
     def attest_head(
         self,

@@ -83,5 +83,9 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
         hold=True,
     )
 
-    sync_round.set_attested(from_counter, from_root, counter, root)
+    # BACKWARD, and marked as such. `reconcile` refuses a head below the stored one unless this
+    # round says the user was shown what it costs and held to confirm -- which is the screen
+    # immediately above. Without the flag the rule there could only infer consent from the shape
+    # of the counters, and consent is exactly the thing that cannot be inferred.
+    sync_round.set_attested(from_counter, from_root, counter, root, backward=True)
     return WardRecoverCounterAck(counter=counter)

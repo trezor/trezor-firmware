@@ -626,7 +626,12 @@ async def sync() -> None:
         attested_from_counter, attested_from_root, attested_counter, attested_root
     )
 
-    _fc, _fr, attested_counter, attested_root = require_attested_round("sync")
+    (
+        attested_from_counter,
+        attested_from_root,
+        attested_counter,
+        attested_root,
+    ) = require_attested_round("sync")
 
     # THE BASELINE IS THE DEVICE'S OWN HEAD, never one the answer names. A backend-chosen starting
     # point would let the walk begin at a state this device never reached.
@@ -638,6 +643,10 @@ async def sync() -> None:
     # saw as committed have been undone, and a catch-up that cannot say so has lost the one thing
     # the REVERT tag carries.
     reverts = 0
+    # WHERE THE LAST STEP BEGAN, kept so the attestation's `from` end can be checked against it
+    # below. Recorded per link rather than inferred at the end, because only the fold knows which
+    # link was last.
+    last_from = None
     for link in answer.links:
         running_counter, running_root, reverted = verify_chain_step(
             k_auth,
@@ -654,6 +663,7 @@ async def sync() -> None:
         )
         # After the step verified, never before: an unverified commitment is just a claim.
         crossed.append(link.auth_commit)
+        last_from = (link.from_counter, link.from_root or None)
         if reverted:
             reverts += 1
 
@@ -668,6 +678,21 @@ async def sync() -> None:
     # an empty tree is EMPTY_ROOT inside the attestation and None here.
     if root_or_empty(running_root) != attested_root:
         raise DataError("chain end does not match the attested root")
+
+    # AND THE LAST STEP MUST BE THE STEP THE WM ATTESTED, not merely one ending where it ends.
+    # The attestation names a TRANSITION; checking only its destination throws half of it away
+    # and leaves exactly the ambiguity naming a step was meant to remove -- two genuine links can
+    # end at the same (counter, root), because a write and a revert may land on the same root,
+    # and crediting the wrong one mis-settles a queued change and mis-counts the reverts.
+    #
+    # NOTHING TO BIND WITH NO LINKS: the daemon's "nothing has changed" answer folds no step, and
+    # the two checks above already establish that this device's own head IS the attested head.
+    # `verify_chain` clears its own `expect_from` after the first batch for the same reason.
+    if last_from is not None and (
+        last_from[0] != attested_from_counter
+        or root_or_empty(last_from[1]) != attested_from_root
+    ):
+        raise DataError("the chain's last step is not the step the WM attested")
 
     # The shared tail -- settle, persist, latch, close. The crossed commitments are passed so
     # settlement is exact: a claim landed when its OWN authorisation is among them, which is not
