@@ -1,7 +1,7 @@
 //! Confirming a single value. The public docs live on [`confirm_value`].
 
 use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, Commitment, UiOutcome, call};
+use super::{BR_CODE_OTHER, Commitment, UiReply, call};
 use crate::Result;
 use crate::structs::{ConfirmValue as WireConfirmValue, TrezorUiEnum};
 
@@ -126,7 +126,7 @@ impl<'a> ConfirmValue<'a> {
 ///     .confirmed()
 /// }
 /// ```
-pub fn confirm_value(params: ConfirmValue<'_>) -> Result<UiOutcome> {
+pub fn confirm_value(params: ConfirmValue<'_>) -> Result<UiReply> {
     let footer = params.footer.map(|f| match f {
         Footer::Hint(text) => (text, false),
         Footer::Warning(text) => (text, true),

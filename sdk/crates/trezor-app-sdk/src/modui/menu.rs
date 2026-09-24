@@ -9,9 +9,9 @@
 //! Core's own UI machinery drives generic menus with callbacks. This is the
 //! thin piece that builds one out of what an app is allowed to say.
 
+use super::BR_CODE_OTHER;
 use super::extra::{Extra, ExtraItem};
 use super::screen::{Screen, call_once};
-use super::{BR_CODE_OTHER, UiOutcome};
 use crate::alloc_types::String;
 use crate::structs::{SelectMenu, ShowProperties, StrSlice, TrezorUiEnum, UiReply};
 use crate::{Error, Result};
@@ -58,7 +58,7 @@ pub(super) fn open(
     extras: &[ExtraItem<'_>],
     cancel: bool,
     br: Option<&str>,
-) -> Result<Option<UiOutcome>> {
+) -> Result<Option<UiReply>> {
     // `check_extras` has already refused a list that cannot be shown, so an empty one
     // here means core answered "show more" for a screen that offered nothing.
     let count = extras.len() + usize::from(cancel);
@@ -112,7 +112,7 @@ pub(super) fn open(
                     // Past the extras lies the way out, which exists only when
                     // the block asked for one.
                     None if cancel && chosen == extras.len() => {
-                        return Ok(Some(UiOutcome::Cancelled));
+                        return Ok(Some(UiReply::Cancelled));
                     }
                     None => return Err(Error::InvalidMessage),
                 }

@@ -37,10 +37,8 @@
 //! })
 //! ```
 
-use super::UiOutcome;
+use super::UiReply;
 use crate::Result;
-#[cfg(doc)]
-use crate::structs::UiReply;
 
 // ============================================================================
 // Constants
@@ -74,9 +72,9 @@ const REQUEST_OVERHEAD: usize = 256;
 ///   of a trip through the extras.
 /// - **Read by [`confirm_in_chunks`]**, which owns the index and decides what
 ///   to send next.
-/// - **Never crosses IPC, and never reaches an app.** The public
-///   [`UiOutcome`] has no notion of chunks, which is the whole point: an app
-///   cannot learn that its value was shown in more than one piece.
+/// - **Never crosses IPC, and never reaches an app.** The reply an app gets
+///   carries no notion of chunks, which is the whole point: an app cannot
+///   learn that its value was shown in more than one piece.
 pub(super) enum AfterChunk {
     /// Move to the next chunk, or finish if this was the last.
     Advance,
@@ -94,7 +92,7 @@ pub(super) enum AfterChunk {
     /// so that making it changes only the block.
     ConfirmAll,
     /// Something ended the block outright, such as a menu entry.
-    Decided(UiOutcome),
+    Decided(UiReply),
     Cancelled,
 }
 
@@ -112,7 +110,7 @@ pub(super) struct ChunkCtx {
 /// Shows up to `chunk_count` chunks in order, stopping as soon as the person decides.
 ///
 /// `show` sends one chunk and reports what the person did with it.
-pub(super) fn confirm_in_chunks<F>(chunk_count: usize, mut show: F) -> Result<UiOutcome>
+pub(super) fn confirm_in_chunks<F>(chunk_count: usize, mut show: F) -> Result<UiReply>
 where
     F: FnMut(ChunkCtx) -> Result<AfterChunk>,
 {
@@ -130,15 +128,15 @@ where
 
         match show(ChunkCtx { index, is_last })? {
             // Accepting the last chunk is the only way to a yes by reading.
-            AfterChunk::Advance if is_last => return Ok(UiOutcome::Confirmed),
+            AfterChunk::Advance if is_last => return Ok(UiReply::Confirmed),
             AfterChunk::Advance => index += 1,
             // Already at the start: there is nowhere to go, so show it again.
             AfterChunk::Retreat => index = index.saturating_sub(1),
-            // And this is the only way to a yes without reading — which is
-            // why it is its own variant rather than an early exit.
-            AfterChunk::ConfirmAll => return Ok(UiOutcome::Confirmed),
-            AfterChunk::Decided(outcome) => return Ok(outcome),
-            AfterChunk::Cancelled => return Ok(UiOutcome::Cancelled),
+            // And this is the only way to a yes without reading — passed on
+            // as what it is rather than folded into a plain yes.
+            AfterChunk::ConfirmAll => return Ok(UiReply::ConfirmedAll),
+            AfterChunk::Decided(reply) => return Ok(reply),
+            AfterChunk::Cancelled => return Ok(UiReply::Cancelled),
         }
     }
 }

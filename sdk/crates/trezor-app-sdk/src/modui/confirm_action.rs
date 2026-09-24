@@ -1,7 +1,7 @@
 //! The generic yes/no block. The public docs live on [`confirm_action`].
 
 use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, Commitment, UiOutcome, call};
+use super::{BR_CODE_OTHER, Commitment, UiReply, call};
 use crate::Result;
 use crate::structs::{ConfirmAction as WireConfirmAction, TrezorUiEnum};
 
@@ -99,7 +99,7 @@ impl<'a> ConfirmAction<'a> {
 ///     .confirmed()
 /// }
 /// ```
-pub fn confirm_action(params: ConfirmAction<'_>) -> Result<UiOutcome> {
+pub fn confirm_action(params: ConfirmAction<'_>) -> Result<UiReply> {
     let request = TrezorUiEnum::ConfirmAction(WireConfirmAction::new(
         params.title,
         params.action,
