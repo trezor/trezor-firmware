@@ -1099,7 +1099,7 @@ static secbool tropic_fw_update_needed(bool *needed) {
     return secfalse;
   }
   *needed = !present || fw_version_is_older(confirmed_riscv, fw_CPU_ver) ||
-                    fw_version_is_older(confirmed_spect, fw_SPECT_ver);
+            fw_version_is_older(confirmed_spect, fw_SPECT_ver);
   return sectrue;
 }
 
