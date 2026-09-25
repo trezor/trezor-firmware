@@ -1195,7 +1195,7 @@ def _step_into(store: WardTrie, to_counter: int, to_root, links=()):
     """
     if to_counter == 0:
         return 0, to_root
-    for fc, fr, tc, tr, _ac in list(links) + list(store.links):
+    for fc, fr, tc, tr in (lnk[:4] for lnk in list(links) + list(store.links)):
         if tc == to_counter and (tr or None) == (to_root or None):
             return fc, fr
     return to_counter - 1, None
@@ -1837,6 +1837,7 @@ def _link(from_counter, from_root, to_counter, to_root):
         auth_commit(
             _K_AUTH, _WARD_ID, from_counter, from_root, to_counter, to_root
         ),
+        "commit",
     )
 
 
@@ -1862,6 +1863,7 @@ def _revert_link(from_counter, from_root, to_counter, to_root):
             to_root,
             TAG_REVERT,
         ),
+        "revert",
     )
 
 
@@ -1872,14 +1874,17 @@ def _serves(links):
     specific (counter, root) -- so this answers by the `to` end, newest first, exactly as a host
     indexing its transition log would. A real host uses `WardTrie.links_ending_at`; these tests
     build their links by hand, so they need the same lookup over a plain list.
+
+    REVERSED, for the reason `links_ending_at` gives: several rows can end at one `(counter,
+    root)` once a demotion exists, and the newest is the live history.
     """
 
     def source(to_counter, to_root, limit):
         out = []
         counter, root = to_counter, to_root
         while len(out) < limit:
-            for link in links:
-                fc, fr, tc, tr, _ac = link
+            for link in reversed(links):
+                fc, fr, tc, tr = link[:4]
                 if tc == counter and (tr or None) == (root or None):
                     out.append(link)
                     counter, root = fc, fr
@@ -2276,7 +2281,7 @@ def test_ward_a_write_emits_its_own_authorisation(session: Session):
     _seed(session, store, b"b", b"two")
 
     assert len(store.links) == 2
-    for from_counter, _fr, to_counter, _tr, ac in store.links:
+    for from_counter, _fr, to_counter, _tr, ac in (lnk[:5] for lnk in store.links):
         assert to_counter == from_counter + 1
         assert ac is not None and len(ac) == 32
     # ...and they chain: each link starts where the previous ended
@@ -2355,7 +2360,17 @@ def _publish_demotion(wm: MockWM, store: WardTrie, ack, from_counter: int, from_
         ack.wm_sig,
         _T0 + ack.counter,
     )
-    link = (from_counter, from_root, ack.counter, ack.new_root, ack.auth_commit)
+    # THE PREDECESSOR IS THE WM'S HEAD, passed in, not the store's -- the two differ exactly when
+    # the WM's register has regressed, which is the case this helper exists for. It is what the
+    # device minted the REVERT over, so it is what the recorded link must name.
+    link = (
+        from_counter,
+        from_root,
+        ack.counter,
+        ack.new_root,
+        ack.auth_commit,
+        "revert",
+    )
     store.links.append(link)
     store.wm_sigs[ack.counter] = ack.wm_sig
     store.counter = ack.counter
@@ -4392,3 +4407,59 @@ def test_ward_demotion_consent_does_not_survive_an_unrelated_adoption(session: S
             minted,
             _T0 + ack.counter,
         )
+
+
+@pytest.mark.models("core")
+def test_ward_a_demotion_from_a_regressed_wm_records_the_wm_predecessor(
+    session: Session,
+):
+    """The recorded link must name the head the REVERT was minted over, not the store's.
+
+    A demotion is authorised against the WM's head, because that is what the WM
+    compare-and-swaps on. Normally the two agree -- a device only ever adopts what the WM
+    attested -- so a host that read the predecessor off its own store was right by accident.
+    When the WM's register has regressed they differ, and reading the store then writes a row
+    whose `from` end the `auth_commit` does not cover: authentic bytes describing a transition
+    that never happened.
+
+    NOT REPAIRABLE AFTERWARDS. Fixing such a row means re-minting the MAC, which needs K_auth,
+    which the host does not have. It is a permanently unwalkable step in the history, so it has
+    to be recorded correctly the first time.
+
+    Asserted by FOLDING IT: the device is made to verify the chain across the demotion, which is
+    the thing a wrong predecessor makes impossible.
+    """
+    store = WardTrie()
+    key_a = _seed(session, store, b"a", b"one")
+    wm = _wm_for(store)
+    _attest(session, wm, store)
+    wm_counter, wm_root = store.counter, store.root()
+
+    # the device runs ahead of where the WM's register will come back to
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"b", b"two", p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res)
+    _publish(wm, res, store)
+    _attest(session, wm, store)
+    assert store.counter > wm_counter
+
+    serviceable = _subset(store, [key_a])
+    ack, _rec = _rollback(
+        session, wm, store, serviceable.root(), wm_counter, wm_root
+    )
+
+    link = _publish_demotion(wm, store, ack, wm_counter, wm_root)
+
+    # THE ROW NAMES THE WM'S HEAD. Reading it off the store would have named the device's, two
+    # counters ahead, and the MAC covers neither that counter nor that root.
+    assert link[0] == wm_counter
+    assert link[1] == wm_root
+    assert link[5] == "revert"
+
+    # ...and the device folds it, which is what an unverifiable predecessor would prevent.
+    _adopt_demotion(session, wm, store, ack, link)
+    assert ward.sync(session).counter == ack.counter

@@ -455,7 +455,7 @@ class MockWardService:
                 to_root=tr,
                 auth_commit=ac,
             )
-            for (fc, fr, tc, tr, ac) in self.store.links
+            for (fc, fr, tc, tr, ac, _op) in self.store.links
             if fc >= (request.current_counter or 0)
         ]
 
