@@ -573,6 +573,12 @@ wheels = [
 ]
 
 [[package]]
+name = "embit"
+version = "0.8.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/83/88/b054b00ade6d2a41749e15976cdcec4b7ec4656ac1cb917ce3de395528d1/embit-0.8.0.tar.gz", hash = "sha256:8bf4b10073c67400370ce523fb16f035fe759f6fdd987c579bdcc268d75ed770", size = 763120, upload-time = "2024-05-30T10:56:48.944Z" }
+
+[[package]]
 name = "execnet"
 version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2021,6 +2027,7 @@ dependencies = [
     { name = "demjson3" },
     { name = "dominate" },
     { name = "ecdsa" },
+    { name = "embit" },
     { name = "fido2" },
     { name = "flake8" },
     { name = "flake8-annotations" },
@@ -2085,6 +2092,7 @@ requires-dist = [
     { name = "demjson3" },
     { name = "dominate" },
     { name = "ecdsa", specifier = ">=0.16,<0.20" },
+    { name = "embit", specifier = ">=0.8.0,<0.9" },
     { name = "fido2", specifier = ">=0.8.0,<0.9" },
     { name = "flake8", specifier = ">=7" },
     { name = "flake8-annotations", specifier = ">=3.1.1,<4" },
