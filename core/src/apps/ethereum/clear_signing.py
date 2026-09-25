@@ -510,18 +510,21 @@ class DurationFormatter(FieldFormatter):
     async def format(
         self,
         value: AnyValue,
-        msg: MsgInSignTx,
-        defs: Definitions,
-        path_walker: PathWalker,
+        _msg: MsgInSignTx,
+        _definitions: Definitions,
+        _path_walker: PathWalker,
     ) -> tuple[str | AboveThreshold | None, EthereumTokenInfo | None, AnyBytes | None]:
         if value is None:
             return None, None, None
-        if isinstance(value, (bytes, bytearray)):
+        if isinstance(value, bytes):
+            # a sliced word, e.g. `deadline.[-4:]`: big-endian seconds
             value = int.from_bytes(value, "big")
         if isinstance(value, int):
-            hours = value // 3600
-            minutes = (value % 3600) // 60
-            seconds = value % 60
+            if value < 0:
+                # a negative duration has no sensible rendering
+                raise InvalidFormatDefinition
+            minutes, seconds = divmod(value, 60)
+            hours, minutes = divmod(minutes, 60)
             return f"{hours:02d}:{minutes:02d}:{seconds:02d}", None, None
         raise InvalidFormatDefinition
 
