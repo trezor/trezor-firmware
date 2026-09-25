@@ -15,6 +15,7 @@ from trezor.messages import (
     ExtAppLoaded,
     ExtAppRootPacketAck,
     ExtAppRootPacketRequest,
+    Version,
 )
 from trezor.wire import context
 from trezor.wire.errors import DataError
@@ -137,4 +138,8 @@ async def load(msg: ExtAppLoad) -> ExtAppLoaded:
     instance_id = random.uniform(2**32 - 1)
     cache_entry = ustruct.pack("<II", image.handle(), instance_id)
     get_sessionless_cache().set(cc.APP_EXTAPP_IDS, cache_entry)
-    return ExtAppLoaded(instance_id=instance_id)
+    major, minor, patch, build = image.version()
+    return ExtAppLoaded(
+        instance_id=instance_id,
+        version=Version(major=major, minor=minor, patch=patch, build=build),
+    )

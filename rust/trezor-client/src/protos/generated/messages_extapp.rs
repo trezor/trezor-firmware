@@ -275,6 +275,8 @@ pub struct ExtAppLoaded {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppLoaded.instance_id)
     pub instance_id: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppLoaded.version)
+    pub version: ::protobuf::MessageField<super::messages_common::Version>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppLoaded.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -311,12 +313,17 @@ impl ExtAppLoaded {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "instance_id",
             |m: &ExtAppLoaded| { &m.instance_id },
             |m: &mut ExtAppLoaded| { &mut m.instance_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_common::Version>(
+            "version",
+            |m: &ExtAppLoaded| { &m.version },
+            |m: &mut ExtAppLoaded| { &mut m.version },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppLoaded>(
             "ExtAppLoaded",
@@ -333,6 +340,14 @@ impl ::protobuf::Message for ExtAppLoaded {
         if self.instance_id.is_none() {
             return false;
         }
+        if self.version.is_none() {
+            return false;
+        }
+        for v in &self.version {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -341,6 +356,9 @@ impl ::protobuf::Message for ExtAppLoaded {
             match tag {
                 8 => {
                     self.instance_id = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.version)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -357,6 +375,10 @@ impl ::protobuf::Message for ExtAppLoaded {
         if let Some(v) = self.instance_id {
             my_size += ::protobuf::rt::uint32_size(1, v);
         }
+        if let Some(v) = self.version.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -365,6 +387,9 @@ impl ::protobuf::Message for ExtAppLoaded {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.instance_id {
             os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.version.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -384,12 +409,14 @@ impl ::protobuf::Message for ExtAppLoaded {
 
     fn clear(&mut self) {
         self.instance_id = ::std::option::Option::None;
+        self.version.clear();
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static ExtAppLoaded {
         static instance: ExtAppLoaded = ExtAppLoaded {
             instance_id: ::std::option::Option::None,
+            version: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1925,23 +1952,24 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ages-common.proto\x1a\roptions.proto\"~\n\nExtAppLoad\x12\x0e\n\x02id\
     \x18\x01\x20\x02(\tR\x02id\x12<\n\x07version\x18\x02\x20\x02(\x0b2\".hw.\
     trezor.messages.common.VersionR\x07version\x12\"\n\x0bfingerprint\x18\
-    \x03\x20\x02(\x0c:\0R\x0bfingerprint\"/\n\x0cExtAppLoaded\x12\x1f\n\x0bi\
-    nstance_id\x18\x01\x20\x02(\rR\ninstanceId\"\x15\n\x13ExtAppHeaderReques\
-    t\"s\n\x0fExtAppHeaderAck\x12\x16\n\x06header\x18\x01\x20\x02(\x0cR\x06h\
-    eader\x12\x14\n\x05proof\x18\x02\x20\x02(\x0cR\x05proof\x122\n\x15root_p\
-    acket_timestamp\x18\x03\x20\x02(\x12R\x13rootPacketTimestamp\"4\n\x17Ext\
-    AppRootPacketRequest\x12\x19\n\x08app_ring\x18\x01\x20\x02(\rR\x07appRin\
-    g\"6\n\x13ExtAppRootPacketAck\x12\x1f\n\x0broot_packet\x18\x01\x20\x02(\
-    \x0cR\nrootPacket\".\n\x16ExtAppDataChunkRequest\x12\x14\n\x05index\x18\
-    \x01\x20\x02(\rR\x05index\"<\n\x12ExtAppDataChunkAck\x12\x12\n\x04data\
-    \x18\x01\x20\x02(\x0cR\x04data\x12\x12\n\x04hash\x18\x02\x20\x02(\x0cR\
-    \x04hash\"c\n\rExtAppMessage\x12\x1f\n\x0binstance_id\x18\x01\x20\x02(\r\
-    R\ninstanceId\x12\x1d\n\nmessage_id\x18\x02\x20\x02(\rR\tmessageId\x12\
-    \x12\n\x04data\x18\x03\x20\x02(\x0cR\x04data\"f\n\x0eExtAppResponse\x12\
-    \x1d\n\nmessage_id\x18\x01\x20\x02(\rR\tmessageId\x12\x12\n\x04data\x18\
-    \x02\x20\x02(\x0cR\x04data\x12!\n\x08finished\x18\x03\x20\x01(\x08:\x05f\
-    alseR\x08finishedB8\n#com.satoshilabs.trezor.lib.protobufB\rMessageExtAp\
-    p\x80\xa6\x1d\x01\
+    \x03\x20\x02(\x0c:\0R\x0bfingerprint\"m\n\x0cExtAppLoaded\x12\x1f\n\x0bi\
+    nstance_id\x18\x01\x20\x02(\rR\ninstanceId\x12<\n\x07version\x18\x02\x20\
+    \x02(\x0b2\".hw.trezor.messages.common.VersionR\x07version\"\x15\n\x13Ex\
+    tAppHeaderRequest\"s\n\x0fExtAppHeaderAck\x12\x16\n\x06header\x18\x01\
+    \x20\x02(\x0cR\x06header\x12\x14\n\x05proof\x18\x02\x20\x02(\x0cR\x05pro\
+    of\x122\n\x15root_packet_timestamp\x18\x03\x20\x02(\x12R\x13rootPacketTi\
+    mestamp\"4\n\x17ExtAppRootPacketRequest\x12\x19\n\x08app_ring\x18\x01\
+    \x20\x02(\rR\x07appRing\"6\n\x13ExtAppRootPacketAck\x12\x1f\n\x0broot_pa\
+    cket\x18\x01\x20\x02(\x0cR\nrootPacket\".\n\x16ExtAppDataChunkRequest\
+    \x12\x14\n\x05index\x18\x01\x20\x02(\rR\x05index\"<\n\x12ExtAppDataChunk\
+    Ack\x12\x12\n\x04data\x18\x01\x20\x02(\x0cR\x04data\x12\x12\n\x04hash\
+    \x18\x02\x20\x02(\x0cR\x04hash\"c\n\rExtAppMessage\x12\x1f\n\x0binstance\
+    _id\x18\x01\x20\x02(\rR\ninstanceId\x12\x1d\n\nmessage_id\x18\x02\x20\
+    \x02(\rR\tmessageId\x12\x12\n\x04data\x18\x03\x20\x02(\x0cR\x04data\"f\n\
+    \x0eExtAppResponse\x12\x1d\n\nmessage_id\x18\x01\x20\x02(\rR\tmessageId\
+    \x12\x12\n\x04data\x18\x02\x20\x02(\x0cR\x04data\x12!\n\x08finished\x18\
+    \x03\x20\x01(\x08:\x05falseR\x08finishedB4\n#com.satoshilabs.trezor.lib.\
+    protobufB\rMessageExtApp\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

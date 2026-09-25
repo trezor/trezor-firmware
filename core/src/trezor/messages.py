@@ -4659,11 +4659,13 @@ if TYPE_CHECKING:
 
     class ExtAppLoaded(protobuf.MessageType):
         instance_id: "int"
+        version: "Version"
 
         def __init__(
             self,
             *,
             instance_id: "int",
+            version: "Version",
         ) -> None:
             pass
 

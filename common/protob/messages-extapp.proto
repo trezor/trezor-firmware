@@ -35,6 +35,8 @@ message ExtAppLoad {
 message ExtAppLoaded {
     /// Instance ID of the loaded app, referred to in ExtAppRun
     required uint32 instance_id = 1;
+    /// Version of the loaded application.
+    required common.Version version = 2;
 }
 
 /**

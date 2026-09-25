@@ -6312,14 +6312,17 @@ class ExtAppLoaded(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9201
     FIELDS = {
         1: protobuf.Field("instance_id", "uint32", repeated=False, required=True),
+        2: protobuf.Field("version", "Version", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
         instance_id: "int",
+        version: "Version",
     ) -> None:
         self.instance_id = instance_id
+        self.version = version
 
 
 class ExtAppHeaderRequest(protobuf.MessageType):
