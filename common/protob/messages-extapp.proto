@@ -8,8 +8,6 @@ option java_outer_classname = "MessageExtApp";
 import "messages-common.proto";
 import "options.proto";
 
-option (include_in_bitcoin_only) = true;
-
 /**
  * Request: Load an external application onto the device.
  *
