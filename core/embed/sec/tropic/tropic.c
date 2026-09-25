@@ -1182,7 +1182,9 @@ static secbool tropic_finish_update(void) {
 
   // XXX: Troic FW version slot
   // We record the updated version in the R-memory.
-  tropic_write_fw_slot();
+  if (!tropic_write_fw_slot()) {
+    return secfalse;
+  }
   return sectrue;
 }
 
