@@ -1363,8 +1363,7 @@ secbool tropic_ensure_fw_updated(void) {
     return secfalse;
   }
   if (!possible) {
-    // TODO: LOGOVÁNÍ?? nebo tady secfalse?
-    return sectrue;
+    return secfalse;
   }
 
   if (state == TROPIC_FW_UPDATE_OUTDATED) {
