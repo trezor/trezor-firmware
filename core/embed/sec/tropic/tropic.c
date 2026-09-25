@@ -1189,9 +1189,6 @@ static secbool tropic_finish_update(void) {
 
   if (ret == LT_OK) {
     // XXX: tady se nastaví ty ukazatele
-    if (!tropic_session_start()) {
-      return secfalse;
-    }
     // XXX: Maintenance bit + cfg sloty
     // Reset the configuration. This includes the Maintenance bit and the
     // slots
