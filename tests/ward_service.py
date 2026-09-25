@@ -513,11 +513,11 @@ class MockWardService:
         the ORDER survives here: nothing is applied locally that the WM refused.
 
         THE `from` HEAD COMES FROM THE WM, not from the request, and that is what makes the
-        compare-and-swap real. `WardPublish` names only the counter it REACHES -- a device advances
-        by exactly one -- so `from_counter` is derivable, but `from_mac` is not: the daemon holds no
-        key of this wallet and could not compute one. Taking it from the WM means a device whose
-        head has been overtaken is refused on the counter, and a device that forked at the same
-        counter is refused on the signature. Both are definitive.
+        compare-and-swap real. `WardPublish` does carry both roots now -- the WM needs them to
+        verify `wm_sig` -- but taking the predecessor it CASes on from its own record rather than
+        from the message is what makes a stale writer detectable: a device whose head has been
+        overtaken is refused on the counter, and one that forked at the same counter is refused on
+        the signature. Both are definitive.
         """
         from .ward_wm import MockWM
 

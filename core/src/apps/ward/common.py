@@ -37,12 +37,13 @@ WARNING_UNVERIFIED: "StrPropertyType" = (
 # a proof -- it produces a well-formed proof that reconstructs to a DIFFERENT root. In an
 # eventually-consistent store there is no completeness signal either: "I have everything" and
 # "I am still missing rows" are the same observation, which is what eventual consistency
-# declines to distinguish. The host cannot check itself against the WM's head, because it
-# cannot verify a mac.
+# declines to distinguish. The host cannot check itself against the WM's head, because it holds
+# no key of this wallet and so cannot mint the `auth_commit` an adoption turns on.
 #
-# So the DEVICE is the completeness oracle, and `WardReconcile` is how it is consulted: an
-# accepted reconcile means the host's root matched the attested mac, i.e. its replica really
-# was complete at that counter.
+# So the DEVICE is the completeness oracle, and an accepted adoption is how it is consulted: the
+# device re-derives the authorisation over the attested step and it verifies, which means the
+# replica really did hold the tree that step produced. `WardVerifyChain` says it for every step
+# in a range; `WardReconcile` says it for one.
 #
 # Replaying the store's own history (docs/core/misc/ward-trie.md) NARROWS this rather than
 # removing it: contiguous counters up to the attested one let the host notice it is MISSING

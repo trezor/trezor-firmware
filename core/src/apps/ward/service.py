@@ -12,10 +12,10 @@ to delete than to keep level:
   the device with "WARD service reports this device is out of sync" and nothing to do about it --
   the one transport with no escape hatch is the one whose owner is most likely to lose history;
 
-  the authorisation surfaces have drifted apart in both directions. This path carries `wm_sig`
-  and `head_init_sig` for writes and has no revert to authorise; connect carries the revert
-  authorisation and no write authorisation. Bringing them level is work on both sides, and only
-  one of them is the target.
+  the authorisation surfaces have drifted apart, though less than they had. Connect now carries
+  `wm_sig` on every write and `head_init_sig` on the sync round, so the write side is level; what
+  this path still lacks is any revert or recover route at all, which is a capability gap rather
+  than an authorisation one.
 
 What it was FOR remains true and is worth keeping in view if the capability is ever rebuilt: the
 device can ask rather than only answer, which is what the rest of this docstring describes.
@@ -580,9 +580,20 @@ async def sync() -> None:
     root = await get_root()
 
     # THE OPENING HEAD, for a WM that has never seen this wallet and so has nothing to compare
-    # against. It is `(counter, root)` -- the device's own, and the WM holds roots now, so there
-    # is nothing to derive. It still has to be AUTHORISED, or a wallet's first head is whatever
-    # the first speaker claims; that is `head_init_sig` below.
+    # against. It has to be AUTHORISED, or a wallet's first head is whatever the first speaker
+    # claims.
+    #
+    # MINTED ONLY AT COUNTER 0, exactly as on the connect path and for the same reason. Enrolment
+    # is genesis-only: a `head_init_sig` proves the head it names was a genuine state of this
+    # wallet, never that it is the LATEST one, so a WM accepting it at an arbitrary counter would
+    # let whichever device reached an empty WM first pin the head to older state. Issuing one over
+    # a non-zero head every round would hand that credential out on request -- and no conforming
+    # WM may act on it anyway, since `adopt.verify_round_attestation` rejects the self-attestation
+    # it would produce. Above genesis the honest answer is to offer nothing.
+    init = None
+    if counter == 0:
+        init = head_init_sig(await derive_k_sig(), ward_id, counter, root)
+
     nonce = random.bytes(NONCE_LENGTH)
     sync_round.begin(nonce)
 
@@ -592,9 +603,7 @@ async def sync() -> None:
             ward_id=ward_id,
             current_counter=counter,
             current_root=root,
-            head_init_sig=head_init_sig(
-                await derive_k_sig(), ward_id, counter, root
-            ),
+            head_init_sig=init,
         ),
         WardSyncResponse,
     )
@@ -618,9 +627,10 @@ async def sync() -> None:
         answer.wm_signature,
     )
     if attested_counter < counter:
-        # Anti-rollback. A malicious WM cannot forge a mac, so its entire remaining freedom is to
-        # replay a state this wallet genuinely reached; this is what bounds which ones. Equality
-        # is fine -- re-reading the same head is a no-op.
+        # Anti-rollback, and the only bound left on a WM that lies: it attests roots in the clear
+        # now, so it can name a state this wallet never reached, and the floor is what stops it
+        # naming an OLD one and freezing the device there. What refuses an INVENTED one is the
+        # chain folded below. Equality is fine -- re-reading the same head is a no-op.
         raise DataError("attested counter is older than the stored counter")
     sync_round.set_attested(
         attested_from_counter, attested_from_root, attested_counter, attested_root
@@ -769,11 +779,11 @@ if utils.USE_WARD_SERVICE_THP:
 # Here the device hands the mutation to the party that owns the replica and gets the attestation
 # back in the same exchange.
 #
-# STRICTLY STRONGER THAN RECONCILE, and in a way worth being precise about. Reconcile adopts any
-# root that reproduces an attested mac -- which is sound, but the mac is merely REPRODUCIBLE by the
-# device. Here the device minted the mac itself, before anyone else saw the transition, and requires
-# the attestation to name that exact counter and that exact mac. There is no root to be persuaded
-# about.
+# STRICTLY STRONGER THAN RECONCILE, and in a way worth being precise about. Reconcile folds a
+# transition the WM named, so the device is checking someone else's description of a step it did
+# not take. Here the device BUILT the step, and rebuilds the attestation preimage from its own
+# operands: a WM answering with some other head is signing bytes this device never asks about, so
+# it fails as a bad signature rather than as a mismatch noticed afterwards.
 #
 # THE NONCE IS PER PUBLICATION, not per session. It is what stops a WM (or a daemon relaying one)
 # answering this write with an attestation of some earlier head it had already collected -- the

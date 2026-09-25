@@ -699,13 +699,18 @@ async def reconcile_pending(
                                them. That is precise: it separates "the head reached N" from "MY
                                change is what made it N".
 
-      `landed_commits` None  -- `reconcile` adopts by binding a root to an attested mac and folds no
-                               links, so there is no list to match against. It is still not reduced
-                               to the counter: a claim carries the `auth_commit` of the transition
-                               it was filed for, and that authorisation names a TO-ROOT. So the
-                               claim landed exactly when the adopted head reproduces it --
-                               `verify_auth_commit(claimed - 1, our head, claimed, adopted_root)`.
-                               Anything else is "cannot tell", which settles as NOT landed.
+      `landed_commits` None  -- a DEFENSIVE FLOOR rather than a route, now that every adoption
+                               folds at least one link. `reconcile` supplies the single
+                               `auth_commit` it verified, and the only case left without one is
+                               an adoption at counter 0, where the tree is empty, no transition
+                               produced it, and there can be no claims to settle: `flush_queue`
+                               refuses offline, so nothing is ever offered before a first sync.
+                               The branch is kept because settling wrongly is worse than settling
+                               conservatively, and it decides by re-deriving the claim's own
+                               authorisation against the adopted head rather than by the counter
+                               -- `verify_auth_commit(claimed - 1, our head, claimed,
+                               adopted_root)`. Anything else is "cannot tell", which settles as
+                               NOT landed.
 
     AND THE RECORD MUST STILL BE THE ONE THAT WAS OFFERED. Slots are reused and a queued value can
     be replaced in place, so the claim's `record_commit` is compared against whatever occupies the

@@ -98,10 +98,11 @@ def _write(session: Session, identifier: bytes, value: bytes) -> tuple:
 def test_a_genesis_read_syncs_itself(client: Client) -> None:
     """An empty tree, a WM that has never seen this wallet, and a read that still works.
 
-    Everything the WM needs to open this wallet's history comes from the device: it cannot compute
-    a mac, holding no key of ours, so the opening head is supplied and signed by the device and the
-    WM adopts it. Without that a genesis wallet could never acquire a first head -- and since a
-    READ may be a wallet's first WARD operation, it cannot be left to the first write.
+    Everything the WM needs to open this wallet's history comes from the device: an opening head
+    is a value anyone knowing `ward_id` could otherwise set, so it is supplied and SIGNED by the
+    device and the WM adopts it on that signature. Without it a genesis wallet could never acquire
+    a first head -- and since a READ may be a wallet's first WARD operation, it cannot be left to
+    the first write. Enrolment is genesis-only, which is exactly why this case has to work.
     """
     store = WardTrie()
     session = client.get_session()
@@ -189,7 +190,7 @@ def test_another_wallet_is_not_served_from_this_replica(client: Client) -> None:
     negotiates -- `WardServiceFetch` does not even carry a ward_id, because the daemon has only one
     replica to answer from. So what has to hold is that the mismatch is CAUGHT rather than served:
     the links carry authorisations only a device of the other wallet could have issued, and the
-    attested mac is over a tree this wallet never built.
+    attested step names a tree this wallet never built.
 
     The failure direction is the whole point. Serving would present another wallet's entries as
     this one's, which is precisely the "cannot verify reading as verified" confusion the subsystem

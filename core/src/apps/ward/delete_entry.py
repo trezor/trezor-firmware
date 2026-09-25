@@ -189,12 +189,15 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
         from_root,
     )
     # NOT COMMITTED HERE. The device hands back the root it derived, its counter and the
-    # authenticators; the head only moves when a WM attestation names that counter and a mac
-    # the device can reproduce -- see `reconcile`. That is what makes "the head is always a
-    # state the WM confirmed" an invariant, and it is what the fork check exists in spite of:
-    # two devices can no longer both hold an unconfirmed counter N+1, because neither holds
-    # one at all. Nothing needs storing in the meantime -- the mac is self-validating, so the
-    # device can accept the root later purely because it reproduces the attested mac.
+    # authenticators; the head only moves when a WM attestation names this exact transition and
+    # the device re-verifies the `auth_commit` over it -- see `reconcile`. That is what makes
+    # "the head is always a state the WM confirmed" an invariant, and it is what the fork check
+    # exists in spite of: two devices can no longer both hold an unconfirmed counter N+1, because
+    # neither holds one at all.
+    #
+    # NOTHING NEEDS STORING IN THE MEANTIME. The authorisation travels with the leaf, and the
+    # device can re-derive it from the attested step later -- so a write the host never publishes
+    # simply never happened, rather than leaving state behind to reconcile.
 
     identity = make_leaf_identity(key_type, EMPTY_PART)
     content = make_leaf_content(EMPTY_PART)
