@@ -472,11 +472,25 @@ def verify_intent_mac(
 # WM-SIGNED statement of the current head; `round.set_head_nonce` latches it for the session. A
 # host feeding a stale nonce does not gain a replay -- it gains a signature the WM refuses.
 #
-# WHAT IT DOES NOT BUY. It binds an authorisation to a moment in the WM's history, not to a
-# moment in real time: a host may still sit on a `wm_sig` and publish it late, as long as no other
-# transition has been accepted in between. And it is the WM's own freshness, so a WM that rotates
-# predictably, or replays an old nonce, weakens exactly this property -- the device cannot check
-# that a nonce is new, only that the WM signed it.
+# THE OBLIGATION THIS PUTS ON THE WM, and it is the whole property rather than a caveat on it:
+# A NONCE THAT HAS EVER BEEN SUPERSEDED MUST NEVER BECOME CURRENT AGAIN. Not by rotation, and --
+# the part that is easy to get wrong -- not through DATABASE RESTORATION, FAILOVER TO A REPLICA,
+# BACKUP RESTORE, or total state recovery. The counter and the root may legitimately regress in
+# all of those; the nonce may not. Restore a retired nonce and every authorisation ever minted
+# against it is live again, at a point in history where nobody approved it -- a restored WM
+# becomes a replay oracle. Handing a standby the CURRENT nonce is correct and necessary, so that
+# authorisations already in flight still land; handing it a stale one is the failure.
+#
+# THE DEVICE CANNOT CHECK ANY OF THAT. It can see that the WM signed a nonce, not that the nonce
+# is new, so this is an obligation on the operator and not something the wire enforces.
+# `tests/ward_wm.py` keeps a ledger of every nonce a wallet has held and refuses to re-issue one,
+# which is where the rule is exercised.
+#
+# WHAT IT DOES NOT BUY, even when the rule is kept. It binds an authorisation to a moment in the
+# WM's history, not to a moment in real time: a host may still sit on a `wm_sig` and publish it
+# late, as long as no other transition has been accepted in between. And a WM that rotates
+# PREDICTABLY leaks nothing an attacker can use directly -- minting still needs K_sig -- but it
+# does tell a host which authorisation will become valid next, which is worth avoiding.
 
 NO_HEAD_NONCE = b"\x00" * 32
 """The nonce a WM holds before it has accepted any transition for a wallet -- see `head_init_sig`.

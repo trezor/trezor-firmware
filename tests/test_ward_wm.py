@@ -28,7 +28,7 @@ import pytest
 from trezorlib import _ed25519
 
 from .ward_keys import head_init_sig, wm_sig
-from .ward_wm import MockWM
+from .ward_wm import NO_HEAD_NONCE, MockWM
 
 K_SIG = b"\x11" * 32
 WARD_ID = _ed25519.publickey_unsafe(K_SIG)
@@ -310,3 +310,179 @@ def test_an_authorisation_moves_the_head_at_most_once():
     assert wm.head(WARD_ID)[:2] == (1, ROOT_1)
     with pytest.raises(ValueError, match="not authorised"):
         wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, kept, timestamp=1000)
+
+
+# --- a superseded head nonce must never become current again -------------------------------
+#
+# THE ONE OBLIGATION A REAL WM CARRIES, and the property everything else about the nonce rests
+# on. `(counter, root)` is not unique across a wallet's history and is not meant to be: roots are
+# content-addressed, so a tree returning to an earlier shape returns to an earlier root, and a
+# REVERT carries an older root forward under a new counter by design. What makes an authorisation
+# single-use is therefore ONLY that the nonce moved on.
+#
+# The cases that make this hard are the ones where the counter and the root are SUPPOSED to go
+# backwards -- a database restored from a backup, a failover onto a replica that lagged, an
+# operator putting a head back by hand. All of those are legitimate for the head. None of them is
+# legitimate for the nonce. The tests below cover each, and the last one shows what a WM that gets
+# it wrong hands to a host that kept an old signature.
+
+
+def _retired_must_stay_retired(wm, before: set, after: set) -> None:
+    """Nothing that was current has been dropped, and nothing has been re-issued."""
+    assert before <= after, "the ledger lost a nonce that had been current"
+
+
+def test_every_head_nonce_a_wallet_ever_holds_is_distinct():
+    """Across ordinary advances, a revert, and a restore that lands on an earlier head.
+
+    Asserted over the WHOLE history rather than pairwise, because the failure this is about is
+    not "the next one repeats the last" -- it is "one from six transitions ago comes back".
+    """
+    wm = _opened()
+    seen = [wm.head_nonce(WARD_ID)]
+
+    _advance(wm, 1, ROOT_1, 2, ROOT_2)
+    seen.append(wm.head_nonce(WARD_ID))
+
+    # back to a root this wallet already held, which is what makes the pair recur
+    _advance(wm, 2, ROOT_2, 3, ROOT_1)
+    seen.append(wm.head_nonce(WARD_ID))
+
+    # a demotion: an OLDER root carried forward under a NEW counter, by construction
+    from .ward_keys import TAG_WM_REVERT
+
+    _advance(wm, 3, ROOT_1, 4, ROOT_0, tag=TAG_WM_REVERT)
+    seen.append(wm.head_nonce(WARD_ID))
+
+    # and a register restored from a backup, landing on a head held long ago
+    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000)
+    seen.append(wm.head_nonce(WARD_ID))
+
+    assert wm.head(WARD_ID)[:2] == (1, ROOT_1)  # the HEAD really did go back...
+    assert len(set(seen)) == len(seen)  # ...and the nonce really did not
+    assert NO_HEAD_NONCE not in seen[1:]  # nor back to the pre-enrolment value
+
+
+def test_a_restore_onto_an_earlier_head_mints_an_unused_nonce():
+    """Backup restore, stated as the operation it is.
+
+    The counter and the root are allowed to regress here -- that is the whole point of a restore.
+    The nonce is not, and the check is against every value this wallet has EVER had, not merely
+    against the one being replaced.
+    """
+    wm = _opened()
+    snapshot_nonce = wm.head_nonce(WARD_ID)
+
+    _advance(wm, 1, ROOT_1, 2, ROOT_2)
+    _advance(wm, 2, ROOT_2, 3, ROOT_1)
+    retired = wm.retired_nonces(WARD_ID)
+
+    # the register comes back at the snapshot's head
+    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000)
+
+    assert wm.head(WARD_ID)[:2] == (1, ROOT_1)
+    restored_nonce = wm.head_nonce(WARD_ID)
+    assert restored_nonce != snapshot_nonce
+    assert restored_nonce not in retired
+    _retired_must_stay_retired(wm, retired, wm.retired_nonces(WARD_ID))
+
+
+def test_a_failover_replica_may_carry_the_current_nonce_but_not_a_retired_one():
+    """Handing over the CURRENT nonce is a correct failover; handing over a stale one is not.
+
+    Worth separating because the two look alike in an operations runbook -- both are "copy the
+    record to the standby" -- and only one of them is safe. What distinguishes them is not the
+    head they carry but whether the nonce they carry has already been superseded.
+    """
+    primary = _opened()
+    _advance(primary, 1, ROOT_1, 2, ROOT_2)
+    current = primary.head_nonce(WARD_ID)
+    counter, root, _ts = primary.head(WARD_ID)
+
+    # A CORRECT FAILOVER: the standby takes the record as it stands, nonce included. Nothing has
+    # been superseded, so an authorisation already minted against it is still good -- which is the
+    # behaviour a failover must preserve, or every device in flight is stranded.
+    standby = MockWM()
+    standby.install_unauthenticated(WARD_ID, counter, root, 1000, head_nonce=current)
+    assert standby.head_nonce(WARD_ID) == current
+    in_flight = wm_sig(K_SIG, WARD_ID, 2, ROOT_2, 3, ROOT_1, current)
+    standby.advance(WARD_ID, 2, ROOT_2, 3, ROOT_1, in_flight, timestamp=1000)
+
+    # ...and once the standby has accepted it, that nonce is spent THERE too -- the failover
+    # inherited the obligation along with the record. Put the head back where `in_flight` was
+    # minted for, the way a second restore would, and the authorisation is refused: the endpoints
+    # match, the moment does not.
+    assert standby.head_nonce(WARD_ID) != current
+    standby.install_unauthenticated(WARD_ID, 2, ROOT_2, 1000)
+    assert standby.head(WARD_ID)[:2] == (2, ROOT_2)
+    with pytest.raises(ValueError, match="not authorised"):
+        standby.advance(WARD_ID, 2, ROOT_2, 3, ROOT_1, in_flight, timestamp=1000)
+
+
+def test_a_kept_authorisation_is_refused_after_a_restore():
+    """The operational consequence, which is what the rule is actually for.
+
+    A host that kept a `wm_sig` waits for its `(counter, root)` predecessor to come back. A
+    restore is the thing most likely to bring it back. The authorisation still names the right
+    endpoints, and is refused anyway.
+    """
+    wm = _opened()
+    kept = wm_sig(K_SIG, WARD_ID, 1, ROOT_1, 2, ROOT_2, wm.head_nonce(WARD_ID))
+
+    wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, kept, timestamp=1000)
+    _advance(wm, 2, ROOT_2, 3, ROOT_1)
+
+    # the register is restored to exactly the head `kept` was minted against
+    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000)
+    assert wm.head(WARD_ID)[:2] == (1, ROOT_1)
+
+    with pytest.raises(ValueError, match="not authorised"):
+        wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, kept, timestamp=1000)
+
+
+def test_a_wm_that_restores_a_retired_nonce_reopens_the_replay():
+    """WHAT THE RULE IS WORTH, shown by breaking it.
+
+    This is not a property of the protocol -- it is the absence of one. If a WM restores a
+    superseded nonce along with the head, every authorisation ever minted against that nonce is
+    live again, and the device has no way to know: it signed honestly, once, for a transition the
+    user approved once. Only the WM can hold this line, which is why it is written down as an
+    obligation rather than enforced by the wire.
+    """
+    wm = _opened()
+    retired_nonce = wm.head_nonce(WARD_ID)
+    kept = wm_sig(K_SIG, WARD_ID, 1, ROOT_1, 2, ROOT_2, retired_nonce)
+
+    wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, kept, timestamp=1000)
+    _advance(wm, 2, ROOT_2, 3, ROOT_1)
+    assert retired_nonce in wm.retired_nonces(WARD_ID)
+
+    # a restore that puts the nonce back too -- the mistake this rule names
+    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000, head_nonce=retired_nonce)
+
+    # and the transition lands a SECOND time, at a moment nobody authorised it for
+    wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, kept, timestamp=1000)
+    assert wm.head(WARD_ID)[:2] == (2, ROOT_2)
+
+
+def test_the_mock_refuses_to_make_a_retired_nonce_current_by_accident():
+    """The ledger is enforcement, not bookkeeping.
+
+    A test that reached a repeated nonce through some future change to this mock should fail
+    loudly rather than quietly assert a property it is no longer testing. Forcing one is possible
+    only by naming it, which is what the test above does.
+    """
+    from .ward_wm import RetiredNonce
+
+    wm = _opened()
+    current = wm.head_nonce(WARD_ID)
+    _advance(wm, 1, ROOT_1, 2, ROOT_2)
+
+    # `_rotate` is the single point every current nonce comes through
+    with pytest.raises(RetiredNonce):
+        wm._retired[WARD_ID].add(
+            wm._rotate(WARD_ID, 3, ROOT_1, wm.head_nonce(WARD_ID))
+        )
+        wm._rotations -= 1
+        wm._rotate(WARD_ID, 3, ROOT_1, wm.head_nonce(WARD_ID))
+    assert current in wm.retired_nonces(WARD_ID)

@@ -68,28 +68,29 @@ def _or_empty(root):
 NO_HEAD_NONCE = b"\x00" * 32
 
 
-def _rotate(ward_id: bytes, to_counter: int, to_root: bytes, previous: bytes) -> bytes:
-    """The WM's next head nonce.
+# --- THE ONE OBLIGATION A REAL WM CARRIES ------------------------------------------------
+#
+# A HEAD NONCE THAT HAS EVER BEEN SUPERSEDED MUST NEVER BECOME CURRENT AGAIN. Not through an
+# ordinary rotation, and -- the part that is easy to get wrong -- not through DATABASE RESTORATION,
+# FAILOVER TO A REPLICA, BACKUP RESTORE, or total state recovery either. The counter and the root
+# may legitimately go backwards in all of those; the nonce may not.
+#
+# WHY IT IS THE WHOLE PROPERTY. The nonce is what makes an authorisation single-use. `(counter,
+# root)` recurs -- roots are content-addressed, and a revert carries an older root forward under a
+# new counter on purpose -- so a `wm_sig` kept from the first occurrence of a pair is refused at
+# the second ONLY because the nonce moved on. Restore a superseded nonce and every authorisation
+# ever minted against it is live again, at a place in history where nobody approved it. A restored
+# WM that also restores its old nonce is therefore not merely stale, it is a replay oracle.
+#
+# SO THIS MOCK KEEPS A LEDGER of every nonce that has ever been current per wallet, and refuses to
+# make one current twice. That turns the obligation into something a test can fail on rather than
+# something a comment asks for -- the deterministic chain below would otherwise be free to collide
+# quietly. `install_unauthenticated` can be told to break it on purpose, which is how the tests
+# show what the rule is worth.
 
-    A real WM draws 32 random bytes. This mock CHAINS them instead -- a hash of the wallet, the
-    head being installed and the nonce being replaced -- for one reason: a device test that
-    records a fixture must be able to run twice and get the same bytes. The security property
-    being modelled is only that the value CHANGES on every accepted transition and does not come
-    back, which a chain gives as surely as randomness does; unpredictability to an ATTACKER is a
-    real WM's job and is not what any test here exercises.
 
-    Never returns the all-zero value: that one is the STARTING state of a freshly enrolled head,
-    which the first accepted advance rotates away for good.
-    """
-    nonce = _hashlib.sha256(
-        b"WARD WM HEAD NONCE v1"
-        + ward_id
-        + to_counter.to_bytes(4, "big")
-        + _or_empty(to_root)
-        + previous
-    ).digest()
-    assert nonce != NO_HEAD_NONCE
-    return nonce
+class RetiredNonce(Exception):
+    """A superseded head nonce was about to become current again."""
 
 
 class MockWM:
@@ -101,6 +102,12 @@ class MockWM:
         # How many demotions this WM has been asked to accept. A real one would apply policy
         # here; recording it is how a test shows the REVERT tag actually reached the WM.
         self.reverts_seen = 0
+        # Every nonce that has ever been current for a wallet, including the one current now.
+        # See the note above: this is the invariant, not bookkeeping.
+        self._retired: dict[bytes, set[bytes]] = {}
+        # Monotone across the WM's life, so a rotation cannot reproduce an earlier one even when
+        # the head it installs is one this wallet held before. A real WM gets this from randomness.
+        self._rotations = 0
         # ward_id -> (from_counter, from_root, to_counter, to_root, timestamp, head_nonce). An
         # absent root is the empty tree and is held as EMPTY_ROOT, the form it takes inside the
         # preimage.
@@ -115,6 +122,55 @@ class MockWM:
     def pubkey(self) -> bytes:
         return self._pub
 
+    # --- the nonce ledger ---------------------------------------------------------------
+
+    def _rotate(
+        self, ward_id: bytes, to_counter: int, to_root: bytes, previous: bytes
+    ) -> bytes:
+        """The WM's next head nonce, and the enforcement point for the rule above.
+
+        A real WM draws 32 random bytes. This mock CHAINS them -- a hash of the wallet, a
+        monotone rotation count, the head being installed and the nonce being replaced -- for one
+        reason: a test must be able to run twice and get the same bytes. The security property
+        being modelled is that the value CHANGES on every accepted transition and NEVER COMES
+        BACK, which a chain gives as surely as randomness does; unpredictability to an attacker is
+        a real WM's job and is not what any test here exercises.
+
+        The rotation count is in the preimage so that returning the head to a `(counter, root)`
+        this wallet held before cannot reproduce the nonce it held then -- which is exactly the
+        case the ledger exists to catch, and it should be impossible by construction as well as
+        detected.
+
+        Never returns the all-zero value: that one is the STARTING state of a freshly enrolled
+        head, which the first accepted advance rotates away for good.
+        """
+        self._rotations += 1
+        nonce = _hashlib.sha256(
+            b"WARD WM HEAD NONCE v1"
+            + ward_id
+            + self._rotations.to_bytes(8, "big")
+            + to_counter.to_bytes(4, "big")
+            + _or_empty(to_root)
+            + previous
+        ).digest()
+        if nonce == NO_HEAD_NONCE or nonce in self._retired.get(ward_id, ()):
+            raise RetiredNonce("rotated onto a nonce that has already been current")
+        return nonce
+
+    def _make_current(self, ward_id: bytes, nonce: bytes) -> bytes:
+        """Record that `nonce` is (or is becoming) this wallet's current head nonce.
+
+        The ledger holds the current one too, so a later attempt to install it again -- which is
+        what restoring a snapshot taken while it was current would do -- is caught rather than
+        passing as a no-op.
+        """
+        self._retired.setdefault(ward_id, set()).add(nonce)
+        return nonce
+
+    def retired_nonces(self, ward_id: bytes) -> "set[bytes]":
+        """Every head nonce this wallet has ever had, current one included."""
+        return set(self._retired.get(ward_id, ()))
+
     def install_unauthenticated(
         self,
         ward_id: bytes,
@@ -123,6 +179,7 @@ class MockWM:
         timestamp: int,
         from_counter: "int | None" = None,
         from_root: "bytes | None" = None,
+        head_nonce: "bytes | None" = None,
     ) -> None:
         # timestamp is REQUIRED, not defaulted. A default lets a caller publish at one time
         # and ingest at another; the signature then covers a different timestamp than the
@@ -140,6 +197,16 @@ class MockWM:
         The `from` end DEFAULTS to the head being displaced, which is what an ordinary advance
         means; pass it explicitly to model a WM whose predecessor is something else. At counter 0
         it defaults to the head itself -- genesis attests itself, having no predecessor.
+
+        THIS IS ALSO THE RESTORE MODEL: a register rebuilt from a backup, a failover onto a
+        replica, an operator putting a head back by hand. All of them can legitimately move the
+        counter and the root BACKWARDS, and by default this mints a nonce that has never been
+        current -- which is the obligation stated at the top of this file, and the thing such a
+        restore must not get wrong.
+
+        `head_nonce` FORCES one instead, bypassing the ledger. It exists for exactly one purpose:
+        to model a WM that restored a SUPERSEDED nonce along with the head, so a test can show
+        what that costs. Nothing else should pass it.
         """
         if from_counter is None:
             known = self._heads.get(ward_id)
@@ -149,13 +216,21 @@ class MockWM:
                 from_counter, from_root = counter, root
         known = self._heads.get(ward_id)
         previous = known[5] if known is not None else NO_HEAD_NONCE
+        if head_nonce is None:
+            nonce = self._make_current(
+                ward_id, self._rotate(ward_id, counter, _or_empty(root), previous)
+            )
+        else:
+            # A WM THAT BROKE THE RULE, on purpose, so a test can measure the damage. Not put
+            # through `_make_current`: the ledger is what this is violating.
+            nonce = head_nonce
         self._heads[ward_id] = (
             from_counter,
             _or_empty(from_root),
             counter,
             _or_empty(root),
             timestamp,
-            _rotate(ward_id, counter, _or_empty(root), previous),
+            nonce,
         )
 
     def head(self, ward_id: bytes) -> Optional[tuple[int, bytes, int]]:
@@ -260,7 +335,7 @@ class MockWM:
                 from_counter,
                 _or_empty(from_root),
                 timestamp,
-                NO_HEAD_NONCE,
+                self._make_current(ward_id, NO_HEAD_NONCE),
             )
             known = self._heads[ward_id]
 
@@ -319,7 +394,10 @@ class MockWM:
             to_counter,
             _or_empty(to_root),
             timestamp,
-            _rotate(ward_id, to_counter, _or_empty(to_root), head_nonce),
+            self._make_current(
+                ward_id,
+                self._rotate(ward_id, to_counter, _or_empty(to_root), head_nonce),
+            ),
         )
         return is_revert
 
@@ -412,7 +490,7 @@ class MockWM:
                 current_counter,
                 _or_empty(current_root),
                 0,
-                NO_HEAD_NONCE,
+                self._make_current(ward_id, NO_HEAD_NONCE),
             )
 
         return self.attest(ward_id, nonce)
