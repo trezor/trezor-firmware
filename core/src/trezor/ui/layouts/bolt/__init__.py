@@ -1368,6 +1368,9 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "ethereum/vault",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         extra_data: str | None = None,
+        receiver_address: str | None = None,
+        owner_address: str | None = None,
+        chunkify: bool = True,
     ) -> None:
 
         account_properties: list[StrPropertyType] = []
@@ -1408,6 +1411,30 @@ if not utils.BITCOIN_ONLY:
             ],
             br_code=br_code,
         )
+
+        if receiver_address is not None:
+            await confirm_value(
+                title=title,
+                value=receiver_address,
+                description=TR.words__recipient,
+                br_name=f"{br_name}/receiver_address",
+                br_code=br_code,
+                verb=TR.buttons__continue,
+                chunkify=chunkify,
+                cancel=True,
+            )
+
+        if owner_address is not None:
+            await confirm_value(
+                title=title,
+                value=owner_address,
+                description=TR.ethereum__vault_owner_address,
+                br_name=f"{br_name}/owner_address",
+                br_code=br_code,
+                verb=TR.buttons__continue,
+                chunkify=chunkify,
+                cancel=True,
+            )
 
         if extra_data is not None:
             await confirm_value(
