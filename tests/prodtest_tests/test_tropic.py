@@ -27,7 +27,7 @@ hand. The general pattern is:
   4. (optionally) assert on ``session.state()``.
 
 The tests seed the Tropic model with the default device-test config
-(``tests/tropic_model/config.yml``), which represents a provisioned device.
+(``tests/tropic_model/firmware_config/current.yml``), which represents a provisioned device.
 Commands that need a fresh/unpaired chip (``tropic-pair``) or device-specific
 certificates are covered only where they succeed; some are exercised through
 their error paths instead (e.g. the TRNG, which the model drives from a
