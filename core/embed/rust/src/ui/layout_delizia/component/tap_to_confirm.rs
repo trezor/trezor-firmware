@@ -157,14 +157,16 @@ impl Component for TapToConfirm {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let btn_msg = self.button.event(ctx, event);
-        if let Some(ButtonMsg::Clicked) = btn_msg {
-            if animation_disabled() {
-                return Some(());
+        if !self.anim.is_active() {
+            let btn_msg = self.button.event(ctx, event);
+            if let Some(ButtonMsg::Clicked) = btn_msg {
+                if animation_disabled() {
+                    return Some(());
+                }
+                self.anim.start();
+                ctx.request_anim_frame();
+                ctx.request_paint();
             }
-            self.anim.start();
-            ctx.request_anim_frame();
-            ctx.request_paint();
         }
 
         if !animation_disabled() {
