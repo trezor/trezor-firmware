@@ -459,14 +459,6 @@ lt_ret_t lt_ecc_key_erase_retry(lt_handle_t *tropic_handle,
   return TROPIC_RETRY_COMMAND(lt_ecc_key_erase(tropic_handle, ecc_slot));
 }
 
-static lt_ret_t lt_r_mem_data_write_retry(lt_handle_t *tropic_handle,
-                                          const uint16_t udata_slot,
-                                          const uint8_t *data,
-                                          const uint16_t size) {
-  return TROPIC_RETRY_COMMAND(
-      lt_r_mem_data_write(tropic_handle, udata_slot, data, size));
-}
-
 lt_ret_t lt_r_mem_data_erase_retry(lt_handle_t *tropic_handle,
                                    const uint16_t udata_slot) {
   return TROPIC_RETRY_COMMAND(lt_r_mem_data_erase(tropic_handle, udata_slot));
@@ -902,7 +894,7 @@ static secbool set_expected_config(
 
   uint8_t distribution_version_bytes[sizeof(uint32_t)] = {0};
   write_be(distribution_version_bytes, expected_config->distribution_version);
-  if (lt_r_mem_data_write_retry(&g_tropic_driver.handle,
+  if (lt_r_mem_data_erase_write_retry(&g_tropic_driver.handle,
                                 TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
                                 distribution_version_bytes,
                                 sizeof(distribution_version_bytes)) != LT_OK) {
