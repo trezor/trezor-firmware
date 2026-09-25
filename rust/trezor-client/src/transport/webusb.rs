@@ -8,7 +8,11 @@ use crate::{
     AvailableDevice,
 };
 use rusb::*;
-use std::{fmt, result::Result, time::Duration};
+use std::{
+    fmt,
+    result::Result,
+    time::{Duration, Instant},
+};
 
 // A collection of constants related to the WebUsb protocol.
 mod constants {
@@ -26,8 +30,23 @@ mod constants {
 /// The chunk size for the serial protocol.
 const CHUNK_SIZE: usize = 64;
 
-const READ_TIMEOUT: Duration = Duration::from_secs(0);
+/// Total time to wait for a single chunk before giving up. Deliberately
+/// generous, because the device legitimately blocks on the user (a button
+/// press or PIN entry can take as long as the user needs). The point is only
+/// that the wait is now *finite*: a vanished or wedged device surfaces a
+/// [`Error::DeviceReadTimeout`] instead of blocking forever, which the
+/// previous value of `0` ("wait indefinitely") allowed.
+const READ_TIMEOUT: Duration = Duration::from_secs(600);
+/// Poll slice within [`READ_TIMEOUT`]: a libusb interrupt read returns
+/// `Timeout` after each slice with no data, and we retry until the deadline.
+const READ_POLL: Duration = Duration::from_millis(100);
 const WRITE_TIMEOUT: Duration = Duration::from_secs(1);
+/// Per-read timeout while discarding stale chunks on connect.
+const DRAIN_TIMEOUT: Duration = Duration::from_millis(10);
+/// Upper bound on chunks discarded while draining, so a device that keeps
+/// producing data can never hold the connect path open (worst case
+/// `DRAIN_MAX_CHUNKS * DRAIN_TIMEOUT`). A real stale buffer is a few chunks.
+const DRAIN_MAX_CHUNKS: usize = 1024;
 
 /// An available transport for connecting with a device.
 #[derive(Debug)]
@@ -58,15 +77,55 @@ impl Link for WebUsbLink {
     }
 
     fn read_chunk(&mut self) -> Result<Vec<u8>, Error> {
-        let mut chunk = vec![0; CHUNK_SIZE];
-        let endpoint = constants::READ_ENDPOINT_MASK | self.endpoint;
+        self.read_chunk_until(Instant::now() + READ_TIMEOUT)
+    }
+}
 
-        let n = self.handle.read_interrupt(endpoint, &mut chunk, READ_TIMEOUT)?;
-        if n == CHUNK_SIZE {
-            Ok(chunk)
-        } else {
-            Err(Error::DeviceReadTimeout)
+impl WebUsbLink {
+    /// Read one chunk, polling in [`READ_POLL`] slices until `deadline`, after
+    /// which [`Error::DeviceReadTimeout`] is returned instead of blocking
+    /// forever on a device that has gone away.
+    fn read_chunk_until(&mut self, deadline: Instant) -> Result<Vec<u8>, Error> {
+        let endpoint = constants::READ_ENDPOINT_MASK | self.endpoint;
+        let mut chunk = vec![0; CHUNK_SIZE];
+        loop {
+            let now = Instant::now();
+            if now >= deadline {
+                return Err(Error::DeviceReadTimeout);
+            }
+            // Floor at 1 ms: rusb converts the timeout to whole milliseconds
+            // (`as_millis() as c_uint`), so a sub-millisecond value truncates
+            // to 0, which libusb treats as "block indefinitely" -- the exact
+            // hang this loop exists to prevent. Overshooting the deadline by up
+            // to one poll slice is harmless; the next iteration catches it.
+            let poll = READ_POLL.min(deadline - now).max(Duration::from_millis(1));
+            match self.handle.read_interrupt(endpoint, &mut chunk, poll) {
+                Ok(n) if n == CHUNK_SIZE => return Ok(chunk),
+                Ok(n) => return Err(Error::UnexpectedChunkSizeFromDevice(n)),
+                Err(rusb::Error::Timeout) => continue,
+                Err(e) => return Err(e.into()),
+            }
         }
+    }
+
+    /// Discard any stale chunks left buffered from a previous, interrupted
+    /// session. Without this, the first response can be paired with a leftover
+    /// message and the link stays desynchronised for the rest of its life.
+    fn drain(&mut self) -> Result<(), Error> {
+        let endpoint = constants::READ_ENDPOINT_MASK | self.endpoint;
+        let mut chunk = vec![0; CHUNK_SIZE];
+        for _ in 0..DRAIN_MAX_CHUNKS {
+            match self.handle.read_interrupt(endpoint, &mut chunk, DRAIN_TIMEOUT) {
+                // A stale chunk; keep draining.
+                Ok(_) => {}
+                // Nothing more queued -- a clean finish.
+                Err(rusb::Error::Timeout) => break,
+                // A real USB error (e.g. the device was unplugged): surface it
+                // rather than handing back a half-broken transport.
+                Err(e) => return Err(e.into()),
+            }
+        }
+        Ok(())
     }
 }
 
@@ -140,17 +199,18 @@ impl WebUsbTransport {
         let handle = dev.open()?;
         handle.claim_interface(interface)?;
 
-        Ok(Box::new(WebUsbTransport {
-            protocol: ProtocolV1 {
-                link: WebUsbLink {
-                    handle,
-                    endpoint: match device.debug {
-                        false => constants::ENDPOINT,
-                        true => constants::ENDPOINT_DEBUG,
-                    },
-                },
+        let mut link = WebUsbLink {
+            handle,
+            endpoint: match device.debug {
+                false => constants::ENDPOINT,
+                true => constants::ENDPOINT_DEBUG,
             },
-        }))
+        };
+        // Drain any chunks already queued on the IN endpoint after claiming
+        // the interface, so the first exchange starts from a clean state.
+        link.drain()?;
+
+        Ok(Box::new(WebUsbTransport { protocol: ProtocolV1 { link } }))
     }
 }
 
