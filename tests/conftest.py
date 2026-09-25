@@ -435,7 +435,6 @@ def _prepared_test_ctx(
         request.session.shouldstop = msg
         pytest.fail(msg)
 
-    # Use DebugLink to wipe (since THP channel requires unlocked device)
     _raw_test_ctx.wipe_device()
 
     # Make sure there are no GC leaks from previous tests

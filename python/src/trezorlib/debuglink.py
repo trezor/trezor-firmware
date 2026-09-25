@@ -1757,13 +1757,10 @@ class TrezorTestContext:
         """
         if reseed and self.is_emulator:
             self.debug.reseed(0)
-        if not self.debug.has_wipe:
-            self.client._get_any_session().call(
-                messages.WipeDevice(),
-                expect=messages.Success,
-            )
-        else:
-            self.debug._call(messages.WipeDevice(), expect=messages.Success)
+        self.client._get_any_session().call(
+            messages.WipeDevice(),
+            expect=messages.Success,
+        )
         self.reset_instance()
 
     def restart_event_loop(self) -> None:
