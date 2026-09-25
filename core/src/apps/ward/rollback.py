@@ -130,7 +130,7 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
         # this back must be THIS demotion and not merely one at the same number -- a different
         # root there is a different state than the one the user was shown.
         sync_round.authorise_demotion(
-            wm_counter, wm_root, new_counter, root_or_empty(recovered_root)
+            stored_counter, wm_counter, wm_root, new_counter, root_or_empty(recovered_root)
         )
 
     ward_id = await derive_ward_id()

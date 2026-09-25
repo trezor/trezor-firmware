@@ -4311,3 +4311,84 @@ def test_ward_enrolment_draws_a_live_nonce(session: Session):
         _T0 + res.counter,
     )
     assert wm.head(ack.ward_id)[:2] == (res.counter, store.root())
+
+
+@pytest.mark.models("core")
+def test_ward_demotion_consent_does_not_survive_an_unrelated_adoption(session: Session):
+    """CONSENT IS FOR A DESCENT FROM A PARTICULAR HEAD, not for a destination in the abstract.
+
+    The hold screen counts what is being discarded from the device's own head -- "currently at
+    #N, restoring at #M, discarding K changes" -- so approving it answers a question about K.
+    Let the device move on to #N+j while the authorisation sits unspent and the very same
+    endpoints mean discarding K+j changes; re-using the consent there would be answering a
+    question nobody was asked.
+
+    WHAT REACHES IT. The exemption is what lets an approved demotion past the anti-rollback
+    floor, so it is the floor that has to stop being waived once the device has moved. The WM's
+    head nonce independently stops a demotion being PUBLISHED after the WM regressed -- the
+    authorisation quotes a nonce the regressed register no longer holds -- so this is the
+    device's own half of the rule, asserted where it lives rather than through a WM that would
+    refuse the step first for a different reason.
+
+    Two mechanisms back it: `adopt` spends a pending authorisation on every adoption, and the
+    record pins the head it was approved at. The first is the rule; the second is what keeps it
+    if a future head-moving path ever forgets.
+    """
+    store = WardTrie()
+    key_a = _seed(session, store, b"a", b"one")
+    wm = _wm_for(store)
+    _attest(session, wm, store)
+    wm_counter, wm_root = store.counter, store.root()
+
+    # The user approves coming back to a tree the host can still serve.
+    serviceable = _subset(store, [key_a])
+    ack, _rec = _rollback(session, wm, store, serviceable.root())
+    assert ack.counter == wm_counter + 1
+
+    # THE HOST NEVER PUBLISHES IT. Instead it carries the device forward with ordinary writes,
+    # which is entirely unprivileged. Two of them, so the approved destination ends up strictly
+    # below the floor and it is the floor -- not the one-step reconcile rule -- being tested.
+    for name, value in ((b"b", b"two"), (b"c", b"three")):
+        res, _rec = _write(
+            session,
+            store,
+            lambda p, n=name, v=value: ward.set_entry(session, _APP, n, v, p),
+            "ward_set_entry",
+        )
+        ward.apply(store, res)
+        _publish(wm, res, store)
+        _attest(session, wm, store)
+    assert store.counter > ack.counter
+
+    # NOW the approved transition is offered, attested by the genuine WM. Its endpoints are
+    # exactly the ones the user held to confirm; the head they confirmed FROM is two adoptions
+    # in the past, so the exemption is gone and the floor refuses it. A fresh hold is the only
+    # way down.
+    ack_sync = ward.sync(session)
+    consumed = wm.head_nonce(ack_sync.ward_id)
+    minted = bytes([0x6D]) * 32
+    sig = wm.sign(
+        ack_sync.ward_id,
+        ack_sync.nonce,
+        wm_counter,
+        wm_root,
+        consumed,
+        ack.counter,
+        ack.new_root,
+        minted,
+        _T0 + ack.counter,
+    )
+    with pytest.raises(
+        exceptions.TrezorFailure, match="older than the stored counter"
+    ):
+        ward.ingest_attestation(
+            session,
+            wm_counter,
+            wm_root,
+            ack.counter,
+            ack.new_root,
+            sig,
+            consumed,
+            minted,
+            _T0 + ack.counter,
+        )

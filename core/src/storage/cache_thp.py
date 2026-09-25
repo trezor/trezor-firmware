@@ -56,7 +56,7 @@ class SessionThpCache(DataCache):
                 0,  # APP_MONERO_LIVE_REFRESH
                 105,  # APP_WARD_SYNC
                 1,  # APP_WARD_ONLINE
-                73,  # APP_WARD_DEMOTION
+                77,  # APP_WARD_DEMOTION
                 69,  # APP_WARD_WM_HEAD
             )
         super().__init__()
