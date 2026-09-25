@@ -1,7 +1,12 @@
 cargo-features = ["panic-immediate-abort"]
 
 [workspace]
-members = ["ethereum", "tron"]
+members = [
+    "tron",
+    # "ethereum" — disabled until ported to modui (it still uses the old
+    # `ui` runtime). Builds standalone meanwhile: it has its own Cargo.lock,
+    # so `cd sdk/apps/ethereum && cargo <cmd>` still works.
+]
 
 resolver = "2"
 
