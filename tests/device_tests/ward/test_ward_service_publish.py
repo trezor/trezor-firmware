@@ -24,9 +24,10 @@ owns the replica and gets the attestation in the same exchange -- so "did my cha
 answer the device computed rather than one it was told.
 
 AND IT IS STRICTLY STRONGER THAN RECONCILE, which is the part worth testing carefully. Reconcile
-adopts any root that reproduces an attested mac. Here the device minted the mac itself before
-anybody else saw the transition, and requires the attestation to name that exact counter and that
-exact mac -- so the tests below spend most of their effort on what happens when it does not.
+folds a transition the WM named, so the device checks someone else's description of a step it did
+not take. Here the device BUILT the step and rebuilds the attestation preimage from its own
+operands, so a WM answering with some other head is signing bytes this device never asks about --
+and the tests below spend most of their effort on what happens when it does.
 """
 
 import pytest

@@ -12,10 +12,11 @@ _MAX_LINKS_PER_ACK = 128
 async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     """Adopt the attested head by proving this device's head is an ANCESTOR of it.
 
-    Runs after WardIngestAttestation, in place of WardReconcile. Where reconcile takes the new
-    head on the WM's word plus a mac, this additionally establishes that every step between here
-    and there was authorised by a device of this wallet and that none was skipped -- which is what
-    a device needs after another device wrote while it was away.
+    Runs after WardIngestAttestation, in place of WardReconcile. Reconcile folds the ONE step the
+    WM attested and so can only move the head by one; this establishes that every step between
+    here and there was authorised by a device of this wallet and that none was skipped -- which is
+    what a device needs after another device wrote while it was away, and the only route that can
+    cross a gap at all.
 
     THE WALK RUNS BACKWARDS, AND THAT IS THE SECURITY CONTENT, not an implementation choice.
 

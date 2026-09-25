@@ -70,11 +70,17 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     # establishes state. `verify_chain` proves descent; this route cannot, so it is now confined
     # to the distance over which there is nothing to prove.
     #
-    # BATCHING IS UNAFFECTED, which is worth saying because the old comment here claimed the
-    # opposite. Ten writes followed by one sync round still work -- the host publishes each
-    # transition as it is made, so the WM advances one step per write and the device adopts the
-    # final one from the head immediately before it. What is refused is adopting a head the
-    # device never had a predecessor for, which is a gap in the history rather than a batch.
+    # BATCHING WM CONFIRMATIONS IS NOT FREE, and never was -- an earlier comment here said it was
+    # and a later one of mine repeated the mistake in the other direction, so it is worth being
+    # exact. A write derives its counter as `get_counter() + 1` from the STORED head, which only
+    # an adoption moves. So N writes with no adoption between them all claim the same counter over
+    # different roots: competing forks, of which the host can publish exactly one. "Ten writes
+    # then one sync round" was never a shape this produces.
+    #
+    # What a host actually does is adopt after each write, which this route serves -- that is the
+    # one-step case. A device that has genuinely fallen behind, because ANOTHER device wrote while
+    # it was away, needs `verify_chain`; there is no shortcut here for it and there should not be,
+    # since the intervening steps are exactly what has not been proved.
     stored_counter = await get_counter()
     stored_root = await get_root()
 
