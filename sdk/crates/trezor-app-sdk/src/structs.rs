@@ -214,7 +214,7 @@ where
     }
 }
 
-/// A menu of selectable string items, shown via [`crate::ui::select_menu`].
+/// A menu of selectable string items, sent as [`TrezorUiEnum::SelectMenu`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct SelectMenu<'a> {
     pub items: Slice<'a, StrSlice<'a>>,
@@ -239,7 +239,7 @@ impl<'a> SelectMenu<'a> {
     }
 }
 
-/// A trade confirmation screen, shown via [`crate::ui::confirm_trade`].
+/// A trade confirmation screen, sent as [`TrezorUiEnum::ConfirmTrade`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmTrade<'a> {
     pub title: StrSlice<'a>,
@@ -273,7 +273,7 @@ impl<'a> ConfirmTrade<'a> {
     }
 }
 
-/// An action confirmation screen, shown via [`crate::ui::confirm_action`].
+/// An action confirmation screen, sent as [`TrezorUiEnum::ConfirmAction`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmAction<'a> {
     pub title: StrSlice<'a>,
@@ -316,7 +316,7 @@ impl<'a> ConfirmAction<'a> {
     }
 }
 
-/// A transaction summary confirmation screen, shown via [`crate::ui::confirm_summary`].
+/// A transaction summary confirmation screen, sent as [`TrezorUiEnum::ConfirmSummary`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmSummary<'a> {
     pub title: StrSlice<'a>,
@@ -368,7 +368,7 @@ impl<'a> ConfirmSummary<'a> {
     }
 }
 
-/// A value confirmation screen, shown via [`crate::ui::confirm_value`].
+/// A value confirmation screen, sent as [`TrezorUiEnum::ConfirmValue`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmValue<'a> {
     pub title: StrSlice<'a>,
@@ -426,7 +426,8 @@ impl<'a> ConfirmValue<'a> {
     }
 }
 
-/// An intro screen shown before [`ConfirmValue`], via [`crate::ui::confirm_value_intro`].
+/// An intro screen shown before [`ConfirmValue`], sent as
+/// [`TrezorUiEnum::ConfirmValueIntro`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmValueIntro<'a> {
     pub title: StrSlice<'a>,
@@ -469,7 +470,7 @@ impl<'a> ConfirmValueIntro<'a> {
     }
 }
 
-/// A warning screen, shown via [`crate::ui::show_warning`].
+/// A warning screen, sent as [`TrezorUiEnum::ShowWarning`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowWarning<'a> {
     pub title: StrSlice<'a>,
@@ -503,7 +504,7 @@ impl<'a> ShowWarning<'a> {
     }
 }
 
-/// A mismatch warning screen, shown via [`crate::ui::show_mismatch`].
+/// A mismatch warning screen, sent as [`TrezorUiEnum::ShowMismatch`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowMismatch<'a> {
     pub title: StrSlice<'a>,
@@ -519,7 +520,7 @@ impl<'a> ShowMismatch<'a> {
     }
 }
 
-/// A danger warning screen, shown via [`crate::ui::show_danger`].
+/// A danger warning screen, sent as [`TrezorUiEnum::ShowDanger`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowDanger<'a> {
     pub title: StrSlice<'a>,
@@ -615,7 +616,7 @@ impl<'a> ShowNotice<'a> {
     }
 }
 
-/// A success screen, shown via [`crate::ui::show_success`].
+/// A success screen, sent as [`TrezorUiEnum::ShowSuccess`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowSuccess<'a> {
     pub title: StrSlice<'a>,
@@ -646,7 +647,7 @@ impl<'a> ShowSuccess<'a> {
     }
 }
 
-/// A number-entry screen, shown via [`crate::ui::request_number`].
+/// A number-entry screen, sent as [`TrezorUiEnum::RequestNumber`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct RequestNumber<'a> {
     pub title: StrSlice<'a>,
@@ -677,7 +678,8 @@ impl<'a> RequestNumber<'a> {
     }
 }
 
-/// A property-list confirmation screen, shown via [`crate::ui::confirm_properties`].
+/// A property-list confirmation screen, sent as
+/// [`TrezorUiEnum::ConfirmProperties`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmProperties<'a> {
     pub title: StrSlice<'a>,
@@ -711,7 +713,8 @@ impl<'a> ConfirmProperties<'a> {
     }
 }
 
-/// A property-list display screen (no confirmation), shown via [`crate::ui::show_properties`].
+/// A property-list display screen (no confirmation), sent as
+/// [`TrezorUiEnum::ShowProperties`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowProperties<'a> {
     pub title: StrSlice<'a>,
@@ -739,7 +742,7 @@ impl<'a> ShowProperties<'a> {
     }
 }
 
-/// A public key display screen, shown via [`crate::ui::show_public_key`].
+/// A public key display screen, sent as [`TrezorUiEnum::ShowPublicKey`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowPublicKey<'a> {
     pub pubkey: StrSlice<'a>,
@@ -773,7 +776,8 @@ impl<'a> ShowPublicKey<'a> {
     }
 }
 
-/// An info screen with a cancel option, shown via [`crate::ui::show_info_with_cancel`].
+/// An info screen with a cancel option, sent as
+/// [`TrezorUiEnum::ShowInfoWithCancel`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowInfoWithCancel<'a> {
     pub title: StrSlice<'a>,
@@ -800,7 +804,8 @@ impl<'a> ShowInfoWithCancel<'a> {
         }
     }
 }
-/// A confirmation screen with an extra info button, shown via [`crate::ui::confirm_with_info`].
+/// A confirmation screen with an extra info button, sent as
+/// [`TrezorUiEnum::ConfirmWithInfo`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmWithInfo<'a> {
     pub title: StrSlice<'a>,
@@ -834,7 +839,7 @@ impl ConfirmWithInfo<'_> {
     }
 }
 
-/// An address display screen, shown via [`crate::ui::show_address`].
+/// An address display screen, sent as [`TrezorUiEnum::ShowAddress`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowAddress<'a> {
     pub address: StrSlice<'a>,

@@ -14,7 +14,7 @@ use rkyv::{
     Archived,
 };
 #[cfg(feature = "app_loading")]
-use trezor_app_sdk::ui::{
+use trezor_app_sdk::structs::{
     Property, Severity as WireSeverity, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum,
     UiReply,
 };

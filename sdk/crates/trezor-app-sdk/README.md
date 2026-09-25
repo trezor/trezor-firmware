@@ -53,7 +53,8 @@ sdk::global_logger!(AppLogger);
 ### 3. Write Your App
 
 ```rust
-use trezor_app_sdk::{self as sdk, ui, info, error};
+use trezor_app_sdk::{self as sdk, info, error};
+use trezor_app_sdk::modui::{Commitment, confirm, notice};
 
 #[no_mangle]
 pub extern "C" fn applet_main(api_getter: sdk::TrezorApiGetter) -> i32 {
@@ -64,13 +65,18 @@ pub extern "C" fn applet_main(api_getter: sdk::TrezorApiGetter) -> i32 {
 
     info!("App started");
 
-    // Use UI functions
-    match ui::confirm_value("Title", "Confirm?") {
-        Ok(true) => {
+    // Use UI blocks
+    let params = confirm::Action::new(
+        "Title", "Confirm?", None, None, Commitment::Step, "app/confirm", &[],
+    );
+    match confirm::action(params) {
+        Ok(reply) if reply.is_confirmed() => {
             info!("Confirmed");
-            ui::show_success("Success", "Done!")?;
+            let _ = notice::show(notice::Notice::new(
+                notice::Severity::Success, "Success", "Done!", "app/done", &[], false,
+            ));
         }
-        Ok(false) => info!("Cancelled"),
+        Ok(_) => info!("Cancelled"),
         Err(e) => {
             error!("Error: {:?}", e);
             return e.to_c_int();
@@ -142,8 +148,8 @@ use trezor_ui_api::confirm_value;
 
 **After:**
 ```rust
-use trezor_app_sdk::{self as sdk, ui, error, info};
-// Use: sdk::init(), ui::confirm_value(), error!(), info!()
+use trezor_app_sdk::{self as sdk, modui, error, info};
+// Use: sdk::init(), modui::confirm::value(), error!(), info!()
 ```
 
 ## Examples
