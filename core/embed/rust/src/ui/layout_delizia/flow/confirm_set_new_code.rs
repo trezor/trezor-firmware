@@ -60,7 +60,7 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, Error> {
             TR::pin__title_settings,
             TR::pin__turn_on,
             TR::pin__cancel_setup,
-            TR::pin__cancel_setup,
+            TR::buttons__cancel,
         )
     };
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
