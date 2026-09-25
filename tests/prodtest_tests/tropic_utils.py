@@ -34,7 +34,9 @@ from trezorlib._internal.emulator import TropicModel
 from trezorlib._internal.prodtest_client import ProdtestClient
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-DEFAULT_TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "firmware_config" / "current.yml"
+DEFAULT_TROPIC_MODEL_CONFIGFILE = (
+    ROOT / "tests" / "tropic_model" / "firmware_config" / "current.yml"
+)
 
 
 class TropicModelState:

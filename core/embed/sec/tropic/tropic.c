@@ -1064,8 +1064,8 @@ static bool tropic_read_fw_slot(uint8_t riscv[4], uint8_t spect[4],
   return true;
 }
 
-// Records that the bundled versions are written to all four banks. Call only
-// after a complete update.
+// Records that the bundled versions are written. Call only after a complete
+// update.
 bool tropic_write_fw_slot(void) {
   if (!tropic_session_start()) {
     return false;
@@ -1098,8 +1098,6 @@ static bool tropic_cleanup_update_config(void) {
     return false;
   }
 
-  // XXX: tady se vrátí Maintenance bit
-  // XXX: ty CFG sloty taky
   tropic_expected_config_t expected_config = {0};
   if (!get_expected_tropic_config(&expected_config)) {
     return false;
@@ -1128,10 +1126,7 @@ static bool tropic_cleanup_update_config(void) {
   return true;
 }
 
-// XXX: Tohle je ta funkce, co se volá v obou případech
-// XXX: Tedy `udělej update` + `vypni ukazatele`
 static bool tropic_finish_update(void) {
-  // XXX: úvodní kontrola
   tropic_driver_t *drv = &g_tropic_driver;
   if (!drv->initialized) {
     return false;
@@ -1139,7 +1134,6 @@ static bool tropic_finish_update(void) {
 
   lt_ret_t ret = LT_FAIL;
 
-  // XXX: tohle je to podstatné
   for (int i = 0; i < TROPIC_FW_UPDATE_MAX_ATTEMPTS; i++) {
     ret = tropic_flash_bundled_fw();
     if (ret == LT_OK) {
@@ -1167,15 +1161,12 @@ static bool tropic_finish_update(void) {
     return false;
   }
 
-  // XXX: tady se nastaví ty ukazatele
-  // XXX: Maintenance bit + cfg sloty
   // Reset the configuration. This includes the Maintenance bit and the
   // slots
   if (!tropic_cleanup_update_config()) {
     return false;
   }
 
-  // XXX: Troic FW version slot
   // We record the updated version in the R-memory.
   if (!tropic_write_fw_slot()) {
     return false;
@@ -1194,7 +1185,6 @@ static bool tropic_prepare_update_config(void) {
     return false;
   }
 
-  // XXX: tady se nastaví ten bit
   // Read R-Config and check if Maintenance Mode is enabled.
   // The whole R-Config is read in case we need to modify it in case the bit is
   // OFF
@@ -1208,8 +1198,6 @@ static bool tropic_prepare_update_config(void) {
         BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK)) {
     // The bit is disabled so we enable it
 
-    // XXX: tady se nastaví ty CFG sloty na "in progress"
-    // XXX: prvně najdu, co se má napsat do backupu, a napíšu to tam
     optional_u32_t distribution_version = {0};
     if (!tropic_get_distribution_version(
             TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT, &distribution_version)) {
@@ -1220,7 +1208,6 @@ static bool tropic_prepare_update_config(void) {
         return false;
       }
     }
-    // XXX: CFG version slot se každopádně vymaže
     if (lt_r_mem_data_erase_retry(&g_tropic_driver.handle,
                                   TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT) !=
         LT_OK) {
@@ -1253,10 +1240,8 @@ static tropic_fw_update_state_t tropic_get_update_state(void) {
   if (TROPIC_RETRY_COMMAND(lt_get_tr01_mode(handle, &tr01_mode)) != LT_OK) {
     return TROPIC_FW_UPDATE_ERROR;
   }
-  // if chip_mode == MAINTENANCE:
   if (tr01_mode == LT_TR01_MAINTENANCE) {
     return TROPIC_FW_UPDATE_UNFINISHED;
-    // if chip_mode == ALARM:
   } else if (tr01_mode == LT_TR01_ALARM) {
     return TROPIC_FW_UPDATE_ERROR;
   }
@@ -1270,7 +1255,6 @@ static tropic_fw_update_state_t tropic_get_update_state(void) {
   if (!tropic_read_fw_slot(riscv_fw, spect_fw, &present)) {
     return TROPIC_FW_UPDATE_ERROR;
   }
-  // if slot_fw is None:
   if (!present) {
     uint32_t r_config_cfg_startup = 0;
     if (TROPIC_RETRY_COMMAND(lt_r_config_read(
@@ -1286,7 +1270,6 @@ static tropic_fw_update_state_t tropic_get_update_state(void) {
     }
   }
 
-  // if slot_fw >= BUNDLED_VERSIONS:             # po složkách
   if (fw_version_is_older(riscv_fw, fw_CPU_ver) ||
       fw_version_is_older(spect_fw, fw_SPECT_ver)) {
     return TROPIC_FW_UPDATE_OUTDATED;
@@ -1301,7 +1284,6 @@ static bool tropic_update_possible(void) {
     return false;
   }
 
-  // XXX: zkontroluju, že mám správnou revizi
   lt_chip_id_t chip_id = {0};
   if (TROPIC_RETRY_COMMAND(lt_get_info_chip_id(handle, &chip_id)) != LT_OK) {
     return false;
@@ -1340,7 +1322,6 @@ static bool tropic_update(void) {
   return tropic_finish_update();
 }
 
-// XXX: tohle je ta funkce, co se volá PO UNLOCKU
 secbool tropic_ensure_fw_updated(void) {
   tropic_fw_update_state_t state = tropic_get_update_state();
   if (state == TROPIC_FW_UPDATE_ERROR) {
@@ -1364,10 +1345,7 @@ secbool tropic_ensure_fw_updated(void) {
   return secfalse;
 }
 
-// XXX: talhe funkce se volá v rámci bootu
-//         => NESMÍ ZAPÍNAT MAINTENENACE BIT! NIKDY!!
-// XXX: tady se zkontroluje ten 3-ukazatel a kdyžtak se zavolá
-// tropic_finish_update
+// Runs at boot. It must never enable the Maintenance bit.
 secbool tropic_check_and_restore_fw_update_in_progress(void) {
   tropic_fw_update_state_t state = tropic_get_update_state();
   if (state == TROPIC_FW_UPDATE_ERROR) {
