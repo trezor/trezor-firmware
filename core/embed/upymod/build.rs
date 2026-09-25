@@ -1205,7 +1205,7 @@ impl<'a> MpyBuilder<'a> {
         }
 
         if cfg!(feature = "app_loading") {
-            files.add(src, "apps/trezorapp/*.py")?;
+            files.add(src, "apps/extapp/*.py")?;
         }
 
         if cfg!(feature = "universal_fw") {
