@@ -1187,22 +1187,22 @@ static secbool tropic_finish_update(void) {
     return secfalse;
   }
 
-  if (ret == LT_OK) {
-    // XXX: tady se nastaví ty ukazatele
-    // XXX: Maintenance bit + cfg sloty
-    // Reset the configuration. This includes the Maintenance bit and the
-    // slots
-    if (sectrue != tropic_cleanup_update_config()) {
-      return secfalse;
-    }
-
-    // XXX: Troic FW version slot
-    // We record the updated version in the R-memory.
-    tropic_write_fw_slot();
-    return sectrue;
+  if (ret != LT_OK) {
+    return secfalse;
   }
 
-  return secfalse;
+  // XXX: tady se nastaví ty ukazatele
+  // XXX: Maintenance bit + cfg sloty
+  // Reset the configuration. This includes the Maintenance bit and the
+  // slots
+  if (sectrue != tropic_cleanup_update_config()) {
+    return secfalse;
+  }
+
+  // XXX: Troic FW version slot
+  // We record the updated version in the R-memory.
+  tropic_write_fw_slot();
+  return sectrue;
 }
 
 // Check if the Maintenance bit is enabled. Enable it if possible.
