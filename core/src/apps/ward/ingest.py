@@ -39,14 +39,22 @@ async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
     # bound left on a WM that lies: it can now name a root this wallet never held, so the floor is
     # what stops it naming an OLD one and freezing the device there.
     #
-    # THE ONE EXEMPTION IS A DEMOTION THE USER APPROVED, and it is exact: `rollback` records the
-    # whole transition it minted a REVERT for, and only that transition passes. A demotion is the
-    # one operation whose purpose is to come down, so the floor cannot be what decides it -- but
-    # nothing else may inherit the exemption, which is why this compares the STEP rather than the
-    # counter. An attestation landing on the approved counter with a different root is a
-    # different state than the user was shown, and is refused here like any other rollback.
-    step = (from_counter, from_root, counter, root)
-    if counter < await get_counter() and step != sync_round.authorised_demotion():
+    # THE ONE EXEMPTION IS A DEMOTION THE USER APPROVED, and it is exact twice over: `rollback`
+    # records the whole transition it minted a REVERT for AND the head the device stood on when
+    # the user held to confirm, and only that pair passes. A demotion is the one operation whose
+    # purpose is to come down, so the floor cannot be what decides it -- but nothing else may
+    # inherit the exemption.
+    #
+    # WHY THE STEP ALONE IS NOT ENOUGH. The screen counts the discarded changes from the device's
+    # own head, so consent is about a descent FROM that head. An authorisation left alive while
+    # the device moved on would exempt the same endpoints from a floor that had risen, and the
+    # user would get a descent discarding more changes than the one they approved. `adopt` spends
+    # the authorisation on every adoption for the same reason; this is the half that does not
+    # depend on remembering to.
+    stored = await get_counter()
+    if counter < stored and not sync_round.demotion_matches(
+        stored, from_counter, from_root, counter, root
+    ):
         raise DataError("attested counter is older than the stored counter")
 
     sync_round.set_attested(from_counter, from_root, counter, root)

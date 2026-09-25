@@ -315,21 +315,40 @@ def require_head_nonce() -> bytes:
 # head that is not one step from where the device stands. Both are right, and both would refuse a
 # demotion -- the whole point of which is to come down. This is the one value that lets them.
 #
-# Layout: flag(1B) || from_counter(4B BE) || from_root(32B) || to_counter(4B BE) || to_root(32B).
-# Roots are kept in PREIMAGE form, the form an attestation carries, so the comparison is a plain
-# equality rather than a normalisation each caller could get wrong.
+# AND THE HEAD THE USER WAS STANDING ON WHEN THEY APPROVED IT. The screen says "Currently at
+# change #N, restoring at #M, discarding K changes" -- every one of those numbers is derived from
+# the device's stored counter at that moment, so the consent is about a DESCENT FROM N and not
+# about the destination in isolation. If the device moves on to N+23 while the authorisation
+# sits unspent, the same endpoints now mean discarding 23 more changes than the user was shown,
+# and re-using the consent would be answering a question nobody was asked.
+#
+# TWO MECHANISMS, DELIBERATELY. `adopt` spends the authorisation on EVERY successful adoption, so
+# an unrelated head change invalidates it; and the approval records the head it was given at, so
+# the exemption is refused even if some future path moves the head without going through `adopt`.
+# The first is the rule; the second is what stops the rule being quietly lost later, and it costs
+# four bytes.
+#
+# Layout: flag(1B) || stored_counter(4B BE) || from_counter(4B BE) || from_root(32B)
+#         || to_counter(4B BE) || to_root(32B). Roots are kept in PREIMAGE form, the form an
+# attestation carries, so the comparison is a plain equality rather than a normalisation each
+# caller could get wrong.
 
 
 def authorise_demotion(
-    from_counter: int, from_root: bytes, to_counter: int, to_root: bytes
+    stored_counter: int,
+    from_counter: int,
+    from_root: bytes,
+    to_counter: int,
+    to_root: bytes,
 ) -> None:
-    """Record the exact transition the user approved."""
+    """Record the exact transition the user approved, and the head they approved it from."""
     from storage.cache_common import APP_WARD_DEMOTION
     from trezor.wire import context
 
     context.cache_set(
         APP_WARD_DEMOTION,
         b"\x01"
+        + stored_counter.to_bytes(4, "big")
         + from_counter.to_bytes(4, "big")
         + from_root
         + to_counter.to_bytes(4, "big")
@@ -337,25 +356,44 @@ def authorise_demotion(
     )
 
 
-def authorised_demotion() -> "tuple[int, bytes, int, bytes] | None":
-    """The transition a demotion was approved for, or None. Absent is the safe answer."""
+def demotion_matches(
+    stored_counter: int,
+    from_counter: int,
+    from_root: bytes,
+    to_counter: int,
+    to_root: bytes,
+) -> bool:
+    """Is this exactly the demotion the user approved, from the head they approved it at?
+
+    ONE PREDICATE, so no caller can check the transition and forget the head. The two halves
+    answer different questions -- "is this the state they consented to" and "is this still the
+    situation they consented in" -- and a caller that asked only the first would accept a descent
+    whose cost had changed since the hold.
+    """
     from storage.cache_common import APP_WARD_DEMOTION
     from trezor.wire import context
 
     raw = context.cache_get(APP_WARD_DEMOTION)
     if not raw or raw[0] != 1:
-        return None
-    return (
-        int.from_bytes(raw[1:5], "big"),
-        raw[5:37],
-        int.from_bytes(raw[37:41], "big"),
-        raw[41:73],
+        return False
+    return raw[1:] == (
+        stored_counter.to_bytes(4, "big")
+        + from_counter.to_bytes(4, "big")
+        + from_root
+        + to_counter.to_bytes(4, "big")
+        + to_root
     )
 
 
 def clear_demotion() -> None:
-    """Spend it. Called once the demotion is adopted, so one confirmation buys one descent."""
+    """Spend it, or drop it.
+
+    Called when the approved demotion is adopted -- one confirmation buys one descent -- and
+    again by `adopt` on EVERY successful adoption, because any other head landing in between is
+    a change to the situation the user approved in. Clearing an absent authorisation is a no-op,
+    so the two callers do not have to coordinate.
+    """
     from storage.cache_common import APP_WARD_DEMOTION
     from trezor.wire import context
 
-    context.cache_set(APP_WARD_DEMOTION, bytes(73))
+    context.cache_set(APP_WARD_DEMOTION, bytes(77))

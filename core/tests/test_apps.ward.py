@@ -5,6 +5,7 @@ from trezor.wire import DataError
 
 from apps.ward import attest as A
 from apps.ward import cas as CAS
+from apps.ward import round as ROUND
 from apps.ward import leaf as L
 from apps.ward import offline_store as OS
 from apps.ward.attest import EMPTY_ROOT
@@ -1621,6 +1622,77 @@ class TestWardLeafOneofIsStrict(unittest.TestCase):
         self.assertTrue(L.is_delete(empty))
 
         self.assertEqual(L.read_leaf_content(None), None)
+
+
+class TestWardDemotionConsent(TestCaseWithContext):
+    """`round`: how long the user's approval of a descent stays good for.
+
+    THE RECORD IS THE CONSENT, so what it contains is what the consent means. It holds the exact
+    transition the user approved AND the head they approved it from, because the screen they held
+    to confirm counts the discarded changes from that head: "currently at #N, restoring at #M,
+    discarding K changes". Approving it answers a question about K.
+
+    Left alive while the device moved on to #N+j, the same endpoints would mean discarding K+j
+    changes -- and the exemption exists precisely to waive the anti-rollback floor, so it would
+    waive a floor that had risen since. Nobody was asked about that.
+    """
+
+    _FROM = bytes([0x11]) * 32
+    _TO = bytes([0x22]) * 32
+
+    def setUp(self):
+        # A LIVE SESSION, because the authorisation lives in the session cache -- which is the
+        # point of it: a demotion not completed in this session must be confirmed again rather
+        # than inherited. `TestCaseWithContext` installs a context but opens no session, and the
+        # cache raises without one.
+        if utils.USE_THP:
+            from storage import cache_thp
+
+            cache_thp.clear_trezor_cache()
+        else:
+            from storage import cache_codec
+
+            cache_codec.start_session()
+
+    def test_it_matches_only_the_transition_that_was_approved(self):
+        ROUND.authorise_demotion(57, 40, self._FROM, 41, self._TO)
+        self.assertTrue(ROUND.demotion_matches(57, 40, self._FROM, 41, self._TO))
+
+        # a different destination root at the approved counter is a DIFFERENT state
+        self.assertFalse(
+            ROUND.demotion_matches(57, 40, self._FROM, 41, bytes([0x33]) * 32)
+        )
+        # ...and so is a different predecessor
+        self.assertFalse(
+            ROUND.demotion_matches(57, 40, bytes([0x33]) * 32, 41, self._TO)
+        )
+        self.assertFalse(ROUND.demotion_matches(57, 39, self._FROM, 41, self._TO))
+        self.assertFalse(ROUND.demotion_matches(57, 40, self._FROM, 42, self._TO))
+
+    def test_it_stops_matching_once_the_device_has_moved(self):
+        """THE BUG THIS CLOSES, stated as the sequence that reaches it.
+
+        The host declines to publish the approved demotion, carries the device forward with
+        ordinary writes -- entirely unprivileged -- and offers the approved transition later. The
+        endpoints still match. The situation does not.
+        """
+        ROUND.authorise_demotion(57, 40, self._FROM, 41, self._TO)
+        self.assertTrue(ROUND.demotion_matches(57, 40, self._FROM, 41, self._TO))
+
+        for moved_to in (58, 80, 100):
+            self.assertFalse(
+                ROUND.demotion_matches(moved_to, 40, self._FROM, 41, self._TO)
+            )
+
+    def test_one_hold_buys_one_descent(self):
+        ROUND.authorise_demotion(57, 40, self._FROM, 41, self._TO)
+        ROUND.clear_demotion()
+        self.assertFalse(ROUND.demotion_matches(57, 40, self._FROM, 41, self._TO))
+
+    def test_an_absent_authorisation_matches_nothing(self):
+        """Absent is the safe answer, and it is what an unset cache slot reads back as."""
+        self.assertFalse(ROUND.demotion_matches(57, 40, self._FROM, 41, self._TO))
+        self.assertFalse(ROUND.demotion_matches(0, 0, bytes(32), 0, bytes(32)))
 
 
 if __name__ == "__main__":

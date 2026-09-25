@@ -322,4 +322,17 @@ async def adopt(
         )
 
     sync_round.mark_online()
+
+    # ANY ADOPTION SPENDS A PENDING DEMOTION CONSENT, not only the one it was given for.
+    #
+    # The user approves a descent from the head the device was standing on -- the screen counts
+    # the discarded changes from it -- so an unrelated head landing in between changes what that
+    # consent would mean. Left alive, an authorisation given at counter 57 could still exempt its
+    # endpoints from the floor once the device had reached 100, and the user would get a descent
+    # discarding 43 more changes than the one they held to confirm.
+    #
+    # `reconcile` already clears it for the matching demotion; clearing again is a no-op, so this
+    # needs no coordination with it. The record also pins the head it was approved at, which is
+    # what keeps the rule if some future path ever moves the head without coming through here.
+    sync_round.clear_demotion()
     sync_round.clear()
