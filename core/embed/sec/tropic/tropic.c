@@ -1093,48 +1093,48 @@ static bool tropic_erase_fw_slot(void) {
 }
 
 // Reset the configuration and restore the CFG version slots
-static secbool tropic_cleanup_update_config(void) {
+static bool tropic_cleanup_update_config(void) {
   if (!tropic_session_start()) {
-    return secfalse;
+    return false;
   }
 
   // XXX: tady se vrátí Maintenance bit
   // XXX: ty CFG sloty taky
   tropic_expected_config_t expected_config = {0};
   if (!get_expected_tropic_config(&expected_config)) {
-    return secfalse;
+    return false;
   }
 
   optional_u32_t backup_distribution_version = {0};
   if (!tropic_get_distribution_version(
           TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
           &backup_distribution_version)) {
-    return secfalse;
+    return false;
   }
   if (backup_distribution_version.has_value &&
       backup_distribution_version.value >
           expected_config.distribution_version) {
     if (!tropic_get_expected_tropic_config_from_distribution_version(
             backup_distribution_version.value, &expected_config)) {
-      return secfalse;
+      return false;
     }
   }
 
   if (set_expected_config(&expected_config, TROPIC_R_CONFIG_WRITE_ALWAYS) !=
       sectrue) {
-    return secfalse;
+    return false;
   }
 
-  return sectrue;
+  return true;
 }
 
 // XXX: Tohle je ta funkce, co se volá v obou případech
 // XXX: Tedy `udělej update` + `vypni ukazatele`
-static secbool tropic_finish_update(void) {
+static bool tropic_finish_update(void) {
   // XXX: úvodní kontrola
   tropic_driver_t *drv = &g_tropic_driver;
   if (!drv->initialized) {
-    return secfalse;
+    return false;
   }
 
   lt_ret_t ret = LT_FAIL;
@@ -1149,14 +1149,14 @@ static secbool tropic_finish_update(void) {
     // Maintenance forbidden, the FW is untouched.
     if (ret == LT_L2_RESP_DISABLED) {
       // Maintenance mode is disabled. We cannot update the FW -> RSOD
-      return secfalse;
+      return false;
     }
 
     // We restart the chip and try again.
     tropic_deinit();
     systick_delay_ms(TROPIC_RESTART_DELAY_MS);
     if (tropic_init(NULL) != LT_OK) {
-      return secfalse;
+      return false;
     }
   }
 
@@ -1164,34 +1164,34 @@ static secbool tropic_finish_update(void) {
   tropic_session_forget();
 
   if (ret != LT_OK) {
-    return secfalse;
+    return false;
   }
 
   // XXX: tady se nastaví ty ukazatele
   // XXX: Maintenance bit + cfg sloty
   // Reset the configuration. This includes the Maintenance bit and the
   // slots
-  if (sectrue != tropic_cleanup_update_config()) {
-    return secfalse;
+  if (!tropic_cleanup_update_config()) {
+    return false;
   }
 
   // XXX: Troic FW version slot
   // We record the updated version in the R-memory.
   if (!tropic_write_fw_slot()) {
-    return secfalse;
+    return false;
   }
-  return sectrue;
+  return true;
 }
 
 // Check if the Maintenance bit is enabled. Enable it if possible.
-static secbool tropic_prepare_update_config(void) {
+static bool tropic_prepare_update_config(void) {
   lt_handle_t *handle = tropic_get_handle();
   if (handle == NULL) {
-    return secfalse;
+    return false;
   }
 
   if (!tropic_session_start()) {
-    return secfalse;
+    return false;
   }
 
   // XXX: tady se nastaví ten bit
@@ -1200,7 +1200,7 @@ static secbool tropic_prepare_update_config(void) {
   // OFF
   lt_config_t r_config = {0};
   if (lt_read_whole_R_config_retry(handle, &r_config) != LT_OK) {
-    return secfalse;
+    return false;
   }
 
   // Check if Maintenance Mode is enabled in R-Config[CFG_START_UP]
@@ -1213,18 +1213,18 @@ static secbool tropic_prepare_update_config(void) {
     optional_u32_t distribution_version = {0};
     if (!tropic_get_distribution_version(
             TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT, &distribution_version)) {
-      return secfalse;
+      return false;
     }
     if (distribution_version.has_value) {
       if (!set_backup_distribution_version_to(distribution_version.value)) {
-        return secfalse;
+        return false;
       }
     }
     // XXX: CFG version slot se každopádně vymaže
     if (lt_r_mem_data_erase_retry(&g_tropic_driver.handle,
                                   TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT) !=
         LT_OK) {
-      return secfalse;
+      return false;
     }
 
     // Flip the MAINTENANCE_ENA bit
@@ -1233,18 +1233,18 @@ static secbool tropic_prepare_update_config(void) {
 
     // Modify the R-config
     if (lt_erase_and_write_R_config_retry(handle, &r_config) != LT_OK) {
-      return secfalse;
+      return false;
     }
 
     // Reboot tropic to apply R-Config changes
     if (TROPIC_RETRY_COMMAND(lt_reboot(handle, TR01_REBOOT)) != LT_OK) {
-      return secfalse;
+      return false;
     }
     // The reboot forgot the session data on the chip. We need to do it as well.
     tropic_session_forget();
   }
   // the bit is ON
-  return sectrue;
+  return true;
 }
 
 static tropic_fw_update_state_t tropic_get_update_state(void) {
@@ -1295,51 +1295,47 @@ static tropic_fw_update_state_t tropic_get_update_state(void) {
   }
 }
 
-static secbool tropic_update_possible(bool *possible) {
-  *possible = false;
+static bool tropic_update_possible(void) {
   lt_handle_t *handle = tropic_get_handle();
   if (handle == NULL) {
-    return secfalse;
+    return false;
   }
 
   // XXX: zkontroluju, že mám správnou revizi
   lt_chip_id_t chip_id = {0};
   if (TROPIC_RETRY_COMMAND(lt_get_info_chip_id(handle, &chip_id)) != LT_OK) {
-    return secfalse;
+    return false;
   }
   if (!tropic_silicon_revision_matches(&chip_id)) {
-    *possible = false;
-    return sectrue;
+    return false;
   }
 
   lt_tr01_mode_t tr01_mode = LT_TR01_ALARM;
   if (TROPIC_RETRY_COMMAND(lt_get_tr01_mode(handle, &tr01_mode)) != LT_OK) {
-    return secfalse;
+    return false;
   }
   if (tr01_mode == LT_TR01_MAINTENANCE) {
-    *possible = true;
-    return sectrue;
+    return true;
   }
 
   if (!tropic_session_start()) {
-    return secfalse;
+    return false;
   }
   uint32_t i_config_cfg_startup = 0;
   if (TROPIC_RETRY_COMMAND(lt_i_config_read(handle, TR01_CFG_START_UP_ADDR,
                                             &i_config_cfg_startup)) != LT_OK) {
-    return secfalse;
+    return false;
   }
-  *possible = (i_config_cfg_startup &
-               BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0;
-  return sectrue;
+  return (i_config_cfg_startup &
+          BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0;
 }
 
-static secbool tropic_update(void) {
+static bool tropic_update(void) {
   if (!tropic_erase_fw_slot()) {
-    return secfalse;
+    return false;
   }
-  if (sectrue != tropic_prepare_update_config()) {
-    return secfalse;
+  if (!tropic_prepare_update_config()) {
+    return false;
   }
   return tropic_finish_update();
 }
@@ -1353,20 +1349,16 @@ secbool tropic_ensure_fw_updated(void) {
   if (state == TROPIC_FW_UPDATE_UP_TO_DATE) {
     return sectrue;
   }
-  bool possible = false;
-  if (sectrue != tropic_update_possible(&possible)) {
-    return secfalse;
-  }
-  if (!possible) {
+  if (!tropic_update_possible()) {
     return secfalse;
   }
 
   if (state == TROPIC_FW_UPDATE_OUTDATED) {
-    return tropic_update();
+    return tropic_update() ? sectrue : secfalse;
   }
 
   if (state == TROPIC_FW_UPDATE_UNFINISHED) {
-    return tropic_finish_update();
+    return tropic_finish_update() ? sectrue : secfalse;
   }
 
   return secfalse;
@@ -1385,15 +1377,11 @@ secbool tropic_check_and_restore_fw_update_in_progress(void) {
   if (state != TROPIC_FW_UPDATE_UNFINISHED) {
     return sectrue;
   }
-  bool possible = false;
-  if (sectrue != tropic_update_possible(&possible)) {
-    return secfalse;
-  }
-  if (!possible) {
+  if (!tropic_update_possible()) {
     return secfalse;
   }
 
-  return tropic_finish_update();
+  return tropic_finish_update() ? sectrue : secfalse;
 }
 
 #ifdef TREZOR_EMULATOR
