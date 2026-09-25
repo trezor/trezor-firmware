@@ -38,7 +38,11 @@ from __future__ import annotations
 import hashlib
 from typing import Optional
 
-__all__ = ["WardTrie", "commit_of", "leaf_hash", "addr_bit"]
+# What a transition DID, recorded because it cannot be recovered -- see `WardTrie.links`.
+OP_COMMIT = "commit"
+OP_REVERT = "revert"
+
+__all__ = ["WardTrie", "commit_of", "leaf_hash", "addr_bit", "OP_COMMIT", "OP_REVERT"]
 
 
 def _sha256(b: bytes) -> bytes:
@@ -129,9 +133,20 @@ class WardTrie:
         # one without the other cannot say which state it holds.
         self.counter = 0
         self.timestamp = 0
-        # Ordered transitions: (from_counter, from_root, to_counter, to_root, auth_commit).
-        # Opaque to the host, which is the point -- it cannot forge a step, and cannot
-        # check one either; only a device of this wallet can.
+        # Ordered transitions:
+        #   (from_counter, from_root, to_counter, to_root, auth_commit, operation).
+        # The first five are opaque to the host, which is the point -- it cannot forge a step,
+        # and cannot check one either; only a device of this wallet can.
+        #
+        # THE OPERATION IS NOT OPAQUE, AND HAS TO BE RECORDED RATHER THAN DERIVED. Whether a link
+        # is a COMMIT or a REVERT is decided by which tag its `auth_commit` was minted under, and
+        # recovering that means computing the MAC both ways under K_auth -- which the host does
+        # not have and must never have. So a host that did not write the operation down when it
+        # created the row can never learn it: the two are indistinguishable in the log, and a
+        # replay that rebuilds a trie by walking history cannot tell "apply this step forward"
+        # from "this step discarded what came before". The device knows which it minted (it chose
+        # the tag) and the host knows which it asked for, so it is free at creation and
+        # unrecoverable afterwards.
         self.links: list = []
         # counter -> the device's `wm_sig` for the transition that REACHED it. A separate map
         # rather than a sixth element on the link, because the two have different audiences: a
@@ -148,11 +163,19 @@ class WardTrie:
         # so nothing keeps one.
 
     def links_ending_at(self, to_counter: int, to_root, limit: int = 64) -> list:
-        """The predecessors of a state, NEWEST FIRST, for the device's backward walk.
+        """The predecessors of a state, walking BACK from it, for the device's backward walk.
 
         A host serving a catch-up answers exactly this question, repeatedly: "the link that ends
         at (counter, root), and then the one that ends where that one began". A real host would
         index `evolu_history` by its `to` end; here the log is short enough to scan.
+
+        THE NEWEST MATCH WINS where several rows end at the same `(counter, root)`, which is why
+        this scans the log in reverse. A counter can be reached TWICE once a demotion exists: the
+        original write got there, and a later REVERT reaches it again carrying an older root. The
+        later one is the live history. Scanning forward -- as this used to, while the docstring
+        claimed otherwise -- returned the ORIGINAL edge, so a catch-up was served the branch the
+        wallet had moved off. `test_ward._link_into` had the same bug and was fixed; this is the
+        real host's copy of it.
 
         NOT A SUGGESTION THE DEVICE MAY IMPROVE ON. It refuses a link ending anywhere but the pair
         it named, so this returning the wrong branch is a refusal rather than a wrong adoption --
@@ -161,8 +184,8 @@ class WardTrie:
         out: list = []
         counter, root = to_counter, to_root
         while len(out) < limit:
-            for link in self.links:
-                fc, fr, tc, tr, _ac = link
+            for link in reversed(self.links):
+                fc, fr, tc, tr = link[0], link[1], link[2], link[3]
                 if tc == counter and (tr or None) == (root or None):
                     out.append(link)
                     counter, root = fc, fr

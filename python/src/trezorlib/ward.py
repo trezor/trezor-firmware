@@ -524,7 +524,11 @@ def verify_chain(
                         to_root=tr,
                         auth_commit=ac,
                     )
-                    for (fc, fr, tc, tr, ac) in links
+                    # `link[:5]` -- the wire carries the transition and its authorisation,
+                    # never the operation. A device derives COMMIT vs REVERT from which tag the
+                    # MAC verifies under; only the HOST needs it written down, because only the
+                    # host cannot compute it. See `WardTrie.links`.
+                    for (fc, fr, tc, tr, ac) in (lnk[:5] for lnk in links)
                 ]
             )
         )
@@ -581,12 +585,28 @@ def rollback(
     )
 
 
-def apply_rollback(store, ack: messages.WardRollbackAck) -> None:
+def apply_rollback(
+    store,
+    ack: messages.WardRollbackAck,
+    from_counter: int,
+    from_root: Optional[bytes],
+) -> None:
     """Roll the caller's store back to match, and record the demotion as a transition.
 
     The store must be able to reproduce the demoted tree, so this only rewinds the
     bookkeeping -- restoring the leaves themselves is the caller's business, since only it
     knows what the earlier tree held.
+
+    THE PREDECESSOR IS AN ARGUMENT, NOT THE STORE'S HEAD, and that distinction is the whole of
+    what a regressed-WM recovery is. The device mints the REVERT over the WM'S head -- the pair
+    it was handed and verified an attestation for -- because that is what the WM will
+    compare-and-swap against. Normally the two agree, since a device only ever adopts what the WM
+    attested, and reading them off the store was right by accident. When the WM's register has
+    regressed they differ, and the link this recorded then named a `from` end the `auth_commit`
+    does not cover: authentic bytes describing a transition that never happened, which every
+    device folding the chain refuses and no host can repair, because repairing it needs K_auth.
+
+    Pass the same `(from_counter, from_root)` given to `rollback`.
 
     THE WM AUTHORISATION IS KEPT, not dropped. A demotion advances the WM's head like any other
     write -- forward one counter, carrying an older root -- so the WM needs `wm_sig` to accept it,
@@ -596,11 +616,14 @@ def apply_rollback(store, ack: messages.WardRollbackAck) -> None:
     """
     store.links.append(
         (
-            store.counter,
-            store.root(),
+            from_counter,
+            from_root,
             ack.counter,
             ack.new_root or None,
             ack.auth_commit,
+            # RECORDED, because it cannot be recovered: telling a REVERT from a COMMIT means
+            # re-deriving the MAC under both tags, which needs K_auth. See `WardTrie.links`.
+            "revert",
         )
     )
     store.wm_sigs[ack.counter] = ack.wm_sig
@@ -700,6 +723,7 @@ def apply(store, result: WardResult) -> None:
                 result.counter,
                 store.root(),
                 result.auth_commit,
+                "commit",
             )
         )
         # AND THE WM'S COPY of the same authorisation, kept beside it because the host is the
