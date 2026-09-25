@@ -1163,7 +1163,7 @@ async def request_definitions(
     return definitions, display_format
 
 
-async def _find_display_format(
+async def find_display_format(
     func_sig: bytes, address_bytes: bytes, msg: MsgInSignTx, nested: bool = False
 ) -> DisplayFormat | None:
     """Find a display format for calling `func_sig` on the `address_bytes`
@@ -1301,7 +1301,7 @@ async def _expand_one_subcall(
         return raw_rows()
 
     try:
-        inner_format = await _find_display_format(func_sig, callee, msg, nested=True)
+        inner_format = await find_display_format(func_sig, callee, msg, nested=True)
         if inner_format is None:
             return raw_rows()
         _, inner_fields = await inner_format.parse_calldata(
@@ -1360,7 +1360,7 @@ async def try_confirm(
 
     func_sig = bytes(data[0:SC_FUNC_SIG_BYTES])
 
-    display_format = await _find_display_format(func_sig, address_bytes, msg)
+    display_format = await find_display_format(func_sig, address_bytes, msg)
     if display_format is None:
         return False
 

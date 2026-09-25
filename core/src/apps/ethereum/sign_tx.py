@@ -139,7 +139,7 @@ async def confirm_tx_data(
     maximum_fee: str,
     fee_items: Sequence[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
-    sender_bytes: AnyBytes,
+    sender_bytes: bytes,
     data_chunk_loader: DataChunkLoader,
 ) -> None:
     """Clear-sign the transaction or confirm calldata chunks."""
@@ -161,7 +161,7 @@ async def confirm_tx_data(
         return await staking_approver
 
     yielding_approver = await yielding.get_approver(
-        msg, initial_data, network, address_bytes, maximum_fee, fee_items, sender_bytes
+        msg, initial_data, defs, address_bytes, maximum_fee, fee_items, sender_bytes
     )
     if yielding_approver is not None:
         if payment_request_verifier is not None:

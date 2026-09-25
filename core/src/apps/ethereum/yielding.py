@@ -2,7 +2,13 @@ from typing import TYPE_CHECKING
 
 from trezor.wire import DataError
 
-from .clear_signing import Array, Atomic, DisplayFormat, parse_address, parse_uint256
+from .clear_signing import (
+    Array,
+    Atomic,
+    DisplayFormat,
+    parse_address,
+    parse_uint256,
+)
 from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
 
 if TYPE_CHECKING:
@@ -11,8 +17,9 @@ if TYPE_CHECKING:
     from typing import Any
 
     from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
-    from trezor.ui.layouts import StrPropertyType
+    from trezorui_api import StrPropertyType
 
+    from .definitions import Definitions
     from .keychain import MsgInSignTx
     from .yielding_vaults import EthereumVaultInfo
 
@@ -167,11 +174,11 @@ def _is_merkl_xyz_claim(
 async def get_approver(
     msg: MsgInSignTx,
     initial_data: AnyBytes,
-    network: EthereumNetworkInfo,
-    address_bytes: AnyBytes,
+    defs: Definitions,
+    address_bytes: bytes,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-    sender_bytes: AnyBytes,
+    sender_bytes: bytes,
 ) -> Coroutine[Any, Any, None] | None:
 
     from .clear_signing import SC_FUNC_SIG_BYTES
@@ -183,45 +190,103 @@ async def get_approver(
     if len(initial_data) < SC_FUNC_SIG_BYTES:
         return None
 
-    vault = lookup_vault(network, address_bytes)
-
     func_sig = bytes(initial_data[:SC_FUNC_SIG_BYTES])
     calldata = memoryview(initial_data)[SC_FUNC_SIG_BYTES:]
 
-    handler = None
     if func_sig == FUNC_SIG_DEPOSIT:
-        vault_tx_config = (DEPOSIT_DISPLAY_FORMAT, vault.asset_token)
+        display_format = DEPOSIT_DISPLAY_FORMAT
     elif func_sig == FUNC_SIG_WITHDRAW:
-        vault_tx_config = (WITHDRAW_DISPLAY_FORMAT, vault.asset_token)
+        display_format = WITHDRAW_DISPLAY_FORMAT
     elif func_sig == FUNC_SIG_REDEEM:
-        vault_tx_config = (REDEEM_DISPLAY_FORMAT, vault.vault_token)
+        display_format = REDEEM_DISPLAY_FORMAT
+    elif _is_merkl_xyz_claim(func_sig, address_bytes, defs.network.chain_id):
+        return await _prepare_merkl_claim(
+            calldata=calldata,
+            msg=msg,
+            network=defs.network,
+            maximum_fee=maximum_fee,
+            fee_items=fee_items,
+            sender_bytes=sender_bytes,
+        )
     else:
-        vault_tx_config = None
+        return None
 
-    if vault_tx_config is not None:
-        display_format, token = vault_tx_config
-        handler = await _prepare_vault_tx(
-            calldata=calldata,
-            display_format=display_format,
-            msg=msg,
-            network=network,
-            maximum_fee=maximum_fee,
-            fee_items=fee_items,
-            sender_bytes=sender_bytes,
-            vault=vault,
-            token=token,
-        )
-    elif _is_merkl_xyz_claim(func_sig, address_bytes, network.chain_id):
-        handler = await _prepare_merkl_claim(
-            calldata=calldata,
-            msg=msg,
-            network=network,
-            maximum_fee=maximum_fee,
-            fee_items=fee_items,
-            sender_bytes=sender_bytes,
-        )
+    vault = lookup_vault(defs.network, address_bytes)
 
-    return handler
+    if func_sig == FUNC_SIG_REDEEM:
+        # redeem() amount is denominated in vault shares
+        token = vault.vault_token
+        if vault is UNKNOWN_VAULT and msg.supports_definition_request:
+            from .clear_signing import request_definitions
+
+            token_defs, _ = await request_definitions(msg.chain_id, address_bytes, None)
+            if token_defs is not None:
+                token = token_defs.get_token(address_bytes)
+    else:
+        # deposit() and withdraw() amounts are denominated in the underlying asset
+        token = await _get_asset_token(msg, defs, vault, address_bytes, func_sig)
+        if token is None:
+            return None
+
+    return await _prepare_vault_tx(
+        calldata=calldata,
+        display_format=display_format,
+        msg=msg,
+        network=defs.network,
+        maximum_fee=maximum_fee,
+        fee_items=fee_items,
+        sender_bytes=sender_bytes,
+        vault=vault,
+        token=token,
+    )
+
+
+async def _get_asset_token(
+    msg: MsgInSignTx,
+    defs: Definitions,
+    vault: EthereumVaultInfo,
+    address_bytes: bytes,
+    func_sig: bytes,
+) -> EthereumTokenInfo | None:
+    """Get the underlying asset token of a vault. For unknown vaults, the asset
+    token address is taken from the vault's external display format.
+
+    Returns `None` if the external display format has unexpected shape."""
+
+    if vault is not UNKNOWN_VAULT:
+        return vault.asset_token
+
+    from .clear_signing import (
+        TokenAmountFormatter,
+        find_display_format,
+        request_definitions,
+    )
+    from .tokens import UNKNOWN_TOKEN
+
+    ext_display_format = await find_display_format(func_sig, address_bytes, msg)
+    if ext_display_format is None:
+        return UNKNOWN_TOKEN
+
+    # The asset amount field is the one with a constant token address.
+    token_addr = None
+    for field in ext_display_format.field_definitions:
+        formatter = field.formatter
+        if (
+            isinstance(formatter, TokenAmountFormatter)
+            and formatter.const_token_address
+        ):
+            token_addr = formatter.const_token_address
+            break
+    if token_addr is None:
+        return None
+
+    # Checks built-in and request-provided token definitions first.
+    token = defs.get_token(token_addr)
+    if token is UNKNOWN_TOKEN and msg.supports_definition_request:
+        token_defs, _ = await request_definitions(msg.chain_id, token_addr, None)
+        if token_defs is not None:
+            token = token_defs.get_token(token_addr)
+    return token
 
 
 async def _prepare_vault_tx(
@@ -231,7 +296,7 @@ async def _prepare_vault_tx(
     network: EthereumNetworkInfo,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-    sender_bytes: AnyBytes,
+    sender_bytes: bytes,
     vault: EthereumVaultInfo,
     token: EthereumTokenInfo,
 ) -> Coroutine[Any, Any, None] | None:
@@ -244,9 +309,12 @@ async def _prepare_vault_tx(
 
     try:
         parameters, _ = await display_format.parse_calldata(calldata, msg, defs)
+
+        # All ERC-4626 vaults use the common file: https://github.com/ethereum/clear-signing-erc7730-registry/blob/master/ercs/calldata-erc4626-vaults.json
         amount = parameters[0]
         receiver_bytes = parameters[1]
         owner_bytes = parameters[2] if len(parameters) > 2 else None
+
         if (
             not isinstance(amount, int)
             or not isinstance(receiver_bytes, bytes)
@@ -258,9 +326,6 @@ async def _prepare_vault_tx(
     except (ValueError, InvalidFunctionCall):
         raise DataError("Invalid data for ERC-4626 vault transaction.")
 
-    if not _is_vault_tx_safe(vault, sender_bytes, receiver_bytes, owner_bytes):
-        return None
-
     # All atomic non-array fields for these 3 calls so this works.
     params_size = len(display_format.parameter_definitions) * 32
     calldata_suffix = calldata[params_size:] if len(calldata) > params_size else None
@@ -270,11 +335,13 @@ async def _prepare_vault_tx(
         address_n=msg.address_n,
         maximum_fee=maximum_fee,
         fee_info_items=fee_items,
-        network=network,
+        network=defs.network,
         vault_str=(vault.name if vault is not UNKNOWN_VAULT else msg.to),
         token=token,
         func_sig=display_format.func_sig,
         extra_data=calldata_suffix,
+        receiver_bytes=receiver_bytes if receiver_bytes != sender_bytes else None,
+        owner_bytes=owner_bytes if owner_bytes != sender_bytes else None,
     )
 
 
@@ -362,24 +429,3 @@ async def _prepare_merkl_claim(
         fee_info_items=fee_items,
         token_labels=token_labels,
     )
-
-
-def _is_vault_tx_safe(
-    vault: EthereumVaultInfo,
-    sender_bytes: AnyBytes,
-    receiver_bytes: AnyBytes,
-    owner_bytes: AnyBytes | None = None,
-) -> bool:
-
-    is_calldata_safe = receiver_bytes == sender_bytes
-    if owner_bytes is not None:
-        # Withdraw/redeem transaction
-        is_calldata_safe = is_calldata_safe and owner_bytes == sender_bytes
-
-    if is_calldata_safe:
-        return True
-    else:
-        # Hard fail for known (Trezor) vaults, blind sign for unknown vaults
-        if vault is not UNKNOWN_VAULT:
-            raise DataError("Vault tx: Signer receiver mismatch")
-        return False
