@@ -16,4 +16,4 @@ if not utils.USE_THP:
         APP_WARD_SYNC = const(8)
         APP_WARD_ONLINE = const(9)
         APP_WARD_DEMOTION = const(10)
-        APP_WARD_HEAD_NONCE = const(11)
+        APP_WARD_WM_HEAD = const(11)

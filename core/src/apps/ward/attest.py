@@ -38,9 +38,9 @@ to decide what a state is. The counter floor bounds it further, refusing anythin
 this device has already accepted.
 
     attestation = b"WARD ATTEST v1" || version(1B) || nonce || ward_id(32B)
-                                    || from_counter(4B BE) || from_root(32B)
-                                    || to_counter(4B BE)   || to_root(32B)
-                                    || head_nonce(32B)     || timestamp(8B BE)
+                                    || from_counter(4B BE) || from_root(32B) || from_head_nonce(32B)
+                                    || to_counter(4B BE)   || to_root(32B)   || to_head_nonce(32B)
+                                    || timestamp(8B BE)
 
 signed Ed25519 under the WM key. The nonce is minted by the device per round and must
 come back inside the signature, so the host cannot stockpile signed anchors and replay
@@ -53,6 +53,25 @@ is quoted FORWARD by the device in the next `cas.wm_sig` -- which is what makes 
 single-use even when a `(counter, root)` pair recurs. See the head-nonce section in `cas`. It is
 in here rather than on the wire beside the signature because a head nonce the host could choose
 would let it aim a genuine device's authorisation at a moment of its own picking.
+
+BOTH ENDS OF THE HEAD NONCE, WHICH NAMES THE OCCURRENCE AND NOT MERELY THE TRANSITION. The
+attested edge is
+
+    (from_counter, from_root, from_head_nonce)  ->  (to_counter, to_root, to_head_nonce)
+
+and `from_head_nonce` is the nonce the WM CONSUMED accepting it. Without it an attestation says
+"some occurrence of this transition landed"; a device that minted its authorisation under a
+particular nonce could not tell that ITS authorisation was the one spent, because a transition
+may genuinely occur more than once -- roots repeat, and a revert re-creates an older pair on
+purpose. With it, the edge is unique for as long as the WM keeps its one obligation, so the
+question has an exact answer.
+
+WHY NOT A SIGNED RECEIPT over the consumed `wm_sig` instead, which looks stronger. Ed25519
+signing is deterministic, so two devices of this wallet producing the same transition produce a
+byte-identical `wm_sig` -- a receipt cannot separate the case it appears to solve. And receipts
+do not CHAIN: naming the consumed nonce makes consecutive attestations link end to end, which is
+what lets a device check the WM's register for continuity at all. See
+`adopt.verify_round_attestation` for the two rules that fall out of it.
 
 THE TIMESTAMP IS CARRIED BUT NO LONGER CHECKED. It is still covered by the signature, so a
 WM cannot alter it, and it stays in the preimage because removing it would be a version bump
@@ -71,7 +90,8 @@ if TYPE_CHECKING:
 _ATTEST_DOMAIN = b"WARD ATTEST v1"
 # 2 when the preimage grew a timestamp; 3 when the 32-byte field stopped being a mac over the
 # root and became the root; 4 when it stopped naming a state and started naming a transition;
-# 5 when the WM's own head nonce joined it.
+# 5 when the WM's own head nonce joined it; 6 when BOTH ends of it did, so the attestation names
+# the transition OCCURRENCE rather than the transition.
 #
 # The v2->v3 bump was the one that mattered most, and it is worth keeping the reason written down:
 # THE LAYOUT DID NOT MOVE. Same offsets, same widths -- so nothing about the bytes would have told
@@ -79,7 +99,7 @@ _ATTEST_DOMAIN = b"WARD ATTEST v1"
 # a mac (or the reverse) fails open, not closed. This bump adds 36 bytes, so a stale signature
 # cannot even parse; the version still moves, because relying on a length accident is how the
 # next change that happens to preserve one gets missed.
-_ATTEST_VERSION = 5
+_ATTEST_VERSION = 6
 
 NONCE_LENGTH = 32
 
@@ -154,12 +174,13 @@ def attestation_preimage(
     nonce: bytes,
     from_counter: int,
     from_root: "bytes | None",
+    from_head_nonce: bytes,
     to_counter: int,
     to_root: "bytes | None",
-    head_nonce: bytes,
+    to_head_nonce: bytes,
     timestamp: int,
 ) -> bytes:
-    """domain || version(1B) || nonce || ward_id || from(4B||32B) || to(4B||32B) || head_nonce || ts.
+    """domain || version || nonce || ward_id || from(4B||32B||32B) || to(4B||32B||32B) || ts.
 
     Fixed widths, per `leaf.leaf_hash_of`: the roots arrive from the host, and adjacent
     variable-length fields are re-splittable if their lengths are not pinned. The WM signature
@@ -169,6 +190,10 @@ def attestation_preimage(
     AN ABSENT ROOT IS THE EMPTY TREE and encodes as `EMPTY_ROOT`, at either end. The empty tree is
     a state a wallet genuinely reaches -- at counter 0, and again whenever it is drained -- so it
     has to be attestable rather than unrepresentable.
+
+    GENESIS CARRIES THE SAME HEAD NONCE AT BOTH ENDS, for the same reason it carries the same
+    root: no transition produced it, so nothing was consumed. Every real step consumes one nonce
+    and mints another, so no genuine step has `from_head_nonce == to_head_nonce`.
 
     GENESIS IS THE SELF-TRANSITION `(0, EMPTY_ROOT) -> (0, EMPTY_ROOT)`. Counter 0 has no
     predecessor and no step produced it, so there is nothing else honest to name. It cannot be
@@ -185,7 +210,8 @@ def attestation_preimage(
         or len(ward_id) != 32
         or len(from_root) != 32
         or len(to_root) != 32
-        or len(head_nonce) != NONCE_LENGTH
+        or len(from_head_nonce) != NONCE_LENGTH
+        or len(to_head_nonce) != NONCE_LENGTH
     ):
         raise DataError("WARD: attestation operands have the wrong length")
     return (
@@ -195,9 +221,10 @@ def attestation_preimage(
         + ward_id
         + from_counter.to_bytes(4, "big")
         + from_root
+        + from_head_nonce
         + to_counter.to_bytes(4, "big")
         + to_root
-        + head_nonce
+        + to_head_nonce
         + timestamp.to_bytes(8, "big")
     )
 
@@ -226,9 +253,10 @@ def verify_attestation(
     nonce: bytes,
     from_counter: int,
     from_root: "bytes | None",
+    from_head_nonce: bytes,
     to_counter: int,
     to_root: "bytes | None",
-    head_nonce: bytes,
+    to_head_nonce: bytes,
     timestamp: int,
     signature: bytes,
 ) -> bool:
@@ -243,9 +271,10 @@ def verify_attestation(
             nonce,
             from_counter,
             from_root,
+            from_head_nonce,
             to_counter,
             to_root,
-            head_nonce,
+            to_head_nonce,
             timestamp,
         ),
         signature,

@@ -8524,7 +8524,8 @@ if TYPE_CHECKING:
         to_root: "AnyBytes | None"
         from_counter: "int | None"
         from_root: "AnyBytes | None"
-        head_nonce: "AnyBytes | None"
+        from_head_nonce: "AnyBytes | None"
+        to_head_nonce: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8535,7 +8536,8 @@ if TYPE_CHECKING:
             to_root: "AnyBytes | None" = None,
             from_counter: "int | None" = None,
             from_root: "AnyBytes | None" = None,
-            head_nonce: "AnyBytes | None" = None,
+            from_head_nonce: "AnyBytes | None" = None,
+            to_head_nonce: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8594,7 +8596,8 @@ if TYPE_CHECKING:
         to_root: "AnyBytes | None"
         wm_signature: "AnyBytes | None"
         timestamp: "int | None"
-        head_nonce: "AnyBytes | None"
+        from_head_nonce: "AnyBytes | None"
+        to_head_nonce: "AnyBytes | None"
         recovered_root: "AnyBytes | None"
 
         def __init__(
@@ -8606,7 +8609,8 @@ if TYPE_CHECKING:
             to_root: "AnyBytes | None" = None,
             wm_signature: "AnyBytes | None" = None,
             timestamp: "int | None" = None,
-            head_nonce: "AnyBytes | None" = None,
+            from_head_nonce: "AnyBytes | None" = None,
+            to_head_nonce: "AnyBytes | None" = None,
             recovered_root: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -8685,7 +8689,8 @@ if TYPE_CHECKING:
         to_root: "AnyBytes | None"
         from_counter: "int | None"
         from_root: "AnyBytes | None"
-        head_nonce: "AnyBytes | None"
+        from_head_nonce: "AnyBytes | None"
+        to_head_nonce: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8697,7 +8702,8 @@ if TYPE_CHECKING:
             to_root: "AnyBytes | None" = None,
             from_counter: "int | None" = None,
             from_root: "AnyBytes | None" = None,
-            head_nonce: "AnyBytes | None" = None,
+            from_head_nonce: "AnyBytes | None" = None,
+            to_head_nonce: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8762,14 +8768,16 @@ if TYPE_CHECKING:
     class WardPublishAck(protobuf.MessageType):
         timestamp: "int | None"
         wm_signature: "AnyBytes | None"
-        head_nonce: "AnyBytes | None"
+        from_head_nonce: "AnyBytes | None"
+        to_head_nonce: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             timestamp: "int | None" = None,
             wm_signature: "AnyBytes | None" = None,
-            head_nonce: "AnyBytes | None" = None,
+            from_head_nonce: "AnyBytes | None" = None,
+            to_head_nonce: "AnyBytes | None" = None,
         ) -> None:
             pass
 

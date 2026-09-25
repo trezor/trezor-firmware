@@ -28,9 +28,10 @@ and `adopt` are separate: reconcile has a check that must run between them.
 async def verify_round_attestation(
     from_counter: "int | None",
     from_root: "bytes | None",
+    from_head_nonce: "bytes | None",
     to_counter: "int | None",
     to_root: "bytes | None",
-    head_nonce: "bytes | None",
+    to_head_nonce: "bytes | None",
     timestamp: int,
     signature: "bytes | None",
 ) -> "tuple[int, bytes, int, bytes]":
@@ -52,18 +53,46 @@ async def verify_round_attestation(
     RETURNS BOTH ROOTS IN PREIMAGE FORM -- EMPTY_ROOT for the empty tree -- since that is what the
     signature covered and what `round.set_attested` must store for a later recomputation.
 
-    LATCHES THE WM'S HEAD NONCE as a side effect, and this is the only place that does. The nonce
-    is covered by the signature, so by the time this returns it is a WM-vouched fact rather than a
-    host claim -- and every route that will later mint a `cas.wm_sig` passes through here first.
-    It is latched even when the caller goes on to refuse the attestation for its own reasons: a
-    nonce is the WM's state, not our verdict on it, and holding a stale one only costs a write
-    the WM would reject anyway. It is NOT returned, because nothing should be threading it
-    through call chains -- callers that need it ask `round.require_head_nonce()`.
+    LATCHES THE WM'S HEAD -- `(to_counter, to_root, to_head_nonce)` -- as a side effect, and this
+    is the only place that does. All three are covered by the signature, so by the time this
+    returns they are WM-vouched facts rather than host claims, and every route that will later
+    mint a `cas.wm_sig` passes through here first. Latched even when the caller goes on to refuse
+    the attestation for its own reasons: the WM's state is not our verdict on it, and holding a
+    stale nonce only costs a write the WM would reject anyway. NOT returned, because nothing
+    should be threading it through call chains -- callers ask `round.require_head_nonce()`.
+
+    THE TWO CONTINUITY RULES, which are what naming BOTH ends of the head nonce buys. The attested
+    edge is `(from_counter, from_root, from_head_nonce) -> (to_counter, to_root, to_head_nonce)`,
+    and `from_head_nonce` is the nonce the WM CONSUMED accepting it -- so the edge names the
+    transition OCCURRENCE, not merely the transition. Against the head this device last saw:
+
+      R1, THE ADVANCE. If the attested `from` end is that head, the WM accepted a transition out
+      of it, and the nonce it consumed must be the one this device latched for it. This is how a
+      device learns that the authorisation IT minted is the one that was spent, rather than that
+      some occurrence of the same transition landed -- a distinction with content, because roots
+      repeat and a revert re-creates an older pair by construction.
+
+      R2, THE STANDSTILL. If the attested `to` end is that head, the WM has not moved since --
+      every transition advances the counter by one, so a head that did not move accepted nothing
+      and cannot have rotated. A different nonce there means the register moved without a
+      transition: a restore, a failover onto a stale replica, a fork. This is the one case where
+      the device can catch a broken WM by itself, and it catches the restore that lands exactly
+      where this device is standing -- the most likely one.
+
+    NEITHER RULE IS A COUNTER RULE. They say nothing about whether the head may be adopted, only
+    that the WM's register is continuous with what this device already saw, so they are the same
+    for every caller and belong here rather than in one of them. When the attested step touches
+    neither end of the latched head the WM has moved further than this device can account for
+    locally, both rules stand down, and `verify_chain` is what proves the gap.
+
+    ACROSS A SESSION THEY DO NOT APPLY AT ALL: the latch is session-scoped, so a fresh session
+    starts with nothing to compare against. See `round.set_wm_head`.
     """
     from trezor.wire import DataError
 
     from . import round as sync_round
     from .attest import root_or_empty, verify_attestation
+    from .cas import NO_HEAD_NONCE
     from .keys import derive_ward_id
 
     ctx = sync_round.get()
@@ -73,8 +102,21 @@ async def verify_round_attestation(
 
     if to_counter is None or from_counter is None or signature is None:
         raise DataError("both ends of the transition and wm_signature are required")
-    if head_nonce is None or len(head_nonce) != 32:
-        raise DataError("WARD: the attested WM head nonce must be 32 bytes")
+    if (
+        from_head_nonce is None
+        or len(from_head_nonce) != 32
+        or to_head_nonce is None
+        or len(to_head_nonce) != 32
+    ):
+        raise DataError("WARD: both attested WM head nonces must be 32 bytes")
+
+    # NO LIVE HEAD MAY CARRY THE ENROLMENT CONSTANT, at either end. `cas.NO_HEAD_NONCE` is only
+    # what `head_init_sig` is signed under; a WM that accepts an enrolment draws a real `N0`
+    # before it attests anything. Seeing it here means the WM never drew one -- and a head left at
+    # a CONSTANT would make the first write after genesis replayable into any future re-enrolment,
+    # which is the one recurrence the nonce exists to prevent. See `cas.NO_HEAD_NONCE`.
+    if NO_HEAD_NONCE in (from_head_nonce, to_head_nonce):
+        raise DataError("WARD: the attested WM head carries the enrolment nonce")
     for r in (from_root, to_root):
         if r is not None and len(r) != 32:
             raise DataError("attested roots must be 32 bytes")
@@ -85,24 +127,49 @@ async def verify_round_attestation(
     if to_counter == 0:
         if from_counter != 0 or root_or_empty(from_root) != root_or_empty(to_root):
             raise DataError("WARD: counter 0 must attest itself")
+        # Nothing produced genesis, so nothing was consumed to reach it -- the same reason the
+        # roots are equal at both ends.
+        if from_head_nonce != to_head_nonce:
+            raise DataError("WARD: counter 0 consumed no head nonce")
     elif to_counter != from_counter + 1:
         raise DataError("WARD: an attested transition advances the counter by exactly one")
+    elif from_head_nonce == to_head_nonce:
+        # A real step consumes one nonce and mints another. Equal ends would be a WM that did not
+        # rotate, which is the failure the whole construction rests on not happening.
+        raise DataError("WARD: an attested transition must rotate the WM head nonce")
 
     if not verify_attestation(
         await derive_ward_id(),
         nonce,
         from_counter,
         from_root,
+        from_head_nonce,
         to_counter,
         to_root,
-        head_nonce,
+        to_head_nonce,
         timestamp,
         signature,
     ):
         raise DataError("WM attestation verification failed")
 
+    # CONTINUITY, against the head this device last saw the WM at -- see the two rules above.
+    # Checked only after the signature, so what is being compared is a WM-vouched value.
+    seen = sync_round.wm_head()
+    if seen is not None:
+        seen_counter, seen_root, seen_nonce = seen
+        if (from_counter, root_or_empty(from_root)) == (seen_counter, seen_root):
+            if from_head_nonce != seen_nonce:
+                raise DataError(
+                    "WARD: the attested transition did not consume the WM head nonce this device holds"
+                )
+        elif (to_counter, root_or_empty(to_root)) == (seen_counter, seen_root):
+            if to_head_nonce != seen_nonce:
+                raise DataError(
+                    "WARD: the WM head nonce changed without the head moving"
+                )
+
     # The WM vouched for it, so record it for the next authorisation this session mints.
-    sync_round.set_head_nonce(head_nonce)
+    sync_round.set_wm_head(to_counter, root_or_empty(to_root), to_head_nonce)
 
     # NO TIME CHECK. The attestation still carries a timestamp and it is still covered by the
     # signature, but nothing compares it: anti-replay is the counter's job, a malicious WM simply

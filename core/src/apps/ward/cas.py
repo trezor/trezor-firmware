@@ -493,12 +493,25 @@ def verify_intent_mac(
 # does tell a host which authorisation will become valid next, which is worth avoiding.
 
 NO_HEAD_NONCE = b"\x00" * 32
-"""The nonce a WM holds before it has accepted any transition for a wallet -- see `head_init_sig`.
+"""The value `head_init_sig` is minted under. NEVER A LIVE HEAD NONCE.
 
-A NEWLY ENROLLED HEAD CARRIES IT, and the first ordinary advance therefore quotes it; the WM
-rotates to a real value when it accepts that advance, and must never rotate back. So this is a
-starting state rather than a reachable one, which is what keeps `head_init_sig` from being
-replayable as an advance once a wallet is moving -- the tag would stop it anyway.
+It exists to domain-separate ENROLMENT, which is the one statement a device makes when the WM
+holds no nonce to quote. A WM that accepts an enrolment draws a real `N0` immediately, and its
+head becomes `(C0, root, N0)` -- so no ordinary authorisation is ever minted against this
+constant, and the rule that a superseded nonce must never become current again has no built-in
+exception to carve out.
+
+WHY IT MUST NOT BE LIVE, which is the whole reason it is spelled out here. `head_init_sig` is a
+signature over a fixed statement and is not secret, so whoever holds one can re-enrol a WM that
+lost everything. If enrolment left the head at this constant, that replay would reproduce the
+exact predecessor triple the FIRST WRITE was authorised against -- `(0, EMPTY_ROOT,
+NO_HEAD_NONCE)` -- and a retained authorisation for it would land a second time. Genesis is not
+an obscure corner: it is where every wallet starts, and where any wallet drained back to nothing
+returns. Drawing `N0` means a re-enrolment yields `N0'` and every historical first-write
+signature is dead.
+
+`adopt.verify_round_attestation` refuses any attested head carrying this value, at either end, so
+a WM that skipped the draw produces attestations no device accepts.
 """
 
 

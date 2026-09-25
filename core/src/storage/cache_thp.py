@@ -57,7 +57,7 @@ class SessionThpCache(DataCache):
                 105,  # APP_WARD_SYNC
                 1,  # APP_WARD_ONLINE
                 73,  # APP_WARD_DEMOTION
-                33,  # APP_WARD_HEAD_NONCE
+                69,  # APP_WARD_WM_HEAD
             )
         super().__init__()
 

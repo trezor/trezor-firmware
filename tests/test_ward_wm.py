@@ -54,15 +54,33 @@ def _advance(wm, frm, from_root, to, to_root, tag=None, **kw):
 
 
 def _opened() -> MockWM:
+    """A WM that has ENROLLED this wallet and taken one advance.
+
+    TWO STEPS, NOT ONE, and that is the protocol rather than a quirk of the mock: enrolment is
+    what makes the WM draw `N0`, and an authorisation has to quote `N0`, so nothing can be
+    authorised until the enrolment has been accepted and attested. The firmware reaches this the
+    same way -- a write needs an online session, and a session goes online by adopting an
+    attestation.
+    """
     wm = MockWM()
-    _advance(wm, 0, ROOT_0, 1, ROOT_1, head_init_sig=head_init_sig(K_SIG, WARD_ID, 0, ROOT_0))
+    wm.attest_head(WARD_ID, NONCE, 0, ROOT_0, head_init_sig(K_SIG, WARD_ID, 0, ROOT_0))
+    _advance(wm, 0, ROOT_0, 1, ROOT_1)
     return wm
 
 
-def test_an_unknown_wallet_needs_head_init():
-    """Otherwise whoever speaks first chooses a wallet's opening head."""
+def test_an_unenrolled_wallet_cannot_be_advanced_at_all():
+    """ENROLMENT IS NOT AN ADVANCE, and cannot be folded into one.
+
+    An authorisation must quote the nonce the WM currently holds, and a WM that has never seen
+    this wallet holds none -- so there is no signature a device could present here that would be
+    checkable against anything. Enrolment is a SYNC-path operation: `attest_head` verifies
+    `head_init_sig`, draws `N0`, and attests it; only then can a device authorise a write.
+
+    The firmware reaches this shape on its own, because a write requires an online session and a
+    session goes online by adopting an attestation.
+    """
     wm = MockWM()
-    with pytest.raises(ValueError, match="head-init"):
+    with pytest.raises(ValueError, match="not enrolled"):
         _advance(wm, 0, ROOT_0, 1, ROOT_1)
 
 
@@ -70,15 +88,15 @@ def test_head_init_must_be_authorised():
     wm = MockWM()
     other = head_init_sig(b"\x22" * 32, WARD_ID, 0, ROOT_0)
     with pytest.raises(ValueError, match="head-init"):
-        _advance(wm, 0, ROOT_0, 1, ROOT_1, head_init_sig=other)
+        wm.attest_head(WARD_ID, NONCE, 0, ROOT_0, other)
 
 
 def test_head_init_names_the_head_it_opens():
     """A signature over one opening head must not open a different one."""
     wm = MockWM()
     with pytest.raises(ValueError, match="head-init"):
-        _advance(
-            wm, 0, ROOT_2, 1, ROOT_1, head_init_sig=head_init_sig(K_SIG, WARD_ID, 0, ROOT_0)
+        wm.attest_head(
+            WARD_ID, NONCE, 0, ROOT_2, head_init_sig(K_SIG, WARD_ID, 0, ROOT_0)
         )
 
 
@@ -91,35 +109,32 @@ def test_a_first_head_starts_at_zero():
     """
     wm = MockWM()
     with pytest.raises(ValueError, match="counter 0"):
-        _advance(
-            wm,
-            7,
-            ROOT_0,
-            8,
-            ROOT_1,
-            head_init_sig=head_init_sig(K_SIG, WARD_ID, 7, ROOT_0),
+        wm.attest_head(
+            WARD_ID, NONCE, 7, ROOT_0, head_init_sig(K_SIG, WARD_ID, 7, ROOT_0)
         )
 
 
 def test_an_advance_attests_the_head_it_created():
     """Not "the head now", which a concurrent winner could have moved -- the whole reason CAS and
     attestation are one call."""
-    fc, fr, counter, root, hn, ts, sig = _advance(_opened(), 1, ROOT_1, 2, ROOT_2)
+    fc, fr, fhn, counter, root, hn, ts, sig = _advance(_opened(), 1, ROOT_1, 2, ROOT_2)
     assert (fc, fr, counter, root, ts) == (1, ROOT_1, 2, ROOT_2, 1000)
     # THE WHOLE STEP IS SIGNED, both ends -- so an attestation cannot be paired with a link that
     # merely ends in the right place.
     _ed25519.checkvalid(
         sig,
         b"WARD ATTEST v1"
-        + bytes([5])
+        + bytes([6])
         + NONCE
         + WARD_ID
         + (1).to_bytes(4, "big")
         + ROOT_1
+        # THE NONCE THIS STEP CONSUMED, which is what names the occurrence...
+        + fhn
         + (2).to_bytes(4, "big")
         + ROOT_2
-        # THE HEAD NONCE the WM rotated to when it accepted this advance, travelling back so the
-        # device can quote it in its NEXT authorisation.
+        # ...and the one it minted, travelling back so the device can quote it in its NEXT
+        # authorisation.
         + hn
         + (1000).to_bytes(8, "big"),
         MockWM().pubkey,
@@ -187,7 +202,7 @@ def test_a_read_only_first_use_can_attest_without_publishing():
     """A read may be a wallet's first WARD operation, so the WM has to be able to bootstrap from
     an attestation request rather than only from a write."""
     wm = MockWM()
-    fc, fr, counter, root, _hn, _ts, _sig = wm.attest_head(
+    fc, fr, _fhn, counter, root, _hn, _ts, _sig = wm.attest_head(
         WARD_ID, NONCE, 0, ROOT_0, head_init_sig(K_SIG, WARD_ID, 0, ROOT_0)
     )
     # AN OPENING HEAD ATTESTS ITSELF: no step produced it, so naming one would be inventing a
@@ -199,7 +214,7 @@ def test_a_read_only_first_use_can_attest_without_publishing():
 
 
 def test_enrolment_is_genesis_only():
-    """A WM MAY BE ENROLLED AT COUNTER 0 AND NOWHERE ELSE, on either entry point.
+    """A WM MAY BE ENROLLED AT COUNTER 0 AND NOWHERE ELSE.
 
     `head_init_sig` proves the head it names was a genuine state of this wallet. It does not
     prove that head is the LATEST one, and no signature one device can produce ever could --
@@ -210,8 +225,6 @@ def test_enrolment_is_genesis_only():
     THE FIRMWARE ENFORCES THE OTHER HALF, which is what makes this more than a policy choice: an
     attestation may only be a self-transition at counter 0 (`adopt.verify_round_attestation`), so
     a WM that enrolled at 57 would install `57 -> 57` and emit attestations no device can accept.
-    The mock used to do exactly that on `attest_head` while `advance` refused it -- two paths
-    disagreeing about the same rule.
 
     RE-SEEDING A WM THAT LOST ITS REGISTER is therefore not this, and is deliberately absent. It
     needs the WM's persisted head restored, or a named recovery operation with a policy for which
@@ -225,14 +238,16 @@ def test_enrolment_is_genesis_only():
     with pytest.raises(ValueError, match="counter 0"):
         wm.attest_head(WARD_ID, NONCE, 57, ROOT_1, at57)
 
-    # ...and the authenticated path has always said so.
+    # ...and the advance path cannot enrol at ALL any more, at any counter -- see
+    # `test_an_unenrolled_wallet_cannot_be_advanced_at_all`. So there is one enrolment entry
+    # point and one rule on it, rather than two paths that had to be kept agreeing.
     wm2 = MockWM()
-    with pytest.raises(ValueError, match="counter 0"):
-        _advance(wm2, 57, ROOT_1, 58, ROOT_2, head_init_sig=at57)
+    with pytest.raises(ValueError, match="not enrolled"):
+        _advance(wm2, 57, ROOT_1, 58, ROOT_2)
 
     # Genesis still enrols, which is the case that has to keep working.
     wm3 = MockWM()
-    fc, fr, tc, tr, _hn, _ts, _sig = wm3.attest_head(
+    fc, fr, _fhn, tc, tr, _hn, _ts, _sig = wm3.attest_head(
         WARD_ID, NONCE, 0, ROOT_0, head_init_sig(K_SIG, WARD_ID, 0, ROOT_0)
     )
     assert (fc, fr, tc, tr) == (0, ROOT_0, 0, ROOT_0)
@@ -486,3 +501,100 @@ def test_the_mock_refuses_to_make_a_retired_nonce_current_by_accident():
         wm._rotations -= 1
         wm._rotate(WARD_ID, 3, ROOT_1, wm.head_nonce(WARD_ID))
     assert current in wm.retired_nonces(WARD_ID)
+
+
+def test_an_attestation_names_the_nonce_the_step_consumed():
+    """The occurrence, not just the transition.
+
+    The attested edge is `(from, from_head_nonce) -> (to, to_head_nonce)`. A device that minted
+    its authorisation under a particular nonce can read `from_head_nonce` and see that ITS
+    authorisation is the one that was spent -- a question with content, because the same
+    transition can occur more than once.
+    """
+    wm = _opened()
+    consumed = wm.head_nonce(WARD_ID)
+
+    fc, fr, from_nonce, tc, tr, to_nonce, _ts, _sig = _advance(
+        wm, 1, ROOT_1, 2, ROOT_2
+    )
+
+    assert (fc, fr, tc, tr) == (1, ROOT_1, 2, ROOT_2)
+    assert from_nonce == consumed  # the one the authorisation quoted
+    assert to_nonce == wm.head_nonce(WARD_ID)  # the one the next must quote
+    assert from_nonce != to_nonce  # every real step rotates
+
+
+def test_two_occurrences_of_one_transition_are_distinguishable():
+    """The same `(from, to)` pair, twice, and the attestations differ.
+
+    Without the consumed nonce these two would be byte-identical statements -- which is precisely
+    the ambiguity that let a host present an attestation of the FIRST occurrence as proof that
+    the second one landed.
+    """
+    wm = _opened()
+    first = _advance(wm, 1, ROOT_1, 2, ROOT_2)
+
+    # bring the WM back so the very same transition can happen again
+    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000)
+    second = _advance(wm, 1, ROOT_1, 2, ROOT_2)
+
+    # the transition is identical...
+    assert first[:2] + first[3:5] == second[:2] + second[3:5]
+    # ...and the occurrence is not, at either end
+    assert first[2] != second[2]
+    assert first[5] != second[5]
+    assert first[7] != second[7]  # so the signatures differ too
+
+
+def test_genesis_consumes_nothing_but_still_draws_a_live_nonce():
+    """Nothing produced counter 0, so nothing was spent reaching it -- the same reason the roots
+    are equal at both ends. But the head it creates is LIVE, so its nonce is a real `N0` and
+    never the enrolment constant.
+
+    `head_init_sig` is signed under NO_HEAD_NONCE because there is nothing else to quote; the
+    instant it is accepted that constant stops being relevant. The firmware refuses any attested
+    head carrying it, at either end.
+    """
+    wm = MockWM()
+    fc, fr, from_nonce, tc, tr, to_nonce, _ts, _sig = wm.attest_head(
+        WARD_ID, NONCE, 0, ROOT_0, head_init_sig(K_SIG, WARD_ID, 0, ROOT_0)
+    )
+    assert (fc, fr, tc, tr) == (0, ROOT_0, 0, ROOT_0)
+    assert from_nonce == to_nonce  # nothing was consumed
+    assert from_nonce == wm.head_nonce(WARD_ID)
+    assert from_nonce != NO_HEAD_NONCE  # ...but it is a real one
+
+
+def test_re_enrolment_after_total_loss_kills_historical_authorisations():
+    """THE REASON THE ENROLMENT CONSTANT MUST NOT BE A LIVE NONCE.
+
+    `head_init_sig` is a signature over a fixed statement and is not secret, so whoever holds one
+    can re-enrol a WM that lost everything -- and nothing can stop that, because a WM with no
+    register has no way to tell a genuine first contact from a replayed one.
+
+    What CAN be stopped is that replay resurrecting old authorisations. If enrolment left the
+    head at a constant, the fresh WM would sit at exactly the predecessor triple the FIRST WRITE
+    was authorised against, and a retained `wm_sig` for it would land again. Genesis is not an
+    obscure corner: it is where every wallet starts, and where any wallet drained back to nothing
+    returns. Drawing `N0` at enrolment means the re-enrolled WM is at `N0'`, and the old
+    authorisation is dead.
+    """
+    init = head_init_sig(K_SIG, WARD_ID, 0, ROOT_0)
+
+    wm = MockWM()
+    wm.attest_head(WARD_ID, NONCE, 0, ROOT_0, init)
+    n0 = wm.head_nonce(WARD_ID)
+    first_write = wm_sig(K_SIG, WARD_ID, 0, ROOT_0, 1, ROOT_1, n0)
+    wm.advance(WARD_ID, 0, ROOT_0, 1, ROOT_1, first_write, timestamp=1000)
+
+    # the WM loses everything, and the retained enrolment signature is replayed
+    reborn = MockWM()
+    reborn.attest_head(WARD_ID, NONCE, 0, ROOT_0, init)
+    n0_prime = reborn.head_nonce(WARD_ID)
+
+    assert reborn.head(WARD_ID)[:2] == (0, ROOT_0)  # the same head...
+    assert n0_prime != n0  # ...and NOT the same moment
+    assert n0_prime != NO_HEAD_NONCE
+
+    with pytest.raises(ValueError, match="not authorised"):
+        reborn.advance(WARD_ID, 0, ROOT_0, 1, ROOT_1, first_write, timestamp=1000)

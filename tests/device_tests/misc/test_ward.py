@@ -84,7 +84,7 @@ from ...ward_keys import (
     TAG_COMMIT,
 )
 from ...ward_trie import WardTrie, addr_bit
-from ...ward_wm import MockWM
+from ...ward_wm import NO_HEAD_NONCE, MockWM
 
 # EVERY TEST HERE SPEAKS THE CONNECT-MODE REQUEST SET -- `WardEntryRequest`, `WardSync`,
 # `WardReconcile`, `WardVerifyChain`. Those messages do not exist in a firmware that serves WARD
@@ -210,6 +210,25 @@ def _read(session: Session, store: WardTrie, call) -> tuple:
     return res, rec
 
 
+def _wm_for(store: WardTrie) -> MockWM:
+    """The ONE WM this store's wallet talks to, created on first use.
+
+    WM IDENTITY MATTERS NOW, which it did not before. The device tracks the WM's head nonce
+    register and checks each attestation for continuity against the head it last saw, so a
+    session that synced against one WM and then against a freshly-built one is refused -- and
+    correctly, because that is indistinguishable from a register that was rebuilt behind its
+    back. A throwaway WM per round used to be harmless; it is now a WM swap.
+
+    Tests that WANT a different WM say so explicitly, by constructing one -- an impostor with its
+    own seed, or a standby in a failover.
+    """
+    wm = getattr(store, "_wm", None)
+    if wm is None:
+        wm = MockWM()
+        store._wm = wm
+    return wm
+
+
 def _head_init_for(counter: int, root):
     """The opening-head authorisation a connect host relays from `WardSyncAck`.
 
@@ -220,6 +239,22 @@ def _head_init_for(counter: int, root):
     from ...ward_keys import head_init_sig as _oracle_head_init
 
     return _oracle_head_init(derive_k_sig(_SEED), _WARD_ID, counter, root)
+
+
+def _nonces(wm: MockWM, ward_id: bytes) -> tuple:
+    """The `(consumed, current)` head-nonce pair the WM would attest right now.
+
+    Tests that hand-roll an attestation need BOTH ends: the attested edge is
+    `(from_counter, from_root, from_head_nonce) -> (to_counter, to_root, to_head_nonce)`, and the
+    device checks the pair for continuity against the head it last saw. Taking them off the WM
+    rather than inventing them keeps a synthetic attestation synthetic in exactly the way the test
+    means it to be -- a wrong counter, say -- instead of also being incoherent about the nonce and
+    failing for a reason the test is not about.
+    """
+    step = wm.step(ward_id)
+    if step is None:
+        return NO_HEAD_NONCE, NO_HEAD_NONCE
+    return step[5], step[6]
 
 
 def _publish(wm: MockWM, res, store: WardTrie) -> None:
@@ -248,7 +283,6 @@ def _publish(wm: MockWM, res, store: WardTrie) -> None:
         root,
         res.wm_sig,
         _T0 + res.counter,
-        head_init_sig=_head_init_for(from_counter, from_root),
     )
 
 
@@ -272,7 +306,7 @@ def _go_online(
     Adopting the head the host already holds, at the counter it already has, so this changes
     no state -- it only tells the device that what it has is confirmed.
     """
-    wm = wm or MockWM()
+    wm = wm or _wm_for(store)
     _attest(session, wm, store)
     return wm
 
@@ -316,11 +350,11 @@ def _confirm(
 ) -> None:
     """Run the WM round that makes the device adopt the head the host now holds.
 
-    A throwaway MockWM is fine when the test has no opinion about the WM: it only has to
-    hold the (counter, root) for the length of one round. Tests that assert on the WM's own
-    state pass theirs.
+    The store's own WM is used unless the test names one -- see `_wm_for`. It is no longer a
+    throwaway: the device checks each attestation's head nonce for continuity against the head it
+    last saw, so a fresh WM per round would read as a register rebuilt behind the session's back.
     """
-    wm = wm or MockWM()
+    wm = wm or _wm_for(store)
     _attest(session, wm, store)
     return wm
 
@@ -1230,12 +1264,20 @@ def _attest(
     into = _link_into(store, counter) if link is _DERIVE_LINK else link
     from_counter, from_root = (into[0], into[1]) if into is not None else (0, None)
     wm.install_unauthenticated(ack.ward_id, counter, root, timestamp, from_counter, from_root)
-    _fc, _fr, _c, _m, head_nonce, _t, sig = wm.attest(ack.ward_id, ack.nonce)
+    _fc, _fr, from_head_nonce, _c, _m, head_nonce, _t, sig = wm.attest(ack.ward_id, ack.nonce)
     # THE WM'S HEAD NONCE travels back with the attestation and is covered by it, so the device
     # learns it from a signed statement rather than from the host. It is what the device's next
     # `wm_sig` will quote.
     ward.ingest_attestation(
-        session, from_counter, from_root, counter, root, sig, head_nonce, timestamp
+        session,
+        from_counter,
+        from_root,
+        counter,
+        root,
+        sig,
+        from_head_nonce,
+        head_nonce,
+        timestamp,
     )
     # THE LINK INTO THE HEAD, which reconcile now requires: an attestation says the WM calls this
     # head current, and only the link says a device of this wallet ever produced it. None at
@@ -1267,7 +1309,7 @@ def test_ward_adopts_an_attested_tree_it_never_built(session: Session):
     # is refused, which is the whole point of the floor.
     foreign = _subset(store, [foreign_key])
 
-    wm = MockWM()
+    wm = _wm_for(store)
     # A MINTED LINK, because no real one exists: this head is synthetic -- nobody ever wrote the
     # transition that would have produced it. The oracle holds K_auth, so it can authorise one,
     # which is exactly what a second device of this wallet would have done.
@@ -1307,13 +1349,14 @@ def test_ward_refuses_an_attestation_from_the_wrong_signer(session: Session):
     # Any head nonce will do: the signer is wrong, so this is refused before the nonce it names
     # can matter. Naming one the device would accept is the point -- nothing else about the
     # message is malformed.
+    from_head_nonce = bytes([0x2A]) * 32
     head_nonce = bytes([0x3B]) * 32
-    sig = impostor.sign(ack.ward_id, ack.nonce, *_step_into(store, counter, root), counter, root, head_nonce, _T0 + counter)
+    sig = impostor.sign(ack.ward_id, ack.nonce, *_step_into(store, counter, root), from_head_nonce, counter, root, head_nonce, _T0 + counter)
 
     with pytest.raises(
         exceptions.TrezorFailure, match="attestation verification failed"
     ):
-        ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, head_nonce, _T0 + counter)
+        ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, from_head_nonce, head_nonce, _T0 + counter)
 
 
 @pytest.mark.models("core")
@@ -1326,19 +1369,19 @@ def test_ward_refuses_an_attestation_bound_to_another_nonce(session: Session):
     """
     store = WardTrie()
     _seed(session, store, b"addr1", b"v")
-    wm = MockWM()
+    wm = _wm_for(store)
 
     # an anchor signed against an earlier round's nonce
     counter = store.counter
     stale_ack = ward.sync(session)
     root = store.root()
-    stale_sig = wm.sign(stale_ack.ward_id, stale_ack.nonce, *_step_into(store, counter, root), counter, root, wm.head_nonce(stale_ack.ward_id), _T0 + counter)
+    stale_sig = wm.sign(stale_ack.ward_id, stale_ack.nonce, *_step_into(store, counter, root), _nonces(wm, stale_ack.ward_id)[0], counter, root, wm.head_nonce(stale_ack.ward_id), _T0 + counter)
 
     ward.sync(session)  # a new round, a new nonce
     with pytest.raises(
         exceptions.TrezorFailure, match="attestation verification failed"
     ):
-        ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, stale_sig, wm.head_nonce(stale_ack.ward_id), _T0 + counter)
+        ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, stale_sig, _nonces(wm, stale_ack.ward_id)[0], wm.head_nonce(stale_ack.ward_id), _T0 + counter)
 
 
 @pytest.mark.models("core")
@@ -1355,14 +1398,14 @@ def test_ward_refuses_a_link_into_a_head_the_wm_did_not_attest(session: Session)
     other_key = _seed(session, store, b"addr2", b"w")
     other = _subset(store, [other_key])  # a different root; reconcile fails on the link
 
-    wm = MockWM()
+    wm = _wm_for(store)
     counter = store.counter
     ack = ward.sync(session)
     # ward_id comes from the DEVICE, being passphrase-dependent. The root is the host's own.
     root = store.root()
     wm.install_unauthenticated(ack.ward_id, counter, root, _T0 + counter, *_step_into(store, counter, root))
-    _fc, _fr, _c, _m, _hn, _t, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, wm.head_nonce(ack.ward_id), _T0 + counter)
+    _fc, _fr, _fhn, _c, _m, _hn, _t, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + counter)
 
     # A LINK AUTHORISED FOR A DIFFERENT DESTINATION. Rewriting the `to_root` of a genuine link
     # would prove nothing -- `WardReconcile` does not carry that field, so the edit never reaches
@@ -1381,7 +1424,7 @@ def test_ward_refuses_an_attested_counter_below_the_floor(session: Session):
     on a WM that lies about which state is current."""
     store = WardTrie()
     _seed(session, store, b"addr1", b"v")
-    wm = MockWM()
+    wm = _wm_for(store)
 
     # RAISED ONE STEP AT A TIME, because reconcile adopts at most one. It used to accept the
     # whole jump in a single round, which is exactly the finding that closed: a device cannot be
@@ -1400,9 +1443,9 @@ def test_ward_refuses_an_attested_counter_below_the_floor(session: Session):
     behind = store.counter - 1
     ack = ward.sync(session)
     old_root = store.root()
-    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, behind, old_root), behind, old_root, wm.head_nonce(ack.ward_id), _T0 + behind)
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, behind, old_root), _nonces(wm, ack.ward_id)[0], behind, old_root, wm.head_nonce(ack.ward_id), _T0 + behind)
     with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
-        ward.ingest_attestation(session, *_step_into(store, behind, old_root), behind, old_root, sig, wm.head_nonce(ack.ward_id), _T0 + behind)
+        ward.ingest_attestation(session, *_step_into(store, behind, old_root), behind, old_root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + behind)
 
 
 @pytest.mark.models("core")
@@ -1419,7 +1462,7 @@ def test_ward_reconcile_refuses_a_multi_step_jump(session: Session):
     """
     store = WardTrie()
     _seed(session, store, b"addr1", b"v")
-    wm = MockWM()
+    wm = _wm_for(store)
 
     target = store.counter + 2
     root = store.root()
@@ -1428,10 +1471,10 @@ def test_ward_reconcile_refuses_a_multi_step_jump(session: Session):
     # attestation check asks, and disconnected from where this device stands, which is what the
     # handler now asks as well.
     sig = wm.sign(
-        ack.ward_id, ack.nonce, target - 1, root, target, root, wm.head_nonce(ack.ward_id), _T0 + target
+        ack.ward_id, ack.nonce, target - 1, root, _nonces(wm, ack.ward_id)[0], target, root, wm.head_nonce(ack.ward_id), _T0 + target
     )
     ward.ingest_attestation(
-        session, target - 1, root, target, root, sig, wm.head_nonce(ack.ward_id), _T0 + target
+        session, target - 1, root, target, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + target
     )
 
     with pytest.raises(exceptions.TrezorFailure, match="use WardVerifyChain"):
@@ -1452,15 +1495,15 @@ def test_ward_reconcile_refuses_a_step_from_elsewhere(session: Session):
     elsewhere = _subset(store, [other_key])
     assert elsewhere.root() != store.root()
 
-    wm = MockWM()
+    wm = _wm_for(store)
     target = store.counter + 1
     root = store.root()
     ack = ward.sync(session)
     sig = wm.sign(
-        ack.ward_id, ack.nonce, target - 1, elsewhere.root(), target, root, wm.head_nonce(ack.ward_id), _T0 + target
+        ack.ward_id, ack.nonce, target - 1, elsewhere.root(), _nonces(wm, ack.ward_id)[0], target, root, wm.head_nonce(ack.ward_id), _T0 + target
     )
     ward.ingest_attestation(
-        session, target - 1, elsewhere.root(), target, root, sig, wm.head_nonce(ack.ward_id), _T0 + target
+        session, target - 1, elsewhere.root(), target, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + target
     )
 
     with pytest.raises(
@@ -1486,17 +1529,17 @@ def test_ward_reconcile_refuses_a_lower_counter_outside_recovery(session: Sessio
     store = WardTrie()
     _seed(session, store, b"a", b"one")
     _seed(session, store, b"b", b"two")
-    wm = MockWM()
+    wm = _wm_for(store)
 
     behind = store.counter - 1
     root = store.root()
     ack = ward.sync(session)
     sig = wm.sign(
-        ack.ward_id, ack.nonce, behind - 1, root, behind, root, wm.head_nonce(ack.ward_id), _T0 + behind
+        ack.ward_id, ack.nonce, behind - 1, root, _nonces(wm, ack.ward_id)[0], behind, root, wm.head_nonce(ack.ward_id), _T0 + behind
     )
     with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
         ward.ingest_attestation(
-            session, behind - 1, root, behind, root, sig, wm.head_nonce(ack.ward_id), _T0 + behind
+            session, behind - 1, root, behind, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + behind
         )
 
 
@@ -1588,9 +1631,15 @@ def test_ward_the_wm_refuses_an_unauthorised_advance(session: Session):
     )
     ward.apply(store, res)
 
-    wm = MockWM()
+    # THE WM MUST ALREADY KNOW THE WALLET, because an advance cannot enrol: an authorisation has
+    # to quote the nonce the WM holds, and one that has never seen this wallet holds none.
+    # Enrolment is a sync-path operation. Here a fixture stands in for the history that put this
+    # head there.
+    wm = _wm_for(store)
     from_counter, from_root = _step_into(store, res.counter, store.root())
-    init = _head_init_for(from_counter, from_root)
+    wm.install_unauthenticated(
+        _WARD_ID, from_counter, from_root, _T0 + from_counter
+    )
 
     with pytest.raises(ValueError, match="not authorised"):
         wm.advance(
@@ -1601,7 +1650,6 @@ def test_ward_the_wm_refuses_an_unauthorised_advance(session: Session):
             store.root(),
             bytes(64),  # no signature at all
             _T0 + res.counter,
-            head_init_sig=init,
         )
 
     # ...and one from a wallet that is not this one is no better.
@@ -1616,7 +1664,6 @@ def test_ward_the_wm_refuses_an_unauthorised_advance(session: Session):
             store.root(),
             other[4] + other[4],  # 64 bytes of the wrong thing
             _T0 + res.counter,
-            head_init_sig=init,
         )
 
 
@@ -1632,7 +1679,7 @@ def test_ward_refuses_a_different_state_at_the_same_counter(session: Session):
     store = WardTrie()
     _seed(session, store, b"addr1", b"v")
     other_key = _seed(session, store, b"addr9", b"other")
-    wm = MockWM()
+    wm = _wm_for(store)
     _attest(session, wm, store)  # the device's real state, at its own counter
 
     # a DIFFERENT state offered at that same counter
@@ -1641,8 +1688,8 @@ def test_ward_refuses_a_different_state_at_the_same_counter(session: Session):
 
     ack = ward.sync(session)
     root = divergent.root()
-    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, counter, root), counter, root, wm.head_nonce(ack.ward_id), _T0 + counter)
-    ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, wm.head_nonce(ack.ward_id), _T0 + counter)
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, counter, root), _nonces(wm, ack.ward_id)[0], counter, root, wm.head_nonce(ack.ward_id), _T0 + counter)
+    ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + counter)
     # THE LINK IS GENUINE, and minted over EXACTLY the step the attestation names -- the same
     # `_step_into` both sides use -- so `verify_inbound_link` passes. What refuses this is the
     # SECOND gate: the device already stands at this counter holding a different root, and one
@@ -1670,7 +1717,7 @@ def test_ward_an_attestation_cannot_be_adopted_twice(session: Session):
     """The round closes on adoption, so a replayed reconcile has nothing to act on."""
     store = WardTrie()
     _seed(session, store, b"addr1", b"v")
-    wm = MockWM()
+    wm = _wm_for(store)
     _attest(session, wm, store)
 
     with pytest.raises(exceptions.TrezorFailure, match="no attested sync round"):
@@ -1724,16 +1771,18 @@ def test_ward_a_published_write_syncs_cleanly(session: Session):
         "ward_set_entry",
     )
     ward.apply(store, res)
-    _confirm(session, store)
 
-    wm = MockWM()
+    # PUBLISHED, not installed by fiat, and that ordering matters now that one WM serves the
+    # whole wallet: `_confirm` would put the head there itself, leaving this authenticated
+    # advance nothing to move and turning the round trip under test into a conflict.
+    wm = _wm_for(store)
     _publish(wm, res, store)
 
     ack = ward.sync(session)
     # RELAYED, not recomputed: the host forwards the step the WM signed. Deriving it again here
     # would be the fixture agreeing with itself, and would break the moment the two disagreed.
-    fc, fr, counter, root, hn, ts, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(session, fc, fr, counter, root, sig, hn, ts)
+    fc, fr, fhn, counter, root, hn, ts, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(session, fc, fr, counter, root, sig, fhn, hn, ts)
     ward.reconcile(session, _link_into(store, counter))
     store.counter = counter  # device and store now agree
 
@@ -1864,11 +1913,11 @@ def test_ward_catches_up_across_transitions_it_never_saw(session: Session):
     ]
     target = base_counter + 2
 
-    wm = MockWM()
+    wm = _wm_for(store)
     ack = ward.sync(session)
     root = head.root()
-    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), target, root, wm.head_nonce(ack.ward_id), _T0 + target)
-    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, wm.head_nonce(ack.ward_id), _T0 + target)
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), _nonces(wm, ack.ward_id)[0], target, root, wm.head_nonce(ack.ward_id), _T0 + target)
+    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + target)
     res = ward.verify_chain(session, _serves(links))
 
     assert res.counter == target
@@ -1918,11 +1967,11 @@ def test_ward_catches_up_further_than_one_ack_can_carry(session: Session):
         counter, root = counter + 1, st.root()
     head, target = states[-1], counter
 
-    wm = MockWM()
+    wm = _wm_for(store)
     ack = ward.sync(session)
     root = head.root()
-    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), target, root, wm.head_nonce(ack.ward_id), _T0 + target)
-    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, wm.head_nonce(ack.ward_id), _T0 + target)
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), _nonces(wm, ack.ward_id)[0], target, root, wm.head_nonce(ack.ward_id), _T0 + target)
+    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + target)
 
     asked = []
     serve = _serves(links)
@@ -1995,11 +2044,11 @@ def test_ward_catches_up_across_a_revert_to_a_state_below_its_own_head(session: 
     ]
     target = here_counter + 2
 
-    wm = MockWM()
+    wm = _wm_for(store)
     ack = ward.sync(session)
     root = restored.root()
-    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), target, root, wm.head_nonce(ack.ward_id), _T0 + target)
-    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, wm.head_nonce(ack.ward_id), _T0 + target)
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), _nonces(wm, ack.ward_id)[0], target, root, wm.head_nonce(ack.ward_id), _T0 + target)
+    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + target)
 
     # ONE REQUEST: the host serves both predecessors in a single ack, since `_serves` walks the
     # chain it was given. Then the WARNING, then the ack.
@@ -2068,7 +2117,7 @@ def test_ward_verify_chain_brings_a_fresh_session_online(session: Session):
     # NO LINKS: the attested head IS the device's head, so there is nothing to fold. The empty
     # chain is the "what I hold is current" case, and the terminal counter and root checks still
     # have to agree -- so this exercises adoption without needing transitions to invent.
-    wm = MockWM()
+    wm = _wm_for(store)
     ack = ward.sync(fresh)
     root = store.root()
     wm.install_unauthenticated(
@@ -2078,8 +2127,8 @@ def test_ward_verify_chain_brings_a_fresh_session_online(session: Session):
         _T0 + store.counter,
         *_step_into(store, store.counter, root),
     )
-    fc, fr, c, r, hn, _t, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(fresh, fc, fr, c, r, sig, hn, _T0 + store.counter)
+    fc, fr, fhn, c, r, hn, _t, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(fresh, fc, fr, c, r, sig, fhn, hn, _T0 + store.counter)
 
     res = ward.verify_chain(fresh, _serves([]))
     assert res.counter == store.counter
@@ -2105,7 +2154,7 @@ def test_ward_refuses_a_chain_with_a_gap(session: Session):
     # jumps two counters in one link
     links = [_link(base_counter, base_root, base_counter + 2, head.root())]
 
-    wm = MockWM()
+    wm = _wm_for(store)
     ack = ward.sync(session)
     target = base_counter + 2
     root = head.root()
@@ -2114,10 +2163,10 @@ def test_ward_refuses_a_chain_with_a_gap(session: Session):
     # ingest rather than in the walk. Naming `target - 1` puts the gap where this test wants it:
     # in the LINK, so `verify_chain_step_back` is the thing that refuses it.
     sig = wm.sign(
-        ack.ward_id, ack.nonce, target - 1, base_root, target, root, wm.head_nonce(ack.ward_id), _T0 + target
+        ack.ward_id, ack.nonce, target - 1, base_root, _nonces(wm, ack.ward_id)[0], target, root, wm.head_nonce(ack.ward_id), _T0 + target
     )
     ward.ingest_attestation(
-        session, target - 1, base_root, target, root, sig, wm.head_nonce(ack.ward_id), _T0 + target
+        session, target - 1, base_root, target, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + target
     )
 
     with pytest.raises(exceptions.TrezorFailure, match="exactly one"):
@@ -2139,11 +2188,11 @@ def test_ward_refuses_a_chain_that_does_not_start_at_its_own_head(session: Sessi
     # a link starting from a root this device is not at
     links = [_link(store.counter, head.root(), target, head.root())]
 
-    wm = MockWM()
+    wm = _wm_for(store)
     ack = ward.sync(session)
     root = head.root()
-    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), target, root, wm.head_nonce(ack.ward_id), _T0 + target)
-    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, wm.head_nonce(ack.ward_id), _T0 + target)
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), _nonces(wm, ack.ward_id)[0], target, root, wm.head_nonce(ack.ward_id), _T0 + target)
+    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + target)
 
     with pytest.raises(
         exceptions.TrezorFailure, match="does not descend from this device's head"
@@ -2162,14 +2211,20 @@ def test_ward_refuses_an_unauthorised_link(session: Session):
 
     forged = [(base_counter, base_root, target, head.root(), bytes(32))]
 
-    wm = MockWM()
+    wm = _wm_for(store)
     ack = ward.sync(session)
     root = head.root()
+    # A SYNTHETIC STEP OUT OF THE DEVICE'S HEAD, so its nonces are the pair such a step would
+    # have: it CONSUMES the one the device latched -- otherwise the continuity rule refuses it a
+    # gate before the MAC, and this test would stop exercising `verify_chain_step_back` -- and
+    # mints a new one, since every real step rotates.
+    consumed = wm.head_nonce(ack.ward_id)
+    minted = bytes([0x8B]) * 32
     sig = wm.sign(
-        ack.ward_id, ack.nonce, *_step_into(store, target, root, forged), target, root, wm.head_nonce(ack.ward_id), _T0 + target
+        ack.ward_id, ack.nonce, *_step_into(store, target, root, forged), consumed, target, root, minted, _T0 + target
     )
     ward.ingest_attestation(
-        session, *_step_into(store, target, root, forged), target, root, sig, wm.head_nonce(ack.ward_id), _T0 + target
+        session, *_step_into(store, target, root, forged), target, root, sig, consumed, minted, _T0 + target
     )
 
     # The attestation names the step this forged link claims, so the walk gets as far as the MAC
@@ -2194,11 +2249,11 @@ def test_ward_refuses_a_chain_that_ends_somewhere_else(session: Session):
     links = [_link(base_counter, base_root, base_counter + 1, elsewhere.root())]
     target = base_counter + 1
 
-    wm = MockWM()
+    wm = _wm_for(store)
     ack = ward.sync(session)
     root = attested.root()  # attests a different root than the walk will reach
-    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), target, root, wm.head_nonce(ack.ward_id), _T0 + target)
-    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, wm.head_nonce(ack.ward_id), _T0 + target)
+    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, target, root, links), _nonces(wm, ack.ward_id)[0], target, root, wm.head_nonce(ack.ward_id), _T0 + target)
+    ward.ingest_attestation(session, *_step_into(store, target, root, links), target, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + target)
 
     # SERVED UNCONDITIONALLY, not through `_serves`. The anchor is the ATTESTED root now, so an
     # HONEST host would filter this link out -- it ends somewhere the device never asked about --
@@ -2260,7 +2315,7 @@ def _rollback(
         )
 
     ack_sync = ward.sync(session)
-    fc, fr, tc, tr, hn, ts, sig = wm.attest(ack_sync.ward_id, ack_sync.nonce)
+    fc, fr, fhn, tc, tr, hn, ts, sig = wm.attest(ack_sync.ward_id, ack_sync.nonce)
 
     rec = _Recorded()
     with session.test_ctx as ctx:
@@ -2277,6 +2332,7 @@ def _rollback(
             tc,
             tr,
             sig,
+            fhn,
             hn,
             recovered_root=recovered_root,
             timestamp=ts,
@@ -2308,8 +2364,8 @@ def _publish_demotion(wm: MockWM, store: WardTrie, ack, from_counter: int, from_
 
 def _adopt_demotion(session: Session, wm: MockWM, store: WardTrie, ack, link):
     """Publish, attest and adopt -- the round trip a host runs after a demotion is minted."""
-    fc, fr, tc, tr, hn, ts, sig = wm.attest(_WARD_ID, ward.sync(session).nonce)
-    ward.ingest_attestation(session, fc, fr, tc, tr, sig, hn, ts)
+    fc, fr, fhn, tc, tr, hn, ts, sig = wm.attest(_WARD_ID, ward.sync(session).nonce)
+    ward.ingest_attestation(session, fc, fr, tc, tr, sig, fhn, hn, ts)
     ward.reconcile(session, link)
 
 
@@ -2326,7 +2382,7 @@ def test_ward_rollback_undoes_the_last_write(session: Session):
     before_root = store.root()
     _seed(session, store, b"b", b"two")
 
-    wm = MockWM()
+    wm = _wm_for(store)
     _attest(session, wm, store)
     ack, rec = _rollback(session, wm, store, before_root)
 
@@ -2372,7 +2428,7 @@ def test_ward_rollback_needs_no_proof_that_the_target_was_ever_the_head(session:
     assert invented.root() != store.root()
     del key_b
 
-    wm = MockWM()
+    wm = _wm_for(store)
     _attest(session, wm, store)
     ack, rec = _rollback(session, wm, store, invented.root())
 
@@ -2399,7 +2455,7 @@ def test_ward_rollback_count_comes_from_the_attested_counter(session: Session):
     _seed(session, store, b"d", b"four")
     assert store.counter == 4
 
-    wm = MockWM()
+    wm = _wm_for(store)
     _attest(session, wm, store)
 
     # The WM's register regressed to counter 1, so the demotion lands at 2 and discards two.
@@ -2427,7 +2483,7 @@ def test_ward_rollback_from_a_regressed_wm_is_the_same_operation(session: Sessio
     """
     store = WardTrie()
     key_a = _seed(session, store, b"a", b"one")
-    wm = MockWM()
+    wm = _wm_for(store)
     _attest(session, wm, store)
     wm_counter, wm_root = store.counter, store.root()
 
@@ -2468,11 +2524,11 @@ def test_ward_rollback_from_a_regressed_wm_is_the_same_operation(session: Sessio
     behind = ack.counter - 1
     ack_sync = ward.sync(session)
     sig2 = wm.sign(
-        ack_sync.ward_id, ack_sync.nonce, behind - 1, wm_root, behind, wm_root, wm.head_nonce(ack_sync.ward_id), _T0
+        ack_sync.ward_id, ack_sync.nonce, behind - 1, wm_root, _nonces(wm, ack_sync.ward_id)[0], behind, wm_root, wm.head_nonce(ack_sync.ward_id), _T0
     )
     with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
         ward.ingest_attestation(
-            session, behind - 1, wm_root, behind, wm_root, sig2, wm.head_nonce(ack_sync.ward_id), _T0
+            session, behind - 1, wm_root, behind, wm_root, sig2, _nonces(wm, ack_sync.ward_id)[0], wm.head_nonce(ack_sync.ward_id), _T0
         )
 
 
@@ -2486,18 +2542,19 @@ def test_ward_rollback_still_requires_a_genuine_attestation(session: Session):
     """
     store = WardTrie()
     _seed(session, store, b"a", b"one")
-    wm = MockWM()
+    wm = _wm_for(store)
     _attest(session, wm, store)
     root = store.root()
 
     impostor = MockWM(seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
     ack = ward.sync(session)
     step = _step_into(store, store.counter, root)
-    head_nonce = wm.head_nonce(ack.ward_id)
+    from_head_nonce, head_nonce = _nonces(wm, ack.ward_id)
     sig = impostor.sign(
         ack.ward_id,
         ack.nonce,
         *step,
+        from_head_nonce,
         store.counter,
         root,
         head_nonce,
@@ -2512,6 +2569,7 @@ def test_ward_rollback_still_requires_a_genuine_attestation(session: Session):
             store.counter,
             root,
             sig,
+            from_head_nonce,
             head_nonce,
             recovered_root=root,
             timestamp=store.timestamp,
@@ -3223,7 +3281,7 @@ def test_ward_a_change_stays_queued_until_the_wm_confirms_it(session: Session):
     # The host neither stores the leaf nor publishes the counter -- the response was lost, as
     # far as it is concerned. The next round therefore attests the OLD head, and the device
     # must conclude its change did not land rather than that it did.
-    _confirm(session, store, wm=MockWM())
+    _confirm(session, store)
 
     rec = _offline_read(session.test_ctx.get_session(), b"addr1")
     assert "queued change" in rec.title
@@ -3255,7 +3313,7 @@ def test_ward_an_offered_change_settles_in_a_later_session(session: Session):
     _go_online(session, store)
     res = ward.flush_queue(session, ward.store_provider(store))
     ward.apply(store, res)
-    _publish(MockWM(), res, store)
+    _publish(_wm_for(store), res, store)
 
     # A NEW SESSION adopts the head the change is in. It shares the device's flash and nothing
     # of the session that offered the change.
@@ -3326,7 +3384,7 @@ def test_ward_a_confirmed_change_becomes_an_offline_copy(session: Session):
     _go_online(session, store)
     res = ward.flush_queue(session, ward.store_provider(store))
     ward.apply(store, res)
-    _publish(MockWM(), res, store)
+    _publish(_wm_for(store), res, store)
     _confirm(session, store)
 
     rec = _offline_read(session.test_ctx.get_session(), b"addr1")
@@ -4053,3 +4111,203 @@ def test_ward_a_named_flush_may_hand_over_the_same_change_twice(session: Session
 
     # ...while the unnamed loop still considers it handed over
     assert ward.flush_queue(session, ward.store_provider(store)).remaining == 0
+
+
+# --- the two continuity rules -------------------------------------------------------------
+#
+# Naming BOTH ends of the WM's head nonce turns the attestation into a statement about the
+# transition OCCURRENCE, and that buys the device two checks against the head it last saw. They
+# are the only means it has of catching a WM whose nonce register moved incoherently -- the
+# failure the operator obligation in `apps/ward/cas` is about -- so they are worth pinning at the
+# wire rather than only in the mock.
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_an_attestation_that_consumed_another_nonce(session: Session):
+    """R1, THE ADVANCE. If the WM advanced out of the head this device is holding, the nonce it
+    consumed must be the one this device latched for that head.
+
+    This is how a device learns that the authorisation IT minted is the one that was spent, and
+    not that some other occurrence of the same transition landed. Roots repeat and a revert
+    re-creates an older pair on purpose, so "the same transition" is genuinely ambiguous without
+    it.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    wm = _wm_for(store)
+    _attest(session, wm, store)  # the device now holds (counter, root, nonce)
+
+    target = store.counter + 1
+    root = store.root()
+    latched = wm.head_nonce(_WARD_ID)
+    minted = bytes([0x5F]) * 32
+
+    # A GENUINE WM SIGNATURE over a step out of the device's head -- but naming some other nonce
+    # as the one it consumed. Nothing else about it is wrong.
+    ack = ward.sync(session)
+    wrong = bytes([0xC7]) * 32
+    assert wrong != latched
+    sig = wm.sign(
+        ack.ward_id, ack.nonce, store.counter, root, wrong, target, root, minted, _T0 + target
+    )
+    with pytest.raises(exceptions.TrezorFailure, match="did not consume"):
+        ward.ingest_attestation(
+            session, store.counter, root, target, root, sig, wrong, minted, _T0 + target
+        )
+
+    # ...and the same step naming the RIGHT one is taken, so the refusal above is about the nonce
+    # and not about anything else in the message.
+    ack = ward.sync(session)
+    sig = wm.sign(
+        ack.ward_id, ack.nonce, store.counter, root, latched, target, root, minted, _T0 + target
+    )
+    ward.ingest_attestation(
+        session, store.counter, root, target, root, sig, latched, minted, _T0 + target
+    )
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_a_nonce_that_moved_while_the_head_did_not(session: Session):
+    """R2, THE STANDSTILL -- the restore detector, and the one case the device can catch alone.
+
+    Every transition advances the counter by exactly one, so a head that did not move accepted
+    nothing and cannot have rotated its nonce. A different nonce on an unmoved head therefore
+    means the register moved without a transition: a backup restore, a failover onto a stale
+    replica, a fork.
+
+    Modelled as the most likely shape of it -- a register restored to exactly the head this
+    device is standing on, which is what an operator recovering a WM would most often produce.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    wm = _wm_for(store)
+    _attest(session, wm, store)
+
+    counter, root = store.counter, store.root()
+    before = wm.head_nonce(_WARD_ID)
+
+    # THE HEAD IS PUT BACK EXACTLY WHERE IT IS, which is what a restore onto the current head
+    # looks like. The counter and the root do not move; the nonce does, because a correct restore
+    # must never re-issue a superseded one.
+    wm.install_unauthenticated(
+        _WARD_ID,
+        counter,
+        root,
+        _T0 + counter,
+        *_step_into(store, counter, root),
+        restore=True,
+    )
+    assert wm.head(_WARD_ID)[:2] == (counter, root)
+    assert wm.head_nonce(_WARD_ID) != before
+
+    ack = ward.sync(session)
+    fc, fr, fhn, tc, tr, hn, ts, sig = wm.attest(ack.ward_id, ack.nonce)
+    with pytest.raises(exceptions.TrezorFailure, match="without the head moving"):
+        ward.ingest_attestation(session, fc, fr, tc, tr, sig, fhn, hn, ts)
+
+
+@pytest.mark.models("core")
+def test_ward_takes_an_unmoved_head_that_kept_its_nonce(session: Session):
+    """The other side of R2: re-confirming the same head is an ordinary, frequent thing.
+
+    A host that syncs twice without writing gets the same attestation content back, and the rule
+    must not make that an error -- it only bites when the nonce moved without the head.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    wm = _wm_for(store)
+    _attest(session, wm, store)
+    _attest(session, wm, store)  # again, nothing moved
+    assert ward.sync(session) is not None
+
+
+@pytest.mark.models("core")
+def test_ward_refuses_an_attested_head_carrying_the_enrolment_nonce(session: Session):
+    """`NO_HEAD_NONCE` is what `head_init_sig` is signed under, and NOTHING ELSE.
+
+    A WM that accepts an enrolment draws a real `N0` before it attests anything, so no live head
+    ever carries the constant. The device enforces that, and the reason is worth stating as the
+    attack: `head_init_sig` is a fixed statement and is not secret, so whoever holds one can
+    re-enrol a WM that lost everything. If enrolment left the head at a CONSTANT, that replay
+    would land the fresh WM on exactly the predecessor triple the first write was authorised
+    against -- `(0, EMPTY_ROOT, NO_HEAD_NONCE)` -- and a retained authorisation for it would be
+    live again. Genesis is where every wallet starts and where any drained wallet returns, so
+    that is not an obscure corner.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"v")
+    wm = _wm_for(store)
+    _attest(session, wm, store)
+
+    target = store.counter + 1
+    root = store.root()
+    ack = ward.sync(session)
+
+    # a genuine WM signature over a well-formed step -- whose new head carries the constant
+    sig = wm.sign(
+        ack.ward_id,
+        ack.nonce,
+        store.counter,
+        root,
+        wm.head_nonce(_WARD_ID),
+        target,
+        root,
+        NO_HEAD_NONCE,
+        _T0 + target,
+    )
+    with pytest.raises(exceptions.TrezorFailure, match="enrolment nonce"):
+        ward.ingest_attestation(
+            session,
+            store.counter,
+            root,
+            target,
+            root,
+            sig,
+            wm.head_nonce(_WARD_ID),
+            NO_HEAD_NONCE,
+            _T0 + target,
+        )
+
+
+@pytest.mark.models("core")
+def test_ward_enrolment_draws_a_live_nonce(session: Session):
+    """The connect-mode enrolment flow end to end, on a WM that has never seen this wallet.
+
+    `WardSyncAck` carries the device's `head_init_sig`; the WM verifies it, draws `N0`, and
+    attests genesis. Only then does the device hold a nonce it can authorise a write against --
+    which is why enrolment cannot be folded into the first write, and why nothing here has to be.
+    """
+    store = WardTrie()
+    wm = _wm_for(store)
+
+    ack = ward.sync(session)
+    assert ack.head_init_sig is not None
+    assert ack.counter == 0
+
+    fc, fr, fhn, tc, tr, hn, ts, sig = wm.attest_head(
+        ack.ward_id, ack.nonce, 0, None, ack.head_init_sig
+    )
+    # GENESIS CONSUMES NOTHING, so both ends carry the same nonce -- but it is a real one.
+    assert fhn == hn != NO_HEAD_NONCE
+    assert (fc, tc) == (0, 0)
+
+    ward.ingest_attestation(session, fc, fr, tc, tr, sig, fhn, hn, ts)
+    ward.reconcile(session, None)
+
+    # and the device can now write, quoting the nonce it just learned
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr1", b"v", p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res)
+    wm.advance(
+        ack.ward_id,
+        *_step_into(store, res.counter, store.root()),
+        res.counter,
+        store.root(),
+        res.wm_sig,
+        _T0 + res.counter,
+    )
+    assert wm.head(ack.ward_id)[:2] == (res.counter, store.root())

@@ -373,18 +373,25 @@ message WardIngestAttestation {
     optional uint32 from_counter = 7;  // the head it advanced from; to_counter - 1
     optional bytes  from_root    = 8;  // absent means the empty tree
 
-    // THE WM'S HEAD NONCE: the freshness token it holds beside (counter, root) and rotates on
-    // every transition it accepts. Covered by the signature above, so the host cannot choose it.
+    // BOTH ENDS OF THE WM'S HEAD NONCE -- the freshness token it holds beside (counter, root) and
+    // rotates on every transition it accepts. Covered by the signature, so the host chooses
+    // neither.
     //
-    // WHAT IT IS FOR. The device quotes it FORWARD, in the next `wm_sig` it mints, and the WM
-    // accepts an authorisation only against the nonce it currently holds. So one authorisation
-    // moves the head at most once, even when a (counter, root) pair recurs -- which a revert
-    // arranges by construction, carrying an older root forward under a new counter.
+    // WHAT THEY ARE FOR. `to_head_nonce` is quoted FORWARD by the device, in the next `wm_sig` it
+    // mints, and the WM accepts an authorisation only against the nonce it currently holds -- so
+    // one authorisation moves the head at most once, even when a (counter, root) pair recurs,
+    // which a revert arranges by construction. `from_head_nonce` is the nonce the WM CONSUMED
+    // accepting this step, and it is what makes the attestation name the transition OCCURRENCE
+    // rather than the transition: a device that minted its authorisation under a particular nonce
+    // can tell that ITS authorisation was the one spent.
     //
-    // THE WM MUST NEVER MAKE A SUPERSEDED NONCE CURRENT AGAIN -- not by rotation, and not
-    // through a backup restore, a failover, or any other state recovery, all of which may move
-    // the counter and root backwards legitimately. See apps/ward/cas.
-    optional bytes  head_nonce   = 9;  // 32B
+    // At counter 0 the two are equal: nothing produced genesis, so nothing was consumed.
+    //
+    // THE WM MUST NEVER MAKE A SUPERSEDED NONCE CURRENT AGAIN -- not by rotation, and not through
+    // a backup restore, a failover, or any other state recovery, all of which may move the
+    // counter and root backwards legitimately. See apps/ward/cas.
+    optional bytes  from_head_nonce = 10;  // 32B
+    optional bytes  to_head_nonce   = 9;  // 32B
 
     // GENESIS ATTESTS ITSELF: at counter 0 nothing produced the head, so the two ends are equal
     // and the empty tree stands on both. No real step has from == to, so the two cannot be
@@ -495,18 +502,25 @@ message WardRollback {
     optional bytes  wm_signature = 13;
     optional uint64 timestamp    = 14;
 
-    // THE WM'S HEAD NONCE: the freshness token it holds beside (counter, root) and rotates on
-    // every transition it accepts. Covered by the signature above, so the host cannot choose it.
+    // BOTH ENDS OF THE WM'S HEAD NONCE -- the freshness token it holds beside (counter, root) and
+    // rotates on every transition it accepts. Covered by the signature, so the host chooses
+    // neither.
     //
-    // WHAT IT IS FOR. The device quotes it FORWARD, in the next `wm_sig` it mints, and the WM
-    // accepts an authorisation only against the nonce it currently holds. So one authorisation
-    // moves the head at most once, even when a (counter, root) pair recurs -- which a revert
-    // arranges by construction, carrying an older root forward under a new counter.
+    // WHAT THEY ARE FOR. `to_head_nonce` is quoted FORWARD by the device, in the next `wm_sig` it
+    // mints, and the WM accepts an authorisation only against the nonce it currently holds -- so
+    // one authorisation moves the head at most once, even when a (counter, root) pair recurs,
+    // which a revert arranges by construction. `from_head_nonce` is the nonce the WM CONSUMED
+    // accepting this step, and it is what makes the attestation name the transition OCCURRENCE
+    // rather than the transition: a device that minted its authorisation under a particular nonce
+    // can tell that ITS authorisation was the one spent.
     //
-    // THE WM MUST NEVER MAKE A SUPERSEDED NONCE CURRENT AGAIN -- not by rotation, and not
-    // through a backup restore, a failover, or any other state recovery, all of which may move
-    // the counter and root backwards legitimately. See apps/ward/cas.
-    optional bytes  head_nonce   = 16;  // 32B
+    // At counter 0 the two are equal: nothing produced genesis, so nothing was consumed.
+    //
+    // THE WM MUST NEVER MAKE A SUPERSEDED NONCE CURRENT AGAIN -- not by rotation, and not through
+    // a backup restore, a failover, or any other state recovery, all of which may move the
+    // counter and root backwards legitimately. See apps/ward/cas.
+    optional bytes  from_head_nonce = 17;  // 32B
+    optional bytes  to_head_nonce   = 16;  // 32B
 
     // THE STATE TO COME BACK TO: the root of a trie the HOST can reconstruct from the rows it
     // actually holds, proposed by it and approved by the user on the device. Absent means the
