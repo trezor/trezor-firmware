@@ -18,15 +18,6 @@ from micropython import const
 
 _OPEN = const(1)  # nonce minted, nothing attested yet
 _ATTESTED = const(2)  # the WM's transition has been verified for this nonce
-# A verified transition that goes BACKWARD, reached only through `WardRecoverCounter` and only
-# after the user held to confirm losing the changes in between.
-#
-# A SEPARATE STATE RATHER THAN AN INFERENCE. `reconcile` could compare the attested counter with
-# the stored one and conclude "this must have been a recovery", but that reasons from the shape
-# of the data to the consent behind it -- and the consent is the whole of what makes a demotion
-# acceptable. Recording it means a future route that reaches an attested round some other way
-# cannot inherit the exemption by accident.
-_ATTESTED_BACKWARD = const(3)
 
 _NONCE_LEN = const(32)
 _ROOT_LEN = const(32)
@@ -56,7 +47,7 @@ def get() -> "tuple[int, bytes, int, bytes, int, bytes] | None":
     from trezor.wire import context
 
     raw = context.cache_get(APP_WARD_SYNC)
-    if not raw or raw[0] not in (_OPEN, _ATTESTED, _ATTESTED_BACKWARD):
+    if not raw or raw[0] not in (_OPEN, _ATTESTED):
         return None
     nonce = raw[1 : 1 + _NONCE_LEN]
     off = 1 + _NONCE_LEN
@@ -69,46 +60,26 @@ def get() -> "tuple[int, bytes, int, bytes, int, bytes] | None":
 
 
 def get_attested() -> "tuple[int, bytes, int, bytes] | None":
-    """The attested transition if this round reached either ATTESTED state, else None.
+    """The attested transition if this round reached ATTESTED, else None.
 
     The state constants are `const()`-folded and therefore absent from the module at runtime, so
-    the ATTESTED test has to live here rather than in the caller. Which KIND of attested round it
-    is comes from `attested_is_backward`; this answers only "is there one".
+    the ATTESTED test has to live here rather than in the caller.
     """
     ctx = get()
-    if ctx is None or ctx[0] not in (_ATTESTED, _ATTESTED_BACKWARD):
+    if ctx is None or ctx[0] != _ATTESTED:
         return None
     _state, _nonce, from_counter, from_root, to_counter, to_root = ctx
     return from_counter, from_root, to_counter, to_root
 
 
-def attested_is_backward() -> bool:
-    """Did this round's attestation go BACKWARD, with the user's confirmation?
-
-    `reconcile` asks because the rule it applies differs: a forward adoption must be one step from
-    the head this device already holds, and a demotion cannot be -- its predecessor is historical.
-    False for a round that is merely open, which is the safe answer: the exemption is granted, not
-    assumed.
-    """
-    ctx = get()
-    return ctx is not None and ctx[0] == _ATTESTED_BACKWARD
-
-
 def set_attested(
-    from_counter: int,
-    from_root: bytes,
-    to_counter: int,
-    to_root: bytes,
-    backward: bool = False,
+    from_counter: int, from_root: bytes, to_counter: int, to_root: bytes
 ) -> None:
     """Record the transition the WM attested, keeping the round's nonce.
 
     Both roots arrive in PREIMAGE FORM -- an empty tree as EMPTY_ROOT -- because that is what the
     signature covered and what a later recomputation has to reproduce.
 
-    `backward` is set by `recover` alone, after the user has held to confirm. It is what lets
-    `reconcile` adopt a head BELOW the stored one, and defaults to False so that a caller which
-    forgets it gets the strict rule rather than the exemption.
     """
     from storage.cache_common import APP_WARD_SYNC
     from trezor.wire import context
@@ -118,7 +89,7 @@ def set_attested(
     _state, nonce, _fc, _fr, _tc, _tr = ctx
     context.cache_set(
         APP_WARD_SYNC,
-        bytes([_ATTESTED_BACKWARD if backward else _ATTESTED])
+        bytes([_ATTESTED])
         + nonce
         + from_counter.to_bytes(4, "big")
         + from_root
@@ -227,3 +198,49 @@ def is_online() -> bool:
 
     raw = context.cache_get(APP_WARD_ONLINE)
     return bool(raw) and raw[0] == _ONLINE
+
+
+# --- the authorised demotion ---------------------------------------------------------
+#
+# A counter the user has APPROVED the head coming down to, recorded when they confirm and spent
+# when it is adopted.
+#
+# WHY IT CANNOT LIVE IN THE ROUND. A demotion is minted against the WM's head and then has to be
+# PUBLISHED before any device may adopt it -- the head only moves when the WM confirms, which is
+# the invariant every other write obeys too. That publication is a round trip, and the sync round
+# that brings the new attestation back is a DIFFERENT round: `begin` discards the old one, so a
+# flag on it is gone exactly when it is needed. It lives beside the online latch instead, for the
+# same lifetime and the same reason -- a demotion not completed in this session must be confirmed
+# again rather than inherited.
+#
+# WHAT IT IS FOR. `ingest` refuses any counter below the stored floor, and `reconcile` refuses any
+# head that is not one step from where the device stands. Both are right, and both would refuse a
+# recovery -- the whole point of which is to come down. This is the one value that lets them, and
+# it names an exact counter, so it admits the demotion the user saw and nothing else.
+
+
+def authorise_demotion(counter: int) -> None:
+    """Record that the user approved the head coming down to `counter`."""
+    from storage.cache_common import APP_WARD_DEMOTION
+    from trezor.wire import context
+
+    context.cache_set(APP_WARD_DEMOTION, b"\x01" + counter.to_bytes(4, "big"))
+
+
+def authorised_demotion() -> "int | None":
+    """The counter a demotion was approved for, or None. Absent is the safe answer."""
+    from storage.cache_common import APP_WARD_DEMOTION
+    from trezor.wire import context
+
+    raw = context.cache_get(APP_WARD_DEMOTION)
+    if not raw or raw[0] != 1:
+        return None
+    return int.from_bytes(raw[1:5], "big")
+
+
+def clear_demotion() -> None:
+    """Spend it. Called once the demotion is adopted, so one confirmation buys one descent."""
+    from storage.cache_common import APP_WARD_DEMOTION
+    from trezor.wire import context
+
+    context.cache_set(APP_WARD_DEMOTION, bytes(5))

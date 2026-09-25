@@ -43,6 +43,7 @@ class SessionCache(DataCache):
                 0,  # APP_MONERO_LIVE_REFRESH
                 105,  # APP_WARD_SYNC
                 1,  # APP_WARD_ONLINE
+                5,  # APP_WARD_DEMOTION
             )
         self.last_usage = 0
         super().__init__()

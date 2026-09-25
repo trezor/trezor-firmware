@@ -526,13 +526,27 @@ message WardRollbackAck {
 message WardRecoverCounter {
     reserved 1, 2;                     // were `counter` and `root`; see WardIngestAttestation
 
+    // The WM'S OWN HEAD, attested against this round's nonce -- the step it most recently took,
+    // which after a register loss is BEHIND this device. It is the predecessor the demotion
+    // extends and the pair the WM will compare-and-swap on, so it has to be the WM's current
+    // head and not a state the host names.
     optional bytes  wm_signature = 3;
     optional uint64 timestamp    = 4;
-
     optional uint32 to_counter   = 5;
     optional bytes  to_root      = 6;  // absent means the empty tree
     optional uint32 from_counter = 7;
     optional bytes  from_root    = 8;  // absent means the empty tree
+
+    // THE STATE TO COME BACK TO: a root the HOST can reconstruct from the rows it actually holds,
+    // proposed by it and approved by the user on the device. Absent means the empty tree.
+    //
+    // NOT REQUIRED TO HAVE BEEN A HEAD, which is the difference from WardRollback. A host that
+    // lost rows rebuilds a tree the wallet may never have had, and reverting to something it can
+    // still serve is the entire point of the escape hatch; demanding an archived attestation
+    // would make the hatch unavailable in exactly the situation it exists for. Rollback can
+    // demand one because it runs while the WM is healthy. Here the WM's record is the thing that
+    // was lost, so the user's approval is the authority and the screen says so.
+    optional bytes  recovered_root = 9;
 }
 
 /**
@@ -540,5 +554,17 @@ message WardRecoverCounter {
  * @end
  */
 message WardRecoverCounterAck {
-    optional uint32 counter = 1;
+    // THE DEMOTION, for the host to publish. Shaped exactly like WardRollbackAck, because a
+    // recovery IS a rollback -- the only thing that differs is that it was built against the WM's
+    // head rather than this device's. A host replaying its transition log treats it the way it
+    // treats any REVERT row: load the whole trie at `new_root` rather than apply a leaf delta,
+    // since the two ends are not one edit apart.
+    //
+    // NOTHING IS ADOPTED YET. The head moves when the WM confirms this and a sync round brings
+    // it back, which is the invariant every write obeys. The device has recorded the user's
+    // consent for that one counter, and for nothing else.
+    optional uint32 counter     = 1;  // wm_counter + 1 -- forward, though the head goes back
+    optional bytes  new_root    = 2;  // absent if the recovered tree is empty
+    optional bytes  auth_commit = 3;  // REVERT, for the other devices of this wallet
+    optional bytes  wm_sig      = 4;  // REVERT, for the WM
 }

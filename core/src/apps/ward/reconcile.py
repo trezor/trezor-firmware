@@ -84,13 +84,15 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     stored_counter = await get_counter()
     stored_root = await get_root()
 
-    if sync_round.attested_is_backward():
-        # A DEMOTION, already confirmed. `recover` refuses anything that is not going backwards
-        # and holds for confirmation before marking the round, so re-asking here would be asking
-        # about a decision already made. The attested predecessor is historical by definition and
-        # cannot be this device's head -- which is precisely why the forward rule cannot apply.
-        if counter >= stored_counter:
-            raise DataError("WARD: a backward round must lower the counter")
+    if counter == sync_round.authorised_demotion():
+        # A DEMOTION THE USER APPROVED. `recover` minted this exact transition against the WM's
+        # head and held for confirmation before recording the counter, so re-asking here would be
+        # asking about a decision already made. Its predecessor is the WM's head, which after a
+        # register loss is NOT this device's -- precisely why the forward rule below cannot apply.
+        #
+        # The link is still verified, above, like any other: consent decides whether the head may
+        # come down, never whether the transition is genuine.
+        sync_round.clear_demotion()
 
     elif counter == stored_counter:
         # NOTHING NEW. The WM names the head this device already holds, so the only question is
