@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <stdatomic.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "memzero.h"
 #include "rand.h"
@@ -30,7 +31,12 @@
 
 #include "vendor/secp256k1-zkp/include/secp256k1.h"
 
-static uint8_t context_buffer[SECP256K1_CONTEXT_SIZE];
+// Make sure `context_buffer` is properly aligned for `secp256k1_context`,
+// since it should be "aligned to hold an object of any type".
+// See `secp256k1_context_preallocated_create()` comment and
+// https://github.com/rust-bitcoin/rust-secp256k1/pull/233.
+static uint8_t context_buffer[SECP256K1_CONTEXT_SIZE]
+    __attribute__((aligned(_Alignof(max_align_t))));
 static secp256k1_context *context;
 static volatile atomic_flag locked;
 
