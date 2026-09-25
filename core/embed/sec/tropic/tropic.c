@@ -1168,11 +1168,6 @@ static secbool tropic_finish_update(void) {
   // The update rebooted the chip. We clear stale session data.
   tropic_session_forget();
 
-  // The driver is down after a failed re-init. We cannot reach the chip.
-  if (!drv->initialized) {
-    return secfalse;
-  }
-
   if (ret != LT_OK) {
     return secfalse;
   }
