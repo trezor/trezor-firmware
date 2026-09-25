@@ -77,9 +77,10 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     _fc, _fr, wm_counter, wm_root = await verify_round_attestation(
         msg.from_counter,
         msg.from_root or None,
+        msg.from_head_nonce,
         msg.to_counter,
         msg.to_root or None,
-        msg.head_nonce,
+        msg.to_head_nonce,
         msg.timestamp or 0,
         msg.wm_signature,
     )

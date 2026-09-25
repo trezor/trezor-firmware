@@ -48,13 +48,15 @@ DEBUG_WM_SEED = b"AUTHDB QM DEBUG KEY SEED v1 ...."
 
 _ATTEST_DOMAIN = b"WARD ATTEST v1"
 # 3: the 32-byte field became the ROOT rather than a mac over it. 4: the preimage names a
-# TRANSITION rather than a single head, so both ends travel. 5: the WM's own HEAD NONCE joined it.
-_ATTEST_VERSION = 5
+# TRANSITION rather than a single head, so both ends travel. 5: the WM's own HEAD NONCE
+# joined it. 6: BOTH ends of it did, naming the OCCURRENCE rather than the transition.
+_ATTEST_VERSION = 6
 
 # The empty tree's stand-in inside a preimage, mirroring apps.ward.attest.EMPTY_ROOT. A head can
 # legitimately BE the empty tree -- counter 0, and any wallet drained back to nothing -- so every
 # entry point here normalises rather than assuming a root is present.
 import hashlib as _hashlib
+from os import urandom as _urandom
 
 EMPTY_ROOT = _hashlib.sha256(b"\x03").digest()
 
@@ -63,9 +65,21 @@ def _or_empty(root):
     return root if root is not None else EMPTY_ROOT
 
 
-# The nonce a WM holds for a wallet it has never seen. `head_init_sig` is the one authorisation
-# valid under it, so a live head must never carry it -- see `_rotate`.
 NO_HEAD_NONCE = b"\x00" * 32
+"""The value `head_init_sig` is minted under. NEVER A LIVE HEAD NONCE.
+
+It exists to domain-separate enrolment, which is the one statement made when the WM holds no
+nonce to quote. The moment an enrolment is accepted the WM draws a real `N0` and its head becomes
+`(C0, root, N0)` -- so no ordinary authorisation is ever minted against this constant, and the
+"never re-issue a superseded nonce" rule has no built-in exception to carve out.
+
+WHY IT MATTERS THAT THIS IS NOT LIVE. `head_init_sig` is a signature over a fixed statement and is
+not secret, so anyone holding one can re-enrol a WM that lost everything. If enrolment left the
+head at this constant, the replayed enrolment would reproduce the exact predecessor triple the
+FIRST WRITE was authorised against, and a retained authorisation for it would land again. Drawing
+`N0` instead means a re-enrolment yields `N0'`, and every historical first-write signature is
+dead.
+"""
 
 
 # --- THE ONE OBLIGATION A REAL WM CARRIES ------------------------------------------------
@@ -108,7 +122,13 @@ class MockWM:
         # Monotone across the WM's life, so a rotation cannot reproduce an earlier one even when
         # the head it installs is one this wallet held before. A real WM gets this from randomness.
         self._rotations = 0
-        # ward_id -> (from_counter, from_root, to_counter, to_root, timestamp, head_nonce). An
+        # PER-INSTANCE, so two WMs never draw the same nonce for the same wallet at the same
+        # head. A real WM gets this from randomness on every draw; the mock keeps the chain
+        # deterministic WITHIN an instance (so one test run is reproducible) and independent
+        # ACROSS instances (so "the WM lost everything" really does mean a different N0).
+        self._salt = _urandom(16)
+        # ward_id -> (from_counter, from_root, to_counter, to_root, timestamp,
+        # from_head_nonce, to_head_nonce). An
         # absent root is the empty tree and is held as EMPTY_ROOT, the form it takes inside the
         # preimage.
         #
@@ -116,13 +136,26 @@ class MockWM:
         # every transition this WM accepts, it is what an authorisation must quote, and it is
         # therefore what stops one `wm_sig` moving the head twice when a `(counter, root)` pair
         # recurs -- as a revert makes it do, carrying an older root forward under a new counter.
-        self._heads: dict[bytes, tuple[int, bytes, int, bytes, int, bytes]] = {}
+        # BOTH ENDS OF THE NONCE, because the attestation names the transition OCCURRENCE: the
+        # `from` one is what this step CONSUMED, the `to` one is what it minted and what the next
+        # authorisation must quote.
+        self._heads: dict[bytes, tuple[int, bytes, int, bytes, int, bytes, bytes]] = {}
 
     @property
     def pubkey(self) -> bytes:
         return self._pub
 
     # --- the nonce ledger ---------------------------------------------------------------
+
+    def _draw(self, ward_id: bytes, root: bytes) -> bytes:
+        """The nonce a WM draws when it ENROLS a wallet -- `N0`, and a real one.
+
+        Not `NO_HEAD_NONCE`: that constant is only what `head_init_sig` is signed under, and the
+        head this creates is live. Distinct per WM INSTANCE, via the salt, because "the WM lost
+        everything and was re-enrolled" is modelled as a new instance and must not reproduce the
+        nonce the old one drew -- which is the whole point of drawing one.
+        """
+        return self._rotate(ward_id, 0, root, NO_HEAD_NONCE)
 
     def _rotate(
         self, ward_id: bytes, to_counter: int, to_root: bytes, previous: bytes
@@ -147,6 +180,7 @@ class MockWM:
         self._rotations += 1
         nonce = _hashlib.sha256(
             b"WARD WM HEAD NONCE v1"
+            + self._salt
             + ward_id
             + self._rotations.to_bytes(8, "big")
             + to_counter.to_bytes(4, "big")
@@ -180,6 +214,7 @@ class MockWM:
         from_counter: "int | None" = None,
         from_root: "bytes | None" = None,
         head_nonce: "bytes | None" = None,
+        restore: bool = False,
     ) -> None:
         # timestamp is REQUIRED, not defaulted. A default lets a caller publish at one time
         # and ingest at another; the signature then covers a different timestamp than the
@@ -204,6 +239,15 @@ class MockWM:
         current -- which is the obligation stated at the top of this file, and the thing such a
         restore must not get wrong.
 
+        TOLD THE STEP IT ALREADY HOLDS, it does nothing -- no transition was accepted, so nothing
+        rotates. That is what a host re-syncing looks like, and a mock that rotated there would be
+        modelling a broken WM on every ordinary round.
+
+        `restore=True` says the REGISTER WAS REBUILT rather than that the WM was told its own
+        head, so a fresh nonce is drawn even when the head is unchanged. That is the shape of a
+        backup restore or a failover that happens to land where the WM already stood, and it is
+        the case a device can catch -- see the standstill rule in `adopt.verify_round_attestation`.
+
         `head_nonce` FORCES one instead, bypassing the ledger. It exists for exactly one purpose:
         to model a WM that restored a SUPERSEDED nonce along with the head, so a test can show
         what that costs. Nothing else should pass it.
@@ -215,12 +259,50 @@ class MockWM:
             else:
                 from_counter, from_root = counter, root
         known = self._heads.get(ward_id)
-        previous = known[5] if known is not None else NO_HEAD_NONCE
         if head_nonce is None:
+            if not restore and known is not None and known[:4] == (
+                from_counter,
+                _or_empty(from_root),
+                counter,
+                _or_empty(root),
+            ):
+                # TOLD THE STEP IT ALREADY HOLDS: nothing was accepted, so nothing rotates. A
+                # nonce that moved while the head did not is precisely what a device refuses --
+                # see the standstill rule in `adopt.verify_round_attestation` -- so a mock that
+                # rotated here would be modelling a broken WM every time a host re-synced.
+                self._heads[ward_id] = known[:4] + (timestamp,) + known[5:]
+                return
+            if known is not None:
+                previous = known[6]
+            elif from_counter == counter:
+                # A self-transition on a wallet this WM has not seen: genesis. One nonce, at both
+                # ends, because nothing was consumed to reach it.
+                previous = self._make_current(
+                    ward_id, self._draw(ward_id, _or_empty(root))
+                )
+                self._heads[ward_id] = (
+                    from_counter,
+                    _or_empty(from_root),
+                    counter,
+                    _or_empty(root),
+                    timestamp,
+                    previous,
+                    previous,
+                )
+                return
+            else:
+                # A fixture standing in for history this WM never saw. The predecessor nonce is a
+                # fiction, but it must be a LIVE-looking one: NO_HEAD_NONCE is the enrolment
+                # constant and no attested head may carry it, so handing the device one here
+                # would fail for a reason the fixture does not mean.
+                previous = self._make_current(
+                    ward_id, self._draw(ward_id, _or_empty(from_root))
+                )
             nonce = self._make_current(
                 ward_id, self._rotate(ward_id, counter, _or_empty(root), previous)
             )
         else:
+            previous = known[6] if known is not None else NO_HEAD_NONCE
             # A WM THAT BROKE THE RULE, on purpose, so a test can measure the damage. Not put
             # through `_make_current`: the ledger is what this is violating.
             nonce = head_nonce
@@ -230,6 +312,7 @@ class MockWM:
             counter,
             _or_empty(root),
             timestamp,
+            previous,
             nonce,
         )
 
@@ -243,39 +326,53 @@ class MockWM:
         known = self._heads.get(ward_id)
         if known is None:
             return None
-        _fc, _fr, counter, root, timestamp, _nonce = known
+        _fc, _fr, counter, root, timestamp, _fn, _tn = known
         return counter, root, timestamp
 
     def head_nonce(self, ward_id: bytes) -> bytes:
         """The freshness token an authorisation for the NEXT transition must quote.
 
-        `NO_HEAD_NONCE` for a wallet this WM has never seen, and also for one just enrolled: a WM
-        that has accepted no transition has rotated nothing, so the first advance quotes zeros. Exposed for tests that forge a `wm_sig` directly; an
+        `NO_HEAD_NONCE` for a wallet this WM has never seen -- which is the state
+        `head_init_sig` is minted against, and the only place that constant appears. An ENROLLED
+        wallet always has a real one, drawn when the enrolment was accepted. Exposed for tests that forge a `wm_sig` directly; an
         ordinary test never needs it, because the DEVICE learns the nonce from an attestation.
         """
         known = self._heads.get(ward_id)
-        return known[5] if known is not None else NO_HEAD_NONCE
+        return known[6] if known is not None else NO_HEAD_NONCE
 
     def step(self, ward_id: bytes) -> Optional[tuple]:
-        """The transition the WM holds: (from_counter, from_root, to_counter, to_root, ts, nonce)."""
+        """(from_counter, from_root, to_counter, to_root, ts, from_nonce, to_nonce)."""
         return self._heads.get(ward_id)
 
     def attest(self, ward_id: bytes, nonce: bytes) -> tuple:
         """Sign the current transition against this round's nonce.
 
-        Returns (from_counter, from_root, to_counter, to_root, head_nonce, timestamp, signature).
-        The ROUND nonce binding is what makes the answer fresh rather than merely authentic; the
-        HEAD nonce travels the other way, and is what the device will quote in its next `wm_sig`.
+        Returns (from_counter, from_root, from_head_nonce, to_counter, to_root, to_head_nonce,
+        timestamp, signature). The ROUND nonce binding is what makes the answer fresh rather than
+        merely authentic; the HEAD nonces travel the other way -- the `to` one is what the device
+        will quote in its next `wm_sig`, and the `from` one is the one this step CONSUMED, which
+        is what lets a device tell its own authorisation was the one spent.
         """
-        fc, fr, counter, root, timestamp, head_nonce = self._heads[ward_id]
+        fc, fr, counter, root, timestamp, from_nonce, to_nonce = self._heads[ward_id]
         return (
             fc,
             fr,
+            from_nonce,
             counter,
             root,
-            head_nonce,
+            to_nonce,
             timestamp,
-            self.sign(ward_id, nonce, fc, fr, counter, root, head_nonce, timestamp),
+            self.sign(
+                ward_id,
+                nonce,
+                fc,
+                fr,
+                from_nonce,
+                counter,
+                root,
+                to_nonce,
+                timestamp,
+            ),
         )
 
     # --- publish-and-attest, as one operation -----------------------------------------------
@@ -296,7 +393,6 @@ class MockWM:
         to_root: bytes,
         wm_sig: bytes,
         timestamp: int,
-        head_init_sig: Optional[bytes] = None,
     ) -> bool:
         """Compare-and-swap the head, verifying the wallet's authorisation. Returns is_revert.
 
@@ -309,39 +405,23 @@ class MockWM:
         own choosing. It is checked against `ward_id`, which IS the verifying key, so there is no
         enrolment and no second per-wallet value.
 
-        A wallet the WM has never seen has no head to compare against, so the first call must carry
-        `head_init_sig` authorising the starting pair. Anyone could otherwise claim a wallet's
-        opening head by being first to speak.
+        IT DOES NOT ENROL, and cannot. An authorisation must quote the nonce the WM currently
+        holds, and a wallet this WM has never seen has no nonce to quote -- so there is no
+        signature a device could present here that would be checkable. Enrolment happens on the
+        SYNC path (`attest_head`), which is where `head_init_sig` is verified and where the WM
+        draws `N0`; only once the device has learned `N0` from the resulting attestation can it
+        authorise a write. The firmware flow already works this way, because a write requires an
+        online session and a session goes online by adopting an attestation.
         """
-        from .ward_keys import verify_head_init_sig, verify_wm_sig
+        from .ward_keys import verify_wm_sig
 
         known = self._heads.get(ward_id)
-
         if known is None:
-            if head_init_sig is None:
-                raise ValueError("unknown ward_id and no head-init authorisation")
-            if not verify_head_init_sig(
-                ward_id, from_counter, from_root, head_init_sig
-            ):
-                raise ValueError("head-init authorisation does not verify")
-            if from_counter != 0:
-                raise ValueError("a wallet's first head must start at counter 0")
-            # The opening head attests ITSELF -- genesis has no predecessor -- and carries
-            # NO_HEAD_NONCE, the state of a WM that has accepted nothing yet. The first advance
-            # quotes that, and the rotation below replaces it for good.
-            self._heads[ward_id] = (
-                from_counter,
-                _or_empty(from_root),
-                from_counter,
-                _or_empty(from_root),
-                timestamp,
-                self._make_current(ward_id, NO_HEAD_NONCE),
-            )
-            known = self._heads[ward_id]
+            raise ValueError("wallet is not enrolled with this WM; sync first")
 
         # COMPARE-AND-SWAP. Refusing an advance from a head we do not hold is what stops two
         # devices both believing they wrote counter N.
-        _phc, _phr, head_counter, head_root, _ts, head_nonce = known
+        _phc, _phr, head_counter, head_root, _ts, _pfn, head_nonce = known
         if (head_counter, head_root) != (from_counter, _or_empty(from_root)):
             raise MockWM.Conflict(head_counter)
 
@@ -394,6 +474,7 @@ class MockWM:
             to_counter,
             _or_empty(to_root),
             timestamp,
+            head_nonce,  # the nonce this step CONSUMED, which the attestation will name
             self._make_current(
                 ward_id,
                 self._rotate(ward_id, to_counter, _or_empty(to_root), head_nonce),
@@ -411,7 +492,6 @@ class MockWM:
         to_root: bytes,
         wm_sig: bytes,
         timestamp: int,
-        head_init_sig: Optional[bytes] = None,
     ) -> tuple:
         """`advance` then `attest`, as ONE operation. What the service path needs.
 
@@ -436,7 +516,6 @@ class MockWM:
             to_root,
             wm_sig,
             timestamp,
-            head_init_sig,
         )
         return self.attest(ward_id, nonce)
 
@@ -454,7 +533,7 @@ class MockWM:
         written, so there may be nothing to attest yet. Same authorisation as `advance` -- an
         opening head is a value anyone who knows `ward_id` could otherwise set.
 
-        GENESIS ONLY, and the same rule `advance` enforces. A `head_init_sig` proves the named
+        GENESIS ONLY. A `head_init_sig` proves the named
         head was a GENUINE STATE OF THIS WALLET; it does not prove it is the LATEST one, and
         nothing a single device holds could. So enrolling a WM at an arbitrary counter would let
         whoever reaches an empty WM first pin the head there: two devices at C40 and C57 both hold
@@ -484,13 +563,20 @@ class MockWM:
             # Attests itself, which only genesis may do -- see the firmware's matching rule in
             # `adopt.verify_round_attestation`. A non-zero self-transition is rejected there, so a
             # mock that installed one would be handing the device something it can never accept.
+            # THE WM DRAWS `N0` HERE, and this is the only place a wallet acquires its first
+            # live nonce. `head_init_sig` was signed under NO_HEAD_NONCE -- the one statement
+            # made when there is no nonce to quote -- and that constant stops being relevant the
+            # instant this succeeds. Both ends of the genesis step carry `N0`: nothing was
+            # consumed to reach counter 0, the same reason the roots are equal.
+            n0 = self._make_current(ward_id, self._draw(ward_id, _or_empty(current_root)))
             self._heads[ward_id] = (
                 current_counter,
                 _or_empty(current_root),
                 current_counter,
                 _or_empty(current_root),
                 0,
-                self._make_current(ward_id, NO_HEAD_NONCE),
+                n0,
+                n0,
             )
 
         return self.attest(ward_id, nonce)
@@ -501,9 +587,10 @@ class MockWM:
         nonce: bytes,
         from_counter: int,
         from_root: "bytes | None",
+        from_head_nonce: bytes,
         to_counter: int,
         to_root: "bytes | None",
-        head_nonce: bytes,
+        to_head_nonce: bytes,
         timestamp: int,
     ) -> bytes:
         """Sign arbitrary values -- used by tests that model a hostile or broken WM."""
@@ -514,9 +601,10 @@ class MockWM:
             + ward_id
             + from_counter.to_bytes(4, "big")
             + _or_empty(from_root)
+            + from_head_nonce
             + to_counter.to_bytes(4, "big")
             + _or_empty(to_root)
-            + head_nonce
+            + to_head_nonce
             + timestamp.to_bytes(8, "big")
         )
         return _ed25519.signature_unsafe(message, self._seed, self._pub)

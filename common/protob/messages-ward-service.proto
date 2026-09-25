@@ -138,10 +138,12 @@ message WardSyncResponse {
     optional uint32 from_counter = 8;
     optional bytes  from_root    = 9;  // absent means the empty tree
 
-    // THE WM'S HEAD NONCE, covered by the signature: the token it rotates on every accepted
-    // transition. The device quotes it forward in its next `wm_sig`, so one authorisation moves
-    // the head at most once even when a (counter, root) pair recurs. See WardPublish.wm_sig.
-    optional bytes  head_nonce   = 10;  // 32B
+    // BOTH ENDS OF THE WM'S HEAD NONCE, covered by the signature: the token it rotates on every
+    // accepted transition. `to_head_nonce` is quoted forward in the device's next `wm_sig`;
+    // `from_head_nonce` is the one this step consumed, which is what names the OCCURRENCE rather
+    // than the transition. See WardPublish.wm_sig and apps/ward/cas.
+    optional bytes  from_head_nonce = 11;  // 32B
+    optional bytes  to_head_nonce   = 10;  // 32B
 }
 
 /**
@@ -222,10 +224,12 @@ message WardPublishAck {
     optional uint64 timestamp    = 3;
     optional bytes  wm_signature = 4;  // over the nonce from WardPublish
 
-    // THE WM'S HEAD NONCE, covered by the signature: the token it rotates on every accepted
-    // transition. The device quotes it forward in its next `wm_sig`, so one authorisation moves
-    // the head at most once even when a (counter, root) pair recurs. See WardPublish.wm_sig.
-    optional bytes  head_nonce   = 5;  // 32B
+    // BOTH ENDS OF THE WM'S HEAD NONCE, covered by the signature: the token it rotates on every
+    // accepted transition. `to_head_nonce` is quoted forward in the device's next `wm_sig`;
+    // `from_head_nonce` is the one this step consumed, which is what names the OCCURRENCE rather
+    // than the transition. See WardPublish.wm_sig and apps/ward/cas.
+    optional bytes  from_head_nonce = 6;  // 32B
+    optional bytes  to_head_nonce   = 5;  // 32B
 }
 
 /**

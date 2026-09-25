@@ -621,9 +621,10 @@ async def sync() -> None:
     ) = await verify_round_attestation(
         answer.from_counter,
         answer.from_root or None,
+        answer.from_head_nonce,
         answer.to_counter,
         answer.to_root or None,
-        answer.head_nonce,
+        answer.to_head_nonce,
         answer.timestamp or 0,
         answer.wm_signature,
     )
@@ -834,6 +835,9 @@ async def publish(
     from .keys import derive_k_sig, derive_ward_id
 
     ward_id = await derive_ward_id()
+    # HELD IN LOCAL SCOPE across the round trip: the publish authorises against it and the
+    # returning attestation must name it as the nonce that was consumed.
+    head_nonce = sync_round.require_head_nonce()
 
     nonce = random.bytes(NONCE_LENGTH)
     sync_round.begin(nonce)
@@ -860,7 +864,7 @@ async def publish(
                 from_root,
                 counter,
                 new_root,
-                sync_round.require_head_nonce(),
+                head_nonce,
             ),
             nonce=nonce,
         ),
@@ -889,9 +893,14 @@ async def publish(
     await verify_round_attestation(
         counter - 1,
         from_root,
+        # THE NONCE THIS DEVICE SIGNED UNDER, passed as the operand rather than read off the
+        # answer. The WM must have consumed exactly it, so feeding it in makes the signature
+        # check ALSO the occurrence check: an attestation for a different occurrence of this same
+        # transition fails as "verification failed" rather than being taken for ours.
+        head_nonce,
         counter,
         new_root,
-        answer.head_nonce,
+        answer.to_head_nonce,
         answer.timestamp or 0,
         answer.wm_signature,
     )

@@ -200,12 +200,20 @@ def is_online() -> bool:
     return bool(raw) and raw[0] == _ONLINE
 
 
-# --- the WM's head nonce ----------------------------------------------------------------
+# --- the WM's head, as this device last saw it ------------------------------------------
 #
-# The freshness token the WM holds beside `(counter, root)` and rotates on every transition it
-# accepts. The device learns it from an attestation -- it is inside the signed preimage, see
-# `attest` -- and quotes it forward in the next `cas.wm_sig`, which is what stops one
-# authorisation being usable twice when a `(counter, root)` pair recurs.
+# `(counter, root, head_nonce)` -- the WM's whole state, latched when an attestation for it
+# verifies. The nonce is the freshness token the WM rotates on every transition it accepts; the
+# device learns it from inside the signed attestation and quotes it forward in the next
+# `cas.wm_sig`, which is what stops one authorisation being usable twice when a `(counter, root)`
+# pair recurs.
+#
+# THE HEAD IS STORED BESIDE THE NONCE, not just the nonce, and that pairing is what makes the
+# continuity rules in `adopt.verify_round_attestation` safe. A bare nonce would have to be
+# compared against the device's FLASH head, and the two can legitimately disagree -- an
+# attestation may verify and then fail to be adopted, leaving a nonce for a head the device does
+# not hold. Comparing an attested end against the head the nonce actually belongs to removes that
+# whole class of false refusal.
 #
 # WHY IT IS NOT IN THE ROUND RECORD. A write happens in a LATER request than the round that
 # brought the nonce in: `adopt` calls `clear()` as its last act, so a value kept on the round is
@@ -214,38 +222,59 @@ def is_online() -> bool:
 # which a nonce has been established this session. A new session must sync before it may write,
 # and must therefore learn a current nonce before it may authorise one.
 #
+# SESSION LIFETIME IS ALSO ITS LIMIT, stated plainly: the continuity rules can only catch a WM
+# register that moved incoherently WITHIN a session. Across a power cycle the device starts with
+# no nonce and the first attestation of the new session is unchecked. Persisting it beside the
+# root in `storage.ward` would extend the check across sessions, at 32 bytes per wallet slot.
+#
 # ALWAYS THE FRESHEST ONE SEEN. Every successful `adopt.verify_round_attestation` overwrites it,
 # whether or not the adoption that follows succeeds -- a nonce is a WM fact, not an outcome of
 # ours, and holding an older one buys nothing: presenting a stale nonce yields a signature the WM
 # refuses, which is a failed write and not a forged one.
+#
+# Layout: flag(1B) || counter(4B BE) || root(32B) || nonce(32B). The root is in PREIMAGE form,
+# the form an attestation carries, so comparison is plain equality.
 
 
-def set_head_nonce(nonce: bytes) -> None:
-    """Record the WM head nonce carried by an attestation this device just verified."""
-    from storage.cache_common import APP_WARD_HEAD_NONCE
+def set_wm_head(counter: int, root: bytes, nonce: bytes) -> None:
+    """Record the WM head an attestation just vouched for, and its freshness token."""
+    from storage.cache_common import APP_WARD_WM_HEAD
     from trezor.wire import context
 
-    assert len(nonce) == _NONCE_LEN
-    # A PRESENCE BYTE, because the all-zero nonce is a REAL value here: it is what a WM holds for
-    # a wallet it has just enrolled, and the first write after genesis quotes it. Without the
-    # flag an unset slot -- which reads back as zeros -- would be indistinguishable from it, and
-    # "we have never synced" would sign as "the WM is at enrolment".
-    context.cache_set(APP_WARD_HEAD_NONCE, b"\x01" + nonce)
+    assert len(root) == _ROOT_LEN and len(nonce) == _NONCE_LEN
+    # A PRESENCE BYTE. An unset cache slot reads back as zeros, which would otherwise parse as a
+    # perfectly well-formed head -- counter 0, an all-zero root, an all-zero nonce -- and "we
+    # have never synced" would be indistinguishable from "the WM is at genesis". The flag is
+    # cheaper than reasoning about whether any of those three could occur together.
+    context.cache_set(
+        APP_WARD_WM_HEAD,
+        b"\x01" + counter.to_bytes(4, "big") + root + nonce,
+    )
+
+
+def wm_head() -> "tuple[int, bytes, bytes] | None":
+    """`(counter, root, head_nonce)` as this device last saw it, or None.
+
+    None is the safe answer: a caller that cannot name the WM's head cannot check continuity
+    against it and cannot mint an authorisation the WM would accept.
+    """
+    from storage.cache_common import APP_WARD_WM_HEAD
+    from trezor.wire import context
+
+    raw = context.cache_get(APP_WARD_WM_HEAD)
+    if not raw or len(raw) != 1 + 4 + _ROOT_LEN + _NONCE_LEN or raw[0] != 1:
+        return None
+    return (
+        int.from_bytes(raw[1:5], "big"),
+        bytes(raw[5 : 5 + _ROOT_LEN]),
+        bytes(raw[5 + _ROOT_LEN :]),
+    )
 
 
 def head_nonce() -> "bytes | None":
-    """The WM's current head nonce as far as this session knows, or None.
-
-    None is the safe answer: a caller that cannot name the nonce cannot mint an authorisation the
-    WM would accept, and should say so rather than sign against a guess.
-    """
-    from storage.cache_common import APP_WARD_HEAD_NONCE
-    from trezor.wire import context
-
-    raw = context.cache_get(APP_WARD_HEAD_NONCE)
-    if not raw or len(raw) != _NONCE_LEN + 1 or raw[0] != 1:
-        return None
-    return bytes(raw[1:])
+    """Just the freshness token, for the callers that only mint against it."""
+    head = wm_head()
+    return head[2] if head is not None else None
 
 
 def require_head_nonce() -> bytes:

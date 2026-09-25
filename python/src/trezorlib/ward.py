@@ -425,7 +425,8 @@ def ingest_attestation(
     to_counter: int,
     to_root: Optional[bytes],
     wm_signature: bytes,
-    head_nonce: bytes,
+    from_head_nonce: bytes,
+    to_head_nonce: bytes,
     timestamp: int = 0,
 ) -> messages.WardIngestAttestationAck:
     """Deliver the WM's signed TRANSITION for the open round.
@@ -434,9 +435,11 @@ def ingest_attestation(
     statement the device's own `auth_commit` covers. At counter 0 the step is `(0, empty) ->
     (0, empty)`: nothing produced genesis, so it attests itself.
 
-    `head_nonce` is the WM's freshness token for the head it is attesting -- covered by the
-    signature, so it is the WM's value and not this host's. The device quotes it forward in the
-    next `wm_sig` it mints, which is what keeps one authorisation from moving the head twice.
+    The two head nonces are the WM's freshness tokens, covered by the signature, so they are the
+    WM's values and not this host's. `to_head_nonce` is the one the device quotes forward in the
+    next `wm_sig` it mints, which is what keeps one authorisation from moving the head twice;
+    `from_head_nonce` is the one this step CONSUMED, which is what lets the device tell that its
+    own authorisation was the one spent rather than some other occurrence of the same transition.
     """
     return session.call(
         messages.WardIngestAttestation(
@@ -445,7 +448,8 @@ def ingest_attestation(
             to_counter=to_counter,
             to_root=to_root,
             wm_signature=wm_signature,
-            head_nonce=head_nonce,
+            from_head_nonce=from_head_nonce,
+            to_head_nonce=to_head_nonce,
             timestamp=timestamp,
         ),
         expect=messages.WardIngestAttestationAck,
@@ -537,7 +541,8 @@ def rollback(
     to_counter: int,
     to_root: Optional[bytes],
     wm_signature: bytes,
-    head_nonce: bytes,
+    from_head_nonce: bytes,
+    to_head_nonce: bytes,
     recovered_root: Optional[bytes] = None,
     timestamp: int = 0,
 ) -> messages.WardRollbackAck:
@@ -567,7 +572,8 @@ def rollback(
             to_counter=to_counter,
             to_root=to_root,
             wm_signature=wm_signature,
-            head_nonce=head_nonce,
+            from_head_nonce=from_head_nonce,
+            to_head_nonce=to_head_nonce,
             recovered_root=recovered_root,
             timestamp=timestamp,
         ),
