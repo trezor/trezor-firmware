@@ -167,13 +167,24 @@ def verify_auth_commit(
     tag: bytes = TAG_COMMIT,
 ) -> bool:
     """Was this exact transition authorised by a holder of this wallet's K_auth?"""
+    from trezor.utils import consteq
+
     expected = auth_commit(
         k_auth, ward_id, from_counter, from_root, to_counter, to_root, tag
     )
-    # Length-independent comparison is not needed -- both sides are locally computed and
-    # the attacker learns nothing from timing here -- but equality on bytes is constant
-    # time in micropython anyway for equal-length inputs.
-    return expected == mac
+    # CONSTANT TIME, and the comment that used to sit here was wrong twice over. It said a
+    # length-independent comparison was not needed because "both sides are locally computed" --
+    # they are not: `mac` arrives from the HOST, on every chain link and every inbound link --
+    # and it asserted that `==` on bytes is constant time in micropython, which it is not. Bytes
+    # equality lowers to a memcmp that returns at the first differing byte, so the time taken
+    # leaks how many leading bytes of a candidate matched.
+    #
+    # WHAT THAT WOULD BUY AN ATTACKER: a byte-at-a-time forgery of an `auth_commit` under a key
+    # it does not hold -- 256 tries per byte rather than 2^256 for the whole tag -- and a forged
+    # one is a transition this wallet never authorised being folded into its history. Whether the
+    # signal survives USB round-trip jitter is not the question a verifier should be answering;
+    # `consteq` costs nothing here and removes it.
+    return consteq(expected, mac)
 
 
 def verify_chain_step(
@@ -418,8 +429,14 @@ def verify_intent_mac(
     of this wallet at some point. It does NOT mean they should be queued again now -- see the
     replay note in `queue_set_entry`.
     """
+    from trezor.utils import consteq
+
+    # Constant time, for the reason spelled out in `verify_auth_commit`: `mac` comes off the
+    # wire, and a short-circuiting compare leaks the length of a correct prefix. A restored
+    # backup is host-held material offered back to the device, so this is the same shape of
+    # attack -- forge the MAC and the device writes back bytes of the attacker's choosing.
     expected = intent_mac(k_auth, ward_id, op, key_type, app_id, identifier, value)
-    return expected == mac
+    return consteq(expected, mac)
 
 
 # --- the WM's authorisation -------------------------------------------------------------
