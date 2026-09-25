@@ -11,7 +11,7 @@
 
 use super::BR_CODE_OTHER;
 use super::extra::{Extra, ExtraItem};
-use super::screen::{Screen, call_once};
+use super::layout::{LayoutHandle, call_once};
 use crate::alloc_types::String;
 use crate::structs::{SelectMenu, ShowProperties, StrSlice, TrezorUiEnum, UiReply};
 use crate::{Error, Result};
@@ -91,7 +91,7 @@ pub(super) fn open(
         menu_step.as_deref(),
         BR_CODE_OTHER,
     ));
-    let screen = Screen::new();
+    let layout = LayoutHandle::new();
     let mut first = true;
 
     loop {
@@ -99,9 +99,9 @@ pub(super) fn open(
         // was chosen, not at the top of the list, so the menu is reopened.
         let reply = if first {
             first = false;
-            screen.show(&request)?
+            layout.show(&request)?
         } else {
-            screen.reshow(&request)?
+            layout.reshow(&request)?
         };
 
         match reply {

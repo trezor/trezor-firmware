@@ -11,7 +11,7 @@
 //! and disappears when the work is done — whether the work finished, failed,
 //! or returned early through `?`. A lost `End` would leave the person staring
 //! at a bar for work that stopped, which is precisely what a scope is for;
-//! the same reasoning that closes a [`Screen`](super::screen::Screen) on drop.
+//! the same reasoning that closes a [`LayoutHandle`](super::layout::LayoutHandle) on drop.
 //!
 //! # Forms
 //!
