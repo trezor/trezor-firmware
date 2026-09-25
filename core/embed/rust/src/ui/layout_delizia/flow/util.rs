@@ -296,18 +296,12 @@ pub fn show_info_screen(
     items: impl IntoIterator<Item = (TString<'static>, TString<'static>)>,
 ) -> ShowInfoScreen {
     let mut paragraphs = ParagraphVecLong::new();
-    let mut first: bool = true;
     for (key, value) in items {
-        // FIXME: padding:
-        if !first {
-            paragraphs.add(Paragraph::new::<TString<'static>>(
-                &theme::TEXT_SUB_GREY,
-                " ".into(),
-            ));
-        }
-        first = false;
         paragraphs.add(Paragraph::new(&theme::TEXT_SUB_GREY, key).no_break());
-        paragraphs.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, value));
+        paragraphs.add(
+            Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, value)
+                .with_bottom_padding(theme::PROPS_SPACING),
+        );
     }
 
     MoreInfoScreen::new(title, paragraphs.into_paragraphs())
