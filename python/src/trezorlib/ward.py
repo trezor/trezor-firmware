@@ -453,12 +453,23 @@ def recover_counter(
     to_counter: int,
     to_root: Optional[bytes],
     wm_signature: bytes,
+    recovered_root: Optional[bytes] = None,
     timestamp: int = 0,
 ) -> messages.WardRecoverCounterAck:
-    """Accept an attestation that goes backwards, after the user confirms.
+    """Mint a demotion onto a state this host can still serve, after the user confirms.
 
-    Only for recovering a WM whose register or clock regressed. It is the sole path that
-    accepts a lower counter, and it holds for confirmation.
+    For a WM whose register regressed. `(from_counter, from_root, to_counter, to_root)` is the
+    WM's OWN current head, attested against this round's nonce -- the predecessor the demotion
+    extends and the pair the WM will compare-and-swap on.
+
+    `recovered_root` is the root of a trie THIS HOST can reconstruct from the rows it holds. It
+    need not ever have been a head: a host that lost rows rebuilds a tree the wallet may never
+    have had, and reverting to something serviceable is the point. `rollback` demands an archived
+    attestation instead, and can afford to, because it runs while the WM is healthy.
+
+    NOTHING IS ADOPTED BY THIS CALL. It returns the REVERT transition; publish it to the WM and
+    then run an ordinary sync round, exactly as for a rollback. Record it with `apply_rollback` --
+    a recovery IS a rollback, so a host's transition log treats the row the same way.
     """
     return session.call(
         messages.WardRecoverCounter(
@@ -467,6 +478,7 @@ def recover_counter(
             to_counter=to_counter,
             to_root=to_root,
             wm_signature=wm_signature,
+            recovered_root=recovered_root,
             timestamp=timestamp,
         ),
         expect=messages.WardRecoverCounterAck,

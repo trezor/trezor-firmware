@@ -5,59 +5,57 @@ if TYPE_CHECKING:
 
 
 async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
-    """Accept an attestation that goes backwards, with the user's explicit consent.
+    """Demote onto a state the host can still serve, when the WM's register went backwards.
 
-    NAMED FOR ITS MODULE, not for what it does: `find_registered_handler` derives the
-    function name from the last component of the path it is registered under, so this must
-    be `recover` in `apps.ward.recover`. A mismatch fails at `getattr`, before any check in
-    the body runs, so every caller sees the same opaque failure whatever it asked for.
+    NAMED FOR ITS MODULE, not for what it does: `find_registered_handler` derives the function
+    name from the last component of the path it is registered under, so this must be `recover` in
+    `apps.ward.recover`. A mismatch fails at `getattr`, before any check in the body runs, so
+    every caller sees the same opaque failure whatever it asked for.
 
-    Monotonicity protects against replay, and when the WM's register is lost or its clock
-    jumps it becomes a denial of service against the owner instead: every device with a
-    stored counter locks out and nothing can sync again. This is the way back, and it is
-    the ONLY path that accepts a lower counter or an older time.
+    A RECOVERY IS A ROLLBACK, and is now built as one. Monotonicity is what stops a replay, and
+    when the WM's register is lost it becomes a denial of service against the owner instead:
+    every device with a stored counter locks out and nothing syncs again. The way back is the
+    same operation `rollback` performs -- a REVERT transition, counter forward, carrying a root
+    from further back -- and the only thing that differs is which head it is built FROM.
 
-    Everything here is still cryptographically genuine: the WM signature is checked against this
-    round's nonce as always. What it is NO LONGER proof of is that the wallet ever reached the
-    state it names. That used to follow for free -- the attested value was a mac only a
-    seed-holding device could produce, so a replay was self-evidently of real history -- and with
-    the WM attesting roots in the clear, it does not. The proof has moved to where every other
-    proof of state now lives: the adoption that follows must fold an authorised LINK into the
-    recovered head (`reconcile`) or walk the chain to it (`verify_chain`), and a host that cannot
-    produce one cannot complete a recovery. Fail-closed, and it is the same requirement the design
-    stated as targeting "a root the Trezor holds its own prior signature for".
+    FROM THE WM'S HEAD, NOT THIS DEVICE'S. That is the whole distinction. Normally they are the
+    same, because a device only ever adopts what the WM attested; after a register loss they are
+    not, and the WM's is the one a transition must extend if the WM is to accept it at all. So
+    this mints
 
-    What cannot be checked is INTENT. Nothing distinguishes a genuine operator recovery
-    from an attacker replaying old state, because both present the same authentic
-    material; the difference lives entirely in whether the user means it. That makes this
-    the strongest social-engineering target in the protocol, so the prompt names both
-    counters, says how far back the state is, and holds -- and says plainly what is lost.
+        (wm_counter, wm_root) -> (wm_counter + 1, recovered_root)
 
-    AND LOWERING THE COUNTER RE-OPENS EVERY COUNTER ABOVE IT. `auth_commit` binds
-    `(from_counter, from_root, to_counter, to_root)` and nothing outside that, so once the head is
-    back at 10 the wallet's own genuine links 10->11->...->57 are replayable, as is any FORK that
-    was ever authorised at those counters: two different roots at counter 11 may each have a real
-    authorisation from (10, R10), and nothing in a link says which one the wallet went on to keep.
-    That is inherent to going backwards -- a counter is what makes an authorisation name one
-    moment, and this is the operation that gives a moment back.
+    under TAG_REVERT, with `auth_commit` for the other devices and `wm_sig` for the WM.
 
-    WHAT BOUNDS IT is that replaying any of it requires the WM to attest each step, and the WM is
-    where the operator is. A host alone cannot re-drive the wallet: the floor only moves up on a
-    LIVE, nonce-bound attestation, and since the archived anchor was removed from
-    `WardVerifyChain` there is no path that raises the stored counter without one. So the exposure
-    is "a recovered wallet can be walked forward again through history the WM agrees to", not
-    "any host holding old links can undo the recovery".
+    THE COUNTER GOES FORWARD, which is what makes it safe to re-use a number the wallet has
+    already been past. It also breaks the replay that lowering the counter used to open: an
+    authorisation binds its exact `(from_counter, from_root)` predecessor, so once the head is
+    `(11, recovered_root)` the old links out of `(11, R11)` no longer apply and the history above
+    cannot be re-driven. That holds unless `recovered_root` happens to equal the root that
+    genuinely held that counter -- roots are content-addressed and may repeat -- which is a
+    narrower residue than the wholesale re-opening a backward jump used to leave.
 
-    GAP(ward): nothing yet distinguishes the wallet's real line from a fork at a re-opened
-    counter. Doing so needs something monotonic that a recovery does NOT reset -- an epoch beside
-    the counter, bumped on every recovery and bound into the preimage, so authorisations from
-    before it stop verifying. That is a wire break and a WM change, deferred deliberately rather
-    than overlooked.
+    WHAT `recovered_root` IS, AND WHAT IT IS NOT. It is a root the HOST can reconstruct from the
+    data it actually holds -- Suite proposes it, having rebuilt the trie from its own rows -- and
+    the user approves it on the screen below. It is NOT required to have been a head: a host that
+    lost rows reconstructs a tree the wallet may never have had, and reverting to something
+    serviceable is the entire point of the escape hatch. `WardRollback` demands an archived
+    attestation for exactly this reason and can afford to, because it runs when the WM is healthy
+    and the target really was current. Here the WM's register is the thing that is gone, so the
+    user's approval is the authority, and the screen has to say so rather than imply a proof that
+    does not exist.
 
-    "How far back" is a COUNT, not a duration. The device has no clock, and the stored time it
-    once compared against is gone with the rest of the timestamp: it was never a security
-    signal, since a malicious WM lies about the clock freely. The count is authenticated --
-    both counters come from verified material -- which the duration never was.
+    NOTHING IS ADOPTED HERE. The device hands back the transition and the head moves only when the
+    WM has confirmed it, which is the invariant every write obeys. What IS recorded is the
+    user's consent -- `round.authorise_demotion` -- because the attestation that comes back names
+    a counter below this device's floor, and `ingest` and `reconcile` would both otherwise be
+    right to refuse it.
+
+    WHAT CANNOT BE CHECKED IS INTENT. Nothing distinguishes a genuine operator recovery from an
+    attacker walking a user through one: both present the same authentic material, and the
+    difference lives entirely in whether the user means it. That makes this the strongest
+    social-engineering target in the protocol, so the screen names both counters, says how far
+    back the state is, and holds.
     """
     from trezor.messages import WardRecoverCounterAck
     from trezor.ui.layouts import confirm_properties
@@ -65,12 +63,17 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
 
     from . import round as sync_round
     from .adopt import verify_round_attestation
-    from .common import require_initialized
+    from .cas import TAG_REVERT, TAG_WM_REVERT, auth_commit, wm_sig
+    from .common import WARNING_UNVERIFIED, require_initialized
+    from .keys import derive_k_auth, derive_k_sig, derive_ward_id
     from .root import get_counter
 
     require_initialized()
 
-    from_counter, from_root, counter, root = await verify_round_attestation(
+    # THE WM'S OWN HEAD, attested against this round's nonce. It is the predecessor the demotion
+    # extends and the value the WM will compare-and-swap on, so it has to be its current one and
+    # not something the host names.
+    _wm_from_counter, _wm_from_root, wm_counter, wm_root = await verify_round_attestation(
         msg.from_counter,
         msg.from_root or None,
         msg.to_counter,
@@ -81,32 +84,70 @@ async def recover(msg: WardRecoverCounter) -> WardRecoverCounterAck:
 
     stored_counter = await get_counter()
 
-    # Refuse to be used for anything but its purpose. An attestation that does NOT go
-    # backwards belongs on the ordinary path, where it needs no confirmation -- routing it
-    # through here would train users to approve this screen.
-    if counter >= stored_counter:
-        raise DataError("attestation is not older; use the ordinary sync path")
+    # Refuse to be used for anything but its purpose. A WM that is not BEHIND this device has not
+    # lost anything, and a demotion from a healthy WM is `WardRollback` -- which requires proof
+    # the target was ever the head, and should not be reachable through a screen that does not.
+    if wm_counter >= stored_counter:
+        raise DataError("the WM is not behind this device; use WardRollback")
+
+    recovered_root = msg.recovered_root or None
+    if recovered_root is not None and len(recovered_root) != 32:
+        raise DataError("recovered_root must be 32 bytes")
+
+    new_counter = wm_counter + 1
 
     await confirm_properties(
         "ward_recover_counter",
         "Reset sync counter",
         [
             ("Currently at", "change #%d" % stored_counter, False),
-            ("Resetting to", "change #%d" % counter, False),
-            ("Going back", "%d changes" % (stored_counter - counter), False),
+            ("Resetting to", "change #%d" % new_counter, False),
+            ("Going back", "%d changes" % (stored_counter - new_counter), False),
             (
                 "Warning",
                 "Changes after #%d may be lost. Only continue if you are recovering "
-                "the sync service." % counter,
+                "the sync service." % new_counter,
                 False,
             ),
+            # SAYS WHAT WAS NOT PROVEN, which is the honest counterpart to the line
+            # `WardRollback` shows. There the WM confirmed the target; here the WM's record is
+            # the thing that was lost, so the state being restored is one the host says it can
+            # serve and nothing more.
+            (
+                "Target",
+                "Proposed by the host. Not confirmed by the WARD Manager.",
+                False,
+            ),
+            WARNING_UNVERIFIED,
         ],
         hold=True,
     )
 
-    # BACKWARD, and marked as such. `reconcile` refuses a head below the stored one unless this
-    # round says the user was shown what it costs and held to confirm -- which is the screen
-    # immediately above. Without the flag the rule there could only infer consent from the shape
-    # of the counters, and consent is exactly the thing that cannot be inferred.
-    sync_round.set_attested(from_counter, from_root, counter, root, backward=True)
-    return WardRecoverCounterAck(counter=counter)
+    ward_id = await derive_ward_id()
+
+    # RECORDED ONLY AFTER THE HOLD. The attestation that brings this head back names a counter
+    # below this device's floor, and nothing else would let it through.
+    sync_round.authorise_demotion(new_counter)
+
+    return WardRecoverCounterAck(
+        counter=new_counter,
+        new_root=recovered_root,
+        auth_commit=auth_commit(
+            await derive_k_auth(),
+            ward_id,
+            wm_counter,
+            wm_root,
+            new_counter,
+            recovered_root,
+            TAG_REVERT,
+        ),
+        wm_sig=wm_sig(
+            await derive_k_sig(),
+            ward_id,
+            wm_counter,
+            wm_root,
+            new_counter,
+            recovered_root,
+            TAG_WM_REVERT,
+        ),
+    )

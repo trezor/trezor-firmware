@@ -8640,6 +8640,7 @@ if TYPE_CHECKING:
         to_root: "AnyBytes | None"
         from_counter: "int | None"
         from_root: "AnyBytes | None"
+        recovered_root: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8650,6 +8651,7 @@ if TYPE_CHECKING:
             to_root: "AnyBytes | None" = None,
             from_counter: "int | None" = None,
             from_root: "AnyBytes | None" = None,
+            recovered_root: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8659,11 +8661,17 @@ if TYPE_CHECKING:
 
     class WardRecoverCounterAck(protobuf.MessageType):
         counter: "int | None"
+        new_root: "AnyBytes | None"
+        auth_commit: "AnyBytes | None"
+        wm_sig: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             counter: "int | None" = None,
+            new_root: "AnyBytes | None" = None,
+            auth_commit: "AnyBytes | None" = None,
+            wm_sig: "AnyBytes | None" = None,
         ) -> None:
             pass
 

@@ -10792,6 +10792,7 @@ class WardRecoverCounter(protobuf.MessageType):
         6: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
         7: protobuf.Field("from_counter", "uint32", repeated=False, required=False, default=None),
         8: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
+        9: protobuf.Field("recovered_root", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10803,6 +10804,7 @@ class WardRecoverCounter(protobuf.MessageType):
         to_root: Optional["bytes"] = None,
         from_counter: Optional["int"] = None,
         from_root: Optional["bytes"] = None,
+        recovered_root: Optional["bytes"] = None,
     ) -> None:
         self.wm_signature = wm_signature
         self.timestamp = timestamp
@@ -10810,20 +10812,30 @@ class WardRecoverCounter(protobuf.MessageType):
         self.to_root = to_root
         self.from_counter = from_counter
         self.from_root = from_root
+        self.recovered_root = recovered_root
 
 
 class WardRecoverCounterAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2318
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("wm_sig", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         counter: Optional["int"] = None,
+        new_root: Optional["bytes"] = None,
+        auth_commit: Optional["bytes"] = None,
+        wm_sig: Optional["bytes"] = None,
     ) -> None:
         self.counter = counter
+        self.new_root = new_root
+        self.auth_commit = auth_commit
+        self.wm_sig = wm_sig
 
 
 class WardServiceOpen(protobuf.MessageType):

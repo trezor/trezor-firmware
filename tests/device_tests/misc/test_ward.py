@@ -1173,7 +1173,11 @@ def _link_into(store: WardTrie, to_counter: int):
     """
     if to_counter == 0:
         return None
-    for link in store.links:
+    # NEWEST FIRST. A counter can be produced TWICE once a demotion exists: the original write
+    # reached it, and a recovery minted a REVERT that reaches it again carrying an older root.
+    # The later one is the live history, so scanning forward would hand back a link into a head
+    # the wallet has moved off -- authentic, and not the one the WM attested.
+    for link in reversed(store.links):
         if link[2] == to_counter:
             return link
     raise AssertionError("no link produces counter %d" % to_counter)
@@ -2464,22 +2468,35 @@ def _recover(
     session: Session,
     wm: MockWM,
     store: WardTrie,
-    counter: int,
-    root: bytes,
+    wm_counter: int,
+    wm_root,
+    recovered_root,
     timestamp: int,
 ):
-    """Walk the recovery confirmation and return (ack, recorder).
+    """Stage a WM register loss and walk the recovery. Returns (ack, recorder).
 
-    TAKES THE STORE, because the attestation names a STEP and the step comes from the host's
-    transition log. A recovery target is an OLD head, so the log is exactly where its predecessor
-    is to be found -- and a host that kept no links cannot recover, which is the same fail-closed
-    property `reconcile` has.
+    `install_unauthenticated` IS the failure being modelled: a WM told a head by a party holding
+    no signature is exactly a register restored from a backup, which is why the mock keeps that
+    entry point and names it as the thing an ordinary fixture must not reach for.
+
+    The device is then asked to come down onto `recovered_root` -- a root this host can serve --
+    by minting a REVERT from the WM's own head. Nothing is adopted here: the ack carries the
+    transition, and the caller publishes it and syncs, exactly as it would for a rollback.
     """
-    ack_sync = ward.sync(session)
-    step = _step_into(store, counter, root)
-    sig = wm.sign(
-        ack_sync.ward_id, ack_sync.nonce, *step, counter, root, timestamp
+    # THE STEP IT REGRESSED TO, not just the head: the mock defaults the `from` end to whatever
+    # head it currently holds, which here is AHEAD -- so the default would install a backward
+    # step and the device would refuse the attestation as malformed before the recovery began.
+    wm.install_unauthenticated(
+        _WARD_ID,
+        wm_counter,
+        wm_root,
+        timestamp,
+        *_step_into(store, wm_counter, wm_root),
     )
+
+    ack_sync = ward.sync(session)
+    fc, fr, tc, tr, ts, sig = wm.attest(ack_sync.ward_id, ack_sync.nonce)
+
     rec = _Recorded()
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
@@ -2488,8 +2505,32 @@ def _recover(
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
-        ack = ward.recover_counter(session, *step, counter, root, sig, timestamp)
+        ack = ward.recover_counter(
+            session, fc, fr, tc, tr, sig, recovered_root=recovered_root, timestamp=ts
+        )
     return ack, rec
+
+
+def _publish_demotion(wm: MockWM, store: WardTrie, ack, from_counter: int, from_root) -> tuple:
+    """Put the minted demotion into the WM, as a host does, and record it in the log.
+
+    THE WM VERIFIES IT like any other advance: compare-and-swap on the head it holds, and
+    `wm_sig` under the REVERT tag. A recovery that the WM refuses simply does not happen.
+    """
+    wm.advance(
+        _WARD_ID,
+        from_counter,
+        from_root,
+        ack.counter,
+        ack.new_root,
+        ack.wm_sig,
+        _T0 + ack.counter,
+    )
+    link = (from_counter, from_root, ack.counter, ack.new_root, ack.auth_commit)
+    store.links.append(link)
+    store.wm_sigs[ack.counter] = ack.wm_sig
+    store.counter = ack.counter
+    return link
 
 
 # REMOVED: test_ward_ingest_refuses_an_attestation_from_before_the_stored_time and
@@ -2501,19 +2542,24 @@ def _recover(
 
 
 @pytest.mark.models("core")
-def test_ward_recover_counter_accepts_a_backward_attestation(session: Session):
-    """The way back from a WM that lost its register: an older head, with consent.
+def test_ward_recover_counter_demotes_onto_a_root_the_host_can_serve(session: Session):
+    """The way back from a WM that lost its register -- as a ROLLBACK, not a backward jump.
 
-    Monotonicity is what stops a replay, and when the operator's state is genuinely lost
-    it becomes a lock-out instead -- every device refuses every sync forever. This is the
-    only path that accepts a lower counter, and afterwards the wallet syncs again.
+    Monotonicity is what stops a replay; when the operator's state is genuinely lost it becomes
+    a lock-out instead, and every device refuses every sync forever. The way out mints a REVERT
+    from the WM's OWN head -- the only head it will compare-and-swap against -- onto a root this
+    host can still reconstruct.
+
+    THE COUNTER GOES FORWARD even though the head goes back, which is what makes re-using a
+    number the wallet has already been past safe. It also breaks the replay a backward jump used
+    to open: an authorisation binds its exact `(from_counter, from_root)` predecessor, so once the
+    head is the recovered root the old links out of that counter no longer apply.
     """
     store = WardTrie()
-    _seed(session, store, b"a", b"one")
+    key_a = _seed(session, store, b"a", b"one")
     wm = MockWM()
     _attest(session, wm, store)
-    old_counter, old_root, old_time = store.counter, store.root(), store.timestamp
-    old_root = old_root
+    wm_counter, wm_root = store.counter, store.root()
 
     res, _rec = _write(
         session,
@@ -2524,34 +2570,47 @@ def test_ward_recover_counter_accepts_a_backward_attestation(session: Session):
     ward.apply(store, res)
     _confirm(session, store)
     _attest(session, wm, store)
-    assert store.counter > old_counter
+    assert store.counter > wm_counter
 
-    # the WM comes back from a backup: it now says the old head is current
-    ack, _rec = _recover(session, wm, store, old_counter, old_root, old_time - 3600)
-    assert ack.counter == old_counter
+    # What this host can still serve: the tree without "b". Not a head the wallet ever had --
+    # which is the point, and why no archived attestation is asked for.
+    serviceable = _subset(store, [key_a])
 
-    # ...and the device adopts it, so the wallet is usable again -- with the link into that
-    # older head, which the host still holds because it archives every one it is handed. A host
-    # that kept none could not complete a recovery, and that is fail-closed by design.
-    ward.reconcile(session, _link_into(store, old_counter))
-    rewound = _subset(store, [expected_entry_key(_K_PATH, _APP, b"a")])
-    assert rewound.root() == old_root
+    ack, _rec = _recover(
+        session, wm, store, wm_counter, wm_root, serviceable.root(), _T0 + wm_counter
+    )
+
+    # FORWARD FROM THE WM'S HEAD, carrying a root from further back.
+    assert ack.counter == wm_counter + 1
+    assert ack.new_root == serviceable.root()
+    assert ack.auth_commit is not None and ack.wm_sig is not None
+
+    # NOTHING ADOPTED YET: the head moves when the WM confirms, like every other write.
+    assert ward.sync(session).counter > wm_counter
+
+    _publish_demotion(wm, store, ack, wm_counter, wm_root)
+    fc, fr, tc, tr, ts, sig = wm.attest(_WARD_ID, ward.sync(session).nonce)
+    ward.ingest_attestation(session, fc, fr, tc, tr, sig, ts)
+    ward.reconcile(session, _link_into(store, ack.counter))
+
+    serviceable.counter = ack.counter
     _res, rec = _read(
-        session, rewound, lambda p: ward.get_entry(session, _APP, b"a", p)
+        session, serviceable, lambda p: ward.get_entry(session, _APP, b"a", p)
     )
     assert "one" in rec.text
+    assert ward.sync(session).counter == ack.counter
 
-    # AND THE RECOVERY STICKS. The host still holds the archived attestation for the head it was
-    # just moved off, and every link up to it -- it archives both by design, because `rollback`
-    # needs them. There used to be a way to spend that: anchor a chain walk on the archived
-    # attestation, descend to the device's current head, and have the device persist the OLD
-    # counter again. No freshness, no screen, recovery undone, wallet stranded exactly as before.
-    #
-    # `WardVerifyChain` no longer takes an anchor at all, so the only way back up is a LIVE
-    # attestation from a WM that has caught up -- which is the operator action the recovery was
-    # for. Asserted on the counter the device reports, since that is the floor at stake.
-    assert store.attestation_for(store.counter) is not None  # the host really did keep it
-    assert ward.sync(session).counter == old_counter
+    # AND THE CONSENT IS SPENT. One hold buys one descent: a second attestation below the floor,
+    # however genuine, has no approval left to ride on.
+    behind = ack.counter - 1
+    ack_sync = ward.sync(session)
+    sig2 = wm.sign(
+        ack_sync.ward_id, ack_sync.nonce, behind - 1, wm_root, behind, wm_root, _T0
+    )
+    with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
+        ward.ingest_attestation(
+            session, behind - 1, wm_root, behind, wm_root, sig2, _T0
+        )
 
 
 @pytest.mark.models("core")
@@ -2571,9 +2630,23 @@ def test_ward_recover_counter_refuses_an_attestation_that_is_not_older(
 
     ack = ward.sync(session)
     root = store.root()
-    sig = wm.sign(ack.ward_id, ack.nonce, *_step_into(store, store.counter, root), store.counter, root, store.timestamp)
-    with pytest.raises(exceptions.TrezorFailure, match="not older"):
-        ward.recover_counter(session, *_step_into(store, store.counter, root), store.counter, root, sig, store.timestamp)
+    step = _step_into(store, store.counter, root)
+    sig = wm.sign(
+        ack.ward_id, ack.nonce, *step, store.counter, root, store.timestamp
+    )
+    # The WM is AT this device's head, not behind it -- so nothing was lost and there is nothing
+    # to recover. A demotion from a healthy WM is `WardRollback`, which asks for proof the target
+    # was ever a head; routing it through here would be a way around that proof.
+    with pytest.raises(exceptions.TrezorFailure, match="not behind this device"):
+        ward.recover_counter(
+            session,
+            *step,
+            store.counter,
+            root,
+            sig,
+            recovered_root=root,
+            timestamp=store.timestamp,
+        )
 
 
 @pytest.mark.models("core")
@@ -2593,11 +2666,22 @@ def test_ward_recover_counter_still_requires_a_genuine_attestation(session: Sess
 
     impostor = MockWM(seed=b"NOT THE WARD MANAGER DEBUG KEY!!")
     ack = ward.sync(session)
-    sig = impostor.sign(ack.ward_id, ack.nonce, *_step_into(store, behind, root), behind, root, store.timestamp - 3600)
+    step = _step_into(store, behind, root)
+    sig = impostor.sign(
+        ack.ward_id, ack.nonce, *step, behind, root, store.timestamp - 3600
+    )
     with pytest.raises(
         exceptions.TrezorFailure, match="attestation verification failed"
     ):
-        ward.recover_counter(session, *_step_into(store, behind, root), behind, root, sig, store.timestamp - 3600)
+        ward.recover_counter(
+            session,
+            *step,
+            behind,
+            root,
+            sig,
+            recovered_root=root,
+            timestamp=store.timestamp - 3600,
+        )
 
 
 @pytest.mark.models("core")
@@ -2614,18 +2698,24 @@ def test_ward_recover_counter_screen_names_both_counters_and_the_distance(
     """
     store = WardTrie()
     _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
     wm = MockWM()
     _attest(session, wm, store)
-    behind = store.counter - 1
-    root = store.root()
+    # The head one step back, taken from the host's own log -- what a restored register lands on.
+    wm_counter, wm_root = _link_into(store, store.counter)[:2]
 
-    _ack, rec = _recover(session, wm, store, behind, root, store.timestamp - 7200)
+    _ack, rec = _recover(
+        session, wm, store, wm_counter, wm_root, store.root(), _T0 + wm_counter
+    )
 
     assert "reset sync counter" in rec.title
     assert "#%d" % store.counter in rec.squashed  # where it is
-    assert "#%d" % behind in rec.squashed  # where it is going
-    assert "1changes" in rec.squashed  # how far back, as an authenticated count
+    assert "#%d" % (wm_counter + 1) in rec.squashed  # where it is going
     assert "may be lost" in rec.text
+    # AND WHAT WAS NOT PROVEN. `WardRollback` tells the user the WM confirmed its target; here
+    # the WM's record is the thing that was lost, so the state is the host's proposal and the
+    # screen must not imply otherwise.
+    assert "not confirmed" in rec.text.lower()
 
 
 # --- the sibling a delete promotes, and the tree a delete can empty ----------------

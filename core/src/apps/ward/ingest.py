@@ -32,12 +32,17 @@ async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
         msg.wm_signature,
     )
 
-    # Anti-rollback, and the reason this rule lives HERE rather than in the shared check:
-    # `recover` needs the opposite one. The attested counter may not precede the floor this
-    # wallet has already accepted; equality is fine, since re-reading the same state is a no-op.
-    # It is also the only bound left on a WM that lies: it can now name a root this wallet never
-    # held, so the floor is what stops it naming an OLD one and freezing the device there.
-    if counter < await get_counter():
+    # Anti-rollback. The attested counter may not precede the floor this wallet has already
+    # accepted; equality is fine, since re-reading the same state is a no-op. It is also the only
+    # bound left on a WM that lies: it can now name a root this wallet never held, so the floor is
+    # what stops it naming an OLD one and freezing the device there.
+    #
+    # THE ONE EXEMPTION IS A DEMOTION THE USER APPROVED, and it is exact: `recover` records the
+    # single counter it minted a REVERT for, and only that counter passes. A demotion is the one
+    # operation whose whole purpose is to come down, so the floor cannot be what decides it --
+    # but nothing else may inherit the exemption, which is why this compares equality rather than
+    # opening a range.
+    if counter < await get_counter() and counter != sync_round.authorised_demotion():
         raise DataError("attested counter is older than the stored counter")
 
     sync_round.set_attested(from_counter, from_root, counter, root)
