@@ -44051,6 +44051,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__vault_deposit_intro, Self::ethereum__vault_deposit_intro),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__vault_owner_address, Self::ethereum__vault_owner_address),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__vault_redeem_intro, Self::ethereum__vault_redeem_intro),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__vault_redeem_to, Self::ethereum__vault_redeem_to),

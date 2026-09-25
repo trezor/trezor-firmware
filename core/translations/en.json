@@ -966,6 +966,7 @@
     "ethereum__vault_claim_intro": "Claim rewards from Merkl.xyz",
     "ethereum__vault_claim_to": "Claim to",
     "ethereum__vault_deposit_intro": "Review details to deposit to vault.",
+    "ethereum__vault_owner_address": "Owner address",
     "ethereum__vault_redeem_intro": "Review details to redeem from vault.",
     "ethereum__vault_redeem_to": "Redeem to",
     "ethereum__vault_withdraw_intro": "Review details to withdraw from vault.",

@@ -1351,6 +1351,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__vault_claim_intro;
   MP_QSTR_ethereum__vault_claim_to;
   MP_QSTR_ethereum__vault_deposit_intro;
+  MP_QSTR_ethereum__vault_owner_address;
   MP_QSTR_ethereum__vault_redeem_intro;
   MP_QSTR_ethereum__vault_redeem_to;
   MP_QSTR_ethereum__vault_withdraw_intro;

@@ -409,6 +409,7 @@ class TR:
     ethereum__vault_claim_intro: str = "Claim rewards from Merkl.xyz"
     ethereum__vault_claim_to: str = "Claim to"
     ethereum__vault_deposit_intro: str = "Review details to deposit to vault."
+    ethereum__vault_owner_address: str = "Owner address"
     ethereum__vault_redeem_intro: str = "Review details to redeem from vault."
     ethereum__vault_redeem_to: str = "Redeem to"
     ethereum__vault_withdraw_intro: str = "Review details to withdraw from vault."
