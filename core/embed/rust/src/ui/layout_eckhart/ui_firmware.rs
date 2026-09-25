@@ -1283,6 +1283,7 @@ impl FirmwareUI for UIEckhart {
         let text_style = theme::TEXT_REGULAR;
         let mut ops = OpTextLayout::new(text_style);
         ops.add_text_with_font(description, text_style.text_font)
+            .add_newline()
             .add_text_with_font(url, theme::TEXT_MONO_MEDIUM.text_font);
 
         let screen = TextScreen::new(FormattedText::new(ops))
