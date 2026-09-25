@@ -170,9 +170,10 @@
 //! review-and-edit loop, a branch — matches on `Backward` itself; the
 //! raw replies are public for exactly that.
 //!
-//! WIP: settled design, not built. No block takes `back` yet and
-//! `confirm_linear_flow` does not exist; both land together, with the
-//! ethereum port that needs them.
+//! WIP: half-built. [`confirm_linear_flow`] exists and owns the ordering,
+//! but no block takes `back` yet, so no step's screen offers the gesture
+//! and no `Backward` can arrive. The parameter lands with the ethereum
+//! port; the flow is ready for it.
 //!
 //! # Step names
 //!
@@ -340,6 +341,7 @@
 mod chunked;
 mod confirm_action;
 mod confirm_data;
+mod confirm_linear_flow;
 mod confirm_properties;
 mod confirm_summary;
 mod confirm_value;
@@ -351,6 +353,7 @@ mod show_notice;
 
 pub use confirm_action::{ConfirmAction, confirm_action};
 pub use confirm_data::{ConfirmData, confirm_data};
+pub use confirm_linear_flow::confirm_linear_flow;
 pub use confirm_properties::{ConfirmProperties, confirm_properties};
 pub use confirm_summary::{ConfirmSummary, confirm_summary};
 pub use confirm_value::{ConfirmValue, Footer, ValueKind, confirm_value};
