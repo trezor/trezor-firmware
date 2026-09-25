@@ -15,6 +15,9 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import pytest
+from embit.bip32 import HDKey
+from embit.networks import NETWORKS
+from embit.psbt import PSBT
 
 from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
@@ -96,10 +99,8 @@ def test_miniscript_spend(session: Session):
     )
     COIN = "Testnet"
 
-    assert (
-        btc.get_public_node(session, parse_path("m/84h/1h/0h"), coin_name=COIN).xpub
-        == TPUBS[0]
-    )
+    node = btc.get_public_node(session, parse_path("m/84h/1h/0h"), coin_name=COIN)
+    assert node.xpub == TPUBS[0]
 
     reg = messages.MiniscriptRegisterPolicy(
         name="Policy name",
@@ -107,35 +108,41 @@ def test_miniscript_spend(session: Session):
         coin_name=COIN,
     )
     session.call(msg=reg, expect=messages.Success)
-    assert (
-        btc.get_address(session, n=[0, 2], policy=reg.policy, coin_name=COIN)
-        == "tb1qerjma9tcyn6qh5yt7wdqqm3q8sz7ft6dn7pratjclzc8pha27rcsgjn0sp"
-    )
+    addr = btc.get_address(session, n=[0, 2], policy=reg.policy, coin_name=COIN)
+    assert addr == "tb1qerjma9tcyn6qh5yt7wdqqm3q8sz7ft6dn7pratjclzc8pha27rcsgjn0sp"
 
-    TXHASH_5694f1 = bytes.fromhex(
-        "5694f194cb1389ab66c066397534b8ad1cd635c4c1effe26088491d3c8500949"
+    psbt = PSBT.from_base64(
+        "cHNidP8BAFIBAAAAAUkJUMjTkYQIJv7vwcQ11hytuDR1OWbAZquJE8uU8ZRWAQAAAAD/////ASgjAAAAAAAAFgAU+cEmDinRJSC3+18cyUxT604zeTYAAAAAAAEA/X4BAgAAAAABAs97FfR7YmrQgT60XxgweHVUVWN3kbXvx389VFuhSomfAAAAAAD9////mfy9e2lkaxldpZhLS2RCtaoyCXJoUm35pM/CGqPgvMEAAAAAAP3///8CsB0AAAAAAAAWABTUUK+8fPAsy9+ngGznvlwYhnu6BhAnAAAAAAAAIgAgyOW+lXgk9AvQi/OaAG4gPAXkr02fgj6uWPiwcN+q8PECRzBEAiAgRlDdAl6Mwfm7YWsZhNr7bkbOh+BZeqfHo+/Y2BYFpgIgEjEaWU6zIRaeHWk72udpjuC84neQgC60U2uHd8UPjLABIQKjNseUzXuUV7pYCAx8bJA7thu3YD+k8vbWbQ0ns06ssQJHMEQCIBPfXQ4Nkvgxxwo0iWvRKa/XRfHlZBPBL1qhZG/+kT09AiAAnZQoXLA4ME+uirBmtDUQFqlE7ET45+R6AZivgO4BwAEhAktl+El745lSZBje9Ef7wtgcZWFaFGCki/VwTzLq9xkpgKEEAAEBKxAnAAAAAAAAIgAgyOW+lXgk9AvQi/OaAG4gPAXkr02fgj6uWPiwcN+q8PEBBUEhA1fLOlkY0V0iTxSonw61RHgnIQj2y7nEc8FWXlUmD26TrHNkdqkU6/nOb5BT8jwuQFNXaRTZ4jjvnwWIrVGyaCIGAm1hwe6Gs0eHzElWWP2v/VtTYLEBUWvEyGTQTLbjI1BSGHJ1i8NUAACAAQAAgAAAAIAAAAAAAgAAACIGA1fLOlkY0V0iTxSonw61RHgnIQj2y7nEc8FWXlUmD26TGFyeIo1UAACAAQAAgAAAAIAAAAAAAgAAAAAA"
     )
-
-    inp1 = messages.TxInputType(
-        address_n=parse_path("m/84h/1h/0h/0/2"),
-        prev_hash=TXHASH_5694f1,
-        prev_index=1,
-        script_type=messages.InputScriptType.SPENDWITNESS,
-        amount=10_000,
-        policy=reg.policy,
-    )
-
-    out1 = messages.TxOutputType(
-        address="tb1ql8qjvr3f6yjjpdlmtuwvjnznad8rx7fkcgwvgg",
-        amount=10_000 - 1_000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
+    pubkey = HDKey.from_string(node.xpub).derive("m/0/2").key
+    inputs = [
+        messages.TxInputType(
+            address_n=i.bip32_derivations[pubkey].derivation,
+            prev_hash=i.vin.txid,
+            prev_index=i.vin.vout,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+            policy=reg.policy,
+            amount=i.utxo.value,
+            sequence=i.vin.sequence,
+        )
+        for i in psbt.inputs
+    ]
+    outputs = [
+        messages.TxOutputType(
+            address=o.vout.script_pubkey.address(NETWORKS["test"]),
+            amount=o.vout.value,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+        )
+        for o in psbt.outputs
+    ]
 
     signatures, _serialized = btc.sign_tx(
         session,
-        "Testnet",
-        [inp1],
-        [out1],
+        COIN,
+        inputs,
+        outputs,
+        version=psbt.tx_version,
+        lock_time=psbt.locktime,
         serialize=False,
         prev_txes=TX_CACHE_SIGNET,
     )
@@ -166,50 +173,50 @@ def test_miniscript_spend_liana(session: Session):
     )
     COIN = "Testnet"
 
-    assert (
-        btc.get_public_node(session, parse_path("m/48h/1h/0h/2h"), coin_name=COIN).xpub
-        == TPUBS[0]
-    )
+    node = btc.get_public_node(session, parse_path("m/48h/1h/0h/2h"), coin_name=COIN)
+    assert node.xpub == TPUBS[0]
+
     reg = messages.MiniscriptRegisterPolicy(
         name="Policy name",
         policy=messages.MiniscriptPolicy(descriptor=DESC),
         coin_name=COIN,
     )
     session.call(reg, expect=messages.Success)
-    assert (
-        btc.get_address(session, n=[0, 1], policy=reg.policy, coin_name=COIN)
-        == "tb1qx54dhwjrq3ay3zwvuazfa4k32lkhh20f9mqhtjvwc8n28z6ahrgq3pejk2"
-    )
+    addr = btc.get_address(session, n=[0, 1], policy=reg.policy, coin_name=COIN)
+    assert addr == "tb1qx54dhwjrq3ay3zwvuazfa4k32lkhh20f9mqhtjvwc8n28z6ahrgq3pejk2"
 
-    TXHASH_d4be22 = bytes.fromhex(
-        "d4be22c80cfeab4c5f4fd2e744d24fb94c8af4aaa150530493ed7a973978eee2"
-    )
-
-    # unsigned PSBT: cHNidP8BAFICAAAAAeLueDmXeu2TBFNQoar0iky5T9JE59JPX0yr/gzIIr7UAAAAAAD9////AUYhAAAAAAAAFgAUhH7Jd+SNi4/DMKLI3HIJdwhi1+6kowQAAAEAywIAAAAAAQHYqmd/WZL+qJOT+5f2XEPzUALTONhlyumq5tyciNVZ8wAAAAAA/f///wE0IgAAAAAAACIAIDUq27pDBHpIicznRJ7W0Vfte6npLsF1yY7B5qOLXbjQAkcwRAIgEAu12ThbMeLnoUW4gXGoyRNtgLoJiMVTGBmN/EF1Ud8CIFacrJc9i3SqN3KU6pUlTnNm6GK1N4Vxa5D2tgz2MYc/ASEDwaxgrIFP7ymqIm9BGZ+2SbpwuLq5OiGykBIZVIRQOEqjowQAAQErNCIAAAAAAAAiACA1Ktu6QwR6SInM50Se1tFX7Xup6S7BdcmOweaji1240AEFRCEDC75bhURKbsY1a1FJFsQxD6kiEzUz4inlmKfSqZlD5JWsc2R2qRStjQxCX2+O2vUnBSggjUbj8GSQbIitA3TNALJoIgYCI1EpH6IXHxLBFqXb1/FWdb0zvMoXyhBDC5/EcW5MSpUYcnWLw1QAAIABAACAAAAAgAAAAAABAAAAIgYDC75bhURKbsY1a1FJFsQxD6kiEzUz4inlmKfSqZlD5JUcXJ4ijTAAAIABAACAAAAAgAIAAIAAAAAAAQAAAAAA
     # (generated from Liana v13)
-    inp1 = messages.TxInputType(
-        address_n=parse_path("m/48h/1h/0h/2h/0/1"),
-        prev_hash=TXHASH_d4be22,
-        prev_index=0,
-        script_type=messages.InputScriptType.SPENDWITNESS,
-        amount=8756,
-        sequence=4294967293,
-        policy=reg.policy,
+    psbt = PSBT.from_base64(
+        "cHNidP8BAFICAAAAAeLueDmXeu2TBFNQoar0iky5T9JE59JPX0yr/gzIIr7UAAAAAAD9////AUYhAAAAAAAAFgAUhH7Jd+SNi4/DMKLI3HIJdwhi1+6kowQAAAEAywIAAAAAAQHYqmd/WZL+qJOT+5f2XEPzUALTONhlyumq5tyciNVZ8wAAAAAA/f///wE0IgAAAAAAACIAIDUq27pDBHpIicznRJ7W0Vfte6npLsF1yY7B5qOLXbjQAkcwRAIgEAu12ThbMeLnoUW4gXGoyRNtgLoJiMVTGBmN/EF1Ud8CIFacrJc9i3SqN3KU6pUlTnNm6GK1N4Vxa5D2tgz2MYc/ASEDwaxgrIFP7ymqIm9BGZ+2SbpwuLq5OiGykBIZVIRQOEqjowQAAQErNCIAAAAAAAAiACA1Ktu6QwR6SInM50Se1tFX7Xup6S7BdcmOweaji1240AEFRCEDC75bhURKbsY1a1FJFsQxD6kiEzUz4inlmKfSqZlD5JWsc2R2qRStjQxCX2+O2vUnBSggjUbj8GSQbIitA3TNALJoIgYCI1EpH6IXHxLBFqXb1/FWdb0zvMoXyhBDC5/EcW5MSpUYcnWLw1QAAIABAACAAAAAgAAAAAABAAAAIgYDC75bhURKbsY1a1FJFsQxD6kiEzUz4inlmKfSqZlD5JUcXJ4ijTAAAIABAACAAAAAgAIAAIAAAAAAAQAAAAAA"
     )
-
-    out1 = messages.TxOutputType(
-        address="tb1qs3lvjaly3k9clses5tydcusfwuyx94lwurmc06",
-        amount=8518,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-
+    pubkey = HDKey.from_string(node.xpub).derive("m/0/1").key
+    inputs = [
+        messages.TxInputType(
+            address_n=i.bip32_derivations[pubkey].derivation,
+            prev_hash=i.vin.txid,
+            prev_index=i.vin.vout,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+            policy=reg.policy,
+            amount=i.utxo.value,
+            sequence=i.vin.sequence,
+        )
+        for i in psbt.inputs
+    ]
+    outputs = [
+        messages.TxOutputType(
+            address=o.vout.script_pubkey.address(NETWORKS["test"]),
+            amount=o.vout.value,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+        )
+        for o in psbt.outputs
+    ]
     signatures, _serialized = btc.sign_tx(
         session,
-        "Testnet",
-        [inp1],
-        [out1],
-        version=2,
-        lock_time=304036,
+        COIN,
+        inputs,
+        outputs,
+        version=psbt.tx_version,
+        lock_time=psbt.locktime,
         serialize=False,
         prev_txes=TX_CACHE_SIGNET,
     )

@@ -435,6 +435,16 @@ def sign_tx(session: "Session", json_file: TextIO, chunkify: bool) -> None:
     click.echo(serialized_tx.hex())
 
 
+@cli.command()
+@click.option("-c", "--coin", type=str)
+@click.argument("name", type=str)
+@click.argument("descriptor", type=str)
+@with_session
+def register_policy(session: "Session", coin: str, name: str, descriptor: str) -> None:
+    """Register a descriptor on the device."""
+    btc.register_policy(session, name=name, descriptor=descriptor, coin_name=coin)
+
+
 #
 # Message functions
 #

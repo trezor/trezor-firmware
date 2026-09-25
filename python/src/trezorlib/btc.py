@@ -427,6 +427,23 @@ def sign_tx(
     return signatures, serialized_tx
 
 
+@workflow(capabilities={messages.Capability.Bitcoin, messages.Capability.Miniscript})
+def register_policy(
+    session: "Session",
+    name: str,
+    descriptor: str,
+    coin_name: str,
+) -> None:
+    session.call(
+        messages.MiniscriptRegisterPolicy(
+            policy=messages.MiniscriptPolicy(descriptor=descriptor),
+            name=name,
+            coin_name=coin_name,
+        ),
+        expect=messages.Success,
+    )
+
+
 @workflow(capability=messages.Capability.Bitcoin)
 def authorize_coinjoin(
     session: "Session",
