@@ -1680,6 +1680,8 @@ pub enum TranslatedString {
     stellar__deploy_contract = 1297,  // "Deploy contract"
     #[cfg(feature = "universal_fw")]
     stellar__wasm_hash = 1298,  // "Wasm hash"
+    #[cfg(feature = "universal_fw")]
+    ethereum__vault_owner_address = 1299,  // "Owner address"
 }
 
 impl TranslatedString {
@@ -2986,6 +2988,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4290,6 +4293,7 @@ impl TranslatedString {
                 19041,
                 19056,
                 19065,
+                19078,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5593,6 +5597,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6897,6 +6902,7 @@ impl TranslatedString {
                 19041,
                 19056,
                 19065,
+                19078,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8200,6 +8206,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9504,6 +9511,7 @@ impl TranslatedString {
                 19041,
                 19056,
                 19065,
+                19078,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10807,6 +10815,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12111,6 +12120,7 @@ impl TranslatedString {
                 19041,
                 19056,
                 19065,
+                19078,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13415,6 +13425,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14719,6 +14730,7 @@ impl TranslatedString {
                 16913,
                 16928,
                 16937,
+                16950,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16022,6 +16034,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17326,6 +17339,7 @@ impl TranslatedString {
                 16913,
                 16928,
                 16937,
+                16950,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18629,6 +18643,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19933,6 +19948,7 @@ impl TranslatedString {
                 16913,
                 16928,
                 16937,
+                16950,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21236,6 +21252,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22540,6 +22557,7 @@ impl TranslatedString {
                 16913,
                 16928,
                 16937,
+                16950,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23844,6 +23862,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25148,6 +25167,7 @@ impl TranslatedString {
                 18894,
                 18909,
                 18918,
+                18931,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26451,6 +26471,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27755,6 +27776,7 @@ impl TranslatedString {
                 18894,
                 18909,
                 18918,
+                18931,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29058,6 +29080,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30362,6 +30385,7 @@ impl TranslatedString {
                 18894,
                 18909,
                 18918,
+                18931,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31665,6 +31689,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32969,6 +32994,7 @@ impl TranslatedString {
                 18894,
                 18909,
                 18918,
+                18931,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -34273,6 +34299,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -35577,6 +35604,7 @@ impl TranslatedString {
                 20365,
                 20380,
                 20389,
+                20402,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36880,6 +36908,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -38184,6 +38213,7 @@ impl TranslatedString {
                 20365,
                 20380,
                 20389,
+                20402,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39487,6 +39517,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -40791,6 +40822,7 @@ impl TranslatedString {
                 20365,
                 20380,
                 20389,
+                20402,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42094,6 +42126,7 @@ impl TranslatedString {
                 "Multisig XPUB #{0} ",
                 "Deploy contract",
                 "Wasm hash",
+                "Owner address",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -43398,6 +43431,7 @@ impl TranslatedString {
                 20365,
                 20380,
                 20389,
+                20402,
             ];
 
         }
@@ -44046,6 +44080,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__vault_claim_to, Self::ethereum__vault_claim_to),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__vault_deposit_intro, Self::ethereum__vault_deposit_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__vault_owner_address, Self::ethereum__vault_owner_address),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__vault_redeem_intro, Self::ethereum__vault_redeem_intro),
         #[cfg(feature = "universal_fw")]

@@ -325,7 +325,7 @@
             "name": "redeem_unknown_vault_receiver_mismatch",
             "skip_models": ["t1"],
             "parameters": {
-                "comment": "ERC-4626 redeem from unknown vault with receiver != sender - unsafe calldata on unknown vault falls through to blind signing",
+                "comment": "ERC-4626 redeem from unknown vault with receiver != sender - mismatched address shown for confirmation",
                 "data": "ba0876520000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a0000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
                 "path": "m/44'/60'/0'/0/1",
                 "to_address": "0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd",
@@ -346,7 +346,7 @@
             "name": "redeem_unknown_vault_owner_mismatch",
             "skip_models": ["t1"],
             "parameters": {
-                "comment": "ERC-4626 redeem from unknown vault with owner != sender - unsafe calldata on unknown vault falls through to blind signing",
+                "comment": "ERC-4626 redeem from unknown vault with owner != sender - mismatched address shown for confirmation",
                 "data": "ba0876520000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac00000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a",
                 "path": "m/44'/60'/0'/0/1",
                 "to_address": "0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd",
@@ -364,10 +364,31 @@
             }
         },
         {
+            "name": "redeem_unknown_vault_receiver_and_owner_mismatch",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 redeem from unknown vault with receiver != sender and owner != sender (distinct addresses) - both shown for confirmation",
+                "data": "ba0876520000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a0000000000000000000000001e6e3708a059aea1241a81c7aae84b6cdbc54d59",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "7f3cb75b67b4df381b9ea4b33150b70b823269a7383b46cf1abe5dc1a7ae0023",
+                "sig_s": "69e401b8f7b5475f77b5b7ec332291d056c6b7b6455daf6b743db6ee96389991"
+            }
+        },
+        {
             "name": "deposit_unknown_vault_receiver_mismatch",
             "skip_models": ["t1"],
             "parameters": {
-                "comment": "ERC-4626 deposit into unknown vault with receiver != sender - unsafe calldata on unknown vault falls through to blind signing",
+                "comment": "ERC-4626 deposit into unknown vault with receiver != sender - mismatched address shown for confirmation",
                 "data": "6e553f650000000000000000000000000000000000000000000000000000000005f5e10000000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a",
                 "path": "m/44'/60'/0'/0/1",
                 "to_address": "0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd",
@@ -388,7 +409,7 @@
             "name": "withdraw_unknown_vault_receiver_mismatch",
             "skip_models": ["t1"],
             "parameters": {
-                "comment": "ERC-4626 withdraw from unknown vault with receiver != sender - unsafe calldata on unknown vault falls through to blind signing",
+                "comment": "ERC-4626 withdraw from unknown vault with receiver != sender - mismatched address shown for confirmation",
                 "data": "b460af940000000000000000000000000000000000000000000000000000000005f5e10000000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a0000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
                 "path": "m/44'/60'/0'/0/1",
                 "to_address": "0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd",
@@ -409,7 +430,7 @@
             "name": "withdraw_unknown_vault_owner_mismatch",
             "skip_models": ["t1"],
             "parameters": {
-                "comment": "ERC-4626 withdraw from unknown vault with owner != sender - unsafe calldata on unknown vault falls through to blind signing",
+                "comment": "ERC-4626 withdraw from unknown vault with owner != sender - mismatched address shown for confirmation",
                 "data": "b460af940000000000000000000000000000000000000000000000000000000005f5e1000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac00000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a",
                 "path": "m/44'/60'/0'/0/1",
                 "to_address": "0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd",
@@ -424,6 +445,27 @@
                 "sig_v": 37,
                 "sig_r": "20229b613ec8e857f7a94db85169d22010e44016f41f61f11f4e7b5c1e60a37c",
                 "sig_s": "3f8a9b3d39317d1e8f1a282b165c16a498124589cdd23131eb8f4d87127541ea"
+            }
+        },
+        {
+            "name": "withdraw_unknown_vault_receiver_and_owner_mismatch",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 withdraw from unknown vault with receiver != sender and owner != sender (distinct addresses) - both shown for confirmation",
+                "data": "b460af940000000000000000000000000000000000000000000000000000000005f5e10000000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a0000000000000000000000001e6e3708a059aea1241a81c7aae84b6cdbc54d59",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "aa0f72bacdcc233d7c9add5ef2b3d85f2dce218f4e38f3b754c3ffecfd7873c5",
+                "sig_s": "36c9cfb86512fb4217d7f1b4aea4a78c18348f0c386fabe47d368a22c00dea8c"
             }
         },
         {
