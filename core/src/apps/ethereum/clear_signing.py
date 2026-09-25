@@ -1147,33 +1147,27 @@ async def request_definitions(
 
 
 async def _find_display_format(
-    func_sig: bytes, contract_address: bytes, msg: MsgInSignTx, nested: bool = False
+    func_sig: bytes, address_bytes: bytes, msg: MsgInSignTx, nested: bool = False
 ) -> DisplayFormat | None:
-    """Find a display format for calling `func_sig` on the `contract_address`
+    """Find a display format for calling `func_sig` on the `address_bytes`
     contract, trying built-ins, then the definitions provided in the initial
     request, then a definition request over the wire."""
 
     from .clear_signing_definitions import all_display_formats
 
-    for display_format in all_display_formats():
-        if display_format.matches_call(func_sig, msg.chain_id, contract_address):
-            return display_format
+    for f in all_display_formats():
+        if f.matches_call(func_sig, msg.chain_id, address_bytes):
+            return f
 
     if not nested and msg.definitions and msg.definitions.encoded_display_format:
-        display_format = DisplayFormat.from_encoded(
-            msg.definitions.encoded_display_format
-        )
-        if display_format.matches_call(func_sig, msg.chain_id, contract_address):
-            return display_format
+        f = DisplayFormat.from_encoded(msg.definitions.encoded_display_format)
+        if f.matches_call(func_sig, msg.chain_id, address_bytes):
+            return f
 
     if msg.supports_definition_request:
-        _, display_format = await request_definitions(
-            msg.chain_id, contract_address, func_sig
-        )
-        if display_format is not None and display_format.matches_call(
-            func_sig, msg.chain_id, contract_address
-        ):
-            return display_format
+        _, f = await request_definitions(msg.chain_id, address_bytes, func_sig)
+        if f is not None and f.matches_call(func_sig, msg.chain_id, address_bytes):
+            return f
 
     return None
 
@@ -1329,7 +1323,7 @@ async def _expand_one_subcall(
 
 async def try_confirm(
     data: AnyBytes,
-    contract_address: bytes,
+    address_bytes: bytes,
     msg: MsgInSignTx,
     defs: Definitions,
     maximum_fee: str,
@@ -1341,15 +1335,15 @@ async def try_confirm(
         TRANSFER_DISPLAY_FORMAT,
     )
 
-    if not contract_address:
+    if not address_bytes:
         return False
 
     if len(data) < SC_FUNC_SIG_BYTES:
         return False
 
-    func_sig = bytes(data[:SC_FUNC_SIG_BYTES])
+    func_sig = bytes(data[0:SC_FUNC_SIG_BYTES])
 
-    display_format = await _find_display_format(func_sig, contract_address, msg)
+    display_format = await _find_display_format(func_sig, address_bytes, msg)
     if display_format is None:
         return False
 
@@ -1366,7 +1360,7 @@ async def try_confirm(
         await _handle_approve(
             calldata,
             display_format,
-            contract_address,
+            address_bytes,
             msg,
             defs,
             maximum_fee,
@@ -1376,7 +1370,7 @@ async def try_confirm(
         await _handle_transfer(
             calldata,
             display_format,
-            contract_address,
+            address_bytes,
             msg,
             defs,
             maximum_fee,
@@ -1398,7 +1392,7 @@ async def try_confirm(
 async def _handle_approve(
     calldata: memoryview,
     display_format: DisplayFormat,
-    contract_address: bytes,
+    address_bytes: bytes,
     msg: MsgInSignTx,
     defs: Definitions,
     maximum_fee: str,
@@ -1461,8 +1455,8 @@ async def _handle_approve(
         fee_items,
         msg.chain_id,
         defs.network,
-        actual_token or defs.get_token(contract_address),
-        contract_address,
+        actual_token or defs.get_token(address_bytes),
+        address_bytes,
         is_revoke,
         bool(msg.chunkify),
         native_amount=native_amount,
@@ -1472,7 +1466,7 @@ async def _handle_approve(
 async def _handle_transfer(
     calldata: memoryview,
     display_format: DisplayFormat,
-    contract_address: bytes,
+    address_bytes: bytes,
     msg: MsgInSignTx,
     defs: Definitions,
     maximum_fee: str,
@@ -1525,18 +1519,18 @@ async def _handle_transfer(
             fee_items,
             msg.chain_id,
             defs.network,
-            actual_token or defs.get_token(contract_address),
-            address_from_bytes(contract_address, defs.network),
+            actual_token or defs.get_token(address_bytes),
+            address_from_bytes(address_bytes, defs.network),
         )
     else:
         await require_confirm_tx(
             recipient_addr,
             value,
-            contract_address,
+            address_bytes,
             msg.address_n,
             maximum_fee,
             fee_items,
-            actual_token or defs.get_token(contract_address),
+            actual_token or defs.get_token(address_bytes),
             is_send=True,
             chunkify=bool(msg.chunkify),
             native_amount=native_amount,
