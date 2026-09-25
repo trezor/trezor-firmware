@@ -57,7 +57,11 @@ class StellarToken:
 
     def format(self, amount: int) -> str:
         """Format an amount with this token's precision and symbol."""
-        return strings.format_amount(amount, self.decimals) + " " + self.symbol
+        return self.with_symbol(strings.format_amount(amount, self.decimals))
+
+    def with_symbol(self, amount: str) -> str:
+        """Append this token's symbol to a raw amount string."""
+        return f"{amount} {self.symbol}"
 
 
 # XLM, the native asset.

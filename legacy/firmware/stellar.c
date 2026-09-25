@@ -561,12 +561,11 @@ bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
                        sizeof(str_price));
 
   /*
-   For 0.675952 Per
+   Each for 0.675952
    USD (G12345678)
    */
-  strlcpy(str_selling, _("For "), sizeof(str_selling));
+  strlcpy(str_selling, _("Each for "), sizeof(str_selling));
   strlcat(str_selling, str_price, sizeof(str_selling));
-  strlcat(str_selling, _(" Per"), sizeof(str_selling));
 
   stellar_layoutTransactionDialog(str_offer, str_buying, str_buying_asset,
                                   str_selling, str_selling_asset);
@@ -647,12 +646,11 @@ bool stellar_confirmManageSellOfferOp(const StellarManageSellOfferOp *msg) {
                        sizeof(str_price));
 
   /*
-   For 0.675952 Per
+   Each for 0.675952
    USD (G12345678)
    */
-  strlcpy(str_buying, _("For "), sizeof(str_buying));
+  strlcpy(str_buying, _("Each for "), sizeof(str_buying));
   strlcat(str_buying, str_price, sizeof(str_buying));
-  strlcat(str_buying, _(" Per"), sizeof(str_buying));
 
   stellar_layoutTransactionDialog(str_offer, str_selling, str_selling_asset,
                                   str_buying, str_buying_asset);
@@ -725,12 +723,11 @@ bool stellar_confirmCreatePassiveSellOfferOp(
                        sizeof(str_price));
 
   /*
-   For 0.675952 Per
+   Each for 0.675952
    USD (G12345678)
    */
-  strlcpy(str_buying, _("For "), sizeof(str_buying));
+  strlcpy(str_buying, _("Each for "), sizeof(str_buying));
   strlcat(str_buying, str_price, sizeof(str_buying));
-  strlcat(str_buying, _(" Per"), sizeof(str_buying));
 
   stellar_layoutTransactionDialog(str_offer, str_selling, str_selling_asset,
                                   str_buying, str_buying_asset);

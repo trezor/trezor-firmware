@@ -165,6 +165,7 @@ async def _confirm_offer(
     selling_asset = op.selling_asset  # local_cache_attribute
     buying_token = StellarToken.from_asset(buying_asset)
     selling_token = StellarToken.from_asset(selling_asset)
+    price_str = str(op.price_n / op.price_d)
 
     buying: PropertyType
     selling: PropertyType
@@ -182,8 +183,8 @@ async def _confirm_offer(
             False,
         )
         price = (
-            TR.stellar__price_per_template.format(selling_token.symbol),
-            str(op.price_n / op.price_d),
+            TR.stellar__price_per_template.format(buying_token.symbol),
+            selling_token.with_symbol(price_str),
             False,
         )
         await confirm_properties(
@@ -200,8 +201,8 @@ async def _confirm_offer(
         )
         buying = (TR.stellar__buying, buying_token.symbol, False)
         price = (
-            TR.stellar__price_per_template.format(buying_token.symbol),
-            str(op.price_n / op.price_d),
+            TR.stellar__price_per_template.format(selling_token.symbol),
+            buying_token.with_symbol(price_str),
             False,
         )
         await confirm_properties(
