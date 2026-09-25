@@ -27,6 +27,7 @@ if not utils.BITCOIN_ONLY:
         DateFormatter,
         DirtyAddress,
         DisplayFormat,
+        DurationFormatter,
         DynamicLeaf,
         EnumFormatter,
         FieldDefinition,
@@ -711,6 +712,42 @@ class TestEthereumClearSigning(unittest.TestCase):
         # non-timestamp value is rejected
         with self.assertRaises(InvalidFormatDefinition):
             await_result(fmt.format("not-a-timestamp", None, None, None))
+
+    def test_duration_formatter(self):
+        fmt = DurationFormatter()
+
+        # seconds -> HH:MM:ss (example from the ERC-7730 spec)
+        formatted, token, addr = await_result(fmt.format(8250, None, None, None))
+        self.assertEqual(formatted, "02:17:30")
+        self.assertIsNone(token)
+        self.assertIsNone(addr)
+
+        formatted, _, _ = await_result(fmt.format(0, None, None, None))
+        self.assertEqual(formatted, "00:00:00")
+
+        # durations longer than a day keep counting hours
+        formatted, _, _ = await_result(
+            fmt.format(100 * 3600 + 59 * 60 + 59, None, None, None)
+        )
+        self.assertEqual(formatted, "100:59:59")
+
+        # None -> None
+        formatted, _, _ = await_result(fmt.format(None, None, None, None))
+        self.assertIsNone(formatted)
+
+        # a sliced word, e.g. `deadline.[-4:]`: big-endian seconds
+        formatted, _, _ = await_result(
+            fmt.format((8250).to_bytes(4, "big"), None, None, None)
+        )
+        self.assertEqual(formatted, "02:17:30")
+
+        # a negative duration is rejected
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(fmt.format(-1, None, None, None))
+
+        # a non-numeric value is rejected
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(fmt.format("not-a-duration", None, None, None))
 
     def test_from_proto_raw_date_dispatch(self):
         # End-to-end from a proto enum value to a rendered string. `from_proto`
