@@ -79,6 +79,41 @@
       }
     },
     {
+      "description": "Assign Self",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 1
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "11111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 1,
+              "accounts": {
+                "assigned_account": 0
+              },
+              "data": {
+                "instruction_id": 1,
+                "owner": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "6b6500c68b37d7374ab4839f020e132faaaec78fd83be6dc91127595b8d28f81263511797ca474c8d4610e796cde10f163541bf15411bc343746e71536b39301"
+      }
+    },
+    {
       "description": "Transfer",
       "parameters": {
         "address": "m/44'/501'/0'/0'",

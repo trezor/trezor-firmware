@@ -74,13 +74,11 @@
           "ui_properties": [
             {
               "account": "assigned_account",
-              "display_name": "Assign account",
-              "default_value_to_hide": "signer"
+              "display_name": "Assign account"
             },
             {
               "parameter": "owner",
-              "display_name": "Assign account to program",
-              "default_value_to_hide": "signer"
+              "display_name": "Assign account to program"
             }
           ]
         },
