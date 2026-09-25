@@ -139,54 +139,13 @@ class WardTrie:
         # that lost these cannot advance the WM's head at all, which is the intended failure --
         # an unauthenticated advance is what it exists to prevent.
         self.wm_sigs: dict = {}
-        # THE ATTESTATION ARCHIVE, keyed by the `to` counter:
-        #   counter -> (nonce, from_counter, from_root, to_counter, to_root, ts, wm_signature)
-        #
-        # Every one of these was already received and then thrown away -- the sync helpers
-        # ingested the attestation and dropped the signature. Keeping them is what makes two
-        # things possible, and neither needs the WM to change:
-        #
-        #   ROLLBACK can prove its target was ever the head. The link into a target says a
-        #   device of this wallet authorised it; only the WM's attestation says the WM held it,
-        #   and without that a host may present a link from an orphaned fork.
-        #
-        #   CATCH-UP CAN RUN WITHOUT A LIVE ROUND. A walk anchored on an archived head proves
-        #   descent in full -- an ancestor of a head the WM really held is on the authoritative
-        #   line -- and claims no currency, so the device adopts and stays offline.
-        #
-        # The archive can only ever say "this WAS a head" -- currency still comes from a fresh,
-        # nonce-bound attestation, which is the line `attest.verify_archived_attestation` keeps.
-        self.attestations: dict = {}
-
-    def archive_attestation(
-        self,
-        nonce: bytes,
-        from_counter: int,
-        from_root,
-        to_counter: int,
-        to_root,
-        timestamp: int,
-        signature: bytes,
-    ) -> None:
-        """Keep what the WM just attested. A real host does this at every sync and publish.
-
-        Keyed by the `to` counter, which still identifies one head -- the WM attests one step per
-        counter. The whole step is kept because `rollback` must present an attestation naming the
-        SAME transition as its link, not merely one ending in the same place.
-        """
-        self.attestations[to_counter] = (
-            nonce,
-            from_counter,
-            from_root,
-            to_counter,
-            to_root,
-            timestamp,
-            signature,
-        )
-
-    def attestation_for(self, counter: int):
-        """The archived tuple for a head, or None if this host never kept one."""
-        return self.attestations.get(counter)
+        # NO ATTESTATION ARCHIVE. A host used to keep every attestation it was handed, because
+        # two paths demanded one later: a chain walk anchored on an archived head, and `rollback`
+        # proving its target was once authoritative. Both are gone -- the first raised the
+        # persisted counter with no freshness and no consent, which defeated a confirmed
+        # recovery; the second asked for proof of headship that a host missing rows cannot have,
+        # in the one situation a rollback exists for. Nothing reads an archived attestation now,
+        # so nothing keeps one.
 
     def links_ending_at(self, to_counter: int, to_root, limit: int = 64) -> list:
         """The predecessors of a state, NEWEST FIRST, for the device's backward walk.

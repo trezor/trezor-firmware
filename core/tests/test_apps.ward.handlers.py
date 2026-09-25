@@ -16,7 +16,6 @@ WARD_REQUESTS = (
     "WardReconcile",
     "WardVerifyChain",
     "WardRollback",
-    "WardRecoverCounter",
     "WardPinCachedEntry",
     "WardEraseCachedEntry",
     "WardFlushQueue",
@@ -43,12 +42,12 @@ class TestWardHandlerWiring(unittest.TestCase):
         module = __import__(modname, None, None, (handler_name,), 0)
         return getattr(module, handler_name)
 
-    So `apps.ward.recover` must define `recover`. That rule is undocumented and invisible at
+    So `apps.ward.rollback` must define `rollback`. That rule is undocumented and invisible at
     the registration site, and getting it wrong fails at `getattr` -- BEFORE any line of the
     handler body runs. Every request then fails identically whatever it asked for, which
-    looks like anything except a naming problem: naming the recovery handler
-    `recover_counter` cost a full device-test cycle and three wrong hypotheses before the
-    cause was found. A rename can reintroduce it silently, and a partial one compiles.
+    looks like anything except a naming problem: naming a handler after what it does rather
+    than after its module once cost a full device-test cycle and three wrong hypotheses before
+    the cause was found. A rename can reintroduce it silently, and a partial one compiles.
 
     This is the only check that catches it without building firmware and running the
     emulator. Note it costs almost nothing: every WARD handler module imports only `typing`

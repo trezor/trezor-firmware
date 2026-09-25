@@ -20,3 +20,4 @@ if utils.USE_THP:
         APP_WARD_SYNC = const(12)
         APP_WARD_ONLINE = const(13)
         APP_WARD_DEMOTION = const(14)
+        APP_WARD_HEAD_NONCE = const(15)

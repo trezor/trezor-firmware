@@ -84,7 +84,7 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     stored_counter = await get_counter()
     stored_root = await get_root()
 
-    if counter == sync_round.authorised_demotion():
+    if (from_counter, from_root, counter, root) == sync_round.authorised_demotion():
         # A DEMOTION THE USER APPROVED. `recover` minted this exact transition against the WM's
         # head and held for confirmation before recording the counter, so re-asking here would be
         # asking about a decision already made. Its predecessor is the WM's head, which after a

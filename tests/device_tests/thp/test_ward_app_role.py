@@ -162,7 +162,6 @@ def test_every_host_facing_ward_message_is_covered(client: Client) -> None:
         m.WardReconcile(),
         m.WardVerifyChain(),
         m.WardRollback(),
-        m.WardRecoverCounter(),
         m.WardPinCachedEntry(app_id=_APP, identifier=_IDENT),
         m.WardEraseCachedEntry(app_id=_APP, identifier=_IDENT),
         m.WardFlushQueue(),

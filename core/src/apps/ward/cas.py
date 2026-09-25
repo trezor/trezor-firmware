@@ -41,8 +41,9 @@ with the Ed25519 path switched off.
 THAT NON-SEED-HOLDER NOW EXISTS: a WM that arbitrates ordering has to be able to tell a real
 device's write from anyone else's, or whoever knows `ward_id` could advance the counter and have
 every genuine device refused thereafter. Its authorisation is at the bottom of this file, and it
-covers EXACTLY THE BYTES ABOVE -- the same statement, made to a verifier holding a different
-secret. The WM is therefore sent the two roots, and sees them.
+covers THE BYTES ABOVE PLUS THE WM'S HEAD NONCE -- the same statement, made to a verifier holding
+a different secret, and pinned to the WM's own place in history so one authorisation moves the
+head at most once. The WM is therefore sent the two roots, and sees them.
 
 WHAT A CHAIN OF THESE PROVES, AND WHAT IT DOES NOT. Folding links from a trusted baseline
 to a claimed head shows each step was authorised by a device holding the seed, that the
@@ -60,15 +61,15 @@ if TYPE_CHECKING:
 TAG_COMMIT = b"WARD COMMIT v3"  # v3: the preimage names ROOTS again; K_mac is gone
 TAG_REVERT = b"WARD REVERT v3"  # v3: as TAG_COMMIT
 
-# The WM's own authorisation. Same preimage as `auth_commit` -- see `transition_preimage`.
-TAG_WM_HEAD = b"WARD WM COMMIT v2"  # v2: roots, as TAG_COMMIT
-TAG_WM_INIT = b"WARD WM INIT v2"  # v2: its own preimage now; see `head_init_sig`
+# The WM's own authorisation. `transition_preimage` plus the WM's HEAD NONCE -- see `wm_preimage`.
+TAG_WM_HEAD = b"WARD WM COMMIT v3"  # v3: the head nonce joined the preimage
+TAG_WM_INIT = b"WARD WM INIT v3"  # v3: as TAG_WM_HEAD; see `head_init_sig`
 # A revert advances the WM head like any write -- forward, carrying an OLDER root -- so the WM
 # could not otherwise tell one from an ordinary advance. The tag does not add replay protection
-# (the destination mac already binds uniquely to that (counter, root) pair); it exists so a WM
-# can apply policy to demotions -- rate-limit them, alert on them -- rather than having the wire
-# decide for it. Mirrors TAG_COMMIT/TAG_REVERT one layer down.
-TAG_WM_REVERT = b"WARD WM REVERT v2"
+# (the head nonce does that now); it exists so a WM can apply policy to demotions -- rate-limit
+# them, alert on them -- rather than having the wire decide for it. Mirrors TAG_COMMIT/TAG_REVERT
+# one layer down.
+TAG_WM_REVERT = b"WARD WM REVERT v3"
 
 
 def transition_preimage(
@@ -86,10 +87,13 @@ def transition_preimage(
     the whole point of a chain.
 
     THE ENDPOINTS ARE ROOTS. `auth_commit` (HMAC under K_auth, checked by another device) and
-    `wm_sig` (Ed25519 under K_sig, checked by the WM) cover IDENTICAL bytes and differ only in
-    tag, key and algorithm -- the same statement made to two verifiers who hold different
-    secrets. They are not redundant: the verifier sets are disjoint, and neither party can check
-    the other's authenticator. See the WM section at the bottom of this file.
+    `wm_sig` (Ed25519 under K_sig, checked by the WM) are built from these same bytes and differ
+    in tag, key, algorithm, and one field only the WM can supply -- its head nonce, appended by
+    `wm_preimage`. The same statement made to two verifiers who hold different secrets. They are
+    not redundant: the verifier sets are disjoint, and neither party can check the other's
+    authenticator. THE NONCE IS NOT IN HERE, because a device walking the chain holds links and
+    no WM state, so folding it in would make history unverifiable. See the WM section at the
+    bottom of this file.
 
     THE ENDPOINTS USED TO BE MAC HEADS, under a second key K_mac, so that a WM verifying a
     `wm_sig` never had to be shown a root. That indirection is gone -- see the module docstring
@@ -420,13 +424,13 @@ def verify_intent_mac(
 
 # --- the WM's authorisation -------------------------------------------------------------
 #
-# A SECOND AUTHENTICATOR, FOR A DIFFERENT VERIFIER, OVER THE SAME BYTES. `auth_commit` above is
-# checked by another DEVICE of this wallet; these are checked by the WM. Both cover exactly
+# A SECOND AUTHENTICATOR, FOR A DIFFERENT VERIFIER, OVER NEARLY THE SAME BYTES. `auth_commit`
+# above is checked by another DEVICE of this wallet; these are checked by the WM. Both cover
 # `transition_preimage` -- the same statement, made to two verifiers holding different secrets --
-# and differ only in tag, key and algorithm.
+# and differ in tag, key, algorithm, and ONE APPENDED FIELD: the WM's head nonce.
 #
-# THEY ARE NOT REDUNDANT, which is the question identical operands invite. The verifier sets are
-# disjoint: K_auth is seed-derived, so only devices of this wallet can check an `auth_commit`,
+# THEY ARE NOT REDUNDANT, which is the question near-identical operands invite. The verifier sets
+# are disjoint: K_auth is seed-derived, so only devices of this wallet can check an `auth_commit`,
 # and the WM holds no secret of ours, so only an Ed25519 signature under K_sig is checkable by
 # it. Neither can stand in for the other.
 #
@@ -437,11 +441,81 @@ def verify_intent_mac(
 # keys by; there is no enrolment step and no second value to keep in step.
 #
 # EVERY OPERAND THE WM ACTS ON IS INSIDE THESE BYTES, and that is load-bearing rather than tidy.
-# It compare-and-swaps on `(from_counter, from_root)` and attests `(to_counter, to_root)`; all
-# four are signed. An earlier shape had the signature name mac heads while the WM stored
-# something else, and a shape where the two diverge lets a host pair a genuine signature with an
-# operand of its own choosing -- which cannot forge state, but can strand the wallet at a head no
-# device will ever accept. Keep them the same set.
+# It compare-and-swaps on `(from_counter, from_root, head_nonce)` and attests `(to_counter,
+# to_root)`; all of them are signed. An earlier shape had the signature name mac heads while the
+# WM stored something else, and a shape where the two diverge lets a host pair a genuine signature
+# with an operand of its own choosing -- which cannot forge state, but can strand the wallet at a
+# head no device will ever accept. Keep them the same set.
+#
+# --- THE HEAD NONCE ----------------------------------------------------------------------
+#
+# The WM's state is `(counter, root, head_nonce)`, and every transition it accepts ROTATES the
+# nonce to a fresh unpredictable value. An authorisation must quote the nonce the WM holds at the
+# moment it is presented, so ONE `wm_sig` MOVES THE HEAD AT MOST ONCE, for all time.
+#
+# WHY THAT IS NEEDED, given that `(from_counter, from_root)` is already in the preimage. A
+# compare-and-swap on a counter-and-root pair looks like it pins a transition to a unique place in
+# history, and it nearly does -- but ROOTS REPEAT. The trie is content-addressed, so a wallet that
+# returns to a state it held before has a root it held before; and a REVERT deliberately carries an
+# older root forward under a NEW counter. So `(counter, root)` can genuinely recur, and the moment
+# it does, an old authorisation over that pair becomes live again -- a host that kept one can
+# re-apply a transition the user authorised once, at a point in history where they never
+# authorised it. Recovery is the operation that makes this reachable rather than theoretical: it
+# brings an old root forward by construction.
+#
+# The nonce removes the recurrence. `(counter, root)` may repeat; `(counter, root, head_nonce)`
+# may not, because the nonce advances on every accepted transition and never comes back.
+#
+# WHERE THE DEVICE GETS IT. From the WM, inside the attestation -- see
+# `attest.attestation_preimage`, which carries the head nonce alongside the transition and signs
+# both. So the device can only mint a `wm_sig` the WM will accept if it has seen a FRESH,
+# WM-SIGNED statement of the current head; `round.set_head_nonce` latches it for the session. A
+# host feeding a stale nonce does not gain a replay -- it gains a signature the WM refuses.
+#
+# WHAT IT DOES NOT BUY. It binds an authorisation to a moment in the WM's history, not to a
+# moment in real time: a host may still sit on a `wm_sig` and publish it late, as long as no other
+# transition has been accepted in between. And it is the WM's own freshness, so a WM that rotates
+# predictably, or replays an old nonce, weakens exactly this property -- the device cannot check
+# that a nonce is new, only that the WM signed it.
+
+NO_HEAD_NONCE = b"\x00" * 32
+"""The nonce a WM holds before it has accepted any transition for a wallet -- see `head_init_sig`.
+
+A NEWLY ENROLLED HEAD CARRIES IT, and the first ordinary advance therefore quotes it; the WM
+rotates to a real value when it accepts that advance, and must never rotate back. So this is a
+starting state rather than a reachable one, which is what keeps `head_init_sig` from being
+replayable as an advance once a wallet is moving -- the tag would stop it anyway.
+"""
+
+
+def wm_preimage(
+    tag: bytes,
+    ward_id: bytes,
+    from_counter: int,
+    from_root: "bytes | None",
+    to_counter: int,
+    to_root: "bytes | None",
+    head_nonce: bytes,
+) -> bytes:
+    """`transition_preimage`, with the WM's head nonce appended.
+
+    APPENDED RATHER THAN WOVEN IN, so the two preimages stay visibly the same statement plus one
+    field -- and so `auth_commit`, which no verifier of the chain could supply a nonce for, keeps
+    exactly the bytes it had. A chain walker holds links, not WM state; putting the nonce in the
+    shared builder would have made history unverifiable.
+
+    Fixed width, so the append is unambiguous without a length prefix.
+    """
+    from trezor.wire import DataError
+
+    if len(head_nonce) != 32:
+        raise DataError("WARD: the WM head nonce must be 32 bytes")
+    return (
+        transition_preimage(
+            tag, ward_id, from_counter, from_root, to_counter, to_root
+        )
+        + head_nonce
+    )
 
 
 def wm_sig(
@@ -451,6 +525,7 @@ def wm_sig(
     from_root: bytes | None,
     to_counter: int,
     to_root: bytes | None,
+    head_nonce: bytes,
     tag: bytes = TAG_WM_HEAD,
 ) -> bytes:
     """Authorise a head advance to the WM. Only a holder of this wallet's K_sig can produce this.
@@ -459,6 +534,9 @@ def wm_sig(
     (TAG_WM_REVERT). Both move the head forward by one counter, so the WM cannot tell them apart
     from the operands -- see TAG_WM_REVERT.
 
+    `head_nonce` is the WM's current freshness token, learned from its latest attestation. It is
+    what makes this authorisation single-use; see the section above.
+
     Not a generic signing API: the preimage is built here from typed arguments, so this can never
     be pointed at bytes a caller chose.
     """
@@ -466,7 +544,9 @@ def wm_sig(
 
     return ed25519.sign(
         k_sig,
-        transition_preimage(tag, ward_id, from_counter, from_root, to_counter, to_root),
+        wm_preimage(
+            tag, ward_id, from_counter, from_root, to_counter, to_root, head_nonce
+        ),
     )
 
 
@@ -476,10 +556,15 @@ def verify_wm_sig(
     from_root: bytes | None,
     to_counter: int,
     to_root: bytes | None,
+    head_nonce: bytes,
     signature: bytes,
     tag: bytes = TAG_WM_HEAD,
 ) -> bool:
     """What the WM checks. Verifies against `ward_id`, which IS the public key.
+
+    `head_nonce` is the WM's OWN current value, never one taken off the wire -- that is the whole
+    content of the check. A WM that verified against a nonce the presenter supplied would be
+    verifying that the presenter can copy a number.
 
     A WM that accepts both kinds checks this twice, once per tag, and learns which it was from
     which call succeeded -- that being the point of having two.
@@ -495,8 +580,8 @@ def verify_wm_sig(
         return ed25519.verify(
             ward_id,
             signature,
-            transition_preimage(
-                tag, ward_id, from_counter, from_root, to_counter, to_root
+            wm_preimage(
+                tag, ward_id, from_counter, from_root, to_counter, to_root, head_nonce
             ),
         )
     except Exception:
@@ -511,6 +596,12 @@ def head_init_sig(
     A compare-and-swap needs something to compare against, and a WM that has never seen this
     wallet has nothing. The first head therefore has to be supplied by the device and
     authenticated, or it would be a value anyone who knows `ward_id` could set.
+
+    UNDER `NO_HEAD_NONCE`, which is the same rule stated one layer down: every other
+    authorisation quotes the nonce of an existing head, and enrolment is exactly the case where
+    there is no existing head to quote. The WM mints its first real nonce when it accepts this,
+    and must never rotate back to the all-zero value -- otherwise these bytes would be replayable
+    as an ordinary advance, which is what the distinct tag also guards.
 
     WHAT IT PROVES, AND WHAT IT CANNOT. It proves the head it names was a GENUINE STATE OF THIS
     WALLET -- only a holder of K_sig can mint one. It does NOT prove that head is the LATEST
@@ -537,7 +628,9 @@ def head_init_sig(
 
     return ed25519.sign(
         k_sig,
-        transition_preimage(TAG_WM_INIT, ward_id, counter, root, counter, root),
+        wm_preimage(
+            TAG_WM_INIT, ward_id, counter, root, counter, root, NO_HEAD_NONCE
+        ),
     )
 
 
@@ -553,7 +646,9 @@ def verify_head_init_sig(
         return ed25519.verify(
             ward_id,
             signature,
-            transition_preimage(TAG_WM_INIT, ward_id, counter, root, counter, root),
+            wm_preimage(
+                TAG_WM_INIT, ward_id, counter, root, counter, root, NO_HEAD_NONCE
+            ),
         )
     except Exception:
         return False

@@ -137,6 +137,11 @@ message WardSyncResponse {
     optional bytes  to_root      = 7;  // absent means the empty tree
     optional uint32 from_counter = 8;
     optional bytes  from_root    = 9;  // absent means the empty tree
+
+    // THE WM'S HEAD NONCE, covered by the signature: the token it rotates on every accepted
+    // transition. The device quotes it forward in its next `wm_sig`, so one authorisation moves
+    // the head at most once even when a (counter, root) pair recurs. See WardPublish.wm_sig.
+    optional bytes  head_nonce   = 10;  // 32B
 }
 
 /**
@@ -192,7 +197,7 @@ message WardPublish {
     reserved 5;
 
     optional bytes  auth_commit = 6;   // for another device of this wallet
-    optional bytes  wm_sig      = 7;   // for the WM: over exactly the bytes auth_commit MACs
+    optional bytes  wm_sig      = 7;   // for the WM: those bytes plus its current head nonce
     optional bytes  nonce       = 8;   // 32B, so the attestation that comes back is for THIS write
 
     // The two ends of the transition, because the WM verifies `wm_sig` over them and
@@ -216,6 +221,11 @@ message WardPublishAck {
 
     optional uint64 timestamp    = 3;
     optional bytes  wm_signature = 4;  // over the nonce from WardPublish
+
+    // THE WM'S HEAD NONCE, covered by the signature: the token it rotates on every accepted
+    // transition. The device quotes it forward in its next `wm_sig`, so one authorisation moves
+    // the head at most once even when a (counter, root) pair recurs. See WardPublish.wm_sig.
+    optional bytes  head_nonce   = 5;  // 32B
 }
 
 /**

@@ -441,6 +441,7 @@ class MockWardService:
             att_from_root,
             att_counter,
             att_root,
+            att_head_nonce,
             att_timestamp,
             signature,
         ) = self.wm.attest(ward_id, request.nonce)
@@ -464,6 +465,7 @@ class MockWardService:
             to_root=att_root,
             timestamp=att_timestamp,
             wm_signature=signature,
+            head_nonce=att_head_nonce,
             links=links,
         )
 
@@ -547,6 +549,7 @@ class MockWardService:
                 _afr,
                 counter,
                 root,
+                head_nonce,
                 timestamp,
                 signature,
             ) = self.wm.publish_and_attest(
@@ -575,10 +578,19 @@ class MockWardService:
             # verification failure rather than as a mismatch it noticed afterwards.
             counter, root = self.publish_ack_override
             signature = self.wm.sign(
-                ward_id, request.nonce, counter - 1, head_root, counter, root, timestamp
+                ward_id,
+                request.nonce,
+                counter - 1,
+                head_root,
+                counter,
+                root,
+                head_nonce,
+                timestamp,
             )
 
-        return messages.WardPublishAck(timestamp=timestamp, wm_signature=signature)
+        return messages.WardPublishAck(
+            timestamp=timestamp, wm_signature=signature, head_nonce=head_nonce
+        )
 
     def _commit(self, request) -> None:
         """Apply the published mutation to this daemon's replica.

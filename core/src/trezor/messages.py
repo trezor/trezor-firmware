@@ -8524,6 +8524,7 @@ if TYPE_CHECKING:
         to_root: "AnyBytes | None"
         from_counter: "int | None"
         from_root: "AnyBytes | None"
+        head_nonce: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8534,6 +8535,7 @@ if TYPE_CHECKING:
             to_root: "AnyBytes | None" = None,
             from_counter: "int | None" = None,
             from_root: "AnyBytes | None" = None,
+            head_nonce: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8586,26 +8588,26 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardRollback(protobuf.MessageType):
-        to_root: "AnyBytes | None"
-        auth_commit: "AnyBytes | None"
         from_counter: "int | None"
         from_root: "AnyBytes | None"
         to_counter: "int | None"
-        nonce: "AnyBytes | None"
-        timestamp: "int | None"
+        to_root: "AnyBytes | None"
         wm_signature: "AnyBytes | None"
+        timestamp: "int | None"
+        head_nonce: "AnyBytes | None"
+        recovered_root: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            to_root: "AnyBytes | None" = None,
-            auth_commit: "AnyBytes | None" = None,
             from_counter: "int | None" = None,
             from_root: "AnyBytes | None" = None,
             to_counter: "int | None" = None,
-            nonce: "AnyBytes | None" = None,
-            timestamp: "int | None" = None,
+            to_root: "AnyBytes | None" = None,
             wm_signature: "AnyBytes | None" = None,
+            timestamp: "int | None" = None,
+            head_nonce: "AnyBytes | None" = None,
+            recovered_root: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8631,52 +8633,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WardRollbackAck"]:
-            return isinstance(msg, cls)
-
-    class WardRecoverCounter(protobuf.MessageType):
-        wm_signature: "AnyBytes | None"
-        timestamp: "int | None"
-        to_counter: "int | None"
-        to_root: "AnyBytes | None"
-        from_counter: "int | None"
-        from_root: "AnyBytes | None"
-        recovered_root: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            wm_signature: "AnyBytes | None" = None,
-            timestamp: "int | None" = None,
-            to_counter: "int | None" = None,
-            to_root: "AnyBytes | None" = None,
-            from_counter: "int | None" = None,
-            from_root: "AnyBytes | None" = None,
-            recovered_root: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardRecoverCounter"]:
-            return isinstance(msg, cls)
-
-    class WardRecoverCounterAck(protobuf.MessageType):
-        counter: "int | None"
-        new_root: "AnyBytes | None"
-        auth_commit: "AnyBytes | None"
-        wm_sig: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            counter: "int | None" = None,
-            new_root: "AnyBytes | None" = None,
-            auth_commit: "AnyBytes | None" = None,
-            wm_sig: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardRecoverCounterAck"]:
             return isinstance(msg, cls)
 
     class WardServiceOpen(protobuf.MessageType):
@@ -8729,6 +8685,7 @@ if TYPE_CHECKING:
         to_root: "AnyBytes | None"
         from_counter: "int | None"
         from_root: "AnyBytes | None"
+        head_nonce: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8740,6 +8697,7 @@ if TYPE_CHECKING:
             to_root: "AnyBytes | None" = None,
             from_counter: "int | None" = None,
             from_root: "AnyBytes | None" = None,
+            head_nonce: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8804,12 +8762,14 @@ if TYPE_CHECKING:
     class WardPublishAck(protobuf.MessageType):
         timestamp: "int | None"
         wm_signature: "AnyBytes | None"
+        head_nonce: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             timestamp: "int | None" = None,
             wm_signature: "AnyBytes | None" = None,
+            head_nonce: "AnyBytes | None" = None,
         ) -> None:
             pass
 
