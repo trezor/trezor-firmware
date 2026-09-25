@@ -1094,11 +1094,6 @@ static bool tropic_erase_fw_slot(void) {
 
 // Reset the configuration and restore the CFG version slots
 static secbool tropic_cleanup_update_config(void) {
-  lt_handle_t *handle = tropic_get_handle();
-  if (handle == NULL) {
-    return secfalse;
-  }
-
   if (!tropic_session_start()) {
     return secfalse;
   }
