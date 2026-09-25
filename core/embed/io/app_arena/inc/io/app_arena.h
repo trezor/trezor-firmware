@@ -57,8 +57,8 @@ typedef struct {
   size_t data_size;
   /** Size of each chunk of the payload in bytes */
   size_t chunk_size;
-  /** Calculated hash of the image header */
-  sha256_digest_t header_hash;
+  /** App fingerprint - hash of the image header */
+  sha256_digest_t fingerprint;
   /** List of allowed curves (e.g., secp256k1, ed25519)
    * Each entry is a null-terminated string, and the list
    * is zero-padded to the maximum length */
