@@ -60,7 +60,9 @@ def _bundled_fw_version_slot() -> bytes:
     """
     config = yaml.safe_load(TROPIC_MODEL_CURRENT_CONFIG.read_text())
     value = slot_value(config, TROPIC_FW_VERSION_SLOT)
-    assert value is not None, f"Missing FW version slot in {TROPIC_MODEL_CURRENT_CONFIG}"
+    assert value is not None, (
+        f"Missing FW version slot in {TROPIC_MODEL_CURRENT_CONFIG}"
+    )
     return value
 
 

@@ -894,10 +894,10 @@ static secbool set_expected_config(
 
   uint8_t distribution_version_bytes[sizeof(uint32_t)] = {0};
   write_be(distribution_version_bytes, expected_config->distribution_version);
-  if (lt_r_mem_data_erase_write_retry(&g_tropic_driver.handle,
-                                TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
-                                distribution_version_bytes,
-                                sizeof(distribution_version_bytes)) != LT_OK) {
+  if (lt_r_mem_data_erase_write_retry(
+          &g_tropic_driver.handle, TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
+          distribution_version_bytes,
+          sizeof(distribution_version_bytes)) != LT_OK) {
     return secfalse;
   }
 
@@ -1252,7 +1252,7 @@ static secbool tropic_prepare_update_config(void) {
   return sectrue;
 }
 
-static tropic_fw_update_state_t tropic_get_update_state(void)  {
+static tropic_fw_update_state_t tropic_get_update_state(void) {
   lt_handle_t *handle = &g_tropic_driver.handle;
   lt_tr01_mode_t tr01_mode = LT_TR01_ALARM;
   if (TROPIC_RETRY_COMMAND(lt_get_tr01_mode(handle, &tr01_mode)) != LT_OK) {
@@ -1261,7 +1261,7 @@ static tropic_fw_update_state_t tropic_get_update_state(void)  {
   // if chip_mode == MAINTENANCE:
   if (tr01_mode == LT_TR01_MAINTENANCE) {
     return TROPIC_FW_UPDATE_UNFINISHED;
-  // if chip_mode == ALARM:
+    // if chip_mode == ALARM:
   } else if (tr01_mode == LT_TR01_ALARM) {
     return TROPIC_FW_UPDATE_ERROR;
   }
@@ -1278,13 +1278,13 @@ static tropic_fw_update_state_t tropic_get_update_state(void)  {
   // if slot_fw is None:
   if (!present) {
     uint32_t r_config_cfg_startup = 0;
-    if (TROPIC_RETRY_COMMAND(lt_r_config_read(handle, TR01_CFG_START_UP_ADDR,
-                                              &r_config_cfg_startup)) != LT_OK) {
+    if (TROPIC_RETRY_COMMAND(lt_r_config_read(
+            handle, TR01_CFG_START_UP_ADDR, &r_config_cfg_startup)) != LT_OK) {
       return TROPIC_FW_UPDATE_ERROR;
     }
     // maintenance on and no FW version in slot = update in progress
     if ((r_config_cfg_startup &
-                    BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0) {
+         BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0) {
       return TROPIC_FW_UPDATE_UNFINISHED;
     } else {
       return TROPIC_FW_UPDATE_OUTDATED;
@@ -1292,15 +1292,15 @@ static tropic_fw_update_state_t tropic_get_update_state(void)  {
   }
 
   // if slot_fw >= BUNDLED_VERSIONS:             # po složkách
-   if (fw_version_is_older(riscv_fw, fw_CPU_ver) ||
-            fw_version_is_older(spect_fw, fw_SPECT_ver)) {
-     return TROPIC_FW_UPDATE_OUTDATED;
-   } else {
-     return TROPIC_FW_UPDATE_UP_TO_DATE;
-   }
+  if (fw_version_is_older(riscv_fw, fw_CPU_ver) ||
+      fw_version_is_older(spect_fw, fw_SPECT_ver)) {
+    return TROPIC_FW_UPDATE_OUTDATED;
+  } else {
+    return TROPIC_FW_UPDATE_UP_TO_DATE;
+  }
 }
 
-static secbool tropic_update_possible(bool * possible) {
+static secbool tropic_update_possible(bool *possible) {
   *possible = false;
   lt_handle_t *handle = tropic_get_handle();
   if (handle == NULL) {
@@ -1335,7 +1335,7 @@ static secbool tropic_update_possible(bool * possible) {
     return secfalse;
   }
   *possible = (i_config_cfg_startup &
-              BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0;
+               BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0;
   return sectrue;
 }
 
@@ -1379,7 +1379,8 @@ secbool tropic_ensure_fw_updated(void) {
 
 // XXX: talhe funkce se volá v rámci bootu
 //         => NESMÍ ZAPÍNAT MAINTENENACE BIT! NIKDY!!
-// XXX: tady se zkontroluje ten 3-ukazatel a kdyžtak se zavolá tropic_finish_update
+// XXX: tady se zkontroluje ten 3-ukazatel a kdyžtak se zavolá
+// tropic_finish_update
 secbool tropic_check_and_restore_fw_update_in_progress(void) {
   tropic_fw_update_state_t state = tropic_get_update_state();
   if (state == TROPIC_FW_UPDATE_ERROR) {

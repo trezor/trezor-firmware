@@ -23,7 +23,6 @@ import pytest
 import yaml
 
 from tests.emulators import (
-    ROOT,
     TROPIC_MODEL_CURRENT_CONFIG,
     EmulatorWrapper,
     delete_profile,
