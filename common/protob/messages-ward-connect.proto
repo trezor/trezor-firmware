@@ -380,6 +380,10 @@ message WardIngestAttestation {
     // accepts an authorisation only against the nonce it currently holds. So one authorisation
     // moves the head at most once, even when a (counter, root) pair recurs -- which a revert
     // arranges by construction, carrying an older root forward under a new counter.
+    //
+    // THE WM MUST NEVER MAKE A SUPERSEDED NONCE CURRENT AGAIN -- not by rotation, and not
+    // through a backup restore, a failover, or any other state recovery, all of which may move
+    // the counter and root backwards legitimately. See apps/ward/cas.
     optional bytes  head_nonce   = 9;  // 32B
 
     // GENESIS ATTESTS ITSELF: at counter 0 nothing produced the head, so the two ends are equal
@@ -498,6 +502,10 @@ message WardRollback {
     // accepts an authorisation only against the nonce it currently holds. So one authorisation
     // moves the head at most once, even when a (counter, root) pair recurs -- which a revert
     // arranges by construction, carrying an older root forward under a new counter.
+    //
+    // THE WM MUST NEVER MAKE A SUPERSEDED NONCE CURRENT AGAIN -- not by rotation, and not
+    // through a backup restore, a failover, or any other state recovery, all of which may move
+    // the counter and root backwards legitimately. See apps/ward/cas.
     optional bytes  head_nonce   = 16;  // 32B
 
     // THE STATE TO COME BACK TO: the root of a trie the HOST can reconstruct from the rows it
