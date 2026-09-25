@@ -334,12 +334,40 @@ def require_head_nonce() -> bytes:
 # caller could get wrong.
 
 
+def _demotion_record(
+    stored_counter: int,
+    from_counter: int,
+    from_root: "bytes | None",
+    to_counter: int,
+    to_root: "bytes | None",
+) -> bytes:
+    """The bytes a demotion authorisation is compared as -- ONE encoder for both sides.
+
+    NORMALISES THE ROOTS HERE, which is the whole reason this is a function rather than two
+    expressions. An empty tree is `None` to some callers and `EMPTY_ROOT` to others: the round
+    stores attested roots in preimage form, `reconcile` converts EMPTY_ROOT back to `None` before
+    it gets this far, and `rollback` holds whatever the host sent. Comparing those raw made a
+    demotion TO AN EMPTY TREE -- draining the wallet back to nothing, a perfectly ordinary
+    recovery target -- record `EMPTY_ROOT` and be checked as `None`, so the approval never
+    matched and the user could not complete a descent they had held to confirm.
+    """
+    from .attest import root_or_empty
+
+    return (
+        stored_counter.to_bytes(4, "big")
+        + from_counter.to_bytes(4, "big")
+        + root_or_empty(from_root)
+        + to_counter.to_bytes(4, "big")
+        + root_or_empty(to_root)
+    )
+
+
 def authorise_demotion(
     stored_counter: int,
     from_counter: int,
-    from_root: bytes,
+    from_root: "bytes | None",
     to_counter: int,
-    to_root: bytes,
+    to_root: "bytes | None",
 ) -> None:
     """Record the exact transition the user approved, and the head they approved it from."""
     from storage.cache_common import APP_WARD_DEMOTION
@@ -348,20 +376,18 @@ def authorise_demotion(
     context.cache_set(
         APP_WARD_DEMOTION,
         b"\x01"
-        + stored_counter.to_bytes(4, "big")
-        + from_counter.to_bytes(4, "big")
-        + from_root
-        + to_counter.to_bytes(4, "big")
-        + to_root,
+        + _demotion_record(
+            stored_counter, from_counter, from_root, to_counter, to_root
+        ),
     )
 
 
 def demotion_matches(
     stored_counter: int,
     from_counter: int,
-    from_root: bytes,
+    from_root: "bytes | None",
     to_counter: int,
-    to_root: bytes,
+    to_root: "bytes | None",
 ) -> bool:
     """Is this exactly the demotion the user approved, from the head they approved it at?
 
@@ -369,6 +395,10 @@ def demotion_matches(
     answer different questions -- "is this the state they consented to" and "is this still the
     situation they consented in" -- and a caller that asked only the first would accept a descent
     whose cost had changed since the hold.
+
+    ROOTS IN EITHER FORM. `None` and `EMPTY_ROOT` both mean the empty tree and both reach this
+    from different callers; `_demotion_record` normalises so the answer does not depend on which
+    one asked.
     """
     from storage.cache_common import APP_WARD_DEMOTION
     from trezor.wire import context
@@ -376,12 +406,8 @@ def demotion_matches(
     raw = context.cache_get(APP_WARD_DEMOTION)
     if not raw or raw[0] != 1:
         return False
-    return raw[1:] == (
-        stored_counter.to_bytes(4, "big")
-        + from_counter.to_bytes(4, "big")
-        + from_root
-        + to_counter.to_bytes(4, "big")
-        + to_root
+    return raw[1:] == _demotion_record(
+        stored_counter, from_counter, from_root, to_counter, to_root
     )
 
 
