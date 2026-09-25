@@ -39,10 +39,14 @@ NONCE = b"\x99" * 32
 
 
 def _advance(wm, frm, from_root, to, to_root, tag=None, **kw):
+    # THE NONCE THE WM CURRENTLY HOLDS. A real device learns it from the WM's last attestation;
+    # here the test reads it off the WM directly, which is the same value by construction and
+    # keeps this file about the WM's own rules rather than about the sync round.
+    nonce = wm.head_nonce(WARD_ID)
     sig = (
-        wm_sig(K_SIG, WARD_ID, frm, from_root, to, to_root)
+        wm_sig(K_SIG, WARD_ID, frm, from_root, to, to_root, nonce)
         if tag is None
-        else wm_sig(K_SIG, WARD_ID, frm, from_root, to, to_root, tag)
+        else wm_sig(K_SIG, WARD_ID, frm, from_root, to, to_root, nonce, tag)
     )
     return wm.publish_and_attest(
         WARD_ID, NONCE, frm, from_root, to, to_root, sig, timestamp=1000, **kw
@@ -100,20 +104,23 @@ def test_a_first_head_starts_at_zero():
 def test_an_advance_attests_the_head_it_created():
     """Not "the head now", which a concurrent winner could have moved -- the whole reason CAS and
     attestation are one call."""
-    fc, fr, counter, root, ts, sig = _advance(_opened(), 1, ROOT_1, 2, ROOT_2)
+    fc, fr, counter, root, hn, ts, sig = _advance(_opened(), 1, ROOT_1, 2, ROOT_2)
     assert (fc, fr, counter, root, ts) == (1, ROOT_1, 2, ROOT_2, 1000)
     # THE WHOLE STEP IS SIGNED, both ends -- so an attestation cannot be paired with a link that
     # merely ends in the right place.
     _ed25519.checkvalid(
         sig,
         b"WARD ATTEST v1"
-        + bytes([4])
+        + bytes([5])
         + NONCE
         + WARD_ID
         + (1).to_bytes(4, "big")
         + ROOT_1
         + (2).to_bytes(4, "big")
         + ROOT_2
+        # THE HEAD NONCE the WM rotated to when it accepted this advance, travelling back so the
+        # device can quote it in its NEXT authorisation.
+        + hn
         + (1000).to_bytes(8, "big"),
         MockWM().pubkey,
     )
@@ -155,7 +162,7 @@ def test_an_unauthorised_transition_is_refused():
             ROOT_1,
             2,
             ROOT_2,
-            wm_sig(b"\x22" * 32, WARD_ID, 1, ROOT_1, 2, ROOT_2),
+            wm_sig(b"\x22" * 32, WARD_ID, 1, ROOT_1, 2, ROOT_2, wm.head_nonce(WARD_ID)),
             timestamp=1000,
         )
     assert wm.head(WARD_ID) == (1, ROOT_1, 1000)
@@ -171,7 +178,7 @@ def test_a_signature_for_another_transition_is_refused():
             ROOT_1,
             2,
             ROOT_2,
-            wm_sig(K_SIG, WARD_ID, 1, ROOT_1, 2, ROOT_0),
+            wm_sig(K_SIG, WARD_ID, 1, ROOT_1, 2, ROOT_0, wm.head_nonce(WARD_ID)),
             timestamp=1000,
         )
 
@@ -180,7 +187,7 @@ def test_a_read_only_first_use_can_attest_without_publishing():
     """A read may be a wallet's first WARD operation, so the WM has to be able to bootstrap from
     an attestation request rather than only from a write."""
     wm = MockWM()
-    fc, fr, counter, root, _ts, _sig = wm.attest_head(
+    fc, fr, counter, root, _hn, _ts, _sig = wm.attest_head(
         WARD_ID, NONCE, 0, ROOT_0, head_init_sig(K_SIG, WARD_ID, 0, ROOT_0)
     )
     # AN OPENING HEAD ATTESTS ITSELF: no step produced it, so naming one would be inventing a
@@ -225,7 +232,7 @@ def test_enrolment_is_genesis_only():
 
     # Genesis still enrols, which is the case that has to keep working.
     wm3 = MockWM()
-    fc, fr, tc, tr, _ts, _sig = wm3.attest_head(
+    fc, fr, tc, tr, _hn, _ts, _sig = wm3.attest_head(
         WARD_ID, NONCE, 0, ROOT_0, head_init_sig(K_SIG, WARD_ID, 0, ROOT_0)
     )
     assert (fc, fr, tc, tr) == (0, ROOT_0, 0, ROOT_0)
@@ -264,12 +271,42 @@ def test_a_revert_signature_is_not_accepted_as_an_ordinary_advance():
     """
     from .ward_keys import TAG_WM_REVERT, verify_wm_sig
 
-    revert = wm_sig(K_SIG, WARD_ID, 1, ROOT_1, 2, ROOT_2, TAG_WM_REVERT)
-    ordinary = wm_sig(K_SIG, WARD_ID, 1, ROOT_1, 2, ROOT_2)
+    hn = b"\x77" * 32
+    revert = wm_sig(K_SIG, WARD_ID, 1, ROOT_1, 2, ROOT_2, hn, TAG_WM_REVERT)
+    ordinary = wm_sig(K_SIG, WARD_ID, 1, ROOT_1, 2, ROOT_2, hn)
     assert revert != ordinary
 
     # each verifies only under its own tag
-    assert verify_wm_sig(WARD_ID, 1, ROOT_1, 2, ROOT_2, revert, TAG_WM_REVERT)
-    assert not verify_wm_sig(WARD_ID, 1, ROOT_1, 2, ROOT_2, revert)
-    assert verify_wm_sig(WARD_ID, 1, ROOT_1, 2, ROOT_2, ordinary)
-    assert not verify_wm_sig(WARD_ID, 1, ROOT_1, 2, ROOT_2, ordinary, TAG_WM_REVERT)
+    assert verify_wm_sig(WARD_ID, 1, ROOT_1, 2, ROOT_2, hn, revert, TAG_WM_REVERT)
+    assert not verify_wm_sig(WARD_ID, 1, ROOT_1, 2, ROOT_2, hn, revert)
+    assert verify_wm_sig(WARD_ID, 1, ROOT_1, 2, ROOT_2, hn, ordinary)
+    assert not verify_wm_sig(WARD_ID, 1, ROOT_1, 2, ROOT_2, hn, ordinary, TAG_WM_REVERT)
+
+
+def test_an_authorisation_moves_the_head_at_most_once():
+    """THE HEAD NONCE, stated as the attack it closes.
+
+    `(counter, root)` is not unique across a wallet's history: roots are content-addressed, so a
+    tree returning to an earlier shape returns to an earlier root, and a REVERT carries an older
+    root forward under a new counter on purpose. So an authorisation bound only to its endpoints
+    becomes live again the moment its predecessor pair recurs, and a host that kept one can land a
+    transition the user approved once at a place in history where they never approved it.
+
+    The nonce rotates on every accepted transition, so the second attempt names a moment that has
+    passed.
+    """
+    wm = _opened()
+    stale_nonce = wm.head_nonce(WARD_ID)
+    kept = wm_sig(K_SIG, WARD_ID, 1, ROOT_1, 2, ROOT_2, stale_nonce)
+
+    # it works exactly once
+    wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, kept, timestamp=1000)
+    assert wm.head_nonce(WARD_ID) != stale_nonce
+
+    # bring the WM back to the SAME (counter, root) predecessor a revert would create, and the
+    # kept authorisation is refused -- the endpoints match, the moment does not
+    _advance(wm, 2, ROOT_2, 3, ROOT_1, tag=None)
+    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000)
+    assert wm.head(WARD_ID)[:2] == (1, ROOT_1)
+    with pytest.raises(ValueError, match="not authorised"):
+        wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, kept, timestamp=1000)

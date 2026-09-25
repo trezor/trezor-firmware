@@ -51,6 +51,7 @@ async def flush_queue(
     from trezor.wire import DataError
 
     from . import offline_store
+    from . import round as sync_round
     from .cas import auth_commit, wm_sig
     from .common import online, pull_leaf, require_initialized
     from .keys import (
@@ -165,9 +166,15 @@ async def flush_queue(
     )
 
     # THE WM-FACING AUTHORISATION for the same transition, under K_sig rather than K_auth. Same
-    # operands, same builder -- one statement to two verifiers. Without it the WM has nothing to
-    # check when the host publishes, and whoever knows `ward_id` could advance the counter and
-    # have every genuine device refused from then on.
+    # transition, one statement to two verifiers, plus the WM's HEAD NONCE -- the freshness token
+    # it rotates on every transition it accepts. Without the signature the WM has nothing to check
+    # when the host publishes, and whoever knows `ward_id` could advance the counter and have every
+    # genuine device refused from then on. Without the nonce, an authorisation would stay live
+    # wherever its `(counter, root)` predecessor recurred, which a revert can arrange.
+    #
+    # The nonce comes from this session's latest verified attestation, which `online()` above
+    # guarantees exists: a session that has not synced cannot write, and therefore cannot be asked
+    # to authorise against a head it has not seen.
     advance = wm_sig(
         await derive_k_sig(),
         await derive_ward_id(),
@@ -175,6 +182,7 @@ async def flush_queue(
         from_root,
         counter,
         new_root,
+        sync_round.require_head_nonce(),
     )
 
     # Mark the record OFFERED, keeping it PENDING. That flag is what stops this loop offering the

@@ -847,8 +847,6 @@ class MessageType(IntEnum):
     WardVerifyChainAck = 2314
     WardRollback = 2315
     WardRollbackAck = 2316
-    WardRecoverCounter = 2317
-    WardRecoverCounterAck = 2318
     WardPinCachedEntry = 2319
     WardEraseCachedEntry = 2320
     WardFlushQueue = 2321
@@ -10660,6 +10658,7 @@ class WardIngestAttestation(protobuf.MessageType):
         6: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
         7: protobuf.Field("from_counter", "uint32", repeated=False, required=False, default=None),
         8: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
+        9: protobuf.Field("head_nonce", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10671,6 +10670,7 @@ class WardIngestAttestation(protobuf.MessageType):
         to_root: Optional["bytes"] = None,
         from_counter: Optional["int"] = None,
         from_root: Optional["bytes"] = None,
+        head_nonce: Optional["bytes"] = None,
     ) -> None:
         self.wm_signature = wm_signature
         self.timestamp = timestamp
@@ -10678,6 +10678,7 @@ class WardIngestAttestation(protobuf.MessageType):
         self.to_root = to_root
         self.from_counter = from_counter
         self.from_root = from_root
+        self.head_nonce = head_nonce
 
 
 class WardIngestAttestationAck(protobuf.MessageType):
@@ -10728,36 +10729,36 @@ class WardReconcileAck(protobuf.MessageType):
 class WardRollback(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2315
     FIELDS = {
-        1: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("from_counter", "uint32", repeated=False, required=False, default=None),
-        4: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("to_counter", "uint32", repeated=False, required=False, default=None),
-        6: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
-        7: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
-        8: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
+        9: protobuf.Field("from_counter", "uint32", repeated=False, required=False, default=None),
+        10: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
+        11: protobuf.Field("to_counter", "uint32", repeated=False, required=False, default=None),
+        12: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
+        13: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
+        14: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
+        16: protobuf.Field("head_nonce", "bytes", repeated=False, required=False, default=None),
+        15: protobuf.Field("recovered_root", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        to_root: Optional["bytes"] = None,
-        auth_commit: Optional["bytes"] = None,
         from_counter: Optional["int"] = None,
         from_root: Optional["bytes"] = None,
         to_counter: Optional["int"] = None,
-        nonce: Optional["bytes"] = None,
-        timestamp: Optional["int"] = None,
+        to_root: Optional["bytes"] = None,
         wm_signature: Optional["bytes"] = None,
+        timestamp: Optional["int"] = None,
+        head_nonce: Optional["bytes"] = None,
+        recovered_root: Optional["bytes"] = None,
     ) -> None:
-        self.to_root = to_root
-        self.auth_commit = auth_commit
         self.from_counter = from_counter
         self.from_root = from_root
         self.to_counter = to_counter
-        self.nonce = nonce
-        self.timestamp = timestamp
+        self.to_root = to_root
         self.wm_signature = wm_signature
+        self.timestamp = timestamp
+        self.head_nonce = head_nonce
+        self.recovered_root = recovered_root
 
 
 class WardRollbackAck(protobuf.MessageType):
@@ -10767,61 +10768,6 @@ class WardRollbackAck(protobuf.MessageType):
         2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
         5: protobuf.Field("wm_sig", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        counter: Optional["int"] = None,
-        new_root: Optional["bytes"] = None,
-        auth_commit: Optional["bytes"] = None,
-        wm_sig: Optional["bytes"] = None,
-    ) -> None:
-        self.counter = counter
-        self.new_root = new_root
-        self.auth_commit = auth_commit
-        self.wm_sig = wm_sig
-
-
-class WardRecoverCounter(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2317
-    FIELDS = {
-        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
-        5: protobuf.Field("to_counter", "uint32", repeated=False, required=False, default=None),
-        6: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
-        7: protobuf.Field("from_counter", "uint32", repeated=False, required=False, default=None),
-        8: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
-        9: protobuf.Field("recovered_root", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        wm_signature: Optional["bytes"] = None,
-        timestamp: Optional["int"] = None,
-        to_counter: Optional["int"] = None,
-        to_root: Optional["bytes"] = None,
-        from_counter: Optional["int"] = None,
-        from_root: Optional["bytes"] = None,
-        recovered_root: Optional["bytes"] = None,
-    ) -> None:
-        self.wm_signature = wm_signature
-        self.timestamp = timestamp
-        self.to_counter = to_counter
-        self.to_root = to_root
-        self.from_counter = from_counter
-        self.from_root = from_root
-        self.recovered_root = recovered_root
-
-
-class WardRecoverCounterAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2318
-    FIELDS = {
-        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
-        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("wm_sig", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10892,6 +10838,7 @@ class WardSyncResponse(protobuf.MessageType):
         7: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
         8: protobuf.Field("from_counter", "uint32", repeated=False, required=False, default=None),
         9: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
+        10: protobuf.Field("head_nonce", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10904,6 +10851,7 @@ class WardSyncResponse(protobuf.MessageType):
         to_root: Optional["bytes"] = None,
         from_counter: Optional["int"] = None,
         from_root: Optional["bytes"] = None,
+        head_nonce: Optional["bytes"] = None,
     ) -> None:
         self.links: Sequence["WardChainLink"] = links if links is not None else []
         self.timestamp = timestamp
@@ -10912,6 +10860,7 @@ class WardSyncResponse(protobuf.MessageType):
         self.to_root = to_root
         self.from_counter = from_counter
         self.from_root = from_root
+        self.head_nonce = head_nonce
 
 
 class WardServiceFetch(protobuf.MessageType):
@@ -10981,6 +10930,7 @@ class WardPublishAck(protobuf.MessageType):
     FIELDS = {
         3: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
         4: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("head_nonce", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10988,9 +10938,11 @@ class WardPublishAck(protobuf.MessageType):
         *,
         timestamp: Optional["int"] = None,
         wm_signature: Optional["bytes"] = None,
+        head_nonce: Optional["bytes"] = None,
     ) -> None:
         self.timestamp = timestamp
         self.wm_signature = wm_signature
+        self.head_nonce = head_nonce
 
 
 class WardPublishConflict(protobuf.MessageType):

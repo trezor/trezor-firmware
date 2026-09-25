@@ -40,11 +40,19 @@ this device has already accepted.
     attestation = b"WARD ATTEST v1" || version(1B) || nonce || ward_id(32B)
                                     || from_counter(4B BE) || from_root(32B)
                                     || to_counter(4B BE)   || to_root(32B)
-                                    || timestamp(8B BE)
+                                    || head_nonce(32B)     || timestamp(8B BE)
 
 signed Ed25519 under the WM key. The nonce is minted by the device per round and must
 come back inside the signature, so the host cannot stockpile signed anchors and replay
 one later -- against a host-only adversary that closes eclipse entirely.
+
+TWO NONCES, AND THEY POINT IN OPPOSITE DIRECTIONS. The ROUND nonce is the device's, minted
+here and quoted back by the WM, and it proves the answer is fresh. The HEAD nonce is the WM's,
+part of its state `(counter, root, head_nonce)`, rotated on every transition it accepts, and it
+is quoted FORWARD by the device in the next `cas.wm_sig` -- which is what makes an authorisation
+single-use even when a `(counter, root)` pair recurs. See the head-nonce section in `cas`. It is
+in here rather than on the wire beside the signature because a head nonce the host could choose
+would let it aim a genuine device's authorisation at a moment of its own picking.
 
 THE TIMESTAMP IS CARRIED BUT NO LONGER CHECKED. It is still covered by the signature, so a
 WM cannot alter it, and it stays in the preimage because removing it would be a version bump
@@ -62,7 +70,8 @@ if TYPE_CHECKING:
 
 _ATTEST_DOMAIN = b"WARD ATTEST v1"
 # 2 when the preimage grew a timestamp; 3 when the 32-byte field stopped being a mac over the
-# root and became the root; 4 when it stopped naming a state and started naming a transition.
+# root and became the root; 4 when it stopped naming a state and started naming a transition;
+# 5 when the WM's own head nonce joined it.
 #
 # The v2->v3 bump was the one that mattered most, and it is worth keeping the reason written down:
 # THE LAYOUT DID NOT MOVE. Same offsets, same widths -- so nothing about the bytes would have told
@@ -70,7 +79,7 @@ _ATTEST_DOMAIN = b"WARD ATTEST v1"
 # a mac (or the reverse) fails open, not closed. This bump adds 36 bytes, so a stale signature
 # cannot even parse; the version still moves, because relying on a length accident is how the
 # next change that happens to preserve one gets missed.
-_ATTEST_VERSION = 4
+_ATTEST_VERSION = 5
 
 NONCE_LENGTH = 32
 
@@ -147,9 +156,10 @@ def attestation_preimage(
     from_root: "bytes | None",
     to_counter: int,
     to_root: "bytes | None",
+    head_nonce: bytes,
     timestamp: int,
 ) -> bytes:
-    """domain || version(1B) || nonce || ward_id || from(4B BE || 32B) || to(4B BE || 32B) || ts.
+    """domain || version(1B) || nonce || ward_id || from(4B||32B) || to(4B||32B) || head_nonce || ts.
 
     Fixed widths, per `leaf.leaf_hash_of`: the roots arrive from the host, and adjacent
     variable-length fields are re-splittable if their lengths are not pinned. The WM signature
@@ -175,6 +185,7 @@ def attestation_preimage(
         or len(ward_id) != 32
         or len(from_root) != 32
         or len(to_root) != 32
+        or len(head_nonce) != NONCE_LENGTH
     ):
         raise DataError("WARD: attestation operands have the wrong length")
     return (
@@ -186,44 +197,27 @@ def attestation_preimage(
         + from_root
         + to_counter.to_bytes(4, "big")
         + to_root
+        + head_nonce
         + timestamp.to_bytes(8, "big")
     )
 
 
-# ---------------------------------------------------------------------------
-# TWO VERIFICATION PATHS, AND THE SECOND IS NOT A GENERALISATION OF THE FIRST.
+# THE NONCE IS THE WHOLE ANTI-ECLIPSE ARGUMENT. The device mints it before the host talks to the
+# WM, so the WM must sign a value nobody could know in advance and a host cannot keep a drawer of
+# previously-signed anchors and serve whichever suits it. `round.clear` then zeroes the slot, so
+# the device retains no past nonces and could not tell one it minted last week from arbitrary
+# bytes -- which is why there is exactly ONE verification entry point here.
 #
-# `verify_attestation` answers "IS THIS THE HEAD NOW". Its nonce comes from the open round and
-# from nowhere else -- `adopt.verify_round_attestation` is its only non-test caller -- and that
-# ordering is the whole anti-eclipse argument: the device mints a nonce before the host talks to
-# the WM, so the WM must sign a value nobody could know in advance and a host cannot keep a
-# drawer of previously-signed anchors and serve whichever suits it.
+# THERE USED TO BE TWO. `verify_archived_attestation` took the nonce as DATA, answering "was this
+# EVER a head" rather than "is this the head NOW", and it was admitted for two callers: a chain
+# walk anchored on an archived head, and `rollback` proving its target was once authoritative.
+# Both are gone. The anchor raised the persisted counter with no freshness and no consent, which
+# defeated a user-confirmed recovery; and rollback's requirement asked for proof of headship that
+# a host missing rows cannot have, making the escape unavailable in the case it exists for.
 #
-# `verify_archived_attestation` answers "WAS THIS EVER A HEAD". It takes the nonce as DATA, which
-# is precisely that drawer. It is admitted because it is asked a different question:
-#
-#     currency  -- only ever established by the round-bound path, never by this one
-#     history   -- established by this one, and it can say nothing about what is current
-#
-# THE NONCE IS INERT HERE. `round.clear` zeroes the slot, so the device retains no past nonces
-# and cannot tell one it minted from arbitrary bytes. Security rests entirely on the WM's
-# signature over the transition: a host may choose freely among every attestation it has ever
-# seen for this wallet, and can forge none of them. What stops that mattering is that the whole
-# step is inside the signed preimage, so an archived attestation names one MOMENT and one
-# PREDECESSOR -- it cannot be re-dated onto another counter, and it cannot be paired with a
-# different link that happens to end at the same place. Roots repeat when content repeats;
-# transitions carrying their counters do not.
-#
-# IF THIS PATH EVER ANSWERS THE FIRST QUESTION, THE ECLIPSE PROTECTION IS GONE. Callers are
-# therefore enumerated deliberately: `rollback`, and `verify_chain` when a walk is anchored on an
-# ARCHIVED head. Not `ingest`, not `recover`, not `service.sync`, not `service.publish` -- each of
-# those decides currency.
-#
-# The second caller is the one to watch, because it looks like adoption and adoption normally does
-# decide currency. It does not here: an archived anchor proves the WM really held that head, which
-# is all DESCENT needs, and `adopt(current=False)` is what keeps the walk from latching on the
-# strength of it. Descent from a genuine past head is a complete proof of lineage and no claim at
-# all about the present.
+# So nothing verifies an attestation outside an open round any more, and there is no second entry
+# point to reach for. If one is ever wanted again, the rule it broke both times is where to
+# start: a path that takes the nonce as DATA must never decide what is CURRENT.
 # ---------------------------------------------------------------------------
 
 
@@ -234,6 +228,7 @@ def verify_attestation(
     from_root: "bytes | None",
     to_counter: int,
     to_root: "bytes | None",
+    head_nonce: bytes,
     timestamp: int,
     signature: bytes,
 ) -> bool:
@@ -244,36 +239,14 @@ def verify_attestation(
     """
     return _verify(
         attestation_preimage(
-            ward_id, nonce, from_counter, from_root, to_counter, to_root, timestamp
-        ),
-        signature,
-    )
-
-
-def verify_archived_attestation(
-    ward_id: bytes,
-    nonce: bytes,
-    from_counter: int,
-    from_root: "bytes | None",
-    to_counter: int,
-    to_root: "bytes | None",
-    timestamp: int,
-    signature: bytes,
-) -> bool:
-    """Was this transition EVER taken by this wallet, under some round the host kept?
-
-    Deliberately a second function rather than a parameter on the first. The two answer different
-    questions, only one of them establishes currency, and a boolean flag on a shared entry point
-    is exactly the kind of thing a later caller passes wrongly. See the note above for the full
-    argument; the short form is that this one may not decide what is current.
-
-    Cryptographically identical to `verify_attestation` -- same preimage, same key. Everything
-    that makes the two different is WHERE THE NONCE COMES FROM and WHAT THE ANSWER MAY BE USED
-    FOR, neither of which is visible in the bytes.
-    """
-    return _verify(
-        attestation_preimage(
-            ward_id, nonce, from_counter, from_root, to_counter, to_root, timestamp
+            ward_id,
+            nonce,
+            from_counter,
+            from_root,
+            to_counter,
+            to_root,
+            head_nonce,
+            timestamp,
         ),
         signature,
     )

@@ -416,8 +416,8 @@ enum MessageType {
     MessageType_WardVerifyChainAck = 2314 [(wire_out) = true];
     MessageType_WardRollback = 2315 [(wire_in) = true];
     MessageType_WardRollbackAck = 2316 [(wire_out) = true];
-    MessageType_WardRecoverCounter = 2317 [(wire_in) = true];
-    MessageType_WardRecoverCounterAck = 2318 [(wire_out) = true];
+    reserved 2317, 2318;  // WardRecoverCounter / Ack -- folded into WardRollback, which now
+                          // builds from the WM's head and so covers a regressed register too
     MessageType_WardPinCachedEntry = 2319 [(wire_in) = true];
     MessageType_WardEraseCachedEntry = 2320 [(wire_in) = true];
     MessageType_WardFlushQueue = 2321 [(wire_in) = true];

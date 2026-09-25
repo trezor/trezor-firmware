@@ -185,7 +185,7 @@ message WardVerifyChain {
     // KEPT from when an earlier head was current, adopting without claiming currency.
     //
     // REMOVED, because it raised the persisted counter with no freshness and no consent. After a
-    // user-confirmed WardRecoverCounter lowered the head from 57 to 10, a host still holding the
+    // user-confirmed demotion lowered the head from 57 to 10, a host still holding the
     // archived attestation for 57 and the links up to it walked the device straight back -- the
     // device persists the counter before it decides about latching, so the recovery was undone
     // silently and the wallet stranded again. It also no longer bought anything: it existed for
@@ -373,6 +373,15 @@ message WardIngestAttestation {
     optional uint32 from_counter = 7;  // the head it advanced from; to_counter - 1
     optional bytes  from_root    = 8;  // absent means the empty tree
 
+    // THE WM'S HEAD NONCE: the freshness token it holds beside (counter, root) and rotates on
+    // every transition it accepts. Covered by the signature above, so the host cannot choose it.
+    //
+    // WHAT IT IS FOR. The device quotes it FORWARD, in the next `wm_sig` it mints, and the WM
+    // accepts an authorisation only against the nonce it currently holds. So one authorisation
+    // moves the head at most once, even when a (counter, root) pair recurs -- which a revert
+    // arranges by construction, carrying an older root forward under a new counter.
+    optional bytes  head_nonce   = 9;  // 32B
+
     // GENESIS ATTESTS ITSELF: at counter 0 nothing produced the head, so the two ends are equal
     // and the empty tree stands on both. No real step has from == to, so the two cannot be
     // confused -- see apps/ward/attest.attestation_preimage.
@@ -453,36 +462,48 @@ message WardReconcileAck {
  * @next Failure
  */
 message WardRollback {
-    // The link INTO the target state: the transition that produced it, with the COMMIT
-    // authorisation only a device of this wallet could have minted. The device demotes to
-    // to_root, which may be several steps back -- the missing links of the range being
-    // discarded are exactly what a host in this situation does not have, so it cannot walk
-    // back one step at a time and must jump to the last state whose link it does hold.
-    //
-    // to_counter is inside the MAC preimage, so the number of changes being discarded is
-    // authenticated rather than asserted, which is what lets the screen state it.
-    optional bytes  to_root      = 1;  // the target; absent means the empty tree
-    optional bytes  auth_commit  = 2;  // over (from_counter, from_root) -> (to_counter, to_root)
-    optional uint32 from_counter = 3;
-    optional bytes  from_root    = 4;  // absent means the empty tree
-    optional uint32 to_counter   = 5;
+    // 1-5 were the LINK INTO THE TARGET: to_root, auth_commit, from_counter, from_root,
+    // to_counter. It authenticated the target and carried the counter the discarded count was
+    // derived from. Gone with the proof requirement below -- a host rebuilding from partial rows
+    // produces a root no link ever ended at, so demanding one refused the very case this exists
+    // for. The count now comes from the counters, which are authenticated on their own.
+    reserved 1, 2, 3, 4, 5;
 
-    // THE PROOF THAT THE TARGET WAS EVER THE HEAD, and it is REQUIRED. `auth_commit` above says
-    // a holder of this wallet's K_auth authorised the target; it does not say the target was
-    // ever authoritative, so a host could present a link from an orphaned fork. These three are
-    // the attestation the WM issued when the target was current, kept by the host and replayed
-    // here: the device checks the signature over ALL FOUR operands above -- the very transition
-    // `auth_commit` names -- which together say the WM actually took this step. An attestation
-    // that merely ended in the same place no longer satisfies it.
+    // 6-8 were the ARCHIVED ATTESTATION for the target, proving it had once been the WM's head
+    // and so excluding an abandoned branch. Same objection: a host missing rows is exactly one
+    // whose reconstructible root the WM may never have attested, so proof of headship made the
+    // escape unavailable in the case it exists for. Whether the target was AUTHORITATIVE is the
+    // user's call now, on a screen that names it as the host's proposal.
+    reserved 6, 7, 8;
+
+    // THE WM'S OWN HEAD, attested against this round's nonce -- the step it most recently took.
+    // The demotion extends it, and it is the pair the WM compare-and-swaps on.
     //
-    // A HOST THAT DID NOT ARCHIVE CANNOT ROLL BACK. That is a deliberate narrowing of an escape
-    // hatch this message's own docstring once said should need no attestation -- the reasoning
-    // there was aimed at a LIVE attestation, which would need the WM reachable in the very
-    // situation rollback exists for. An archived one does not, but it does need to have been
-    // kept, so hosts must begin archiving at their first sync after upgrade.
-    optional bytes  nonce        = 6;  // the nonce that attestation was minted under
-    optional uint64 timestamp    = 7;
-    optional bytes  wm_signature = 8;
+    // FROM THE WM'S HEAD, NOT THE DEVICE'S, which is what lets this one message cover two
+    // failures. A device only ever adopts what the WM attested, so normally the two heads are the
+    // same and this is an ordinary rollback landing at counter + 1. When the WM's register has
+    // regressed they differ, and building from the WM's is the only thing it will accept -- which
+    // is what WardRecoverCounter used to be for. That message is gone; this is it.
+    optional uint32 from_counter = 9;
+    optional bytes  from_root    = 10;  // absent means the empty tree
+    optional uint32 to_counter   = 11;
+    optional bytes  to_root      = 12;  // absent means the empty tree
+    optional bytes  wm_signature = 13;
+    optional uint64 timestamp    = 14;
+
+    // THE WM'S HEAD NONCE: the freshness token it holds beside (counter, root) and rotates on
+    // every transition it accepts. Covered by the signature above, so the host cannot choose it.
+    //
+    // WHAT IT IS FOR. The device quotes it FORWARD, in the next `wm_sig` it mints, and the WM
+    // accepts an authorisation only against the nonce it currently holds. So one authorisation
+    // moves the head at most once, even when a (counter, root) pair recurs -- which a revert
+    // arranges by construction, carrying an older root forward under a new counter.
+    optional bytes  head_nonce   = 16;  // 32B
+
+    // THE STATE TO COME BACK TO: the root of a trie the HOST can reconstruct from the rows it
+    // actually holds, proposed by it and approved by the user on the device. Absent means the
+    // empty tree. Not required to have been a head -- see the note on 6-8.
+    optional bytes  recovered_root = 15;
 }
 
 /**
@@ -494,77 +515,10 @@ message WardRollbackAck {
     optional bytes  new_root    = 2;  // absent if the wallet is now empty
     optional bytes  auth_commit = 3;  // a REVERT link, for the host to record
     reserved 4;                       // was auth_sig; see WardLeafAck
-    // The WM-facing authorisation for the demotion, under "WARD WM REVERT v2". A revert
+    // The WM-facing authorisation for the demotion, under "WARD WM REVERT v3". A revert
     // advances the head like any write -- forward, carrying an OLDER root -- so without its
     // own tag the WM cannot tell a demotion from an ordinary advance and cannot apply policy
     // to one. Same preimage shape as an ordinary wm_sig; only the tag differs.
     optional bytes  wm_sig      = 5;
 }
 
-/**
- * Request: accept an attestation that goes BACKWARDS, with the user's consent.
- *
- * If the WM's register is lost or its clock jumps back, every device with a stored
- * counter locks out: the monotonicity that protects against replay becomes a denial of
- * service against the owner. This is the way back.
- *
- * The device still requires a valid WM signature over this round's nonce, and still
- * requires the link folded afterwards to name it -- so the state being adopted is
- * one this wallet genuinely reached. Only a device holding K_auth can produce that link, so a
- * replayed attestation plus a genuine link is proof of past presence, which is exactly the "root the
- * Trezor holds its own prior signature for" that recovery is supposed to demand.
- *
- * What it cannot check is INTENT. Everything here is cryptographically genuine; the
- * question is whether the user means to give up the state in between. That makes this the
- * strongest social-engineering target in the protocol -- anyone who can talk a user
- * through it can replay old state wholesale -- so the confirmation names both counters and
- * the age of what is being reverted to, and holds.
- * @start
- * @next WardRecoverCounterAck
- * @next Failure
- */
-message WardRecoverCounter {
-    reserved 1, 2;                     // were `counter` and `root`; see WardIngestAttestation
-
-    // The WM'S OWN HEAD, attested against this round's nonce -- the step it most recently took,
-    // which after a register loss is BEHIND this device. It is the predecessor the demotion
-    // extends and the pair the WM will compare-and-swap on, so it has to be the WM's current
-    // head and not a state the host names.
-    optional bytes  wm_signature = 3;
-    optional uint64 timestamp    = 4;
-    optional uint32 to_counter   = 5;
-    optional bytes  to_root      = 6;  // absent means the empty tree
-    optional uint32 from_counter = 7;
-    optional bytes  from_root    = 8;  // absent means the empty tree
-
-    // THE STATE TO COME BACK TO: a root the HOST can reconstruct from the rows it actually holds,
-    // proposed by it and approved by the user on the device. Absent means the empty tree.
-    //
-    // NOT REQUIRED TO HAVE BEEN A HEAD, which is the difference from WardRollback. A host that
-    // lost rows rebuilds a tree the wallet may never have had, and reverting to something it can
-    // still serve is the entire point of the escape hatch; demanding an archived attestation
-    // would make the hatch unavailable in exactly the situation it exists for. Rollback can
-    // demand one because it runs while the WM is healthy. Here the WM's record is the thing that
-    // was lost, so the user's approval is the authority and the screen says so.
-    optional bytes  recovered_root = 9;
-}
-
-/**
- * Response: the round is now attested at the lower counter; reconcile follows as usual.
- * @end
- */
-message WardRecoverCounterAck {
-    // THE DEMOTION, for the host to publish. Shaped exactly like WardRollbackAck, because a
-    // recovery IS a rollback -- the only thing that differs is that it was built against the WM's
-    // head rather than this device's. A host replaying its transition log treats it the way it
-    // treats any REVERT row: load the whole trie at `new_root` rather than apply a leaf delta,
-    // since the two ends are not one edit apart.
-    //
-    // NOTHING IS ADOPTED YET. The head moves when the WM confirms this and a sync round brings
-    // it back, which is the invariant every write obeys. The device has recorded the user's
-    // consent for that one counter, and for nothing else.
-    optional uint32 counter     = 1;  // wm_counter + 1 -- forward, though the head goes back
-    optional bytes  new_root    = 2;  // absent if the recovered tree is empty
-    optional bytes  auth_commit = 3;  // REVERT, for the other devices of this wallet
-    optional bytes  wm_sig      = 4;  // REVERT, for the WM
-}

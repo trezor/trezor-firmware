@@ -200,10 +200,79 @@ def is_online() -> bool:
     return bool(raw) and raw[0] == _ONLINE
 
 
+# --- the WM's head nonce ----------------------------------------------------------------
+#
+# The freshness token the WM holds beside `(counter, root)` and rotates on every transition it
+# accepts. The device learns it from an attestation -- it is inside the signed preimage, see
+# `attest` -- and quotes it forward in the next `cas.wm_sig`, which is what stops one
+# authorisation being usable twice when a `(counter, root)` pair recurs.
+#
+# WHY IT IS NOT IN THE ROUND RECORD. A write happens in a LATER request than the round that
+# brought the nonce in: `adopt` calls `clear()` as its last act, so a value kept on the round is
+# gone by the time anything needs it. It lives beside the online latch instead, and for the same
+# lifetime -- which is also the right rule, because `online()` is exactly the condition under
+# which a nonce has been established this session. A new session must sync before it may write,
+# and must therefore learn a current nonce before it may authorise one.
+#
+# ALWAYS THE FRESHEST ONE SEEN. Every successful `adopt.verify_round_attestation` overwrites it,
+# whether or not the adoption that follows succeeds -- a nonce is a WM fact, not an outcome of
+# ours, and holding an older one buys nothing: presenting a stale nonce yields a signature the WM
+# refuses, which is a failed write and not a forged one.
+
+
+def set_head_nonce(nonce: bytes) -> None:
+    """Record the WM head nonce carried by an attestation this device just verified."""
+    from storage.cache_common import APP_WARD_HEAD_NONCE
+    from trezor.wire import context
+
+    assert len(nonce) == _NONCE_LEN
+    # A PRESENCE BYTE, because the all-zero nonce is a REAL value here: it is what a WM holds for
+    # a wallet it has just enrolled, and the first write after genesis quotes it. Without the
+    # flag an unset slot -- which reads back as zeros -- would be indistinguishable from it, and
+    # "we have never synced" would sign as "the WM is at enrolment".
+    context.cache_set(APP_WARD_HEAD_NONCE, b"\x01" + nonce)
+
+
+def head_nonce() -> "bytes | None":
+    """The WM's current head nonce as far as this session knows, or None.
+
+    None is the safe answer: a caller that cannot name the nonce cannot mint an authorisation the
+    WM would accept, and should say so rather than sign against a guess.
+    """
+    from storage.cache_common import APP_WARD_HEAD_NONCE
+    from trezor.wire import context
+
+    raw = context.cache_get(APP_WARD_HEAD_NONCE)
+    if not raw or len(raw) != _NONCE_LEN + 1 or raw[0] != 1:
+        return None
+    return bytes(raw[1:])
+
+
+def require_head_nonce() -> bytes:
+    """The head nonce, or refuse to authorise anything.
+
+    Signing against an unknown nonce would produce an authorisation the WM cannot accept, and the
+    failure would surface at the host as a rejected publish with no explanation. Fail here, where
+    the reason is nameable.
+    """
+    from trezor.wire import DataError
+
+    nonce = head_nonce()
+    if nonce is None:
+        raise DataError("WARD: no WM head nonce in this session; sync first")
+    return nonce
+
+
 # --- the authorised demotion ---------------------------------------------------------
 #
-# A counter the user has APPROVED the head coming down to, recorded when they confirm and spent
-# when it is adopted.
+# The exact TRANSITION the user approved the head coming down to, recorded when they confirm and
+# spent when it is adopted.
+#
+# THE WHOLE STEP, NOT JUST THE COUNTER. A counter alone would admit any genuine attestation
+# landing on that number -- including one for a different root, which is a different demotion
+# than the one the user was shown. The device minted the transition itself, so it knows all four
+# operands and can require the attestation that comes back to be exactly it. Consent is for a
+# specific state, and this is what makes the code say so.
 #
 # WHY IT CANNOT LIVE IN THE ROUND. A demotion is minted against the WM's head and then has to be
 # PUBLISHED before any device may adopt it -- the head only moves when the WM confirms, which is
@@ -215,27 +284,44 @@ def is_online() -> bool:
 #
 # WHAT IT IS FOR. `ingest` refuses any counter below the stored floor, and `reconcile` refuses any
 # head that is not one step from where the device stands. Both are right, and both would refuse a
-# recovery -- the whole point of which is to come down. This is the one value that lets them, and
-# it names an exact counter, so it admits the demotion the user saw and nothing else.
+# demotion -- the whole point of which is to come down. This is the one value that lets them.
+#
+# Layout: flag(1B) || from_counter(4B BE) || from_root(32B) || to_counter(4B BE) || to_root(32B).
+# Roots are kept in PREIMAGE form, the form an attestation carries, so the comparison is a plain
+# equality rather than a normalisation each caller could get wrong.
 
 
-def authorise_demotion(counter: int) -> None:
-    """Record that the user approved the head coming down to `counter`."""
+def authorise_demotion(
+    from_counter: int, from_root: bytes, to_counter: int, to_root: bytes
+) -> None:
+    """Record the exact transition the user approved."""
     from storage.cache_common import APP_WARD_DEMOTION
     from trezor.wire import context
 
-    context.cache_set(APP_WARD_DEMOTION, b"\x01" + counter.to_bytes(4, "big"))
+    context.cache_set(
+        APP_WARD_DEMOTION,
+        b"\x01"
+        + from_counter.to_bytes(4, "big")
+        + from_root
+        + to_counter.to_bytes(4, "big")
+        + to_root,
+    )
 
 
-def authorised_demotion() -> "int | None":
-    """The counter a demotion was approved for, or None. Absent is the safe answer."""
+def authorised_demotion() -> "tuple[int, bytes, int, bytes] | None":
+    """The transition a demotion was approved for, or None. Absent is the safe answer."""
     from storage.cache_common import APP_WARD_DEMOTION
     from trezor.wire import context
 
     raw = context.cache_get(APP_WARD_DEMOTION)
     if not raw or raw[0] != 1:
         return None
-    return int.from_bytes(raw[1:5], "big")
+    return (
+        int.from_bytes(raw[1:5], "big"),
+        raw[5:37],
+        int.from_bytes(raw[37:41], "big"),
+        raw[41:73],
+    )
 
 
 def clear_demotion() -> None:
@@ -243,4 +329,4 @@ def clear_demotion() -> None:
     from storage.cache_common import APP_WARD_DEMOTION
     from trezor.wire import context
 
-    context.cache_set(APP_WARD_DEMOTION, bytes(5))
+    context.cache_set(APP_WARD_DEMOTION, bytes(73))

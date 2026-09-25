@@ -623,6 +623,7 @@ async def sync() -> None:
         answer.from_root or None,
         answer.to_counter,
         answer.to_root or None,
+        answer.head_nonce,
         answer.timestamp or 0,
         answer.wm_signature,
     )
@@ -847,9 +848,11 @@ async def publish(
             from_root=from_root,
             new_root=new_root,
             auth_commit=step,
-            # OVER THE SAME BYTES `auth_commit` MACs, differing only in tag, key and algorithm.
-            # The WM compare-and-swaps on `from_root` and attests `new_root`, and both are inside
-            # what it verifies -- so a host cannot pair this signature with operands of its own.
+            # OVER THE BYTES `auth_commit` MACs PLUS THE WM'S HEAD NONCE, differing otherwise
+            # only in tag, key and algorithm. The WM compare-and-swaps on `from_root` and the
+            # nonce and attests `new_root`, and all of them are inside what it verifies -- so a
+            # host cannot pair this signature with operands of its own, and cannot hold it back
+            # and re-apply it after some other transition has landed.
             wm_sig=wm_sig(
                 await derive_k_sig(),
                 ward_id,
@@ -857,6 +860,7 @@ async def publish(
                 from_root,
                 counter,
                 new_root,
+                sync_round.require_head_nonce(),
             ),
             nonce=nonce,
         ),
@@ -887,6 +891,7 @@ async def publish(
         from_root,
         counter,
         new_root,
+        answer.head_nonce,
         answer.timestamp or 0,
         answer.wm_signature,
     )

@@ -28,6 +28,7 @@ async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
         msg.from_root or None,
         msg.to_counter,
         msg.to_root or None,
+        msg.head_nonce,
         msg.timestamp or 0,
         msg.wm_signature,
     )
@@ -37,12 +38,14 @@ async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
     # bound left on a WM that lies: it can now name a root this wallet never held, so the floor is
     # what stops it naming an OLD one and freezing the device there.
     #
-    # THE ONE EXEMPTION IS A DEMOTION THE USER APPROVED, and it is exact: `recover` records the
-    # single counter it minted a REVERT for, and only that counter passes. A demotion is the one
-    # operation whose whole purpose is to come down, so the floor cannot be what decides it --
-    # but nothing else may inherit the exemption, which is why this compares equality rather than
-    # opening a range.
-    if counter < await get_counter() and counter != sync_round.authorised_demotion():
+    # THE ONE EXEMPTION IS A DEMOTION THE USER APPROVED, and it is exact: `rollback` records the
+    # whole transition it minted a REVERT for, and only that transition passes. A demotion is the
+    # one operation whose purpose is to come down, so the floor cannot be what decides it -- but
+    # nothing else may inherit the exemption, which is why this compares the STEP rather than the
+    # counter. An attestation landing on the approved counter with a different root is a
+    # different state than the user was shown, and is refused here like any other rollback.
+    step = (from_counter, from_root, counter, root)
+    if counter < await get_counter() and step != sync_round.authorised_demotion():
         raise DataError("attested counter is older than the stored counter")
 
     sync_round.set_attested(from_counter, from_root, counter, root)

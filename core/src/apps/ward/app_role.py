@@ -106,7 +106,7 @@ def _app_label() -> str:
 #                                 replica plumbing. Every transition is verified against the
 #                                 device's own keys and the WM attestation, so the worst a caller
 #                                 gets is a failed or needless sync.
-#   WardRollback / WardRecoverCounter / WardResetService
+#   WardRollback / WardResetService
 #                                 already hold to confirm, and show counters rather than values.
 _REVEALING: tuple[int, ...] | None = None
 
@@ -285,7 +285,6 @@ def _ward_app_messages() -> "tuple[int, ...]":
             MT.WardReconcile,
             MT.WardVerifyChain,
             MT.WardRollback,
-            MT.WardRecoverCounter,
             MT.WardPinCachedEntry,
             MT.WardEraseCachedEntry,
             MT.WardFlushQueue,

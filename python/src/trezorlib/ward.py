@@ -425,6 +425,7 @@ def ingest_attestation(
     to_counter: int,
     to_root: Optional[bytes],
     wm_signature: bytes,
+    head_nonce: bytes,
     timestamp: int = 0,
 ) -> messages.WardIngestAttestationAck:
     """Deliver the WM's signed TRANSITION for the open round.
@@ -432,6 +433,10 @@ def ingest_attestation(
     The WM attests the step that reached the current head, not the head alone -- the same
     statement the device's own `auth_commit` covers. At counter 0 the step is `(0, empty) ->
     (0, empty)`: nothing produced genesis, so it attests itself.
+
+    `head_nonce` is the WM's freshness token for the head it is attesting -- covered by the
+    signature, so it is the WM's value and not this host's. The device quotes it forward in the
+    next `wm_sig` it mints, which is what keeps one authorisation from moving the head twice.
     """
     return session.call(
         messages.WardIngestAttestation(
@@ -440,48 +445,10 @@ def ingest_attestation(
             to_counter=to_counter,
             to_root=to_root,
             wm_signature=wm_signature,
+            head_nonce=head_nonce,
             timestamp=timestamp,
         ),
         expect=messages.WardIngestAttestationAck,
-    )
-
-
-def recover_counter(
-    session: "Session",
-    from_counter: int,
-    from_root: Optional[bytes],
-    to_counter: int,
-    to_root: Optional[bytes],
-    wm_signature: bytes,
-    recovered_root: Optional[bytes] = None,
-    timestamp: int = 0,
-) -> messages.WardRecoverCounterAck:
-    """Mint a demotion onto a state this host can still serve, after the user confirms.
-
-    For a WM whose register regressed. `(from_counter, from_root, to_counter, to_root)` is the
-    WM's OWN current head, attested against this round's nonce -- the predecessor the demotion
-    extends and the pair the WM will compare-and-swap on.
-
-    `recovered_root` is the root of a trie THIS HOST can reconstruct from the rows it holds. It
-    need not ever have been a head: a host that lost rows rebuilds a tree the wallet may never
-    have had, and reverting to something serviceable is the point. `rollback` demands an archived
-    attestation instead, and can afford to, because it runs while the WM is healthy.
-
-    NOTHING IS ADOPTED BY THIS CALL. It returns the REVERT transition; publish it to the WM and
-    then run an ordinary sync round, exactly as for a rollback. Record it with `apply_rollback` --
-    a recovery IS a rollback, so a host's transition log treats the row the same way.
-    """
-    return session.call(
-        messages.WardRecoverCounter(
-            from_counter=from_counter,
-            from_root=from_root,
-            to_counter=to_counter,
-            to_root=to_root,
-            wm_signature=wm_signature,
-            recovered_root=recovered_root,
-            timestamp=timestamp,
-        ),
-        expect=messages.WardRecoverCounterAck,
     )
 
 
@@ -536,7 +503,7 @@ def verify_chain(
     THE REQUEST CARRIES NOTHING. The anchor is the attestation ingested this round, which the
     device already holds. There used to be an `attestation` argument for anchoring on an ARCHIVED
     one instead; it is gone, because it let a host raise the device's persisted counter with no
-    freshness and no confirmation -- undoing a user-confirmed `recover_counter` by replaying the
+    freshness and no confirmation -- undoing a user-confirmed demotion by replaying the
     attestation it had kept. See the note in the firmware's `verify_chain._anchor`.
     """
     res = session.call(messages.WardVerifyChain())
@@ -564,47 +531,45 @@ def verify_chain(
 
 
 def rollback(
-    session: "Session", link: tuple, attestation: Optional[tuple] = None
+    session: "Session",
+    from_counter: int,
+    from_root: Optional[bytes],
+    to_counter: int,
+    to_root: Optional[bytes],
+    wm_signature: bytes,
+    head_nonce: bytes,
+    recovered_root: Optional[bytes] = None,
+    timestamp: int = 0,
 ) -> messages.WardRollbackAck:
-    """Revert the device to an earlier state of this wallet, possibly several steps back.
+    """Demote the head onto a state this host can still serve, after the user confirms.
 
-    `link` is `(from_counter, from_root, to_counter, to_root, auth_commit)` -- the entry of
-    the caller's transition log that PRODUCED the target state, which is the same 5-tuple
-    `apply` records. The device verifies that authorisation, so the target cannot be
-    invented; it then demotes to `to_root` at `counter + 1`.
+    ONE CALL FOR TWO FAILURES. `recover_counter` is gone: it built the same REVERT from the same
+    operands and differed only in which head it extended, so the two have been folded together.
+    A device only ever adopts what the WM attested, so normally the WM's head IS the device's and
+    this is an ordinary rollback; when the WM's register has regressed they differ, and building
+    from the WM's is the only thing it will compare-and-swap against.
 
-    Note it is the link INTO the target, not the one out of it. Reverting several steps is
-    the normal case rather than the exception: a caller missing rows cannot present the
-    links for the range it is discarding -- those are exactly what it is missing -- so it
-    jumps to the last state whose link it does hold.
+    `(from_counter, from_root, to_counter, to_root)` is the WM's OWN current head, attested
+    against this round's nonce -- so run `sync` and get the WM to sign its head first.
 
-    The earliest reachable target is counter 1: every target is authorised by the link that
-    produced it, and genesis has none.
+    `recovered_root` is the root of a trie THIS HOST can reconstruct from the rows it holds. It
+    need not ever have been a head: a host that lost rows rebuilds a tree the wallet may never
+    have had, and reverting to something serviceable is the entire point. Nothing proves it was
+    authoritative; the user's approval is what covers that, and the screen says so.
 
-    `attestation` is the tuple the caller ARCHIVED when the target was the head --
-    `(nonce, from_counter, from_root, to_counter, to_root, timestamp, wm_signature)` -- and it is
-    required. It must name the SAME transition as `link`, not merely end in the same place. The link alone
-    proves a device of this wallet authorised the target; only the attestation proves the WM
-    ever held it, so without one a caller could present a link from an orphaned fork. A caller
-    that kept none cannot roll back.
+    NOTHING IS ADOPTED BY THIS CALL. It returns the REVERT transition; publish it to the WM and
+    then run an ordinary sync round. Record it with `apply_rollback`.
     """
-    from_counter, from_root, to_counter, to_root, auth_commit = link
-    if attestation is None:
-        raise ValueError(
-            "rollback needs the attestation archived for the target counter; a caller that "
-            "kept none cannot prove the target was ever the WM's head"
-        )
-    nonce, _afc, _afr, _atc, _atr, timestamp, wm_signature = attestation
     return session.call(
         messages.WardRollback(
-            to_root=to_root,
-            auth_commit=auth_commit,
             from_counter=from_counter,
             from_root=from_root,
             to_counter=to_counter,
-            nonce=nonce,
-            timestamp=timestamp,
+            to_root=to_root,
             wm_signature=wm_signature,
+            head_nonce=head_nonce,
+            recovered_root=recovered_root,
+            timestamp=timestamp,
         ),
         expect=messages.WardRollbackAck,
     )

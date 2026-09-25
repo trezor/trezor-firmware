@@ -30,6 +30,7 @@ async def verify_round_attestation(
     from_root: "bytes | None",
     to_counter: "int | None",
     to_root: "bytes | None",
+    head_nonce: "bytes | None",
     timestamp: int,
     signature: "bytes | None",
 ) -> "tuple[int, bytes, int, bytes]":
@@ -50,6 +51,14 @@ async def verify_round_attestation(
 
     RETURNS BOTH ROOTS IN PREIMAGE FORM -- EMPTY_ROOT for the empty tree -- since that is what the
     signature covered and what `round.set_attested` must store for a later recomputation.
+
+    LATCHES THE WM'S HEAD NONCE as a side effect, and this is the only place that does. The nonce
+    is covered by the signature, so by the time this returns it is a WM-vouched fact rather than a
+    host claim -- and every route that will later mint a `cas.wm_sig` passes through here first.
+    It is latched even when the caller goes on to refuse the attestation for its own reasons: a
+    nonce is the WM's state, not our verdict on it, and holding a stale one only costs a write
+    the WM would reject anyway. It is NOT returned, because nothing should be threading it
+    through call chains -- callers that need it ask `round.require_head_nonce()`.
     """
     from trezor.wire import DataError
 
@@ -64,6 +73,8 @@ async def verify_round_attestation(
 
     if to_counter is None or from_counter is None or signature is None:
         raise DataError("both ends of the transition and wm_signature are required")
+    if head_nonce is None or len(head_nonce) != 32:
+        raise DataError("WARD: the attested WM head nonce must be 32 bytes")
     for r in (from_root, to_root):
         if r is not None and len(r) != 32:
             raise DataError("attested roots must be 32 bytes")
@@ -84,10 +95,14 @@ async def verify_round_attestation(
         from_root,
         to_counter,
         to_root,
+        head_nonce,
         timestamp,
         signature,
     ):
         raise DataError("WM attestation verification failed")
+
+    # The WM vouched for it, so record it for the next authorisation this session mints.
+    sync_round.set_head_nonce(head_nonce)
 
     # NO TIME CHECK. The attestation still carries a timestamp and it is still covered by the
     # signature, but nothing compares it: anti-replay is the counter's job, a malicious WM simply
