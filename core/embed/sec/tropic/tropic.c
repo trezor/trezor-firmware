@@ -1129,13 +1129,7 @@ static secbool tropic_cleanup_update_config(void) {
       sectrue) {
     return secfalse;
   }
-  // Reboot tropic to apply R-Config changes
-  if (TROPIC_RETRY_COMMAND(lt_reboot(handle, TR01_REBOOT)) != LT_OK) {
-    return secfalse;
-  }
 
-  // The reboot forgot the session data on the chip. We need to do it as well.
-  tropic_session_forget();
   return sectrue;
 }
 
