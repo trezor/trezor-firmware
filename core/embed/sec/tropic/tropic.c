@@ -208,9 +208,7 @@ static bool is_retryable(lt_ret_t ret) {
       if (!is_retryable(TROPIC_RETRY_COMMAND_res)) {                      \
         break;                                                            \
       }                                                                   \
-      tropic_deinit();                                                    \
-      systick_delay_ms(TROPIC_RESTART_DELAY_MS);                          \
-      if (tropic_init(NULL) != LT_OK) {                                   \
+      if (tropic_restart()) {                                             \
         break;                                                            \
       }                                                                   \
       if (TROPIC_RETRY_COMMAND_session_started) {                         \
@@ -329,6 +327,19 @@ void tropic_session_forget(void) {
   tropic_driver_t *drv = &g_tropic_driver;
   lt_l3_invalidate_host_session_data(&drv->handle.l3);
   drv->session_started = false;
+}
+
+static bool tropic_restart(void) {
+#ifdef TREZOR_EMULATOR
+  lt_ret_t ret = lt_reboot(&g_tropic_driver.handle, TR01_REBOOT);
+  tropic_session_forget();
+  return ret == LT_OK;
+
+#else
+  tropic_deinit();
+  systick_delay_ms(TROPIC_RESTART_DELAY_MS);
+  return tropic_init(NULL) == LT_OK;
+#endif
 }
 
 // If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
@@ -919,9 +930,7 @@ static secbool set_expected_config(
   }
 
   // restart Tropic so the new config takes effect.
-  tropic_deinit();
-  systick_delay_ms(TROPIC_RESTART_DELAY_MS);
-  if (tropic_init(NULL) != LT_OK) {
+  if (!tropic_restart()) {
     return secfalse;
   }
 
@@ -1147,9 +1156,7 @@ static bool tropic_finish_update(void) {
     }
 
     // We restart the chip and try again.
-    tropic_deinit();
-    systick_delay_ms(TROPIC_RESTART_DELAY_MS);
-    if (tropic_init(NULL) != LT_OK) {
+    if (!tropic_restart()) {
       return false;
     }
   }
