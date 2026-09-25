@@ -236,8 +236,11 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
                 DynamicLeaf(parse_bytes),  # 1 packedPath (sliced for token addresses)
                 Array(  # 2 swapData: (sendingAssetId, receivingAssetId, fromAmount)[]
                     Tuple(
-                        (parse_address, parse_address, parse_uint256),
-                        is_dynamic=False,
+                        (
+                            Atomic(parse_address),
+                            Atomic(parse_address),
+                            Atomic(parse_uint256),
+                        )
                     )
                 ),
             ],
