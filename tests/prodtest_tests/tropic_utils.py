@@ -35,14 +35,14 @@ from trezorlib._internal.prodtest_client import ProdtestClient
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_TROPIC_MODEL_CONFIGFILE = (
-    ROOT / "tests" / "tropic_model" / "firmware_config.yml"
+    ROOT / "tests" / "tropic_model" / "current.yml"
 )
 
 
 class TropicModelState:
     """Read-only view over a Tropic model config-output YAML file.
 
-    The structure mirrors `tests/tropic_model/firmware_config.yml`:
+    The structure mirrors `tests/tropic_model/current.yml`:
 
       - `i_config` / `r_config`: dicts of `cfg_*` config words (ints)
       - `i_pairing_keys`: slot index -> {`state`, `value`}
