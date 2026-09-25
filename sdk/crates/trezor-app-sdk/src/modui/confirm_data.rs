@@ -7,7 +7,7 @@
 
 use super::chunked::{self, AfterChunk, BYTES_PER_CHUNK};
 use super::extra::ExtraItem;
-use super::screen::Screen;
+use super::layout::LayoutHandle;
 use super::{BR_CODE_OTHER, menu};
 use crate::alloc_types::String;
 use crate::structs::{ConfirmValue as WireConfirmValue, TrezorUiEnum, UiReply};
@@ -100,16 +100,16 @@ pub fn confirm_data(params: ConfirmData<'_>) -> Result<UiReply> {
 
     // One buffer reused for every chunk rather than an allocation per chunk.
     let mut hex = String::with_capacity(BYTES_PER_CHUNK * 2);
-    // One screen for the whole sequence: each chunk rebuilds it, because its
+    // One layout for the whole sequence: each chunk rebuilds it, because its
     // content changed, but a trip through the extras and back does not.
-    let screen = Screen::new();
+    let layout = LayoutHandle::new();
 
     chunked::confirm_in_chunks(params.data.len().div_ceil(BYTES_PER_CHUNK), |ctx| {
         let start = ctx.index * BYTES_PER_CHUNK;
         let end = (start + BYTES_PER_CHUNK).min(params.data.len());
 
         encode_hex(&params.data[start..end], &mut hex);
-        show_chunk(&params, &hex, &screen)
+        show_chunk(&params, &hex, &layout)
     })
 }
 
@@ -123,7 +123,7 @@ pub fn confirm_data(params: ConfirmData<'_>) -> Result<UiReply> {
 /// A chunk goes as a value, the screen every model pages: core splits it across
 /// as many screens as it takes, and the person answers only once they have
 /// seen all of it.
-fn show_chunk(params: &ConfirmData<'_>, hex: &str, screen: &Screen) -> Result<AfterChunk> {
+fn show_chunk(params: &ConfirmData<'_>, hex: &str, layout: &LayoutHandle) -> Result<AfterChunk> {
     let request = TrezorUiEnum::ConfirmValue(WireConfirmValue::new(
         params.title,
         hex,
@@ -142,8 +142,8 @@ fn show_chunk(params: &ConfirmData<'_>, hex: &str, screen: &Screen) -> Result<Af
         None,                 // footer
     ));
 
-    // This chunk's content is new, so the screen is built rather than reopened.
-    let mut reply = screen.show(&request)?;
+    // This chunk's content is new, so the layout is built rather than reopened.
+    let mut reply = layout.show(&request)?;
 
     loop {
         match reply {
@@ -161,7 +161,7 @@ fn show_chunk(params: &ConfirmData<'_>, hex: &str, screen: &Screen) -> Result<Af
                 match menu::open(params.extras, params.cancel, Some(params.br))? {
                     Some(reply) => return Ok(AfterChunk::Decided(reply)),
                     // Back to the chunk the person was reading, as they left it.
-                    None => reply = screen.reshow(&request)?,
+                    None => reply = layout.reshow(&request)?,
                 }
             }
             UiReply::Cancelled => return Ok(AfterChunk::Cancelled),

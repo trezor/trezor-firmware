@@ -1,4 +1,4 @@
-//! A screen that outlives a single answer.
+//! A handle to a layout on the trusted side, so it survives being answered.
 //!
 //! Private. A block is one call to the app, but several screens to the person:
 //! the block itself, the list of extras, one of the extras, then the block
@@ -7,13 +7,12 @@
 //! position, page index, animation state — and paying a full construction to
 //! show the person something they had already been looking at.
 //!
-//! A [`Screen`] names a layout on the trusted side so it can be shown again
-//! instead of rebuilt. The name is a handle the app picks; the trusted side
-//! keeps the layout under it until the handle is closed, which happens when
-//! the `Screen` is dropped.
+//! A [`LayoutHandle`] is the app-side claim on such a layout: it picks a
+//! handle number, the trusted side keeps the layout under it, and the layout
+//! can be shown again instead of rebuilt. Dropping the handle closes it.
 //!
 //! The handle and the operation ride in the IPC message id rather than in the
-//! payload, so the request itself describes only the screen.
+//! payload, so the request itself describes only the content.
 
 use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
@@ -49,35 +48,38 @@ const HANDLE_MASK: u16 = (1 << HANDLE_BITS) - 1;
 
 /// A layout on the trusted side that survives being answered.
 ///
-/// Dropping it closes the layout. Every screen a block shows should be one of
-/// these, so nothing is left behind when the block returns — including when it
-/// returns by `?`.
-pub(super) struct Screen {
+/// Dropping it closes the layout. Every screen a block shows more than once
+/// should go through one of these, so nothing is left behind when the block
+/// returns — including when it returns by `?` — and so re-showing restores
+/// what the person was looking at rather than rebuilding it.
+pub(super) struct LayoutHandle {
     handle: u16,
 }
 
-impl Screen {
-    /// Claims a handle. Nothing is built until the first [`Screen::show`].
+impl LayoutHandle {
+    /// Claims a handle. Nothing is built on the trusted side until the first
+    /// [`LayoutHandle::show`].
     pub fn new() -> Self {
         Self {
             handle: next_handle(),
         }
     }
 
-    /// Builds the screen from `request` and blocks until the person acts on it.
+    /// Builds the layout from `request` and blocks until the person acts on
+    /// it.
     ///
-    /// Use this for content the person has not seen, including the next chunk of
-    /// something they have: the trusted side rebuilds the layout, so whatever
-    /// the previous request said is gone.
+    /// Use this for content the person has not seen, including the next
+    /// chunk of something they have: the trusted side builds a new layout, so
+    /// whatever the previous request said is gone.
     pub fn show(&self, request: &TrezorUiEnum) -> Result<UiReply> {
         self.send(OP_OPEN, request)
     }
 
-    /// Shows the screen again, as the person left it.
+    /// Shows the layout again, as the person left it.
     ///
-    /// Only correct when `request` is the same one [`Screen::show`] was given:
-    /// the trusted side reuses the layout it already has and ignores the
-    /// payload. The payload is sent anyway so that a trusted side which no
+    /// Only correct when `request` is the same one [`LayoutHandle::show`] was
+    /// given: the trusted side reuses the layout it already has and ignores
+    /// the payload. The payload is sent anyway so that a trusted side which no
     /// longer holds the layout can rebuild it rather than fail.
     pub fn reshow(&self, request: &TrezorUiEnum) -> Result<UiReply> {
         self.send(OP_REOPEN, request)
@@ -90,7 +92,7 @@ impl Screen {
     }
 }
 
-impl Drop for Screen {
+impl Drop for LayoutHandle {
     fn drop(&mut self) {
         // Nothing useful can be done if this fails, and a panic here would
         // replace whatever error is already unwinding out of the block.
@@ -102,10 +104,11 @@ impl Drop for Screen {
 // Entry point
 // ============================================================================
 
-/// Shows one screen that is never shown again, and blocks until the person acts.
+/// Shows one screen that is never shown again, and blocks until the person
+/// acts on it.
 ///
-/// For content with no follow-up, where keeping the layout alive would only
-/// leave something to clean up.
+/// For content with no follow-up, where keeping a layout alive would only
+/// leave something to clean up. No handle is involved.
 pub(super) fn call_once(request: &TrezorUiEnum) -> Result<UiReply> {
     let bytes = to_bytes::<Failure>(request).map_err(|_| Error::ServiceError)?;
     raw_call(message_id(OP_ONCE, 0), bytes.as_ref())
@@ -122,10 +125,12 @@ fn message_id(op: u16, handle: u16) -> u16 {
 
 /// Hands out the next handle.
 ///
-/// Handles are never reused while a [`Screen`] holds one, because a block nests
-/// only a few screens deep and the counter covers every value the handle bits
-/// allow before it comes round again. A `static mut` rather than an atomic because an app is a single
-/// task, which is the same assumption the rest of this crate makes.
+/// Handles are never reused while a [`LayoutHandle`] holds one: a block
+/// nests only a few screens deep, and the counter covers every value the
+/// handle bits allow before it comes round again.
+///
+/// A `static mut` rather than an atomic because an app is a single task,
+/// which is the same assumption the rest of this crate makes.
 fn next_handle() -> u16 {
     static mut NEXT: u16 = 1;
 

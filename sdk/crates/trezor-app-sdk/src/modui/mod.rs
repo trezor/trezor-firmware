@@ -312,11 +312,11 @@
 // out, and neither should force a change to a block's signature when they do.
 //
 // When the wire is replaced, this is where it starts. Every block builds a
-// `TrezorUiEnum` and hands it to `screen`, the only file that touches IPC — so
+// `TrezorUiEnum` and hands it to `layout`, the only file that touches IPC — so
 // a new request type means changing each block's final expression and how
-// `screen` serializes, and nothing else here. What the new wire has to carry is
+// `layout` serializes, and nothing else here. What the new wire has to carry is
 // already decided by this module: the block and its facts, the extras as data,
-// and the op plus screen handle that today ride in the IPC message id because
+// and the op plus layout handle that today ride in the IPC message id because
 // the payload had nowhere to put them. An earlier attempt at that type
 // (`ui_wire.rs`, since deleted; see the git history) is worth reading first,
 // for its list of things the app is deliberately not allowed to say.
@@ -344,9 +344,9 @@ mod confirm_properties;
 mod confirm_summary;
 mod confirm_value;
 mod extra;
+mod layout;
 mod menu;
 mod progress;
-mod screen;
 mod show_notice;
 
 pub use confirm_action::{ConfirmAction, confirm_action};
@@ -355,8 +355,8 @@ pub use confirm_properties::{ConfirmProperties, confirm_properties};
 pub use confirm_summary::{ConfirmSummary, confirm_summary};
 pub use confirm_value::{ConfirmValue, Footer, ValueKind, confirm_value};
 pub use extra::{Extra, ExtraItem};
+use layout::LayoutHandle;
 pub use progress::{Progress, Total, progress, progress_with};
-use screen::Screen;
 pub use show_notice::{Severity, ShowNotice, show_notice};
 use ufmt::derive::uDebug;
 
@@ -439,8 +439,8 @@ impl UiReply {
 /// Sends a block and returns what the person did with it.
 ///
 /// When a block offers extras, looking at them and coming back brings the same
-/// screen up again. The screen is reopened rather than rebuilt, so it is
-/// found as it was left; that is invisible to the caller either way,
+/// screen up again. The layout is reopened rather than rebuilt, so it is
+/// found as the person left it; that is invisible to the caller either way,
 /// because the block is still one call and one answer.
 fn call(
     request: &TrezorUiEnum,
@@ -456,15 +456,15 @@ fn call(
     }
     menu::check_extras(extras, cancel)?;
 
-    let screen = Screen::new();
+    let layout = LayoutHandle::new();
     let mut first = true;
 
     loop {
         let reply = if first {
             first = false;
-            screen.show(request)?
+            layout.show(request)?
         } else {
-            screen.reshow(request)?
+            layout.reshow(request)?
         };
 
         match reply {
