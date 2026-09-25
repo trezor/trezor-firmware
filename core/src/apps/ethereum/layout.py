@@ -29,8 +29,8 @@ if TYPE_CHECKING:
         EthereumTokenInfo,
         PaymentRequest,
     )
-    from trezor.ui.layouts import StrPropertyType
     from trezor.ui.layouts.properties import AboveThreshold
+    from trezorui_api import StrPropertyType
 
 
 async def require_confirm_approve(
@@ -272,7 +272,11 @@ async def require_confirm_vault_tx(
     vault_str: str,
     token: EthereumTokenInfo,
     func_sig: AnyBytes,
+    vault_is_address: bool = False,
     extra_data: AnyBytes | None = None,
+    receiver_bytes: AnyBytes | None = None,
+    owner_bytes: AnyBytes | None = None,
+    chunkify: bool = True,
 ) -> None:
     from .yielding import FUNC_SIG_DEPOSIT, FUNC_SIG_REDEEM, FUNC_SIG_WITHDRAW
 
@@ -304,11 +308,17 @@ async def require_confirm_vault_tx(
         "0x" + extra_data.hex() if extra_data is not None else None
     )
 
+    receiver_address = (
+        address_from_bytes(receiver_bytes, network) if receiver_bytes else None
+    )
+    owner_address = address_from_bytes(owner_bytes, network) if owner_bytes else None
+
     await confirm_ethereum_vault_tx(
         title=title,
         intro_question=intro_question,
         verb=verb,
         vault_str=vault_str,
+        vault_is_address=vault_is_address,
         amount=amount,
         amount_label=amount_label,
         account=account,
@@ -318,6 +328,9 @@ async def require_confirm_vault_tx(
         chain=network.name,
         br_name=br_name,
         extra_data=extra_data_str,
+        receiver_address=receiver_address,
+        owner_address=owner_address,
+        chunkify=chunkify,
     )
 
 
