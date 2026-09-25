@@ -86,12 +86,12 @@ impl ExtAppLoad {
         self.id.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
-    // required bytes fingerprint = 3;
+    // optional bytes fingerprint = 3;
 
     pub fn fingerprint(&self) -> &[u8] {
         match self.fingerprint.as_ref() {
             Some(v) => v,
-            None => b"",
+            None => &[],
         }
     }
 
@@ -156,9 +156,6 @@ impl ::protobuf::Message for ExtAppLoad {
             return false;
         }
         if self.version.is_none() {
-            return false;
-        }
-        if self.fingerprint.is_none() {
             return false;
         }
         for v in &self.version {
@@ -1949,27 +1946,27 @@ impl ::protobuf::reflect::ProtobufValue for ExtAppResponse {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x15messages-extapp.proto\x12\x19hw.trezor.messages.extapp\x1a\x15mess\
-    ages-common.proto\x1a\roptions.proto\"~\n\nExtAppLoad\x12\x0e\n\x02id\
-    \x18\x01\x20\x02(\tR\x02id\x12<\n\x07version\x18\x02\x20\x02(\x0b2\".hw.\
-    trezor.messages.common.VersionR\x07version\x12\"\n\x0bfingerprint\x18\
-    \x03\x20\x02(\x0c:\0R\x0bfingerprint\"m\n\x0cExtAppLoaded\x12\x1f\n\x0bi\
-    nstance_id\x18\x01\x20\x02(\rR\ninstanceId\x12<\n\x07version\x18\x02\x20\
-    \x02(\x0b2\".hw.trezor.messages.common.VersionR\x07version\"\x15\n\x13Ex\
-    tAppHeaderRequest\"s\n\x0fExtAppHeaderAck\x12\x16\n\x06header\x18\x01\
-    \x20\x02(\x0cR\x06header\x12\x14\n\x05proof\x18\x02\x20\x02(\x0cR\x05pro\
-    of\x122\n\x15root_packet_timestamp\x18\x03\x20\x02(\x12R\x13rootPacketTi\
-    mestamp\"4\n\x17ExtAppRootPacketRequest\x12\x19\n\x08app_ring\x18\x01\
-    \x20\x02(\rR\x07appRing\"6\n\x13ExtAppRootPacketAck\x12\x1f\n\x0broot_pa\
-    cket\x18\x01\x20\x02(\x0cR\nrootPacket\".\n\x16ExtAppDataChunkRequest\
-    \x12\x14\n\x05index\x18\x01\x20\x02(\rR\x05index\"<\n\x12ExtAppDataChunk\
-    Ack\x12\x12\n\x04data\x18\x01\x20\x02(\x0cR\x04data\x12\x12\n\x04hash\
-    \x18\x02\x20\x02(\x0cR\x04hash\"c\n\rExtAppMessage\x12\x1f\n\x0binstance\
-    _id\x18\x01\x20\x02(\rR\ninstanceId\x12\x1d\n\nmessage_id\x18\x02\x20\
-    \x02(\rR\tmessageId\x12\x12\n\x04data\x18\x03\x20\x02(\x0cR\x04data\"f\n\
-    \x0eExtAppResponse\x12\x1d\n\nmessage_id\x18\x01\x20\x02(\rR\tmessageId\
-    \x12\x12\n\x04data\x18\x02\x20\x02(\x0cR\x04data\x12!\n\x08finished\x18\
-    \x03\x20\x01(\x08:\x05falseR\x08finishedB4\n#com.satoshilabs.trezor.lib.\
-    protobufB\rMessageExtApp\
+    ages-common.proto\"|\n\nExtAppLoad\x12\x0e\n\x02id\x18\x01\x20\x02(\tR\
+    \x02id\x12<\n\x07version\x18\x02\x20\x02(\x0b2\".hw.trezor.messages.comm\
+    on.VersionR\x07version\x12\x20\n\x0bfingerprint\x18\x03\x20\x01(\x0cR\
+    \x0bfingerprint\"m\n\x0cExtAppLoaded\x12\x1f\n\x0binstance_id\x18\x01\
+    \x20\x02(\rR\ninstanceId\x12<\n\x07version\x18\x02\x20\x02(\x0b2\".hw.tr\
+    ezor.messages.common.VersionR\x07version\"\x15\n\x13ExtAppHeaderRequest\
+    \"s\n\x0fExtAppHeaderAck\x12\x16\n\x06header\x18\x01\x20\x02(\x0cR\x06he\
+    ader\x12\x14\n\x05proof\x18\x02\x20\x02(\x0cR\x05proof\x122\n\x15root_pa\
+    cket_timestamp\x18\x03\x20\x02(\x12R\x13rootPacketTimestamp\"4\n\x17ExtA\
+    ppRootPacketRequest\x12\x19\n\x08app_ring\x18\x01\x20\x02(\rR\x07appRing\
+    \"6\n\x13ExtAppRootPacketAck\x12\x1f\n\x0broot_packet\x18\x01\x20\x02(\
+    \x0cR\nrootPacket\".\n\x16ExtAppDataChunkRequest\x12\x14\n\x05index\x18\
+    \x01\x20\x02(\rR\x05index\"<\n\x12ExtAppDataChunkAck\x12\x12\n\x04data\
+    \x18\x01\x20\x02(\x0cR\x04data\x12\x12\n\x04hash\x18\x02\x20\x02(\x0cR\
+    \x04hash\"c\n\rExtAppMessage\x12\x1f\n\x0binstance_id\x18\x01\x20\x02(\r\
+    R\ninstanceId\x12\x1d\n\nmessage_id\x18\x02\x20\x02(\rR\tmessageId\x12\
+    \x12\n\x04data\x18\x03\x20\x02(\x0cR\x04data\"f\n\x0eExtAppResponse\x12\
+    \x1d\n\nmessage_id\x18\x01\x20\x02(\rR\tmessageId\x12\x12\n\x04data\x18\
+    \x02\x20\x02(\x0cR\x04data\x12!\n\x08finished\x18\x03\x20\x01(\x08:\x05f\
+    alseR\x08finishedB4\n#com.satoshilabs.trezor.lib.protobufB\rMessageExtAp\
+    p\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1986,9 +1983,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(2);
+            let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_common::file_descriptor().clone());
-            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(10);
             messages.push(ExtAppLoad::generated_message_descriptor_data());
             messages.push(ExtAppLoaded::generated_message_descriptor_data());

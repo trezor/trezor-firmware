@@ -77,7 +77,7 @@ typedef struct {
   size_t written_bytes;
   // Hash of the next chunk
   sha256_digest_t chunk_hash;
-  // App fingerpint (hash of the image header)
+  // App fingerprint (hash of the image header)
   sha256_digest_t fingerprint;
 
   // Applet associated with the application

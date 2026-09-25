@@ -4642,14 +4642,14 @@ if TYPE_CHECKING:
     class ExtAppLoad(protobuf.MessageType):
         id: "str"
         version: "Version"
-        fingerprint: "AnyBytes"
+        fingerprint: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             id: "str",
             version: "Version",
-            fingerprint: "AnyBytes",
+            fingerprint: "AnyBytes | None" = None,
         ) -> None:
             pass
 

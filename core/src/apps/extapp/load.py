@@ -31,8 +31,9 @@ def image_matches(image: app.AppImage, msg: ExtAppLoad) -> bool:
         return False
     if image.version() < (v.major, v.minor, v.patch, v.build):
         return False
-    if msg.fingerprint != b"" and image.fingerprint() != msg.fingerprint:
-        return False
+    if __debug__:
+        if msg.fingerprint is not None and image.fingerprint() != msg.fingerprint:
+            return False
     return True
 
 

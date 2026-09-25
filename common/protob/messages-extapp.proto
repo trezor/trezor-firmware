@@ -6,7 +6,6 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "MessageExtApp";
 
 import "messages-common.proto";
-import "options.proto";
 
 /**
  * Request: Load an external application onto the device.
@@ -25,7 +24,7 @@ message ExtAppLoad {
     /// Minimal required version
     required common.Version version = 2;
     /// Fingerprint of the app to load (optional)
-    required bytes fingerprint = 3 [default = ''];
+    optional bytes fingerprint = 3;
 }
 
 /**

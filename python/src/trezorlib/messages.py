@@ -6293,7 +6293,7 @@ class ExtAppLoad(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("id", "string", repeated=False, required=True),
         2: protobuf.Field("version", "Version", repeated=False, required=True),
-        3: protobuf.Field("fingerprint", "bytes", repeated=False, required=True),
+        3: protobuf.Field("fingerprint", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -6301,7 +6301,7 @@ class ExtAppLoad(protobuf.MessageType):
         *,
         id: "str",
         version: "Version",
-        fingerprint: "bytes",
+        fingerprint: Optional["bytes"] = None,
     ) -> None:
         self.id = id
         self.version = version
