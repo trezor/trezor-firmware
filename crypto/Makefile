@@ -40,7 +40,7 @@ OPTFLAGS ?= -O3 -g
 
 CFLAGS   += $(OPTFLAGS) \
             $(SANFLAGS) \
-            -std=gnu99 \
+            -std=gnu11 \
             -W \
             -Wall \
             -Wextra \
