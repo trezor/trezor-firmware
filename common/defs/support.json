@@ -25,6 +25,7 @@
       "bitcoin:LTC": "1.5.2",
       "bitcoin:MONA": "1.6.0",
       "bitcoin:NMC": "1.5.2",
+      "bitcoin:PEPE": "1.14.2",
       "bitcoin:PPC": "1.8.4",
       "bitcoin:QTUM": "1.8.1",
       "bitcoin:REGTEST": "1.8.2",
@@ -141,6 +142,7 @@
       "bitcoin:KOTO": "2.6.1",
       "bitcoin:LTC": "2.6.1",
       "bitcoin:MONA": "2.6.1",
+      "bitcoin:PEPE": "2.11.2",
       "bitcoin:PPC": "2.6.1",
       "bitcoin:QTUM": "2.6.1",
       "bitcoin:REGTEST": "2.6.1",
@@ -208,14 +210,14 @@
       "misc:MAID": "2.6.1",
       "misc:OMNI": "2.6.1",
       "misc:SOL": "2.6.4",
+      "misc:TRX": "2.10.1",
       "misc:USDT": "2.6.1",
       "misc:XLM": "2.6.1",
       "misc:XMR": "2.6.1",
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1",
-      "misc:TRX": "2.10.1"
+      "misc:tXRP": "2.6.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T2B1 (#2793)",
@@ -267,6 +269,7 @@
       "bitcoin:LTC": "2.0.5",
       "bitcoin:MONA": "2.0.5",
       "bitcoin:NMC": "2.0.5",
+      "bitcoin:PEPE": "2.11.2",
       "bitcoin:PPC": "2.1.9",
       "bitcoin:QTUM": "2.1.1",
       "bitcoin:REGTEST": "2.1.1",
@@ -339,6 +342,7 @@
       "misc:MAID": "2.0.10",
       "misc:OMNI": "2.0.10",
       "misc:SOL": "2.6.4",
+      "misc:TRX": "2.10.1",
       "misc:USDT": "2.0.10",
       "misc:XLM": "2.0.8",
       "misc:XMR": "2.0.8",
@@ -351,8 +355,7 @@
       "nem:DIMTOK": "2.0.7",
       "nem:PAC:CHS": "2.0.7",
       "nem:PAC:HRT": "2.0.7",
-      "nem:XEM": "2.0.7",
-      "misc:TRX": "2.10.1"
+      "nem:XEM": "2.0.7"
     },
     "unsupported": {
       "bitcoin:PART": "incompatible fork",
@@ -383,6 +386,7 @@
       "bitcoin:KOTO": "2.8.1",
       "bitcoin:LTC": "2.8.1",
       "bitcoin:MONA": "2.8.1",
+      "bitcoin:PEPE": "2.11.2",
       "bitcoin:PPC": "2.8.1",
       "bitcoin:QTUM": "2.8.1",
       "bitcoin:REGTEST": "2.8.1",
@@ -450,14 +454,14 @@
       "misc:MAID": "2.8.1",
       "misc:OMNI": "2.8.1",
       "misc:SOL": "2.8.1",
+      "misc:TRX": "2.10.1",
       "misc:USDT": "2.8.1",
       "misc:XLM": "2.8.1",
       "misc:XMR": "2.8.1",
       "misc:XRP": "2.8.1",
       "misc:XTZ": "2.8.1",
       "misc:tADA": "2.8.1",
-      "misc:tXRP": "2.8.1",
-      "misc:TRX": "2.10.1"
+      "misc:tXRP": "2.8.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T3B1 (#2793)",
@@ -504,6 +508,7 @@
       "bitcoin:KOTO": "2.6.1",
       "bitcoin:LTC": "2.6.1",
       "bitcoin:MONA": "2.6.1",
+      "bitcoin:PEPE": "2.11.2",
       "bitcoin:PPC": "2.6.1",
       "bitcoin:QTUM": "2.6.1",
       "bitcoin:REGTEST": "2.6.1",
@@ -571,14 +576,14 @@
       "misc:MAID": "2.6.1",
       "misc:OMNI": "2.6.1",
       "misc:SOL": "2.6.4",
+      "misc:TRX": "2.10.1",
       "misc:USDT": "2.6.1",
       "misc:XLM": "2.6.1",
       "misc:XMR": "2.6.1",
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1",
-      "misc:TRX": "2.10.1"
+      "misc:tXRP": "2.6.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T3T1 (#2793)",
@@ -625,6 +630,7 @@
       "bitcoin:KOTO": "2.6.1",
       "bitcoin:LTC": "2.6.1",
       "bitcoin:MONA": "2.6.1",
+      "bitcoin:PEPE": "2.11.2",
       "bitcoin:PPC": "2.6.1",
       "bitcoin:QTUM": "2.6.1",
       "bitcoin:REGTEST": "2.6.1",
@@ -692,14 +698,14 @@
       "misc:MAID": "2.6.1",
       "misc:OMNI": "2.6.1",
       "misc:SOL": "2.6.4",
+      "misc:TRX": "2.10.1",
       "misc:USDT": "2.6.1",
       "misc:XLM": "2.6.1",
       "misc:XMR": "2.6.1",
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1",
-      "misc:TRX": "2.10.1"
+      "misc:tXRP": "2.6.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T3W1 (#2793)",
@@ -725,7 +731,6 @@
       "eth:tHOL:17000": "Deprecated testnet"
     }
   },
-
   "D001": {
     "supported": {
       "bitcoin:ACM": "2.6.1",
@@ -747,6 +752,7 @@
       "bitcoin:KOTO": "2.6.1",
       "bitcoin:LTC": "2.6.1",
       "bitcoin:MONA": "2.6.1",
+      "bitcoin:PEPE": "2.11.2",
       "bitcoin:PPC": "2.6.1",
       "bitcoin:QTUM": "2.6.1",
       "bitcoin:REGTEST": "2.6.1",
@@ -814,14 +820,14 @@
       "misc:MAID": "2.6.1",
       "misc:OMNI": "2.6.1",
       "misc:SOL": "2.6.4",
+      "misc:TRX": "2.10.1",
       "misc:USDT": "2.6.1",
       "misc:XLM": "2.6.1",
       "misc:XMR": "2.6.1",
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1",
-      "misc:TRX": "2.10.1"
+      "misc:tXRP": "2.6.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T3W1 (#2793)",
@@ -847,7 +853,6 @@
       "eth:tHOL:17000": "Deprecated testnet"
     }
   },
-
   "D002": {
     "supported": {
       "bitcoin:ACM": "2.6.1",
@@ -869,6 +874,7 @@
       "bitcoin:KOTO": "2.6.1",
       "bitcoin:LTC": "2.6.1",
       "bitcoin:MONA": "2.6.1",
+      "bitcoin:PEPE": "2.11.2",
       "bitcoin:PPC": "2.6.1",
       "bitcoin:QTUM": "2.6.1",
       "bitcoin:REGTEST": "2.6.1",
@@ -936,14 +942,14 @@
       "misc:MAID": "2.6.1",
       "misc:OMNI": "2.6.1",
       "misc:SOL": "2.6.4",
+      "misc:TRX": "2.10.1",
       "misc:USDT": "2.6.1",
       "misc:XLM": "2.6.1",
       "misc:XMR": "2.6.1",
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1",
-      "misc:TRX": "2.10.1"
+      "misc:tXRP": "2.6.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T3W1 (#2793)",
