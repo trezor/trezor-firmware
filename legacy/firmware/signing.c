@@ -2027,14 +2027,7 @@ static bool compile_output(TxOutputType *in, TxOutputBinType *out,
       return false;
     }
     if (needs_confirm) {
-      if (in->op_return_data.size >= 8 &&
-          memcmp(in->op_return_data.bytes, "omni", 4) ==
-              0) {  // OMNI transaction
-        layoutConfirmOmni(in->op_return_data.bytes, in->op_return_data.size);
-      } else {
-        layoutConfirmOpReturn(in->op_return_data.bytes,
-                              in->op_return_data.size);
-      }
+      layoutConfirmOpReturn(in->op_return_data.bytes, in->op_return_data.size);
       if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput,
                          false)) {
         fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);

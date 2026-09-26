@@ -3,7 +3,6 @@ RETURN=0
 
 EXCEPTIONS=()
 EXCEPTIONS+=( "decred" )  # "decred" figures in field names used by the bitcoin app
-EXCEPTIONS+=( "omni" )  # OMNI is part of the bitcoin app
 EXCEPTIONS+=( "derive_cardano" )  # field name in Initialize message
 # BIP39 or SLIP39 words that have "dash" and "ripple" in them
 EXCEPTIONS+=( "dash" "ripple" )

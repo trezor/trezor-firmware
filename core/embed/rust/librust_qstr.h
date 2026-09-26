@@ -204,7 +204,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_bitcoin__title_purchase_ticket;
   MP_QSTR_bitcoin__title_update_transaction;
   MP_QSTR_bitcoin__unknown_path;
-  MP_QSTR_bitcoin__unknown_transaction;
   MP_QSTR_bitcoin__unusually_high_fee;
   MP_QSTR_bitcoin__unverified_external_inputs;
   MP_QSTR_bitcoin__valid_signature;
