@@ -1,6 +1,6 @@
 use super::ffi;
 
-#[derive(PartialEq, Debug, Eq, FromPrimitive, Clone, Copy)]
+#[derive(PartialEq, Debug, Eq, Clone, Copy)]
 pub enum HapticEffect {
     ButtonPress = ffi::haptic_effect_t_HAPTIC_BUTTON_PRESS as _,
     HoldToConfirm = ffi::haptic_effect_t_HAPTIC_HOLD_TO_CONFIRM as _,

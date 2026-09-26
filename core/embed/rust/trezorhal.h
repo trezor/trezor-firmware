@@ -24,10 +24,6 @@
 #include <io/button.h>
 #endif
 
-#ifdef USE_HAPTIC
-#include <io/haptic.h>
-#endif
-
 #ifdef USE_RGB_LED
 #include <io/rgb_led.h>
 #endif
