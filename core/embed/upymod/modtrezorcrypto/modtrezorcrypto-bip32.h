@@ -546,12 +546,14 @@ static mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
   int res = hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode);
 
   if (!res) {
+    memzero(&hdnode, sizeof(hdnode));
     mp_raise_ValueError(MP_ERROR_TEXT("Failed to derive the root node"));
   }
 
   mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
       mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
   o->hdnode = hdnode;
+  memzero(&hdnode, sizeof(hdnode));
   o->fingerprint = 0;
   return MP_OBJ_FROM_PTR(o);
 }
