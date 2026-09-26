@@ -4,13 +4,13 @@ use super::theme;
 use crate::strutil::TString;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{play, HapticEffect};
-use crate::ui::component::{Component, Event, EventCtx, Timer};
+use crate::ui::component::text::{LineBreaking, PageBreaking, TextStyle};
+use crate::ui::component::{Component, Event, EventCtx, TextLayout, Timer};
 use crate::ui::display::toif::Icon;
 use crate::ui::display::{Color, Font};
 use crate::ui::event::TouchEvent;
 use crate::ui::geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect};
 use crate::ui::shape::{self, Renderer};
-use crate::ui::util::split_two_lines;
 
 pub enum ButtonMsg {
     Pressed,
@@ -241,13 +241,7 @@ impl Button {
                     .render(target);
             }
             ButtonContent::IconAndText(child) => {
-                child.render(
-                    target,
-                    self.area,
-                    self.style(),
-                    Self::BASELINE_OFFSET,
-                    alpha,
-                );
+                child.render(target, self.area, self.style(), alpha);
             }
         }
     }
@@ -441,31 +435,30 @@ impl IconText {
         target: &mut impl Renderer<'s>,
         area: Rect,
         style: &ButtonStyle,
-        baseline_offset: Offset,
         alpha: u8,
     ) {
-        let mut show_text = |text: &str, rect: Rect| {
-            let text_pos = rect.left_center() + baseline_offset;
-            let text_pos = Point::new(rect.top_left().x + Self::ICON_SPACE, text_pos.y);
-            shape::Text::new(text_pos, text, style.font)
-                .with_fg(style.text_color)
-                .with_alpha(alpha)
-                .render(target)
-        };
+        let text_area = area
+            .inset(Insets::left(Self::ICON_SPACE))
+            .inset(Insets::right(Self::TEXT_MARGIN));
+        let text_style = TextStyle::new(
+            style.font,
+            style.text_color,
+            style.background_color,
+            theme::GREY,
+            theme::GREY,
+        )
+        .with_line_breaking(LineBreaking::BreakAtWhitespace)
+        .with_page_breaking(PageBreaking::CutAndInsertEllipsis);
 
         self.text.map(|t| {
-            let (t1, t2) = split_two_lines(
-                t,
-                style.font,
-                area.width() - Self::ICON_SPACE - Self::TEXT_MARGIN,
-            );
-
-            if t1.is_empty() || t2.is_empty() {
-                show_text(t, area);
-            } else {
-                show_text(t1, Rect::new(area.top_left(), area.right_center()));
-                show_text(t2, Rect::new(area.left_center(), area.bottom_right()));
-            }
+            let layout = TextLayout::new(text_style).with_bounds(text_area);
+            // Vertical centering, the same way as `Label::place` does it.
+            let height = layout.fit_text(t).height();
+            let diff = text_area.height() - height;
+            let centered = text_area.inset(Insets::new(diff / 2, 0, diff - diff / 2, 0));
+            layout
+                .with_bounds(centered)
+                .render_text_with_alpha(t, target, alpha, true);
         });
 
         let icon_pos = Point::new(
