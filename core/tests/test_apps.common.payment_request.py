@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     P = ParamSpec("P")
 
 
-# Decorator that replaces DEBUG version of `verify_payment_request_is_supported` and PUBLIC_KEY
+# Decorator that replaces DEBUG version of `verify_payment_request_is_supported` and PUBLIC_KEYS
 # by the PROD versions
 def patch_prod(func: Callable[P, None]) -> Callable[P, None]:
 
@@ -226,6 +226,48 @@ class TestPaymentRequestVerfier(unittest.TestCase):
         with self.assertRaises(wire.DataError) as e:
             verifier.verify()
         self.assertEqual(e.value.message, "Invalid signature in payment request.")
+
+    # nist256p1 public key of m/0h for "all all ... all" seed (see `_use_debug_key`)
+    DEBUG_PUBLIC_KEY = bytes.fromhex(
+        "03d9d93f89c6963b94bbd7a5118828e44c1c395915ace84888717f568cb01974c3"
+    )
+    SWAPKIT_PROD_PUBLIC_KEY = bytes.fromhex(
+        "03238e281e1da708c84d72abf65edb6808daf9ca2c1965ed94a310ae4155e48ebb"
+    )
+
+    @patch_prod
+    def test_payment_requests_multiple_public_keys(self):
+        # The test request is signed with the debug key, which is the second
+        # key in the list - verification must try all keys.
+        with patch(
+            PaymentRequestVerifier,
+            "PUBLIC_KEYS",
+            (self.SWAPKIT_PROD_PUBLIC_KEY, self.DEBUG_PUBLIC_KEY),
+        ):
+            verifier = PaymentRequestVerifier(
+                payment_request=_get_coin_swap_request(),
+                slip44_id=1,
+                keychain=_get_test_keychain(),
+                amount_size_bytes=12345,
+            )
+            verifier.verify()
+
+    @patch_prod
+    def test_payment_requests_no_matching_public_key(self):
+        with patch(
+            PaymentRequestVerifier,
+            "PUBLIC_KEYS",
+            (self.SWAPKIT_PROD_PUBLIC_KEY,),
+        ):
+            verifier = PaymentRequestVerifier(
+                payment_request=_get_coin_swap_request(),
+                slip44_id=1,
+                keychain=_get_test_keychain(),
+                amount_size_bytes=12345,
+            )
+            with self.assertRaises(wire.DataError) as e:
+                verifier.verify()
+            self.assertEqual(e.value.message, "Invalid signature in payment request.")
 
     @patch_prod_nonce
     def test_payment_requests_without_nonce_in_prod(self):
