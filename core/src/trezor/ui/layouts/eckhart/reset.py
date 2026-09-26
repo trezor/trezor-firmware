@@ -176,31 +176,50 @@ async def _prompt_number(
     max_count: int,
     br_name: str,
 ) -> int:
+    from trezor.ui.layouts.menu import Menu, leaf_from_layout, show_menu
+
     with trezorui_api.request_number(
         title=title,
         count=count,
         min_count=min_count,
         max_count=max_count,
         description=description,
-        more_info_callback=info,
-    ) as layout:
-        result = await interact(
-            layout,
-            br_name,
-            ButtonRequestType.ResetDevice,
-            raise_on_cancel=None,
-        )
+    ) as num_input:
+        br_name_once: str | None = br_name
+        while True:
+            result = await interact(
+                num_input,
+                br_name_once,
+                ButtonRequestType.ResetDevice,
+                raise_on_cancel=None,
+            )
+            br_name_once = None  # ButtonRequest should be sent only once
 
-    if __debug__ and result is CONFIRMED:
-        # sent by debuglink. debuglink does not change the number of shares anyway
-        # so use the initial one
-        return count
+            if result is trezorui_api.CANCELLED:
+                raise ActionCancelled  # user cancelled request number prompt
 
-    if result is not trezorui_api.CANCELLED:
-        assert isinstance(result, int)
-        return result
-    else:
-        raise ActionCancelled  # user cancelled request number prompt
+            if __debug__ and not isinstance(result, tuple):
+                # sent by debuglink. debuglink does not change the number of
+                # shares anyway so use the initial one
+                result = (result, count)
+            result, value = result
+
+            if result is CONFIRMED:
+                assert isinstance(value, int)
+                return value
+
+            if result is trezorui_api.INFO:
+                # shows the menu with the "more info" screen
+                leaf = leaf_from_layout(
+                    TR.buttons__more_info,
+                    lambda: trezorui_api.show_info_with_cancel(
+                        title=title,
+                        items=[("", info(value), False)],
+                    ),
+                )
+                await show_menu(Menu([leaf]))
+            else:
+                raise RuntimeError
 
 
 def slip39_prompt_threshold(
