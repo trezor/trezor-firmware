@@ -300,6 +300,25 @@ class TestZcashAddress(unittest.TestCase):
             receivers = unified_addresses.decode(address, COIN)
             self.assertEqual(receivers, get_receivers(tv))
 
+    def test_decode_short_payload(self):
+        from trezor.wire import DataError
+
+        # A valid bech32m checksum over a 10-byte payload.
+        address = "u1qqqsyqcyq5rqwzqf6qaezy"
+        with self.assertRaises(DataError) as e:
+            unified_addresses.decode(address, COIN)
+        self.assertEqual(e.value.message, "Invalid address length")
+
+    def test_decode_nonzero_padding_bits(self):
+        from trezor.wire import DataError
+
+        # A valid bech32m checksum over 60 5-bit groups whose last 4 bits,
+        # left over after the conversion to bytes, are not zero.
+        address = "u1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpxz4x42"
+        with self.assertRaises(DataError) as e:
+            unified_addresses.decode(address, COIN)
+        self.assertEqual(e.value.message, "Bech32m decoding failed.")
+
 
 if __name__ == "__main__":
     unittest.main()
