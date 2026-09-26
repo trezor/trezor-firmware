@@ -10,7 +10,7 @@ MODEL="$1"
 cd "$(dirname "$0")"
 
 # download emulators for the given model if not already present
-uv run python download_emulators.py "$MODEL"
+python download_emulators.py "$MODEL"
 
 cd ..
 # are we in Nix(OS)?
