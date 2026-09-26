@@ -23,12 +23,16 @@ runs:
   steps:
     - uses: ./.github/actions/environment
 
-    - run: nix-shell --run "uv run make -C core build_bootloader_emu TREZOR_MODEL=${{ inputs.model }}"
+    - run: $UV_RUN make -C core build_bootloader_emu
       if: inputs.build-bootloader == 'true'
       shell: sh
+      env:
+        TREZOR_MODEL: "${{ inputs.model }}"
 
-    - run: nix-shell --run "uv run make -C core build_unix_frozen TREZOR_MODEL=${{ inputs.model }}"
+    - run: $UV_RUN make -C core build_unix_frozen
       shell: sh
+      env:
+        TREZOR_MODEL: "${{ inputs.model }}"
 
     - id: prepare_binary
       run: |
