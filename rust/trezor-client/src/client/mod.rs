@@ -236,18 +236,30 @@ impl Trezor {
         self.call(req, Box::new(|_, _| Ok(())))
     }
 
+    /// Sign an identity challenge (SLIP-0013 / SLIP-0019).
+    ///
+    /// `digest` is the `challenge_hidden` value that is actually signed, while
+    /// `challenge_visual` is the human-readable string shown to the user on the
+    /// device screen (pass an empty string for no visual challenge).
+    ///
+    /// The full [`protos::SignedIdentity`] response is returned, so the caller
+    /// can read the device-derived `public_key` alongside the `signature` (for
+    /// example to cross-check the signature host-side). This mirrors
+    /// [`Trezor::get_ecdh_session_key`], which already returns its full
+    /// response message.
     pub fn sign_identity(
         &mut self,
         identity: protos::IdentityType,
         digest: Vec<u8>,
+        challenge_visual: String,
         curve: String,
-    ) -> Result<TrezorResponse<'_, Vec<u8>, protos::SignedIdentity>> {
+    ) -> Result<TrezorResponse<'_, protos::SignedIdentity, protos::SignedIdentity>> {
         let mut req = protos::SignIdentity::new();
         req.identity = MessageField::some(identity);
         req.set_challenge_hidden(digest);
-        req.set_challenge_visual("".to_owned());
+        req.set_challenge_visual(challenge_visual);
         req.set_ecdsa_curve_name(curve);
-        self.call(req, Box::new(|_, m| Ok(m.signature().to_owned())))
+        self.call(req, Box::new(|_, m| Ok(m)))
     }
 
     pub fn get_ecdh_session_key(
