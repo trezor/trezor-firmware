@@ -1,0 +1,128 @@
+{
+    "setup": {
+        "mnemonic": "alcohol woman abuse must during monitor noble actual mixed trade anger aisle",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "stake_hoodi",
+            "parameters": {
+                "comment": "Stake transaction - Hoodi testnet",
+                "data": "3a29dbae0000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
+                "chain_id": 560048,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x16345785D8A0000"
+            },
+            "result": {
+                "sig_v": 1,
+                "sig_r": "123cf2d195b234600443228a2e441f39e7b8968db6843d5493349b121202e723",
+                "sig_s": "63a59cfd89c3e3a6d8b486289f09609d1066bacdc7dc0da2b60097ceedf56981"
+            }
+        },
+        {
+            "name": "stake_main",
+            "parameters": {
+                "comment": "Stake transaction - Mainnet",
+                "data": "3a29dbae0000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xD523794C879D9eC028960a231F866758e405bE34",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x16345785D8A0000"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "05a37bf477df7f256729ec8607aa20a6286c42a246b5deebaf6d54915c0f87e3",
+                "sig_s": "30ffe2e80119452403bbf238b02def90a120ade2e73ab60926060ed10562f5ed"
+            }
+        },
+        {
+            "name": "unstake_hoodi",
+            "parameters": {
+                "comment": "Unstake transaction - Hoodi testnet",
+                "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
+                "chain_id": 560048,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 1,
+                "sig_r": "5b019f573ff5cd182fa4c643c029e29c97dc2268d50e07d5b34f8b8315be1fbf",
+                "sig_s": "0577b4c3ae0df86a379905f99d14980b6b870b8779adc5becfa702c0e5c9c7c2"
+            }
+        },
+        {
+            "name": "unstake_main",
+            "parameters": {
+                "comment": "Unstake transaction - Mainnet",
+                "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xD523794C879D9eC028960a231F866758e405bE34",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "15eb458e473c7f74abf99ba8833885e25435f913e77e5bc1259396942f6b9539",
+                "sig_s": "14ea7a1417cfab7bb2cdbd0750aa7929f02a30999b624dd2ae1029c6be9dc9d8"
+            }
+        },
+        {
+            "name": "claim_hoodi",
+            "parameters": {
+                "comment": "Claim transaction - Hoodi testnet",
+                "data": "33986ffa",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x624087DD1904ab122A32878Ce9e933C7071F53B9",
+                "chain_id": 560048,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 1,
+                "sig_r": "b2ac0b0e5b1e495b99cb8fd4574f8e99c79421489d8c7ecdb5e83ee15dd1f818",
+                "sig_s": "752b3cbb088f111fc2c6d7c267fdd3adc2a189aa539258284b8d09d37f8f15dd"
+            }
+        },
+        {
+            "name": "claim_mainnet",
+            "parameters": {
+                "comment": "Claim transaction - Mainnet",
+                "data": "33986ffa",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x7a7f0b3c23C23a31cFcb0c44709be70d4D545c6e",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_limit": "0x14",
+                "max_gas_fee": "0x14",
+                "max_priority_fee": "0x1",
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "7b3a09f1e0b28b2a25ddc3de02168fc20e9faada1d97181679dfb6f8383382da",
+                "sig_s": "6667dbb7b7b63d3e51df012a62dc6b01f13b60c7598b04aa499722cfb26864f3"
+            }
+        }
+    ]
+}

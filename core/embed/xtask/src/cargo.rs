@@ -51,7 +51,7 @@ pub fn test(args: TestArgs) -> Result<()> {
             .current_dir(helpers::workspace_dir()?);
 
         println!("xtask: Running test on `{}`", &package);
-        println!("{}", command_args_to_string(&cmd).bold().dimmed());
+        println!("{}", helpers::command_args_to_string(&cmd).bold().dimmed());
 
         let status = cmd.status().context("Failed to spawn `cargo test`")?;
 
@@ -183,7 +183,7 @@ fn run_cargo_subcommand(subcommand: &str, args: &ResolvedBuildArgs) -> Result<()
 
     let project_name = format!("{:?}", args.project).to_lowercase();
     println!("xtask: Running {} on `{}`", subcommand, project_name);
-    println!("{}", command_args_to_string(&cmd).bold().dimmed());
+    println!("{}", helpers::command_args_to_string(&cmd).bold().dimmed());
 
     let status = cmd
         .status()
@@ -195,10 +195,4 @@ fn run_cargo_subcommand(subcommand: &str, args: &ResolvedBuildArgs) -> Result<()
     );
 
     Ok(())
-}
-
-fn command_args_to_string(cmd: &process::Command) -> String {
-    let mut parts = vec![cmd.get_program().to_string_lossy().into_owned()];
-    parts.extend(cmd.get_args().map(|arg| arg.to_string_lossy().into_owned()));
-    parts.join(" ")
 }

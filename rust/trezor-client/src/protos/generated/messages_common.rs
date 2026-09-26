@@ -3655,6 +3655,264 @@ pub mod payment_request {
     }
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.common.Version)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct Version {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.common.Version.major)
+    pub major: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.common.Version.minor)
+    pub minor: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.common.Version.patch)
+    pub patch: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.common.Version.build)
+    pub build: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.common.Version.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a Version {
+    fn default() -> &'a Version {
+        <Version as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl Version {
+    pub fn new() -> Version {
+        ::std::default::Default::default()
+    }
+
+    // required uint32 major = 1;
+
+    pub fn major(&self) -> u32 {
+        self.major.unwrap_or(0)
+    }
+
+    pub fn clear_major(&mut self) {
+        self.major = ::std::option::Option::None;
+    }
+
+    pub fn has_major(&self) -> bool {
+        self.major.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_major(&mut self, v: u32) {
+        self.major = ::std::option::Option::Some(v);
+    }
+
+    // required uint32 minor = 2;
+
+    pub fn minor(&self) -> u32 {
+        self.minor.unwrap_or(0)
+    }
+
+    pub fn clear_minor(&mut self) {
+        self.minor = ::std::option::Option::None;
+    }
+
+    pub fn has_minor(&self) -> bool {
+        self.minor.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_minor(&mut self, v: u32) {
+        self.minor = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 patch = 3;
+
+    pub fn patch(&self) -> u32 {
+        self.patch.unwrap_or(0u32)
+    }
+
+    pub fn clear_patch(&mut self) {
+        self.patch = ::std::option::Option::None;
+    }
+
+    pub fn has_patch(&self) -> bool {
+        self.patch.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_patch(&mut self, v: u32) {
+        self.patch = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 build = 4;
+
+    pub fn build(&self) -> u32 {
+        self.build.unwrap_or(0u32)
+    }
+
+    pub fn clear_build(&mut self) {
+        self.build = ::std::option::Option::None;
+    }
+
+    pub fn has_build(&self) -> bool {
+        self.build.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_build(&mut self, v: u32) {
+        self.build = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "major",
+            |m: &Version| { &m.major },
+            |m: &mut Version| { &mut m.major },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "minor",
+            |m: &Version| { &m.minor },
+            |m: &mut Version| { &mut m.minor },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "patch",
+            |m: &Version| { &m.patch },
+            |m: &mut Version| { &mut m.patch },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "build",
+            |m: &Version| { &m.build },
+            |m: &mut Version| { &mut m.build },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Version>(
+            "Version",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for Version {
+    const NAME: &'static str = "Version";
+
+    fn is_initialized(&self) -> bool {
+        if self.major.is_none() {
+            return false;
+        }
+        if self.minor.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.major = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                16 => {
+                    self.minor = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                24 => {
+                    self.patch = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                32 => {
+                    self.build = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.major {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.minor {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        if let Some(v) = self.patch {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
+        if let Some(v) = self.build {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.major {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.minor {
+            os.write_uint32(2, v)?;
+        }
+        if let Some(v) = self.patch {
+            os.write_uint32(3, v)?;
+        }
+        if let Some(v) = self.build {
+            os.write_uint32(4, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> Version {
+        Version::new()
+    }
+
+    fn clear(&mut self) {
+        self.major = ::std::option::Option::None;
+        self.minor = ::std::option::Option::None;
+        self.patch = ::std::option::Option::None;
+        self.build = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static Version {
+        static instance: Version = Version {
+            major: ::std::option::Option::None,
+            minor: ::std::option::Option::None,
+            patch: ::std::option::Option::None,
+            build: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for Version {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("Version").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for Version {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Version {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x15messages-common.proto\x12\x19hw.trezor.messages.common\x1a\roption\
     s.proto\"%\n\x07Success\x12\x1a\n\x07message\x18\x01\x20\x01(\t:\0R\x07m\
@@ -3725,9 +3983,12 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     haseMemo\x12\x1b\n\tcoin_type\x18\x01\x20\x02(\rR\x08coinType\x12\x16\n\
     \x06amount\x18\x02\x20\x02(\tR\x06amount\x12\x18\n\x07address\x18\x03\
     \x20\x02(\tR\x07address\x12\x1b\n\taddress_n\x18\x04\x20\x03(\rR\x08addr\
-    essN\x12\x10\n\x03mac\x18\x05\x20\x02(\x0cR\x03macJ\x04\x08\x04\x10\x05B\
-    >\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCommon\x80\xa6\
-    \x1d\x01\
+    essN\x12\x10\n\x03mac\x18\x05\x20\x02(\x0cR\x03macJ\x04\x08\x04\x10\x05\
+    \"g\n\x07Version\x12\x14\n\x05major\x18\x01\x20\x02(\rR\x05major\x12\x14\
+    \n\x05minor\x18\x02\x20\x02(\rR\x05minor\x12\x17\n\x05patch\x18\x03\x20\
+    \x01(\r:\x010R\x05patch\x12\x17\n\x05build\x18\x04\x20\x01(\r:\x010R\x05\
+    buildB>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCommon\
+    \x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3746,7 +4007,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(15);
+            let mut messages = ::std::vec::Vec::with_capacity(16);
             messages.push(Success::generated_message_descriptor_data());
             messages.push(Failure::generated_message_descriptor_data());
             messages.push(ButtonRequest::generated_message_descriptor_data());
@@ -3757,6 +4018,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(PassphraseAck::generated_message_descriptor_data());
             messages.push(HDNodeType::generated_message_descriptor_data());
             messages.push(PaymentRequest::generated_message_descriptor_data());
+            messages.push(Version::generated_message_descriptor_data());
             messages.push(payment_request::PaymentRequestMemo::generated_message_descriptor_data());
             messages.push(payment_request::TextMemo::generated_message_descriptor_data());
             messages.push(payment_request::TextDetailsMemo::generated_message_descriptor_data());
