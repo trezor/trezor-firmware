@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import json
 import tempfile
 from contextlib import nullcontext
 from dataclasses import dataclass
@@ -24,8 +23,7 @@ import pytest
 import yaml
 
 from tests.emulators import (
-    ROOT,
-    TROPIC_MODEL_CONFIGFILE,
+    TROPIC_MODEL_CURRENT_CONFIG,
     EmulatorWrapper,
     delete_profile,
     get_logfile,
@@ -33,15 +31,16 @@ from tests.emulators import (
 from trezorlib._internal.emulator import TropicModel
 
 from . import model_only
-
-TROPIC_CONFIGS_JSON = (
-    ROOT / "core" / "embed" / "sec" / "tropic" / "config" / "tropic_configs.json"
+from .tropic_common import (
+    TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
+    TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
+    expected_config,
+    set_chip_distribution,
+    set_version_slot,
+    slot_is_erased,
+    slot_value,
 )
-TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT = 6
-TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT = 7
-CHIP_ID_BATCH_ID_OFFSET = 96
-BATCH_ID_V0 = bytes([0x19, 0x0A, 0x08, 0x10, 0x10])
-BATCH_ID_V1 = bytes([0x19, 0x07, 0x1F, 0x0A, 0x04])
+
 INCOMPARABLE_I_CONFIG = "incomparable_i"
 INCOMPARABLE_R_CONFIG = "incomparable_r"
 
@@ -209,119 +208,39 @@ TROPIC_BOOT_SCENARIOS = [
 ]
 
 
-def _config_to_numbers(config: dict, irreversible: bool) -> dict[str, int]:
-    numbers = {}
-    for category, category_config in config.items():
-        number = 0xFFFFFFFF if irreversible else 0
-        settings = category_config["setting"]
-
-        if "uap" not in category:
-            for details in settings.values():
-                if irreversible:
-                    if not details["value"]:
-                        number &= ~(1 << details["bit"])
-                elif details["value"]:
-                    number |= 1 << details["bit"]
-        else:
-            for i in range(4):
-                for details in settings[f"pairing_key_{i}"].values():
-                    if irreversible:
-                        if not details["value"]:
-                            number &= ~(1 << details["bit"])
-                    elif details["value"]:
-                        number |= 1 << details["bit"]
-
-        numbers[category] = number
-    return numbers
-
-
-def _expected_config(config_type: str, version: int) -> dict[str, int]:
-    configs = json.loads(TROPIC_CONFIGS_JSON.read_text())
-    config_versions = configs[config_type]
-    irreversible = config_type == "irreversible_configurations"
-
-    for versioned_config in config_versions:
-        if versioned_config["version"] == version:
-            return _config_to_numbers(versioned_config["config"], irreversible)
-
-    raise ValueError(f"Missing Tropic {config_type} version {version}")
-
-
 def _initial_config(config_type: str, version_or_name: int | str) -> dict[str, int]:
     if isinstance(version_or_name, int):
-        return _expected_config(config_type, version_or_name)
+        return expected_config(config_type, version_or_name)
 
     if version_or_name == INCOMPARABLE_I_CONFIG:
-        config = _expected_config("irreversible_configurations", 0)
+        config = expected_config("irreversible_configurations", 0)
         config["cfg_uap_mac_and_destroy"] = 4244438268
         return config
 
     if version_or_name == INCOMPARABLE_R_CONFIG:
-        config = _expected_config("reversible_configurations", 0)
+        config = expected_config("reversible_configurations", 0)
         config["cfg_start_up"] = 2
         return config
 
     raise ValueError(f"Unknown Tropic config scenario: {version_or_name}")
 
 
-def _set_chip_distribution(config: dict, distribution_version: int) -> None:
-    batch_id = BATCH_ID_V1 if distribution_version == 1 else BATCH_ID_V0
-    chip_id = bytearray(config["chip_id"])
-    chip_id[CHIP_ID_BATCH_ID_OFFSET : CHIP_ID_BATCH_ID_OFFSET + len(batch_id)] = (
-        batch_id
-    )
-    config["chip_id"] = bytes(chip_id)
-
-
-def _set_slot(config: dict, slot: int, value: int | None) -> None:
-    r_user_data = config.setdefault("r_user_data", {})
-    if value is None:
-        r_user_data.pop(slot, None)
-        return
-
-    r_user_data[slot] = {"value": value.to_bytes(4, "big")}
-
-
 def _build_tropic_model_config(scenario: TropicBootScenario) -> dict:
-    config = yaml.safe_load(TROPIC_MODEL_CONFIGFILE.read_text())
-    _set_chip_distribution(config, scenario.chip_distribution)
+    config = yaml.safe_load(TROPIC_MODEL_CURRENT_CONFIG.read_text())
+    set_chip_distribution(config, scenario.chip_distribution)
     config["i_config"] = _initial_config(
         "irreversible_configurations", scenario.initial_i_config
     )
     config["r_config"] = _initial_config(
         "reversible_configurations", scenario.initial_r_config
     )
-    _set_slot(
+    set_version_slot(
         config, TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT, scenario.distribution_slot
     )
-    _set_slot(
+    set_version_slot(
         config, TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT, scenario.backup_slot
     )
     return config
-
-
-def _slot_config(config: dict, slot: int) -> dict | None:
-    return (config.get("r_user_data") or {}).get(slot)
-
-
-def _slot_value(config: dict, slot: int) -> bytes | None:
-    slot_config = _slot_config(config, slot)
-    if not slot_config:
-        return None
-    return slot_config.get("value")
-
-
-def _slot_is_erased(config: dict, slot: int) -> bool:
-    slot_config = _slot_config(config, slot)
-    if not slot_config:
-        return True
-    if slot_config.get("free") is True:
-        return True
-
-    value = slot_config.get("value")
-    if value in (None, b""):
-        return True
-    return all(byte == 0xFF for byte in value)
 
 
 def _check_tropic_model_output(
@@ -337,18 +256,18 @@ def _check_tropic_model_output(
     )
 
     output = yaml.safe_load(output_path.read_text())
-    assert output["i_config"] == _expected_config(
+    assert output["i_config"] == expected_config(
         "irreversible_configurations", expected_i_version
     )
-    assert output["r_config"] == _expected_config(
+    assert output["r_config"] == expected_config(
         "reversible_configurations", expected_r_version
     )
 
-    assert _slot_value(
+    assert slot_value(
         output, TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT
     ) == expected_distribution_version.to_bytes(4, "big")
     if expect_backup_erased:
-        assert _slot_is_erased(output, TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT)
+        assert slot_is_erased(output, TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT)
 
 
 @model_only("T3W1")

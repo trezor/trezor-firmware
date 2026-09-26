@@ -40,9 +40,8 @@ CORE_SRC_DIR = ROOT / "core" / "src"
 
 ENV = {"SDL_VIDEODRIVER": "dummy"}
 
-TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "config.yml"
-TROPIC_MODEL_CONFIGFILE_OLD = ROOT / "tests" / "tropic_model" / "config_old.yml"
-TROPIC_OLD_CONFIG_UNTIL_VERSION = (2, 12, 1)  # inclusive
+TROPIC_MODEL_CONFIG_DIR = ROOT / "tests" / "tropic_model" / "firmware_config"
+TROPIC_MODEL_CURRENT_CONFIG = TROPIC_MODEL_CONFIG_DIR / "current.yml"
 TROPIC_CAPABLE_MODELS = {"T3W1"}
 
 

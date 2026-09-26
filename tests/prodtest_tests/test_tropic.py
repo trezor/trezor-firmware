@@ -27,22 +27,24 @@ hand. The general pattern is:
   4. (optionally) assert on ``session.state()``.
 
 The tests seed the Tropic model with the default device-test config
-(``tests/tropic_model/config.yml``), which represents an already-paired device.
+(``tests/tropic_model/firmware_config/current.yml``), which represents a provisioned device.
 Commands that need a fresh/unpaired chip (``tropic-pair``) or device-specific
 certificates are covered only where they succeed; some are exercised through
 their error paths instead (e.g. the TRNG, which the model drives from a
-constant, and firmware update against a mismatched chip revision).
+constant).
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+import yaml
 
 from trezorlib._internal.prodtest_client import Cmd, ProdtestCommand
 
 from . import (
     PRODTEST_ERR_TROPIC_TEST_RNG_REPEAT,
-    PRODTEST_ERR_TROPIC_UPDATE_WRONG_REVISION,
     assert_command_fails,
     assert_hexdata,
 )
@@ -67,9 +69,6 @@ _BACKUP_DISTRIBUTION_VERSION_SLOT = 7
 
 # Arbitrary non-default sensors config: 8 hex digits = big-endian uint32.
 _SENSORS_CONFIG_VALUE = "0000000F"
-
-# Reversible-config keys that ``lock`` is expected to change.
-_LOCK_CHANGED_R_CONFIG_KEYS = {"cfg_start_up"}
 
 
 # --- info / read-only commands ---------------------------------------------
@@ -111,18 +110,16 @@ def test_tropic_get_spect_fw_version(tropic_prodtest: TropicProdtest) -> None:
 def test_tropic_lock_check(tropic_prodtest: TropicProdtest, is_emulator: bool) -> None:
     """``lock-check`` reports a yes/no answer.
 
-    On the emulator this is always ``NO``: ``lock-check`` returns ``NO`` as soon
-    as the MCU has no stored Tropic public key, which is the case for a freshly
-    started emulator — the pairing process was never run against it. On real
-    hardware either answer is valid depending on provisioning, so we only check
-    the shape there.
+    On the emulator this is ``YES``: the default Tropic model config is a
+    locked device. On real hardware either answer is valid depending on
+    provisioning, so we only check the shape there.
     """
     with tropic_prodtest() as session:
         resp = session.client.command_ok(ProdtestCommand(Cmd.TROPIC_LOCK_CHECK))
 
     assert resp.args in ("YES", "NO")
     if is_emulator:
-        assert resp.args == "NO"
+        assert resp.args == "YES"
 
 
 @pytest.mark.requires_command(Cmd.TROPIC_READ_CONFIGS)
@@ -219,42 +216,34 @@ def test_tropic_test_counter(tropic_prodtest: TropicProdtest) -> None:
     assert state.mcounters, "no monotonic counters were initialized"
 
 
-@pytest.mark.requires_command(Cmd.TROPIC_LOCK)
-def test_tropic_lock(tropic_prodtest: TropicProdtest) -> None:
-    """``tropic-lock`` writes the expected config and distribution version.
+@pytest.mark.requires_command(Cmd.TROPIC_LOCK, Cmd.TROPIC_LOCK_CHECK)
+def test_tropic_lock(tropic_prodtest: TropicProdtest, tmp_path: Path) -> None:
+    """``tropic-lock`` turns a paired, unlocked chip into the provisioned one.
 
-    ``lock`` is irreversible, but each Tropic test runs against its own
-    throwaway model, so locking it is safe. It rewrites the reversible config to
-    the expected "locked" values, writes the distribution version into its slot,
-    erases the backup slot, and leaves the pairing keys untouched. We capture a
-    fresh (unlocked) model as a baseline to show the reversible config actually
-    changed.
+    The default config is the provisioned device, so it is the expected result.
+    The starting chip is that device before ``lock``: both configs erased and no
+    distribution version. Each test runs against its own throwaway model, so the
+    irreversible lock is safe.
     """
-    baseline = TropicModelState.from_file(DEFAULT_TROPIC_MODEL_CONFIGFILE)
+    config = yaml.safe_load(DEFAULT_TROPIC_MODEL_CONFIGFILE.read_text())
+    config["r_config"] = dict.fromkeys(config["r_config"], 0xFFFFFFFF)
+    config["i_config"] = dict.fromkeys(config["i_config"], 0xFFFFFFFF)
+    del config["r_user_data"][_DISTRIBUTION_VERSION_SLOT]
+    pre_lock_config = tmp_path / "tropic_model_config.yml"
+    pre_lock_config.write_text(yaml.safe_dump(config))
 
-    with tropic_prodtest(
-        tropic_model_configfile=DEFAULT_TROPIC_MODEL_CONFIGFILE
-    ) as session:
+    with tropic_prodtest(tropic_model_configfile=pre_lock_config) as session:
         session.client.command_ok(ProdtestCommand(Cmd.TROPIC_LOCK))
+        resp = session.client.command_ok(ProdtestCommand(Cmd.TROPIC_LOCK_CHECK))
     locked = session.state()
+    provisioned = TropicModelState.from_file(DEFAULT_TROPIC_MODEL_CONFIGFILE)
 
-    # Locking rewrites the reversible config to the expected locked values.
-    # Reporting the full diff on failure.
-    r_config_diff = {
-        key: (baseline.r_config.get(key), locked.r_config.get(key))
-        for key in baseline.r_config.keys() | locked.r_config.keys()
-        if baseline.r_config.get(key) != locked.r_config.get(key)
-    }
-    assert set(r_config_diff) == _LOCK_CHANGED_R_CONFIG_KEYS, (
-        f"unexpected r_config changes: {r_config_diff}"
+    assert resp.args == "YES"
+    assert locked.r_config == provisioned.r_config
+    assert locked.i_config == provisioned.i_config
+    assert locked.slot_value(_DISTRIBUTION_VERSION_SLOT) == provisioned.slot_value(
+        _DISTRIBUTION_VERSION_SLOT
     )
-
-    assert locked.i_config == baseline.i_config
-
-    # The distribution version is written (4-byte big-endian) and its backup
-    # slot is left erased.
-    version = locked.slot_value(_DISTRIBUTION_VERSION_SLOT)
-    assert version is not None and len(version) == 4
     assert locked.slot_is_erased(_BACKUP_DISTRIBUTION_VERSION_SLOT)
 
     # Pairing keys survive the lock.
@@ -277,13 +266,9 @@ def test_tropic_test_rng_rejects_constant_rng(tropic_prodtest: TropicProdtest) -
 
 
 @pytest.mark.requires_command(Cmd.TROPIC_UPDATE_FW)
-def test_tropic_update_fw_rejects_wrong_revision(
+def test_tropic_update_fw_accept_silicon_revision(
     tropic_prodtest: TropicProdtest,
 ) -> None:
-    """``update-fw`` refuses the model's mismatched chip silicon revision."""
+    """``update-fw`` accepts the model's chip silicon revision."""
     with tropic_prodtest() as session:
-        resp = assert_command_fails(
-            session.client, ProdtestCommand(Cmd.TROPIC_UPDATE_FW)
-        )
-
-    assert resp.error_code == PRODTEST_ERR_TROPIC_UPDATE_WRONG_REVISION
+        session.client.command_ok(ProdtestCommand(Cmd.TROPIC_UPDATE_FW))

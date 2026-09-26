@@ -33,6 +33,14 @@
 #include <libtropic/cal/trezor_crypto/libtropic_trezor_crypto.h>
 #include <lt_l3_process.h>
 
+#ifdef SECURE_MODE
+// These define non-static arrays, so this must remain the only translation
+// unit in any binary that includes them.
+// libtropic's `fw_CPU*` symbols hold the RISC-V FW.
+#include "fw_CPU.h"
+#include "fw_SPECT.h"
+#endif
+
 #ifdef TREZOR_EMULATOR
 #include <arpa/inet.h>
 #include <libtropic/hal/posix/tcp/libtropic_port_posix_tcp.h>
@@ -109,6 +117,8 @@ static const uint8_t TROPIC_BATCHES_V1[][LT_MEMBER_SIZE(
 // again.
 #define TROPIC_RESTART_DELAY_MS 10
 
+#define TROPIC_FW_UPDATE_MAX_ATTEMPTS 3
+
 // clang-format off
 // Temporary address table for config objects, ordered to match lt_config_t.obj[].
 // Using a local const table instead of `cfg_desc_table` from libtropic because including
@@ -164,6 +174,13 @@ typedef enum {
   TROPIC_CONFIG_STRICTNESS_INCOMPARABLE,
 } tropic_config_strictness_t;
 
+typedef enum {
+  TROPIC_FW_UPDATE_UNFINISHED,
+  TROPIC_FW_UPDATE_OUTDATED,
+  TROPIC_FW_UPDATE_UP_TO_DATE,
+  TROPIC_FW_UPDATE_ERROR
+} tropic_fw_update_state_t;
+
 #ifdef TREZOR_EMULATOR
 #define TROPIC_RETRY_COMMAND(command) command
 #else
@@ -191,9 +208,7 @@ static bool is_retryable(lt_ret_t ret) {
       if (!is_retryable(TROPIC_RETRY_COMMAND_res)) {                      \
         break;                                                            \
       }                                                                   \
-      tropic_deinit();                                                    \
-      systick_delay_ms(TROPIC_RESTART_DELAY_MS);                          \
-      if (tropic_init(NULL) != LT_OK) {                                   \
+      if (tropic_restart()) {                                             \
         break;                                                            \
       }                                                                   \
       if (TROPIC_RETRY_COMMAND_session_started) {                         \
@@ -312,6 +327,19 @@ void tropic_session_forget(void) {
   tropic_driver_t *drv = &g_tropic_driver;
   lt_l3_invalidate_host_session_data(&drv->handle.l3);
   drv->session_started = false;
+}
+
+static bool tropic_restart(void) {
+#ifdef TREZOR_EMULATOR
+  lt_ret_t ret = lt_reboot(&g_tropic_driver.handle, TR01_REBOOT);
+  tropic_session_forget();
+  return ret == LT_OK;
+
+#else
+  tropic_deinit();
+  systick_delay_ms(TROPIC_RESTART_DELAY_MS);
+  return tropic_init(NULL) == LT_OK;
+#endif
 }
 
 // If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
@@ -440,14 +468,6 @@ void tropic_session_start_time(uint32_t *time_ms) {
 lt_ret_t lt_ecc_key_erase_retry(lt_handle_t *tropic_handle,
                                 const lt_ecc_slot_t ecc_slot) {
   return TROPIC_RETRY_COMMAND(lt_ecc_key_erase(tropic_handle, ecc_slot));
-}
-
-static lt_ret_t lt_r_mem_data_write_retry(lt_handle_t *tropic_handle,
-                                          const uint16_t udata_slot,
-                                          const uint8_t *data,
-                                          const uint16_t size) {
-  return TROPIC_RETRY_COMMAND(
-      lt_r_mem_data_write(tropic_handle, udata_slot, data, size));
 }
 
 lt_ret_t lt_r_mem_data_erase_retry(lt_handle_t *tropic_handle,
@@ -885,10 +905,10 @@ static secbool set_expected_config(
 
   uint8_t distribution_version_bytes[sizeof(uint32_t)] = {0};
   write_be(distribution_version_bytes, expected_config->distribution_version);
-  if (lt_r_mem_data_write_retry(&g_tropic_driver.handle,
-                                TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
-                                distribution_version_bytes,
-                                sizeof(distribution_version_bytes)) != LT_OK) {
+  if (lt_r_mem_data_erase_write_retry(
+          &g_tropic_driver.handle, TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
+          distribution_version_bytes,
+          sizeof(distribution_version_bytes)) != LT_OK) {
     return secfalse;
   }
 
@@ -910,9 +930,7 @@ static secbool set_expected_config(
   }
 
   // restart Tropic so the new config takes effect.
-  tropic_deinit();
-  systick_delay_ms(TROPIC_RESTART_DELAY_MS);
-  if (tropic_init(NULL) != LT_OK) {
+  if (!tropic_restart()) {
     return secfalse;
   }
 
@@ -991,6 +1009,364 @@ secbool tropic_ensure_configuration(void) {
     return secfalse;
   }
   return sectrue;
+}
+
+bool tropic_silicon_revision_matches(const lt_chip_id_t *chip_id) {
+#ifdef LT_SILICON_REV_ABAB
+  // CHIP_ID v0.0.0.1 has no silicon revision field (libtropic reports it as
+  // "N/A") and was used only on ABAB silicon, so the version alone identifies
+  // the chip. Newer ABAB chips spell the revision out.
+  const bool chip_id_is_v0001 =
+      chip_id->chip_id_ver[0] == 0 && chip_id->chip_id_ver[1] == 0 &&
+      chip_id->chip_id_ver[2] == 0 && chip_id->chip_id_ver[3] == 1;
+
+  return memcmp(chip_id->silicon_rev, "ABAB", 4) == 0 || chip_id_is_v0001;
+#elif defined(LT_SILICON_REV_ACAB)
+  return memcmp(chip_id->silicon_rev, "ACAB", 4) == 0;
+#else
+#error "Tropic silicon revision not set"
+#endif  // LT_SILICON_REV_ABAB
+}
+
+lt_ret_t tropic_flash_bundled_fw(void) {
+#ifdef TREZOR_EMULATOR
+  // The model implements no FW-update L2 commands.
+  return LT_OK;
+#else
+  return lt_do_mutable_fw_update(&g_tropic_driver.handle, fw_CPU,
+                                 sizeof(fw_CPU), fw_SPECT, sizeof(fw_SPECT));
+#endif
+}
+
+// Version arrays are {reserved, patch, minor, major}; byte 0 is not compared.
+static bool fw_version_is_older(const uint8_t *have, const uint8_t *want) {
+  for (int i = 3; i >= 1; i--) {
+    if (have[i] != want[i]) {
+      return have[i] < want[i];
+    }
+  }
+  return false;
+}
+
+static bool tropic_read_fw_slot(uint8_t riscv[4], uint8_t spect[4],
+                                bool *present) {
+  uint8_t buf[TROPIC_FW_VERSION_SIZE] = {0};
+  uint16_t length = 0;
+  lt_ret_t ret =
+      lt_r_mem_data_read_retry(&g_tropic_driver.handle, TROPIC_FW_VERSION_SLOT,
+                               buf, sizeof(buf), &length);
+  if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
+    *present = false;
+    return true;
+  }
+  if (ret != LT_OK) {
+    return false;
+  }
+  if (length != sizeof(buf)) {
+    *present = false;
+    return true;
+  }
+
+  memcpy(riscv, buf, 4);
+  memcpy(spect, buf + 4, 4);
+  *present = true;
+  return true;
+}
+
+// Records that the bundled versions are written. Call only after a complete
+// update.
+bool tropic_write_fw_slot(void) {
+  if (!tropic_session_start()) {
+    return false;
+  }
+  uint8_t buf[TROPIC_FW_VERSION_SIZE] = {0};
+  memcpy(buf, fw_CPU_ver, 4);
+  memcpy(buf + 4, fw_SPECT_ver, 4);
+  if (lt_r_mem_data_erase_write_retry(&g_tropic_driver.handle,
+                                      TROPIC_FW_VERSION_SLOT, buf,
+                                      sizeof(buf)) != LT_OK) {
+    return false;
+  }
+
+  uint8_t riscv[4] = {0};
+  uint8_t spect[4] = {0};
+  bool present = false;
+  return tropic_read_fw_slot(riscv, spect, &present) && present &&
+         memcmp(riscv, fw_CPU_ver, 4) == 0 &&
+         memcmp(spect, fw_SPECT_ver, 4) == 0;
+}
+
+static bool tropic_erase_fw_slot(void) {
+  return lt_r_mem_data_erase_retry(&g_tropic_driver.handle,
+                                   TROPIC_FW_VERSION_SLOT) == LT_OK;
+}
+
+// Reset the configuration and restore the CFG version slots
+static bool tropic_cleanup_update_config(void) {
+  if (!tropic_session_start()) {
+    return false;
+  }
+
+  tropic_expected_config_t expected_config = {0};
+  if (!get_expected_tropic_config(&expected_config)) {
+    return false;
+  }
+
+  optional_u32_t backup_distribution_version = {0};
+  if (!tropic_get_distribution_version(
+          TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
+          &backup_distribution_version)) {
+    return false;
+  }
+  if (backup_distribution_version.has_value &&
+      backup_distribution_version.value >
+          expected_config.distribution_version) {
+    if (!tropic_get_expected_tropic_config_from_distribution_version(
+            backup_distribution_version.value, &expected_config)) {
+      return false;
+    }
+  }
+
+  if (set_expected_config(&expected_config, TROPIC_R_CONFIG_WRITE_ALWAYS) !=
+      sectrue) {
+    return false;
+  }
+
+  return true;
+}
+
+static bool tropic_finish_update(void) {
+  tropic_driver_t *drv = &g_tropic_driver;
+  if (!drv->initialized) {
+    return false;
+  }
+
+  lt_ret_t ret = LT_FAIL;
+
+  for (int i = 0; i < TROPIC_FW_UPDATE_MAX_ATTEMPTS; i++) {
+    ret = tropic_flash_bundled_fw();
+    if (ret == LT_OK) {
+      break;
+    }
+
+    // Maintenance forbidden, the FW is untouched.
+    if (ret == LT_L2_RESP_DISABLED) {
+      // Maintenance mode is disabled. We cannot update the FW -> RSOD
+      return false;
+    }
+
+    // We restart the chip and try again.
+    if (!tropic_restart()) {
+      return false;
+    }
+  }
+
+  // The update rebooted the chip. We clear stale session data.
+  tropic_session_forget();
+
+  if (ret != LT_OK) {
+    return false;
+  }
+
+  // Reset the configuration. This includes the Maintenance bit and the
+  // slots
+  if (!tropic_cleanup_update_config()) {
+    return false;
+  }
+
+  // We record the updated version in the R-memory.
+  if (!tropic_write_fw_slot()) {
+    return false;
+  }
+  return true;
+}
+
+// Check if the Maintenance bit is enabled. Enable it if possible.
+static bool tropic_prepare_update_config(void) {
+  lt_handle_t *handle = tropic_get_handle();
+  if (handle == NULL) {
+    return false;
+  }
+
+  if (!tropic_session_start()) {
+    return false;
+  }
+
+  // Read R-Config and check if Maintenance Mode is enabled.
+  // The whole R-Config is read in case we need to modify it in case the bit is
+  // OFF
+  lt_config_t r_config = {0};
+  if (lt_read_whole_R_config_retry(handle, &r_config) != LT_OK) {
+    return false;
+  }
+
+  // Check if Maintenance Mode is enabled in R-Config[CFG_START_UP]
+  if (!(r_config.obj[TR01_CFG_START_UP_IDX] &
+        BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK)) {
+    // The bit is disabled so we enable it
+
+    optional_u32_t distribution_version = {0};
+    if (!tropic_get_distribution_version(
+            TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT, &distribution_version)) {
+      return false;
+    }
+    if (distribution_version.has_value) {
+      if (!set_backup_distribution_version_to(distribution_version.value)) {
+        return false;
+      }
+    }
+    if (lt_r_mem_data_erase_retry(&g_tropic_driver.handle,
+                                  TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT) !=
+        LT_OK) {
+      return false;
+    }
+
+    // Flip the MAINTENANCE_ENA bit
+    r_config.obj[TR01_CFG_START_UP_IDX] |=
+        BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK;
+
+    // Modify the R-config
+    if (lt_erase_and_write_R_config_retry(handle, &r_config) != LT_OK) {
+      return false;
+    }
+
+    // Reboot tropic to apply R-Config changes
+    if (TROPIC_RETRY_COMMAND(lt_reboot(handle, TR01_REBOOT)) != LT_OK) {
+      return false;
+    }
+    // The reboot forgot the session data on the chip. We need to do it as well.
+    tropic_session_forget();
+  }
+  // the bit is ON
+  return true;
+}
+
+static tropic_fw_update_state_t tropic_get_update_state(void) {
+  lt_handle_t *handle = &g_tropic_driver.handle;
+  lt_tr01_mode_t tr01_mode = LT_TR01_ALARM;
+  if (TROPIC_RETRY_COMMAND(lt_get_tr01_mode(handle, &tr01_mode)) != LT_OK) {
+    return TROPIC_FW_UPDATE_ERROR;
+  }
+  if (tr01_mode == LT_TR01_MAINTENANCE) {
+    return TROPIC_FW_UPDATE_UNFINISHED;
+  } else if (tr01_mode == LT_TR01_ALARM) {
+    return TROPIC_FW_UPDATE_ERROR;
+  }
+
+  if (!tropic_session_start()) {
+    return TROPIC_FW_UPDATE_ERROR;
+  }
+  uint8_t riscv_fw[4] = {0};
+  uint8_t spect_fw[4] = {0};
+  bool present = false;
+  if (!tropic_read_fw_slot(riscv_fw, spect_fw, &present)) {
+    return TROPIC_FW_UPDATE_ERROR;
+  }
+  if (!present) {
+    uint32_t r_config_cfg_startup = 0;
+    if (TROPIC_RETRY_COMMAND(lt_r_config_read(
+            handle, TR01_CFG_START_UP_ADDR, &r_config_cfg_startup)) != LT_OK) {
+      return TROPIC_FW_UPDATE_ERROR;
+    }
+    // maintenance on and no FW version in slot = update in progress
+    if ((r_config_cfg_startup &
+         BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0) {
+      return TROPIC_FW_UPDATE_UNFINISHED;
+    } else {
+      return TROPIC_FW_UPDATE_OUTDATED;
+    }
+  }
+
+  if (fw_version_is_older(riscv_fw, fw_CPU_ver) ||
+      fw_version_is_older(spect_fw, fw_SPECT_ver)) {
+    return TROPIC_FW_UPDATE_OUTDATED;
+  } else {
+    return TROPIC_FW_UPDATE_UP_TO_DATE;
+  }
+}
+
+static bool tropic_update_possible(void) {
+  lt_handle_t *handle = tropic_get_handle();
+  if (handle == NULL) {
+    return false;
+  }
+
+  lt_chip_id_t chip_id = {0};
+  if (TROPIC_RETRY_COMMAND(lt_get_info_chip_id(handle, &chip_id)) != LT_OK) {
+    return false;
+  }
+  if (!tropic_silicon_revision_matches(&chip_id)) {
+    return false;
+  }
+
+  lt_tr01_mode_t tr01_mode = LT_TR01_ALARM;
+  if (TROPIC_RETRY_COMMAND(lt_get_tr01_mode(handle, &tr01_mode)) != LT_OK) {
+    return false;
+  }
+  if (tr01_mode == LT_TR01_MAINTENANCE) {
+    return true;
+  }
+
+  if (!tropic_session_start()) {
+    return false;
+  }
+  uint32_t i_config_cfg_startup = 0;
+  if (TROPIC_RETRY_COMMAND(lt_i_config_read(handle, TR01_CFG_START_UP_ADDR,
+                                            &i_config_cfg_startup)) != LT_OK) {
+    return false;
+  }
+  return (i_config_cfg_startup &
+          BOOTLOADER_CO_CFG_START_UP_MAINTENANCE_ENA_MASK) != 0;
+}
+
+static bool tropic_update(void) {
+  if (!tropic_erase_fw_slot()) {
+    return false;
+  }
+  if (!tropic_prepare_update_config()) {
+    return false;
+  }
+  return tropic_finish_update();
+}
+
+secbool tropic_ensure_fw_updated(void) {
+  tropic_fw_update_state_t state = tropic_get_update_state();
+  if (state == TROPIC_FW_UPDATE_ERROR) {
+    return secfalse;
+  }
+  if (state == TROPIC_FW_UPDATE_UP_TO_DATE) {
+    return sectrue;
+  }
+  if (!tropic_update_possible()) {
+    return secfalse;
+  }
+
+  if (state == TROPIC_FW_UPDATE_OUTDATED) {
+    return tropic_update() ? sectrue : secfalse;
+  }
+
+  if (state == TROPIC_FW_UPDATE_UNFINISHED) {
+    return tropic_finish_update() ? sectrue : secfalse;
+  }
+
+  return secfalse;
+}
+
+// Runs at boot. It must never enable the Maintenance bit.
+secbool tropic_check_and_restore_fw_update_in_progress(void) {
+  tropic_fw_update_state_t state = tropic_get_update_state();
+  if (state == TROPIC_FW_UPDATE_ERROR) {
+    return secfalse;
+  }
+
+  if (state != TROPIC_FW_UPDATE_UNFINISHED) {
+    return sectrue;
+  }
+  if (!tropic_update_possible()) {
+    return secfalse;
+  }
+
+  return tropic_finish_update() ? sectrue : secfalse;
 }
 
 #ifdef TREZOR_EMULATOR
@@ -1076,6 +1452,12 @@ lt_handle_t *tropic_prodtest_init_and_get_handle(cli_t *cli) {
   }
 
   return tropic_get_handle();
+}
+
+bool tropic_fw_slot_is_outdated(
+    const uint8_t fw_version[TROPIC_FW_VERSION_SIZE]) {
+  return fw_version_is_older(fw_version, fw_CPU_ver) ||
+         fw_version_is_older(fw_version + 4, fw_SPECT_ver);
 }
 #endif  // TREZOR_PRODTEST
 

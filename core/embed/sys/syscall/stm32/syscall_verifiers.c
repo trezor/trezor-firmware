@@ -1544,6 +1544,10 @@ access_violation:
   apptask_access_violation();
   return false;
 }
+
+secbool tropic_ensure_fw_updated__verified(void) {
+  return tropic_ensure_fw_updated();
+}
 #endif
 
 #ifdef USE_APP_LOADING

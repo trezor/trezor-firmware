@@ -46,6 +46,11 @@
 #define TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT 6
 // Slot reserved for the backup distribution version of Tropic configuration.
 #define TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT 7
+// Slot reserved for the Tropic FW versions holding a RISC-V version followed
+// by a SPECT version.
+#define TROPIC_FW_VERSION_SLOT 8
+// Number of bytes in slot 8
+#define TROPIC_FW_VERSION_SIZE 8
 
 // Pairing key used by prodtest to inject the privileged and unprivileged
 // pairing keys.
@@ -69,6 +74,8 @@
 
 #include "libtropic.h"
 
+secbool tropic_check_and_restore_fw_update_in_progress(void);
+
 lt_ret_t tropic_init(cli_t* cli);
 
 void tropic_deinit(void);
@@ -88,6 +95,16 @@ typedef struct {
 } tropic_expected_config_t;
 
 #ifdef TREZOR_PRODTEST
+bool tropic_silicon_revision_matches(const lt_chip_id_t* chip_id);
+
+// Flashes the FW images bundled with this build.
+lt_ret_t tropic_flash_bundled_fw(void);
+
+bool tropic_write_fw_slot(void);
+
+bool tropic_fw_slot_is_outdated(
+    const uint8_t fw_version[TROPIC_FW_VERSION_SIZE]);
+
 lt_handle_t* tropic_prodtest_init_and_get_handle(cli_t* cli);
 
 lt_ret_t tropic_custom_session_start(cli_t* cli,
@@ -130,6 +147,8 @@ bool tropic_get_expected_tropic_config_from_distribution_version(
 #endif  // TREZOR_PRODTEST
 
 #endif  // KERNEL_MODE
+
+secbool tropic_ensure_fw_updated(void);
 
 secbool tropic_ensure_configuration(void);
 

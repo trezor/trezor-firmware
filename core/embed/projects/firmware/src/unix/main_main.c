@@ -106,6 +106,8 @@ static void drivers_init(void) {
   ensure_true(tropic_init(NULL) == LT_OK,
               "Failed to initialize Tropic driver. Make sure the "
               "`model_server` is running.");
+  ensure(tropic_check_and_restore_fw_update_in_progress(),
+         "Failed to restore FW update in progress");
   ensure(tropic_ensure_configuration(), "Tropic configuration check failed");
 #endif
 
