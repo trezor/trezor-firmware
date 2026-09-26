@@ -12,4 +12,5 @@ pub mod options;
 pub mod postbuild;
 pub mod prebuild;
 pub mod presets;
+pub mod raconfig;
 pub mod upload;
