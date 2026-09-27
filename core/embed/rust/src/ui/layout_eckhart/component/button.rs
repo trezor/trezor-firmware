@@ -1,3 +1,5 @@
+#[cfg(feature = "haptic")]
+use io::haptic::{play, HapticEffect};
 use sys::time::{Duration, Instant, ShortDuration};
 
 use super::super::component::ConnectionIndicator;
@@ -5,8 +7,6 @@ use super::super::theme::{self, Gradient};
 use crate::strutil::TString;
 #[cfg(feature = "translations")]
 use crate::translations::TR;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic::{play, HapticEffect};
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{Component, Event, EventCtx, Marquee, Timer};
 use crate::ui::constant;

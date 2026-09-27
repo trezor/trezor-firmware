@@ -1,10 +1,10 @@
+#[cfg(feature = "haptic")]
+use io::haptic::{self, HapticEffect};
 use sys::time::{Duration, Instant};
 
 use super::super::constant;
 use super::super::cshape::{render_loader, LoaderRange};
 use super::theme;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic::{self, HapticEffect};
 use crate::ui::animation::Animation;
 use crate::ui::component::{Component, Event, EventCtx, Pad};
 use crate::ui::display::toif::Icon;

@@ -1,11 +1,11 @@
+#[cfg(feature = "haptic")]
+use io::haptic::{self, HapticEffect};
 use sys::time::Duration;
 
 use super::super::component::{Button, ButtonMsg};
 use super::{theme, HoldToConfirmAnim};
 use crate::strutil::TString;
 use crate::translations::TR;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic::{self, HapticEffect};
 use crate::ui::component::{Component, Event, EventCtx, Timeout};
 use crate::ui::geometry::{Alignment2D, Insets, Offset, Rect};
 use crate::ui::shape::{self, Renderer};

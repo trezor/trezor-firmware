@@ -4,8 +4,6 @@ pub mod bitblt;
 pub mod ble;
 pub mod display;
 mod ffi;
-#[cfg(feature = "haptic")]
-pub mod haptic;
 
 #[cfg(feature = "button")]
 pub mod button;

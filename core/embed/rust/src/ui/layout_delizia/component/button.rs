@@ -1,9 +1,9 @@
+#[cfg(feature = "haptic")]
+use io::haptic::{play, HapticEffect};
 use sys::time::ShortDuration;
 
 use super::theme;
 use crate::strutil::TString;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic::{play, HapticEffect};
 use crate::ui::component::{Component, Event, EventCtx, Timer};
 use crate::ui::display::toif::Icon;
 use crate::ui::display::{Color, Font};

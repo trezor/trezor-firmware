@@ -1,3 +1,5 @@
+#[cfg(feature = "haptic")]
+use io::haptic::{play, HapticEffect};
 use sys::time::{Duration, Instant};
 
 use super::super::cshape::{self, UnlockOverlay};
@@ -9,8 +11,6 @@ use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::time::Stopwatch;
 use crate::translations::TR;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic::{play, HapticEffect};
 use crate::trezorhal::usb::usb_configured;
 use crate::ui::component::base::AttachType;
 use crate::ui::component::{Component, Event, EventCtx, Label, Timer};

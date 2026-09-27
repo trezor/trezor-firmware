@@ -290,10 +290,6 @@ fn generate_trezorhal_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_type("button_t")
             .allowlist_type("button_event_t")
             .allowlist_function("button_get_event")
-            // haptic
-            .allowlist_type("haptic_effect_t")
-            .allowlist_function("haptic_play")
-            .allowlist_function("haptic_play_custom")
             // jpegdec
             .allowlist_var("JPEGDEC_RGBA8888_BUFFER_SIZE")
             .allowlist_var("JPEGDEC_MONO8_BUFFER_SIZE")
