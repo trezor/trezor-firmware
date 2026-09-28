@@ -828,10 +828,11 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         let button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
         let active: usize = kwargs.get(Qstr::MP_QSTR_active)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+        let back_button: bool = kwargs.get_or(Qstr::MP_QSTR_back_button, false)?;
 
         let items: [TString<'static>; MAX_CHECKLIST_ITEMS] = util::iter_into_array(items)?;
 
-        let layout = ModelUI::show_checklist(title, button, active, items)?;
+        let layout = ModelUI::show_checklist(title, button, active, items, back_button)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1874,6 +1875,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     items: Iterable[str],
     ///     active: int,
     ///     button: str,
+    ///     back_button: bool = False,
     /// ) -> LayoutContext[UiResult]:
     ///     """Checklist of backup steps. Active index is highlighted, previous items have check
     ///     mark next to them. Limited to 3 items."""

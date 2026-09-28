@@ -800,8 +800,12 @@ impl FirmwareUI for UIEckhart {
         // the header emits `FlowMsg::Info` and the layout returns the
         // currently displayed number along with the result (see
         // `ComponentMsgObj for RequestNumberScreen`).
+        // The left action bar button (chevron-up) emits
+        // `ValueInputScreenMsg::Cancelled`; interpret it as going back. Going
+        // back is the only way out of the prompt -- interrupting the flow is
+        // not possible.
         let map_fn: fn(ValueInputScreenMsg) -> Option<FlowMsg> = |msg| match msg {
-            ValueInputScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+            ValueInputScreenMsg::Cancelled => Some(FlowMsg::Back),
             ValueInputScreenMsg::Confirmed(_) => Some(FlowMsg::Confirmed),
             ValueInputScreenMsg::Menu => Some(FlowMsg::Info),
             ValueInputScreenMsg::Changed(_) => None,
@@ -812,9 +816,10 @@ impl FirmwareUI for UIEckhart {
                 description.unwrap_or(TString::empty()),
             )
             .with_header(Header::new(title).with_menu_button())
-            .with_action_bar(ActionBar::new_single(Button::with_text(
-                TR::buttons__confirm.into(),
-            )))
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(theme::ICON_CHEVRON_UP),
+                Button::with_text(TR::buttons__confirm.into()),
+            ))
             .map(map_fn),
         );
         Ok(layout)
@@ -979,6 +984,7 @@ impl FirmwareUI for UIEckhart {
         button: TString<'static>,
         active: usize,
         items: [TString<'static>; MAX_CHECKLIST_ITEMS],
+        back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
         for (i, item) in items.into_iter().enumerate() {
@@ -1003,13 +1009,30 @@ impl FirmwareUI for UIEckhart {
         .with_done_offset(theme::CHECKLIST_DONE_OFFSET)
         .with_current_offset(theme::CHECKLIST_CURRENT_OFFSET);
 
+        let action_bar = if back_button {
+            ActionBar::new_double(
+                Button::with_icon(theme::ICON_CHEVRON_UP),
+                Button::with_text(button),
+            )
+        } else {
+            ActionBar::new_single(Button::with_text(button))
+        };
+
+        // The left action bar button (only present when `back_button` is set)
+        // emits `TextScreenMsg::Cancelled`; interpret it as going back. Going
+        // back is the only way out of the checklist -- interrupting the flow
+        // is not possible.
+        let map_fn: fn(TextScreenMsg) -> Option<FlowMsg> = |msg| match msg {
+            TextScreenMsg::Cancelled => Some(FlowMsg::Back),
+            TextScreenMsg::Menu => Some(FlowMsg::Info),
+            TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+        };
+
         let layout = RootComponent::new(
             TextScreen::new(checklist_content)
                 .with_header(Header::new(title))
-                .with_action_bar(ActionBar::new_double(
-                    Button::with_icon(theme::ICON_CROSS),
-                    Button::with_text(button),
-                )),
+                .with_action_bar(action_bar)
+                .map(map_fn),
         );
 
         Ok(layout)

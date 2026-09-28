@@ -594,6 +594,7 @@ def show_checklist(
     items: Iterable[str],
     active: int,
     button: str,
+    back_button: bool = False,
 ) -> LayoutContext[UiResult]:
     """Checklist of backup steps. Active index is highlighted, previous items have check
     mark next to them. Limited to 3 items."""

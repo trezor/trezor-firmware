@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import storage
 import storage.device as storage_device
+import trezorui_api
 from trezor import TR
 from trezor.crypto import hmac, slip39
 from trezor.enums import BackupType, MessageType
@@ -224,14 +225,65 @@ async def _backup_slip39_basic(
 
     await handler.intro()
 
-    # get number of shares
-    await layout.slip39_show_checklist(0, advanced=False)
-    share_count = await layout.slip39_prompt_number_of_shares(num_of_words)
+    share_count: int | None = None
+    share_threshold: int | None = None
 
-    # get threshold
-    await layout.slip39_show_checklist(1, advanced=False, count=share_count)
-    share_threshold = await layout.slip39_prompt_threshold(share_count)
+    # Let the user go back and forth between the steps, keeping the already
+    # entered values. `BACK` results can only occur on layouts that support
+    # going back; other layouts only ever confirm and march forward.
+    step = 0
+    while True:
+        if step == 0:
+            # checklist: set number of shares
+            # (no going back from the first step)
+            await layout.slip39_show_checklist(0, advanced=False)
+            step = 1
+        elif step == 1:
+            # get number of shares
+            result = await layout.slip39_prompt_number_of_shares(
+                num_of_words, init_value=share_count
+            )
+            if result is trezorui_api.BACK:
+                step = 0
+            else:
+                assert isinstance(result, int)
+                share_count = result
+                step = 2
+        elif step == 2:
+            # checklist: set threshold
+            assert share_count is not None
+            result = await layout.slip39_show_checklist(
+                1, advanced=False, count=share_count, back_button=True
+            )
+            step = 1 if result is trezorui_api.BACK else 3
+        elif step == 3:
+            # get threshold
+            assert share_count is not None
+            result = await layout.slip39_prompt_threshold(
+                share_count, init_value=share_threshold
+            )
+            if result is trezorui_api.BACK:
+                step = 2
+            else:
+                assert isinstance(result, int)
+                share_threshold = result
+                step = 4
+        else:
+            # checklist: write down and check the shares
+            assert share_count is not None and share_threshold is not None
+            result = await layout.slip39_show_checklist(
+                2,
+                advanced=False,
+                count=share_count,
+                threshold=share_threshold,
+                back_button=True,
+            )
+            if result is trezorui_api.BACK:
+                step = 3
+            else:
+                break
 
+    assert share_count is not None and share_threshold is not None
     mnemonics = _get_slip39_mnemonics(
         encrypted_master_secret,
         group_threshold,
@@ -240,9 +292,6 @@ async def _backup_slip39_basic(
     )
 
     # show and confirm individual shares
-    await layout.slip39_show_checklist(
-        2, advanced=False, count=share_count, threshold=share_threshold
-    )
     await layout.slip39_basic_show_and_confirm_shares(handler, mnemonics[0])
 
 
@@ -254,24 +303,123 @@ async def _backup_slip39_advanced(
 ) -> None:
     await handler.intro()
 
-    # get number of groups
-    await layout.slip39_show_checklist(0, advanced=True)
-    groups_count = await layout.slip39_advanced_prompt_number_of_groups()
+    groups_count: int | None = None
+    group_threshold: int | None = None
+    groups: list[tuple[int, int]] = []
+    # share count of the group currently being configured
+    pending_share_count: int | None = None
 
-    # get group threshold
-    await layout.slip39_show_checklist(1, advanced=True, count=groups_count)
-    group_threshold = await layout.slip39_advanced_prompt_group_threshold(groups_count)
+    # Let the user go back and forth between the steps, keeping the already
+    # entered values. `BACK` results can only occur on layouts that support
+    # going back; other layouts only ever confirm and march forward.
+    step = 0
+    group_index = 0
+    while True:
+        if step == 0:
+            # checklist: set number of groups
+            # (no going back from the first step)
+            await layout.slip39_show_checklist(0, advanced=True)
+            step = 1
+        elif step == 1:
+            # get number of groups
+            result = await layout.slip39_advanced_prompt_number_of_groups(
+                init_value=groups_count
+            )
+            if result is trezorui_api.BACK:
+                step = 0
+            else:
+                assert isinstance(result, int)
+                groups_count = result
+                # keep the already entered groups that still fit
+                del groups[groups_count:]
+                step = 2
+        elif step == 2:
+            # checklist: set group threshold
+            assert groups_count is not None
+            result = await layout.slip39_show_checklist(
+                1, advanced=True, count=groups_count, back_button=True
+            )
+            step = 1 if result is trezorui_api.BACK else 3
+        elif step == 3:
+            # get group threshold
+            assert groups_count is not None
+            result = await layout.slip39_advanced_prompt_group_threshold(
+                groups_count, init_value=group_threshold
+            )
+            if result is trezorui_api.BACK:
+                step = 2
+            else:
+                assert isinstance(result, int)
+                group_threshold = result
+                step = 4
+        elif step == 4:
+            # checklist: set sizes and thresholds of the individual groups
+            assert groups_count is not None and group_threshold is not None
+            result = await layout.slip39_show_checklist(
+                2,
+                advanced=True,
+                count=groups_count,
+                threshold=group_threshold,
+                back_button=True,
+            )
+            if result is trezorui_api.BACK:
+                step = 3
+            else:
+                step = 5
+                group_index = 0
+                pending_share_count = None
+        elif step == 5:
+            # get number of shares of the current group
+            assert groups_count is not None
+            result = await layout.slip39_prompt_number_of_shares(
+                num_of_words,
+                group_index,
+                init_value=(
+                    pending_share_count
+                    if pending_share_count is not None
+                    else groups[group_index][1]
+                    if group_index < len(groups)
+                    else None
+                ),
+            )
+            if result is trezorui_api.BACK:
+                if group_index == 0:
+                    step = 4  # back to the checklist
+                else:
+                    # back to the previous group's threshold
+                    group_index -= 1
+                    pending_share_count = groups[group_index][1]
+                    step = 6
+            else:
+                assert isinstance(result, int)
+                pending_share_count = result
+                step = 6
+        else:
+            # get threshold of the current group
+            assert step == 6
+            assert pending_share_count is not None
+            result = await layout.slip39_prompt_threshold(
+                pending_share_count,
+                group_index,
+                init_value=(
+                    groups[group_index][0] if group_index < len(groups) else None
+                ),
+            )
+            if result is trezorui_api.BACK:
+                step = 5  # back to the current group's number of shares
+            else:
+                assert isinstance(result, int)
+                if group_index < len(groups):
+                    groups[group_index] = (result, pending_share_count)
+                else:
+                    groups.append((result, pending_share_count))
+                pending_share_count = None
+                group_index += 1
+                if group_index == groups_count:
+                    break
+                step = 5
 
-    # get shares and thresholds
-    await layout.slip39_show_checklist(
-        2, advanced=True, count=groups_count, threshold=group_threshold
-    )
-    groups = []
-    for i in range(groups_count):
-        share_count = await layout.slip39_prompt_number_of_shares(num_of_words, i)
-        share_threshold = await layout.slip39_prompt_threshold(share_count, i)
-        groups.append((share_threshold, share_count))
-
+    assert group_threshold is not None
     mnemonics = _get_slip39_mnemonics(
         encrypted_master_secret, group_threshold, groups, extendable
     )
