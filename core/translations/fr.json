@@ -1022,7 +1022,7 @@
     "ethereum__calldata_digest": "Digest ERC-8213",
     "ethereum__calldata_suffix": "Suffixe de calldata",
     "ethereum__confirm_contract": "Confirmer le contrat",
-    "ethereum__contract_address": "Adresse de contrat du fournisseur",
+    "ethereum__contract_address": "Adresse de contrat",
     "ethereum__data_size_template": "Taille : {0} octets",
     "ethereum__delegate_done": {
       "Bolt": "",
