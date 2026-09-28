@@ -819,6 +819,7 @@ impl FirmwareUI for UIBolt {
         button: TString<'static>,
         active: usize,
         items: [TString<'static>; MAX_CHECKLIST_ITEMS],
+        _back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
         for (i, item) in items.into_iter().enumerate() {

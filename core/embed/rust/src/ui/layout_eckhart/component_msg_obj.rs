@@ -8,15 +8,15 @@ use super::firmware::{
     TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
 use crate::micropython::{Error, Obj};
-use crate::ui::component::MsgMap;
+use crate::ui::component::text::paragraphs::{Checklist, ParagraphVecShort};
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{
     text::paragraphs::{ParagraphSource, Paragraphs},
     Component, Timeout,
 };
-use crate::ui::flow::FlowMsg;
+use crate::ui::component::{FlowMsg, MsgMap};
 use crate::ui::layout::obj::ComponentMsgObj;
-use crate::ui::layout::result::{CANCELLED, CONFIRMED, INFO};
+use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 
 impl ComponentMsgObj for PinKeyboard<'_> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
@@ -136,6 +136,19 @@ impl<T: ValueInput> ComponentMsgObj for ValueInputScreen<T> {
     }
 }
 
+/// Layout returned by `show_checklist`: the checklist of backup steps with an
+/// optional back button (chevron-up) in place of the cancel button.
+pub type ChecklistScreen =
+    MsgMap<TextScreen<Checklist<ParagraphVecShort<'static>>>, fn(TextScreenMsg) -> Option<FlowMsg>>;
+
+impl ComponentMsgObj for ChecklistScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        // `TryFrom<FlowMsg> for Obj` covers all the emitted variants,
+        // including `FlowMsg::Back`.
+        msg.try_into()
+    }
+}
+
 /// Layout returned by `request_number`: the number input screen with the
 /// "more info" menu button in the header.
 pub type RequestNumberScreen =
@@ -148,6 +161,7 @@ impl ComponentMsgObj for RequestNumberScreen {
         let value: u32 = self.inner().value();
         match msg {
             FlowMsg::Confirmed => Ok((CONFIRMED.as_obj(), value).try_into()?),
+            FlowMsg::Back => Ok((BACK.as_obj(), value).try_into()?),
             FlowMsg::Info => Ok((INFO.as_obj(), value).try_into()?),
             msg => msg.try_into(),
         }
