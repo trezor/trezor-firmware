@@ -804,7 +804,7 @@ impl FirmwareUI for UIDelizia {
         _button: TString<'static>,
         active: usize,
         items: [TString<'static>; MAX_CHECKLIST_ITEMS],
-        _back_button: bool,
+        back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
         for (i, item) in items.into_iter().enumerate() {
@@ -833,13 +833,21 @@ impl FirmwareUI for UIDelizia {
         .with_icon_done_color(theme::GREEN)
         .with_done_offset(theme::CHECKLIST_DONE_OFFSET);
 
-        let layout = RootComponent::new(SwipeUpScreen::new(
-            Frame::with_header(
-                Header::left_aligned(title),
-                SwipeContent::new(checklist_content),
-            )
-            .with_swipeup_footer(None),
-        ));
+        // When going back is possible, the header has a menu button emitting
+        // `FlowMsg::Info`; the menu itself is external, shown from Python.
+        let header = if back_button {
+            Header::left_aligned(title).with_menu_button()
+        } else {
+            Header::left_aligned(title)
+        };
+        let frame = Frame::with_header(header, SwipeContent::new(checklist_content))
+            .with_swipeup_footer(None);
+        let frame = if back_button {
+            frame.with_external_menu()
+        } else {
+            frame
+        };
+        let layout = RootComponent::new(SwipeUpScreen::new(frame));
         Ok(layout)
     }
 

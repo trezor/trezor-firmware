@@ -190,7 +190,7 @@ def test_backup_slip39_advanced(
     assert expected_ms == actual_ms
 
 
-@pytest.mark.models("eckhart")  # going back is supported only on Eckhart
+@pytest.mark.models("delizia,eckhart")  # going back is supported on these layouts
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 def test_backup_slip39_basic_back_navigation(
     session: Session, backup_method: messages.BackupMethod
@@ -216,15 +216,13 @@ def test_backup_slip39_basic_back_navigation(
     assert expected_ms == actual_ms
 
 
-@pytest.mark.models("eckhart")  # going back is supported only on Eckhart
+@pytest.mark.models("delizia,eckhart")  # going back is supported on these layouts
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
 def test_backup_slip39_advanced_back_navigation(
     session: Session, backup_method: messages.BackupMethod
 ):
     with session.test_ctx as client:
-        IF = InputFlowSlip39AdvancedBackupBackNavigation(
-            session, method=backup_method
-        )
+        IF = InputFlowSlip39AdvancedBackupBackNavigation(session, method=backup_method)
         client.set_input_flow(IF.get())
         device.backup(session, backup_method=backup_method)
 

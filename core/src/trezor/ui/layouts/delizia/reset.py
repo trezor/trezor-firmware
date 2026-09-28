@@ -89,6 +89,10 @@ async def select_word(
     return words[result]
 
 
+async def _go_back() -> ui.UiResult:
+    return trezorui_api.BACK
+
+
 async def slip39_show_checklist(
     step: int,
     advanced: bool,
@@ -96,19 +100,39 @@ async def slip39_show_checklist(
     threshold: int | None = None,
     back_button: bool = False,
 ) -> ui.UiResult:
+    from trezor.ui.layouts.menu import Menu, MenuLeaf, show_menu
+
     items = _slip_39_checklist_items(step, advanced, count, threshold)
     with trezorui_api.show_checklist(
         title=TR.reset__title_shamir_backup,
         button=TR.buttons__continue,
         active=step,
         items=items,
+        back_button=back_button,
     ) as layout:
-        result = await interact(
-            layout, "slip39_checklist", ButtonRequestType.ResetDevice
-        )
-    if result != CONFIRMED:
-        raise ActionCancelled
-    return result
+        br_name_once: str | None = "slip39_checklist"
+        while True:
+            result = await interact(
+                layout,
+                br_name_once,
+                ButtonRequestType.ResetDevice,
+                raise_on_cancel=None,
+            )
+            br_name_once = None  # ButtonRequest should be sent only once
+
+            if result is CONFIRMED:
+                return result
+
+            if result is trezorui_api.INFO:
+                # shows the menu with the "go back" option
+                menu_result = await show_menu(
+                    Menu([MenuLeaf(TR.buttons__go_back, _go_back)])
+                )
+                if menu_result is not None:
+                    return menu_result.value  # BACK
+            else:
+                # not reachable from the UI, only via debuglink
+                raise ActionCancelled
 
 
 def _slip_39_checklist_items(
@@ -153,8 +177,8 @@ async def _prompt_number(
     min_count: int,
     max_count: int,
     br_name: str,
-) -> int:
-    from trezor.ui.layouts.menu import Menu, leaf_from_layout, show_menu
+) -> int | ui.UiResult:
+    from trezor.ui.layouts.menu import Menu, MenuLeaf, leaf_from_layout, show_menu
 
     with trezorui_api.request_number(
         title=title,
@@ -174,7 +198,8 @@ async def _prompt_number(
             br_name_once = None  # ButtonRequest should be sent only once
 
             if result is trezorui_api.CANCELLED:
-                raise ActionCancelled  # user cancelled request number prompt
+                # not reachable from the UI, only via debuglink
+                raise ActionCancelled
 
             if __debug__ and not isinstance(result, tuple):
                 # sent by debuglink. debuglink does not change the number of
@@ -187,15 +212,20 @@ async def _prompt_number(
                 return value
 
             if status is trezorui_api.INFO:
-                # shows the menu with the "more info" screen
-                leaf = leaf_from_layout(
-                    TR.buttons__more_info,
-                    lambda: trezorui_api.show_info_with_cancel(
-                        title="",
-                        items=[("", info(value), False)],
+                # shows the menu with "more info" and "go back" options
+                leaves = [
+                    leaf_from_layout(
+                        TR.buttons__more_info,
+                        lambda: trezorui_api.show_info_with_cancel(
+                            title="",
+                            items=[("", info(value), False)],
+                        ),
                     ),
-                )
-                await show_menu(Menu([leaf]))
+                    MenuLeaf(TR.buttons__go_back, _go_back),
+                ]
+                menu_result = await show_menu(Menu(leaves))
+                if menu_result is not None:
+                    return menu_result.value  # BACK
             else:
                 raise RuntimeError
 
