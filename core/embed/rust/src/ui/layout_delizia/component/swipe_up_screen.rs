@@ -1,7 +1,7 @@
 use crate::ui::component::{Component, Event, EventCtx, SwipeDetect};
 use crate::ui::event::SwipeEvent;
 use crate::ui::flow::Swipable;
-use crate::ui::geometry::Rect;
+use crate::ui::geometry::{Direction, Rect};
 use crate::ui::shape::Renderer;
 
 /// Wrapper component adding "swipe up" handling to `content`.
@@ -12,6 +12,7 @@ pub struct SwipeUpScreen<T> {
 
 pub enum SwipeUpScreenMsg<T> {
     Swiped,
+    SwipedDown,
     Content(T),
 }
 
@@ -47,6 +48,9 @@ impl<T: Swipable + Component> Component for SwipeUpScreen<T> {
             .swipe
             .event(ctx, event, self.content.get_swipe_config())
         {
+            Some(SwipeEvent::End(Direction::Down)) => {
+                return Some(SwipeUpScreenMsg::SwipedDown);
+            }
             Some(SwipeEvent::End(_dir)) => {
                 return Some(SwipeUpScreenMsg::Swiped);
             }

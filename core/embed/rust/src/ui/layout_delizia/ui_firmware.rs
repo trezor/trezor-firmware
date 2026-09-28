@@ -4,10 +4,11 @@ use heapless::Vec;
 
 use super::component::{
     check_homescreen_format, Bip39Input, CoinJoinProgress, Frame, FrameMsg, Header, Homescreen,
-    Lockscreen, MnemonicKeyboard, MoreInfoScreen, NumberInputDialog, PinKeyboard, Progress,
-    PromptScreen, ScrolledVerticalMenu, SelectWordCount, SelectWordCountLayout, Slip39Input,
-    StatusScreen, SwipeContent, SwipeUpScreen, TradeScreen, VerticalMenu, VerticalMenuChoiceMsg,
-    VerticalMenuItem, VerticalMenuItems,
+    Lockscreen, MnemonicKeyboard, MoreInfoScreen, NumberInputDialog, NumberInputDialogMsg,
+    PinKeyboard, Progress, PromptScreen, ScrolledVerticalMenu, SelectWordCount,
+    SelectWordCountLayout, Slip39Input, StatusScreen, SwipeContent, SwipeUpScreen,
+    SwipeUpScreenMsg, TradeScreen, VerticalMenu, VerticalMenuChoiceMsg, VerticalMenuItem,
+    VerticalMenuItems,
 };
 use super::flow::{
     self, new_confirm_action_simple, show_info_screen, ConfirmActionExtra,
@@ -657,19 +658,32 @@ impl FirmwareUI for UIDelizia {
         // the header emits `FlowMsg::Info` and the layout returns the
         // currently displayed number along with the result (see
         // `ComponentMsgObj for RequestNumberScreen`).
+        // Swiping down goes back to the previous screen; going back is the
+        // only way out of the prompt -- interrupting the flow is not
+        // possible.
+        let map_fn: fn(SwipeUpScreenMsg<FrameMsg<NumberInputDialogMsg>>) -> Option<FlowMsg> =
+            |msg| match msg {
+                SwipeUpScreenMsg::Content(FrameMsg::Button(b)) => Some(b),
+                SwipeUpScreenMsg::Swiped => Some(FlowMsg::Confirmed),
+                SwipeUpScreenMsg::SwipedDown => Some(FlowMsg::Back),
+                _ => None,
+            };
         let layout = RootComponent::new(
-            Frame::with_header(
-                Header::left_aligned(title).with_menu_button(),
-                SwipeContent::new(NumberInputDialog::new(
-                    min_count as u16,
-                    max_count as u16,
-                    count as u16,
-                    description.unwrap(),
-                )?),
+            SwipeUpScreen::new(
+                Frame::with_header(
+                    Header::left_aligned(title).with_menu_button(),
+                    SwipeContent::new(NumberInputDialog::new(
+                        min_count as u16,
+                        max_count as u16,
+                        count as u16,
+                        description.unwrap(),
+                    )?),
+                )
+                .with_swipeup_footer(None)
+                .with_swipe(Direction::Down, SwipeSettings::Default)
+                .with_external_menu(),
             )
-            .with_swipeup_footer(None)
-            .with_external_menu()
-            .map_to_button_msg(),
+            .map(map_fn),
         );
         Ok(layout)
     }
@@ -804,7 +818,7 @@ impl FirmwareUI for UIDelizia {
         _button: TString<'static>,
         active: usize,
         items: [TString<'static>; MAX_CHECKLIST_ITEMS],
-        _back_button: bool,
+        back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
         for (i, item) in items.into_iter().enumerate() {
@@ -833,13 +847,20 @@ impl FirmwareUI for UIDelizia {
         .with_icon_done_color(theme::GREEN)
         .with_done_offset(theme::CHECKLIST_DONE_OFFSET);
 
-        let layout = RootComponent::new(SwipeUpScreen::new(
-            Frame::with_header(
-                Header::left_aligned(title),
-                SwipeContent::new(checklist_content),
-            )
-            .with_swipeup_footer(None),
-        ));
+        let frame = Frame::with_header(
+            Header::left_aligned(title),
+            SwipeContent::new(checklist_content),
+        )
+        .with_swipeup_footer(None);
+        // Going back (by swiping down, converted to `BACK` by
+        // `ComponentMsgObj for SwipeUpScreen`) is the only way out of the
+        // checklist -- interrupting the flow is not possible.
+        let frame = if back_button {
+            frame.with_swipe(Direction::Down, SwipeSettings::Default)
+        } else {
+            frame
+        };
+        let layout = RootComponent::new(SwipeUpScreen::new(frame));
         Ok(layout)
     }
 

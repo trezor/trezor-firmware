@@ -18,7 +18,7 @@ use crate::ui::component::{
 use crate::ui::component::{Component, FlowMsg, MsgMap, Never};
 use crate::ui::flow::Swipable;
 use crate::ui::layout::obj::ComponentMsgObj;
-use crate::ui::layout::result::{CANCELLED, CONFIRMED, INFO};
+use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 
 impl TryFrom<SelectWordCountMsg> for Obj {
     type Error = Error;
@@ -120,6 +120,7 @@ impl<T: Component + ComponentMsgObj + Swipable> ComponentMsgObj for SwipeUpScree
         match msg {
             SwipeUpScreenMsg::Content(c) => self.inner().msg_try_into_obj(c),
             SwipeUpScreenMsg::Swiped => Ok(CONFIRMED.as_obj()),
+            SwipeUpScreenMsg::SwipedDown => Ok(BACK.as_obj()),
         }
     }
 }
@@ -147,19 +148,21 @@ where
 }
 
 /// Layout returned by `request_number`: the number input screen with the
-/// "more info" menu button in the header.
+/// "more info" menu button in the header. Swiping down emits
+/// `FlowMsg::Back`.
 pub type RequestNumberScreen = MsgMap<
-    Frame<SwipeContent<NumberInputDialog>>,
-    fn(FrameMsg<NumberInputDialogMsg>) -> Option<FlowMsg>,
+    SwipeUpScreen<Frame<SwipeContent<NumberInputDialog>>>,
+    fn(SwipeUpScreenMsg<FrameMsg<NumberInputDialogMsg>>) -> Option<FlowMsg>,
 >;
 
 impl ComponentMsgObj for RequestNumberScreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         // Return not only the result, but also the currently displayed number,
         // so that Python can e.g. show the corresponding "more info" text.
-        let value: u16 = self.inner().inner().inner().value();
+        let value: u16 = self.inner().inner().inner().inner().value();
         match msg {
             FlowMsg::Confirmed | FlowMsg::Next => Ok((CONFIRMED.as_obj(), value).try_into()?),
+            FlowMsg::Back => Ok((BACK.as_obj(), value).try_into()?),
             FlowMsg::Info => Ok((INFO.as_obj(), value).try_into()?),
             msg => msg.try_into(),
         }
