@@ -420,6 +420,7 @@ pub trait FirmwareUI {
         button: TString<'static>,
         active: usize,
         items: [TString<'static>; MAX_CHECKLIST_ITEMS],
+        back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_danger(

@@ -36,8 +36,10 @@ from ..input_flows import (
     FlowAdapter,
     InputFlowBip39Backup,
     InputFlowSlip39AdvancedBackup,
+    InputFlowSlip39AdvancedBackupBackNavigation,
     InputFlowSlip39AdvancedCustomBackup,
     InputFlowSlip39BasicBackup,
+    InputFlowSlip39BasicBackupBackNavigation,
     InputFlowSlip39CustomBackup,
     normal,
     try_to_cancel,
@@ -185,6 +187,61 @@ def test_backup_slip39_advanced(
     actual_ms = shamir.combine_mnemonics(
         IF.mnemonics[:3] + IF.mnemonics[5:8] + IF.mnemonics[10:13]
     )
+    assert expected_ms == actual_ms
+
+
+@pytest.mark.models("eckhart")  # going back is supported only on Eckhart
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
+def test_backup_slip39_basic_back_navigation(
+    session: Session, backup_method: messages.BackupMethod
+):
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicBackupBackNavigation(session, method=backup_method)
+        client.set_input_flow(IF.get())
+        device.backup(session, backup_method=backup_method)
+
+    session.refresh_features()
+    assert session.features.initialized is True
+    assert (
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
+    assert session.features.backup_type is messages.BackupType.Slip39_Basic
+
+    # the flow went back and forth and settled on 3-of-3 shares
+    assert len(IF.mnemonics) == 3
+    expected_ms = shamir.combine_mnemonics(MNEMONIC_SLIP39_BASIC_20_3of6)
+    actual_ms = shamir.combine_mnemonics(IF.mnemonics)
+    assert expected_ms == actual_ms
+
+
+@pytest.mark.models("eckhart")  # going back is supported only on Eckhart
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
+def test_backup_slip39_advanced_back_navigation(
+    session: Session, backup_method: messages.BackupMethod
+):
+    with session.test_ctx as client:
+        IF = InputFlowSlip39AdvancedBackupBackNavigation(
+            session, method=backup_method
+        )
+        client.set_input_flow(IF.get())
+        device.backup(session, backup_method=backup_method)
+
+    session.refresh_features()
+    assert session.features.initialized is True
+    assert (
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
+    assert session.features.backup_type is messages.BackupType.Slip39_Advanced
+
+    # the flow went back and forth and settled on groups 2-of-3 and 3-of-5
+    # with group threshold 2
+    assert [len(group) for group in IF.mnemonics] == [3, 5]
+    expected_ms = shamir.combine_mnemonics(MNEMONIC_SLIP39_ADVANCED_20)
+    actual_ms = shamir.combine_mnemonics(IF.mnemonics[0][:2] + IF.mnemonics[1][:3])
     assert expected_ms == actual_ms
 
 
