@@ -157,3 +157,57 @@ with `head_size == 0` inside an array would defeat the heads bounds pre-check
 (`array_length * 0`), letting an attacker-controlled length word drive an
 unbounded parse loop. Rejecting them guarantees `head_size >= 32` for every
 constructible type.
+
+## Nesting caps, and why unread parameters are skipped
+
+`ABIValue.from_proto` bounds two things: `_MAX_ABI_NESTING` (8), plain
+recursion depth, and `_MAX_NESTED_ARRAYS` (2), the number of `Array` levels on
+a root-to-leaf path. The second is much tighter than the first because array
+levels do not merely nest, they *multiply*.
+
+Element heads are offset words, and the bounds pre-check only verifies that
+the heads fit - nothing stops many heads from pointing at the **same** body.
+One array body can therefore be re-parsed once per pointing head, and each
+extra array level multiplies that again. Within the 6144-byte calldata
+budget, a hostile descriptor plus calldata gets roughly:
+
+| shape | node visits | value tree |
+| --- | --- | --- |
+| `RouterPath[]` (2 array levels) | ~1.1k | ~30 KB |
+| `RouterPath[][]` (3 array levels) | ~49k | ~1.3 MB |
+
+The device heap is 37 KB (`_heap_start`/`_heap_end`). The three-level case is
+not slow, it is a `MemoryError` - and `MemoryError` is not a
+`ClearSigningFailed`, so it would escape the blind-signing fallback in
+`sign_tx` rather than degrade gracefully. That is why the cap stays at 2.
+
+Real router calldata does exceed it. OKX's `smartSwapByOrderId` takes
+`batches` as `RouterPath[][]`, three levels once the `address[]` inside the
+element struct is counted. But no descriptor ever *displays* `batches` - the
+deeply nested arguments are route plumbing, not something a user confirms.
+
+So `_build_parameter_definitions` decodes only the top-level parameters some
+display field reads. ABI decoding is positional, so the others cannot simply
+be dropped; each is replaced by a `SkippedParameter` that consumes its head
+span and decodes nothing. `_head_span` derives that span from the wire
+descriptor without ever entering an array, so it stays cheap and total even
+for a shape `from_proto` would refuse.
+
+The rules that keep this honest:
+
+* **A parameter some field reads is still built normally.** If a path does
+  point into an over-cap shape, `from_proto` raises and the display format is
+  dropped, exactly as before - never a silently blank row.
+* **Anything unrecognised means "decode everything".**
+  `_read_parameter_indices` returns `None` for an empty path, an out-of-range
+  index, or a slice as the first step, rather than guess.
+* **Formatter paths count as reads.** `TokenAmountFormatter.token_path` and
+  `CalldataFormatter.callee_path` are walked through the `PathWalker`, so
+  they keep their parameter alive even when no field `path` names it.
+* **`approve`/`transfer` are never pruned.** `_handle_approve` and
+  `_handle_transfer` index the parsed parameters positionally instead of
+  through a path, so a skipped one would read back as `None`. Both shapes are
+  shallow anyway.
+
+Only top-level parameters are skipped. Inside a parameter that *is* displayed,
+every level is decoded as before, and the caps apply unchanged.

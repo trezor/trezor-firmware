@@ -34,11 +34,15 @@ if not utils.BITCOIN_ONLY:
         InvalidFormatDefinition,
         OutOfBounds,
         RawFormatter,
+        SkippedParameter,
         TokenAmountFormatter,
         Tuple,
         ValueOverflow,
+        _build_parameter_definitions,
         _expand_calldata_field,
         _format_field_value,
+        _head_span,
+        _read_parameter_indices,
         make_fixed_bytes_parser,
         make_int_parser,
         make_uint_parser,
@@ -2264,9 +2268,10 @@ class TestABIValueFromProto(unittest.TestCase):
         # okx `smartSwapByOrderId`s `batches` parameter:
         #   (address[], address[], uint256[], bytes[], uint256)[][]
         # Three array levels - the two on the parameter plus the one inside the
-        # element struct - so it is over the cap and the whole display format
-        # is dropped. This is the deferred case: it flips to accepted once
-        # unreferenced parameters are pruned, since no field ever reads it.
+        # element struct - so it is over the cap and `from_proto` refuses it.
+        # The display format as a whole survives anyway, because no field reads
+        # `batches` and `_build_parameter_definitions` skips it - see
+        # `TestSkippedParameters`.
         element = p_tuple(
             [
                 p_array(p_atomic(EABIT.ABI_ADDRESS)),  # mixAdapters
@@ -2290,6 +2295,206 @@ class TestABIValueFromProto(unittest.TestCase):
         # 99 is not a member of EthereumABIType.
         with self.assertRaises(InvalidFormatDefinition):
             ABIValue.from_proto(p_atomic(99))
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestSkippedParameters(unittest.TestCase):
+    """A top-level parameter no display field reads is not decoded.
+
+    ABI decoding is positional, so the parameter still has to be walked past -
+    `SkippedParameter` consumes its head and nothing else. This is what lets a
+    descriptor keep `_MAX_NESTED_ARRAYS` at 2 while still handling router
+    calldata whose undisplayed route arguments are deeper than that.
+    """
+
+    # okx `RouterPath`:
+    #   (address[] mixAdapters, address[] assetTo, uint256[] rawData,
+    #    bytes[] extraData, uint256 fromToken)
+    ROUTER_PATH = p_tuple(
+        [
+            p_array(p_atomic(EABIT.ABI_ADDRESS)),
+            p_array(p_atomic(EABIT.ABI_ADDRESS)),
+            p_array(p_atomic(EABIT.ABI_UINT256)),
+            p_array(p_dynamic(EABIT.ABI_BYTES)),
+            p_atomic(EABIT.ABI_UINT256),
+        ],
+        is_dynamic=True,
+    )
+    # `BaseRequest`: five static fields, so five words in place
+    BASE_REQUEST = p_tuple(
+        [
+            p_atomic(EABIT.ABI_UINT256),
+            p_atomic(EABIT.ABI_ADDRESS),
+            p_atomic(EABIT.ABI_UINT256),
+            p_atomic(EABIT.ABI_UINT256),
+            p_atomic(EABIT.ABI_UINT256),
+        ],
+        is_dynamic=False,
+    )
+
+    def _field(self, path, formatter=RawFormatter):
+        return FieldDefinition(path, "label", formatter)
+
+    # --- head spans -------------------------------------------------------
+
+    def test_head_span_of_dynamic_is_one_word(self):
+        # whatever it points at, a dynamic node's head is a single offset word
+        for info in (
+            p_dynamic(EABIT.ABI_BYTES),
+            p_array(p_atomic(EABIT.ABI_ADDRESS)),
+            p_array(p_array(self.ROUTER_PATH)),  # over `_MAX_NESTED_ARRAYS`
+            self.ROUTER_PATH,  # a tuple holding dynamic fields
+        ):
+            self.assertEqual(_head_span(info), 32)
+
+    def test_head_span_of_static_tuple_is_its_fields(self):
+        self.assertEqual(_head_span(p_atomic(EABIT.ABI_UINT256)), 32)
+        self.assertEqual(_head_span(self.BASE_REQUEST), 5 * 32)
+        # static tuples nest in place
+        nested = p_tuple(
+            [p_atomic(EABIT.ABI_UINT8), self.BASE_REQUEST], is_dynamic=False
+        )
+        self.assertEqual(_head_span(nested), 6 * 32)
+
+    def test_head_span_of_tuple_with_deep_dynamic_field_is_one_word(self):
+        # dynamism is transitive: a tuple holding a static-looking tuple that
+        # itself holds an array is dynamic, so one offset word - not a sum.
+        inner = p_tuple(
+            [p_atomic(EABIT.ABI_UINT8), p_array(p_atomic(EABIT.ABI_ADDRESS))],
+            is_dynamic=True,
+        )
+        outer = p_tuple([p_atomic(EABIT.ABI_UINT8), inner], is_dynamic=True)
+        self.assertEqual(_head_span(outer), 32)
+
+    def test_head_span_rejects_malformed_nodes(self):
+        with self.assertRaises(InvalidFormatDefinition):
+            _head_span(EthereumABIValueInfo())  # no variant set
+        with self.assertRaises(InvalidFormatDefinition):
+            _head_span(p_tuple([], is_dynamic=False))  # zero fields
+
+    def test_head_span_is_depth_bounded(self):
+        # a descriptor cannot drive unbounded recursion here either
+        node = p_atomic(EABIT.ABI_UINT256)
+        for _ in range(50):
+            node = p_tuple([node], is_dynamic=False)
+        with self.assertRaises(InvalidFormatDefinition):
+            _head_span(node)
+
+    # --- which parameters count as read -----------------------------------
+
+    def test_read_indices_from_field_paths(self):
+        fields = [self._field((2, 0)), self._field((4, 1, 3))]
+        self.assertEqual(_read_parameter_indices(fields, 5), {2, 4})
+
+    def test_read_indices_include_formatter_paths(self):
+        # `token_path` and `callee_path` are walked too, so they keep their
+        # parameter alive even though no field `path` names it
+        fields = [
+            self._field((0,), TokenAmountFormatter(token_path=(3, 1))),
+            self._field((1,), CalldataFormatter(callee_path=(2,))),
+        ]
+        self.assertEqual(_read_parameter_indices(fields, 4), {0, 1, 2, 3})
+
+    def test_read_indices_ignore_container_and_const_paths(self):
+        fields = [
+            self._field(ContainerPath.To),
+            self._field("a literal constant"),
+            self._field((1,), TokenAmountFormatter(token_path=ContainerPath.To)),
+        ]
+        self.assertEqual(_read_parameter_indices(fields, 3), {1})
+
+    def test_read_indices_bail_out_on_anything_unexpected(self):
+        # `None` means "decode everything": we never prune on a path we do not
+        # fully understand, and we leave rejecting it to `parse_calldata`.
+        for path in (
+            (),  # empty path
+            ((0, 4),),  # a slice as the very first step
+            (9,),  # out of range
+            (-1,),  # ditto
+        ):
+            self.assertIsNone(_read_parameter_indices([self._field(path)], 3))
+
+    # --- building the parameter list --------------------------------------
+
+    def test_unread_parameter_is_skipped(self):
+        params = [p_atomic(EABIT.ABI_UINT256), p_atomic(EABIT.ABI_ADDRESS)]
+        built = _build_parameter_definitions(
+            params, [self._field((1,))], b"\x01\x02\x03\x04"
+        )
+        self.assertIsInstance(built[0], SkippedParameter)
+        self.assertIsInstance(built[1], Atomic)
+
+    def test_over_cap_parameter_survives_when_unread(self):
+        # okx `smartSwapByOrderId`: `batches` is `RouterPath[][]`, three array
+        # levels, which `ABIValue.from_proto` refuses. No field reads it, so
+        # the descriptor is usable anyway.
+        params = [
+            p_atomic(EABIT.ABI_UINT256),  # 0 orderId
+            self.BASE_REQUEST,  # 1 baseRequest
+            p_array(p_atomic(EABIT.ABI_UINT256)),  # 2 batchesAmount
+            p_array(p_array(self.ROUTER_PATH)),  # 3 batches  <- over the cap
+        ]
+        with self.assertRaises(InvalidFormatDefinition):
+            ABIValue.from_proto(params[3])
+
+        built = _build_parameter_definitions(
+            params, [self._field((1, 2))], b"\x01\x02\x03\x04"
+        )
+        self.assertIsInstance(built[0], SkippedParameter)
+        self.assertIsInstance(built[1], Tuple)
+        self.assertIsInstance(built[2], SkippedParameter)
+        self.assertIsInstance(built[3], SkippedParameter)
+
+        # and it parses: heads are 1 + 5 + 1 + 1 words, `baseRequest` in place
+        calldata = memoryview(
+            to_bytes(7)  # 0   orderId
+            + to_bytes(0x1111)  # 32  baseRequest.fromToken
+            + pad_left(bytes.fromhex("11" * 20))  # 64  .toToken
+            + to_bytes(25 * 10**17)  # 96  .fromTokenAmount
+            + to_bytes(1)  # 128 .minReturnAmount
+            + to_bytes(1790000000)  # 160 .deadLine
+            + to_bytes(8 * 32)  # 192 batchesAmount -> offset
+            + to_bytes(9 * 32)  # 224 batches       -> offset
+            + to_bytes(0)  # 256 batchesAmount: empty
+            + to_bytes(0)  # 288 batches: empty
+        )
+        values, offset = [], 0
+        for node in built:
+            value, consumed = node.parse(calldata, offset)
+            values.append(value)
+            offset += consumed
+        self.assertEqual(offset, 8 * 32)
+        self.assertEqual(values[0], None)  # skipped, not decoded
+        self.assertEqual(values[1][2], 25 * 10**17)  # fromTokenAmount
+        self.assertEqual(values[3], None)  # `batches` never touched
+
+    def test_over_cap_parameter_still_rejected_when_read(self):
+        # a field that *does* read it must fail the whole display format,
+        # loudly - never silently render a `None`
+        params = [p_array(p_array(self.ROUTER_PATH))]
+        with self.assertRaises(InvalidFormatDefinition):
+            _build_parameter_definitions(
+                params, [self._field((0, 0, 0, 4))], b"\x01\x02\x03\x04"
+            )
+
+    def test_builtin_selectors_are_never_pruned(self):
+        # `_handle_approve` / `_handle_transfer` index the parsed parameters
+        # positionally, not through a path, so a skipped one would read as
+        # `None`. Neither selector may be pruned, whatever the fields say.
+        params = [p_atomic(EABIT.ABI_ADDRESS), p_atomic(EABIT.ABI_UINT256)]
+        for display_format in (
+            clear_signing_definitions.APPROVE_DISPLAY_FORMAT,
+            clear_signing_definitions.TRANSFER_DISPLAY_FORMAT,
+        ):
+            built = _build_parameter_definitions(
+                params, [self._field(ContainerPath.To)], display_format.func_sig
+            )
+            for node in built:
+                self.assertIsInstance(node, Atomic)
+
+    def test_skipped_parameter_is_bounds_checked(self):
+        with self.assertRaises(OutOfBounds):
+            SkippedParameter(32).parse(memoryview(b"\x00" * 31), 0)
 
 
 if __name__ == "__main__":

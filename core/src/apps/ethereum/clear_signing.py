@@ -808,6 +808,74 @@ class Array(ABIValue):
         return value
 
 
+class SkippedParameter(ABIValue):
+    """A top-level parameter that no display field ever reads.
+
+    ABI decoding is positional, so a parameter cannot simply be dropped - the
+    ones after it are found by walking past its head. But nothing forces us to
+    decode its *body*: all we need is its head span, which `_head_span` derives
+    from the wire descriptor without ever descending into an array. The parsed
+    value is `None`, and `get_value_for_path` already returns `None` for a path
+    that walks into it.
+
+    This is what keeps `_MAX_NESTED_ARRAYS` at 2. The shapes that exceed the
+    cap in practice (OKX's `batches`, `(address[], address[], uint256[],
+    bytes[], uint256)[][]`) are exactly the shapes no descriptor displays, so
+    skipping them costs nothing and avoids paying for a third array level -
+    see the note in README.md on why that level is not free."""
+
+    is_dynamic = False
+
+    def __init__(self, head_size: int) -> None:
+        self.head_size = head_size
+
+    def parse(
+        self, raw_data: memoryview, offset: int, block_start: int = 0
+    ) -> tuple[AnyValue, int]:
+        # `is_dynamic` is False, so the base `parse` would call `parse_body`;
+        # override instead, to consume the head without following the pointer.
+        if offset + self.head_size > len(raw_data):
+            raise OutOfBounds
+        return None, self.head_size
+
+
+def _is_dynamic(info: EthereumABIValueInfo, depth: int = 0) -> bool:
+    """Whether a wire descriptor node encodes as an offset word.
+
+    Mirrors the `is_dynamic` of the `ABIValue` that `from_proto` would build:
+    arrays and `bytes`/`string` always, a tuple iff any field is - and that is
+    transitive, hence the recursion."""
+    if depth > _MAX_ABI_NESTING:
+        raise InvalidFormatDefinition
+    if info.array is not None or info.dynamic is not None:
+        return True
+    if info.atomic is not None:
+        return False
+    if info.tuple is not None:
+        if not info.tuple.fields:
+            raise InvalidFormatDefinition  # see `Tuple.__init__`
+        return any(_is_dynamic(f, depth + 1) for f in info.tuple.fields)
+    raise InvalidFormatDefinition
+
+
+def _head_span(info: EthereumABIValueInfo, depth: int = 0) -> int:
+    """The head span of a wire descriptor node, without decoding its body.
+
+    A dynamic node's head is a single offset word whatever it points at, so
+    arrays are never entered - which is the point: this must stay cheap and
+    total, even for a shape `ABIValue.from_proto` would reject. Only a static
+    tuple is walked, and its fields are static by definition, so the walk is
+    bounded by the descriptor's own nesting."""
+    if depth > _MAX_ABI_NESTING:
+        raise InvalidFormatDefinition
+    if _is_dynamic(info, depth):
+        return _EVM_WORD_SIZE
+    if info.atomic is not None:
+        return _EVM_WORD_SIZE
+    # a static tuple is its fields laid out back to back, in place
+    return sum(_head_span(f, depth + 1) for f in info.tuple.fields)
+
+
 # https://eips.ethereum.org/EIPS/eip-7730#evm-transaction-container
 
 
@@ -828,6 +896,21 @@ class FieldDefinition:
         self.path = path
         self.label = label
         self.formatter = formatter
+
+    def read_paths(self) -> Iterable[Path]:
+        """Every path this field can walk into the parsed parameters.
+
+        The field's own `path`, plus the auxiliary paths a formatter resolves
+        through the `PathWalker`: `TokenAmountFormatter.token_path` and
+        `CalldataFormatter.callee_path`. A formatter that is still a *class*
+        (the parameterless ones) carries neither."""
+        yield self.path
+        formatter = self.formatter
+        if isinstance(formatter, TokenAmountFormatter):
+            if formatter.token_path is not None:
+                yield formatter.token_path
+        elif isinstance(formatter, CalldataFormatter):
+            yield formatter.callee_path
 
     @staticmethod
     def from_proto(info: EthereumERC7730FieldInfo) -> "FieldDefinition":
@@ -1103,18 +1186,87 @@ class DisplayFormat:
 
         proto = decode_definition(encoded, EthereumDisplayFormatInfo)
 
+        func_sig = bytes(proto.func_sig)
+        field_definitions = [
+            FieldDefinition.from_proto(f) for f in proto.field_definitions
+        ]
+
         return cls(
             binding_context=BindingContext([(proto.chain_id, bytes(proto.address))]),
-            func_sig=bytes(proto.func_sig),
+            func_sig=func_sig,
             intent=proto.intent,
             provider_name=proto.provider_name,
-            parameter_definitions=[
-                ABIValue.from_proto(p) for p in proto.parameter_definitions
-            ],
-            field_definitions=[
-                FieldDefinition.from_proto(f) for f in proto.field_definitions
-            ],
+            parameter_definitions=_build_parameter_definitions(
+                proto.parameter_definitions, field_definitions, func_sig
+            ),
+            field_definitions=field_definitions,
         )
+
+
+def _read_parameter_indices(
+    field_definitions: list[FieldDefinition], count: int
+) -> set[int] | None:
+    """Which top-level parameters the display fields actually read.
+
+    `None` means "could not tell, decode everything" - the safe answer, and
+    the one we give for anything unexpected rather than risk pruning a
+    parameter some path would have walked into.
+
+    A data path is a tuple of steps whose first step indexes `parameters`
+    (see `get_value_for_path`). Container paths (`int`) and literal constants
+    (`str`) read no parameter at all."""
+    read: set[int] = set()
+    for field_definition in field_definitions:
+        for path in field_definition.read_paths():
+            if isinstance(path, (int, str)):
+                continue  # container path or literal constant
+            if not path:
+                # an empty path never resolves; let `parse_calldata` be the
+                # one to reject it, with everything decoded as before
+                return None
+            first = path[0]
+            if not isinstance(first, int):
+                # a slice as the very first step would view the parameter
+                # list itself as bytes - nonsense, but do not prune on it
+                return None
+            if not 0 <= first < count:
+                return None  # out of range; again, not ours to reject
+            read.add(first)
+    return read
+
+
+def _build_parameter_definitions(
+    proto_parameters: list[EthereumABIValueInfo],
+    field_definitions: list[FieldDefinition],
+    func_sig: bytes,
+) -> list[ABIValue]:
+    """Build the parser for each top-level parameter, skipping the unread ones.
+
+    A parameter no field reads is replaced by a `SkippedParameter`, which
+    consumes its head so the following parameters are still found, and decodes
+    nothing. That keeps the descriptor usable even when the unread parameter's
+    shape is one `ABIValue.from_proto` refuses - which is the common case for
+    router calldata: the deeply nested route/batch arguments are the ones
+    never displayed."""
+    from .clear_signing_definitions import (
+        APPROVE_DISPLAY_FORMAT,
+        TRANSFER_DISPLAY_FORMAT,
+    )
+
+    read = _read_parameter_indices(field_definitions, len(proto_parameters))
+    if func_sig in (APPROVE_DISPLAY_FORMAT.func_sig, TRANSFER_DISPLAY_FORMAT.func_sig):
+        # `_handle_approve` / `_handle_transfer` index the parsed parameters
+        # positionally rather than through a path, so a skipped one would read
+        # back as `None`. These two shapes are shallow anyway.
+        read = None
+
+    parameter_definitions: list[ABIValue] = []
+    for i, info in enumerate(proto_parameters):
+        if read is not None and i not in read:
+            parameter_definitions.append(SkippedParameter(_head_span(info)))
+        else:
+            parameter_definitions.append(ABIValue.from_proto(info))
+    return parameter_definitions
 
 
 async def request_definitions(
