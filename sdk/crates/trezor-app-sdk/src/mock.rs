@@ -24,7 +24,7 @@ use stabby::str::Str;
 use crate::traits::ApiVariant;
 use crate::traits::allocator::{FfiLayout, GlobalAllocatorV1, GlobalAllocatorV1Vtable};
 use crate::traits::crypto::{
-    BoxedHasher, CryptoError, CryptoV1, CryptoV1Vtable, EcCurve, HashingAlgorithm, Hasher,
+    BoxedHasher, CryptoError, CryptoV1, CryptoV1Vtable, EcCurve, Hasher, HashingAlgorithm,
 };
 use crate::traits::syslog::{
     LogCallbackDyn as _, LogCallbackRef, LogLevel, LogRecord, SyslogV1, SyslogV1Vtable,
@@ -52,8 +52,6 @@ use crate::traits::wire::{WireError, WireMessage, WireV1, WireV1Vtable};
 struct DummyApi;
 
 impl TrezorApiV1 for DummyApi {
-    extern "C" fn init(&self, _inbox_words: usize) {}
-
     extern "C" fn system_exit(&self) -> ! {
         panic!("app called system_exit")
     }
@@ -276,7 +274,10 @@ impl SyslogV1 for DummySyslog {
 struct DummyWire;
 
 impl WireV1 for DummyWire {
-    extern "C" fn wire_receive_start(&self, _timeout_ms: u32) -> FastResult<WireMessage, WireError> {
+    extern "C" fn wire_receive_start(
+        &self,
+        _timeout_ms: u32,
+    ) -> FastResult<WireMessage, WireError> {
         Err(WireError::Timeout).into()
     }
 
@@ -297,7 +298,11 @@ impl WireV1 for DummyWire {
         Err(WireError::FailedToSend).into()
     }
 
-    extern "C" fn wire_error<'a>(&self, _code: u16, _message: Str<'a>) -> FastResult<(), WireError> {
+    extern "C" fn wire_error<'a>(
+        &self,
+        _code: u16,
+        _message: Str<'a>,
+    ) -> FastResult<(), WireError> {
         Err(WireError::FailedToSend).into()
     }
 }
