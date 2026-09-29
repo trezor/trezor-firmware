@@ -570,8 +570,10 @@ pub enum Severity {
     Success,
     /// The flow finished; the person goes back to the host.
     ///
-    /// The last screen an app shows. Nothing on the device follows it, so it
-    /// does not wait to be answered.
+    /// The last screen an app shows. Nothing on the device follows it, so
+    /// the call does not wait for the person to dismiss it — the host's
+    /// response should not wait on an acknowledgement. What the screen does
+    /// after the call returns is the model's business.
     Done,
     /// Something to read before going on. Nothing is at stake.
     Info,
