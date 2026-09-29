@@ -56,6 +56,7 @@ include_icon!(ICON_CLICK, "layout_bolt/res/finger24.toif");
 
 include_icon!(ICON_CORNER_CANCEL, "layout_bolt/res/x32.toif");
 include_icon!(ICON_CORNER_INFO, "layout_bolt/res/info32.toif");
+include_icon!(ICON_CORNER_MENU, "layout_bolt/res/menu32.toif");
 
 // Checklist symbols.
 include_icon!(ICON_LIST_CURRENT, "layout_bolt/res/arrow-right16.toif");

@@ -4,10 +4,10 @@ use core::cmp::Ordering;
 use super::component::FidoConfirm;
 use super::component::{
     check_homescreen_format, AddressDetails, Bip39Input, Button, ButtonMsg, ButtonPage,
-    ButtonStyleSheet, CancelConfirmMsg, CoinJoinProgress, Dialog, Frame, Homescreen, IconDialog,
-    Lockscreen, MnemonicKeyboard, NumberInputDialog, PassphraseKeyboard, PinKeyboard, Progress,
-    SelectMenu, SelectWordCount, SelectWordCountLayout, SetBrightnessDialog, ShareWords,
-    SimplePage, Slip39Input,
+    ButtonStyleSheet, CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress, Dialog, Frame,
+    FrameMsg, Homescreen, IconDialog, Lockscreen, MnemonicKeyboard, NumberInputDialog,
+    NumberInputDialogMsg, PassphraseKeyboard, PinKeyboard, Progress, SelectMenu, SelectWordCount,
+    SelectWordCountLayout, SetBrightnessDialog, ShareWords, SimplePage, Slip39Input,
 };
 use super::{fonts, theme, UIBolt};
 use crate::io::BinaryData;
@@ -26,7 +26,7 @@ use crate::ui::component::text::paragraphs::{
 };
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
-    Border, ComponentExt, Empty, FormattedText, Jpeg, Label, Never, Timeout,
+    Border, ComponentExt, Empty, FlowMsg, FormattedText, Jpeg, Label, Never, Timeout,
 };
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
@@ -667,11 +667,28 @@ impl FirmwareUI for UIBolt {
         more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         debug_assert!(more_info_callback.is_some());
-        let layout = RootComponent::new(Frame::left_aligned(
-            theme::label_title(),
-            title,
-            NumberInputDialog::new(min_count, max_count, count, more_info_callback.unwrap())?,
-        ));
+        // The "more info" content is driven from Python: the menu button in
+        // the header emits `FlowMsg::Info` and the layout returns the
+        // currently displayed number along with the result (see
+        // `ComponentMsgObj for RequestNumberScreen`).
+        // The up-arrow button on the left goes back to the previous screen;
+        // going back is the only way out of the prompt -- interrupting the
+        // flow is not possible.
+        let map_fn: fn(FrameMsg<NumberInputDialogMsg>) -> Option<FlowMsg> = |msg| match msg {
+            FrameMsg::Content(NumberInputDialogMsg::Selected) => Some(FlowMsg::Confirmed),
+            FrameMsg::Content(NumberInputDialogMsg::Back) => Some(FlowMsg::Back),
+            FrameMsg::Button(CancelInfoConfirmMsg::Info) => Some(FlowMsg::Info),
+            _ => None,
+        };
+        let layout = RootComponent::new(
+            Frame::left_aligned(
+                theme::label_title(),
+                title,
+                NumberInputDialog::new(min_count, max_count, count, more_info_callback.unwrap())?,
+            )
+            .with_menu_button()
+            .map(map_fn),
+        );
         Ok(layout)
     }
 
@@ -819,7 +836,7 @@ impl FirmwareUI for UIBolt {
         button: TString<'static>,
         active: usize,
         items: [TString<'static>; MAX_CHECKLIST_ITEMS],
-        _back_button: bool,
+        back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
         for (i, item) in items.into_iter().enumerate() {
@@ -846,9 +863,7 @@ impl FirmwareUI for UIBolt {
                 .with_check_width(theme::CHECKLIST_CHECK_WIDTH)
                 .with_current_offset(theme::CHECKLIST_CURRENT_OFFSET)
                 .with_done_offset(theme::CHECKLIST_DONE_OFFSET),
-                theme::button_bar(Button::with_text(button).map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
-                })),
+                Button::back_confirm(Button::with_text(button), back_button),
             ),
         ));
         Ok(layout)

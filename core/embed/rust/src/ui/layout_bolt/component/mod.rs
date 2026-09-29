@@ -40,8 +40,8 @@ mod welcome_screen;
 #[cfg(all(feature = "micropython", feature = "translations"))]
 pub use address_details::AddressDetails;
 pub use button::{
-    Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
-    CancelInfoConfirmMsg, IconText, SelectWordMsg,
+    BackConfirmMsg, Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet,
+    CancelConfirmMsg, CancelInfoConfirmMsg, IconText, SelectWordMsg,
 };
 #[cfg(feature = "translations")]
 pub use coinjoin_progress::CoinJoinProgress;
