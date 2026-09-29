@@ -4,14 +4,13 @@
 //! [`UiV1`](crate::traits::ui::UiV1) vtable handed to this app, and returns
 //! Core's response.
 
+use crate::app_runtime2::get_ui_or_die;
 pub use crate::traits::ui::{
     ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
     ConfirmValueIntro, ConfirmWithInfo, Property, RequestNumber, SelectMenu, ShowAddress,
     ShowDanger, ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess,
     ShowWarning, StrExt, TrezorUiResult,
 };
-
-use crate::app_runtime2::get_ui_or_die;
 use crate::traits::ui::{UiV1Dyn as _, opt_bytes};
 use crate::{Error, IntoAppResult, Result};
 
@@ -327,9 +326,7 @@ pub fn show_properties<'a>(show_properties: ShowProperties<'a>) -> Result<()> {
 }
 
 pub fn show_warning<'a>(show_warning: ShowWarning<'a>) -> Result<()> {
-    get_ui_or_die()
-        .show_warning(show_warning)
-        .into_app_result()
+    get_ui_or_die().show_warning(show_warning).into_app_result()
 }
 
 pub fn show_info_with_cancel<'a>(show_info_with_cancel: ShowInfoWithCancel<'a>) -> UiResult {
@@ -355,9 +352,7 @@ pub fn show_danger<'a>(show_danger: ShowDanger<'a>) -> UiResult {
 }
 
 pub fn show_success<'a>(show_success: ShowSuccess<'a>) -> Result<()> {
-    get_ui_or_die()
-        .show_success(show_success)
-        .into_app_result()
+    get_ui_or_die().show_success(show_success).into_app_result()
 }
 
 pub fn request_number<'a>(request_number: RequestNumber<'a>) -> UiResult {
@@ -379,9 +374,7 @@ pub fn confirm_with_info<'a>(confirm_with_info: ConfirmWithInfo<'a>) -> UiResult
 }
 
 pub fn show_address<'a>(show_address: ShowAddress<'a>) -> UiResult {
-    get_ui_or_die()
-        .show_address(show_address)
-        .into_app_result()
+    get_ui_or_die().show_address(show_address).into_app_result()
 }
 
 /// Starts a progress indicator, with an optional `description`/`title` and
@@ -394,7 +387,12 @@ pub fn init_progress<'a>(
     danger: bool,
 ) -> Result<()> {
     get_ui_or_die()
-        .init_progress(opt_bytes(description), opt_bytes(title), indeterminate, danger)
+        .init_progress(
+            opt_bytes(description),
+            opt_bytes(title),
+            indeterminate,
+            danger,
+        )
         .into_app_result()
 }
 
