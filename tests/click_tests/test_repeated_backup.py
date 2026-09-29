@@ -145,8 +145,8 @@ def test_repeated_backup_via_device(
     reset.set_selection(debug, 3 - 5)
     # confirm checklist
     reset.confirm_read(debug)
-    # threshold=2
-    reset.set_selection(debug, 2 - 3)
+    # threshold=2 (the default for 3 shares)
+    reset.set_selection(debug, 0)
     # confirm checklist
     reset.confirm_read(debug)
     # confirm backup warning
