@@ -1559,6 +1559,7 @@ async def _handle_generic_ui(
     from . import tokens
     from .helpers import bytes_from_address
     from .layout import require_confirm_clear_signing
+    from .networks import UNKNOWN_NETWORK
     from .sc_constants import lookup_known_address
 
     # Surface the native ETH value in the summary when non-zero - unless one of
@@ -1589,7 +1590,7 @@ async def _handle_generic_ui(
             )
             properties_to_confirm.append(token_address_property)
 
-    recipient_str = (
+    contract_name = (
         (lookup_known_address(msg.chain_id, bytes_from_address(msg.to)) or msg.to)
         if display_format.provider_name is None
         else display_format.provider_name
@@ -1597,12 +1598,20 @@ async def _handle_generic_ui(
 
     account, account_path = get_account_and_path(msg.address_n)
 
+    # Name the chain when we recognize it, otherwise fall back to the bare chain ID.
+    chain_info: StrPropertyType = (
+        (TR.ethereum__approve_chain_id, str(msg.chain_id), None)
+        if defs.network is UNKNOWN_NETWORK
+        else (TR.words__chain, defs.network.name, None)
+    )
+
     await require_confirm_clear_signing(
-        recipient_str=recipient_str,
+        contract_name=contract_name,
         intent=display_format.intent,
         properties=properties_to_confirm,
         maximum_fee=maximum_fee,
         contract_address=address_from_bytes(address_bytes, defs.network),
+        chain_info=chain_info,
         amount=None if value_shown_as_field else amount,
         account=account,
         account_path=account_path,

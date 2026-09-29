@@ -1273,11 +1273,12 @@ if not utils.BITCOIN_ONLY:
         )
 
     async def confirm_ethereum_clear_signing(
-        recipient_str: str,
+        contract_name: str,
         intent: str,
         properties: list[StrPropertyType],
         maximum_fee: str,
         contract_address: str,
+        chain_info: StrPropertyType,
         amount: str | None = None,
         account: str | None = None,
         account_path: str | None = None,
@@ -1292,6 +1293,7 @@ if not utils.BITCOIN_ONLY:
             info_items.append((TR.words__account, account, None))
             info_items.append((TR.address_details__derivation_path, account_path, None))
         info_items.append((TR.ethereum__contract_address, contract_address, None))
+        info_items.append(chain_info)
         info_items = with_colon(info_items)
 
         def _info_ctx() -> trezorui_api.LayoutContext[ui.UiResult]:
@@ -1300,7 +1302,7 @@ if not utils.BITCOIN_ONLY:
                 items=info_items,
             )
 
-        await confirm_action(f"{br_name}/provider", TR.words__provider, recipient_str)
+        await confirm_action(f"{br_name}/provider", TR.words__provider, contract_name)
         await confirm_action(f"{br_name}/intent", TR.words__intent, intent)
         if properties:
             props_ctx = trezorui_api.confirm_properties(
