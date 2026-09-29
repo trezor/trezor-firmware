@@ -16,12 +16,13 @@
 
 from __future__ import annotations
 
+import io
 from collections.abc import Callable
 from typing import Any
 
 import pytest
 
-from trezorlib import ethereum, messages
+from trezorlib import ethereum, messages, protobuf
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutContent
 from trezorlib.exceptions import TrezorFailure
@@ -457,7 +458,7 @@ UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS = {
 
 def _sign_tx_with_display_format(
     session: Session,
-    display_format: messages.EthereumDisplayFormatInfo,
+    display_format: messages.EthereumDisplayFormatInfo | bytes,
     token: dict | None = None,
     sign_tx_params: dict | None = None,
     on_page: Callable[[LayoutContent], None] | None = None,
@@ -600,6 +601,33 @@ def test_clear_signing_with_mismatched_definition(session: Session) -> None:
             UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.field_definitions
         ),
     )
+    on_page, assert_all_seen = make_label_checker(
+        absent=(
+            UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN", "WETH", "USDT"}
+        )
+    )
+    _sign_tx_with_display_format(session, bad_display_format, on_page=on_page)
+    assert_all_seen()
+
+
+@pytest.mark.models("core")
+def test_clear_signing_with_unknown_enum_in_definition(session: Session) -> None:
+    # trezorlib refuses to encode unknown enum values, so the bad entry
+    # is encoded by hand and appended to an otherwise valid definition.
+    WIRE_VARINT, WIRE_LENGTH = 0, 2
+    UNKNOWN_ABI_TYPE = 127  # not a valid `EthereumABIType`
+
+    def field_key(field_number: int, wire_type: int) -> int:
+        return field_number << 3 | wire_type
+
+    # EthereumABIValueInfo { atomic (1) = UNKNOWN_ABI_TYPE }
+    bad_param = bytes([field_key(1, WIRE_VARINT), UNKNOWN_ABI_TYPE])
+    # EthereumDisplayFormatInfo { parameter_definitions (5) += bad_param }
+    extra_param = bytes([field_key(5, WIRE_LENGTH), len(bad_param)]) + bad_param
+
+    writer = io.BytesIO()
+    protobuf.dump_message(writer, UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT)
+    bad_display_format = writer.getvalue() + extra_param
     on_page, assert_all_seen = make_label_checker(
         absent=(
             UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT_LABELS | {"UNKN", "WETH", "USDT"}

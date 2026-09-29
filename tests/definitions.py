@@ -205,7 +205,7 @@ def make_eth_display_format(
 
 
 def encode_eth_display_format(
-    display_format: messages.EthereumDisplayFormatInfo,
+    display_format: messages.EthereumDisplayFormatInfo | bytes,
 ) -> bytes:
     payload = make_payload(
         data_type=messages.DefinitionType.ETHEREUM_DISPLAY_FORMAT,
