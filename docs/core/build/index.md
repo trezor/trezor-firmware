@@ -30,3 +30,19 @@ source .venv/bin/activate
 ```
 
 After completing setup, see [Emulator](emulator.md) or [Embedded](embedded.md) build instructions.
+
+## Nix flakes
+
+[Flakes](https://nixos.wiki/wiki/flakes) are experimental yet widely used feature of the Nix package manager. If you prefer you can use the associated tooling instead of `nix-shell`.
+
+| Classic `nix-shell`                                                  | Flakes equivalent                                          |
+| -------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `nix-shell`                                                          | `nix develop`                                              |
+| `nix-shell --run "uv run bash"`                                      | `nix develop --command uv run bash`                        |
+| `nix-shell --arg fullDeps true --run "uv run make -C core test_emu"` | `nix develop .#everything -c uv run make -C core test_emu` |
+
+Note that as of 2026 flakes need to be enabled in `nix.conf`:
+
+```
+experimental-features = nix-command flakes
+```
