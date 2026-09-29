@@ -224,7 +224,7 @@ app_tool_clippy: ## run clippy on the trezor-app-tool crate
 
 app_tool_test: ## run unit tests for the trezor-app-tool crate
 	@echo [APP-TOOL-TEST]
-	@cd sdk/crates/trezor-app-tool ; cargo test --lib
+	@cd sdk/crates/trezor-app-tool ; cargo test --bins
 
 app_tool_doc: ## build documentation for the trezor-app-tool crate
 	@echo [APP-TOOL-DOC]
