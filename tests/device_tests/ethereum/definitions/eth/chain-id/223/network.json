@@ -1,0 +1,9 @@
+{
+  "data_type": "ETHEREUM_NETWORK",
+  "message": {
+    "chain_id": 223,
+    "symbol": "BTC",
+    "slip44": 60,
+    "name": "B2"
+  }
+}
