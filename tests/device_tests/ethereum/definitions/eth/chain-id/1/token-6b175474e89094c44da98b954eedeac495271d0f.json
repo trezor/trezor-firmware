@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "6b175474e89094c44da98b954eedeac495271d0f",
+    "chain_id": 1,
+    "symbol": "DAI",
+    "decimals": 18,
+    "name": "Dai"
+  }
+}

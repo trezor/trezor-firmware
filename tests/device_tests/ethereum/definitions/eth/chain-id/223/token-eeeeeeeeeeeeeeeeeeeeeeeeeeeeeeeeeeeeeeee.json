@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "chain_id": 223,
+    "symbol": "BTC",
+    "decimals": 18,
+    "name": "B2"
+  }
+}
