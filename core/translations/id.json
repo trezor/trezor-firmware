@@ -861,7 +861,7 @@
     "ethereum__calldata_digest": "Digest ERC-8213",
     "ethereum__calldata_suffix": "Sufiks calldata",
     "ethereum__confirm_contract": "Konfirmasi kontrak",
-    "ethereum__contract_address": "Alamat kontrak penyedia",
+    "ethereum__contract_address": "Alamat kontrak",
     "ethereum__data_size_template": "Ukuran: {0} byte",
     "ethereum__delegate_done": {
       "Bolt": "",
@@ -877,12 +877,6 @@
     "ethereum__eip_712_empty_domain": "dApp tidak identifikasi dirinya!",
     "ethereum__gas_limit": "Batas gas",
     "ethereum__gas_price": "Harga gas",
-    "ethereum__interaction_contract": {
-      "Bolt": "Kontrak interaksi",
-      "Caesar": "Kontrak interaksi",
-      "Delizia": "Kontrak interaksi",
-      "Eckhart": "Alamat kontrak interaksi"
-    },
     "ethereum__max_gas_price": "Biaya maks. per gas",
     "ethereum__name_and_version": "Nama dan versi",
     "ethereum__new_contract": "Kontrak baru akan di-deploy",

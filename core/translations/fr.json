@@ -1022,7 +1022,7 @@
     "ethereum__calldata_digest": "Digest ERC-8213",
     "ethereum__calldata_suffix": "Suffixe de calldata",
     "ethereum__confirm_contract": "Confirmer le contrat",
-    "ethereum__contract_address": "Adresse de contrat",
+    "ethereum__contract_address": "Adresse du contrat",
     "ethereum__data_size_template": "Taille : {0} octets",
     "ethereum__delegate_done": {
       "Bolt": "",
@@ -1038,7 +1038,6 @@
     "ethereum__eip_712_empty_domain": "La dApp ne s'est pas identifiée !",
     "ethereum__gas_limit": "Limite de gas",
     "ethereum__gas_price": "Prix du gas",
-    "ethereum__interaction_contract": "Contrat d'interaction",
     "ethereum__max_gas_price": "Frais max par gas",
     "ethereum__name_and_version": "Nom et version",
     "ethereum__new_contract": "Le nouveau contrat sera déployé",
