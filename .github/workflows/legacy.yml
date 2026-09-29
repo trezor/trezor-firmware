@@ -94,13 +94,12 @@ jobs:
           retention-days: 7
 
   legacy_emu_arm:
-    if: github.event_name == 'schedule'
-    name: Emulator arm
-    runs-on: ubuntu-latest-arm64
+    name: Emulator ARM
+    runs-on: ubuntu-26.04-arm
     timeout-minutes: 20
     strategy:
       matrix:
-        coins: [universal]
+        coins: [universal, btconly]
         type: [debuglink]
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
     env:
