@@ -2730,6 +2730,75 @@ class InputFlowSlip39BasicBackupBackNavigation(InputFlowBase):
         self.mnemonics: list[str] = []
         self.method = method
 
+    def input_flow_caesar(self) -> BRGeneratorType:
+        assert self.method is messages.BackupMethod.Display
+
+        yield  # Backup intro
+        self.debug.press_yes()
+
+        # checklist: set number of shares (no going back from the first step)
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+
+        # number of shares info
+        assert (yield).name == "slip39_shares"
+        self.debug.press_yes()
+
+        # number of shares carousel: navigate to the BACK item and select it
+        assert (yield).name == "slip39_shares"
+        for _ in range(5):  # initial value 5 -> 5 items to the left
+            self.debug.press_left()
+        self.debug.press_middle()
+
+        # checklist: set number of shares
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+
+        # number of shares info
+        assert (yield).name == "slip39_shares"
+        self.debug.press_yes()
+
+        # number of shares carousel: change the default 5 to 3
+        assert (yield).name == "slip39_shares"
+        self.debug.press_left()
+        self.debug.press_left()
+        self.debug.press_middle()
+
+        # checklist: set threshold
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+
+        # threshold info
+        assert (yield).name == "slip39_prompt_threshold"
+        self.debug.press_yes()
+
+        # threshold carousel: change the default 2 to 3
+        assert (yield).name == "slip39_threshold"
+        self.debug.press_right()
+        self.debug.press_middle()
+
+        # checklist: write down the shares -- go back via the up arrow
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_left()
+
+        # threshold info
+        assert (yield).name == "slip39_prompt_threshold"
+        self.debug.press_yes()
+
+        # threshold carousel: the previously entered 3 is preselected
+        assert (yield).name == "slip39_threshold"
+        self.debug.press_middle()
+
+        # checklist: write down the shares
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+
+        yield  # Confirm show seeds
+        self.debug.press_yes()
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_N_shares(self.debug, 3, self.method)
+
     def input_flow_delizia(self) -> BRGeneratorType:
         assert self.method in (
             messages.BackupMethod.Display,
@@ -2892,6 +2961,115 @@ class InputFlowSlip39AdvancedBackupBackNavigation(InputFlowBase):
         super().__init__(client)
         self.mnemonics: list[list[str]] = []
         self.method = method
+
+    def input_flow_caesar(self) -> BRGeneratorType:
+        assert self.method is messages.BackupMethod.Display
+
+        yield  # Backup intro
+        self.debug.press_yes()
+
+        # checklist: set number of groups (no going back from the first step)
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+
+        # number of groups carousel: change the default 5 to 2
+        assert (yield).name == "slip39_groups"
+        for _ in range(3):  # 5 -> 2
+            self.debug.press_left()
+        self.debug.press_middle()
+
+        # checklist: set group threshold
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+
+        # group threshold carousel: keep the default 2
+        assert (yield).name == "slip39_group_threshold"
+        self.debug.press_middle()
+
+        # checklist: set sizes and thresholds of the groups
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+
+        # group 1 shares info
+        assert (yield).name == "slip39_shares"
+        self.debug.press_yes()
+
+        # group 1 shares carousel: change the default 5 to 3
+        assert (yield).name == "slip39_shares"
+        self.debug.press_left()
+        self.debug.press_left()
+        self.debug.press_middle()
+
+        # group 1 threshold info
+        assert (yield).name == "slip39_prompt_threshold"
+        self.debug.press_yes()
+
+        # group 1 threshold carousel: keep the default 2
+        assert (yield).name == "slip39_threshold"
+        self.debug.press_middle()
+
+        # group 2 shares info
+        assert (yield).name == "slip39_shares"
+        self.debug.press_yes()
+
+        # group 2 shares carousel: navigate to the BACK item and select it
+        assert (yield).name == "slip39_shares"
+        for _ in range(5):  # initial value 5 -> 5 items to the left
+            self.debug.press_left()
+        self.debug.press_middle()
+
+        # group 1 threshold info (again, after going back)
+        assert (yield).name == "slip39_prompt_threshold"
+        self.debug.press_yes()
+
+        # group 1 threshold carousel: the previously entered 2 is preselected
+        assert (yield).name == "slip39_threshold"
+        self.debug.press_middle()
+
+        # group 2 shares info
+        assert (yield).name == "slip39_shares"
+        self.debug.press_yes()
+
+        # group 2 shares carousel: keep the default 5
+        assert (yield).name == "slip39_shares"
+        self.debug.press_middle()
+
+        # group 2 threshold info
+        assert (yield).name == "slip39_prompt_threshold"
+        self.debug.press_yes()
+
+        # group 2 threshold carousel: change the default 3 to 4, then navigate
+        # to the BACK item and select it
+        assert (yield).name == "slip39_threshold"
+        self.debug.press_right()  # 3 -> 4
+        for _ in range(3):  # 4 is the third item -> 3 items to the left
+            self.debug.press_left()
+        self.debug.press_middle()
+
+        # group 2 shares info
+        assert (yield).name == "slip39_shares"
+        self.debug.press_yes()
+
+        # group 2 shares carousel: the previously entered 5 is preselected
+        assert (yield).name == "slip39_shares"
+        self.debug.press_middle()
+
+        # group 2 threshold info
+        assert (yield).name == "slip39_prompt_threshold"
+        self.debug.press_yes()
+
+        # group 2 threshold carousel: the default 3 is shown again -- keep it
+        assert (yield).name == "slip39_threshold"
+        self.debug.press_middle()
+
+        yield  # Confirm show seeds
+        self.debug.press_yes()
+
+        # Mnemonic phrases - show & confirm shares for all groups
+        # 2 groups: 2-of-3 and 3-of-5
+        self.mnemonics = yield from load_N_groups(
+            self.debug, [(2, 3), (3, 5)], self.method
+        )
 
     def input_flow_delizia(self) -> BRGeneratorType:
         assert self.method in (

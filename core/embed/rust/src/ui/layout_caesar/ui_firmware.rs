@@ -24,7 +24,8 @@ use crate::ui::component::text::paragraphs::{
 };
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
-    Component, ComponentExt, Empty, FormattedText, Label, LineBreaking, Paginate, Timeout,
+    Component, ComponentExt, Empty, FlowMsg, FormattedText, Label, LineBreaking, Never, PageMsg,
+    Paginate, Timeout,
 };
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
@@ -1004,7 +1005,7 @@ impl FirmwareUI for UICaesar {
         button: TString<'static>,
         active: usize,
         items: [TString<'static>; MAX_CHECKLIST_ITEMS],
-        _back_button: bool,
+        back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
         for (i, item) in items.into_iter().enumerate() {
@@ -1016,6 +1017,16 @@ impl FirmwareUI for UICaesar {
             paragraphs.add(Paragraph::new(style, item));
         }
         let confirm_btn = Some(ButtonDetails::text(button));
+        // The left button (only present when `back_button` is set) emits
+        // `PageMsg::Cancelled`; interpret it as going back. Going back is the
+        // only way out of the checklist -- interrupting the flow is not
+        // possible.
+        let cancel_btn = back_button.then(ButtonDetails::up_arrow_icon);
+        let map_fn: fn(PageMsg<Never>) -> Option<FlowMsg> = |msg| match msg {
+            PageMsg::Cancelled => Some(FlowMsg::Back),
+            PageMsg::Confirmed => Some(FlowMsg::Confirmed),
+            _ => None,
+        };
 
         let layout = RootComponent::new(
             ButtonPage::new(
@@ -1031,7 +1042,9 @@ impl FirmwareUI for UICaesar {
                 .with_current_offset(theme::CHECKLIST_CURRENT_OFFSET),
                 theme::BG,
             )
-            .with_confirm_btn(confirm_btn),
+            .with_confirm_btn(confirm_btn)
+            .with_cancel_btn(cancel_btn)
+            .map(map_fn),
         );
         Ok(layout)
     }

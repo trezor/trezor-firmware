@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import trezorui_api
 from trezor import TR
 from trezor.enums import ButtonRequestType
+from trezor.wire import ActionCancelled
 
 from ..common import interact
 from . import confirm_action, show_success, show_warning
@@ -125,6 +126,7 @@ async def slip39_show_checklist(
         button=TR.buttons__continue,
         active=step,
         items=items,
+        back_button=back_button,
     ) as layout:
         return await interact(layout, "slip39_checklist", ButtonRequestType.ResetDevice)
 
@@ -135,7 +137,7 @@ async def _prompt_number(
     min_count: int,
     max_count: int,
     br_name: str,
-) -> int:
+) -> int | trezorui_api.UiResult:
     with trezorui_api.request_number(
         title=title,
         count=count,
@@ -146,7 +148,12 @@ async def _prompt_number(
             num_input,
             br_name,
             ButtonRequestType.ResetDevice,
+            raise_on_cancel=None,
         )
+
+    if result is trezorui_api.CANCELLED:
+        # not reachable from the UI, only via debuglink
+        raise ActionCancelled
 
     if __debug__:
         if isinstance(result, str):
@@ -154,6 +161,8 @@ async def _prompt_number(
             result = CONFIRMED, int(result)
     status, value = result
 
+    if status is trezorui_api.BACK:
+        return trezorui_api.BACK
     assert status is CONFIRMED
     assert isinstance(value, int)
     return value

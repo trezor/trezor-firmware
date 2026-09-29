@@ -190,7 +190,7 @@ def test_backup_slip39_advanced(
     assert expected_ms == actual_ms
 
 
-@pytest.mark.models("delizia,eckhart")  # going back is supported on these layouts
+@pytest.mark.models("safe3,delizia,eckhart")  # going back is supported on these layouts
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 def test_backup_slip39_basic_back_navigation(
     session: Session, backup_method: messages.BackupMethod
@@ -216,7 +216,7 @@ def test_backup_slip39_basic_back_navigation(
     assert expected_ms == actual_ms
 
 
-@pytest.mark.models("delizia,eckhart")  # going back is supported on these layouts
+@pytest.mark.models("safe3,delizia,eckhart")  # going back is supported on these layouts
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
 def test_backup_slip39_advanced_back_navigation(
     session: Session, backup_method: messages.BackupMethod
