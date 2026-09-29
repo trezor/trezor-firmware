@@ -1338,6 +1338,10 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             for item in m.items.as_ref() {
                 unwrap!(vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard)));
             }
+            // The way out comes last, drawn as one where the model can.
+            if let Some(cancel) = m.cancel.as_ref() {
+                unwrap!(vec.push(SelectMenuItem::new(tstr(cancel), MenuItemIntent::Danger)));
+            }
             wrap(
                 ModelUI::select_menu(vec, 0)?,
                 m.br_code.to_native(),

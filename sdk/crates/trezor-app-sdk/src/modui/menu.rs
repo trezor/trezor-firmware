@@ -70,12 +70,10 @@ pub(super) fn open(
     for (slot, extra) in titles.iter_mut().zip(extras) {
         *slot = extra.label.into();
     }
-    if cancel {
-        // Another word this library should not be choosing; see the note
-        // in `confirm_data`. The way out is an ordinary entry because the
-        // renderer ignores `SelectMenu`'s own `cancel` field.
-        titles[extras.len()] = "Cancel".into();
-    }
+    // The way out goes separately, so each model can draw it as its own way
+    // out; core puts it after the extras. Another word this library should not
+    // be choosing; see the note in `confirm_data`.
+    let cancel_label = cancel.then_some("Cancel");
 
     // These screens exist only because a block offered extras, so their names
     // hang off the block's. The app never writes them: it names its step, and
@@ -86,8 +84,8 @@ pub(super) fn open(
     let details_step = br.map(|br| step(br, STEP_DETAILS));
 
     let request = TrezorUiEnum::SelectMenu(SelectMenu::new(
-        &titles[..count],
-        None,
+        &titles[..extras.len()],
+        cancel_label,
         menu_step.as_deref(),
         BR_CODE_OTHER,
     ));
