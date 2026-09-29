@@ -92,7 +92,7 @@
     "address__qr_code": "Code QR",
     "address__title_cosigner": "(cosignataire)",
     "address__title_cosigner_template": "Cosignataire {0}",
-    "address__title_multisig_xpub_template": "",
+    "address__title_multisig_xpub_template": "XPUB du Multisig #{0} ",
     "address__title_provider_address": "Adresse du fournisseur",
     "address__title_receive_address": {
       "Bolt": "Adr. de récep.",
@@ -161,14 +161,14 @@
       "Delizia": "Créez une sauvegarde pour éviter de perdre l'accès à vos fonds.",
       "Eckhart": "Créez une sauvegarde pour éviter de perdre l'accès à vos fonds."
     },
-    "backup__info_multi_group_backup": "",
+    "backup__info_multi_group_backup": "Votre sauvegarde de portefeuille est composée de {0} groupe(s), dont {1} requis pour la restaurer.",
     "backup__info_multi_share_backup": {
       "Bolt": "La sauvegarde contient plusieurs listes dans un ordre spécifique (fragments).",
       "Caesar": "La sauvegarde contient plusieurs listes dans un ordre spécifique (fragments).",
       "Delizia": "Votre sauvegarde de portefeuille contient plusieurs listes de mots dans un ordre spécifique (fragments).",
       "Eckhart": "Votre sauvegarde de portefeuille contient plusieurs listes de mots dans un ordre spécifique (fragments)."
     },
-    "backup__info_n_of_m_template": "",
+    "backup__info_n_of_m_template": "{0} sur {1}",
     "backup__info_single_share_backup": "Votre sauvegarde de portefeuille contient {0} mots dans un ordre spécifique.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Sauvegardez-le dès maintenant.",
@@ -989,12 +989,7 @@
       "Delizia": "Vérifiez les détails pour autoriser la dépense des jetons.",
       "Eckhart": "Vérifiez les détails pour autoriser la dépense des jetons."
     },
-    "ethereum__approve_intro_revoke": {
-      "Bolt": "Vérifiez les informations pour révoquer l'autorisation des jetons.",
-      "Caesar": "Vérifiez les détails pour autoriser la dépense des jetons.",
-      "Delizia": "Vérifiez les détails pour autoriser la dépense des jetons.",
-      "Eckhart": "Vérifiez les détails pour autoriser la dépense des jetons."
-    },
+    "ethereum__approve_intro_revoke": "Vérifiez les informations pour révoquer l'autorisation des jetons.",
     "ethereum__approve_intro_title": {
       "Bolt": "Autorisation de jetons",
       "Caesar": "Approbation du jeton",
@@ -1923,7 +1918,7 @@
       "Bolt": "Accéder à la Passphrase du portefeuille ?",
       "Caesar": "Accéder à la Passphrase du portefeuille ?",
       "Delizia": "Accéder à la Passphrase du portefeuille ?",
-      "Eckhart": "Accéder à la Passphrase du portefeuille "
+      "Eckhart": "Accéder à la Passphrase du portefeuille"
     },
     "passphrase__always_on_device": "Toujours saisir votre passphrase sur votre Trezor ?",
     "passphrase__continue_with_empty_passphrase": "Continuer avec une passphrase vide ?",
@@ -2028,9 +2023,9 @@
     },
     "pin__invalid_pin": "PIN invalide",
     "pin__last_attempt": {
-      "Bolt": "Dernière tentative",
-      "Caesar": "Dernière tentative",
-      "Delizia": "Dernière tentative",
+      "Bolt": "Dernière",
+      "Caesar": "Dernier essai",
+      "Delizia": "Dernier essai",
       "Eckhart": "Dernier essai"
     },
     "pin__mismatch": "Les codes PIN saisis ne correspondent pas !",
@@ -2080,7 +2075,7 @@
     "pin__turn_off": "Voulez-vous vraiment désactiver la protection par PIN ?",
     "pin__turn_on": "Activer la protection par code PIN ?",
     "pin__wipe_code_exists_description": {
-      "Bolt": "Désactivez le code d'effac. avant de désact. la protection par PIN.",
+      "Bolt": "Le code d'effacement doit être désactivé avant le code PIN.",
       "Caesar": "Désactivez le code d'effac. avant de désact. la protection par PIN.",
       "Delizia": "Désactivez le code d'effac. avant de désact. la protection par PIN.",
       "Eckhart": "Désactivez le code d'effacement avant de désactiver la protection par code PIN."
@@ -2939,7 +2934,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Annuler la signature",
-      "Eckhart": "Annuler la signature"
+      "Eckhart": "Annuler la signature ?"
     },
     "send__confirm_sending": "Montant de l'envoi",
     "send__from_multiple_accounts": "Envoi depuis plusieurs comptes.",
@@ -3087,7 +3082,7 @@
     "stellar__add_trust": "Ajouter le Trust",
     "stellar__all_will_be_sent_to": "Tous les XLM seront envoyés à",
     "stellar__allow_trust": "Autoriser le Trust",
-    "stellar__approve_token": "",
+    "stellar__approve_token": "Approuver le jeton",
     "stellar__balance_id": "ID de solde",
     "stellar__bump_sequence": "Avancement de la séquence",
     "stellar__buying": "Achat",
@@ -3101,13 +3096,13 @@
     "stellar__delete": "Supprimer",
     "stellar__delete_passive_offer": "Supprimer l'offre passive",
     "stellar__delete_trust": "Supprimer le Trust",
-    "stellar__deploy_contract": "",
+    "stellar__deploy_contract": "Déployer le contrat",
     "stellar__destination": "Destination",
     "stellar__exchanges_require_memo": "Mémo non défini. Généralement requis pour un envoi vers une plateforme d'échange.",
     "stellar__ext_auth": "Autorisations Externes",
-    "stellar__ext_auth_message": "La transaction contient des appels supplémentaires autorisés par des moyens externes.",
+    "stellar__ext_auth_message": "La transaction contient des invocations autorisées de manière externe.",
     "stellar__final_confirm": "Confirmation finale",
-    "stellar__from": "",
+    "stellar__from": "Depuis",
     "stellar__hash": "Hash",
     "stellar__high": "Élevé",
     "stellar__home_domain": "Domaine d'origine",
@@ -3131,7 +3126,7 @@
     "stellar__preauth_transaction": "Transaction pré-autorisée",
     "stellar__price_per_template": "Prix par {0}",
     "stellar__remove_signer": "Supprimer le signataire",
-    "stellar__revoke_approval": "",
+    "stellar__revoke_approval": "Révoquer l’approbation",
     "stellar__revoke_trust": "Révoquer le Trust",
     "stellar__selling": "Vente",
     "stellar__set_data": "Définir les données",
@@ -3140,8 +3135,8 @@
     "stellar__sign_authorization": "Signer l'autorisation",
     "stellar__sign_with": "Signer avec",
     "stellar__source_account": "Compte source",
-    "stellar__spender": "",
-    "stellar__to": "",
+    "stellar__spender": "Spender",
+    "stellar__to": "Vers",
     "stellar__token_contract": "Contrat du jeton",
     "stellar__token_info": {
       "Bolt": "Info sur le jeton",
@@ -3151,7 +3146,7 @@
     },
     "stellar__transaction_source": "Source de la transaction",
     "stellar__transaction_source_diff_warning": "La source de la transaction n'appartient pas à ce Trezor.",
-    "stellar__transfer_token": "",
+    "stellar__transfer_token": "Transférer jeton",
     "stellar__trusted_account": "Compte de Trust",
     "stellar__update": "Mettre à jour",
     "stellar__valid_from": "Valide à partir de (UTC)",
@@ -3159,7 +3154,7 @@
     "stellar__valid_until_ledger": "Valide jusqu'au ledger",
     "stellar__value_sha256": "Valeur (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Voulez-vous effacer la clé de valeur {0} ?",
-    "stellar__wasm_hash": "",
+    "stellar__wasm_hash": "Hash du Wasm",
     "storage_msg__processing": "Traitement...",
     "storage_msg__starting": "Démarrage en cours",
     "storage_msg__verifying_pin": "Vérification du PIN...",
@@ -3277,12 +3272,22 @@
     },
     "tron__claim_unfrozen_balance": "Réclamer les fonds disponibles ?",
     "tron__claim_voting_rewards": "Réclamer les récompenses de vote ?",
-    "tron__delegate_resource": "",
-    "tron__lock_period": "",
-    "tron__lockperiod_blocks": "",
-    "tron__lockperiod_time": "",
+    "tron__delegate_resource": "Déléguer une ressource",
+    "tron__lock_period": "Période de vérouillage",
+    "tron__lockperiod_blocks": {
+      "Bolt": "Blocs",
+      "Caesar": "Période de vérouillage (blocs)",
+      "Delizia": "Blocs",
+      "Eckhart": "Blocs"
+    },
+    "tron__lockperiod_time": {
+      "Bolt": "Période",
+      "Caesar": "Période de vérouillage (temps)",
+      "Delizia": "Période",
+      "Eckhart": "Période"
+    },
     "tron__owner_address": "Adresse du propriétaire",
-    "tron__undelegate_resource": "",
+    "tron__undelegate_resource": "Annuler la délégation",
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3673,7 +3678,7 @@
       "Delizia": "du",
       "Eckhart": ""
     },
-    "words__from_title": "",
+    "words__from_title": "Depuis",
     "words__function": "Fonction",
     "words__important": "Important",
     "words__instructions": "Instructions",

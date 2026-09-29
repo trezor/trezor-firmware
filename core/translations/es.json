@@ -80,9 +80,9 @@
       "Eckhart": "Clave pública confirmada"
     },
     "address__qr_code": "Código QR",
-    "address__title_cosigner": "Cofirmante",
+    "address__title_cosigner": "(cofirmante)",
     "address__title_cosigner_template": "Cofirmante {0}",
-    "address__title_multisig_xpub_template": "",
+    "address__title_multisig_xpub_template": "XPUB Multifirma #{0} ",
     "address__title_provider_address": {
       "Bolt": "Dirección de proveedor",
       "Caesar": "Dirección del proveedor",
@@ -91,7 +91,7 @@
     },
     "address__title_receive_address": "Dirección destino",
     "address__title_refund_address": "Dirección de reembolso",
-    "address__title_yours": "Tuyas",
+    "address__title_yours": "(tuya)",
     "address__warning_not_yours": {
       "Bolt": "",
       "Caesar": "",
@@ -141,9 +141,9 @@
       "Delizia": "Crea una c. seg. para evitar perder el acceso a tus fondos.",
       "Eckhart": "Crea una c. seg. para evitar perder el acceso a tus fondos."
     },
-    "backup__info_multi_group_backup": "",
+    "backup__info_multi_group_backup": "Tu copia de seguridad contiene {0} grupos con un umbral de grupo de {1}.",
     "backup__info_multi_share_backup": "La c. seg. de la billetera contiene varias listas de palabras en un orden concreto (partes).",
-    "backup__info_n_of_m_template": "",
+    "backup__info_n_of_m_template": "{0} de {1}",
     "backup__info_single_share_backup": "La c. seg. de la billetera contiene {0} palabras en un orden concreto.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Debes realizar una c. seg. de tu billetera.",
@@ -631,12 +631,7 @@
       "Eckhart": "Número máx. rondas"
     },
     "coinjoin__title": "Autorizar coinjoin",
-    "coinjoin__title_progress": {
-      "Bolt": "Coinjoin en curso",
-      "Caesar": "Coinjoin en curso",
-      "Delizia": "Coinjoin en curso",
-      "Eckhart": "Coinjoin en curso..."
-    },
+    "coinjoin__title_progress": "Coinjoin en curso...",
     "coinjoin__waiting_for_others": "Esperando a los demás",
     "confirm_total__fee_rate": "Comisión",
     "confirm_total__title_fee": "Info. comisiones",
@@ -1333,12 +1328,7 @@
       "Delizia": "El idioma cambió con éxito.",
       "Eckhart": "El idioma cambió con éxito."
     },
-    "language__progress": {
-      "Bolt": "Cambiando lenguaje",
-      "Caesar": "Cambiando lenguaje",
-      "Delizia": "Cambiando lenguaje",
-      "Eckhart": "Cambiando lenguaje..."
-    },
+    "language__progress": "Cambiando lenguaje...",
     "language__title": "Configuración de idioma",
     "led__disable": {
       "Bolt": "",
@@ -1870,11 +1860,11 @@
       "Eckhart": ""
     },
     "pin__diff_from_wipe_code": "El nuevo PIN debe ser diferente al código de borrar.",
-    "pin__disabled": "Protección con PIN\ndesactivada.",
+    "pin__disabled": "Protección con PIN desactivada.",
     "pin__enabled": {
-      "Bolt": "Protección con PIN\nactivada.",
-      "Caesar": "Protección con PIN\nactivada.",
-      "Delizia": "Protección con PIN\nactivada.",
+      "Bolt": "Protección con PIN activada.",
+      "Caesar": "Protección con PIN activada.",
+      "Delizia": "Protección con PIN activada.",
       "Eckhart": ""
     },
     "pin__enter": "Ingresar el PIN",
@@ -1887,7 +1877,12 @@
       "Eckhart": "Necesitarás un PIN para acceder al dispositivo."
     },
     "pin__invalid_pin": "PIN inválido",
-    "pin__last_attempt": "Último intento",
+    "pin__last_attempt": {
+      "Bolt": "Último",
+      "Caesar": "Último intento",
+      "Delizia": "Último intento",
+      "Eckhart": "Último intento"
+    },
     "pin__mismatch": "¡Los PIN ingresados no coinciden!",
     "pin__pin_mismatch": "El PIN no coincide.",
     "pin__please_check_again": {
@@ -1957,12 +1952,7 @@
       "Eckhart": ""
     },
     "progress__one_second_left": "Queda 1 segundo",
-    "progress__please_wait": {
-      "Bolt": "Espera, por favor",
-      "Caesar": "Espera, por favor",
-      "Delizia": "Espera, por favor",
-      "Eckhart": "Espera, por favor..."
-    },
+    "progress__please_wait": "Espera, por favor...",
     "progress__refreshing": "Actualizando...",
     "progress__signing_transaction": "Firmando transacción...",
     "progress__syncing": "Sincronizando...",
@@ -2729,7 +2719,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Cancelar firma",
-      "Eckhart": "Cancelar firma"
+      "Eckhart": "¿Cancelar firma?"
     },
     "send__confirm_sending": "Enviando importe",
     "send__from_multiple_accounts": "Enviando desde varias cuentas.",
@@ -2867,7 +2857,7 @@
     "stellar__add_trust": "Añadir Trust",
     "stellar__all_will_be_sent_to": "Todos los XLM se enviarán a",
     "stellar__allow_trust": "Permitir Trust",
-    "stellar__approve_token": "",
+    "stellar__approve_token": "Aprobar token",
     "stellar__balance_id": "ID saldo",
     "stellar__bump_sequence": "Incrementar secuencia",
     "stellar__buying": "Comprando",
@@ -2881,13 +2871,13 @@
     "stellar__delete": "Eliminar",
     "stellar__delete_passive_offer": "Eliminar oferta pasiva",
     "stellar__delete_trust": "Eliminar Trust",
-    "stellar__deploy_contract": "",
+    "stellar__deploy_contract": "Desplegar contrato",
     "stellar__destination": "Destino",
     "stellar__exchanges_require_memo": "Memo no definido. Normalmente es necesario cuando envías a exchanges.",
     "stellar__ext_auth": "Autorizaciones Externas",
-    "stellar__ext_auth_message": "La transacción contiene invocaciones adicionales autorizadas por métodos externos.",
+    "stellar__ext_auth_message": "La transacción contiene invocaciones adicionales autorizadas externamente.",
     "stellar__final_confirm": "Confirmación final",
-    "stellar__from": "",
+    "stellar__from": "De",
     "stellar__hash": "Hash",
     "stellar__high": "Alto",
     "stellar__home_domain": "Dominio de origen",
@@ -2916,7 +2906,7 @@
     "stellar__preauth_transaction": "Transacción pre-autorizada",
     "stellar__price_per_template": "Precio por {0}",
     "stellar__remove_signer": "Eliminar firmante",
-    "stellar__revoke_approval": "",
+    "stellar__revoke_approval": "Revocar aprobación",
     "stellar__revoke_trust": "Revocar Trust",
     "stellar__selling": "Vendiendo",
     "stellar__set_data": "Configurar datos",
@@ -2925,8 +2915,8 @@
     "stellar__sign_authorization": "Firmar autorización",
     "stellar__sign_with": "Firmar con",
     "stellar__source_account": "Cuenta origen",
-    "stellar__spender": "",
-    "stellar__to": "",
+    "stellar__spender": "Gastadora",
+    "stellar__to": "A",
     "stellar__token_contract": "Contrato del token",
     "stellar__token_info": {
       "Bolt": "Info del token",
@@ -2936,7 +2926,7 @@
     },
     "stellar__transaction_source": "Fuente de transacción",
     "stellar__transaction_source_diff_warning": "La fuente de la transacción no pertenece a este Trezor.",
-    "stellar__transfer_token": "",
+    "stellar__transfer_token": "Transferir token",
     "stellar__trusted_account": "Cuenta de confianza",
     "stellar__update": "Actualizar",
     "stellar__valid_from": "Válido desde (UTC)",
@@ -2944,20 +2934,10 @@
     "stellar__valid_until_ledger": "Válida hasta el ledger",
     "stellar__value_sha256": "Valor (SHA-256)",
     "stellar__wanna_clean_value_key_template": "¿Quieres borrar la clave de valor {0}?",
-    "stellar__wasm_hash": "",
-    "storage_msg__processing": {
-      "Bolt": "Procesando",
-      "Caesar": "Procesando",
-      "Delizia": "Procesando",
-      "Eckhart": "Procesando..."
-    },
+    "stellar__wasm_hash": "Hash Wasm",
+    "storage_msg__processing": "Procesando...",
     "storage_msg__starting": "Iniciando",
-    "storage_msg__verifying_pin": {
-      "Bolt": "Verificando PIN",
-      "Caesar": "Verificando PIN",
-      "Delizia": "Verificando PIN",
-      "Eckhart": "Verificando PIN..."
-    },
+    "storage_msg__verifying_pin": "Verificando PIN...",
     "storage_msg__wrong_pin": "PIN incorrecto",
     "suite_sync__delegated_identity_key_no_thp": "¿Permitir que Trezor Suite use Suite Sync con este Trezor?",
     "suite_sync__delegated_identity_key_thp": "¿Permitir que {0} en {1} use Suite Sync con este Trezor?",
@@ -3067,12 +3047,22 @@
     },
     "tron__claim_unfrozen_balance": "¿Reclamar balance descongelado?",
     "tron__claim_voting_rewards": "¿Reclamar recompensas de voto?",
-    "tron__delegate_resource": "",
-    "tron__lock_period": "",
-    "tron__lockperiod_blocks": "",
-    "tron__lockperiod_time": "",
+    "tron__delegate_resource": "Delegar recurso",
+    "tron__lock_period": "Periodo de bloqueo",
+    "tron__lockperiod_blocks": {
+      "Bolt": "Bloques",
+      "Caesar": "Periodo de bloqueo (Bloques)",
+      "Delizia": "Bloques",
+      "Eckhart": "Bloques"
+    },
+    "tron__lockperiod_time": {
+      "Bolt": "Time",
+      "Caesar": "Periodo de bloqueo (Tiempo)",
+      "Delizia": "Time",
+      "Eckhart": "Time"
+    },
     "tron__owner_address": "Dirección del propietario",
-    "tron__undelegate_resource": "",
+    "tron__undelegate_resource": "Remover delegación del recurso",
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3473,7 +3463,7 @@
       "Delizia": "del",
       "Eckhart": ""
     },
-    "words__from_title": "",
+    "words__from_title": "De",
     "words__function": "Función",
     "words__important": "Importante",
     "words__instructions": "Instrucciones",

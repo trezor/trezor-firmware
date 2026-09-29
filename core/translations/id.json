@@ -54,13 +54,13 @@
       "Eckhart": "Kunci publik dikonfirmasi"
     },
     "address__qr_code": "Kode QR",
-    "address__title_cosigner": "Penjamin",
+    "address__title_cosigner": "(penjamin)",
     "address__title_cosigner_template": "Penjamin {0}",
-    "address__title_multisig_xpub_template": "",
+    "address__title_multisig_xpub_template": "XPUB Multisig #{0} ",
     "address__title_provider_address": "Alamat penyedia",
     "address__title_receive_address": "Alamat penerimaan",
     "address__title_refund_address": "Alamat refund",
-    "address__title_yours": "Milik Anda",
+    "address__title_yours": "(milik Anda)",
     "address__warning_not_yours": {
       "Bolt": "",
       "Caesar": "",
@@ -108,11 +108,11 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Buat cadangan dompet agar tidak kehilangan akses ke dana Anda.",
-      "Eckhart": "Buat dompet cadangan agar tidak kehilangan akses ke dana Anda."
+      "Eckhart": "Buat cadangan dompet agar tidak kehilangan akses ke dana Anda."
     },
-    "backup__info_multi_group_backup": "",
+    "backup__info_multi_group_backup": "Cadangan dompet Anda berisi {0} grup dengan ambang batas grup {1}.",
     "backup__info_multi_share_backup": "Cadangan dompet Anda berisi beberapa daftar kata dengan urutan tertentu (bagian).",
-    "backup__info_n_of_m_template": "",
+    "backup__info_n_of_m_template": "{0}-dari-{1}",
     "backup__info_single_share_backup": "Cadangan dompet Anda berisi {0} kata dengan urutan tertentu.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Anda harus mencadangkan dompet baru Anda sekarang.",
@@ -590,12 +590,7 @@
     "coinjoin__max_mining_fee": "Maks. biaya penambangan",
     "coinjoin__max_rounds": "Maks. putaran",
     "coinjoin__title": "Otorisasi coinjoin",
-    "coinjoin__title_progress": {
-      "Bolt": "Coinjoin berlangsung",
-      "Caesar": "Coinjoin berlangsung",
-      "Delizia": "Coinjoin berlangsung",
-      "Eckhart": "Coinjoin berlangsung..."
-    },
+    "coinjoin__title_progress": "Coinjoin berlangsung...",
     "coinjoin__waiting_for_others": "Menunggu yang lain",
     "confirm_total__fee_rate": "Kurs biaya",
     "confirm_total__title_fee": "Info biaya",
@@ -1277,12 +1272,7 @@
       "Delizia": "Bahasa berhasil diubah.",
       "Eckhart": "Bahasa berhasil diubah."
     },
-    "language__progress": {
-      "Bolt": "Mengubah bahasa",
-      "Caesar": "Mengubah bahasa",
-      "Delizia": "Mengubah bahasa",
-      "Eckhart": "Mengubah bahasa..."
-    },
+    "language__progress": "Mengubah bahasa...",
     "language__title": "Pengaturan bahasa",
     "led__disable": {
       "Bolt": "",
@@ -1814,11 +1804,11 @@
       "Eckhart": ""
     },
     "pin__diff_from_wipe_code": "PIN baru harus berbeda dengan kode wipe Anda.",
-    "pin__disabled": "Proteksi PIN\ndinonaktifkan.",
+    "pin__disabled": "Proteksi PIN dinonaktifkan.",
     "pin__enabled": {
-      "Bolt": "Proteksi PIN\ndiaktifkan.",
-      "Caesar": "Proteksi PIN\ndiaktifkan.",
-      "Delizia": "Proteksi PIN\ndiaktifkan.",
+      "Bolt": "Proteksi PIN diaktifkan.",
+      "Caesar": "Proteksi PIN diaktifkan.",
+      "Delizia": "Proteksi PIN diaktifkan.",
       "Eckhart": ""
     },
     "pin__enter": "Masukkan PIN",
@@ -1831,7 +1821,12 @@
       "Eckhart": "PIN akan diperlukan untuk mengakses perangkat ini."
     },
     "pin__invalid_pin": "PIN tidak valid",
-    "pin__last_attempt": "Upaya terakhir",
+    "pin__last_attempt": {
+      "Bolt": "Terakhir",
+      "Caesar": "Upaya terakhir",
+      "Delizia": "Upaya terakhir",
+      "Eckhart": "Upaya terakhir"
+    },
     "pin__mismatch": "PIN yang dimasukkan tidak cocok!",
     "pin__pin_mismatch": "PIN tidak cocok",
     "pin__please_check_again": {
@@ -1873,7 +1868,12 @@
     "pin__tries_left": "percobaan lagi",
     "pin__turn_off": "Anda yakin ingin nonaktifkan perlindungan PIN?",
     "pin__turn_on": "Aktifkan proteksi PIN?",
-    "pin__wipe_code_exists_description": "Kode wipe harus nonaktif sebelum menonaktifkan proteksi PIN.",
+    "pin__wipe_code_exists_description": {
+      "Bolt": "Kode wipe harus nonaktif sebelum nonaktifkan PIN.",
+      "Caesar": "Kode wipe harus nonaktif sebelum menonaktifkan proteksi PIN.",
+      "Delizia": "Kode wipe harus nonaktif sebelum menonaktifkan proteksi PIN.",
+      "Eckhart": "Kode wipe harus nonaktif sebelum menonaktifkan proteksi PIN."
+    },
     "pin__wipe_code_exists_title": "Kode wipe diatur",
     "pin__wrong_pin": "PIN salah",
     "plurals__contains_x_keys": "kunci|kunci",
@@ -1896,12 +1896,7 @@
       "Eckhart": ""
     },
     "progress__one_second_left": "Tersisa 1 detik",
-    "progress__please_wait": {
-      "Bolt": "Harap tunggu",
-      "Caesar": "Harap tunggu",
-      "Delizia": "Harap tunggu",
-      "Eckhart": "Harap tunggu..."
-    },
+    "progress__please_wait": "Harap tunggu...",
     "progress__refreshing": "Memuat ulang...",
     "progress__signing_transaction": "Menandatangani transaksi...",
     "progress__syncing": "Menyinkronkan...",
@@ -2300,7 +2295,7 @@
     },
     "reset__select_word_x_of_y_template": {
       "Bolt": "Pilih kata {0} dari {1}:",
-      "Caesar": "Pilih kata {0} dari {1}",
+      "Caesar": "Kata {0} dari {1}",
       "Delizia": "Pilih kata {0} dari {1}",
       "Eckhart": ""
     },
@@ -2678,7 +2673,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Batalkan tandatangan",
-      "Eckhart": "Batalkan tandatangan"
+      "Eckhart": "Batalkan tandatangan?"
     },
     "send__confirm_sending": "Jumlah dikirim",
     "send__from_multiple_accounts": "Mengirim dari beberapa akun.",
@@ -2816,7 +2811,7 @@
     "stellar__add_trust": "Tambahkan Trust",
     "stellar__all_will_be_sent_to": "Semua XLM akan dikirim ke",
     "stellar__allow_trust": "Izinkan Trust",
-    "stellar__approve_token": "",
+    "stellar__approve_token": "Setujui token",
     "stellar__balance_id": "ID Saldo",
     "stellar__bump_sequence": "Bump Sequence",
     "stellar__buying": "Pembelian",
@@ -2830,13 +2825,18 @@
     "stellar__delete": "Hapus",
     "stellar__delete_passive_offer": "Hapus Penawaran Pasif",
     "stellar__delete_trust": "Hapus trust",
-    "stellar__deploy_contract": "",
+    "stellar__deploy_contract": "Deploy contract",
     "stellar__destination": "Tujuan",
     "stellar__exchanges_require_memo": "Memo belum diatur. Biasanya dibutuhkan ketika mengirim ke bursa.",
     "stellar__ext_auth": "Otorisasi Eksternal",
-    "stellar__ext_auth_message": "Transaksi berisi pemanggilan tambahan yang diotorisasi secara eksternal.",
+    "stellar__ext_auth_message": {
+      "Bolt": "Transaksi berisi panggilan berotorisasi eksternal.",
+      "Caesar": "Transaksi berisi pemanggilan yang diotorisasi secara eksternal.",
+      "Delizia": "Transaksi berisi pemanggilan yang diotorisasi secara eksternal.",
+      "Eckhart": "Transaksi berisi pemanggilan yang diotorisasi secara eksternal."
+    },
     "stellar__final_confirm": "Konfirmasi akhir",
-    "stellar__from": "",
+    "stellar__from": "Dari",
     "stellar__hash": "Hash",
     "stellar__high": "Tinggi",
     "stellar__home_domain": "Home Domain",
@@ -2860,7 +2860,7 @@
     "stellar__preauth_transaction": "Pre-auth transaction",
     "stellar__price_per_template": "Harga per {0}",
     "stellar__remove_signer": "Hapus Penandatangan",
-    "stellar__revoke_approval": "",
+    "stellar__revoke_approval": "Cabut persetujuan",
     "stellar__revoke_trust": "Cabut trust",
     "stellar__selling": "Penjualan",
     "stellar__set_data": "Atur data",
@@ -2869,8 +2869,8 @@
     "stellar__sign_authorization": "Tandatangani otorisasi",
     "stellar__sign_with": "Tandatangani dengan",
     "stellar__source_account": "Akun sumber",
-    "stellar__spender": "",
-    "stellar__to": "",
+    "stellar__spender": "Pengguna dana",
+    "stellar__to": "Ke",
     "stellar__token_contract": "Kontrak token",
     "stellar__token_info": {
       "Bolt": "Info token",
@@ -2880,7 +2880,7 @@
     },
     "stellar__transaction_source": "Sumber transaksi",
     "stellar__transaction_source_diff_warning": "Sumber transaksi bukan milik Trezor ini.",
-    "stellar__transfer_token": "",
+    "stellar__transfer_token": "Transfer token",
     "stellar__trusted_account": "Akun Terpercaya",
     "stellar__update": "Perbarui",
     "stellar__valid_from": "Valid dari (UTC)",
@@ -2888,20 +2888,10 @@
     "stellar__valid_until_ledger": "Berlaku hingga ledger",
     "stellar__value_sha256": "Nilai (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Anda ingin menghapus kunci nilai {0}?",
-    "stellar__wasm_hash": "",
-    "storage_msg__processing": {
-      "Bolt": "Memproses",
-      "Caesar": "Memproses",
-      "Delizia": "Memproses",
-      "Eckhart": "Memproses..."
-    },
+    "stellar__wasm_hash": "Hash Wasm",
+    "storage_msg__processing": "Memproses...",
     "storage_msg__starting": "Memulai",
-    "storage_msg__verifying_pin": {
-      "Bolt": "Memverifikasi PIN",
-      "Caesar": "Memverifikasi PIN",
-      "Delizia": "Memverifikasi PIN",
-      "Eckhart": "Memverifikasi PIN..."
-    },
+    "storage_msg__verifying_pin": "Memverifikasi PIN...",
     "storage_msg__wrong_pin": "PIN salah",
     "suite_sync__delegated_identity_key_no_thp": "Izinkan Trezor Suite gunakan Suite Sync dgn Trezor ini?",
     "suite_sync__delegated_identity_key_thp": "Izinkan {0} di {1} gunakan Suite Sync dengan Trezor ini?",
@@ -3011,12 +3001,22 @@
     },
     "tron__claim_unfrozen_balance": "Klaim saldo yang dicairkan?",
     "tron__claim_voting_rewards": "Klaim imbalan voting?",
-    "tron__delegate_resource": "",
-    "tron__lock_period": "",
-    "tron__lockperiod_blocks": "",
-    "tron__lockperiod_time": "",
+    "tron__delegate_resource": "Delegasi sumber daya",
+    "tron__lock_period": "Durasi penguncian",
+    "tron__lockperiod_blocks": {
+      "Bolt": "Blok",
+      "Caesar": "Durasi penguncian (blok)",
+      "Delizia": "Blok",
+      "Eckhart": "Blok"
+    },
+    "tron__lockperiod_time": {
+      "Bolt": "Durasi",
+      "Caesar": "Durasi penguncian (waktu)",
+      "Delizia": "Durasi",
+      "Eckhart": "Durasi"
+    },
     "tron__owner_address": "Alamat pemilik",
-    "tron__undelegate_resource": "",
+    "tron__undelegate_resource": "Cabut delegasi sumber daya",
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3392,7 +3392,7 @@
       "Delizia": "dari",
       "Eckhart": ""
     },
-    "words__from_title": "",
+    "words__from_title": "Dari",
     "words__function": "Fungsi",
     "words__important": "Penting",
     "words__instructions": "Instruksi",
