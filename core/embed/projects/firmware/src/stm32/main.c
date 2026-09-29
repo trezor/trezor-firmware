@@ -73,7 +73,7 @@ extern const void nrf_app_size;
 LOG_DECLARE(coreapp_main)
 
 #if USE_IPC
-uint32_t ipc_buffer[IPC_BUFFER_SIZE / sizeof(uint32_t)];
+uint32_t ipc_buffer[IPC_COREAPP_BUFFER_SIZE / sizeof(uint32_t)];
 #endif
 
 int main_func(uint32_t cmd, void *arg) {
