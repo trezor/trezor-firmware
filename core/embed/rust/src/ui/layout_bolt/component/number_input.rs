@@ -12,7 +12,7 @@ use crate::ui::shape::{self, Renderer};
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum NumberInputDialogMsg {
     Selected,
-    InfoRequested,
+    Back,
 }
 
 pub struct NumberInputDialog<F>
@@ -24,7 +24,7 @@ where
     input: Child<NumberInput>,
     paragraphs: Child<Paragraphs<Paragraph<'static>>>,
     paragraphs_pad: Pad,
-    info_button: Child<Button>,
+    back_button: Child<Button>,
     confirm_button: Child<Button>,
 }
 
@@ -40,7 +40,7 @@ where
             input: NumberInput::new(min, max, init_value).into_child(),
             paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text)).into_child(),
             paragraphs_pad: Pad::with_background(theme::BG),
-            info_button: Button::with_icon(theme::ICON_CORNER_INFO).into_child(),
+            back_button: Button::with_icon(theme::ICON_UP).into_child(),
             confirm_button: Button::with_text(TR::buttons__continue.into())
                 .styled(theme::button_confirm())
                 .into_child(),
@@ -85,7 +85,7 @@ where
         self.input.place(input_area);
         self.paragraphs.place(content_area);
         self.paragraphs_pad.place(content_area);
-        self.info_button.place(grid.row_col(0, 0));
+        self.back_button.place(grid.row_col(0, 0));
         self.confirm_button.place(grid.cells(GridCellSpan {
             from: (0, 1),
             to: (0, 2),
@@ -98,8 +98,8 @@ where
             self.update_text(ctx, i);
         }
         self.paragraphs.event(ctx, event);
-        if let Some(ButtonMsg::Clicked) = self.info_button.event(ctx, event) {
-            return Some(Self::Msg::InfoRequested);
+        if let Some(ButtonMsg::Clicked) = self.back_button.event(ctx, event) {
+            return Some(Self::Msg::Back);
         }
         if let Some(ButtonMsg::Clicked) = self.confirm_button.event(ctx, event) {
             return Some(Self::Msg::Selected);
@@ -111,7 +111,7 @@ where
         self.input.render(target);
         self.paragraphs_pad.render(target);
         self.paragraphs.render(target);
-        self.info_button.render(target);
+        self.back_button.render(target);
         self.confirm_button.render(target);
     }
 }
@@ -125,7 +125,7 @@ where
         t.component("NumberInputDialog");
         t.child("input", &self.input);
         t.child("paragraphs", &self.paragraphs);
-        t.child("info_button", &self.info_button);
+        t.child("back_button", &self.back_button);
         t.child("confirm_button", &self.confirm_button);
     }
 }

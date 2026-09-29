@@ -92,6 +92,28 @@ where
         self.with_button(theme::ICON_CORNER_INFO, CancelInfoConfirmMsg::Info)
     }
 
+    pub fn with_menu_button(self) -> Self {
+        self.with_menu_button_msg(CancelInfoConfirmMsg::Info)
+    }
+
+    fn with_menu_button_msg(mut self, msg: CancelInfoConfirmMsg) -> Self {
+        // The touch area is intentionally not expanded downwards so that the
+        // button does not overlap interactive content right below it (e.g.
+        // the number input's increment button).
+        let touch_area = Insets {
+            left: self.border.left * 4,
+            bottom: 0,
+            ..self.border
+        };
+        self.button = Some(Child::new(
+            Button::with_icon(theme::ICON_CORNER_MENU)
+                .with_expanded_touch_area(touch_area)
+                .styled(theme::button_moreinfo()),
+        ));
+        self.button_msg = msg;
+        self
+    }
+
     pub fn inner(&self) -> &T {
         self.content.inner()
     }
