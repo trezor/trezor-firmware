@@ -23,7 +23,7 @@ runs:
         MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}
         OUTDIR=${{ github.run_id }}
         mkdir -p $OUTDIR
-        nix-shell --run "uv run python ci/prepare_ui_artifacts.py || true"
+        $UV_RUN ci/prepare_ui_artifacts.py || true
         mv tests/ui_tests/reports/test/* $OUTDIR
         mv tests/ui_tests/fixtures.*.json $OUTDIR
 
@@ -48,18 +48,18 @@ runs:
     - name: Upload test results
       run: |
         # Cache s5cmd package (to be reused by the next calls)
-        nix-shell --run "s5cmd version"
+        $NIX_RUN s5cmd version
 
         CMD="s5cmd --log error cp --concurrency 100"
 
         # Upload report
         du -sh ${{ github.run_id }}
-        nix-shell --run "$CMD ${{ github.run_id }}/ s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/" &
+        $NIX_RUN bash -c "$CMD ${{ github.run_id }}/ s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/" &
         PID1=$!
 
         # Upload test screen recording
         du -sh ci/ui_test_records
-        nix-shell --run "$CMD ci/ui_test_records/ s3://data.trezor.io/dev/firmware/ui_tests/" &
+        $NIX_RUN bash -c "$CMD ci/ui_test_records/ s3://data.trezor.io/dev/firmware/ui_tests/" &
         PID2=$!
         # TODO: generate directory listing / autoindex
 

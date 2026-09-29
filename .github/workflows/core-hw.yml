@@ -92,16 +92,16 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - uses: ./.github/actions/environment
-      - run: nix-shell --arg hardwareTest true --run uhubctl
-      - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build-xtask/artifacts/latest/firmware.bin"
+      - run: $NIX_RUN uhubctl
+      - run: $UV_RUN make -C core build_firmware
+      - run: $UV_RUN ci/hardware_tests/bootstrap.py "$TREZOR_MODEL" core/build-xtask/artifacts/latest/firmware.bin
       - run: |
-          nix-shell --run "uv run trezorctl list"
-          nix-shell --run "uv run trezorctl get-features"
+          $UV_RUN trezorctl list
+          $UV_RUN trezorctl get-features
         if: matrix.model != 'T3W1'  # gets stuck on models with THP
       - run: |
-          nix-shell --arg hardwareTest true --run "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
-          nix-shell --run "uv run pytest -v --verbose-log-file pytest.log tests/device_tests $TESTOPTS"
+          $NIX_RUN bash -c "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
+          $UV_RUN pytest -v --verbose-log-file pytest.log tests/device_tests $TESTOPTS
       - run: tail -n50 trezor.log || true
         if: failure()
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -141,15 +141,15 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/environment
         with:
-          full-deps: "true"
-      - run: nix-shell --arg hardwareTest true --run uhubctl
-      - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build-xtask/artifacts/latest/firmware.bin"
-      - run: nix-shell --run "uv run trezorctl list"
-      - run: nix-shell --run "uv run trezorctl get-features"
+          nix-dev-shell: everything
+      - run: $NIX_RUN uhubctl
+      - run: $UV_RUN make -C core build_firmware
+      - run: $UV_RUN ci/hardware_tests/bootstrap.py "$TREZOR_MODEL" core/build-xtask/artifacts/latest/firmware.bin
+      - run: $UV_RUN trezorctl list
+      - run: $UV_RUN trezorctl get-features
       - run: |
-          nix-shell --arg hardwareTest true --run "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
-          nix-shell --arg fullDeps true --run "./core/tests/run_tests_device_emu_monero.sh --trezor-path webusb:"
+          $NIX_RUN bash -c "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
+          $NIX_RUN ./core/tests/run_tests_device_emu_monero.sh --trezor-path webusb:"
       - run: tail -n50 trezor.log || true
         if: failure()
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -185,10 +185,12 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - uses: ./.github/actions/environment
-      - run: nix-shell --arg hardwareTest true --run uhubctl
-      - run: nix-shell --run "uv run legacy/script/setup"
-      - run: nix-shell --run "export PRODUCTION=0 && uv run legacy/script/cibuild"
-      - run: nix-shell --arg hardwareTest true --run "ci/hardware_tests/t1_hw_test.sh"
+      - run: $NIX_RUN uhubctl
+      - run: $UV_RUN legacy/script/setup
+      - run: $UV_RUN legacy/script/cibuild
+        env:
+          PRODUCTION: 0
+      - run: $NIX_RUN ci/hardware_tests/t1_hw_test.sh
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-hardware-${{ matrix.coins }}
