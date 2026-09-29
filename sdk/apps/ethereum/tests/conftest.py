@@ -543,7 +543,7 @@ def pytest_runtest_makereport(item: pytest.Item, call) -> t.Generator:
     # The device_handler fixture uses this as 'request.node.rep_call.passed' attribute,
     # in order to raise error only if the test passed.
     outcome = yield
-    rep = outcome.get_result()
+    rep = outcome.get_result()  # type: ignore [outcome is set by hookwrapper]
     setattr(item, f"rep_{rep.when}", rep)
 
 

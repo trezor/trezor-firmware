@@ -36,7 +36,7 @@ def test_getaddress_chunkify_details(
     session: Session, instance_id: int, parameters, result
 ):
     with session.test_ctx as client:
-        IF = InputFlowShowAddressQRCode(session)
+        IF = InputFlowShowAddressQRCode(session)  # type: ignore [session is a DebugSession]
         client.set_input_flow(IF.get())
         address_n = parse_path(parameters["path"])
         assert (

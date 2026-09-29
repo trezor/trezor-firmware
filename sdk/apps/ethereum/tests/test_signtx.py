@@ -662,7 +662,7 @@ def test_signtx_payment_req(
         session, purchase_memo_1.coin_name, purchase_memo_1.address_n
     )
 
-    memos = [purchase_memo_1]
+    memos: list = [purchase_memo_1]
 
     if has_refund:
         refund_memo = RefundMemo(address_n=parse_path("m/44h/60h/0h/0/0"))

@@ -198,7 +198,7 @@ fn is_vault_tx_safe<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use trezor_app_sdk::crypto::{self, HashingAlgorithm, HasherExt};
+    use trezor_app_sdk::crypto::{self, HasherExt, HashingAlgorithm};
 
     fn keccak256(data: &[u8]) -> [u8; 32] {
         let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);

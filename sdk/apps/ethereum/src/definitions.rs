@@ -9,7 +9,7 @@ use crate::{
 use prost::Message;
 use trezor_app_sdk::{
     Error, Result,
-    crypto::{self, HashingAlgorithm, HasherExt},
+    crypto::{self, HasherExt, HashingAlgorithm},
 };
 
 const THRESHOLD: usize = 2;

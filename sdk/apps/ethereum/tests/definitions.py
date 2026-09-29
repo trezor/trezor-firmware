@@ -58,8 +58,9 @@ def make_payload(
         message_bytes = writer.getvalue()
 
     payload = definitions.DefinitionPayload(
-        magic=b"trzd1",
-        data_type=data_type,
+        magic=b"trzd",
+        version=b"1",
+        data_type=data_type,  # type: ignore [app enum, same values as trezorlib]
         timestamp=timestamp,
         data=message_bytes,
     )
@@ -126,7 +127,7 @@ def encode_eth_token(
 
 def make_eth_defs(
     network: bytes | None, token: bytes | None
-) -> ethereum_messages.EthereumDefinitions:
+) -> ethereum_messages.Definitions:
     return ethereum_messages.Definitions(
         encoded_network=network,
         encoded_token=token,

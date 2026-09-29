@@ -20,7 +20,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, AnyStr, Optional
 
 from trezorlib import exceptions, protobuf
-from trezorlib.messages import Failure, ExtAppMessage, ExtAppResponse
+from trezorlib.messages import ExtAppMessage, ExtAppResponse, Failure
 from trezorlib.tools import prepare_message_bytes
 
 from .generated import messages as ethereum_messages
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from trezorlib.tools import Address
 
 
-def message_id(msg: type[protobuf.MessageType] | ethereum_messages.MessageType) -> int:
+def message_id(msg: type[protobuf.MessageType] | protobuf.MessageType) -> int:
     """Return app-specific numeric message ID for a message class or instance."""
     if isinstance(msg, type):
         name = msg.__name__
@@ -56,8 +56,8 @@ def call_ext(
     session: "Session",
     instance_id: int,
     *,
-    msg_data: ethereum_messages.MessageType,
-    expect: list[type[ethereum_messages.MessageType]],
+    msg_data: protobuf.MessageType,
+    expect: list[type[protobuf.MessageType]],
     timeout: float | None = None,
 ) -> Any:
     """Call a method on this session, process and return the response."""

@@ -17,7 +17,7 @@ use crate::{
 use primitive_types::U256;
 use trezor_app_sdk::{
     Error, Result, ResultExt,
-    crypto::{self, HashingAlgorithm, HasherExt},
+    crypto::{self, HasherExt, HashingAlgorithm},
     ui::{self, Property},
 };
 

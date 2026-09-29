@@ -19,7 +19,7 @@ use crate::{helpers::get_type_name, uformat, wire_request};
 use primitive_types::U256;
 use trezor_app_sdk::{
     Error, Result, ResultExt,
-    crypto::{self, HashingAlgorithm, HasherExt},
+    crypto::{self, HasherExt, HashingAlgorithm},
     ui, unwrap,
 };
 

@@ -9,7 +9,7 @@ use crate::{
 };
 use trezor_app_sdk::{
     Error, Result, ResultExt,
-    crypto::{self, HashingAlgorithm, HasherExt},
+    crypto::{self, HasherExt, HashingAlgorithm},
     ui, unwrap,
 };
 

@@ -6,7 +6,7 @@ from typing import Optional, Protocol
 from ecdsa import NIST256p, SigningKey
 
 from trezorlib.client import Session
-from trezorlib.testing.common import compact_size
+from trezorlib.tools import compact_size
 
 from .generated import messages as ethereum_messages
 
