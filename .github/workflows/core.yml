@@ -190,16 +190,16 @@ jobs:
           retention-days: 7
 
   core_emu_arm:
-    if: github.event_name == 'schedule'
     name: Build emu ARM (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}, ${{ matrix.asan }}${{matrix.n1w1 && ', n1w1' || '' }})
-    runs-on: ubuntu-latest-arm64
+    if: github.repository == 'trezor/trezor-firmware'
+    runs-on: ubuntu-26.04-arm
     timeout-minutes: 15
     needs: param
     strategy:
       fail-fast: false
       matrix:
         model: [T2T1, T3B1, T3T1, T3W1]
-        coins: [universal]
+        coins: [universal, btconly]
         type: [debuglink]
         asan: [noasan]
         n1w1: [false]
@@ -890,8 +890,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs:
-      # Do not include ARM, they are only built on nightly
       - core_emu
+      - core_emu_arm
     steps:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
@@ -916,6 +916,12 @@ jobs:
         run: |
           rm -rf emulators/{bootloader,firmware}-emu emulators/mpy-files emulators/*.json
           pushd emulators
+          # NOTE: trezor-user-env has different naming scheme for nightly and for branches (cf. `core_upload_emu`):
+          # nightly (main): trezor-emu-arm-core-*
+          # branches:       trezor-emu-core-arm-*
+          # trezor-user-env expected format for aarch64: trezor-emu-core-arm-T2T1-universal
+          for F in firmware-emu-arm-*; do NEWF=`echo $F | sed s/firmware-emu-arm/trezor-emu-core-arm/`; mv $F $NEWF; done
+          # trezor-user-env expected format for x86_64: trezor-emu-core-T2T1-universal
           for F in firmware-emu-*; do NEWF=`echo $F | sed s/firmware-emu/trezor-emu-core/`; mv $F $NEWF; done
           popd
           tree
