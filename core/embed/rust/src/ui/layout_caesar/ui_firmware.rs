@@ -1249,6 +1249,11 @@ impl FirmwareUI for UICaesar {
             // There is no "continue in the app" screen either — its own
             // `show_continue_in_app` shows nothing — so the end of a flow waits
             // to be dismissed like the rest.
+            // WIP: the `Done` arm diverges from the notice contract — it should
+            // answer without waiting for the person (delizia and eckhart time
+            // out and return). This model's screens have no timeout support
+            // yet; until they do, the person dismisses and the call blocks.
+            // The reply value is the same either way.
             Severity::Info | Severity::Success | Severity::Done => {
                 LayoutObj::new_root(Self::confirm_action(
                     title,

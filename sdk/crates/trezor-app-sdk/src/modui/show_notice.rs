@@ -1,6 +1,7 @@
 //! Telling the person something. The public docs live on [`show_notice`].
 //!
-//! One block for every callout. Failures are not among them; see
+//! One block for every callout, one contract across models: the same request
+//! answers the same way everywhere. Failures are not among the callouts; see
 //! [`Severity`].
 
 use super::extra::ExtraItem;
@@ -70,10 +71,19 @@ impl<'a> ShowNotice<'a> {
 /// words, and whether it goes away by itself. The same severity looks the same
 /// from every app.
 ///
-/// A [`Severity::Danger`] notice can always be refused, and a
-/// [`Severity::Warning`] can on most models; call [`UiReply::confirmed`] on
-/// both. The other severities only ever answer `Confirmed`, which apps usually
-/// ignore.
+/// The contract is uniform across models: the same request answers the same
+/// way everywhere. How each model renders a severity is its own business, and
+/// may look entirely different — but which replies can arrive is not:
+///
+/// - [`Severity::Info`] and [`Severity::Success`] answer `Confirmed`.
+/// - [`Severity::Warning`] and [`Severity::Danger`] answer `Confirmed` or
+///   `Cancelled` — a refusal is always possible, whatever the model draws for
+///   it. Call [`UiReply::confirmed`] on both.
+/// - [`Severity::Done`] answers `Confirmed` without waiting for the person:
+///   it is the last screen of the flow, nothing on the device follows it, and
+///   the host's response should not wait on a dismissal. The screen may stay
+///   up for a moment or until the person acknowledges it, whichever the model
+///   does — the call has already returned.
 ///
 /// There is no error notice: an app that fails returns `Err`, and whether the
 /// person sees a screen for that is core's decision.
@@ -81,8 +91,9 @@ impl<'a> ShowNotice<'a> {
 /// # Errors
 ///
 /// Extras, or `cancel: true`, work only where the model's screen for that
-/// severity has a menu — today [`Severity::Info`], and not on every model.
-/// Elsewhere core ends the app's session rather than answer. Otherwise see
+/// severity has a menu — today [`Severity::Info`] on one model. Elsewhere the
+/// notice is drawn without them and the model says so, rather than fail; the
+/// severity's own way out (Warning, Danger) is unaffected. Otherwise see
 /// [errors](crate::modui#errors).
 ///
 /// # Example

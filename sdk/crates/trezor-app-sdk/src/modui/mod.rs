@@ -251,6 +251,13 @@
 //! warning, and the flow continues: on such a model the extras are
 //! unreachable, but the app is not told.
 //!
+//! WIP: the one contract break left is [`show_notice`] with
+//! [`Severity::Done`]: it should answer at once on every model, but on two
+//! of them the screen has no timeout support yet, so the person dismisses
+//! and the call blocks meanwhile — same reply, different timing. The
+//! deviations are documented at the model's own `show_notice`; the fix is
+//! timeout support in those screens, not a change here.
+//!
 //! WIP: both of those outcomes are under discussion. A screen core cannot
 //! draw kills the app's task outright — the blocking call never returns,
 //! not even with an `Err`. Bluntly: there is no proper error path from core
