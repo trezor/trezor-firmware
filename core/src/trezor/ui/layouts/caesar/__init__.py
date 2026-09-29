@@ -1249,11 +1249,12 @@ if not utils.BITCOIN_ONLY:
             )
 
     async def confirm_ethereum_clear_signing(
-        recipient_str: str,
+        contract_name: str,
         intent: str,
         properties: list[StrPropertyType],
         maximum_fee: str,
         contract_address: str,
+        chain_info: StrPropertyType,
         amount: str | None = None,
         account: str | None = None,
         account_path: str | None = None,
@@ -1272,6 +1273,11 @@ if not utils.BITCOIN_ONLY:
                 (TR.address_details__derivation_path, account_path, None)
             )
 
+        contract_properties: list[StrPropertyType] = [
+            (TR.words__address, contract_address, None),
+            chain_info,
+        ]
+
         def _menu() -> Menu[None]:
             menu_items: list[MenuLeaf[None]] = []
             if account_properties:
@@ -1282,11 +1288,13 @@ if not utils.BITCOIN_ONLY:
                     )
                 )
             menu_items.append(
-                create_info_menu_leaf(TR.ethereum__contract_address, contract_address)
+                create_info_menu_leaf(
+                    TR.ethereum__contract_address, with_colon(contract_properties)
+                )
             )
             return Menu(menu_items)
 
-        await confirm_action(f"{br_name}/provider", TR.words__provider, recipient_str)
+        await confirm_action(f"{br_name}/provider", TR.words__provider, contract_name)
         await confirm_action(f"{br_name}/intent", TR.words__intent, intent)
         if properties:
             with trezorui_api.confirm_properties(
