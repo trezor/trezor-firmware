@@ -42,7 +42,7 @@ impl ChoiceFactory for ChoiceFactoryNumberInput {
                 TR::inputs__back.map_translated(|t| {
                     let mut choice_item = ChoiceItem::new(
                         t,
-                        ButtonLayout::arrow_armed_arrow(TR::inputs__return.into()),
+                        ButtonLayout::arrow_armed_arrow(TR::buttons__select.into()),
                     )
                     .with_icon(theme::ICON_ARROW_BACK_UP);
                     choice_item.set_left_btn(None);
