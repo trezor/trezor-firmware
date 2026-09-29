@@ -1090,7 +1090,10 @@ class DisplayFormat:
 
         from apps.common.definitions import decode_definition
 
-        proto = decode_definition(encoded, EthereumDisplayFormatInfo)
+        try:
+            proto = decode_definition(encoded, EthereumDisplayFormatInfo)
+        except DataError as e:
+            raise InvalidFormatDefinition
 
         return cls(
             binding_context=BindingContext([(proto.chain_id, bytes(proto.address))]),
