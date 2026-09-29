@@ -1022,12 +1022,7 @@
     "ethereum__calldata_digest": "ERC-8213-Digest",
     "ethereum__calldata_suffix": "Calldata-Suffix",
     "ethereum__confirm_contract": "Vertrag bestätigen",
-    "ethereum__contract_address": {
-      "Bolt": "{provider} Kontraktadresse",
-      "Caesar": "{provider} Kontraktadresse",
-      "Delizia": "Provider Vertragsadresse",
-      "Eckhart": "{provider} Kontraktadresse"
-    },
+    "ethereum__contract_address": "Contract-Adresse",
     "ethereum__data_size_template": "Größe: {0} Bytes",
     "ethereum__delegate_done": {
       "Bolt": "",
@@ -1043,8 +1038,7 @@
     "ethereum__eip_712_empty_domain": "dApp hat sich nicht identifiziert!",
     "ethereum__gas_limit": "Gas-Grenze",
     "ethereum__gas_price": "Gas-Preis",
-    "ethereum__interaction_contract": "Interaktionsvertrag",
-    "ethereum__max_gas_price": "Maximaler Gas-Preis",
+    "ethereum__max_gas_price": "Max. Gas-Preis",
     "ethereum__name_and_version": "Name und Version",
     "ethereum__new_contract": {
       "Bolt": "Neuen Vertrag einstellen",

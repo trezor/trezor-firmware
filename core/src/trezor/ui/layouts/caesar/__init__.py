@@ -1294,7 +1294,9 @@ if not utils.BITCOIN_ONLY:
             )
             return Menu(menu_items)
 
-        await confirm_action(f"{br_name}/provider", TR.words__provider, contract_name)
+        await confirm_action(
+            f"{br_name}/provider", TR.ethereum__contract_address, contract_name
+        )
         await confirm_action(f"{br_name}/intent", TR.words__intent, intent)
         if properties:
             with trezorui_api.confirm_properties(
@@ -1811,7 +1813,7 @@ if not utils.BITCOIN_ONLY:
             if is_send:
                 title = TR.words__recipient
             else:
-                title = TR.ethereum__interaction_contract if recipient else ""
+                title = TR.ethereum__contract_address if recipient else ""
 
             while True:
                 # Allowing going back and forth between recipient and summary/details

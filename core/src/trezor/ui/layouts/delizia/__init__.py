@@ -1093,9 +1093,7 @@ if not utils.BITCOIN_ONLY:
                 br_name="confirm_output",
                 br_code=br_code,
                 subtitle=(
-                    TR.words__recipient
-                    if is_send
-                    else TR.ethereum__interaction_contract
+                    TR.words__recipient if is_send else TR.ethereum__contract_address
                 ),
                 chunkify=chunkify if recipient else False,
                 cancel_text=TR.buttons__cancel,
@@ -1294,7 +1292,7 @@ if not utils.BITCOIN_ONLY:
             return Menu(menu_items)
 
         for screen, title, value in (
-            ("provider", TR.words__provider, contract_name),
+            ("provider", TR.ethereum__contract_address, contract_name),
             ("intent", TR.words__intent, intent),
         ):
             with trezorui_api.confirm_action(

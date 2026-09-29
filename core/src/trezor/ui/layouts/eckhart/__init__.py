@@ -1101,7 +1101,7 @@ if not utils.BITCOIN_ONLY:
         subtitle = (
             None
             if not is_send and recipient is None
-            else (TR.words__recipient if is_send else TR.ethereum__interaction_contract)
+            else (TR.words__recipient if is_send else TR.ethereum__contract_address)
         )
         title = TR.words__send
 
@@ -1343,7 +1343,7 @@ if not utils.BITCOIN_ONLY:
             return Menu(menu_items)
 
         for screen, title, value in (
-            ("provider", TR.words__provider, contract_name),
+            ("provider", TR.ethereum__contract_address, contract_name),
             ("intent", TR.words__intent, intent),
         ):
             with trezorui_api.confirm_action(

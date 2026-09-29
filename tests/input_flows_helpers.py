@@ -488,7 +488,7 @@ class EthereumFlow:
     ) -> BRGeneratorType:
         assert (yield).name == "confirm_ethereum_tx"
         assert (
-            TR.ethereum__interaction_contract in self.debug.read_layout().title()
+            TR.ethereum__contract_address in self.debug.read_layout().title()
             or TR.words__recipient in self.debug.read_layout().title()
         )
         if cancel:

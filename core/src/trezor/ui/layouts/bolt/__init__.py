@@ -1099,7 +1099,7 @@ if not utils.BITCOIN_ONLY:
             description = with_colon(TR.words__recipient)
         else:
             description = (
-                with_colon(TR.ethereum__interaction_contract) if recipient else None
+                with_colon(TR.ethereum__contract_address) if recipient else None
             )
 
         address_ctx = trezorui_api.confirm_value(
@@ -1302,7 +1302,9 @@ if not utils.BITCOIN_ONLY:
                 items=info_items,
             )
 
-        await confirm_action(f"{br_name}/provider", TR.words__provider, contract_name)
+        await confirm_action(
+            f"{br_name}/provider", TR.ethereum__contract_address, contract_name
+        )
         await confirm_action(f"{br_name}/intent", TR.words__intent, intent)
         if properties:
             props_ctx = trezorui_api.confirm_properties(

@@ -865,7 +865,7 @@
     "ethereum__calldata_digest": "ERC-8213 digest",
     "ethereum__calldata_suffix": "Calldata suffix",
     "ethereum__confirm_contract": "Confirm contract",
-    "ethereum__contract_address": "Provider contract address",
+    "ethereum__contract_address": "Contract address",
     "ethereum__data_size_template": "Size: {0} bytes",
     "ethereum__delegate_done": {
       "Bolt": "",
@@ -881,12 +881,6 @@
     "ethereum__eip_712_empty_domain": "dApp did not identify itself!",
     "ethereum__gas_limit": "Gas limit",
     "ethereum__gas_price": "Gas price",
-    "ethereum__interaction_contract": {
-      "Bolt": "Interaction contract",
-      "Caesar": "Interaction contract",
-      "Delizia": "Interaction contract",
-      "Eckhart": "Interaction contract address"
-    },
     "ethereum__max_gas_price": "Max fee per gas",
     "ethereum__name_and_version": "Name and version",
     "ethereum__new_contract": "New contract will be deployed",
