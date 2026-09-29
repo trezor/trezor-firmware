@@ -1,5 +1,5 @@
-use trezor_app_sdk::crypto::{self, HashingAlgorithm, HasherExt as _};
 use crate::{alloc_types::String, paths::Bip32Path};
+use trezor_app_sdk::crypto::{self, HasherExt as _, HashingAlgorithm};
 use trezor_app_sdk::{Error, Result, ResultExt};
 
 pub const COIN: &str = "Tron";

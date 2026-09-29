@@ -28,9 +28,13 @@ use crate::{
     },
     uformat,
 };
-use trezor_app_sdk::{crypto, crypto::{HashingAlgorithm, HasherExt as _}, ui::{self, Property}};
 use prost::Message;
 use trezor_app_sdk::{Error, Result, ResultExt, WireEncode, unwrap, wire_request_raw};
+use trezor_app_sdk::{
+    crypto,
+    crypto::{HasherExt as _, HashingAlgorithm},
+    ui::{self, Property},
+};
 
 // Maximum chain_id which returns the full signature_v (which must fit into an uint32).
 // chain_ids larger than this will only return one bit and the caller must recalculate

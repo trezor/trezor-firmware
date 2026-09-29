@@ -2,14 +2,14 @@ import io
 from typing import TYPE_CHECKING, Any, Union
 
 from trezorlib import exceptions, protobuf
-from trezorlib.messages import Failure, ExtAppMessage, ExtAppResponse
+from trezorlib.messages import ExtAppMessage, ExtAppResponse, Failure
 from trezorlib.protobuf import load_message
 
 from .generated import messages as tron_messages
 
 if TYPE_CHECKING:
-    from .tools import Address
-    from .transport.session import Session
+    from trezorlib.client import Session
+    from trezorlib.tools import Address
 
     TronMessageType = Union[
         tron_messages.TransferContract,
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     ]
 
 
-def message_id(msg: type[protobuf.MessageType] | tron_messages.MessageType) -> int:
+def message_id(msg: type[protobuf.MessageType] | protobuf.MessageType) -> int:
     """Return app-specific numeric message ID for a message class or instance."""
     if isinstance(msg, type):
         name = msg.__name__
@@ -48,8 +48,8 @@ def call_ext(
     session: "Session",
     instance_id: int,
     *,
-    msg_data: tron_messages.MessageType,
-    expect: list[type[tron_messages.MessageType]],
+    msg_data: protobuf.MessageType,
+    expect: list[type[protobuf.MessageType]],
     timeout: float | None = None,
 ) -> Any:
     """Call a method on this session, process and return the response."""
