@@ -396,6 +396,19 @@ impl Button {
         ))
     }
 
+    /// Create a button bar with an up-arrow back button on the left and a
+    /// confirm button on the right. The back button is only shown when
+    /// `show_back` is set, otherwise the confirm button takes the full width.
+    pub fn back_confirm(right: Button, show_back: bool) -> FixedHeightBar<BackConfirm> {
+        theme::button_bar(BackConfirm {
+            left: Button::with_icon(theme::ICON_UP)
+                .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| BackConfirmMsg::Back)),
+            right: right
+                .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| BackConfirmMsg::Confirmed)),
+            show_back,
+        })
+    }
+
     pub fn cancel_confirm_text(
         left: Option<TString<'static>>,
         right: Option<TString<'static>>,
@@ -484,6 +497,63 @@ impl Button {
 pub enum CancelConfirmMsg {
     Cancelled,
     Confirmed,
+}
+
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
+pub enum BackConfirmMsg {
+    Back,
+    Confirmed,
+}
+
+/// Button bar with an optional up-arrow back button on the left and a
+/// confirm button on the right. The confirm button takes the full width when
+/// the back button is not shown.
+pub struct BackConfirm {
+    left: MsgMap<Button, BackConfirmHandlerFn>,
+    right: MsgMap<Button, BackConfirmHandlerFn>,
+    show_back: bool,
+}
+
+type BackConfirmHandlerFn = fn(ButtonMsg) -> Option<BackConfirmMsg>;
+
+impl Component for BackConfirm {
+    type Msg = BackConfirmMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let (left_area, right_area) = if self.show_back {
+            let (left, rest) = bounds.split_left(theme::BUTTON_WIDTH);
+            (left, rest.inset(Insets::left(theme::BUTTON_SPACING)))
+        } else {
+            (Rect::zero(), bounds)
+        };
+        self.left.place(left_area);
+        self.right.place(right_area);
+        bounds
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.left
+            .event(ctx, event)
+            .or_else(|| self.right.event(ctx, event))
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if self.show_back {
+            self.left.render(target);
+        }
+        self.right.render(target);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for BackConfirm {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("BackConfirm");
+        if self.show_back {
+            t.child("left_button", &self.left);
+        }
+        t.child("right_button", &self.right);
+    }
 }
 
 type CancelInfoConfirm<F0, F1, F2> =

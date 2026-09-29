@@ -1,12 +1,12 @@
 use core::convert::TryInto;
 
 use super::component::{
-    AddressDetails, ButtonPage, CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress, Dialog,
-    DialogMsg, FidoConfirm, FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog,
-    Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog,
-    NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg,
-    Progress, SelectMenu, SelectMenuMsg, SelectWordCountMsg, SelectWordMsg, SetBrightnessDialog,
-    SimplePage,
+    AddressDetails, BackConfirmMsg, ButtonPage, CancelConfirmMsg, CancelInfoConfirmMsg,
+    CoinJoinProgress, Dialog, DialogMsg, FidoConfirm, FidoMsg, Frame, FrameMsg, Homescreen,
+    HomescreenMsg, IconDialog, Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg,
+    NumberInputDialog, NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
+    PinKeyboard, PinKeyboardMsg, Progress, SelectMenu, SelectMenuMsg, SelectWordCountMsg,
+    SelectWordMsg, SetBrightnessDialog, SimplePage,
 };
 use crate::micropython::{Error, Obj};
 use crate::strutil::TString;
@@ -15,9 +15,9 @@ use crate::ui::component::placed::GridPlaced;
 use crate::ui::component::text::paragraphs::{ParagraphSource, Paragraphs};
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::Timeout;
-use crate::ui::component::{Component, FormattedText, Never, Paginate};
+use crate::ui::component::{Component, FlowMsg, FormattedText, MsgMap, Never, Paginate};
 use crate::ui::layout::obj::ComponentMsgObj;
-use crate::ui::layout::result::{CANCELLED, CONFIRMED, INFO};
+use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 
 impl TryFrom<CancelConfirmMsg> for Obj {
     type Error = Error;
@@ -26,6 +26,17 @@ impl TryFrom<CancelConfirmMsg> for Obj {
         match value {
             CancelConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
             CancelConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
+        }
+    }
+}
+
+impl TryFrom<BackConfirmMsg> for Obj {
+    type Error = Error;
+
+    fn try_from(value: BackConfirmMsg) -> Result<Self, Self::Error> {
+        match value {
+            BackConfirmMsg::Back => Ok(BACK.as_obj()),
+            BackConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
         }
     }
 }
@@ -190,15 +201,24 @@ where
     }
 }
 
-impl<F> ComponentMsgObj for NumberInputDialog<F>
+/// Layout returned by `request_number`: the number input screen with the
+/// menu button in the header and a back button (up arrow) in the button bar.
+pub type RequestNumberScreen<F> =
+    MsgMap<Frame<NumberInputDialog<F>>, fn(FrameMsg<NumberInputDialogMsg>) -> Option<FlowMsg>>;
+
+impl<F> ComponentMsgObj for RequestNumberScreen<F>
 where
     F: Fn(u32) -> TString<'static>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        let value = self.value();
+        // Return not only the result, but also the currently displayed number,
+        // so that Python can e.g. show the corresponding "more info" text.
+        let value = self.inner().inner().value();
         match msg {
-            NumberInputDialogMsg::Selected => Ok((CONFIRMED.as_obj(), value).try_into()?),
-            NumberInputDialogMsg::InfoRequested => Ok((INFO.as_obj(), value).try_into()?),
+            FlowMsg::Confirmed => Ok((CONFIRMED.as_obj(), value).try_into()?),
+            FlowMsg::Back => Ok((BACK.as_obj(), value).try_into()?),
+            FlowMsg::Info => Ok((INFO.as_obj(), value).try_into()?),
+            msg => msg.try_into(),
         }
     }
 }

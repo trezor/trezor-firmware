@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import trezorui_api
 from trezor import TR
 from trezor.enums import ButtonRequestType
+from trezor.wire import ActionCancelled
 
 from ..common import interact, raise_if_not_confirmed
 
@@ -98,6 +99,7 @@ async def slip39_show_checklist(
         button=TR.buttons__continue,
         active=step,
         items=items,
+        back_button=back_button,
     ) as layout:
         return await interact(layout, "slip39_checklist", ButtonRequestType.ResetDevice)
 
@@ -110,7 +112,9 @@ async def _prompt_number(
     min_count: int,
     max_count: int,
     br_name: str,
-) -> int:
+) -> int | trezorui_api.UiResult:
+    from trezor.ui.layouts.menu import Menu, leaf_from_layout, show_menu
+
     with trezorui_api.request_number(
         title=title,
         count=count,
@@ -126,23 +130,36 @@ async def _prompt_number(
                 ButtonRequestType.ResetDevice,
                 raise_on_cancel=None,
             )
-            if __debug__:
-                if not isinstance(result, tuple):
-                    # DebugLink currently can't send number of shares and it doesn't
-                    # change the counter either so just use the initial value.
-                    result = result, count
+
+            if result is trezorui_api.CANCELLED:
+                # not reachable from the UI, only via debuglink
+                raise ActionCancelled
+
+            if __debug__ and not isinstance(result, tuple):
+                # sent by debuglink. debuglink does not change the number of
+                # shares anyway so use the initial one
+                result = (result, count)
             status, value = result
 
-            if status == CONFIRMED:
+            if status is CONFIRMED:
                 assert isinstance(value, int)
                 return value
 
-            with trezorui_api.show_simple(
-                title=None,
-                text=info(value),
-                button=TR.buttons__ok_i_understand,
-            ) as layout:
-                await interact(layout, None, raise_on_cancel=None)
+            if status is trezorui_api.BACK:
+                return trezorui_api.BACK
+
+            if status is trezorui_api.INFO:
+                # shows the menu with the "more info" screen
+                leaf = leaf_from_layout(
+                    TR.buttons__more_info,
+                    lambda: trezorui_api.show_info_with_cancel(
+                        title=title,
+                        items=[("", info(value), False)],
+                    ),
+                )
+                await show_menu(Menu([leaf]))
+            else:
+                raise RuntimeError
 
 
 def slip39_prompt_threshold(
