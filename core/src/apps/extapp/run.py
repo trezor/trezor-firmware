@@ -6,11 +6,11 @@ import trezorui_api
 import ustruct  # pyright: ignore[reportMissingImports]
 from storage import cache_common as cc
 from trezor import app, io, loop, ui, workflow
-from trezor.messages import ExtAppMessage, ExtAppResponse, Failure
+from trezor.messages import ExtAppMessage, ExtAppResponse
 from trezor.ui import ProgressLayout
 from trezor.ui.layouts.progress import progress
 from trezor.wire import context
-from trezor.wire.errors import DataError
+from trezor.wire.errors import DataError, Error
 
 from apps.common import paths
 from apps.common.keychain import Keychain, get_keychain
@@ -528,17 +528,13 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             )
             if __debug__:
                 log.debug(__name__, f"Received wire error message: {err_message}")
-            response = Failure(
-                code=message_id,  # pyright: ignore [reportArgumentType]
-                message=err_message,
-            )
-            ack = await context.call(response, ExtAppMessage)
-            if ack.message_id > 0xFFFF:
-                die(DataError("Invalid message ID."))
-            io.ipc_send(
-                task_id,
-                fn_id(_SERVICE_WIRE_START, ack.message_id),
-                ack.data,
+            # A failure ends the request, like a final response does. Waiting
+            # here for the host's next message would keep the workflow alive,
+            # so the homescreen would never come back. The app is already
+            # waiting for its next request, which the next `run()` delivers.
+            raise Error(
+                message_id,  # pyright: ignore [reportArgumentType]
+                err_message,
             )
 
         else:
