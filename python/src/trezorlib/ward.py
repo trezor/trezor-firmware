@@ -743,6 +743,7 @@ def pin_cached_entry(
 
     The device pulls the leaf, verifies it exactly as a read does, shows the value and asks.
     Nothing is written before that confirmation, so a rejected screen leaves flash untouched.
+    Needs a synced session, like a read: an unproved leaf is never kept.
 
     Fails if the device's store is FULL -- it never evicts, because every record it holds is
     either a value the user chose to keep or a change they confirmed and that is not published

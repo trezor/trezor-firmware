@@ -148,7 +148,7 @@ async def flush_queue(
         old_leaf,
         (key_type, id_part, val_part),
         proof,
-        root_for_write(from_root, counter - 1),
+        root_for_write(from_root),
         witness_entry_key=witness_entry_key,
         witness_commit=witness_commit,
     )

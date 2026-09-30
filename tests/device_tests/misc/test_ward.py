@@ -2928,44 +2928,35 @@ def test_ward_offline_read_of_an_unpinned_entry_says_so(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ward_pin_at_counter_zero_is_allowed(session: Session):
-    """Bootstrap: with no trie on the host there is no proof and no root, so the AEAD is the
-    whole of the evidence -- and pinning adds no new trust assumption, because a READ in this
-    state already displays exactly these bytes on exactly this evidence.
+def test_ward_pin_needs_a_synced_session(session: Session):
+    """An unsynced device keeps NOTHING, even a leaf it could authenticate.
 
-    What it cannot show is freshness, and nothing pretends otherwise: the record stores no counter,
-    so a local read says only that this copy has not been checked against a host.
+    This used to be allowed, on the AEAD alone: only this wallet's devices can seal a leaf, so a
+    host cannot forge one. But it can REPLAY one. The leaf below is genuine -- sealed by another
+    device of this wallet -- and at counter 0 nothing can say whether it is current. Counter 0 is
+    this device's floor, not the wallet's, so a second device of a wallet with history is in
+    exactly this state, and the host holds every leaf that wallet ever published. Offline records
+    store no counter, so an old value pinned here would read as VALID indefinitely.
+
+    Refused before the device pulls at all, and flash is untouched.
     """
     key = expected_entry_key(_K_PATH, _APP, b"addr1")
-
-    # A leaf sealed by ANOTHER device of this wallet, served to one that has never synced.
-    # It has to come from the oracle: the moment this device syncs it learns the tree is
-    # EMPTY, and from then on it rightly refuses any leaf claiming to be in it -- so the
-    # state under test cannot be reached through a local write. See tests/ward_keys.py.
     leaf = ward.Leaf(
         seal_identity(_K_IDENT, key, "address", b"addr1", _APP),
-        seal_content(_K_DATA, key, "address", b"bootstrap_value"),
+        seal_content(_K_DATA, key, "address", b"replayed_value"),
     )
+    pulls = []
 
-    def provider(_entry_key: bytes) -> ward.Answer:
-        # No proof, and none is asked for: the device holds no root to check one against.
+    def provider(entry_key: bytes) -> ward.Answer:
+        pulls.append(entry_key)
         return ward.Answer(leaf=leaf)
 
-    rec = _Recorded()
-    with session.test_ctx as ctx:
-        ctx.set_expected_responses(_expected("ward_pin_cached_entry", reveals=m.WardPinCachedEntry))
-        ctx.set_input_flow(
-            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
-        )
+    with pytest.raises(exceptions.TrezorFailure, match="sync"):
         ward.pin_cached_entry(session, _APP, b"addr1", provider)
+    assert pulls == []
 
-    assert "keep for offline use" in rec.title
-    assert "bootstrap_value" in rec.squashed
-
-    read = _offline_read(session.test_ctx.get_session(), b"addr1")
-    assert "bootstrap_value" in read.squashed
-    # Authentic, with nothing claiming it is current.
-    assert "not checked against the host" in read.text.lower()
+    rec = _offline_read(session.test_ctx.get_session(), b"addr1")
+    assert "not kept offline" in rec.title
 
 
 @pytest.mark.models("core")

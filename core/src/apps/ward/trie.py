@@ -296,11 +296,10 @@ def compute_new_root(
     from .leaf import leaf_hash_of
 
     # ONE EMPTY STATE. "Never written" and "emptied by a delete" are both EMPTY_ROOT by the
-    # time they get here; "no root after writing" -- cannot verify -- never does. Only the
-    # caller holds the counter that tells those apart, so it settles None once, in
-    # `root.root_for_write`, and a None here is a caller that skipped that step. Refused
-    # rather than read as empty: read as empty, it would authorise a witness-less insert
-    # that replaces whatever tree the device lost track of.
+    # time they get here -- adoption stores one before a session can write. None is "cannot
+    # verify", and `root.root_for_write` refuses it before this is called, so a None here is
+    # a caller that skipped that step. Refused rather than read as empty: read as empty, it
+    # would authorise a witness-less insert that replaces whatever tree the device lost.
     if stored_root is None:
         raise DataError("WARD: no trusted root")
     empty = stored_root == EMPTY_ROOT

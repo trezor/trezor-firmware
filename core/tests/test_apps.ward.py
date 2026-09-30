@@ -932,10 +932,10 @@ class TestWardComputeNewRoot(unittest.TestCase):
             compute_new_root(a, None, self._leaf(b"a"), good, root)
 
     def test_an_unsettled_root_is_refused_not_read_as_empty(self):
-        """None is "cannot verify" until `root_for_write` has settled it with the counter.
+        """None is "cannot verify", and `root_for_write` refuses it before the trie is reached.
 
         Read as empty -- as it once was -- None authorised a witness-less first insert, so a
-        device that had written and then lost its root would let the host replace the tree.
+        device without a trusted root would let the host replace the tree.
         Every operation refuses it, including the one that would have succeeded.
         """
         k, b = self._key([0]), self._key([1])
@@ -959,19 +959,19 @@ class TestWardComputeNewRoot(unittest.TestCase):
         ):
             with self.assertRaises(DataError):
                 call()
-        # the same first insert succeeds once the caller has settled the root as empty
+        # the same first insert succeeds against the EMPTY_ROOT an adoption stores
         self.assertEqual(
             compute_new_root(k, None, self._leaf(b"k"), [], EMPTY_ROOT), lk
         )
 
-    def test_root_for_write_settles_none_with_the_counter(self):
-        """No root at counter 0 is an empty wallet; no root after a write cannot verify."""
-        self.assertEqual(root_for_write(None, 0), EMPTY_ROOT)
+    def test_root_for_write_never_reads_none_as_empty(self):
+        """Not even at counter 0: that is this device's floor, and a second device of a wallet
+        with history starts there too. A writer is online, so it holds a real root."""
         with self.assertRaises(DataError):
-            root_for_write(None, 3)
+            root_for_write(None)
         r = bytes(range(32))
-        self.assertEqual(root_for_write(r, 3), r)
-        self.assertEqual(root_for_write(EMPTY_ROOT, 3), EMPTY_ROOT)
+        self.assertEqual(root_for_write(r), r)
+        self.assertEqual(root_for_write(EMPTY_ROOT), EMPTY_ROOT)
 
 
 class TestWardAttestation(unittest.TestCase):
