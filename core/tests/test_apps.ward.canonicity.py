@@ -127,7 +127,7 @@ class TestWardTrieCanonicity(unittest.TestCase):
         rng = _Rng(seed)
 
         model = CanonicalTrie()
-        root = None  # the device: None means "has never written"
+        root = EMPTY_ROOT  # the device before its first write, as `root_for_write` settles it
         live = {}
 
         for step in range(self.STEPS):
@@ -253,7 +253,7 @@ class TestWardTrieCanonicity(unittest.TestCase):
         """
         keys = _keys_ladder(6)
         model = CanonicalTrie()
-        root = None
+        root = EMPTY_ROOT
         for i, k in enumerate(keys):
             p, wkey, wcommit = model.nonmembership_witness(k)
             root = compute_new_root(

@@ -124,7 +124,7 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
         entry_key_for,
     )
     from .leaf import EMPTY_PART, make_leaf_content, make_leaf_identity
-    from .root import get_counter, get_root
+    from .root import get_counter, get_root, root_for_write
     from .trie import compute_new_root
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
@@ -186,7 +186,7 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
         old_leaf,
         None,
         proof,
-        from_root,
+        root_for_write(from_root, counter - 1),
     )
     # NOT COMMITTED HERE. The device hands back the root it derived, its counter and the
     # authenticators; the head only moves when a WM attestation names this exact transition and
