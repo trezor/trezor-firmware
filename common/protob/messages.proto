@@ -457,6 +457,8 @@ enum MessageType {
     // established before it knows which link to ask for.
     MessageType_WardChainRequest = 2345 [(wire_out) = true];
     MessageType_WardChainLinkAck = 2346 [(wire_in) = true];
+    MessageType_WardRejoin = 2347 [(wire_in) = true];
+    MessageType_WardRejoinAck = 2348 [(wire_out) = true];
 
     MessageType_WardResetApp = 2343 [(wire_in) = true];
     MessageType_WardResetAppAck = 2344 [(wire_out) = true];

@@ -872,6 +872,8 @@ class MessageType(IntEnum):
     WardResetServiceAck = 2342
     WardChainRequest = 2345
     WardChainLinkAck = 2346
+    WardRejoin = 2347
+    WardRejoinAck = 2348
     WardResetApp = 2343
     WardResetAppAck = 2344
     DisplayAddress = 2322
@@ -10616,6 +10618,43 @@ class WardVerifyChainAck(protobuf.MessageType):
     ) -> None:
         self.counter = counter
         self.new_root = new_root
+        self.reverts_crossed = reverts_crossed
+
+
+class WardRejoin(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2347
+    FIELDS = {
+        1: protobuf.Field("fork_counter", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        fork_counter: Optional["int"] = None,
+    ) -> None:
+        self.fork_counter = fork_counter
+
+
+class WardRejoinAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2348
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("new_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("discarded", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("reverts_crossed", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: Optional["int"] = None,
+        new_root: Optional["bytes"] = None,
+        discarded: Optional["int"] = None,
+        reverts_crossed: Optional["int"] = None,
+    ) -> None:
+        self.counter = counter
+        self.new_root = new_root
+        self.discarded = discarded
         self.reverts_crossed = reverts_crossed
 
 

@@ -8489,6 +8489,40 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WardVerifyChainAck"]:
             return isinstance(msg, cls)
 
+    class WardRejoin(protobuf.MessageType):
+        fork_counter: "int | None"
+
+        def __init__(
+            self,
+            *,
+            fork_counter: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardRejoin"]:
+            return isinstance(msg, cls)
+
+    class WardRejoinAck(protobuf.MessageType):
+        counter: "int | None"
+        new_root: "AnyBytes | None"
+        discarded: "int | None"
+        reverts_crossed: "int | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int | None" = None,
+            new_root: "AnyBytes | None" = None,
+            discarded: "int | None" = None,
+            reverts_crossed: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardRejoinAck"]:
+            return isinstance(msg, cls)
+
     class WardSync(protobuf.MessageType):
 
         @classmethod

@@ -2292,6 +2292,182 @@ def test_ward_a_write_emits_its_own_authorisation(session: Session):
 # --- rollback: the escape from a stuck wallet ----------------------------------------
 
 
+def _fork(session: Session) -> tuple:
+    """Leave this device on a branch the WM has since LOST. Returns (store, base, own, main, head).
+
+    The device writes three entries and adopts each, so it stands on (3, R3') -- a head the WM
+    really attested. Then the WM's register is "restored" to (2, R2) and another device of the
+    wallet writes on from there: (2,R2) -> (3,X3) -> (4,X4). Those links are minted by the oracle,
+    which holds K_auth as a second device would. The device's own branch link (2,R2) -> (3,R3')
+    stays in the host's log, which is what a rejoin needs to prove it.
+    """
+    store = WardTrie()
+    ka = _seed(session, store, b"a", b"one")
+    kb = _seed(session, store, b"b", b"two")
+    base = (store.counter, store.root())
+    _seed(session, store, b"c", b"lost")
+    own = (store.counter, store.root())
+
+    x3 = _subset(store, [ka]).root()
+    x4 = _subset(store, [kb]).root()
+    # the fixture only means something if the branches really differ where they are compared
+    assert x3 != own[1] and x4 != own[1] and x3 != x4
+    main = [
+        _link(base[0], base[1], base[0] + 1, x3),
+        _link(base[0] + 1, x3, base[0] + 2, x4),
+    ]
+    return store, base, own, main, (base[0] + 2, x4)
+
+
+def _attest_head(session: Session, wm: MockWM, head: tuple, from_state: tuple) -> None:
+    """Sync and ingest an attestation of `head`, stepping from `from_state` -- and adopt nothing.
+
+    `install_unauthenticated` is the restore model: the WM is told a head by a party with no
+    signature, exactly as a backup restore or failover would leave it.
+    """
+    ack = ward.sync(session)
+    wm.install_unauthenticated(
+        ack.ward_id, head[0], head[1], _T0 + head[0], from_state[0], from_state[1]
+    )
+    fc, fr, fhn, tc, tr, hn, ts, sig = wm.attest(ack.ward_id, ack.nonce)
+    ward.ingest_attestation(session, fc, fr, tc, tr, sig, fhn, hn, ts)
+
+
+def _rejoin(session: Session, fork_counter: int, links: list) -> tuple:
+    """Walk the rejoin confirmation and return (ack, recorder)."""
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        ack = ward.rejoin(session, fork_counter, _serves(links))
+    return ack, rec
+
+
+@pytest.mark.models("core")
+def test_ward_a_device_on_a_lost_branch_cannot_catch_up(session: Session):
+    """The gap WardRejoin exists for: the walk reaches this device's counter at another root.
+
+    Refusing is right -- adopting a history that does not continue the one it holds is exactly
+    what the descent check exists to stop -- but on its own it strands the device for good.
+    """
+    store, _base, _own, main, head = _fork(session)
+    _attest_head(session, _wm_for(store), head, (main[-1][0], main[-1][1]))
+
+    with pytest.raises(exceptions.TrezorFailure, match="does not descend"):
+        ward.verify_chain(session, _serves(store.links + main))
+
+
+@pytest.mark.models("core")
+def test_ward_rejoin_adopts_the_wm_head_after_the_wm_lost_a_branch(session: Session):
+    """Both branches proved, the loss shown, the WM's head adopted -- and verified against."""
+    store, base, own, main, head = _fork(session)
+    _attest_head(session, _wm_for(store), head, (main[-1][0], main[-1][1]))
+
+    # the host finds the fork point from its own log
+    log = WardTrie()
+    log.links = store.links + main
+    assert log.fork_point(own, head) == base[0]
+
+    ack, rec = _rejoin(session, base[0], store.links + main)
+
+    assert ack.counter == head[0]
+    assert ack.new_root == head[1]
+    assert ack.discarded == 1
+    assert ack.reverts_crossed == 0
+    assert "rejoin" in rec.title
+    for shown in ("#%d" % own[0], "#%d" % base[0], "#%d" % head[0], "1change"):
+        assert shown in rec.squashed
+
+    # the adopted tree is the one it verifies against now, and the session is online
+    head_store = _subset(store, [expected_entry_key(_K_PATH, _APP, b"b")])
+    head_store.counter = head[0]
+    assert head_store.root() == head[1]
+    _res, read = _read(session, head_store, lambda p: ward.get_entry(session, _APP, b"b", p))
+    assert "two" in read.text
+
+
+@pytest.mark.models("core")
+def test_ward_rejoin_declined_leaves_the_device_where_it_was(session: Session):
+    store, base, own, main, head = _fork(session)
+    _attest_head(session, _wm_for(store), head, (main[-1][0], main[-1][1]))
+
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(reject_flow(session))
+        with pytest.raises(exceptions.Cancelled):
+            ward.rejoin(session, base[0], _serves(store.links + main))
+
+    assert ward.sync(session).counter == own[0]
+
+
+@pytest.mark.models("core")
+def test_ward_rejoin_needs_the_devices_own_branch(session: Session):
+    """No proof of this device's branch, no rejoin: that proof is what makes the fork genuine."""
+    store, base, _own, main, head = _fork(session)
+    _attest_head(session, _wm_for(store), head, (main[-1][0], main[-1][1]))
+
+    own_branch_link = store.links[-1]
+    served = [lnk for lnk in store.links if lnk is not own_branch_link] + main
+    with pytest.raises(exceptions.TrezorFailure, match="cannot continue the chain"):
+        ward.rejoin(session, base[0], _serves(served))
+
+
+@pytest.mark.models("core")
+def test_ward_rejoin_refuses_a_fork_point_that_is_not_the_latest(session: Session):
+    """Naming a LOWER counter would inflate the count on screen; the branches must part above it."""
+    store, base, _own, main, head = _fork(session)
+    _attest_head(session, _wm_for(store), head, (main[-1][0], main[-1][1]))
+
+    with pytest.raises(exceptions.TrezorFailure, match="do not part"):
+        ward.rejoin(session, base[0] - 1, _serves(store.links + main))
+
+
+@pytest.mark.models("core")
+def test_ward_rejoin_refuses_a_fork_point_at_or_above_a_head(session: Session):
+    store, _base, own, main, head = _fork(session)
+    _attest_head(session, _wm_for(store), head, (main[-1][0], main[-1][1]))
+
+    with pytest.raises(exceptions.TrezorFailure, match="below both heads"):
+        ward.rejoin(session, own[0], _serves(store.links + main))
+
+
+@pytest.mark.models("core")
+def test_ward_rejoin_refuses_a_device_that_is_not_on_a_fork(session: Session):
+    """A device on the WM's own branch catches up with verify_chain; the branches never part."""
+    store = WardTrie()
+    ka = _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
+    base = (store.counter, store.root())
+    x3 = _subset(store, [ka]).root()
+    main = [_link(base[0], base[1], base[0] + 1, x3)]
+    head = (base[0] + 1, x3)
+    _attest_head(session, _wm_for(store), head, base)
+
+    with pytest.raises(exceptions.TrezorFailure, match="do not part"):
+        ward.rejoin(session, base[0] - 1, _serves(store.links + main))
+
+
+@pytest.mark.models("core")
+def test_ward_rejoin_needs_an_attested_round(session: Session):
+    """The WM's head comes from this round's attestation, never from the host."""
+    store, base, _own, main, _head = _fork(session)
+
+    with pytest.raises(exceptions.TrezorFailure, match="no attested sync round"):
+        ward.rejoin(session, base[0], _serves(store.links + main))
+
+
+@pytest.mark.models("core")
+def test_ward_rejoin_refuses_a_forged_link(session: Session):
+    """Neither branch can be invented: every link needs K_auth, which the host does not hold."""
+    store, base, _own, main, head = _fork(session)
+    _attest_head(session, _wm_for(store), head, (main[-1][0], main[-1][1]))
+
+    forged = list(main[0])
+    forged[4] = bytes(32)
+    with pytest.raises(exceptions.TrezorFailure, match="not authorised"):
+        ward.rejoin(session, base[0], _serves(store.links + [tuple(forged), main[1]]))
+
+
 def _rollback(
     session: Session,
     wm: MockWM,

@@ -807,6 +807,8 @@ if TYPE_CHECKING:
         WardResetServiceAck = 2342
         WardChainRequest = 2345
         WardChainLinkAck = 2346
+        WardRejoin = 2347
+        WardRejoinAck = 2348
         WardResetApp = 2343
         WardResetAppAck = 2344
         DisplayAddress = 2322

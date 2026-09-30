@@ -510,8 +510,52 @@ def verify_chain(
     freshness and no confirmation -- undoing a user-confirmed demotion by replaying the
     attestation it had kept. See the note in the firmware's `verify_chain._anchor`.
     """
-    res = session.call(messages.WardVerifyChain())
+    res = _answer_chain_pulls(
+        session, session.call(messages.WardVerifyChain()), link_source, max_links_per_ack
+    )
+    if not isinstance(res, messages.WardVerifyChainAck):
+        raise RuntimeError(f"unexpected response to the chain walk: {res}")
+    return res
 
+
+def rejoin(
+    session: "Session",
+    fork_counter: int,
+    link_source: LinkSource,
+    max_links_per_ack: int = 64,
+) -> messages.WardRejoinAck:
+    """Rejoin the WM's history after it lost the branch the device stands on.
+
+    Only for a FORK: the device holds a head the WM once attested, but the WM's current history
+    does not contain it -- its register was restored below that head and other devices wrote on.
+    `verify_chain` refuses that ("does not descend"); this is the way back, and the user holds to
+    confirm it, because every change the device holds above `fork_counter` is discarded.
+
+    Run after `sync` and `ingest_attestation`, like `verify_chain`. `fork_counter` is the last
+    counter both branches share -- find it with `WardTrie.fork_point`. The device then walks BOTH
+    branches back to it through `link_source`, exactly as `verify_chain` does: the WM's branch
+    from the attested head, and its own from its stored head. So `link_source` must serve the
+    device's branch too, which means the host must have KEPT those links; a host that dropped them
+    cannot offer a rejoin.
+    """
+    res = _answer_chain_pulls(
+        session,
+        session.call(messages.WardRejoin(fork_counter=fork_counter)),
+        link_source,
+        max_links_per_ack,
+    )
+    if not isinstance(res, messages.WardRejoinAck):
+        raise RuntimeError(f"unexpected response to the rejoin: {res}")
+    return res
+
+
+def _answer_chain_pulls(
+    session: "Session",
+    res: object,
+    link_source: LinkSource,
+    max_links_per_ack: int,
+) -> object:
+    """Answer the device's `WardChainRequest`s until it says something else, and return that."""
     while isinstance(res, messages.WardChainRequest):
         links = link_source(res.to_counter, res.to_root, max_links_per_ack)
         res = session.call(
@@ -532,9 +576,6 @@ def verify_chain(
                 ]
             )
         )
-
-    if not isinstance(res, messages.WardVerifyChainAck):
-        raise RuntimeError(f"unexpected response to the chain walk: {res}")
     return res
 
 
