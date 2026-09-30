@@ -39,6 +39,28 @@ async def get_root() -> bytes | None:
     return ward_store.get_root(await derive_wallet_id())
 
 
+def root_for_write(root: bytes | None, counter: int) -> bytes:
+    """The root a write derives from: the stored one, or EMPTY_ROOT for a wallet that has
+    never written.
+
+    `root` and `counter` are the values `get_root` and `get_counter` just returned. No root at
+    counter 0 is a genuinely empty wallet. No root AFTER a write means the device cannot
+    verify, and is refused here -- never read as empty, since an empty tree accepts an insert
+    with no witness at all. The same rule `common.verify_leaf_against_root` applies to reads;
+    this is the one place writes settle it, so `trie.compute_new_root` never sees None.
+    """
+    if root is not None:
+        return root
+    if counter > 0:
+        from trezor.wire import DataError
+
+        raise DataError("WARD: no trusted root; sync before writing")
+
+    from .attest import EMPTY_ROOT
+
+    return EMPTY_ROOT
+
+
 async def get_counter() -> int:
     """The anti-rollback floor for the active wallet."""
     import storage.ward as ward_store

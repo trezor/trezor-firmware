@@ -270,7 +270,7 @@ def compute_new_root(
     old_leaf,
     new_leaf,
     proof: "list[bytes]",
-    stored_root: bytes | None,
+    stored_root: bytes,
     witness_entry_key: bytes | None = None,
     witness_commit: bytes | None = None,
 ) -> bytes:
@@ -295,10 +295,15 @@ def compute_new_root(
     from .attest import EMPTY_ROOT
     from .leaf import leaf_hash_of
 
-    # An empty tree has a root like any other state; what it does not have is anything to
-    # prove a membership against. `stored_root is None` means something entirely different
-    # -- this device has never written -- and the two must not be collapsed.
-    empty = stored_root is None or stored_root == EMPTY_ROOT
+    # ONE EMPTY STATE. "Never written" and "emptied by a delete" are both EMPTY_ROOT by the
+    # time they get here; "no root after writing" -- cannot verify -- never does. Only the
+    # caller holds the counter that tells those apart, so it settles None once, in
+    # `root.root_for_write`, and a None here is a caller that skipped that step. Refused
+    # rather than read as empty: read as empty, it would authorise a witness-less insert
+    # that replaces whatever tree the device lost track of.
+    if stored_root is None:
+        raise DataError("WARD: no trusted root")
+    empty = stored_root == EMPTY_ROOT
 
     inserting = old_leaf is None
     deleting = new_leaf is None
@@ -309,8 +314,7 @@ def compute_new_root(
         if not proof and witness_entry_key is None:
             # The first entry of an empty tree: there is no state to prove, so the
             # device's OWN record that the tree is empty is the only authority accepted
-            # here. That covers both a device that has never written and one whose last
-            # entry was deleted.
+            # here -- an empty tree, however it got there.
             if not empty:
                 raise DataError("WARD: tree is not empty; a witness is required")
             return _leaf_of(entry_key, new_leaf)
@@ -321,7 +325,7 @@ def compute_new_root(
         # The same check as the read path, and NOT left to it: `common.verify_leaf_against_root`
         # returns early in the two states that reach here with a host-supplied witness -- a
         # fresh device (no root, counter 0) and an emptied tree -- so this is the only place
-        # the witness is checked at all. A None `stored_root` fails it as "not in the tree".
+        # the witness is checked at all.
         failure = _absence_failure(
             entry_key, witness_entry_key, witness_commit, proof, stored_root
         )
@@ -383,7 +387,7 @@ def compute_new_root(
     # Both DELETE and UPDATE must first prove the leaf they claim to be replacing. An
     # empty tree holds no leaf to replace, so there is nothing either could be proving.
     if empty:
-        raise DataError("WARD: no trusted root")
+        raise DataError("WARD: the tree is empty; nothing to replace")
     current = _leaf_of(entry_key, old_leaf)
     if reconstruct(current, proof, entry_key) != stored_root:
         raise DataError("WARD: current entry does not match the trusted root")

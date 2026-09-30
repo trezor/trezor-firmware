@@ -69,7 +69,7 @@ async def flush_queue(
         make_leaf_content,
         make_leaf_identity,
     )
-    from .root import get_counter, get_root
+    from .root import get_counter, get_root, root_for_write
     from .trie import compute_new_root
 
     require_initialized()
@@ -148,7 +148,7 @@ async def flush_queue(
         old_leaf,
         (key_type, id_part, val_part),
         proof,
-        from_root,
+        root_for_write(from_root, counter - 1),
         witness_entry_key=witness_entry_key,
         witness_commit=witness_commit,
     )

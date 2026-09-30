@@ -27,6 +27,7 @@ from apps.ward.leaf import (
     unpack_content,
     unpack_identity,
 )
+from apps.ward.root import root_for_write
 from apps.ward.trie import (
     addr_bit,
     compute_new_root,
@@ -721,7 +722,8 @@ class TestWardComputeNewRoot(unittest.TestCase):
         """With no proof and no witness the device's own record is the only authority."""
         k = self._key([0])
         self.assertEqual(
-            compute_new_root(k, None, self._leaf(b"a"), [], None), self._lh(k, b"a")
+            compute_new_root(k, None, self._leaf(b"a"), [], EMPTY_ROOT),
+            self._lh(k, b"a"),
         )
         # ...and the same call is refused once the device holds a root
         with self.assertRaises(DataError):
@@ -918,7 +920,7 @@ class TestWardComputeNewRoot(unittest.TestCase):
         insert(good, root)
         for bad in (
             lambda: insert(good, bytes(32)),  # not the device's root
-            lambda: insert(good, None),  # no root at all: nothing to be in
+            lambda: insert(good, None),  # unsettled root: refused before anything else
             lambda: insert(good, root, w_key=a, w_commit=self._commit(b"a")),  # itself
             lambda: insert(good, root, w_key=c, w_commit=self._commit(b"c")),  # off-path
             lambda: insert(good, root, w_commit=self._commit(b"x")),  # wrong commit
@@ -928,6 +930,48 @@ class TestWardComputeNewRoot(unittest.TestCase):
         # and a non-empty tree never accepts a witness-less insert, proof or not
         with self.assertRaises(DataError):
             compute_new_root(a, None, self._leaf(b"a"), good, root)
+
+    def test_an_unsettled_root_is_refused_not_read_as_empty(self):
+        """None is "cannot verify" until `root_for_write` has settled it with the counter.
+
+        Read as empty -- as it once was -- None authorised a witness-less first insert, so a
+        device that had written and then lost its root would let the host replace the tree.
+        Every operation refuses it, including the one that would have succeeded.
+        """
+        k, b = self._key([0]), self._key([1])
+        lk, lb = self._lh(k, b"k"), self._lh(b, b"b")
+        proof = [self._elem(0, lb)]
+        for call in (
+            lambda: compute_new_root(k, None, self._leaf(b"k"), [], None),
+            lambda: compute_new_root(
+                k,
+                None,
+                self._leaf(b"k"),
+                proof,
+                None,
+                witness_entry_key=b,
+                witness_commit=self._commit(b"b"),
+            ),
+            lambda: compute_new_root(k, self._leaf(b"k"), None, proof, None),
+            lambda: compute_new_root(
+                k, self._leaf(b"k"), self._leaf(b"k2"), proof, None
+            ),
+        ):
+            with self.assertRaises(DataError):
+                call()
+        # the same first insert succeeds once the caller has settled the root as empty
+        self.assertEqual(
+            compute_new_root(k, None, self._leaf(b"k"), [], EMPTY_ROOT), lk
+        )
+
+    def test_root_for_write_settles_none_with_the_counter(self):
+        """No root at counter 0 is an empty wallet; no root after a write cannot verify."""
+        self.assertEqual(root_for_write(None, 0), EMPTY_ROOT)
+        with self.assertRaises(DataError):
+            root_for_write(None, 3)
+        r = bytes(range(32))
+        self.assertEqual(root_for_write(r, 3), r)
+        self.assertEqual(root_for_write(EMPTY_ROOT, 3), EMPTY_ROOT)
 
 
 class TestWardAttestation(unittest.TestCase):
