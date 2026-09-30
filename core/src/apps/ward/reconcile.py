@@ -17,8 +17,9 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     it: a WM that invented a transition would be believed on its own word. The MAC is what makes
     it a statement about this wallet.
 
-    ONE STEP, AND ONLY FROM WHERE THIS DEVICE STANDS. The attested predecessor must BE the
-    device's stored head, so the distance this route can move the head is zero or one. It used to
+    ONE LINK, AND ONLY FROM WHERE THIS DEVICE STANDS. The attested predecessor must BE the
+    device's stored head, so this route moves the head by one transition: a single write, or a
+    single BATCH of up to MAX_BATCH changes -- still one link, with nothing in between. It used to
     accept any counter at or above the stored one, which made the WM an authority on lineage --
     a device could be carried across dozens of transitions it never saw, on one link. See the
     rules below.
@@ -41,6 +42,7 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     from . import round as sync_round
     from .adopt import adopt, require_attested_round, verify_inbound_link
     from .attest import root_or_empty
+    from .cas import MAX_BATCH
     from .common import require_initialized
     from .root import get_counter, get_root
 
@@ -112,6 +114,17 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
             stored_root
         ):
             raise DataError("WARD: the attested step does not start at this device's head")
+
+    elif (
+        stored_counter + 1 < counter <= stored_counter + MAX_BATCH
+        and from_counter == stored_counter
+        and root_or_empty(from_root) == root_or_empty(stored_root)
+    ):
+        # ONE BATCH, FROM WHERE THIS DEVICE STANDS. Still a single link -- one transition that
+        # carried several changes -- so there is still nothing in between to prove: the MAC over
+        # (stored -> counter) is the whole of the history. A jump that does NOT start at this
+        # device's head is a gap, below, however short.
+        pass
 
     else:
         # A GAP. Refused by name, because the alternative exists and is strictly stronger: the

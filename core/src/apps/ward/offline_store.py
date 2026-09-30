@@ -571,10 +571,14 @@ async def count_unsent() -> int:
 # adopted can say whether that claim was met. The claim is per-change, so `FLAG_OFFERED` alone cannot
 # carry it -- and putting it back in the record is exactly what this format dropped.
 #
-# So it lives in the SESSION CACHE: slot(1) || claimed counter(4 BE), up to 8 of them. That lifetime
-# is not a compromise, it is the safe one. A session that drops loses the claims, and a claim the
-# device cannot attribute is treated as NOT LANDED -- so the change is offered again. Fail-closed in
-# the direction that costs a re-send rather than a change.
+# So it lives in its own FLASH JOURNAL (`storage.ward.claim_*`): wallet_id(16) || slot(1) ||
+# claimed counter(4 BE) || auth_commit(32) || record_commit(32), one per record slot, as many as the
+# store has slots. It outlives the session, so a change offered before a disconnect still settles
+# at the next adoption; a claim the device cannot attribute is treated as NOT LANDED -- so the
+# change is offered again. Fail-closed in the direction that costs a re-send rather than a change.
+#
+# A BATCH files one claim per record it carried, all naming the batch's single `auth_commit` and
+# its `to_counter`, so one adopted link settles every change in it at once.
 
 
 async def _claim_wallet_id() -> bytes:
@@ -646,9 +650,14 @@ async def _claim_produced(
 
     The counter alone cannot answer it -- another device of the same wallet reaches the same
     counter with a different change. The claim's `auth_commit` can: it was minted over
-    (claimed - 1, from_root, claimed, to_root), so re-deriving it against the head now being
-    adopted answers "is the adopted root the one my authorisation names" rather than "did the
-    head reach my number".
+    (claimed - 1, from_root, claimed, to_root) for a single write, so re-deriving it against the
+    head now being adopted answers "is the adopted root the one my authorisation names" rather
+    than "did the head reach my number".
+
+    A BATCH claim cannot be decided here: its authorisation starts `n` counters back, which the
+    claim does not record, so the re-derivation fails and it settles as NOT landed -- the safe
+    direction. Every caller that can reach a batch supplies `landed_commits`, which decides it
+    exactly.
 
     Three things must hold, and each is a way of not knowing rather than a way of failing:
 

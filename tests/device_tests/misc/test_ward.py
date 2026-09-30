@@ -107,6 +107,8 @@ _K_AUTH = derive_k_auth(_SEED)
 # A fixed wall-clock base for attestations. The device has no clock; it only ever compares
 # what it was told last with what it is being told now.
 _T0 = 1_700_000_000
+# Mirrors `apps.ward.cas.MAX_BATCH`: the most changes one transition may carry.
+_MAX_BATCH = 8
 _WARD_ID = derive_ward_id(_SEED)
 
 
@@ -2150,19 +2152,22 @@ def test_ward_verify_chain_brings_a_fresh_session_online(session: Session):
 
 @pytest.mark.models("core")
 def test_ward_refuses_a_chain_with_a_gap(session: Session):
-    """A skipped step is how a fork stays invisible: every link is authentic, but the
-    device never sees the transition that diverged."""
+    """A jump longer than any batch may carry is refused, however authentic the link.
+
+    A batch legitimately advances by the changes it carries, up to MAX_BATCH; anything longer is
+    not a transition any device mints, so it is refused before its MAC is computed."""
     store = WardTrie()
     k1 = _seed(session, store, b"a", b"one")
     base_counter, base_root = store.counter, store.root()
     head = _subset(store, [k1])
 
-    # jumps two counters in one link
-    links = [_link(base_counter, base_root, base_counter + 2, head.root())]
+    # jumps further than MAX_BATCH counters in one link
+    far = _MAX_BATCH + 1
+    links = [_link(base_counter, base_root, base_counter + far, head.root())]
 
     wm = _wm_for(store)
     ack = ward.sync(session)
-    target = base_counter + 2
+    target = base_counter + far
     root = head.root()
     # THE ATTESTATION IS CONTIGUOUS, deliberately -- a WM only ever advances its head one counter
     # at a time, so it would never sign the jump itself, and an attestation that did is refused at
@@ -2175,7 +2180,7 @@ def test_ward_refuses_a_chain_with_a_gap(session: Session):
         session, target - 1, base_root, target, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + target
     )
 
-    with pytest.raises(exceptions.TrezorFailure, match="exactly one"):
+    with pytest.raises(exceptions.TrezorFailure, match="1 to MAX_BATCH"):
         ward.verify_chain(session, _serves(links))
 
 
@@ -2329,6 +2334,17 @@ class _World:
         """This device writes, the host applies it, and the next round adopts it."""
         return _seed(self.session, self.store, identifier, value)
 
+    def delete(self, identifier: bytes) -> None:
+        """This device deletes an entry, the host applies it, and the next round adopts it."""
+        res, _rec = _write(
+            self.session,
+            self.store,
+            lambda p: ward.delete_entry(self.session, _APP, identifier, p),
+            "ward_delete_entry",
+        )
+        ward.apply(self.store, res)
+        _confirm(self.session, self.store)
+
     def tree_of(self, *identifiers: bytes) -> bytes:
         """The root of a tree holding only these of this wallet's genuine leaves."""
         return _subset(self.store, [self.key(i) for i in identifiers]).root()
@@ -2359,6 +2375,22 @@ class _World:
             self.elsewhere.append(_link(counter, root, counter + 1, new_root))
             counter, root = counter + 1, new_root
         return counter, root
+
+    def other_device_writes_batch(self, n: int, new_root: bytes) -> tuple:
+        """Another device publishes ONE transition carrying `n` changes: counter += n, one link."""
+        counter, root, _ts = self.wm.head(_WARD_ID)
+        sig = oracle_wm_sig(
+            self._k_sig,
+            _WARD_ID,
+            counter,
+            root,
+            counter + n,
+            new_root,
+            self.wm.head_nonce(_WARD_ID),
+        )
+        self.wm.advance(_WARD_ID, counter, root, counter + n, new_root, sig, _T0 + counter + n)
+        self.elsewhere.append(_link(counter, root, counter + n, new_root))
+        return counter + n, new_root
 
     def links(self) -> list:
         """Every link a host holds: its own log, then what other devices published."""
@@ -2676,6 +2708,84 @@ def test_ward_scenario_wm_behind_to_an_older_tree_discards_its_entries(session: 
     assert rewound.root() == older
     _res, read = _read(session, rewound, lambda p: ward.get_entry(session, _APP, b"c", p))
     assert "entry not found" in read.title
+
+
+# --- batch links: variable-length steps, and why every walk must land EXACTLY ----------------
+
+
+@pytest.mark.models("core")
+def test_ward_a_batch_link_cannot_jump_over_the_devices_head(session: Session):
+    """SKIP-OVER SPLICING, the attack a variable-length step makes possible, refused.
+
+    Roots are content-addressed and repeat: set x then delete x returns to the tree before it. So
+    this device stands at (3, R3) with R3 == R1. A genuine batch link (1, R1) -> (5, R5) exists --
+    another device published it after the WM was restored to (1, R1). Walking back from the
+    attested head, that one link steps from 5 straight to 1, OVER counter 3, and arrives at a root
+    equal to this device's own. A walk that compared only the root would adopt a history that
+    never passed through this device's real head; landing exactly on counter 3 is what refuses it.
+    """
+    world = _World(session)
+    world.write(b"a", b"one")
+    base = world.head
+    world.write(b"x", b"transient")
+    world.delete(b"x")
+    own = world.head
+    assert own[0] == base[0] + 2 and own[1] == base[1]  # the precondition: the root repeats
+
+    world.wm_restores_to(base)
+    world.other_device_writes_batch(4, bytes([0x55]) * 32)
+    world.sync()
+
+    with pytest.raises(exceptions.TrezorFailure, match="does not land on counter"):
+        world.verify_chain()
+    # and reconcile does not take it either: the step does not start at this device's head
+    with pytest.raises(exceptions.TrezorFailure, match="use WardVerifyChain"):
+        ward.reconcile(session, world.elsewhere[-1])
+
+
+@pytest.mark.models("core")
+def test_ward_catches_up_across_another_devices_batch(session: Session):
+    """A batch of n changes is ONE authorised transition: one link, the counter moved by n."""
+    world = _World(session)
+    world.write(b"a", b"one")
+    world.write(b"b", b"two")
+    head = world.other_device_writes_batch(3, world.tree_of(b"a"))
+    world.sync()
+
+    # one link, starting at this device's own head -- so reconcile adopts it outright
+    world.reconcile()
+    assert ward.sync(session).counter == head[0]
+
+
+@pytest.mark.models("core")
+def test_ward_rejoin_across_a_batch_counts_changes_and_refuses_a_point_inside_it(
+    session: Session,
+):
+    """The WM's branch is one batch link 2 -> 5; this device's branch is 2 -> 3 -> 4.
+
+    The fork point is 2 and the discard count is this device's two changes. A fork point of 3 --
+    inside the batch's span, a counter the WM's branch never stood at -- is refused because the
+    walk cannot land there, and the "part above" check compares STATES: the two branches sit at
+    different counters above the fork point, which is still a genuine parting.
+    """
+    world = _World(session)
+    world.write(b"a", b"one")
+    world.write(b"b", b"two")
+    base = world.head
+    world.write(b"c", b"lost")
+    world.write(b"d", b"lost too")
+    own = world.head
+    world.wm_restores_to(base)
+    head = world.other_device_writes_batch(3, world.tree_of(b"a"))
+    world.sync()
+
+    with pytest.raises(exceptions.TrezorFailure, match="does not land on counter"):
+        world.rejoin(base[0] + 1)
+
+    ack, rec = world.rejoin(base[0])
+    assert (ack.counter, ack.new_root) == head
+    assert ack.discarded == own[0] - base[0] == 2
+    assert "2changes" in rec.squashed
 
 
 def _rollback(

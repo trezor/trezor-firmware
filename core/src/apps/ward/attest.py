@@ -197,7 +197,7 @@ def attestation_preimage(
 
     GENESIS IS THE SELF-TRANSITION `(0, EMPTY_ROOT) -> (0, EMPTY_ROOT)`. Counter 0 has no
     predecessor and no step produced it, so there is nothing else honest to name. It cannot be
-    confused with a real transition: every one of those advances the counter by exactly one, so
+    confused with a real transition: every one of those advances the counter by at least one, so
     no genuine step has `from == to`. `cas.head_init_sig` uses the same shape one layer up, for
     the same reason.
     """

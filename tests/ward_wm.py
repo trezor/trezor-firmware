@@ -65,6 +65,9 @@ def _or_empty(root):
     return root if root is not None else EMPTY_ROOT
 
 
+# Mirrors `apps.ward.cas.MAX_BATCH`: the most changes one transition may carry.
+MAX_BATCH = 8
+
 NO_HEAD_NONCE = b"\x00" * 32
 """The value `head_init_sig` is minted under. NEVER A LIVE HEAD NONCE.
 
@@ -530,8 +533,11 @@ class MockWM:
         if (head_counter, head_root) != (from_counter, _or_empty(from_root)):
             raise MockWM.Conflict(head_counter)
 
-        if to_counter != from_counter + 1:
-            raise ValueError("a head advances by exactly one")
+        # FORWARD, by the number of changes the transition carries: one for a write, up to
+        # MAX_BATCH for a batch of queued changes. One compare-and-swap and one nonce rotation
+        # either way -- a batch is one transition, not several.
+        if not 1 <= to_counter - from_counter <= MAX_BATCH:
+            raise ValueError("a head advances by 1 to MAX_BATCH")
 
         # EITHER TAG, AND WHICH ONE IS THE POINT. A revert advances the head exactly like a
         # write -- forward one counter, carrying an OLDER root -- so the operands

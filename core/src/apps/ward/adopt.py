@@ -73,7 +73,7 @@ async def verify_round_attestation(
       repeat and a revert re-creates an older pair by construction.
 
       R2, THE STANDSTILL. If the attested `to` end is that head, the WM has not moved since --
-      every transition advances the counter by one, so a head that did not move accepted nothing
+      every transition advances the counter by at least one, so a head that did not move accepted nothing
       and cannot have rotated. A different nonce there means the register moved without a
       transition: a restore, a failover onto a stale replica, a fork. This is the one case where
       the device can catch a broken WM by itself, and it catches the restore that lands exactly
@@ -92,7 +92,7 @@ async def verify_round_attestation(
 
     from . import round as sync_round
     from .attest import root_or_empty, verify_attestation
-    from .cas import NO_HEAD_NONCE
+    from .cas import MAX_BATCH, NO_HEAD_NONCE
     from .keys import derive_ward_id
 
     ctx = sync_round.get()
@@ -121,7 +121,8 @@ async def verify_round_attestation(
         if r is not None and len(r) != 32:
             raise DataError("attested roots must be 32 bytes")
 
-    # THE STEP MUST BE ONE STEP, checked on the WM's own claim rather than on the host's link.
+    # THE STEP MUST MOVE FORWARD by 1 to MAX_BATCH -- a batch advances by the changes it carries --
+    # checked on the WM's own claim rather than on the host's link.
     # Genesis is the exception and the only one: counter 0 has no predecessor, so it attests
     # itself -- see `attest.attestation_preimage`.
     if to_counter == 0:
@@ -131,8 +132,8 @@ async def verify_round_attestation(
         # roots are equal at both ends.
         if from_head_nonce != to_head_nonce:
             raise DataError("WARD: counter 0 consumed no head nonce")
-    elif to_counter != from_counter + 1:
-        raise DataError("WARD: an attested transition advances the counter by exactly one")
+    elif not 1 <= to_counter - from_counter <= MAX_BATCH:
+        raise DataError("WARD: an attested transition advances the counter by 1 to MAX_BATCH")
     elif from_head_nonce == to_head_nonce:
         # A real step consumes one nonce and mints another. Equal ends would be a WM that did not
         # rotate, which is the failure the whole construction rests on not happening.
