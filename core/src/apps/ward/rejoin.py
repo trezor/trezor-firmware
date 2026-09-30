@@ -111,10 +111,15 @@ async def rejoin(msg: WardRejoin) -> WardRejoinAck:
 
     if root_or_empty(main_root) != root_or_empty(branch_root):
         raise DataError("WARD: the two branches do not meet at the fork point")
-    # Both walks took a step (the bounds above), so both `above` states exist and sit at
-    # `fork_counter + 1`. Equal means the branches were still one history there.
+    # Both walks took a step (the bounds above) and landed exactly on `fork_counter` (`walk_back`
+    # refuses otherwise), so both `above` states exist. They are compared as (counter, root)
+    # STATES, not roots: a batch link on one branch puts its `above` at a different counter from
+    # the other's, and two different states there are a genuine parting. Only the same counter
+    # with the same root means the branches were still one history above the fork point.
     assert main_above is not None and branch_above is not None
-    if root_or_empty(main_above[1]) == root_or_empty(branch_above[1]):
+    if main_above[0] == branch_above[0] and root_or_empty(
+        main_above[1]
+    ) == root_or_empty(branch_above[1]):
         raise DataError("WARD: the branches do not part at the fork point")
 
     discarded = stored_counter - fork_counter

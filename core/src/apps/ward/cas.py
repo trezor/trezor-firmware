@@ -47,7 +47,8 @@ head at most once. The WM is therefore sent the two roots, and sees them.
 
 WHAT A CHAIN OF THESE PROVES, AND WHAT IT DOES NOT. Folding links from a trusted baseline
 to a claimed head shows each step was authorised by a device holding the seed, that the
-counters are contiguous, and that each link's `from` matches the previous link's `to` --
+counters only move forward (by at most MAX_BATCH per step), and that each link's `from` matches
+the previous link's `to` --
 so the head descends from the baseline rather than sitting on a fork. It does NOT prove
 the head is current: that is the WM attestation's job, and the two are combined by
 requiring the chain to terminate exactly at the attested counter.
@@ -55,8 +56,21 @@ requiring the chain to terminate exactly at the attested counter.
 
 from typing import TYPE_CHECKING
 
+from micropython import const
+
 if TYPE_CHECKING:
     pass
+
+# THE MOST CHANGES ONE TRANSITION MAY CARRY. A write is one change and advances the counter by one;
+# a BATCH folds several queued changes into one transition and advances it by as many, so the
+# counter still counts changes -- which is what the rollback and rejoin screens report. Every
+# step rule is "1 <= to - from <= MAX_BATCH", never "exactly one".
+#
+# WHY A BOUND AT ALL, when the MAC covers both counters and nobody without K_auth can mint a jump.
+# Variable-length steps let a backward walk JUMP OVER a state, so every walk must land exactly on
+# its stop counter (see `verify_chain.walk_back`); the bound keeps a batch's cost -- rebuilt in
+# full when it loses a race -- and its share of the claim journal predictable.
+MAX_BATCH = const(8)
 
 TAG_COMMIT = b"WARD COMMIT v3"  # v3: the preimage names ROOTS again; K_mac is gone
 TAG_REVERT = b"WARD REVERT v3"  # v3: as TAG_COMMIT
@@ -202,8 +216,9 @@ def verify_chain_step(
 
       contiguous counter and root -- otherwise a link from an unrelated branch could be
         spliced in, since each link is individually authentic;
-      a +1 counter step -- otherwise a gap could hide transitions the verifier never sees,
-        which is how a fork stays invisible;
+      a forward counter step of at most MAX_BATCH -- a batch advances by the number of changes
+        it carries; a gap between links is still impossible, since each link's `from` must be
+        the previous link's `to`;
       the MAC itself -- otherwise the link was never authorised at all.
 
     Returns the advanced head. O(1): the device holds only the running head and never
@@ -219,8 +234,8 @@ def verify_chain_step(
         raise DataError("WARD: chain link does not follow the running counter")
     if root_or_empty(from_root) != root_or_empty(running_root):
         raise DataError("WARD: chain link does not follow the running root")
-    if to_counter != running_counter + 1:
-        raise DataError("WARD: chain link must advance the counter by exactly one")
+    if not 1 <= to_counter - running_counter <= MAX_BATCH:
+        raise DataError("WARD: chain link must advance the counter by 1 to MAX_BATCH")
 
     # Either kind of authorisation is a legitimate step for the purpose of DESCENT: a
     # rollback is as much a real transition as a write, and a history containing one must
@@ -291,8 +306,10 @@ def verify_chain_step_back(
         raise DataError("WARD: chain link does not end at the running counter")
     if root_or_empty(to_root) != root_or_empty(running_root):
         raise DataError("WARD: chain link does not end at the running root")
-    if from_counter != running_counter - 1:
-        raise DataError("WARD: chain link must step the counter back by exactly one")
+    # A BATCH steps back by as many changes as it carried. The walk that calls this must then
+    # land EXACTLY on its stop counter -- a step longer than one can otherwise jump over it.
+    if not 1 <= running_counter - from_counter <= MAX_BATCH:
+        raise DataError("WARD: chain link must step the counter back by 1 to MAX_BATCH")
 
     # Either tag, for the reason given above `verify_chain_step`: a demotion is a real transition
     # and a history containing one must still be walkable. Reported, not swallowed.

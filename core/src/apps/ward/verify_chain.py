@@ -221,9 +221,10 @@ async def walk_back(
 
     Returns `(root_at_stop, crossed, reverts, above)`:
 
-      root_at_stop  the root the walk arrived at. The COUNTER is `stop_counter` by construction;
-                    the root is whatever the links led to, and comparing it is the caller's job --
-                    `verify_chain` against its own head, `rejoin` against the other branch.
+      root_at_stop  the root the walk arrived at. The COUNTER is exactly `stop_counter` -- that
+                    is enforced here, see below; the root is whatever the links led to, and
+                    comparing it is the caller's job -- `verify_chain` against its own head,
+                    `rejoin` against the other branch.
       crossed       every link's `auth_commit`, newest first: the precise evidence of which
                     transitions the walk covered, which is what settles queued claims.
       reverts       how many of those were REVERT links.
@@ -232,7 +233,17 @@ async def walk_back(
 
     `expect_from`, if given, pins the FIRST link's predecessor -- the predecessor the WM's
     attestation named -- so a walk starting at an attested head cannot begin from anywhere else.
+
+    IT MUST LAND EXACTLY ON `stop_counter`, and that is checked HERE so no caller can forget it. A
+    batch link steps back by as many changes as it carried, so a walk can otherwise JUMP OVER the
+    state it was meant to stop at. Roots are content-addressed and repeat -- set x then delete x
+    returns to the same root -- so a caller comparing only the root would accept a walk that
+    skipped the device's real head: a genuine batch 41 -> 45 would "reach" a device standing at
+    (43, R41). Landing on the counter as well as the root is what makes the arrival a state the
+    walk actually passed through.
     """
+    from trezor.wire import DataError
+
     running_counter, running_root = start_counter, start_root
     crossed = []
     reverts = 0
@@ -250,6 +261,8 @@ async def walk_back(
         crossed.extend(stepped[0])
         reverts += stepped[1]
         above = stepped[2]
+    if running_counter != stop_counter:
+        raise DataError("WARD: the chain does not land on counter %d" % stop_counter)
     return running_root, crossed, reverts, above
 
 
@@ -321,8 +334,9 @@ async def _pull_batch(
         if reverted:
             reverts += 1
         # A host may pad an ack past the target; folding further would walk below this device's
-        # head, which is `rollback`'s business and needs the user's consent.
-        if running_counter == target_counter:
+        # head, which is `rollback`'s business and needs the user's consent. `<=`, not `==`: a
+        # batch link can step OVER the target, and `walk_back` refuses such a walk by name.
+        if running_counter <= target_counter:
             break
 
     return running_counter, running_root, (crossed, reverts, above)

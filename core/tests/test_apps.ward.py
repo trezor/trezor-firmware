@@ -1344,16 +1344,29 @@ class TestWardCas(unittest.TestCase):
                 self.K_AUTH, self.WARD_ID, 1, self.R1, orphan
             )
 
+    def test_a_batch_link_folds_in_both_directions(self):
+        """One transition carrying MAX_BATCH changes is a single genuine step, either way."""
+        n = CAS.MAX_BATCH
+        link = self._link(0, None, n, self.R2)
+        self.assertEqual(
+            CAS.verify_chain_step(self.K_AUTH, self.WARD_ID, 0, None, link)[:2], (n, self.R2)
+        )
+        self.assertEqual(
+            CAS.verify_chain_step_back(self.K_AUTH, self.WARD_ID, n, self.R2, link)[:2],
+            (0, None),
+        )
+
     def test_the_backward_chain_refuses_every_way_of_lying_with_real_links(self):
         """The mirror of the forward case: authentic links, wrong placement."""
-        # a gap
+        # a jump longer than any batch may carry
+        far = CAS.MAX_BATCH + 1
         with self.assertRaises(DataError):
             CAS.verify_chain_step_back(
                 self.K_AUTH,
                 self.WARD_ID,
-                2,
+                far,
                 self.R2,
-                self._link(0, None, 2, self.R2),
+                self._link(0, None, far, self.R2),
             )
         # a link ending at another branch's root at the right counter
         with self.assertRaises(DataError):
@@ -1386,14 +1399,14 @@ class TestWardCas(unittest.TestCase):
     def test_the_chain_refuses_every_way_of_lying_with_real_links(self):
         """Each link here is individually authentic; only its placement is wrong. That is
         the interesting case -- forged links are the easy half."""
-        # a gap, which is how a fork stays invisible
+        # a jump longer than any batch may carry
         with self.assertRaises(DataError):
             CAS.verify_chain_step(
                 self.K_AUTH,
                 self.WARD_ID,
                 0,
                 None,
-                self._link(0, None, 2, self.R2),
+                self._link(0, None, CAS.MAX_BATCH + 1, self.R2),
             )
         # a link from another branch
         with self.assertRaises(DataError):

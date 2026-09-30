@@ -160,10 +160,19 @@ def test_the_predecessor_root_is_compared_too():
         _advance(wm, 1, ROOT_2, 2, ROOT_2)
 
 
-def test_a_head_advances_by_exactly_one():
+def test_a_head_advances_by_one_to_max_batch():
+    """A batch is one transition carrying several changes; anything longer is refused."""
+    from .ward_wm import MAX_BATCH
+
+    too_far = _opened()
+    with pytest.raises(ValueError, match="1 to MAX_BATCH"):
+        _advance(too_far, 1, ROOT_1, 1 + MAX_BATCH + 1, ROOT_2)
+
     wm = _opened()
-    with pytest.raises(ValueError, match="exactly one"):
-        _advance(wm, 1, ROOT_1, 3, ROOT_2)
+    before = wm.head_nonce(WARD_ID)
+    _advance(wm, 1, ROOT_1, 1 + MAX_BATCH, ROOT_2)
+    assert wm.head(WARD_ID)[:2] == (1 + MAX_BATCH, ROOT_2)
+    assert wm.head_nonce(WARD_ID) != before  # one transition, one rotation
 
 
 def test_an_unauthorised_transition_is_refused():
