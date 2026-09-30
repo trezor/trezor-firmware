@@ -105,6 +105,12 @@ bool ipc_register(systask_id_t remote, void *buffer, size_t size) {
     return false;
   }
 
+  if (queue->ptr != NULL) {
+    // A buffer is already registered for this remote; it must be
+    // unregistered first.
+    return false;
+  }
+
   if (size > IPC_MAX_BUFFER_SIZE) {
     return false;
   }
