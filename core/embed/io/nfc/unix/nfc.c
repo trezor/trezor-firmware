@@ -23,3 +23,5 @@ bool nfc_get_event(nfc_event_t* event) { return false; }
 
 ts_t nfc_start_discovery(void) { return TS_OK; }
 ts_t nfc_stop_discovery(void) { return TS_OK; }
+
+// TODO
