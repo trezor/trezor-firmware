@@ -53,6 +53,9 @@ typedef struct {
   emu_sock_t sock;
   uint8_t msg[64];
   int msg_len;
+  // VCP output is sent one line per datagram, UDP has no flow control
+  uint8_t tx_buf[1024];
+  size_t tx_len;
 } usb_iface_t;
 
 static usb_iface_t usb_ifaces[USBD_MAX_NUM_INTERFACES];
@@ -70,6 +73,7 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
     sock_init(&iface->sock);
     memzero(&iface->msg, sizeof(usb_ifaces[i].msg));
     iface->msg_len = 0;
+    iface->tx_len = 0;
   }
   return sectrue;
 }
@@ -198,9 +202,27 @@ static int usb_emulated_read(usb_iface_t *iface, uint8_t *buf, size_t len) {
   return 0;
 }
 
+static ssize_t usb_emulated_flush(usb_iface_t *iface) {
+  ssize_t r = sock_sendto(&iface->sock, iface->tx_buf, iface->tx_len);
+  iface->tx_len = 0;
+  return r;
+}
+
 static ssize_t usb_emulated_write(usb_iface_t *iface, const uint8_t *buf,
                                   uint32_t len) {
-  return sock_sendto(&iface->sock, buf, len);
+  if (iface->type != USB_IFACE_TYPE_VCP) {
+    return sock_sendto(&iface->sock, buf, len);
+  }
+
+  for (uint32_t i = 0; i < len; i++) {
+    iface->tx_buf[iface->tx_len++] = buf[i];
+    if (buf[i] == '\n' || iface->tx_len == sizeof(iface->tx_buf)) {
+      if (usb_emulated_flush(iface) < 0) {
+        return -1;
+      }
+    }
+  }
+  return len;
 }
 
 secbool usb_configured(void) {
@@ -226,6 +248,10 @@ static void on_event_poll(void *context, bool read_awaited,
   // logic simple.
 
   if (read_awaited) {
+    // Waiting for input, so send any unterminated output (e.g. the prompt)
+    if (iface->tx_len > 0) {
+      usb_emulated_flush(iface);
+    }
     if (sectrue == usb_emulated_poll_read(iface)) {
       syshandle_signal_read_ready(iface->handle, NULL);
     }

@@ -33,7 +33,8 @@ def test_ping_with_text(client: ProdtestClient) -> None:
 
 def test_ping_with_long_text(client: ProdtestClient) -> None:
     """ping echoes text up to the CLI line buffer, truncating anything beyond."""
-    long_text = 512 * "longtext"
+    # The CLI line buffer holds 8191 characters, "ping " included.
+    long_text = (8191 - len("ping ")) * "x"
     resp = client.command_ok(ProdtestCommand(Cmd.PING, long_text))
     assert resp.args == long_text
     too_long_text = long_text + "A"
