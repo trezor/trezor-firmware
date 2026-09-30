@@ -8,16 +8,71 @@ use crate::translations::TR;
 /// Unified-length String type, long enough for most simple use-cases.
 pub type ShortString = String<128>;
 
-pub fn hexlify(data: &[u8], buffer: &mut [u8]) {
+fn hexbyte(b: u8) -> (u8, u8) {
     const HEX_LOWER: [u8; 16] = *b"0123456789abcdef";
+    let hi: usize = ((b & 0xf0) >> 4).into();
+    let lo: usize = (b & 0x0f).into();
+    (HEX_LOWER[hi], HEX_LOWER[lo])
+}
+
+pub fn hexlify(data: &[u8], buffer: &mut [u8]) {
     let mut i: usize = 0;
     for b in data.iter().take(buffer.len() / 2) {
-        let hi: usize = ((b & 0xf0) >> 4).into();
-        let lo: usize = (b & 0x0f).into();
-        buffer[i] = HEX_LOWER[hi];
-        buffer[i + 1] = HEX_LOWER[lo];
+        let (hi, lo) = hexbyte(*b);
+        buffer[i] = hi;
+        buffer[i + 1] = lo;
         i += 2;
     }
+}
+
+pub struct HexBytes<'a>(&'a [u8]);
+
+impl<'a> ufmt::uDisplay for HexBytes<'a> {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        for b in self.0.iter() {
+            let (hi, lo) = hexbyte(*b);
+            f.write_char(hi.into())?;
+            f.write_char(lo.into())?;
+        }
+        Ok(())
+    }
+}
+
+pub fn hex_bytes<'a, T>(bytes: &'a T) -> HexBytes<'a>
+where
+    T: AsRef<[u8]> + ?Sized,
+{
+    HexBytes(bytes.as_ref())
+}
+
+pub struct StripOk<'a, T, E>(&'a Result<T, E>);
+
+impl<'a, T, E> ufmt::uDebug for StripOk<'a, T, E>
+where
+    T: ufmt::uDebug,
+    E: ufmt::uDebug,
+{
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        match self.0 {
+            Ok(t) => t.fmt(f)?,
+            Err(e) => {
+                f.write_str("Err(")?;
+                e.fmt(f)?;
+                f.write_char(')')?;
+            }
+        };
+        Ok(())
+    }
+}
+
+pub const fn strip_ok<'a, T, E>(val: &'a Result<T, E>) -> StripOk<'a, T, E> {
+    StripOk(val)
 }
 
 pub fn format_i64(num: i64, buffer: &mut [u8]) -> Option<&str> {
