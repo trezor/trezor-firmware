@@ -358,6 +358,13 @@
   },
   {
     "exact": [
+      "instructions__hold_to_confirm"
+    ],
+    "allowedLayouts": [ "Caesar", "Delizia" ],
+    "description": "These are specific to Caesar and Delizia layouts"
+  },
+  {
+    "exact": [
       "backup__new_wallet_created",
       "backup__title_skip",
       "recovery__word_x_of_y_template",
@@ -379,7 +386,6 @@
       "ethereum__subtitle_input_data_bytes",
       "fido__more_credentials",
       "homescreen__settings_title",
-      "instructions__hold_to_confirm",
       "instructions__shares_continue_with_x_template",
       "instructions__swipe_down",
       "instructions__swipe_horizontally",
