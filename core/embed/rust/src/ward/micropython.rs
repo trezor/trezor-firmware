@@ -1,28 +1,69 @@
 use super::error::WARD_EXCEPTION_TYPE;
+use super::store::{Buffer, Scope, Store, WalletId};
+use crate::micropython::buffer::get_buffer;
 use crate::micropython::macros::{obj_fn_3, obj_fn_var, obj_module};
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::{util, Error, Obj};
 
-extern "C" fn ward_get(_wallet_id: Obj, _app: Obj, _key: Obj) -> Obj {
-    let block = || -> Result<Obj, Error> { Err(Error::NotImplementedError) };
+fn store<'a>(wallet_id: &'a [u8], app: &'a [u8]) -> Result<Store<'a>, Error> {
+    let wallet_id: &WalletId = wallet_id
+        .try_into()
+        .map_err(|_| Error::ValueError(c"Invalid wallet id"))?;
+    Ok(Store::new(Scope::new(wallet_id, app)?)?)
+}
+
+extern "C" fn ward_get(wallet_id: Obj, app: Obj, key: Obj) -> Obj {
+    let block = || {
+        // SAFETY: references are discarded at the end of this block.
+        let (wallet_id, app, key) =
+            unsafe { (get_buffer(wallet_id)?, get_buffer(app)?, get_buffer(key)?) };
+        let mut buf = Buffer::new();
+        store(wallet_id, app)?.get(key, &mut buf)?.try_into()
+    };
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn ward_next_entry(_wallet_id: Obj, _app: Obj, _cursor: Obj) -> Obj {
-    let block = || -> Result<Obj, Error> { Err(Error::NotImplementedError) };
+extern "C" fn ward_next_entry(wallet_id: Obj, app: Obj, cursor: Obj) -> Obj {
+    let block = || {
+        // SAFETY: references are discarded at the end of this block.
+        let (wallet_id, app) = unsafe { (get_buffer(wallet_id)?, get_buffer(app)?) };
+        let store = store(wallet_id, app)?;
+        let cursor: u8 = cursor.try_into()?;
+        let mut buf = Buffer::new();
+        match store.next(cursor, &mut buf)? {
+            Some((next, record)) => (next, record.key, record.value).try_into(),
+            None => Ok(Obj::const_none()),
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn ward_set(n_args: usize, args: *const Obj) -> Obj {
-    let block =
-        |_args: &[Obj], _kwargs: &Map| -> Result<Obj, Error> { Err(Error::NotImplementedError) };
+    let block = |args: &[Obj], _kwargs: &Map| {
+        // SAFETY: references are discarded at the end of this block.
+        let (wallet_id, app, key, value) = unsafe {
+            (
+                get_buffer(args[0])?,
+                get_buffer(args[1])?,
+                get_buffer(args[2])?,
+                get_buffer(args[3])?,
+            )
+        };
+        store(wallet_id, app)?.set(key, value)?;
+        Ok(Obj::const_none())
+    };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
-extern "C" fn ward_delete(_wallet_id: Obj, _app: Obj, _key: Obj) -> Obj {
-    let block = || -> Result<Obj, Error> { Err(Error::NotImplementedError) };
+extern "C" fn ward_delete(wallet_id: Obj, app: Obj, key: Obj) -> Obj {
+    let block = || {
+        // SAFETY: references are discarded at the end of this block.
+        let (wallet_id, app, key) =
+            unsafe { (get_buffer(wallet_id)?, get_buffer(app)?, get_buffer(key)?) };
+        Ok(store(wallet_id, app)?.delete(key)?.into())
+    };
     unsafe { util::try_or_raise(block) }
 }
 
