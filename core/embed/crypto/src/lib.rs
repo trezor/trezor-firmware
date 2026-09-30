@@ -15,6 +15,8 @@ pub mod ed25519;
 mod ffi;
 pub mod hmac;
 pub mod merkle;
+#[cfg(feature = "noise")]
+pub mod noise_xxpsk3;
 pub mod secret;
 pub mod sha256;
 pub mod sha3;
