@@ -1,3 +1,4 @@
+import trezorward
 from trezorward import WardError  # noqa: F401
 
 
@@ -14,11 +15,11 @@ class WardStore:
 
     async def get(self, key: bytes) -> bytes | None:
         """Return the value stored under `key`, or None if there is none."""
-        raise NotImplementedError
+        return trezorward.get(self._wallet_id, self._app, key)
 
     def entries(self) -> "WardIterator":
         """Iterate over all `(key, value)` records, one record at a time."""
-        raise NotImplementedError
+        return WardIterator(self._wallet_id, self._app)
 
     async def set(self, key: bytes, value: bytes, description: str) -> None:
         """Store `value` under `key`.
@@ -26,7 +27,14 @@ class WardStore:
         If a different value is already stored, the user is asked to approve
         the replacement first. `description` describes the record to the user.
         """
-        raise NotImplementedError
+        old = trezorward.get(self._wallet_id, self._app, key)
+        if old == value:
+            return
+        if old is not None:
+            from .layout import confirm_replace
+
+            await confirm_replace(self._app, description)
+        trezorward.set(self._wallet_id, self._app, key, value)
 
     async def delete(self, key: bytes, description: str) -> bool:
         """Delete the record stored under `key`, return whether there was one.
@@ -34,7 +42,13 @@ class WardStore:
         The user is asked to approve the deletion first. `description`
         describes the record to the user.
         """
-        raise NotImplementedError
+        if trezorward.get(self._wallet_id, self._app, key) is None:
+            return False
+
+        from .layout import confirm_delete
+
+        await confirm_delete(self._app, description)
+        return trezorward.delete(self._wallet_id, self._app, key)
 
 
 class WardIterator:
@@ -47,4 +61,8 @@ class WardIterator:
         return self
 
     def __next__(self) -> tuple[bytes, bytes]:
-        raise NotImplementedError
+        entry = trezorward.next_entry(self._wallet_id, self._app, self._cursor)
+        if entry is None:
+            raise StopIteration
+        self._cursor, key, value = entry
+        return key, value

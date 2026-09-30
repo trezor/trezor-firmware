@@ -22,7 +22,10 @@ class WardApp:
 
 async def open_ward(app: int) -> WardStore:
     """Open the WARD store of `app` in the current passphrase wallet."""
-    raise NotImplementedError
+    from .keys import derive_wallet_id
+    from .store import WardStore
+
+    return WardStore(await derive_wallet_id(), app)
 
 
 def with_ward(app: int) -> Callable[[HandlerWithWard[T]], HandlerWithWard[T]]:
