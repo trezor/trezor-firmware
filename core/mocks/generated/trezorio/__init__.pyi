@@ -103,7 +103,6 @@ from . import (
     fatfs,
     haptic,
     ipc,
-    nfc,
     pm,
     rgb_led,
     sdcard,

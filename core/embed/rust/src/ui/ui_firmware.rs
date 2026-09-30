@@ -19,7 +19,7 @@ pub const MAX_WORD_QUIZ_ITEMS: usize = 3;
 pub const MAX_GROUP_SHARE_LINES: usize = 4;
 pub const MAX_MENU_ITEMS: usize = 6;
 
-pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
+pub const MAX_PAIRED_DEVICES: usize = 10; // Maximum number of paired devices in the device menu
 
 /// One entry of `select_menu()`: its label plus what the entry means.
 ///

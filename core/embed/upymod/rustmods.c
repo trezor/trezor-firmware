@@ -40,6 +40,10 @@ MP_REGISTER_MODULE(MP_QSTR_trezordefinitions, mp_module_trezordefinitions);
 MP_REGISTER_MODULE(MP_QSTR_trezorble, mp_module_trezorble);
 #endif
 
+#ifdef USE_NFC
+MP_REGISTER_MODULE(MP_QSTR_trezornfc, mp_module_trezornfc);
+#endif
+
 #ifdef USE_THP
 MP_REGISTER_MODULE(MP_QSTR_trezorthp, mp_module_trezorthp);
 #endif
