@@ -906,6 +906,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = ts_code(nfc_transceive_psk__verified(
           pcd_psk, pcd_psk_len, picc_psk, picc_psk_max_len, picc_psk_len));
     } break;
+    case SYSCALL_NFC_TRANSCEIVE_START: {
+      const nfc_apdu_message_t *cmd = (const nfc_apdu_message_t *)args[0];
+      args[0] = ts_code(nfc_transceive_start__verified(cmd));
+    } break;
+    case SYSCALL_NFC_TRANSCEIVE_COMPLETE: {
+      nfc_apdu_message_t *resp = (nfc_apdu_message_t *)args[0];
+      args[0] = ts_code(nfc_transceive_complete__verified(resp));
+    } break;
 
 #endif
 

@@ -22,8 +22,24 @@
 #include <trezor_bsp.h>
 #include <trezor_types.h>
 
+#include <sys/systask.h>
+
 bool nfc_identify(nfc_dev_info_t *dev_info);
 
 bool nfc_check_connection(nfc_dev_info_t *dev_info);
 
 ts_t nfc_restart_discovery(void);
+
+// Progress the asynchronous exchange, if any. Must be called after
+// rfalNfcWorker(). Returns true while the exchange is still in progress.
+bool nfc_transceive_process(void);
+
+// Returns true if the exchange started by `task_id` has finished and the
+// NFC_EVENT_TRANSCEIVE_DONE event has not been reported yet.
+bool nfc_transceive_event_pending(systask_id_t task_id);
+
+// Same as nfc_transceive_event_pending() but marks the event as reported.
+bool nfc_transceive_take_event(systask_id_t task_id);
+
+// Drops the exchange started by a killed task.
+void nfc_transceive_task_killed(systask_id_t task_id);

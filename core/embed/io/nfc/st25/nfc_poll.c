@@ -59,7 +59,14 @@ void nfc_poll_deinit(void) {
 
 bool nfc_get_event(nfc_event_t* event) {
   assert(event != NULL);
-  nfc_fsm_t* fsm = &g_nfc_tls[systask_id(systask_active())];
+  systask_id_t task_id = systask_id(systask_active());
+  nfc_fsm_t* fsm = &g_nfc_tls[task_id];
+
+  // Report the finished exchange before a possible disconnect
+  if (nfc_transceive_take_event(task_id)) {
+    *event = NFC_EVENT_TRANSCEIVE_DONE;
+    return true;
+  }
 
   if (fsm->connected && fsm->disconnected) {
     fsm->connected = 0;
@@ -97,6 +104,10 @@ static void on_task_created(void* context, systask_id_t task_id) {
   memset(fsm, 0, sizeof(nfc_fsm_t));
 }
 
+static void on_task_killed(void* context, systask_id_t task_id) {
+  nfc_transceive_task_killed(task_id);
+}
+
 static void on_event_poll(void* context, bool read_awaited,
                           bool write_awaited) {
   UNUSED(write_awaited);
@@ -105,9 +116,14 @@ static void on_event_poll(void* context, bool read_awaited,
     // Run worker
     rfalNfcWorker();
 
+    bool xfer_pending = nfc_transceive_process();
+
     if (rfalNfcIsDevActivated(rfalNfcGetState())) {
       if (nfc_card_connected) {
-        if (!nfc_check_connection(&nfc_card_info)) {
+        // The presence check would interfere with the exchange in progress.
+        // If the card is removed meanwhile, the exchange fails and the next
+        // check detects it.
+        if (!xfer_pending && !nfc_check_connection(&nfc_card_info)) {
           nfc_restart_discovery();
           nfc_card_connected = false;
         }
@@ -135,12 +151,13 @@ static bool on_check_read_ready(void* context, systask_id_t task_id,
   if (!new_state && fsm->last_state) {
     fsm->disconnected = 1;
   }
-  return fsm->connected || fsm->disconnected;
+  return fsm->connected || fsm->disconnected ||
+         nfc_transceive_event_pending(task_id);
 }
 
 static const syshandle_vmt_t g_nfc_handle_vmt = {
     .task_created = on_task_created,
-    .task_killed = NULL,
+    .task_killed = on_task_killed,
     .check_read_ready = on_check_read_ready,
     .check_write_ready = NULL,
     .poll = on_event_poll,

@@ -56,6 +56,8 @@ typedef enum {
   NFC_NO_EVENT = 0,
   NFC_EVENT_CONNECTED,
   NFC_EVENT_DISCONNECTED,
+  NFC_EVENT_TRANSCEIVE_DONE,  //!< exchange started by nfc_transceive_start()
+                              //!< finished, call nfc_transceive_complete()
 } nfc_event_t;
 
 /** @brief NFC card details */
@@ -128,6 +130,35 @@ ts_t nfc_get_device_info(nfc_dev_info_t *dev_info);
  * @return TS_OK when the function pass, otherwise an error.
  */
 ts_t nfc_transceive(const nfc_apdu_message_t *cmd, nfc_apdu_message_t *resp);
+
+/**
+ * @brief Start an asynchronous APDU exchange with the activated NFC device.
+ *
+ * Only ISO-DEP devices are supported. The function returns immediately after
+ * the command is handed over to RFAL, the command buffer can be reused right
+ * after. Poll SYSHANDLE_NFC with sysevents_poll() to progress the exchange;
+ * once it finishes, nfc_get_event() reports NFC_EVENT_TRANSCEIVE_DONE to the
+ * calling task, which then picks up the result with nfc_transceive_complete().
+ *
+ * Only one exchange can be in progress at a time.
+ *
+ * @param cmd [in] Tx data buffer structure
+ * @return TS_OK when the exchange was started, TS_EBUSY if another exchange is
+ * in progress, TS_ENOSTATE if no ISO-DEP device is activated, otherwise an
+ * error.
+ */
+ts_t nfc_transceive_start(const nfc_apdu_message_t *cmd);
+
+/**
+ * @brief Get the result of the exchange started by nfc_transceive_start().
+ *
+ * Must be called by the same task that started the exchange.
+ *
+ * @param resp [out] Rx data buffer structure
+ * @return Result of the exchange, TS_EBUSY if it has not finished yet,
+ * TS_ENOSTATE if the calling task has no exchange to complete.
+ */
+ts_t nfc_transceive_complete(nfc_apdu_message_t *resp);
 
 /**
  * @brief Transceive psk message over ISO14443-3 customized frame (9-b header,

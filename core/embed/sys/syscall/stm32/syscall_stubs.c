@@ -857,6 +857,15 @@ ts_t nfc_transceive_psk(const uint8_t *pcd_psk, size_t pcd_psk_len,
                                  SYSCALL_NFC_TRANSCEIVE_PSK));
 }
 
+ts_t nfc_transceive_start(const nfc_apdu_message_t *cmd) {
+  return ts_make(syscall_invoke1((uint32_t)cmd, SYSCALL_NFC_TRANSCEIVE_START));
+}
+
+ts_t nfc_transceive_complete(nfc_apdu_message_t *resp) {
+  return ts_make(
+      syscall_invoke1((uint32_t)resp, SYSCALL_NFC_TRANSCEIVE_COMPLETE));
+}
+
 #endif
 
 // =============================================================================

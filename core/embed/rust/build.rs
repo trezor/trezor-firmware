@@ -295,6 +295,8 @@ fn generate_trezorhal_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_function("nfc_get_device_info")
             .allowlist_function("nfc_transceive")
             .allowlist_function("nfc_transceive_psk")
+            .allowlist_function("nfc_transceive_start")
+            .allowlist_function("nfc_transceive_complete")
             .allowlist_type("nfc_dev_type_t")
             .allowlist_type("nfc_dev_interface_t")
             .allowlist_type("nfc_nfca_listen_device_type_t")

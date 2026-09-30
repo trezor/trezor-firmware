@@ -29,6 +29,7 @@
 
 #include "nfc_internal.h"
 #include "nfc_poll.h"
+#include "nfc_poll_internal.h"
 #include "rfal_isoDep.h"
 #include "rfal_nfc.h"
 #include "rfal_rf.h"
@@ -50,6 +51,28 @@
 #define NFC_CRC_A_PRELOAD 0x6363U
 #define NFC_CRC_A_POLY 0x8408U
 
+typedef enum {
+  NFC_XFER_IDLE = 0,
+  NFC_XFER_PENDING,  // exchange in progress
+  NFC_XFER_DONE,     // result waits for nfc_transceive_complete()
+} nfc_xfer_state_t;
+
+// Asynchronous exchange started by nfc_transceive_start()
+typedef struct {
+  nfc_xfer_state_t state;
+  // Task that started the exchange
+  systask_id_t owner;
+  // Cleared when the owner is killed while the exchange is in progress
+  bool owner_alive;
+  // NFC_EVENT_TRANSCEIVE_DONE already reported to the owner
+  bool event_reported;
+  // Rx buffer provided by RFAL, valid until the next exchange
+  uint8_t *rx_data;
+  uint16_t *rx_data_len;
+  ts_t result;
+  nfc_apdu_message_t resp;
+} nfc_xfer_t;
+
 typedef struct {
   bool initialized;
   bool rfal_initialized;
@@ -59,6 +82,7 @@ typedef struct {
   void (*nfc_irq_callback)(void);
   EXTI_HandleTypeDef hEXTI;
   const rfalNfcDiscoverParam *disc_params;
+  nfc_xfer_t xfer;
 } st25_driver_t;
 
 static const rfalNfcDiscoverParam default_disc_params = {
@@ -95,6 +119,8 @@ static st25_driver_t g_st25_driver = {
 
 static ts_t nfc_transceive_blocking(const nfc_apdu_message_t *cmd,
                                     nfc_apdu_message_t *resp);
+
+static void nfc_transceive_finish(ts_t result);
 
 static ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
 
@@ -354,6 +380,10 @@ ts_t nfc_stop_discovery(void) {
   st25_driver_t *drv = &g_st25_driver;
   TSH_CHECK(drv->initialized, TS_ENOINIT);
 
+  if (drv->xfer.state == NFC_XFER_PENDING) {
+    nfc_transceive_finish(TS_ENOSTATE);
+  }
+
   // In case the NFC state machine is active, deactivate to idle before
   // registering a new card emulation technology.
   if (rfalNfcGetState() != RFAL_NFC_STATE_IDLE) {
@@ -374,6 +404,10 @@ ts_t nfc_restart_discovery(void) {
   TSH_DECLARE;
   st25_driver_t *drv = &g_st25_driver;
   TSH_CHECK(drv->initialized, TS_ENOINIT);
+
+  if (drv->xfer.state == NFC_XFER_PENDING) {
+    nfc_transceive_finish(TS_ENOSTATE);
+  }
 
   ReturnCode ret = rfalNfcDeactivate(RFAL_NFC_DEACTIVATE_DISCOVERY);
   TSH_CHECK_ARG(ret == RFAL_ERR_NONE);
@@ -437,6 +471,7 @@ ts_t nfc_transceive(const nfc_apdu_message_t *cmd, nfc_apdu_message_t *resp) {
   TSH_DECLARE;
   st25_driver_t *drv = &g_st25_driver;
   TSH_CHECK(drv->initialized, TS_ENOINIT);
+  TSH_CHECK(drv->xfer.state != NFC_XFER_PENDING, TS_EBUSY);
 
   rfalNfcState state = rfalNfcGetState();
   if (state != RFAL_NFC_STATE_ACTIVATED &&
@@ -450,6 +485,154 @@ cleanup:
   TSH_RETURN;
 }
 
+static bool nfc_transceive_owned_by(const nfc_xfer_t *xfer,
+                                    systask_id_t task_id) {
+  return xfer->state != NFC_XFER_IDLE && xfer->owner_alive &&
+         xfer->owner == task_id;
+}
+
+static void nfc_transceive_finish(ts_t result) {
+  nfc_xfer_t *xfer = &g_st25_driver.xfer;
+
+  if (ts_error(result)) {
+    xfer->resp.data_len = 0;
+  }
+  xfer->result = result;
+  xfer->event_reported = false;
+  // Nobody would pick up the result of a killed task
+  xfer->state = xfer->owner_alive ? NFC_XFER_DONE : NFC_XFER_IDLE;
+}
+
+ts_t nfc_transceive_start(const nfc_apdu_message_t *cmd) {
+  TSH_DECLARE;
+  st25_driver_t *drv = &g_st25_driver;
+  nfc_xfer_t *xfer = &drv->xfer;
+  TSH_CHECK(drv->initialized, TS_ENOINIT);
+  TSH_CHECK(cmd != NULL && cmd->data_len <= sizeof(cmd->data), TS_EINVAL);
+
+  systask_id_t task_id = systask_id(systask_active());
+
+  // A result that has not been picked up can only be discarded by its owner
+  TSH_CHECK(xfer->state == NFC_XFER_IDLE ||
+                (xfer->state == NFC_XFER_DONE &&
+                 nfc_transceive_owned_by(xfer, task_id)),
+            TS_EBUSY);
+
+  rfalNfcState state = rfalNfcGetState();
+  TSH_CHECK(state == RFAL_NFC_STATE_ACTIVATED ||
+                state == RFAL_NFC_STATE_DATAEXCHANGE_DONE,
+            TS_ENOSTATE);
+
+  // Only ISO-DEP is supported. RFAL copies ISO-DEP commands into its own
+  // buffer and the protocol bounds the exchange duration, whereas the RF
+  // interface (e.g. T2T) keeps referencing the caller's buffer and has no
+  // timeout with RFAL_FWT_NONE.
+  rfalNfcDevice *dev = NULL;
+  TSH_CHECK(rfalNfcGetActiveDevice(&dev) == RFAL_ERR_NONE && dev != NULL,
+            TS_ENOSTATE);
+  TSH_CHECK(dev->rfInterface == RFAL_NFC_INTERFACE_ISODEP, TS_ENOSTATE);
+
+  xfer->rx_data = NULL;
+  xfer->rx_data_len = NULL;
+
+  ReturnCode err =
+      rfalNfcDataExchangeStart((uint8_t *)cmd->data, cmd->data_len,
+                               &xfer->rx_data, &xfer->rx_data_len,
+                               RFAL_FWT_NONE);
+
+  TSH_CHECK(err != RFAL_ERR_WRONG_STATE, TS_ENOSTATE);
+  TSH_CHECK(err != RFAL_ERR_PARAM, TS_EINVAL);
+  TSH_CHECK(err == RFAL_ERR_NONE, TS_ENOEN);
+
+  xfer->state = NFC_XFER_PENDING;
+  xfer->owner = task_id;
+  xfer->owner_alive = true;
+  xfer->event_reported = false;
+  xfer->result = TS_OK;
+  xfer->resp.data_len = 0;
+
+cleanup:
+  TSH_RETURN;
+}
+
+ts_t nfc_transceive_complete(nfc_apdu_message_t *resp) {
+  TSH_DECLARE;
+  st25_driver_t *drv = &g_st25_driver;
+  nfc_xfer_t *xfer = &drv->xfer;
+  TSH_CHECK(drv->initialized, TS_ENOINIT);
+  TSH_CHECK(resp != NULL, TS_EINVAL);
+  TSH_CHECK(nfc_transceive_owned_by(xfer, systask_id(systask_active())),
+            TS_ENOSTATE);
+  TSH_CHECK(xfer->state == NFC_XFER_DONE, TS_EBUSY);
+
+  ts_t result = xfer->result;
+  memcpy(resp->data, xfer->resp.data, xfer->resp.data_len);
+  resp->data_len = xfer->resp.data_len;
+  xfer->state = NFC_XFER_IDLE;
+
+  TSH_CHECK_OK(result);
+
+cleanup:
+  TSH_RETURN;
+}
+
+bool nfc_transceive_process(void) {
+  nfc_xfer_t *xfer = &g_st25_driver.xfer;
+
+  if (xfer->state != NFC_XFER_PENDING) {
+    return false;
+  }
+
+  ReturnCode err = rfalNfcDataExchangeGetStatus();
+  if (err == RFAL_ERR_BUSY) {
+    return true;
+  }
+
+  if (err != RFAL_ERR_NONE) {
+    nfc_transceive_finish(TS_ENOEN);
+  } else if (xfer->rx_data == NULL || xfer->rx_data_len == NULL) {
+    nfc_transceive_finish(TS_EINVAL);
+  } else if (*xfer->rx_data_len > sizeof(xfer->resp.data)) {
+    nfc_transceive_finish(TS_ENOMEM);
+  } else {
+    // Copy the response out of the RFAL buffer before it gets reused
+    memcpy(xfer->resp.data, xfer->rx_data, *xfer->rx_data_len);
+    xfer->resp.data_len = *xfer->rx_data_len;
+    nfc_transceive_finish(TS_OK);
+  }
+
+  return false;
+}
+
+bool nfc_transceive_event_pending(systask_id_t task_id) {
+  const nfc_xfer_t *xfer = &g_st25_driver.xfer;
+  return xfer->state == NFC_XFER_DONE &&
+         nfc_transceive_owned_by(xfer, task_id) && !xfer->event_reported;
+}
+
+bool nfc_transceive_take_event(systask_id_t task_id) {
+  if (!nfc_transceive_event_pending(task_id)) {
+    return false;
+  }
+  g_st25_driver.xfer.event_reported = true;
+  return true;
+}
+
+void nfc_transceive_task_killed(systask_id_t task_id) {
+  nfc_xfer_t *xfer = &g_st25_driver.xfer;
+
+  if (!nfc_transceive_owned_by(xfer, task_id)) {
+    return;
+  }
+
+  if (xfer->state == NFC_XFER_PENDING) {
+    // RFAL cannot cancel the exchange; let it finish and drop the result
+    xfer->owner_alive = false;
+  } else {
+    xfer->state = NFC_XFER_IDLE;
+  }
+}
+
 ts_t nfc_transceive_psk(const uint8_t *pcd_psk, size_t pcd_psk_len,
                         uint8_t *picc_psk, size_t picc_psk_max_len,
                         uint16_t *picc_psk_len) {
@@ -458,6 +641,7 @@ ts_t nfc_transceive_psk(const uint8_t *pcd_psk, size_t pcd_psk_len,
 
   st25_driver_t *drv = &g_st25_driver;
   TSH_CHECK(drv->initialized, TS_ENOINIT);
+  TSH_CHECK(drv->xfer.state != NFC_XFER_PENDING, TS_EBUSY);
 
   TSH_CHECK_ARG(pcd_psk != NULL);
   TSH_CHECK_ARG(pcd_psk_len == NFC_PSK_SHARE_LEN);

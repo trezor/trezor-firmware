@@ -78,6 +78,7 @@ pub fn nfc_parse_event(event: ffi::nfc_event_t) -> NfcEvent {
     match event {
         ffi::nfc_event_t_NFC_EVENT_CONNECTED => NfcEvent::Connected,
         ffi::nfc_event_t_NFC_EVENT_DISCONNECTED => NfcEvent::Disconnected,
+        ffi::nfc_event_t_NFC_EVENT_TRANSCEIVE_DONE => NfcEvent::TransceiveDone,
         _ => panic!(),
     }
 }
@@ -104,6 +105,25 @@ pub fn transceive(command: &Apdu) -> Result<Apdu, NfcError> {
     let mut response = Apdu::zero();
     ulog::debug!("Transceive command: {}.", hex_bytes(command));
     unsafe { ffi::nfc_transceive(command as *const _, &mut response as *mut _) }.ok()?;
+    ulog::debug!("Transceive response: {}.", hex_bytes(&response));
+    Ok(response)
+}
+
+/// Starts an asynchronous exchange with an ISO-DEP card. Poll
+/// `Syshandle::Nfc` until `NfcEvent::TransceiveDone`, then call
+/// `transceive_complete`.
+pub fn transceive_start(command: &Apdu) -> Result<(), NfcError> {
+    ulog::debug!("Transceive start: {}.", hex_bytes(command));
+    // SAFETY: ffi, the command is copied before the call returns
+    unsafe { ffi::nfc_transceive_start(command as *const _).ok()? };
+    Ok(())
+}
+
+/// Returns the response of the exchange started by `transceive_start`.
+pub fn transceive_complete() -> Result<Apdu, NfcError> {
+    let mut response = Apdu::zero();
+    // SAFETY: ffi
+    unsafe { ffi::nfc_transceive_complete(&mut response as *mut _).ok()? };
     ulog::debug!("Transceive response: {}.", hex_bytes(&response));
     Ok(response)
 }

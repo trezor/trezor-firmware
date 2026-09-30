@@ -293,6 +293,10 @@ ts_t nfc_transceive_psk__verified(const uint8_t *pcd_psk, size_t pcd_psk_len,
                                   uint8_t *picc_psk, size_t picc_psk_max_len,
                                   uint16_t *picc_psk_len);
 
+ts_t nfc_transceive_start__verified(const nfc_apdu_message_t *cmd);
+
+ts_t nfc_transceive_complete__verified(nfc_apdu_message_t *resp);
+
 #endif
 
 // ---------------------------------------------------------------------
