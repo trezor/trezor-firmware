@@ -39,26 +39,25 @@ async def get_root() -> bytes | None:
     return ward_store.get_root(await derive_wallet_id())
 
 
-def root_for_write(root: bytes | None, counter: int) -> bytes:
-    """The root a write derives from: the stored one, or EMPTY_ROOT for a wallet that has
-    never written.
+def root_for_write(root: bytes | None) -> bytes:
+    """The root a write derives from -- the stored one, or refuse.
 
-    `root` and `counter` are the values `get_root` and `get_counter` just returned. No root at
-    counter 0 is a genuinely empty wallet. No root AFTER a write means the device cannot
-    verify, and is refused here -- never read as empty, since an empty tree accepts an insert
-    with no witness at all. The same rule `common.verify_leaf_against_root` applies to reads;
-    this is the one place writes settle it, so `trie.compute_new_root` never sees None.
+    Every writer requires `common.online()`, and a session goes online only by ADOPTING a
+    WM-attested head: `adopt` stores the root before it marks the session, and raises instead
+    if it cannot. So a writer always holds a real root -- EMPTY_ROOT for a wallet that has
+    never written -- and a None here means that chain was broken somewhere.
+
+    NONE IS NEVER READ AS EMPTY, not even at counter 0. This used to settle None at counter 0
+    to EMPTY_ROOT on the theory that it meant an empty wallet. It does not: the counter is THIS
+    device's floor, and a second device of a wallet with history starts at 0 too. An empty tree
+    accepts an insert with no witness, so reading None as one would let the host replace the
+    tree. There is no case left in which that reading is needed, so it is gone.
     """
-    if root is not None:
-        return root
-    if counter > 0:
+    if root is None:
         from trezor.wire import DataError
 
         raise DataError("WARD: no trusted root; sync before writing")
-
-    from .attest import EMPTY_ROOT
-
-    return EMPTY_ROOT
+    return root
 
 
 async def get_counter() -> int:

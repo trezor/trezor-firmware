@@ -13,28 +13,23 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     among records that were never real. Nothing reaches flash that has not already passed the
     same checks a read passes.
 
-    WHAT IS CHECKED DEPENDS ON WHAT THE DEVICE KNOWS, and `verify_leaf_against_root` already
-    encodes exactly that, which is why this calls it with the same arguments a read would
-    rather than growing a second policy that could drift:
+    ONLINE ONLY, like every other read. The value is pulled through `pull_leaf` -- the same
+    ask, prove, open that `WardGetEntry` uses -- so what reaches flash is what a verified read
+    would have shown: a leaf proved against a WM-attested root this session adopted.
 
-      counter > 0 : a Merkle proof against the trusted root, plus the anti-rollback floor
-                    below. The leaf is bound to a tree the device accepted.
+    THIS USED TO ACCEPT AN UNSYNCED DEVICE, at counter 0 with no root, where
+    `verify_leaf_against_root` checks nothing and the AEAD was the whole of the evidence. The
+    argument for it had two legs and both had gone. "A read in this state already displays
+    these bytes" -- `WardGetEntry` now refuses offline, so pinning was the ONLY path left that
+    let host bytes in unproved. "The record carries counter 0 and turns stale" -- records store
+    no counter (see `offline_store`), so nothing ever marked it. And counter 0 is THIS device's
+    floor, not the wallet's: a second device of a wallet with history starts there too, and the
+    host holds every leaf that wallet ever published. An authentic OLD address would pin
+    cleanly, stay VALID indefinitely, and be served offline as the user's value.
 
-      counter = 0 : nothing to check against, so nothing is checked. There is no trie on the
-                    host yet, hence no proof and no root -- and a proof against a root the
-                    host supplied would be theatre.
-
-    WHAT COUNTER 0 STILL BUYS, because it is not nothing. The AEAD opens or it does not, and
-    its AAD is domain || entry_key || key_type: only a holder of K_data -- this wallet's
-    devices, nobody else -- can produce a valid tag. A host cannot forge a value, move a leaf
-    to another path, or pass an identity part off as a content part. What it CANNOT show is
-    freshness: a genuine older leaf for this path passes identically, and nothing here can
-    tell the two apart.
-
-    So pinning at counter 0 adds NO NEW TRUST ASSUMPTION. A read in this state already
-    displays exactly these bytes on exactly this evidence; the store keeps what the screen
-    already showed. The record carries counter 0, which turns it stale the moment a reconcile
-    moves the trusted counter off zero -- so it can never later pass for current.
+    After a sync that cannot happen. Adoption stores a root before marking the session online
+    -- EMPTY_ROOT for a wallet that has never written, which admits no leaf at all -- so there
+    is no state left in which a pin is taken on the host's word.
 
     REPLACEMENT IS DESTRUCTION. An existing record is a value the user chose to keep, so
     overwriting it asks again and shows both values. Identical bytes are the exception: that
@@ -45,57 +40,25 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     from trezor.wire import DataError
 
     from . import offline_store
-    from .common import (
-        decode_leaf,
-        display_bytes,
-        pull_leaf_from_backend,
-        require_key,
-        verify_leaf_against_root,
-    )
+    from .common import display_bytes, online, pull_leaf, require_key
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
-    from .leaf import is_delete, read_leaf_content, read_leaf_identity
-    from .root import get_counter, get_root
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
     key_type = ENTRY_TYPE_ADDRESS
     entry_key = await entry_key_for(app_id, identifier, key_type)
 
-    ack = await pull_leaf_from_backend(entry_key)
-    val_part = read_leaf_content(ack.content)
-    wire_key_type, id_part = read_leaf_identity(ack.identity)
-    present = val_part is not None and not is_delete(val_part)
-    leaf_key_type = wire_key_type or key_type
+    if not await online():
+        raise DataError("WARD: sync first; an entry is kept offline only once it is proved")
 
-    trusted_root = await get_root()
-    trusted_counter = await get_counter()
-
-    verify_leaf_against_root(
-        trusted_root,
-        trusted_counter,
-        entry_key,
-        leaf_key_type,
-        id_part,
-        val_part,
-        present,
-        ack.proof,
-        ack.witness_entry_key,
-        ack.witness_commit,
-    )
-
-    if not present:
-        # A proved absence. Nothing to keep, and inventing an empty record would make a later
-        # offline read report a value the entry does not have.
-        raise DataError("WARD: no entry to keep offline")
-
-    # ANTI-ROLLBACK IS THE PROOF, and there is nothing else to add here. `WardEntryAck` carries
-    # no counter -- deliberately, since a host-asserted one would be worth nothing -- so a leaf
-    # from an earlier state is caught by failing to be IN the trusted root, above. Being
-    # authentic is not the same as being current, and the membership check is what separates
-    # them. At counter 0 there is no root, so no such separation exists; see below.
-
-    value = await decode_leaf(entry_key, key_type, val_part)
+    # THE SAME PULL A VERIFIED READ MAKES, not a second copy of it. Proved against the root this
+    # session adopted -- so a genuine but OLDER leaf fails to be in it, which is the whole of the
+    # anti-rollback here: `WardEntryAck` carries no counter, deliberately, since a host-asserted
+    # one would be worth nothing. It is also where the host is refused a say in the key_type.
+    value, _leaf, _material = await pull_leaf(entry_key, key_type)
     if value is None:
+        # A proved absence, or a tombstone. Nothing to keep, and inventing an empty record
+        # would make a later offline read report a value the entry does not have.
         raise DataError("WARD: no entry to keep offline")
 
     # SIZE IS REFUSED BEFORE THE PROMPT. Asking the user to keep something and then failing to

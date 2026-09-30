@@ -127,7 +127,7 @@ class TestWardTrieCanonicity(unittest.TestCase):
         rng = _Rng(seed)
 
         model = CanonicalTrie()
-        root = EMPTY_ROOT  # the device before its first write, as `root_for_write` settles it
+        root = EMPTY_ROOT  # the device before its first write: what adopting genesis stores
         live = {}
 
         for step in range(self.STEPS):

@@ -186,7 +186,7 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
         old_leaf,
         None,
         proof,
-        root_for_write(from_root, counter - 1),
+        root_for_write(from_root),
     )
     # NOT COMMITTED HERE. The device hands back the root it derived, its counter and the
     # authenticators; the head only moves when a WM attestation names this exact transition and
