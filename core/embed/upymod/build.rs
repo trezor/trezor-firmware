@@ -1210,6 +1210,10 @@ impl<'a> MpyBuilder<'a> {
             files.add(src, "apps/thp/*.py")?;
         }
 
+        if cfg!(feature = "ward") {
+            files.add(src, "apps/ward/*.py")?;
+        }
+
         if cfg!(feature = "app_loading") {
             files.add(src, "apps/trezorapp/*.py")?;
         }
