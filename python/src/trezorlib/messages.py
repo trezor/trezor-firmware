@@ -10461,6 +10461,7 @@ class WardFlushQueue(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
         2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("max_batch", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10468,9 +10469,11 @@ class WardFlushQueue(protobuf.MessageType):
         *,
         app_id: Optional["str"] = None,
         identifier: Optional["bytes"] = None,
+        max_batch: Optional["int"] = None,
     ) -> None:
         self.app_id = app_id
         self.identifier = identifier
+        self.max_batch = max_batch
 
 
 class WardResetApp(protobuf.MessageType):
@@ -10495,14 +10498,54 @@ class WardEntryRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2301
     FIELDS = {
         3: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("staged", "WardStagedLeaf", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         entry_key: Optional["bytes"] = None,
+        staged: Optional["WardStagedLeaf"] = None,
     ) -> None:
         self.entry_key = entry_key
+        self.staged = staged
+
+
+class WardStagedLeaf(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("commit", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entry_key: Optional["bytes"] = None,
+        commit: Optional["bytes"] = None,
+    ) -> None:
+        self.entry_key = entry_key
+        self.commit = commit
+
+
+class WardBatchedLeaf(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("identity", "WardLeafIdentity", repeated=False, required=False, default=None),
+        3: protobuf.Field("content", "WardLeafContent", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entry_key: Optional["bytes"] = None,
+        identity: Optional["WardLeafIdentity"] = None,
+        content: Optional["WardLeafContent"] = None,
+    ) -> None:
+        self.entry_key = entry_key
+        self.identity = identity
+        self.content = content
 
 
 class WardLeafAck(protobuf.MessageType):
@@ -10544,19 +10587,24 @@ class WardFlushQueueAck(protobuf.MessageType):
         6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
         8: protobuf.Field("remaining", "uint32", repeated=False, required=True),
         9: protobuf.Field("wm_sig", "bytes", repeated=False, required=False, default=None),
+        10: protobuf.Field("from_counter", "uint32", repeated=False, required=False, default=None),
+        11: protobuf.Field("leaves", "WardBatchedLeaf", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         remaining: "int",
+        leaves: Optional[Sequence["WardBatchedLeaf"]] = None,
         entry_key: Optional["bytes"] = None,
         identity: Optional["WardLeafIdentity"] = None,
         content: Optional["WardLeafContent"] = None,
         counter: Optional["int"] = None,
         auth_commit: Optional["bytes"] = None,
         wm_sig: Optional["bytes"] = None,
+        from_counter: Optional["int"] = None,
     ) -> None:
+        self.leaves: Sequence["WardBatchedLeaf"] = leaves if leaves is not None else []
         self.remaining = remaining
         self.entry_key = entry_key
         self.identity = identity
@@ -10564,6 +10612,7 @@ class WardFlushQueueAck(protobuf.MessageType):
         self.counter = counter
         self.auth_commit = auth_commit
         self.wm_sig = wm_sig
+        self.from_counter = from_counter
 
 
 class WardVerifyChain(protobuf.MessageType):

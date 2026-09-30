@@ -2990,6 +2990,111 @@ def test_ward_attack_multiple_approved_demotions(session: Session):
     assert ward.sync(session).counter == own[0]
 
 
+# --- opt-in batching: several queued changes, ONE transition --------------------------------
+
+
+def _queue(session: Session, *identifiers: bytes) -> None:
+    """Queue one change per identifier, value b"v-" + identifier, confirming each."""
+    for identifier in identifiers:
+        with session.test_ctx as ctx:
+            ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+            ward.queue_set_entry(session, _APP, identifier, b"v-" + identifier)
+
+
+@pytest.mark.models("core")
+def test_ward_batched_flush_publishes_one_transition_for_several_changes(session: Session):
+    """Three queued changes, one flush: one link F -> F+3, one authorisation, three leaves.
+
+    Each leaf is stamped with its own counter, so the counter still counts changes; and one
+    adopted link settles all three claims, so every record becomes an offline copy.
+    """
+    store = WardTrie()
+    _queue(session, b"q1", b"q2", b"q3")
+    _go_online(session, store)
+    start = store.counter
+
+    res = ward.flush_queue(session, ward.store_provider(store), max_batch=8)
+
+    assert [k for k, _leaf in res.leaves] == [
+        expected_entry_key(_K_PATH, _APP, i) for i in (b"q1", b"q2", b"q3")
+    ]
+    assert (res.from_counter, res.counter, res.remaining) == (start, start + 3, 0)
+    stamps = [
+        unpack_content(open_content(_K_DATA, k, "address", leaf.content.encrypted))[0]
+        for k, leaf in res.leaves
+    ]
+    assert stamps == [start + 1, start + 2, start + 3]
+
+    ward.apply(store, res)
+    assert len(store.links) == 1 and store.links[0][:3] == (start, None, start + 3)
+    _publish(_wm_for(store), res, store)
+    _confirm(session, store)
+
+    for identifier in (b"q1", b"q2", b"q3"):
+        rec = _offline_read(session.test_ctx.get_session(), identifier)
+        assert "offline copy" in rec.title
+
+
+@pytest.mark.models("core")
+def test_ward_a_batch_that_loses_the_race_stays_queued_whole(session: Session):
+    """All or nothing at the WM too: another device wins, the batch is refused as one, and every
+    change in it is offered again -- rebuilt on the new head."""
+    world = _World(session)
+    _queue(session, b"q1", b"q2", b"q3")
+    world.write(b"a", b"one")
+    start = world.head[0]
+
+    lost = ward.flush_queue(session, ward.store_provider(world.store), max_batch=8)
+    assert len(lost.leaves) == 3
+
+    # another device publishes first; ours can no longer compare-and-swap
+    world.other_device_writes(world.tree_of(b"a"))
+    with pytest.raises(MockWM.Conflict):
+        world.wm.advance(
+            _WARD_ID, start, world.head[1], lost.counter, bytes(32), lost.wm_sig, _T0
+        )
+    world.sync()
+    world.reconcile()  # adopting the winner settles all three claims as NOT landed
+
+    again = ward.flush_queue(session, ward.store_provider(world.store), max_batch=8)
+    assert len(again.leaves) == 3
+    assert (again.from_counter, again.counter) == (start + 1, start + 4)
+
+
+@pytest.mark.models("core")
+def test_ward_a_batch_is_capped_at_max_batch(session: Session):
+    store = WardTrie()
+    _queue(session, *[b"q%d" % i for i in range(10)])
+    _go_online(session, store)
+
+    res = ward.flush_queue(session, ward.store_provider(store), max_batch=20)
+    assert len(res.leaves) == _MAX_BATCH
+    assert res.remaining == 10 - _MAX_BATCH
+
+
+@pytest.mark.models("core")
+def test_ward_a_batch_with_one_bad_proof_files_nothing(session: Session):
+    """The second change's proof is wrong: the whole batch aborts, and nothing is offered."""
+    store = WardTrie()
+    _queue(session, b"q1", b"q2", b"q3")
+    _go_online(session, store)
+    honest = ward.store_provider(store)
+
+    class Lying:
+        def __call__(self, entry_key: bytes) -> ward.Answer:
+            return honest(entry_key)
+
+        def with_staged(self, staged: list):
+            return lambda _entry_key: ward.Answer()  # "absent", with no witness
+
+    with pytest.raises(exceptions.TrezorFailure, match="without a witness"):
+        ward.flush_queue(session, Lying(), max_batch=8)
+
+    # nothing was filed or flagged: the same three are still there to publish
+    res = ward.flush_queue(session, honest, max_batch=8)
+    assert len(res.leaves) == 3
+
+
 def _rollback(
     session: Session,
     wm: MockWM,

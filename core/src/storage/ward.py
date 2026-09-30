@@ -791,6 +791,18 @@ def claim_put(rec: bytes) -> bool:
     return True
 
 
+def claims_fit(wallet_id: bytes, slots: "list[int]") -> bool:
+    """Would a claim for every one of `slots` fit? Asked BEFORE a batch files any of them.
+
+    A batch is all or nothing, so it must not file some claims and then find the journal full: a
+    change offered with no claim cannot be settled. A slot this wallet already has a claim for
+    replaces it and needs no new entry.
+    """
+    needed = sum(1 for slot in slots if claim_find(wallet_id, slot) is None)
+    free = sum(1 for i in range(MAX_CLAIMS) if _claim_slot(i) is None)
+    return needed <= free
+
+
 def claim_read(index: int) -> bytes | None:
     """One claim by index, or None if the slot is empty or unreadable."""
     rec = _claim_slot(index)

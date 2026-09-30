@@ -147,7 +147,7 @@ async def online_or_offline() -> bool:
         return False
 
 
-async def pull_leaf_from_backend(entry_key: bytes):
+async def pull_leaf_from_backend(entry_key: bytes, staged: "tuple | None" = None):
     """Ask whoever owns the replica for its leaf at this path, and return the raw ack.
 
     Verifies NOTHING. Split out so the verification below can be reached without a round-trip,
@@ -168,15 +168,19 @@ async def pull_leaf_from_backend(entry_key: bytes):
     if utils.USE_WARD_SERVICE_CHANNEL:
         from .service import fetch
 
+        # A batched flush is connect-only; nothing on a service build stages a leaf.
+        assert staged is None
         return await fetch(entry_key)
 
-    from trezor.messages import WardEntryAck, WardEntryRequest
+    from trezor.messages import WardEntryAck, WardEntryRequest, WardStagedLeaf
     from trezor.wire import context
 
-    return await context.call(
-        WardEntryRequest(entry_key=entry_key),
-        expected_type=WardEntryAck,
-    )
+    request = WardEntryRequest(entry_key=entry_key)
+    if staged is not None:
+        # A BATCHED FLUSH: the change folded just before this one, so the host can prove this path
+        # against the running root. See `WardEntryRequest.staged`.
+        request.staged = WardStagedLeaf(entry_key=staged[0], commit=staged[1])
+    return await context.call(request, expected_type=WardEntryAck)
 
 
 async def decode_leaf(entry_key: bytes, key_type: str, val_part) -> bytes | None:
@@ -196,7 +200,12 @@ async def decode_leaf(entry_key: bytes, key_type: str, val_part) -> bytes | None
     return None if decoded is None else decoded[1]
 
 
-async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
+async def pull_leaf(
+    entry_key: bytes,
+    key_type: str,
+    root: "bytes | None" = None,
+    staged: "tuple | None" = None,
+) -> tuple:
     """PULL the host's leaf for an already-derived keyed path, verified.
 
     The three steps -- ask, check against the trusted root, open -- are `pull_leaf_from_backend`,
@@ -221,10 +230,15 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     The identity part is returned but nothing reads it yet: the device already knows the
     identifier and app_id, having derived the path from them, so it is carried only
     because the leaf hash commits to it.
+
+    `root`, given only by a BATCHED FLUSH, is the root to prove against instead of the stored
+    one: the running root the batch has derived so far, which is still a root the device computed
+    itself and never one the host named. `staged` rides along on the request so the host can
+    produce a proof against it. Both absent is the ordinary read.
     """
     from .leaf import is_delete, read_leaf_content, read_leaf_identity
 
-    ack = await pull_leaf_from_backend(entry_key)
+    ack = await pull_leaf_from_backend(entry_key, staged)
 
     val_part = read_leaf_content(ack.content)
     wire_key_type, id_part = read_leaf_identity(ack.identity)
@@ -247,7 +261,7 @@ async def pull_leaf(entry_key: bytes, key_type: str) -> tuple:
     from .root import get_counter, get_root
 
     verify_leaf_against_root(
-        await get_root(),
+        await get_root() if root is None else root,
         await get_counter(),
         entry_key,
         leaf_key_type,

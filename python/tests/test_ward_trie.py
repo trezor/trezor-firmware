@@ -267,3 +267,73 @@ def test_fork_point() -> None:
     assert log.fork_point((4, r4), (3, r3a)) == 2
     assert log.fork_point((2, r2), (4, r4)) == 2  # an ancestor: the lower head itself
     assert log.fork_point((3, _root("unknown")), (4, r4)) is None
+
+
+# --- a batched flush, host side ------------------------------------------------------------------
+
+
+def test_scratch_serves_each_batched_change_against_the_running_root() -> None:
+    """Play the device: prove each change against the root built so far, from `scratch(staged)`.
+
+    The host cannot prove change i against the running root from its own tree -- that root holds
+    changes 1..i-1 it has not stored yet -- so each pull brings the previous change STAGED. The
+    running root the device derives this way must equal the root the store reaches once the batch
+    is applied, or the device's one link would name a head the host cannot serve.
+    """
+    rng = random.Random(7)
+    store = WardTrie()
+    existing = _keys(rng, 10, 0)
+    for k in existing:
+        store.set(k, _leaf(b"old"))
+    batch = _keys(rng, 3, 0) + existing[:2]  # three inserts, two updates
+    running = store.root_or_empty()
+
+    staged: list = []
+    new_leaves = []
+    for k in batch:
+        view = store.scratch(staged)
+        new = _leaf(bytes([rng.getrandbits(8)]) * 3)
+        c = _commit(new)
+        if k in view:
+            running = update_root(k, view.commit(k), c, view.membership_proof(k), running)
+        else:
+            proof, wkey, wcommit = view.nonmembership_proof(k)
+            running = insert_root(k, c, proof, running, wkey, wcommit)
+        staged.append((k, c))
+        new_leaves.append((k, new))
+
+    assert store.root_or_empty() != running  # the store is untouched until the batch is applied
+    for k, leaf in new_leaves:
+        store.set(k, leaf)
+    assert store.root_or_empty() == running
+
+
+def test_apply_records_one_link_for_a_batch() -> None:
+    from trezorlib import ward
+
+    store = WardTrie()
+    store.set(MEMBER, _leaf(b"x"))
+    store.counter = 4
+    before = store.root()
+    a, b = bytes([1]) * 32, bytes([2]) * 32
+    result = ward.WardResult(
+        None,
+        b"",
+        counter=6,
+        auth_commit=b"m" * 32,
+        wm_sig=b"s" * 64,
+        remaining=0,
+        leaves=[(a, _leaf(b"a")), (b, _leaf(b"b"))],
+        from_counter=4,
+    )
+    ward.apply(store, result)
+
+    assert a in store and b in store and store.counter == 6
+    assert len(store.links) == 1
+    link = store.links[0]
+    assert (link.from_counter, link.from_root, link.to_counter) == (4, before, 6)
+    assert link.to_root == store.root() and store.wm_sigs[6] == b"s" * 64
+
+    stale = ward.WardResult(None, b"", counter=9, leaves=[(a, _leaf(b"a"))], from_counter=7)
+    with pytest.raises(ValueError, match="starts at counter 7"):
+        ward.apply(store, stale)

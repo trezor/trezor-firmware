@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from micropython import const
 from trezor import utils
 
 if TYPE_CHECKING:
@@ -28,10 +29,13 @@ async def flush_queue(
     device boundary, so the parts are built on the way out and nowhere else. See
     `storage/ward.py` for the full argument.
 
-    ONE PER REQUEST, and the host repeats until `remaining` is zero. A queued batch has no
-    transaction to apply under -- Evolu's CRDT offers none -- so a partial application is
+    ONE PER REQUEST BY DEFAULT, and the host repeats until `remaining` is zero. A queued batch has
+    no transaction to apply under -- Evolu's CRDT offers none -- so a partial application is
     always possible; one change per round-trip bounds it to a single step and makes each step
     independently retryable, rather than pretending the batch is atomic.
+
+    A HOST MAY OPT IN TO BATCHING (`max_batch`), and then owns the atomicity: see `_flush_batch`
+    and `WardFlushQueue.max_batch` for what it undertakes.
 
     NO CONFIRMATION SCREEN. The user held to confirm when the change was queued. Asking again
     would be asking about a decision already made -- the same reasoning `reconcile` gives for
@@ -76,6 +80,15 @@ async def flush_queue(
 
     if not await online():
         raise DataError("WARD: sync before publishing queued changes")
+
+    # OPT-IN BATCHING. Only when the host asks, only for the unnamed drain, and only on connect: a
+    # named flush publishes THAT change, and a service build publishes one change per WardPublish.
+    max_batch = msg.max_batch or 1
+    named = msg.app_id is not None and msg.identifier is not None
+    if max_batch > 1 and not named and not utils.USE_WARD_SERVICE_CHANNEL:
+        from .cas import MAX_BATCH
+
+        return await _flush_batch(min(max_batch, MAX_BATCH))
 
     # NAMED, OR THE NEXT ONE. A host that says which entry to publish gets that one -- and that is
     # the only way a COMPACT record can be published, since such a record holds a hash of its identity
@@ -224,4 +237,150 @@ async def flush_queue(
         # comes back only through `reconcile_pending`, which is the point at which the device can
         # tell the head has moved at all.
         remaining=remaining,
+    )
+
+
+# The most a batch's leaves may occupy in one WardFlushQueueAck. The wire buffer is 8704 bytes; the
+# rest is headroom for the ack's own fields and framing.
+_BATCH_BYTES = const(7000)
+
+
+async def _flush_batch(limit: int) -> "WardFlushQueueAck":
+    """Fold up to `limit` queued changes into ONE transition (F, R_F) -> (F + n, R_T).
+
+    ONE TRANSITION, NOT n. One `auth_commit` and one `wm_sig` over the whole step, so the WM
+    compare-and-swaps once and rotates once, and the queue drains in one round trip instead of n.
+    The counter advances by n, so it still counts changes: each leaf is stamped with its own
+    `c_leaf` (F + i), and the rollback and rejoin screens still say how many changes are at stake.
+
+    SEQUENTIAL, AGAINST ROOTS THIS DEVICE DERIVED. Change i is pulled and proved against R_{i-1},
+    the root the batch has built so far -- never one the host names -- which is the whole of the
+    soundness argument, unchanged from a single write. The host cannot produce that proof alone,
+    since R_{i-1} holds leaves it has not seen yet, so each request after the first STAGES the
+    previous change (its entry_key and commit) for the host to apply to a scratch tree. That is a
+    hint the host needs, not something trusted: a wrong proof fails against the device's own root.
+
+    ALL OR NOTHING. Any failed pull or proof raises before anything is filed or flagged, so the
+    batch either goes out whole or leaves every record exactly as it was. The claims are checked
+    for room first, for the same reason: a change offered with no claim could never settle.
+
+    NO DUPLICATES TO COLLAPSE. The queue holds at most one record per identity -- a replacement
+    keeps its slot -- so no path appears twice in a batch, and no change is proved against a leaf
+    the batch itself just wrote.
+    """
+    from storage import ward as ward_store
+    from trezor.messages import WardBatchedLeaf, WardFlushQueueAck
+    from trezor.wire import DataError
+
+    from . import offline_store
+    from . import round as sync_round
+    from .cas import auth_commit, wm_sig
+    from .common import pull_leaf
+    from .keys import (
+        derive_k_auth,
+        derive_k_data,
+        derive_k_ident,
+        derive_k_sig,
+        derive_wallet_id,
+        derive_ward_id,
+        entry_key_for,
+    )
+    from .leaf import (
+        commit_of,
+        encode_content,
+        encode_identity,
+        make_leaf_content,
+        make_leaf_identity,
+        part_bytes,
+    )
+    from .root import get_counter, get_root, root_for_write
+    from .trie import compute_new_root
+
+    # In queue order, and only records the unnamed drain may publish: compact ones are absent from
+    # enumeration by construction, and are skipped here too should one ever appear.
+    queued = [
+        e
+        for e in await offline_store.list_entries()
+        if e.pending and not e.offered and not e.compact
+    ][:limit]
+    if not queued:
+        return WardFlushQueueAck(remaining=0)
+
+    from_counter = await get_counter()
+    from_root = await get_root()
+    running = root_for_write(from_root)
+
+    folded = []  # (entry, entry_key, key_type, id_part, val_part)
+    used = 0
+    staged = None
+    for entry in queued:
+        key_type = entry.key_type
+        entry_key = await entry_key_for(entry.app_id, entry.identifier, key_type)
+        _value, old_leaf, material = await pull_leaf(
+            entry_key, key_type, root=running, staged=staged
+        )
+        c_leaf = from_counter + len(folded) + 1
+        id_part = encode_identity(
+            await derive_k_ident(key_type), entry_key, key_type, entry.identifier, entry.app_id
+        )
+        val_part = encode_content(
+            await derive_k_data(key_type), entry_key, key_type, entry.value, c_leaf=c_leaf
+        )
+        size = len(part_bytes(id_part)) + len(part_bytes(val_part)) + 64
+        if folded and used + size > _BATCH_BYTES:
+            # What does not fit waits for the next flush, still queued and un-offered.
+            break
+        proof, witness_entry_key, witness_commit = material
+        running = compute_new_root(
+            entry_key,
+            old_leaf,
+            (key_type, id_part, val_part),
+            proof,
+            running,
+            witness_entry_key=witness_entry_key,
+            witness_commit=witness_commit,
+        )
+        folded.append((entry, entry_key, key_type, id_part, val_part))
+        used += size
+        staged = (entry_key, commit_of(key_type, id_part, val_part))
+
+    to_counter = from_counter + len(folded)
+    ward_id = await derive_ward_id()
+    step = auth_commit(
+        await derive_k_auth(), ward_id, from_counter, from_root, to_counter, running
+    )
+    advance = wm_sig(
+        await derive_k_sig(),
+        ward_id,
+        from_counter,
+        from_root,
+        to_counter,
+        running,
+        sync_round.require_head_nonce(),
+    )
+
+    # Room for EVERY claim before filing any of them -- see the docstring.
+    if not ward_store.claims_fit(
+        await derive_wallet_id(), [e[0].slot for e in folded]
+    ):
+        raise DataError("WARD: cannot record this batch; settle the pending changes first")
+    # Every record names the batch's single authorisation and its to_counter, so one adopted link
+    # settles them all -- see `offline_store.reconcile_pending`.
+    for entry, *_rest in folded:
+        await offline_store.mark_offered(entry, to_counter, step)
+
+    return WardFlushQueueAck(
+        counter=to_counter,
+        from_counter=from_counter,
+        auth_commit=step,
+        wm_sig=advance,
+        remaining=await offline_store.count_unsent(),
+        leaves=[
+            WardBatchedLeaf(
+                entry_key=entry_key,
+                identity=make_leaf_identity(key_type, id_part),
+                content=make_leaf_content(val_part),
+            )
+            for _entry, entry_key, key_type, id_part, val_part in folded
+        ],
     )

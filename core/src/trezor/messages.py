@@ -8338,12 +8338,14 @@ if TYPE_CHECKING:
     class WardFlushQueue(protobuf.MessageType):
         app_id: "str | None"
         identifier: "AnyBytes | None"
+        max_batch: "int | None"
 
         def __init__(
             self,
             *,
             app_id: "str | None" = None,
             identifier: "AnyBytes | None" = None,
+            max_batch: "int | None" = None,
         ) -> None:
             pass
 
@@ -8373,16 +8375,52 @@ if TYPE_CHECKING:
 
     class WardEntryRequest(protobuf.MessageType):
         entry_key: "AnyBytes | None"
+        staged: "WardStagedLeaf | None"
 
         def __init__(
             self,
             *,
             entry_key: "AnyBytes | None" = None,
+            staged: "WardStagedLeaf | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WardEntryRequest"]:
+            return isinstance(msg, cls)
+
+    class WardStagedLeaf(protobuf.MessageType):
+        entry_key: "AnyBytes | None"
+        commit: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes | None" = None,
+            commit: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardStagedLeaf"]:
+            return isinstance(msg, cls)
+
+    class WardBatchedLeaf(protobuf.MessageType):
+        entry_key: "AnyBytes | None"
+        identity: "WardLeafIdentity | None"
+        content: "WardLeafContent | None"
+
+        def __init__(
+            self,
+            *,
+            entry_key: "AnyBytes | None" = None,
+            identity: "WardLeafIdentity | None" = None,
+            content: "WardLeafContent | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardBatchedLeaf"]:
             return isinstance(msg, cls)
 
     class WardLeafAck(protobuf.MessageType):
@@ -8417,17 +8455,21 @@ if TYPE_CHECKING:
         auth_commit: "AnyBytes | None"
         remaining: "int"
         wm_sig: "AnyBytes | None"
+        from_counter: "int | None"
+        leaves: "list[WardBatchedLeaf]"
 
         def __init__(
             self,
             *,
             remaining: "int",
+            leaves: "list[WardBatchedLeaf] | None" = None,
             entry_key: "AnyBytes | None" = None,
             identity: "WardLeafIdentity | None" = None,
             content: "WardLeafContent | None" = None,
             counter: "int | None" = None,
             auth_commit: "AnyBytes | None" = None,
             wm_sig: "AnyBytes | None" = None,
+            from_counter: "int | None" = None,
         ) -> None:
             pass
 

@@ -505,6 +505,24 @@ class WardTrie(TransitionLog):
         self.blobs.pop(entry_key, None)
         self._tree = None
 
+    def scratch(self, staged: Sequence[tuple] = ()) -> "WardTrie":
+        """A copy of the tree with `staged` (entry_key, commit) leaves applied -- no log, no blobs
+        for the staged keys.
+
+        What a host serves a BATCHED flush from: the device proves each change against the root it
+        has built so far, which already holds the changes it folded before, and this is that tree.
+        The store itself is untouched until the batch is applied.
+        """
+        copy = WardTrie()
+        copy._leaves = dict(self._leaves)
+        copy._commits = dict(self._commits)
+        copy.blobs = dict(self.blobs)
+        for entry_key, commit in staged:
+            copy._commits[entry_key] = commit
+            copy._leaves[entry_key] = leaf_hash(entry_key, commit)
+        copy.counter = self.counter
+        return copy
+
     def commit(self, entry_key: bytes) -> bytes:
         return self._commits[entry_key]
 
