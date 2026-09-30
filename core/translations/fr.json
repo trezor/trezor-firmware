@@ -161,7 +161,7 @@
       "Delizia": "Créez une sauvegarde pour éviter de perdre l'accès à vos fonds.",
       "Eckhart": "Créez une sauvegarde pour éviter de perdre l'accès à vos fonds."
     },
-    "backup__info_multi_group_backup": "Votre sauvegarde de portefeuille est composée de {0} groupe(s), dont {1} requis pour la restaurer.",
+    "backup__info_multi_group_backup": "Votre sauvegarde de portefeuille est composée de {0} groupes, dont {1} requis pour la restaurer.",
     "backup__info_multi_share_backup": {
       "Bolt": "La sauvegarde contient plusieurs listes dans un ordre spécifique (fragments).",
       "Caesar": "La sauvegarde contient plusieurs listes dans un ordre spécifique (fragments).",
@@ -2076,8 +2076,8 @@
     "pin__turn_on": "Activer la protection par code PIN ?",
     "pin__wipe_code_exists_description": {
       "Bolt": "Le code d'effacement doit être désactivé avant le code PIN.",
-      "Caesar": "Désactivez le code d'effac. avant de désact. la protection par PIN.",
-      "Delizia": "Désactivez le code d'effac. avant de désact. la protection par PIN.",
+      "Caesar": "Désactivez le code d'effacement avant de désactiver la protection par code PIN.",
+      "Delizia": "Désactivez le code d'effacement avant de désactiver la protection par code PIN.",
       "Eckhart": "Désactivez le code d'effacement avant de désactiver la protection par code PIN."
     },
     "pin__wipe_code_exists_title": "Code d'effacement défini",
@@ -3126,7 +3126,7 @@
     "stellar__preauth_transaction": "Transaction pré-autorisée",
     "stellar__price_per_template": "Prix par {0}",
     "stellar__remove_signer": "Supprimer le signataire",
-    "stellar__revoke_approval": "Révoquer l’approbation",
+    "stellar__revoke_approval": "Révoquer l'approbation",
     "stellar__revoke_trust": "Révoquer le Trust",
     "stellar__selling": "Vente",
     "stellar__set_data": "Définir les données",
