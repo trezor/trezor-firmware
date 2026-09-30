@@ -58,8 +58,8 @@ bool ipc_init(void);
  *
  * @param remote The remote task ID to register the buffer for.
  * @param buffer Pointer to the buffer to use for receiving messages.
- * @param size Size of the buffer in bytes. Must be less or equal to
- *             IPC_MAX_BUFFER_SIZE.
+ * @param size Size of the buffer in bytes. Must be non-zero and less or equal
+ *             to IPC_MAX_BUFFER_SIZE.
  * @return true if the buffer was successfully registered
  *
  */

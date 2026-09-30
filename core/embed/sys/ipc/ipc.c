@@ -111,7 +111,7 @@ bool ipc_register(systask_id_t remote, void *buffer, size_t size) {
     return false;
   }
 
-  if (size > IPC_MAX_BUFFER_SIZE) {
+  if (buffer == NULL || size == 0 || size > IPC_MAX_BUFFER_SIZE) {
     return false;
   }
 
