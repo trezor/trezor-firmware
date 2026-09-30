@@ -1168,9 +1168,10 @@ class TestEthereumClearSigning(unittest.TestCase):
 
     TRANSFER_SIG = b"\xa9\x05\x9c\xbb"
     RECIPIENT = bytes.fromhex("d8da6bf26964af9d7eed9e03e53415d37aa96045")
-    # stETH: mapped to "Lido" in KNOWN_ADDRESSES, exercising the provider /
-    # callee name resolution. Will be updated once those definitions are removed.
+    # stETH: not in KNOWN_ADDRESSES, so the provider / callee is displayed as
+    # its checksummed address.
     CALLEE = bytes.fromhex("ae7ab96520de3a18e5e111b5eaab095312d7fe84")
+    CALLEE_STR = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
 
     @staticmethod
     def _msg(**kwargs):
@@ -1249,8 +1250,9 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
         return fields
 
-    def _assert_raw_fallback(self, fields, blob, callee_str="Lido"):
+    def _assert_raw_fallback(self, fields, blob, callee_str=None):
         # the fallback is two rows: the callee, then the raw hex blob
+        callee_str = callee_str or self.CALLEE_STR
         self.assertEqual(len(fields), 2)
         self.assertEqual(fields[0][0][:2], ("Subcall to", callee_str))
         self.assertEqual(fields[1][0][:2], ("Wrapped call", blob.hex()))
@@ -1308,7 +1310,7 @@ class TestEthereumClearSigning(unittest.TestCase):
 
         self.assertEqual(len(fields), 4)
         # built-in TRANSFER has no provider_name -> KNOWN_ADDRESSES fallback
-        self.assertEqual(fields[0][0][:2], ("(Subcall) Provider", "Lido"))
+        self.assertEqual(fields[0][0][:2], ("(Subcall) Provider", self.CALLEE_STR))
         self.assertEqual(fields[1][0][:2], ("(Subcall) Intent", "Send"))
         (label, formatted, _), _, _ = fields[2]
         self.assertEqual(label, "(Subcall) To")
@@ -1430,7 +1432,7 @@ class TestEthereumClearSigning(unittest.TestCase):
             clear_signing_definitions.all_display_formats = original
 
         self.assertEqual(len(fields), 4)
-        self.assertEqual(fields[0][0][:2], ("(Subcall) Provider", "Lido"))
+        self.assertEqual(fields[0][0][:2], ("(Subcall) Provider", self.CALLEE_STR))
         self.assertEqual(fields[1][0][:2], ("(Subcall) Intent", "Middle"))
         # the middle format's calldata field degraded to callee + raw hex
         (label, formatted, _), _, _ = fields[2]
@@ -1581,7 +1583,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertEqual(len(fields), 8)
         for n, group in ((1, fields[:4]), (2, fields[4:])):
             prefix = f"(Subcall #{n}) "
-            self.assertEqual(group[0][0][:2], (prefix + "Provider", "Lido"))
+            self.assertEqual(group[0][0][:2], (prefix + "Provider", self.CALLEE_STR))
             self.assertEqual(group[1][0][:2], (prefix + "Intent", "Send"))
             (label, formatted, _), _, _ = group[2]
             self.assertEqual(label, prefix + "To")
@@ -1603,7 +1605,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
 
         self.assertEqual(len(fields), 8)
-        self.assertEqual(fields[0][0][:2], ("(Subcall #1) Provider", "Lido"))
+        self.assertEqual(fields[0][0][:2], ("(Subcall #1) Provider", self.CALLEE_STR))
         (label, provider, _), _, _ = fields[4]
         self.assertEqual(label, "(Subcall #2) Provider")
         self.assertEqual(provider.lower(), "0x" + other_callee.hex())
@@ -1618,12 +1620,12 @@ class TestEthereumClearSigning(unittest.TestCase):
         fields, _ = self._expand_array([bad_blob, good_blob])
 
         self.assertEqual(len(fields), 6)
-        self.assertEqual(fields[0][0][:2], ("(Subcall #1) To", "Lido"))
+        self.assertEqual(fields[0][0][:2], ("(Subcall #1) To", self.CALLEE_STR))
         self.assertEqual(
             fields[1][0][:2],
             ("(Subcall #1) Wrapped call", bad_blob.hex()),
         )
-        self.assertEqual(fields[2][0][:2], ("(Subcall #2) Provider", "Lido"))
+        self.assertEqual(fields[2][0][:2], ("(Subcall #2) Provider", self.CALLEE_STR))
 
     def test_calldata_array_empty(self):
         # An empty subcall array legitimately contributes no rows.
