@@ -1,4 +1,5 @@
 use alloc::vec::Vec;
+
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 use stabby::boxed::BoxedSlice;
@@ -27,7 +28,12 @@ mod hashers;
 /// variant).
 fn ipc_crypto_call(value: &TrezorCryptoEnum) -> Result<BoxedSlice<u8>, WireError> {
     let bytes = to_bytes::<Failure>(value).map_err(|_| WireError::DecodeError)?;
-    let (_id, data) = ipc_call(CoreIpcService::Crypto.into(), value.id() as u16, &bytes, TIMEOUT_MAX)?;
+    let (_id, data) = ipc_call(
+        CoreIpcService::Crypto.into(),
+        value.id() as u16,
+        &bytes,
+        TIMEOUT_MAX,
+    )?;
     Ok(data)
 }
 
@@ -89,9 +95,12 @@ fn ecdsa_verify_recover_digest(
         .map_err(|_| CryptoError::InvalidEncoding)?;
 
     for recid in 0..4u8 {
-        if let Ok(recovered) =
-            crypto::ecdsa::verify_recover(curve, signature, crypto::ecdsa::RecId::new(recid), digest)
-        {
+        if let Ok(recovered) = crypto::ecdsa::verify_recover(
+            curve,
+            signature,
+            crypto::ecdsa::RecId::new(recid),
+            digest,
+        ) {
             if pubkey_matches(&recovered, public_key) {
                 return Ok(BoxedSlice::from(public_key));
             }

@@ -126,7 +126,8 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
   void* app_entry = coreapp_get_app_entry();
   TSH_CHECK(app_entry != NULL, TS_EBADMSG);
 
-  ok = systask_push_call(&applet->task, app_entry, (uintptr_t)applet_main, 0, 0);
+  ok =
+      systask_push_call(&applet->task, app_entry, (uintptr_t)applet_main, 0, 0);
   TSH_CHECK(ok, TS_ENOMEM);
 
 cleanup:

@@ -1,4 +1,4 @@
-use crypto::{hmac, sha256, sha3, sha512};
+use crypto::{hmac, sha3, sha256, sha512};
 use stabby::boxed::{Box, BoxedSlice};
 use stabby::slice::Slice;
 use stabby::vec::Vec;
@@ -8,8 +8,9 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 /// A [`Hasher`] state that can be finalized exactly once: [`Self::consume`]
 /// drops the inner context (zeroizing it via its own `Zeroize` impl) so a
 /// finalized hasher can't be updated/finalized again, and the whole wrapper
-/// is itself `ZeroizeOnDrop` so an app that drops a [`BoxedHasher`](trezor_app_sdk::traits::crypto::BoxedHasher)
-/// without ever calling `finalize` still doesn't leak hasher state (which,
+/// is itself `ZeroizeOnDrop` so an app that drops a
+/// [`BoxedHasher`](trezor_app_sdk::traits::crypto::BoxedHasher) without ever
+/// calling `finalize` still doesn't leak hasher state (which,
 /// for HMAC, includes the key).
 #[derive(Zeroize, ZeroizeOnDrop)]
 pub struct ConsumableHasher<T: Zeroize>(Option<T>);
@@ -83,7 +84,10 @@ impl Sha3 {
         let mut new = Box::new(Self(Some(Default::default())));
         // COPY HAZARD: init is public information
         assert!(
-            new.borrow_mut().hazard_mut().init(bit_size, is_keccak).is_ok(),
+            new.borrow_mut()
+                .hazard_mut()
+                .init(bit_size, is_keccak)
+                .is_ok(),
             "Invalid parameters"
         );
         new

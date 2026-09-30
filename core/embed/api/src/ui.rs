@@ -8,7 +8,9 @@ use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 use stabby::option::Option as StabbyOption;
 use stabby::slice::Slice;
-use trezor_app_sdk::structs::{self, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult as WireTrezorUiResult};
+use trezor_app_sdk::structs::{
+    self, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult as WireTrezorUiResult,
+};
 use trezor_app_sdk::traits::ui::{
     ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
     ConfirmValueIntro, ConfirmWithInfo, Property, RequestNumber, SelectMenu, ShowAddress,
@@ -203,8 +205,12 @@ impl UiV1 for TrezorUiV1Impl {
         &self,
         value: SelectMenu<'a>,
     ) -> FastResult<TrezorUiResult, WireError> {
-        let items: alloc::vec::Vec<structs::StrSlice> =
-            value.items.as_slice().iter().map(|s| s.as_str().into()).collect();
+        let items: alloc::vec::Vec<structs::StrSlice> = value
+            .items
+            .as_slice()
+            .iter()
+            .map(|s| s.as_str().into())
+            .collect();
         ui_call(&TrezorUiEnum::SelectMenu(structs::SelectMenu {
             items: items.as_slice().into(),
             cancel: opt_str(value.cancel),
