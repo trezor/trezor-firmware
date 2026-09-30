@@ -258,6 +258,22 @@ fn add_noise(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
         Some(attrs.clone()),
     );
 
+    lib.add_rust_bindings(|builder| {
+        Ok(builder
+            .header(format!("{CRYPTO_PATH}/noise_xxpsk3.h"))
+            .allowlist_var("NOISE_XXPSK3_DHLEN")
+            .allowlist_var("NOISE_XXPSK3_TAG_SIZE")
+            .allowlist_type("noise_xxpsk3_initiator_t")
+            .no_copy("noise_xxpsk3_initiator_t") // FIXME: sub-structs too?
+            .allowlist_function("noise_xxpsk3_initiator_init")
+            .allowlist_function("noise_xxpsk3_initiator_deinit")
+            .allowlist_function("noise_xxpsk3_initiator_create_request1")
+            .allowlist_function("noise_xxpsk3_initiator_handle_response1")
+            .allowlist_function("noise_xxpsk3_initiator_create_request2")
+            .allowlist_function("noise_xxpsk3_send_message")
+            .allowlist_function("noise_xxpsk3_receive_message"))
+    })?;
+
     Ok(())
 }
 
