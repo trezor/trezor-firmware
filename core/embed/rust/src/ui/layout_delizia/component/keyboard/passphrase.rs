@@ -1,7 +1,7 @@
 use core::cell::Cell;
 
 use num_traits::ToPrimitive;
-use sys::time::Duration;
+use sys::time::{Duration, Instant};
 
 use super::super::super::component::button::{Button, ButtonContent, ButtonMsg};
 use super::super::super::component::keyboard::common::{render_pending_marker, MultiTapKeyboard};
@@ -15,11 +15,11 @@ use crate::ui::component::text::common::TextBox;
 use crate::ui::component::text::layout::{LayoutFit, LineBreaking};
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
-    Component, Event, EventCtx, Label, Maybe, Never, Pad, Swipe, TextLayout, Timer,
+    Component, Event, EventCtx, Marquee, Maybe, Never, Pad, Swipe, TextLayout, Timer,
 };
 use crate::ui::display;
 use crate::ui::event::TouchEvent;
-use crate::ui::geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Rect};
+use crate::ui::geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Point, Rect};
 use crate::ui::shape::{Bar, Renderer, Text, ToifImage};
 use crate::ui::util::{DisplayStyle, Pager};
 
@@ -75,7 +75,7 @@ impl From<KeyboardLayout> for ButtonContent {
 pub struct PassphraseKeyboard {
     page_swipe: Swipe,
     input: Input,
-    input_prompt: Label<'static>,
+    input_prompt: Marquee,
     erase_btn: Maybe<Button>,
     cancel_btn: Maybe<Button>,
     confirm_btn: Maybe<Button>,
@@ -137,7 +137,7 @@ impl PassphraseKeyboard {
         Self {
             page_swipe: Swipe::horizontal(),
             input: Input::new(max_len),
-            input_prompt: Label::left_aligned(prompt, theme::label_keyboard()),
+            input_prompt: Self::prompt_marquee(prompt, theme::label_keyboard()),
             erase_btn,
             cancel_btn,
             confirm_btn,
@@ -223,6 +223,14 @@ impl PassphraseKeyboard {
         self.cancel_btn.show_if(ctx, is_empty);
         self.cancel_btn.inner_mut().enable_if(ctx, is_empty);
 
+        if is_empty {
+            // The prompt becomes visible again; reset and restart the marquee
+            // so it scrolls from the beginning.
+            self.input_prompt.reset();
+            self.input_prompt.start(ctx, Instant::now());
+            self.input_prompt.request_complete_repaint(ctx);
+        }
+
         self.update_input_btns_state(ctx);
         self.input.request_complete_repaint(ctx);
     }
@@ -266,6 +274,31 @@ impl PassphraseKeyboard {
     pub fn passphrase(&self) -> &str {
         self.input.textbox.content()
     }
+
+    fn prompt_marquee(text: TString<'static>, style: TextStyle) -> Marquee {
+        Marquee::new(
+            text,
+            style.text_font,
+            style.text_color,
+            style.background_color,
+        )
+    }
+
+    /// Area of a `Marquee` replacing a top-aligned `Label` in `strip`:
+    /// `Marquee` renders the text baseline at `text_height - 1` below the top
+    /// of its area while `Label` places it at `text_max_height -
+    /// text_baseline`, so the area is shifted to make the baselines match.
+    /// The bottom of the area covers the descent so that descenders are not
+    /// clipped.
+    fn prompt_marquee_area(strip: Rect) -> Rect {
+        let font = theme::label_keyboard().text_font;
+        let baseline_y = strip.y0 + font.text_max_height() - font.text_baseline();
+        let top = baseline_y - (font.text_height() - 1);
+        Rect::from_top_left_and_size(
+            Point::new(strip.x0, top),
+            Offset::new(strip.width(), baseline_y + font.text_baseline() - top),
+        )
+    }
 }
 
 impl Component for PassphraseKeyboard {
@@ -284,7 +317,6 @@ impl Component for PassphraseKeyboard {
             .split_right(CONFIRM_EMPTY_BTN_WIDTH + CONFIRM_EMPTY_BTN_MARGIN_RIGHT)
             .1;
 
-        let top_area = top_area.inset(INPUT_INSETS);
         let input_area = input_area.inset(INPUT_INSETS);
         let confirm_btn_area = confirm_btn_area.inset(CONFIRM_BTN_INSETS);
         let confirm_empty_btn_area = confirm_empty_btn_area.inset(CONFIRM_EMPTY_BTN_INSETS);
@@ -295,7 +327,10 @@ impl Component for PassphraseKeyboard {
 
         self.page_swipe.place(bounds);
         self.input.place(input_area);
-        self.input_prompt.place(top_area);
+        // The prompt is clipped to the input area so that it does not overlap
+        // the confirm-empty button; it scrolls if it does not fit.
+        self.input_prompt
+            .place(Self::prompt_marquee_area(input_area));
 
         // control buttons
         self.confirm_btn.place(confirm_btn_area);
@@ -322,6 +357,16 @@ impl Component for PassphraseKeyboard {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Start and drive the prompt marquee only while it is visible, i.e.
+        // while the input textbox is empty (matching render).
+        if self.input.textbox.is_empty() {
+            if let Event::Attach(_) = event {
+                self.input_prompt.start(ctx, Instant::now());
+            } else {
+                self.input_prompt.event(ctx, event);
+            }
+        }
+
         // Handle multi-tap timeout: commit the pending character
         if self.input.multi_tap.timeout_event(event) {
             self.input.multi_tap.clear_pending_state(ctx);
