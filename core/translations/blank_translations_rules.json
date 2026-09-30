@@ -4,10 +4,15 @@
     "allowedLayouts": [ "Eckhart" ],
     "description": "BLE related strings only in Eckhart"
   },
+    {
+    "prefix": "thp__nfc_",
+    "allowedLayouts": [ "Eckhart" ],
+    "description": "THP NFC related strings only in Eckhart"
+  },
   {
     "prefix": "thp__",
-    "allowedLayouts": [ "Eckhart" ],
-    "description": "THP related strings only in Eckhart"
+    "allowedLayouts": [ "Delizia","Eckhart" ],
+    "description": "THP related strings only in Delizia and Eckhart"
   },
   {
     "prefix": "n1w1__",
