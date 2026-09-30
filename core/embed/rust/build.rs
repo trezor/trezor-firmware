@@ -158,6 +158,8 @@ fn generate_trezorhal_bindings(lib: &mut CLibrary) -> Result<()> {
     lib.add_rust_bindings_ex("trezorhal", |builder| {
         Ok(builder
             .header("trezorhal.h")
+            // needs to be imported from rtl::error instead
+            .blocklist_type("ts_t")
             // model
             .allowlist_var("MODEL_INTERNAL_NAME")
             .allowlist_var("MODEL_FULL_NAME")
