@@ -76,41 +76,24 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     if anchor_counter < target_counter:
         raise DataError("WARD: the anchored head is behind this device")
 
-    running_counter = anchor_counter
-    running_root = anchor_root
+    # THE FIRST LINK MUST BEGIN WHERE THE WM SAID IT DID -- see `walk_back`.
+    running_root, crossed, reverts, _above = await walk_back(
+        k_auth,
+        ward_id,
+        anchor_counter,
+        anchor_root,
+        target_counter,
+        expect_from=(anchor_from_counter, anchor_from_root),
+    )
 
-    # Every step's authorisation is kept, because it is the precise evidence a queued change
-    # landed: a claim filed by `flush_queue` carries the `auth_commit` of its own transition, so
-    # matching against this list distinguishes "the head reached N" from "MY change made it N".
-    crossed = []
-    # Counted, not just accepted. A history containing demotions means changes this device once
-    # saw as committed have been undone, and a catch-up that cannot say so has lost the one thing
-    # the REVERT tag carries.
-    reverts = 0
-
-    # THE FIRST LINK MUST BEGIN WHERE THE WM SAID IT DID -- passed down so the check happens as
-    # that link is folded, not after the batch. A host serving several links at once would
-    # otherwise walk straight past it.
-    expect_from = (anchor_from_counter, anchor_from_root)
-
-    while running_counter > target_counter:
-        running_counter, running_root, stepped = await _pull_batch(
-            k_auth,
-            ward_id,
-            running_counter,
-            running_root,
-            target_counter,
-            expect_from,
-        )
-        expect_from = None
-        crossed.extend(stepped[0])
-        reverts += stepped[1]
-
-    # WHERE THE WALK ARRIVED MUST BE WHERE THIS DEVICE STANDS. The counter is settled by the loop;
+    # WHERE THE WALK ARRIVED MUST BE WHERE THIS DEVICE STANDS. The counter is settled by the walk;
     # the root is not, and without this a walk could descend from some OTHER state that happens to
-    # sit at the same counter -- which is precisely a fork.
+    # sit at the same counter -- which is precisely a fork. Refused here; a fork the WM caused by
+    # losing history is `WardRejoin`'s, with the user's consent and a proof of both branches.
     if root_or_empty(running_root) != root_or_empty(target_root):
-        raise DataError("WARD: the chain does not descend from this device's head")
+        raise DataError(
+            "WARD: the chain does not descend from this device's head; if the WM lost history, use WardRejoin"
+        )
 
     if __debug__:
         from trezor import log
@@ -226,6 +209,50 @@ async def _anchor(msg: WardVerifyChain) -> "tuple[int, bytes | None, int, bytes 
     )
 
 
+async def walk_back(
+    k_auth: bytes,
+    ward_id: bytes,
+    start_counter: int,
+    start_root: "bytes | None",
+    stop_counter: int,
+    expect_from: "tuple | None" = None,
+) -> "tuple[bytes | None, list, int, tuple | None]":
+    """Walk authorised links BACK from `(start_counter, start_root)` down to `stop_counter`.
+
+    Returns `(root_at_stop, crossed, reverts, above)`:
+
+      root_at_stop  the root the walk arrived at. The COUNTER is `stop_counter` by construction;
+                    the root is whatever the links led to, and comparing it is the caller's job --
+                    `verify_chain` against its own head, `rejoin` against the other branch.
+      crossed       every link's `auth_commit`, newest first: the precise evidence of which
+                    transitions the walk covered, which is what settles queued claims.
+      reverts       how many of those were REVERT links.
+      above         `(counter, root)` one step above the stop, or None if the walk took no step.
+                    `rejoin` needs it to prove a fork point is the LATEST common state.
+
+    `expect_from`, if given, pins the FIRST link's predecessor -- the predecessor the WM's
+    attestation named -- so a walk starting at an attested head cannot begin from anywhere else.
+    """
+    running_counter, running_root = start_counter, start_root
+    crossed = []
+    reverts = 0
+    above = None
+    while running_counter > stop_counter:
+        running_counter, running_root, stepped = await _pull_batch(
+            k_auth,
+            ward_id,
+            running_counter,
+            running_root,
+            stop_counter,
+            expect_from,
+        )
+        expect_from = None
+        crossed.extend(stepped[0])
+        reverts += stepped[1]
+        above = stepped[2]
+    return running_root, crossed, reverts, above
+
+
 async def _pull_batch(
     k_auth: bytes,
     ward_id: bytes,
@@ -264,7 +291,9 @@ async def _pull_batch(
 
     crossed = []
     reverts = 0
+    above = None
     for link in links:
+        above = (running_counter, running_root)
         running_counter, running_root, reverted = verify_chain_step_back(
             k_auth,
             ward_id,
@@ -296,4 +325,4 @@ async def _pull_batch(
         if running_counter == target_counter:
             break
 
-    return running_counter, running_root, (crossed, reverts)
+    return running_counter, running_root, (crossed, reverts, above)

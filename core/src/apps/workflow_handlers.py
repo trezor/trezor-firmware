@@ -184,6 +184,8 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.ward.verify_chain"
         if msg_type == MessageType.WardRollback:
             return "apps.ward.rollback"
+        if msg_type == MessageType.WardRejoin:
+            return "apps.ward.rejoin"
         if msg_type == MessageType.WardPinCachedEntry:
             return "apps.ward.pin_cached_entry"
         if msg_type == MessageType.WardEraseCachedEntry:

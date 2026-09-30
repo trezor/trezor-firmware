@@ -194,6 +194,28 @@ class WardTrie:
                 break
         return out
 
+    def fork_point(self, a: tuple, b: tuple) -> Optional[int]:
+        """The last counter two `(counter, root)` states share, walking both back; None if never.
+
+        What a host passes as `WardRejoin.fork_counter`. The device checks it rather than trusting
+        it -- both branches must meet at this counter and part one step above -- so a wrong answer
+        here is a refusal, not a wrong rejoin. None when the log does not reach a common state,
+        which is also the case the host cannot offer a rejoin for.
+        """
+        (ac, ar), (bc, br) = a, b
+        while (ac, ar or None) != (bc, br or None):
+            if ac >= bc:
+                prev = self.links_ending_at(ac, ar, limit=1)
+                if not prev:
+                    return None
+                ac, ar = prev[0][0], prev[0][1]
+            else:
+                prev = self.links_ending_at(bc, br, limit=1)
+                if not prev:
+                    return None
+                bc, br = prev[0][0], prev[0][1]
+        return ac
+
     # --- store ---
 
     def set(self, entry_key: bytes, leaf) -> None:

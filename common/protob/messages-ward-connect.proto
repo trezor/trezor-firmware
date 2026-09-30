@@ -250,6 +250,43 @@ message WardVerifyChainAck {
 }
 
 /**
+ * Request: rejoin the WM's history after it lost the branch this device stands on.
+ *
+ * FOR A FORK, NOTHING ELSE. A device only adopts WM-attested heads, so if it stands on a state
+ * the WM's current history does not contain, the WM's register was restored below a head it had
+ * attested. WardVerifyChain refuses that -- its walk reaches this device's counter at a different
+ * root -- and without this the device could never sync again.
+ *
+ * The device walks BOTH branches back to `fork_counter`, pulling links exactly as
+ * WardVerifyChain does: the WM's, from this round's attested head, and its own, from its stored
+ * head. Every link is checked under K_auth, the two walks must meet at one root, and they must
+ * DIFFER one step above it -- so the fork point is the latest common state, and the count the
+ * user is shown is the real one. Then it holds for confirmation and adopts the attested head.
+ *
+ * The WM is never trusted about lineage: both branches are proved to be this wallet's own. A WM
+ * head BELOW this device is WardRollback's case, not this one. Run WardIngestAttestation first.
+ * @start
+ * @next WardChainRequest
+ * @next ButtonRequest
+ * @next WardRejoinAck
+ * @next Failure
+ */
+message WardRejoin {
+    optional uint32 fork_counter = 1;  // the last counter both branches share; the host finds it
+}
+
+/**
+ * Response: the head the device adopted, and what it gave up to get there.
+ * @end
+ */
+message WardRejoinAck {
+    optional uint32 counter         = 1;
+    optional bytes  new_root        = 2;  // absent if the adopted tree is empty
+    optional uint32 discarded       = 3;  // this device's changes above the fork point, now gone
+    optional uint32 reverts_crossed = 4;  // demotions on the WM's branch, as in WardVerifyChainAck
+}
+
+/**
  * The SYNC ROUND: how a device learns which tree is current.
  *
  *   WardSync              device mints a nonce for this round
