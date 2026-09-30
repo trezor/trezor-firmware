@@ -80,13 +80,13 @@
       "Eckhart": "Public Key bestätigt"
     },
     "address__qr_code": "QR-Code",
-    "address__title_cosigner": "(cosigner)",
+    "address__title_cosigner": "(Cosigner)",
     "address__title_cosigner_template": "Cosigner {0}",
     "address__title_multisig_xpub_template": "Multisig XPUB #{0} ",
     "address__title_provider_address": "Anbieteradresse",
     "address__title_receive_address": "Empfangsadresse",
     "address__title_refund_address": "Refund-Adresse",
-    "address__title_yours": "(Deine)",
+    "address__title_yours": "(von dir)",
     "address__warning_not_yours": {
       "Bolt": "",
       "Caesar": "",
@@ -741,12 +741,7 @@
     "coinjoin__max_mining_fee": "Maximale Mining-Gebühr",
     "coinjoin__max_rounds": "Maximale Runden",
     "coinjoin__title": "Coinjoin autorisieren",
-    "coinjoin__title_progress": {
-      "Bolt": "CoinJoin läuft...",
-      "Caesar": "CoinJoin läuft...",
-      "Delizia": "CoinJoin läuft...",
-      "Eckhart": "Coinjoin läuft..."
-    },
+    "coinjoin__title_progress": "Coinjoin läuft...",
     "coinjoin__waiting_for_others": "Auf andere warten",
     "confirm_total__fee_rate": "Gebührensatz",
     "confirm_total__title_fee": {
@@ -2050,11 +2045,11 @@
       "Eckhart": ""
     },
     "pin__diff_from_wipe_code": "Die neue PIN muss sich von deinem Löschcode unterscheiden.",
-    "pin__disabled": "PIN-Schutz\ndeaktiviert.",
+    "pin__disabled": "PIN-Schutz deaktiviert.",
     "pin__enabled": {
-      "Bolt": "PIN-Schutz\naktiviert.",
-      "Caesar": "PIN-Schutz\naktiviert.",
-      "Delizia": "PIN-Schutz\naktiviert.",
+      "Bolt": "PIN-Schutz aktiviert.",
+      "Caesar": "PIN-Schutz aktiviert.",
+      "Delizia": "PIN-Schutz aktiviert.",
       "Eckhart": ""
     },
     "pin__enter": "PIN eingeben",
@@ -2989,7 +2984,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Signieren abbrechen",
-      "Eckhart": "Signieren abbrechen"
+      "Eckhart": "Signieren abbrechen?"
     },
     "send__confirm_sending": "Betrag senden",
     "send__from_multiple_accounts": {
@@ -3322,7 +3317,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Gebe diesen einmaligen Sicherheitscode ein {0}"
+      "Eckhart": "Gib diesen Einmal-Sicherheitscode auf {0} ein"
     },
     "thp__code_title": {
       "Bolt": "",
