@@ -51,6 +51,11 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     target in the protocol, so the screen names where the wallet is, where it is going, how far
     back that is, and what was not proven, and holds. Bounded loss, not prevented loss.
 
+    THE TARGET TREE IS UNCHECKED TOO. `recovered_root` is a root this device never derived, so
+    its tree need not keep every key on its own side of a branch -- and a misrouted old leaf
+    stays hidden until a later delete promotes it back. See "A ROOT THE DEVICE DID NOT DERIVE"
+    in `trie`.
+
     NOTHING IS ADOPTED HERE. The ack carries the transition and the head moves only once the WM
     has confirmed it, which is the invariant every write obeys. What IS recorded, when the new
     counter does not advance this device, is the user's consent for that exact counter --

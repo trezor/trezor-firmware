@@ -56,6 +56,16 @@ still verify soundly, but a party that later rebuilds the tree canonically compu
 different root and rejects it, which is fail-closed and recoverable by rollback. The real
 mitigation is a strictly specified construction plus conformance tests, which is why the
 shared vectors in the tests matter more here than usual.
+
+A ROOT THE DEVICE DID NOT DERIVE CAN HIDE A LEAF. Every tree built through
+`compute_new_root` keeps each key on its own side of every branch above it. A root adopted
+through `rollback` is the host's proposal, and nothing here checks how its tree was built. There
+a genuine old leaf can sit on the WRONG side of a branch: its membership proof cannot fold,
+so it proves absent -- soundly, since a lookup never reaches it. It stays that way until the
+leaf on the other side of that branch is deleted. The collapse then promotes the hidden
+subtree, the misrouted branch is gone, and the old leaf is present again. This is no more than
+rollback already concedes, since the host could have put that leaf in plainly, but it can
+appear long after the screen the user consented on.
 """
 
 from typing import TYPE_CHECKING
@@ -119,6 +129,15 @@ def reconstruct(start_hash: bytes, proof: "list[bytes]", entry_key: bytes) -> by
     `entry_key` is the path of the leaf the walk STARTS from -- for a non-membership
     proof that is the witness's path, not the absent key's.
     """
+    from trezor.wire import DataError
+
+    # Widths here, not only at the callers. `addr_bit` indexes the key directly, so a short
+    # one is an untyped IndexError, and a long one routes by its first 32 bytes while the leaf
+    # preimage has no boundary marker. Every caller checks today; this stops the next from
+    # having to remember.
+    if len(start_hash) != 32 or len(entry_key) != 32:
+        raise DataError("WARD: reconstruct operands must be 32 bytes")
+
     validate_proof_shape(proof)
 
     node = start_hash
@@ -154,6 +173,55 @@ def verify_membership(
     return reconstruct(node, proof, entry_key) == expected_root
 
 
+def _absence_failure(
+    entry_key: bytes,
+    witness_entry_key: bytes,
+    witness_commit: bytes,
+    proof: "list[bytes]",
+    expected_root: bytes | None,
+) -> "str | None":
+    """Why this witness does NOT prove `entry_key` absent under `expected_root`, or None.
+
+    The one implementation of the non-membership check, shared by the read path (which
+    wants a bool) and by insert (which must raise). The two used to be separate copies, and
+    the width fix below had to be made in both.
+    """
+    # Lengths FIRST. "differs from the target" and "agrees at every branch bit" are both
+    # satisfied by a witness key that is the target with extra bytes glued on -- and since
+    # the leaf preimage concatenates key and commit with no boundary marker, K || C[0] with
+    # commit C[1:] hashes to the target's own leaf. A host could then pass the target's
+    # MEMBERSHIP proof off as proof of absence. `leaf.leaf_hash_of` refuses that too; this
+    # rejects it before the comparisons below, which would otherwise pass and read as though
+    # the witness relationship were real.
+    #
+    # RAISES rather than returning a reason, unlike the checks after it: a wrong-width
+    # operand is a malformed message, not a claim that failed, and the two must not read
+    # alike. As a failed claim it surfaced as "absence does not match the trusted root" --
+    # which says the host's tree disagrees, when what happened is that the host sent garbage.
+    from trezor.wire import DataError
+
+    if (
+        len(entry_key) != 32
+        or len(witness_entry_key) != 32
+        or len(witness_commit) != 32
+    ):
+        raise DataError("WARD: witness operands must be 32 bytes")
+
+    if witness_entry_key == entry_key:
+        return "WARD: witness must differ from entry_key"
+
+    for split_bit, _sibling in validate_proof_shape(proof):
+        if addr_bit(entry_key, split_bit) != addr_bit(witness_entry_key, split_bit):
+            return "WARD: witness does not occupy the target's path"
+
+    from .leaf import leaf_hash_of
+
+    witness_leaf = leaf_hash_of(witness_entry_key, witness_commit)
+    if reconstruct(witness_leaf, proof, witness_entry_key) != expected_root:
+        return "WARD: witness is not in the tree"
+    return None
+
+
 def verify_nonmembership(
     entry_key: bytes,
     witness_entry_key: bytes,
@@ -167,15 +235,15 @@ def verify_nonmembership(
     leaf that already occupies the path the target would take. Three things must hold,
     and dropping any one of them makes the proof forgeable:
 
-      0. every operand is exactly 32 bytes -- see the comment below, this one is load-bearing,
-         and it RAISES where the rest return False, being a malformed message rather than a
-         failed claim;
+      0. every operand is exactly 32 bytes -- see `_absence_failure`, this one is
+         load-bearing, and it RAISES where the rest return False, being a malformed message
+         rather than a failed claim;
       1. the witness is a different key -- otherwise it proves presence, not absence;
       2. the witness is really in the tree, i.e. its leaf folds up to `expected_root`;
       3. the witness shares the target's path: the two agree at EVERY bit the proof
-         branches on. Since the shape check has already forced those branch points to be
-         strictly increasing with every skipped bit accounted for, agreeing at them is
-         agreeing on the whole prefix down to where the paths part.
+         branches on. Those branch points are strictly increasing and bound into the node
+         hashes, so agreeing at them is agreeing at every bit the lookup reads on the way
+         down.
 
     Given all three, a leaf at the target's own path cannot exist: the lookup for it
     would descend exactly the branches proved here and arrive at the witness.
@@ -183,39 +251,12 @@ def verify_nonmembership(
     The witness travels as two hashes -- its path and its commitment -- so serving an
     absence proof reveals nothing about the witness's identifier or value.
     """
-    # Lengths FIRST. "differs from the target" and "agrees at every branch bit" are both
-    # satisfied by a witness key that is the target with extra bytes glued on -- and since
-    # the leaf preimage concatenates key and commit with no boundary marker, K || C[0] with
-    # commit C[1:] hashes to the target's own leaf. A host could then pass the target's
-    # MEMBERSHIP proof off as proof of absence. `leaf.leaf_hash_of` refuses that too; this
-    # rejects it before the comparisons below, which would otherwise pass and read as though
-    # the witness relationship were real.
-    #
-    # RAISES rather than returning False, unlike the checks after it: a wrong-width operand
-    # is a malformed message, not a claim that failed, and the two must not read alike. As
-    # a False it surfaced as "absence does not match the trusted root" -- which says the
-    # host's tree disagrees, when what happened is that the host sent garbage.
-    from trezor.wire import DataError
-
-    if (
-        len(entry_key) != 32
-        or len(witness_entry_key) != 32
-        or len(witness_commit) != 32
-    ):
-        raise DataError("WARD: witness operands must be 32 bytes")
-
-    if witness_entry_key == entry_key:
-        return False
-
-    steps = validate_proof_shape(proof)
-    for split_bit, _sibling in steps:
-        if addr_bit(entry_key, split_bit) != addr_bit(witness_entry_key, split_bit):
-            return False
-
-    from .leaf import leaf_hash_of
-
-    witness_leaf = leaf_hash_of(witness_entry_key, witness_commit)
-    return reconstruct(witness_leaf, proof, witness_entry_key) == expected_root
+    return (
+        _absence_failure(
+            entry_key, witness_entry_key, witness_commit, proof, expected_root
+        )
+        is None
+    )
 
 
 def _leaf_of(entry_key: bytes, leaf) -> bytes:
@@ -277,30 +318,16 @@ def compute_new_root(
         if witness_entry_key is None or witness_commit is None:
             raise DataError("WARD: insert needs a non-membership witness")
 
-        # Lengths BEFORE any routing, on the same three operands and for the same reason as
-        # `verify_nonmembership`. `addr_bit` indexes the key directly, so a short witness
-        # raises IndexError out of the loop below -- an untyped crash where a protocol error
-        # is the honest answer. `leaf_hash_of` does catch it, but only after that loop has
-        # run, and the read path that would have caught it first is SKIPPED in the two states
-        # that reach here with a host-supplied witness: a fresh device (no root, counter 0)
-        # and an emptied tree (`common.verify_leaf_against_root` returns early for both).
-        if (
-            len(entry_key) != 32
-            or len(witness_entry_key) != 32
-            or len(witness_commit) != 32
-        ):
-            raise DataError("WARD: insert operands must be 32 bytes")
-
-        if witness_entry_key == entry_key:
-            raise DataError("WARD: witness must differ from entry_key")
-
-        for split_bit, _sibling in validate_proof_shape(proof):
-            if addr_bit(entry_key, split_bit) != addr_bit(witness_entry_key, split_bit):
-                raise DataError("WARD: witness does not occupy the target's path")
-
+        # The same check as the read path, and NOT left to it: `common.verify_leaf_against_root`
+        # returns early in the two states that reach here with a host-supplied witness -- a
+        # fresh device (no root, counter 0) and an emptied tree -- so this is the only place
+        # the witness is checked at all. A None `stored_root` fails it as "not in the tree".
+        failure = _absence_failure(
+            entry_key, witness_entry_key, witness_commit, proof, stored_root
+        )
+        if failure is not None:
+            raise DataError(failure)
         witness_leaf = leaf_hash_of(witness_entry_key, witness_commit)
-        if reconstruct(witness_leaf, proof, witness_entry_key) != stored_root:
-            raise DataError("WARD: witness is not in the tree")
 
         # Where the two paths part is computed HERE, never taken from the host: it decides
         # where the new leaf is spliced in, so a host-chosen value would let it graft the

@@ -31,6 +31,7 @@ from apps.ward.trie import (
     addr_bit,
     compute_new_root,
     internal_hash,
+    reconstruct,
     validate_proof_shape,
     verify_membership,
     verify_nonmembership,
@@ -860,6 +861,73 @@ class TestWardComputeNewRoot(unittest.TestCase):
             witness_commit=self._commit(b"b"),
         )
         self.assertEqual(got, internal_hash(0, internal_hash(1, lb, la), lc))
+
+    def test_reconstruct_refuses_wrong_width_operands(self):
+        """Checked in the fold itself, so no future caller can forget. A short key used to
+        be an untyped IndexError out of `addr_bit`; a long one routed by its first 32 bytes."""
+        lc = self._lh(self._key([1]), b"c")
+        proof = [self._elem(0, lc)]
+        for key in (bytes(31), bytes(33)):
+            with self.assertRaises(DataError):
+                reconstruct(bytes(32), proof, key)
+        for start in (bytes(31), bytes(33)):
+            with self.assertRaises(DataError):
+                reconstruct(start, proof, bytes(32))
+
+    def test_insert_refuses_a_wrong_width_witness(self):
+        """A DataError, not an IndexError: the read path that would have caught it first is
+        skipped on a fresh device and an emptied tree, so insert checks for itself."""
+        a, b, c = self._key([0, 1]), self._key([0]), self._key([1])
+        root = internal_hash(0, self._lh(b, b"b"), self._lh(c, b"c"))
+        proof = [self._elem(0, self._lh(c, b"c"))]
+        for w_key, w_commit in (
+            (b[:31], self._commit(b"b")),
+            (b + b"\x00", self._commit(b"b")),
+            (b, self._commit(b"b")[:31]),
+        ):
+            with self.assertRaises(DataError):
+                compute_new_root(
+                    a,
+                    None,
+                    self._leaf(b"a"),
+                    proof,
+                    root,
+                    witness_entry_key=w_key,
+                    witness_commit=w_commit,
+                )
+
+    def test_insert_witness_must_prove_absence_against_the_device_root(self):
+        """Each failed claim raises, through the same check the read path uses."""
+        a, b, c = self._key([0, 1]), self._key([0]), self._key([1])
+        lb, lc = self._lh(b, b"b"), self._lh(c, b"c")
+        root = internal_hash(0, lb, lc)
+        good = [self._elem(0, lc)]
+
+        def insert(proof, stored_root, w_key=b, w_commit=None):
+            return compute_new_root(
+                a,
+                None,
+                self._leaf(b"a"),
+                proof,
+                stored_root,
+                witness_entry_key=w_key,
+                witness_commit=w_commit or self._commit(b"b"),
+            )
+
+        # the honest call succeeds, so each refusal below is about the one thing changed
+        insert(good, root)
+        for bad in (
+            lambda: insert(good, bytes(32)),  # not the device's root
+            lambda: insert(good, None),  # no root at all: nothing to be in
+            lambda: insert(good, root, w_key=a, w_commit=self._commit(b"a")),  # itself
+            lambda: insert(good, root, w_key=c, w_commit=self._commit(b"c")),  # off-path
+            lambda: insert(good, root, w_commit=self._commit(b"x")),  # wrong commit
+        ):
+            with self.assertRaises(DataError):
+                bad()
+        # and a non-empty tree never accepts a witness-less insert, proof or not
+        with self.assertRaises(DataError):
+            compute_new_root(a, None, self._leaf(b"a"), good, root)
 
 
 class TestWardAttestation(unittest.TestCase):
