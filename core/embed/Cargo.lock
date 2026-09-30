@@ -719,6 +719,8 @@ dependencies = [
  "cty",
  "hex",
  "models",
+ "num-derive",
+ "num-traits",
  "xbuild",
 ]
 

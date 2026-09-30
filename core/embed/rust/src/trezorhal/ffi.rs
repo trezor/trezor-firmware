@@ -8,4 +8,6 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::cast_lossless)]
 
+use rtl::error::ts_t;
+
 include!(concat!(env!("OUT_DIR"), "/trezorhal.rs"));
