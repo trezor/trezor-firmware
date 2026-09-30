@@ -35,10 +35,8 @@ bs58 = { version = "0.5", default-features = false, features = [
 ] }
 
 [build-dependencies]
-prost-build = "0.14.1"
-serde = { version = "=1.0.145", features = ["derive"] }
-serde_json = "1"
-
+anyhow = "1.0.71"
+trezor-app-build = { path = "../../crates/trezor-app-build" }
 
 [features]
 # --------------------------------------------------------------------------
