@@ -2388,6 +2388,48 @@ class _World:
             ack = ward.rejoin(self.session, fork_counter, self.serve(links))
         return ack, rec
 
+    # --- the other two routes into a head ---------------------------------------------------
+
+    def reconcile(self) -> None:
+        """Adopt a ONE-step advance: fold the newest link another device published."""
+        ward.reconcile(self.session, self.elsewhere[-1])
+
+    def verify_chain(self):
+        """Adopt the attested head across a GAP by walking back to this device's own head."""
+        return ward.verify_chain(self.session, self.serve())
+
+    def rollback(self, recovered_root: bytes) -> tuple:
+        """Mint a REVERT from the WM's head as it stands now; returns (ack, recorder).
+
+        Unlike `_rollback`, this never restages the WM -- the scenario already put it where it
+        is (`wm_restores_to`), and the demotion must be built on exactly that head.
+        """
+        ack_sync = ward.sync(self.session)
+        fc, fr, fhn, tc, tr, hn, ts, sig = self.wm.attest(ack_sync.ward_id, ack_sync.nonce)
+        rec = _Recorded()
+        with self.session.test_ctx as ctx:
+            ctx.set_expected_responses(
+                [m.ButtonRequest(name="ward_rollback"), m.WardRollbackAck]
+            )
+            ctx.set_input_flow(
+                InputFlowConfirmAllWarnings(self.session, on_page=rec.on_page).get()
+            )
+            ack = ward.rollback(
+                self.session, fc, fr, tc, tr, sig, fhn, hn,
+                recovered_root=recovered_root, timestamp=ts,
+            )
+        return ack, rec
+
+    def adopt_demotion(self, ack) -> None:
+        """Publish the REVERT to the WM, then run the round that adopts it.
+
+        The predecessor is the WM's head read BEFORE publishing: that is what the device minted
+        the REVERT over, and it differs from this device's own head exactly when the WM is behind.
+        """
+        wm_counter, wm_root, _ts = self.wm.head(_WARD_ID)
+        link = _publish_demotion(self.wm, self.store, ack, wm_counter, wm_root)
+        _adopt_demotion(self.session, self.wm, self.store, ack, link)
+
 
 def _lost_branch(session: Session, sync: bool = True) -> tuple:
     """Leave this device on a branch the WM has LOST. Returns (world, base, own, head).
@@ -2526,6 +2568,114 @@ def test_ward_rejoin_refuses_a_forged_link(session: Session):
     links = world.store.links + [tuple(forged)] + world.elsewhere[1:]
     with pytest.raises(exceptions.TrezorFailure, match="not authorised"):
         world.rejoin(base[0], links=links)
+
+
+def _behind_device(session: Session) -> tuple:
+    """Leave the WM BEHIND this device. Returns (world, base, own).
+
+    This device writes a, b, c and adopts each, so it stands on (3, R3). Then the WM's register is
+    restored from a backup taken at (1, R1) -- disaster recovery -- and nobody has written since.
+    The host still holds every leaf, so a recovery can choose to lose nothing.
+    """
+    world = _World(session)
+    world.write(b"a", b"one")
+    base = world.head
+    world.write(b"b", b"two")
+    world.write(b"c", b"three")
+    own = world.head
+    world.wm_restores_to(base)
+    return world, base, own
+
+
+# --- the three positions a device can be in against the WM's head ----------------------------
+#
+#   fast-forward  device head is an ANCESTOR of the WM's    reconcile / verify_chain, no screen
+#   fork          common ancestor, but not an ancestor       rejoin (above), hold to confirm
+#   WM behind     the WM's register went back (DR restore)   rollback -> publish -> adopt, hold
+#
+# Each test also pins the routes that must REFUSE, so which operation owns which case is a
+# tested fact rather than a comment.
+
+
+@pytest.mark.models("core")
+def test_ward_scenario_fast_forward_one_step_needs_no_confirmation(session: Session):
+    world = _World(session)
+    world.write(b"a", b"one")
+    world.write(b"b", b"two")
+    head = world.other_device_writes(world.tree_of(b"a"))
+    world.sync()
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.WardReconcileAck])  # no ButtonRequest: nothing to approve
+        world.reconcile()
+
+    assert ward.sync(session).counter == head[0]
+
+
+@pytest.mark.models("core")
+def test_ward_scenario_fast_forward_across_a_gap(session: Session):
+    world = _World(session)
+    world.write(b"a", b"one")
+    world.write(b"b", b"two")
+    base = world.head
+    head = world.other_device_writes(world.tree_of(b"a"), world.tree_of(b"b"))
+    world.sync()
+
+    # not a fork, so the rejoin has nothing to do: the branches never part
+    with pytest.raises(exceptions.TrezorFailure, match="do not part"):
+        world.rejoin(base[0] - 1)
+
+    with session.test_ctx as ctx:
+        # one pull carries both links; no ButtonRequest -- a fast-forward discards nothing
+        ctx.set_expected_responses([m.WardChainRequest, m.WardVerifyChainAck])
+        ack = world.verify_chain()
+    assert (ack.counter, ack.new_root) == head
+
+
+@pytest.mark.models("core")
+def test_ward_scenario_wm_behind_refuses_ingest_and_recovers_by_rollback(session: Session):
+    """DR restore on the WM. Refused as a rollback until the user approves a demotion.
+
+    The recovered tree here is this device's OWN current one, which the host still holds, so the
+    recovery loses no entry: only the counter comes down, from 3 to base + 1.
+    """
+    world, base, own = _behind_device(session)
+
+    # the symptom: an attested head below the floor is refused, whoever signed it
+    with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
+        world.sync()
+    # and the rejoin has no attested round to work from -- this is not its case
+    with pytest.raises(exceptions.TrezorFailure, match="no attested sync round"):
+        world.rejoin(base[0])
+
+    ack, rec = world.rollback(own[1])
+    assert (ack.counter, ack.new_root) == (base[0] + 1, own[1])
+    for shown in ("#%d" % own[0], "#%d" % (base[0] + 1), "1change"):
+        assert shown in rec.squashed
+
+    world.adopt_demotion(ack)
+    assert ward.sync(session).counter == ack.counter
+    _res, read = _read(
+        session, world.store, lambda p: ward.get_entry(session, _APP, b"c", p)
+    )
+    assert "three" in read.text  # nothing was lost
+
+
+@pytest.mark.models("core")
+def test_ward_scenario_wm_behind_to_an_older_tree_discards_its_entries(session: Session):
+    """The same recovery onto an OLDER tree: the entries it lacks are gone, as the screen warned."""
+    world, base, _own = _behind_device(session)
+
+    older = world.tree_of(b"a")
+    ack, rec = world.rollback(older)
+    assert "cannot be recovered" in rec.text.lower()
+
+    world.adopt_demotion(ack)
+    rewound = _subset(world.store, [world.key(b"a")])
+    rewound.counter = ack.counter
+    assert rewound.root() == older
+    _res, read = _read(session, rewound, lambda p: ward.get_entry(session, _APP, b"c", p))
+    assert "entry not found" in read.title
 
 
 def _rollback(
