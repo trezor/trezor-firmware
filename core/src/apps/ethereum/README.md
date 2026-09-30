@@ -96,7 +96,7 @@ optional `selector` - per ERC-7730, an explicit selector means the blob is
 args-only; otherwise the blob's first 4 bytes are the selector.
 
 `_expand_calldata_field` resolves a display format for `(chain_id, callee,
-inner selector)` via `_find_display_format` - built-ins, then a wire
+inner selector)` via `find_display_format` - built-ins, then a wire
 definition request; the host-provided blob slot is skipped for nested lookups
 since it holds the one format embedded for the *outer* call - and, on
 success, runs the inner format's `parse_calldata` over the blob's body. The
