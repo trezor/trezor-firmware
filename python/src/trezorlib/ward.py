@@ -44,6 +44,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable, NamedTuple, Optional
 
 from . import messages
+from .ward_trie import OP_COMMIT, OP_REVERT, Link
 
 if TYPE_CHECKING:
     import protobuf
@@ -571,7 +572,7 @@ def _answer_chain_pulls(
                     # `link[:5]` -- the wire carries the transition and its authorisation,
                     # never the operation. A device derives COMMIT vs REVERT from which tag the
                     # MAC verifies under; only the HOST needs it written down, because only the
-                    # host cannot compute it. See `WardTrie.links`.
+                    # host cannot compute it. See `TransitionLog`.
                     for (fc, fr, tc, tr, ac) in (lnk[:5] for lnk in links)
                 ]
             )
@@ -656,15 +657,15 @@ def apply_rollback(
     the only authorisation the connect path ever minted for a WM reached nobody.
     """
     store.links.append(
-        (
+        Link(
             from_counter,
             from_root,
             ack.counter,
             ack.new_root or None,
             ack.auth_commit,
             # RECORDED, because it cannot be recovered: telling a REVERT from a COMMIT means
-            # re-deriving the MAC under both tags, which needs K_auth. See `WardTrie.links`.
-            "revert",
+            # re-deriving the MAC under both tags, which needs K_auth. See `TransitionLog`.
+            OP_REVERT,
         )
     )
     store.wm_sigs[ack.counter] = ack.wm_sig
@@ -674,7 +675,7 @@ def apply_rollback(
 def leaf_is_delete(leaf: Optional[Leaf]) -> bool:
     """A leaf whose content body is empty is a deletion, not an empty-valued entry.
 
-    Dispatches on `encoding` for the reason `ward_trie._part_bytes` gives: the firmware reads the
+    Dispatches on `encoding` for the reason `trezorlib.ward_trie._part_bytes` gives: the firmware reads the
     discriminator, and a host that reads field presence instead disagrees about which arm a
     message is -- on the commit preimage, where a disagreement is a different root.
     """
@@ -758,13 +759,13 @@ def apply(store, result: WardResult) -> None:
         # The transition log. The host cannot forge or read these -- it holds them so
         # another device of the wallet can verify the steps it missed.
         store.links.append(
-            (
+            Link(
                 before_counter,
                 before_root,
                 result.counter,
                 store.root(),
                 result.auth_commit,
-                "commit",
+                OP_COMMIT,
             )
         )
         # AND THE WM'S COPY of the same authorisation, kept beside it because the host is the
