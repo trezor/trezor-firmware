@@ -267,7 +267,7 @@ def _publish(wm: MockWM, res, store: WardTrie) -> None:
     `wm_sig` exists for.
 
     THE AUTHENTICATED PATH, deliberately, because this is where connect-mode `wm_sig` gets
-    exercised at all. `MockWM.install_unauthenticated` would also work and would test nothing:
+    exercised at all. `MockWM.force_head` would also work and would test nothing:
     it is there for fixtures standing in for history, not for a write this test just made.
     """
     # THE WHOLE STEP, not just the head it reaches. Both roots are the host's own -- it derived
@@ -1263,7 +1263,7 @@ def _attest(
     # naming one. `link` overrides it for the synthetic-head tests, which have no real link.
     into = _link_into(store, counter) if link is _DERIVE_LINK else link
     from_counter, from_root = (into[0], into[1]) if into is not None else (0, None)
-    wm.install_unauthenticated(ack.ward_id, counter, root, timestamp, from_counter, from_root)
+    wm.force_head(ack.ward_id, counter, root, timestamp, from_counter, from_root)
     _fc, _fr, from_head_nonce, _c, _m, head_nonce, _t, sig = wm.attest(ack.ward_id, ack.nonce)
     # THE WM'S HEAD NONCE travels back with the attestation and is covered by it, so the device
     # learns it from a signed statement rather than from the host. It is what the device's next
@@ -1403,7 +1403,7 @@ def test_ward_refuses_a_link_into_a_head_the_wm_did_not_attest(session: Session)
     ack = ward.sync(session)
     # ward_id comes from the DEVICE, being passphrase-dependent. The root is the host's own.
     root = store.root()
-    wm.install_unauthenticated(ack.ward_id, counter, root, _T0 + counter, *_step_into(store, counter, root))
+    wm.force_head(ack.ward_id, counter, root, _T0 + counter, *_step_into(store, counter, root))
     _fc, _fr, _fhn, _c, _m, _hn, _t, sig = wm.attest(ack.ward_id, ack.nonce)
     ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, _nonces(wm, ack.ward_id)[0], wm.head_nonce(ack.ward_id), _T0 + counter)
 
@@ -1637,7 +1637,7 @@ def test_ward_the_wm_refuses_an_unauthorised_advance(session: Session):
     # head there.
     wm = _wm_for(store)
     from_counter, from_root = _step_into(store, res.counter, store.root())
-    wm.install_unauthenticated(
+    wm.force_head(
         _WARD_ID, from_counter, from_root, _T0 + from_counter
     )
 
@@ -2125,7 +2125,7 @@ def test_ward_verify_chain_brings_a_fresh_session_online(session: Session):
     wm = _wm_for(store)
     ack = ward.sync(fresh)
     root = store.root()
-    wm.install_unauthenticated(
+    wm.force_head(
         ack.ward_id,
         store.counter,
         root,
@@ -2322,11 +2322,11 @@ def _fork(session: Session) -> tuple:
 def _attest_head(session: Session, wm: MockWM, head: tuple, from_state: tuple) -> None:
     """Sync and ingest an attestation of `head`, stepping from `from_state` -- and adopt nothing.
 
-    `install_unauthenticated` is the restore model: the WM is told a head by a party with no
-    signature, exactly as a backup restore or failover would leave it.
+    `force_head` stands in for the history that put the WM there -- here, other devices writing
+    on after its register was restored.
     """
     ack = ward.sync(session)
-    wm.install_unauthenticated(
+    wm.force_head(
         ack.ward_id, head[0], head[1], _T0 + head[0], from_state[0], from_state[1]
     )
     fc, fr, fhn, tc, tr, hn, ts, sig = wm.attest(ack.ward_id, ack.nonce)
@@ -2479,7 +2479,7 @@ def _rollback(
     """Walk the demotion confirmation and return (ack, recorder).
 
     `wm_counter`/`wm_root` stage a REGRESSED WM -- its register restored from a backup, which
-    `install_unauthenticated` models exactly: a WM told a head by a party holding no signature.
+    is exactly `MockWM.restore_backup`: the head goes back, the nonce is fresh.
     Omit them for the ordinary case, where the WM is at this device's head and the demotion is
     what used to be called a rollback. The handler cannot tell the two apart, which is the point
     of having one.
@@ -2487,7 +2487,7 @@ def _rollback(
     if wm_counter is None:
         wm_counter, wm_root = store.counter, store.root()
     else:
-        wm.install_unauthenticated(
+        wm.restore_backup(
             _WARD_ID,
             wm_counter,
             wm_root,
@@ -4371,13 +4371,12 @@ def test_ward_refuses_a_nonce_that_moved_while_the_head_did_not(session: Session
     # THE HEAD IS PUT BACK EXACTLY WHERE IT IS, which is what a restore onto the current head
     # looks like. The counter and the root do not move; the nonce does, because a correct restore
     # must never re-issue a superseded one.
-    wm.install_unauthenticated(
+    wm.restore_backup(
         _WARD_ID,
         counter,
         root,
         _T0 + counter,
         *_step_into(store, counter, root),
-        restore=True,
     )
     assert wm.head(_WARD_ID)[:2] == (counter, root)
     assert wm.head_nonce(_WARD_ID) != before

@@ -36,11 +36,11 @@ It still sees no identifier and no value: it is told roots, never leaves.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import NamedTuple, Optional
 
 from trezorlib import _ed25519
 
-__all__ = ["MockWM", "DEBUG_WM_SEED"]
+__all__ = ["MockWM", "WMRecord", "RetiredNonce", "DEBUG_WM_SEED"]
 
 # The well-known debug WM key. Firmware compiles in its public key and accepts it on
 # debug builds only; a release build ships an all-zero placeholder and rejects everything.
@@ -105,6 +105,18 @@ dead.
 
 class RetiredNonce(Exception):
     """A superseded head nonce was about to become current again."""
+
+
+class WMRecord(NamedTuple):
+    """One wallet's register row: the step that reached the head, and both ends' nonces."""
+
+    from_counter: int
+    from_root: bytes
+    counter: int
+    root: bytes
+    timestamp: int
+    from_head_nonce: bytes
+    head_nonce: bytes
 
 
 class MockWM:
@@ -315,6 +327,99 @@ class MockWM:
             previous,
             nonce,
         )
+
+    # --- NAMED SCENARIOS --------------------------------------------------------------------
+    #
+    # What happens to a real WM's register, each as the operation it is. They are all built on
+    # `install_unauthenticated` -- none is an authorised advance -- and exist so a test reads as
+    # the incident it models, and so each one's nonce rule is stated once, here, rather than
+    # re-derived from a combination of flags at every call site.
+
+    def record(self, ward_id: bytes) -> "Optional[WMRecord]":
+        """The register row for a wallet, as an operator would back it up or hand to a standby."""
+        known = self._heads.get(ward_id)
+        return None if known is None else WMRecord(*known)
+
+    def force_head(
+        self,
+        ward_id: bytes,
+        counter: int,
+        root: bytes,
+        timestamp: int,
+        from_counter: "int | None" = None,
+        from_root: "bytes | None" = None,
+    ) -> None:
+        """FIXTURE: stand in for history made before the test, or by a writer the test elides.
+
+        Rotates the nonce like any accepted step, and is a no-op when told the step the WM already
+        holds (a host re-syncing). Not an incident -- use the scenarios below to model one.
+        """
+        self.install_unauthenticated(
+            ward_id, counter, root, timestamp, from_counter, from_root
+        )
+
+    def restore_backup(
+        self,
+        ward_id: bytes,
+        counter: int,
+        root: bytes,
+        timestamp: int,
+        from_counter: "int | None" = None,
+        from_root: "bytes | None" = None,
+    ) -> None:
+        """DISASTER RECOVERY: the register is rebuilt from a backup taken at `(counter, root)`.
+
+        The counter and the root may go BACKWARDS -- that is what a restore is. The nonce never
+        does: a fresh one is drawn even when the restore lands exactly where the WM already stood,
+        because the register WAS rebuilt. That is the obligation at the top of this file done
+        right, and it is what lets a device catch a restore onto its own head (the standstill rule
+        in `adopt.verify_round_attestation`).
+        """
+        self.install_unauthenticated(
+            ward_id, counter, root, timestamp, from_counter, from_root, restore=True
+        )
+
+    def take_over(self, ward_id: bytes, record: "WMRecord") -> None:
+        """A CORRECT FAILOVER: this standby takes the primary's record as it stands, nonce and all.
+
+        Keeping the CURRENT nonce is what a failover must do -- an authorisation already minted
+        against it is still good, and dropping it would strand every device in flight. Taking a
+        nonce this instance has already SEEN superseded is the unsafe copy, and is refused: the
+        two look identical in a runbook ("copy the record to the standby") and only one is safe.
+        """
+        if record.head_nonce in self._retired.get(ward_id, ()):
+            raise RetiredNonce("the record carries a nonce this WM has already retired")
+        self.install_unauthenticated(
+            ward_id,
+            record.counter,
+            record.root,
+            record.timestamp,
+            record.from_counter,
+            record.from_root,
+            head_nonce=record.head_nonce,
+        )
+        # The standby holds the obligation from now on: this nonce is current here, so it may
+        # never be made current here again.
+        self._make_current(ward_id, record.head_nonce)
+
+    def restore_with_stale_nonce(
+        self, ward_id: bytes, counter: int, root: bytes, timestamp: int, nonce: bytes
+    ) -> None:
+        """A BROKEN RESTORE: the head comes back WITH a nonce that was already superseded.
+
+        Exists only so a test can show what the rule is worth -- every authorisation ever minted
+        against `nonce` is live again. A real WM must never do this.
+        """
+        self.install_unauthenticated(ward_id, counter, root, timestamp, head_nonce=nonce)
+
+    def lose_wallet(self, ward_id: bytes) -> None:
+        """TOTAL LOSS of one wallet's register. It can come back only by enrolling at genesis.
+
+        The nonce ledger is kept: a real WM gets "never re-issue" from randomness, which survives
+        a lost row, and the mock's ledger stands in for exactly that. (A lost WM altogether is a
+        new `MockWM()`, whose salt makes its nonces unrelated to this one's.)
+        """
+        self._heads.pop(ward_id, None)
 
     def head(self, ward_id: bytes) -> Optional[tuple[int, bytes, int]]:
         """The HEAD -- `(counter, root, timestamp)` -- not the step that reached it.

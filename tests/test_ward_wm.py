@@ -321,7 +321,7 @@ def test_an_authorisation_moves_the_head_at_most_once():
     # bring the WM back to the SAME (counter, root) predecessor a revert would create, and the
     # kept authorisation is refused -- the endpoints match, the moment does not
     _advance(wm, 2, ROOT_2, 3, ROOT_1, tag=None)
-    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000)
+    wm.restore_backup(WARD_ID, 1, ROOT_1, 1000)
     assert wm.head(WARD_ID)[:2] == (1, ROOT_1)
     with pytest.raises(ValueError, match="not authorised"):
         wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, kept, timestamp=1000)
@@ -370,7 +370,7 @@ def test_every_head_nonce_a_wallet_ever_holds_is_distinct():
     seen.append(wm.head_nonce(WARD_ID))
 
     # and a register restored from a backup, landing on a head held long ago
-    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000)
+    wm.restore_backup(WARD_ID, 1, ROOT_1, 1000)
     seen.append(wm.head_nonce(WARD_ID))
 
     assert wm.head(WARD_ID)[:2] == (1, ROOT_1)  # the HEAD really did go back...
@@ -393,7 +393,7 @@ def test_a_restore_onto_an_earlier_head_mints_an_unused_nonce():
     retired = wm.retired_nonces(WARD_ID)
 
     # the register comes back at the snapshot's head
-    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000)
+    wm.restore_backup(WARD_ID, 1, ROOT_1, 1000)
 
     assert wm.head(WARD_ID)[:2] == (1, ROOT_1)
     restored_nonce = wm.head_nonce(WARD_ID)
@@ -412,13 +412,12 @@ def test_a_failover_replica_may_carry_the_current_nonce_but_not_a_retired_one():
     primary = _opened()
     _advance(primary, 1, ROOT_1, 2, ROOT_2)
     current = primary.head_nonce(WARD_ID)
-    counter, root, _ts = primary.head(WARD_ID)
 
     # A CORRECT FAILOVER: the standby takes the record as it stands, nonce included. Nothing has
     # been superseded, so an authorisation already minted against it is still good -- which is the
     # behaviour a failover must preserve, or every device in flight is stranded.
     standby = MockWM()
-    standby.install_unauthenticated(WARD_ID, counter, root, 1000, head_nonce=current)
+    standby.take_over(WARD_ID, primary.record(WARD_ID))
     assert standby.head_nonce(WARD_ID) == current
     in_flight = wm_sig(K_SIG, WARD_ID, 2, ROOT_2, 3, ROOT_1, current)
     standby.advance(WARD_ID, 2, ROOT_2, 3, ROOT_1, in_flight, timestamp=1000)
@@ -428,7 +427,7 @@ def test_a_failover_replica_may_carry_the_current_nonce_but_not_a_retired_one():
     # minted for, the way a second restore would, and the authorisation is refused: the endpoints
     # match, the moment does not.
     assert standby.head_nonce(WARD_ID) != current
-    standby.install_unauthenticated(WARD_ID, 2, ROOT_2, 1000)
+    standby.restore_backup(WARD_ID, 2, ROOT_2, 1000)
     assert standby.head(WARD_ID)[:2] == (2, ROOT_2)
     with pytest.raises(ValueError, match="not authorised"):
         standby.advance(WARD_ID, 2, ROOT_2, 3, ROOT_1, in_flight, timestamp=1000)
@@ -448,7 +447,7 @@ def test_a_kept_authorisation_is_refused_after_a_restore():
     _advance(wm, 2, ROOT_2, 3, ROOT_1)
 
     # the register is restored to exactly the head `kept` was minted against
-    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000)
+    wm.restore_backup(WARD_ID, 1, ROOT_1, 1000)
     assert wm.head(WARD_ID)[:2] == (1, ROOT_1)
 
     with pytest.raises(ValueError, match="not authorised"):
@@ -473,7 +472,7 @@ def test_a_wm_that_restores_a_retired_nonce_reopens_the_replay():
     assert retired_nonce in wm.retired_nonces(WARD_ID)
 
     # a restore that puts the nonce back too -- the mistake this rule names
-    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000, head_nonce=retired_nonce)
+    wm.restore_with_stale_nonce(WARD_ID, 1, ROOT_1, 1000, retired_nonce)
 
     # and the transition lands a SECOND time, at a moment nobody authorised it for
     wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, kept, timestamp=1000)
@@ -535,7 +534,7 @@ def test_two_occurrences_of_one_transition_are_distinguishable():
     first = _advance(wm, 1, ROOT_1, 2, ROOT_2)
 
     # bring the WM back so the very same transition can happen again
-    wm.install_unauthenticated(WARD_ID, 1, ROOT_1, 1000)
+    wm.restore_backup(WARD_ID, 1, ROOT_1, 1000)
     second = _advance(wm, 1, ROOT_1, 2, ROOT_2)
 
     # the transition is identical...
@@ -598,3 +597,53 @@ def test_re_enrolment_after_total_loss_kills_historical_authorisations():
 
     with pytest.raises(ValueError, match="not authorised"):
         reborn.advance(WARD_ID, 0, ROOT_0, 1, ROOT_1, first_write, timestamp=1000)
+
+
+# --- the named scenarios --------------------------------------------------------------------------
+
+
+def test_a_failover_refuses_a_record_whose_nonce_it_has_retired():
+    """Taking over the CURRENT record is a correct failover; a second copy of an old one is not."""
+    from .ward_wm import RetiredNonce
+
+    primary = _opened()
+    record = primary.record(WARD_ID)
+    standby = MockWM()
+    standby.take_over(WARD_ID, record)
+    assert standby.head_nonce(WARD_ID) == record.head_nonce
+
+    _advance(standby, 1, ROOT_1, 2, ROOT_2)
+    with pytest.raises(RetiredNonce):
+        standby.take_over(WARD_ID, record)
+
+
+def test_a_restore_onto_the_current_head_still_rotates():
+    """The register WAS rebuilt, so the nonce moves even though the head does not."""
+    wm = _opened()
+    before = wm.head_nonce(WARD_ID)
+    wm.restore_backup(WARD_ID, 1, ROOT_1, 1000)
+    assert wm.head(WARD_ID)[:2] == (1, ROOT_1)
+    assert wm.head_nonce(WARD_ID) != before
+
+    # ...whereas a fixture told the step the WM already holds is a re-sync, and nothing moves
+    other = _opened()
+    held = other.record(WARD_ID)
+    other.force_head(
+        WARD_ID, held.counter, held.root, 1000, held.from_counter, held.from_root
+    )
+    assert other.head_nonce(WARD_ID) == held.head_nonce
+
+
+def test_a_lost_wallet_can_only_come_back_at_genesis():
+    wm = _opened()
+    old = wm.retired_nonces(WARD_ID)
+    wm.lose_wallet(WARD_ID)
+    assert wm.head(WARD_ID) is None and wm.record(WARD_ID) is None
+
+    with pytest.raises(ValueError, match="counter 0"):
+        wm.attest_head(
+            WARD_ID, NONCE, 1, ROOT_1, head_init_sig(K_SIG, WARD_ID, 1, ROOT_1)
+        )
+    wm.attest_head(WARD_ID, NONCE, 0, ROOT_0, head_init_sig(K_SIG, WARD_ID, 0, ROOT_0))
+    assert wm.head(WARD_ID)[:2] == (0, ROOT_0)
+    assert wm.head_nonce(WARD_ID) not in old  # a fresh N0, not the one the lost row held
