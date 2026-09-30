@@ -38,6 +38,7 @@ eos = []
 mldsa = []
 nem = []
 noise_kk1 = ["aes_gcm"]
+noise_xxpsk3 = ["aes_gcm"]
 secp256k1_zkp = []
 sphincsplus = []
 thp = ["dep:trezor-thp"]
@@ -50,6 +51,7 @@ test = [
     "models/mcu_stm32u5g",
     "models/model_t3w1",
     "noise_kk1",
+    "noise_xxpsk3",
     "rtl/error_shims",
     "secp256k1_zkp",
     "sphincsplus",
