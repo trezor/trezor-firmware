@@ -265,7 +265,7 @@ jobs:
         run: nix-shell --run "uv run make -C core test_emu_prodtest"
 
   core_unit_python_test:
-    name: Python unit tests (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.asan }})
+    name: Python unit tests (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.asan }}${{ matrix.miniscript && ', miniscript' || '' }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: param
@@ -275,9 +275,16 @@ jobs:
         model: [T2T1, T3B1, T3T1, T3W1]
         coins: ${{ fromJSON(github.event_name == 'schedule' && '["universal", "btconly"]' || '["universal"]') }}
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
+        miniscript: [false]
+        include:
+          - model: T3T1
+            coins: btconly
+            asan: noasan
+            miniscript: true  # currently Miniscript (and WARD) is not supported for universal builds
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      MINISCRIPT: ${{ matrix.miniscript && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       PYOPT: 0
