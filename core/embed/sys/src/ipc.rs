@@ -104,18 +104,21 @@ pub struct IpcInbox<D: DerefMut<Target = [usize]>> {
 impl<D: DerefMut<Target = [usize]>> IpcInbox<D> {
     /// Creates a new inbox for `remote`, registering `buffer` with the kernel.
     ///
-    /// Panics in debug builds if registration fails — this can only happen
-    /// if the buffer is empty, since `D`'s bound already guarantees
-    /// `usize` alignment and the kernel has no other rejection reason.
-    pub fn new(remote: u8, mut buffer: D) -> Self {
+    /// Returns `None` if the kernel rejects the registration: `buffer` is
+    /// empty or too large, or an inbox for `remote` already exists. (`D`'s
+    /// bound already guarantees `usize` alignment.) No inbox is created in
+    /// that case, so it can't unregister another inbox's buffer on drop.
+    pub fn new(remote: u8, mut buffer: D) -> Option<Self> {
         let ptr = buffer.as_mut_ptr() as *mut cty::c_void;
         let size = buffer.len() * core::mem::size_of::<usize>();
         // SAFETY: `buffer` is owned by `self` for as long as it stays
         // registered (unregistered on drop, below), and the kernel only
         // writes into it — it's never aliased by a live Rust reference.
         let ok = unsafe { ffi::ipc_register(remote, ptr, size) };
-        debug_assert!(ok, "Failed to register IPC buffer");
-        Self { remote, buffer }
+        if !ok {
+            return None;
+        }
+        Some(Self { remote, buffer })
     }
 
     /// Polls for an incoming message without blocking.
