@@ -17,8 +17,10 @@
 from __future__ import annotations
 
 import io
+import json
 import typing as t
 from hashlib import sha256
+from pathlib import Path
 
 from trezorlib import cosi, definitions, messages, protobuf
 from trezorlib.testing.common import PRIVATE_KEYS_DEV
@@ -213,3 +215,38 @@ def encode_eth_display_format(
     )
     proof, signature = sign_payload(payload, [])
     return payload + proof + signature
+
+
+_MESSAGE_TYPES: dict[messages.DefinitionType, type[protobuf.MessageType]] = {
+    messages.DefinitionType.ETHEREUM_NETWORK: messages.EthereumNetworkInfo,
+    messages.DefinitionType.ETHEREUM_TOKEN: messages.EthereumTokenInfo,
+    messages.DefinitionType.SOLANA_TOKEN: messages.SolanaTokenInfo,
+    messages.DefinitionType.ETHEREUM_DISPLAY_FORMAT: messages.EthereumDisplayFormatInfo,
+}
+
+
+def json_to_dat(d: dict[str, t.Any]) -> bytes:
+    """Encode and dev-sign a JSON definition.
+
+    Always uses format version 2 and the maximum timestamp (the `make_payload`
+    defaults), so the test definitions never expire."""
+    data_type = messages.DefinitionType[d["data_type"]]
+    payload = make_payload(
+        data_type=data_type,
+        message=protobuf.dict_to_proto(_MESSAGE_TYPES[data_type], d["message"]),
+    )
+    proof, signature = sign_payload(payload, [])
+    return payload + proof + signature
+
+
+class JsonSource(definitions.Source):
+    """Serves JSON definitions as freshly dev-signed .dat blobs."""
+
+    def __init__(self, root: Path) -> None:
+        self.root = root
+
+    def fetch_path(self, *components: str) -> bytes | None:
+        path = self.root.joinpath(*components).with_suffix(".json")
+        if not path.exists():
+            return None
+        return json_to_dat(json.loads(path.read_text()))
