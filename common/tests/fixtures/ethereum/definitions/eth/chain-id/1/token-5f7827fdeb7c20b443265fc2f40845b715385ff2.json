@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "5f7827fdeb7c20b443265fc2f40845b715385ff2",
+    "chain_id": 1,
+    "symbol": "EURCV",
+    "decimals": 18,
+    "name": "EUR CoinVertible"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "87870bca3f3fd6335c3f4ce8392d69350b4fa4e2",
+    "func_sig": "ac9650d8",
+    "intent": "Multicall",
+    "parameter_definitions": [
+      {
+        "array": {
+          "dynamic": "ABI_BYTES"
+        }
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Call",
+        "formatter": "FORMATTER_CALLDATA",
+        "callee_path": {
+          "container_path": "TO"
+        }
+      }
+    ],
+    "provider_name": "Aave DAO"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "cf91b70017eabde82c9671e30e5502d312ea6eb2",
+    "chain_id": 1,
+    "symbol": "PUPPIES",
+    "decimals": 9,
+    "name": "I love puppies"
+  }
+}

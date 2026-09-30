@@ -1,0 +1,190 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 8453,
+    "address": "d68647555e5da198d50866334eed647cbe3d1556",
+    "func_sig": "ac7a324a",
+    "intent": "Buy cover",
+    "parameter_definitions": [
+      {
+        "tuple": {
+          "fields": [
+            {
+              "atomic": "ABI_UINT32"
+            },
+            {
+              "atomic": "ABI_UINT32"
+            },
+            {
+              "atomic": "ABI_UINT32"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "atomic": "ABI_UINT32"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "atomic": "ABI_UINT16"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            }
+          ],
+          "is_dynamic": false
+        }
+      },
+      {
+        "array": {
+          "atomic": "ABI_ADDRESS"
+        }
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT8"
+      },
+      {
+        "atomic": "ABI_BYTES32"
+      },
+      {
+        "atomic": "ABI_BYTES32"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0,
+            2
+          ]
+        },
+        "label": "Cover asset",
+        "formatter": "FORMATTER_ENUM",
+        "enum_values": [
+          {
+            "key": 0,
+            "value": "ETH"
+          },
+          {
+            "key": 1,
+            "value": "DAI"
+          },
+          {
+            "key": 2,
+            "value": "USDC"
+          },
+          {
+            "key": 3,
+            "value": "USDT"
+          },
+          {
+            "key": 4,
+            "value": "POL"
+          },
+          {
+            "key": 5,
+            "value": "cbBTC"
+          }
+        ]
+      },
+      {
+        "path": {
+          "path": [
+            0,
+            3
+          ]
+        },
+        "label": "Cover amount",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            0,
+            7
+          ]
+        },
+        "label": "Cover duration",
+        "formatter": "FORMATTER_UNIT",
+        "base": "days"
+      },
+      {
+        "path": {
+          "path": [
+            0,
+            4
+          ]
+        },
+        "label": "Payment asset",
+        "formatter": "FORMATTER_ENUM",
+        "enum_values": [
+          {
+            "key": 0,
+            "value": "ETH"
+          },
+          {
+            "key": 1,
+            "value": "DAI"
+          },
+          {
+            "key": 2,
+            "value": "USDC"
+          },
+          {
+            "key": 3,
+            "value": "USDT"
+          },
+          {
+            "key": 4,
+            "value": "POL"
+          },
+          {
+            "key": 5,
+            "value": "cbBTC"
+          }
+        ]
+      },
+      {
+        "path": {
+          "path": [
+            0,
+            5
+          ]
+        },
+        "label": "Premium amount",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            0,
+            6
+          ]
+        },
+        "label": "Fee amount",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Recipient",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "OpenCover"
+  }
+}

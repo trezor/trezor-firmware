@@ -1,0 +1,62 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "55073cdf0b0e42c8b807a265eadff69973274a8d",
+    "func_sig": "74d37182",
+    "intent": "Deploy Vault",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "const_value": "teWBTC"
+        },
+        "label": "Vault share ticker",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Initial deposit",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "const_token_address": "2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Max management fee",
+        "formatter": "FORMATTER_UNIT",
+        "decimals": 2,
+        "base": "%"
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Max performance fee",
+        "formatter": "FORMATTER_UNIT",
+        "decimals": 2,
+        "base": "%"
+      }
+    ],
+    "provider_name": "Tesseract Earn Oy"
+  }
+}

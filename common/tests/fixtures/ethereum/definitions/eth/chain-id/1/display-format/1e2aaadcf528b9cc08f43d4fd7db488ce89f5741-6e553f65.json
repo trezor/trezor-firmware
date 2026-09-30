@@ -1,0 +1,46 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "1e2aaadcf528b9cc08f43d4fd7db488ce89f5741",
+    "func_sig": "6e553f65",
+    "intent": "Deposit",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Deposit asset",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "const_token_address": "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      },
+      {
+        "path": {
+          "const_value": "9SUSDC11Core"
+        },
+        "label": "Share ticker",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Send shares to",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "9Summits"
+  }
+}

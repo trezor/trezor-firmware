@@ -1,0 +1,97 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "1231deb6f5749ef6ce6943a275a1d3e7486f4eae",
+    "func_sig": "4666fc80",
+    "intent": "Swap",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_BYTES32"
+      },
+      {
+        "dynamic": "ABI_STRING"
+      },
+      {
+        "dynamic": "ABI_STRING"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "tuple": {
+          "fields": [
+            {
+              "atomic": "ABI_ADDRESS"
+            },
+            {
+              "atomic": "ABI_ADDRESS"
+            },
+            {
+              "atomic": "ABI_ADDRESS"
+            },
+            {
+              "atomic": "ABI_ADDRESS"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "dynamic": "ABI_BYTES"
+            },
+            {
+              "atomic": "ABI_BOOL"
+            }
+          ],
+          "is_dynamic": true
+        }
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            5,
+            4
+          ]
+        },
+        "label": "Amount to Send",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            5,
+            2
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            4
+          ]
+        },
+        "label": "Minimum to Receive",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            5,
+            3
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Recipient",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "LI.FI"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "a3931d71877c0e7a3148cb7eb4463524fec27fbd",
+    "func_sig": "b460af94",
+    "intent": "Withdraw USDS from Sky Savings",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Withdraw exactly",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "const_token_address": "dc035d45d973e3ec169d2276ddab16f1e407384f"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "To",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Owner",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "Sky"
+  }
+}

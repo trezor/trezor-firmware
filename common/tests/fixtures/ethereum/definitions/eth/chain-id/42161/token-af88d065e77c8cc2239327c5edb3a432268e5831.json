@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "af88d065e77c8cc2239327c5edb3a432268e5831",
+    "chain_id": 42161,
+    "symbol": "USDC",
+    "decimals": 6,
+    "name": "USDC"
+  }
+}

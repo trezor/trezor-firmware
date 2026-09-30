@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "8236a87084f8b84306f72007f36f2618a5634494",
+    "chain_id": 1,
+    "symbol": "LBTC",
+    "decimals": 8,
+    "name": "Lombard BTC"
+  }
+}

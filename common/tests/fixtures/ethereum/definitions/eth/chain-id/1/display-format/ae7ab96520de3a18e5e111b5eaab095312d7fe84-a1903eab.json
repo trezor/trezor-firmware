@@ -1,0 +1,24 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "ae7ab96520de3a18e5e111b5eaab095312d7fe84",
+    "func_sig": "a1903eab",
+    "intent": "Stake ETH",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "container_path": "VALUE"
+        },
+        "label": "Amount",
+        "formatter": "FORMATTER_AMOUNT"
+      }
+    ],
+    "provider_name": "Lido DAO"
+  }
+}

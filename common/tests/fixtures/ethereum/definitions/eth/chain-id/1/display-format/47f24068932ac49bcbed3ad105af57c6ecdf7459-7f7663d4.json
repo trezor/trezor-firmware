@@ -1,0 +1,90 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "47f24068932ac49bcbed3ad105af57c6ecdf7459",
+    "func_sig": "7f7663d4",
+    "intent": "Swap tokens via TeraSwap",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Input Token",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Amount In",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            4
+          ]
+        },
+        "label": "Output Token",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            5
+          ]
+        },
+        "label": "Minimum Output",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            4
+          ]
+        },
+        "native_currency_address": [
+          "0000000000000000000000000000000000000000"
+        ]
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Router",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "TeraSwap"
+  }
+}

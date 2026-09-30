@@ -1,0 +1,134 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 42161,
+    "address": "6131b5fae19ea4f9d964eac0408e4408b66337b5",
+    "func_sig": "e21fd0e9",
+    "intent": "Swap",
+    "parameter_definitions": [
+      {
+        "tuple": {
+          "fields": [
+            {
+              "atomic": "ABI_ADDRESS"
+            },
+            {
+              "atomic": "ABI_ADDRESS"
+            },
+            {
+              "dynamic": "ABI_BYTES"
+            },
+            {
+              "tuple": {
+                "fields": [
+                  {
+                    "atomic": "ABI_ADDRESS"
+                  },
+                  {
+                    "atomic": "ABI_ADDRESS"
+                  },
+                  {
+                    "array": {
+                      "atomic": "ABI_ADDRESS"
+                    }
+                  },
+                  {
+                    "array": {
+                      "atomic": "ABI_UINT256"
+                    }
+                  },
+                  {
+                    "array": {
+                      "atomic": "ABI_ADDRESS"
+                    }
+                  },
+                  {
+                    "array": {
+                      "atomic": "ABI_UINT256"
+                    }
+                  },
+                  {
+                    "atomic": "ABI_ADDRESS"
+                  },
+                  {
+                    "atomic": "ABI_UINT256"
+                  },
+                  {
+                    "atomic": "ABI_UINT256"
+                  },
+                  {
+                    "atomic": "ABI_UINT256"
+                  },
+                  {
+                    "dynamic": "ABI_BYTES"
+                  }
+                ],
+                "is_dynamic": true
+              }
+            },
+            {
+              "dynamic": "ABI_BYTES"
+            }
+          ],
+          "is_dynamic": true
+        }
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0,
+            3,
+            7
+          ]
+        },
+        "label": "Amount to Send",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0,
+            3,
+            0
+          ]
+        },
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        ]
+      },
+      {
+        "path": {
+          "path": [
+            0,
+            3,
+            8
+          ]
+        },
+        "label": "Minimum to Receive",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0,
+            3,
+            1
+          ]
+        },
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        ]
+      },
+      {
+        "path": {
+          "path": [
+            0,
+            3,
+            6
+          ]
+        },
+        "label": "Beneficiary",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "KyberSwap"
+  }
+}

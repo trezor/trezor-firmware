@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "64d0f55cd8c7133a9d7102b13987235f486f2224",
+    "chain_id": 1,
+    "symbol": "BORG",
+    "decimals": 18,
+    "name": "SwissBorg"
+  }
+}

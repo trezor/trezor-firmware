@@ -1,0 +1,19 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 42220,
+    "address": "7d21685c17607338b313a7174bab6620bad0aab7",
+    "func_sig": "9dca362f",
+    "intent": "Create Account",
+    "field_definitions": [
+      {
+        "path": {
+          "container_path": "FROM"
+        },
+        "label": "Account Owner",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "Celo"
+  }
+}

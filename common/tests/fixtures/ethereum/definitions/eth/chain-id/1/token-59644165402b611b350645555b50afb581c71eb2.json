@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "59644165402b611b350645555b50afb581c71eb2",
+    "chain_id": 1,
+    "symbol": "METAON",
+    "decimals": 18,
+    "name": "Meta Platforms (Ondo Tokenized Stock)"
+  }
+}

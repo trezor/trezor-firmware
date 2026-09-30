@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "ca14007eff0db1f8135f4c25b34de49ab0d42766",
+    "chain_id": 1,
+    "symbol": "STRK",
+    "decimals": 18,
+    "name": "Starknet"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "5a9610919f5e81183823a2be4bd1beb2b4da2a20",
+    "chain_id": 1,
+    "symbol": "APR",
+    "decimals": 18,
+    "name": "Capricorn"
+  }
+}

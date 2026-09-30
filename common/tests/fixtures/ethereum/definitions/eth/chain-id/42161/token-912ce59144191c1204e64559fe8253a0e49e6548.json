@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "912ce59144191c1204e64559fe8253a0e49e6548",
+    "chain_id": 42161,
+    "symbol": "ARB",
+    "decimals": 18,
+    "name": "Arbitrum"
+  }
+}

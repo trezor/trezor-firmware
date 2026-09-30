@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "c9eef266834730340a55b6cc24621b31baf55581",
+    "chain_id": 1,
+    "symbol": "SPCXON",
+    "decimals": 18,
+    "name": "SpaceX (Ondo Tokenized Stock)"
+  }
+}

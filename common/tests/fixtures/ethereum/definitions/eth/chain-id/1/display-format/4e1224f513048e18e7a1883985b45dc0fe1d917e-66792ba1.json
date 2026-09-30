@@ -1,0 +1,26 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "4e1224f513048e18e7a1883985b45dc0fe1d917e",
+    "func_sig": "66792ba1",
+    "intent": "Withdrawal message",
+    "parameter_definitions": [
+      {
+        "dynamic": "ABI_STRING"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Public keys",
+        "formatter": "FORMATTER_RAW"
+      }
+    ],
+    "provider_name": "P2P Staking"
+  }
+}

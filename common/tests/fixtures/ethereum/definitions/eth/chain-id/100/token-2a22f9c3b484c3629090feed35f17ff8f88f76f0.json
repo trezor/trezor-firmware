@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "2a22f9c3b484c3629090feed35f17ff8f88f76f0",
+    "chain_id": 100,
+    "symbol": "USDC.E",
+    "decimals": 6,
+    "name": "Gnosis xDAI Bridged USDC (Gnosis)"
+  }
+}

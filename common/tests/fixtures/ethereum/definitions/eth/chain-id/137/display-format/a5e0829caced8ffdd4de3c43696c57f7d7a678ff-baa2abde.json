@@ -1,0 +1,81 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 137,
+    "address": "a5e0829caced8ffdd4de3c43696c57f7d7a678ff",
+    "func_sig": "baa2abde",
+    "intent": "Remove Liquidity",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Minimum amount",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            4
+          ]
+        },
+        "label": "Minimum amount",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            1
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            5
+          ]
+        },
+        "label": "Beneficiary",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            6
+          ]
+        },
+        "label": "Deadline",
+        "formatter": "FORMATTER_DATE"
+      }
+    ],
+    "provider_name": "QuickSwap"
+  }
+}

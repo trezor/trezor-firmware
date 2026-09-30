@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "2791bca1f2de4661ed88a30c99a7a9449aa84174",
+    "chain_id": 137,
+    "symbol": "USDC.E",
+    "decimals": 6,
+    "name": "Polygon Bridged USDC (Polygon PoS)"
+  }
+}

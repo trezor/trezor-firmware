@@ -1,0 +1,29 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "e1b1252652a2ff0cc3a4214ee73d9fed1fea5b4f",
+    "func_sig": "aa2f892d",
+    "intent": "Redeem from Stablecoin Vault",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Shares to redeem",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "container_path": "TO"
+        }
+      }
+    ],
+    "provider_name": "Figment"
+  }
+}

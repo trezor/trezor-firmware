@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "e3872dd4eba50598c54b2aa21b04c71fc37b000b",
+    "chain_id": 1,
+    "symbol": "NEXI",
+    "decimals": 18,
+    "name": "Nexira DAEP"
+  }
+}

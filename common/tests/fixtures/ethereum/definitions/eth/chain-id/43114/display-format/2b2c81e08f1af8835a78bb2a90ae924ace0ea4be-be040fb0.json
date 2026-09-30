@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 43114,
+    "address": "2b2c81e08f1af8835a78bb2a90ae924ace0ea4be",
+    "func_sig": "be040fb0",
+    "intent": "Claim unstaked AVAX",
+    "provider_name": "BENQI"
+  }
+}
