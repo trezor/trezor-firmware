@@ -840,12 +840,8 @@ impl CredentialVerifier for TrezorCredentialVerifier {
                 log::debug!("[{:04x}] Result: {}", self.channel_id, ps as u8);
                 ps
             }
-            Err(e) => {
-                log::error!(
-                    "[{:04x}] Credential verification error: {:?}",
-                    self.channel_id,
-                    e
-                );
+            Err(_) => {
+                log::error!("[{:04x}] Credential verification error", self.channel_id);
                 PairingState::Unpaired
             }
         }

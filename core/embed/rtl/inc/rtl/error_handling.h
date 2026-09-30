@@ -20,6 +20,7 @@
 #pragma once
 
 #include <errno.h>
+#include <stdint.h>
 
 #include "sysexit.h"
 
@@ -28,31 +29,50 @@
 #define __FILE_NAME__ __FILE__
 #endif
 
+// Error codes (do not use directly, use the TS_* macros instead)
+typedef enum : int32_t {
+  TS_CODE_OK = 0,
+  TS_CODE_EINVAL = EINVAL,
+  TS_CODE_ENOMEM = ENOMEM,
+  TS_CODE_ENOENT = ENOENT,
+  TS_CODE_EBUSY = EBUSY,
+  TS_CODE_ETIMEDOUT = ETIMEDOUT,
+  TS_CODE_EIO = EIO,
+  TS_CODE_EBADMSG = EBADMSG,
+  TS_CODE_EACCES = EACCES,
+  TS_CODE_EEXIST = EEXIST,
+
+  // Trezor-specific error codes
+  TS_CODE_ENOINIT = 2000,
+  TS_CODE_ENOEN = 2001,
+  TS_CODE_ENOSTATE = 2002,
+
+} ts_error_code_t;
+
 /** Status code type */
 typedef struct {
   // Do not access this field directly,
   // use `ts_ok()` and `ts_error()` macros.
-  int code;
+  ts_error_code_t code;
 } ts_t;
 
 /** OK status code (signalling success or no error) */
 #define TS_OK ts_make(0)
 
-#define TS_EINVAL ts_make(EINVAL)
-#define TS_ENOMEM ts_make(ENOMEM)
-#define TS_ENOENT ts_make(ENOENT)
-#define TS_EBUSY ts_make(EBUSY)
-#define TS_ETIMEDOUT ts_make(ETIMEDOUT)
-#define TS_EIO ts_make(EIO)
-#define TS_EBADMSG ts_make(EBADMSG)
-#define TS_EACCES ts_make(EACCES)
-#define TS_EEXIST ts_make(EEXIST)
+#define TS_EINVAL ts_make(TS_CODE_EINVAL)
+#define TS_ENOMEM ts_make(TS_CODE_ENOMEM)
+#define TS_ENOENT ts_make(TS_CODE_ENOENT)
+#define TS_EBUSY ts_make(TS_CODE_EBUSY)
+#define TS_ETIMEDOUT ts_make(TS_CODE_ETIMEDOUT)
+#define TS_EIO ts_make(TS_CODE_EIO)
+#define TS_EBADMSG ts_make(TS_CODE_EBADMSG)
+#define TS_EACCES ts_make(TS_CODE_EACCES)
+#define TS_EEXIST ts_make(TS_CODE_EEXIST)
 
-/** List of Trezor-specific error codes with offset from 2000 to avoid mixing
- * with standard errno codes */
-#define TS_ENOINIT ts_make(2000)  /* Not initialized */
-#define TS_ENOEN ts_make(2001)    /* Not enabled */
-#define TS_ENOSTATE ts_make(2002) /* Wrong state */
+// Trezor-specific error codes
+#define TS_ENOINIT ts_make(TS_CODE_ENOINIT)   /* Not initialized */
+#define TS_ENOEN ts_make(TS_CODE_ENOEN)       /* Not enabled */
+#define TS_ENOSTATE ts_make(TS_CODE_ENOSTATE) /* Wrong state */
 
 /**
  * Extracts the code integer value from status structure.
