@@ -175,10 +175,9 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
 
     await confirm_properties("ward_delete_entry", "Delete entry", props, hold=True)
 
-    # Derive the root the deletion leaves behind. The sibling decomposition matters here:
-    # The sibling of the removed leaf promotes unchanged -- a node's hash does not depend on
-    # its depth, so re-parenting costs nothing. This used to need a witness for the sibling's
-    # KIND; see `trie.compute_new_root`.
+    # Derive the root the deletion leaves behind. The sibling of the removed leaf promotes
+    # unchanged -- a node's hash does not depend on its depth, so re-parenting costs nothing.
+    # This used to need a witness for the sibling's KIND; see `trie.compute_new_root`.
     proof, _witness_key, _witness_commit = material
     from_root = await get_root()
     counter = await get_counter() + 1
