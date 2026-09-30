@@ -7,6 +7,9 @@ description = "no_std SDK for developing Trezor extapps in Rust"
 license = "GPL-3.0-only"
 exclude = ["supply-chain/"]
 
+[package.metadata.trezor]
+sdk-version = "0.1.0"
+
 [lib]
 crate-type = ["rlib"]
 
