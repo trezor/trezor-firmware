@@ -432,7 +432,7 @@ class MockWardService:
             from_counter, from_root = (
                 (prev[0][0], prev[0][1]) if prev else (counter - 1, None)
             )
-            self.wm.install_unauthenticated(
+            self.wm.force_head(
                 ward_id, counter, root, timestamp, from_counter, from_root or EMPTY_ROOT
             )
 
@@ -533,7 +533,7 @@ class MockWardService:
             # this publish was built on is no longer the head the WM holds.
             stolen_counter, stolen_root = self.steal_head_before_publish
             self.steal_head_before_publish = None
-            self.wm.install_unauthenticated(
+            self.wm.force_head(
                 self.ward_id,
                 stolen_counter,
                 stolen_root,
