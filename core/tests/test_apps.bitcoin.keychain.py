@@ -287,12 +287,15 @@ class TestAccountNames(unittest.TestCase):
 
     def test_casa_requires_segwit(self):
         """account_label passes no script type, so require_segwit is the only gate."""
+        # Bitcoin has segwit, so its Casa path is named.
+        self.assertEqual(self._name([H_(45), 0, 0, 0, 0], None), "Casa #1")
+
+    @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+    def test_casa_requires_segwit_altcoin(self):
         # Dogecoin has no segwit, so a P2SH-segwit scheme must stay unnamed.
         self.assertIsNone(
             address_n_to_name(_get_coin_by_name("Dogecoin"), [H_(45), 3, 0, 0, 0])
         )
-        # Bitcoin has segwit, so its Casa path is named.
-        self.assertEqual(self._name([H_(45), 0, 0, 0, 0], None), "Casa #1")
 
     def test_multisig_script_type(self):
         """SPENDMULTISIG names the same nodes as its single-key analogue."""
@@ -327,15 +330,6 @@ class TestAccountNames(unittest.TestCase):
             self._name([H_(3), H_(1)], InputScriptType.SPENDADDRESS, export_point=True),
             "GreenAddress",
         )
-        # Offered for Bitcoin only, so it must not name the path on a fork.
-        self.assertIsNone(
-            address_n_to_name(
-                _get_coin_by_name("Litecoin"),
-                [H_(3), H_(1)],
-                InputScriptType.SPENDADDRESS,
-                export_point=True,
-            )
-        )
         # The subaccount's leaves are named too, but never numbered: the
         # [1-100]' level is not spelled as an account.
         self.assertEqual(
@@ -347,6 +341,20 @@ class TestAccountNames(unittest.TestCase):
             self._name([1, 0], InputScriptType.SPENDADDRESS, export_point=True)
         )
         self.assertIsNone(self._name([1, 0], InputScriptType.SPENDADDRESS))
+
+    @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+    def test_greenaddress_altcoin(self):
+        from trezor.enums import InputScriptType
+
+        # Offered for Bitcoin only, so it must not name the path on a fork.
+        self.assertIsNone(
+            address_n_to_name(
+                _get_coin_by_name("Litecoin"),
+                [H_(3), H_(1)],
+                InputScriptType.SPENDADDRESS,
+                export_point=True,
+            )
+        )
 
     def test_other_names_do_not_move(self):
         """The export-point match must agree with the old truncation."""
@@ -523,6 +531,7 @@ class TestSignMessageBip48(TestCaseWithContext):
         self.assertFalse(validate_path_against_script_type(coin, msg))
         self.assertTrue(self._derive(msg))
 
+    @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
     def test_fork_coins_get_no_bitcoin_path_alias(self):
         """The Bitcoin-namespace alias of a fork must not carry the grant.
 
