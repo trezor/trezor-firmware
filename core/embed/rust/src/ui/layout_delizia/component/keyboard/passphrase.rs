@@ -313,11 +313,14 @@ impl Component for PassphraseKeyboard {
             bounds.split_bottom(4 * theme::PASSPHRASE_BUTTON_HEIGHT + 3 * theme::BUTTON_SPACING);
         self.keypad_area = keypad_area;
         let (input_area, confirm_btn_area) = top_area.split_right(CONFIRM_BTN_WIDTH);
-        let confirm_empty_btn_area = confirm_btn_area
-            .split_right(CONFIRM_EMPTY_BTN_WIDTH + CONFIRM_EMPTY_BTN_MARGIN_RIGHT)
-            .1;
+        // The prompt is shown only while the input is empty, i.e. when the
+        // small confirm-empty button is shown instead of the wider confirm
+        // button, so it may extend up to the confirm-empty button's area.
+        let (prompt_area, confirm_empty_btn_area) =
+            top_area.split_right(CONFIRM_EMPTY_BTN_WIDTH + CONFIRM_EMPTY_BTN_MARGIN_RIGHT);
 
         let input_area = input_area.inset(INPUT_INSETS);
+        let prompt_area = prompt_area.inset(INPUT_INSETS);
         let confirm_btn_area = confirm_btn_area.inset(CONFIRM_BTN_INSETS);
         let confirm_empty_btn_area = confirm_empty_btn_area.inset(CONFIRM_EMPTY_BTN_INSETS);
 
@@ -327,10 +330,10 @@ impl Component for PassphraseKeyboard {
 
         self.page_swipe.place(bounds);
         self.input.place(input_area);
-        // The prompt is clipped to the input area so that it does not overlap
-        // the confirm-empty button; it scrolls if it does not fit.
+        // The prompt is clipped to the prompt area so that it does not
+        // overlap the confirm-empty button; it scrolls if it does not fit.
         self.input_prompt
-            .place(Self::prompt_marquee_area(input_area));
+            .place(Self::prompt_marquee_area(prompt_area));
 
         // control buttons
         self.confirm_btn.place(confirm_btn_area);
