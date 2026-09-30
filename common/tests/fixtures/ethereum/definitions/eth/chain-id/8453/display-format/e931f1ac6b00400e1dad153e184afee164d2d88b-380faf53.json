@@ -1,0 +1,78 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 8453,
+    "address": "e931f1ac6b00400e1dad153e184afee164d2d88b",
+    "func_sig": "380faf53",
+    "intent": "Redeem L2 tBTC to Bitcoin",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT16"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      },
+      {
+        "atomic": "ABI_UINT32"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Amount",
+        "formatter": "FORMATTER_UNIT",
+        "decimals": 18,
+        "base": "tBTC",
+        "prefix": false
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Recipient chain",
+        "formatter": "FORMATTER_ENUM",
+        "enum_values": [
+          {
+            "key": 2,
+            "value": "Ethereum"
+          }
+        ]
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "BTC output script",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Nonce",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "container_path": "VALUE"
+        },
+        "label": "Wormhole message fee",
+        "formatter": "FORMATTER_AMOUNT"
+      }
+    ],
+    "provider_name": "Threshold Network"
+  }
+}

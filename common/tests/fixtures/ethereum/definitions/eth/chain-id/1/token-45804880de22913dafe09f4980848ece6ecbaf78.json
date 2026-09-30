@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "45804880de22913dafe09f4980848ece6ecbaf78",
+    "chain_id": 1,
+    "symbol": "PAXG",
+    "decimals": 18,
+    "name": "PAX Gold"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "8659eeff31cfcff580d37af8e7af250f8998aa83",
+    "func_sig": "608c54d4",
+    "intent": "Create and Stake",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_BYTES32"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Operator",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Salt",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Call Address",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Transaction",
+        "formatter": "FORMATTER_CALLDATA",
+        "callee_path": {
+          "path": [
+            2
+          ]
+        }
+      }
+    ],
+    "provider_name": "Kiln"
+  }
+}

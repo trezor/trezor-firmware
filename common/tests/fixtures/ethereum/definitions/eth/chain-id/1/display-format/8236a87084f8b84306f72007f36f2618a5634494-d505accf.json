@@ -1,0 +1,76 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "8236a87084f8b84306f72007f36f2618a5634494",
+    "func_sig": "d505accf",
+    "intent": "Permit",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT8"
+      },
+      {
+        "atomic": "ABI_BYTES32"
+      },
+      {
+        "atomic": "ABI_BYTES32"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Owner",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Spender",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Allowance",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "container_path": "TO"
+        },
+        "threshold": "8000000000000000000000000000000000000000000000000000000000000000",
+        "threshold_message": "Unlimited"
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Valid Until",
+        "formatter": "FORMATTER_DATE"
+      }
+    ],
+    "provider_name": "Lombard Finance"
+  }
+}

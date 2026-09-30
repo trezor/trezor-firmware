@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "f0db65d17e30a966c2ae6a21f6bba71cea6e9754",
+    "chain_id": 1,
+    "symbol": "BARD",
+    "decimals": 18,
+    "name": "Lombard"
+  }
+}

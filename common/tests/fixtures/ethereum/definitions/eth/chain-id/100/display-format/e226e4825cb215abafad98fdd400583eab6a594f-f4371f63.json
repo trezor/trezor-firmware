@@ -1,0 +1,67 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 100,
+    "address": "e226e4825cb215abafad98fdd400583eab6a594f",
+    "func_sig": "f4371f63",
+    "intent": "Swap token",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_BYTES32"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Swap ID",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Token to swap",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Solver",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Amount",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            1
+          ]
+        }
+      }
+    ],
+    "provider_name": "Layerswap"
+  }
+}

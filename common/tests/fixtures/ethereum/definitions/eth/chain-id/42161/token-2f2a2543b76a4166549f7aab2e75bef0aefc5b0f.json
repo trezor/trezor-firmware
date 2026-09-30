@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "2f2a2543b76a4166549f7aab2e75bef0aefc5b0f",
+    "chain_id": 42161,
+    "symbol": "WBTC",
+    "decimals": 8,
+    "name": "Arbitrum Bridged WBTC (Arbitrum One)"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "00f05efa6d73335225f23b5adb1fc873795aaccf",
+    "func_sig": "6e553f65",
+    "intent": "Deposit",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Deposit asset",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "const_token_address": "dac17f958d2ee523a2206206994597c13d831ec7"
+      },
+      {
+        "path": {
+          "const_value": "lmMsthUSDT"
+        },
+        "label": "Share ticker",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Send shares to",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "Kiln"
+  }
+}

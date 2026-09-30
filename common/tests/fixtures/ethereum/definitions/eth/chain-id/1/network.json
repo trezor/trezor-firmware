@@ -1,0 +1,9 @@
+{
+  "data_type": "ETHEREUM_NETWORK",
+  "message": {
+    "chain_id": 1,
+    "symbol": "ETH",
+    "slip44": 60,
+    "name": "Ethereum"
+  }
+}

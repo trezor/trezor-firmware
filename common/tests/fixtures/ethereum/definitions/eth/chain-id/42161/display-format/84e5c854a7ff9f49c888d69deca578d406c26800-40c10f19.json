@@ -1,0 +1,43 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 42161,
+    "address": "84e5c854a7ff9f49c888d69deca578d406c26800",
+    "func_sig": "40c10f19",
+    "intent": "Mint with wrapped BTC",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Token",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Amount to Deposit",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0
+          ]
+        }
+      }
+    ],
+    "provider_name": "Bedrock"
+  }
+}

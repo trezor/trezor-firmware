@@ -1,0 +1,53 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "a3931d71877c0e7a3148cb7eb4463524fec27fbd",
+    "func_sig": "ba087652",
+    "intent": "Redeem",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Shares to redeem",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "container_path": "TO"
+        }
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "To",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Owner",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "Sky"
+  }
+}

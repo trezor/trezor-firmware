@@ -1,0 +1,22 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 223,
+    "address": "f9775085d726e782e83585033b58606f7731ab18",
+    "func_sig": "1249c58b",
+    "intent": "Mint with native BTC",
+    "field_definitions": [
+      {
+        "path": {
+          "container_path": "VALUE"
+        },
+        "label": "Amount",
+        "formatter": "FORMATTER_UNIT",
+        "decimals": 18,
+        "base": "BTC",
+        "prefix": false
+      }
+    ],
+    "provider_name": "Bedrock"
+  }
+}

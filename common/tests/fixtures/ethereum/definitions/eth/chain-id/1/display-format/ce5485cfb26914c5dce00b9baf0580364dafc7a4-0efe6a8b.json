@@ -1,0 +1,53 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "ce5485cfb26914c5dce00b9baf0580364dafc7a4",
+    "func_sig": "0efe6a8b",
+    "intent": "Bridge",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Amount to deposit",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Recipient",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "container_path": "VALUE"
+        },
+        "label": "Deposit fee",
+        "formatter": "FORMATTER_AMOUNT"
+      }
+    ],
+    "provider_name": "StarkWare"
+  }
+}

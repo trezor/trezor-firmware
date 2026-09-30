@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "320623b8e4ff03373931769a31fc52a4e78b5d70",
+    "chain_id": 1,
+    "symbol": "RSR",
+    "decimals": 18,
+    "name": "Reserve Rights"
+  }
+}

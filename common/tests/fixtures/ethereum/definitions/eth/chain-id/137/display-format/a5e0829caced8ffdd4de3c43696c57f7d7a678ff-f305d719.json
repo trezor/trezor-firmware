@@ -1,0 +1,94 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 137,
+    "address": "a5e0829caced8ffdd4de3c43696c57f7d7a678ff",
+    "func_sig": "f305d719",
+    "intent": "Add Liquidity",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "container_path": "VALUE"
+        },
+        "label": "Amount to Send",
+        "formatter": "FORMATTER_AMOUNT"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Desired amount",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Minimum amount",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Minimum amount",
+        "formatter": "FORMATTER_AMOUNT"
+      },
+      {
+        "path": {
+          "path": [
+            4
+          ]
+        },
+        "label": "Beneficiary",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            5
+          ]
+        },
+        "label": "Deadline",
+        "formatter": "FORMATTER_DATE"
+      }
+    ],
+    "provider_name": "QuickSwap"
+  }
+}

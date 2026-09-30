@@ -1,0 +1,121 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "66a28b080918184851774a89ab94850a41f6a1e5",
+    "func_sig": "b293f97f",
+    "intent": "Bridge BORG",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT16"
+      },
+      {
+        "atomic": "ABI_BYTES32"
+      },
+      {
+        "atomic": "ABI_BYTES32"
+      },
+      {
+        "atomic": "ABI_BOOL"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Amount",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "const_token_address": "64d0f55cd8c7133a9d7102b13987235f486f2224"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Destination Chain",
+        "formatter": "FORMATTER_ENUM",
+        "enum_values": [
+          {
+            "key": 1,
+            "value": "Solana"
+          },
+          {
+            "key": 2,
+            "value": "Ethereum"
+          },
+          {
+            "key": 4,
+            "value": "BNB Smart Chain"
+          },
+          {
+            "key": 5,
+            "value": "Polygon"
+          },
+          {
+            "key": 6,
+            "value": "Avalanche"
+          },
+          {
+            "key": 23,
+            "value": "Arbitrum"
+          },
+          {
+            "key": 24,
+            "value": "Optimism"
+          },
+          {
+            "key": 30,
+            "value": "Base"
+          }
+        ]
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Destination Address",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Refund Address",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            4
+          ]
+        },
+        "label": "Should Queue",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            5
+          ]
+        },
+        "label": "Instructions",
+        "formatter": "FORMATTER_RAW"
+      }
+    ],
+    "provider_name": "SwissBorg"
+  }
+}

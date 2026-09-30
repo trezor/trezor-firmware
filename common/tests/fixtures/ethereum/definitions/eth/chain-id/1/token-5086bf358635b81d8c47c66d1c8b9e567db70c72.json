@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "5086bf358635b81d8c47c66d1c8b9e567db70c72",
+    "chain_id": 1,
+    "symbol": "REUSD",
+    "decimals": 18,
+    "name": "Re Protocol reUSD"
+  }
+}

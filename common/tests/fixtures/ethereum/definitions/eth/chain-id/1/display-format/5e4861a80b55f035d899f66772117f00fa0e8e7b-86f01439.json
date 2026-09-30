@@ -1,0 +1,120 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "5e4861a80b55f035d899f66772117f00fa0e8e7b",
+    "func_sig": "86f01439",
+    "intent": "Reveal cross-chain deposit",
+    "parameter_definitions": [
+      {
+        "tuple": {
+          "fields": [
+            {
+              "atomic": "ABI_BYTES4"
+            },
+            {
+              "dynamic": "ABI_BYTES"
+            },
+            {
+              "dynamic": "ABI_BYTES"
+            },
+            {
+              "atomic": "ABI_BYTES4"
+            }
+          ],
+          "is_dynamic": true
+        }
+      },
+      {
+        "tuple": {
+          "fields": [
+            {
+              "atomic": "ABI_UINT32"
+            },
+            {
+              "atomic": "ABI_BYTES8"
+            },
+            {
+              "atomic": "ABI_BYTES20"
+            },
+            {
+              "atomic": "ABI_BYTES20"
+            },
+            {
+              "atomic": "ABI_BYTES4"
+            },
+            {
+              "atomic": "ABI_ADDRESS"
+            }
+          ],
+          "is_dynamic": false
+        }
+      },
+      {
+        "atomic": "ABI_BYTES32"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            1,
+            0
+          ]
+        },
+        "label": "Funding output",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            1,
+            2
+          ]
+        },
+        "label": "Wallet pubkey hash",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            1,
+            3
+          ]
+        },
+        "label": "Refund pubkey hash",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            1,
+            4
+          ]
+        },
+        "label": "Refund locktime",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            1,
+            5
+          ]
+        },
+        "label": "Vault",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Deposit owner data",
+        "formatter": "FORMATTER_RAW"
+      }
+    ],
+    "provider_name": "Threshold Network"
+  }
+}

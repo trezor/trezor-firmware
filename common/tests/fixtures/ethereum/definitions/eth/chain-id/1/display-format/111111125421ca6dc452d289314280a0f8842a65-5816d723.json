@@ -1,0 +1,32 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "111111125421ca6dc452d289314280a0f8842a65",
+    "func_sig": "5816d723",
+    "intent": "Execute with permit",
+    "parameter_definitions": [
+      {
+        "dynamic": "ABI_BYTES"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Swap",
+        "formatter": "FORMATTER_CALLDATA",
+        "callee_path": {
+          "container_path": "TO"
+        }
+      }
+    ],
+    "provider_name": "1inch Network"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "00000000219ab540356cbb839cbe05303d7705fa",
+    "func_sig": "22895118",
+    "intent": "Stake ETH",
+    "parameter_definitions": [
+      {
+        "dynamic": "ABI_BYTES"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      },
+      {
+        "atomic": "ABI_BYTES32"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Validator public key",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Withdraw credentials",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "container_path": "VALUE"
+        },
+        "label": "Amount to deposit",
+        "formatter": "FORMATTER_AMOUNT"
+      }
+    ],
+    "provider_name": "Ethereum Foundation"
+  }
+}

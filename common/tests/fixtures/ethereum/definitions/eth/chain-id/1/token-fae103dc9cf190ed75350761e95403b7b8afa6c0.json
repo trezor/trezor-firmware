@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "fae103dc9cf190ed75350761e95403b7b8afa6c0",
+    "chain_id": 1,
+    "symbol": "RSWETH",
+    "decimals": 18,
+    "name": "Restaked Swell ETH"
+  }
+}

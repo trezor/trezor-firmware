@@ -1,0 +1,71 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "99361435420711723af805f08187c9e6bf796683",
+    "func_sig": "42e8866b",
+    "intent": "instantly buy",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_BYTES32"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "You pay with",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Amount",
+        "formatter": "FORMATTER_UNIT",
+        "decimals": 18,
+        "base": " ",
+        "prefix": false
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Minimum to Receive",
+        "formatter": "FORMATTER_UNIT",
+        "decimals": 18,
+        "base": " ",
+        "prefix": false
+      },
+      {
+        "path": {
+          "path": [
+            4
+          ]
+        },
+        "label": "Receiver",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "Midas"
+  }
+}

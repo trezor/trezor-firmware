@@ -1,0 +1,65 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "47f24068932ac49bcbed3ad105af57c6ecdf7459",
+    "func_sig": "7739563c",
+    "intent": "Swap ETH via TeraSwap",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "container_path": "VALUE"
+        },
+        "label": "ETH Amount",
+        "formatter": "FORMATTER_AMOUNT"
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Output Token",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Minimum Output",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            2
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Router",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "TeraSwap"
+  }
+}

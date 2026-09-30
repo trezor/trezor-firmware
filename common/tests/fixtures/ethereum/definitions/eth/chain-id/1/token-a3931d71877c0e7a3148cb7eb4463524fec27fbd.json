@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "a3931d71877c0e7a3148cb7eb4463524fec27fbd",
+    "chain_id": 1,
+    "symbol": "SUSDS",
+    "decimals": 18,
+    "name": "sUSDS"
+  }
+}

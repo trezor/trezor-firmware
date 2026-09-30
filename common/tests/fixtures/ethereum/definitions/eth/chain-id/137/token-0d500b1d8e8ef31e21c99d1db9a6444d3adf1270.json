@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+    "chain_id": 137,
+    "symbol": "WPOL",
+    "decimals": 18,
+    "name": "Wrapped POL"
+  }
+}

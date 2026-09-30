@@ -1,0 +1,119 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "23be839a14cec3d6d716d904f09368bbf9c750eb",
+    "func_sig": "a49b131b",
+    "intent": "Stake ETH",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_BYTES32"
+      },
+      {
+        "atomic": "ABI_UINT96"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "tuple": {
+          "fields": [
+            {
+              "atomic": "ABI_UINT96"
+            },
+            {
+              "atomic": "ABI_ADDRESS"
+            }
+          ],
+          "is_dynamic": false
+        }
+      },
+      {
+        "tuple": {
+          "fields": [
+            {
+              "atomic": "ABI_UINT96"
+            },
+            {
+              "atomic": "ABI_ADDRESS"
+            }
+          ],
+          "is_dynamic": false
+        }
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ],
+          "slice_start": -20
+        },
+        "label": "Withdrawal address",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            0
+          ],
+          "slice_end": 1
+        },
+        "label": "Credential type",
+        "formatter": "FORMATTER_RAW"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "ETH per validator",
+        "formatter": "FORMATTER_AMOUNT"
+      },
+      {
+        "path": {
+          "container_path": "VALUE"
+        },
+        "label": "Amount to deposit",
+        "formatter": "FORMATTER_AMOUNT"
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Fee Distributor",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            3,
+            0
+          ]
+        },
+        "label": "Client share (bps)",
+        "formatter": "FORMATTER_UNIT",
+        "decimals": 0,
+        "base": "bps"
+      },
+      {
+        "path": {
+          "path": [
+            3,
+            1
+          ]
+        },
+        "label": "Client recipient",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "P2P Staking"
+  }
+}

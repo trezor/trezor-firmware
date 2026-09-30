@@ -1,0 +1,51 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "1e2aaadcf528b9cc08f43d4fd7db488ce89f5741",
+    "func_sig": "b460af94",
+    "intent": "Withdraw",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Withdraw exactly",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "const_token_address": "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "To",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Owner",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "9Summits"
+  }
+}

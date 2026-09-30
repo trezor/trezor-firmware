@@ -1,0 +1,72 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "f0bc39fc911f6437c84d16188dd8294f7110f451",
+    "func_sig": "dab2b778",
+    "intent": "Limit Sell GM Token",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "GM Amount to Sell",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Receive Token",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Min Price",
+        "formatter": "FORMATTER_UNIT",
+        "decimals": 18,
+        "base": "USD"
+      },
+      {
+        "path": {
+          "path": [
+            4
+          ]
+        },
+        "label": "Order Expires",
+        "formatter": "FORMATTER_DATE"
+      }
+    ],
+    "provider_name": "Ondo Finance"
+  }
+}

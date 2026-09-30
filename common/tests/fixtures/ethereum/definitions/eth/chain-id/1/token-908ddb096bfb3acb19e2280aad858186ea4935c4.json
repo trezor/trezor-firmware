@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "908ddb096bfb3acb19e2280aad858186ea4935c4",
+    "chain_id": 1,
+    "symbol": "ESE",
+    "decimals": 18,
+    "name": "Eesee"
+  }
+}

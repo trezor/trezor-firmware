@@ -1,0 +1,140 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "111111125421ca6dc452d289314280a0f8842a65",
+    "func_sig": "56a75868",
+    "intent": "Fill order",
+    "parameter_definitions": [
+      {
+        "tuple": {
+          "fields": [
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "atomic": "ABI_ADDRESS"
+            },
+            {
+              "atomic": "ABI_ADDRESS"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            }
+          ],
+          "is_dynamic": false
+        }
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0,
+            6
+          ]
+        },
+        "label": "Order selling amount",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0,
+            4
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            0,
+            5
+          ]
+        },
+        "label": "Order purchasing amt",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0,
+            3
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Amount to sell",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0,
+            4
+          ]
+        }
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ],
+          "slice_end": 1
+        },
+        "label": "Additional action",
+        "formatter": "FORMATTER_ENUM",
+        "enum_values": [
+          {
+            "key": 0,
+            "value": "None"
+          },
+          {
+            "key": 16,
+            "value": "None"
+          },
+          {
+            "key": 32,
+            "value": "None"
+          },
+          {
+            "key": 64,
+            "value": "Unwrap"
+          },
+          {
+            "key": 80,
+            "value": "Unwrap"
+          },
+          {
+            "key": 96,
+            "value": "Unwrap"
+          }
+        ]
+      }
+    ],
+    "provider_name": "1inch Network"
+  }
+}

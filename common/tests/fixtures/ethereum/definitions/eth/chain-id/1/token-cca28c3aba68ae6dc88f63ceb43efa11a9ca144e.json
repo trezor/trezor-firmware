@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "cca28c3aba68ae6dc88f63ceb43efa11a9ca144e",
+    "chain_id": 1,
+    "symbol": "KIWI",
+    "decimals": 9,
+    "name": "Kiwi"
+  }
+}
