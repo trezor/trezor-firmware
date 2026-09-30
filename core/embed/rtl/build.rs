@@ -58,6 +58,12 @@ fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
         .header("inc/rtl/sysexit.h")
         .allowlist_function("system_exit")
         .allowlist_function("system_exit_error_ex")
-        .allowlist_function("system_exit_fatal_ex");
+        .allowlist_function("system_exit_fatal_ex")
+        .header("inc/rtl/error_handling.h")
+        .allowlist_type("ts_t")
+        .must_use_type("ts_t")
+        .default_macro_constant_type(bindgen::MacroTypeVariation::Signed)
+        .allowlist_item("E(INVAL|NOMEM|NOENT|BUSY|TIMEDOUT|IO|BADMSG|ACCES|EXIST)")
+        .allowlist_function("ts_string");
     Ok(builder)
 }

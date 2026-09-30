@@ -13,6 +13,9 @@ xbuild.workspace = true
 [dependencies]
 cty.workspace = true
 models.workspace = true
+num-derive.workspace = true
+num-traits.workspace = true
+ufmt.workspace = true
 
 [features]
 
