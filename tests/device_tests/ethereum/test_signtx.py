@@ -18,20 +18,18 @@ from __future__ import annotations
 
 import typing as t
 from itertools import product
-from pathlib import Path
 
 import pytest
 
 from trezorlib import ethereum, exceptions, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import message_filters
-from trezorlib.definitions import FilesystemSource
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path, unharden
 
-from ...common import parametrize_using_common_fixtures
-from ...definitions import encode_eth_network
+from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
+from ...definitions import JsonSource, encode_eth_network
 from ...input_flows import (
     InputFlowConfirmAllWarnings,
     InputFlowEthereumSignTxData,
@@ -119,13 +117,11 @@ def _do_test_signtx(
     assert sig.v == result["sig_v"]
 
 
-# Directory of dev-signed Ethereum definitions (network / token / clear-signing
-# display formats), laid out as eth/chain-id/<n>/... exactly like the deploy
-# tarball you would pass to `trezorctl ethereum --definitions <dir> sign-tx ...`.
-# Curated to only the definitions the cases below actually pull; drop more .dat
-# files in to clear-sign more contracts/functions.
-_DEFINITIONS_DIR = Path(__file__).parent / "definitions"
-_DEFINITIONS_SOURCE = FilesystemSource(_DEFINITIONS_DIR)
+# Directory of Ethereum definitions (network / token / clear-signing display
+# formats) as JSON, laid out as eth/chain-id/<n>/... like the deploy tarball.
+# `JsonSource` dev-signs each one on request. Curated to only the definitions
+# the cases below actually pull; add more to clear-sign more contracts/functions.
+_DEFINITIONS_SOURCE = JsonSource(COMMON_FIXTURES_DIR / "ethereum" / "definitions")
 
 
 @parametrize_using_common_fixtures("ethereum/sign_tx_external_definitions.json")
