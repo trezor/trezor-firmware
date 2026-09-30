@@ -2404,11 +2404,16 @@ class _World:
         log.links = self.links()
         return log.fork_point(a, b)
 
-    def sync(self) -> None:
-        """Nonce, then the WM's attestation of its current head, ingested -- and nothing adopted."""
+    def sync(self) -> tuple:
+        """Nonce, then the WM's attestation of its current head, ingested -- and nothing adopted.
+
+        Returns the attestation as ingested, so an attacking host can KEEP it and replay it later.
+        """
         ack = ward.sync(self.session)
         fc, fr, fhn, tc, tr, hn, ts, sig = self.wm.attest(ack.ward_id, ack.nonce)
-        ward.ingest_attestation(self.session, fc, fr, tc, tr, sig, fhn, hn, ts)
+        attestation = (fc, fr, tc, tr, sig, fhn, hn, ts)
+        ward.ingest_attestation(self.session, *attestation)
+        return attestation
 
     def rejoin(self, fork_counter: int, links: "list | None" = None) -> tuple:
         """Walk the rejoin confirmation; returns (ack, recorder)."""
@@ -2458,9 +2463,18 @@ class _World:
         The predecessor is the WM's head read BEFORE publishing: that is what the device minted
         the REVERT over, and it differs from this device's own head exactly when the WM is behind.
         """
+        self.adopt(self.publish_demotion(ack))
+
+    def publish_demotion(self, ack) -> tuple:
+        """Hand a minted REVERT to the WM (an authenticated advance) and log it. Returns the link."""
         wm_counter, wm_root, _ts = self.wm.head(_WARD_ID)
-        link = _publish_demotion(self.wm, self.store, ack, wm_counter, wm_root)
-        _adopt_demotion(self.session, self.wm, self.store, ack, link)
+        return _publish_demotion(self.wm, self.store, ack, wm_counter, wm_root)
+
+    def adopt(self, link: tuple) -> tuple:
+        """Sync, ingest the WM's attestation, reconcile `link`. Returns the attestation ingested."""
+        attestation = self.sync()
+        ward.reconcile(self.session, link)
+        return attestation
 
 
 def _lost_branch(session: Session, sync: bool = True) -> tuple:
@@ -2786,6 +2800,194 @@ def test_ward_rejoin_across_a_batch_counts_changes_and_refuses_a_point_inside_it
     assert (ack.counter, ack.new_root) == head
     assert ack.discarded == own[0] - base[0] == 2
     assert "2changes" in rec.squashed
+
+
+# --- attack mocks: a hostile host holding GENUINE material -----------------------------------
+#
+# Every attack below uses only what a real host legitimately ends up holding -- attestations it was
+# handed, authorisations the device minted, links from every branch any device ever wrote -- and
+# replays, reorders or recombines them. None needs a key. Each test shows the attack refused, and
+# where it matters that the honest path still works afterwards.
+
+
+def _foreign_link(from_counter, from_root, to_counter, to_root) -> tuple:
+    """A transition authorised under a key that is NOT this wallet's K_auth -- another wallet's."""
+    return (
+        from_counter,
+        from_root,
+        to_counter,
+        to_root,
+        auth_commit(b"\x99" * 32, _WARD_ID, from_counter, from_root, to_counter, to_root),
+        "commit",
+    )
+
+
+@pytest.mark.models("core")
+def test_ward_attack_recovery_replay(session: Session):
+    """RECOVERY REPLAY: the host re-presents a recovery that already happened.
+
+    After a WM restore the user approves a demotion and the device adopts it. The host kept both
+    halves of that recovery -- the WM attestation of the demoted head, and the REVERT's `wm_sig` --
+    and replays them once the wallet has moved on. The attestation is bound to the round nonce the
+    device minted then, and the `wm_sig` to the WM head nonce of then; both are single-use.
+    """
+    world, base, own = _behind_device(session)
+    ack, _rec = world.rollback(own[1])
+    link = world.publish_demotion(ack)
+    kept_attestation = world.adopt(link)
+    world.write(b"d", b"after the recovery")
+
+    # the device: an old attestation answers an old round, not this one
+    ward.sync(session)
+    with pytest.raises(exceptions.TrezorFailure, match="verification failed"):
+        ward.ingest_attestation(session, *kept_attestation)
+
+    # the WM: put its register back at the revert's predecessor, as a second restore would --
+    # the REVERT's authorisation named a nonce that is gone for good
+    world.wm_restores_to(base)
+    with pytest.raises(ValueError, match="not authorised"):
+        world.wm.advance(
+            _WARD_ID, base[0], base[1], ack.counter, ack.new_root, ack.wm_sig, _T0 + ack.counter
+        )
+
+
+@pytest.mark.models("core")
+def test_ward_attack_fork_and_switch(session: Session):
+    """FORK & SWITCH: the host tries to move the device onto a branch the WM never accepted.
+
+    This device's own write is a genuine transition the WM refused -- another device won the race
+    -- so the host holds an authentic ORPHAN link. It tries to splice it into the catch-up walk,
+    and to reconcile onto it. The walk pins every link's `to` end to a state already established
+    from the WM's head, so the orphan is refused before its MAC is computed.
+    """
+    world = _World(session)
+    world.write(b"a", b"one")
+    world.write(b"b", b"two")
+    base = world.head
+
+    # this device's write, handed to the host but never published: the orphan
+    res, _rec = _write(
+        session,
+        world.store,
+        lambda p: ward.set_entry(session, _APP, b"c", b"orphan", p),
+        "ward_set_entry",
+    )
+    fork = _subset(world.store, [world.key(b"a"), world.key(b"b")])
+    fork.set(res.entry_key, res.leaf)
+    orphan = (base[0], base[1], res.counter, fork.root(), res.auth_commit, "commit")
+
+    # another device wins the race at the same counter, and writes on
+    head = world.other_device_writes(world.tree_of(b"a"), world.tree_of(b"b"))
+    world.sync()
+
+    def switching(to_counter, to_root, limit):
+        # the genuine link into the head, then the ORPHAN where the real link into base+1 goes --
+        # one ack, the way a host would slip it in
+        assert to_counter == head[0]
+        return [world.elsewhere[-1], orphan]
+
+    with pytest.raises(exceptions.TrezorFailure, match="does not end at the running root"):
+        ward.verify_chain(session, switching)
+    with pytest.raises(exceptions.TrezorFailure, match="not authorised"):
+        ward.reconcile(session, orphan)
+
+    # the honest catch-up still works
+    assert world.verify_chain().counter == head[0]
+
+
+@pytest.mark.models("core")
+def test_ward_attack_splicing_unrelated_genuine_transitions(session: Session):
+    """SPLICING: stitch a genuine link from elsewhere into the walk, where its ends seem to fit.
+
+    Roots repeat, so a link from much earlier in history can END AT THE SAME ROOT as the state the
+    walk has reached -- here R1, reached at counter 1 by this device and again at counter 3 by
+    another device's set-and-delete. Pinning the COUNTER as well as the root refuses it. A link
+    minted under another wallet's key, for exactly the right step, fails its MAC.
+    """
+    world = _World(session)
+    world.write(b"a", b"one")
+    base = world.head  # (1, R1)
+    rx, r4 = bytes([0x77]) * 32, bytes([0x88]) * 32
+    # another device: set x (1 -> 2), delete x (2 -> 3, back to R1), then one more write
+    head = world.other_device_writes(rx, base[1], r4)
+    world.sync()
+
+    earliest_into_r1 = world.store.links[0]  # (0, empty) -> (1, R1): genuine, and unrelated
+
+    def splicing(to_counter, to_root, limit):
+        # the genuine link into the head, which lands on (3, R1) -- then the link into (1, R1),
+        # whose root fits and whose counter does not
+        assert to_counter == head[0]
+        return [world.elsewhere[-1], earliest_into_r1]
+
+    with pytest.raises(exceptions.TrezorFailure, match="does not end at the running counter"):
+        ward.verify_chain(session, splicing)
+
+    foreign = [_foreign_link(*lnk[:4]) for lnk in world.elsewhere]
+    with pytest.raises(exceptions.TrezorFailure, match="not authorised"):
+        ward.verify_chain(session, _serves(world.store.links + foreign))
+
+    assert world.verify_chain().counter == head[0]
+
+
+@pytest.mark.models("core")
+def test_ward_attack_pending_revert_authorization(session: Session):
+    """A REVERT the user approved but the host never published is a live authorisation -- until
+    the wallet moves. Then it is dead on both sides.
+
+    The WM: its head moved, so the compare-and-swap refuses; and a register put back at the
+    revert's predecessor draws a fresh nonce, so the `wm_sig` no longer verifies.
+    """
+    world = _World(session)
+    world.write(b"a", b"one")
+    base = world.head
+    world.write(b"b", b"two")
+    own = world.head
+
+    pending, _rec = world.rollback(base[1])  # approved and held by the host, never published
+    world.write(b"c", b"the wallet moves on")
+
+    with pytest.raises(MockWM.Conflict):
+        world.wm.advance(
+            _WARD_ID, own[0], own[1], pending.counter, pending.new_root, pending.wm_sig,
+            _T0 + pending.counter,
+        )
+
+    world.wm_restores_to(own)
+    with pytest.raises(ValueError, match="not authorised"):
+        world.wm.advance(
+            _WARD_ID, own[0], own[1], pending.counter, pending.new_root, pending.wm_sig,
+            _T0 + pending.counter,
+        )
+
+
+@pytest.mark.models("core")
+def test_ward_attack_multiple_approved_demotions(session: Session):
+    """TWO APPROVED DEMOTIONS: the host lands the one the user approved FIRST.
+
+    After a WM restore the user holds to confirm twice, choosing a different target each time.
+    Both REVERTs are genuine and both quote the same WM head nonce, so the WM lands at most one of
+    them. And the device's consent is for the LAST approval only: a descent to the earlier target
+    is refused as a plain rollback, so a host cannot pick among the user's approvals.
+    """
+    world, base, own = _behind_device(session)
+    first, _r1 = world.rollback(own[1])
+    second, _r2 = world.rollback(world.tree_of(b"a"))
+    assert first.counter == second.counter and first.new_root != second.new_root
+
+    # the host lands the FIRST approval
+    link = world.publish_demotion(first)
+    # ...so the second can never land as well: the head moved, and its nonce is spent
+    with pytest.raises(MockWM.Conflict):
+        world.wm.advance(
+            _WARD_ID, base[0], base[1], second.counter, second.new_root, second.wm_sig,
+            _T0 + second.counter,
+        )
+
+    # and the device will not descend to the first target: its consent names the second
+    with pytest.raises(exceptions.TrezorFailure, match="older than the stored counter"):
+        world.adopt(link)
+    assert ward.sync(session).counter == own[0]
 
 
 def _rollback(
