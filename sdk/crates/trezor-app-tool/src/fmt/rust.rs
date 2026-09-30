@@ -9,7 +9,7 @@ pub fn format(check_only: bool, packages: &[Package]) -> Result<()> {
     let mut cmd = process::Command::new("cargo");
     cmd.arg("fmt");
     for package in packages {
-        cmd.arg("-p").arg(&package.name);
+        cmd.arg("-p").arg(&*package.name);
     }
     if check_only {
         cmd.arg("--").arg("--check");

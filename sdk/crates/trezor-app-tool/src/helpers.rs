@@ -93,7 +93,7 @@ pub fn artifact_name(
 
 /// Returns the path to the built ELF file of `package` for the given build arguments.
 pub fn elf_path(args: &BuildArgs, package: &Package) -> Result<PathBuf> {
-    Ok(profile_dir(args)?.join(&package.name))
+    Ok(profile_dir(args)?.join(&*package.name))
 }
 
 /// Returns the profile output directory (e.g. `build/thumbv7em-none-eabihf/release`).

@@ -261,7 +261,7 @@ impl BuildArgs {
     /// based on the provided cli arguments, restricted to `packages`.
     pub fn configure_cargo(&self, cmd: &mut process::Command, packages: &[Package]) -> Result<()> {
         for package in packages {
-            cmd.arg("-p").arg(&package.name);
+            cmd.arg("-p").arg(&*package.name);
         }
 
         let features = self.resolve_features()?;

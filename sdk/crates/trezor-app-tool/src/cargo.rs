@@ -88,7 +88,7 @@ pub fn test(args: TestArgs) -> Result<()> {
     let mut cmd = process::Command::new("cargo");
     cmd.arg("test");
     for package in &packages {
-        cmd.arg("-p").arg(&package.name);
+        cmd.arg("-p").arg(&*package.name);
     }
     cmd.args(["--features", &features.join(",")])
         .arg(&args.test);
