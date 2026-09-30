@@ -42,6 +42,30 @@ import "messages-ward.proto";
 message WardEntryRequest {
     reserved 1, 2;                  // were app_id, identifier -- now folded into entry_key
     optional bytes entry_key = 3;   // 32B keyed path; the host serves by this alone
+
+    // A BATCHED FLUSH ONLY: the change the device just folded, so the host can apply it to a
+    // scratch copy of its tree and prove `entry_key` against the RUNNING root rather than the
+    // stored one. Cumulative across the batch -- each request carries the next one. The device
+    // verifies every proof against the root it derived itself, so this is a hint the host needs,
+    // never something the device trusts. The commit is published in the ack anyway.
+    optional WardStagedLeaf staged = 4;
+}
+
+/**
+ * The leaf a batched flush has folded but not yet handed over: enough for the host to hash it.
+ */
+message WardStagedLeaf {
+    optional bytes entry_key = 1;  // 32B
+    optional bytes commit    = 2;  // 32B; the leaf is sha256(0x00 || entry_key || commit)
+}
+
+/**
+ * One leaf of a batched flush, exactly as a single flush would carry it.
+ */
+message WardBatchedLeaf {
+    optional bytes            entry_key = 1;
+    optional WardLeafIdentity identity  = 2;
+    optional WardLeafContent  content   = 3;
 }
 
 /**
@@ -145,6 +169,13 @@ message WardFlushQueueAck {
     required uint32 remaining = 8;
 
     optional bytes wm_sig = 9;  // for the WM; see WardLeafAck.wm_sig
+
+    // A BATCHED FLUSH (WardFlushQueue.max_batch > 1): every leaf the ONE transition carries, in
+    // the order the device folded them, and the counter it advanced FROM -- `counter` is then
+    // from_counter + len(leaves). The single-leaf fields above stay unset. The host applies all of
+    // them and records ONE link, as one local transaction -- see WardFlushQueue.max_batch.
+    optional uint32          from_counter = 10;
+    repeated WardBatchedLeaf leaves       = 11;
 }
 
 /**

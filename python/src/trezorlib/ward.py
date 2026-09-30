@@ -133,6 +133,11 @@ class WardResult(NamedTuple):
     # handed over after this one. Loop until it reads zero. There is no `queued` field: a queued
     # change is not a WardResult at all, because the queue requests answer their own ack types.
     remaining: Optional[int] = None
+    # A BATCHED flush only: every (entry_key, Leaf) the ONE transition carries, in the order the
+    # device folded them, and the counter it advanced from. `counter` is then
+    # `from_counter + len(leaves)`, and `entry_key` / `leaf` are unset.
+    leaves: Optional[list] = None
+    from_counter: Optional[int] = None
 
 
 def _call_answering_pulls(
@@ -154,10 +159,22 @@ def _call_answering_pulls(
     """
     res = session.call(msg)
     entry_key = b""
+    # A BATCHED FLUSH stages each change it folds, so later pulls are proved against the device's
+    # RUNNING root. The provider must then serve from a scratch tree with those leaves applied --
+    # see `store_provider`'s `with_staged`.
+    staged: list = []
 
     while isinstance(res, messages.WardEntryRequest):
         entry_key = res.entry_key or b""
-        answer = provider(entry_key)
+        if res.staged is not None:
+            staged.append((res.staged.entry_key, res.staged.commit))
+        if staged:
+            with_staged = getattr(provider, "with_staged", None)
+            if with_staged is None:
+                raise RuntimeError("this provider cannot serve a batched flush")
+            answer = with_staged(staged)(entry_key)
+        else:
+            answer = provider(entry_key)
         leaf = answer.leaf
         # Hand back exactly what was stored. Absent identity+content means "no entry".
         res = session.call(
@@ -175,6 +192,19 @@ def _call_answering_pulls(
     # a field that exists only there, because only a drain has anything to count. Nothing that
     # merely touched the QUEUE reaches this function at all: those requests never pull, so they
     # are plain calls (see `queue_set_entry` and friends).
+    if isinstance(res, messages.WardFlushQueueAck) and res.leaves:
+        return WardResult(
+            res,
+            b"",
+            None,
+            res.counter,
+            res.auth_commit,
+            res.wm_sig,
+            res.remaining,
+            leaves=[(bl.entry_key, Leaf(bl.identity, bl.content)) for bl in res.leaves],
+            from_counter=res.from_counter,
+        )
+
     if isinstance(res, (messages.WardLeafAck, messages.WardFlushQueueAck)):
         return WardResult(
             res,
@@ -711,6 +741,9 @@ def store_provider(store) -> EntryProvider:
             proof=proof, witness_entry_key=witness_key, witness_commit=witness_commit
         )
 
+    # A BATCHED FLUSH: serve from a scratch copy with the device's staged leaves applied, so a
+    # proof matches the running root. The store itself is untouched until `apply`.
+    provider.with_staged = lambda staged: store_provider(store.scratch(staged))  # type: ignore[attr-defined]
     return provider
 
 
@@ -734,6 +767,10 @@ def apply(store, result: WardResult) -> None:
     device believes is gone -- every later proof for it refused, with nothing to say why.
     Failing here names it instead.
     """
+    if result.leaves:
+        _apply_batch(store, result)
+        return
+
     if result.leaf is None:
         raise ValueError("this result carries no leaf; nothing to apply")
 
@@ -773,6 +810,38 @@ def apply(store, result: WardResult) -> None:
         # this over with them, or the WM has nothing to verify the advance against.
         store.wm_sigs[result.counter] = result.wm_sig
         store.counter = result.counter
+
+
+def _apply_batch(store, result: WardResult) -> None:  # noqa: ANN001
+    """Apply every leaf of a batched flush, and record ONE link for the one transition.
+
+    ONE TRANSACTION, in a real host: store every leaf and the link together, and publish to the WM
+    only after they commit -- see `flush_queue`. This in-memory store has nothing to roll back, so
+    the sequence here is simply the order a transaction would contain.
+    """
+    if store.counter != result.from_counter:
+        raise ValueError(
+            "this batch starts at counter %s but the store is at %s"
+            % (result.from_counter, store.counter)
+        )
+    before_root = store.root()
+    for entry_key, leaf in result.leaves or ():
+        if leaf_is_delete(leaf):
+            store.remove(entry_key)
+        else:
+            store.set(entry_key, leaf)
+    store.links.append(
+        Link(
+            result.from_counter,
+            before_root,
+            result.counter,
+            store.root(),
+            result.auth_commit,
+            OP_COMMIT,
+        )
+    )
+    store.wm_sigs[result.counter] = result.wm_sig
+    store.counter = result.counter
 
 
 def pin_cached_entry(
@@ -823,8 +892,22 @@ def flush_queue(
     provider: EntryProvider,
     app_id: Optional[str] = None,
     identifier: Optional[bytes] = None,
+    max_batch: int = 1,
 ) -> WardResult:
     """Publish ONE queued change, sealed and re-derived against current state.
+
+    OPT-IN BATCHING with `max_batch > 1`: the device folds up to that many queued changes (at most
+    its MAX_BATCH, 8) into ONE transition, and the result carries them all in `leaves`, with one
+    `auth_commit` and one `wm_sig` -- one WM round trip for the lot. `apply` stores them and
+    records one link. Ignored for a named change and on a service build.
+
+    ONLY ASK FOR A BATCH IF YOU CAN STORE IT WHOLE. A batch is one unit of consistency: a replica
+    with only some of its leaves cannot serve at the new head, and a leaf lost for good forces a
+    `rollback` to the state before the batch, discarding every change in it. So the caller must
+    store all the leaves and the link in ONE local transaction, publish to the WM only after it
+    commits, and tag the rows with `counter` -- see `WardFlushQueue.max_batch`. The provider must
+    also offer `with_staged` (as `store_provider` does), since later pulls are proved against the
+    device's running root.
 
     Returns a result whose `remaining` says how many are still waiting; call again while it
     is non-zero. `apply` the leaf and publish (counter, root) to the WM exactly as for a
@@ -851,7 +934,11 @@ def flush_queue(
     """
     return _call_answering_pulls(
         session,
-        messages.WardFlushQueue(app_id=app_id, identifier=identifier),
+        messages.WardFlushQueue(
+            app_id=app_id,
+            identifier=identifier,
+            max_batch=max_batch if max_batch > 1 else None,
+        ),
         provider,
     )
 

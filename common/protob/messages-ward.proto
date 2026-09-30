@@ -502,6 +502,20 @@ message WardEraseCachedEntry {
 message WardFlushQueue {
     optional string app_id     = 1;  // together with identifier: publish THIS queued change
     optional bytes  identifier = 2;
+
+    // OPT-IN BATCHING: fold up to this many queued changes into ONE transition, (F, R_F) ->
+    // (F + n, R_T), with one auth_commit and one wm_sig -- one WM round trip instead of n. Absent
+    // or 1 is today's one change per request. Capped at the device's MAX_BATCH (8), and ignored
+    // when a change is NAMED, and on a service build, which publishes one change per WardPublish.
+    //
+    // THE HOST'S OBLIGATION, and the reason this is opt-in. A batch is one unit of consistency:
+    // a replica holding only some of its leaves cannot rebuild R_T and cannot serve at that head,
+    // and if a leaf is lost for good the only way back is a WardRollback to F, discarding all n.
+    // A host may ask for more than 1 only if it (a) stores all n leaves and the one batch link in
+    // a SINGLE local transaction, (b) publishes to the WM only after that transaction commits, and
+    // (c) tags each row with the batch's to_counter, so a replay never reconstructs an
+    // intermediate state F+1 .. F+n-1 that was never attested.
+    optional uint32 max_batch = 3;
 }
 
 
