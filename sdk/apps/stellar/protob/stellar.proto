@@ -9,9 +9,9 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
 
 // https://github.com/stellar/stellar-core/blob/02d26858069de7c0eefe065056fb0a19bf72ea56/src/xdr/Stellar-ledger-entries.x#L25-L31
 enum AssetType {
-  NATIVE     = 0;
-  ALPHANUM4  = 1;
-  ALPHANUM12 = 2;
+    NATIVE = 0;
+    ALPHANUM4 = 1;
+    ALPHANUM12 = 2;
 }
 
 /**
@@ -19,9 +19,9 @@ enum AssetType {
  * @embed
  */
 message Asset {
-  required AssetType type   = 1;
-  optional string           code   = 2;    // for non-native assets, string describing the code
-  optional string           issuer = 3;  // issuing address
+    required AssetType type = 1;
+    optional string code = 2;    // for non-native assets, string describing the code
+    optional string issuer = 3;  // issuing address
 }
 
 /**
@@ -30,9 +30,9 @@ message Asset {
  * @next Address
  */
 message GetAddress {
-  repeated uint32 address_n    = 1;   // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
-  optional bool   show_display = 2;  // optionally show on display before sending the result
-  optional bool   chunkify     = 3;      // display the address in chunks of 4 characters
+    repeated uint32 address_n = 1;   // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
+    optional bool show_display = 2;  // optionally show on display before sending the result
+    optional bool chunkify = 3;      // display the address in chunks of 4 characters
 }
 
 /**
@@ -40,8 +40,8 @@ message GetAddress {
  * @end
  */
 message Address {
-  required string address = 1;  // Address in Stellar format (base32 of a pubkey with checksum)
-  optional bytes  mac     = 2;       // Address authentication code
+    required string address = 1;  // Address in Stellar format (base32 of a pubkey with checksum)
+    optional bytes mac = 2;       // Address authentication code
 }
 
 /**
@@ -50,28 +50,28 @@ message Address {
  * @next TxOpRequest
  */
 message SignTx {
-  repeated uint32                address_n          = 2;  // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
-  required string                network_passphrase = 3;           // passphrase for signing messages on the destination network
-  required string                source_account     = 4;               // source account address
-  required uint32                fee                = 5;                          // Fee (in stroops) for the transaction
-  required uint64                sequence_number    = 6;              // transaction sequence number
-  required uint32                timebounds_start   = 8;             // unix timestamp (client must truncate this to 32 bits)
-  required uint32                timebounds_end     = 9;               // unix timestamp (client must truncate this to 32 bits)
-  required MemoType       memo_type          = 10;          // type of memo attached to the transaction
-  optional string                memo_text          = 11;                   // up to 28 characters (4 bytes are for length)
-  optional uint64                memo_id            = 12;                     // 8-byte uint64
-  optional bytes                 memo_hash          = 13;                    // 32 bytes representing a hash
-  required uint32                num_operations     = 14;              // number of operations in this transaction
-  optional common.PaymentRequest payment_req        = 15;  // SLIP-24 payment request
+    repeated uint32 address_n = 2;  // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
+    required string network_passphrase = 3;           // passphrase for signing messages on the destination network
+    required string source_account = 4;               // source account address
+    required uint32 fee = 5;                          // Fee (in stroops) for the transaction
+    required uint64 sequence_number = 6;              // transaction sequence number
+    required uint32 timebounds_start = 8;             // unix timestamp (client must truncate this to 32 bits)
+    required uint32 timebounds_end = 9;               // unix timestamp (client must truncate this to 32 bits)
+    required MemoType memo_type = 10;                 // type of memo attached to the transaction
+    optional string memo_text = 11;                   // up to 28 characters (4 bytes are for length)
+    optional uint64 memo_id = 12;                     // 8-byte uint64
+    optional bytes memo_hash = 13;                    // 32 bytes representing a hash
+    required uint32 num_operations = 14;              // number of operations in this transaction
+    optional common.PaymentRequest payment_req = 15;  // SLIP-24 payment request
 
     // https://github.com/stellar/stellar-core/blob/02d26858069de7c0eefe065056fb0a19bf72ea56/src/xdr/Stellar-transaction.x#L506-L513
-  enum MemoType {
-    NONE   = 0;
-    TEXT   = 1;
-    ID     = 2;
-    HASH   = 3;
-    RETURN = 4;
-  }
+    enum MemoType {
+        NONE = 0;
+        TEXT = 1;
+        ID = 2;
+        HASH = 3;
+        RETURN = 4;
+    }
 }
 
 /**
@@ -100,10 +100,10 @@ message TxOpRequest {}
  * @next SignedTx
  */
 message PaymentOp {
-  optional string       source_account      = 1;       // (optional) source account address
-  required string       destination_account = 2;  // destination account address
-  required Asset asset               = 3;          // asset involved in the operation
-  required sint64       amount              = 4;               // amount of the given asset to pay
+    optional string source_account = 1;       // (optional) source account address
+    required string destination_account = 2;  // destination account address
+    required Asset asset = 3;                 // asset involved in the operation
+    required sint64 amount = 4;               // amount of the given asset to pay
 }
 
 /**
@@ -112,9 +112,9 @@ message PaymentOp {
  * @next SignedTx
  */
 message CreateAccountOp {
-  optional string source_account   = 1;    // (optional) source account address
-  required string new_account      = 2;       // account address to create
-  required sint64 starting_balance = 3;  // initial starting balance for the new account
+    optional string source_account = 1;    // (optional) source account address
+    required string new_account = 2;       // account address to create
+    required sint64 starting_balance = 3;  // initial starting balance for the new account
 }
 
 /**
@@ -123,13 +123,13 @@ message CreateAccountOp {
  * @next SignedTx
  */
 message PathPaymentStrictReceiveOp {
-  optional string       source_account      = 1;           // (optional) source address
-  required Asset send_asset          = 2;         // asset we pay with
-  required sint64       send_max            = 3;                 // the maximum amount of sendAsset to send (excluding fees)
-  required string       destination_account = 4;      // recipient of the payment
-  required Asset destination_asset   = 5;  // what they end up with
-  required sint64       destination_amount  = 6;       // amount they end up with
-  repeated Asset paths               = 7;              // additional hops it must go through to get there
+    optional string source_account = 1;       // (optional) source address
+    required Asset send_asset = 2;            // asset we pay with
+    required sint64 send_max = 3;             // the maximum amount of sendAsset to send (excluding fees)
+    required string destination_account = 4;  // recipient of the payment
+    required Asset destination_asset = 5;     // what they end up with
+    required sint64 destination_amount = 6;   // amount they end up with
+    repeated Asset paths = 7;                 // additional hops it must go through to get there
 }
 
 /**
@@ -138,13 +138,13 @@ message PathPaymentStrictReceiveOp {
  * @next SignedTx
  */
 message PathPaymentStrictSendOp {
-  optional string       source_account      = 1;           // (optional) source address
-  required Asset send_asset          = 2;         // asset we pay with
-  required sint64       send_amount         = 3;              // amount of sendAsset to send (excluding fees)
-  required string       destination_account = 4;      // recipient of the payment
-  required Asset destination_asset   = 5;  // what they end up with
-  required sint64       destination_min     = 6;          // the minimum amount of dest asset to be received
-  repeated Asset paths               = 7;              // additional hops it must go through to get there
+    optional string source_account = 1;       // (optional) source address
+    required Asset send_asset = 2;            // asset we pay with
+    required sint64 send_amount = 3;          // amount of sendAsset to send (excluding fees)
+    required string destination_account = 4;  // recipient of the payment
+    required Asset destination_asset = 5;     // what they end up with
+    required sint64 destination_min = 6;      // the minimum amount of dest asset to be received
+    repeated Asset paths = 7;                 // additional hops it must go through to get there
 }
 
 /**
@@ -153,13 +153,13 @@ message PathPaymentStrictSendOp {
  * @next SignedTx
  */
 message ManageSellOfferOp {
-  optional string       source_account = 1;  // (optional) source account address
-  required Asset selling_asset  = 2;
-  required Asset buying_asset   = 3;
-  required sint64       amount         = 4;
-  required uint32       price_n        = 5;   // Price numerator
-  required uint32       price_d        = 6;   // Price denominator
-  required uint64       offer_id       = 7;  // Offer ID for updating an existing offer
+    optional string source_account = 1;  // (optional) source account address
+    required Asset selling_asset = 2;
+    required Asset buying_asset = 3;
+    required sint64 amount = 4;
+    required uint32 price_n = 5;   // Price numerator
+    required uint32 price_d = 6;   // Price denominator
+    required uint64 offer_id = 7;  // Offer ID for updating an existing offer
 }
 
 /**
@@ -168,13 +168,13 @@ message ManageSellOfferOp {
  * @next SignedTx
  */
 message ManageBuyOfferOp {
-  optional string       source_account = 1;  // (optional) source account address
-  required Asset selling_asset  = 2;
-  required Asset buying_asset   = 3;
-  required sint64       amount         = 4;
-  required uint32       price_n        = 5;   // Price numerator
-  required uint32       price_d        = 6;   // Price denominator
-  required uint64       offer_id       = 7;  // Offer ID for updating an existing offer
+    optional string source_account = 1;  // (optional) source account address
+    required Asset selling_asset = 2;
+    required Asset buying_asset = 3;
+    required sint64 amount = 4;
+    required uint32 price_n = 5;   // Price numerator
+    required uint32 price_d = 6;   // Price denominator
+    required uint64 offer_id = 7;  // Offer ID for updating an existing offer
 }
 
 /**
@@ -183,12 +183,12 @@ message ManageBuyOfferOp {
  * @next SignedTx
  */
 message CreatePassiveSellOfferOp {
-  optional string       source_account = 1;  // (optional) source account address
-  required Asset selling_asset  = 2;
-  required Asset buying_asset   = 3;
-  required sint64       amount         = 4;
-  required uint32       price_n        = 5;  // Price numerator
-  required uint32       price_d        = 6;  // Price denominator
+    optional string source_account = 1;  // (optional) source account address
+    required Asset selling_asset = 2;
+    required Asset buying_asset = 3;
+    required sint64 amount = 4;
+    required uint32 price_n = 5;  // Price numerator
+    required uint32 price_d = 6;  // Price denominator
 }
 
 /**
@@ -197,25 +197,25 @@ message CreatePassiveSellOfferOp {
  * @next SignedTx
  */
 message SetOptionsOp {
-  optional string            source_account                = 1;                 // (optional) source account address
-  optional string            inflation_destination_account = 2;  // (optional) inflation destination address
-  optional uint32            clear_flags                   = 3;
-  optional uint32            set_flags                     = 4;
-  optional uint32            master_weight                 = 5;
-  optional uint32            low_threshold                 = 6;
-  optional uint32            medium_threshold              = 7;
-  optional uint32            high_threshold                = 8;
-  optional string            home_domain                   = 9;
-  optional SignerType signer_type                   = 10;
-  optional bytes             signer_key                    = 11;
-  optional uint32            signer_weight                 = 12;
+    optional string source_account = 1;                 // (optional) source account address
+    optional string inflation_destination_account = 2;  // (optional) inflation destination address
+    optional uint32 clear_flags = 3;
+    optional uint32 set_flags = 4;
+    optional uint32 master_weight = 5;
+    optional uint32 low_threshold = 6;
+    optional uint32 medium_threshold = 7;
+    optional uint32 high_threshold = 8;
+    optional string home_domain = 9;
+    optional SignerType signer_type = 10;
+    optional bytes signer_key = 11;
+    optional uint32 signer_weight = 12;
 
     // https://github.com/stellar/stellar-core/blob/02d26858069de7c0eefe065056fb0a19bf72ea56/src/xdr/Stellar-types.x#L32-L37
-  enum SignerType {
-    ACCOUNT  = 0;
-    PRE_AUTH = 1;
-    HASH     = 2;
-  }
+    enum SignerType {
+        ACCOUNT = 0;
+        PRE_AUTH = 1;
+        HASH = 2;
+    }
 }
 
 /**
@@ -224,9 +224,9 @@ message SetOptionsOp {
  * @next SignedTx
  */
 message ChangeTrustOp {
-  optional string       source_account = 1;  // (optional) source account address
-  required Asset asset          = 2;
-  required uint64       limit          = 3;
+    optional string source_account = 1;  // (optional) source account address
+    required Asset asset = 2;
+    required uint64 limit = 3;
 }
 
 /**
@@ -235,11 +235,11 @@ message ChangeTrustOp {
  * @next SignedTx
  */
 message AllowTrustOp {
-  optional string           source_account  = 1;   // (optional) source account address
-  required string           trusted_account = 2;  // The account being allowed to hold the asset
-  required AssetType asset_type      = 3;
-  optional string           asset_code      = 4;       // human-readable asset code
-  required bool             is_authorized   = 5;
+    optional string source_account = 1;   // (optional) source account address
+    required string trusted_account = 2;  // The account being allowed to hold the asset
+    required AssetType asset_type = 3;
+    optional string asset_code = 4;       // human-readable asset code
+    required bool is_authorized = 5;
 }
 
 /**
@@ -248,8 +248,8 @@ message AllowTrustOp {
  * @next SignedTx
  */
 message AccountMergeOp {
-  optional string source_account      = 1;       // (optional) source account address
-  required string destination_account = 2;  // destination account address
+    optional string source_account = 1;       // (optional) source account address
+    required string destination_account = 2;  // destination account address
 }
 
 /**
@@ -258,9 +258,9 @@ message AccountMergeOp {
  * @next SignedTx
  */
 message ManageDataOp {
-  optional string source_account = 1;  // (optional) source account address
-  required string key            = 2;
-  optional bytes  value          = 3;            // 64 bytes of arbitrary data
+    optional string source_account = 1;  // (optional) source account address
+    required string key = 2;
+    optional bytes value = 3;            // 64 bytes of arbitrary data
 }
 
 /**
@@ -269,8 +269,8 @@ message ManageDataOp {
  * @next SignedTx
  */
 message BumpSequenceOp {
-  optional string source_account = 1;  // (optional) source account address
-  required uint64 bump_to        = 2;         // new sequence number
+    optional string source_account = 1;  // (optional) source account address
+    required uint64 bump_to = 2;         // new sequence number
 }
 
 /**
@@ -279,8 +279,8 @@ message BumpSequenceOp {
  * @next SignedTx
  */
 message ClaimClaimableBalanceOp {
-  optional string source_account = 1;  // (optional) source account address
-  required bytes  balance_id     = 2;       // balance id, 4 bytes of type flag, 32 bytes of data
+    optional string source_account = 1;  // (optional) source account address
+    required bytes balance_id = 2;       // balance id, 4 bytes of type flag, 32 bytes of data
 }
 
 /**
@@ -288,8 +288,8 @@ message ClaimClaimableBalanceOp {
  * @end
  */
 message SignedTx {
-  required bytes public_key = 1;  // public key for the private key used to sign data
-  required bytes signature  = 2;   // signature suitable for sending to the Stellar network
+    required bytes public_key = 1;  // public key for the private key used to sign data
+    required bytes signature = 2;   // signature suitable for sending to the Stellar network
 }
 
 /**
@@ -298,86 +298,86 @@ message SignedTx {
  * @embed
  */
 message SCVal {
-  required SCValType type = 1;
-  optional bool             b    = 2;                     // SCV_BOOL
-  reserved 3;                              // SCV_ERROR, not supported yet
-  optional uint32              u32       = 4;                 // SCV_U32
-  optional sint32              i32       = 5;                 // SCV_I32
-  optional uint64              u64       = 6;                 // SCV_U64
-  optional sint64              i64       = 7;                 // SCV_I64
-  optional uint64              timepoint = 8;           // SCV_TIMEPOINT
-  optional uint64              duration  = 9;            // SCV_DURATION
-  optional UInt128Parts u128      = 10;  // SCV_U128
-  optional Int128Parts  i128      = 11;   // SCV_I128
-  optional UInt256Parts u256      = 12;  // SCV_U256
-  optional Int256Parts  i256      = 13;   // SCV_I256
-  optional bytes               bytes     = 14;               // SCV_BYTES
-    // SCV_STRING - The bytes contained in Strings do not necessarily conform to any
+    required SCValType type = 1;
+    optional bool b = 2;              // SCV_BOOL
+    reserved 3;                       // SCV_ERROR, not supported yet
+    optional uint32 u32 = 4;          // SCV_U32
+    optional sint32 i32 = 5;          // SCV_I32
+    optional uint64 u64 = 6;          // SCV_U64
+    optional sint64 i64 = 7;          // SCV_I64
+    optional uint64 timepoint = 8;    // SCV_TIMEPOINT
+    optional uint64 duration = 9;     // SCV_DURATION
+    optional UInt128Parts u128 = 10;  // SCV_U128
+    optional Int128Parts i128 = 11;   // SCV_I128
+    optional UInt256Parts u256 = 12;  // SCV_U256
+    optional Int256Parts i256 = 13;   // SCV_I256
+    optional bytes bytes = 14;        // SCV_BYTES
+                                      // SCV_STRING - The bytes contained in Strings do not necessarily conform to any
     // standard text encoding such as ASCII or Unicode UTF-8. They are plain uninterpreted bytes.
     // See: https://developers.stellar.org/docs/learn/fundamentals/contract-development/types/built-in-types
-  optional bytes                string  = 15;
-  optional string               symbol  = 16;             // SCV_SYMBOL
-  repeated SCVal         vec     = 17;          // SCV_VEC
-  repeated SCValMapEntry map     = 18;  // SCV_MAP
-  optional string               address = 19;            // SCV_ADDRESS
-  reserved 20;                             // SCV_CONTRACT_INSTANCE, not supported yet
-  reserved 21;                             // SCV_LEDGER_KEY_NONCE, not supported yet
+    optional bytes string = 15;
+    optional string symbol = 16;      // SCV_SYMBOL
+    repeated SCVal vec = 17;          // SCV_VEC
+    repeated SCValMapEntry map = 18;  // SCV_MAP
+    optional string address = 19;     // SCV_ADDRESS
+    reserved 20;                      // SCV_CONTRACT_INSTANCE, not supported yet
+    reserved 21;                      // SCV_LEDGER_KEY_NONCE, not supported yet
 
-  message UInt128Parts {
-    required uint64 hi = 1;
-    required uint64 lo = 2;
-  }
+    message UInt128Parts {
+        required uint64 hi = 1;
+        required uint64 lo = 2;
+    }
 
-  message Int128Parts {
-    required sint64 hi = 1;
-    required uint64 lo = 2;
-  }
+    message Int128Parts {
+        required sint64 hi = 1;
+        required uint64 lo = 2;
+    }
 
-  message UInt256Parts {
-    required uint64 hi_hi = 1;
-    required uint64 hi_lo = 2;
-    required uint64 lo_hi = 3;
-    required uint64 lo_lo = 4;
-  }
+    message UInt256Parts {
+        required uint64 hi_hi = 1;
+        required uint64 hi_lo = 2;
+        required uint64 lo_hi = 3;
+        required uint64 lo_lo = 4;
+    }
 
-  message Int256Parts {
-    required sint64 hi_hi = 1;
-    required uint64 hi_lo = 2;
-    required uint64 lo_hi = 3;
-    required uint64 lo_lo = 4;
-  }
+    message Int256Parts {
+        required sint64 hi_hi = 1;
+        required uint64 hi_lo = 2;
+        required uint64 lo_hi = 3;
+        required uint64 lo_lo = 4;
+    }
 
-  message SCValMapEntry {
-    required SCVal key   = 1;
-    required SCVal value = 2;
-  }
+    message SCValMapEntry {
+        required SCVal key = 1;
+        required SCVal value = 2;
+    }
 
-  enum SCValType {
-    SCV_BOOL = 0;
-    SCV_VOID = 1;
-    reserved 2;  // SCV_ERROR, not supported yet (This type is unlikely to occur, although it is a valid value)
-    SCV_U32       = 3;
-    SCV_I32       = 4;
-    SCV_U64       = 5;
-    SCV_I64       = 6;
-    SCV_TIMEPOINT = 7;
-    SCV_DURATION  = 8;
-    SCV_U128      = 9;
-    SCV_I128      = 10;
-    SCV_U256      = 11;
-    SCV_I256      = 12;
-    SCV_BYTES     = 13;
-    SCV_STRING    = 14;
-    SCV_SYMBOL    = 15;
-    SCV_VEC       = 16;
-    SCV_MAP       = 17;
-    SCV_ADDRESS   = 18;
+    enum SCValType {
+        SCV_BOOL = 0;
+        SCV_VOID = 1;
+        reserved 2;  // SCV_ERROR, not supported yet (This type is unlikely to occur, although it is a valid value)
+        SCV_U32 = 3;
+        SCV_I32 = 4;
+        SCV_U64 = 5;
+        SCV_I64 = 6;
+        SCV_TIMEPOINT = 7;
+        SCV_DURATION = 8;
+        SCV_U128 = 9;
+        SCV_I128 = 10;
+        SCV_U256 = 11;
+        SCV_I256 = 12;
+        SCV_BYTES = 13;
+        SCV_STRING = 14;
+        SCV_SYMBOL = 15;
+        SCV_VEC = 16;
+        SCV_MAP = 17;
+        SCV_ADDRESS = 18;
         // these 3 scval types are special and are only used in the internal ledger layout.
         // they are not convertible to the env values
-    reserved 19;  // SCV_CONTRACT_INSTANCE, not supported yet
-    reserved 20;  // SCV_LEDGER_KEY_CONTRACT_INSTANCE, not supported yet
-    reserved 21;  // SCV_LEDGER_KEY_NONCE, not supported yet
-  }
+        reserved 19;  // SCV_CONTRACT_INSTANCE, not supported yet
+        reserved 20;  // SCV_LEDGER_KEY_CONTRACT_INSTANCE, not supported yet
+        reserved 21;  // SCV_LEDGER_KEY_NONCE, not supported yet
+    }
 }
 
 /**
@@ -385,16 +385,16 @@ message SCVal {
  * @embed
  */
 message InvokeContractArgs {
-  required string       contract_address = 1;
-  required string       function_name    = 2;
-  repeated SCVal args             = 3;
+    required string contract_address = 1;
+    required string function_name = 2;
+    repeated SCVal args = 3;
     // Hint that contract_address is the Stellar Asset Contract (SAC) of this
     // asset. The device re-derives the SAC address of the asset (CAP-46-2) and
     // uses the hint only if it matches contract_address, so a wrong hint cannot
     // mislead the user. A mismatch falls back to the raw contract UI. When it
     // matches, SEP-41 token functions are shown as token operations.
     // Not part of the XDR, hence never covered by the signature.
-  optional Asset asset_hint = 4;
+    optional Asset asset_hint = 4;
 }
 
 /**
@@ -402,24 +402,24 @@ message InvokeContractArgs {
  * @embed
  */
 message ContractIDPreimage {
-  required ContractIDPreimageType        type         = 1;
-  optional ContractIDPreimageFromAddress from_address = 2;
+    required ContractIDPreimageType type = 1;
+    optional ContractIDPreimageFromAddress from_address = 2;
 
-  enum ContractIDPreimageType {
-    CONTRACT_ID_PREIMAGE_FROM_ADDRESS = 0;
+    enum ContractIDPreimageType {
+        CONTRACT_ID_PREIMAGE_FROM_ADDRESS = 0;
         // Deploying the Stellar Asset Contract of an asset is intentionally not
         // supported. Its creation needs no authorization, and CAP-46-11 does
         // not even allow it in authorization entries, so it can only be the
         // host function of an operation, where anyone can invoke it and the
         // deployer gains nothing: there is nothing security-relevant for the
         // user to confirm on the device.
-    reserved 1;  // CONTRACT_ID_PREIMAGE_FROM_ASSET
-  }
+        reserved 1;  // CONTRACT_ID_PREIMAGE_FROM_ASSET
+    }
 
-  message ContractIDPreimageFromAddress {
-    required string address = 1;  // the deployer address
-    required bytes  salt    = 2;      // 32-byte salt
-  }
+    message ContractIDPreimageFromAddress {
+        required string address = 1;  // the deployer address
+        required bytes salt = 2;      // 32-byte salt
+    }
 }
 
 /**
@@ -427,16 +427,16 @@ message ContractIDPreimage {
  * @embed
  */
 message ContractExecutable {
-  required ContractExecutableType type      = 1;
-  optional bytes                         wasm_hash = 2;  // CONTRACT_EXECUTABLE_WASM: 32-byte hash of the uploaded Wasm code
+    required ContractExecutableType type = 1;
+    optional bytes wasm_hash = 2;  // CONTRACT_EXECUTABLE_WASM: 32-byte hash of the uploaded Wasm code
 
-  enum ContractExecutableType {
-    CONTRACT_EXECUTABLE_WASM = 0;
+    enum ContractExecutableType {
+        CONTRACT_EXECUTABLE_WASM = 0;
         // Only used by the Stellar Asset Contract, whose deployment is not
         // supported (see ContractIDPreimageType).
-    reserved 1;  // CONTRACT_EXECUTABLE_STELLAR_ASSET
-    reserved 2;  // CONTRACT_EXECUTABLE_EXTERNAL_REF (Protocol 28), not supported yet
-  }
+        reserved 1;  // CONTRACT_EXECUTABLE_STELLAR_ASSET
+        reserved 2;  // CONTRACT_EXECUTABLE_EXTERNAL_REF (Protocol 28), not supported yet
+    }
 }
 
 /**
@@ -444,9 +444,9 @@ message ContractExecutable {
  * @embed
  */
 message CreateContractArgsV2 {
-  required ContractIDPreimage contract_id_preimage = 1;
-  required ContractExecutable executable           = 2;
-  repeated SCVal              constructor_args     = 3;  // arguments of the contract's constructor
+    required ContractIDPreimage contract_id_preimage = 1;
+    required ContractExecutable executable = 2;
+    repeated SCVal constructor_args = 3;  // arguments of the contract's constructor
 }
 
 /**
@@ -454,19 +454,19 @@ message CreateContractArgsV2 {
  * @embed
  */
 message SorobanAuthorizedFunction {
-  required SorobanAuthorizedFunctionType type                       = 1;
-  optional InvokeContractArgs            contract_fn                = 2;
-  optional CreateContractArgsV2          create_contract_v2_host_fn = 3;
+    required SorobanAuthorizedFunctionType type = 1;
+    optional InvokeContractArgs contract_fn = 2;
+    optional CreateContractArgsV2 create_contract_v2_host_fn = 3;
 
-  enum SorobanAuthorizedFunctionType {
-    SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN = 0;
+    enum SorobanAuthorizedFunctionType {
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN = 0;
         // The legacy contract creation without constructor arguments is
         // superseded by the V2 variant, which the host records in
         // authorization entries since Protocol 22, and is intentionally not
         // supported.
-    reserved 1;  // SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN
-    SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN = 2;
-  }
+        reserved 1;  // SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN = 2;
+    }
 }
 
 /**
@@ -474,8 +474,8 @@ message SorobanAuthorizedFunction {
  * @embed
  */
 message SorobanAuthorizedInvocation {
-  required SorobanAuthorizedFunction   function        = 1;
-  repeated SorobanAuthorizedInvocation sub_invocations = 2;
+    required SorobanAuthorizedFunction function = 1;
+    repeated SorobanAuthorizedInvocation sub_invocations = 2;
 }
 
 /**
@@ -483,21 +483,21 @@ message SorobanAuthorizedInvocation {
  * @embed
  */
 message HostFunction {
-  required HostFunctionType     type               = 1;
-  optional InvokeContractArgs   invoke_contract    = 2;
-  optional CreateContractArgsV2 create_contract_v2 = 3;
+    required HostFunctionType type = 1;
+    optional InvokeContractArgs invoke_contract = 2;
+    optional CreateContractArgsV2 create_contract_v2 = 3;
 
-  enum HostFunctionType {
-    HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0;
+    enum HostFunctionType {
+        HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0;
         // The legacy contract creation without constructor arguments is
         // superseded by the V2 variant (Protocol 22) and is intentionally not
         // supported.
-    reserved 1;  // HOST_FUNCTION_TYPE_CREATE_CONTRACT
-        // Uploading Wasm is intentionally not supported: there is no meaningful
-        // way for the user to verify the Wasm blob on the device.
-    reserved 2;  // HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM
-    HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2 = 3;
-  }
+        reserved 1;  // HOST_FUNCTION_TYPE_CREATE_CONTRACT
+                     // Uploading Wasm is intentionally not supported: there is no meaningful
+                     // way for the user to verify the Wasm blob on the device.
+        reserved 2;  // HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM
+        HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2 = 3;
+    }
 }
 
 /**
@@ -505,10 +505,10 @@ message HostFunction {
  * @embed
  */
 message SorobanAddressCredentials {
-  required string       address                     = 1;
-  required sint64       nonce                       = 2;
-  required uint32       signature_expiration_ledger = 3;
-  required SCVal signature                   = 4;
+    required string address = 1;
+    required sint64 nonce = 2;
+    required uint32 signature_expiration_ledger = 3;
+    required SCVal signature = 4;
 }
 
 /**
@@ -522,9 +522,9 @@ message SorobanAddressCredentials {
  * @embed
  */
 message SorobanDelegateSignature {
-  required string                          address          = 1;          // the delegated signer's address
-  required SCVal                    signature        = 2;  // signature of the delegated signer, may be SCV_VOID
-  repeated SorobanDelegateSignature nested_delegates = 3;  // signers the delegate itself delegates to
+    required string address = 1;                             // the delegated signer's address
+    required SCVal signature = 2;                            // signature of the delegated signer, may be SCV_VOID
+    repeated SorobanDelegateSignature nested_delegates = 3;  // signers the delegate itself delegates to
 }
 
 /**
@@ -534,8 +534,8 @@ message SorobanDelegateSignature {
  * @embed
  */
 message SorobanAddressCredentialsWithDelegates {
-  required SorobanAddressCredentials address_credentials = 1;
-  repeated SorobanDelegateSignature  delegates           = 2;
+    required SorobanAddressCredentials address_credentials = 1;
+    repeated SorobanDelegateSignature delegates = 2;
 }
 
 /**
@@ -543,18 +543,18 @@ message SorobanAddressCredentialsWithDelegates {
  * @embed
  */
 message SorobanCredentials {
-  required SorobanCredentialsType                 type                   = 1;
-  optional SorobanAddressCredentials              address_v2             = 2;
-  optional SorobanAddressCredentialsWithDelegates address_with_delegates = 3;
+    required SorobanCredentialsType type = 1;
+    optional SorobanAddressCredentials address_v2 = 2;
+    optional SorobanAddressCredentialsWithDelegates address_with_delegates = 3;
 
-  enum SorobanCredentialsType {
-    SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0;
+    enum SorobanCredentialsType {
+        SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0;
         // 1 is the legacy SOROBAN_CREDENTIALS_ADDRESS, which is due to be
         // deprecated in Protocol 28 and is intentionally not supported
-    reserved 1;
-    SOROBAN_CREDENTIALS_ADDRESS_V2             = 2;
-    SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES = 3;
-  };
+        reserved 1;
+        SOROBAN_CREDENTIALS_ADDRESS_V2 = 2;
+        SOROBAN_CREDENTIALS_ADDRESS_WITH_DELEGATES = 3;
+    };
 }
 
 /**
@@ -562,8 +562,8 @@ message SorobanCredentials {
  * @embed
  */
 message SorobanAuthorizationEntry {
-  required SorobanCredentials          credentials     = 1;
-  required SorobanAuthorizedInvocation root_invocation = 2;
+    required SorobanCredentials credentials = 1;
+    required SorobanAuthorizedInvocation root_invocation = 2;
 }
 
 /**
@@ -572,9 +572,9 @@ message SorobanAuthorizationEntry {
  * @next TxExtRequest
  */
 message InvokeHostFunctionOp {
-  optional string                           source_account = 1;  // (optional) source account address
-  required HostFunction              function       = 2;
-  repeated SorobanAuthorizationEntry auth           = 3;
+    optional string source_account = 1;  // (optional) source account address
+    required HostFunction function = 2;
+    repeated SorobanAuthorizationEntry auth = 3;
 }
 
 /**
@@ -589,30 +589,31 @@ message InvokeHostFunctionOp {
  * @next Failure
  */
 message SignSorobanAuthorization {
-  repeated uint32 address_n = 1;  // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
-    // passphrase of the network the authorization is valid on; the preimage's
-    // networkID is derived from it
-  required string                                  network_passphrase                 = 2;
-  required SorobanAuthorizationEnvelopeType envelope_type                      = 3;  // the HashIDPreimage variant to sign
-  optional SorobanAuthorizationWithAddress  soroban_authorization_with_address = 4;  // union arm for ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS
+    repeated uint32 address_n = 1;  // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
+                                    // passphrase of the network the authorization is valid on; the preimage's
+                                    // networkID is derived from it
+    required string network_passphrase = 2;
+    required SorobanAuthorizationEnvelopeType envelope_type = 3;  // the HashIDPreimage variant to sign
+    optional SorobanAuthorizationWithAddress soroban_authorization_with_address =
+        4;  // union arm for ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS
 
-    // https://github.com/stellar/stellar-xdr/blob/v27.0/Stellar-transaction.x#L753
-  message SorobanAuthorizationWithAddress {
-    required sint64 nonce                       = 1;                        // replay-protection nonce of the credentials
-    required uint32 signature_expiration_ledger = 2;  // ledger sequence until which the authorization remains valid
-        // The address whose credentials are being provided: either the device
-        // account itself, or e.g. a contract account of which the device is a
-        // signer, or, for a CAP-71 delegate signature, the entry's top-level
-        // address.
-    required string                             address    = 3;
-    required SorobanAuthorizedInvocation invocation = 4;  // the authorized invocation tree
-  }
+            // https://github.com/stellar/stellar-xdr/blob/v27.0/Stellar-transaction.x#L753
+    message SorobanAuthorizationWithAddress {
+        required sint64 nonce = 1;                        // replay-protection nonce of the credentials
+        required uint32 signature_expiration_ledger = 2;  // ledger sequence until which the authorization remains valid
+                                                          // The address whose credentials are being provided: either
+                                                          // the device account itself, or e.g. a contract account of
+                                                          // which the device is a signer, or, for a CAP-71 delegate
+                                                          // signature, the entry's top-level address.
+        required string address = 3;
+        required SorobanAuthorizedInvocation invocation = 4;  // the authorized invocation tree
+    }
 
     // Soroban authorization cases of the EnvelopeType XDR enum, see
     // https://github.com/stellar/stellar-xdr/blob/v27.0/Stellar-ledger-entries.x#L656
-  enum SorobanAuthorizationEnvelopeType {
-    ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS = 10;
-  }
+    enum SorobanAuthorizationEnvelopeType {
+        ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS = 10;
+    }
 }
 
 /**
@@ -620,8 +621,8 @@ message SignSorobanAuthorization {
  * @end
  */
 message SorobanAuthorizationSignature {
-  required bytes public_key = 1;  // public key for the private key used to sign the authorization
-  required bytes signature  = 2;   // ed25519 signature of the authorization payload
+    required bytes public_key = 1;  // public key for the private key used to sign the authorization
+    required bytes signature = 2;   // ed25519 signature of the authorization payload
 }
 
 /**
@@ -636,7 +637,7 @@ message TxExtRequest {}
  */
 message TxExt {
     // For soroban transactions, v = 1, otherwise v = 0
-  required sint32 v = 1;
+    required sint32 v = 1;
     // SorobanTransactionData XDR, required when v == 1. Passed through as raw bytes
     // and committed via the signed digest. Contains the footprint (ledger entries the
     // tx may access), resource limits, and the resourceFee -- none of which grant
@@ -644,5 +645,5 @@ message TxExt {
     // state changes; those are gated by InvokeHostFunctionOp.auth, shown
     // on-device), and the resourceFee is a component of the already-confirmed total
     // fee. A tampered value can only fail the tx or waste fees up to that total.
-  optional bytes soroban_data = 2;
+    optional bytes soroban_data = 2;
 }

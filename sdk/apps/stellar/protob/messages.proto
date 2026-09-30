@@ -6,40 +6,40 @@ package hw.trezor.messages;
  */
 
 enum MessageType {
-  MessageType_SignTx                     = 0 ;
-  MessageType_TxOpRequest                = 1 ;
-  MessageType_GetAddress                 = 2 ;
-  MessageType_Address                    = 3 ;
-  MessageType_CreateAccountOp            = 4 ;
-  MessageType_PaymentOp                  = 5 ;
-  MessageType_PathPaymentStrictReceiveOp = 6 ;
-  MessageType_ManageSellOfferOp          = 7 ;
-  MessageType_CreatePassiveSellOfferOp   = 8 ;
-  MessageType_SetOptionsOp               = 9 ;
-  MessageType_ChangeTrustOp              = 10 ;
-  MessageType_AllowTrustOp               = 11 ;
-  MessageType_AccountMergeOp             = 12 ;
-  reserved 13;  // omitted: InflationOp
-  MessageType_ManageDataOp            = 14 ;
-  MessageType_BumpSequenceOp          = 15 ;
-  MessageType_ManageBuyOfferOp        = 16 ;
-  MessageType_PathPaymentStrictSendOp = 17   ;
-  reserved 18;  // omitted: CreateClaimableBalanceOp
-  MessageType_ClaimClaimableBalanceOp = 19 ;
-  reserved 20;  // omitted: BeginSponsoringFutureReservesOp
-  reserved 21;  // omitted: EndSponsoringFutureReservesOp
-  reserved 22;  // omitted: RevokeSponsorshipOp
-  reserved 23;  // omitted: ClawbackOp
-  MessageType_SignedTx = 24 ;
-  reserved 25;  // omitted: ClawbackClaimableBalanceOp
-  reserved 26;  // omitted: SetTrustLineFlagsOp
-  reserved 27;  // omitted: LiquidityPoolDepositOp
-  reserved 28;  // omitted: LiquidityPoolWithdrawOp
-  MessageType_InvokeHostFunctionOp = 29 ;
-  reserved 30;  // omitted: ExtendFootprintTtl
-  reserved 31;  // omitted: RestoreFootprint
-  MessageType_TxExtRequest                  = 32 ;
-  MessageType_TxExt                         = 33 ;
-  MessageType_SignSorobanAuthorization      = 34 ;
-  MessageType_SorobanAuthorizationSignature = 35 ;
+    MessageType_SignTx = 0;
+    MessageType_TxOpRequest = 1;
+    MessageType_GetAddress = 2;
+    MessageType_Address = 3;
+    MessageType_CreateAccountOp = 4;
+    MessageType_PaymentOp = 5;
+    MessageType_PathPaymentStrictReceiveOp = 6;
+    MessageType_ManageSellOfferOp = 7;
+    MessageType_CreatePassiveSellOfferOp = 8;
+    MessageType_SetOptionsOp = 9;
+    MessageType_ChangeTrustOp = 10;
+    MessageType_AllowTrustOp = 11;
+    MessageType_AccountMergeOp = 12;
+    reserved 13;  // omitted: InflationOp
+    MessageType_ManageDataOp = 14;
+    MessageType_BumpSequenceOp = 15;
+    MessageType_ManageBuyOfferOp = 16;
+    MessageType_PathPaymentStrictSendOp = 17;
+    reserved 18;  // omitted: CreateClaimableBalanceOp
+    MessageType_ClaimClaimableBalanceOp = 19;
+    reserved 20;  // omitted: BeginSponsoringFutureReservesOp
+    reserved 21;  // omitted: EndSponsoringFutureReservesOp
+    reserved 22;  // omitted: RevokeSponsorshipOp
+    reserved 23;  // omitted: ClawbackOp
+    MessageType_SignedTx = 24;
+    reserved 25;  // omitted: ClawbackClaimableBalanceOp
+    reserved 26;  // omitted: SetTrustLineFlagsOp
+    reserved 27;  // omitted: LiquidityPoolDepositOp
+    reserved 28;  // omitted: LiquidityPoolWithdrawOp
+    MessageType_InvokeHostFunctionOp = 29;
+    reserved 30;  // omitted: ExtendFootprintTtl
+    reserved 31;  // omitted: RestoreFootprint
+    MessageType_TxExtRequest = 32;
+    MessageType_TxExt = 33;
+    MessageType_SignSorobanAuthorization = 34;
+    MessageType_SorobanAuthorizationSignature = 35;
 }
