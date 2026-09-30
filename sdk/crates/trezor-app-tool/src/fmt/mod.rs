@@ -12,8 +12,8 @@ pub fn format(args: FmtArgs) -> Result<()> {
 
     for package in &packages {
         let package_dir = helpers::package_dir(package)?;
-        translations::format(package_dir.join("translations"), args.check)?;
-        python::format(package_dir.join("tests"), args.check)?;
+        translations::format(package_dir, args.check)?;
+        python::format(package_dir, args.check)?;
     }
 
     Ok(())

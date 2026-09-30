@@ -5,7 +5,7 @@
 //! specific executable binary.
 
 use anyhow::{Context, Result, ensure};
-use cargo_metadata::{Package, semver::Version};
+use cargo_metadata::Package;
 use object::Object;
 use sha2::Digest;
 use std::{
@@ -172,9 +172,9 @@ pub fn convert_elf_to_bin(
         app_name: pack_str(&metadata::app_name(package)?, "App name")?,
         vendor_name: pack_str(&metadata::vendor_name(package)?, "Vendor name")?,
         model: model.map_or([0; 4], |m| m.model_id_bytes()),
-        version: pack_version(metadata::app_version(package))?,
-        sdk_version: [0; 4],
-        abi_version: 1,
+        version: pack_version(&metadata::app_version(package))?,
+        sdk_version: pack_version(&metadata::sdk_version(package)?)?,
+        abi_version: metadata::abi_version()?,
         target_arch: target_arch.id(),
         app_ring: metadata::app_ring(package)?,
         reserved1: [0; 1],
@@ -206,23 +206,26 @@ pub fn convert_elf_to_bin(
     Ok(bin_path)
 }
 
-/// Converts a semver version into the 4-byte `[major, minor, patch, 0]` header form.
-fn pack_version(version: &Version) -> Result<[u8; 4]> {
-    Ok([
-        version
-            .major
-            .try_into()
-            .context("Failed to convert major version to u8")?,
-        version
-            .minor
-            .try_into()
-            .context("Failed to convert minor version to u8")?,
-        version
-            .patch
-            .try_into()
-            .context("Failed to convert patch version to u8")?,
-        0,
-    ])
+/// Converts one to four dot-separated numeric version components into the
+/// 4-byte app-header form, padding omitted components with zeroes.
+fn pack_version(version: &str) -> Result<[u8; 4]> {
+    let mut packed = [0; 4];
+
+    for (index, component) in version.split('.').enumerate() {
+        ensure!(
+            index < packed.len(),
+            "Version '{version}' has more than 4 components"
+        );
+        ensure!(
+            !component.is_empty(),
+            "Version '{version}' has an empty component"
+        );
+        packed[index] = component.parse().with_context(|| {
+            format!("Version '{version}' has an invalid component '{component}'")
+        })?;
+    }
+
+    Ok(packed)
 }
 
 /// Packs a string into a fixed-size, zero-padded byte array.
@@ -346,14 +349,15 @@ mod tests {
 
     #[test]
     fn version_bytes_layout() {
-        let v = Version::new(1, 2, 3);
-        assert_eq!(pack_version(&v).unwrap(), [1, 2, 3, 0]);
+        assert_eq!(pack_version("1.2.3").unwrap(), [1, 2, 3, 0]);
+        assert_eq!(pack_version("0.1").unwrap(), [0, 1, 0, 0]);
+        assert_eq!(pack_version("1.2.3.4").unwrap(), [1, 2, 3, 4]);
     }
 
     #[test]
     fn version_bytes_rejects_component_over_u8() {
-        let v = Version::new(256, 0, 0);
-        assert!(pack_version(&v).is_err());
+        assert!(pack_version("256.0.0").is_err());
+        assert!(pack_version("1.2.3.4.5").is_err());
     }
 
     #[test]

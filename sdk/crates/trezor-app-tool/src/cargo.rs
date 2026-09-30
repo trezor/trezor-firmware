@@ -28,12 +28,12 @@ pub fn build_packages(args: &BuildArgs) -> Result<Vec<(Package, PathBuf)>> {
     let packages = helpers::selected_packages(&args.package)?;
 
     // Build the component(s)
-    run_cargo_subcommand("build", &args, &packages, None::<&[&str]>)?;
+    run_cargo_subcommand("build", args, &packages, None::<&[&str]>)?;
 
     let mut pairs = Vec::new();
 
     for package in &packages {
-        let elf_path = helpers::elf_path(&args, package)?;
+        let elf_path = helpers::elf_path(args, package)?;
 
         let bin_path = image::convert_elf_to_bin(&elf_path, package, args.model)?;
         let artifact_name = helpers::artifact_name(

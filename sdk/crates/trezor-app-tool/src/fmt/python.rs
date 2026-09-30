@@ -2,13 +2,16 @@
 //! `tests/` directory.
 
 use crate::helpers;
-use anyhow::{Result, ensure};
-use std::process::Command;
+use anyhow::{Context, Result, ensure};
+use std::{path::Path, process::Command};
 
-/// Runs `ruff` (lint + format), `flake8`, and `pyright` in
-/// the given directory. With `check_only`, `ruff` runs in check mode instead
-/// of rewriting files in place.
-pub fn format(dir: std::path::PathBuf, check_only: bool) -> Result<()> {
+/// Runs `ruff` (lint + format) and `flake8` on the `tests/` directory of
+/// the app at `package_dir`, then `pyright` from `package_dir` so it picks
+/// up the app's `pyrightconfig.json`. With `check_only`, `ruff` runs in
+/// check mode instead of rewriting files in place.
+pub fn format(package_dir: &Path, check_only: bool) -> Result<()> {
+    let dir = package_dir.join("tests");
+
     let mut cmd = Command::new("ruff");
     cmd.arg("check");
     if !check_only {
@@ -19,7 +22,7 @@ pub fn format(dir: std::path::PathBuf, check_only: bool) -> Result<()> {
     println!("app-tool: Running ruff check");
     println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
 
-    let status = cmd.status().expect("Failed to run ruff check");
+    let status = cmd.status().context("Failed to spawn `ruff check`")?;
     ensure!(
         status.success(),
         "`ruff check` failed with status: {status}",
@@ -35,7 +38,7 @@ pub fn format(dir: std::path::PathBuf, check_only: bool) -> Result<()> {
     println!("app-tool: Running ruff format");
     println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
 
-    let status = cmd.status().expect("Failed to run ruff format");
+    let status = cmd.status().context("Failed to spawn `ruff format`")?;
     ensure!(
         status.success(),
         "`ruff format` failed with status: {status}",
@@ -45,13 +48,14 @@ pub fn format(dir: std::path::PathBuf, check_only: bool) -> Result<()> {
     cmd.arg(&dir);
     println!("app-tool: Running flake8");
     println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
-    let status = cmd.status().expect("Failed to run flake8");
+    let status = cmd.status().context("Failed to spawn `flake8`")?;
     ensure!(status.success(), "`flake8` failed with status: {status}",);
 
     let mut cmd = Command::new("pyright");
+    cmd.current_dir(package_dir);
     println!("app-tool: Running pyright");
     println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
-    let status = cmd.status().expect("Failed to run pyright");
+    let status = cmd.status().context("Failed to spawn `pyright`")?;
     ensure!(status.success(), "`pyright` failed with status: {status}",);
     Ok(())
 }

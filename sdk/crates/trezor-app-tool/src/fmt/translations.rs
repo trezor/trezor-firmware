@@ -2,7 +2,11 @@
 //! object keys and pretty-prints with a trailing newline, matching the
 //! style produced by `cargo app-tool fmt`.
 
-use std::{collections::BTreeMap, fs};
+use std::{
+    collections::BTreeMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{Result, bail};
 use serde_json::Value;
@@ -13,11 +17,12 @@ enum FileStatus {
     FatalError,
 }
 
-/// Formats all JSON translation files in the given directory.
-/// If `check_only` is `true`, it will only check for formatting
-/// issues without modifying files.
-pub fn format(dir: std::path::PathBuf, check_only: bool) -> Result<()> {
-    let mut errors: Vec<std::path::PathBuf> = Vec::new();
+/// Formats all JSON translation files in the `translations/` directory of
+/// the app at `package_dir`. If `check_only` is `true`, it will only check
+/// for formatting issues without modifying files.
+pub fn format(package_dir: &Path, check_only: bool) -> Result<()> {
+    let dir = package_dir.join("translations");
+    let mut errors: Vec<PathBuf> = Vec::new();
 
     for entry in fs::read_dir(&dir)? {
         let entry = entry?;
@@ -40,7 +45,7 @@ pub fn format(dir: std::path::PathBuf, check_only: bool) -> Result<()> {
     Ok(())
 }
 
-fn process_file(path: &std::path::Path, check_only: bool) -> Result<FileStatus> {
+fn process_file(path: &Path, check_only: bool) -> Result<FileStatus> {
     let original_text = fs::read_to_string(path)?;
 
     let value: Value = match serde_json::from_str(&original_text) {

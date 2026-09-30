@@ -276,27 +276,11 @@ impl BuildArgs {
         }
 
         if !self.emulator {
-            // !@# TODO introduce --target option
             let target = self
                 .model
                 .map_or(Model::T3W1.target_triple(), |m| m.target_triple());
-            // Not a file in the app's own source tree: the layout is fixed
-            // by Core's loader and identical for every app, so the script
-            // ships with this crate and gets written into the build
-            // directory here -- see `crate::linker`.
-            let linker_script = prebuild::prepare_linker_script()?;
             cmd.args(["--target", target]);
-            cmd.env(
-                "RUSTFLAGS",
-                format!(
-                    "-C link-arg=-T{} \
-                     -C link-arg=--emit-relocs \
-                     -C link-arg=-z \
-                     -C link-arg=max-page-size=0x20 \
-                     -C link-arg=--no-dynamic-linker",
-                    linker_script.display()
-                ),
-            );
+            cmd.env("RUSTFLAGS", Self::resolve_rustflags()?);
         }
 
         if self.verbose {
@@ -304,6 +288,23 @@ impl BuildArgs {
         }
 
         Ok(())
+    }
+
+    /// Returns the `RUSTFLAGS` value for a non-emulator build.
+    fn resolve_rustflags() -> Result<String> {
+        let linker_script = prebuild::prepare_linker_script()?;
+
+        let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
+        if !rustflags.is_empty() {
+            rustflags.push(' ');
+        }
+        rustflags.push_str(&format!(
+            "-C link-arg=-T{} \
+             -C link-arg=--emit-relocs \
+             -C link-arg=--no-dynamic-linker",
+            linker_script.display()
+        ));
+        Ok(rustflags)
     }
 
     /// Returns the Rust target triple used when building firmware (i.e.

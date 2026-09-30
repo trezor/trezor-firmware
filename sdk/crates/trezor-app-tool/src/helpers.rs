@@ -51,16 +51,14 @@ pub fn resolve_target_arch(
         if emulator { "not" } else { "only" }
     );
 
-    if !emulator {
-        if let Some(model) = model {
-            ensure!(
-                model.target_arch() == arch,
-                "Model '{}' requires architecture '{}', not '{}'",
-                model.model_id(),
-                model.target_arch().name(),
-                arch.name()
-            );
-        }
+    if !emulator && let Some(model) = model {
+        ensure!(
+            model.target_arch() == arch,
+            "Model '{}' requires architecture '{}', not '{}'",
+            model.model_id(),
+            model.target_arch().name(),
+            arch.name()
+        );
     }
 
     Ok(arch)

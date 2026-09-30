@@ -36,7 +36,7 @@ fn test_package(package: &Package, app_path: &Path, args: &DeviceTestArgs) -> Re
         cmd.args(["--ui=test", "--ui-check-missing", "--do-master-diff"]);
     }
 
-    let package_dir = helpers::package_dir(&package)?;
+    let package_dir = helpers::package_dir(package)?;
 
     cmd.env("TREZOR_TRANSLATIONS_DIR", package_dir.join("translations"))
         .current_dir(package_dir);

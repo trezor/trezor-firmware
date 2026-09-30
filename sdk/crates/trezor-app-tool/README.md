@@ -1,112 +1,110 @@
-# Modular App Build & Test Toolkit
+# Trezor App Tool
 
-This crate provides a robust workflow for building, testing, and analyzing modular applications—especially those targeting embedded hardware.
-**Do not use pure Cargo for these tasks.**
-Always use `cargo app-tool ...` commands, as they create proper Cargo invocations and workflows, which can be quite complex.
+`trezor-app-tool` supports the development workflow for Trezor external applications. It builds, packages, checks, and tests apps with the target, features, and artifacts required by Trezor firmware.
 
----
+## Invocation
 
-## Prerequisites
+The tool is available in two development contexts.
 
-- **Rust** (nightly, with `cargo-binutils`)
-- **ARM binutils** (for cross-compilation)
-- **Python** (for test orchestration and result processing)
+### Standalone Application Repository
 
-> **Note:**
-> While Nix is not a strict prerequisite, entering the provided Nix shell (`nix-shell`) will ensure all dependencies are available and correctly configured.
-
-Additionally, the environment includes **uv** for Python-related tasks.
-`uv` requires a `.venv` virtual environment to be created, but you do not need to activate it manually—`app-tool` will call `uv run` commands as needed.
-
----
-
-## Available Commands
-
-All commands are invoked via:
-
-```sh
-cargo app-tool <command> [options]
-```
-
-### Build
-
-- Runs a series of steps:
-  - `cargo build`
-  - ELF postprocessing (to minimize loadable app size)
-  - Size analysis of individual modules (HW targets only)
-  - Publishing the final binary to the publish folder, i.e. `target/artifacts/<model>/<app.elf>`
-
-### Other Cargo-like Commands
-
-- `clean`, `clippy`, `fmt`, `check`
-
-### Unit Tests
-
-- Runs `cargo test` in the background
-- Executes unit tests with SDK functionality replaced or mocked (e.g., crypto functions)
-
-### Device Tests
-
-- Runs device tests (currently only on emulator)
-  - **A proper binary must be built prior to running device tests**
-  - Emulator must match the modular app's language
-  - Spawns `pytest` for all or specified tests
-  - UI results can be shown/updated via Python scripts:
-    - `show_results.py`
-    - `update_results.py`
-
-### Python Style & Checks
-
-- Ensures consistent Python code style and catches obvious issues
-
----
-
-## Usage
-
-- List all commands:
-
-  ```sh
-  cargo app-tool --help
-  ```
-
-- List options for a specific command:
-
-  ```sh
-  cargo app-tool <command> --help
-  ```
-
----
-
-## Common Arguments
-
-- `--project` (or `-p`): The workspace member (app) to build or test.
-  **Note:** You should specify the application crate; do not build `app-tool` itself.
-- `--model` (e.g., `t3w1`, `t3t1`): Model-specific translations/definitions (e.g., tokens)
-- `--lang`: Selects language for the binary
-- `--log-level`: Sets the log level for the built firmware (e.g., `error`, `warn`, `info`, `debug`, `trace`)
-- `--emulator`: Build or run for the emulator target instead of hardware
-- `--debug`: Enables debug symbols, custom panic handler, and error context chaining
-  **Note:** This significantly increases binary size and is not recommended for hardware (may cause insufficient memory).
-
----
-
-## Notes
-
-- For best results, use the provided Nix shell to ensure all dependencies are available and consistent.
-- Device tests currently run only on the emulator.
-- Python scripts are used for test orchestration and UI result processing.
-- The Trezor SDK is currently a local dependency; you must provide the correct path to it.
-- Running `cargo app-tool clean` removes all workspace builds, including any builds performed by `app-tool build`.
-
----
-
-## Example
+In a standalone external-app repository, enter the repository's Nix shell and run `app-tool` directly:
 
 ```sh
 nix-shell
-cargo app-tool build -p funnycoin --model t3w1 --lang en --log-level trace --emulator
-cargo app-tool unit-tests -p funnycoin --model t3t1 --lang cs
-cargo app-tool clippy
-cargo app-tool device-tests -p funnycoin -m t3w1
-cargo app-tool py-style-check
+app-tool <command> [options]
 ```
+
+Use `--package` when the repository contains more than one application. A single-app repository can omit it.
+
+### Trezor Firmware Repository
+
+From the `trezor-firmware` repository, run app-tool through `xtask`:
+
+```sh
+xtask apps <command> [options]
+```
+
+Use `--package` to select one or more external apps. Without it, the command operates on the applicable apps in the repository.
+
+## Package Selection
+
+`-p`, `--package <PACKAGE>` selects an app package. Repeat the option to work with multiple apps:
+
+```sh
+xtask apps build -p app-one -p app-two --arch armv8m
+```
+
+## Commands
+
+| Command | Purpose |
+| --- | --- |
+| `build` | Build and package external applications. |
+| `check` | Type-check external applications. |
+| `clippy` | Run Clippy checks. |
+| `size` | Show binary size information. |
+| `test` | Run Rust unit tests. |
+| `device-test` | Run device tests against an emulator or physical device. |
+| `fmt` | Format application sources and check formatting. |
+| `clean` | Remove app build artifacts. |
+
+Run `app-tool --help` or `xtask apps --help` to list commands, and append `--help` to a command for its complete options.
+
+## Build
+
+Builds the selected apps for hardware or the emulator, converts each ELF into a loadable app binary, and publishes the resulting artifacts. Development builds also create the app proofs and RootPacket needed to load an app during development. Use `--production` for a production build and `--debug` to use the debug firmware profile.
+
+```sh
+app-tool build [--package <PACKAGE>] [options]
+xtask apps build [--package <PACKAGE>] [options]
+```
+
+## Check and Lint
+
+`check` type-checks the selected apps without producing app artifacts. `clippy` runs the same target, feature, and profile configuration through Clippy. Pass the same target options that would be used for `build`.
+
+```sh
+app-tool check [--package <PACKAGE>] [options]
+app-tool clippy [--package <PACKAGE>] [options]
+```
+
+## Size Analysis
+
+Displays section sizes for the selected app binary using the requested target configuration. Build the app first so the binary is available for analysis.
+
+```sh
+app-tool size [--package <PACKAGE>] [options]
+```
+
+## Rust Unit Tests
+
+Runs host-side Rust unit tests with the selected model and language features. Use `-t`, `--test <TEST>` to run a specific test; without it, all package tests run.
+
+```sh
+app-tool test [--package <PACKAGE>] [options]
+```
+
+## Device Tests
+
+Runs an app's Python device tests against an already-built artifact and a running emulator or reachable physical device. It does not start the emulator. Use `-t`, `--test <TEST>` to select a test, and `--ui` to enable UI screenshot testing.
+
+```sh
+app-tool device-test [--package <PACKAGE>] [options]
+```
+
+## Formatting
+
+Formats Rust sources, application translations, and Python files in each app's `tests/` directory. Pass `--check` to report formatting differences without changing files.
+
+```sh
+app-tool fmt [--package <PACKAGE>] [--check]
+```
+
+## Cleaning
+
+Removes the build artifacts for the current app workspace.
+
+```sh
+app-tool clean
+```
+

@@ -2,8 +2,7 @@
 //! `Cargo.toml`.
 
 use anyhow::{Context, Result, ensure};
-use cargo_metadata::Package;
-use cargo_metadata::semver::Version;
+use cargo_metadata::{MetadataCommand, Package};
 
 /// Upper bound on an app's IPC inbox, mirroring the kernel's
 /// `IPC_MAX_BUFFER_SIZE` (`core/embed/sys/ipc/inc/sys/ipc.h`). `ipc_register`
@@ -29,8 +28,8 @@ pub const IPC_BUFFER_MIN_SIZE: u64 = 256;
 pub const IPC_BUFFER_DEFAULT_SIZE: u64 = 1024;
 
 /// Retrieves the app version from the package metadata.
-pub fn app_version(package: &Package) -> &Version {
-    &package.version
+pub fn app_version(package: &Package) -> String {
+    package.version.to_string()
 }
 
 /// Retrieves the app identifier from the package metadata.
@@ -138,6 +137,20 @@ pub fn paths(package: &Package) -> Result<Vec<String>> {
     metadata_string_array(package, "paths")
 }
 
+/// Retrieves the SDK version of the `trezor-app-sdk` dependency
+/// from the package metadata.
+pub fn sdk_version(package: &Package) -> Result<String> {
+    let sdk = dependency_package(package, "trezor-app-sdk")?;
+    metadata_string(&sdk, "sdk-version")
+}
+
+/// Retrieves the ABI version used by the app.
+pub fn abi_version() -> Result<u8> {
+    std::env::var("TREZOR_APP_TOOLING_ABI_VERSION").map_or(Ok(1), |v| {
+        v.parse::<u8>().context("Failed to parse ABI version")
+    })
+}
+
 fn metadata_string(package: &Package, key: &str) -> Result<String> {
     let value = package
         .metadata
@@ -197,4 +210,29 @@ fn metadata_number(package: &Package, key: &str) -> Result<u64> {
         .ok_or_else(|| anyhow::anyhow!("{} must be a number in Cargo.toml", key))?
         .parse::<u64>()
         .with_context(|| format!("Failed to parse {key}"))
+}
+
+/// Returns the [`Package`] of `package`'s dependency called `name`, so its
+/// version and `[package.metadata]` can be read.
+///
+/// The `Package` values handled by this tool come from a `no_deps` metadata
+/// query, which lists workspace members only, so the dependency graph is
+/// resolved here for the package's manifest.
+pub fn dependency_package(package: &Package, name: &str) -> Result<Package> {
+    let dep = package
+        .dependencies
+        .iter()
+        .find(|dep| dep.name == name)
+        .ok_or_else(|| anyhow::anyhow!("Dependency {} not found in Cargo.toml", name))?;
+
+    let metadata = MetadataCommand::new()
+        .manifest_path(&package.manifest_path)
+        .exec()
+        .context("Failed to read cargo metadata")?;
+
+    metadata
+        .packages
+        .into_iter()
+        .find(|p| p.name == dep.name && dep.req.matches(&p.version))
+        .ok_or_else(|| anyhow::anyhow!("Package {} not found in the dependency graph", name))
 }
