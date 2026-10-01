@@ -9,11 +9,13 @@
 //! Core's own UI machinery drives generic menus with callbacks. This is the
 //! thin piece that builds one out of what an app is allowed to say.
 
+use stabby::str::Str;
+
 use super::BR_CODE_OTHER;
 use super::extra::{Extra, ExtraItem};
 use super::layout::{LayoutHandle, call_once};
 use crate::alloc_types::String;
-use crate::structs::{SelectMenu, ShowProperties, StrSlice, TrezorUiEnum, UiReply};
+use crate::traits::ui::{SelectMenu, ShowProperties, UiReply};
 use crate::{Error, Result};
 
 // ============================================================================
@@ -54,19 +56,25 @@ pub(super) fn check_extras(extras: &[ExtraItem<'_>], cancel: bool) -> Result<()>
 ///
 /// `Some` means the person decided the block from here; `None` means they merely
 /// looked, and the main screen should come back.
+///
+/// `cancel` is a way out the block asked for, drawn on every model.
+/// `refusable` says the block can always be refused: a model whose menu
+/// button took the place of the screen's own way out draws one here too.
+/// Either way it is the entry after the extras.
 pub(super) fn open(
     extras: &[ExtraItem<'_>],
     cancel: bool,
+    refusable: bool,
     br: Option<&str>,
 ) -> Result<Option<UiReply>> {
     // `check_extras` has already refused a list that cannot be shown, so an empty one
     // here means core answered "show more" for a screen that offered nothing.
-    let count = extras.len() + usize::from(cancel);
+    let count = extras.len() + usize::from(cancel || refusable);
     if count == 0 {
         return Err(Error::InvalidMessage);
     }
 
-    let mut titles = [StrSlice::default(); MAX_ENTRIES];
+    let mut titles = [Str::from(""); MAX_ENTRIES];
     for (slot, extra) in titles.iter_mut().zip(extras) {
         *slot = extra.label.into();
     }
@@ -83,12 +91,13 @@ pub(super) fn open(
     let menu_step = br.map(|br| step(br, STEP_MENU));
     let details_step = br.map(|br| step(br, STEP_DETAILS));
 
-    let request = TrezorUiEnum::SelectMenu(SelectMenu::new(
+    let request = SelectMenu::new(
         &titles[..extras.len()],
         cancel_label,
+        refusable,
         menu_step.as_deref(),
         BR_CODE_OTHER,
-    ));
+    );
     let layout = LayoutHandle::new();
     let mut first = true;
 
@@ -109,7 +118,7 @@ pub(super) fn open(
                     Some(extra) => show(extra, details_step.as_deref())?,
                     // Past the extras lies the way out, which exists only when
                     // the block asked for one.
-                    None if cancel && chosen == extras.len() => {
+                    None if (cancel || refusable) && chosen == extras.len() => {
                         return Ok(Some(UiReply::Cancelled));
                     }
                     None => return Err(Error::InvalidMessage),
@@ -139,7 +148,7 @@ fn show(extra: &ExtraItem<'_>, br: Option<&str>) -> Result<()> {
     match extra.value {
         Extra::Simple(props) => {
             let request = ShowProperties::new(extra.label, props, None, br, BR_CODE_OTHER);
-            call_once(&TrezorUiEnum::ShowProperties(request))?;
+            let _ = call_once(&request)?;
         }
         // Fetching chunk by chunk is unsolved; this is where that loop belongs
         // once its shape is settled. `check_extras` refuses these before anything is

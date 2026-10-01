@@ -49,6 +49,9 @@ use crate::ui::ModelUI;
 const NOTICE_DONE_TIMEOUT_MS: u32 = 3200;
 
 impl FirmwareUI for UIDelizia {
+    // The header has room for one button: with a menu, that is the menu.
+    const MENU_CARRIES_WAY_OUT: bool = true;
+
     fn confirm_action(
         title: TString<'static>,
         action: Option<TString<'static>>,
