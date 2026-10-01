@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.13.0] (21st October 2026)
+
+### Added
+- Stellar: Support Protocol 27 delegated authentication.  [#7311]
+- Stellar: Support creating contracts.  [#7313]
+- Stellar: Added definitions for Centrifuge SEP-41 token contracts.  [#7869]
+- Ethereum: Improved clear signing support.  [#7984]
+- Solana: Confirm non-zero space allocation when creating an account.
+
+### Changed
+- Increase maximum passphrase length to 128 bytes.  [#4084]
+- Allow going back and changing previous selections during multishare backup creation, and remove the option to interrupt the flow from the checklist and number input screens.  [#7823]
+
+### Fixed
+- Ripple: Destination tag 0 no longer omitted in payment requests.  [#6969]
+- Don't warn about unknown derivation path when exporting valid xpubs.  [#7691]
+- Allow signing messages with multisig keys and exportable account nodes.  [#7717]
+- Check the correctness of thresholds in Advanced Shamir backup to prevent unfinished backup state.  [#7754]
+- Fix future timestamp formatting.  [#7850]
+
+### Security
+- Monero: Reject a payment ID that is not 8 or 32 bytes before displaying it.  [#97]
+- Monero: Always confirm the payment ID that will be included in the signed transaction.  [#97]
+- Cardano: Ask for the level of details when a simple transaction contains a script data hash.
+- Cardano: Ask for the level of details when an output of a simple transaction contains a datum or a reference script.
+- Solana: Always show the assigned account and new owner program in System Program Assign instructions.
+- Solana: Ask user for confirmation of optional instruction parameters that were previously hidden, e.g. when unsetting a token authority.
+- Solana: Confirm foreign base account when creating an account.
+- Solana: Fixed misleading account labels in Token program instructions.
+- Solana: Show trailing account references with their actual flags instead of presenting them as multisig signers.
+- Solana: Warn about a possible transfer hook in Token-2022 Transfer Checked instructions with trailing accounts.
+- Stellar: Fix the asset used as the price unit when confirming DEX offers.
+
 ## [2.12.5] (16th September 2026)
 
 ### Added
@@ -388,6 +421,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 [#69]: https://github.com/trezor/trezor-firmware/pull/69
+[#97]: https://github.com/trezor/trezor-firmware/pull/97
 [#1120]: https://github.com/trezor/trezor-firmware/pull/1120
 [#2299]: https://github.com/trezor/trezor-firmware/pull/2299
 [#2919]: https://github.com/trezor/trezor-firmware/pull/2919
@@ -431,6 +465,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3976]: https://github.com/trezor/trezor-firmware/pull/3976
 [#3990]: https://github.com/trezor/trezor-firmware/pull/3990
 [#4000]: https://github.com/trezor/trezor-firmware/pull/4000
+[#4084]: https://github.com/trezor/trezor-firmware/pull/4084
 [#4093]: https://github.com/trezor/trezor-firmware/pull/4093
 [#4099]: https://github.com/trezor/trezor-firmware/pull/4099
 [#4101]: https://github.com/trezor/trezor-firmware/pull/4101
@@ -516,6 +551,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6780]: https://github.com/trezor/trezor-firmware/pull/6780
 [#6843]: https://github.com/trezor/trezor-firmware/pull/6843
 [#6941]: https://github.com/trezor/trezor-firmware/pull/6941
+[#6969]: https://github.com/trezor/trezor-firmware/pull/6969
 [#7053]: https://github.com/trezor/trezor-firmware/pull/7053
 [#7065]: https://github.com/trezor/trezor-firmware/pull/7065
 [#7083]: https://github.com/trezor/trezor-firmware/pull/7083
@@ -524,9 +560,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#7140]: https://github.com/trezor/trezor-firmware/pull/7140
 [#7252]: https://github.com/trezor/trezor-firmware/pull/7252
 [#7310]: https://github.com/trezor/trezor-firmware/pull/7310
+[#7311]: https://github.com/trezor/trezor-firmware/pull/7311
 [#7312]: https://github.com/trezor/trezor-firmware/pull/7312
+[#7313]: https://github.com/trezor/trezor-firmware/pull/7313
 [#7487]: https://github.com/trezor/trezor-firmware/pull/7487
 [#7544]: https://github.com/trezor/trezor-firmware/pull/7544
 [#7582]: https://github.com/trezor/trezor-firmware/pull/7582
 [#7652]: https://github.com/trezor/trezor-firmware/pull/7652
 [#7678]: https://github.com/trezor/trezor-firmware/pull/7678
+[#7691]: https://github.com/trezor/trezor-firmware/pull/7691
+[#7717]: https://github.com/trezor/trezor-firmware/pull/7717
+[#7754]: https://github.com/trezor/trezor-firmware/pull/7754
+[#7823]: https://github.com/trezor/trezor-firmware/pull/7823
+[#7850]: https://github.com/trezor/trezor-firmware/pull/7850
+[#7869]: https://github.com/trezor/trezor-firmware/pull/7869
+[#7984]: https://github.com/trezor/trezor-firmware/pull/7984
