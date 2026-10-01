@@ -23,7 +23,6 @@
 #include <trezor_rtl.h>
 
 #include <io/nfc.h>
-#include <rtl/strutils.h>
 #include <sys/irq.h>
 #include <sys/systick.h>
 
@@ -532,12 +531,9 @@ static ts_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
       dev_info->interface = NFC_DEV_INTERFACE_UNKNOWN;
   }
 
-  dev_info->uid_len = nfc_device->nfcidLen;
   TSH_CHECK(nfc_device->nfcidLen <= NFC_MAX_UID_LEN, TS_ENOEN);
-
-  // Copy the hex UID in printable string
-  cstr_encode_hex(dev_info->uid, NFC_MAX_UID_BUF_SIZE, nfc_device->nfcid,
-                  nfc_device->nfcidLen);
+  memcpy(dev_info->uid, nfc_device->nfcid, nfc_device->nfcidLen);
+  dev_info->uid_len = nfc_device->nfcidLen;
 
 cleanup:
   TSH_RETURN;
