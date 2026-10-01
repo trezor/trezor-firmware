@@ -3,6 +3,16 @@
 //! One block for every callout, one contract across models: the same request
 //! answers the same way everywhere. Failures are not among the callouts; see
 //! [`Severity`].
+//!
+//! WIP: manual test results (testapp):
+//! - caesar (T3B1) and bolt (T2T1): an info notice with extras draws no menu
+//!   button, so its extras cannot be reached. A warning notice with extras
+//!   and `cancel: true` draws only its text and can only be confirmed —
+//!   neither the extras nor the asked-for way out exist.
+//! - bolt (T2T1): a `Done` notice waits for a tap instead of returning on its
+//!   own.
+//! - Delizia gained a menu button for info and warning notices; the other
+//!   severities, and bolt and caesar, still draw without one.
 
 use super::extra::ExtraItem;
 use super::{BR_CODE_OTHER, UiReply, call};

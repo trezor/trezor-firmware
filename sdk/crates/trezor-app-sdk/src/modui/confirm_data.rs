@@ -1,5 +1,12 @@
 //! Confirming an opaque byte blob. The public docs live on [`confirm_data`].
 //!
+//! WIP: manual test results with extras and `cancel: true` (testapp):
+//! caesar (T3B1) and eckhart (T3W1) draw the menu, the extras and Cancel
+//! well, but the way out appears twice — on the screen and again in the menu.
+//! The menu's Cancel should only be drawn where the screen has none of its
+//! own. bolt (T2T1) draws no menu, so neither the extras nor the asked-for
+//! Cancel can be reached.
+//!
 //! This block exists because of *what* it shows — raw bytes with no meaning
 //! the device can interpret, rendered as hex — and not because of how much of
 //! it there is. Length is not the caller's problem: a blob of any size is one
