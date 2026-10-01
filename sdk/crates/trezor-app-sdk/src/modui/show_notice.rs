@@ -64,11 +64,6 @@ impl<'a> ShowNotice<'a> {
             cancel,
         }
     }
-
-    /// Whether the screen has anything to offer besides its main content.
-    fn offers_more(&self) -> bool {
-        !self.extras.is_empty() || self.cancel
-    }
 }
 
 // ============================================================================
@@ -141,9 +136,9 @@ pub fn show_notice(params: ShowNotice<'_>) -> Result<UiReply> {
         params.severity,
         params.title,
         params.content,
-        params.offers_more(), // external_menu: how the extras are reached
-        Some(params.br),      // br_name: the step's name; the app owns it
-        BR_CODE_OTHER,        // legacy field; see the constant
+        !params.extras.is_empty() || params.cancel, // external_menu: how the extras are reached
+        Some(params.br),                            // br_name: the step's name; the app owns it
+        BR_CODE_OTHER,                              // legacy field; see the constant
     );
 
     call(

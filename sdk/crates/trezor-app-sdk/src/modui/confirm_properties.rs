@@ -54,11 +54,6 @@ impl<'a> ConfirmProperties<'a> {
             cancel,
         }
     }
-
-    /// Whether the screen has anything to offer besides its main content.
-    fn offers_more(&self) -> bool {
-        !self.extras.is_empty() || self.cancel
-    }
 }
 
 // ============================================================================
