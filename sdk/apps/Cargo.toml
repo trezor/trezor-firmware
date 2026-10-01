@@ -1,7 +1,7 @@
 cargo-features = ["panic-immediate-abort"]
 
 [workspace]
-members = ["ethereum", "testapp", "tron"]
+members = ["ethereum", "stellar", "testapp", "tron"]
 
 resolver = "2"
 
