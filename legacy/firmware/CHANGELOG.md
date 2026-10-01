@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 1.14.2 [21st October 2026]
+
+### Changed
+- Restrict which message types may use an authorization granted by DoPreauthorized or a path unlocked by UnlockPath.
+
+### Fixed
+- Show "not registered" message instead of a registration prompt when Firefox sends its dummy U2F register request.  [#3331]
+- Abort coinjoin signing if the coin name in SignTx does not match the coinjoin authorization.
+
+### Security
+- Fix Ethereum address formatting.  [#253]
+- Validate recovery input method.  [#304]
+- Ethereum: Native token transfer blocked for staking operations.
+- Show maximum coordinator fee rate in coinjoin authorization dialog.
+- Stellar: Fix the asset used as the price unit when confirming DEX offers.
+
 ## 1.14.1 [18th March 2026]
 
 ### Changed
@@ -595,6 +611,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 [#15]: https://github.com/trezor/trezor-firmware/pull/15
 [#131]: https://github.com/trezor/trezor-firmware/pull/131
+[#253]: https://github.com/trezor/trezor-firmware/pull/253
+[#304]: https://github.com/trezor/trezor-firmware/pull/304
 [#965]: https://github.com/trezor/trezor-firmware/pull/965
 [#1018]: https://github.com/trezor/trezor-firmware/pull/1018
 [#1030]: https://github.com/trezor/trezor-firmware/pull/1030
@@ -667,6 +685,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#2743]: https://github.com/trezor/trezor-firmware/pull/2743
 [#3043]: https://github.com/trezor/trezor-firmware/pull/3043
 [#3216]: https://github.com/trezor/trezor-firmware/pull/3216
+[#3331]: https://github.com/trezor/trezor-firmware/pull/3331
 [#3576]: https://github.com/trezor/trezor-firmware/pull/3576
 [#3691]: https://github.com/trezor/trezor-firmware/pull/3691
 [#3949]: https://github.com/trezor/trezor-firmware/pull/3949
