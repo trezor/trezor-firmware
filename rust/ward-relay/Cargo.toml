@@ -1,0 +1,34 @@
+[package]
+name = "ward-relay"
+version = "0.1.0"
+edition = "2021"
+description = "The wardd relay binding for Rust hosts (BHWI, async-hwi): carry a WARD conversation between the local WARD service and a Trezor"
+license = "LGPL-3.0-only"
+publish = false
+
+[features]
+default = []
+# Encode/decode Trezor messages BY NAME from the firmware's own .proto files, plus a codec-v1 frame
+# pipe (and its UDP transport, for the emulator). Without it the crate is the relay alone, for a
+# host whose own transport already speaks protobuf by name.
+codec = ["dep:protobuf", "dep:hex", "dep:protobuf-parse"]
+
+[dependencies]
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["net", "rt", "macros", "time"] }
+tokio-tungstenite = "0.24"
+protobuf = { version = "=3.7.2", optional = true }
+hex = { version = "0.4", optional = true }
+
+[build-dependencies]
+protobuf = { version = "=3.7.2", optional = true }
+protobuf-parse = { version = "=3.7.2", optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["net", "rt", "rt-multi-thread", "macros", "time"] }
+
+[[example]]
+name = "emulator"
+required-features = ["codec"]
