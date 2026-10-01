@@ -22,5 +22,5 @@ runs:
       shell: sh
     - name: Dependencies uv
       if: inputs.pre-download == 'true'
-      run: timeout -v --kill-after=10 200 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "uv sync"
+      run: timeout -v --kill-after=10 500 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "uv sync"
       shell: sh
