@@ -154,6 +154,10 @@ impl TryFrom<Obj> for DeviceMenuParams {
 }
 
 pub trait FirmwareUI {
+    /// Whether a screen's menu button takes the place of its own way out, so
+    /// that a menu the caller drives must carry that way out instead.
+    const MENU_CARRIES_WAY_OUT: bool = false;
+
     /// How the confirmation screens read their buttons and menu.
     ///
     /// Shared by `confirm_action` and `confirm_value`, and the same wherever a

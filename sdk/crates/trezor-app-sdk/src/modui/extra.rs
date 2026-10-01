@@ -5,7 +5,7 @@
 //! That is the whole vocabulary: no menus, no trees, no callbacks deciding
 //! outcomes.
 
-use crate::structs::Property;
+use crate::traits::ui::Property;
 
 // ============================================================================
 // Data types
