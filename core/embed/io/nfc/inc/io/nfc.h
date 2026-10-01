@@ -22,7 +22,6 @@
 #include <trezor_types.h>
 
 #define NFC_MAX_UID_LEN 10
-#define NFC_MAX_UID_BUF_SIZE ((NFC_MAX_UID_LEN + 1) * 2)
 
 /**
  * @brief Must correspond to RFAL_FEATURE_ISO_DEP_APDU_MAX_LEN in
@@ -63,8 +62,8 @@ typedef struct {
   nfc_dev_type_t type;                     //!< NFC card type
   nfc_nfca_listen_device_type_t tag_type;  //!< NFC-A tag type
   nfc_dev_interface_t interface;           //!< NFC card interface
-  char uid[NFC_MAX_UID_BUF_SIZE];          //!< Card UID string
-  uint8_t uid_len;
+  uint8_t uid[NFC_MAX_UID_LEN];            //!< Card UID (raw bytes)
+  uint8_t uid_len;                         //!< Card UID length in bytes
 } nfc_dev_info_t;
 
 /** @brief NFC APDU message buffer structure */
