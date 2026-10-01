@@ -363,7 +363,8 @@ class FakeDevice:
                 nonce=os.urandom(32),
                 ward_id=self.ward_id,
                 counter=self.counter,
-                root=self.root,
+                # as the firmware: the root only at genesis (apps/ward/sync.py)
+                root=self.root if self.counter == 0 else None,
                 head_init_sig=self._sign(pre + b"\x00" * 32),
             )
         if isinstance(msg, messages.WardIngestAttestation):
