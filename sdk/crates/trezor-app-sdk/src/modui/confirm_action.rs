@@ -1,4 +1,7 @@
 //! The generic yes/no block. The public docs live on [`confirm_action`].
+//!
+//! WIP: manual test results with extras (testapp), bolt (T2T1): no menu, so
+//! the extras cannot be reached.
 
 use super::extra::ExtraItem;
 use super::{BR_CODE_OTHER, Commitment, UiReply, call};

@@ -1,4 +1,12 @@
 //! Confirming a single value. The public docs live on [`confirm_value`].
+//!
+//! WIP: manual test results with extras (testapp):
+//! - caesar (T3B1): only the value is drawn. Its Cancel works, but there is
+//!   no menu, so the extras cannot be reached.
+//! - delizia (T3T1): the menu button replaced the screen's way out and the
+//!   menu had none, so the block could not be refused. Fixed by
+//!   `MENU_CARRIES_WAY_OUT`; not re-tested since.
+//! - bolt (T2T1): no menu, so the extras cannot be reached.
 
 use super::extra::ExtraItem;
 use super::{BR_CODE_OTHER, Commitment, UiReply, call};

@@ -1,5 +1,11 @@
 //! The closing screen of a transaction. The public docs live on
 //! [`confirm_summary`].
+//!
+//! WIP: manual test results (testapp):
+//! - caesar (T3B1): with extras the menu, the extras and its way out all
+//!   work; without extras there is no menu, as intended. The reference for
+//!   what the other blocks should do there.
+//! - bolt (T2T1): no menu, so the extras cannot be reached.
 
 use super::extra::ExtraItem;
 use super::{BR_CODE_OTHER, UiReply, call};
