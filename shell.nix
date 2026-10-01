@@ -1,178 +1,27 @@
-{ fullDeps ? false
-, hardwareTest ? false
-, devTools ? false
-, pythonTest ? false
- }:
-
+{
+  fullDeps ? false,
+  hardwareTest ? false,
+  devTools ? false,
+  ...
+}:
 let
-  # the last commit from master as of 2026-03-16
-  # when updating please also bump rustProfiles below
-  rustOverlay = import (builtins.fetchTarball {
-    url = "https://github.com/oxalica/rust-overlay/archive/f600ea449c7b5bb596fa1cf21c871cc5b9e31316.tar.gz";
-    sha256 = "0x70l5b4v5zljnwkzbv7yi5ld04vb75zb6wk620sfm6vd406166c";
-  });
-  # define this variable and devTools if you want nrf{util,connect}
-  acceptJlink = builtins.getEnv "TREZOR_FIRMWARE_ACCEPT_JLINK_LICENSE" == "yes";
-  # the last successful build of nixpkgs-unstable as of 2026-07-17
-  nixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/59682e0069f0ed0a452e2179a7f4c1f247027b9e.tar.gz";
-    sha256 = "136vd5g72cq5xgwnxzcwwjdl16wgi4as7dyfjj6dp59fh0fvxj67";
-  }) {
-    config = {
-      allowUnfree = acceptJlink;
-      segger-jlink.acceptLicense = acceptJlink;
-    };
-    overlays = [ rustOverlay ];
-  };
-  moneroTests = nixpkgs.fetchurl {
-    url = "https://github.com/ph4r05/monero/releases/download/v0.18.3.1-dev-tests-u18.04-01/trezor_tests";
-    sha256 = "d8938679b69f53132ddacea1de4b38b225b06b37b3309aa17911cfbe09b70b4a";
-  };
-  moneroTestsPatched = nixpkgs.runCommandCC "monero_trezor_tests" {} ''
-    cp ${moneroTests} $out
-    chmod +wx $out
-    ${nixpkgs.patchelf}/bin/patchelf \
-      --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-      --add-rpath "${nixpkgs.udev}/lib" \
-      "$out"
-    chmod -w $out
-  '';
-  # do not expose rust's gcc: https://github.com/oxalica/rust-overlay/issues/70
-  # Create a wrapper that only exposes $pkg/bin. This prevents pulling in
-  # development deps, packages to a nix-shell. This is especially important
-  # when packages are combined from different nixpkgs versions.
-  mkBinOnlyWrapper = pkg:
-    nixpkgs.runCommand "${pkg.pname}-${pkg.version}-bin" { inherit (pkg) meta; } ''
-      mkdir -p "$out/bin"
-      for bin in "${nixpkgs.lib.getBin pkg}/bin/"*; do
-          ln -s "$bin" "$out/bin/"
-      done
-    '';
-  # NOTE: don't forget to update Minimum Supported Rust Version in docs/core/build/emulator.md
-  rustProfiles = nixpkgs.rust-bin.nightly."2026-03-16";
-  rustNightly = rustProfiles.minimal.override {
-    targets = [
-      "thumbv8m.main-none-eabihf" # T3
-      "thumbv7em-none-eabihf" # T2
-      "thumbv7m-none-eabi"    # T1
-    ];
-    # we use rustfmt from nixpkgs because it's built with the nighly flag needed for wrap_comments
-    # to use official binary, remove rustfmt from buildInputs and add it to extensions:
-    extensions = [ "rust-src" "clippy" "rustfmt" ];
-  };
-  openocd-stm = (nixpkgs.openocd.overrideAttrs (oldAttrs: {
-    src = nixpkgs.fetchFromGitHub {
-      owner = "STMicroelectronics";
-      repo = "OpenOCD";
-      rev = "openocd-cubeide-v1.13.0";
-      sha256 = "a811402e19f0bfe496f6eecdc05ecea57f79a323879a810efaaff101cb0f420f";
-    };
-    version = "stm-cubeide-v1.13.0";
-    nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ nixpkgs.autoreconfHook ];
-  }));
+  whichShell =
+    if fullDeps then
+      "everything"
+    else if devTools || hardwareTest then
+      "default"
+    else
+      "minimal";
 in
-with nixpkgs;
-stdenvNoCC.mkDerivation ({
-  name = "trezor-firmware-env";
-  nativeBuildInputs = lib.optionals (!stdenv.isDarwin) [ autoPatchelfHook ];
-  buildInputs = lib.optionals fullDeps [
-    bitcoind
-    sdl2-compat # for running old emulators used in upgrade tests
-    SDL2_image # for running old emulators used in upgrade tests
-  ] ++ [
-    sdl3
-    sdl3-image
-    bash
-    bloaty  # for binsize
-    cargo-audit
-    cargo-vet
-    check
-    crowdin-cli  # for translations
-    curl  # for connect tests
-    editorconfig-checker
-    gcc-arm-embedded-13
-    gcc14
-    git
-    git-subrepo
-    gnumake
-    graphviz
-    libffi
-    libjpeg
-    libusb1
-    llvmPackages.clang
-    openssl
-    perl
-    pkg-config
-    poetry
-    ps
-    protobuf_31  # version needs to be <= than the one in pyproject.toml
-    pyright
-    python3
-    ruff
-    (mkBinOnlyWrapper rustNightly)
-    s5cmd
-    sccache
-    uv
-    wget
-    zlib
-    moreutils
-  ] ++ lib.optionals (!stdenv.isDarwin) [
-    procps
-    valgrind
-  ] ++ lib.optionals (stdenv.isDarwin) [
-    libiconv
-  ] ++ lib.optionals hardwareTest [
-    uhubctl
-    socat
-    ffmpeg_7-headless
-    dejavu_fonts
-  ] ++ lib.optionals devTools [
-    cmake
-    ninja
-    tio
-    shellcheck
-    openocd-stm
-  ] ++ lib.optionals (devTools && !stdenv.isDarwin) [
-    gdb
-    kdePackages.kcachegrind
-  ] ++ lib.optionals (devTools && acceptJlink) [
-    nrfutil
-    nrfconnect
-  ];
-  LD_LIBRARY_PATH = lib.makeLibraryPath [
-    libffi
-    libjpeg
-    libusb1
-    libressl
-  ];
-  DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
-  NIX_ENFORCE_PURITY = 0;
-
-  # Fix bdist-wheel problem by setting source date epoch to a more recent date
-  SOURCE_DATE_EPOCH = 1600000000;
-
-  # Used by rust bindgen
-  LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
-
-  # don't try to use stack protector for Apple Silicon (emulator) binaries
-  # it's broken at the moment
-  hardeningDisable = lib.optionals (stdenv.isDarwin && stdenv.isAarch64) [ "stackprotector" ];
-
-  # Enabling rust-analyzer extension in VSCode
-  RUST_SRC_PATH = "${rustProfiles.rust-src}/lib/rustlib/src/rust/library";
-
-  # Avoid printing "Using udevCheckHook", there are no rules to check
-  dontUdevCheck = 1;
-} // (if pythonTest then {
-  # Allow uv to use any python version for python tests
-  UV_PYTHON_PREFERENCE = "managed";
-  UV_PYTHON_DOWNLOADS = "automatic";
-} else {
-  # Force uv to use the nix-provided Python instead of its own managed builds.
-  # Without this, uv defaults to python-preference=managed + python-downloads=automatic,
-  # silently downloading/reusing its own interpreter and ignoring python3 on PATH.
-  UV_PYTHON_PREFERENCE = "only-system";
-  UV_PYTHON_DOWNLOADS = "never";
-}) // (lib.optionalAttrs fullDeps) {
-  TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
-})
+(import (
+  let
+    lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+    nodeName = lock.nodes.root.inputs.flake-compat;
+  in
+  fetchTarball {
+    url =
+      lock.nodes.${nodeName}.locked.url
+        or "https://github.com/NixOS/flake-compat/archive/${lock.nodes.${nodeName}.locked.rev}.tar.gz";
+    sha256 = lock.nodes.${nodeName}.locked.narHash;
+  }
+) { src = ./.; }).outputs.devShells."${builtins.currentSystem}"."${whichShell}"
