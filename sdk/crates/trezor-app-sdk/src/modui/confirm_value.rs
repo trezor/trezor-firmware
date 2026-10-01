@@ -94,11 +94,6 @@ impl<'a> ConfirmValue<'a> {
             extras,
         }
     }
-
-    /// Whether the screen has anything to offer besides its main content.
-    fn offers_more(&self) -> bool {
-        !self.extras.is_empty()
-    }
 }
 
 // ============================================================================
@@ -152,9 +147,9 @@ pub fn confirm_value(params: ConfirmValue<'_>) -> Result<UiReply> {
         false, // info: the menu button is the external one below
         params.commitment == Commitment::Final, // hold: follows from the commitment
         params.kind == ValueKind::Address,
-        false,                // page_counter
-        true,                 // cancel: refusing is never the app's to switch off
-        params.offers_more(), // external_menu: how the menu is reached
+        false,                     // page_counter
+        true,                      // cancel: refusing is never the app's to switch off
+        !params.extras.is_empty(), // external_menu: how the menu is reached
         footer,
     );
 

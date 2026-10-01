@@ -51,11 +51,6 @@ impl<'a> ConfirmSummary<'a> {
             extras,
         }
     }
-
-    /// Whether the screen has anything to offer besides its main content.
-    fn offers_more(&self) -> bool {
-        !self.extras.is_empty()
-    }
 }
 
 // ============================================================================
@@ -106,10 +101,10 @@ pub fn confirm_summary(params: ConfirmSummary<'_>) -> Result<UiReply> {
         None,
         None,
         None,
-        false,                // back_button: sequences run forward only
-        params.offers_more(), // external_menu: how the extras are reached
-        Some(params.br),      // br_name: the step's name; the app owns it
-        BR_CODE_OTHER,        // legacy field; see the constant
+        false,                     // back_button: sequences run forward only
+        !params.extras.is_empty(), // external_menu: how the extras are reached
+        Some(params.br),           // br_name: the step's name; the app owns it
+        BR_CODE_OTHER,             // legacy field; see the constant
     );
 
     // The summary's own menu holds its way out, but a menu of extras replaces

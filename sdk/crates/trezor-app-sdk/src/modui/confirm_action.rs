@@ -58,11 +58,6 @@ impl<'a> ConfirmAction<'a> {
             extras,
         }
     }
-
-    /// Whether the screen has anything to offer besides its main content.
-    fn offers_more(&self) -> bool {
-        !self.extras.is_empty()
-    }
 }
 
 // ============================================================================
@@ -113,7 +108,7 @@ pub fn confirm_action(params: ConfirmAction<'_>) -> Result<UiReply> {
         true,                                   // cancel: the person can always leave
         Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
         BR_CODE_OTHER,   // legacy field; see the constant
-        params.offers_more(), // external_menu: how the menu is reached
+        !params.extras.is_empty(), // external_menu: how the menu is reached
     );
 
     // Always refusable: where the menu button takes the screen's own way out,

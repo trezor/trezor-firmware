@@ -62,11 +62,6 @@ impl<'a> ConfirmData<'a> {
             cancel,
         }
     }
-
-    /// Whether the screen has anything to offer besides its main content.
-    fn offers_more(&self) -> bool {
-        !self.extras.is_empty() || self.cancel
-    }
 }
 
 // ============================================================================
@@ -131,6 +126,8 @@ pub fn confirm_data(params: ConfirmData<'_>) -> Result<UiReply> {
 /// as many screens as it takes, and the person answers only once they have
 /// seen all of it.
 fn show_chunk(params: &ConfirmData<'_>, hex: &str, layout: &LayoutHandle) -> Result<AfterChunk> {
+    // The screen has a menu: the app offered extras, a way out, or both.
+    let has_menu = !params.extras.is_empty() || params.cancel;
     let request = WireConfirmValue::new(
         params.title,
         hex,
@@ -140,13 +137,13 @@ fn show_chunk(params: &ConfirmData<'_>, hex: &str, layout: &LayoutHandle) -> Res
         true,            // is_data: raw data, shown verbatim
         None,            // verb: the model's own
         params.subtitle,
-        false,                // info: the menu button is the external one below
-        false,                // hold
-        false,                // chunkify: hex, not an address to compare by eye
-        true,                 // page_counter: where the person is within the chunk
-        true,                 // cancel: the screen's own way out
-        params.offers_more(), // external_menu: how the extras are reached
-        None,                 // footer
+        false,    // info: the menu button is the external one below
+        false,    // hold
+        false,    // chunkify: hex, not an address to compare by eye
+        true,     // page_counter: where the person is within the chunk
+        true,     // cancel: the screen's own way out
+        has_menu, // external_menu: how the extras are reached
+        None,     // footer
     );
 
     // This chunk's content is new, so the layout is built rather than reopened.
@@ -164,7 +161,7 @@ fn show_chunk(params: &ConfirmData<'_>, hex: &str, layout: &LayoutHandle) -> Res
             UiReply::ConfirmedAll => return Ok(AfterChunk::ConfirmAll),
             // The extras, which is all this can mean: the screen has no other
             // secondary button.
-            UiReply::WantsMore if params.offers_more() => {
+            UiReply::WantsMore if has_menu => {
                 match menu::open(params.extras, params.cancel, false, Some(params.br))? {
                     Some(reply) => return Ok(AfterChunk::Decided(reply)),
                     // Back to the chunk the person was reading, as they left it.
