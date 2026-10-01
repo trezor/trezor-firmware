@@ -126,6 +126,8 @@ stdenvNoCC.mkDerivation ({
     socat
     ffmpeg_7-headless
     dejavu_fonts
+    strace
+    usbutils
   ] ++ lib.optionals devTools [
     cmake
     ninja

@@ -92,7 +92,10 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - uses: ./.github/actions/environment
-      - run: nix-shell --arg hardwareTest true --run uhubctl
+      - name: uhubctl
+        run: |
+          nix-shell --arg hardwareTest true --run uhubctl
+          nix-shell --arg hardwareTest true --run "uv run core/tools/check-usb-permissions.py" |& tee check-usb-permissions.log
       - run: nix-shell --run "uv run make -C core build_firmware"
       - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build-xtask/artifacts/latest/firmware.bin"
       - run: |
@@ -110,6 +113,7 @@ jobs:
           path: |
             trezor.log
             pytest.log
+            check-usb-permissions.log
           retention-days: 7
         if: always()
 
@@ -185,13 +189,18 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - uses: ./.github/actions/environment
-      - run: nix-shell --arg hardwareTest true --run uhubctl
+      - name: uhubctl
+        run: |
+          nix-shell --arg hardwareTest true --run uhubctl
+          nix-shell --arg hardwareTest true --run "uv run core/tools/check-usb-permissions.py" |& tee check-usb-permissions.log
       - run: nix-shell --run "uv run legacy/script/setup"
       - run: nix-shell --run "export PRODUCTION=0 && uv run legacy/script/cibuild"
       - run: nix-shell --arg hardwareTest true --run "ci/hardware_tests/t1_hw_test.sh"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-hardware-${{ matrix.coins }}
-          path: ci/hardware_tests/*.mp4
+          path: |
+            ci/hardware_tests/*.mp4
+            check-usb-permissions.log
           retention-days: 7
         if: always()
