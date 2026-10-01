@@ -416,9 +416,14 @@ def wardd(tmp_path: Path) -> t.Iterator[str]:
     port = probe.getsockname()[1]
     probe.close()
     (tmp_path / "token").write_text("relay-test")
+    log = (tmp_path / "wardd.log").open("w")
+    # `node --import tsx`, not the tsx binary: that one spawns a child node, and terminating it
+    # would orphan the daemon
     proc = subprocess.Popen(
         [
-            str(Path(SUITE) / "node_modules/.bin/tsx"),
+            "node",
+            "--import",
+            "tsx",
             "packages/wardd/src/cli.ts",
             "--memory",
             "--port",
@@ -429,7 +434,7 @@ def wardd(tmp_path: Path) -> t.Iterator[str]:
             str(tmp_path / "token"),
         ],
         cwd=SUITE,
-        stdout=subprocess.PIPE,
+        stdout=log,
         stderr=subprocess.STDOUT,
     )
     url = f"ws://127.0.0.1:{port}"
@@ -441,12 +446,11 @@ def wardd(tmp_path: Path) -> t.Iterator[str]:
             time.sleep(0.1)
     else:
         proc.kill()
-        pytest.fail(
-            f"wardd did not start: {proc.stdout.read().decode() if proc.stdout else ''}"
-        )
+        pytest.fail(f"wardd did not start: {(tmp_path / 'wardd.log').read_text()}")
     yield url
     proc.terminate()
     proc.wait(10)
+    log.close()
 
 
 def test_against_wardd_sync_flush_status(wardd: str) -> None:
