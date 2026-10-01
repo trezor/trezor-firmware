@@ -3,7 +3,7 @@
 use super::extra::ExtraItem;
 use super::{BR_CODE_OTHER, Commitment, UiReply, call};
 use crate::Result;
-use crate::structs::{ConfirmAction as WireConfirmAction, TrezorUiEnum};
+use crate::traits::ui::ConfirmAction as WireConfirmAction;
 
 // ============================================================================
 // Data types
@@ -68,8 +68,8 @@ impl<'a> ConfirmAction<'a> {
 
 /// Asks the person to confirm an action, and waits for the answer.
 ///
-/// The person can always refuse: the screen has its own way out, so the block
-/// takes no `cancel`.
+/// The person can always refuse, so the block takes no `cancel`: the way out
+/// is on the screen, or in its menu where the menu button takes its place.
 ///
 /// # Errors
 ///
@@ -100,7 +100,7 @@ impl<'a> ConfirmAction<'a> {
 /// }
 /// ```
 pub fn confirm_action(params: ConfirmAction<'_>) -> Result<UiReply> {
-    let request = TrezorUiEnum::ConfirmAction(WireConfirmAction::new(
+    let request = WireConfirmAction::new(
         params.title,
         params.action,
         params.description,
@@ -111,8 +111,9 @@ pub fn confirm_action(params: ConfirmAction<'_>) -> Result<UiReply> {
         Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
         BR_CODE_OTHER,   // legacy field; see the constant
         params.offers_more(), // external_menu: how the menu is reached
-    ));
+    );
 
-    // The screen has its own way out, so the extras need not offer one.
-    call(&request, params.extras, false, Some(params.br))
+    // Always refusable: where the menu button takes the screen's own way out,
+    // the menu carries it instead.
+    call(&request, params.extras, false, true, Some(params.br))
 }

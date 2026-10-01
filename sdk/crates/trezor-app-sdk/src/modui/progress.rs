@@ -72,15 +72,9 @@
 //! })?;
 //! ```
 
-use rkyv::rancor::Failure;
-use rkyv::to_bytes;
-
-use crate::core_services::services_or_die;
-use crate::ipc::IpcMessage;
-use crate::service::CoreIpcService;
-use crate::structs::TrezorProgressEnum;
-use crate::util::Timeout;
-use crate::{Error, Result};
+use crate::app_runtime2::get_ui_or_die;
+use crate::traits::ui::{UiV1Dyn as _, opt_bytes};
+use crate::{IntoAppResult, Result};
 
 // ============================================================================
 // Data types
@@ -174,13 +168,14 @@ impl Progress {
     /// [`crate::Error::ServiceError`] if the request could not be sent or
     /// core did not accept it.
     pub fn start(label: &str, total: Total) -> Result<Self> {
-        let request = TrezorProgressEnum::Init {
-            description: Some(label.into()),
-            title: None,
-            indeterminate: matches!(total, Total::Unknown),
-            danger: false,
-        };
-        send(&request)?;
+        get_ui_or_die()
+            .init_progress(
+                opt_bytes(Some(label)),
+                opt_bytes(None),
+                matches!(total, Total::Unknown),
+                false,
+            )
+            .into_app_result()?;
 
         Ok(Self {
             total: match total {
@@ -209,12 +204,10 @@ impl Progress {
         // Saturating: reporting past the declared total pins the bar full
         // rather than wrapping it around.
         self.done = self.done.saturating_add(units);
-        let percent = (self.done.min(total) * 100) / total;
-        let request = TrezorProgressEnum::Update {
-            description: None,
-            value: percent,
-        };
-        let _ = send(&request);
+        // Core's progress scale is 0..=1000. Widened so `done * 1000` cannot
+        // overflow for large totals.
+        let permille = (u64::from(self.done.min(total)) * 1000 / u64::from(total)) as u32;
+        let _ = get_ui_or_die().update_progress(opt_bytes(None), permille);
     }
 }
 
@@ -223,19 +216,7 @@ impl Drop for Progress {
         if self.started {
             // Nothing useful can be done if this fails, and a panic here
             // would replace whatever error is already unwinding out.
-            let _ = send(&TrezorProgressEnum::End);
+            let _ = get_ui_or_die().end_progress();
         }
     }
-}
-
-// ============================================================================
-// Internals
-// ============================================================================
-
-/// Sends one progress message and waits for core's acknowledgement.
-fn send(request: &TrezorProgressEnum) -> Result<()> {
-    let bytes = to_bytes::<Failure>(request).map_err(|_| Error::ServiceError)?;
-    let message = IpcMessage::new(request.id(), bytes.as_ref());
-    services_or_die().call(CoreIpcService::Progress, &message, Timeout::max())?;
-    Ok(())
 }

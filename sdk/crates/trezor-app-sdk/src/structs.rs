@@ -218,7 +218,11 @@ where
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct SelectMenu<'a> {
     pub items: Slice<'a, StrSlice<'a>>,
+    /// A way out the block asked for; every model draws it, after the items.
     pub cancel: Option<StrSlice<'a>>,
+    /// The block behind the menu can always be refused. A model whose menu
+    /// button takes the place of the screen's own way out draws one here.
+    pub refusable: bool,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
 }
@@ -227,12 +231,14 @@ impl<'a> SelectMenu<'a> {
     pub fn new(
         items: &'a [StrSlice<'a>],
         cancel: Option<&'a str>,
+        refusable: bool,
         br_name: Option<&'a str>,
         br_code: i32,
     ) -> SelectMenu<'a> {
         SelectMenu {
             items: items.into(),
             cancel: cancel.map(|s| s.into()),
+            refusable,
             br_name: br_name.map(|s| s.into()),
             br_code,
         }
@@ -1140,6 +1146,7 @@ pub enum TrezorProgressEnum<'a> {
     },
     Update {
         description: Option<StrSlice<'a>>,
+        /// How far along, from 0 to 1000.
         value: u32,
     },
     End,

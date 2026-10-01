@@ -7,8 +7,8 @@
 use super::extra::ExtraItem;
 use super::{BR_CODE_OTHER, UiReply, call};
 use crate::Result;
-pub use crate::structs::Severity;
-use crate::structs::{ShowNotice as WireShowNotice, TrezorUiEnum};
+pub use crate::traits::ui::Severity;
+use crate::traits::ui::ShowNotice as WireShowNotice;
 
 // ============================================================================
 // Data types
@@ -137,9 +137,10 @@ pub fn show_notice(params: ShowNotice<'_>) -> Result<UiReply> {
     );
 
     call(
-        &TrezorUiEnum::ShowNotice(request),
+        &request,
         params.extras,
         params.cancel,
+        false,
         Some(params.br),
     )
 }

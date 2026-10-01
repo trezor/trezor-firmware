@@ -195,10 +195,11 @@
 //! as the person left it. How they are presented is the library's choice and
 //! may change without any signature changing.
 //!
-//! Every confirmation can be refused from its own screen, and that is never the
-//! app's to switch off. A block whose screen always has a way out takes no
-//! `cancel`. Where a block does take one, `cancel: true` adds a Cancel entry to
-//! its extras that abandons the whole block.
+//! Every confirmation can be refused, and that is never the app's to switch
+//! off. A block that is always refusable takes no `cancel`; its way out is on
+//! the screen, or in its extras on a model whose menu button takes the
+//! screen's way out. Where a block does take one, `cancel: true` adds a Cancel
+//! entry to its extras that abandons the whole block, on every model.
 //!
 //! A block that cannot show extras yet refuses a non-empty list rather than
 //! draw a screen whose extras nobody can open; see the table above.
@@ -315,19 +316,15 @@
 // points, and are removed before merge.
 //
 // The public surface above is the design; what carries it is scaffolding.
-// Today that means serializing onto the existing `TrezorUiEnum` wire and
-// borrowing `crate::Error` for failures. Both get rewritten as core is built
-// out, and neither should force a change to a block's signature when they do.
+// Today that means the `UiV1` vtable (`traits::ui`), whose request types
+// mirror the existing wire, and borrowing `crate::Error` for failures. Both
+// get rewritten as core is built out, and neither should force a change to a
+// block's signature when they do.
 //
-// When the wire is replaced, this is where it starts. Every block builds a
-// `TrezorUiEnum` and hands it to `layout`, the only file that touches IPC — so
-// a new request type means changing each block's final expression and how
-// `layout` serializes, and nothing else here. What the new wire has to carry is
-// already decided by this module: the block and its facts, the extras as data,
-// and the op plus layout handle that today ride in the IPC message id because
-// the payload had nowhere to put them. An earlier attempt at that type
-// (`ui_wire.rs`, since deleted; see the git history) is worth reading first,
-// for its list of things the app is deliberately not allowed to say.
+// Every block builds one `traits::ui` request and hands it to `layout`, the
+// only file that calls `UiV1` for screens — so a new request type means a new
+// `UiV1` method, one line in `layout`'s `request!` list, and the block's final
+// expression, and nothing else here.
 //
 // ButtonRequests: the app names the step and nothing else. The suffixes are
 // `menu`'s. `br_code` is the legacy identifier, always `BR_CODE_OTHER`. Page
@@ -371,10 +368,9 @@ pub use show_notice::{Severity, ShowNotice, show_notice};
 use ufmt::derive::uDebug;
 
 /// A key/value fact, as shown in a list or on an extra's screen.
-pub use crate::structs::Property;
-use crate::structs::TrezorUiEnum;
+pub use crate::traits::ui::Property;
 /// The person's answer to a block: the wire reply, as it came.
-pub use crate::structs::UiReply;
+pub use crate::traits::ui::UiReply;
 use crate::{Error, Result};
 
 // ============================================================================
@@ -453,9 +449,10 @@ impl UiReply {
 /// found as the person left it; that is invisible to the caller either way,
 /// because the block is still one call and one answer.
 fn call(
-    request: &TrezorUiEnum,
+    request: &impl layout::Request,
     extras: &[ExtraItem<'_>],
     cancel: bool,
+    refusable: bool,
     br: Option<&str>,
 ) -> Result<UiReply> {
     // `None` is a block that announces nothing, which is the block's own
@@ -464,7 +461,7 @@ fn call(
     if br == Some("") {
         return Err(Error::ValueError("a step name must not be empty"));
     }
-    menu::check_extras(extras, cancel)?;
+    menu::check_extras(extras, cancel || refusable)?;
 
     let layout = LayoutHandle::new();
     let mut first = true;
@@ -485,7 +482,7 @@ fn call(
             // The person asked for the extras. A block that offered none cannot
             // produce this, so it is a protocol violation rather than a gesture.
             UiReply::WantsMore => {
-                if let Some(reply) = menu::open(extras, cancel, br)? {
+                if let Some(reply) = menu::open(extras, cancel, refusable, br)? {
                     return Ok(reply);
                 }
             }

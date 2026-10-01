@@ -3,7 +3,7 @@
 
 use super::extra::ExtraItem;
 use super::{BR_CODE_OTHER, Commitment, UiReply, call};
-use crate::structs::{ConfirmProperties as WireConfirmProperties, Property, TrezorUiEnum};
+use crate::traits::ui::{ConfirmProperties as WireConfirmProperties, Property};
 use crate::{Error, Result};
 
 // ============================================================================
@@ -104,9 +104,10 @@ pub fn confirm_properties(params: ConfirmProperties<'_>) -> Result<UiReply> {
     );
 
     call(
-        &TrezorUiEnum::ConfirmProperties(request),
+        &request,
         params.extras,
         params.cancel,
+        false,
         Some(params.br),
     )
 }

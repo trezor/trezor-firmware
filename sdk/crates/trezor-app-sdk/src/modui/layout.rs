@@ -11,40 +11,45 @@
 //! handle number, the trusted side keeps the layout under it, and the layout
 //! can be shown again instead of rebuilt. Dropping the handle closes it.
 //!
-//! The handle and the operation ride in the IPC message id rather than in the
-//! payload, so the request itself describes only the content.
+//! Each request type maps to one [`UiV1`](crate::traits::ui::UiV1) method,
+//! through [`Request`]; the op and the handle travel beside the request, so
+//! the request itself describes only the content.
 
-use rkyv::api::low::deserialize;
-use rkyv::rancor::Failure;
-use rkyv::{Archived, to_bytes};
-
-use crate::core_services::services_or_die;
-use crate::ipc::IpcMessage;
-use crate::service::CoreIpcService;
-use crate::structs::{TrezorUiEnum, UiReply};
-use crate::util::Timeout;
-use crate::{Error, Result};
-
-// ============================================================================
-// Constants
-// ============================================================================
-
-/// Build the layout, show it, and forget it.
-const OP_ONCE: u16 = 0;
-/// Build the layout and keep it alive under the handle.
-const OP_OPEN: u16 = 1;
-/// Show the layout already held under the handle, without rebuilding it.
-const OP_REOPEN: u16 = 2;
-/// Drop the layout held under the handle. Shows nothing.
-const OP_CLOSE: u16 = 3;
-
-/// Bits of the message id that carry the handle; the rest carry the op.
-const HANDLE_BITS: u16 = 12;
-const HANDLE_MASK: u16 = (1 << HANDLE_BITS) - 1;
+use crate::app_runtime2::get_ui_or_die;
+use crate::traits::ui::{
+    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmValue, HANDLE_BITS, OP_ONCE, OP_OPEN,
+    OP_REOPEN, SelectMenu, ShowNotice, ShowProperties, UiReply, UiV1Dyn as _,
+};
+use crate::{IntoAppResult, Result};
 
 // ============================================================================
 // Data types
 // ============================================================================
+
+/// A request the trusted side can draw: one `UiV1` method per type.
+pub(super) trait Request {
+    fn send(&self, op: u16, handle: u16) -> Result<UiReply>;
+}
+
+macro_rules! request {
+    ($($ty:ident => $method:ident),* $(,)?) => {$(
+        impl Request for $ty<'_> {
+            fn send(&self, op: u16, handle: u16) -> Result<UiReply> {
+                get_ui_or_die().$method(op, handle, self.clone()).into_app_result()
+            }
+        }
+    )*};
+}
+
+request! {
+    ConfirmAction => confirm_action,
+    ConfirmValue => confirm_value,
+    ConfirmSummary => confirm_summary,
+    ConfirmProperties => confirm_properties,
+    ShowProperties => show_properties,
+    ShowNotice => show_notice,
+    SelectMenu => select_menu,
+}
 
 /// A layout on the trusted side that survives being answered.
 ///
@@ -71,8 +76,8 @@ impl LayoutHandle {
     /// Use this for content the person has not seen, including the next
     /// chunk of something they have: the trusted side builds a new layout, so
     /// whatever the previous request said is gone.
-    pub fn show(&self, request: &TrezorUiEnum) -> Result<UiReply> {
-        self.send(OP_OPEN, request)
+    pub fn show(&self, request: &impl Request) -> Result<UiReply> {
+        request.send(OP_OPEN, self.handle)
     }
 
     /// Shows the layout again, as the person left it.
@@ -81,14 +86,8 @@ impl LayoutHandle {
     /// given: the trusted side reuses the layout it already has and ignores
     /// the payload. The payload is sent anyway so that a trusted side which no
     /// longer holds the layout can rebuild it rather than fail.
-    pub fn reshow(&self, request: &TrezorUiEnum) -> Result<UiReply> {
-        self.send(OP_REOPEN, request)
-    }
-
-    /// Sends one message for this handle and decodes the reply.
-    fn send(&self, op: u16, request: &TrezorUiEnum) -> Result<UiReply> {
-        let bytes = to_bytes::<Failure>(request).map_err(|_| Error::ServiceError)?;
-        raw_call(message_id(op, self.handle), bytes.as_ref())
+    pub fn reshow(&self, request: &impl Request) -> Result<UiReply> {
+        request.send(OP_REOPEN, self.handle)
     }
 }
 
@@ -96,7 +95,7 @@ impl Drop for LayoutHandle {
     fn drop(&mut self) {
         // Nothing useful can be done if this fails, and a panic here would
         // replace whatever error is already unwinding out of the block.
-        let _ = raw_call(message_id(OP_CLOSE, self.handle), &[]);
+        let _ = get_ui_or_die().close(self.handle);
     }
 }
 
@@ -109,19 +108,13 @@ impl Drop for LayoutHandle {
 ///
 /// For content with no follow-up, where keeping a layout alive would only
 /// leave something to clean up. No handle is involved.
-pub(super) fn call_once(request: &TrezorUiEnum) -> Result<UiReply> {
-    let bytes = to_bytes::<Failure>(request).map_err(|_| Error::ServiceError)?;
-    raw_call(message_id(OP_ONCE, 0), bytes.as_ref())
+pub(super) fn call_once(request: &impl Request) -> Result<UiReply> {
+    request.send(OP_ONCE, 0)
 }
 
 // ============================================================================
 // Internals
 // ============================================================================
-
-/// Packs an operation and a handle into the 16-bit IPC message id.
-fn message_id(op: u16, handle: u16) -> u16 {
-    (op << HANDLE_BITS) | (handle & HANDLE_MASK)
-}
 
 /// Hands out the next handle.
 ///
@@ -132,21 +125,12 @@ fn message_id(op: u16, handle: u16) -> u16 {
 /// A `static mut` rather than an atomic because an app is a single task,
 /// which is the same assumption the rest of this crate makes.
 fn next_handle() -> u16 {
+    const MAX: u16 = (1 << HANDLE_BITS) - 1;
     static mut NEXT: u16 = 1;
 
     unsafe {
         let handle = NEXT;
-        NEXT = if handle >= HANDLE_MASK { 1 } else { handle + 1 };
+        NEXT = if handle >= MAX { 1 } else { handle + 1 };
         handle
     }
-}
-
-/// Sends one UI message and blocks until the trusted side answers.
-fn raw_call(id: u16, payload: &[u8]) -> Result<UiReply> {
-    let message = IpcMessage::new(id, payload);
-    let reply = services_or_die().call(CoreIpcService::Ui, &message, Timeout::max())?;
-
-    let archived = rkyv::access::<Archived<UiReply>, Failure>(reply.data())
-        .map_err(|_| Error::InvalidMessage)?;
-    deserialize::<UiReply, Failure>(archived).map_err(|_| Error::InvalidMessage)
 }

@@ -10,7 +10,7 @@ use super::extra::ExtraItem;
 use super::layout::LayoutHandle;
 use super::{BR_CODE_OTHER, menu};
 use crate::alloc_types::String;
-use crate::structs::{ConfirmValue as WireConfirmValue, TrezorUiEnum, UiReply};
+use crate::traits::ui::{ConfirmValue as WireConfirmValue, UiReply};
 use crate::{Error, Result};
 
 // ============================================================================
@@ -124,7 +124,7 @@ pub fn confirm_data(params: ConfirmData<'_>) -> Result<UiReply> {
 /// as many screens as it takes, and the person answers only once they have
 /// seen all of it.
 fn show_chunk(params: &ConfirmData<'_>, hex: &str, layout: &LayoutHandle) -> Result<AfterChunk> {
-    let request = TrezorUiEnum::ConfirmValue(WireConfirmValue::new(
+    let request = WireConfirmValue::new(
         params.title,
         hex,
         None,            // description
@@ -140,7 +140,7 @@ fn show_chunk(params: &ConfirmData<'_>, hex: &str, layout: &LayoutHandle) -> Res
         true,                 // cancel: the screen's own way out
         params.offers_more(), // external_menu: how the extras are reached
         None,                 // footer
-    ));
+    );
 
     // This chunk's content is new, so the layout is built rather than reopened.
     let mut reply = layout.show(&request)?;
@@ -158,7 +158,7 @@ fn show_chunk(params: &ConfirmData<'_>, hex: &str, layout: &LayoutHandle) -> Res
             // The extras, which is all this can mean: the screen has no other
             // secondary button.
             UiReply::WantsMore if params.offers_more() => {
-                match menu::open(params.extras, params.cancel, Some(params.br))? {
+                match menu::open(params.extras, params.cancel, false, Some(params.br))? {
                     Some(reply) => return Ok(AfterChunk::Decided(reply)),
                     // Back to the chunk the person was reading, as they left it.
                     None => reply = layout.reshow(&request)?,

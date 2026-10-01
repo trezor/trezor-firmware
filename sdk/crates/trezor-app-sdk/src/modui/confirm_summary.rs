@@ -4,7 +4,7 @@
 use super::extra::ExtraItem;
 use super::{BR_CODE_OTHER, UiReply, call};
 use crate::Result;
-use crate::structs::{ConfirmSummary as WireConfirmSummary, TrezorUiEnum};
+use crate::traits::ui::ConfirmSummary as WireConfirmSummary;
 
 // ============================================================================
 // Data types
@@ -110,9 +110,10 @@ pub fn confirm_summary(params: ConfirmSummary<'_>) -> Result<UiReply> {
     // it, so that menu has to carry the way out instead. Without extras the
     // screen keeps its own.
     call(
-        &TrezorUiEnum::ConfirmSummary(request),
+        &request,
         params.extras,
         !params.extras.is_empty(),
+        false,
         Some(params.br),
     )
 }
