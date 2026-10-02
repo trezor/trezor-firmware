@@ -10,6 +10,7 @@ pub const DIGEST_SIZE: usize = ffi::SHA512_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
 pub type Sha512Ctx = SecretContext<ffi::SHA512_CTX>;
+pub type Sha512Guard<'a> = HazardGuard<'a, ffi::SHA512_CTX>;
 
 // SAFETY: SHA512_CTX is valid when zeroed
 unsafe impl ZeroableMemory for ffi::SHA512_CTX {}
@@ -25,7 +26,7 @@ impl ffi::SHA512_CTX {
     }
 }
 
-impl HazardGuard<'_, ffi::SHA512_CTX> {
+impl Sha512Guard<'_> {
     /// Update the SHA512 context with the given data.
     pub fn update(&mut self, data: &[u8]) {
         let data_slice = CSlice::from(data);
@@ -89,6 +90,7 @@ impl Sha512<&'_ mut Sha512Ctx> {
 mod test {
     use super::*;
 
+    // vectors from http://www.di-mgt.com.au/sha_testvectors.html
     const SHA512_EMPTY: &str = "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e";
     const SHA512_VECTORS: &[(&[u8], &str)] = &[
         (b"", SHA512_EMPTY),
@@ -125,6 +127,38 @@ mod test {
         for (data, expected) in SHA512_VECTORS {
             let out_hex = hexdigest(data);
             assert_eq!(out_hex, *expected);
+        }
+    }
+
+    #[test]
+    fn test_update() {
+        for (data, expected) in SHA512_VECTORS {
+            let mut ctx = Sha512Ctx::default();
+            let mut sha = Sha512::new(&mut ctx);
+            sha.update(data);
+            assert_eq!(hex::encode(sha.finalize()), *expected);
+        }
+
+        let mut ctx = Sha512Ctx::default();
+        let mut sha = Sha512::new(&mut ctx);
+        for _ in 0..1_000_000 {
+            sha.update(b"a");
+        }
+        assert_eq!(
+            hex::encode(sha.finalize()),
+            "e718483d0ce769644e2e42c7bc15b4638e1f98b13b2044285632a803afa973ebde0ff244877ea60a4cb0432ce577c31beb009c5c2c49aa2e4eadb217ad8cc09b"
+        );
+    }
+
+    #[test]
+    fn test_guard_reuse() {
+        // reinitializing the context after `finalize` allows reusing it
+        let mut ctx = Sha512Ctx::default();
+        for _ in 0..2 {
+            ctx.hazard_mut().init();
+            let mut guard = Sha512Guard::hazard_new(&mut ctx);
+            guard.update(b"abc");
+            assert_eq!(hex::encode(guard.finalize()), hexdigest(b"abc"));
         }
     }
 }

@@ -10,6 +10,7 @@ pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
 pub type Sha256Ctx = SecretContext<ffi::SHA256_CTX>;
+pub type Sha256Guard<'a> = HazardGuard<'a, ffi::SHA256_CTX>;
 
 // SAFETY: SHA256_CTX is valid when zeroed
 unsafe impl ZeroableMemory for ffi::SHA256_CTX {}
@@ -25,7 +26,7 @@ impl ffi::SHA256_CTX {
     }
 }
 
-impl HazardGuard<'_, ffi::SHA256_CTX> {
+impl Sha256Guard<'_> {
     /// Update the SHA256 context with the given data.
     pub fn update(&mut self, data: &[u8]) {
         let ptr = CSlice::from(data);
@@ -98,12 +99,21 @@ impl Sha256<&'_ mut Sha256Ctx> {
 mod test {
     use super::*;
 
+    // vectors from http://www.di-mgt.com.au/sha_testvectors.html
     const SHA256_EMPTY: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
     const SHA256_VECTORS: &[(&[u8], &str)] = &[
         (b"", SHA256_EMPTY),
         (
             b"abc",
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+        ),
+        (
+            b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+            "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
+        ),
+        (
+            b"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+            "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1",
         ),
     ];
 
@@ -126,6 +136,38 @@ mod test {
         for (data, expected) in SHA256_VECTORS {
             let out_hex = hexdigest(data);
             assert_eq!(out_hex, *expected);
+        }
+    }
+
+    #[test]
+    fn test_update() {
+        for (data, expected) in SHA256_VECTORS {
+            let mut ctx = Sha256Ctx::default();
+            let mut sha = Sha256::new(&mut ctx);
+            sha.update(data);
+            assert_eq!(hex::encode(sha.finalize()), *expected);
+        }
+
+        let mut ctx = Sha256Ctx::default();
+        let mut sha = Sha256::new(&mut ctx);
+        for _ in 0..1_000_000 {
+            sha.update(b"a");
+        }
+        assert_eq!(
+            hex::encode(sha.finalize()),
+            "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0"
+        );
+    }
+
+    #[test]
+    fn test_guard_reuse() {
+        // reinitializing the context after `finalize` allows reusing it
+        let mut ctx = Sha256Ctx::default();
+        for _ in 0..2 {
+            ctx.hazard_mut().init();
+            let mut guard = Sha256Guard::hazard_new(&mut ctx);
+            guard.update(b"abc");
+            assert_eq!(hex::encode(guard.finalize()), hexdigest(b"abc"));
         }
     }
 }
