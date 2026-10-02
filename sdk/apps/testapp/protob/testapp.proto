@@ -1,0 +1,200 @@
+syntax = "proto2";
+package hw.trezor.testapp;
+
+/**
+ * One request per modui block. Each mirrors its block's parameters one to
+ * one, so the host drives the library through the same surface an app uses.
+ * `br` is the step name the host sees for that screen.
+ */
+
+enum Commitment {
+    Step = 0;
+    Final = 1;
+}
+
+enum ValueKind {
+    Text = 0;
+    Address = 1;
+}
+
+enum Severity {
+    Info = 0;
+    Success = 1;
+    Done = 2;
+    Warning = 3;
+    Danger = 4;
+}
+
+message Property {
+    required string key = 1;
+    required string value = 2;
+    optional bool mono = 3 [default = false];
+}
+
+/**
+ * Something the person can look at from the block's menu.
+ */
+message ExtraItem {
+    required string label = 1;
+    repeated Property props = 2;
+}
+
+/**
+ * Request: modui::confirm_action
+ * @next UiResult
+ */
+message ConfirmAction {
+    required string title = 1;
+    required string action = 2;
+    optional string description = 3;
+    optional string subtitle = 4;
+    optional Commitment commitment = 5 [default = Step];
+    required string br = 6;
+    repeated ExtraItem extras = 7;
+}
+
+/**
+ * Request: modui::confirm_value
+ * At most one of `footer_hint` and `footer_warning`.
+ * @next UiResult
+ */
+message ConfirmValue {
+    required string title = 1;
+    required string value = 2;
+    optional ValueKind kind = 3 [default = Text];
+    optional string subtitle = 4;
+    optional string description = 5;
+    optional string footer_hint = 6;
+    optional string footer_warning = 7;
+    optional Commitment commitment = 8 [default = Step];
+    required string br = 9;
+    repeated ExtraItem extras = 10;
+}
+
+/**
+ * Request: modui::confirm_data
+ * @next UiResult
+ */
+message ConfirmData {
+    required string title = 1;
+    required bytes data = 2;
+    optional string subtitle = 3;
+    required string br = 4;
+    repeated ExtraItem extras = 5;
+    optional bool cancel = 6 [default = false];
+}
+
+/**
+ * Request: modui::confirm_properties
+ * @next UiResult
+ */
+message ConfirmProperties {
+    required string title = 1;
+    repeated Property props = 2;
+    optional string subtitle = 3;
+    optional Commitment commitment = 4 [default = Step];
+    required string br = 5;
+    repeated ExtraItem extras = 6;
+    optional bool cancel = 7 [default = false];
+}
+
+/**
+ * Request: modui::confirm_summary
+ * An amount or a fee is shown only when both its label and its value are set.
+ * @next UiResult
+ */
+message ConfirmSummary {
+    required string title = 1;
+    optional string amount_label = 2;
+    optional string amount = 3;
+    optional string fee_label = 4;
+    optional string fee = 5;
+    required string br = 6;
+    repeated ExtraItem extras = 7;
+}
+
+/**
+ * Request: modui::show_notice
+ * @next UiResult
+ */
+message ShowNotice {
+    optional Severity severity = 1 [default = Info];
+    required string title = 2;
+    required string content = 3;
+    required string br = 4;
+    repeated ExtraItem extras = 5;
+    optional bool cancel = 6 [default = false];
+}
+
+/**
+ * Request: modui::progress_with, paced by the host.
+ * The progress stays up while the app asks for steps with `ProgressTick`; the
+ * host answers each tick with `ProgressStep`, or with `ProgressEnd` to finish.
+ * Without `total` the progress is indeterminate.
+ * @next ProgressTick
+ */
+message ShowProgress {
+    required string label = 1;
+    optional uint32 total = 2;
+}
+
+/**
+ * The app's question while a progress runs: what next?
+ * @next ProgressStep
+ * @next ProgressEnd
+ */
+message ProgressTick {
+}
+
+/**
+ * Report `units` more units of work done.
+ * @next ProgressTick
+ */
+message ProgressStep {
+    optional uint32 units = 1 [default = 1];
+}
+
+/**
+ * The work is over; the progress goes away.
+ * @next UiResult
+ */
+message ProgressEnd {
+}
+
+/**
+ * One step of a linear flow; exactly one field is set.
+ */
+message FlowStep {
+    optional ConfirmAction confirm_action = 1;
+    optional ConfirmValue confirm_value = 2;
+    optional ConfirmProperties confirm_properties = 3;
+    optional ConfirmSummary confirm_summary = 4;
+    optional ShowNotice show_notice = 5;
+}
+
+/**
+ * Request: modui::confirm_linear_flow
+ * @next UiResult
+ */
+message ConfirmLinearFlow {
+    repeated FlowStep steps = 1;
+}
+
+/**
+ * Response: the block's answer, exactly as the library returned it.
+ * `choice` is set only with `Choice`.
+ * @end
+ */
+message UiResult {
+    enum Reply {
+        Confirmed = 0;
+        Cancelled = 1;
+        WantsMore = 2;
+        Choice = 3;
+        Forward = 4;
+        Backward = 5;
+        ConfirmedAll = 6;
+    }
+    required Reply reply = 1;
+    optional uint32 choice = 2;
+}
