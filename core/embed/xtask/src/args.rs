@@ -1,3 +1,4 @@
+use std::ffi::OsString;
 use std::path::PathBuf;
 
 use anyhow::{Result, anyhow};
@@ -159,6 +160,8 @@ pub enum Cmd {
     PrintVersion(PrintVersionArgs),
     /// Generate Rust Analyzer configuration for the specified model.
     RaConfig(RaConfigArgs),
+    /// Run the Trezor App Tool command
+    Apps(AppsArgs),
 }
 
 #[derive(Args, Debug, Clone)]
@@ -286,4 +289,10 @@ pub struct RaConfigArgs {
     /// Write the configuration to a file instead of stdout
     #[arg(long)]
     pub file: Option<PathBuf>,
+}
+
+#[derive(Args, Debug)]
+pub struct AppsArgs {
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+    pub args: Vec<OsString>,
 }
