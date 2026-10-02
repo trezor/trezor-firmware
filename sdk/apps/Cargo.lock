@@ -810,6 +810,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "testapp"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "prost",
+ "trezor-app-build",
+ "trezor-app-sdk",
+ "ufmt",
+]
+
+[[package]]
 name = "tinyvec"
 version = "1.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
