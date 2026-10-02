@@ -22,7 +22,6 @@ enum State {
     Failed,
 }
 
-// SAFETY: gcm_ctx is valid when zeroed
 unsafe impl ZeroableMemory for ffi::gcm_ctx {}
 
 pub type AesGcmContext = SecretContext<ffi::gcm_ctx>;
