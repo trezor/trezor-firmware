@@ -182,6 +182,13 @@ pub fn artifacts_dir() -> Result<PathBuf> {
     ensure_directory(&dir)?;
     Ok(dir)
 }
+/// Returns the directory where JSON serialized artifacts for
+/// a specific model should be stored.
+pub fn artifacts_serialized_dir() -> Result<PathBuf> {
+    let dir = artifacts_dir()?.join("serialized");
+    ensure_directory(&dir)?;
+    Ok(dir)
+}
 
 /// Checks if the given directory exists, and creates it if it doesn't.
 pub fn ensure_directory(path: &Path) -> Result<()> {

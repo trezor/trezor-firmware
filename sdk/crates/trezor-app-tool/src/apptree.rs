@@ -3,11 +3,12 @@
 //! generating the Merkle proofs and RootPacket needed to load them.
 
 use crate::{artifacts, helpers};
-use anyhow::{Context, Ok, Result, ensure};
+use anyhow::{ensure, Context, Ok, Result};
 use std::{path::Path, process::Command};
 
 /// Python tool building the app Merkle proofs and the RootPacket(s), relative to the repo root.
 const APPTREE_TOOL: &str = "core/tools/trezor_core_tools/extapp_tool.py";
+const APPTREE_TOOL_ADVANCED: &str = "core/tools/trezor_core_tools/extapp_tool_advanced.py";
 
 /// Generates application tree (Merkle proofs and RootPacket) for all
 /// application in artifacts directory.
@@ -23,11 +24,23 @@ pub fn generate() -> Result<()> {
         .context("Failed to resolve repo root from the sdk/apps workspace root")?
         .to_path_buf();
 
+    let artifacts_serialized_dir = helpers::artifacts_serialized_dir()?;
+
     let mut cmd = Command::new("uv");
     cmd.arg("run")
         .arg(repo_root.join(APPTREE_TOOL))
         .arg("build-dev-bundle")
         .args(&apps)
+        .current_dir(&repo_root);
+
+    cmd = Command::new("uv");
+
+    cmd.arg("run")
+        .arg(repo_root.join(APPTREE_TOOL_ADVANCED))
+        .arg("post-build")
+        .args(&apps)
+        .arg("--out-dir")
+        .arg(artifacts_serialized_dir)
         .current_dir(&repo_root);
 
     println!("app-tool: Building app proofs and dev-signed RootPacket");

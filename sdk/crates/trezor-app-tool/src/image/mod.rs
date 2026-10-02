@@ -4,7 +4,7 @@
 //! The app binary format consists of a fixed-size header followed by the platform
 //! specific executable binary.
 
-use anyhow::{Context, Result, ensure};
+use anyhow::{ensure, Context, Result};
 use cargo_metadata::Package;
 use object::Object;
 use sha2::Digest;
@@ -17,7 +17,7 @@ use std::{
 use zerocopy::{IntoBytes, LittleEndian, U16, U32};
 use zerocopy_derive::{Immutable, IntoBytes};
 
-use crate::args::{Model, TargetArch};
+use crate::args::{Language, Model, TargetArch};
 
 mod armv8m;
 mod metadata;
@@ -29,6 +29,16 @@ impl TargetArch {
             TargetArch::Armv8m => 0,
             TargetArch::LinuxX86_64 => 1,
             TargetArch::MacosAarch64 => 2,
+        }
+    }
+}
+
+impl Language {
+    /// Returns the language identifier stored in the app header.
+    pub fn id(&self) -> u8 {
+        match self {
+            Language::EN => 0,
+            Language::CS => 1,
         }
     }
 }
@@ -62,8 +72,8 @@ struct AppHeader {
     target_arch: u8,
     /// Application privilege ring
     app_ring: u8,
-    /// Padding, reserved for future use
-    reserved1: [u8; 1],
+    /// Application language
+    language: u8,
     /// Size of binary payload (code + init and relocation data)
     code_size: U32<LittleEndian>,
     /// Size of RAM required by the app
@@ -119,12 +129,14 @@ impl AppHeader {
 /// `[package.metadata.trezor]`, see [`crate::metadata`]) to the
 /// architecture-specific payload -- the relocated ARMv8-M image from
 /// [`crate::armv8m`] for a hardware build, or the raw ELF bytes as-is for an
-/// x86-64 emulator build. Writes the result next to `elf_path` and returns
+/// x86-64 emulator build. `language` is recorded in the header as the
+/// language the app was built for. Writes the result next to `elf_path` and returns
 /// its path.
 pub fn convert_elf_to_bin(
     elf_path: &Path,
     package: &Package,
     model: Option<Model>,
+    language: Language,
 ) -> Result<PathBuf> {
     let raw_elf = fs::read(elf_path)
         .with_context(|| format!("Failed to read the elf file {:?}", elf_path))?;
@@ -177,7 +189,7 @@ pub fn convert_elf_to_bin(
         abi_version: metadata::abi_version()?,
         target_arch: target_arch.id(),
         app_ring: metadata::app_ring(package)?,
-        reserved1: [0; 1],
+        language: language.id(),
         code_size: U32::new(code.len() as u32),
         chunk_hash: hash_payload(&code, AppHeader::CHUNK_SIZE),
         data_size: U32::new(data_size),

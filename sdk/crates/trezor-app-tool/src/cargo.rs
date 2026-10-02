@@ -35,7 +35,7 @@ pub fn build_packages(args: &BuildArgs) -> Result<Vec<(Package, PathBuf)>> {
     for package in &packages {
         let elf_path = helpers::elf_path(args, package)?;
 
-        let bin_path = image::convert_elf_to_bin(&elf_path, package, args.model)?;
+        let bin_path = image::convert_elf_to_bin(&elf_path, package, args.model, args.lang)?;
         let artifact_name = helpers::artifact_name(
             package,
             args.lang,

@@ -392,6 +392,7 @@ def _generate_app_image(
         abi_version=5,
         target_arch=5,
         app_ring=app_ring,
+        language=0,
         code_size=1,
         data_size=1,
         chunk_hash=b"\x00" * 32,
