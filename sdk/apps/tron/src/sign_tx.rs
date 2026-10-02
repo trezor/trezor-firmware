@@ -32,7 +32,7 @@ use trezor_app_sdk::{Error, Result, ResultExt, WireEncode, unwrap, wire_request_
 use trezor_app_sdk::{
     crypto,
     crypto::{HasherExt as _, HashingAlgorithm},
-    modui::{self, Property, Severity, ShowNotice},
+    modui::{self, Property, notice},
 };
 
 // Maximum chain_id which returns the full signature_v (which must fit into an uint32).
@@ -86,8 +86,8 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
     signature.push(sig[0]);
 
     // The last screen of the flow: nothing hangs on how it went away.
-    let _ = modui::show_notice(ShowNotice::new(
-        Severity::Done,
+    let _ = modui::notice::show(notice::Notice::new(
+        notice::Severity::Done,
         tr!("words__title_done"),
         tr!("send__transaction_signed"),
         "tron/signed",

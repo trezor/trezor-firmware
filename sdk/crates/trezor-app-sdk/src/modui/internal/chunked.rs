@@ -37,8 +37,8 @@
 //! })
 //! ```
 
-use super::UiReply;
 use crate::Result;
+use crate::traits::ui::UiReply;
 
 // ============================================================================
 // Constants
@@ -49,7 +49,7 @@ use crate::Result;
 /// A whole request has to fit in one IPC message, and hex takes two characters
 /// a byte, so a chunk is under half a message, leaving the rest for the other
 /// fields of the request. Core pages each chunk itself.
-pub(super) const BYTES_PER_CHUNK: usize = (MAX_REQUEST_BYTES - REQUEST_OVERHEAD) / 2;
+pub(in crate::modui) const BYTES_PER_CHUNK: usize = (MAX_REQUEST_BYTES - REQUEST_OVERHEAD) / 2;
 
 /// The largest request core is asked to hold at once.
 const MAX_REQUEST_BYTES: usize = 1024;
@@ -75,7 +75,7 @@ const REQUEST_OVERHEAD: usize = 256;
 /// - **Never crosses IPC, and never reaches an app.** The reply an app gets
 ///   carries no notion of chunks, which is the whole point: an app cannot
 ///   learn that its value was shown in more than one piece.
-pub(super) enum AfterChunk {
+pub(in crate::modui) enum AfterChunk {
     /// Move to the next chunk, or finish if this was the last.
     Advance,
     /// Go back to the chunk before, or stay put if this was the first.
@@ -97,7 +97,7 @@ pub(super) enum AfterChunk {
 }
 
 /// Where the person is in the sequence, and the chrome that follows from it.
-pub(super) struct ChunkCtx {
+pub(in crate::modui) struct ChunkCtx {
     /// Zero-based chunk index, used to slice the content.
     pub index: usize,
     pub is_last: bool,
@@ -110,7 +110,7 @@ pub(super) struct ChunkCtx {
 /// Shows up to `chunk_count` chunks in order, stopping as soon as the person decides.
 ///
 /// `show` sends one chunk and reports what the person did with it.
-pub(super) fn confirm_in_chunks<F>(chunk_count: usize, mut show: F) -> Result<UiReply>
+pub(in crate::modui) fn confirm_in_chunks<F>(chunk_count: usize, mut show: F) -> Result<UiReply>
 where
     F: FnMut(ChunkCtx) -> Result<AfterChunk>,
 {

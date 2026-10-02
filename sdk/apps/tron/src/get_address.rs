@@ -6,7 +6,7 @@ use crate::{
 };
 use trezor_app_sdk::{
     Result, ResultExt, crypto,
-    modui::{self, Commitment, ConfirmValue, ExtraItem, Property, Severity, ShowNotice, ValueKind},
+    modui::{self, Commitment, ExtraItem, Property, confirm, notice},
 };
 
 pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
@@ -31,10 +31,10 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
             Property::plain(tr!("words__account"), account_name.as_str()),
             Property::plain(tr!("address_details__derivation_path"), &path),
         ];
-        modui::confirm_value(ConfirmValue::new(
+        modui::confirm::value(confirm::Value::new(
             &subtitle,
             &address,
-            ValueKind::Address,
+            confirm::ValueKind::Address,
             None,
             None,
             None,
@@ -50,8 +50,8 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
         .c()?;
 
         // The last screen of the flow: nothing hangs on how it went away.
-        let _ = modui::show_notice(ShowNotice::new(
-            Severity::Done,
+        let _ = modui::notice::show(notice::Notice::new(
+            notice::Severity::Done,
             tr!("words__title_done"),
             tr!("address__confirmed"),
             "tron/address/confirmed",

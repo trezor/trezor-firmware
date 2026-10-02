@@ -1,22 +1,22 @@
-//! The generic yes/no block. The public docs live on [`confirm_action`].
+//! The generic yes/no block. The public docs live on [`action`].
 //!
 //! WIP: manual test results with extras (testapp), bolt (T2T1): no menu, so
 //! the extras cannot be reached.
 
-use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, Commitment, UiReply, call};
 use crate::Result;
+use crate::modui::internal::{BR_CODE_OTHER, call};
+use crate::modui::{Commitment, ExtraItem, UiReply};
 use crate::traits::ui::ConfirmAction as WireConfirmAction;
 
 // ============================================================================
 // Data types
 // ============================================================================
 
-/// Parameters for [`confirm_action`], built by [`ConfirmAction::new`].
+/// Parameters for [`action`], built by [`Action::new`].
 ///
 /// Only what the screen says is here. The confirm gesture and its label are
 /// fixed by the block and are not the app's to choose.
-pub struct ConfirmAction<'a> {
+pub struct Action<'a> {
     title: &'a str,
     action: &'a str,
     description: Option<&'a str>,
@@ -26,7 +26,7 @@ pub struct ConfirmAction<'a> {
     extras: &'a [ExtraItem<'a>],
 }
 
-impl<'a> ConfirmAction<'a> {
+impl<'a> Action<'a> {
     /// A confirmation screen headed `title`, asking the person about `action`.
     ///
     /// - `title` — the screen's heading, such as `"Send"`.
@@ -76,7 +76,7 @@ impl<'a> ConfirmAction<'a> {
 /// # Example
 ///
 /// ```no_run
-/// use trezor_app_sdk::modui::{self as ui, Commitment, ConfirmAction, ExtraItem, Property};
+/// use trezor_app_sdk::modui::{Commitment, ExtraItem, Property, confirm};
 ///
 /// fn confirm_sign(account: &str, path: &str) -> trezor_app_sdk::Result<()> {
 ///     let account_facts = [
@@ -85,7 +85,7 @@ impl<'a> ConfirmAction<'a> {
 ///     ];
 ///     let extras = [ExtraItem::simple("Account info", &account_facts)];
 ///
-///     ui::confirm_action(ConfirmAction::new(
+///     confirm::action(confirm::Action::new(
 ///         "Send",
 ///         "Sign the transaction?",
 ///         None,
@@ -97,7 +97,7 @@ impl<'a> ConfirmAction<'a> {
 ///     .confirmed()
 /// }
 /// ```
-pub fn confirm_action(params: ConfirmAction<'_>) -> Result<UiReply> {
+pub fn action(params: Action<'_>) -> Result<UiReply> {
     let request = WireConfirmAction::new(
         params.title,
         params.action,

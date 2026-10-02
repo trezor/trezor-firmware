@@ -1,5 +1,5 @@
 //! The closing screen of a transaction. The public docs live on
-//! [`confirm_summary`].
+//! [`summary`].
 //!
 //! WIP: manual test results (testapp):
 //! - caesar (T3B1): with extras the menu, the extras and its way out all
@@ -7,17 +7,17 @@
 //!   what the other blocks should do there.
 //! - bolt (T2T1): no menu, so the extras cannot be reached.
 
-use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, UiReply, call};
 use crate::Result;
+use crate::modui::internal::{BR_CODE_OTHER, call};
+use crate::modui::{ExtraItem, UiReply};
 use crate::traits::ui::ConfirmSummary as WireConfirmSummary;
 
 // ============================================================================
 // Data types
 // ============================================================================
 
-/// Parameters for [`confirm_summary`], built by [`ConfirmSummary::new`].
-pub struct ConfirmSummary<'a> {
+/// Parameters for [`summary`], built by [`Summary::new`].
+pub struct Summary<'a> {
     title: &'a str,
     amount: Option<(&'a str, &'a str)>,
     fee: Option<(&'a str, &'a str)>,
@@ -25,7 +25,7 @@ pub struct ConfirmSummary<'a> {
     extras: &'a [ExtraItem<'a>],
 }
 
-impl<'a> ConfirmSummary<'a> {
+impl<'a> Summary<'a> {
     /// A summary headed `title`.
     ///
     /// - `title` — the screen's heading, such as `"Send"`.
@@ -70,13 +70,13 @@ impl<'a> ConfirmSummary<'a> {
 /// # Example
 ///
 /// ```no_run
-/// use trezor_app_sdk::modui::{self as ui, ConfirmSummary, ExtraItem, Property};
+/// use trezor_app_sdk::modui::{ExtraItem, Property, confirm};
 ///
 /// fn confirm_total(amount: &str, fee: &str, account: &str) -> trezor_app_sdk::Result<()> {
 ///     let account_facts = [Property::plain("Account", account)];
 ///     let extras = [ExtraItem::simple("Account info", &account_facts)];
 ///
-///     ui::confirm_summary(ConfirmSummary::new(
+///     confirm::summary(confirm::Summary::new(
 ///         "Send",
 ///         Some(("Amount", amount)),
 ///         Some(("Fee limit", fee)),
@@ -86,7 +86,7 @@ impl<'a> ConfirmSummary<'a> {
 ///     .confirmed()
 /// }
 /// ```
-pub fn confirm_summary(params: ConfirmSummary<'_>) -> Result<UiReply> {
+pub fn summary(params: Summary<'_>) -> Result<UiReply> {
     let request = WireConfirmSummary::new(
         params.title,
         params.amount.map(|(_, value)| value),
