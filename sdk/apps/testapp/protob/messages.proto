@@ -1,0 +1,24 @@
+syntax = "proto2";
+package hw.trezor.messages;
+
+/**
+ * Messages for Trezor communication
+ */
+
+/**
+ * Mapping between Trezor wire identifier (uint) and a protobuf message
+ */
+enum MessageType {
+    MessageType_ConfirmAction = 0;
+    MessageType_ConfirmValue = 1;
+    MessageType_ConfirmData = 2;
+    MessageType_ConfirmProperties = 3;
+    MessageType_ConfirmSummary = 4;
+    MessageType_ShowNotice = 5;
+    MessageType_ShowProgress = 6;
+    MessageType_ConfirmLinearFlow = 7;
+    MessageType_UiResult = 8;
+    MessageType_ProgressTick = 9;
+    MessageType_ProgressStep = 10;
+    MessageType_ProgressEnd = 11;
+}
