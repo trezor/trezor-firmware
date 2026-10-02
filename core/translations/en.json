@@ -220,7 +220,6 @@
     "bitcoin__title_purchase_ticket": "Purchase ticket",
     "bitcoin__title_update_transaction": "Update transaction",
     "bitcoin__unknown_path": "Unknown path",
-    "bitcoin__unknown_transaction": "Unknown transaction",
     "bitcoin__unusually_high_fee": "Unusually high fee.",
     "bitcoin__unverified_external_inputs": "The transaction contains unverified external inputs.",
     "bitcoin__valid_signature": "The signature is valid.",
