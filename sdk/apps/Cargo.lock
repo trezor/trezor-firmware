@@ -197,19 +197,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ethereum"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bs58",
- "primitive-types",
- "prost",
- "trezor-app-build",
- "trezor-app-sdk",
- "ufmt",
-]
-
-[[package]]
 name = "fastrand"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

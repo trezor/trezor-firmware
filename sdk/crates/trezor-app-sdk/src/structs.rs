@@ -18,12 +18,18 @@ use ufmt::derive::uDebug;
 /// A key-value pair with an optional monospace flag, used in UI detail views.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub struct Property<'a> {
+    /// The label, such as `"Amount"`.
     pub key: StrSlice<'a>,
+    /// The content shown under the label.
     pub value: StrSlice<'a>,
+    /// Whether the value is shown in a fixed-width font.
     pub mono: bool,
 }
 
 impl<'a> Property<'a> {
+    /// A fact with `key` as its label and `value` as its content. `mono` shows
+    /// the value in a fixed-width font; prefer [`Property::plain`] or
+    /// [`Property::mono`], which say which.
     pub fn new(key: &'a str, value: &'a str, mono: bool) -> Self {
         Self {
             key: key.into(),
@@ -32,10 +38,13 @@ impl<'a> Property<'a> {
         }
     }
 
+    /// A fact whose value is machine-like — a hash, a hex string — and reads
+    /// better in a fixed-width font.
     pub fn mono(key: &'a str, value: &'a str) -> Self {
         Self::new(key, value, true)
     }
 
+    /// A fact whose value is ordinary text.
     pub fn plain(key: &'a str, value: &'a str) -> Self {
         Self::new(key, value, false)
     }
@@ -205,25 +214,38 @@ where
     }
 }
 
-/// A menu of selectable string items, shown via [`crate::ui::select_menu`].
+/// A menu of selectable string items, sent as [`TrezorUiEnum::SelectMenu`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct SelectMenu<'a> {
     pub items: Slice<'a, StrSlice<'a>>,
+    /// A way out the block asked for; every model draws it, after the items.
     pub cancel: Option<StrSlice<'a>>,
+    /// The block behind the menu can always be refused. A model whose menu
+    /// button takes the place of the screen's own way out draws one here.
+    pub refusable: bool,
+    pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
 }
 
 impl<'a> SelectMenu<'a> {
-    pub fn new(items: &'a [StrSlice<'a>], cancel: Option<&'a str>, br_code: i32) -> SelectMenu<'a> {
+    pub fn new(
+        items: &'a [StrSlice<'a>],
+        cancel: Option<&'a str>,
+        refusable: bool,
+        br_name: Option<&'a str>,
+        br_code: i32,
+    ) -> SelectMenu<'a> {
         SelectMenu {
             items: items.into(),
             cancel: cancel.map(|s| s.into()),
+            refusable,
+            br_name: br_name.map(|s| s.into()),
             br_code,
         }
     }
 }
 
-/// A trade confirmation screen, shown via [`crate::ui::confirm_trade`].
+/// A trade confirmation screen, sent as [`TrezorUiEnum::ConfirmTrade`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmTrade<'a> {
     pub title: StrSlice<'a>,
@@ -257,7 +279,7 @@ impl<'a> ConfirmTrade<'a> {
     }
 }
 
-/// An action confirmation screen, shown via [`crate::ui::confirm_action`].
+/// An action confirmation screen, sent as [`TrezorUiEnum::ConfirmAction`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmAction<'a> {
     pub title: StrSlice<'a>,
@@ -300,7 +322,7 @@ impl<'a> ConfirmAction<'a> {
     }
 }
 
-/// A transaction summary confirmation screen, shown via [`crate::ui::confirm_summary`].
+/// A transaction summary confirmation screen, sent as [`TrezorUiEnum::ConfirmSummary`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmSummary<'a> {
     pub title: StrSlice<'a>,
@@ -313,6 +335,7 @@ pub struct ConfirmSummary<'a> {
     pub extra_title: Option<StrSlice<'a>>,
     pub extra_items: Option<Slice<'a, Property<'a>>>,
     pub back_button: bool,
+    pub external_menu: bool,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
 }
@@ -329,6 +352,7 @@ impl<'a> ConfirmSummary<'a> {
         extra_title: Option<&'a str>,
         extra_items: Option<&'a [Property<'a>]>,
         back_button: bool,
+        external_menu: bool,
         br_name: Option<&'a str>,
         br_code: i32,
     ) -> Self {
@@ -343,13 +367,14 @@ impl<'a> ConfirmSummary<'a> {
             extra_title: extra_title.map(|s| s.into()),
             extra_items: extra_items.map(|s| s.into()),
             back_button,
+            external_menu,
             br_name: br_name.map(|s| s.into()),
             br_code,
         }
     }
 }
 
-/// A value confirmation screen, shown via [`crate::ui::confirm_value`].
+/// A value confirmation screen, sent as [`TrezorUiEnum::ConfirmValue`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmValue<'a> {
     pub title: StrSlice<'a>,
@@ -407,7 +432,8 @@ impl<'a> ConfirmValue<'a> {
     }
 }
 
-/// An intro screen shown before [`ConfirmValue`], via [`crate::ui::confirm_value_intro`].
+/// An intro screen shown before [`ConfirmValue`], sent as
+/// [`TrezorUiEnum::ConfirmValueIntro`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmValueIntro<'a> {
     pub title: StrSlice<'a>,
@@ -450,7 +476,7 @@ impl<'a> ConfirmValueIntro<'a> {
     }
 }
 
-/// A warning screen, shown via [`crate::ui::show_warning`].
+/// A warning screen, sent as [`TrezorUiEnum::ShowWarning`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowWarning<'a> {
     pub title: StrSlice<'a>,
@@ -484,7 +510,7 @@ impl<'a> ShowWarning<'a> {
     }
 }
 
-/// A mismatch warning screen, shown via [`crate::ui::show_mismatch`].
+/// A mismatch warning screen, sent as [`TrezorUiEnum::ShowMismatch`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowMismatch<'a> {
     pub title: StrSlice<'a>,
@@ -500,7 +526,7 @@ impl<'a> ShowMismatch<'a> {
     }
 }
 
-/// A danger warning screen, shown via [`crate::ui::show_danger`].
+/// A danger warning screen, sent as [`TrezorUiEnum::ShowDanger`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowDanger<'a> {
     pub title: StrSlice<'a>,
@@ -531,7 +557,74 @@ impl<'a> ShowDanger<'a> {
     }
 }
 
-/// A success screen, shown via [`crate::ui::show_success`].
+/// What kind of news a notice is.
+///
+/// The only thing the app decides about a notice. The screen, its button words
+/// and its timeout follow from it, and are core's, per model — which is why
+/// this travels as a meaning rather than as a look.
+///
+/// There is no error severity, on purpose. A failure is not a notice a flow
+/// carries on from: an app fails by returning `Err`, and whether the person
+/// sees a screen for that is core's to decide on the failure path, as
+/// `show_error_and_raise` does for core's own flows.
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub enum Severity {
+    /// A step worked, and the flow continues after this screen.
+    ///
+    /// For example a signature that verified. Distinct from
+    /// [`Severity::Done`], which is the last screen of a flow.
+    Success,
+    /// The flow finished; the person goes back to the host.
+    ///
+    /// The last screen an app shows. Nothing on the device follows it, so
+    /// the call does not wait for the person to dismiss it — the host's
+    /// response should not wait on an acknowledgement. What the screen does
+    /// after the call returns is the model's business.
+    Done,
+    /// Something to read before going on. Nothing is at stake.
+    Info,
+    /// Something to consider before going on.
+    Warning,
+    /// Going on is risky; the person has to choose it deliberately.
+    Danger,
+}
+
+/// A notice of some [`Severity`], sent by the app SDK.
+///
+/// Carries what the notice says and nothing about how it looks: no button
+/// words, no timeout, no choice of screen. Core derives those from `severity`.
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct ShowNotice<'a> {
+    pub severity: Severity,
+    pub title: StrSlice<'a>,
+    pub content: StrSlice<'a>,
+    /// The screen has a menu: the app offered extras, a way out, or both.
+    pub external_menu: bool,
+    pub br_name: Option<StrSlice<'a>>,
+    pub br_code: i32,
+}
+
+impl<'a> ShowNotice<'a> {
+    pub fn new(
+        severity: Severity,
+        title: &'a str,
+        content: &'a str,
+        external_menu: bool,
+        br_name: Option<&'a str>,
+        br_code: i32,
+    ) -> Self {
+        Self {
+            severity,
+            title: title.into(),
+            content: content.into(),
+            external_menu,
+            br_name: br_name.map(|s| s.into()),
+            br_code,
+        }
+    }
+}
+
+/// A success screen, sent as [`TrezorUiEnum::ShowSuccess`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowSuccess<'a> {
     pub title: StrSlice<'a>,
@@ -562,7 +655,7 @@ impl<'a> ShowSuccess<'a> {
     }
 }
 
-/// A number-entry screen, shown via [`crate::ui::request_number`].
+/// A number-entry screen, sent as [`TrezorUiEnum::RequestNumber`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct RequestNumber<'a> {
     pub title: StrSlice<'a>,
@@ -593,7 +686,8 @@ impl<'a> RequestNumber<'a> {
     }
 }
 
-/// A property-list confirmation screen, shown via [`crate::ui::confirm_properties`].
+/// A property-list confirmation screen, sent as
+/// [`TrezorUiEnum::ConfirmProperties`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmProperties<'a> {
     pub title: StrSlice<'a>,
@@ -627,7 +721,8 @@ impl<'a> ConfirmProperties<'a> {
     }
 }
 
-/// A property-list display screen (no confirmation), shown via [`crate::ui::show_properties`].
+/// A property-list display screen (no confirmation), sent as
+/// [`TrezorUiEnum::ShowProperties`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowProperties<'a> {
     pub title: StrSlice<'a>,
@@ -655,7 +750,7 @@ impl<'a> ShowProperties<'a> {
     }
 }
 
-/// A public key display screen, shown via [`crate::ui::show_public_key`].
+/// A public key display screen, sent as [`TrezorUiEnum::ShowPublicKey`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowPublicKey<'a> {
     pub pubkey: StrSlice<'a>,
@@ -689,7 +784,8 @@ impl<'a> ShowPublicKey<'a> {
     }
 }
 
-/// An info screen with a cancel option, shown via [`crate::ui::show_info_with_cancel`].
+/// An info screen with a cancel option, sent as
+/// [`TrezorUiEnum::ShowInfoWithCancel`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowInfoWithCancel<'a> {
     pub title: StrSlice<'a>,
@@ -716,7 +812,8 @@ impl<'a> ShowInfoWithCancel<'a> {
         }
     }
 }
-/// A confirmation screen with an extra info button, shown via [`crate::ui::confirm_with_info`].
+/// A confirmation screen with an extra info button, sent as
+/// [`TrezorUiEnum::ConfirmWithInfo`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmWithInfo<'a> {
     pub title: StrSlice<'a>,
@@ -750,7 +847,7 @@ impl ConfirmWithInfo<'_> {
     }
 }
 
-/// An address display screen, shown via [`crate::ui::show_address`].
+/// An address display screen, sent as [`TrezorUiEnum::ShowAddress`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowAddress<'a> {
     pub address: StrSlice<'a>,
@@ -761,6 +858,7 @@ pub struct ShowAddress<'a> {
     pub path: Option<StrSlice<'a>>,
     pub xpubs: Slice<'a, Property<'a>>,
     pub chunkify: bool,
+    pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
     pub case_sensitive: bool,
 }
@@ -775,6 +873,7 @@ impl ShowAddress<'_> {
         path: Option<&'a str>,
         xpubs: &'a [Property<'a>],
         chunkify: bool,
+        br_name: Option<&'a str>,
         br_code: i32,
         case_sensitive: bool,
     ) -> ShowAddress<'a> {
@@ -787,6 +886,7 @@ impl ShowAddress<'_> {
             path: path.map(|s| s.into()),
             xpubs: xpubs.into(),
             chunkify,
+            br_name: br_name.map(|s| s.into()),
             br_code,
             case_sensitive,
         }
@@ -816,16 +916,102 @@ pub enum TrezorUiEnum<'a> {
     ShowInfoWithCancel(ShowInfoWithCancel<'a>),
     ConfirmWithInfo(ConfirmWithInfo<'a>),
     ShowAddress(ShowAddress<'a>),
+    ShowNotice(ShowNotice<'a>),
 }
 
-/// Result returned by the Core task after a UI interaction.
+/// What the person did with one screen.
+///
+/// # Who uses this
+///
+/// - **Written by core**, from whatever the Python layout returned. Core is
+///   the only producer; an app never constructs one.
+/// - **Read by the app SDK**, which decodes it and hands it to the block that
+///   sent the request, which answers what the library consumes itself and
+///   passes the rest on to the app.
+/// - **Crosses IPC**, so it is the one vocabulary both sides must agree on.
+///
+/// Variants say what the person *did*, rather than naming the button that did it.
+///
+/// It is still wider than any single request's contract — `Choice` only means
+/// something in answer to a list, `Backward` only where a screen offered it —
+/// so a caller that cannot use a reply treats it as a protocol violation. The
+/// fix for that is pairing replies to requests, which this enum does not do.
+///
+/// An answer is an ordinary value, easy to ignore by accident — hence
+/// `#[must_use]` and [`UiReply::confirmed`](crate::traits::ui::UiReply::confirmed), the idiomatic way to require
+/// a yes; see the `modui` module for what a block can answer.
+#[must_use]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
-pub enum TrezorUiResult {
+pub enum UiReply {
+    /// The person pressed the screen's affirmative, having seen all of it.
+    ///
+    /// The plain yes. Distinct from [`UiReply::ConfirmedAll`], which is a yes
+    /// to content the person skipped past, and from [`UiReply::Forward`], which
+    /// is not an answer at all but a request for the next part.
+    ///
+    /// Scaffolding: until `Forward` has a producer, this *also* arrives from
+    /// every chunk of a chunked block, so a caller mid-content cannot take it
+    /// at face value. Only a chunked block in the app SDK has to care.
     Confirmed,
-    Back,
+
+    /// The person refused, or left without answering.
+    ///
+    /// One variant for both because the device cannot tell them apart and the
+    /// caller should not act differently: either way the block did not get its
+    /// yes. Distinct from [`UiReply::Backward`], which asks to go back a step
+    /// rather than abandon the whole thing.
+    ///
+    /// This is an ordinary answer, not a failure. It becomes an `Err` only
+    /// where a caller says it cannot proceed without confirmation.
     Cancelled,
-    Info,
-    Integer(u32),
+
+    /// The person asked for whatever else the screen offers.
+    ///
+    /// The extras: the details, the account, the way out. Lateral — it asks
+    /// for *different* content, where [`UiReply::Forward`] asks for more of
+    /// the same. Both can be on one screen at once, which is why they are two
+    /// variants and not one.
+    ///
+    /// Scaffolding: on a chunk's screen with no extras this currently means the
+    /// skip-ahead instead, because such a screen has one secondary button and
+    /// the app SDK picks what it does. [`UiReply::ConfirmedAll`] is what that
+    /// becomes once core owns the buttons.
+    WantsMore,
+
+    /// The person picked the entry at this index.
+    ///
+    /// Only meaningful in answer to a list; any other screen treats it as a
+    /// protocol violation. The index is into the list *as sent*, so the sender
+    /// resolves it — core never learns what an entry meant.
+    Choice(u16),
+
+    /// The person wants what comes after this, and core cannot supply it.
+    ///
+    /// Core pages within the content it was given, silently, as far as that
+    /// goes. This says it reached the end of that and there is more beyond —
+    /// so it is *not* the same as [`UiReply::Confirmed`], which says the person
+    /// finished the whole thing. That distinction is the point: it is what
+    /// stops "next" and "done" arriving as the same answer.
+    Forward,
+
+    /// The person wants what came before this, and core cannot supply it.
+    ///
+    /// The mirror of [`UiReply::Forward`]: an earlier chunk than core holds, or
+    /// an earlier step of a flow. Which of those it is follows from what the
+    /// caller was doing, since only it knows whether it is mid-content.
+    Backward,
+
+    /// The person accepted the rest without reading it.
+    ///
+    /// Distinct from [`UiReply::Confirmed`], which is the person reaching the end
+    /// and agreeing: this is the shortcut past whatever remains. Distinct from
+    /// [`UiReply::WantsMore`] for the reason it exists at all — the skip-ahead
+    /// used to arrive as that, because a chunk's screen has one secondary button
+    /// and the app SDK was choosing what it meant.
+    ///
+    /// WIP: no producer yet, for that same reason. Core cannot offer both the
+    /// extras and the shortcut until it owns the screen's buttons.
+    ConfirmedAll,
 }
 
 /// All crypto operations that can be requested from the app via IPC.
@@ -944,6 +1130,12 @@ impl ufmt::uDebug for TrezorCryptoResult {
 /// Progress bar operations that can be requested from the app via IPC.
 ///
 /// Constructed by the higher-level `progress` module — do not construct variants directly.
+///
+/// The three variants are one lifecycle: `Init` opens the progress, `Update`
+/// moves its fill — a percent, which the app SDK computes; core only draws —
+/// and `End` closes it. The app SDK pairs them with a guard that sends `End`
+/// on drop, so an app cannot leave a progress on screen for work that
+/// stopped; see the `modui` progress docs.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum TrezorProgressEnum<'a> {
     Init {
@@ -954,6 +1146,7 @@ pub enum TrezorProgressEnum<'a> {
     },
     Update {
         description: Option<StrSlice<'a>>,
+        /// How far along, from 0 to 1000.
         value: u32,
     },
     End,

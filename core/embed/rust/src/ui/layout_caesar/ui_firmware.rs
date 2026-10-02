@@ -30,8 +30,8 @@ use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    DeviceMenuParams, FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-    MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
+    DeviceMenuParams, FirmwareUI, SelectMenuItem, Severity, MAX_CHECKLIST_ITEMS,
+    MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::{geometry, ModelUI};
 
@@ -42,14 +42,14 @@ impl FirmwareUI for UICaesar {
         description: Option<TString<'static>>,
         _subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
-        _cancel: bool,
+        cancel: bool,
         verb_cancel: Option<TString<'static>>,
         hold: bool,
         _hold_danger: bool,
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = {
             let action = action.unwrap_or("".into());
@@ -70,10 +70,13 @@ impl FirmwareUI for UICaesar {
         content_in_button_page(
             title,
             paragraphs,
-            verb.unwrap_or(TString::empty()),
-            verb_cancel,
+            // A caller that names no verb still wants the screen answerable.
+            verb.unwrap_or(TR::buttons__confirm.into()),
+            // This model draws a cancel button only for a label; `""` is its
+            // icon. Core's own layouts pass the label, or turn `cancel` off.
+            verb_cancel.or(cancel.then(TString::empty)),
             hold,
-            false,
+            external_menu,
         )
     }
 
@@ -150,10 +153,10 @@ impl FirmwareUI for UICaesar {
         chunkify: bool,
         _page_counter: bool,
         _prompt_screen: bool,
-        _cancel: bool,
+        cancel: bool,
         _back_button: bool,
         _footer: Option<(TString<'static>, bool)>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
@@ -176,9 +179,11 @@ impl FirmwareUI for UICaesar {
             title,
             paragraphs,
             verb.unwrap_or(TR::buttons__confirm.into()),
-            verb_cancel,
+            // This model draws a cancel button only for a label; `""` is its
+            // icon.
+            verb_cancel.or(cancel.then(TString::empty)),
             hold,
-            false,
+            external_menu,
         )
     }
 
@@ -1225,6 +1230,65 @@ impl FirmwareUI for UICaesar {
         Ok(obj)
     }
 
+    fn show_notice(
+        severity: Severity,
+        title: TString<'static>,
+        content: TString<'static>,
+        external_menu: bool,
+    ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: no notice screen on this model has a menu a caller can drive.
+        // The notice is drawn without one, so the caller's extras are
+        // unreachable here.
+        if external_menu {
+            log::warn!("show_notice: external_menu is not supported on this model, ignored");
+        }
+        match severity {
+            // This model's info screen has no button and never answers, and it
+            // has no success screen at all: its own `show_success` is a plain
+            // confirmation with a single Continue. So all three are that.
+            // There is no "continue in the app" screen either — its own
+            // `show_continue_in_app` shows nothing — so the end of a flow waits
+            // to be dismissed like the rest.
+            // WIP: the `Done` arm diverges from the notice contract — it should
+            // answer without waiting for the person (delizia and eckhart time
+            // out and return). This model's screens have no timeout support
+            // yet; until they do, the person dismisses and the call blocks.
+            // The reply value is the same either way.
+            Severity::Info | Severity::Success | Severity::Done => {
+                LayoutObj::new_root(Self::confirm_action(
+                    title,
+                    None,
+                    Some(content),
+                    None,
+                    Some(TR::buttons__continue.into()),
+                    false,
+                    None,
+                    false,
+                    false,
+                    false,
+                    false,
+                    None,
+                    false,
+                )?)
+            }
+            Severity::Warning => Self::show_warning(
+                Some(title),
+                TR::buttons__continue.into(),
+                content,
+                TString::empty(),
+                true, // allow_cancel: like core's own warnings
+                false,
+            ),
+            Severity::Danger => LayoutObj::new_root(Self::show_danger(
+                title,
+                content,
+                TString::empty(),
+                None,
+                Some(TR::buttons__cancel.into()),
+            )?),
+        }
+    }
+
     fn show_progress(
         description: TString<'static>,
         indeterminate: bool,
@@ -1487,7 +1551,16 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     } else {
         None
     };
-    if hold && !external_menu {
+    // WIP: this page cannot hold and show a menu at once. It keeps the hold,
+    // the stronger promise to the person, and drops the menu, so the caller's
+    // extras are unreachable here.
+    let external_menu = if hold && external_menu {
+        log::warn!("confirm: external_menu is not supported together with hold, ignored");
+        false
+    } else {
+        external_menu
+    };
+    if hold {
         confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
     }
 
