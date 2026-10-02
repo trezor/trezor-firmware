@@ -61,7 +61,9 @@ fn select_keys(
     }
 }
 
-fn combine_publickeys(keys: &[ed25519::PublicKey]) -> Result<ed25519::PublicKey, Error> {
+/// Combines `keys` into the public key a CoSi signature over them verifies
+/// against (see [`verify`]).
+pub fn combine_publickeys(keys: &[ed25519::PublicKey]) -> Result<ed25519::PublicKey, Error> {
     let mut combined_key = ed25519::PublicKey::default();
     // SAFETY: ffi
     let res = unsafe {
@@ -71,5 +73,42 @@ fn combine_publickeys(keys: &[ed25519::PublicKey]) -> Result<ed25519::PublicKey,
         Ok(combined_key)
     } else {
         Err(Error::InvalidEncoding)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    // RFC 8032 test vectors 1 and 2
+    const KEY_A: &str = "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a";
+    const KEY_B: &str = "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c";
+
+    fn key(hex_str: &str) -> ed25519::PublicKey {
+        hex::decode(hex_str).unwrap().try_into().unwrap()
+    }
+
+    #[test]
+    fn test_combine_single_key() {
+        let a = key(KEY_A);
+        assert_eq!(combine_publickeys(&[a]).unwrap(), a);
+    }
+
+    #[test]
+    fn test_combine_is_order_independent() {
+        let (a, b) = (key(KEY_A), key(KEY_B));
+        let ab = combine_publickeys(&[a, b]).unwrap();
+        assert_eq!(combine_publickeys(&[b, a]).unwrap(), ab);
+        assert_ne!(ab, a);
+        assert_ne!(ab, b);
+    }
+
+    #[test]
+    fn test_combine_invalid_key() {
+        // y = 2 is not on the curve
+        let mut bad = [0u8; 32];
+        bad[0] = 2;
+        let res = combine_publickeys(&[key(KEY_A), bad]);
+        assert!(matches!(res, Err(Error::InvalidEncoding)));
     }
 }
