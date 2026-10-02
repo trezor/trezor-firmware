@@ -267,7 +267,8 @@ static ts_t nfc_poll_start(cli_t *cli) {
   return TS_OK;
 }
 
-static ts_t nfc_wait_for_tap(cli_t *cli, on_tap_callback_t callback) {
+static ts_t nfc_wait_for_tap(cli_t *cli, on_tap_callback_t callback,
+                             bool repeat) {
   TSH_DECLARE;
   ts_t status;
 
@@ -278,6 +279,10 @@ static ts_t nfc_wait_for_tap(cli_t *cli, on_tap_callback_t callback) {
   cli_trace(cli,
             "Instruction: place card flat on antenna and hold still. Press "
             "Ctrl+C to abort.");
+  if (repeat) {
+    cli_trace(cli, "Keep the card on the antenna to measure continuously.");
+    cli_trace(cli, "Remove the card to stop, then tap again to restart.");
+  }
 
   sysevents_t awaited_events = {0};
   sysevents_t signalled_events = {0};
@@ -314,13 +319,26 @@ static ts_t nfc_wait_for_tap(cli_t *cli, on_tap_callback_t callback) {
         TSH_CHECK(false, TS_EINVAL);
       }
 
-      // Call ON-TAP callback function
-      uint32_t tic = systick_ms();
-      status = (callback)(cli);
-      cli_trace(cli, "STEP 3/3: Command finished in %lu ms.",
-                (unsigned long)(systick_ms() - tic));
-      TSH_CHECK_OK(status);
-      break;
+      do {
+        uint32_t tic = systick_ms();
+        status = (callback)(cli);
+        cli_trace(cli, "STEP 3/3: Command finished in %lu ms.",
+                  (unsigned long)(systick_ms() - tic));
+
+        if (ts_error(status)) {
+          if (repeat) {
+            // A failed measurement means the card was removed; wait for the
+            // next CONNECTED event instead of ending the command.
+            status = TS_OK;
+            break;
+          }
+          TSH_CHECK_OK(status);
+        }
+      } while (repeat && !cli_aborted(cli));
+
+      if (!repeat) {
+        break;
+      }
     }
   }
 
@@ -333,7 +351,8 @@ static void nfc_poll_stop(void) {
   nfc_deinit();
 }
 
-static ts_t nfc_backup_tap(cli_t *cli, on_tap_callback_t callback) {
+static ts_t nfc_backup_tap(cli_t *cli, on_tap_callback_t callback,
+                           bool repeat) {
   ts_t status;
 
   status = nfc_poll_start(cli);
@@ -343,16 +362,20 @@ static ts_t nfc_backup_tap(cli_t *cli, on_tap_callback_t callback) {
 
   handshake_completed = false;
 
-  status = nfc_wait_for_tap(cli, callback);
+  status = nfc_wait_for_tap(cli, callback, repeat);
   memzero(&intr, sizeof(intr));
 
   nfc_poll_stop();
   return status;
 }
 
-#define REGISTER_NFC_BACKUP_CMD(handler_name, tap_fn, err_code, err_msg) \
+#define REGISTER_NFC_BACKUP_CMD(handler_name, tap_fn, err_code, err_msg, \
+                                repeat)                                  \
   static void handler_name(cli_t *cli) {                                 \
-    ts_t status = nfc_backup_tap(cli, tap_fn);                           \
+    ts_t status = nfc_backup_tap(cli, tap_fn, repeat);                   \
+    if (repeat) {                                                        \
+      prodtest_show_homescreen();                                        \
+    }                                                                    \
     if (ts_error(status)) {                                              \
       cli_error(cli, err_code, err_msg);                                 \
     } else {                                                             \
@@ -953,6 +976,65 @@ cleanup:
   TSH_RETURN;
 }
 
+static ts_t api_integrity_check(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  nfc_apdu_message_t cmd = {0};
+  nfc_apdu_message_t rsp = {0};
+
+  status = nfc_backup_compose_apdu(0x80, 0x06, 0x00, 0x00, NULL, 0, &cmd);
+  TSH_CHECK_OK(status);
+
+  status =
+      nfc_backup_transceive_logged(cli, "integrity-check", 0x06, &cmd, &rsp);
+  TSH_CHECK_OK(status);
+
+  TSH_CHECK(rsp.data_len == 5 * 4 + 2U, TS_EINVAL);
+  TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
+                rsp.data[rsp.data_len - 1] == 0x00U,
+            TS_EINVAL);
+
+  uint32_t words[5] = {0};
+  for (size_t i = 0; i < 5; i++) {
+    const uint8_t *b = &rsp.data[i * 4];
+    words[i] = ((uint32_t)b[0] << 24) | ((uint32_t)b[1] << 16) |
+               ((uint32_t)b[2] << 8) | (uint32_t)b[3];
+  }
+
+  cli_trace(cli, "Integrity check:");
+  cli_trace(cli, "  1-bit errors: %lu", (unsigned long)words[0]);
+  cli_trace(cli, "  2-bit errors: %lu", (unsigned long)words[1]);
+  cli_trace(cli, "  3-bit errors: %lu", (unsigned long)words[2]);
+  cli_trace(cli, "  4-bit errors: %lu", (unsigned long)words[3]);
+  cli_trace(cli, "  First error address: 0x%08lX", (unsigned long)words[4]);
+
+cleanup:
+  TSH_RETURN;
+}
+
+static ts_t api_harden_memory(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  nfc_apdu_message_t cmd = {0};
+  nfc_apdu_message_t rsp = {0};
+
+  status = nfc_backup_compose_apdu(0x80, 0x07, 0x00, 0x00, NULL, 0, &cmd);
+  TSH_CHECK_OK(status);
+
+  status = nfc_backup_transceive_logged(cli, "harden-memory", 0x07, &cmd, &rsp);
+  TSH_CHECK_OK(status);
+
+  TSH_CHECK(rsp.data_len == 2U, TS_EINVAL);
+  TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
+                rsp.data[rsp.data_len - 1] == 0x00U,
+            TS_EINVAL);
+
+cleanup:
+  TSH_RETURN;
+}
+
 static ts_t api_read_pin_counter(cli_t *cli, uint8_t *pin_counter) {
   TSH_DECLARE;
   ts_t status;
@@ -1243,11 +1325,11 @@ static ts_t system_measure(cli_t *cli, uint32_t *frequency_khz) {
   nfc_apdu_message_t cmd = {0};
   nfc_apdu_message_t rsp = {0};
 
-  status = nfc_backup_compose_apdu(0x20, 0x01, 0x00, 0x00, NULL, 0, &cmd);
+  status = nfc_backup_compose_apdu(0x20, 0x03, 0x00, 0x00, NULL, 0, &cmd);
   TSH_CHECK_OK(status);
 
   status =
-      nfc_backup_transceive_logged(cli, "system-measure", 0x01, &cmd, &rsp);
+      nfc_backup_transceive_logged(cli, "system-measure", 0x03, &cmd, &rsp);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(rsp.data_len == (2 + sizeof(uint32_t)), TS_EINVAL);
@@ -1260,6 +1342,31 @@ static ts_t system_measure(cli_t *cli, uint32_t *frequency_khz) {
   cli_trace(cli, "NFC card MCU frequency: %lu.%02lu MHz",
             (unsigned long)(*frequency_khz / 1000U),
             (unsigned long)((*frequency_khz % 1000U) / 10U));
+
+  goto cleanup;
+
+cleanup:
+  TSH_RETURN;
+}
+
+static ts_t system_1k_write(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  nfc_apdu_message_t cmd = {0};
+  nfc_apdu_message_t rsp = {0};
+
+  status = nfc_backup_compose_apdu(0x20, 0x05, 0x00, 0x00, NULL, 0, &cmd);
+  TSH_CHECK_OK(status);
+
+  status =
+      nfc_backup_transceive_logged(cli, "system-1k-write", 0x05, &cmd, &rsp);
+  TSH_CHECK_OK(status);
+
+  TSH_CHECK(rsp.data_len == (2), TS_EINVAL);
+  TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
+                rsp.data[rsp.data_len - 1] == 0x00U,
+            TS_EINVAL);
 
   goto cleanup;
 
@@ -1345,6 +1452,28 @@ static ts_t nfc_backup_set_pin(cli_t *cli) {
   TSH_CHECK_OK(status);
 
   status = api_set_pin(cli, new_pin, new_pin_len);
+  TSH_CHECK_OK(status);
+
+cleanup:
+  TSH_RETURN;
+}
+
+static ts_t nfc_backup_integrity_check(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  status = api_integrity_check(cli);
+  TSH_CHECK_OK(status);
+
+cleanup:
+  TSH_RETURN;
+}
+
+static ts_t nfc_backup_harden_memory(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  status = api_harden_memory(cli);
   TSH_CHECK_OK(status);
 
 cleanup:
@@ -1573,13 +1702,8 @@ static ts_t nfc_backup_measure(cli_t *cli) {
     TSH_CHECK(false, TS_EINVAL);
   }
 
-  uint32_t frequency_khz = 0;
-  while (true) {
-    if (cli_aborted(cli)) {
-      cli_trace(cli, "Aborted by operator.");
-      break;
-    }
-
+  while (!cli_aborted(cli)) {
+    uint32_t frequency_khz = 0;
     status = system_measure(cli, &frequency_khz);
     TSH_CHECK_OK(status);
 
@@ -1596,12 +1720,25 @@ static ts_t nfc_backup_measure(cli_t *cli) {
                  freq_mhz_frac, (unsigned)percent, quality);
 
     screen_prodtest_signal_meter(percent, label, strlen(label));
-
-    // systick_delay_ms(100);
   }
 
 cleanup:
-  prodtest_show_homescreen();
+  TSH_RETURN;
+}
+
+static ts_t nfc_backup_1k_write(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    TSH_CHECK(false, TS_EINVAL);
+  }
+
+  status = system_1k_write(cli);
+  TSH_CHECK_OK(status);
+
+cleanup:
   TSH_RETURN;
 }
 
@@ -1811,61 +1948,76 @@ static void prodtest_nfc_backup_transparent_mode(cli_t *cli) {
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_handshake, &nfc_backup_handshake,
                         PRODTEST_ERR_NFC_BACKUP_HANDSHAKE_FAILED,
-                        "NFC handshake failed");
+                        "NFC handshake failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_authenticate,
                         &nfc_backup_authenticate,
                         PRODTEST_ERR_NFC_BACKUP_AUTHENTICATE_FAILED,
-                        "NFC authenticate failed");
+                        "NFC authenticate failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_set_pin, &nfc_backup_set_pin,
                         PRODTEST_ERR_NFC_BACKUP_SET_PIN_FAILED,
-                        "NFC set PIN failed");
+                        "NFC set PIN failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_wipe, &nfc_backup_wipe,
-                        PRODTEST_ERR_NFC_BACKUP_WIPE_FAILED, "NFC wipe failed");
+                        PRODTEST_ERR_NFC_BACKUP_WIPE_FAILED, "NFC wipe failed",
+                        false);
+
+REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_integrity_check,
+                        &nfc_backup_integrity_check,
+                        PRODTEST_ERR_NFC_BACKUP_INTEGRITY_CHECK_FAILED,
+                        "NFC integrity check failed", false);
+
+REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_harden_memory,
+                        &nfc_backup_harden_memory,
+                        PRODTEST_ERR_NFC_BACKUP_HARDEN_MEMORY_FAILED,
+                        "NFC harden memory failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_read_pin_counter,
                         &nfc_backup_read_pin_counter,
                         PRODTEST_ERR_NFC_BACKUP_READ_PIN_COUNTER_FAILED,
-                        "NFC read PIN counter failed");
+                        "NFC read PIN counter failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_read_success_log,
                         &nfc_backup_read_success_log,
                         PRODTEST_ERR_NFC_BACKUP_READ_SUCCESS_LOG_FAILED,
-                        "NFC read success log failed");
+                        "NFC read success log failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_read_failure_logs,
                         &nfc_backup_read_failure_logs,
                         PRODTEST_ERR_NFC_BACKUP_READ_FAILURE_LOGS_FAILED,
-                        "NFC read failure logs failed");
+                        "NFC read failure logs failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_read_seed_metadata,
                         &nfc_backup_read_seed_metadata,
                         PRODTEST_ERR_NFC_BACKUP_READ_SEED_METADATA_FAILED,
-                        "NFC read seed metadata failed");
+                        "NFC read seed metadata failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_write_seed_metadata,
                         &nfc_backup_write_seed_metadata,
                         PRODTEST_ERR_NFC_BACKUP_WRITE_SEED_METADATA_FAILED,
-                        "NFC write seed metadata failed");
+                        "NFC write seed metadata failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_read_seed, &nfc_backup_read_seed,
                         PRODTEST_ERR_NFC_BACKUP_READ_SEED_FAILED,
-                        "NFC read seed failed");
+                        "NFC read seed failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_write_seed, &nfc_backup_write_seed,
                         PRODTEST_ERR_NFC_BACKUP_WRITE_SEED_FAILED,
-                        "NFC write seed failed");
+                        "NFC write seed failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_activate_flashloader,
                         &nfc_backup_activate_flashloader,
                         PRODTEST_ERR_NFC_BACKUP_ACTIVATE_FLASHLOADER_FAILED,
-                        "NFC activate flashloader failed");
+                        "NFC activate flashloader failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_measure, &nfc_backup_measure,
                         PRODTEST_ERR_NFC_BACKUP_MEASURE_FAILED,
-                        "NFC measure failed");
+                        "NFC measure failed", true);
+
+REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_1k_write, &nfc_backup_1k_write,
+                        PRODTEST_ERR_NFC_BACKUP_1K_WRITE_FAILED,
+                        "NFC 1k write failed", false);
 
 // clang-format off
 
@@ -1894,6 +2046,20 @@ PRODTEST_CLI_CMD(
   .name = "nfc-backup-wipe",
   .func = prodtest_nfc_backup_wipe,
   .info = "Run nfc-backup wipe test",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-backup-integrity-check",
+  .func = prodtest_nfc_backup_integrity_check,
+  .info = "Run nfc-backup integrity check test",
+  .args = ""
+);  
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-backup-harden",
+  .func = prodtest_nfc_backup_harden_memory,
+  .info = "Run nfc-backup harden memory test",
   .args = ""
 );
 
@@ -1966,5 +2132,13 @@ PRODTEST_CLI_CMD(
   .info = "Run nfc-backup measure test",
   .args = ""
 );
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-backup-1k-write",
+  .func = prodtest_nfc_backup_1k_write,
+  .info = "Run nfc-backup 1k write test",
+  .args = ""
+);
+
 
 #endif  // USE_NFC
