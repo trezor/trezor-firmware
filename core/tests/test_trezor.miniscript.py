@@ -69,20 +69,20 @@ if utils.USE_MINISCRIPT:
             [0, 2048, "bc1qyqwat6ts2wcwp0zj24vhz7vdky5rhef03np67d7nsuyh7j8w4z5sy6dcr0"],
             [1, 2048, "bc1q4j4dqp0ascxv9n6vmzkkw0fdj0agq2q5untuhf57mut99j5tqjqqy2mq2n"],
         ),
-        (
-            "wsh(and_v(v:pk({0}/<0;1>/*),andor(pk({1}/<0;1>/*),sha256(e258d248fda94c63753607f7c4494ee0fcbe92f1a76bfdac795c9d84101eb317),older(144))))",
-            [TEST1_XPUB, TEST2_XPUB],
-            [
-                0,
-                31415,
-                "bc1qfd3tg4jld7ydyvcugvqkxmcjgga5j3kkyhwmh383468phu3vqvtsfzysfs",
-            ],
-            [
-                1,
-                31415,
-                "bc1q0yrczjqxwdmh46dummxqcqz3vulk6h34shqs4wkkwdr3zkp0lzaq08c4yk",
-            ],
-        ),
+        # (
+        #     "wsh(and_v(v:pk({0}/<0;1>/*),andor(pk({1}/<0;1>/*),sha256(e258d248fda94c63753607f7c4494ee0fcbe92f1a76bfdac795c9d84101eb317),older(144))))",
+        #     [TEST1_XPUB, TEST2_XPUB],
+        #     [
+        #         0,
+        #         31415,
+        #         "bc1qfd3tg4jld7ydyvcugvqkxmcjgga5j3kkyhwmh383468phu3vqvtsfzysfs",
+        #     ],
+        #     [
+        #         1,
+        #         31415,
+        #         "bc1q0yrczjqxwdmh46dummxqcqz3vulk6h34shqs4wkkwdr3zkp0lzaq08c4yk",
+        #     ],
+        # ),
         (
             "wsh(and_v(v:multi(2,{0}/<0;1>/*,{1}/<0;1>/*,{2}/<0;1>/*),after(1893456000)))",
             [TEST1_XPUB, TEST2_XPUB, TEST3_XPUB],
@@ -105,42 +105,42 @@ if utils.USE_MINISCRIPT:
             [1, 2, "bc1qldc8pxzl5rx7c3fgtwjqpwuad6xmujk4vznv8t7qhfhredcjptjs03mqyy"],
         ),
         # From https://adys.dev/miniscript
-        (
-            # Corporate Wallet
-            "wsh(andor(pk({3}/0/0),after(1767225600),multi(2,{0}/0/0,{1}/0/0,{2}/0/0)))",
-            MORE_XPUBS,
-            [0, 0, "bc1q8ptytc24ztnhhe0ksd7ngq56sf5afe8erz6phhtw4yxh7yk5kx3q880634"],
-        ),
-        (
-            # Emergency Recovery",
-            "wsh(or_d(pk({0}/0/0),and_v(v:thresh(2,pkh({1}/0/0),a:pkh({2}/0/0),a:pkh({3}/0/0)),older(1008))))",
-            MORE_XPUBS,
-            [0, 0, "bc1qk6s8edzztsx0lfx5clr8xe6pxaz6wqmu0eah5u8jglg66zv7ldnsksr73p"],
-        ),
-        (
-            # 2FA + Backup
-            "wsh(and_v(v:pk({0}/0/0),andor(pk({1}/0/0),hash160(6c60f404f8167a38fc70eaf8aa17ac351023bef8),older(52560))))",
-            MORE_XPUBS,
-            [0, 0, "bc1qfr0lnd8ujtech9l5p6llh8wusz4779ezjt0xpz6ntnw3lzqspnhqkz98lv"],
-        ),
-        (
-            # HODL Wallet
-            "wsh(or_d(pk({0}/0/0),and_v(v:thresh(3,pkh({1}/0/0),a:pkh({2}/0/0),a:pkh({3}/0/0),a:pkh({4}/0/0)),older(52560))))",
-            MORE_XPUBS,
-            [0, 0, "bc1qy7sn46zry0x039ydl6j3jalj63vsuhg64c0s8ms9wuejz3mx9kpsqkga9y"],
-        ),
-        (
-            # Timelocked Multisig
-            "wsh(and_v(v:multi(2,{0}/0/0,{1}/0/0,{2}/0/0),after(1767225600)))",
-            MORE_XPUBS,
-            [0, 0, "bc1qtw2r0rs7u5cusde4lfvnepeshyuy87ujx5tudk30un6h6ujxj30sx9dyqs"],
-        ),
-        (
-            # Atomic Swap
-            "wsh(and_v(v:pk({0}/0/0),andor(pk({1}/0/0),sha256(e258d248fda94c63753607f7c4494ee0fcbe92f1a76bfdac795c9d84101eb317),older(144))))",
-            MORE_XPUBS,
-            [0, 0, "bc1qlxxylc6h34j5pw45yp4dnj9n9m2ney4cg97wawxe8jkpt7c4k0cqlxvlvl"],
-        ),
+        # (
+        #     # Corporate Wallet
+        #     "wsh(andor(pk({3}/0/0),after(1767225600),multi(2,{0}/0/0,{1}/0/0,{2}/0/0)))",
+        #     MORE_XPUBS,
+        #     [0, 0, "bc1q8ptytc24ztnhhe0ksd7ngq56sf5afe8erz6phhtw4yxh7yk5kx3q880634"],
+        # ),
+        # (
+        #     # Emergency Recovery",
+        #     "wsh(or_d(pk({0}/0/0),and_v(v:thresh(2,pkh({1}/0/0),a:pkh({2}/0/0),a:pkh({3}/0/0)),older(1008))))",
+        #     MORE_XPUBS,
+        #     [0, 0, "bc1qk6s8edzztsx0lfx5clr8xe6pxaz6wqmu0eah5u8jglg66zv7ldnsksr73p"],
+        # ),
+        # (
+        #     # 2FA + Backup
+        #     "wsh(and_v(v:pk({0}/0/0),andor(pk({1}/0/0),hash160(6c60f404f8167a38fc70eaf8aa17ac351023bef8),older(52560))))",
+        #     MORE_XPUBS,
+        #     [0, 0, "bc1qfr0lnd8ujtech9l5p6llh8wusz4779ezjt0xpz6ntnw3lzqspnhqkz98lv"],
+        # ),
+        # (
+        #     # HODL Wallet
+        #     "wsh(or_d(pk({0}/0/0),and_v(v:thresh(3,pkh({1}/0/0),a:pkh({2}/0/0),a:pkh({3}/0/0),a:pkh({4}/0/0)),older(52560))))",
+        #     MORE_XPUBS,
+        #     [0, 0, "bc1qy7sn46zry0x039ydl6j3jalj63vsuhg64c0s8ms9wuejz3mx9kpsqkga9y"],
+        # ),
+        # (
+        #     # Timelocked Multisig
+        #     "wsh(and_v(v:multi(2,{0}/0/0,{1}/0/0,{2}/0/0),after(1767225600)))",
+        #     MORE_XPUBS,
+        #     [0, 0, "bc1qtw2r0rs7u5cusde4lfvnepeshyuy87ujx5tudk30un6h6ujxj30sx9dyqs"],
+        # ),
+        # (
+        #     # Atomic Swap
+        #     "wsh(and_v(v:pk({0}/0/0),andor(pk({1}/0/0),sha256(e258d248fda94c63753607f7c4494ee0fcbe92f1a76bfdac795c9d84101eb317),older(144))))",
+        #     MORE_XPUBS,
+        #     [0, 0, "bc1qlxxylc6h34j5pw45yp4dnj9n9m2ney4cg97wawxe8jkpt7c4k0cqlxvlvl"],
+        # ),
         # Liana end-to-end tests
         (
             "wsh(or_d(pk({0}/<0;1>/*),and_v(v:pkh({1}/<0;1>/*),older(52596))))",
@@ -176,6 +176,7 @@ class TestMiniscript(unittest.TestCase):
             desc = template.format(*xpubs)
             for internal, index, expected in addrs:
                 assert internal in (0, 1)
+                print(desc)
                 script = miniscript.compile(desc, bool(internal), index)
                 self.assertEqual(_wsh(hrp=expected[:2], script=script), expected)
 

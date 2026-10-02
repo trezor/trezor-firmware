@@ -1,9 +1,14 @@
-use miniscript::bitcoin::{secp256k1, PublicKey, ScriptBuf};
-use miniscript::descriptor::{DescriptorPublicKey, Wsh};
+extern crate alloc;
+
+use alloc::string::String;
+use core::iter;
+use core::str::FromStr;
+
+use miniscript::bitcoin::hashes::{hash160, ripemd160, sha256};
+use miniscript::bitcoin::{bip32, secp256k1, PublicKey, ScriptBuf};
+use miniscript::descriptor::{DescriptorMultiXKey, DescriptorPublicKey, Wildcard, Wsh};
 use miniscript::expression::{FromTree, Tree};
-use miniscript::{
-    translate_hash_clone, FromStrKey, MiniscriptKey, TranslateErr, Translator,
-};
+use miniscript::{hash256, FromStrKey, MiniscriptKey, TranslateErr, Translator};
 
 use crate::miniscript::Error::Unsupported;
 
@@ -62,31 +67,61 @@ struct Derivator<'a> {
     secp: &'a secp256k1::Secp256k1<secp256k1::VerifyOnly>,
 }
 
-impl Translator<DescriptorPublicKey> for Derivator<'_> {
+impl Translator<String> for Derivator<'_> {
     type TargetPk = PublicKey;
 
     type Error = Error;
 
-    fn pk(&mut self, pk: &DescriptorPublicKey) -> Result<Self::TargetPk, Self::Error> {
+    fn pk(&mut self, pk: &String) -> Result<Self::TargetPk, Self::Error> {
         // TODO: check global xpubs structure
         // TODO: avoid cloning
-        let res = match pk
-            .clone()
-            .into_single_keys()
-            .get(usize::from(self.internal))
-        {
-            Some(key) => key
-                .clone()
-                .at_derivation_index(self.index)
-                .map_err(|_| Error::Unsupported)?
-                .derive_public_key(self.secp),
-            None => return Err(Error::Unsupported),
+        let DescriptorMultiXKey {
+            origin: _,
+            xkey,
+            derivation_paths,
+            wildcard,
+        } = match DescriptorPublicKey::from_str(pk).expect("TODO") {
+            DescriptorPublicKey::MultiXPub(multi) => multi,
+            _ => return Err(Error::Unsupported),
         };
-        Ok(res)
+        if wildcard != Wildcard::Unhardened {
+            return Err(Error::Unsupported);
+        }
+        let derivation_paths = derivation_paths.into_paths();
+        if derivation_paths.len() != 2 {
+            return Err(Error::Unsupported);
+        }
+        let path = &derivation_paths[usize::from(self.internal)];
+        if path.len() != 1 {
+            return Err(Error::Unsupported);
+        }
+        let index =
+            bip32::ChildNumber::from_normal_idx(self.index).map_err(|_| Error::Unsupported)?;
+
+        let mut result = xkey;
+        for number in iter::chain(path.into_iter(), iter::once(&index)) {
+            result = result
+                .ckd_pub(self.secp, *number)
+                .map_err(|_| Error::Unsupported)?;
+        }
+        Ok(PublicKey::new(result.public_key))
     }
 
-    // TODO: not sure if needed, and how much it costs us in flash space
-    translate_hash_clone!(DescriptorPublicKey);
+    fn sha256(&mut self, _sha256: &String) -> Result<sha256::Hash, Error> {
+        Err(Error::Unsupported)
+    }
+
+    fn hash256(&mut self, _hash256: &String) -> Result<hash256::Hash, Error> {
+        Err(Error::Unsupported)
+    }
+
+    fn ripemd160(&mut self, _ripemd160: &String) -> Result<ripemd160::Hash, Error> {
+        Err(Error::Unsupported)
+    }
+
+    fn hash160(&mut self, _hash160: &String) -> Result<hash160::Hash, Error> {
+        Err(Error::Unsupported)
+    }
 }
 
 impl Descriptor<PublicKey> {
@@ -98,7 +133,7 @@ impl Descriptor<PublicKey> {
 }
 
 pub fn compile(desc: &str, internal: bool, index: u32) -> Result<ScriptBuf, Error> {
-    let multipath = Descriptor::<DescriptorPublicKey>::parse(&desc)?;
+    let multipath = Descriptor::parse(&desc)?;
     let mut derivator = Derivator {
         internal,
         index,

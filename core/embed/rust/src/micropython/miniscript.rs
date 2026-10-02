@@ -1,5 +1,3 @@
-extern crate alloc;
-
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::error::Error;
 use crate::micropython::module::Module;
