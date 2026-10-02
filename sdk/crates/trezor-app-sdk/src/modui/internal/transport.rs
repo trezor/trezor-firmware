@@ -27,7 +27,7 @@ use crate::{IntoAppResult, Result};
 // ============================================================================
 
 /// A request the trusted side can draw: one `UiV1` method per type.
-pub(super) trait Request {
+pub(in crate::modui) trait Request {
     fn send(&self, op: u16, handle: u16) -> Result<UiReply>;
 }
 
@@ -57,7 +57,7 @@ request! {
 /// should go through one of these, so nothing is left behind when the block
 /// returns — including when it returns by `?` — and so re-showing restores
 /// what the person was looking at rather than rebuilding it.
-pub(super) struct LayoutHandle {
+pub(in crate::modui) struct LayoutHandle {
     handle: u16,
 }
 
@@ -108,7 +108,7 @@ impl Drop for LayoutHandle {
 ///
 /// For content with no follow-up, where keeping a layout alive would only
 /// leave something to clean up. No handle is involved.
-pub(super) fn call_once(request: &impl Request) -> Result<UiReply> {
+pub(in crate::modui) fn call_once(request: &impl Request) -> Result<UiReply> {
     request.send(OP_ONCE, 0)
 }
 

@@ -1,4 +1,4 @@
-//! Confirming a single value. The public docs live on [`confirm_value`].
+//! Confirming a single value. The public docs live on [`value`].
 //!
 //! WIP: manual test results with extras (testapp):
 //! - caesar (T3B1): only the value is drawn. Its Cancel works, but there is
@@ -8,9 +8,9 @@
 //!   `MENU_CARRIES_WAY_OUT`; not re-tested since.
 //! - bolt (T2T1): no menu, so the extras cannot be reached.
 
-use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, Commitment, UiReply, call};
 use crate::Result;
+use crate::modui::internal::{BR_CODE_OTHER, call};
+use crate::modui::{Commitment, ExtraItem, UiReply};
 use crate::traits::ui::ConfirmValue as WireConfirmValue;
 
 // ============================================================================
@@ -42,8 +42,8 @@ pub enum Footer<'a> {
     Warning(&'a str),
 }
 
-/// Parameters for [`confirm_value`], built by [`ConfirmValue::new`].
-pub struct ConfirmValue<'a> {
+/// Parameters for [`value`], built by [`Value::new`].
+pub struct Value<'a> {
     title: &'a str,
     value: &'a str,
     kind: ValueKind,
@@ -55,7 +55,7 @@ pub struct ConfirmValue<'a> {
     extras: &'a [ExtraItem<'a>],
 }
 
-impl<'a> ConfirmValue<'a> {
+impl<'a> Value<'a> {
     /// Confirms one `value` of the given kind under `title`.
     ///
     /// - `title` — the screen's heading, such as `"Send"`.
@@ -112,16 +112,16 @@ impl<'a> ConfirmValue<'a> {
 /// # Example
 ///
 /// ```no_run
-/// use trezor_app_sdk::modui::{self as ui, Commitment, ConfirmValue, Footer, ValueKind};
+/// use trezor_app_sdk::modui::{Commitment, confirm};
 ///
 /// fn confirm_recipient(address: &str) -> trezor_app_sdk::Result<()> {
-///     ui::confirm_value(ConfirmValue::new(
+///     confirm::value(confirm::Value::new(
 ///         "Send",
 ///         address,
-///         ValueKind::Address,
+///         confirm::ValueKind::Address,
 ///         Some("Recipient"),
 ///         None,
-///         Some(Footer::Hint("Check with the source.")),
+///         Some(confirm::Footer::Hint("Check with the source.")),
 ///         Commitment::Step,
 ///         "app/send/recipient",
 ///         &[],
@@ -129,7 +129,7 @@ impl<'a> ConfirmValue<'a> {
 ///     .confirmed()
 /// }
 /// ```
-pub fn confirm_value(params: ConfirmValue<'_>) -> Result<UiReply> {
+pub fn value(params: Value<'_>) -> Result<UiReply> {
     let footer = params.footer.map(|f| match f {
         Footer::Hint(text) => (text, false),
         Footer::Warning(text) => (text, true),

@@ -11,7 +11,7 @@
 //! and disappears when the work is done — whether the work finished, failed,
 //! or returned early through `?`. A lost `End` would leave the person staring
 //! at a bar for work that stopped, which is precisely what a scope is for;
-//! the same reasoning that closes a [`LayoutHandle`](super::layout::LayoutHandle) on drop.
+//! the same reasoning that closes a `LayoutHandle` on drop.
 //!
 //! # Forms
 //!
@@ -23,14 +23,14 @@
 //! on the host:
 //!
 //! ```text
-//! let key = ui::progress("Deriving key", Total::Unknown, || derive())?;
+//! let key = progress::run("Deriving key", progress::Total::Unknown, || derive())?;
 //! ```
 //!
 //! Work in steps, each reported; the total is declared once, in whatever unit
 //! the app counts, and the percent is never the app's arithmetic:
 //!
 //! ```text
-//! let digest = ui::progress_with("Signing", Total::Units(data.len() as u32), |prog| {
+//! let digest = progress::run_with("Signing", progress::Total::Units(data.len() as u32), |prog| {
 //!     let mut hasher = Hasher::new();
 //!     for chunk in data.chunks(1024) {
 //!         hasher.update(chunk);
@@ -46,7 +46,7 @@
 //! it however the function left — `Ok`, `Err`, or `?` in between:
 //!
 //! ```text
-//! let mut prog = ui::Progress::start("Signing", Total::Units(2))?;
+//! let mut prog = progress::Progress::start("Signing", progress::Total::Units(2))?;
 //! let digest = hash(tx)?;                    // early exit: prog drops, bar ends
 //! prog.step(1);
 //! confirm_the_person()?;                     // refusal: same
@@ -62,7 +62,7 @@
 //! # Example
 //!
 //! ```text
-//! let done = ui::progress_with("Signing", Total::Units(data.len() as u32), |prog| {
+//! let done = progress::run_with("Signing", progress::Total::Units(data.len() as u32), |prog| {
 //!     let mut done = 0;
 //!     for chunk in data.chunks(1024) {
 //!         done += hash_all(chunk);
@@ -98,7 +98,7 @@ pub enum Total {
 /// A progress that is running. Dismissing it is not the app's to do: it goes
 /// away when this value is dropped, whatever happened to the work.
 ///
-/// Created by [`progress`], [`progress_with`], or [`Progress::start`]; see
+/// Created by [`run`], [`run_with`], or [`Progress::start`]; see
 /// the module docs.
 pub struct Progress {
     /// Total units, when known; the percent comes from this.
@@ -120,7 +120,7 @@ pub struct Progress {
 /// The progress appears before `work` runs and disappears after — on success,
 /// on error, on early return through `?`, all the same, because its lifetime
 /// is the call. If `work` wants to report steps, take the second form,
-/// [`progress_with`].
+/// [`run_with`].
 ///
 /// Use [`Total::Unknown`] when the amount of work is not known upfront; the
 /// person sees ongoing motion rather than a bar.
@@ -130,7 +130,7 @@ pub struct Progress {
 /// `Err` only if the progress could not be shown at all — the request never
 /// reached core, or core refused it. `work`'s own result passes through
 /// untouched.
-pub fn progress<T>(label: &str, total: Total, work: impl FnOnce() -> T) -> Result<T> {
+pub fn run<T>(label: &str, total: Total, work: impl FnOnce() -> T) -> Result<T> {
     let _guard = Progress::start(label, total)?;
     Ok(work())
 }
@@ -138,17 +138,13 @@ pub fn progress<T>(label: &str, total: Total, work: impl FnOnce() -> T) -> Resul
 /// Runs `work` under a progress, handing it the [`Progress`] to report steps
 /// with.
 ///
-/// Same lifetime as [`progress`]; the only difference is that `work` receives
+/// Same lifetime as [`run`]; the only difference is that `work` receives
 /// the handle, so it can call [`Progress::step`] as it goes.
 ///
 /// # Errors
 ///
-/// See [`progress`]; `work`'s own result and errors pass through untouched.
-pub fn progress_with<T>(
-    label: &str,
-    total: Total,
-    work: impl FnOnce(&mut Progress) -> T,
-) -> Result<T> {
+/// See [`run`]; `work`'s own result and errors pass through untouched.
+pub fn run_with<T>(label: &str, total: Total, work: impl FnOnce(&mut Progress) -> T) -> Result<T> {
     let mut guard = Progress::start(label, total)?;
     Ok(work(&mut guard))
 }
@@ -156,7 +152,7 @@ pub fn progress_with<T>(
 impl Progress {
     /// Starts a progress and returns it, running.
     ///
-    /// Prefer [`progress`] or [`progress_with`], which tie the progress to a
+    /// Prefer [`run`] or [`run_with`], which tie the progress to a
     /// scope and cannot leak it; reach for this only when the work cannot be
     /// expressed as a closure. Dropping the value ends the progress — so the
     /// binding must hold it: `let _ = Progress::start(..)` drops it at once,

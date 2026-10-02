@@ -1,8 +1,8 @@
 //! Confirming a list of key/value facts. The public docs live on
-//! [`confirm_properties`].
+//! [`properties`].
 
-use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, Commitment, UiReply, call};
+use crate::modui::internal::{BR_CODE_OTHER, call};
+use crate::modui::{Commitment, ExtraItem, UiReply};
 use crate::traits::ui::{ConfirmProperties as WireConfirmProperties, Property};
 use crate::{Error, Result};
 
@@ -10,8 +10,8 @@ use crate::{Error, Result};
 // Data types
 // ============================================================================
 
-/// Parameters for [`confirm_properties`], built by [`ConfirmProperties::new`].
-pub struct ConfirmProperties<'a> {
+/// Parameters for [`properties`], built by [`Properties::new`].
+pub struct Properties<'a> {
     title: &'a str,
     props: &'a [Property<'a>],
     subtitle: Option<&'a str>,
@@ -21,7 +21,7 @@ pub struct ConfirmProperties<'a> {
     cancel: bool,
 }
 
-impl<'a> ConfirmProperties<'a> {
+impl<'a> Properties<'a> {
     /// Confirms the facts in `props` under `title`.
     ///
     /// - `title` — the screen's heading.
@@ -33,7 +33,7 @@ impl<'a> ConfirmProperties<'a> {
     ///   [step names](crate::modui#step-names).
     /// - `extras` — more the person can look at from this screen; see
     ///   [extras](crate::modui#extras-and-the-way-out).
-    ///   Not shown by this block yet; see [`confirm_properties`].
+    ///   Not shown by this block yet; see [`properties`].
     /// - `cancel` — whether the extras also offer a way to abandon the block.
     pub fn new(
         title: &'a str,
@@ -71,18 +71,18 @@ impl<'a> ConfirmProperties<'a> {
 /// # Example
 ///
 /// ```no_run
-/// use trezor_app_sdk::modui::{self as ui, Commitment, ConfirmProperties, Property};
+/// use trezor_app_sdk::modui::{Commitment, Property, confirm};
 ///
 /// fn confirm_stake(amount: &str) -> trezor_app_sdk::Result<()> {
 ///     let props = [
 ///         Property::plain("Amount", amount),
 ///         Property::plain("Resource", "Energy"),
 ///     ];
-///     ui::confirm_properties(ConfirmProperties::new("Summary", &props, None, Commitment::Step, "app/stake", &[], true))?
+///     confirm::properties(confirm::Properties::new("Summary", &props, None, Commitment::Step, "app/stake", &[], true))?
 ///         .confirmed()
 /// }
 /// ```
-pub fn confirm_properties(params: ConfirmProperties<'_>) -> Result<UiReply> {
+pub fn properties(params: Properties<'_>) -> Result<UiReply> {
     // This block's wire has no menu button yet, so anything behind one would
     // be silently unreachable. Refusing is worse to use and better to debug.
     if !params.extras.is_empty() {

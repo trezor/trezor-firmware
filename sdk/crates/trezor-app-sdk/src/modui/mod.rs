@@ -43,12 +43,12 @@
 //!
 //! | Block | Shows | Extras |
 //! |---|---|---|
-//! | [`confirm_action`] | a question about an action | yes |
-//! | [`confirm_value`] | one value, e.g. an address or an amount | yes |
-//! | [`confirm_properties`] | a list of key/value facts | not yet |
-//! | [`confirm_data`] | raw bytes, as hex, of any length - supports chunking | yes |
-//! | [`confirm_summary`] | the closing amount and fee of a transaction - special commonly used case | yes |
-//! | [`show_notice`] | a notice of some [`Severity`] | depends on the severity |
+//! | [`confirm::action`] | a question about an action | yes |
+//! | [`confirm::value`] | one value, e.g. an address or an amount | yes |
+//! | [`confirm::properties`] | a list of key/value facts | not yet |
+//! | [`confirm::data`] | raw bytes, as hex, of any length - supports chunking | yes |
+//! | [`confirm::summary`] | the closing amount and fee of a transaction - special commonly used case | yes |
+//! | [`notice::show`] | a notice of some [`notice::Severity`] | depends on the severity |
 //!
 //! Every block takes a params struct built by one constructor carrying every
 //! parameter, and blocks until the person answers.
@@ -67,7 +67,7 @@
 //! # Showing an address
 //!
 //! There is no `show_address` block: an app shows an address as
-//! [`confirm_value`] with [`ValueKind::Address`], passing the account and
+//! [`confirm::value`] with [`confirm::ValueKind::Address`], passing the account and
 //! derivation path in `extras`.
 //!
 //! WIP: deliberate, and open to discussion. An address is a special case:
@@ -84,7 +84,7 @@
 //!
 //! - **Chunking** is this library's, and exists because memory is limited. A
 //!   request to core has to fit in one IPC message, on the order of a
-//!   kilobyte, so data longer than that — the bytes given to [`confirm_data`],
+//!   kilobyte, so data longer than that — the bytes given to [`confirm::data`],
 //!   an [`Extra::Chunked`] extra — is cut into chunks, and each chunk is sent
 //!   to core as a request of its own.
 //! - **Pagination** is core's, and exists because the screen is small. Core
@@ -103,7 +103,7 @@
 //! app, or through the app from the host — so content of any length reads
 //! as one document. That needs the total length known upfront, so core can
 //! count pages across chunks, and a way for the screen to ask for more;
-//! neither exists yet. The `chunked` module holds the details.
+//! neither exists yet. `internal::chunked` holds the details.
 //!
 //! # Outcomes
 //!
@@ -142,7 +142,7 @@
 //! Most screens must be a yes:
 //!
 //! ```text
-//! ui::confirm_action(params)?.confirmed()?;
+//! confirm::action(params)?.confirmed()?;
 //! ```
 //!
 //! The first `?` unwraps the block's result; `.confirmed()` turns every
@@ -163,14 +163,14 @@
 //!
 //! Sequences are where it matters. A sequence that wants earlier steps
 //! revisitable sets `back` on every step after the first, and answers
-//! `Backward` by showing the previous step again. `confirm_linear_flow`
+//! `Backward` by showing the previous step again. `flow::linear`
 //! is that, library-owned: the app hands over the steps, the flow sets
 //! `back` itself — never on the first — and returns when the last step
 //! is confirmed or any is refused. A sequence of another shape — a
 //! review-and-edit loop, a branch — matches on `Backward` itself; the
 //! raw replies are public for exactly that.
 //!
-//! WIP: half-built. [`confirm_linear_flow`] exists and owns the ordering,
+//! WIP: half-built. [`flow::linear`] exists and owns the ordering,
 //! but no block takes `back` yet, so no step's screen offers the gesture
 //! and no `Backward` can arrive. The parameter lands with the ethereum
 //! port; the flow is ready for it.
@@ -214,19 +214,19 @@
 //! app never ends one by hand: the library owns the ending, the same way it
 //! owns a block's screens.
 //!
-//! Two forms cover the usual cases, both closures: [`progress`] for work
-//! that needs no step reporting, [`progress_with`] for work that does —
-//! [`Progress::step`] along the way, in whatever unit the app counts. The
+//! Two forms cover the usual cases, both closures: [`progress::run`] for work
+//! that needs no step reporting, [`progress::run_with`] for work that does —
+//! [`progress::Progress::step`] along the way, in whatever unit the app counts. The
 //! percent is never the app's arithmetic: the library computes it from the
-//! [`Total`] given at the start, and a step past the total pins the bar
-//! full rather than wrapping it. [`Total::Unknown`] shows motion without
+//! [`progress::Total`] given at the start, and a step past the total pins the bar
+//! full rather than wrapping it. [`progress::Total::Unknown`] shows motion without
 //! a fill, and steps on it do nothing.
 //!
 //! A step is deliberately infallible. It is a status note, not a step of
 //! the work: an update that cannot be delivered must not abort the work it
 //! describes, so the person at worst sees a stale bar until the next one.
 //!
-//! [`Progress::start`] is the escape hatch for work that cannot be a
+//! [`progress::Progress::start`] is the escape hatch for work that cannot be a
 //! closure, and carries the one trap: the binding must hold the value,
 //! because dropping it is what ends the progress. `let _ = ...` ends it
 //! at once.
@@ -252,11 +252,11 @@
 //! warning, and the flow continues: on such a model the extras are
 //! unreachable, but the app is not told.
 //!
-//! WIP: the one contract break left is [`show_notice`] with
-//! [`Severity::Done`]: it should answer at once on every model, but on two
+//! WIP: the one contract break left is [`notice::show`] with
+//! [`notice::Severity::Done`]: it should answer at once on every model, but on two
 //! of them the screen has no timeout support yet, so the person dismisses
 //! and the call blocks meanwhile — same reply, different timing. The
-//! deviations are documented at the model's own `show_notice`; the fix is
+//! deviations are documented at the model's own `notice::show`; the fix is
 //! timeout support in those screens, not a change here.
 //!
 //! WIP: both of those outcomes are under discussion. A screen core cannot
@@ -273,15 +273,15 @@
 //! # Example
 //!
 //! ```no_run
-//! use trezor_app_sdk::modui::{self as ui, Commitment, ConfirmAction, ConfirmValue, ValueKind};
+//! use trezor_app_sdk::modui::{Commitment, confirm};
 //!
 //! // A sequence of blocks is just a sequence of calls. Cancelling any one of
 //! // them stops the flow, because `confirmed()` turns it into an error.
 //! fn confirm_send(address: &str) -> trezor_app_sdk::Result<()> {
-//!     ui::confirm_value(ConfirmValue::new(
+//!     confirm::value(confirm::Value::new(
 //!         "Send",
 //!         address,
-//!         ValueKind::Address,
+//!         confirm::ValueKind::Address,
 //!         Some("Recipient"),
 //!         None,
 //!         None,
@@ -291,7 +291,7 @@
 //!     ))?
 //!     .confirmed()?;
 //!
-//!     ui::confirm_action(ConfirmAction::new(
+//!     confirm::action(confirm::Action::new(
 //!         "Send",
 //!         "Sign the transaction?",
 //!         None,
@@ -305,8 +305,8 @@
 //!
 //! // Or handle the cancel yourself, when leaving is not an error.
 //! fn offer_details(address: &str) -> trezor_app_sdk::Result<bool> {
-//!     let params = ConfirmValue::new("Send", address, ValueKind::Address, None, None, None, Commitment::Step, "app/send", &[]);
-//!     Ok(ui::confirm_value(params)?.is_confirmed())
+//!     let params = confirm::Value::new("Send", address, confirm::ValueKind::Address, None, None, None, Commitment::Step, "app/send", &[]);
+//!     Ok(confirm::value(params)?.is_confirmed())
 //! }
 //! ```
 
@@ -321,50 +321,38 @@
 // get rewritten as core is built out, and neither should force a change to a
 // block's signature when they do.
 //
-// Every block builds one `traits::ui` request and hands it to `layout`, the
-// only file that calls `UiV1` for screens — so a new request type means a new
-// `UiV1` method, one line in `layout`'s `request!` list, and the block's final
-// expression, and nothing else here.
+// Every block builds one `traits::ui` request and hands it to
+// `internal::transport`, the only file that calls `UiV1` for screens — so a new
+// request type means a new `UiV1` method, one line in `transport`'s `request!`
+// list, and the block's final expression, and nothing else here.
 //
 // ButtonRequests: the app names the step and nothing else. The suffixes are
-// `menu`'s. `br_code` is the legacy identifier, always `BR_CODE_OTHER`. Page
+// `internal::menu`'s. `br_code` is the legacy identifier, always `BR_CODE_OTHER`. Page
 // counts, and whether a repeat is a new step, are core's.
 //
-// Every file is laid out the same way, each section skipped when empty:
-// `Constants` (what the block fixes and the app cannot choose), `Data types`
-// (the params struct), `Entry point` (the one public function), `Internals`.
+// Layout: the public surface is this file plus one module per kind of block
+// (`confirm`, `notice`, `progress`, `flow`); the library's own machinery is in
+// `internal`, which no app can name. A public file holds only what an app may
+// use — the params type, its constructor, the entry function and the types an
+// app names. Any private helper, constant or loop goes in `internal`, so that
+// reading a public file is reading the API.
+//
 // A block file is dull on purpose: params in, one `UiReply` out, the wire
-// call in between. Anything cleverer belongs in a shared helper (`chunked`,
-// `menu`) so that no single block owns behaviour the others should have too.
-// Each block's own example lives on its entry point, where rustdoc shows it:
-// the block modules are private, so their `//!` docs are for maintainers.
-
-// One file per block, plus the helpers they share. This list is the inventory;
-// the re-exports below are grouped by rustfmt (`group_imports`), so do not try
-// to arrange them by hand.
-mod chunked;
-mod confirm_action;
-mod confirm_data;
-mod confirm_linear_flow;
-mod confirm_properties;
-mod confirm_summary;
-mod confirm_value;
+// call in between. Anything cleverer belongs in `internal` (`chunked`, `menu`,
+// `data`) so that no single block owns behaviour the others should have too.
+// Each block's own example lives on its entry point, where rustdoc shows it;
+// the files inside `confirm/` are private modules re-exported by
+// `confirm/mod.rs`, so their `//!` docs are for maintainers. The re-exports
+// below are grouped by rustfmt (`group_imports`), so do not try to arrange
+// them by hand.
+pub mod confirm;
 mod extra;
-mod layout;
-mod menu;
-mod progress;
-mod show_notice;
+pub mod flow;
+mod internal;
+pub mod notice;
+pub mod progress;
 
-pub use confirm_action::{ConfirmAction, confirm_action};
-pub use confirm_data::{ConfirmData, confirm_data};
-pub use confirm_linear_flow::confirm_linear_flow;
-pub use confirm_properties::{ConfirmProperties, confirm_properties};
-pub use confirm_summary::{ConfirmSummary, confirm_summary};
-pub use confirm_value::{ConfirmValue, Footer, ValueKind, confirm_value};
 pub use extra::{Extra, ExtraItem};
-use layout::LayoutHandle;
-pub use progress::{Progress, Total, progress, progress_with};
-pub use show_notice::{Severity, ShowNotice, show_notice};
 use ufmt::derive::uDebug;
 
 /// A key/value fact, as shown in a list or on an extra's screen.
@@ -372,24 +360,6 @@ pub use crate::traits::ui::Property;
 /// The person's answer to a block: the wire reply, as it came.
 pub use crate::traits::ui::UiReply;
 use crate::{Error, Result};
-
-// ============================================================================
-// Constants
-// ============================================================================
-
-/// The `ButtonRequestType` every block sends: `Other`, and nothing else.
-///
-/// Named for its value rather than its role, so that a call site says what
-/// goes on the wire instead of implying there is a choice to make.
-///
-/// Legacy field, kept because hosts written before `br_name` switch on it. It
-/// does not classify an extapp's screens and is not meant to: the name carries
-/// the meaning, and every extapp call is `Other` by decision.
-///
-/// Stated once here rather than per block so that the day the field leaves the
-/// wire, this constant and its uses go with it and nothing has to be
-/// re-derived. Do not grow it into a per-block table.
-const BR_CODE_OTHER: i32 = 1;
 
 // ============================================================================
 // Data types
@@ -421,7 +391,7 @@ impl UiReply {
     /// [`Error::Cancelled`].
     ///
     /// Use this when the caller cannot proceed without confirmation:
-    /// `ui::confirm_action(params)?.confirmed()?`.
+    /// `confirm::action(params)?.confirmed()?`.
     pub fn confirmed(self) -> Result<()> {
         match self {
             Self::Confirmed | Self::ConfirmedAll => Ok(()),
@@ -435,61 +405,5 @@ impl UiReply {
     /// it, which is still a yes.
     pub fn is_confirmed(self) -> bool {
         matches!(self, Self::Confirmed | Self::ConfirmedAll)
-    }
-}
-
-// ============================================================================
-// Internals
-// ============================================================================
-
-/// Sends a block and returns what the person did with it.
-///
-/// When a block offers extras, looking at them and coming back brings the same
-/// screen up again. The layout is reopened rather than rebuilt, so it is
-/// found as the person left it; that is invisible to the caller either way,
-/// because the block is still one call and one answer.
-fn call(
-    request: &impl layout::Request,
-    extras: &[ExtraItem<'_>],
-    cancel: bool,
-    refusable: bool,
-    br: Option<&str>,
-) -> Result<UiReply> {
-    // `None` is a block that announces nothing, which is the block's own
-    // nature. An empty name is neither that nor a name, so it is a mistake:
-    // the host would see a step with no identity, which is worse than silence.
-    if br == Some("") {
-        return Err(Error::ValueError("a step name must not be empty"));
-    }
-    menu::check_extras(extras, cancel || refusable)?;
-
-    let layout = LayoutHandle::new();
-    let mut first = true;
-
-    loop {
-        let reply = if first {
-            first = false;
-            layout.show(request)?
-        } else {
-            layout.reshow(request)?
-        };
-
-        match reply {
-            // The answers, passed on as they came. `ConfirmedAll` is a yes
-            // with the fact that the rest was skipped attached, for screens
-            // that offer the skip.
-            UiReply::Confirmed | UiReply::Cancelled | UiReply::ConfirmedAll => return Ok(reply),
-            // The person asked for the extras. A block that offered none cannot
-            // produce this, so it is a protocol violation rather than a gesture.
-            UiReply::WantsMore => {
-                if let Some(reply) = menu::open(extras, cancel, refusable, br)? {
-                    return Ok(reply);
-                }
-            }
-            // The rest answer a screen this is not — a page turn, a pick from
-            // a list, a way back no block offers — including a variant added
-            // to the wire after this was written.
-            _ => return Err(Error::InvalidMessage),
-        }
     }
 }

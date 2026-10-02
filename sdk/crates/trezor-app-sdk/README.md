@@ -15,7 +15,7 @@ A unified SDK for developing Trezor applications in Rust.
 ```
 trezor-app-sdk/
 ├── log          - Logging module with macros (error!, info!, etc.)
-├── ui           - High-level UI functions (confirm_value, show_success, etc.)
+├── modui        - UI building blocks (confirm::value, notice::show, etc.)
 └── low_level_api - Low-level system API (for advanced use, custom loggers)
 ```
 
@@ -109,18 +109,17 @@ RUSTFLAGS='--cfg log_level="info"' cargo build  # Only error, warn, info
 RUSTFLAGS='--cfg log_level="trace"' cargo build # All levels (default)
 ```
 
-### `ui` Module
+### `modui` Module
 
-High-level UI functions:
+UI building blocks; the confirmations and notices return `Result<UiReply>`:
 
-- `confirm_value(title, content) -> Result<bool>` - Show confirmation dialog
-- `confirm_properties(title, props) -> Result<bool>` - Confirm key-value list
-- `show_warning(title, content) -> Result<()>` - Display warning
-- `show_success(title, content) -> Result<()>` - Display success message
-- `request_string(prompt) -> Result<String>` - Get string input
-- `request_number(title, content, init, min, max) -> Result<u32>` - Get number
-- `sleep(ms) -> Result<()>` - Sleep for milliseconds
-- `request_finish() -> Result<bool>` - Signal completion
+- `confirm::action(params)` - Confirm an action
+- `confirm::value(params)` - Confirm one value (address, amount, ...)
+- `confirm::data(params)` - Confirm raw bytes, shown as hex
+- `confirm::properties(params)` - Confirm key-value list
+- `confirm::summary(params)` - Confirm amount and fee
+- `notice::show(params)` - Display a notice (info, warning, success, ...)
+- `progress::run(label, total, work) -> Result<T>` - Show progress while `work` runs
 
 ### `low_level_api` Module
 

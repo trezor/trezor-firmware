@@ -48,12 +48,12 @@ use crate::{Error, Result};
 /// # Example
 ///
 /// ```text
-/// ui::confirm_linear_flow(&[
-///     |back| ui::confirm_value(ConfirmValue::new(.., back, ..)),
-///     |back| ui::confirm_summary(ConfirmSummary::new(.., back, ..)),
+/// flow::linear(&[
+///     |back| confirm::value(confirm::Value::new(.., back, ..)),
+///     |back| confirm::summary(confirm::Summary::new(.., back, ..)),
 /// ])?;
 /// ```
-pub fn confirm_linear_flow(steps: &[&dyn Fn(bool) -> Result<UiReply>]) -> Result<UiReply> {
+pub fn linear(steps: &[&dyn Fn(bool) -> Result<UiReply>]) -> Result<UiReply> {
     if steps.is_empty() {
         return Err(Error::ValueError("a flow needs at least one step"));
     }

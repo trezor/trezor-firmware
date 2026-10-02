@@ -1,97 +1,27 @@
-//! Confirming an opaque byte blob. The public docs live on [`confirm_data`].
-//!
-//! WIP: manual test results with extras and `cancel: true` (testapp):
-//! caesar (T3B1) and eckhart (T3W1) draw the menu, the extras and Cancel
-//! well, but the way out appears twice — on the screen and again in the menu.
-//! The menu's Cancel should only be drawn where the screen has none of its
-//! own. bolt (T2T1) draws no menu, so neither the extras nor the asked-for
-//! Cancel can be reached.
-//!
-//! This block exists because of *what* it shows — raw bytes with no meaning
-//! the device can interpret, rendered as hex — and not because of how much of
-//! it there is. Length is not the caller's problem: a blob of any size is one
-//! call returning one outcome, and `chunked` handles the rest.
+//! How [`confirm::data`](crate::modui::confirm::data) shows a blob: in chunks,
+//! each a value screen that core pages, with the extras menu between them.
 
 use super::chunked::{self, AfterChunk, BYTES_PER_CHUNK};
-use super::extra::ExtraItem;
-use super::layout::LayoutHandle;
+use super::transport::LayoutHandle;
 use super::{BR_CODE_OTHER, menu};
 use crate::alloc_types::String;
+use crate::modui::ExtraItem;
 use crate::traits::ui::{ConfirmValue as WireConfirmValue, UiReply};
 use crate::{Error, Result};
 
-// ============================================================================
-// Data types
-// ============================================================================
-
-/// Parameters for [`confirm_data`], built by [`ConfirmData::new`].
-pub struct ConfirmData<'a> {
-    title: &'a str,
-    data: &'a [u8],
-    subtitle: Option<&'a str>,
-    br: &'a str,
-    extras: &'a [ExtraItem<'a>],
-    cancel: bool,
+/// What the block was given, as [`confirm::Data`](crate::modui::confirm::Data)
+/// holds it.
+pub(in crate::modui) struct Params<'a> {
+    pub title: &'a str,
+    pub data: &'a [u8],
+    pub subtitle: Option<&'a str>,
+    pub br: &'a str,
+    pub extras: &'a [ExtraItem<'a>],
+    pub cancel: bool,
 }
 
-impl<'a> ConfirmData<'a> {
-    /// Confirms `data`, shown as hex however long it is.
-    ///
-    /// - `title` — the heading of every screen.
-    /// - `data` — the bytes, of any length.
-    /// - `subtitle` — optional line under the heading.
-    /// - `br` — the step name the host sees; see
-    ///   [step names](crate::modui#step-names).
-    /// - `extras` — more the person can look at from this screen; see
-    ///   [extras](crate::modui#extras-and-the-way-out).
-    /// - `cancel` — whether the extras also offer a way to abandon the block.
-    pub fn new(
-        title: &'a str,
-        data: &'a [u8],
-        subtitle: Option<&'a str>,
-        br: &'a str,
-        extras: &'a [ExtraItem<'a>],
-        cancel: bool,
-    ) -> Self {
-        Self {
-            title,
-            data,
-            subtitle,
-            br,
-            extras,
-            cancel,
-        }
-    }
-}
-
-// ============================================================================
-// Entry point
-// ============================================================================
-
-/// Asks the person to confirm raw bytes, and waits for the answer.
-///
-/// For data the device cannot interpret, such as contract call data. The
-/// bytes are shown as hex, a screen at a time, and a blob of any length is
-/// still one call with one outcome: the app never sees how it was split.
-///
-/// `Confirmed` means the person went through all of it: there is no way to
-/// accept the rest unread.
-///
-/// # Errors
-///
-/// See [errors](crate::modui#errors).
-///
-/// # Example
-///
-/// ```no_run
-/// use trezor_app_sdk::modui::{self as ui, ConfirmData};
-///
-/// fn confirm_calldata(calldata: &[u8]) -> trezor_app_sdk::Result<()> {
-///     ui::confirm_data(ConfirmData::new("Transaction data", calldata, None, "app/data", &[], true))?
-///         .confirmed()
-/// }
-/// ```
-pub fn confirm_data(params: ConfirmData<'_>) -> Result<UiReply> {
+/// Runs the block.
+pub(in crate::modui) fn confirm(params: &Params<'_>) -> Result<UiReply> {
     // This block drives its own screens, so it makes the check `call` makes for
     // every other one: a step with no identity is worse for the host than a
     // block that deliberately announces nothing.
@@ -111,13 +41,9 @@ pub fn confirm_data(params: ConfirmData<'_>) -> Result<UiReply> {
         let end = (start + BYTES_PER_CHUNK).min(params.data.len());
 
         encode_hex(&params.data[start..end], &mut hex);
-        show_chunk(&params, &hex, &layout)
+        show_chunk(params, &hex, &layout)
     })
 }
-
-// ============================================================================
-// Internals
-// ============================================================================
 
 /// Sends one chunk and waits for the person, showing the same chunk until
 /// they leave it.
@@ -125,7 +51,7 @@ pub fn confirm_data(params: ConfirmData<'_>) -> Result<UiReply> {
 /// A chunk goes as a value, the screen every model pages: core splits it across
 /// as many screens as it takes, and the person answers only once they have
 /// seen all of it.
-fn show_chunk(params: &ConfirmData<'_>, hex: &str, layout: &LayoutHandle) -> Result<AfterChunk> {
+fn show_chunk(params: &Params<'_>, hex: &str, layout: &LayoutHandle) -> Result<AfterChunk> {
     // The screen has a menu: the app offered extras, a way out, or both.
     let has_menu = !params.extras.is_empty() || params.cancel;
     let request = WireConfirmValue::new(
