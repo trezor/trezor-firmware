@@ -11,8 +11,8 @@ permissions:
 
 jobs:
   set-project-status:
-    # run only in 'trezor/trezor-firmware' repository
-    if: github.repository == 'trezor/trezor-firmware'
+    # do not run in forks
+    if: startsWith(github.repository, 'trezor/trezor-firmware')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
