@@ -9,43 +9,71 @@ pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
 pub type HmacSha256Ctx = SecretContext<ffi::HMAC_SHA256_CTX>;
+pub type HmacSha256Guard<'a> = HazardGuard<'a, ffi::HMAC_SHA256_CTX>;
 
 // SAFETY: HMAC_SHA256_CTX is valid when zeroed
 unsafe impl ZeroableMemory for ffi::HMAC_SHA256_CTX {}
 
-impl HazardGuard<'_, ffi::HMAC_SHA256_CTX> {
-    /// Initialize the HMAC context with the given key.
+impl ffi::HMAC_SHA256_CTX {
+    /// Initializes the context with `key` in place.
     ///
-    /// Called by [`HmacSha256::new`].
-    fn init(&mut self, key: &[u8]) {
-        let ptr = CSlice::from(key);
+    /// Called by [`HmacSha256::new`]. Call again when reusing the context
+    /// after [`Self::hazard_finalize`] / [`HazardGuard::finalize`].
+    ///
+    /// # Copy hazard
+    ///
+    /// See [`Self::hazard_update`].
+    pub fn hazard_init(&mut self, key: &[u8]) {
         // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::hmac_sha256_Init(self.hazard_mut(), ptr.ptr(), ptr.len() as u32) };
+        unsafe { ffi::hmac_sha256_Init(self, key.as_ptr(), key.len() as u32) };
     }
 
-    /// Update the HMAC context with the given data.
-    fn update(&mut self, data: &[u8]) {
+    /// # Copy hazard
+    ///
+    /// The caller must not move or copy `self` for as long as it keeps
+    /// using it via [`Self::hazard_update`] / [`Self::hazard_finalize`].
+    /// Prefer [`HmacSha256`] which enforces this via pinning; this raw API
+    /// only exists for callers that cannot use a pinned context (e.g.
+    /// because they must own the hasher by value, as required by some
+    /// external trait).
+    pub fn hazard_update(&mut self, data: &[u8]) {
         let ptr = CSlice::from(data);
         // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::hmac_sha256_Update(self.hazard_mut(), ptr.ptr(), ptr.len() as u32) };
+        // COPY HAZARD: operates on the context in place
+        unsafe { ffi::hmac_sha256_Update(self, ptr.ptr(), ptr.len() as u32) };
     }
 
-    /// Finalize the HMAC context and return the digest.
-    fn finalize(&mut self) -> Digest {
+    /// # Copy hazard
+    ///
+    /// See [`Self::hazard_update`].
+    pub fn hazard_finalize(&mut self) -> Digest {
         let mut digest = [0u8; DIGEST_SIZE];
         // SAFETY: ffi
-        // COPY HAZARD: operates on the guarded context in place
-        unsafe { ffi::hmac_sha256_Final(self.hazard_mut(), digest.as_mut_ptr()) };
+        // COPY HAZARD: operates on the context in place
+        unsafe { ffi::hmac_sha256_Final(self, digest.as_mut_ptr()) };
         digest
     }
 }
 
-/// HMAC-SHA256 hasher.
-///
-/// A wrapper around an HMAC-SHA256 context that provides a safe interface for
-/// authenticating data.
+impl HmacSha256Guard<'_> {
+    /// Initialize the HMAC context with the given key.
+    ///
+    /// Called by [`HmacSha256::new`].
+    pub fn init(&mut self, key: &[u8]) {
+        self.hazard_mut().hazard_init(key);
+    }
+
+    /// Update the HMAC context with the given data.
+    pub fn update(&mut self, data: &[u8]) {
+        self.hazard_mut().hazard_update(data);
+    }
+
+    /// Finalize the HMAC context and return the digest.
+    pub fn finalize(&mut self) -> Digest {
+        self.hazard_mut().hazard_finalize()
+    }
+}
+
 pub struct HmacSha256<D: DerefMut<Target = HmacSha256Ctx>>(SecretContextLock<D>);
 
 impl<D: DerefMut<Target = HmacSha256Ctx>> HmacSha256<D> {
@@ -62,7 +90,7 @@ impl<D: DerefMut<Target = HmacSha256Ctx>> HmacSha256<D> {
     }
 
     /// Finalize the HMAC context and return the digest.
-    pub fn finalize(mut self) -> Digest {
+    pub fn finalize(&mut self) -> Digest {
         self.0.guarded().finalize()
     }
 }
@@ -130,9 +158,7 @@ mod test {
 
     #[test]
     fn test_empty_ctx() {
-        let mut ctx = HmacSha256Ctx::default();
-        let hmac = HmacSha256::new(&mut ctx, b"");
-        let out = hmac.finalize();
+        let out = HmacSha256::digest(b"", b"");
         let out_hex = hex::encode(out);
 
         assert_eq!(out_hex, HMAC_SHA256_EMPTY);

@@ -8,7 +8,7 @@ fn main() -> Result<()> {
         lib.add_include("../../rust"); // Cyclic dependency
 
         if cfg!(feature = "app_loading") {
-            lib.add_source("../../api/trezor_api_v1_impl.c");
+            lib.import_lib("api")?;
         }
 
         if cfg!(feature = "force_bootloader_upgrade") {

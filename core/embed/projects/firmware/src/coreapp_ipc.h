@@ -19,6 +19,18 @@
 
 #pragma once
 
-#include "trezor_api_v1.h"
+#include <sys/systask.h>
 
-typedef void* (*trezor_api_getter_t)(uint32_t version);
+/**
+ * Task the coreapp exchanges IPC messages with.
+ *
+ * Task IDs are zero-based indices (see `systask_id_t`): 0 is the kernel, 1 the
+ * coreapp itself, 2 the loaded user app. Only meaningful with `USE_APP_LOADING`
+ * enabled, which is also what raises `SYSTASK_MAX_TASKS` to 3.
+ *
+ * TODO: replace with a task id obtained from the applet/app-arena layer once
+ * one is exposed, rather than assuming the single extapp slot.
+ */
+#define IPC_REMOTE_EXTAPP ((systask_id_t)2)
+// Size of the IPC receive buffer registered by the coreapp
+#define IPC_COREAPP_BUFFER_SIZE (32 * 1024)

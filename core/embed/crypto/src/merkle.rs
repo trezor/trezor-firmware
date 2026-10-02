@@ -4,9 +4,8 @@ use super::sha256;
 ///
 /// Expects the Merkle tree format specified in `external-definitions.md`.
 pub fn merkle_root(elem: &[u8], proof: &[sha256::Digest]) -> sha256::Digest {
-    let mut ctx = sha256::Sha256Ctx::default();
-
     // hash the leaf element
+    let mut ctx = sha256::Sha256Ctx::default();
     let mut sha = sha256::Sha256::new(&mut ctx);
     sha.update(&[0x00]);
     sha.update(elem);
@@ -19,6 +18,7 @@ pub fn merkle_root(elem: &[u8], proof: &[sha256::Digest]) -> sha256::Digest {
         } else {
             (proof_elem, &out)
         };
+        let mut ctx = sha256::Sha256Ctx::default();
         let mut sha = sha256::Sha256::new(&mut ctx);
         sha.update(&[0x01]);
         sha.update(min);
