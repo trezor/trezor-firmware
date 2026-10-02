@@ -112,6 +112,7 @@ void prodtest_pm_suspend(cli_t* cli) {
   prodtest_show_homescreen();
 }
 
+#ifdef USE_CHARGER
 void prodtest_pm_charge_disable(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -147,6 +148,7 @@ void prodtest_pm_charge_enable(cli_t* cli) {
 
   cli_ok(cli, "");
 }
+#endif /* USE_CHARGER */
 
 void prodtest_pm_fuel_gauge_monitor(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -473,6 +475,7 @@ PRODTEST_CLI_CMD(
     .args = ""
 );
 
+#ifdef USE_CHARGER
 PRODTEST_CLI_CMD(
     .name = "pm-charge-enable",
     .func = prodtest_pm_charge_enable,
@@ -486,6 +489,7 @@ PRODTEST_CLI_CMD(
     .info = "Disable battery charging",
     .args = ""
 );
+#endif /* USE_CHARGER */
 
 PRODTEST_CLI_CMD(
   .name = "pm-event-monitor",
@@ -508,12 +512,14 @@ PRODTEST_CLI_CMD(
   .args = ""
 );
 
+#ifdef USE_CHARGER
 PRODTEST_CLI_CMD(
   .name = "pm-set-soc-target",
   .func = prodtest_pm_set_soc_target,
   .info = "Set battery SoC charging target",
   .args = "<target>"
 );
+#endif /* USE_CHARGER */
 
 PRODTEST_CLI_CMD(
   .name = "pm-new-soc-estimate",
