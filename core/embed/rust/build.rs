@@ -99,6 +99,8 @@ fn generate_micropython_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_function("gc_alloc")
             .allowlist_function("gc_free")
             .allowlist_var("GC_ALLOC_FLAG_HAS_FINALISER")
+            .allowlist_function("m_tracked_calloc")
+            .allowlist_function("m_tracked_free")
             // iter
             .allowlist_type("mp_obj_iter_buf_t")
             .allowlist_function("mp_getiter")
