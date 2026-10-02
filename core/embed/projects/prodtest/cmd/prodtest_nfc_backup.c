@@ -1374,6 +1374,77 @@ cleanup:
   TSH_RETURN;
 }
 
+static ts_t benchmark_slhdsa(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  nfc_apdu_message_t cmd = {0};
+  nfc_apdu_message_t rsp = {0};
+
+  status = nfc_backup_compose_apdu(0x00, 0xC0, 0x00, 0x00, NULL, 0, &cmd);
+  TSH_CHECK_OK(status);
+
+  status =
+      nfc_backup_transceive_logged(cli, "benchmark-slhdsa", 0xC0, &cmd, &rsp);
+  TSH_CHECK_OK(status);
+
+  // Response: 4 error code bytes, 4 tick bytes (little endian), SW1 SW2
+  // (ignored).
+  TSH_CHECK(rsp.data_len == 4 + 4 + 2U, TS_EINVAL);
+
+  uint32_t ticks = (uint32_t)rsp.data[4] | ((uint32_t)rsp.data[5] << 8) |
+                   ((uint32_t)rsp.data[6] << 16) |
+                   ((uint32_t)rsp.data[7] << 24);
+  uint32_t time_us = (uint32_t)(((uint64_t)ticks * 1000000u) / 1695000u);
+
+  cli_trace(cli, "SLH-DSA benchmark:");
+  cli_trace(cli, "  Error codes: %02X %02X %02X %02X", rsp.data[0], rsp.data[1],
+            rsp.data[2], rsp.data[3]);
+  cli_trace(cli, "  Ticks: %lu", (unsigned long)ticks);
+  cli_trace(cli, "  Time: %lu.%03lu ms", (unsigned long)(time_us / 1000U),
+            (unsigned long)(time_us % 1000U));
+
+cleanup:
+  TSH_RETURN;
+}
+
+static ts_t benchmark_mlkem(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  nfc_apdu_message_t cmd = {0};
+  nfc_apdu_message_t rsp = {0};
+
+  status = nfc_backup_compose_apdu(0x00, 0xC1, 0x00, 0x00, NULL, 0, &cmd);
+  TSH_CHECK_OK(status);
+
+  status =
+      nfc_backup_transceive_logged(cli, "benchmark-mlkem", 0xC1, &cmd, &rsp);
+  TSH_CHECK_OK(status);
+
+  // Response: 4 error code bytes, 3 x 4 tick bytes (little endian), SW1 SW2
+  // (ignored).
+  TSH_CHECK(rsp.data_len == 4 + 3 * 4 + 2U, TS_EINVAL);
+
+  cli_trace(cli, "ML-KEM benchmark:");
+  cli_trace(cli, "  Error codes: %02X %02X %02X %02X", rsp.data[0], rsp.data[1],
+            rsp.data[2], rsp.data[3]);
+
+  for (size_t i = 0; i < 3; i++) {
+    const uint8_t *b = &rsp.data[4 + i * 4];
+    uint32_t ticks = (uint32_t)b[0] | ((uint32_t)b[1] << 8) |
+                     ((uint32_t)b[2] << 16) | ((uint32_t)b[3] << 24);
+    uint32_t time_us = (uint32_t)(((uint64_t)ticks * 1000000u) / 1695000u);
+
+    cli_trace(cli, "  Test %u: %lu ticks, %lu.%03lu ms", (unsigned)(i + 1),
+              (unsigned long)ticks, (unsigned long)(time_us / 1000U),
+              (unsigned long)(time_us % 1000U));
+  }
+
+cleanup:
+  TSH_RETURN;
+}
+
 static ts_t nfc_backup_activate_flashloader(cli_t *cli) {
   TSH_DECLARE;
   ts_t status;
@@ -1742,6 +1813,38 @@ cleanup:
   TSH_RETURN;
 }
 
+static ts_t nfc_backup_slhdsa_benchmark(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    TSH_CHECK(false, TS_EINVAL);
+  }
+
+  status = benchmark_slhdsa(cli);
+  TSH_CHECK_OK(status);
+
+cleanup:
+  TSH_RETURN;
+}
+
+static ts_t nfc_backup_mlkem_benchmark(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    TSH_CHECK(false, TS_EINVAL);
+  }
+
+  status = benchmark_mlkem(cli);
+  TSH_CHECK_OK(status);
+
+cleanup:
+  TSH_RETURN;
+}
+
 // Transparent mode CLI: buffers incoming characters into a line and, once a
 // termination character (or a full buffer) is seen, dispatches it to one of
 // the registered command handlers below.
@@ -2019,6 +2122,16 @@ REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_1k_write, &nfc_backup_1k_write,
                         PRODTEST_ERR_NFC_BACKUP_1K_WRITE_FAILED,
                         "NFC 1k write failed", false);
 
+REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_slhdsa_benchmark,
+                        &nfc_backup_slhdsa_benchmark,
+                        PRODTEST_ERR_NFC_BACKUP_SLHDSA_BENCHMARK_FAILED,
+                        "NFC SL-HDSA benchmark failed", false);
+
+REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_mlkem_benchmark,
+                        &nfc_backup_mlkem_benchmark,
+                        PRODTEST_ERR_NFC_BACKUP_MLKEM_BENCHMARK_FAILED,
+                        "NFC ML-KEM benchmark failed", false);
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -2137,6 +2250,20 @@ PRODTEST_CLI_CMD(
   .name = "nfc-backup-1k-write",
   .func = prodtest_nfc_backup_1k_write,
   .info = "Run nfc-backup 1k write test",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-backup-slhdsa-benchmark",
+  .func = prodtest_nfc_backup_slhdsa_benchmark,
+  .info = "Run nfc-backup SL-HDSA benchmark test",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-backup-mlkem-benchmark",
+  .func = prodtest_nfc_backup_mlkem_benchmark,
+  .info = "Run nfc-backup ML-KEM benchmark test",
   .args = ""
 );
 
