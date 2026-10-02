@@ -1,14 +1,7 @@
 use rtl::CSlice;
 
 use super::ffi;
-
-#[derive(PartialEq, Debug, Eq, Clone, Copy)]
-pub enum LogLevel {
-    Debug = ffi::log_level_t_LOG_LEVEL_DBG as _,
-    Info = ffi::log_level_t_LOG_LEVEL_INF as _,
-    Warn = ffi::log_level_t_LOG_LEVEL_WARN as _,
-    Error = ffi::log_level_t_LOG_LEVEL_ERR as _,
-}
+pub use crate::syslog_level::LogLevel;
 
 impl From<&str> for ffi::log_source_t {
     fn from(s: &str) -> Self {
@@ -93,4 +86,9 @@ pub fn log_simple(module: &str, level: LogLevel, message: &str) {
     if syslog_start_record(module, level) {
         syslog_write_chunk(message, true).ok();
     }
+}
+
+pub fn init_log_crate() {
+    #[cfg(not(feature = "log_crate_disabled"))]
+    crate::log_crate::init()
 }
