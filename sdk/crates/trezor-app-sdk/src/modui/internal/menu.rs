@@ -12,9 +12,9 @@
 use stabby::str::Str;
 
 use super::BR_CODE_OTHER;
-use super::extra::{Extra, ExtraItem};
-use super::layout::{LayoutHandle, call_once};
+use super::transport::{LayoutHandle, call_once};
 use crate::alloc_types::String;
+use crate::modui::{Extra, ExtraItem};
 use crate::traits::ui::{SelectMenu, ShowProperties, UiReply};
 use crate::{Error, Result};
 
@@ -23,7 +23,7 @@ use crate::{Error, Result};
 // ============================================================================
 
 /// Entries the renderer can show at once, counting the way out.
-pub(super) const MAX_ENTRIES: usize = 6;
+pub(in crate::modui) const MAX_ENTRIES: usize = 6;
 
 /// Appended to the block's step name for the list of extras.
 const STEP_MENU: &str = "/menu";
@@ -39,7 +39,7 @@ const STEP_DETAILS: &str = "/details";
 ///
 /// Every block calls this first, so a list that cannot be shown fails as the
 /// block is called, not later, when the person opens the menu mid-flow.
-pub(super) fn check_extras(extras: &[ExtraItem<'_>], cancel: bool) -> Result<()> {
+pub(in crate::modui) fn check_extras(extras: &[ExtraItem<'_>], cancel: bool) -> Result<()> {
     if extras.len() + usize::from(cancel) > MAX_ENTRIES {
         return Err(Error::ValueError("too many extras for one screen"));
     }
@@ -61,7 +61,7 @@ pub(super) fn check_extras(extras: &[ExtraItem<'_>], cancel: bool) -> Result<()>
 /// `refusable` says the block can always be refused: a model whose menu
 /// button took the place of the screen's own way out draws one here too.
 /// Either way it is the entry after the extras.
-pub(super) fn open(
+pub(in crate::modui) fn open(
     extras: &[ExtraItem<'_>],
     cancel: bool,
     refusable: bool,
@@ -80,7 +80,7 @@ pub(super) fn open(
     }
     // The way out goes separately, so each model can draw it as its own way
     // out; core puts it after the extras. Another word this library should not
-    // be choosing; see the note in `confirm_data`.
+    // be choosing; see the note in `internal::data`.
     let cancel_label = cancel.then_some("Cancel");
 
     // These screens exist only because a block offered extras, so their names

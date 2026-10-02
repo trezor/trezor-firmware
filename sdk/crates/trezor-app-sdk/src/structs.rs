@@ -938,7 +938,7 @@ pub enum TrezorUiEnum<'a> {
 /// fix for that is pairing replies to requests, which this enum does not do.
 ///
 /// An answer is an ordinary value, easy to ignore by accident — hence
-/// `#[must_use]` and [`UiReply::confirmed`], the idiomatic way to require
+/// `#[must_use]` and [`UiReply::confirmed`](crate::traits::ui::UiReply::confirmed), the idiomatic way to require
 /// a yes; see the `modui` module for what a block can answer.
 #[must_use]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]

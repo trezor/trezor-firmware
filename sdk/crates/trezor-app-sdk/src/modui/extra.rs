@@ -55,8 +55,8 @@ pub enum Extra<'a> {
 /// }
 /// ```
 pub struct ExtraItem<'a> {
-    pub(super) label: &'a str,
-    pub(super) value: Extra<'a>,
+    pub(in crate::modui) label: &'a str,
+    pub(in crate::modui) value: Extra<'a>,
 }
 
 impl<'a> ExtraItem<'a> {

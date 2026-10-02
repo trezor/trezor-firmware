@@ -1,4 +1,4 @@
-//! Telling the person something. The public docs live on [`show_notice`].
+//! Telling the person something. The public docs live on [`show`].
 //!
 //! One block for every callout, one contract across models: the same request
 //! answers the same way everywhere. Failures are not among the callouts; see
@@ -14,9 +14,9 @@
 //! - Delizia gained a menu button for info and warning notices; the other
 //!   severities, and bolt and caesar, still draw without one.
 
-use super::extra::ExtraItem;
-use super::{BR_CODE_OTHER, UiReply, call};
 use crate::Result;
+use crate::modui::internal::{BR_CODE_OTHER, call};
+use crate::modui::{ExtraItem, UiReply};
 pub use crate::traits::ui::Severity;
 use crate::traits::ui::ShowNotice as WireShowNotice;
 
@@ -24,8 +24,8 @@ use crate::traits::ui::ShowNotice as WireShowNotice;
 // Data types
 // ============================================================================
 
-/// Parameters for [`show_notice`], built by [`ShowNotice::new`].
-pub struct ShowNotice<'a> {
+/// Parameters for [`show`], built by [`Notice::new`].
+pub struct Notice<'a> {
     severity: Severity,
     title: &'a str,
     content: &'a str,
@@ -34,7 +34,7 @@ pub struct ShowNotice<'a> {
     cancel: bool,
 }
 
-impl<'a> ShowNotice<'a> {
+impl<'a> Notice<'a> {
     /// A notice of the given severity.
     ///
     /// - `severity` — what kind of news this is; see [`Severity`].
@@ -45,7 +45,7 @@ impl<'a> ShowNotice<'a> {
     ///   [step names](crate::modui#step-names).
     /// - `extras` — more the person can look at from this screen; see
     ///   [extras](crate::modui#extras-and-the-way-out).
-    ///   Not every severity can show them; see [`show_notice`].
+    ///   Not every severity can show them; see [`show`].
     /// - `cancel` — whether the extras also offer a way to abandon the block.
     pub fn new(
         severity: Severity,
@@ -104,11 +104,11 @@ impl<'a> ShowNotice<'a> {
 /// # Example
 ///
 /// ```no_run
-/// use trezor_app_sdk::modui::{self as ui, Severity, ShowNotice};
+/// use trezor_app_sdk::modui::notice;
 ///
 /// fn warn_unknown_contract() -> trezor_app_sdk::Result<()> {
-///     ui::show_notice(ShowNotice::new(
-///         Severity::Danger,
+///     notice::show(notice::Notice::new(
+///         notice::Severity::Danger,
 ///         "Important",
 ///         "Unknown contract address.",
 ///         "app/unknown_contract",
@@ -120,8 +120,8 @@ impl<'a> ShowNotice<'a> {
 ///
 /// fn signed() -> trezor_app_sdk::Result<()> {
 ///     // The last screen of the flow: nothing hangs on how it went away.
-///     let _ = ui::show_notice(ShowNotice::new(
-///         Severity::Done,
+///     let _ = notice::show(notice::Notice::new(
+///         notice::Severity::Done,
 ///         "Done",
 ///         "Transaction signed",
 ///         "app/signed",
@@ -131,7 +131,7 @@ impl<'a> ShowNotice<'a> {
 ///     Ok(())
 /// }
 /// ```
-pub fn show_notice(params: ShowNotice<'_>) -> Result<UiReply> {
+pub fn show(params: Notice<'_>) -> Result<UiReply> {
     let request = WireShowNotice::new(
         params.severity,
         params.title,
