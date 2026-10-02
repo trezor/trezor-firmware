@@ -8,6 +8,10 @@
 	protostyle protostyle_check \
 	defs_check \
 	ruststyle ruststyle_check \
+	app_build_fmt app_build_fmt_check \
+	app_build_check app_build_clippy \
+	app_build_test app_build_doc \
+	app_build_audit app_build_vet \
 	typecheck pyright \
 	mocks mocks_check \
 	templates templates_check \
@@ -139,12 +143,47 @@ ruststyle: ## apply code style on rust sources
 	@echo [RUSTFMT]
 	@cd core/embed ; cargo fmt
 	make -C rust style
+	make app_build_fmt
 
 ruststyle_check: ## run code style check on rust sources
 	@echo [RUSTFMT]
 	@cd core/embed ; cargo fmt -- --check
 	make -C rust style_check
+	make app_build_fmt_check
 
+## trezor-app-build commands:
+
+app_build_fmt: ## apply code style on the trezor-app-build crate
+	@echo [APP-BUILD-RUSTFMT]
+	@cd sdk/crates/trezor-app-build ; cargo fmt
+
+app_build_fmt_check: ## run code style check on the trezor-app-build crate
+	@echo [APP-BUILD-RUSTFMT]
+	@cd sdk/crates/trezor-app-build ; cargo fmt -- --check
+
+app_build_check: ## run cargo check on the trezor-app-build crate
+	@echo [APP-BUILD-CHECK]
+	@cd sdk/crates/trezor-app-build ; cargo check --all-targets
+
+app_build_clippy: ## run clippy on the trezor-app-build crate
+	@echo [APP-BUILD-CLIPPY]
+	@cd sdk/crates/trezor-app-build ; cargo clippy --all-targets
+
+app_build_test: ## run unit tests for the trezor-app-build crate
+	@echo [APP-BUILD-TEST]
+	@cd sdk/crates/trezor-app-build ; cargo test --lib
+
+app_build_doc: ## build documentation for the trezor-app-build crate
+	@echo [APP-BUILD-DOC]
+	@cd sdk/crates/trezor-app-build ; cargo doc --no-deps
+
+app_build_audit: ## run cargo audit on the trezor-app-build crate's dependencies
+	@echo [APP-BUILD-AUDIT]
+	@cd sdk/crates/trezor-app-build ; cargo audit
+
+app_build_vet: ## run cargo vet on the trezor-app-build crate's dependencies
+	@echo [APP-BUILD-VET]
+	@cd sdk/crates/trezor-app-build ; cargo vet --locked
 
 typecheck: pyright
 
