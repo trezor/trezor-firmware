@@ -364,6 +364,7 @@ impl Component for PassphraseKeyboard {
         // while the input textbox is empty (matching render).
         if self.input.textbox.is_empty() {
             if let Event::Attach(_) = event {
+                self.input_prompt.reset();
                 self.input_prompt.start(ctx, Instant::now());
             } else {
                 self.input_prompt.event(ctx, event);
