@@ -1,0 +1,4 @@
+/target
+/.vscode
+/host/testapp_host/messages.py
+__pycache__/
