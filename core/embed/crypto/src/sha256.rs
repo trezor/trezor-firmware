@@ -10,6 +10,7 @@ pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
 pub type Sha256Ctx = SecretContext<ffi::SHA256_CTX>;
+pub type Sha256Guard<'a> = HazardGuard<'a, ffi::SHA256_CTX>;
 
 // SAFETY: SHA256_CTX is valid when zeroed
 unsafe impl ZeroableMemory for ffi::SHA256_CTX {}
@@ -25,7 +26,7 @@ impl ffi::SHA256_CTX {
     }
 }
 
-impl HazardGuard<'_, ffi::SHA256_CTX> {
+impl Sha256Guard<'_> {
     /// Update the SHA256 context with the given data.
     pub fn update(&mut self, data: &[u8]) {
         let ptr = CSlice::from(data);
@@ -126,6 +127,18 @@ mod test {
         for (data, expected) in SHA256_VECTORS {
             let out_hex = hexdigest(data);
             assert_eq!(out_hex, *expected);
+        }
+    }
+
+    #[test]
+    fn test_guard_reuse() {
+        // reinitializing the context after `finalize` allows reusing it
+        let mut ctx = Sha256Ctx::default();
+        for _ in 0..2 {
+            ctx.hazard_mut().init();
+            let mut guard = Sha256Guard::hazard_new(&mut ctx);
+            guard.update(b"abc");
+            assert_eq!(hex::encode(guard.finalize()), hexdigest(b"abc"));
         }
     }
 }
