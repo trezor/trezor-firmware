@@ -153,7 +153,7 @@ class ZcashV4(Bitcoinlike):
             write_compact_size(serialized_tx, 0)  # nShieldedOutput
             write_compact_size(serialized_tx, 0)  # nJoinSplit
 
-        await helpers.request_tx_finish(self.tx_req)
+        helpers.request_tx_finish(self.tx_req)
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
         await self.sign_nonsegwit_bip143_input(i_sign)
