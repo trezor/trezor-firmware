@@ -176,6 +176,9 @@ pub struct TestArgs {
     /// Run tests under MIRI
     #[arg(long)]
     pub miri: bool,
+    /// Filter tests to run
+    #[arg(long, num_args = 1..)]
+    pub filter: Vec<String>,
 }
 
 #[derive(Args, Debug)]
