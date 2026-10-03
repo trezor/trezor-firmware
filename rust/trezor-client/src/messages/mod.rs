@@ -4,7 +4,11 @@ use crate::protos::{MessageType::*, *};
 
 /// Extends the protobuf Message trait to also have a static getter for the message
 /// type code.
-pub trait TrezorMessage: protobuf::Message + std::fmt::Debug {
+///
+/// [`protobuf::MessageFull`] (rather than the leaner [`protobuf::Message`]) is
+/// required so that the runtime descriptor is available, which the client uses
+/// to redact secret-adjacent fields from its trace logging.
+pub trait TrezorMessage: protobuf::MessageFull {
     const MESSAGE_TYPE: MessageType;
 
     #[inline]
