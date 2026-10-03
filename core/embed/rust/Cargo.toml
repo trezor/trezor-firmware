@@ -144,6 +144,7 @@ test = [
     "dma2d",
     "layout_bolt",
     "micropython",
+    "miniscript",
     "nrf",
     "optiga",
     "protobuf",
