@@ -16,6 +16,10 @@ impl ShortDuration {
     pub const fn from_millis(millis: u16) -> Self {
         Self { millis }
     }
+
+    pub const fn to_millis(self) -> u32 {
+        self.millis as u32
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
@@ -53,20 +57,20 @@ impl Duration {
         Self::from_millis(days * MILLIS_PER_DAY)
     }
 
-    pub fn to_millis(self) -> u32 {
+    pub const fn to_millis(self) -> u32 {
         self.millis
     }
 
-    pub fn to_secs(self) -> u32 {
+    pub const fn to_secs(self) -> u32 {
         self.millis / MILLIS_PER_SEC
     }
-    pub fn to_mins(self) -> u32 {
+    pub const fn to_mins(self) -> u32 {
         self.millis / MILLIS_PER_MINUTE
     }
-    pub fn to_hours(self) -> u32 {
+    pub const fn to_hours(self) -> u32 {
         self.millis / MILLIS_PER_HOUR
     }
-    pub fn to_days(self) -> u32 {
+    pub const fn to_days(self) -> u32 {
         self.millis / MILLIS_PER_DAY
     }
 
