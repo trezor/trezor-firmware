@@ -3,93 +3,48 @@ from typing import TYPE_CHECKING
 from trezor import utils
 
 if TYPE_CHECKING:
+    from trezor.messages import WardLeafAck, WardMutationApplied
     from trezor.ui.layouts import StrPropertyType
 
-# Every screen carries this. Sealing the leaf narrowed what needs warning about, but did
-# not remove it:
-#
-#   the host CANNOT forge a value, or move a leaf from one path to another -- the AEAD tag
-#   fails, so anything that reaches a screen really was sealed by this device for this
-#   path;
-#   the host CAN return an OLDER sealed leaf for that path, or claim it holds none at all.
-#
-# So the value is authentic but its freshness is unproven, and that is what the wording
-# has to say. It would be actively worse to soften this to "encrypted": a decrypted value
-# looks authoritative on screen, so a vaguer warning next to a more trustworthy value
-# misleads more than the blunt version did.
-#
-# FIXME(ward): do NOT remove this warning until proofs against an attested root land --
-# only those detect a stale leaf or a suppressed entry.
+# Every screen carries this. The AEAD stops a host forging a value or moving a leaf between
+# paths, but it can still serve an OLDER sealed leaf or deny holding one: the value is
+# authentic, its freshness is not proven.
+# FIXME(ward): do NOT remove until proofs against an attested root land.
 WARNING_UNVERIFIED: "StrPropertyType" = (
     "Warning",
     "Not proven current; may be out of date.",
     False,
 )
 
-# FIXME(ward): all WARD screen strings are hardcoded English. They need to move into the
-# translation blobs (TR.*) before this is shippable; kept literal while the wire shape
-# and the screens are still moving.
+# FIXME(ward): all WARD screen strings are hardcoded English; move them to TR.* before shipping.
 
-# GAP(ward): a host cannot know whether its replica is COMPLETE, and this is where that
-# surfaces.
-#
-# A root commits to the whole key set, so a replica missing one leaf does not fail to produce
-# a proof -- it produces a well-formed proof that reconstructs to a DIFFERENT root. In an
-# eventually-consistent store there is no completeness signal either: "I have everything" and
-# "I am still missing rows" are the same observation, which is what eventual consistency
-# declines to distinguish. The host cannot check itself against the WM's head, because it holds
-# no key of this wallet and so cannot mint the `auth_commit` an adoption turns on.
-#
-# So the DEVICE is the completeness oracle, and an accepted adoption is how it is consulted: the
-# device re-derives the authorisation over the attested step and it verifies, which means the
-# replica really did hold the tree that step produced. `WardVerifyChain` says it for every step
-# in a range; `WardReconcile` says it for one.
-#
-# Replaying the store's own history (docs/core/misc/ward-trie.md) NARROWS this rather than
-# removing it: contiguous counters up to the attested one let the host notice it is MISSING
-# something. It still cannot tell whether the head it knows about is current, nor whether the
-# history is genuine -- it is the host's own record either way. Currency and authenticity stay
-# with the device.
-#
-# The cost is that ONE refusal below covers three different situations -- a replica that is
-# behind, a replica that is partial, and data that is permanently lost -- and the device
-# cannot tell them apart. Only the first two are waitable; the third needs `WardRollback`,
-# which is why that screen is dangerous rather than routine. See `rollback.py`.
+# GAP(ward): a host cannot know whether its replica is COMPLETE -- a missing leaf yields a
+# well-formed proof against a different root. The device is the completeness oracle: an
+# accepted adoption proves the replica held the tree that step produced. One refusal therefore
+# covers a replica that is behind, one that is partial, and data that is lost; only
+# `WardRollback` recovers the last.
 
 
 def display_bytes(value: bytes) -> str:
-    """Best-effort rendering of an arbitrary byte string for a trusted screen:
-    UTF-8 when it decodes cleanly, otherwise hex."""
+    """UTF-8 when it decodes cleanly, otherwise hex."""
     try:
         return value.decode()
     except UnicodeError:
-        # NOT `ubinascii` -- this firmware has no such module, and the mistake hides:
-        # the fallback only runs for non-UTF-8 values, which tests rarely supply.
+        # NOT `ubinascii`: this firmware has no such module.
         return value.hex()
 
 
 def require_initialized() -> None:
-    """Every WARD request needs a seed: the keyed path, the leaf keys and ward_id all
-    derive from it."""
+    """Every WARD request needs a seed."""
     from apps.common.seed import raise_if_not_initialized
 
     raise_if_not_initialized()
 
 
 def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, bytes]":
-    """Validate the (app_id, identifier) pair every WARD request carries.
+    """Validate the (app_id, identifier) pair, before anything is derived, pulled or shown.
 
-    GAP(ward): app_id is taken from the WIRE, so there is no ACL -- any caller may claim any
-    app_id and read another app's entries. The intended model has core fill it in from the
-    caller's identity, which needs a notion of app identity the device does not have yet.
-    Deferred until an app boundary actually exists; until then app_id is a namespace, not a
-    permission.
-
-    The wire fields are `optional` on purpose -- a proto2 `required` field a caller
-    forgets to set is an encode-time failure in every binding -- so the check lives
-    here instead, and runs before anything is derived, pulled or shown.
-
-    Also refuses an uninitialised device: deriving the keyed path needs a seed.
+    GAP(ward): app_id comes from the wire, so it is a namespace, not a permission.
     """
     from trezor.wire import DataError
 
@@ -101,23 +56,10 @@ def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, byt
 
 
 async def online() -> bool:
-    """Whether this session may read from the backend, syncing first if it can.
+    """Whether a WM attestation has been bound to a held tree in THIS session.
 
-    THE ANSWER IS THE SAME QUESTION IN BOTH BUILDS -- "has a WM attestation been bound to a tree
-    this device actually holds, in THIS session" -- but who can establish it differs. A connect
-    build cannot: the sync is a sequence of requests the HOST issues, so the device can only
-    report what has already happened. A service build can, because the daemon is reachable
-    whenever the device wants it, so the first WARD operation of a session drives its own sync
-    instead of failing and asking the host to go first.
-
-    ONE ATTEMPT. See `service.become_ready`: a loop here would turn a disagreement with the daemon
-    into a hang in front of the user.
-
-    Raises whatever the sync failed with, deliberately. The generic "sync first" that callers
-    raise on a False answer says nothing about WHY, and on a service build there is now a real
-    reason to report -- an unreachable daemon, a refused attestation, a chain that does not
-    descend. `label` is the one caller that wants the offline answer instead, and asks for it by
-    name.
+    A service build drives one sync attempt itself and raises whatever it failed with; a
+    connect build can only report what the host has already done.
     """
     from . import round as sync_round
 
@@ -133,71 +75,12 @@ async def online() -> bool:
 
 
 async def online_or_offline() -> bool:
-    """`online`, but a failed sync answers False instead of raising.
-
-    FOR THE ONE CALLER WITH A LEGITIMATE OFFLINE ANSWER. `label` shows a name from the device's own
-    store when it cannot verify one, and says so on screen; every other caller refuses, because
-    for them "could not verify" must never become "here is a value". Swallowing is confined here
-    for exactly that reason -- widening it would recreate the fallback `get_entry` exists to
-    refuse.
-    """
+    """`online`, but a failed sync answers False. Only for `label`, which may fall back to the
+    device's own store and says so on screen."""
     try:
         return await online()
     except Exception:
         return False
-
-
-async def pull_leaf_from_backend(entry_key: bytes, staged: "tuple | None" = None):
-    """Ask whoever owns the replica for its leaf at this path, and return the raw ack.
-
-    Verifies NOTHING. Split out so the verification below can be reached without a round-trip,
-    and so callers that need the ack's other fields do not have to re-issue the call. The request
-    names ONLY the opaque path -- see `keys.entry_key_for`.
-
-    "BACKEND", NOT "HOST", because which party that is depends on how this firmware was built. A
-    connect build asks the WARD APP over the same channel it is answering on -- on that build the app
-    owns the replica as well as invoking the operation -- which is why the request only exists inside
-    a workflow (the pattern `apps/webauthn/list_resident_credentials.py` uses). A service build asks a daemon on a channel
-    of its own, and asks a HEAD-AWARE question, which is a strictly better one: the daemon can say
-    "you are out of sync" instead of serving a proof that cannot verify.
-
-    THE ONE PLACE THE TRANSPORTS DIVERGE for reads. Everything above and below -- the keyed path,
-    the root check, the AEAD open -- is identical, and deliberately so: only the question's
-    addressee changes, never what makes the answer trustworthy.
-    """
-    if utils.USE_WARD_SERVICE_CHANNEL:
-        from .service import fetch
-
-        # A batched flush is connect-only; nothing on a service build stages a leaf.
-        assert staged is None
-        return await fetch(entry_key)
-
-    from trezor.messages import WardEntryAck, WardEntryRequest, WardStagedLeaf
-    from trezor.wire import context
-
-    request = WardEntryRequest(entry_key=entry_key)
-    if staged is not None:
-        # A BATCHED FLUSH: the change folded just before this one, so the host can prove this path
-        # against the running root. See `WardEntryRequest.staged`.
-        request.staged = WardStagedLeaf(entry_key=staged[0], commit=staged[1])
-    return await context.call(request, expected_type=WardEntryAck)
-
-
-async def decode_leaf(entry_key: bytes, key_type: str, val_part) -> bytes | None:
-    """Open a content part and return its value, or None if it carries none.
-
-    The other half of authenticity: a part the host forged, corrupted, or lifted from another
-    path fails the tag and raises here. The AAD is domain || entry_key || key_type, so a
-    successful open is itself the statement that this part was sealed by a holder of K_data
-    FOR THIS PATH and this key type.
-    """
-    from .keys import derive_k_data
-    from .leaf import decode_content
-
-    decoded = decode_content(
-        await derive_k_data(key_type), entry_key, key_type, val_part
-    )
-    return None if decoded is None else decoded[1]
 
 
 async def pull_leaf(
@@ -206,65 +89,52 @@ async def pull_leaf(
     root: "bytes | None" = None,
     staged: "tuple | None" = None,
 ) -> tuple:
-    """PULL the host's leaf for an already-derived keyed path, verified.
+    """Ask the backend for its leaf at `entry_key`, verify it against the trusted root, open it.
 
-    The three steps -- ask, check against the trusted root, open -- are `pull_leaf_from_backend`,
-    `verify_leaf_against_root` and `decode_leaf`, composed here in the order that matters. This
-    is the ONLINE path; a device with no synced host reads its own store instead, which is a
-    different function in a different module (`apps.ward.offline_store`) precisely so that
-    "verified against a trusted root" and "a local copy" can never be confused for each other.
-
-    THE DEVICE NO LONGER HOLDS NOTHING. It keeps pinned copies of selected leaves and writes it
-    has not been able to publish yet -- see `storage/ward.py`. None of that is consulted here:
-    this function's answer is the host's, checked, and nothing else.
-
-    Returns `(value, old_leaf, write_material)`:
-
-      value           the decoded value, or None when nothing is there (no such entry, or
-                      a tombstone). Distinct from b"", an entry whose value IS empty.
-      old_leaf        (key_type, id_part, val_part) as received, or None -- what a write
-                      must prove it is replacing.
-      write_material  (proof, witness_entry_key, witness_commit), which a write feeds to
-                      `trie.compute_new_root`.
-
-    The identity part is returned but nothing reads it yet: the device already knows the
-    identifier and app_id, having derived the path from them, so it is carried only
-    because the leaf hash commits to it.
-
-    `root`, given only by a BATCHED FLUSH, is the root to prove against instead of the stored
-    one: the running root the batch has derived so far, which is still a root the device computed
-    itself and never one the host named. `staged` rides along on the request so the host can
-    produce a proof against it. Both absent is the ordinary read.
+    Returns `(value, old_leaf, (proof, witness_entry_key, witness_commit))`; value and old_leaf
+    are None when nothing is there. `root`/`staged` are given only by a batched flush, to prove
+    against its running root.
     """
-    from .leaf import is_delete, read_leaf_content, read_leaf_identity
+    from trezor.wire import DataError
 
-    ack = await pull_leaf_from_backend(entry_key, staged)
+    from .keys import derive_k_data
+    from .leaf import (
+        decode_content,
+        is_delete,
+        read_leaf_content,
+        read_leaf_identity,
+    )
+    from .root import get_counter, get_root
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        from .service import fetch
+
+        # A batched flush is connect-only; nothing on a service build stages a leaf.
+        assert staged is None
+        ack = await fetch(entry_key)
+    else:
+        from trezor.messages import WardEntryAck, WardEntryRequest, WardStagedLeaf
+        from trezor.wire import context
+
+        request = WardEntryRequest(entry_key=entry_key)
+        if staged is not None:
+            request.staged = WardStagedLeaf(entry_key=staged[0], commit=staged[1])
+        ack = await context.call(request, expected_type=WardEntryAck)
 
     val_part = read_leaf_content(ack.content)
     wire_key_type, id_part = read_leaf_identity(ack.identity)
     present = val_part is not None and not is_delete(val_part)
 
-    # The host does not get to name the key_type. It is an input to `entry_key`, so the
-    # device already knows the only value a leaf at this path can legitimately carry -- and
-    # it goes into the commit, hence into the leaf hash. A wrong one fails the membership
-    # proof anyway; refusing it here keeps a host-chosen field out of a hashed preimage and
-    # says what is actually wrong instead of blaming the root.
+    # The key_type is an input to entry_key, so the host does not get to name it.
     if wire_key_type is not None and wire_key_type != key_type:
-        from trezor.wire import DataError
-
         raise DataError("WARD: leaf key_type does not match the requested path")
-    leaf_key_type = key_type
 
-    # Check the answer against the root the device trusts, BEFORE opening anything. A host
-    # that says "no such entry" has to prove it, or it could hide any entry it dislikes
-    # simply by denying it exists.
-    from .root import get_counter, get_root
-
+    # Verified BEFORE opening anything; an absence has to be proved too.
     verify_leaf_against_root(
         await get_root() if root is None else root,
         await get_counter(),
         entry_key,
-        leaf_key_type,
+        key_type,
         id_part,
         val_part,
         present,
@@ -274,18 +144,62 @@ async def pull_leaf(
     )
 
     material = (ack.proof, ack.witness_entry_key, ack.witness_commit)
-
     if not present:
         return None, None, material
 
-    value = await decode_leaf(entry_key, key_type, val_part)
-    return value, (leaf_key_type, id_part, val_part), material
+    # The AAD binds the part to this path and key type, so a successful open is authenticity.
+    decoded = decode_content(
+        await derive_k_data(key_type), entry_key, key_type, val_part
+    )
+    value = None if decoded is None else decoded[1]
+    return value, (key_type, id_part, val_part), material
 
 
 async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
     """Just the value, for the read path -- see `pull_leaf`."""
     value, _old_leaf, _material = await pull_leaf(entry_key, key_type)
     return value
+
+
+async def finish_write(
+    entry_key: bytes,
+    identity,
+    content,
+    from_root: bytes | None,
+    counter: int,
+    new_root: bytes | None,
+) -> "WardLeafAck | WardMutationApplied":
+    """Authorise `(counter - 1, from_root) -> (counter, new_root)` and hand it on.
+
+    NOT COMMITTED HERE: the head moves only when a WM attestation names this transition and the
+    device re-verifies it. A connect build returns the leaf and authorisations; a service build
+    publishes and adopts, returning no leaf -- a replica owner reads an absent content body as a
+    deletion.
+    """
+    from .cas import authorise
+
+    step, advance = await authorise(counter - 1, from_root, counter, new_root)
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        from trezor.messages import WardMutationApplied
+
+        from .service import publish
+
+        await publish(
+            entry_key, identity, content, from_root, counter, new_root, step, advance
+        )
+        return WardMutationApplied(entry_key=entry_key, counter=counter)
+
+    from trezor.messages import WardLeafAck
+
+    return WardLeafAck(
+        entry_key=entry_key,
+        identity=identity,
+        content=content,
+        counter=counter,
+        auth_commit=step,
+        wm_sig=advance,
+    )
 
 
 def verify_leaf_against_root(
@@ -302,17 +216,9 @@ def verify_leaf_against_root(
 ) -> None:
     """Check the host's answer against the device's trusted root, or raise.
 
-    Does nothing when the device holds NO root: there is then nothing to check against,
-    and checking a proof against a root the host supplied would be theatre. That is the
-    state every release build is in today -- see `root.py` -- and it is why the screens
-    still warn.
-
-    An EMPTY TREE is a different thing entirely and is checked here rather than waved
-    through. It used to be recorded as "no root", so deleting a wallet's last entry
-    silently turned verification off -- reachable by ordinary use, and from a state the
-    user has every reason to think is protected. The tree now says it is empty, and an
-    empty tree has exactly one honest answer: nothing is present, and no witness is needed
-    to say so, since there is no leaf to exhibit.
+    No root at counter 0 is a genuinely empty wallet and passes; no root at a non-zero counter
+    fails, because "cannot verify" must never read as "verified". An EMPTY_ROOT tree admits only
+    absence, with no witness needed.
     """
     from trezor.wire import DataError
 
@@ -320,13 +226,6 @@ def verify_leaf_against_root(
     from .trie import verify_membership, verify_nonmembership
 
     if root is None:
-        # No root and nothing ever written: the wallet is genuinely empty, so an absence
-        # claim is trivially true and there is nothing to check it against.
-        #
-        # No root but a NON-ZERO counter is a different thing entirely -- the device has
-        # written before and simply cannot verify right now -- and it must FAIL rather than
-        # wave the answer through. "Cannot verify" reading as "verified" is the failure
-        # direction that hides, and it is the one this subsystem has had to close twice.
         if counter > 0:
             raise DataError("no trusted root; sync before reading")
         return
@@ -341,9 +240,6 @@ def verify_leaf_against_root(
             raise DataError("WARD: entry does not match the trusted root")
         return
 
-    # Absence has to be proved too. An empty tree is the one case with nothing to show:
-    # the device knows the tree is empty because it holds no root at all, which is
-    # handled above, so reaching here without a witness means the host simply declined.
     if witness_entry_key is None or witness_commit is None:
         raise DataError("WARD: absence claimed without a witness")
     if not verify_nonmembership(

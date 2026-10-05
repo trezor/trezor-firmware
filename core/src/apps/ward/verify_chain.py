@@ -3,49 +3,18 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from trezor.messages import WardVerifyChain, WardVerifyChainAck
 
-# How many links one ack may carry. The wire buffer is 8704 bytes and a link costs ~112, so a
-# full ack is around 77; this is a sanity bound on a host that pads, not a protocol limit -- the
-# walk's real bound is the counter distance, checked below.
+# Sanity bound on a padding host (~77 links fit the 8704-byte buffer); the walk's real bound is
+# the counter distance.
 _MAX_LINKS_PER_ACK = 128
 
 
 async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     """Adopt the attested head by proving this device's head is an ANCESTOR of it.
 
-    Runs after WardIngestAttestation, in place of WardReconcile. Reconcile folds the ONE step the
-    WM attested and so can only move the head by one; this establishes that every step between
-    here and there was authorised by a device of this wallet and that none was skipped -- which is
-    what a device needs after another device wrote while it was away, and the only route that can
-    cross a gap at all.
-
-    THE WALK RUNS BACKWARDS, AND THAT IS THE SECURITY CONTENT, not an implementation choice.
-
-    Folding FORWARD from this device's head, the `from` end of each link is pinned and the `to`
-    end is the host's to choose; the destination is only checked once, at the end. That is enough
-    when the whole history arrives in one message, and not enough otherwise -- and it is unsafe
-    for a different reason as well: `set_entry` hands out an `auth_commit` on WardLeafAck BEFORE
-    knowing whether the write landed, so a host that merely keeps what it is given holds genuine
-    links for transitions the WM never accepted. A forward fold follows one onto an orphaned
-    branch and nothing recovers from there -- the counter cannot go back, no later chain from the
-    real line reconnects to that root, and `rollback` needs an attestation the branch never had.
-
-    Anchored at the attested head and walking BACK, the `to` end of every link is pinned by a
-    state already established, ultimately by the WM's signature. Every state the walk reaches is
-    therefore an ancestor of a head the WM vouched for, and an orphan cannot enter: the walk asks
-    for the link ending at a specific (counter, root), and `verify_chain_step_back` refuses one
-    that ends anywhere else before computing its MAC.
-
-    And it removes the ceiling. Links are pulled one ack at a time, so the 8704-byte buffer bounds
-    a single WardChainLinkAck instead of the catch-up distance, and a device arbitrarily far
-    behind catches up in one workflow. Nothing is persisted until the walk completes, so an
-    abandoned walk leaves no head, no latch and nothing to reconcile.
-
-    GAP(ward): multi-device is exercised only through the host ORACLE -- `tests/ward_trie.py`
-    serves both the links and the proofs, and no test runs two real devices against one trie.
-    Evolu's own history makes a real one possible, because replaying it is exactly how a second
-    device catches up: rebuild live state from `evolu_history` to serve proofs, then serve the
-    transitions here as WardChainLink to prove descent. The test wants two emulators on one seed:
-    A writes, B replays and verifies, and B's derived head must equal A's.
+    The walk runs BACKWARDS from the attested head, so every link's `to` end is pinned by a state
+    already established (ultimately by the WM's signature) and an orphaned link -- one a host kept
+    from a write the WM never accepted -- cannot enter. Links are pulled one ack at a time, so the
+    distance is unbounded; nothing is persisted until the walk completes.
     """
     from trezor.messages import WardVerifyChainAck
     from trezor.wire import DataError
@@ -61,22 +30,17 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     ward_id = await derive_ward_id()
     k_auth = await derive_k_auth()
 
-    # THE ANCHOR IS THIS ROUND'S ATTESTATION, and nothing else. The WM attests the whole step in
-    # the clear, so both ends come out of the round and the host names none of them -- see
-    # `_anchor` for why the archived alternative was removed rather than kept alongside.
-    anchor_from_counter, anchor_from_root, anchor_counter, anchor_root = await _anchor(
-        msg
+    # Anchored on this round's attestation; the host names nothing.
+    anchor_from_counter, anchor_from_root, anchor_counter, anchor_root = attested_step(
+        "verify against"
     )
 
-    # The baseline is the device's OWN head, not anything the host names. A host-chosen target
-    # would let the walk stop at a state this device never reached.
     target_counter = await get_counter()
     target_root = await get_root()
 
     if anchor_counter < target_counter:
         raise DataError("WARD: the anchored head is behind this device")
 
-    # THE FIRST LINK MUST BEGIN WHERE THE WM SAID IT DID -- see `walk_back`.
     running_root, crossed, reverts, _above = await walk_back(
         k_auth,
         ward_id,
@@ -86,10 +50,7 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
         expect_from=(anchor_from_counter, anchor_from_root),
     )
 
-    # WHERE THE WALK ARRIVED MUST BE WHERE THIS DEVICE STANDS. The counter is settled by the walk;
-    # the root is not, and without this a walk could descend from some OTHER state that happens to
-    # sit at the same counter -- which is precisely a fork. Refused here; a fork the WM caused by
-    # losing history is `WardRejoin`'s, with the user's consent and a proof of both branches.
+    # Same counter but a different root is a fork; a WM that lost history is `WardRejoin`'s case.
     if root_or_empty(running_root) != root_or_empty(target_root):
         raise DataError(
             "WARD: the chain does not descend from this device's head; if the WM lost history, use WardRejoin"
@@ -106,9 +67,7 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
             reverts,
         )
 
-    # The shared tail -- settle, persist, latch, close -- see `adopt`. Settling by the
-    # transitions actually CROSSED rather than by the counter is what stops a record being
-    # cleared because another device's write happened to advance past it.
+    # Settled by the transitions actually crossed, not by the counter.
     await adopt(anchor_counter, anchor_root, landed_commits=crossed)
 
     if reverts:
@@ -121,38 +80,12 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
 
 async def warn_reached_by_revert(reverts: int) -> None:
     """Tell the user the head just adopted was reached by discarding changes.
-
-    INFORMATIONAL, NOT A GATE, and the difference is the whole design of this screen.
-
-    A local `WardRollback` holds to confirm because the device is PERFORMING the demotion and the
-    user is choosing it. Here the demotion already happened: a holder of this wallet's K_auth
-    issued it behind that very screen, and the WM accepted it. This device is catching up to what
-    the wallet already is, not authorising it -- and there is no meaningful refusal on offer,
-    because declining would not undo anything, it would only leave this device unable to sync at
-    all. A prompt that can only be answered one way is an obstacle, not consent.
-
-    What is NOT informational is the fact itself. Changes this device previously saw as committed
-    are gone, and a catch-up that adopts in silence is the one path by which a user's approved
-    change disappears with nothing on screen. So: shown after the adoption, once per crossing --
-    the head has moved past those transitions, so a later sync does not cross them again.
-
-    A COUNT IS THE WHOLE ANSWER, and that is a decision rather than a shortfall. `WardChainLink`
-    carries the transition's endpoints and the tag, never the counter the restored root originally
-    belonged to -- `rollback` knows it and puts it on its own screen, not on the link -- so naming
-    the discarded entries would mean binding that counter into `auth_commit`'s preimage, since
-    anything outside the MAC is forgeable. Weighed and declined: what a user has to act on is that
-    the wallet went backwards and by how many steps, and the entries themselves are what the next
-    read shows against the restored tree. The same count goes back on `WardVerifyChainAck` for a
-    host that wants to say it too.
+    Informational, not a gate: the demotion already happened under a hold on another device, and
+    declining would only leave this device unable to sync. Shown once per crossing.
     """
     from trezor.ui.layouts import show_warning
 
-    # ONE ARGUMENT ONLY. `subheader` is a description on bolt and eckhart but becomes the BUTTON
-    # LABEL on delizia, so a sentence passed there reads as a button on one model and as body text
-    # on the others. Everything this screen has to say goes in `content`.
-    #
-    # Literal strings, as everywhere else in WARD -- see the note in `common.py` about translation
-    # blobs being pending while the wire shape settles. `rollback`'s own screen is literal too.
+    # Content only: `subheader` renders as a button label on delizia.
     await show_warning(
         "ward_chain_revert",
         "Another device discarded %d change(s). This is now the wallet's state."
@@ -160,47 +93,13 @@ async def warn_reached_by_revert(reverts: int) -> None:
     )
 
 
-async def _anchor(msg: WardVerifyChain) -> "tuple[int, bytes | None, int, bytes | None]":
-    """The step this walk descends from: the head the WM attested THIS ROUND, and its predecessor.
-
-    LIVE ONLY, and the host names nothing: `WardVerifyChain` carries no fields at all. The
-    anchor fields are reserved on the wire, so a stale host's are dropped by the decoder rather
-    than checked here -- one fewer rule that can be forgotten.
-
-    THERE USED TO BE AN ARCHIVED PATH, and removing it is what this function is really about.
-    It let a walk anchor on an attestation the host had KEPT from when some earlier head was
-    current, on the reasoning that descent needs only GENUINE ("the WM really held this") and not
-    FRESH ("this is the head now"), so such a walk could adopt without claiming currency and
-    without latching online.
-
-    IT WAS A WAY TO RAISE THE STORED COUNTER WITH NO FRESHNESS AND NO CONSENT, which defeats
-    `WardRecoverCounter`. After an operator lowers the head from 57 to 10 -- a screen the user
-    holds to confirm, for the one situation where the WM's register was lost -- a host still
-    holding the archived attestation for 57, and the links from 10 up to it, could walk the device
-    straight back to 57. `adopt` persists the counter before it decides about latching, so the
-    recovery was undone silently, the floor was back above what the WM could attest, and the
-    wallet was stranded again with no screen and no WM involvement.
-
-    AND IT WAS NO LONGER BUYING ANYTHING. Its purpose was staged catch-up, from when links
-    travelled as one repeated field and the 8704-byte buffer bounded the catch-up DISTANCE. The
-    backward walk pulls them one ack at a time, so a device arbitrarily far behind catches up in
-    a single workflow -- see the note above. Nothing exercised the archived path either: it had
-    no test in the tree.
-
-    The archived attestation itself is not gone. `rollback` still requires one, which is the
-    question it genuinely answers -- "was this target EVER the head" -- and there the counter
-    moves FORWARD and the user holds to confirm. See `attest.verify_archived_attestation`.
-
-    Returns (from_counter, from_root, to_counter, to_root), the roots in app form.
-    """
+def attested_step(what: str) -> "tuple[int, bytes | None, int, bytes | None]":
+    """This round's attested step `(from_counter, from_root, to_counter, to_root)`, roots in app
+    form (the empty tree as None)."""
     from .adopt import require_attested_round
     from .attest import EMPTY_ROOT
 
-    # NOTHING IS READ OFF `msg`, and there is nothing to read: WardVerifyChain carries no fields
-    # at all now. The anchor fields are RESERVED on the wire rather than merely unused, so a
-    # stale host that still sends them has them dropped by the decoder instead of reaching a
-    # check here -- which is the stronger arrangement, since it cannot be forgotten.
-    from_counter, from_root, counter, root = require_attested_round("verify against")
+    from_counter, from_root, counter, root = require_attested_round(what)
     return (
         from_counter,
         None if from_root == EMPTY_ROOT else from_root,
@@ -219,28 +118,11 @@ async def walk_back(
 ) -> "tuple[bytes | None, list, int, tuple | None]":
     """Walk authorised links BACK from `(start_counter, start_root)` down to `stop_counter`.
 
-    Returns `(root_at_stop, crossed, reverts, above)`:
-
-      root_at_stop  the root the walk arrived at. The COUNTER is exactly `stop_counter` -- that
-                    is enforced here, see below; the root is whatever the links led to, and
-                    comparing it is the caller's job -- `verify_chain` against its own head,
-                    `rejoin` against the other branch.
-      crossed       every link's `auth_commit`, newest first: the precise evidence of which
-                    transitions the walk covered, which is what settles queued claims.
-      reverts       how many of those were REVERT links.
-      above         `(counter, root)` one step above the stop, or None if the walk took no step.
-                    `rejoin` needs it to prove a fork point is the LATEST common state.
-
-    `expect_from`, if given, pins the FIRST link's predecessor -- the predecessor the WM's
-    attestation named -- so a walk starting at an attested head cannot begin from anywhere else.
-
-    IT MUST LAND EXACTLY ON `stop_counter`, and that is checked HERE so no caller can forget it. A
-    batch link steps back by as many changes as it carried, so a walk can otherwise JUMP OVER the
-    state it was meant to stop at. Roots are content-addressed and repeat -- set x then delete x
-    returns to the same root -- so a caller comparing only the root would accept a walk that
-    skipped the device's real head: a genuine batch 41 -> 45 would "reach" a device standing at
-    (43, R41). Landing on the counter as well as the root is what makes the arrival a state the
-    walk actually passed through.
+    Returns `(root_at_stop, crossed, reverts, above)`: the root reached (the caller compares it),
+    every crossed `auth_commit` newest first, the REVERT count, and the `(counter, root)` one
+    step above the stop (None if no step was taken). `expect_from` pins the first link's
+    predecessor. The walk must land EXACTLY on `stop_counter`: roots repeat, so a batch link
+    jumping over the stop could otherwise "arrive" at a state the walk never passed through.
     """
     from trezor.wire import DataError
 
@@ -276,14 +158,9 @@ async def _pull_batch(
 ) -> "tuple[int, bytes | None, tuple]":
     """Ask the host for the predecessors of the running head and fold as many as apply.
 
-    ONE REQUEST, ONE ACK, and the request names the exact (counter, root) whose predecessor it
-    wants. The host cannot answer with a link ending elsewhere -- that is refused in
-    `verify_chain_step_back` before the MAC is computed -- so batching is a transport convenience
-    with no security content: sending one link is as correct as sending seventy.
-
-    `expect_from`, given only for the walk's FIRST link, is the predecessor the WM's attestation
-    named. Checked here rather than after the batch returns, because a host serving several links
-    in one ack would otherwise carry the walk past the one step this binds.
+    The request names the exact `(counter, root)` wanted and `verify_chain_step_back` refuses any
+    link ending elsewhere, so batching has no security content. `expect_from` is checked per link
+    so a multi-link ack cannot carry the walk past the step it binds.
     """
     from trezor.messages import WardChainLinkAck, WardChainRequest
     from trezor.wire import DataError, context
@@ -333,9 +210,7 @@ async def _pull_batch(
         crossed.append(link.auth_commit)
         if reverted:
             reverts += 1
-        # A host may pad an ack past the target; folding further would walk below this device's
-        # head, which is `rollback`'s business and needs the user's consent. `<=`, not `==`: a
-        # batch link can step OVER the target, and `walk_back` refuses such a walk by name.
+        # Never fold below the target; overshooting is refused by `walk_back`.
         if running_counter <= target_counter:
             break
 
