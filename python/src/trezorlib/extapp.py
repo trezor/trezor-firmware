@@ -54,8 +54,8 @@ class AppHeader(SanityCheckedStruct):
     target_arch: int
     # Application privilege ring
     app_ring: int
-    # Reserved for future use
-    reserved_1: bytes | None = None
+    # Application language
+    language: int
     # Size of binary payload in bytes (code + init and relocation data)
     code_size: int
     # Size of RAM required by the app (includes stack, heap, and static data)
@@ -88,7 +88,7 @@ class AppHeader(SanityCheckedStruct):
         "abi_version" / c.Int8ul,
         "target_arch" / c.Int8ul,
         "app_ring" / c.Int8ul,
-        "reserved_1" / Reserved(1),
+        "language" / c.Int8ul,
         "code_size" / c.Int32ul,
         "data_size" / c.Int32ul,
         "chunk_hash" / c.Bytes(32),

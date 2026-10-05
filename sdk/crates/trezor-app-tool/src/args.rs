@@ -21,13 +21,14 @@ pub enum Model {
 
 /// A language a modular app's UI can be built for.
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
 pub enum Language {
     /// English.
     #[value(name = "en")]
-    EN,
+    EN = 0,
     /// Czech.
     #[value(name = "cs")]
-    CS,
+    CS = 1,
 }
 
 /// A CPU architecture a modular app can be built for. The emulator
