@@ -94,7 +94,7 @@ jobs:
       - uses: ./.github/actions/environment
       - name: uhubctl
         run: |
-          nix-shell --arg hardwareTest true --run uhubctl
+          nix-shell --arg hardwareTest true --run uhubctl || true
           nix-shell --arg hardwareTest true --run "uv run core/tools/check-usb-permissions.py" |& tee check-usb-permissions.log
       - run: nix-shell --run "uv run make -C core build_firmware"
       - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build-xtask/artifacts/latest/firmware.bin"
@@ -191,7 +191,7 @@ jobs:
       - uses: ./.github/actions/environment
       - name: uhubctl
         run: |
-          nix-shell --arg hardwareTest true --run uhubctl
+          nix-shell --arg hardwareTest true --run uhubctl || true
           nix-shell --arg hardwareTest true --run "uv run core/tools/check-usb-permissions.py" |& tee check-usb-permissions.log
       - run: nix-shell --run "uv run legacy/script/setup"
       - run: nix-shell --run "export PRODUCTION=0 && uv run legacy/script/cibuild"
