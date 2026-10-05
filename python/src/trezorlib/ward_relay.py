@@ -51,8 +51,19 @@ WARDD_DEFAULT_URL = "ws://127.0.0.1:21329"
 RELAY_PROTOCOL_VERSION = "1.0"
 DEFAULT_TOKEN_FILE = Path.home() / ".trezor-ward" / "token"
 
+# The only messages wardd may put on the device: its sync and flush conversation. Anything else --
+# GetPublicKey, a silent GetAddress -- is answered as a Failure without reaching the device, so
+# whatever answers on the wardd port cannot drive the wallet.
+DEVICE_CALLS = frozenset(
+    "WardSync WardIngestAttestation WardReconcile WardVerifyChain WardRejoin "
+    "WardFlushQueue WardEntryAck WardChainLinkAck".split()
+)
+
 _WS_GUID = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 _OP_CONT, _OP_TEXT, _OP_CLOSE, _OP_PING, _OP_PONG = 0x0, 0x1, 0x8, 0x9, 0xA
+# Bounds on what a peer may make this client buffer: a handshake head, and one whole message.
+_MAX_HEAD = 16 << 10
+_MAX_MESSAGE = 16 << 20
 
 
 class WarddError(Exception):
@@ -109,6 +120,8 @@ class _WebSocket:
 
     def _read_until(self, marker: bytes) -> bytes:
         while marker not in self._buf:
+            if len(self._buf) > _MAX_HEAD:
+                raise WarddError("protocol", "oversized WebSocket handshake")
             self._recv()
         head, _, self._buf = self._buf.partition(marker)
         return head
@@ -153,10 +166,12 @@ class _WebSocket:
                 (n,) = struct.unpack(">H", self._read_exact(2))
             elif n == 127:
                 (n,) = struct.unpack(">Q", self._read_exact(8))
-            mask = self._read_exact(4) if b1 & 0x80 else None
+            # RFC 6455: a server never masks, and a control frame is short and whole
+            if b1 & 0x80 or (opcode >= 8 and (n > 125 or not fin)):
+                raise WarddError("protocol", "malformed WebSocket frame")
+            if len(message) + n > _MAX_MESSAGE:
+                raise WarddError("protocol", "wardd sent an oversized message")
             payload = self._read_exact(n)
-            if mask:
-                payload = _unmask(payload, mask)
             if opcode == _OP_PING:
                 self._send_frame(_OP_PONG, payload)
             elif opcode == _OP_CLOSE:
@@ -226,6 +241,8 @@ class WarddClient:
             if "deviceCall" in frame:
                 call = frame["deviceCall"]
                 try:
+                    if call["name"] not in DEVICE_CALLS:
+                        raise RuntimeError(f"wardd may not send {call['name']}")
                     if device is None:
                         raise RuntimeError(f"no device to answer {call['name']}")
                     name, body = device(call["name"], call.get("message") or {})

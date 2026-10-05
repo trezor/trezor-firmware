@@ -180,6 +180,20 @@ def _conversation(conn: _ServerConn, frame: dict) -> None:
     conn.send({"id": i, "result": {"replies": [first, second]}})
 
 
+def _forbidden(conn: _ServerConn, frame: dict) -> None:
+    i = frame["id"]
+    conn.send({"id": i, "deviceCall": {"name": "GetPublicKey", "message": {}}})
+    conn.send({"id": i, "result": conn.recv()["deviceReply"]})
+
+
+def _hostile(conn: _ServerConn, frame: dict) -> None:
+    # claims an exabyte-long text frame, or sends a masked one
+    if frame["params"].get("masked"):
+        conn.sock.sendall(bytes([0x81, 0x80 | 2]) + b"\0\0\0\0{}")
+    else:
+        conn.sock.sendall(bytes([0x81, 127]) + struct.pack(">Q", 1 << 60))
+
+
 def _echo(conn: _ServerConn, frame: dict) -> None:
     conn.send(
         {"id": frame["id"], "result": {"params": frame["params"], "big": "x" * 70000}}
@@ -194,7 +208,15 @@ def _refuse(conn: _ServerConn, frame: dict) -> None:
 
 @pytest.fixture
 def stub() -> t.Iterator[StubWardd]:
-    s = StubWardd({"sync": _conversation, "echo": _echo, "refused": _refuse})
+    s = StubWardd(
+        {
+            "sync": _conversation,
+            "echo": _echo,
+            "refused": _refuse,
+            "forbidden": _forbidden,
+            "hostile": _hostile,
+        }
+    )
     yield s
     s.close()
 
@@ -251,6 +273,27 @@ def test_a_device_that_raises_is_answered_as_a_failure(stub: StubWardd) -> None:
         "name": "Failure",
         "message": {"code": "DataError", "message": "no"},
     }
+
+
+def test_a_message_outside_the_sync_conversation_never_reaches_the_device(
+    stub: StubWardd,
+) -> None:
+    seen = []
+    with WarddClient("good", stub.url) as client:
+        result = client.call("forbidden", {}, lambda n, b: seen.append(n) or ("X", {}))
+    assert seen == []
+    assert result == {
+        "name": "Failure",
+        "message": {"message": "wardd may not send GetPublicKey"},
+    }
+
+
+@pytest.mark.parametrize("params", [{}, {"masked": True}])
+def test_an_oversized_or_masked_frame_is_refused(stub: StubWardd, params) -> None:
+    with WarddClient("good", stub.url) as client:
+        with pytest.raises(WarddError) as e:
+            client.call("hostile", params)
+    assert e.value.code == "protocol"
 
 
 def test_large_frames_and_error_codes(stub: StubWardd) -> None:
