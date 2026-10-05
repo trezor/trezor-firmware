@@ -14,24 +14,19 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-"""The Python binding of the wardd relay -- for HWI and anything else built on trezorlib.
+"""The Python binding of the wardd relay, for HWI and anything else built on trezorlib.
 
-`wardd` is the local WARD service: it holds the wallet's replica (in Evolu), the WM client and the
-order of every sync, catch-up and flush. A binding carries messages between it and the device on
-the session the caller already holds, and nothing more -- the same contract the Connect, Rust and
-Java bindings implement (`packages/ward-core/relay.md` in trezor-suite, version 1.x):
+`wardd` (the local WARD service) owns the replica, the WM client and the order of every sync and
+flush; a binding only carries messages between it and the device on the caller's session. The
+contract is `packages/ward-core/relay.md` in trezor-suite, version 1.x:
 
     client -> wardd   {id, method, params}
     wardd  -> client  {id, deviceCall: {name, message}}    send this to the device
     client -> wardd   {id, deviceReply: {name, message}}   what the device said, pulls included
     wardd  -> client  {id, result} | {id, error: {code, message}}
 
-Messages travel BY NAME with a JSON body, bytes as hex -- exactly `protobuf.to_dict` /
-`protobuf.dict_to_proto`, so this module holds no WARD message logic at all.
-
-THE SOCKET IS STDLIB-ONLY. wardd listens on 127.0.0.1, so a minimal RFC 6455 client (text frames,
-ping/pong, close) is all a binding needs, and trezorlib -- which HWI vendors -- takes no new
-dependency for it.
+Messages travel by name with a JSON body (`protobuf.to_dict` / `dict_to_proto`, bytes as hex).
+The socket is a stdlib-only RFC 6455 client, so trezorlib takes no new dependency.
 """
 
 from __future__ import annotations
@@ -85,8 +80,7 @@ class _WebSocket:
             ) from e
         self._buf = b""
         key = base64.b64encode(os.urandom(16))
-        # NO Origin header: only a browser sends one, and wardd checks it against its allow-list.
-        # A local process is admitted on the pairing token alone.
+        # No Origin header: wardd admits a local process on the pairing token alone.
         request = (
             f"GET {u.path or '/'} HTTP/1.1\r\n"
             f"Host: {u.netloc}\r\n"
@@ -110,19 +104,19 @@ class _WebSocket:
 
     def _read_until(self, marker: bytes) -> bytes:
         while marker not in self._buf:
-            self._buf += self._recv()
+            self._recv()
         head, _, self._buf = self._buf.partition(marker)
         return head
 
-    def _recv(self) -> bytes:
+    def _recv(self) -> None:
         chunk = self.sock.recv(65536)
         if not chunk:
             raise WarddError("closed", "wardd closed the connection")
-        return chunk
+        self._buf += chunk
 
     def _read_exact(self, n: int) -> bytes:
         while len(self._buf) < n:
-            self._buf += self._recv()
+            self._recv()
         out, self._buf = self._buf[:n], self._buf[n:]
         return out
 
@@ -214,11 +208,8 @@ class WarddClient:
         params: dict | None = None,
         device: DeviceCall | None = None,
     ) -> dict:
-        """One call; a CONVERSATION when wardd needs the device, answered through `device`.
-
-        EVERY deviceCall GETS A deviceReply. A device that raises is answered as a `Failure`, so
-        wardd ends the conversation -- and releases the wallet -- instead of waiting forever.
-        """
+        """One call; a conversation when wardd needs the device, answered through `device`.
+        Every deviceCall gets a deviceReply -- a raising device is answered as a `Failure`."""
         call_id = self._next_id
         self._next_id += 1
         self._ws.send_text(
@@ -254,12 +245,7 @@ def _failure_body(e: Exception) -> dict:
 
 
 def session_device(session: "Session") -> DeviceCall:
-    """The frame pipe: put a named message on `session` and hand back what the device said.
-
-    `Session.call` WITHOUT `expect=` returns whatever comes back -- pulls included, which are the
-    conversation itself -- while still handling button requests and turning a `Failure` into an
-    exception, which `WarddClient.call` reports to wardd as a Failure.
-    """
+    """Put a named message on `session` and return what the device said, pulls included."""
 
     def device(name: str, body: dict) -> tuple[str, dict]:
         message_type = getattr(messages, name, None)
@@ -280,11 +266,8 @@ def open_store(
     ward_id: bytes | None = None,
     evolu_node: bytes | None = None,
 ) -> dict:
-    """Select the wallet in wardd: the one given, or the session's own (asked with `WardSync`).
-
-    `evolu_node` is the 64-byte SLIP-21 node the device returns for `EvoluGetNode`; wardd derives
-    the replica's owner from its child `WARD`. A wardd running with `--memory` needs none.
-    """
+    """Select the wallet in wardd: `ward_id`, or the session's own (asked with `WardSync`).
+    `evolu_node` is the device's `EvoluGetNode` node; a `--memory` wardd needs none."""
     if ward_id is None:
         ack = session.call(messages.WardSync(), expect=messages.WardSyncAck)
         if ack.ward_id is None:
@@ -316,12 +299,8 @@ def status(client: WarddClient) -> dict:
 
 
 class WarddProvider:
-    """An `EntryProvider` backed by wardd, for the trezorlib calls that pull (`ward.get_entry`,
-    `ward.set_entry`, `ward.flush_queue`) -- so a host can drive those itself and still serve from
-    wardd's replica. Open the store first. `with_staged` serves a batched flush's running root.
-
-    After a write, pass its `WardResult` to `apply_result`: wardd stores it and publishes it.
-    """
+    """An `EntryProvider` backed by wardd's replica, for the trezorlib calls that pull. Open the
+    store first; after a write, `apply_result` makes wardd store and publish it."""
 
     def __init__(self, client: WarddClient, staged: list | None = None) -> None:
         self.client = client
@@ -335,29 +314,19 @@ class WarddProvider:
                 "staged": [[k.hex(), c.hex()] for k, c in self.staged],
             },
         )
-        identity = ack.get("identity")
-        content = ack.get("content")
-        leaf = None
-        if identity or content:
-            leaf = Leaf(
-                (
-                    protobuf.dict_to_proto(messages.WardLeafIdentity, identity)
-                    if identity
-                    else None
-                ),
-                (
-                    protobuf.dict_to_proto(messages.WardLeafContent, content)
-                    if content
-                    else None
-                ),
-            )
-        witness_key = ack.get("witness_entry_key")
-        witness_commit = ack.get("witness_commit")
+        identity, content = ack.get("identity"), ack.get("content")
+        identity = identity and protobuf.dict_to_proto(messages.WardLeafIdentity, identity)
+        content = content and protobuf.dict_to_proto(messages.WardLeafContent, content)
+
+        def hex_or_none(name: str) -> bytes | None:
+            value = ack.get(name)
+            return bytes.fromhex(value) if value else None
+
         return Answer(
-            leaf=leaf,
+            leaf=Leaf(identity or None, content or None) if identity or content else None,
             proof=[bytes.fromhex(p) for p in ack.get("proof") or []],
-            witness_entry_key=bytes.fromhex(witness_key) if witness_key else None,
-            witness_commit=bytes.fromhex(witness_commit) if witness_commit else None,
+            witness_entry_key=hex_or_none("witness_entry_key"),
+            witness_commit=hex_or_none("witness_commit"),
         )
 
     def with_staged(self, staged: list) -> "WarddProvider":
