@@ -46,12 +46,10 @@ async def set_root(root: bytes | None, counter: int | None = None) -> bool:
     """
     import storage.ward as ward_store
 
-    from .attest import EMPTY_ROOT
+    from .attest import root_or_empty
     from .keys import derive_wallet_id
 
-    if root is None:
-        root = EMPTY_ROOT
     wallet_id = await derive_wallet_id()
     if counter is None:
         counter = ward_store.get_counter(wallet_id)
-    return ward_store.set_root(wallet_id, root, counter)
+    return ward_store.set_root(wallet_id, root_or_empty(root), counter)

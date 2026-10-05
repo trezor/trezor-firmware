@@ -14,22 +14,13 @@ async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
     from trezor.wire import DataError
 
     from . import round as sync_round
-    from .adopt import verify_round_attestation
+    from .adopt import verify_attested
     from .common import require_initialized
     from .root import get_counter
 
     require_initialized()
 
-    from_counter, from_root, counter, root = await verify_round_attestation(
-        msg.from_counter,
-        msg.from_root or None,
-        msg.from_head_nonce,
-        msg.to_counter,
-        msg.to_root or None,
-        msg.to_head_nonce,
-        msg.timestamp or 0,
-        msg.wm_signature,
-    )
+    from_counter, from_root, counter, root = await verify_attested(msg)
 
     # Anti-rollback floor. The one exemption is the exact demotion the user approved, from the
     # head they approved it at (`round.demotion_matches`).

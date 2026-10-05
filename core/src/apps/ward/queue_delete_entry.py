@@ -14,7 +14,7 @@ async def queue_delete_entry(msg: WardQueueDeleteEntry) -> WardQueueDeleteAck:
     from trezor.ui.layouts import confirm_properties
 
     from . import offline_store
-    from .common import display_bytes
+    from .common import display_bytes, entry_props
 
     app_id, identifier, key_type, status, entry = await offline_store.lookup(msg)
 
@@ -24,7 +24,7 @@ async def queue_delete_entry(msg: WardQueueDeleteEntry) -> WardQueueDeleteAck:
     await confirm_properties(
         "ward_queue_delete_entry",
         "Discard queued change?",
-        offline_store.entry_props(app_id, identifier)
+        entry_props(app_id, identifier)
         + [
             ("Discarding", display_bytes(entry.value), True),
             ("Warning", "This change was never published. It will be lost.", False),

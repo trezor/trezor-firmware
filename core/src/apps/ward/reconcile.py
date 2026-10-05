@@ -18,7 +18,7 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
 
     from . import round as sync_round
     from .adopt import adopt, require_attested_round, verify_inbound_link
-    from .attest import EMPTY_ROOT, root_or_empty
+    from .attest import app_root, same_root
     from .cas import MAX_BATCH
     from .common import require_initialized
     from .root import get_counter, get_root
@@ -32,8 +32,7 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
         from_counter, from_root, counter, root, msg.auth_commit
     )
 
-    if root == EMPTY_ROOT:
-        root = None
+    root = app_root(root)
 
     stored_counter = await get_counter()
     stored_root = await get_root()
@@ -45,13 +44,13 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
         sync_round.clear_demotion()
 
     elif counter == stored_counter:
-        if stored_root is not None and stored_root != root_or_empty(root):
+        if stored_root is not None and not same_root(stored_root, root):
             raise DataError("attested counter matches but the root differs")
 
     elif (
         stored_counter + 1 <= counter <= stored_counter + MAX_BATCH
         and from_counter == stored_counter
-        and root_or_empty(from_root) == root_or_empty(stored_root)
+        and same_root(from_root, stored_root)
     ):
         # One link from this device's head: a single write or a single batch.
         pass

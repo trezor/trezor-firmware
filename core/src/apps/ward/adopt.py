@@ -5,6 +5,11 @@ The route-specific proof (reconcile's single link, verify_chain's backward walk)
 handler; `verify_inbound_link` and `adopt` are separate because reconcile checks between them.
 """
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from trezor.messages import WardIngestAttestation, WardRollback
+
 
 async def verify_round_attestation(
     from_counter: "int | None",
@@ -29,7 +34,7 @@ async def verify_round_attestation(
     from trezor.wire import DataError
 
     from . import round as sync_round
-    from .attest import root_or_empty, verify_attestation
+    from .attest import root_or_empty, same_root, verify_attestation
     from .cas import MAX_BATCH, NO_HEAD_NONCE
     from .keys import derive_ward_id
 
@@ -58,7 +63,7 @@ async def verify_round_attestation(
 
     # A step advances by 1..MAX_BATCH and rotates the nonce; genesis attests itself.
     if to_counter == 0:
-        if from_counter != 0 or root_or_empty(from_root) != root_or_empty(to_root):
+        if from_counter != 0 or not same_root(from_root, to_root):
             raise DataError("WARD: counter 0 must attest itself")
         if from_head_nonce != to_head_nonce:
             raise DataError("WARD: counter 0 consumed no head nonce")
@@ -85,12 +90,12 @@ async def verify_round_attestation(
     seen = sync_round.wm_head()
     if seen is not None:
         seen_counter, seen_root, seen_nonce = seen
-        if (from_counter, root_or_empty(from_root)) == (seen_counter, seen_root):
+        if from_counter == seen_counter and same_root(from_root, seen_root):
             if from_head_nonce != seen_nonce:
                 raise DataError(
                     "WARD: the attested transition did not consume the WM head nonce this device holds"
                 )
-        elif (to_counter, root_or_empty(to_root)) == (seen_counter, seen_root):
+        elif to_counter == seen_counter and same_root(to_root, seen_root):
             if to_head_nonce != seen_nonce:
                 raise DataError(
                     "WARD: the WM head nonce changed without the head moving"
@@ -99,6 +104,20 @@ async def verify_round_attestation(
     sync_round.set_wm_head(to_counter, root_or_empty(to_root), to_head_nonce)
     # The timestamp is signed but deliberately not checked: anti-replay is the counter's job.
     return from_counter, root_or_empty(from_root), to_counter, root_or_empty(to_root)
+
+
+async def verify_attested(msg: "WardIngestAttestation | WardRollback") -> "tuple[int, bytes, int, bytes]":
+    """`verify_round_attestation` over a message carrying the attestation's fields by name."""
+    return await verify_round_attestation(
+        msg.from_counter,
+        msg.from_root or None,
+        msg.from_head_nonce,
+        msg.to_counter,
+        msg.to_root or None,
+        msg.to_head_nonce,
+        msg.timestamp or 0,
+        msg.wm_signature,
+    )
 
 
 def require_attested_round(what: str) -> "tuple[int, bytes, int, bytes]":
@@ -129,7 +148,7 @@ async def verify_inbound_link(
     from trezor.wire import DataError
 
     from .attest import EMPTY_ROOT, root_or_empty
-    from .cas import TAG_REVERT, verify_auth_commit
+    from .cas import link_kind
     from .keys import derive_k_auth, derive_ward_id
 
     if to_counter == 0:
@@ -142,25 +161,12 @@ async def verify_inbound_link(
     if supplied is None:
         raise DataError("WARD: the link into the " + subject + " is required")
 
-    ward_id = await derive_ward_id()
-    k_auth = await derive_k_auth()
-
-    if verify_auth_commit(
-        k_auth, ward_id, from_counter, from_root, to_counter, to_root, supplied
-    ):
-        return False
-    if verify_auth_commit(
-        k_auth,
-        ward_id,
-        from_counter,
-        from_root,
-        to_counter,
-        to_root,
-        supplied,
-        TAG_REVERT,
-    ):
-        return True
-    raise DataError("WARD: the link into the " + subject + " is not authorised")
+    return link_kind(
+        await derive_k_auth(),
+        await derive_ward_id(),
+        (from_counter, from_root, to_counter, to_root, supplied),
+        "WARD: the link into the " + subject + " is not authorised",
+    )
 
 
 async def adopt(

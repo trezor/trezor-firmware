@@ -75,9 +75,13 @@ def reconstruct(start_hash: bytes, proof: "list[bytes]", entry_key: bytes) -> by
     if len(start_hash) != 32 or len(entry_key) != 32:
         raise DataError("WARD: reconstruct operands must be 32 bytes")
 
-    node = start_hash
-    for split_bit, sibling in reversed(validate_proof_shape(proof)):
-        if addr_bit(entry_key, split_bit) == 0:
+    return _fold(start_hash, reversed(validate_proof_shape(proof)), entry_key)
+
+
+def _fold(node: bytes, steps, path: bytes) -> bytes:
+    """Hash `node` up through leaf-to-root `(split_bit, sibling)` steps, sided by `path`."""
+    for split_bit, sibling in steps:
+        if addr_bit(path, split_bit) == 0:
             node = internal_hash(split_bit, node, sibling)
         else:
             node = internal_hash(split_bit, sibling, node)
@@ -221,25 +225,14 @@ def compute_new_root(
 
         # `split_bit` may fall ABOVE existing branches on the witness's path (inside a
         # compressed run); the subtree below folds unchanged.
-        below = []
+        steps = [_parse_proof_elem(elem) for elem in proof]  # leaf-to-root
         idx = 0
-        while idx < len(proof):
-            sb, _sib = _parse_proof_elem(proof[idx])
-            if sb == split_bit:
+        while idx < len(steps) and steps[idx][0] >= split_bit:
+            if steps[idx][0] == split_bit:
                 # Unreachable (the absence check rejects this); explicit by design.
                 raise DataError("WARD: witness path already branches at the split bit")
-            if sb < split_bit:
-                break
-            below.append(proof[idx])
             idx += 1
-
-        node = witness_leaf
-        for elem in below:
-            sb, sib = _parse_proof_elem(elem)
-            if addr_bit(witness_entry_key, sb) == 0:
-                node = internal_hash(sb, node, sib)
-            else:
-                node = internal_hash(sb, sib, node)
+        node = _fold(witness_leaf, steps[:idx], witness_entry_key)
 
         new_leaf_h = _leaf_of(entry_key, new_leaf)
         if addr_bit(entry_key, split_bit) == 0:

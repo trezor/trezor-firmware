@@ -21,12 +21,12 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
 
     from . import offline_store
     from .cas import OP_SET, intent_mac
-    from .common import display_bytes
+    from .common import display_bytes, entry_props
     from .keys import derive_k_auth, derive_ward_id
 
     app_id, identifier, _key_type, status, entry = await offline_store.lookup(msg)
 
-    props = offline_store.entry_props(app_id, identifier)
+    props = entry_props(app_id, identifier)
 
     if status == offline_store.CORRUPT or (status == offline_store.VALID and entry is None):
         raise DataError("WARD: the offline copy cannot be read")

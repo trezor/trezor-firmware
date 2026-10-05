@@ -34,6 +34,16 @@ def root_or_empty(root: bytes | None) -> bytes:
     return root if root is not None else EMPTY_ROOT
 
 
+def same_root(a: "bytes | None", b: "bytes | None") -> bool:
+    """Equal as trees: `None` and EMPTY_ROOT both mean the empty tree."""
+    return root_or_empty(a) == root_or_empty(b)
+
+
+def app_root(root: "bytes | None") -> "bytes | None":
+    """A root in app form: the empty tree as None."""
+    return None if root == EMPTY_ROOT else root
+
+
 # PLACEHOLDER: until a real key is provisioned, release builds reject every attestation.
 _WM_PUBKEY = b"\x00" * 32
 
@@ -83,6 +93,8 @@ def attestation_preimage(
     """
     from trezor.wire import DataError
 
+    from .codec import u32
+
     from_root = root_or_empty(from_root)
     to_root = root_or_empty(to_root)
     if (
@@ -99,10 +111,10 @@ def attestation_preimage(
         + bytes([_ATTEST_VERSION])
         + nonce
         + ward_id
-        + from_counter.to_bytes(4, "big")
+        + u32(from_counter)
         + from_root
         + from_head_nonce
-        + to_counter.to_bytes(4, "big")
+        + u32(to_counter)
         + to_root
         + to_head_nonce
         + timestamp.to_bytes(8, "big")
@@ -128,15 +140,8 @@ def verify_attestation(
     """
     return _verify(
         attestation_preimage(
-            ward_id,
-            nonce,
-            from_counter,
-            from_root,
-            from_head_nonce,
-            to_counter,
-            to_root,
-            to_head_nonce,
-            timestamp,
+            ward_id, nonce, from_counter, from_root, from_head_nonce,
+            to_counter, to_root, to_head_nonce, timestamp,
         ),
         signature,
     )

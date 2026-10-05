@@ -43,10 +43,6 @@ class StoredEntry:
         self.raw = raw
 
 
-def _u16(value: int) -> bytes:
-    return value.to_bytes(2, "big")
-
-
 def _flags(pending: bool, offered: bool) -> int:
     from storage.ward import FLAG_OFFERED, FLAG_PENDING
 
@@ -64,17 +60,13 @@ def identity_block(key_type: str, app_id: str, identifier: bytes) -> bytes:
 
     len8(key_type) || key_type || len8(app_id) || app_id || len16(identifier) || identifier
     """
-    from trezor.wire import DataError
+    from .codec import lp
 
-    kt = key_type.encode()
-    ai = app_id.encode()
-    if len(kt) > 0xFF or len(ai) > 0xFF:
-        raise DataError("WARD: key_type or app_id too long to store")
-    if len(identifier) > 0xFFFF:
-        raise DataError("WARD: identifier too long to store")
-
+    too_long = "WARD: key_type or app_id too long to store"
     return (
-        bytes([len(kt)]) + kt + bytes([len(ai)]) + ai + _u16(len(identifier)) + identifier
+        lp(1, key_type.encode(), too_long)
+        + lp(1, app_id.encode(), too_long)
+        + lp(2, identifier, "WARD: identifier too long to store")
     )
 
 
@@ -110,13 +102,12 @@ def encode_record(
     prefix || (identity_block | wallet_entry(16)) || flags(1) || len16(value) || value
     """
     from storage.ward import STORE_VERSION, STORE_VERSION_COMPACT, store_prefix
-    from trezor.wire import DataError
 
+    from .codec import lp
     from .keys import wallet_entry
 
-    if len(value) > 0xFFFF:
-        raise DataError("WARD: value too long to store")
-
+    # the value is checked before the name, as it always was
+    value_field = lp(2, value, "WARD: value too long to store")
     if compact:
         version = STORE_VERSION_COMPACT
         name = wallet_entry(wallet_id, app_id, identifier, key_type)
@@ -125,12 +116,22 @@ def encode_record(
         name = identity_block(key_type, app_id, identifier)
 
     return (
-        store_prefix(wallet_id, version)
-        + name
-        + bytes([_flags(pending, offered)])
-        + _u16(len(value))
-        + value
+        store_prefix(wallet_id, version) + name + bytes([_flags(pending, offered)]) + value_field
     )
+
+
+def _read_name(record: bytes) -> tuple:
+    """A Reader positioned at the flags byte, and the record's identity (None when compact)."""
+    from storage.ward import STORE_VERSION_COMPACT, store_key_off
+
+    from .codec import Reader
+    from .keys import WALLET_ENTRY_LEN
+
+    r = Reader(record, store_key_off(record[0]))
+    if record[0] == STORE_VERSION_COMPACT:
+        r.take(WALLET_ENTRY_LEN)
+        return r, None
+    return r, (r.lp(1).decode(), r.lp(1).decode(), r.lp(2))
 
 
 def _parse(
@@ -142,32 +143,15 @@ def _parse(
 ) -> StoredEntry:
     """Bytes back to a StoredEntry, or raise. A compact record takes the caller's identity (empty
     when enumerating)."""
-    from storage.ward import FLAG_OFFERED, FLAG_PENDING, STORE_VERSION_COMPACT, store_key_off
+    from storage.ward import FLAG_OFFERED, FLAG_PENDING
     from trezor.wire import DataError
 
-    from .keys import WALLET_ENTRY_LEN
-
-    off = store_key_off(record[0])
-
-    def take(n: int) -> bytes:
-        nonlocal off
-        chunk = record[off : off + n]
-        # a slice past the end is short, not an error: check every width
-        if len(chunk) != n:
-            raise DataError("WARD: truncated record")
-        off += n
-        return chunk
-
-    compact = record[0] == STORE_VERSION_COMPACT
-    if compact:
-        take(WALLET_ENTRY_LEN)
-    else:
-        key_type = take(take(1)[0]).decode()
-        app_id = take(take(1)[0]).decode()
-        identifier = take(int.from_bytes(take(2), "big"))
-    flags = take(1)[0]
-    value = take(int.from_bytes(take(2), "big"))
-    if off != len(record):
+    r, name = _read_name(record)
+    if name is not None:
+        key_type, app_id, identifier = name
+    flags = r.uint(1)
+    value = r.lp(2)
+    if not r.done():
         raise DataError("WARD: trailing bytes in record")
 
     return StoredEntry(
@@ -177,7 +161,7 @@ def _parse(
         value=value,
         pending=bool(flags & FLAG_PENDING),
         offered=bool(flags & FLAG_OFFERED),
-        compact=compact,
+        compact=name is None,
         slot=slot,
         raw=record,
     )
@@ -185,18 +169,7 @@ def _parse(
 
 def _flags_off(record: bytes) -> int:
     """Where the flags byte sits, whichever form the record is in."""
-    from storage.ward import STORE_VERSION_COMPACT, store_key_off
-
-    from .keys import WALLET_ENTRY_LEN
-
-    off = store_key_off(record[0])
-    if record[0] == STORE_VERSION_COMPACT:
-        return off + WALLET_ENTRY_LEN
-
-    off += 1 + record[off]  # key_type
-    off += 1 + record[off]  # app_id
-    off += 2 + int.from_bytes(record[off : off + 2], "big")  # identifier
-    return off
+    return _read_name(record)[0].off
 
 
 def record_commit(record: bytes) -> bytes:
@@ -492,14 +465,15 @@ async def reconcile_pending(
 UNREADABLE = "An offline copy that cannot be read."
 
 
-def entry_props(app_id: str, identifier: bytes) -> list:
-    """The two rows every offline-store screen opens with."""
+def existing_value(status: int, entry: "StoredEntry | None") -> "tuple[str, bool] | None":
+    """How an existing record shows on a screen: `(text, is_data)`, or None when there is none."""
     from .common import display_bytes
 
-    return [
-        ("Domain", app_id, False),
-        ("Key", display_bytes(identifier), True),
-    ]
+    if status == VALID and entry is not None:
+        return display_bytes(entry.value), True
+    if status == CORRUPT:
+        return UNREADABLE, False
+    return None
 
 
 async def lookup(msg) -> tuple:

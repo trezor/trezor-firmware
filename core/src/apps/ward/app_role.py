@@ -62,24 +62,13 @@ async def _confirm_reveal(msg: "Msg") -> None:
     """Ask before a stored value reaches the display -- domain and key only, never the value."""
     from trezor.ui.layouts import confirm_properties
 
-    from .common import display_bytes
+    from .common import entry_props
 
-    app_id = getattr(msg, "app_id", None) or ""
-    identifier = getattr(msg, "identifier", None) or b""
-
-    await confirm_properties(
-        "ward_reveal_entry",
-        "Reveal entry?",
-        [
-            ("Domain", app_id, False),
-            ("Key", display_bytes(identifier), True),
-            (
-                "Reveals",
-                "A stored value will be shown on this screen.",
-                False,
-            ),
-        ],
+    props = entry_props(
+        getattr(msg, "app_id", None) or "", getattr(msg, "identifier", None) or b""
     )
+    props.append(("Reveals", "A stored value will be shown on this screen.", False))
+    await confirm_properties("ward_reveal_entry", "Reveal entry?", props)
 
 
 async def require_ward_app(msg_type: int, msg: "Msg") -> None:

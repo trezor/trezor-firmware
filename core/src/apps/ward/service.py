@@ -39,33 +39,29 @@ RPC_TIMEOUT_MS = const(30_000)
 # Bumped when the message set changes shape, so an older daemon is refused by name.
 PROTOCOL_VERSION = 1
 
-_IFACE_NUM_OFF = const(0)
-_CHANNEL_ID_OFF = const(1)
-_SESSION_ID_OFF = const(3)
-_BINDING_LEN = const(4)
+
+def _binding_cache():
+    from storage.cache import get_sessionless_cache
+
+    return get_sessionless_cache()
 
 
 def get_binding() -> tuple[int, int, int] | None:
     """(iface_num, channel_id, session_id) of the bound service, or None. All three are needed:
     channel ids are reallocated, possibly on another interface."""
-    from storage.cache import get_sessionless_cache
     from storage.cache_common import APP_WARD_SERVICE
 
-    raw = get_sessionless_cache().get(APP_WARD_SERVICE)
+    raw = _binding_cache().get(APP_WARD_SERVICE)
     if raw is None:
         return None
-    return (
-        raw[_IFACE_NUM_OFF],
-        int.from_bytes(raw[_CHANNEL_ID_OFF:_SESSION_ID_OFF], "big"),
-        raw[_SESSION_ID_OFF],
-    )
+    # iface(1) || channel_id(2) || session_id(1)
+    return raw[0], int.from_bytes(raw[1:3], "big"), raw[3]
 
 
 def set_binding(iface_num: int, channel_id: int, session_id: int) -> None:
-    from storage.cache import get_sessionless_cache
     from storage.cache_common import APP_WARD_SERVICE
 
-    get_sessionless_cache().set(
+    _binding_cache().set(
         APP_WARD_SERVICE,
         bytes([iface_num]) + channel_id.to_bytes(2, "big") + bytes([session_id]),
     )
@@ -73,10 +69,22 @@ def set_binding(iface_num: int, channel_id: int, session_id: int) -> None:
 
 def clear_binding() -> None:
     """Forget which channel is the service. Does NOT unpin the daemon's key."""
-    from storage.cache import get_sessionless_cache
     from storage.cache_common import APP_WARD_SERVICE
 
-    get_sessionless_cache().delete(APP_WARD_SERVICE)
+    _binding_cache().delete(APP_WARD_SERVICE)
+
+
+def _check_open(iface: "WireInterface", msg: "WardServiceOpen") -> None:
+    """What every bind refuses first: a connect build, a foreign interface, another protocol.
+    The interface is the authorisation boundary -- a separate OS claim Suite does not hold."""
+    from trezor import wire
+
+    if not utils.USE_WARD_SERVICE_CHANNEL:
+        raise wire.DataError("this firmware does not serve WARD over a service channel")
+    if not wire.is_ward_interface(iface):
+        raise wire.DataError("WARD service must be opened on the WARD interface")
+    if msg.protocol_version != PROTOCOL_VERSION:
+        raise wire.DataError("unsupported WARD service protocol version")
 
 
 if utils.USE_WARD_SERVICE_THP:
@@ -92,17 +100,8 @@ if utils.USE_WARD_SERVICE_THP:
         from trezor.messages import WardServiceOpenAck
         from trezor.wire import context
 
-        if not utils.USE_WARD_SERVICE_CHANNEL:
-            raise wire.DataError("this firmware does not serve WARD over a service channel")
-
         ctx = context.get_context()
-
-        # The interface is the authorisation boundary: a separate OS claim Suite does not hold.
-        if not wire.is_ward_interface(ctx.iface):
-            raise wire.DataError("WARD service must be opened on the WARD interface")
-
-        if msg.protocol_version != PROTOCOL_VERSION:
-            raise wire.DataError("unsupported WARD service protocol version")
+        _check_open(ctx.iface, msg)
 
         channel = ctx.channel
 
@@ -154,20 +153,10 @@ else:
     async def bind_codec(msg: WardServiceOpen, iface: WireInterface) -> WardServiceOpenAck:
         """Bind this interface as the WARD service. The codec has no identity to pin, so the
         interface is the whole check; nothing a daemon says is trusted anyway. Idempotent."""
-        from trezor import wire
         from trezor.messages import WardServiceOpenAck
 
-        if not utils.USE_WARD_SERVICE_CHANNEL:
-            raise wire.DataError(
-                "this firmware does not serve WARD over a service channel"
-            )
-
-        # Restated so the refusal does not depend on `wire.setup` routing.
-        if not wire.is_ward_interface(iface):
-            raise wire.DataError("WARD service must be opened on the WARD interface")
-
-        if msg.protocol_version != PROTOCOL_VERSION:
-            raise wire.DataError("unsupported WARD service protocol version")
+        # The interface check is restated so the refusal does not depend on `wire.setup` routing.
+        _check_open(iface, msg)
 
         set_binding(iface.iface_num(), 0, 0)
 
@@ -369,8 +358,8 @@ async def sync() -> None:
 
     from . import round as sync_round
     from .adopt import adopt, verify_round_attestation
-    from .attest import NONCE_LENGTH, root_or_empty
-    from .cas import head_init_sig, verify_chain_step
+    from .attest import NONCE_LENGTH, same_root
+    from .cas import head_init_sig, link_of, verify_chain_step
     from .common import require_initialized
     from .keys import derive_k_auth, derive_k_sig, derive_ward_id
     from .root import get_counter, get_root
@@ -432,24 +421,14 @@ async def sync() -> None:
     reverts = 0
     last_from = None
     for link in answer.links:
+        step = link_of(link)
         running_counter, running_root, reverted = verify_chain_step(
-            k_auth,
-            ward_id,
-            running_counter,
-            running_root,
-            (
-                link.from_counter,
-                link.from_root or None,
-                link.to_counter,
-                link.to_root or None,
-                link.auth_commit,
-            ),
+            k_auth, ward_id, running_counter, running_root, step
         )
         # After the step verified, never before.
-        crossed.append(link.auth_commit)
-        last_from = (link.from_counter, link.from_root or None)
-        if reverted:
-            reverts += 1
+        crossed.append(step[4])
+        last_from = step[:2]
+        reverts += reverted
 
     if __debug__:
         log.debug(__name__, "sync: %d links, %d of them reverts", len(answer.links), reverts)
@@ -458,14 +437,14 @@ async def sync() -> None:
         raise DataError("chain does not end at the attested counter")
 
     # And on the attested root (preimage form), or the fold could arrive at a fork.
-    if root_or_empty(running_root) != attested_root:
+    if not same_root(running_root, attested_root):
         raise DataError("chain end does not match the attested root")
 
     # And the last step must BE the attested step: a write and a revert can end on the same
     # (counter, root). With no links, the checks above already make the own head the attested one.
     if last_from is not None and (
         last_from[0] != attested_from_counter
-        or root_or_empty(last_from[1]) != attested_from_root
+        or not same_root(last_from[1], attested_from_root)
     ):
         raise DataError("the chain's last step is not the step the WM attested")
 
