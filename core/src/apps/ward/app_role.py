@@ -1,61 +1,13 @@
-"""Which application may operate WARD on this device, and how the device knows.
+"""Which application may operate WARD on this device.
 
-WHAT THIS IS NOT. It is not a boundary between "the wallet" and "the WARD app". The user-facing WARD
-messages arrive on the ORDINARY interface, the same one a wallet uses, and they are expected to come
-from a wallet eventually -- today's app is a proof of concept for exactly that. What crosses a channel
-of its own is the replica traffic behind them, and that is the daemon's business, not this file's. See
-`docs/core/misc/ward-channels.md`.
+ONE, chosen by the user. Pairing cannot tell paired hosts apart, so on THP the first WARD request
+pins the sender's static key after a held confirmation; later requests from that key pass silently
+and any other key is refused -- never offered a takeover (recovery is `reset_app`). `app_id` still
+arrives on the wire, so this narrows who may name entries to one host rather than stopping it.
 
-WHAT IT IS. A bound on how many parties may operate WARD on one device: ONE, chosen by the user.
-Several hosts can be connected on that interface at once, and pairing does not tell them apart -- it
-proves a host holds a credential this device issued, and every paired host holds one. So "some paired
-host" is the wrong granularity for "may read, write and queue this wallet's WARD entries", and without
-a pin any connected host has that power. The daemon is already pinned this way
-(`apps.ward.service`), and this is deliberately the same shape so neither has to be reasoned about
-alone.
-
-WHAT IT DOES NOT REACH. `app_id` still arrives on the wire, so the pinned host may name any app's
-entries; this narrows who can do that to one host rather than stopping it. See the gap recorded in
-`common.require_key`.
-
-AND WHAT IT CANNOT REACH AT ALL: THE V1 CODEC. There is no handshake there, so there is no host key
-to pin -- not a weaker one, none. A device speaking protocol v1 cannot tell one connected
-application from another by any means, so a role is not a thing it can hold.
-
-The answer is not to invent an identity, nor to fail closed and leave WARD unavailable on every
-model without THP. It is that v1 already has a security model and it is not identity: it is the
-user, per operation, on the device's own screen. Every user-facing WARD operation already confirms,
-and a read DISPLAYS its value and returns only `Success`, so the plaintext never reaches the host
-at all.
-
-WHAT WAS ACTUALLY MISSING IS ORDERING. Those confirmations carry the value among their properties,
-so the secret is on the display by the time the user is asked -- an acknowledgement, not a decision.
-On a THP build that is sound, because the pin has already decided that exactly one application may
-trigger any of it. With no pin, TRIGGERING A READ IS THE DISCLOSURE, and a screen that reveals
-first and asks second is not a control.
-
-So on v1 the pin is replaced by `_confirm_reveal` below: before any operation that can put a stored
-value on screen, the user is shown the domain and key alone and asked. Two screens rather than one,
-which is the honest price of a transport that cannot tell one application from another.
-
-WHY HERE AND NOT IN THE SIX HANDLERS. Same reason the role check is a filter: six call sites are six
-chances to forget, and the one that got forgotten would be a WARD operation that reveals a value
-with nothing asked first. The list below is the policy, exactly as `_ward_app_messages` is.
-
-WHAT IS STILL LOST, stated rather than glossed: `app_id` is a namespace and not a permission, so any
-connected application may ASK to display any entry. It simply cannot do so without the user reading
-which one first.
-
-TRUST ON FIRST USE, WITH A HELD CONFIRMATION. There is no useful moment before the first request at
-which an app could announce itself -- the request IS the announcement, and refusing until some
-earlier message had arrived would only move the question one message earlier. So the first WARD
-request pins the app that made it, and the user holds to allow it; every request after that from that
-same key is silent, and every request from any other key is refused.
-
-REFUSED, NOT OFFERED A TAKEOVER. A screen that any host could summon by asking is not a pin: it
-would turn the boundary into a phishing question, and the honest answer to "another app is asking" is
-that the user did not ask for another app. Recovering from a lost app key is an ownership migration
-with a user decision in it, and it lives in `apps.ward.reset_app`.
+The v1 codec has no host identity at all. There the user is the control, per operation: before
+anything that can put a stored value on screen, `_confirm_reveal` asks with the domain and key
+alone, because the operation's own confirmation already shows the value.
 """
 
 from typing import TYPE_CHECKING
@@ -68,21 +20,12 @@ if TYPE_CHECKING:
 
 
 def _app_label() -> str:
-    """The name to put on the pinning screen. Best effort, and never trusted.
-
-    It comes from the pairing credential this device itself issued, so it is not a claim the current
-    request makes -- but it is still a name a host chose for itself, and two apps may choose the
-    same one. What is actually pinned is the static key; this is only there so the screen says
-    something more useful than "an application".
-    """
+    """The name for the pinning screen, from the pairing credential. Display only, never trusted."""
     from trezor.wire import context
 
     channel = getattr(context.get_context(), "channel", None)
     credential = channel.credential if channel is not None else None
     if credential is None:
-        # Unpaired, or paired by a route that issues no credential -- the debug skip-pairing
-        # shortcut is one. Named honestly rather than left blank: the user is being asked about an
-        # application the device cannot name.
         return "an unnamed application"
 
     metadata = credential.cred_metadata
@@ -93,21 +36,9 @@ def _app_label() -> str:
     return app_name or host_name or "an unnamed application"
 
 
-# WHICH OPERATIONS CAN PUT A STORED VALUE ON SCREEN -- the ones whose confirmation shows something
-# the caller did not already supply. A `WardSetEntry` displays the value the caller sent and reveals
-# nothing; a `WardEraseCachedEntry` displays what is about to be discarded, which the caller may
-# never have seen.
-#
-# NOT INCLUDED, each for its own reason:
-#   WardFlushQueue                publishes a change the user already confirmed when queueing, and
-#                                 hands back sealed parts -- ciphertext, or on a service build no
-#                                 leaf at all. Nothing on screen, nothing revealed.
-#   WardSync / WardIngestAttestation / WardReconcile / WardVerifyChain
-#                                 replica plumbing. Every transition is verified against the
-#                                 device's own keys and the WM attestation, so the worst a caller
-#                                 gets is a failed or needless sync.
-#   WardRollback / WardRejoin / WardResetService
-#                                 already hold to confirm, and show counters rather than values.
+# Operations whose confirmation can show a stored value the caller did not supply. Excluded:
+# flush (already confirmed when queued, returns ciphertext), sync plumbing (verified against the
+# device's own keys), rollback/rejoin/reset_service (hold, and show counters, not values).
 _REVEALING: tuple[int, ...] | None = None
 
 
@@ -128,11 +59,7 @@ def _revealing_messages() -> "tuple[int, ...]":
 
 
 async def _confirm_reveal(msg: "Msg") -> None:
-    """Ask before a stored value reaches the display. The domain and key, and nothing else.
-
-    DELIBERATELY WITHOUT THE VALUE, which is the entire point: this is the screen the user answers
-    while the secret is still unrevealed. The operation's own confirmation follows and shows it.
-    """
+    """Ask before a stored value reaches the display -- domain and key only, never the value."""
     from trezor.ui.layouts import confirm_properties
 
     from .common import display_bytes
@@ -156,25 +83,16 @@ async def _confirm_reveal(msg: "Msg") -> None:
 
 
 async def require_ward_app(msg_type: int, msg: "Msg") -> None:
-    """Refuse unless this channel belongs to the app that holds the WARD role.
+    """Refuse with `DataError` unless this channel's host holds the WARD role; pin it on first use.
 
-    RUN BEFORE THE HANDLER, from the wire filter below, and therefore before the request has been
-    looked at at all. That order is deliberate: the question here is who is speaking, not what they
-    said, and a request that turns out to be malformed does not make its sender more entitled to ask
-    it.
-
-    Raises `DataError` in every refusing case, which is the failure every WARD handler already
-    raises -- so a caller without standing gets the same shape of answer as one that asked wrongly,
-    and learns nothing from the difference.
+    Runs from the wire filter, before the request is looked at.
     """
     from storage import ward as storage_ward
     from trezor import wire
     from trezor.wire import context
 
     if not utils.USE_THP:
-        # NO IDENTITY EXISTS ON THIS TRANSPORT, so there is no role to hold and nothing to compare.
-        # The user decides instead, per operation, before anything is revealed -- see the module
-        # docstring for why that is the whole of the answer and what it does not cover.
+        # No identity on this transport: the user decides per operation instead.
         if msg_type in _revealing_messages():
             await _confirm_reveal(msg)
         return
@@ -182,32 +100,19 @@ async def require_ward_app(msg_type: int, msg: "Msg") -> None:
     ctx = context.get_context()
     channel = getattr(ctx, "channel", None)
     if channel is None:
-        # A THP BUILD WITH NO CHANNEL MUST STILL FAIL CLOSED. `CodecContext` survives in THP builds
-        # for DebugLink, and "cannot identify the caller" is not an answer this side may accept --
-        # the branch above is reached because the whole firmware has no identities, not because
-        # this one caller happens to lack one.
+        # A THP build with no channel (DebugLink's codec context) must still fail closed.
         raise wire.DataError("WARD needs a paired THP channel")
 
     host_key = channel.get_host_static_public_key()
     pinned = storage_ward.get_app_host_key()
 
     if pinned == host_key:
-        # The ordinary case, and it writes nothing and shows nothing: an app that already holds the
-        # role must not pay a screen per operation, and a flash write per request would be worse
-        # than useless.
         return
 
     if pinned is not None:
-        # Not repairable by connecting a different app: the pin is in flash precisely so that
-        # unplugging the device does not clear it.
         raise wire.DataError("another application holds the WARD app role")
 
-    # --- first use ---------------------------------------------------------------------------
-    #
-    # PINNING IS A FLASH WRITE, so it needs the device unlocked, and saying so beats letting
-    # `config.set` fail with an opaque storage error at the one moment the caller can least
-    # interpret it. Stated before the screen rather than after, so the user is not asked to allow
-    # something that then cannot be stored.
+    # First use. Pinning is a flash write: refuse a locked device before the screen, not after.
     from trezor import config
 
     if not config.is_unlocked():
@@ -215,9 +120,6 @@ async def require_ward_app(msg_type: int, msg: "Msg") -> None:
 
     from trezor.ui.layouts import confirm_properties
 
-    # HELD, and the wording names the durable consequence rather than the request in front of it:
-    # what the user is allowing is not this one read, it is which application owns WARD on this
-    # device from here on.
     await confirm_properties(
         "ward_app_role",
         "Allow WARD access",
@@ -240,37 +142,17 @@ async def require_ward_app(msg_type: int, msg: "Msg") -> None:
     storage_ward.set_app_host_key(host_key)
 
 
-# --- how it gets called ----------------------------------------------------------------------
-#
-# A WIRE FILTER, NOT A LINE IN EVERY HANDLER. `trezor.wire.filters` exists for exactly this shape --
-# "run something before this message reaches its handler, or refuse it" -- and it is what the PIN
-# lock uses (`apps.common.lock_manager._pinlock_filter`). Sixteen call sites would have been sixteen
-# chances to forget, and the one that got forgotten would be a WARD operation any paired host could
-# perform: the failure would be silent, because nothing about a missing check looks wrong.
-#
-# ORDER MATTERS AND IT IS ARRANGED IN `apps.base`: this filter is appended BEFORE the pinlock one, so
-# the pinlock behaviour still triggers first and the device is unlocked before the role is decided.
-# The unlock check inside `require_ward_app` therefore rarely fires -- it stays because "cannot write
-# flash" must fail closed on its own terms, not because some other filter usually got there first.
+# A wire filter rather than a check in every handler, so none can be forgotten. `apps.base` installs
+# it BEFORE the pinlock filter, so the device is unlocked before the role is decided.
 _MESSAGES: tuple[int, ...] | None = None
 
 
 def _ward_app_messages() -> "tuple[int, ...]":
-    """The host-facing WARD messages, which is to say: the ones the WARD app may send.
+    """The messages only the WARD app may send. Built on first use to spare boot RAM.
 
-    BUILT ON FIRST USE, not at import: this module is imported during boot to install the filter,
-    and `MessageType` in a module-level tuple would be RAM spent before any WARD message exists.
-
-    THE LIST IS THE POLICY, so it is here rather than derived from `workflow_handlers`: being
-    dispatchable and being a WARD operation are different properties, and a message added to the
-    registry must be classified deliberately. `tests/device_tests/ward/test_app_role.py` enumerates
-    the registry's WARD entries and fails if one is missing from here, so "deliberately" is enforced
-    rather than hoped for.
-
-    NOT INCLUDED, each for its own reason:
-      WardServiceOpen   the daemon's, on the WARD interface, with a pin of its own.
-      WardResetApp      the escape hatch for a lost app key -- requiring the role to retire the pin
-                        would make the pin unrecoverable, which is the one thing it must not be.
+    The list is the policy; a device test fails if a registered WARD message is missing. Excluded:
+    WardServiceOpen (the daemon's, pinned separately) and WardResetApp (the escape hatch for a
+    lost app key).
     """
     global _MESSAGES
     if _MESSAGES is None:
@@ -292,8 +174,6 @@ def _ward_app_messages() -> "tuple[int, ...]":
             MT.WardQueueSetEntry,
             MT.WardQueueDeleteEntry,
             MT.WardQueueGetEntry,
-            # The daemon binding is WARD state, so changing it is a WARD operation: an app that may
-            # not read an entry may not decide which daemon serves them either.
             MT.WardResetService,
         )
     return _MESSAGES

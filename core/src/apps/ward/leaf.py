@@ -1,33 +1,16 @@
-"""The WARD leaf: two independently encoded parts, plus the wire codec for them.
+"""The WARD leaf: two independently sealed parts, and their wire codec.
 
     part(p)       = encoding(1B) || len8(nonce) || nonce || len8(tag) || tag
                                  || len32(body) || body
     pack_identity = len16(identifier) || identifier || len8(app_id) || app_id
                                       || device_id(1B)
     pack_content  = C_leaf(4B BE) || len32(value) || value
+    aad           = domain(1B) || entry_key || key_type
 
-`key_type` is always clear -- it selects the two keys that will seal the parts -- and
-travels on the identity part rather than being repeated per part.
-
-Each part is SEALED with ChaCha20-Poly1305 under a device-only key -- the identity under
-K_ident(key_type), the content under K_data(key_type) -- so the host holds two opaque
-blobs it can neither read nor forge. The AAD binds a part to its path, its part-domain
-and its key_type:
-
-    aad = domain(1B) || entry_key || key_type
-
-so a part cannot be replayed as the other part, nor moved to another path: both fail the
-tag check.
-
-What sealing does NOT buy: freshness or existence. The host can still return an older
-sealed leaf for the same path, or claim it holds none. Only a proof against an attested
-root detects those, which is why the screens still warn.
-
-THE DEVICE BUILDS THE LEAF -- now a hard fact, not a convention: the host has none of
-the keys, so it cannot produce a part at all.
-
-Byte-for-byte identical to the reference implementation, so its published leaf vectors
-pin this code; see `core/tests/test_apps.ward.py`.
+Parts are sealed with ChaCha20-Poly1305 under K_ident(key_type) / K_data(key_type), so the
+host can neither read nor forge them; the AAD stops a part being swapped or moved. Sealing
+gives no freshness -- only a proof against an attested root does. Byte-identical to the
+reference; vectors in `core/tests/test_apps.ward.py`.
 """
 
 from typing import TYPE_CHECKING
@@ -41,43 +24,28 @@ if TYPE_CHECKING:
 ENC_ENCRYPTED = 0
 ENC_PLAINTEXT = 1
 
-# An empty part means DELETED. Distinct from a present part whose body carries a
-# zero-length value, which is an entry that exists and whose value happens to be empty.
-# Conflating those -- as the reference does, returning an empty part for any empty value
-# -- makes an empty-valued entry impossible to represent and impossible to delete.
+# An empty part means DELETED; an entry with an empty value still has a non-empty body.
 EMPTY_PART: "Part" = (ENC_PLAINTEXT, b"", b"", b"")
 
-# Per-part mode (dev switch). False = sealed, which is what production ships; True leaves
-# that part host-inspectable. The two parts are INDEPENDENT: a build may seal the identity
-# and leave the content readable, or the reverse. The wire is self-describing either way,
-# and each part's encoding byte sits inside its framing, so the modes cannot collide.
+# Per-part dev switches; False (sealed) ships. Debug builds only.
 WARD_PLAINTEXT_IDENTITY = False
 WARD_PLAINTEXT_CONTENT = False
 
 if (WARD_PLAINTEXT_IDENTITY or WARD_PLAINTEXT_CONTENT) and not __debug__:
-    # A release build must never hand the host a readable part. Failing at import is the
-    # point: this is not a condition to discover from a screenshot months later.
     raise RuntimeError("WARD plaintext leaf parts require a __debug__ build")
 
 # --- AEAD (ChaCha20-Poly1305, RFC-7539, 12-byte nonce) ---
 
-# Ciphertext is padded up to the next bucket so its length leaks only a coarse band
-# rather than the exact size of the value. Plaintext parts are NOT padded: the body is
-# readable anyway, so padding would buy nothing and only complicate the layout.
+# Ciphertext is padded to a bucket so its length leaks only a coarse band.
 _AEAD_BUCKETS = (64, 256, 1024, 4096)
 
-# Part-domain separation, inside the AAD. Distinct constants are what stop an identity
-# part from ever being consumed as a content part.
+# Part-domain separation inside the AAD.
 _AAD_IDENTITY = b"\x03"
 _AAD_CONTENT = b"\x02"
 
 
 def _aead_aad(domain: bytes, entry_key: bytes, key_type: str) -> bytes:
-    """Bind a part to its leaf, its part-domain and its key_type.
-
-    Including entry_key is what makes a sealed part unmovable: replaying it under another
-    path changes the AAD and the tag check fails.
-    """
+    """Bind a part to its path, part-domain and key_type."""
     return domain + entry_key + key_type.encode()
 
 
@@ -91,13 +59,7 @@ def _pad_bucket(pt: bytes) -> bytes:
 def _seal(
     key: bytes, domain: bytes, entry_key: bytes, key_type: str, pt: bytes, nonce: bytes
 ) -> "Part":
-    """Seal one part. The NONCE IS AN ARGUMENT, never generated here.
-
-    Generation lives in the two encode_* functions, which is the only place it should:
-    that keeps this function deterministic and therefore pinnable by a known-answer test,
-    while leaving exactly one line in the module capable of getting nonce generation
-    wrong.
-    """
+    """Seal one part. Deterministic: the nonce is an argument, generated by encode_*."""
     from trezor.crypto import chacha20poly1305_encrypt
 
     cipher = chacha20poly1305_encrypt(key, nonce)
@@ -120,40 +82,20 @@ def _open(
     try:
         cipher.finish(tag)
     except AuthenticationError:
-        # The host returned a part that was not sealed for this path, this part-domain
-        # and this key_type -- forged, corrupted, or lifted from another entry.
         raise DataError("WARD leaf AEAD tag mismatch")
     return pt
 
 
 def _fresh_nonce() -> bytes:
-    """A fresh 12 bytes per part per write -- NEVER derived from the leaf.
-
-    Deriving it from (entry_key, C_leaf) would be catastrophic here, because a rollback
-    legitimately re-visits a pair that has already been sealed, and a repeated
-    (key, nonce) under ChaCha20-Poly1305 loses both confidentiality and the tag's
-    unforgeability.
-    """
+    """Random 12 bytes per part per write, NEVER derived from the leaf: a rollback revisits
+    (entry_key, C_leaf) pairs, and a repeated nonce breaks ChaCha20-Poly1305."""
     from trezor.crypto import random
 
     return random.bytes(12)
 
 
-# C_leaf is the global root counter stamped onto a leaf when it changes. It lives inside
-# the content body and never in entry_key, so an entry keeps one stable path across
-# versions. Nothing reads it yet: no root exists to count, and the trie hashes the
-# encoded part without inspecting it. Fixed at 0 until the root lands, at which point a
-# real counter drops in without changing this layout or any hash over it.
-# C_leaf is THE COUNTER THIS LEAF WAS COMMITTED AT -- settled, and not the counter at which
-# the change was created. `set_entry` stamps the counter it is about to commit, so the two
-# coincide today; they diverge the moment an offline intent is queued, because the device
-# forms it before it knows the head counter and another device may commit it at a different
-# one. The committing device therefore stamps this, not the originating one, and a conflict
-# check compares against the CURRENT leaf's value.
-#
-# Nothing reads it yet. Its consumers are batch monotonicity and offline-queue conflict
-# detection, neither of which exists -- which is why reading it earlier would have meant
-# inventing semantics the design had not fixed.
+# C_leaf: the counter a leaf was COMMITTED at (stamped by the committing device), kept in
+# the content body so entry_key stays stable. Nothing reads it yet.
 C_LEAF_UNUSED = 0
 
 
@@ -171,39 +113,6 @@ def part_bytes(part: "Part | None") -> bytes:
     )
 
 
-def part_from_bytes(buf: bytes, off: int = 0) -> "tuple[Part, int]":
-    """Parse one framed part, returning it and the offset just past it.
-
-    The exact inverse of `part_bytes`, and kept adjacent to it for that reason: two functions
-    that must agree byte for byte drift the moment they live apart, and a framing disagreement
-    here is silent -- it produces a WRONG part rather than an error, and the AEAD tag it then
-    fails to verify looks like corruption somewhere else entirely.
-    """
-    from trezor.wire import DataError
-
-    try:
-        encoding = buf[off]
-        nonce_len = buf[off + 1]
-        off += 2
-        nonce = buf[off : off + nonce_len]
-        off += nonce_len
-        tag_len = buf[off]
-        off += 1
-        tag = buf[off : off + tag_len]
-        off += tag_len
-        body_len = int.from_bytes(buf[off : off + 4], "big")
-        off += 4
-        body = buf[off : off + body_len]
-        off += body_len
-    except IndexError:
-        raise DataError("WARD: truncated leaf part")
-    # Slicing past the end returns SHORT rather than raising, so length has to be checked
-    # explicitly -- otherwise a truncated record parses into a plausible-looking short part.
-    if len(nonce) != nonce_len or len(tag) != tag_len or len(body) != body_len:
-        raise DataError("WARD: truncated leaf part")
-    return (encoding, nonce, tag, body), off
-
-
 def is_delete(part: "Part | None") -> bool:
     """An empty body is a delete, whatever the encoding."""
     return part is None or len(part[3]) == 0
@@ -211,20 +120,12 @@ def is_delete(part: "Part | None") -> bool:
 
 # --- identity part ---------------------------------------------------------------
 #
-# The identity part IS the entry_key preimage, kept so nothing has to recompute it -- the
-# scope's three fields plus the identifier, which is exactly what `keys.entry_key` HMACs.
-# That it is SEALED is the whole point: the host stores the preimage without holding it, so
-# it can serve an entry it cannot name. Storing this part in the clear for indexing would
-# undo the keyed path entirely -- the host would hold identifier -> entry_key for every row,
-# which is the mapping the HMAC exists to withhold.
+# The identity part is the entry_key preimage. It MUST stay sealed: in the clear the host
+# would hold identifier -> entry_key, the mapping the HMAC exists to withhold.
 
 
 def pack_identity(identifier: bytes, app_id: str | bytes, device_id: int = 0) -> bytes:
-    """len16(identifier) || identifier || len8(app_id) || app_id || device_id(1B).
-
-    The single point of canonicalisation for the identity body: both the commitment and
-    (later) the AEAD go through it, so they can never disagree.
-    """
+    """len16(identifier) || identifier || len8(app_id) || app_id || device_id(1B)."""
     from trezor.wire import DataError
 
     if isinstance(app_id, str):
@@ -266,11 +167,7 @@ def encode_identity(
     device_id: int = 0,
     nonce: bytes | None = None,
 ) -> "Part":
-    """Build the identity part, sealed unless this build leaves identities readable.
-
-    `nonce` is for known-answer tests ONLY; production must leave it None so a fresh one
-    is generated per write.
-    """
+    """Build the identity part. `nonce` is for known-answer tests ONLY."""
     pt = pack_identity(identifier, app_id, device_id)
     if WARD_PLAINTEXT_IDENTITY:
         return (ENC_PLAINTEXT, b"", b"", pt)
@@ -316,10 +213,7 @@ def encode_content(
 ) -> "Part":
     """Build the content part. `value=None` means DELETE; b"" is a real empty value.
 
-    Note the asymmetry with the reference, which returns an empty part for any
-    zero-length value and so cannot tell an empty entry from a deleted one.
-
-    `nonce` is for known-answer tests ONLY; production must leave it None.
+    `nonce` is for known-answer tests ONLY.
     """
     if value is None:
         return EMPTY_PART
@@ -341,10 +235,7 @@ def decode_content(
     return unpack_content(_open(k_data, _AAD_CONTENT, entry_key, key_type, part))
 
 
-# --- leaf commitment -------------------------------------------------------------
-# The trie will hash THIS, not the value. It belongs to the leaf rather than to the trie:
-# it is a function of the parts alone, and a host holding no keys can still recompute it,
-# which is what lets one serve proofs without being able to read anything.
+# --- leaf commitment: a function of the encoded parts, so a keyless host can serve proofs.
 
 
 def commit_of(key_type: str, id_part: "Part | None", val_part: "Part | None") -> bytes:
@@ -369,25 +260,8 @@ def commit_of(key_type: str, id_part: "Part | None", val_part: "Part | None") ->
 def leaf_hash_of(entry_key: bytes, commit: bytes) -> bytes:
     """leaf = sha256(0x00 || entry_key || commit), both operands exactly 32 bytes.
 
-    Takes the commitment rather than the parts, so a verifier can rebuild a witness leaf
-    from (entry_key, commit) without ever holding the parts themselves.
-
-    THE LENGTHS ARE THE SECURITY, and this is not defensive tidiness. The preimage
-    concatenates two variable-length byte strings with nothing to mark the boundary, so
-    without a fixed width the split is ambiguous: (K, C) and (K || C[0], C[1:]) produce
-    IDENTICAL hashes, with no attack on SHA-256 involved.
-
-    That was a proof-soundness break, not a theoretical one. A non-membership witness is
-    supplied by the host, and the only checks on it were "differs from the target" and
-    "agrees with the target at every branch bit". A 33-byte witness key K || C[0] differs
-    from K, routes identically (routing reads bits 0..255, i.e. the first 32 bytes), and
-    hashes to the target's own leaf -- so a host could take the target's genuine MEMBERSHIP
-    proof and have it accepted as proof of ABSENCE. A present entry could be hidden on
-    every read, and a delete of it would report the idempotent success it reserves for a
-    proved absence.
-
-    Enforcing it here rather than at each call site is deliberate: the primitive is typed,
-    so no future caller can reintroduce it by forgetting.
+    THE WIDTHS ARE THE SECURITY: without them (K, C) and (K || C[0], C[1:]) hash alike, which
+    let a host pass a membership proof off as non-membership.
     """
     from trezor.crypto.hashlib import sha256
     from trezor.wire import DataError
@@ -404,11 +278,8 @@ def leaf_hash(
 
 
 # --- wire <-> part codec ---------------------------------------------------------
-# The wire carries a self-describing "manual oneof" per part (the codegen has no
-# `oneof`, so `encoding` is the discriminator and mutual exclusivity is a code
-# invariant). These four functions are the ONLY place that mapping happens, and they
-# reject a part whose encoding this build does not expect -- an encrypted-only build
-# must not silently accept a plaintext part handed to it by the host.
+# The only place the wire's manual oneof is mapped; a part in an encoding this build does
+# not expect is rejected.
 
 
 def make_leaf_content(part: "Part | None") -> "Any":
@@ -425,33 +296,14 @@ def make_leaf_content(part: "Part | None") -> "Any":
     )
 
 
-# Nonce and tag are fixed by the AEAD, not negotiable per message; pinning them here keeps a
-# malformed sealed part from reaching the cipher at all.
+# Fixed by the AEAD; checked before a sealed part reaches the cipher.
 _NONCE_LEN = 12
 _TAG_LEN = 16
 
 
 def _require_canonical(encoding: "Any", sealed: "Any", clear: "Any") -> int:
-    """Read the discriminator of a manual oneof, strictly, and return it.
-
-    The codegen has no `oneof`, so `encoding` is a plain field and mutual exclusivity is a code
-    invariant rather than a wire one. That left two ways for two implementations to disagree about
-    the same bytes, and BOTH of them land on the commit preimage -- the one value the whole trie
-    hashes -- so a disagreement is a different leaf and a different root:
-
-      an UNKNOWN encoding was normalised. `(encoding or ENC_ENCRYPTED) == ENC_PLAINTEXT` reads 2 as
-        "not plaintext", i.e. as sealed. A later build that adds encoding 2 would frame those bytes
-        differently and compute a different commit for a message this one already accepted;
-
-      BOTH arms set was accepted. Firmware dispatched on the discriminator while the host twins
-        dispatch on field presence (`tests/ward_trie._part_bytes`, `trezorlib.ward.leaf_is_delete`),
-        so `encoding=0` plus a `plaintext` submessage framed one way here and the other way there.
-
-    Neither is a forgery -- the device computes its own commit and trusts only its own root, so a
-    host cannot make a proof verify that should not. Both are divergence: the host serves a proof
-    the device cannot reproduce, or rebuilds a root the device will not adopt. Fail-closed, and
-    unnecessary. The host twins dispatch on `encoding` too, or this only moves the disagreement.
-    """
+    """The discriminator of a manual oneof, strictly: unknown encodings and both arms set are
+    refused, since either would frame the commit differently from the host twins."""
     from trezor.wire import DataError
 
     e = encoding if encoding is not None else ENC_ENCRYPTED
@@ -472,9 +324,7 @@ def read_leaf_content(content: "Any") -> "Part | None":
     ):
         p = content.plaintext
         body = p.content if (p is not None and p.content is not None) else b""
-        # An EMPTY body is a delete and carries nothing, so its encoding byte is
-        # immaterial: accept it in either mode. Without this a sealed build would reject
-        # its own delete leaf, since EMPTY_PART is plaintext-encoded by construction.
+        # An empty body is a delete (EMPTY_PART is plaintext-encoded): accepted in either mode.
         if len(body) > 0 and not WARD_PLAINTEXT_CONTENT:
             raise DataError("WARD: plaintext content but firmware is encrypted-only")
         return (ENC_PLAINTEXT, b"", b"", body)
@@ -524,8 +374,7 @@ def read_leaf_identity(identity: "Any") -> "tuple[str | None, Part | None]":
     ):
         p = identity.plain
         if p is None or p.identifier is None:
-            # No body: a delete's empty part, acceptable in either mode -- see the same
-            # reasoning in read_leaf_content.
+            # A delete's empty part, accepted in either mode.
             return key_type, None
         if not WARD_PLAINTEXT_IDENTITY:
             raise DataError("WARD: plaintext identity but firmware is encrypted-only")

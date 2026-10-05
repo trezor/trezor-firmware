@@ -1,50 +1,30 @@
 from typing import TYPE_CHECKING
 
-from trezor import utils
-
 if TYPE_CHECKING:
     from trezor.messages import WardLeafAck, WardMutationApplied, WardSetEntry
 
 
 async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
-    """WardSetEntry handler: confirm creating or replacing a host-held entry.
+    """WardSetEntry handler: confirm creating or replacing an entry, then build its leaf.
 
-    The device pulls the CURRENT value before showing anything, which is what makes an
-    add and an overwrite different screens: silently replacing a value the user cannot
-    see is the failure mode worth designing against here, so an overwrite names what it
-    replaces.
-
-    The device then BUILDS THE LEAF and returns it; the host stores it verbatim under
-    entry_key and applies the change to its own store. It has to be the builder because it is
-    the only party that will hold the keys once the parts are sealed -- so the host is never
-    given a leaf-shaped thing it is expected to assemble itself.
-
-    REQUIRES A SYNCED SESSION AND REFUSES WITHOUT ONE. It used to fall back to queueing the
-    change, which meant this one request did two entirely different things depending on state
-    the host cannot see: sometimes a leaf came back, sometimes a receipt, and "did my change
-    apply?" was unanswerable from the request alone. Queueing is now asked for by name --
-    `WardQueueSetEntry` -- so each request has exactly one meaning and one ack type.
+    Pulls the current value first so an overwrite names what it replaces. Requires a synced
+    session; queueing is `WardQueueSetEntry`.
     """
-    from trezor.messages import WardLeafAck
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
-    from . import round as sync_round
-    from .cas import auth_commit, wm_sig
     from .common import (
         WARNING_UNVERIFIED,
         display_bytes,
+        finish_write,
         online,
         pull_leaf,
         require_key,
     )
     from .keys import (
         ENTRY_TYPE_ADDRESS,
-        derive_k_auth,
-        derive_k_sig,
         derive_k_data,
         derive_k_ident,
-        derive_ward_id,
         entry_key_for,
     )
     from .leaf import (
@@ -58,8 +38,7 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
-    # Empty is a legitimate value; absent is not. Writing "nothing specified" as if it
-    # were an empty value would silently blank an entry, so require the field.
+    # Empty is a legitimate value; absent is not -- it would silently blank the entry.
     value = msg.value
     if value is None:
         raise DataError("value is required")
@@ -86,13 +65,7 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
 
     await confirm_properties("ward_set_entry", title, props)
 
-    # Sealed only after confirmation, so a rejected write produces no leaf at all -- and
-    # burns no nonce.
-    #
-    # The counter advances here, and the leaf is stamped with the counter it was written
-    # at (C_leaf). Nothing reads that stamp yet; it exists so a later per-leaf staleness
-    # check has something to compare, and writing it now costs nothing while leaving it
-    # zero would mean rewriting every leaf to add it.
+    # Sealed only after confirmation; the leaf is stamped with the counter it lands at (C_leaf).
     from_root = await get_root()
     counter = await get_counter() + 1
     id_part = encode_identity(
@@ -102,9 +75,7 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
         await derive_k_data(key_type), entry_key, key_type, value, c_leaf=counter
     )
 
-    # The device DERIVES its own new root rather than being told one. That is what makes
-    # the root worth anything: it is a value the device computed from a state the host had
-    # to prove, not a number it was handed.
+    # The device DERIVES its new root from proven state rather than being told one.
     proof, witness_entry_key, witness_commit = material
     new_root = compute_new_root(
         entry_key,
@@ -115,67 +86,12 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
         witness_entry_key=witness_entry_key,
         witness_commit=witness_commit,
     )
-    # NOT COMMITTED HERE. The device hands back the root it derived, its counter and the
-    # authenticators; the head only moves when a WM attestation names this exact transition and
-    # the device re-verifies the `auth_commit` over it -- see `reconcile`. That is what makes
-    # "the head is always a state the WM confirmed" an invariant, and it is what the fork check
-    # exists in spite of: two devices can no longer both hold an unconfirmed counter N+1, because
-    # neither holds one at all.
-    #
-    # NOTHING NEEDS STORING IN THE MEANTIME. The authorisation travels with the leaf, and the
-    # device can re-derive it from the attested step later -- so a write the host never publishes
-    # simply never happened, rather than leaving state behind to reconcile.
 
-    identity = make_leaf_identity(key_type, id_part)
-    content = make_leaf_content(val_part)
-    step = auth_commit(
-        await derive_k_auth(),
-        await derive_ward_id(),
-        counter - 1,
+    return await finish_write(
+        entry_key,
+        make_leaf_identity(key_type, id_part),
+        make_leaf_content(val_part),
         from_root,
         counter,
         new_root,
-    )
-
-    # THE WM-FACING AUTHORISATION for the same transition, under K_sig rather than K_auth. Same
-    # transition, one statement to two verifiers, plus the WM's HEAD NONCE -- the freshness token
-    # it rotates on every transition it accepts. Without the signature the WM has nothing to check
-    # when the host publishes, and whoever knows `ward_id` could advance the counter and have every
-    # genuine device refused from then on. Without the nonce, an authorisation would stay live
-    # wherever its `(counter, root)` predecessor recurred, which a revert can arrange.
-    #
-    # The nonce comes from this session's latest verified attestation, which `online()` above
-    # guarantees exists: a session that has not synced cannot write, and therefore cannot be asked
-    # to authorise against a head it has not seen.
-    advance = wm_sig(
-        await derive_k_sig(),
-        await derive_ward_id(),
-        counter - 1,
-        from_root,
-        counter,
-        new_root,
-        sync_round.require_head_nonce(),
-    )
-
-    if utils.USE_WARD_SERVICE_CHANNEL:
-        # THE ONE POINT WHERE THIS HANDLER'S TRANSPORT SHOWS. Everything above -- the pull, the
-        # screen, the sealing, the derived root -- is the same work in both builds; what differs is
-        # who is handed the result and whether the device waits to hear that it stuck.
-        from trezor.messages import WardMutationApplied
-
-        from .service import publish
-
-        await publish(entry_key, identity, content, from_root, counter, new_root, step)
-        # NO LEAF GOES BACK. The calling app does not own the replica here, and `WardLeafAck` is
-        # not merely unhelpful in its place -- a replica owner's `apply` reads an absent content body
-        # as a deletion, so an emptied ack would erase the entry it just wrote.
-        return WardMutationApplied(entry_key=entry_key, counter=counter)
-
-    return WardLeafAck(
-        entry_key=entry_key,
-        identity=identity,
-        content=content,
-        counter=counter,
-        auth_commit=step,
-        wm_sig=advance,
     )

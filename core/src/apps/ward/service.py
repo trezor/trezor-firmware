@@ -1,43 +1,13 @@
 """The WARD service channel: a daemon that owns the replica, on an interface of its own.
 
-DEPRECATED, AND OFF BY DEFAULT. Built only behind `--enable-ward-service-channel`, and now
-deprecated rather than merely optional: expect removal, and do not build new work on this path.
+DEPRECATED, AND OFF BY DEFAULT (`--enable-ward-service-channel`); do not build new work on it. It
+has no recovery route -- no `WardRollback`, and `sync` is chain-only -- so a daemon with incomplete
+history leaves the device out of sync with nothing to do about it.
 
-WHY, RECORDED HERE BECAUSE THE REASONING IS NOT OBVIOUS FROM THE CODE. The connect transport is
-the one WARD is developed and tested against, and the two have diverged in ways that are cheaper
-to delete than to keep level:
-
-  no recovery at all. `WardRollback` and `WardRecoverCounter` are connect-only, and `sync` here
-  is chain-only with no `reconcile` fallback. A daemon whose replica history is incomplete leaves
-  the device with "WARD service reports this device is out of sync" and nothing to do about it --
-  the one transport with no escape hatch is the one whose owner is most likely to lose history;
-
-  the authorisation surfaces have drifted apart, though less than they had. Connect now carries
-  `wm_sig` on every write and `head_init_sig` on the sync round, so the write side is level; what
-  this path still lacks is any revert or recover route at all, which is a capability gap rather
-  than an authorisation one.
-
-What it was FOR remains true and is worth keeping in view if the capability is ever rebuilt: the
-device can ask rather than only answer, which is what the rest of this docstring describes.
-
-WHY A SECOND CHANNEL EXISTS AT ALL. A WARD read goes through `context.call()`, which reaches
-CURRENT_CONTEXT -- the workflow currently executing. On a connect build that makes WARD's store
-structurally the calling APP's store, and a read can only happen while that app is answering. A
-daemon on its own interface can be asked at any point in any workflow, and can be asked by the device
-rather than only answer it.
-
-WHO THE PARTIES ARE. The WARD app invokes the user-facing operations; this daemon owns the replica; a
-wallet may be connected at the same time and is part of neither exchange. See
-`docs/core/misc/ward-channels.md`.
-
-THE INVERSION. `WardServiceOpen` is the LAST host-initiated application message on this channel.
-Afterwards the device is the sole initiator: it writes a request and reads the reply. One message
-stream with no request ids cannot carry two independent conversations -- a reply and an unrelated
-request are indistinguishable -- so rather than add ids, the direction is fixed.
-
-WHAT BINDING IS AND IS NOT. It establishes WHICH daemon this device talks to, and nothing else.
-It does not make the service usable: readiness comes from a sync, which happens when a WARD
-operation first needs it. And it does not choose a transport -- that is decided at build time.
+What it buys: the device can ASK rather than only answer, at any point in any workflow.
+`WardServiceOpen` is the last host-initiated message; afterwards the device is the sole initiator,
+because one stream without request ids cannot carry two conversations. Binding names WHICH daemon
+and nothing else -- readiness comes from a sync. See `docs/core/misc/ward-channels.md`.
 """
 
 from micropython import const
@@ -58,25 +28,15 @@ if TYPE_CHECKING:
     from trezor.wire.protocol_common import Message
     from trezor.wire.thp.channel import Channel
 
-    # WHAT AN RPC TALKS THROUGH. Both ends of the union carry `channel_id` and `iface`, which is
-    # every attribute this module wants from them -- so the logging and the teardown read the same
-    # on either transport instead of being written twice.
     ServiceLink = Channel | WardCodecContext
 
 
-# HOW LONG A REVERSE RPC MAY TAKE, END TO END. A daemon that stops answering must not hang the
-# workflow that is waiting on it: WARD reads fail closed, and a hang is the one failure mode
-# that does not. Generous, because the daemon may have to consult a database and build a proof.
-#
-# IT COVERS THE WRITE AS WELL AS THE READ, and that is not a detail. `Channel.write` waits for the
-# THP ack, and a daemon that has gone away acks nothing -- so the retransmission machinery is what
-# ends that wait, after MAX_RETRANSMISSION_COUNT attempts and upwards of a hundred seconds. Timing
-# only the read leaves the failure this bound exists to prevent exactly where it was: the workflow
-# parks in the write, and the deadline below is never reached.
+# End-to-end bound on one reverse RPC, covering the WRITE too: under THP a write to a vanished
+# daemon waits on retransmissions for far longer than this. A hang is the one non-fail-closed
+# failure.
 RPC_TIMEOUT_MS = const(30_000)
 
-# The service protocol this firmware speaks. Bumped when the message set changes shape, so a
-# daemon built against an older firmware is refused by name instead of misreading a field.
+# Bumped when the message set changes shape, so an older daemon is refused by name.
 PROTOCOL_VERSION = 1
 
 _IFACE_NUM_OFF = const(0)
@@ -86,12 +46,8 @@ _BINDING_LEN = const(4)
 
 
 def get_binding() -> tuple[int, int, int] | None:
-    """(iface_num, channel_id, session_id) of the bound service, or None.
-
-    Every field is needed. The channel id alone does not identify a channel: ids are reallocated,
-    and a reallocation on ANOTHER interface would otherwise be indistinguishable from the service
-    still being there.
-    """
+    """(iface_num, channel_id, session_id) of the bound service, or None. All three are needed:
+    channel ids are reallocated, possibly on another interface."""
     from storage.cache import get_sessionless_cache
     from storage.cache_common import APP_WARD_SERVICE
 
@@ -116,12 +72,7 @@ def set_binding(iface_num: int, channel_id: int, session_id: int) -> None:
 
 
 def clear_binding() -> None:
-    """Forget which channel is the service. Does NOT unpin the daemon's key.
-
-    The two are different facts and are forgotten at different times: the channel goes away
-    whenever the daemon restarts or the cable moves, while the daemon's identity is meant to
-    survive exactly that.
-    """
+    """Forget which channel is the service. Does NOT unpin the daemon's key."""
     from storage.cache import get_sessionless_cache
     from storage.cache_common import APP_WARD_SERVICE
 
@@ -131,12 +82,9 @@ def clear_binding() -> None:
 if utils.USE_WARD_SERVICE_THP:
 
     async def service(msg: WardServiceOpen) -> WardServiceOpenAck:
-        """Bind this channel as the WARD service.
+        """Bind this channel as the WARD service, pinning the daemon's static key on first use.
 
-        Deliberately does NOT require a pre-existing service session: an unknown session id arrives as
-        an ephemeral seedless context, and this handler is what allocates the real slot. And it does
-        not check which channel is currently dispatched, because this channel legitimately is -- that
-        is how this message got here.
+        Needs no pre-existing service session: this handler allocates it.
         """
         from storage import cache_thp
         from storage import ward as storage_ward
@@ -145,15 +93,11 @@ if utils.USE_WARD_SERVICE_THP:
         from trezor.wire import context
 
         if not utils.USE_WARD_SERVICE_CHANNEL:
-            # Unreachable in a connect build, where the handler is not registered and this module is
-            # not frozen in. Stated anyway so the refusal does not depend on registration alone.
             raise wire.DataError("this firmware does not serve WARD over a service channel")
 
         ctx = context.get_context()
 
-        # THE INTERFACE IS THE AUTHORISATION BOUNDARY. Everything below trusts that this channel is
-        # the daemon's, and the only reason to believe that is which interface it arrived on -- a
-        # separate OS claim that Suite does not hold.
+        # The interface is the authorisation boundary: a separate OS claim Suite does not hold.
         if not wire.is_ward_interface(ctx.iface):
             raise wire.DataError("WARD service must be opened on the WARD interface")
 
@@ -162,41 +106,21 @@ if utils.USE_WARD_SERVICE_THP:
 
         channel = ctx.channel
 
-        # ONE DAEMON, PINNED. Pairing proves only that the host holds a credential this device issued,
-        # which every paired host does -- Suite included. Without this, any paired host could open the
-        # WARD interface and answer for the replica.
+        # ONE DAEMON, PINNED: every paired host -- Suite included -- passes pairing.
         host_key = channel.get_host_static_public_key()
         pinned = storage_ward.get_service_host_key()
         if pinned is None:
-            # PINNING IS A FLASH WRITE, so a first bind needs the device unlocked. Said explicitly
-            # rather than left to fail inside `config.set`, which would surface as an opaque storage
-            # error at the point where the daemon is least able to interpret it. Re-binding an
-            # already-pinned daemon writes nothing and works while locked, which is the case that
-            # matters at boot: the daemon comes up before the user does.
+            # Pinning is a flash write; re-binding a pinned daemon writes nothing and works locked.
             from trezor import config
 
             if not config.is_unlocked():
                 raise wire.DataError("unlock the device to bind the WARD service")
             storage_ward.set_service_host_key(host_key)
         elif pinned != host_key:
-            # Not repairable by connecting a different daemon: the pin is in flash precisely so that
-            # unplugging the device does not clear it. Recovering from a lost daemon key is an
-            # ownership migration, with a user decision in it, and belongs in its own path.
             raise wire.DataError("another daemon is bound as the WARD service")
 
-        # NEVER DISPLACE A LIVE SERVICE. The displaced binding is what some in-flight operation is
-        # holding, so replacing it would strand that operation on a channel nothing answers for.
-        #
-        # LIVE, not merely recorded. A daemon restart leaves a binding naming a channel that is gone,
-        # and refusing on that would lock the service out until the device rebooted -- so a recorded
-        # binding only counts while its channel is still open.
-        #
-        # NOT REACHABLE TODAY, and worth saying so rather than implying coverage. Two channels of one
-        # daemon cannot coexist: THP replaces a channel arriving with an already-known host static
-        # key, so the older one is closed. A channel with a different key fails the pin above. And a
-        # repeat open on the bound channel itself is never dispatched, because binding hands the
-        # channel to the device. Kept because all three of those are properties of other code, and a
-        # binding must not be displaced silently if any of them changes.
+        # Never displace a LIVE binding (a dead one is a daemon restart). Unreachable today, but
+        # only because of properties of other code.
         bound = get_binding()
         if bound is not None:
             from trezorthp import channel_is_open
@@ -210,15 +134,11 @@ if utils.USE_WARD_SERVICE_THP:
         )
         set_binding(ctx.iface.iface_num(), ctx.channel_id, ctx.session_id)
 
-        # THE CONVERSATION INVERTS HERE. From now on the device asks and the daemon answers, so the
-        # interface's dispatcher must stop reading this channel -- otherwise it and the workflow
-        # awaiting its own reply would race for the same incoming message.
+        # The conversation inverts: the dispatcher must stop reading, or it and the waiting
+        # workflow would race for the same reply.
         channel.iface_ctx.release_dispatch()
 
         if __debug__:
-            # NO "WARD" IN THE TEXT: `trezor.log` prefixes every line logged against this interface
-            # with it, so the messages here are written as if the subject were understood -- which it
-            # is, in a module that has no other one.
             log.info(
                 __name__,
                 "service bound: cid %04x, session %d",
@@ -232,23 +152,8 @@ if utils.USE_WARD_SERVICE_THP:
 else:
 
     async def bind_codec(msg: WardServiceOpen, iface: WireInterface) -> WardServiceOpenAck:
-        """Bind this interface as the WARD service. The codec has no channel and no credential.
-
-        WHAT IS CHECKED IS THE INTERFACE, and that is the whole of it. A codec transport carries no
-        Noise identity to pin, so `WardServiceOpen` establishes only that a process is listening on
-        the interface the OS gave to `wardd` -- a separate claim from the wallet interface, and the
-        one this endpoint is authorised by.
-
-        NOTHING ELSE IS NEEDED, because nothing else is trusted. A hostile daemon can fail an
-        operation, answer wrongly or force an unnecessary sync; it cannot inject state. Leaf
-        authenticity, MPT proofs, the WM attestation and the device-minted nonce/counter/mac are
-        what accept an answer, and none of them ask who sent it.
-
-        REBINDING IS IDEMPOTENT and displaces nothing, which is right here and would not have been
-        under THP. There is no channel to strand: a daemon that restarts announces itself again,
-        the recorded interface is the same interface, and any RPC that was in flight fails on its
-        own deadline rather than on this.
-        """
+        """Bind this interface as the WARD service. The codec has no identity to pin, so the
+        interface is the whole check; nothing a daemon says is trusted anyway. Idempotent."""
         from trezor import wire
         from trezor.messages import WardServiceOpenAck
 
@@ -257,9 +162,7 @@ else:
                 "this firmware does not serve WARD over a service channel"
             )
 
-        # THE INTERFACE IS THE AUTHORISATION BOUNDARY. Restated here even though the only caller
-        # is the service interface's own reader, so the refusal does not depend on the routing in
-        # `wire.setup` being right.
+        # Restated so the refusal does not depend on `wire.setup` routing.
         if not wire.is_ward_interface(iface):
             raise wire.DataError("WARD service must be opened on the WARD interface")
 
@@ -276,39 +179,17 @@ else:
 
 # --- talking to the service ---------------------------------------------------------------
 #
-# THE DEVICE ASKS AND THE DAEMON ANSWERS, and after binding that is the only direction. One
-# message stream with no request ids cannot carry two independent conversations: a reply and an
-# unrelated request are indistinguishable. Rather than add ids, the channel is inverted.
-#
-# WHAT ENFORCES IT IS STRUCTURAL, not a flag, and on both transports the structure is "exactly one
-# reader". Under THP the interface's dispatcher releases the channel
-# (`InterfaceContext.release_dispatch`) and the waiting workflow is what reads. An earlier design
-# gated the receive boundary on an "RPC in flight" flag instead; that would have had to be right
-# about `expecting_message`, which `Channel.write` clears as its first act, and about ACK
-# piggybacking, which can deliver a valid fast response while `expecting_ack` is still set.
-#
-# The codec cannot hand the interface over -- `loop.wait` wakes every task paused on it, so two
-# readers would race for the same bytes -- so its reader never lets go and routes an answer into
-# the mailbox the workflow is parked on instead. Still one reader; see
-# `trezor.wire.codec.ward_context`.
-#
-# An unsolicited message from the daemon therefore is not dispatched at all: it is read by whoever
-# owns the read, fails the type check below, and fails that operation. That is the fail-closed
-# direction, and it costs the daemon its own conversation rather than the device's integrity.
+# EXACTLY ONE READER after binding. Under THP the dispatcher has released the channel and the
+# waiting workflow reads; the codec's reader never lets go and routes answers into the workflow's
+# mailbox (`trezor.wire.codec.ward_context`). An unsolicited message fails the type check in
+# `_rpc` and fails that operation.
 
 
 def _service_link() -> "tuple[ServiceLink, int]":
     """What an RPC talks through, and the session id to write on (0 where there is none).
 
-    UNDER THP, REATTACHING IS NOT OPTIONAL. The Rust channel outlives MicroPython session restarts
-    but the `Channel` object does not, and a channel that is not its interface's `active_channel`
-    cannot be written at all -- `Channel.write` pokes a write loop that drains only that one.
-
-    UNDER THE CODEC THERE IS NOTHING TO REATTACH, and that is the whole difference: the endpoint is
-    the interface's reader, which `wire.setup` spawns and respawns, so the binding names a fact
-    about the interface rather than a handle that can go stale. What can still be true is that the
-    reader is not running -- between a session restart and the next `wire.setup` -- and that is a
-    `DataError` on the operation, not a broken invariant.
+    Under THP the channel is reattached every time: the `Channel` object does not survive
+    session restarts, and a non-active channel cannot be written.
     """
     from trezor.wire import DataError
 
@@ -324,17 +205,11 @@ def _service_link() -> "tuple[ServiceLink, int]":
 
     from trezor.wire import context
 
-    # Reached from the WALLET workflow, so the context here is Suite's channel -- borrowed only
-    # for the `ThpContext` it hangs off, which is the one object that knows every interface.
+    # The current context is the wallet's channel, borrowed only for its `ThpContext`.
     thp_ctx = context.get_context().channel.iface_ctx.thp_ctx
     channel = thp_ctx.attach_existing_channel(iface_num, channel_id)
 
     if __debug__:
-        # LOGGED EVERY TIME, cheap and worth it: this line is the only place the identity of the
-        # channel an RPC is about to use is visible. A daemon that appears to hang is usually a
-        # binding naming a channel that is not the one the daemon is holding, and the id is what
-        # says so -- `attach_existing_channel` refuses outright when it can tell, and this covers
-        # the cases where it cannot.
         log.debug(
             __name__,
             "channel %04x on iface %d attached for an RPC",
@@ -349,25 +224,15 @@ def _service_link() -> "tuple[ServiceLink, int]":
 async def _rpc(
     request: protobuf.MessageType, *expected: type[LoadedMessageType]
 ) -> "protobuf.MessageType":
-    """Ask the service one question and read its answer.
-
-    The answer must be one of `expected` and must arrive on the service's own session. Anything
-    else fails the operation rather than being interpreted: the daemon is the only party on this
-    channel, so a surprise here means the conversation has desynchronised, and continuing would
-    mean acting on a message meant for something else. It also costs the daemon its channel --
-    see `_desynchronised` for why the operation alone is not enough.
-    """
+    """Ask the service one question; the answer must be one of `expected`, on the service's own
+    session. Anything else -- including silence -- tears the channel down (`_desynchronised`)."""
     from trezor import loop
     from trezor.wire.message_handler import decode_message
 
     link, session_id = _service_link()
 
     async def exchange() -> "tuple[int, Message] | str":
-        # ONE DEADLINE OVER BOTH HALVES. Neither `write` nor `read` has one of its own, and the
-        # wait that actually strands a silent daemon is the FIRST: under THP `write` returns when
-        # the ack arrives, so with nothing at the other end it sits there until the retransmissions
-        # are exhausted; under the codec a write to an interface nobody drains parks just as
-        # thoroughly. Racing them as one coroutine bounds the pair.
+        # One deadline over write AND read; either can park forever on a silent daemon.
         if utils.USE_WARD_SERVICE_THP:
             await link.write(request, session_id)
             return await link.read()
@@ -377,9 +242,6 @@ async def _rpc(
         try:
             return (session_id, await ward_context.exchange(request))
         except Exception as exc:
-            # A MANGLED FRAME IS AN ANSWER, just not one that can be read, so it gets a reason of
-            # its own rather than being reported as silence. Returned rather than raised so the
-            # single teardown below stays the only exit.
             if __debug__:
                 log.exception(__name__, exc, iface=link.iface)
             return "the WARD service link failed"
@@ -419,9 +281,6 @@ async def _rpc(
             return decode_message(message, expected_type)
 
     if __debug__:
-        # THE WIRE TYPE, not a name: the whole problem is that this is not a message the device
-        # asked for, so there is no reason to believe it decodes as anything in particular. The
-        # number is what a daemon author needs, and looking it up cannot fail.
         log.error(
             __name__,
             "(cid: %04x) service answered with wire type %d; expected one of %s",
@@ -431,43 +290,22 @@ async def _rpc(
             iface=link.iface,
         )
 
-    # NOTHING WILL DECODE THIS ONE either -- releasing before tearing the channel down, so the
-    # shared buffer is not stranded by a daemon that answered wrongly.
     message.release()
     raise _desynchronised(link, "unexpected message from the WARD service")
 
 
 def _desynchronised(link: "ServiceLink", what: str) -> Exception:
-    """Tear the service channel down, and return the error to raise for having done so.
+    """Tear the service channel down and return the error to raise.
 
-    WHY THE CHANNEL GOES RATHER THAN JUST THE OPERATION. Each of these means the device no longer
-    knows where it is in the conversation: a request whose answer never came may still be answered
-    later, and a reply that is not the one asked for leaves the next read one message behind
-    forever. Since the device is the sole initiator, nothing else will ever resynchronise it --
-    there is no host turn in which to notice. Closing the channel is the resynchronisation, and it
-    costs the daemon a reconnect rather than costing the device its integrity.
-
-    A TIMED-OUT WRITE ALSO HAS TO GO. Under THP the abandoned message is still pending in the
-    channel and the retransmission loop would keep re-sending it with no `send_buffer` behind it;
-    closing discards it. The codec retransmits nothing, so what has to go there is smaller -- the
-    RPC flag and any answer that arrived too late to be anyone's -- and the reader keeps reading,
-    so a daemon can announce itself again without waiting for anything to be torn down.
-
-    THE PIN IS NOT TOUCHED. This says the transport went away, which is what a daemon restart looks
-    like; it says nothing about WHICH daemon is entitled to the role. Erasing the pin here would
-    turn every dropped cable into an ownership migration.
-
-    Returned rather than raised so the caller's `raise` is where the flow ends, which keeps the
-    teardown from reading like a side effect of an unrelated error path.
+    The device is the sole initiator, so nothing else would ever resynchronise the conversation;
+    under THP closing also discards a pending retransmission. The pin is NOT touched -- a dropped
+    cable is not an ownership migration.
     """
     from trezor.wire import DataError
 
     exc = DataError(what)
 
     if __debug__:
-        # ERROR, not debug. Every path into here loses the daemon's channel and the binding with
-        # it, so this is the line that explains a service which was working a moment ago and is
-        # now simply not bound -- the state the next operation reports, several messages later.
         log.error(
             __name__,
             "(cid: %04x) tearing down the service channel: %s",
@@ -489,14 +327,8 @@ def _desynchronised(link: "ServiceLink", what: str) -> Exception:
 async def fetch(entry_key: bytes, retry: bool = True) -> "WardEntryAck":
     """Ask the service for its leaf at this path. Verifies NOTHING -- the caller does that.
 
-    HEAD-AWARE, unlike the connect-mode request it replaces. The device says which head it holds,
-    so the service can answer `WardSyncRequired` instead of serving a proof that cannot verify
-    against it. Both fields are needed: several roots may share a counter across forks, so the
-    counter alone does not name a head.
-
-    `WardSyncRequired` needs no authentication. Lying about it only forces an authenticated sync,
-    which is a denial of service rather than a way to corrupt anything -- and the sync it forces
-    is the same one that would have happened anyway, so there is nothing to gain by it.
+    Names the device's head so the service can answer `WardSyncRequired`, which needs no
+    authentication: lying about it only forces an authenticated sync. One sync, one retry.
     """
     from trezor.messages import WardEntryAck, WardServiceFetch, WardSyncRequired
     from trezor.wire import DataError
@@ -513,14 +345,9 @@ async def fetch(entry_key: bytes, retry: bool = True) -> "WardEntryAck":
         WardSyncRequired,
     )
 
-    # COMPARED BY WIRE TYPE, not `isinstance`: message classes here are C-backed and are not
-    # valid second arguments to `isinstance`, which fails at runtime rather than at import.
+    # By wire type: C-backed message classes are not valid `isinstance` arguments.
     if answer.MESSAGE_WIRE_TYPE == WardSyncRequired.MESSAGE_WIRE_TYPE:
         if retry:
-            # ONE SYNC AND ONE RETRY, and then it is an error. A daemon that still says "out of
-            # sync" about the head the device just adopted from that same daemon is disagreeing
-            # with itself, and asking again cannot resolve it -- it can only spin in front of the
-            # user. The read fails closed, which is the safe direction.
             await sync()
             return await fetch(entry_key, retry=False)
         raise DataError("WARD service reports this device is out of sync")
@@ -528,45 +355,20 @@ async def fetch(entry_key: bytes, retry: bool = True) -> "WardEntryAck":
     return answer
 
 
-# --- becoming ready -----------------------------------------------------------------------
-#
-# ONE RPC WHERE THE CONNECT PATH TAKES THREE. `WardSync` minted a nonce, `WardIngestAttestation`
-# checked the WM's answer against it, and `WardVerifyChain` proved descent and adopted -- three
-# separate host requests, which is exactly why the round's nonce had to live in the session cache
-# (`round.py`). As one exchange the nonce is a local across a single `await`.
-#
-# THE CACHE ENTRY STAYS ANYWAY, and that is a deliberate trade. `verify_round_attestation`,
-# `require_attested_round` and `adopt` all read the round from there, and they are the audited
-# path: the nonce binding, the counter rules, and above all the settle-then-persist-then-latch
-# order that recovery depends on. Reusing them costs one cache write per sync; forking them to
-# take the nonce as an argument would cost a second copy of that order, which is the last thing
-# in WARD that should exist twice.
-#
-# CHAIN-ONLY, which REMOVES a weaker path rather than adding one. The daemon owns the replica and
-# its history, so it can always produce the links; there is no reason to accept a head on the WM's
-# word when descent from this device's own head is available. The two guarantees are
-# complementary -- the chain gives descent, the attestation gives currency -- and they are joined
-# by requiring the fold to end exactly at the attested counter, on the attested root.
-
-
 async def sync() -> None:
     """Ask the service for the current head and adopt it, or raise.
 
-    The nonce is minted HERE, before the daemon talks to the WM, and that ordering is the whole
-    freshness argument: the WM must sign a value nobody could have known in advance, so a drawer
-    of previously-signed anchors is useless.
-
-    HEAD-INIT IS ALWAYS SENT, not only when the device thinks the WM is new. The device cannot
-    know whether the WM has ever seen this wallet -- that is the WM's state, not the device's --
-    and guessing wrong in the "it knows" direction would strand a genesis wallet with no way to
-    open its history. The WM ignores it once it holds a head, so the cost is one signature.
+    One RPC for the connect path's three, reusing the same audited round (`round`, `adopt`). The
+    nonce is minted here, before the daemon talks to the WM. CHAIN-ONLY: the daemon owns the
+    history, so the head must descend from this device's own head and end exactly on the
+    attested step.
     """
     from trezor.crypto import random
     from trezor.messages import WardSyncRequest, WardSyncResponse
     from trezor.wire import DataError
 
     from . import round as sync_round
-    from .adopt import adopt, require_attested_round, verify_round_attestation
+    from .adopt import adopt, verify_round_attestation
     from .attest import NONCE_LENGTH, root_or_empty
     from .cas import head_init_sig, verify_chain_step
     from .common import require_initialized
@@ -579,17 +381,8 @@ async def sync() -> None:
     counter = await get_counter()
     root = await get_root()
 
-    # THE OPENING HEAD, for a WM that has never seen this wallet and so has nothing to compare
-    # against. It has to be AUTHORISED, or a wallet's first head is whatever the first speaker
-    # claims.
-    #
-    # MINTED ONLY AT COUNTER 0, exactly as on the connect path and for the same reason. Enrolment
-    # is genesis-only: a `head_init_sig` proves the head it names was a genuine state of this
-    # wallet, never that it is the LATEST one, so a WM accepting it at an arbitrary counter would
-    # let whichever device reached an empty WM first pin the head to older state. Issuing one over
-    # a non-zero head every round would hand that credential out on request -- and no conforming
-    # WM may act on it anyway, since `adopt.verify_round_attestation` rejects the self-attestation
-    # it would produce. Above genesis the honest answer is to offer nothing.
+    # Genesis-only enrolment: a `head_init_sig` proves a head genuine, never LATEST, so one
+    # above counter 0 would let a WM be pinned to old state.
     init = None
     if counter == 0:
         init = head_init_sig(await derive_k_sig(), ward_id, counter, root)
@@ -608,11 +401,8 @@ async def sync() -> None:
         WardSyncResponse,
     )
 
-    # Same verification as `ingest`, and deliberately the same code: the attestation must be
-    # bound to THIS round's nonce, and nothing here adopts on the strength of it alone.
-    # THE DAEMON SERVES THE WHOLE STEP. The device's own head is a candidate predecessor but not
-    # the right one: the WM may be several transitions ahead, and the step it attests is the last
-    # of them. So the `from` end comes off the answer like the `to` end does.
+    # Same verification as `ingest`; the WM may be several steps ahead, so both ends come off the
+    # answer.
     (
         attested_from_counter,
         attested_from_root,
@@ -629,35 +419,17 @@ async def sync() -> None:
         answer.wm_signature,
     )
     if attested_counter < counter:
-        # Anti-rollback, and the only bound left on a WM that lies: it attests roots in the clear
-        # now, so it can name a state this wallet never reached, and the floor is what stops it
-        # naming an OLD one and freezing the device there. What refuses an INVENTED one is the
-        # chain folded below. Equality is fine -- re-reading the same head is a no-op.
         raise DataError("attested counter is older than the stored counter")
     sync_round.set_attested(
         attested_from_counter, attested_from_root, attested_counter, attested_root
     )
 
-    (
-        attested_from_counter,
-        attested_from_root,
-        attested_counter,
-        attested_root,
-    ) = require_attested_round("sync")
-
-    # THE BASELINE IS THE DEVICE'S OWN HEAD, never one the answer names. A backend-chosen starting
-    # point would let the walk begin at a state this device never reached.
+    # The baseline is the device's own head, never one the answer names.
     running_counter = counter
     running_root = root
     k_auth = await derive_k_auth()
     crossed = []
-    # Counted, not just accepted. A history containing demotions means changes this device once
-    # saw as committed have been undone, and a catch-up that cannot say so has lost the one thing
-    # the REVERT tag carries.
     reverts = 0
-    # WHERE THE LAST STEP BEGAN, kept so the attestation's `from` end can be checked against it
-    # below. Recorded per link rather than inferred at the end, because only the fold knows which
-    # link was last.
     last_from = None
     for link in answer.links:
         running_counter, running_root, reverted = verify_chain_step(
@@ -673,7 +445,7 @@ async def sync() -> None:
                 link.auth_commit,
             ),
         )
-        # After the step verified, never before: an unverified commitment is just a claim.
+        # After the step verified, never before.
         crossed.append(link.auth_commit)
         last_from = (link.from_counter, link.from_root or None)
         if reverted:
@@ -685,40 +457,23 @@ async def sync() -> None:
     if running_counter != attested_counter:
         raise DataError("chain does not end at the attested counter")
 
-    # AND ON THE ATTESTED ROOT. The counter alone would let the fold arrive at some other state
-    # sitting at the same number -- which is precisely a fork. Compared in preimage form, since
-    # an empty tree is EMPTY_ROOT inside the attestation and None here.
+    # And on the attested root (preimage form), or the fold could arrive at a fork.
     if root_or_empty(running_root) != attested_root:
         raise DataError("chain end does not match the attested root")
 
-    # AND THE LAST STEP MUST BE THE STEP THE WM ATTESTED, not merely one ending where it ends.
-    # The attestation names a TRANSITION; checking only its destination throws half of it away
-    # and leaves exactly the ambiguity naming a step was meant to remove -- two genuine links can
-    # end at the same (counter, root), because a write and a revert may land on the same root,
-    # and crediting the wrong one mis-settles a queued change and mis-counts the reverts.
-    #
-    # NOTHING TO BIND WITH NO LINKS: the daemon's "nothing has changed" answer folds no step, and
-    # the two checks above already establish that this device's own head IS the attested head.
-    # `verify_chain` clears its own `expect_from` after the first batch for the same reason.
+    # And the last step must BE the attested step: a write and a revert can end on the same
+    # (counter, root). With no links, the checks above already make the own head the attested one.
     if last_from is not None and (
         last_from[0] != attested_from_counter
         or root_or_empty(last_from[1]) != attested_from_root
     ):
         raise DataError("the chain's last step is not the step the WM attested")
 
-    # The shared tail -- settle, persist, latch, close. The crossed commitments are passed so
-    # settlement is exact: a claim landed when its OWN authorisation is among them, which is not
-    # the same question as whether the counter moved past it.
     await adopt(attested_counter, running_root, landed_commits=crossed)
 
 
 async def become_ready() -> bool:
-    """Drive one sync if this session is not already online. Returns whether it now is.
-
-    EXACTLY ONE ATTEMPT, no retry loop. A sync that fails to make the session online has been
-    answered by a daemon that is not going to do better on a second identical ask, and a loop here
-    would turn a disagreement into a hang in front of the user.
-    """
+    """Drive ONE sync if this session is not already online; return whether it now is."""
     from . import round as sync_round
 
     if sync_round.is_online():
@@ -729,21 +484,11 @@ async def become_ready() -> bool:
 
 
 if utils.USE_WARD_SERVICE_THP:
-    # ONLY THP HAS A CHANNEL TO CLOSE, and only THP has a reason to want one closed: this exists
-    # for `reset_service`, which is the recovery path for a pinned daemon key -- a thing the codec
-    # transport does not have and does not need. See `apps.ward.reset_service`.
 
     def close_bound_channel(reason: str) -> None:
-        """Close the service's channel if it is still open, so the interface is free for the next one.
+        """Close the service's channel if still open, so the interface is free for the next daemon.
 
-        NOT A TEARDOWN OF THE BINDING -- the caller decides that, and the two are not the same fact: a
-        daemon restart closes a channel and keeps its pin. This only ensures that no channel is left
-        occupying the interface, because it tracks one at a time and the next daemon would otherwise
-        meet a busy interface rather than a bind.
-
-        Silent when there is nothing to close, or when what is recorded is no longer reachable. The
-        caller is on its way to forgetting the binding anyway, so making that depend on the state of the
-        channel it is discarding would be the wrong way round.
+        Leaves the binding to the caller; silent when there is nothing reachable to close.
         """
         from trezor.wire import DataError
 
@@ -773,25 +518,6 @@ if utils.USE_WARD_SERVICE_THP:
         channel.clear(DataError(reason))
 
 
-# --- publishing a mutation ----------------------------------------------------------------
-#
-# WHAT THIS REMOVES IS THE UNCONFIRMED WINDOW. On a connect build a write ends by handing the leaf
-# to the host and hoping: the host must publish to the WM, then run a whole sync round before the
-# device will believe its own write landed, and everything between is a state only the host knows.
-# Here the device hands the mutation to the party that owns the replica and gets the attestation
-# back in the same exchange.
-#
-# STRICTLY STRONGER THAN RECONCILE, and in a way worth being precise about. Reconcile folds a
-# transition the WM named, so the device is checking someone else's description of a step it did
-# not take. Here the device BUILT the step, and rebuilds the attestation preimage from its own
-# operands: a WM answering with some other head is signing bytes this device never asks about, so
-# it fails as a bad signature rather than as a mismatch noticed afterwards.
-#
-# THE NONCE IS PER PUBLICATION, not per session. It is what stops a WM (or a daemon relaying one)
-# answering this write with an attestation of some earlier head it had already collected -- the
-# signature has to cover a value minted after the transition existed.
-
-
 async def publish(
     entry_key: bytes,
     identity: "protobuf.MessageType | None",
@@ -800,29 +526,14 @@ async def publish(
     counter: int,
     new_root: bytes | None,
     step: bytes,
+    advance: bytes,
 ) -> None:
-    """Hand one mutation to the service, and adopt it if the WM attests it. Raises otherwise.
+    """Hand one mutation `(counter - 1) -> counter` to the service and adopt it once the WM
+    attests it; raise otherwise.
 
-    `counter` is the counter the transition REACHES, so it advances from `counter - 1`; the device
-    only ever moves by one, which is why the service is not told where it came from and cannot
-    choose a different baseline.
-
-    THE LATCH DROPS BEFORE THE REQUEST GOES OUT. From that moment the device cannot say whether the
-    daemon applied the mutation, and recording the doubt only on failure would leave the whole
-    unknown window looking known. `adopt` restores it, so the ordinary cost is one round trip.
-
-    A CONFLICT IS NOT AN AMBIGUITY, and the difference decides what happens to the channel. The
-    service says the WM's head was not the one this transition was built on -- so the write is known
-    NOT to have landed, `_rpc` leaves the channel up because nothing about the conversation is
-    unclear, and the operation fails cleanly. Everything else -- no answer, a wrong session, a type
-    that does not belong -- may have landed, so `_rpc` tears the channel down and the outcome is
-    settled by the next sync instead.
-
-    NOTHING IS DONE HERE TO REOPEN A QUEUED OFFER, and that is not an omission. A conflict leaves
-    the session offline, so the next WARD operation drives a sync, and that sync's `adopt` settles
-    every outstanding claim by the commitments it actually crossed -- this one among them, and
-    exactly as not-landed. Reopening it here would mean deciding the fate of one claim from a path
-    that cannot see the others, which is how a claim for a change that DID land gets cleared.
+    The latch drops BEFORE the request: from then the outcome is unknown until `adopt`. A
+    conflict means known-not-landed and keeps the channel; anything else may have landed and is
+    settled by the next sync. Queued claims are left for that sync's `adopt` to settle.
     """
     from trezor.crypto import random
     from trezor.messages import WardPublish, WardPublishAck, WardPublishConflict
@@ -831,14 +542,11 @@ async def publish(
     from . import round as sync_round
     from .adopt import adopt, verify_round_attestation
     from .attest import NONCE_LENGTH
-    from .cas import wm_sig
-    from .keys import derive_k_sig, derive_ward_id
 
-    ward_id = await derive_ward_id()
-    # HELD IN LOCAL SCOPE across the round trip: the publish authorises against it and the
-    # returning attestation must name it as the nonce that was consumed.
+    # The nonce `advance` was signed under; the attestation must name it as consumed.
     head_nonce = sync_round.require_head_nonce()
 
+    # Per publication, so the WM cannot answer with an attestation collected earlier.
     nonce = random.bytes(NONCE_LENGTH)
     sync_round.begin(nonce)
     sync_round.mark_offline()
@@ -852,51 +560,21 @@ async def publish(
             from_root=from_root,
             new_root=new_root,
             auth_commit=step,
-            # OVER THE BYTES `auth_commit` MACs PLUS THE WM'S HEAD NONCE, differing otherwise
-            # only in tag, key and algorithm. The WM compare-and-swaps on `from_root` and the
-            # nonce and attests `new_root`, and all of them are inside what it verifies -- so a
-            # host cannot pair this signature with operands of its own, and cannot hold it back
-            # and re-apply it after some other transition has landed.
-            wm_sig=wm_sig(
-                await derive_k_sig(),
-                ward_id,
-                counter - 1,
-                from_root,
-                counter,
-                new_root,
-                head_nonce,
-            ),
+            wm_sig=advance,
             nonce=nonce,
         ),
         WardPublishAck,
         WardPublishConflict,
     )
 
-    # Compared by wire type rather than `isinstance` -- see `fetch`.
     if answer.MESSAGE_WIRE_TYPE == WardPublishConflict.MESSAGE_WIRE_TYPE:
         raise DataError("WARD: another writer moved the head first; retry")
 
-    # EVERY OPERAND IS THE DEVICE'S OWN, and that is now the whole check rather than the prelude
-    # to one. The transition being attested is the one this handler just built, so both ends come
-    # from local scope and the signature is verified against THEM -- a WM that attested some other
-    # head fails here as "verification failed", because the bytes it signed are not the bytes the
-    # device just reconstructed.
-    #
-    # There used to be a comparison after this call, back when the attested counter and root
-    # arrived on the wire and could disagree with what was published. Feeding the device's own
-    # values in makes that comparison vacuous -- it can no longer fail -- so it is gone rather
-    # than left standing as a check that reads like one and is not.
-    #
-    # No `require_attested_round` and no intermediate ATTESTED state: that machinery exists so a
-    # route which establishes its root SEPARATELY can be joined to an attestation across a host
-    # turn, and this route has neither a separate root nor a turn to cross.
+    # EVERY OPERAND IS THE DEVICE'S OWN, nonce included: an attestation of any other head or any
+    # other occurrence of this step fails as a bad signature.
     await verify_round_attestation(
         counter - 1,
         from_root,
-        # THE NONCE THIS DEVICE SIGNED UNDER, passed as the operand rather than read off the
-        # answer. The WM must have consumed exactly it, so feeding it in makes the signature
-        # check ALSO the occurrence check: an attestation for a different occurrence of this same
-        # transition fails as "verification failed" rather than being taken for ours.
         head_nonce,
         counter,
         new_root,
@@ -905,7 +583,4 @@ async def publish(
         answer.wm_signature,
     )
 
-    # Settle, then a checked `set_root`, then latch, then close -- see `adopt`. The crossed
-    # commitment is this transition's own, so a queued change is settled by ITS authorisation
-    # landing rather than by the counter having moved past it.
     await adopt(counter, new_root, landed_commits=[step])

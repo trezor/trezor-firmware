@@ -1,69 +1,24 @@
 """WARD read for an ON-DEVICE app: resolve what an identifier is CALLED.
 
-WHY THIS IS NOT `get_entry`. Both read one entry, but they answer to different people and
-so cannot share an answer. `get_entry` serves the HOST, which asked for a specific entry
-and is owed a screen about that entry -- the value, its provenance, a confirmation. This
-serves FIRMWARE, which is in the middle of showing something else and wants one more line
-on that screen. A label lookup therefore never confirms, never fails the surrounding
-workflow, and returns rather than displays.
+Unlike `get_entry` it never confirms and returns rather than displays. The source is chosen UP
+FRONT -- verified pull when online, the device's own store otherwise -- so a hostile backend
+cannot pick which one the user sees by answering badly. It is the only caller of
+`online_or_offline`, because it has an honest offline answer.
 
-THE SAME TWO SOURCES, CHOSEN THE SAME WAY. Online (this session has adopted a WM-attested
-head) means pull from the backend and check the answer against the trusted root; offline means
-this device's own store. The choice is made UP FRONT, by `common.online_or_offline()`, for the
-reason `get_entry` now enforces by refusing outright: a device that pulled first and fell back to
-its local copy on failure would let a hostile backend choose which of the two the user sees, simply
-by answering badly.
-
-`online_or_offline` RATHER THAN `online`, and this is the ONLY caller entitled to it. On a service
-build the question can be answered by driving a sync, which can fail -- and every other caller must
-let that failure through, because for them "could not verify" must never become "here is a value".
-This one has a legitimate offline answer and a screen that says so, so a failed sync is a source
-selection here rather than an error.
-
-WHY THIS ONE STILL FORKS while the host-facing requests were split in two. The caller here is an
-ON-DEVICE app, not a host: there is no request for it to name, and no host to be told which
-message to send. What the split bought -- one request, one meaning -- is already true of a
-function whose only callers are inside the firmware.
-
-PROVENANCE TRAVELS WITH THE LABEL. The caller gets `(label, note)`, never a bare label,
-because the four ways a label can arrive are not interchangeable on a screen a user checks
-a recipient against:
-
-  a value pulled and checked against the root this session trusts,
-  a local copy authenticated at some earlier counter,
-  a change the user made that no host has taken yet,
-  nothing at all.
-
-`note` is the sentence that says which, ready to hand to `show_address(warning=...)`. A
-caller that wanted only the label would silently present the last three as the first, and
-that is the confusion this subsystem exists to prevent -- so there is no such entry point.
-
-FAILURE IS THE CALLER'S TO ABSORB, not to propagate. Anything that goes wrong here is a
-LABELLING failure: a host that does not speak WARD, an ack that does not verify, an
-uninitialised device. None of them says anything about the address the caller is about to
-show, so this raises for the caller to catch and note, and a caller that aborts its own
-workflow over it has misread what it asked for.
+Returns `(label, note)`, never a bare label: `note` says which provenance the label has, ready
+for `show_address(warning=...)`. Failures are labelling failures, for the caller to absorb.
 """
 
-# The provenance sentences. Short, because they land in a `warning` slot next to an address
-# on a small screen, and blunt, because a hedged one reads as reassurance.
+# Short and blunt: they land in a `warning` slot next to an address.
 NOTE_UNVERIFIED = "Label not proven current."
 NOTE_ABSENT = "No label for this address."
 NOTE_OFFLINE = "Offline label; not checked with the host."
-# NOTE_STALE went with the record's counter: nothing stores the counter a copy was authenticated at,
-# so nothing can say it has changed SINCE. NOTE_OFFLINE is the honest floor for a local copy.
 NOTE_PENDING = "Label not published yet."
 NOTE_NO_COPY = "No label kept on this device."
 NOTE_CORRUPT = "A label is stored here but cannot be read."
 
-# WHICH FIRMWARE MODULES MAY ASK. The principal is a constant a firmware module passes about
-# ITSELF -- it never arrives from the wire -- so this is capability scoping, not
-# authentication: it bounds which on-device apps can turn WARD into a label lookup, and it is
-# the list to extend when Bitcoin's or Ethereum's get_address adopts this.
-#
-# Distinct from the DOMAIN being read, which for `display_address` DOES come from the wire.
-# The principal says who is asking; the domain says whose entries are being read, and today
-# nothing constrains the second -- see the ACL gap in `common.require_key`.
+# Which firmware modules may ask. The principal is a constant a module passes about itself,
+# never from the wire: capability scoping, not authentication.
 _CAPABILITIES = {
     "display_address": ("read",),
 }
@@ -82,16 +37,10 @@ async def resolve_label(
     domain: str | None = None,
     key_type: str | None = None,
 ) -> "tuple[bytes | None, str]":
-    """Look up the label for `identifier`, returning `(label, note)`.
+    """`(label, note)` for `identifier` in `domain` (default: the principal's own).
 
-    `principal` is the calling firmware module, checked against the capability list above.
-    `domain` is the WARD domain to read, defaulting to the principal -- an app that reads
-    its own entries passes nothing, and `display_address` passes the domain it was asked
-    about, which is why the two are separate arguments rather than one.
-
-    `label` is None whenever nothing could be shown, for any reason; `note` always says
-    which reason. Raises only if the lookup could not be PERFORMED -- see the module
-    docstring on who absorbs that.
+    `label` is None whenever nothing can be shown; `note` says why. Raises only if the lookup
+    could not be performed.
     """
     from . import offline_store
     from .common import online_or_offline, pull_entry, require_initialized
@@ -108,10 +57,7 @@ async def resolve_label(
 
     if await online_or_offline():
         value = await pull_entry(entry_key, key_type)
-        # ABSENT is a proven answer here, not a failure: the host had to exhibit a witness
-        # for it. An entry whose value is EMPTY is a different thing and keeps its note --
-        # it is a label the user chose to blank, and saying "no label" of it would hide a
-        # deliberate state.
+        # ABSENT is proven (a witness was checked); an EMPTY value is a deliberate blank.
         if value is None:
             return None, NOTE_ABSENT
         return value, NOTE_UNVERIFIED
@@ -119,9 +65,7 @@ async def resolve_label(
     status, entry = await offline_store.get(key_type, app_id, identifier)
 
     if status == offline_store.CORRUPT:
-        # NOT reported as "no label". Something is stored at this path that this build
-        # cannot read, and the two lead to opposite conclusions about whether the address
-        # is known to the wallet.
+        # Not "no label": something is stored here that this build cannot read.
         return None, NOTE_CORRUPT
 
     if status == offline_store.MISS or entry is None:
@@ -130,6 +74,4 @@ async def resolve_label(
     if entry.pending:
         return entry.value, NOTE_PENDING
 
-    # No staleness to report: the record does not store the counter it was authenticated at, so
-    # "a local copy" is all this can honestly say.
     return entry.value, NOTE_OFFLINE
