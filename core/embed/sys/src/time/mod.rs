@@ -2,9 +2,11 @@ use crate::ffi;
 
 mod duration;
 mod instant;
+mod timeout;
 
 pub use duration::{Duration, ShortDuration};
 pub use instant::Instant;
+pub use timeout::Timeout;
 
 pub fn ticks_ms() -> u32 {
     // SAFETY: safe

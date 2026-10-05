@@ -9,7 +9,7 @@ use super::duration::Duration;
  * MAX_DIFFERENCE_IN_MILLIS. In the Ord implementation, if the difference is
  * more than MAX_DIFFERENCE_IN_MILLIS, we can assume that the smaller Instant
  * is actually wrapped around and so is in the future. */
-const MAX_DIFFERENCE_IN_MILLIS: u32 = u32::MAX / 2;
+pub(super) const MAX_DIFFERENCE_IN_MILLIS: u32 = u32::MAX / 2;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Instant {
