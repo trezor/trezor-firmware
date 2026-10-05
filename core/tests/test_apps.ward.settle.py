@@ -56,9 +56,6 @@ class TestWardClaimSettlement(unittest.TestCase):
         R.get_counter = _counter
         R.get_root = _root
 
-    def tearDown(self):
-        seed_module.get_seed, R.get_counter, R.get_root = self._saved
-
     # --- helpers -----------------------------------------------------------------
 
     def _offer(self, counter, to_root, identifier=b"addr1"):
@@ -157,6 +154,87 @@ class TestWardClaimSettlement(unittest.TestCase):
         # both are this wallet's, so both are settled the same way -- neither is lost
         self.assertEqual(self._state(b"addr1"), (True, False))
         self.assertEqual(self._state(b"addr2"), (True, False))
+
+    # --- unreadable records ------------------------------------------------------
+
+    def _corrupt(self, identifier):
+        """Make a stored record unparseable in place: its value length now runs off the end."""
+        from storage import ward as ward_store
+
+        _status, entry = await_result(OS.get("address", "btc", identifier))
+        off = OS._flags_off(entry.raw) + 1
+        raw = entry.raw[:off] + b"\xff\xff" + entry.raw[off + 2 :]
+        ward_store.store_write_slot(entry.slot, raw)
+        return entry.slot, raw
+
+    def _patch_warning(self, answer=None):
+        import trezor.ui.layouts as layouts
+
+        shown = []
+        saved = layouts.show_warning
+
+        async def _warn(br_name, content, *args, **kwargs):
+            shown.append(br_name)
+            if answer is not None:
+                raise answer
+
+        layouts.show_warning = _warn
+        self.addCleanup(lambda: setattr(layouts, "show_warning", saved))
+        return shown
+
+    def addCleanup(self, fn):
+        self._cleanups = getattr(self, "_cleanups", []) + [fn]
+
+    def tearDown(self):
+        for fn in getattr(self, "_cleanups", []):
+            fn()
+        self._cleanups = []
+        seed_module.get_seed, R.get_counter, R.get_root = self._saved
+
+    def test_an_unreadable_record_is_warned_about_then_skipped(self):
+        """One corrupt record must not block every sync, but it is skipped only after a warning."""
+        from storage import ward as ward_store
+
+        self._offer(42, _MINE, identifier=b"addr1")
+        self._offer(42, _MINE, identifier=b"addr2")
+        slot, raw = self._corrupt(b"addr1")
+        shown = self._patch_warning()
+
+        await_result(OS.reconcile_pending(42, _MINE))
+
+        self.assertEqual(shown, ["ward_unreadable_claim"])
+        self.assertEqual(ward_store.store_read_slot(slot), raw)  # left as it was
+        self.assertEqual(self._state(b"addr2"), (False, False))  # the rest still settles
+        from apps.ward.keys import derive_wallet_id
+
+        self.assertEqual(ward_store.claim_list(await_result(derive_wallet_id())), [])
+
+    def test_declining_the_warning_changes_nothing(self):
+        from storage import ward as ward_store
+        from trezor.wire import ActionCancelled
+
+        from apps.ward.keys import derive_wallet_id
+
+        self._offer(42, _MINE, identifier=b"addr1")
+        self._offer(42, _MINE, identifier=b"addr2")
+        self._corrupt(b"addr1")
+        self._patch_warning(ActionCancelled())
+        claims = ward_store.claim_list(await_result(derive_wallet_id()))
+
+        with self.assertRaises(ActionCancelled):
+            await_result(OS.reconcile_pending(42, _MINE))
+
+        self.assertEqual(ward_store.claim_list(await_result(derive_wallet_id())), claims)
+        self.assertEqual(self._state(b"addr2"), (True, True))
+
+    def test_named_tells_a_corrupt_entry_from_another_unreadable_record(self):
+        """`get` says CORRUPT for both; only `named` says which one an erase would remove."""
+        await_result(OS.put("address", "btc", b"addr1", b"v1", True))
+        self._corrupt(b"addr1")
+
+        self.assertEqual(await_result(OS.get("address", "btc", b"addr1"))[0], OS.CORRUPT)
+        self.assertTrue(await_result(OS.named("address", "btc", b"addr1")))
+        self.assertFalse(await_result(OS.named("address", "btc", b"addr9")))
 
 
 if __name__ == "__main__":

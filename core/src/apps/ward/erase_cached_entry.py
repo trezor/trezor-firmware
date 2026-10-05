@@ -23,8 +23,13 @@ async def erase_cached_entry(msg: WardEraseCachedEntry) -> Success:
 
     unreadable = status == offline_store.CORRUPT or entry is None
     shown = (offline_store.UNREADABLE, False) if unreadable else (display_bytes(entry.value), True)
+    # CORRUPT also covers a miss beside some OTHER unreadable record: say so, and erase that one
+    by_name = not unreadable or await offline_store.named(key_type, app_id, identifier)
 
-    if unreadable:
+    if not by_name:
+        title, label, tail = "Remove unreadable record?", "Removing", []
+        shown = (offline_store.FOREIGN, False)
+    elif unreadable:
         title, label, tail = "Remove unreadable copy?", "Removing", []
     elif entry.pending:
         title, label = "Discard pending change?", "Discarding"
@@ -36,7 +41,7 @@ async def erase_cached_entry(msg: WardEraseCachedEntry) -> Success:
 
     await confirm_properties("ward_erase_cached_entry", title, props, hold=True)
 
-    if unreadable:
+    if not by_name:
         # cannot be named, so it goes by slot
         if not await offline_store.erase_unreadable():
             return Success(message="WARD entry not kept offline")

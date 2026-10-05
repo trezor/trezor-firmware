@@ -291,6 +291,21 @@ async def put(
         raise DataError("WARD: offline store is full; erase an entry first")
 
 
+async def named(key_type: str, app_id: str, identifier: bytes) -> bool:
+    """Whether a record is stored under this entry's own name, readable or not. Tells a CORRUPT
+    entry apart from a miss that `get` reports CORRUPT because ANOTHER record is unreadable."""
+    from storage import ward as ward_store
+
+    from .keys import derive_wallet_id
+
+    return (
+        ward_store.store_find(
+            await derive_wallet_id(), await _candidates(key_type, app_id, identifier)
+        )
+        is not None
+    )
+
+
 async def erase(key_type: str, app_id: str, identifier: bytes) -> None:
     """Remove a record. THE CALLER MUST ALREADY HOLD THE USER'S CONFIRMATION."""
     from storage import ward as ward_store
@@ -442,27 +457,48 @@ async def reconcile_pending(
 
     from .keys import derive_wallet_id
 
+    # Parsed before anything moves: an unreadable record is skipped only once the user has seen
+    # the warning, and declining it aborts the adoption with every claim and flag untouched.
+    claims, unreadable = [], 0
     for index, claim in ward_store.claim_list(await derive_wallet_id()):
         _w, slot, claimed, auth_commit, commit = ward_store.claim_parse(claim)
         record = ward_store.store_read_slot(slot)
-        if record is None or not _known(record):
-            ward_store.claim_delete(index)
-            continue
+        entry = None
+        if record is not None and _known(record):
+            try:
+                entry = _parse(record, slot=slot)
+            except Exception:
+                unreadable += 1
+        claims.append((index, entry, claimed, auth_commit, commit))
 
-        entry = _parse(record, slot=slot)
-        if entry.pending and entry.offered and record_commit(record) == commit:
+    if unreadable:
+        from trezor.ui.layouts import show_warning
+
+        await show_warning(
+            "ward_unreadable_claim",
+            "%d queued change(s) cannot be read and will stay unsettled. "
+            "Erase the offline copy to remove it." % unreadable,
+        )
+
+    for index, entry, claimed, auth_commit, commit in claims:
+        if (
+            entry is not None
+            and entry.pending
+            and entry.offered
+            and record_commit(entry.raw) == commit
+        ):
             if landed_commits is not None:
                 landed = auth_commit in landed_commits
             else:
                 landed = await _claim_produced(claimed, adopted, adopted_root, auth_commit)
             await _set_flags(entry, not landed, False)
-
         ward_store.claim_delete(index)
 
 
 # --- shared by the offline-store handlers ------------------------------------------------
 
 UNREADABLE = "An offline copy that cannot be read."
+FOREIGN = "Not this entry: a record from newer firmware, which this one cannot read."
 
 
 def existing_value(status: int, entry: "StoredEntry | None") -> "tuple[str, bool] | None":
