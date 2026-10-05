@@ -162,25 +162,6 @@ message ProgressEnd {
 }
 
 /**
- * One step of a linear flow; exactly one field is set.
- */
-message FlowStep {
-    optional ConfirmAction confirm_action = 1;
-    optional ConfirmValue confirm_value = 2;
-    optional ConfirmProperties confirm_properties = 3;
-    optional ConfirmSummary confirm_summary = 4;
-    optional ShowNotice show_notice = 5;
-}
-
-/**
- * Request: modui::confirm_linear_flow
- * @next UiResult
- */
-message ConfirmLinearFlow {
-    repeated FlowStep steps = 1;
-}
-
-/**
  * Response: the block's answer, exactly as the library returned it.
  * `choice` is set only with `Choice`.
  * @end

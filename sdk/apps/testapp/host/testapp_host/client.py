@@ -35,7 +35,6 @@ REQUESTS = (
     m.ConfirmProperties,
     m.ConfirmSummary,
     m.ShowNotice,
-    m.ConfirmLinearFlow,
 )
 
 

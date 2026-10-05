@@ -22,8 +22,8 @@ pub(crate) mod proto;
 
 use proto::messages::MessageType;
 use proto::testapp::{
-    ConfirmAction, ConfirmData, ConfirmLinearFlow, ConfirmProperties, ConfirmSummary, ConfirmValue,
-    ShowNotice, ShowProgress,
+    ConfirmAction, ConfirmData, ConfirmProperties, ConfirmSummary, ConfirmValue, ShowNotice,
+    ShowProgress,
 };
 
 /// Wire codec for [`wire_handler!`] — encodes/decodes messages via [`prost`].
@@ -90,13 +90,6 @@ wire_handler!(
     MessageType::UiResult,
     blocks::show_progress
 );
-wire_handler!(
-    handle_confirm_linear_flow,
-    ProstCodec,
-    ConfirmLinearFlow,
-    MessageType::UiResult,
-    blocks::confirm_linear_flow
-);
 
 // Application entry point - receives raw bytes, returns raw bytes
 #[unsafe(no_mangle)]
@@ -117,7 +110,6 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::ConfirmSummary) => handle_confirm_summary(data),
         Ok(MessageType::ShowNotice) => handle_show_notice(data),
         Ok(MessageType::ShowProgress) => handle_show_progress(data),
-        Ok(MessageType::ConfirmLinearFlow) => handle_confirm_linear_flow(data),
         Ok(_) => {
             error!("Invalid function: {:?}", id);
             Err(Error::InvalidFunction)

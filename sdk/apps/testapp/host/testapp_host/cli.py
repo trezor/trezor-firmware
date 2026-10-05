@@ -6,7 +6,6 @@ Only argument parsing lives here; the work is done by the library.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 import time
 from collections.abc import Callable, Sequence
@@ -46,15 +45,6 @@ def data_bytes(args: argparse.Namespace) -> bytes:
     if args.data_hex is not None:
         return bytes.fromhex(args.data_hex)
     return bytes(i % 256 for i in range(args.data_len))
-
-
-def flow_steps(text: str) -> list[m.FlowStep]:
-    if text.startswith("@"):
-        text = Path(text[1:]).read_text()
-    steps = json.loads(text)
-    if not isinstance(steps, list):
-        raise argparse.ArgumentTypeError("the flow is a JSON list of steps")
-    return [protobuf.dict_to_proto(m.FlowStep, step) for step in steps]
 
 
 # Each subcommand turns its flags into one request.
@@ -114,7 +104,6 @@ BUILDERS: dict[str, Callable[[argparse.Namespace], protobuf.MessageType]] = {
         extras=parsed_extras(a),
         cancel=a.cancel,
     ),
-    "flow": lambda a: m.ConfirmLinearFlow(steps=a.steps),
 }
 
 
@@ -248,13 +237,6 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--steps", type=int, default=10)
     p.add_argument("--step-units", type=int, default=1)
     p.add_argument("--step-delay-ms", type=int, default=200)
-
-    p = block("flow", "modui::confirm_linear_flow")
-    p.add_argument(
-        "steps",
-        type=flow_steps,
-        help='JSON list of steps, or @FILE; e.g. \'[{"confirm_action": {"title": "A", "action": "a", "br": "s/1"}}]\'',
-    )
 
     return parser
 

@@ -114,11 +114,10 @@
 //! never reported.
 //!
 //! Which replies can arrive is fixed by the parameters, not by filtering
-//! after the fact: a screen renders a back affordance only when its block
-//! takes `back`, a Cancel entry only when it takes `cancel`, and a reply
-//! the parameters could not produce — a `Backward` from a block that
-//! shows no way back — is a protocol violation, answered with
-//! [`crate::Error::InvalidMessage`]. What the library answers itself — a
+//! after the fact: a screen renders a Cancel entry only when its block
+//! takes `cancel`, and a reply the parameters could not produce — a
+//! `Backward`, which no screen offers — is a protocol violation, answered
+//! with [`crate::Error::InvalidMessage`]. What the library answers itself — a
 //! `WantsMore` by opening the extras, page turns inside one chunk — never
 //! reaches the caller; `ConfirmedAll` does, from chunked content the
 //! person accepted without reading: a yes, with that fact attached.
@@ -127,10 +126,6 @@
 //! means. For the most common case — a screen that must be a yes —
 //! `.confirmed()` and `.is_confirmed()` are sugar for that decision, so a
 //! refusal needs no arm of its own.
-//!
-//! `Backward` is the one answer no block can give yet: the wire has no
-//! `back` parameter, so no screen offers the gesture. It arrives with
-//! [going back](#going-back).
 //!
 //! WIP: with the raw reply public, sibling outcome types are subsumed:
 //! `Choice` already rides the wire for a pick from a list, and an input
@@ -153,27 +148,6 @@
 //! trailing `?` on a screen that must be a yes: a refusal would be ignored,
 //! with the flow carrying on as if the person had confirmed. Omit it only
 //! when the `Result` itself is the function's return value.
-//!
-//! # Going back
-//!
-//! Back is a parameter, like the way out. A block that takes `back` — off
-//! by default — renders a back affordance on its screen, and only such a
-//! block answers `Backward`. A lone block has nothing to go back to; it
-//! leaves `back` off, and the answer cannot even arrive.
-//!
-//! Sequences are where it matters. A sequence that wants earlier steps
-//! revisitable sets `back` on every step after the first, and answers
-//! `Backward` by showing the previous step again. `flow::linear`
-//! is that, library-owned: the app hands over the steps, the flow sets
-//! `back` itself — never on the first — and returns when the last step
-//! is confirmed or any is refused. A sequence of another shape — a
-//! review-and-edit loop, a branch — matches on `Backward` itself; the
-//! raw replies are public for exactly that.
-//!
-//! WIP: half-built. [`flow::linear`] exists and owns the ordering,
-//! but no block takes `back` yet, so no step's screen offers the gesture
-//! and no `Backward` can arrive. The parameter lands with the ethereum
-//! port; the flow is ready for it.
 //!
 //! # Step names
 //!
@@ -347,7 +321,6 @@
 // them by hand.
 pub mod confirm;
 mod extra;
-pub mod flow;
 mod internal;
 pub mod notice;
 pub mod progress;

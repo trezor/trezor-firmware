@@ -28,7 +28,6 @@ name (`br`).
 | `ConfirmSummary` | `modui::confirm::summary` |
 | `ShowNotice` | `modui::notice::show` |
 | `ShowProgress` | `modui::progress::run_with`, paced by the host (below) |
-| `ConfirmLinearFlow` | `modui::flow::linear` |
 
 ## Build and run
 
@@ -53,9 +52,6 @@ sdk/apps/testapp/host/testappctl action --final \
 sdk/apps/testapp/host/testappctl value --address --footer-warning "Not yours"
 sdk/apps/testapp/host/testappctl notice --severity danger
 sdk/apps/testapp/host/testappctl progress --total 20 --steps 20
-sdk/apps/testapp/host/testappctl flow \
-    '[{"confirm_action": {"title": "A", "action": "a", "br": "s/1"}},
-      {"confirm_value": {"title": "B", "value": "v", "br": "s/2", "commitment": "Final"}}]'
 ```
 
 Every subcommand has sensible defaults, so `testappctl action` alone works.

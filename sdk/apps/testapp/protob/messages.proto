@@ -16,7 +16,6 @@ enum MessageType {
     MessageType_ConfirmSummary = 4;
     MessageType_ShowNotice = 5;
     MessageType_ShowProgress = 6;
-    MessageType_ConfirmLinearFlow = 7;
     MessageType_UiResult = 8;
     MessageType_ProgressTick = 9;
     MessageType_ProgressStep = 10;

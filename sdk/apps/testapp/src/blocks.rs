@@ -75,20 +75,6 @@ pub fn show_progress(m: wire::ShowProgress) -> Result<wire::UiResult> {
     reply(UiReply::Confirmed)
 }
 
-pub fn confirm_linear_flow(m: wire::ConfirmLinearFlow) -> Result<wire::UiResult> {
-    // No block takes `back` yet, so the flag each step gets goes nowhere.
-    let steps: Vec<_> = m
-        .steps
-        .iter()
-        .map(|step| move |_back: bool| run_step(step))
-        .collect();
-    let steps: Vec<&dyn Fn(bool) -> Result<UiReply>> = steps
-        .iter()
-        .map(|step| step as &dyn Fn(bool) -> Result<UiReply>)
-        .collect();
-    reply(modui::flow::linear(&steps)?)
-}
-
 // ============================================================================
 // Blocks
 // ============================================================================
@@ -179,32 +165,6 @@ fn run_show_notice(m: &wire::ShowNotice) -> Result<UiReply> {
         &extras.items(),
         m.cancel(),
     ))
-}
-
-fn run_step(step: &wire::FlowStep) -> Result<UiReply> {
-    match step {
-        wire::FlowStep {
-            confirm_action: Some(m),
-            ..
-        } => run_confirm_action(m),
-        wire::FlowStep {
-            confirm_value: Some(m),
-            ..
-        } => run_confirm_value(m),
-        wire::FlowStep {
-            confirm_properties: Some(m),
-            ..
-        } => run_confirm_properties(m),
-        wire::FlowStep {
-            confirm_summary: Some(m),
-            ..
-        } => run_confirm_summary(m),
-        wire::FlowStep {
-            show_notice: Some(m),
-            ..
-        } => run_show_notice(m),
-        _ => Err(Error::ValueError("a flow step names no block")),
-    }
 }
 
 // ============================================================================
