@@ -1862,37 +1862,11 @@ def load_device(
     session.refresh_features()
 
 
-def load_extapp(session: client.Session, binary: Path) -> int:
-    if not binary.is_file():
-        raise FileNotFoundError(f"App binary not found: {binary}")
-    app_binary = binary.read_bytes()
-
-    # The proof sits next to the app binary, sharing its name but with a .proof suffix.
-    proof_path = binary.with_suffix(".proof")
-    if not proof_path.is_file():
-        raise FileNotFoundError(f"App proof not found: {proof_path}")
-    proof = proof_path.read_bytes()
-
-    # Pick the root packet based on the app ring stored in the app header:
-    # ring 0 -> rootpacket_0, rings 1 and 2 -> rootpacket_12.
-    app_ring = extapp.AppImage.parse(app_binary).header.app_ring
-    root_packet_name = (
-        "rootpacket_0-timestamped-signed.tmr"
-        if app_ring == 0
-        else "rootpacket_12-timestamped-signed.tmr"
-    )
-    root_packet_path = binary.parent / root_packet_name
-    if not root_packet_path.is_file():
-        raise FileNotFoundError(f"Root packet not found: {root_packet_path}")
-    root_packet = root_packet_path.read_bytes()
-
+def load_extapp(session: client.Session, tapp_file: Path) -> int:
     # Tests always want the freshly built binary: without `match_fingerprint`, the
     # device keeps serving an already installed app with the same id/version.
     # With it, the installed app is reused only if its fingerprint matches.
-    instance_id = extapp.load(
-        session, app_binary, proof, root_packet, None, match_fingerprint=True
-    )
-    return instance_id
+    return extapp.load_tapp(session, tapp_file, match_fingerprint=True)
 
 
 # keep the old name for compatibility

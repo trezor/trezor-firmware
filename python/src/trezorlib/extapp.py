@@ -16,7 +16,10 @@
 
 from __future__ import annotations
 
+import base64
+import json
 from hashlib import sha256
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional, cast
 
 import construct as c
@@ -177,7 +180,9 @@ def _version_message(version: tuple[int, ...]) -> messages.Version:
 
 def load(
     session: Session,
-    binary: bytes,
+    header: bytes,
+    chunks: list[bytes],
+    chunk_hashes: list[bytes],
     proof: bytes,
     root_packet: bytes,
     min_version: Optional[tuple[int, int, int, int]],
@@ -188,31 +193,35 @@ def load(
     Returns:
         Instance ID of the loaded app
     """
+    if len(chunks) != len(chunk_hashes):
+        raise ValueError(
+            f"Number of chunks({len(chunks)}) and chunk_hashes ({len(chunk_hashes)}) are not the same."
+        )
 
-    image = AppImage.parse(binary)
+    header_parsed = AppHeader.parse(header)
 
     if min_version is not None:
         min_version_info = f"{_format_version(min_version)}+"
-        if image.header.version < min_version:
+        if header_parsed.version < min_version:
             raise ValueError(
                 "Application version "
-                f"{_format_version(image.header.version)} "
+                f"{_format_version(header_parsed.version)} "
                 "is less than the minimum required version "
                 f"{_format_version(min_version)}"
             )
     else:
         min_version_info = ""
-        min_version = image.header.version
+        min_version = header_parsed.version
 
-    print(f"Requesting {image.header.id} {min_version_info}")
+    print(f"Requesting {header_parsed.id} {min_version_info}")
 
-    fingerprint = image.fingerprint() if match_fingerprint else None
+    fingerprint = header_parsed.fingerprint() if match_fingerprint else None
 
     # Send a request to the device to load the app, providing the hash, app ID, and minimum version.
     resp = session.call(
         messages.ExtAppLoad(
             fingerprint=fingerprint,
-            id=image.header.id,
+            id=header_parsed.id,
             version=_version_message(min_version),
         )
     )
@@ -224,7 +233,7 @@ def load(
 
         resp = session.call(
             messages.ExtAppHeaderAck(
-                header=image.header_bytes(),
+                header=header,
                 proof=proof,
                 root_packet_timestamp=rp.auth.timestamp,
             )
@@ -233,18 +242,72 @@ def load(
         if isinstance(resp, messages.ExtAppRootPacketRequest):
             resp = session.call(messages.ExtAppRootPacketAck(root_packet=root_packet))
 
-        chunks = image.chunks()
-
         print(
-            f"Uploading {image.header.id} {_format_version(image.header.version)} ({len(image.payload) / 1024:.1f} KB)"
+            f"Uploading {header_parsed.id} {_format_version(header_parsed.version)} ({sum(len(chunk) for chunk in chunks) / 1024:.1f} KB)"
         )
         # Send the payload in chunks as requested by the device
         while isinstance(resp, messages.ExtAppDataChunkRequest):
             chunk = chunks[resp.index]
+            chunk_hash = chunk_hashes[resp.index]
             resp = session.call(
-                messages.ExtAppDataChunkAck(data=chunk[0], hash=chunk[1])
+                messages.ExtAppDataChunkAck(data=chunk, hash=chunk_hash)
             )
 
     # After the upload, the device should respond with ExtAppLoaded containing the instance ID.
     resp = messages.ExtAppLoaded.ensure_isinstance(resp)
     return resp.instance_id
+
+
+def load_tapp(
+    session: Session,
+    tapp_file: Path,
+    min_version: Optional[tuple[int, int, int, int]] = None,
+    match_fingerprint: bool = False,
+) -> int:
+    """Load a serialized external application (`.tapp`) onto the device.
+
+    The proof is expected next to the app, sharing its name with a `.proof`
+    suffix, and the root packets in the `root-packets` directory of the
+    serialized artifacts tree (`<root>/<app_id>/<version>/<app>.tapp`).
+
+    Returns:
+        Instance ID of the loaded app
+    """
+    if not tapp_file.is_file():
+        raise FileNotFoundError(f"App file not found: {tapp_file}")
+    with open(tapp_file, "rb") as f:
+        app_json = json.load(f)
+    header = base64.b64decode(app_json["header"])
+
+    proof_path = tapp_file.with_suffix(".proof")
+    if not proof_path.is_file():
+        raise FileNotFoundError(f"App proof not found: {proof_path}")
+    with open(proof_path, "rb") as f:
+        proof_json = json.load(f)
+    proof = bytes.fromhex("".join(proof_json["proof"]))
+
+    # Pick the root packet based on the app ring stored in the app header:
+    # ring 0 -> rootpacket_ring0, rings 1 and 2 -> rootpacket_ring12.
+    app_ring = AppHeader.parse(header).app_ring
+    root_packet_name = (
+        "rootpacket_ring0.tmr" if app_ring == 0 else "rootpacket_ring12.tmr"
+    )
+    root_packet_path = (
+        tapp_file.parent.parent.parent / "root-packets" / root_packet_name
+    )
+    if not root_packet_path.is_file():
+        raise FileNotFoundError(f"Root packet not found: {root_packet_path}")
+    with open(root_packet_path, "rb") as f:
+        root_packet_json = json.load(f)
+    root_packet = base64.b64decode(root_packet_json["root_packet"])
+
+    return load(
+        session,
+        header=header,
+        chunks=[base64.b64decode(chunk) for chunk in app_json["chunks"]],
+        chunk_hashes=[bytes.fromhex(hash) for hash in app_json["chunk_hashes"]],
+        proof=proof,
+        root_packet=root_packet,
+        min_version=min_version,
+        match_fingerprint=match_fingerprint,
+    )
