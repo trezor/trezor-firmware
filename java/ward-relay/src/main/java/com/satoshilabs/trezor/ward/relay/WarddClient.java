@@ -10,6 +10,7 @@ import java.net.http.WebSocket;
 import java.time.Duration;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
@@ -40,6 +41,14 @@ import java.util.concurrent.TimeoutException;
 public final class WarddClient implements AutoCloseable {
     public static final URI DEFAULT_URL = URI.create("ws://127.0.0.1:21329");
     public static final String RELAY_PROTOCOL_VERSION = "1.0";
+
+    /**
+     * The only messages wardd may put on the device: its sync and flush conversation. Anything
+     * else is answered as a {@code Failure} without reaching the device.
+     */
+    public static final Set<String> DEVICE_CALLS = Set.of(
+            "WardSync", "WardIngestAttestation", "WardReconcile", "WardVerifyChain",
+            "WardRejoin", "WardFlushQueue", "WardEntryAck", "WardChainLinkAck");
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final HexFormat HEX = HexFormat.of();
@@ -212,6 +221,9 @@ public final class WarddClient implements AutoCloseable {
     private static ObjectNode answer(WardPipe pipe, DeviceMessage request) {
         ObjectNode reply = JSON.createObjectNode();
         try {
+            if (!DEVICE_CALLS.contains(request.name())) {
+                throw PipeException.broken("wardd may not send " + request.name());
+            }
             if (pipe == null) {
                 throw PipeException.broken("no device to answer " + request.name());
             }
@@ -251,6 +263,9 @@ public final class WarddClient implements AutoCloseable {
         }
         if (item == CLOSED || item instanceof Throwable) {
             inbox.add(item); // stays closed for any later call
+            if (item instanceof WarddException e) {
+                throw e;
+            }
             throw new WarddException("closed", "wardd closed the connection");
         }
         try {
@@ -261,6 +276,8 @@ public final class WarddClient implements AutoCloseable {
     }
 
     /** Collects whole text messages; pings are answered with pongs by the JDK itself. */
+    private static final int MAX_MESSAGE = 16 << 20;
+
     private static final class Inbox implements WebSocket.Listener {
         private final BlockingQueue<Object> inbox;
         private final StringBuilder partial = new StringBuilder();
@@ -271,6 +288,12 @@ public final class WarddClient implements AutoCloseable {
 
         @Override
         public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
+            if (partial.length() + data.length() > MAX_MESSAGE) {
+                // a bound on what wardd can make this client buffer; the socket is done
+                inbox.add(new WarddException("protocol", "wardd sent an oversized message"));
+                ws.abort();
+                return null;
+            }
             partial.append(data);
             if (last) {
                 inbox.add(partial.toString());

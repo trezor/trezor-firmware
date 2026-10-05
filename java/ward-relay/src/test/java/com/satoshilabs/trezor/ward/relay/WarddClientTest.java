@@ -36,6 +36,18 @@ class WarddClientTest {
             result.putObject("result").putArray("replies").add(first).add(second);
             conn.send(result);
         });
+        wardd.scripts.put("forbidden", (conn, frame) -> {
+            long id = frame.get("id").asLong();
+            conn.send(deviceCall(id, "GetPublicKey"));
+            ObjectNode result = StubWardd.JSON.createObjectNode().put("id", id);
+            result.set("result", conn.recv().get("deviceReply"));
+            conn.send(result);
+        });
+        wardd.scripts.put("huge", (conn, frame) -> {
+            ObjectNode result = StubWardd.JSON.createObjectNode().put("id", frame.get("id").asLong());
+            result.putObject("result").put("big", "x".repeat(17 << 20));
+            conn.send(result);
+        });
         wardd.scripts.put("refused", (conn, frame) ->
                 conn.send(StubWardd.error(frame.get("id").asLong(), "needs_rejoin", "fork at 3")));
         wardd.scripts.put("echo", (conn, frame) -> {
@@ -105,6 +117,28 @@ class WarddClientTest {
                 throw new IllegalStateException("gone");
             }, false);
             assertTrue(out.at("/replies/1/message/message").asText().contains("gone"));
+        }
+    }
+
+    @Test
+    void aMessageOutsideTheSyncConversationNeverReachesTheDevice() throws Exception {
+        List<String> seen = new ArrayList<>();
+        try (WarddClient client = WarddClient.connect(wardd.url(), "good")) {
+            JsonNode out = client.call("forbidden", null, request -> {
+                seen.add(request.name());
+                return request;
+            });
+            assertEquals(List.of(), seen);
+            assertEquals("Failure", out.get("name").asText());
+            assertEquals("wardd may not send GetPublicKey", out.at("/message/message").asText());
+        }
+    }
+
+    @Test
+    void anOversizedMessageIsRefused() throws Exception {
+        try (WarddClient client = WarddClient.connect(wardd.url(), "good")) {
+            WarddException e = assertThrows(WarddException.class, () -> client.call("huge", null, null));
+            assertEquals("protocol", e.code());
         }
     }
 
