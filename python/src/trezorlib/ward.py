@@ -23,10 +23,11 @@ the DEVICE built, verbatim. Writes return that leaf; the caller applies it (`app
 
 from __future__ import annotations
 
+import typing as t
 from typing import TYPE_CHECKING, Callable, NamedTuple, Optional
 
 from . import messages
-from .ward_trie import OP_COMMIT, OP_REVERT, Link
+from .ward_trie import OP_COMMIT, OP_REVERT, Link, _part_arms
 
 if TYPE_CHECKING:
     import protobuf
@@ -113,46 +114,56 @@ def _call_answering_pulls(
             )
         )
 
-    if isinstance(res, messages.WardFlushQueueAck) and res.leaves:
-        return WardResult(
-            res,
-            b"",
-            None,
-            res.counter,
-            res.auth_commit,
-            res.wm_sig,
-            res.remaining,
-            leaves=[(bl.entry_key, Leaf(bl.identity, bl.content)) for bl in res.leaves],
-            from_counter=res.from_counter,
-        )
-
-    if isinstance(res, (messages.WardLeafAck, messages.WardFlushQueueAck)):
-        return WardResult(
-            res,
-            res.entry_key or entry_key,
-            Leaf(res.identity, res.content),
-            res.counter,
-            res.auth_commit,
-            res.wm_sig,
-            getattr(res, "remaining", None),
-        )
-
-    # A service build published the mutation itself: the result must carry NO leaf. An empty
-    # `Leaf` would be read by `apply` as a deletion of the entry just written.
-    if isinstance(res, (messages.WardMutationApplied, messages.WardFlushQueueApplied)):
-        return WardResult(
-            res,
-            res.entry_key or entry_key,
-            counter=res.counter,
-            remaining=getattr(res, "remaining", None),
-        )
-
-    if not isinstance(res, messages.Success):
+    if isinstance(res, messages.Success):
+        return WardResult(res, entry_key)
+    if not isinstance(
+        res,
+        (
+            messages.WardLeafAck,
+            messages.WardFlushQueueAck,
+            messages.WardMutationApplied,
+            messages.WardFlushQueueApplied,
+        ),
+    ):
         raise RuntimeError(
             f"unexpected response to {type(msg).__name__}: {type(res).__name__}"
         )
 
-    return WardResult(res, entry_key)
+    batch = getattr(res, "leaves", None)
+    # A service build published the mutation itself (`*Applied`): the result must carry NO leaf.
+    # An empty `Leaf` would be read by `apply` as a deletion of the entry just written.
+    carries_leaf = (
+        isinstance(res, (messages.WardLeafAck, messages.WardFlushQueueAck)) and not batch
+    )
+    return WardResult(
+        res,
+        b"" if batch else (res.entry_key or entry_key),
+        Leaf(res.identity, res.content) if carries_leaf else None,
+        res.counter,
+        getattr(res, "auth_commit", None),
+        getattr(res, "wm_sig", None),
+        getattr(res, "remaining", None),
+        leaves=[(bl.entry_key, Leaf(bl.identity, bl.content)) for bl in batch] if batch else None,
+        from_counter=res.from_counter if batch else None,
+    )
+
+
+def _keyed_pull(
+    session: "Session",
+    cls: type,
+    app_id: str,
+    identifier: bytes,
+    provider: EntryProvider,
+) -> WardResult:
+    """One request naming (app_id, identifier), its pulls answered from `provider`."""
+    return _call_answering_pulls(session, cls(app_id=app_id, identifier=identifier), provider)
+
+
+def _keyed_call(
+    session: "Session", cls: type, app_id: str, identifier: bytes, expect: type
+) -> t.Any:
+    """One request naming (app_id, identifier), with no pulls."""
+    return session.call(cls(app_id=app_id, identifier=identifier), expect=expect)
 
 
 def get_entry(
@@ -162,11 +173,7 @@ def get_entry(
     provider: EntryProvider,
 ) -> WardResult:
     """Display the host-held entry for (app_id, identifier). Builds no leaf."""
-    return _call_answering_pulls(
-        session,
-        messages.WardGetEntry(app_id=app_id, identifier=identifier),
-        provider,
-    )
+    return _keyed_pull(session, messages.WardGetEntry, app_id, identifier, provider)
 
 
 def set_entry(
@@ -199,11 +206,7 @@ def delete_entry(
     Idempotent on an absent path (no `auth_commit`, no screen), but the absence must still be
     proved with a non-membership witness.
     """
-    return _call_answering_pulls(
-        session,
-        messages.WardDeleteEntry(app_id=app_id, identifier=identifier),
-        provider,
-    )
+    return _keyed_pull(session, messages.WardDeleteEntry, app_id, identifier, provider)
 
 
 # --- the offline queue: the device's own store; no pulls, own ack types ---------------------
@@ -263,10 +266,7 @@ def queue_delete_entry(
 ) -> messages.WardQueueDeleteAck:
     """Discard a queued (pending) change, on confirmation. Not a WARD deletion; `missing` is an
     answer, not a failure."""
-    return session.call(
-        messages.WardQueueDeleteEntry(app_id=app_id, identifier=identifier),
-        expect=messages.WardQueueDeleteAck,
-    )
+    return _keyed_call(session, messages.WardQueueDeleteEntry, app_id, identifier, messages.WardQueueDeleteAck)
 
 
 def queue_get_entry(
@@ -276,10 +276,7 @@ def queue_get_entry(
 ) -> messages.WardQueueGetAck:
     """Export a queued change or pinned copy for backup; keep the whole ack. A record the device
     cannot read fails rather than reading as missing."""
-    return session.call(
-        messages.WardQueueGetEntry(app_id=app_id, identifier=identifier),
-        expect=messages.WardQueueGetAck,
-    )
+    return _keyed_call(session, messages.WardQueueGetEntry, app_id, identifier, messages.WardQueueGetAck)
 
 
 def sync(session: "Session") -> messages.WardSyncAck:
@@ -322,12 +319,8 @@ def reconcile(
 ) -> messages.WardReconcileAck:
     """Adopt the attested head one step on, by the `auth_commit` of `link` (a 5-tuple; only its
     last element is sent). `link=None` only at counter 0. Prefer `verify_chain`."""
-    auth_commit = None
-    if link is not None:
-        auth_commit = link[4]
-
     return session.call(
-        messages.WardReconcile(auth_commit=auth_commit),
+        messages.WardReconcile(auth_commit=link[4] if link is not None else None),
         expect=messages.WardReconcileAck,
     )
 
@@ -342,12 +335,14 @@ def verify_chain(
     `link_source(to_counter, to_root, limit)` returns contiguous links ending at that state,
     newest first; returning none ends the walk with a failure.
     """
-    res = _answer_chain_pulls(
-        session, session.call(messages.WardVerifyChain()), link_source, max_links_per_ack
+    return _chain_walk(
+        session,
+        messages.WardVerifyChain(),
+        link_source,
+        max_links_per_ack,
+        messages.WardVerifyChainAck,
+        "the chain walk",
     )
-    if not isinstance(res, messages.WardVerifyChainAck):
-        raise RuntimeError(f"unexpected response to the chain walk: {res}")
-    return res
 
 
 def rejoin(
@@ -361,24 +356,27 @@ def rejoin(
     `fork_counter` is the last shared counter (`WardTrie.fork_point`); `link_source` must serve
     both branches back to it, so the host must have kept the device's links.
     """
-    res = _answer_chain_pulls(
+    return _chain_walk(
         session,
-        session.call(messages.WardRejoin(fork_counter=fork_counter)),
+        messages.WardRejoin(fork_counter=fork_counter),
         link_source,
         max_links_per_ack,
+        messages.WardRejoinAck,
+        "the rejoin",
     )
-    if not isinstance(res, messages.WardRejoinAck):
-        raise RuntimeError(f"unexpected response to the rejoin: {res}")
-    return res
 
 
-def _answer_chain_pulls(
+def _chain_walk(
     session: "Session",
-    res: object,
+    msg: "protobuf.MessageType",
     link_source: LinkSource,
     max_links_per_ack: int,
-) -> object:
-    """Answer the device's `WardChainRequest`s until it says something else, and return that."""
+    expected: type,
+    what: str,
+) -> t.Any:
+    """Send `msg`, answer the device's `WardChainRequest`s from `link_source`, and return the
+    final response, which must be an `expected`."""
+    res = session.call(msg)
     while isinstance(res, messages.WardChainRequest):
         links = link_source(res.to_counter, res.to_root, max_links_per_ack)
         res = session.call(
@@ -396,6 +394,8 @@ def _answer_chain_pulls(
                 ]
             )
         )
+    if not isinstance(res, expected):
+        raise RuntimeError(f"unexpected response to {what}: {res}")
     return res
 
 
@@ -432,11 +432,13 @@ def rollback(
     )
 
 
-def _log(store, link: Link, wm_sig: Optional[bytes]) -> None:  # noqa: ANN001
-    """Record a transition, the WM's copy of its authorisation, and the new counter."""
-    store.links.append(link)
-    store.wm_sigs[link.to_counter] = wm_sig
-    store.counter = link.to_counter
+def _log(store, *link: object, wm_sig: Optional[bytes]) -> None:  # noqa: ANN001
+    """Record a transition (the `Link` fields), the WM's copy of its authorisation, and the new
+    counter."""
+    entry = Link(*link)
+    store.links.append(entry)
+    store.wm_sigs[entry.to_counter] = wm_sig
+    store.counter = entry.to_counter
 
 
 def apply_rollback(
@@ -452,15 +454,13 @@ def apply_rollback(
     """
     _log(
         store,
-        Link(
-            from_counter,
-            from_root,
-            ack.counter,
-            ack.new_root or None,
-            ack.auth_commit,
-            OP_REVERT,
-        ),
-        ack.wm_sig,
+        from_counter,
+        from_root,
+        ack.counter,
+        ack.new_root or None,
+        ack.auth_commit,
+        OP_REVERT,
+        wm_sig=ack.wm_sig,
     )
 
 
@@ -468,15 +468,10 @@ def leaf_is_delete(leaf: Optional[Leaf]) -> bool:
     """An empty content body is a deletion. Dispatches on `encoding`, as the firmware does."""
     if leaf is None or leaf.content is None:
         return True
-    content = leaf.content
-    encoding = 0 if content.encoding is None else content.encoding
-    if encoding not in (0, 1):
-        raise ValueError(f"unknown leaf content encoding: {encoding!r}")
-    if content.encrypted is not None and content.plaintext is not None:
-        raise ValueError("leaf content sets both encodings")
+    encoding, clear, sealed = _part_arms(leaf.content, "content")
     if encoding == 1:
-        return not (content.plaintext is not None and content.plaintext.content)
-    return not (content.encrypted is not None and content.encrypted.ct)
+        return not (clear is not None and clear.content)
+    return not (sealed is not None and sealed.ct)
 
 
 def store_provider(store) -> EntryProvider:
@@ -532,15 +527,13 @@ def apply(store, result: WardResult) -> None:
     if result.counter is not None:
         _log(
             store,
-            Link(
-                before_counter,
-                before_root,
-                result.counter,
-                store.root(),
-                result.auth_commit,
-                OP_COMMIT,
-            ),
-            result.wm_sig,
+            before_counter,
+            before_root,
+            result.counter,
+            store.root(),
+            result.auth_commit,
+            OP_COMMIT,
+            wm_sig=result.wm_sig,
         )
 
 
@@ -557,15 +550,13 @@ def _apply_batch(store, result: WardResult) -> None:  # noqa: ANN001
         _put(store, entry_key, leaf)
     _log(
         store,
-        Link(
-            result.from_counter,
-            before_root,
-            result.counter,
-            store.root(),
-            result.auth_commit,
-            OP_COMMIT,
-        ),
-        result.wm_sig,
+        result.from_counter,
+        before_root,
+        result.counter,
+        store.root(),
+        result.auth_commit,
+        OP_COMMIT,
+        wm_sig=result.wm_sig,
     )
 
 
@@ -577,11 +568,7 @@ def pin_cached_entry(
 ) -> WardResult:
     """Keep a verified copy of (app_id, identifier) on the device, on confirmation. Needs a synced
     session; fails if the device store is full (it never evicts)."""
-    return _call_answering_pulls(
-        session,
-        messages.WardPinCachedEntry(app_id=app_id, identifier=identifier),
-        provider,
-    )
+    return _keyed_pull(session, messages.WardPinCachedEntry, app_id, identifier, provider)
 
 
 def erase_cached_entry(
@@ -591,10 +578,7 @@ def erase_cached_entry(
 ) -> messages.Success:
     """Remove the device's local copy of (app_id, identifier), on confirmation. Not a WARD
     deletion; the device derives the path, so a host cannot name an arbitrary record."""
-    return session.call(
-        messages.WardEraseCachedEntry(app_id=app_id, identifier=identifier),
-        expect=messages.Success,
-    )
+    return _keyed_call(session, messages.WardEraseCachedEntry, app_id, identifier, messages.Success)
 
 
 def flush_queue(

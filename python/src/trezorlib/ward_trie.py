@@ -89,6 +89,18 @@ def _u32(n: int) -> bytes:
     return n.to_bytes(4, "big")
 
 
+def _lp(width: int, data: bytes) -> bytes:
+    """`len(data)` in `width` big-endian bytes, then `data`."""
+    if len(data) >> (8 * width):
+        raise ValueError("bytes must be in range(0, 256)")
+    return len(data).to_bytes(width, "big") + data
+
+
+def _state(counter: int, root: Optional[bytes]) -> tuple:
+    """A `(counter, root)` state, the empty tree as None, so states compare as states."""
+    return counter, root or None
+
+
 def _require32(*values: bytes) -> None:
     # Load-bearing: preimages concatenate operands with no separator, so only a fixed width
     # makes every split unambiguous.
@@ -102,44 +114,46 @@ def addr_bit(entry_key: bytes, bit: int) -> int:
     return (entry_key[bit // 8] >> (7 - (bit % 8))) & 1
 
 
-def _part_bytes(part: object) -> bytes:
-    """A wire leaf part -> its canonical framing, for the commit preimage.
-
-    Dispatches on `encoding`, not field presence, and refuses what the firmware refuses (unknown
-    encoding, both arms set) -- any disagreement would be a different root.
-    """
-    empty = bytes([1, 0, 0]) + _u32(0)  # the empty (deleted) part
-    if part is None:
-        return empty
-
+def _part_arms(part: object, what: str = "part") -> tuple:
+    """`(encoding, clear, sealed)` of a wire leaf part, refusing what the firmware refuses: an
+    unknown encoding, or both arms set. Dispatch is on `encoding`, never on field presence."""
     encoding = getattr(part, "encoding", None)
     encoding = 0 if encoding is None else encoding
     if encoding not in (0, 1):
-        raise ValueError("unknown leaf part encoding: %r" % (encoding,))
+        raise ValueError("unknown leaf %s encoding: %r" % (what, encoding))
     clear = getattr(part, "plaintext", None)
     if clear is None:
         clear = getattr(part, "plain", None)
     sealed = getattr(part, "encrypted", None)
     if sealed is not None and clear is not None:
-        raise ValueError("leaf part sets both encodings")
+        raise ValueError("leaf %s sets both encodings" % what)
+    return encoding, clear, sealed
 
-    if encoding == 1:
-        if clear is None:
-            return empty
-        body = getattr(clear, "content", None) or b""
-        return bytes([1, 0, 0]) + _u32(len(body)) + body
 
-    if sealed is None:
-        return empty
-    nonce, tag, ct = sealed.nonce or b"", sealed.tag or b"", sealed.ct or b""
-    return bytes([0, len(nonce)]) + nonce + bytes([len(tag)]) + tag + _u32(len(ct)) + ct
+def _part_bytes(part: object) -> bytes:
+    """A wire leaf part -> its canonical framing, for the commit preimage. Any disagreement with
+    the firmware would be a different root."""
+    encoding, clear, sealed = (1, None, None) if part is None else _part_arms(part)
+    if encoding == 0 and sealed is not None:
+        return (
+            bytes([0])
+            + _lp(1, sealed.nonce or b"")
+            + _lp(1, sealed.tag or b"")
+            + _lp(4, sealed.ct or b"")
+        )
+    # plaintext, or the empty (deleted) part: no nonce, no tag
+    body = (getattr(clear, "content", None) or b"") if encoding == 1 else b""
+    return bytes([1]) + _lp(1, b"") + _lp(1, b"") + _lp(4, body)
 
 
 def commit_of(key_type: str, identity: object, content: object) -> bytes:
     """The leaf commitment over a leaf's wire parts. `identity`/`content` may be None (empty)."""
-    kt = key_type.encode()
-    a, b = _part_bytes(identity), _part_bytes(content)
-    return _sha256(b"\x02" + bytes([len(kt)]) + kt + _u32(len(a)) + a + _u32(len(b)) + b)
+    return _sha256(
+        b"\x02"
+        + _lp(1, key_type.encode())
+        + _lp(4, _part_bytes(identity))
+        + _lp(4, _part_bytes(content))
+    )
 
 
 def leaf_hash(entry_key: bytes, commit: bytes) -> bytes:
@@ -151,6 +165,13 @@ def leaf_hash(entry_key: bytes, commit: bytes) -> bytes:
 def internal_hash(split_bit: int, left: bytes, right: bytes) -> bytes:
     """internal = sha256(0x01 || u16be(split_bit) || left || right). Children are positional."""
     return _sha256(b"\x01" + _u16(split_bit) + left + right)
+
+
+def _join(split_bit: int, side: int, node: bytes, sibling: bytes) -> bytes:
+    """The parent of `node`, which sits on `side` (its key's bit) of `split_bit`."""
+    if side == 0:
+        return internal_hash(split_bit, node, sibling)
+    return internal_hash(split_bit, sibling, node)
 
 
 def proof_elem(split_bit: int, sibling: bytes) -> bytes:
@@ -197,10 +218,7 @@ def fold(start: bytes, proof: Sequence[bytes], entry_key: bytes) -> bytes:
     node = start
     for elem in proof:
         split_bit, sibling = parse_proof_elem(elem)
-        if addr_bit(entry_key, split_bit) == 0:
-            node = internal_hash(split_bit, node, sibling)
-        else:
-            node = internal_hash(split_bit, sibling, node)
+        node = _join(split_bit, addr_bit(entry_key, split_bit), node, sibling)
     return node
 
 
@@ -284,11 +302,9 @@ def insert_root(
 
     # Everything below the splice folds into one node, which moves up with its hash unchanged.
     subtree = fold(leaf_hash(witness_key, witness_commit), proof[:idx], witness_key)
-    new_h = leaf_hash(entry_key, new_commit)
-    if addr_bit(entry_key, split_bit) == 0:
-        branch = internal_hash(split_bit, new_h, subtree)
-    else:
-        branch = internal_hash(split_bit, subtree, new_h)
+    branch = _join(
+        split_bit, addr_bit(entry_key, split_bit), leaf_hash(entry_key, new_commit), subtree
+    )
     # Above the splice both keys agree at every branch bit: either path folds the same.
     return fold(branch, proof[idx:], witness_key)
 
@@ -377,12 +393,12 @@ class TransitionLog:
         """The predecessors of a state, walking back from it. The newest match wins: after a
         demotion a counter can be reached twice, and the later edge is the live history."""
         out: list = []
-        counter, root = to_counter, to_root
+        state = _state(to_counter, to_root)
         while len(out) < limit:
             for link in reversed(self.links):
-                if link[2] == counter and (link[3] or None) == (root or None):
+                if _state(link[2], link[3]) == state:
                     out.append(link)
-                    counter, root = link[0], link[1]
+                    state = _state(link[0], link[1])
                     break
             else:
                 break
@@ -391,16 +407,16 @@ class TransitionLog:
     def fork_point(self, a: tuple, b: tuple) -> Optional[int]:
         """The last counter two `(counter, root)` states share, walking both back; None if never.
         What a host passes as `WardRejoin.fork_counter` (the device checks it)."""
-        a, b = tuple(a), tuple(b)
-        while (a[0], a[1] or None) != (b[0], b[1] or None):
-            later = a if a[0] >= b[0] else b
-            prev = self.links_ending_at(later[0], later[1], limit=1)
+        a, b = _state(a[0], a[1]), _state(b[0], b[1])
+        while a != b:
+            a_later = a[0] >= b[0]
+            prev = self.links_ending_at(*(a if a_later else b), limit=1)
             if not prev:
                 return None
-            if later is a:
-                a = (prev[0][0], prev[0][1])
+            if a_later:
+                a = _state(prev[0][0], prev[0][1])
             else:
-                b = (prev[0][0], prev[0][1])
+                b = _state(prev[0][0], prev[0][1])
         return a[0]
 
 
@@ -520,15 +536,11 @@ class WardTrie(TransitionLog):
         if node[0] == "leaf":
             return self._leaves[node[1]]
         _, bit, left, right = node
-        if addr_bit(target, bit) == 0:
-            lh = self._proof(left, target, out)
-            rh = self._hash(right)
-            out.append(proof_elem(bit, rh))
-        else:
-            lh = self._hash(left)
-            rh = self._proof(right, target, out)
-            out.append(proof_elem(bit, lh))
-        return internal_hash(bit, lh, rh)
+        side = addr_bit(target, bit)
+        here = self._proof(right if side else left, target, out)
+        sibling = self._hash(left if side else right)
+        out.append(proof_elem(bit, sibling))
+        return _join(bit, side, here, sibling)
 
     def membership_proof(self, entry_key: bytes) -> list:
         """The proof for a PRESENT key, leaf-to-root."""
