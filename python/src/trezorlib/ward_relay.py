@@ -63,6 +63,11 @@ class WarddError(Exception):
         self.code = code
 
 
+def _unmask(payload: bytes, mask: bytes) -> bytes:
+    """RFC 6455 masking, which is its own inverse."""
+    return bytes(b ^ mask[i % 4] for i, b in enumerate(payload))
+
+
 class _WebSocket:
     """A minimal RFC 6455 client: enough for a localhost JSON peer, and no more."""
 
@@ -133,8 +138,7 @@ class _WebSocket:
             header.append(0x80 | 127)
             header += struct.pack(">Q", n)
         mask = os.urandom(4)
-        masked = bytes(b ^ mask[i % 4] for i, b in enumerate(payload))
-        self.sock.sendall(bytes(header) + mask + masked)
+        self.sock.sendall(bytes(header) + mask + _unmask(payload, mask))
 
     def send_text(self, text: str) -> None:
         self._send_frame(_OP_TEXT, text.encode())
@@ -152,7 +156,7 @@ class _WebSocket:
             mask = self._read_exact(4) if b1 & 0x80 else None
             payload = self._read_exact(n)
             if mask:
-                payload = bytes(b ^ mask[i % 4] for i, b in enumerate(payload))
+                payload = _unmask(payload, mask)
             if opcode == _OP_PING:
                 self._send_frame(_OP_PONG, payload)
             elif opcode == _OP_CLOSE:

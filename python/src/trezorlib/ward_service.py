@@ -170,19 +170,15 @@ def _find_ward_interface(device: t.Any) -> tuple[int, int]:
 
 
 class _ServiceClientBase:
-    """What both transports share: announcing, and the context-manager shape."""
+    """What both transports share: announcing, and the context-manager shape. Subclasses provide
+    `connect`, `close`, `pair` and `call`."""
 
-    def connect(self) -> None:
-        raise NotImplementedError
+    if t.TYPE_CHECKING:
 
-    def close(self) -> None:
-        raise NotImplementedError
-
-    def pair(self, skip: bool = False) -> None:
-        raise NotImplementedError
-
-    def call(self, msg: MessageType, timeout: float | None = None) -> MessageType:
-        raise NotImplementedError
+        def connect(self) -> None: ...
+        def close(self) -> None: ...
+        def pair(self, skip: bool = False) -> None: ...
+        def call(self, msg: MessageType, timeout: float | None = None) -> MessageType: ...
 
     def announce(
         self, protocol_version: int | None = None
