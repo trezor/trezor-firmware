@@ -62,12 +62,19 @@ async def _init_step(
     from trezor.wire import context
 
     from apps.common import paths
+    from apps.monero import PATTERN, SLIP44_ID
 
     await paths.validate_path(keychain, msg.address_n)
 
-    if not context.cache_get_bool(APP_MONERO_LIVE_REFRESH):
-        await layout.require_confirm_live_refresh()
-        context.cache_set_bool(APP_MONERO_LIVE_REFRESH, True)
+    account = (
+        paths.get_account_name("XMR", msg.address_n, PATTERN, SLIP44_ID)
+        if msg.address_n[-1] != paths.HARDENED  # non-default account
+        else None
+    )
+    # approval is remembered per session for the last approved account
+    if context.cache_get_int(APP_MONERO_LIVE_REFRESH) != msg.address_n[-1]:
+        await layout.require_confirm_live_refresh(account)
+        context.cache_set_int(APP_MONERO_LIVE_REFRESH, msg.address_n[-1])
 
     s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 

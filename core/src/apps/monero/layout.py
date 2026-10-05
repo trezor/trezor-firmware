@@ -61,31 +61,34 @@ def _format_amount(value: int) -> str:
     return format_amount_unit(format_amount(value, 12), "XMR")
 
 
-async def require_confirm_watchkey() -> None:
+async def require_confirm_watchkey(account: str | None = None) -> None:
     await confirm_action(
         "get_watchkey",
         TR.monero__confirm_export,
         description=TR.monero__wanna_export_watchkey,
+        action=account,
         br_code=BRT_SignTx,
         prompt_screen=True,
     )
 
 
-async def require_confirm_keyimage_sync() -> None:
+async def require_confirm_keyimage_sync(account: str | None = None) -> None:
     await confirm_action(
         "key_image_sync",
         TR.monero__confirm_ki_sync,
         description=TR.monero__wanna_sync_key_images,
+        action=account,
         br_code=BRT_SignTx,
         prompt_screen=True,
     )
 
 
-async def require_confirm_live_refresh() -> None:
+async def require_confirm_live_refresh(account: str | None = None) -> None:
     await confirm_action(
         "live_refresh",
         TR.monero__confirm_refresh,
         description=TR.monero__wanna_start_refresh,
+        action=account,
         br_code=BRT_SignTx,
         prompt_screen=True,
     )

@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import monero
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import LayoutContent
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
@@ -55,3 +56,28 @@ def test_monero_getwatchkey(session: Session):
         res.watch_key.hex()
         == "e0671fbed2c9231fe4f286962862813a4a4d153c793bf5d0e3742119723f3000"
     )
+
+
+def _get_watch_key_screens(session: Session, path: str) -> list[str]:
+    screens: list[str] = []
+
+    def on_page(layout: LayoutContent) -> None:
+        screens.append(layout.json_str)
+
+    with session.test_ctx as client:
+        client.set_input_flow(client.ui.default_input_flow(on_page=on_page))
+        monero.get_watch_key(session, parse_path(path))
+    return screens
+
+
+@pytest.mark.altcoin
+@pytest.mark.monero
+@pytest.mark.models("core")
+@pytest.mark.setup_client(mnemonic=MNEMONIC12)
+def test_monero_getwatchkey_shows_account(session: Session):
+    screens = _get_watch_key_screens(session, "m/44h/128h/0h")
+    assert screens and not any("XMR #" in s for s in screens)
+
+    screens = _get_watch_key_screens(session, "m/44h/128h/1h")
+    # account numbers are displayed 1-based, as in get_address
+    assert any("XMR #2" in s for s in screens)

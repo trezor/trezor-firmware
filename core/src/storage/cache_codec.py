@@ -40,7 +40,7 @@ class SessionCache(DataCache):
                 0,  # APP_COMMON_DERIVE_CARDANO
                 96,  # APP_CARDANO_ICARUS_SECRET
                 96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
-                0,  # APP_MONERO_LIVE_REFRESH
+                4,  # APP_MONERO_LIVE_REFRESH
                 4 + 4,  # APP_EXTAPP_IDS
             )
         self.last_usage = 0

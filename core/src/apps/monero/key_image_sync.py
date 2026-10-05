@@ -77,14 +77,19 @@ async def _init_step(
     from trezor.messages import MoneroKeyImageExportInitAck
 
     from apps.common import paths
-    from apps.monero import misc
+    from apps.monero import PATTERN, SLIP44_ID, misc
     from apps.monero.xmr import monero
 
     await paths.validate_path(keychain, msg.address_n)
 
     s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 
-    await layout.require_confirm_keyimage_sync()
+    account = (
+        paths.get_account_name("XMR", msg.address_n, PATTERN, SLIP44_ID)
+        if msg.address_n[-1] != paths.HARDENED  # non-default account
+        else None
+    )
+    await layout.require_confirm_keyimage_sync(account)
 
     s.num_outputs = msg.num
     s.expected_hash = msg.hash
