@@ -131,10 +131,6 @@ struct {
   bool set;
 } g_layout __attribute__((aligned(4))) = {0};
 
-#ifndef USE_BLE_CONSOLE
-static void usb_vcp_intr_callback(void) { cli_abort(&g_cli); }
-#endif
-
 // Reads console input, runs a command if a full line arrived, flushes output
 static void prodtest_process_cli(void) {
   const cli_command_t *cmd = cli_process_io(&g_cli);
@@ -235,8 +231,8 @@ int prodtest_main(void) {
 
   drivers_init();
 
-#ifndef USE_BLE_CONSOLE
-  ensure(usb_configure(&usb_vcp_intr_callback), "usb_configure failed");
+#ifdef USE_USB
+  ensure(usb_configure(&console_usb_intr), "usb_configure failed");
 
   ensure(usb_start(NULL), "usb_start failed");
 #endif
@@ -298,6 +294,7 @@ int prodtest_main(void) {
     sysevents_t signalled = {0};
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
+    console_tick();
 #ifdef USE_BLE_CONSOLE
     prodtest_ble_console_tick();
 #endif

@@ -13,7 +13,7 @@ BLE is the default; without a name or address the tool takes any unit in
 range that announces the console service, preferring the one used last. Over
 BLE the console is whatever the device routes to it:
 - prodtest on a board with [ble_console]: the CLI, both directions; the unit
-  advertises as "<MODEL> PT <cpuid>" and accepts pairing by itself;
+  advertises as "<MODEL> PT <hash>" and accepts pairing by itself;
 - firmware built with `--dbg-console ble`: the debug log, output only (input
   is ignored). The first pairing needs "Pair new device" open on the device;
   a bonded host reconnects without it.
@@ -37,7 +37,7 @@ through trezorlib's ProdtestClient over SerialTransport on the served tty.
 
 Examples:
     console.py                             # the one unit with a console in range
-    console.py --ble "T3W1 PT 1A2B3C4D"    # a prodtest unit by name
+    console.py --ble "T3W1 PT A1B2C3"      # a prodtest unit by name
     console.py --ble "Trezor Safe 7"       # firmware debug log, name prefix
     console.py --ble C0:FF:EE:12:34:56
     console.py --serial /dev/ttyACM0
@@ -95,7 +95,8 @@ CONSOLE_RX_UUID = "8c000011-a59b-4d58-a9ad-073df69fa1b1"  # host -> device
 CONSOLE_TX_UUID = "8c000012-a59b-4d58-a9ad-073df69fa1b1"  # device -> host
 PACKET_SIZE = 244
 
-# Prodtest advertises as "<MODEL> PT <cpuid>".
+# Prodtest advertises as "<MODEL> PT <hash>" (the start of SHA-256 over the
+# CPU id).
 # Trezor's Bluetooth SIG company id, the key of its advertising manufacturer
 # data; bit 0x10 of the flags byte (offset 0 after the id) says the BLE console
 # service is present.

@@ -16,17 +16,25 @@ To exit from interactive mode type `.+ENTER`.
 
 ### Console transport
 
-The CLI runs over USB VCP unless the board declares `[ble_console]` in its
-`embed/models/<MODEL>/boards/<board>.toml`, in which case it runs over the BLE
-console service (a GATT service separate from the wire-protocol one, see
-`nordic/trezor/README.md`), the only option on USB-less models. The T3W1 board
-configs carry the entry temporarily for bring-up; the nRF image must be built
-with `CONFIG_TRZ_CONSOLE` for the same board. The emulator always keeps its
-console on the UDP-backed VCP.
+The CLI runs over USB VCP and, on boards that declare `[ble_console]` in
+`embed/models/<MODEL>/boards/<board>.toml`, also over the BLE console service (a
+GATT service separate from the wire-protocol one, see `nordic/trezor/README.md`),
+the only option on USB-less models. Both transports are listened to until one
+of them delivers input; that transport then owns the CLI, so a unit can be
+tested over USB at one station and over BLE at another without the two
+interleaving. Ownership ends when the owner's link goes away (USB unplugged, a
+charger does not count, or the BLE host disconnected) or on `console-release`,
+after which the first input on either transport wins again. A line sent on the
+other transport meanwhile is discarded and answered there with
+`ERROR 24011 "console in use over ..."`. The T3W1 board
+configs carry the entry temporarily for
+bring-up; the nRF image must be built with `CONFIG_TRZ_CONSOLE` for the same
+board. The emulator always keeps its console on the UDP-backed VCP.
 
 With the BLE console, prodtest at boot erases all bonds, forces a static address
-and advertises in pairing mode as `<MODEL> PT <cpuid>`; pairing requests are
-accepted automatically. The host must be bonded (numeric comparison) and
+and advertises in pairing mode as `<MODEL> PT <hash>`, the hash being the first
+six hex digits of SHA-256 over the CPU id; pairing requests are accepted
+automatically. The host must be bonded (numeric comparison) and
 subscribed to the console TX characteristic. `core/tools/console.py` is a
 standalone terminal for it (needs only `bleak`, plus `pyserial` for `--serial`;
 no trezorlib); the same tool reads the firmware's debug log when the firmware

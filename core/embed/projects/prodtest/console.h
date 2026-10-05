@@ -28,18 +28,52 @@
  *
  * The CLI engine (rtl/cli) is a byte stream: it reads one byte at a time and
  * writes many small fragments. This module sits between the engine and the
- * transport the board provides:
+ * transports the board provides:
  *
+ * - USB VCP (USE_USB): a byte stream already; passed through with a blocking
+ *   write and an adaptive timeout so an absent host does not stall the loop.
  * - BLE console (USE_BLE_CONSOLE, board declares `[ble_console]`): a packet
  *   channel of up to 244 bytes. Input packets are handed to the engine byte by
  *   byte; output fragments are coalesced into a packet that is flushed on a
  *   newline, when full, or when the main loop calls console_flush().
- * - USB VCP otherwise: a byte stream already; passed through with a blocking
- *   write and an adaptive timeout so an absent host does not stall the loop.
+ *
+ * When both are built in, both are listened to until one delivers input; that
+ * transport then owns the console, so different stages of testing can use
+ * different transports without the two ever interleaving. Ownership ends when
+ * the owner's link goes away (USB unplugged, BLE disconnected), or on the
+ * `console-release` command; both transports are then listened to again.
+ * Meanwhile a line sent on the other transport is discarded and answered
+ * there with an error that names the owner.
  */
 
-/** Sets up the transport and the Ctrl-C abort hook. */
+typedef enum {
+  CONSOLE_BACKEND_NONE = 0,  // no input yet, listening on every transport
+  CONSOLE_BACKEND_USB,
+  CONSOLE_BACKEND_BLE,
+} console_backend_t;
+
+/** Sets up the transports and the Ctrl-C abort hooks. */
 void console_init(cli_t *cli);
+
+/** Transport that owns the console, NONE until the first input byte. */
+console_backend_t console_active(void);
+
+/**
+ * Gives the console up after the current command's reply has been flushed,
+ * so the other transport can take it with its first input byte.
+ */
+void console_release(void);
+
+/**
+ * Releases the console when the owning transport's link is gone. Call from
+ * the main loop on every pass.
+ */
+void console_tick(void);
+
+#ifdef USE_USB
+/** USB VCP interrupt-byte callback, to be passed to usb_configure(). */
+void console_usb_intr(void);
+#endif
 
 /** Bits of `sysevents_t.read_ready` the main loop should wait on. */
 uint32_t console_poll_mask(void);
