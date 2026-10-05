@@ -20,6 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/image_hash_conf.h>
 #include <sys/flash.h>
 #include <sys/flash_utils.h>
 #include <sys/sysevent.h>
@@ -55,6 +56,12 @@ typedef struct {
   uint32_t chunk_size;    // size of already received chunk data
   bool headers_parsed;  // true once the first chunk's headers are validated and
                         // confirmed
+  // Digest of the header prefetch exactly as on_headers validated it. Block 0
+  // is checked against it before it is written: its hash in the image covers
+  // only the code, so a retried block 0 could otherwise carry different
+  // headers than the ones that were validated and confirmed.
+  uint8_t headers_digest[IMAGE_HASH_DIGEST_LENGTH];
+  uint32_t headers_len;
   bool wireless_transport;          // whether the transport is over BLE
   image_upload_handler_t *handler;  // active image-type handler
 } upload_engine_t;
@@ -107,6 +114,15 @@ static void write_image_data(const flash_area_t *area, uint32_t offset,
   }
 }
 
+// Digest of the first `len` bytes of chunk_buffer.
+static void image_prefix_digest(uint32_t len,
+                                uint8_t digest[IMAGE_HASH_DIGEST_LENGTH]) {
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+  IMAGE_HASH_UPDATE(&ctx, (const uint8_t *)chunk_buffer, len);
+  IMAGE_HASH_FINAL(&ctx, digest);
+}
+
 static upload_status_t process_upload_chunk(protob_io_t *iface,
                                             image_upload_handler_t *handler,
                                             upload_engine_t *e) {
@@ -138,6 +154,9 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
 
       // How much of block 0 the header prefetch already delivered
       const uint32_t prefetched = e->chunk_size;
+
+      e->headers_len = prefetched;
+      image_prefix_digest(e->headers_len, e->headers_digest);
 
       uint32_t chunk_limit =
           (e->remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : e->remaining;
@@ -171,6 +190,18 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Firmware too big");
     return UPLOAD_ERR_FIRMWARE_TOO_BIG;
+  }
+
+  if (e->block == 0) {
+    uint8_t digest[IMAGE_HASH_DIGEST_LENGTH];
+    image_prefix_digest(e->headers_len, digest);
+    if (memcmp(digest, e->headers_digest, sizeof(digest)) != 0) {
+      // Not a transfer error the retry could fix: the host sent different
+      // headers. Abort.
+      send_msg_failure(iface, FailureType_Failure_ProcessError,
+                       "Firmware headers changed");
+      return UPLOAD_ERR_INVALID_IMAGE_HEADER;
+    }
   }
 
   // type-specific per-chunk integrity verification
