@@ -23,9 +23,13 @@ cmd("id")
 dirs = " ".join(str(d) for d in Path("/dev/bus/usb").parents)
 cmd(f"ls -ld /dev/bus/usb/* {dirs}")
 cmd("ls -l /dev/bus/usb/*")
+cmd("ls -l /sys/bus/usb/devices")
 cmd("ls -vl `find /sys/bus/usb/devices/usb*/ -name disable`")
 cmd(
     'for F in `find /sys/bus/usb/devices/usb*/ -name disable | sort -V`; do echo -n "$F "; cat $F; done'
+)
+cmd(
+    'for F in /sys/bus/usb/devices/usb*; do echo -n "$F -> "; CTRL=$(readlink -f $F/..); echo $CTRL; od -An -tx1 -N8 "$CTRL/config"; cat $CTRL/power/runtime_status; readlink $CTRL/driver; echo; done'
 )
 cmd("lsusb --tree -v")
 cmd("uhubctl --version")
