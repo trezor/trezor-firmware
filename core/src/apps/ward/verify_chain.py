@@ -20,7 +20,7 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     from trezor.wire import DataError
 
     from .adopt import adopt
-    from .attest import root_or_empty
+    from .attest import same_root
     from .common import require_initialized
     from .keys import derive_k_auth, derive_ward_id
     from .root import get_counter, get_root
@@ -51,7 +51,7 @@ async def verify_chain(msg: WardVerifyChain) -> WardVerifyChainAck:
     )
 
     # Same counter but a different root is a fork; a WM that lost history is `WardRejoin`'s case.
-    if root_or_empty(running_root) != root_or_empty(target_root):
+    if not same_root(running_root, target_root):
         raise DataError(
             "WARD: the chain does not descend from this device's head; if the WM lost history, use WardRejoin"
         )
@@ -97,15 +97,10 @@ def attested_step(what: str) -> "tuple[int, bytes | None, int, bytes | None]":
     """This round's attested step `(from_counter, from_root, to_counter, to_root)`, roots in app
     form (the empty tree as None)."""
     from .adopt import require_attested_round
-    from .attest import EMPTY_ROOT
+    from .attest import app_root
 
     from_counter, from_root, counter, root = require_attested_round(what)
-    return (
-        from_counter,
-        None if from_root == EMPTY_ROOT else from_root,
-        counter,
-        None if root == EMPTY_ROOT else root,
-    )
+    return from_counter, app_root(from_root), counter, app_root(root)
 
 
 async def walk_back(
@@ -131,7 +126,7 @@ async def walk_back(
     reverts = 0
     above = None
     while running_counter > stop_counter:
-        running_counter, running_root, stepped = await _pull_batch(
+        running_counter, running_root, stepped, stepped_reverts, above = await _pull_batch(
             k_auth,
             ward_id,
             running_counter,
@@ -140,9 +135,8 @@ async def walk_back(
             expect_from,
         )
         expect_from = None
-        crossed.extend(stepped[0])
-        reverts += stepped[1]
-        above = stepped[2]
+        crossed.extend(stepped)
+        reverts += stepped_reverts
     if running_counter != stop_counter:
         raise DataError("WARD: the chain does not land on counter %d" % stop_counter)
     return running_root, crossed, reverts, above
@@ -155,7 +149,7 @@ async def _pull_batch(
     running_root: "bytes | None",
     target_counter: int,
     expect_from: "tuple | None" = None,
-) -> "tuple[int, bytes | None, tuple]":
+) -> "tuple[int, bytes | None, list, int, tuple | None]":
     """Ask the host for the predecessors of the running head and fold as many as apply.
 
     The request names the exact `(counter, root)` wanted and `verify_chain_step_back` refuses any
@@ -165,8 +159,8 @@ async def _pull_batch(
     from trezor.messages import WardChainLinkAck, WardChainRequest
     from trezor.wire import DataError, context
 
-    from .attest import root_or_empty
-    from .cas import verify_chain_step_back
+    from .attest import same_root
+    from .cas import link_of, verify_chain_step_back
 
     ack = await context.call(
         WardChainRequest(to_counter=running_counter, to_root=running_root),
@@ -185,25 +179,13 @@ async def _pull_batch(
     for link in links:
         above = (running_counter, running_root)
         running_counter, running_root, reverted = verify_chain_step_back(
-            k_auth,
-            ward_id,
-            running_counter,
-            running_root,
-            (
-                link.from_counter,
-                link.from_root or None,
-                link.to_counter,
-                link.to_root or None,
-                link.auth_commit,
-            ),
+            k_auth, ward_id, running_counter, running_root, link_of(link)
         )
         # AFTER the MAC verified, never before: an unverified commitment is a host's claim.
         if expect_from is not None:
             want_counter, want_root = expect_from
             expect_from = None
-            if running_counter != want_counter or root_or_empty(
-                running_root
-            ) != root_or_empty(want_root):
+            if running_counter != want_counter or not same_root(running_root, want_root):
                 raise DataError(
                     "WARD: the first link does not begin at the attested predecessor"
                 )
@@ -214,4 +196,4 @@ async def _pull_batch(
         if running_counter <= target_counter:
             break
 
-    return running_counter, running_root, (crossed, reverts, above)
+    return running_counter, running_root, crossed, reverts, above

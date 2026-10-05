@@ -16,6 +16,10 @@ most MAX_BATCH, each authorised), not currency -- the WM attestation supplies th
 """
 
 from micropython import const
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from trezor.messages import WardChainLink
 
 # The most changes one transition (a batch) may carry; every step rule is
 # "1 <= to - from <= MAX_BATCH". Variable steps mean every walk must land EXACTLY.
@@ -48,6 +52,7 @@ def transition_preimage(
     from trezor.wire import DataError
 
     from .attest import root_or_empty
+    from .codec import step_bytes
 
     from_root = root_or_empty(from_root)
     to_root = root_or_empty(to_root)
@@ -59,11 +64,21 @@ def transition_preimage(
         bytes([len(tag)])
         + tag
         + ward_id
-        + from_counter.to_bytes(4, "big")
-        + from_root
-        + to_counter.to_bytes(4, "big")
-        + to_root
+        + step_bytes(from_counter, from_root, to_counter, to_root)
     )
+
+
+def _mac(key: bytes, preimage: bytes) -> bytes:
+    from trezor.crypto import hmac
+
+    return hmac(hmac.SHA256, key, preimage).digest()
+
+
+def _mac_ok(expected: bytes, mac: bytes) -> bool:
+    from trezor.utils import consteq
+
+    # CONSTANT TIME: `mac` comes from the host, and bytes `==` short-circuits.
+    return consteq(expected, mac)
 
 
 def auth_commit(
@@ -76,13 +91,10 @@ def auth_commit(
     tag: bytes = TAG_COMMIT,
 ) -> bytes:
     """Authorise a transition. Only a device holding the seed can produce this."""
-    from trezor.crypto import hmac
-
-    return hmac(
-        hmac.SHA256,
+    return _mac(
         k_auth,
         transition_preimage(tag, ward_id, from_counter, from_root, to_counter, to_root),
-    ).digest()
+    )
 
 
 def verify_auth_commit(
@@ -96,29 +108,36 @@ def verify_auth_commit(
     tag: bytes = TAG_COMMIT,
 ) -> bool:
     """Was this exact transition authorised by a holder of this wallet's K_auth?"""
-    from trezor.utils import consteq
-
-    expected = auth_commit(
-        k_auth, ward_id, from_counter, from_root, to_counter, to_root, tag
+    return _mac_ok(
+        auth_commit(k_auth, ward_id, from_counter, from_root, to_counter, to_root, tag),
+        mac,
     )
-    # CONSTANT TIME: `mac` comes from the host, and bytes `==` short-circuits.
-    return consteq(expected, mac)
 
 
-def _link_is_revert(k_auth: bytes, ward_id: bytes, link: "tuple") -> bool:
-    """Is this link a REVERT (True) or a COMMIT (False)? Raises if it is neither.
+def link_of(msg: "WardChainLink") -> tuple:
+    """A wire link as `(from_counter, from_root, to_counter, to_root, auth_commit)`."""
+    return (
+        msg.from_counter,
+        msg.from_root or None,
+        msg.to_counter,
+        msg.to_root or None,
+        msg.auth_commit,
+    )
+
+
+def link_kind(
+    k_auth: bytes, ward_id: bytes, link: tuple, error: str = "WARD: chain link is not authorised"
+) -> bool:
+    """Is this link a REVERT (True) or a COMMIT (False)? DataError(error) if it is neither.
 
     Both kinds are real transitions for descent; which one it was is reported, not swallowed.
     """
     from trezor.wire import DataError
 
-    from_counter, from_root, to_counter, to_root, mac = link
     for tag, is_revert in ((TAG_COMMIT, False), (TAG_REVERT, True)):
-        if verify_auth_commit(
-            k_auth, ward_id, from_counter, from_root, to_counter, to_root, mac, tag
-        ):
+        if verify_auth_commit(k_auth, ward_id, *link, tag):
             return is_revert
-    raise DataError("WARD: chain link is not authorised")
+    raise DataError(error)
 
 
 def verify_chain_step(
@@ -130,23 +149,21 @@ def verify_chain_step(
 ) -> "tuple[int, bytes | None, bool]":
     """Fold one link (from_counter, from_root, to_counter, to_root, auth_commit) FORWARD.
 
-    Its `from` must be the running head and it must advance by 1..MAX_BATCH, before the MAC is
-    checked. Returns `(to_counter, to_root, is_revert)`; raises on any failure.
+    Its `from` must be the running head and it must advance by 1..MAX_BATCH, both before the MAC
+    is computed. Returns `(to_counter, to_root, is_revert)`.
     """
     from trezor.wire import DataError
 
-    from .attest import root_or_empty
+    from .attest import same_root
 
-    from_counter, from_root, to_counter, to_root, _mac = link
-
-    if from_counter != running_counter:
+    fc, fr, tc, tr, _mac = link
+    if fc != running_counter:
         raise DataError("WARD: chain link does not follow the running counter")
-    if root_or_empty(from_root) != root_or_empty(running_root):
+    if not same_root(fr, running_root):
         raise DataError("WARD: chain link does not follow the running root")
-    if not 1 <= to_counter - running_counter <= MAX_BATCH:
+    if not 1 <= tc - running_counter <= MAX_BATCH:
         raise DataError("WARD: chain link must advance the counter by 1 to MAX_BATCH")
-
-    return to_counter, to_root, _link_is_revert(k_auth, ward_id, link)
+    return tc, tr, link_kind(k_auth, ward_id, link)
 
 
 def verify_chain_step_back(
@@ -160,23 +177,21 @@ def verify_chain_step_back(
 
     A separate function, not a flag: which end is pinned is the whole security of a walk.
     Backwards the `to` end is pinned by an already-established state, so an orphaned link the
-    WM never accepted is refused on the root check before its MAC is computed.
+    WM never accepted is refused on the root check before its MAC is computed. A batch steps
+    back by several; the calling walk must land EXACTLY on its stop counter.
     """
     from trezor.wire import DataError
 
-    from .attest import root_or_empty
+    from .attest import same_root
 
-    from_counter, from_root, to_counter, to_root, _mac = link
-
-    if to_counter != running_counter:
+    fc, fr, tc, tr, _mac = link
+    if tc != running_counter:
         raise DataError("WARD: chain link does not end at the running counter")
-    if root_or_empty(to_root) != root_or_empty(running_root):
+    if not same_root(tr, running_root):
         raise DataError("WARD: chain link does not end at the running root")
-    # A batch steps back by several; the calling walk must land EXACTLY on its stop counter.
-    if not 1 <= running_counter - from_counter <= MAX_BATCH:
+    if not 1 <= running_counter - fc <= MAX_BATCH:
         raise DataError("WARD: chain link must step the counter back by 1 to MAX_BATCH")
-
-    return from_counter, from_root, _link_is_revert(k_auth, ward_id, link)
+    return fc, fr, link_kind(k_auth, ward_id, link)
 
 
 # --- the queued INTENT ---------------------------------------------------------------------
@@ -205,27 +220,20 @@ def intent_preimage(
     """
     from trezor.wire import DataError
 
-    kt = key_type.encode()
-    ai = app_id.encode()
+    from .codec import lp
+
     if len(ward_id) != 32:
         raise DataError("WARD: intent operands must be 32 bytes")
-    if len(kt) > 0xFF or len(ai) > 0xFF:
-        raise DataError("WARD: key_type or app_id too long to authenticate")
-    if len(identifier) > 0xFFFF or len(value) > 0xFFFF:
-        raise DataError("WARD: identifier or value too long to authenticate")
-
+    names = "WARD: key_type or app_id too long to authenticate"
+    sizes = "WARD: identifier or value too long to authenticate"
     return (
         TAG_INTENT
         + ward_id
         + bytes([op])
-        + bytes([len(kt)])
-        + kt
-        + bytes([len(ai)])
-        + ai
-        + len(identifier).to_bytes(2, "big")
-        + identifier
-        + len(value).to_bytes(2, "big")
-        + value
+        + lp(1, key_type.encode(), names)
+        + lp(1, app_id.encode(), names)
+        + lp(2, identifier, sizes)
+        + lp(2, value, sizes)
     )
 
 
@@ -239,13 +247,7 @@ def intent_mac(
     value: bytes,
 ) -> bytes:
     """Authenticate a queued intent. Only a device holding the seed can produce this."""
-    from trezor.crypto import hmac
-
-    return hmac(
-        hmac.SHA256,
-        k_auth,
-        intent_preimage(ward_id, op, key_type, app_id, identifier, value),
-    ).digest()
+    return _mac(k_auth, intent_preimage(ward_id, op, key_type, app_id, identifier, value))
 
 
 def verify_intent_mac(
@@ -259,11 +261,9 @@ def verify_intent_mac(
     mac: bytes,
 ) -> bool:
     """Did a device of this wallet queue EXACTLY this intent? (Not: should it be queued again.)"""
-    from trezor.utils import consteq
-
-    # Constant time, as in `verify_auth_commit`.
-    expected = intent_mac(k_auth, ward_id, op, key_type, app_id, identifier, value)
-    return consteq(expected, mac)
+    return _mac_ok(
+        intent_mac(k_auth, ward_id, op, key_type, app_id, identifier, value), mac
+    )
 
 
 # --- the WM's authorisation -------------------------------------------------------------
@@ -305,11 +305,15 @@ def wm_preimage(
     if len(head_nonce) != 32:
         raise DataError("WARD: the WM head nonce must be 32 bytes")
     return (
-        transition_preimage(
-            tag, ward_id, from_counter, from_root, to_counter, to_root
-        )
+        transition_preimage(tag, ward_id, from_counter, from_root, to_counter, to_root)
         + head_nonce
     )
+
+
+def _wm_sign(k_sig: bytes, *preimage_args) -> bytes:
+    from trezor.crypto.curve import ed25519
+
+    return ed25519.sign(k_sig, wm_preimage(*preimage_args))
 
 
 def wm_sig(
@@ -323,13 +327,8 @@ def wm_sig(
     tag: bytes = TAG_WM_HEAD,
 ) -> bytes:
     """Authorise a head advance to the WM (TAG_WM_HEAD, or TAG_WM_REVERT for a demotion)."""
-    from trezor.crypto.curve import ed25519
-
-    return ed25519.sign(
-        k_sig,
-        wm_preimage(
-            tag, ward_id, from_counter, from_root, to_counter, to_root, head_nonce
-        ),
+    return _wm_sign(
+        k_sig, tag, ward_id, from_counter, from_root, to_counter, to_root, head_nonce
     )
 
 
@@ -399,13 +398,8 @@ def head_init_sig(
     counter 0 (enforced device-side by `adopt.verify_round_attestation`). Re-seeding a WM that
     lost its register is out of scope.
     """
-    from trezor.crypto.curve import ed25519
-
-    return ed25519.sign(
-        k_sig,
-        wm_preimage(
-            TAG_WM_INIT, ward_id, counter, root, counter, root, NO_HEAD_NONCE
-        ),
+    return _wm_sign(
+        k_sig, TAG_WM_INIT, ward_id, counter, root, counter, root, NO_HEAD_NONCE
     )
 
 

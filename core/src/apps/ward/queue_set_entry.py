@@ -17,7 +17,7 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
     from trezor.wire import DataError
 
     from . import offline_store
-    from .common import display_bytes, require_key
+    from .common import display_bytes, entry_props, require_key
     from .keys import ENTRY_TYPE_ADDRESS
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
@@ -38,7 +38,7 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
 
     status, existing = await offline_store.get(key_type, app_id, identifier)
 
-    props = offline_store.entry_props(app_id, identifier)
+    props = entry_props(app_id, identifier)
     if status == offline_store.VALID and existing is not None:
         title = "Queue update"
         props.append(("Replaces (local copy)", display_bytes(existing.value), True))
@@ -79,7 +79,7 @@ async def _restore(
 
     from . import offline_store
     from .cas import OP_SET, verify_intent_mac
-    from .common import display_bytes
+    from .common import display_bytes, entry_props
     from .keys import derive_k_auth, derive_ward_id
 
     if not verify_intent_mac(
@@ -98,7 +98,7 @@ async def _restore(
 
     status, existing = await offline_store.get(key_type, app_id, identifier)
 
-    props = offline_store.entry_props(app_id, identifier)
+    props = entry_props(app_id, identifier)
 
     if status == offline_store.CORRUPT:
         title = "Replace offline copy?"

@@ -18,8 +18,8 @@ async def rejoin(msg: WardRejoin) -> WardRejoinAck:
     from trezor.wire import DataError
 
     from .adopt import adopt
-    from .attest import EMPTY_ROOT, root_or_empty
-    from .common import require_initialized
+    from .attest import app_root, same_root
+    from .common import change_no, count_changes, require_initialized
     from .keys import derive_k_auth, derive_ward_id
     from .root import get_counter, get_root
     from .verify_chain import attested_step, walk_back, warn_reached_by_revert
@@ -32,7 +32,7 @@ async def rejoin(msg: WardRejoin) -> WardRejoinAck:
     stored_root = await get_root()
     if stored_root is None:
         raise DataError("WARD: no trusted root; nothing to rejoin from")
-    stored_root = None if stored_root == EMPTY_ROOT else stored_root
+    stored_root = app_root(stored_root)
 
     if head_counter < stored_counter:
         raise DataError("WARD: the WM head is behind this device; use WardRollback")
@@ -63,13 +63,11 @@ async def rejoin(msg: WardRejoin) -> WardRejoinAck:
         fork_counter,
     )
 
-    if root_or_empty(main_root) != root_or_empty(branch_root):
+    if not same_root(main_root, branch_root):
         raise DataError("WARD: the two branches do not meet at the fork point")
     # Compared as (counter, root) states: a batch on one branch puts `above` at another counter.
     assert main_above is not None and branch_above is not None
-    if main_above[0] == branch_above[0] and root_or_empty(
-        main_above[1]
-    ) == root_or_empty(branch_above[1]):
+    if main_above[0] == branch_above[0] and same_root(main_above[1], branch_above[1]):
         raise DataError("WARD: the branches do not part at the fork point")
 
     discarded = stored_counter - fork_counter
@@ -77,14 +75,10 @@ async def rejoin(msg: WardRejoin) -> WardRejoinAck:
         "ward_rejoin",
         "Rejoin shared history",
         [
-            ("Currently at", "change #%d" % stored_counter, False),
-            ("Last shared", "change #%d" % fork_counter, False),
-            ("Rejoining at", "change #%d" % head_counter, False),
-            (
-                "Discarding",
-                "%d change%s" % (discarded, "" if discarded == 1 else "s"),
-                False,
-            ),
+            ("Currently at", change_no(stored_counter), False),
+            ("Last shared", change_no(fork_counter), False),
+            ("Rejoining at", change_no(head_counter), False),
+            ("Discarding", count_changes(discarded), False),
             (
                 "Warning",
                 "The WARD Manager did not keep changes it had confirmed. Discarded changes cannot be recovered.",

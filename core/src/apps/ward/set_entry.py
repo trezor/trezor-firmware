@@ -15,26 +15,14 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
 
     from .common import (
         WARNING_UNVERIFIED,
+        commit_change,
         display_bytes,
-        finish_write,
+        entry_props,
         online,
         pull_leaf,
         require_key,
     )
-    from .keys import (
-        ENTRY_TYPE_ADDRESS,
-        derive_k_data,
-        derive_k_ident,
-        entry_key_for,
-    )
-    from .leaf import (
-        encode_content,
-        encode_identity,
-        make_leaf_content,
-        make_leaf_identity,
-    )
-    from .root import get_counter, get_root, root_for_write
-    from .trie import compute_new_root
+    from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
@@ -51,10 +39,7 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
 
     old, old_leaf, material = await pull_leaf(entry_key, key_type)
 
-    props = [
-        ("Domain", app_id, False),
-        ("Key", display_bytes(identifier), True),
-    ]
+    props = entry_props(app_id, identifier)
     if old is None:
         title = "Add entry"
     else:
@@ -65,33 +50,6 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
 
     await confirm_properties("ward_set_entry", title, props)
 
-    # Sealed only after confirmation; the leaf is stamped with the counter it lands at (C_leaf).
-    from_root = await get_root()
-    counter = await get_counter() + 1
-    id_part = encode_identity(
-        await derive_k_ident(key_type), entry_key, key_type, identifier, app_id
-    )
-    val_part = encode_content(
-        await derive_k_data(key_type), entry_key, key_type, value, c_leaf=counter
-    )
-
-    # The device DERIVES its new root from proven state rather than being told one.
-    proof, witness_entry_key, witness_commit = material
-    new_root = compute_new_root(
-        entry_key,
-        old_leaf,
-        (key_type, id_part, val_part),
-        proof,
-        root_for_write(from_root),
-        witness_entry_key=witness_entry_key,
-        witness_commit=witness_commit,
-    )
-
-    return await finish_write(
-        entry_key,
-        make_leaf_identity(key_type, id_part),
-        make_leaf_content(val_part),
-        from_root,
-        counter,
-        new_root,
+    return await commit_change(
+        entry_key, key_type, app_id, identifier, value, old_leaf, material
     )

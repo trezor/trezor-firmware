@@ -24,16 +24,16 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
 
     from .common import (
         WARNING_UNVERIFIED,
+        commit_change,
         display_bytes,
-        finish_write,
+        entry_props,
         online,
         pull_leaf,
         require_key,
     )
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
     from .leaf import EMPTY_PART, make_leaf_content, make_leaf_identity
-    from .root import get_counter, get_root, root_for_write
-    from .trie import compute_new_root
+    from .root import get_counter
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
@@ -59,31 +59,12 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
             counter=counter,
         )
 
-    props = [
-        ("Domain", app_id, False),
-        ("Key", display_bytes(identifier), True),
-        ("Deleting value", display_bytes(current), True),
-        WARNING_UNVERIFIED,
-    ]
+    props = entry_props(app_id, identifier)
+    props.append(("Deleting value", display_bytes(current), True))
+    props.append(WARNING_UNVERIFIED)
 
     await confirm_properties("ward_delete_entry", "Delete entry", props, hold=True)
 
-    proof, _witness_key, _witness_commit = material
-    from_root = await get_root()
-    counter = await get_counter() + 1
-    new_root = compute_new_root(
-        entry_key,
-        old_leaf,
-        None,
-        proof,
-        root_for_write(from_root),
-    )
-
-    return await finish_write(
-        entry_key,
-        make_leaf_identity(key_type, EMPTY_PART),
-        make_leaf_content(EMPTY_PART),
-        from_root,
-        counter,
-        new_root,
+    return await commit_change(
+        entry_key, key_type, app_id, identifier, None, old_leaf, material
     )

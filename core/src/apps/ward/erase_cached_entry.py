@@ -14,31 +14,25 @@ async def erase_cached_entry(msg: WardEraseCachedEntry) -> Success:
     from trezor.ui.layouts import confirm_properties
 
     from . import offline_store
-    from .common import display_bytes
+    from .common import display_bytes, entry_props
 
     app_id, identifier, key_type, status, entry = await offline_store.lookup(msg)
 
     if status == offline_store.MISS:
         return Success(message="WARD entry not kept offline")
 
-    props = offline_store.entry_props(app_id, identifier)
     unreadable = status == offline_store.CORRUPT or entry is None
+    shown = (offline_store.UNREADABLE, False) if unreadable else (display_bytes(entry.value), True)
 
     if unreadable:
-        title = "Remove unreadable copy?"
-        props.append(("Removing", offline_store.UNREADABLE, False))
+        title, label, tail = "Remove unreadable copy?", "Removing", []
     elif entry.pending:
-        title = "Discard pending change?"
-        props.append(("Discarding", display_bytes(entry.value), True))
-        props.append(
-            ("Warning", "This change was never published. It will be lost.", False)
-        )
+        title, label = "Discard pending change?", "Discarding"
+        tail = [("Warning", "This change was never published. It will be lost.", False)]
     else:
-        title = "Remove offline copy?"
-        props.append(("Removing", display_bytes(entry.value), True))
-        props.append(
-            ("Note", "The entry itself is not deleted, only this device's copy.", False)
-        )
+        title, label = "Remove offline copy?", "Removing"
+        tail = [("Note", "The entry itself is not deleted, only this device's copy.", False)]
+    props = entry_props(app_id, identifier) + [(label,) + shown] + tail
 
     await confirm_properties("ward_erase_cached_entry", title, props, hold=True)
 

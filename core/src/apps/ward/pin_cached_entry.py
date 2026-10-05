@@ -16,7 +16,7 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     from trezor.wire import DataError
 
     from . import offline_store
-    from .common import display_bytes, online, pull_leaf, require_key
+    from .common import display_bytes, entry_props, online, pull_leaf, require_key
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
@@ -35,16 +35,11 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     offline_store.ensure_storable(key_type, app_id, identifier, value)
 
     status, existing = await offline_store.get(key_type, app_id, identifier)
-    props = offline_store.entry_props(app_id, identifier)
+    props = entry_props(app_id, identifier)
 
-    if status == offline_store.VALID and existing is not None:
-        if existing.value == value:
-            return Success(message="WARD entry already kept offline")
-        replacing = (display_bytes(existing.value), True)
-    elif status == offline_store.CORRUPT:
-        replacing = (offline_store.UNREADABLE, False)
-    else:
-        replacing = None
+    if status == offline_store.VALID and existing is not None and existing.value == value:
+        return Success(message="WARD entry already kept offline")
+    replacing = offline_store.existing_value(status, existing)
 
     if replacing is not None:
         await confirm_properties(

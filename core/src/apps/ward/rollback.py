@@ -23,24 +23,20 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     from trezor.wire import DataError
 
     from . import round as sync_round
-    from .adopt import verify_round_attestation
+    from .adopt import verify_attested
     from .cas import authorise
-    from .common import WARNING_UNVERIFIED, require_initialized
+    from .common import (
+        WARNING_UNVERIFIED,
+        change_no,
+        count_changes,
+        require_initialized,
+    )
     from .root import get_counter
 
     require_initialized()
 
     # The predecessor is the WM's own attested head, the pair it will compare-and-swap on.
-    _fc, _fr, wm_counter, wm_root = await verify_round_attestation(
-        msg.from_counter,
-        msg.from_root or None,
-        msg.from_head_nonce,
-        msg.to_counter,
-        msg.to_root or None,
-        msg.to_head_nonce,
-        msg.timestamp or 0,
-        msg.wm_signature,
-    )
+    _fc, _fr, wm_counter, wm_root = await verify_attested(msg)
 
     recovered_root = msg.recovered_root or None
     if recovered_root is not None and len(recovered_root) != 32:
@@ -50,26 +46,17 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     new_counter = wm_counter + 1
 
     props = [
-        ("Currently at", "change #%d" % stored_counter, False),
-        ("Restoring at", "change #%d" % new_counter, False),
+        ("Currently at", change_no(stored_counter), False),
+        ("Restoring at", change_no(new_counter), False),
     ]
     # Depth from authenticated numbers: an honest recovery is shallow, malice must go deep.
     if new_counter <= stored_counter:
-        discarded = stored_counter - new_counter
-        props.append(
-            (
-                "Discarding",
-                "%d change%s" % (discarded, "" if discarded == 1 else "s"),
-                False,
-            )
-        )
-    props.append(
-        ("Warning", "Discarded changes cannot be recovered.", False)
-    )
-    props.append(
-        ("Target", "Proposed by the host. Not confirmed by the WARD Manager.", False)
-    )
-    props.append(WARNING_UNVERIFIED)
+        props.append(("Discarding", count_changes(stored_counter - new_counter), False))
+    props += [
+        ("Warning", "Discarded changes cannot be recovered.", False),
+        ("Target", "Proposed by the host. Not confirmed by the WARD Manager.", False),
+        WARNING_UNVERIFIED,
+    ]
 
     await confirm_properties("ward_rollback", "Revert changes", props, hold=True)
 

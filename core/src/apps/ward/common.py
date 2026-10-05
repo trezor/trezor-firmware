@@ -34,6 +34,22 @@ def display_bytes(value: bytes) -> str:
         return value.hex()
 
 
+def change_no(counter: int) -> str:
+    return "change #%d" % counter
+
+
+def count_changes(n: int) -> str:
+    return "%d change%s" % (n, "" if n == 1 else "s")
+
+
+def entry_props(app_id: str, identifier: bytes) -> list:
+    """The Domain and Key rows every entry screen opens with."""
+    return [
+        ("Domain", app_id, False),
+        ("Key", display_bytes(identifier), True),
+    ]
+
+
 def require_initialized() -> None:
     """Every WARD request needs a seed."""
     from apps.common.seed import raise_if_not_initialized
@@ -161,23 +177,63 @@ async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
     return value
 
 
-async def finish_write(
+async def commit_change(
     entry_key: bytes,
-    identity,
-    content,
-    from_root: bytes | None,
-    counter: int,
-    new_root: bytes | None,
+    key_type: str,
+    app_id: str,
+    identifier: bytes,
+    value: "bytes | None",
+    old_leaf: "tuple | None",
+    material: tuple,
 ) -> "WardLeafAck | WardMutationApplied":
-    """Authorise `(counter - 1, from_root) -> (counter, new_root)` and hand it on.
+    """Seal `value` (None: delete), derive the new root from the proven pull, authorise
+    `(counter - 1, from_root) -> (counter, new_root)` and hand it on. Called after the screen.
 
-    NOT COMMITTED HERE: the head moves only when a WM attestation names this transition and the
-    device re-verifies it. A connect build returns the leaf and authorisations; a service build
-    publishes and adopts, returning no leaf -- a replica owner reads an absent content body as a
-    deletion.
+    The leaf is stamped with the counter it lands at (C_leaf). The device DERIVES its new root
+    rather than being told one. NOT COMMITTED HERE: the head moves only when a WM attestation
+    names this transition and the device re-verifies it. A connect build returns the leaf and
+    authorisations; a service build publishes and adopts, returning no leaf -- a replica owner
+    reads an absent content body as a deletion.
     """
     from .cas import authorise
+    from .keys import derive_k_data, derive_k_ident
+    from .leaf import (
+        EMPTY_PART,
+        encode_content,
+        encode_identity,
+        make_leaf_content,
+        make_leaf_identity,
+    )
+    from .root import get_counter, get_root, root_for_write
+    from .trie import compute_new_root
 
+    from_root = await get_root()
+    counter = await get_counter() + 1
+    if value is None:
+        id_part = val_part = EMPTY_PART
+        new_leaf = None
+    else:
+        id_part = encode_identity(
+            await derive_k_ident(key_type), entry_key, key_type, identifier, app_id
+        )
+        val_part = encode_content(
+            await derive_k_data(key_type), entry_key, key_type, value, c_leaf=counter
+        )
+        new_leaf = (key_type, id_part, val_part)
+
+    # A delete has an old leaf, so it is never an insert and the witness goes unused.
+    proof, witness_entry_key, witness_commit = material
+    new_root = compute_new_root(
+        entry_key,
+        old_leaf,
+        new_leaf,
+        proof,
+        root_for_write(from_root),
+        witness_entry_key=witness_entry_key,
+        witness_commit=witness_commit,
+    )
+    identity = make_leaf_identity(key_type, id_part)
+    content = make_leaf_content(val_part)
     step, advance = await authorise(counter - 1, from_root, counter, new_root)
 
     if utils.USE_WARD_SERVICE_CHANNEL:
