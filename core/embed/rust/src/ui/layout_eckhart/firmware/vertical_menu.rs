@@ -14,7 +14,7 @@ use crate::ui::util::animation_disabled;
 /// Number of buttons.
 /// Presently, VerticalMenu holds only fixed number of buttons.
 pub const LONG_MENU_ITEMS: usize = 100;
-pub const MEDIUM_MENU_ITEMS: usize = 10;
+pub const MEDIUM_MENU_ITEMS: usize = 16;
 pub const SHORT_MENU_ITEMS: usize = 6;
 
 /// `select_menu()` builds a `ShortMenuVec` out of a list already bounded by

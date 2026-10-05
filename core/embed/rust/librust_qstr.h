@@ -794,6 +794,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_rotation__south;
   MP_QSTR_rotation__title_change;
   MP_QSTR_rotation__west;
+  MP_QSTR_run;
   MP_QSTR_safety_checks__approve_unsafe_always;
   MP_QSTR_safety_checks__approve_unsafe_temporary;
   MP_QSTR_safety_checks__enforce_strict;

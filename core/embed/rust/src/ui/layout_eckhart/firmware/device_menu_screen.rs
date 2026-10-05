@@ -424,37 +424,22 @@ impl DeviceMenuScreen {
         &mut self,
         paired_devices: Vec<(TString<'static>, Option<[TString<'static>; 2]>), MAX_PAIRED_DEVICES>,
         submenu_indices: Vec<u8, MAX_PAIRED_DEVICES>,
-        connected_idx: Option<u8>,
+        _connected_idx: Option<u8>,
     ) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
-        for (i, ((_mac, host_info), device)) in
+        for (i, ((_mac, host_info), _device)) in
             (0u8..).zip(paired_devices.iter().zip(submenu_indices))
         {
-            let connection_status = match connected_idx {
-                Some(idx) if idx == i => Some(true),
-                _ => Some(false),
-            };
-
             let text = if let Some([host_name, _app_name]) = host_info {
                 *host_name
             } else {
                 TR::words__unknown.into()
             };
 
-            let item_device =
-                MenuItem::go_to_subscreen(text, device).with_connection_status(connection_status);
+            let item_device = MenuItem::return_msg(text, DeviceMenuMsg::UnpairDevice(i));
 
             items.add(item_device);
         }
-
-        items.add(MenuItem::return_msg(
-            TR::ble__pair_new.into(),
-            DeviceMenuMsg::PairDevice,
-        ));
-        let unpair_all_item =
-            MenuItem::return_msg(TR::ble__forget_all.into(), DeviceMenuMsg::UnpairAllDevices)
-                .warn();
-        items.add(unpair_all_item);
 
         self.register_submenu(DeviceMenuId::PairAndConnect, Submenu::new(items));
     }
@@ -708,7 +693,7 @@ impl DeviceMenuScreen {
         backup_failed: bool,
         backup_needed: bool,
         pin_unset: bool,
-        connected_subtext: Option<TString<'static>>,
+        _connected_subtext: Option<TString<'static>>,
     ) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
 
@@ -742,10 +727,7 @@ impl DeviceMenuScreen {
         }
 
         if self.has_submenu(DeviceMenuId::PairAndConnect) {
-            let connected = connected_subtext.is_some();
-            let it =
-                MenuItem::go_to_submenu(TR::ble__pair_title.into(), DeviceMenuId::PairAndConnect)
-                    .with_connection_status(Some(connected));
+            let it = MenuItem::go_to_submenu("NFC Command".into(), DeviceMenuId::PairAndConnect);
             items.add(it);
         }
 

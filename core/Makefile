@@ -80,7 +80,7 @@ ifeq ($(PYOPT),1)
 XTASK_BUILD_OPTS += --pyopt true
 else ifeq ($(PYOPT),0)
 XTASK_BUILD_OPTS += --pyopt false
-XTASK_BUILD_OPTS += --disable-animation
+# XTASK_BUILD_OPTS += --disable-animation
 XTASK_BUILD_OPTS += --dbg-console vcp
 XTASK_BUILD_OPTS += --debug-link
 endif

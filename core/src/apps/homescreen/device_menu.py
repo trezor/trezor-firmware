@@ -104,7 +104,21 @@ def _menu_params(
     if __debug__:
         log.debug(__name__, "connected: %s (%s)", connected_addr, connected_idx)
     hostname_map = {e.mac_addr: e for e in paired_cache.load()}
-    paired_devices = [_get_hostinfo(bond, hostname_map) for bond in bonds]
+    # paired_devices = [_get_hostinfo(bond, hostname_map) for bond in bonds]
+    paired_devices = [
+        (name, (name, ""))
+        for name in [
+            "ReadSeedMeta",
+            "WriteSeedMeta",
+            "ReadSeed",
+            "WriteSeed",
+            "Wipe",
+            "SetPin",
+            "ReadPinCounter",
+            "ReadSuccessLog",
+            "ReadFailureLogs",
+        ]
+    ]
 
     # versions used in "About" screen, emulator uses dummy versions for fixtures
     if utils.EMULATOR or not utils.USE_NRF:
@@ -288,13 +302,28 @@ async def handle_UnpairAllDevices() -> None:
 
 
 async def handle_UnpairDevice(index: int) -> None:
-    from trezor.messages import BleUnpair
+    from trezornfc import run
 
-    from apps.management.ble.unpair import unpair
+    done = False
 
-    bonds = ble.get_bonds()
-    if index < len(bonds):
-        await unpair(BleUnpair(addr=bonds[index]))
+    while not done:
+        try:
+            len, response = run(index)
+            done = True
+        except Exception as e:
+            log.exception(__name__, e)
+            len = 0
+            response = str(e)
+            cancel = True
+        if response:
+            with trezorui_api.confirm_value(
+                title=f"NFC response ({len} B)" if len > 0 else "NFC response",
+                value=response,
+                is_data=True,
+                verb=None if done else "Retry",
+                cancel=not done,
+            ) as layout:
+                await raise_if_not_confirmed(layout, "nfc")
 
 
 async def handle_ToggleBluetooth() -> None:

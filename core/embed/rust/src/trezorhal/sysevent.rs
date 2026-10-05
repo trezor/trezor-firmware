@@ -171,16 +171,18 @@ pub fn parse_event(signalled: &sysevents_t) -> Option<Event> {
     None
 }
 
-pub fn sysevents_poll(ifaces: &[Syshandle]) -> Option<Event> {
+pub fn sysevents_poll_timeout(ifaces: &[Syshandle], timeout: Duration) -> Option<Event> {
     let awaited = Sysevents::reading_from(ifaces);
     let mut signalled = Sysevents::zeroed();
 
-    let deadline = Instant::now()
-        .checked_add(Duration::from_millis(100))
-        .unwrap();
+    let deadline = Instant::now().checked_add(timeout).unwrap();
 
     // SAFETY: safe.
     unsafe { ffi::sysevents_poll(&awaited as _, &mut signalled as _, deadline.to_millis()) };
 
     parse_event(&signalled)
+}
+
+pub fn sysevents_poll(ifaces: &[Syshandle]) -> Option<Event> {
+    sysevents_poll_timeout(ifaces, Duration::from_millis(100))
 }
