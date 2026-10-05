@@ -35,8 +35,11 @@
 #include <io/ble_console.h>
 #include <rtl/printf.h>
 #include <sys/cpuid.h>
+
+#include "sha2.h"
 #endif
 
+#include "console.h"
 #include "prodtest_ble.h"
 #include "prodtest_error_codes.h"
 
@@ -112,6 +115,12 @@ void prodtest_ble_console_tick(void) {
     return;
   }
 
+  // Once the operator talks over USB the radio is theirs: the BLE test
+  // commands must not have their advertising undone from here.
+  if (console_active() == CONSOLE_BACKEND_USB) {
+    return;
+  }
+
   ble_state_t state = {0};
   ble_get_state(&state);
 
@@ -148,13 +157,17 @@ bool prodtest_ble_console_start(void) {
   ble_set_enabled(true);
   ble_set_static_mac(true);
 
-  // Per-unit advertising name, e.g. "T3W1 PT 1A2B3C4D"; fits BLE_ADV_NAME_LEN.
+  // Per-unit advertising name, e.g. "T3W1 PT A1B2C3"; fits BLE_ADV_NAME_LEN.
+  // The suffix is the start of SHA-256 over the whole CPU id, so every bit of
+  // the id contributes and the name does not leak the id itself.
   cpuid_t cpuid = {0};
   cpuid_get(&cpuid);
+  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+  sha256_Raw((const uint8_t*)&cpuid.id, sizeof(cpuid.id), digest);
 
-  int name_len =
-      snprintf_(g_console_adv_name, sizeof(g_console_adv_name), "%s PT %08lX",
-                MODEL_INTERNAL_NAME, (unsigned long)cpuid.id[2]);
+  int name_len = snprintf_(g_console_adv_name, sizeof(g_console_adv_name),
+                           "%s PT %02X%02X%02X", MODEL_INTERNAL_NAME, digest[0],
+                           digest[1], digest[2]);
   if (name_len < 0) {
     return false;
   }

@@ -26,6 +26,7 @@ fn main() -> Result<()> {
                 "common.c",
                 "prodtest_boardloader.c",
                 "prodtest_button.c",
+                "prodtest_console.c",
                 "prodtest_crc.c",
                 "prodtest_display.c",
                 "prodtest_prodtest.c",
