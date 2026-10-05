@@ -7,7 +7,7 @@ use anyhow::{Context, Ok, Result, ensure};
 use std::{path::Path, process::Command};
 
 /// Python tool building the app Merkle proofs and the RootPacket(s), relative to the repo root.
-const APPTREE_TOOL: &str = "core/tools/trezor_core_tools/extapp_tool.py";
+const APPTREE_TOOL: &str = "core/tools/trezor_core_tools/apptree_tool.py";
 
 /// Generates application tree (Merkle proofs and RootPacket) for all
 /// application in artifacts directory.
@@ -23,11 +23,15 @@ pub fn generate() -> Result<()> {
         .context("Failed to resolve repo root from the sdk/apps workspace root")?
         .to_path_buf();
 
+    let artifacts_serialized_dir = helpers::artifacts_serialized_dir()?;
+
     let mut cmd = Command::new("uv");
     cmd.arg("run")
         .arg(repo_root.join(APPTREE_TOOL))
-        .arg("build-dev-bundle")
+        .arg("post-build")
         .args(&apps)
+        .arg("--out-dir")
+        .arg(artifacts_serialized_dir)
         .current_dir(&repo_root);
 
     println!("app-tool: Building app proofs and dev-signed RootPacket");
