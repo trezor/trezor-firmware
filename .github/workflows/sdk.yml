@@ -40,6 +40,7 @@ jobs:
   app_tool_fmt_check:
     name: trezor-app-tool / Format check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -50,6 +51,7 @@ jobs:
   app_tool_check:
     name: trezor-app-tool / Cargo check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -60,6 +62,7 @@ jobs:
   app_tool_clippy:
     name: trezor-app-tool / Clippy
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -70,6 +73,7 @@ jobs:
   app_tool_unit_tests:
     name: trezor-app-tool / Unit tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -80,6 +84,7 @@ jobs:
   app_tool_doc_build:
     name: trezor-app-tool / Doc build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -90,6 +95,7 @@ jobs:
   app_tool_deps_check:
     name: trezor-app-tool / Dependency check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
