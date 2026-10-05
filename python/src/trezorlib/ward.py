@@ -14,29 +14,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-"""WARD client -- sealed leaf, PULL-only, keyed path, proofs against a root.
+"""WARD client: the device stores no entries and PULLS each one from the host mid-workflow
+(`WardEntryRequest`, answered like `btc.sign_tx`'s `TxRequest`), with a proof once it holds a root.
 
-The device stores no entries. It asks the host for the one it needs mid-workflow, so
-the host must be prepared to answer a device-initiated `WardEntryRequest` while its own
-call is still in flight. That is the same shape as `btc.sign_tx` answering `TxRequest`:
-call, inspect what came back, answer it, repeat until the workflow returns.
-
-Writes work the same way and pull too: the device asks for the CURRENT value so it can
-show what is being replaced or removed. The device does not write -- it returns the leaf
-it built and the CALLER applies it, see `apply`.
-
-The host must also PROVE its answers once the device holds a root: a present leaf comes
-with a membership proof, an absent one with a witness. See `Answer`.
-
-**The store is keyed by the opaque `entry_key`, not by the identifier.** The device
-derives that key from a seed this library does not have, so a host CANNOT compute it --
-that is the whole point, and why every call returns the key it was asked for. Anything
-here that could derive an entry_key would defeat the property being bought.
-
-**The stored unit is a two-part leaf the DEVICE builds.** A write returns that leaf and
-the caller stores it verbatim. Do not assemble one here: while the parts are plaintext a
-host technically could, but that stops being true the moment they are sealed, and code
-that quietly relies on it now would break then.
+The store is keyed by the opaque `entry_key`, which only the device can derive, and holds the leaf
+the DEVICE built, verbatim. Writes return that leaf; the caller applies it (`apply`).
 """
 
 from __future__ import annotations
@@ -53,34 +35,20 @@ if TYPE_CHECKING:
 
 
 class Leaf(NamedTuple):
-    """A stored WARD leaf, exactly as the device handed it over.
-
-    Opaque to the host: it holds these two parts and gives them back when asked for the
-    path they sit at. Both parts empty means the entry was deleted.
-    """
+    """A stored leaf, exactly as the device handed it over. Both parts empty means deleted."""
 
     identity: Optional[messages.WardLeafIdentity]
     content: Optional[messages.WardLeafContent]
 
 
 class Answer(NamedTuple):
-    """What the host hands back for one path.
-
-    A leaf alone is not enough once the device holds a root: the answer has to be
-    provable. `proof` accompanies a present leaf; `witness_*` accompany an absent one,
-    since absence is shown by exhibiting the leaf that occupies the path instead.
-
-    An all-empty Answer says "the tree is empty", which only a device holding no root can
-    accept.
-    """
+    """The host's answer for one path: a leaf with its membership `proof`, or, for an absent
+    path, the `witness_*` leaf that occupies it. All-empty means "the tree is empty"."""
 
     leaf: Optional[Leaf] = None
     proof: Optional[list] = None
     witness_entry_key: Optional[bytes] = None
     witness_commit: Optional[bytes] = None
-    # Nothing for DELETE: the collapsing sibling promotes unchanged, so the proof is all the
-    # device needs. It used to require a witness for the sibling's kind, because a node's hash
-    # committed to its depth and a re-parented branch went stale while a leaf did not.
 
 
 # Answers a device pull, keyed by the opaque path.
@@ -94,48 +62,19 @@ LinkSource = Callable[[int, Optional[bytes], int], list]
 class WardResult(NamedTuple):
     """What a WARD call returns.
 
-    `entry_key` is the opaque 32-byte path the device asked about; callers need it to
-    apply a confirmed write or delete, since it is the key their store is organised by
-    and they have no other way to learn it.
-
-    `leaf` is the leaf the device built, present for writes and deletes and None for a
-    read. For a delete both its parts are empty and the record should be removed.
-
-    `auth_commit` is the authorisation for the transition this call made -- and its ABSENCE
-    means no transition was made. That is the shape of an idempotent delete of a path that
-    already held nothing: same empty leaf, same counter, nothing to authorise. Callers
-    should branch on it rather than on the counter, which is equal to the stored one in that
-    case and cannot be compared without knowing the store is in sync.
+    `leaf` is set for direct writes and deletes. `auth_commit` (for other devices) and `wm_sig`
+    (for the WM) authorise the transition; both are None when no transition happened -- branch on
+    that, not on the counter. `remaining` is set by `flush_queue`; `leaves`/`from_counter` by a
+    batched flush, where `entry_key`/`leaf` are unset.
     """
 
     response: protobuf.MessageType
     entry_key: bytes
     leaf: Optional[Leaf] = None
-    # What a write produced. The caller must publish these to the WM, or the device is
-    # ahead of it and its next sync is refused as a rollback.
     counter: Optional[int] = None
-    # Authorises this write's transition for another DEVICE of this wallet. The caller stores it
-    # with the link so a device catching up later can verify the step without having witnessed
-    # it -- load-bearing rather than merely useful, since nothing else proves a head is a state
-    # this wallet really produced.
     auth_commit: Optional[bytes] = None
-    # The same transition, authorised for the WM: Ed25519 under K_sig over exactly the bytes
-    # `auth_commit` MACs. What the caller publishes to the WM is `(counter, new_root)` -- the
-    # root being one it derived itself -- TOGETHER WITH THIS. A WM that is handed the pair
-    # without it has nothing to verify, and then whoever knows `ward_id` can advance the counter
-    # and strand every genuine device.
-    #
-    # Both are absent when no transition happened, which is the shape of an idempotent delete of
-    # a path that already held nothing. Branch on that rather than on the counter, which equals
-    # the stored one in that case.
     wm_sig: Optional[bytes] = None
-    # `flush_queue` only (so, `WardFlushQueueAck` only): queued changes still waiting to be
-    # handed over after this one. Loop until it reads zero. There is no `queued` field: a queued
-    # change is not a WardResult at all, because the queue requests answer their own ack types.
     remaining: Optional[int] = None
-    # A BATCHED flush only: every (entry_key, Leaf) the ONE transition carries, in the order the
-    # device folded them, and the counter it advanced from. `counter` is then
-    # `from_counter + len(leaves)`, and `entry_key` / `leaf` are unset.
     leaves: Optional[list] = None
     from_counter: Optional[int] = None
 
@@ -145,23 +84,11 @@ def _call_answering_pulls(
     msg: "protobuf.MessageType",
     provider: EntryProvider,
 ) -> WardResult:
-    """Drive a WARD workflow, answering every `WardEntryRequest` from `provider`.
-
-    Note `Session.call` is used WITHOUT `expect=`: it defaults to the `MessageType`
-    base, so either a `WardEntryRequest` or the final `Success` is accepted and we
-    dispatch on the type. Using `call_raw` instead would lose Failure-to-exception
-    conversion and the button-request handling, both of which we want.
-
-    The loop is not bounded to a single pull on purpose: what a later phase adds is more
-    round trips (proof material, lineage), not a different mechanism. Every phase-1
-    workflow pulls exactly once, and all pulls in one workflow name the same entry, so
-    the last key seen is the workflow's key.
-    """
+    """Drive a WARD workflow, answering every `WardEntryRequest` from `provider`."""
     res = session.call(msg)
     entry_key = b""
-    # A BATCHED FLUSH stages each change it folds, so later pulls are proved against the device's
-    # RUNNING root. The provider must then serve from a scratch tree with those leaves applied --
-    # see `store_provider`'s `with_staged`.
+    # A batched flush stages each change it folds; later pulls are proved against the device's
+    # RUNNING root, so they are served from a scratch tree with those leaves applied.
     staged: list = []
 
     while isinstance(res, messages.WardEntryRequest):
@@ -176,7 +103,6 @@ def _call_answering_pulls(
         else:
             answer = provider(entry_key)
         leaf = answer.leaf
-        # Hand back exactly what was stored. Absent identity+content means "no entry".
         res = session.call(
             messages.WardEntryAck(
                 identity=leaf.identity if leaf is not None else None,
@@ -187,11 +113,6 @@ def _call_answering_pulls(
             )
         )
 
-    # Both leaf-bearing acks land here. WardLeafAck ends a direct write or delete;
-    # WardFlushQueueAck ends a flush, which publishes an ordinary leaf and adds `remaining` --
-    # a field that exists only there, because only a drain has anything to count. Nothing that
-    # merely touched the QUEUE reaches this function at all: those requests never pull, so they
-    # are plain calls (see `queue_set_entry` and friends).
     if isinstance(res, messages.WardFlushQueueAck) and res.leaves:
         return WardResult(
             res,
@@ -216,12 +137,8 @@ def _call_answering_pulls(
             getattr(res, "remaining", None),
         )
 
-    # A SERVICE BUILD ANSWERS WITH NEITHER, and the result must carry NO LEAF. The device published
-    # the mutation to the WARD service, which owns the replica; a leaf here would be a second copy
-    # going stale from the next write onwards. Constructing an empty `Leaf` instead of none would be
-    # worse than useless -- `apply` reads an absent content body as a deletion, so it would erase
-    # the entry that was just written. That is why these are separate messages rather than a
-    # `WardLeafAck` with the fields left out, and why nothing below fills the leaf in.
+    # A service build published the mutation itself: the result must carry NO leaf. An empty
+    # `Leaf` would be read by `apply` as a deletion of the entry just written.
     if isinstance(res, (messages.WardMutationApplied, messages.WardFlushQueueApplied)):
         return WardResult(
             res,
@@ -244,12 +161,7 @@ def get_entry(
     identifier: bytes,
     provider: EntryProvider,
 ) -> WardResult:
-    """Ask the device to display the host-held entry for (app_id, identifier).
-
-    The device derives the keyed path and asks `provider` for the leaf at it; `provider`
-    returning None means "no such entry" -- the device says so on screen rather than
-    showing an empty value. Returns no leaf, since a read builds none.
-    """
+    """Display the host-held entry for (app_id, identifier). Builds no leaf."""
     return _call_answering_pulls(
         session,
         messages.WardGetEntry(app_id=app_id, identifier=identifier),
@@ -264,22 +176,10 @@ def set_entry(
     value: Optional[bytes],
     provider: EntryProvider,
 ) -> WardResult:
-    """Ask the device to confirm creating or replacing the entry for (app_id, identifier).
+    """Create or replace an entry, on confirmation. Needs a synced session.
 
-    The device pulls the current value from `provider` first, so it shows an "Add entry"
-    screen when the entry is new and an "Update entry" screen naming what it replaces
-    when it is not.
-
-    **The device does not write.** It returns the leaf it built and the caller must store
-    it verbatim under the returned `entry_key` -- see `apply`. A result the caller ignores
-    means the user confirmed a write that never happened.
-
-    REQUIRES A SYNCED SESSION and fails without one. Queueing is a separate request --
-    `queue_set_entry` -- so that one call never means two different things.
-
-    `value` is typed Optional only so callers can exercise the device-side validation --
-    an absent value is rejected, because writing "nothing specified" as if it were an
-    empty value would silently blank an entry. Pass b"" for a genuinely empty value.
+    The device does not write: store the returned leaf with `apply`. `value=None` is rejected by
+    the device; pass b"" for an empty value.
     """
     return _call_answering_pulls(
         session,
@@ -294,22 +194,10 @@ def delete_entry(
     identifier: bytes,
     provider: EntryProvider,
 ) -> WardResult:
-    """Ask the device to confirm deleting the entry for (app_id, identifier).
+    """Delete an entry, on confirmation; remove the record with `apply`.
 
-    The device pulls the entry first so the screen can name the value being removed.
-
-    IDEMPOTENT on a path that already holds nothing: the call succeeds, `auth_commit` is
-    None to say no transition happened, the counter is unchanged, and no confirmation is
-    shown. `provider` must still PROVE the absence with a non-membership witness -- an
-    unwitnessed "I hold none" is refused, so a host cannot get the device to agree that an
-    entry it is hiding never existed.
-
-    This covers the retry-after-a-lost-response case only once the caller has applied the
-    delete to its own store. A caller that retries while still holding the row serves a
-    proof against a root the device has moved past, and is refused.
-
-    **The device does not delete.** It returns a leaf with both parts empty and the
-    caller must remove the record at the returned `entry_key` -- see `apply`.
+    Idempotent on an absent path (no `auth_commit`, no screen), but the absence must still be
+    proved with a non-membership witness.
     """
     return _call_answering_pulls(
         session,
@@ -318,11 +206,7 @@ def delete_entry(
     )
 
 
-# --- the offline queue: its own requests, none of which pull -------------------------------
-#
-# These operate on the DEVICE'S OWN STORE and never on the trie, so there is no proof material
-# to serve and no `provider` argument to pass. They also answer their own ack types, which is
-# what stops a caller confusing "held on the device" with "in the tree".
+# --- the offline queue: the device's own store; no pulls, own ack types ---------------------
 
 
 def queue_set_entry(
@@ -333,22 +217,10 @@ def queue_set_entry(
     mac: Optional[bytes] = None,
     compact: bool = False,
 ) -> messages.WardQueueSetAck:
-    """Ask the device to HOLD a write until a synced host can publish it.
+    """HOLD a write on the device until `flush_queue` publishes it.
 
-    Nothing is applied: the device stores the intent, shows a screen that says so, and returns
-    the path it will live at. Publish it later with `flush_queue`, which re-derives it against
-    whatever the tree has become and hands back the sealed leaf.
-
-    `value` is typed Optional only so callers can exercise the device-side validation -- an
-    absent value is rejected. Pass b"" for a genuinely empty value.
-
-    WITH `mac` THIS IS A RESTORE of a change exported by `queue_get_entry`: the three fields must be
-    exactly what came out, because the device MACs them together with the path and key space it
-    derives itself. Use `restore_queued_entry` rather than mapping the fields by hand.
-
-    WITH `compact` the device keeps a HASH of the identity instead of the identity -- 40-odd bytes less
-    flash per record. Such an entry is still readable and still backupable, but publishing it needs
-    `flush_queue` to be told which entry to publish, since a hash cannot become a keyed path.
+    With `mac` this restores a `queue_get_entry` export (use `restore_queued_entry`). With
+    `compact` the device keeps only a hash of the identity; publishing it then needs a named flush.
     """
     return session.call(
         messages.WardQueueSetEntry(
@@ -367,16 +239,8 @@ def restore_queued_entry(
     backup: messages.WardQueueGetAck,
     compact: bool = False,
 ) -> messages.WardQueueSetAck:
-    """Hand a backed-up queued change straight back to the device.
-
-    Takes the ack `queue_get_entry` returned and re-offers it unchanged, which is the only way it
-    can be offered: every field is MAC'd, so a caller that rebuilds the request field by field and
-    drops or defaults one gets a verification failure rather than a subtly different change. That
-    is why this exists instead of a documented mapping.
-
-    Only a PENDING record has a MAC; a pinned copy has nothing to re-queue and is rejected here
-    rather than at the device, since the request would be unauthenticated by construction.
-    """
+    """Re-queue a `queue_get_entry` backup unchanged. Every field is MAC'd, so only a PENDING
+    record (one with a MAC) can be restored."""
     if backup.mac is None:
         raise ValueError(
             "this backup carries no intent MAC; only a queued (pending) change can be restored"
@@ -397,16 +261,8 @@ def queue_delete_entry(
     app_id: str,
     identifier: bytes,
 ) -> messages.WardQueueDeleteAck:
-    """Ask the device to DISCARD a queued change, on confirmation.
-
-    Not a WARD deletion: the entry in the tree is untouched, and `delete_entry` remains the way
-    to remove one. Pending records only -- a copy pinned by `pin_cached_entry` is reported as
-    `missing` and left alone, since "do not publish this" and "stop keeping this here" are
-    different questions. `erase_cached_entry` is the pinned-copy path.
-
-    `missing` is an ANSWER, not a failure: a caller reconciling its own view of the queue will
-    legitimately ask about a change that has already been published.
-    """
+    """Discard a queued (pending) change, on confirmation. Not a WARD deletion; `missing` is an
+    answer, not a failure."""
     return session.call(
         messages.WardQueueDeleteEntry(app_id=app_id, identifier=identifier),
         expect=messages.WardQueueDeleteAck,
@@ -418,20 +274,8 @@ def queue_get_entry(
     app_id: str,
     identifier: bytes,
 ) -> messages.WardQueueGetAck:
-    """EXPORT what the device holds for (app_id, identifier), for backup.
-
-    Reads the device's own store -- a queued change, or a pinned copy -- and needs no host round
-    trip. The ack reports which case it was (`missing`, `pending`), the record itself in the clear,
-    and for a pending record a MAC over all of it. Keep the whole ack: it is the backup, and
-    `restore_queued_entry` hands it back.
-
-    A record this build cannot read FAILS rather than coming back flagged: "there is something here
-    I cannot vouch for" must not be reported as "nothing here", which would invite writing over it.
-
-    A queued change exists in ONE device's flash and nowhere else, which is what makes this worth a
-    round trip. A pinned copy comes back too, without a MAC -- WARD already holds that value, so
-    there is no intent to restore.
-    """
+    """Export a queued change or pinned copy for backup; keep the whole ack. A record the device
+    cannot read fails rather than reading as missing."""
     return session.call(
         messages.WardQueueGetEntry(app_id=app_id, identifier=identifier),
         expect=messages.WardQueueGetAck,
@@ -439,13 +283,8 @@ def queue_get_entry(
 
 
 def sync(session: "Session") -> messages.WardSyncAck:
-    """Open a sync round: the device mints the nonce the WM must sign against.
-
-    The ack also carries the device's current `counter`, which doubles as a "where are you"
-    query. A caller that lost a write's response can compare it against its own and learn
-    whether the write landed -- without it, the retry fails against a root the device has
-    moved past and there is nothing to distinguish that from an entry that never existed.
-    """
+    """Open a sync round: the device mints the nonce the WM signs. The ack's `counter` also tells a
+    caller that lost a write's response whether it landed."""
     return session.call(messages.WardSync(), expect=messages.WardSyncAck)
 
 
@@ -460,18 +299,8 @@ def ingest_attestation(
     to_head_nonce: bytes,
     timestamp: int = 0,
 ) -> messages.WardIngestAttestationAck:
-    """Deliver the WM's signed TRANSITION for the open round.
-
-    The WM attests the step that reached the current head, not the head alone -- the same
-    statement the device's own `auth_commit` covers. At counter 0 the step is `(0, empty) ->
-    (0, empty)`: nothing produced genesis, so it attests itself.
-
-    The two head nonces are the WM's freshness tokens, covered by the signature, so they are the
-    WM's values and not this host's. `to_head_nonce` is the one the device quotes forward in the
-    next `wm_sig` it mints, which is what keeps one authorisation from moving the head twice;
-    `from_head_nonce` is the one this step CONSUMED, which is what lets the device tell that its
-    own authorisation was the one spent rather than some other occurrence of the same transition.
-    """
+    """Deliver the WM's signed transition into its head for the open round. Genesis is
+    `(0, empty) -> (0, empty)`; the head nonces are the WM's, covered by its signature."""
     return session.call(
         messages.WardIngestAttestation(
             from_counter=from_counter,
@@ -491,21 +320,8 @@ def reconcile(
     session: "Session",
     link: Optional[tuple] = None,
 ) -> messages.WardReconcileAck:
-    """Adopt the attested head by authorising the step the WM attested.
-
-    NOTHING BUT 32 BYTES TRAVELS. The WM attests the whole transition, so both counters and both
-    roots arrive inside the signature the device verified this round; a host names none of them.
-    What it contributes is the `auth_commit` over that same step, which only a device of this
-    wallet could mint. `link` is still taken as the usual
-    `(from_counter, from_root, to_counter, to_root, auth_commit)` 5-tuple for callers' convenience
-    -- only its last element is sent, and the rest is a cross-check the caller may do itself.
-
-    Pass `link=None` only at counter 0, where the tree is empty and no transition produced it.
-
-    Prefer `verify_chain`: this proves one step, not that the attested predecessor descends from
-    the device's own head, so a WM colluding with a host can still attest a step off the
-    authoritative line. The walk rules that out.
-    """
+    """Adopt the attested head one step on, by the `auth_commit` of `link` (a 5-tuple; only its
+    last element is sent). `link=None` only at counter 0. Prefer `verify_chain`."""
     auth_commit = None
     if link is not None:
         auth_commit = link[4]
@@ -521,25 +337,10 @@ def verify_chain(
     link_source: LinkSource,
     max_links_per_ack: int = 64,
 ) -> messages.WardVerifyChainAck:
-    """Adopt a WM-attested head by proving the device's own head is an ANCESTOR of it.
+    """Adopt the attested head by walking back from it to the device's own head.
 
-    Used instead of `reconcile` when the device is more than one step behind -- which, since
-    reconcile became one-step-only, is every catch-up. THE DEVICE DRIVES: it anchors at the head
-    attested in this round and then asks for predecessors, walking backwards, until it reaches the
-    head it already holds. This function is the host half of that loop -- the same shape as
-    `btc.sign_tx`'s TxRequest exchange.
-
-    `link_source(to_counter, to_root, limit)` must return up to `limit` links ending at that exact
-    state, NEWEST FIRST and contiguous -- each one's `from` end being the next one's `to` end.
-    Links are the usual `(from_counter, from_root, to_counter, to_root, auth_commit)` 5-tuples.
-    Returning fewer is always fine; returning none ends the walk with a failure, which is the
-    honest answer when the host does not hold that range.
-
-    THE REQUEST CARRIES NOTHING. The anchor is the attestation ingested this round, which the
-    device already holds. There used to be an `attestation` argument for anchoring on an ARCHIVED
-    one instead; it is gone, because it let a host raise the device's persisted counter with no
-    freshness and no confirmation -- undoing a user-confirmed demotion by replaying the
-    attestation it had kept. See the note in the firmware's `verify_chain._anchor`.
+    `link_source(to_counter, to_root, limit)` returns contiguous links ending at that state,
+    newest first; returning none ends the walk with a failure.
     """
     res = _answer_chain_pulls(
         session, session.call(messages.WardVerifyChain()), link_source, max_links_per_ack
@@ -555,19 +356,10 @@ def rejoin(
     link_source: LinkSource,
     max_links_per_ack: int = 64,
 ) -> messages.WardRejoinAck:
-    """Rejoin the WM's history after it lost the branch the device stands on.
+    """Rejoin the WM's history after it lost the device's branch, on confirmation.
 
-    Only for a FORK: the device holds a head the WM once attested, but the WM's current history
-    does not contain it -- its register was restored below that head and other devices wrote on.
-    `verify_chain` refuses that ("does not descend"); this is the way back, and the user holds to
-    confirm it, because every change the device holds above `fork_counter` is discarded.
-
-    Run after `sync` and `ingest_attestation`, like `verify_chain`. `fork_counter` is the last
-    counter both branches share -- find it with `WardTrie.fork_point`. The device then walks BOTH
-    branches back to it through `link_source`, exactly as `verify_chain` does: the WM's branch
-    from the attested head, and its own from its stored head. So `link_source` must serve the
-    device's branch too, which means the host must have KEPT those links; a host that dropped them
-    cannot offer a rejoin.
+    `fork_counter` is the last shared counter (`WardTrie.fork_point`); `link_source` must serve
+    both branches back to it, so the host must have kept the device's links.
     """
     res = _answer_chain_pulls(
         session,
@@ -599,10 +391,7 @@ def _answer_chain_pulls(
                         to_root=tr,
                         auth_commit=ac,
                     )
-                    # `link[:5]` -- the wire carries the transition and its authorisation,
-                    # never the operation. A device derives COMMIT vs REVERT from which tag the
-                    # MAC verifies under; only the HOST needs it written down, because only the
-                    # host cannot compute it. See `TransitionLog`.
+                    # the operation is host-side bookkeeping, never on the wire
                     for (fc, fr, tc, tr, ac) in (lnk[:5] for lnk in links)
                 ]
             )
@@ -622,24 +411,10 @@ def rollback(
     recovered_root: Optional[bytes] = None,
     timestamp: int = 0,
 ) -> messages.WardRollbackAck:
-    """Demote the head onto a state this host can still serve, after the user confirms.
+    """Mint a REVERT from the WM's attested head to `recovered_root`, on confirmation.
 
-    ONE CALL FOR TWO FAILURES. `recover_counter` is gone: it built the same REVERT from the same
-    operands and differed only in which head it extended, so the two have been folded together.
-    A device only ever adopts what the WM attested, so normally the WM's head IS the device's and
-    this is an ordinary rollback; when the WM's register has regressed they differ, and building
-    from the WM's is the only thing it will compare-and-swap against.
-
-    `(from_counter, from_root, to_counter, to_root)` is the WM's OWN current head, attested
-    against this round's nonce -- so run `sync` and get the WM to sign its head first.
-
-    `recovered_root` is the root of a trie THIS HOST can reconstruct from the rows it holds. It
-    need not ever have been a head: a host that lost rows rebuilds a tree the wallet may never
-    have had, and reverting to something serviceable is the entire point. Nothing proves it was
-    authoritative; the user's approval is what covers that, and the screen says so.
-
-    NOTHING IS ADOPTED BY THIS CALL. It returns the REVERT transition; publish it to the WM and
-    then run an ordinary sync round. Record it with `apply_rollback`.
+    The operands are the WM's own head, attested this round. Nothing is adopted: publish the
+    REVERT to the WM, sync, and record it with `apply_rollback`.
     """
     return session.call(
         messages.WardRollback(
@@ -657,58 +432,40 @@ def rollback(
     )
 
 
+def _log(store, link: Link, wm_sig: Optional[bytes]) -> None:  # noqa: ANN001
+    """Record a transition, the WM's copy of its authorisation, and the new counter."""
+    store.links.append(link)
+    store.wm_sigs[link.to_counter] = wm_sig
+    store.counter = link.to_counter
+
+
 def apply_rollback(
     store,
     ack: messages.WardRollbackAck,
     from_counter: int,
     from_root: Optional[bytes],
 ) -> None:
-    """Roll the caller's store back to match, and record the demotion as a transition.
+    """Record a demotion as a REVERT link; restoring the leaves is the caller's business.
 
-    The store must be able to reproduce the demoted tree, so this only rewinds the
-    bookkeeping -- restoring the leaves themselves is the caller's business, since only it
-    knows what the earlier tree held.
-
-    THE PREDECESSOR IS AN ARGUMENT, NOT THE STORE'S HEAD, and that distinction is the whole of
-    what a regressed-WM recovery is. The device mints the REVERT over the WM'S head -- the pair
-    it was handed and verified an attestation for -- because that is what the WM will
-    compare-and-swap against. Normally the two agree, since a device only ever adopts what the WM
-    attested, and reading them off the store was right by accident. When the WM's register has
-    regressed they differ, and the link this recorded then named a `from` end the `auth_commit`
-    does not cover: authentic bytes describing a transition that never happened, which every
-    device folding the chain refuses and no host can repair, because repairing it needs K_auth.
-
-    Pass the same `(from_counter, from_root)` given to `rollback`.
-
-    THE WM AUTHORISATION IS KEPT, not dropped. A demotion advances the WM's head like any other
-    write -- forward one counter, carrying an older root -- so the WM needs `wm_sig` to accept it,
-    under the REVERT tag so it can tell a demotion from an ordinary advance and apply policy to
-    one. This used to read `counter`, `new_root` and `auth_commit` and discard the signature, so
-    the only authorisation the connect path ever minted for a WM reached nobody.
+    Pass the same `(from_counter, from_root)` given to `rollback` -- the WM's head, which the
+    `auth_commit` covers, not the store's.
     """
-    store.links.append(
+    _log(
+        store,
         Link(
             from_counter,
             from_root,
             ack.counter,
             ack.new_root or None,
             ack.auth_commit,
-            # RECORDED, because it cannot be recovered: telling a REVERT from a COMMIT means
-            # re-deriving the MAC under both tags, which needs K_auth. See `TransitionLog`.
             OP_REVERT,
-        )
+        ),
+        ack.wm_sig,
     )
-    store.wm_sigs[ack.counter] = ack.wm_sig
-    store.counter = ack.counter
 
 
 def leaf_is_delete(leaf: Optional[Leaf]) -> bool:
-    """A leaf whose content body is empty is a deletion, not an empty-valued entry.
-
-    Dispatches on `encoding` for the reason `trezorlib.ward_trie._part_bytes` gives: the firmware reads the
-    discriminator, and a host that reads field presence instead disagrees about which arm a
-    message is -- on the commit preimage, where a disagreement is a different root.
-    """
+    """An empty content body is a deletion. Dispatches on `encoding`, as the firmware does."""
     if leaf is None or leaf.content is None:
         return True
     content = leaf.content
@@ -723,12 +480,7 @@ def leaf_is_delete(leaf: Optional[Leaf]) -> bool:
 
 
 def store_provider(store) -> EntryProvider:
-    """An `EntryProvider` backed by anything with the `WardTrie` shape.
-
-    Serving needs NO key: the leaf commitment is over the encoded parts, so a host proves
-    what it holds without being able to read it. Note also what the store is not keyed by
-    -- there is no identifier in it anywhere, which is what the keyed path buys.
-    """
+    """An `EntryProvider` backed by anything with the `WardTrie` shape. Needs no key."""
 
     def provider(entry_key: bytes) -> Answer:
         if entry_key in store:
@@ -741,31 +493,22 @@ def store_provider(store) -> EntryProvider:
             proof=proof, witness_entry_key=witness_key, witness_commit=witness_commit
         )
 
-    # A BATCHED FLUSH: serve from a scratch copy with the device's staged leaves applied, so a
-    # proof matches the running root. The store itself is untouched until `apply`.
     provider.with_staged = lambda staged: store_provider(store.scratch(staged))  # type: ignore[attr-defined]
     return provider
+
+
+def _put(store, entry_key: bytes, leaf: Leaf) -> None:  # noqa: ANN001
+    if leaf_is_delete(leaf):
+        store.remove(entry_key)
+    else:
+        store.set(entry_key, leaf)
 
 
 def apply(store, result: WardResult) -> None:
     """Apply a confirmed write or delete to the caller's store.
 
-    The device confirmed and built the leaf; persisting it is the host's job, and a
-    result the caller drops on the floor means the user approved a change that never
-    happened. An empty content body is a delete, so the record goes away rather than
-    being kept as a tombstone.
-
-    NOT FOR A SERVICE BUILD. There the device published the mutation itself and the ack carries no
-    leaf, so this raises -- correctly. A host that owns no replica has nothing to apply, and the
-    absence of a leaf is the signal to stop treating the store as authoritative rather than
-    something to work around.
-
-    NO AUTH_COMMIT MEANS NOTHING CHANGED. A delete of an already-absent path succeeds
-    idempotently and authorises no transition, so there is nothing to apply. That is
-    asserted rather than assumed: if the device reports no transition while the store still
-    holds the entry, the two disagree about the world, and continuing would leave a row the
-    device believes is gone -- every later proof for it refused, with nothing to say why.
-    Failing here names it instead.
+    Raises on a service-build result, which carries no leaf. No `auth_commit` means nothing
+    changed, and the store must not still hold the entry.
     """
     if result.leaves:
         _apply_batch(store, result)
@@ -785,17 +528,10 @@ def apply(store, result: WardResult) -> None:
         return
 
     before_root, before_counter = store.root(), store.counter
-    if leaf_is_delete(result.leaf):
-        store.remove(result.entry_key)
-    else:
-        store.set(result.entry_key, result.leaf)
-
-    # Keep the counter with the root. The device is the counter authority, and a store
-    # that tracked only the root could not tell the WM which state it is publishing.
+    _put(store, result.entry_key, result.leaf)
     if result.counter is not None:
-        # The transition log. The host cannot forge or read these -- it holds them so
-        # another device of the wallet can verify the steps it missed.
-        store.links.append(
+        _log(
+            store,
             Link(
                 before_counter,
                 before_root,
@@ -803,22 +539,14 @@ def apply(store, result: WardResult) -> None:
                 store.root(),
                 result.auth_commit,
                 OP_COMMIT,
-            )
+            ),
+            result.wm_sig,
         )
-        # AND THE WM'S COPY of the same authorisation, kept beside it because the host is the
-        # only party that ever holds both: it publishes `(counter, root)` to the WM and must hand
-        # this over with them, or the WM has nothing to verify the advance against.
-        store.wm_sigs[result.counter] = result.wm_sig
-        store.counter = result.counter
 
 
 def _apply_batch(store, result: WardResult) -> None:  # noqa: ANN001
-    """Apply every leaf of a batched flush, and record ONE link for the one transition.
-
-    ONE TRANSACTION, in a real host: store every leaf and the link together, and publish to the WM
-    only after they commit -- see `flush_queue`. This in-memory store has nothing to roll back, so
-    the sequence here is simply the order a transaction would contain.
-    """
+    """Apply every leaf of a batched flush and log ONE link. A real host does this in one
+    transaction and publishes to the WM only after it commits."""
     if store.counter != result.from_counter:
         raise ValueError(
             "this batch starts at counter %s but the store is at %s"
@@ -826,11 +554,9 @@ def _apply_batch(store, result: WardResult) -> None:  # noqa: ANN001
         )
     before_root = store.root()
     for entry_key, leaf in result.leaves or ():
-        if leaf_is_delete(leaf):
-            store.remove(entry_key)
-        else:
-            store.set(entry_key, leaf)
-    store.links.append(
+        _put(store, entry_key, leaf)
+    _log(
+        store,
         Link(
             result.from_counter,
             before_root,
@@ -838,10 +564,9 @@ def _apply_batch(store, result: WardResult) -> None:  # noqa: ANN001
             store.root(),
             result.auth_commit,
             OP_COMMIT,
-        )
+        ),
+        result.wm_sig,
     )
-    store.wm_sigs[result.counter] = result.wm_sig
-    store.counter = result.counter
 
 
 def pin_cached_entry(
@@ -850,16 +575,8 @@ def pin_cached_entry(
     identifier: bytes,
     provider: EntryProvider,
 ) -> WardResult:
-    """Ask the device to keep (app_id, identifier) for offline use.
-
-    The device pulls the leaf, verifies it exactly as a read does, shows the value and asks.
-    Nothing is written before that confirmation, so a rejected screen leaves flash untouched.
-    Needs a synced session, like a read: an unproved leaf is never kept.
-
-    Fails if the device's store is FULL -- it never evicts, because every record it holds is
-    either a value the user chose to keep or a change they confirmed and that is not published
-    yet. The user erases something first, via `erase_cached_entry`.
-    """
+    """Keep a verified copy of (app_id, identifier) on the device, on confirmation. Needs a synced
+    session; fails if the device store is full (it never evicts)."""
     return _call_answering_pulls(
         session,
         messages.WardPinCachedEntry(app_id=app_id, identifier=identifier),
@@ -872,15 +589,8 @@ def erase_cached_entry(
     app_id: str,
     identifier: bytes,
 ) -> messages.Success:
-    """Ask the device to remove its local copy of (app_id, identifier), on confirmation.
-
-    NOT a WARD deletion: the entry itself is untouched and `delete_entry` remains the way to
-    remove one. This is the only way a record leaves the device's storage -- nothing evicts,
-    expires or is cleaned up.
-
-    No provider: the device shows what it already holds, and needs no host round-trip. It
-    derives the path itself, so a host cannot name an arbitrary record to destroy.
-    """
+    """Remove the device's local copy of (app_id, identifier), on confirmation. Not a WARD
+    deletion; the device derives the path, so a host cannot name an arbitrary record."""
     return session.call(
         messages.WardEraseCachedEntry(app_id=app_id, identifier=identifier),
         expect=messages.Success,
@@ -894,43 +604,12 @@ def flush_queue(
     identifier: Optional[bytes] = None,
     max_batch: int = 1,
 ) -> WardResult:
-    """Publish ONE queued change, sealed and re-derived against current state.
+    """Publish the next queued change (or the named one), re-derived against current state.
 
-    OPT-IN BATCHING with `max_batch > 1`: the device folds up to that many queued changes (at most
-    its MAX_BATCH, 8) into ONE transition, and the result carries them all in `leaves`, with one
-    `auth_commit` and one `wm_sig` -- one WM round trip for the lot. `apply` stores them and
-    records one link. Ignored for a named change and on a service build.
-
-    ONLY ASK FOR A BATCH IF YOU CAN STORE IT WHOLE. A batch is one unit of consistency: a replica
-    with only some of its leaves cannot serve at the new head, and a leaf lost for good forces a
-    `rollback` to the state before the batch, discarding every change in it. So the caller must
-    store all the leaves and the link in ONE local transaction, publish to the WM only after it
-    commits, and tag the rows with `counter` -- see `WardFlushQueue.max_batch`. The provider must
-    also offer `with_staged` (as `store_provider` does), since later pulls are proved against the
-    device's running root.
-
-    Returns a result whose `remaining` says how many are still waiting; call again while it
-    is non-zero. `apply` the leaf and publish (counter, root) to the WM exactly as for a
-    write -- the change does not take effect until the WM confirms that counter, and until
-    then the device keeps it queued and will offer it again.
-
-    `remaining == 0` with no `entry_key` means the queue was already empty.
-
-    NAME AN ENTRY with (app_id, identifier) to publish that one instead of the next in the queue. That
-    is the only way a COMPACT record can be published: it holds a hash of its identity, and the device
-    cannot turn a hash back into a keyed path -- so the caller, which has the identity in its backup,
-    supplies it.
-
-    Answers a `WardFlushQueueAck`: an ordinary leaf with the full authenticators, plus
-    `remaining`, which lives there and nowhere else -- a direct write has nothing to count.
-
-    ON A SERVICE BUILD it answers `WardFlushQueueApplied` instead, and everything above about
-    applying and publishing does not apply: the device handed the change to the WARD service and
-    adopted the attestation itself, so there is no leaf and nothing for the caller to do. Only
-    `remaining` carries over, and the drain loop is unchanged -- which is why it is on both
-    messages. Branch on the response type, never on whether a leaf happens to be present.
-
-    Requires a synced session: with no trusted root there is nothing to derive against.
+    Loop while `remaining` is non-zero; `apply` and publish each result as for a write. Naming an
+    entry is the only way to publish a COMPACT record. `max_batch > 1` folds up to that many into
+    ONE transition -- only if the caller can store all its leaves and link in one transaction, and
+    the provider offers `with_staged`. A service build answers `WardFlushQueueApplied` with no leaf.
     """
     return _call_answering_pulls(
         session,
@@ -944,31 +623,17 @@ def flush_queue(
 
 
 def reset_app(session: "Session") -> messages.WardResetAppAck:
-    """Retire the pinned WARD app, so the next app to make a WARD request may claim the role.
-
-    THE ONE WARD REQUEST THAT DOES NOT NEED THE ROLE, and it cannot need it: the reason to send this
-    is that the app holding the role can no longer ask. The device holds to confirm, because the
-    request authenticates its sender only as "some paired host" -- which is the granularity the pin
-    exists to improve on.
-
-    Discards nothing: every entry, queued change, claim and root survives. `was_bound` on the ack
-    says whether a pin was actually retired, which success alone does not tell you.
-    """
+    """Retire the pinned WARD app, on confirmation. Discards nothing; `was_bound` says whether a
+    pin was retired."""
     return session.call(messages.WardResetApp(), expect=messages.WardResetAppAck)
 
 
 def reset_service(
     session: "Session", force: bool = False
 ) -> messages.WardResetServiceAck:
-    """Unbind the WARD service, so another daemon may claim the role. Service builds only.
+    """Unbind the WARD service daemon, on confirmation (service builds, ordinary session).
 
-    ON THE ORDINARY SESSION, unlike everything else about the service channel. The daemon whose key
-    was lost is the one party that cannot ask for this, so the request comes from the app that
-    operates WARD and the device holds to confirm.
-
-    Refused while queued changes are unresolved -- publish them with the current service first.
-    `force` overrides that and gets a screen naming how many may be lost; the changes themselves are
-    not discarded, and `unresolved` on the ack reports what was outstanding.
+    Refused while queued changes are unresolved unless `force`; `unresolved` reports them.
     """
     return session.call(
         messages.WardResetService(force=force or None),

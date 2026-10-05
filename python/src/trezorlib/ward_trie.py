@@ -16,9 +16,8 @@
 
 """The WARD Merkle trie, host side: build it, serve proofs, and check them.
 
-The spec is `docs/core/misc/ward-trie.md`; the firmware verifier is `core/src/apps/ward/trie.py`,
-and this must stay byte-for-byte identical to it -- the conformance vectors in
-`python/tests/test_ward_trie.py` are the same ones `core/tests/test_apps.ward.py` pins.
+Spec: `docs/core/misc/ward-trie.md`. Must stay byte-for-byte identical to the firmware's
+`core/src/apps/ward/trie.py`; the conformance vectors in `python/tests/test_ward_trie.py` pin both.
 
     leaf     = sha256(0x00 || entry_key || commit)
     commit   = sha256(0x02 || len8(key_type) || key_type
@@ -27,21 +26,9 @@ and this must stay byte-for-byte identical to it -- the conformance vectors in
     empty    = sha256(0x03)
     part     = encoding(1B) || len8(nonce) || nonce || len8(tag) || tag || len32(body) || body
 
-A path-compressed binary trie keyed by the 32-byte entry_key, MSB-first. Children are
-POSITIONAL (left is bit 0), never sorted; a node's hash commits to its split bit and never to its
-depth, so a subtree that moves up or down keeps its hash. A proof is a list of 34-byte elements,
-LEAF-TO-ROOT, each `u16be(split_bit) || sibling`.
-
-THREE LAYERS, usable separately:
-
-  primitives   hashing and the proof element, exactly as the firmware computes them.
-  verifier     `fold`, `check_shape`, membership, non-membership, and the roots an insert, a
-               delete and an update derive -- the device's own rules, so a host can predict the
-               root a write will produce and refuse to send what the device would refuse.
-  store        `WardTrie`: the leaves a host holds, the proofs it serves, and its transition log.
-
-Serving proofs needs NO key: the leaf commitment is over the encoded parts, so a host proves what
-it holds without being able to read it.
+A path-compressed binary trie keyed MSB-first by the 32-byte entry_key; children are positional and
+a node's hash commits to its split bit, never its depth. A proof is a LEAF-TO-ROOT list of 34-byte
+`u16be(split_bit) || sibling` elements. Serving proofs needs no key.
 """
 
 from __future__ import annotations
@@ -103,9 +90,8 @@ def _u32(n: int) -> bytes:
 
 
 def _require32(*values: bytes) -> None:
-    # Every opaque operand is exactly 32 bytes, and that is load-bearing: the preimages
-    # concatenate them with no separator, so a key K || C[0] with commit C[1:] hashes to the
-    # leaf of (K, C). Fixed width makes every split unambiguous.
+    # Load-bearing: preimages concatenate operands with no separator, so only a fixed width
+    # makes every split unambiguous.
     for v in values:
         if v is None or len(v) != 32:
             raise WardTrieError("WARD trie operands must be 32 bytes")
@@ -117,17 +103,14 @@ def addr_bit(entry_key: bytes, bit: int) -> int:
 
 
 def _part_bytes(part: object) -> bytes:
-    """A wire WardLeafContent/WardLeafIdentity submessage -> its canonical framing.
+    """A wire leaf part -> its canonical framing, for the commit preimage.
 
-    DISPATCHES ON `encoding`, NOT ON FIELD PRESENCE. This computes the commit preimage, so a
-    disagreement with the firmware about which arm a message is produces a different leaf and a
-    different root -- the host then serves proofs the device cannot reproduce. Presence-based
-    dispatch disagreed for exactly the messages `leaf._require_canonical` rejects: an unknown
-    encoding, and both arms set at once. Those raise here too, so the two implementations refuse
-    the same bytes rather than framing them differently.
+    Dispatches on `encoding`, not field presence, and refuses what the firmware refuses (unknown
+    encoding, both arms set) -- any disagreement would be a different root.
     """
+    empty = bytes([1, 0, 0]) + _u32(0)  # the empty (deleted) part
     if part is None:
-        return bytes([1, 0, 0]) + _u32(0)  # the empty (deleted) part
+        return empty
 
     encoding = getattr(part, "encoding", None)
     encoding = 0 if encoding is None else encoding
@@ -142,14 +125,12 @@ def _part_bytes(part: object) -> bytes:
 
     if encoding == 1:
         if clear is None:
-            return bytes([1, 0, 0]) + _u32(0)
-        # a plaintext identity carries structured fields, not a body; only the empty
-        # form ever reaches the trie in practice (a delete)
+            return empty
         body = getattr(clear, "content", None) or b""
         return bytes([1, 0, 0]) + _u32(len(body)) + body
 
     if sealed is None:
-        return bytes([1, 0, 0]) + _u32(0)
+        return empty
     nonce, tag, ct = sealed.nonce or b"", sealed.tag or b"", sealed.ct or b""
     return bytes([0, len(nonce)]) + nonce + bytes([len(tag)]) + tag + _u32(len(ct)) + ct
 
@@ -192,9 +173,8 @@ def parse_proof_elem(elem: bytes) -> tuple[int, bytes]:
 def check_shape(proof: Sequence[bytes]) -> list[tuple[int, bytes]]:
     """Refuse a proof that is not a real root-to-leaf path; return its parsed steps.
 
-    Read root-first (the proof reversed), split bits must strictly increase and stay below 256 --
-    which also caps a valid proof at 256 elements. It cannot check canonicity: one path does not
-    show what the siblings hold. The device keeps trees canonical by building them that way.
+    Root-first, split bits must strictly increase and stay below 256. Canonicity is not checkable
+    from one path; the device keeps trees canonical by building them that way.
     """
     steps = []
     prev = -1
@@ -210,11 +190,8 @@ def check_shape(proof: Sequence[bytes]) -> list[tuple[int, bytes]]:
 
 
 def fold(start: bytes, proof: Sequence[bytes], entry_key: bytes) -> bytes:
-    """Hash `start` up the path of `entry_key` to a CANDIDATE root.
-
-    `start` is a leaf or any subtree's hash. The result proves nothing until compared with a root
-    the caller already trusts -- a proof checked against a root the host also supplied is theatre.
-    """
+    """Hash `start` (a leaf or subtree hash) up the path of `entry_key` to a CANDIDATE root,
+    which proves nothing until compared with a root the caller already trusts."""
     _require32(start, entry_key)
     check_shape(proof)
     node = start
@@ -266,7 +243,7 @@ def verify_nonmembership(
 
 def _require_settled(stored_root: Optional[bytes]) -> bytes:
     # None is "cannot verify", never "empty": read as empty it would authorise a witness-less
-    # insert that replaces the tree. The caller settles it -- see the firmware's `root_for_write`.
+    # insert that replaces the tree.
     if stored_root is None:
         raise WardTrieError("no trusted root")
     return stored_root
@@ -285,7 +262,6 @@ def insert_root(
     _require32(entry_key)
 
     if stored_root == EMPTY_ROOT:
-        # The first entry of an empty tree: the device's OWN record is the only authority.
         if proof or witness_key is not None:
             raise WardTrieError("an empty tree takes no witness")
         return leaf_hash(entry_key, new_commit)
@@ -354,12 +330,8 @@ def update_root(
 
 
 class Link(NamedTuple):
-    """One transition in a wallet's history, as a host logs it.
-
-    The first five fields are opaque to the host, which is the point -- it cannot forge a step, and
-    cannot check one either; only a device of this wallet can. A NamedTuple, so existing code that
-    indexes (`link[4]`) or slices (`link[:5]`) the old 6-tuple keeps working.
-    """
+    """One transition as a host logs it. The first five fields are opaque to the host; a
+    NamedTuple, so indexing and slicing the old tuple keeps working."""
 
     from_counter: int
     from_root: Optional[bytes]
@@ -370,19 +342,10 @@ class Link(NamedTuple):
 
 
 class TransitionLog:
-    """What a host keeps so other devices of the wallet can walk the steps they missed.
+    """What a host keeps so other devices can walk the steps they missed.
 
-    THE OPERATION HAS TO BE RECORDED RATHER THAN DERIVED. Whether a link is a COMMIT or a REVERT is
-    decided by which tag its `auth_commit` was minted under, and recovering that means computing
-    the MAC both ways under K_auth -- which the host does not have and must never have. So it is
-    free at creation and unrecoverable afterwards.
-
-    `wm_sigs` maps a counter to the device's `wm_sig` for the transition that REACHED it: a link is
-    folded by another DEVICE, a `wm_sig` is handed to the WM, so they have different audiences. A
-    host that lost these cannot advance the WM's head, which is the intended failure.
-
-    NO ATTESTATION ARCHIVE. Nothing reads an archived attestation any more -- anchoring a walk on
-    one raised the persisted counter with no freshness -- so nothing keeps one.
+    The operation (COMMIT/REVERT) is RECORDED: deriving it needs K_auth, which the host never has.
+    `wm_sigs` maps a counter to the `wm_sig` of the transition that reached it, for the WM.
     """
 
     def __init__(self) -> None:
@@ -411,13 +374,8 @@ class TransitionLog:
     def links_ending_at(
         self, to_counter: int, to_root: Optional[bytes], limit: int = 64
     ) -> list:
-        """The predecessors of a state, walking BACK from it -- the device's backward walk.
-
-        THE NEWEST MATCH WINS where several rows end at the same `(counter, root)`: a counter can
-        be reached TWICE once a demotion exists, and the later edge is the live history. The device
-        refuses a link ending anywhere but the pair it named, so a wrong answer here is a refusal
-        rather than a wrong adoption.
-        """
+        """The predecessors of a state, walking back from it. The newest match wins: after a
+        demotion a counter can be reached twice, and the later edge is the live history."""
         out: list = []
         counter, root = to_counter, to_root
         while len(out) < limit:
@@ -432,38 +390,29 @@ class TransitionLog:
 
     def fork_point(self, a: tuple, b: tuple) -> Optional[int]:
         """The last counter two `(counter, root)` states share, walking both back; None if never.
-
-        What a host passes as `WardRejoin.fork_counter`. The device checks it rather than trusting
-        it, so a wrong answer here is a refusal, not a wrong rejoin.
-        """
-        (ac, ar), (bc, br) = a, b
-        while (ac, ar or None) != (bc, br or None):
-            if ac >= bc:
-                prev = self.links_ending_at(ac, ar, limit=1)
-                if not prev:
-                    return None
-                ac, ar = prev[0][0], prev[0][1]
+        What a host passes as `WardRejoin.fork_counter` (the device checks it)."""
+        a, b = tuple(a), tuple(b)
+        while (a[0], a[1] or None) != (b[0], b[1] or None):
+            later = a if a[0] >= b[0] else b
+            prev = self.links_ending_at(later[0], later[1], limit=1)
+            if not prev:
+                return None
+            if later is a:
+                a = (prev[0][0], prev[0][1])
             else:
-                prev = self.links_ending_at(bc, br, limit=1)
-                if not prev:
-                    return None
-                bc, br = prev[0][0], prev[0][1]
-        return ac
+                b = (prev[0][0], prev[0][1])
+        return a[0]
 
 
 # --- store: the tree ---------------------------------------------------------------------------
 
 
 class WardTrie(TransitionLog):
-    """A host's replica: entry_key -> leaf, the canonical root, proofs -- and its transition log.
+    """A host's replica: entry_key -> leaf, the canonical root, proofs, and its transition log.
 
-    CACHED, WITH THE REBUILD AS THE ORACLE. The tree is built once and reused until a leaf changes;
-    `set` and `remove` are the only mutators and both drop it. `rebuild_root()` recomputes from
-    scratch, and the tests assert the two always agree -- so the cache is an optimisation with a
-    check, not a second implementation to trust.
-
-    `root()` is None for an empty tree, because that is what goes on the wire ("absent"); the
-    preimage form, and what the verifier functions take, is `root_or_empty()`.
+    The tree is cached until `set`/`remove`; `rebuild_root()` is the uncached oracle tests compare
+    against. `root()` is None for an empty tree (the wire's "absent"); `root_or_empty()` is the
+    preimage form.
     """
 
     def __init__(self) -> None:
@@ -472,24 +421,17 @@ class WardTrie(TransitionLog):
         self._commits: dict[bytes, bytes] = {}  # entry_key -> commit
         self.blobs: dict[bytes, object] = {}  # entry_key -> the Leaf the device built
         self._tree = None
-        # The counter the device reported for this state. A root alone does not identify a
-        # moment -- roots repeat whenever contents repeat -- so a store that kept one without the
-        # other could not say which state it holds.
+        # roots repeat, so a state is (counter, root)
         self.counter = 0
         self.timestamp = 0
 
     # --- leaves ---
 
     def set(self, entry_key: bytes, leaf: object, key_type: Optional[str] = None) -> None:
-        """Store the leaf the device built. `key_type` defaults to the one its identity names.
-
-        The key_type is inside the commitment, so it must be the one the device used; a leaf
-        without an identity part has nothing to name it, and `key_type` has to be passed.
-        """
+        """Store the leaf the device built. `key_type` (inside the commitment) defaults to the one
+        its identity names, else "address"."""
         if key_type is None:
             if leaf.identity is None or getattr(leaf.identity, "key_type", None) is None:
-                # the historical default for identity-less leaves, kept so fixtures that build
-                # bare content leaves still hash as the firmware does
                 key_type = "address"
             else:
                 key_type = leaf.identity.key_type
@@ -506,13 +448,8 @@ class WardTrie(TransitionLog):
         self._tree = None
 
     def scratch(self, staged: Sequence[tuple] = ()) -> "WardTrie":
-        """A copy of the tree with `staged` (entry_key, commit) leaves applied -- no log, no blobs
-        for the staged keys.
-
-        What a host serves a BATCHED flush from: the device proves each change against the root it
-        has built so far, which already holds the changes it folded before, and this is that tree.
-        The store itself is untouched until the batch is applied.
-        """
+        """A copy with `staged` (entry_key, commit) leaves applied and no log: what a batched flush
+        is served from, since the device proves against its running root."""
         copy = WardTrie()
         copy._leaves = dict(self._leaves)
         copy._commits = dict(self._commits)
@@ -566,9 +503,7 @@ class WardTrie(TransitionLog):
 
     def root(self) -> Optional[bytes]:
         """The canonical root, or None when the tree is empty (the wire's "absent")."""
-        if not self._leaves:
-            return None
-        return self._hash(self._root_node())
+        return self._hash(self._root_node()) if self._leaves else None
 
     def root_or_empty(self) -> bytes:
         """The root in preimage form: EMPTY_ROOT for the empty tree."""
@@ -577,9 +512,7 @@ class WardTrie(TransitionLog):
 
     def rebuild_root(self) -> Optional[bytes]:
         """The root recomputed from scratch, ignoring the cache: the oracle `root()` is held to."""
-        if not self._leaves:
-            return None
-        return self._hash(self._build(sorted(self._leaves), 0))
+        return self._hash(self._build(sorted(self._leaves), 0)) if self._leaves else None
 
     # --- proofs ---
 
@@ -609,10 +542,7 @@ class WardTrie(TransitionLog):
         self, entry_key: bytes
     ) -> tuple[list, Optional[bytes], Optional[bytes]]:
         """(proof, witness_entry_key, witness_commit) for an ABSENT key; ([], None, None) if empty.
-
-        The witness is whatever leaf the lookup lands on: descend toward `entry_key` and take the
-        leaf you arrive at. Its own membership proof is the absence proof.
-        """
+        The witness is the leaf a lookup for `entry_key` lands on."""
         if not self._leaves:
             return [], None, None
         node = self._root_node()
