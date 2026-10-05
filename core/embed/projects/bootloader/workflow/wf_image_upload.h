@@ -133,12 +133,17 @@ struct image_upload_handler {
   workflow_result_t success_result;
   /** Type-specific UI callbacks. */
   const image_upload_ui_t *ui;
+  /** Bytes at the start of the image that `on_headers` validated */
+  size_t validated_prefix_len;
 
   /**
    * Validates the image headers and runs user confirmation / policy.
    *
    * Called once with the first IMAGE_INIT_CHUNK_SIZE bytes, which contain all
    * headers. On success the engine fetches the remainder of the image.
+   *
+   * Must set `validated_prefix_len` if any of the bytes it validated are not
+   * covered by `on_chunk`.
    *
    * @param self Handler instance.
    * @param iface Protobuf I/O interface used to send failure / abort messages.

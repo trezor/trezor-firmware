@@ -56,10 +56,10 @@ typedef struct {
   uint32_t chunk_size;    // size of already received chunk data
   bool headers_parsed;  // true once the first chunk's headers are validated and
                         // confirmed
-  // Digest of the header prefetch exactly as on_headers validated it. Block 0
-  // is checked against it before it is written: its hash in the image covers
-  // only the code, so a retried block 0 could otherwise carry different
-  // headers than the ones that were validated and confirmed.
+  // Digest of the header as on_headers validated it. Block 0 is checked
+  // against it before it is written: its hash in the image covers only the
+  // code, so a retried block 0 could otherwise carry different headers than the
+  // ones that were validated and confirmed.
   uint8_t headers_digest[IMAGE_HASH_DIGEST_LENGTH];
   uint32_t headers_len;
   bool wireless_transport;          // whether the transport is over BLE
@@ -155,7 +155,13 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
       // How much of block 0 the header prefetch already delivered
       const uint32_t prefetched = e->chunk_size;
 
-      e->headers_len = prefetched;
+      if (handler->validated_prefix_len > prefetched) {
+        // A handler may only pin bytes it was actually given.
+        send_msg_failure(iface, FailureType_Failure_ProcessError,
+                         "Invalid firmware header");
+        return UPLOAD_ERR_INVALID_IMAGE_HEADER;
+      }
+      e->headers_len = handler->validated_prefix_len;
       image_prefix_digest(e->headers_len, e->headers_digest);
 
       uint32_t chunk_limit =
