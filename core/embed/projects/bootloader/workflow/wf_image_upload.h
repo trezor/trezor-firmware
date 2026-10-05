@@ -144,11 +144,14 @@ struct image_upload_handler {
    * @param iface Protobuf I/O interface used to send failure / abort messages.
    * @param buf Buffer holding the first received chunk.
    * @param len Number of valid bytes in @p buf.
+   * @param validated_len Out: bytes at the start of the image it validated
+   *        that `on_chunk` does not cover (preset to 0). The engine rejects a
+   *        retried first chunk whose bytes there differ.
    * @return UPLOAD_OK on success, a negative upload_status_t otherwise.
    */
   upload_status_t (*on_headers)(image_upload_handler_t *self,
                                 protob_io_t *iface, const uint8_t *buf,
-                                size_t len);
+                                size_t len, size_t *validated_len);
 
   /**
    * Verifies a fully-received chunk before it is written to flash.

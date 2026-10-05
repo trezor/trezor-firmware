@@ -135,7 +135,7 @@ static void detect_installation(const vendor_header *current_vhdr,
 
 static upload_status_t fw_on_headers(image_upload_handler_t *base,
                                      protob_io_t *iface, const uint8_t *buf,
-                                     size_t len) {
+                                     size_t len, size_t *validated_len) {
   fw_upload_handler_t *self = (fw_upload_handler_t *)base;
   (void)len;
 
@@ -353,6 +353,9 @@ static upload_status_t fw_on_headers(image_upload_handler_t *base,
   }
 
   self->headers_offset = IMAGE_HEADER_SIZE + vhdr.hdrlen;
+  // The per-block hashes start at headers_offset, so the headers before it are
+  // the part no later check covers; have the engine pin exactly that span.
+  *validated_len = self->headers_offset;
 
   return UPLOAD_OK;
 }
