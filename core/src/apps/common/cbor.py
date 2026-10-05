@@ -158,11 +158,10 @@ def _cbor_decode(r: BufferReader) -> Value:
     elif fb_type == _CBOR_ARRAY:
         if fb_aux == _CBOR_VAR_FOLLOWS:
             res: Value = []
-            while True:
+            while r.peek() != _CBOR_PRIMITIVE + _CBOR_BREAK:
                 item = _cbor_decode(r)
-                if item == _CBOR_PRIMITIVE + _CBOR_BREAK:
-                    break
                 res.append(item)
+            r.get()  # consume the break byte
             return res
         else:
             ln = _read_length(r, fb_aux)
@@ -174,14 +173,13 @@ def _cbor_decode(r: BufferReader) -> Value:
     elif fb_type == _CBOR_MAP:
         res = {}
         if fb_aux == _CBOR_VAR_FOLLOWS:
-            while True:
+            while r.peek() != _CBOR_PRIMITIVE + _CBOR_BREAK:
                 key = _cbor_decode(r)
                 if key in res:
                     raise ValueError
-                if key == _CBOR_PRIMITIVE + _CBOR_BREAK:
-                    break
                 value = _cbor_decode(r)
                 res[key] = value
+            r.get()  # consume the break byte
         else:
             ln = _read_length(r, fb_aux)
             for _ in range(ln):
@@ -206,7 +204,7 @@ def _cbor_decode(r: BufferReader) -> Value:
         elif fb_aux == _CBOR_NULL:
             return None
         elif fb_aux == _CBOR_BREAK:
-            return fb
+            raise ValueError  # break outside an indefinite-length container
         else:
             raise NotImplementedError
     else:
