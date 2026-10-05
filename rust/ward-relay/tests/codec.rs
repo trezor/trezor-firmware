@@ -84,14 +84,16 @@ fn pipe(replies: Vec<(&'static str, Value)>) -> CodecPipe<ScriptedIo> {
 }
 
 #[tokio::test]
-async fn buttons_are_acked_and_pulls_are_returned() {
-    let mut p = pipe(vec![
-        ("ButtonRequest", json!({})),
-        ("WardEntryRequest", json!({"entry_key": "55".repeat(32)})),
-    ]);
+async fn buttons_and_pulls_are_returned_never_answered() {
+    let mut p = pipe(vec![("ButtonRequest", json!({}))]);
+    let (name, _) = p.call("WardReconcile", json!({})).await.unwrap();
+    assert_eq!(name, "ButtonRequest");
+    assert_eq!(p.into_inner().written, ["WardReconcile"]);
+
+    let entry = json!({"entry_key": "55".repeat(32)});
+    let mut p = pipe(vec![("WardEntryRequest", entry.clone())]);
     let (name, body) = p.call("WardFlushQueue", json!({"max_batch": 2})).await.unwrap();
-    assert_eq!((name.as_str(), body), ("WardEntryRequest", json!({"entry_key": "55".repeat(32)})));
-    assert_eq!(p.into_inner().written, ["WardFlushQueue", "ButtonAck"]);
+    assert_eq!((name.as_str(), body), ("WardEntryRequest", entry));
 }
 
 #[tokio::test]

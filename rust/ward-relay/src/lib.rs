@@ -33,6 +33,20 @@ use tokio_tungstenite::{
 pub const WARDD_DEFAULT_URL: &str = "ws://127.0.0.1:21329";
 pub const RELAY_PROTOCOL_VERSION: &str = "1.0";
 
+/// The only messages wardd may put on the device: its sync and flush conversation. Anything else
+/// is answered as a `Failure` without reaching the device, so whatever answers on the wardd port
+/// cannot drive the wallet.
+pub const DEVICE_CALLS: [&str; 8] = [
+    "WardSync",
+    "WardIngestAttestation",
+    "WardReconcile",
+    "WardVerifyChain",
+    "WardRejoin",
+    "WardFlushQueue",
+    "WardEntryAck",
+    "WardChainLinkAck",
+];
+
 #[derive(Debug, thiserror::Error)]
 pub enum RelayError {
     /// wardd's refusal; `code` is the contract's (`wm_conflict`, `needs_rejoin`, ...).
@@ -139,6 +153,9 @@ impl WarddClient {
                 let name = call.get("name").and_then(Value::as_str).unwrap_or_default().to_owned();
                 let message = call.get("message").cloned().unwrap_or_else(|| json!({}));
                 let outcome = match pipe.as_deref_mut() {
+                    _ if !DEVICE_CALLS.contains(&name.as_str()) => {
+                        Err(PipeError::Other(format!("wardd may not send {name}")))
+                    }
                     Some(p) => p.call(&name, message).await,
                     None => Err(PipeError::Other(format!("no device to answer {name}"))),
                 };

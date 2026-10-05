@@ -274,10 +274,10 @@ impl FrameIo for UdpEmulator {
 
 /// A [`WardPipe`] over any [`FrameIo`].
 ///
-/// HANDLES WHAT THE USER IS PART OF: a `ButtonRequest` is acked (the user acts on the device), a
-/// `PassphraseRequest` is answered with [`CodecPipe::passphrase`] if one was set and refused
-/// otherwise -- answering an empty passphrase on the user's behalf would open a different wallet.
-/// Everything else, the WARD pulls included, is returned.
+/// A `ButtonRequest` is returned like any other reply -- this pipe never answers a screen for the
+/// user. A `PassphraseRequest` is answered with [`CodecPipe::passphrase`] if one was set and
+/// refused otherwise -- answering an empty passphrase on the user's behalf would open a different
+/// wallet. Everything else, the WARD pulls included, is returned.
 pub struct CodecPipe<T: FrameIo> {
     io: T,
     pub passphrase: Option<String>,
@@ -309,7 +309,6 @@ impl<T: FrameIo> CodecPipe<T> {
             let (id, bytes) = self.io.read().map_err(|e| PipeError::Other(e.to_string()))?;
             let (reply, message) = decode(id, &bytes).map_err(PipeError::Other)?;
             match reply.as_str() {
-                "ButtonRequest" => (name, body) = ("ButtonAck".into(), json!({})),
                 "PassphraseRequest" => match &self.passphrase {
                     Some(p) => (name, body) = ("PassphraseAck".into(), json!({ "passphrase": p })),
                     None => return Err(PipeError::Other("the device asks for a passphrase".into())),

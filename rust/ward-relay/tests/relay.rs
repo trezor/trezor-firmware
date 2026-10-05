@@ -63,6 +63,13 @@ async fn start_wardd() -> (String, Log) {
                             .send(send(json!({"id": id, "error": {"code": "needs_rejoin", "message": "fork"}})))
                             .await
                             .unwrap(),
+                        Some("forbidden") => {
+                            ws.send(send(json!({"id": id, "deviceCall": {"name": "GetPublicKey", "message": {}}})))
+                                .await
+                                .unwrap();
+                            let reply = recv(&mut ws).await.unwrap()["deviceReply"].clone();
+                            ws.send(send(json!({"id": id, "result": reply}))).await.unwrap();
+                        }
                         Some("hangup") => return,
                         _ => ws.send(send(json!({"id": id, "result": frame["params"]}))).await.unwrap(),
                     }
@@ -135,6 +142,19 @@ async fn a_device_failure_and_a_broken_pipe_both_go_back_as_failures() {
         .await
         .unwrap();
     assert_eq!(out["replies"][1], json!({"name": "Failure", "message": {"message": "gone"}}));
+}
+
+#[tokio::test]
+async fn a_message_outside_the_sync_conversation_never_reaches_the_device() {
+    let (url, _) = start_wardd().await;
+    let mut client = WarddClient::connect(&url, "good").await.unwrap();
+    let mut pipe = Scripted(vec![], None);
+    let out = client.call("forbidden", json!({}), Some(&mut pipe)).await.unwrap();
+    assert!(pipe.0.is_empty());
+    assert_eq!(
+        out,
+        json!({"name": "Failure", "message": {"message": "wardd may not send GetPublicKey"}})
+    );
 }
 
 #[tokio::test]
