@@ -180,6 +180,13 @@ def _expected(br_name: str, final=m.Success, reveals: type | None = None) -> lis
     ]
 
 
+# The request behind each write screen, for its v1 reveal prefix.
+_WRITE_MSG = {
+    "ward_set_entry": m.WardSetEntry,
+    "ward_delete_entry": m.WardDeleteEntry,
+}
+
+
 def _write(
     session: Session, store: WardTrie, call, br_name: str, switched: bool = False
 ) -> tuple:
@@ -192,7 +199,7 @@ def _write(
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
             (session_switch_prefix() if switched else [])
-            + _expected(br_name, m.WardLeafAck)
+            + _expected(br_name, m.WardLeafAck, reveals=_WRITE_MSG.get(br_name))
         )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
@@ -801,7 +808,9 @@ def test_ward_delete_entry_is_idempotent_on_a_proved_absence(session: Session):
     before = store.counter
 
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.WardEntryRequest, m.WardLeafAck])
+        ctx.set_expected_responses(
+            reveal_prefix(m.WardDeleteEntry) + [m.WardEntryRequest, m.WardLeafAck]
+        )
         res = ward.delete_entry(session, _APP, b"ghost", ward.store_provider(store))
 
     # the same empty leaf a real delete returns, so a host applies both the same way
@@ -882,7 +891,9 @@ def test_ward_apply_refuses_to_drop_a_no_change_result_on_a_live_entry(
     key = _seed(session, store, b"addr1", b"present")
 
     with session.test_ctx as ctx:
-        ctx.set_expected_responses([m.WardEntryRequest, m.WardLeafAck])
+        ctx.set_expected_responses(
+            reveal_prefix(m.WardDeleteEntry) + [m.WardEntryRequest, m.WardLeafAck]
+        )
         res = ward.delete_entry(session, _APP, b"ghost", ward.store_provider(store))
 
     # pretend the no-change result was for the live entry -- the shape a confused host

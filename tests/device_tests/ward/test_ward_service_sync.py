@@ -88,7 +88,8 @@ def _write(session: Session, identifier: bytes, value: bytes) -> tuple:
     """
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_set_entry"), m.WardMutationApplied]
+            reveal_prefix(m.WardSetEntry)
+            + [m.ButtonRequest(name="ward_set_entry"), m.WardMutationApplied]
         )
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         res = ward.set_entry(session, _APP, identifier, value, _nothing_on_the_wire)

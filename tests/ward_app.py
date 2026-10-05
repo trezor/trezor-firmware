@@ -67,6 +67,8 @@ REVEAL_BR = "ward_reveal_entry"
 _REVEALING_MESSAGES = frozenset(
     (
         "WardGetEntry",
+        "WardSetEntry",
+        "WardDeleteEntry",
         "WardQueueGetEntry",
         "WardQueueSetEntry",
         "WardQueueDeleteEntry",

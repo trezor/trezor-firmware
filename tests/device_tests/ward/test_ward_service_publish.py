@@ -70,7 +70,8 @@ def _nothing_on_the_wire(entry_key: bytes):
 def _write(session: Session, identifier: bytes, value: bytes):
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_set_entry"), m.WardMutationApplied]
+            reveal_prefix(m.WardSetEntry)
+            + [m.ButtonRequest(name="ward_set_entry"), m.WardMutationApplied]
         )
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         return ward.set_entry(session, _APP, identifier, value, _nothing_on_the_wire)
@@ -80,6 +81,7 @@ def _delete(session: Session, identifier: bytes, expect_screen: bool = True):
     expected = [m.WardMutationApplied]
     if expect_screen:
         expected.insert(0, m.ButtonRequest(name="ward_delete_entry"))
+    expected = reveal_prefix(m.WardDeleteEntry) + expected
     with session.test_ctx as ctx:
         ctx.set_expected_responses(expected)
         ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())

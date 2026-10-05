@@ -118,6 +118,8 @@ class TestWardRevealPolicy(unittest.TestCase):
 
         expected = {
             MessageType.WardGetEntry,
+            MessageType.WardSetEntry,
+            MessageType.WardDeleteEntry,
             MessageType.WardQueueGetEntry,
             MessageType.WardQueueSetEntry,
             MessageType.WardQueueDeleteEntry,

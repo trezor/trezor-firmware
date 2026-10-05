@@ -36,7 +36,8 @@ def _app_label() -> str:
     return app_name or host_name or "an unnamed application"
 
 
-# Operations whose confirmation can show a stored value the caller did not supply. Excluded:
+# Operations whose confirmation can show a stored value the caller did not supply (a write or delete
+# names the value it replaces). Excluded:
 # flush (already confirmed when queued, returns ciphertext), sync plumbing (verified against the
 # device's own keys), rollback/rejoin/reset_service (hold, and show counters, not values).
 _REVEALING: tuple[int, ...] | None = None
@@ -49,6 +50,8 @@ def _revealing_messages() -> "tuple[int, ...]":
 
         _REVEALING = (
             MT.WardGetEntry,
+            MT.WardSetEntry,
+            MT.WardDeleteEntry,
             MT.WardQueueGetEntry,
             MT.WardQueueSetEntry,
             MT.WardQueueDeleteEntry,
