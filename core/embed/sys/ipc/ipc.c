@@ -153,7 +153,7 @@ bool ipc_try_receive(ipc_message_t *msg) {
 
   ipc_queue_item_t *item = (ipc_queue_item_t *)queue->rptr;
 
-  if (queued - sizeof(ipc_queue_item_t) <
+  if (queue->wptr - queue->rptr - sizeof(ipc_queue_item_t) <
       ALIGN_UP(item->size, IPC_DATA_ALIGNMENT)) {
     // Invalid item size
     return false;
