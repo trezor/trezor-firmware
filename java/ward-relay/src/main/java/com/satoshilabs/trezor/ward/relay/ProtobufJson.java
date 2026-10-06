@@ -3,6 +3,7 @@ package com.satoshilabs.trezor.ward.relay;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
@@ -27,6 +28,7 @@ import java.util.Map;
  */
 public final class ProtobufJson {
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final JsonNodeFactory NODES = JSON.getNodeFactory();
     private static final HexFormat HEX = HexFormat.of();
     private static final BigInteger TWO_64 = BigInteger.ONE.shiftLeft(64);
 
@@ -82,96 +84,72 @@ public final class ProtobufJson {
     }
 
     private static JsonNode valueJson(FieldDescriptor field, Object value) {
-        switch (field.getJavaType()) {
-            case INT:
+        return switch (field.getJavaType()) {
+            case INT -> {
                 int i = (Integer) value;
-                return number(isUnsigned(field) ? Integer.toUnsignedLong(i) : i);
-            case LONG:
+                yield number(isUnsigned(field) ? Integer.toUnsignedLong(i) : i);
+            }
+            case LONG -> {
                 long l = (Long) value;
-                return isUnsigned(field) && l < 0
-                        ? JSON.getNodeFactory().numberNode(BigInteger.valueOf(l).add(TWO_64))
+                yield isUnsigned(field) && l < 0
+                        ? NODES.numberNode(BigInteger.valueOf(l).add(TWO_64))
                         : number(l);
-            case FLOAT:
-                return JSON.getNodeFactory().numberNode((Float) value);
-            case DOUBLE:
-                return JSON.getNodeFactory().numberNode((Double) value);
-            case BOOLEAN:
-                return JSON.getNodeFactory().booleanNode((Boolean) value);
-            case STRING:
-                return JSON.getNodeFactory().textNode((String) value);
-            case BYTE_STRING:
-                return JSON.getNodeFactory().textNode(HEX.formatHex(((ByteString) value).toByteArray()));
-            case ENUM:
-                return JSON.getNodeFactory().textNode(((EnumValueDescriptor) value).getName());
-            case MESSAGE:
-                return toJson((MessageOrBuilder) value);
-            default:
-                throw new IllegalStateException("unhandled field type " + field.getJavaType());
-        }
+            }
+            case FLOAT -> NODES.numberNode((Float) value);
+            case DOUBLE -> NODES.numberNode((Double) value);
+            case BOOLEAN -> NODES.booleanNode((Boolean) value);
+            case STRING -> NODES.textNode((String) value);
+            case BYTE_STRING -> NODES.textNode(HEX.formatHex(((ByteString) value).toByteArray()));
+            case ENUM -> NODES.textNode(((EnumValueDescriptor) value).getName());
+            case MESSAGE -> toJson((MessageOrBuilder) value);
+        };
     }
 
     /** The narrowest node, as Jackson's parser builds one: JSON that round-trips compares equal. */
     private static JsonNode number(long n) {
-        return n == (int) n ? JSON.getNodeFactory().numberNode((int) n) : JSON.getNodeFactory().numberNode(n);
+        return n == (int) n ? NODES.numberNode((int) n) : NODES.numberNode(n);
     }
 
     private static Object valueProto(Message.Builder builder, FieldDescriptor field, JsonNode v) {
         String bad = field.getName() + ": unexpected value " + v;
-        switch (field.getJavaType()) {
-            case INT:
-                if (!v.canConvertToLong()) {
-                    throw new IllegalArgumentException(bad);
-                }
-                return (int) v.asLong();
-            case LONG:
-                if (!v.isIntegralNumber()) {
-                    throw new IllegalArgumentException(bad);
-                }
-                return v.bigIntegerValue().longValue();
-            case FLOAT:
-                return (float) v.asDouble();
-            case DOUBLE:
-                return v.asDouble();
-            case BOOLEAN:
-                if (!v.isBoolean()) {
-                    throw new IllegalArgumentException(bad);
-                }
-                return v.asBoolean();
-            case STRING:
-                if (!v.isTextual()) {
-                    throw new IllegalArgumentException(bad);
-                }
-                return v.asText();
-            case BYTE_STRING:
+        return switch (field.getJavaType()) {
+            case INT -> (int) require(v, v.canConvertToLong(), bad).asLong();
+            case LONG -> require(v, v.isIntegralNumber(), bad).bigIntegerValue().longValue();
+            case FLOAT -> (float) v.asDouble();
+            case DOUBLE -> v.asDouble();
+            case BOOLEAN -> require(v, v.isBoolean(), bad).asBoolean();
+            case STRING -> require(v, v.isTextual(), bad).asText();
+            case BYTE_STRING -> {
                 try {
-                    return ByteString.copyFrom(HEX.parseHex(v.asText()));
+                    yield ByteString.copyFrom(HEX.parseHex(v.asText()));
                 } catch (IllegalArgumentException e) {
                     throw new IllegalArgumentException(bad, e);
                 }
-            case ENUM:
+            }
+            case ENUM -> {
                 EnumValueDescriptor value = v.isTextual()
                         ? field.getEnumType().findValueByName(v.asText())
                         : field.getEnumType().findValueByNumber(v.asInt());
                 if (value == null) {
                     throw new IllegalArgumentException(bad);
                 }
-                return value;
-            case MESSAGE:
-                return fromJson(builder.newBuilderForField(field), v).build();
-            default:
-                throw new IllegalStateException("unhandled field type " + field.getJavaType());
+                yield value;
+            }
+            case MESSAGE -> fromJson(builder.newBuilderForField(field), v).build();
+        };
+    }
+
+    private static JsonNode require(JsonNode v, boolean ok, String bad) {
+        if (!ok) {
+            throw new IllegalArgumentException(bad);
         }
+        return v;
     }
 
     private static boolean isUnsigned(FieldDescriptor field) {
-        switch (field.getType()) {
-            case UINT32:
-            case UINT64:
-            case FIXED32:
-            case FIXED64:
-                return true;
-            default:
-                return false;
-        }
+        return switch (field.getType()) {
+            case UINT32, UINT64, FIXED32, FIXED64 -> true;
+            default -> false;
+        };
     }
 }
