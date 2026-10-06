@@ -192,7 +192,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_bitcoin__lot_of_change_outputs;
   MP_QSTR_bitcoin__multiple_accounts;
   MP_QSTR_bitcoin__new_fee_rate;
-  MP_QSTR_bitcoin__simple_send_of;
   MP_QSTR_bitcoin__ticket_amount;
   MP_QSTR_bitcoin__title_confirm_details;
   MP_QSTR_bitcoin__title_finalize_transaction;
