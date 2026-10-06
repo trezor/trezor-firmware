@@ -7,10 +7,17 @@
     pack_content  = C_leaf(4B BE) || len32(value) || value
     aad           = domain(1B) || entry_key || key_type
 
-Parts are sealed with ChaCha20-Poly1305 under K_ident(key_type) / K_data(key_type), so the
-host can neither read nor forge them; the AAD stops a part being swapped or moved. Sealing
-gives no freshness -- only a proof against an attested root does. Byte-identical to the
-reference; vectors in `core/tests/test_apps.ward.py`.
+Parts are sealed under K_ident(key_type) / K_data(key_type), so the host can neither read nor
+forge them; the context (domain, entry_key, key_type) stops a part being swapped or moved. Two
+schemes, chosen per part by its `encoding` byte -- which `commit_of` hashes, so the root fixes it:
+
+    ENC_ENCRYPTED (0)  ChaCha20-Poly1305, random 12-byte nonce stored in the part
+    ENC_SIV (2)        synthetic IV: siv = HMAC(K_mac, context || pt)[:16] is both the tag and
+                       the ChaCha20 nonce (siv[:12]); no nonce is stored, and a repeated
+                       (entry_key, C_leaf) cannot repeat a keystream for a different value
+
+Writes use WARD_SEAL_ENCODING; reads accept both. Sealing gives no freshness -- only a proof
+against an attested root does. Vectors in `core/tests/test_apps.ward.py`.
 """
 
 from typing import TYPE_CHECKING
@@ -23,6 +30,10 @@ if TYPE_CHECKING:
 
 ENC_ENCRYPTED = 0
 ENC_PLAINTEXT = 1
+ENC_SIV = 2
+
+# The scheme new parts are sealed with. Reads dispatch on each part's own encoding.
+WARD_SEAL_ENCODING = ENC_ENCRYPTED
 
 # An empty part means DELETED; an entry with an empty value still has a non-empty body.
 EMPTY_PART: "Part" = (ENC_PLAINTEXT, b"", b"", b"")
@@ -34,7 +45,7 @@ WARD_PLAINTEXT_CONTENT = False
 if (WARD_PLAINTEXT_IDENTITY or WARD_PLAINTEXT_CONTENT) and not __debug__:
     raise RuntimeError("WARD plaintext leaf parts require a __debug__ build")
 
-# --- AEAD (ChaCha20-Poly1305, RFC-7539, 12-byte nonce) ---
+# --- sealing ---
 
 # Ciphertext is padded to a bucket so its length leaks only a coarse band.
 _AEAD_BUCKETS = (64, 256, 1024, 4096)
@@ -55,6 +66,90 @@ def _clear(body: bytes) -> "Part":
     return (ENC_PLAINTEXT, b"", b"", body)
 
 
+def _aead_seal(
+    key: bytes, domain: bytes, entry_key: bytes, key_type: str, pt: bytes, nonce: "bytes | None"
+) -> tuple:
+    """ChaCha20-Poly1305 under AAD = domain || entry_key || key_type. The nonce is random per part
+    per write and NEVER derived from the leaf: (entry_key, C_leaf) pairs recur (retries, other
+    devices, rollbacks), and a repeated nonce breaks ChaCha20-Poly1305."""
+    from trezor.crypto import chacha20poly1305_encrypt, random
+
+    nonce = nonce or random.bytes(12)
+    cipher = chacha20poly1305_encrypt(key, nonce)
+    cipher.auth(domain + entry_key + key_type.encode())
+    ct = cipher.encrypt(pt)
+    return nonce, cipher.finish(), ct
+
+
+def _aead_open(
+    key: bytes, domain: bytes, entry_key: bytes, key_type: str, nonce: bytes, tag: bytes, ct: bytes
+) -> bytes:
+    from trezor.crypto import AuthenticationError, chacha20poly1305_decrypt
+    from trezor.wire import DataError
+
+    cipher = chacha20poly1305_decrypt(key, nonce)
+    cipher.auth(domain + entry_key + key_type.encode())
+    pt = cipher.decrypt(ct)
+    try:
+        cipher.finish(tag)
+    except AuthenticationError:
+        raise DataError("WARD leaf AEAD tag mismatch")
+    return pt
+
+
+def _siv_keys(key: bytes) -> "tuple[bytes, bytes]":
+    """(K_enc, K_mac): never `key` itself, which the AEAD scheme uses with random nonces."""
+    from trezor.crypto import hmac
+
+    return (
+        hmac(hmac.SHA256, key, b"WARD SIV enc").digest(),
+        hmac(hmac.SHA256, key, b"WARD SIV mac").digest(),
+    )
+
+
+def _siv(k_mac: bytes, domain: bytes, entry_key: bytes, key_type: str, pt: bytes) -> bytes:
+    from trezor.crypto import hmac
+
+    from .codec import lp
+
+    ctx = domain + entry_key + lp(1, key_type.encode(), "WARD: key_type too long")
+    return hmac(hmac.SHA256, k_mac, b"WARD SIV v1" + ctx + pt).digest()[:16]
+
+
+def _siv_stream(k_enc: bytes, siv: bytes, data: bytes) -> bytes:
+    """ChaCha20 keyed by K_enc with nonce siv[:12]: the AEAD object as a bare stream cipher. Its
+    Poly1305 tag is never finished or used -- the siv is the tag -- and it XORs both ways."""
+    from trezor.crypto import chacha20poly1305_encrypt
+
+    return chacha20poly1305_encrypt(k_enc, siv[:12]).encrypt(data)
+
+
+def _siv_seal(
+    key: bytes, domain: bytes, entry_key: bytes, key_type: str, pt: bytes, _nonce: "bytes | None"
+) -> tuple:
+    k_enc, k_mac = _siv_keys(key)
+    siv = _siv(k_mac, domain, entry_key, key_type, pt)
+    return b"", siv, _siv_stream(k_enc, siv, pt)
+
+
+def _siv_open(
+    key: bytes, domain: bytes, entry_key: bytes, key_type: str, _nonce: bytes, tag: bytes, ct: bytes
+) -> bytes:
+    from trezor.utils import consteq
+    from trezor.wire import DataError
+
+    k_enc, k_mac = _siv_keys(key)
+    pt = _siv_stream(k_enc, tag, ct)
+    # CONSTANT TIME, and nothing of `pt` leaves before the check
+    if not consteq(_siv(k_mac, domain, entry_key, key_type, pt), tag):
+        raise DataError("WARD leaf SIV mismatch")
+    return pt
+
+
+_SEAL = {ENC_ENCRYPTED: _aead_seal, ENC_SIV: _siv_seal}
+_OPEN = {ENC_ENCRYPTED: _aead_open, ENC_SIV: _siv_open}
+
+
 def _encode_part(
     plaintext: bool,
     key: bytes,
@@ -64,26 +159,20 @@ def _encode_part(
     pt: bytes,
     nonce: "bytes | None",
 ) -> "Part":
-    """Seal one part under AAD = domain || entry_key || key_type (or, dev builds only, leave it
-    clear). The nonce is random per part per write -- `nonce` is for known-answer tests ONLY --
-    and NEVER derived from the leaf: a rollback revisits (entry_key, C_leaf) pairs, and a
-    repeated nonce breaks ChaCha20-Poly1305."""
-    from trezor.crypto import chacha20poly1305_encrypt, random
-
+    """Seal one part with WARD_SEAL_ENCODING (or, dev builds only, leave it clear). `nonce` is
+    for known-answer tests ONLY, and SIV ignores it."""
     if plaintext:
         return _clear(pt)
-    nonce = nonce or random.bytes(12)
-    cipher = chacha20poly1305_encrypt(key, nonce)
-    cipher.auth(domain + entry_key + key_type.encode())
-    ct = cipher.encrypt(_pad_bucket(pt))
-    return (ENC_ENCRYPTED, nonce, cipher.finish(), ct)
+    enc = WARD_SEAL_ENCODING
+    nonce, tag, ct = _SEAL[enc](key, domain, entry_key, key_type, _pad_bucket(pt), nonce)
+    return (enc, nonce, tag, ct)
 
 
 def _decode_part(
     key: bytes, domain: bytes, entry_key: bytes, key_type: str, part: "Part | None", unpack
 ) -> "Any":
-    """`unpack` of a part's plaintext (padding left on), or None for a deleted part."""
-    from trezor.crypto import AuthenticationError, chacha20poly1305_decrypt
+    """`unpack` of a part's plaintext (padding left on), or None for a deleted part. The scheme
+    is the part's own encoding, never the build's write setting."""
     from trezor.wire import DataError
 
     if is_delete(part):
@@ -92,14 +181,9 @@ def _decode_part(
     encoding, nonce, tag, ct = part
     if encoding == ENC_PLAINTEXT:
         return unpack(ct)
-    cipher = chacha20poly1305_decrypt(key, nonce)
-    cipher.auth(domain + entry_key + key_type.encode())
-    pt = cipher.decrypt(ct)
-    try:
-        cipher.finish(tag)
-    except AuthenticationError:
-        raise DataError("WARD leaf AEAD tag mismatch")
-    return unpack(pt)
+    if encoding not in _OPEN:
+        raise DataError("WARD: unknown leaf part encoding")
+    return unpack(_OPEN[encoding](key, domain, entry_key, key_type, nonce, tag, ct))
 
 
 # Unpacking a short plaintext; only a part that passed its AEAD, or a dev plaintext one, gets here.
@@ -283,13 +367,13 @@ def make_leaf_content(part: "Part | None") -> "Any":
             encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=body)
         )
     return WardLeafContent(
-        encoding=ENC_ENCRYPTED,
+        encoding=encoding,
         encrypted=WardEncryptedLeaf(nonce=nonce, tag=tag, ct=body),
     )
 
 
-# Fixed by the AEAD; checked before a sealed part reaches the cipher.
-_NONCE_LEN = 12
+# Fixed by each scheme; checked before a sealed part reaches the cipher.
+_NONCE_LEN = {ENC_ENCRYPTED: 12, ENC_SIV: 0}
 _TAG_LEN = 16
 
 
@@ -299,7 +383,7 @@ def _require_canonical(encoding: "Any", sealed: "Any", clear: "Any") -> int:
     from trezor.wire import DataError
 
     e = encoding if encoding is not None else ENC_ENCRYPTED
-    if e not in (ENC_ENCRYPTED, ENC_PLAINTEXT):
+    if e not in (ENC_ENCRYPTED, ENC_PLAINTEXT, ENC_SIV):
         raise DataError("WARD: unknown leaf part encoding")
     if sealed is not None and clear is not None:
         raise DataError("WARD: leaf part sets both encodings")
@@ -314,21 +398,20 @@ def _mode_error(sealed: bool, what: str) -> Exception:
     return DataError("WARD: plaintext %s but firmware is encrypted-only" % what)
 
 
-def _sealed_part(e: "Any", what: str) -> "Part":
-    """A sealed wire part, its nonce and tag at the AEAD's fixed widths."""
+def _sealed_part(encoding: int, e: "Any", what: str) -> "Part":
+    """A sealed wire part, its nonce and tag at its scheme's fixed widths."""
     from trezor.wire import DataError
 
-    if len(e.nonce or b"") != _NONCE_LEN or len(e.tag or b"") != _TAG_LEN:
+    if len(e.nonce or b"") != _NONCE_LEN[encoding] or len(e.tag or b"") != _TAG_LEN:
         raise DataError("WARD: sealed %s has a malformed nonce or tag" % what)
-    return (ENC_ENCRYPTED, e.nonce or b"", e.tag or b"", e.ct or b"")
+    return (encoding, e.nonce or b"", e.tag or b"", e.ct or b"")
 
 
 def read_leaf_content(content: "Any") -> "Part | None":
     if content is None:
         return None
-    if _require_canonical(content.encoding, content.encrypted, content.plaintext) == (
-        ENC_PLAINTEXT
-    ):
+    encoding = _require_canonical(content.encoding, content.encrypted, content.plaintext)
+    if encoding == ENC_PLAINTEXT:
         p = content.plaintext
         body = p.content if (p is not None and p.content is not None) else b""
         # An empty body is a delete (EMPTY_PART is plaintext-encoded): accepted in either mode.
@@ -338,7 +421,7 @@ def read_leaf_content(content: "Any") -> "Part | None":
     if WARD_PLAINTEXT_CONTENT:
         raise _mode_error(True, "content")
     e = content.encrypted
-    return None if e is None else _sealed_part(e, "content")
+    return None if e is None else _sealed_part(encoding, e, "content")
 
 
 def make_leaf_identity(key_type: str, part: "Part | None") -> "Any":
@@ -358,7 +441,7 @@ def make_leaf_identity(key_type: str, part: "Part | None") -> "Any":
             )
         return WardLeafIdentity(encoding=ENC_PLAINTEXT, key_type=key_type, plain=plain)
     return WardLeafIdentity(
-        encoding=ENC_ENCRYPTED,
+        encoding=encoding,
         key_type=key_type,
         encrypted=WardEncryptedIdentity(nonce=nonce, tag=tag, ct=body),
     )
@@ -370,9 +453,8 @@ def read_leaf_identity(identity: "Any") -> "tuple[str | None, Part | None]":
     if identity is None:
         return None, None
     key_type = identity.key_type or ENTRY_TYPE_ADDRESS
-    if _require_canonical(identity.encoding, identity.encrypted, identity.plain) == (
-        ENC_PLAINTEXT
-    ):
+    encoding = _require_canonical(identity.encoding, identity.encrypted, identity.plain)
+    if encoding == ENC_PLAINTEXT:
         p = identity.plain
         if p is None or p.identifier is None:
             # A delete's empty part, accepted in either mode.
@@ -385,4 +467,4 @@ def read_leaf_identity(identity: "Any") -> "tuple[str | None, Part | None]":
     if WARD_PLAINTEXT_IDENTITY:
         raise _mode_error(True, "identity")
     e = identity.encrypted
-    return key_type, None if e is None else _sealed_part(e, "identity")
+    return key_type, None if e is None else _sealed_part(encoding, e, "identity")

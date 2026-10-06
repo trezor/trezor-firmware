@@ -136,7 +136,10 @@ message WardDeleteEntry {
  *   part(p) = encoding(1B)||len8(nonce)||nonce||len8(tag)||tag||len32(body)||body
  *
  * Each part's encoding byte sits inside that framing, so a sealed and an unsealed part
- * can never collide.
+ * can never collide -- and the commit fixes which scheme opens a part:
+ *   0 = AEAD: ChaCha20-Poly1305, random 12-byte nonce, Poly1305 tag
+ *   1 = plaintext (dev builds, and the empty delete part)
+ *   2 = SIV: no nonce (empty); tag = HMAC-SHA256 synthetic IV, also the ChaCha20 nonce
  *
  * THE DEVICE PRODUCES THE LEAF and the host stores it verbatim. This is not a convention
  * the host is asked to respect -- it holds neither K_ident nor K_data, so it cannot
@@ -148,8 +151,8 @@ message WardDeleteEntry {
  * indistinguishable from deleted ones, and so impossible to represent or to delete.
  */
 message WardEncryptedLeaf {
-    optional bytes nonce = 1;  // 12B AEAD nonce
-    optional bytes tag   = 2;  // 16B Poly1305 tag
+    optional bytes nonce = 1;  // 12B AEAD nonce (encoding 0); empty for SIV (encoding 2)
+    optional bytes tag   = 2;  // 16B Poly1305 tag (0) or synthetic IV (2)
     optional bytes ct    = 3;  // AEAD ciphertext (empty = delete)
 }
 
@@ -158,8 +161,8 @@ message WardPlaintextLeaf {
 }
 
 message WardLeafContent {
-    optional uint32 encoding         = 1;  // 0 = encrypted (default), 1 = plaintext
-    optional WardEncryptedLeaf encrypted = 2;  // set when encoding = 0
+    optional uint32 encoding         = 1;  // 0 = AEAD (default), 1 = plaintext, 2 = SIV
+    optional WardEncryptedLeaf encrypted = 2;  // set when encoding = 0 or 2
     optional WardPlaintextLeaf plaintext = 3;  // set when encoding = 1
 }
 
@@ -170,15 +173,15 @@ message WardPlainIdentity {
 }
 
 message WardEncryptedIdentity {
-    optional bytes nonce = 1;  // 12B AEAD nonce
-    optional bytes tag   = 2;  // 16B Poly1305 tag
+    optional bytes nonce = 1;  // 12B AEAD nonce (encoding 0); empty for SIV (encoding 2)
+    optional bytes tag   = 2;  // 16B Poly1305 tag (0) or synthetic IV (2)
     optional bytes ct    = 3;  // AEAD over len16(identifier)||identifier||len8(app_id)||app_id||device_id(1B)
 }
 
 message WardLeafIdentity {
-    optional uint32 encoding             = 1;  // 0 = encrypted (default), 1 = plaintext
+    optional uint32 encoding             = 1;  // 0 = AEAD (default), 1 = plaintext, 2 = SIV
     optional string key_type             = 2;  // ALWAYS CLEAR -- selects both leaf keys
-    optional WardEncryptedIdentity encrypted = 3;  // set when encoding = 0
+    optional WardEncryptedIdentity encrypted = 3;  // set when encoding = 0 or 2
     optional WardPlainIdentity     plain     = 4;  // set when encoding = 1
 }
 

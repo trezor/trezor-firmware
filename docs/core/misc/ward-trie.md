@@ -38,7 +38,7 @@ All hashes are SHA-256. `len8`/`len32` are unsigned big-endian length prefixes o
 
 ```
 part      = encoding(1B) ‖ len8(nonce) ‖ nonce ‖ len8(tag) ‖ tag ‖ len32(body) ‖ body
-            encoding: 0 = encrypted, 1 = plaintext
+            encoding: 0 = AEAD (12-byte nonce), 1 = plaintext, 2 = SIV (empty nonce)
 
 commit    = sha256( 0x02 ‖ len8(key_type) ‖ key_type
                          ‖ len32(id_part)  ‖ id_part

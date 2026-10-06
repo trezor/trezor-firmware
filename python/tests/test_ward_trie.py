@@ -337,3 +337,23 @@ def test_apply_records_one_link_for_a_batch() -> None:
     stale = ward.WardResult(None, b"", counter=9, leaves=[(a, _leaf(b"a"))], from_counter=7)
     with pytest.raises(ValueError, match="starts at counter 7"):
         ward.apply(store, stale)
+
+
+def test_an_siv_part_is_framed_with_its_own_encoding_byte() -> None:
+    """Encoding 2 (SIV) rides the sealed arm with no nonce; its framing is byte-for-byte the
+    firmware's `leaf.part_bytes((2, b"", tag, ct))`, and the encoding byte is in the commit."""
+    from trezorlib import ward_trie
+    from trezorlib.ward import Leaf, leaf_is_delete
+
+    tag, ct = b"t" * 16, b"c" * 64
+    siv = SimpleNamespace(
+        encoding=2,
+        encrypted=SimpleNamespace(nonce=b"", tag=tag, ct=ct),
+        plaintext=None,
+    )
+    assert ward_trie._part_bytes(siv) == bytes([2, 0, 16]) + tag + (64).to_bytes(4, "big") + ct
+    aead = SimpleNamespace(encoding=0, encrypted=siv.encrypted, plaintext=None)
+    assert commit_of("address", None, siv) != commit_of("address", None, aead)
+    assert not leaf_is_delete(Leaf(None, siv))
+    with pytest.raises(ValueError, match="unknown leaf"):
+        ward_trie._part_bytes(SimpleNamespace(encoding=3, encrypted=None, plaintext=None))

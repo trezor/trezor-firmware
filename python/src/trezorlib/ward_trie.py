@@ -115,7 +115,7 @@ def _part_arms(part: object, what: str = "part") -> tuple:
     unknown encoding, or both arms set. Dispatch is on `encoding`, never on field presence."""
     encoding = getattr(part, "encoding", None)
     encoding = 0 if encoding is None else encoding
-    if encoding not in (0, 1):
+    if encoding not in (0, 1, 2):
         raise ValueError("unknown leaf %s encoding: %r" % (what, encoding))
     clear = getattr(part, "plaintext", None)
     if clear is None:
@@ -130,9 +130,10 @@ def _part_bytes(part: object) -> bytes:
     """A wire leaf part -> its canonical framing, for the commit preimage. Any disagreement with
     the firmware would be a different root."""
     encoding, clear, sealed = (1, None, None) if part is None else _part_arms(part)
-    if encoding == 0 and sealed is not None:
+    # 0 = AEAD (12-byte nonce), 2 = SIV (no nonce): the same sealed framing, own encoding byte
+    if encoding in (0, 2) and sealed is not None:
         return (
-            bytes([0])
+            bytes([encoding])
             + _lp(1, sealed.nonce or b"")
             + _lp(1, sealed.tag or b"")
             + _lp(4, sealed.ct or b"")

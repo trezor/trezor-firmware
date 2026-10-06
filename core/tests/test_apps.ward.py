@@ -473,6 +473,109 @@ class TestWardSealedLeaf(unittest.TestCase):
             L.read_leaf_content(wire)
 
 
+class TestWardSivLeaf(unittest.TestCase):
+    """ENC_SIV: no stored nonce, so a repeated (entry_key, C_leaf) cannot reuse a keystream.
+
+    Writes pick the scheme by WARD_SEAL_ENCODING; reads dispatch on the part's own encoding.
+    """
+
+    KT = "address"
+
+    def setUp(self):
+        self.k_ident = slip21_key(SEED, [b"ward", b"K_ident", b"address"])
+        self.k_data = slip21_key(SEED, [b"ward", b"K_data", b"address"])
+        self.ek = b"\x11" * 32
+        L.WARD_SEAL_ENCODING = L.ENC_SIV
+
+    def tearDown(self):
+        L.WARD_SEAL_ENCODING = ENC_ENCRYPTED
+
+    def _content(self, value=b"hello", c_leaf=7, key=None, ek=None):
+        return encode_content(
+            key or self.k_data, ek or self.ek, self.KT, value, c_leaf=c_leaf
+        )
+
+    def test_known_answer(self):
+        """Pinned against an independent CPython implementation (HMAC-SHA256 + ChaCha20 at
+        block counter 1, `cryptography`), so the AEAD-as-stream-cipher reuse is checked."""
+        part = encode_content(bytes(range(32)), self.ek, self.KT, b"hello", c_leaf=7)
+        self.assertEqual(part[0], L.ENC_SIV)
+        self.assertEqual(part[1], b"")  # no nonce is stored
+        self.assertEqual(part[2], bytes.fromhex("d97fc6bb13d006c69dacd9e1feeea918"))
+        self.assertEqual(
+            part[3],
+            bytes.fromhex(
+                "038d8b5497e7f82ff6c098ef57ec12fa56804ede424eacf388a4100416cc86fc"
+                "101e9809d6c4b3e84e6cb495fcb07009104ba1f6a19ede6536d2c1ffb679d663"
+            ),
+        )
+
+    def test_round_trip_both_parts(self):
+        self.assertEqual(
+            decode_content(self.k_data, self.ek, self.KT, self._content()), (7, b"hello")
+        )
+        id_part = encode_identity(self.k_ident, self.ek, self.KT, b"alice", "bitcoin", 7)
+        self.assertEqual(id_part[0], L.ENC_SIV)
+        self.assertEqual(
+            decode_identity(self.k_ident, self.ek, self.KT, id_part),
+            (b"alice", b"bitcoin", 7),
+        )
+
+    def test_deterministic_and_bound_to_the_value(self):
+        """The same inputs seal identically; a different value OR counter changes the IV, which
+        is the whole point -- a retried write at one C_leaf gets a fresh keystream."""
+        a = self._content()
+        self.assertEqual(a, self._content())
+        self.assertNotEqual(a[2], self._content(value=b"other")[2])
+        self.assertNotEqual(a[2], self._content(c_leaf=8)[2])
+
+    def test_tampering_and_moving_are_refused(self):
+        part = self._content()
+        bad_ct = (part[0], part[1], part[2], part[3][:-1] + bytes([part[3][-1] ^ 1]))
+        bad_tag = (part[0], part[1], bytes([part[2][0] ^ 1]) + part[2][1:], part[3])
+        for p in (bad_ct, bad_tag):
+            with self.assertRaises(DataError):
+                decode_content(self.k_data, self.ek, self.KT, p)
+        with self.assertRaises(DataError):
+            decode_content(self.k_data, b"\x22" * 32, self.KT, part)
+        with self.assertRaises(DataError):
+            decode_content(self.k_data, self.ek, "label", part)
+        with self.assertRaises(DataError):  # the other part's key and domain
+            decode_identity(self.k_ident, self.ek, self.KT, part)
+
+    def test_an_aead_part_still_opens_while_writes_are_siv(self):
+        L.WARD_SEAL_ENCODING = ENC_ENCRYPTED
+        old = self._content()
+        L.WARD_SEAL_ENCODING = L.ENC_SIV
+        self.assertEqual(old[0], ENC_ENCRYPTED)
+        self.assertEqual(decode_content(self.k_data, self.ek, self.KT, old), (7, b"hello"))
+
+    def test_the_wire_keeps_the_encoding_and_its_widths(self):
+        """Encoding 2 travels in the sealed arm with an empty nonce; the encoding byte is in
+        the commit, so the root fixes which scheme opens a leaf."""
+        part = self._content()
+        self.assertEqual(L.read_leaf_content(L.make_leaf_content(part)), part)
+        id_part = encode_identity(self.k_ident, self.ek, self.KT, b"alice", "bitcoin", 7)
+        self.assertEqual(
+            L.read_leaf_identity(L.make_leaf_identity(self.KT, id_part)),
+            (self.KT, id_part),
+        )
+        self.assertNotEqual(
+            part_bytes(part), part_bytes((ENC_ENCRYPTED,) + tuple(part[1:]))
+        )
+        from trezor.messages import WardEncryptedLeaf, WardLeafContent
+
+        for encoding, nonce in ((L.ENC_SIV, b"\x00" * 12), (ENC_ENCRYPTED, b"")):
+            wire = WardLeafContent(
+                encoding=encoding,
+                encrypted=WardEncryptedLeaf(nonce=nonce, tag=part[2], ct=part[3]),
+            )
+            with self.assertRaises(DataError):
+                L.read_leaf_content(wire)
+        with self.assertRaises(DataError):
+            L.read_leaf_content(WardLeafContent(encoding=3))
+
+
 class TestWardTrie(unittest.TestCase):
     """The trie verifier, pinned against vectors that trezorlib, the firmware reference
     and @trezor/ward all agree on.
