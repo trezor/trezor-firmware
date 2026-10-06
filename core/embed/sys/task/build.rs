@@ -45,6 +45,7 @@ fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
         .header("task/inc/sys/sysevent.h")
         .allowlist_function("sysevents_poll")
         .allowlist_type("syshandle_t")
-        .allowlist_type("sysevents_t");
+        .allowlist_type("sysevents_t")
+        .allowlist_type("syshandle_mask_t");
     Ok(builder)
 }
