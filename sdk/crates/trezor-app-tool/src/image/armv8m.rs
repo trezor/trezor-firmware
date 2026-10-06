@@ -260,13 +260,23 @@ impl Armv8mBinary {
             .context("Startup symbol address does not fit in u32")
     }
 
+    /// Returns the ELF `p_flags` (`PF_R`/`PF_W`/`PF_X`) of a program segment.
+    fn segment_flags(segment: &object::Segment<'_, '_>) -> u32 {
+        match segment.flags() {
+            object::SegmentFlags::Elf { p_flags } => p_flags,
+            _ => 0,
+        }
+    }
+
     /// Finds and reads the read-only segment containing code and rodata.
     fn ro_segment(elf: &object::File<'_>) -> Result<RoSegment> {
         let ro_segment = elf
             .segments()
             .find(|segment| {
-                let perm = segment.permissions();
-                perm.readonly() && perm.executable()
+                let flags = Self::segment_flags(segment);
+                flags & object::elf::PF_R != 0
+                    && flags & object::elf::PF_W == 0
+                    && flags & object::elf::PF_X != 0
             })
             .context("Failed to find the read-only segment")?;
 
@@ -298,8 +308,10 @@ impl Armv8mBinary {
         let rw_segment = elf
             .segments()
             .find(|segment| {
-                let perm = segment.permissions();
-                perm.readable() && perm.writable() && !perm.executable()
+                let flags = Self::segment_flags(segment);
+                flags & object::elf::PF_R != 0
+                    && flags & object::elf::PF_W != 0
+                    && flags & object::elf::PF_X == 0
             })
             .context("Failed to find the read-write segment")?;
 

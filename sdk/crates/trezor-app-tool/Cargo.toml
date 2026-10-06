@@ -7,15 +7,13 @@ license = "GPL-3.0-only"
 exclude = ["supply-chain/"]
 
 [dependencies]
-clap = { version = "4.6.0", features = ["derive"] }
+clap = { version = "4.6.0", default-features = false, features = ["derive", "std", "help", "usage", "error-context", "suggestions"] }
 cargo_metadata = "0.23.1"
 serde_json = "1.0.145"
 anyhow = "1.0.71"
-regex = "1"
-hex = "0.4.3"
-object = "0.39.1"
-sha2 = "0.11.0"
-zerocopy = "0.8.50"
-zerocopy-derive = "0.8.50"
+object = { version = "0.37.3", default-features = false, features = ["read_core", "elf", "std"] }
+sha2 = "0.10.9"
+zerocopy = "0.8.27"
+zerocopy-derive = "0.8.27"
 protox = "0.9.1"
 prost-types = "0.14"
