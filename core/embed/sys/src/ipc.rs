@@ -4,57 +4,10 @@
 //! incoming messages; [`IpcMessage`] borrows from that buffer for as long as
 //! it's alive. [`send`] fires a message at another task directly.
 
-use rtl::unwrap;
-use spin::Mutex;
-
 use crate::buffer::{KernelBuffer, KernelBufferPtr};
 use crate::task::TaskId;
 use crate::time::Timeout;
 use crate::{ffi, sysevent};
-
-/// A lock for the set of IPC queues.
-///
-/// Ensures that no more than one inbox can be registered for a given remote.
-///
-/// The kernel only allows one inbox per remote, and registrations are
-/// latest-wins. Meaning that only the last created `IpcInbox` correctly
-/// receives messages. The earlier ones can call `try_receive` but will bind the
-/// result to a wrong lifetime. Moreover, when dropping an earlier registration,
-/// `ipc_unregister` will actually deregister the currently active inbox.
-///
-/// Inbox registrations have to go through [`IPC_QUEUE_LOCK`] and refuse to
-/// register if the remote is already locked.
-struct QueueLock(Mutex<[bool; TaskId::MAX]>);
-
-impl QueueLock {
-    /// Creates a new lock.
-    const fn new() -> Self {
-        Self(Mutex::new([false; TaskId::MAX]))
-    }
-
-    /// Tries to register an inbox for `remote`.
-    ///
-    /// Returns `Err(InboxAlreadyRegistered)` if the remote is already locked.
-    fn try_register(&self, remote: TaskId) -> Result<(), InboxAlreadyRegistered> {
-        let mut lock = unwrap!(self.0.try_lock());
-        let idx = remote.into_index();
-        if lock[idx] {
-            return Err(InboxAlreadyRegistered);
-        }
-        lock[idx] = true;
-        Ok(())
-    }
-
-    /// Unregisters an inbox for `remote`.
-    fn unregister(&self, remote: TaskId) {
-        let mut lock = unwrap!(self.0.try_lock());
-        let idx = remote.into_index();
-        lock[idx] = false;
-    }
-}
-
-/// Global lock for the set of IPC queues.
-static IPC_QUEUE_LOCK: QueueLock = QueueLock::new();
 
 /// The message could not be sent because the remote task is not receiving.
 pub struct SendFailed;
@@ -220,21 +173,25 @@ pub struct IpcInbox<P: KernelBufferPtr> {
 impl<P: KernelBufferPtr<Align = usize>> IpcInbox<P> {
     /// Creates a new inbox for `remote`, registering `buffer` with the kernel.
     ///
-    /// Panics in debug builds if registration fails — this can only happen
-    /// if the buffer is empty, since `P`'s bound already guarantees
-    /// `usize` alignment and the kernel has no other rejection reason.
+    /// Panics if the buffer has zero size.
+    ///
+    /// Returns an error if another inbox is already registered for the same
+    /// remote.
     pub fn new(remote: TaskId, buffer: P) -> Result<Self, InboxAlreadyRegistered> {
-        IPC_QUEUE_LOCK.try_register(remote)?;
-
         let buffer = KernelBuffer::new(buffer);
+        rtl::ensure!(buffer.byte_size() > 0, "Empty IPC buffer");
         // SAFETY: memory managed by `buffer` is valid until deregistration on
         // drop, and no Rust references to it can be created.
-        let ok = unsafe { ffi::ipc_register(remote.into(), buffer.ptr() as _, buffer.byte_size()) };
-        debug_assert!(ok, "Failed to register IPC buffer");
-        Ok(Self {
-            remote,
-            _buffer: buffer,
-        })
+        let result =
+            unsafe { ffi::ipc_register(remote.into(), buffer.ptr() as _, buffer.byte_size()) };
+        if result {
+            Ok(Self {
+                remote,
+                _buffer: buffer,
+            })
+        } else {
+            Err(InboxAlreadyRegistered)
+        }
     }
 
     /// Polls for an incoming message without blocking.
@@ -260,6 +217,5 @@ impl<P: KernelBufferPtr> Drop for IpcInbox<P> {
         // SAFETY: unregistering before `buffer` is dropped/freed prevents
         // the kernel from writing into memory we no longer own.
         unsafe { ffi::ipc_unregister(self.remote.into()) };
-        IPC_QUEUE_LOCK.unregister(self.remote);
     }
 }
