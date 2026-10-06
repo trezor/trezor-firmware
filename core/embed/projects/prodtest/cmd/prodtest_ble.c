@@ -171,7 +171,7 @@ bool prodtest_ble_console_start(void) {
   if (name_len < 0) {
     return false;
   }
-  if (name_len > BLE_ADV_NAME_LEN) {
+  if ((size_t)name_len > BLE_ADV_NAME_LEN) {
     name_len = BLE_ADV_NAME_LEN;
   }
   g_console_adv_name_len = name_len;
