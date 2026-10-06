@@ -1336,9 +1336,12 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         // Access the archived data zero-copy using safe Deref access
         match archived {
         Archived::<TrezorUiEnum>::SelectMenu(m) => {
+            // The app decides how many items there are, so too many is its
+            // error to get back, not a reason to stop the device.
             let mut vec = heapless::Vec::<SelectMenuItem, MAX_MENU_ITEMS>::new();
             for item in m.items.as_ref() {
-                unwrap!(vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard)));
+                vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard))
+                    .map_err(|_| Error::OutOfRange)?;
             }
             // The way out comes last, drawn as one where the model can: the
             // one the block asked for, or the screen's own where the menu
@@ -1351,7 +1354,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 None => None,
             };
             if let Some(cancel) = cancel {
-                unwrap!(vec.push(SelectMenuItem::new(cancel, MenuItemIntent::Danger)));
+                vec.push(SelectMenuItem::new(cancel, MenuItemIntent::Danger))
+                    .map_err(|_| Error::OutOfRange)?;
             }
             wrap(
                 ModelUI::select_menu(vec, 0)?,
