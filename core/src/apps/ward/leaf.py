@@ -175,13 +175,6 @@ def encode_identity(
     )
 
 
-def decode_identity(
-    k_ident: bytes, entry_key: bytes, key_type: str, part: "Part | None"
-) -> "tuple[bytes, bytes, int] | None":
-    """Recover (identifier, app_id, device_id), or None for a deleted part."""
-    return _decode_part(k_ident, _AAD_IDENTITY, entry_key, key_type, part, unpack_identity)
-
-
 # --- content part ----------------------------------------------------------------
 
 

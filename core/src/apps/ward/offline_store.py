@@ -1,12 +1,9 @@
 """The device's own entries: pinned copies of leaves, and writes it could not publish.
 
-One record type for both roles; `FLAG_PENDING` says which, and only `reconcile_pending` clears it.
-Records are named by identity (full form) or by `keys.wallet_entry`, a hash of it (compact form);
-every caller here knows the identity, so both names are tried. Compact records carry no wallet tag,
-so they are reachable by name or claimed slot, never by enumeration.
-
-`get` answers MISS, VALID or CORRUPT and never collapses "cannot read" into "absent". Nothing here
-ever deletes except `erase`/`erase_unreadable`, whose callers hold the user's confirmation.
+One record type; `FLAG_PENDING` says which, and only `reconcile_pending` clears it. Records are
+named by identity (full form) or by `keys.wallet_entry` (compact form, no wallet tag, never
+enumerable); both names are tried. `get` never collapses "cannot read" into "absent", and only
+`erase`/`erase_unreadable` delete, their callers holding the user's confirmation.
 """
 
 from micropython import const
@@ -231,17 +228,18 @@ async def get(
         return CORRUPT, None
 
 
-def _sized_record(
-    wallet_id: bytes,
+def ensure_storable(
     key_type: str,
     app_id: str,
     identifier: bytes,
     value: bytes,
-    pending: bool,
+    pending: bool = False,
     offered: bool = False,
     compact: bool = False,
+    wallet_id: bytes = bytes(16),
 ) -> bytes:
-    """`encode_record`, refusing a value or a whole record past the store's caps."""
+    """The record, or raise if it would not fit -- called before a screen, so one is never shown
+    for something that cannot then be stored."""
     from storage import ward as ward_store
     from trezor.wire import DataError
 
@@ -254,14 +252,6 @@ def _sized_record(
     if len(record) > ward_store.MAX_RECORD_LEN:
         raise DataError("WARD: entry too large to keep offline")
     return record
-
-
-def ensure_storable(
-    key_type: str, app_id: str, identifier: bytes, value: bytes
-) -> None:
-    """Raise unless this entry would fit, WITHOUT writing -- so a screen is never shown for
-    something that cannot then be stored."""
-    _sized_record(bytes(16), key_type, app_id, identifier, value, False)
 
 
 async def put(
@@ -281,8 +271,8 @@ async def put(
     from .keys import derive_wallet_id
 
     wallet_id = await derive_wallet_id()
-    record = _sized_record(
-        wallet_id, key_type, app_id, identifier, value, pending, offered, compact
+    record = ensure_storable(
+        key_type, app_id, identifier, value, pending, offered, compact, wallet_id
     )
     full, short = await _candidates(key_type, app_id, identifier)
     version, name = short if compact else full
@@ -349,10 +339,8 @@ async def list_entries() -> "list[StoredEntry]":
     return out
 
 
-# A pending record is either queued (not offered: what `flush_queue` takes) or handed to a host
-# and awaiting the WM (offered). Only the first is offered again; the second resolves at the next
-# adoption, in `reconcile_pending`. Compact records are publishable only by name, so neither
-# function below sees them.
+# Pending records are queued (what `flush_queue` takes) or offered (awaiting the next adoption).
+# Compact records are publishable only by name, so neither function below sees them.
 
 
 async def _unsent() -> "list[StoredEntry]":
@@ -370,29 +358,6 @@ async def count_unsent() -> int:
     return len(await _unsent())
 
 
-async def file_claim(
-    entry: StoredEntry, counter: int, auth_commit: bytes
-) -> bool:
-    """Journal which record generation was offered, at which counter, for which transition.
-    False if the journal is full."""
-    from storage import ward as ward_store
-
-    from .keys import derive_wallet_id
-
-    if entry.slot is None:
-        raise ValueError
-
-    return ward_store.claim_put(
-        ward_store.claim_encode(
-            await derive_wallet_id(),
-            entry.slot,
-            counter,
-            auth_commit,
-            record_commit(entry.raw),
-        )
-    )
-
-
 async def mark_offered(entry: StoredEntry, counter: int, auth_commit: bytes) -> None:
     """Record that this queued change was handed to a host, keeping it PENDING.
 
@@ -400,9 +365,17 @@ async def mark_offered(entry: StoredEntry, counter: int, auth_commit: bytes) -> 
     OFFERED record with no claim (invisible to every flush, stranded forever). A full journal
     refuses the offer for the same reason.
     """
+    from storage import ward as ward_store
     from trezor.wire import DataError
 
-    if not await file_claim(entry, counter, auth_commit):
+    from .keys import derive_wallet_id
+
+    if entry.slot is None:
+        raise ValueError
+    claim = ward_store.claim_encode(
+        await derive_wallet_id(), entry.slot, counter, auth_commit, record_commit(entry.raw)
+    )
+    if not ward_store.claim_put(claim):
         raise DataError("WARD: cannot record this change; settle the pending one first")
 
     await _set_flags(entry, True, True)
@@ -443,15 +416,10 @@ async def reconcile_pending(
 ) -> None:
     """Settle every claim of this wallet against the head just adopted, then retire it.
 
-    Landed means the claim's `auth_commit` is in `landed_commits` (the transitions the caller
-    verified), or -- without that list -- `_claim_produced`. A counter comparison is NOT enough:
-    another device can reach the same counter with a different change.
-
-      landed, record unchanged      : both flags cleared; it stays as the cached copy.
-      not landed, record unchanged  : OFFERED cleared, so `flush_queue` offers it again.
-      record replaced/erased since  : untouched.
-
-    Driven by the journal, so it reaches compact records and touches nothing it did not offer.
+    Landed means its `auth_commit` is in `landed_commits` (transitions the caller verified), else
+    `_claim_produced` -- never a counter comparison, which another device's change can satisfy.
+    Landed: both flags cleared (a cached copy). Not landed: OFFERED cleared, offered again.
+    Record replaced or erased since: untouched.
     """
     from storage import ward as ward_store
 

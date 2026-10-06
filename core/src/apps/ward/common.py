@@ -113,14 +113,11 @@ async def pull_leaf(
     """
     from trezor.wire import DataError
 
+    from .attest import EMPTY_ROOT
     from .keys import derive_k_data
-    from .leaf import (
-        decode_content,
-        is_delete,
-        read_leaf_content,
-        read_leaf_identity,
-    )
+    from .leaf import decode_content, is_delete, read_leaf_content, read_leaf_identity
     from .root import get_counter, get_root
+    from .trie import verify_membership, verify_nonmembership
 
     if utils.USE_WARD_SERVICE_CHANNEL:
         from .service import fetch
@@ -145,19 +142,25 @@ async def pull_leaf(
     if wire_key_type is not None and wire_key_type != key_type:
         raise DataError("WARD: leaf key_type does not match the requested path")
 
-    # Verified BEFORE opening anything; an absence has to be proved too.
-    verify_leaf_against_root(
-        await get_root() if root is None else root,
-        await get_counter(),
-        entry_key,
-        key_type,
-        id_part,
-        val_part,
-        present,
-        ack.proof,
-        ack.witness_entry_key,
-        ack.witness_commit,
-    )
+    # Verified BEFORE opening anything; an absence has to be proved too. No root at counter 0 is
+    # a genuinely empty wallet; at a non-zero counter "cannot verify" must never read as
+    # "verified". An EMPTY_ROOT tree admits only absence, with no witness needed.
+    root = await get_root() if root is None else root
+    if root is None:
+        if await get_counter() > 0:
+            raise DataError("no trusted root; sync before reading")
+    elif root == EMPTY_ROOT:
+        if present:
+            raise DataError("WARD: the tree is empty; no entry can be in it")
+    elif present:
+        if not verify_membership(entry_key, key_type, id_part, val_part, ack.proof, root):
+            raise DataError("WARD: entry does not match the trusted root")
+    elif ack.witness_entry_key is None or ack.witness_commit is None:
+        raise DataError("WARD: absence claimed without a witness")
+    elif not verify_nonmembership(
+        entry_key, ack.witness_entry_key, ack.witness_commit, ack.proof, root
+    ):
+        raise DataError("WARD: absence does not match the trusted root")
 
     material = (ack.proof, ack.witness_entry_key, ack.witness_commit)
     if not present:
@@ -169,12 +172,6 @@ async def pull_leaf(
     )
     value = None if decoded is None else decoded[1]
     return value, (key_type, id_part, val_part), material
-
-
-async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
-    """Just the value, for the read path -- see `pull_leaf`."""
-    value, _old_leaf, _material = await pull_leaf(entry_key, key_type)
-    return value
 
 
 async def commit_change(
@@ -256,49 +253,3 @@ async def commit_change(
         auth_commit=step,
         wm_sig=advance,
     )
-
-
-def verify_leaf_against_root(
-    root: bytes | None,
-    counter: int,
-    entry_key: bytes,
-    key_type: str,
-    id_part,
-    val_part,
-    present: bool,
-    proof,
-    witness_entry_key,
-    witness_commit,
-) -> None:
-    """Check the host's answer against the device's trusted root, or raise.
-
-    No root at counter 0 is a genuinely empty wallet and passes; no root at a non-zero counter
-    fails, because "cannot verify" must never read as "verified". An EMPTY_ROOT tree admits only
-    absence, with no witness needed.
-    """
-    from trezor.wire import DataError
-
-    from .attest import EMPTY_ROOT
-    from .trie import verify_membership, verify_nonmembership
-
-    if root is None:
-        if counter > 0:
-            raise DataError("no trusted root; sync before reading")
-        return
-
-    if root == EMPTY_ROOT:
-        if present:
-            raise DataError("WARD: the tree is empty; no entry can be in it")
-        return
-
-    if present:
-        if not verify_membership(entry_key, key_type, id_part, val_part, proof, root):
-            raise DataError("WARD: entry does not match the trusted root")
-        return
-
-    if witness_entry_key is None or witness_commit is None:
-        raise DataError("WARD: absence claimed without a witness")
-    if not verify_nonmembership(
-        entry_key, witness_entry_key, witness_commit, proof, root
-    ):
-        raise DataError("WARD: absence does not match the trusted root")

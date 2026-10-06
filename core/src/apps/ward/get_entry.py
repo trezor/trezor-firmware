@@ -21,7 +21,7 @@ async def get_entry(msg: WardGetEntry) -> Success:
         display_bytes,
         entry_props,
         online,
-        pull_entry,
+        pull_leaf,
         require_key,
     )
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
@@ -36,7 +36,7 @@ async def get_entry(msg: WardGetEntry) -> Success:
     if not await online():
         raise DataError("WARD: sync first, or read the local copy with WardQueueGetEntry")
 
-    value = await pull_entry(entry_key, key_type)
+    value = (await pull_leaf(entry_key, key_type))[0]
     # Absent ("no such entry") and empty are different answers on screen.
     if value is None:
         title = "Entry not found"

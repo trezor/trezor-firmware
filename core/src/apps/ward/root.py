@@ -1,9 +1,6 @@
-"""The trie root the device verifies proofs against, persisted per hidden wallet.
-
-The device derives it from proven state (`trie.compute_new_root`); the host can never set it.
-It lives in flash, not a module global, because `trezor.wire` unimports workflow modules
-between requests and a lost root would read as "cannot verify". It proves leaves against a
-root, not that the root is current -- only an attestation does that.
+"""The trie root the device verifies proofs against, persisted per hidden wallet in flash (workflow
+modules are unimported between requests). Derived from proven state, never set by the host; it
+proves leaves against a root, not that the root is current -- only an attestation does that.
 """
 
 
@@ -17,11 +14,8 @@ async def get_root() -> bytes | None:
 
 
 def root_for_write(root: bytes | None) -> bytes:
-    """The root a write derives from, or refuse.
-
-    None is never read as the empty tree, even at counter 0: an empty tree accepts an insert
-    with no witness, so that reading would let the host replace the tree.
-    """
+    """The root a write derives from, or refuse. None is never the empty tree, even at counter 0:
+    an empty tree accepts an insert with no witness, which would let the host replace the tree."""
     if root is None:
         from trezor.wire import DataError
 
@@ -39,11 +33,8 @@ async def get_counter() -> int:
 
 
 async def set_root(root: bytes | None, counter: int | None = None) -> bool:
-    """Record an adopted root (None = empty tree); `counter=None` keeps the stored one.
-
-    False means the wallet has no slot, and the caller MUST fail the adoption: an online
-    device with no stored root accepts leaves unproven.
-    """
+    """Record an adopted root (None = empty tree); `counter=None` keeps the stored one. False means
+    no slot, and the caller MUST fail the adoption: with no stored root leaves go unproven."""
     import storage.ward as ward_store
 
     from .attest import root_or_empty

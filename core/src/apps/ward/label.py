@@ -43,7 +43,7 @@ async def resolve_label(
     could not be performed.
     """
     from . import offline_store
-    from .common import online_or_offline, pull_entry, require_initialized
+    from .common import online_or_offline, pull_leaf, require_initialized
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
 
     _authorize(principal, "read")
@@ -56,7 +56,7 @@ async def resolve_label(
     entry_key = await entry_key_for(app_id, identifier, key_type)
 
     if await online_or_offline():
-        value = await pull_entry(entry_key, key_type)
+        value = (await pull_leaf(entry_key, key_type))[0]
         # ABSENT is proven (a witness was checked); an EMPTY value is a deliberate blank.
         if value is None:
             return None, NOTE_ABSENT

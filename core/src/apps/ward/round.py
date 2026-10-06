@@ -10,6 +10,8 @@ Round layout: state(1B) || nonce(32B) || from_counter(4B BE) || from_root(32B)
 
 from micropython import const
 
+from storage import cache_common as _cc
+
 _OPEN = const(1)  # nonce minted, nothing attested yet
 _ATTESTED = const(2)  # the WM's transition has been verified for this nonce
 
@@ -34,18 +36,14 @@ def _set(key: int, value: bytes) -> None:
 
 def begin(nonce: bytes) -> None:
     """Open a round, discarding any unfinished one: only the latest nonce may be answered."""
-    from storage.cache_common import APP_WARD_SYNC
-
-    _set(APP_WARD_SYNC, bytes([_OPEN]) + nonce + bytes(2 * (4 + _ROOT_LEN)))
+    _set(_cc.APP_WARD_SYNC, bytes([_OPEN]) + nonce + bytes(2 * (4 + _ROOT_LEN)))
 
 
 def get() -> "tuple[int, bytes, int, bytes, int, bytes] | None":
     """(state, nonce, from_counter, from_root, to_counter, to_root), or None if none is open."""
-    from storage.cache_common import APP_WARD_SYNC
-
     from .codec import Reader
 
-    raw = _get(APP_WARD_SYNC)
+    raw = _get(_cc.APP_WARD_SYNC)
     if not raw or raw[0] not in (_OPEN, _ATTESTED):
         return None
     r = Reader(raw, 1)
@@ -71,23 +69,19 @@ def set_attested(
     from_counter: int, from_root: bytes, to_counter: int, to_root: bytes
 ) -> None:
     """Record the transition the WM attested, keeping the nonce. Roots in preimage form."""
-    from storage.cache_common import APP_WARD_SYNC
-
     from .codec import step_bytes
 
     ctx = get()
     assert ctx is not None
     _set(
-        APP_WARD_SYNC,
+        _cc.APP_WARD_SYNC,
         bytes([_ATTESTED]) + ctx[1] + step_bytes(from_counter, from_root, to_counter, to_root),
     )
 
 
 def clear() -> None:
     """Close the round once adopted, so an attestation cannot be replayed into a second one."""
-    from storage.cache_common import APP_WARD_SYNC
-
-    _set(APP_WARD_SYNC, bytes(_RECORD_LEN))
+    _set(_cc.APP_WARD_SYNC, bytes(_RECORD_LEN))
 
 
 # --- the online latch ---------------------------------------------------------------
@@ -100,9 +94,7 @@ _ONLINE = const(1)
 
 def mark_online() -> None:
     """Record that this session has adopted a WM-attested head."""
-    from storage.cache_common import APP_WARD_ONLINE
-
-    _set(APP_WARD_ONLINE, bytes([_ONLINE]))
+    _set(_cc.APP_WARD_ONLINE, bytes([_ONLINE]))
 
 
 def mark_offline() -> None:
@@ -111,16 +103,12 @@ def mark_offline() -> None:
     From that moment the outcome is unknown, so it is recorded before the request; `adopt` sets
     the latch again. Connect builds do not drop it: there only the host can re-establish a head.
     """
-    from storage.cache_common import APP_WARD_ONLINE
-
-    _set(APP_WARD_ONLINE, bytes(1))
+    _set(_cc.APP_WARD_ONLINE, bytes(1))
 
 
 def is_online() -> bool:
     """Whether this session has adopted a head. False (the default) routes reads offline."""
-    from storage.cache_common import APP_WARD_ONLINE
-
-    raw = _get(APP_WARD_ONLINE)
+    raw = _get(_cc.APP_WARD_ONLINE)
     return bool(raw) and raw[0] == _ONLINE
 
 
@@ -137,21 +125,17 @@ def is_online() -> bool:
 
 def set_wm_head(counter: int, root: bytes, nonce: bytes) -> None:
     """Record the WM head an attestation just vouched for, and its freshness token."""
-    from storage.cache_common import APP_WARD_WM_HEAD
-
     from .codec import u32
 
     assert len(root) == _ROOT_LEN and len(nonce) == _NONCE_LEN
-    _set(APP_WARD_WM_HEAD, b"\x01" + u32(counter) + root + nonce)
+    _set(_cc.APP_WARD_WM_HEAD, b"\x01" + u32(counter) + root + nonce)
 
 
 def wm_head() -> "tuple[int, bytes, bytes] | None":
     """`(counter, root, head_nonce)` as this device last saw it, or None."""
-    from storage.cache_common import APP_WARD_WM_HEAD
-
     from .codec import Reader
 
-    raw = _get(APP_WARD_WM_HEAD)
+    raw = _get(_cc.APP_WARD_WM_HEAD)
     if not raw or len(raw) != 1 + 4 + _ROOT_LEN + _NONCE_LEN or raw[0] != 1:
         return None
     r = Reader(raw, 1)
@@ -194,10 +178,8 @@ def authorise_demotion(
     to_root: "bytes | None",
 ) -> None:
     """Record the exact transition the user approved, and the head they approved it from."""
-    from storage.cache_common import APP_WARD_DEMOTION
-
     _set(
-        APP_WARD_DEMOTION,
+        _cc.APP_WARD_DEMOTION,
         _demotion_record(stored_counter, from_counter, from_root, to_counter, to_root),
     )
 
@@ -210,9 +192,7 @@ def demotion_matches(
     to_root: "bytes | None",
 ) -> bool:
     """Is this exactly the approved demotion, from the head it was approved at?"""
-    from storage.cache_common import APP_WARD_DEMOTION
-
-    raw = _get(APP_WARD_DEMOTION)
+    raw = _get(_cc.APP_WARD_DEMOTION)
     if not raw or raw[0] != 1:
         return False
     return raw == _demotion_record(
@@ -222,6 +202,4 @@ def demotion_matches(
 
 def clear_demotion() -> None:
     """Spend or drop the approval. A no-op when none is recorded."""
-    from storage.cache_common import APP_WARD_DEMOTION
-
-    _set(APP_WARD_DEMOTION, bytes(_DEMOTION_LEN))
+    _set(_cc.APP_WARD_DEMOTION, bytes(_DEMOTION_LEN))

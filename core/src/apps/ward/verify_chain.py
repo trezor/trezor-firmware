@@ -111,50 +111,16 @@ async def walk_back(
     stop_counter: int,
     expect_from: "tuple | None" = None,
 ) -> "tuple[bytes | None, list, int, tuple | None]":
-    """Walk authorised links BACK from `(start_counter, start_root)` down to `stop_counter`.
+    """Walk authorised links BACK from `(start_counter, start_root)` down to `stop_counter`,
+    pulling them from the host one ack at a time.
 
     Returns `(root_at_stop, crossed, reverts, above)`: the root reached (the caller compares it),
     every crossed `auth_commit` newest first, the REVERT count, and the `(counter, root)` one
     step above the stop (None if no step was taken). `expect_from` pins the first link's
-    predecessor. The walk must land EXACTLY on `stop_counter`: roots repeat, so a batch link
-    jumping over the stop could otherwise "arrive" at a state the walk never passed through.
-    """
-    from trezor.wire import DataError
-
-    running_counter, running_root = start_counter, start_root
-    crossed = []
-    reverts = 0
-    above = None
-    while running_counter > stop_counter:
-        running_counter, running_root, stepped, stepped_reverts, above = await _pull_batch(
-            k_auth,
-            ward_id,
-            running_counter,
-            running_root,
-            stop_counter,
-            expect_from,
-        )
-        expect_from = None
-        crossed.extend(stepped)
-        reverts += stepped_reverts
-    if running_counter != stop_counter:
-        raise DataError("WARD: the chain does not land on counter %d" % stop_counter)
-    return running_root, crossed, reverts, above
-
-
-async def _pull_batch(
-    k_auth: bytes,
-    ward_id: bytes,
-    running_counter: int,
-    running_root: "bytes | None",
-    target_counter: int,
-    expect_from: "tuple | None" = None,
-) -> "tuple[int, bytes | None, list, int, tuple | None]":
-    """Ask the host for the predecessors of the running head and fold as many as apply.
-
-    The request names the exact `(counter, root)` wanted and `verify_chain_step_back` refuses any
-    link ending elsewhere, so batching has no security content. `expect_from` is checked per link
-    so a multi-link ack cannot carry the walk past the step it binds.
+    predecessor. Each request names the exact `(counter, root)` wanted and
+    `verify_chain_step_back` refuses a link ending elsewhere, so batching has no security content.
+    The walk must land EXACTLY on `stop_counter`: roots repeat, so a batch link jumping over the
+    stop could otherwise "arrive" at a state the walk never passed through.
     """
     from trezor.messages import WardChainLinkAck, WardChainRequest
     from trezor.wire import DataError, context
@@ -162,38 +128,37 @@ async def _pull_batch(
     from .attest import same_root
     from .cas import link_of, verify_chain_step_back
 
-    ack = await context.call(
-        WardChainRequest(to_counter=running_counter, to_root=running_root),
-        expected_type=WardChainLinkAck,
-    )
-
-    links = ack.links
-    if not links:
-        raise DataError("WARD: the host cannot continue the chain")
-    if len(links) > _MAX_LINKS_PER_ACK:
-        raise DataError("WARD: too many links in one ack")
-
+    counter, root = start_counter, start_root
     crossed = []
     reverts = 0
     above = None
-    for link in links:
-        above = (running_counter, running_root)
-        running_counter, running_root, reverted = verify_chain_step_back(
-            k_auth, ward_id, running_counter, running_root, link_of(link)
+    while counter > stop_counter:
+        ack = await context.call(
+            WardChainRequest(to_counter=counter, to_root=root),
+            expected_type=WardChainLinkAck,
         )
-        # AFTER the MAC verified, never before: an unverified commitment is a host's claim.
-        if expect_from is not None:
-            want_counter, want_root = expect_from
-            expect_from = None
-            if running_counter != want_counter or not same_root(running_root, want_root):
-                raise DataError(
-                    "WARD: the first link does not begin at the attested predecessor"
-                )
-        crossed.append(link.auth_commit)
-        if reverted:
-            reverts += 1
-        # Never fold below the target; overshooting is refused by `walk_back`.
-        if running_counter <= target_counter:
-            break
-
-    return running_counter, running_root, crossed, reverts, above
+        if not ack.links:
+            raise DataError("WARD: the host cannot continue the chain")
+        if len(ack.links) > _MAX_LINKS_PER_ACK:
+            raise DataError("WARD: too many links in one ack")
+        for link in ack.links:
+            above = (counter, root)
+            counter, root, reverted = verify_chain_step_back(
+                k_auth, ward_id, counter, root, link_of(link)
+            )
+            # AFTER the MAC verified, never before: an unverified commitment is a host's claim.
+            if expect_from is not None:
+                if counter != expect_from[0] or not same_root(root, expect_from[1]):
+                    raise DataError(
+                        "WARD: the first link does not begin at the attested predecessor"
+                    )
+                expect_from = None
+            crossed.append(link.auth_commit)
+            if reverted:
+                reverts += 1
+            # Never fold below the stop; overshooting is refused below.
+            if counter <= stop_counter:
+                break
+    if counter != stop_counter:
+        raise DataError("WARD: the chain does not land on counter %d" % stop_counter)
+    return root, crossed, reverts, above

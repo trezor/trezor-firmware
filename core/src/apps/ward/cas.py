@@ -6,13 +6,10 @@
 
 `tag` is TAG_COMMIT for a write and TAG_REVERT for a rollback; an empty tree is EMPTY_ROOT.
 
-A MAC, because exactly the seed holders (this wallet's devices) need to verify it. The WM,
-which arbitrates ordering, gets its own authenticator over the same bytes plus its head nonce
-(`wm_sig`, Ed25519 under K_sig, bottom of this file). The WM sees roots and could attest one
-the wallet never held; descent through K_auth links (`verify_chain`) is what catches that.
-
-A chain of links from a trusted baseline proves descent (contiguous ends, forward steps of at
-most MAX_BATCH, each authorised), not currency -- the WM attestation supplies that.
+A MAC, because exactly the seed holders need to verify it; the WM gets its own authenticator over
+the same bytes plus its head nonce (`wm_sig`). The WM could attest a root the wallet never held;
+descent through K_auth links (`verify_chain`) catches that. A chain proves descent, not currency --
+the WM attestation supplies that.
 """
 
 from micropython import const
@@ -74,13 +71,6 @@ def _mac(key: bytes, preimage: bytes) -> bytes:
     return hmac(hmac.SHA256, key, preimage).digest()
 
 
-def _mac_ok(expected: bytes, mac: bytes) -> bool:
-    from trezor.utils import consteq
-
-    # CONSTANT TIME: `mac` comes from the host, and bytes `==` short-circuits.
-    return consteq(expected, mac)
-
-
 def auth_commit(
     k_auth: bytes,
     ward_id: bytes,
@@ -108,7 +98,10 @@ def verify_auth_commit(
     tag: bytes = TAG_COMMIT,
 ) -> bool:
     """Was this exact transition authorised by a holder of this wallet's K_auth?"""
-    return _mac_ok(
+    from trezor.utils import consteq
+
+    # CONSTANT TIME: `mac` comes from the host, and bytes `==` short-circuits.
+    return consteq(
         auth_commit(k_auth, ward_id, from_counter, from_root, to_counter, to_root, tag),
         mac,
     )
@@ -147,11 +140,8 @@ def verify_chain_step(
     running_root: bytes | None,
     link: "tuple",
 ) -> "tuple[int, bytes | None, bool]":
-    """Fold one link (from_counter, from_root, to_counter, to_root, auth_commit) FORWARD.
-
-    Its `from` must be the running head and it must advance by 1..MAX_BATCH, both before the MAC
-    is computed. Returns `(to_counter, to_root, is_revert)`.
-    """
+    """Fold one link (from_counter, from_root, to_counter, to_root, auth_commit) FORWARD: its `from`
+    must be the running head and it must advance by 1..MAX_BATCH, both checked before the MAC."""
     from trezor.wire import DataError
 
     from .attest import same_root
@@ -175,10 +165,9 @@ def verify_chain_step_back(
 ) -> "tuple[int, bytes | None, bool]":
     """Fold one link BACKWARD off the running head; returns its predecessor and `is_revert`.
 
-    A separate function, not a flag: which end is pinned is the whole security of a walk.
-    Backwards the `to` end is pinned by an already-established state, so an orphaned link the
-    WM never accepted is refused on the root check before its MAC is computed. A batch steps
-    back by several; the calling walk must land EXACTLY on its stop counter.
+    Not a flag on the forward fold: which end is pinned is the whole security of a walk. The `to`
+    end is pinned by an established state, so an orphaned link is refused before its MAC is
+    computed. The calling walk must land EXACTLY on its stop counter.
     """
     from trezor.wire import DataError
 
@@ -194,11 +183,8 @@ def verify_chain_step_back(
     return fc, fr, link_kind(k_auth, ward_id, link)
 
 
-# --- the queued INTENT ---------------------------------------------------------------------
-#
-# A queued change exported for backup comes back as host-held material; this MAC under K_auth
-# lets the device recognise its own intent. It binds the identity (a queued change has no path
-# yet), not a counter: a restored change comes back with none assigned.
+# --- the queued INTENT: a MAC under K_auth so a backed-up queued change can be recognised when it
+# comes back. It binds the identity (a queued change has no path yet), not a counter.
 
 TAG_INTENT = b"WARD INTENT v1"
 
@@ -261,33 +247,23 @@ def verify_intent_mac(
     mac: bytes,
 ) -> bool:
     """Did a device of this wallet queue EXACTLY this intent? (Not: should it be queued again.)"""
-    return _mac_ok(
+    from trezor.utils import consteq
+
+    return consteq(
         intent_mac(k_auth, ward_id, op, key_type, app_id, identifier, value), mac
     )
 
 
-# --- the WM's authorisation -------------------------------------------------------------
-#
-# Ed25519 under K_sig over `transition_preimage` + the WM's head nonce, so only a device of this
-# wallet can advance the WM head (`ward_id` is the public key). Not redundant with `auth_commit`:
-# the verifier sets are disjoint.
-#
-# THE HEAD NONCE. The WM's state is `(counter, root, head_nonce)` and every accepted transition
-# rotates the nonce, so one `wm_sig` moves the head at most once even though `(counter, root)`
-# pairs recur (roots are content-addressed; a revert re-creates an old one). The device learns
-# the nonce only from a WM-signed attestation.
+# --- the WM's authorisation: Ed25519 under K_sig (`ward_id` is its public key) over
+# `transition_preimage` + the WM's head nonce. Every accepted transition rotates the nonce, so one
+# `wm_sig` moves the head at most once even though `(counter, root)` pairs recur.
 #
 # WM OBLIGATION, unenforceable by the device: a superseded nonce must NEVER become current again
-# -- not by rotation, failover, or backup restore. Restoring one revives every authorisation
-# minted against it.
+# (rotation, failover, backup restore) -- that revives every authorisation minted against it.
 
+# The nonce `head_init_sig` is minted under and NEVER a live head nonce, so a replayed enrolment
+# cannot recreate the genesis predecessor; `adopt.verify_round_attestation` refuses it.
 NO_HEAD_NONCE = b"\x00" * 32
-"""The nonce `head_init_sig` is minted under; NEVER a live head nonce.
-
-The WM draws a real nonce on enrolment, so a replayed enrolment cannot recreate the genesis
-predecessor `(0, EMPTY_ROOT, NO_HEAD_NONCE)` a first write was authorised against.
-`adopt.verify_round_attestation` refuses attested heads carrying it.
-"""
 
 
 def wm_preimage(
@@ -310,12 +286,6 @@ def wm_preimage(
     )
 
 
-def _wm_sign(k_sig: bytes, *preimage_args) -> bytes:
-    from trezor.crypto.curve import ed25519
-
-    return ed25519.sign(k_sig, wm_preimage(*preimage_args))
-
-
 def wm_sig(
     k_sig: bytes,
     ward_id: bytes,
@@ -327,8 +297,10 @@ def wm_sig(
     tag: bytes = TAG_WM_HEAD,
 ) -> bytes:
     """Authorise a head advance to the WM (TAG_WM_HEAD, or TAG_WM_REVERT for a demotion)."""
-    return _wm_sign(
-        k_sig, tag, ward_id, from_counter, from_root, to_counter, to_root, head_nonce
+    from trezor.crypto.curve import ed25519
+
+    return ed25519.sign(
+        k_sig, wm_preimage(tag, ward_id, from_counter, from_root, to_counter, to_root, head_nonce)
     )
 
 
@@ -358,55 +330,9 @@ async def authorise(
     )
 
 
-def _wm_verify(ward_id: bytes, signature: bytes, *preimage_args) -> bool:
-    """Ed25519-verify `wm_preimage(*preimage_args)` under `ward_id`; any failure is False."""
-    from trezor.crypto.curve import ed25519
-
-    if len(signature) != 64:
-        return False
-    try:
-        return ed25519.verify(ward_id, signature, wm_preimage(*preimage_args))
-    except Exception:
-        return False
-
-
-def verify_wm_sig(
-    ward_id: bytes,
-    from_counter: int,
-    from_root: bytes | None,
-    to_counter: int,
-    to_root: bytes | None,
-    head_nonce: bytes,
-    signature: bytes,
-    tag: bytes = TAG_WM_HEAD,
-) -> bool:
-    """What the WM checks, against its OWN current nonce. On the device only for tests."""
-    return _wm_verify(
-        ward_id,
-        signature,
-        tag, ward_id, from_counter, from_root, to_counter, to_root, head_nonce,
-    )
-
-
 def head_init_sig(
     k_sig: bytes, ward_id: bytes, counter: int, root: bytes | None
 ) -> bytes:
-    """Authorise the FIRST head a WM holds for this wallet: enrolment, not recovery.
-
-    A self-transition `(counter, root) -> (counter, root)` under TAG_WM_INIT and NO_HEAD_NONCE.
-    It proves the head was a genuine state, not the latest, so a WM may accept it only at
-    counter 0 (enforced device-side by `adopt.verify_round_attestation`). Re-seeding a WM that
-    lost its register is out of scope.
-    """
-    return _wm_sign(
-        k_sig, TAG_WM_INIT, ward_id, counter, root, counter, root, NO_HEAD_NONCE
-    )
-
-
-def verify_head_init_sig(
-    ward_id: bytes, counter: int, root: bytes | None, signature: bytes
-) -> bool:
-    """What the WM checks before adopting a wallet it has never seen. On the device for tests."""
-    return _wm_verify(
-        ward_id, signature, TAG_WM_INIT, ward_id, counter, root, counter, root, NO_HEAD_NONCE
-    )
+    """Authorise the FIRST head a WM holds for this wallet: a self-transition under TAG_WM_INIT and
+    NO_HEAD_NONCE. It proves a genuine state, not the latest, so it is valid only at counter 0."""
+    return wm_sig(k_sig, ward_id, counter, root, counter, root, NO_HEAD_NONCE, TAG_WM_INIT)

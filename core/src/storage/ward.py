@@ -1,13 +1,9 @@
-"""Persistent WARD state, per hidden wallet: root slots, host pins, the offline store, claims.
+"""Persistent WARD state, per hidden wallet (keyed by wallet_id): root slots, host pins, the
+offline store, claims. Disjoint key ranges -- roots 1..MAX_WALLETS, service pin 0x10, app pin 0x11,
+claims 0x20.., records 0x40.. -- so no record is read as another kind.
 
-Key ranges are disjoint so no record is ever read as another kind: roots 1..MAX_WALLETS, service
-pin 0x10, app pin 0x11, claims 0x20.., offline records 0x40...
-
-Every slot is keyed by wallet_id (`apps.ward.keys.derive_wallet_id`), so a passphrase switch never
-sees another wallet's root or records. When slots or bytes run out the store REFUSES rather than
-evicting, and nothing is ever erased implicitly: only a user-confirmed erase or replacement removes
-a record. Records are plaintext because `storage.c` already seals each value under a PIN-derived
-key with the slot number as AAD; sealing under K_data happens only on export.
+When full the store REFUSES, never evicts, and only a user-confirmed erase or replacement removes a
+record. Plaintext is fine: `storage.c` seals each value under a PIN-derived key, slot as AAD.
 """
 
 from micropython import const
@@ -72,15 +68,11 @@ def _find(wallet_id: bytes) -> "tuple[int, bytes] | None":
 
 
 def get_root(wallet_id: bytes) -> bytes | None:
-    """This wallet's stored root, or None ("cannot verify", never "verified")."""
+    """This wallet's stored root, or None ("cannot verify", never "verified"). An empty tree is
+    stored as EMPTY_ROOT; all-zero only ever means "no root"."""
     found = _find(wallet_id)
-    if found is None:
-        return None
-    root = found[1][_WALLET_ID_LEN : _WALLET_ID_LEN + _ROOT_LEN]
-    # An empty tree is stored as EMPTY_ROOT; all-zero only ever means "no root".
-    if root == bytes(_ROOT_LEN):
-        return None
-    return root
+    root = found[1][_WALLET_ID_LEN : _WALLET_ID_LEN + _ROOT_LEN] if found else None
+    return None if root == bytes(_ROOT_LEN) else root
 
 
 def get_counter(wallet_id: bytes) -> int:
@@ -93,11 +85,8 @@ def get_counter(wallet_id: bytes) -> int:
 
 
 def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> bool:
-    """Record this wallet's root and counter. False if every slot belongs to another wallet.
-
-    The result is not advisory: a caller that ignores False believes it adopted a head it did not
-    store, and an absent root at counter 0 reads as "nothing was ever written".
-    """
+    """Record this wallet's root and counter. False if every slot belongs to another wallet --
+    not advisory: ignoring it believes in a head that was never stored."""
     _check_wallet_id(wallet_id)
 
     found = _find(wallet_id)
@@ -114,17 +103,12 @@ def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> bool:
     return True
 
 
-# --- host pins ------------------------------------------------------------------------
-#
-# Pairing admits every paired host; a pin names ONE daemon (service) and ONE app (TOFU). In flash,
-# because a binding that dissolved on reboot could be taken over by unplugging the device. Clearing
-# a pin touches nothing else; whether to allow the migration is the caller's decision.
+# --- host pins: ONE daemon (service) and ONE app (TOFU), in flash so a reboot cannot dissolve them.
 _SERVICE_HOST_KEY = const(0x10)
 _APP_HOST_KEY = const(0x11)
 
 
 def _pin_set(key: int, host_key: bytes, role: str) -> None:
-    # refuses a wrong-width key rather than storing a truncated one
     if len(host_key) != 32:
         raise ValueError(role + " host key must be 32 bytes")
     common.set(common.APP_WARD, key, host_key)
@@ -158,11 +142,8 @@ def clear_app_host_key() -> None:
     common.delete(common.APP_WARD, _APP_HOST_KEY)
 
 
-# --- the offline store ------------------------------------------------------------------
-#
-# Cached reads and pending writes, one record type, one shared pool across wallets. Bounded by
-# slots AND by total bytes (the norcow sector is shared with everything else); either limit reports
-# the same "full".
+# --- the offline store: cached reads and pending writes, one pool across wallets, bounded by slots
+# AND by total bytes (the norcow sector is shared); either limit reports the same "full".
 MAX_STORE_ENTRIES = const(20)
 _STORE = _Range(0x40, MAX_STORE_ENTRIES)
 MAX_VALUE_LEN = const(1024)  # room for a BIP-388 wallet policy, not just a label
@@ -172,16 +153,15 @@ MAX_STORE_BYTES = const(6144)
 STORE_VERSION = const(3)  # the full form: the identity is in the record
 STORE_VERSION_COMPACT = const(4)  # the identity is replaced by a 16-byte hash of it
 
-# The full form tags records with wallet_id[:7]: enough to tell this device's wallets apart, and it
-# authorises nothing (storage.c already gates reads on the PIN). The compact form carries no tag --
-# its name is a hash over wallet_id -- so `store_list` cannot enumerate it.
+# The full form tags records with wallet_id[:7], which authorises nothing (storage.c gates on the PIN).
+# The compact form's name is a hash over wallet_id, so it has no tag and cannot be enumerated.
 _STORE_WALLET_ID_LEN = const(7)
 
 FLAG_PENDING = const(0x01)  # a local write that has not been published yet
 FLAG_OFFERED = const(0x02)  # ...and it has been handed to a host this side of a reconcile
 
-# FROZEN HEADER, across every future version: version(1) || wallet_id(7) || identity. A build that
-# cannot parse a newer record must still find it to let the user erase it.
+# FROZEN HEADER across versions: version(1) || wallet_id(7) || identity, so a build that cannot
+# parse a newer record can still find it for the user to erase.
 _STORE_ID_OFF = const(1)
 STORE_KEY_OFF = const(8)  # where the identity begins
 STORE_PREFIX_LEN = const(8)
@@ -217,11 +197,8 @@ def _headed() -> "list[tuple[int, bytes]]":
 
 
 def store_find(wallet_id: bytes, candidates: "list[tuple[int, bytes]]") -> int | None:
-    """This wallet's slot for any `(version, key)` candidate, or None.
-
-    Matches version, wallet and key at fixed offsets, never the key alone: the same identifier
-    under another passphrase is another wallet's entry.
-    """
+    """This wallet's slot for any `(version, key)` candidate, or None. Matches version, wallet and
+    key, never the key alone: the same identifier under another passphrase is another wallet's."""
     if len(wallet_id) != _WALLET_ID_LEN or not candidates:
         raise ValueError  # a record is always named by a wallet and at least one key
     for _version, key in candidates:
@@ -259,9 +236,7 @@ def store_put(
     replaces: bytes | None = None,
 ) -> bool:
     """Write a record, replacing this wallet's one under `key` (or `replaces` in the other form).
-
-    False if full -- no free slot or no room in MAX_STORE_BYTES. Never evicts.
-    """
+    False if full -- no free slot or no room in MAX_STORE_BYTES. Never evicts."""
     header = store_prefix(wallet_id, version) + key
     if record[: len(header)] != header:
         raise ValueError  # record header must name the version, wallet and key it is stored under
@@ -295,10 +270,7 @@ def store_delete(wallet_id: bytes, candidates: "list[tuple[int, bytes]]") -> Non
 
 
 def store_find_unreadable(wallet_id: bytes) -> int | None:
-    """A full-shaped slot of this wallet whose version this build cannot parse, or None.
-
-    Found by the frozen header alone, so a newer record can still be erased on user request.
-    """
+    """A full-shaped slot of this wallet whose version this build cannot parse, or None."""
     for i, rec in store_list(wallet_id):
         if rec[0] not in (STORE_VERSION, STORE_VERSION_COMPACT):
             return i
@@ -333,13 +305,10 @@ def store_list(wallet_id: bytes) -> "list[tuple[int, bytes]]":
     return [(i, rec) for i, rec in _headed() if _has_tag(rec, wallet_id)]
 
 
-# --- the offer claim journal ------------------------------------------------------------
-#
-# A claim remembers, across power loss, which queued record `flush_queue` offered at which counter,
-# so the next adoption can settle it. One per record slot. It names the record GENERATION
-# (`record_commit`), so a slot reused or replaced after the offer is never settled by mistake.
-#
-# wallet_id(16) || slot(1) || counter(4) || auth_commit(32) || record_commit(32)
+# --- the offer claim journal: which queued record was offered at which counter, kept across power
+# loss so the next adoption can settle it. Names the record GENERATION (`record_commit`), so a slot
+# reused after the offer is never settled by mistake.
+#   wallet_id(16) || slot(1) || counter(4) || auth_commit(32) || record_commit(32)
 MAX_CLAIMS = const(MAX_STORE_ENTRIES)
 _CLAIMS = _Range(0x20, MAX_CLAIMS)
 _CLAIM_SLOT_OFF = const(16)
