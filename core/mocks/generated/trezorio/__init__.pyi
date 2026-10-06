@@ -3,7 +3,12 @@ from buffer_types import *
 
 
 # upymod/modtrezorio/modtrezorio-ipc.h
-def ipc_send(remote: int, fn: int, data: AnyBytes) -> None:
+def ipc_send(
+    remote: int,
+    service: int,
+    message_id: int,
+    data: AnyBytes,
+) -> None:
     """
     Sends an IPC message to the specified remote task.
     """
@@ -15,7 +20,8 @@ class IpcMessage(NamedTuple):
     IPC message structure.
     """
     remote: int
-    fn: int
+    service: int
+    message_id: int
     data: AnyBytes
 
 

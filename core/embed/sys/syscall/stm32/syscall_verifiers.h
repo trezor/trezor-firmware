@@ -83,7 +83,8 @@ bool ipc_try_receive__verified(ipc_message_t *msg);
 
 void ipc_message_free__verified(ipc_message_t *msg);
 
-bool ipc_send__verified(systask_id_t remote, uint32_t fn, const void *data,
+bool ipc_send__verified(systask_id_t remote, uint16_t service,
+                        uint16_t message_id, const void *data,
                         size_t data_size);
 
 #endif  // USE_IPC
