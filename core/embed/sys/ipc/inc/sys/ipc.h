@@ -28,8 +28,10 @@
 
 typedef struct {
   systask_id_t remote;
-  // Function code with flags (IPC_FN_xxx)
-  uint32_t fn;
+  // Service ID
+  uint16_t service;
+  // Message ID within the service
+  uint16_t message_id;
   // Pointer to the message payload data
   const void *data;
   // Size of the payload data
@@ -100,11 +102,12 @@ void ipc_message_free(ipc_message_t *msg);
  * receiving messages and there is enough space in that buffer.
  *
  * @param remote The destination task ID to send the message to.
- * @param fn The function code for the message.
+ * @param service The service ID for the message.
+ * @param message_id The message ID within the service.
  * @param data Pointer to the message payload data.
  * @param data_size Size of the payload data in bytes.
  *
  * @return true if the message was successfully sent
  */
-bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
-              size_t data_size);
+bool ipc_send(systask_id_t remote, uint16_t service, uint16_t message_id,
+              const void *data, size_t data_size);

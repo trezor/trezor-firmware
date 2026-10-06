@@ -229,7 +229,8 @@ access_violation:
   apptask_access_violation();
 }
 
-bool ipc_send__verified(systask_id_t remote, uint32_t fn, const void *data,
+bool ipc_send__verified(systask_id_t remote, uint16_t service,
+                        uint16_t message_id, const void *data,
                         size_t data_size) {
   // NULL data is allowed for a zero-length message, `ipc_send()` accepts it and
   // sends an empty message.
@@ -237,7 +238,7 @@ bool ipc_send__verified(systask_id_t remote, uint32_t fn, const void *data,
     goto access_violation;
   }
 
-  return ipc_send(remote, fn, data, data_size);
+  return ipc_send(remote, service, message_id, data, data_size);
 
 access_violation:
   apptask_access_violation();

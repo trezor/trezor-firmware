@@ -279,10 +279,12 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_IPC_SEND: {
       systask_id_t remote = (systask_id_t)args[0];
-      uint32_t fn = (uint32_t)args[1];
-      const void *data = (const void *)args[2];
-      size_t data_size = (size_t)args[3];
-      args[0] = ipc_send__verified(remote, fn, data, data_size);
+      uint16_t service = (uint16_t)args[1];
+      uint16_t message_id = (uint16_t)args[2];
+      const void *data = (const void *)args[3];
+      size_t data_size = (size_t)args[4];
+      args[0] =
+          ipc_send__verified(remote, service, message_id, data, data_size);
     } break;
 #endif  // USE_IPC
 
