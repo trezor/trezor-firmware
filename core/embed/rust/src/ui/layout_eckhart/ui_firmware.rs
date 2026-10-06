@@ -8,7 +8,7 @@ use super::firmware::{
     Hint, Homescreen, LabelInput, MnemonicKeyboard, NumberInput, PinKeyboard, ProgressScreen,
     SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, ShortMenuVec, Slip39Input,
     StringKeyboard, TextScreen, TextScreenMsg, ValueInputScreen, ValueInputScreenMsg, VerticalMenu,
-    VerticalMenuScreen, VerticalMenuScreenMsg,
+    VerticalMenuScreen, VerticalMenuScreenMsg, SHORT_MENU_ITEMS,
 };
 use super::theme::firmware::{button_actionbar_danger, button_confirm};
 use super::theme::gradient::Gradient;
@@ -109,10 +109,12 @@ impl FirmwareUI for UIEckhart {
             header = header.with_right_button(Button::with_icon(theme::ICON_MENU), HeaderMsg::Menu);
         }
 
+        // With a menu, the way out lives in it (see `extapp_menu`), as on this
+        // model's own screens, so the screen draws none of its own.
         let mut screen = TextScreen::new(paragraphs)
             .with_header(header)
             .with_external_menu(external_menu)
-            .with_action_bar(if cancel {
+            .with_action_bar(if cancel && !external_menu {
                 ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button)
             } else {
                 ActionBar::new_single(right_button)
@@ -535,7 +537,9 @@ impl FirmwareUI for UIEckhart {
             Header::new(title)
         };
 
-        let action_bar = if cancel {
+        // With a menu, the way out lives in it (see `extapp_menu`), as on this
+        // model's own screens, so the screen draws none of its own.
+        let action_bar = if cancel && !external_menu {
             ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button)
         } else if back_button {
             ActionBar::new_double(Button::with_icon(theme::ICON_CHEVRON_UP), right_button)
@@ -910,6 +914,32 @@ impl FirmwareUI for UIEckhart {
         let screen = VerticalMenuScreen::new(menu)
             .with_header(Header::new(TString::empty()).with_close_button())
             .map(move |msg| match msg {
+                VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
+                VerticalMenuScreenMsg::Close => Some(FlowMsg::Confirmed),
+                _ => None,
+            });
+
+        flow::util::single_page(screen)
+    }
+
+    fn extapp_menu(
+        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        // With a menu, this model keeps the way out in it rather than on the
+        // screen, as its own flows do: it goes here, after the extras.
+        if items.len() >= SHORT_MENU_ITEMS {
+            return Err(Error::ValueError(c"too many extras for one menu"));
+        }
+        let cancel = items.len();
+        let mut menu = VerticalMenu::<ShortMenuVec>::empty();
+        for item in &items {
+            menu.item(Button::new_menu_item(item.text, theme::menu_item_title()));
+        }
+        menu.item(Button::new_cancel_menu_item(TR::buttons__cancel.into()));
+        let screen = VerticalMenuScreen::new(menu)
+            .with_header(Header::new(TString::empty()).with_close_button())
+            .map(move |msg| match msg {
+                VerticalMenuScreenMsg::Selected(i) if i == cancel => Some(FlowMsg::Cancelled),
                 VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
                 VerticalMenuScreenMsg::Close => Some(FlowMsg::Confirmed),
                 _ => None,
