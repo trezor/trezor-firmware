@@ -483,10 +483,11 @@ def test_ward_leaf_is_sealed_and_hides_what_it_holds(session: Session):
 
     # both parts sealed: the encrypted arm is set, the readable arm is not
     for part in (leaf.identity, leaf.content):
-        assert (part.encoding or 0) == 0
+        # 0 = AEAD with a 12-byte nonce, 2 = SIV with none
+        assert (part.encoding or 0) in (0, 2)
+        assert len(part.encrypted.nonce or b"") == (12 if not part.encoding else 0)
     assert leaf.identity.encrypted is not None and leaf.identity.plain is None
     assert leaf.content.encrypted is not None and leaf.content.plaintext is None
-    assert len(leaf.identity.encrypted.nonce) == 12
     assert len(leaf.identity.encrypted.tag) == 16
 
     # key_type stays clear -- it has to, since it selects the keys that open the parts
@@ -586,7 +587,7 @@ def test_ward_rejects_a_tampered_leaf(session: Session):
         ward.Leaf(
             store.blobs[key].identity,
             m.WardLeafContent(
-                encoding=0,
+                encoding=store.blobs[key].content.encoding,
                 encrypted=m.WardEncryptedLeaf(
                     nonce=sealed.nonce, tag=sealed.tag, ct=flipped
                 ),

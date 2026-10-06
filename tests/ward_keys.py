@@ -326,12 +326,28 @@ _AAD_CONTENT = b"\x02"
 
 
 def _open(key: bytes, domain: bytes, entry_key_: bytes, key_type: str, part) -> bytes:
-    """Open a sealed part. `part` is a WardLeafContent.encrypted / WardLeafIdentity.encrypted."""
+    """Open a sealed part. `part` is a WardLeafContent.encrypted / WardLeafIdentity.encrypted.
+
+    The scheme follows from the nonce width, which the firmware fixes per encoding: 12 bytes
+    is the AEAD (encoding 0), none is SIV (encoding 2) -- written out independently here."""
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
     from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
-    aad = domain + entry_key_ + key_type.encode()
-    # `cryptography` expects the tag appended to the ciphertext; the wire keeps them apart
-    return ChaCha20Poly1305(key).decrypt(part.nonce, part.ct + part.tag, aad)
+    if part.nonce:
+        aad = domain + entry_key_ + key_type.encode()
+        # `cryptography` expects the tag appended to the ciphertext; the wire keeps them apart
+        return ChaCha20Poly1305(key).decrypt(part.nonce, part.ct + part.tag, aad)
+
+    k_enc = hmac.new(key, b"WARD SIV enc", hashlib.sha256).digest()
+    k_mac = hmac.new(key, b"WARD SIV mac", hashlib.sha256).digest()
+    # the RFC 7539 keystream the device's AEAD object yields starts at block 1
+    nonce = (1).to_bytes(4, "little") + part.tag[:12]
+    pt = Cipher(algorithms.ChaCha20(k_enc, nonce), mode=None).decryptor().update(part.ct)
+    ctx = domain + entry_key_ + bytes([len(key_type)]) + key_type.encode()
+    siv = hmac.new(k_mac, b"WARD SIV v1" + ctx + pt, hashlib.sha256).digest()[:16]
+    if not hmac.compare_digest(siv, part.tag):
+        raise ValueError("SIV mismatch")
+    return pt
 
 
 def open_identity(k_ident: bytes, entry_key_: bytes, key_type: str, part) -> bytes:
