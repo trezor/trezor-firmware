@@ -37,7 +37,8 @@
 typedef struct {
   uint8_t free;
   systask_id_t remote;
-  uint32_t fn;
+  uint16_t service;
+  uint16_t message_id;
   size_t size;
   uint8_t __attribute__((aligned(IPC_DATA_ALIGNMENT))) data[];
 } ipc_queue_item_t;
@@ -140,6 +141,9 @@ bool ipc_try_receive(ipc_message_t *msg) {
 
   ipc_queue_t *queue = ipc_queue(target, msg->remote);
 
+  assert(queue->wptr >= queue->rptr);
+  size_t queued = (size_t)(queue->wptr - queue->rptr);
+
   if (queue == NULL || queue->ptr == NULL) {
     // Invalid target or no queue registered
     return false;
@@ -152,13 +156,14 @@ bool ipc_try_receive(ipc_message_t *msg) {
 
   ipc_queue_item_t *item = (ipc_queue_item_t *)queue->rptr;
 
-  if (queue->wptr - queue->rptr - sizeof(ipc_queue_item_t) <
+  if (queued - sizeof(ipc_queue_item_t) <
       ALIGN_UP(item->size, IPC_DATA_ALIGNMENT)) {
     // Invalid item size
     return false;
   }
 
-  msg->fn = item->fn;
+  msg->service = item->service;
+  msg->message_id = item->message_id;
   msg->data = item->data;
   msg->size = item->size;
 
@@ -215,8 +220,8 @@ void ipc_message_free(ipc_message_t *msg) {
   }
 }
 
-bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
-              size_t data_size) {
+bool ipc_send(systask_id_t remote, uint16_t service, uint16_t message_id,
+              const void *data, size_t data_size) {
   systask_id_t origin = systask_id(systask_active());
 
   ipc_queue_t *queue = ipc_queue(remote, origin);
@@ -243,7 +248,8 @@ bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
   ipc_queue_item_t item_hdr = {
       .free = false,
       .remote = origin,
-      .fn = fn,
+      .service = service,
+      .message_id = message_id,
       .size = data_size,
   };
 
