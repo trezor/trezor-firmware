@@ -1129,40 +1129,37 @@ access_violation:
   return TS_EACCES;
 }
 
-ts_t nfc_transceive__verified(const nfc_apdu_message_t *cmd,
-                              nfc_apdu_message_t *resp) {
+ts_t nfc_transceive_start__verified(const nfc_apdu_message_t *cmd) {
   if (!probe_read_access(cmd, sizeof(*cmd))) {
     goto access_violation;
   }
 
-  if (!probe_write_access(resp, sizeof(*resp))) {
-    goto access_violation;
-  }
-
-  return nfc_transceive(cmd, resp);
+  return nfc_transceive_start(cmd);
 
 access_violation:
   apptask_access_violation();
   return TS_EACCES;
 }
 
-ts_t nfc_transceive_psk__verified(const uint8_t *pcd_psk, size_t pcd_psk_len,
-                                  uint8_t *picc_psk, size_t picc_psk_max_len,
-                                  uint16_t *picc_psk_len) {
+ts_t nfc_transceive_psk_start__verified(const uint8_t *pcd_psk,
+                                        size_t pcd_psk_len) {
   if (!probe_read_access(pcd_psk, pcd_psk_len)) {
     goto access_violation;
   }
 
-  if (!probe_write_access(picc_psk, picc_psk_max_len)) {
+  return nfc_transceive_psk_start(pcd_psk, pcd_psk_len);
+
+access_violation:
+  apptask_access_violation();
+  return TS_EACCES;
+}
+
+ts_t nfc_transceive_complete__verified(nfc_apdu_message_t *resp) {
+  if (!probe_write_access(resp, sizeof(*resp))) {
     goto access_violation;
   }
 
-  if (!probe_write_access(picc_psk_len, sizeof(*picc_psk_len))) {
-    goto access_violation;
-  }
-
-  return nfc_transceive_psk(pcd_psk, pcd_psk_len, picc_psk, picc_psk_max_len,
-                            picc_psk_len);
+  return nfc_transceive_complete(resp);
 
 access_violation:
   apptask_access_violation();
