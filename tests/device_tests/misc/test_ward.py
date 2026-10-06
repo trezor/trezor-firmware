@@ -512,10 +512,10 @@ def test_ward_sealed_leaf_really_contains_the_preimage(session: Session):
     key = _seed(session, store, b"addr1", b"Petr_label")
     leaf = store.blobs[key]
 
-    identity = open_identity(_K_IDENT, key, "address", leaf.identity.encrypted)
+    identity = open_identity(_K_IDENT, key, "address", leaf.identity)
     assert unpack_identity(identity) == (b"addr1", _APP.encode(), 0)
 
-    content = open_content(_K_DATA, key, "address", leaf.content.encrypted)
+    content = open_content(_K_DATA, key, "address", leaf.content)
     c_leaf, value = unpack_content(content)
     assert value == b"Petr_label"
     # the leaf is stamped with the counter it was written at, so a later per-leaf
@@ -536,7 +536,7 @@ def test_ward_sealed_part_is_bound_to_its_path(session: Session):
     other_key = expected_entry_key(_K_PATH, _APP, b"addr2")
 
     with pytest.raises(Exception):
-        open_content(_K_DATA, other_key, "address", store.blobs[key].content.encrypted)
+        open_content(_K_DATA, other_key, "address", store.blobs[key].content)
 
 
 @pytest.mark.models("core")
@@ -3032,7 +3032,7 @@ def test_ward_batched_flush_publishes_one_transition_for_several_changes(session
     ]
     assert (res.from_counter, res.counter, res.remaining) == (start, start + 3, 0)
     stamps = [
-        unpack_content(open_content(_K_DATA, k, "address", leaf.content.encrypted))[0]
+        unpack_content(open_content(_K_DATA, k, "address", leaf.content))[0]
         for k, leaf in res.leaves
     ]
     assert stamps == [start + 1, start + 2, start + 3]
@@ -4070,7 +4070,7 @@ def test_ward_flush_publishes_the_queued_change_sealed(session: Session):
 
     # the content really is sealed, and opens to what was queued
     value = unpack_content(
-        open_content(_K_DATA, res.entry_key, "address", res.leaf.content.encrypted)
+        open_content(_K_DATA, res.entry_key, "address", res.leaf.content)
     )[1]
     assert value == b"published_value"
 
@@ -4418,7 +4418,7 @@ def test_ward_a_restored_change_still_publishes(session: Session):
     res = ward.flush_queue(session, ward.store_provider(store))
     assert res.remaining == 0
     value = unpack_content(
-        open_content(_K_DATA, res.entry_key, "address", res.leaf.content.encrypted)
+        open_content(_K_DATA, res.entry_key, "address", res.leaf.content)
     )[1]
     assert value == b"from_backup"
 
@@ -4790,7 +4790,7 @@ def test_ward_a_compact_record_is_published_when_it_is_named(session: Session):
     assert res.remaining == 0
     assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
     value = unpack_content(
-        open_content(_K_DATA, res.entry_key, "address", res.leaf.content.encrypted)
+        open_content(_K_DATA, res.entry_key, "address", res.leaf.content)
     )[1]
     assert value == b"needs_a_name"
 
@@ -4926,7 +4926,7 @@ def test_ward_a_named_flush_may_hand_over_the_same_change_twice(session: Session
 
     assert first.entry_key == again.entry_key
     value = unpack_content(
-        open_content(_K_DATA, again.entry_key, "address", again.leaf.content.encrypted)
+        open_content(_K_DATA, again.entry_key, "address", again.leaf.content)
     )[1]
     assert value == b"offered_twice"
 
