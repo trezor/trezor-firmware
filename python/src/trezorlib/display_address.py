@@ -16,18 +16,9 @@
 
 """Show an address on the device, labelled from WARD.
 
-THE HOST NAMES THE ADDRESS AND NOTHING ELSE. There is no way to attach a label here,
-because a label the host supplied would be a claim about the recipient made on the screen
-the user checks the recipient against. The device resolves it, from the host's WARD replica
-or from its own store, and says on screen which one it used.
-
-That is why this takes a `provider`. If the session has synced (`ward.sync` ->
-`ward.ingest_attestation` -> `ward.reconcile`), the device PULLS the entry mid-workflow and
-checks it against the root it trusts, exactly as `ward.get_entry` does -- so the caller must
-be ready to answer a `WardEntryRequest` while its own call is in flight. If the session has
-NOT synced, the device reads its own store and no pull is emitted at all, so the provider is
-simply never called; passing one costs nothing and omitting one is only safe for a caller
-that knows it never synced.
+The host names the address and nothing else; the device resolves the label, from the host's
+replica or its own store, and says which. On a synced session the device PULLS the entry
+mid-workflow (as `ward.get_entry` does), so pass a `provider`; unsynced, it is never called.
 """
 
 from __future__ import annotations
@@ -41,16 +32,6 @@ if TYPE_CHECKING:
     from .client import Session
 
 
-def _no_entry(_entry_key: bytes) -> Answer:
-    """The provider for a caller with nothing to serve: a well-formed "I hold none".
-
-    NOT the same as declining to answer -- the device is owed a reply to a pull it emitted,
-    and this one is refused if the device holds a root, since an unwitnessed absence is
-    exactly what a host hiding an entry would send.
-    """
-    return Answer()
-
-
 def show_address(
     session: "Session",
     address: str,
@@ -62,15 +43,8 @@ def show_address(
     app_id: Optional[str] = None,
     provider: Optional[EntryProvider] = None,
 ) -> str:
-    """Display `address` on the device with its WARD label, if one resolves.
-
-    `app_id` is the WARD domain the label is looked up in -- the same domain a
-    `ward.set_entry` wrote it under. `subtitle` is shown ONLY when no label resolves; a
-    resolved label takes the slot.
-
-    Returns the address that was shown, so a caller can use this where it would otherwise
-    have used a `get_address` result.
-    """
+    """Display `address` with its WARD label (looked up in domain `app_id`), if one resolves.
+    `subtitle` is shown only when none does. Returns the address shown."""
     _call_answering_pulls(
         session,
         messages.DisplayAddress(
@@ -81,6 +55,7 @@ def show_address(
             chunkify=chunkify,
             app_id=app_id,
         ),
-        provider or _no_entry,
+        # no provider: a well-formed "I hold none", refused once the device holds a root
+        provider or (lambda _entry_key: Answer()),
     )
     return address

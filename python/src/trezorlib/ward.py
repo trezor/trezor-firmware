@@ -103,11 +103,11 @@ def _call_answering_pulls(
             answer = with_staged(staged)(entry_key)
         else:
             answer = provider(entry_key)
-        leaf = answer.leaf
+        leaf = answer.leaf or Leaf(None, None)
         res = session.call(
             messages.WardEntryAck(
-                identity=leaf.identity if leaf is not None else None,
-                content=leaf.content if leaf is not None else None,
+                identity=leaf.identity,
+                content=leaf.content,
                 proof=answer.proof or [],
                 witness_entry_key=answer.witness_entry_key,
                 witness_commit=answer.witness_commit,
@@ -116,15 +116,9 @@ def _call_answering_pulls(
 
     if isinstance(res, messages.Success):
         return WardResult(res, entry_key)
-    if not isinstance(
-        res,
-        (
-            messages.WardLeafAck,
-            messages.WardFlushQueueAck,
-            messages.WardMutationApplied,
-            messages.WardFlushQueueApplied,
-        ),
-    ):
+    leaf_acks = (messages.WardLeafAck, messages.WardFlushQueueAck)
+    applied = (messages.WardMutationApplied, messages.WardFlushQueueApplied)
+    if not isinstance(res, leaf_acks + applied):
         raise RuntimeError(
             f"unexpected response to {type(msg).__name__}: {type(res).__name__}"
         )
@@ -132,9 +126,7 @@ def _call_answering_pulls(
     batch = getattr(res, "leaves", None)
     # A service build published the mutation itself (`*Applied`): the result must carry NO leaf.
     # An empty `Leaf` would be read by `apply` as a deletion of the entry just written.
-    carries_leaf = (
-        isinstance(res, (messages.WardLeafAck, messages.WardFlushQueueAck)) and not batch
-    )
+    carries_leaf = isinstance(res, leaf_acks) and not batch
     return WardResult(
         res,
         b"" if batch else (res.entry_key or entry_key),
@@ -285,6 +277,11 @@ def sync(session: "Session") -> messages.WardSyncAck:
     return session.call(messages.WardSync(), expect=messages.WardSyncAck)
 
 
+def _fields(params: dict) -> dict:
+    """A wrapper's own parameters, minus the session, as message fields of the same names."""
+    return {k: v for k, v in params.items() if k != "session"}
+
+
 def ingest_attestation(
     session: "Session",
     from_counter: int,
@@ -298,19 +295,8 @@ def ingest_attestation(
 ) -> messages.WardIngestAttestationAck:
     """Deliver the WM's signed transition into its head for the open round. Genesis is
     `(0, empty) -> (0, empty)`; the head nonces are the WM's, covered by its signature."""
-    return session.call(
-        messages.WardIngestAttestation(
-            from_counter=from_counter,
-            from_root=from_root,
-            to_counter=to_counter,
-            to_root=to_root,
-            wm_signature=wm_signature,
-            from_head_nonce=from_head_nonce,
-            to_head_nonce=to_head_nonce,
-            timestamp=timestamp,
-        ),
-        expect=messages.WardIngestAttestationAck,
-    )
+    msg = messages.WardIngestAttestation(**_fields(locals()))
+    return session.call(msg, expect=messages.WardIngestAttestationAck)
 
 
 def reconcile(
@@ -416,20 +402,8 @@ def rollback(
     The operands are the WM's own head, attested this round. Nothing is adopted: publish the
     REVERT to the WM, sync, and record it with `apply_rollback`.
     """
-    return session.call(
-        messages.WardRollback(
-            from_counter=from_counter,
-            from_root=from_root,
-            to_counter=to_counter,
-            to_root=to_root,
-            wm_signature=wm_signature,
-            from_head_nonce=from_head_nonce,
-            to_head_nonce=to_head_nonce,
-            recovered_root=recovered_root,
-            timestamp=timestamp,
-        ),
-        expect=messages.WardRollbackAck,
-    )
+    msg = messages.WardRollback(**_fields(locals()))
+    return session.call(msg, expect=messages.WardRollbackAck)
 
 
 def _log(store, *link: object, wm_sig: Optional[bytes]) -> None:  # noqa: ANN001
@@ -492,27 +466,23 @@ def store_provider(store) -> EntryProvider:
     return provider
 
 
-def _put(store, entry_key: bytes, leaf: Leaf) -> None:  # noqa: ANN001
-    if leaf_is_delete(leaf):
-        store.remove(entry_key)
-    else:
-        store.set(entry_key, leaf)
-
-
 def apply(store, result: WardResult) -> None:
-    """Apply a confirmed write or delete to the caller's store.
+    """Apply a confirmed write, delete or batched flush to the caller's store.
 
     Raises on a service-build result, which carries no leaf. No `auth_commit` means nothing
-    changed, and the store must not still hold the entry.
+    changed, and the store must not still hold the entry. A batch logs ONE link; a real host
+    applies it in one transaction and publishes to the WM only after it commits.
     """
     if result.leaves:
-        _apply_batch(store, result)
-        return
-
-    if result.leaf is None:
+        if store.counter != result.from_counter:
+            raise ValueError(
+                "this batch starts at counter %s but the store is at %s"
+                % (result.from_counter, store.counter)
+            )
+        writes = result.leaves
+    elif result.leaf is None:
         raise ValueError("this result carries no leaf; nothing to apply")
-
-    if result.auth_commit is None:
+    elif result.auth_commit is None:
         if result.entry_key in store:
             raise ValueError(
                 "device reports no change but the store still holds this entry; "
@@ -521,9 +491,15 @@ def apply(store, result: WardResult) -> None:
         if result.counter is not None:
             store.counter = result.counter
         return
+    else:
+        writes = [(result.entry_key, result.leaf)]
 
     before_root, before_counter = store.root(), store.counter
-    _put(store, result.entry_key, result.leaf)
+    for entry_key, leaf in writes:
+        if leaf_is_delete(leaf):
+            store.remove(entry_key)
+        else:
+            store.set(entry_key, leaf)
     if result.counter is not None:
         _log(
             store,
@@ -535,29 +511,6 @@ def apply(store, result: WardResult) -> None:
             OP_COMMIT,
             wm_sig=result.wm_sig,
         )
-
-
-def _apply_batch(store, result: WardResult) -> None:  # noqa: ANN001
-    """Apply every leaf of a batched flush and log ONE link. A real host does this in one
-    transaction and publishes to the WM only after it commits."""
-    if store.counter != result.from_counter:
-        raise ValueError(
-            "this batch starts at counter %s but the store is at %s"
-            % (result.from_counter, store.counter)
-        )
-    before_root = store.root()
-    for entry_key, leaf in result.leaves or ():
-        _put(store, entry_key, leaf)
-    _log(
-        store,
-        result.from_counter,
-        before_root,
-        result.counter,
-        store.root(),
-        result.auth_commit,
-        OP_COMMIT,
-        wm_sig=result.wm_sig,
-    )
 
 
 def pin_cached_entry(

@@ -85,10 +85,6 @@ def _u16(n: int) -> bytes:
     return n.to_bytes(2, "big")
 
 
-def _u32(n: int) -> bytes:
-    return n.to_bytes(4, "big")
-
-
 def _lp(width: int, data: bytes) -> bytes:
     """`len(data)` in `width` big-endian bytes, then `data`."""
     if len(data) >> (8 * width):
@@ -214,10 +210,8 @@ def fold(start: bytes, proof: Sequence[bytes], entry_key: bytes) -> bytes:
     """Hash `start` (a leaf or subtree hash) up the path of `entry_key` to a CANDIDATE root,
     which proves nothing until compared with a root the caller already trusts."""
     _require32(start, entry_key)
-    check_shape(proof)
     node = start
-    for elem in proof:
-        split_bit, sibling = parse_proof_elem(elem)
+    for split_bit, sibling in reversed(check_shape(proof)):
         node = _join(split_bit, addr_bit(entry_key, split_bit), node, sibling)
     return node
 
@@ -407,17 +401,14 @@ class TransitionLog:
     def fork_point(self, a: tuple, b: tuple) -> Optional[int]:
         """The last counter two `(counter, root)` states share, walking both back; None if never.
         What a host passes as `WardRejoin.fork_counter` (the device checks it)."""
-        a, b = _state(a[0], a[1]), _state(b[0], b[1])
-        while a != b:
-            a_later = a[0] >= b[0]
-            prev = self.links_ending_at(*(a if a_later else b), limit=1)
+        ends = [_state(a[0], a[1]), _state(b[0], b[1])]
+        while ends[0] != ends[1]:
+            later = 0 if ends[0][0] >= ends[1][0] else 1
+            prev = self.links_ending_at(*ends[later], limit=1)
             if not prev:
                 return None
-            if a_later:
-                a = _state(prev[0][0], prev[0][1])
-            else:
-                b = _state(prev[0][0], prev[0][1])
-        return a[0]
+            ends[later] = _state(prev[0][0], prev[0][1])
+        return ends[0][0]
 
 
 # --- store: the tree ---------------------------------------------------------------------------
@@ -447,10 +438,9 @@ class WardTrie(TransitionLog):
         """Store the leaf the device built. `key_type` (inside the commitment) defaults to the one
         its identity names, else "address"."""
         if key_type is None:
-            if leaf.identity is None or getattr(leaf.identity, "key_type", None) is None:
-                key_type = "address"
-            else:
-                key_type = leaf.identity.key_type
+            key_type = getattr(leaf.identity, "key_type", None)
+        if key_type is None:
+            key_type = "address"
         commit = commit_of(key_type, leaf.identity, leaf.content)
         self._commits[entry_key] = commit
         self._leaves[entry_key] = leaf_hash(entry_key, commit)

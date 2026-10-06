@@ -140,18 +140,15 @@ class _WebSocket:
 
     def _send_frame(self, opcode: int, payload: bytes) -> None:
         # A client MUST mask every frame it sends.
-        header = bytearray([0x80 | opcode])
-        n = len(payload)
+        n, op = len(payload), 0x80 | opcode
         if n < 126:
-            header.append(0x80 | n)
+            header = struct.pack(">BB", op, 0x80 | n)
         elif n < 1 << 16:
-            header.append(0x80 | 126)
-            header += struct.pack(">H", n)
+            header = struct.pack(">BBH", op, 0x80 | 126, n)
         else:
-            header.append(0x80 | 127)
-            header += struct.pack(">Q", n)
+            header = struct.pack(">BBQ", op, 0x80 | 127, n)
         mask = os.urandom(4)
-        self.sock.sendall(bytes(header) + mask + _unmask(payload, mask))
+        self.sock.sendall(header + mask + _unmask(payload, mask))
 
     def send_text(self, text: str) -> None:
         self._send_frame(_OP_TEXT, text.encode())
@@ -339,15 +336,14 @@ class WarddProvider:
         identity = identity and protobuf.dict_to_proto(messages.WardLeafIdentity, identity)
         content = content and protobuf.dict_to_proto(messages.WardLeafContent, content)
 
-        def hex_or_none(name: str) -> bytes | None:
-            value = ack.get(name)
-            return bytes.fromhex(value) if value else None
+        def unhex(name: str) -> bytes | None:
+            return bytes.fromhex(ack[name]) if ack.get(name) else None
 
         return Answer(
             leaf=Leaf(identity or None, content or None) if identity or content else None,
             proof=[bytes.fromhex(p) for p in ack.get("proof") or []],
-            witness_entry_key=hex_or_none("witness_entry_key"),
-            witness_commit=hex_or_none("witness_commit"),
+            witness_entry_key=unhex("witness_entry_key"),
+            witness_commit=unhex("witness_commit"),
         )
 
     def with_staged(self, staged: list) -> "WarddProvider":
