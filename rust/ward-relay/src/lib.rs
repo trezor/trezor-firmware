@@ -111,12 +111,12 @@ impl WarddClient {
     /// NO Origin header is sent: only a browser sends one, and wardd checks it against its
     /// allow-list; a local process is admitted on the token alone.
     pub async fn connect(url: &str, token: &str) -> Result<Self, RelayError> {
-        let request = url
-            .into_client_request()
-            .map_err(|e| RelayError::Unreachable { url: url.into(), reason: e.to_string() })?;
-        let (ws, _) = tokio_tungstenite::connect_async(request)
-            .await
-            .map_err(|e| RelayError::Unreachable { url: url.into(), reason: e.to_string() })?;
+        let unreachable = |e: tokio_tungstenite::tungstenite::Error| RelayError::Unreachable {
+            url: url.into(),
+            reason: e.to_string(),
+        };
+        let request = url.into_client_request().map_err(unreachable)?;
+        let (ws, _) = tokio_tungstenite::connect_async(request).await.map_err(unreachable)?;
         let mut client = WarddClient { ws, next_id: 1 };
         if let Err(e) = client
             .call_without_device(
@@ -205,7 +205,7 @@ impl WarddClient {
         evolu_node: Option<&[u8]>,
     ) -> Result<Value, RelayError> {
         let ward_id = match ward_id {
-            Some(id) => hex_of(id),
+            Some(id) => hex::encode(id),
             None => {
                 let (name, ack) = pipe
                     .call("WardSync", json!({}))
@@ -222,7 +222,7 @@ impl WarddClient {
         };
         let mut params = json!({ "wardId": ward_id });
         if let Some(node) = evolu_node {
-            params["evoluNode"] = json!(hex_of(node));
+            params["evoluNode"] = json!(hex::encode(node));
         }
         self.call_without_device("openStore", params).await
     }
@@ -260,7 +260,7 @@ impl WarddClient {
         staged: &[(Vec<u8>, Vec<u8>)],
     ) -> Result<Value, RelayError> {
         let staged: Vec<Value> =
-            staged.iter().map(|(k, c)| json!([hex_of(k), hex_of(c)])).collect();
+            staged.iter().map(|(k, c)| json!([hex::encode(k), hex::encode(c)])).collect();
         self.call_without_device("serveEntry", json!({ "request": request, "staged": staged }))
             .await
     }
@@ -299,8 +299,4 @@ impl WarddClient {
             }
         }
     }
-}
-
-fn hex_of(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
 }

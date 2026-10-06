@@ -11,7 +11,7 @@ default = []
 # Encode/decode Trezor messages BY NAME from the firmware's own .proto files, plus a codec-v1 frame
 # pipe (and its UDP transport, for the emulator). Without it the crate is the relay alone, for a
 # host whose own transport already speaks protobuf by name.
-codec = ["dep:protobuf", "dep:hex", "dep:protobuf-parse"]
+codec = ["dep:protobuf", "dep:protobuf-parse"]
 
 [dependencies]
 futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
@@ -20,7 +20,7 @@ thiserror = "2"
 tokio = { version = "1", features = ["net", "rt", "macros", "time"] }
 tokio-tungstenite = "0.24"
 protobuf = { version = "=3.7.2", optional = true }
-hex = { version = "0.4", optional = true }
+hex = "0.4"
 
 [build-dependencies]
 protobuf = { version = "=3.7.2", optional = true }
