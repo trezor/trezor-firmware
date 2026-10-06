@@ -76,7 +76,6 @@ BUILDERS: dict[str, Callable[[argparse.Namespace], protobuf.MessageType]] = {
         subtitle=a.subtitle,
         br=a.br,
         extras=parsed_extras(a),
-        cancel=a.cancel,
     ),
     "properties": lambda a: m.ConfirmProperties(
         title=a.title,
@@ -85,7 +84,6 @@ BUILDERS: dict[str, Callable[[argparse.Namespace], protobuf.MessageType]] = {
         commitment=commitment(a),
         br=a.br,
         extras=parsed_extras(a),
-        cancel=a.cancel,
     ),
     "summary": lambda a: m.ConfirmSummary(
         title=a.title,
@@ -150,7 +148,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     def with_cancel(p: argparse.ArgumentParser) -> None:
         p.add_argument(
-            "--cancel", action="store_true", help="add a Cancel entry to the extras"
+            "--cancel",
+            action="store_true",
+            help="the notice must offer a way to back out",
         )
 
     p = block("action", "modui::confirm_action")
@@ -187,7 +187,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--subtitle")
     with_extras(p)
-    with_cancel(p)
 
     p = block("properties", "modui::confirm_properties")
     p.add_argument("--title", default="Confirm properties")
@@ -208,7 +207,6 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--subtitle")
     with_commitment(p)
     with_extras(p)
-    with_cancel(p)
 
     p = block("summary", "modui::confirm_summary")
     p.add_argument("--title", default="Summary")

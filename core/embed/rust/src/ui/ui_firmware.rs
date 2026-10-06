@@ -154,10 +154,6 @@ impl TryFrom<Obj> for DeviceMenuParams {
 }
 
 pub trait FirmwareUI {
-    /// Whether a screen's menu button takes the place of its own way out, so
-    /// that a menu the caller drives must carry that way out instead.
-    const MENU_CARRIES_WAY_OUT: bool = false;
-
     /// How the confirmation screens read their buttons and menu.
     ///
     /// Shared by `confirm_action` and `confirm_value`, and the same wherever a
@@ -437,6 +433,19 @@ pub trait FirmwareUI {
         current: usize,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    /// The menu of an external app's extras.
+    ///
+    /// Answers the chosen extra's index, or `CONFIRMED` when closed. A model
+    /// whose screens give their way out up to the menu button adds that way
+    /// out here and answers `CANCELLED` when it is taken; the caller never
+    /// asks for it. Separate from [`FirmwareUI::select_menu`], which core's
+    /// own flows use.
+    fn extapp_menu(
+        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Self::select_menu(items, 0)
+    }
+
     fn select_word(
         title: TString<'static>,
         description: TString<'static>,
@@ -546,13 +555,15 @@ pub trait FirmwareUI {
     /// The model picks the screen, its button words and its timeout, so the
     /// same severity looks the same wherever it comes from. `external_menu`
     /// asks for a menu button the caller drives; a model whose screen for this
-    /// severity cannot draw one returns `NotImplementedError` rather than a
-    /// notice with a menu nobody can open.
+    /// severity cannot draw one draws the notice without it, and says so.
+    /// `cancel` says the notice must offer a way to back out, answering
+    /// `CANCELLED`; how is the model's.
     fn show_notice(
         severity: Severity,
         title: TString<'static>,
         content: TString<'static>,
         external_menu: bool,
+        cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error>;
 
     fn show_progress(

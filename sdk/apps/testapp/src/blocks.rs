@@ -1,8 +1,8 @@
 //! One handler per modui block: build the block's parameters from the
-//! request, call the block, and hand its reply back as it came.
+//! request, call the block, and hand its answer back.
 
 use trezor_app_sdk::modui::{
-    self, Commitment, ExtraItem, Property, UiReply, confirm, notice, progress,
+    self, Commitment, Decision, ExtraItem, Property, confirm, notice, progress,
 };
 use trezor_app_sdk::{Error, Result, WireDecode, WireEncode, wire_request_raw};
 
@@ -16,35 +16,34 @@ use crate::proto::testapp::{self as wire, ui_result::Reply};
 // ============================================================================
 
 pub fn confirm_action(m: wire::ConfirmAction) -> Result<wire::UiResult> {
-    reply(run_confirm_action(&m)?)
+    decided(run_confirm_action(&m)?)
 }
 
 pub fn confirm_value(m: wire::ConfirmValue) -> Result<wire::UiResult> {
-    reply(run_confirm_value(&m)?)
+    decided(run_confirm_value(&m)?)
 }
 
 pub fn confirm_data(m: wire::ConfirmData) -> Result<wire::UiResult> {
     let extras = Extras::new(&m.extras);
-    reply(modui::confirm::data(modui::confirm::Data::new(
+    decided(modui::confirm::data(modui::confirm::Data::new(
         &m.title,
         &m.data,
         m.subtitle.as_deref(),
         &m.br,
         &extras.items(),
-        m.cancel(),
     ))?)
 }
 
 pub fn confirm_properties(m: wire::ConfirmProperties) -> Result<wire::UiResult> {
-    reply(run_confirm_properties(&m)?)
+    decided(run_confirm_properties(&m)?)
 }
 
 pub fn confirm_summary(m: wire::ConfirmSummary) -> Result<wire::UiResult> {
-    reply(run_confirm_summary(&m)?)
+    decided(run_confirm_summary(&m)?)
 }
 
 pub fn show_notice(m: wire::ShowNotice) -> Result<wire::UiResult> {
-    reply(run_show_notice(&m)?)
+    decided(run_show_notice(&m)?)
 }
 
 /// Runs a progress for as long as the host keeps it going: each tick asks the
@@ -72,14 +71,14 @@ pub fn show_progress(m: wire::ShowProgress) -> Result<wire::UiResult> {
         }
     })??;
     // A progress asks nothing; it answers only that it ran.
-    reply(UiReply::Confirmed)
+    answer(Reply::Confirmed)
 }
 
 // ============================================================================
 // Blocks
 // ============================================================================
 
-fn run_confirm_action(m: &wire::ConfirmAction) -> Result<UiReply> {
+fn run_confirm_action(m: &wire::ConfirmAction) -> Result<Decision> {
     let extras = Extras::new(&m.extras);
     modui::confirm::action(modui::confirm::Action::new(
         &m.title,
@@ -92,7 +91,7 @@ fn run_confirm_action(m: &wire::ConfirmAction) -> Result<UiReply> {
     ))
 }
 
-fn run_confirm_value(m: &wire::ConfirmValue) -> Result<UiReply> {
+fn run_confirm_value(m: &wire::ConfirmValue) -> Result<Decision> {
     let footer = match (m.footer_hint.as_deref(), m.footer_warning.as_deref()) {
         (None, None) => None,
         (Some(hint), None) => Some(confirm::Footer::Hint(hint)),
@@ -121,7 +120,7 @@ fn run_confirm_value(m: &wire::ConfirmValue) -> Result<UiReply> {
     ))
 }
 
-fn run_confirm_properties(m: &wire::ConfirmProperties) -> Result<UiReply> {
+fn run_confirm_properties(m: &wire::ConfirmProperties) -> Result<Decision> {
     let props = properties(&m.props);
     let extras = Extras::new(&m.extras);
     modui::confirm::properties(modui::confirm::Properties::new(
@@ -131,11 +130,10 @@ fn run_confirm_properties(m: &wire::ConfirmProperties) -> Result<UiReply> {
         commitment(m.commitment()),
         &m.br,
         &extras.items(),
-        m.cancel(),
     ))
 }
 
-fn run_confirm_summary(m: &wire::ConfirmSummary) -> Result<UiReply> {
+fn run_confirm_summary(m: &wire::ConfirmSummary) -> Result<Decision> {
     let amount = m.amount_label.as_deref().zip(m.amount.as_deref());
     let fee = m.fee_label.as_deref().zip(m.fee.as_deref());
     let extras = Extras::new(&m.extras);
@@ -148,7 +146,7 @@ fn run_confirm_summary(m: &wire::ConfirmSummary) -> Result<UiReply> {
     ))
 }
 
-fn run_show_notice(m: &wire::ShowNotice) -> Result<UiReply> {
+fn run_show_notice(m: &wire::ShowNotice) -> Result<Decision> {
     let severity = match m.severity() {
         wire::Severity::Info => notice::Severity::Info,
         wire::Severity::Success => notice::Severity::Success,
@@ -208,19 +206,16 @@ impl<'a> Extras<'a> {
     }
 }
 
-/// The block's answer, as the host receives it.
-fn reply(reply: UiReply) -> Result<wire::UiResult> {
-    let (reply, choice) = match reply {
-        UiReply::Confirmed => (Reply::Confirmed, None),
-        UiReply::Cancelled => (Reply::Cancelled, None),
-        UiReply::WantsMore => (Reply::WantsMore, None),
-        UiReply::Choice(choice) => (Reply::Choice, Some(u32::from(choice))),
-        UiReply::Forward => (Reply::Forward, None),
-        UiReply::Backward => (Reply::Backward, None),
-        UiReply::ConfirmedAll => (Reply::ConfirmedAll, None),
-    };
+/// A block's answer, as the host receives it.
+fn decided(decision: Decision) -> Result<wire::UiResult> {
+    answer(match decision {
+        Decision::Confirmed => Reply::Confirmed,
+        Decision::Cancelled => Reply::Cancelled,
+    })
+}
+
+fn answer(reply: Reply) -> Result<wire::UiResult> {
     Ok(wire::UiResult {
         reply: reply as i32,
-        choice,
     })
 }

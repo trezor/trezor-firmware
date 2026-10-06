@@ -13,10 +13,10 @@ requires one of each; neither is used.
 ## How it works
 
 Each wire request names one block and carries its parameters one to one
-(`protob/testapp.proto`). The app calls the block and answers with the reply
-exactly as the library returned it (`UiResult`), so the host sees what the
-person did — `Confirmed`, `Cancelled`, `Choice(n)`... A block that fails
-answers with a `Failure`. The host picks every parameter, including the step
+(`protob/testapp.proto`). The app calls the block and answers with how it
+ended (`UiResult`): `Confirmed` or `Cancelled`, for a confirmation and a
+notice alike; a progress answers `Confirmed` once it has run. A block that
+fails answers with a `Failure`. The host picks every parameter, including the step
 name (`br`).
 
 | Request | Block |

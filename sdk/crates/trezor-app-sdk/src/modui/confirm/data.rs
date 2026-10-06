@@ -1,11 +1,9 @@
 //! Confirming an opaque byte blob. The public docs live on [`data`].
 //!
-//! WIP: manual test results with extras and `cancel: true` (testapp):
-//! caesar (T3B1) and eckhart (T3W1) draw the menu, the extras and Cancel
-//! well, but the way out appears twice — on the screen and again in the menu.
-//! The menu's Cancel should only be drawn where the screen has none of its
-//! own. bolt (T2T1) draws no menu, so neither the extras nor the asked-for
-//! Cancel can be reached.
+//! WIP: manual test results with extras (testapp), before the way out moved
+//! into the layouts: caesar (T3B1) and eckhart (T3W1) drew the way out twice,
+//! on the screen and again in the menu, because the app could ask for a menu
+//! Cancel. bolt (T2T1) draws no menu, so the extras cannot be reached.
 //!
 //! This block exists because of *what* it shows — raw bytes with no meaning
 //! the device can interpret, rendered as hex — and not because of how much of
@@ -13,7 +11,7 @@
 //! call returning one outcome, and `internal::data` handles the rest.
 
 use crate::Result;
-use crate::modui::{ExtraItem, UiReply, internal};
+use crate::modui::{Decision, ExtraItem, internal};
 
 // ============================================================================
 // Data types
@@ -26,7 +24,6 @@ pub struct Data<'a> {
     subtitle: Option<&'a str>,
     br: &'a str,
     extras: &'a [ExtraItem<'a>],
-    cancel: bool,
 }
 
 impl<'a> Data<'a> {
@@ -39,14 +36,12 @@ impl<'a> Data<'a> {
     ///   [step names](crate::modui#step-names).
     /// - `extras` — more the person can look at from this screen; see
     ///   [extras](crate::modui#extras-and-the-way-out).
-    /// - `cancel` — whether the extras also offer a way to abandon the block.
     pub fn new(
         title: &'a str,
         data: &'a [u8],
         subtitle: Option<&'a str>,
         br: &'a str,
         extras: &'a [ExtraItem<'a>],
-        cancel: bool,
     ) -> Self {
         Self {
             title,
@@ -54,7 +49,6 @@ impl<'a> Data<'a> {
             subtitle,
             br,
             extras,
-            cancel,
         }
     }
 }
@@ -82,17 +76,16 @@ impl<'a> Data<'a> {
 /// use trezor_app_sdk::modui::confirm;
 ///
 /// fn confirm_calldata(calldata: &[u8]) -> trezor_app_sdk::Result<()> {
-///     confirm::data(confirm::Data::new("Transaction data", calldata, None, "app/data", &[], true))?
+///     confirm::data(confirm::Data::new("Transaction data", calldata, None, "app/data", &[]))?
 ///         .confirmed()
 /// }
 /// ```
-pub fn data(params: Data<'_>) -> Result<UiReply> {
-    internal::data::confirm(&internal::data::Params {
+pub fn data(params: Data<'_>) -> Result<Decision> {
+    internal::decide(internal::data::confirm(&internal::data::Params {
         title: params.title,
         data: params.data,
         subtitle: params.subtitle,
         br: params.br,
         extras: params.extras,
-        cancel: params.cancel,
-    })
+    })?)
 }

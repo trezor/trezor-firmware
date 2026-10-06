@@ -1316,6 +1316,7 @@ impl FirmwareUI for UIEckhart {
         title: TString<'static>,
         content: TString<'static>,
         external_menu: bool,
+        _cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         // WIP: only the info screen has a menu a caller can drive. The notice is drawn
         // without it, so the caller's extras are unreachable here.

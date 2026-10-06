@@ -81,7 +81,6 @@ message ConfirmData {
     optional string subtitle = 3;
     required string br = 4;
     repeated ExtraItem extras = 5;
-    optional bool cancel = 6 [default = false];
 }
 
 /**
@@ -95,7 +94,6 @@ message ConfirmProperties {
     optional Commitment commitment = 4 [default = Step];
     required string br = 5;
     repeated ExtraItem extras = 6;
-    optional bool cancel = 7 [default = false];
 }
 
 /**
@@ -162,20 +160,14 @@ message ProgressEnd {
 }
 
 /**
- * Response: the block's answer, exactly as the library returned it.
- * `choice` is set only with `Choice`.
+ * Response: how the block ended, `Confirmed` or `Cancelled`. A progress
+ * answers `Confirmed` once it has run.
  * @end
  */
 message UiResult {
     enum Reply {
         Confirmed = 0;
         Cancelled = 1;
-        WantsMore = 2;
-        Choice = 3;
-        Forward = 4;
-        Backward = 5;
-        ConfirmedAll = 6;
     }
     required Reply reply = 1;
-    optional uint32 choice = 2;
 }

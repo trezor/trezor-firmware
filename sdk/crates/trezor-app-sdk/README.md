@@ -111,7 +111,7 @@ RUSTFLAGS='--cfg log_level="trace"' cargo build # All levels (default)
 
 ### `modui` Module
 
-UI building blocks; the confirmations and notices return `Result<UiReply>`:
+UI building blocks; confirmations and notices return `Result<Decision>`:
 
 - `confirm::action(params)` - Confirm an action
 - `confirm::value(params)` - Confirm one value (address, amount, ...)

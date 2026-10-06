@@ -109,8 +109,6 @@ pub enum Severity {
 #[derive(Clone)]
 pub struct SelectMenu<'a> {
     pub items: Slice<'a, Str<'a>>,
-    pub cancel: StabbyOption<Slice<'a, u8>>,
-    pub refusable: bool,
     pub br_name: StabbyOption<Slice<'a, u8>>,
     pub br_code: i32,
 }
@@ -118,15 +116,11 @@ pub struct SelectMenu<'a> {
 impl<'a> SelectMenu<'a> {
     pub fn new(
         items: &'a [Str<'a>],
-        cancel: Option<&'a str>,
-        refusable: bool,
         br_name: Option<&'a str>,
         br_code: i32,
     ) -> Self {
         Self {
             items: items.into(),
-            cancel: opt_bytes(cancel),
-            refusable,
             br_name: opt_bytes(br_name),
             br_code,
         }
@@ -141,7 +135,6 @@ pub struct ConfirmAction<'a> {
     pub description: StabbyOption<Slice<'a, u8>>,
     pub subtitle: StabbyOption<Slice<'a, u8>>,
     pub hold: bool,
-    pub cancel: bool,
     pub verb: StabbyOption<Slice<'a, u8>>,
     pub br_name: StabbyOption<Slice<'a, u8>>,
     pub br_code: i32,
@@ -157,7 +150,6 @@ impl<'a> ConfirmAction<'a> {
         subtitle: Option<&'a str>,
         hold: bool,
         verb: Option<&'a str>,
-        cancel: bool,
         br_name: Option<&'a str>,
         br_code: i32,
         external_menu: bool,
@@ -168,7 +160,6 @@ impl<'a> ConfirmAction<'a> {
             description: opt_bytes(description),
             subtitle: opt_bytes(subtitle),
             hold,
-            cancel,
             verb: opt_bytes(verb),
             br_name: opt_bytes(br_name),
             br_code,
@@ -248,7 +239,6 @@ pub struct ConfirmValue<'a> {
     pub hold: bool,
     pub chunkify: bool,
     pub page_counter: bool,
-    pub cancel: bool,
     pub br_name: StabbyOption<Slice<'a, u8>>,
     pub br_code: i32,
     pub external_menu: bool,
@@ -271,7 +261,6 @@ impl<'a> ConfirmValue<'a> {
         hold: bool,
         chunkify: bool,
         page_counter: bool,
-        cancel: bool,
         external_menu: bool,
         footer: Option<(&'a str, bool)>,
     ) -> Self {
@@ -290,7 +279,6 @@ impl<'a> ConfirmValue<'a> {
             hold,
             chunkify,
             page_counter,
-            cancel,
             br_name: opt_bytes(br_name),
             br_code,
             external_menu,
@@ -370,6 +358,7 @@ pub struct ShowNotice<'a> {
     pub title: Str<'a>,
     pub content: Str<'a>,
     pub external_menu: bool,
+    pub cancel: bool,
     pub br_name: StabbyOption<Slice<'a, u8>>,
     pub br_code: i32,
 }
@@ -380,6 +369,7 @@ impl<'a> ShowNotice<'a> {
         title: &'a str,
         content: &'a str,
         external_menu: bool,
+        cancel: bool,
         br_name: Option<&'a str>,
         br_code: i32,
     ) -> Self {
@@ -388,6 +378,7 @@ impl<'a> ShowNotice<'a> {
             title: title.into(),
             content: content.into(),
             external_menu,
+            cancel,
             br_name: opt_bytes(br_name),
             br_code,
         }

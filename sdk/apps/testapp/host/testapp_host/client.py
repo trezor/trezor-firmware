@@ -40,14 +40,11 @@ REQUESTS = (
 
 @dataclass(frozen=True)
 class UiResult:
-    """The block's answer, exactly as the library returned it."""
+    """How the block ended: Confirmed or Cancelled."""
 
     reply: m.Reply
-    choice: Optional[int] = None
 
     def __str__(self) -> str:
-        if self.reply == m.Reply.Choice:
-            return f"Choice({self.choice})"
         return self.reply.name
 
 
@@ -188,4 +185,4 @@ def _expect(resp: ExtAppResponse, message_type: m.MessageType) -> None:
 def _result(resp: ExtAppResponse) -> UiResult:
     _expect(resp, m.MessageType.UiResult)
     result = protobuf.load_message(io.BytesIO(resp.data), m.UiResult)
-    return UiResult(reply=m.Reply(result.reply), choice=result.choice)
+    return UiResult(reply=m.Reply(result.reply))
