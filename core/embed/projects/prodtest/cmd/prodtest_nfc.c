@@ -28,6 +28,7 @@
 #include <sys/systick.h>
 
 #include "prodtest_error_codes.h"
+#include "prodtest_nfc.h"
 
 // Buffer size for the UID as a hex string
 #define NFC_UID_HEX_BUF_SIZE (NFC_MAX_UID_LEN * 2 + 1)
@@ -263,7 +264,7 @@ static void prodtest_nfc_write_card(cli_t* cli) {
 
       tx_buf.data_len =
           nfc_compose_uri("trezor.io/", tx_buf.data, sizeof(tx_buf.data));
-      nfc_status = nfc_transceive(&tx_buf, &rx_buf);
+      nfc_status = prodtest_nfc_transceive(cli, &tx_buf, &rx_buf);
       if (ts_ok(nfc_status)) {
         cli_trace(cli, "URI write success");
       } else {

@@ -55,6 +55,7 @@ typedef enum {
   NFC_NO_EVENT = 0,
   NFC_EVENT_CONNECTED,
   NFC_EVENT_DISCONNECTED,
+  NFC_EVENT_TRANSCEIVE_DONE,
 } nfc_event_t;
 
 /** @brief NFC card details */
@@ -99,10 +100,10 @@ ts_t nfc_start_discovery(void);
 ts_t nfc_stop_discovery(void);
 
 /**
- * processing NFC operations. Poll SYSHANDLE_NFC with sysevents_poll() to
- * progress NFC operations.
+ * @brief Continue processing NFC operations. Poll SYSHANDLE_NFC with
+ * sysevents_poll() to progress NFC operations.
  *
- * `@return` true when an event is reported, otherwise false.
+ * @return true when an event is reported, otherwise false.
  */
 bool nfc_get_event(nfc_event_t *event);
 
@@ -120,29 +121,35 @@ bool nfc_get_state(void);
 ts_t nfc_get_device_info(nfc_dev_info_t *dev_info);
 
 /**
- * @brief Transceive data with the activated NFC device. This is a blocking
- * call.
- * @param cmd [in] Tx data buffer structure
- * @param resp [out] Rx data buffer structure
- * @return TS_OK when the function pass, otherwise an error.
+ * @brief Initiate asynchronous data exchange with the activated NFC device.
+ * Poll SYSHANDLE_NFC with sysevents_poll() to progress the exchange. Once it
+ * finishes, call nfc_transceive_complete() to get the result.
+ *
+ * @param cmd [in] Tx data buffer structure, can be reused after return.
+ * @return TS_OK when the exchange was started, otherwise an error.
  */
-ts_t nfc_transceive(const nfc_apdu_message_t *cmd, nfc_apdu_message_t *resp);
+ts_t nfc_transceive_start(const nfc_apdu_message_t *cmd);
 
 /**
- * @brief Transceive psk message over ISO14443-3 customized frame (9-b header,
- * no parity bits, augmented CRC).
+ * @brief Start transceiving PSK message over ISO14443-3 customized frame (9-b
+ * header, no parity bits, augmented CRC).
  *
- * pcd_psk should be an array of 16 bytes, and picc_psk should be of the same
- * size.
+ * Behaves like nfc_transceive_start(): the share is copied before the
+ * function returns, NFC_EVENT_TRANSCEIVE_DONE is reported when the exchange
+ * finishes and the result is picked up with nfc_transceive_complete().
  *
- * @param pcd_psk [in] Pointer to the PSK message to transmit.
- * @param pcd_psk_len [in] Length of the PSK message to transmit.
- * @param picc_psk [out] Pointer to the buffer to store received PSK message.
- * @param picc_psk_max_len [in] Capacity of the receive buffer.
- * @param picc_psk_len [in/out] Pointer to the length of the received PSK
- * message.
- * @return TS_OK when the function pass, otherwise an error.
+ * @param pcd_psk [in] PSK share to transmit (16 bytes).
+ * @param pcd_psk_len [in] Length of the PSK share.
+ * @return TS_OK when the exchange was started, otherwise an error.
  */
-ts_t nfc_transceive_psk(const uint8_t *pcd_psk, size_t pcd_psk_len,
-                        uint8_t *picc_psk, size_t picc_psk_max_len,
-                        uint16_t *picc_psk_len);
+ts_t nfc_transceive_psk_start(const uint8_t *pcd_psk, size_t pcd_psk_len);
+
+/**
+ * @brief Get the result of the exchange started by nfc_transceive_start() or
+ * nfc_transceive_psk_start().
+ *
+ * @param resp [out] Rx data buffer structure
+ * @return Result of the exchange, TS_EBUSY if it has not finished yet,
+ * TS_ENOSTATE if there is no exchange to complete.
+ */
+ts_t nfc_transceive_complete(nfc_apdu_message_t *resp);
