@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
+use crate::args::Project;
 use crate::helpers;
 use crate::options::ResolvedBuildArgs;
 
@@ -93,6 +94,11 @@ pub fn collect_artifacts(args: &ResolvedBuildArgs, is_dependency: bool) -> Resul
             let bin_src = if ubin.exists() { ubin } else { bin };
 
             artifacts.push((bin_src, format!("{name}.bin")));
+
+            if args.project == Project::Secmon {
+                let filename = "secmon_api.o";
+                artifacts.push((elf.with_file_name(filename), filename.to_owned()));
+            }
         }
         artifacts.push((
             profile_dir.join(format!("{binary_name}.map")),
