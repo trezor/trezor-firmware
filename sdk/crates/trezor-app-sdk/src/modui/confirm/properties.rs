@@ -1,8 +1,8 @@
 //! Confirming a list of key/value facts. The public docs live on
 //! [`properties`].
 
-use crate::modui::internal::{BR_CODE_OTHER, call};
-use crate::modui::{Commitment, ExtraItem, UiReply};
+use crate::modui::internal::{BR_CODE_OTHER, call, decide};
+use crate::modui::{Commitment, Decision, ExtraItem};
 use crate::traits::ui::{ConfirmProperties as WireConfirmProperties, Property};
 use crate::{Error, Result};
 
@@ -18,7 +18,6 @@ pub struct Properties<'a> {
     commitment: Commitment,
     br: &'a str,
     extras: &'a [ExtraItem<'a>],
-    cancel: bool,
 }
 
 impl<'a> Properties<'a> {
@@ -34,7 +33,6 @@ impl<'a> Properties<'a> {
     /// - `extras` — more the person can look at from this screen; see
     ///   [extras](crate::modui#extras-and-the-way-out).
     ///   Not shown by this block yet; see [`properties`].
-    /// - `cancel` — whether the extras also offer a way to abandon the block.
     pub fn new(
         title: &'a str,
         props: &'a [Property<'a>],
@@ -42,7 +40,6 @@ impl<'a> Properties<'a> {
         commitment: Commitment,
         br: &'a str,
         extras: &'a [ExtraItem<'a>],
-        cancel: bool,
     ) -> Self {
         Self {
             title,
@@ -51,7 +48,6 @@ impl<'a> Properties<'a> {
             commitment,
             br,
             extras,
-            cancel,
         }
     }
 }
@@ -65,7 +61,7 @@ impl<'a> Properties<'a> {
 /// # Errors
 ///
 /// This block cannot show extras yet: a non-empty `extras` is refused with
-/// [`crate::Error::ValueError`], and `cancel` has no effect. Otherwise see
+/// [`crate::Error::ValueError`]. Otherwise see
 /// [errors](crate::modui#errors).
 ///
 /// # Example
@@ -78,11 +74,11 @@ impl<'a> Properties<'a> {
 ///         Property::plain("Amount", amount),
 ///         Property::plain("Resource", "Energy"),
 ///     ];
-///     confirm::properties(confirm::Properties::new("Summary", &props, None, Commitment::Step, "app/stake", &[], true))?
+///     confirm::properties(confirm::Properties::new("Summary", &props, None, Commitment::Step, "app/stake", &[]))?
 ///         .confirmed()
 /// }
 /// ```
-pub fn properties(params: Properties<'_>) -> Result<UiReply> {
+pub fn properties(params: Properties<'_>) -> Result<Decision> {
     // This block's wire has no menu button yet, so anything behind one would
     // be silently unreachable. Refusing is worse to use and better to debug.
     if !params.extras.is_empty() {
@@ -98,11 +94,5 @@ pub fn properties(params: Properties<'_>) -> Result<UiReply> {
         BR_CODE_OTHER, // legacy field; see the constant
     );
 
-    call(
-        &request,
-        params.extras,
-        params.cancel,
-        false,
-        Some(params.br),
-    )
+    decide(call(&request, params.extras, Some(params.br))?)
 }

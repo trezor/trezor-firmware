@@ -1,7 +1,7 @@
-//! Presenting a block's extra data, and its way out.
+//! Presenting a block's extra data.
 //!
-//! Private. An app lists labelled extras and says whether the block may be
-//! abandoned; this turns that into whatever the screen actually offers. Today
+//! Private. An app lists labelled extras; this turns them into whatever the
+//! screen actually offers. Today
 //! that is a menu, because the renderer has one — which is exactly why menus
 //! are not in the app's vocabulary. The choice can change here without any
 //! block signature moving.
@@ -22,8 +22,12 @@ use crate::{Error, Result};
 // Constants
 // ============================================================================
 
-/// Entries the renderer can show at once, counting the way out.
+/// Entries the renderer can show at once.
 pub(in crate::modui) const MAX_ENTRIES: usize = 6;
+
+/// Extras one menu can carry: one entry is left for a way out, which a model
+/// whose screens give theirs up to the menu button adds itself.
+const MAX_EXTRAS: usize = MAX_ENTRIES - 1;
 
 /// Appended to the block's step name for the list of extras.
 const STEP_MENU: &str = "/menu";
@@ -39,8 +43,8 @@ const STEP_DETAILS: &str = "/details";
 ///
 /// Every block calls this first, so a list that cannot be shown fails as the
 /// block is called, not later, when the person opens the menu mid-flow.
-pub(in crate::modui) fn check_extras(extras: &[ExtraItem<'_>], cancel: bool) -> Result<()> {
-    if extras.len() + usize::from(cancel) > MAX_ENTRIES {
+pub(in crate::modui) fn check_extras(extras: &[ExtraItem<'_>]) -> Result<()> {
+    if extras.len() > MAX_EXTRAS {
         return Err(Error::ValueError("too many extras for one screen"));
     }
     if extras
@@ -57,32 +61,17 @@ pub(in crate::modui) fn check_extras(extras: &[ExtraItem<'_>], cancel: bool) -> 
 /// `Some` means the person decided the block from here; `None` means they merely
 /// looked, and the main screen should come back.
 ///
-/// `cancel` is a way out the block asked for, drawn on every model.
-/// `refusable` says the block can always be refused: a model whose menu
-/// button took the place of the screen's own way out draws one here too.
-/// Either way it is the entry after the extras.
+/// The menu carries only the extras. A model that keeps the block's way out in
+/// the menu adds it itself and answers `Cancelled` when it is taken, so this
+/// never learns whether that entry exists or where it is.
 pub(in crate::modui) fn open(
     extras: &[ExtraItem<'_>],
-    cancel: bool,
-    refusable: bool,
     br: Option<&str>,
 ) -> Result<Option<UiReply>> {
-    // `check_extras` has already refused a list that cannot be shown, so an empty one
-    // here means core answered "show more" for a screen that offered nothing.
-    let count = extras.len() + usize::from(cancel || refusable);
-    if count == 0 {
-        return Err(Error::InvalidMessage);
-    }
-
     let mut titles = [Str::from(""); MAX_ENTRIES];
     for (slot, extra) in titles.iter_mut().zip(extras) {
         *slot = extra.label.into();
     }
-    // The way out goes separately, so each model can draw it as its own way
-    // out; core puts it after the extras. Another word this library should not
-    // be choosing; see the note in `internal::data`.
-    let cancel_label = cancel.then_some("Cancel");
-
     // These screens exist only because a block offered extras, so their names
     // hang off the block's. The app never writes them: it names its step, and
     // the library says which part of that step the person is looking at. A block
@@ -91,13 +80,7 @@ pub(in crate::modui) fn open(
     let menu_step = br.map(|br| step(br, STEP_MENU));
     let details_step = br.map(|br| step(br, STEP_DETAILS));
 
-    let request = SelectMenu::new(
-        &titles[..extras.len()],
-        cancel_label,
-        refusable,
-        menu_step.as_deref(),
-        BR_CODE_OTHER,
-    );
+    let request = SelectMenu::new(&titles[..extras.len()], menu_step.as_deref(), BR_CODE_OTHER);
     let layout = LayoutHandle::new();
     let mut first = true;
 
@@ -116,16 +99,13 @@ pub(in crate::modui) fn open(
                 let chosen = chosen as usize;
                 match extras.get(chosen) {
                     Some(extra) => show(extra, details_step.as_deref())?,
-                    // Past the extras lies the way out, which exists only when
-                    // the block asked for one.
-                    None if (cancel || refusable) && chosen == extras.len() => {
-                        return Ok(Some(UiReply::Cancelled));
-                    }
                     None => return Err(Error::InvalidMessage),
                 }
             }
             // Closed without choosing: back to the main screen.
-            UiReply::Confirmed | UiReply::Cancelled => return Ok(None),
+            UiReply::Confirmed => return Ok(None),
+            // The way out the model keeps in its menu: the block is refused.
+            UiReply::Cancelled => return Ok(Some(UiReply::Cancelled)),
             _ => return Err(Error::InvalidMessage),
         }
     }

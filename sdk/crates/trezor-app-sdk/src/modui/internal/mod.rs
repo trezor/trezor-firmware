@@ -8,7 +8,7 @@ pub(in crate::modui) mod transport;
 
 use transport::LayoutHandle;
 
-use super::ExtraItem;
+use super::{Decision, ExtraItem};
 use crate::traits::ui::UiReply;
 use crate::{Error, Result};
 
@@ -43,8 +43,6 @@ pub(in crate::modui) const BR_CODE_OTHER: i32 = 1;
 pub(in crate::modui) fn call(
     request: &impl transport::Request,
     extras: &[ExtraItem<'_>],
-    cancel: bool,
-    refusable: bool,
     br: Option<&str>,
 ) -> Result<UiReply> {
     // `None` is a block that announces nothing, which is the block's own
@@ -53,7 +51,7 @@ pub(in crate::modui) fn call(
     if br == Some("") {
         return Err(Error::ValueError("a step name must not be empty"));
     }
-    menu::check_extras(extras, cancel || refusable)?;
+    menu::check_extras(extras)?;
 
     let layout = LayoutHandle::new();
     let mut first = true;
@@ -71,10 +69,10 @@ pub(in crate::modui) fn call(
             // with the fact that the rest was skipped attached, for screens
             // that offer the skip.
             UiReply::Confirmed | UiReply::Cancelled | UiReply::ConfirmedAll => return Ok(reply),
-            // The person asked for the extras. A block that offered none cannot
-            // produce this, so it is a protocol violation rather than a gesture.
+            // The person opened the menu: the extras, and whatever way out the
+            // model keeps there. Either way it is the model's to have drawn.
             UiReply::WantsMore => {
-                if let Some(reply) = menu::open(extras, cancel, refusable, br)? {
+                if let Some(reply) = menu::open(extras, br)? {
                     return Ok(reply);
                 }
             }
@@ -83,5 +81,17 @@ pub(in crate::modui) fn call(
             // to the wire after this was written.
             _ => return Err(Error::InvalidMessage),
         }
+    }
+}
+
+/// Reads the answer of a block that waits for the person.
+///
+/// `ConfirmedAll` is a yes: the person accepted the rest without reading it.
+/// Anything else is a reply no such block can produce.
+pub(in crate::modui) fn decide(reply: UiReply) -> Result<Decision> {
+    match reply {
+        UiReply::Confirmed | UiReply::ConfirmedAll => Ok(Decision::Confirmed),
+        UiReply::Cancelled => Ok(Decision::Cancelled),
+        _ => Err(Error::InvalidMessage),
     }
 }

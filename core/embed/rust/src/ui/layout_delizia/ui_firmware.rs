@@ -49,9 +49,6 @@ use crate::ui::ModelUI;
 const NOTICE_DONE_TIMEOUT_MS: u32 = 3200;
 
 impl FirmwareUI for UIDelizia {
-    // The header has room for one button: with a menu, that is the menu.
-    const MENU_CARRIES_WAY_OUT: bool = true;
-
     fn confirm_action(
         title: TString<'static>,
         action: Option<TString<'static>>,
@@ -757,6 +754,37 @@ impl FirmwareUI for UIDelizia {
         flow::util::single_page(layout)
     }
 
+    fn extapp_menu(
+        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        // The header has room for one button, and with a menu that is the
+        // menu: the screen's own way out moves in here, after the extras.
+        let cancel = items.len();
+        let mut menu_items = VerticalMenuItems::new();
+        let too_many = || Error::ValueError(c"too many extras for one menu");
+        for item in items {
+            menu_items
+                .push(VerticalMenuItem::Item(item.text))
+                .map_err(|_| too_many())?;
+        }
+        menu_items
+            .push(VerticalMenuItem::Cancel(TR::buttons__cancel.into()))
+            .map_err(|_| too_many())?;
+        let menu = ScrolledVerticalMenu::new(menu_items, 0);
+        let frame = Frame::with_header(
+            Header::left_aligned(TString::empty()).with_cancel_button(),
+            menu,
+        );
+        let layout = MsgMap::new(frame, move |msg| match msg {
+            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) if i == cancel => {
+                Some(FlowMsg::Cancelled)
+            }
+            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+            FrameMsg::Button(_) => Some(FlowMsg::Confirmed),
+        });
+        flow::util::single_page(layout)
+    }
+
     fn select_word(
         title: TString<'static>,
         description: TString<'static>,
@@ -1061,6 +1089,7 @@ impl FirmwareUI for UIDelizia {
         title: TString<'static>,
         content: TString<'static>,
         external_menu: bool,
+        _cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         // WIP: only the info and warning notices have a menu a caller can
         // drive. The others are drawn without it, so the caller's extras are
