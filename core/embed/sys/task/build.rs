@@ -37,6 +37,11 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
 fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
     let builder = builder
+        // systask.h
+        .header("task/inc/sys/systask.h")
+        .allowlist_type("systask_id_t")
+        .allowlist_var("SYSTASK_MAX_TASKS")
+        // sysevent.h
         .header("task/inc/sys/sysevent.h")
         .allowlist_function("sysevents_poll")
         .allowlist_type("syshandle_t")

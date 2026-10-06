@@ -16,5 +16,5 @@ pub mod sysevent;
 
 #[cfg(feature = "dbg_console")]
 pub mod syslog;
-
+pub mod task;
 pub mod time;
