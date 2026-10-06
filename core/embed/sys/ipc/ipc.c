@@ -141,9 +141,6 @@ bool ipc_try_receive(ipc_message_t *msg) {
 
   ipc_queue_t *queue = ipc_queue(target, msg->remote);
 
-  assert(queue->wptr >= queue->rptr);
-  size_t queued = (size_t)(queue->wptr - queue->rptr);
-
   if (queue == NULL || queue->ptr == NULL) {
     // Invalid target or no queue registered
     return false;
