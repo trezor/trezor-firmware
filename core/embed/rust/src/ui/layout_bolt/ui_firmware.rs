@@ -1118,6 +1118,7 @@ impl FirmwareUI for UIBolt {
         title: TString<'static>,
         content: TString<'static>,
         external_menu: bool,
+        _cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         // WIP: no notice screen on this model has a menu a caller can drive. The notice
         // is drawn without it, so the caller's extras are unreachable here.

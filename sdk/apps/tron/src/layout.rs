@@ -167,7 +167,6 @@ pub fn confirm_freeze_operations(
         Commitment::Final,
         "tron/freeze",
         &[],
-        false,
     ))
     .c()?
     .confirmed()
@@ -468,7 +467,6 @@ pub fn confirm_tron_transfer(
         Commitment::Step,
         "tron/transfer/amount",
         &[],
-        false,
     ))
     .c()?
     .confirmed()
@@ -546,7 +544,6 @@ fn confirm_tron_approve(
         Commitment::Step,
         "tron/approve/amount",
         &[],
-        false,
     ))
     .c()?
     .confirmed()
@@ -572,7 +569,6 @@ pub fn confirm_tron_voting<'a>(items: &[Property<'a>]) -> Result<()> {
         Commitment::Final,
         "tron/vote",
         &[],
-        false,
     ))
     .c()?
     .confirmed()
@@ -592,7 +588,7 @@ fn confirm_ethereum_unknown_contract_warning() -> Result<()> {
         &content,
         "tron/unknown_contract",
         &[],
-        false,
+        true,
     ))
     .c()?
     .confirmed()
@@ -629,7 +625,6 @@ pub fn confirm_unknown_smart_contract(
         None,
         "tron/contract/data",
         &[],
-        true,
     ))
     .c()?
     .confirmed()

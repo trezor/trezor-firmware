@@ -4,13 +4,13 @@
 //! - caesar (T3B1): only the value is drawn. Its Cancel works, but there is
 //!   no menu, so the extras cannot be reached.
 //! - delizia (T3T1): the menu button replaced the screen's way out and the
-//!   menu had none, so the block could not be refused. Fixed by
-//!   `MENU_CARRIES_WAY_OUT`; not re-tested since.
+//!   menu had none, so the block could not be refused. delizia's menu now
+//!   adds its own Cancel; not re-tested since.
 //! - bolt (T2T1): no menu, so the extras cannot be reached.
 
 use crate::Result;
-use crate::modui::internal::{BR_CODE_OTHER, call};
-use crate::modui::{Commitment, ExtraItem, UiReply};
+use crate::modui::internal::{BR_CODE_OTHER, call, decide};
+use crate::modui::{Commitment, Decision, ExtraItem};
 use crate::traits::ui::ConfirmValue as WireConfirmValue;
 
 // ============================================================================
@@ -129,7 +129,7 @@ impl<'a> Value<'a> {
 ///     .confirmed()
 /// }
 /// ```
-pub fn value(params: Value<'_>) -> Result<UiReply> {
+pub fn value(params: Value<'_>) -> Result<Decision> {
     let footer = params.footer.map(|f| match f {
         Footer::Hint(text) => (text, false),
         Footer::Warning(text) => (text, true),
@@ -148,12 +148,9 @@ pub fn value(params: Value<'_>) -> Result<UiReply> {
         params.commitment == Commitment::Final, // hold: follows from the commitment
         params.kind == ValueKind::Address,
         false,                     // page_counter
-        true,                      // cancel: refusing is never the app's to switch off
         !params.extras.is_empty(), // external_menu: how the menu is reached
         footer,
     );
 
-    // Always refusable: where the menu button takes the screen's own way out,
-    // the menu carries it instead.
-    call(&request, params.extras, false, true, Some(params.br))
+    decide(call(&request, params.extras, Some(params.br))?)
 }

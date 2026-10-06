@@ -17,7 +17,6 @@ pub(in crate::modui) struct Params<'a> {
     pub subtitle: Option<&'a str>,
     pub br: &'a str,
     pub extras: &'a [ExtraItem<'a>],
-    pub cancel: bool,
 }
 
 /// Runs the block.
@@ -28,7 +27,7 @@ pub(in crate::modui) fn confirm(params: &Params<'_>) -> Result<UiReply> {
     if params.br.is_empty() {
         return Err(Error::ValueError("a step name must not be empty"));
     }
-    menu::check_extras(params.extras, params.cancel)?;
+    menu::check_extras(params.extras)?;
 
     // One buffer reused for every chunk rather than an allocation per chunk.
     let mut hex = String::with_capacity(BYTES_PER_CHUNK * 2);
@@ -52,8 +51,8 @@ pub(in crate::modui) fn confirm(params: &Params<'_>) -> Result<UiReply> {
 /// as many screens as it takes, and the person answers only once they have
 /// seen all of it.
 fn show_chunk(params: &Params<'_>, hex: &str, layout: &LayoutHandle) -> Result<AfterChunk> {
-    // The screen has a menu: the app offered extras, a way out, or both.
-    let has_menu = !params.extras.is_empty() || params.cancel;
+    // The screen has a menu exactly when the app offered extras.
+    let has_menu = !params.extras.is_empty();
     let request = WireConfirmValue::new(
         params.title,
         hex,
@@ -67,7 +66,6 @@ fn show_chunk(params: &Params<'_>, hex: &str, layout: &LayoutHandle) -> Result<A
         false,    // hold
         false,    // chunkify: hex, not an address to compare by eye
         true,     // page_counter: where the person is within the chunk
-        true,     // cancel: the screen's own way out
         has_menu, // external_menu: how the extras are reached
         None,     // footer
     );
@@ -85,10 +83,9 @@ fn show_chunk(params: &Params<'_>, hex: &str, layout: &LayoutHandle) -> Result<A
             // all of it. Whether that finishes the block is the loop's to say.
             UiReply::Confirmed => return Ok(AfterChunk::Advance),
             UiReply::ConfirmedAll => return Ok(AfterChunk::ConfirmAll),
-            // The extras, which is all this can mean: the screen has no other
-            // secondary button.
-            UiReply::WantsMore if has_menu => {
-                match menu::open(params.extras, params.cancel, false, Some(params.br))? {
+            // The menu: the extras, and whatever way out the model keeps there.
+            UiReply::WantsMore => {
+                match menu::open(params.extras, Some(params.br))? {
                     Some(reply) => return Ok(AfterChunk::Decided(reply)),
                     // Back to the chunk the person was reading, as they left it.
                     None => reply = layout.reshow(&request)?,

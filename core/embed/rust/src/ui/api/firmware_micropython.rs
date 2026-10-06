@@ -32,8 +32,6 @@ use crate::micropython::module::Module;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::{util, Error, Obj};
 use crate::strutil::TString;
-#[cfg(feature = "app_loading")]
-use crate::translations::TR;
 use crate::trezorhal::model;
 use crate::ui::backlight::BACKLIGHT_LEVELS_OBJ;
 use crate::ui::component::Empty;
@@ -1344,22 +1342,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard))
                     .map_err(|_| Error::OutOfRange)?;
             }
-            // The way out comes last, drawn as one where the model can: the
-            // one the block asked for, or the screen's own where the menu
-            // button took its place.
-            let cancel = match m.cancel.as_ref() {
-                Some(cancel) => Some(tstr(cancel)),
-                None if m.refusable && ModelUI::MENU_CARRIES_WAY_OUT => {
-                    Some(TR::buttons__cancel.into())
-                }
-                None => None,
-            };
-            if let Some(cancel) = cancel {
-                vec.push(SelectMenuItem::new(cancel, MenuItemIntent::Danger))
-                    .map_err(|_| Error::OutOfRange)?;
-            }
             wrap(
-                ModelUI::select_menu(vec, 0)?,
+                ModelUI::extapp_menu(vec)?,
                 m.br_code.to_native(),
                 m.br_name.as_ref(),
             )?
@@ -1382,7 +1366,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 tstr_opt(&m.description),
                 tstr_opt(&m.subtitle),
                 tstr_opt(&m.verb),
-                m.cancel,
+                // Every confirmation can be refused; how is the model's.
+                true,
                 None,
                 m.hold,
                 false,
@@ -1454,7 +1439,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 m.chunkify,
                 m.page_counter,
                 false,
-                m.cancel,
+                // Every confirmation can be refused; how is the model's.
+                true,
                 false,
                 tstr_tuple_opt(&m.footer),
                 m.external_menu,
@@ -1523,6 +1509,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                     tstr(&m.title),
                     tstr(&m.content),
                     m.external_menu,
+                    m.cancel,
                 )?,
                 m.br_code.to_native(),
                 match m.br_name.as_ref() {

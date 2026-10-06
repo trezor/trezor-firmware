@@ -7,16 +7,17 @@
 //! WIP: manual test results (testapp):
 //! - caesar (T3B1) and bolt (T2T1): an info notice with extras draws no menu
 //!   button, so its extras cannot be reached. A warning notice with extras
-//!   and `cancel: true` draws only its text and can only be confirmed —
-//!   neither the extras nor the asked-for way out exist.
+//!   and `cancel: true` drew only its text and could only be confirmed —
+//!   neither the extras nor the asked-for way out existed. `cancel` now goes
+//!   to the model's own screen; recheck.
 //! - bolt (T2T1): a `Done` notice waits for a tap instead of returning on its
 //!   own.
 //! - Delizia gained a menu button for info and warning notices; the other
 //!   severities, and bolt and caesar, still draw without one.
 
 use crate::Result;
-use crate::modui::internal::{BR_CODE_OTHER, call};
-use crate::modui::{ExtraItem, UiReply};
+use crate::modui::internal::{BR_CODE_OTHER, call, decide};
+use crate::modui::{Decision, ExtraItem};
 pub use crate::traits::ui::Severity;
 use crate::traits::ui::ShowNotice as WireShowNotice;
 
@@ -46,7 +47,8 @@ impl<'a> Notice<'a> {
     /// - `extras` — more the person can look at from this screen; see
     ///   [extras](crate::modui#extras-and-the-way-out).
     ///   Not every severity can show them; see [`show`].
-    /// - `cancel` — whether the extras also offer a way to abandon the block.
+    /// - `cancel` — whether the person must be able to back out of it. How
+    ///   they do is the model's.
     pub fn new(
         severity: Severity,
         title: &'a str,
@@ -80,10 +82,11 @@ impl<'a> Notice<'a> {
 /// way everywhere. How each model renders a severity is its own business, and
 /// may look entirely different — but which replies can arrive is not:
 ///
-/// - [`Severity::Info`] and [`Severity::Success`] answer `Confirmed`.
-/// - [`Severity::Warning`] and [`Severity::Danger`] answer `Confirmed` or
-///   `Cancelled` — a refusal is always possible, whatever the model draws for
-///   it. Call [`UiReply::confirmed`] on both.
+/// - Moving on is `Confirmed`, the ordinary case.
+/// - Backing out is `Cancelled`, and only a notice that offers a way out can
+///   answer it: with `cancel` set, every model offers one; without, a model
+///   may still (a danger screen always does). `.confirmed()` turns it into
+///   [`crate::Error::Cancelled`] where the flow cannot go on without a yes.
 /// - [`Severity::Done`] answers `Confirmed` without waiting for the person:
 ///   it is the last screen of the flow, nothing on the device follows it, and
 ///   the host's response should not wait on a dismissal. The screen may stay
@@ -95,10 +98,9 @@ impl<'a> Notice<'a> {
 ///
 /// # Errors
 ///
-/// Extras, or `cancel: true`, work only where the model's screen for that
-/// severity has a menu — today [`Severity::Info`] on one model. Elsewhere the
-/// notice is drawn without them and the model says so, rather than fail; the
-/// severity's own way out (Warning, Danger) is unaffected. Otherwise see
+/// Extras work only where the model's screen for that severity has a menu.
+/// Elsewhere the notice is drawn without them and the model says so, rather
+/// than fail. Otherwise see
 /// [errors](crate::modui#errors).
 ///
 /// # Example
@@ -113,7 +115,7 @@ impl<'a> Notice<'a> {
 ///         "Unknown contract address.",
 ///         "app/unknown_contract",
 ///         &[],
-///         false,
+///         true,
 ///     ))?
 ///     .confirmed()
 /// }
@@ -131,21 +133,16 @@ impl<'a> Notice<'a> {
 ///     Ok(())
 /// }
 /// ```
-pub fn show(params: Notice<'_>) -> Result<UiReply> {
+pub fn show(params: Notice<'_>) -> Result<Decision> {
     let request = WireShowNotice::new(
         params.severity,
         params.title,
         params.content,
-        !params.extras.is_empty() || params.cancel, // external_menu: how the extras are reached
-        Some(params.br),                            // br_name: the step's name; the app owns it
-        BR_CODE_OTHER,                              // legacy field; see the constant
+        !params.extras.is_empty(), // external_menu: how the extras are reached
+        params.cancel,             // cancel: the model provides the way out
+        Some(params.br),           // br_name: the step's name; the app owns it
+        BR_CODE_OTHER,             // legacy field; see the constant
     );
 
-    call(
-        &request,
-        params.extras,
-        params.cancel,
-        false,
-        Some(params.br),
-    )
+    decide(call(&request, params.extras, Some(params.br))?)
 }

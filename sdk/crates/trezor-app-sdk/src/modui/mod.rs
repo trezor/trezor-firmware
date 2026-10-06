@@ -25,8 +25,8 @@
 //! And the words for what moves between them:
 //!
 //! - **a block** — one typed function of this library: one call, one
-//!   question, one [`UiReply`], and the call does not return until the
-//!   person has answered. The app's only way to show anything.
+//!   question, one answer (see [outcomes](#outcomes)), and the call does
+//!   not return until the person has answered. The app's only way to show anything.
 //! - **a screen** — what the person sees at one moment. A block may show
 //!   several — its own, the extras menu, pages of content; the app never
 //!   counts them.
@@ -107,30 +107,19 @@
 //!
 //! # Outcomes
 //!
-//! A block returns [`UiReply`]: the person's answer as it crossed the
-//! wire, not a translation of it. Cancelling is an answer, not a failure,
-//! so it arrives as `Ok`. How the person got there — which page they were
-//! on, whether they opened the extras, which button they pressed — is
-//! never reported.
+//! What a block returns depends on what kind of block it is:
 //!
-//! Which replies can arrive is fixed by the parameters, not by filtering
-//! after the fact: a screen renders a Cancel entry only when its block
-//! takes `cancel`, and a reply the parameters could not produce — a
-//! `Backward`, which no screen offers — is a protocol violation, answered
-//! with [`crate::Error::InvalidMessage`]. What the library answers itself — a
-//! `WantsMore` by opening the extras, page turns inside one chunk — never
-//! reaches the caller; `ConfirmedAll` does, from chunked content the
-//! person accepted without reading: a yes, with that fact attached.
+//! - **A confirmation** ([`confirm`]) and **a notice** ([`notice::show`])
+//!   return [`Decision`]: `Confirmed` or `Cancelled`. A notice answers
+//!   `Confirmed` when the person moves on, and `Cancelled` only where it
+//!   offers a way back out. Refusing is an answer, not a failure, so both
+//!   arrive as `Ok`; `Err` is for failures alone (see [errors](#errors)).
+//! - **A progress** ([`progress`]) returns what the work returned.
 //!
-//! Reading the answer is a `match`; the caller decides what each answer
-//! means. For the most common case — a screen that must be a yes —
-//! `.confirmed()` and `.is_confirmed()` are sugar for that decision, so a
-//! refusal needs no arm of its own.
-//!
-//! WIP: with the raw reply public, sibling outcome types are subsumed:
-//! `Choice` already rides the wire for a pick from a list, and an input
-//! block adds its variant there — carrying its value — rather than a
-//! parallel enum family. Written when the first such block exists.
+//! How the person got there — which page they were on, whether they opened
+//! the extras, which button they pressed — is never reported. What the
+//! library answers itself, such as opening the extras or turning pages
+//! inside one chunk, never reaches the caller.
 //!
 //! ## The `confirmed()?` idiom
 //!
@@ -140,9 +129,8 @@
 //! confirm::action(params)?.confirmed()?;
 //! ```
 //!
-//! The first `?` unwraps the block's result; `.confirmed()` turns every
-//! answer that is not a yes into [`crate::Error::Cancelled`], which the
-//! trailing `?`
+//! The first `?` unwraps the block's result; `.confirmed()` turns
+//! `Cancelled` into [`crate::Error::Cancelled`], which the trailing `?`
 //! returns from the function at once — nothing after it runs, and the host
 //! sees the session ending with the person's refusal. Do not drop the
 //! trailing `?` on a screen that must be a yes: a refusal would be ignored,
@@ -170,10 +158,10 @@
 //! may change without any signature changing.
 //!
 //! Every confirmation can be refused, and that is never the app's to switch
-//! off. A block that is always refusable takes no `cancel`; its way out is on
-//! the screen, or in its extras on a model whose menu button takes the
-//! screen's way out. Where a block does take one, `cancel: true` adds a Cancel
-//! entry to its extras that abandons the whole block, on every model.
+//! off: no confirmation takes `cancel`. Where the way out is drawn — on the
+//! screen, or in the extras on a model whose menu button takes its place — is
+//! the model's, and the app neither sees nor chooses it. A notice takes
+//! `cancel`: whether the person may back out of it.
 //!
 //! A block that cannot show extras yet refuses a non-empty list rather than
 //! draw a screen whose extras nobody can open; see the table above.
@@ -305,13 +293,13 @@
 // counts, and whether a repeat is a new step, are core's.
 //
 // Layout: the public surface is this file plus one module per kind of block
-// (`confirm`, `notice`, `progress`, `flow`); the library's own machinery is in
+// (`confirm`, `notice`, `progress`); the library's own machinery is in
 // `internal`, which no app can name. A public file holds only what an app may
 // use — the params type, its constructor, the entry function and the types an
 // app names. Any private helper, constant or loop goes in `internal`, so that
 // reading a public file is reading the API.
 //
-// A block file is dull on purpose: params in, one `UiReply` out, the wire
+// A block file is dull on purpose: params in, one answer out, the wire
 // call in between. Anything cleverer belongs in `internal` (`chunked`, `menu`,
 // `data`) so that no single block owns behaviour the others should have too.
 // Each block's own example lives on its entry point, where rustdoc shows it;
@@ -330,8 +318,6 @@ use ufmt::derive::uDebug;
 
 /// A key/value fact, as shown in a list or on an extra's screen.
 pub use crate::traits::ui::Property;
-/// The person's answer to a block: the wire reply, as it came.
-pub use crate::traits::ui::UiReply;
 use crate::{Error, Result};
 
 // ============================================================================
@@ -352,31 +338,38 @@ pub enum Commitment {
     Final,
 }
 
-/// The common readings of a block's answer.
+/// The person's answer to a block that waits for them.
 ///
-/// The reply itself is the wire's — one variant per gesture, defined beside
-/// the other wire types — and every variant an app can receive is one the
-/// block's parameters asked for; see [outcomes](crate::modui#outcomes).
-/// These methods are the readings most callers want, so a refusal needs no
-/// arm of its own.
-impl UiReply {
-    /// Discharges the answer, turning every reply that is not a yes into
-    /// [`Error::Cancelled`].
+/// A confirmation answers `Confirmed` or `Cancelled`. A notice answers
+/// `Confirmed` when the person moves on, and `Cancelled` only where it offers
+/// a way back out. Both arrive as `Ok`: a refusal is an answer, not a
+/// failure; `Err` is for failures. How the person got there — which button,
+/// which page, whether they opened the extras — is never reported.
+#[must_use]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq)]
+pub enum Decision {
+    /// The person said yes, or moved on.
+    Confirmed,
+    /// The person refused, or backed out, by whatever way out the model offers.
+    Cancelled,
+}
+
+impl Decision {
+    /// Discharges the answer, turning a refusal into [`Error::Cancelled`].
     ///
-    /// Use this when the caller cannot proceed without confirmation:
-    /// `confirm::action(params)?.confirmed()?`.
+    /// The one exception to `Err` meaning failure, on purpose: most flows
+    /// cannot go on without a yes, and this lets them write
+    /// `confirm::action(params)?.confirmed()?` and match the refusal once, at
+    /// the end, the way Rust code handles any other early exit.
     pub fn confirmed(self) -> Result<()> {
         match self {
-            Self::Confirmed | Self::ConfirmedAll => Ok(()),
-            _ => Err(Error::Cancelled),
+            Self::Confirmed => Ok(()),
+            Self::Cancelled => Err(Error::Cancelled),
         }
     }
 
     /// Returns `true` if the person confirmed.
-    ///
-    /// A `ConfirmedAll` counts: the person accepted the rest without reading
-    /// it, which is still a yes.
     pub fn is_confirmed(self) -> bool {
-        matches!(self, Self::Confirmed | Self::ConfirmedAll)
+        self == Self::Confirmed
     }
 }

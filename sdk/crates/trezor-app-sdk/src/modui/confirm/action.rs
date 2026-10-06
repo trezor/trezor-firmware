@@ -4,8 +4,8 @@
 //! the extras cannot be reached.
 
 use crate::Result;
-use crate::modui::internal::{BR_CODE_OTHER, call};
-use crate::modui::{Commitment, ExtraItem, UiReply};
+use crate::modui::internal::{BR_CODE_OTHER, call, decide};
+use crate::modui::{Commitment, Decision, ExtraItem};
 use crate::traits::ui::ConfirmAction as WireConfirmAction;
 
 // ============================================================================
@@ -97,7 +97,7 @@ impl<'a> Action<'a> {
 ///     .confirmed()
 /// }
 /// ```
-pub fn action(params: Action<'_>) -> Result<UiReply> {
+pub fn action(params: Action<'_>) -> Result<Decision> {
     let request = WireConfirmAction::new(
         params.title,
         params.action,
@@ -105,13 +105,10 @@ pub fn action(params: Action<'_>) -> Result<UiReply> {
         params.subtitle,
         params.commitment == Commitment::Final, // hold: follows from the commitment
         None,                                   // verb: the label follows the gesture
-        true,                                   // cancel: the person can always leave
         Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
         BR_CODE_OTHER,   // legacy field; see the constant
         !params.extras.is_empty(), // external_menu: how the menu is reached
     );
 
-    // Always refusable: where the menu button takes the screen's own way out,
-    // the menu carries it instead.
-    call(&request, params.extras, false, true, Some(params.br))
+    decide(call(&request, params.extras, Some(params.br))?)
 }

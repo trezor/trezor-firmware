@@ -215,14 +215,12 @@ where
 }
 
 /// A menu of selectable string items, sent as [`TrezorUiEnum::SelectMenu`].
+///
+/// Only the caller's items. A model whose screens give their way out up to
+/// the menu button adds that way out itself.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct SelectMenu<'a> {
     pub items: Slice<'a, StrSlice<'a>>,
-    /// A way out the block asked for; every model draws it, after the items.
-    pub cancel: Option<StrSlice<'a>>,
-    /// The block behind the menu can always be refused. A model whose menu
-    /// button takes the place of the screen's own way out draws one here.
-    pub refusable: bool,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
 }
@@ -230,15 +228,11 @@ pub struct SelectMenu<'a> {
 impl<'a> SelectMenu<'a> {
     pub fn new(
         items: &'a [StrSlice<'a>],
-        cancel: Option<&'a str>,
-        refusable: bool,
         br_name: Option<&'a str>,
         br_code: i32,
     ) -> SelectMenu<'a> {
         SelectMenu {
             items: items.into(),
-            cancel: cancel.map(|s| s.into()),
-            refusable,
             br_name: br_name.map(|s| s.into()),
             br_code,
         }
@@ -287,7 +281,6 @@ pub struct ConfirmAction<'a> {
     pub description: Option<StrSlice<'a>>,
     pub subtitle: Option<StrSlice<'a>>,
     pub hold: bool,
-    pub cancel: bool,
     pub verb: Option<StrSlice<'a>>,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
@@ -302,7 +295,6 @@ impl<'a> ConfirmAction<'a> {
         subtitle: Option<&'a str>,
         hold: bool,
         verb: Option<&'a str>,
-        cancel: bool,
         br_name: Option<&'a str>,
         br_code: i32,
         external_menu: bool,
@@ -313,7 +305,6 @@ impl<'a> ConfirmAction<'a> {
             description: description.map(|s| s.into()),
             subtitle: subtitle.map(|s| s.into()),
             hold,
-            cancel,
             verb: verb.map(|s| s.into()),
             br_name: br_name.map(|s| s.into()),
             br_code,
@@ -387,7 +378,6 @@ pub struct ConfirmValue<'a> {
     pub hold: bool,
     pub chunkify: bool,
     pub page_counter: bool,
-    pub cancel: bool,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
     pub external_menu: bool,
@@ -408,7 +398,6 @@ impl<'a> ConfirmValue<'a> {
         hold: bool,
         chunkify: bool,
         page_counter: bool,
-        cancel: bool,
         external_menu: bool,
         footer: Option<(&'a str, bool)>,
     ) -> Self {
@@ -423,7 +412,6 @@ impl<'a> ConfirmValue<'a> {
             hold,
             chunkify,
             page_counter,
-            cancel,
             br_name: br_name.map(|s| s.into()),
             br_code,
             external_menu,
@@ -598,8 +586,10 @@ pub struct ShowNotice<'a> {
     pub severity: Severity,
     pub title: StrSlice<'a>,
     pub content: StrSlice<'a>,
-    /// The screen has a menu: the app offered extras, a way out, or both.
+    /// The screen leads to the caller's menu of extras.
     pub external_menu: bool,
+    /// The notice must offer a way to back out. How is the model's.
+    pub cancel: bool,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
 }
@@ -610,6 +600,7 @@ impl<'a> ShowNotice<'a> {
         title: &'a str,
         content: &'a str,
         external_menu: bool,
+        cancel: bool,
         br_name: Option<&'a str>,
         br_code: i32,
     ) -> Self {
@@ -618,6 +609,7 @@ impl<'a> ShowNotice<'a> {
             title: title.into(),
             content: content.into(),
             external_menu,
+            cancel,
             br_name: br_name.map(|s| s.into()),
             br_code,
         }
@@ -938,8 +930,8 @@ pub enum TrezorUiEnum<'a> {
 /// fix for that is pairing replies to requests, which this enum does not do.
 ///
 /// An answer is an ordinary value, easy to ignore by accident — hence
-/// `#[must_use]` and [`UiReply::confirmed`](crate::traits::ui::UiReply::confirmed), the idiomatic way to require
-/// a yes; see the `modui` module for what a block can answer.
+/// `#[must_use]`. Apps never see it: `modui` reads it into what each kind of
+/// block answers.
 #[must_use]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum UiReply {

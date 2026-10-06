@@ -8,8 +8,8 @@
 //! - bolt (T2T1): no menu, so the extras cannot be reached.
 
 use crate::Result;
-use crate::modui::internal::{BR_CODE_OTHER, call};
-use crate::modui::{ExtraItem, UiReply};
+use crate::modui::{Decision, ExtraItem};
+use crate::modui::internal::{BR_CODE_OTHER, call, decide};
 use crate::traits::ui::ConfirmSummary as WireConfirmSummary;
 
 // ============================================================================
@@ -86,7 +86,7 @@ impl<'a> Summary<'a> {
 ///     .confirmed()
 /// }
 /// ```
-pub fn summary(params: Summary<'_>) -> Result<UiReply> {
+pub fn summary(params: Summary<'_>) -> Result<Decision> {
     let request = WireConfirmSummary::new(
         params.title,
         params.amount.map(|(_, value)| value),
@@ -107,14 +107,5 @@ pub fn summary(params: Summary<'_>) -> Result<UiReply> {
         BR_CODE_OTHER,             // legacy field; see the constant
     );
 
-    // The summary's own menu holds its way out, but a menu of extras replaces
-    // it, so that menu has to carry the way out instead. Without extras the
-    // screen keeps its own.
-    call(
-        &request,
-        params.extras,
-        !params.extras.is_empty(),
-        false,
-        Some(params.br),
-    )
+    decide(call(&request, params.extras, Some(params.br))?)
 }
