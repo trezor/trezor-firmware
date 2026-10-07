@@ -19,6 +19,8 @@ def unlock(pin: str, ext_salt: AnyBytes | None) -> bool:
     """
     Attempts to unlock the storage with the given PIN and external salt.
     Returns True on success, False on failure.
+    Firmware code should call `storage.unlock()`, which also decrypts
+    the cache.
     """
 
 
@@ -27,6 +29,7 @@ def check_pin(pin: str, ext_salt: AnyBytes | None) -> bool:
     """
     Check the given PIN with the given external salt.
     Returns True on success, False on failure.
+    Also unlocks the storage, so call it only when already unlocked.
     """
 
 
@@ -34,6 +37,8 @@ def check_pin(pin: str, ext_salt: AnyBytes | None) -> bool:
 def lock() -> None:
     """
     Locks the storage.
+    Firmware code should call `storage.lock()`, which also encrypts
+    the cache.
     """
 
 

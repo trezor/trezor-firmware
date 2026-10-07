@@ -2,11 +2,18 @@ import builtins
 import gc
 from typing import TYPE_CHECKING
 
-from storage.cache_common import SESSIONLESS_FLAG, SessionlessCache
+from storage.cache_common import (
+    SESSIONLESS_FLAG,
+    SessionlessCache,
+    get_cache_encryption_key,
+)
 from trezor import utils
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from collections.abc import Sequence
+
+    from storage.cache_common import DataCache
 
 # Cache initialization
 _SESSIONLESS_CACHE = SessionlessCache()
@@ -22,7 +29,8 @@ else:
     _PROTOCOL_CACHE = cache_codec
 
 _PROTOCOL_CACHE.initialize()
-_SESSIONLESS_CACHE.clear()
+
+_ALL_CACHES: Sequence[DataCache] = _PROTOCOL_CACHE.get_sessions() + [_SESSIONLESS_CACHE]
 
 gc.collect()
 
@@ -49,6 +57,8 @@ def get_int_all_sessions(key: int) -> builtins.set[int]:
     If the key has the `SESSIONLESS_FLAG` set, the values are retrieved
     from the sessionless cache. Otherwise, the values are fetched
     from the protocol cache.
+
+    `key` must not be an encrypted field -- `get` raises on those while locked.
     """
     if key & SESSIONLESS_FLAG:
         values = builtins.set()
@@ -77,3 +87,42 @@ homescreen_shown: object | None = None
 # Timestamp of last autolock activity.
 # Here to persist across main loop restart between workflows.
 autolock_last_touch: int | None = None
+
+
+def encrypt_cache() -> None:
+    """
+    Encrypts seeds in all the cached sessions and the sessionless cache.
+    """
+    try:
+        encryption_key = get_cache_encryption_key()
+        for cache in _ALL_CACHES:
+            cache.encrypt(encryption_key)
+    except Exception as e:
+        if __debug__:
+            from trezor import log
+
+            log.exception(__name__, e)
+        utils.halt(e.__class__.__name__)
+
+
+def decrypt_cache() -> None:
+    """
+    Decrypts seeds in all the cached sessions and the sessionless cache.
+    """
+    try:
+        encryption_key = get_cache_encryption_key()
+        for cache in _ALL_CACHES:
+            cache.decrypt(encryption_key)
+    except Exception as e:
+        if __debug__:
+            from trezor import log
+
+            log.exception(__name__, e)
+        utils.halt(e.__class__.__name__)
+
+
+if __debug__:
+
+    def no_unexpected_plaintext() -> bool:
+        """True if every cache that should have been encrypted was."""
+        return all(cache.no_unexpected_plaintext() for cache in _ALL_CACHES)

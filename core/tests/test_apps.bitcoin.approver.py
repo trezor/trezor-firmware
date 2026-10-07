@@ -1,7 +1,6 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-import storage.cache_codec
 from trezor import wire
 from trezor.crypto import bip32
 from trezor.enums import InputScriptType, OutputScriptType
@@ -18,6 +17,9 @@ from apps.bitcoin.sign_tx.approvers import CoinJoinApprover
 from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.sign_tx.tx_info import TxInfo
 from apps.common import coins
+
+if not utils.USE_THP:
+    import storage.cache_codec
 
 
 class TestApprover(TestCaseWithContext):
