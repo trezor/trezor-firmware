@@ -90,6 +90,7 @@ pytest                         # offline: the fixture set itself, no device
 pytest --hw                    # flash and drive the attached T3W1
 pytest --hw -k migration       # one area
 pytest --hw --operator -s      # also the PIN-at-boot flows, with a person
+pytest --hw -m "not cut"       # everything but the SWD power-loss cuts
 ```
 
 `--hw` needs openocd with an ST-Link on the unit (the tests flash through
@@ -98,11 +99,20 @@ starting state from a full erase, so tests are independent and any order works.
 
 | file | covers (plan IDs) |
 | --- | --- |
-| `test_fixtures.py` | every release variant verifies; versions climb; floors; intermediaries embed A; btc-only salting |
-| `test_install.py` | BT-05, IN-02, IN-10, IN-11, IL-01, IL-02, NR-01, VR-05, FW-01, header-only reinstall |
+| `test_fixtures.py` | every release variant verifies; versions climb; floors; intermediaries embed A; btc-only salting; every cut point resolves in its ELF |
+| `test_install.py` | BT-01, BT-05, IN-02, IN-10, IN-11, IN-12, IL-01, IL-02, NR-01, VR-05, VR-06, FW-01, header-only reinstall |
+| `test_tamper.py` | the wire tamper matrix: IN-03, IN-05, IN-06, IN-07, IN-08, IN-13, IN-14, IL-02, NR-03, MG-19 (PQ half) |
 | `test_floors.py` | VR-01 (`burns`), VR-03, VR-04 |
+| `test_power_loss.py` | PL-01…04, PL-06…08, MG-12…15 (`cut`) |
 | `test_migration.py` | MG-01, MG-03, MG-04/05, MG-09; a variant change after migration wipes |
+| `test_scenarios.py` | WP-01, MG-19 (legacy half) |
 | `test_operator.py` | MG-02, MG-07 |
+
+The tamper cases (`pqhw/tamper.py`) are the manual wire harness's
+(`firmware_pq_update.py --tamper`), with the same expected messages, restated
+as functions over the upload the flows send. Every refusal is followed by a
+recovery check: a refusal before the confirm leaves the firmware and seed
+untouched, a refusal in phase 2 is cured by the honest install.
 
 Two device facts shape the suite:
 
@@ -129,8 +139,10 @@ the pictures.
 Screenshots are read over SWD (`pqhw/screen.py`), because neither debuglink
 returns pixels on hardware and the device is not on USB at its boot
 lockscreen. openocd reads which GFXMMU virtual buffer the LTDC is scanning
-(layer-1 `CFBAR`), dumps it and reads `CFBAR` again; a capture that saw a
-buffer swap is taken again, so a torn frame never reaches the report. The CPU
+(layer-1 `CFBAR`), dumps it, then reads every 8th line and `CFBAR` again; a
+capture that saw a swap or a redraw is taken again, up to three times. A
+screen that never settles keeps its last capture, marked in the report as
+possibly mixing two frames. The CPU
 keeps running (pausing it mid-install would risk host timeouts), so a picture
 shows the screen at the moment of the read: the step itself on a screen that
 waits for input, possibly the next screen on a transient one. The SWD clock
@@ -138,3 +150,20 @@ defaults to 24 MHz, an ST-Link V3's maximum (about 3 s per capture); lower it
 with `PQHW_SWD_KHZ` on a long cable or an older probe.
 `python -m pqhw.screen out.png` takes one capture and prints how long it took. The boardloader does not drive the
 display, so a step during it shows the error instead of a picture.
+
+## Power-loss cuts
+
+`pqhw/cutpoint.py` makes a power cut at a named function: openocd sets a
+hardware breakpoint at its address, waits for the unit to halt there, and
+resets it (`before`: on entry; `after`: once it returns; `during`: a few
+seconds into it). Addresses come from the ELF of the code that will run the
+function, which the builder stages next to each image and checks byte for
+byte against it: `release-*/T3W1/bootloader.elf`, and
+`intermediary/{kernel,secmon}-<variant>.elf`. A cut in a bootloader that only
+boots later (B's, after the boardloader swap) is armed once the old one has
+stopped, since the same address is other code in the old image.
+
+While a cut is armed, openocd holds the ST-Link: steps recorded meanwhile have
+no screenshot ("SWD probe held by the cut point"). A reset is not a brown-out
+in the middle of a flash write; PL-05 (during the boardloader's copy) needs a
+switched power supply and is not automated.

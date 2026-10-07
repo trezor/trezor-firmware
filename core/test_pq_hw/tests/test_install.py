@@ -9,7 +9,7 @@ from pqhw.device import Unit
 from pqhw.fixtures import VARIANTS, Fixtures
 
 from trezorlib import exceptions
-from trezorlib.messages import FirmwareScheme
+from trezorlib.messages import Capability, FirmwareScheme
 
 pytestmark = pytest.mark.hw
 
@@ -19,7 +19,9 @@ def test_empty_unit_takes_official_without_prompt(
     unit: Unit, fx: Fixtures, variant: str
 ) -> None:
     """BT-05, IN-11 (official half): an empty unit reads empty and installs an
-    official variant with no prompt, so the factory flow stays unattended."""
+    official variant with no prompt, so the factory flow stays unattended.
+    BT-01, VR-06: the variant then runs as itself, reporting the manifest's
+    version, and the bootloader names its vendor."""
     ctx = flows.baseline_pq_empty(unit, fx, "release-A")
     f = ctx.features
     assert f.firmware_scheme == FirmwareScheme.PqSecure
@@ -27,26 +29,42 @@ def test_empty_unit_takes_official_without_prompt(
     assert not f.firmware_present
     assert not f.firmware_corrupted
 
-    report = flows.pq_install(unit, ctx, fx.bundle("release-A", variant))
+    bundle = fx.bundle("release-A", variant)
+    report = flows.pq_install(unit, ctx, bundle)
     assert not report.prompted
     assert not report.phase2_prompted
     assert report.served["code"] == 0, "the flashed bootloader is A's, header-only"
 
     ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
-    assert flows.version(ctx.features) == (2, 14, 0)
-    assert not ctx.features.initialized
+    f = ctx.features
+    assert flows.version(f) == bundle.firmware.manifest.firmware_version[:3]
+    assert not f.initialized
+    assert f.firmware_scheme == FirmwareScheme.PqSecure
+    assert Capability.Bitcoin in f.capabilities
+    assert (Capability.Ethereum in f.capabilities) == (variant == "universal")
+
+    ctx = flows.enter_bootloader(unit, ctx)
+    f = ctx.features
+    assert f.fw_vendor == flows.VENDOR[variant]
+    assert f.firmware_present and not f.firmware_corrupted
 
 
-def test_empty_unit_asks_before_custom(unit: Unit, fx: Fixtures) -> None:
-    """IN-11 (custom half): empty does not mean unattended for unofficial code."""
+def test_custom_on_empty_unit(unit: Unit, fx: Fixtures) -> None:
+    """IN-11 (custom half), IN-12: a locked bootloader refuses custom firmware
+    outright; an unlocked one installs it, but only after asking (empty does
+    not mean unattended for unofficial code), and reports it as unsafe."""
     ctx = flows.baseline_pq_empty(unit, fx, "release-A")
-    try:
-        report = flows.pq_install(unit, ctx, fx.bundle("release-A", "custom"))
-    except exceptions.TrezorFailure as e:
-        if "restrict" in str(e).lower():
-            pytest.skip(f"bootloader is locked on this unit: {e}")
-        raise
+    bundle = fx.bundle("release-A", "custom")
+    if ctx.features.bootloader_locked:
+        with pytest.raises(exceptions.TrezorFailure, match="Unlock the bootloader"):
+            flows.pq_install(unit, ctx, bundle, confirm=False)
+        return
+    report = flows.pq_install(unit, ctx, bundle)
     assert report.prompted
+    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    assert flows.version(ctx.features) == (2, 14, 0)
+    ctx = flows.enter_bootloader(unit, ctx)
+    assert ctx.features.fw_vendor == flows.VENDOR["custom"]
 
 
 def test_reinstall_is_header_only(unit: Unit, fx: Fixtures) -> None:
