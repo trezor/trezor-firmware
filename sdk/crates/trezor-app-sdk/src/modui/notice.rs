@@ -4,7 +4,7 @@
 //! answers the same way everywhere. Failures are not among the callouts; see
 //! [`Severity`].
 //!
-//! WIP: manual test results (testapp):
+//! WIP: manual test results (by hand):
 //! - caesar (T3B1) and bolt (T2T1): an info notice with extras draws no menu
 //!   button, so its extras cannot be reached. A warning notice with extras
 //!   and `cancel: true` drew only its text and could only be confirmed —

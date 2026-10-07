@@ -1,6 +1,6 @@
 //! Confirming an opaque byte blob. The public docs live on [`data`].
 //!
-//! WIP: manual test results with extras (testapp), before the way out moved
+//! WIP: manual test results with extras (by hand), before the way out moved
 //! into the layouts: caesar (T3B1) and eckhart (T3W1) drew the way out twice,
 //! on the screen and again in the menu, because the app could ask for a menu
 //! Cancel. bolt (T2T1) draws no menu, so the extras cannot be reached.

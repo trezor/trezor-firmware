@@ -1,7 +1,7 @@
 //! The closing screen of a transaction. The public docs live on
 //! [`summary`].
 //!
-//! WIP: manual test results (testapp):
+//! WIP: manual test results (by hand):
 //! - caesar (T3B1): with extras the menu, the extras and its way out all
 //!   work; without extras there is no menu, as intended. The reference for
 //!   what the other blocks should do there.
