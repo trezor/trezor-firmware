@@ -39,6 +39,9 @@ LOG = logging.getLogger(__name__)
 
 MODES = ("before", "after", "during")
 
+#: SWD clock for cut scripts: what the target config uses across a reset
+#: (the MCU runs from MSI 4 MHz right after one)
+CUT_SWD_KHZ = 480
 #: T3W1: the boardloader, where a reset halts the core (memory.h)
 BOARDLOADER = range(0x0C004000, 0x0C01E000)
 #: T3W1 boot UCB (BOOTUCB_START): magic, header and code address, header hash
@@ -230,8 +233,15 @@ def _script(
     def mark(name: str, value: str = "") -> str:
         return f'set f [open {{{marks / name}}} w]; puts $f "{value}"; close $f'
 
+    # Nothing may touch the debug connection between the halt at the cut and
+    # the reset. The target config's reset-start handler drops the SWD clock
+    # to 480 kHz, and an ST-Link re-initialises the link on a clock change,
+    # which can let a halted core run for a moment: a cut on
+    # `bl ucb_stage_arm` armed the swap in 2 of 3 runs that way (2026-10-07).
+    # So the whole script runs at that clock and the handler is disabled.
     lines = [
-        f"adapter speed {screen.SWD_KHZ}",
+        f"adapter speed {CUT_SWD_KHZ}",
+        "stm32u5x.cpu configure -event reset-start {}",
         "init",
         f"bp {addr:#x} 2 hw",
         mark("armed"),
