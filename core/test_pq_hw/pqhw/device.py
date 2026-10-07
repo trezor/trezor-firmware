@@ -74,7 +74,13 @@ class Unit:
                 return None
         # USB only: the unit is flashed and driven over its cable, and a BLE or
         # emulator transport answering as well must not be picked instead.
-        devices = WebUsbTransport.enumerate()
+        try:
+            devices = WebUsbTransport.enumerate()
+        except Exception as e:
+            # A device dropping off the bus mid-enumeration (every reboot)
+            # fails its descriptor read; it is leaving, so it is not there.
+            LOG.debug("enumeration failed, device in transition: %s", e)
+            return None
         if len(devices) > 1:
             paths = ", ".join(d.get_path() for d in devices)
             raise AmbiguousUnit(
