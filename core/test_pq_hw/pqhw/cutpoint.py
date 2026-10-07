@@ -110,6 +110,22 @@ def call_sites(elf: Path, caller: str, callee: str) -> list[tuple[int, int]]:
     return sites
 
 
+def spin_address(elf: Path) -> int | None:
+    """A `b .` instruction in `elf` (a while(1) in an exit path): where the
+    core is parked at a cut, so it cannot carry on if the halt leaks."""
+    out = subprocess.run(
+        ["arm-none-eabi-objdump", "-d", "--no-show-raw-insn", str(elf)],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    for line in out.splitlines():
+        m = re.match(r"\s*([0-9a-f]+):\s+b(?:\.n|\.w)?\s+([0-9a-f]+)\s", line)
+        if m and m.group(1) == m.group(2):
+            return int(m.group(1), 16)
+    return None
+
+
 def symbolize(addr: int, elfs: list[Path]) -> str:
     """`function+offset` of a code address, from the first ELF covering it."""
     addr &= ~1
@@ -268,6 +284,14 @@ def _script(
         "set hlr [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg lr]] 0]",
         mark("hit_lr", "$hlr"),
         mark("hit", "$pc"),
+        # Park the core: the halt was seen to leak before the reset in about
+        # half the runs (the core ran on and armed the swap). Pointed at a
+        # `b .` with interrupts masked, a leak only spins.
+        *(
+            [f"catch {{reg primask 1}}", f"catch {{reg pc {spin:#x}}}"]
+            if (spin := spin_address(cut.elf)) is not None
+            else []
+        ),
         f"if {{[catch {{reset halt}} err]}} {{ {mark('reset_error', '$err')}; exit }}",
         "set rpc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
         mark("reset", "$rpc"),
