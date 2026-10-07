@@ -210,8 +210,10 @@ def pq_phase1(
         served["nrf" if is_nrf else "code"] += len(payload)
     messages.Success.ensure_isinstance(resp)
     LOG.info("phase 1 done: prompted=%s served=%s", prompted, served)
+    # text only: the device reboots straight away, mid-capture
     unit.step(
-        f"phase 1 done (bootloader code {served['code']} B, nRF {served['nrf']} B)"
+        f"phase 1 done (bootloader code {served['code']} B, nRF {served['nrf']} B)",
+        screenshot=False,
     )
     return prompted, served
 
@@ -245,7 +247,7 @@ def pq_phase2(unit: Unit, bundle: PqSecureBundle) -> bool:
     firmware._stream_firmware_upload(
         session, data, resp, lambda _: None, bundle.chunk_prev_hashes()
     )
-    unit.step("phase 2: firmware streamed")
+    unit.step("phase 2: firmware streamed", screenshot=False)
     close(ctx)
     unit.wait_gone()
     return prompted or needed_person
@@ -290,7 +292,7 @@ def legacy_install(
         confirm=confirm,
         on_prompt=lambda: unit.step("legacy install: confirmation, tapping confirm"),
     )
-    unit.step("legacy install: firmware streamed")
+    unit.step("legacy install: firmware streamed", screenshot=False)
     close(ctx)
     unit.wait_gone()
     return prompted

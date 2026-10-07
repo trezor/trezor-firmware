@@ -56,6 +56,8 @@ class Unit:
         #: Flow recorder for the HTML report (set by conftest under --hw).
         self.recorder: t.Any = None
         self._last_enum_error: str | None = None
+        #: USB identity of the last connection, for wait_gone.
+        self._connected: tuple[int, int] | None = None
         #: Seconds without an answer after which a request counts as waiting on
         #: a confirmation screen. The bootloader sends no ButtonRequest and its
         #: debuglink reports no layout content, so a stall is the only signal.
@@ -133,10 +135,29 @@ class Unit:
     def present(self) -> bool:
         return self._find() is not None
 
+    @staticmethod
+    def _identity(transport: Transport | None) -> tuple[int, int] | None:
+        """(bus, address): the address is new on every enumeration, so it tells
+        a rebooted device from one that never left."""
+        device = getattr(transport, "device", None)
+        if device is None:
+            return None
+        try:
+            return device.getBusNumber(), device.getDeviceAddress()
+        except Exception:
+            return None
+
     def wait_gone(self, timeout: float = 15) -> None:
+        """Until the device connected last has rebooted: seen absent, or back
+        under a new USB address (a fast reboot can complete between polls, or
+        while a screenshot is being taken)."""
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
-            if not self.present():
+            transport = self._find()
+            if transport is None:
+                return
+            ident = self._identity(transport)
+            if self._connected is not None and ident not in (None, self._connected):
                 return
             time.sleep(0.2)
         raise UnitError(f"device did not leave the bus within {timeout:.0f} s")
@@ -188,6 +209,7 @@ class Unit:
                 f.patch_version,
             )
             if bootloader is None or mode == bootloader:
+                self._connected = self._identity(transport)
                 self.step(
                     f"{'bootloader' if mode else 'firmware'} "
                     f"{f.major_version}.{f.minor_version}.{f.patch_version}"

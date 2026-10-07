@@ -63,7 +63,7 @@ class Recorder:
         step = Step(time.monotonic() - rec.started, caption)
         LOG.info("step %d: %s", n, caption)
         if not screenshot:
-            step.error = "host-side check, screen unchanged"
+            step.error = "no screenshot (host-side, or the device is rebooting)"
         elif self.screenshots:
             rel = f"{rec.slug}/{n:02d}.png"
             try:
