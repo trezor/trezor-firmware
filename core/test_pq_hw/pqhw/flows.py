@@ -19,6 +19,7 @@ from .device import (
     UnitError,
     call_watching_prompt,
     close,
+    run_watching_stalls,
     tap_bootloader_intro,
 )
 from .fixtures import Fixtures
@@ -248,11 +249,14 @@ def legacy_install(
     assert ctx.features.bootloader_mode, "legacy_install starts in bootloader mode"
     session = ctx.get_seedless_session()
 
-    def erase() -> t.Any:
-        return session.call(messages.FirmwareErase(length=len(data)))
+    def upload(tick: t.Callable[[], None]) -> None:
+        # The legacy bootloader confirms after it has read the headers, i.e.
+        # in the middle of the stream, so the whole exchange is watched.
+        resp = session.call(messages.FirmwareErase(length=len(data)))
+        tick()
+        firmware._stream_firmware_upload(session, data, resp, lambda _: tick())
 
-    resp, prompted = call_watching_prompt(ctx, erase, stall=unit.stall, confirm=confirm)
-    firmware._stream_firmware_upload(session, data, resp, lambda _: None)
+    _, prompted = run_watching_stalls(ctx, upload, stall=unit.stall, confirm=confirm)
     close(ctx)
     unit.wait_gone()
     return prompted

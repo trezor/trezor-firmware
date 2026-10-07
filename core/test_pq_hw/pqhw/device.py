@@ -296,6 +296,58 @@ def call_watching_prompt(
     return result["value"], prompted
 
 
+def run_watching_stalls(
+    ctx: TrezorTestContext,
+    work: t.Callable[[t.Callable[[], None]], T],
+    *,
+    stall: float,
+    confirm: bool = True,
+    timeout: float = 600,
+) -> tuple[T, bool]:
+    """Run a multi-request exchange; tap confirm whenever it stops progressing.
+
+    For flows whose confirmation comes mid-stream: a legacy bootloader answers
+    FirmwareErase at once, reads the headers, and only then asks. `work` gets a
+    `tick` to call on every step that made progress.
+    """
+    last = time.monotonic()
+
+    def tick() -> None:
+        nonlocal last
+        last = time.monotonic()
+
+    result: dict[str, t.Any] = {}
+
+    def worker() -> None:
+        try:
+            result["value"] = work(tick)
+        except BaseException as e:  # re-raised in the caller's thread
+            result["error"] = e
+
+    th = threading.Thread(target=worker, daemon=True)
+    th.start()
+    deadline = time.monotonic() + timeout
+    taps = 0
+    while th.is_alive() and time.monotonic() < deadline:
+        th.join(0.5)
+        if th.is_alive() and time.monotonic() - last > stall:
+            if not confirm:
+                raise UnitError(
+                    "device is waiting on a confirmation that should not appear"
+                )
+            if taps >= MAX_TAPS:
+                raise UnitError(f"still blocked after {MAX_TAPS} taps")
+            taps += 1
+            LOG.info("exchange stalled %.0f s: tapping confirm (%d)", stall, taps)
+            bootloader_tap_confirm(ctx.debug)
+            tick()
+    if th.is_alive():
+        raise UnitError(f"no answer within {timeout:.0f} s")
+    if "error" in result:
+        raise result["error"]
+    return result["value"], taps > 0
+
+
 def firmware_debuglink(
     transport: Transport, version: tuple[int, int, int]
 ) -> DebugLink:
