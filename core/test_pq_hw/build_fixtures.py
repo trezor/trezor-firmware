@@ -57,7 +57,9 @@ DEVEL = ["--bootloader-devel"]
 # Storage then takes its non-Optiga path, so every firmware here (legacy,
 # intermediary, PQ) must agree on it.
 DEBUG_FW = ["--debug-link", "--pyopt=false", "--disable-animation", "--disable-optiga"]
-DEBUG_BL = ["--debug-link"]
+# Animations off in the bootloaders too: the SWD screenshots then catch
+# settled screens, and stall-based confirms are not racing a transition.
+DEBUG_BL = ["--debug-link", "--disable-animation"]
 
 FW_VARIANT_SEC = {"universal": 0x5A5A5A5A, "btc-only": 0xA5A5A5A5}
 
