@@ -55,14 +55,16 @@ class Recorder:
         self.current = TestRecord(nodeid, _slug(nodeid))
         self.records.append(self.current)
 
-    def step(self, caption: str) -> None:
+    def step(self, caption: str, screenshot: bool = True) -> None:
         rec = self.current
         if rec is None:
             return
         n = len(rec.steps) + 1
         step = Step(time.monotonic() - rec.started, caption)
         LOG.info("step %d: %s", n, caption)
-        if self.screenshots:
+        if not screenshot:
+            step.error = "host-side check, screen unchanged"
+        elif self.screenshots:
             rel = f"{rec.slug}/{n:02d}.png"
             try:
                 screen.capture(self.dir / rel)

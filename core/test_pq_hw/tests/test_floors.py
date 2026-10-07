@@ -21,24 +21,24 @@ def test_fix_version_wipes_below(unit: Unit, fx: Fixtures) -> None:
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", "universal"))
     assert report.prompted
     ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
-    assert flows.seed_fingerprint(ctx) is None
+    assert flows.seed_fingerprint(unit, ctx) is None
 
 
 def test_fix_version_keeps_at(unit: Unit, fx: Fixtures) -> None:
     """VR-03: under B-fix, installing B (2.1.20, at the floor) keeps the seed."""
     ctx = flows.baseline_pq_installed(unit, fx, "release-B-fix", "universal")
-    seed = flows.seed_fingerprint(ctx)
+    seed = flows.seed_fingerprint(unit, ctx)
     ctx = flows.enter_bootloader(unit, ctx)
     flows.pq_install(unit, ctx, fx.bundle("release-B", "universal"))
     ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
-    assert flows.seed_fingerprint(ctx) == seed
+    assert flows.seed_fingerprint(unit, ctx) == seed
 
 
 def test_min_prev_refused_below(unit: Unit, fx: Fixtures) -> None:
     """VR-04: C needs an installed bootloader >= 2.1.20; A has 2.1.19. Refused
     in phase 1 before any prompt, and the unit still runs A with its seed."""
     ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
-    seed = flows.seed_fingerprint(ctx)
+    seed = flows.seed_fingerprint(unit, ctx)
     ctx = flows.enter_bootloader(unit, ctx)
     with pytest.raises(exceptions.TrezorFailure):
         flows.pq_install(
@@ -48,18 +48,18 @@ def test_min_prev_refused_below(unit: Unit, fx: Fixtures) -> None:
     unit.reset()
     ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
     assert flows.version(ctx.features) == (2, 14, 0)
-    assert flows.seed_fingerprint(ctx) == seed
+    assert flows.seed_fingerprint(unit, ctx) == seed
 
 
 def test_min_prev_accepted_at(unit: Unit, fx: Fixtures) -> None:
     """VR-04: from B (2.1.20) the same release installs."""
     ctx = flows.baseline_pq_installed(unit, fx, "release-B", "universal")
-    seed = flows.seed_fingerprint(ctx)
+    seed = flows.seed_fingerprint(unit, ctx)
     ctx = flows.enter_bootloader(unit, ctx)
     flows.pq_install(unit, ctx, fx.bundle("release-C-minprev", "universal"))
     ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
     assert flows.version(ctx.features) == (2, 14, 3)
-    assert flows.seed_fingerprint(ctx) == seed
+    assert flows.seed_fingerprint(unit, ctx) == seed
 
 
 @pytest.mark.burns

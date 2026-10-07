@@ -45,7 +45,7 @@ PIN = "1234"
 WIPE_CODE = "9876"
 
 
-def load_seed(ctx: TrezorTestContext, pin: str | None = None) -> None:
+def load_seed(unit: Unit, ctx: TrezorTestContext, pin: str | None = None) -> None:
     """Without a PIN unless asked: a T3W1 is not on USB until its boot
     lockscreen is unlocked, so a PIN at boot needs a person. The storage salt
     binds firmware_type with or without a PIN, so a wrong domain still loses
@@ -54,15 +54,21 @@ def load_seed(ctx: TrezorTestContext, pin: str | None = None) -> None:
     debuglink.load_device(
         session, MNEMONIC, pin=pin, passphrase_protection=False, label=LABEL
     )
+    unit.step(
+        f"seed loaded over debuglink (LoadDevice, {'PIN ' + pin if pin else 'no PIN'})"
+    )
 
 
-def seed_fingerprint(ctx: TrezorTestContext) -> str | None:
-    """The account xpub, or None on an uninitialised device."""
+def seed_fingerprint(unit: Unit, ctx: TrezorTestContext) -> str | None:
+    """The account xpub, or None on an uninitialised device. Recorded as a
+    text-only step: reading it changes nothing on screen."""
     features = ctx.refresh_features()
     if not features.initialized:
+        unit.step("seed check: device not initialised", screenshot=False)
         return None
     session = ctx.get_session(passphrase="")
     node = btc.get_public_node(session, parse_path(XPUB_PATH), coin_name="Bitcoin")
+    unit.step(f"seed check: {XPUB_PATH} xpub ...{node.xpub[-12:]}", screenshot=False)
     return node.xpub
 
 
@@ -97,7 +103,7 @@ def baseline_pq_installed(
     assert not report.prompted, "an official install on an empty unit must not ask"
     ctx = unit.context(bootloader=False, timeout=REBOOT)
     if seeded:
-        load_seed(ctx)
+        load_seed(unit, ctx)
     return ctx
 
 
@@ -122,6 +128,12 @@ def enter_bootloader(
     """From firmware mode; with `bundle`, as a pre-authorised (interaction-less)
     upgrade the firmware confirms itself."""
     session = ctx.get_session(passphrase="")
+    unit.step(
+        "firmware: reboot to bootloader"
+        + (" pre-authorising the release (interaction-less)" if bundle else "")
+        + "; its confirm is pressed over debuglink",
+        screenshot=False,
+    )
     if bundle is None:
         # lands on the bootloader intro, which needs a tap to bring the wire up
         device.reboot_to_bootloader(session)

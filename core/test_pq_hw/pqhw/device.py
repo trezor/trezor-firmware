@@ -92,10 +92,11 @@ class Unit:
     def reset(self) -> None:
         self.xtask("reset", "-m", MODEL)
 
-    def step(self, caption: str) -> None:
-        """A point in the flow worth seeing: logged, and captured for the report."""
+    def step(self, caption: str, screenshot: bool = True) -> None:
+        """A point in the flow worth seeing: logged, and captured for the report
+        (with a screenshot unless the step changes nothing on screen)."""
         if self.recorder is not None:
-            self.recorder.step(caption)
+            self.recorder.step(caption, screenshot=screenshot)
         else:
             LOG.info("step: %s", caption)
 

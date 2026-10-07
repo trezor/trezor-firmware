@@ -21,8 +21,8 @@ def migrate(unit: Unit, fx: Fixtures, legacy_variant: str, seeded: bool = True):
     assert flows.version(ctx.features) == (2, 13, 0)
     seed = None
     if seeded:
-        flows.load_seed(ctx)
-        seed = flows.seed_fingerprint(ctx)
+        flows.load_seed(unit, ctx)
+        seed = flows.seed_fingerprint(unit, ctx)
         assert seed is not None
 
     # MG-01: the legacy bootloader takes the legacy-signed intermediary
@@ -49,7 +49,7 @@ def test_migration_keeps_seed(unit: Unit, fx: Fixtures, variant: str) -> None:
     ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
     assert ctx.features.firmware_scheme == FirmwareScheme.PqSecure
     assert flows.version(ctx.features) == (2, 14, 0)
-    assert flows.seed_fingerprint(ctx) == seed
+    assert flows.seed_fingerprint(unit, ctx) == seed
 
 
 def test_migration_into_other_variant_wipes(unit: Unit, fx: Fixtures) -> None:
@@ -59,7 +59,7 @@ def test_migration_into_other_variant_wipes(unit: Unit, fx: Fixtures) -> None:
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", "btc-only"))
     assert report.prompted
     ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
-    assert flows.seed_fingerprint(ctx) is None
+    assert flows.seed_fingerprint(unit, ctx) is None
 
 
 def test_unseeded_unit_migrates(unit: Unit, fx: Fixtures) -> None:
@@ -68,4 +68,4 @@ def test_unseeded_unit_migrates(unit: Unit, fx: Fixtures) -> None:
     flows.pq_install(unit, ctx, fx.bundle("release-A", "universal"))
     ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
     assert flows.version(ctx.features) == (2, 14, 0)
-    assert flows.seed_fingerprint(ctx) is None
+    assert flows.seed_fingerprint(unit, ctx) is None
