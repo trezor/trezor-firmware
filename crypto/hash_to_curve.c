@@ -131,7 +131,7 @@ static bool simple_swu(const bignum256 *u, const bignum256 *a,
   bn_mod(&x1, p);
 
   // x1 = inv0(1)
-  bn_inverse(&x1, p);
+  bn_inverse_blinded(&x1, p);
 
   // e1 = x1 == 0
   int e1 = bn_is_zero(&x1);

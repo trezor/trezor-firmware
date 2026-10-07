@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include "memzero.h"
+#include "rand.h"
 #include "script.h"
 
 /*
@@ -1908,3 +1909,57 @@ void bn_inverse(bignum256 *x, const bignum256 *prime) {
   bn_inverse_slow(x, prime);
 }
 #endif
+
+// x = random number in the range [1, prime - 1]
+// Guarantees x is normalized and fully reduced modulo prime
+// Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256, so that
+//   the expected number of rejection-sampling iterations is close to one
+void bn_random(bignum256 *x, const bignum256 *prime) {
+  do {
+    for (int i = 0; i < BN_LIMBS - 1; i++) {
+      x->val[i] = random32() & ((1u << BN_BITS_PER_LIMB) - 1);
+    }
+    x->val[BN_LIMBS - 1] = random32() & ((1u << BN_BITS_LAST_LIMB) - 1);
+    // check that x is in range and not zero.
+  } while (bn_is_zero(x) || !bn_is_less(x, prime));
+}
+
+// x = 1/x % prime if x != 0 else 0
+// Assumes x is is_normalized
+// Assumes GCD(x, prime) = 1
+// Guarantees x is normalized and fully reduced modulo prime
+// Assumes prime is odd, normalized, 2**256 - 2**224 <= prime <= 2**256
+// Uses multiplicative blinding, because bn_inverse() doesn't have constant
+// memory access flow with regard to x. Use this instead of bn_inverse()
+// whenever x is secret.
+void bn_inverse_blinded(bignum256 *x, const bignum256 *prime) {
+  bignum256 r = {0};
+  bn_random(&r, prime);
+  bn_multiply(&r, x, prime);  // x = x*r
+  bn_inverse(x, prime);       // x = (x*r)^-1
+  bn_multiply(&r, x, prime);  // x = x^-1
+  bn_mod(x, prime);
+  memzero(&r, sizeof(r));
+}
+
+// s = s/x % prime if x != 0 else 0
+// Overwrites x
+// Assumes s, x are is_normalized
+// Assumes GCD(x, prime) = 1
+// Guarantees s is normalized and fully reduced modulo prime
+// Assumes prime is odd, normalized, 2**256 - 2**224 <= prime <= 2**256
+// Uses multiplicative blinding like bn_inverse_blinded(), but removes the
+// blinding only after the inverse has been multiplied into s, so the
+// unblinded inverse of x never exists. Use this instead of
+// bn_inverse_blinded() followed by bn_multiply() whenever the inverse
+// itself is not needed.
+void bn_divide_blinded(bignum256 *s, bignum256 *x, const bignum256 *prime) {
+  bignum256 r = {0};
+  bn_random(&r, prime);
+  bn_multiply(&r, x, prime);  // x = x*r
+  bn_inverse(x, prime);       // x = (x*r)^-1
+  bn_multiply(x, s, prime);   // s = s*(x*r)^-1
+  bn_multiply(&r, s, prime);  // s = s*x^-1
+  bn_mod(s, prime);
+  memzero(&r, sizeof(r));
+}

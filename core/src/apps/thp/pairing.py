@@ -333,7 +333,7 @@ async def _handle_qr_code_tag(
     sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
     sha_ctx.update(ctx.code_qr_code)
     expected_tag = sha_ctx.digest()
-    if expected_tag != message.tag:
+    if not utils.consteq(expected_tag, message.tag):
         raise DataError("Unexpected QR Code Tag")
 
     if ctx.qr_code_secret is None:
@@ -361,7 +361,7 @@ async def _handle_nfc_tag(
     sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
     sha_ctx.update(ctx.nfc_secret)
     expected_tag = sha_ctx.digest()
-    if expected_tag != message.tag:
+    if not utils.consteq(expected_tag, message.tag):
         raise DataError("Unexpected NFC Unidirectional Tag")
 
     if ctx.handshake_hash_host[:16] != ctx.channel_ctx.get_handshake_hash()[:16]:
