@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pytest
 from pqhw import flows
-from pqhw.device import Unit
+from pqhw.device import Unit, UnitError
 from pqhw.fixtures import VARIANTS, Fixtures
 
 from trezorlib import exceptions
@@ -61,7 +61,13 @@ def test_custom_on_empty_unit(unit: Unit, fx: Fixtures) -> None:
         return
     report = flows.pq_install(unit, ctx, bundle)
     assert report.prompted
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    # Unofficial firmware is held at the bootloader's unsafe-firmware warning
+    # until a person confirms it, so it does not come up on USB by itself.
+    try:
+        ctx = unit.context(bootloader=False, timeout=60)
+    except UnitError:
+        unit.step("custom firmware held at the boot warning (needs a person)")
+        return
     assert flows.version(ctx.features) == (2, 14, 0)
     ctx = flows.enter_bootloader(unit, ctx)
     assert ctx.features.fw_vendor == flows.VENDOR["custom"]

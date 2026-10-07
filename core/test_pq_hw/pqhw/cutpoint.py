@@ -46,9 +46,12 @@ UCB = 0x0C01C000
 UCB_SIZE = 48
 #: T3W1 BOOTLOADER_START
 BOOTLOADER = 0x0C01E000
-#: when watched memory is read: halted at the cut, halted right after the
-#: reset, and SETTLE seconds after the unit was let run again
-MOMENTS = ("cut", "reset", "boot")
+#: when watched memory is read: SETTLE seconds after the unit was let run
+#: again. Never while it is halted at the cut or the reset vector: debugger
+#: reads of protected flash there returned garbage, and a faulting access may
+#: let the ST-Link release the halt -- a cut on `bl ucb_stage_arm` armed the
+#: swap in one run and not in another (2026-10-07).
+MOMENTS = ("boot",)
 SETTLE = 8.0
 
 #: name -> (address, length) of memory to snapshot at each moment
@@ -255,11 +258,9 @@ def _script(
         "set hlr [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg lr]] 0]",
         mark("hit_lr", "$hlr"),
         mark("hit", "$pc"),
-        *snap("cut"),
         f"if {{[catch {{reset halt}} err]}} {{ {mark('reset_error', '$err')}; exit }}",
         "set rpc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
         mark("reset", "$rpc"),
-        *snap("reset"),
         *_trace(marks, trace or []),
         "catch {resume}",
         f"sleep {int(SETTLE * 1000)}",
@@ -295,7 +296,8 @@ class Armed:
         self._tmp = tempfile.TemporaryDirectory()
         marks = Path(self._tmp.name)
         script = marks / "cut.tcl"
-        self.watch = {"ucb": (UCB, UCB_SIZE), **self.watch}
+        # the UCB is not watched: debugger reads of it were never right; the
+        # trace records what the boardloader itself read
         points = [(label, symbol_address(elf, fn)) for label, elf, fn in self.trace]
         script.write_text(_script(self.cut, self.timeout, marks, self.watch, points))
         screen.probe_holder = f"cut point {self.cut}"

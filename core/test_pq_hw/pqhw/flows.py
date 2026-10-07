@@ -284,6 +284,7 @@ def pq_phase2(unit: Unit, bundle: PqSecureBundle, upload: Upload | None = None) 
     except UnitError:
         # Not on USB: the bootloader is on its intro ("Initiate connection"),
         # which brings the wire up only after a tap -- it did not resume.
+        unit.step("phase 2 did not come up on USB within the resume time")
         if unit.ask is None:
             raise UnitError(
                 "phase 2 never came up on USB: the bootloader did not resume the "
