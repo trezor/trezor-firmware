@@ -27,8 +27,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         add_driver_none(lib)?;
     } else if cfg!(feature = "display_ltdc_dsi") {
         add_driver_ltdc_dsi(lib)?;
-    } else if cfg!(feature = "display_st7789") {
-        add_driver_st7789(lib)?;
+    } else if cfg!(feature = "display_i8080") {
+        add_driver_i8080(lib)?;
     } else if cfg!(feature = "display_vg2864") {
         add_driver_vg2864(lib)?;
     } else if cfg!(feature = "display_stm32f429i_disc1") {
@@ -160,7 +160,7 @@ fn add_driver_ltdc_dsi(lib: &mut CLibrary) -> Result<()> {
     Ok(())
 }
 
-fn add_driver_st7789(lib: &mut CLibrary) -> Result<()> {
+fn add_driver_i8080(lib: &mut CLibrary) -> Result<()> {
     if cfg!(feature = "mcu_stm32u58") {
         lib.add_sources([
             "display/i8080/display_driver.c",
