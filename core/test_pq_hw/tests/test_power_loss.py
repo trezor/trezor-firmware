@@ -119,6 +119,8 @@ def test_cut_in_phase1_before_arming(
     assert res.hit, f"phase 1 never reached {symbol}"
     unit.step(f"cut fired: {cut}; {res.summary(labels)}")
     unit.step(cutpoint.calls_summary(res.armed), screenshot=False)
+    caller = res.armed.hit_caller if res.armed else None
+    unit.step(f"cut called from {caller}; {res.action_summary()}", screenshot=False)
     finish(unit, fx, seed, OLD_BL)
 
 
@@ -138,6 +140,8 @@ def test_cut_after_arming(unit: Unit, fx: Fixtures) -> None:
     assert res.hit
     unit.step(f"cut fired: {cut}; {res.summary(labels)}")
     unit.step(cutpoint.calls_summary(res.armed), screenshot=False)
+    caller = res.armed.hit_caller if res.armed else None
+    unit.step(f"cut called from {caller}; {res.action_summary()}", screenshot=False)
     report = finish(unit, fx, seed, NEW_BL)
     assert report.served["code"] == 0, "B's bootloader was already in place"
 

@@ -193,6 +193,8 @@ def _script(
     # reset vector, the PC proves the reset happened; then it runs.
     lines += [
         "set pc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
+        "set hlr [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg lr]] 0]",
+        mark("hit_lr", "$hlr"),
         mark("hit", "$pc"),
         *snap("cut"),
         f"if {{[catch {{reset halt}} err]}} {{ {mark('reset_error', '$err')}; exit }}",
@@ -223,6 +225,8 @@ class Armed:
     _proc: subprocess.Popen | None = None
     _tmp: tempfile.TemporaryDirectory | None = None
     hit_pc: int | None = None
+    #: return address at the cut: who called the cut function
+    hit_caller: str | None = None
     reset_pc: int | None = None
     #: (name, moment) -> bytes read, absent if the read failed
     snapshots: dict[tuple[str, str], bytes] = field(default_factory=dict)
@@ -265,6 +269,15 @@ class Armed:
         hit = marks / "hit"
         if hit.exists():
             self.hit_pc = int(hit.read_text().strip() or "0", 0)
+            lr = marks / "hit_lr"
+            if lr.exists() and lr.read_text().strip():
+                self.hit_caller = symbolize(
+                    int(lr.read_text().strip(), 0), [self.cut.elf]
+                )
+                LOG.info("cut function called from %s", self.hit_caller)
+            for line in self.output.splitlines():
+                if "halted due to" in line:
+                    LOG.info("openocd: %s", line.strip())
             reset = marks / "reset"
             if not reset.exists():
                 err = (
@@ -376,6 +389,16 @@ class CutResult:
 
     def summary(self, labels: dict[str, dict[bytes, str]] | None = None) -> str:
         return summary(self.armed, labels)
+
+    def action_summary(self) -> str:
+        """Where the host side was when the cut fired: still waiting on the
+        device (as it should be), or already done."""
+        if not self.action_done:
+            return "host: still in the exchange at the cut"
+        if self.action_error is not None:
+            e = self.action_error
+            return f"host: exchange ended with {type(e).__name__}: {e}"[:300]
+        return f"host: exchange COMPLETED before the cut: {self.action_value!r}"[:300]
 
 
 def summary(
