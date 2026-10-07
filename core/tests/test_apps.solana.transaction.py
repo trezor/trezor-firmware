@@ -203,5 +203,46 @@ class TestSolanaTransactionHeader(unittest.TestCase):
                 Transaction(build_tx(header, TRANSFER_ACCOUNTS, [TRANSFER_INSTRUCTION]))
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestSolanaTransactionInstructions(unittest.TestCase):
+    def test_instruction_id(self):
+        transaction = Transaction(
+            build_tx((1, 0, 1), TRANSFER_ACCOUNTS, [TRANSFER_INSTRUCTION])
+        )
+
+        # The parsed instruction keeps the whole data.
+        ((program_index, accounts, data),) = transaction.raw_instructions
+        self.assertEqual(program_index, 2)
+        self.assertEqual(accounts, [0, 1])
+        self.assertEqual(bytes(data), TRANSFER_INSTRUCTION[2])
+
+        # The instruction id is split off when the instruction is created.
+        (transfer,) = transaction.instructions
+        self.assertEqual(transfer.instruction_id, 2)
+        self.assertEqual(bytes(transfer.instruction_data), (1000).to_bytes(8, "little"))
+
+    def test_data_shorter_than_instruction_id(self):
+        # System Program instruction ids take 4 bytes.
+        short_instruction = (2, (0, 1), b"\x02\x00")
+        transaction = Transaction(
+            build_tx(
+                (1, 0, 1),
+                TRANSFER_ACCOUNTS,
+                [short_instruction, TRANSFER_INSTRUCTION],
+            )
+        )
+        short, transfer = transaction.instructions
+
+        # The whole data is kept and the instruction is shown as unsupported.
+        self.assertIsNone(short.instruction_id)
+        self.assertFalse(short.is_instruction_supported)
+        self.assertEqual(bytes(short.instruction_data), b"\x02\x00")
+        self.assertTrue(transaction.blind_signing)
+
+        # The following instruction is not affected.
+        self.assertEqual(transfer.instruction_id, 2)
+        self.assertEqual(transfer.lamports, 1000)
+
+
 if __name__ == "__main__":
     unittest.main()

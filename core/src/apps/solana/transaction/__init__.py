@@ -121,31 +121,14 @@ class Transaction:
 
         for _ in range(num_of_instructions):
             program_index = serialized_tx_reader.get()
-            program_id = base58.encode(self.addresses[program_index][0])
+
             num_of_accounts = parse_var_int(serialized_tx_reader)
-            accounts: list[int] = []
-            for _ in range(num_of_accounts):
-                account_index = serialized_tx_reader.get()
-                accounts.append(account_index)
+            accounts = serialized_tx_reader.read_memoryview(num_of_accounts)
 
             data_length = parse_var_int(serialized_tx_reader)
+            data = serialized_tx_reader.read_memoryview(data_length)
 
-            instruction_id_length = get_instruction_id_length(program_id)
-            if 0 < instruction_id_length <= data_length:
-                instruction_id = int.from_bytes(
-                    serialized_tx_reader.read_memoryview(instruction_id_length),
-                    "little",
-                )
-            else:
-                instruction_id = None
-
-            instruction_data = serialized_tx_reader.read_memoryview(
-                max(0, data_length - instruction_id_length)
-            )
-
-            self.raw_instructions.append(
-                (program_index, instruction_id, accounts, instruction_data)
-            )
+            self.raw_instructions.append((program_index, list(accounts), data))
 
     def _parse_address_lookup_tables(self, serialized_tx: BufferReader) -> None:
         self.address_lookup_tables_rw_addresses = []
@@ -181,13 +164,20 @@ class Transaction:
         )
 
         self.instructions = []
-        for (
-            program_index,
-            instruction_id,
-            accounts,
-            instruction_data,
-        ) in self.raw_instructions:
+        for program_index, accounts, instruction_data in self.raw_instructions:
             program_id = base58.encode(self.addresses[program_index][0])
+
+            instruction_id_length = get_instruction_id_length(program_id)
+            if 0 < instruction_id_length <= len(instruction_data):
+                instruction_id = int.from_bytes(
+                    instruction_data[:instruction_id_length], "little"
+                )
+                instruction_data = instruction_data[instruction_id_length:]
+            else:
+                # The program has no instruction ids, or the data is too short
+                # to contain one. The latter is shown as an unsupported instruction.
+                instruction_id = None
+
             instruction_accounts = [
                 combined_accounts[account_index] for account_index in accounts
             ]
