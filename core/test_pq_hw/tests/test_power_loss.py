@@ -103,6 +103,10 @@ def finish(unit: Unit, fx: Fixtures, seed, bootloader: tuple[int, int, int]):
         # UCB flash write itself, one call below ucb_stage_arm
         ("nrf_staging_write_desc", "after"),
         ("boot_ucb_write", "before"),
+        # inside phase 1 (A's ELF): back from the nRF stage, before the
+        # keep_seed check; and on the `bl ucb_stage_arm` instruction itself
+        ("workflow_firmware_update_pq+0x558", "before"),
+        ("workflow_firmware_update_pq+0x562", "before"),
     ],
 )
 def test_cut_in_phase1_before_arming(

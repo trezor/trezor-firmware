@@ -100,7 +100,9 @@ class CutPoint:
 
     @property
     def address(self) -> int:
-        return symbol_address(self.elf, self.symbol)
+        """`symbol`, or `symbol+0xoff` for an instruction inside a function."""
+        name, _, off = self.symbol.partition("+")
+        return symbol_address(self.elf, name) + (int(off, 0) if off else 0)
 
     def __str__(self) -> str:
         extra = f" +{self.delay:g} s" if self.mode == "during" else ""
