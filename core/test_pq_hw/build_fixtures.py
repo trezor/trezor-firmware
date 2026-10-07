@@ -51,6 +51,20 @@ DEFAULT_REFS = {
 }
 
 DEVEL = ["--bootloader-devel"]
+
+# Cut points the hardware tests break at, per ELF; each must exist and match
+# the staged image. See pqhw/cutpoint.py.
+CUT_SYMBOLS = {
+    "bootloader": [
+        "ucb_stage_verify",
+        "nrf_staging_write_desc",
+        "ucb_stage_arm",
+        "nrf_update_with_progress",
+        "nrf_staging_clear",
+    ],
+    "kernel": ["nrf_update"],
+    "secmon": ["boot_image_replace", "boot_ucb_write"],
+}
 # Firmware debuglink exists only under __debug__, hence pyopt off. Optiga is
 # off: every wallet set-up advances its security counter, which lives in the
 # chip and survives flash-erase, and a high counter slows every later run.
@@ -440,6 +454,38 @@ class Ctx:
         return dst
 
 
+def check_elf_matches(elf: Path, image: bytes, symbol: str) -> None:
+    """The code at `symbol` in `elf` is in `image`: the ELF the cut-point driver
+    takes addresses from is the build that was released, not a later one."""
+    from elftools.elf.elffile import ELFFile
+
+    with elf.open("rb") as f:
+        e = ELFFile(f)
+        sym = next(
+            (
+                s
+                for s in e.get_section_by_name(".symtab").iter_symbols()
+                if s.name == symbol
+            ),
+            None,
+        )
+        if sym is None:
+            raise BuildError(f"{elf.name}: no symbol {symbol}")
+        addr = sym["st_value"] & ~1
+        for sec in e.iter_sections():
+            start, size = sec["sh_addr"], sec["sh_size"]
+            if sec["sh_type"] == "SHT_PROGBITS" and start <= addr < start + size:
+                code = sec.data()[addr - start : addr - start + 64]
+                break
+        else:
+            raise BuildError(f"{elf.name}: {symbol} is in no loadable section")
+    if code not in image:
+        raise BuildError(
+            f"{elf.name}: the code at {symbol} is not in the staged image "
+            "(the ELF is from another build)"
+        )
+
+
 def load_manifest() -> dict:
     path = FIXTURES / "manifest.json"
     if path.exists():
@@ -563,6 +609,10 @@ def build_release(ctx: Ctx, name: str) -> None:
     xtask(ctx, "build", "boardloader", "-m", MODEL, *DEVEL)
     args_bl = ["build", "bootloader", "-m", MODEL, *DEVEL, *DEBUG_BL]
     xtask(ctx, *args_bl)
+    # Kept before the release step, which builds other projects into the same
+    # artifacts directory; checked against the released bootloader below.
+    bl_elf = LOGS / f"{name}-bootloader.elf"
+    shutil.copyfile(out / "bootloader.elf", bl_elf)
     args = ["release", "--bootloader", "built", *DEVEL, *DEBUG_FW]
     xtask(ctx, *args)
 
@@ -581,6 +631,11 @@ def build_release(ctx: Ctx, name: str) -> None:
             tree / MODEL / n, f"{name}/{MODEL}/{n}", args_bl + ["&&"] + args, **info
         )
     ctx.stage(tree / f"{MODEL}.zip", f"{name}/{MODEL}.zip", args)
+    # Symbols for the SWD cut-point driver (pqhw/cutpoint.py).
+    bl_bin = (tree / MODEL / bundle["bootloader"]["file"]).read_bytes()
+    for sym in CUT_SYMBOLS["bootloader"]:
+        check_elf_matches(bl_elf, bl_bin, sym)
+    ctx.stage(bl_elf, f"{name}/{MODEL}/bootloader.elf", args_bl)
     devel_zip = tree / "release-devel.zip"
     if devel_zip.exists():
         ctx.stage(devel_zip, f"{name}/release-devel.zip", args)
@@ -681,6 +736,15 @@ def build_intermediary(ctx: Ctx) -> None:
             )
         if variant == "btc-only" and not fw.startswith(vh_btc.read_bytes()):
             raise BuildError("intermediary btc-only: wrong vendor header")
+        for part in ("kernel", "secmon"):
+            for sym in CUT_SYMBOLS[part]:
+                check_elf_matches(out / f"{part}.elf", fw, sym)
+            ctx.stage(
+                out / f"{part}.elf",
+                f"intermediary/{part}-{variant}.elf",
+                args,
+                variant=variant,
+            )
         ctx.stage(
             out / "firmware.bin",
             f"intermediary/firmware-{variant}.bin",

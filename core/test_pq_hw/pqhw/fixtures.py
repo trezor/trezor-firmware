@@ -69,6 +69,14 @@ class Fixtures:
     def release_bootloader(self, release: str) -> Path:
         return self.release_file(release, "bootloader.bin")
 
+    def release_elf(self, release: str) -> Path:
+        """Symbols of the release's bootloader, for SWD cut points."""
+        return self.release_file(release, "bootloader.elf")
+
+    def intermediary_elf(self, variant: str, part: str) -> Path:
+        """`kernel` or `secmon` of the intermediary built as `variant`."""
+        return self.path(f"intermediary/{part}-{variant}.elf")
+
     def bundle(self, release: str, variant: str) -> PqSecureBundle:
         return PqSecureBundle.load(self.release_zip(release), variant)
 
