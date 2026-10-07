@@ -116,3 +116,19 @@ Two device facts shape the suite:
   a confirmation; the test taps the right action-bar button and records it.
   Validated on the bootloader emulator (prompt, tap, refusal without a tap).
   If a slow verification is ever misread as a prompt, raise `--stall`.
+
+## Flow report and screenshots
+
+A `--hw` run writes `reports/<timestamp>/index.html`: a summary table, then
+per test its steps in order (every reconnection, every bootloader tap with
+the screen being confirmed, each install phase) with a screenshot each, the
+failure traceback and the captured log. The path is printed at the end of
+the run; `--report-dir` moves it, `--no-screens` keeps the steps but skips
+the pictures.
+
+Screenshots are read over SWD (`pqhw/screen.py`), because neither debuglink
+returns pixels on hardware and the device is not on USB at its boot
+lockscreen. openocd reads which GFXMMU virtual buffer the LTDC is scanning
+(layer-1 `CFBAR`) and dumps it; the CPU keeps running. Each takes a few
+seconds, depending on the ST-Link. The boardloader does not drive the
+display, so a step during it shows the error instead of a picture.

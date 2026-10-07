@@ -53,6 +53,8 @@ class Unit:
         self.path = path
         #: Asks the person at the bench to act, when the run has one (--operator).
         self.ask = ask
+        #: Flow recorder for the HTML report (set by conftest under --hw).
+        self.recorder: t.Any = None
         #: Seconds without an answer after which a request counts as waiting on
         #: a confirmation screen. The bootloader sends no ButtonRequest and its
         #: debuglink reports no layout content, so a stall is the only signal.
@@ -88,6 +90,13 @@ class Unit:
 
     def reset(self) -> None:
         self.xtask("reset", "-m", MODEL)
+
+    def step(self, caption: str) -> None:
+        """A point in the flow worth seeing: logged, and captured for the report."""
+        if self.recorder is not None:
+            self.recorder.step(caption)
+        else:
+            LOG.info("step: %s", caption)
 
     # --- USB ------------------------------------------------------------------
 
@@ -171,6 +180,10 @@ class Unit:
                 f.patch_version,
             )
             if bootloader is None or mode == bootloader:
+                self.step(
+                    f"{'bootloader' if mode else 'firmware'} "
+                    f"{f.major_version}.{f.minor_version}.{f.patch_version}"
+                )
                 return ctx
             close(ctx)
             last = UnitError(
@@ -210,6 +223,7 @@ def tap_bootloader_intro(unit: Unit, timeout: float = 120) -> None:
                 ),
                 timeout=30,
             )
+            unit.step("bootloader intro: tapping 'Initiate connection'")
             x, y = BUTTONS.info()  # the single, full-width action-bar button
             debug._write(messages.DebugLinkDecision(x=x, y=y))
             return
@@ -256,6 +270,7 @@ def call_watching_prompt(
     stall: float,
     confirm: bool = True,
     timeout: float = 600,
+    on_prompt: t.Callable[[], None] | None = None,
 ) -> tuple[T, bool]:
     """Run a blocking bootloader request; report whether it waited on a prompt.
 
@@ -280,6 +295,8 @@ def call_watching_prompt(
             raise UnitError(
                 "device is waiting on a confirmation that should not appear"
             )
+        if on_prompt is not None:
+            on_prompt()
         # Some installs confirm on more than one screen; keep tapping while the
         # request stays blocked. A tap on a progress screen does nothing.
         for tap in range(1, MAX_TAPS + 1):
@@ -303,6 +320,7 @@ def run_watching_stalls(
     stall: float,
     confirm: bool = True,
     timeout: float = 600,
+    on_prompt: t.Callable[[], None] | None = None,
 ) -> tuple[T, bool]:
     """Run a multi-request exchange; tap confirm whenever it stops progressing.
 
@@ -338,6 +356,8 @@ def run_watching_stalls(
             if taps >= MAX_TAPS:
                 raise UnitError(f"still blocked after {MAX_TAPS} taps")
             taps += 1
+            if taps == 1 and on_prompt is not None:
+                on_prompt()
             LOG.info("exchange stalled %.0f s: tapping confirm (%d)", stall, taps)
             bootloader_tap_confirm(ctx.debug)
             tick()

@@ -1,0 +1,86 @@
+"""Screenshots of a running T3W1 over SWD.
+
+Neither debuglink returns pixels on hardware, and a T3W1 is not on USB at all
+while its boot lockscreen is up, so the frame buffer is read over SWD instead.
+This works at every stage (boardloader excepted: it does not drive the LTDC),
+needs no device-side support, and does not stop the CPU.
+
+The display controller (LTDC) scans layer 1 from the address in its CFBAR
+register. On T3W1 that is one of the two GFXMMU virtual buffers, which present
+the frame linearly: 520 lines of 768 ARGB8888 pixels, the UI in the first 380
+of each line (the layer window maps buffer column 0 to panel column 50).
+"""
+
+from __future__ import annotations
+
+import re
+import subprocess
+import tempfile
+from pathlib import Path
+
+from PIL import Image
+
+# LTDC on STM32U5G9: APB2 + 0x6800, layer 1 at +0x84, CFBAR at layer +0x28.
+# Secure alias; the non-secure one is 0x400168AC.
+LTDC_L1_CFBAR = 0x500168AC
+# GFXMMU virtual buffers 0 and 1, secure and non-secure aliases.
+FRAME_BUFFERS = (0x34000000, 0x34400000, 0x24000000, 0x24400000)
+
+WIDTH = 380  # DISPLAY_RESX
+HEIGHT = 520  # DISPLAY_RESY
+STRIDE = 768 * 4  # FRAME_BUFFER_PIXELS_PER_LINE, ARGB8888
+
+OPENOCD = [
+    "openocd",
+    "-f",
+    "interface/stlink.cfg",
+    "-c",
+    "transport select hla_swd",
+    "-f",
+    "target/stm32u5x.cfg",
+]
+
+
+class ScreenError(Exception):
+    pass
+
+
+def _openocd(commands: str) -> str:
+    res = subprocess.run(
+        [*OPENOCD, "-c", commands], capture_output=True, text=True, timeout=120
+    )
+    out = res.stdout + res.stderr
+    if res.returncode != 0:
+        raise ScreenError(f"openocd failed: {out.strip().splitlines()[-1:]}")
+    return out
+
+
+def displayed_buffer() -> int:
+    """Address the LTDC is scanning out right now."""
+    out = _openocd(f"init; mdw {LTDC_L1_CFBAR:#x}; exit")
+    m = re.search(rf"{LTDC_L1_CFBAR:#010x}:\s*([0-9a-fA-F]{{8}})", out, re.I)
+    if m is None:
+        raise ScreenError("could not read the LTDC frame buffer address")
+    fb = int(m.group(1), 16)
+    if fb not in FRAME_BUFFERS:
+        raise ScreenError(f"display not running (LTDC scans {fb:#010x})")
+    return fb
+
+
+def capture(dest: Path) -> Path:
+    """Write the screen as a PNG to `dest`."""
+    fb = displayed_buffer()
+    size = (HEIGHT - 1) * STRIDE + WIDTH * 4
+    with tempfile.TemporaryDirectory() as tmp:
+        raw = Path(tmp) / "fb.bin"
+        _openocd(f"init; dump_image {raw} {fb:#x} {size}; exit")
+        data = raw.read_bytes()
+    if len(data) != size:
+        raise ScreenError(f"short frame buffer read: {len(data)} of {size} bytes")
+    data += bytes(STRIDE - WIDTH * 4)  # pad the last line to a full stride
+    image = Image.frombuffer(
+        "RGBA", (STRIDE // 4, HEIGHT), data, "raw", "BGRA", 0, 1
+    ).crop((0, 0, WIDTH, HEIGHT))
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    image.convert("RGB").save(dest)
+    return dest

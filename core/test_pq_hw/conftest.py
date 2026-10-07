@@ -10,6 +10,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from pqhw.device import Unit  # noqa: E402
 from pqhw.fixtures import DEFAULT_ROOT, Fixtures  # noqa: E402
+from pqhw.report import Recorder  # noqa: E402
+
+REPORTS = Path(__file__).resolve().parent / "reports"
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -36,6 +39,17 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="transport path of the unit, if several devices are connected",
     )
     group.addoption(
+        "--no-screens",
+        action="store_true",
+        help="skip SWD screenshots (each one takes a few seconds)",
+    )
+    group.addoption(
+        "--report-dir",
+        type=Path,
+        default=REPORTS,
+        help="where the HTML flow report goes (default: core/test_pq_hw/reports)",
+    )
+    group.addoption(
         "--stall",
         type=float,
         default=6.0,
@@ -46,6 +60,22 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 def pytest_configure(config: pytest.Config) -> None:
     # trezorlib logs every transport open/close at INFO; device waits poll.
     logging.getLogger("trezorlib").setLevel(logging.WARNING)
+    config._pqhw_recorder = None  # type: ignore[attr-defined]
+
+
+@pytest.hookimpl(wrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item: pytest.Item, call):
+    report = yield
+    setattr(item, f"_pqhw_rep_{report.when}", report)
+    return report
+
+
+def pytest_terminal_summary(terminalreporter, config: pytest.Config) -> None:
+    recorder = config._pqhw_recorder  # type: ignore[attr-defined]
+    if recorder is not None:
+        path = recorder.write()
+        if path is not None:
+            terminalreporter.write_line(f"flow report: {path}")
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list) -> None:
@@ -78,12 +108,60 @@ def _asker(config: pytest.Config):
 
 
 @pytest.fixture(scope="session")
+def recorder(request: pytest.FixtureRequest, fx: Fixtures) -> Recorder:
+    config = request.config
+    context = {
+        "fixture set": f"{fx.root} (builder {fx.manifest.get('builder', '?')[:10]})",
+        **{
+            f"source {name}": f"{src['ref']} @ {src['commit'][:10]}"
+            for name, src in fx.manifest.get("sources", {}).items()
+        },
+        "screenshots": "off" if config.getoption("--no-screens") else "SWD",
+    }
+    rec = Recorder(
+        config.getoption("--report-dir"),
+        screenshots=not config.getoption("--no-screens"),
+        title="PQ secure boot hardware tests",
+        context=context,
+    )
+    config._pqhw_recorder = rec  # type: ignore[attr-defined]
+    return rec
+
+
+@pytest.fixture(scope="session")
 def unit(request: pytest.FixtureRequest) -> Unit:
     config = request.config
-    return Unit(
+    unit = Unit(
         path=config.getoption("--unit-path"),
         stall=config.getoption("--stall"),
         ask=_asker(config) if config.getoption("--operator") else None,
+    )
+    if config.getoption("--hw"):
+        unit.recorder = request.getfixturevalue("recorder")
+    return unit
+
+
+@pytest.fixture(autouse=True)
+def _flow_record(request: pytest.FixtureRequest):
+    """Record each hardware test's flow for the HTML report."""
+    item = request.node
+    if "hw" not in item.keywords or not request.config.getoption("--hw"):
+        yield
+        return
+    rec: Recorder = request.getfixturevalue("recorder")
+    rec.start(item.nodeid)
+    yield
+    report = getattr(item, "_pqhw_rep_call", None) or getattr(
+        item, "_pqhw_rep_setup", None
+    )
+    if report is None:
+        rec.finish("unknown", 0.0, "", "")
+        return
+    rec.finish(
+        report.outcome,
+        report.duration,
+        report.longreprtext if report.failed else "",
+        report.caplog,
     )
 
 

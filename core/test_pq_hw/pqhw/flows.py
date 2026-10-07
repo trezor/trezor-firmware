@@ -175,7 +175,13 @@ def pq_phase1(
             )
         )
 
-    resp, prompted = call_watching_prompt(ctx, begin, stall=unit.stall, confirm=confirm)
+    resp, prompted = call_watching_prompt(
+        ctx,
+        begin,
+        stall=unit.stall,
+        confirm=confirm,
+        on_prompt=lambda: unit.step("phase 1: confirmation, tapping confirm"),
+    )
     served = {"code": 0, "nrf": 0}
     while isinstance(resp, messages.FirmwareRequest):
         is_nrf = (resp.coprocessor_index or 0) != 0
@@ -187,6 +193,9 @@ def pq_phase1(
         served["nrf" if is_nrf else "code"] += len(payload)
     messages.Success.ensure_isinstance(resp)
     LOG.info("phase 1 done: prompted=%s served=%s", prompted, served)
+    unit.step(
+        f"phase 1 done (bootloader code {served['code']} B, nRF {served['nrf']} B)"
+    )
     return prompted, served
 
 
@@ -219,6 +228,7 @@ def pq_phase2(unit: Unit, bundle: PqSecureBundle) -> bool:
     firmware._stream_firmware_upload(
         session, data, resp, lambda _: None, bundle.chunk_prev_hashes()
     )
+    unit.step("phase 2: firmware streamed")
     close(ctx)
     unit.wait_gone()
     return prompted or needed_person
@@ -256,7 +266,14 @@ def legacy_install(
         tick()
         firmware._stream_firmware_upload(session, data, resp, lambda _: tick())
 
-    _, prompted = run_watching_stalls(ctx, upload, stall=unit.stall, confirm=confirm)
+    _, prompted = run_watching_stalls(
+        ctx,
+        upload,
+        stall=unit.stall,
+        confirm=confirm,
+        on_prompt=lambda: unit.step("legacy install: confirmation, tapping confirm"),
+    )
+    unit.step("legacy install: firmware streamed")
     close(ctx)
     unit.wait_gone()
     return prompted
