@@ -149,12 +149,13 @@ class Unit:
 
     @staticmethod
     def wire_answers(transport: Transport, timeout: float = 2.0) -> bool:
-        """Whether the wire interface takes a packet. The bootloader's intro
-        has USB up (the debug interface) but the wire down until it is tapped,
-        and trezorlib retries a write there forever, so this probes with its
-        own timeout: a raw v1 Initialize. Acceptance is the signal, not an
-        answer (a THP firmware need not answer a v1 packet); whatever does come
-        back is drained so it cannot reach the next session."""
+        """Whether the wire interface answers. The bootloader's intro has USB
+        up and even takes packets, but does not read them until it is tapped;
+        trezorlib's own protocol probe then waits for an answer forever. So
+        this sends the same probe, a v1 Cancel, with its own timeout. Every
+        mode answers it: a bootloader or v1 firmware with a Failure, a THP
+        firmware with Failure(InvalidProtocol). The answer is drained so it
+        cannot reach the next session."""
         import usb1
 
         ms = int(timeout * 1000)
@@ -164,19 +165,22 @@ class Unit:
             return False
         try:
             h, ep = transport.handle, transport.endpoint
-            packet = b"?##" + (0).to_bytes(2, "big") + (0).to_bytes(4, "big")
+            cancel = messages.MessageType.Cancel
+            packet = b"?##" + int(cancel).to_bytes(2, "big") + (0).to_bytes(4, "big")
             try:
                 sent = h.interruptWrite(ep, packet.ljust(64, b"\0"), ms)
             except usb1.USBErrorTimeout as e:
                 sent = e.transferred
             if not sent:
                 return False
+            answered = False
             wait = ms
-            while True:  # drain the answer, if any, packet by packet
+            while True:  # the answer, then the rest of it, packet by packet
                 try:
                     h.interruptRead(0x80 | ep, 64, wait)
-                except usb1.USBErrorTimeout:
-                    return True
+                except usb1.USBErrorTimeout as e:
+                    return answered or bool(e.received)
+                answered = True
                 wait = 300
         except Exception:
             return False

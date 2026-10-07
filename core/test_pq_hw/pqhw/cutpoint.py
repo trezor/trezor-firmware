@@ -38,6 +38,9 @@ LOG = logging.getLogger(__name__)
 
 MODES = ("before", "after", "during")
 
+#: T3W1: the boardloader, where a reset halts the core (memory.h)
+BOARDLOADER = range(0x0C004000, 0x0C01E000)
+
 
 @dataclass(frozen=True)
 class CutPoint:
@@ -97,10 +100,16 @@ def _script(cut: CutPoint, timeout: float, marks: Path) -> str:
         ]
     elif cut.mode == "during":
         lines += ["resume", f"sleep {int(cut.delay * 1000)}"]
+    # `reset halt`, not `reset run`: a reset that failed would leave openocd
+    # to exit and the core to carry on past the cut, silently. Halted at the
+    # reset vector, the PC proves the reset happened; then it runs.
     lines += [
         "set pc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
         mark("hit", "$pc"),
-        "reset run",
+        f"if {{[catch {{reset halt}} err]}} {{ {mark('reset_error', '$err')}; exit }}",
+        "set rpc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
+        mark("reset", "$rpc"),
+        "resume",
         "exit",
     ]
     return "\n".join(lines) + "\n"
@@ -115,6 +124,7 @@ class Armed:
     _proc: subprocess.Popen | None = None
     _tmp: tempfile.TemporaryDirectory | None = None
     hit_pc: int | None = None
+    reset_pc: int | None = None
     output: str = field(default="", repr=False)
 
     def start(self, arm_timeout: float = 30) -> Armed:
@@ -147,10 +157,34 @@ class Armed:
         except subprocess.TimeoutExpired:
             self._proc.kill()
         self.output = self._finish()
-        hit = Path(self._tmp.name) / "hit"
+        LOG.info("openocd: %s", self._tail())
+        marks = Path(self._tmp.name)
+        hit = marks / "hit"
         if hit.exists():
             self.hit_pc = int(hit.read_text().strip() or "0", 0)
-            LOG.info("cut %s fired (pc %#010x), unit reset", self.cut, self.hit_pc)
+            reset = marks / "reset"
+            if not reset.exists():
+                err = (
+                    (marks / "reset_error").read_text().strip()
+                    if (marks / "reset_error").exists()
+                    else self._tail()
+                )
+                raise CutError(
+                    f"cut {self.cut} reached (pc {self.hit_pc:#010x}) but the "
+                    f"reset failed, so the unit ran on past it: {err}"
+                )
+            self.reset_pc = int(reset.read_text().strip() or "0", 0)
+            if self.reset_pc not in BOARDLOADER:
+                raise CutError(
+                    f"cut {self.cut}: after the reset the core is at "
+                    f"{self.reset_pc:#010x}, not in the boardloader; no reset"
+                )
+            LOG.info(
+                "cut %s fired (pc %#010x); reset, core restarted at %#010x",
+                self.cut,
+                self.hit_pc,
+                self.reset_pc,
+            )
             return True
         if (Path(self._tmp.name) / "timeout").exists():
             LOG.info("cut %s not reached in %.0f s", self.cut, self.timeout)
