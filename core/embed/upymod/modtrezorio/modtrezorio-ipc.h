@@ -21,6 +21,7 @@
 #include <trezor_rtl.h>
 
 #include <sys/ipc.h>
+#include "sys/systask.h"
 
 /// package: trezorio.__init__
 
@@ -68,12 +69,43 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_ipc_send_obj, 4, 4,
 ///     message_id: int
 ///     data: AnyBytes
 
-static mp_obj_t mod_trezorio_ipc_message_to_obj(ipc_message_t* message) {
+// Take ownership of `message`, allocate an `IpcMessage` object from it, and
+// ensure that the message is freed even in case of failure.
+static mp_obj_t mod_trezorio_ipc_message_move_to_obj(ipc_message_t* message) {
+  // Allocate message->size + 1 bytes, so that micropython can later insert a
+  // trailing null byte. It doesn't make sense for a bytes object but it's on
+  // the common str/bytes path.
+  char* data_bytes = m_new_maybe(char, message->size + 1);
+  if (data_bytes == NULL) {
+    ipc_message_free(message);
+    mp_raise_type(&mp_type_MemoryError);
+  }
+
+  // copy the message data to the allocated bytes
+  memcpy(data_bytes, message->data, message->size);
+
+  // create a vstr from the allocated bytes
+  vstr_t message_data = {
+      .alloc = message->size + 1,
+      .len = message->size,
+      .buf = data_bytes,
+      .fixed_buf = false,
+  };
+
+  // copy the message properties to local variables
+  systask_id_t remote = message->remote;
+  uint16_t service = message->service;
+  uint16_t message_id = message->message_id;
+
+  // free the message before continuing to possibly-raising code
+  ipc_message_free(message);
+
+  // construct the tuple
   const mp_obj_t values[4] = {
-      MP_OBJ_NEW_SMALL_INT(message->remote),
-      MP_OBJ_NEW_SMALL_INT(message->service),
-      MP_OBJ_NEW_SMALL_INT(message->message_id),
-      mp_obj_new_bytes(message->data, message->size),
+      MP_OBJ_NEW_SMALL_INT(remote),
+      MP_OBJ_NEW_SMALL_INT(service),
+      MP_OBJ_NEW_SMALL_INT(message_id),
+      mp_obj_new_bytes_from_vstr(&message_data),
   };
   static const qstr fields[4] = {MP_QSTR_remote, MP_QSTR_service,
                                  MP_QSTR_message_id, MP_QSTR_data};
