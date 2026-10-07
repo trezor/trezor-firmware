@@ -39,6 +39,12 @@ LOG = logging.getLogger(__name__)
 
 MODES = ("before", "after", "during")
 
+#: Cortex-M debug and system control registers used for the cut's reset
+DEMCR = 0xE000EDFC
+DEMCR_TRCENA = 1 << 24
+DEMCR_VC_CORERESET = 1 << 0
+AIRCR = 0xE000ED0C
+AIRCR_SYSRESETREQ = 0x05FA0004  # VECTKEY | SYSRESETREQ
 #: SWD clock for cut scripts: what the target config uses across a reset
 #: (the MCU runs from MSI 4 MHz right after one)
 CUT_SWD_KHZ = 480
@@ -108,22 +114,6 @@ def call_sites(elf: Path, caller: str, callee: str) -> list[tuple[int, int]]:
             nbytes = len(m.group(2).replace(" ", "")) // 2
             sites.append((int(m.group(1), 16), nbytes))
     return sites
-
-
-def spin_address(elf: Path) -> int | None:
-    """A `b .` instruction in `elf` (a while(1) in an exit path): where the
-    core is parked at a cut, so it cannot carry on if the halt leaks."""
-    out = subprocess.run(
-        ["arm-none-eabi-objdump", "-d", "--no-show-raw-insn", str(elf)],
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout
-    for line in out.splitlines():
-        m = re.match(r"\s*([0-9a-f]+):\s+b(?:\.n|\.w)?\s+([0-9a-f]+)\s", line)
-        if m and m.group(1) == m.group(2):
-            return int(m.group(1), 16)
-    return None
 
 
 def symbolize(addr: int, elfs: list[Path]) -> str:
@@ -276,24 +266,29 @@ def _script(
     elif cut.mode == "during":
         # let it run, then stop it: registers are only readable when halted
         lines += ["resume", f"sleep {int(cut.delay * 1000)}", "halt"]
-    # `reset halt`, not `reset run`: a reset that failed would leave openocd
-    # to exit and the core to carry on past the cut, silently. Halted at the
-    # reset vector, the PC proves the reset happened; then it runs.
+    # The reset is issued by hand while the core stays halted. openocd's
+    # `reset halt` must not be used here: on an ST-Link (hla_target.c,
+    # hl_assert_reset) it first writes DHCSR = DBGKEY|C_DEBUGEN, which clears
+    # C_HALT and lets the core run until the reset lands a few USB round trips
+    # later -- long enough, in some runs, for the cut-off code to execute (a
+    # cut on `bl ucb_stage_arm` still armed the swap, 2026-10-07). Debug
+    # register writes do not resume a halted core: set the reset vector catch
+    # (DEMCR.VC_CORERESET, keeping TRCENA), request a system reset
+    # (AIRCR.SYSRESETREQ), and the core goes from halted straight into reset
+    # and halts again on its first instruction, where the PC, read fresh,
+    # proves it.
     lines += [
         "set pc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
         "set hlr [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg lr]] 0]",
         mark("hit_lr", "$hlr"),
         mark("hit", "$pc"),
-        # Park the core: the halt was seen to leak before the reset in about
-        # half the runs (the core ran on and armed the swap). Pointed at a
-        # `b .` with interrupts masked, a leak only spins.
-        *(
-            [f"catch {{reg primask 1}}", f"catch {{reg pc {spin:#x}}}"]
-            if (spin := spin_address(cut.elf)) is not None
-            else []
-        ),
-        f"if {{[catch {{reset halt}} err]}} {{ {mark('reset_error', '$err')}; exit }}",
-        "set rpc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
+        f"if {{[catch {{mww {DEMCR:#x} {DEMCR_TRCENA | DEMCR_VC_CORERESET:#x}; "
+        f"mww {AIRCR:#x} {AIRCR_SYSRESETREQ:#x}}} err]}} "
+        f"{{ {mark('reset_error', '$err')}; exit }}",
+        "sleep 200",
+        "catch {poll}",
+        "catch {halt}",
+        "set rpc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc force]] 0]",
         mark("reset", "$rpc"),
         *_trace(marks, trace or []),
         "catch {resume}",
