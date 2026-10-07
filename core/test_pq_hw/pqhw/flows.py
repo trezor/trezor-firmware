@@ -385,19 +385,15 @@ def wipe_in_bootloader(unit: Unit, ctx: TrezorTestContext) -> TrezorTestContext:
     return unit.context(bootloader=True, timeout=REBOOT)
 
 
-def reach_bootloader(unit: Unit, timeout: float = PHASE2_RESUME) -> TrezorTestContext:
-    """Wherever a refusal or a cut left the unit: its bootloader, on USB. A
-    bootloader with no valid firmware may sit on its intro ("Initiate
-    connection"), enumerated but with the wire down until tapped; one that
-    stays like that for INTRO_SILENCE seconds is tapped. A unit back in
-    firmware is rebooted into the bootloader."""
-    deadline = time.monotonic() + timeout
+def _connect_any(unit: Unit, deadline: float) -> TrezorTestContext:
+    """A connection in whatever mode the unit is in. A bootloader sitting on
+    its intro ("Initiate connection") is enumerated with the wire down until
+    tapped; one that stays like that for INTRO_SILENCE seconds is tapped (only
+    if debuglink shows that screen)."""
     silent_since: float | None = None
-    ctx = None
     while time.monotonic() < deadline:
         try:
-            ctx = unit.context(bootloader=None, timeout=10)
-            break
+            return unit.context(bootloader=None, timeout=10)
         except UnitError:
             pass
         now = time.monotonic()
@@ -408,8 +404,13 @@ def reach_bootloader(unit: Unit, timeout: float = PHASE2_RESUME) -> TrezorTestCo
         elif now - silent_since > INTRO_SILENCE:
             tap_bootloader_intro(unit, timeout=30, bootloader_only=True)
             silent_since = None
-    if ctx is None:
-        raise UnitError(f"unit not reachable over USB within {timeout:.0f} s")
+    raise UnitError("unit not reachable over USB in time")
+
+
+def reach_bootloader(unit: Unit, timeout: float = PHASE2_RESUME) -> TrezorTestContext:
+    """Wherever a refusal or a cut left the unit: its bootloader, on USB. A
+    unit back in firmware is rebooted into the bootloader."""
+    ctx = _connect_any(unit, time.monotonic() + timeout)
     if ctx.features.bootloader_mode:
         unit.step("recovery: in the bootloader")
         return ctx
@@ -419,13 +420,15 @@ def reach_bootloader(unit: Unit, timeout: float = PHASE2_RESUME) -> TrezorTestCo
 
 def wait_pq_bootloader(unit: Unit, timeout: float = 2 * REBOOT) -> TrezorTestContext:
     """The PQ bootloader, as opposed to the legacy one: both report
-    bootloader_mode, only one reports the Merkle-tree scheme."""
+    bootloader_mode, only one reports the Merkle-tree scheme. A firmware on
+    the way (the intermediary doing its swap) is left alone; a PQ bootloader
+    that comes up on its intro (after a cut, with no boot command telling it
+    to connect) is tapped."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        ctx = unit.context(
-            bootloader=True, timeout=max(1.0, deadline - time.monotonic())
-        )
-        if ctx.features.firmware_scheme == FirmwareScheme.PqSecure:
+        ctx = _connect_any(unit, deadline)
+        f = ctx.features
+        if f.bootloader_mode and f.firmware_scheme == FirmwareScheme.PqSecure:
             return ctx
         close(ctx)
         time.sleep(2)
