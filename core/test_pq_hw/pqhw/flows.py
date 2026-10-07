@@ -36,6 +36,8 @@ XPUB_PATH = "m/84h/0h/0h"
 REBOOT = 240
 # Phase 1 reboot to phase 2 on USB: boardloader swap plus an nRF push.
 PHASE2_RESUME = 150
+# On USB with a silent wire this long: the bootloader intro, waiting for a tap.
+INTRO_SILENCE = 15
 
 
 # --- seed -------------------------------------------------------------------
@@ -385,20 +387,29 @@ def wipe_in_bootloader(unit: Unit, ctx: TrezorTestContext) -> TrezorTestContext:
 
 def reach_bootloader(unit: Unit, timeout: float = PHASE2_RESUME) -> TrezorTestContext:
     """Wherever a refusal or a cut left the unit: its bootloader, on USB. A
-    bootloader with no valid firmware may sit on its intro, wire down, until
-    tapped; a unit back in firmware is rebooted into the bootloader."""
-    try:
-        ctx = unit.context(bootloader=None, timeout=timeout)
-    except UnitError:
-        for _ in range(3):
-            tap_bootloader_intro(unit)
-            try:
-                ctx = unit.context(bootloader=None, timeout=20)
-                break
-            except UnitError:
-                continue
-        else:
-            raise UnitError("unit neither on USB nor answering an intro tap") from None
+    bootloader with no valid firmware may sit on its intro ("Initiate
+    connection"), enumerated but with the wire down until tapped; one that
+    stays like that for INTRO_SILENCE seconds is tapped. A unit back in
+    firmware is rebooted into the bootloader."""
+    deadline = time.monotonic() + timeout
+    silent_since: float | None = None
+    ctx = None
+    while time.monotonic() < deadline:
+        try:
+            ctx = unit.context(bootloader=None, timeout=10)
+            break
+        except UnitError:
+            pass
+        now = time.monotonic()
+        if not unit.present():
+            silent_since = None  # still rebooting, or pushing the nRF
+        elif silent_since is None:
+            silent_since = now
+        elif now - silent_since > INTRO_SILENCE:
+            tap_bootloader_intro(unit, timeout=30, bootloader_only=True)
+            silent_since = None
+    if ctx is None:
+        raise UnitError(f"unit not reachable over USB within {timeout:.0f} s")
     if ctx.features.bootloader_mode:
         unit.step("recovery: in the bootloader")
         return ctx

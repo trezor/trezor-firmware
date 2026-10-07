@@ -147,6 +147,45 @@ class Unit:
         except Exception:
             return None
 
+    @staticmethod
+    def wire_answers(transport: Transport, timeout: float = 2.0) -> bool:
+        """Whether the wire interface takes a packet. The bootloader's intro
+        has USB up (the debug interface) but the wire down until it is tapped,
+        and trezorlib retries a write there forever, so this probes with its
+        own timeout: a raw v1 Initialize. Acceptance is the signal, not an
+        answer (a THP firmware need not answer a v1 packet); whatever does come
+        back is drained so it cannot reach the next session."""
+        import usb1
+
+        ms = int(timeout * 1000)
+        try:
+            transport.open()
+        except Exception:
+            return False
+        try:
+            h, ep = transport.handle, transport.endpoint
+            packet = b"?##" + (0).to_bytes(2, "big") + (0).to_bytes(4, "big")
+            try:
+                sent = h.interruptWrite(ep, packet.ljust(64, b"\0"), ms)
+            except usb1.USBErrorTimeout as e:
+                sent = e.transferred
+            if not sent:
+                return False
+            wait = ms
+            while True:  # drain the answer, if any, packet by packet
+                try:
+                    h.interruptRead(0x80 | ep, 64, wait)
+                except usb1.USBErrorTimeout:
+                    return True
+                wait = 300
+        except Exception:
+            return False
+        finally:
+            try:
+                transport.close()
+            except Exception:
+                pass
+
     def wait_gone(self, timeout: float = 15) -> None:
         """Until the device connected last has rebooted: seen absent, or back
         under a new USB address (a fast reboot can complete between polls, or
@@ -190,6 +229,8 @@ class Unit:
                 if transport.get_path() != seen:
                     seen = transport.get_path()
                     LOG.info("unit on USB at %s, connecting", seen)
+                if not self.wire_answers(transport):
+                    raise UnitError("on USB, but the wire interface is silent")
                 ctx = TrezorTestContext(transport, auto_interact=True, force_wipe=False)
             except AmbiguousUnit:
                 raise
@@ -223,13 +264,19 @@ class Unit:
         raise UnitError(f"no usable connection within {timeout:.0f} s: {last}")
 
 
-def tap_bootloader_intro(unit: Unit, timeout: float = 120) -> None:
+def tap_bootloader_intro(
+    unit: Unit, timeout: float = 120, bootloader_only: bool = False
+) -> bool:
     """Get past the bootloader intro ("Initiate connection") over debuglink.
 
     A plain RebootToBootloader lands there, and the wire interface comes up
     only after the tap. A debuglink bootloader starts USB with its debug
     interface at boot, so the tap can be sent from the host. Only for that
     entry: on the connect screen of an install, the same spot is Cancel.
+
+    With `bootloader_only`, nothing is tapped unless the screen is the
+    bootloader's (its debuglink state has no layout tokens; a firmware's has).
+    Returns whether it tapped.
     """
     deadline = time.monotonic() + timeout
     last: Exception | None = None
@@ -247,16 +294,19 @@ def tap_bootloader_intro(unit: Unit, timeout: float = 120) -> None:
             continue
         try:
             # answered once the intro layout is on screen
-            debug._call(
+            state = debug._call(
                 messages.DebugLinkGetState(
                     wait_layout=messages.DebugWaitType.CURRENT_LAYOUT
                 ),
                 timeout=30,
             )
+            if bootloader_only and getattr(state, "tokens", None):
+                LOG.info("not the bootloader intro (a firmware layout): no tap")
+                return False
             unit.step("bootloader intro: tapping 'Initiate connection'")
             x, y = BUTTONS.info()  # the single, full-width action-bar button
             debug._write(messages.DebugLinkDecision(x=x, y=y))
-            return
+            return True
         except Exception as e:  # USB still settling after the reboot
             if str(e) != str(last):
                 LOG.info("bootloader debuglink not ready: %s", e)
