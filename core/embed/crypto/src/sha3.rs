@@ -7,6 +7,7 @@ use super::secret::{HazardGuard, SecretContext, SecretContextLock, ZeroableMemor
 use super::{Error, ffi};
 
 /// SHA-3 / Keccak context together with its variant parameters.
+/// SHA-3 / Keccak context together with its variant parameters.
 pub struct Sha3CtxInner {
     ctx: ffi::SHA3_CTX,
     bit_size: u32,
@@ -37,58 +38,35 @@ impl Sha3CtxInner {
         }
     }
 
-    /// # Copy hazard
-    ///
-    /// Do not move or copy `self` while in use. Prefer [`Sha3_256`], which pins
-    /// it.
-    pub fn hazard_update(&mut self, data: &[u8]) {
-        let ptr = CSlice::from(data);
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the context in place
-        unsafe { ffi::sha3_Update(&mut self.ctx, ptr.ptr(), ptr.len()) };
-    }
-
-    /// Finalize into `buffer`.
-    ///
-    /// # Copy hazard
-    ///
-    /// See [`Self::hazard_update`].
-    pub fn hazard_finalize_into(&mut self, buffer: &mut [u8]) {
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the context in place
-        if self.is_keccak {
-            unsafe { ffi::keccak_Final(&mut self.ctx, buffer.as_mut_ptr()) };
-        } else {
-            unsafe { ffi::sha3_Final(&mut self.ctx, buffer.as_mut_ptr()) };
-        }
-    }
-
     /// Digest size in bits this context was initialized with.
     pub fn bit_size(&self) -> u32 {
         self.bit_size
-    }
-
-    /// Whether the context uses Keccak padding instead of SHA-3.
-    pub fn is_keccak(&self) -> bool {
-        self.is_keccak
     }
 }
 
 impl Sha3Guard<'_> {
     /// Update the SHA3/Keccak context with the given data.
     pub fn update(&mut self, data: &[u8]) {
-        // COPY HAZARD: implemented on a guard
-        self.hazard_mut().hazard_update(data);
+        let ptr = CSlice::from(data);
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the guarded context in place
+        unsafe { ffi::sha3_Update(&mut self.hazard_mut().ctx, ptr.ptr(), ptr.len()) };
     }
 
-    /// Finalize into `buffer`.
+    /// Finalize into `buffer`, which must hold `bit_size() / 8` bytes.
     ///
     /// After calling this method, the context is in a zeroized state. Before
     /// reusing it, the caller must call [`Sha3CtxInner::init`] to reinitialize
     /// it.
     pub fn finalize_into(&mut self, buffer: &mut [u8]) {
-        // COPY HAZARD: implemented on a guard
-        self.hazard_mut().hazard_finalize_into(buffer);
+        let inner = self.hazard_mut();
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the guarded context in place
+        if inner.is_keccak {
+            unsafe { ffi::keccak_Final(&mut inner.ctx, buffer.as_mut_ptr()) };
+        } else {
+            unsafe { ffi::sha3_Final(&mut inner.ctx, buffer.as_mut_ptr()) };
+        }
     }
 }
 
@@ -111,7 +89,7 @@ macro_rules! impl_raw_hasher {
             }
 
             #[doc = concat!("Finalize the `", stringify!($name), "` context and return the digest.")]
-            pub fn finalize(&mut self) -> [u8; $digest_size] {
+            pub fn finalize(mut self) -> [u8; $digest_size] {
                 let mut buffer = [0u8; $digest_size];
                 self.0.guarded().finalize_into(&mut buffer);
                 buffer
@@ -119,9 +97,6 @@ macro_rules! impl_raw_hasher {
         }
 
         impl $name<&'_ mut Sha3Ctx> {
-            /// Digest size in bytes.
-            pub const DIGEST_SIZE: usize = $digest_size;
-
             #[doc = concat!("Calculate the `", stringify!($name), "` digest of the given data.")]
             pub fn digest(data: &[u8]) -> [u8; $digest_size] {
                 let mut ctx = Sha3Ctx::default();
@@ -259,26 +234,20 @@ mod test {
     }
 
     #[test]
-    fn test_hazard_api_reuse() {
+    fn test_guard_reuse() {
         let mut ctx = Sha3Ctx::default();
-        let inner = ctx.hazard_mut();
         for (is_keccak, expected) in [
             (false, hex::encode(Sha3_256::digest(b"abc"))),
             (true, hex::encode(Keccak256::digest(b"abc"))),
         ] {
             for _ in 0..2 {
-                inner.init(256, is_keccak).unwrap();
-                inner.hazard_update(b"abc");
+                ctx.hazard_mut().init(256, is_keccak).unwrap();
+                let mut guard = Sha3Guard::hazard_new(&mut ctx);
+                guard.update(b"abc");
                 let mut out = [0u8; 32];
-                inner.hazard_finalize_into(&mut out);
+                guard.finalize_into(&mut out);
                 assert_eq!(hex::encode(out), expected);
             }
         }
-    }
-
-    #[test]
-    fn test_digest_size() {
-        assert_eq!(Sha3_256::DIGEST_SIZE, 32);
-        assert_eq!(Keccak512::DIGEST_SIZE, 64);
     }
 }
