@@ -32,7 +32,7 @@ from ..payment_req import (
     make_payment_request,
 )
 from .construct.instructions import PROGRAMS, UnknownInstruction
-from .construct.transaction import Message, RawInstruction
+from .construct.transaction import Message, RawInstruction, serialize_v1_tx
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.solana, pytest.mark.models("core")]
 
@@ -61,6 +61,7 @@ def get_amount_and_destination(parameters, instruction):
     "solana/sign_tx.predefined_transactions.json",
     "solana/sign_tx.staking_transactions.json",
     "solana/sign_tx.payment_request.json",
+    "solana/sign_tx.v1_transactions.json",
 )
 def test_solana_sign_tx(session: Session, parameters, result):
     serialized_tx = _serialize_tx(parameters["construct"])
@@ -160,6 +161,15 @@ def _serialize_tx(tx_construct):
         serialized_instruction = builder.build(instruction)
         raw_instruction = RawInstruction.parse(serialized_instruction)
         serialized_instructions.append(raw_instruction)
+
+    if tx_construct["version"] == 1:
+        return serialize_v1_tx(
+            tx_construct["header"],
+            tx_construct["accounts"],
+            tx_construct["blockhash"],
+            [raw_instruction.value for raw_instruction in serialized_instructions],
+            tx_construct.get("config"),
+        )
 
     message_construct = {
         "version": tx_construct["version"],
