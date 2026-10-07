@@ -5,6 +5,7 @@ from __future__ import annotations
 import struct
 
 import pytest
+from pqhw.cutpoint import CutPoint
 from pqhw.fixtures import VARIANTS, Fixtures
 
 from trezorlib import firmware
@@ -102,3 +103,31 @@ def test_nrf_differs_between_a_and_b(fx: Fixtures) -> None:
     b = fx.release_meta("release-B")["coprocessors"][0]
     assert a["image_hash"] != b["image_hash"]
     assert nrf_version(fx, "release-A") < nrf_version(fx, "release-B")
+
+
+# The cut points the power-loss tests break at; they must resolve in the ELFs
+# staged with each image (the builder checked the ELFs match the images).
+CUT_POINTS = {
+    "bootloader": [
+        "ucb_stage_verify",
+        "nrf_staging_write_desc",
+        "ucb_stage_arm",
+        "nrf_update_with_progress",
+        "nrf_staging_clear",
+    ],
+    "kernel": ["nrf_update"],
+    "secmon": ["boot_image_replace", "boot_ucb_write"],
+}
+
+
+@pytest.mark.parametrize("release", RELEASES)
+def test_release_cut_points_resolve(fx: Fixtures, release: str) -> None:
+    for symbol in CUT_POINTS["bootloader"]:
+        CutPoint(fx.release_elf(release), symbol).address
+
+
+@pytest.mark.parametrize("variant", VARIANTS)
+def test_intermediary_cut_points_resolve(fx: Fixtures, variant: str) -> None:
+    for part in ("kernel", "secmon"):
+        for symbol in CUT_POINTS[part]:
+            CutPoint(fx.intermediary_elf(variant, part), symbol).address

@@ -186,6 +186,9 @@ def _several_sessions() -> tuple[int, int, bytes, bool]:
 
 _fast_path_works: bool | None = None
 
+#: set while something else (the cut-point driver) holds the ST-Link
+probe_holder: str | None = None
+
 
 def _grab() -> tuple[int, int, bytes, bool]:
     global _fast_path_works
@@ -208,6 +211,8 @@ def capture(dest: Path) -> bool:
     """Write the screen as a PNG to `dest`. Returns False when the screen kept
     changing over every attempt: the picture is then the last one taken and
     may mix two frames, which still beats no picture of a transient screen."""
+    if probe_holder is not None:
+        raise ScreenError(f"SWD probe held by {probe_holder}")
     start = time.monotonic()
     for attempt in range(1, TEAR_RETRIES + 1):
         before, after, data, settled = _grab()
