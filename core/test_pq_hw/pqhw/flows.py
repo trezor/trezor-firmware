@@ -127,7 +127,11 @@ def enter_bootloader(
 ) -> TrezorTestContext:
     """From firmware mode; with `bundle`, as a pre-authorised (interaction-less)
     upgrade the firmware confirms itself."""
-    session = ctx.get_session(passphrase="")
+    # a seeded session is refused on an uninitialised device (NotInitialized)
+    if ctx.refresh_features().initialized:
+        session = ctx.get_session(passphrase="")
+    else:
+        session = ctx.get_seedless_session()
     unit.step(
         "firmware: reboot to bootloader"
         + (" pre-authorising the release (interaction-less)" if bundle else "")
