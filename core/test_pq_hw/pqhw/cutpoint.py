@@ -43,6 +43,15 @@ BOARDLOADER = range(0x0C004000, 0x0C01E000)
 #: T3W1 boot UCB (BOOTUCB_START): magic, header and code address, header hash
 UCB = 0x0C01C000
 UCB_SIZE = 48
+#: T3W1 BOOTLOADER_START
+BOOTLOADER = 0x0C01E000
+#: when watched memory is read: halted at the cut, halted right after the
+#: reset, and SETTLE seconds after the unit was let run again
+MOMENTS = ("cut", "reset", "boot")
+SETTLE = 8.0
+
+#: name -> (address, length) of memory to snapshot at each moment
+Watch = dict[str, tuple[int, int]]
 
 
 @dataclass(frozen=True)
@@ -75,9 +84,16 @@ class CutError(Exception):
     pass
 
 
-def _script(cut: CutPoint, timeout: float, marks: Path) -> str:
+def _script(cut: CutPoint, timeout: float, marks: Path, watch: Watch) -> str:
     """Jim Tcl for openocd. Progress goes to marker files: console output of
     scripted commands is not reliable across openocd builds."""
+
+    def snap(moment: str) -> list[str]:
+        return [
+            f"catch {{dump_image {{{marks / f'{name}@{moment}.bin'}}} {a:#x} {n}}}"
+            for name, (a, n) in watch.items()
+        ]
+
     addr = cut.address
     ms = int(timeout * 1000)
 
@@ -109,13 +125,14 @@ def _script(cut: CutPoint, timeout: float, marks: Path) -> str:
     lines += [
         "set pc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
         mark("hit", "$pc"),
-        # what the boardloader will act on: at the cut, and once reset
-        f"dump_image {{{marks / 'ucb_at_cut.bin'}}} {UCB:#x} {UCB_SIZE}",
+        *snap("cut"),
         f"if {{[catch {{reset halt}} err]}} {{ {mark('reset_error', '$err')}; exit }}",
         "set rpc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
         mark("reset", "$rpc"),
-        f"dump_image {{{marks / 'ucb_at_reset.bin'}}} {UCB:#x} {UCB_SIZE}",
+        *snap("reset"),
         "resume",
+        f"sleep {int(SETTLE * 1000)}",
+        *snap("boot"),
         "exit",
     ]
     return "\n".join(lines) + "\n"
@@ -127,20 +144,22 @@ class Armed:
 
     cut: CutPoint
     timeout: float
+    #: memory to snapshot at each of MOMENTS (the UCB is always included)
+    watch: Watch = field(default_factory=dict)
     _proc: subprocess.Popen | None = None
     _tmp: tempfile.TemporaryDirectory | None = None
     hit_pc: int | None = None
     reset_pc: int | None = None
-    #: the boot UCB block at the cut and right after the reset
-    ucb_at_cut: bytes | None = None
-    ucb_at_reset: bytes | None = None
+    #: (name, moment) -> bytes read, absent if the read failed
+    snapshots: dict[tuple[str, str], bytes] = field(default_factory=dict)
     output: str = field(default="", repr=False)
 
     def start(self, arm_timeout: float = 30) -> Armed:
         self._tmp = tempfile.TemporaryDirectory()
         marks = Path(self._tmp.name)
         script = marks / "cut.tcl"
-        script.write_text(_script(self.cut, self.timeout, marks))
+        self.watch = {"ucb": (UCB, UCB_SIZE), **self.watch}
+        script.write_text(_script(self.cut, self.timeout, marks, self.watch))
         screen.probe_holder = f"cut point {self.cut}"
         self._proc = subprocess.Popen(
             [*screen.OPENOCD, "-f", str(script)],
@@ -162,7 +181,7 @@ class Armed:
         passed with the unit never reaching it (False)."""
         assert self._proc is not None and self._tmp is not None
         try:
-            self._proc.wait(self.timeout * 2 + 60)
+            self._proc.wait(self.timeout * 2 + SETTLE + 60)
         except subprocess.TimeoutExpired:
             self._proc.kill()
         self.output = self._finish()
@@ -183,19 +202,17 @@ class Armed:
                     f"reset failed, so the unit ran on past it: {err}"
                 )
             self.reset_pc = int(reset.read_text().strip() or "0", 0)
-            for name in ("ucb_at_cut", "ucb_at_reset"):
-                f = marks / f"{name}.bin"
-                data = f.read_bytes() if f.exists() else None
-                setattr(self, name, data)
-                LOG.info(
-                    "%s: %s",
-                    name,
-                    "unreadable"
-                    if data is None
-                    else "erased"
-                    if data == b"\xff" * len(data)
-                    else data.hex(),
-                )
+            for name, (_a, n) in self.watch.items():
+                for moment in MOMENTS:
+                    f = marks / f"{name}@{moment}.bin"
+                    if f.exists() and f.stat().st_size == n:
+                        self.snapshots[name, moment] = f.read_bytes()
+                    LOG.info(
+                        "%s @%s: %s",
+                        name,
+                        moment,
+                        self.snapshots.get((name, moment), b"").hex() or "unread",
+                    )
             if self.reset_pc not in BOARDLOADER:
                 raise CutError(
                     f"cut {self.cut}: after the reset the core is at "
@@ -240,9 +257,9 @@ class Armed:
             self._tmp.cleanup()
 
 
-def arm(cut: CutPoint, timeout: float = 300) -> Armed:
+def arm(cut: CutPoint, timeout: float = 300, watch: Watch | None = None) -> Armed:
     """Arm `cut` for work the unit does on its own (a boot, a push)."""
-    return Armed(cut, timeout).start()
+    return Armed(cut, timeout, dict(watch or {})).start()
 
 
 @dataclass
@@ -255,29 +272,47 @@ class CutResult:
     action_value: t.Any = None
     armed: Armed | None = None
 
-    def ucb_summary(self) -> str:
-        return ucb_summary(self.armed)
+    def summary(self, labels: dict[str, dict[bytes, str]] | None = None) -> str:
+        return summary(self.armed, labels)
 
 
-def ucb_summary(armed: Armed | None) -> str:
-    """The boot UCB at the cut and after the reset, for the report."""
+def summary(
+    armed: Armed | None, labels: dict[str, dict[bytes, str]] | None = None
+) -> str:
+    """The watched memory at each moment, for the report. `labels` names known
+    contents per watch (e.g. which release's bootloader code). The UCB reads
+    as erased, armed (its magic), or anything else, which is most likely a
+    read the flash protection blanked (the UCB sits in the boardloader's
+    range), not data."""
+    if armed is None:
+        return "nothing watched"
+    labels = labels or {}
 
-    def one(data: bytes | None) -> str:
+    def one(name: str, moment: str) -> str:
+        data = armed.snapshots.get((name, moment))
         if data is None:
             return "unread"
+        if data in labels.get(name, {}):
+            return labels[name][data]
         if data == b"\xff" * len(data):
             return "erased"
-        return "ARMED " + data[:12].hex()
+        if name == "ucb":
+            if data[:4] == b"\x00" * 4:
+                return "blank read"
+            return "ARMED " + data[:12].hex()
+        return data.hex()
 
-    if armed is None:
-        return "UCB not read"
-    return (
-        f"UCB at cut: {one(armed.ucb_at_cut)}; after reset: {one(armed.ucb_at_reset)}"
+    return "; ".join(
+        f"{name}: " + ", ".join(f"{m} {one(name, m)}" for m in MOMENTS)
+        for name in armed.watch
     )
 
 
 def cut_during(
-    cut: CutPoint, action: t.Callable[[], t.Any], timeout: float = 300
+    cut: CutPoint,
+    action: t.Callable[[], t.Any],
+    timeout: float = 300,
+    watch: Watch | None = None,
 ) -> CutResult:
     """Arm `cut`, run the host side of the exchange that reaches it, and reset
     the unit there. The action loses its device mid-call; whatever it raises
@@ -293,7 +328,7 @@ def cut_during(
         finally:
             done.set()
 
-    with arm(cut, timeout) as armed:
+    with arm(cut, timeout, watch) as armed:
         th = threading.Thread(target=run, daemon=True)
         th.start()
         hit = armed.wait()

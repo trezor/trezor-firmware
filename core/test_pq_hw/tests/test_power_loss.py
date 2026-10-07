@@ -27,6 +27,20 @@ NEW_FW = (2, 14, 1)
 PUSH_DELAY = 5.0
 
 
+def code_watch(fx: Fixtures):
+    """Where A's and B's bootloader code differ (their compiled-in version),
+    read in place: which release's code is installed at each moment of a cut.
+    Returns (watch, labels) for cutpoint."""
+    a, b = fx.bundle(OLD, "universal"), fx.bundle(NEW, "universal")
+    ca, cb = a.bootloader_code, b.bootloader_code
+    d = next(i for i in range(len(ca)) if ca[i] != cb[i]) & ~3
+    addr = cutpoint.BOOTLOADER + len(a.boot_header) + d
+    return (
+        {"bootloader": (addr, 8)},
+        {"bootloader": {ca[d : d + 8]: "A", cb[d : d + 8]: "B"}},
+    )
+
+
 def start(unit: Unit, fx: Fixtures):
     """A seeded unit on A, in its bootloader, about to take B: B replaces the
     bootloader code and the nRF, so every phase-1 step runs."""
@@ -63,9 +77,12 @@ def test_cut_in_phase1_before_arming(
     ctx, seed, bundle = start(unit, fx)
     cut = CutPoint(fx.release_elf(OLD), symbol, mode)
     unit.step(f"cut armed: {cut}", screenshot=False)
-    res = cutpoint.cut_during(cut, lambda: flows.pq_phase1(unit, ctx, bundle))
+    watch, labels = code_watch(fx)
+    res = cutpoint.cut_during(
+        cut, lambda: flows.pq_phase1(unit, ctx, bundle), watch=watch
+    )
     assert res.hit, f"phase 1 never reached {symbol}"
-    unit.step(f"cut fired: {cut}; {res.ucb_summary()}")
+    unit.step(f"cut fired: {cut}; {res.summary(labels)}")
     finish(unit, fx, seed, OLD_BL)
 
 
@@ -75,20 +92,25 @@ def test_cut_after_arming(unit: Unit, fx: Fixtures) -> None:
     ctx, seed, bundle = start(unit, fx)
     cut = CutPoint(fx.release_elf(OLD), "ucb_stage_arm", "after")
     unit.step(f"cut armed: {cut}", screenshot=False)
-    res = cutpoint.cut_during(cut, lambda: flows.pq_phase1(unit, ctx, bundle))
+    watch, labels = code_watch(fx)
+    res = cutpoint.cut_during(
+        cut, lambda: flows.pq_phase1(unit, ctx, bundle), watch=watch
+    )
     assert res.hit
-    unit.step(f"cut fired: {cut}; {res.ucb_summary()}")
+    unit.step(f"cut fired: {cut}; {res.summary(labels)}")
     report = finish(unit, fx, seed, NEW_BL)
     assert report.served["code"] == 0, "B's bootloader was already in place"
 
 
-def phase1_then_arm(unit: Unit, ctx, bundle, cut: CutPoint) -> cutpoint.Armed:
+def phase1_then_arm(
+    unit: Unit, ctx, bundle, cut: CutPoint, watch: cutpoint.Watch
+) -> cutpoint.Armed:
     """Phase 1 of A -> B to completion, then arm `cut` in B's bootloader once
     A's has stopped (the same address means other code in A)."""
     flows.pq_phase1(unit, ctx, bundle)
     flows.close(ctx)
     unit.wait_gone()
-    armed = cutpoint.arm(cut)
+    armed = cutpoint.arm(cut, watch=watch)
     unit.step(f"cut armed: {cut}", screenshot=False)
     return armed
 
@@ -109,9 +131,10 @@ def test_cut_around_nrf_push(
     nRF current."""
     ctx, seed, bundle = start(unit, fx)
     cut = CutPoint(fx.release_elf(NEW), symbol, mode, delay)
-    with phase1_then_arm(unit, ctx, bundle, cut) as armed:
+    watch, labels = code_watch(fx)
+    with phase1_then_arm(unit, ctx, bundle, cut, watch) as armed:
         assert armed.wait(), f"B's bootloader never reached {symbol}"
-    unit.step(f"cut fired: {cut}; {cutpoint.ucb_summary(armed)}")
+    unit.step(f"cut fired: {cut}; {cutpoint.summary(armed, labels)}")
     report = finish(unit, fx, seed, NEW_BL)
     assert report.served["nrf"] == 0, "the nRF was not brought current on its own"
 
@@ -204,7 +227,7 @@ def test_cut_in_intermediary_swap(
     if not hit and symbol == "nrf_update":
         pytest.skip("the intermediary found the nRF current: no push to cut")
     assert hit, f"the intermediary never reached {symbol}"
-    unit.step(f"cut fired: {cut}; {cutpoint.ucb_summary(armed)}")
+    unit.step(f"cut fired: {cut}; {cutpoint.summary(armed)}")
     migration_finishes(unit, fx, variant, seed)
 
 
