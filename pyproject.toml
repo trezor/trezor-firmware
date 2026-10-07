@@ -71,7 +71,10 @@ dev = [
 [tool.uv]
 package = false
 exclude-newer = "30 days"
-exclude-newer-package = { urllib3 = "2026-09-15T19:29:37Z" }
+
+[tool.uv.exclude-newer-package]
+urllib3 = "2026-09-15T19:29:37Z"
+virtualenv = "2026-10-02T17:42:25.614Z"
 
 [tool.uv.sources]
 trezor = { path = "./python", editable = true }
