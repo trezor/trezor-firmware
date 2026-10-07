@@ -13,7 +13,6 @@ of each line (the layer window maps buffer column 0 to panel column 50).
 
 from __future__ import annotations
 
-import re
 import subprocess
 import tempfile
 from pathlib import Path
@@ -55,35 +54,42 @@ def _openocd(commands: str) -> str:
     return out
 
 
+def read_memory(address: int, size: int) -> bytes:
+    """`size` bytes from the running target, through a file.
+
+    `mdw` output is not echoed to the console by every openocd build, so the
+    bytes go through dump_image, which writes a file either way.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        raw = Path(tmp) / "mem.bin"
+        out = _openocd(f"init; dump_image {raw} {address:#x} {size}; exit")
+        data = raw.read_bytes() if raw.exists() else b""
+    if len(data) != size:
+        tail = " | ".join(out.strip().splitlines()[-3:])
+        raise ScreenError(f"read of {size} B at {address:#010x} failed: {tail}")
+    return data
+
+
 def displayed_buffer() -> int:
     """Address the LTDC is scanning out right now."""
-    tried = []
+    errors = []
     for reg in LTDC_L1_CFBAR:
-        out = _openocd(f"init; mdw {reg:#x}; exit")
-        m = re.search(rf"{reg:#010x}:\s*([0-9a-fA-F]{{8}})", out, re.I)
-        if m is None:
-            tail = " | ".join(out.strip().splitlines()[-3:])
-            tried.append(f"{reg:#010x}: {tail}")
+        try:
+            fb = int.from_bytes(read_memory(reg, 4), "little")
+        except ScreenError as e:
+            errors.append(str(e))
             continue
-        fb = int(m.group(1), 16)
         if fb not in FRAME_BUFFERS:
             raise ScreenError(f"display not running (LTDC scans {fb:#010x})")
         return fb
-    raise ScreenError(
-        "could not read the LTDC frame buffer address; " + "; ".join(tried)
-    )
+    raise ScreenError("could not read the LTDC register; " + "; ".join(errors))
 
 
 def capture(dest: Path) -> Path:
     """Write the screen as a PNG to `dest`."""
     fb = displayed_buffer()
     size = (HEIGHT - 1) * STRIDE + WIDTH * 4
-    with tempfile.TemporaryDirectory() as tmp:
-        raw = Path(tmp) / "fb.bin"
-        _openocd(f"init; dump_image {raw} {fb:#x} {size}; exit")
-        data = raw.read_bytes()
-    if len(data) != size:
-        raise ScreenError(f"short frame buffer read: {len(data)} of {size} bytes")
+    data = read_memory(fb, size)
     data += bytes(STRIDE - WIDTH * 4)  # pad the last line to a full stride
     image = Image.frombuffer(
         "RGBA", (STRIDE // 4, HEIGHT), data, "raw", "BGRA", 0, 1
