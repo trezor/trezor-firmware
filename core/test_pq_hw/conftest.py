@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 
@@ -40,6 +41,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=6.0,
         help="seconds of silence that count as a confirmation prompt",
     )
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    # trezorlib logs every transport open/close at INFO; device waits poll.
+    logging.getLogger("trezorlib").setLevel(logging.WARNING)
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list) -> None:

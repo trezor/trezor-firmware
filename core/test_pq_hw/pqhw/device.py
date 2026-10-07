@@ -16,7 +16,8 @@ from trezorlib.debuglink import (
     ScreenButtons,
     TrezorTestContext,
 )
-from trezorlib.transport import Transport, enumerate_devices, get_transport
+from trezorlib.transport import Transport, get_transport
+from trezorlib.transport.webusb import WebUsbTransport
 
 LOG = logging.getLogger(__name__)
 
@@ -28,6 +29,10 @@ BUTTONS = ScreenButtons(LayoutType.Eckhart)
 
 class UnitError(Exception):
     pass
+
+
+class AmbiguousUnit(UnitError):
+    """More than one candidate on USB: retrying cannot fix it."""
 
 
 class Unit:
@@ -67,9 +72,14 @@ class Unit:
                 return get_transport(self.path)
             except Exception:
                 return None
-        devices = enumerate_devices()
+        # USB only: the unit is flashed and driven over its cable, and a BLE or
+        # emulator transport answering as well must not be picked instead.
+        devices = WebUsbTransport.enumerate()
         if len(devices) > 1:
-            raise UnitError(f"{len(devices)} devices connected; pass --unit-path")
+            paths = ", ".join(d.get_path() for d in devices)
+            raise AmbiguousUnit(
+                f"{len(devices)} USB devices ({paths}); pass --unit-path"
+            )
         return devices[0] if devices else None
 
     def present(self) -> bool:
@@ -106,7 +116,11 @@ class Unit:
             try:
                 transport = self.wait_present(max(1.0, deadline - time.monotonic()))
                 ctx = TrezorTestContext(transport, auto_interact=True, force_wipe=False)
+            except AmbiguousUnit:
+                raise
             except Exception as e:  # mid-reboot, interface not ready yet
+                if str(e) != str(last):
+                    LOG.info("waiting for the device: %s: %s", type(e).__name__, e)
                 last = e
                 time.sleep(1)
                 continue
