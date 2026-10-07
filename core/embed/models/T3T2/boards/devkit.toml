@@ -3,14 +3,14 @@ emulator_header = "T3T2/boards/unix.h"
 
 [display]
 driver = "io/display_i8080"
-panel = "io/display_panel_dem240320b1"
+panel = "io/display_panel_lx200b4501ctp03"
 
 [backlight]
 driver = "io/backlight_pwm"
 
 [touch]
 driver = "io/touch_ft6x36"
-panel = "io/touch_panel_lx154a2422cpt23"
+panel = "io/touch_panel_lx200b4501ctp03"
 
 [optiga]
 

@@ -46,31 +46,17 @@ void display_io_init_te_interrupt(void);
 #ifdef DISPLAY_I8080_16BIT_DW
 #define DISPLAY_ADDR_SHIFT 2
 #define DISP_MEM_TYPE uint16_t
-#elif DISPLAY_I8080_8BIT_DW
+#elif defined(DISPLAY_I8080_8BIT_DW)
 #define DISPLAY_ADDR_SHIFT 1
 #define DISP_MEM_TYPE uint8_t
 #else
 #error "Unsupported display interface"
 #endif
 
-/*#define DISPLAY_CMD_ADDRESS ((__IO DISP_MEM_TYPE *)(DISPLAY_MEMORY_BASE))
-#define DISPLAY_DATA_ADDRESS                    \
-  ((__IO DISP_MEM_TYPE *)(DISPLAY_MEMORY_BASE | \
-                          (DISPLAY_ADDR_SHIFT << DISPLAY_MEMORY_PIN)))
-*/
-
 extern __IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS;
 extern __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS;
 
 #define ISSUE_CMD_BYTE(X) (*(DISPLAY_CMD_ADDRESS) = (X))
 #define ISSUE_DATA_BYTE(X) (*(DISPLAY_DATA_ADDRESS) = (X))
-
-#ifdef DISPLAY_I8080_16BIT_DW
-#define ISSUE_PIXEL_DATA(X) ISSUE_DATA_BYTE(X)
-#elif DISPLAY_I8080_8BIT_DW
-#define ISSUE_PIXEL_DATA(X)    \
-  ISSUE_DATA_BYTE((X) & 0xFF); \
-  ISSUE_DATA_BYTE((X) >> 8)
-#endif
 
 #endif  // TREZORHAL_DISPLAY_IO_H

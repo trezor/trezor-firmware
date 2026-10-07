@@ -107,6 +107,11 @@ static inline bool gfx_bitblt_check_dst_xy(const gfx_bitblt_t* bb) {
 // to one with DMA2D while copying the other to the display with DMA.
 
 void display_fill(const gfx_bitblt_t* bb) {
+  display_driver_t* drv = &g_display_driver;
+  // Local copy: the display write pointer could alias the driver struct,
+  // which would force a reload of pixel_endian after every pixel write
+  display_pixel_endian_t endian = drv->pixel_endian;
+
   if (!gfx_bitblt_check_dst_xy(bb)) {
     return;
   }
@@ -117,12 +122,17 @@ void display_fill(const gfx_bitblt_t* bb) {
 
   while (height-- > 0) {
     for (int x = 0; x < bb->width; x++) {
-      ISSUE_PIXEL_DATA(bb->src_fg);
+      ISSUE_PIXEL_DATA(endian, bb->src_fg);
     }
   }
 }
 
 void display_copy_rgb565(const gfx_bitblt_t* bb) {
+  display_driver_t* drv = &g_display_driver;
+  // Local copy: the display write pointer could alias the driver struct,
+  // which would force a reload of pixel_endian after every pixel write
+  display_pixel_endian_t endian = drv->pixel_endian;
+
   if (!gfx_bitblt_check_dst_xy(bb) || !gfx_bitblt_check_src_x(bb, 16)) {
     return;
   }
@@ -134,13 +144,18 @@ void display_copy_rgb565(const gfx_bitblt_t* bb) {
 
   while (height-- > 0) {
     for (int x = 0; x < bb->width; x++) {
-      ISSUE_PIXEL_DATA(src_ptr[x]);
+      ISSUE_PIXEL_DATA(endian, src_ptr[x]);
     }
     src_ptr += bb->src_stride / sizeof(*src_ptr);
   }
 }
 
 void display_copy_mono1p(const gfx_bitblt_t* bb) {
+  display_driver_t* drv = &g_display_driver;
+  // Local copy: the display write pointer could alias the driver struct,
+  // which would force a reload of pixel_endian after every pixel write
+  display_pixel_endian_t endian = drv->pixel_endian;
+
   if (!gfx_bitblt_check_dst_xy(bb) || !gfx_bitblt_check_src_x(bb, 1)) {
     return;
   }
@@ -155,7 +170,7 @@ void display_copy_mono1p(const gfx_bitblt_t* bb) {
     for (int x = 0; x < bb->width; x++) {
       uint8_t mask = 1 << (7 - ((src_ofs + x) & 7));
       uint8_t data = src[(src_ofs + x) / 8];
-      ISSUE_PIXEL_DATA((data & mask) ? bb->src_fg : bb->src_bg);
+      ISSUE_PIXEL_DATA(endian, (data & mask) ? bb->src_fg : bb->src_bg);
     }
     src_ofs += bb->src_stride;
   }

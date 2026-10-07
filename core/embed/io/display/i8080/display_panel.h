@@ -31,6 +31,12 @@
 // of ILI9341V datasheet
 #define DISPLAY_ID_ILI9341V 0x009341U
 
+// Byte order of RGB565 pixel data expected by the panel
+typedef enum {
+  DISPLAY_PIXEL_LITTLE_ENDIAN,  // low byte of each pixel first
+  DISPLAY_PIXEL_BIG_ENDIAN,     // high byte of each pixel first
+} display_pixel_endian_t;
+
 typedef struct {
   uint16_t x;
   uint16_t y;
@@ -45,8 +51,12 @@ void display_panel_init(void);
 // Due to inability to change display setting in boardlaoder,
 // we need to reinitialize the display when bootloader or firmware runs
 void display_panel_reinit(void);
-void display_panel_set_little_endian(void);
-void display_panel_set_big_endian(void);
+// Configures the panel for little-endian pixel data where supported.
+// Returns the byte order the panel actually uses (GC9307: big-endian).
+display_pixel_endian_t display_panel_set_little_endian(void);
+// Configures the panel for big-endian pixel data.
+// Returns the byte order the panel actually uses (always big-endian).
+display_pixel_endian_t display_panel_set_big_endian(void);
 
 void display_panel_sleep(void);
 void display_panel_unsleep(void);

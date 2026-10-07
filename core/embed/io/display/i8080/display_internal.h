@@ -4,6 +4,9 @@
 #include <trezor_bsp.h>
 #include <trezor_types.h>
 
+#include "display_io.h"
+#include "display_panel.h"
+
 #ifdef FRAMEBUFFER
 
 #include "../fb_queue/fb_queue.h"
@@ -33,10 +36,32 @@ typedef struct {
   int orientation_angle;
   int update_pending;
 
+  // Byte order of pixel data expected by the panel
+  display_pixel_endian_t pixel_endian;
+
 } display_driver_t;
 
 // Display driver instance
 extern display_driver_t g_display_driver;
+
+// Writes one RGB565 pixel in the given byte order. The byte order only
+// matters on the 8-bit bus; on the 16-bit bus the pixel is written in a
+// single bus cycle.
+#ifdef DISPLAY_I8080_16BIT_DW
+#define ISSUE_PIXEL_DATA(E, X) ((void)(E), ISSUE_DATA_BYTE(X))
+#elif defined(DISPLAY_I8080_8BIT_DW)
+#define ISSUE_PIXEL_DATA(E, X)             \
+  do {                                     \
+    uint16_t _px = (X);                    \
+    if ((E) == DISPLAY_PIXEL_BIG_ENDIAN) { \
+      ISSUE_DATA_BYTE(_px >> 8);           \
+      ISSUE_DATA_BYTE(_px & 0xFF);         \
+    } else {                               \
+      ISSUE_DATA_BYTE(_px & 0xFF);         \
+      ISSUE_DATA_BYTE(_px >> 8);           \
+    }                                      \
+  } while (0)
+#endif  // DISPLAY_I8080_16BIT_DW
 
 static inline uint32_t is_mode_exception(void) {
   uint32_t isr_number = __get_IPSR() & IPSR_ISR_Msk;
