@@ -27,6 +27,8 @@ XPUB_PATH = "m/84h/0h/0h"
 # Timeouts. A phase-1 reboot can include the boardloader installing a 320 KB
 # bootloader and the bootloader pushing a 271 KB nRF image over UART.
 REBOOT = 240
+# Phase 1 reboot to phase 2 on USB: boardloader swap plus an nRF push.
+PHASE2_RESUME = 150
 
 
 # --- seed -------------------------------------------------------------------
@@ -170,9 +172,24 @@ def pq_phase1(
 
 
 def pq_phase2(unit: Unit, bundle: PqSecureBundle) -> bool:
-    """After phase 1's reboot: stream the firmware. Returns whether it waited on
-    a prompt, which it never should."""
-    ctx = unit.context(bootloader=True, timeout=REBOOT)
+    """After phase 1's reboot: stream the firmware. Returns whether it needed a
+    person, which it never should: the bootloader is meant to resume on its own
+    (BOOT_COMMAND_CONTINUE_UPGRADE) with the wire up."""
+    needed_person = False
+    try:
+        ctx = unit.context(bootloader=True, timeout=PHASE2_RESUME)
+    except UnitError:
+        # Not on USB: the bootloader is on its intro ("Initiate connection"),
+        # which brings the wire up only after a tap -- it did not resume.
+        if unit.ask is None:
+            raise UnitError(
+                "phase 2 never came up on USB: the bootloader did not resume the "
+                "install on its own (likely on the intro screen, 'Initiate "
+                "connection'). Run with --operator to continue past it."
+            ) from None
+        unit.ask("The device did not resume phase 2. Tap 'Initiate connection'.")
+        needed_person = True
+        ctx = unit.context(bootloader=True, timeout=REBOOT)
     session = ctx.get_seedless_session()
     data = bundle.firmware.data
 
@@ -185,7 +202,7 @@ def pq_phase2(unit: Unit, bundle: PqSecureBundle) -> bool:
     )
     close(ctx)
     unit.wait_gone()
-    return prompted
+    return prompted or needed_person
 
 
 def pq_install(

@@ -38,8 +38,15 @@ class AmbiguousUnit(UnitError):
 class Unit:
     """One T3W1 on the bench, reachable over SWD (openocd) and USB."""
 
-    def __init__(self, path: str | None = None, stall: float = 6.0) -> None:
+    def __init__(
+        self,
+        path: str | None = None,
+        stall: float = 6.0,
+        ask: t.Callable[[str], None] | None = None,
+    ) -> None:
         self.path = path
+        #: Asks the person at the bench to act, when the run has one (--operator).
+        self.ask = ask
         #: Seconds without an answer after which a request counts as waiting on
         #: a confirmation screen. The bootloader sends no ButtonRequest and its
         #: debuglink reports no layout content, so a stall is the only signal.

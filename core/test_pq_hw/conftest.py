@@ -67,21 +67,27 @@ def fx(request: pytest.FixtureRequest) -> Fixtures:
     return fixtures
 
 
-@pytest.fixture(scope="session")
-def unit(request: pytest.FixtureRequest) -> Unit:
-    return Unit(
-        path=request.config.getoption("--unit-path"),
-        stall=request.config.getoption("--stall"),
-    )
-
-
-@pytest.fixture
-def operator(request: pytest.FixtureRequest):
-    """Ask the person at the bench to do something, and wait until they have."""
-    capture = request.config.pluginmanager.getplugin("capturemanager")
+def _asker(config: pytest.Config):
+    capture = config.pluginmanager.getplugin("capturemanager")
 
     def ask(instruction: str) -> None:
         with capture.global_and_fixture_disabled():
             input(f"\n>>> {instruction}\n    press Enter when done ")
 
     return ask
+
+
+@pytest.fixture(scope="session")
+def unit(request: pytest.FixtureRequest) -> Unit:
+    config = request.config
+    return Unit(
+        path=config.getoption("--unit-path"),
+        stall=config.getoption("--stall"),
+        ask=_asker(config) if config.getoption("--operator") else None,
+    )
+
+
+@pytest.fixture
+def operator(request: pytest.FixtureRequest):
+    """Ask the person at the bench to do something, and wait until they have."""
+    return _asker(request.config)
