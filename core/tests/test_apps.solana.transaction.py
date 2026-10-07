@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor.utils import BufferReader
 from trezor.wire import DataError
 
 from apps.common.writers import write_bytes_unchecked, write_uint8, write_uvarint
@@ -7,6 +8,7 @@ from common import unittest, utils
 
 if not utils.BITCOIN_ONLY:
     from apps.solana.transaction import Transaction
+    from apps.solana.transaction.parse import parse_var_int
     from apps.solana.types import AddressType
 
 if TYPE_CHECKING:
@@ -104,6 +106,55 @@ TRANSFER_INSTRUCTION: RawInstruction = (
     (0, 1),
     (2).to_bytes(4, "little") + (1000).to_bytes(8, "little"),
 )
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestSolanaCompactU16(unittest.TestCase):
+    # Vectors from solana-sdk's short_vec test_deserialize():
+    # https://github.com/anza-xyz/solana-sdk/blob/e2adabb20e084efe4e5a872bb5be71051130bcd8/short-vec/src/lib.rs#L337-L378
+
+    def test_valid(self):
+        vectors = (
+            (b"\x00", 0x0000),
+            (b"\x7f", 0x007F),
+            (b"\x80\x01", 0x0080),
+            (b"\xff\x01", 0x00FF),
+            (b"\x80\x02", 0x0100),
+            (b"\xff\x0f", 0x07FF),
+            (b"\xff\x7f", 0x3FFF),
+            (b"\x80\x80\x01", 0x4000),
+            (b"\xff\xff\x03", 0xFFFF),
+        )
+        for encoded, expected in vectors:
+            reader = BufferReader(encoded)
+            self.assertEqual(parse_var_int(reader), expected)
+            self.assertEqual(reader.remaining_count(), 0)
+
+    def test_invalid(self):
+        vectors = (
+            # aliases
+            (b"\x80\x00", ValueError),
+            (b"\x80\x80\x00", ValueError),
+            (b"\xff\x00", ValueError),
+            (b"\xff\x80\x00", ValueError),
+            (b"\x80\x81\x00", ValueError),
+            (b"\xff\x81\x00", ValueError),
+            (b"\x80\x82\x00", ValueError),
+            (b"\xff\x8f\x00", ValueError),
+            (b"\xff\xff\x00", ValueError),
+            # too short
+            (b"", EOFError),
+            (b"\x80", EOFError),
+            (b"\x80\x80", EOFError),
+            # too long
+            (b"\x80\x80\x80\x00", ValueError),
+            # too large
+            (b"\x80\x80\x04", ValueError),
+            (b"\x80\x80\x06", ValueError),
+        )
+        for encoded, error in vectors:
+            with self.assertRaises(error):
+                parse_var_int(BufferReader(encoded))
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
