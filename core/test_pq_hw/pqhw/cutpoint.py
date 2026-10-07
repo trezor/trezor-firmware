@@ -40,6 +40,9 @@ MODES = ("before", "after", "during")
 
 #: T3W1: the boardloader, where a reset halts the core (memory.h)
 BOARDLOADER = range(0x0C004000, 0x0C01E000)
+#: T3W1 boot UCB (BOOTUCB_START): magic, header and code address, header hash
+UCB = 0x0C01C000
+UCB_SIZE = 48
 
 
 @dataclass(frozen=True)
@@ -106,9 +109,12 @@ def _script(cut: CutPoint, timeout: float, marks: Path) -> str:
     lines += [
         "set pc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
         mark("hit", "$pc"),
+        # what the boardloader will act on: at the cut, and once reset
+        f"dump_image {{{marks / 'ucb_at_cut.bin'}}} {UCB:#x} {UCB_SIZE}",
         f"if {{[catch {{reset halt}} err]}} {{ {mark('reset_error', '$err')}; exit }}",
         "set rpc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
         mark("reset", "$rpc"),
+        f"dump_image {{{marks / 'ucb_at_reset.bin'}}} {UCB:#x} {UCB_SIZE}",
         "resume",
         "exit",
     ]
@@ -125,6 +131,9 @@ class Armed:
     _tmp: tempfile.TemporaryDirectory | None = None
     hit_pc: int | None = None
     reset_pc: int | None = None
+    #: the boot UCB block at the cut and right after the reset
+    ucb_at_cut: bytes | None = None
+    ucb_at_reset: bytes | None = None
     output: str = field(default="", repr=False)
 
     def start(self, arm_timeout: float = 30) -> Armed:
@@ -174,6 +183,19 @@ class Armed:
                     f"reset failed, so the unit ran on past it: {err}"
                 )
             self.reset_pc = int(reset.read_text().strip() or "0", 0)
+            for name in ("ucb_at_cut", "ucb_at_reset"):
+                f = marks / f"{name}.bin"
+                data = f.read_bytes() if f.exists() else None
+                setattr(self, name, data)
+                LOG.info(
+                    "%s: %s",
+                    name,
+                    "unreadable"
+                    if data is None
+                    else "erased"
+                    if data == b"\xff" * len(data)
+                    else data.hex(),
+                )
             if self.reset_pc not in BOARDLOADER:
                 raise CutError(
                     f"cut {self.cut}: after the reset the core is at "
@@ -231,6 +253,27 @@ class CutResult:
     action_done: bool = False
     action_error: BaseException | None = None
     action_value: t.Any = None
+    armed: Armed | None = None
+
+    def ucb_summary(self) -> str:
+        return ucb_summary(self.armed)
+
+
+def ucb_summary(armed: Armed | None) -> str:
+    """The boot UCB at the cut and after the reset, for the report."""
+
+    def one(data: bytes | None) -> str:
+        if data is None:
+            return "unread"
+        if data == b"\xff" * len(data):
+            return "erased"
+        return "ARMED " + data[:12].hex()
+
+    if armed is None:
+        return "UCB not read"
+    return (
+        f"UCB at cut: {one(armed.ucb_at_cut)}; after reset: {one(armed.ucb_at_reset)}"
+    )
 
 
 def cut_during(
@@ -257,6 +300,7 @@ def cut_during(
     # the device reset under the action; give it time to notice
     done.wait(30)
     return CutResult(
+        armed=armed,
         hit=hit,
         action_done=done.is_set(),
         action_error=box.get("error"),

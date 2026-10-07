@@ -279,7 +279,7 @@ def tap_bootloader_intro(
     entry: on the connect screen of an install, the same spot is Cancel.
 
     With `bootloader_only`, nothing is tapped unless the screen is the
-    bootloader's (its debuglink state has no layout tokens; a firmware's has).
+    intro: no layout tokens, or tokens with its "Initiate connection".
     Returns whether it tapped.
     """
     deadline = time.monotonic() + timeout
@@ -304,8 +304,10 @@ def tap_bootloader_intro(
                 ),
                 timeout=30,
             )
-            if bootloader_only and getattr(state, "tokens", None):
-                LOG.info("not the bootloader intro (a firmware layout): no tap")
+            tokens = " ".join(getattr(state, "tokens", None) or [])
+            # the intro shows this button; no firmware screen does
+            if bootloader_only and tokens and "Initiate connection" not in tokens:
+                LOG.info("not the bootloader intro, no tap; screen: %s", tokens[:200])
                 return False
             unit.step("bootloader intro: tapping 'Initiate connection'")
             x, y = BUTTONS.info()  # the single, full-width action-bar button

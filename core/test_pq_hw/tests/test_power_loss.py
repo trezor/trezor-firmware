@@ -65,7 +65,7 @@ def test_cut_in_phase1_before_arming(
     unit.step(f"cut armed: {cut}", screenshot=False)
     res = cutpoint.cut_during(cut, lambda: flows.pq_phase1(unit, ctx, bundle))
     assert res.hit, f"phase 1 never reached {symbol}"
-    unit.step(f"cut fired: {cut}")
+    unit.step(f"cut fired: {cut}; {res.ucb_summary()}")
     finish(unit, fx, seed, OLD_BL)
 
 
@@ -77,7 +77,7 @@ def test_cut_after_arming(unit: Unit, fx: Fixtures) -> None:
     unit.step(f"cut armed: {cut}", screenshot=False)
     res = cutpoint.cut_during(cut, lambda: flows.pq_phase1(unit, ctx, bundle))
     assert res.hit
-    unit.step(f"cut fired: {cut}")
+    unit.step(f"cut fired: {cut}; {res.ucb_summary()}")
     report = finish(unit, fx, seed, NEW_BL)
     assert report.served["code"] == 0, "B's bootloader was already in place"
 
@@ -111,7 +111,7 @@ def test_cut_around_nrf_push(
     cut = CutPoint(fx.release_elf(NEW), symbol, mode, delay)
     with phase1_then_arm(unit, ctx, bundle, cut) as armed:
         assert armed.wait(), f"B's bootloader never reached {symbol}"
-    unit.step(f"cut fired: {cut}")
+    unit.step(f"cut fired: {cut}; {cutpoint.ucb_summary(armed)}")
     report = finish(unit, fx, seed, NEW_BL)
     assert report.served["nrf"] == 0, "the nRF was not brought current on its own"
 
@@ -204,7 +204,7 @@ def test_cut_in_intermediary_swap(
     if not hit and symbol == "nrf_update":
         pytest.skip("the intermediary found the nRF current: no push to cut")
     assert hit, f"the intermediary never reached {symbol}"
-    unit.step(f"cut fired: {cut}")
+    unit.step(f"cut fired: {cut}; {cutpoint.ucb_summary(armed)}")
     migration_finishes(unit, fx, variant, seed)
 
 
