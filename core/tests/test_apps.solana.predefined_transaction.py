@@ -116,6 +116,10 @@ def create_mock_instruction(
     return instruction
 
 
+SIGNER = "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
+OTHER_ACCOUNT = "BVRFH6vt5bNXub6WnnFRgaHFTcbkjBrf7x1troU1izGg"
+
+
 def create_account(address, is_reference=False):
     # direct address: (pubkey, type); ALT reference: (table_address, index, type)
     if is_reference:
@@ -128,7 +132,7 @@ def create_transfer_token_instruction(
     instruction_id=TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED,
     token_mint="GHArwcWCuk9WkUG4XKUbt935rKfmBmywbEWyFxdH3mou",
     destination_account="92YgwqTtTWB7qY92JT6mbL2WCmhAs7LPZL4jLcizNfwx",
-    owner="14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+    owner=SIGNER,
     mint_is_reference=False,
     destination_is_reference=False,
     owner_is_reference=False,
@@ -244,12 +248,16 @@ class TestSolanaPredefinedTransactions(unittest.TestCase):
             ],
             # transfer instructions owner mismatch
             [
-                create_transfer_token_instruction(
-                    owner="14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS"
-                ),
-                create_transfer_token_instruction(
-                    owner="BVRFH6vt5bNXub6WnnFRgaHFTcbkjBrf7x1troU1izGg"
-                ),
+                create_transfer_token_instruction(owner=SIGNER),
+                create_transfer_token_instruction(owner=OTHER_ACCOUNT),
+            ],
+            # the tokens are spent by someone else than the signer
+            [
+                create_transfer_token_instruction(owner=OTHER_ACCOUNT),
+            ],
+            [
+                create_create_token_account_instruction(),
+                create_transfer_token_instruction(owner=OTHER_ACCOUNT),
             ],
             # token program mismatch
             [
@@ -312,11 +320,17 @@ class TestSolanaPredefinedTransactions(unittest.TestCase):
             ],
         ]
 
+        signer_public_key = base58.decode(SIGNER)
+
         for instructions in valid_test_cases:
-            self.assertTrue(is_predefined_token_transfer(instructions))
+            self.assertTrue(
+                is_predefined_token_transfer(instructions, signer_public_key)
+            )
 
         for instructions in invalid_test_cases:
-            self.assertFalse(is_predefined_token_transfer(instructions))
+            self.assertFalse(
+                is_predefined_token_transfer(instructions, signer_public_key)
+            )
 
 
 if __name__ == "__main__":
