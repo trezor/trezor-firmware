@@ -25,14 +25,15 @@ if TYPE_CHECKING:
     Header = tuple[int, int, int]
     # Program index, account indexes, and instruction data.
     RawInstruction = tuple[int, Sequence[int], AnyBytes]
+    # Address lookup table (ALT): account, read-write and read-only indexes.
+    Alt = tuple[AnyBytes, Sequence[int], Sequence[int]]
 
 
 BLOCKHASH = b"h" * 32
 
 
-# Serialization of the legacy transaction format,
+# Serialization of the legacy and v0 transaction formats,
 # as described in core/src/apps/solana/README.md.
-# TODO: test versioned transactions as well
 
 
 def write_compact_u16(w: Writer, n: int) -> None:
@@ -72,17 +73,30 @@ def write_instruction(w: Writer, instruction: RawInstruction) -> None:
     write_compact_bytes(w, data)
 
 
+def write_alt(w: Writer, alt: Alt) -> None:
+    account, rw_indexes, ro_indexes = alt
+    write_bytes_unchecked(w, account)
+    write_compact_array(w, rw_indexes, write_uint8)
+    write_compact_array(w, ro_indexes, write_uint8)
+
+
 def build_tx(
     header: Header,
     accounts: Sequence[AnyBytes],
     instructions: Sequence[RawInstruction] = (),
     blockhash: AnyBytes = BLOCKHASH,
+    version: int | None = None,
+    alts: Sequence[Alt] = (),
 ) -> bytes:
     w = bytearray()
+    if version is not None:
+        write_uint8(w, 0x80 | version)
     write_tx_header(w, *header)
     write_compact_array(w, accounts, write_bytes_unchecked)
     write_bytes_unchecked(w, blockhash)
     write_compact_array(w, instructions, write_instruction)
+    if version is not None:
+        write_compact_array(w, alts, write_alt)
     return bytes(w)
 
 
@@ -232,6 +246,68 @@ class TestSolanaTransactionInstructions(unittest.TestCase):
         # The following instruction is not affected.
         self.assertEqual(transfer.instruction_id, 2)
         self.assertEqual(transfer.lamports, 1000)
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestSolanaTransactionAlts(unittest.TestCase):
+    def test_without_alts(self):
+        for version in (None, 0):
+            transaction = Transaction(
+                build_tx(
+                    (1, 0, 1),
+                    TRANSFER_ACCOUNTS,
+                    [TRANSFER_INSTRUCTION],
+                    version=version,
+                )
+            )
+            self.assertEqual(transaction.version, version)
+            self.assertEqual(transaction.address_lookup_tables_rw_addresses, [])
+            self.assertEqual(transaction.address_lookup_tables_ro_addresses, [])
+
+    def test_unexpected_alts(self):
+        # Only v0 transactions end with an ALT list.
+        alts = bytearray()
+        write_compact_array(alts, [(b"t" * 32, (5,), (7,))], write_alt)
+        for version in (None,):
+            serialized_tx = build_tx(
+                (1, 0, 1),
+                TRANSFER_ACCOUNTS,
+                [TRANSFER_INSTRUCTION],
+                version=version,
+            )
+            with self.assertRaises(DataError):
+                Transaction(serialized_tx + alts)
+
+    def test_v0_with_alt(self):
+        table = b"t" * 32
+        # Transfer to index 2, i.e. the first address loaded from the table
+        # right after the static accounts.
+        transfer_instruction = (1, (0, 2), TRANSFER_INSTRUCTION[2])
+        transaction = Transaction(
+            build_tx(
+                (1, 0, 1),
+                (SIGNER, SYSTEM_PROGRAM),
+                [transfer_instruction],
+                version=0,
+                alts=[(table, (5,), (7,))],
+            )
+        )
+        self.assertEqual(
+            transaction.address_lookup_tables_rw_addresses,
+            [(table, 5, AddressType.AddressRw)],
+        )
+        self.assertEqual(
+            transaction.address_lookup_tables_ro_addresses,
+            [(table, 7, AddressType.AddressReadOnly)],
+        )
+        (transfer,) = transaction.instructions
+        self.assertEqual(transfer.recipient_account, (table, 5, AddressType.AddressRw))
+
+    def test_v0_missing_alts(self):
+        # Unlike legacy, v0 must end with the (possibly empty) ALT list.
+        legacy_tx = build_tx((1, 0, 1), TRANSFER_ACCOUNTS, [TRANSFER_INSTRUCTION])
+        with self.assertRaises(EOFError):
+            Transaction(b"\x80" + legacy_tx)
 
 
 if __name__ == "__main__":
