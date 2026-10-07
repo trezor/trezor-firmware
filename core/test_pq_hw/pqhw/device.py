@@ -55,6 +55,7 @@ class Unit:
         self.ask = ask
         #: Flow recorder for the HTML report (set by conftest under --hw).
         self.recorder: t.Any = None
+        self._last_enum_error: str | None = None
         #: Seconds without an answer after which a request counts as waiting on
         #: a confirmation screen. The bootloader sends no ButtonRequest and its
         #: debuglink reports no layout content, so a stall is the only signal.
@@ -113,8 +114,14 @@ class Unit:
         except Exception as e:
             # A device dropping off the bus mid-enumeration (every reboot)
             # fails its descriptor read; it is leaving, so it is not there.
-            LOG.debug("enumeration failed, device in transition: %s", e)
+            # Logged once per message: a unit stuck failing enumeration would
+            # otherwise look exactly like one that is absent.
+            msg = f"{type(e).__name__}: {e}"
+            if msg != self._last_enum_error:
+                LOG.info("USB enumeration failed (device in transition?): %s", msg)
+                self._last_enum_error = msg
             return None
+        self._last_enum_error = None
         if len(devices) > 1:
             paths = ", ".join(d.get_path() for d in devices)
             raise AmbiguousUnit(
@@ -227,6 +234,11 @@ def tap_bootloader_intro(unit: Unit, timeout: float = 120) -> None:
             x, y = BUTTONS.info()  # the single, full-width action-bar button
             debug._write(messages.DebugLinkDecision(x=x, y=y))
             return
+        except Exception as e:  # USB still settling after the reboot
+            if str(e) != str(last):
+                LOG.info("bootloader debuglink not ready: %s", e)
+            last = e
+            time.sleep(1)
         finally:
             try:
                 debug.close()

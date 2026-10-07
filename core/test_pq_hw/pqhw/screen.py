@@ -21,8 +21,8 @@ from pathlib import Path
 from PIL import Image
 
 # LTDC on STM32U5G9: APB2 + 0x6800, layer 1 at +0x84, CFBAR at layer +0x28.
-# Secure alias; the non-secure one is 0x400168AC.
-LTDC_L1_CFBAR = 0x500168AC
+# Tried through the secure alias, then the non-secure one.
+LTDC_L1_CFBAR = (0x500168AC, 0x400168AC)
 # GFXMMU virtual buffers 0 and 1, secure and non-secure aliases.
 FRAME_BUFFERS = (0x34000000, 0x34400000, 0x24000000, 0x24400000)
 
@@ -57,14 +57,21 @@ def _openocd(commands: str) -> str:
 
 def displayed_buffer() -> int:
     """Address the LTDC is scanning out right now."""
-    out = _openocd(f"init; mdw {LTDC_L1_CFBAR:#x}; exit")
-    m = re.search(rf"{LTDC_L1_CFBAR:#010x}:\s*([0-9a-fA-F]{{8}})", out, re.I)
-    if m is None:
-        raise ScreenError("could not read the LTDC frame buffer address")
-    fb = int(m.group(1), 16)
-    if fb not in FRAME_BUFFERS:
-        raise ScreenError(f"display not running (LTDC scans {fb:#010x})")
-    return fb
+    tried = []
+    for reg in LTDC_L1_CFBAR:
+        out = _openocd(f"init; mdw {reg:#x}; exit")
+        m = re.search(rf"{reg:#010x}:\s*([0-9a-fA-F]{{8}})", out, re.I)
+        if m is None:
+            tail = " | ".join(out.strip().splitlines()[-3:])
+            tried.append(f"{reg:#010x}: {tail}")
+            continue
+        fb = int(m.group(1), 16)
+        if fb not in FRAME_BUFFERS:
+            raise ScreenError(f"display not running (LTDC scans {fb:#010x})")
+        return fb
+    raise ScreenError(
+        "could not read the LTDC frame buffer address; " + "; ".join(tried)
+    )
 
 
 def capture(dest: Path) -> Path:
@@ -84,3 +91,12 @@ def capture(dest: Path) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
     image.convert("RGB").save(dest)
     return dest
+
+
+if __name__ == "__main__":
+    import sys
+
+    # python -m pqhw.screen [out.png] -- one capture, for checking the setup
+    target = Path(sys.argv[1] if len(sys.argv) > 1 else "screen.png")
+    print(f"LTDC scans {displayed_buffer():#010x}")
+    print(f"wrote {capture(target)}")
