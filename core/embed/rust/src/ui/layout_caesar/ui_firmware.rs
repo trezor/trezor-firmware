@@ -1551,16 +1551,7 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     } else {
         None
     };
-    // WIP: this page cannot hold and show a menu at once. It keeps the hold,
-    // the stronger promise to the person, and drops the menu, so the caller's
-    // extras are unreachable here.
-    let external_menu = if hold && external_menu {
-        log::warn!("confirm: external_menu is not supported together with hold, ignored");
-        false
-    } else {
-        external_menu
-    };
-    if hold {
+    if hold && !external_menu {
         confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
     }
 
