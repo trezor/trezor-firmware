@@ -175,13 +175,16 @@ class Unit:
                 return False
             answered = False
             wait = ms
-            while True:  # the answer, then the rest of it, packet by packet
+            # the answer, then the rest of it, packet by packet; capped, so a
+            # device that keeps sending cannot hold the probe
+            for _ in range(64):
                 try:
                     h.interruptRead(0x80 | ep, 64, wait)
                 except usb1.USBErrorTimeout as e:
                     return answered or bool(e.received)
                 answered = True
                 wait = 300
+            return answered
         except Exception:
             return False
         finally:
