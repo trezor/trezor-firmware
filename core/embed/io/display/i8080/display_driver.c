@@ -69,7 +69,7 @@ bool display_init(display_content_mode_t mode) {
     display_io_init_gpio();
     display_io_init_fmc();
     display_panel_init();
-    display_panel_set_little_endian();
+    drv->pixel_endian = display_panel_set_little_endian();
     backlight_init(BACKLIGHT_RESET, GAMMA_EXP);
   } else {
     // Reinitialize FMC to set correct timing
@@ -77,7 +77,7 @@ bool display_init(display_content_mode_t mode) {
     display_io_init_fmc();
 
     // Important for model T as this is not set in boardloader
-    display_panel_set_little_endian();
+    drv->pixel_endian = display_panel_set_little_endian();
     display_panel_reinit();
     backlight_init(BACKLIGHT_RETAIN, GAMMA_EXP);
   }
@@ -124,7 +124,7 @@ void display_deinit(display_content_mode_t mode) {
   if (mode == DISPLAY_RESET_CONTENT) {
     display_set_orientation(0);
   }
-  display_panel_set_big_endian();
+  drv->pixel_endian = display_panel_set_big_endian();
 #endif
 
   drv->initialized = false;
@@ -166,9 +166,12 @@ int display_set_orientation(int angle) {
 
       display_panel_set_window(0, 0, INTERNAL_FB_WIDTH - 1,
                                INTERNAL_FB_HEIGHT - 1);
+      // Local copy: the display write pointer could alias the driver struct,
+      // which would force a reload of pixel_endian after every pixel write
+      display_pixel_endian_t endian = drv->pixel_endian;
       for (uint32_t i = 0; i < INTERNAL_FB_WIDTH * INTERNAL_FB_HEIGHT; i++) {
         // 2 bytes per pixel because we're using RGB 5-6-5 format
-        ISSUE_PIXEL_DATA(0x0000);
+        ISSUE_PIXEL_DATA(endian, 0x0000);
       }
 
       display_panel_rotate(angle);
