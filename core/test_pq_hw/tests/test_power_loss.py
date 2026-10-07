@@ -9,14 +9,19 @@ PL-05 (during the boardloader's copy: needs a real power cut) and PL-09
 
 from __future__ import annotations
 
+import sys
 import threading
 import time
+from pathlib import Path
 
 import pytest
 from pqhw import cutpoint, flows
 from pqhw.cutpoint import CutPoint
 from pqhw.device import Unit
 from pqhw.fixtures import Fixtures
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from build_fixtures import check_elf_matches  # noqa: E402
 
 pytestmark = [pytest.mark.hw, pytest.mark.cut]
 
@@ -39,6 +44,33 @@ def code_watch(fx: Fixtures):
         {"bootloader": (addr, 8)},
         {"bootloader": {ca[d : d + 8]: "A", cb[d : d + 8]: "B"}},
     )
+
+
+# The boardloader the suite flashes (built in the legacy worktree; not yet a
+# staged fixture). Only used for tracing, after a check that it is that build.
+BOARDLOADER_ELF = (
+    (Path(__file__).resolve().parents[1])
+    / "work/legacy/core/build-xtask/artifacts/T3W1/boardloader.elf"
+)
+
+
+def ucb_trace(fx: Fixtures) -> cutpoint.Trace:
+    """Who reads and who writes the boot UCB during the boot after a cut: the
+    boardloader's boot_ucb_read (its return says whether it will install) and
+    any boot_ucb_write in A's bootloader (with the caller that armed it)."""
+    trace: cutpoint.Trace = [
+        ("A boot_ucb_write", fx.release_elf(OLD), "boot_ucb_write")
+    ]
+    if BOARDLOADER_ELF.exists():
+        flashed = fx.legacy("boardloader").read_bytes()
+        try:
+            check_elf_matches(BOARDLOADER_ELF, flashed, "boot_ucb_read")
+            trace.insert(
+                0, ("boardloader boot_ucb_read", BOARDLOADER_ELF, "boot_ucb_read")
+            )
+        except Exception:
+            pass
+    return trace
 
 
 def start(unit: Unit, fx: Fixtures):
@@ -79,10 +111,14 @@ def test_cut_in_phase1_before_arming(
     unit.step(f"cut armed: {cut}", screenshot=False)
     watch, labels = code_watch(fx)
     res = cutpoint.cut_during(
-        cut, lambda: flows.pq_phase1(unit, ctx, bundle), watch=watch
+        cut,
+        lambda: flows.pq_phase1(unit, ctx, bundle),
+        watch=watch,
+        trace=ucb_trace(fx),
     )
     assert res.hit, f"phase 1 never reached {symbol}"
     unit.step(f"cut fired: {cut}; {res.summary(labels)}")
+    unit.step(cutpoint.calls_summary(res.armed), screenshot=False)
     finish(unit, fx, seed, OLD_BL)
 
 
@@ -94,10 +130,14 @@ def test_cut_after_arming(unit: Unit, fx: Fixtures) -> None:
     unit.step(f"cut armed: {cut}", screenshot=False)
     watch, labels = code_watch(fx)
     res = cutpoint.cut_during(
-        cut, lambda: flows.pq_phase1(unit, ctx, bundle), watch=watch
+        cut,
+        lambda: flows.pq_phase1(unit, ctx, bundle),
+        watch=watch,
+        trace=ucb_trace(fx),
     )
     assert res.hit
     unit.step(f"cut fired: {cut}; {res.summary(labels)}")
+    unit.step(cutpoint.calls_summary(res.armed), screenshot=False)
     report = finish(unit, fx, seed, NEW_BL)
     assert report.served["code"] == 0, "B's bootloader was already in place"
 

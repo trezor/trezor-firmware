@@ -52,6 +52,38 @@ SETTLE = 8.0
 
 #: name -> (address, length) of memory to snapshot at each moment
 Watch = dict[str, tuple[int, int]]
+#: (label, ELF, function): calls to record during the boot after the reset
+Trace = list[tuple[str, Path, str]]
+#: how long the boot after the reset is traced
+TRACE_SECONDS = 20.0
+#: bytes dumped at each traced call's first argument
+TRACE_ARG_BYTES = 48
+
+
+def symbol_address(elf: Path, name: str) -> int:
+    with elf.open("rb") as f:
+        for sym in ELFFile(f).get_section_by_name(".symtab").iter_symbols():
+            if sym.name == name and sym["st_info"]["type"] == "STT_FUNC":
+                return sym["st_value"] & ~1
+    raise KeyError(f"{name} is not a function in {elf.name}")
+
+
+def symbolize(addr: int, elfs: list[Path]) -> str:
+    """`function+offset` of a code address, from the first ELF covering it."""
+    addr &= ~1
+    for elf in elfs:
+        with elf.open("rb") as f:
+            for sym in ELFFile(f).get_section_by_name(".symtab").iter_symbols():
+                start, size = sym["st_value"] & ~1, sym["st_size"]
+                if (
+                    sym["st_info"]["type"] == "STT_FUNC"
+                    and size
+                    and start <= addr < start + size
+                ):
+                    return (
+                        f"{sym.name}+{addr - start:#x} ({elf.parent.name}/{elf.name})"
+                    )
+    return f"{addr:#010x}"
 
 
 @dataclass(frozen=True)
@@ -68,12 +100,7 @@ class CutPoint:
 
     @property
     def address(self) -> int:
-        with self.elf.open("rb") as f:
-            symtab = ELFFile(f).get_section_by_name(".symtab")
-            for sym in symtab.iter_symbols():
-                if sym.name == self.symbol and sym["st_info"]["type"] == "STT_FUNC":
-                    return sym["st_value"] & ~1  # Thumb bit
-        raise KeyError(f"{self.symbol} is not a function in {self.elf.name}")
+        return symbol_address(self.elf, self.symbol)
 
     def __str__(self) -> str:
         extra = f" +{self.delay:g} s" if self.mode == "during" else ""
@@ -84,7 +111,49 @@ class CutError(Exception):
     pass
 
 
-def _script(cut: CutPoint, timeout: float, marks: Path, watch: Watch) -> str:
+def _trace(marks: Path, trace: list[tuple[str, int]]) -> list[str]:
+    """Record each call to the traced functions during the boot: entry (pc,
+    caller, first argument), then its return value and the memory the first
+    argument pointed to, read once the function has run."""
+    if not trace:
+        return []
+    ms = int(TRACE_SECONDS * 1000)
+    hex_re = "{0x[0-9a-fA-F]+}"
+    lines = [f"set tf [open {{{marks / 'trace.txt'}}} w]", "set n 0"]
+    lines += [f"bp {addr:#x} 2 hw" for _label, addr in trace]
+    lines += [
+        f"set end [expr {{[clock milliseconds] + {ms}}}]",
+        "while {[clock milliseconds] < $end} {",
+        "  catch {resume}",
+        "  set left [expr {$end - [clock milliseconds]}]",
+        "  if {$left <= 0 || [catch {wait_halt $left}]} { break }",
+        f"  set pc [lindex [regexp -inline {hex_re} [reg pc]] 0]",
+        f"  set lr [lindex [regexp -inline {hex_re} [reg lr]] 0]",
+        f"  set a0 [lindex [regexp -inline {hex_re} [reg r0]] 0]",
+        # run the call out: a breakpoint on its return address
+        f"  rbp all",
+        "  bp [expr {$lr & ~1}] 2 hw",
+        "  catch {resume}",
+        "  if {[catch {wait_halt 5000}]} { set ret timeout } else {",
+        f"    set ret [lindex [regexp -inline {hex_re} [reg r0]] 0] }}",
+        "  rbp all",
+        # quoted, not braced: $n must substitute when catch runs the body
+        f'  catch {{dump_image "{marks}/arg$n.bin" $a0 {TRACE_ARG_BYTES}}}',
+        '  puts $tf "$n $pc $lr $a0 $ret"; flush $tf',
+        "  incr n",
+    ]
+    lines += [f"  bp {addr:#x} 2 hw" for _label, addr in trace]
+    lines += ["}", "rbp all", "close $tf", "catch {resume}"]
+    return lines
+
+
+def _script(
+    cut: CutPoint,
+    timeout: float,
+    marks: Path,
+    watch: Watch,
+    trace: list[tuple[str, int]] | None = None,
+) -> str:
     """Jim Tcl for openocd. Progress goes to marker files: console output of
     scripted commands is not reliable across openocd builds."""
 
@@ -130,7 +199,8 @@ def _script(cut: CutPoint, timeout: float, marks: Path, watch: Watch) -> str:
         "set rpc [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg pc]] 0]",
         mark("reset", "$rpc"),
         *snap("reset"),
-        "resume",
+        *_trace(marks, trace or []),
+        "catch {resume}",
         f"sleep {int(SETTLE * 1000)}",
         *snap("boot"),
         "exit",
@@ -146,6 +216,10 @@ class Armed:
     timeout: float
     #: memory to snapshot at each of MOMENTS (the UCB is always included)
     watch: Watch = field(default_factory=dict)
+    #: calls to record during the boot after the reset
+    trace: Trace = field(default_factory=list)
+    #: one dict per traced call, in order
+    calls: list[dict] = field(default_factory=list)
     _proc: subprocess.Popen | None = None
     _tmp: tempfile.TemporaryDirectory | None = None
     hit_pc: int | None = None
@@ -159,7 +233,8 @@ class Armed:
         marks = Path(self._tmp.name)
         script = marks / "cut.tcl"
         self.watch = {"ucb": (UCB, UCB_SIZE), **self.watch}
-        script.write_text(_script(self.cut, self.timeout, marks, self.watch))
+        points = [(label, symbol_address(elf, fn)) for label, elf, fn in self.trace]
+        script.write_text(_script(self.cut, self.timeout, marks, self.watch, points))
         screen.probe_holder = f"cut point {self.cut}"
         self._proc = subprocess.Popen(
             [*screen.OPENOCD, "-f", str(script)],
@@ -181,7 +256,7 @@ class Armed:
         passed with the unit never reaching it (False)."""
         assert self._proc is not None and self._tmp is not None
         try:
-            self._proc.wait(self.timeout * 2 + SETTLE + 60)
+            self._proc.wait(self.timeout * 2 + SETTLE + TRACE_SECONDS + 60)
         except subprocess.TimeoutExpired:
             self._proc.kill()
         self.output = self._finish()
@@ -213,6 +288,7 @@ class Armed:
                         moment,
                         self.snapshots.get((name, moment), b"").hex() or "unread",
                     )
+            self._read_trace(marks)
             if self.reset_pc not in BOARDLOADER:
                 raise CutError(
                     f"cut {self.cut}: after the reset the core is at "
@@ -229,6 +305,27 @@ class Armed:
             LOG.info("cut %s not reached in %.0f s", self.cut, self.timeout)
             return False
         raise CutError(f"openocd ended without a result: {self._tail()}")
+
+    def _read_trace(self, marks: Path) -> None:
+        f = marks / "trace.txt"
+        if not self.trace or not f.exists():
+            return
+        by_addr = {symbol_address(elf, fn): label for label, elf, fn in self.trace}
+        elfs = list(dict.fromkeys(elf for _l, elf, _f in self.trace))
+        for line in f.read_text().splitlines():
+            n, pc, lr, a0, ret = line.split()
+            arg = marks / f"arg{n}.bin"
+            call = {
+                "call": by_addr.get(int(pc, 0), pc),
+                "caller": symbolize(int(lr, 0), elfs),
+                "arg0": a0,
+                "ret": ret,
+                "arg_mem": arg.read_bytes().hex() if arg.exists() else None,
+            }
+            self.calls.append(call)
+            LOG.info("traced call: %s", call)
+        if not self.calls:
+            LOG.info("traced calls: none in %.0f s", TRACE_SECONDS)
 
     def cancel(self) -> None:
         if self._proc is not None and self._proc.poll() is None:
@@ -257,9 +354,14 @@ class Armed:
             self._tmp.cleanup()
 
 
-def arm(cut: CutPoint, timeout: float = 300, watch: Watch | None = None) -> Armed:
+def arm(
+    cut: CutPoint,
+    timeout: float = 300,
+    watch: Watch | None = None,
+    trace: Trace | None = None,
+) -> Armed:
     """Arm `cut` for work the unit does on its own (a boot, a push)."""
-    return Armed(cut, timeout, dict(watch or {})).start()
+    return Armed(cut, timeout, dict(watch or {}), list(trace or [])).start()
 
 
 @dataclass
@@ -308,11 +410,25 @@ def summary(
     )
 
 
+def calls_summary(armed: Armed | None) -> str:
+    """The traced calls in order, for the report."""
+    if armed is None or not armed.trace:
+        return ""
+    if not armed.calls:
+        return "traced calls: none"
+    parts = []
+    for c in armed.calls:
+        caller = c["caller"].split(" (")[0]
+        parts.append(f"{c['call']} from {caller} -> {c['ret']}")
+    return "traced calls: " + "; ".join(parts)
+
+
 def cut_during(
     cut: CutPoint,
     action: t.Callable[[], t.Any],
     timeout: float = 300,
     watch: Watch | None = None,
+    trace: Trace | None = None,
 ) -> CutResult:
     """Arm `cut`, run the host side of the exchange that reaches it, and reset
     the unit there. The action loses its device mid-call; whatever it raises
@@ -328,7 +444,7 @@ def cut_during(
         finally:
             done.set()
 
-    with arm(cut, timeout, watch) as armed:
+    with arm(cut, timeout, watch, trace) as armed:
         th = threading.Thread(target=run, daemon=True)
         th.start()
         hit = armed.wait()
