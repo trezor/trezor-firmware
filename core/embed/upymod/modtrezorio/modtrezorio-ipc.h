@@ -45,8 +45,8 @@ static mp_obj_t mod_trezorio_ipc_send(size_t n_args, const mp_obj_t* args) {
   systask_id_t remote = (systask_id_t)mp_obj_get_int(remote_obj);
   mp_int_t service = mp_obj_get_int(service_obj);
   mp_int_t message_id = mp_obj_get_int(message_id_obj);
-  if (service < 0 || service >= UINT16_MAX || message_id < 0 ||
-      message_id >= UINT16_MAX) {
+  if (service < 0 || service > UINT16_MAX || message_id < 0 ||
+      message_id > UINT16_MAX) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid service or message ID."));
   }
 
