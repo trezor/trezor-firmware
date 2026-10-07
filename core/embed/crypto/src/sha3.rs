@@ -82,6 +82,10 @@ impl Sha3Guard<'_> {
     }
 
     /// Finalize into `buffer`.
+    ///
+    /// After calling this method, the context is in a zeroized state. Before
+    /// reusing it, the caller must call [`Sha3CtxInner::init`] to reinitialize
+    /// it.
     pub fn finalize_into(&mut self, buffer: &mut [u8]) {
         // COPY HAZARD: implemented on a guard
         self.hazard_mut().hazard_finalize_into(buffer);
@@ -90,7 +94,7 @@ impl Sha3Guard<'_> {
 
 macro_rules! impl_raw_hasher {
     ($name:ident, $bit_size:literal, $is_keccak:literal, $digest_size:expr) => {
-        /// SHA-3 / Keccak hasher.
+        #[doc = concat!("`", stringify!($name), "` hasher over a [`Sha3Ctx`].")]
         pub struct $name<D: DerefMut<Target = Sha3Ctx>>(SecretContextLock<D>);
 
         impl<D: DerefMut<Target = Sha3Ctx>> $name<D> {
@@ -115,6 +119,9 @@ macro_rules! impl_raw_hasher {
         }
 
         impl $name<&'_ mut Sha3Ctx> {
+            /// Digest size in bytes.
+            pub const DIGEST_SIZE: usize = $digest_size;
+
             #[doc = concat!("Calculate the `", stringify!($name), "` digest of the given data.")]
             pub fn digest(data: &[u8]) -> [u8; $digest_size] {
                 let mut ctx = Sha3Ctx::default();
@@ -267,5 +274,11 @@ mod test {
                 assert_eq!(hex::encode(out), expected);
             }
         }
+    }
+
+    #[test]
+    fn test_digest_size() {
+        assert_eq!(Sha3_256::DIGEST_SIZE, 32);
+        assert_eq!(Keccak512::DIGEST_SIZE, 64);
     }
 }
