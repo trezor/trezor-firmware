@@ -37,6 +37,11 @@
 #define PANEL_INIT_SEQ dem240320b1_init_seq
 #define PANEL_ROTATE dem240320b1_rotate
 #define PANEL_REINIT dem240320b1_init_seq
+#elif defined(DISPLAY_PANEL_LX200B4501CTP03)
+#include "panels/lx200b4501ctp03.h"
+#define PANEL_INIT_SEQ lx200b4501ctp03_init_seq
+#define PANEL_ROTATE lx200b4501ctp03_rotate
+#define PANEL_REINIT lx200b4501ctp03_init_seq
 #elif defined(DISPLAY_PANEL_LHS200KB_IF21)
 #include "panels/lhs200kb-if21.h"
 #define PANEL_INIT_SEQ lhs200kb_if21_init_seq
@@ -158,10 +163,11 @@ void display_panel_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
   }
 }
 
-void display_panel_set_little_endian(void) {
+display_pixel_endian_t display_panel_set_little_endian(void) {
   uint32_t id = display_panel_identify();
   if (id == DISPLAY_ID_GC9307) {
-    // CANNOT SET ENDIAN FOR GC9307
+    // CANNOT SET ENDIAN FOR GC9307, it expects the high byte first
+    return DISPLAY_PIXEL_BIG_ENDIAN;
   } else if (id == DISPLAY_ID_ST7789V) {
     ISSUE_CMD_BYTE(0xB0);
     ISSUE_DATA_BYTE(0x00);
@@ -173,12 +179,13 @@ void display_panel_set_little_endian(void) {
     ISSUE_DATA_BYTE(0x30);
     ISSUE_DATA_BYTE(0x20);
   }
+  return DISPLAY_PIXEL_LITTLE_ENDIAN;
 }
 
-void display_panel_set_big_endian(void) {
+display_pixel_endian_t display_panel_set_big_endian(void) {
   uint32_t id = display_panel_identify();
   if (id == DISPLAY_ID_GC9307) {
-    // CANNOT SET ENDIAN FOR GC9307
+    // CANNOT SET ENDIAN FOR GC9307, it is natively big-endian
   } else if (id == DISPLAY_ID_ST7789V) {
     ISSUE_CMD_BYTE(0xB0);
     ISSUE_DATA_BYTE(0x00);
@@ -190,6 +197,7 @@ void display_panel_set_big_endian(void) {
     ISSUE_DATA_BYTE(0x30);
     ISSUE_DATA_BYTE(0x00);
   }
+  return DISPLAY_PIXEL_BIG_ENDIAN;
 }
 
 #if defined(DISPLAY_PANEL_T2T1) && !defined(BOARDLOADER)
