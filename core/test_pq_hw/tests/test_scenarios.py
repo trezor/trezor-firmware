@@ -14,9 +14,9 @@ pytestmark = pytest.mark.hw
 
 
 def test_bootloader_wipe_leaves_an_empty_unit(unit: Unit, fx: Fixtures) -> None:
-    """WP-01: WipeDevice in the PQ bootloader clears firmware_type with the
-    firmware, so the unit reads empty and takes an official release unattended,
-    without the old seed."""
+    """Wipes a seeded unit from the PQ bootloader: it must read as empty
+    afterwards, take an official release without a confirm, and have no
+    seed. [WP-01]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
     ctx = flows.enter_bootloader(unit, ctx)
     ctx = flows.wipe_in_bootloader(unit, ctx)
@@ -31,9 +31,8 @@ def test_bootloader_wipe_leaves_an_empty_unit(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_legacy_bootloader_refuses_a_pq_image(unit: Unit, fx: Fixtures) -> None:
-    """MG-19 (legacy half): the legacy bootloader does not take a PQ firmware
-    image, and the legacy firmware still boots with its seed. (The PQ half is
-    test_tamper.py::test_bare_phase2_refused.)"""
+    """Offers a PQ firmware image to the legacy bootloader: it must refuse it,
+    and the legacy firmware must still boot with its seed. [MG-19]"""
     ctx = flows.baseline_legacy(unit, fx, "universal")
     flows.load_seed(unit, ctx)
     seed = flows.seed_fingerprint(unit, ctx)

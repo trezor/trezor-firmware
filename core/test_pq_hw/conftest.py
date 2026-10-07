@@ -117,6 +117,13 @@ def recorder(request: pytest.FixtureRequest, fx: Fixtures) -> Recorder:
             for name, src in fx.manifest.get("sources", {}).items()
         },
         "screenshots": "off" if config.getoption("--no-screens") else "SWD",
+        "releases": (
+            "legacy = firmware 2.13.0, bootloader 2.1.18; intermediary = 2.13.1; "
+            "A = 2.14.0 / 2.1.19; B = 2.14.1 / 2.1.20 (new bootloader code "
+            "and nRF); B-fix = 2.14.2 / 2.1.20 with fix_version 2.1.20; "
+            "C = 2.14.3 / 2.1.21, needs 2.1.20 installed; "
+            "E = 2.14.4 / 2.1.22, anti-rollback counter 4"
+        ),
     }
     rec = Recorder(
         config.getoption("--report-dir"),
@@ -149,7 +156,7 @@ def _flow_record(request: pytest.FixtureRequest):
         yield
         return
     rec: Recorder = request.getfixturevalue("recorder")
-    rec.start(item.nodeid)
+    rec.start(item.nodeid, getattr(item.function, "__doc__", None) or "")
     yield
     report = getattr(item, "_pqhw_rep_call", None) or getattr(
         item, "_pqhw_rep_setup", None

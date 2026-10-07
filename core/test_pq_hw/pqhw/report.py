@@ -28,6 +28,8 @@ class Step:
 class TestRecord:
     nodeid: str
     slug: str
+    #: what the test does, from its docstring
+    doc: str = ""
     started: float = field(default_factory=time.monotonic)
     steps: list[Step] = field(default_factory=list)
     outcome: str = "unknown"
@@ -52,8 +54,8 @@ class Recorder:
         self.records: list[TestRecord] = []
         self.current: TestRecord | None = None
 
-    def start(self, nodeid: str) -> None:
-        self.current = TestRecord(nodeid, _slug(nodeid))
+    def start(self, nodeid: str, doc: str = "") -> None:
+        self.current = TestRecord(nodeid, _slug(nodeid), " ".join(doc.split()))
         self.records.append(self.current)
 
     def step(self, caption: str, screenshot: bool = True) -> None:
@@ -104,7 +106,8 @@ class Recorder:
             for k, v in self.context.items()
         )
         rows = "".join(
-            f'<tr class="{e(r.outcome)}"><td><a href="#{e(r.slug)}">{e(r.nodeid)}</a></td>'
+            f'<tr class="{e(r.outcome)}"><td><a href="#{e(r.slug)}" title="{e(r.doc)}">'
+            f"{e(r.nodeid)}</a></td>"
             f"<td>{e(r.outcome)}</td><td>{r.duration:.0f} s</td><td>{len(r.steps)}</td></tr>"
             for r in self.records
         )
@@ -134,6 +137,7 @@ section.passed {{ border-left-color:var(--pass); }}
 section.failed {{ border-left-color:var(--fail); }}
 section.skipped {{ border-left-color:var(--skip); }}
 .meta {{ color:var(--dim); margin:2px 0 10px; }}
+.doc {{ margin:6px 0 4px; max-width:75ch; }}
 .steps {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
   gap:12px; }}
 figure {{ margin:0; }} figure img {{ width:100%; max-width:190px;
@@ -178,6 +182,7 @@ details summary {{ cursor:pointer; color:var(--dim); margin-top:10px; }}
         return (
             f'<section id="{e(r.slug)}" class="{e(r.outcome)}">'
             f"<h2>{e(r.nodeid)}</h2>"
-            f'<p class="meta">{e(r.outcome)} · {r.duration:.0f} s</p>'
+            + (f'<p class="doc">{e(r.doc)}</p>' if r.doc else "")
+            + f'<p class="meta">{e(r.outcome)} · {r.duration:.0f} s</p>'
             f'<div class="steps">{"".join(figs)}</div>{failure}{log}</section>'
         )

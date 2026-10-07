@@ -106,8 +106,10 @@ def finish(unit: Unit, fx: Fixtures, seed, bootloader: tuple[int, int, int]):
 def test_cut_in_phase1_before_arming(
     unit: Unit, fx: Fixtures, symbol: str, mode: str
 ) -> None:
-    """PL-01..03: cut before the UCB is armed: the old bootloader stays, any
-    partial staging is discarded, the install starts over."""
+    """Simulates power loss at a point of the A to B install before the
+    bootloader swap is committed: the old bootloader must stay, and re-
+    running the install over USB must complete with the seed. [PL-01, PL-02,
+    PL-03]"""
     ctx, seed, bundle = start(unit, fx)
     cut = CutPoint(fx.release_elf(OLD), symbol, mode)
     unit.step(f"cut armed: {cut}", screenshot=False)
@@ -127,8 +129,9 @@ def test_cut_in_phase1_before_arming(
 
 
 def test_cut_after_arming(unit: Unit, fx: Fixtures) -> None:
-    """PL-04: cut once the UCB is armed, before the reboot: the boardloader
-    installs B's bootloader anyway, so the re-run is header-only."""
+    """Simulates power loss just after the bootloader swap is committed: the
+    boardloader must install B's bootloader on the next boot, and the re-run
+    only needs the firmware. [PL-04]"""
     ctx, seed, bundle = start(unit, fx)
     cut = CutPoint(
         fx.release_elf(OLD), "workflow_firmware_update_pq>ucb_stage_arm", "after"
@@ -173,10 +176,9 @@ def phase1_then_arm(
 def test_cut_around_nrf_push(
     unit: Unit, fx: Fixtures, symbol: str, mode: str, delay: float
 ) -> None:
-    """PL-06: cut mid-push: the resume driver pushes again and converges.
-    PL-07: cut after the push, before the staging is cleared: the live hash
-    matches, so the next boot skips and clears. Either way the re-run finds the
-    nRF current."""
+    """Simulates power loss during, or right after, the nRF update on the first
+    boot of B's bootloader: the next boot must bring the nRF up to date on
+    its own. [PL-06, PL-07]"""
     ctx, seed, bundle = start(unit, fx)
     cut = CutPoint(fx.release_elf(NEW), symbol, mode, delay)
     watch, labels = code_watch(fx)
@@ -188,8 +190,8 @@ def test_cut_around_nrf_push(
 
 
 def test_cut_mid_phase2(unit: Unit, fx: Fixtures) -> None:
-    """PL-08: reset while the firmware streams: back in the bootloader with
-    B's header, and the re-run completes."""
+    """Resets the unit while the firmware is being streamed: it must come back
+    in the bootloader, and the re-run must complete with the seed. [PL-08]"""
     ctx, seed, bundle = start(unit, fx)
     flows.pq_phase1(unit, ctx, bundle)
     flows.close(ctx)
@@ -267,9 +269,9 @@ def migration_finishes(unit: Unit, fx: Fixtures, variant: str, seed) -> None:
 def test_cut_in_intermediary_swap(
     unit: Unit, fx: Fixtures, part: str, symbol: str, mode: str, delay: float
 ) -> None:
-    """MG-12..14: the intermediary's swap cut at each step; the next boot picks
-    it up (re-push, re-replace, or the boardloader finishing) and the
-    migration completes with the seed."""
+    """Simulates power loss at each step of the intermediary's swap to the PQ
+    bootloader: the next boot must carry on, and the migration must end with
+    the seed intact. [MG-12, MG-13, MG-14]"""
     variant = "universal"
     seed = legacy_to_intermediary(unit, fx, variant)
     # armed after the legacy bootloader has stopped running the old image
@@ -285,8 +287,9 @@ def test_cut_in_intermediary_swap(
 
 
 def test_cut_in_pq_bootloader_before_firmware(unit: Unit, fx: Fixtures) -> None:
-    """MG-15: power lost with the PQ bootloader in place and no firmware yet:
-    it comes back to the PQ bootloader, and the release keeps the seed."""
+    """Simulates power loss after migration, while the PQ bootloader waits for
+    its first firmware: it must come back to the PQ bootloader, and
+    installing the release must keep the seed. [MG-15]"""
     variant = "universal"
     seed = legacy_to_intermediary(unit, fx, variant)
     ctx = flows.wait_pq_bootloader(unit)

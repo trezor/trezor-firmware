@@ -32,7 +32,9 @@ def install_intermediary_with_pin(
 
 
 def test_pin_gates_the_swap(unit: Unit, fx: Fixtures, operator) -> None:
-    """MG-02, MG-04: nothing moves until the PIN is entered; the seed survives."""
+    """With a PIN set, the intermediary does nothing until the PIN is entered;
+    then it swaps to the PQ bootloader and the seed survives. Needs a person
+    at the device. [MG-02, MG-04]"""
     seed = install_intermediary_with_pin(unit, fx)
     operator(
         "The device should show the lockscreen reading 'Unlock to continue "
@@ -49,9 +51,9 @@ def test_pin_gates_the_swap(unit: Unit, fx: Fixtures, operator) -> None:
 
 
 def test_wipe_code_at_the_intermediary(unit: Unit, fx: Fixtures, operator) -> None:
-    """MG-07: the wipe code erases storage; the legacy bootloader shows the wipe
-    screen and reboots; the empty intermediary swaps without asking. The unit
-    is stamped, not empty, so release A then asks, and installs uninitialised."""
+    """Entering the wipe code at the intermediary's PIN prompt erases storage;
+    the empty intermediary then swaps without asking. Needs a person at the
+    device. [MG-07]"""
     install_intermediary_with_pin(unit, fx, wipe_code=flows.WIPE_CODE)
     operator(f"Tap the lockscreen and enter the WIPE CODE {flows.WIPE_CODE}.")
     ctx = flows.wait_pq_bootloader(unit)

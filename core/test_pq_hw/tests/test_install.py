@@ -18,10 +18,10 @@ pytestmark = pytest.mark.hw
 def test_empty_unit_takes_official_without_prompt(
     unit: Unit, fx: Fixtures, variant: str
 ) -> None:
-    """BT-05, IN-11 (official half): an empty unit reads empty and installs an
-    official variant with no prompt, so the factory flow stays unattended.
-    BT-01, VR-06: the variant then runs as itself, reporting the manifest's
-    version, and the bootloader names its vendor."""
+    """On a factory-fresh unit, an official firmware (universal or btc-only)
+    installs with no confirm screen, so the factory flow needs no person.
+    The firmware then reports its own version and capabilities, and the
+    bootloader names its vendor. [BT-01, BT-05, VR-06, IN-11]"""
     ctx = flows.baseline_pq_empty(unit, fx, "release-A")
     f = ctx.features
     assert f.firmware_scheme == FirmwareScheme.PqSecure
@@ -50,9 +50,9 @@ def test_empty_unit_takes_official_without_prompt(
 
 
 def test_custom_on_empty_unit(unit: Unit, fx: Fixtures) -> None:
-    """IN-11 (custom half), IN-12: a locked bootloader refuses custom firmware
-    outright; an unlocked one installs it, but only after asking (empty does
-    not mean unattended for unofficial code), and reports it as unsafe."""
+    """Custom (unofficial) firmware on a fresh unit: a locked bootloader
+    refuses it; an unlocked one installs it only after a confirm and flags
+    it as unsafe at boot. [IN-11, IN-12]"""
     ctx = flows.baseline_pq_empty(unit, fx, "release-A")
     bundle = fx.bundle("release-A", "custom")
     if ctx.features.bootloader_locked:
@@ -74,7 +74,8 @@ def test_custom_on_empty_unit(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_reinstall_is_header_only(unit: Unit, fx: Fixtures) -> None:
-    """The same release again: no bootloader code and no nRF image streamed."""
+    """Installs the release the unit already runs: neither the bootloader code
+    nor the nRF image is sent again, and the seed is kept."""
     ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
     seed = flows.seed_fingerprint(unit, ctx)
     ctx = flows.enter_bootloader(unit, ctx)
@@ -85,8 +86,9 @@ def test_reinstall_is_header_only(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_upgrade_streams_bootloader_and_nrf(unit: Unit, fx: Fixtures) -> None:
-    """IN-02, NR-01, FW-01: A -> B replaces the bootloader code (rebuilt, so it
-    does not conform) and pushes nRF 1.0.1 -> 1.1.3; the seed survives."""
+    """Upgrades A to B: the new bootloader code and the new nRF image are both
+    installed, the firmware reports B's version, and the seed is kept.
+    [IN-02, NR-01, FW-01]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
     seed = flows.seed_fingerprint(unit, ctx)
     assert seed is not None
@@ -105,7 +107,8 @@ def test_upgrade_streams_bootloader_and_nrf(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_downgrade_keeps_seed(unit: Unit, fx: Fixtures) -> None:
-    """VR-05: B -> A is allowed after a confirm, below no floor, seed kept."""
+    """Downgrades B to A from the bootloader: allowed after a confirm, since no
+    version floor forbids it, and the seed is kept. [VR-05]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-B", "universal")
     seed = flows.seed_fingerprint(unit, ctx)
     ctx = flows.enter_bootloader(unit, ctx)
@@ -117,7 +120,8 @@ def test_downgrade_keeps_seed(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_variant_change_wipes(unit: Unit, fx: Fixtures) -> None:
-    """IN-10: universal -> btc-only is a different storage domain."""
+    """Switches a seeded universal unit to btc-only firmware: a different
+    storage domain, so the confirm warns and the seed is erased. [IN-10]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
     ctx = flows.enter_bootloader(unit, ctx)
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", "btc-only"))
@@ -127,7 +131,9 @@ def test_variant_change_wipes(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_interaction_less_upgrade(unit: Unit, fx: Fixtures) -> None:
-    """IL-01: confirmed in firmware, installed by the bootloader without asking."""
+    """Upgrade approved in the firmware: after the firmware's own confirm, the
+    bootloader installs B without asking again, and the seed is kept.
+    [IL-01]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
     seed = flows.seed_fingerprint(unit, ctx)
     bundle = fx.bundle("release-B", "universal")
@@ -140,7 +146,8 @@ def test_interaction_less_upgrade(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_interaction_less_refuses_other_release(unit: Unit, fx: Fixtures) -> None:
-    """IL-02 consent-mismatch: consent for B universal does not cover B btc-only."""
+    """Approval given in the firmware for B universal must not cover B btc-
+    only: the bootloader refuses it. [IL-02]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
     ctx = flows.enter_bootloader(unit, ctx, bundle=fx.bundle("release-B", "universal"))
     with pytest.raises(exceptions.TrezorFailure, match="Firmware mismatch"):

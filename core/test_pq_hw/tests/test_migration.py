@@ -38,8 +38,9 @@ def migrate(unit: Unit, fx: Fixtures, legacy_variant: str, seeded: bool = True):
 
 @pytest.mark.parametrize("variant", VARIANTS)
 def test_migration_keeps_seed(unit: Unit, fx: Fixtures, variant: str) -> None:
-    """MG-01, MG-03, MG-04/05: a seeded legacy unit of each variant ends on PQ
-    release A of the same variant with the same seed."""
+    """Migrates a seeded legacy unit through the intermediary to the PQ
+    bootloader and release A of the same variant: the seed must survive.
+    [MG-01, MG-03, MG-04, MG-05]"""
     ctx, seed = migrate(unit, fx, variant)
     # stamped, so the unit is not empty: the install asks
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", variant))
@@ -53,8 +54,9 @@ def test_migration_keeps_seed(unit: Unit, fx: Fixtures, variant: str) -> None:
 
 
 def test_migration_into_other_variant_wipes(unit: Unit, fx: Fixtures) -> None:
-    """The stamp is load-bearing: a universal unit installing btc-only after the
-    swap crosses storage domains and loses the seed."""
+    """After migrating a universal unit, installing btc-only crosses storage
+    domains: the seed is erased, so the intermediary's variant stamp
+    matters."""
     ctx, _ = migrate(unit, fx, "universal")
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", "btc-only"))
     assert report.prompted
@@ -63,7 +65,8 @@ def test_migration_into_other_variant_wipes(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_unseeded_unit_migrates(unit: Unit, fx: Fixtures) -> None:
-    """MG-09: an uninitialised legacy unit swaps with no interaction at all."""
+    """A legacy unit with no seed migrates with no interaction at all and ends
+    on PQ release A, still empty. [MG-09]"""
     ctx, _ = migrate(unit, fx, "universal", seeded=False)
     flows.pq_install(unit, ctx, fx.bundle("release-A", "universal"))
     ctx = unit.context(bootloader=False, timeout=flows.REBOOT)

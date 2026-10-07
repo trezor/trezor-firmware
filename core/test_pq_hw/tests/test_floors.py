@@ -14,8 +14,9 @@ pytestmark = pytest.mark.hw
 
 
 def test_fix_version_wipes_below(unit: Unit, fx: Fixtures) -> None:
-    """VR-03: under B-fix (fix 2.1.20), installing A (2.1.19) wipes, never
-    silently: the confirm is forced."""
+    """Installs release A over B-fix, whose fix_version floor (2.1.20) is above
+    A's bootloader. The install must still go ahead, but only after a
+    confirm, and the seed must be erased. [VR-03]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-B-fix", "universal")
     ctx = flows.enter_bootloader(unit, ctx)
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", "universal"))
@@ -25,7 +26,8 @@ def test_fix_version_wipes_below(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_fix_version_keeps_at(unit: Unit, fx: Fixtures) -> None:
-    """VR-03: under B-fix, installing B (2.1.20, at the floor) keeps the seed."""
+    """Installs release B over B-fix: B's bootloader is exactly at the
+    fix_version floor, so the seed must be kept. [VR-03]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-B-fix", "universal")
     seed = flows.seed_fingerprint(unit, ctx)
     ctx = flows.enter_bootloader(unit, ctx)
@@ -35,8 +37,9 @@ def test_fix_version_keeps_at(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_min_prev_refused_below(unit: Unit, fx: Fixtures) -> None:
-    """VR-04: C needs an installed bootloader >= 2.1.20; A has 2.1.19. Refused
-    in phase 1 before any prompt, and the unit still runs A with its seed."""
+    """Offers release C, which only installs over a bootloader of 2.1.20 or
+    newer, to a unit on A (2.1.19). It must be refused before any confirm
+    screen, leaving A and the seed untouched. [VR-04]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
     seed = flows.seed_fingerprint(unit, ctx)
     ctx = flows.enter_bootloader(unit, ctx)
@@ -52,7 +55,8 @@ def test_min_prev_refused_below(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_min_prev_accepted_at(unit: Unit, fx: Fixtures) -> None:
-    """VR-04: from B (2.1.20) the same release installs."""
+    """Offers release C to a unit on B (2.1.20, exactly at C's floor): it must
+    install and keep the seed. [VR-04]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-B", "universal")
     seed = flows.seed_fingerprint(unit, ctx)
     ctx = flows.enter_bootloader(unit, ctx)
@@ -64,8 +68,10 @@ def test_min_prev_accepted_at(unit: Unit, fx: Fixtures) -> None:
 
 @pytest.mark.burns
 def test_monotonic_refuses_older_bootloader(unit: Unit, fx: Fixtures) -> None:
-    """VR-01: E burns bootloader monotonic 4; B (monotonic 3) is then refused
-    before the confirm. The next baseline's flash-erase resets the counter."""
+    """Installs release E, which raises the bootloader anti-rollback counter to
+    4, then offers B (counter 3): B must be refused before any confirm
+    screen. Moves a forward-only counter; the next test's flash erase resets
+    it. [VR-01]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
     ctx = flows.enter_bootloader(unit, ctx)
     flows.pq_install(unit, ctx, fx.bundle("release-E-mono", "universal"))

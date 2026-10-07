@@ -49,6 +49,10 @@ def assert_recovers(unit: Unit, fx: Fixtures, seed: str | None) -> None:
 
 @pytest.mark.parametrize("case", tamper.PHASE1, ids=lambda c: c.name)
 def test_phase1_refused(unit: Unit, fx: Fixtures, case: tamper.Tamper) -> None:
+    """Sends a genuine release with one field corrupted before installation
+    starts (signature, model, manifest, nRF data or custom layout): the
+    bootloader must refuse it before any confirm screen and leave the unit
+    untouched. [IN-03, IN-05, IN-13, IN-14, NR-03]"""
     ctx, seed = seeded_unit(unit, fx)
     bundle = fx.bundle(RELEASE, case.variant)
     upload = case.alter(flows.Upload.of(bundle), bundle)
@@ -62,6 +66,9 @@ def test_phase1_refused(unit: Unit, fx: Fixtures, case: tamper.Tamper) -> None:
 
 @pytest.mark.parametrize("case", tamper.PHASE2, ids=lambda c: c.name)
 def test_phase2_refused(unit: Unit, fx: Fixtures, case: tamper.Tamper) -> None:
+    """Corrupts the firmware stream after installation has started (a flipped
+    byte, wrong or missing chunk hashes): the bootloader must refuse it, and
+    the honest install must then complete with the seed. [IN-06]"""
     ctx, seed = seeded_unit(unit, fx)
     bundle = fx.bundle(RELEASE, "universal")
     upload = case.alter(flows.Upload.of(bundle), bundle)
@@ -76,7 +83,9 @@ def test_phase2_refused(unit: Unit, fx: Fixtures, case: tamper.Tamper) -> None:
 
 
 def test_variant_swap_refused(unit: Unit, fx: Fixtures) -> None:
-    """IN-07: phase 1 approves universal, phase 2 streams btc-only."""
+    """Approves universal in the first phase, then streams btc-only firmware:
+    the bootloader must refuse it, and the honest install must then
+    complete. [IN-07]"""
     ctx, seed = seeded_unit(unit, fx)
     bundle = fx.bundle(RELEASE, "universal")
     upload = tamper.variant_swap(
@@ -93,9 +102,9 @@ def test_variant_swap_refused(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_bare_phase2_refused(unit: Unit, fx: Fixtures) -> None:
-    """IN-08: a fresh bootloader boot takes no firmware stream without phase 1,
-    and refusing it erases nothing. Also MG-19's PQ half: the only way to offer
-    a legacy image is this bare stream, so it is refused the same way."""
+    """Streams firmware without the first phase: the bootloader must refuse it
+    and erase nothing. This is also the only way to offer a legacy image to
+    the PQ bootloader. [IN-08, MG-19]"""
     ctx, seed = seeded_unit(unit, fx)
     ctx = flows.enter_bootloader(unit, ctx)
     data = fx.bundle(RELEASE, "universal").firmware.data
@@ -113,8 +122,9 @@ def test_bare_phase2_refused(unit: Unit, fx: Fixtures) -> None:
 def test_consent_preamble_refused_in_firmware(
     unit: Unit, fx: Fixtures, kind: str
 ) -> None:
-    """IL-02: the firmware refuses to pre-authorise a preamble it cannot parse,
-    or one whose variant is another vendor's, and stays where it is."""
+    """Asks the firmware to pre-approve an upgrade it cannot parse, or one for
+    another vendor's variant: the firmware must refuse and keep running.
+    [IL-02]"""
     ctx, seed = seeded_unit(unit, fx)
     bundle = fx.bundle("release-B", "universal")
     if kind == "bad-preamble":
