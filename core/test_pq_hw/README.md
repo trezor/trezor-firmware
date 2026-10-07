@@ -129,6 +129,11 @@ the pictures.
 Screenshots are read over SWD (`pqhw/screen.py`), because neither debuglink
 returns pixels on hardware and the device is not on USB at its boot
 lockscreen. openocd reads which GFXMMU virtual buffer the LTDC is scanning
-(layer-1 `CFBAR`) and dumps it; the CPU keeps running. Each takes a few
-seconds, depending on the ST-Link. The boardloader does not drive the
+(layer-1 `CFBAR`), dumps it and reads `CFBAR` again; a capture that saw a
+buffer swap is taken again, so a torn frame never reaches the report. The CPU
+keeps running (pausing it mid-install would risk host timeouts), so a picture
+shows the screen at the moment of the read: the step itself on a screen that
+waits for input, possibly the next screen on a transient one. The SWD clock
+defaults to 8 MHz; `PQHW_SWD_KHZ=24000` suits an ST-Link V3 on a short cable.
+`python -m pqhw.screen out.png` takes one capture and prints how long it took. The boardloader does not drive the
 display, so a step during it shows the error instead of a picture.
