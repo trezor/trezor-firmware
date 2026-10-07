@@ -245,7 +245,8 @@ def _script(
             "rbp all",
         ]
     elif cut.mode == "during":
-        lines += ["resume", f"sleep {int(cut.delay * 1000)}"]
+        # let it run, then stop it: registers are only readable when halted
+        lines += ["resume", f"sleep {int(cut.delay * 1000)}", "halt"]
     # `reset halt`, not `reset run`: a reset that failed would leave openocd
     # to exit and the core to carry on past the cut, silently. Halted at the
     # reset vector, the PC proves the reset happened; then it runs.
