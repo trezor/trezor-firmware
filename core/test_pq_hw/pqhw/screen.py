@@ -14,9 +14,13 @@ The display controller (LTDC) scans layer 1 from the address in its CFBAR
 register. On T3W1 that is one of the two GFXMMU virtual buffers, which present
 the frame linearly: 520 lines of 768 ARGB8888 pixels, the UI in the first 380
 of each line (the layer window maps buffer column 0 to panel column 50). The
-UI draws into the other buffer and swaps, so the displayed one is stable unless
-a swap lands mid-read; CFBAR is read before and after, and a capture that saw
-it change is taken again.
+UI draws into the other buffer and swaps, so the displayed one is stable while
+no swap happens. A read takes over a second, though, and two swaps inside it
+(A -> B -> A) leave CFBAR unchanged while A was redrawn under the read, which
+gives a picture made of two frames. So besides comparing CFBAR before and
+after, every SAMPLE_STEP-th line is read again at the end and must match: a
+redraw anywhere in the read changes the lines read before it. A capture that
+fails either check is taken again.
 """
 
 from __future__ import annotations
@@ -49,6 +53,9 @@ FRAME_SIZE = (HEIGHT - 1) * STRIDE + WIDTH * 4
 # or an older probe. The target config's own default is much slower.
 SWD_KHZ = int(os.environ.get("PQHW_SWD_KHZ", "24000"))
 TEAR_RETRIES = 3
+# Lines re-read after the frame to prove nothing was redrawn during the read.
+SAMPLE_STEP = 8
+SAMPLE_LINES = range(0, HEIGHT, SAMPLE_STEP)
 
 OPENOCD = [
     "openocd",
@@ -88,8 +95,15 @@ def _check_fb(fb: int) -> int:
 # --- fast path: one session -------------------------------------------------
 
 
-def _one_session(reg: int, tmp: Path) -> tuple[int, int, bytes]:
-    """CFBAR before, the frame, CFBAR after, in a single openocd run.
+def _settled(frame: bytes, samples: dict[int, bytes]) -> bool:
+    """The re-read lines match the frame: nothing was redrawn during the read."""
+    line = WIDTH * 4
+    return all(frame[y * STRIDE : y * STRIDE + line] == d for y, d in samples.items())
+
+
+def _one_session(reg: int, tmp: Path) -> tuple[int, int, bytes, bool]:
+    """CFBAR before, the frame, the sample lines again, CFBAR after, in a
+    single openocd run.
 
     Needs `read_memory` and Jim's file I/O; the register values go out through
     a file, and through `echo` as a second channel, since console output of
@@ -97,10 +111,15 @@ def _one_session(reg: int, tmp: Path) -> tuple[int, int, bytes]:
     """
     frame = tmp / "fb.bin"
     regs = tmp / "regs.txt"
+    resample = "".join(
+        f"dump_image {tmp / f's{y}.bin'} [expr {{$a + {y * STRIDE}}}] {WIDTH * 4}; "
+        for y in SAMPLE_LINES
+    )
     out = _openocd(
         "init; "
         f"set a [lindex [read_memory {reg:#x} 32 1] 0]; "
         f"dump_image {frame} $a {FRAME_SIZE}; "
+        f"{resample}"
         f"set b [lindex [read_memory {reg:#x} 32 1] 0]; "
         'echo "PQHW_CFBAR $a $b"; '
         f'set f [open {regs} w]; puts $f "$a $b"; close $f; '
@@ -112,7 +131,14 @@ def _one_session(reg: int, tmp: Path) -> tuple[int, int, bytes]:
     )
     if m is None or not frame.exists():
         raise ScreenError("single-session capture produced no result")
-    return int(m.group(1), 0), int(m.group(2), 0), frame.read_bytes()
+    data = frame.read_bytes()
+    samples = {}
+    for y in SAMPLE_LINES:
+        path = tmp / f"s{y}.bin"
+        if not path.exists():
+            raise ScreenError(f"single-session capture lost sample line {y}")
+        samples[y] = path.read_bytes()
+    return int(m.group(1), 0), int(m.group(2), 0), data, _settled(data, samples)
 
 
 # --- fallback: one session per read -----------------------------------------
@@ -147,11 +173,13 @@ def displayed_buffer() -> int:
     return _check_fb(_read_cfbar()[1])
 
 
-def _several_sessions() -> tuple[int, int, bytes]:
+def _several_sessions() -> tuple[int, int, bytes, bool]:
+    """Slow path: the whole frame twice, which must match."""
     reg, a = _read_cfbar()
     data = read_memory(_check_fb(a), FRAME_SIZE)
+    again = read_memory(a, FRAME_SIZE)
     b = int.from_bytes(read_memory(reg, 4), "little")
-    return a, b, data
+    return a, b, data, data == again
 
 
 # --- capture ----------------------------------------------------------------
@@ -159,7 +187,7 @@ def _several_sessions() -> tuple[int, int, bytes]:
 _fast_path_works: bool | None = None
 
 
-def _grab() -> tuple[int, int, bytes]:
+def _grab() -> tuple[int, int, bytes, bool]:
     global _fast_path_works
     if _fast_path_works is not False:
         for reg in LTDC_L1_CFBAR:
@@ -180,11 +208,11 @@ def capture(dest: Path) -> Path:
     """Write the screen as a PNG to `dest`."""
     start = time.monotonic()
     for attempt in range(1, TEAR_RETRIES + 1):
-        before, after, data = _grab()
+        before, after, data, settled = _grab()
         _check_fb(before)
-        if before == after:
+        if before == after and settled:
             break
-        LOG.info("buffer swapped during capture %d, taking it again", attempt)
+        LOG.info("screen redrawn during capture %d, taking it again", attempt)
     else:
         raise ScreenError(f"screen kept changing over {TEAR_RETRIES} captures")
     if len(data) != FRAME_SIZE:
