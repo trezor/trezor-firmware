@@ -74,6 +74,7 @@ exclude-newer = "30 days"
 
 [tool.uv.exclude-newer-package]
 urllib3 = "2026-09-15T19:29:37Z"
+mako = "2026-09-22T20:54:33.129Z"
 virtualenv = "2026-10-02T17:42:25.614Z"
 
 [tool.uv.sources]
