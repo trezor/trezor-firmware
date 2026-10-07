@@ -99,6 +99,10 @@ def finish(unit: Unit, fx: Fixtures, seed, bootloader: tuple[int, int, int]):
         ("ucb_stage_verify", "before"),  # PL-01
         ("nrf_staging_write_desc", "before"),  # PL-02
         ("ucb_stage_arm", "before"),  # PL-03
+        # bracketing PL-03: the descriptor written, nothing after it; and the
+        # UCB flash write itself, one call below ucb_stage_arm
+        ("nrf_staging_write_desc", "after"),
+        ("boot_ucb_write", "before"),
     ],
 )
 def test_cut_in_phase1_before_arming(

@@ -114,6 +114,7 @@ CUT_POINTS = {
         "ucb_stage_arm",
         "nrf_update_with_progress",
         "nrf_staging_clear",
+        "boot_ucb_write",
     ],
     "kernel": ["nrf_update"],
     "secmon": ["boot_image_replace", "boot_ucb_write"],
