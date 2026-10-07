@@ -204,17 +204,18 @@ def _grab() -> tuple[int, int, bytes, bool]:
     return _several_sessions()
 
 
-def capture(dest: Path) -> Path:
-    """Write the screen as a PNG to `dest`."""
+def capture(dest: Path) -> bool:
+    """Write the screen as a PNG to `dest`. Returns False when the screen kept
+    changing over every attempt: the picture is then the last one taken and
+    may mix two frames, which still beats no picture of a transient screen."""
     start = time.monotonic()
     for attempt in range(1, TEAR_RETRIES + 1):
         before, after, data, settled = _grab()
         _check_fb(before)
-        if before == after and settled:
+        settled = settled and before == after
+        if settled:
             break
-        LOG.info("screen redrawn during capture %d, taking it again", attempt)
-    else:
-        raise ScreenError(f"screen kept changing over {TEAR_RETRIES} captures")
+        LOG.info("screen redrawn during capture %d", attempt)
     if len(data) != FRAME_SIZE:
         raise ScreenError(f"short frame read: {len(data)} of {FRAME_SIZE} bytes")
     data += bytes(STRIDE - WIDTH * 4)  # pad the last line to a full stride
@@ -224,7 +225,7 @@ def capture(dest: Path) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
     image.convert("RGB").save(dest)
     LOG.debug("screenshot in %.1f s", time.monotonic() - start)
-    return dest
+    return settled
 
 
 if __name__ == "__main__":
@@ -234,5 +235,6 @@ if __name__ == "__main__":
     # python -m pqhw.screen [out.png] -- one capture, for checking the setup
     target = Path(sys.argv[1] if len(sys.argv) > 1 else "screen.png")
     t0 = time.monotonic()
-    capture(target)
-    print(f"wrote {target} in {time.monotonic() - t0:.1f} s (SWD {SWD_KHZ} kHz)")
+    settled = capture(target)
+    note = "" if settled else ", screen was changing: may mix two frames"
+    print(f"wrote {target} in {time.monotonic() - t0:.1f} s (SWD {SWD_KHZ} kHz{note})")

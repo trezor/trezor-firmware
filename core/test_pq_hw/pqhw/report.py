@@ -21,6 +21,7 @@ class Step:
     caption: str
     image: str | None = None  # relative to the report directory
     error: str | None = None
+    torn: bool = False  # the screen changed during the capture
 
 
 @dataclass
@@ -67,7 +68,7 @@ class Recorder:
         elif self.screenshots:
             rel = f"{rec.slug}/{n:02d}.png"
             try:
-                screen.capture(self.dir / rel)
+                step.torn = not screen.capture(self.dir / rel)
                 step.image = rel
             except Exception as e:  # a missing picture never fails a test
                 step.error = str(e)
@@ -139,6 +140,8 @@ figure {{ margin:0; }} figure img {{ width:100%; max-width:190px;
   border:1px solid var(--rule); display:block; }}
 figcaption {{ font-size:12.5px; margin-top:4px; }}
 figcaption b {{ color:var(--dim); font-weight:500; }}
+figcaption i {{ color:var(--skip); font-style:normal; }}
+figure.torn img {{ border:1px dashed var(--skip); }}
 .noimg {{ width:190px; height:60px; border:1px dashed var(--rule);
   color:var(--dim); font-size:11px; padding:6px; overflow:hidden; }}
 pre {{ background:var(--bg); padding:10px; overflow-x:auto; font-size:12px;
@@ -160,9 +163,11 @@ details summary {{ cursor:pointer; color:var(--dim); margin-top:10px; }}
                 pic = f'<a href="{e(s.image)}"><img src="{e(s.image)}" alt=""></a>'
             else:
                 pic = f'<div class="noimg">{e(s.error or "no screenshot")}</div>'
+            torn = "<br><i>screen changing: may mix two frames</i>" if s.torn else ""
             figs.append(
-                f"<figure>{pic}<figcaption><b>{i} · {s.elapsed:.0f} s</b><br>"
-                f"{e(s.caption)}</figcaption></figure>"
+                f'<figure class="{"torn" if s.torn else ""}">{pic}'
+                f"<figcaption><b>{i} · {s.elapsed:.0f} s</b><br>"
+                f"{e(s.caption)}{torn}</figcaption></figure>"
             )
         failure = f"<pre>{e(r.failure)}</pre>" if r.failure else ""
         log = (
