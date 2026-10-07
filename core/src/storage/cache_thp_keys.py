@@ -18,3 +18,17 @@ if utils.USE_THP:
         APP_CARDANO_ICARUS_TREZOR_SECRET = const(10)
         APP_MONERO_LIVE_REFRESH = const(11)
         APP_EXTAPP_IDS = const(12)
+
+    # Order and membership are part of the ciphertext layout -- see `EncryptableDataCache`.
+    if utils.BITCOIN_ONLY:
+        CACHE_ENCRYPTED_KEYS_THP = (
+            APP_COMMON_SEED,
+            APP_COMMON_NONCE,
+        )
+    else:
+        CACHE_ENCRYPTED_KEYS_THP = (
+            APP_COMMON_SEED,
+            APP_COMMON_NONCE,
+            APP_CARDANO_ICARUS_SECRET,
+            APP_CARDANO_ICARUS_TREZOR_SECRET,
+        )
