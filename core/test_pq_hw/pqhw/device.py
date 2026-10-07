@@ -23,6 +23,11 @@ LOG = logging.getLogger(__name__)
 
 REPO = Path(__file__).resolve().parents[3]
 EMBED = REPO / "core" / "embed"
+# The legacy and PQ layouts put FIRMWARE_START in different places (the PQ
+# bootloader region is 64 KB larger), and `xtask flash -f` takes the address
+# from the tree it runs in. Legacy images are flashed from the legacy source
+# tree the fixture builder keeps.
+LEGACY_EMBED = REPO / "core" / "test_pq_hw" / "work" / "legacy" / "core" / "embed"
 MODEL = "T3W1"
 BUTTONS = ScreenButtons(LayoutType.Eckhart)
 
@@ -54,10 +59,10 @@ class Unit:
 
     # --- SWD ------------------------------------------------------------------
 
-    def xtask(self, *args: str) -> None:
+    def xtask(self, *args: str, embed: Path = EMBED) -> None:
         cmd = ["cargo", "xtask", *args]
-        LOG.info("$ %s", " ".join(cmd))
-        res = subprocess.run(cmd, cwd=EMBED, capture_output=True, text=True)
+        LOG.info("$ %s   (in %s)", " ".join(cmd), embed.relative_to(REPO))
+        res = subprocess.run(cmd, cwd=embed, capture_output=True, text=True)
         if res.returncode != 0:
             raise UnitError(f"{' '.join(cmd)} failed:\n{res.stdout}\n{res.stderr}")
 
@@ -65,8 +70,20 @@ class Unit:
         """Whole flash, which also resets the monotonic counters."""
         self.xtask("flash-erase", "-m", MODEL)
 
-    def flash(self, project: str, image: Path) -> None:
-        self.xtask("flash", "-m", MODEL, "-f", str(image), project)
+    def flash(self, project: str, image: Path, layout: str = "pq") -> None:
+        """Write `image` where `project` lives in the given layout."""
+        if layout == "legacy":
+            if not LEGACY_EMBED.exists():
+                raise UnitError(
+                    f"{LEGACY_EMBED} is missing: run build_fixtures.py, whose "
+                    "legacy worktree provides the legacy flash layout"
+                )
+            embed = LEGACY_EMBED
+        elif layout == "pq":
+            embed = EMBED
+        else:
+            raise ValueError(f"unknown layout {layout!r}")
+        self.xtask("flash", "-m", MODEL, "-f", str(image), project, embed=embed)
 
     def reset(self) -> None:
         self.xtask("reset", "-m", MODEL)

@@ -71,9 +71,9 @@ def seed_fingerprint(ctx: TrezorTestContext) -> str | None:
 def baseline_legacy(unit: Unit, fx: Fixtures, variant: str) -> TrezorTestContext:
     """Pre-migration state: legacy boardloader, bootloader and firmware."""
     unit.erase()
-    unit.flash("boardloader", fx.legacy("boardloader"))
-    unit.flash("bootloader", fx.legacy("bootloader"))
-    unit.flash("firmware", fx.legacy(variant))
+    unit.flash("boardloader", fx.legacy("boardloader"), layout="legacy")
+    unit.flash("bootloader", fx.legacy("bootloader"), layout="legacy")
+    unit.flash("firmware", fx.legacy(variant), layout="legacy")
     unit.reset()
     return unit.context(bootloader=False, timeout=REBOOT)
 
