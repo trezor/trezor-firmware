@@ -198,7 +198,7 @@ def _find_prodtest_emulator(model: str | None) -> Path:
     If *model* is None, use the ``latest`` symlink (``xtask build prodtest
     --latest``), mirroring the convention in ``tests/emulators.py``.
     """
-    artifacts = ROOT / "core" / "build-xtask" / "artifacts"
+    artifacts = ROOT / "core" / "build" / "artifacts"
 
     if model is None:
         path = artifacts / "latest" / "prodtest-emu"

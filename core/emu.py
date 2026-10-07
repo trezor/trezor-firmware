@@ -25,7 +25,7 @@ except Exception:
 
 
 HERE = Path(__file__).resolve().parent
-MICROPYTHON = HERE / "build-xtask" / "artifacts" / "latest" / "firmware-emu"
+MICROPYTHON = HERE / "build" / "artifacts" / "latest" / "firmware-emu"
 TROPIC_MODEL_CONFIG = (
     HERE.parent / "tests" / "tropic_model" / "firmware_config" / "current.yml"
 )

@@ -97,7 +97,7 @@ jobs:
           nix-shell --arg hardwareTest true --run uhubctl || true
           nix-shell --arg hardwareTest true --run "uv run core/tools/check-usb-permissions.py" |& tee check-usb-permissions.log
       - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build-xtask/artifacts/latest/firmware.bin"
+      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build/artifacts/latest/firmware.bin"
       - run: |
           nix-shell --run "uv run trezorctl list"
           nix-shell --run "uv run trezorctl get-features"
@@ -148,7 +148,7 @@ jobs:
           full-deps: "true"
       - run: nix-shell --arg hardwareTest true --run uhubctl
       - run: nix-shell --run "uv run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build-xtask/artifacts/latest/firmware.bin"
+      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py \"$TREZOR_MODEL\" core/build/artifacts/latest/firmware.bin"
       - run: nix-shell --run "uv run trezorctl list"
       - run: nix-shell --run "uv run trezorctl get-features"
       - run: |

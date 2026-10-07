@@ -215,7 +215,7 @@ CLI flags always win over presets.
 
 ## Build artifacts
 
-Everything is placed under cargo's target directory (`core/build-xtask/` by
+Everything is placed under cargo's target directory (`core/build/` by
 default), referred to here as `build/`.
 
 ### Folder layout

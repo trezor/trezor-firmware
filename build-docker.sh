@@ -353,27 +353,27 @@ for TREZOR_MODEL in ${MODELS[@]}; do
       $GIT_CLEAN_REPO
       rm -rf /build/*
       uv run make clean vendor $MAKE_TARGETS QUIET_MODE=1
-      for binary in build-xtask/artifacts/$TREZOR_MODEL/*.bin; do
+      for binary in build/artifacts/$TREZOR_MODEL/*.bin; do
         uv run ../tools/check-insecure-prng.py --absent "\$binary"
       done
       for item in bootloader secmon kernel firmware prodtest; do
         # Append the labeled fingerprint, preceded by '# <artifact name>'.
-        if [ "\$item" != kernel ] && [ -s build-xtask/artifacts/$TREZOR_MODEL/\$item.bin ]; then
-          src=\$(ls build-xtask/artifacts/pub/\$item-$TREZOR_MODEL*.bin 2>/dev/null | head -n1 || true)
+        if [ "\$item" != kernel ] && [ -s build/artifacts/$TREZOR_MODEL/\$item.bin ]; then
+          src=\$(ls build/artifacts/pub/\$item-$TREZOR_MODEL*.bin 2>/dev/null | head -n1 || true)
           src=\${src##*/}
           {
             echo "# core${DIRSUFFIX}/\$item/\${src:-\$item.bin}"
             uv run ../python/tools/firmware-fingerprint.py \
-                build-xtask/artifacts/$TREZOR_MODEL/\$item.bin
+                build/artifacts/$TREZOR_MODEL/\$item.bin
             echo
           } >> /local/build/${COMMIT_HASH}.fingerprints
         fi
-        if [ -f build-xtask/artifacts/$TREZOR_MODEL/\$item.elf ]; then
+        if [ -f build/artifacts/$TREZOR_MODEL/\$item.elf ]; then
           # copy only the artifacts to the build output directory
           mkdir -p /build/\$item/
-          gzip build-xtask/artifacts/$TREZOR_MODEL/\$item.elf
-          cp -v build-xtask/artifacts/$TREZOR_MODEL/\$item* /build/\$item/
-          pub_bin=(build-xtask/artifacts/pub/\$item-$TREZOR_MODEL-*.bin)
+          gzip build/artifacts/$TREZOR_MODEL/\$item.elf
+          cp -v build/artifacts/$TREZOR_MODEL/\$item* /build/\$item/
+          pub_bin=(build/artifacts/pub/\$item-$TREZOR_MODEL-*.bin)
           if [ -f "\$pub_bin" ]; then
             cp -v "\${pub_bin[@]}" /build/\$item/
           fi  # no pub bin for kernel, or for secmon when built only as a dependency

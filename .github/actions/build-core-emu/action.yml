@@ -32,8 +32,8 @@ runs:
 
     - id: prepare_binary
       run: |
-        TARGET="core/build-xtask/artifacts/latest/trezor-emu-core-${{ inputs.model }}-v${{ inputs.version }}${{ inputs.binary-suffix }}"
-        mv core/build-xtask/artifacts/latest/firmware-emu "$TARGET"
+        TARGET="core/build/artifacts/latest/trezor-emu-core-${{ inputs.model }}-v${{ inputs.version }}${{ inputs.binary-suffix }}"
+        mv core/build/artifacts/latest/firmware-emu "$TARGET"
         echo "binary_path=$TARGET" >> "$GITHUB_OUTPUT"
       shell: sh
 
@@ -54,6 +54,6 @@ runs:
       with:
         name: ${{ inputs.artifact-name }}
         path: |
-          core/build-xtask/artifacts/latest/trezor-emu-core*
-          core/build-xtask/artifacts/latest/bootloader-emu
+          core/build/artifacts/latest/trezor-emu-core*
+          core/build/artifacts/latest/bootloader-emu
         retention-days: 7

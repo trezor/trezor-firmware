@@ -1,5 +1,5 @@
 [build]
-target-dir = "../build-xtask"
+target-dir = "../build"
 #rustc-wrapper = "sccache"
 
 [alias]

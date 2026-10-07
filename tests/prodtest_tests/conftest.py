@@ -171,7 +171,7 @@ def client(
     The model is resolved in order:
       1. --prodtest-model CLI option
       2. TREZOR_MODEL environment variable
-      3. 'latest' symlink under core/build-xtask/artifacts/latest/prodtest-emu
+      3. 'latest' symlink under core/build/artifacts/latest/prodtest-emu
     """
     model = request.config.getoption("prodtest_model") or None
 

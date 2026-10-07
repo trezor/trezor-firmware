@@ -47,7 +47,7 @@ jobs:
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: |
-            core/build-xtask/artifacts/latest/firmware-emu*
+            core/build/artifacts/latest/firmware-emu*
           retention-days: 7
 
   # Context tests for Core. Generates screenshots of UI flows of curated list of tests

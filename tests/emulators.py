@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 BINDIR = ROOT / "tests" / "emulators"
 
 LOCAL_BUILD_PATHS = {
-    "core": ROOT / "core" / "build-xtask" / "artifacts" / "latest" / "firmware-emu",
+    "core": ROOT / "core" / "build" / "artifacts" / "latest" / "firmware-emu",
     "legacy": ROOT / "legacy" / "firmware" / "trezor.elf",
 }
 

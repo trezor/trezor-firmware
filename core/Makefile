@@ -26,7 +26,7 @@
 	bloaty combine combine_fw upload upload_prodtest \
 	coverage unused
 
-BUILD_DIR = build-xtask/artifacts/latest
+BUILD_DIR = build/artifacts/latest
 
 TREZOR_MODEL ?= T3W1
 PYTEST_TIMEOUT ?= 500
