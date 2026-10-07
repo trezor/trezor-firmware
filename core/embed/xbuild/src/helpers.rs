@@ -327,44 +327,44 @@ mod tests {
     #[test]
     fn locates_dirs_in_legacy_cross_layout() {
         assert_dirs(
-            "/repo/core/build-xtask/thumbv8m.main-none-eabihf/release/build/kernel-e281cbafac5dc040/out",
-            "/repo/core/build-xtask/thumbv8m.main-none-eabihf/release",
-            "/repo/core/build-xtask",
+            "/repo/core/build/thumbv8m.main-none-eabihf/release/build/kernel-e281cbafac5dc040/out",
+            "/repo/core/build/thumbv8m.main-none-eabihf/release",
+            "/repo/core/build",
         );
     }
 
     #[test]
     fn locates_dirs_in_layout_v2_cross() {
         assert_dirs(
-            "/repo/core/build-xtask/thumbv8m.main-none-eabihf/release/build/kernel/e281cbafac5dc040/out",
-            "/repo/core/build-xtask/thumbv8m.main-none-eabihf/release",
-            "/repo/core/build-xtask",
+            "/repo/core/build/thumbv8m.main-none-eabihf/release/build/kernel/e281cbafac5dc040/out",
+            "/repo/core/build/thumbv8m.main-none-eabihf/release",
+            "/repo/core/build",
         );
     }
 
     #[test]
     fn locates_dirs_in_legacy_host_layout() {
-        let out_dir = Path::new("/repo/core/build-xtask/debug/build/xbuild-abcdef0123456789/out");
+        let out_dir = Path::new("/repo/core/build/debug/build/xbuild-abcdef0123456789/out");
         assert_eq!(
             cargo_profile_dir_from_out_dir(out_dir).unwrap(),
-            PathBuf::from("/repo/core/build-xtask/debug")
+            PathBuf::from("/repo/core/build/debug")
         );
         assert_eq!(
             cargo_target_dir_from_out_dir(out_dir, "aarch64-apple-darwin").unwrap(),
-            PathBuf::from("/repo/core/build-xtask")
+            PathBuf::from("/repo/core/build")
         );
     }
 
     #[test]
     fn locates_dirs_in_layout_v2_host() {
-        let out_dir = Path::new("/repo/core/build-xtask/debug/build/xbuild/abcdef0123456789/out");
+        let out_dir = Path::new("/repo/core/build/debug/build/xbuild/abcdef0123456789/out");
         assert_eq!(
             cargo_profile_dir_from_out_dir(out_dir).unwrap(),
-            PathBuf::from("/repo/core/build-xtask/debug")
+            PathBuf::from("/repo/core/build/debug")
         );
         assert_eq!(
             cargo_target_dir_from_out_dir(out_dir, "aarch64-apple-darwin").unwrap(),
-            PathBuf::from("/repo/core/build-xtask")
+            PathBuf::from("/repo/core/build")
         );
     }
 }

@@ -11,7 +11,7 @@ SYMBOL_TYPES = ("t", "w")  # text, weak
 
 ROOT = Path(__file__).parent.parent.resolve()
 
-FIRMWARE_ELF = ROOT / "core" / "build-xtask" / "artifacts" / "latest" / "firmware.elf"
+FIRMWARE_ELF = ROOT / "core" / "build" / "artifacts" / "latest" / "firmware.elf"
 
 
 def load_address_map(elf_file: Path) -> dict[int, str]:

@@ -62,7 +62,7 @@ fn copy_if_newer(src: &Path, dst: &Path) -> Result<bool> {
     Ok(true)
 }
 
-/// Collects build artifacts into `build-xtask/artifacts/{MODEL_ID}/`.
+/// Collects build artifacts into `build/artifacts/{MODEL_ID}/`.
 /// When `is_dependency` is true, the `.bin` file is skipped (only ELF, MAP,
 /// and compile_commands are collected).
 pub fn collect_artifacts(args: &ResolvedBuildArgs, is_dependency: bool) -> Result<()> {
