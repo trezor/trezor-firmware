@@ -125,9 +125,15 @@ class Unit:
         """
         deadline = time.monotonic() + timeout
         last: Exception | None = None
+        want = {None: "any", True: "bootloader", False: "firmware"}[bootloader]
+        LOG.info("waiting up to %.0f s for the unit on USB (%s mode)", timeout, want)
+        seen: str | None = None
         while time.monotonic() < deadline:
             try:
                 transport = self.wait_present(max(1.0, deadline - time.monotonic()))
+                if transport.get_path() != seen:
+                    seen = transport.get_path()
+                    LOG.info("unit on USB at %s, connecting", seen)
                 ctx = TrezorTestContext(transport, auto_interact=True, force_wipe=False)
             except AmbiguousUnit:
                 raise
@@ -137,7 +143,15 @@ class Unit:
                 last = e
                 time.sleep(1)
                 continue
-            mode = bool(ctx.features.bootloader_mode)
+            f = ctx.features
+            mode = bool(f.bootloader_mode)
+            LOG.info(
+                "connected: %s %s.%s.%s",
+                "bootloader" if mode else "firmware",
+                f.major_version,
+                f.minor_version,
+                f.patch_version,
+            )
             if bootloader is None or mode == bootloader:
                 return ctx
             close(ctx)
