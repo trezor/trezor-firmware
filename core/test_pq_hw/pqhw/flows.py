@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import time
 import typing as t
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from hashlib import blake2s, sha256
 
 from trezorlib import btc, debuglink, device, exceptions, firmware, messages
@@ -110,6 +110,41 @@ def baseline_pq_installed(
 # --- installs -------------------------------------------------------------------
 
 
+@dataclass(frozen=True)
+class Upload:
+    """What an install puts on the wire, taken from a bundle. Tamper cases
+    derive an altered copy (dataclasses.replace) instead of patching flows."""
+
+    boot_header: bytes
+    #: the image's manifest region, sent as FirmwareBegin.module_headers
+    module_headers: bytes
+    #: bootloader code, served if the device asks for it
+    code: bytes
+    nrf_image: bytes | None
+    nrf_co_path: bytes | None
+    nrf_image_hash: bytes | None
+    #: phase 2: the firmware image and its inline chunk hashes
+    firmware: bytes
+    prev_hashes: dict[int, bytes]
+
+    @classmethod
+    def of(cls, bundle: PqSecureBundle, send_nrf: bool = True) -> Upload:
+        nrf = bundle.nrf if send_nrf else None
+        return cls(
+            boot_header=bundle.boot_header,
+            module_headers=bundle.firmware.manifest_region,
+            code=bundle.bootloader_code,
+            nrf_image=nrf.image if nrf else None,
+            nrf_co_path=nrf.co_path if nrf else None,
+            nrf_image_hash=nrf.image_hash if nrf else None,
+            firmware=bundle.firmware.data,
+            prev_hashes=bundle.chunk_prev_hashes(),
+        )
+
+    def but(self, **changes: t.Any) -> Upload:
+        return replace(self, **changes)
+
+
 @dataclass
 class InstallReport:
     #: phase 1 waited on a confirmation screen
@@ -124,9 +159,13 @@ def enter_bootloader(
     unit: Unit,
     ctx: TrezorTestContext,
     bundle: PqSecureBundle | None = None,
+    *,
+    preamble: bytes | None = None,
 ) -> TrezorTestContext:
     """From firmware mode; with `bundle`, as a pre-authorised (interaction-less)
-    upgrade the firmware confirms itself."""
+    upgrade the firmware confirms itself. `preamble` replaces the bundle's
+    consent preamble (tamper cases); a firmware that refuses it raises its
+    TrezorFailure and stays where it is."""
     # a seeded session is refused on an uninitialised device (NotInitialized)
     if ctx.refresh_features().initialized:
         session = ctx.get_session(passphrase="")
@@ -153,11 +192,17 @@ def enter_bootloader(
                 continue
         raise UnitError("bootloader wire did not come up after tapping the intro")
     else:
-        device.reboot_to_bootloader(
-            session,
-            boot_command=messages.BootCommand.INSTALL_UPGRADE,
-            firmware_preamble=bundle.consent_preamble(),
-        )
+        try:
+            device.reboot_to_bootloader(
+                session,
+                boot_command=messages.BootCommand.INSTALL_UPGRADE,
+                firmware_preamble=(
+                    preamble if preamble is not None else bundle.consent_preamble()
+                ),
+            )
+        except exceptions.TrezorFailure as e:
+            unit.step(f"firmware refused the upgrade: {e.message}")
+            raise
     close(ctx)
     unit.wait_gone()
     return unit.context(bootloader=True, timeout=REBOOT)
@@ -170,24 +215,27 @@ def pq_phase1(
     *,
     confirm: bool = True,
     send_nrf: bool = True,
+    upload: Upload | None = None,
 ) -> tuple[bool, dict[str, int]]:
     """FirmwareBegin and whatever code or nRF image the device pulls; returns
-    (prompted, bytes served per image). The device then reboots."""
+    (prompted, bytes served per image). The device then reboots. `upload`
+    replaces what the bundle would send."""
     assert ctx.features.bootloader_mode, "phase 1 starts in bootloader mode"
-    nrf = bundle.nrf if send_nrf else None
+    up = upload or Upload.of(bundle, send_nrf)
     session = ctx.get_seedless_session()
-    code = bundle.bootloader_code
+    code = up.code
+    nrf_image = up.nrf_image
 
     def begin() -> messages.FirmwareRequest | messages.Success:
         return session.call(
             messages.FirmwareBegin(
-                boot_header=bundle.boot_header,
-                module_headers=bundle.firmware.manifest_region,
+                boot_header=up.boot_header,
+                module_headers=up.module_headers,
                 code_length=len(code),
                 code_hash=sha256(code).digest(),
-                nrf_length=len(nrf.image) if nrf else None,
-                nrf_co_path=nrf.co_path if nrf else None,
-                nrf_image_hash=nrf.image_hash if nrf else None,
+                nrf_length=len(nrf_image) if nrf_image else None,
+                nrf_co_path=up.nrf_co_path,
+                nrf_image_hash=up.nrf_image_hash,
             )
         )
 
@@ -206,7 +254,7 @@ def pq_phase1(
     served = {"code": 0, "nrf": 0}
     while isinstance(resp, messages.FirmwareRequest):
         is_nrf = (resp.coprocessor_index or 0) != 0
-        src = nrf.image if (is_nrf and nrf) else code
+        src = nrf_image if (is_nrf and nrf_image) else code
         payload = src[resp.offset : resp.offset + resp.length]
         resp = session.call(
             messages.FirmwareUpload(payload=payload, hash=blake2s(payload).digest())
@@ -222,10 +270,12 @@ def pq_phase1(
     return prompted, served
 
 
-def pq_phase2(unit: Unit, bundle: PqSecureBundle) -> bool:
+def pq_phase2(unit: Unit, bundle: PqSecureBundle, upload: Upload | None = None) -> bool:
     """After phase 1's reboot: stream the firmware. Returns whether it needed a
     person, which it never should: the bootloader is meant to resume on its own
-    (BOOT_COMMAND_CONTINUE_UPGRADE) with the wire up."""
+    (BOOT_COMMAND_CONTINUE_UPGRADE) with the wire up. A rejected stream raises
+    the device's TrezorFailure."""
+    up = upload or Upload.of(bundle)
     needed_person = False
     try:
         ctx = unit.context(bootloader=True, timeout=PHASE2_RESUME)
@@ -242,15 +292,19 @@ def pq_phase2(unit: Unit, bundle: PqSecureBundle) -> bool:
         needed_person = True
         ctx = unit.context(bootloader=True, timeout=REBOOT)
     session = ctx.get_seedless_session()
-    data = bundle.firmware.data
+    data = up.firmware
 
     def erase() -> t.Any:
         return session.call(messages.FirmwareErase(length=len(data)))
 
     resp, prompted = call_watching_prompt(ctx, erase, stall=unit.stall, confirm=False)
-    firmware._stream_firmware_upload(
-        session, data, resp, lambda _: None, bundle.chunk_prev_hashes()
-    )
+    try:
+        firmware._stream_firmware_upload(
+            session, data, resp, lambda _: None, up.prev_hashes
+        )
+    except exceptions.TrezorFailure as e:
+        unit.step(f"phase 2 refused: {e.message}")
+        raise
     unit.step("phase 2: firmware streamed", screenshot=False)
     close(ctx)
     unit.wait_gone()
@@ -264,13 +318,15 @@ def pq_install(
     *,
     confirm: bool = True,
     send_nrf: bool = True,
+    upload: Upload | None = None,
 ) -> InstallReport:
     """Both phases from bootloader mode, ending with the device rebooting into
     the new firmware. A refused install raises the device's TrezorFailure."""
-    prompted, served = pq_phase1(unit, ctx, bundle, confirm=confirm, send_nrf=send_nrf)
+    up = upload or Upload.of(bundle, send_nrf)
+    prompted, served = pq_phase1(unit, ctx, bundle, confirm=confirm, upload=up)
     close(ctx)
     unit.wait_gone()
-    phase2_prompted = pq_phase2(unit, bundle)
+    phase2_prompted = pq_phase2(unit, bundle, up)
     return InstallReport(prompted, served, phase2_prompted)
 
 
@@ -300,6 +356,54 @@ def legacy_install(
     close(ctx)
     unit.wait_gone()
     return prompted
+
+
+#: vendor string the bootloader reports per variant (fw_check_pq.c)
+VENDOR = {
+    "universal": "Trezor",
+    "btc-only": "Trezor Bitcoin-only",
+    "custom": "UNSAFE, DO NOT USE!",
+}
+
+
+def wipe_in_bootloader(unit: Unit, ctx: TrezorTestContext) -> TrezorTestContext:
+    """Host WipeDevice in the bootloader, confirmed on the device; returns the
+    bootloader it comes back to."""
+    session = ctx.get_seedless_session()
+    resp, _ = call_watching_prompt(
+        ctx,
+        lambda: session.call(messages.WipeDevice()),
+        stall=unit.stall,
+        on_prompt=lambda: unit.step("bootloader wipe: confirmation, tapping confirm"),
+    )
+    messages.Success.ensure_isinstance(resp)
+    unit.step("bootloader wipe done", screenshot=False)
+    close(ctx)
+    unit.wait_gone()
+    return unit.context(bootloader=True, timeout=REBOOT)
+
+
+def reach_bootloader(unit: Unit, timeout: float = PHASE2_RESUME) -> TrezorTestContext:
+    """Wherever a refusal or a cut left the unit: its bootloader, on USB. A
+    bootloader with no valid firmware may sit on its intro, wire down, until
+    tapped; a unit back in firmware is rebooted into the bootloader."""
+    try:
+        ctx = unit.context(bootloader=None, timeout=timeout)
+    except UnitError:
+        for _ in range(3):
+            tap_bootloader_intro(unit)
+            try:
+                ctx = unit.context(bootloader=None, timeout=20)
+                break
+            except UnitError:
+                continue
+        else:
+            raise UnitError("unit neither on USB nor answering an intro tap") from None
+    if ctx.features.bootloader_mode:
+        unit.step("recovery: in the bootloader")
+        return ctx
+    unit.step("recovery: back in firmware, rebooting to the bootloader")
+    return enter_bootloader(unit, ctx)
 
 
 def wait_pq_bootloader(unit: Unit, timeout: float = 2 * REBOOT) -> TrezorTestContext:
