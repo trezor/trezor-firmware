@@ -75,3 +75,39 @@ present in the output and rebuilds the intermediaries whenever A is rebuilt.
 `xtask flash-erase -m T3W1` erases the whole flash, which also resets the
 bootloader monotonic counter, so a unit can return to the legacy baseline after
 a migration or after release E.
+
+## Tests
+
+Run from this directory (it carries its own `pytest.ini`):
+
+```sh
+pytest                         # offline: the fixture set itself, no device
+pytest --hw                    # flash and drive the attached T3W1
+pytest --hw -k migration       # one area
+pytest --hw --operator -s      # also the PIN-at-boot flows, with a person
+```
+
+`--hw` needs openocd with an ST-Link on the unit (the tests flash through
+`xtask flash` / `flash-erase`) and the unit on USB. Every test builds its own
+starting state from a full erase, so tests are independent and any order works.
+
+| file | covers (plan IDs) |
+| --- | --- |
+| `test_fixtures.py` | every release variant verifies; versions climb; floors; intermediaries embed A; btc-only salting |
+| `test_install.py` | BT-05, IN-02, IN-10, IN-11, IL-01, IL-02, NR-01, VR-05, FW-01, header-only reinstall |
+| `test_floors.py` | VR-01 (`burns`), VR-03, VR-04, IL-05 |
+| `test_migration.py` | MG-01, MG-03, MG-04/05, MG-09; a variant change after migration wipes |
+| `test_operator.py` | MG-02, MG-07 |
+
+Two device facts shape the suite:
+
+- **Seeds are loaded without a PIN.** A T3W1 does not open USB until its boot
+  lockscreen is unlocked, so a PIN at boot cannot be entered over debuglink.
+  The storage salt binds `firmware_type` either way, so seed checks are just as
+  strong; the PIN flows themselves are the `--operator` tests.
+- **A bootloader prompt is detected by silence.** The bootloader sends no
+  ButtonRequest and its debuglink reports no layout content, so a request that
+  has not been answered after `--stall` seconds (default 6) counts as waiting on
+  a confirmation; the test taps the right action-bar button and records it.
+  Validated on the bootloader emulator (prompt, tap, refusal without a tap).
+  If a slow verification is ever misread as a prompt, raise `--stall`.
