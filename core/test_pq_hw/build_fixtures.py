@@ -27,6 +27,7 @@ import json
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
 from collections.abc import Callable
@@ -352,6 +353,31 @@ def edit_versions(
     return Edit("versions", apply, desc, set_args)
 
 
+def nrf_version(image: bytes) -> str:
+    """MCUboot image header version: major.minor.revision."""
+    major, minor, rev = struct.unpack_from("<BBH", image, 20)
+    return f"{major}.{minor}.{rev}"
+
+
+def edit_nrf_input(name: str) -> Edit:
+    """Release this nRF build instead of the tree's committed one.
+
+    `name` is a file under fixtures/inputs/, frozen there so a rebuild does not
+    depend on whatever the nordic build directory holds at the time.
+    """
+    src = FIXTURES / "inputs" / name
+
+    def apply(wt: Path) -> None:
+        if not src.exists():
+            raise BuildError(f"missing nRF input {src}")
+        dst = wt / "core" / "embed" / "models" / MODEL / "trezor-ble-dev-bare.bin"
+        shutil.copyfile(src, dst)
+
+    desc = f"{name} sha256 {sha256(src)[:16]}" if src.exists() else name
+    version = nrf_version(src.read_bytes()) if src.exists() else None
+    return Edit("nrf-input", apply, desc, {"nrf_version": version})
+
+
 def touch_version_includers(wt: Path) -> None:
     """Force a recompile of everything that includes a version.h.
 
@@ -383,7 +409,10 @@ class Ctx:
     files: dict[str, dict] = field(default_factory=dict)
 
     def expected(self) -> dict:
-        return next((e.args for e in self.edits if e.name == "versions"), {})
+        exp: dict = {}
+        for e in self.edits:
+            exp |= e.args
+        return exp
 
     def stage(
         self, src: Path, rel: str, build: list[str] | None = None, **info
@@ -572,6 +601,13 @@ def check_release_versions(ctx: Ctx, rel_dir: Path, bundle: dict) -> None:
             )
     if "monotonic" in exp and bl.get("monotonic") != exp["monotonic"]:
         raise BuildError(f"{ctx.target}: bootloader monotonic is {bl.get('monotonic')}")
+    if exp.get("nrf_version"):
+        for c in bundle.get("coprocessors", []):
+            got = nrf_version((rel_dir / c["file"]).read_bytes())
+            if got != exp["nrf_version"]:
+                raise BuildError(
+                    f"{ctx.target}: nRF image is {got}, expected {exp['nrf_version']}"
+                )
     if "firmware" in exp:
         want = f"{exp['firmware']}.0"
         for v in bundle["variants"]:
@@ -665,14 +701,15 @@ KEEP = source_edit(edit_keep_storage)
 STAMP = source_edit(edit_stamp_by_variant)
 
 
-def release(name: str, **versions) -> Target:
-    return Target(
-        name,
-        "pq",
-        [],
-        [KEEP, edit_versions(**versions)],
-        lambda ctx: build_release(ctx, name),
-    )
+# Releases from B on carry a second nRF build, so A -> B is a real nRF push.
+NRF_B = "nrf-1.1.3-dev-bare.bin"
+
+
+def release(name: str, nrf: str | None = None, **versions) -> Target:
+    edits = [KEEP, edit_versions(**versions)]
+    if nrf:
+        edits.append(edit_nrf_input(nrf))
+    return Target(name, "pq", [], edits, lambda ctx: build_release(ctx, name))
 
 
 # Versions climb in install order: legacy 2.13.0 / bl 2.1.18 (main, unchanged)
@@ -688,15 +725,23 @@ TARGETS = [
         [KEEP, STAMP, edit_versions(firmware="2.13.1")],
         build_intermediary,
     ),
-    release("release-B", firmware="2.14.1", bootloader="2.1.20"),
+    release("release-B", nrf=NRF_B, firmware="2.14.1", bootloader="2.1.20"),
     # Seed is kept only by releases at or above 2.1.20: B-fix -> A wipes, -> B keeps.
-    release("release-B-fix", firmware="2.14.2", bootloader="2.1.20", fix="2.1.20"),
+    release(
+        "release-B-fix", nrf=NRF_B, firmware="2.14.2", bootloader="2.1.20", fix="2.1.20"
+    ),
     # Installs only over a bootloader >= 2.1.20: refused from A, accepted from B.
     release(
-        "release-C-minprev", firmware="2.14.3", bootloader="2.1.21", min_prev="2.1.20"
+        "release-C-minprev",
+        nrf=NRF_B,
+        firmware="2.14.3",
+        bootloader="2.1.21",
+        min_prev="2.1.20",
     ),
     # Burns bootloader monotonic 4; afterwards A and B are refused. flash-erase resets.
-    release("release-E-mono", firmware="2.14.4", bootloader="2.1.22", monotonic=4),
+    release(
+        "release-E-mono", nrf=NRF_B, firmware="2.14.4", bootloader="2.1.22", monotonic=4
+    ),
 ]
 BY_NAME = {t.name: t for t in TARGETS}
 

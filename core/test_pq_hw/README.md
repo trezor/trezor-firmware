@@ -51,6 +51,11 @@ Applied to the scratch worktrees only:
 | release-C-minprev | 2.14.3 | 2.1.21 | min_prev_version 2.1.20 |
 | release-E-mono | 2.14.4 | 2.1.22 | monotonic 4 |
 
+Releases from B on release a second nRF build, frozen as a fixture input
+(`fixtures/inputs/nrf-1.1.3-dev-bare.bin`, with a JSON note of how it was
+built), so A -> B is a real nRF push (1.0.1 -> 1.1.3). The builder checks the
+released image carries that version.
+
 Every `--bootloader-devel` legacy build uses the dev vendor header, whose
 `fw_type` is universal whatever `--btc-only` says, so the btc-only legacy
 firmware and intermediary carry a generated dev-signed vendor header with
