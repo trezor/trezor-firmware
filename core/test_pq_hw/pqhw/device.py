@@ -30,6 +30,7 @@ EMBED = REPO / "core" / "embed"
 LEGACY_EMBED = REPO / "core" / "test_pq_hw" / "work" / "legacy" / "core" / "embed"
 MODEL = "T3W1"
 BUTTONS = ScreenButtons(LayoutType.Eckhart)
+MAX_TAPS = 5
 
 
 class UnitError(Exception):
@@ -236,7 +237,13 @@ def bootloader_tap_confirm(debug: DebugLink) -> None:
     helpers' layout read-back is not needed.
     """
     x, y = BUTTONS.ok()
-    debug._write(messages.DebugLinkDecision(x=x, y=y))
+    msg = messages.DebugLinkDecision(x=x, y=y)
+    try:
+        debug._write(msg)
+    except Exception:
+        # the test context opens its debug transport only for a probe
+        debug.open()
+        debug._write(msg)
 
 
 T = t.TypeVar("T")
@@ -273,10 +280,17 @@ def call_watching_prompt(
             raise UnitError(
                 "device is waiting on a confirmation that should not appear"
             )
-        bootloader_tap_confirm(ctx.debug)
+        # Some installs confirm on more than one screen; keep tapping while the
+        # request stays blocked. A tap on a progress screen does nothing.
+        for tap in range(1, MAX_TAPS + 1):
+            LOG.info("request blocked %.0f s: tapping confirm (%d)", stall, tap)
+            bootloader_tap_confirm(ctx.debug)
+            th.join(stall)
+            if not th.is_alive():
+                break
         th.join(timeout)
         if th.is_alive():
-            raise UnitError(f"no answer {timeout:.0f} s after confirming")
+            raise UnitError(f"no answer {timeout:.0f} s after {MAX_TAPS} taps")
     if "error" in result:
         raise result["error"]
     return result["value"], prompted
