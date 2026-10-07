@@ -16,7 +16,7 @@ from ..verification import SignatureVerifier
 from . import helpers
 from .approvers import CoinJoinApprover
 from .helpers import request_tx_input, request_tx_output
-from .progress import progress
+from .progress import Progress
 from .tx_info import OriginalTxInfo
 
 if TYPE_CHECKING:
@@ -42,8 +42,9 @@ _SERIALIZED_TX_BUFFER = empty_bytearray(_MAX_SERIALIZED_CHUNK_SIZE)
 
 class Bitcoin:
     def init_signing(self) -> None:
-        # Next shown progress bar is already signing progress, but it isn't shown until approval from next dialog
-        progress.init_signing(
+        # Step counts for the signing phase. The "Signing transaction" progress
+        # layout is created after the last approval dialog, in signer().
+        self.progress.init_signing(
             len(self.external),
             len(self.segwit),
             len(self.presigned),
@@ -56,7 +57,7 @@ class Bitcoin:
         self.signing = True
 
     async def signer(self) -> None:
-        progress.init(
+        self.progress.init(
             self.tx_info.tx, is_coinjoin=isinstance(self.approver, CoinJoinApprover)
         )
 
@@ -73,11 +74,10 @@ class Bitcoin:
         # Check fee, approve lock_time and total.
         await self.approver.approve_tx(self.tx_info, self.orig_txs, self)
 
-        # Make sure proper progress is shown, in case dialog was not required
         if not self.signing:
             self.init_signing()
-            progress.report_init()
-        progress.report()
+        self.progress.report_init()
+        self.progress.report()
 
         # Following steps can take a long time, make sure autolock doesn't kick in.
         # This is set to True again after workflow is finished in start_default().
@@ -119,6 +119,7 @@ class Bitcoin:
         self.tx_info = TxInfo(self, helpers.sanitize_sign_tx(tx, coin))
         self.keychain = keychain
         self.coin = coin
+        self.progress = Progress()
 
         if approver is not None:
             self.approver = approver
@@ -179,7 +180,7 @@ class Bitcoin:
 
         for i in range(tx_info.tx.inputs_count):
             # STAGE_REQUEST_1_INPUT in legacy
-            progress.advance()
+            self.progress.advance()
             txi = await request_tx_input(self.tx_req, i, self.coin)
             if txi.script_type not in (
                 InputScriptType.SPENDTAPROOT,
@@ -218,7 +219,7 @@ class Bitcoin:
     async def step2_approve_outputs(self) -> None:
         for i in range(self.tx_info.tx.outputs_count):
             # STAGE_REQUEST_2_OUTPUT in legacy
-            progress.advance()
+            self.progress.advance()
             txo = await request_tx_output(self.tx_req, i, self.coin)
             script_pubkey = self.output_derive_script(txo)
             orig_txo: TxOutput | None = None
@@ -245,7 +246,7 @@ class Bitcoin:
             expected_digest = self.h_presigned_inputs
             for i in range(self.tx_info.tx.inputs_count):
                 if i in self.presigned:
-                    progress.advance()
+                    self.progress.advance()
                     txi = await request_tx_input(self.tx_req, i, self.coin)
                     writers.write_tx_input_check(h_check, txi)
 
@@ -295,14 +296,14 @@ class Bitcoin:
         for i in range(self.tx_info.tx.inputs_count):
             if i in self.external:
                 if self.serialize:
-                    progress.advance()
+                    self.progress.advance()
                     await self.serialize_external_input(i)
             elif i in self.segwit:
                 if self.serialize:
-                    progress.advance()
+                    self.progress.advance()
                     await self.serialize_segwit_input(i)
             else:
-                progress.advance()
+                self.progress.advance()
                 await self.sign_nonsegwit_input(i)
 
     async def step5_serialize_outputs(self) -> None:
@@ -311,7 +312,7 @@ class Bitcoin:
 
         write_compact_size(self.serialized_tx, self.tx_info.tx.outputs_count)
         for i in range(self.tx_info.tx.outputs_count):
-            progress.advance()
+            self.progress.advance()
             await self.serialize_output(i)
 
     async def step6_sign_segwit_inputs(self) -> None:
@@ -323,13 +324,13 @@ class Bitcoin:
                 if i in self.external:
                     if self.serialize:
                         if i in self.presigned:
-                            progress.advance()
+                            self.progress.advance()
                             txi = await request_tx_input(self.tx_req, i, self.coin)
                             self.serialized_tx.extend(txi.witness or b"\0")
                         else:
                             self.serialized_tx.append(0)
                 else:
-                    progress.advance()
+                    self.progress.advance()
                     await self.sign_segwit_input(i)
             else:
                 # add empty witness for non-segwit inputs
@@ -340,8 +341,8 @@ class Bitcoin:
         if self.serialize:
             self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
         if __debug__:
-            progress.assert_finished()
-        await helpers.request_tx_finish(self.tx_req)
+            self.progress.assert_finished()
+        helpers.request_tx_finish(self.tx_req)
 
     async def process_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
         if txi.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
@@ -495,7 +496,7 @@ class Bitcoin:
             h_check = HashWriter(sha256())
 
             for i in range(orig.tx.inputs_count):
-                progress.advance()
+                self.progress.advance()
                 txi = await request_tx_input(self.tx_req, i, self.coin, orig.orig_hash)
                 writers.write_tx_input_check(h_check, txi)
                 script_pubkey = self.input_derive_script(txi)
@@ -727,7 +728,7 @@ class Bitcoin:
         node = None
         for i in range(tx.inputs_count):
             # STAGE_REQUEST_4_INPUT in legacy
-            progress.advance()
+            self.progress.advance()
             txi = await request_tx_input(self.tx_req, i, coin, tx_hash)
             writers.write_tx_input_check(h_check, txi)
             # Only the previous UTXO's scriptPubKey is included in h_sign.
@@ -765,7 +766,7 @@ class Bitcoin:
 
         for i in range(tx.outputs_count):
             # STAGE_REQUEST_4_OUTPUT in legacy
-            progress.advance()
+            self.progress.advance()
             txo = await request_tx_output(self.tx_req, i, coin, tx_hash)
             script_pubkey = self.output_derive_script(txo)
             self.write_tx_output(h_check, txo, script_pubkey)
@@ -815,7 +816,7 @@ class Bitcoin:
 
         # STAGE_REQUEST_3_PREV_META in legacy
         tx = await helpers.request_tx_meta(self.tx_req, coin, prev_hash)
-        progress.init_prev_tx(tx.inputs_count, tx.outputs_count)
+        self.progress.init_prev_tx(tx.inputs_count, tx.outputs_count)
 
         if tx.outputs_count <= prev_index:
             raise ProcessError("Not enough outputs in previous transaction.")
@@ -828,7 +829,7 @@ class Bitcoin:
 
         for i in range(tx.inputs_count):
             # STAGE_REQUEST_3_PREV_INPUT in legacy
-            progress.advance_prev_tx()
+            self.progress.advance_prev_tx()
             txi = await helpers.request_tx_prev_input(self.tx_req, i, coin, prev_hash)
             self.write_tx_input(txh, txi, txi.script_sig)
 
@@ -837,7 +838,7 @@ class Bitcoin:
         script_pubkey: AnyBytes | None = None
         for i in range(tx.outputs_count):
             # STAGE_REQUEST_3_PREV_OUTPUT in legacy
-            progress.advance_prev_tx()
+            self.progress.advance_prev_tx()
             txo_bin = await helpers.request_tx_prev_output(
                 self.tx_req, i, coin, prev_hash
             )
