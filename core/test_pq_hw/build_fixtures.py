@@ -51,8 +51,12 @@ DEFAULT_REFS = {
 }
 
 DEVEL = ["--bootloader-devel"]
-# Firmware debuglink exists only under __debug__, hence pyopt off.
-DEBUG_FW = ["--debug-link", "--pyopt=false", "--disable-animation"]
+# Firmware debuglink exists only under __debug__, hence pyopt off. Optiga is
+# off: every wallet set-up advances its security counter, which lives in the
+# chip and survives flash-erase, and a high counter slows every later run.
+# Storage then takes its non-Optiga path, so every firmware here (legacy,
+# intermediary, PQ) must agree on it.
+DEBUG_FW = ["--debug-link", "--pyopt=false", "--disable-animation", "--disable-optiga"]
 DEBUG_BL = ["--debug-link"]
 
 FW_VARIANT_SEC = {"universal": 0x5A5A5A5A, "btc-only": 0xA5A5A5A5}

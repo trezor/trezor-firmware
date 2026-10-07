@@ -36,6 +36,11 @@ Applied to the scratch worktrees only:
 - **Storage kept across reboots.** Firmware debuglink exists only under
   `__debug__`, and `boot.py` wipes storage on every hardware boot of such a
   build, which would defeat every seed check.
+- **Optiga disabled** in every firmware build (`--disable-optiga`): each wallet
+  set-up advances its security counter, which lives in the chip and survives
+  `flash-erase`. Storage then takes its non-Optiga path in all of legacy,
+  intermediary and PQ alike; a release-style run with Optiga belongs to the
+  manual pass.
 - **Intermediary stamp per variant.** The intermediary stamps `UNIVERSAL`
   unconditionally; a btc-only unit would lose its seed. Skipped once the branch
   fixes it.
