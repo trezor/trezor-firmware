@@ -75,6 +75,14 @@ fn set_panel_dem240320b1(lib: &mut CLibrary) {
     ]);
 }
 
+fn set_panel_lx200b4501ctp03(lib: &mut CLibrary) {
+    lib.add_defines([
+        ("DISPLAY_PANEL_LX200B4501CTP03", Some("1")),
+        ("DISPLAY_RESX", Some("240")),
+        ("DISPLAY_RESY", Some("320")),
+    ]);
+}
+
 fn set_panel_lx154a2482(lib: &mut CLibrary) {
     lib.add_defines([
         ("DISPLAY_PANEL_LX154A2482", Some("1")),
@@ -111,6 +119,8 @@ fn add_driver_unix(lib: &mut CLibrary) -> Result<()> {
         set_panel_lx154a2482(lib);
     } else if cfg!(feature = "display_panel_dem240320b1") {
         set_panel_dem240320b1(lib);
+    } else if cfg!(feature = "display_panel_lx200b4501ctp03") {
+        set_panel_lx200b4501ctp03(lib);
     } else if cfg!(feature = "display_panel_t2t1") {
         set_panel_t2t1(lib);
     } else if cfg!(feature = "display_panel_vg2864") {
@@ -173,6 +183,9 @@ fn add_driver_i8080(lib: &mut CLibrary) -> Result<()> {
         } else if cfg!(feature = "display_panel_dem240320b1") {
             set_panel_dem240320b1(lib);
             lib.add_source("display/i8080/panels/dem240320b1.c");
+        } else if cfg!(feature = "display_panel_lx200b4501ctp03") {
+            set_panel_lx200b4501ctp03(lib);
+            lib.add_source("display/i8080/panels/lx200b4501ctp03.c");
         } else {
             bail_unsupported!();
         }
