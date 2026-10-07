@@ -14,7 +14,13 @@ from trezorlib.firmware.pq_secure import PqSecureBundle
 from trezorlib.messages import FirmwareScheme
 from trezorlib.tools import parse_path
 
-from .device import Unit, UnitError, call_watching_prompt, close
+from .device import (
+    Unit,
+    UnitError,
+    call_watching_prompt,
+    close,
+    tap_bootloader_intro,
+)
 from .fixtures import Fixtures
 
 LOG = logging.getLogger(__name__)
@@ -116,7 +122,19 @@ def enter_bootloader(
     upgrade the firmware confirms itself."""
     session = ctx.get_session(passphrase="")
     if bundle is None:
+        # lands on the bootloader intro, which needs a tap to bring the wire up
         device.reboot_to_bootloader(session)
+        close(ctx)
+        unit.wait_gone()
+        # A tap that lands before the intro is drawn is lost; on this path the
+        # screen can only be the intro, so tapping again is safe.
+        for _ in range(3):
+            tap_bootloader_intro(unit)
+            try:
+                return unit.context(bootloader=True, timeout=20)
+            except UnitError:
+                continue
+        raise UnitError("bootloader wire did not come up after tapping the intro")
     else:
         device.reboot_to_bootloader(
             session,

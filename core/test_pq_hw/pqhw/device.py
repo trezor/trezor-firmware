@@ -148,6 +148,47 @@ class Unit:
         raise UnitError(f"no usable connection within {timeout:.0f} s: {last}")
 
 
+def tap_bootloader_intro(unit: Unit, timeout: float = 120) -> None:
+    """Get past the bootloader intro ("Initiate connection") over debuglink.
+
+    A plain RebootToBootloader lands there, and the wire interface comes up
+    only after the tap. A debuglink bootloader starts USB with its debug
+    interface at boot, so the tap can be sent from the host. Only for that
+    entry: on the connect screen of an install, the same spot is Cancel.
+    """
+    deadline = time.monotonic() + timeout
+    last: Exception | None = None
+    while time.monotonic() < deadline:
+        try:
+            transport = unit.wait_present(max(1.0, deadline - time.monotonic()))
+            debug = DebugLink(transport.find_debug())
+            debug.model = models.T3W1
+            debug.open()
+        except AmbiguousUnit:
+            raise
+        except Exception as e:  # debug interface not up yet
+            last = e
+            time.sleep(0.5)
+            continue
+        try:
+            # answered once the intro layout is on screen
+            debug._call(
+                messages.DebugLinkGetState(
+                    wait_layout=messages.DebugWaitType.CURRENT_LAYOUT
+                ),
+                timeout=30,
+            )
+            x, y = BUTTONS.info()  # the single, full-width action-bar button
+            debug._write(messages.DebugLinkDecision(x=x, y=y))
+            return
+        finally:
+            try:
+                debug.close()
+            except Exception:
+                pass
+    raise UnitError(f"bootloader intro not reachable over debuglink: {last}")
+
+
 def close(ctx: TrezorTestContext) -> None:
     """Release the USB handles; a reconnect after a reboot needs them free."""
     for closer in (ctx.debug.close, ctx.transport.close):

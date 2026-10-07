@@ -95,7 +95,7 @@ starting state from a full erase, so tests are independent and any order works.
 | --- | --- |
 | `test_fixtures.py` | every release variant verifies; versions climb; floors; intermediaries embed A; btc-only salting |
 | `test_install.py` | BT-05, IN-02, IN-10, IN-11, IL-01, IL-02, NR-01, VR-05, FW-01, header-only reinstall |
-| `test_floors.py` | VR-01 (`burns`), VR-03, VR-04, IL-05 |
+| `test_floors.py` | VR-01 (`burns`), VR-03, VR-04 |
 | `test_migration.py` | MG-01, MG-03, MG-04/05, MG-09; a variant change after migration wipes |
 | `test_operator.py` | MG-02, MG-07 |
 

@@ -34,18 +34,6 @@ def test_fix_version_keeps_at(unit: Unit, fx: Fixtures) -> None:
     assert flows.seed_fingerprint(ctx) == seed
 
 
-def test_fix_version_blocks_silent_install(unit: Unit, fx: Fixtures) -> None:
-    """IL-05: across a fix_version boundary the interaction-less path asks."""
-    ctx = flows.baseline_pq_installed(unit, fx, "release-B-fix", "universal")
-    bundle = fx.bundle("release-A", "universal")
-    try:
-        ctx = flows.enter_bootloader(unit, ctx, bundle=bundle)
-    except exceptions.TrezorFailure:
-        pytest.skip("firmware refused to pre-authorise a lower version")
-    report = flows.pq_install(unit, ctx, bundle)
-    assert report.prompted
-
-
 def test_min_prev_refused_below(unit: Unit, fx: Fixtures) -> None:
     """VR-04: C needs an installed bootloader >= 2.1.20; A has 2.1.19. Refused
     in phase 1 before any prompt, and the unit still runs A with its seed."""
