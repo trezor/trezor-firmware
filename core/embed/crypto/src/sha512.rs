@@ -94,19 +94,14 @@ impl<D: DerefMut<Target = Sha512Ctx>> Sha512<D> {
     }
 }
 
-/// Calculate the SHA512 digest of `data` into `out`.
-pub fn digest_into(data: &[u8], out: &mut Digest) {
-    let mut ctx = Sha512Ctx::default();
-    let mut sha = Sha512::new(&mut ctx);
-    sha.update(data);
-    *out = sha.finalize();
-}
-
-/// Calculate the SHA512 digest of `data`.
-pub fn digest(data: &[u8]) -> Digest {
-    let mut out = [0u8; DIGEST_SIZE];
-    digest_into(data, &mut out);
-    out
+impl Sha512<&'_ mut Sha512Ctx> {
+    /// Calculate the SHA512 digest of the given data.
+    pub fn digest(data: &[u8]) -> Digest {
+        let mut ctx = Sha512Ctx::default();
+        let mut sha = Sha512::new(&mut ctx);
+        sha.update(data);
+        sha.finalize()
+    }
 }
 
 #[cfg(test)]
@@ -131,7 +126,7 @@ mod test {
     ];
 
     fn hexdigest(data: &[u8]) -> String {
-        hex::encode(digest(data))
+        hex::encode(Sha512::digest(data))
     }
 
     #[test]
