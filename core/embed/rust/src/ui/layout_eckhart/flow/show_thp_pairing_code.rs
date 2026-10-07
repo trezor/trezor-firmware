@@ -4,6 +4,7 @@ use super::super::firmware::{
     VerticalMenuScreenMsg,
 };
 use super::super::{fonts, theme};
+use crate::micropython::buffer::StrBuffer;
 use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
@@ -12,6 +13,7 @@ use crate::ui::component::{ComponentExt, FormattedText};
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
 use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
 use crate::ui::geometry::{Alignment, Direction};
+use crate::util::interpolate;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ShowPairingCode {
@@ -43,12 +45,28 @@ impl FlowController for ShowPairingCode {
 
 pub fn new_show_thp_pairing_code(
     title: TString<'static>,
-    description: TString<'static>,
+    description: StrBuffer,
+    host_name: TString<'static>,
     code: TString<'static>,
 ) -> Result<SwipeFlow, Error> {
-    let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
-    ops.add_text_with_font(description, fonts::FONT_SATOSHI_REGULAR_38)
-        .add_newline()
+    let style = theme::firmware::TEXT_REGULAR;
+    let mut ops = OpTextLayout::new(style);
+
+    for part in interpolate::parse(description) {
+        match part {
+            interpolate::Item::Text(s) => {
+                ops.add_text_with_font(s, style.text_font);
+            }
+            interpolate::Item::Arg(0) => {
+                ops.add_color(theme::YELLOW);
+                ops.add_text_with_font(host_name, style.text_font);
+                ops.add_color(style.text_color);
+            }
+            interpolate::Item::Arg(_) => return Err(Error::OutOfRange),
+        };
+    }
+
+    ops.add_newline()
         .add_newline()
         .add_newline()
         .add_alignment(Alignment::Center)
