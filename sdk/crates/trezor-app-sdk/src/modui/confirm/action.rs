@@ -1,6 +1,6 @@
 //! The generic yes/no block. The public docs live on [`action`].
 //!
-//! WIP: manual test results with extras (testapp), bolt (T2T1): no menu, so
+//! WIP: manual test results with extras (by hand), bolt (T2T1): no menu, so
 //! the extras cannot be reached.
 
 use crate::Result;

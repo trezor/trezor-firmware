@@ -1,6 +1,6 @@
 //! Confirming a single value. The public docs live on [`value`].
 //!
-//! WIP: manual test results with extras (testapp):
+//! WIP: manual test results with extras (by hand):
 //! - caesar (T3B1): only the value is drawn. Its Cancel works, but there is
 //!   no menu, so the extras cannot be reached.
 //! - delizia (T3T1): the menu button replaced the screen's way out and the
