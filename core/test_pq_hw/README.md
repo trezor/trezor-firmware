@@ -153,10 +153,18 @@ display, so a step during it shows the error instead of a picture.
 
 ## Power-loss cuts
 
-`pqhw/cutpoint.py` makes a power cut at a named function: openocd sets a
-hardware breakpoint at its address, waits for the unit to halt there, and
-resets it (`before`: on entry; `after`: once it returns; `during`: a few
-seconds into it). Addresses come from the ELF of the code that will run the
+`pqhw/cutpoint.py` makes a power cut at a chosen instruction: openocd sets a
+hardware breakpoint there, waits for the unit to halt, resets it (`reset
+halt`, checked to land on the boardloader's reset handler) and lets it boot.
+Cuts are named as call sites, `caller>callee`: `before` halts on the call
+instruction, `after` on the one following it, `during` lets the callee run a
+few seconds first. Not on the callee's own entry: on hardware a halt on a
+function's first instruction behaved as if the function had already run (a
+cut "before `ucb_stage_arm`" still armed the swap; a cut on the `bl` in the
+caller did not). After each cut the boot is traced: breakpoints on the
+boardloader's `boot_ucb_read` and the bootloader's `boot_ucb_write` record
+what the firmware itself read and wrote. Debugger reads of the UCB are not
+trusted: they disagreed with what the boardloader read at the same moment. Addresses come from the ELF of the code that will run the
 function, which the builder stages next to each image and checks byte for
 byte against it: `release-*/T3W1/bootloader.elf`, and
 `intermediary/{kernel,secmon}-<variant>.elf`. A cut in a bootloader that only

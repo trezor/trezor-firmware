@@ -96,17 +96,11 @@ def finish(unit: Unit, fx: Fixtures, seed, bootloader: tuple[int, int, int]):
 @pytest.mark.parametrize(
     "symbol, mode",
     [
-        ("ucb_stage_verify", "before"),  # PL-01
-        ("nrf_staging_write_desc", "before"),  # PL-02
-        ("ucb_stage_arm", "before"),  # PL-03
-        # bracketing PL-03: the descriptor written, nothing after it; and the
-        # UCB flash write itself, one call below ucb_stage_arm
-        ("nrf_staging_write_desc", "after"),
-        ("boot_ucb_write", "before"),
-        # inside phase 1 (A's ELF): back from the nRF stage, before the
-        # keep_seed check; and on the `bl ucb_stage_arm` instruction itself
-        ("workflow_firmware_update_pq+0x558", "before"),
-        ("workflow_firmware_update_pq+0x562", "before"),
+        # Cut on the call instruction in the caller, not on the callee's
+        # entry: see CutPoint.address.
+        ("workflow_firmware_update_pq>ucb_stage_verify", "before"),  # PL-01
+        ("nrf_on_finish>nrf_staging_write_desc", "before"),  # PL-02
+        ("workflow_firmware_update_pq>ucb_stage_arm", "before"),  # PL-03
     ],
 )
 def test_cut_in_phase1_before_arming(
@@ -136,7 +130,9 @@ def test_cut_after_arming(unit: Unit, fx: Fixtures) -> None:
     """PL-04: cut once the UCB is armed, before the reboot: the boardloader
     installs B's bootloader anyway, so the re-run is header-only."""
     ctx, seed, bundle = start(unit, fx)
-    cut = CutPoint(fx.release_elf(OLD), "ucb_stage_arm", "after")
+    cut = CutPoint(
+        fx.release_elf(OLD), "workflow_firmware_update_pq>ucb_stage_arm", "after"
+    )
     unit.step(f"cut armed: {cut}", screenshot=False)
     watch, labels = code_watch(fx)
     res = cutpoint.cut_during(
@@ -170,8 +166,8 @@ def phase1_then_arm(
 @pytest.mark.parametrize(
     "symbol, mode, delay",
     [
-        ("nrf_update_with_progress", "during", PUSH_DELAY),  # PL-06
-        ("nrf_staging_clear", "before", 0.0),  # PL-07
+        ("nrf_ota_resume_boot>nrf_update_with_progress", "during", PUSH_DELAY),  # PL-06
+        ("nrf_ota_resume_boot>nrf_staging_clear", "before", 0.0),  # PL-07
     ],
 )
 def test_cut_around_nrf_push(
@@ -257,9 +253,14 @@ def migration_finishes(unit: Unit, fx: Fixtures, variant: str, seed) -> None:
 @pytest.mark.parametrize(
     "part, symbol, mode, delay",
     [
-        ("kernel", "nrf_update", "during", PUSH_DELAY),  # MG-12
-        ("secmon", "boot_image_replace", "before", 0.0),  # MG-13
-        ("secmon", "boot_ucb_write", "after", 0.0),  # MG-14
+        ("kernel", "nrf_update__verified>nrf_update", "during", PUSH_DELAY),  # MG-12
+        (
+            "secmon",
+            "boot_image_replace__verified>boot_image_replace",
+            "before",
+            0.0,
+        ),  # MG-13
+        ("secmon", "boot_image_replace>boot_ucb_write", "after", 0.0),  # MG-14
     ],
     ids=["MG-12-nrf-push", "MG-13-before-replace", "MG-14-ucb-armed"],
 )
@@ -276,7 +277,7 @@ def test_cut_in_intermediary_swap(
     with cutpoint.arm(cut) as armed:
         unit.step(f"cut armed: {cut}", screenshot=False)
         hit = armed.wait()
-    if not hit and symbol == "nrf_update":
+    if not hit and symbol.endswith(">nrf_update"):
         pytest.skip("the intermediary found the nRF current: no push to cut")
     assert hit, f"the intermediary never reached {symbol}"
     unit.step(f"cut fired: {cut}; {cutpoint.summary(armed)}")

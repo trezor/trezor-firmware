@@ -22,6 +22,7 @@ cannot run, and steps recorded meanwhile carry no picture.
 from __future__ import annotations
 
 import logging
+import re
 import subprocess
 import tempfile
 import threading
@@ -68,6 +69,41 @@ def symbol_address(elf: Path, name: str) -> int:
     raise KeyError(f"{name} is not a function in {elf.name}")
 
 
+def call_sites(elf: Path, caller: str, callee: str) -> list[tuple[int, int]]:
+    """(address, length) of each `bl`/`b.w` to `callee` inside `caller`."""
+    start = symbol_address(elf, caller)
+    with elf.open("rb") as f:
+        size = next(
+            s["st_size"]
+            for s in ELFFile(f).get_section_by_name(".symtab").iter_symbols()
+            if s.name == caller and s["st_info"]["type"] == "STT_FUNC"
+        )
+    out = subprocess.run(
+        [
+            "arm-none-eabi-objdump",
+            "-d",
+            str(elf),
+            f"--start-address={start:#x}",
+            f"--stop-address={start + size:#x}",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    sites = []
+    for line in out.splitlines():
+        m = re.match(
+            r"\s*([0-9a-f]+):\s+((?:[0-9a-f]{4} ?)+)\s+(bl|b\.w|b)\s+[0-9a-f]+ <"
+            + re.escape(callee)
+            + ">",
+            line,
+        )
+        if m:
+            nbytes = len(m.group(2).replace(" ", "")) // 2
+            sites.append((int(m.group(1), 16), nbytes))
+    return sites
+
+
 def symbolize(addr: int, elfs: list[Path]) -> str:
     """`function+offset` of a code address, from the first ELF covering it."""
     addr &= ~1
@@ -99,8 +135,28 @@ class CutPoint:
             raise ValueError(f"mode must be one of {MODES}")
 
     @property
+    def is_call(self) -> bool:
+        return ">" in self.symbol
+
+    @property
     def address(self) -> int:
-        """`symbol`, or `symbol+0xoff` for an instruction inside a function."""
+        """`symbol`, `symbol+0xoff` for an instruction inside a function, or
+        `caller>callee[#n]` for the n-th (default last) call of callee inside
+        caller: the call instruction itself, or with mode "after" the one
+        following it.
+
+        Prefer the call form. A halt on a function's first instruction was
+        seen on hardware to behave as if the function had already run: with
+        it, a cut "before ucb_stage_arm" still armed the swap, while a cut on
+        the `bl ucb_stage_arm` in the caller did not (2026-10-07)."""
+        if self.is_call:
+            caller, _, callee = self.symbol.partition(">")
+            callee, _, nth = callee.partition("#")
+            sites = call_sites(self.elf, caller, callee)
+            if not sites:
+                raise KeyError(f"{caller} does not call {callee} in {self.elf.name}")
+            addr, length = sites[int(nth) if nth else -1]
+            return addr + length if self.mode == "after" else addr
         name, _, off = self.symbol.partition("+")
         return symbol_address(self.elf, name) + (int(off, 0) if off else 0)
 
@@ -179,7 +235,7 @@ def _script(
         f"if {{[catch {{wait_halt {ms}}}]}} {{ rbp all; {mark('timeout')}; exit }}",
         "rbp all",
     ]
-    if cut.mode == "after":
+    if cut.mode == "after" and not cut.is_call:
         # LR at entry is the return address; break there once it runs out
         lines += [
             "set lr [lindex [regexp -inline {0x[0-9a-fA-F]+} [reg lr]] 0]",

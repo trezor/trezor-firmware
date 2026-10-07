@@ -105,30 +105,33 @@ def test_nrf_differs_between_a_and_b(fx: Fixtures) -> None:
     assert nrf_version(fx, "release-A") < nrf_version(fx, "release-B")
 
 
-# The cut points the power-loss tests break at; they must resolve in the ELFs
-# staged with each image (the builder checked the ELFs match the images).
-CUT_POINTS = {
+# The cut points the power-loss tests break at, as call sites (caller>callee):
+# each must resolve in the ELF staged with its image (the builder checked the
+# ELFs match the images).
+CUT_CALLS = {
     "bootloader": [
-        "ucb_stage_verify",
-        "nrf_staging_write_desc",
-        "ucb_stage_arm",
-        "nrf_update_with_progress",
-        "nrf_staging_clear",
-        "boot_ucb_write",
+        "workflow_firmware_update_pq>ucb_stage_verify",
+        "nrf_on_finish>nrf_staging_write_desc",
+        "workflow_firmware_update_pq>ucb_stage_arm",
+        "nrf_ota_resume_boot>nrf_update_with_progress",
+        "nrf_ota_resume_boot>nrf_staging_clear",
     ],
-    "kernel": ["nrf_update"],
-    "secmon": ["boot_image_replace", "boot_ucb_write"],
+    "kernel": ["nrf_update__verified>nrf_update"],
+    "secmon": [
+        "boot_image_replace__verified>boot_image_replace",
+        "boot_image_replace>boot_ucb_write",
+    ],
 }
 
 
 @pytest.mark.parametrize("release", RELEASES)
 def test_release_cut_points_resolve(fx: Fixtures, release: str) -> None:
-    for symbol in CUT_POINTS["bootloader"]:
-        CutPoint(fx.release_elf(release), symbol).address
+    for call in CUT_CALLS["bootloader"]:
+        CutPoint(fx.release_elf(release), call).address
 
 
 @pytest.mark.parametrize("variant", VARIANTS)
 def test_intermediary_cut_points_resolve(fx: Fixtures, variant: str) -> None:
     for part in ("kernel", "secmon"):
-        for symbol in CUT_POINTS[part]:
-            CutPoint(fx.intermediary_elf(variant, part), symbol).address
+        for call in CUT_CALLS[part]:
+            CutPoint(fx.intermediary_elf(variant, part), call).address
