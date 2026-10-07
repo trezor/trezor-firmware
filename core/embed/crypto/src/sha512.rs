@@ -19,44 +19,20 @@ impl ffi::SHA512_CTX {
     /// Initialize the SHA512 context.
     ///
     /// Called by [`Sha512::new`]. Call again when reusing the context after
-    /// [`Self::hazard_finalize`] / [`HazardGuard::finalize`].
-    ///
-    /// # Copy hazard
-    ///
-    /// None because a "freshly initialized context" is public information.
+    /// [`HazardGuard::finalize`].
     pub fn init(&mut self) {
         // SAFETY: ffi
         unsafe { ffi::sha512_Init(self) };
-    }
-
-    /// # Copy hazard
-    ///
-    /// Do not move or copy `self` while in use. Prefer [`Sha512`], which pins
-    /// it.
-    pub fn hazard_update(&mut self, data: &[u8]) {
-        let data_slice = CSlice::from(data);
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the context in place
-        unsafe { ffi::sha512_Update(self, data_slice.ptr(), data_slice.len()) };
-    }
-
-    /// # Copy hazard
-    ///
-    /// See [`Self::hazard_update`].
-    pub fn hazard_finalize(&mut self) -> Digest {
-        let mut digest = [0u8; DIGEST_SIZE];
-        // SAFETY: ffi
-        // COPY HAZARD: operates on the context in place
-        unsafe { ffi::sha512_Final(self, digest.as_mut_ptr()) };
-        digest
     }
 }
 
 impl Sha512Guard<'_> {
     /// Update the SHA512 context with the given data.
     pub fn update(&mut self, data: &[u8]) {
-        // COPY HAZARD: implemented on a guard
-        self.hazard_mut().hazard_update(data);
+        let data_slice = CSlice::from(data);
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the guarded context in place
+        unsafe { ffi::sha512_Update(self.hazard_mut(), data_slice.ptr(), data_slice.len()) };
     }
 
     /// Finalize the SHA512 context and return the digest.
@@ -65,12 +41,18 @@ impl Sha512Guard<'_> {
     /// reusing it, the caller must call [`ffi::SHA512_CTX::init`] to
     /// reinitialize it.
     pub fn finalize(&mut self) -> Digest {
-        // COPY HAZARD: implemented on a guard
-        self.hazard_mut().hazard_finalize()
+        let mut digest = [0u8; DIGEST_SIZE];
+        // SAFETY: ffi
+        // COPY HAZARD: operates on the guarded context in place
+        unsafe { ffi::sha512_Final(self.hazard_mut(), digest.as_mut_ptr()) };
+        digest
     }
 }
 
-/// SHA512 hasher over a [`Sha512Ctx`].
+/// SHA512 hasher.
+///
+/// A wrapper around a SHA512 context that provides a safe interface for hashing
+/// data.
 pub struct Sha512<D: DerefMut<Target = Sha512Ctx>>(SecretContextLock<D>);
 
 impl<D: DerefMut<Target = Sha512Ctx>> Sha512<D> {
@@ -88,7 +70,7 @@ impl<D: DerefMut<Target = Sha512Ctx>> Sha512<D> {
     }
 
     /// Finalize the SHA512 context and return the digest.
-    pub fn finalize(&mut self) -> Digest {
+    pub fn finalize(mut self) -> Digest {
         // COPY HAZARD: neither hazard call exfiltrates data
         self.0.guarded().finalize()
     }
@@ -132,8 +114,10 @@ mod test {
     #[test]
     fn test_empty_ctx() {
         let mut ctx = Sha512Ctx::default();
-        let mut sha = Sha512::new(&mut ctx);
-        let out_hex = hex::encode(sha.finalize());
+        let sha = Sha512::new(&mut ctx);
+        let out = sha.finalize();
+
+        let out_hex = hex::encode(out);
         assert_eq!(out_hex, SHA512_EMPTY);
     }
 
@@ -146,13 +130,14 @@ mod test {
     }
 
     #[test]
-    fn test_hazard_api_reuse() {
+    fn test_guard_reuse() {
+        // reinitializing the context after `finalize` allows reusing it
         let mut ctx = Sha512Ctx::default();
-        let inner = ctx.hazard_mut();
         for _ in 0..2 {
-            inner.init();
-            inner.hazard_update(b"abc");
-            assert_eq!(hex::encode(inner.hazard_finalize()), hexdigest(b"abc"));
+            ctx.hazard_mut().init();
+            let mut guard = Sha512Guard::hazard_new(&mut ctx);
+            guard.update(b"abc");
+            assert_eq!(hex::encode(guard.finalize()), hexdigest(b"abc"));
         }
     }
 }
