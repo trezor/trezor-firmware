@@ -40,7 +40,7 @@ def test_min_prev_refused_below(unit: Unit, fx: Fixtures) -> None:
     ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
     seed = flows.seed_fingerprint(unit, ctx)
     ctx = flows.enter_bootloader(unit, ctx)
-    with pytest.raises(exceptions.TrezorFailure):
+    with pytest.raises(exceptions.TrezorFailure, match="Unsupported upgrade path"):
         flows.pq_install(
             unit, ctx, fx.bundle("release-C-minprev", "universal"), confirm=False
         )
@@ -72,5 +72,5 @@ def test_monotonic_refuses_older_bootloader(unit: Unit, fx: Fixtures) -> None:
     ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
     assert flows.version(ctx.features) == (2, 14, 4)
     ctx = flows.enter_bootloader(unit, ctx)
-    with pytest.raises(exceptions.TrezorFailure):
+    with pytest.raises(exceptions.TrezorFailure, match="Firmware downgrade protection"):
         flows.pq_install(unit, ctx, fx.bundle("release-B", "universal"), confirm=False)

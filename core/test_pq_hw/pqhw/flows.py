@@ -8,7 +8,7 @@ import typing as t
 from dataclasses import dataclass
 from hashlib import blake2s, sha256
 
-from trezorlib import btc, debuglink, device, firmware, messages
+from trezorlib import btc, debuglink, device, exceptions, firmware, messages
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.firmware.pq_secure import PqSecureBundle
 from trezorlib.messages import FirmwareScheme
@@ -187,13 +187,18 @@ def pq_phase1(
             )
         )
 
-    resp, prompted = call_watching_prompt(
-        ctx,
-        begin,
-        stall=unit.stall,
-        confirm=confirm,
-        on_prompt=lambda: unit.step("phase 1: confirmation, tapping confirm"),
-    )
+    try:
+        resp, prompted = call_watching_prompt(
+            ctx,
+            begin,
+            stall=unit.stall,
+            confirm=confirm,
+            on_prompt=lambda: unit.step("phase 1: confirmation, tapping confirm"),
+        )
+    except exceptions.TrezorFailure as e:
+        # the bootloader also draws its failure screen
+        unit.step(f"phase 1 refused: {e.message}")
+        raise
     served = {"code": 0, "nrf": 0}
     while isinstance(resp, messages.FirmwareRequest):
         is_nrf = (resp.coprocessor_index or 0) != 0
