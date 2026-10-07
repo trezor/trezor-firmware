@@ -1,12 +1,21 @@
 from typing import TYPE_CHECKING
 
+from trezor.crypto import base58
 from trezor.utils import BufferReader
 from trezor.wire import DataError
 
-from apps.common.writers import write_bytes_unchecked, write_uint8, write_uvarint
+from apps.common.writers import (
+    write_bytes_unchecked,
+    write_uint8,
+    write_uint16_le,
+    write_uint32_le,
+    write_uint64_le,
+    write_uvarint,
+)
 from common import unittest, utils
 
 if not utils.BITCOIN_ONLY:
+    from apps.solana.constants import SOLANA_BASE_FEE_LAMPORTS
     from apps.solana.transaction import Transaction
     from apps.solana.transaction.parse import parse_var_int
     from apps.solana.types import AddressType
@@ -27,12 +36,24 @@ if TYPE_CHECKING:
     RawInstruction = tuple[int, Sequence[int], AnyBytes]
     # Address lookup table (ALT): account, read-write and read-only indexes.
     Alt = tuple[AnyBytes, Sequence[int], Sequence[int]]
+    # Priority fee, compute unit limit, loaded accounts data size limit, and
+    # heap size of a v1 transaction, each None if not set.
+    TxConfig = tuple[int | None, int | None, int | None, int | None]
 
 
 BLOCKHASH = b"h" * 32
 
+NO_CONFIG: TxConfig = (None, None, None, None)
+# Mask bits and serialization of the TxConfig values, in the same order.
+CONFIG_FIELDS = (
+    (0b00011, write_uint64_le),
+    (0b00100, write_uint32_le),
+    (0b01000, write_uint32_le),
+    (0b10000, write_uint32_le),
+)
 
-# Serialization of the legacy and v0 transaction formats,
+
+# Serialization of the legacy, v0, and v1 transaction formats,
 # as described in core/src/apps/solana/README.md.
 
 
@@ -80,6 +101,61 @@ def write_alt(w: Writer, alt: Alt) -> None:
     write_compact_array(w, ro_indexes, write_uint8)
 
 
+def write_tx_body_legacy_v0(
+    w: Writer,
+    accounts: Sequence[AnyBytes],
+    instructions: Sequence[RawInstruction],
+    blockhash: AnyBytes,
+    version: int | None,
+    alts: Sequence[Alt],
+) -> None:
+    write_compact_array(w, accounts, write_bytes_unchecked)
+    write_bytes_unchecked(w, blockhash)
+    write_compact_array(w, instructions, write_instruction)
+    if version is not None:
+        write_compact_array(w, alts, write_alt)
+
+
+def get_config_mask(config: TxConfig) -> int:
+    config_mask = 0
+    for (bits, _), value in zip(CONFIG_FIELDS, config):
+        if value is not None:
+            config_mask |= bits
+    return config_mask
+
+
+def write_tx_body_v1(
+    w: Writer,
+    accounts: Sequence[AnyBytes],
+    instructions: Sequence[RawInstruction],
+    blockhash: AnyBytes,
+    config: TxConfig,
+    config_mask: int | None,
+) -> None:
+    """If `config_mask` is None, it is computed from `config`."""
+    if config_mask is None:
+        config_mask = get_config_mask(config)
+    write_uint32_le(w, config_mask)
+    write_bytes_unchecked(w, blockhash)
+    write_uint8(w, len(instructions))
+    write_uint8(w, len(accounts))
+
+    for account in accounts:
+        write_bytes_unchecked(w, account)
+
+    for (_, write_value), value in zip(CONFIG_FIELDS, config):
+        if value is not None:
+            write_value(w, value)
+
+    for program_index, account_indexes, data in instructions:
+        write_uint8(w, program_index)
+        write_uint8(w, len(account_indexes))
+        write_uint16_le(w, len(data))
+    for _, account_indexes, data in instructions:
+        write_bytes_unchecked(w, bytes(account_indexes))
+        write_bytes_unchecked(w, data)
+
+
 def build_tx(
     header: Header,
     accounts: Sequence[AnyBytes],
@@ -87,20 +163,22 @@ def build_tx(
     blockhash: AnyBytes = BLOCKHASH,
     version: int | None = None,
     alts: Sequence[Alt] = (),
+    config: TxConfig = NO_CONFIG,
+    config_mask: int | None = None,
 ) -> bytes:
     w = bytearray()
     if version is not None:
         write_uint8(w, 0x80 | version)
     write_tx_header(w, *header)
-    write_compact_array(w, accounts, write_bytes_unchecked)
-    write_bytes_unchecked(w, blockhash)
-    write_compact_array(w, instructions, write_instruction)
-    if version is not None:
-        write_compact_array(w, alts, write_alt)
+    if version == 1:
+        write_tx_body_v1(w, accounts, instructions, blockhash, config, config_mask)
+    else:
+        write_tx_body_legacy_v0(w, accounts, instructions, blockhash, version, alts)
     return bytes(w)
 
 
 SYSTEM_PROGRAM = bytes(32)  # base58 "11111111111111111111111111111111"
+COMPUTE_BUDGET_PROGRAM = base58.decode("ComputeBudget111111111111111111111111111111")
 SIGNER = b"s" * 32
 RECIPIENT = b"r" * 32
 TRANSFER_ACCOUNTS = (SIGNER, RECIPIENT, SYSTEM_PROGRAM)
@@ -184,14 +262,20 @@ class TestSolanaTransactionHeader(unittest.TestCase):
                 ),
             ),
         )
-        for header, expected_types in vectors:
-            transaction = Transaction(
-                build_tx(header, TRANSFER_ACCOUNTS, [TRANSFER_INSTRUCTION])
-            )
-            self.assertEqual(
-                [address[1] for address in transaction.addresses],
-                list(expected_types),
-            )
+        for version in (None, 0, 1):
+            for header, expected_types in vectors:
+                transaction = Transaction(
+                    build_tx(
+                        header,
+                        TRANSFER_ACCOUNTS,
+                        [TRANSFER_INSTRUCTION],
+                        version=version,
+                    )
+                )
+                self.assertEqual(
+                    [address[1] for address in transaction.addresses],
+                    list(expected_types),
+                )
 
     def test_invalid(self):
         # Headers rejected by Message::sanitize(), see:
@@ -202,9 +286,25 @@ class TestSolanaTransactionHeader(unittest.TestCase):
             (0, 0, 1),  # no signers at all
             (2, 0, 2),  # signing and read-only non-signing areas overlap
         )
-        for header in vectors:
-            with self.assertRaises(DataError):
-                Transaction(build_tx(header, TRANSFER_ACCOUNTS, [TRANSFER_INSTRUCTION]))
+        for version in (None, 0, 1):
+            for header in vectors:
+                with self.assertRaises(DataError):
+                    Transaction(
+                        build_tx(
+                            header,
+                            TRANSFER_ACCOUNTS,
+                            [TRANSFER_INSTRUCTION],
+                            version=version,
+                        )
+                    )
+
+    def test_unsupported_version(self):
+        # A valid v0 transaction, so that nothing but the version is wrong.
+        v0_tx = build_tx(
+            (1, 0, 1), TRANSFER_ACCOUNTS, [TRANSFER_INSTRUCTION], version=0
+        )
+        with self.assertRaises(DataError):
+            Transaction(b"\x82" + v0_tx[1:])
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -251,7 +351,7 @@ class TestSolanaTransactionInstructions(unittest.TestCase):
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestSolanaTransactionAlts(unittest.TestCase):
     def test_without_alts(self):
-        for version in (None, 0):
+        for version in (None, 0, 1):
             transaction = Transaction(
                 build_tx(
                     (1, 0, 1),
@@ -268,7 +368,7 @@ class TestSolanaTransactionAlts(unittest.TestCase):
         # Only v0 transactions end with an ALT list.
         alts = bytearray()
         write_compact_array(alts, [(b"t" * 32, (5,), (7,))], write_alt)
-        for version in (None,):
+        for version in (None, 1):
             serialized_tx = build_tx(
                 (1, 0, 1),
                 TRANSFER_ACCOUNTS,
@@ -308,6 +408,115 @@ class TestSolanaTransactionAlts(unittest.TestCase):
         legacy_tx = build_tx((1, 0, 1), TRANSFER_ACCOUNTS, [TRANSFER_INSTRUCTION])
         with self.assertRaises(EOFError):
             Transaction(b"\x80" + legacy_tx)
+
+
+def raw_instructions(transaction: Transaction) -> list[tuple]:
+    # Instruction data are memoryviews, which can't be compared directly.
+    return [
+        (program_index, accounts, bytes(data))
+        for program_index, accounts, data in transaction.raw_instructions
+    ]
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestSolanaTransactionV1(unittest.TestCase):
+    def test_known_answer(self):
+        # The serialized transaction from solana-sdk's
+        # byte_layout_with_config() test, prefixed with the version:
+        # https://github.com/anza-xyz/solana-sdk/blob/891412dceb0a7d3d4116ac295eef519882138090/message/src/versions/v1/message.rs#L1155-L1193
+        serialized_tx = (
+            b"\x81"
+            + bytes((1, 0, 0))  # header
+            + (0b111).to_bytes(4, "little")  # config mask
+            + b"\xbb" * 32  # blockhash
+            + bytes((1, 2))  # number of instructions and addresses
+            + b"\x01" * 32
+            + b"\x02" * 32
+            + (0x0102030405060708).to_bytes(8, "little")  # priority fee
+            + (0x11223344).to_bytes(4, "little")  # compute unit limit
+            + bytes((1, 0))
+            + (0).to_bytes(2, "little")  # instruction header
+        )
+        transaction = Transaction(serialized_tx)
+
+        self.assertEqual(transaction.version, 1)
+        self.assertEqual(transaction.blockhash, b"\xbb" * 32)
+        self.assertEqual(
+            [address for address, _ in transaction.addresses],
+            [b"\x01" * 32, b"\x02" * 32],
+        )
+        self.assertEqual(raw_instructions(transaction), [(1, [], b"")])
+        fee = transaction.calculate_fee()
+        assert fee is not None
+        self.assertEqual(fee.priority, 0x0102030405060708)
+
+    def test_same_as_legacy(self):
+        instructions = (
+            TRANSFER_INSTRUCTION,
+            (2, (1, 0, 1), b"\xff" * 300),
+        )
+        legacy = Transaction(build_tx((1, 0, 1), TRANSFER_ACCOUNTS, instructions))
+        v1 = Transaction(
+            build_tx(
+                (1, 0, 1),
+                TRANSFER_ACCOUNTS,
+                instructions,
+                version=1,
+                config=(12_345, 200_000, 64 * 1024, 64 * 1024),
+            )
+        )
+
+        self.assertEqual(v1.version, 1)
+        self.assertEqual(v1.addresses, legacy.addresses)
+        self.assertEqual(v1.blockhash, legacy.blockhash)
+        self.assertEqual(raw_instructions(v1), raw_instructions(legacy))
+
+    def test_invalid_config(self):
+        vectors = (
+            # mask, config
+            (0b10_0000, NO_CONFIG),  # unknown bit
+            # Only one of the two priority fee bits set.
+            (0b01, (777, None, None, None)),
+            (0b10, (777, None, None, None)),
+        )
+        for mask, config in vectors:
+            with self.assertRaises(DataError):
+                Transaction(
+                    build_tx(
+                        (1, 0, 1),
+                        TRANSFER_ACCOUNTS,
+                        [TRANSFER_INSTRUCTION],
+                        version=1,
+                        config=config,
+                        config_mask=mask,
+                    )
+                )
+
+    def test_fee(self):
+        header = (1, 0, 2)
+        accounts = (SIGNER, RECIPIENT, SYSTEM_PROGRAM, COMPUTE_BUDGET_PROGRAM)
+        instructions = (
+            # Set Compute Unit Limit
+            (3, (), b"\x02" + (300_000).to_bytes(4, "little")),
+            # Set Compute Unit Price (microlamports)
+            (3, (), b"\x03" + (2_000_000).to_bytes(8, "little")),
+            TRANSFER_INSTRUCTION,
+        )
+        legacy_fee = Transaction(
+            build_tx(header, accounts, instructions)
+        ).calculate_fee()
+        assert legacy_fee is not None
+        self.assertEqual(legacy_fee.base, SOLANA_BASE_FEE_LAMPORTS)
+        self.assertEqual(legacy_fee.priority, 600_000)  # limit * price in lamports
+
+        # v1 ignores ComputeBudget instructions, the fee comes from the config.
+        for config, priority_fee in ((NO_CONFIG, 0), ((777, None, None, None), 777)):
+            fee = Transaction(
+                build_tx(header, accounts, instructions, version=1, config=config)
+            ).calculate_fee()
+            assert fee is not None
+            self.assertEqual(fee.base, SOLANA_BASE_FEE_LAMPORTS)
+            self.assertEqual(fee.priority, priority_fee)
 
 
 if __name__ == "__main__":
