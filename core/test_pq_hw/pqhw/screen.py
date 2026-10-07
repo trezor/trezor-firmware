@@ -44,9 +44,10 @@ HEIGHT = 520  # DISPLAY_RESY
 STRIDE = 768 * 4  # FRAME_BUFFER_PIXELS_PER_LINE, ARGB8888
 FRAME_SIZE = (HEIGHT - 1) * STRIDE + WIDTH * 4
 
-# SWD clock in kHz. An ST-Link V3 goes up to 24000; 8000 holds on ordinary
-# cables. The target config's own default is much slower.
-SWD_KHZ = int(os.environ.get("PQHW_SWD_KHZ", "8000"))
+# SWD clock in kHz: an ST-Link V3's maximum (measured on the bench: 3.2 s per
+# capture against 4.1 s at 8000). Lower it with PQHW_SWD_KHZ on a long cable
+# or an older probe. The target config's own default is much slower.
+SWD_KHZ = int(os.environ.get("PQHW_SWD_KHZ", "24000"))
 TEAR_RETRIES = 3
 
 OPENOCD = [
