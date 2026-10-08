@@ -325,7 +325,6 @@ impl ButtonDetails {
             "<" => Self::left_arrow_icon(),
             "^" => Self::up_arrow_icon(),
             "V" => Self::down_arrow_icon(),
-            "i" => Self::info_icon(),
             _ => Self::text(text),
         })
     }
@@ -335,9 +334,9 @@ impl ButtonDetails {
         Self::text(text).with_arms()
     }
 
-    /// Cross-style-icon cancel button with no outline.
+    /// Cross-style-icon cancel/close button with no outline.
     pub fn cancel_icon() -> Self {
-        Self::icon(theme::ICON_CANCEL).with_offset(Offset::new(3, -3))
+        Self::icon(theme::ICON_CLOSE).with_offset(Offset::new(3, -3))
     }
 
     /// Hamburger icon opening the context menu. No outline.
@@ -354,14 +353,9 @@ impl ButtonDetails {
             .with_shift()
     }
 
-    /// Cross closing the current screen. No outline.
-    pub fn close_icon() -> Self {
-        Self::icon(theme::ICON_CLOSE).with_offset(Offset::new(3, -3))
-    }
-
-    /// Cross in brackets. Closes the current screen when pressed briefly,
-    /// engages "Shift" when held.
-    pub fn close_shift_icon() -> Self {
+    /// Cross in brackets. Cancels/closes the current screen when pressed
+    /// briefly, engages "Shift" when held.
+    pub fn cancel_shift_icon() -> Self {
         Self::icon(theme::ICON_CLOSE_SHIFT)
             .with_fixed_width(theme::ICON_CLOSE_SHIFT.toif.width())
             .with_offset(Offset::new(0, -3))
@@ -540,51 +534,12 @@ impl ButtonLayout {
         )
     }
 
-    /// Left text, armed text and right info icon/text.
-    pub fn text_armed_info(left: TString<'static>, middle: TString<'static>) -> Self {
-        Self::new(
-            Some(ButtonDetails::from_text_possible_icon(left)),
-            Some(ButtonDetails::armed_text(middle)),
-            Some(ButtonDetails::info_icon()),
-        )
-    }
-
-    /// Left text, armed text and right info text.
-    pub fn text_armed_text(
-        left: TString<'static>,
-        middle: TString<'static>,
-        right: TString<'static>,
-    ) -> Self {
-        Self::new(
-            Some(ButtonDetails::from_text_possible_icon(left)),
-            Some(ButtonDetails::armed_text(middle)),
-            if right.is_empty() {
-                None
-            } else {
-                Some(ButtonDetails::from_text_possible_icon(right))
-            },
-        )
-    }
-
     /// Left cancel, armed text and right info icon.
     pub fn cancel_armed_info(middle: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             Some(ButtonDetails::armed_text(middle)),
             Some(ButtonDetails::info_icon()),
-        )
-    }
-
-    /// Left cancel, armed text and right info icon/text.
-    pub fn cancel_armed_text(middle: TString<'static>, right: TString<'static>) -> Self {
-        Self::new(
-            Some(ButtonDetails::cancel_icon()),
-            Some(ButtonDetails::armed_text(middle)),
-            if right.is_empty() {
-                None
-            } else {
-                Some(ButtonDetails::from_text_possible_icon(right))
-            },
         )
     }
 
@@ -696,15 +651,6 @@ impl ButtonLayout {
         )
     }
 
-    /// Up arrow on left, middle text and info on the right.
-    pub fn up_arrow_armed_info(text: TString<'static>) -> Self {
-        Self::new(
-            Some(ButtonDetails::up_arrow_icon()),
-            Some(ButtonDetails::armed_text(text)),
-            Some(ButtonDetails::info_icon()),
-        )
-    }
-
     /// Cancel cross on left and right arrow facing down.
     pub fn cancel_none_arrow_down() -> Self {
         Self::new(
@@ -774,8 +720,6 @@ pub enum ButtonAction {
     Cancel,
     /// Confirm the whole layout - send Msg::Confirmed
     Confirm,
-    /// Send INFO message from layout - send Msg::Info
-    Info,
 }
 
 /// Storing actions for all three possible buttons.
@@ -917,15 +861,6 @@ impl ButtonActions {
             Some(ButtonAction::Cancel),
             Some(ButtonAction::Confirm),
             None,
-        )
-    }
-
-    /// Cancelling with left, confirming with middle and info with right
-    pub fn cancel_confirm_info() -> Self {
-        Self::new(
-            Some(ButtonAction::Cancel),
-            Some(ButtonAction::Confirm),
-            Some(ButtonAction::Info),
         )
     }
 

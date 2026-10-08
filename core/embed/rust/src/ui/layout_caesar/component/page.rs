@@ -14,10 +14,16 @@ use crate::ui::util::Pager;
 /// `ButtonPage::with_menu_nav`).
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MenuNav {
-    /// Opens the context menu - the screen returns `PageMsg::Info`.
+    /// Opens the context menu with additional information - the screen returns
+    /// `PageMsg::Info`.
     Menu,
-    /// Closes the screen, e.g. the one opened from a context menu - the screen
-    /// returns `PageMsg::Cancelled`.
+    /// Opens the context menu with choices how to continue the flow (e.g.
+    /// "Show all") - the screen returns `PageMsg::Info`. Unlike `Menu`, it is
+    /// not reported as an information menu to the debug tracing (automated
+    /// tests would otherwise pick the choices while visiting it).
+    ChoiceMenu,
+    /// Closes the screen, e.g. cancels the flow or closes the screen opened
+    /// from a context menu - the screen returns `PageMsg::Cancelled`.
     Close,
 }
 
@@ -31,9 +37,11 @@ where
     confirm_btn_details: Option<ButtonDetails>,
     back_btn_details: Option<ButtonDetails>,
     next_btn_details: Option<ButtonDetails>,
-    has_menu: bool,
     /// Menu navigation, replacing the cancel/back/next buttons.
     menu_nav: Option<MenuNav>,
+    /// Whether "Shift" + right button on the first page goes back to the
+    /// previous screen of the flow (menu navigation only).
+    back_on_first_page: bool,
     /// Whether the left button is being held as "Shift" (menu navigation only).
     shift_active: bool,
     buttons: Child<ButtonController>,
@@ -51,8 +59,8 @@ where
             confirm_btn_details: Some(ButtonDetails::text(TR::buttons__confirm.into())),
             back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
-            has_menu: false,
             menu_nav: None,
+            back_on_first_page: false,
             shift_active: false,
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call
@@ -71,11 +79,6 @@ where
         self
     }
 
-    pub fn with_menu(mut self, has_menu: bool) -> Self {
-        self.has_menu = has_menu;
-        self
-    }
-
     /// Navigation with the left button opening a context menu (or closing the
     /// screen), and the right button scrolling down and finally confirming
     /// (when there is a confirm button).
@@ -84,6 +87,15 @@ where
     /// the right button then scrolls up.
     pub fn with_menu_nav(mut self, menu_nav: MenuNav) -> Self {
         self.menu_nav = Some(menu_nav);
+        self
+    }
+
+    /// "Shift" is offered also on the first page, where it goes back to the
+    /// previous screen of the flow - the screen returns `PageMsg::Cancelled`.
+    /// Only for `MenuNav::Menu` and `MenuNav::ChoiceMenu`, where the left
+    /// button does not cancel.
+    pub fn with_back_on_first_page(mut self) -> Self {
+        self.back_on_first_page = true;
         self
     }
 
@@ -141,15 +153,12 @@ where
         } else {
             self.back_btn_details.clone()
         };
-        let (btn_middle, btn_right) = match (has_next, self.has_menu) {
-            (true, _) => (None, self.next_btn_details.clone()),
-            (false, false) => (None, self.confirm_btn_details.clone()),
-            (false, true) => (
-                self.confirm_btn_details.clone().map(|b| b.with_arms()),
-                Some(ButtonDetails::info_icon()),
-            ),
+        let btn_right = if has_next {
+            self.next_btn_details.clone()
+        } else {
+            self.confirm_btn_details.clone()
         };
-        ButtonLayout::new(btn_left, btn_middle, btn_right)
+        ButtonLayout::new(btn_left, None, btn_right)
     }
 
     fn get_menu_nav_button_layout(
@@ -159,16 +168,17 @@ where
         has_next: bool,
     ) -> ButtonLayout {
         // The bracketed left icon advertises "Shift", which is offered only when
-        // there is somewhere to scroll up to. It stays while "Shift" is held.
-        let shift = has_prev || self.shift_active;
+        // there is somewhere to go back to. It stays while "Shift" is held.
+        let can_go_back = has_prev || self.back_on_first_page;
+        let shift = can_go_back || self.shift_active;
         let btn_left = match (menu_nav, shift) {
-            (MenuNav::Menu, false) => ButtonDetails::menu_icon(),
-            (MenuNav::Menu, true) => ButtonDetails::menu_shift_icon(),
-            (MenuNav::Close, false) => ButtonDetails::close_icon(),
-            (MenuNav::Close, true) => ButtonDetails::close_shift_icon(),
+            (MenuNav::Menu | MenuNav::ChoiceMenu, false) => ButtonDetails::menu_icon(),
+            (MenuNav::Menu | MenuNav::ChoiceMenu, true) => ButtonDetails::menu_shift_icon(),
+            (MenuNav::Close, false) => ButtonDetails::cancel_icon(),
+            (MenuNav::Close, true) => ButtonDetails::cancel_shift_icon(),
         };
         let btn_right = if self.shift_active {
-            has_prev.then(ButtonDetails::scroll_up_wide)
+            can_go_back.then(ButtonDetails::scroll_up_wide)
         } else if has_next {
             Some(ButtonDetails::scroll_down_wide())
         } else {
@@ -186,7 +196,7 @@ where
         match self.buttons.event(ctx, event) {
             Some(ButtonControllerMsg::Triggered(ButtonPos::Left, _)) => {
                 return Some(match menu_nav {
-                    MenuNav::Menu => PageMsg::Info,
+                    MenuNav::Menu | MenuNav::ChoiceMenu => PageMsg::Info,
                     MenuNav::Close => PageMsg::Cancelled,
                 });
             }
@@ -202,9 +212,13 @@ where
                 self.shift_active = true;
                 self.update_buttons(ctx);
             }
-            Some(ButtonControllerMsg::ShiftedTriggered) if self.pager().has_prev() => {
-                self.prev_page();
-                self.change_page(ctx);
+            Some(ButtonControllerMsg::ShiftedTriggered) => {
+                if self.pager().has_prev() {
+                    self.prev_page();
+                    self.change_page(ctx);
+                } else if self.back_on_first_page {
+                    return Some(PageMsg::Cancelled);
+                }
             }
             Some(ButtonControllerMsg::ShiftEnded) => {
                 self.shift_active = false;
@@ -279,8 +293,6 @@ where
                         // Clicked NEXT. Scroll down.
                         self.next_page();
                         self.change_page(ctx);
-                    } else if self.has_menu {
-                        return Some(PageMsg::Info);
                     } else {
                         return Some(PageMsg::Confirmed);
                     }
@@ -314,9 +326,9 @@ where
         t.int("page_count", i64::from(self.pager().total()));
         t.child("buttons", &self.buttons);
         t.child("content", &self.content);
-        let has_menu = self.has_menu || self.menu_nav == Some(MenuNav::Menu);
-        t.bool("has_menu", has_menu && self.pager().is_last());
-        // The context menu is opened by the left button.
-        t.bool("left_menu", self.menu_nav == Some(MenuNav::Menu));
+        t.bool(
+            "has_menu",
+            self.menu_nav == Some(MenuNav::Menu) && self.pager().is_last(),
+        );
     }
 }

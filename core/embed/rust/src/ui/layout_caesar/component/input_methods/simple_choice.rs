@@ -23,8 +23,7 @@ struct ChoiceFactorySimple {
     choices: Vec<TString<'static>, MAX_LENGTH>,
     controls: ChoiceControls,
     select_text: TString<'static>,
-    /// Using the context menu buttons - arrow glyph to enter an item, cross to
-    /// close the menu.
+    /// Using the context menu buttons - arrow glyph to enter an item.
     menu_buttons: bool,
 }
 
@@ -73,11 +72,7 @@ impl ChoiceFactory for ChoiceFactorySimple {
         if self.controls != ChoiceControls::Carousel {
             if choice_index == 0 {
                 if self.controls == ChoiceControls::Cancellable {
-                    choice_item.set_left_btn(Some(if self.menu_buttons {
-                        ButtonDetails::close_icon()
-                    } else {
-                        ButtonDetails::cancel_icon()
-                    }));
+                    choice_item.set_left_btn(Some(ButtonDetails::cancel_icon()));
                 } else {
                     choice_item.set_left_btn(None);
                 }
@@ -150,8 +145,8 @@ impl SimpleChoice {
         self
     }
 
-    /// Using the context menu buttons - arrow glyph to enter an item, cross to
-    /// close the menu. `danger_items` marks the items that are dangerous.
+    /// Using the context menu buttons - arrow glyph to enter an item.
+    /// `danger_items` marks the items that are dangerous.
     pub fn with_menu_buttons(mut self, danger_items: Vec<bool, MAX_LENGTH>) -> Self {
         self.choice_page = self.choice_page.with_choice_factory(|choices| {
             choices.menu_buttons = true;

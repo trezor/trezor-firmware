@@ -361,9 +361,10 @@ def confirm_summary(
 ) -> LayoutContext[UiResult]:
     """Confirm summary of a transaction.
     account_items and extra_items need to be:
-     * a list (on Eckhart and Caesar)
+     * a list (on Eckhart)
      * an iterable (on Delizia)
      * None / non-None on Bolt
+     * None on Caesar (shown in the external menu instead)
     TODO: get rid of account_items and extra_items for consistency!
     """
 

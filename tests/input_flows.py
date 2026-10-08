@@ -63,6 +63,7 @@ from .input_flows_helpers import (
     PinFlow,
     RecoveryFlow,
     n1w1_handle_write,
+    read_caesar_menu_item,
 )
 
 B = messages.ButtonRequestType
@@ -404,7 +405,9 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
         self.debug.press_yes()
 
         br = yield
-        self.debug.press_info()
+        # "Show all" from the menu
+        self.debug.press_left()
+        self.debug.button_actions.navigate_to_menu_item(0)
 
         # paginate through the whole message
         br = yield
@@ -1050,19 +1053,29 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             self.debug.press_yes()
             br = yield
 
-        # Go into details
-        self.debug.press_right()
-        # Go through details and back
-        self.debug.press_right()
-        self.debug.press_right()
-        self.debug.press_right()
+        # qr code
         self.debug.press_left()
+        self.debug.button_actions.navigate_to_menu_item(0)
+        self.debug.synchronize_at("Qr")
         self.debug.press_left()
-        assert br.pages is not None
-        for _ in range(br.pages - 1):
+        # account info
+        self.debug.button_actions.navigate_to_menu_item(1)
+        self.debug.synchronize_at("Paragraphs")
+        self.debug.press_left()
+        self.debug.button_actions.close_menu()
+
+        # scroll down through the xpub, back up with "Shift" and down again
+        layout = self.debug.synchronize_at("ButtonPage")
+        pages = layout.page_count()
+        for _ in range(pages - 1):
             self.debug.press_right()
+        if pages > 1:
+            self.debug.press_right_with_shift(pages - 1)
+            assert self.debug.read_layout().active_page() == 0
+            for _ in range(pages - 1):
+                self.debug.press_right()
         # Confirm
-        self.debug.press_middle()
+        self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         if self.passphrase_request_expected:
@@ -1346,16 +1359,9 @@ def sign_tx_go_to_info_caesar(
         client.debug.press_middle()
         yield
 
-    client.debug.press_right()
-    layout = client.debug.read_layout()
-    screen_texts.append(layout.visible_screen())
-
-    client.debug.press_right()
-    layout = client.debug.read_layout()
-    screen_texts.append(layout.visible_screen())
-
-    client.debug.press_left()
-    client.debug.press_left()
+    # fee info and account info in the menu
+    for item in range(2):
+        screen_texts.append(read_caesar_menu_item(client.debug, item))
 
     return "\n".join(screen_texts)
 
@@ -1522,7 +1528,9 @@ class InputFlowSignTxInformationCancel(InputFlowBase):
 
     def input_flow_caesar(self) -> BRGeneratorType:
         yield from sign_tx_go_to_info_caesar(self.client)
+        # cancel from the menu
         self.debug.press_left()
+        self.debug.button_actions.navigate_to_menu_item(2)
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield from sign_tx_go_to_info_delizia(self.client)
@@ -1758,7 +1766,8 @@ class InputFlowEIP712ShowMore(InputFlowBase):
         if self.layout_type is LayoutType.Bolt:
             self.debug.click(self.SHOW_MORE)
         elif self.layout_type is LayoutType.Caesar:
-            self.debug.press_right()
+            self.debug.press_left()
+            self.debug.button_actions.navigate_to_menu_item(0)
         elif self.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.button_actions.navigate_to_menu_item(0)
@@ -1895,7 +1904,9 @@ class InputFlowEthereumSignTxData(InputFlowBase):
             confirm_tx.send(br)
 
     def _go_to_next_page(self, is_intro: bool):
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar) or is_intro:
+        if self.client.layout_type is LayoutType.Caesar:
+            self.debug.press_yes()  # pagination is the right button
+        elif self.client.layout_type is LayoutType.Bolt or is_intro:
             self.debug.press_info()  # pagination is a special button
         elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.press_yes()  # pagination is a regular button
@@ -1906,7 +1917,15 @@ class InputFlowEthereumSignTxData(InputFlowBase):
         self.debug.press_no()
 
     def _confirm_all(self, is_intro: bool):
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar) or is_intro:
+        if self.client.layout_type is LayoutType.Caesar:
+            layout = self.debug.read_layout()
+            if TR.buttons__confirm_all.lower() in layout.json_str.lower():
+                self.debug.press_yes()  # confirmation is the right button
+            else:
+                # the right button scrolls, confirmation is in the menu
+                self.debug.press_left()
+                self.debug.button_actions.navigate_to_menu_item(0)
+        elif self.client.layout_type is LayoutType.Bolt or is_intro:
             self.debug.press_yes()  # confirmation is a regular button
         elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.press_info()  # confirmation is available via menu

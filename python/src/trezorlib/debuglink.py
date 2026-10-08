@@ -488,10 +488,6 @@ class LayoutContent(UnstructuredJSONReader):
     def has_menu(self) -> bool:
         return bool(self.find_unique_value_by_key("has_menu", False, bool))
 
-    def has_left_menu(self) -> bool:
-        """Whether the menu is opened by the left button (Caesar)."""
-        return bool(self.find_unique_value_by_key("left_menu", False, bool))
-
     def danger_menu_items(self) -> list[bool]:
         """Which menu items are dangerous, e.g. cancelling the flow (Caesar)."""
         return self.find_unique_value_by_key("danger_items", [], list)
@@ -1168,10 +1164,7 @@ class DebugUI:
         if layout.has_menu():
             is_menu = True
             if self.debuglink.layout_type is LayoutType.Caesar:
-                if layout.has_left_menu():
-                    self.debuglink.press_left()
-                else:
-                    self.debuglink.press_right()
+                self.debuglink.press_left()
             else:
                 self.debuglink.click(self.debuglink.screen_buttons.menu())
 
@@ -2326,8 +2319,32 @@ class ButtonActions:
         click_amount = BUTTON_LETTERS_BIP39[idx].index(letter) + 1
         return self.debuglink.screen_buttons.mnemonic_from_index(idx), click_amount
 
+    def _navigate_to_caesar_menu_item(self, idx: int) -> str:
+        """Move to the nth item of the menu carousel and select it."""
+        layout = self.debuglink.synchronize_at("SimpleChoice")
+        current = layout.active_page()
+        for _ in range(idx - current):
+            self.debuglink.press_right()
+        for _ in range(current - idx):
+            self.debuglink.press_left()
+        layout = self.debuglink.read_layout()
+        assert layout.active_page() == idx
+        current_choice = layout.find_unique_value_by_key("current_choice", {}, dict)
+        self.debuglink.press_middle()
+        return current_choice.get("content", "")
+
+    def close_menu(self) -> None:
+        """Close the menu carousel (Caesar) by moving to its first item and
+        pressing the cross."""
+        assert self.debuglink.layout_type is LayoutType.Caesar
+        layout = self.debuglink.synchronize_at("SimpleChoice")
+        for _ in range(layout.active_page() + 1):
+            self.debuglink.press_left()
+
     def navigate_to_menu_item(self, idx: int) -> str:
         """Navigate to the nth item in the vertical menu. Starts from 0. Returns the selected item text."""
+        if self.debuglink.layout_type is LayoutType.Caesar:
+            return self._navigate_to_caesar_menu_item(idx)
         item_buttons = self.debuglink.screen_buttons.vertical_menu_items()
         layout = self.debuglink.read_layout()
         if self.debuglink.layout_type is LayoutType.Delizia:

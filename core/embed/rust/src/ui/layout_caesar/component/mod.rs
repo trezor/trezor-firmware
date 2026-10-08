@@ -39,7 +39,6 @@ mod progress;
 mod scrollbar;
 #[cfg(feature = "translations")]
 mod share_words;
-mod show_more;
 mod title;
 
 #[cfg(all(feature = "micropython", feature = "translations"))]
@@ -66,4 +65,3 @@ pub use progress::Progress;
 pub use scrollbar::ScrollBar;
 #[cfg(feature = "translations")]
 pub use share_words::ShareWords;
-pub use show_more::{CancelInfoConfirmMsg, ShowMore};
