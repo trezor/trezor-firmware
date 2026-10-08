@@ -458,22 +458,6 @@ nfc_status_t nfc_deactivate_stm(void) {
   return NFC_OK;
 }
 
-nfc_status_t nfc_read_regs(uint8_t *regs) {
-  st25_driver_t *drv = &g_st25_driver;
-
-  if (!drv->initialized) {
-    return NFC_NOT_INITIALIZED;
-  }
-
-  ReturnCode err =
-      st25r500ReadMultipleRegisters(ST25R500_REG_OPERATION, regs, 4);
-  if (err != RFAL_ERR_NONE) {
-    return NFC_ERROR;
-  }
-
-  return NFC_OK;
-}
-
 nfc_status_t nfc_get_event(nfc_event_t *event) {
   st25_driver_t *drv = &g_st25_driver;
 

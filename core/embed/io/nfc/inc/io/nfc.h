@@ -99,11 +99,8 @@ nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
 nfc_status_t nfc_dev_write_ndef_uri(void);
 
 nfc_status_t nfc_get_rssi(uint16_t *rssi);
-nfc_status_t nfc_get_wu_i_q(bool clear_calibration, int8_t *wu_i, int8_t *wu_q);
 nfc_status_t nfc_get_sense_rf(int8_t *sense_adc);
 nfc_status_t nfc_get_tx_en(bool *tx_en);
 nfc_status_t nfc_amp_phase_calibration(uint8_t *amp, uint8_t *phase);
-nfc_status_t nfc_read_regs(uint8_t *regs);
-nfc_status_t nfc_measure_current(float *res);
 nfc_status_t nfc_measure_vdd_dr(float *res);
 nfc_status_t nfc_measure_vdd_tx(float *res);

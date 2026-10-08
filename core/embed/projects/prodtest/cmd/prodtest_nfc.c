@@ -23,56 +23,37 @@
 
 #include <io/nfc.h>
 #include <rtl/cli.h>
+#include <stdint.h>
 #include <sys/systick.h>
 
 #include "prodtest_error_codes.h"
 
 static nfc_dev_info_t dev_info = {0};
 
-// #ifndef ELEM_SWAP(a, b)
-#define ELEM_SWAP(a, b)       \
-  {                           \
-    register uint8_t t = (a); \
-    (a) = (b);                \
-    (b) = t;                  \
+/* Sorts v[0..n-1] IN PLACE (insertion sort) and returns the trimmed mean in
+ * plain LSB (rounded, 0..255). k = samples dropped on each side; k = (n-1)/2
+ * returns the median (for even n, the rounded mean of the two middle samples).
+ * Returns 0xFFFF on invalid arguments (n == 0, n > 16, 2k >= n). */
+static inline uint16_t trimmed_mean(uint8_t* v, uint8_t n, uint8_t k) {
+  if (n == 0u || n > 16u || 2u * k >= n) return 0xFFFFu;
+  for (uint8_t i = 1u; i < n; i++) { /* insertion sort */
+    uint8_t x = v[i];
+    int j = (int)i - 1;
+    while (j >= 0 && v[j] > x) {
+      v[j + 1] = v[j];
+      j--;
+    }
+    v[j + 1] = x;
   }
-// #endif
-
-uint8_t kth_smallest(uint8_t a[], uint16_t n, uint16_t k) {
-  uint64_t i, j, l, m;
-  uint8_t x;
-  l = 0;
-  m = n - 1;
-  while (l < m) {
-    x = a[k];
-    i = l;
-    j = m;
-    do {
-      while (a[i] < x) i++;
-      while (x < a[j]) j--;
-      if (i <= j) {
-        ELEM_SWAP(a[i], a[j]);
-        i++;
-        j--;
-      }
-    } while (i <= j);
-    if (j < k) l = i;
-    if (k < i) m = j;
-  }
-  return a[k];
+  uint32_t sum = 0u;
+  for (uint8_t i = k; i < n - k; i++) sum += v[i];
+  uint32_t cnt = n - 2u * k;
+  return (uint16_t)((sum + cnt / 2u) / cnt); /* rounded, plain LSB */
 }
-
-#define wirth_median(a, n) \
-  kth_smallest(a, n, (((n) & 1) ? ((n) / 2) : (((n) / 2) - 1)))
 
 static nfc_status_t nfc_print_antenna_info(cli_t* cli) {
   bool tx_en = false;
-  // int8_t wu_i = 0;
-  // int8_t wu_q = 0;
-  int8_t sense_adc = 0;
-  // uint16_t rssi = 0;
-  uint8_t amp = 0;
-  uint8_t phase = 0;
+  uint16_t rssi = 0;
 
   nfc_status_t ret = nfc_get_tx_en(&tx_en);
   if (ret != NFC_OK) {
@@ -80,77 +61,14 @@ static nfc_status_t nfc_print_antenna_info(cli_t* cli) {
     return NFC_ERROR;
   }
 
-  // TODO: reduce the gain before using it
-  // the result is saturated +/- 95
-  // ret = nfc_get_wu_i_q(false, &wu_i, &wu_q);
-  // if (ret != NFC_OK) {
-  //   cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "NFC WU I/Q error");
-  //   return NFC_ERROR;
-  // }
-
-#define NUM_CALIBRATION_SAMPLES 16
-  uint8_t amp_array[NUM_CALIBRATION_SAMPLES] = {0};
-  uint8_t phase_array[NUM_CALIBRATION_SAMPLES] = {0};
-  for (uint8_t idx = 0; idx < NUM_CALIBRATION_SAMPLES; idx++) {
-    ret = nfc_amp_phase_calibration(&amp_array[idx], &phase_array[idx]);
+  if (tx_en) {
+    ret = nfc_get_rssi(&rssi);
     if (ret != NFC_OK) {
-      cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED,
-                "NFC Amplitude/Phase calibration error");
+      cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "NFC RSSI error");
       return NFC_ERROR;
     }
+    cli_trace(cli, " TX_en=%d; RSSI=%03d", tx_en, rssi);
   }
-  amp = wirth_median(amp_array, NUM_CALIBRATION_SAMPLES);
-  phase = wirth_median(phase_array, NUM_CALIBRATION_SAMPLES);
-
-  if (!tx_en) {
-    uint8_t sense_array[NUM_CALIBRATION_SAMPLES] = {0};
-    for (uint8_t idx = 0; idx < NUM_CALIBRATION_SAMPLES; idx++) {
-      ret = nfc_get_sense_rf(&sense_adc);
-      if (ret != NFC_OK) {
-        cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "NFC Sense RF error");
-        return NFC_ERROR;
-      }
-    }
-    sense_adc = wirth_median(sense_array, NUM_CALIBRATION_SAMPLES);
-  }
-
-  // if (tx_en) {
-  //   ret = nfc_get_rssi(&rssi);
-  //   if (ret != NFC_OK) {
-  //     cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED, "NFC RSSI error");
-  //     return NFC_ERROR;
-  //   }
-  // }
-
-  cli_trace(cli, " TX_en=%03d; Amp=%03d; || Phase=%03d; Sense=%03d", tx_en, amp,
-            phase, sense_adc);
-
-#define ST25R210_ANT_REV_B_AMP_REF 235
-#define ST25R210_ANT_REV_B_PHASE_REF 118
-
-  if (amp < ST25R210_ANT_REV_B_AMP_REF / 2) {
-    cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_ERROR,
-              "NFC antenna amplitude is too low - antenna may be disconnected "
-              "or damaged");
-
-    return NFC_ERROR;
-  }
-
-  if (((phase - ST25R210_ANT_REV_B_PHASE_REF) <
-           -(ST25R210_ANT_REV_B_PHASE_REF * 0.15) ||
-       (phase - ST25R210_ANT_REV_B_PHASE_REF) >
-           (ST25R210_ANT_REV_B_PHASE_REF * 0.15)) ||
-      ((amp - ST25R210_ANT_REV_B_AMP_REF) <
-           -(ST25R210_ANT_REV_B_AMP_REF * 0.15) ||
-       (amp - ST25R210_ANT_REV_B_AMP_REF) >
-           (ST25R210_ANT_REV_B_AMP_REF * 0.15))) {
-    cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_ERROR,
-              "NFC antenna amplitude or phase is out of range - "
-              "antenna may be detuned");
-    return NFC_ERROR;
-  }
-
-  // TODO: repeate amp and phase checks with GPIO_MOS off
 
   return NFC_OK;
 }
@@ -191,41 +109,19 @@ static void prodtest_nfc_read_card(cli_t* cli) {
     goto cleanup;
   }
 
-  // nfc_print_antenna_info(cli);
-
   if (NFC_OK != nfc_activate_stm()) {
     cli_error(cli, PRODTEST_ERR_NFC_ACTIVATION, "NFC activation failed");
     goto cleanup;
   }
 
-  nfc_print_antenna_info(cli);
-
-  // uint8_t regs[4] = {0};
-  // ret = nfc_read_regs(&regs[0]);
-  // cli_trace(
-  //     cli, "ret=%d; reg[0]=0x%02X, reg[1]=0x%02X, reg[2]=0x%02X,
-  //     reg[3]=0x%02X", ret, regs[0], regs[1], regs[2], regs[3]);
-
   nfc_event_t nfc_event;
   uint32_t expire_time = ticks_timeout(timeout);
-  uint32_t counter = 1;
 
   while (true) {
     if (timeout_set && ticks_expired(expire_time)) {
       cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_TIMEOUT, "NFC timeout");
       goto cleanup;
     }
-
-    // if (counter == 1000) {
-    //   counter = 1;
-    //   ret = nfc_read_regs(&regs[0]);
-    //   cli_trace(
-    //       cli,
-    //       "ret=%d; reg[0]=0x%02X, reg[1]=0x%02X, reg[2]=0x%02X,
-    //       reg[3]=0x%02X", ret, regs[0], regs[1], regs[2], regs[3]);
-    // } else {
-    //   counter++;
-    // }
 
     nfc_status_t nfc_status = nfc_get_event(&nfc_event);
 
@@ -267,8 +163,6 @@ static void prodtest_nfc_read_card(cli_t* cli) {
       }
 
       nfc_print_antenna_info(cli);
-      counter = 1;
-
       if (timeout_set) {
         nfc_dev_deactivate();
         cli_trace(cli, "NFC reader mode over");
@@ -277,9 +171,6 @@ static void prodtest_nfc_read_card(cli_t* cli) {
 
       systick_delay_ms(100);
       nfc_dev_deactivate();
-    } else if (counter++ % 1500 == 0) {
-      nfc_print_antenna_info(cli);
-      counter = 1;
     }
 
     if (cli_aborted(cli)) {
@@ -459,12 +350,6 @@ static void prodtest_nfc_self_test(cli_t* cli) {
     return;
   }
 
-  uint8_t test_array[10] = {100, 101, 102, 103, 124, 135, 6, 107, 118, 119};
-
-  float median = wirth_median(test_array, 10);
-  cli_trace(cli, "median test =  %d.%02d", (int)median,
-            (int)(median * 100) % 100);
-
   nfc_status_t ret = nfc_init();
 
   if (ret != NFC_OK) {
@@ -483,19 +368,12 @@ static void prodtest_nfc_self_test(cli_t* cli) {
     goto cleanup;
   }
 
-  for (uint8_t init_cnt = 0; init_cnt < 5; init_cnt++) {
-    nfc_print_antenna_info(cli);
-    systick_delay_ms(200);
-  }
-
   if (NFC_OK != nfc_activate_stm()) {
     cli_error(cli, PRODTEST_ERR_NFC_ACTIVATION, "NFC activation failed");
     goto cleanup;
   }
 
-  // nfc_event_t nfc_event;
   uint32_t expire_time = ticks_timeout(timeout);
-  // uint32_t counter = 1;
 
   while (true) {
     if (timeout_set && ticks_expired(expire_time)) {
@@ -503,16 +381,58 @@ static void prodtest_nfc_self_test(cli_t* cli) {
       goto cleanup;
     }
 
-    // nfc_status_t nfc_status = nfc_get_event(&nfc_event);
-
-    // if (nfc_status != NFC_OK) {
-    //   cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_ERROR, "NFC error");
-    //   goto cleanup;
-    // }
-    nfc_print_antenna_info(cli);
-
     if (cli_aborted(cli)) {
       goto cleanup;
+    }
+
+#define ST25R210_AMP_PAHASE_CALIBRATION_SAMPLES 16
+#define ST25R210_ANT_REV_B_AMP_REF 235
+#define ST25R210_ANT_REV_B_PHASE_REF 118
+#define ST25R210_ANT_REV_B_AMP_PHASE_TOLERANCE 0.15f
+
+    uint8_t amp_array[ST25R210_AMP_PAHASE_CALIBRATION_SAMPLES] = {0};
+    uint8_t phase_array[ST25R210_AMP_PAHASE_CALIBRATION_SAMPLES] = {0};
+    uint8_t amp = 0;
+    uint8_t phase = 0;
+    for (uint8_t idx = 0; idx < ST25R210_AMP_PAHASE_CALIBRATION_SAMPLES;
+         idx++) {
+      ret = nfc_amp_phase_calibration(&amp_array[idx], &phase_array[idx]);
+      if (ret != NFC_OK) {
+        cli_error(cli, PRODTEST_ERR_NFC_UNEXPECTED,
+                  "NFC Amplitude/Phase calibration error");
+        goto cleanup;
+      }
+    }
+
+    amp = trimmed_mean(
+        amp_array, ST25R210_AMP_PAHASE_CALIBRATION_SAMPLES,
+        (uint8_t)((ST25R210_AMP_PAHASE_CALIBRATION_SAMPLES - 1u) / 2u));
+    phase = trimmed_mean(
+        phase_array, ST25R210_AMP_PAHASE_CALIBRATION_SAMPLES,
+        (uint8_t)((ST25R210_AMP_PAHASE_CALIBRATION_SAMPLES - 1u) / 2u));
+
+    cli_trace(cli, " Amp=%03d; Phase=%03d", amp, phase);
+
+    if (amp < ST25R210_ANT_REV_B_AMP_REF / 2) {
+      cli_error(
+          cli, PRODTEST_ERR_NFC_READ_CARD_ERROR,
+          "NFC antenna amplitude is too low - antenna may be disconnected "
+          "or damaged");
+    } else {
+      uint8_t amp_diff = (amp > ST25R210_ANT_REV_B_AMP_REF)
+                             ? (amp - ST25R210_ANT_REV_B_AMP_REF)
+                             : (ST25R210_ANT_REV_B_AMP_REF - amp);
+      uint8_t phase_diff = (phase > ST25R210_ANT_REV_B_PHASE_REF)
+                               ? (phase - ST25R210_ANT_REV_B_PHASE_REF)
+                               : (ST25R210_ANT_REV_B_PHASE_REF - phase);
+      if ((phase_diff > (ST25R210_ANT_REV_B_PHASE_REF *
+                         ST25R210_ANT_REV_B_AMP_PHASE_TOLERANCE)) ||
+          (amp_diff > (ST25R210_ANT_REV_B_AMP_REF *
+                       ST25R210_ANT_REV_B_AMP_PHASE_TOLERANCE))) {
+        cli_error(cli, PRODTEST_ERR_NFC_READ_CARD_ERROR,
+                  "NFC antenna amplitude or phase is out of 15%% range - "
+                  "antenna may be detuned");
+      }
     }
 
     systick_delay_ms(500);
