@@ -71,7 +71,13 @@ def cancel_backup(
         debug.click(debug.screen_buttons.cancel())
         debug.click(debug.screen_buttons.cancel())
     elif debug.layout_type is LayoutType.Caesar:
-        debug.press_left()
+        if TR.backup__new_wallet_created in debug.read_layout().text_content():
+            # "Skip" from the menu
+            debug.press_left()
+            debug.button_actions.navigate_to_menu_item(0)
+        else:
+            debug.press_left()
+        # confirm skipping
         debug.press_left()
     elif debug.layout_type is LayoutType.Delizia:
         debug.click(debug.screen_buttons.menu())
