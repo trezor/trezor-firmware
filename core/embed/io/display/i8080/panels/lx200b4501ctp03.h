@@ -22,11 +22,6 @@
 
 #include "../display_panel.h"
 
-// LX200B4501CTP03A / LX200B4501CTP03B, 2.0" TFT-LCD, 240(RGB)x320,
-// controller GC9307C. The two part numbers differ only in backlight
-// luminance (700 vs 530 nit typ.) - electrically and register-wise
-// identical, so both are served by this single panel definition.
-
 void lx200b4501ctp03_init_seq(void);
 void lx200b4501ctp03_rotate(int degrees, display_padding_t* padding);
 

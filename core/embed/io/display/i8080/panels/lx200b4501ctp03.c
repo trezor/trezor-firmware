@@ -17,11 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Register sequence adapted from the vendor GC9307 application note for a
-// 240x320 IPS module (GC9307_BOE2.0_IPS(GV020QVQ-N81-DQP0)_AN_20240621); the
-// module datasheets for LX200B4501CTP03A/B do not themselves provide a
-// register init table.
-
 #include <trezor_model.h>
 
 #include "../display_io.h"
