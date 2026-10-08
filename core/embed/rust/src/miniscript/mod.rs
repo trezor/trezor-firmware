@@ -16,7 +16,7 @@ impl From<miniscript::Error> for Error {
 }
 
 /// Script descriptor
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Descriptor<Pk: MiniscriptKey> {
     /// Pay-to-Witness-ScriptHash with Segwitv0 context
     Wsh(Wsh<Pk>),
