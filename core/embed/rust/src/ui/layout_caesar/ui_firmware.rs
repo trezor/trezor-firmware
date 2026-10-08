@@ -709,33 +709,25 @@ impl FirmwareUI for UICaesar {
     }
 
     fn prompt_backup() -> Result<impl LayoutMaybeTrace, Error> {
-        let get_page = move |page_index| match page_index {
-            0 => {
-                let btn_layout = ButtonLayout::text_none_arrow_wide(TR::buttons__skip.into());
-                let btn_actions = ButtonActions::cancel_none_next();
-                let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-                ops.add_text_with_font(TR::backup__new_wallet_created, fonts::FONT_NORMAL)
-                    .add_newline()
-                    .add_text_with_font(TR::backup__it_should_be_backed_up_now, fonts::FONT_NORMAL);
-                let formatted = FormattedText::new(ops).vertically_centered();
-                Page::new(btn_layout, btn_actions, formatted)
-                    .with_title(TR::words__title_success.into())
-            }
-            1 => {
-                let btn_layout = ButtonLayout::up_arrow_none_text(TR::buttons__back_up.into());
-                let btn_actions = ButtonActions::prev_none_confirm();
-                let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-                ops.add_text_with_font(TR::backup__recover_anytime, fonts::FONT_NORMAL);
-                let formatted = FormattedText::new(ops).vertically_centered();
-                Page::new(btn_layout, btn_actions, formatted)
-                    .with_title(TR::backup__title_backup_wallet.into())
-            }
-            _ => unreachable!(),
-        };
-        let pages = FlowPages::new(get_page, 2);
+        let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+        ops.add_text_with_font(TR::backup__new_wallet_created, fonts::FONT_NORMAL)
+            .add_newline()
+            .add_text_with_font(TR::backup__it_should_be_backed_up_now, fonts::FONT_NORMAL)
+            .add_next_page()
+            .add_text_with_font(TR::backup__recover_anytime, fonts::FONT_NORMAL);
+        let formatted = FormattedText::new(ops).vertically_centered();
 
-        let layout = RootComponent::new(Flow::new(pages));
-        Ok(layout)
+        // Skipping the backup is in the context menu.
+        let content = ButtonPage::new(formatted, theme::BG)
+            .with_menu_nav(MenuNav::ChoiceMenu)
+            .with_confirm_btn(Some(ButtonDetails::text(TR::buttons__back_up.into())));
+        let frame = ScrollableFrame::new(content)
+            .with_page_titles([
+                TR::words__title_success.into(),
+                TR::backup__title_backup_wallet.into(),
+            ])
+            .with_numeric_page_counter();
+        Ok(RootComponent::new(frame))
     }
 
     fn request_bip39(
