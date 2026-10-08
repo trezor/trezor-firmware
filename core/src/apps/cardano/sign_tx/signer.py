@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from apps.common import cbor
     from apps.common.keychain import Keychain as Slip21Keychain
     from apps.common.paths import PathSchema
+    from apps.common.payment_request import PaymentRequestVerifier
 
     from ..helpers.hash_builder_collection import HashBuilderEmbeddedCBOR
 
@@ -119,6 +120,11 @@ class Signer:
         self.change_out = 0  # sum of change amounts
 
         self.account_path_checker = AccountPathChecker()
+
+        # Created in _validate_tx_init if the tx contains a payment request.
+        self.payment_req_verifier: PaymentRequestVerifier | None = None
+        # Address of the (single) non-change output covered by the payment request.
+        self.payment_req_recipient: str | None = None
 
         # There should be at most one pool owner given as a path.
         self.pool_owner_path = None
@@ -256,9 +262,6 @@ class Signer:
 
         msg = self.msg  # local_cache_attribute
 
-        if msg.payment_req and msg.outputs_count > 1:
-            raise ProcessError("Multiple outputs not supported for payment requests")
-
         if msg.fee > LOVELACE_MAX_SUPPLY:
             raise ProcessError("Fee is out of range!")
         if (
@@ -267,6 +270,15 @@ class Signer:
         ):
             raise ProcessError("Total collateral is out of range!")
         validate_network_info(msg.network_id, msg.protocol_magic)
+
+        if msg.payment_req:
+            from apps.common.payment_request import PaymentRequestVerifier
+
+            if msg.payment_req.amount is None:
+                raise DataError("Missing payment request amount.")
+            self.payment_req_verifier = PaymentRequestVerifier(
+                msg.payment_req, SLIP44_ID, self.slip21_keychain
+            )
 
     async def _show_tx_init(self) -> None:
         self.should_show_details = await layout.show_tx_init(self.signing_mode_title)
@@ -314,10 +326,24 @@ class Signer:
         if self.total_out > LOVELACE_MAX_SUPPLY:
             raise ProcessError("Total transaction amount is out of range!")
 
+        if self.payment_req_verifier:
+            if self.payment_req_recipient is None:
+                raise ProcessError("Payment request must have a recipient output")
+            self.payment_req_verifier.verify()
+            # Shown only after the payment request signature has been verified.
+            assert self.msg.payment_req
+            await layout.require_confirm_payment_request(
+                self.payment_req_recipient,
+                self.msg.payment_req,
+                None,
+                self.msg.network_id,
+            )
+
     async def _process_output(
         self, outputs_list: HashBuilderList, output: CardanoTxOutput, output_index: int
     ) -> None:
         self._validate_output(output)
+        self._payment_request_add_output(output)
         should_show = self._should_show_output(output)
         if should_show:
             await self._show_output_init(output, output_index)
@@ -343,8 +369,6 @@ class Signer:
             raise RuntimeError  # should be unreachable
 
     def _validate_output(self, output: CardanoTxOutput) -> None:
-        from apps.common.payment_request import PaymentRequestVerifier
-
         from ..helpers import OUTPUT_DATUM_HASH_SIZE
 
         address_parameters = output.address_parameters  # local_cache_attribute
@@ -381,34 +405,37 @@ class Signer:
             if output.format != CardanoTxOutputSerializationFormat.MAP_BABBAGE:
                 raise ProcessError("Invalid output")
 
-        if self.msg.payment_req:
-            self.payment_req_verifier = PaymentRequestVerifier(
-                self.msg.payment_req, SLIP44_ID, self.slip21_keychain
-            )
-            assert output.address is not None
-            self.payment_req_verifier.add_output(
-                output.amount, output.address, change=self._is_change_output(output)
-            )
-            self.payment_req_verifier.verify()
-        else:
-            self.payment_req_verifier = None
-
         self.account_path_checker.add_output(output)
+
+    def _payment_request_add_output(self, output: CardanoTxOutput) -> None:
+        if self.payment_req_verifier is None:
+            return
+
+        if output.address is not None:
+            if self.payment_req_recipient is not None:
+                raise ProcessError(
+                    "Multiple recipients not supported for payment requests"
+                )
+            self.payment_req_recipient = output.address
+            address = output.address
+            change = False
+        else:
+            # Change output, derive the address from the address parameters.
+            assert output.address_parameters is not None  # _validate_output
+            address = addresses.derive_human_readable(
+                self.keychain,
+                output.address_parameters,
+                self.msg.protocol_magic,
+                self.msg.network_id,
+            )
+            change = True
+        self.payment_req_verifier.add_output(output.amount, address, change=change)
 
     async def _show_output_init(
         self, output: CardanoTxOutput, output_index: int
     ) -> None:
-        if self.payment_req_verifier:
-            assert self.msg.payment_req
-            assert output.address
-            address_n = (
-                output.address_parameters.address_n
-                if output.address_parameters
-                else None
-            )
-            await layout.require_confirm_payment_request(
-                output.address, self.msg.payment_req, address_n, self.msg.network_id
-            )
+        if self.payment_req_verifier and output.address is not None:
+            # Confirmed in _process_outputs once the payment request is verified.
             return
 
         address_type = self._get_output_address_type(output)
