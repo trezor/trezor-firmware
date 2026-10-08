@@ -29,6 +29,7 @@ class FailureType(IntEnum):
     ThpUnallocatedSession = 16
     InvalidProtocol = 17
     InProgress = 19
+    AppError = 20
     FirmwareError = 99
 
 
@@ -6444,7 +6445,6 @@ class ExtAppResponse(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("message_id", "uint32", repeated=False, required=True),
         2: protobuf.Field("data", "bytes", repeated=False, required=True),
-        3: protobuf.Field("finished", "bool", repeated=False, required=False, default=False),
     }
 
     def __init__(
@@ -6452,11 +6452,9 @@ class ExtAppResponse(protobuf.MessageType):
         *,
         message_id: int,
         data: bytes,
-        finished: bool | None = False,
     ) -> None:
         self.message_id = message_id
         self.data = data
-        self.finished = finished
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):
