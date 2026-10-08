@@ -24,7 +24,7 @@ impl AddressDetails {
             qr_code,
             pad: Pad::with_background(theme::BG).with_clear(),
             buttons: Child::new(ButtonController::new(ButtonLayout::new(
-                Some(ButtonDetails::close_icon()),
+                Some(ButtonDetails::cancel_icon()),
                 None,
                 None,
             ))),
