@@ -63,6 +63,7 @@ asan                          = { true = ["asan"] }
 apps                          = { true = ["app_loading"] }
 benchmark                     = { true = ["benchmark"] }
 block-on-vcp                  = { true = ["block_on_vcp"] }
+boot-wipe                     = { true = ["boot_wipe"] }
 bootloader-devel              = { true = ["bootloader_devel"] }
 btc-only                      = { false = ["universal_fw"] }
 prebuilt-secmon              = { true = ["prebuilt_secmon"] }
