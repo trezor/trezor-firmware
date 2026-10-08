@@ -42,6 +42,8 @@
 #define USBD_MAX_NUM_INTERFACES 8
 
 #define USB_RX_BUFFER_SIZE 64
+// Packets kept per interface while nobody reads it.
+#define USB_RX_QUEUE_LEN 64
 
 // These apply only to the USB VCP interface
 #define USB_TX_BUFFER_SIZE 128
@@ -59,8 +61,11 @@ typedef struct {
   usb_iface_type_t type;
   uint16_t port;
   emu_sock_t sock;
-  uint8_t rx_buf[USB_RX_BUFFER_SIZE];
-  int rx_len;
+  // FIFO of received packets; `rx_head` is the oldest one.
+  uint8_t rx_buf[USB_RX_QUEUE_LEN][USB_RX_BUFFER_SIZE];
+  size_t rx_len[USB_RX_QUEUE_LEN];
+  size_t rx_head;
+  size_t rx_count;
   // Guards `tx_buf`, `tx_len` and `flush_thread_running`, and serializes
   // `sock_recvfrom()` with the flush thread's `sock_sendto()` (see `sock.h`).
   pthread_mutex_t sock_lock;
@@ -85,8 +90,10 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
     iface->type = USB_IFACE_TYPE_DISABLED;
     iface->port = 0;
     sock_init(&iface->sock);
-    memzero(&iface->rx_buf, sizeof(usb_ifaces[i].rx_buf));
-    iface->rx_len = 0;
+    memzero(&iface->rx_buf, sizeof(iface->rx_buf));
+    memzero(&iface->rx_len, sizeof(iface->rx_len));
+    iface->rx_head = 0;
+    iface->rx_count = 0;
     pthread_mutex_init(&iface->sock_lock, NULL);
     iface->tx_len = 0;
     iface->flush_thread_running = false;
@@ -188,36 +195,37 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
 }
 
 static secbool usb_emulated_poll_read(usb_iface_t *iface) {
-  if (iface->rx_len > 0) {
-    return sectrue;
+  static const char ping_req[] = "PINGPING";
+  static const char ping_resp[] = "PONGPONG";
+
+  // Drain the socket so that a readiness ping is answered even when packets
+  // nobody reads yet are queued ahead of it - the host's probe must not wait
+  // for a reader, as it does not on a real device. Regular packets wait in
+  // the FIFO for their reader; once it is full they stay in the socket.
+  while (iface->rx_count < USB_RX_QUEUE_LEN && sock_can_recv(&iface->sock)) {
+    size_t tail = (iface->rx_head + iface->rx_count) % USB_RX_QUEUE_LEN;
+    uint8_t *pkt = iface->rx_buf[tail];
+
+    pthread_mutex_lock(&iface->sock_lock);
+    // Flush buffered bytes before `sock_recvfrom()` changes `si_other`.
+    usb_flush(iface);
+    size_t len = sock_recvfrom(&iface->sock, pkt, USB_RX_BUFFER_SIZE);
+    pthread_mutex_unlock(&iface->sock_lock);
+    if (!len) {
+      break;
+    }
+
+    if (len == strlen(ping_req) && 0 == memcmp(ping_req, pkt, len)) {
+      sock_sendto(&iface->sock, (const uint8_t *)ping_resp, strlen(ping_resp));
+      memzero(pkt, USB_RX_BUFFER_SIZE);
+      continue;
+    }
+
+    iface->rx_len[tail] = len;
+    iface->rx_count++;
   }
 
-  if (!sock_can_recv(&iface->sock)) {
-    return secfalse;
-  }
-
-  pthread_mutex_lock(&iface->sock_lock);
-  // Flush buffered bytes before `sock_recvfrom()` changes `si_other`.
-  usb_flush(iface);
-  size_t len =
-      sock_recvfrom(&iface->sock, iface->rx_buf, sizeof(iface->rx_buf));
-  pthread_mutex_unlock(&iface->sock_lock);
-  if (!len) {
-    return secfalse;
-  }
-
-  static const char *ping_req = "PINGPING";
-  static const char *ping_resp = "PONGPONG";
-  if (len == strlen(ping_req) &&
-      0 == memcmp(ping_req, iface->rx_buf, strlen(ping_req))) {
-    sock_sendto(&iface->sock, (const uint8_t *)ping_resp, strlen(ping_resp));
-    memzero(iface->rx_buf, sizeof(iface->rx_buf));
-    return secfalse;
-  }
-
-  iface->rx_len = len;
-
-  return sectrue;
+  return sectrue * (iface->rx_count > 0);
 }
 
 static secbool usb_emulated_poll_write(usb_iface_t *iface) {
@@ -225,23 +233,32 @@ static secbool usb_emulated_poll_write(usb_iface_t *iface) {
 }
 
 static int usb_emulated_read(usb_iface_t *iface, uint8_t *buf, size_t len) {
-  if (iface->rx_len > 0) {
-    if ((size_t)iface->rx_len < len) {
-      len = iface->rx_len;
-    }
-    memcpy(buf, iface->rx_buf, len);
-
-    if (iface->type == USB_IFACE_TYPE_VCP) {
-      iface->rx_len -= len;
-      memmove(iface->rx_buf, iface->rx_buf + len, iface->rx_len);
-    } else {
-      iface->rx_len = 0;
-      memzero(iface->rx_buf, sizeof(iface->rx_buf));
-    }
-    return len;
+  if (iface->rx_count == 0) {
+    return 0;
   }
 
-  return 0;
+  uint8_t *pkt = iface->rx_buf[iface->rx_head];
+  size_t *pkt_len = &iface->rx_len[iface->rx_head];
+
+  if (*pkt_len < len) {
+    len = *pkt_len;
+  }
+  memcpy(buf, pkt, len);
+
+  if (iface->type == USB_IFACE_TYPE_VCP) {
+    // A byte stream: the rest of the packet waits for the next read.
+    *pkt_len -= len;
+    memmove(pkt, pkt + len, *pkt_len);
+    if (*pkt_len > 0) {
+      return len;
+    }
+  }
+
+  memzero(pkt, USB_RX_BUFFER_SIZE);
+  *pkt_len = 0;
+  iface->rx_head = (iface->rx_head + 1) % USB_RX_QUEUE_LEN;
+  iface->rx_count--;
+  return len;
 }
 
 static void usb_flush(usb_iface_t *iface) {
@@ -317,6 +334,17 @@ void usb_get_state(usb_state_t *state) {
 static void on_event_poll(void *context, bool read_awaited,
                           bool write_awaited) {
   usb_iface_t *iface = (usb_iface_t *)context;
+
+  // A real device answers the host's enumeration no matter which interface
+  // the firmware is reading. Emulate that by serving the readiness ping on
+  // every started interface whenever any of them is polled. A regular packet
+  // picked up this way stays buffered until its interface is read.
+  for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
+    usb_iface_t *other = &usb_ifaces[i];
+    if (other != iface && other->sock.sock >= 0) {
+      usb_emulated_poll_read(other);
+    }
+  }
 
   // Only one task can read or write at a time. Therefore, we can
   // assume that only one task is waiting for events and keep the
