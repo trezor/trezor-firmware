@@ -93,7 +93,7 @@ Run from this directory (it carries its own `pytest.ini`):
 pytest                         # offline: the fixture set itself, no device
 pytest --hw                    # flash and drive the attached T3W1
 pytest --hw -k migration       # one area
-pytest --hw --operator -s      # also the PIN-at-boot flows, with a person
+pytest --hw --operator -s      # with a person to rescue a stuck phase 2
 pytest --hw -m "not cut"       # everything but the SWD power-loss cuts
 ```
 
@@ -110,7 +110,7 @@ starting state from a full erase, so tests are independent and any order works.
 | `test_power_loss.py` | PL-01…04, PL-06…08, MG-12…15 (`cut`) |
 | `test_migration.py` | MG-01, MG-03, MG-04/05, MG-09; a variant change after migration wipes |
 | `test_scenarios.py` | WP-01, MG-19 (legacy half) |
-| `test_operator.py` | MG-02, MG-07 |
+| `test_pin.py` | MG-02, MG-04, MG-07 (PIN and wipe code at boot, over debuglink) |
 
 The tamper cases (`pqhw/tamper.py`) are the manual wire harness's
 (`firmware_pq_update.py --tamper`), with the same expected messages, restated
@@ -120,10 +120,11 @@ untouched, a refusal in phase 2 is cured by the honest install.
 
 Two device facts shape the suite:
 
-- **Seeds are loaded without a PIN.** A T3W1 does not open USB until its boot
-  lockscreen is unlocked, so a PIN at boot cannot be entered over debuglink.
-  The storage salt binds `firmware_type` either way, so seed checks are just as
-  strong; the PIN flows themselves are the `--operator` tests.
+- **Seeds are loaded without a PIN**, except in `test_pin.py`, so that reboots
+  need no unlock. The storage salt binds `firmware_type` either way, so seed
+  checks are just as strong. Debug builds start USB and debuglink before the
+  boot PIN prompt, so the PIN tests tap the lockscreen and type the PIN (or the
+  wipe code) over debuglink (`device.unlock_lockscreen`).
 - **A bootloader prompt is detected by silence.** The bootloader sends no
   ButtonRequest and its debuglink reports no layout content, so a request that
   has not been answered after `--stall` seconds (default 6) counts as waiting on
@@ -141,8 +142,7 @@ the run; `--report-dir` moves it, `--no-screens` keeps the steps but skips
 the pictures.
 
 Screenshots are read over SWD (`pqhw/screen.py`), because neither debuglink
-returns pixels on hardware and the device is not on USB at its boot
-lockscreen. openocd reads which GFXMMU virtual buffer the LTDC is scanning
+returns pixels on hardware. openocd reads which GFXMMU virtual buffer the LTDC is scanning
 (layer-1 `CFBAR`), dumps it, then reads every 8th line and `CFBAR` again; a
 capture that saw a swap or a redraw is taken again, up to three times. A
 screen that never settles keeps its last capture, marked in the report as

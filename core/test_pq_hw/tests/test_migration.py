@@ -1,5 +1,5 @@
-"""The legacy -> PQ migration, unattended (no PIN). Operator-driven PIN flows
-are in test_operator.py."""
+"""The legacy -> PQ migration, unattended (no PIN). The PIN-at-boot flows are
+in test_pin.py."""
 
 from __future__ import annotations
 

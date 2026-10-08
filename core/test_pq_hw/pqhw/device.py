@@ -329,6 +329,99 @@ def tap_bootloader_intro(
     raise UnitError(f"bootloader intro not reachable over debuglink: {last}")
 
 
+def _layout_tokens(debug: DebugLink, timeout: float = 30) -> str:
+    """The current layout as one string (its JSON tokens, joined)."""
+    state = debug._call(
+        messages.DebugLinkGetState(wait_layout=messages.DebugWaitType.CURRENT_LAYOUT),
+        timeout=timeout,
+    )
+    return "".join(getattr(state, "tokens", None) or [])
+
+
+def read_screen(unit: Unit, timeout: float = 120) -> tuple[str, t.Any]:
+    """The current layout's tokens and the USB identity it was read under,
+    from whatever is running a debuglink (a locked firmware included)."""
+    deadline = time.monotonic() + timeout
+    last: Exception | None = None
+    while time.monotonic() < deadline:
+        try:
+            transport = unit.wait_present(max(1.0, deadline - time.monotonic()))
+            debug = DebugLink(transport.find_debug())
+            debug.model = models.T3W1
+            debug.open()
+        except AmbiguousUnit:
+            raise
+        except Exception as e:  # debug interface not up yet
+            last = e
+            time.sleep(0.5)
+            continue
+        try:
+            return _layout_tokens(debug), unit._identity(transport)
+        except Exception as e:
+            last = e
+            time.sleep(1)
+        finally:
+            try:
+                debug.close()
+            except Exception:
+                pass
+    raise UnitError(f"no debuglink layout within {timeout:.0f} s: {last}")
+
+
+def unlock_lockscreen(unit: Unit, code: str, timeout: float = 120) -> str:
+    """Enter `code` (a PIN or the wipe code) at a firmware's boot lockscreen.
+
+    Debug builds start USB and a debuglink session before the PIN prompt, so
+    the lockscreen is driven like the click tests do it: a tap opens the PIN
+    keyboard, then the code goes in as text input. The writes are raw: the
+    boot-time debug session ends when the boot screen does, so a decision that
+    unlocks the device may never be answered. Returns the lockscreen's layout
+    tokens, for checks on what it showed.
+    """
+    deadline = time.monotonic() + timeout
+    last: Exception | None = None
+    while time.monotonic() < deadline:
+        try:
+            transport = unit.wait_present(max(1.0, deadline - time.monotonic()))
+            debug = DebugLink(transport.find_debug())
+            debug.model = models.T3W1
+            debug.open()
+        except AmbiguousUnit:
+            raise
+        except Exception as e:  # debug interface not up yet
+            last = e
+            time.sleep(0.5)
+            continue
+        try:
+            lockscreen = _layout_tokens(debug)
+            if "PinKeyboard" not in lockscreen:
+                unit.step("boot lockscreen: tapping to open the PIN keyboard")
+                for _ in range(MAX_TAPS):
+                    x, y = BUTTONS.info()
+                    debug._write(messages.DebugLinkDecision(x=x, y=y))
+                    time.sleep(1)
+                    if "PinKeyboard" in _layout_tokens(debug):
+                        break
+                else:
+                    raise UnitError("the PIN keyboard did not open")
+            unit.step(f"PIN keyboard: entering {code} over debuglink")
+            debug._write(messages.DebugLinkDecision(input=code))
+            return lockscreen
+        except UnitError:
+            raise
+        except Exception as e:  # USB still settling after the reboot
+            if str(e) != str(last):
+                LOG.info("firmware debuglink not ready: %s", e)
+            last = e
+            time.sleep(1)
+        finally:
+            try:
+                debug.close()
+            except Exception:
+                pass
+    raise UnitError(f"boot lockscreen not reachable over debuglink: {last}")
+
+
 def close(ctx: TrezorTestContext) -> None:
     """Release the USB handles; a reconnect after a reboot needs them free."""
     for closer in (ctx.debug.close, ctx.transport.close):

@@ -66,10 +66,10 @@ WIPE_CODE = "9876"
 
 
 def load_seed(unit: Unit, ctx: TrezorTestContext, pin: str | None = None) -> None:
-    """Without a PIN unless asked: a T3W1 is not on USB until its boot
-    lockscreen is unlocked, so a PIN at boot needs a person. The storage salt
-    binds firmware_type with or without a PIN, so a wrong domain still loses
-    the seed."""
+    """Without a PIN unless asked, so that reboots need no unlock. A PIN at
+    boot is entered over debuglink (device.unlock_lockscreen). The storage
+    salt binds firmware_type with or without a PIN, so a wrong domain still
+    loses the seed."""
     session = ctx.get_seedless_session()
     debuglink.load_device(
         session, MNEMONIC, pin=pin, passphrase_protection=False, label=LABEL

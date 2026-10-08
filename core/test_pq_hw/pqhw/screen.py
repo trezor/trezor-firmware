@@ -1,7 +1,7 @@
 """Screenshots of a running T3W1 over SWD.
 
-Neither debuglink returns pixels on hardware, and a T3W1 is not on USB at all
-while its boot lockscreen is up, so the frame buffer is read over SWD instead.
+Neither debuglink returns pixels on hardware, so the frame buffer is read over
+SWD instead.
 This works at every stage (boardloader excepted: it does not drive the LTDC)
 and needs no device-side support.
 
