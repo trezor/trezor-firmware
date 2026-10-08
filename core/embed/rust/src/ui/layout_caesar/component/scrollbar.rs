@@ -1,5 +1,3 @@
-use heapless::Vec;
-
 use super::super::theme;
 use crate::strutil::ShortString;
 use crate::ui::component::{Component, Event, EventCtx, Never, Pad, Paginate};
@@ -7,48 +5,24 @@ use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
 use crate::ui::shape::{self, Renderer};
 use crate::ui::util::Pager;
 
-/// Scrollbar to be painted horizontally at the top right of the screen.
+/// Numeric "current/total" page counter to be painted at the top right of the
+/// screen.
 pub struct ScrollBar {
     pad: Pad,
     pager: Pager,
-    /// Showing a numeric "current/total" counter instead of the dots.
-    numeric: bool,
-}
-
-/// Carrying the appearance of the scrollbar dot.
-#[cfg_attr(test, derive(Debug))]
-enum DotType {
-    BigFull, // *
-    Big,     // O
-    Middle,  // o
-    Small,   // .
 }
 
 pub const SCROLLBAR_SPACE: i16 = 5;
 
-/// How many dots at most will there be
-const MAX_DOTS: u16 = 5;
-
 impl ScrollBar {
-    /// Maximum size (width/height) of a dot
-    pub const MAX_DOT_SIZE: i16 = 5;
-    /// Distance between two dots
-    pub const DOTS_DISTANCE: i16 = 2;
-    pub const DOTS_INTERVAL: i16 = Self::MAX_DOT_SIZE + Self::DOTS_DISTANCE;
-    pub const MAX_WIDTH: i16 = Self::dots_width(MAX_DOTS);
+    /// Space the separator icon takes (with a 1px gap on both sides).
+    const SEPARATOR_WIDTH: i16 = theme::ICON_PAGE_SEPARATOR.toif.width() + 2;
 
     pub fn new(page_count: u16) -> Self {
         Self {
             pad: Pad::with_background(theme::BG),
             pager: Pager::new(page_count),
-            numeric: false,
         }
-    }
-
-    /// Showing a numeric "current/total" counter instead of the dots.
-    pub fn with_numeric(mut self) -> Self {
-        self.numeric = true;
-        self
     }
 
     /// Page count will be given later as it is not available yet.
@@ -56,173 +30,62 @@ impl ScrollBar {
         Self::new(1)
     }
 
-    pub const fn dots_width(dots_shown: u16) -> i16 {
-        Self::DOTS_INTERVAL * dots_shown as i16 - Self::DOTS_DISTANCE
-    }
-
     /// The width the scrollbar will really occupy.
     pub fn overall_width(&self) -> i16 {
-        if self.numeric {
-            // Reserving the same width for the current page as for the total,
-            // so that the counter fits on every page.
-            let (_, total) = self.numeric_parts();
-            return 2 * theme::FONT_HEADER.text_width(&total) + Self::NUMERIC_SEPARATOR_WIDTH;
-        }
-        let dots_shown = self.pager.total().min(MAX_DOTS);
-        Self::dots_width(dots_shown)
+        // Reserving the same width for the current page as for the total,
+        // so that the counter fits on every page.
+        let (_, total) = self.texts();
+        2 * theme::FONT_HEADER.text_width(&total) + Self::SEPARATOR_WIDTH
     }
 
     /// The height the scrollbar will really occupy.
     pub fn overall_height(&self) -> i16 {
-        if self.numeric {
-            theme::FONT_HEADER.text_height()
-        } else {
-            Self::MAX_DOT_SIZE
-        }
+        theme::FONT_HEADER.text_height()
     }
 
     pub fn set_pager(&mut self, pager: Pager) {
         self.pager = pager;
     }
 
-    /// Create a (seemingly circular) dot given its top left point.
-    /// Make it full when it is active, otherwise paint just the perimeter and
-    /// leave center empty.
-    fn render_dot<'s>(&self, target: &mut impl Renderer<'s>, dot_type: &DotType, top_right: Point) {
-        let full_square =
-            Rect::from_top_right_and_size(top_right, Offset::uniform(Self::MAX_DOT_SIZE));
-
-        match dot_type {
-            DotType::BigFull => shape::Bar::new(full_square)
-                .with_radius(2)
-                .with_bg(theme::FG)
-                .render(target),
-
-            DotType::Big => shape::Bar::new(full_square)
-                .with_radius(2)
-                .with_fg(theme::FG)
-                .render(target),
-
-            DotType::Middle => shape::Bar::new(full_square.shrink(1))
-                .with_radius(1)
-                .with_fg(theme::FG)
-                .render(target),
-
-            DotType::Small => shape::Bar::new(full_square.shrink(2))
-                .with_bg(theme::FG)
-                .render(target),
-        }
-    }
-
-    /// Get a sequence of dots to be drawn, with specifying their appearance.
-    /// Painting only big dots in case of 2 and 3 pages,
-    /// three big and 1 middle in case of 4 pages,
-    /// and three big, one middle and one small in case of 5 and more pages.
-    fn get_drawable_dots(&self) -> Vec<DotType, { MAX_DOTS as usize }> {
-        let mut dots = Vec::new();
-
-        match self.pager.total() {
-            0..=3 => {
-                // *OO
-                // O*O
-                // OO*
-                for i in 0..self.pager.total() {
-                    if i == self.pager.current() {
-                        unwrap!(dots.push(DotType::BigFull));
-                    } else {
-                        unwrap!(dots.push(DotType::Big));
-                    }
-                }
-            }
-            4 => {
-                // *OOo
-                // O*Oo
-                // oO*O
-                // oOO*
-                match self.pager.current() {
-                    0 => unwrap!(dots.push(DotType::BigFull)),
-                    1 => unwrap!(dots.push(DotType::Big)),
-                    _ => unwrap!(dots.push(DotType::Middle)),
-                };
-                match self.pager.current() {
-                    1 => unwrap!(dots.push(DotType::BigFull)),
-                    _ => unwrap!(dots.push(DotType::Big)),
-                };
-                match self.pager.current() {
-                    2 => unwrap!(dots.push(DotType::BigFull)),
-                    _ => unwrap!(dots.push(DotType::Big)),
-                };
-                match self.pager.current() {
-                    3 => unwrap!(dots.push(DotType::BigFull)),
-                    2 => unwrap!(dots.push(DotType::Big)),
-                    _ => unwrap!(dots.push(DotType::Middle)),
-                };
-            }
-            _ => {
-                // *OOo.
-                // O*Oo.
-                // oO*Oo
-                // ...
-                // oO*Oo
-                // .oO*O
-                // .oOO*
-                let full_dot_index = match self.pager.current() {
-                    0 => 0,
-                    1 => 1,
-                    last_but_one if last_but_one == self.pager.total() - 2 => 3,
-                    last if last == self.pager.total() - 1 => 4,
-                    _ => 2,
-                };
-                match full_dot_index {
-                    0 => unwrap!(dots.push(DotType::BigFull)),
-                    1 => unwrap!(dots.push(DotType::Big)),
-                    2 => unwrap!(dots.push(DotType::Middle)),
-                    _ => unwrap!(dots.push(DotType::Small)),
-                };
-                match full_dot_index {
-                    0 => unwrap!(dots.push(DotType::Big)),
-                    1 => unwrap!(dots.push(DotType::BigFull)),
-                    2 => unwrap!(dots.push(DotType::Big)),
-                    _ => unwrap!(dots.push(DotType::Middle)),
-                };
-                match full_dot_index {
-                    2 => unwrap!(dots.push(DotType::BigFull)),
-                    _ => unwrap!(dots.push(DotType::Big)),
-                };
-                match full_dot_index {
-                    0 | 1 => unwrap!(dots.push(DotType::Middle)),
-                    3 => unwrap!(dots.push(DotType::BigFull)),
-                    _ => unwrap!(dots.push(DotType::Big)),
-                };
-                match full_dot_index {
-                    0 | 1 => unwrap!(dots.push(DotType::Small)),
-                    2 => unwrap!(dots.push(DotType::Middle)),
-                    3 => unwrap!(dots.push(DotType::Big)),
-                    _ => unwrap!(dots.push(DotType::BigFull)),
-                };
-            }
-        }
-        dots
-    }
-
-    /// Space the separator icon takes in the numeric counter (with a 1px gap
-    /// on both sides).
-    const NUMERIC_SEPARATOR_WIDTH: i16 = theme::ICON_PAGE_SEPARATOR.toif.width() + 2;
-
-    fn numeric_parts(&self) -> (ShortString, ShortString) {
+    fn texts(&self) -> (ShortString, ShortString) {
         (
             uformat!("{}", self.pager.current() + 1),
             uformat!("{}", self.pager.total()),
         )
     }
+}
 
-    /// "current/total" counter, right-aligned.
-    fn render_numeric<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let (current, total) = self.numeric_parts();
+impl Component for ScrollBar {
+    type Msg = Never;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        // Occupying as little space as possible (according to the number of pages),
+        // aligning to the right.
+        let scrollbar_area = Rect::from_top_right_and_size(
+            bounds.top_right(),
+            Offset::new(self.overall_width(), self.overall_height()),
+        );
+        self.pad.place(scrollbar_area);
+        scrollbar_area
+    }
+
+    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+        None
+    }
+
+    /// Displaying the "current/total" counter, right-aligned.
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        // Not showing the counter when there is only one page
+        if self.pager.is_single() {
+            return;
+        }
+
+        self.pad.render(target);
+
+        let (current, total) = self.texts();
         let font = theme::FONT_HEADER;
         let baseline = self.pad.area.top_right() + Offset::y(font.text_height() - 1);
-        let total_left = baseline.x - font.text_width(&total);
-        let current_right = total_left - Self::NUMERIC_SEPARATOR_WIDTH;
+        let current_right = baseline.x - font.text_width(&total) - Self::SEPARATOR_WIDTH;
         shape::Text::new(baseline, &total, font)
             .with_align(Alignment::End)
             .with_fg(theme::FG)
@@ -238,53 +101,6 @@ impl ScrollBar {
             .with_align(Alignment::End)
             .with_fg(theme::FG)
             .render(target);
-    }
-
-    fn render_horizontal<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let mut top_right = self.pad.area.top_right();
-        for dot in self.get_drawable_dots().iter().rev() {
-            self.render_dot(target, dot, top_right);
-            top_right.x -= Self::DOTS_INTERVAL;
-        }
-    }
-}
-
-impl Component for ScrollBar {
-    type Msg = Never;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        // Occupying as little space as possible (according to the number of pages),
-        // aligning to the right.
-        let offset = if self.numeric {
-            Offset::zero()
-        } else {
-            Offset::y(1) // offset for centering vertically
-        };
-        let scrollbar_area = Rect::from_top_right_and_size(
-            bounds.top_right() + offset,
-            Offset::new(self.overall_width(), self.overall_height()),
-        );
-        self.pad.place(scrollbar_area);
-        scrollbar_area
-    }
-
-    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
-        None
-    }
-
-    /// Displaying one dot for each page.
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        // Not showing the scrollbar dot when there is only one page
-        if self.pager.is_single() {
-            return;
-        }
-
-        self.pad.render(target);
-        if self.numeric {
-            self.render_numeric(target);
-        } else {
-            self.render_horizontal(target);
-        }
     }
 }
 

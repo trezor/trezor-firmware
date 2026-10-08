@@ -119,9 +119,7 @@ impl FirmwareUI for UICaesar {
         let content = ButtonPage::new(address_ops(), theme::BG)
             .with_menu_nav(menu_nav)
             .with_confirm_btn(Some(ButtonDetails::text(verb)));
-        let frame = ScrollableFrame::new(content)
-            .with_title(title)
-            .with_numeric_page_counter();
+        let frame = ScrollableFrame::new(content).with_title(title);
         LayoutObj::new(frame)
     }
 
@@ -310,9 +308,7 @@ impl FirmwareUI for UICaesar {
         let content = ButtonPage::new(paragraphs, theme::BG)
             .with_menu_nav(MenuNav::Menu)
             .with_confirm_btn(Some(ButtonDetails::text(TR::buttons__install.into())));
-        let frame = ScrollableFrame::new(content)
-            .with_title(TR::firmware_update__title.into())
-            .with_numeric_page_counter();
+        let frame = ScrollableFrame::new(content).with_title(TR::firmware_update__title.into());
         Ok(RootComponent::new(frame))
     }
 
@@ -514,7 +510,7 @@ impl FirmwareUI for UICaesar {
         } else {
             content = content.with_menu_nav(MenuNav::Close);
         }
-        let mut frame = ScrollableFrame::new(content).with_numeric_page_counter();
+        let mut frame = ScrollableFrame::new(content);
         if let Some(title) = title {
             frame = frame.with_title(title);
         }
@@ -568,11 +564,7 @@ impl FirmwareUI for UICaesar {
         let content = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
             .with_menu_nav(menu_nav)
             .with_confirm_btn(Some(confirm_btn));
-        LayoutObj::new(
-            ScrollableFrame::new(content)
-                .with_title(title)
-                .with_numeric_page_counter(),
-        )
+        LayoutObj::new(ScrollableFrame::new(content).with_title(title))
     }
 
     fn check_homescreen_format(image: BinaryData, _accept_toif: bool) -> bool {
@@ -721,12 +713,10 @@ impl FirmwareUI for UICaesar {
         let content = ButtonPage::new(formatted, theme::BG)
             .with_menu_nav(MenuNav::ChoiceMenu)
             .with_confirm_btn(Some(ButtonDetails::text(TR::buttons__back_up.into())));
-        let frame = ScrollableFrame::new(content)
-            .with_page_titles([
-                TR::words__title_success.into(),
-                TR::backup__title_backup_wallet.into(),
-            ])
-            .with_numeric_page_counter();
+        let frame = ScrollableFrame::new(content).with_page_titles([
+            TR::words__title_success.into(),
+            TR::backup__title_backup_wallet.into(),
+        ]);
         Ok(RootComponent::new(frame))
     }
 
@@ -1201,7 +1191,7 @@ impl FirmwareUI for UICaesar {
             .with_menu_nav(MenuNav::Close)
             .with_confirm_btn(None);
 
-        let mut frame = ScrollableFrame::new(page).with_numeric_page_counter();
+        let mut frame = ScrollableFrame::new(page);
         if !title.is_empty() {
             frame = frame.with_title(title);
         }
@@ -1417,7 +1407,7 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
         content = content.with_cancel_btn(verb_cancel.map(ButtonDetails::from_text_possible_icon));
     }
 
-    let mut frame = ScrollableFrame::new(content).with_numeric_page_counter();
+    let mut frame = ScrollableFrame::new(content);
     if !title.is_empty() {
         frame = frame.with_title(title);
     }

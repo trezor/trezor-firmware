@@ -141,12 +141,6 @@ where
         self.page_titles = Vec::from_iter(titles);
         self
     }
-
-    /// Showing a numeric "current/total" page counter instead of the dots.
-    pub fn with_numeric_page_counter(mut self) -> Self {
-        self.scrollbar = self.scrollbar.with_numeric();
-        self
-    }
 }
 
 impl<T> Component for ScrollableFrame<T>
