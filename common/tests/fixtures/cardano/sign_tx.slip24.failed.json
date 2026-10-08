@@ -5,7 +5,7 @@
   },
   "tests": [
     {
-      "description": "Swap - multiple outputs",
+      "description": "Swap - multiple recipients",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -28,7 +28,7 @@
             "amount": "3003112"
           },
           {
-            "address": "2657WMsDfac7BteXkJq5Jzdog4h47fPbkwUM49isuWbYAr2cFRHa3rURP236h9PBe",
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
             "amount": "1001234"
           }
         ],
@@ -46,7 +46,197 @@
         "payment_req": true
       },
       "result": {
-        "error_message": "Multiple outputs not supported for payment requests"
+        "error_message": "Multiple recipients not supported for payment requests"
+      }
+    },
+    {
+      "description": "Swap - only change output",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/44'/1815'/0'/0/1",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "stakingPath": "m/1852'/1815'/0'/2/0",
+            "amount": "1000000"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false,
+        "tag_cbor_sets": false,
+        "payment_req": true
+      },
+      "result": {
+        "error_message": "Payment request must have a recipient output"
+      }
+    },
+    {
+      "description": "Swap - tokens on the recipient output",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/44'/1815'/0'/0/1",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112",
+            "token_bundle": [
+              {
+                "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                "tokens": [
+                  {
+                    "asset_name_bytes": "74652474436f696e",
+                    "amount": "7878754"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "stakingPath": "m/1852'/1815'/0'/2/0",
+            "amount": "1000000"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false,
+        "tag_cbor_sets": false,
+        "payment_req": true
+      },
+      "result": {
+        "error_message": "Tokens and Plutus data not supported for payment requests"
+      }
+    },
+    {
+      "description": "Swap - datum hash on the recipient output",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/44'/1815'/0'/0/1",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112",
+            "datum_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7"
+          },
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "stakingPath": "m/1852'/1815'/0'/2/0",
+            "amount": "1000000"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false,
+        "tag_cbor_sets": false,
+        "payment_req": true
+      },
+      "result": {
+        "error_message": "Tokens and Plutus data not supported for payment requests"
+      }
+    },
+    {
+      "description": "Swap - Plutus signing mode",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/44'/1815'/0'/0/1",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false,
+        "tag_cbor_sets": false,
+        "payment_req": true
+      },
+      "result": {
+        "error_message": "Payment requests not supported in this signing mode"
       }
     }
   ]

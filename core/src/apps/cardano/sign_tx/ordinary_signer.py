@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
 from trezor import TR
-from trezor.wire import ProcessError
+from trezor.wire import DataError, ProcessError
 
 from .. import layout, seed
-from ..helpers.paths import SCHEMA_MINT
+from ..helpers.paths import SCHEMA_MINT, SLIP44_ID
 from .signer import Signer, SuiteTxType
 
 if TYPE_CHECKING:
@@ -42,6 +42,15 @@ class OrdinarySigner(Signer):
         _assert_tx_init_cond(not msg.has_collateral_return)
         _assert_tx_init_cond(msg.total_collateral is None)
         _assert_tx_init_cond(msg.reference_inputs_count == 0)
+
+    def _init_payment_request(self, payment_req: messages.PaymentRequest) -> None:
+        from apps.common.payment_request import PaymentRequestVerifier
+
+        if payment_req.amount is None:
+            raise DataError("Missing payment request amount.")
+        self.payment_req_verifier = PaymentRequestVerifier(
+            payment_req, SLIP44_ID, self.slip21_keychain
+        )
 
     def _suite_tx_type(self) -> SuiteTxType:
         msg = self.msg  # local_cache_attribute
