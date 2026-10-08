@@ -23,6 +23,9 @@ struct ChoiceFactorySimple {
     choices: Vec<TString<'static>, MAX_LENGTH>,
     controls: ChoiceControls,
     select_text: TString<'static>,
+    /// Using the context menu buttons - arrow glyph to enter an item, cross to
+    /// close the menu.
+    menu_buttons: bool,
 }
 
 impl ChoiceFactorySimple {
@@ -35,6 +38,7 @@ impl ChoiceFactorySimple {
             choices,
             controls,
             select_text,
+            menu_buttons: false,
         }
     }
 
@@ -53,15 +57,27 @@ impl ChoiceFactory for ChoiceFactorySimple {
 
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         let text = &self.choices[choice_index];
-        let mut choice_item =
-            text.map(|t| ChoiceItem::new(t, ButtonLayout::arrow_armed_arrow(self.select_text)));
+        let btn_layout = if self.menu_buttons {
+            ButtonLayout::new(
+                Some(ButtonDetails::left_arrow_icon()),
+                Some(ButtonDetails::menu_select_icon()),
+                Some(ButtonDetails::right_arrow_icon()),
+            )
+        } else {
+            ButtonLayout::arrow_armed_arrow(self.select_text)
+        };
+        let mut choice_item = text.map(|t| ChoiceItem::new(t, btn_layout));
 
         // Disabling prev/next buttons for the first/last choice when not in carousel.
         // (could be done to the same item if there is only one)
         if self.controls != ChoiceControls::Carousel {
             if choice_index == 0 {
                 if self.controls == ChoiceControls::Cancellable {
-                    choice_item.set_left_btn(Some(ButtonDetails::cancel_icon()));
+                    choice_item.set_left_btn(Some(if self.menu_buttons {
+                        ButtonDetails::close_icon()
+                    } else {
+                        ButtonDetails::cancel_icon()
+                    }));
                 } else {
                     choice_item.set_left_btn(None);
                 }
@@ -82,6 +98,8 @@ pub struct SimpleChoice {
     page_count: u16,
     return_index: bool,
     ignore_cancelled: bool,
+    /// Which items are dangerous (e.g. cancelling the whole flow).
+    danger_items: Vec<bool, MAX_LENGTH>,
 }
 
 impl SimpleChoice {
@@ -98,6 +116,7 @@ impl SimpleChoice {
             page_count,
             return_index: false,
             ignore_cancelled: false,
+            danger_items: Vec::new(),
         }
     }
 
@@ -128,6 +147,16 @@ impl SimpleChoice {
     /// Returning `CONFIRMED` to MicroPython (instead of `CANCELLED`).
     pub fn with_ignore_cancelled(mut self) -> Self {
         self.ignore_cancelled = true;
+        self
+    }
+
+    /// Using the context menu buttons - arrow glyph to enter an item, cross to
+    /// close the menu. `danger_items` marks the items that are dangerous.
+    pub fn with_menu_buttons(mut self, danger_items: Vec<bool, MAX_LENGTH>) -> Self {
+        self.choice_page = self.choice_page.with_choice_factory(|choices| {
+            choices.menu_buttons = true;
+        });
+        self.danger_items = danger_items;
         self
     }
 
@@ -190,5 +219,10 @@ impl crate::trace::Trace for SimpleChoice {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("SimpleChoice");
         t.child("choice_page", &self.choice_page);
+        t.in_list("danger_items", &|l| {
+            for danger in self.danger_items.iter() {
+                l.bool(*danger);
+            }
+        });
     }
 }

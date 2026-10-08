@@ -4,7 +4,7 @@ use heapless::Vec;
 
 use super::component::{
     AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, ChoiceControls,
-    CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen,
+    CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen, MenuNav,
     NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords, ShowMore,
     SimpleChoice, WordlistEntry, WordlistType, SIMPLE_CHOICE_MAX_LENGTH,
 };
@@ -27,6 +27,7 @@ use crate::ui::component::{
     Component, ComponentExt, Empty, FlowMsg, FormattedText, Label, LineBreaking, Never, PageMsg,
     Paginate, Timeout,
 };
+use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
@@ -89,19 +90,7 @@ impl FirmwareUI for UICaesar {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
         let address: TString = address.try_into()?;
 
-        let get_page = move |page_index| {
-            assert!(page_index == 0);
-            let (btn_layout, btn_actions) = if info_button {
-                (
-                    ButtonLayout::cancel_armed_info(verb),
-                    ButtonActions::cancel_confirm_info(),
-                )
-            } else {
-                (
-                    ButtonLayout::cancel_none_text(verb),
-                    ButtonActions::cancel_none_confirm(),
-                )
-            };
+        let address_ops = move || {
             let mut ops = OpTextLayout::new(theme::TEXT_MONO_DATA);
             if let Some(label) = address_label {
                 // NOTE: need to explicitly turn off the chunkification before rendering the
@@ -118,8 +107,28 @@ impl FirmwareUI for UICaesar {
                 ops.add_chunkify_text(Some((theme::MONO_CHUNKS, 2)));
             }
             ops.add_text_with_font(address, fonts::FONT_MONO);
-            let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted).with_title(title)
+            FormattedText::new(ops).vertically_centered()
+        };
+
+        if info_button {
+            // The info is in the context menu, opened by the left button.
+            let content = ButtonPage::new(address_ops(), theme::BG)
+                .with_menu_nav(MenuNav::Menu)
+                .with_confirm_btn(Some(ButtonDetails::text(verb)));
+            let frame = ScrollableFrame::new(content)
+                .with_title(title)
+                .with_numeric_page_counter();
+            return LayoutObj::new(frame);
+        }
+
+        let get_page = move |page_index| {
+            assert!(page_index == 0);
+            Page::new(
+                ButtonLayout::cancel_none_text(verb),
+                ButtonActions::cancel_none_confirm(),
+                address_ops(),
+            )
+            .with_title(title)
         };
         let pages = FlowPages::new(get_page, 1);
 
@@ -915,20 +924,22 @@ impl FirmwareUI for UICaesar {
         items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
         current: usize,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        // the entry's intent is not rendered on this model
-        let labels: heapless::Vec<TString<'static>, MAX_MENU_ITEMS> =
-            items.into_iter().map(|item| item.text).collect();
-        // Returning the index of the selected menu item
+        let labels: heapless::Vec<TString<'static>, SIMPLE_CHOICE_MAX_LENGTH> =
+            items.iter().map(|item| item.text).collect();
+        // the entry's intent is not rendered, it is only traced for the tests
+        let danger_items = items
+            .iter()
+            .map(|item| item.intent == MenuItemIntent::Danger)
+            .collect();
+        // Returning the index of the selected menu item. The select text is not
+        // used, the menu buttons show an arrow glyph instead.
         let layout = RootComponent::new(
-            SimpleChoice::new(
-                labels,
-                ChoiceControls::Cancellable,
-                TR::buttons__view.into(),
-            )
-            .with_initial_page_counter(current)
-            .with_show_incomplete()
-            .with_return_index()
-            .with_ignore_cancelled(),
+            SimpleChoice::new(labels, ChoiceControls::Cancellable, TString::empty())
+                .with_menu_buttons(danger_items)
+                .with_initial_page_counter(current)
+                .with_show_incomplete()
+                .with_return_index()
+                .with_ignore_cancelled(),
         );
         Ok(layout)
     }
@@ -985,18 +996,12 @@ impl FirmwareUI for UICaesar {
         address: TString<'static>,
         case_sensitive: bool,
         _details_title: TString<'static>,
-        account: Option<(TString<'static>, TString<'static>)>,
-        path: Option<(TString<'static>, TString<'static>)>,
-        xpubs: Obj,
+        _account: Option<(TString<'static>, TString<'static>)>,
+        _path: Option<(TString<'static>, TString<'static>)>,
+        _xpubs: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;
-
-        for i in IterBuf::new().try_iterate(xpubs)? {
-            let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
-            ad.add_xpub(xtitle, text)?;
-        }
-
-        let layout = RootComponent::new(ad);
+        // Only the QR code, the account information has its own menu item.
+        let layout = RootComponent::new(AddressDetails::new(address, case_sensitive)?);
         Ok(layout)
     }
 
@@ -1294,13 +1299,12 @@ impl FirmwareUI for UICaesar {
             }
         }
 
+        // Opened from the context menu, closed by the left button.
         let page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
-            .with_back_btn(Some(ButtonDetails::left_arrow_icon()))
-            .with_next_btn(Some(ButtonDetails::right_arrow_icon()))
-            .with_cancel_btn(Some(ButtonDetails::cancel_icon()))
+            .with_menu_nav(MenuNav::Close)
             .with_confirm_btn(None);
 
-        let mut frame = ScrollableFrame::new(page);
+        let mut frame = ScrollableFrame::new(page).with_numeric_page_counter();
         if !title.is_empty() {
             frame = frame.with_title(title);
         }
