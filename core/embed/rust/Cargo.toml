@@ -24,6 +24,7 @@ easer.workspace = true
 heapless.workspace = true
 log.workspace = true
 minicbor.workspace = true
+miniscript = { workspace = true, optional = true }
 num-derive.workspace = true
 num-traits.workspace = true
 pareen.workspace = true
@@ -37,8 +38,6 @@ ufmt.workspace = true
 unsize.workspace = true
 without-alloc.workspace = true
 zeroize = { workspace = true, optional = true }
-
-miniscript = { version = "13.1.0", default-features = false, optional = true }
 
 
 # crates in embed/ directory
