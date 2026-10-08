@@ -4,8 +4,8 @@
 //! the extras cannot be reached.
 
 use crate::Result;
-use crate::modui::internal::{BR_CODE_OTHER, call, decide};
-use crate::modui::{Commitment, Decision, ExtraItem};
+use crate::modui::internal::{BR_CODE_OTHER, answer, call};
+use crate::modui::{Commitment, ExtraItem};
 use crate::traits::ui::ConfirmAction as WireConfirmAction;
 
 // ============================================================================
@@ -93,11 +93,10 @@ impl<'a> Action<'a> {
 ///         Commitment::Step,
 ///         "app/sign",
 ///         &extras,
-///     ))?
-///     .confirmed()
+///     ))
 /// }
 /// ```
-pub fn action(params: Action<'_>) -> Result<Decision> {
+pub fn action(params: Action<'_>) -> Result<()> {
     let request = WireConfirmAction::new(
         params.title,
         params.action,
@@ -110,5 +109,5 @@ pub fn action(params: Action<'_>) -> Result<Decision> {
         !params.extras.is_empty(), // external_menu: how the menu is reached
     );
 
-    decide(call(&request, params.extras, Some(params.br))?)
+    answer(call(&request, params.extras, Some(params.br))?)
 }

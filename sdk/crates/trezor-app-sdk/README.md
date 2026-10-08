@@ -53,7 +53,7 @@ sdk::global_logger!(AppLogger);
 ### 3. Write Your App
 
 ```rust
-use trezor_app_sdk::{self as sdk, info, error};
+use trezor_app_sdk::{self as sdk, Error, info, error};
 use trezor_app_sdk::modui::{Commitment, confirm, notice};
 
 #[no_mangle]
@@ -70,13 +70,13 @@ pub extern "C" fn applet_main(api_getter: sdk::TrezorApiGetter) -> i32 {
         "Title", "Confirm?", None, None, Commitment::Step, "app/confirm", &[],
     );
     match confirm::action(params) {
-        Ok(reply) if reply.is_confirmed() => {
+        Ok(()) => {
             info!("Confirmed");
             let _ = notice::show(notice::Notice::new(
                 notice::Severity::Success, "Success", "Done!", "app/done", &[], false,
             ));
         }
-        Ok(_) => info!("Cancelled"),
+        Err(Error::Cancelled) => info!("Cancelled"),
         Err(e) => {
             error!("Error: {:?}", e);
             return e.to_c_int();
@@ -111,7 +111,8 @@ RUSTFLAGS='--cfg log_level="trace"' cargo build # All levels (default)
 
 ### `modui` Module
 
-UI building blocks; confirmations and notices return `Result<Decision>`:
+UI building blocks; confirmations and notices return `Result<()>`, where
+the person backing out is `Err(Error::Cancelled)`:
 
 - `confirm::action(params)` - Confirm an action
 - `confirm::value(params)` - Confirm one value (address, amount, ...)

@@ -85,8 +85,8 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
     signature.extend_from_slice(&sig[1..65]);
     signature.push(sig[0]);
 
-    // The last screen of the flow: nothing hangs on how it went away.
-    let _ = modui::notice::show(notice::Notice::new(
+    // The last screen of the flow; it offers no way back out.
+    modui::notice::show(notice::Notice::new(
         notice::Severity::Done,
         tr!("words__title_done"),
         tr!("send__transaction_signed"),

@@ -8,7 +8,7 @@ pub(in crate::modui) mod transport;
 
 use transport::LayoutHandle;
 
-use super::{Decision, ExtraItem};
+use super::ExtraItem;
 use crate::traits::ui::UiReply;
 use crate::{Error, Result};
 
@@ -86,12 +86,13 @@ pub(in crate::modui) fn call(
 
 /// Reads the answer of a block that waits for the person.
 ///
-/// `ConfirmedAll` is a yes: the person accepted the rest without reading it.
-/// Anything else is a reply no such block can produce.
-pub(in crate::modui) fn decide(reply: UiReply) -> Result<Decision> {
+/// A yes is `Ok`; `ConfirmedAll` is a yes too, the person accepted the rest
+/// without reading it. A cancel is `Err(Cancelled)`, so that `?` stops the
+/// app's flow on it. Anything else is a reply no such block can produce.
+pub(in crate::modui) fn answer(reply: UiReply) -> Result<()> {
     match reply {
-        UiReply::Confirmed | UiReply::ConfirmedAll => Ok(Decision::Confirmed),
-        UiReply::Cancelled => Ok(Decision::Cancelled),
+        UiReply::Confirmed | UiReply::ConfirmedAll => Ok(()),
+        UiReply::Cancelled => Err(Error::Cancelled),
         _ => Err(Error::InvalidMessage),
     }
 }

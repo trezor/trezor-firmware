@@ -1,8 +1,8 @@
 //! Confirming a list of key/value facts. The public docs live on
 //! [`properties`].
 
-use crate::modui::internal::{BR_CODE_OTHER, call, decide};
-use crate::modui::{Commitment, Decision, ExtraItem};
+use crate::modui::internal::{BR_CODE_OTHER, answer, call};
+use crate::modui::{Commitment, ExtraItem};
 use crate::traits::ui::{ConfirmProperties as WireConfirmProperties, Property};
 use crate::{Error, Result};
 
@@ -74,11 +74,10 @@ impl<'a> Properties<'a> {
 ///         Property::plain("Amount", amount),
 ///         Property::plain("Resource", "Energy"),
 ///     ];
-///     confirm::properties(confirm::Properties::new("Summary", &props, None, Commitment::Step, "app/stake", &[]))?
-///         .confirmed()
+///     confirm::properties(confirm::Properties::new("Summary", &props, None, Commitment::Step, "app/stake", &[]))
 /// }
 /// ```
-pub fn properties(params: Properties<'_>) -> Result<Decision> {
+pub fn properties(params: Properties<'_>) -> Result<()> {
     // This block's wire has no menu button yet, so anything behind one would
     // be silently unreachable. Refusing is worse to use and better to debug.
     if !params.extras.is_empty() {
@@ -94,5 +93,5 @@ pub fn properties(params: Properties<'_>) -> Result<Decision> {
         BR_CODE_OTHER, // legacy field; see the constant
     );
 
-    decide(call(&request, params.extras, Some(params.br))?)
+    answer(call(&request, params.extras, Some(params.br))?)
 }

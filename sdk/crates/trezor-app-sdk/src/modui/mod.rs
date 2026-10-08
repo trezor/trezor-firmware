@@ -110,32 +110,38 @@
 //! What a block returns depends on what kind of block it is:
 //!
 //! - **A confirmation** ([`confirm`]) and **a notice** ([`notice::show`])
-//!   return [`Decision`]: `Confirmed` or `Cancelled`. A notice answers
-//!   `Confirmed` when the person moves on, and `Cancelled` only where it
-//!   offers a way back out. Refusing is an answer, not a failure, so both
-//!   arrive as `Ok`; `Err` is for failures alone (see [errors](#errors)).
+//!   return `Result<()>`: `Ok(())` when the person said yes or moved on,
+//!   and `Err(`[`crate::Error::Cancelled`]`)` when they backed out, by
+//!   whatever way out the model offers. A notice answers `Cancelled` only
+//!   where it offers a way back out.
 //! - **A progress** ([`progress`]) returns what the work returned.
+//!
+//! A cancel is an `Err` so that `?` stops the flow on it: nothing after the
+//! refused screen runs, and the host sees the session end with the person's
+//! refusal. Most screens must be a yes, so this is the case that should cost
+//! nothing to write and nothing to forget:
+//!
+//! ```text
+//! confirm::action(params)?;
+//! ```
+//!
+//! Where backing out is not the end of the flow, match it:
+//!
+//! ```text
+//! match confirm::action(params) {
+//!     Ok(()) => { /* yes */ }
+//!     Err(Error::Cancelled) => { /* no, carry on */ }
+//!     Err(e) => return Err(e),
+//! }
+//! ```
+//!
+//! Every other `Err` is a failure the app cannot fix and should pass up the
+//! same way (see [errors](#errors)).
 //!
 //! How the person got there — which page they were on, whether they opened
 //! the extras, which button they pressed — is never reported. What the
 //! library answers itself, such as opening the extras or turning pages
 //! inside one chunk, never reaches the caller.
-//!
-//! ## The `confirmed()?` idiom
-//!
-//! Most screens must be a yes:
-//!
-//! ```text
-//! confirm::action(params)?.confirmed()?;
-//! ```
-//!
-//! The first `?` unwraps the block's result; `.confirmed()` turns
-//! `Cancelled` into [`crate::Error::Cancelled`], which the trailing `?`
-//! returns from the function at once — nothing after it runs, and the host
-//! sees the session ending with the person's refusal. Do not drop the
-//! trailing `?` on a screen that must be a yes: a refusal would be ignored,
-//! with the flow carrying on as if the person had confirmed. Omit it only
-//! when the `Result` itself is the function's return value.
 //!
 //! # Step names
 //!
@@ -195,7 +201,8 @@
 //!
 //! # Errors
 //!
-//! A block returns `Err` only when it could not ask the question at all. The
+//! Apart from [`crate::Error::Cancelled`] (see [outcomes](#outcomes)), a
+//! block returns `Err` only when it could not ask the question at all. The
 //! parameters are checked as the block is called, before anything is shown,
 //! so a bad list of extras never fails halfway through a flow:
 //!
@@ -238,7 +245,7 @@
 //! use trezor_app_sdk::modui::{Commitment, confirm};
 //!
 //! // A sequence of blocks is just a sequence of calls. Cancelling any one of
-//! // them stops the flow, because `confirmed()` turns it into an error.
+//! // them stops the flow, because a cancel is an `Err`.
 //! fn confirm_send(address: &str) -> trezor_app_sdk::Result<()> {
 //!     confirm::value(confirm::Value::new(
 //!         "Send",
@@ -250,8 +257,7 @@
 //!         Commitment::Step,
 //!         "app/send/recipient",
 //!         &[],
-//!     ))?
-//!     .confirmed()?;
+//!     ))?;
 //!
 //!     confirm::action(confirm::Action::new(
 //!         "Send",
@@ -261,14 +267,17 @@
 //!         Commitment::Step,
 //!         "app/send/confirm",
 //!         &[],
-//!     ))?
-//!     .confirmed()
+//!     ))
 //! }
 //!
-//! // Or handle the cancel yourself, when leaving is not an error.
+//! // Or handle the cancel yourself, when leaving is not the end of the flow.
 //! fn offer_details(address: &str) -> trezor_app_sdk::Result<bool> {
 //!     let params = confirm::Value::new("Send", address, confirm::ValueKind::Address, None, None, None, Commitment::Step, "app/send", &[]);
-//!     Ok(confirm::value(params)?.is_confirmed())
+//!     match confirm::value(params) {
+//!         Ok(()) => Ok(true),
+//!         Err(trezor_app_sdk::Error::Cancelled) => Ok(false),
+//!         Err(e) => Err(e),
+//!     }
 //! }
 //! ```
 
@@ -318,7 +327,6 @@ use ufmt::derive::uDebug;
 
 /// A key/value fact, as shown in a list or on an extra's screen.
 pub use crate::traits::ui::Property;
-use crate::{Error, Result};
 
 // ============================================================================
 // Data types
@@ -336,40 +344,4 @@ pub enum Commitment {
     Step,
     /// The last confirmation before the app signs or otherwise acts.
     Final,
-}
-
-/// The person's answer to a block that waits for them.
-///
-/// A confirmation answers `Confirmed` or `Cancelled`. A notice answers
-/// `Confirmed` when the person moves on, and `Cancelled` only where it offers
-/// a way back out. Both arrive as `Ok`: a refusal is an answer, not a
-/// failure; `Err` is for failures. How the person got there — which button,
-/// which page, whether they opened the extras — is never reported.
-#[must_use]
-#[derive(uDebug, Copy, Clone, PartialEq, Eq)]
-pub enum Decision {
-    /// The person said yes, or moved on.
-    Confirmed,
-    /// The person refused, or backed out, by whatever way out the model offers.
-    Cancelled,
-}
-
-impl Decision {
-    /// Discharges the answer, turning a refusal into [`Error::Cancelled`].
-    ///
-    /// The one exception to `Err` meaning failure, on purpose: most flows
-    /// cannot go on without a yes, and this lets them write
-    /// `confirm::action(params)?.confirmed()?` and match the refusal once, at
-    /// the end, the way Rust code handles any other early exit.
-    pub fn confirmed(self) -> Result<()> {
-        match self {
-            Self::Confirmed => Ok(()),
-            Self::Cancelled => Err(Error::Cancelled),
-        }
-    }
-
-    /// Returns `true` if the person confirmed.
-    pub fn is_confirmed(self) -> bool {
-        self == Self::Confirmed
-    }
 }
