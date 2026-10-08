@@ -173,5 +173,25 @@ if utils.USE_POWER_MANAGER:
 if utils.BOOT_WIPE:
     config.wipe()
 
+if __debug__:
+    # Start the USB before the PIN prompt so that the lockscreen can be driven
+    # over debuglink, the same way the bootloader does it. The device id is
+    # created lazily and storage refuses writes while locked, so a device with
+    # no id yet keeps a fixed serial number until its next boot.
+    import storage.common
+    import usb
+
+    _dev_id = storage.common.get(
+        storage.common.APP_DEVICE, storage.device.DEVICE_ID, public=True
+    )
+    usb.bus.open(_dev_id.decode() if _dev_id else "000000000000000000000000")
+    del _dev_id
+
+    import apps.debug
+
+    # The session task dies with `loop.clear()` at the end of `bootscreen()`
+    # and `session.py` spawns a fresh one.
+    apps.debug.boot()
+
 loop.schedule(bootscreen())
 loop.run()
