@@ -1,7 +1,10 @@
 use crate::{
     alloc_types::{String, ToString, Vec, vec},
     common::get_encoded_address,
-    helpers::{format_energy_amount, format_token_amount, format_trx_amount},
+    helpers::{
+        chunkify_number, format_blocks_as_time, format_energy_amount, format_token_amount,
+        format_trx_amount,
+    },
     proto::tron::{ResourceCode, TransferContract, TriggerSmartContract},
     strutil::hex_encode,
     uformat,
@@ -140,18 +143,11 @@ pub fn confirm_freeze_operations(
     ))
     .c()?;
 
-    let amount = format_trx_amount(balance);
-    let resource = if resource == ResourceCode::Energy as i32 {
-        "Energy"
-    } else {
-        "Bandwidth"
-    };
-
     modui::confirm::properties(confirm::Properties::new(
         tr!("words__title_summary"),
         &[
-            Property::new(tr!("words__amount"), &amount, false),
-            Property::new(tr!("words__resource"), resource, false),
+            Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
+            Property::new(tr!("words__resource"), resource_name(resource), false),
         ],
         None,
         Commitment::Final,
@@ -176,64 +172,57 @@ pub fn confirm_delegate_resource(
     lock_period: Option<u64>,
 ) -> Result<()> {
     let title = tr!("tron__delegate_resource");
-    let br_name = "tron/delegate";
 
-    confirm_address(
+    modui::confirm::value(confirm::Value::new(
         title,
         &get_encoded_address(receiver_address).c()?,
-        None,
+        confirm::ValueKind::Address,
         Some(tr!("words__recipient")),
         None,
         None,
-        Some(true),
-        Some(uformat!("{}/recipient", br_name).as_str()),
-        ButtonRequestType::Other.into(),
-        None,
-        None,
-    )
+        Commitment::Step,
+        "tron/delegate/recipient",
+        &[],
+    ))
     .c()?;
 
-    ui::error_if_not_confirmed(
-        ui::confirm_properties(ui::ConfirmProperties::new(
-            title,
-            &[
-                Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
-                Property::new(tr!("words__resource"), resource_name(resource), false),
-            ],
-            None,
-            None,
-            lock_period.is_none(),
-            Some(uformat!("{}/resource", br_name).as_str()),
-            ButtonRequestType::ConfirmOutput.into(),
-        ))
-        .c()?,
-    )
+    modui::confirm::properties(confirm::Properties::new(
+        title,
+        &[
+            Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
+            Property::new(tr!("words__resource"), resource_name(resource), false),
+        ],
+        None,
+        if lock_period.is_none() {
+            Commitment::Final
+        } else {
+            Commitment::Step
+        },
+        "tron/delegate/resource",
+        &[],
+    ))
     .c()?;
 
     if let Some(lock_period) = lock_period {
-        ui::error_if_not_confirmed(
-            ui::confirm_properties(ui::ConfirmProperties::new(
-                title,
-                &[
-                    Property::new(
-                        tr!("tron__lockperiod_time"),
-                        &format_blocks_as_time(lock_period),
-                        true,
-                    ),
-                    Property::new(
-                        tr!("tron__lockperiod_blocks"),
-                        &chunkify_number(lock_period),
-                        true,
-                    ),
-                ],
-                Some(tr!("tron__lock_period")),
-                None,
-                true,
-                Some(uformat!("{}/lock_period", br_name).as_str()),
-                ButtonRequestType::ConfirmOutput.into(),
-            ))
-            .c()?,
-        )
+        modui::confirm::properties(confirm::Properties::new(
+            title,
+            &[
+                Property::new(
+                    tr!("tron__lockperiod_time"),
+                    &format_blocks_as_time(lock_period),
+                    true,
+                ),
+                Property::new(
+                    tr!("tron__lockperiod_blocks"),
+                    &chunkify_number(lock_period),
+                    true,
+                ),
+            ],
+            Some(tr!("tron__lock_period")),
+            Commitment::Final,
+            "tron/delegate/lock_period",
+            &[],
+        ))
         .c()?;
     }
 
@@ -246,41 +235,32 @@ pub fn confirm_undelegate_resource(
     resource: i32,
 ) -> Result<()> {
     let title = tr!("tron__undelegate_resource");
-    let br_name = "tron/undelegate";
 
-    confirm_address(
+    modui::confirm::value(confirm::Value::new(
         title,
         &get_encoded_address(receiver_address).c()?,
-        None,
+        confirm::ValueKind::Address,
         Some(tr!("words__from_title")),
         None,
         None,
-        Some(true),
-        Some(uformat!("{}/from_address", br_name).as_str()),
-        ButtonRequestType::Other.into(),
-        None,
-        None,
-    )
+        Commitment::Step,
+        "tron/undelegate/from_address",
+        &[],
+    ))
     .c()?;
 
-    ui::error_if_not_confirmed(
-        ui::confirm_properties(ui::ConfirmProperties::new(
-            title,
-            &[
-                Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
-                Property::new(tr!("words__resource"), resource_name(resource), false),
-            ],
-            None,
-            None,
-            true,
-            Some(uformat!("{}/resource", br_name).as_str()),
-            ButtonRequestType::ConfirmOutput.into(),
-        ))
-        .c()?,
-    )
-    .c()?;
-
-    Ok(())
+    modui::confirm::properties(confirm::Properties::new(
+        title,
+        &[
+            Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
+            Property::new(tr!("words__resource"), resource_name(resource), false),
+        ],
+        None,
+        Commitment::Final,
+        "tron/undelegate/resource",
+        &[],
+    ))
+    .c()
 }
 
 pub fn confirm_claim(
@@ -419,6 +399,7 @@ pub fn confirm_tron_transfer(
     recipient_addr: &str,
     amount_str: &str,
     maximum_fee: &str,
+    native_amount_str: Option<&str>,
 ) -> Result<()> {
     let title = tr!("words__send");
 
@@ -450,7 +431,7 @@ pub fn confirm_tron_transfer(
 
     modui::confirm::summary(confirm::Summary::new(
         title,
-        None,
+        native_amount_str.map(|a| (tr!("words__amount"), a)),
         Some((tr!("words__fee_limit"), maximum_fee)),
         "tron/transfer/summary",
         &[],
@@ -463,6 +444,7 @@ fn confirm_tron_approve(
     amount_str: &str,
     is_revoke: bool,
     maximum_fee: &str,
+    native_amount_str: Option<&str>,
 ) -> Result<()> {
     let (title, action_subtitle, value_subtitle, summary_view) = if is_revoke {
         (
@@ -519,7 +501,7 @@ fn confirm_tron_approve(
 
     modui::confirm::summary(confirm::Summary::new(
         title,
-        None,
+        native_amount_str.map(|a| (tr!("words__amount"), a)),
         Some((tr!("words__fee_limit"), maximum_fee)),
         "tron/approve/summary",
         &[],
@@ -560,6 +542,7 @@ fn confirm_ethereum_unknown_contract_warning() -> Result<()> {
 pub fn confirm_unknown_smart_contract(
     contract: &TriggerSmartContract,
     fee_limit: u64,
+    trx_value: Option<u64>,
 ) -> Result<()> {
     confirm_ethereum_unknown_contract_warning().c()?;
 
@@ -603,6 +586,7 @@ pub fn confirm_known_trc20_smart_contract(
     fee_limit: u64,
     token_decimals: u32,
     token_symbol: &str,
+    trx_value: Option<u64>,
 ) -> Result<()> {
     let native_amount_str = trx_value.map(format_trx_amount);
     let native_amount_str = native_amount_str.as_deref();
@@ -627,6 +611,7 @@ pub fn confirm_known_trc20_smart_contract(
             &amount_str,
             is_revoke,
             &format_energy_amount(fee_limit),
+            native_amount_str,
         )
         .c()?;
     } else {
@@ -638,6 +623,7 @@ pub fn confirm_known_trc20_smart_contract(
                 token_symbol,
             ),
             &format_energy_amount(fee_limit),
+            native_amount_str,
         )
         .c()?;
     }

@@ -9,8 +9,9 @@ use crate::{
     common::{COIN, SLIP44_ID, get_encoded_address},
     consts::{TYPE_URL_TEMPLATE, token_by_address},
     layout::{
-        confirm_claim, confirm_freeze_operations, confirm_known_trc20_smart_contract, confirm_note,
-        confirm_tron_voting, confirm_trx_transfer, confirm_unknown_smart_contract,
+        confirm_claim, confirm_delegate_resource, confirm_freeze_operations,
+        confirm_known_trc20_smart_contract, confirm_note, confirm_tron_voting,
+        confirm_trx_transfer, confirm_undelegate_resource, confirm_unknown_smart_contract,
     },
     paths::{Bip32Path, PATTERNS_ADDRESS},
     proto::{
@@ -350,16 +351,27 @@ pub(crate) fn request_contract() -> Result<(RawContractType, Vec<u8>)> {
 }
 
 fn process_smart_contract(contract: &TriggerSmartContract, fee_limit: u64) -> Result<()> {
-    if process_known_trc20_contract(contract, fee_limit).c()? {
+    let mut trx_value = None;
+    if let Some(call_value) = contract.call_value.filter(|&value| value != 0) {
+        if call_value > INT64_MAX {
+            return Err(Error::DataError("Tron: invalid call value"));
+        }
+        trx_value = Some(call_value);
+    }
+    if process_known_trc20_contract(contract, fee_limit, trx_value).c()? {
         return Ok(());
     } else {
-        confirm_unknown_smart_contract(&contract, fee_limit).c()?;
+        confirm_unknown_smart_contract(contract, fee_limit, trx_value).c()?;
         Ok(())
     }
 }
 
 /// Returns false when the contract is unrecoginsed. i.e. not (Transfer and known TRC-20)
-fn process_known_trc20_contract(contract: &TriggerSmartContract, fee_limit: u64) -> Result<bool> {
+fn process_known_trc20_contract(
+    contract: &TriggerSmartContract,
+    fee_limit: u64,
+    trx_value: Option<u64>,
+) -> Result<bool> {
     let token_info = token_by_address(&contract.contract_address);
     if token_info.is_none() || contract.data.len() != (SC_ARGUMENT_BYTES * 2 + SC_FUNC_SIG_BYTES) {
         return Ok(false);
@@ -397,6 +409,7 @@ fn process_known_trc20_contract(contract: &TriggerSmartContract, fee_limit: u64)
         fee_limit,
         token_decimals,
         token_symbol,
+        trx_value,
     )
     .c()?;
 
