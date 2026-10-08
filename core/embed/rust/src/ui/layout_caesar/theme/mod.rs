@@ -66,7 +66,6 @@ pub const MONO_CHUNKS: Chunks = Chunks::new(4, 4);
 include_icon!(ICON_ARM_LEFT, "layout_caesar/res/arm_left.toif"); // 10*6
 include_icon!(ICON_ARM_RIGHT, "layout_caesar/res/arm_right.toif"); // 10*6
 include_icon!(ICON_ARROW_LEFT, "layout_caesar/res/arrow_left.toif"); // 4*7
-include_icon!(ICON_ARROW_LEFT_BIG, "layout_caesar/res/arrow_left_big.toif"); // 8*7
 include_icon!(ICON_ARROW_RIGHT, "layout_caesar/res/arrow_right.toif"); // 4*7
 include_icon!(
     ICON_ARROW_RIGHT_FAT,
@@ -75,18 +74,67 @@ include_icon!(
 include_icon!(ICON_ARROW_UP, "layout_caesar/res/arrow_up.toif"); // 8*4
 include_icon!(ICON_ARROW_DOWN, "layout_caesar/res/arrow_down.toif"); // 7*4
 include_icon!(ICON_ARROW_BACK_UP, "layout_caesar/res/arrow_back_up.toif"); // 8*8
-include_icon!(ICON_BIN, "layout_caesar/res/bin.toif"); // 10*10
 include_icon!(ICON_CANCEL, "layout_caesar/res/cancel.toif"); // 7*7
+include_icon!(ICON_CLOSE, "layout_caesar/res/new_menu/close.toif"); // 8*7
+include_icon!(
+    ICON_CLOSE_SHIFT,
+    "layout_caesar/res/new_menu/close_shift.toif"
+); // 20*7
 include_icon!(ICON_COINJOIN, "layout_caesar/res/coinjoin.toif"); // 12*12
 include_icon!(ICON_DELETE, "layout_caesar/res/delete.toif"); // 9*7
 include_icon!(ICON_DEVICE_NAME, "layout_caesar/res/device_name.toif"); // 116*18
 include_icon!(ICON_EYE, "layout_caesar/res/eye_round.toif"); // 12*7
+include_icon!(
+    ICON_GHOST_BUTTON,
+    "layout_caesar/res/new_menu/ghost_button.toif"
+); // 51*11
 include_icon!(ICON_LOCK, "layout_caesar/res/lock.toif"); // 10*10
 include_icon!(ICON_LOCK_SMALL, "layout_caesar/res/lock_small.toif"); // 6*7
 include_icon!(ICON_LOGO, "layout_caesar/res/logo_22_33.toif"); // 22*33
 include_icon!(ICON_LOGO_EMPTY, "layout_caesar/res/logo_22_33_empty.toif");
+include_icon!(ICON_MENU, "layout_caesar/res/new_menu/menu.toif"); // 6*7
+include_icon!(
+    ICON_MENU_NAV_LEFT,
+    "layout_caesar/res/new_menu/menu_nav_left.toif"
+); // 4*7
+include_icon!(
+    ICON_MENU_NAV_RIGHT,
+    "layout_caesar/res/new_menu/menu_nav_right.toif"
+); // 4*7
+include_icon!(
+    ICON_MENU_SHIFT,
+    "layout_caesar/res/new_menu/menu_shift.toif"
+); // 20*7
+include_icon!(
+    ICON_MID_BUTTON_ARROW_DOWN,
+    "layout_caesar/res/new_menu/mid_button_arrow_down.toif"
+); // 8*4
+include_icon!(
+    ICON_MID_BUTTON_ARROW_UP,
+    "layout_caesar/res/new_menu/mid_button_arrow_up.toif"
+); // 8*4
+include_icon!(
+    ICON_MID_BUTTON_PRESSED_L,
+    "layout_caesar/res/new_menu/mid_button_pressed_l.toif"
+); // 9*5
+include_icon!(
+    ICON_MID_BUTTON_PRESSED_R,
+    "layout_caesar/res/new_menu/mid_button_pressed_r.toif"
+); // 9*5
 include_icon!(ICON_NEXT_PAGE, "layout_caesar/res/next_page.toif"); // 9*8
+include_icon!(
+    ICON_PAGE_SEPARATOR,
+    "layout_caesar/res/new_menu/page_separator.toif"
+); // 3*5
 include_icon!(ICON_PREV_PAGE, "layout_caesar/res/prev_page.toif"); // 8*10
+include_icon!(
+    ICON_RIGHT_BUTTON_ARROW_DOWN,
+    "layout_caesar/res/new_menu/right_button_arrow_down.toif"
+); // 5*3
+include_icon!(
+    ICON_RIGHT_BUTTON_ARROW_UP,
+    "layout_caesar/res/new_menu/right_button_arrow_up.toif"
+); // 5*3
 include_icon!(ICON_SPACE, "layout_caesar/res/space.toif"); // 12*3
 include_icon!(ICON_TICK, "layout_caesar/res/tick.toif"); // 8*6
 include_icon!(ICON_TICK_FAT, "layout_caesar/res/tick_fat.toif"); // 8*6
