@@ -64,6 +64,7 @@
             "rust-src"
             "clippy"
             "rustfmt"
+            "llvm-tools"
           ];
         };
         openocd-stm = pkgs.openocd.overrideAttrs (oldAttrs: {
@@ -103,6 +104,7 @@
               bash
               bloaty # for binsize
               cargo-audit
+              cargo-binutils
               cargo-vet
               check
               cmake # for nRF build
