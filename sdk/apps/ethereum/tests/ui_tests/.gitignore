@@ -1,0 +1,8 @@
+*.png
+*.html
+*.zip
+*.txt
+*.js
+fixtures.suggestion.json
+fixtures.results.json
+reporting/master_cache

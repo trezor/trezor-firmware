@@ -10,6 +10,7 @@ pub const DIGEST_SIZE: usize = ffi::SHA512_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
 pub type Sha512Ctx = SecretContext<ffi::SHA512_CTX>;
+pub type Sha512Guard<'a> = HazardGuard<'a, ffi::SHA512_CTX>;
 
 // SAFETY: SHA512_CTX is valid when zeroed
 unsafe impl ZeroableMemory for ffi::SHA512_CTX {}
@@ -25,7 +26,7 @@ impl ffi::SHA512_CTX {
     }
 }
 
-impl HazardGuard<'_, ffi::SHA512_CTX> {
+impl Sha512Guard<'_> {
     /// Update the SHA512 context with the given data.
     pub fn update(&mut self, data: &[u8]) {
         let data_slice = CSlice::from(data);
@@ -125,6 +126,18 @@ mod test {
         for (data, expected) in SHA512_VECTORS {
             let out_hex = hexdigest(data);
             assert_eq!(out_hex, *expected);
+        }
+    }
+
+    #[test]
+    fn test_guard_reuse() {
+        // reinitializing the context after `finalize` allows reusing it
+        let mut ctx = Sha512Ctx::default();
+        for _ in 0..2 {
+            ctx.hazard_mut().init();
+            let mut guard = Sha512Guard::hazard_new(&mut ctx);
+            guard.update(b"abc");
+            assert_eq!(hex::encode(guard.finalize()), hexdigest(b"abc"));
         }
     }
 }
