@@ -148,11 +148,7 @@ void bg_copy_start_const_out_16(const uint16_t *src, uint16_t *dst, size_t size,
   HAL_DMA_Init(&DMA_Handle);
 
   // No byte exchange here: the frame buffer already holds each pixel in the
-  // native uint16_t layout the panel expects over its 16-bit-wide bus - the
-  // CPU-loop path elsewhere (ISSUE_DATA_BYTE()/ISSUE_PIXEL_DATA() for
-  // DISPLAY_I8080_16BIT_DW) writes that very same value verbatim, with no
-  // swap - so a plain halfword-wide copy is correct as-is. Unlike the 8-bit
-  // MSB-first panel case, there's no byte-order mismatch to fix up here.
+  // native uint16_t layout the panel expects over its 16-bit-wide bus.
   DMA_DataHandlingConfTypeDef data_handling = {0};
   data_handling.DataExchange = DMA_EXCHANGE_NONE;
   data_handling.DataAlignment = DMA_DATA_RIGHTALIGN_ZEROPADDED;
