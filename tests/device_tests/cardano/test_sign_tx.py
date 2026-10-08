@@ -149,10 +149,21 @@ def call_sign_tx(session: Session, parameters, input_flow=None, chunkify: bool =
         )
         memos = [purchase_memo, refund_memo, text_details_memo]
         nonce = misc.get_nonce(session)
+        change_addresses = [
+            cardano.get_address(
+                session,
+                o[0].address_parameters,
+                protocol_magic=parameters["protocol_magic"],
+                network_id=parameters["network_id"],
+            )
+            for o in outputs
+            if o[0].address_parameters is not None
+        ]
         payment_request = make_payment_request(
             recipient_name="trezor.io",
             slip44=1815,
             outputs=[(o[0].amount, o[0].address) for o in outputs],
+            change_addresses=change_addresses,
             memos=memos,
             nonce=nonce,
         )
