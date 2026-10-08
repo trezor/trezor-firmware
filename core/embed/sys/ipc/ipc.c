@@ -166,7 +166,7 @@ bool ipc_try_receive(ipc_message_t *msg) {
 
   // Move read pointer to the next item
   queue->rptr +=
-      sizeof(ipc_queue_item_t) + ALIGN_UP(item->size, IPC_DATA_ALIGNMENT);
+      ALIGN_UP(sizeof(ipc_queue_item_t) + item->size, IPC_DATA_ALIGNMENT);
 
   return true;
 }
