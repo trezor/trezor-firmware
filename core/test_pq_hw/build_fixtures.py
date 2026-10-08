@@ -45,9 +45,9 @@ MODEL = "T3W1"
 DEFAULT_REFS = {
     "pq": "tychovrahe/pq/bootloader12",
     "intermediary": "tychovrahe/pq/intermediary_exp",
-    # Legacy is built from where the intermediary branched off main, so the
-    # baseline is the firmware the intermediary was written against.
-    "legacy": None,
+    # main plus the early-debuglink and boot-wipe-option commits, so a legacy
+    # unit can be unlocked over debuglink at the boot PIN prompt.
+    "legacy": "tychovrahe/debuglink/early",
 }
 
 DEVEL = ["--bootloader-devel"]
@@ -65,7 +65,9 @@ CUT_SYMBOLS = {
     "kernel": ["nrf_update"],
     "secmon": ["boot_image_replace", "boot_ucb_write"],
 }
-# Firmware debuglink exists only under __debug__, hence pyopt off. Optiga is
+# Firmware debuglink exists only under __debug__, hence pyopt off. Storage is
+# kept across reboots: the boot wipe is an opt-in build option (--boot-wipe)
+# on every source branch, so it is simply not passed. Optiga is
 # off: every wallet set-up advances its security counter, which lives in the
 # chip and survives flash-erase, and a high counter slows every later run.
 # Storage then takes its non-Optiga path, so every firmware here (legacy,
@@ -250,15 +252,6 @@ def xtask(ctx: Ctx, *args: str, env: dict[str, str] | None = None) -> None:
 # source edits (applied to the scratch worktrees only, never committed)
 
 
-def edit_keep_storage(wt: Path) -> None:
-    """Debug builds wipe storage on every hardware boot; seed checks need it kept."""
-    replace_once(
-        wt / "core" / "src" / "boot.py",
-        "if __debug__ and not utils.EMULATOR:\n    config.wipe()\n",
-        "# test_pq_hw: storage is kept across reboots in this test build\n",
-    )
-
-
 def edit_stamp_by_variant(wt: Path) -> None:
     """Stamp the variant this build is, and rebuild when the input changes."""
     path = wt / "core" / "embed" / "projects" / "firmware" / "build.rs"
@@ -336,8 +329,10 @@ def edit_versions(
 ) -> Edit:
     """Version fields for a release, so the sets install in a meaningful order.
 
-    fix and min_prev are the BOOTLOADER header's floors, compared against
-    bootloader versions.
+    The boot header version is the release version (the firmware version),
+    stamped by the signer, as are fix and min_prev, which are release numbers
+    read from the firmware's version.h. `bootloader` is the bootloader's own
+    compile-time version (Features, intro), not in the header.
     """
     args = dict(
         firmware=firmware,
@@ -349,19 +344,20 @@ def edit_versions(
 
     def apply(wt: Path) -> None:
         proj = wt / "core" / "embed" / "projects"
+        fw = {}
         if firmware:
-            set_defines(
-                proj / "firmware" / "version.h", version_defines("VERSION", firmware)
-            )
-        bl = {}
-        if bootloader:
-            bl |= version_defines("VERSION", bootloader)
+            fw |= version_defines("VERSION", firmware)
         if fix:
-            bl |= version_defines("FIX_VERSION", fix)
+            fw |= version_defines("FIX_VERSION", fix)
         if min_prev:
-            bl |= version_defines("MIN_PREV_VERSION", min_prev)
-        if bl:
-            set_defines(proj / "bootloader" / "version.h", bl)
+            fw |= version_defines("MIN_PREV_VERSION", min_prev)
+        if fw:
+            set_defines(proj / "firmware" / "version.h", fw)
+        if bootloader:
+            set_defines(
+                proj / "bootloader" / "version.h",
+                version_defines("VERSION", bootloader),
+            )
         if monotonic is not None:
             set_defines(
                 wt / "core" / "embed" / "models" / MODEL / "versions.h",
@@ -651,7 +647,8 @@ def check_release_versions(ctx: Ctx, rel_dir: Path, bundle: dict) -> None:
     exp = ctx.expected()
     bl = bootloader_info(rel_dir / bundle["bootloader"]["file"])
     wanted = {
-        "version": exp.get("bootloader"),
+        # The header carries the release version, not the bootloader's own.
+        "version": exp.get("firmware"),
         "fix_version": exp.get("fix"),
         "min_prev_version": exp.get("min_prev"),
     }
@@ -767,7 +764,6 @@ class Target:
     build: Callable[[Ctx], None]
 
 
-KEEP = source_edit(edit_keep_storage)
 STAMP = source_edit(edit_stamp_by_variant)
 
 
@@ -776,7 +772,7 @@ NRF_B = "nrf-1.1.3-dev-bare.bin"
 
 
 def release(name: str, nrf: str | None = None, **versions) -> Target:
-    edits = [KEEP, edit_versions(**versions)]
+    edits = [edit_versions(**versions)]
     if nrf:
         edits.append(edit_nrf_input(nrf))
     return Target(name, "pq", [], edits, lambda ctx: build_release(ctx, name))
@@ -786,27 +782,28 @@ def release(name: str, nrf: str | None = None, **versions) -> Target:
 # -> intermediary 2.13.1 -> A -> B; the floor releases sit above B.
 TARGETS = [
     Target("vendorheader-btc", "legacy", [], [], build_vendorheader_btc),
-    Target("legacy", "legacy", ["vendorheader-btc"], [KEEP], build_legacy),
+    Target("legacy", "legacy", ["vendorheader-btc"], [], build_legacy),
     release("release-A", firmware="2.14.0", bootloader="2.1.19"),
     Target(
         "intermediary",
         "intermediary",
         ["release-A", "vendorheader-btc"],
-        [KEEP, STAMP, edit_versions(firmware="2.13.1")],
+        [STAMP, edit_versions(firmware="2.13.1")],
         build_intermediary,
     ),
     release("release-B", nrf=NRF_B, firmware="2.14.1", bootloader="2.1.20"),
-    # Seed is kept only by releases at or above 2.1.20: B-fix -> A wipes, -> B keeps.
+    # Floors are release numbers. Seed is kept only by releases at or above
+    # 2.14.1: B-fix -> A wipes, -> B keeps.
     release(
-        "release-B-fix", nrf=NRF_B, firmware="2.14.2", bootloader="2.1.20", fix="2.1.20"
+        "release-B-fix", nrf=NRF_B, firmware="2.14.2", bootloader="2.1.20", fix="2.14.1"
     ),
-    # Installs only over a bootloader >= 2.1.20: refused from A, accepted from B.
+    # Installs only over a release >= 2.14.1: refused from A, accepted from B.
     release(
         "release-C-minprev",
         nrf=NRF_B,
         firmware="2.14.3",
         bootloader="2.1.21",
-        min_prev="2.1.20",
+        min_prev="2.14.1",
     ),
     # Burns bootloader monotonic 4; afterwards A and B are refused. flash-erase resets.
     release(
@@ -862,9 +859,6 @@ def main() -> int:
             p.error(f"--ref {item}: expected one of {list(refs)}=REF")
         refs[k] = v
     labels = dict(refs)
-    if refs["legacy"] is None:
-        refs["legacy"] = git("merge-base", refs["intermediary"], "main")
-        labels["legacy"] = f"merge-base({refs['intermediary']}, main)"
 
     try:
         commits = {k: resolve(v) for k, v in refs.items()}

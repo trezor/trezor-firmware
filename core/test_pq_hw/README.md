@@ -11,7 +11,7 @@ source branches, each in its own persistent worktree under `work/`:
 
 | source | default ref | builds |
 | --- | --- | --- |
-| `legacy` | merge-base of the intermediary and `main` | boardloader, bootloader, universal and btc-only firmware |
+| `legacy` | `tychovrahe/debuglink/early` (main + early debuglink) | boardloader, bootloader, universal and btc-only firmware |
 | `pq` | `tychovrahe/pq/bootloader12` | releases A, B, B-fix, C-minprev, E-mono |
 | `intermediary` | `tychovrahe/pq/intermediary_exp` | universal and btc-only intermediaries, embedding release A |
 
@@ -33,9 +33,10 @@ Run it inside the nix-shell with the repo `.venv` present. Logs are in
 
 Applied to the scratch worktrees only:
 
-- **Storage kept across reboots.** Firmware debuglink exists only under
-  `__debug__`, and `boot.py` wipes storage on every hardware boot of such a
-  build, which would defeat every seed check.
+- **Storage kept across reboots** without an edit: the debug boot wipe is the
+  opt-in `--boot-wipe` build option on every source branch, and the builder
+  does not pass it. All three branches also start USB and debuglink before the
+  boot PIN prompt, so a PIN-locked unit can be driven over debuglink.
 - **Optiga disabled** in every firmware build (`--disable-optiga`): each wallet
   set-up advances its security counter, which lives in the chip and survives
   `flash-erase`. Storage then takes its non-Optiga path in all of legacy,
@@ -44,7 +45,10 @@ Applied to the scratch worktrees only:
 - **Intermediary stamp per variant.** The intermediary stamps `UNIVERSAL`
   unconditionally; a btc-only unit would lose its seed. Skipped once the branch
   fixes it.
-- **Versions**, so the sets install in a meaningful order:
+- **Versions**, so the sets install in a meaningful order. The boot header
+  `version` is the release version (= firmware version), stamped by the
+  signer; the floors are release numbers from the firmware `version.h`. The
+  bootloader column is the bootloader's own compile-time version (Features):
 
 | set | firmware | bootloader | floor |
 | --- | --- | --- | --- |
@@ -52,8 +56,8 @@ Applied to the scratch worktrees only:
 | intermediary | 2.13.1 | embeds A | |
 | release-A | 2.14.0 | 2.1.19 (monotonic 3) | |
 | release-B | 2.14.1 | 2.1.20 | |
-| release-B-fix | 2.14.2 | 2.1.20 | fix_version 2.1.20 |
-| release-C-minprev | 2.14.3 | 2.1.21 | min_prev_version 2.1.20 |
+| release-B-fix | 2.14.2 | 2.1.20 | fix_version 2.14.1 |
+| release-C-minprev | 2.14.3 | 2.1.21 | min_prev_version 2.14.1 |
 | release-E-mono | 2.14.4 | 2.1.22 | monotonic 4 |
 
 Releases from B on release a second nRF build, frozen as a fixture input

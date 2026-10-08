@@ -14,8 +14,8 @@ pytestmark = pytest.mark.hw
 
 
 def test_fix_version_wipes_below(unit: Unit, fx: Fixtures) -> None:
-    """Installs release A over B-fix, whose fix_version floor (2.1.20) is above
-    A's bootloader. The install must still go ahead, but only after a
+    """Installs release A (2.14.0) over B-fix, whose fix_version floor (release
+    2.14.1) is above A. The install must still go ahead, but only after a
     confirm, and the seed must be erased. [VR-03]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-B-fix", "universal")
     ctx = flows.enter_bootloader(unit, ctx)
@@ -26,7 +26,7 @@ def test_fix_version_wipes_below(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_fix_version_keeps_at(unit: Unit, fx: Fixtures) -> None:
-    """Installs release B over B-fix: B's bootloader is exactly at the
+    """Installs release B over B-fix: B (2.14.1) is exactly at the
     fix_version floor, so the seed must be kept. [VR-03]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-B-fix", "universal")
     seed = flows.seed_fingerprint(unit, ctx)
@@ -37,8 +37,8 @@ def test_fix_version_keeps_at(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_min_prev_refused_below(unit: Unit, fx: Fixtures) -> None:
-    """Offers release C, which only installs over a bootloader of 2.1.20 or
-    newer, to a unit on A (2.1.19). It must be refused before any confirm
+    """Offers release C, which only installs over release 2.14.1 or newer, to a
+    unit on A (2.14.0). It must be refused before any confirm
     screen, leaving A and the seed untouched. [VR-04]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
     seed = flows.seed_fingerprint(unit, ctx)
@@ -55,7 +55,7 @@ def test_min_prev_refused_below(unit: Unit, fx: Fixtures) -> None:
 
 
 def test_min_prev_accepted_at(unit: Unit, fx: Fixtures) -> None:
-    """Offers release C to a unit on B (2.1.20, exactly at C's floor): it must
+    """Offers release C to a unit on B (2.14.1, exactly at C's floor): it must
     install and keep the seed. [VR-04]"""
     ctx = flows.baseline_pq_installed(unit, fx, "release-B", "universal")
     seed = flows.seed_fingerprint(unit, ctx)
