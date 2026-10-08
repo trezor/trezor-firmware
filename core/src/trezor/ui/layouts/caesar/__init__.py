@@ -330,76 +330,66 @@ async def show_address(
     br_code: ButtonRequestType = ButtonRequestType.Address,
     chunkify: bool = False,
 ) -> None:
+    from trezor.ui.layouts.menu import Menu, MenuLeaf, cancel_leaf, confirm_with_menu
+
     mismatch_title = mismatch_title or TR.addr_mismatch__mismatch  # def_arg
-    send_button_request = True
     if title is None:
         # Will be a marquee in case of multisig
         title = TR.address__title_receive_address
         if multisig_index is not None:
             title = f"{title} (MULTISIG)"  # TODO translation?
 
-    while True:
-        with trezorui_api.confirm_address(
-            title=title,
-            address=address,
-            address_label=None,
-            info_button=True,
-            chunkify=chunkify,
+    def xpub_title(i: int) -> str:
+        # Will be marquee (cannot fit one line)
+        result = TR.address__title_multisig_xpub_template.format(i + 1)
+        result += (
+            TR.address__title_yours
+            if i == multisig_index
+            else TR.address__title_cosigner
+        )
+        return result
+
+    account_info: list[StrPropertyType] = []
+    if account:
+        account_info.append((with_colon(TR.words__account), account, False))
+    if path:
+        account_info.append(
+            (with_colon(TR.address_details__derivation_path), path, False)
+        )
+    account_info.extend((xpub_title(i), xpub, True) for i, xpub in enumerate(xpubs))
+
+    async def show_qr_code() -> None:
+        with trezorui_api.show_address_details(
+            qr_title="",  # unused on this model
+            address=address if address_qr is None else address_qr,
+            case_sensitive=case_sensitive,
+            details_title="",  # unused on this model
+            account=None,  # shown in the account info
+            path=None,  # shown in the account info
+            xpubs=(),  # shown in the account info
         ) as layout:
-            result = await interact(
-                layout,
-                br_name if send_button_request else None,
-                br_code,
-                raise_on_cancel=None,
-            )
-        send_button_request = False
+            await interact(layout, None, raise_on_cancel=None)
 
-        # User confirmed with middle button.
-        if result is CONFIRMED:
-            break
+    menu_items: list[MenuLeaf[None]] = [MenuLeaf(TR.address__qr_code, show_qr_code)]
+    if account_info:
+        menu_items.append(
+            create_info_menu_leaf(TR.address_details__account_info, account_info)
+        )
+    menu_items.append(
+        cancel_leaf(
+            TR.buttons__cancel,
+            confirm=lambda: trezorui_api.show_mismatch(title=mismatch_title),
+        )
+    )
 
-        # User pressed right button, go to address details.
-        elif result is INFO:
-
-            def xpub_title(i: int) -> str:
-                # Will be marquee (cannot fit one line)
-                result = TR.address__title_multisig_xpub_template.format(i + 1)
-                result += (
-                    TR.address__title_yours
-                    if i == multisig_index
-                    else TR.address__title_cosigner
-                )
-                return result
-
-            with trezorui_api.show_address_details(
-                qr_title="",  # unused on this model
-                address=address if address_qr is None else address_qr,
-                case_sensitive=case_sensitive,
-                details_title="",  # unused on this model
-                account=(with_colon(TR.words__account), account) if account else None,
-                path=(
-                    (with_colon(TR.address_details__derivation_path), path)
-                    if path
-                    else None
-                ),
-                xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
-            ) as layout:
-                result = await interact(layout, None, raise_on_cancel=None)
-            # Can only go back from the address details.
-            assert result is CANCELLED
-
-        # User pressed left cancel button, show mismatch dialogue.
-        else:
-            with trezorui_api.show_mismatch(title=mismatch_title) as layout:
-                result = await interact(
-                    layout,
-                    None,
-                    raise_on_cancel=None,
-                )
-                assert result in (CONFIRMED, CANCELLED)
-                # Right button aborts action, left goes back to showing address.
-                if result is CONFIRMED:
-                    raise ActionCancelled
+    with trezorui_api.confirm_address(
+        title=title,
+        address=address,
+        address_label=None,
+        info_button=True,
+        chunkify=chunkify,
+    ) as layout:
+        await confirm_with_menu(layout, Menu(menu_items), br_name, br_code)
 
 
 async def show_pubkey(

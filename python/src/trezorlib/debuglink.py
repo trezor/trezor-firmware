@@ -488,6 +488,14 @@ class LayoutContent(UnstructuredJSONReader):
     def has_menu(self) -> bool:
         return bool(self.find_unique_value_by_key("has_menu", False, bool))
 
+    def has_left_menu(self) -> bool:
+        """Whether the menu is opened by the left button (Caesar)."""
+        return bool(self.find_unique_value_by_key("left_menu", False, bool))
+
+    def danger_menu_items(self) -> list[bool]:
+        """Which menu items are dangerous, e.g. cancelling the flow (Caesar)."""
+        return self.find_unique_value_by_key("danger_items", [], list)
+
     def has_flow_menu(self) -> bool:
         return bool(self.find_unique_value_by_key("has_flow_menu", False, bool))
 
@@ -725,6 +733,36 @@ class DebugLink:
                 ),
                 wait=False,
             )
+
+    @contextmanager
+    def hold_button(self, button: messages.DebugPhysicalButton) -> t.Iterator[None]:
+        """Hold a physical button while the block is executed."""
+        self._decision(
+            messages.DebugLinkDecision(
+                physical_button=button,
+                touch_event_type=DebugTouchEventType.TOUCH_START,
+            ),
+            wait=False,
+        )
+        try:
+            yield
+        finally:
+            self._decision(
+                messages.DebugLinkDecision(
+                    physical_button=button,
+                    touch_event_type=DebugTouchEventType.TOUCH_END,
+                ),
+                wait=False,
+            )
+
+    def press_right_with_shift(self, count: int = 1) -> None:
+        """Press the right button `count` times while holding the left button as
+        "Shift" (Caesar), which triggers its secondary function, e.g. scrolling up."""
+        with self.hold_button(messages.DebugPhysicalButton.LEFT_BTN):
+            # wait for "Shift" to engage (200 ms in the firmware)
+            time.sleep(0.3)
+            for _ in range(count):
+                self.press_right()
 
     def synchronize_at(
         self, layout_text: str | list[str], timeout: float = 5
@@ -1130,7 +1168,10 @@ class DebugUI:
         if layout.has_menu():
             is_menu = True
             if self.debuglink.layout_type is LayoutType.Caesar:
-                self.debuglink.press_right()
+                if layout.has_left_menu():
+                    self.debuglink.press_left()
+                else:
+                    self.debuglink.press_right()
             else:
                 self.debuglink.click(self.debuglink.screen_buttons.menu())
 
@@ -1154,11 +1195,13 @@ class DebugUI:
                 raise UnexpectedMenuError(menu_layout.json_str)
         elif self.debuglink.layout_type is LayoutType.Caesar:
             assert gen is None, "Menu visiting callback not yet supported on Caesar"
-            menu_items_count = self.debuglink.read_layout().page_count()
-            for _ in range(menu_items_count):
-                self.debuglink.press_middle()
-                # paginate through all properties and confirm
-                self._paginate_and_confirm(None)
+            menu_layout = self.debuglink.read_layout()
+            danger_items = menu_layout.danger_menu_items()
+            for i in range(menu_layout.page_count()):
+                if i >= len(danger_items) or not danger_items[i]:
+                    self.debuglink.press_middle()
+                    # paginate through all properties and confirm
+                    self._paginate_and_confirm(None)
                 # paginate to next menu item
                 self.debuglink.press_right()
 
