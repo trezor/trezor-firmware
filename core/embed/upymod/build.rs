@@ -60,6 +60,10 @@ fn main() -> Result<()> {
             lib.add_define("DISABLE_ANIMATION", Some("1"));
         }
 
+        if cfg!(feature = "boot_wipe") {
+            lib.add_define("BOOT_WIPE", Some("1"));
+        }
+
         if cfg!(feature = "log_stack_usage") {
             lib.add_define("LOG_STACK_USAGE", Some("1"));
         }
