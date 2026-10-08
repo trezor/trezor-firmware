@@ -41,9 +41,13 @@ static mp_obj_t mod_trezorio_ipc_send(size_t n_args, const mp_obj_t* args) {
   mp_buffer_info_t bufinfo = {0};
   mp_get_buffer_raise(data_obj, &bufinfo, MP_BUFFER_READ);
 
-  systask_id_t remote = (systask_id_t)mp_obj_get_int(remote_obj);
+  mp_int_t remote_int = mp_obj_get_int(remote_obj);
   mp_int_t service = mp_obj_get_int(service_obj);
   mp_int_t message_id = mp_obj_get_int(message_id_obj);
+  if (remote_int < 0 || remote_int >= SYSTASK_MAX_TASKS) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid remote task ID."));
+  }
+  systask_id_t remote = (systask_id_t)remote_int;
   if (service < 0 || service > UINT16_MAX || message_id < 0 ||
       message_id > UINT16_MAX) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid service or message ID."));
