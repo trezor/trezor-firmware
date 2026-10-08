@@ -117,7 +117,7 @@ void bg_copy_start_const_out_8(const uint8_t *src, uint8_t *dst, size_t size,
 }
 
 void bg_copy_start_const_out_16(const uint16_t *src, uint16_t *dst, size_t size,
-                                bg_copy_callback_t callback) {
+                                bool swap_bytes, bg_copy_callback_t callback) {
   uint32_t data_to_send = size > MAX_DATA_SIZE ? MAX_DATA_SIZE : size;
   dma_transfer_remaining = size;
   dma_data_transferred = 0;
@@ -147,10 +147,12 @@ void bg_copy_start_const_out_16(const uint16_t *src, uint16_t *dst, size_t size,
   DMA_Handle.Init.Mode = DMA_NORMAL;
   HAL_DMA_Init(&DMA_Handle);
 
-  // No byte exchange here: the frame buffer already holds each pixel in the
-  // native uint16_t layout the panel expects over its 16-bit-wide bus.
+  // Optionally swap the bytes of each halfword. On an 8-bit FMC bus, the FMC
+  // splits each 16-bit write into two byte cycles (lower address first), so
+  // swapping makes the high byte of each pixel go out first.
   DMA_DataHandlingConfTypeDef data_handling = {0};
-  data_handling.DataExchange = DMA_EXCHANGE_NONE;
+  data_handling.DataExchange =
+      swap_bytes ? DMA_EXCHANGE_DEST_BYTE : DMA_EXCHANGE_NONE;
   data_handling.DataAlignment = DMA_DATA_RIGHTALIGN_ZEROPADDED;
   HAL_DMAEx_ConfigDataHandling(&DMA_Handle, &data_handling);
 

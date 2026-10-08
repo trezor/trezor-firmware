@@ -142,16 +142,17 @@ static void start_fb_copy(void) {
 #if defined(DISPLAY_I8080_16BIT_DW)
       bg_copy_start_const_out_16((const uint16_t *)get_fb_ptr(fb_idx),
                                  (uint16_t *)DISPLAY_DATA_ADDRESS,
-                                 PHYSICAL_FRAME_BUFFER_SIZE, bg_copy_callback);
+                                 PHYSICAL_FRAME_BUFFER_SIZE, false,
+                                 bg_copy_callback);
 #elif defined(DISPLAY_I8080_8BIT_DW) && defined(DISPLAY_I8080_8BIT_MSB_FIRST)
-      uint8_t *fb_ptr = get_fb_ptr(fb_idx);
-      mpu_set_active_fb(fb_ptr, PHYSICAL_FRAME_BUFFER_SIZE);
-      uint16_t *fb = (uint16_t *)fb_ptr;
-      for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
-        ISSUE_PIXEL_DATA(fb[i]);
-      }
-      mpu_set_active_fb(NULL, 0);
-      bg_copy_callback();
+      // 16-bit DMA writes with byte exchange; the 8-bit FMC splits each
+      // halfword into two bus cycles (lower address first), so the high byte
+      // of each pixel goes out first. D/C must not be on FMC_A0.
+      _Static_assert(DISPLAY_MEMORY_PIN > 0, "D/C must not be on FMC_A0");
+      bg_copy_start_const_out_16((const uint16_t *)get_fb_ptr(fb_idx),
+                                 (uint16_t *)DISPLAY_DATA_ADDRESS,
+                                 PHYSICAL_FRAME_BUFFER_SIZE, true,
+                                 bg_copy_callback);
 #else
       bg_copy_start_const_out_8(get_fb_ptr(fb_idx),
                                 (uint8_t *)DISPLAY_DATA_ADDRESS,

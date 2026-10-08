@@ -27,19 +27,25 @@ void bg_copy_start_const_out_8(const uint8_t *src, uint8_t *dst, size_t size,
 
 /**
  * Performs data copy from src to dst in the background, 16 bits at a time.
- * Used for a native 16-bit-wide i8080 bus, where each pixel is written to
- * the panel in a single atomic bus cycle and no byte reordering is needed
- * (the frame buffer already holds pixels in the layout the panel expects).
  * The destination is constant, meaning the address is not incremented.
  * Ensure the transfer completion by calling bg_copy_wait.
+ *
+ * Without byte swapping, it is used for a native 16-bit-wide i8080 bus, where
+ * each pixel is written to the panel in a single bus cycle.
+ *
+ * With byte swapping, it is used for an 8-bit-wide i8080 bus with a panel
+ * expecting the high byte of each pixel first. The DMA swaps the bytes of
+ * each halfword and the FMC splits every 16-bit write into two 8-bit bus
+ * cycles (lower address first), so the high byte goes out first.
  *
  * @param src source data address (16-bit aligned)
  * @param dst destination data address (16-bit aligned)
  * @param size size of data to be transferred in bytes
+ * @param swap_bytes swap the two bytes of each halfword before writing
  * @param callback optional callback to be called when the transfer is complete
  */
 void bg_copy_start_const_out_16(const uint16_t *src, uint16_t *dst, size_t size,
-                                bg_copy_callback_t callback);
+                                bool swap_bytes, bg_copy_callback_t callback);
 
 /**
  * Waits for the data transfer completion
