@@ -21,18 +21,19 @@ unsafe impl GlobalAlloc for TrackedAllocator {
         //    not support custom alignment.
         //  - `raw` is guaranteed to stay valid as long as `m_tracked_free()` is not
         //    called.
-        // EXCEPTION: Returns null instead of raising.
+        // EXCEPTION:
+        // - Terminates with a fatal error if allocation fails (better UX, instead of an
+        //   internal Rust stdlib panic).
         let raw: *mut c_void = unsafe { ffi::m_tracked_calloc(1, size) };
-        if !raw.is_null() {
-            #[cfg(feature = "debug")]
-            log::trace!(
-                "{:?} = {} : +{}",
-                raw,
-                TOTAL.fetch_add(size, Ordering::Relaxed),
-                size
-            );
-            ensure!(raw.is_aligned_to(layout.align()), "Unaligned allocation");
-        }
+        ensure!(!raw.is_null(), "Allocation failed");
+        #[cfg(feature = "debug")]
+        log::trace!(
+            "{:?} = {} : +{}",
+            raw,
+            TOTAL.fetch_add(size, Ordering::Relaxed),
+            size
+        );
+        ensure!(raw.is_aligned_to(layout.align()), "Unaligned allocation");
         raw as _
     }
     unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
