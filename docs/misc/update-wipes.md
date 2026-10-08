@@ -42,10 +42,19 @@ The device gets **wiped on every reboot**:
 ----
 
 [1] Firmware contains a _fix_version_, which is the lowest version to which that
-particular firmware can be downgraded without wiping storage. This is typically used in
-case the internal storage format is changed. For example, in version 2.2.0, we have
-introduced Wipe Code, which introduced some changes to storage that the older firmwares
-(e.g. 2.1.8) would not understand. It can also be used to enforce security fixes.
+particular firmware can be downgraded without wiping storage. It is bumped in two cases:
+
+- The internal storage format changes in a way that older firmware would not understand.
+  For example, version 2.2.0 introduced Wipe Code, which changed the storage format in a
+  way that older firmwares (e.g. 2.1.8) could not handle.
+- The firmware fixes a vulnerability that an attacker in possession of the device could
+  exploit against data in the device's storage area without further interaction from the
+  owner, e.g. a side channel leaking the seed. Whether the attacker also needs to know
+  the PIN is irrelevant. Vulnerabilities that depend on the owner continuing to use the
+  downgraded device do not warrant a bump, because a wipe would only make the owner
+  recover the seed onto the same vulnerable firmware.
+
+A fix_version bump is accompanied by a bump of the minor version.
 
 [2] The most common example is if you have a device with the official firmware
 (SatoshiLabs) and you install the unofficial (UNSIGNED) firmware -> the device gets
