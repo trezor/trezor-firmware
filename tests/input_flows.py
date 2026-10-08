@@ -4064,8 +4064,19 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
         assert TR.backup__new_wallet_created in self.text_content()
+        assert self.debug.read_layout().title() == TR.words__title_success
+        # second page and back with "Shift"
         self.debug.press_right()
-        self.debug.press_no()
+        layout = self.debug.read_layout()
+        assert layout.title() == TR.backup__title_backup_wallet
+        assert TR.backup__recover_anytime in layout.text_content()
+        self.debug.press_right_with_shift()
+        layout = self.debug.read_layout()
+        assert layout.title() == TR.words__title_success
+        assert TR.backup__new_wallet_created in layout.text_content()
+        # skip from the menu
+        self.debug.press_left()
+        self.debug.button_actions.navigate_to_menu_item(0)
         yield  # Confirm skip backup
         assert TR.backup__want_to_skip in self.text_content()
         self.debug.press_no()
