@@ -62,8 +62,7 @@ fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
         .header("inc/rtl/error_handling.h")
         .allowlist_type("ts_t")
         .must_use_type("ts_t")
-        .default_macro_constant_type(bindgen::MacroTypeVariation::Signed)
-        .allowlist_item("E(INVAL|NOMEM|NOENT|BUSY|TIMEDOUT|IO|BADMSG|ACCES|EXIST)")
+        .prepend_enum_name(false)
         .allowlist_function("ts_string");
     Ok(builder)
 }

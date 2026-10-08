@@ -14,7 +14,7 @@ impl TStatus {
     }
 
     pub const fn is_ok(&self) -> bool {
-        self.code() == 0
+        self.code() == ffi::TS_CODE_OK
     }
 
     pub fn ok(&self) -> Result<(), Error> {
@@ -41,19 +41,19 @@ impl TStatus {
 #[repr(i32)]
 pub enum Error {
     // Standard errno
-    EINVAL = ffi::EINVAL,
-    ENOMEM = ffi::ENOMEM,
-    ENOENT = ffi::ENOENT,
-    EBUSY = ffi::EBUSY,
-    ETIMEDOUT = ffi::ETIMEDOUT,
-    EIO = ffi::EIO,
-    EBADMSG = ffi::EBADMSG,
-    EACCES = ffi::EACCES,
-    EEXIST = ffi::EEXIST,
+    EINVAL = ffi::TS_CODE_EINVAL,
+    ENOMEM = ffi::TS_CODE_ENOMEM,
+    ENOENT = ffi::TS_CODE_ENOENT,
+    EBUSY = ffi::TS_CODE_EBUSY,
+    ETIMEDOUT = ffi::TS_CODE_ETIMEDOUT,
+    EIO = ffi::TS_CODE_EIO,
+    EBADMSG = ffi::TS_CODE_EBADMSG,
+    EACCES = ffi::TS_CODE_EACCES,
+    EEXIST = ffi::TS_CODE_EEXIST,
     // Trezor-specific
-    ENOINIT = 2000,  //< Not initialized
-    ENOEN = 2001,    //< Not enabled
-    ENOSTATE = 2002, //< Wrong state
+    ENOINIT = ffi::TS_CODE_ENOINIT,
+    ENOEN = ffi::TS_CODE_ENOEN,
+    ENOSTATE = ffi::TS_CODE_ENOSTATE,
 }
 
 impl Error {
