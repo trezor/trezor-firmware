@@ -31,10 +31,16 @@
 // Display interface-mode select pins (IM0-IM2).
 #define DISPLAY_IM0_PORT GPIOF
 #define DISPLAY_IM0_PIN GPIO_PIN_11
+// DISPLAY_IM0_VAL:
+// - DISPLAY_I8080_16BIT_DW => GPIO_PIN_SET
+// - DISPLAY_I8080_8BIT_DW => GPIO_PIN_RESET
+#define DISPLAY_IM0_VAL GPIO_PIN_SET
 #define DISPLAY_IM1_PORT GPIOF
 #define DISPLAY_IM1_PIN GPIO_PIN_14
+#define DISPLAY_IM1_VAL GPIO_PIN_RESET
 #define DISPLAY_IM2_PORT GPIOG
 #define DISPLAY_IM2_PIN GPIO_PIN_1
+#define DISPLAY_IM2_VAL GPIO_PIN_RESET
 
 // Backlight: four LED strings driven as synchronized active-low PWM by
 // TIM3 CH1-CH4 on PE3-PE6 (cathodes via 33R), with a common boost supply.

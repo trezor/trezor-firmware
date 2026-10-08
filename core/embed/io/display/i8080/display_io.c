@@ -32,6 +32,19 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
 
 #ifdef KERNEL_MODE
 
+static inline void display_io_IM_init(GPIO_TypeDef *port, uint16_t pin,
+                                      GPIO_PinState val) {
+  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Alternate = 0;
+
+  GPIO_InitStructure.Pin = pin;
+  HAL_GPIO_WritePin(port, pin, val);
+  HAL_GPIO_Init(port, &GPIO_InitStructure);
+}
+
 void display_io_init_gpio(void) {
   // init peripherals
   __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -55,31 +68,16 @@ void display_io_init_gpio(void) {
 #endif
 
 #ifdef DISPLAY_IM0_PIN
-  // Interface-mode select pins: sampled by the controller only at reset, so
-  // must reach their target level before the reset pulse below is issued.
-  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Alternate = 0;
+  display_io_IM_init(DISPLAY_IM0_PORT, DISPLAY_IM0_PIN, DISPLAY_IM0_VAL);
+#endif  // DISPLAY_IM0_PIN
 
-  GPIO_InitStructure.Pin = DISPLAY_IM0_PIN;
-#ifdef DISPLAY_I8080_16BIT_DW
-  HAL_GPIO_WritePin(DISPLAY_IM0_PORT, DISPLAY_IM0_PIN,
-                    GPIO_PIN_SET);  // IM0=1: 16-bit bus interface I
-#else
-  HAL_GPIO_WritePin(DISPLAY_IM0_PORT, DISPLAY_IM0_PIN,
-                    GPIO_PIN_RESET);  // IM0=0: 8-bit bus interface I
-#endif
-  HAL_GPIO_Init(DISPLAY_IM0_PORT, &GPIO_InitStructure);
+#ifdef DISPLAY_IM1_PIN
+  display_io_IM_init(DISPLAY_IM1_PORT, DISPLAY_IM1_PIN, DISPLAY_IM1_VAL);
+#endif  // DISPLAY_IM1_PIN
 
-  GPIO_InitStructure.Pin = DISPLAY_IM1_PIN;
-  HAL_GPIO_WritePin(DISPLAY_IM1_PORT, DISPLAY_IM1_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(DISPLAY_IM1_PORT, &GPIO_InitStructure);
-
-  GPIO_InitStructure.Pin = DISPLAY_IM2_PIN;
-  HAL_GPIO_WritePin(DISPLAY_IM2_PORT, DISPLAY_IM2_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(DISPLAY_IM2_PORT, &GPIO_InitStructure);
-#endif
+#ifdef DISPLAY_IM2_PIN
+  display_io_IM_init(DISPLAY_IM2_PORT, DISPLAY_IM2_PIN, DISPLAY_IM2_VAL);
+#endif  // DISPLAY_IM2_PIN
 
   // LCD_RST
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
