@@ -61,7 +61,7 @@ pub use input_methods::{
     wordlist::{WordlistEntry, WordlistType},
 };
 #[cfg(feature = "translations")]
-pub use page::ButtonPage;
+pub use page::{ButtonPage, MenuNav};
 pub use progress::Progress;
 pub use scrollbar::ScrollBar;
 #[cfg(feature = "translations")]
