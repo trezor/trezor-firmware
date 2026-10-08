@@ -34,12 +34,11 @@ _SERVICE_PROGRESS = const(5)
 _SERVICE_CRYPTO = const(6)
 
 # A UI message id packs an operation and a screen handle, so that a layout can
-# outlive the answer it gave. The old UI API never opens a screen and always
-# sends `_UI_OP_ONE_SHOT` with handle 0, so it is unaffected.
+# outlive the answer it gave. Mirrors `OP_*` in the SDK's `traits::ui`.
 _UI_HANDLE_BITS = const(12)
 _UI_HANDLE_MASK = const((1 << 12) - 1)
 
-_UI_OP_ONE_SHOT = const(0)  # build, show, forget
+_UI_OP_ONCE = const(0)  # build, show, forget
 _UI_OP_OPEN = const(1)  # build, show, keep under the handle
 _UI_OP_REOPEN = const(2)  # show what is already held, without rebuilding
 _UI_OP_CLOSE = const(3)  # drop what is held, show nothing
@@ -245,7 +244,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                     # waiting on a screen that never existed, so the app stops.
                     die(DataError(f"Cannot show the app's screen: {e}"))
                 layout, result = await _show_new_layout(layout_obj, br_code, br_name)
-                if op != _UI_OP_ONE_SHOT:
+                if op != _UI_OP_ONCE:
                     if handle not in screens and len(screens) >= _UI_MAX_SCREENS:
                         die(DataError("Too many open screens"))
                     screens[handle] = layout

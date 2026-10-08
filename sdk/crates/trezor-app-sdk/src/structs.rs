@@ -3,11 +3,8 @@
 //! These types are serialized via [`rkyv`] and sent over IPC between the app
 //! and the Core firmware task.
 //!
-//! **Prefer the higher-level `ui`/`crypto`/`progress` modules and each type's
-//! `new()` constructor over building these directly.** Fields are `pub`
-//! despite that, because Core reads them straight off the archived (rkyv)
-//! form with no wrapper API of its own — that's the one legitimate reader
-//! these fields need to stay public for.
+//! Apps use `modui` and `crypto`, not these. Fields are `pub` because core
+//! reads them straight off the archived (rkyv) form.
 
 use rkyv::boxed::{ArchivedBox, BoxResolver};
 use rkyv::rancor::Fallible;
@@ -47,30 +44,6 @@ impl<'a> Property<'a> {
     /// A fact whose value is ordinary text.
     pub fn plain(key: &'a str, value: &'a str) -> Self {
         Self::new(key, value, false)
-    }
-}
-
-/// A string with an optional monospace flag, used in UI list views.
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
-pub struct StrExt<'a> {
-    pub key: StrSlice<'a>,
-    pub mono: bool,
-}
-
-impl<'a> StrExt<'a> {
-    pub fn new(key: &'a str, mono: bool) -> Self {
-        Self {
-            key: key.into(),
-            mono,
-        }
-    }
-
-    pub fn mono(key: &'a str) -> Self {
-        Self::new(key, true)
-    }
-
-    pub fn plain(key: &'a str) -> Self {
-        Self::new(key, false)
     }
 }
 
@@ -239,40 +212,6 @@ impl<'a> SelectMenu<'a> {
     }
 }
 
-/// A trade confirmation screen, sent as [`TrezorUiEnum::ConfirmTrade`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmTrade<'a> {
-    pub title: StrSlice<'a>,
-    pub subtitle: StrSlice<'a>,
-    pub buy: StrSlice<'a>,
-    pub sell: Option<StrSlice<'a>>,
-    pub back_button: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ConfirmTrade<'a> {
-    pub fn new(
-        title: &'a str,
-        subtitle: &'a str,
-        buy: &'a str,
-        sell: Option<&'a str>,
-        back_button: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> ConfirmTrade<'a> {
-        ConfirmTrade {
-            title: title.into(),
-            subtitle: subtitle.into(),
-            buy: buy.into(),
-            sell: sell.map(|s| s.into()),
-            back_button,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
 /// An action confirmation screen, sent as [`TrezorUiEnum::ConfirmAction`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmAction<'a> {
@@ -420,131 +359,6 @@ impl<'a> ConfirmValue<'a> {
     }
 }
 
-/// An intro screen shown before [`ConfirmValue`], sent as
-/// [`TrezorUiEnum::ConfirmValueIntro`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmValueIntro<'a> {
-    pub title: StrSlice<'a>,
-    pub value: StrSlice<'a>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub verb: Option<StrSlice<'a>>,
-    pub verb_cancel: Option<StrSlice<'a>>,
-    pub verb_view_all: Option<StrSlice<'a>>,
-    pub hold: bool,
-    pub chunkify: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ConfirmValueIntro<'a> {
-    pub fn new(
-        title: &'a str,
-        value: &'a str,
-        subtitle: Option<&'a str>,
-        verb: Option<&'a str>,
-        verb_cancel: Option<&'a str>,
-        verb_view_all: Option<&'a str>,
-        hold: bool,
-        chunkify: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            value: value.into(),
-            subtitle: subtitle.map(|s| s.into()),
-            verb: verb.map(|s| s.into()),
-            verb_cancel: verb_cancel.map(|s| s.into()),
-            verb_view_all: verb_view_all.map(|s| s.into()),
-            hold,
-            chunkify,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A warning screen, sent as [`TrezorUiEnum::ShowWarning`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowWarning<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub verb: StrSlice<'a>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-    pub allow_cancel: bool,
-    pub danger: bool,
-}
-
-impl<'a> ShowWarning<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        verb: &'a str,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        allow_cancel: bool,
-        danger: bool,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            verb: verb.into(),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-            allow_cancel,
-            danger,
-        }
-    }
-}
-
-/// A mismatch warning screen, sent as [`TrezorUiEnum::ShowMismatch`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowMismatch<'a> {
-    pub title: StrSlice<'a>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowMismatch<'a> {
-    pub fn new(title: &'a str, br_code: i32) -> Self {
-        Self {
-            title: title.into(),
-            br_code,
-        }
-    }
-}
-
-/// A danger warning screen, sent as [`TrezorUiEnum::ShowDanger`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowDanger<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-    pub verb_cancel: Option<StrSlice<'a>>,
-    pub menu_title: Option<StrSlice<'a>>,
-}
-
-impl<'a> ShowDanger<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        verb_cancel: Option<&'a str>,
-        menu_title: Option<&'a str>,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-            verb_cancel: verb_cancel.map(|s| s.into()),
-            menu_title: menu_title.map(|s| s.into()),
-        }
-    }
-}
-
 /// What kind of news a notice is.
 ///
 /// The only thing the app decides about a notice. The screen, its button words
@@ -568,6 +382,8 @@ pub enum Severity {
     /// the call does not wait for the person to dismiss it — the host's
     /// response should not wait on an acknowledgement. What the screen does
     /// after the call returns is the model's business.
+    ///
+    /// WIP: bolt and caesar wait for a tap.
     Done,
     /// Something to read before going on. Nothing is at stake.
     Info,
@@ -589,6 +405,7 @@ pub struct ShowNotice<'a> {
     /// The screen leads to the caller's menu of extras.
     pub external_menu: bool,
     /// The notice must offer a way to back out. How is the model's.
+    /// WIP: ignored by every model.
     pub cancel: bool,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
@@ -611,68 +428,6 @@ impl<'a> ShowNotice<'a> {
             external_menu,
             cancel,
             br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A success screen, sent as [`TrezorUiEnum::ShowSuccess`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowSuccess<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub button: StrSlice<'a>,
-    pub duration_ms: Option<u32>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowSuccess<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        button: &'a str,
-        duration_ms: Option<u32>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            button: button.into(),
-            duration_ms,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A number-entry screen, sent as [`TrezorUiEnum::RequestNumber`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct RequestNumber<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub initial: u32,
-    pub min: u32,
-    pub max: u32,
-    pub br_code: i32,
-}
-
-impl<'a> RequestNumber<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        initial: u32,
-        min: u32,
-        max: u32,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            initial,
-            min,
-            max,
             br_code,
         }
     }
@@ -742,267 +497,50 @@ impl<'a> ShowProperties<'a> {
     }
 }
 
-/// A public key display screen, sent as [`TrezorUiEnum::ShowPublicKey`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowPublicKey<'a> {
-    pub pubkey: StrSlice<'a>,
-    pub title: StrSlice<'a>,
-    pub account: Option<StrSlice<'a>>,
-    pub path: Option<StrSlice<'a>>,
-    pub warning: Option<StrSlice<'a>>,
-    pub br_name: StrSlice<'a>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowPublicKey<'a> {
-    pub fn new(
-        pubkey: &'a str,
-        title: &'a str,
-        account: Option<&'a str>,
-        path: Option<&'a str>,
-        warning: Option<&'a str>,
-        br_name: &'a str,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            pubkey: pubkey.into(),
-            title: title.into(),
-            account: account.map(|s| s.into()),
-            path: path.map(|s| s.into()),
-            warning: warning.map(|s| s.into()),
-            br_name: br_name.into(),
-            br_code,
-        }
-    }
-}
-
-/// An info screen with a cancel option, sent as
-/// [`TrezorUiEnum::ShowInfoWithCancel`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowInfoWithCancel<'a> {
-    pub title: StrSlice<'a>,
-    pub items: Slice<'a, Property<'a>>,
-    pub chunkify: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowInfoWithCancel<'a> {
-    pub fn new(
-        title: &'a str,
-        items: &'a [Property<'a>],
-        chunkify: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            items: items.into(),
-            chunkify,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-/// A confirmation screen with an extra info button, sent as
-/// [`TrezorUiEnum::ConfirmWithInfo`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmWithInfo<'a> {
-    pub title: StrSlice<'a>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub items: Slice<'a, StrExt<'a>>,
-    pub verb: StrSlice<'a>,
-    pub verb_info: Option<StrSlice<'a>>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl ConfirmWithInfo<'_> {
-    pub fn new<'a>(
-        title: &'a str,
-        subtitle: Option<&'a str>,
-        items: &'a [StrExt<'a>],
-        verb: &'a str,
-        verb_info: Option<&'a str>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> ConfirmWithInfo<'a> {
-        ConfirmWithInfo {
-            title: title.into(),
-            subtitle: subtitle.map(|s| s.into()),
-            items: items.into(),
-            verb: verb.into(),
-            verb_info: verb_info.map(|s| s.into()),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// An address display screen, sent as [`TrezorUiEnum::ShowAddress`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowAddress<'a> {
-    pub address: StrSlice<'a>,
-    pub address_qr: StrSlice<'a>,
-    pub title: Option<StrSlice<'a>>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub account: Option<StrSlice<'a>>,
-    pub path: Option<StrSlice<'a>>,
-    pub xpubs: Slice<'a, Property<'a>>,
-    pub chunkify: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-    pub case_sensitive: bool,
-}
-
-impl ShowAddress<'_> {
-    pub fn new<'a>(
-        address: &'a str,
-        address_qr: &'a str,
-        title: Option<&'a str>,
-        subtitle: Option<&'a str>,
-        account: Option<&'a str>,
-        path: Option<&'a str>,
-        xpubs: &'a [Property<'a>],
-        chunkify: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        case_sensitive: bool,
-    ) -> ShowAddress<'a> {
-        ShowAddress {
-            address: address.into(),
-            address_qr: address_qr.into(),
-            title: title.map(|s| s.into()),
-            subtitle: subtitle.map(|s| s.into()),
-            account: account.map(|s| s.into()),
-            path: path.map(|s| s.into()),
-            xpubs: xpubs.into(),
-            chunkify,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-            case_sensitive,
-        }
-    }
-}
-
-/// All UI screens that can be requested from the app via IPC.
-///
-/// Each variant corresponds to one screen type in the Trezor UI. Constructed
-/// by the higher-level `ui` module — do not construct variants directly.
+/// One UI request, as it crosses IPC: one variant per `modui` block, plus the
+/// extras' menu and screen. Built by `core/embed/api` from the `traits::ui`
+/// mirrors.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorUiEnum<'a> {
     SelectMenu(SelectMenu<'a>),
-    ConfirmTrade(ConfirmTrade<'a>),
     ConfirmAction(ConfirmAction<'a>),
     ConfirmSummary(ConfirmSummary<'a>),
     ConfirmValue(ConfirmValue<'a>),
-    ConfirmValueIntro(ConfirmValueIntro<'a>),
-    ShowWarning(ShowWarning<'a>),
-    ShowMismatch(ShowMismatch<'a>),
-    ShowDanger(ShowDanger<'a>),
-    ShowSuccess(ShowSuccess<'a>),
-    RequestNumber(RequestNumber<'a>),
     ConfirmProperties(ConfirmProperties<'a>),
     ShowProperties(ShowProperties<'a>),
-    ShowPublicKey(ShowPublicKey<'a>),
-    ShowInfoWithCancel(ShowInfoWithCancel<'a>),
-    ConfirmWithInfo(ConfirmWithInfo<'a>),
-    ShowAddress(ShowAddress<'a>),
     ShowNotice(ShowNotice<'a>),
 }
 
-/// What the person did with one screen.
+/// What the person did with one screen. Written by core, read by `modui`;
+/// apps never see it.
 ///
-/// # Who uses this
-///
-/// - **Written by core**, from whatever the Python layout returned. Core is
-///   the only producer; an app never constructs one.
-/// - **Read by the app SDK**, which decodes it and hands it to the block that
-///   sent the request, which answers what the library consumes itself and
-///   passes the rest on to the app.
-/// - **Crosses IPC**, so it is the one vocabulary both sides must agree on.
-///
-/// Variants say what the person *did*, rather than naming the button that did it.
-///
-/// It is still wider than any single request's contract — `Choice` only means
-/// something in answer to a list, `Backward` only where a screen offered it —
-/// so a caller that cannot use a reply treats it as a protocol violation. The
-/// fix for that is pairing replies to requests, which this enum does not do.
-///
-/// An answer is an ordinary value, easy to ignore by accident — hence
-/// `#[must_use]`. Apps never see it: `modui` reads it into what each kind of
-/// block answers.
+/// Variants say what the person *did*, not which button did it. Wider than any
+/// one request's contract (`Choice` only answers a list), so a reply a caller
+/// cannot use is a protocol violation.
 #[must_use]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum UiReply {
-    /// The person pressed the screen's affirmative, having seen all of it.
+    /// Yes, having seen all of it.
     ///
-    /// The plain yes. Distinct from [`UiReply::ConfirmedAll`], which is a yes
-    /// to content the person skipped past, and from [`UiReply::Forward`], which
-    /// is not an answer at all but a request for the next part.
-    ///
-    /// Scaffolding: until `Forward` has a producer, this *also* arrives from
-    /// every chunk of a chunked block, so a caller mid-content cannot take it
-    /// at face value. Only a chunked block in the app SDK has to care.
+    /// WIP: until `Forward` has a producer, every chunk of `confirm::data`
+    /// answers this too.
     Confirmed,
-
-    /// The person refused, or left without answering.
-    ///
-    /// One variant for both because the device cannot tell them apart and the
-    /// caller should not act differently: either way the block did not get its
-    /// yes. Distinct from [`UiReply::Backward`], which asks to go back a step
-    /// rather than abandon the whole thing.
-    ///
-    /// This is an ordinary answer, not a failure. It becomes an `Err` only
-    /// where a caller says it cannot proceed without confirmation.
+    /// Refused, or left without answering. `modui` turns it into
+    /// `Err(Error::Cancelled)`.
     Cancelled,
-
-    /// The person asked for whatever else the screen offers.
-    ///
-    /// The extras: the details, the account, the way out. Lateral — it asks
-    /// for *different* content, where [`UiReply::Forward`] asks for more of
-    /// the same. Both can be on one screen at once, which is why they are two
-    /// variants and not one.
-    ///
-    /// Scaffolding: on a chunk's screen with no extras this currently means the
-    /// skip-ahead instead, because such a screen has one secondary button and
-    /// the app SDK picks what it does. [`UiReply::ConfirmedAll`] is what that
-    /// becomes once core owns the buttons.
+    /// The extras: the screen's menu button. Lateral, unlike `Forward`.
     WantsMore,
-
-    /// The person picked the entry at this index.
-    ///
-    /// Only meaningful in answer to a list; any other screen treats it as a
-    /// protocol violation. The index is into the list *as sent*, so the sender
-    /// resolves it — core never learns what an entry meant.
+    /// Picked the list entry at this index, as sent.
     Choice(u16),
-
-    /// The person wants what comes after this, and core cannot supply it.
+    /// Paged past the end of the content core holds; the sender has more.
     ///
-    /// Core pages within the content it was given, silently, as far as that
-    /// goes. This says it reached the end of that and there is more beyond —
-    /// so it is *not* the same as [`UiReply::Confirmed`], which says the person
-    /// finished the whole thing. That distinction is the point: it is what
-    /// stops "next" and "done" arriving as the same answer.
+    /// WIP: no producer yet.
     Forward,
-
-    /// The person wants what came before this, and core cannot supply it.
-    ///
-    /// The mirror of [`UiReply::Forward`]: an earlier chunk than core holds, or
-    /// an earlier step of a flow. Which of those it is follows from what the
-    /// caller was doing, since only it knows whether it is mid-content.
+    /// Paged back before the content core holds, or back a step.
     Backward,
-
-    /// The person accepted the rest without reading it.
+    /// Accepted the rest without reading it.
     ///
-    /// Distinct from [`UiReply::Confirmed`], which is the person reaching the end
-    /// and agreeing: this is the shortcut past whatever remains. Distinct from
-    /// [`UiReply::WantsMore`] for the reason it exists at all — the skip-ahead
-    /// used to arrive as that, because a chunk's screen has one secondary button
-    /// and the app SDK was choosing what it meant.
-    ///
-    /// WIP: no producer yet, for that same reason. Core cannot offer both the
-    /// extras and the shortcut until it owns the screen's buttons.
+    /// WIP: no producer yet.
     ConfirmedAll,
 }
 
@@ -1121,10 +659,10 @@ impl ufmt::uDebug for TrezorCryptoResult {
 
 /// Progress bar operations that can be requested from the app via IPC.
 ///
-/// Constructed by the higher-level `progress` module — do not construct variants directly.
+/// Built by `core/embed/api`; apps use `modui::progress`.
 ///
 /// The three variants are one lifecycle: `Init` opens the progress, `Update`
-/// moves its fill — a percent, which the app SDK computes; core only draws —
+/// moves its fill — 0 to 1000, which the app SDK computes; core only draws —
 /// and `End` closes it. The app SDK pairs them with a guard that sends `End`
 /// on drop, so an app cannot leave a progress on screen for work that
 /// stopped; see the `modui` progress docs.

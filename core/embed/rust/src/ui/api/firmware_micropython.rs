@@ -15,7 +15,7 @@ use rkyv::{
 };
 #[cfg(feature = "app_loading")]
 use trezor_app_sdk::structs::{
-    Property, Severity as WireSeverity, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum,
+    Property, Severity as WireSeverity, Slice, StrSlice, TrezorProgressEnum, TrezorUiEnum,
     UiReply,
 };
 
@@ -1303,19 +1303,6 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 .map(|s| (unwrap!(StrBuffer::alloc(s.0.as_ref())).into(), s.1))
         }
 
-        fn obj_from_strextlist(archived: &Archived<Slice<StrExt>>) -> Obj {
-            let slice = archived.as_ref();
-            let mut list = unwrap!(List::with_capacity(slice.len()));
-            for item in slice {
-                let obj = unwrap!(Obj::try_from((
-                    unwrap!(Obj::try_from(item.key.as_ref())),
-                    unwrap!(Obj::try_from(item.mono))
-                )));
-                unwrap!(list.append(obj));
-            }
-            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
-        }
-
         fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Obj {
             let slice = archived.as_ref();
             let mut list = unwrap!(List::with_capacity(slice.len()));
@@ -1334,8 +1321,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         // Access the archived data zero-copy using safe Deref access
         match archived {
         Archived::<TrezorUiEnum>::SelectMenu(m) => {
-            // The app decides how many items there are, so too many is its
-            // error to get back, not a reason to stop the device.
+            // The app decides how many items there are, so too many stops the
+            // app, not the device.
             let mut vec = heapless::Vec::<SelectMenuItem, MAX_MENU_ITEMS>::new();
             for item in m.items.as_ref() {
                 vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard))
@@ -1347,17 +1334,6 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 m.br_name.as_ref(),
             )?
         }
-        Archived::<TrezorUiEnum>::ConfirmTrade(m) => wrap(
-            ModelUI::confirm_trade(
-                tstr(&m.title),
-                tstr(&m.subtitle),
-                tstr_opt(&m.sell),
-                tstr(&m.buy),
-                m.back_button,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
         Archived::<TrezorUiEnum>::ConfirmAction(m) => wrap(
             ModelUI::confirm_action(
                 tstr(&m.title),
@@ -1378,33 +1354,6 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             m.br_code.to_native(),
             m.br_name.as_ref(),
         )?,
-        Archived::<TrezorUiEnum>::ShowInfoWithCancel(m) => wrap(
-            ModelUI::show_info_with_cancel(
-                tstr(&m.title),
-                obj_from_proplist((&m.items).into()),
-                false,
-                m.chunkify,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmValueIntro(m) => (
-            ModelUI::confirm_value_intro(
-                tstr(&m.title),
-                m.value.as_ref().try_into()?,
-                tstr_opt(&m.subtitle),
-                tstr_opt(&m.verb),
-                tstr_opt(&m.verb_cancel),
-                tstr_opt(&m.verb_view_all),
-                m.hold,
-                m.chunkify,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
         Archived::<TrezorUiEnum>::ConfirmSummary(m) => wrap(
             ModelUI::confirm_summary(
                 tstr_opt(&m.amount),
@@ -1447,51 +1396,6 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             m.br_code.to_native(),
             m.br_name.as_ref(),
         )?,
-        Archived::<TrezorUiEnum>::ShowWarning(m) => (
-            ModelUI::show_warning(
-                Some(tstr(&m.title)),
-                tstr(&m.verb),
-                tstr(&m.content),
-                TString::empty(),
-                m.allow_cancel,
-                m.danger,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::ShowMismatch(m) => wrap(
-            ModelUI::show_mismatch(tstr(&m.title))?,
-            m.br_code.to_native(),
-            None,
-        )?,
-        Archived::<TrezorUiEnum>::ShowDanger(m) => wrap(
-            ModelUI::show_danger(
-                tstr(&m.title),
-                tstr(&m.content),
-                TString::empty(),
-                tstr_opt(&m.menu_title),
-                tstr_opt(&m.verb_cancel),
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowSuccess(m) => (
-            ModelUI::show_success(
-                tstr(&m.title),
-                tstr(&m.button),
-                tstr(&m.content),
-                false,
-                m.duration_ms.as_ref().map(|d| d.to_native()).unwrap_or(0),
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
         Archived::<TrezorUiEnum>::ShowNotice(m) => {
             // The app said what kind of news this is; the model decides what
             // that looks like. This only translates the wire's word for it.
@@ -1517,18 +1421,6 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 },
             )
         }
-        Archived::<TrezorUiEnum>::RequestNumber(m) => wrap(
-            ModelUI::request_number(
-                tstr(&m.title),
-                m.initial.into(),
-                m.min.into(),
-                m.max.into(),
-                Some(tstr(&m.content)),
-                Some(|_| TString::empty()),
-            )?,
-            m.br_code.to_native(),
-            None,
-        )?,
         Archived::<TrezorUiEnum>::ConfirmProperties(m) => wrap(
             ModelUI::confirm_properties(
                 tstr(&m.title),
@@ -1549,63 +1441,6 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             )?,
             m.br_code.to_native(),
             m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowPublicKey(m) => {
-            let account = tstr_opt(&m.account);
-            let pubkey = tstr(&m.pubkey);
-            wrap(
-                ModelUI::flow_get_pubkey(
-                    pubkey,
-                    tstr(&m.title),
-                    account,
-                    tstr_opt(&m.warning),
-                    pubkey,
-                    account,
-                    tstr_opt(&m.path),
-                    11,
-                    tstr(&m.br_name),
-                )?,
-                m.br_code.to_native(),
-                None,
-            )?
-        }
-        Archived::<TrezorUiEnum>::ConfirmWithInfo(m) => (
-            ModelUI::confirm_with_info(
-                tstr(&m.title),
-                tstr_opt(&m.subtitle),
-                obj_from_strextlist(&m.items),
-                tstr(&m.verb),
-                tstr_opt(&m.verb_info),
-                None,
-                false,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::ShowAddress(m) => wrap(
-            ModelUI::flow_get_address(
-                tstr(&m.address),
-                tstr_opt(&m.title).unwrap_or("Receive".into()),
-                tstr_opt(&m.subtitle),
-                None,
-                None,
-                m.chunkify,
-                tstr(&m.address_qr),
-                m.case_sensitive,
-                tstr_opt(&m.account),
-                tstr_opt(&m.path),
-                obj_from_proplist(&m.xpubs),
-                // The flow announces itself, so the step's name goes to it and
-                // not to `wrap`: announcing it here too would be a second
-                // ButtonRequest for one screen.
-                u16::try_from(m.br_code.to_native()).map_err(|_| Error::TypeError)?,
-                tstr_opt(&m.br_name).unwrap_or("show_address".into()),
-            )?,
-            m.br_code.to_native(),
-            None,
         )?,
     };
 
