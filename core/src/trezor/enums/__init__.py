@@ -26,6 +26,7 @@ if TYPE_CHECKING:
         ThpUnallocatedSession = 16
         InvalidProtocol = 17
         InProgress = 19
+        AppError = 20
         FirmwareError = 99
 
     class ButtonRequestType(IntEnum):
