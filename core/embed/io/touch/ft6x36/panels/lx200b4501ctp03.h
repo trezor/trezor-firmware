@@ -24,11 +24,5 @@
 // Performs touch coordinates correction needed for a specific panel.
 // Input parameters x, y represent the original touch coordinates.
 // Output parameters x_new, y_new represent the corrected touch coordinates.
-//
-// For LX200B4501CTP03A/B this currently reuses the LX154A2422CPT23 formula
-// (shift X coordinate towards the edge of the screen, proportionally to the
-// distance from the center of the screen) as a starting point, split into its
-// own file/feature so it can be tuned independently once real touch
-// measurements are available for this panel's own touch glass.
 void lx200b4501ctp03_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
                                       uint16_t *y_new);
