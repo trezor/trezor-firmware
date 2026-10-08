@@ -458,6 +458,22 @@ nfc_status_t nfc_deactivate_stm(void) {
   return NFC_OK;
 }
 
+nfc_status_t nfc_read_regs(uint8_t *regs) {
+  st25_driver_t *drv = &g_st25_driver;
+
+  if (!drv->initialized) {
+    return NFC_NOT_INITIALIZED;
+  }
+
+  ReturnCode err =
+      st25r500ReadMultipleRegisters(ST25R500_REG_OPERATION, regs, 4);
+  if (err != RFAL_ERR_NONE) {
+    return NFC_ERROR;
+  }
+
+  return NFC_OK;
+}
+
 nfc_status_t nfc_get_event(nfc_event_t *event) {
   st25_driver_t *drv = &g_st25_driver;
 
@@ -676,30 +692,7 @@ nfc_status_t nfc_get_rssi(uint16_t *rssi) {
   return (ret == RFAL_ERR_NONE) ? NFC_OK : NFC_ERROR;
 }
 
-nfc_status_t nfc_get_wu_i_q(int8_t *wu_i, int8_t *wu_q) {
-  st25_driver_t *drv = &g_st25_driver;
-
-  if (!drv->initialized) {
-    return NFC_NOT_INITIALIZED;
-  }
-
-  ReturnCode ret = st25r500ClearCalibration();
-  if (ret != RFAL_ERR_NONE) {
-    return NFC_ERROR;
-  }
-
-  ret = st25r500MeasureIQ(wu_i, wu_q);
-
-  // // The wake-up measurement is a chip level measurement of the antenna
-  // // surroundings, accepted in both ready and power-down mode. It is used to
-  // // detect an approaching card, so it must not require an activated device.
-  // // Either output pointer may be NULL if only one channel is of interest.
-  // ret = st25r500MeasureWU(wu_i, wu_q);
-
-  return (ret == RFAL_ERR_NONE) ? NFC_OK : NFC_ERROR;
-}
-
-nfc_status_t nfc_get_sense_rf(uint8_t *sense_adc) {
+nfc_status_t nfc_get_sense_rf(int8_t *sense_adc) {
   st25_driver_t *drv = &g_st25_driver;
 
   if (!drv->initialized) {
@@ -715,15 +708,10 @@ nfc_status_t nfc_get_sense_rf(uint8_t *sense_adc) {
   }
 
   ReturnCode ret = st25r500ExecuteCommandAndGetResult(
-      ST25R500_CMD_SENSE_RF, ST25R500_REG_SENSE_DISPLAY, 2 /* ms */, sense_adc);
+      ST25R500_CMD_SENSE_RF, ST25R500_REG_SENSE_DISPLAY, 10 /* ms */,
+      (uint8_t *)sense_adc);
 
   return (ret == RFAL_ERR_NONE) ? NFC_OK : NFC_ERROR;
-
-  // // Sense RF display register holds the result of the last sense RF
-  // // direct command (combination of the I and Q components).
-  // ret = st25r500ReadRegister(ST25R500_REG_SENSE_DISPLAY, sense_adc);
-
-  // return (ret == RFAL_ERR_NONE) ? NFC_OK : NFC_ERROR;
 }
 
 nfc_status_t nfc_get_tx_en(bool *tx_en) {
@@ -768,7 +756,47 @@ nfc_status_t nfc_amp_phase_calibration(uint8_t *amp, uint8_t *phase) {
   return (ret == RFAL_ERR_NONE) ? NFC_OK : NFC_ERROR;
 }
 
-// TODO: from datasheet: 5.15.22 Trigger diagnostic measurement
+nfc_status_t nfc_measure_vdd_dr(float *res) {
+  st25_driver_t *drv = &g_st25_driver;
+
+  if (!drv->initialized) {
+    return NFC_NOT_INITIALIZED;
+  }
+
+  if (!st25r500IsOscOn()) {
+    return NFC_ERROR;
+  }
+
+  uint16_t rawResult = 0;
+
+  ReturnCode ret = st25r500DiagMeasure(ST25R500_DIAG_MEAS_VDD_DR, &rawResult);
+  if (res != NULL) {
+    *res = (float)rawResult * 11.7f;  // Convert to mV, see datasheet
+  }
+
+  return (ret == RFAL_ERR_NONE) ? NFC_OK : NFC_ERROR;
+}
+
+nfc_status_t nfc_measure_vdd_tx(float *res) {
+  st25_driver_t *drv = &g_st25_driver;
+
+  if (!drv->initialized) {
+    return NFC_NOT_INITIALIZED;
+  }
+
+  if (!st25r500IsOscOn()) {
+    return NFC_ERROR;
+  }
+
+  uint16_t rawResult = 0;
+
+  ReturnCode ret = st25r500DiagMeasure(ST25R500_DIAG_MEAS_VDD_TX, &rawResult);
+  if (res != NULL) {
+    *res = (float)rawResult * 11.7f;  // Convert to mV, see datasheet
+  }
+
+  return (ret == RFAL_ERR_NONE) ? NFC_OK : NFC_ERROR;
+}
 
 HAL_StatusTypeDef nfc_spi_transmit_receive(const uint8_t *tx_data,
                                            uint8_t *rx_data, uint16_t length) {
