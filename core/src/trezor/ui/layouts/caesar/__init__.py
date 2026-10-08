@@ -152,11 +152,20 @@ async def show_wallet_created_success() -> None:
 
 
 async def prompt_backup() -> bool:
+    from trezor.ui.layouts.menu import Menu, MenuLeaf, interact_with_menu
+
     br_name = "backup_device"
     br_code = ButtonRequestType.ResetDevice
 
+    async def skip() -> bool:
+        return True
+
+    # skipping is in the menu
+    menu = Menu([MenuLeaf(TR.buttons__skip, skip)])
     with trezorui_api.prompt_backup() as layout:
-        result = await interact(layout, br_name, br_code, raise_on_cancel=None)
+        result = await interact_with_menu(
+            layout, menu, br_name, br_code, raise_on_cancel=None
+        )
     if result is CONFIRMED:
         return True
 
