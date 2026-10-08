@@ -1,0 +1,172 @@
+name: SDK
+
+# Release-gating checks for the `trezor-app-tool` crate
+# (sdk/crates/trezor-app-tool), the build/test/format driver for modular Trezor
+# apps (invoked from sdk/apps as `cargo app-tool <cmd>`, or via `xtask apps <cmd>`
+# from core/embed/xtask, which just spawns it), and the `trezor-app-build` crate
+# (sdk/crates/trezor-app-build), the build-script helpers the apps use for
+# protobuf, translation and linker setup.
+# See sdk/doc/development.md for background on their roles.
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize  # branch head update
+      - labeled
+    paths:
+      - 'sdk/**'
+      - '.github/workflows/sdk.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '17 23 * * *'  # every day @ 23:17
+  push:
+    branches:
+      - 'release/**'
+      - 'secfix/**'
+    paths:
+      - 'sdk/**'
+
+# cancel any previous runs on the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read        # for actions/checkout
+
+jobs:
+  app_tool_fmt_check:
+    name: trezor-app-tool / Format check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_tool_fmt_check"
+
+  app_tool_check:
+    name: trezor-app-tool / Cargo check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_tool_check"
+
+  app_tool_clippy:
+    name: trezor-app-tool / Clippy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_tool_clippy"
+
+  app_tool_unit_tests:
+    name: trezor-app-tool / Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_tool_test"
+
+  app_tool_doc_build:
+    name: trezor-app-tool / Doc build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_tool_doc"
+
+  app_tool_deps_check:
+    name: trezor-app-tool / Dependency check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_tool_audit"
+      - run: nix-shell --run "make app_tool_vet"
+
+  app_build_fmt_check:
+    name: trezor-app-build / Format check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_build_fmt_check"
+
+  app_build_check:
+    name: trezor-app-build / Cargo check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_build_check"
+
+  app_build_clippy:
+    name: trezor-app-build / Clippy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_build_clippy"
+
+  app_build_unit_tests:
+    name: trezor-app-build / Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_build_test"
+
+  app_build_doc_build:
+    name: trezor-app-build / Doc build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_build_doc"
+
+  app_build_deps_check:
+    name: trezor-app-build / Dependency check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make app_build_audit"
+      - run: nix-shell --run "make app_build_vet"
