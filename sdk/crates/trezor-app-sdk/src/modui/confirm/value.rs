@@ -9,8 +9,8 @@
 //! - bolt (T2T1): no menu, so the extras cannot be reached.
 
 use crate::Result;
-use crate::modui::internal::{BR_CODE_OTHER, call, decide};
-use crate::modui::{Commitment, Decision, ExtraItem};
+use crate::modui::internal::{BR_CODE_OTHER, answer, call};
+use crate::modui::{Commitment, ExtraItem};
 use crate::traits::ui::ConfirmValue as WireConfirmValue;
 
 // ============================================================================
@@ -125,11 +125,10 @@ impl<'a> Value<'a> {
 ///         Commitment::Step,
 ///         "app/send/recipient",
 ///         &[],
-///     ))?
-///     .confirmed()
+///     ))
 /// }
 /// ```
-pub fn value(params: Value<'_>) -> Result<Decision> {
+pub fn value(params: Value<'_>) -> Result<()> {
     let footer = params.footer.map(|f| match f {
         Footer::Hint(text) => (text, false),
         Footer::Warning(text) => (text, true),
@@ -152,5 +151,5 @@ pub fn value(params: Value<'_>) -> Result<Decision> {
         footer,
     );
 
-    decide(call(&request, params.extras, Some(params.br))?)
+    answer(call(&request, params.extras, Some(params.br))?)
 }

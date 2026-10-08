@@ -8,8 +8,8 @@
 //! - bolt (T2T1): no menu, so the extras cannot be reached.
 
 use crate::Result;
-use crate::modui::{Decision, ExtraItem};
-use crate::modui::internal::{BR_CODE_OTHER, call, decide};
+use crate::modui::ExtraItem;
+use crate::modui::internal::{BR_CODE_OTHER, answer, call};
 use crate::traits::ui::ConfirmSummary as WireConfirmSummary;
 
 // ============================================================================
@@ -59,7 +59,7 @@ impl<'a> Summary<'a> {
 
 /// Shows the closing summary of a transaction, and waits for the answer.
 ///
-/// Usually the last screen before signing: `Confirmed` is the person's yes to
+/// Usually the last screen before signing: `Ok` is the person's yes to
 /// the whole transaction. The person can always refuse it, so the block takes
 /// no `cancel`.
 ///
@@ -82,11 +82,10 @@ impl<'a> Summary<'a> {
 ///         Some(("Fee limit", fee)),
 ///         "app/summary",
 ///         &extras,
-///     ))?
-///     .confirmed()
+///     ))
 /// }
 /// ```
-pub fn summary(params: Summary<'_>) -> Result<Decision> {
+pub fn summary(params: Summary<'_>) -> Result<()> {
     let request = WireConfirmSummary::new(
         params.title,
         params.amount.map(|(_, value)| value),
@@ -107,5 +106,5 @@ pub fn summary(params: Summary<'_>) -> Result<Decision> {
         BR_CODE_OTHER,             // legacy field; see the constant
     );
 
-    decide(call(&request, params.extras, Some(params.br))?)
+    answer(call(&request, params.extras, Some(params.br))?)
 }

@@ -32,8 +32,6 @@ pub(crate) fn confirm_message_hash(hash: &[u8]) -> Result<()> {
         "tron/message_hash",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()
 }
 
@@ -66,8 +64,6 @@ pub(crate) fn confirm_typed_data_final() -> Result<()> {
         "tron/typed_data",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()
 }
 
@@ -83,8 +79,6 @@ pub(crate) fn confirm_empty_typed_message() -> Result<()> {
         "tron/message",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()
 }
 
@@ -123,8 +117,6 @@ pub fn confirm_note(note: &str) -> Result<()> {
         "tron/note",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()
 }
 
@@ -146,8 +138,6 @@ pub fn confirm_freeze_operations(
         "tron/freeze/owner",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()?;
 
     let amount = format_trx_amount(balance);
@@ -168,8 +158,6 @@ pub fn confirm_freeze_operations(
         "tron/freeze",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()
 }
 
@@ -316,8 +304,6 @@ pub fn confirm_claim(
             "tron/claim/owner",
             &[],
         ))
-        .c()?
-        .confirmed()
         .c()?;
     }
 
@@ -368,8 +354,6 @@ pub fn confirm_tron_claim(
         "tron/claim",
         extras,
     ))
-    .c()?
-    .confirmed()
     .c()
 }
 
@@ -397,8 +381,6 @@ fn confirm_tron_summary(
         "tron/summary",
         extras,
     ))
-    .c()?
-    .confirmed()
     .c()
 }
 
@@ -428,8 +410,6 @@ fn confirm_tron_send(
         "tron/send",
         &extras,
     ))
-    .c()?
-    .confirmed()
     .c()?;
 
     confirm_tron_summary(Some(tr!("words__send")), amount, fee, Some(account_details))
@@ -453,8 +433,6 @@ pub fn confirm_tron_transfer(
         "tron/transfer",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()?;
 
     modui::confirm::properties(confirm::Properties::new(
@@ -468,8 +446,6 @@ pub fn confirm_tron_transfer(
         "tron/transfer/amount",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()?;
 
     modui::confirm::summary(confirm::Summary::new(
@@ -479,8 +455,6 @@ pub fn confirm_tron_transfer(
         "tron/transfer/summary",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()
 }
 
@@ -515,8 +489,6 @@ fn confirm_tron_approve(
         "tron/approve",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()?;
 
     modui::confirm::value(confirm::Value::new(
@@ -530,8 +502,6 @@ fn confirm_tron_approve(
         "tron/approve/spender",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()?;
 
     modui::confirm::properties(confirm::Properties::new(
@@ -545,8 +515,6 @@ fn confirm_tron_approve(
         "tron/approve/amount",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()?;
 
     modui::confirm::summary(confirm::Summary::new(
@@ -556,8 +524,6 @@ fn confirm_tron_approve(
         "tron/approve/summary",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()
 }
 
@@ -570,8 +536,6 @@ pub fn confirm_tron_voting<'a>(items: &[Property<'a>]) -> Result<()> {
         "tron/vote",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()
 }
 
@@ -590,8 +554,6 @@ fn confirm_ethereum_unknown_contract_warning() -> Result<()> {
         &[],
         true,
     ))
-    .c()?
-    .confirmed()
     .c()
 }
 
@@ -613,8 +575,6 @@ pub fn confirm_unknown_smart_contract(
         "tron/contract",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()?;
 
     // The app hands over the raw calldata and gets one outcome; the hex, how it
@@ -626,8 +586,6 @@ pub fn confirm_unknown_smart_contract(
         "tron/contract/data",
         &[],
     ))
-    .c()?
-    .confirmed()
     .c()?;
 
     confirm_tron_summary(

@@ -11,7 +11,7 @@
 //! call returning one outcome, and `internal::data` handles the rest.
 
 use crate::Result;
-use crate::modui::{Decision, ExtraItem, internal};
+use crate::modui::{ExtraItem, internal};
 
 // ============================================================================
 // Data types
@@ -63,7 +63,7 @@ impl<'a> Data<'a> {
 /// bytes are shown as hex, a screen at a time, and a blob of any length is
 /// still one call with one outcome: the app never sees how it was split.
 ///
-/// `Confirmed` means the person went through all of it: there is no way to
+/// `Ok` means the person went through all of it: there is no way to
 /// accept the rest unread.
 ///
 /// # Errors
@@ -76,12 +76,11 @@ impl<'a> Data<'a> {
 /// use trezor_app_sdk::modui::confirm;
 ///
 /// fn confirm_calldata(calldata: &[u8]) -> trezor_app_sdk::Result<()> {
-///     confirm::data(confirm::Data::new("Transaction data", calldata, None, "app/data", &[]))?
-///         .confirmed()
+///     confirm::data(confirm::Data::new("Transaction data", calldata, None, "app/data", &[]))
 /// }
 /// ```
-pub fn data(params: Data<'_>) -> Result<Decision> {
-    internal::decide(internal::data::confirm(&internal::data::Params {
+pub fn data(params: Data<'_>) -> Result<()> {
+    internal::answer(internal::data::confirm(&internal::data::Params {
         title: params.title,
         data: params.data,
         subtitle: params.subtitle,

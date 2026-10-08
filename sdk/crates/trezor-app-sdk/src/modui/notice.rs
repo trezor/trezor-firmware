@@ -16,8 +16,8 @@
 //!   severities, and bolt and caesar, still draw without one.
 
 use crate::Result;
-use crate::modui::internal::{BR_CODE_OTHER, call, decide};
-use crate::modui::{Decision, ExtraItem};
+use crate::modui::ExtraItem;
+use crate::modui::internal::{BR_CODE_OTHER, answer, call};
 pub use crate::traits::ui::Severity;
 use crate::traits::ui::ShowNotice as WireShowNotice;
 
@@ -82,12 +82,11 @@ impl<'a> Notice<'a> {
 /// way everywhere. How each model renders a severity is its own business, and
 /// may look entirely different — but which replies can arrive is not:
 ///
-/// - Moving on is `Confirmed`, the ordinary case.
-/// - Backing out is `Cancelled`, and only a notice that offers a way out can
-///   answer it: with `cancel` set, every model offers one; without, a model
-///   may still (a danger screen always does). `.confirmed()` turns it into
-///   [`crate::Error::Cancelled`] where the flow cannot go on without a yes.
-/// - [`Severity::Done`] answers `Confirmed` without waiting for the person:
+/// - Moving on is `Ok(())`, the ordinary case.
+/// - Backing out is `Err(`[`crate::Error::Cancelled`]`)`, and only a notice
+///   that offers a way out can answer it: with `cancel` set, every model
+///   offers one; without, a model may still (a danger screen always does).
+/// - [`Severity::Done`] answers `Ok(())` without waiting for the person:
 ///   it is the last screen of the flow, nothing on the device follows it, and
 ///   the host's response should not wait on a dismissal. The screen may stay
 ///   up for a moment or until the person acknowledges it, whichever the model
@@ -116,13 +115,12 @@ impl<'a> Notice<'a> {
 ///         "app/unknown_contract",
 ///         &[],
 ///         true,
-///     ))?
-///     .confirmed()
+///     ))
 /// }
 ///
 /// fn signed() -> trezor_app_sdk::Result<()> {
-///     // The last screen of the flow: nothing hangs on how it went away.
-///     let _ = notice::show(notice::Notice::new(
+///     // The last screen of the flow; it offers no way back out.
+///     notice::show(notice::Notice::new(
 ///         notice::Severity::Done,
 ///         "Done",
 ///         "Transaction signed",
@@ -133,7 +131,7 @@ impl<'a> Notice<'a> {
 ///     Ok(())
 /// }
 /// ```
-pub fn show(params: Notice<'_>) -> Result<Decision> {
+pub fn show(params: Notice<'_>) -> Result<()> {
     let request = WireShowNotice::new(
         params.severity,
         params.title,
@@ -144,5 +142,5 @@ pub fn show(params: Notice<'_>) -> Result<Decision> {
         BR_CODE_OTHER,             // legacy field; see the constant
     );
 
-    decide(call(&request, params.extras, Some(params.br))?)
+    answer(call(&request, params.extras, Some(params.br))?)
 }
