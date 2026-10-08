@@ -214,6 +214,10 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map disable_animation: bool,
 
+    /// Wipe the storage on every boot (test builds only)
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    map boot_wipe: bool,
+
     /// Show UI perf overlay
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map perf_overlay: bool,

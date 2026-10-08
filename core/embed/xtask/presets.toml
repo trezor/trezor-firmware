@@ -30,6 +30,7 @@ pyopt = false
 
 [[test]]
 when = { emulator = false }
+boot-wipe = true
 storage-insecure-testing-mode = true
 disable-optiga = true
 disable-tropic = true
@@ -52,6 +53,7 @@ source-lines = true
 
 [[dev]]
 when = { emulator = false, project = ["firmware", "prodtest"] }
+boot-wipe = true
 dbg-console = "swo"
 pyopt = false
 
