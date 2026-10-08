@@ -49,15 +49,10 @@ mod alloc_types;
 #[cfg(feature = "app")]
 pub mod crypto;
 
-#[cfg(not(feature = "app"))]
-pub mod ui {
-    pub use crate::structs::{
-        Property, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
-    };
-}
-
+// Building-block UI library. The wire types it rides on are in `structs`;
+// non-`app` consumers such as core link against those directly.
 #[cfg(feature = "app")]
-pub mod ui;
+pub mod modui;
 
 #[cfg(feature = "app")]
 pub mod log;

@@ -3,11 +3,8 @@
 //! These types are serialized via [`rkyv`] and sent over IPC between the app
 //! and the Core firmware task.
 //!
-//! **Prefer the higher-level `ui`/`crypto`/`progress` modules and each type's
-//! `new()` constructor over building these directly.** Fields are `pub`
-//! despite that, because Core reads them straight off the archived (rkyv)
-//! form with no wrapper API of its own — that's the one legitimate reader
-//! these fields need to stay public for.
+//! Apps use `modui` and `crypto`, not these. Fields are `pub` because core
+//! reads them straight off the archived (rkyv) form.
 
 use rkyv::boxed::{ArchivedBox, BoxResolver};
 use rkyv::rancor::Fallible;
@@ -18,12 +15,18 @@ use ufmt::derive::uDebug;
 /// A key-value pair with an optional monospace flag, used in UI detail views.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub struct Property<'a> {
+    /// The label, such as `"Amount"`.
     pub key: StrSlice<'a>,
+    /// The content shown under the label.
     pub value: StrSlice<'a>,
+    /// Whether the value is shown in a fixed-width font.
     pub mono: bool,
 }
 
 impl<'a> Property<'a> {
+    /// A fact with `key` as its label and `value` as its content. `mono` shows
+    /// the value in a fixed-width font; prefer [`Property::plain`] or
+    /// [`Property::mono`], which say which.
     pub fn new(key: &'a str, value: &'a str, mono: bool) -> Self {
         Self {
             key: key.into(),
@@ -32,36 +35,15 @@ impl<'a> Property<'a> {
         }
     }
 
+    /// A fact whose value is machine-like — a hash, a hex string — and reads
+    /// better in a fixed-width font.
     pub fn mono(key: &'a str, value: &'a str) -> Self {
         Self::new(key, value, true)
     }
 
+    /// A fact whose value is ordinary text.
     pub fn plain(key: &'a str, value: &'a str) -> Self {
         Self::new(key, value, false)
-    }
-}
-
-/// A string with an optional monospace flag, used in UI list views.
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
-pub struct StrExt<'a> {
-    pub key: StrSlice<'a>,
-    pub mono: bool,
-}
-
-impl<'a> StrExt<'a> {
-    pub fn new(key: &'a str, mono: bool) -> Self {
-        Self {
-            key: key.into(),
-            mono,
-        }
-    }
-
-    pub fn mono(key: &'a str) -> Self {
-        Self::new(key, true)
-    }
-
-    pub fn plain(key: &'a str) -> Self {
-        Self::new(key, false)
     }
 }
 
@@ -205,59 +187,32 @@ where
     }
 }
 
-/// A menu of selectable string items, shown via [`crate::ui::select_menu`].
+/// A menu of selectable string items, sent as [`TrezorUiEnum::SelectMenu`].
+///
+/// Only the caller's items. A model whose screens give their way out up to
+/// the menu button adds that way out itself.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct SelectMenu<'a> {
     pub items: Slice<'a, StrSlice<'a>>,
-    pub cancel: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> SelectMenu<'a> {
-    pub fn new(items: &'a [StrSlice<'a>], cancel: Option<&'a str>, br_code: i32) -> SelectMenu<'a> {
-        SelectMenu {
-            items: items.into(),
-            cancel: cancel.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A trade confirmation screen, shown via [`crate::ui::confirm_trade`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmTrade<'a> {
-    pub title: StrSlice<'a>,
-    pub subtitle: StrSlice<'a>,
-    pub buy: StrSlice<'a>,
-    pub sell: Option<StrSlice<'a>>,
-    pub back_button: bool,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
 }
 
-impl<'a> ConfirmTrade<'a> {
+impl<'a> SelectMenu<'a> {
     pub fn new(
-        title: &'a str,
-        subtitle: &'a str,
-        buy: &'a str,
-        sell: Option<&'a str>,
-        back_button: bool,
+        items: &'a [StrSlice<'a>],
         br_name: Option<&'a str>,
         br_code: i32,
-    ) -> ConfirmTrade<'a> {
-        ConfirmTrade {
-            title: title.into(),
-            subtitle: subtitle.into(),
-            buy: buy.into(),
-            sell: sell.map(|s| s.into()),
-            back_button,
+    ) -> SelectMenu<'a> {
+        SelectMenu {
+            items: items.into(),
             br_name: br_name.map(|s| s.into()),
             br_code,
         }
     }
 }
 
-/// An action confirmation screen, shown via [`crate::ui::confirm_action`].
+/// An action confirmation screen, sent as [`TrezorUiEnum::ConfirmAction`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmAction<'a> {
     pub title: StrSlice<'a>,
@@ -265,7 +220,6 @@ pub struct ConfirmAction<'a> {
     pub description: Option<StrSlice<'a>>,
     pub subtitle: Option<StrSlice<'a>>,
     pub hold: bool,
-    pub cancel: bool,
     pub verb: Option<StrSlice<'a>>,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
@@ -280,7 +234,6 @@ impl<'a> ConfirmAction<'a> {
         subtitle: Option<&'a str>,
         hold: bool,
         verb: Option<&'a str>,
-        cancel: bool,
         br_name: Option<&'a str>,
         br_code: i32,
         external_menu: bool,
@@ -291,7 +244,6 @@ impl<'a> ConfirmAction<'a> {
             description: description.map(|s| s.into()),
             subtitle: subtitle.map(|s| s.into()),
             hold,
-            cancel,
             verb: verb.map(|s| s.into()),
             br_name: br_name.map(|s| s.into()),
             br_code,
@@ -300,7 +252,7 @@ impl<'a> ConfirmAction<'a> {
     }
 }
 
-/// A transaction summary confirmation screen, shown via [`crate::ui::confirm_summary`].
+/// A transaction summary confirmation screen, sent as [`TrezorUiEnum::ConfirmSummary`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmSummary<'a> {
     pub title: StrSlice<'a>,
@@ -313,6 +265,7 @@ pub struct ConfirmSummary<'a> {
     pub extra_title: Option<StrSlice<'a>>,
     pub extra_items: Option<Slice<'a, Property<'a>>>,
     pub back_button: bool,
+    pub external_menu: bool,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
 }
@@ -329,6 +282,7 @@ impl<'a> ConfirmSummary<'a> {
         extra_title: Option<&'a str>,
         extra_items: Option<&'a [Property<'a>]>,
         back_button: bool,
+        external_menu: bool,
         br_name: Option<&'a str>,
         br_code: i32,
     ) -> Self {
@@ -343,13 +297,14 @@ impl<'a> ConfirmSummary<'a> {
             extra_title: extra_title.map(|s| s.into()),
             extra_items: extra_items.map(|s| s.into()),
             back_button,
+            external_menu,
             br_name: br_name.map(|s| s.into()),
             br_code,
         }
     }
 }
 
-/// A value confirmation screen, shown via [`crate::ui::confirm_value`].
+/// A value confirmation screen, sent as [`TrezorUiEnum::ConfirmValue`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmValue<'a> {
     pub title: StrSlice<'a>,
@@ -362,7 +317,6 @@ pub struct ConfirmValue<'a> {
     pub hold: bool,
     pub chunkify: bool,
     pub page_counter: bool,
-    pub cancel: bool,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
     pub external_menu: bool,
@@ -383,7 +337,6 @@ impl<'a> ConfirmValue<'a> {
         hold: bool,
         chunkify: bool,
         page_counter: bool,
-        cancel: bool,
         external_menu: bool,
         footer: Option<(&'a str, bool)>,
     ) -> Self {
@@ -398,7 +351,6 @@ impl<'a> ConfirmValue<'a> {
             hold,
             chunkify,
             page_counter,
-            cancel,
             br_name: br_name.map(|s| s.into()),
             br_code,
             external_menu,
@@ -407,193 +359,82 @@ impl<'a> ConfirmValue<'a> {
     }
 }
 
-/// An intro screen shown before [`ConfirmValue`], via [`crate::ui::confirm_value_intro`].
+/// What kind of news a notice is.
+///
+/// The only thing the app decides about a notice. The screen, its button words
+/// and its timeout follow from it, and are core's, per model — which is why
+/// this travels as a meaning rather than as a look.
+///
+/// There is no error severity, on purpose. A failure is not a notice a flow
+/// carries on from: an app fails by returning `Err`, and whether the person
+/// sees a screen for that is core's to decide on the failure path, as
+/// `show_error_and_raise` does for core's own flows.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmValueIntro<'a> {
+pub enum Severity {
+    /// A step worked, and the flow continues after this screen.
+    ///
+    /// For example a signature that verified. Distinct from
+    /// [`Severity::Done`], which is the last screen of a flow.
+    Success,
+    /// The flow finished; the person goes back to the host.
+    ///
+    /// The last screen an app shows. Nothing on the device follows it, so
+    /// the call does not wait for the person to dismiss it — the host's
+    /// response should not wait on an acknowledgement. What the screen does
+    /// after the call returns is the model's business.
+    ///
+    /// WIP: bolt and caesar wait for a tap.
+    Done,
+    /// Something to read before going on. Nothing is at stake.
+    Info,
+    /// Something to consider before going on.
+    Warning,
+    /// Going on is risky; the person has to choose it deliberately.
+    Danger,
+}
+
+/// A notice of some [`Severity`], sent by the app SDK.
+///
+/// Carries what the notice says and nothing about how it looks: no button
+/// words, no timeout, no choice of screen. Core derives those from `severity`.
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct ShowNotice<'a> {
+    pub severity: Severity,
     pub title: StrSlice<'a>,
-    pub value: StrSlice<'a>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub verb: Option<StrSlice<'a>>,
-    pub verb_cancel: Option<StrSlice<'a>>,
-    pub verb_view_all: Option<StrSlice<'a>>,
-    pub hold: bool,
-    pub chunkify: bool,
+    pub content: StrSlice<'a>,
+    /// The screen leads to the caller's menu of extras.
+    pub external_menu: bool,
+    /// The notice must offer a way to back out. How is the model's.
+    /// WIP: ignored by every model.
+    pub cancel: bool,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
 }
 
-impl<'a> ConfirmValueIntro<'a> {
+impl<'a> ShowNotice<'a> {
     pub fn new(
+        severity: Severity,
         title: &'a str,
-        value: &'a str,
-        subtitle: Option<&'a str>,
-        verb: Option<&'a str>,
-        verb_cancel: Option<&'a str>,
-        verb_view_all: Option<&'a str>,
-        hold: bool,
-        chunkify: bool,
+        content: &'a str,
+        external_menu: bool,
+        cancel: bool,
         br_name: Option<&'a str>,
         br_code: i32,
     ) -> Self {
         Self {
+            severity,
             title: title.into(),
-            value: value.into(),
-            subtitle: subtitle.map(|s| s.into()),
-            verb: verb.map(|s| s.into()),
-            verb_cancel: verb_cancel.map(|s| s.into()),
-            verb_view_all: verb_view_all.map(|s| s.into()),
-            hold,
-            chunkify,
+            content: content.into(),
+            external_menu,
+            cancel,
             br_name: br_name.map(|s| s.into()),
             br_code,
         }
     }
 }
 
-/// A warning screen, shown via [`crate::ui::show_warning`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowWarning<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub verb: StrSlice<'a>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-    pub allow_cancel: bool,
-    pub danger: bool,
-}
-
-impl<'a> ShowWarning<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        verb: &'a str,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        allow_cancel: bool,
-        danger: bool,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            verb: verb.into(),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-            allow_cancel,
-            danger,
-        }
-    }
-}
-
-/// A mismatch warning screen, shown via [`crate::ui::show_mismatch`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowMismatch<'a> {
-    pub title: StrSlice<'a>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowMismatch<'a> {
-    pub fn new(title: &'a str, br_code: i32) -> Self {
-        Self {
-            title: title.into(),
-            br_code,
-        }
-    }
-}
-
-/// A danger warning screen, shown via [`crate::ui::show_danger`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowDanger<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-    pub verb_cancel: Option<StrSlice<'a>>,
-    pub menu_title: Option<StrSlice<'a>>,
-}
-
-impl<'a> ShowDanger<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        verb_cancel: Option<&'a str>,
-        menu_title: Option<&'a str>,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-            verb_cancel: verb_cancel.map(|s| s.into()),
-            menu_title: menu_title.map(|s| s.into()),
-        }
-    }
-}
-
-/// A success screen, shown via [`crate::ui::show_success`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowSuccess<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub button: StrSlice<'a>,
-    pub duration_ms: Option<u32>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowSuccess<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        button: &'a str,
-        duration_ms: Option<u32>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            button: button.into(),
-            duration_ms,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A number-entry screen, shown via [`crate::ui::request_number`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct RequestNumber<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub initial: u32,
-    pub min: u32,
-    pub max: u32,
-    pub br_code: i32,
-}
-
-impl<'a> RequestNumber<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        initial: u32,
-        min: u32,
-        max: u32,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            initial,
-            min,
-            max,
-            br_code,
-        }
-    }
-}
-
-/// A property-list confirmation screen, shown via [`crate::ui::confirm_properties`].
+/// A property-list confirmation screen, sent as
+/// [`TrezorUiEnum::ConfirmProperties`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmProperties<'a> {
     pub title: StrSlice<'a>,
@@ -627,7 +468,8 @@ impl<'a> ConfirmProperties<'a> {
     }
 }
 
-/// A property-list display screen (no confirmation), shown via [`crate::ui::show_properties`].
+/// A property-list display screen (no confirmation), sent as
+/// [`TrezorUiEnum::ShowProperties`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowProperties<'a> {
     pub title: StrSlice<'a>,
@@ -655,177 +497,51 @@ impl<'a> ShowProperties<'a> {
     }
 }
 
-/// A public key display screen, shown via [`crate::ui::show_public_key`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowPublicKey<'a> {
-    pub pubkey: StrSlice<'a>,
-    pub title: StrSlice<'a>,
-    pub account: Option<StrSlice<'a>>,
-    pub path: Option<StrSlice<'a>>,
-    pub warning: Option<StrSlice<'a>>,
-    pub br_name: StrSlice<'a>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowPublicKey<'a> {
-    pub fn new(
-        pubkey: &'a str,
-        title: &'a str,
-        account: Option<&'a str>,
-        path: Option<&'a str>,
-        warning: Option<&'a str>,
-        br_name: &'a str,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            pubkey: pubkey.into(),
-            title: title.into(),
-            account: account.map(|s| s.into()),
-            path: path.map(|s| s.into()),
-            warning: warning.map(|s| s.into()),
-            br_name: br_name.into(),
-            br_code,
-        }
-    }
-}
-
-/// An info screen with a cancel option, shown via [`crate::ui::show_info_with_cancel`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowInfoWithCancel<'a> {
-    pub title: StrSlice<'a>,
-    pub items: Slice<'a, Property<'a>>,
-    pub chunkify: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowInfoWithCancel<'a> {
-    pub fn new(
-        title: &'a str,
-        items: &'a [Property<'a>],
-        chunkify: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            items: items.into(),
-            chunkify,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-/// A confirmation screen with an extra info button, shown via [`crate::ui::confirm_with_info`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmWithInfo<'a> {
-    pub title: StrSlice<'a>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub items: Slice<'a, StrExt<'a>>,
-    pub verb: StrSlice<'a>,
-    pub verb_info: Option<StrSlice<'a>>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl ConfirmWithInfo<'_> {
-    pub fn new<'a>(
-        title: &'a str,
-        subtitle: Option<&'a str>,
-        items: &'a [StrExt<'a>],
-        verb: &'a str,
-        verb_info: Option<&'a str>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> ConfirmWithInfo<'a> {
-        ConfirmWithInfo {
-            title: title.into(),
-            subtitle: subtitle.map(|s| s.into()),
-            items: items.into(),
-            verb: verb.into(),
-            verb_info: verb_info.map(|s| s.into()),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// An address display screen, shown via [`crate::ui::show_address`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowAddress<'a> {
-    pub address: StrSlice<'a>,
-    pub address_qr: StrSlice<'a>,
-    pub title: Option<StrSlice<'a>>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub account: Option<StrSlice<'a>>,
-    pub path: Option<StrSlice<'a>>,
-    pub xpubs: Slice<'a, Property<'a>>,
-    pub chunkify: bool,
-    pub br_code: i32,
-    pub case_sensitive: bool,
-}
-
-impl ShowAddress<'_> {
-    pub fn new<'a>(
-        address: &'a str,
-        address_qr: &'a str,
-        title: Option<&'a str>,
-        subtitle: Option<&'a str>,
-        account: Option<&'a str>,
-        path: Option<&'a str>,
-        xpubs: &'a [Property<'a>],
-        chunkify: bool,
-        br_code: i32,
-        case_sensitive: bool,
-    ) -> ShowAddress<'a> {
-        ShowAddress {
-            address: address.into(),
-            address_qr: address_qr.into(),
-            title: title.map(|s| s.into()),
-            subtitle: subtitle.map(|s| s.into()),
-            account: account.map(|s| s.into()),
-            path: path.map(|s| s.into()),
-            xpubs: xpubs.into(),
-            chunkify,
-            br_code,
-            case_sensitive,
-        }
-    }
-}
-
-/// All UI screens that can be requested from the app via IPC.
-///
-/// Each variant corresponds to one screen type in the Trezor UI. Constructed
-/// by the higher-level `ui` module — do not construct variants directly.
+/// One UI request, as it crosses IPC: one variant per `modui` block, plus the
+/// extras' menu and screen. Built by `core/embed/api` from the `traits::ui`
+/// mirrors.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorUiEnum<'a> {
     SelectMenu(SelectMenu<'a>),
-    ConfirmTrade(ConfirmTrade<'a>),
     ConfirmAction(ConfirmAction<'a>),
     ConfirmSummary(ConfirmSummary<'a>),
     ConfirmValue(ConfirmValue<'a>),
-    ConfirmValueIntro(ConfirmValueIntro<'a>),
-    ShowWarning(ShowWarning<'a>),
-    ShowMismatch(ShowMismatch<'a>),
-    ShowDanger(ShowDanger<'a>),
-    ShowSuccess(ShowSuccess<'a>),
-    RequestNumber(RequestNumber<'a>),
     ConfirmProperties(ConfirmProperties<'a>),
     ShowProperties(ShowProperties<'a>),
-    ShowPublicKey(ShowPublicKey<'a>),
-    ShowInfoWithCancel(ShowInfoWithCancel<'a>),
-    ConfirmWithInfo(ConfirmWithInfo<'a>),
-    ShowAddress(ShowAddress<'a>),
+    ShowNotice(ShowNotice<'a>),
 }
 
-/// Result returned by the Core task after a UI interaction.
+/// What the person did with one screen. Written by core, read by `modui`;
+/// apps never see it.
+///
+/// Variants say what the person *did*, not which button did it. Wider than any
+/// one request's contract (`Choice` only answers a list), so a reply a caller
+/// cannot use is a protocol violation.
+#[must_use]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
-pub enum TrezorUiResult {
+pub enum UiReply {
+    /// Yes, having seen all of it.
+    ///
+    /// WIP: until `Forward` has a producer, every chunk of `confirm::data`
+    /// answers this too.
     Confirmed,
-    Back,
+    /// Refused, or left without answering. `modui` turns it into
+    /// `Err(Error::Cancelled)`.
     Cancelled,
-    Info,
-    Integer(u32),
+    /// The extras: the screen's menu button. Lateral, unlike `Forward`.
+    WantsMore,
+    /// Picked the list entry at this index, as sent.
+    Choice(u16),
+    /// Paged past the end of the content core holds; the sender has more.
+    ///
+    /// WIP: no producer yet.
+    Forward,
+    /// Paged back before the content core holds, or back a step.
+    Backward,
+    /// Accepted the rest without reading it.
+    ///
+    /// WIP: no producer yet.
+    ConfirmedAll,
 }
 
 /// All crypto operations that can be requested from the app via IPC.
@@ -943,7 +659,13 @@ impl ufmt::uDebug for TrezorCryptoResult {
 
 /// Progress bar operations that can be requested from the app via IPC.
 ///
-/// Constructed by the higher-level `progress` module — do not construct variants directly.
+/// Built by `core/embed/api`; apps use `modui::progress`.
+///
+/// The three variants are one lifecycle: `Init` opens the progress, `Update`
+/// moves its fill — 0 to 1000, which the app SDK computes; core only draws —
+/// and `End` closes it. The app SDK pairs them with a guard that sends `End`
+/// on drop, so an app cannot leave a progress on screen for work that
+/// stopped; see the `modui` progress docs.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum TrezorProgressEnum<'a> {
     Init {
@@ -954,6 +676,7 @@ pub enum TrezorProgressEnum<'a> {
     },
     Update {
         description: Option<StrSlice<'a>>,
+        /// How far along, from 0 to 1000.
         value: u32,
     },
     End,

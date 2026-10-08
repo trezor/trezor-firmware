@@ -14,8 +14,9 @@ use rkyv::{
     Archived,
 };
 #[cfg(feature = "app_loading")]
-use trezor_app_sdk::ui::{
-    Property, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
+use trezor_app_sdk::structs::{
+    Property, Severity as WireSeverity, Slice, StrSlice, TrezorProgressEnum, TrezorUiEnum,
+    UiReply,
 };
 
 use crate::io::BinaryData;
@@ -47,6 +48,8 @@ use crate::ui::layout::obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ};
 use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 use crate::ui::layout::util::{upy_disable_animation, RecoveryType};
 use crate::ui::notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ};
+#[cfg(feature = "app_loading")]
+use crate::ui::ui_firmware::Severity;
 use crate::ui::ui_firmware::{
     FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
     MAX_WORD_QUIZ_ITEMS,
@@ -1300,19 +1303,6 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 .map(|s| (unwrap!(StrBuffer::alloc(s.0.as_ref())).into(), s.1))
         }
 
-        fn obj_from_strextlist(archived: &Archived<Slice<StrExt>>) -> Obj {
-            let slice = archived.as_ref();
-            let mut list = unwrap!(List::with_capacity(slice.len()));
-            for item in slice {
-                let obj = unwrap!(Obj::try_from((
-                    unwrap!(Obj::try_from(item.key.as_ref())),
-                    unwrap!(Obj::try_from(item.mono))
-                )));
-                unwrap!(list.append(obj));
-            }
-            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
-        }
-
         fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Obj {
             let slice = archived.as_ref();
             let mut list = unwrap!(List::with_capacity(slice.len()));
@@ -1331,27 +1321,19 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         // Access the archived data zero-copy using safe Deref access
         match archived {
         Archived::<TrezorUiEnum>::SelectMenu(m) => {
+            // The app decides how many items there are, so too many stops the
+            // app, not the device.
             let mut vec = heapless::Vec::<SelectMenuItem, MAX_MENU_ITEMS>::new();
             for item in m.items.as_ref() {
-                unwrap!(vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard)));
+                vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard))
+                    .map_err(|_| Error::OutOfRange)?;
             }
             wrap(
-                ModelUI::select_menu(vec, 0)?,
+                ModelUI::extapp_menu(vec)?,
                 m.br_code.to_native(),
-                None,
+                m.br_name.as_ref(),
             )?
         }
-        Archived::<TrezorUiEnum>::ConfirmTrade(m) => wrap(
-            ModelUI::confirm_trade(
-                tstr(&m.title),
-                tstr(&m.subtitle),
-                tstr_opt(&m.sell),
-                tstr(&m.buy),
-                m.back_button,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
         Archived::<TrezorUiEnum>::ConfirmAction(m) => wrap(
             ModelUI::confirm_action(
                 tstr(&m.title),
@@ -1359,7 +1341,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 tstr_opt(&m.description),
                 tstr_opt(&m.subtitle),
                 tstr_opt(&m.verb),
-                m.cancel,
+                // Every confirmation can be refused; how is the model's.
+                true,
                 None,
                 m.hold,
                 false,
@@ -1371,33 +1354,6 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             m.br_code.to_native(),
             m.br_name.as_ref(),
         )?,
-        Archived::<TrezorUiEnum>::ShowInfoWithCancel(m) => wrap(
-            ModelUI::show_info_with_cancel(
-                tstr(&m.title),
-                obj_from_proplist((&m.items).into()),
-                false,
-                m.chunkify,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmValueIntro(m) => (
-            ModelUI::confirm_value_intro(
-                tstr(&m.title),
-                m.value.as_ref().try_into()?,
-                tstr_opt(&m.subtitle),
-                tstr_opt(&m.verb),
-                tstr_opt(&m.verb_cancel),
-                tstr_opt(&m.verb_view_all),
-                m.hold,
-                m.chunkify,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
         Archived::<TrezorUiEnum>::ConfirmSummary(m) => wrap(
             ModelUI::confirm_summary(
                 tstr_opt(&m.amount),
@@ -1411,7 +1367,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 tstr_opt(&m.extra_title),
                 None,
                 m.back_button,
-                false,
+                m.external_menu,
             )?,
             m.br_code.to_native(),
             m.br_name.as_ref(),
@@ -1431,7 +1387,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 m.chunkify,
                 m.page_counter,
                 false,
-                m.cancel,
+                // Every confirmation can be refused; how is the model's.
+                true,
                 false,
                 tstr_tuple_opt(&m.footer),
                 m.external_menu,
@@ -1439,63 +1396,31 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             m.br_code.to_native(),
             m.br_name.as_ref(),
         )?,
-        Archived::<TrezorUiEnum>::ShowWarning(m) => (
-            ModelUI::show_warning(
-                Some(tstr(&m.title)),
-                tstr(&m.verb),
-                tstr(&m.content),
-                TString::empty(),
-                m.allow_cancel,
-                m.danger,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::ShowMismatch(m) => wrap(
-            ModelUI::show_mismatch(tstr(&m.title))?,
-            m.br_code.to_native(),
-            None,
-        )?,
-        Archived::<TrezorUiEnum>::ShowDanger(m) => wrap(
-            ModelUI::show_danger(
-                tstr(&m.title),
-                tstr(&m.content),
-                TString::empty(),
-                tstr_opt(&m.menu_title),
-                tstr_opt(&m.verb_cancel),
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowSuccess(m) => (
-            ModelUI::show_success(
-                tstr(&m.title),
-                tstr(&m.button),
-                tstr(&m.content),
-                false,
-                m.duration_ms.as_ref().map(|d| d.to_native()).unwrap_or(0),
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::RequestNumber(m) => wrap(
-            ModelUI::request_number(
-                tstr(&m.title),
-                m.initial.into(),
-                m.min.into(),
-                m.max.into(),
-                Some(tstr(&m.content)),
-                Some(|_| TString::empty()),
-            )?,
-            m.br_code.to_native(),
-            None,
-        )?,
+        Archived::<TrezorUiEnum>::ShowNotice(m) => {
+            // The app said what kind of news this is; the model decides what
+            // that looks like. This only translates the wire's word for it.
+            let severity = match m.severity {
+                Archived::<WireSeverity>::Success => Severity::Success,
+                Archived::<WireSeverity>::Done => Severity::Done,
+                Archived::<WireSeverity>::Info => Severity::Info,
+                Archived::<WireSeverity>::Warning => Severity::Warning,
+                Archived::<WireSeverity>::Danger => Severity::Danger,
+            };
+            (
+                ModelUI::show_notice(
+                    severity,
+                    tstr(&m.title),
+                    tstr(&m.content),
+                    m.external_menu,
+                    m.cancel,
+                )?,
+                m.br_code.to_native(),
+                match m.br_name.as_ref() {
+                    Some(s) => Obj::try_from(s.as_ref())?,
+                    None => Obj::const_none(),
+                },
+            )
+        }
         Archived::<TrezorUiEnum>::ConfirmProperties(m) => wrap(
             ModelUI::confirm_properties(
                 tstr(&m.title),
@@ -1516,60 +1441,6 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             )?,
             m.br_code.to_native(),
             m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowPublicKey(m) => {
-            let account = tstr_opt(&m.account);
-            let pubkey = tstr(&m.pubkey);
-            wrap(
-                ModelUI::flow_get_pubkey(
-                    pubkey,
-                    tstr(&m.title),
-                    account,
-                    tstr_opt(&m.warning),
-                    pubkey,
-                    account,
-                    tstr_opt(&m.path),
-                    11,
-                    tstr(&m.br_name),
-                )?,
-                m.br_code.to_native(),
-                None,
-            )?
-        }
-        Archived::<TrezorUiEnum>::ConfirmWithInfo(m) => (
-            ModelUI::confirm_with_info(
-                tstr(&m.title),
-                tstr_opt(&m.subtitle),
-                obj_from_strextlist(&m.items),
-                tstr(&m.verb),
-                tstr_opt(&m.verb_info),
-                None,
-                false,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::ShowAddress(m) => wrap(
-            ModelUI::flow_get_address(
-                tstr(&m.address),
-                tstr_opt(&m.title).unwrap_or("Receive".into()),
-                tstr_opt(&m.subtitle),
-                None,
-                None,
-                m.chunkify,
-                tstr(&m.address_qr),
-                m.case_sensitive,
-                tstr_opt(&m.account),
-                tstr_opt(&m.path),
-                obj_from_proplist(&m.xpubs),
-                10,
-                "show_address".into(),
-            )?,
-            m.br_code.to_native(),
-            None,
         )?,
     };
 
@@ -1604,23 +1475,31 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
             }
         }));
 
-        // Map MicroPython UiResult object to Rust enum for serialization
+        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
+        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
+
+        // Say what the person did, rather than naming the button that did it.
+        //
+        // WIP: `UiReply::Forward` has no producer here yet, and `Backward` is
+        // only ever the flow-level back button. Both should also come from a
+        // screen paging to the edge of the chunk of data it was given — but a
+        // layout cannot tell it is at an edge until the request carries the
+        // chunk's offset and the total length, which it does not. Until then
+        // a chunked block reads `Confirmed` as "next chunk" and cannot go back
+        // a chunk at all.
         let msg = if obj == CONFIRMED.as_obj() {
-            TrezorUiResult::Confirmed
+            UiReply::Confirmed
         } else if obj == CANCELLED.as_obj() {
-            TrezorUiResult::Cancelled
-        } else if obj == BACK.as_obj() {
-            TrezorUiResult::Back
+            UiReply::Cancelled
         } else if obj == INFO.as_obj() {
-            TrezorUiResult::Info
+            UiReply::WantsMore
+        } else if obj == BACK.as_obj() {
+            UiReply::Backward
         } else if let Ok(val) = u32::try_from(obj) {
-            TrezorUiResult::Integer(val)
+            UiReply::Choice(u16::try_from(val).map_err(|_| Error::TypeError)?)
         } else {
             return Err(Error::TypeError);
         };
-
-        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
-        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
 
         let bytes = to_bytes_in_with_alloc::<_, _, Failure>(
             &msg,

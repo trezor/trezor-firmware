@@ -39,10 +39,14 @@ use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ContentType, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    DeviceMenuParams, FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-    MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
+    DeviceMenuParams, FirmwareUI, SelectMenuItem, Severity, MAX_CHECKLIST_ITEMS,
+    MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
+
+/// How long the closing notice stays up before dismissing itself; the same as
+/// `show_continue_in_app`.
+const NOTICE_DONE_TIMEOUT_MS: u32 = 3200;
 
 impl FirmwareUI for UIDelizia {
     fn confirm_action(
@@ -395,8 +399,13 @@ impl FirmwareUI for UIDelizia {
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         back_button: bool,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        if external_menu {
+            // WIP: this screen has no menu a caller can drive. It is drawn as
+            // before, without one, so the caller's extras are unreachable here.
+            log::warn!("confirm_summary: external_menu is not supported on this model, ignored");
+        }
         // collect available info
         let account_info = if let Some(items) = account_items {
             let mut pairs = Vec::<(TString<'static>, TString<'static>), 4>::new();
@@ -745,6 +754,37 @@ impl FirmwareUI for UIDelizia {
         flow::util::single_page(layout)
     }
 
+    fn extapp_menu(
+        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        // The header has room for one button, and with a menu that is the
+        // menu: the screen's own way out moves in here, after the extras.
+        let cancel = items.len();
+        let mut menu_items = VerticalMenuItems::new();
+        let too_many = || Error::ValueError(c"too many extras for one menu");
+        for item in items {
+            menu_items
+                .push(VerticalMenuItem::Item(item.text))
+                .map_err(|_| too_many())?;
+        }
+        menu_items
+            .push(VerticalMenuItem::Cancel(TR::buttons__cancel.into()))
+            .map_err(|_| too_many())?;
+        let menu = ScrolledVerticalMenu::new(menu_items, 0);
+        let frame = Frame::with_header(
+            Header::left_aligned(TString::empty()).with_cancel_button(),
+            menu,
+        );
+        let layout = MsgMap::new(frame, move |msg| match msg {
+            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) if i == cancel => {
+                Some(FlowMsg::Cancelled)
+            }
+            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+            FrameMsg::Button(_) => Some(FlowMsg::Confirmed),
+        });
+        flow::util::single_page(layout)
+    }
+
     fn select_word(
         title: TString<'static>,
         description: TString<'static>,
@@ -973,13 +1013,15 @@ impl FirmwareUI for UIDelizia {
         _time_ms: u32,
         external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<Gc<LayoutObj>, Error> {
-        if external_menu {
-            return Err(Error::NotImplementedError);
-        }
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
+        let header = Header::left_aligned(title);
+        let header = if external_menu {
+            header.with_menu_button()
+        } else {
+            header
+        };
         let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::with_header(Header::left_aligned(title), SwipeContent::new(content))
-                .with_swipeup_footer(None),
+            Frame::with_header(header, SwipeContent::new(content)).with_swipeup_footer(None),
         ))?;
         Ok(obj)
     }
@@ -1040,6 +1082,64 @@ impl FirmwareUI for UIDelizia {
         ));
 
         Ok(layout)
+    }
+
+    fn show_notice(
+        severity: Severity,
+        title: TString<'static>,
+        content: TString<'static>,
+        external_menu: bool,
+        _cancel: bool,
+    ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: only the info and warning notices have a menu a caller can
+        // drive. The others are drawn without it, so the caller's extras are
+        // unreachable there.
+        if external_menu && !matches!(severity, Severity::Info | Severity::Warning) {
+            log::warn!("show_notice: external_menu is not supported for this severity, ignored");
+        }
+        match severity {
+            Severity::Info => Self::show_info(title, content, None, 0, external_menu),
+            Severity::Warning if external_menu => {
+                let content =
+                    Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, content));
+                LayoutObj::new(SwipeUpScreen::new(
+                    Frame::with_header(
+                        Header::left_aligned(title).with_menu_button(),
+                        SwipeContent::new(content),
+                    )
+                    .with_swipeup_footer(Some(TR::buttons__continue.into())),
+                ))
+            }
+            // This model's success screen has a fixed header, and the message
+            // is the status text itself, as in its own `show_success`. The
+            // caller's title has nowhere to go.
+            Severity::Success => {
+                Self::show_success(content, TString::empty(), TString::empty(), false, 0)
+            }
+            // The same screen as `show_continue_in_app`.
+            Severity::Done => Self::show_success(
+                content,
+                TR::instructions__continue_in_app.into(),
+                TString::empty(),
+                false,
+                NOTICE_DONE_TIMEOUT_MS,
+            ),
+            Severity::Warning => Self::show_warning(
+                Some(title),
+                TR::buttons__continue.into(),
+                content,
+                TString::empty(),
+                true, // allow_cancel; WIP: this model's `show_warning` ignores it
+                false,
+            ),
+            Severity::Danger => LayoutObj::new_root(Self::show_danger(
+                title,
+                content,
+                TString::empty(),
+                None,
+                Some(TR::buttons__cancel.into()),
+            )?),
+        }
     }
 
     fn show_progress(

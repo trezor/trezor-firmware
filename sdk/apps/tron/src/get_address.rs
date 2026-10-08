@@ -1,13 +1,13 @@
 use crate::{
     common::{COIN, SLIP44_ID, get_encoded_address, get_pubkey_hash},
     paths::{Bip32Path, PATTERNS_ADDRESS},
-    proto::{
-        common::button_request::ButtonRequestType,
-        tron::{Address, GetAddress},
-    },
+    proto::tron::{Address, GetAddress},
     uformat,
 };
-use trezor_app_sdk::{Result, ResultExt, crypto, ui};
+use trezor_app_sdk::{
+    Result, ResultExt, crypto,
+    modui::{self, Commitment, ExtraItem, Property, confirm, notice},
+};
 
 pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
     let dp: Bip32Path = Bip32Path::from_slice(&msg.address_n);
@@ -26,30 +26,35 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
             .get_account_name(COIN, &PATTERNS_ADDRESS, SLIP44_ID)
             .ok_or(crate::Error::DataError("Failed to get account name"))
             .c()?;
-        ui::error_if_not_confirmed(
-            ui::show_address(ui::ShowAddress::new(
-                &address,
-                &address,
-                None,
-                Some(subtitle.as_str()),
-                Some(account_name.as_str()),
-                Some(&dp.format_path()),
-                &[],
-                msg.chunkify(),
-                ButtonRequestType::Other.into(),
-                true,
-            ))
-            .c()?,
-        )
+        let path = dp.format_path();
+        let account_facts = [
+            Property::plain(tr!("words__account"), account_name.as_str()),
+            Property::plain(tr!("address_details__derivation_path"), &path),
+        ];
+        modui::confirm::value(confirm::Value::new(
+            &subtitle,
+            &address,
+            confirm::ValueKind::Address,
+            None,
+            None,
+            None,
+            Commitment::Step,
+            "tron/address",
+            &[ExtraItem::simple(
+                tr!("address_details__account_info"),
+                &account_facts,
+            )],
+        ))
         .c()?;
 
-        ui::show_success(ui::ShowSuccess::new(
+        // The last screen of the flow; it offers no way back out.
+        modui::notice::show(notice::Notice::new(
+            notice::Severity::Done,
             tr!("words__title_done"),
             tr!("address__confirmed"),
-            tr!("instructions__continue_in_app"),
-            Some(3200),
-            None,
-            ButtonRequestType::Other.into(),
+            "tron/address/confirmed",
+            &[],
+            false,
         ))
         .c()?;
     }

@@ -1,4 +1,4 @@
-//! Stable-ABI mirror of `structs.rs`'s UI/progress argument structs.
+//! Stable-ABI mirror of the UI requests `modui` sends, and of the reply.
 //!
 //! `structs.rs` is the wire IDL shared byte-for-byte with Core's Rust+Python
 //! side and isn't itself ABI-stable (`rkyv`-only, not `#[stabby::stabby]`).
@@ -17,9 +17,19 @@
 use stabby::option::Option as StabbyOption;
 use stabby::slice::Slice;
 use stabby::str::Str;
+use ufmt::derive::uDebug;
 
 use super::util::FastResult;
 use super::wire::WireError;
+
+/// Build a layout, show it, and forget it. The handle is ignored.
+pub const OP_ONCE: u16 = 0;
+/// Build a layout and keep it alive under the handle.
+pub const OP_OPEN: u16 = 1;
+/// Show the layout already held under the handle, without rebuilding it.
+pub const OP_REOPEN: u16 = 2;
+/// Bits a handle may use; Core packs it with the op into one IPC message id.
+pub const HANDLE_BITS: u16 = 12;
 
 /// Converts an optional `&str` constructor argument into the
 /// niche-friendly `StabbyOption<Slice<u8>>` field representation.
@@ -67,41 +77,31 @@ impl<'a> Property<'a> {
     }
 }
 
-/// A string with an optional monospace flag, used in UI list views.
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct StrExt<'a> {
-    pub key: Str<'a>,
-    pub mono: bool,
-}
-
-impl<'a> StrExt<'a> {
-    pub fn new(key: &'a str, mono: bool) -> Self {
-        Self {
-            key: key.into(),
-            mono,
-        }
-    }
-
-    pub fn mono(key: &'a str) -> Self {
-        Self::new(key, true)
-    }
-
-    pub fn plain(key: &'a str) -> Self {
-        Self::new(key, false)
-    }
-}
-
-/// Result returned by Core after a UI interaction.
+/// Mirrors [`crate::structs::UiReply`]; see there for what each answer means.
+#[must_use]
 #[stabby::stabby]
 #[repr(C, u8)]
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum TrezorUiResult {
+#[derive(uDebug, Clone, Copy, PartialEq, Eq)]
+pub enum UiReply {
     Confirmed,
-    Back,
     Cancelled,
+    WantsMore,
+    Choice(u16),
+    Forward,
+    Backward,
+    ConfirmedAll,
+}
+
+/// Mirrors [`crate::structs::Severity`]; see there for what each one means.
+#[stabby::stabby]
+#[repr(u8)]
+#[derive(uDebug, Clone, Copy, PartialEq, Eq)]
+pub enum Severity {
+    Success,
+    Done,
     Info,
-    Integer(u32),
+    Warning,
+    Danger,
 }
 
 /// A menu of selectable string items.
@@ -109,48 +109,14 @@ pub enum TrezorUiResult {
 #[derive(Clone)]
 pub struct SelectMenu<'a> {
     pub items: Slice<'a, Str<'a>>,
-    pub cancel: StabbyOption<Slice<'a, u8>>,
-    pub br_code: i32,
-}
-
-impl<'a> SelectMenu<'a> {
-    pub fn new(items: &'a [Str<'a>], cancel: Option<&'a str>, br_code: i32) -> Self {
-        Self {
-            items: items.into(),
-            cancel: opt_bytes(cancel),
-            br_code,
-        }
-    }
-}
-
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct ConfirmTrade<'a> {
-    pub title: Str<'a>,
-    pub subtitle: Str<'a>,
-    pub buy: Str<'a>,
-    pub sell: StabbyOption<Slice<'a, u8>>,
-    pub back_button: bool,
     pub br_name: StabbyOption<Slice<'a, u8>>,
     pub br_code: i32,
 }
 
-impl<'a> ConfirmTrade<'a> {
-    pub fn new(
-        title: &'a str,
-        subtitle: &'a str,
-        buy: &'a str,
-        sell: Option<&'a str>,
-        back_button: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
+impl<'a> SelectMenu<'a> {
+    pub fn new(items: &'a [Str<'a>], br_name: Option<&'a str>, br_code: i32) -> Self {
         Self {
-            title: title.into(),
-            subtitle: subtitle.into(),
-            buy: buy.into(),
-            sell: opt_bytes(sell),
-            back_button,
+            items: items.into(),
             br_name: opt_bytes(br_name),
             br_code,
         }
@@ -165,7 +131,6 @@ pub struct ConfirmAction<'a> {
     pub description: StabbyOption<Slice<'a, u8>>,
     pub subtitle: StabbyOption<Slice<'a, u8>>,
     pub hold: bool,
-    pub cancel: bool,
     pub verb: StabbyOption<Slice<'a, u8>>,
     pub br_name: StabbyOption<Slice<'a, u8>>,
     pub br_code: i32,
@@ -181,7 +146,6 @@ impl<'a> ConfirmAction<'a> {
         subtitle: Option<&'a str>,
         hold: bool,
         verb: Option<&'a str>,
-        cancel: bool,
         br_name: Option<&'a str>,
         br_code: i32,
         external_menu: bool,
@@ -192,7 +156,6 @@ impl<'a> ConfirmAction<'a> {
             description: opt_bytes(description),
             subtitle: opt_bytes(subtitle),
             hold,
-            cancel,
             verb: opt_bytes(verb),
             br_name: opt_bytes(br_name),
             br_code,
@@ -214,6 +177,7 @@ pub struct ConfirmSummary<'a> {
     pub extra_title: StabbyOption<Slice<'a, u8>>,
     pub extra_items: StabbyOption<Slice<'a, Property<'a>>>,
     pub back_button: bool,
+    pub external_menu: bool,
     pub br_name: StabbyOption<Slice<'a, u8>>,
     pub br_code: i32,
 }
@@ -231,6 +195,7 @@ impl<'a> ConfirmSummary<'a> {
         extra_title: Option<&'a str>,
         extra_items: Option<&'a [Property<'a>]>,
         back_button: bool,
+        external_menu: bool,
         br_name: Option<&'a str>,
         br_code: i32,
     ) -> Self {
@@ -245,6 +210,7 @@ impl<'a> ConfirmSummary<'a> {
             extra_title: opt_bytes(extra_title),
             extra_items: extra_items.map(Into::into).into(),
             back_button,
+            external_menu,
             br_name: opt_bytes(br_name),
             br_code,
         }
@@ -269,7 +235,6 @@ pub struct ConfirmValue<'a> {
     pub hold: bool,
     pub chunkify: bool,
     pub page_counter: bool,
-    pub cancel: bool,
     pub br_name: StabbyOption<Slice<'a, u8>>,
     pub br_code: i32,
     pub external_menu: bool,
@@ -292,7 +257,6 @@ impl<'a> ConfirmValue<'a> {
         hold: bool,
         chunkify: bool,
         page_counter: bool,
-        cancel: bool,
         external_menu: bool,
         footer: Option<(&'a str, bool)>,
     ) -> Self {
@@ -311,199 +275,11 @@ impl<'a> ConfirmValue<'a> {
             hold,
             chunkify,
             page_counter,
-            cancel,
             br_name: opt_bytes(br_name),
             br_code,
             external_menu,
             footer_text,
             footer_bold,
-        }
-    }
-}
-
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct ConfirmValueIntro<'a> {
-    pub title: Str<'a>,
-    pub value: Str<'a>,
-    pub subtitle: StabbyOption<Slice<'a, u8>>,
-    pub verb: StabbyOption<Slice<'a, u8>>,
-    pub verb_cancel: StabbyOption<Slice<'a, u8>>,
-    pub verb_view_all: StabbyOption<Slice<'a, u8>>,
-    pub hold: bool,
-    pub chunkify: bool,
-    pub br_name: StabbyOption<Slice<'a, u8>>,
-    pub br_code: i32,
-}
-
-impl<'a> ConfirmValueIntro<'a> {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        title: &'a str,
-        value: &'a str,
-        subtitle: Option<&'a str>,
-        verb: Option<&'a str>,
-        verb_cancel: Option<&'a str>,
-        verb_view_all: Option<&'a str>,
-        hold: bool,
-        chunkify: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            value: value.into(),
-            subtitle: opt_bytes(subtitle),
-            verb: opt_bytes(verb),
-            verb_cancel: opt_bytes(verb_cancel),
-            verb_view_all: opt_bytes(verb_view_all),
-            hold,
-            chunkify,
-            br_name: opt_bytes(br_name),
-            br_code,
-        }
-    }
-}
-
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct ShowWarning<'a> {
-    pub title: Str<'a>,
-    pub content: Str<'a>,
-    pub verb: Str<'a>,
-    pub br_name: StabbyOption<Slice<'a, u8>>,
-    pub br_code: i32,
-    pub allow_cancel: bool,
-    pub danger: bool,
-}
-
-impl<'a> ShowWarning<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        verb: &'a str,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        allow_cancel: bool,
-        danger: bool,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            verb: verb.into(),
-            br_name: opt_bytes(br_name),
-            br_code,
-            allow_cancel,
-            danger,
-        }
-    }
-}
-
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct ShowMismatch<'a> {
-    pub title: Str<'a>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowMismatch<'a> {
-    pub fn new(title: &'a str, br_code: i32) -> Self {
-        Self {
-            title: title.into(),
-            br_code,
-        }
-    }
-}
-
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct ShowDanger<'a> {
-    pub title: Str<'a>,
-    pub content: Str<'a>,
-    pub br_name: StabbyOption<Slice<'a, u8>>,
-    pub br_code: i32,
-    pub verb_cancel: StabbyOption<Slice<'a, u8>>,
-    pub menu_title: StabbyOption<Slice<'a, u8>>,
-}
-
-impl<'a> ShowDanger<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        verb_cancel: Option<&'a str>,
-        menu_title: Option<&'a str>,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            br_name: opt_bytes(br_name),
-            br_code,
-            verb_cancel: opt_bytes(verb_cancel),
-            menu_title: opt_bytes(menu_title),
-        }
-    }
-}
-
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct ShowSuccess<'a> {
-    pub title: Str<'a>,
-    pub content: Str<'a>,
-    pub button: Str<'a>,
-    pub duration_ms: StabbyOption<u32>,
-    pub br_name: StabbyOption<Slice<'a, u8>>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowSuccess<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        button: &'a str,
-        duration_ms: Option<u32>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            button: button.into(),
-            duration_ms: duration_ms.into(),
-            br_name: opt_bytes(br_name),
-            br_code,
-        }
-    }
-}
-
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct RequestNumber<'a> {
-    pub title: Str<'a>,
-    pub content: Str<'a>,
-    pub initial: u32,
-    pub min: u32,
-    pub max: u32,
-    pub br_code: i32,
-}
-
-impl<'a> RequestNumber<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        initial: u32,
-        min: u32,
-        max: u32,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            initial,
-            min,
-            max,
-            br_code,
         }
     }
 }
@@ -570,213 +346,93 @@ impl<'a> ShowProperties<'a> {
     }
 }
 
+/// Mirrors [`crate::structs::ShowNotice`].
 #[stabby::stabby]
 #[derive(Clone)]
-pub struct ShowPublicKey<'a> {
-    pub pubkey: Str<'a>,
+pub struct ShowNotice<'a> {
+    pub severity: Severity,
     pub title: Str<'a>,
-    pub account: StabbyOption<Slice<'a, u8>>,
-    pub path: StabbyOption<Slice<'a, u8>>,
-    pub warning: StabbyOption<Slice<'a, u8>>,
-    pub br_name: Str<'a>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowPublicKey<'a> {
-    pub fn new(
-        pubkey: &'a str,
-        title: &'a str,
-        account: Option<&'a str>,
-        path: Option<&'a str>,
-        warning: Option<&'a str>,
-        br_name: &'a str,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            pubkey: pubkey.into(),
-            title: title.into(),
-            account: opt_bytes(account),
-            path: opt_bytes(path),
-            warning: opt_bytes(warning),
-            br_name: br_name.into(),
-            br_code,
-        }
-    }
-}
-
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct ShowInfoWithCancel<'a> {
-    pub title: Str<'a>,
-    pub items: Slice<'a, Property<'a>>,
-    pub chunkify: bool,
+    pub content: Str<'a>,
+    pub external_menu: bool,
+    pub cancel: bool,
     pub br_name: StabbyOption<Slice<'a, u8>>,
     pub br_code: i32,
 }
 
-impl<'a> ShowInfoWithCancel<'a> {
+impl<'a> ShowNotice<'a> {
     pub fn new(
+        severity: Severity,
         title: &'a str,
-        items: &'a [Property<'a>],
-        chunkify: bool,
+        content: &'a str,
+        external_menu: bool,
+        cancel: bool,
         br_name: Option<&'a str>,
         br_code: i32,
     ) -> Self {
         Self {
+            severity,
             title: title.into(),
-            items: items.into(),
-            chunkify,
+            content: content.into(),
+            external_menu,
+            cancel,
             br_name: opt_bytes(br_name),
             br_code,
         }
     }
 }
 
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct ConfirmWithInfo<'a> {
-    pub title: Str<'a>,
-    pub subtitle: StabbyOption<Slice<'a, u8>>,
-    pub items: Slice<'a, StrExt<'a>>,
-    pub verb: Str<'a>,
-    pub verb_info: StabbyOption<Slice<'a, u8>>,
-    pub br_name: StabbyOption<Slice<'a, u8>>,
-    pub br_code: i32,
-}
-
-impl<'a> ConfirmWithInfo<'a> {
-    pub fn new(
-        title: &'a str,
-        subtitle: Option<&'a str>,
-        items: &'a [StrExt<'a>],
-        verb: &'a str,
-        verb_info: Option<&'a str>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            subtitle: opt_bytes(subtitle),
-            items: items.into(),
-            verb: verb.into(),
-            verb_info: opt_bytes(verb_info),
-            br_name: opt_bytes(br_name),
-            br_code,
-        }
-    }
-}
-
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct ShowAddress<'a> {
-    pub address: Str<'a>,
-    pub address_qr: Str<'a>,
-    pub title: StabbyOption<Slice<'a, u8>>,
-    pub subtitle: StabbyOption<Slice<'a, u8>>,
-    pub account: StabbyOption<Slice<'a, u8>>,
-    pub path: StabbyOption<Slice<'a, u8>>,
-    pub xpubs: Slice<'a, Property<'a>>,
-    pub chunkify: bool,
-    pub br_code: i32,
-    pub case_sensitive: bool,
-}
-
-impl<'a> ShowAddress<'a> {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        address: &'a str,
-        address_qr: &'a str,
-        title: Option<&'a str>,
-        subtitle: Option<&'a str>,
-        account: Option<&'a str>,
-        path: Option<&'a str>,
-        xpubs: &'a [Property<'a>],
-        chunkify: bool,
-        br_code: i32,
-        case_sensitive: bool,
-    ) -> Self {
-        Self {
-            address: address.into(),
-            address_qr: address_qr.into(),
-            title: opt_bytes(title),
-            subtitle: opt_bytes(subtitle),
-            account: opt_bytes(account),
-            path: opt_bytes(path),
-            xpubs: xpubs.into(),
-            chunkify,
-            br_code,
-            case_sensitive,
-        }
-    }
-}
-
-/// Talks to Core's UI/progress screens. Each method sends one screen request
-/// over the wire and returns Core's response — implemented in `core/embed/api`
+/// Talks to Core's UI/progress screens — implemented in `core/embed/api`
 /// against [`super::wire::WireV1`].
+///
+/// Each screen method sends one request and returns Core's reply. `op` is one
+/// of [`OP_ONCE`], [`OP_OPEN`], [`OP_REOPEN`]; `handle` names the layout Core
+/// keeps for the last two, until [`UiV1::close`].
 #[stabby::stabby(checked)]
 pub trait UiV1: Send + Sync {
-    extern "C" fn confirm_value<'a>(
-        &self,
-        value: ConfirmValue<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn confirm_value_intro<'a>(
-        &self,
-        value: ConfirmValueIntro<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn confirm_summary<'a>(
-        &self,
-        value: ConfirmSummary<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
     extern "C" fn confirm_action<'a>(
         &self,
+        op: u16,
+        handle: u16,
         value: ConfirmAction<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn select_menu<'a>(
+    ) -> FastResult<UiReply, WireError>;
+    extern "C" fn confirm_value<'a>(
         &self,
-        value: SelectMenu<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+        op: u16,
+        handle: u16,
+        value: ConfirmValue<'a>,
+    ) -> FastResult<UiReply, WireError>;
+    extern "C" fn confirm_summary<'a>(
+        &self,
+        op: u16,
+        handle: u16,
+        value: ConfirmSummary<'a>,
+    ) -> FastResult<UiReply, WireError>;
     extern "C" fn confirm_properties<'a>(
         &self,
+        op: u16,
+        handle: u16,
         value: ConfirmProperties<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+    ) -> FastResult<UiReply, WireError>;
     extern "C" fn show_properties<'a>(
         &self,
+        op: u16,
+        handle: u16,
         value: ShowProperties<'a>,
-    ) -> FastResult<(), WireError>;
-    extern "C" fn show_warning<'a>(&self, value: ShowWarning<'a>) -> FastResult<(), WireError>;
-    extern "C" fn show_info_with_cancel<'a>(
+    ) -> FastResult<UiReply, WireError>;
+    extern "C" fn show_notice<'a>(
         &self,
-        value: ShowInfoWithCancel<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn show_mismatch<'a>(
+        op: u16,
+        handle: u16,
+        value: ShowNotice<'a>,
+    ) -> FastResult<UiReply, WireError>;
+    extern "C" fn select_menu<'a>(
         &self,
-        value: ShowMismatch<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn confirm_trade<'a>(
-        &self,
-        value: ConfirmTrade<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn show_danger<'a>(
-        &self,
-        value: ShowDanger<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn show_success<'a>(&self, value: ShowSuccess<'a>) -> FastResult<(), WireError>;
-    extern "C" fn request_number<'a>(
-        &self,
-        value: RequestNumber<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn show_public_key<'a>(
-        &self,
-        value: ShowPublicKey<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn confirm_with_info<'a>(
-        &self,
-        value: ConfirmWithInfo<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn show_address<'a>(
-        &self,
-        value: ShowAddress<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+        op: u16,
+        handle: u16,
+        value: SelectMenu<'a>,
+    ) -> FastResult<UiReply, WireError>;
+    /// Drops the layout held under `handle`. Shows nothing.
+    extern "C" fn close(&self, handle: u16) -> FastResult<(), WireError>;
 
     extern "C" fn init_progress<'a>(
         &self,
@@ -785,6 +441,7 @@ pub trait UiV1: Send + Sync {
         indeterminate: bool,
         danger: bool,
     ) -> FastResult<(), WireError>;
+    /// `value` is how far along, from 0 to 1000.
     extern "C" fn update_progress<'a>(
         &self,
         description: StabbyOption<Slice<'a, u8>>,

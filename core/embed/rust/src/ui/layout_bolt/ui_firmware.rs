@@ -32,8 +32,8 @@ use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    DeviceMenuParams, FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-    MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
+    DeviceMenuParams, FirmwareUI, SelectMenuItem, Severity, MAX_CHECKLIST_ITEMS,
+    MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::{geometry, ModelUI};
 
@@ -51,8 +51,13 @@ impl FirmwareUI for UIBolt {
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        if external_menu {
+            // WIP: this screen has no menu a caller can drive. It is drawn as
+            // before, without one, so the caller's extras are unreachable here.
+            log::warn!("confirm_action: external_menu is not supported on this model, ignored");
+        }
         let paragraphs = {
             let action = action.unwrap_or("".into());
             let description = description.unwrap_or("".into());
@@ -124,8 +129,13 @@ impl FirmwareUI for UIBolt {
         _cancel: bool,
         _back_button: bool,
         _footer: Option<(TString<'static>, bool)>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        if external_menu {
+            // WIP: this screen has no menu a caller can drive. It is drawn as
+            // before, without one, so the caller's extras are unreachable here.
+            log::warn!("confirm_value: external_menu is not supported on this model, ignored");
+        }
         let frame = ConfirmValue::new(title, value, description, verb, verb_cancel, hold)
             .with_text_mono(is_data)
             .with_subtitle(subtitle)
@@ -455,8 +465,13 @@ impl FirmwareUI for UIBolt {
         _extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         _back_button: bool,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        if external_menu {
+            // WIP: this screen has no menu a caller can drive. It is drawn as
+            // before, without one, so the caller's extras are unreachable here.
+            log::warn!("confirm_summary: external_menu is not supported on this model, ignored");
+        }
         let info_button: bool = account_items.is_some() || extra_items.is_some();
         let mut paragraphs = ParagraphVecShort::new();
         if let Some(amount) = amount {
@@ -1082,6 +1097,55 @@ impl FirmwareUI for UIBolt {
         Ok(layout)
     }
 
+    fn show_notice(
+        severity: Severity,
+        title: TString<'static>,
+        content: TString<'static>,
+        external_menu: bool,
+        _cancel: bool,
+    ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: no notice screen on this model has a menu a caller can drive. The notice
+        // is drawn without it, so the caller's extras are unreachable here.
+        let external_menu = if external_menu {
+            log::warn!("show_notice: external_menu is not supported on this model, ignored");
+            false
+        } else {
+            external_menu
+        };
+        match severity {
+            Severity::Info => Self::show_info(
+                title,
+                content,
+                Some((TR::buttons__continue.into(), true)),
+                0,
+                external_menu,
+            ),
+            // WIP: `Done` should answer without waiting; here it waits for the
+            // tap (the modal cannot combine a button with a timeout).
+            Severity::Success | Severity::Done => {
+                Self::show_success(title, TR::buttons__continue.into(), content, false, 0)
+            }
+            Severity::Warning => Self::show_warning(
+                Some(title),
+                TR::buttons__continue.into(),
+                TString::empty(),
+                content,
+                true, // allow_cancel: like core's own warnings
+                false,
+            ),
+            // No danger screen on this model: a warning that asks whether to
+            // go on, as its own `show_danger` does.
+            Severity::Danger => Self::show_warning(
+                Some(title),
+                TR::buttons__continue.into(),
+                content,
+                TR::words__continue_anyway_question.into(),
+                true, // allow_cancel: danger can always be refused
+                true,
+            ),
+        }
+    }
+
     fn show_progress(
         description: TString<'static>,
         indeterminate: bool,
@@ -1118,11 +1182,17 @@ impl FirmwareUI for UIBolt {
     }
 
     fn show_properties(
-        _title: TString<'static>,
-        _subtitle: Option<TString<'static>>,
-        _value: Obj,
+        title: TString<'static>,
+        subtitle: Option<TString<'static>>,
+        value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
+        // WIP: this model has no properties screen of its own. The info screen
+        // shows the same facts, and dismissing it answers the same way; only
+        // the subtitle has nowhere to go.
+        if subtitle.is_some() {
+            log::warn!("show_properties: subtitle is not supported on this model, ignored");
+        }
+        Self::show_info_with_cancel(title, value, false, false)
     }
 
     fn show_share_words(
