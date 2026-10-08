@@ -122,6 +122,9 @@ class AppHeader(SanityCheckedStruct):
         / Reserved(c.this.header_size - c.this._end_offset + c.this._start_offset),
     )
 
+    def fingerprint(self) -> bytes:
+        return sha256(self.build()).digest()
+
 
 class AppImage(SanityCheckedStruct):
     # Parsed fixed-size app header
@@ -140,7 +143,7 @@ class AppImage(SanityCheckedStruct):
 
     def fingerprint(self) -> bytes:
         """Calculate the SHA256 hash of the application header."""
-        return sha256(self.header_bytes()).digest()
+        return self.header.fingerprint()
 
     def chunks(self) -> list[tuple[bytes, bytes]]:
         """Split the payload into chunks and calculate the hash chain."""
