@@ -66,7 +66,6 @@ pub const MONO_CHUNKS: Chunks = Chunks::new(4, 4);
 include_icon!(ICON_ARM_LEFT, "layout_caesar/res/arm_left.toif"); // 10*6
 include_icon!(ICON_ARM_RIGHT, "layout_caesar/res/arm_right.toif"); // 10*6
 include_icon!(ICON_ARROW_LEFT, "layout_caesar/res/arrow_left.toif"); // 4*7
-include_icon!(ICON_ARROW_LEFT_BIG, "layout_caesar/res/arrow_left_big.toif"); // 8*7
 include_icon!(ICON_ARROW_RIGHT, "layout_caesar/res/arrow_right.toif"); // 4*7
 include_icon!(
     ICON_ARROW_RIGHT_FAT,
@@ -75,7 +74,6 @@ include_icon!(
 include_icon!(ICON_ARROW_UP, "layout_caesar/res/arrow_up.toif"); // 8*4
 include_icon!(ICON_ARROW_DOWN, "layout_caesar/res/arrow_down.toif"); // 7*4
 include_icon!(ICON_ARROW_BACK_UP, "layout_caesar/res/arrow_back_up.toif"); // 8*8
-include_icon!(ICON_BIN, "layout_caesar/res/bin.toif"); // 10*10
 include_icon!(ICON_CANCEL, "layout_caesar/res/cancel.toif"); // 7*7
 include_icon!(ICON_COINJOIN, "layout_caesar/res/coinjoin.toif"); // 12*12
 include_icon!(ICON_DELETE, "layout_caesar/res/delete.toif"); // 9*7
