@@ -22,7 +22,7 @@ pub fn build(args: BuildArgs) -> Result<()> {
 }
 
 /// Builds the selected app(s) and returns a vector of tuples containing
-/// each package and the path to its resulting binary.
+/// each package and the path to its serialized app (`.tapp`).
 pub fn build_packages(args: &BuildArgs) -> Result<Vec<(Package, PathBuf)>> {
     let target_arch = helpers::resolve_target_arch(args.model, args.arch, args.emulator)?;
     let packages = helpers::selected_packages(&args.package)?;
@@ -30,7 +30,7 @@ pub fn build_packages(args: &BuildArgs) -> Result<Vec<(Package, PathBuf)>> {
     // Build the component(s)
     run_cargo_subcommand("build", args, &packages, None::<&[&str]>)?;
 
-    let mut pairs = Vec::new();
+    let mut binaries = Vec::new();
 
     for package in &packages {
         let elf_path = helpers::elf_path(args, package)?;
@@ -47,12 +47,19 @@ pub fn build_packages(args: &BuildArgs) -> Result<Vec<(Package, PathBuf)>> {
         artifacts::publish_artifact(&elf_path, &format!("{}.elf", artifact_name))?;
         let binary = artifacts::publish_artifact(&bin_path, &format!("{}.bin", artifact_name))?;
 
-        pairs.push((package.clone(), binary));
+        binaries.push((package.clone(), binary));
     }
 
     apptree::generate()?;
 
-    Ok(pairs)
+    let serialized_dir = helpers::artifacts_serialized_dir()?;
+    binaries
+        .into_iter()
+        .map(|(package, binary)| {
+            let tapp = image::serialized_app_path(&binary, &serialized_dir)?;
+            Ok((package, tapp))
+        })
+        .collect()
 }
 
 /// Runs `cargo clippy` with the feature/profile/target configuration for `args`.
