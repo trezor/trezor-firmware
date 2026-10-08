@@ -221,6 +221,17 @@ static void on_event_poll(void *context, bool read_awaited,
                           bool write_awaited) {
   usb_iface_t *iface = (usb_iface_t *)context;
 
+  // A real device answers the host's enumeration no matter which interface
+  // the firmware is reading. Emulate that by serving the readiness ping on
+  // every started interface whenever any of them is polled. A regular packet
+  // picked up this way stays buffered until its interface is read.
+  for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
+    usb_iface_t *other = &usb_ifaces[i];
+    if (other != iface && other->sock.sock >= 0) {
+      usb_emulated_poll_read(other);
+    }
+  }
+
   // Only one task can read or write at a time. Therefore, we can
   // assume that only one task is waiting for events and keep the
   // logic simple.
