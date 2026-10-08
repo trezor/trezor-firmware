@@ -18,7 +18,7 @@ enum ButtonState {
     Nothing,
     /// One Button is down when previously nothing was.
     /// _ _  ... ↓ _ | _ ↓
-    /// NEXT: Nothing, BothDown, HTCNeedsRelease
+    /// NEXT: Nothing, BothDown, HTCNeedsRelease, Shifted
     OneDown(PhysicalButton),
     /// Both buttons are down ("middle-click").
     /// ↓ _ | _ ↓ ... ↓ ↓
@@ -34,6 +34,12 @@ enum ButtonState {
     /// ↓ _ | _ ↓ ... ↓ _ | _ ↓
     /// NEXT: Nothing
     HTCNeedsRelease(PhysicalButton),
+    /// Left button is held as "Shift" (only when it is a shift button, see
+    /// `ButtonDetails::with_shift`). Right button may be down or not; its
+    /// secondary function is triggered when it is released.
+    /// ↓ _ | ↓ ↓
+    /// NEXT: Nothing, HTCNeedsRelease
+    Shifted { right_down: bool },
 }
 
 pub enum ButtonControllerMsg {
@@ -47,6 +53,15 @@ pub enum ButtonControllerMsg {
     /// Hold-to-confirm button was released prematurely - without triggering
     /// LongPressed.
     ReleasedWithoutLongPress(ButtonPos),
+    /// Left button was held long enough to engage "Shift".
+    ShiftStarted,
+    /// Right button was pressed and released while "Shift" was held - its
+    /// secondary function should be performed. Repeatable while "Shift" is
+    /// held.
+    ShiftedTriggered,
+    /// Left button was released, ending "Shift". Its primary function is not
+    /// triggered.
+    ShiftEnded,
 }
 
 /// Defines what kind of button should be currently used.
@@ -105,30 +120,44 @@ pub struct ButtonContainer {
     /// Whether it should even send `ButtonControllerMsg::LongPressed` events
     /// (optional)
     send_long_press: bool,
+    /// Whether holding the button engages "Shift"
+    shift: bool,
 }
 
 impl ButtonContainer {
     /// Supplying `None` as `btn_details`  marks the button inactive
     /// (it can be later activated in `set()`).
+    const DEFAULT_LONG_PRESS_MS: u32 = 1000;
+
     pub fn new(pos: ButtonPos, btn_details: Option<ButtonDetails>) -> Self {
-        const DEFAULT_LONG_PRESS_MS: u32 = 1000;
-        let send_long_press = btn_details.as_ref().is_some_and(|btn| btn.send_long_press);
-        Self {
+        let mut container = Self {
             pos,
-            button_type: btn_details.map(|d| ButtonType::from_button_details(pos, d)),
+            button_type: None,
             pressed_since: None,
-            long_press_ms: DEFAULT_LONG_PRESS_MS,
+            long_press_ms: Self::DEFAULT_LONG_PRESS_MS,
             long_pressed_timer: Timer::new(),
-            send_long_press,
-        }
+            send_long_press: false,
+            shift: false,
+        };
+        container.set_details(btn_details);
+        container
+    }
+
+    fn set_details(&mut self, btn_details: Option<ButtonDetails>) {
+        self.send_long_press = btn_details.as_ref().is_some_and(|btn| btn.send_long_press);
+        self.long_press_ms = btn_details
+            .as_ref()
+            .and_then(|btn| btn.long_press_ms)
+            .unwrap_or(Self::DEFAULT_LONG_PRESS_MS);
+        self.shift = btn_details.as_ref().is_some_and(|btn| btn.shift);
+        self.button_type = btn_details.map(|d| ButtonType::from_button_details(self.pos, d));
     }
 
     /// Changing the state of the button.
     ///
     /// Passing `None` as `btn_details` will mark the button as inactive.
     pub fn set(&mut self, btn_details: Option<ButtonDetails>, button_area: Rect) {
-        self.send_long_press = btn_details.as_ref().is_some_and(|btn| btn.send_long_press);
-        self.button_type = btn_details.map(|d| ButtonType::from_button_details(self.pos, d));
+        self.set_details(btn_details);
         if let Some(button_type) = &mut self.button_type {
             button_type.place(button_area);
         }
@@ -193,6 +222,11 @@ impl ButtonContainer {
             self.long_pressed_timer
                 .start(ctx, Duration::from_millis(self.long_press_ms));
         }
+    }
+
+    /// Whether holding the button engages "Shift".
+    pub fn is_shift(&self) -> bool {
+        self.button_type.is_some() && self.shift
     }
 
     /// Reset the pressed information.
@@ -282,6 +316,33 @@ impl ButtonController {
         self.left_btn.set_pressed(ctx, left);
         self.middle_btn.set_pressed(ctx, mid);
         self.right_btn.set_pressed(ctx, right);
+    }
+
+    /// Showing the buttons pressed or released according to the current
+    /// state. Also useful after the buttons were replaced by `set()` while
+    /// being held.
+    pub fn refresh_pressed(&mut self, ctx: &mut EventCtx) {
+        match self.state {
+            // Not showing anything also when we wait for a release
+            ButtonState::Nothing | ButtonState::HTCNeedsRelease(_) => {
+                self.set_pressed(ctx, false, false, false);
+            }
+            ButtonState::OneDown(down_button) => match down_button {
+                PhysicalButton::Left => {
+                    self.set_pressed(ctx, true, false, false);
+                }
+                PhysicalButton::Right => {
+                    self.set_pressed(ctx, false, false, true);
+                }
+                _ => {}
+            },
+            ButtonState::BothDown | ButtonState::OneReleased(_) => {
+                self.set_pressed(ctx, false, true, false);
+            }
+            ButtonState::Shifted { right_down } => {
+                self.set_pressed(ctx, true, false, right_down);
+            }
+        }
     }
 
     pub fn highlight_button(&mut self, ctx: &mut EventCtx, pos: ButtonPos) {
@@ -529,29 +590,33 @@ impl Component for ButtonController {
                         }
                         _ => (self.state, None),
                     },
-                };
-
-                // Updating the visual feedback for the buttons
-                match new_state {
-                    // Not showing anything also when we wait for a release
-                    ButtonState::Nothing | ButtonState::HTCNeedsRelease(_) => {
-                        self.set_pressed(ctx, false, false, false);
-                    }
-                    ButtonState::OneDown(down_button) => match down_button {
-                        PhysicalButton::Left => {
-                            self.set_pressed(ctx, true, false, false);
+                    // ↓ _ | ↓ ↓
+                    ButtonState::Shifted { right_down } => match button_event {
+                        // ↓ ▼
+                        ButtonEvent::ButtonPressed(PhysicalButton::Right) if !right_down => {
+                            (ButtonState::Shifted { right_down: true }, None)
                         }
-                        PhysicalButton::Right => {
-                            self.set_pressed(ctx, false, false, true);
-                        }
-                        _ => {}
+                        // ↓ ▲
+                        ButtonEvent::ButtonReleased(PhysicalButton::Right) if right_down => (
+                            ButtonState::Shifted { right_down: false },
+                            Some(ButtonControllerMsg::ShiftedTriggered),
+                        ),
+                        // ▲ * - leaving "Shift" without triggering anything
+                        ButtonEvent::ButtonReleased(PhysicalButton::Left) => (
+                            if right_down {
+                                ButtonState::HTCNeedsRelease(PhysicalButton::Right)
+                            } else {
+                                ButtonState::Nothing
+                            },
+                            Some(ButtonControllerMsg::ShiftEnded),
+                        ),
+                        _ => (self.state, None),
                     },
-                    ButtonState::BothDown | ButtonState::OneReleased(_) => {
-                        self.set_pressed(ctx, false, true, false);
-                    }
                 };
 
                 self.state = new_state;
+                // Updating the visual feedback for the buttons
+                self.refresh_pressed(ctx);
                 event
             }
             // Timer - handle clickable properties and HoldToConfirm expiration
@@ -560,6 +625,15 @@ impl Component for ButtonController {
                     ignore_btn_delay.handle_timers(event);
                 }
                 if let Some(pos) = self.handle_long_press_timers(event) {
+                    if pos == ButtonPos::Left
+                        && self.left_btn.is_shift()
+                        && self.state == ButtonState::OneDown(PhysicalButton::Left)
+                    {
+                        // Left button stays highlighted, it is still being held.
+                        self.left_btn.reset();
+                        self.state = ButtonState::Shifted { right_down: false };
+                        return Some(ButtonControllerMsg::ShiftStarted);
+                    }
                     return Some(ButtonControllerMsg::LongPressed(pos));
                 }
                 self.handle_htc_expiration(ctx, event)

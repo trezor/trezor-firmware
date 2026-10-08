@@ -1,8 +1,9 @@
 use heapless::Vec;
 
 use super::super::theme;
+use crate::strutil::ShortString;
 use crate::ui::component::{Component, Event, EventCtx, Never, Pad, Paginate};
-use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
 use crate::ui::shape::{self, Renderer};
 use crate::ui::util::Pager;
 
@@ -10,6 +11,8 @@ use crate::ui::util::Pager;
 pub struct ScrollBar {
     pad: Pad,
     pager: Pager,
+    /// Showing a numeric "current/total" counter instead of the dots.
+    numeric: bool,
 }
 
 /// Carrying the appearance of the scrollbar dot.
@@ -38,7 +41,14 @@ impl ScrollBar {
         Self {
             pad: Pad::with_background(theme::BG),
             pager: Pager::new(page_count),
+            numeric: false,
         }
+    }
+
+    /// Showing a numeric "current/total" counter instead of the dots.
+    pub fn with_numeric(mut self) -> Self {
+        self.numeric = true;
+        self
     }
 
     /// Page count will be given later as it is not available yet.
@@ -52,8 +62,23 @@ impl ScrollBar {
 
     /// The width the scrollbar will really occupy.
     pub fn overall_width(&self) -> i16 {
+        if self.numeric {
+            // Reserving the same width for the current page as for the total,
+            // so that the counter fits on every page.
+            let (_, total) = self.numeric_parts();
+            return 2 * theme::FONT_HEADER.text_width(&total) + Self::NUMERIC_SEPARATOR_WIDTH;
+        }
         let dots_shown = self.pager.total().min(MAX_DOTS);
         Self::dots_width(dots_shown)
+    }
+
+    /// The height the scrollbar will really occupy.
+    pub fn overall_height(&self) -> i16 {
+        if self.numeric {
+            theme::FONT_HEADER.text_height()
+        } else {
+            Self::MAX_DOT_SIZE
+        }
     }
 
     pub fn set_pager(&mut self, pager: Pager) {
@@ -180,6 +205,41 @@ impl ScrollBar {
         dots
     }
 
+    /// Space the separator icon takes in the numeric counter (with a 1px gap
+    /// on both sides).
+    const NUMERIC_SEPARATOR_WIDTH: i16 = theme::ICON_PAGE_SEPARATOR.toif.width() + 2;
+
+    fn numeric_parts(&self) -> (ShortString, ShortString) {
+        (
+            uformat!("{}", self.pager.current() + 1),
+            uformat!("{}", self.pager.total()),
+        )
+    }
+
+    /// "current/total" counter, right-aligned.
+    fn render_numeric<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let (current, total) = self.numeric_parts();
+        let font = theme::FONT_HEADER;
+        let baseline = self.pad.area.top_right() + Offset::y(font.text_height() - 1);
+        let total_left = baseline.x - font.text_width(&total);
+        let current_right = total_left - Self::NUMERIC_SEPARATOR_WIDTH;
+        shape::Text::new(baseline, &total, font)
+            .with_align(Alignment::End)
+            .with_fg(theme::FG)
+            .render(target);
+        shape::ToifImage::new(
+            Point::new(current_right + 1, baseline.y),
+            theme::ICON_PAGE_SEPARATOR.toif,
+        )
+        .with_align(Alignment2D::BOTTOM_LEFT)
+        .with_fg(theme::FG)
+        .render(target);
+        shape::Text::new(Point::new(current_right, baseline.y), &current, font)
+            .with_align(Alignment::End)
+            .with_fg(theme::FG)
+            .render(target);
+    }
+
     fn render_horizontal<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let mut top_right = self.pad.area.top_right();
         for dot in self.get_drawable_dots().iter().rev() {
@@ -195,9 +255,14 @@ impl Component for ScrollBar {
     fn place(&mut self, bounds: Rect) -> Rect {
         // Occupying as little space as possible (according to the number of pages),
         // aligning to the right.
+        let offset = if self.numeric {
+            Offset::zero()
+        } else {
+            Offset::y(1) // offset for centering vertically
+        };
         let scrollbar_area = Rect::from_top_right_and_size(
-            bounds.top_right() + Offset::y(1), // offset for centering vertically
-            Offset::new(self.overall_width(), Self::MAX_DOT_SIZE),
+            bounds.top_right() + offset,
+            Offset::new(self.overall_width(), self.overall_height()),
         );
         self.pad.place(scrollbar_area);
         scrollbar_area
@@ -215,7 +280,11 @@ impl Component for ScrollBar {
         }
 
         self.pad.render(target);
-        self.render_horizontal(target);
+        if self.numeric {
+            self.render_numeric(target);
+        } else {
+            self.render_horizontal(target);
+        }
     }
 }
 

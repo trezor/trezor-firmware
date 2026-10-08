@@ -126,6 +126,12 @@ where
         self.title = Some(Child::new(Title::new(title)));
         self
     }
+
+    /// Showing a numeric "current/total" page counter instead of the dots.
+    pub fn with_numeric_page_counter(mut self) -> Self {
+        self.scrollbar = self.scrollbar.with_numeric();
+        self
+    }
 }
 
 impl<T> Component for ScrollableFrame<T>
@@ -145,7 +151,7 @@ where
                 (bounds, Rect::zero(), Rect::zero())
             } else {
                 let (scrollbar_area, content_area) =
-                    bounds.split_top(ScrollBar::MAX_DOT_SIZE + constant::LINE_SPACE);
+                    bounds.split_top(self.scrollbar.overall_height() + constant::LINE_SPACE);
                 (content_area, scrollbar_area, Rect::zero())
             }
         } else {
