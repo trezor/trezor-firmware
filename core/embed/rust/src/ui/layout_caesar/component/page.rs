@@ -10,6 +10,17 @@ use crate::ui::geometry::{Insets, Rect};
 use crate::ui::shape::Renderer;
 use crate::ui::util::Pager;
 
+/// What the left button does in the menu navigation (see
+/// `ButtonPage::with_menu_nav`).
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum MenuNav {
+    /// Opens the context menu - the screen returns `PageMsg::Info`.
+    Menu,
+    /// Closes the screen, e.g. the one opened from a context menu - the screen
+    /// returns `PageMsg::Cancelled`.
+    Close,
+}
+
 pub struct ButtonPage<T>
 where
     T: Component + Paginate,
@@ -21,6 +32,10 @@ where
     back_btn_details: Option<ButtonDetails>,
     next_btn_details: Option<ButtonDetails>,
     has_menu: bool,
+    /// Menu navigation, replacing the cancel/back/next buttons.
+    menu_nav: Option<MenuNav>,
+    /// Whether the left button is being held as "Shift" (menu navigation only).
+    shift_active: bool,
     buttons: Child<ButtonController>,
 }
 
@@ -37,6 +52,8 @@ where
             back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             has_menu: false,
+            menu_nav: None,
+            shift_active: false,
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call
             // `content.page_count()`.
@@ -56,6 +73,17 @@ where
 
     pub fn with_menu(mut self, has_menu: bool) -> Self {
         self.has_menu = has_menu;
+        self
+    }
+
+    /// Navigation with the left button opening a context menu (or closing the
+    /// screen), and the right button scrolling down and finally confirming
+    /// (when there is a confirm button).
+    ///
+    /// Holding the left button on any but the first page engages "Shift", and
+    /// the right button then scrolls up.
+    pub fn with_menu_nav(mut self, menu_nav: MenuNav) -> Self {
+        self.menu_nav = Some(menu_nav);
         self
     }
 
@@ -94,12 +122,20 @@ where
     fn update_buttons(&mut self, ctx: &mut EventCtx) {
         let pager = self.pager();
         let btn_layout = self.get_button_layout(pager.has_prev(), pager.has_next());
-        self.buttons.mutate(ctx, |_ctx, buttons| {
+        let shift_active = self.shift_active;
+        self.buttons.mutate(ctx, |ctx, buttons| {
             buttons.set(btn_layout);
+            if shift_active {
+                // The new left button is still being held.
+                buttons.refresh_pressed(ctx);
+            }
         });
     }
 
     fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout {
+        if let Some(menu_nav) = self.menu_nav {
+            return self.get_menu_nav_button_layout(menu_nav, has_prev, has_next);
+        }
         let btn_left = if !has_prev {
             self.cancel_btn_details.clone()
         } else {
@@ -114,6 +150,69 @@ where
             ),
         };
         ButtonLayout::new(btn_left, btn_middle, btn_right)
+    }
+
+    fn get_menu_nav_button_layout(
+        &self,
+        menu_nav: MenuNav,
+        has_prev: bool,
+        has_next: bool,
+    ) -> ButtonLayout {
+        // The bracketed left icon advertises "Shift", which is offered only when
+        // there is somewhere to scroll up to. It stays while "Shift" is held.
+        let shift = has_prev || self.shift_active;
+        let btn_left = match (menu_nav, shift) {
+            (MenuNav::Menu, false) => ButtonDetails::menu_icon(),
+            (MenuNav::Menu, true) => ButtonDetails::menu_shift_icon(),
+            (MenuNav::Close, false) => ButtonDetails::close_icon(),
+            (MenuNav::Close, true) => ButtonDetails::close_shift_icon(),
+        };
+        let btn_right = if self.shift_active {
+            has_prev.then(ButtonDetails::scroll_up_wide)
+        } else if has_next {
+            Some(ButtonDetails::scroll_down_wide())
+        } else {
+            self.confirm_btn_details.clone()
+        };
+        ButtonLayout::new(Some(btn_left), None, btn_right)
+    }
+
+    fn event_menu_nav(
+        &mut self,
+        ctx: &mut EventCtx,
+        event: Event,
+        menu_nav: MenuNav,
+    ) -> Option<PageMsg<T::Msg>> {
+        match self.buttons.event(ctx, event) {
+            Some(ButtonControllerMsg::Triggered(ButtonPos::Left, _)) => {
+                return Some(match menu_nav {
+                    MenuNav::Menu => PageMsg::Info,
+                    MenuNav::Close => PageMsg::Cancelled,
+                });
+            }
+            Some(ButtonControllerMsg::Triggered(ButtonPos::Right, _)) => {
+                if self.pager().has_next() {
+                    self.next_page();
+                    self.change_page(ctx);
+                } else {
+                    return Some(PageMsg::Confirmed);
+                }
+            }
+            Some(ButtonControllerMsg::ShiftStarted) => {
+                self.shift_active = true;
+                self.update_buttons(ctx);
+            }
+            Some(ButtonControllerMsg::ShiftedTriggered) if self.pager().has_prev() => {
+                self.prev_page();
+                self.change_page(ctx);
+            }
+            Some(ButtonControllerMsg::ShiftEnded) => {
+                self.shift_active = false;
+                self.update_buttons(ctx);
+            }
+            _ => {}
+        }
+        None
     }
 }
 
@@ -153,7 +252,12 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         ctx.set_page_count(self.pager().total());
-        if let Some(ButtonControllerMsg::Triggered(pos, _)) = self.buttons.event(ctx, event) {
+        if let Some(menu_nav) = self.menu_nav {
+            if let Some(msg) = self.event_menu_nav(ctx, event, menu_nav) {
+                return Some(msg);
+            }
+        } else if let Some(ButtonControllerMsg::Triggered(pos, _)) = self.buttons.event(ctx, event)
+        {
             match pos {
                 ButtonPos::Left => {
                     if self.pager().has_prev() {
@@ -210,6 +314,9 @@ where
         t.int("page_count", i64::from(self.pager().total()));
         t.child("buttons", &self.buttons);
         t.child("content", &self.content);
-        t.bool("has_menu", self.has_menu && self.pager().is_last());
+        let has_menu = self.has_menu || self.menu_nav == Some(MenuNav::Menu);
+        t.bool("has_menu", has_menu && self.pager().is_last());
+        // The context menu is opened by the left button.
+        t.bool("left_menu", self.menu_nav == Some(MenuNav::Menu));
     }
 }
