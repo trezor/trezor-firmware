@@ -33,6 +33,10 @@ class Tamper:
     alter: t.Callable[[Upload, PqSecureBundle], Upload]
     #: the variant the case needs (the custom layout cases)
     variant: str = "universal"
+    #: refused before the confirm screen; False for the nRF co-path, which is
+    #: checked when the nRF stage runs, after the confirm and after the
+    #: bootloader staging has already overwritten part of the firmware area
+    before_confirm: bool = True
 
 
 def _flip(data: bytes, offset: int) -> bytes:
@@ -104,8 +108,9 @@ PHASE1 = [
         "nRF image not in founder tree",
         1,
         "nRF co-path byte flipped: the whole upload is refused, even with the "
-        "nRF already current",
+        "nRF already current (after the confirm, when the nRF stage runs)",
         _nrf_copath,
+        before_confirm=False,
     ),
     Tamper(
         "no-nrf",

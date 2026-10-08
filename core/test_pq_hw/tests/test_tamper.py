@@ -58,10 +58,18 @@ def test_phase1_refused(unit: Unit, fx: Fixtures, case: tamper.Tamper) -> None:
     upload = case.alter(flows.Upload.of(bundle), bundle)
     ctx = flows.enter_bootloader(unit, ctx)
     unit.step(f"tamper {case.name}: {case.what}", screenshot=False)
-    # confirm=False: each of these is refused before the confirm screen
     with pytest.raises(exceptions.TrezorFailure, match=case.expect):
-        flows.pq_install(unit, ctx, bundle, confirm=False, upload=upload)
-    assert_untouched(unit, ctx, seed)
+        # confirm=False makes an unexpected confirm screen fail the test
+        flows.pq_install(
+            unit, ctx, bundle, confirm=not case.before_confirm, upload=upload
+        )
+    if case.before_confirm:
+        assert_untouched(unit, ctx, seed)
+    else:
+        # refused after the staging reused part of the firmware area: the
+        # firmware is gone, the honest install brings it back with the seed
+        flows.close(ctx)
+        assert_recovers(unit, fx, seed)
 
 
 @pytest.mark.parametrize("case", tamper.PHASE2, ids=lambda c: c.name)

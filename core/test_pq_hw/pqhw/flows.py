@@ -38,6 +38,24 @@ REBOOT = 240
 PHASE2_RESUME = 150
 # On USB with a silent wire this long: the bootloader intro, waiting for a tap.
 INTRO_SILENCE = 15
+# While waiting for a unit that is off USB (a boardloader swap, an nRF push, a
+# restart), a screenshot this often: the report then shows progress, an error
+# screen or a restart instead of only the timeout.
+WAIT_SCREEN_EVERY = 30
+
+
+class _WaitScreens:
+    """Screenshot steps at most every WAIT_SCREEN_EVERY seconds of a wait."""
+
+    def __init__(self, unit: Unit, what: str) -> None:
+        self.unit, self.what = unit, what
+        self.start = self.last = time.monotonic()
+
+    def tick(self) -> None:
+        now = time.monotonic()
+        if now - self.last >= WAIT_SCREEN_EVERY:
+            self.last = now
+            self.unit.step(f"{self.what}: {now - self.start:.0f} s, not on USB yet")
 
 
 # --- seed -------------------------------------------------------------------
@@ -280,7 +298,19 @@ def pq_phase2(unit: Unit, bundle: PqSecureBundle, upload: Upload | None = None) 
     up = upload or Upload.of(bundle)
     needed_person = False
     try:
-        ctx = unit.context(bootloader=True, timeout=PHASE2_RESUME)
+        deadline = time.monotonic() + PHASE2_RESUME
+        screens = _WaitScreens(unit, "waiting for phase 2")
+        while True:
+            try:
+                ctx = unit.context(
+                    bootloader=True,
+                    timeout=min(WAIT_SCREEN_EVERY, deadline - time.monotonic()),
+                )
+                break
+            except UnitError:
+                if time.monotonic() >= deadline:
+                    raise
+                screens.tick()
     except UnitError:
         # Not on USB: the bootloader is on its intro ("Initiate connection"),
         # which brings the wire up only after a tap -- it did not resume.
@@ -392,11 +422,13 @@ def _connect_any(unit: Unit, deadline: float) -> TrezorTestContext:
     tapped; one that stays like that for INTRO_SILENCE seconds is tapped (only
     if debuglink shows that screen)."""
     silent_since: float | None = None
+    screens = _WaitScreens(unit, "waiting for the unit")
     while time.monotonic() < deadline:
         try:
             return unit.context(bootloader=None, timeout=10)
         except UnitError:
             pass
+        screens.tick()
         now = time.monotonic()
         if not unit.present():
             silent_since = None  # still rebooting, or pushing the nRF
@@ -405,6 +437,7 @@ def _connect_any(unit: Unit, deadline: float) -> TrezorTestContext:
         elif now - silent_since > INTRO_SILENCE:
             tap_bootloader_intro(unit, timeout=30, bootloader_only=True)
             silent_since = None
+    unit.step("unit not reachable over USB in time")
     raise UnitError("unit not reachable over USB in time")
 
 
