@@ -1120,14 +1120,8 @@ impl FirmwareUI for UIBolt {
                 0,
                 external_menu,
             ),
-            // This model has no "continue in the app" screen — its own
-            // `show_continue_in_app` shows nothing — so the end of a flow looks
-            // like any other success and waits to be dismissed.
-            // WIP: diverges from the notice contract — `Done` should answer
-            // without waiting for the person (delizia and eckhart time out and
-            // return). This model's modal cannot yet combine a dismiss button
-            // with a timeout; until it can, the person dismisses and the call
-            // blocks. The reply value is the same either way.
+            // WIP: `Done` should answer without waiting; here it waits for the
+            // tap (the modal cannot combine a button with a timeout).
             Severity::Success | Severity::Done => {
                 Self::show_success(title, TR::buttons__continue.into(), content, false, 0)
             }

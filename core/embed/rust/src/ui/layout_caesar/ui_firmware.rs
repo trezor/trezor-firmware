@@ -1237,24 +1237,16 @@ impl FirmwareUI for UICaesar {
         external_menu: bool,
         _cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        // WIP: no notice screen on this model has a menu a caller can drive.
-        // The notice is drawn without one, so the caller's extras are
-        // unreachable here.
+        // WIP: the menu is not wired into notices yet, so the caller's extras
+        // are unreachable here.
         if external_menu {
             log::warn!("show_notice: external_menu is not supported on this model, ignored");
         }
         match severity {
-            // This model's info screen has no button and never answers, and it
-            // has no success screen at all: its own `show_success` is a plain
-            // confirmation with a single Continue. So all three are that.
-            // There is no "continue in the app" screen either — its own
-            // `show_continue_in_app` shows nothing — so the end of a flow waits
-            // to be dismissed like the rest.
-            // WIP: the `Done` arm diverges from the notice contract — it should
-            // answer without waiting for the person (delizia and eckhart time
-            // out and return). This model's screens have no timeout support
-            // yet; until they do, the person dismisses and the call blocks.
-            // The reply value is the same either way.
+            // A plain confirmation with a single Continue, as this model's own
+            // `show_success` is: its info screen has no button.
+            // WIP: `Done` should answer without waiting; here it waits for the
+            // tap (no screen with both a button and a timeout).
             Severity::Info | Severity::Success | Severity::Done => {
                 LayoutObj::new_root(Self::confirm_action(
                     title,
@@ -1277,7 +1269,7 @@ impl FirmwareUI for UICaesar {
                 TR::buttons__continue.into(),
                 content,
                 TString::empty(),
-                true, // allow_cancel: like core's own warnings
+                true, // allow_cancel; WIP: this model's `show_warning` ignores it
                 false,
             ),
             Severity::Danger => LayoutObj::new_root(Self::show_danger(
@@ -1552,6 +1544,8 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     } else {
         None
     };
+    // WIP: a menu takes the hold's place, so a `Final` step with extras is a
+    // tap here (#7694).
     if hold && !external_menu {
         confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
     }

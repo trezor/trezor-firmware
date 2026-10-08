@@ -90,7 +90,7 @@ pub fn properties(params: Properties<'_>) -> Result<()> {
         None, // verb: the label follows the gesture, which the block owns
         params.commitment == Commitment::Final, // hold: follows from the commitment
         Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
-        BR_CODE_OTHER, // legacy field; see the constant
+        BR_CODE_OTHER, // see the constant
     );
 
     answer(call(&request, params.extras, Some(params.br))?)

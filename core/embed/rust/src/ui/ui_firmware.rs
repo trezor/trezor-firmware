@@ -557,7 +557,7 @@ pub trait FirmwareUI {
     /// asks for a menu button the caller drives; a model whose screen for this
     /// severity cannot draw one draws the notice without it, and says so.
     /// `cancel` says the notice must offer a way to back out, answering
-    /// `CANCELLED`; how is the model's.
+    /// `CANCELLED`; how is the model's. WIP: every model ignores it.
     fn show_notice(
         severity: Severity,
         title: TString<'static>,

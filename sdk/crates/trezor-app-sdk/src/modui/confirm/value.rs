@@ -1,12 +1,6 @@
 //! Confirming a single value. The public docs live on [`value`].
 //!
-//! WIP: manual test results with extras (by hand):
-//! - caesar (T3B1): only the value is drawn. Its Cancel works, but there is
-//!   no menu, so the extras cannot be reached.
-//! - delizia (T3T1): the menu button replaced the screen's way out and the
-//!   menu had none, so the block could not be refused. delizia's menu now
-//!   adds its own Cancel; not re-tested since.
-//! - bolt (T2T1): no menu, so the extras cannot be reached.
+//! WIP: bolt has no menu, so the extras cannot be reached.
 
 use crate::Result;
 use crate::modui::internal::{BR_CODE_OTHER, answer, call};
@@ -139,7 +133,7 @@ pub fn value(params: Value<'_>) -> Result<()> {
         params.value,
         params.description,
         Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
-        BR_CODE_OTHER,   // legacy field; see the constant
+        BR_CODE_OTHER,   // see the constant
         true,            // is_data: values are shown verbatim, not prose
         None,            // verb: the label follows the gesture, which the block owns
         params.subtitle,

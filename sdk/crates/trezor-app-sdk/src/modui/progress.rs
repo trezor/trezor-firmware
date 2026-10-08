@@ -10,8 +10,7 @@
 //! The app never ends a progress by hand. It appears when a progress starts
 //! and disappears when the work is done — whether the work finished, failed,
 //! or returned early through `?`. A lost `End` would leave the person staring
-//! at a bar for work that stopped, which is precisely what a scope is for;
-//! the same reasoning that closes a `LayoutHandle` on drop.
+//! at a bar for work that stopped, which is precisely what a scope is for.
 //!
 //! # Forms
 //!
@@ -161,8 +160,8 @@ impl Progress {
     ///
     /// # Errors
     ///
-    /// [`crate::Error::ServiceError`] if the request could not be sent or
-    /// core did not accept it.
+    /// [`crate::Error::DataError`] if the request could not be sent or core
+    /// did not accept it.
     pub fn start(label: &str, total: Total) -> Result<Self> {
         get_ui_or_die()
             .init_progress(

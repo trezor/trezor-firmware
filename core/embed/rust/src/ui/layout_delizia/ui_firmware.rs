@@ -1129,7 +1129,7 @@ impl FirmwareUI for UIDelizia {
                 TR::buttons__continue.into(),
                 content,
                 TString::empty(),
-                true, // allow_cancel: like core's own warnings
+                true, // allow_cancel; WIP: this model's `show_warning` ignores it
                 false,
             ),
             Severity::Danger => LayoutObj::new_root(Self::show_danger(

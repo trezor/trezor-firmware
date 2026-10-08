@@ -57,7 +57,7 @@
 //!
 //! ```text
 //! show_qr          — a value as a QR code, to scan (needs a wire extension)
-//! request_number   — the person enters a number (RequestNumber exists on the wire)
+//! request_number   — the person enters a number (needs a wire extension)
 //! choose           — the person picks one of a list; a decisive screen, not
 //!                    the navigational extras menu, and collides with the
 //!                    no-app-menus rule — decide that boundary explicitly
@@ -86,7 +86,8 @@
 //!   request to core has to fit in one IPC message, on the order of a
 //!   kilobyte, so data longer than that — the bytes given to [`confirm::data`],
 //!   an [`Extra::Chunked`] extra — is cut into chunks, and each chunk is sent
-//!   to core as a request of its own.
+//!   to core as a request of its own. WIP: [`Extra::Chunked`] is not
+//!   implemented yet.
 //! - **Pagination** is core's, and exists because the screen is small. Core
 //!   splits whatever one request carries across as many screens as it takes
 //!   — a screen holds a few hundred bytes at most, on the largest model — as
@@ -221,23 +222,15 @@
 //! warning, and the flow continues: on such a model the extras are
 //! unreachable, but the app is not told.
 //!
-//! WIP: the one contract break left is [`notice::show`] with
-//! [`notice::Severity::Done`]: it should answer at once on every model, but on two
-//! of them the screen has no timeout support yet, so the person dismisses
-//! and the call blocks meanwhile — same reply, different timing. The
-//! deviations are documented at the model's own `notice::show`; the fix is
-//! timeout support in those screens, not a change here.
+//! WIP: both of those outcomes are under discussion. There is no error path
+//! from core to the app: a screen core cannot draw stops the app's task, and
+//! the blocking call never returns. The cheap fix is a `UiReply` failure
+//! variant mapped to `Err` in `internal::answer`; a fuller one is an
+//! error-report service covering crypto and progress too. Whether to tell
+//! the app about a dropped menu is open.
 //!
-//! WIP: both of those outcomes are under discussion. A screen core cannot
-//! draw kills the app's task outright — the blocking call never returns,
-//! not even with an `Err`. Bluntly: there is no proper error path from core
-//! to the app. The app can receive a service reply or nothing, and core's
-//! only failure mode toward the app is stopping its task; errors flow to
-//! the host, never to the app. The cheap fix is a `UiReply` failure variant
-//! mapped to `Err` in `screen`; a fuller one is an error-report service
-//! covering crypto and progress too. Likewise, a silently dropped menu
-//! leaves the app believing its extras exist on every model; whether to
-//! tell it is open.
+//! WIP: contract breaks left: a `Done` notice waits for a tap on bolt and
+//! caesar, and notices ignore `cancel`; see [`notice`].
 //!
 //! # Example
 //!
@@ -298,8 +291,8 @@
 // list, and the block's final expression, and nothing else here.
 //
 // ButtonRequests: the app names the step and nothing else. The suffixes are
-// `internal::menu`'s. `br_code` is the legacy identifier, always `BR_CODE_OTHER`. Page
-// counts, and whether a repeat is a new step, are core's.
+// `internal::menu`'s. `br_code` is always `BR_CODE_OTHER`. Page counts, and
+// whether a repeat is a new step, are core's.
 //
 // Layout: the public surface is this file plus one module per kind of block
 // (`confirm`, `notice`, `progress`); the library's own machinery is in
@@ -335,9 +328,12 @@ pub use crate::traits::ui::Property;
 /// What confirming a block commits the person to.
 ///
 /// The app knows which of its screens is the one that signs; the library does
-/// not. The app says so here, and the library turns it into the gesture —
-/// today a hold rather than a tap — so the person's last yes is harder to give
-/// by accident. The gesture itself is not the app's to name.
+/// not. The app says so here, and the library turns it into the gesture — a
+/// hold rather than a tap — so the person's last yes is harder to give by
+/// accident. The gesture itself is not the app's to name.
+///
+/// WIP: on caesar a screen with extras has a menu instead of the hold, so
+/// `Final` is a tap there (#7694).
 #[derive(uDebug, Copy, Clone, PartialEq, Eq)]
 pub enum Commitment {
     /// One step of a longer flow. Confirming it only moves on.

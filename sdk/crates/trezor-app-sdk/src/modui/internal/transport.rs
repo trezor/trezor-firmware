@@ -2,10 +2,8 @@
 //!
 //! Private. A block is one call to the app, but several screens to the person:
 //! the block itself, the list of extras, one of the extras, then the block
-//! again. Sending the block's request a second time used to build a second
-//! layout on the trusted side, losing everything the first one held — scroll
-//! position, page index, animation state — and paying a full construction to
-//! show the person something they had already been looking at.
+//! again. Coming back must find the block as the person left it — scroll
+//! position, page index — without building it a second time.
 //!
 //! A [`LayoutHandle`] is the app-side claim on such a layout: it picks a
 //! handle number, the trusted side keeps the layout under it, and the layout

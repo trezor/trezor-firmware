@@ -16,18 +16,8 @@ use crate::{Error, Result};
 // Constants
 // ============================================================================
 
-/// The `ButtonRequestType` every block sends: `Other`, and nothing else.
-///
-/// Named for its value rather than its role, so that a call site says what
-/// goes on the wire instead of implying there is a choice to make.
-///
-/// Legacy field, kept because hosts written before `br_name` switch on it. It
-/// does not classify an extapp's screens and is not meant to: the name carries
-/// the meaning, and every extapp call is `Other` by decision.
-///
-/// Stated once here rather than per block so that the day the field leaves the
-/// wire, this constant and its uses go with it and nothing has to be
-/// re-derived. Do not grow it into a per-block table.
+/// The `ButtonRequestType` every block sends: `Other`. The step name
+/// (`br_name`) carries the meaning; do not grow this into a per-block table.
 pub(in crate::modui) const BR_CODE_OTHER: i32 = 1;
 
 // ============================================================================
