@@ -58,7 +58,7 @@ fn show_chunk(params: &Params<'_>, hex: &str, layout: &LayoutHandle) -> Result<A
         hex,
         None,            // description
         Some(params.br), // br_name: the step's name; the app owns it
-        BR_CODE_OTHER,   // legacy field; see the constant
+        BR_CODE_OTHER,   // see the constant
         true,            // is_data: raw data, shown verbatim
         None,            // verb: the model's own
         params.subtitle,

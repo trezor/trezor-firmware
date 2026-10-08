@@ -28,9 +28,8 @@ pub enum Extra<'a> {
     ///
     /// The closure runs inside the app and never crosses IPC.
     ///
-    /// **Not implemented yet**: a block given one returns
-    /// [`crate::Error::ValueError`] as soon as it is called, before anything is
-    /// shown. The signature is provisional and may change.
+    /// **WIP: not implemented.** A block given one returns
+    /// [`crate::Error::ValueError`] before anything is shown.
     Chunked(&'a dyn Fn(usize, &mut [u8]) -> usize),
     //
     // Other kinds belong here as they are needed, each differing only in how it

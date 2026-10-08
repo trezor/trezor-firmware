@@ -3,8 +3,7 @@ cargo-features = ["panic-immediate-abort"]
 [workspace]
 members = [
     "tron",
-    # "ethereum" — disabled until ported to modui (it still uses the old
-    # `ui` runtime).
+    # "ethereum" — WIP: not ported to modui yet.
 ]
 
 resolver = "2"

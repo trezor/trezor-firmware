@@ -1,7 +1,6 @@
 //! The generic yes/no block. The public docs live on [`action`].
 //!
-//! WIP: manual test results with extras (by hand), bolt (T2T1): no menu, so
-//! the extras cannot be reached.
+//! WIP: bolt has no menu, so the extras cannot be reached.
 
 use crate::Result;
 use crate::modui::internal::{BR_CODE_OTHER, answer, call};
@@ -105,7 +104,7 @@ pub fn action(params: Action<'_>) -> Result<()> {
         params.commitment == Commitment::Final, // hold: follows from the commitment
         None,                                   // verb: the label follows the gesture
         Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
-        BR_CODE_OTHER,   // legacy field; see the constant
+        BR_CODE_OTHER,   // see the constant
         !params.extras.is_empty(), // external_menu: how the menu is reached
     );
 

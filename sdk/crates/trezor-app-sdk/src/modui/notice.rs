@@ -4,16 +4,17 @@
 //! answers the same way everywhere. Failures are not among the callouts; see
 //! [`Severity`].
 //!
-//! WIP: manual test results (by hand):
-//! - caesar (T3B1) and bolt (T2T1): an info notice with extras draws no menu
-//!   button, so its extras cannot be reached. A warning notice with extras
-//!   and `cancel: true` drew only its text and could only be confirmed —
-//!   neither the extras nor the asked-for way out existed. `cancel` now goes
-//!   to the model's own screen; recheck.
-//! - bolt (T2T1): a `Done` notice waits for a tap instead of returning on its
-//!   own.
-//! - Delizia gained a menu button for info and warning notices; the other
-//!   severities, and bolt and caesar, still draw without one.
+//! WIP: extras have a menu only on delizia (info, warning) and eckhart (info).
+//!
+//! WIP: `Done` waits for a tap on bolt and caesar.
+//!
+//! WIP: `cancel` ignored — every layout takes `_cancel`. Today the screen
+//! decides: danger always; warning on bolt/eckhart (caesar/delizia
+//! `show_warning` drop `allow_cancel`), delizia also with extras; info only
+//! with extras (delizia/eckhart, menu Cancel); success/done never.
+//! Direction: way out moves to the menu, like confirmations. `cancel` =
+//! "menu button even without extras"; `extapp_menu` adds Cancel. Info and
+//! warning only. Bolt: no menus, keeps on-screen X. Caesar: waits on #7694.
 
 use crate::Result;
 use crate::modui::ExtraItem;
@@ -48,7 +49,7 @@ impl<'a> Notice<'a> {
     ///   [extras](crate::modui#extras-and-the-way-out).
     ///   Not every severity can show them; see [`show`].
     /// - `cancel` — whether the person must be able to back out of it. How
-    ///   they do is the model's.
+    ///   they do is the model's. WIP: ignored today; see the module notes.
     pub fn new(
         severity: Severity,
         title: &'a str,
@@ -86,11 +87,12 @@ impl<'a> Notice<'a> {
 /// - Backing out is `Err(`[`crate::Error::Cancelled`]`)`, and only a notice
 ///   that offers a way out can answer it: with `cancel` set, every model
 ///   offers one; without, a model may still (a danger screen always does).
+///   WIP: not yet; see the module notes.
 /// - [`Severity::Done`] answers `Ok(())` without waiting for the person:
 ///   it is the last screen of the flow, nothing on the device follows it, and
 ///   the host's response should not wait on a dismissal. The screen may stay
 ///   up for a moment or until the person acknowledges it, whichever the model
-///   does — the call has already returned.
+///   does — the call has already returned. WIP: not on bolt and caesar.
 ///
 /// There is no error notice: an app that fails returns `Err`, and whether the
 /// person sees a screen for that is core's decision.
@@ -139,7 +141,7 @@ pub fn show(params: Notice<'_>) -> Result<()> {
         !params.extras.is_empty(), // external_menu: how the extras are reached
         params.cancel,             // cancel: the model provides the way out
         Some(params.br),           // br_name: the step's name; the app owns it
-        BR_CODE_OTHER,             // legacy field; see the constant
+        BR_CODE_OTHER,             // see the constant
     );
 
     answer(call(&request, params.extras, Some(params.br))?)

@@ -1,11 +1,8 @@
 //! The closing screen of a transaction. The public docs live on
 //! [`summary`].
 //!
-//! WIP: manual test results (by hand):
-//! - caesar (T3B1): with extras the menu, the extras and its way out all
-//!   work; without extras there is no menu, as intended. The reference for
-//!   what the other blocks should do there.
-//! - bolt (T2T1): no menu, so the extras cannot be reached.
+//! WIP: bolt has no menu and delizia ignores it, so the extras cannot be
+//! reached there.
 
 use crate::Result;
 use crate::modui::ExtraItem;
@@ -103,7 +100,7 @@ pub fn summary(params: Summary<'_>) -> Result<()> {
         false,                     // back_button: sequences run forward only
         !params.extras.is_empty(), // external_menu: how the extras are reached
         Some(params.br),           // br_name: the step's name; the app owns it
-        BR_CODE_OTHER,             // legacy field; see the constant
+        BR_CODE_OTHER,             // see the constant
     );
 
     answer(call(&request, params.extras, Some(params.br))?)
