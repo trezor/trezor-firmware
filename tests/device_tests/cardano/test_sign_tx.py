@@ -42,8 +42,9 @@ def show_details_input_flow(client: Client):
         SHOW_ALL_BUTTON_POSITION = (143, 167)
         client.debug.click(SHOW_ALL_BUTTON_POSITION)
     elif client.layout_type is LayoutType.Caesar:
-        # Caesar - right button for "Show all"
-        client.debug.press_yes()
+        # Caesar - "Show all" from context menu
+        client.debug.press_left()
+        client.debug.button_actions.navigate_to_menu_item(0)
     elif client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
         # Delizia - "Show all" button from context menu
         client.debug.click(client.debug.screen_buttons.menu())
