@@ -4,8 +4,9 @@
 //! The app binary format consists of a fixed-size header followed by the platform
 //! specific executable binary.
 
-use anyhow::{Context, Result, ensure};
+use anyhow::{Context, Result, anyhow, ensure};
 use cargo_metadata::Package;
+use clap::ValueEnum;
 use object::Object;
 use sha2::Digest;
 use std::{
@@ -14,8 +15,8 @@ use std::{
     mem::size_of,
     path::{Path, PathBuf},
 };
-use zerocopy::{IntoBytes, LittleEndian, U16, U32};
-use zerocopy_derive::{Immutable, IntoBytes};
+use zerocopy::{FromBytes, IntoBytes, LittleEndian, U16, U32};
+use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::args::{Language, Model, TargetArch};
 
@@ -37,7 +38,7 @@ impl TargetArch {
 /// containing metadata about the app, such as segment sizes and addresses padded
 /// with zeroes to ensure it is exactly APP_HEADER_SIZE bytes in size.
 #[repr(C)]
-#[derive(IntoBytes, Immutable, Debug)]
+#[derive(IntoBytes, FromBytes, Immutable, Debug)]
 struct AppHeader {
     /// Magic number to identify the app binary format
     magic: U32<LittleEndian>,
@@ -208,6 +209,66 @@ pub fn convert_elf_to_bin(
     Ok(bin_path)
 }
 
+/// Returns the path of the serialized app (`.tapp`) that
+/// `extapp_tool_advanced.py post-build` writes into `serialized_dir` for the
+/// app binary at `bin_path`. The path is derived from the binary's header and
+/// must match `get_app_name` in that tool:
+/// `<id>/<version>/<id>_<version>_sdk<major.minor>_<arch>_abi<abi>_<model>_<lang>.tapp`.
+pub fn serialized_app_path(bin_path: &Path, serialized_dir: &Path) -> Result<PathBuf> {
+    let bytes = fs::read(bin_path)
+        .with_context(|| format!("Failed to read the app binary {:?}", bin_path))?;
+    let (header, _) = AppHeader::read_from_prefix(&bytes)
+        .map_err(|_| anyhow!("App binary {:?} is too short to contain a header", bin_path))?;
+    ensure!(
+        header.magic.get() == AppHeader::APP_HEADER_MAGIC,
+        "App binary {:?} has an invalid header magic",
+        bin_path
+    );
+
+    let id = unpack_str(&header.id, "App id")?;
+    let model = unpack_str(&header.model, "Model")?;
+    let version = unpack_version(&header.version);
+    let sdk_version = unpack_version(&header.sdk_version[..2]);
+    let arch = [
+        TargetArch::Armv8m,
+        TargetArch::LinuxX86_64,
+        TargetArch::MacosAarch64,
+    ]
+    .into_iter()
+    .find(|arch| arch.id() == header.target_arch)
+    .with_context(|| format!("Unknown target architecture {}", header.target_arch))?;
+    let language = Language::value_variants()
+        .iter()
+        .copied()
+        .find(|&language| language as u8 == header.language)
+        .with_context(|| format!("Unknown language {}", header.language))?;
+
+    let name = format!(
+        "{id}_{version}_sdk{sdk_version}_{}_abi{}_{model}_{}.tapp",
+        arch.name(),
+        header.abi_version,
+        language.name(),
+    );
+
+    Ok(serialized_dir.join(id).join(&version).join(name))
+}
+
+/// Formats packed version components as a dot-separated string.
+fn unpack_version(version: &[u8]) -> String {
+    version
+        .iter()
+        .map(u8::to_string)
+        .collect::<Vec<_>>()
+        .join(".")
+}
+
+/// Decodes a zero-padded utf-8 string from the app header.
+fn unpack_str<'a>(bytes: &'a [u8], label: &str) -> Result<&'a str> {
+    std::str::from_utf8(bytes)
+        .with_context(|| format!("{label} is not valid utf-8"))
+        .map(|string| string.trim_end_matches('\0'))
+}
+
 /// Converts one to four dot-separated numeric version components into the
 /// 4-byte app-header form, padding omitted components with zeroes.
 fn pack_version(version: &str) -> Result<[u8; 4]> {
@@ -286,6 +347,7 @@ fn hash_payload(payload: &[u8], chunk_size: usize) -> [u8; 32] {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use zerocopy::FromZeros;
 
     fn sha256_of(chunk: &[u8], prev_hash: [u8; 32]) -> [u8; 32] {
         let mut hasher = sha2::Sha256::new();
@@ -403,5 +465,46 @@ mod tests {
     fn different_chunk_size_changes_the_hash() {
         let payload = b"abcdefgh";
         assert_ne!(hash_payload(payload, 4), hash_payload(payload, 8));
+    }
+
+    fn write_header(name: &str, model: Option<Model>, target_arch: TargetArch) -> PathBuf {
+        let mut header = AppHeader::new_zeroed();
+        header.magic = U32::new(AppHeader::APP_HEADER_MAGIC);
+        header.id = pack_str("tron.trezor.com", "App id").unwrap();
+        header.model = model.map_or([0; 4], Model::model_id_bytes);
+        header.version = pack_version("0.1.0").unwrap();
+        header.sdk_version = pack_version("0.1.2").unwrap();
+        header.abi_version = 1;
+        header.target_arch = target_arch.id();
+        header.language = Language::CS as u8;
+
+        let path = std::env::temp_dir().join(name);
+        fs::write(&path, header.to_padded_bytes()).unwrap();
+        path
+    }
+
+    #[test]
+    fn serialized_app_path_matches_post_build_naming() {
+        let bin = write_header(
+            "serialized-path-t3w1.bin",
+            Some(Model::T3W1),
+            TargetArch::Armv8m,
+        );
+        let path = serialized_app_path(&bin, Path::new("serialized")).unwrap();
+        assert_eq!(
+            path,
+            Path::new("serialized/tron.trezor.com/0.1.0.0")
+                .join("tron.trezor.com_0.1.0.0_sdk0.1_armv8m_abi1_T3W1_cs.tapp")
+        );
+    }
+
+    #[test]
+    fn serialized_app_path_universal_emulator_app() {
+        let bin = write_header("serialized-path-all.bin", None, TargetArch::LinuxX86_64);
+        let path = serialized_app_path(&bin, Path::new("serialized")).unwrap();
+        assert_eq!(
+            path.file_name().unwrap(),
+            "tron.trezor.com_0.1.0.0_sdk0.1_linux-x86_64_abi1__cs.tapp"
+        );
     }
 }
