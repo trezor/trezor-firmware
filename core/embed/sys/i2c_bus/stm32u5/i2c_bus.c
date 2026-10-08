@@ -35,19 +35,12 @@
 // SCLH and SCLL are manually modified to achieve more symmetric clock
 #define I2C_TIMING_400000_Hz 0x30D22728
 #define I2C_TIMING_200000_Hz 0x30D2595A
-// Standard mode, freq = 100kHz: derived from I2C_TIMING_200000_Hz by doubling
-// PRESC (0x3 -> 0x7), which exactly doubles every programmed timing interval
-// (SCLDEL/SDADEL/SCLH/SCLL are unchanged), halving the nominal frequency.
-// Needed on boards with no external I2C pull-up resistors, where the MCU's
-// weak internal pull-ups (GPIO_PULLUP) give much slower SDA/SCL rise times
-// than the 250ns assumed above.
-#define I2C_TIMING_100000_Hz 0x70D2595A
-#define I2C_TIMING I2C_TIMING_100000_Hz
+#define I2C_TIMING I2C_TIMING_200000_Hz
 
-// We expect the I2C bus to be running at ~100kHz
+// We expect the I2C bus to be running at ~200kHz
 // and max response time of the device is 1000us
-#define I2C_BUS_CHAR_TIMEOUT (100 + 5)  // us
-#define I2C_BUS_OP_TIMEOUT 1000         // us
+#define I2C_BUS_CHAR_TIMEOUT (50 + 5)  // us
+#define I2C_BUS_OP_TIMEOUT 1000        // us
 
 #define I2C_BUS_TIMEOUT(n) \
   ((I2C_BUS_CHAR_TIMEOUT * (1 + n) + I2C_BUS_OP_TIMEOUT + 999) / 1000)
@@ -238,11 +231,8 @@ static void i2c_bus_unlock(i2c_bus_t* bus) {
 
   // Configure SDA and SCL as open-drain output
   // and connect to the I2C peripheral
-  // Pull-up enabled: no external I2C pull-up resistors are populated on the
-  // board, so the line needs the MCU's internal weak pull-up to read back a
-  // valid high level while bit-banging the recovery clock.
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_OD;
-  GPIO_InitStructure.Pull = GPIO_PULLUP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 
   GPIO_InitStructure.Pin = def->scl_pin;
@@ -344,11 +334,8 @@ static bool i2c_bus_init(i2c_bus_t* bus, int bus_index) {
 
   // Configure SDA and SCL as open-drain output
   // and connect to the I2C peripheral
-  // Pull-up enabled: no external I2C pull-up resistors are populated on the
-  // board, so rely on the MCU's internal weak pull-up instead (see
-  // I2C_TIMING_100000_Hz above for the corresponding clock derating).
   GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
-  GPIO_InitStructure.Pull = GPIO_PULLUP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 
   GPIO_InitStructure.Alternate = def->pin_af;
