@@ -30,6 +30,9 @@ OLD_BL, NEW_BL = (2, 1, 19), (2, 1, 20)
 NEW_FW = (2, 14, 1)
 #: seconds into the nRF push (271 KB over UART, ~30 s) for the "during" cuts
 PUSH_DELAY = 5.0
+#: an nRF below the 1.0.1 the intermediary embeds (frozen fixture input), so
+#: the intermediary has something to push in MG-12
+OLDER_NRF = "nrf-1.0.0-dev.bin"
 
 
 def code_watch(fx: Fixtures):
@@ -231,13 +234,19 @@ def _wait_streaming(unit: Unit, phase1_usb, timeout: float) -> None:
 # --- migration (intermediary) -------------------------------------------------
 
 
-def legacy_to_intermediary(unit: Unit, fx: Fixtures, variant: str):
+def legacy_to_intermediary(
+    unit: Unit, fx: Fixtures, variant: str, nrf_before: bytes | None = None
+):
     """Seeded legacy unit, intermediary streamed through the legacy bootloader;
-    returns the baseline seed once the unit reboots into the intermediary."""
+    returns the baseline seed once the unit reboots into the intermediary.
+    `nrf_before` goes onto the nRF (J-Link) while the legacy bootloader runs:
+    after the legacy firmware's own nRF check, before the intermediary's."""
     ctx = flows.baseline_legacy(unit, fx, variant)
     flows.load_seed(unit, ctx)
     seed = flows.seed_fingerprint(unit, ctx)
     ctx = flows.enter_bootloader(unit, ctx)
+    if nrf_before is not None:
+        unit.flash_nrf(nrf_before, "an nRF older than the intermediary's")
     flows.legacy_install(unit, ctx, fx.intermediary(variant).read_bytes())
     return seed
 
@@ -273,14 +282,20 @@ def test_cut_in_intermediary_swap(
     bootloader: the next boot must carry on, and the migration must end with
     the seed intact. [MG-12, MG-13, MG-14]"""
     variant = "universal"
-    seed = legacy_to_intermediary(unit, fx, variant)
+    push = symbol.endswith(">nrf_update")
+    # A push needs an nRF the intermediary does not consider current.
+    older = fx.nrf_input(OLDER_NRF).read_bytes() if push else None
+    seed = legacy_to_intermediary(unit, fx, variant, nrf_before=older)
     # armed after the legacy bootloader has stopped running the old image
     cut = CutPoint(fx.intermediary_elf(variant, part), symbol, mode, delay)
     with cutpoint.arm(cut) as armed:
         unit.step(f"cut armed: {cut}", screenshot=False)
         hit = armed.wait()
-    if not hit and symbol.endswith(">nrf_update"):
-        pytest.skip("the intermediary found the nRF current: no push to cut")
+    if not hit and push and not unit.nrf_jlink:
+        pytest.skip(
+            "the intermediary found the nRF current: no push to cut "
+            "(--nrf-jlink starts it on an older nRF)"
+        )
     assert hit, f"the intermediary never reached {symbol}"
     unit.step(f"cut fired: {cut}; {cutpoint.summary(armed)}")
     migration_finishes(unit, fx, variant, seed)

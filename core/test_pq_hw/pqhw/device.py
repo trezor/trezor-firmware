@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import logging
+import re
+import struct
 import subprocess
+import tempfile
 import threading
 import time
 import typing as t
@@ -32,6 +35,42 @@ MODEL = "T3W1"
 BUTTONS = ScreenButtons(LayoutType.Eckhart)
 MAX_TAPS = 5
 
+# The nRF52832's MCUboot runs single-app: one application slot, no swap, so an
+# application written there is what boots (after MCUboot checks its
+# signature). MCUboot below it, custom_data and the settings/bond storage
+# above it are left alone (nordic/trezor/boards/arm/t3w1_revA_nrf52832).
+NRF_SLOT = 0xE000
+NRF_SLOT_SIZE = 0x6C000
+MCUBOOT_IMAGE_MAGIC = 0x96F3B83D
+
+
+def nrf_image_version(image: bytes) -> str:
+    """MCUboot image header version: major.minor.revision."""
+    magic = struct.unpack_from("<I", image, 0)[0]
+    if magic != MCUBOOT_IMAGE_MAGIC:
+        raise UnitError(f"not an MCUboot application image (magic 0x{magic:08x})")
+    major, minor, rev = struct.unpack_from("<BBH", image, 20)
+    return f"{major}.{minor}.{rev}"
+
+
+def _intel_hex(data: bytes, base: int) -> str:
+    """Intel HEX for `data` at `base`, which nrfjprog programs page-wise."""
+
+    def record(rtype: int, addr: int, payload: bytes) -> str:
+        body = bytes([len(payload), addr >> 8, addr & 0xFF, rtype]) + payload
+        return f":{body.hex().upper()}{(-sum(body)) & 0xFF:02X}"
+
+    lines = []
+    upper = None
+    for off in range(0, len(data), 16):
+        addr = base + off
+        if addr >> 16 != upper:
+            upper = addr >> 16
+            lines.append(record(0x04, 0, upper.to_bytes(2, "big")))
+        lines.append(record(0x00, addr & 0xFFFF, data[off : off + 16]))
+    lines.append(record(0x01, 0, b""))
+    return "\n".join(lines) + "\n"
+
 
 class UnitError(Exception):
     pass
@@ -49,8 +88,12 @@ class Unit:
         path: str | None = None,
         stall: float = 6.0,
         ask: t.Callable[[str], None] | None = None,
+        nrf_jlink: str | None = None,
     ) -> None:
         self.path = path
+        #: J-Link wired to the nRF (a serial number, or "auto" for the only
+        #: one attached); None leaves the nRF as the previous run left it.
+        self.nrf_jlink = nrf_jlink
         #: Asks the person at the bench to act, when the run has one (--operator).
         self.ask = ask
         #: Flow recorder for the HTML report (set by conftest under --hw).
@@ -93,6 +136,53 @@ class Unit:
 
     def reset(self) -> None:
         self.xtask("reset", "-m", MODEL)
+
+    # --- nRF over J-Link -------------------------------------------------------
+
+    def _nrfjprog(self, *args: str) -> str:
+        cmd = ["nrfjprog", "-f", "NRF52"]
+        if self.nrf_jlink and self.nrf_jlink != "auto":
+            cmd += ["-s", self.nrf_jlink]
+        cmd += list(args)
+        LOG.info("$ %s", " ".join(cmd))
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        if res.returncode != 0:
+            raise UnitError(f"{' '.join(cmd)} failed:\n{res.stdout}\n{res.stderr}")
+        return res.stdout
+
+    def flash_nrf(self, image: bytes, label: str) -> bool:
+        """Put the nRF on a known application image; False without a J-Link.
+
+        Only the pages the image covers are erased: MCUboot, custom_data and
+        the bond storage stay. The image must carry signatures the unit's
+        MCUboot accepts, which the check after the reset proves: MCUboot that
+        refuses an image never leaves its own code.
+        """
+        if not self.nrf_jlink:
+            return False
+        version = nrf_image_version(image)
+        if len(image) > NRF_SLOT_SIZE:
+            raise UnitError(f"nRF image {label} does not fit the slot")
+        with tempfile.NamedTemporaryFile("w", suffix=".hex") as f:
+            f.write(_intel_hex(image, NRF_SLOT))
+            f.flush()
+            self._nrfjprog("--program", f.name, "--sectorerase", "--verify")
+        self._nrfjprog("--reset")
+        time.sleep(2)
+        # Halts the core for one register read, then lets it run on.
+        regs = self._nrfjprog("--readregs")
+        self._nrfjprog("--run")
+        m = re.search(r"PC:\s*0x([0-9A-Fa-f]+)", regs)
+        if m is None:
+            raise UnitError(f"could not read the nRF PC:\n{regs}")
+        pc = int(m.group(1), 16)
+        if not NRF_SLOT <= pc < NRF_SLOT + NRF_SLOT_SIZE:
+            raise UnitError(
+                f"nRF did not start {label} ({version}): PC 0x{pc:05x} is outside "
+                "the application slot (MCUboot refused the image?)"
+            )
+        self.step(f"nRF set to {label} ({version}) over J-Link", screenshot=False)
+        return True
 
     def step(self, caption: str, screenshot: bool = True) -> None:
         """A point in the flow worth seeing: logged, and captured for the report

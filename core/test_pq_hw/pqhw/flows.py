@@ -96,8 +96,11 @@ def seed_fingerprint(unit: Unit, ctx: TrezorTestContext) -> str | None:
 
 
 def baseline_legacy(unit: Unit, fx: Fixtures, variant: str) -> TrezorTestContext:
-    """Pre-migration state: legacy boardloader, bootloader and firmware."""
+    """Pre-migration state: legacy boardloader, bootloader and firmware, and
+    (with --nrf-jlink) the nRF image the legacy firmware embeds, so its boot
+    finds the nRF current."""
     unit.erase()
+    unit.flash_nrf(fx.legacy("trezor-ble-dev").read_bytes(), "the legacy nRF")
     unit.flash("boardloader", fx.legacy("boardloader"), layout="legacy")
     unit.flash("bootloader", fx.legacy("bootloader"), layout="legacy")
     unit.flash("firmware", fx.legacy(variant), layout="legacy")
@@ -106,8 +109,11 @@ def baseline_legacy(unit: Unit, fx: Fixtures, variant: str) -> TrezorTestContext
 
 
 def baseline_pq_empty(unit: Unit, fx: Fixtures, release: str) -> TrezorTestContext:
-    """A factory-fresh PQ unit: the release's bootloader, firmware_type NONE."""
+    """A factory-fresh PQ unit: the release's bootloader, firmware_type NONE,
+    and (with --nrf-jlink) the release's own nRF image, so a later install of
+    another release is a real nRF push."""
     unit.erase()
+    unit.flash_nrf(fx.release_nrf(release).read_bytes(), f"the {release} nRF")
     unit.flash("boardloader", fx.legacy("boardloader"))
     unit.flash("bootloader", fx.release_bootloader(release))
     unit.reset()

@@ -82,3 +82,19 @@ class Fixtures:
 
     def release_meta(self, release: str) -> dict:
         return json.loads(self.release_file(release, "bundle.json").read_text())
+
+    def release_nrf(self, release: str) -> Path:
+        """The nRF application image the release carries."""
+        nrf = [
+            c for c in self.release_meta(release)["coprocessors"] if c["kind"] == "nrf"
+        ]
+        if len(nrf) != 1:
+            raise FixtureError(f"{release} carries {len(nrf)} nRF images")
+        return self.release_file(release, nrf[0]["file"])
+
+    def nrf_input(self, name: str) -> Path:
+        """A frozen nRF build under inputs/ (not built here, see its .json)."""
+        path = self.root / "inputs" / name
+        if not path.exists():
+            raise FixtureError(f"missing nRF input {path}")
+        return path

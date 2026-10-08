@@ -39,6 +39,14 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="transport path of the unit, if several devices are connected",
     )
     group.addoption(
+        "--nrf-jlink",
+        default=None,
+        metavar="SERIAL",
+        help="J-Link wired to the nRF (serial, or 'auto'): every baseline then "
+        "puts the nRF on a known application image instead of whatever the "
+        "previous run left there",
+    )
+    group.addoption(
         "--no-screens",
         action="store_true",
         help="skip SWD screenshots (each one takes a few seconds)",
@@ -117,11 +125,16 @@ def recorder(request: pytest.FixtureRequest, fx: Fixtures) -> Recorder:
             for name, src in fx.manifest.get("sources", {}).items()
         },
         "screenshots": "off" if config.getoption("--no-screens") else "SWD",
+        "nRF reset": (
+            f"J-Link {config.getoption('--nrf-jlink')}"
+            if config.getoption("--nrf-jlink")
+            else "off (the nRF keeps what the previous run left)"
+        ),
         "releases": (
             "legacy = firmware 2.13.0, bootloader 2.1.18; intermediary = 2.13.1; "
             "A = 2.14.0 / 2.1.19; B = 2.14.1 / 2.1.20 (new bootloader code "
-            "and nRF); B-fix = 2.14.2 / 2.1.20 with fix_version 2.1.20; "
-            "C = 2.14.3 / 2.1.21, needs 2.1.20 installed; "
+            "and nRF); B-fix = 2.14.2 / 2.1.20 with fix_version 2.14.1; "
+            "C = 2.14.3 / 2.1.21, needs release 2.14.1 installed; "
             "E = 2.14.4 / 2.1.22, anti-rollback counter 4"
         ),
     }
@@ -142,6 +155,7 @@ def unit(request: pytest.FixtureRequest) -> Unit:
         path=config.getoption("--unit-path"),
         stall=config.getoption("--stall"),
         ask=_asker(config) if config.getoption("--operator") else None,
+        nrf_jlink=config.getoption("--nrf-jlink"),
     )
     if config.getoption("--hw"):
         unit.recorder = request.getfixturevalue("recorder")

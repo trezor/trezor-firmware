@@ -578,6 +578,13 @@ def build_legacy(ctx: Ctx) -> None:
         **bootloader_info(out / "bootloader.bin"),
     )
 
+    # The nRF image the legacy firmware embeds: a legacy baseline puts it on
+    # the nRF (J-Link), so the legacy boot finds the nRF current.
+    nrf = ctx.wt / "core" / "embed" / "models" / MODEL / "trezor-ble-dev.bin"
+    ctx.stage(
+        nrf, "legacy/trezor-ble-dev.bin", nrf_version=nrf_version(nrf.read_bytes())
+    )
+
     for variant, extra, vh in (
         ("universal", [], vh_uni),
         ("btc-only", ["--btc-only"], vh_btc),

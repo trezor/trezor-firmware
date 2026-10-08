@@ -95,7 +95,29 @@ pytest --hw                    # flash and drive the attached T3W1
 pytest --hw -k migration       # one area
 pytest --hw --operator -s      # with a person to rescue a stuck phase 2
 pytest --hw -m "not cut"       # everything but the SWD power-loss cuts
+pytest --hw --nrf-jlink 933001122   # also reset the nRF over J-Link (serial or "auto")
 ```
+
+### The nRF over J-Link
+
+Flashing the STM does not touch the nRF, so without help each run inherits
+whatever nRF the previous one left: an install whose nRF is already current
+pushes nothing, and the push tests (MG-12) skip. With `--nrf-jlink`, every
+baseline first writes a known application image to the nRF over a J-Link wired
+to it (`Unit.flash_nrf`, `nrfjprog`):
+
+- a legacy baseline gets the image the legacy firmware embeds
+  (`legacy/trezor-ble-dev.bin`), so the legacy boot finds it current;
+- a PQ baseline gets its release's own image, so installing another release
+  is a real push;
+- MG-12 writes `inputs/nrf-1.0.0-dev.bin` while the legacy bootloader runs, so
+  the intermediary (which embeds 1.0.1) has a push to cut.
+
+Only the application slot (0xE000, 432 KB) is written, page by page: MCUboot,
+`custom_data` and the bond storage are left alone. MCUboot runs single-app and
+checks only the signature, so any dev-signed image boots, older ones included.
+The helper resets the nRF and checks its PC is inside the application slot,
+so an image MCUboot refuses fails the run instead of looking like a skip.
 
 `--hw` needs openocd with an ST-Link on the unit (the tests flash through
 `xtask flash` / `flash-erase`) and the unit on USB. Every test builds its own
