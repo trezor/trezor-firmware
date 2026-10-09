@@ -5,6 +5,7 @@ from __future__ import annotations
 import struct
 
 import pytest
+from pqhw import screen
 from pqhw.cutpoint import CutPoint
 from pqhw.fixtures import VARIANTS, Fixtures
 
@@ -135,3 +136,15 @@ def test_intermediary_cut_points_resolve(fx: Fixtures, variant: str) -> None:
     for part in ("kernel", "secmon"):
         for call in CUT_CALLS[part]:
             CutPoint(fx.intermediary_elf(variant, part), call).address
+
+
+@pytest.mark.parametrize("release", RELEASES)
+def test_boot_args_address(fx: Fixtures, release: str) -> None:
+    """pqhw.screen.last_rsod reads the RSOD texts at a fixed address."""
+    from elftools.elf.elffile import ELFFile
+
+    with fx.release_elf(release).open("rb") as f:
+        symtab = ELFFile(f).get_section_by_name(".symtab")
+        (sym,) = symtab.get_symbol_by_name("g_boot_args")
+        assert sym["st_value"] == screen.BOOT_ARGS
+        assert sym["st_size"] == screen.BOOT_ARGS_SIZE

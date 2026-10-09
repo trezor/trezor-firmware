@@ -14,6 +14,7 @@ from trezorlib.firmware.pq_secure import PqSecureBundle
 from trezorlib.messages import FirmwareScheme
 from trezorlib.tools import parse_path
 
+from . import screen
 from .device import (
     Unit,
     UnitError,
@@ -321,6 +322,15 @@ def pq_phase2(unit: Unit, bundle: PqSecureBundle, upload: Upload | None = None) 
         # Not on USB: the bootloader is on its intro ("Initiate connection"),
         # which brings the wire up only after a tap -- it did not resume.
         unit.step("phase 2 did not come up on USB within the resume time")
+        # A shutdown on the way (an nRF push failing, KB-11) left its RSOD
+        # texts in RAM; screenshots catch the RSOD itself only by chance.
+        rsod = screen.last_rsod()
+        if rsod is not None:
+            unit.step(
+                "last RSOD (from RAM): "
+                + " | ".join(f"{k}: {v}" for k, v in rsod.items() if v),
+                screenshot=False,
+            )
         if unit.ask is None:
             raise UnitError(
                 "phase 2 never came up on USB: the bootloader did not resume the "

@@ -157,6 +157,40 @@ def read_memory(address: int, size: int) -> bytes:
     return data
 
 
+# The bootloader's boot arguments (`g_boot_args`, section .boot_args): the
+# same address in every release (tests/test_fixtures.py checks the ELFs).
+BOOT_ARGS = 0x30000008
+BOOT_ARGS_SIZE = 248
+# systask_postmortem_t: reason (4), privileged (padded to 4), then the
+# error union's title, message and footer, 64 B each.
+_PM_TEXT = ((8, "title"), (72, "message"), (136, "footer"))
+
+
+def last_rsod() -> dict[str, str] | None:
+    """The last RSOD's texts, from the boot arguments in RAM.
+
+    error_shutdown leaves them there for the next boot to show, and only the
+    boot command is cleared at startup, so they outlive the RSOD itself:
+    readable after a failure that a screenshot missed. None if nothing
+    printable is there.
+    """
+    try:
+        raw = read_memory(BOOT_ARGS, BOOT_ARGS_SIZE)
+    except ScreenError:
+        return None
+    texts = {}
+    for off, name in _PM_TEXT:
+        field = raw[off : off + 64].split(b"\0", 1)[0]
+        try:
+            text = field.decode()
+        except UnicodeDecodeError:
+            return None
+        if text and not text.isprintable():
+            return None
+        texts[name] = text
+    return texts if any(texts.values()) else None
+
+
 def _read_cfbar() -> tuple[int, int]:
     """(register address that answered, its value)."""
     errors = []
