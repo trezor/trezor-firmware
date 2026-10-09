@@ -187,6 +187,9 @@ class Unit:
             raise UnitError(f"could not read RESETREAS:\n{out}")
         if clear:
             self._nrfjprog("--memwr", f"{NRF_RESETREAS:#x}", "--val", "0xFFFFFFFF")
+        # nrfjprog can leave the core halted, and a halted nRF does not answer
+        # the bootloader, which then pushes an image the nRF already runs.
+        self._nrfjprog("--run")
         return int(m.group(1), 16)
 
     def stall_nrf_push(
