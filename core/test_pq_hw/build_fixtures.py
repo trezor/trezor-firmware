@@ -204,8 +204,9 @@ def prepare_worktree(name: str, commit: str) -> Path:
             cwd=wt,
         )
         # Untracked files only: ignored build directories survive, so cargo
-        # stays incremental.
-        git("clean", "-fdq", cwd=wt)
+        # stays incremental. Agent-tool files (.claude/, .mcp.json) can be
+        # mounted into a worktree and cannot be removed; they are never inputs.
+        git("clean", "-fdq", "-e", ".claude", "-e", ".mcp.json", cwd=wt)
     sync_submodules(wt, REPO / ".git" / "modules")
     return wt
 
