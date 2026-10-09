@@ -23,10 +23,21 @@
 
 #include <io/nfc.h>
 #include <rtl/cli.h>
+#include <rtl/strutils.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 
 #include "prodtest_error_codes.h"
+#include "prodtest_nfc.h"
+
+// Buffer size for the UID as a hex string
+#define NFC_UID_HEX_BUF_SIZE (NFC_MAX_UID_LEN * 2 + 1)
+
+static const char* nfc_uid_to_hex(const nfc_dev_info_t* dev_info, char* buf,
+                                  size_t buf_size) {
+  cstr_encode_hex(buf, buf_size, dev_info->uid, dev_info->uid_len);
+  return buf;
+}
 
 static uint16_t nfc_compose_uri(const char* uri, uint8_t* buffer,
                                 uint16_t buffer_size) {
@@ -121,12 +132,15 @@ static void prodtest_nfc_read_card(cli_t* cli) {
       nfc_get_device_info(&dev_info);
       cli_trace(cli, "NFC card detected.");
 
+      char uid_hex[NFC_UID_HEX_BUF_SIZE];
+      nfc_uid_to_hex(&dev_info, uid_hex, sizeof(uid_hex));
+
       switch (dev_info.type) {
         case NFC_DEV_TYPE_A:
-          cli_trace(cli, "NFC Type A: UID: %s", dev_info.uid);
+          cli_trace(cli, "NFC Type A: UID: %s", uid_hex);
           break;
         case NFC_DEV_TYPE_B:
-          cli_trace(cli, "NFC Type B: UID: %s", dev_info.uid);
+          cli_trace(cli, "NFC Type B: UID: %s", uid_hex);
           break;
         case NFC_DEV_TYPE_UNKNOWN:
           cli_trace(cli, "NFC Type UNKNOWN");
@@ -242,13 +256,15 @@ static void prodtest_nfc_write_card(cli_t* cli) {
         goto cleanup;
       }
 
-      cli_trace(cli, "Writing URI to NFC tag %s", dev_info.uid);
+      char uid_hex[NFC_UID_HEX_BUF_SIZE];
+      cli_trace(cli, "Writing URI to NFC tag %s",
+                nfc_uid_to_hex(&dev_info, uid_hex, sizeof(uid_hex)));
       nfc_apdu_message_t tx_buf = {0};
       nfc_apdu_message_t rx_buf = {0};
 
       tx_buf.data_len =
           nfc_compose_uri("trezor.io/", tx_buf.data, sizeof(tx_buf.data));
-      nfc_status = nfc_transceive(&tx_buf, &rx_buf);
+      nfc_status = prodtest_nfc_transceive(cli, &tx_buf, &rx_buf);
       if (ts_ok(nfc_status)) {
         cli_trace(cli, "URI write success");
       } else {
