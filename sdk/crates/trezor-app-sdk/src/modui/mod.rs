@@ -316,28 +316,10 @@ pub mod notice;
 pub mod progress;
 
 pub use extra::{Extra, ExtraItem};
-use ufmt::derive::uDebug;
-
-/// A key/value fact, as shown in a list or on an extra's screen.
-pub use crate::traits::ui::Property;
 
 // ============================================================================
 // Data types
 // ============================================================================
-
-/// What confirming a block commits the person to.
-///
-/// The app knows which of its screens is the one that signs; the library does
-/// not. The app says so here, and the library turns it into the gesture — a
-/// hold rather than a tap — so the person's last yes is harder to give by
-/// accident. The gesture itself is not the app's to name.
-///
-/// WIP: on caesar a screen with extras has a menu instead of the hold, so
-/// `Final` is a tap there (#7694).
-#[derive(uDebug, Copy, Clone, PartialEq, Eq)]
-pub enum Commitment {
-    /// One step of a longer flow. Confirming it only moves on.
-    Step,
-    /// The last confirmation before the app signs or otherwise acts.
-    Final,
-}
+pub use crate::structs::Commitment;
+/// A key/value fact, as shown in a list or on an extra's screen.
+pub use crate::traits::ui::Property;

@@ -15,8 +15,8 @@ use rkyv::{
 };
 #[cfg(feature = "app_loading")]
 use trezor_app_sdk::structs::{
-    Property, Severity as WireSeverity, Slice, StrSlice, TrezorProgressEnum, TrezorUiEnum,
-    UiReply,
+    ArchivedCommitment, Commitment, Property, Severity as WireSeverity, Slice, StrSlice,
+    TrezorProgressEnum, TrezorUiEnum, UiReply,
 };
 
 use crate::io::BinaryData;
@@ -1288,6 +1288,15 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             ))
         }
 
+        // Every extapp step is `ButtonRequestType.Other`; the step's name
+        // carries the meaning.
+        const BR_CODE_OTHER: i32 = 1;
+
+        // The app says which step is its final yes; the gesture for it is ours.
+        fn hold(commitment: &Archived<Commitment>) -> bool {
+            matches!(commitment, ArchivedCommitment::Final)
+        }
+
         fn tstr(s: &Archived<StrSlice>) -> TString<'static> {
             unwrap!(StrBuffer::alloc(s.as_ref())).into()
         }
@@ -1341,19 +1350,19 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 Some(tstr(&m.action)),
                 tstr_opt(&m.description),
                 tstr_opt(&m.subtitle),
-                tstr_opt(&m.verb),
+                None,
                 // Every confirmation can be refused; how is the model's.
                 true,
                 None,
-                m.hold,
+                hold(&m.commitment),
                 false,
                 false,
                 false,
                 None,
                 m.external_menu,
             )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
+            BR_CODE_OTHER,
+            Some(&m.br_name),
         )?,
         Archived::<TrezorUiEnum>::ConfirmSummary(m) => wrap(
             ModelUI::confirm_summary(

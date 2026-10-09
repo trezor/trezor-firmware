@@ -3,9 +3,9 @@
 //! WIP: bolt has no menu, so the extras cannot be reached.
 
 use crate::Result;
-use crate::modui::internal::{BR_CODE_OTHER, answer, call};
+use crate::modui::internal::{answer, call};
 use crate::modui::{Commitment, ExtraItem};
-use crate::traits::ui::ConfirmAction as WireConfirmAction;
+use crate::structs::ConfirmAction;
 
 // ============================================================================
 // Data types
@@ -16,12 +16,9 @@ use crate::traits::ui::ConfirmAction as WireConfirmAction;
 /// Only what the screen says is here. The confirm gesture and its label are
 /// fixed by the block and are not the app's to choose.
 pub struct Action<'a> {
-    title: &'a str,
-    action: &'a str,
-    description: Option<&'a str>,
-    subtitle: Option<&'a str>,
-    commitment: Commitment,
-    br: &'a str,
+    /// The request as core reads it; it goes through the FFI as is.
+    request: ConfirmAction<'a>,
+    /// Shown by the library from the screen's menu; never sent.
     extras: &'a [ExtraItem<'a>],
 }
 
@@ -48,12 +45,15 @@ impl<'a> Action<'a> {
         extras: &'a [ExtraItem<'a>],
     ) -> Self {
         Self {
-            title,
-            action,
-            description,
-            subtitle,
-            commitment,
-            br,
+            request: ConfirmAction {
+                title: title.into(),
+                action: action.into(),
+                description: description.into(),
+                subtitle: subtitle.into(),
+                commitment,
+                br_name: br.into(),
+                external_menu: !extras.is_empty(),
+            },
             extras,
         }
     }
@@ -96,17 +96,6 @@ impl<'a> Action<'a> {
 /// }
 /// ```
 pub fn action(params: Action<'_>) -> Result<()> {
-    let request = WireConfirmAction::new(
-        params.title,
-        params.action,
-        params.description,
-        params.subtitle,
-        params.commitment == Commitment::Final, // hold: follows from the commitment
-        None,                                   // verb: the label follows the gesture
-        Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
-        BR_CODE_OTHER,   // see the constant
-        !params.extras.is_empty(), // external_menu: how the menu is reached
-    );
-
-    answer(call(&request, params.extras, Some(params.br))?)
+    let br = params.request.br_name.as_str();
+    answer(call(&params.request, params.extras, Some(br))?)
 }

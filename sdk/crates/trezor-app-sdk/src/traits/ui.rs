@@ -21,6 +21,7 @@ use ufmt::derive::uDebug;
 
 use super::util::FastResult;
 use super::wire::WireError;
+pub use crate::structs::ConfirmAction;
 
 /// Build a layout, show it, and forget it. The handle is ignored.
 pub const OP_ONCE: u16 = 0;
@@ -120,47 +121,6 @@ impl<'a> SelectMenu<'a> {
             items: items.into(),
             br_name: opt_bytes(br_name),
             br_code,
-        }
-    }
-}
-
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct ConfirmAction<'a> {
-    pub title: Str<'a>,
-    pub action: Str<'a>,
-    pub description: StabbyOption<Slice<'a, u8>>,
-    pub subtitle: StabbyOption<Slice<'a, u8>>,
-    pub hold: bool,
-    pub verb: StabbyOption<Slice<'a, u8>>,
-    pub br_name: StabbyOption<Slice<'a, u8>>,
-    pub br_code: i32,
-    pub external_menu: bool,
-}
-
-impl<'a> ConfirmAction<'a> {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        title: &'a str,
-        action: &'a str,
-        description: Option<&'a str>,
-        subtitle: Option<&'a str>,
-        hold: bool,
-        verb: Option<&'a str>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        external_menu: bool,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            action: action.into(),
-            description: opt_bytes(description),
-            subtitle: opt_bytes(subtitle),
-            hold,
-            verb: opt_bytes(verb),
-            br_name: opt_bytes(br_name),
-            br_code,
-            external_menu,
         }
     }
 }

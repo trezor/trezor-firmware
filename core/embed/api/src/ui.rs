@@ -94,17 +94,7 @@ impl UiV1 for TrezorUiV1Impl {
         ui_call(
             op,
             handle,
-            &TrezorUiEnum::ConfirmAction(structs::ConfirmAction {
-                title: value.title.as_str().into(),
-                action: value.action.as_str().into(),
-                description: opt_str(value.description),
-                subtitle: opt_str(value.subtitle),
-                hold: value.hold,
-                verb: opt_str(value.verb),
-                br_name: opt_str(value.br_name),
-                br_code: value.br_code,
-                external_menu: value.external_menu,
-            }),
+            &TrezorUiEnum::ConfirmAction(value),
         )
     }
 
