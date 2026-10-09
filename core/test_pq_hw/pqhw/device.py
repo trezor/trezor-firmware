@@ -118,6 +118,8 @@ class Unit:
         #: J-Link wired to the nRF (a serial number, or "auto" for the only
         #: one attached); None leaves the nRF as the previous run left it.
         self.nrf_jlink = nrf_jlink
+        #: The RSOD texts seen during the last watched wait (flows), if any.
+        self.last_rsod: dict[str, str] | None = None
         #: Asks the person at the bench to act, when the run has one (--operator).
         self.ask = ask
         #: Flow recorder for the HTML report (set by conftest under --hw).
@@ -186,6 +188,32 @@ class Unit:
         if clear:
             self._nrfjprog("--memwr", f"{NRF_RESETREAS:#x}", "--val", "0xFFFFFFFF")
         return int(m.group(1), 16)
+
+    def stall_nrf_push(
+        self, start: float = 5.0, window: float = 60.0, hold: float = 15.0
+    ) -> bool:
+        """Make the next nRF push fail, as KB-11 did: from `start` s on, poll
+        the nRF and, once it runs MCUboot (a push holds it there for ~25 s;
+        the application runs above the slot start), halt it for `hold` s.
+        Returns whether a push was caught within `window` s."""
+        time.sleep(start)
+        deadline = time.monotonic() + window
+        while time.monotonic() < deadline:
+            try:
+                # Halts the core for the read.
+                regs = self._nrfjprog("--readregs")
+            except UnitError:
+                time.sleep(1)  # the STM is resetting the nRF
+                continue
+            m = re.search(r"PC:\s*0x([0-9A-Fa-f]+)", regs)
+            if m is not None and int(m.group(1), 16) < NRF_SLOT:
+                LOG.info("nRF in MCUboot: holding it for %.0f s", hold)
+                time.sleep(hold)
+                self._nrfjprog("--run")
+                return True
+            self._nrfjprog("--run")
+            time.sleep(1)
+        return False
 
     def flash_nrf(self, image: bytes, label: str) -> bool:
         """Put the nRF on a known application image; False without a J-Link.

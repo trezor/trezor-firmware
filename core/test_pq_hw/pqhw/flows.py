@@ -71,6 +71,7 @@ class _RsodWatcher:
         self._thread.join(30)
 
     def report(self, unit: Unit) -> None:
+        unit.last_rsod = self.seen
         if self.seen is not None:
             unit.step(
                 "RSOD during the wait (from RAM): "

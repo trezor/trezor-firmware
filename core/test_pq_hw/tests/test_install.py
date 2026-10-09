@@ -3,6 +3,8 @@ change, interaction-less upgrade. Plan cases in the docstrings."""
 
 from __future__ import annotations
 
+import threading
+
 import pytest
 from pqhw import flows
 from pqhw.device import Unit, UnitError
@@ -100,6 +102,44 @@ def test_upgrade_streams_bootloader_and_nrf(unit: Unit, fx: Fixtures) -> None:
     assert report.served["code"] == len(bundle.bootloader_code)
     assert bundle.nrf is not None
     assert report.served["nrf"] == len(bundle.nrf.image)
+
+    ctx = flows.wait_firmware(unit)
+    assert flows.version(ctx.features) == (2, 14, 1)
+    assert flows.seed_fingerprint(unit, ctx) == seed
+
+
+def test_failed_nrf_push_resumes_install(unit: Unit, fx: Fixtures) -> None:
+    """Makes the nRF push of an A-to-B upgrade fail, by halting the nRF over
+    J-Link while it runs MCUboot: the bootloader shows the failure, reboots,
+    pushes again and must then resume phase 2 on its own (no tap, no host
+    restart), ending on B with the seed kept. [KB-12]"""
+    if not unit.nrf_jlink:
+        pytest.skip("needs --nrf-jlink to stall the nRF")
+    ctx = flows.baseline_pq_installed(unit, fx, "release-A", "universal")
+    seed = flows.seed_fingerprint(unit, ctx)
+    assert seed is not None
+
+    bundle = fx.bundle("release-B", "universal")
+    ctx = flows.enter_bootloader(unit, ctx)
+    up = flows.Upload.of(bundle)
+    flows.pq_phase1(unit, ctx, bundle, upload=up)
+    flows.close(ctx)
+
+    stalled = {}
+    staller = threading.Thread(
+        target=lambda: stalled.setdefault("caught", unit.stall_nrf_push()),
+        daemon=True,
+    )
+    staller.start()
+    unit.wait_gone()
+    needed_person = flows.pq_phase2(unit, bundle, up)
+    staller.join(120)
+    assert stalled.get("caught"), "the nRF was never caught in MCUboot"
+    rsod = unit.last_rsod
+    assert rsod is not None and rsod["title"].startswith("nRF"), (
+        f"the stalled push did not fail visibly: {rsod}"
+    )
+    assert not needed_person, "phase 2 did not resume on its own"
 
     ctx = flows.wait_firmware(unit)
     assert flows.version(ctx.features) == (2, 14, 1)

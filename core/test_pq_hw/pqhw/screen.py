@@ -174,6 +174,9 @@ BOOT_COMMAND = 0x30000000
 BOOT_ARGS = 0x30000008
 BOOT_ARGS_SIZE = 248
 BOOT_COMMAND_SHOW_RSOD = 0x7CD945A0
+# A failed nRF push during an install shows the RSOD itself and keeps this
+# command, with the texts in its (otherwise unused) arguments.
+BOOT_COMMAND_CONTINUE_UPGRADE = 0x6D2F84B1
 # systask_postmortem_t: reason (1 B enum), privileged (1), then, 4-aligned, the
 # error union's title, message and footer, 64 B each.
 _PM_TEXT = ((4, "title"), (68, "message"), (132, "footer"))
@@ -193,12 +196,15 @@ def rsod_now() -> dict[str, str] | None:
         raw = read_memory(BOOT_COMMAND, 8 + BOOT_ARGS_SIZE)
     except ScreenError:
         return None
-    if int.from_bytes(raw[:8], "little") != BOOT_COMMAND_SHOW_RSOD:
+    command = int.from_bytes(raw[:8], "little")
+    if command not in (BOOT_COMMAND_SHOW_RSOD, BOOT_COMMAND_CONTINUE_UPGRADE):
         return None
     pm = raw[8:]
     texts = {}
     for off, name in _PM_TEXT:
         texts[name] = pm[off : off + 64].split(b"\0", 1)[0].decode(errors="replace")
+    if command == BOOT_COMMAND_CONTINUE_UPGRADE and not texts["title"]:
+        return None  # a plain phase-2 boot carries no texts
     return texts
 
 
