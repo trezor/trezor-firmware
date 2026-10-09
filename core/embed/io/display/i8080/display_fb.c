@@ -274,19 +274,9 @@ void display_refresh(void) {
 #ifndef DISPLAY_TE_PIN
   // Without a tearing-effect signal there is no interrupt to trigger the
   // copy, so kick it off here (no-op if a copy is already in progress).
-#if defined(DISPLAY_I8080_8BIT_MSB_FIRST)
-  // The CPU-loop fallback inside start_fb_copy() (MSB-first 8-bit) pushes
-  // the whole frame synchronously and can take a while (no background DMA
-  // runs in this mode), so unlike the DMA-kickoff path below - whose lock
-  // only needs to cover a brief queue/DMA-state update - it must NOT be
-  // called with interrupts locked, or it starves everything else (watchdog,
-  // USB, ...) for the whole frame and faults.
-  start_fb_copy();
-#else
   irq_key_t irq_key = irq_lock();
   start_fb_copy();
   irq_unlock(irq_key);
-#endif
 #endif
 
 #else  // BOARDLOADER

@@ -53,12 +53,6 @@ void display_io_init_te_interrupt(void);
 #error "Unsupported display interface"
 #endif
 
-/*#define DISPLAY_CMD_ADDRESS ((__IO DISP_MEM_TYPE *)(DISPLAY_MEMORY_BASE))
-#define DISPLAY_DATA_ADDRESS                    \
-  ((__IO DISP_MEM_TYPE *)(DISPLAY_MEMORY_BASE | \
-                          (DISPLAY_ADDR_SHIFT << DISPLAY_MEMORY_PIN)))
-*/
-
 extern __IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS;
 extern __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS;
 
