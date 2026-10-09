@@ -22,6 +22,11 @@ pub struct ResolvedBuildFeatures {
 /// features tied to build mechanics (model selection, emulator, asan) are
 /// added directly here.
 pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeatures> {
+    // TEMPORARY: see the matching `compile_error!` in the firmware crate.
+    if args.apps && args.miniscript {
+        bail!("--apps and --miniscript cannot be combined (temporary restriction)");
+    }
+
     if args.production {
         if args.storage_insecure_testing_mode {
             bail!("storage_insecure_testing_mode cannot be used in production builds");
