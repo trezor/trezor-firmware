@@ -174,9 +174,9 @@ BOOT_COMMAND = 0x30000000
 BOOT_ARGS = 0x30000008
 BOOT_ARGS_SIZE = 248
 BOOT_COMMAND_SHOW_RSOD = 0x7CD945A0
-# systask_postmortem_t: reason (4), privileged (padded to 4), then the
+# systask_postmortem_t: reason (1 B enum), privileged (1), then, 4-aligned, the
 # error union's title, message and footer, 64 B each.
-_PM_TEXT = ((8, "title"), (72, "message"), (136, "footer"))
+_PM_TEXT = ((4, "title"), (68, "message"), (132, "footer"))
 
 
 def rsod_now() -> dict[str, str] | None:
