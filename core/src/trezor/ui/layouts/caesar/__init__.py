@@ -2341,47 +2341,68 @@ async def confirm_signverify(
     account: str | None = None,
     chunkify: bool = False,
 ) -> None:
-    br_name = "verify_message" if verify else "sign_message"
+    from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
+
+    if verify:
+        address_title = TR.sign_message__verify_address
+        br_name = "verify_message"
+    else:
+        address_title = TR.sign_message__confirm_address
+        br_name = "sign_message"
+
+    info_items: list[StrPropertyType] = []
+    if account is not None:
+        info_items.append((TR.words__account, account, False))
+    if path is not None:
+        info_items.append((TR.address_details__derivation_path, path, False))
+    info_items.append(
+        (
+            TR.sign_message__message_size,
+            TR.sign_message__bytes_template.format(len(message)),
+            False,
+        )
+    )
+    menu = Menu(
+        [
+            create_info_menu_leaf(TR.buttons__more_info, with_colon(info_items)),
+            cancel_leaf(
+                TR.buttons__cancel,
+                confirm=lambda: trezorui_api.show_mismatch(
+                    title=TR.addr_mismatch__mismatch
+                ),
+            ),
+        ]
+    )
+
+    with trezorui_api.confirm_value(
+        title=address_title,
+        value=address,
+        description=None,
+        verb=TR.buttons__continue,
+        chunkify=chunkify,
+        external_menu=True,
+    ) as address_layout:
+        await confirm_with_menu(address_layout, menu, br_name, BR_CODE_OTHER)
 
     with trezorui_api.confirm_value(
         title=TR.sign_message__confirm_message,
         description=None,
         value=message,
-        verb=None,
-        verb_cancel="^",
         hold=not verify,
-        chunkify=chunkify,
+        external_menu=True,
     ) as message_layout:
-        # Allowing to go back from the second screen
-        while True:
+        if message_layout.page_count() <= LONG_MSG_PAGE_THRESHOLD:
+            await confirm_with_menu(message_layout, menu, br_name, BR_CODE_OTHER)
+        else:
             await confirm_blob(
                 br_name,
-                TR.sign_message__confirm_address,
-                address,
-                verb=TR.buttons__continue,
+                TR.sign_message__confirm_message,
+                message,
                 br_code=BR_CODE_OTHER,
+                ask_pagination=True,
+                # signing without reading the whole message is held to confirm
+                extra_confirmation_if_not_read=not verify,
             )
-            try:
-                if message_layout.page_count() <= LONG_MSG_PAGE_THRESHOLD:
-                    await raise_if_not_confirmed(
-                        message_layout,
-                        br_name,
-                        BR_CODE_OTHER,
-                    )
-                else:
-                    await confirm_blob(
-                        br_name,
-                        TR.sign_message__confirm_message,
-                        message,
-                        verb=None,
-                        verb_cancel="^",
-                        ask_pagination=True,
-                        extra_confirmation_if_not_read=not verify,
-                    )
-            except ActionCancelled:
-                continue
-            else:
-                break
 
 
 def error_popup(
