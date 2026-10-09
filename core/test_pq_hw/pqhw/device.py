@@ -34,6 +34,10 @@ LEGACY_EMBED = REPO / "core" / "test_pq_hw" / "work" / "legacy" / "core" / "embe
 MODEL = "T3W1"
 BUTTONS = ScreenButtons(LayoutType.Eckhart)
 MAX_TAPS = 5
+#: Seconds the trezorlib connection (protocol probe, THP handshake and the
+#: pairing skip) may take. trezorlib reads USB without a timeout, so a device
+#: that stops answering mid-handshake would otherwise hang the whole run.
+CONNECT_TIMEOUT = 60
 
 # The nRF52832's MCUboot runs single-app: one application slot, no swap, so an
 # application written there is what boots (after MCUboot checks its
@@ -307,6 +311,38 @@ class Unit:
             time.sleep(0.5)
         raise UnitError(f"device did not appear within {timeout:.0f} s")
 
+    def _connect(self, transport: Transport) -> TrezorTestContext:
+        """TrezorTestContext, but abandoned after CONNECT_TIMEOUT seconds.
+
+        On a stall the screen is captured (that is the one clue to what the
+        device waits for) and the transport is closed, which fails the stuck
+        read in the worker; the caller then retries.
+        """
+        result: dict[str, t.Any] = {}
+
+        def worker() -> None:
+            try:
+                result["ctx"] = TrezorTestContext(
+                    transport, auto_interact=True, force_wipe=False
+                )
+            except BaseException as e:  # re-raised in the caller's thread
+                result["error"] = e
+
+        th = threading.Thread(target=worker, daemon=True)
+        th.start()
+        th.join(CONNECT_TIMEOUT)
+        if th.is_alive():
+            self.step(f"connection stalled for {CONNECT_TIMEOUT} s, retrying")
+            try:
+                transport.close()
+            except Exception:
+                pass
+            th.join(10)
+            raise UnitError(f"connection stalled for {CONNECT_TIMEOUT} s")
+        if "error" in result:
+            raise result["error"]
+        return result["ctx"]
+
     def context(
         self, *, bootloader: bool | None = None, timeout: float = 120
     ) -> TrezorTestContext:
@@ -328,7 +364,7 @@ class Unit:
                     LOG.info("unit on USB at %s, connecting", seen)
                 if not self.wire_answers(transport):
                     raise UnitError("on USB, but the wire interface is silent")
-                ctx = TrezorTestContext(transport, auto_interact=True, force_wipe=False)
+                ctx = self._connect(transport)
             except AmbiguousUnit:
                 raise
             except Exception as e:  # mid-reboot, interface not ready yet

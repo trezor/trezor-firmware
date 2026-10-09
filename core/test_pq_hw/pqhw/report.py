@@ -84,6 +84,9 @@ class Recorder:
             self.current.failure = failure
             self.current.log = log
         self.current = None
+        # Written after every test: a run killed by the pytest timeout (which
+        # exits without the session-end hooks) keeps its report.
+        self.write()
 
     # --- HTML -------------------------------------------------------------
 
