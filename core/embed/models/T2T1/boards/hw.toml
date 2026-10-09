@@ -2,7 +2,7 @@ header = "T2T1/boards/trezor_t.h"
 emulator_header = "T2T1/boards/t2t1-unix.h"
 
 [display]
-driver = "io/display_st7789"
+driver = "io/display_i8080"
 panel = "io/display_panel_t2t1"
 
 [backlight]

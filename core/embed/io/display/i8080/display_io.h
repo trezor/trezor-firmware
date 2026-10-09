@@ -53,12 +53,6 @@ void display_io_init_te_interrupt(void);
 #error "Unsupported display interface"
 #endif
 
-/*#define DISPLAY_CMD_ADDRESS ((__IO DISP_MEM_TYPE *)(DISPLAY_MEMORY_BASE))
-#define DISPLAY_DATA_ADDRESS                    \
-  ((__IO DISP_MEM_TYPE *)(DISPLAY_MEMORY_BASE | \
-                          (DISPLAY_ADDR_SHIFT << DISPLAY_MEMORY_PIN)))
-*/
-
 extern __IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS;
 extern __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS;
 
@@ -67,10 +61,18 @@ extern __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS;
 
 #ifdef DISPLAY_I8080_16BIT_DW
 #define ISSUE_PIXEL_DATA(X) ISSUE_DATA_BYTE(X)
-#elif DISPLAY_I8080_8BIT_DW
+#elif defined(DISPLAY_I8080_8BIT_DW)
+#ifdef DISPLAY_I8080_8BIT_MSB_FIRST
+// Some controllers (e.g. GC9307C) have no register to control the byte order
+// of GRAM writes on the 8-bit bus and expect the high byte of each pixel first.
+#define ISSUE_PIXEL_DATA(X)  \
+  ISSUE_DATA_BYTE((X) >> 8); \
+  ISSUE_DATA_BYTE((X) & 0xFF)
+#else
 #define ISSUE_PIXEL_DATA(X)    \
   ISSUE_DATA_BYTE((X) & 0xFF); \
   ISSUE_DATA_BYTE((X) >> 8)
-#endif
+#endif  // DISPLAY_I8080_8BIT_MSB_FIRST
+#endif  // DISPLAY_I8080_16BIT_DW
 
 #endif  // TREZORHAL_DISPLAY_IO_H

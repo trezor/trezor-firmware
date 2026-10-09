@@ -32,6 +32,19 @@ __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
 
 #ifdef KERNEL_MODE
 
+static inline void display_io_IM_init(GPIO_TypeDef *port, uint16_t pin,
+                                      GPIO_PinState val) {
+  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Alternate = 0;
+
+  GPIO_InitStructure.Pin = pin;
+  HAL_GPIO_WritePin(port, pin, val);
+  HAL_GPIO_Init(port, &GPIO_InitStructure);
+}
+
 void display_io_init_gpio(void) {
   // init peripherals
   __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -50,9 +63,21 @@ void display_io_init_gpio(void) {
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Alternate = 0;
   GPIO_InitStructure.Pin = DISPLAY_PWR_PIN;
-  HAL_GPIO_WritePin(DISPLAY_PWR_PORT, DISPLAY_PWR_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(DISPLAY_PWR_PORT, DISPLAY_PWR_PIN, GPIO_PIN_RESET);
   HAL_GPIO_Init(DISPLAY_PWR_PORT, &GPIO_InitStructure);
 #endif
+
+#ifdef DISPLAY_IM0_PIN
+  display_io_IM_init(DISPLAY_IM0_PORT, DISPLAY_IM0_PIN, DISPLAY_IM0_VAL);
+#endif  // DISPLAY_IM0_PIN
+
+#ifdef DISPLAY_IM1_PIN
+  display_io_IM_init(DISPLAY_IM1_PORT, DISPLAY_IM1_PIN, DISPLAY_IM1_VAL);
+#endif  // DISPLAY_IM1_PIN
+
+#ifdef DISPLAY_IM2_PIN
+  display_io_IM_init(DISPLAY_IM2_PORT, DISPLAY_IM2_PIN, DISPLAY_IM2_VAL);
+#endif  // DISPLAY_IM2_PIN
 
   // LCD_RST
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;

@@ -2,8 +2,11 @@
 
 #define VDD_3V3 1
 
-// ST7789 (Display Elektronik DEM240320B1) over 16-bit i8080 FMC bus.
+// GC9307C (LX200B4501CTP03A/B) over i8080 FMC bus.
 // The module has no tearing-effect (TE) output, so no DISPLAY_TE_* defines.
+// For 8-bit mode, use:
+// #define DISPLAY_I8080_8BIT_DW 1
+// #define DISPLAY_I8080_8BIT_MSB_FIRST 1
 #define DISPLAY_I8080_16BIT_DW 1
 
 // Use a single framebuffer on this project (lower RAM use; there is no TE
@@ -24,6 +27,20 @@
 // Display power-supply enable (DISPL_PWR_EN, load switch)
 #define DISPLAY_PWR_PORT GPIOF
 #define DISPLAY_PWR_PIN GPIO_PIN_15
+
+// Display interface-mode select pins (IM0-IM2).
+#define DISPLAY_IM0_PORT GPIOF
+#define DISPLAY_IM0_PIN GPIO_PIN_11
+// DISPLAY_IM0_VAL:
+// - DISPLAY_I8080_16BIT_DW => GPIO_PIN_SET
+// - DISPLAY_I8080_8BIT_DW => GPIO_PIN_RESET
+#define DISPLAY_IM0_VAL GPIO_PIN_SET
+#define DISPLAY_IM1_PORT GPIOF
+#define DISPLAY_IM1_PIN GPIO_PIN_14
+#define DISPLAY_IM1_VAL GPIO_PIN_RESET
+#define DISPLAY_IM2_PORT GPIOG
+#define DISPLAY_IM2_PIN GPIO_PIN_1
+#define DISPLAY_IM2_VAL GPIO_PIN_RESET
 
 // Backlight: four LED strings driven as synchronized active-low PWM by
 // TIM3 CH1-CH4 on PE3-PE6 (cathodes via 33R), with a common boost supply.
@@ -97,6 +114,8 @@
 
 #define TOUCH_SENSITIVITY 0x40
 #define TOUCH_I2C_INSTANCE 0
+#define TOUCH_RST_PORT GPIOC
+#define TOUCH_RST_PIN GPIO_PIN_2  // DISPL_MISO in schematic rev. A
 #define TOUCH_INT_PORT GPIOB
 #define TOUCH_INT_PIN GPIO_PIN_11
 #define TOUCH_ON_PORT GPIOG
