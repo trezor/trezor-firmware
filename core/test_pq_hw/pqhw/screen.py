@@ -202,8 +202,18 @@ def rsod_now() -> dict[str, str] | None:
     return texts
 
 
-# nrf_update.c `g_last_update`: tries (u8, padded to 4), then u32 arrays of 3
-# (error, ms, uart_errors), uart_flags, then u32 arrays of 3 (stats, resends).
+# nrf_update.c `g_last_update`: member offsets (u32 arrays of 3 tries, except
+# `tries` and `uart_flags`). tests/test_fixtures.py checks them against the
+# ELF's DWARF: a size check alone missed a reordering once.
+PUSH_FIELDS = {
+    "tries": 0,
+    "error": 4,
+    "ms": 16,
+    "uart_errors": 28,
+    "stats": 40,
+    "resends": 52,
+    "uart_flags": 64,
+}
 _PUSH_RECORD_SIZE = 68
 _PUSH_STEPS = {1: "s", 2: "r", 3: "cs", 4: "cr"}
 _PUSH_ERRORS = {1: "to", 2: "wm", 3: "bz"}
@@ -235,8 +245,13 @@ def nrf_push_record(elf: Path) -> list[str] | None:
     u32 = lambda off: int.from_bytes(raw[off : off + 4], "little")  # noqa: E731
     lines = []
     for i in range(tries):
-        error, ms = u32(4 + 4 * i), u32(16 + 4 * i)
-        uart, stats, resends = u32(28 + 4 * i), u32(44 + 4 * i), u32(56 + 4 * i)
+        at = {k: v + 4 * i for k, v in PUSH_FIELDS.items()}
+        error, ms = u32(at["error"]), u32(at["ms"])
+        uart, stats, resends = (
+            u32(at["uart_errors"]),
+            u32(at["stats"]),
+            u32(at["resends"]),
+        )
         if error:
             step = _PUSH_STEPS.get(error >> 24, "?")
             err = _PUSH_ERRORS.get((error >> 16) & 0xFF, "?")

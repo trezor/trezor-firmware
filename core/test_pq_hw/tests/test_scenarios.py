@@ -26,7 +26,7 @@ def test_bootloader_wipe_leaves_an_empty_unit(unit: Unit, fx: Fixtures) -> None:
     assert not f.fw_vendor
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", "universal"))
     assert not report.prompted, "a wiped unit must read empty"
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.seed_fingerprint(unit, ctx) is None
 
 
@@ -43,6 +43,6 @@ def test_legacy_bootloader_refuses_a_pq_image(unit: Unit, fx: Fixtures) -> None:
     unit.step("legacy bootloader refused the PQ image")
     flows.close(ctx)
     unit.reset()
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.version(ctx.features) == (2, 13, 0)
     assert flows.seed_fingerprint(unit, ctx) == seed

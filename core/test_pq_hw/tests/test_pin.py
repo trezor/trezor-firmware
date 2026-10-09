@@ -52,7 +52,7 @@ def test_pin_gates_the_swap(unit: Unit, fx: Fixtures) -> None:
     ctx = flows.wait_pq_bootloader(unit)
     flows.pq_install(unit, ctx, fx.bundle("release-A", "universal"))
     unlock_lockscreen(unit, flows.PIN, timeout=flows.REBOOT)
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     ctx.use_pin_sequence([flows.PIN])
     assert flows.seed_fingerprint(unit, ctx) == seed
 
@@ -66,5 +66,5 @@ def test_wipe_code_at_the_intermediary(unit: Unit, fx: Fixtures) -> None:
     ctx = flows.wait_pq_bootloader(unit)
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", "universal"))
     assert report.prompted
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.seed_fingerprint(unit, ctx) is None

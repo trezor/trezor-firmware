@@ -5,6 +5,7 @@ from __future__ import annotations
 import struct
 
 import pytest
+from elftools.elf.elffile import ELFFile
 from pqhw import screen
 from pqhw.cutpoint import CutPoint
 from pqhw.fixtures import VARIANTS, Fixtures
@@ -159,6 +160,35 @@ def test_nrf_push_record_layout(fx: Fixtures, release: str) -> None:
     from elftools.elf.elffile import ELFFile
 
     with fx.release_elf(release).open("rb") as f:
-        symtab = ELFFile(f).get_section_by_name(".symtab")
+        elf = ELFFile(f)
+        symtab = elf.get_section_by_name(".symtab")
         (sym,) = symtab.get_symbol_by_name("g_last_update")
         assert sym["st_size"] == screen._PUSH_RECORD_SIZE
+        assert (
+            _member_offsets(elf, "nrf_update.c", "g_last_update") == screen.PUSH_FIELDS
+        )
+
+
+def _member_offsets(elf: ELFFile, unit: str, variable: str) -> dict[str, int]:
+    """Member offsets of a struct-typed variable, from the ELF's DWARF."""
+    dwarf = elf.get_dwarf_info()
+    for cu in dwarf.iter_CUs():
+        if not cu.get_top_DIE().get_full_path().endswith(unit):
+            continue
+        for die in cu.iter_DIEs():
+            if die.tag != "DW_TAG_variable":
+                continue
+            name = die.attributes.get("DW_AT_name")
+            if name is None or name.value.decode() != variable:
+                continue
+            struct = die.get_DIE_from_attribute("DW_AT_type")
+            while struct.tag in ("DW_TAG_typedef", "DW_TAG_volatile_type"):
+                struct = struct.get_DIE_from_attribute("DW_AT_type")
+            return {
+                m.attributes["DW_AT_name"].value.decode(): m.attributes[
+                    "DW_AT_data_member_location"
+                ].value
+                for m in struct.iter_children()
+                if m.tag == "DW_TAG_member"
+            }
+    raise AssertionError(f"{variable} not found in {unit}")

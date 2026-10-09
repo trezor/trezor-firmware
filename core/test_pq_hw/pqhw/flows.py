@@ -93,6 +93,32 @@ class _WaitScreens:
             self.unit.step(f"{self.what}: {now - self.start:.0f} s, not on USB yet")
 
 
+def wait_firmware(unit: Unit, timeout: float = REBOOT) -> TrezorTestContext:
+    """The firmware on USB after an install or reboot, watched like the
+    phase-2 wait: screenshots while it is not there, and any RSOD (whose texts
+    last only 10 s) read from RAM."""
+    deadline = time.monotonic() + timeout
+    screens = _WaitScreens(unit, "waiting for the firmware")
+    watcher = _RsodWatcher()
+    try:
+        with watcher:
+            while True:
+                try:
+                    return unit.context(
+                        bootloader=False,
+                        timeout=max(
+                            1.0, min(WAIT_SCREEN_EVERY, deadline - time.monotonic())
+                        ),
+                    )
+                except UnitError:
+                    if time.monotonic() >= deadline:
+                        unit.step("the firmware did not come up on USB in time")
+                        raise
+                    screens.tick()
+    finally:
+        watcher.report(unit)
+
+
 # --- seed -------------------------------------------------------------------
 
 
@@ -140,7 +166,7 @@ def baseline_legacy(unit: Unit, fx: Fixtures, variant: str) -> TrezorTestContext
     unit.flash("bootloader", fx.legacy("bootloader"), layout="legacy")
     unit.flash("firmware", fx.legacy(variant), layout="legacy")
     unit.reset()
-    return unit.context(bootloader=False, timeout=REBOOT)
+    return wait_firmware(unit)
 
 
 def baseline_pq_empty(unit: Unit, fx: Fixtures, release: str) -> TrezorTestContext:
@@ -162,7 +188,7 @@ def baseline_pq_installed(
     ctx = baseline_pq_empty(unit, fx, release)
     report = pq_install(unit, ctx, fx.bundle(release, variant))
     assert not report.prompted, "an official install on an empty unit must not ask"
-    ctx = unit.context(bootloader=False, timeout=REBOOT)
+    ctx = wait_firmware(unit)
     if seeded:
         load_seed(unit, ctx)
     return ctx

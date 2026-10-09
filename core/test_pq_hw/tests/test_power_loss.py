@@ -90,7 +90,7 @@ def finish(unit: Unit, fx: Fixtures, seed, bootloader: tuple[int, int, int]):
     ctx = flows.reach_bootloader(unit)
     assert flows.version(ctx.features) == bootloader, "bootloader after the cut"
     report = flows.pq_install(unit, ctx, fx.bundle(NEW, "universal"))
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.version(ctx.features) == NEW_FW
     assert flows.seed_fingerprint(unit, ctx) == seed
     return report
@@ -257,7 +257,7 @@ def migration_finishes(unit: Unit, fx: Fixtures, variant: str, seed) -> None:
     ctx = flows.wait_pq_bootloader(unit)
     assert flows.version(ctx.features) == OLD_BL
     flows.pq_install(unit, ctx, fx.bundle(OLD, variant))
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.seed_fingerprint(unit, ctx) == seed
 
 

@@ -35,7 +35,7 @@ def test_empty_unit_takes_official_without_prompt(
     assert not report.phase2_prompted
     assert report.served["code"] == 0, "the flashed bootloader is A's, header-only"
 
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     f = ctx.features
     assert flows.version(f) == bundle.firmware.manifest.firmware_version[:3]
     assert not f.initialized
@@ -81,7 +81,7 @@ def test_reinstall_is_header_only(unit: Unit, fx: Fixtures) -> None:
     ctx = flows.enter_bootloader(unit, ctx)
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", "universal"))
     assert report.served == {"code": 0, "nrf": 0}
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.seed_fingerprint(unit, ctx) == seed
 
 
@@ -101,7 +101,7 @@ def test_upgrade_streams_bootloader_and_nrf(unit: Unit, fx: Fixtures) -> None:
     assert bundle.nrf is not None
     assert report.served["nrf"] == len(bundle.nrf.image)
 
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.version(ctx.features) == (2, 14, 1)
     assert flows.seed_fingerprint(unit, ctx) == seed
 
@@ -114,7 +114,7 @@ def test_downgrade_keeps_seed(unit: Unit, fx: Fixtures) -> None:
     ctx = flows.enter_bootloader(unit, ctx)
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", "universal"))
     assert report.prompted
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.version(ctx.features) == (2, 14, 0)
     assert flows.seed_fingerprint(unit, ctx) == seed
 
@@ -126,7 +126,7 @@ def test_variant_change_wipes(unit: Unit, fx: Fixtures) -> None:
     ctx = flows.enter_bootloader(unit, ctx)
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", "btc-only"))
     assert report.prompted, "the seed-erase warning is on the confirm screen"
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.seed_fingerprint(unit, ctx) is None
 
 
@@ -140,7 +140,7 @@ def test_interaction_less_upgrade(unit: Unit, fx: Fixtures) -> None:
     ctx = flows.enter_bootloader(unit, ctx, bundle=bundle)
     report = flows.pq_install(unit, ctx, bundle, confirm=False)
     assert not report.prompted
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.version(ctx.features) == (2, 14, 1)
     assert flows.seed_fingerprint(unit, ctx) == seed
 

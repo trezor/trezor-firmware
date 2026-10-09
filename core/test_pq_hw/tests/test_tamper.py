@@ -32,7 +32,7 @@ def assert_untouched(unit: Unit, ctx, seed: str | None) -> None:
     firmware with its seed."""
     flows.close(ctx)
     unit.reset()
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.version(ctx.features) == INSTALLED
     assert flows.seed_fingerprint(unit, ctx) == seed
 
@@ -42,7 +42,7 @@ def assert_recovers(unit: Unit, fx: Fixtures, seed: str | None) -> None:
     being unchanged, the seed is still there."""
     ctx = flows.reach_bootloader(unit)
     flows.pq_install(unit, ctx, fx.bundle(RELEASE, "universal"))
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.version(ctx.features) == INSTALLED
     assert flows.seed_fingerprint(unit, ctx) == seed
 

@@ -47,7 +47,7 @@ def test_migration_keeps_seed(unit: Unit, fx: Fixtures, variant: str) -> None:
     assert report.prompted
     assert report.served["code"] == 0, "the swapped-in bootloader is A's own"
 
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert ctx.features.firmware_scheme == FirmwareScheme.PqSecure
     assert flows.version(ctx.features) == (2, 14, 0)
     assert flows.seed_fingerprint(unit, ctx) == seed
@@ -60,7 +60,7 @@ def test_migration_into_other_variant_wipes(unit: Unit, fx: Fixtures) -> None:
     ctx, _ = migrate(unit, fx, "universal")
     report = flows.pq_install(unit, ctx, fx.bundle("release-A", "btc-only"))
     assert report.prompted
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.seed_fingerprint(unit, ctx) is None
 
 
@@ -69,6 +69,6 @@ def test_unseeded_unit_migrates(unit: Unit, fx: Fixtures) -> None:
     on PQ release A, still empty. [MG-09]"""
     ctx, _ = migrate(unit, fx, "universal", seeded=False)
     flows.pq_install(unit, ctx, fx.bundle("release-A", "universal"))
-    ctx = unit.context(bootloader=False, timeout=flows.REBOOT)
+    ctx = flows.wait_firmware(unit)
     assert flows.version(ctx.features) == (2, 14, 0)
     assert flows.seed_fingerprint(unit, ctx) is None
