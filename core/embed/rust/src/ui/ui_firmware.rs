@@ -163,11 +163,9 @@ pub trait FirmwareUI {
     /// - `cancel` — whether the screen offers a way out.
     /// - `verb_cancel` — the way out's label; `None` means the model's own.
     /// - `external_menu` — draw a menu button that answers `INFO`, for a menu
-    ///   the caller drives. A model that cannot draw one says so, and never
-    ///   hides a way out behind it.
+    ///   the caller drives. A model with no place for one draws without it.
     ///
-    /// Not every model honours all of these yet; each one that does not says
-    /// so where it ignores them.
+    /// WIP: not every model honours all of these yet.
     #[allow(clippy::too_many_arguments)]
     fn confirm_action(
         title: TString<'static>,
