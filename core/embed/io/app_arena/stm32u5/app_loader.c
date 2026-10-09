@@ -35,6 +35,8 @@ LOG_DECLARE(app_loader)
 #define MPU_ALIGNMENT 32   // Required alignment for MPU regions
 #define STACK_ALIGNMENT 8  // Required alignment for stack end
 
+#define WATCHDOG_TIMEOUT 5000  // ms
+
 // RO segment has been relocated to RW segment
 #define RUNTIME_FLAG_RO_SEGMENT_RELOCATED (1 << 0)
 
@@ -537,6 +539,9 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
 
   // Enable coreapp TLS area swapping
   systask_enable_tls(&applet->task, coreapp_get_tls_area());
+
+    systask_enable_watchdog(&applet->task, WATCHDOG_TIMEOUT);
+
 
   // Start the task in Core's own app entry point, handing it `applet_main`,
   // rather than jumping into `applet_main` directly. Core then sets up the
