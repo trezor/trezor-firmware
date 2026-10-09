@@ -357,6 +357,11 @@ def pq_phase2(unit: Unit, bundle: PqSecureBundle, upload: Upload | None = None) 
                         raise
                     screens.tick()
         watcher.report(unit)
+        # The nRF push ran on this boot; how it went, even when it succeeded.
+        elf = getattr(bundle, "bootloader_elf", None)
+        push = screen.nrf_push_record(elf) if elf is not None else None
+        if push:
+            unit.step("nRF push: " + "; ".join(push), screenshot=False)
     except UnitError:
         watcher.report(unit)
         # Not on USB: the bootloader is on its intro ("Initiate connection"),

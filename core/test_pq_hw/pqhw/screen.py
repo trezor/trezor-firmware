@@ -202,6 +202,55 @@ def rsod_now() -> dict[str, str] | None:
     return texts
 
 
+# nrf_update.c `g_last_update`: tries (u8, padded to 4), then u32 arrays of 3
+# (error, ms, uart_errors), uart_flags, then u32 arrays of 3 (stats, resends).
+_PUSH_RECORD_SIZE = 68
+_PUSH_STEPS = {1: "s", 2: "r", 3: "cs", 4: "cr"}
+_PUSH_ERRORS = {1: "to", 2: "wm", 3: "bz"}
+
+
+def nrf_push_record(elf: Path) -> list[str] | None:
+    """The last nRF push of the running bootloader (`g_last_update`), one
+    line per try; None if there was none or the record cannot be read.
+
+    A push that succeeds shows nothing on screen, so this is the only view of
+    the chunk re-sends it needed (KB-11).
+    """
+    if probe_holder is not None:
+        return None
+    from elftools.elf.elffile import ELFFile
+
+    with elf.open("rb") as f:
+        symtab = ELFFile(f).get_section_by_name(".symtab")
+        syms = symtab.get_symbol_by_name("g_last_update") if symtab else None
+    if not syms or syms[0]["st_size"] != _PUSH_RECORD_SIZE:
+        return None  # another layout: better nothing than a wrong decode
+    try:
+        raw = read_memory(syms[0]["st_value"], _PUSH_RECORD_SIZE)
+    except ScreenError:
+        return None
+    tries = raw[0]
+    if not 0 < tries <= 3:
+        return None
+    u32 = lambda off: int.from_bytes(raw[off : off + 4], "little")  # noqa: E731
+    lines = []
+    for i in range(tries):
+        error, ms = u32(4 + 4 * i), u32(16 + 4 * i)
+        uart, stats, resends = u32(28 + 4 * i), u32(44 + 4 * i), u32(56 + 4 * i)
+        if error:
+            step = _PUSH_STEPS.get(error >> 24, "?")
+            err = _PUSH_ERRORS.get((error >> 16) & 0xFF, "?")
+            result = f"failed {step}/{err}@{(error & 0xFFFF) * 256}"
+        else:
+            result = "ok"
+        lines.append(
+            f"try {i + 1}: {result} after {ms} ms, slowest reply {stats >> 16} ms, "
+            f"{resends >> 16} re-sends ({resends & 0xFFFF} answered), "
+            f"{uart} UART errors"
+        )
+    return lines
+
+
 def _read_cfbar() -> tuple[int, int]:
     """(register address that answered, its value)."""
     errors = []

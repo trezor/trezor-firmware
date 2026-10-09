@@ -78,7 +78,11 @@ class Fixtures:
         return self.path(f"intermediary/{part}-{variant}.elf")
 
     def bundle(self, release: str, variant: str) -> PqSecureBundle:
-        return PqSecureBundle.load(self.release_zip(release), variant)
+        bundle = PqSecureBundle.load(self.release_zip(release), variant)
+        # The symbols of the bootloader it installs: phase 2 reads that
+        # bootloader's nRF push record (screen.nrf_push_record).
+        bundle.bootloader_elf = self.release_elf(release)  # type: ignore[attr-defined]
+        return bundle
 
     def release_meta(self, release: str) -> dict:
         return json.loads(self.release_file(release, "bundle.json").read_text())

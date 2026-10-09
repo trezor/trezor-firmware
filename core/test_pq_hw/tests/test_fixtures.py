@@ -151,3 +151,14 @@ def test_boot_args_address(fx: Fixtures, release: str) -> None:
         (cmd,) = symtab.get_symbol_by_name("g_boot_command")
         assert cmd["st_value"] == screen.BOOT_COMMAND
         assert cmd["st_size"] == screen.BOOT_ARGS - screen.BOOT_COMMAND
+
+
+@pytest.mark.parametrize("release", RELEASES)
+def test_nrf_push_record_layout(fx: Fixtures, release: str) -> None:
+    """pqhw.screen.nrf_push_record decodes g_last_update with a fixed layout."""
+    from elftools.elf.elffile import ELFFile
+
+    with fx.release_elf(release).open("rb") as f:
+        symtab = ELFFile(f).get_section_by_name(".symtab")
+        (sym,) = symtab.get_symbol_by_name("g_last_update")
+        assert sym["st_size"] == screen._PUSH_RECORD_SIZE
