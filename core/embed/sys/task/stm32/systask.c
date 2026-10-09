@@ -861,7 +861,9 @@ __attribute__((naked, no_stack_protector)) void GTZC_IRQHandler(void) {
 }
 #endif
 
-__attribute__((no_stack_protector, used)) static void nmi_handler(void) {
+__attribute__((no_stack_protector,
+               used)) static void nmi_handler(uint32_t msp,
+                                              uint32_t exc_return) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 #ifdef STM32U5
   if ((RCC->CIFR & RCC_CIFR_CSSF) != 0) {
@@ -871,7 +873,7 @@ __attribute__((no_stack_protector, used)) static void nmi_handler(void) {
     RCC->CIR = RCC_CIR_CSSC;
 #endif
     // Clock Security System triggered NMI
-    systask_exit_fault(true, __get_MSP());
+    systask_exit_fault(msp, exc_return);
   }
 #ifdef STM32U5
   else if (FLASH->ECCR & FLASH_ECCR_ECCD_Msk) {
@@ -884,20 +886,20 @@ __attribute__((no_stack_protector, used)) static void nmi_handler(void) {
     // is in the bootloader code region.
     if (bankid == 0 && addr >= BOARDLOADER_START &&
         addr < BOARDLOADER_START + BOARDLOADER_MAXSIZE) {
-      systask_exit_fault(false, __get_MSP());
+      systask_exit_fault(msp, exc_return);
     }
 #elif defined(BOOTLOADER)
     // In bootloader, this is a fatal error only if the address
     // is in the bootloader code region.
     if (bankid == 0 && addr >= BOOTLOADER_START &&
         addr < BOOTLOADER_START + BOOTLOADER_MAXSIZE) {
-      systask_exit_fault(false, __get_MSP());
+      systask_exit_fault(msp, exc_return);
     }
 #else
     (void)addr;
     (void)bankid;
     // In application/prodtest this is a fatal error
-    systask_exit_fault(false, __get_MSP());
+    systask_exit_fault(msp, exc_return);
 #endif
   }
 #endif  // STM32U5
@@ -905,7 +907,7 @@ __attribute__((no_stack_protector, used)) static void nmi_handler(void) {
   mpu_restore(mpu_mode);
 }
 
-__attribute__((no_stack_protector)) void NMI_Handler(void) {
+__attribute__((naked, no_stack_protector)) void NMI_Handler(void) {
   __asm__ volatile(
       "MRS      R0, MSP               \n"  // R0 = MSP
       "MOV      R1, LR                \n"  // R1 = EXC_RETURN code
