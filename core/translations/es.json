@@ -2790,12 +2790,7 @@
     "sign_message__confirm_address": "Dirección firma",
     "sign_message__confirm_message": "Confirmar mensaje",
     "sign_message__confirm_without_review": "Confirmar sin revisar",
-    "sign_message__message_size": {
-      "Bolt": "Tamaño del mensaje",
-      "Caesar": "",
-      "Delizia": "Tamaño del mensaje",
-      "Eckhart": "Tamaño del mensaje"
-    },
+    "sign_message__message_size": "Tamaño del mensaje",
     "sign_message__verify_address": "Verificar dirección",
     "sn__action": {
       "Bolt": "",
