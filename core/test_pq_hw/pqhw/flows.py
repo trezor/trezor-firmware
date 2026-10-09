@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 import time
 import typing as t
 from dataclasses import dataclass, replace
@@ -43,6 +44,38 @@ INTRO_SILENCE = 15
 # restart), a screenshot this often: the report then shows progress, an error
 # screen or a restart instead of only the timeout.
 WAIT_SCREEN_EVERY = 30
+
+
+class _RsodWatcher:
+    """Polls RAM for an RSOD while a wait runs (see screen.rsod_now)."""
+
+    def __init__(self, every: float = 1.5) -> None:
+        self.every = every
+        self.seen: dict[str, str] | None = None
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+
+    def _run(self) -> None:
+        while not self._stop.wait(self.every):
+            texts = screen.rsod_now()
+            if texts is not None and self.seen is None:
+                self.seen = texts
+
+    def __enter__(self) -> _RsodWatcher:
+        self._thread.start()
+        return self
+
+    def __exit__(self, *exc: t.Any) -> None:
+        self._stop.set()
+        self._thread.join(30)
+
+    def report(self, unit: Unit) -> None:
+        if self.seen is not None:
+            unit.step(
+                "RSOD during the wait (from RAM): "
+                + " | ".join(f"{k}: {v}" for k, v in self.seen.items() if v),
+                screenshot=False,
+            )
 
 
 class _WaitScreens:
@@ -304,33 +337,30 @@ def pq_phase2(unit: Unit, bundle: PqSecureBundle, upload: Upload | None = None) 
     the device's TrezorFailure."""
     up = upload or Upload.of(bundle)
     needed_person = False
+    # The nRF push runs on this boot; a failure there shows an RSOD for only
+    # 10 s (KB-11), so RAM is watched for one throughout the wait.
+    watcher = _RsodWatcher()
     try:
         deadline = time.monotonic() + PHASE2_RESUME
         screens = _WaitScreens(unit, "waiting for phase 2")
-        while True:
-            try:
-                ctx = unit.context(
-                    bootloader=True,
-                    timeout=min(WAIT_SCREEN_EVERY, deadline - time.monotonic()),
-                )
-                break
-            except UnitError:
-                if time.monotonic() >= deadline:
-                    raise
-                screens.tick()
+        with watcher:
+            while True:
+                try:
+                    ctx = unit.context(
+                        bootloader=True,
+                        timeout=min(WAIT_SCREEN_EVERY, deadline - time.monotonic()),
+                    )
+                    break
+                except UnitError:
+                    if time.monotonic() >= deadline:
+                        raise
+                    screens.tick()
+        watcher.report(unit)
     except UnitError:
+        watcher.report(unit)
         # Not on USB: the bootloader is on its intro ("Initiate connection"),
         # which brings the wire up only after a tap -- it did not resume.
         unit.step("phase 2 did not come up on USB within the resume time")
-        # A shutdown on the way (an nRF push failing, KB-11) left its RSOD
-        # texts in RAM; screenshots catch the RSOD itself only by chance.
-        rsod = screen.last_rsod()
-        if rsod is not None:
-            unit.step(
-                "last RSOD (from RAM): "
-                + " | ".join(f"{k}: {v}" for k, v in rsod.items() if v),
-                screenshot=False,
-            )
         if unit.ask is None:
             raise UnitError(
                 "phase 2 never came up on USB: the bootloader did not resume the "

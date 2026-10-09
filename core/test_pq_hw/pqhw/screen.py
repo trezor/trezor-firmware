@@ -30,6 +30,7 @@ import os
 import re
 import subprocess
 import tempfile
+import threading
 import time
 from pathlib import Path
 
@@ -72,7 +73,16 @@ class ScreenError(Exception):
     pass
 
 
+# One openocd at a time: the RSOD watcher polls from a thread.
+_probe_lock = threading.Lock()
+
+
 def _openocd(commands: str) -> str:
+    with _probe_lock:
+        return _openocd_unlocked(commands)
+
+
+def _openocd_unlocked(commands: str) -> str:
     res = subprocess.run(
         [*OPENOCD, "-c", f"adapter speed {SWD_KHZ}; {commands}"],
         capture_output=True,
@@ -157,38 +167,39 @@ def read_memory(address: int, size: int) -> bytes:
     return data
 
 
-# The bootloader's boot arguments (`g_boot_args`, section .boot_args): the
-# same address in every release (tests/test_fixtures.py checks the ELFs).
+# The bootloader's boot command and arguments (`g_boot_command`, 8 B, then
+# `g_boot_args`, section .boot_args): the same addresses in every release
+# (tests/test_fixtures.py checks the ELFs).
+BOOT_COMMAND = 0x30000000
 BOOT_ARGS = 0x30000008
 BOOT_ARGS_SIZE = 248
+BOOT_COMMAND_SHOW_RSOD = 0x7CD945A0
 # systask_postmortem_t: reason (4), privileged (padded to 4), then the
 # error union's title, message and footer, 64 B each.
 _PM_TEXT = ((8, "title"), (72, "message"), (136, "footer"))
 
 
-def last_rsod() -> dict[str, str] | None:
-    """The last RSOD's texts, from the boot arguments in RAM.
+def rsod_now() -> dict[str, str] | None:
+    """The RSOD on screen right now, read from RAM; None if there is none.
 
-    error_shutdown leaves them there for the next boot to show, and only the
-    boot command is cleared at startup, so they outlive the RSOD itself:
-    readable after a failure that a screenshot missed. None if nothing
-    printable is there.
+    A fatal error saves its texts with BOOT_COMMAND_SHOW_RSOD, shows them for
+    10 s, then reboots with a command that clears them: the texts are
+    readable only while the RSOD is up. A screenshot every 30-40 s catches
+    that by chance; polling this does not.
     """
+    if probe_holder is not None:
+        return None
     try:
-        raw = read_memory(BOOT_ARGS, BOOT_ARGS_SIZE)
+        raw = read_memory(BOOT_COMMAND, 8 + BOOT_ARGS_SIZE)
     except ScreenError:
         return None
+    if int.from_bytes(raw[:8], "little") != BOOT_COMMAND_SHOW_RSOD:
+        return None
+    pm = raw[8:]
     texts = {}
     for off, name in _PM_TEXT:
-        field = raw[off : off + 64].split(b"\0", 1)[0]
-        try:
-            text = field.decode()
-        except UnicodeDecodeError:
-            return None
-        if text and not text.isprintable():
-            return None
-        texts[name] = text
-    return texts if any(texts.values()) else None
+        texts[name] = pm[off : off + 64].split(b"\0", 1)[0].decode(errors="replace")
+    return texts
 
 
 def _read_cfbar() -> tuple[int, int]:
