@@ -22,16 +22,22 @@
 #include "../display_io.h"
 #include "lx200b4501ctp03.h"
 
+#define MADCTL_MY (1U << 7U)   // Row Address Order
+#define MADCTL_MX (1U << 6U)   // Column Address Order
+#define MADCTL_MV (1U << 5U)   // Row / Column Exchange
+#define MADCTL_ML (1U << 4U)   // Vertical Refresh Order
+#define MADCTL_BGR (1U << 3U)  // RGB-BGR Order
+#define MADCTL_MH (1U << 2U)   // Horizontal Refresh Order
+
+#define MADCTL_DEFAULT (MADCTL_MX | MADCTL_BGR | MADCTL_MH)
+
 void lx200b4501ctp03_init_seq(void) {
   // Inter Register Enable1 / Enable2
   ISSUE_CMD_BYTE(0xFE);
   ISSUE_CMD_BYTE(0xEF);
 
-  // MADCTL: Memory Data Access Control; MX=1, RGB=1 (default orientation is
-  // never re-applied via lx200b4501ctp03_rotate(), so this initial value is
-  // the one that actually takes effect on a default-orientation boot)
   ISSUE_CMD_BYTE(0x36);
-  ISSUE_DATA_BYTE(0x48);
+  ISSUE_DATA_BYTE(MADCTL_DEFAULT);
 
   // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits
   // input)
@@ -153,34 +159,25 @@ void lx200b4501ctp03_init_seq(void) {
 }
 
 void lx200b4501ctp03_rotate(int degrees, display_padding_t* padding) {
-#define RGB (1 << 3)
-#define ML (1 << 4)  // vertical refresh order
-#define MH (1 << 2)  // horizontal refresh order
-#define MV (1 << 5)
-#define MX (1 << 6)
-#define MY (1 << 7)
-  // MADCTL: Memory Data Access Control - reference:
-  // section 6.2.18 in the GC9307 manual
-  uint8_t display_command_parameter = 0;
+  uint8_t madctl_val = MADCTL_DEFAULT;
+
   switch (degrees) {
     case 0:
-      display_command_parameter = 0;
+      // Nothing to change.
       break;
     case 90:
-      display_command_parameter = MV | MX | MH | ML;
+      madctl_val ^= (MADCTL_MV | (MADCTL_MX | MADCTL_MH));
       break;
     case 180:
-      display_command_parameter = MX | MY | MH | ML;
+      madctl_val ^= ((MADCTL_MY | MADCTL_ML) | (MADCTL_MX | MADCTL_MH));
       break;
     case 270:
-      display_command_parameter = MV | MY;
+      madctl_val ^= (MADCTL_MV | (MADCTL_MY | MADCTL_ML));
       break;
   }
 
-  display_command_parameter ^= RGB | MY;  // XOR RGB and MY settings
-
   ISSUE_CMD_BYTE(0x36);
-  ISSUE_DATA_BYTE(display_command_parameter);
+  ISSUE_DATA_BYTE(madctl_val);
 
   // Full 240x320 panel - no window offset in any orientation.
   padding->x = 0;
