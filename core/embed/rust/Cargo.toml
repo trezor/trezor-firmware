@@ -132,6 +132,8 @@ test = [
     "models/model_t2t1",
     "sec/secret",
     "sys/dbg_console",
+    "sys/log_external",
+    "sys/log_max_debug",
     "upymod/emulator",
     "upymod/layout_bolt",
     "upymod/universal_fw",
