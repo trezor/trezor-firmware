@@ -2,11 +2,12 @@
 //! each a value screen that core pages, with the extras menu between them.
 
 use super::chunked::{self, AfterChunk, BYTES_PER_CHUNK};
+use super::menu;
 use super::transport::LayoutHandle;
-use super::{BR_CODE_OTHER, menu};
 use crate::alloc_types::String;
 use crate::modui::confirm::Data;
-use crate::traits::ui::{ConfirmValue as WireConfirmValue, UiReply};
+use crate::structs::{Commitment, ConfirmValue, OptStrSlice, ValueKind};
+use crate::traits::ui::UiReply;
 use crate::{Error, Result};
 
 /// Runs the block.
@@ -37,24 +38,19 @@ pub(in crate::modui) fn confirm(params: &Data<'_>) -> Result<UiReply> {
 /// as many screens as it takes, and the person answers only once they have
 /// seen all of it.
 fn show_chunk(params: &Data<'_>, hex: &str, layout: &LayoutHandle) -> Result<AfterChunk> {
-    // The screen has a menu exactly when the app offered extras.
-    let has_menu = !params.extras.is_empty();
-    let request = WireConfirmValue::new(
-        params.title,
-        hex,
-        None,            // description
-        Some(params.br), // br_name: the step's name; the app owns it
-        BR_CODE_OTHER,   // see the constant
-        true,            // is_data: raw data, shown verbatim
-        None,            // verb: the model's own
-        params.subtitle,
-        false,    // info: the menu button is the external one below
-        false,    // hold
-        false,    // chunkify: hex, not an address to compare by eye
-        true,     // page_counter: where the person is within the chunk
-        has_menu, // external_menu: how the extras are reached
-        None,     // footer
-    );
+    let request = ConfirmValue {
+        title: params.title.into(),
+        value: hex.into(),
+        kind: ValueKind::Data,
+        subtitle: params.subtitle.into(),
+        description: OptStrSlice::NONE,
+        footer: OptStrSlice::NONE,
+        footer_warning: false,
+        commitment: Commitment::Step,
+        br_name: params.br.into(),
+        // The screen has a menu exactly when the app offered extras.
+        external_menu: !params.extras.is_empty(),
+    };
 
     // This chunk's content is new, so the layout is built rather than reopened.
     let mut reply = layout.show(&request)?;

@@ -370,59 +370,40 @@ impl<'a> ConfirmSummary<'a> {
     }
 }
 
+/// What a value *is*, which decides how it is formatted.
+///
+/// There is deliberately no `chunkify` flag: grouping an address into chunks
+/// is a consequence of it being an address, not a separate choice.
+#[stabby::stabby]
+#[repr(u8)]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub enum ValueKind {
+    /// Shown as written.
+    Text,
+    /// Grouped into chunks so it can be compared by eye.
+    Address,
+    /// Raw bytes as hex, paged with a counter; what `confirm::data` sends.
+    Data,
+}
+
 /// A value confirmation screen, sent as [`TrezorUiEnum::ConfirmValue`].
+#[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmValue<'a> {
     pub title: StrSlice<'a>,
     pub value: StrSlice<'a>,
-    pub description: Option<StrSlice<'a>>,
-    pub is_data: bool,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub verb: Option<StrSlice<'a>>,
-    pub info: bool,
-    pub hold: bool,
-    pub chunkify: bool,
-    pub page_counter: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
+    pub kind: ValueKind,
+    pub subtitle: OptStrSlice<'a>,
+    pub description: OptStrSlice<'a>,
+    /// A note along the bottom of the screen.
+    pub footer: OptStrSlice<'a>,
+    /// Whether the note is something to weigh before confirming.
+    pub footer_warning: bool,
+    pub commitment: Commitment,
+    /// The step's name, announced to the host.
+    pub br_name: StrSlice<'a>,
+    /// Draw a menu button; set by the library when the block has extras.
     pub external_menu: bool,
-    pub footer: Option<(StrSlice<'a>, bool)>,
-}
-
-impl<'a> ConfirmValue<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        description: Option<&'a str>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        is_data: bool,
-        verb: Option<&'a str>,
-        subtitle: Option<&'a str>,
-        info: bool,
-        hold: bool,
-        chunkify: bool,
-        page_counter: bool,
-        external_menu: bool,
-        footer: Option<(&'a str, bool)>,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            value: content.into(),
-            description: description.map(|s| s.into()),
-            is_data,
-            subtitle: subtitle.map(|s| s.into()),
-            verb: verb.map(|s| s.into()),
-            info,
-            hold,
-            chunkify,
-            page_counter,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-            external_menu,
-            footer: footer.map(|(s, b)| (s.into(), b)),
-        }
-    }
 }
 
 /// What kind of news a notice is.

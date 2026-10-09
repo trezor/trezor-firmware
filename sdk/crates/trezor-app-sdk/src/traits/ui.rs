@@ -21,7 +21,7 @@ use ufmt::derive::uDebug;
 
 use super::util::FastResult;
 use super::wire::WireError;
-pub use crate::structs::ConfirmAction;
+pub use crate::structs::{ConfirmAction, ConfirmValue};
 
 /// Build a layout, show it, and forget it. The handle is ignored.
 pub const OP_ONCE: u16 = 0;
@@ -174,73 +174,6 @@ impl<'a> ConfirmSummary<'a> {
             external_menu,
             br_name: opt_bytes(br_name),
             br_code,
-        }
-    }
-}
-
-/// Fields mirror [`crate::structs::ConfirmValue`] except `footer`, which is
-/// flattened into `footer_text`/`footer_bold` since stabby has no tuples;
-/// [`Self::new`] still takes the same `Option<(&str, bool)>` shape as the
-/// wire-format constructor, since a plain (non-ABI-crossing) parameter can
-/// be a tuple.
-#[stabby::stabby]
-#[derive(Clone)]
-pub struct ConfirmValue<'a> {
-    pub title: Str<'a>,
-    pub value: Str<'a>,
-    pub description: StabbyOption<Slice<'a, u8>>,
-    pub is_data: bool,
-    pub subtitle: StabbyOption<Slice<'a, u8>>,
-    pub verb: StabbyOption<Slice<'a, u8>>,
-    pub info: bool,
-    pub hold: bool,
-    pub chunkify: bool,
-    pub page_counter: bool,
-    pub br_name: StabbyOption<Slice<'a, u8>>,
-    pub br_code: i32,
-    pub external_menu: bool,
-    pub footer_text: StabbyOption<Slice<'a, u8>>,
-    pub footer_bold: bool,
-}
-
-impl<'a> ConfirmValue<'a> {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        description: Option<&'a str>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        is_data: bool,
-        verb: Option<&'a str>,
-        subtitle: Option<&'a str>,
-        info: bool,
-        hold: bool,
-        chunkify: bool,
-        page_counter: bool,
-        external_menu: bool,
-        footer: Option<(&'a str, bool)>,
-    ) -> Self {
-        let (footer_text, footer_bold) = match footer {
-            Some((text, bold)) => (opt_bytes(Some(text)), bold),
-            None => (opt_bytes(None), false),
-        };
-        Self {
-            title: title.into(),
-            value: content.into(),
-            description: opt_bytes(description),
-            is_data,
-            subtitle: opt_bytes(subtitle),
-            verb: opt_bytes(verb),
-            info,
-            hold,
-            chunkify,
-            page_counter,
-            br_name: opt_bytes(br_name),
-            br_code,
-            external_menu,
-            footer_text,
-            footer_bold,
         }
     }
 }

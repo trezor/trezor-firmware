@@ -9,13 +9,12 @@ use rkyv::{
     option::ArchivedOption,
     rancor::Failure,
     ser::{allocator::SubAllocator, writer::Buffer},
-    tuple::ArchivedTuple2,
     util::Align,
     Archived,
 };
 #[cfg(feature = "app_loading")]
 use trezor_app_sdk::structs::{
-    ArchivedCommitment, Commitment, Property, Severity as WireSeverity, Slice, StrSlice,
+    ArchivedCommitment, ArchivedValueKind, Commitment, Property, Severity as WireSeverity, Slice, StrSlice,
     TrezorProgressEnum, TrezorUiEnum, UiReply,
 };
 
@@ -1306,13 +1305,6 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 .map(|s| unwrap!(StrBuffer::alloc(s.as_ref())).into())
         }
 
-        fn tstr_tuple_opt(
-            s: &ArchivedOption<ArchivedTuple2<Archived<StrSlice>, bool>>,
-        ) -> Option<(TString<'static>, bool)> {
-            s.as_ref()
-                .map(|s| (unwrap!(StrBuffer::alloc(s.0.as_ref())).into(), s.1))
-        }
-
         fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Obj {
             let slice = archived.as_ref();
             let mut list = unwrap!(List::with_capacity(slice.len()));
@@ -1387,24 +1379,24 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 tstr(&m.title),
                 Obj::try_from(m.value.as_ref())?,
                 tstr_opt(&m.description),
-                m.is_data,
+                true,
                 None,
                 tstr_opt(&m.subtitle),
-                tstr_opt(&m.verb),
                 None,
-                m.info,
-                m.hold,
-                m.chunkify,
-                m.page_counter,
+                None,
+                false,
+                hold(&m.commitment),
+                matches!(m.kind, ArchivedValueKind::Address),
+                matches!(m.kind, ArchivedValueKind::Data),
                 false,
                 // Every confirmation can be refused; how is the model's.
                 true,
                 false,
-                tstr_tuple_opt(&m.footer),
+                tstr_opt(&m.footer).map(|text| (text, m.footer_warning)),
                 m.external_menu,
             )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
+            BR_CODE_OTHER,
+            Some(&m.br_name),
         )?,
         Archived::<TrezorUiEnum>::ShowNotice(m) => {
             // The app said what kind of news this is; the model decides what
