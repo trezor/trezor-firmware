@@ -37,6 +37,8 @@ pub use client::{
 pub use error::{Error, Result};
 pub use messages::TrezorMessage;
 
+#[cfg(feature = "tron")]
+pub use client::{tron_parse_raw_transaction, TronContract};
 #[cfg(feature = "bitcoin")]
 pub use flows::sign_tx::SignTxProgress;
 #[cfg(feature = "bitcoin")]
@@ -297,5 +299,70 @@ mod tests {
         assert_eq!(signature.r.len(), 32);
         assert_eq!(signature.s.len(), 32);
         assert_eq!(signature.v, 38);
+    }
+
+    #[cfg(feature = "tron")]
+    const TRON_RAW_DATA_HEX: &str = "0a02e94222086394747da9fee42140c08afee680335a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870e0b5fae68033";
+
+    #[cfg(feature = "tron")]
+    const TRON_PATH: [u32; 5] = [44 | (1 << 31), 195 | (1 << 31), 1 << 31, 0, 0];
+
+    #[cfg(feature = "tron")]
+    #[test]
+    fn test_tron_parse_raw_transaction() {
+        let raw = hex::decode(TRON_RAW_DATA_HEX).expect("valid hex");
+        let (tx, contract) = crate::tron_parse_raw_transaction(&raw).expect("parse raw tx");
+
+        assert_eq!(tx.ref_block_bytes(), hex::decode("e942").unwrap());
+        assert_eq!(tx.ref_block_hash(), hex::decode("6394747da9fee421").unwrap());
+        assert_eq!(tx.expiration(), 1752562632000);
+        assert_eq!(tx.timestamp(), 1752562572000);
+
+        match contract {
+            crate::TronContract::Transfer(c) => {
+                assert_eq!(c.amount(), 18123456);
+                assert_eq!(
+                    c.owner_address(),
+                    hex::decode("41f2cd810c48c401d392ead3c6e1e1cb9f57750a58").unwrap()
+                );
+                assert_eq!(
+                    c.to_address(),
+                    hex::decode("4141f82674a30ae1328745d08afe2d1a0a24195283").unwrap()
+                );
+            }
+            other => panic!("expected transfer contract, got {:?}", other),
+        }
+    }
+
+    #[cfg(feature = "tron")]
+    #[test]
+    #[serial]
+    fn test_tron_address() {
+        let mut emulator = init_emulator();
+        let address = emulator
+            .tron_get_address(TRON_PATH.to_vec(), false, false)
+            .expect("Failed to get Tron address");
+        assert_eq!(address, "TY72iA3SBtrds3QLYsS7LwYfkzXwAXCRWT");
+    }
+
+    #[cfg(feature = "tron")]
+    #[test]
+    #[serial]
+    fn test_tron_sign_tx() {
+        let mut emulator = init_emulator();
+        let raw = hex::decode(TRON_RAW_DATA_HEX).expect("valid hex");
+        let (tx, contract) = crate::tron_parse_raw_transaction(&raw).expect("parse raw tx");
+
+        let signature = with_auto_approve(|| {
+            emulator
+                .tron_sign_tx(tx, contract, TRON_PATH.to_vec(), false)
+                .expect("Failed to sign Tron transaction")
+        });
+
+        let expected = hex::decode(
+            "a7f8602b02413e9dded0170daa5b4ada9a2679198af276be456f4faea1bc326f5070789bec5e6471de3f726f4fe0c9daced8df183e4a62804db26d5650c59a521c",
+        )
+        .unwrap();
+        assert_eq!(signature, expected);
     }
 }

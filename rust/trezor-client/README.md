@@ -22,7 +22,8 @@ Last tested with firmware v2.4.2.
 ## Features
 
 -   `bitcoin` and `ethereum`: client implementation and full support;
--   `cardano`, `monero`, `ripple`, `stellar` and `tron`: only protobuf bindings.
+-   `tron`: client implementation (address derivation and transaction signing);
+-   `cardano`, `evolu`, `monero`, `nostr`, `ripple` and `stellar`: only protobuf bindings.
 
 ## Credits
 

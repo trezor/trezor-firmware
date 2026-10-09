@@ -11,6 +11,11 @@ pub use ethereum::*;
 #[cfg(feature = "solana")]
 mod solana;
 
+#[cfg(feature = "tron")]
+mod tron;
+#[cfg(feature = "tron")]
+pub use tron::*;
+
 pub mod common;
 pub use common::*;
 
