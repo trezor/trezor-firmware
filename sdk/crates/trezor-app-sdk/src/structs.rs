@@ -259,16 +259,17 @@ where
     }
 }
 
-/// The extras' menu: the caller's labels, sent as [`TrezorUiEnum::SelectMenu`].
+/// More the person can look at from a block's screen: an entry in the block's
+/// menu, and the facts shown when it is picked.
 ///
-/// Only the caller's items. A model whose screens give their way out up to
-/// the menu button adds that way out itself.
+/// Travels with the block's request; core walks the menu itself and answers
+/// the app only when the block is decided.
 #[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct SelectMenu<'a> {
-    pub items: Slice<'a, StrSlice<'a>>,
-    /// The step's name, if the block announces one.
-    pub br_name: OptStrSlice<'a>,
+pub struct ExtraItem<'a> {
+    /// The menu entry's label, and the title of its screen.
+    pub label: StrSlice<'a>,
+    pub props: Slice<'a, Property<'a>>,
 }
 
 /// What confirming a block commits the person to.
@@ -301,8 +302,9 @@ pub struct ConfirmAction<'a> {
     pub commitment: Commitment,
     /// The step's name, announced to the host.
     pub br_name: StrSlice<'a>,
-    /// Draw a menu button; set by the library when the block has extras.
-    pub external_menu: bool,
+    /// Reached from the screen's menu button, which core draws when there
+    /// are any.
+    pub extras: Slice<'a, ExtraItem<'a>>,
 }
 
 /// A transaction summary, sent as [`TrezorUiEnum::ConfirmSummary`].
@@ -316,8 +318,9 @@ pub struct ConfirmSummary<'a> {
     pub fee_label: StrSlice<'a>,
     /// The step's name, announced to the host.
     pub br_name: StrSlice<'a>,
-    /// Draw a menu button; set by the library when the block has extras.
-    pub external_menu: bool,
+    /// Reached from the screen's menu button, which core draws when there
+    /// are any.
+    pub extras: Slice<'a, ExtraItem<'a>>,
 }
 
 /// What a value *is*, which decides how it is formatted.
@@ -352,8 +355,9 @@ pub struct ConfirmValue<'a> {
     pub commitment: Commitment,
     /// The step's name, announced to the host.
     pub br_name: StrSlice<'a>,
-    /// Draw a menu button; set by the library when the block has extras.
-    pub external_menu: bool,
+    /// Reached from the screen's menu button, which core draws when there
+    /// are any.
+    pub extras: Slice<'a, ExtraItem<'a>>,
 }
 
 /// What kind of news a notice is.
@@ -402,8 +406,9 @@ pub struct ShowNotice<'a> {
     pub severity: Severity,
     pub title: StrSlice<'a>,
     pub content: StrSlice<'a>,
-    /// Draw a menu button; set by the library when the block has extras.
-    pub external_menu: bool,
+    /// Reached from the screen's menu button, which core draws when there
+    /// are any.
+    pub extras: Slice<'a, ExtraItem<'a>>,
     /// The notice must offer a way to back out. How is the model's.
     /// WIP: ignored by every model.
     pub cancel: bool,
@@ -421,41 +426,31 @@ pub struct ConfirmProperties<'a> {
     pub commitment: Commitment,
     /// The step's name, announced to the host.
     pub br_name: StrSlice<'a>,
+    /// Reached from the screen's menu button, which core draws when there
+    /// are any.
+    pub extras: Slice<'a, ExtraItem<'a>>,
 }
 
-/// One extra, shown as a list of facts, sent as [`TrezorUiEnum::ShowProperties`].
-#[stabby::stabby]
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowProperties<'a> {
-    pub title: StrSlice<'a>,
-    pub props: Slice<'a, Property<'a>>,
-    /// The step's name, if the block announces one.
-    pub br_name: OptStrSlice<'a>,
-}
-
-/// One UI request, as it crosses IPC: one variant per `modui` block, plus the
-/// extras' menu and screen. `core/embed/api` wraps the request the app passed
-/// through the `UiV1` vtable and serializes it.
+/// One UI request, as it crosses IPC: one variant per `modui` block.
+/// `core/embed/api` wraps the request the app passed through the `UiV1` vtable
+/// and serializes it.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorUiEnum<'a> {
-    SelectMenu(SelectMenu<'a>),
     ConfirmAction(ConfirmAction<'a>),
     ConfirmSummary(ConfirmSummary<'a>),
     ConfirmValue(ConfirmValue<'a>),
     ConfirmProperties(ConfirmProperties<'a>),
-    ShowProperties(ShowProperties<'a>),
     ShowNotice(ShowNotice<'a>),
 }
 
 /// What the person did with one screen. Written by core, read by `modui`;
 /// apps never see it.
 ///
-/// Variants say what the person *did*, not which button did it. Wider than any
-/// one request's contract (`Choice` only answers a list), so a reply a caller
-/// cannot use is a protocol violation.
+/// Variants say what the person *did*, not which button did it. Only the
+/// block's final answer crosses: what happens in its menu stays in core.
 #[must_use]
 #[stabby::stabby]
-#[repr(C, u8)]
+#[repr(u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum UiReply {
     /// Yes, having seen all of it.
@@ -466,10 +461,6 @@ pub enum UiReply {
     /// Refused, or left without answering. `modui` turns it into
     /// `Err(Error::Cancelled)`.
     Cancelled,
-    /// The extras: the screen's menu button.
-    WantsMore,
-    /// Picked the list entry at this index, as sent.
-    Choice(u16),
     // WIP: chunk paging. No screen produces these yet; they come back with it.
     // /// Paged past the end of the content core holds; the sender has more.
     // Forward,

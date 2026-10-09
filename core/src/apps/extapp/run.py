@@ -33,19 +33,6 @@ _SERVICE_UI = const(4)
 _SERVICE_PROGRESS = const(5)
 _SERVICE_CRYPTO = const(6)
 
-# A UI message id packs an operation and a screen handle, so that a layout can
-# outlive the answer it gave. Mirrors `OP_*` in the SDK's `traits::ui`.
-_UI_HANDLE_BITS = const(12)
-_UI_HANDLE_MASK = const((1 << 12) - 1)
-
-_UI_OP_ONCE = const(0)  # build, show, forget
-_UI_OP_OPEN = const(1)  # build, show, keep under the handle
-_UI_OP_REOPEN = const(2)  # show what is already held, without rebuilding
-_UI_OP_CLOSE = const(3)  # drop what is held, show nothing
-
-# An app nests only a few screens at a time; anything beyond this is a leak.
-_UI_MAX_SCREENS = const(8)
-
 _SERVICE_PROGRESS_INIT = const(0)
 _SERVICE_PROGRESS_REPORT = const(1)
 _SERVICE_PROGRESS_STOP = const(2)
@@ -57,11 +44,6 @@ _SERVICE_CRYPTO_SIGN_TYPED_HASH = const(3)
 _SERVICE_CRYPTO_GET_ADDRESS_MAC = const(4)
 _SERVICE_CRYPTO_CHECK_ADDRESS_MAC = const(5)
 _SERVICE_CRYPTO_VERIFY_NONCE_CACHE = const(6)
-
-
-def from_ui_message_id(message_id: int) -> tuple[int, int]:
-    """Split a UI message id into the operation and the screen handle."""
-    return (message_id >> _UI_HANDLE_BITS, message_id & _UI_HANDLE_MASK)
 
 
 async def _show_new_layout(
@@ -80,6 +62,58 @@ async def _show_new_layout(
     if br_name is not None:
         layout.put_button_request((br_code, br_name))
     return layout, await layout.get_result()
+
+
+async def _show_block(data: bytes) -> Any:
+    """Show one block of an app and return its final answer.
+
+    The request carries the block's extras, so the block's menu is walked here:
+    the person can open the menu, look at extras and come back as often as they
+    like, and only the decision goes back to the app.
+    """
+    try:
+        layout_obj, br_code, br_name = trezorui_api.process_ipc_message(data=data)
+    except Exception as e:
+        # The request cannot be drawn. Answering would leave the app waiting on
+        # a screen that never existed, so the app stops.
+        raise DataError(f"Cannot show the app's screen: {e}")
+    layout, result = await _show_new_layout(layout_obj, br_code, br_name)
+    while result is trezorui_api.INFO:
+        result = await _walk_extras(data, br_code, br_name)
+        if result is None:
+            # Back to the block, as the person left it.
+            result = await _run_layout(layout)
+    return result
+
+
+async def _walk_extras(
+    data: bytes, br_code: ButtonRequestType, br_name: str | None
+) -> Any:
+    """Show the block's menu of extras until the person leaves it.
+
+    Returns `CANCELLED` when they refused the block from the menu (the way out
+    some models keep there), or `None` to go back to the block.
+    """
+
+    def step(suffix: str) -> str | None:
+        return None if br_name is None else br_name + suffix
+
+    try:
+        menu_obj = trezorui_api.process_ipc_extra(data=data)
+    except Exception as e:
+        raise DataError(f"Cannot show the app's menu: {e}")
+    menu, choice = await _show_new_layout(menu_obj, br_code, step("/menu"))
+    while isinstance(choice, int):
+        try:
+            extra_obj = trezorui_api.process_ipc_extra(data=data, index=choice)
+        except Exception as e:
+            raise DataError(f"Cannot show the app's extra: {e}")
+        # Leaving the extra comes back to the menu, on the entry it was.
+        await _show_new_layout(extra_obj, br_code, step("/details"))
+        choice = await _run_layout(menu)
+    if choice is trezorui_api.CANCELLED:
+        return choice
+    return None
 
 
 async def _run_layout(layout: ui.Layout) -> Any:
@@ -190,9 +224,6 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
     log.debug(__name__, "Starting main loop for Trezor app")
 
     progress_obj: ProgressLayout | None = None
-    # Layouts the app asked to keep, so that showing one again does not build a
-    # second copy of it. Emptied when the task ends, with the task's memory.
-    screens: dict[int, ui.Layout] = {}
 
     def crypto_resp_cb(data: bytes) -> None:
         log.debug(__name__, "Sending crypto result")
@@ -215,32 +246,10 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
         service, message_id = msg.service, msg.message_id
 
         if service == _SERVICE_UI:
-            op, handle = from_ui_message_id(message_id)
-
-            if op == _UI_OP_CLOSE:
-                # Nothing is shown; the app is only saying it is done with the
-                # screen. Answering keeps the app's blocking call symmetric.
-                screens.pop(handle, None)
-                result = trezorui_api.CANCELLED
-            elif op == _UI_OP_REOPEN and handle in screens:
-                result = await _run_layout(screens[handle])
-            else:
-                # Either a fresh screen, or a reopen of one we no longer hold —
-                # in which case the app sent the payload again precisely so it
-                # can be rebuilt rather than fail.
-                try:
-                    layout_obj, br_code, br_name = trezorui_api.process_ipc_message(
-                        data=bytes(msg.data)
-                    )
-                except Exception as e:
-                    # The request cannot be drawn. Answering would leave the app
-                    # waiting on a screen that never existed, so the app stops.
-                    die(DataError(f"Cannot show the app's screen: {e}"))
-                layout, result = await _show_new_layout(layout_obj, br_code, br_name)
-                if op != _UI_OP_ONCE:
-                    if handle not in screens and len(screens) >= _UI_MAX_SCREENS:
-                        die(DataError("Too many open screens"))
-                    screens[handle] = layout
+            try:
+                result = await _show_block(bytes(msg.data))
+            except DataError as e:
+                die(e)
 
             log.debug(__name__, f"UI interaction result: {result}")
             # Serialize and send the result back

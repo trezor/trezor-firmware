@@ -1262,6 +1262,61 @@ extern "C" fn new_tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+// Helper to wrap a layout with br_code and optional br_name into the expected
+// tuple
+#[cfg(feature = "app_loading")]
+fn wrap(
+    layout: impl LayoutMaybeTrace + 'static,
+    br_code: i32,
+    br_name: Option<&Archived<StrSlice>>,
+) -> Result<(Gc<LayoutObj>, i32, Obj), Error> {
+    Ok((
+        LayoutObj::new_root(layout)?,
+        br_code,
+        match br_name {
+            Some(s) => <Obj as TryFrom<&str>>::try_from(s.as_ref())?,
+            None => Obj::const_none(),
+        },
+    ))
+}
+
+// Every extapp step is `ButtonRequestType.Other`; the step's name
+// carries the meaning.
+#[cfg(feature = "app_loading")]
+const BR_CODE_OTHER: i32 = 1;
+
+// The app says which step is its final yes; the gesture for it is ours.
+#[cfg(feature = "app_loading")]
+fn hold(commitment: &Archived<Commitment>) -> bool {
+    matches!(commitment, ArchivedCommitment::Final)
+}
+
+#[cfg(feature = "app_loading")]
+fn tstr(s: &Archived<StrSlice>) -> TString<'static> {
+    unwrap!(StrBuffer::alloc(s.as_ref())).into()
+}
+
+#[cfg(feature = "app_loading")]
+fn tstr_opt(s: &ArchivedOption<Archived<StrSlice>>) -> Option<TString<'static>> {
+    s.as_ref()
+        .map(|s| unwrap!(StrBuffer::alloc(s.as_ref())).into())
+}
+
+#[cfg(feature = "app_loading")]
+fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Obj {
+    let slice = archived.as_ref();
+    let mut list = unwrap!(List::with_capacity(slice.len()));
+    for item in slice {
+        let obj = unwrap!(Obj::try_from((
+            unwrap!(Obj::try_from(item.key.as_ref())),
+            unwrap!(Obj::try_from(item.value.as_ref())),
+            unwrap!(Obj::try_from(item.mono))
+        )));
+        unwrap!(list.append(obj));
+    }
+    unwrap!(List::alloc(unsafe { list.as_slice() })).into()
+}
+
 #[cfg(feature = "app_loading")]
 extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
@@ -1270,68 +1325,9 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         let archived =
             unsafe { access_unchecked::<Archived<TrezorUiEnum>>(unwrap!(get_buffer(obj))) };
 
-        // Helper to wrap a layout with br_code and optional br_name into the expected
-        // tuple
-        fn wrap(
-            layout: impl LayoutMaybeTrace + 'static,
-            br_code: i32,
-            br_name: Option<&Archived<StrSlice>>,
-        ) -> Result<(Gc<LayoutObj>, i32, Obj), Error> {
-            Ok((
-                LayoutObj::new_root(layout)?,
-                br_code,
-                match br_name {
-                    Some(s) => <Obj as TryFrom<&str>>::try_from(s.as_ref())?,
-                    None => Obj::const_none(),
-                },
-            ))
-        }
-
-        // Every extapp step is `ButtonRequestType.Other`; the step's name
-        // carries the meaning.
-        const BR_CODE_OTHER: i32 = 1;
-
-        // The app says which step is its final yes; the gesture for it is ours.
-        fn hold(commitment: &Archived<Commitment>) -> bool {
-            matches!(commitment, ArchivedCommitment::Final)
-        }
-
-        fn tstr(s: &Archived<StrSlice>) -> TString<'static> {
-            unwrap!(StrBuffer::alloc(s.as_ref())).into()
-        }
-
-        fn tstr_opt(s: &ArchivedOption<Archived<StrSlice>>) -> Option<TString<'static>> {
-            s.as_ref()
-                .map(|s| unwrap!(StrBuffer::alloc(s.as_ref())).into())
-        }
-
-        fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Obj {
-            let slice = archived.as_ref();
-            let mut list = unwrap!(List::with_capacity(slice.len()));
-            for item in slice {
-                let obj = unwrap!(Obj::try_from((
-                    unwrap!(Obj::try_from(item.key.as_ref())),
-                    unwrap!(Obj::try_from(item.value.as_ref())),
-                    unwrap!(Obj::try_from(item.mono))
-                )));
-                unwrap!(list.append(obj));
-            }
-            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
-        }
-
         let (main_layout, br_code, br_name) =
-        // Access the archived data zero-copy using safe Deref access
+        // Read in place, without copying.
         match archived {
-        Archived::<TrezorUiEnum>::SelectMenu(m) => {
-            // The app decides how many items there are, so too many stops the
-            // app, not the device.
-            let mut vec = heapless::Vec::<SelectMenuItem, MAX_MENU_ITEMS>::new();
-            for item in m.items.as_ref() {
-                vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard))
-                    .map_err(|_| Error::OutOfRange)?;
-            }
-            wrap(ModelUI::extapp_menu(vec)?, BR_CODE_OTHER, m.br_name.as_ref())?
-        }
         Archived::<TrezorUiEnum>::ConfirmAction(m) => wrap(
             ModelUI::confirm_action(
                 tstr(&m.title),
@@ -1347,7 +1343,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 false,
                 false,
                 None,
-                m.external_menu,
+                !m.extras.is_empty(),
             )?,
             BR_CODE_OTHER,
             Some(&m.br_name),
@@ -1365,7 +1361,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 None,
                 None,
                 false,
-                m.external_menu,
+                !m.extras.is_empty(),
             )?,
             BR_CODE_OTHER,
             Some(&m.br_name),
@@ -1389,7 +1385,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 true,
                 false,
                 tstr_opt(&m.footer).map(|text| (text, m.footer_warning)),
-                m.external_menu,
+                !m.extras.is_empty(),
             )?,
             BR_CODE_OTHER,
             Some(&m.br_name),
@@ -1409,7 +1405,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                     severity,
                     tstr(&m.title),
                     tstr(&m.content),
-                    m.external_menu,
+                    !m.extras.is_empty(),
                     m.cancel,
                 )?,
                 BR_CODE_OTHER,
@@ -1423,15 +1419,10 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 obj_from_proplist(&m.props),
                 hold(&m.commitment),
                 None,
-                false,
+                !m.extras.is_empty(),
             )?,
             BR_CODE_OTHER,
             Some(&m.br_name),
-        )?,
-        Archived::<TrezorUiEnum>::ShowProperties(m) => wrap(
-            ModelUI::show_properties(tstr(&m.title), None, obj_from_proplist(&m.props))?,
-            BR_CODE_OTHER,
-            m.br_name.as_ref(),
         )?,
     };
 
@@ -1447,6 +1438,67 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
 
 #[cfg(not(feature = "app_loading"))]
 extern "C" fn new_process_ipc_message(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+    unimplemented!()
+}
+
+/// One of a request's extras screens, built from the same request bytes as
+/// the block: its menu (`index` is `None`) or the extra at `index`.
+///
+/// The extras travel with the request, so core walks the menu without asking
+/// the app; only the block's final answer goes back.
+#[cfg(feature = "app_loading")]
+extern "C" fn new_process_ipc_extra(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+        let index: Option<u32> = kwargs
+            .get(Qstr::MP_QSTR_index)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+
+        let archived =
+            unsafe { access_unchecked::<Archived<TrezorUiEnum>>(unwrap!(get_buffer(obj))) };
+        let extras = match archived {
+            Archived::<TrezorUiEnum>::ConfirmAction(m) => &m.extras,
+            Archived::<TrezorUiEnum>::ConfirmValue(m) => &m.extras,
+            Archived::<TrezorUiEnum>::ConfirmSummary(m) => &m.extras,
+            Archived::<TrezorUiEnum>::ConfirmProperties(m) => &m.extras,
+            Archived::<TrezorUiEnum>::ShowNotice(m) => &m.extras,
+        };
+
+        let layout = match index {
+            None => {
+                // More extras than the model's menu holds stops the app, not
+                // the device.
+                let mut items = heapless::Vec::<SelectMenuItem, MAX_MENU_ITEMS>::new();
+                for extra in extras.as_ref() {
+                    items
+                        .push(SelectMenuItem::new(
+                            tstr(&extra.label),
+                            MenuItemIntent::Standard,
+                        ))
+                        .map_err(|_| Error::OutOfRange)?;
+                }
+                LayoutObj::new_root(ModelUI::extapp_menu(items)?)?
+            }
+            Some(index) => {
+                let extra = extras
+                    .as_ref()
+                    .get(index as usize)
+                    .ok_or(Error::OutOfRange)?;
+                LayoutObj::new_root(ModelUI::show_properties(
+                    tstr(&extra.label),
+                    None,
+                    obj_from_proplist(&extra.props),
+                )?)?
+            }
+        };
+        Ok(layout.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_process_ipc_extra(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
     unimplemented!()
 }
 
@@ -1470,6 +1522,8 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
         let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
 
         // Say what the person did, rather than naming the button that did it.
+        // Only the block's final answer goes back: its menu and extras stay
+        // in core.
         //
         // WIP: chunk paging (`Forward`, `Backward`, `ConfirmedAll`) needs the
         // request to carry the chunk's offset and the total length, so a
@@ -1478,10 +1532,6 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
             UiReply::Confirmed
         } else if obj == CANCELLED.as_obj() {
             UiReply::Cancelled
-        } else if obj == INFO.as_obj() {
-            UiReply::WantsMore
-        } else if let Ok(val) = u32::try_from(obj) {
-            UiReply::Choice(u16::try_from(val).map_err(|_| Error::TypeError)?)
         } else {
             return Err(Error::TypeError);
         };
@@ -2480,9 +2530,17 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
     Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
 
+    /// def process_ipc_extra(
+    ///     *,
+    ///     data: bytes,
+    ///     index: int | None = None,
+    /// ) -> LayoutObj[UiResult | int]:
+    ///     """Build one of an IPC request's extras screens: its menu, or the extra at `index`."""
+    Qstr::MP_QSTR_process_ipc_extra => obj_fn_kw!(0, new_process_ipc_extra).as_obj(),
+
     /// def send_ui_result(
     ///     *,
-    ///     result: UiResult | int | str | None,
+    ///     result: UiResult,
     ///     ipc_cb: Callable[[bytes], None] | None = None,
     /// ) -> None:
     ///     """Serialize a UI result into bytes and send it via the ipc_cb callback.."""

@@ -7,71 +7,35 @@
 use super::util::FastResult;
 use super::wire::WireError;
 pub use crate::structs::{
-    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmValue, OptStrSlice, Property,
-    SelectMenu, Severity, ShowNotice, ShowProperties, UiReply,
+    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmValue, ExtraItem, OptStrSlice,
+    Property, Severity, ShowNotice, UiReply,
 };
-
-/// Build a layout, show it, and forget it. The handle is ignored.
-pub const OP_ONCE: u16 = 0;
-/// Build a layout and keep it alive under the handle.
-pub const OP_OPEN: u16 = 1;
-/// Show the layout already held under the handle, without rebuilding it.
-pub const OP_REOPEN: u16 = 2;
-/// Bits a handle may use; Core packs it with the op into one IPC message id.
-pub const HANDLE_BITS: u16 = 12;
 
 /// Talks to Core's UI/progress screens — implemented in `core/embed/api`
 /// against [`super::wire::WireV1`].
 ///
-/// Each screen method sends one request and returns Core's reply. `op` is one
-/// of [`OP_ONCE`], [`OP_OPEN`], [`OP_REOPEN`]; `handle` names the layout Core
-/// keeps for the last two, until [`UiV1::close`].
+/// Each screen method shows one block and returns once the person has decided
+/// it. Everything in between, such as the block's menu and extras, happens in
+/// Core.
 #[stabby::stabby(checked)]
 pub trait UiV1: Send + Sync {
     extern "C" fn confirm_action<'a>(
         &self,
-        op: u16,
-        handle: u16,
         value: ConfirmAction<'a>,
     ) -> FastResult<UiReply, WireError>;
     extern "C" fn confirm_value<'a>(
         &self,
-        op: u16,
-        handle: u16,
         value: ConfirmValue<'a>,
     ) -> FastResult<UiReply, WireError>;
     extern "C" fn confirm_summary<'a>(
         &self,
-        op: u16,
-        handle: u16,
         value: ConfirmSummary<'a>,
     ) -> FastResult<UiReply, WireError>;
     extern "C" fn confirm_properties<'a>(
         &self,
-        op: u16,
-        handle: u16,
         value: ConfirmProperties<'a>,
     ) -> FastResult<UiReply, WireError>;
-    extern "C" fn show_properties<'a>(
-        &self,
-        op: u16,
-        handle: u16,
-        value: ShowProperties<'a>,
-    ) -> FastResult<UiReply, WireError>;
-    extern "C" fn show_notice<'a>(
-        &self,
-        op: u16,
-        handle: u16,
-        value: ShowNotice<'a>,
-    ) -> FastResult<UiReply, WireError>;
-    extern "C" fn select_menu<'a>(
-        &self,
-        op: u16,
-        handle: u16,
-        value: SelectMenu<'a>,
-    ) -> FastResult<UiReply, WireError>;
-    /// Drops the layout held under `handle`. Shows nothing.
-    extern "C" fn close(&self, handle: u16) -> FastResult<(), WireError>;
+    extern "C" fn show_notice<'a>(&self, value: ShowNotice<'a>) -> FastResult<UiReply, WireError>;
 
     extern "C" fn init_progress<'a>(
         &self,

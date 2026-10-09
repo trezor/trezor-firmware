@@ -4,24 +4,21 @@
 //! WIP: bolt has no menu and delizia ignores it, so the extras cannot be
 //! reached there.
 
-use crate::Result;
+use crate::app_runtime2::get_ui_or_die;
 use crate::modui::ExtraItem;
-use crate::modui::internal::{answer, call};
+use crate::modui::internal::answer;
 use crate::structs::ConfirmSummary;
+use crate::traits::ui::UiV1Dyn as _;
+use crate::{IntoAppResult, Result};
 
 // ============================================================================
 // Data types
 // ============================================================================
 
 /// Parameters for [`summary`], built by [`Summary::new`].
-pub struct Summary<'a> {
-    /// The request as core reads it; it goes through the FFI as is.
-    request: ConfirmSummary<'a>,
-    /// Shown by the library from the screen's menu; never sent.
-    extras: &'a [ExtraItem<'a>],
-}
+pub type Summary<'a> = ConfirmSummary<'a>;
 
-impl<'a> Summary<'a> {
+impl<'a> ConfirmSummary<'a> {
     /// A summary headed `title`.
     ///
     /// - `title` — the screen's heading, such as `"Send"`.
@@ -40,16 +37,13 @@ impl<'a> Summary<'a> {
         extras: &'a [ExtraItem<'a>],
     ) -> Self {
         Self {
-            request: ConfirmSummary {
-                title: title.into(),
-                amount: amount.map(|(_, value)| value).into(),
-                amount_label: amount.map(|(label, _)| label).into(),
-                fee: fee.map_or("", |(_, value)| value).into(),
-                fee_label: fee.map_or("", |(label, _)| label).into(),
-                br_name: br.into(),
-                external_menu: !extras.is_empty(),
-            },
-            extras,
+            title: title.into(),
+            amount: amount.map(|(_, value)| value).into(),
+            amount_label: amount.map(|(label, _)| label).into(),
+            fee: fee.map_or("", |(_, value)| value).into(),
+            fee_label: fee.map_or("", |(label, _)| label).into(),
+            br_name: br.into(),
+            extras: extras.into(),
         }
     }
 }
@@ -87,6 +81,5 @@ impl<'a> Summary<'a> {
 /// }
 /// ```
 pub fn summary(params: Summary<'_>) -> Result<()> {
-    let br = params.request.br_name.as_str();
-    answer(call(&params.request, params.extras, Some(br))?)
+    answer(get_ui_or_die().confirm_summary(params).into_app_result()?)
 }

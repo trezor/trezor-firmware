@@ -887,9 +887,18 @@ def process_ipc_message(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def process_ipc_extra(
+    *,
+    data: bytes,
+    index: int | None = None,
+) -> LayoutObj[UiResult | int]:
+    """Build one of an IPC request's extras screens: its menu, or the extra at `index`."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def send_ui_result(
     *,
-    result: UiResult | int | str | None,
+    result: UiResult,
     ipc_cb: Callable[[bytes], None] | None = None,
 ) -> None:
     """Serialize a UI result into bytes and send it via the ipc_cb callback.."""

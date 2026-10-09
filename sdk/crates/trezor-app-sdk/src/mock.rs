@@ -32,8 +32,8 @@ use crate::traits::syslog::{
 };
 use crate::traits::trezor_v1::{TrezorApiV1, TrezorApiV1Struct, TrezorApiV1Vtable};
 use crate::traits::ui::{
-    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmValue, SelectMenu, ShowNotice,
-    ShowProperties, UiReply, UiV1, UiV1Vtable,
+    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmValue, ShowNotice, UiReply, UiV1,
+    UiV1Vtable,
 };
 use crate::traits::util::FastResult;
 use crate::traits::wire::{WireError, WireMessage, WireV1, WireV1Vtable};
@@ -323,8 +323,6 @@ struct DummyUi;
 impl UiV1 for DummyUi {
     extern "C" fn confirm_action<'a>(
         &self,
-        _op: u16,
-        _handle: u16,
         _value: ConfirmAction<'a>,
     ) -> FastResult<UiReply, WireError> {
         unimplemented!("not exercised by the current test suite")
@@ -332,8 +330,6 @@ impl UiV1 for DummyUi {
 
     extern "C" fn confirm_value<'a>(
         &self,
-        _op: u16,
-        _handle: u16,
         _value: ConfirmValue<'a>,
     ) -> FastResult<UiReply, WireError> {
         unimplemented!("not exercised by the current test suite")
@@ -341,8 +337,6 @@ impl UiV1 for DummyUi {
 
     extern "C" fn confirm_summary<'a>(
         &self,
-        _op: u16,
-        _handle: u16,
         _value: ConfirmSummary<'a>,
     ) -> FastResult<UiReply, WireError> {
         unimplemented!("not exercised by the current test suite")
@@ -350,41 +344,12 @@ impl UiV1 for DummyUi {
 
     extern "C" fn confirm_properties<'a>(
         &self,
-        _op: u16,
-        _handle: u16,
         _value: ConfirmProperties<'a>,
     ) -> FastResult<UiReply, WireError> {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn show_properties<'a>(
-        &self,
-        _op: u16,
-        _handle: u16,
-        _value: ShowProperties<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn show_notice<'a>(
-        &self,
-        _op: u16,
-        _handle: u16,
-        _value: ShowNotice<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn select_menu<'a>(
-        &self,
-        _op: u16,
-        _handle: u16,
-        _value: SelectMenu<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn close(&self, _handle: u16) -> FastResult<(), WireError> {
+    extern "C" fn show_notice<'a>(&self, _value: ShowNotice<'a>) -> FastResult<UiReply, WireError> {
         unimplemented!("not exercised by the current test suite")
     }
 

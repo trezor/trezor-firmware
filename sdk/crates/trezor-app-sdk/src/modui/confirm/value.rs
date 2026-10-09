@@ -2,11 +2,13 @@
 //!
 //! WIP: bolt has no menu, so the extras cannot be reached.
 
-use crate::Result;
-use crate::modui::internal::{answer, call};
+use crate::app_runtime2::get_ui_or_die;
+use crate::modui::internal::answer;
 use crate::modui::{Commitment, ExtraItem};
 use crate::structs::ConfirmValue;
 pub use crate::structs::ValueKind;
+use crate::traits::ui::UiV1Dyn as _;
+use crate::{IntoAppResult, Result};
 
 // ============================================================================
 // Data types
@@ -25,14 +27,9 @@ pub enum Footer<'a> {
 }
 
 /// Parameters for [`value`], built by [`Value::new`].
-pub struct Value<'a> {
-    /// The request as core reads it; it goes through the FFI as is.
-    request: ConfirmValue<'a>,
-    /// Shown by the library from the screen's menu; never sent.
-    extras: &'a [ExtraItem<'a>],
-}
+pub type Value<'a> = ConfirmValue<'a>;
 
-impl<'a> Value<'a> {
+impl<'a> ConfirmValue<'a> {
     /// Confirms one `value` of the given kind under `title`.
     ///
     /// - `title` — the screen's heading, such as `"Send"`.
@@ -65,19 +62,16 @@ impl<'a> Value<'a> {
             Some(Footer::Warning(text)) => (Some(text), true),
         };
         Self {
-            request: ConfirmValue {
-                title: title.into(),
-                value: value.into(),
-                kind,
-                subtitle: subtitle.into(),
-                description: description.into(),
-                footer: footer.into(),
-                footer_warning,
-                commitment,
-                br_name: br.into(),
-                external_menu: !extras.is_empty(),
-            },
-            extras,
+            title: title.into(),
+            value: value.into(),
+            kind,
+            subtitle: subtitle.into(),
+            description: description.into(),
+            footer: footer.into(),
+            footer_warning,
+            commitment,
+            br_name: br.into(),
+            extras: extras.into(),
         }
     }
 }
@@ -115,6 +109,5 @@ impl<'a> Value<'a> {
 /// }
 /// ```
 pub fn value(params: Value<'_>) -> Result<()> {
-    let br = params.request.br_name.as_str();
-    answer(call(&params.request, params.extras, Some(br))?)
+    answer(get_ui_or_die().confirm_value(params).into_app_result()?)
 }

@@ -1,43 +1,34 @@
 //! How [`confirm::data`](crate::modui::confirm::data) shows a blob: in chunks,
-//! each a value screen that core pages, with the extras menu between them.
+//! each a value screen that core pages, and whose menu core runs.
 
 use super::chunked::{self, AfterChunk, BYTES_PER_CHUNK};
-use super::menu;
-use super::transport::LayoutHandle;
 use crate::alloc_types::String;
+use crate::app_runtime2::get_ui_or_die;
 use crate::modui::confirm::Data;
 use crate::structs::{Commitment, ConfirmValue, OptStrSlice, ValueKind};
-use crate::traits::ui::UiReply;
-use crate::{Error, Result};
+use crate::traits::ui::{UiReply, UiV1Dyn as _};
+use crate::{IntoAppResult, Result};
 
 /// Runs the block.
 pub(in crate::modui) fn confirm(params: &Data<'_>) -> Result<UiReply> {
-    // This block drives its own screens, so it makes the check `call` makes
-    // for every other one.
-    super::check_params(Some(params.br), params.extras)?;
-
     // One buffer reused for every chunk rather than an allocation per chunk.
     let mut hex = String::with_capacity(BYTES_PER_CHUNK * 2);
-    // One layout for the whole sequence: each chunk rebuilds it, because its
-    // content changed, but a trip through the extras and back does not.
-    let layout = LayoutHandle::new();
 
     chunked::confirm_in_chunks(params.data.len().div_ceil(BYTES_PER_CHUNK), |ctx| {
         let start = ctx.index * BYTES_PER_CHUNK;
         let end = (start + BYTES_PER_CHUNK).min(params.data.len());
 
         encode_hex(&params.data[start..end], &mut hex);
-        show_chunk(params, &hex, &layout)
+        show_chunk(params, &hex)
     })
 }
 
-/// Sends one chunk and waits for the person, showing the same chunk until
-/// they leave it.
+/// Sends one chunk and waits for the person to decide it.
 ///
 /// A chunk goes as a value, the screen every model pages: core splits it across
-/// as many screens as it takes, and the person answers only once they have
-/// seen all of it.
-fn show_chunk(params: &Data<'_>, hex: &str, layout: &LayoutHandle) -> Result<AfterChunk> {
+/// as many screens as it takes, and runs the chunk's menu itself. The person
+/// answers only once they have seen all of it.
+fn show_chunk(params: &Data<'_>, hex: &str) -> Result<AfterChunk> {
     let request = ConfirmValue {
         title: params.title.into(),
         value: hex.into(),
@@ -48,34 +39,19 @@ fn show_chunk(params: &Data<'_>, hex: &str, layout: &LayoutHandle) -> Result<Aft
         footer_warning: false,
         commitment: Commitment::Step,
         br_name: params.br.into(),
-        // The screen has a menu exactly when the app offered extras.
-        external_menu: !params.extras.is_empty(),
+        extras: params.extras.into(),
     };
 
-    // This chunk's content is new, so the layout is built rather than reopened.
-    let mut reply = layout.show(&request)?;
-
-    loop {
-        match reply {
-            // WIP: chunk paging; these come back with it (see `UiReply`).
-            // UiReply::Forward => return Ok(AfterChunk::Advance),
-            // UiReply::Backward => return Ok(AfterChunk::Retreat),
-            // UiReply::ConfirmedAll => return Ok(AfterChunk::ConfirmAll),
-            // Core pages within the chunk, so a yes means the person has seen
-            // all of it. Whether that finishes the block is the loop's to say.
-            UiReply::Confirmed => return Ok(AfterChunk::Advance),
-            // The menu: the extras, and whatever way out the model keeps there.
-            UiReply::WantsMore => {
-                match menu::open(params.extras, Some(params.br))? {
-                    Some(reply) => return Ok(AfterChunk::Decided(reply)),
-                    // Back to the chunk the person was reading, as they left it.
-                    None => reply = layout.reshow(&request)?,
-                }
-            }
-            UiReply::Cancelled => return Ok(AfterChunk::Cancelled),
-            _ => return Err(Error::InvalidMessage),
-        }
-    }
+    Ok(
+        match get_ui_or_die().confirm_value(request).into_app_result()? {
+            // Core pages within the chunk, so a yes means the person has seen all
+            // of it. Whether that finishes the block is the loop's to say.
+            UiReply::Confirmed => AfterChunk::Advance,
+            UiReply::Cancelled => AfterChunk::Cancelled,
+            // WIP: chunk paging (`Forward`, `Backward`, `ConfirmedAll`) comes back
+            // here when it lands; see `UiReply`.
+        },
+    )
 }
 
 /// Writes `bytes` as lowercase hex into `out`, replacing its contents.

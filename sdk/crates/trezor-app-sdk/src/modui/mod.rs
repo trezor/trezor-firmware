@@ -45,7 +45,7 @@
 //! |---|---|---|
 //! | [`confirm::action`] | a question about an action | yes |
 //! | [`confirm::value`] | one value, e.g. an address or an amount | yes |
-//! | [`confirm::properties`] | a list of key/value facts | not yet |
+//! | [`confirm::properties`] | a list of key/value facts | yes |
 //! | [`confirm::data`] | raw bytes, as hex, of any length - supports chunking | yes |
 //! | [`confirm::summary`] | the closing amount and fee of a transaction - special commonly used case | yes |
 //! | [`notice::show`] | a notice of some [`notice::Severity`] | depends on the severity |
@@ -82,12 +82,10 @@
 //! Content can be longer than one screen, and two different things split it,
 //! each for its own reason:
 //!
-//! - **Chunking** is this library's, and exists because memory is limited. A
-//!   request to core has to fit in one IPC message, on the order of a
-//!   kilobyte, so data longer than that — the bytes given to [`confirm::data`],
-//!   an [`Extra::Chunked`] extra — is cut into chunks, and each chunk is sent
-//!   to core as a request of its own. WIP: [`Extra::Chunked`] is not
-//!   implemented yet.
+//! - **Chunking** is this library's, and exists because core's memory is
+//!   limited: long data — the bytes given to [`confirm::data`] — is cut into
+//!   chunks so core never holds a whole blob at once, and each chunk is sent to
+//!   core as a request of its own.
 //! - **Pagination** is core's, and exists because the screen is small. Core
 //!   splits whatever one request carries across as many screens as it takes
 //!   — a screen holds a few hundred bytes at most, on the largest model — as
@@ -140,9 +138,8 @@
 //! same way (see [errors](#errors)).
 //!
 //! How the person got there — which page they were on, whether they opened
-//! the extras, which button they pressed — is never reported. What the
-//! library answers itself, such as opening the extras or turning pages
-//! inside one chunk, never reaches the caller.
+//! the extras, which button they pressed — is never reported: it happens in
+//! core, and only the block's answer comes back.
 //!
 //! # Step names
 //!
@@ -152,26 +149,24 @@
 //! name its steps. Use `"<app>/<step>"`, keep it stable across releases, and
 //! give each distinct screen its own name — hosts and tests match on it.
 //!
-//! The library adds to it, and the app should not: screens that exist only
-//! because a block offered extras are named after the block, with `/menu` and
-//! `/details` appended. An empty name is refused.
+//! Core adds to it, and the app should not: screens that exist only because a
+//! block offered extras are named after the block, with `/menu` and
+//! `/details` appended.
 //!
 //! # Extras and the way out
 //!
-//! Most blocks take `extras`, a list of labelled [`ExtraItem`]s: more that the
-//! person may want to see, such as the account a payment comes from. They are
-//! reached from the block's screen, and looking at one comes back to the block
-//! as the person left it. How they are presented is the library's choice and
-//! may change without any signature changing.
+//! Every block but `confirm::data`'s chunks takes `extras`, a list of
+//! labelled [`ExtraItem`]s: more that the person may want to see, such as the
+//! account a payment comes from. They travel with the block's request, and core
+//! presents them from the block's screen; looking at one comes back to the
+//! block as the person left it. How they are presented is core's, per model,
+//! and may change without any signature changing.
 //!
 //! Every confirmation can be refused, and that is never the app's to switch
 //! off: no confirmation takes `cancel`. Where the way out is drawn — on the
 //! screen, or in the extras on a model whose menu button takes its place — is
 //! the model's, and the app neither sees nor chooses it. A notice takes
 //! `cancel`: whether the person may back out of it.
-//!
-//! A block that cannot show extras yet refuses a non-empty list rather than
-//! draw a screen whose extras nobody can open; see the table above.
 //!
 //! # Progress
 //!
@@ -203,17 +198,12 @@
 //! # Errors
 //!
 //! Apart from [`crate::Error::Cancelled`] (see [outcomes](#outcomes)), a
-//! block returns `Err` only when it could not ask the question at all. The
-//! parameters are checked as the block is called, before anything is shown,
-//! so a bad list of extras never fails halfway through a flow:
+//! block returns `Err` only when its request could not reach the device or
+//! the answer could not be read.
 //!
-//! - [`crate::Error::ValueError`] — the parameters cannot be shown: an empty
-//!   step name, more extras than one screen can offer, extras on a block that
-//!   cannot show them yet, or an extra of a kind not implemented yet.
-//! - [`crate::Error::InvalidMessage`] — the device answered with something
-//!   that makes no sense for this screen, including a reply its parameters
-//!   could not have produced.
-//! - Any other error — the request could not reach the device.
+//! The library checks nothing itself. A request core cannot take — more
+//! extras than a model's menu holds, more than fits in one IPC message —
+//! stops the app: that is a mistake in the app, not a state to handle.
 //!
 //! Core also checks what it is asked to draw, per model, and the same call
 //! may fare differently on each. What a model cannot draw at all — a screen
@@ -279,20 +269,21 @@
 // `WIP:` paragraphs in the docs above mark open thoughts and discussion
 // points, and are removed before merge.
 //
-// One type per request, from the app to core. A block's params type holds the
-// `crate::structs` request core reads, plus what stays in the app (extras);
-// its constructor fills the request directly. The request then crosses the
-// `UiV1` vtable as is, `core/embed/api` serializes that same value, and core
-// reads it archived. There are no mirror types and no conversions in between.
+// One type per request, from the app to core. A block's params type is the
+// `crate::structs` request core reads, extras included; its constructor fills
+// it directly. The request crosses the `UiV1` vtable as is, `core/embed/api`
+// serializes that same value, and core reads it archived. Core runs the
+// block's menu itself and replies once. There are no mirror types and no
+// conversions in between.
 //
-// Every block hands its request to `internal::transport`, the only file that
-// calls `UiV1` for screens — so a new request type means a `structs` type, a
-// new `UiV1` method, one line in `transport`'s `request!` list, and the
-// block's params type, and nothing else here.
+// Every block is one `UiV1` call and `internal::answer` — so a new request
+// type means a `structs` type, a `UiV1` method and its shim in
+// `core/embed/api`, an arm in core's dispatch, and the block's params alias
+// and constructor here.
 //
-// ButtonRequests: the app names the step and nothing else. The suffixes are
-// `internal::menu`'s. The `ButtonRequestType` is core's (always
-// `Other`), as are page counts and whether a repeat is a new step.
+// ButtonRequests: the app names the step and nothing else. The `/menu` and
+// `/details` suffixes are core's, as are the `ButtonRequestType` (always
+// `Other`), page counts, and whether a repeat is a new step.
 //
 // Layout: the public surface is this file plus one module per kind of block
 // (`confirm`, `notice`, `progress`); the library's own machinery is in
@@ -302,7 +293,7 @@
 // reading a public file is reading the API.
 //
 // A block file is dull on purpose: params in, one answer out, the wire
-// call in between. Anything cleverer belongs in `internal` (`chunked`, `menu`,
+// call in between. Anything cleverer belongs in `internal` (`chunked`,
 // `data`) so that no single block owns behaviour the others should have too.
 // Each block's own example lives on its entry point, where rustdoc shows it;
 // the files inside `confirm/` are private modules re-exported by
@@ -315,7 +306,7 @@ mod internal;
 pub mod notice;
 pub mod progress;
 
-pub use extra::{Extra, ExtraItem};
+pub use extra::ExtraItem;
 
 // ============================================================================
 // Data types

@@ -2,27 +2,25 @@
 //!
 //! WIP: bolt has no menu, so the extras cannot be reached.
 
-use crate::Result;
-use crate::modui::internal::{answer, call};
+use crate::app_runtime2::get_ui_or_die;
+use crate::modui::internal::answer;
 use crate::modui::{Commitment, ExtraItem};
 use crate::structs::ConfirmAction;
+use crate::traits::ui::UiV1Dyn as _;
+use crate::{IntoAppResult, Result};
 
 // ============================================================================
 // Data types
 // ============================================================================
 
-/// Parameters for [`action`], built by [`Action::new`].
+/// Parameters for [`action`], built by [`Action::new`]: the request core reads,
+/// passed through the FFI as is.
 ///
 /// Only what the screen says is here. The confirm gesture and its label are
 /// fixed by the block and are not the app's to choose.
-pub struct Action<'a> {
-    /// The request as core reads it; it goes through the FFI as is.
-    request: ConfirmAction<'a>,
-    /// Shown by the library from the screen's menu; never sent.
-    extras: &'a [ExtraItem<'a>],
-}
+pub type Action<'a> = ConfirmAction<'a>;
 
-impl<'a> Action<'a> {
+impl<'a> ConfirmAction<'a> {
     /// A confirmation screen headed `title`, asking the person about `action`.
     ///
     /// - `title` — the screen's heading, such as `"Send"`.
@@ -45,16 +43,13 @@ impl<'a> Action<'a> {
         extras: &'a [ExtraItem<'a>],
     ) -> Self {
         Self {
-            request: ConfirmAction {
-                title: title.into(),
-                action: action.into(),
-                description: description.into(),
-                subtitle: subtitle.into(),
-                commitment,
-                br_name: br.into(),
-                external_menu: !extras.is_empty(),
-            },
-            extras,
+            title: title.into(),
+            action: action.into(),
+            description: description.into(),
+            subtitle: subtitle.into(),
+            commitment,
+            br_name: br.into(),
+            extras: extras.into(),
         }
     }
 }
@@ -96,6 +91,5 @@ impl<'a> Action<'a> {
 /// }
 /// ```
 pub fn action(params: Action<'_>) -> Result<()> {
-    let br = params.request.br_name.as_str();
-    answer(call(&params.request, params.extras, Some(br))?)
+    answer(get_ui_or_die().confirm_action(params).into_app_result()?)
 }

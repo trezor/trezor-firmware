@@ -1,24 +1,21 @@
 //! Confirming a list of key/value facts. The public docs live on
 //! [`properties`].
 
-use crate::modui::internal::{answer, call};
+use crate::app_runtime2::get_ui_or_die;
+use crate::modui::internal::answer;
 use crate::modui::{Commitment, ExtraItem};
 use crate::structs::{ConfirmProperties, Property};
-use crate::{Error, Result};
+use crate::traits::ui::UiV1Dyn as _;
+use crate::{IntoAppResult, Result};
 
 // ============================================================================
 // Data types
 // ============================================================================
 
 /// Parameters for [`properties`], built by [`Properties::new`].
-pub struct Properties<'a> {
-    /// The request as core reads it; it goes through the FFI as is.
-    request: ConfirmProperties<'a>,
-    /// Shown by the library from the screen's menu; never sent.
-    extras: &'a [ExtraItem<'a>],
-}
+pub type Properties<'a> = ConfirmProperties<'a>;
 
-impl<'a> Properties<'a> {
+impl<'a> ConfirmProperties<'a> {
     /// Confirms the facts in `props` under `title`.
     ///
     /// - `title` — the screen's heading.
@@ -40,14 +37,12 @@ impl<'a> Properties<'a> {
         extras: &'a [ExtraItem<'a>],
     ) -> Self {
         Self {
-            request: ConfirmProperties {
-                title: title.into(),
-                props: props.into(),
-                subtitle: subtitle.into(),
-                commitment,
-                br_name: br.into(),
-            },
-            extras,
+            title: title.into(),
+            props: props.into(),
+            subtitle: subtitle.into(),
+            commitment,
+            br_name: br.into(),
+            extras: extras.into(),
         }
     }
 }
@@ -60,9 +55,7 @@ impl<'a> Properties<'a> {
 ///
 /// # Errors
 ///
-/// This block cannot show extras yet: a non-empty `extras` is refused with
-/// [`crate::Error::ValueError`]. Otherwise see
-/// [errors](crate::modui#errors).
+/// See [errors](crate::modui#errors).
 ///
 /// # Example
 ///
@@ -78,11 +71,9 @@ impl<'a> Properties<'a> {
 /// }
 /// ```
 pub fn properties(params: Properties<'_>) -> Result<()> {
-    // This block's wire has no menu button yet, so anything behind one would
-    // be silently unreachable. Refusing is worse to use and better to debug.
-    if !params.extras.is_empty() {
-        return Err(Error::ValueError("extras not yet supported by this block"));
-    }
-    let br = params.request.br_name.as_str();
-    answer(call(&params.request, params.extras, Some(br))?)
+    answer(
+        get_ui_or_die()
+            .confirm_properties(params)
+            .into_app_result()?,
+    )
 }

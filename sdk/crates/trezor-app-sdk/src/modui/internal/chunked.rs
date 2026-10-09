@@ -46,17 +46,13 @@ use crate::traits::ui::UiReply;
 
 /// Bytes of raw data sent to core per chunk.
 ///
-/// A whole request has to fit in one IPC message, and hex takes two characters
-/// a byte, so a chunk is under half a message, leaving the rest for the other
-/// fields of the request. Core pages each chunk itself.
-pub(in crate::modui) const BYTES_PER_CHUNK: usize = (MAX_REQUEST_BYTES - REQUEST_OVERHEAD) / 2;
-
-/// The largest request core is asked to hold at once.
-const MAX_REQUEST_BYTES: usize = 1024;
-
-/// Room kept in a request for everything but the chunk: title, subtitle, step
-/// name, and the encoding around them.
-const REQUEST_OVERHEAD: usize = 256;
+/// Chunking bounds how much of a long blob core holds at once: core keeps
+/// several copies of a request while it draws it, and hex doubles the data.
+/// Core's inbox for app messages (32 KB) is the hard ceiling, far above this.
+/// Core pages each chunk itself.
+///
+/// WIP: a guess. Measure core's heap with a large blob and raise it.
+pub(in crate::modui) const BYTES_PER_CHUNK: usize = 384;
 
 // ============================================================================
 // Data types
@@ -67,9 +63,7 @@ const REQUEST_OVERHEAD: usize = 256;
 /// # Who uses this
 ///
 /// - **Written by a block**, in the closure it hands to
-///   [`confirm_in_chunks`]. The block
-///   turns a [`UiReply`] into this, adding what the reply cannot say: what came
-///   of a trip through the extras.
+///   [`confirm_in_chunks`], from the chunk's [`UiReply`].
 /// - **Read by [`confirm_in_chunks`]**, which owns the index and decides what
 ///   to send next.
 /// - **Never crosses IPC, and never reaches an app.** The reply an app gets
@@ -83,8 +77,6 @@ pub(in crate::modui) enum AfterChunk {
     // Retreat,
     // /// Accept the remainder without reading it.
     // ConfirmAll,
-    /// Something ended the block outright, such as a menu entry.
-    Decided(UiReply),
     Cancelled,
 }
 
@@ -125,7 +117,6 @@ where
             // WIP: chunk paging (see `AfterChunk`).
             // AfterChunk::Retreat => index = index.saturating_sub(1),
             // AfterChunk::ConfirmAll => return Ok(UiReply::ConfirmedAll),
-            AfterChunk::Decided(reply) => return Ok(reply),
             AfterChunk::Cancelled => return Ok(UiReply::Cancelled),
         }
     }

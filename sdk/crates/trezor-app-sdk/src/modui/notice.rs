@@ -16,25 +16,22 @@
 //! "menu button even without extras"; `extapp_menu` adds Cancel. Info and
 //! warning only. Bolt: no menus, keeps on-screen X. Caesar: waits on #7694.
 
-use crate::Result;
+use crate::app_runtime2::get_ui_or_die;
 use crate::modui::ExtraItem;
-use crate::modui::internal::{answer, call};
+use crate::modui::internal::answer;
 pub use crate::structs::Severity;
 use crate::structs::ShowNotice;
+use crate::traits::ui::UiV1Dyn as _;
+use crate::{IntoAppResult, Result};
 
 // ============================================================================
 // Data types
 // ============================================================================
 
 /// Parameters for [`show`], built by [`Notice::new`].
-pub struct Notice<'a> {
-    /// The request as core reads it; it goes through the FFI as is.
-    request: ShowNotice<'a>,
-    /// Shown by the library from the screen's menu; never sent.
-    extras: &'a [ExtraItem<'a>],
-}
+pub type Notice<'a> = ShowNotice<'a>;
 
-impl<'a> Notice<'a> {
+impl<'a> ShowNotice<'a> {
     /// A notice of the given severity.
     ///
     /// - `severity` — what kind of news this is; see [`Severity`].
@@ -57,15 +54,12 @@ impl<'a> Notice<'a> {
         cancel: bool,
     ) -> Self {
         Self {
-            request: ShowNotice {
-                severity,
-                title: title.into(),
-                content: content.into(),
-                external_menu: !extras.is_empty(),
-                cancel,
-                br_name: br.into(),
-            },
-            extras,
+            severity,
+            title: title.into(),
+            content: content.into(),
+            cancel,
+            br_name: br.into(),
+            extras: extras.into(),
         }
     }
 }
@@ -135,6 +129,5 @@ impl<'a> Notice<'a> {
 /// }
 /// ```
 pub fn show(params: Notice<'_>) -> Result<()> {
-    let br = params.request.br_name.as_str();
-    answer(call(&params.request, params.extras, Some(br))?)
+    answer(get_ui_or_die().show_notice(params).into_app_result()?)
 }
