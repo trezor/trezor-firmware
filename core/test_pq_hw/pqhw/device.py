@@ -46,6 +46,26 @@ CONNECT_TIMEOUT = 60
 NRF_SLOT = 0xE000
 NRF_SLOT_SIZE = 0x6C000
 MCUBOOT_IMAGE_MAGIC = 0x96F3B83D
+# nRF52832 POWER.RESETREAS: sticky reset causes, cleared by writing 1s.
+NRF_RESETREAS = 0x40000400
+NRF_RESETREAS_BITS = {
+    0x1: "pin",
+    0x2: "watchdog",
+    0x4: "soft",
+    0x8: "lockup",
+    0x10000: "system-off wake (GPIO)",
+    0x20000: "system-off wake (LPCOMP)",
+    0x40000: "system-off wake (debug)",
+    0x80000: "system-off wake (NFC)",
+}
+
+
+def describe_resetreas(value: int) -> str:
+    causes = [name for bit, name in NRF_RESETREAS_BITS.items() if value & bit]
+    rest = value & ~sum(NRF_RESETREAS_BITS)
+    if rest:
+        causes.append(f"0x{rest:x}")
+    return f"0x{value:08x} ({', '.join(causes) or 'none'})"
 
 
 def nrf_image_version(image: bytes) -> str:
@@ -153,6 +173,19 @@ class Unit:
         if res.returncode != 0:
             raise UnitError(f"{' '.join(cmd)} failed:\n{res.stdout}\n{res.stderr}")
         return res.stdout
+
+    def nrf_resetreas(self, clear: bool = False) -> int | None:
+        """The nRF's sticky reset causes (None without a J-Link); `clear`
+        resets them afterwards, so the next read shows only later resets."""
+        if not self.nrf_jlink:
+            return None
+        out = self._nrfjprog("--memrd", f"{NRF_RESETREAS:#x}", "--n", "4")
+        m = re.search(r":\s*([0-9A-Fa-f]{8})", out)
+        if m is None:
+            raise UnitError(f"could not read RESETREAS:\n{out}")
+        if clear:
+            self._nrfjprog("--memwr", f"{NRF_RESETREAS:#x}", "--val", "0xFFFFFFFF")
+        return int(m.group(1), 16)
 
     def flash_nrf(self, image: bytes, label: str) -> bool:
         """Put the nRF on a known application image; False without a J-Link.

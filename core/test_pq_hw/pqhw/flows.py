@@ -21,6 +21,7 @@ from .device import (
     UnitError,
     call_watching_prompt,
     close,
+    describe_resetreas,
     run_watching_stalls,
     tap_bootloader_intro,
 )
@@ -361,6 +362,13 @@ def pq_phase2(unit: Unit, bundle: PqSecureBundle, upload: Upload | None = None) 
         # Not on USB: the bootloader is on its intro ("Initiate connection"),
         # which brings the wire up only after a tap -- it did not resume.
         unit.step("phase 2 did not come up on USB within the resume time")
+        resetreas = unit.nrf_resetreas()
+        if resetreas is not None:
+            unit.step(
+                f"nRF reset causes since the install began: "
+                f"{describe_resetreas(resetreas)}",
+                screenshot=False,
+            )
         if unit.ask is None:
             raise UnitError(
                 "phase 2 never came up on USB: the bootloader did not resume the "
@@ -402,6 +410,8 @@ def pq_install(
     """Both phases from bootloader mode, ending with the device rebooting into
     the new firmware. A refused install raises the device's TrezorFailure."""
     up = upload or Upload.of(bundle, send_nrf)
+    # Only this install's nRF resets count (read when phase 2 does not resume).
+    unit.nrf_resetreas(clear=True)
     prompted, served = pq_phase1(unit, ctx, bundle, confirm=confirm, upload=up)
     close(ctx)
     unit.wait_gone()
