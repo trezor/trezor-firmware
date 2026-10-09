@@ -83,6 +83,19 @@ fn main() -> Result<()> {
             ]
         );
 
+        lib.add_rust_bindings(add_rust_bindings)?;
+
         Ok(())
     })
+}
+
+fn add_rust_bindings(builder: bindgen::Builder) -> Result<bindgen::Builder> {
+    let builder = builder
+        .header("inc/sys/logging.h")
+        .header("dbg/inc/sys/syslog.h")
+        .allowlist_function("syslog_start_record")
+        .allowlist_function("syslog_write_chunk")
+        .allowlist_type("log_source_t")
+        .allowlist_type("log_level_t");
+    Ok(builder)
 }
