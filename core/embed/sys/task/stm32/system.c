@@ -66,9 +66,9 @@ void system_init(systask_error_handler_t error_handler) {
 #endif
   mpu_init();
   mpu_reconfig(MPU_MODE_DEFAULT);
-  systask_scheduler_init(error_handler);
   systick_init();
   systimer_init();
+  systask_scheduler_init(error_handler);
 #ifdef USE_IPC
   ipc_init();
 #endif

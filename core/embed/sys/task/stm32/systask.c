@@ -32,6 +32,7 @@
 #include <sys/sysevent_source.h>
 #include <sys/systask.h>
 #include <sys/system.h>
+#include <sys/systimer.h>
 
 // Disable stack protector for this file since it  may interfere
 // with the stack manipulation and fault handling
@@ -58,6 +59,8 @@ typedef struct {
   systask_t* waiting_task;
   // Bitmap of used task IDs
   uint32_t task_id_map;
+  // Watchdog timer
+  systimer_t* watchdog;
 
 } systask_scheduler_t;
 
@@ -73,6 +76,11 @@ static systask_scheduler_t g_systask_scheduler = {
         .stack_base = (uint32_t)&_stack_section_start,
         .stack_end = (uint32_t)&_stack_section_end,
     }};
+
+// forward declaration
+#ifdef USE_APPLETS
+static void systask_watchdog_callback(void* arg);
+#endif
 
 void systask_scheduler_init(systask_error_handler_t error_handler) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
@@ -100,6 +108,11 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
   // Enable SecureFault handler
   SCB->SHCSR |= SCB_SHCSR_SECUREFAULTENA_Msk;
 #endif
+
+#ifdef USE_APPLETS
+  scheduler->watchdog = systimer_create(systask_watchdog_callback, NULL);
+  ensure_true(scheduler->watchdog != NULL, "Failed to create watchdog timer");
+#endif
 }
 
 void systask_enable_tls(systask_t* task, mpu_area_t tls) {
@@ -107,6 +120,15 @@ void systask_enable_tls(systask_t* task, mpu_area_t tls) {
   task->tls_addr = (void*)tls.start;
   task->tls_size = tls.size;
 }
+
+#ifdef USE_APPLETS
+void systask_enable_watchdog(systask_t* task, ticks_t timeout) {
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
+  if (task != &scheduler->kernel_task && timeout > 0) {
+    task->watchdog_timeout = timeout;
+  }
+}
+#endif
 
 systask_t* systask_active(void) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
@@ -565,6 +587,43 @@ __attribute((used)) static void systask_exit_fault(uint32_t msp,
   mpu_restore(mpu_mode);
 }
 
+#ifdef USE_APPLETS
+static void systask_watchdog_callback(void* arg) {
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
+
+  systask_t* task = scheduler->active_task;
+
+  // IRQs are disabled
+
+  if (task->watchdog_timeout == 0) {
+    // Stale expiration, the active task (e.g. kernel) is not watched
+    return;
+  }
+
+  if (task->killed) {
+    // Already killed, re-killing would overwrite the real pminfo reason
+    return;
+  }
+
+  if (scheduler->waiting_task != task) {
+    // The task already yielded, PendSV will switch it out and unset timer
+    return;
+  }
+
+  if ((SCB->ICSR & SCB_ICSR_RETTOBASE_Msk) == 0 || task->in_callback) {
+    // SVC_Handler is running a syscall for this task or the kernel is
+    // waiting for a callback return, retry shortly
+    systimer_set(scheduler->watchdog, 1);
+    return;
+  }
+
+  systask_postmortem_t* pminfo = &task->pminfo;
+  memset(pminfo, 0, sizeof(systask_postmortem_t));
+  pminfo->reason = TASK_TERM_REASON_WATCHDOG;
+  systask_kill(task);
+}
+#endif
+
 // C part of PendSV handler that switches tasks
 //
 // `sp` is the stack pointer of the current task
@@ -580,6 +639,13 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
 
   // Save the current task context
   systask_t* prev_task = scheduler->active_task;
+
+#ifdef USE_APPLETS
+  if (prev_task->watchdog_timeout != 0) {
+    systimer_unset(scheduler->watchdog);
+  }
+#endif
+
   prev_task->sp = sp;
 #if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__)
   // sp_lim is not valid on ARMv7-M
@@ -621,6 +687,10 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   if (next_task->tls_size != 0) {
     // Restore the TLS of the next task
     memcpy(next_task->tls_addr, next_task->tls_copy, next_task->tls_size);
+  }
+
+  if (next_task->watchdog_timeout != 0) {
+    systimer_set(scheduler->watchdog, next_task->watchdog_timeout);
   }
 #endif
 

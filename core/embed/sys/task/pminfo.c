@@ -119,6 +119,10 @@ void systask_print_pminfo(systask_t* task) {
       print_fault(&pminfo->fault);
 #endif
       break;
+
+    case TASK_TERM_REASON_WATCHDOG:
+      dbg_printf("Watchdog timeout\n");
+      break;
   }
 #endif  // USE_DBG_CONSOLE
 }

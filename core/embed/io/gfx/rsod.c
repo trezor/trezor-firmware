@@ -32,6 +32,7 @@
 #define RSOD_DEFAULT_MESSAGE "Unspecified";
 #define RSOD_DEFAULT_FOOTER "Please visit trezor.io/rsod";
 #define RSOD_EXIT_MESSAGE "Exit "  // followed by exit code
+#define RSOD_WATCHDOG_MESSAGE "Watchdog timeout"
 
 #ifdef KERNEL_MODE
 
@@ -78,6 +79,10 @@ void rsod_terminal(const systask_postmortem_t* pminfo) {
       break;
     case TASK_TERM_REASON_FAULT:
       message = system_fault_message(&pminfo->fault);
+      break;
+
+    case TASK_TERM_REASON_WATCHDOG:
+      message = RSOD_WATCHDOG_MESSAGE;
       break;
   }
 
@@ -167,6 +172,10 @@ void rsod_gui(const systask_postmortem_t* pminfo) {
 
     case TASK_TERM_REASON_FAULT:
       message = system_fault_message(&pminfo->fault);
+      break;
+
+    case TASK_TERM_REASON_WATCHDOG:
+      message = RSOD_WATCHDOG_MESSAGE;
       break;
   }
 
