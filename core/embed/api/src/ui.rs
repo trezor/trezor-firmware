@@ -1,20 +1,17 @@
 //! Implements [`trezor_app_sdk::traits::ui`]'s `UiV1` on top of
-//! [`crate::wire::ipc_call`]. Each method converts its stabby-safe mirror
-//! argument into the matching `trezor_app_sdk::structs` (wire-format) enum
-//! variant, sends it to Core's UI/progress service, and converts the
-//! response back.
+//! [`crate::wire::ipc_call`]. Each method takes the request exactly as the app
+//! built it, serializes it, sends it to Core's UI/progress service and returns
+//! the reply. There is nothing to convert: the vtable carries the wire types.
 //!
 //! The op and the layout handle ride in the IPC message id;
 //! `apps/extapp/run.py` unpacks them.
 
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
-use stabby::option::Option as StabbyOption;
-use stabby::slice::Slice;
-use trezor_app_sdk::structs::{self, TrezorProgressEnum, TrezorUiEnum};
+use trezor_app_sdk::structs::{TrezorProgressEnum, TrezorUiEnum};
 use trezor_app_sdk::traits::ui::{
-    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmValue, HANDLE_BITS, Property,
-    SelectMenu, Severity, ShowNotice, ShowProperties, UiReply, UiV1, as_opt_str,
+    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmValue, HANDLE_BITS, OptStrSlice,
+    SelectMenu, ShowNotice, ShowProperties, UiReply, UiV1,
 };
 use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
 use trezor_app_sdk::traits::wire::WireError;
@@ -25,50 +22,26 @@ use crate::wire::{CoreIpcService, ipc_call};
 /// through [`UiV1::close`].
 const OP_CLOSE: u16 = 3;
 
-type Properties<'a> = alloc::vec::Vec<structs::Property<'a>>;
-
-fn opt_str(bytes: StabbyOption<Slice<'_, u8>>) -> Option<structs::StrSlice<'_>> {
-    as_opt_str(bytes).map(Into::into)
-}
-
-fn to_properties<'a>(props: &[Property<'a>]) -> Properties<'a> {
-    props
-        .iter()
-        .map(|p| structs::Property::new(p.key.as_str(), p.value.as_str(), p.mono))
-        .collect()
-}
-
-fn opt_properties<'a>(props: StabbyOption<Slice<'a, Property<'a>>>) -> Option<Properties<'a>> {
-    Option::<Slice<'a, Property<'a>>>::from(props).map(|p| to_properties(p.as_slice()))
-}
-
 /// Packs an operation and a layout handle into the 16-bit IPC message id.
 fn message_id(op: u16, handle: u16) -> u16 {
     (op << HANDLE_BITS) | (handle & ((1 << HANDLE_BITS) - 1))
 }
 
-/// Sends one UI message to Core and returns the raw reply.
-fn ipc_ui_raw(op: u16, handle: u16, payload: &[u8]) -> Result<structs::UiReply, WireError> {
+/// Sends one UI message to Core and returns its reply.
+fn ipc_ui_raw(op: u16, handle: u16, payload: &[u8]) -> Result<UiReply, WireError> {
     let id = message_id(op, handle);
     let (_id, data) = ipc_call(CoreIpcService::Ui.into(), id, payload, TIMEOUT_MAX)?;
-    let archived = rkyv::access::<rkyv::Archived<structs::UiReply>, Failure>(&data)
+    let archived = rkyv::access::<rkyv::Archived<UiReply>, Failure>(&data)
         .map_err(|_| WireError::DecodeError)?;
-    rkyv::api::low::deserialize::<structs::UiReply, Failure>(archived)
-        .map_err(|_| WireError::DecodeError)
+    rkyv::api::low::deserialize::<UiReply, Failure>(archived).map_err(|_| WireError::DecodeError)
 }
 
-/// Sends `value` to Core's UI service and converts the reply to its mirror.
-fn ui_call(op: u16, handle: u16, value: &TrezorUiEnum) -> FastResult<UiReply, WireError> {
-    let result = to_bytes::<Failure>(value)
+/// Serializes `request` and sends it to Core's UI service.
+fn ui_call(op: u16, handle: u16, request: TrezorUiEnum) -> FastResult<UiReply, WireError> {
+    to_bytes::<Failure>(&request)
         .map_err(|_| WireError::DecodeError)
         .and_then(|bytes| ipc_ui_raw(op, handle, &bytes))
-        .map(|reply| match reply {
-            structs::UiReply::Confirmed => UiReply::Confirmed,
-            structs::UiReply::Cancelled => UiReply::Cancelled,
-            structs::UiReply::WantsMore => UiReply::WantsMore,
-            structs::UiReply::Choice(i) => UiReply::Choice(i),
-        });
-    result.into()
+        .into()
 }
 
 fn ipc_progress_call(value: &TrezorProgressEnum) -> Result<(), WireError> {
@@ -91,11 +64,7 @@ impl UiV1 for TrezorUiV1Impl {
         handle: u16,
         value: ConfirmAction<'a>,
     ) -> FastResult<UiReply, WireError> {
-        ui_call(
-            op,
-            handle,
-            &TrezorUiEnum::ConfirmAction(value),
-        )
+        ui_call(op, handle, TrezorUiEnum::ConfirmAction(value))
     }
 
     extern "C" fn confirm_value<'a>(
@@ -104,11 +73,7 @@ impl UiV1 for TrezorUiV1Impl {
         handle: u16,
         value: ConfirmValue<'a>,
     ) -> FastResult<UiReply, WireError> {
-        ui_call(
-            op,
-            handle,
-            &TrezorUiEnum::ConfirmValue(value),
-        )
+        ui_call(op, handle, TrezorUiEnum::ConfirmValue(value))
     }
 
     extern "C" fn confirm_summary<'a>(
@@ -117,27 +82,7 @@ impl UiV1 for TrezorUiV1Impl {
         handle: u16,
         value: ConfirmSummary<'a>,
     ) -> FastResult<UiReply, WireError> {
-        let account_items = opt_properties(value.account_items);
-        let extra_items = opt_properties(value.extra_items);
-        ui_call(
-            op,
-            handle,
-            &TrezorUiEnum::ConfirmSummary(structs::ConfirmSummary {
-                title: value.title.as_str().into(),
-                amount: opt_str(value.amount),
-                amount_label: opt_str(value.amount_label),
-                fee: value.fee.as_str().into(),
-                fee_label: value.fee_label.as_str().into(),
-                account_title: opt_str(value.account_title),
-                account_items: account_items.as_deref().map(Into::into),
-                extra_title: opt_str(value.extra_title),
-                extra_items: extra_items.as_deref().map(Into::into),
-                back_button: value.back_button,
-                external_menu: value.external_menu,
-                br_name: opt_str(value.br_name),
-                br_code: value.br_code,
-            }),
-        )
+        ui_call(op, handle, TrezorUiEnum::ConfirmSummary(value))
     }
 
     extern "C" fn confirm_properties<'a>(
@@ -146,20 +91,7 @@ impl UiV1 for TrezorUiV1Impl {
         handle: u16,
         value: ConfirmProperties<'a>,
     ) -> FastResult<UiReply, WireError> {
-        let props = to_properties(value.props.as_slice());
-        ui_call(
-            op,
-            handle,
-            &TrezorUiEnum::ConfirmProperties(structs::ConfirmProperties {
-                title: value.title.as_str().into(),
-                props: props.as_slice().into(),
-                subtitle: opt_str(value.subtitle),
-                verb: opt_str(value.verb),
-                hold: value.hold,
-                br_name: opt_str(value.br_name),
-                br_code: value.br_code,
-            }),
-        )
+        ui_call(op, handle, TrezorUiEnum::ConfirmProperties(value))
     }
 
     extern "C" fn show_properties<'a>(
@@ -168,18 +100,7 @@ impl UiV1 for TrezorUiV1Impl {
         handle: u16,
         value: ShowProperties<'a>,
     ) -> FastResult<UiReply, WireError> {
-        let props = to_properties(value.props.as_slice());
-        ui_call(
-            op,
-            handle,
-            &TrezorUiEnum::ShowProperties(structs::ShowProperties {
-                title: value.title.as_str().into(),
-                props: props.as_slice().into(),
-                subtitle: opt_str(value.subtitle),
-                br_name: opt_str(value.br_name),
-                br_code: value.br_code,
-            }),
-        )
+        ui_call(op, handle, TrezorUiEnum::ShowProperties(value))
     }
 
     extern "C" fn show_notice<'a>(
@@ -188,25 +109,7 @@ impl UiV1 for TrezorUiV1Impl {
         handle: u16,
         value: ShowNotice<'a>,
     ) -> FastResult<UiReply, WireError> {
-        ui_call(
-            op,
-            handle,
-            &TrezorUiEnum::ShowNotice(structs::ShowNotice {
-                severity: match value.severity {
-                    Severity::Success => structs::Severity::Success,
-                    Severity::Done => structs::Severity::Done,
-                    Severity::Info => structs::Severity::Info,
-                    Severity::Warning => structs::Severity::Warning,
-                    Severity::Danger => structs::Severity::Danger,
-                },
-                title: value.title.as_str().into(),
-                content: value.content.as_str().into(),
-                external_menu: value.external_menu,
-                cancel: value.cancel,
-                br_name: opt_str(value.br_name),
-                br_code: value.br_code,
-            }),
-        )
+        ui_call(op, handle, TrezorUiEnum::ShowNotice(value))
     }
 
     extern "C" fn select_menu<'a>(
@@ -215,21 +118,7 @@ impl UiV1 for TrezorUiV1Impl {
         handle: u16,
         value: SelectMenu<'a>,
     ) -> FastResult<UiReply, WireError> {
-        let items: alloc::vec::Vec<structs::StrSlice> = value
-            .items
-            .as_slice()
-            .iter()
-            .map(|s| s.as_str().into())
-            .collect();
-        ui_call(
-            op,
-            handle,
-            &TrezorUiEnum::SelectMenu(structs::SelectMenu {
-                items: items.as_slice().into(),
-                br_name: opt_str(value.br_name),
-                br_code: value.br_code,
-            }),
-        )
+        ui_call(op, handle, TrezorUiEnum::SelectMenu(value))
     }
 
     extern "C" fn close(&self, handle: u16) -> FastResult<(), WireError> {
@@ -238,14 +127,14 @@ impl UiV1 for TrezorUiV1Impl {
 
     extern "C" fn init_progress<'a>(
         &self,
-        description: StabbyOption<Slice<'a, u8>>,
-        title: StabbyOption<Slice<'a, u8>>,
+        description: OptStrSlice<'a>,
+        title: OptStrSlice<'a>,
         indeterminate: bool,
         danger: bool,
     ) -> FastResult<(), WireError> {
         ipc_progress_call(&TrezorProgressEnum::Init {
-            description: opt_str(description),
-            title: opt_str(title),
+            description,
+            title,
             indeterminate,
             danger,
         })
@@ -254,14 +143,10 @@ impl UiV1 for TrezorUiV1Impl {
 
     extern "C" fn update_progress<'a>(
         &self,
-        description: StabbyOption<Slice<'a, u8>>,
+        description: OptStrSlice<'a>,
         value: u32,
     ) -> FastResult<(), WireError> {
-        ipc_progress_call(&TrezorProgressEnum::Update {
-            description: opt_str(description),
-            value,
-        })
-        .into()
+        ipc_progress_call(&TrezorProgressEnum::Update { description, value }).into()
     }
 
     extern "C" fn end_progress(&self) -> FastResult<(), WireError> {

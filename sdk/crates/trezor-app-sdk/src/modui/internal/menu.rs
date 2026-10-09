@@ -9,13 +9,10 @@
 //! Core's own UI machinery drives generic menus with callbacks. This is the
 //! thin piece that builds one out of what an app is allowed to say.
 
-use stabby::str::Str;
-
-use super::BR_CODE_OTHER;
 use super::transport::{LayoutHandle, call_once};
 use crate::alloc_types::String;
 use crate::modui::{Extra, ExtraItem};
-use crate::traits::ui::{SelectMenu, ShowProperties, UiReply};
+use crate::structs::{SelectMenu, ShowProperties, StrSlice, UiReply};
 use crate::{Error, Result};
 
 // ============================================================================
@@ -68,7 +65,7 @@ pub(in crate::modui) fn open(
     extras: &[ExtraItem<'_>],
     br: Option<&str>,
 ) -> Result<Option<UiReply>> {
-    let mut titles = [Str::from(""); MAX_ENTRIES];
+    let mut titles = [StrSlice::new(""); MAX_ENTRIES];
     for (slot, extra) in titles.iter_mut().zip(extras) {
         *slot = extra.label.into();
     }
@@ -80,7 +77,10 @@ pub(in crate::modui) fn open(
     let menu_step = br.map(|br| step(br, STEP_MENU));
     let details_step = br.map(|br| step(br, STEP_DETAILS));
 
-    let request = SelectMenu::new(&titles[..extras.len()], menu_step.as_deref(), BR_CODE_OTHER);
+    let request = SelectMenu {
+        items: titles[..extras.len()].into(),
+        br_name: menu_step.as_deref().into(),
+    };
     let layout = LayoutHandle::new();
     let mut reply = layout.show(&request)?;
 
@@ -117,7 +117,11 @@ fn step(br: &str, suffix: &str) -> String {
 fn show(extra: &ExtraItem<'_>, br: Option<&str>) -> Result<()> {
     match extra.value {
         Extra::Simple(props) => {
-            let request = ShowProperties::new(extra.label, props, None, br, BR_CODE_OTHER);
+            let request = ShowProperties {
+                title: extra.label.into(),
+                props: props.into(),
+                br_name: br.into(),
+            };
             let _ = call_once(&request)?;
         }
         // Fetching chunk by chunk is unsolved; this is where that loop belongs

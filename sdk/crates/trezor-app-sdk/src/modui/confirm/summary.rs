@@ -6,8 +6,8 @@
 
 use crate::Result;
 use crate::modui::ExtraItem;
-use crate::modui::internal::{BR_CODE_OTHER, answer, call};
-use crate::traits::ui::ConfirmSummary as WireConfirmSummary;
+use crate::modui::internal::{answer, call};
+use crate::structs::ConfirmSummary;
 
 // ============================================================================
 // Data types
@@ -15,10 +15,9 @@ use crate::traits::ui::ConfirmSummary as WireConfirmSummary;
 
 /// Parameters for [`summary`], built by [`Summary::new`].
 pub struct Summary<'a> {
-    title: &'a str,
-    amount: Option<(&'a str, &'a str)>,
-    fee: Option<(&'a str, &'a str)>,
-    br: &'a str,
+    /// The request as core reads it; it goes through the FFI as is.
+    request: ConfirmSummary<'a>,
+    /// Shown by the library from the screen's menu; never sent.
     extras: &'a [ExtraItem<'a>],
 }
 
@@ -41,10 +40,15 @@ impl<'a> Summary<'a> {
         extras: &'a [ExtraItem<'a>],
     ) -> Self {
         Self {
-            title,
-            amount,
-            fee,
-            br,
+            request: ConfirmSummary {
+                title: title.into(),
+                amount: amount.map(|(_, value)| value).into(),
+                amount_label: amount.map(|(label, _)| label).into(),
+                fee: fee.map_or("", |(_, value)| value).into(),
+                fee_label: fee.map_or("", |(label, _)| label).into(),
+                br_name: br.into(),
+                external_menu: !extras.is_empty(),
+            },
             extras,
         }
     }
@@ -83,25 +87,6 @@ impl<'a> Summary<'a> {
 /// }
 /// ```
 pub fn summary(params: Summary<'_>) -> Result<()> {
-    let request = WireConfirmSummary::new(
-        params.title,
-        params.amount.map(|(_, value)| value),
-        params.amount.map(|(label, _)| label),
-        params.fee.map_or("", |(_, value)| value),
-        params.fee.map_or("", |(label, _)| label),
-        // The wire's labelled slots are the renderer's own hardcoded menu.
-        // The extras go through the same menu every other block uses instead,
-        // so how many fit is the shared limit rather than this screen's
-        // accident.
-        None,
-        None,
-        None,
-        None,
-        false,                     // back_button: sequences run forward only
-        !params.extras.is_empty(), // external_menu: how the extras are reached
-        Some(params.br),           // br_name: the step's name; the app owns it
-        BR_CODE_OTHER,             // see the constant
-    );
-
-    answer(call(&request, params.extras, Some(params.br))?)
+    let br = params.request.br_name.as_str();
+    answer(call(&params.request, params.extras, Some(br))?)
 }

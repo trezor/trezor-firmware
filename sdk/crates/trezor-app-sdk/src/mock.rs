@@ -390,8 +390,8 @@ impl UiV1 for DummyUi {
 
     extern "C" fn init_progress<'a>(
         &self,
-        _description: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
-        _title: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
+        _description: crate::structs::OptStrSlice<'a>,
+        _title: crate::structs::OptStrSlice<'a>,
         _indeterminate: bool,
         _danger: bool,
     ) -> FastResult<(), WireError> {
@@ -400,7 +400,7 @@ impl UiV1 for DummyUi {
 
     extern "C" fn update_progress<'a>(
         &self,
-        _description: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
+        _description: crate::structs::OptStrSlice<'a>,
         _value: u32,
     ) -> FastResult<(), WireError> {
         unimplemented!("not exercised by the current test suite")

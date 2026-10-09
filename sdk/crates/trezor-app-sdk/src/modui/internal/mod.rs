@@ -13,14 +13,6 @@ use crate::traits::ui::UiReply;
 use crate::{Error, Result};
 
 // ============================================================================
-// Constants
-// ============================================================================
-
-/// The `ButtonRequestType` every block sends: `Other`. The step name
-/// (`br_name`) carries the meaning; do not grow this into a per-block table.
-pub(in crate::modui) const BR_CODE_OTHER: i32 = 1;
-
-// ============================================================================
 // Internals
 // ============================================================================
 

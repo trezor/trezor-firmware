@@ -1,9 +1,9 @@
 //! Confirming a list of key/value facts. The public docs live on
 //! [`properties`].
 
-use crate::modui::internal::{BR_CODE_OTHER, answer, call};
+use crate::modui::internal::{answer, call};
 use crate::modui::{Commitment, ExtraItem};
-use crate::traits::ui::{ConfirmProperties as WireConfirmProperties, Property};
+use crate::structs::{ConfirmProperties, Property};
 use crate::{Error, Result};
 
 // ============================================================================
@@ -12,11 +12,9 @@ use crate::{Error, Result};
 
 /// Parameters for [`properties`], built by [`Properties::new`].
 pub struct Properties<'a> {
-    title: &'a str,
-    props: &'a [Property<'a>],
-    subtitle: Option<&'a str>,
-    commitment: Commitment,
-    br: &'a str,
+    /// The request as core reads it; it goes through the FFI as is.
+    request: ConfirmProperties<'a>,
+    /// Shown by the library from the screen's menu; never sent.
     extras: &'a [ExtraItem<'a>],
 }
 
@@ -42,11 +40,13 @@ impl<'a> Properties<'a> {
         extras: &'a [ExtraItem<'a>],
     ) -> Self {
         Self {
-            title,
-            props,
-            subtitle,
-            commitment,
-            br,
+            request: ConfirmProperties {
+                title: title.into(),
+                props: props.into(),
+                subtitle: subtitle.into(),
+                commitment,
+                br_name: br.into(),
+            },
             extras,
         }
     }
@@ -83,15 +83,6 @@ pub fn properties(params: Properties<'_>) -> Result<()> {
     if !params.extras.is_empty() {
         return Err(Error::ValueError("extras not yet supported by this block"));
     }
-    let request = WireConfirmProperties::new(
-        params.title,
-        params.props,
-        params.subtitle,
-        None, // verb: the label follows the gesture, which the block owns
-        params.commitment == Commitment::Final, // hold: follows from the commitment
-        Some(params.br), // br_name: the step's name; the app owns it (see the field docs)
-        BR_CODE_OTHER, // see the constant
-    );
-
-    answer(call(&request, params.extras, Some(params.br))?)
+    let br = params.request.br_name.as_str();
+    answer(call(&params.request, params.extras, Some(br))?)
 }

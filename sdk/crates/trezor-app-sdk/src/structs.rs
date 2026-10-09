@@ -259,29 +259,16 @@ where
     }
 }
 
-/// A menu of selectable string items, sent as [`TrezorUiEnum::SelectMenu`].
+/// The extras' menu: the caller's labels, sent as [`TrezorUiEnum::SelectMenu`].
 ///
 /// Only the caller's items. A model whose screens give their way out up to
 /// the menu button adds that way out itself.
+#[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct SelectMenu<'a> {
     pub items: Slice<'a, StrSlice<'a>>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> SelectMenu<'a> {
-    pub fn new(
-        items: &'a [StrSlice<'a>],
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> SelectMenu<'a> {
-        SelectMenu {
-            items: items.into(),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
+    /// The step's name, if the block announces one.
+    pub br_name: OptStrSlice<'a>,
 }
 
 /// What confirming a block commits the person to.
@@ -318,56 +305,19 @@ pub struct ConfirmAction<'a> {
     pub external_menu: bool,
 }
 
-/// A transaction summary confirmation screen, sent as [`TrezorUiEnum::ConfirmSummary`].
+/// A transaction summary, sent as [`TrezorUiEnum::ConfirmSummary`].
+#[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmSummary<'a> {
     pub title: StrSlice<'a>,
-    pub amount: Option<StrSlice<'a>>,
-    pub amount_label: Option<StrSlice<'a>>,
+    pub amount: OptStrSlice<'a>,
+    pub amount_label: OptStrSlice<'a>,
     pub fee: StrSlice<'a>,
     pub fee_label: StrSlice<'a>,
-    pub account_title: Option<StrSlice<'a>>,
-    pub account_items: Option<Slice<'a, Property<'a>>>,
-    pub extra_title: Option<StrSlice<'a>>,
-    pub extra_items: Option<Slice<'a, Property<'a>>>,
-    pub back_button: bool,
+    /// The step's name, announced to the host.
+    pub br_name: StrSlice<'a>,
+    /// Draw a menu button; set by the library when the block has extras.
     pub external_menu: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ConfirmSummary<'a> {
-    pub fn new(
-        title: &'a str,
-        amount: Option<&'a str>,
-        amount_label: Option<&'a str>,
-        fee: &'a str,
-        fee_label: &'a str,
-        account_title: Option<&'a str>,
-        account_items: Option<&'a [Property<'a>]>,
-        extra_title: Option<&'a str>,
-        extra_items: Option<&'a [Property<'a>]>,
-        back_button: bool,
-        external_menu: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            amount: amount.map(|s| s.into()),
-            amount_label: amount_label.map(|s| s.into()),
-            fee: fee.into(),
-            fee_label: fee_label.into(),
-            account_title: account_title.map(|s| s.into()),
-            account_items: account_items.map(|s| s.into()),
-            extra_title: extra_title.map(|s| s.into()),
-            extra_items: extra_items.map(|s| s.into()),
-            back_button,
-            external_menu,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
 }
 
 /// What a value *is*, which decides how it is formatted.
@@ -416,6 +366,8 @@ pub struct ConfirmValue<'a> {
 /// carries on from: an app fails by returning `Err`, and whether the person
 /// sees a screen for that is core's to decide on the failure path, as
 /// `show_error_and_raise` does for core's own flows.
+#[stabby::stabby]
+#[repr(u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum Severity {
     /// A step worked, and the flow continues after this screen.
@@ -440,113 +392,50 @@ pub enum Severity {
     Danger,
 }
 
-/// A notice of some [`Severity`], sent by the app SDK.
+/// A notice of some [`Severity`], sent as [`TrezorUiEnum::ShowNotice`].
 ///
 /// Carries what the notice says and nothing about how it looks: no button
 /// words, no timeout, no choice of screen. Core derives those from `severity`.
+#[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowNotice<'a> {
     pub severity: Severity,
     pub title: StrSlice<'a>,
     pub content: StrSlice<'a>,
-    /// The screen leads to the caller's menu of extras.
+    /// Draw a menu button; set by the library when the block has extras.
     pub external_menu: bool,
     /// The notice must offer a way to back out. How is the model's.
     /// WIP: ignored by every model.
     pub cancel: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
+    /// The step's name, announced to the host.
+    pub br_name: StrSlice<'a>,
 }
 
-impl<'a> ShowNotice<'a> {
-    pub fn new(
-        severity: Severity,
-        title: &'a str,
-        content: &'a str,
-        external_menu: bool,
-        cancel: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            severity,
-            title: title.into(),
-            content: content.into(),
-            external_menu,
-            cancel,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A property-list confirmation screen, sent as
-/// [`TrezorUiEnum::ConfirmProperties`].
+/// A property-list confirmation, sent as [`TrezorUiEnum::ConfirmProperties`].
+#[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmProperties<'a> {
     pub title: StrSlice<'a>,
     pub props: Slice<'a, Property<'a>>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub verb: Option<StrSlice<'a>>,
-    pub hold: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
+    pub subtitle: OptStrSlice<'a>,
+    pub commitment: Commitment,
+    /// The step's name, announced to the host.
+    pub br_name: StrSlice<'a>,
 }
 
-impl<'a> ConfirmProperties<'a> {
-    pub fn new(
-        title: &'a str,
-        props: &'a [Property<'a>],
-        subtitle: Option<&'a str>,
-        verb: Option<&'a str>,
-        hold: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            props: props.into(),
-            subtitle: subtitle.map(|s| s.into()),
-            verb: verb.map(|s| s.into()),
-            hold,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A property-list display screen (no confirmation), sent as
-/// [`TrezorUiEnum::ShowProperties`].
+/// One extra, shown as a list of facts, sent as [`TrezorUiEnum::ShowProperties`].
+#[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowProperties<'a> {
     pub title: StrSlice<'a>,
     pub props: Slice<'a, Property<'a>>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowProperties<'a> {
-    pub fn new(
-        title: &'a str,
-        props: &'a [Property<'a>],
-        subtitle: Option<&'a str>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            props: props.into(),
-            subtitle: subtitle.map(|s| s.into()),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
+    /// The step's name, if the block announces one.
+    pub br_name: OptStrSlice<'a>,
 }
 
 /// One UI request, as it crosses IPC: one variant per `modui` block, plus the
-/// extras' menu and screen. Built by `core/embed/api` from the `traits::ui`
-/// mirrors.
+/// extras' menu and screen. `core/embed/api` wraps the request the app passed
+/// through the `UiV1` vtable and serializes it.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorUiEnum<'a> {
     SelectMenu(SelectMenu<'a>),
@@ -565,6 +454,8 @@ pub enum TrezorUiEnum<'a> {
 /// one request's contract (`Choice` only answers a list), so a reply a caller
 /// cannot use is a protocol violation.
 #[must_use]
+#[stabby::stabby]
+#[repr(C, u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum UiReply {
     /// Yes, having seen all of it.
@@ -714,13 +605,13 @@ impl ufmt::uDebug for TrezorCryptoResult {
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum TrezorProgressEnum<'a> {
     Init {
-        description: Option<StrSlice<'a>>,
-        title: Option<StrSlice<'a>>,
+        description: OptStrSlice<'a>,
+        title: OptStrSlice<'a>,
         indeterminate: bool,
         danger: bool,
     },
     Update {
-        description: Option<StrSlice<'a>>,
+        description: OptStrSlice<'a>,
         /// How far along, from 0 to 1000.
         value: u32,
     },

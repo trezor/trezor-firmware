@@ -18,9 +18,9 @@
 
 use crate::Result;
 use crate::modui::ExtraItem;
-use crate::modui::internal::{BR_CODE_OTHER, answer, call};
-pub use crate::traits::ui::Severity;
-use crate::traits::ui::ShowNotice as WireShowNotice;
+use crate::modui::internal::{answer, call};
+pub use crate::structs::Severity;
+use crate::structs::ShowNotice;
 
 // ============================================================================
 // Data types
@@ -28,12 +28,10 @@ use crate::traits::ui::ShowNotice as WireShowNotice;
 
 /// Parameters for [`show`], built by [`Notice::new`].
 pub struct Notice<'a> {
-    severity: Severity,
-    title: &'a str,
-    content: &'a str,
-    br: &'a str,
+    /// The request as core reads it; it goes through the FFI as is.
+    request: ShowNotice<'a>,
+    /// Shown by the library from the screen's menu; never sent.
     extras: &'a [ExtraItem<'a>],
-    cancel: bool,
 }
 
 impl<'a> Notice<'a> {
@@ -59,12 +57,15 @@ impl<'a> Notice<'a> {
         cancel: bool,
     ) -> Self {
         Self {
-            severity,
-            title,
-            content,
-            br,
+            request: ShowNotice {
+                severity,
+                title: title.into(),
+                content: content.into(),
+                external_menu: !extras.is_empty(),
+                cancel,
+                br_name: br.into(),
+            },
             extras,
-            cancel,
         }
     }
 }
@@ -134,15 +135,6 @@ impl<'a> Notice<'a> {
 /// }
 /// ```
 pub fn show(params: Notice<'_>) -> Result<()> {
-    let request = WireShowNotice::new(
-        params.severity,
-        params.title,
-        params.content,
-        !params.extras.is_empty(), // external_menu: how the extras are reached
-        params.cancel,             // cancel: the model provides the way out
-        Some(params.br),           // br_name: the step's name; the app owns it
-        BR_CODE_OTHER,             // see the constant
-    );
-
-    answer(call(&request, params.extras, Some(params.br))?)
+    let br = params.request.br_name.as_str();
+    answer(call(&params.request, params.extras, Some(br))?)
 }

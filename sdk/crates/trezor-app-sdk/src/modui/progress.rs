@@ -72,7 +72,8 @@
 //! ```
 
 use crate::app_runtime2::get_ui_or_die;
-use crate::traits::ui::{UiV1Dyn as _, opt_bytes};
+use crate::structs::OptStrSlice;
+use crate::traits::ui::UiV1Dyn as _;
 use crate::{IntoAppResult, Result};
 
 // ============================================================================
@@ -165,8 +166,8 @@ impl Progress {
     pub fn start(label: &str, total: Total) -> Result<Self> {
         get_ui_or_die()
             .init_progress(
-                opt_bytes(Some(label)),
-                opt_bytes(None),
+                OptStrSlice::new(Some(label)),
+                OptStrSlice::NONE,
                 matches!(total, Total::Unknown),
                 false,
             )
@@ -202,7 +203,7 @@ impl Progress {
         // Core's progress scale is 0..=1000. Widened so `done * 1000` cannot
         // overflow for large totals.
         let permille = (u64::from(self.done.min(total)) * 1000 / u64::from(total)) as u32;
-        let _ = get_ui_or_die().update_progress(opt_bytes(None), permille);
+        let _ = get_ui_or_die().update_progress(OptStrSlice::NONE, permille);
     }
 }
 

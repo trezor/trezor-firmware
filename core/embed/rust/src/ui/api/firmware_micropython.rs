@@ -1330,11 +1330,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard))
                     .map_err(|_| Error::OutOfRange)?;
             }
-            wrap(
-                ModelUI::extapp_menu(vec)?,
-                m.br_code.to_native(),
-                m.br_name.as_ref(),
-            )?
+            wrap(ModelUI::extapp_menu(vec)?, BR_CODE_OTHER, m.br_name.as_ref())?
         }
         Archived::<TrezorUiEnum>::ConfirmAction(m) => wrap(
             ModelUI::confirm_action(
@@ -1363,16 +1359,16 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 tstr(&m.fee),
                 tstr(&m.fee_label),
                 Some(tstr(&m.title)),
-                m.account_items.as_ref().map(|i| obj_from_proplist(i)),
-                tstr_opt(&m.account_title),
-                m.extra_items.as_ref().map(|i| obj_from_proplist(i)),
-                tstr_opt(&m.extra_title),
                 None,
-                m.back_button,
+                None,
+                None,
+                None,
+                None,
+                false,
                 m.external_menu,
             )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
+            BR_CODE_OTHER,
+            Some(&m.br_name),
         )?,
         Archived::<TrezorUiEnum>::ConfirmValue(m) => wrap(
             ModelUI::confirm_value(
@@ -1416,11 +1412,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                     m.external_menu,
                     m.cancel,
                 )?,
-                m.br_code.to_native(),
-                match m.br_name.as_ref() {
-                    Some(s) => Obj::try_from(s.as_ref())?,
-                    None => Obj::const_none(),
-                },
+                BR_CODE_OTHER,
+                Obj::try_from(m.br_name.as_ref())?,
             )
         }
         Archived::<TrezorUiEnum>::ConfirmProperties(m) => wrap(
@@ -1428,20 +1421,16 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 tstr(&m.title),
                 tstr_opt(&m.subtitle),
                 obj_from_proplist(&m.props),
-                m.hold,
-                tstr_opt(&m.verb),
+                hold(&m.commitment),
+                None,
                 false,
             )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
+            BR_CODE_OTHER,
+            Some(&m.br_name),
         )?,
         Archived::<TrezorUiEnum>::ShowProperties(m) => wrap(
-            ModelUI::show_properties(
-                tstr(&m.title),
-                tstr_opt(&m.subtitle),
-                obj_from_proplist(&m.props),
-            )?,
-            m.br_code.to_native(),
+            ModelUI::show_properties(tstr(&m.title), None, obj_from_proplist(&m.props))?,
+            BR_CODE_OTHER,
             m.br_name.as_ref(),
         )?,
     };

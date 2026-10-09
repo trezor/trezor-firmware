@@ -279,20 +279,20 @@
 // `WIP:` paragraphs in the docs above mark open thoughts and discussion
 // points, and are removed before merge.
 //
-// The public surface above is the design; what carries it is scaffolding.
-// Today that means the `UiV1` vtable (`traits::ui`), whose request types
-// mirror the existing wire, and borrowing `crate::Error` for failures. Both
-// get rewritten as core is built out, and neither should force a change to a
-// block's signature when they do.
+// One type per request, from the app to core. A block's params type holds the
+// `crate::structs` request core reads, plus what stays in the app (extras);
+// its constructor fills the request directly. The request then crosses the
+// `UiV1` vtable as is, `core/embed/api` serializes that same value, and core
+// reads it archived. There are no mirror types and no conversions in between.
 //
-// Every block builds one `traits::ui` request and hands it to
-// `internal::transport`, the only file that calls `UiV1` for screens — so a new
-// request type means a new `UiV1` method, one line in `transport`'s `request!`
-// list, and the block's final expression, and nothing else here.
+// Every block hands its request to `internal::transport`, the only file that
+// calls `UiV1` for screens — so a new request type means a `structs` type, a
+// new `UiV1` method, one line in `transport`'s `request!` list, and the
+// block's params type, and nothing else here.
 //
 // ButtonRequests: the app names the step and nothing else. The suffixes are
-// `internal::menu`'s. `br_code` is always `BR_CODE_OTHER`. Page counts, and
-// whether a repeat is a new step, are core's.
+// `internal::menu`'s. The `ButtonRequestType` is core's (always
+// `Other`), as are page counts and whether a repeat is a new step.
 //
 // Layout: the public surface is this file plus one module per kind of block
 // (`confirm`, `notice`, `progress`); the library's own machinery is in
