@@ -43,6 +43,9 @@ typedef struct {
   uint8_t __attribute__((aligned(IPC_DATA_ALIGNMENT))) data[];
 } ipc_queue_item_t;
 
+_Static_assert(sizeof(ipc_queue_item_t) % IPC_DATA_ALIGNMENT == 0,
+               "ipc_queue_item_t size must be aligned to IPC_DATA_ALIGNMENT");
+
 typedef struct {
   uint8_t *ptr;
   uint8_t *wptr;
@@ -166,7 +169,7 @@ bool ipc_try_receive(ipc_message_t *msg) {
 
   // Move read pointer to the next item
   queue->rptr +=
-      ALIGN_UP(sizeof(ipc_queue_item_t) + item->size, IPC_DATA_ALIGNMENT);
+      sizeof(ipc_queue_item_t) + ALIGN_UP(item->size, IPC_DATA_ALIGNMENT);
 
   return true;
 }
@@ -202,7 +205,7 @@ void ipc_message_free(ipc_message_t *msg) {
 
     // Move to next item
     size_t item_size =
-        ALIGN_UP(sizeof(ipc_queue_item_t) + item->size, IPC_DATA_ALIGNMENT);
+        sizeof(ipc_queue_item_t) + ALIGN_UP(item->size, IPC_DATA_ALIGNMENT);
     item = (ipc_queue_item_t *)((uint8_t *)item + item_size);
 
     if (advance_wptr) {
@@ -234,7 +237,7 @@ bool ipc_send(systask_id_t remote, uint16_t service, uint16_t message_id,
   }
 
   size_t item_size =
-      ALIGN_UP(sizeof(ipc_queue_item_t) + data_size, IPC_DATA_ALIGNMENT);
+      sizeof(ipc_queue_item_t) + ALIGN_UP(data_size, IPC_DATA_ALIGNMENT);
   size_t free_size = queue->size - (queue->wptr - queue->ptr);
 
   if (item_size > free_size) {
