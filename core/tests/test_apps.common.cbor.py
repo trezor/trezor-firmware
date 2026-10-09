@@ -135,6 +135,7 @@ class TestCardanoCbor(unittest.TestCase):
                 IndefiniteLengthArray([1, [2, 3], IndefiniteLengthArray([4, 5])]),
                 "9f018202039f0405ffff",
             ),
+            (IndefiniteLengthArray([255, 1]), "9f18ff01ff"),
             # boolean
             (True, "f5"),
             (False, "f4"),
@@ -145,6 +146,17 @@ class TestCardanoCbor(unittest.TestCase):
             encoded = bytes.fromhex(encoded_hex)
             self.assertEqual(encode(val), encoded)
             self.assertEqual(decode(encoded), val)
+
+    def test_cbor_decode_break(self):
+        # 255 is a value, not a break
+        self.assertEqual(decode(bytes.fromhex("bf18ff01ff")), {255: 1})
+        # misplaced break
+        for encoded_hex in ("ff", "81ff", "bf01ff"):
+            with self.assertRaises(ValueError):
+                decode(bytes.fromhex(encoded_hex))
+        # missing break
+        with self.assertRaises(EOFError):
+            decode(bytes.fromhex("9f18ff"))
 
     def test_cbor_tuples(self):
         """
