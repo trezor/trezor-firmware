@@ -17,9 +17,9 @@ pub fn elf_path(args: &ResolvedBuildArgs) -> Result<PathBuf> {
 /// `build/thumbv7em-none-eabihf/release`).
 pub fn profile_dir(args: &ResolvedBuildArgs) -> Result<PathBuf> {
     let mut path = build_dir()?;
-    if !args.emulator {
+    if !args.emulator || args.asan {
         let model_config = args.model.config()?;
-        path = path.join(model_config.target_triple()?);
+        path = path.join("x86_64-unknown-linux-gnu"); // model_config.target_triple()?);
     }
 
     let name = match args.cargo_profile_name() {
