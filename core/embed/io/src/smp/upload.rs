@@ -9,6 +9,8 @@ use super::{
 
 const CHUNK_SIZE: usize = 256;
 const MAX_PACKET_SIZE: usize = 512;
+/// Max re-sends of a chunk whose response did not arrive in time.
+const CHUNK_RESENDS: u32 = 3;
 
 pub fn upload_image(
     image_data: &[u8],
@@ -94,28 +96,27 @@ pub fn upload_image(
 
         let data_len = writer.bytes_written();
 
-        unwrap!(receiver_acquire());
-
         let header = SmpHeader::new(SMP_OP_WRITE, data_len, SMP_GROUP_IMAGE, 0, 1).to_bytes();
 
         data[..SMP_HEADER_SIZE].copy_from_slice(&header);
         data[SMP_HEADER_SIZE..SMP_HEADER_SIZE + data_len].copy_from_slice(&cbor_data[..data_len]);
 
-        let res = send_request(&mut data[..SMP_HEADER_SIZE + data_len], &mut buffer);
+        let answered = (0..=CHUNK_RESENDS).any(|_| {
+            unwrap!(receiver_acquire());
+            if send_request(&mut data[..SMP_HEADER_SIZE + data_len], &mut buffer).is_err() {
+                receiver_release();
+                return false;
+            }
+            let mut resp_buffer = [0u8; 64];
+            wait_for_response(
+                MsgType::ImageUploadResponse,
+                &mut resp_buffer,
+                Duration::from_millis(500),
+            )
+            .is_ok()
+        });
 
-        if res.is_err() {
-            receiver_release();
-            return false;
-        }
-
-        let mut resp_buffer = [0u8; 64];
-        if wait_for_response(
-            MsgType::ImageUploadResponse,
-            &mut resp_buffer,
-            Duration::from_millis(500),
-        )
-        .is_err()
-        {
+        if !answered {
             return false;
         }
 
