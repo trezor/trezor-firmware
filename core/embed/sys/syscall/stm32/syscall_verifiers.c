@@ -69,7 +69,17 @@ void sysevents_poll__verified(const sysevents_t *awaited,
     goto access_violation;
   }
 
-  sysevents_poll(awaited, signalled, deadline);
+  sysevents_t awaited_copy = *awaited;
+
+  applet_t *applet = syscall_get_context();
+  if (!applet->privileges.unlimited_syscalls) {
+    systask_id_t task_id = systask_id(&applet->task);
+    syshandle_mask_t allowed_handles = 1 << (SYSHANDLE_IPC0 + task_id);
+    awaited_copy.read_ready &= allowed_handles;
+    awaited_copy.write_ready &= allowed_handles;
+  }
+
+  sysevents_poll(&awaited_copy, signalled, deadline);
   return;
 
 access_violation:
