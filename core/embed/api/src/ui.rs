@@ -67,9 +67,6 @@ fn ui_call(op: u16, handle: u16, value: &TrezorUiEnum) -> FastResult<UiReply, Wi
             structs::UiReply::Cancelled => UiReply::Cancelled,
             structs::UiReply::WantsMore => UiReply::WantsMore,
             structs::UiReply::Choice(i) => UiReply::Choice(i),
-            structs::UiReply::Forward => UiReply::Forward,
-            structs::UiReply::Backward => UiReply::Backward,
-            structs::UiReply::ConfirmedAll => UiReply::ConfirmedAll,
         });
     result.into()
 }

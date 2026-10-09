@@ -522,26 +522,24 @@ pub enum TrezorUiEnum<'a> {
 pub enum UiReply {
     /// Yes, having seen all of it.
     ///
-    /// WIP: until `Forward` has a producer, every chunk of `confirm::data`
-    /// answers this too.
+    /// WIP: until chunk paging exists, every chunk of `confirm::data` answers
+    /// this too.
     Confirmed,
     /// Refused, or left without answering. `modui` turns it into
     /// `Err(Error::Cancelled)`.
     Cancelled,
-    /// The extras: the screen's menu button. Lateral, unlike `Forward`.
+    /// The extras: the screen's menu button.
     WantsMore,
     /// Picked the list entry at this index, as sent.
     Choice(u16),
-    /// Paged past the end of the content core holds; the sender has more.
-    ///
-    /// WIP: no producer yet.
-    Forward,
-    /// Paged back before the content core holds, or back a step.
-    Backward,
-    /// Accepted the rest without reading it.
-    ///
-    /// WIP: no producer yet.
-    ConfirmedAll,
+    // WIP: chunk paging. No screen produces these yet; they come back with it.
+    // /// Paged past the end of the content core holds; the sender has more.
+    // Forward,
+    // /// Paged back before the content core holds.
+    // Backward,
+    // /// Accepted the rest without reading it (on the screen or in the menu;
+    // /// undecided).
+    // ConfirmedAll,
 }
 
 /// All crypto operations that can be requested from the app via IPC.

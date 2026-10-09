@@ -75,14 +75,13 @@ fn show_chunk(params: &Params<'_>, hex: &str, layout: &LayoutHandle) -> Result<A
 
     loop {
         match reply {
-            // What "next chunk" will be once core can tell it has paged to the
-            // edge of the chunk it was given. Nothing sends it yet.
-            UiReply::Forward => return Ok(AfterChunk::Advance),
-            UiReply::Backward => return Ok(AfterChunk::Retreat),
+            // WIP: chunk paging; these come back with it (see `UiReply`).
+            // UiReply::Forward => return Ok(AfterChunk::Advance),
+            // UiReply::Backward => return Ok(AfterChunk::Retreat),
+            // UiReply::ConfirmedAll => return Ok(AfterChunk::ConfirmAll),
             // Core pages within the chunk, so a yes means the person has seen
             // all of it. Whether that finishes the block is the loop's to say.
             UiReply::Confirmed => return Ok(AfterChunk::Advance),
-            UiReply::ConfirmedAll => return Ok(AfterChunk::ConfirmAll),
             // The menu: the extras, and whatever way out the model keeps there.
             UiReply::WantsMore => {
                 match menu::open(params.extras, Some(params.br))? {

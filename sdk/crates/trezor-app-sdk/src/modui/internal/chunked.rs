@@ -15,8 +15,8 @@
 //! next chunk.
 //!
 //! WIP, the direction: join the two into one continuous read, as the module
-//! docs lay out. [`UiReply::Forward`] and [`UiReply::Backward`] are reserved
-//! for it.
+//! docs lay out. The paging replies (`UiReply::Forward`, `Backward`,
+//! `ConfirmedAll`) are commented out until then.
 //!
 //! Chunking is an implementation detail of this crate, never an API choice. A
 //! modular app never picks a "chunked" block, never sets a chunk size, and
@@ -78,19 +78,11 @@ const REQUEST_OVERHEAD: usize = 256;
 pub(in crate::modui) enum AfterChunk {
     /// Move to the next chunk, or finish if this was the last.
     Advance,
-    /// Go back to the chunk before, or stay put if this was the first.
-    ///
-    /// WIP: nothing produces this yet. Core cannot tell it has paged back to
-    /// the start of the chunk it was given, so no screen offers the gesture —
-    /// see the note where core turns a layout's result into a reply. The loop
-    /// handles it so that the day it can, only the block changes.
-    Retreat,
-    /// Accept the remainder without reading it.
-    ///
-    /// WIP: nothing produces this yet. No screen offers a skip-ahead, and
-    /// whether one should is a decision still to be made; the loop handles it
-    /// so that making it changes only the block.
-    ConfirmAll,
+    // WIP: chunk paging; these come back with it (see `UiReply`).
+    // /// Go back to the chunk before, or stay put if this was the first.
+    // Retreat,
+    // /// Accept the remainder without reading it.
+    // ConfirmAll,
     /// Something ended the block outright, such as a menu entry.
     Decided(UiReply),
     Cancelled,
@@ -130,11 +122,9 @@ where
             // Accepting the last chunk is the only way to a yes by reading.
             AfterChunk::Advance if is_last => return Ok(UiReply::Confirmed),
             AfterChunk::Advance => index += 1,
-            // Already at the start: there is nowhere to go, so show it again.
-            AfterChunk::Retreat => index = index.saturating_sub(1),
-            // And this is the only way to a yes without reading — passed on
-            // as what it is rather than folded into a plain yes.
-            AfterChunk::ConfirmAll => return Ok(UiReply::ConfirmedAll),
+            // WIP: chunk paging (see `AfterChunk`).
+            // AfterChunk::Retreat => index = index.saturating_sub(1),
+            // AfterChunk::ConfirmAll => return Ok(UiReply::ConfirmedAll),
             AfterChunk::Decided(reply) => return Ok(reply),
             AfterChunk::Cancelled => return Ok(UiReply::Cancelled),
         }

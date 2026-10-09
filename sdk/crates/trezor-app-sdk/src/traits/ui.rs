@@ -87,9 +87,10 @@ pub enum UiReply {
     Cancelled,
     WantsMore,
     Choice(u16),
-    Forward,
-    Backward,
-    ConfirmedAll,
+    // WIP: chunk paging; see `structs::UiReply`.
+    // Forward,
+    // Backward,
+    // ConfirmedAll,
 }
 
 /// Mirrors [`crate::structs::Severity`]; see there for what each one means.

@@ -55,10 +55,8 @@ pub(in crate::modui) fn call(
         };
 
         match reply {
-            // The answers, passed on as they came. `ConfirmedAll` is a yes
-            // with the fact that the rest was skipped attached, for screens
-            // that offer the skip.
-            UiReply::Confirmed | UiReply::Cancelled | UiReply::ConfirmedAll => return Ok(reply),
+            // The answers, passed on as they came.
+            UiReply::Confirmed | UiReply::Cancelled => return Ok(reply),
             // The person opened the menu: the extras, and whatever way out the
             // model keeps there. Either way it is the model's to have drawn.
             UiReply::WantsMore => {
@@ -76,12 +74,11 @@ pub(in crate::modui) fn call(
 
 /// Reads the answer of a block that waits for the person.
 ///
-/// A yes is `Ok`; `ConfirmedAll` is a yes too, the person accepted the rest
-/// without reading it. A cancel is `Err(Cancelled)`, so that `?` stops the
-/// app's flow on it. Anything else is a reply no such block can produce.
+/// A yes is `Ok`. A cancel is `Err(Cancelled)`, so that `?` stops the app's
+/// flow on it. Anything else is a reply no such block can produce.
 pub(in crate::modui) fn answer(reply: UiReply) -> Result<()> {
     match reply {
-        UiReply::Confirmed | UiReply::ConfirmedAll => Ok(()),
+        UiReply::Confirmed => Ok(()),
         UiReply::Cancelled => Err(Error::Cancelled),
         _ => Err(Error::InvalidMessage),
     }

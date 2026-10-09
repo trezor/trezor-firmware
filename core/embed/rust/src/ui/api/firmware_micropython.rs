@@ -1481,21 +1481,15 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
 
         // Say what the person did, rather than naming the button that did it.
         //
-        // WIP: `UiReply::Forward` has no producer here yet, and `Backward` is
-        // only ever the flow-level back button. Both should also come from a
-        // screen paging to the edge of the chunk of data it was given — but a
-        // layout cannot tell it is at an edge until the request carries the
-        // chunk's offset and the total length, which it does not. Until then
-        // a chunked block reads `Confirmed` as "next chunk" and cannot go back
-        // a chunk at all.
+        // WIP: chunk paging (`Forward`, `Backward`, `ConfirmedAll`) needs the
+        // request to carry the chunk's offset and the total length, so a
+        // screen can tell it is at an edge. No extapp screen returns `BACK`.
         let msg = if obj == CONFIRMED.as_obj() {
             UiReply::Confirmed
         } else if obj == CANCELLED.as_obj() {
             UiReply::Cancelled
         } else if obj == INFO.as_obj() {
             UiReply::WantsMore
-        } else if obj == BACK.as_obj() {
-            UiReply::Backward
         } else if let Ok(val) = u32::try_from(obj) {
             UiReply::Choice(u16::try_from(val).map_err(|_| Error::TypeError)?)
         } else {
