@@ -632,11 +632,12 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
 __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
   __asm__ volatile(
       "LDR     R0, =%[active_task] \n"
+      "LDR     R0, [R0]            \n"  // R0 =  active_task
       "LDR     R1, =%[waiting_task]\n"
+      "LDR     R1, [R1]            \n"  // R1 =  waiting_task
       "CMP     R0, R1              \n"
       "BEQ     3f                  \n"  // No task switch needed
 
-      "LDR     R0, [R0]            \n"  // R0 =  active_task
       "LDR     R0, [R0, #12]       \n"  // R0 =  active_task->killed
       "CMP     R0, #0              \n"
       "BEQ     1f                  \n"  // =0 => normal processing
