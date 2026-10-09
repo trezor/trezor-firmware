@@ -68,6 +68,7 @@ disable-animation             = { true = ["disable_animation"] }
 force-bootloader-upgrade      = { true = ["force_bootloader_upgrade"] }
 frozen                        = { true = ["frozen"] }
 log-external                  = { true = ["log_external"] }
+log-level                     = { off = ["log_max_off"], error = ["log_max_error"], warn = ["log_max_warn"], info = ["log_max_info"], debug = ["log_max_debug"] }
 log-stack-usage               = { true = ["log_stack_usage"] }
 mem-perf                      = { true = ["memperf"] }
 miniscript                    = { true = ["miniscript"] }

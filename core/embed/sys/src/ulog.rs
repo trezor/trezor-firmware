@@ -4,8 +4,6 @@
 //! instead of core::fmt. When logging is disabled, the invocation is dead code
 //! and gets optimized out.
 
-pub const ENABLED: bool = cfg!(feature = "dbg_console");
-
 #[doc(hidden)]
 pub mod __private {
     // `uwrite!` expands to relative `ufmt::` paths. Importing it in the macro
@@ -29,13 +27,31 @@ pub mod __private {
     }
 }
 
+use crate::syslog_level::LogLevel;
+
+// Static maximum log level used to optimize out calls with higher level at
+// compile-time.
+pub const STATIC_MAX_LEVEL: LogLevel = if !cfg!(feature = "dbg_console") {
+    LogLevel::Off
+} else if cfg!(feature = "log_max_debug") {
+    LogLevel::Debug
+} else if cfg!(feature = "log_max_info") {
+    LogLevel::Info
+} else if cfg!(feature = "log_max_warn") {
+    LogLevel::Warn
+} else if cfg!(feature = "log_max_error") {
+    LogLevel::Error
+} else {
+    LogLevel::Off
+};
+
 // `#[macro_export]` places macros at the crate root, so they are exported under
 // hidden unique names and only get their public names in this module.
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __ulog_log {
     ($level:expr, $($args:tt)+) => ({
-        if $crate::ulog::ENABLED {
+        if $level <= $crate::ulog::STATIC_MAX_LEVEL {
             use $crate::ulog::__private::ufmt;
             $crate::ulog::__private::log(core::module_path!(), $level, |writer| {
                 ufmt::uwrite!(writer, $($args)+)

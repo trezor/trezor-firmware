@@ -16,6 +16,7 @@ when = { emulator = true }
 dbg-console = "swo" # required by prodtest test
 debug = true
 source-lines = true # required by test coverage
+log-level = "debug"
 log-external = true
 
 [[defaults]]
@@ -47,6 +48,7 @@ log-external = true
 when = { emulator = false, project = ["firmware", "prodtest"] }
 dbg-console = "swo"
 pyopt = false
+log-level = "warn"
 
 # Example of a model- and project-specific fragment:
 #

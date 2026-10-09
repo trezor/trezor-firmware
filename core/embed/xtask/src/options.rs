@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Args;
 use serde::Deserialize;
 
-use crate::args::{BuildArgs, ConsoleType, Model, Project};
+use crate::args::{BuildArgs, ConsoleType, LogLevel, Model, Project};
 use crate::presets;
 
 /// How an option's `Option<T>` value from the defaults/presets/CLI layers is
@@ -23,6 +23,13 @@ impl ResolveValue for bool {
 /// Unset resolves to [`ConsoleType::None`] (no debug console).
 impl ResolveValue for ConsoleType {
     type Resolved = ConsoleType;
+    fn resolve(value: Option<Self>) -> Self::Resolved {
+        value.unwrap_or_default()
+    }
+}
+
+impl ResolveValue for LogLevel {
+    type Resolved = LogLevel;
     fn resolve(value: Option<Self>) -> Self::Resolved {
         value.unwrap_or_default()
     }
@@ -190,6 +197,10 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "false")]
     map log_external: bool,
 
+    /// Compile-time log level filter
+    #[arg(long)]
+    map log_level: LogLevel,
+
     /// Optimize MicroPython bytecode
     #[arg(long, num_args = 0..=1, default_missing_value = "true", overrides_with = "pyopt")]
     map pyopt: bool,
@@ -338,6 +349,34 @@ pub struct ConsoleMap {
     pub swo: Vec<String>,
     #[serde(default)]
     pub system_view: Vec<String>,
+}
+
+impl MapValue for LogLevel {
+    type Map = LogLevelMap;
+    fn select(map: &Self::Map, value: Self) -> &[String] {
+        match value {
+            LogLevel::Off => &map.off,
+            LogLevel::Error => &map.error,
+            LogLevel::Warn => &map.warn,
+            LogLevel::Info => &map.info,
+            LogLevel::Debug => &map.debug,
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
+#[serde(deny_unknown_fields, rename_all = "kebab-case")]
+pub struct LogLevelMap {
+    #[serde(default)]
+    pub off: Vec<String>,
+    #[serde(default)]
+    pub error: Vec<String>,
+    #[serde(default)]
+    pub warn: Vec<String>,
+    #[serde(default)]
+    pub info: Vec<String>,
+    #[serde(default)]
+    pub debug: Vec<String>,
 }
 
 /// A feature selected from the `[build-options]` table, together with the

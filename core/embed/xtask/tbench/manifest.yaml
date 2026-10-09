@@ -195,6 +195,28 @@ options:
     when: component(firmware)
     type: checkbox
 
+  - id: log-level
+    name: Maximum compile-time log level
+    description: Logging calls above this level are optimized out.
+    group: Debugging
+    type: multistate
+    states:
+      - value: off
+        name: Off
+        description: No logging.
+      - value: error
+        name: Error
+        description: Only Error level.
+      - value: warn
+        name: Warning
+        description: Only Error and Warning levels.
+      - value: info
+        name: Info
+        description: Only Error, Warning and Info levels.
+      - value: debug
+        name: Debug
+        description: All log levels enabled.
+
   - id: log-external
     name: Enable logging through 'log' crate
     description: Useful with 3rd-party crates that use the standard macros but increases code size.
