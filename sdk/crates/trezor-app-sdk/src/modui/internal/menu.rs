@@ -82,25 +82,15 @@ pub(in crate::modui) fn open(
 
     let request = SelectMenu::new(&titles[..extras.len()], menu_step.as_deref(), BR_CODE_OTHER);
     let layout = LayoutHandle::new();
-    let mut first = true;
+    let mut reply = layout.show(&request)?;
 
     loop {
-        // Looking at an extra and coming back should land on the entry that
-        // was chosen, not at the top of the list, so the menu is reopened.
-        let reply = if first {
-            first = false;
-            layout.show(&request)?
-        } else {
-            layout.reshow(&request)?
-        };
-
         match reply {
             UiReply::Choice(chosen) => {
-                let chosen = chosen as usize;
-                match extras.get(chosen) {
-                    Some(extra) => show(extra, details_step.as_deref())?,
-                    None => return Err(Error::InvalidMessage),
-                }
+                let extra = extras.get(chosen as usize).ok_or(Error::InvalidMessage)?;
+                show(extra, details_step.as_deref())?;
+                // Back on the entry that was chosen, not at the top of the list.
+                reply = layout.reshow(&request)?;
             }
             // Closed without choosing: back to the main screen.
             UiReply::Confirmed => return Ok(None),

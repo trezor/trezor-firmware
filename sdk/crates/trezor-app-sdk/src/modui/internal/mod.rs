@@ -35,41 +35,40 @@ pub(in crate::modui) fn call(
     extras: &[ExtraItem<'_>],
     br: Option<&str>,
 ) -> Result<UiReply> {
-    // `None` is a block that announces nothing, which is the block's own
-    // nature. An empty name is neither that nor a name, so it is a mistake:
-    // the host would see a step with no identity, which is worse than silence.
-    if br == Some("") {
-        return Err(Error::ValueError("a step name must not be empty"));
-    }
-    menu::check_extras(extras)?;
+    check_params(br, extras)?;
 
     let layout = LayoutHandle::new();
-    let mut first = true;
+    let mut reply = layout.show(request)?;
 
     loop {
-        let reply = if first {
-            first = false;
-            layout.show(request)?
-        } else {
-            layout.reshow(request)?
-        };
-
         match reply {
             // The answers, passed on as they came.
             UiReply::Confirmed | UiReply::Cancelled => return Ok(reply),
             // The person opened the menu: the extras, and whatever way out the
             // model keeps there. Either way it is the model's to have drawn.
-            UiReply::WantsMore => {
-                if let Some(reply) = menu::open(extras, br)? {
-                    return Ok(reply);
-                }
-            }
+            UiReply::WantsMore => match menu::open(extras, br)? {
+                Some(reply) => return Ok(reply),
+                // Back to the block, as the person left it.
+                None => reply = layout.reshow(request)?,
+            },
             // The rest answer a screen this is not — a page turn, a pick from
             // a list, a way back no block offers — including a variant added
             // to the wire after this was written.
             _ => return Err(Error::InvalidMessage),
         }
     }
+}
+
+/// Checks what every block is given, before anything is shown.
+///
+/// `None` is a block that announces nothing, which is the block's own nature.
+/// An empty name is neither that nor a name, so it is a mistake: the host would
+/// see a step with no identity, which is worse than silence.
+pub(in crate::modui) fn check_params(br: Option<&str>, extras: &[ExtraItem<'_>]) -> Result<()> {
+    if br == Some("") {
+        return Err(Error::ValueError("a step name must not be empty"));
+    }
+    menu::check_extras(extras)
 }
 
 /// Reads the answer of a block that waits for the person.

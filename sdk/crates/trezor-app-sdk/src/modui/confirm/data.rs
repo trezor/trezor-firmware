@@ -16,11 +16,11 @@ use crate::modui::{ExtraItem, internal};
 
 /// Parameters for [`data`], built by [`Data::new`].
 pub struct Data<'a> {
-    title: &'a str,
-    data: &'a [u8],
-    subtitle: Option<&'a str>,
-    br: &'a str,
-    extras: &'a [ExtraItem<'a>],
+    pub(in crate::modui) title: &'a str,
+    pub(in crate::modui) data: &'a [u8],
+    pub(in crate::modui) subtitle: Option<&'a str>,
+    pub(in crate::modui) br: &'a str,
+    pub(in crate::modui) extras: &'a [ExtraItem<'a>],
 }
 
 impl<'a> Data<'a> {
@@ -77,11 +77,5 @@ impl<'a> Data<'a> {
 /// }
 /// ```
 pub fn data(params: Data<'_>) -> Result<()> {
-    internal::answer(internal::data::confirm(&internal::data::Params {
-        title: params.title,
-        data: params.data,
-        subtitle: params.subtitle,
-        br: params.br,
-        extras: params.extras,
-    })?)
+    internal::answer(internal::data::confirm(&params)?)
 }

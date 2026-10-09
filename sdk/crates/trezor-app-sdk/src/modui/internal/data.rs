@@ -5,29 +5,15 @@ use super::chunked::{self, AfterChunk, BYTES_PER_CHUNK};
 use super::transport::LayoutHandle;
 use super::{BR_CODE_OTHER, menu};
 use crate::alloc_types::String;
-use crate::modui::ExtraItem;
+use crate::modui::confirm::Data;
 use crate::traits::ui::{ConfirmValue as WireConfirmValue, UiReply};
 use crate::{Error, Result};
 
-/// What the block was given, as [`confirm::Data`](crate::modui::confirm::Data)
-/// holds it.
-pub(in crate::modui) struct Params<'a> {
-    pub title: &'a str,
-    pub data: &'a [u8],
-    pub subtitle: Option<&'a str>,
-    pub br: &'a str,
-    pub extras: &'a [ExtraItem<'a>],
-}
-
 /// Runs the block.
-pub(in crate::modui) fn confirm(params: &Params<'_>) -> Result<UiReply> {
-    // This block drives its own screens, so it makes the check `call` makes for
-    // every other one: a step with no identity is worse for the host than a
-    // block that deliberately announces nothing.
-    if params.br.is_empty() {
-        return Err(Error::ValueError("a step name must not be empty"));
-    }
-    menu::check_extras(params.extras)?;
+pub(in crate::modui) fn confirm(params: &Data<'_>) -> Result<UiReply> {
+    // This block drives its own screens, so it makes the check `call` makes
+    // for every other one.
+    super::check_params(Some(params.br), params.extras)?;
 
     // One buffer reused for every chunk rather than an allocation per chunk.
     let mut hex = String::with_capacity(BYTES_PER_CHUNK * 2);
@@ -50,7 +36,7 @@ pub(in crate::modui) fn confirm(params: &Params<'_>) -> Result<UiReply> {
 /// A chunk goes as a value, the screen every model pages: core splits it across
 /// as many screens as it takes, and the person answers only once they have
 /// seen all of it.
-fn show_chunk(params: &Params<'_>, hex: &str, layout: &LayoutHandle) -> Result<AfterChunk> {
+fn show_chunk(params: &Data<'_>, hex: &str, layout: &LayoutHandle) -> Result<AfterChunk> {
     // The screen has a menu exactly when the app offered extras.
     let has_menu = !params.extras.is_empty();
     let request = WireConfirmValue::new(
