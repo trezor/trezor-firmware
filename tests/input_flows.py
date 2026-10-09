@@ -503,6 +503,18 @@ class InputFlowSignMessageInfo(InputFlowBase):
         self.debug.press_yes()
         yield
 
+    def input_flow_caesar(self) -> BRGeneratorType:
+        yield
+        # show address/message info (visits "More info", skips "Cancel")
+        self.client.ui.visit_menu_items()
+        # cancel signature
+        self.debug.press_left()
+        self.debug.button_actions.navigate_to_menu_item(1)
+        # address mismatch? - "Quit" button aborts the flow
+        self.debug.synchronize_at("Flow")
+        self.debug.press_right()
+        yield
+
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
         # show address/message info
