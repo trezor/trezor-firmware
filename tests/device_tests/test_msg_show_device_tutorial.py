@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import device
+from trezorlib import device, exceptions
 from trezorlib.debuglink import DebugSession as Session
 
 
@@ -25,3 +25,11 @@ from trezorlib.debuglink import DebugSession as Session
 def test_tutorial(session: Session):
     device.show_device_tutorial(session)
     assert session.features.initialized is False
+
+
+@pytest.mark.models("t2t1")
+def test_tutorial_not_available(session: Session):
+    with pytest.raises(
+        exceptions.TrezorFailure, match="UnexpectedMessage: Unexpected message"
+    ):
+        device.show_device_tutorial(session)
