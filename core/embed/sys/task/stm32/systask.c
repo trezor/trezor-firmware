@@ -506,9 +506,15 @@ static uint32_t get_return_addr(bool secure, bool privileged, uint32_t sp) {
   return addr;
 }
 
-// Terminate active task from fault/exception handler
-__attribute((used)) static void systask_exit_fault(uint32_t msp,
-                                                   uint32_t exc_return) {
+// Terminate task from fault/exception handler
+//
+// `msp` and `exc_return` describe the context in which the exception
+// occurred. The task that was running at that time is recorded in the
+// postmortem info. If `kernel_fatal` is set, the kernel task is terminated
+// regardless of which task was running (used for system-level events
+// like NMI that cannot be attributed to the running task).
+static void systask_exit_fault_ex(uint32_t msp, uint32_t exc_return,
+                                  bool kernel_fatal) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
   bool privileged = (exc_return & 0x4) == 0;
@@ -528,8 +534,12 @@ __attribute((used)) static void systask_exit_fault(uint32_t msp,
 
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
-  systask_t* task =
+  // Task that was running when the exception occurred
+  systask_t* origin =
       privileged ? &scheduler->kernel_task : scheduler->active_task;
+
+  // Task to be terminated
+  systask_t* task = kernel_fatal ? &scheduler->kernel_task : origin;
 
   systask_postmortem_t* pminfo = &task->pminfo;
 
@@ -542,7 +552,7 @@ __attribute((used)) static void systask_exit_fault(uint32_t msp,
     pminfo->fault.pc = get_return_addr(secure, privileged, sp);
     pminfo->fault.sp = sp;
 #if !(defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__))
-    pminfo->fault.sp_lim = task->sp_lim;
+    pminfo->fault.sp_lim = origin->sp_lim;
 #endif
     pminfo->fault.irqn = (__get_IPSR() & IPSR_ISR_Msk) - 16;
     pminfo->fault.cfsr = SCB->CFSR;
@@ -563,6 +573,13 @@ __attribute((used)) static void systask_exit_fault(uint32_t msp,
   systask_kill(task);
 
   mpu_restore(mpu_mode);
+}
+
+// Terminate active task from fault/exception handler
+// (entered directly from the naked exception handlers)
+__attribute((used)) static void systask_exit_fault(uint32_t msp,
+                                                   uint32_t exc_return) {
+  systask_exit_fault_ex(msp, exc_return, false);
 }
 
 // C part of PendSV handler that switches tasks
@@ -867,7 +884,9 @@ __attribute__((naked, no_stack_protector)) void GTZC_IRQHandler(void) {
 }
 #endif
 
-__attribute__((no_stack_protector, used)) static void nmi_handler(void) {
+__attribute__((no_stack_protector,
+               used)) static void nmi_handler(uint32_t msp,
+                                              uint32_t exc_return) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 #ifdef STM32U5
   if ((RCC->CIFR & RCC_CIFR_CSSF) != 0) {
@@ -877,7 +896,7 @@ __attribute__((no_stack_protector, used)) static void nmi_handler(void) {
     RCC->CIR = RCC_CIR_CSSC;
 #endif
     // Clock Security System triggered NMI
-    systask_exit_fault(true, __get_MSP());
+    systask_exit_fault_ex(msp, exc_return, true);
   }
 #ifdef STM32U5
   else if (FLASH->ECCR & FLASH_ECCR_ECCD_Msk) {
@@ -890,20 +909,20 @@ __attribute__((no_stack_protector, used)) static void nmi_handler(void) {
     // is in the bootloader code region.
     if (bankid == 0 && addr >= BOARDLOADER_START &&
         addr < BOARDLOADER_START + BOARDLOADER_MAXSIZE) {
-      systask_exit_fault(false, __get_MSP());
+      systask_exit_fault_ex(msp, exc_return, true);
     }
 #elif defined(BOOTLOADER)
     // In bootloader, this is a fatal error only if the address
     // is in the bootloader code region.
     if (bankid == 0 && addr >= BOOTLOADER_START &&
         addr < BOOTLOADER_START + BOOTLOADER_MAXSIZE) {
-      systask_exit_fault(false, __get_MSP());
+      systask_exit_fault_ex(msp, exc_return, true);
     }
 #else
     (void)addr;
     (void)bankid;
     // In application/prodtest this is a fatal error
-    systask_exit_fault(false, __get_MSP());
+    systask_exit_fault_ex(msp, exc_return, true);
 #endif
   }
 #endif  // STM32U5
@@ -911,7 +930,7 @@ __attribute__((no_stack_protector, used)) static void nmi_handler(void) {
   mpu_restore(mpu_mode);
 }
 
-__attribute__((no_stack_protector)) void NMI_Handler(void) {
+__attribute__((naked, no_stack_protector)) void NMI_Handler(void) {
   __asm__ volatile(
       "MRS      R0, MSP               \n"  // R0 = MSP
       "MOV      R1, LR                \n"  // R1 = EXC_RETURN code
