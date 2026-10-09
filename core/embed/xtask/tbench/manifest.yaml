@@ -195,7 +195,7 @@ options:
     when: component(firmware)
     type: checkbox
 
-  - id: log-crate
+  - id: log-external
     name: Enable logging through 'log' crate
     description: Useful with 3rd-party crates that use the standard macros but increases code size.
     group: Debugging

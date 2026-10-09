@@ -1,4 +1,4 @@
-use sys::syslog::{init_log_crate, log, LogLevel};
+use sys::syslog::{init_external_logging, log, LogLevel};
 
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::map::Map;
@@ -67,7 +67,7 @@ extern "C" fn py_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
 
 extern "C" fn py_init() -> Obj {
     let block = || {
-        init_log_crate();
+        init_external_logging();
         Ok(())
     };
     unsafe {

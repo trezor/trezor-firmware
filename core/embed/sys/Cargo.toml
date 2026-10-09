@@ -14,7 +14,7 @@ crypto.workspace = true
 cty.workspace = true
 rtl.workspace = true
 models.workspace = true
-log.workspace = true
+log = { workspace = true, optional = true }
 ufmt.workspace = true
 
 [features]
@@ -52,7 +52,7 @@ emulator = ["rtl/emulator", "crypto/emulator"]
 i2c_bus = []
 ipc = []
 lockable_bootloader = []
-log_crate_disabled = ["log/max_level_off", "log/release_max_level_off"]
+log_external = ["log"]
 production = ["rtl/production"]
 pvd = []
 rtc = []

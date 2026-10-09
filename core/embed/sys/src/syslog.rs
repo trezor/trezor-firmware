@@ -88,7 +88,7 @@ pub fn log_simple(module: &str, level: LogLevel, message: &str) {
     }
 }
 
-pub fn init_log_crate() {
-    #[cfg(not(feature = "log_crate_disabled"))]
-    crate::log_crate::init()
+pub fn init_external_logging() {
+    #[cfg(feature = "log_external")]
+    crate::log_external::init()
 }

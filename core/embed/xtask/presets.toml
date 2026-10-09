@@ -16,7 +16,7 @@ when = { emulator = true }
 dbg-console = "swo" # required by prodtest test
 debug = true
 source-lines = true # required by test coverage
-log-crate = true
+log-external = true
 
 [[defaults]]
 when = { emulator = false }
@@ -41,7 +41,7 @@ asan = true
 frozen = false
 pyopt = false
 source-lines = true
-log-crate = true
+log-external = true
 
 [[dev]]
 when = { emulator = false, project = ["firmware", "prodtest"] }
