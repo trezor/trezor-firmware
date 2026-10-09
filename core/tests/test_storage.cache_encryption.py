@@ -145,6 +145,8 @@ class TestStorageCacheEncryption(unittest.TestCase):
         # `decrypt_cache` would hide the `AuthenticationError` behind the halt
         with self.assertRaises(AuthenticationError):
             session.decrypt()
+        # a failed decrypt must leave the fields guarded
+        self.assert_encrypted(session)
         # unauthenticated plaintext must never be written back
         for key in self.KEYS:
             self.assertEqual(ciphertext[key], self._ciphertext(session, key))

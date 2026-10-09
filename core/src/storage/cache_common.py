@@ -228,11 +228,15 @@ class EncryptableDataCache(DataCache):
         # encrypted fields so that they can be decrypted in the next step.
         self.is_encrypted = False
         decrypted_fields = {}
-        for field in self.fields_to_encrypt():
-            value = self.get(field)
-            if value is not None:
-                decrypted_fields[field] = cipher.decrypt(value)
-        cipher.finish(self.authentication_tag)
+        try:
+            for field in self.fields_to_encrypt():
+                value = self.get(field)
+                if value is not None:
+                    decrypted_fields[field] = cipher.decrypt(value)
+            cipher.finish(self.authentication_tag)
+        except Exception:
+            self.is_encrypted = True
+            raise
         for field, value in decrypted_fields.items():
             self.set(field, value)
         # Erase the now-spent nonce and tag; zero in place to keep the buffers.
