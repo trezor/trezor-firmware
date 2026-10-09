@@ -2,6 +2,7 @@
 from typing import TYPE_CHECKING
 
 from storage import cache, common, device
+from trezor import config
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -13,8 +14,6 @@ def wipe(clear_cache: bool = True) -> None:
     If the device should communicate after wipe, use `clear_cache=False` and clear cache manually later using
     `wipe_cache()`.
     """
-    from trezor import config
-
     config.wipe()
     if clear_cache:
         cache.clear_all()
@@ -40,7 +39,8 @@ def init_unlocked() -> None:
 
 def reset(excluded: tuple[AnyBytes, AnyBytes] | None) -> None:
     """
-    Wipes storage but keeps the device id, device secret, and credential counter unchanged.
+    Wipes storage but keeps the device id. On THP builds it also keeps the device secret,
+    the credential counter and the paired names, so existing pairings survive.
     """
     from trezor import utils
 
@@ -62,6 +62,27 @@ def reset(excluded: tuple[AnyBytes, AnyBytes] | None) -> None:
         )
         if paired_names:
             common.set(common.APP_DEVICE, device.THP_PAIRED_NAMES, paired_names)
+
+
+def lock() -> None:
+    """Lock the storage. Encrypts the cache first, so the two stay in sync."""
+    if not config.is_unlocked():
+        # Load-bearing, not an optimization: `LockDevice` on an already locked device would
+        # have `encrypt_cache` try to store a new device secret, and crash.
+        return
+    cache.encrypt_cache()
+    config.lock()
+
+
+def unlock(pin: str, salt: AnyBytes | None) -> bool:
+    """Unlock the storage and decrypt the cache. False if the PIN was wrong."""
+    was_locked = not config.is_unlocked()
+    if not config.unlock(pin, salt):
+        return False
+    # debug-only: catches a lock path that skipped encryption
+    assert not was_locked or cache.no_unexpected_plaintext()
+    cache.decrypt_cache()
+    return True
 
 
 def _migrate_from_version_01() -> None:

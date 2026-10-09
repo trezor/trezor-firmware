@@ -2,11 +2,12 @@ import builtins
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage.cache_common import DataCache
+from storage.cache_common import EncryptableDataCache
 from trezor import utils
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from collections.abc import Sequence
     from typing import TypeVar
 
     T = TypeVar("T")
@@ -16,7 +17,7 @@ _MAX_SESSIONS_COUNT = const(10)
 _SESSION_ID_LENGTH = const(32)
 
 
-class SessionCache(DataCache):
+class SessionCache(EncryptableDataCache):
     """
     A cache for storing values that depend on seed derivation
     or are specific to a `protocol_v1` session.
@@ -54,6 +55,16 @@ class SessionCache(DataCache):
             self.session_id[:] = random.bytes(_SESSION_ID_LENGTH)
         # export it as immutable bytes
         return bytes(self.session_id)
+
+    def fields_to_encrypt(self) -> Sequence[int]:
+        from storage.cache_codec_keys import CACHE_ENCRYPTED_KEYS_CODEC
+
+        return CACHE_ENCRYPTED_KEYS_CODEC
+
+    def is_preauthorized(self) -> bool:
+        from storage.cache_codec_keys import APP_COMMON_AUTHORIZATION_TYPE
+
+        return self.is_set(APP_COMMON_AUTHORIZATION_TYPE)
 
     def clear(self) -> None:
         super().clear()
