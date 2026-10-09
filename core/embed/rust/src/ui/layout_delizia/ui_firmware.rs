@@ -19,6 +19,7 @@ use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
 use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
+use crate::micropython::py_object::GcObject;
 use crate::micropython::{util, Error, Obj};
 use crate::storage;
 use crate::strutil::TString;
@@ -83,9 +84,9 @@ impl FirmwareUI for UIDelizia {
         _verb: Option<TString<'static>>,
         _info_button: bool,
         _chunkify: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         // confirm_value is used instead
-        Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
+        Err(Error::NotImplementedError)
     }
 
     fn confirm_trade(
@@ -160,7 +161,7 @@ impl FirmwareUI for UIDelizia {
         verb_view_all: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         const CONFIRM_VALUE_INTRO_MARGIN: u8 = 24;
         ConfirmValue::new(
             title,
@@ -472,7 +473,7 @@ impl FirmwareUI for UIDelizia {
         verb_info: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         _external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
@@ -515,7 +516,7 @@ impl FirmwareUI for UIDelizia {
         recovery_type: RecoveryType,
         show_instructions: bool,
         remaining_shares: Option<Obj>,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let pages_vec = if let Some(pages_obj) = remaining_shares {
             let mut vec = ParagraphVecLong::new();
             for page in IterBuf::new().try_iterate(pages_obj)? {
@@ -868,7 +869,7 @@ impl FirmwareUI for UIDelizia {
         description: TString<'static>,
         allow_cancel: bool,
         _time_ms: u32,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
         let frame = if allow_cancel {
             Frame::with_header(
@@ -981,7 +982,7 @@ impl FirmwareUI for UIDelizia {
         _button: Option<(TString<'static>, bool)>,
         _time_ms: u32,
         external_menu: bool, // TODO: will eventually replace the internal menu
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         if external_menu {
             return Err(Error::NotImplementedError);
         }
@@ -1072,7 +1073,7 @@ impl FirmwareUI for UIDelizia {
         indeterminate: bool,
         time_ms: u32,
         skip_first_paint: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let progress = CoinJoinProgress::<Never>::new(title, indeterminate)?;
         let obj = if time_ms > 0 && indeterminate {
             let timeout = Timeout::new(time_ms);
@@ -1080,9 +1081,7 @@ impl FirmwareUI for UIDelizia {
         } else {
             LayoutObj::new(progress)?
         };
-        if skip_first_paint {
-            obj.skip_first_paint();
-        }
+        obj.borrow_mut().skip_first_paint(skip_first_paint);
         Ok(obj)
     }
 
@@ -1169,7 +1168,7 @@ impl FirmwareUI for UIDelizia {
         text: TString<'static>,
         _title: Option<TString<'static>>,
         _button: Option<TString<'static>>,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let obj = LayoutObj::new(Paragraphs::new(Paragraph::new(&theme::TEXT_DEMIBOLD, text)))?;
         Ok(obj)
     }
@@ -1180,7 +1179,7 @@ impl FirmwareUI for UIDelizia {
         description: TString<'static>,
         _allow_cancel: bool,
         time_ms: u32,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let instruction = if button.is_empty() {
             TR::instructions__tap_to_continue.into()
         } else {
@@ -1216,7 +1215,7 @@ impl FirmwareUI for UIDelizia {
         description: TString<'static>,
         _allow_cancel: bool,
         danger: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let action = if button.is_empty() {
             None
         } else {

@@ -1,4 +1,3 @@
-use core::cell::{RefCell, RefMut};
 use core::convert::{TryFrom, TryInto};
 use core::marker::PhantomData;
 use core::ops::{Deref, DerefMut};
@@ -11,12 +10,13 @@ use sys::time::Duration;
 use super::base::{Layout, LayoutState, PaintOutOfBounds};
 use crate::maybe_trace::MaybeTrace;
 use crate::micropython::buffer::StrBuffer;
-use crate::micropython::gc::{self, Gc, GcBox};
+use crate::micropython::gc::{self, GcBox};
 use crate::micropython::macros::{
     obj_dict, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_map, obj_type,
 };
 use crate::micropython::map::Map;
-use crate::micropython::obj::{Obj, ObjBase};
+use crate::micropython::obj::Obj;
+use crate::micropython::py_object::{GcObject, PyClass};
 use crate::micropython::qstr::Qstr;
 use crate::micropython::simple_type::SimpleTypeObj;
 use crate::micropython::typ::{FullType, Type};
@@ -181,16 +181,10 @@ enum Repaint {
     Full,
 }
 
-/// `LayoutObj` is a GC-allocated object exported to MicroPython, with type
-/// `LayoutObj::obj_type()`. It wraps a root component through the
-/// `ObjComponent` trait.
-#[repr(C)]
+/// `LayoutObj` is a MicroPython class implemented in Rust. It wraps a root
+/// component through the `LayoutMaybeTrace` trait and is exposed to MicroPython
+/// as `LayoutObj::obj_type()`.
 pub struct LayoutObj {
-    base: ObjBase,
-    inner: RefCell<LayoutObjInner>,
-}
-
-struct LayoutObjInner {
     root: Option<GcBox<dyn LayoutMaybeTrace>>,
     event_ctx: EventCtx,
     timer_fn: Obj,
@@ -203,10 +197,15 @@ struct LayoutObjInner {
 
 const NO_LAYOUT: Error = Error::RuntimeError(c"No layout");
 
-impl LayoutObjInner {
+impl LayoutObj {
+    /// Create a new `LayoutObj`, wrapping a root component.
+    pub fn new<T: ComponentMaybeTrace + 'static>(root: T) -> Result<GcObject<Self>, Error> {
+        Self::new_root(RootComponent::new(root))
+    }
+
     /// Create a new `LayoutObj`, wrapping a root component.
     #[inline(never)]
-    pub fn new(root: impl LayoutMaybeTrace + 'static) -> Result<Self, Error> {
+    pub fn new_root(root: impl LayoutMaybeTrace + 'static) -> Result<GcObject<Self>, Error> {
         let root = GcBox::new(root)?;
 
         let mut new = Self {
@@ -226,7 +225,7 @@ impl LayoutObjInner {
         let msg = new.obj_event(Event::RequestPaint);
         assert!(matches!(msg, Ok(s) if s == Obj::const_none()));
 
-        Ok(new)
+        GcObject::new_with_finaliser(new)
     }
 
     fn obj_delete(&mut self) {
@@ -403,29 +402,15 @@ impl LayoutObjInner {
             .take_value()
             .unwrap_or(Ok(Obj::const_none()))
     }
-}
 
-impl LayoutObj {
-    /// Create a new `LayoutObj`, wrapping a root component.
-    pub fn new<T: ComponentMaybeTrace + 'static>(root: T) -> Result<Gc<Self>, Error> {
-        let root_component = RootComponent::new(root);
-        Self::new_root(root_component)
-    }
-
-    pub fn new_root(root: impl LayoutMaybeTrace + 'static) -> Result<Gc<Self>, Error> {
-        // SAFETY: This is a Python object and has a base as first element
-        unsafe {
-            Gc::new_with_custom_finaliser(Self {
-                base: Self::obj_type().as_base(),
-                inner: RefCell::new(LayoutObjInner::new(root)?),
-            })
+    pub fn skip_first_paint(&mut self, skip: bool) {
+        if skip {
+            self.repaint = Repaint::None;
         }
     }
+}
 
-    fn inner_mut(&self) -> RefMut<'_, LayoutObjInner> {
-        self.inner.borrow_mut()
-    }
-
+impl PyClass for LayoutObj {
     fn obj_type() -> &'static Type {
         static TYPE: FullType = obj_type! {
             name: Qstr::MP_QSTR_LayoutObj,
@@ -455,35 +440,6 @@ impl LayoutObj {
             }),
         };
         &TYPE
-    }
-
-    pub fn skip_first_paint(&self) {
-        self.inner_mut().repaint = Repaint::None;
-    }
-}
-
-impl From<Gc<LayoutObj>> for Obj {
-    fn from(val: Gc<LayoutObj>) -> Self {
-        // SAFETY:
-        //  - We are GC-allocated.
-        //  - We are `repr(C)`.
-        //  - We have a `base` as the first field with the correct type.
-        unsafe { Obj::from_ptr(Gc::into_raw(val).cast()) }
-    }
-}
-
-impl TryFrom<Obj> for Gc<LayoutObj> {
-    type Error = Error;
-
-    fn try_from(value: Obj) -> Result<Self, Self::Error> {
-        if LayoutObj::obj_type().is_type_of(value) {
-            // SAFETY: We assume that if `value` is an object pointer with the correct type,
-            // it is always GC-allocated.
-            let this = unsafe { Gc::from_raw(value.as_ptr().cast()) };
-            Ok(this)
-        } else {
-            Err(Error::TypeError)
-        }
     }
 }
 
@@ -524,11 +480,11 @@ impl TryFrom<Never> for Obj {
 
 extern "C" fn ui_layout_attach_timer_fn(this: Obj, timer_fn: Obj, attach_type: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        this.inner_mut().obj_set_timer_fn(timer_fn);
+        let this: GcObject<LayoutObj> = this.try_into()?;
+        this.borrow_mut().obj_set_timer_fn(timer_fn);
 
         let msg = this
-            .inner_mut()
+            .borrow_mut()
             .obj_event(Event::Attach(AttachType::try_from_obj(attach_type)?));
         msg
     };
@@ -541,13 +497,13 @@ extern "C" fn ui_layout_touch_event(n_args: usize, args: *const Obj) -> Obj {
         if args.len() != 4 {
             return Err(Error::TypeError);
         }
-        let this: Gc<LayoutObj> = args[0].try_into()?;
+        let this: GcObject<LayoutObj> = args[0].try_into()?;
         let event = TouchEvent::new(
             args[1].try_into()?,
             args[2].try_into()?,
             args[3].try_into()?,
         )?;
-        let msg = this.inner_mut().obj_event(Event::Touch(event))?;
+        let msg = this.borrow_mut().obj_event(Event::Touch(event))?;
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
@@ -564,7 +520,7 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
         if args.len() != 3 {
             return Err(Error::TypeError);
         }
-        let this: Gc<LayoutObj> = args[0].try_into()?;
+        let this: GcObject<LayoutObj> = args[0].try_into()?;
         let event_type_num: u8 = args[1].try_into()?;
         let button_num: u8 = args[2].try_into()?;
 
@@ -572,7 +528,7 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
         let button = unwrap!(PhysicalButton::from_u8(button_num));
 
         let event = ButtonEvent::new(event_type, button);
-        let msg = this.inner_mut().obj_event(Event::Button(event))?;
+        let msg = this.borrow_mut().obj_event(Event::Button(event))?;
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
@@ -589,10 +545,10 @@ extern "C" fn ui_layout_ble_event(n_args: usize, args: *const Obj) -> Obj {
         if args.len() != 3 {
             return Err(Error::TypeError);
         }
-        let this: Gc<LayoutObj> = args[0].try_into()?;
+        let this: GcObject<LayoutObj> = args[0].try_into()?;
 
         let event = BLEEvent::new(args[1].try_into()?, args[2].try_into_option()?)?;
-        let msg = this.inner_mut().obj_event(Event::BLE(event))?;
+        let msg = this.borrow_mut().obj_event(Event::BLE(event))?;
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
@@ -606,11 +562,11 @@ extern "C" fn ui_layout_ble_event(_n_args: usize, _args: *const Obj) -> Obj {
 #[cfg(feature = "power_manager")]
 extern "C" fn ui_layout_pm_event(this: Obj, flags: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
+        let this: GcObject<LayoutObj> = this.try_into()?;
         let flags: u32 = flags.try_into()?;
 
         let event = PMEvent::from_packed_flags(flags);
-        let msg = this.inner_mut().obj_event(Event::PM(event))?;
+        let msg = this.borrow_mut().obj_event(Event::PM(event))?;
         Ok(msg)
     };
 
@@ -627,11 +583,11 @@ extern "C" fn ui_layout_progress_event(n_args: usize, args: *const Obj) -> Obj {
         if args.len() != 3 {
             return Err(Error::TypeError);
         }
-        let this: Gc<LayoutObj> = args[0].try_into()?;
+        let this: GcObject<LayoutObj> = args[0].try_into()?;
         let value: u16 = args[1].try_into()?;
         let description: StrBuffer = args[2].try_into()?;
         let msg = this
-            .inner_mut()
+            .borrow_mut()
             .obj_event(Event::Progress(value, description.into()))?;
         Ok(msg)
     };
@@ -643,9 +599,9 @@ extern "C" fn ui_layout_usb_event(n_args: usize, args: *const Obj) -> Obj {
         if args.len() != 2 {
             return Err(Error::TypeError);
         }
-        let this: Gc<LayoutObj> = args[0].try_into()?;
+        let this: GcObject<LayoutObj> = args[0].try_into()?;
         let event = USBEvent::new(args[1].try_into()?)?;
-        let msg = this.inner_mut().obj_event(Event::USB(event))?;
+        let msg = this.borrow_mut().obj_event(Event::USB(event))?;
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
@@ -653,9 +609,9 @@ extern "C" fn ui_layout_usb_event(n_args: usize, args: *const Obj) -> Obj {
 
 extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
+        let this: GcObject<LayoutObj> = this.try_into()?;
         let event = Event::Timer(token.try_into()?);
-        let msg = this.inner_mut().obj_event(event)?;
+        let msg = this.borrow_mut().obj_event(event)?;
         Ok(msg)
     };
     unsafe { util::try_or_raise(block) }
@@ -663,8 +619,8 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
 
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        let painted = this.inner_mut().obj_paint_if_requested()?;
+        let this: GcObject<LayoutObj> = this.try_into()?;
+        let painted = this.borrow_mut().obj_paint_if_requested()?;
         if painted {
             display::refresh();
         }
@@ -675,8 +631,8 @@ extern "C" fn ui_layout_paint(this: Obj) -> Obj {
 
 extern "C" fn ui_layout_request_complete_repaint(this: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        this.inner_mut().obj_request_repaint()?;
+        let this: GcObject<LayoutObj> = this.try_into()?;
+        this.borrow_mut().obj_request_repaint()?;
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -684,8 +640,8 @@ extern "C" fn ui_layout_request_complete_repaint(this: Obj) -> Obj {
 
 extern "C" fn ui_layout_page_count(this: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        let page_count = this.inner_mut().obj_page_count();
+        let this: GcObject<LayoutObj> = this.try_into()?;
+        let page_count = this.borrow_mut().obj_page_count();
         Ok(page_count)
     };
     unsafe { util::try_or_raise(block) }
@@ -693,8 +649,8 @@ extern "C" fn ui_layout_page_count(this: Obj) -> Obj {
 
 extern "C" fn ui_layout_button_request(this: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        let button_request = this.inner_mut().obj_button_request();
+        let this: GcObject<LayoutObj> = this.try_into()?;
+        let button_request = this.borrow_mut().obj_button_request();
         button_request
     };
     unsafe { util::try_or_raise(block) }
@@ -702,8 +658,8 @@ extern "C" fn ui_layout_button_request(this: Obj) -> Obj {
 
 extern "C" fn ui_layout_needs_params_refresh(this: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        let requested = this.inner_mut().obj_needs_params_refresh();
+        let this: GcObject<LayoutObj> = this.try_into()?;
+        let requested = this.borrow_mut().obj_needs_params_refresh();
         Ok(requested)
     };
     unsafe { util::try_or_raise(block) }
@@ -711,8 +667,8 @@ extern "C" fn ui_layout_needs_params_refresh(this: Obj) -> Obj {
 
 extern "C" fn ui_layout_update_params(this: Obj, params: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        let msg = this.inner_mut().obj_update_params(params);
+        let this: GcObject<LayoutObj> = this.try_into()?;
+        let msg = this.borrow_mut().obj_update_params(params);
         msg
     };
     unsafe { util::try_or_raise(block) }
@@ -720,8 +676,8 @@ extern "C" fn ui_layout_update_params(this: Obj, params: Obj) -> Obj {
 
 extern "C" fn ui_layout_get_transition_out(this: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        let transition_out = this.inner_mut().obj_get_transition_out();
+        let this: GcObject<LayoutObj> = this.try_into()?;
+        let transition_out = this.borrow_mut().obj_get_transition_out();
         Ok(transition_out)
     };
     unsafe { util::try_or_raise(block) }
@@ -729,8 +685,8 @@ extern "C" fn ui_layout_get_transition_out(this: Obj) -> Obj {
 
 extern "C" fn ui_layout_return_value(this: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        let value = this.inner_mut().obj_return_value();
+        let this: GcObject<LayoutObj> = this.try_into()?;
+        let value = this.borrow_mut().obj_return_value();
         value
     };
     unsafe { util::try_or_raise(block) }
@@ -745,8 +701,8 @@ pub extern "C" fn ui_debug_layout_type() -> &'static Type {
 #[cfg(feature = "ui_debug")]
 extern "C" fn ui_layout_trace(this: Obj, callback: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        this.inner_mut().obj_trace(callback)?;
+        let this: GcObject<LayoutObj> = this.try_into()?;
+        this.borrow_mut().obj_trace(callback)?;
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -759,8 +715,8 @@ extern "C" fn ui_layout_trace(_this: Obj, _callback: Obj) -> Obj {
 
 extern "C" fn ui_layout_delete(this: Obj) -> Obj {
     let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        this.inner_mut().obj_delete();
+        let this: GcObject<LayoutObj> = this.try_into()?;
+        this.borrow_mut().obj_delete();
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -768,9 +724,9 @@ extern "C" fn ui_layout_delete(this: Obj) -> Obj {
 
 extern "C" fn ui_layout_enter(this: Obj) -> Obj {
     let block = || {
-        let obj: Gc<LayoutObj> = this.try_into()?;
+        let obj: GcObject<LayoutObj> = this.try_into()?;
         // Raise an exception if the root layout has been already dropped.
-        obj.inner_mut()
+        obj.borrow_mut()
             .root
             .as_ref()
             .ok_or(Error::RuntimeError(c"No root layout on enter"))?;
@@ -784,8 +740,8 @@ extern "C" fn ui_layout_exit(n_args: usize, args: *const Obj) -> Obj {
         if args.len() != 4 {
             return Err(Error::TypeError);
         }
-        let this: Gc<LayoutObj> = args[0].try_into()?;
-        this.inner_mut().obj_delete();
+        let this: GcObject<LayoutObj> = args[0].try_into()?;
+        this.borrow_mut().obj_delete();
         Ok(Obj::const_none())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }

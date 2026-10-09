@@ -19,6 +19,7 @@ use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
 use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
+use crate::micropython::py_object::GcObject;
 use crate::micropython::{util, Error, Obj};
 use crate::storage;
 use crate::strutil::TString;
@@ -127,8 +128,8 @@ impl FirmwareUI for UIEckhart {
         _verb: Option<TString<'static>>,
         _info_button: bool,
         _chunkify: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
+    ) -> Result<GcObject<LayoutObj>, Error> {
+        Err(Error::NotImplementedError)
     }
 
     fn confirm_homescreen(
@@ -575,7 +576,7 @@ impl FirmwareUI for UIEckhart {
         verb_view_all: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let flow = flow::new_confirm_value_intro(
             title,
             subtitle,
@@ -598,7 +599,7 @@ impl FirmwareUI for UIEckhart {
         verb_info: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         _external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
@@ -644,7 +645,7 @@ impl FirmwareUI for UIEckhart {
         recovery_type: RecoveryType,
         show_instructions: bool,
         remaining_shares: Option<Obj>,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let shares_layout = if let Some(pages_obj) = remaining_shares {
             let mut op_layout = OpTextLayout::new(theme::TEXT_SMALL);
             let mut iter_buf = IterBuf::new();
@@ -1056,7 +1057,7 @@ impl FirmwareUI for UIEckhart {
         description: TString<'static>,
         allow_cancel: bool,
         time_ms: u32,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let content = Paragraphs::new(Paragraph::new(&theme::firmware::TEXT_REGULAR, description))
             .with_placement(LinearPlacement::vertical());
 
@@ -1242,7 +1243,7 @@ impl FirmwareUI for UIEckhart {
         button: Option<(TString<'static>, bool)>,
         _time_ms: u32,
         external_menu: bool, // TODO: will eventually replace the internal menu
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_REGULAR, description))
             .with_placement(LinearPlacement::vertical());
 
@@ -1356,7 +1357,7 @@ impl FirmwareUI for UIEckhart {
         indeterminate: bool,
         time_ms: u32,
         skip_first_paint: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let progress = ProgressScreen::new_coinjoin_progress(
             TR::coinjoin__title_progress.into(),
             indeterminate,
@@ -1368,9 +1369,7 @@ impl FirmwareUI for UIEckhart {
         } else {
             LayoutObj::new(progress)?
         };
-        if skip_first_paint {
-            obj.skip_first_paint();
-        }
+        obj.borrow_mut().skip_first_paint(skip_first_paint);
         Ok(obj)
     }
 
@@ -1492,7 +1491,7 @@ impl FirmwareUI for UIEckhart {
         text: TString<'static>,
         title: Option<TString<'static>>,
         button: Option<TString<'static>>,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text)
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical());
@@ -1515,7 +1514,7 @@ impl FirmwareUI for UIEckhart {
         description: TString<'static>,
         allow_cancel: bool,
         time_ms: u32,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, description)
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical());
@@ -1546,7 +1545,7 @@ impl FirmwareUI for UIEckhart {
         description: TString<'static>,
         allow_cancel: bool,
         danger: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<GcObject<LayoutObj>, Error> {
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_REGULAR, description),
             Paragraph::new(&theme::TEXT_REGULAR, value),
