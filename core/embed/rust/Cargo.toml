@@ -111,7 +111,7 @@ ui_overlay = []
 ui_performance_overlay = []
 universal_fw = []
 usb = []
-ward = ["dep:trezor-ward"]
+ward = ["dep:trezor-ward", "heapless/zeroize", "storage", "dep:zeroize"]
 
 # --------------------------------------------------------------------------
 # Unit test configuration
@@ -161,6 +161,7 @@ test = [
     "ui_jpeg",
     "ui_overlay",
     "universal_fw",
+    "ward",
 ]
 
 # --------------------------------------------------------------------------
