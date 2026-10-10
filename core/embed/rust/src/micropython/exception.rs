@@ -111,6 +111,7 @@ pub mod builtin {
     wrap_builtin!(MemoryError, mp_type_MemoryError);
     wrap_builtin!(NotImplementedError, mp_type_NotImplementedError);
     wrap_builtin!(OverflowError, mp_type_OverflowError);
+    wrap_builtin!(OSError, mp_type_OSError);
     wrap_builtin!(RuntimeError, mp_type_RuntimeError);
     wrap_builtin!(TypeError, mp_type_TypeError);
     wrap_builtin!(ValueError, mp_type_ValueError);

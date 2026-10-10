@@ -2,12 +2,14 @@ use core::convert::{Infallible, TryInto};
 use core::ffi::CStr;
 use core::num::TryFromIntError;
 
+use rtl::error::Error as RtlError;
+
 use super::exception::{builtin, Exception};
 use super::obj::Obj;
 use super::qstr::Attribute;
 
 #[allow(clippy::enum_variant_names)] // We mimic the Python exception classnames here.
-#[derive(Debug)]
+#[cfg_attr(test, derive(Debug))]
 pub enum Error {
     TypeError,
     OutOfRange,
@@ -21,6 +23,7 @@ pub enum Error {
     ValueErrorParam(&'static CStr, Obj),
     RuntimeError(&'static CStr),
     NotImplementedError,
+    OSError(RtlError),
     Exception(Exception),
 }
 
@@ -46,6 +49,7 @@ impl Error {
             Error::EOFError => Exception::new(builtin::EOFError, &[]),
             Error::RuntimeError(msg) => Exception::new_with_arg(builtin::RuntimeError, msg),
             Error::NotImplementedError => Exception::new(builtin::NotImplementedError, &[]),
+            Error::OSError(e) => Exception::new_with_arg(builtin::OSError, e.to_str()),
             Error::Exception(exception) => exception,
         }
     }
