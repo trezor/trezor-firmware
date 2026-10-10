@@ -273,6 +273,11 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         ctx.set_page_count(self.pager().total());
+        if matches!(event, Event::Attach(_)) && self.shift_active {
+            // The layout is (re)started - "Shift" is not held anymore.
+            self.shift_active = false;
+            self.update_buttons(ctx);
+        }
         if let Some(menu_nav) = self.menu_nav {
             if let Some(msg) = self.event_menu_nav(ctx, event, menu_nav) {
                 return Some(msg);
