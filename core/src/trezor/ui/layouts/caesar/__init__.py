@@ -606,24 +606,20 @@ async def confirm_payment_request(
                     refund_account_items,
                 )
             )
-        if menu_items:
-            with trezorui_api.confirm_with_info(
-                title=title,
-                items=[(TR.words__provider, True), (recipient_name, False)],
-                verb=TR.buttons__continue,
-                external_menu=True,
-            ) as main_layout:
+        with trezorui_api.confirm_properties(
+            title=title,
+            items=with_colon([(TR.words__provider, recipient_name, True)]),
+            verb=TR.buttons__continue,
+            external_menu=bool(menu_items),
+        ) as main_layout:
+            if menu_items:
                 await confirm_with_menu(
                     main_layout,
                     _menu_with_cancel(menu_items, TR.buttons__cancel_sign),
                     "confirm_payment_request",
                 )
-        else:
-            await confirm_properties(
-                "confirm_payment_request",
-                title,
-                [(TR.words__provider, recipient_name, True)],
-            )
+            else:
+                await raise_if_not_confirmed(main_layout, "confirm_payment_request")
 
     # Allow GC to free the objects allocated above.
     await _task()
@@ -815,64 +811,75 @@ async def confirm_blob(
         hold=hold,
         chunkify=chunkify,
     ) as layout:
-        if ask_pagination and layout.page_count() > 1:
-            assert not hold
-            return await _confirm_ask_pagination(
-                br_name,
-                title,
-                data,
-                description or "",
-                br_code,
-                extra_confirmation_if_not_read,
-            )
-        else:
+        if not ask_pagination or layout.page_count() <= 1:
             return await raise_if_not_confirmed(layout, br_name, br_code)
+
+    await _confirm_ask_pagination(
+        br_name,
+        title,
+        data,
+        description,
+        verb=verb,
+        hold=hold,
+        br_code=br_code,
+        chunkify=chunkify,
+        # a text (not an icon) labels the cancel menu item
+        cancel=verb_cancel if verb_cancel and len(verb_cancel) > 1 else None,
+        extra_confirmation_if_not_read=extra_confirmation_if_not_read,
+    )
 
 
 async def _confirm_ask_pagination(
     br_name: str,
     title: str,
     data: StrOrBytes,
-    description: str,
+    description: str | None,
+    *,
+    verb: str | None,
+    hold: bool,
     br_code: ButtonRequestType,
-    extra_confirmation_if_not_read: bool = False,
+    chunkify: bool,
+    cancel: str | None,
+    extra_confirmation_if_not_read: bool,
 ) -> None:
-    data = utils.hexlify_if_bytes(data)
+    """Long content paginated on a single screen. Confirming it without reading
+    all the pages is in the menu."""
+    from trezor.ui.layouts.menu import MenuLeaf, MenuResult, interact_with_menu
 
-    with trezorui_api.confirm_more(
+    async def skip_review() -> bool:
+        return True
+
+    menu = _menu_with_cancel(
+        [MenuLeaf(TR.sign_message__confirm_without_review, skip_review)], cancel
+    )
+    with trezorui_api.confirm_value(
         title=title,
-        button=TR.buttons__confirm,
-        items=[(description, False), (data, True)],
-    ) as confirm_more_layout:
+        description=description,
+        value=data,
+        verb=verb or TR.buttons__confirm,
+        hold=hold,
+        chunkify=chunkify,
+        info=True,  # menu with the choice to skip the review
+    ) as layout:
         while True:
-            if not await should_show_more(
-                title,
-                para=[(description, False), (data, True)],
-                br_name=br_name,
-                br_code=br_code,
-            ):
-                if extra_confirmation_if_not_read:
-                    try:
-                        await confirm_value(
-                            title,
-                            TR.sign_message__confirm_without_review,
-                            None,
-                            br_name=br_name,
-                            br_code=br_code,
-                            verb=TR.buttons__confirm,
-                            verb_cancel="^",
-                            hold=True,
-                            is_data=False,
-                        )
-                    except ActionCancelled:
-                        continue
+            result = await interact_with_menu(layout, menu, br_name, br_code)
+            if not isinstance(result, MenuResult) or not extra_confirmation_if_not_read:
                 return
-
-            result = await interact(confirm_more_layout, br_name, br_code, None)
-            if result is trezorui_api.CANCELLED:
-                continue
-            else:
-                break
+            try:
+                await confirm_value(
+                    title,
+                    TR.sign_message__confirm_without_review,
+                    None,
+                    br_name=br_name,
+                    br_code=br_code,
+                    verb=TR.buttons__confirm,
+                    verb_cancel="^",
+                    hold=True,
+                    is_data=False,
+                )
+            except ActionCancelled:
+                continue  # back to the content
+            return
 
 
 def confirm_address(
@@ -2297,27 +2304,57 @@ async def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> None:
-    with trezorui_api.confirm_modify_fee(
-        title=title,
-        sign=sign,
-        user_fee_change=user_fee_change,
-        total_fee_new=total_fee_new,
-        fee_rate_amount=fee_rate_amount,
-    ) as layout:
-        return await raise_if_not_confirmed(
-            layout, "modify_fee", ButtonRequestType.SignTx
+    from trezor.ui.layouts.menu import confirm_with_menu
+
+    if sign < 0:
+        description = TR.modify_fee__decrease_fee
+    elif sign > 0:
+        description = TR.modify_fee__increase_fee
+    else:
+        description, user_fee_change = TR.modify_fee__no_change, ""
+    items: list[PropertyType] = [
+        (description, user_fee_change or None, True),
+        (TR.modify_fee__transaction_fee, total_fee_new, True),
+    ]
+    menu_items = []
+    if fee_rate_amount:
+        menu_items.append(
+            create_info_menu_leaf(
+                TR.confirm_total__title_fee,
+                [(TR.modify_fee__fee_rate, fee_rate_amount, True)],
+            )
         )
+
+    with trezorui_api.confirm_properties(
+        title=TR.modify_fee__title,
+        items=items,
+        external_menu=bool(menu_items),
+    ) as layout:
+        if menu_items:
+            await confirm_with_menu(
+                layout,
+                _menu_with_cancel(menu_items),
+                "modify_fee",
+                ButtonRequestType.SignTx,
+            )
+        else:
+            await raise_if_not_confirmed(layout, "modify_fee", ButtonRequestType.SignTx)
 
 
 async def confirm_coinjoin(
     max_rounds: int, max_fee_per_vbyte: str, max_coordinator_fee_pct: str
 ) -> None:
-    with trezorui_api.confirm_coinjoin(
-        max_rounds=str(max_rounds),
-        max_feerate=max_fee_per_vbyte,
-        max_coordinator_fee_pct=max_coordinator_fee_pct,
-    ) as layout:
-        return await raise_if_not_confirmed(layout, "coinjoin_final", BR_CODE_OTHER)
+    await confirm_properties(
+        "coinjoin_final",
+        TR.coinjoin__title,
+        [
+            (TR.coinjoin__max_rounds, str(max_rounds), True),
+            (TR.coinjoin__max_mining_fee, max_fee_per_vbyte, True),
+            (TR.coinjoin__max_coordinator_fee_pct, max_coordinator_fee_pct, True),
+        ],
+        hold=True,
+        br_code=BR_CODE_OTHER,
+    )
 
 
 # TODO cleanup @ redesign
@@ -2406,6 +2443,7 @@ async def confirm_signverify(
                 TR.sign_message__confirm_message,
                 message,
                 br_code=BR_CODE_OTHER,
+                hold=not verify,
                 ask_pagination=True,
                 # signing without reading the whole message is held to confirm
                 extra_confirmation_if_not_read=not verify,

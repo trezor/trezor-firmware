@@ -579,15 +579,6 @@ impl ButtonLayout {
         )
     }
 
-    /// Left text and WIDE right arrow.
-    pub fn text_none_arrow_wide(text: TString<'static>) -> Self {
-        Self::new(
-            Some(ButtonDetails::from_text_possible_icon(text)),
-            None,
-            Some(ButtonDetails::down_arrow_icon_wide()),
-        )
-    }
-
     /// Only right text.
     pub fn none_none_text(text: TString<'static>) -> Self {
         Self::new(
@@ -615,39 +606,12 @@ impl ButtonLayout {
         )
     }
 
-    /// Up arrow left and right text.
-    pub fn up_arrow_none_text(text: TString<'static>) -> Self {
-        Self::new(
-            Some(ButtonDetails::up_arrow_icon()),
-            None,
-            Some(ButtonDetails::from_text_possible_icon(text)),
-        )
-    }
-
     /// Cancel cross on left and right arrow.
     pub fn cancel_none_arrow() -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             None,
             Some(ButtonDetails::right_arrow_icon()),
-        )
-    }
-
-    /// Cancel cross on left and right arrow facing down.
-    pub fn cancel_none_arrow_wide() -> Self {
-        Self::new(
-            Some(ButtonDetails::cancel_icon()),
-            None,
-            Some(ButtonDetails::down_arrow_icon_wide()),
-        )
-    }
-
-    /// Up arrow on left and right arrow facing down.
-    pub fn up_arrow_none_arrow_wide() -> Self {
-        Self::new(
-            Some(ButtonDetails::up_arrow_icon()),
-            None,
-            Some(ButtonDetails::down_arrow_icon_wide()),
         )
     }
 
@@ -761,15 +725,6 @@ impl ButtonActions {
         )
     }
 
-    /// Previous with left, confirming with right
-    pub fn prev_none_confirm() -> Self {
-        Self::new(
-            Some(ButtonAction::PrevPage),
-            None,
-            Some(ButtonAction::Confirm),
-        )
-    }
-
     /// Previous with left, confirming with middle
     pub fn prev_confirm_none() -> Self {
         Self::new(
@@ -813,15 +768,6 @@ impl ButtonActions {
         )
     }
 
-    /// Cancelling with left, going to the next page with right
-    pub fn cancel_none_next() -> Self {
-        Self::new(
-            Some(ButtonAction::Cancel),
-            None,
-            Some(ButtonAction::NextPage),
-        )
-    }
-
     /// Only going to the next page with right
     pub fn none_none_next() -> Self {
         Self::new(None, None, Some(ButtonAction::NextPage))
@@ -830,11 +776,6 @@ impl ButtonActions {
     /// Only going to the next page with middle
     pub fn none_next_none() -> Self {
         Self::new(None, Some(ButtonAction::NextPage), None)
-    }
-
-    /// Only going to the prev page with left
-    pub fn prev_none_none() -> Self {
-        Self::new(Some(ButtonAction::PrevPage), None, None)
     }
 
     /// Cancelling with left, confirming with right
@@ -852,15 +793,6 @@ impl ButtonActions {
             Some(ButtonAction::Cancel),
             Some(ButtonAction::Confirm),
             Some(ButtonAction::NextPage),
-        )
-    }
-
-    /// Cancelling with left and confirming with middle
-    pub fn cancel_confirm_none() -> Self {
-        Self::new(
-            Some(ButtonAction::Cancel),
-            Some(ButtonAction::Confirm),
-            None,
         )
     }
 

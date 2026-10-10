@@ -404,23 +404,21 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
         yield
         self.debug.press_yes()
 
+        # paginate through the whole message and confirm it
         br = yield
-        # "Show all" from the menu
-        self.debug.press_left()
-        self.debug.button_actions.navigate_to_menu_item(0)
-
-        # paginate through the whole message
-        br = yield
-        # TODO: try load the message_read the same way as in UI bolt (T)
-        if br.pages is not None:
-            for i in range(br.pages):
-                if i < br.pages - 1:
-                    self.debug.swipe_up()
+        layouts: list[LayoutContent] = []
+        assert br.pages is not None
+        for i in range(br.pages):
+            layouts.append(self.debug.read_layout())
+            if i < br.pages - 1:
+                self.debug.swipe_up()
+        self.message_read = multipage_content(layouts)
         self.debug.press_yes()
 
-        # confirm message
-        yield
-        self.debug.press_yes()
+        if self.verify:
+            # "The signature is valid!" screen
+            br = yield
+            self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         # collect screen contents into `message_read`.
@@ -1626,9 +1624,8 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         yield  # modify amount - amount
         self.debug.press_right()
         yield  # modify fee
-        self.debug.press_right()
-        self.debug.press_right()
-        self.debug.press_right()
+        for _ in range(self.debug.read_layout().page_count()):
+            self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield  # confirm txid
