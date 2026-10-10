@@ -1379,6 +1379,31 @@ def sign_tx_go_to_info_caesar(
 
 
 class InputFlowSignTxBackFromAmount(InputFlowBase):
+    def input_flow_caesar(self) -> BRGeneratorType:
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.press_right()
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__amount + " #1" in layout.title()
+        # "Shift" + right button goes back
+        self.debug.press_right_with_shift()
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.press_right()
+
+        yield
+        self.debug.read_layout()
+        self.debug.press_right()
+
+        yield
+        self.debug.read_layout()
+        self.debug.press_yes()
+
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
         layout = self.debug.read_layout()
@@ -1435,6 +1460,19 @@ class InputFlowSignTxBackFromAmount(InputFlowBase):
 
 
 class InputFlowSignTxCancelFromAmount(InputFlowBase):
+    def input_flow_caesar(self) -> BRGeneratorType:
+        yield  # confirm address
+        self.debug.read_layout()
+        self.debug.press_right()
+
+        yield  # amount screen
+        layout = self.debug.read_layout()
+        assert TR.words__amount + " #1" in layout.title()
+        # cancel is the last menu item
+        self.debug.press_left()
+        menu = self.debug.synchronize_at("SimpleChoice")
+        self.debug.button_actions.navigate_to_menu_item(menu.page_count() - 1)
+
     def input_flow_delizia(self) -> BRGeneratorType:
         yield  # confirm address
         layout = self.debug.read_layout()
