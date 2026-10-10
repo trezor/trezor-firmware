@@ -91,7 +91,8 @@ where
     }
 
     /// "Shift" is offered also on the first page, where it goes back to the
-    /// previous screen of the flow - the screen returns `PageMsg::Cancelled`.
+    /// previous screen of the flow - the screen returns `PageMsg::Cancelled`,
+    /// which is `BACK` for MicroPython.
     /// Only for `MenuNav::Menu` and `MenuNav::ChoiceMenu`, where the left
     /// button does not cancel.
     pub fn with_back_on_first_page(mut self) -> Self {
@@ -107,6 +108,12 @@ where
     pub fn with_next_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.next_btn_details = btn_details;
         self
+    }
+
+    /// Whether `PageMsg::Cancelled` means going back to the previous screen
+    /// (see `with_back_on_first_page`) rather than cancelling.
+    pub fn cancelled_is_back(&self) -> bool {
+        self.back_on_first_page && self.menu_nav != Some(MenuNav::Close)
     }
 
     /// Basically just determining whether the right button for

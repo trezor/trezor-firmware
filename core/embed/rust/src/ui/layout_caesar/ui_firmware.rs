@@ -24,7 +24,8 @@ use crate::ui::component::text::paragraphs::{
 };
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
-    Component, ComponentExt, Empty, FlowMsg, FormattedText, Never, PageMsg, Paginate, Timeout,
+    Component, ComponentExt, Empty, FlowMsg, FormattedText, LineBreaking, Never, PageMsg, Paginate,
+    Timeout,
 };
 use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
@@ -75,6 +76,7 @@ impl FirmwareUI for UICaesar {
             verb_cancel,
             hold,
             external_menu,
+            false,
         )
     }
 
@@ -98,8 +100,11 @@ impl FirmwareUI for UICaesar {
                 if chunkify {
                     ops.add_chunkify_text(None);
                 }
-                ops.add_text_with_font(label, fonts::FONT_NORMAL)
-                    .add_newline();
+                // the label is a text, breaking only at whitespace
+                ops.add_line_breaking(LineBreaking::BreakAtWhitespace)
+                    .add_text_with_font(label, fonts::FONT_NORMAL)
+                    .add_newline()
+                    .add_line_breaking(theme::TEXT_MONO_DATA.line_breaking);
             }
             if chunkify {
                 // Chunkifying the address into smaller pieces when requested
@@ -148,7 +153,7 @@ impl FirmwareUI for UICaesar {
         _page_counter: bool,
         _prompt_screen: bool,
         _cancel: bool,
-        _back_button: bool,
+        back_button: bool,
         _footer: Option<(TString<'static>, bool)>,
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -176,6 +181,7 @@ impl FirmwareUI for UICaesar {
             verb_cancel,
             hold,
             external_menu,
+            back_button,
         )
     }
 
@@ -224,6 +230,7 @@ impl FirmwareUI for UICaesar {
             TR::buttons__hold_to_confirm.into(),
             None,
             true,
+            false,
             false,
         )
     }
@@ -345,6 +352,7 @@ impl FirmwareUI for UICaesar {
             Some("".into()),
             false,
             false,
+            false,
         )
     }
 
@@ -371,6 +379,7 @@ impl FirmwareUI for UICaesar {
             paragraphs,
             TR::buttons__confirm.into(),
             Some("".into()),
+            false,
             false,
             false,
         )
@@ -404,6 +413,7 @@ impl FirmwareUI for UICaesar {
             Some("<".into()),
             false,
             false,
+            false,
         )
     }
 
@@ -430,6 +440,7 @@ impl FirmwareUI for UICaesar {
             Some("".into()),
             hold,
             external_menu,
+            false,
         )
     }
 
@@ -453,7 +464,15 @@ impl FirmwareUI for UICaesar {
             .add_text_with_font(TR::reset__tos_link, fonts::FONT_BOLD);
         let formatted = FormattedText::new(ops).vertically_centered();
 
-        content_in_button_page(title, formatted, button, Some("".into()), false, false)
+        content_in_button_page(
+            title,
+            formatted,
+            button,
+            Some("".into()),
+            false,
+            false,
+            false,
+        )
     }
 
     fn confirm_summary(
@@ -605,6 +624,7 @@ impl FirmwareUI for UICaesar {
             paragraphs.into_paragraphs(),
             button,
             Some("".into()),
+            false,
             false,
             false,
         )?;
@@ -998,6 +1018,7 @@ impl FirmwareUI for UICaesar {
             None,
             false,
             false,
+            false,
         )
     }
 
@@ -1374,8 +1395,10 @@ const DOWN_ARROW: &str = "V";
 /// Has optional title (supply empty `TString` for that) and hold-to-confirm
 /// functionality.
 ///
-/// With `external_menu`, the left button opens the context menu. Otherwise, an
-/// empty `verb_cancel` puts a cross cancelling the flow on the left.
+/// With `external_menu`, the left button opens the context menu, and with
+/// `back_button` also "Shift" + right button on the first page goes back to the
+/// previous screen. Otherwise, an empty `verb_cancel` puts a cross cancelling
+/// the flow on the left.
 fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     title: TString<'static>,
     content: T,
@@ -1383,6 +1406,7 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     verb_cancel: Option<TString<'static>>,
     hold: bool,
     external_menu: bool,
+    back_button: bool,
 ) -> Result<impl LayoutMaybeTrace, Error> {
     // Right button - down arrow, text or nothing.
     // Optional HoldToConfirm
@@ -1400,6 +1424,9 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     let mut content = ButtonPage::new(content, theme::BG).with_confirm_btn(confirm_btn);
     if external_menu {
         content = content.with_menu_nav(MenuNav::Menu);
+        if back_button {
+            content = content.with_back_on_first_page();
+        }
     } else if verb_cancel.is_some_and(|verb_cancel| verb_cancel.is_empty()) {
         content = content.with_menu_nav(MenuNav::Close);
     } else {

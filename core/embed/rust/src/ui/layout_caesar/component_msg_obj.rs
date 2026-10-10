@@ -40,6 +40,7 @@ where
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             PageMsg::Confirmed => Ok(CONFIRMED.as_obj()),
+            PageMsg::Cancelled if self.cancelled_is_back() => Ok(BACK.as_obj()),
             PageMsg::Cancelled => Ok(CANCELLED.as_obj()),
             PageMsg::Info => Ok(INFO.as_obj()),
             _ => Err(Error::TypeError),

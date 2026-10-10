@@ -393,10 +393,12 @@ async def show_address(
         )
     )
 
+    # shown above the address
+    address_label = "\n".join(line for line in (network, warning) if line)
     with trezorui_api.confirm_address(
         title=title,
         address=address,
-        address_label=None,
+        address_label=address_label or None,
         info_button=True,
         chunkify=chunkify,
     ) as layout:
@@ -423,6 +425,7 @@ async def show_pubkey(
         br_name=br_name,
         br_code=ButtonRequestType.PublicKey,
         mismatch_title=mismatch_title,
+        warning=warning,
         chunkify=False,
     )
 
@@ -612,7 +615,7 @@ async def confirm_payment_request(
             ) as main_layout:
                 await confirm_with_menu(
                     main_layout,
-                    _menu_with_cancel(menu_items),
+                    _menu_with_cancel(menu_items, TR.buttons__cancel_sign),
                     "confirm_payment_request",
                 )
         else:
@@ -657,10 +660,13 @@ async def confirm_output(
     address_label: str | None = None,
     output_index: int | None = None,
     chunkify: bool = False,
-    source_account: str | None = None,  # ignored on safe 3
-    source_account_path: str | None = None,  # ignored on safe 3
+    source_account: str | None = None,
+    source_account_path: str | None = None,
 ) -> None:
-    title = title or TR.send__confirm_sending  # def_arg
+    from trezor.ui.layouts.menu import interact_with_menu
+
+    from ..common import confirm_linear_flow
+
     address_title = TR.words__recipient
     if output_index is not None:
         address_title += f" #{output_index + 1}"
@@ -668,39 +674,47 @@ async def confirm_output(
     if output_index is not None:
         amount_title += f" #{output_index + 1}"
 
-    while True:
-        with trezorui_api.confirm_address(
-            title=address_title,
-            address=address,
-            address_label=address_label or None,
-            verb=TR.buttons__continue,
-            info_button=False,
-            chunkify=chunkify,
-        ) as layout:
-            await interact(
-                layout,
-                "confirm_output",
-                br_code,
+    account_items: list[StrPropertyType] = []
+    if source_account:
+        account_items.append((TR.words__wallet, source_account, None))
+    if source_account_path and source_account_path != source_account:
+        # the reason for this check is account_label in bitcoin/sign_tx/layout.py
+        # which can return the derivation path instead of the account
+        account_items.append(
+            (TR.address_details__derivation_path, source_account_path, None)
+        )
+    menu_items = []
+    if account_items:
+        menu_items.append(
+            create_info_menu_leaf(
+                TR.address_details__account_info, with_colon(account_items)
             )
+        )
+    menu = _menu_with_cancel(menu_items)
 
-        try:
-            with trezorui_api.confirm_value(
-                title=amount_title,
-                value=amount,
-                description=None,
-                verb_cancel="^",
-                verb=TR.buttons__confirm,
-            ) as layout:
-                await interact(
-                    layout,
-                    "confirm_output",
-                    br_code,
-                )
-        except ActionCancelled:
-            # if the user cancels here, go back to confirm_value
-            continue
-        else:
-            return
+    address_ctx = trezorui_api.confirm_address(
+        title=address_title,
+        address=address,
+        address_label=address_label or None,
+        verb=TR.buttons__continue,
+        info_button=True,
+        chunkify=chunkify,
+    )
+    # "Shift" + right button goes back to the address
+    amount_ctx = trezorui_api.confirm_value(
+        title=amount_title,
+        value=amount,
+        description=None,
+        verb=TR.buttons__confirm,
+        external_menu=True,
+        back_button=True,
+    )
+
+    with address_ctx as address_layout, amount_ctx as amount_layout:
+        await confirm_linear_flow(
+            lambda: interact_with_menu(address_layout, menu, "confirm_output", br_code),
+            lambda: interact_with_menu(amount_layout, menu, "confirm_output", br_code),
+        )
 
 
 async def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> ui.UiResult:
@@ -874,8 +888,25 @@ def confirm_address(
     info_items: Iterable[StrPropertyType] | None = None,
     info_title: str | None = None,
 ) -> Awaitable[None]:
+    br_name = br_name or "confirm_address"  # def_arg
+    if info_items:
+        return _confirm_value_with_menu(
+            br_name,
+            br_code,
+            subtitle or title,
+            address,
+            [
+                create_info_menu_leaf(
+                    info_title or TR.words__title_information,
+                    with_colon(info_items),
+                )
+            ],
+            description=with_colon(description),
+            verb=verb or TR.buttons__confirm,
+            chunkify=chunkify,
+        )
     return confirm_blob(
-        br_name or "confirm_address",
+        br_name,
         subtitle or title,
         address,
         description,
@@ -933,6 +964,7 @@ async def confirm_properties(
         title=title,
         items=items,
         hold=hold,
+        verb=verb,
     ) as layout:
         return await raise_if_not_confirmed(
             layout,
@@ -956,8 +988,12 @@ async def confirm_value(
     chunkify: bool = False,
     chunkify_info: bool = False,
     cancel: bool = False,
+    cancel_text: str | None = None,
 ) -> None:
-    """General confirmation dialog, used by many other confirm_* functions."""
+    """General confirmation dialog, used by many other confirm_* functions.
+
+    `info_items` are shown in the menu, `cancel_text` labels its cancel item.
+    """
 
     if description and value:
         description = with_colon(description)
@@ -981,25 +1017,7 @@ async def confirm_value(
                 br_code,
             )
 
-    from trezor.ui.layouts.menu import confirm_with_menu, leaf_from_layout
-
-    if chunkify:
-        main_ctx = trezorui_api.confirm_address(
-            title=title,
-            address=value,
-            address_label=None,
-            verb=verb or TR.buttons__confirm,
-            info_button=True,
-            chunkify=chunkify,
-        )
-    else:
-        main_ctx = trezorui_api.confirm_with_info(
-            title=title,
-            subtitle=description,
-            items=((value, False),),
-            verb=verb or TR.buttons__confirm,
-            external_menu=True,
-        )
+    from trezor.ui.layouts.menu import leaf_from_layout
 
     def item_factory(
         info_title: str, info_value: str
@@ -1014,12 +1032,21 @@ async def confirm_value(
             chunkify=chunkify_info,
         )
 
-    menu = _menu_with_cancel(
-        leaf_from_layout(name or "", item_factory(name or "", value or ""))
-        for name, value, _is_data in info_items
+    await _confirm_value_with_menu(
+        br_name,
+        br_code,
+        title,
+        value,
+        [
+            leaf_from_layout(name or "", item_factory(name or "", value or ""))
+            for name, value, _is_data in info_items
+        ],
+        description=description,
+        verb=verb or TR.buttons__confirm,
+        is_data=is_data,
+        chunkify=chunkify,
+        cancel=cancel_text,
     )
-    with main_ctx as main:
-        return await confirm_with_menu(main, menu, br_name, br_code)
 
 
 async def confirm_total(
@@ -1086,7 +1113,7 @@ async def confirm_trade(
     ]
     for k, v in extra_menu_items:
         menu_items.append(create_info_menu_leaf(k, v))
-    menu = _menu_with_cancel(menu_items)
+    menu = _menu_with_cancel(menu_items, TR.buttons__cancel_sign)
 
     with trade_ctx as trade_layout:
         await confirm_with_menu(trade_layout, menu, "confirm_trade")
@@ -1236,9 +1263,7 @@ if not utils.BITCOIN_ONLY:
             False,
         )
 
-        account_items: tuple[StrPropertyType] | None = None
-        if account_path:
-            account_items = ((TR.address_details__derivation_path, account_path, None),)
+        account_items = _account_info_items(account, account_path)
 
         await _confirm_summary(
             "confirm_ethereum_approve",
@@ -1249,7 +1274,7 @@ if not utils.BITCOIN_ONLY:
             title=TR.words__title_summary,
             info=(
                 (TR.confirm_total__title_fee, with_colon(fee_info_items)),
-                (TR.address_details__account_info, with_colon(account_items)),
+                (TR.address_details__account_info, account_items),
             ),
             br_code=BR_CODE_OTHER,
         )
@@ -1330,8 +1355,8 @@ if not utils.BITCOIN_ONLY:
         intro_question: str,
         verb: str,
         total_amount: str,
-        _account: str | None,
-        _account_path: str | None,
+        account: str | None,
+        account_path: str | None,
         maximum_fee: str,
         address: str,
         address_title: str,
@@ -1342,15 +1367,16 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from ..properties import with_colon
 
-        await confirm_value(
-            title,
-            intro_question,
-            "",
+        await _confirm_value_with_menu(
             br_name,
             br_code,
+            title,
+            intro_question,
+            [create_info_menu_leaf(address_title, address)]
+            + _account_info_leaves(account, account_path),
             verb=verb,
-            info_items=((address_title, address, None),),
-            chunkify_info=chunkify,
+            is_data=False,
+            cancel=TR.buttons__cancel_sign,
         )
 
         # confirmation
@@ -1393,25 +1419,15 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from ..properties import with_colon
 
-        account_properties: list[StrPropertyType] = []
-        if account:
-            account_properties.append((TR.words__account, account, None))
-        if account_path:
-            account_properties.append(
-                (TR.address_details__derivation_path, account_path, None)
-            )
-
-        await confirm_value(
-            title=title,
-            value=intro_question,
-            is_data=False,
-            description=None,
+        await _confirm_value_with_menu(
+            f"{br_name}/intro",
+            br_code,
+            title,
+            intro_question,
+            _account_info_leaves(account, account_path),
             verb=TR.buttons__continue,
-            chunkify=False,
-            info_items=account_properties if account_properties else None,
-            cancel=True,
-            br_name=f"{br_name}/intro",
-            br_code=br_code,
+            is_data=False,
+            cancel=TR.buttons__cancel_sign,
         )
 
         await confirm_value(
@@ -1493,25 +1509,15 @@ if not utils.BITCOIN_ONLY:
 
         from ..properties import with_colon
 
-        account_properties: list[StrPropertyType] = []
-        if account:
-            account_properties.append((TR.words__account, account, None))
-        if account_path:
-            account_properties.append(
-                (TR.address_details__derivation_path, account_path, None)
-            )
-
-        await confirm_value(
-            title=title,
-            value=intro_question,
-            is_data=False,
-            description=None,
+        await _confirm_value_with_menu(
+            f"{br_name}/intro",
+            br_code,
+            title,
+            intro_question,
+            _account_info_leaves(account, account_path),
             verb=TR.buttons__continue,
-            chunkify=False,
-            info_items=account_properties if account_properties else None,
-            cancel=True,
-            br_name=f"{br_name}/intro",
-            br_code=br_code,
+            is_data=False,
+            cancel=TR.buttons__cancel_sign,
         )
 
         await confirm_properties(
@@ -1740,8 +1746,11 @@ if not utils.BITCOIN_ONLY:
             external_menu=True,
         )
         menu = _menu_with_cancel(
-            create_info_menu_leaf(name or "", value or "")
-            for name, value, _is_data in items
+            (
+                create_info_menu_leaf(name or "", value or "")
+                for name, value, _is_data in items
+            ),
+            TR.buttons__cancel_sign,
         )
         with main_ctx as main:
             await confirm_with_menu(main, menu, br_name, br_code)
@@ -1792,8 +1801,8 @@ if not utils.BITCOIN_ONLY:
     async def confirm_ethereum_tx(
         recipient: str | None,
         total_amount: str,
-        _account: str | None,
-        _account_path: str | None,
+        account: str | None,
+        account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[StrPropertyType],
         is_send: bool,
@@ -1804,6 +1813,7 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from trezor.ui.layouts.menu import interact_with_menu
 
+        from ..common import confirm_linear_flow
         from ..properties import with_colon
 
         if native_amount is not None:
@@ -1811,43 +1821,49 @@ if not utils.BITCOIN_ONLY:
             # show it next to the token amount so it can't be signed unseen.
             total_amount = f"{total_amount}\n{native_amount}"
 
-        menu = _menu_with_cancel(
+        if is_send:
+            title = TR.words__recipient
+        else:
+            title = TR.ethereum__contract_address if recipient else ""
+
+        recipient_menu = _menu_with_cancel(
+            _account_info_leaves(account, account_path), TR.buttons__cancel_sign
+        )
+        summary_menu = _menu_with_cancel(
             [
                 create_info_menu_leaf(
                     TR.confirm_total__title_fee, with_colon(fee_info_items)
                 )
             ]
         )
-        with trezorui_api.confirm_summary(
-            amount=total_amount,
-            amount_label=with_colon(TR.words__amount),
-            fee=maximum_fee,
-            fee_label=with_colon(TR.send__maximum_fee),
-            back_button=True,
-            external_menu=True,
-        ) as summary_layout:
-            if is_send:
-                title = TR.words__recipient
-            else:
-                title = TR.ethereum__contract_address if recipient else ""
 
-            while True:
-                # Allowing going back and forth between recipient and summary/details
-                await confirm_blob(
-                    br_name,
-                    title,
-                    recipient or TR.ethereum__new_contract,
-                    verb=TR.buttons__continue,
-                    br_code=br_code,
-                    chunkify=(chunkify if recipient else False),
+        async def _recipient() -> trezorui_api.UiResult:
+            with trezorui_api.confirm_value(
+                title=title,
+                value=recipient or TR.ethereum__new_contract,
+                description=None,
+                is_data=bool(recipient),
+                verb=TR.buttons__continue,
+                chunkify=chunkify if recipient else False,
+                external_menu=True,
+            ) as layout:
+                return await interact_with_menu(
+                    layout, recipient_menu, br_name, br_code
                 )
 
-                # going back to the recipient returns CANCELLED
-                result = await interact_with_menu(
-                    summary_layout, menu, br_name, br_code, raise_on_cancel=None
-                )
-                if result is CONFIRMED:
-                    break
+        async def _summary() -> trezorui_api.UiResult:
+            # "Shift" + right button goes back to the recipient
+            with trezorui_api.confirm_summary(
+                amount=total_amount,
+                amount_label=with_colon(TR.words__amount),
+                fee=maximum_fee,
+                fee_label=with_colon(TR.send__maximum_fee),
+                back_button=True,
+                external_menu=True,
+            ) as layout:
+                return await interact_with_menu(layout, summary_menu, br_name, br_code)
+
+        await confirm_linear_flow(_recipient, _summary)
 
     async def confirm_stellar_tx(
         fee: str,
@@ -1977,24 +1993,15 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "tron/claim",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        account_properties: list[StrPropertyType] = []
-        if account:
-            account_properties.append((TR.words__account, account, None))
-        if account_path:
-            account_properties.append(
-                (TR.address_details__derivation_path, account_path, None)
-            )
-        await confirm_value(
-            title=title,
-            value=intro_question,
-            is_data=False,
-            description=None,
-            chunkify=False,
+        await _confirm_value_with_menu(
+            br_name,
+            br_code,
+            title,
+            intro_question,
+            _account_info_leaves(account, account_path),
             verb=TR.buttons__confirm,
-            info_items=account_properties,
-            cancel=True,
-            br_name=br_name,
-            br_code=br_code,
+            is_data=False,
+            cancel=TR.buttons__cancel_sign,
         )
 
     async def confirm_tron_summary(
@@ -2654,13 +2661,68 @@ def create_info_menu_leaf(
     )
 
 
-def _menu_with_cancel(items: Iterable[MenuLeaf[R]]) -> Menu[R]:
-    """Context menu with the given items, and the last one cancelling the flow."""
+def _menu_with_cancel(
+    items: Iterable[MenuLeaf[R]], cancel: str | None = None
+) -> Menu[R]:
+    """Context menu with the given items, and the last one cancelling the flow
+    (labelled `cancel`, "Cancel" by default)."""
     from trezor.ui.layouts.menu import Menu, cancel_leaf
 
     items = list(items)
-    items.append(cancel_leaf(TR.buttons__cancel))
+    items.append(cancel_leaf(cancel or TR.buttons__cancel))
     return Menu(items)
+
+
+def _account_info_items(
+    account: str | None, account_path: str | None
+) -> list[StrPropertyType]:
+    items: list[StrPropertyType] = []
+    if account:
+        items.append((TR.words__account, account, None))
+    if account_path:
+        items.append((TR.address_details__derivation_path, account_path, None))
+    return with_colon(items)
+
+
+def _account_info_leaves(
+    account: str | None, account_path: str | None
+) -> list[MenuLeaf[None]]:
+    """ "Account info" menu item, if there is any."""
+    items = _account_info_items(account, account_path)
+    if not items:
+        return []
+    return [create_info_menu_leaf(TR.address_details__account_info, items)]
+
+
+async def _confirm_value_with_menu(
+    br_name: str,
+    br_code: ButtonRequestType,
+    title: str,
+    value: str,
+    menu_items: Iterable[MenuLeaf[None]],
+    *,
+    description: str | None = None,
+    verb: str | None = None,
+    is_data: bool = True,
+    chunkify: bool = False,
+    cancel: str | None = None,
+) -> None:
+    """Value confirmed by the right button, with `menu_items` and a cancel item
+    in the menu."""
+    from trezor.ui.layouts.menu import confirm_with_menu
+
+    with trezorui_api.confirm_value(
+        title=title,
+        value=value,
+        description=description,
+        verb=verb or TR.buttons__confirm,
+        is_data=is_data,
+        chunkify=chunkify,
+        external_menu=True,
+    ) as layout:
+        await confirm_with_menu(
+            layout, _menu_with_cancel(menu_items, cancel), br_name, br_code
+        )
 
 
 async def _confirm_summary(
