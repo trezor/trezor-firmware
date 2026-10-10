@@ -222,9 +222,9 @@ class Unit:
         """Put the nRF on a known application image; False without a J-Link.
 
         Only the pages the image covers are erased: MCUboot, custom_data and
-        the bond storage stay. The image must carry signatures the unit's
-        MCUboot accepts, which the check after the reset proves: MCUboot that
-        refuses an image never leaves its own code.
+        the bond storage stay. The image is verified after writing; whether
+        it starts is checked after the reset, when the nRF is not held in
+        MCUboot (see below).
         """
         if not self.nrf_jlink:
             return False
@@ -236,19 +236,27 @@ class Unit:
             f.flush()
             self._nrfjprog("--program", f.name, "--sectorerase", "--verify")
         self._nrfjprog("--reset")
-        time.sleep(2)
-        # Halts the core for one register read, then lets it run on.
-        regs = self._nrfjprog("--readregs")
-        self._nrfjprog("--run")
-        m = re.search(r"PC:\s*0x([0-9A-Fa-f]+)", regs)
-        if m is None:
-            raise UnitError(f"could not read the nRF PC:\n{regs}")
-        pc = int(m.group(1), 16)
-        if not NRF_SLOT <= pc < NRF_SLOT + NRF_SLOT_SIZE:
-            raise UnitError(
-                f"nRF did not start {label} ({version}): PC 0x{pc:05x} is outside "
-                "the application slot (MCUboot refused the image?)"
+        # An erased STM leaves the nRF's STAY_IN_BLD line floating, and
+        # MCUboot may then wait in serial recovery instead of starting the
+        # application; the STM's next boot resets the nRF properly. So an nRF
+        # still in MCUboot is noted, not failed: the image itself is verified.
+        in_app = False
+        for _ in range(3):
+            time.sleep(1)
+            # Halts the core for one register read, then lets it run on.
+            regs = self._nrfjprog("--readregs")
+            self._nrfjprog("--run")
+            m = re.search(r"PC:\s*0x([0-9A-Fa-f]+)", regs)
+            if m is not None and int(m.group(1), 16) >= NRF_SLOT:
+                in_app = True
+                break
+        if not in_app:
+            self.step(
+                f"nRF set to {label} ({version}), but it waits in MCUboot "
+                "(STAY_IN_BLD floats while the STM is erased)",
+                screenshot=False,
             )
+            return True
         self.step(f"nRF set to {label} ({version}) over J-Link", screenshot=False)
         return True
 
