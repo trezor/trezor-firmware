@@ -441,6 +441,12 @@ impl Component for ButtonController {
         // We are matching event with `Event::Button` for a button action
         // and `Event::Timer` for getting the expiration of HTC.
         match event {
+            // The layout is (re)started, e.g. when going back to it. Button events
+            // that happened in the meantime went elsewhere, so forget the presses.
+            Event::Attach(_) => {
+                self.reset_state(ctx);
+                None
+            }
             Event::Button(button_event) => {
                 let (new_state, event) = match self.state {
                     // _ _
