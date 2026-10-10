@@ -75,7 +75,7 @@ impl FirmwareUI for UICaesar {
             verb.unwrap_or(TString::empty()),
             verb_cancel,
             hold,
-            external_menu,
+            external_menu.then_some(MenuNav::Menu),
             false,
         )
     }
@@ -147,7 +147,7 @@ impl FirmwareUI for UICaesar {
         _subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
-        _info: bool,
+        info: bool,
         hold: bool,
         chunkify: bool,
         _page_counter: bool,
@@ -180,7 +180,14 @@ impl FirmwareUI for UICaesar {
             verb.unwrap_or(TR::buttons__confirm.into()),
             verb_cancel,
             hold,
-            external_menu,
+            // `info` is a menu with choices how to continue the flow
+            if external_menu {
+                Some(MenuNav::Menu)
+            } else if info {
+                Some(MenuNav::ChoiceMenu)
+            } else {
+                None
+            },
             back_button,
         )
     }
@@ -207,32 +214,12 @@ impl FirmwareUI for UICaesar {
     }
 
     fn confirm_coinjoin(
-        max_rounds: TString<'static>,
-        max_feerate: TString<'static>,
-        max_coordinator_fee_pct: TString<'static>,
+        _max_rounds: TString<'static>,
+        _max_feerate: TString<'static>,
+        _max_coordinator_fee_pct: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = Paragraphs::new([
-            // Decreasing bottom padding between paragraphs to fit one screen:
-            Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_rounds).with_bottom_padding(2),
-            Paragraph::new(&theme::TEXT_MONO, max_rounds),
-            Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_mining_fee)
-                .with_bottom_padding(2)
-                .no_break(),
-            Paragraph::new(&theme::TEXT_MONO, max_feerate).with_bottom_padding(2),
-            // Shown in a separate screen:
-            Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_coordinator_fee_pct),
-            Paragraph::new(&theme::TEXT_MONO, max_coordinator_fee_pct),
-        ]);
-
-        content_in_button_page(
-            TR::coinjoin__title.into(),
-            paragraphs,
-            TR::buttons__hold_to_confirm.into(),
-            None,
-            true,
-            false,
-            false,
-        )
+        // Composed in Python from `confirm_properties`.
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_emphasized(
@@ -321,39 +308,13 @@ impl FirmwareUI for UICaesar {
 
     fn confirm_modify_fee(
         _title: TString<'static>,
-        sign: i32,
-        user_fee_change: TString<'static>,
-        total_fee_new: TString<'static>,
-        fee_rate_amount: Option<TString<'static>>,
+        _sign: i32,
+        _user_fee_change: TString<'static>,
+        _total_fee_new: TString<'static>,
+        _fee_rate_amount: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let (description, change) = match sign {
-            s if s < 0 => (TR::modify_fee__decrease_fee, user_fee_change),
-            s if s > 0 => (TR::modify_fee__increase_fee, user_fee_change),
-            _ => (TR::modify_fee__no_change, "".into()),
-        };
-
-        let mut paragraphs_vec = ParagraphVecShort::new();
-        paragraphs_vec
-            .add(Paragraph::new(&theme::TEXT_BOLD, description))
-            .add(Paragraph::new(&theme::TEXT_MONO, change))
-            .add(Paragraph::new(&theme::TEXT_BOLD, TR::modify_fee__transaction_fee).no_break())
-            .add(Paragraph::new(&theme::TEXT_MONO, total_fee_new));
-
-        if let Some(fee_rate_amount) = fee_rate_amount {
-            paragraphs_vec
-                .add(Paragraph::new(&theme::TEXT_BOLD, TR::modify_fee__fee_rate).no_break())
-                .add(Paragraph::new(&theme::TEXT_MONO, fee_rate_amount));
-        }
-
-        content_in_button_page(
-            TR::modify_fee__title.into(),
-            paragraphs_vec.into_paragraphs(),
-            TR::buttons__confirm.into(),
-            Some("".into()),
-            false,
-            false,
-            false,
-        )
+        // Composed in Python from `confirm_properties`.
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_modify_output(
@@ -378,43 +339,23 @@ impl FirmwareUI for UICaesar {
             TR::modify_amount__title.into(),
             paragraphs,
             TR::buttons__confirm.into(),
-            Some("".into()),
+            // going back to the address
+            Some("^".into()),
             false,
-            false,
+            None,
             false,
         )
     }
 
     fn confirm_more(
-        title: TString<'static>,
-        button: TString<'static>,
+        _title: TString<'static>,
+        _button: TString<'static>,
         _button_style_confirm: bool,
         _hold: bool,
-        items: Obj,
+        _items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut paragraphs = ParagraphVecLong::new();
-
-        for para in IterBuf::new().try_iterate(items)? {
-            let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
-            let is_data = is_data.try_into()?;
-            let style: &TextStyle = if is_data {
-                &theme::TEXT_MONO_DATA
-            } else {
-                &theme::TEXT_NORMAL
-            };
-            let text: TString = text.try_into()?;
-            paragraphs.add(Paragraph::new(style, text));
-        }
-
-        content_in_button_page(
-            title,
-            paragraphs.into_paragraphs(),
-            button,
-            Some("<".into()),
-            false,
-            false,
-            false,
-        )
+        // Long content is paginated in a single screen on this model.
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_properties(
@@ -439,7 +380,7 @@ impl FirmwareUI for UICaesar {
             button_text,
             Some("".into()),
             hold,
-            external_menu,
+            external_menu.then_some(MenuNav::Menu),
             false,
         )
     }
@@ -470,7 +411,7 @@ impl FirmwareUI for UICaesar {
             button,
             Some("".into()),
             false,
-            false,
+            None,
             false,
         )
     }
@@ -625,7 +566,7 @@ impl FirmwareUI for UICaesar {
             button,
             Some("".into()),
             false,
-            false,
+            None,
             false,
         )?;
         LayoutObj::new_root(layout)
@@ -672,52 +613,16 @@ impl FirmwareUI for UICaesar {
         verb: TString<'static>,
         items: Gc<List>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        // Cache the page count so that we can move `items` into the closure.
-        let page_count = items.len();
-
-        // Closure to lazy-load the information on given page index.
-        // Done like this to allow arbitrarily many pages without
-        // the need of any allocation here in Rust.
-        let get_page = move |page_index| {
-            let item_obj = unwrap!(items.get(page_index));
-            let text = unwrap!(TString::try_from(item_obj));
-
-            let (btn_layout, btn_actions) = if page_count == 1 {
-                // There is only one page
-                (
-                    ButtonLayout::cancel_none_text(verb),
-                    ButtonActions::cancel_none_confirm(),
-                )
-            } else if page_index == 0 {
-                // First page
-                (
-                    ButtonLayout::cancel_none_arrow_wide(),
-                    ButtonActions::cancel_none_next(),
-                )
-            } else if page_index == page_count - 1 {
-                // Last page
-                (
-                    ButtonLayout::up_arrow_none_text(verb),
-                    ButtonActions::prev_none_confirm(),
-                )
-            } else {
-                // Page in the middle
-                (
-                    ButtonLayout::up_arrow_none_arrow_wide(),
-                    ButtonActions::prev_none_next(),
-                )
-            };
-
-            let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-            ops.add_text_with_font(text, fonts::FONT_NORMAL);
-            let formatted = FormattedText::new(ops).vertically_centered();
-
-            Page::new(btn_layout, btn_actions, formatted)
-        };
-
-        let pages = FlowPages::new(get_page, page_count);
-        let layout = RootComponent::new(Flow::new(pages).with_common_title(title));
-        Ok(layout)
+        // Each item on its own page.
+        let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+        for (i, item) in IterBuf::new().try_iterate(items.into())?.enumerate() {
+            if i > 0 {
+                ops.add_next_page();
+            }
+            ops.add_text_with_font(TString::try_from(item)?, fonts::FONT_NORMAL);
+        }
+        let formatted = FormattedText::new(ops).vertically_centered();
+        content_in_button_page(title, formatted, verb, Some("".into()), false, None, false)
     }
 
     fn prompt_backup() -> Result<impl LayoutMaybeTrace, Error> {
@@ -1017,7 +922,7 @@ impl FirmwareUI for UICaesar {
             TR::buttons__continue.into(),
             None,
             false,
-            false,
+            None,
             false,
         )
     }
@@ -1395,17 +1300,17 @@ const DOWN_ARROW: &str = "V";
 /// Has optional title (supply empty `TString` for that) and hold-to-confirm
 /// functionality.
 ///
-/// With `external_menu`, the left button opens the context menu, and with
-/// `back_button` also "Shift" + right button on the first page goes back to the
-/// previous screen. Otherwise, an empty `verb_cancel` puts a cross cancelling
-/// the flow on the left.
+/// With `menu`, the left button opens the context menu, and with `back_button`
+/// also "Shift" + right button on the first page goes back to the previous
+/// screen. Otherwise, an empty `verb_cancel` puts a cross cancelling the flow
+/// on the left.
 fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     title: TString<'static>,
     content: T,
     verb: TString<'static>,
     verb_cancel: Option<TString<'static>>,
     hold: bool,
-    external_menu: bool,
+    menu: Option<MenuNav>,
     back_button: bool,
 ) -> Result<impl LayoutMaybeTrace, Error> {
     // Right button - down arrow, text or nothing.
@@ -1422,8 +1327,8 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     }
 
     let mut content = ButtonPage::new(content, theme::BG).with_confirm_btn(confirm_btn);
-    if external_menu {
-        content = content.with_menu_nav(MenuNav::Menu);
+    if let Some(menu) = menu {
+        content = content.with_menu_nav(menu);
         if back_button {
             content = content.with_back_on_first_page();
         }
