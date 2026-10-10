@@ -272,6 +272,42 @@ def nrf_push_record(elf: Path) -> list[str] | None:
     return lines
 
 
+# STM32U5 USB_OTG_HS, through both aliases: which one answers depends on the
+# firmware's TrustZone setup (the other reads as zero).
+_OTG_HS = {"ns": 0x42040000, "s": 0x52040000}
+
+
+def usb_controller_state() -> str:
+    """The STM's USB device controller, decoded: whether the firmware
+    connected to the bus at all (DCTL.SDIS clear) and whether a host
+    enumerated it (DCFG.DAD, the address it was given)."""
+    if probe_holder is not None:
+        return f"not read: SWD probe held by {probe_holder}"
+    parts = []
+    for name, base in _OTG_HS.items():
+        try:
+            core = read_memory(base, 0x40)
+            dev = read_memory(base + 0x800, 0x10)
+        except ScreenError as e:
+            parts.append(f"{name}: unreadable ({e})")
+            continue
+        u32 = lambda b, off: int.from_bytes(b[off : off + 4], "little")  # noqa: E731
+        gotgctl, gccfg = u32(core, 0x00), u32(core, 0x38)
+        dcfg, dctl, dsts = u32(dev, 0x0), u32(dev, 0x4), u32(dev, 0x8)
+        if not (gotgctl | gccfg | dcfg | dctl | dsts):
+            parts.append(f"{name}: all zero")
+            continue
+        parts.append(
+            f"{name}: soft-disconnect {'ON' if dctl & 0x2 else 'off'}, "
+            f"address {(dcfg >> 4) & 0x7F}, "
+            f"{'suspended' if dsts & 0x1 else 'not suspended'}, "
+            f"B-session {'valid' if gotgctl & (1 << 19) else 'invalid'} "
+            f"(GOTGCTL {gotgctl:#010x} GCCFG {gccfg:#010x} DCFG {dcfg:#010x} "
+            f"DCTL {dctl:#010x} DSTS {dsts:#010x})"
+        )
+    return "; ".join(parts)
+
+
 def _read_cfbar() -> tuple[int, int]:
     """(register address that answered, its value)."""
     errors = []

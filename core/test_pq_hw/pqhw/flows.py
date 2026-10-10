@@ -114,6 +114,13 @@ def wait_firmware(unit: Unit, timeout: float = REBOOT) -> TrezorTestContext:
                 except UnitError:
                     if time.monotonic() >= deadline:
                         unit.step("the firmware did not come up on USB in time")
+                        # Which side is at fault: the host, or a firmware
+                        # that never connected to the bus.
+                        unit.step(f"host USB: {host_usb_devices()}", screenshot=False)
+                        unit.step(
+                            f"STM USB controller: {screen.usb_controller_state()}",
+                            screenshot=False,
+                        )
                         raise
                     screens.tick()
     finally:

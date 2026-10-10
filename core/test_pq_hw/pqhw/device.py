@@ -68,6 +68,29 @@ def describe_resetreas(value: int) -> str:
     return f"0x{value:08x} ({', '.join(causes) or 'none'})"
 
 
+def host_usb_devices() -> str:
+    """Every SatoshiLabs device the host sees, whatever its interfaces: tells a
+    unit that is not on the bus from one the transports do not recognise."""
+    import usb1
+
+    seen = []
+    try:
+        with usb1.USBContext() as ctx:
+            for dev in ctx.getDeviceIterator(skip_on_error=True):
+                if dev.getVendorID() != 0x1209:
+                    continue
+                desc = f"{dev.getVendorID():04x}:{dev.getProductID():04x}"
+                desc += f" bus {dev.getBusNumber()} addr {dev.getDeviceAddress()}"
+                try:
+                    desc += f" '{dev.getProduct()}'"
+                except Exception:
+                    pass
+                seen.append(desc)
+    except Exception as e:
+        return f"enumeration failed: {type(e).__name__}: {e}"
+    return ", ".join(seen) or "none"
+
+
 def nrf_image_version(image: bytes) -> str:
     """MCUboot image header version: major.minor.revision."""
     magic = struct.unpack_from("<I", image, 0)[0]
