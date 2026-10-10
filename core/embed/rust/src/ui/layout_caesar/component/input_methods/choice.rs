@@ -136,12 +136,24 @@ where
     /// Need to update the initial button layout.
     pub fn with_initial_page_counter(mut self, page_counter: usize) -> Self {
         self.page_counter = page_counter;
+        self.reset_initial_buttons();
+        self
+    }
+
+    /// Adjust the choice factory at the very beginning.
+    /// Need to update the initial button layout.
+    pub fn with_choice_factory(mut self, adjust: impl FnOnce(&mut F)) -> Self {
+        adjust(&mut self.choices);
+        self.reset_initial_buttons();
+        self
+    }
+
+    fn reset_initial_buttons(&mut self) {
         let initial_btn_layout = self.get_current_item().btn_layout();
         self.buttons = Child::new(
             ButtonController::new(initial_btn_layout)
                 .with_ignore_btn_delay(constant::IGNORE_OTHER_BTN_MS),
         );
-        self
     }
 
     pub fn with_controls(mut self, controls: ChoiceControls) -> Self {

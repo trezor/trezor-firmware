@@ -4,8 +4,8 @@ use heapless::Vec;
 
 use super::component::{
     AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, ChoiceControls,
-    CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen,
-    NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords, ShowMore,
+    CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen, MenuNav,
+    NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords,
     SimpleChoice, WordlistEntry, WordlistType, SIMPLE_CHOICE_MAX_LENGTH,
 };
 use super::{constant, fonts, theme, UICaesar};
@@ -24,9 +24,10 @@ use crate::ui::component::text::paragraphs::{
 };
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
-    Component, ComponentExt, Empty, FlowMsg, FormattedText, Label, LineBreaking, Never, PageMsg,
-    Paginate, Timeout,
+    Component, ComponentExt, Empty, FlowMsg, FormattedText, LineBreaking, Never, PageMsg, Paginate,
+    Timeout,
 };
+use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
@@ -50,7 +51,7 @@ impl FirmwareUI for UICaesar {
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = {
             let action = action.unwrap_or("".into());
@@ -74,6 +75,7 @@ impl FirmwareUI for UICaesar {
             verb.unwrap_or(TString::empty()),
             verb_cancel,
             hold,
+            external_menu.then_some(MenuNav::Menu),
             false,
         )
     }
@@ -89,19 +91,7 @@ impl FirmwareUI for UICaesar {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
         let address: TString = address.try_into()?;
 
-        let get_page = move |page_index| {
-            assert!(page_index == 0);
-            let (btn_layout, btn_actions) = if info_button {
-                (
-                    ButtonLayout::cancel_armed_info(verb),
-                    ButtonActions::cancel_confirm_info(),
-                )
-            } else {
-                (
-                    ButtonLayout::cancel_none_text(verb),
-                    ButtonActions::cancel_none_confirm(),
-                )
-            };
+        let address_ops = move || {
             let mut ops = OpTextLayout::new(theme::TEXT_MONO_DATA);
             if let Some(label) = address_label {
                 // NOTE: need to explicitly turn off the chunkification before rendering the
@@ -110,21 +100,32 @@ impl FirmwareUI for UICaesar {
                 if chunkify {
                     ops.add_chunkify_text(None);
                 }
-                ops.add_text_with_font(label, fonts::FONT_NORMAL)
-                    .add_newline();
+                // the label is a text, breaking only at whitespace
+                ops.add_line_breaking(LineBreaking::BreakAtWhitespace)
+                    .add_text_with_font(label, fonts::FONT_NORMAL)
+                    .add_newline()
+                    .add_line_breaking(theme::TEXT_MONO_DATA.line_breaking);
             }
             if chunkify {
                 // Chunkifying the address into smaller pieces when requested
                 ops.add_chunkify_text(Some((theme::MONO_CHUNKS, 2)));
             }
             ops.add_text_with_font(address, fonts::FONT_MONO);
-            let formatted = FormattedText::new(ops).vertically_centered();
-            Page::new(btn_layout, btn_actions, formatted).with_title(title)
+            FormattedText::new(ops).vertically_centered()
         };
-        let pages = FlowPages::new(get_page, 1);
 
-        let obj = LayoutObj::new(Flow::new(pages))?;
-        Ok(obj)
+        // The info is in the context menu, opened by the left button. Without
+        // it, the left button cancels.
+        let menu_nav = if info_button {
+            MenuNav::Menu
+        } else {
+            MenuNav::Close
+        };
+        let content = ButtonPage::new(address_ops(), theme::BG)
+            .with_menu_nav(menu_nav)
+            .with_confirm_btn(Some(ButtonDetails::text(verb)));
+        let frame = ScrollableFrame::new(content).with_title(title);
+        LayoutObj::new(frame)
     }
 
     fn confirm_trade(
@@ -146,15 +147,15 @@ impl FirmwareUI for UICaesar {
         _subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
-        _info: bool,
+        info: bool,
         hold: bool,
         chunkify: bool,
         _page_counter: bool,
         _prompt_screen: bool,
         _cancel: bool,
-        _back_button: bool,
+        back_button: bool,
         _footer: Option<(TString<'static>, bool)>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
@@ -179,7 +180,15 @@ impl FirmwareUI for UICaesar {
             verb.unwrap_or(TR::buttons__confirm.into()),
             verb_cancel,
             hold,
-            false,
+            // `info` is a menu with choices how to continue the flow
+            if external_menu {
+                Some(MenuNav::Menu)
+            } else if info {
+                Some(MenuNav::ChoiceMenu)
+            } else {
+                None
+            },
+            back_button,
         )
     }
 
@@ -205,31 +214,12 @@ impl FirmwareUI for UICaesar {
     }
 
     fn confirm_coinjoin(
-        max_rounds: TString<'static>,
-        max_feerate: TString<'static>,
-        max_coordinator_fee_pct: TString<'static>,
+        _max_rounds: TString<'static>,
+        _max_feerate: TString<'static>,
+        _max_coordinator_fee_pct: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = Paragraphs::new([
-            // Decreasing bottom padding between paragraphs to fit one screen:
-            Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_rounds).with_bottom_padding(2),
-            Paragraph::new(&theme::TEXT_MONO, max_rounds),
-            Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_mining_fee)
-                .with_bottom_padding(2)
-                .no_break(),
-            Paragraph::new(&theme::TEXT_MONO, max_feerate).with_bottom_padding(2),
-            // Shown in a separate screen:
-            Paragraph::new(&theme::TEXT_BOLD, TR::coinjoin__max_coordinator_fee_pct),
-            Paragraph::new(&theme::TEXT_MONO, max_coordinator_fee_pct),
-        ]);
-
-        content_in_button_page(
-            TR::coinjoin__title.into(),
-            paragraphs,
-            TR::buttons__hold_to_confirm.into(),
-            None,
-            true,
-            false,
-        )
+        // Composed in Python from `confirm_properties`.
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_emphasized(
@@ -305,68 +295,26 @@ impl FirmwareUI for UICaesar {
 
     fn confirm_firmware_update(
         description: TString<'static>,
-        fingerprint: TString<'static>,
+        _fingerprint: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        use super::component::bl_confirm::Confirm;
-        let title = TR::firmware_update__title;
-        let message = Label::left_aligned(description, theme::TEXT_NORMAL).vertically_centered();
-        let fingerprint = Label::left_aligned(
-            fingerprint,
-            theme::TEXT_NORMAL.with_line_breaking(LineBreaking::BreakWordsNoHyphen),
-        )
-        .vertically_centered();
-
-        let layout = RootComponent::new(
-            Confirm::new(
-                theme::BG,
-                title.into(),
-                message,
-                None,
-                TR::buttons__install.as_tstring(),
-                false,
-            )
-            .with_info_screen(
-                TR::firmware_update__title_fingerprint.as_tstring(),
-                fingerprint,
-            ),
-        );
-        Ok(layout)
+        // The fingerprint is shown in the context menu.
+        let paragraphs = Paragraph::new(&theme::TEXT_NORMAL, description).into_paragraphs();
+        let content = ButtonPage::new(paragraphs, theme::BG)
+            .with_menu_nav(MenuNav::Menu)
+            .with_confirm_btn(Some(ButtonDetails::text(TR::buttons__install.into())));
+        let frame = ScrollableFrame::new(content).with_title(TR::firmware_update__title.into());
+        Ok(RootComponent::new(frame))
     }
 
     fn confirm_modify_fee(
         _title: TString<'static>,
-        sign: i32,
-        user_fee_change: TString<'static>,
-        total_fee_new: TString<'static>,
-        fee_rate_amount: Option<TString<'static>>,
+        _sign: i32,
+        _user_fee_change: TString<'static>,
+        _total_fee_new: TString<'static>,
+        _fee_rate_amount: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let (description, change) = match sign {
-            s if s < 0 => (TR::modify_fee__decrease_fee, user_fee_change),
-            s if s > 0 => (TR::modify_fee__increase_fee, user_fee_change),
-            _ => (TR::modify_fee__no_change, "".into()),
-        };
-
-        let mut paragraphs_vec = ParagraphVecShort::new();
-        paragraphs_vec
-            .add(Paragraph::new(&theme::TEXT_BOLD, description))
-            .add(Paragraph::new(&theme::TEXT_MONO, change))
-            .add(Paragraph::new(&theme::TEXT_BOLD, TR::modify_fee__transaction_fee).no_break())
-            .add(Paragraph::new(&theme::TEXT_MONO, total_fee_new));
-
-        if let Some(fee_rate_amount) = fee_rate_amount {
-            paragraphs_vec
-                .add(Paragraph::new(&theme::TEXT_BOLD, TR::modify_fee__fee_rate).no_break())
-                .add(Paragraph::new(&theme::TEXT_MONO, fee_rate_amount));
-        }
-
-        content_in_button_page(
-            TR::modify_fee__title.into(),
-            paragraphs_vec.into_paragraphs(),
-            TR::buttons__confirm.into(),
-            Some("".into()),
-            false,
-            false,
-        )
+        // Composed in Python from `confirm_properties`.
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_modify_output(
@@ -391,41 +339,23 @@ impl FirmwareUI for UICaesar {
             TR::modify_amount__title.into(),
             paragraphs,
             TR::buttons__confirm.into(),
-            Some("".into()),
+            // going back to the address
+            Some("^".into()),
             false,
+            None,
             false,
         )
     }
 
     fn confirm_more(
-        title: TString<'static>,
-        button: TString<'static>,
+        _title: TString<'static>,
+        _button: TString<'static>,
         _button_style_confirm: bool,
         _hold: bool,
-        items: Obj,
+        _items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut paragraphs = ParagraphVecLong::new();
-
-        for para in IterBuf::new().try_iterate(items)? {
-            let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
-            let is_data = is_data.try_into()?;
-            let style: &TextStyle = if is_data {
-                &theme::TEXT_MONO_DATA
-            } else {
-                &theme::TEXT_NORMAL
-            };
-            let text: TString = text.try_into()?;
-            paragraphs.add(Paragraph::new(style, text));
-        }
-
-        content_in_button_page(
-            title,
-            paragraphs.into_paragraphs(),
-            button,
-            Some("<".into()),
-            false,
-            false,
-        )
+        // Long content is paginated in a single screen on this model.
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_properties(
@@ -450,7 +380,8 @@ impl FirmwareUI for UICaesar {
             button_text,
             Some("".into()),
             hold,
-            external_menu,
+            external_menu.then_some(MenuNav::Menu),
+            false,
         )
     }
 
@@ -474,7 +405,15 @@ impl FirmwareUI for UICaesar {
             .add_text_with_font(TR::reset__tos_link, fonts::FONT_BOLD);
         let formatted = FormattedText::new(ops).vertically_centered();
 
-        content_in_button_page(title, formatted, button, Some("".into()), false, false)
+        content_in_button_page(
+            title,
+            formatted,
+            button,
+            Some("".into()),
+            false,
+            None,
+            false,
+        )
     }
 
     fn confirm_summary(
@@ -484,139 +423,58 @@ impl FirmwareUI for UICaesar {
         fee_label: TString<'static>,
         title: Option<TString<'static>>,
         account_items: Option<Obj>,
-        account_title: Option<TString<'static>>,
+        _account_title: Option<TString<'static>>,
         extra_items: Option<Obj>,
-        extra_title: Option<TString<'static>>,
-        verb_cancel: Option<TString<'static>>,
-        _back_button: bool,
-        external_menu: bool, // TODO: will eventually replace the internal menu
+        _extra_title: Option<TString<'static>>,
+        _verb_cancel: Option<TString<'static>>,
+        back_button: bool,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        // collect available info pages
-        let mut info_pages: Vec<(TString, Obj), 2> = Vec::new();
-        if let Some(info) = extra_items {
-            // put extra items first as it's typically used for fee info
-            let extra_title = extra_title.unwrap_or(TR::words__title_information.into());
-            unwrap!(info_pages.push((extra_title, info)));
-        }
-        if let Some(info) = account_items {
-            let account_title =
-                account_title.unwrap_or(TR::confirm_total__title_sending_from.into());
-            unwrap!(info_pages.push((account_title, info)));
-        }
-        if external_menu && !info_pages.is_empty() {
+        if account_items.is_some() || extra_items.is_some() {
+            // The information is shown in the context menu on this model.
             return Err(Error::NotImplementedError);
         }
 
-        // button layouts and actions
-        let verb_cancel: TString = verb_cancel.unwrap_or(TString::empty());
-        let btns_summary_page = move |has_pages_after: bool| -> (ButtonLayout, ButtonActions) {
-            // if there are no info pages, the right button is not needed
-            // if verb_cancel is "^", the left button is an arrow pointing up
-            let left_btn = Some(ButtonDetails::from_text_possible_icon(verb_cancel));
-            let right_btn = (has_pages_after || external_menu).then(ButtonDetails::info_icon);
-            let middle_btn = Some(ButtonDetails::armed_text(TR::buttons__confirm.into()));
-
-            (
-                ButtonLayout::new(left_btn, middle_btn, right_btn),
-                if has_pages_after {
-                    ButtonActions::cancel_confirm_next()
-                } else if external_menu {
-                    ButtonActions::cancel_confirm_info()
-                } else {
-                    ButtonActions::cancel_confirm_none()
-                },
-            )
-        };
-        let btns_info_page = |is_last: bool| -> (ButtonLayout, ButtonActions) {
-            // on the last info page, the right button is not needed
-            if is_last {
-                (
-                    ButtonLayout::arrow_none_none(),
-                    ButtonActions::prev_none_none(),
-                )
-            } else {
-                (
-                    ButtonLayout::arrow_none_arrow(),
-                    ButtonActions::prev_none_next(),
-                )
-            }
-        };
-
-        let total_pages = 1 + info_pages.len();
-        let get_page = move |page_index| {
-            match page_index {
-                0 => {
-                    // Total amount + fee
-                    let (btn_layout, btn_actions) = btns_summary_page(!info_pages.is_empty());
-
-                    let mut ops = OpTextLayout::new(theme::TEXT_MONO);
-                    if let Some(title) = title {
-                        ops.add_text_with_font(title, fonts::FONT_BOLD_UPPER)
-                            .add_newline();
-                    }
-
-                    let mut has_amount = false;
-                    if let Some(amount) = amount {
-                        if let Some(amount_label) = amount_label {
-                            has_amount = true;
-                            ops.add_text_with_font(amount_label, fonts::FONT_BOLD);
-                            if !amount_label.is_empty() && !amount.is_empty() {
-                                ops.add_newline();
-                            }
-                            ops.add_text_with_font(amount, fonts::FONT_MONO);
-                        }
-                    }
-
-                    if !fee_label.is_empty() || !fee.is_empty() {
-                        if has_amount {
-                            ops.add_newline();
-                        }
-                        ops.add_newline()
-                            .add_text_with_font(fee_label, fonts::FONT_BOLD)
-                            .add_newline()
-                            .add_text_with_font(fee, fonts::FONT_MONO);
-                    }
-
-                    let formatted = FormattedText::new(ops);
-                    Page::new(btn_layout, btn_actions, formatted)
+        let mut ops = OpTextLayout::new(theme::TEXT_MONO);
+        let mut has_amount = false;
+        if let Some(amount) = amount {
+            if let Some(amount_label) = amount_label {
+                has_amount = true;
+                ops.add_text_with_font(amount_label, fonts::FONT_BOLD);
+                if !amount_label.is_empty() && !amount.is_empty() {
+                    ops.add_newline();
                 }
-                i => {
-                    // Other info pages as provided
-                    let (title, info_obj) = &info_pages[i - 1];
-                    let is_last = i == total_pages - 1;
-                    let (btn_layout, btn_actions) = btns_info_page(is_last);
-
-                    let mut ops = OpTextLayout::new(theme::TEXT_MONO);
-                    let mut iter_buf = IterBuf::new();
-                    for item in unwrap!(iter_buf.try_iterate(*info_obj)) {
-                        let [key, value, _is_data]: [Obj; 3] = unwrap!(util::iter_into_array(item));
-                        if !ops.is_empty() {
-                            // Each key-value pair is on its own page
-                            ops.add_next_page();
-                        }
-                        ops.add_text_with_font(unwrap!(TString::try_from(key)), fonts::FONT_BOLD)
-                            .add_newline()
-                            .add_text_with_font(
-                                unwrap!(TString::try_from(value)),
-                                fonts::FONT_MONO,
-                            );
-                    }
-
-                    let formatted = FormattedText::new(ops).vertically_centered();
-                    Page::new(btn_layout, btn_actions, formatted)
-                        .with_slim_arrows()
-                        .with_title(*title)
-                }
+                ops.add_text_with_font(amount, fonts::FONT_MONO);
             }
-        };
-        let pages = FlowPages::new(get_page, total_pages);
+        }
+        if !fee_label.is_empty() || !fee.is_empty() {
+            if has_amount {
+                ops.add_newline();
+            }
+            ops.add_newline()
+                .add_text_with_font(fee_label, fonts::FONT_BOLD)
+                .add_newline()
+                .add_text_with_font(fee, fonts::FONT_MONO);
+        }
 
-        let layout = RootComponent::new(
-            Flow::new(pages)
-                .with_scrollbar(false)
-                .with_menu(external_menu),
+        // The info is in the context menu, opened by the left button. Without
+        // it, the left button cancels.
+        let mut content = ButtonPage::new(FormattedText::new(ops), theme::BG).with_confirm_btn(
+            Some(ButtonDetails::text(TR::buttons__hold_to_confirm.into()).with_default_duration()),
         );
-        Ok(layout)
+        if external_menu {
+            content = content.with_menu_nav(MenuNav::Menu);
+            if back_button {
+                content = content.with_back_on_first_page();
+            }
+        } else {
+            content = content.with_menu_nav(MenuNav::Close);
+        }
+        let mut frame = ScrollableFrame::new(content);
+        if let Some(title) = title {
+            frame = frame.with_title(title);
+        }
+        Ok(RootComponent::new(frame))
     }
 
     fn confirm_with_info(
@@ -625,7 +483,7 @@ impl FirmwareUI for UICaesar {
         items: Obj,
         verb: TString<'static>,
         verb_info: Option<TString<'static>>,
-        verb_cancel: Option<TString<'static>>,
+        _verb_cancel: Option<TString<'static>>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
@@ -638,7 +496,7 @@ impl FirmwareUI for UICaesar {
             let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
-                &theme::TEXT_MONO_DATA_WITH_CLASSIC_ELLIPSIS
+                &theme::TEXT_MONO_DATA
             } else {
                 &theme::TEXT_NORMAL
             };
@@ -649,16 +507,24 @@ impl FirmwareUI for UICaesar {
             }
         }
 
-        LayoutObj::new(Frame::new(
-            title,
-            ShowMore::<Paragraphs<ParagraphVecShort>>::new(
-                paragraphs.into_paragraphs(),
-                verb_cancel,
-                verb,
-                verb_info.unwrap_or_else(TString::empty),
-            )
-            .with_menu(external_menu),
-        ))
+        // The info, or the choice to show more (`verb_info`), is in the context
+        // menu, opened by the left button. Without it, the left button cancels.
+        let menu_nav = if external_menu {
+            MenuNav::Menu
+        } else if verb_info.is_some_and(|verb_info| !verb_info.is_empty()) {
+            MenuNav::ChoiceMenu
+        } else {
+            MenuNav::Close
+        };
+        let confirm_btn = if verb == TString::Str(DOWN_ARROW) {
+            ButtonDetails::scroll_down_wide()
+        } else {
+            ButtonDetails::text(verb)
+        };
+        let content = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
+            .with_menu_nav(menu_nav)
+            .with_confirm_btn(Some(confirm_btn));
+        LayoutObj::new(ScrollableFrame::new(content).with_title(title))
     }
 
     fn check_homescreen_format(image: BinaryData, _accept_toif: bool) -> bool {
@@ -700,6 +566,7 @@ impl FirmwareUI for UICaesar {
             button,
             Some("".into()),
             false,
+            None,
             false,
         )?;
         LayoutObj::new_root(layout)
@@ -746,82 +613,36 @@ impl FirmwareUI for UICaesar {
         verb: TString<'static>,
         items: Gc<List>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        // Cache the page count so that we can move `items` into the closure.
-        let page_count = items.len();
-
-        // Closure to lazy-load the information on given page index.
-        // Done like this to allow arbitrarily many pages without
-        // the need of any allocation here in Rust.
-        let get_page = move |page_index| {
-            let item_obj = unwrap!(items.get(page_index));
-            let text = unwrap!(TString::try_from(item_obj));
-
-            let (btn_layout, btn_actions) = if page_count == 1 {
-                // There is only one page
-                (
-                    ButtonLayout::cancel_none_text(verb),
-                    ButtonActions::cancel_none_confirm(),
-                )
-            } else if page_index == 0 {
-                // First page
-                (
-                    ButtonLayout::cancel_none_arrow_wide(),
-                    ButtonActions::cancel_none_next(),
-                )
-            } else if page_index == page_count - 1 {
-                // Last page
-                (
-                    ButtonLayout::up_arrow_none_text(verb),
-                    ButtonActions::prev_none_confirm(),
-                )
-            } else {
-                // Page in the middle
-                (
-                    ButtonLayout::up_arrow_none_arrow_wide(),
-                    ButtonActions::prev_none_next(),
-                )
-            };
-
-            let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-            ops.add_text_with_font(text, fonts::FONT_NORMAL);
-            let formatted = FormattedText::new(ops).vertically_centered();
-
-            Page::new(btn_layout, btn_actions, formatted)
-        };
-
-        let pages = FlowPages::new(get_page, page_count);
-        let layout = RootComponent::new(Flow::new(pages).with_common_title(title));
-        Ok(layout)
+        // Each item on its own page.
+        let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+        for (i, item) in IterBuf::new().try_iterate(items.into())?.enumerate() {
+            if i > 0 {
+                ops.add_next_page();
+            }
+            ops.add_text_with_font(TString::try_from(item)?, fonts::FONT_NORMAL);
+        }
+        let formatted = FormattedText::new(ops).vertically_centered();
+        content_in_button_page(title, formatted, verb, Some("".into()), false, None, false)
     }
 
     fn prompt_backup() -> Result<impl LayoutMaybeTrace, Error> {
-        let get_page = move |page_index| match page_index {
-            0 => {
-                let btn_layout = ButtonLayout::text_none_arrow_wide(TR::buttons__skip.into());
-                let btn_actions = ButtonActions::cancel_none_next();
-                let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-                ops.add_text_with_font(TR::backup__new_wallet_created, fonts::FONT_NORMAL)
-                    .add_newline()
-                    .add_text_with_font(TR::backup__it_should_be_backed_up_now, fonts::FONT_NORMAL);
-                let formatted = FormattedText::new(ops).vertically_centered();
-                Page::new(btn_layout, btn_actions, formatted)
-                    .with_title(TR::words__title_success.into())
-            }
-            1 => {
-                let btn_layout = ButtonLayout::up_arrow_none_text(TR::buttons__back_up.into());
-                let btn_actions = ButtonActions::prev_none_confirm();
-                let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-                ops.add_text_with_font(TR::backup__recover_anytime, fonts::FONT_NORMAL);
-                let formatted = FormattedText::new(ops).vertically_centered();
-                Page::new(btn_layout, btn_actions, formatted)
-                    .with_title(TR::backup__title_backup_wallet.into())
-            }
-            _ => unreachable!(),
-        };
-        let pages = FlowPages::new(get_page, 2);
+        let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+        ops.add_text_with_font(TR::backup__new_wallet_created, fonts::FONT_NORMAL)
+            .add_newline()
+            .add_text_with_font(TR::backup__it_should_be_backed_up_now, fonts::FONT_NORMAL)
+            .add_next_page()
+            .add_text_with_font(TR::backup__recover_anytime, fonts::FONT_NORMAL);
+        let formatted = FormattedText::new(ops).vertically_centered();
 
-        let layout = RootComponent::new(Flow::new(pages));
-        Ok(layout)
+        // Skipping the backup is in the context menu.
+        let content = ButtonPage::new(formatted, theme::BG)
+            .with_menu_nav(MenuNav::ChoiceMenu)
+            .with_confirm_btn(Some(ButtonDetails::text(TR::buttons__back_up.into())));
+        let frame = ScrollableFrame::new(content).with_page_titles([
+            TR::words__title_success.into(),
+            TR::backup__title_backup_wallet.into(),
+        ]);
+        Ok(RootComponent::new(frame))
     }
 
     fn request_bip39(
@@ -915,20 +736,22 @@ impl FirmwareUI for UICaesar {
         items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
         current: usize,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        // the entry's intent is not rendered on this model
-        let labels: heapless::Vec<TString<'static>, MAX_MENU_ITEMS> =
-            items.into_iter().map(|item| item.text).collect();
-        // Returning the index of the selected menu item
+        let labels: heapless::Vec<TString<'static>, SIMPLE_CHOICE_MAX_LENGTH> =
+            items.iter().map(|item| item.text).collect();
+        // the entry's intent is not rendered, it is only traced for the tests
+        let danger_items = items
+            .iter()
+            .map(|item| item.intent == MenuItemIntent::Danger)
+            .collect();
+        // Returning the index of the selected menu item. The select text is not
+        // used, the menu buttons show an arrow glyph instead.
         let layout = RootComponent::new(
-            SimpleChoice::new(
-                labels,
-                ChoiceControls::Cancellable,
-                TR::buttons__view.into(),
-            )
-            .with_initial_page_counter(current)
-            .with_show_incomplete()
-            .with_return_index()
-            .with_ignore_cancelled(),
+            SimpleChoice::new(labels, ChoiceControls::Cancellable, TString::empty())
+                .with_menu_buttons(danger_items)
+                .with_initial_page_counter(current)
+                .with_show_incomplete()
+                .with_return_index()
+                .with_ignore_cancelled(),
         );
         Ok(layout)
     }
@@ -985,18 +808,12 @@ impl FirmwareUI for UICaesar {
         address: TString<'static>,
         case_sensitive: bool,
         _details_title: TString<'static>,
-        account: Option<(TString<'static>, TString<'static>)>,
-        path: Option<(TString<'static>, TString<'static>)>,
-        xpubs: Obj,
+        _account: Option<(TString<'static>, TString<'static>)>,
+        _path: Option<(TString<'static>, TString<'static>)>,
+        _xpubs: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;
-
-        for i in IterBuf::new().try_iterate(xpubs)? {
-            let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
-            ad.add_xpub(xtitle, text)?;
-        }
-
-        let layout = RootComponent::new(ad);
+        // Only the QR code, the account information has its own menu item.
+        let layout = RootComponent::new(AddressDetails::new(address, case_sensitive)?);
         Ok(layout)
     }
 
@@ -1105,6 +922,7 @@ impl FirmwareUI for UICaesar {
             TR::buttons__continue.into(),
             None,
             false,
+            None,
             false,
         )
     }
@@ -1294,10 +1112,9 @@ impl FirmwareUI for UICaesar {
             }
         }
 
+        // Opened from the context menu, closed by the left button.
         let page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
-            .with_back_btn(Some(ButtonDetails::left_arrow_icon()))
-            .with_next_btn(Some(ButtonDetails::right_arrow_icon()))
-            .with_cancel_btn(Some(ButtonDetails::cancel_icon()))
+            .with_menu_nav(MenuNav::Close)
             .with_confirm_btn(None);
 
         let mut frame = ScrollableFrame::new(page);
@@ -1475,40 +1292,52 @@ impl FirmwareUI for UICaesar {
     }
 }
 
+/// Text of the confirm button showing a wide down arrow instead.
+const DOWN_ARROW: &str = "V";
+
 /// Function to create and call a `ButtonPage` dialog based on paginable content
 /// (e.g. `Paragraphs` or `FormattedText`).
 /// Has optional title (supply empty `TString` for that) and hold-to-confirm
 /// functionality.
+///
+/// With `menu`, the left button opens the context menu, and with `back_button`
+/// also "Shift" + right button on the first page goes back to the previous
+/// screen. Otherwise, an empty `verb_cancel` puts a cross cancelling the flow
+/// on the left.
 fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     title: TString<'static>,
     content: T,
     verb: TString<'static>,
     verb_cancel: Option<TString<'static>>,
     hold: bool,
-    external_menu: bool,
+    menu: Option<MenuNav>,
+    back_button: bool,
 ) -> Result<impl LayoutMaybeTrace, Error> {
-    // Left button - icon, text or nothing.
-    let cancel_btn = verb_cancel.map(ButtonDetails::from_text_possible_icon);
-
     // Right button - down arrow, text or nothing.
     // Optional HoldToConfirm
-    let mut confirm_btn = if !verb.is_empty() {
-        if verb == TString::Str("V") {
-            Some(ButtonDetails::down_arrow_icon_wide())
-        } else {
-            Some(ButtonDetails::text(verb))
-        }
-    } else {
+    let mut confirm_btn = if verb.is_empty() {
         None
+    } else if verb == TString::Str(DOWN_ARROW) {
+        Some(ButtonDetails::scroll_down_wide())
+    } else {
+        Some(ButtonDetails::text(verb))
     };
-    if hold && !external_menu {
+    if hold {
         confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
     }
 
-    let content = ButtonPage::new(content, theme::BG)
-        .with_cancel_btn(cancel_btn)
-        .with_confirm_btn(confirm_btn)
-        .with_menu(external_menu);
+    let mut content = ButtonPage::new(content, theme::BG).with_confirm_btn(confirm_btn);
+    if let Some(menu) = menu {
+        content = content.with_menu_nav(menu);
+        if back_button {
+            content = content.with_back_on_first_page();
+        }
+    } else if verb_cancel.is_some_and(|verb_cancel| verb_cancel.is_empty()) {
+        content = content.with_menu_nav(MenuNav::Close);
+    } else {
+        // Left button - back arrow, text or nothing.
+        content = content.with_cancel_btn(verb_cancel.map(ButtonDetails::from_text_possible_icon));
+    }
 
     let mut frame = ScrollableFrame::new(content);
     if !title.is_empty() {

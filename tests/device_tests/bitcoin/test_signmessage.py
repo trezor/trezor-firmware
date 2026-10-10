@@ -341,7 +341,7 @@ def test_signmessage_long(
         assert sig.signature.hex() == signature
 
 
-@pytest.mark.models("core", skip=["safe3"], reason="Not implemented")
+@pytest.mark.models("core")
 @pytest.mark.parametrize(
     "coin_name, path, script_type, no_script_type, address, message, signature", VECTORS
 )

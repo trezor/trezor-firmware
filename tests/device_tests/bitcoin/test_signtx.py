@@ -158,7 +158,7 @@ def test_one_one_fee(session: Session):
     )
 
 
-@pytest.mark.models("t3w1", "t3t1")
+@pytest.mark.models("safe3", "t3w1", "t3t1")
 def test_one_one_fee_back_from_amount(session: Session):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
@@ -212,7 +212,7 @@ def test_one_one_fee_back_from_amount(session: Session):
 
 
 @pytest.mark.models(
-    "t3t1", "t3w1", reason="Cannot cancel from Amount screen on Bolt & Caesar"
+    "safe3", "t3t1", "t3w1", reason="Cannot cancel from Amount screen on Bolt"
 )
 def test_one_one_fee_cancel_from_amount(session: Session):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5

@@ -2,7 +2,7 @@ use super::scrollbar::SCROLLBAR_SPACE;
 use super::title::Title;
 use super::{
     theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
-    CancelInfoConfirmMsg, FlowPages, Page, ScrollBar,
+    CancelConfirmMsg, FlowPages, Page, ScrollBar,
 };
 use crate::strutil::TString;
 use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx, Pad, Paginate};
@@ -32,8 +32,6 @@ where
     /// Possibly enforcing the second button to be ignored after some time after
     /// pressing the first button
     ignore_second_button_ms: Option<u32>,
-    #[cfg(feature = "ui_debug")]
-    has_menu: bool,
 }
 
 impl<F> Flow<F>
@@ -60,8 +58,6 @@ where
             return_confirmed_index: false,
             show_scrollbar: true,
             ignore_second_button_ms: None,
-            #[cfg(feature = "ui_debug")]
-            has_menu: false,
         }
     }
 
@@ -93,17 +89,6 @@ where
 
     pub fn confirmed_index(&self) -> Option<usize> {
         self.return_confirmed_index.then_some(self.page_counter)
-    }
-
-    #[cfg(feature = "ui_debug")]
-    pub fn with_menu(mut self, has_menu: bool) -> Self {
-        self.has_menu = has_menu;
-        self
-    }
-
-    #[cfg(not(feature = "ui_debug"))]
-    pub fn with_menu(self, _has_menu: bool) -> Self {
-        self
     }
 
     /// Getting new current page according to page counter.
@@ -219,7 +204,7 @@ impl<F> Component for Flow<F>
 where
     F: Fn(usize) -> Page,
 {
-    type Msg = CancelInfoConfirmMsg;
+    type Msg = CancelConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (title_content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
@@ -301,9 +286,8 @@ where
                         self.go_to_last_page(ctx);
                         return None;
                     }
-                    ButtonAction::Cancel => return Some(CancelInfoConfirmMsg::Cancelled),
-                    ButtonAction::Confirm => return Some(CancelInfoConfirmMsg::Confirmed),
-                    ButtonAction::Info => return Some(CancelInfoConfirmMsg::Info),
+                    ButtonAction::Cancel => return Some(CancelConfirmMsg::Cancelled),
+                    ButtonAction::Confirm => return Some(CancelConfirmMsg::Confirmed),
                 }
             }
         };
@@ -346,9 +330,5 @@ where
         t.child("scrollbar", &self.scrollbar);
         t.child("buttons", &self.buttons);
         t.child("flow_page", &self.current_page);
-        t.bool(
-            "has_menu",
-            self.has_menu && self.current_page.pager().is_last(),
-        );
     }
 }

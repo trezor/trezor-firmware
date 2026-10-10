@@ -297,8 +297,7 @@
       "reset__title_set_number_of_shares",
       "reset__total_number_of_shares_in_group_template",
       "send__to_the_total_amount",
-      "send__you_are_contributing",
-      "sign_message__message_size"
+      "send__you_are_contributing"
     ],
     "allowedLayouts": [ "Bolt", "Delizia", "Eckhart" ],
     "description": "These are specific to Bolt, Delizia, and Eckhart layouts"
