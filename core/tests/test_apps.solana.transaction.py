@@ -72,19 +72,6 @@ def write_instruction(w: Writer, instruction: RawInstruction) -> None:
     write_compact_bytes(w, data)
 
 
-def write_tx(
-    w: Writer,
-    header: Header,
-    accounts: Sequence[AnyBytes],
-    instructions: Sequence[RawInstruction] = (),
-    blockhash: AnyBytes = BLOCKHASH,
-) -> None:
-    write_tx_header(w, *header)
-    write_compact_array(w, accounts, write_bytes_unchecked)
-    write_bytes_unchecked(w, blockhash)
-    write_compact_array(w, instructions, write_instruction)
-
-
 def build_tx(
     header: Header,
     accounts: Sequence[AnyBytes],
@@ -92,7 +79,10 @@ def build_tx(
     blockhash: AnyBytes = BLOCKHASH,
 ) -> bytes:
     w = bytearray()
-    write_tx(w, header, accounts, instructions, blockhash)
+    write_tx_header(w, *header)
+    write_compact_array(w, accounts, write_bytes_unchecked)
+    write_bytes_unchecked(w, blockhash)
+    write_compact_array(w, instructions, write_instruction)
     return bytes(w)
 
 
