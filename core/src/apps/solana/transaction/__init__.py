@@ -1,8 +1,11 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
 from trezor.utils import BufferReader
 from trezor.wire import DataError
+
+from apps.common.readers import read_uint16_le, read_uint32_le, read_uint64_le
 
 from ..constants import (
     MICROLAMPORTS_PER_LAMPORT,
@@ -24,6 +27,23 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
     from ..types import Account, Address, AddressReference, RawInstruction
+
+
+# Config mask bits of v1 transactions, the config values follow in this order:
+# https://github.com/anza-xyz/solana-sdk/blob/891412dceb0a7d3d4116ac295eef519882138090/message/src/versions/v1/config.rs
+_CONFIG_PRIORITY_FEE = const(0b0_0011)  # u64, both bits must be set
+_CONFIG_COMPUTE_UNIT_LIMIT = const(0b0_0100)  # u32
+_CONFIG_LOADED_ACCOUNTS_DATA_SIZE_LIMIT = const(0b0_1000)  # u32
+_CONFIG_HEAP_SIZE = const(0b1_0000)  # u32
+_CONFIG_KNOWN_BITS = const(
+    _CONFIG_PRIORITY_FEE
+    | _CONFIG_COMPUTE_UNIT_LIMIT
+    | _CONFIG_LOADED_ACCOUNTS_DATA_SIZE_LIMIT
+    | _CONFIG_HEAP_SIZE
+)
+
+# Program id index (u8), number of account indexes (u8), and data length (u16).
+_V1_INSTRUCTION_HEADER_SIZE = const(4)
 
 
 class Fee:
@@ -55,6 +75,9 @@ class Transaction:
     address_lookup_tables_rw_addresses: list[AddressReference]
     address_lookup_tables_ro_addresses: list[AddressReference]
 
+    # Priority fee in lamports set in the config of v1 transactions.
+    config_priority_fee: int
+
     def __init__(self, serialized_tx: AnyBytes) -> None:
         self._parse_transaction(serialized_tx)
         self._create_instructions()
@@ -64,13 +87,10 @@ class Transaction:
         serialized_tx_reader = BufferReader(serialized_tx)
         self._parse_header(serialized_tx_reader)
 
-        self._parse_addresses(serialized_tx_reader)
-
-        self.blockhash = parse_block_hash(serialized_tx_reader)
-
-        self._parse_instructions(serialized_tx_reader)
-
-        self._parse_address_lookup_tables(serialized_tx_reader)
+        if self.version == 1:
+            self._parse_body_v1(serialized_tx_reader)
+        else:
+            self._parse_body_legacy_v0(serialized_tx_reader)
 
         if serialized_tx_reader.remaining_count() != 0:
             raise DataError("Invalid transaction")
@@ -78,17 +98,45 @@ class Transaction:
     def _parse_header(self, serialized_tx_reader: BufferReader) -> None:
         if serialized_tx_reader.peek() & 0b10000000:
             self.version = serialized_tx_reader.get() & 0b01111111
-            # only version 0 is supported
-            if self.version > 0:
+            # only versions 0 and 1 are supported
+            if self.version > 1:
                 raise DataError("Unsupported transaction version")
 
         self.required_signers_count: int = serialized_tx_reader.get()
         self.num_signature_read_only_addresses: int = serialized_tx_reader.get()
         self.num_read_only_addresses: int = serialized_tx_reader.get()
 
-    def _parse_addresses(self, serialized_tx_reader: BufferReader) -> None:
+    def _parse_body_legacy_v0(self, serialized_tx_reader: BufferReader) -> None:
+        """Parses the rest of legacy and v0 transactions."""
         num_of_addresses = parse_var_int(serialized_tx_reader)
+        self._parse_addresses(serialized_tx_reader, num_of_addresses)
 
+        self.blockhash = parse_block_hash(serialized_tx_reader)
+
+        self._parse_instructions_legacy_v0(serialized_tx_reader)
+
+        self._parse_address_lookup_tables(serialized_tx_reader)
+
+    def _parse_body_v1(self, serialized_tx_reader: BufferReader) -> None:
+        config_mask = read_uint32_le(serialized_tx_reader)
+
+        self.blockhash = parse_block_hash(serialized_tx_reader)
+
+        num_of_instructions = serialized_tx_reader.get()
+        num_of_addresses = serialized_tx_reader.get()
+        self._parse_addresses(serialized_tx_reader, num_of_addresses)
+
+        self._parse_config(serialized_tx_reader, config_mask)
+
+        self._parse_instructions_v1(serialized_tx_reader, num_of_instructions)
+
+        # v1 has no address lookup tables.
+        self.address_lookup_tables_rw_addresses = []
+        self.address_lookup_tables_ro_addresses = []
+
+    def _parse_addresses(
+        self, serialized_tx_reader: BufferReader, num_of_addresses: int
+    ) -> None:
         if self.num_signature_read_only_addresses >= self.required_signers_count:
             raise DataError("At least one writable signer required")
         if (
@@ -114,38 +162,68 @@ class Transaction:
 
         self.addresses = addresses
 
-    def _parse_instructions(self, serialized_tx_reader: BufferReader) -> None:
+    def _parse_config(
+        self, serialized_tx_reader: BufferReader, config_mask: int
+    ) -> None:
+        # Masks rejected by solana-sdk.
+        if config_mask | _CONFIG_KNOWN_BITS != _CONFIG_KNOWN_BITS:
+            raise DataError("Unsupported transaction config")
+
+        priority_fee_bits = config_mask & _CONFIG_PRIORITY_FEE
+        if priority_fee_bits not in (0, _CONFIG_PRIORITY_FEE):
+            raise DataError("Invalid transaction config")
+        if priority_fee_bits:
+            self.config_priority_fee = read_uint64_le(serialized_tx_reader)
+        else:
+            self.config_priority_fee = 0
+
+        # The remaining values are resource limits that affect neither the fee
+        # nor the accounts, so they are not shown.
+        for bit in (
+            _CONFIG_COMPUTE_UNIT_LIMIT,
+            _CONFIG_LOADED_ACCOUNTS_DATA_SIZE_LIMIT,
+            _CONFIG_HEAP_SIZE,
+        ):
+            if config_mask & bit:
+                read_uint32_le(serialized_tx_reader)
+
+    def _parse_instructions_legacy_v0(self, serialized_tx_reader: BufferReader) -> None:
         num_of_instructions = parse_var_int(serialized_tx_reader)
 
         self.raw_instructions = []
 
         for _ in range(num_of_instructions):
             program_index = serialized_tx_reader.get()
-            program_id = base58.encode(self.addresses[program_index][0])
+
             num_of_accounts = parse_var_int(serialized_tx_reader)
-            accounts: list[int] = []
-            for _ in range(num_of_accounts):
-                account_index = serialized_tx_reader.get()
-                accounts.append(account_index)
+            accounts = serialized_tx_reader.read_memoryview(num_of_accounts)
 
             data_length = parse_var_int(serialized_tx_reader)
+            data = serialized_tx_reader.read_memoryview(data_length)
 
-            instruction_id_length = get_instruction_id_length(program_id)
-            if 0 < instruction_id_length <= data_length:
-                instruction_id = int.from_bytes(
-                    serialized_tx_reader.read_memoryview(instruction_id_length),
-                    "little",
-                )
-            else:
-                instruction_id = None
+            self.raw_instructions.append((program_index, list(accounts), data))
 
-            instruction_data = serialized_tx_reader.read_memoryview(
-                max(0, data_length - instruction_id_length)
+    def _parse_instructions_v1(
+        self, serialized_tx_reader: BufferReader, num_of_instructions: int
+    ) -> None:
+        # All instruction headers come first, followed by all the payloads.
+        headers_reader = BufferReader(
+            serialized_tx_reader.read_memoryview(
+                _V1_INSTRUCTION_HEADER_SIZE * num_of_instructions
             )
+        )
 
-            self.raw_instructions.append(
-                (program_index, instruction_id, accounts, instruction_data)
-            )
+        self.raw_instructions = []
+
+        for _ in range(num_of_instructions):
+            program_index = headers_reader.get()
+            num_of_accounts = headers_reader.get()
+            data_length = read_uint16_le(headers_reader)
+
+            accounts = serialized_tx_reader.read_memoryview(num_of_accounts)
+            data = serialized_tx_reader.read_memoryview(data_length)
+
+            self.raw_instructions.append((program_index, list(accounts), data))
 
     def _parse_address_lookup_tables(self, serialized_tx: BufferReader) -> None:
         self.address_lookup_tables_rw_addresses = []
@@ -181,13 +259,20 @@ class Transaction:
         )
 
         self.instructions = []
-        for (
-            program_index,
-            instruction_id,
-            accounts,
-            instruction_data,
-        ) in self.raw_instructions:
+        for program_index, accounts, instruction_data in self.raw_instructions:
             program_id = base58.encode(self.addresses[program_index][0])
+
+            instruction_id_length = get_instruction_id_length(program_id)
+            if 0 < instruction_id_length <= len(instruction_data):
+                instruction_id = int.from_bytes(
+                    instruction_data[:instruction_id_length], "little"
+                )
+                instruction_data = instruction_data[instruction_id_length:]
+            else:
+                # The program has no instruction ids, or the data is too short
+                # to contain one. The latter is shown as an unsupported instruction.
+                instruction_id = None
+
             instruction_accounts = [
                 combined_accounts[account_index] for account_index in accounts
             ]
@@ -225,6 +310,22 @@ class Transaction:
 
         base_fee = SOLANA_BASE_FEE_LAMPORTS * number_of_signers
 
+        priority_fee = self._calculate_priority_fee()
+        rent = self.calculate_rent()
+        if rent is None:
+            return None
+        return Fee(
+            base=base_fee,
+            priority=priority_fee,
+            rent=rent,
+        )
+
+    def _calculate_priority_fee(self) -> int:
+        """Returns the priority fee in lamports."""
+        if self.version == 1:
+            # v1 ignores ComputeBudget instructions in favor of the config.
+            return self.config_priority_fee
+
         unit_price = 0
         is_unit_price_set = False
         unit_limit = SOLANA_COMPUTE_UNIT_LIMIT
@@ -248,15 +349,9 @@ class Transaction:
                     is_unit_price_set = True
 
         priority_fee = unit_price * unit_limit  # in microlamports
-        rent = self.calculate_rent()
-        if rent is None:
-            return None
-        return Fee(
-            base=base_fee,
-            priority=(priority_fee + MICROLAMPORTS_PER_LAMPORT - 1)
-            // MICROLAMPORTS_PER_LAMPORT,
-            rent=rent,
-        )
+        return (
+            priority_fee + MICROLAMPORTS_PER_LAMPORT - 1
+        ) // MICROLAMPORTS_PER_LAMPORT
 
     def get_account_address(self, account: Account) -> bytes | None:
         if not is_address_reference(account):

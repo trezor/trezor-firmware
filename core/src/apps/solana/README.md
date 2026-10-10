@@ -138,6 +138,43 @@ The new transaction format must be distinguished from the legacy transaction for
 +---------------+---------------------------+-----------------+---------------------------+-----------------+
 ```
 
+### v1 transaction format
+
+Version 1 transactions ([SIMD-0385](https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0385-transaction-v1.md)) have a layout of their own. There are no lookup tables, the counts have a fixed size, and all the instruction headers precede the instruction payloads. The signatures come last instead of first.
+
+```
++----------------------------------------------------------------+
+|                     v1 transaction format                      |
++-----------------------------+----------------------------------+
+| version (1B)                | 0x81                             |
+| header (3B)                 | same as in legacy transactions   |
+| config mask (4B)            | u32 LE                           |
+| blockhash (32B)             |                                  |
+| # of instructions (1B)      |                                  |
+| # of account addresses (1B) |                                  |
+| account addresses           | 32B each                         |
+| config values               | selected by the config mask      |
+| instruction headers         | 4B each                          |
+| instruction payloads        | account address indexes and data |
++-----------------------------+----------------------------------+
+```
+
+```
++----------------------------------------------------------------------------------+
+|                              v1 instruction header                               |
++-----------------------+-----------------------------------+----------------------+
+| Program id index (1B) | # of account address indexes (1B) | Data length (2B, LE) |
++-----------------------+-----------------------------------+----------------------+
+```
+
+The config replaces the ComputeBudget instructions, which don't configure v1 transactions. Its mask selects the values that follow, in this order:
+- bits 0 and 1 (both or none): priority fee, u64 LE, in lamports (not per compute unit)
+- bit 2: compute unit limit, u32 LE
+- bit 3: loaded accounts data size limit, u32 LE
+- bit 4: heap size, u32 LE
+
+Masks with other bits set are rejected. Only the priority fee is shown, the other values are resource limits which affect neither the fee nor the accounts.
+
 ## Solana app basic concept and software architecture
 
 The software architecture designed for signing Solana messages utilizes a system of parser functions to construct objects from various classes. At its core is the `Transaction` class, serving as the higher-level entity responsible for encapsulating all transaction-related information. This includes a list of instructions derived from the `Instruction` class. This structure can seamlessly handle both legacy and versioned transactions.
