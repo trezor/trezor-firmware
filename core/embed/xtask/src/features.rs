@@ -32,6 +32,9 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
         if args.disable_tropic {
             bail!("disable_tropic cannot be used in production builds");
         }
+        if args.boot_wipe {
+            bail!("boot_wipe cannot be used in production builds");
+        }
     }
 
     let mut features: Vec<String> = vec![args.model.feature_name()];
@@ -224,6 +227,18 @@ mod tests {
         let args = ResolvedBuildArgs {
             production: true,
             disable_tropic: true,
+            ..ResolvedBuildArgs::default()
+        };
+
+        let error = resolve_features(&args).unwrap_err();
+        assert!(error.to_string().contains("production"));
+    }
+
+    #[test]
+    fn rejects_boot_wipe_in_production_builds() {
+        let args = ResolvedBuildArgs {
+            production: true,
+            boot_wipe: true,
             ..ResolvedBuildArgs::default()
         };
 

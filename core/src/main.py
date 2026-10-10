@@ -33,6 +33,7 @@ if __debug__:
 import trezor.pin  # noqa: F401
 
 # === Prepare the USB interfaces first. Do not connect to the host yet.
+# (Debug builds connect already in `boot`, so that debuglink works before unlock.)
 # usb imports trezor.utils and trezor.io which is a C module
 import usb
 
@@ -44,7 +45,8 @@ with utils.unimport():
 # start the USB
 import storage.device
 
-usb.bus.open(storage.device.get_device_id())
+if not __debug__:
+    usb.bus.open(storage.device.get_device_id())
 
 
 # enable BLE, allow connections
