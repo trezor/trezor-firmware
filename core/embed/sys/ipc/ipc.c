@@ -293,9 +293,18 @@ static bool on_check_read_ready(void *context, systask_id_t task_id,
   return (queue != NULL && queue->rptr < queue->wptr);
 }
 
+static void on_task_killed(void *context, systask_id_t task_id) {
+  systask_id_t origin = (systask_id_t)(uintptr_t)context;
+
+  ipc_queue_t *in_queue = ipc_queue(task_id, origin);
+  if (in_queue != NULL) {
+    memset(in_queue, 0, sizeof(ipc_queue_t));
+  }
+}
+
 static const syshandle_vmt_t g_ipc_handle_vmt = {
     .task_created = on_task_created,
-    .task_killed = NULL,
+    .task_killed = on_task_killed,
     .check_read_ready = on_check_read_ready,
     .check_write_ready = NULL,
     .poll = on_event_poll,
