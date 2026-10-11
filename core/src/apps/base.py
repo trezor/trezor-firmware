@@ -452,10 +452,16 @@ async def handle_EndSession(msg: EndSession) -> Success:
 
 async def handle_Ping(msg: Ping) -> Success:
     if msg.button_protection:
-        from trezor.enums import ButtonRequestType as B
-        from trezor.ui.layouts import confirm_action
+        # TODO: temporary, to invoke the FIDO UI via `trezorctl device ping <app> -b`
+        from trezor.ui.layouts.fido import confirm_fido
 
-        await confirm_action("ping", TR.words__confirm, "ping", br_code=B.ProtectCall)
+        index = await confirm_fido(
+            TR.fido__title_authenticate,
+            msg.message,
+            None,
+            ["Alice", "bob@example.com", None],
+        )
+        return Success(message=f"{msg.message}: chosen account {index}")
     return Success(message=msg.message)
 
 
