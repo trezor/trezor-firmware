@@ -1,7 +1,8 @@
 //! Implements [`trezor_app_sdk::traits::ui`]'s `UiV1` on top of
 //! [`crate::wire::ipc_call`]. `ui_call` takes the request exactly as the app
 //! built it, serializes it, sends it to Core's UI service and returns the
-//! reply; the progress methods do the same for the progress service. There is
+//! reply. `confirm_data` does the same a chunk at a time, and the progress
+//! methods for the progress service. There is
 //! nothing to convert: the vtable carries the wire types.
 //!
 //! This runs on the app's task but is part of the firmware, so anything an
@@ -105,11 +106,14 @@ impl UiV1 for TrezorUiV1Impl {
         &self,
         request: TrezorUiEnum<'a>,
     ) -> FastResult<TrezorUiResult, WireError> {
-        match request {
-            TrezorUiEnum::ConfirmData(data) => confirm_in_chunks(data),
-            request => ui_request(request),
-        }
-        .into()
+        ui_request(request).into()
+    }
+
+    extern "C" fn confirm_data<'a>(
+        &self,
+        request: ConfirmData<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        confirm_in_chunks(request).into()
     }
 
     extern "C" fn init_progress<'a>(

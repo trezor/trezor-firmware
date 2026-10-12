@@ -286,8 +286,9 @@
 // no mirror types and no conversions in between.
 //
 // So a new block means a `structs` type and its `TrezorUiEnum` variant, an
-// arm in core's dispatch, and the block's function here. The `UiV1` vtable
-// has one `ui_call` for every block.
+// arm in core's dispatch, and the block's function here. Every block goes
+// through `UiV1::ui_call`, except `confirm::data`: its own
+// `UiV1::confirm_data` lets the firmware send the data in chunks.
 //
 // ButtonRequests: the app names the step and nothing else. The `/menu` and
 // `/details` suffixes are core's, as are the `ButtonRequestType` (always

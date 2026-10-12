@@ -7,7 +7,7 @@
 
 use crate::app_runtime2::{get_ui_or_die, system_exit_fatal};
 use crate::modui::ExtraItem;
-use crate::structs::{ConfirmData, TrezorUiEnum, TrezorUiResult};
+use crate::structs::{ConfirmData, TrezorUiResult};
 use crate::traits::ui::UiV1Dyn as _;
 use crate::{Error, Result};
 
@@ -55,10 +55,7 @@ pub fn data(
         br_name: br.into(),
         extras: extras.into(),
     };
-    match get_ui_or_die()
-        .ui_call(TrezorUiEnum::ConfirmData(request))
-        .into_result()
-    {
+    match get_ui_or_die().confirm_data(request).into_result() {
         Ok(TrezorUiResult::Confirmed | TrezorUiResult::ConfirmedAll) => Ok(()),
         Ok(TrezorUiResult::Cancelled) => Err(Error::Cancelled),
         Ok(_) => system_exit_fatal("unexpected UI reply", file!(), line!()),

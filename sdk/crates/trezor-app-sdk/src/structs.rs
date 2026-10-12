@@ -448,8 +448,10 @@ pub struct ConfirmProperties<'a> {
     pub extras: Slice<'a, ExtraItem<'a>>,
 }
 
-/// One UI request: one variant per `modui` block. The app passes it through
-/// the `UiV1` vtable, and `core/embed/api` serializes that same value for IPC.
+/// One UI request, as it crosses IPC: one variant per `modui` block. Blocks
+/// pass it through `UiV1::ui_call` as is; `confirm::data` passes its
+/// `ConfirmData` to `UiV1::confirm_data` instead, which sends it a chunk at a
+/// time.
 #[stabby::stabby]
 #[repr(C, u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]

@@ -31,7 +31,7 @@ use crate::traits::syslog::{
     LogCallbackDyn as _, LogCallbackRef, LogLevel, LogRecord, SyslogV1, SyslogV1Vtable,
 };
 use crate::traits::trezor_v1::{TrezorApiV1, TrezorApiV1Struct, TrezorApiV1Vtable};
-use crate::traits::ui::{StrSlice, TrezorUiEnum, TrezorUiResult, UiV1, UiV1Vtable};
+use crate::traits::ui::{ConfirmData, StrSlice, TrezorUiEnum, TrezorUiResult, UiV1, UiV1Vtable};
 use crate::traits::util::FastResult;
 use crate::traits::wire::{WireError, WireMessage, WireV1, WireV1Vtable};
 
@@ -321,6 +321,13 @@ impl UiV1 for DummyUi {
     extern "C" fn ui_call<'a>(
         &self,
         _request: TrezorUiEnum<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_data<'a>(
+        &self,
+        _request: ConfirmData<'a>,
     ) -> FastResult<TrezorUiResult, WireError> {
         unimplemented!("not exercised by the current test suite")
     }
