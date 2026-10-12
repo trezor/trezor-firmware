@@ -22,7 +22,7 @@
 /// }
 /// ```
 pub use crate::structs::ExtraItem;
-use crate::traits::ui::Property;
+use crate::structs::Property;
 
 impl<'a> ExtraItem<'a> {
     /// Key/value facts the app already has, labelled `label`.

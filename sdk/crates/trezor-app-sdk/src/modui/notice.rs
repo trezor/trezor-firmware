@@ -24,51 +24,19 @@ use crate::structs::ShowNotice;
 use crate::traits::ui::UiV1Dyn as _;
 use crate::{IntoAppResult, Result};
 
-// ============================================================================
-// Data types
-// ============================================================================
-
-/// Parameters for [`show`], built by [`Notice::new`].
-pub type Notice<'a> = ShowNotice<'a>;
-
-impl<'a> ShowNotice<'a> {
-    /// A notice of the given severity.
-    ///
-    /// - `severity` — what kind of news this is; see [`Severity`].
-    /// - `title` — the notice's heading. Some models have a fixed heading for
-    ///   some severities and do not show it.
-    /// - `content` — what the notice says.
-    /// - `br` — the step name the host sees; see
-    ///   [step names](crate::modui#step-names).
-    /// - `extras` — more the person can look at from this screen; see
-    ///   [extras](crate::modui#extras-and-the-way-out).
-    ///   Not every severity can show them; see [`show`].
-    /// - `cancel` — whether the person must be able to back out of it. How
-    ///   they do is the model's. WIP: ignored today; see the module notes.
-    pub fn new(
-        severity: Severity,
-        title: &'a str,
-        content: &'a str,
-        br: &'a str,
-        extras: &'a [ExtraItem<'a>],
-        cancel: bool,
-    ) -> Self {
-        Self {
-            severity,
-            title: title.into(),
-            content: content.into(),
-            cancel,
-            br_name: br.into(),
-            extras: extras.into(),
-        }
-    }
-}
-
-// ============================================================================
-// Entry point
-// ============================================================================
-
 /// Tells the person something, and waits for them to move on.
+///
+/// - `severity` — what kind of news this is; see [`Severity`].
+/// - `title` — the notice's heading. Some models have a fixed heading for
+///   some severities and do not show it.
+/// - `content` — what the notice says.
+/// - `cancel` — whether the person must be able to back out of it. How
+///   they do is the model's. WIP: ignored today; see the module notes.
+/// - `br` — the step name the host sees; see
+///   [step names](crate::modui#step-names).
+/// - `extras` — more the person can look at from this screen; see
+///   [extras](crate::modui#extras-and-the-way-out).
+///   Not every severity can show them; see below.
 ///
 /// The severity decides everything about how it looks: its screen, its button
 /// words, and whether it goes away by itself. The same severity looks the same
@@ -105,29 +73,44 @@ impl<'a> ShowNotice<'a> {
 /// use trezor_app_sdk::modui::notice;
 ///
 /// fn warn_unknown_contract() -> trezor_app_sdk::Result<()> {
-///     notice::show(notice::Notice::new(
+///     notice::show(
 ///         notice::Severity::Danger,
 ///         "Important",
 ///         "Unknown contract address.",
+///         true,
 ///         "app/unknown_contract",
 ///         &[],
-///         true,
-///     ))
+///     )
 /// }
 ///
 /// fn signed() -> trezor_app_sdk::Result<()> {
 ///     // The last screen of the flow; it offers no way back out.
-///     notice::show(notice::Notice::new(
+///     notice::show(
 ///         notice::Severity::Done,
 ///         "Done",
 ///         "Transaction signed",
+///         false,
 ///         "app/signed",
 ///         &[],
-///         false,
-///     ))?;
+///     )?;
 ///     Ok(())
 /// }
 /// ```
-pub fn show(params: Notice<'_>) -> Result<()> {
-    answer(get_ui_or_die().show_notice(params).into_app_result()?)
+pub fn show(
+    severity: Severity,
+    title: &str,
+    content: &str,
+    cancel: bool,
+    br: &str,
+    extras: &[ExtraItem<'_>],
+) -> Result<()> {
+    let request = ShowNotice {
+        severity,
+        title: title.into(),
+        content: content.into(),
+        cancel,
+        br_name: br.into(),
+        extras: extras.into(),
+    };
+    answer(get_ui_or_die().show_notice(request).into_app_result()?)
 }

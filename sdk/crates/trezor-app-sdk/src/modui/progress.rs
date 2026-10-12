@@ -72,7 +72,6 @@
 //! ```
 
 use crate::app_runtime2::get_ui_or_die;
-use crate::structs::OptStrSlice;
 use crate::traits::ui::UiV1Dyn as _;
 use crate::{IntoAppResult, Result};
 
@@ -82,13 +81,14 @@ use crate::{IntoAppResult, Result};
 
 /// How much work there is, which decides what the person sees.
 ///
-/// The app says what it is about to do; the library turns that into the
-/// bar — a growing fill when the total is known, motion without a fill
-/// when it is not.
+/// The app says what it is about to do; core turns that into the bar — a
+/// growing fill when the total is known, motion without a fill when it is
+/// not.
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Total {
-    /// Known upfront, in whatever unit the app counts. The percent is the
-    /// library's to compute; the app never does that arithmetic.
+    /// Known upfront, in whatever unit the app counts. The percent is core's
+    /// to compute; the app never does that arithmetic. `Units(0)` is shown
+    /// as [`Total::Unknown`].
     Units(u32),
     /// Not known upfront. The person sees that work is ongoing, and nothing
     /// else — no fill, no percent, no false promise of how much is left.
@@ -101,13 +101,9 @@ pub enum Total {
 /// Created by [`run`], [`run_with`], or [`Progress::start`]; see
 /// the module docs.
 pub struct Progress {
-    /// Total units, when known; the percent comes from this.
-    total: Option<u32>,
-    /// Units reported so far.
-    done: u32,
-    /// Set once the initial request has been accepted, so `Drop` only ends
-    /// a progress that truly started.
-    started: bool,
+    // Built only once core has accepted the start, so dropping it always
+    // ends a progress that is running. Core keeps the count.
+    _running: (),
 }
 
 // ============================================================================
@@ -164,23 +160,14 @@ impl Progress {
     /// [`crate::Error::DataError`] if the request could not be sent or core
     /// did not accept it.
     pub fn start(label: &str, total: Total) -> Result<Self> {
+        let total = match total {
+            Total::Units(units) => units,
+            Total::Unknown => 0,
+        };
         get_ui_or_die()
-            .init_progress(
-                OptStrSlice::new(Some(label)),
-                OptStrSlice::NONE,
-                matches!(total, Total::Unknown),
-                false,
-            )
+            .init_progress(label.into(), total)
             .into_app_result()?;
-
-        Ok(Self {
-            total: match total {
-                Total::Units(units) => Some(units),
-                Total::Unknown => None,
-            },
-            done: 0,
-            started: true,
-        })
+        Ok(Self { _running: () })
     }
 
     /// Reports that `units` of work are done, of the total given at the start.
@@ -193,26 +180,14 @@ impl Progress {
     /// Does nothing for a [`Total::Unknown`] progress — there is no fill to
     /// grow, and no number that would mean anything.
     pub fn step(&mut self, units: u32) {
-        let Some(total) = self.total else { return };
-        if total == 0 {
-            return;
-        }
-        // Saturating: reporting past the declared total pins the bar full
-        // rather than wrapping it around.
-        self.done = self.done.saturating_add(units);
-        // Core's progress scale is 0..=1000. Widened so `done * 1000` cannot
-        // overflow for large totals.
-        let permille = (u64::from(self.done.min(total)) * 1000 / u64::from(total)) as u32;
-        let _ = get_ui_or_die().update_progress(OptStrSlice::NONE, permille);
+        let _ = get_ui_or_die().step_progress(units);
     }
 }
 
 impl Drop for Progress {
     fn drop(&mut self) {
-        if self.started {
-            // Nothing useful can be done if this fails, and a panic here
-            // would replace whatever error is already unwinding out.
-            let _ = get_ui_or_die().end_progress();
-        }
+        // Nothing useful can be done if this fails, and a panic here would
+        // replace whatever error is already unwinding out.
+        let _ = get_ui_or_die().end_progress();
     }
 }

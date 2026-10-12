@@ -1,10 +1,10 @@
-//! Low-level IPC message types for the Trezor UI, Crypto, and Progress interfaces.
+//! The requests an app sends to core, and core's replies, for the UI, crypto
+//! and progress services.
 //!
-//! These types are serialized via [`rkyv`] and sent over IPC between the app
-//! and the Core firmware task.
-//!
-//! Apps use `modui` and `crypto`, not these. Fields are `pub` because core
-//! reads them straight off the archived (rkyv) form.
+//! Each type is serialized with [`rkyv`] and sent over IPC between the app and
+//! the core task. A UI request is also what the app builds: `modui`'s params
+//! types are these, under their own names. Fields are `pub` because core reads
+//! them straight off the archived form.
 
 use rkyv::boxed::{ArchivedBox, BoxResolver};
 use rkyv::option::ArchivedOption;
@@ -96,8 +96,8 @@ impl<'a> From<&'a str> for StrSlice<'a> {
     }
 }
 
-// Archives as rkyv's own `ArchivedBox<str>`, which carries a correct
-// CheckBytes impl, so core reads it through validated `rkyv::access`.
+// Archives as rkyv's own `ArchivedBox<str>`, whose `CheckBytes` core can use
+// to validate a request (WIP: core reads it with `access_unchecked`).
 impl<'a> Archive for StrSlice<'a> {
     type Archived = ArchivedBox<str>;
     type Resolver = BoxResolver;
@@ -297,8 +297,8 @@ pub enum Commitment {
 pub struct ConfirmAction<'a> {
     pub title: StrSlice<'a>,
     pub action: StrSlice<'a>,
-    pub description: OptStrSlice<'a>,
     pub subtitle: OptStrSlice<'a>,
+    pub description: OptStrSlice<'a>,
     pub commitment: Commitment,
     /// The step's name, announced to the host.
     pub br_name: StrSlice<'a>,
@@ -314,8 +314,8 @@ pub struct ConfirmSummary<'a> {
     pub title: StrSlice<'a>,
     pub amount: OptStrSlice<'a>,
     pub amount_label: OptStrSlice<'a>,
-    pub fee: StrSlice<'a>,
-    pub fee_label: StrSlice<'a>,
+    pub fee: OptStrSlice<'a>,
+    pub fee_label: OptStrSlice<'a>,
     /// The step's name, announced to the host.
     pub br_name: StrSlice<'a>,
     /// Reached from the screen's menu button, which core draws when there
@@ -326,7 +326,8 @@ pub struct ConfirmSummary<'a> {
 /// What a value *is*, which decides how it is formatted.
 ///
 /// There is deliberately no `chunkify` flag: grouping an address into chunks
-/// is a consequence of it being an address, not a separate choice.
+/// is a consequence of it being an address, not a separate choice. Raw bytes
+/// are not a kind of value: they go as [`ConfirmData`].
 #[stabby::stabby]
 #[repr(u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
@@ -335,8 +336,6 @@ pub enum ValueKind {
     Text,
     /// Grouped into chunks so it can be compared by eye.
     Address,
-    /// Raw bytes as hex, paged with a counter; what `confirm::data` sends.
-    Data,
 }
 
 /// A value confirmation screen, sent as [`TrezorUiEnum::ConfirmValue`].
@@ -353,6 +352,24 @@ pub struct ConfirmValue<'a> {
     /// Whether the note is something to weigh before confirming.
     pub footer_warning: bool,
     pub commitment: Commitment,
+    /// The step's name, announced to the host.
+    pub br_name: StrSlice<'a>,
+    /// Reached from the screen's menu button, which core draws when there
+    /// are any.
+    pub extras: Slice<'a, ExtraItem<'a>>,
+}
+
+/// A raw-bytes confirmation, sent as [`TrezorUiEnum::ConfirmData`].
+///
+/// The app passes all of its bytes. `core/embed/api` sends them to core a
+/// chunk at a time, each chunk as a request of its own with `data` narrowed
+/// to it, so core never holds a whole blob at once. Core shows them as hex.
+#[stabby::stabby]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct ConfirmData<'a> {
+    pub title: StrSlice<'a>,
+    pub data: Slice<'a, u8>,
+    pub subtitle: OptStrSlice<'a>,
     /// The step's name, announced to the host.
     pub br_name: StrSlice<'a>,
     /// Reached from the screen's menu button, which core draws when there
@@ -406,14 +423,14 @@ pub struct ShowNotice<'a> {
     pub severity: Severity,
     pub title: StrSlice<'a>,
     pub content: StrSlice<'a>,
-    /// Reached from the screen's menu button, which core draws when there
-    /// are any.
-    pub extras: Slice<'a, ExtraItem<'a>>,
     /// The notice must offer a way to back out. How is the model's.
     /// WIP: ignored by every model.
     pub cancel: bool,
     /// The step's name, announced to the host.
     pub br_name: StrSlice<'a>,
+    /// Reached from the screen's menu button, which core draws when there
+    /// are any.
+    pub extras: Slice<'a, ExtraItem<'a>>,
 }
 
 /// A property-list confirmation, sent as [`TrezorUiEnum::ConfirmProperties`].
@@ -439,12 +456,13 @@ pub enum TrezorUiEnum<'a> {
     ConfirmAction(ConfirmAction<'a>),
     ConfirmSummary(ConfirmSummary<'a>),
     ConfirmValue(ConfirmValue<'a>),
+    ConfirmData(ConfirmData<'a>),
     ConfirmProperties(ConfirmProperties<'a>),
     ShowNotice(ShowNotice<'a>),
 }
 
-/// What the person did with one screen. Written by core, read by `modui`;
-/// apps never see it.
+/// How the person decided a block. Written by core, read by `modui`; apps
+/// never see it.
 ///
 /// Variants say what the person *did*, not which button did it. Only the
 /// block's final answer crosses: what happens in its menu stays in core.
@@ -455,8 +473,8 @@ pub enum TrezorUiEnum<'a> {
 pub enum UiReply {
     /// Yes, having seen all of it.
     ///
-    /// WIP: until chunk paging exists, every chunk of `confirm::data` answers
-    /// this too.
+    /// WIP: until chunk paging exists, every chunk of a [`ConfirmData`]
+    /// answers this too.
     Confirmed,
     /// Refused, or left without answering. `modui` turns it into
     /// `Err(Error::Cancelled)`.
@@ -588,23 +606,25 @@ impl ufmt::uDebug for TrezorCryptoResult {
 ///
 /// Built by `core/embed/api`; apps use `modui::progress`.
 ///
-/// The three variants are one lifecycle: `Init` opens the progress, `Update`
-/// moves its fill — 0 to 1000, which the app SDK computes; core only draws —
-/// and `End` closes it. The app SDK pairs them with a guard that sends `End`
-/// on drop, so an app cannot leave a progress on screen for work that
-/// stopped; see the `modui` progress docs.
+/// The three variants are one lifecycle: `Init` opens the progress, `Step`
+/// reports work done, and `End` closes it. Core keeps the count and turns it
+/// into the bar. The app SDK pairs them with a guard that sends `End` on
+/// drop, so an app cannot leave a progress on screen for work that stopped;
+/// see the `modui` progress docs.
+///
+/// Only what the app chose travels; how the progress looks is core's.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum TrezorProgressEnum<'a> {
     Init {
-        description: OptStrSlice<'a>,
-        title: OptStrSlice<'a>,
-        indeterminate: bool,
-        danger: bool,
+        /// What the work is, such as `"Signing"`.
+        label: StrSlice<'a>,
+        /// How much work there is, in the app's own units. `0` means not
+        /// known: the bar shows motion rather than a fill.
+        total: u32,
     },
-    Update {
-        description: OptStrSlice<'a>,
-        /// How far along, from 0 to 1000.
-        value: u32,
+    Step {
+        /// Units of work done since the last step.
+        units: u32,
     },
     End,
 }
@@ -613,7 +633,7 @@ impl<'a> TrezorProgressEnum<'a> {
     pub fn id(&self) -> u16 {
         match self {
             TrezorProgressEnum::Init { .. } => 0,
-            TrezorProgressEnum::Update { .. } => 1,
+            TrezorProgressEnum::Step { .. } => 1,
             TrezorProgressEnum::End => 2,
         }
     }
@@ -708,22 +728,13 @@ mod tests {
         let variants: &[(u16, &str)] = &[
             (
                 Init {
-                    description: None,
-                    title: None,
-                    indeterminate: false,
-                    danger: false,
+                    label: "".into(),
+                    total: 0,
                 }
                 .id(),
                 "Init",
             ),
-            (
-                Update {
-                    description: None,
-                    value: 0,
-                }
-                .id(),
-                "Update",
-            ),
+            (Step { units: 0 }.id(), "Step"),
             (End.id(), "End"),
         ];
         // all IDs must be unique

@@ -8,50 +8,17 @@ use crate::structs::{ConfirmProperties, Property};
 use crate::traits::ui::UiV1Dyn as _;
 use crate::{IntoAppResult, Result};
 
-// ============================================================================
-// Data types
-// ============================================================================
-
-/// Parameters for [`properties`], built by [`Properties::new`].
-pub type Properties<'a> = ConfirmProperties<'a>;
-
-impl<'a> ConfirmProperties<'a> {
-    /// Confirms the facts in `props` under `title`.
-    ///
-    /// - `title` — the screen's heading.
-    /// - `props` — the facts, in the order they are shown.
-    /// - `subtitle` — optional line under the heading.
-    /// - `commitment` — whether confirming this is the person's final yes; see
-    ///   [`Commitment`].
-    /// - `br` — the step name the host sees; see
-    ///   [step names](crate::modui#step-names).
-    /// - `extras` — more the person can look at from this screen; see
-    ///   [extras](crate::modui#extras-and-the-way-out).
-    ///   Not shown by this block yet; see [`properties`].
-    pub fn new(
-        title: &'a str,
-        props: &'a [Property<'a>],
-        subtitle: Option<&'a str>,
-        commitment: Commitment,
-        br: &'a str,
-        extras: &'a [ExtraItem<'a>],
-    ) -> Self {
-        Self {
-            title: title.into(),
-            props: props.into(),
-            subtitle: subtitle.into(),
-            commitment,
-            br_name: br.into(),
-            extras: extras.into(),
-        }
-    }
-}
-
-// ============================================================================
-// Entry point
-// ============================================================================
-
 /// Asks the person to confirm a list of facts, and waits for the answer.
+///
+/// - `title` — the screen's heading.
+/// - `props` — the facts, in the order they are shown.
+/// - `subtitle` — optional line under the heading.
+/// - `commitment` — whether confirming this is the person's final yes; see
+///   [`Commitment`].
+/// - `br` — the step name the host sees; see
+///   [step names](crate::modui#step-names).
+/// - `extras` — more the person can look at from this screen; see
+///   [extras](crate::modui#extras-and-the-way-out).
 ///
 /// # Errors
 ///
@@ -67,13 +34,28 @@ impl<'a> ConfirmProperties<'a> {
 ///         Property::plain("Amount", amount),
 ///         Property::plain("Resource", "Energy"),
 ///     ];
-///     confirm::properties(confirm::Properties::new("Summary", &props, None, Commitment::Step, "app/stake", &[]))
+///     confirm::properties("Summary", &props, None, Commitment::Step, "app/stake", &[])
 /// }
 /// ```
-pub fn properties(params: Properties<'_>) -> Result<()> {
+pub fn properties(
+    title: &str,
+    props: &[Property<'_>],
+    subtitle: Option<&str>,
+    commitment: Commitment,
+    br: &str,
+    extras: &[ExtraItem<'_>],
+) -> Result<()> {
+    let request = ConfirmProperties {
+        title: title.into(),
+        props: props.into(),
+        subtitle: subtitle.into(),
+        commitment,
+        br_name: br.into(),
+        extras: extras.into(),
+    };
     answer(
         get_ui_or_die()
-            .confirm_properties(params)
+            .confirm_properties(request)
             .into_app_result()?,
     )
 }

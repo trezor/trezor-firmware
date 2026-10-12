@@ -7,8 +7,8 @@
 use super::util::FastResult;
 use super::wire::WireError;
 pub use crate::structs::{
-    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmValue, ExtraItem, OptStrSlice,
-    Property, Severity, ShowNotice, UiReply,
+    ConfirmAction, ConfirmData, ConfirmProperties, ConfirmSummary, ConfirmValue, ShowNotice,
+    StrSlice, UiReply,
 };
 
 /// Talks to Core's UI/progress screens — implemented in `core/embed/api`
@@ -27,6 +27,10 @@ pub trait UiV1: Send + Sync {
         &self,
         value: ConfirmValue<'a>,
     ) -> FastResult<UiReply, WireError>;
+    /// Shows all of `value.data`, however long; the implementation sends it
+    /// to core in chunks.
+    extern "C" fn confirm_data<'a>(&self, value: ConfirmData<'a>)
+    -> FastResult<UiReply, WireError>;
     extern "C" fn confirm_summary<'a>(
         &self,
         value: ConfirmSummary<'a>,
@@ -37,19 +41,14 @@ pub trait UiV1: Send + Sync {
     ) -> FastResult<UiReply, WireError>;
     extern "C" fn show_notice<'a>(&self, value: ShowNotice<'a>) -> FastResult<UiReply, WireError>;
 
+    /// `total` is in the app's own units; `0` means not known.
     extern "C" fn init_progress<'a>(
         &self,
-        description: OptStrSlice<'a>,
-        title: OptStrSlice<'a>,
-        indeterminate: bool,
-        danger: bool,
+        label: StrSlice<'a>,
+        total: u32,
     ) -> FastResult<(), WireError>;
-    /// `value` is how far along, from 0 to 1000.
-    extern "C" fn update_progress<'a>(
-        &self,
-        description: OptStrSlice<'a>,
-        value: u32,
-    ) -> FastResult<(), WireError>;
+    /// Reports `units` more of the total done.
+    extern "C" fn step_progress(&self, units: u32) -> FastResult<(), WireError>;
     extern "C" fn end_progress(&self) -> FastResult<(), WireError>;
 }
 

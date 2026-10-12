@@ -22,10 +22,7 @@ use trezor_app_sdk::{Error, Result, info};
 
 #[unsafe(no_mangle)]
 pub fn app() -> Result<()> {
-    let params = confirm::Action::new(
-        "Title", "Confirm?", None, None, Commitment::Step, "app/confirm", &[],
-    );
-    match confirm::action(params) {
+    match confirm::action("Title", "Confirm?", None, None, Commitment::Step, "app/confirm", &[]) {
         Ok(()) => {}
         Err(Error::Cancelled) => {
             info!("Cancelled");
@@ -33,9 +30,7 @@ pub fn app() -> Result<()> {
         }
         Err(e) => return Err(e),
     }
-    notice::show(notice::Notice::new(
-        notice::Severity::Done, "Done", "All set", "app/done", &[], false,
-    ))
+    notice::show(notice::Severity::Done, "Done", "All set", false, "app/done", &[])
 }
 ```
 
@@ -46,12 +41,12 @@ A real app loops on the host's requests; see `sdk/apps/tron/src/main.rs`.
 Confirmations and notices return `Result<()>`; the person backing out is
 `Err(Error::Cancelled)`, so `?` stops the flow on it.
 
-- `confirm::action(params)` - confirm an action
-- `confirm::value(params)` - confirm one value (address, amount, ...)
-- `confirm::data(params)` - confirm raw bytes, shown as hex
-- `confirm::properties(params)` - confirm a key-value list
-- `confirm::summary(params)` - confirm amount and fee
-- `notice::show(params)` - tell the person something (info, warning, done, ...)
+- `confirm::action(..)` - confirm an action
+- `confirm::value(..)` - confirm one value (address, amount, ...)
+- `confirm::data(..)` - confirm raw bytes, shown as hex
+- `confirm::properties(..)` - confirm a key-value list
+- `confirm::summary(..)` - confirm amount and fee
+- `notice::show(..)` - tell the person something (info, warning, done, ...)
 - `progress::run(label, total, work)` - show progress while `work` runs
 
 The module docs (`cargo doc`) are the full reference.

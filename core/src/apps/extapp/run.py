@@ -6,6 +6,7 @@ import trezorui_api
 import ustruct  # pyright: ignore[reportMissingImports]
 from storage import cache_common as cc
 from trezor import app, io, loop, ui, workflow
+from trezor.enums import ButtonRequestType
 from trezor.messages import ExtAppMessage, ExtAppResponse
 from trezor.ui import ProgressLayout
 from trezor.ui.layouts.progress import progress
@@ -23,8 +24,6 @@ if TYPE_CHECKING:
     from trezorio import IpcMessage
     from typing import Any, NoReturn
 
-    from trezor.enums import ButtonRequestType
-
 _SERVICE_WIRE_START = const(0)
 _SERVICE_WIRE_CONTINUE = const(1)
 _SERVICE_WIRE_END = const(2)
@@ -34,7 +33,7 @@ _SERVICE_PROGRESS = const(5)
 _SERVICE_CRYPTO = const(6)
 
 _SERVICE_PROGRESS_INIT = const(0)
-_SERVICE_PROGRESS_REPORT = const(1)
+_SERVICE_PROGRESS_STEP = const(1)
 _SERVICE_PROGRESS_STOP = const(2)
 
 _SERVICE_CRYPTO_GET_XPUB = const(0)
@@ -46,9 +45,7 @@ _SERVICE_CRYPTO_CHECK_ADDRESS_MAC = const(5)
 _SERVICE_CRYPTO_VERIFY_NONCE_CACHE = const(6)
 
 
-async def _show_new_layout(
-    layout_obj: Any, br_code: ButtonRequestType, br_name: str | None
-) -> tuple[ui.Layout, Any]:
+async def _show_new_layout(layout_obj: Any, br_name: str) -> tuple[ui.Layout, Any]:
     """Show a freshly built layout, and wait for the answer.
 
     Returns the layout as well, so that a caller which means to show it again
@@ -59,8 +56,8 @@ async def _show_new_layout(
     workflow.close_others()
     layout = ui.Layout(layout_obj)
     layout.start()
-    if br_name is not None:
-        layout.put_button_request((br_code, br_name))
+    # Every app step is `Other`; its name carries the meaning.
+    layout.put_button_request((ButtonRequestType.Other, br_name))
     return layout, await layout.get_result()
 
 
@@ -72,44 +69,38 @@ async def _show_block(data: bytes) -> Any:
     like, and only the decision goes back to the app.
     """
     try:
-        layout_obj, br_code, br_name = trezorui_api.process_ipc_message(data=data)
+        layout_obj, br_name = trezorui_api.process_ipc_message(data=data)
     except Exception as e:
         # The request cannot be drawn. Answering would leave the app waiting on
         # a screen that never existed, so the app stops.
         raise DataError(f"Cannot show the app's screen: {e}")
-    layout, result = await _show_new_layout(layout_obj, br_code, br_name)
+    layout, result = await _show_new_layout(layout_obj, br_name)
     while result is trezorui_api.INFO:
-        result = await _walk_extras(data, br_code, br_name)
+        result = await _walk_extras(data, br_name)
         if result is None:
             # Back to the block, as the person left it.
             result = await _run_layout(layout)
     return result
 
 
-async def _walk_extras(
-    data: bytes, br_code: ButtonRequestType, br_name: str | None
-) -> Any:
+async def _walk_extras(data: bytes, br_name: str) -> Any:
     """Show the block's menu of extras until the person leaves it.
 
     Returns `CANCELLED` when they refused the block from the menu (the way out
     some models keep there), or `None` to go back to the block.
     """
-
-    def step(suffix: str) -> str | None:
-        return None if br_name is None else br_name + suffix
-
     try:
         menu_obj = trezorui_api.process_ipc_extra(data=data)
     except Exception as e:
         raise DataError(f"Cannot show the app's menu: {e}")
-    menu, choice = await _show_new_layout(menu_obj, br_code, step("/menu"))
+    menu, choice = await _show_new_layout(menu_obj, br_name + "/menu")
     while isinstance(choice, int):
         try:
             extra_obj = trezorui_api.process_ipc_extra(data=data, index=choice)
         except Exception as e:
             raise DataError(f"Cannot show the app's extra: {e}")
         # Leaving the extra comes back to the menu, on the entry it was.
-        await _show_new_layout(extra_obj, br_code, step("/details"))
+        await _show_new_layout(extra_obj, br_name + "/details")
         choice = await _run_layout(menu)
     if choice is trezorui_api.CANCELLED:
         return choice
@@ -117,14 +108,14 @@ async def _walk_extras(
 
 
 async def _run_layout(layout: ui.Layout) -> Any:
-    """Show a layout that is already built, and wait for the user to answer.
+    """Show a layout that is already built, and wait for the person to answer.
 
     The layout keeps whatever state it had — which page it was on, how far it
     was scrolled — because it is started again rather than constructed again.
     """
     # Same courtesy `interact()` does: nobody else should be drawing.
     workflow.close_others()
-    # The user has seen this screen before, so it should return rather than
+    # The person has seen this screen before, so it should return rather than
     # arrive.
     layout.should_resume = True
     layout.start()
@@ -224,6 +215,9 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
     log.debug(__name__, "Starting main loop for Trezor app")
 
     progress_obj: ProgressLayout | None = None
+    # The app reports work in its own units; the count and the fill are ours.
+    progress_total = 0
+    progress_done = 0
 
     def crypto_resp_cb(data: bytes) -> None:
         log.debug(__name__, "Sending crypto result")
@@ -480,29 +474,25 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             if message_id == _SERVICE_PROGRESS_INIT:
                 # Initialize a progress context
                 assert isinstance(obj, tuple)
-                assert len(obj) == 4
-                description: str | None = obj[0]
-                title: str | None = obj[1]
-                indeterminate: bool = obj[2]
-                danger: bool = obj[3]
+                assert len(obj) == 2
+                label: str = obj[0]
+                progress_total = obj[1]
+                progress_done = 0
+                # A total of 0 means the app does not know it: motion, no fill.
                 progress_obj = progress(
-                    description=description,
-                    title=title,
-                    indeterminate=indeterminate,
-                    danger=danger,
+                    description=label, indeterminate=progress_total == 0
                 )
                 # The layout only appears on its first report, and an
                 # indeterminate progress never reports: show it now.
                 progress_obj.report(0)
-            elif message_id == _SERVICE_PROGRESS_REPORT:
+            elif message_id == _SERVICE_PROGRESS_STEP:
                 if progress_obj is None:
                     die(DataError("Progress not initialized"))
-                # Report progress update
-                assert isinstance(obj, tuple)
-                assert len(obj) == 2
-                description: str | None = obj[0]
-                value: int = obj[1]
-                progress_obj.report(value, description=description)
+                assert isinstance(obj, int)
+                if progress_total:
+                    # Past the total pins the bar full rather than wrapping.
+                    progress_done = min(progress_done + obj, progress_total)
+                    progress_obj.report(progress_done * 1000 // progress_total)
             elif message_id == _SERVICE_PROGRESS_STOP:
                 if progress_obj is None:
                     die(DataError("Progress not initialized"))

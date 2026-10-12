@@ -31,7 +31,7 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
             Property::plain(tr!("words__account"), account_name.as_str()),
             Property::plain(tr!("address_details__derivation_path"), &path),
         ];
-        modui::confirm::value(confirm::Value::new(
+        modui::confirm::value(
             &subtitle,
             &address,
             confirm::ValueKind::Address,
@@ -44,18 +44,18 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
                 tr!("address_details__account_info"),
                 &account_facts,
             )],
-        ))
+        )
         .c()?;
 
         // The last screen of the flow; it offers no way back out.
-        modui::notice::show(notice::Notice::new(
+        modui::notice::show(
             notice::Severity::Done,
             tr!("words__title_done"),
             tr!("address__confirmed"),
+            false,
             "tron/address/confirmed",
             &[],
-            false,
-        ))
+        )
         .c()?;
     }
 

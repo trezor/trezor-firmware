@@ -882,8 +882,8 @@ def tutorial() -> LayoutContext[UiResult]:
 def process_ipc_message(
     *,
     data: bytes,
-) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
-    """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
+) -> tuple[LayoutObj[UiResult], str]:
+    """Build the layout for an app's UI request; return it with the step name to announce."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

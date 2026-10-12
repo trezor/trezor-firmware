@@ -32,8 +32,8 @@ use crate::traits::syslog::{
 };
 use crate::traits::trezor_v1::{TrezorApiV1, TrezorApiV1Struct, TrezorApiV1Vtable};
 use crate::traits::ui::{
-    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmValue, ShowNotice, UiReply, UiV1,
-    UiV1Vtable,
+    ConfirmAction, ConfirmData, ConfirmProperties, ConfirmSummary, ConfirmValue, ShowNotice,
+    StrSlice, UiReply, UiV1, UiV1Vtable,
 };
 use crate::traits::util::FastResult;
 use crate::traits::wire::{WireError, WireMessage, WireV1, WireV1Vtable};
@@ -335,6 +335,13 @@ impl UiV1 for DummyUi {
         unimplemented!("not exercised by the current test suite")
     }
 
+    extern "C" fn confirm_data<'a>(
+        &self,
+        _value: ConfirmData<'a>,
+    ) -> FastResult<UiReply, WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
     extern "C" fn confirm_summary<'a>(
         &self,
         _value: ConfirmSummary<'a>,
@@ -355,19 +362,13 @@ impl UiV1 for DummyUi {
 
     extern "C" fn init_progress<'a>(
         &self,
-        _description: crate::structs::OptStrSlice<'a>,
-        _title: crate::structs::OptStrSlice<'a>,
-        _indeterminate: bool,
-        _danger: bool,
+        _label: StrSlice<'a>,
+        _total: u32,
     ) -> FastResult<(), WireError> {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn update_progress<'a>(
-        &self,
-        _description: crate::structs::OptStrSlice<'a>,
-        _value: u32,
-    ) -> FastResult<(), WireError> {
+    extern "C" fn step_progress(&self, _units: u32) -> FastResult<(), WireError> {
         unimplemented!("not exercised by the current test suite")
     }
 

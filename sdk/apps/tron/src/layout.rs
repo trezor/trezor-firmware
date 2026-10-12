@@ -24,7 +24,7 @@ pub(crate) fn confirm_message_hash(hash: &[u8]) -> Result<()> {
             .as_str()
     );
 
-    modui::confirm::value(confirm::Value::new(
+    modui::confirm::value(
         tr!("ethereum__title_confirm_message_hash"),
         &message_hash_hex,
         confirm::ValueKind::Text,
@@ -34,7 +34,7 @@ pub(crate) fn confirm_message_hash(hash: &[u8]) -> Result<()> {
         Commitment::Step,
         "tron/message_hash",
         &[],
-    ))
+    )
     .c()
 }
 
@@ -58,7 +58,7 @@ fn get_account_info_items<'a>(
 }
 
 pub(crate) fn confirm_typed_data_final() -> Result<()> {
-    modui::confirm::action(confirm::Action::new(
+    modui::confirm::action(
         tr!("ethereum__title_confirm_typed_data"),
         tr!("ethereum__sign_eip712"),
         None,
@@ -66,12 +66,12 @@ pub(crate) fn confirm_typed_data_final() -> Result<()> {
         Commitment::Final,
         "tron/typed_data",
         &[],
-    ))
+    )
     .c()
 }
 
 pub(crate) fn confirm_empty_typed_message() -> Result<()> {
-    modui::confirm::value(confirm::Value::new(
+    modui::confirm::value(
         tr!("ethereum__title_confirm_message"),
         "",
         confirm::ValueKind::Text,
@@ -81,7 +81,7 @@ pub(crate) fn confirm_empty_typed_message() -> Result<()> {
         Commitment::Step,
         "tron/message",
         &[],
-    ))
+    )
     .c()
 }
 
@@ -109,7 +109,7 @@ pub(crate) fn addr_pad(addr: &str, chunkify: bool) -> Result<String> {
 
 /// A note attached to a transaction: free-form text supplied by the sender.
 pub fn confirm_note(note: &str) -> Result<()> {
-    modui::confirm::value(confirm::Value::new(
+    modui::confirm::value(
         tr!("words__note"),
         note,
         confirm::ValueKind::Text,
@@ -119,7 +119,7 @@ pub fn confirm_note(note: &str) -> Result<()> {
         Commitment::Step,
         "tron/note",
         &[],
-    ))
+    )
     .c()
 }
 
@@ -130,7 +130,7 @@ pub fn confirm_freeze_operations(
     title: &str,
 ) -> Result<()> {
     let address = get_encoded_address(owner_address).c()?;
-    modui::confirm::value(confirm::Value::new(
+    modui::confirm::value(
         title,
         &address,
         confirm::ValueKind::Address,
@@ -140,10 +140,10 @@ pub fn confirm_freeze_operations(
         Commitment::Step,
         "tron/freeze/owner",
         &[],
-    ))
+    )
     .c()?;
 
-    modui::confirm::properties(confirm::Properties::new(
+    modui::confirm::properties(
         tr!("words__title_summary"),
         &[
             Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
@@ -153,7 +153,7 @@ pub fn confirm_freeze_operations(
         Commitment::Final,
         "tron/freeze",
         &[],
-    ))
+    )
     .c()
 }
 
@@ -173,7 +173,7 @@ pub fn confirm_delegate_resource(
 ) -> Result<()> {
     let title = tr!("tron__delegate_resource");
 
-    modui::confirm::value(confirm::Value::new(
+    modui::confirm::value(
         title,
         &get_encoded_address(receiver_address).c()?,
         confirm::ValueKind::Address,
@@ -183,10 +183,10 @@ pub fn confirm_delegate_resource(
         Commitment::Step,
         "tron/delegate/recipient",
         &[],
-    ))
+    )
     .c()?;
 
-    modui::confirm::properties(confirm::Properties::new(
+    modui::confirm::properties(
         title,
         &[
             Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
@@ -200,11 +200,11 @@ pub fn confirm_delegate_resource(
         },
         "tron/delegate/resource",
         &[],
-    ))
+    )
     .c()?;
 
     if let Some(lock_period) = lock_period {
-        modui::confirm::properties(confirm::Properties::new(
+        modui::confirm::properties(
             title,
             &[
                 Property::new(
@@ -222,7 +222,7 @@ pub fn confirm_delegate_resource(
             Commitment::Final,
             "tron/delegate/lock_period",
             &[],
-        ))
+        )
         .c()?;
     }
 
@@ -236,7 +236,7 @@ pub fn confirm_undelegate_resource(
 ) -> Result<()> {
     let title = tr!("tron__undelegate_resource");
 
-    modui::confirm::value(confirm::Value::new(
+    modui::confirm::value(
         title,
         &get_encoded_address(receiver_address).c()?,
         confirm::ValueKind::Address,
@@ -246,10 +246,10 @@ pub fn confirm_undelegate_resource(
         Commitment::Step,
         "tron/undelegate/from_address",
         &[],
-    ))
+    )
     .c()?;
 
-    modui::confirm::properties(confirm::Properties::new(
+    modui::confirm::properties(
         title,
         &[
             Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
@@ -259,7 +259,7 @@ pub fn confirm_undelegate_resource(
         Commitment::Final,
         "tron/undelegate/resource",
         &[],
-    ))
+    )
     .c()
 }
 
@@ -273,7 +273,7 @@ pub fn confirm_claim(
     // When the owner address differs from the signing address, confirm it first
     // (with a warning) so the final screen is the claim itself.
     if let Some(owner_address) = owner_address {
-        modui::confirm::value(confirm::Value::new(
+        modui::confirm::value(
             title,
             owner_address,
             confirm::ValueKind::Address,
@@ -283,7 +283,7 @@ pub fn confirm_claim(
             Commitment::Step,
             "tron/claim/owner",
             &[],
-        ))
+        )
         .c()?;
     }
 
@@ -325,7 +325,7 @@ pub fn confirm_tron_claim(
         &extras[..]
     };
 
-    modui::confirm::action(confirm::Action::new(
+    modui::confirm::action(
         title,
         intro_question,
         None,
@@ -333,7 +333,7 @@ pub fn confirm_tron_claim(
         Commitment::Final,
         "tron/claim",
         extras,
-    ))
+    )
     .c()
 }
 
@@ -354,13 +354,13 @@ fn confirm_tron_summary(
         .map(|items| ExtraItem::simple(tr!("address_details__account_info"), items));
     let extras = account_extra.as_slice();
 
-    modui::confirm::summary(confirm::Summary::new(
+    modui::confirm::summary(
         title.unwrap_or(tr!("words__send")),
         amount.map(|a| (tr!("words__amount"), a)),
         fee.map(|f| (tr!("words__fee_limit"), f)),
         "tron/summary",
         extras,
-    ))
+    )
     .c()
 }
 
@@ -379,7 +379,7 @@ fn confirm_tron_send(
         &account_items,
     )];
 
-    modui::confirm::value(confirm::Value::new(
+    modui::confirm::value(
         tr!("words__send"),
         address,
         confirm::ValueKind::Address,
@@ -389,7 +389,7 @@ fn confirm_tron_send(
         Commitment::Step,
         "tron/send",
         &extras,
-    ))
+    )
     .c()?;
 
     confirm_tron_summary(Some(tr!("words__send")), amount, fee, Some(account_details))
@@ -403,7 +403,7 @@ pub fn confirm_tron_transfer(
 ) -> Result<()> {
     let title = tr!("words__send");
 
-    modui::confirm::value(confirm::Value::new(
+    modui::confirm::value(
         title,
         recipient_addr,
         confirm::ValueKind::Address,
@@ -413,10 +413,10 @@ pub fn confirm_tron_transfer(
         Commitment::Step,
         "tron/transfer",
         &[],
-    ))
+    )
     .c()?;
 
-    modui::confirm::properties(confirm::Properties::new(
+    modui::confirm::properties(
         title,
         &[
             Property::new(tr!("words__amount"), amount_str, false),
@@ -426,16 +426,16 @@ pub fn confirm_tron_transfer(
         Commitment::Step,
         "tron/transfer/amount",
         &[],
-    ))
+    )
     .c()?;
 
-    modui::confirm::summary(confirm::Summary::new(
+    modui::confirm::summary(
         title,
         native_amount_str.map(|a| (tr!("words__amount"), a)),
         Some((tr!("words__fee_limit"), maximum_fee)),
         "tron/transfer/summary",
         &[],
-    ))
+    )
     .c()
 }
 
@@ -462,7 +462,7 @@ fn confirm_tron_approve(
         )
     };
 
-    modui::confirm::action(confirm::Action::new(
+    modui::confirm::action(
         title,
         action_subtitle,
         None,
@@ -470,10 +470,10 @@ fn confirm_tron_approve(
         Commitment::Step,
         "tron/approve",
         &[],
-    ))
+    )
     .c()?;
 
-    modui::confirm::value(confirm::Value::new(
+    modui::confirm::value(
         title,
         recipient_addr,
         confirm::ValueKind::Address,
@@ -483,10 +483,10 @@ fn confirm_tron_approve(
         Commitment::Step,
         "tron/approve/spender",
         &[],
-    ))
+    )
     .c()?;
 
-    modui::confirm::properties(confirm::Properties::new(
+    modui::confirm::properties(
         title,
         &[
             summary_view,
@@ -496,28 +496,28 @@ fn confirm_tron_approve(
         Commitment::Step,
         "tron/approve/amount",
         &[],
-    ))
+    )
     .c()?;
 
-    modui::confirm::summary(confirm::Summary::new(
+    modui::confirm::summary(
         title,
         native_amount_str.map(|a| (tr!("words__amount"), a)),
         Some((tr!("words__fee_limit"), maximum_fee)),
         "tron/approve/summary",
         &[],
-    ))
+    )
     .c()
 }
 
 pub fn confirm_tron_voting<'a>(items: &[Property<'a>]) -> Result<()> {
-    modui::confirm::properties(confirm::Properties::new(
+    modui::confirm::properties(
         tr!("words__review"),
         items,
         Some(tr!("words__voting")),
         Commitment::Final,
         "tron/vote",
         &[],
-    ))
+    )
     .c()
 }
 
@@ -528,14 +528,14 @@ fn confirm_ethereum_unknown_contract_warning() -> Result<()> {
         tr!("words__know_what_your_doing")
     );
 
-    modui::notice::show(notice::Notice::new(
+    modui::notice::show(
         notice::Severity::Danger,
         tr!("words__important"),
         &content,
+        true,
         "tron/unknown_contract",
         &[],
-        true,
-    ))
+    )
     .c()
 }
 
@@ -547,7 +547,7 @@ pub fn confirm_unknown_smart_contract(
     confirm_ethereum_unknown_contract_warning().c()?;
 
     let contract_address = get_encoded_address(&contract.contract_address).c()?;
-    modui::confirm::value(confirm::Value::new(
+    modui::confirm::value(
         tr!("ethereum__token_contract"),
         &contract_address,
         confirm::ValueKind::Address,
@@ -557,18 +557,18 @@ pub fn confirm_unknown_smart_contract(
         Commitment::Step,
         "tron/contract",
         &[],
-    ))
+    )
     .c()?;
 
     // The app hands over the raw calldata and gets one outcome; the hex, how it
     // is split up, and the button labels are not the app's.
-    modui::confirm::data(confirm::Data::new(
+    modui::confirm::data(
         tr!("ethereum__title_input_data"),
         &contract.data,
         None,
         "tron/contract/data",
         &[],
-    ))
+    )
     .c()?;
 
     confirm_tron_summary(

@@ -100,14 +100,14 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
     signature.push(sig[0]);
 
     // The last screen of the flow; it offers no way back out.
-    modui::notice::show(notice::Notice::new(
+    modui::notice::show(
         notice::Severity::Done,
         tr!("words__title_done"),
         tr!("send__transaction_signed"),
+        false,
         "tron/signed",
         &[],
-        false,
-    ))
+    )
     .c()?;
 
     Ok(Signature { signature })

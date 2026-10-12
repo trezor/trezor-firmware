@@ -1,9 +1,6 @@
 //! The library's own machinery. Private to `modui`; nothing here is visible to
 //! an app.
 
-pub(in crate::modui) mod chunked;
-pub(in crate::modui) mod data;
-
 use crate::traits::ui::UiReply;
 use crate::{Error, Result};
 

@@ -14,8 +14,8 @@ use rkyv::{
 };
 #[cfg(feature = "app_loading")]
 use trezor_app_sdk::structs::{
-    ArchivedCommitment, ArchivedValueKind, Commitment, Property, Severity as WireSeverity, Slice, StrSlice,
-    TrezorProgressEnum, TrezorUiEnum, UiReply,
+    ArchivedCommitment, ArchivedValueKind, Commitment, Property, Severity as WireSeverity, Slice,
+    StrSlice, TrezorProgressEnum, TrezorUiEnum, UiReply,
 };
 
 use crate::io::BinaryData;
@@ -41,8 +41,6 @@ use crate::ui::layout::device_menu_result::DEVICE_MENU_RESULT;
 use crate::ui::layout::menu_item_intent::micropython::MENU_ITEM_INTENT_OBJ;
 #[cfg(feature = "app_loading")]
 use crate::ui::layout::menu_item_intent::MenuItemIntent;
-#[cfg(feature = "app_loading")]
-use crate::ui::layout::obj::LayoutMaybeTrace;
 use crate::ui::layout::obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ};
 use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 use crate::ui::layout::util::{upy_disable_animation, RecoveryType};
@@ -1262,29 +1260,6 @@ extern "C" fn new_tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-// Helper to wrap a layout with br_code and optional br_name into the expected
-// tuple
-#[cfg(feature = "app_loading")]
-fn wrap(
-    layout: impl LayoutMaybeTrace + 'static,
-    br_code: i32,
-    br_name: Option<&Archived<StrSlice>>,
-) -> Result<(Gc<LayoutObj>, i32, Obj), Error> {
-    Ok((
-        LayoutObj::new_root(layout)?,
-        br_code,
-        match br_name {
-            Some(s) => <Obj as TryFrom<&str>>::try_from(s.as_ref())?,
-            None => Obj::const_none(),
-        },
-    ))
-}
-
-// Every extapp step is `ButtonRequestType.Other`; the step's name
-// carries the meaning.
-#[cfg(feature = "app_loading")]
-const BR_CODE_OTHER: i32 = 1;
-
 // The app says which step is its final yes; the gesture for it is ours.
 #[cfg(feature = "app_loading")]
 fn hold(commitment: &Archived<Commitment>) -> bool {
@@ -1317,121 +1292,143 @@ fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Obj {
     unwrap!(List::alloc(unsafe { list.as_slice() })).into()
 }
 
+/// Builds the layout for an app's request, and returns it with the step name
+/// to announce for it.
+///
+/// Only what the app chose arrives; every other parameter of the layout is
+/// set here, the same for every app.
 #[cfg(feature = "app_loading")]
 extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
 
+        // Read in place, without copying.
         let archived =
             unsafe { access_unchecked::<Archived<TrezorUiEnum>>(unwrap!(get_buffer(obj))) };
 
-        let (main_layout, br_code, br_name) =
-        // Read in place, without copying.
-        match archived {
-        Archived::<TrezorUiEnum>::ConfirmAction(m) => wrap(
-            ModelUI::confirm_action(
-                tstr(&m.title),
-                Some(tstr(&m.action)),
-                tstr_opt(&m.description),
-                tstr_opt(&m.subtitle),
-                None,
-                // Every confirmation can be refused; how is the model's.
-                true,
-                None,
-                hold(&m.commitment),
-                false,
-                false,
-                false,
-                None,
-                !m.extras.is_empty(),
-            )?,
-            BR_CODE_OTHER,
-            Some(&m.br_name),
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmSummary(m) => wrap(
-            ModelUI::confirm_summary(
-                tstr_opt(&m.amount),
-                tstr_opt(&m.amount_label),
-                tstr(&m.fee),
-                tstr(&m.fee_label),
-                Some(tstr(&m.title)),
-                None,
-                None,
-                None,
-                None,
-                None,
-                false,
-                !m.extras.is_empty(),
-            )?,
-            BR_CODE_OTHER,
-            Some(&m.br_name),
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmValue(m) => wrap(
-            ModelUI::confirm_value(
-                tstr(&m.title),
-                Obj::try_from(m.value.as_ref())?,
-                tstr_opt(&m.description),
-                true,
-                None,
-                tstr_opt(&m.subtitle),
-                None,
-                None,
-                false,
-                hold(&m.commitment),
-                matches!(m.kind, ArchivedValueKind::Address),
-                matches!(m.kind, ArchivedValueKind::Data),
-                false,
-                // Every confirmation can be refused; how is the model's.
-                true,
-                false,
-                tstr_opt(&m.footer).map(|text| (text, m.footer_warning)),
-                !m.extras.is_empty(),
-            )?,
-            BR_CODE_OTHER,
-            Some(&m.br_name),
-        )?,
-        Archived::<TrezorUiEnum>::ShowNotice(m) => {
-            // The app said what kind of news this is; the model decides what
-            // that looks like. This only translates the wire's word for it.
-            let severity = match m.severity {
-                Archived::<WireSeverity>::Success => Severity::Success,
-                Archived::<WireSeverity>::Done => Severity::Done,
-                Archived::<WireSeverity>::Info => Severity::Info,
-                Archived::<WireSeverity>::Warning => Severity::Warning,
-                Archived::<WireSeverity>::Danger => Severity::Danger,
-            };
-            (
-                ModelUI::show_notice(
-                    severity,
+        let (layout, br_name) = match archived {
+            Archived::<TrezorUiEnum>::ConfirmAction(m) => (
+                LayoutObj::new_root(ModelUI::confirm_action(
                     tstr(&m.title),
-                    tstr(&m.content),
+                    Some(tstr(&m.action)),
+                    tstr_opt(&m.description),
+                    tstr_opt(&m.subtitle),
+                    None,
+                    // Every confirmation can be refused; how is the model's.
+                    true,
+                    None,
+                    hold(&m.commitment),
+                    false,
+                    false,
+                    false,
+                    None,
                     !m.extras.is_empty(),
-                    m.cancel,
-                )?,
-                BR_CODE_OTHER,
-                Obj::try_from(m.br_name.as_ref())?,
-            )
-        }
-        Archived::<TrezorUiEnum>::ConfirmProperties(m) => wrap(
-            ModelUI::confirm_properties(
-                tstr(&m.title),
-                tstr_opt(&m.subtitle),
-                obj_from_proplist(&m.props),
-                hold(&m.commitment),
-                None,
-                !m.extras.is_empty(),
-            )?,
-            BR_CODE_OTHER,
-            Some(&m.br_name),
-        )?,
-    };
+                )?)?,
+                &m.br_name,
+            ),
+            Archived::<TrezorUiEnum>::ConfirmSummary(m) => (
+                LayoutObj::new_root(ModelUI::confirm_summary(
+                    tstr_opt(&m.amount),
+                    tstr_opt(&m.amount_label),
+                    // WIP: no model can leave the fee out; an empty one stands
+                    // in for it.
+                    tstr_opt(&m.fee).unwrap_or(TString::empty()),
+                    tstr_opt(&m.fee_label).unwrap_or(TString::empty()),
+                    Some(tstr(&m.title)),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    false,
+                    !m.extras.is_empty(),
+                )?)?,
+                &m.br_name,
+            ),
+            Archived::<TrezorUiEnum>::ConfirmValue(m) => (
+                LayoutObj::new_root(ModelUI::confirm_value(
+                    tstr(&m.title),
+                    Obj::try_from(m.value.as_ref())?,
+                    tstr_opt(&m.description),
+                    true,
+                    None,
+                    tstr_opt(&m.subtitle),
+                    None,
+                    None,
+                    false,
+                    hold(&m.commitment),
+                    matches!(m.kind, ArchivedValueKind::Address),
+                    false,
+                    false,
+                    // Every confirmation can be refused; how is the model's.
+                    true,
+                    false,
+                    tstr_opt(&m.footer).map(|text| (text, m.footer_warning)),
+                    !m.extras.is_empty(),
+                )?)?,
+                &m.br_name,
+            ),
+            // One chunk of the app's data. The bytes go to the layout as they
+            // are; it formats the hex itself, a page at a time.
+            Archived::<TrezorUiEnum>::ConfirmData(m) => (
+                LayoutObj::new_root(ModelUI::confirm_value(
+                    tstr(&m.title),
+                    Obj::try_from(m.data.as_ref())?,
+                    None,
+                    true,
+                    None,
+                    tstr_opt(&m.subtitle),
+                    None,
+                    None,
+                    false,
+                    false,
+                    false,
+                    true,
+                    false,
+                    // Every confirmation can be refused; how is the model's.
+                    true,
+                    false,
+                    None,
+                    !m.extras.is_empty(),
+                )?)?,
+                &m.br_name,
+            ),
+            Archived::<TrezorUiEnum>::ShowNotice(m) => {
+                // The app said what kind of news this is; the model decides
+                // what that looks like. This only translates the wire's word
+                // for it.
+                let severity = match m.severity {
+                    Archived::<WireSeverity>::Success => Severity::Success,
+                    Archived::<WireSeverity>::Done => Severity::Done,
+                    Archived::<WireSeverity>::Info => Severity::Info,
+                    Archived::<WireSeverity>::Warning => Severity::Warning,
+                    Archived::<WireSeverity>::Danger => Severity::Danger,
+                };
+                (
+                    ModelUI::show_notice(
+                        severity,
+                        tstr(&m.title),
+                        tstr(&m.content),
+                        !m.extras.is_empty(),
+                        m.cancel,
+                    )?,
+                    &m.br_name,
+                )
+            }
+            Archived::<TrezorUiEnum>::ConfirmProperties(m) => (
+                LayoutObj::new_root(ModelUI::confirm_properties(
+                    tstr(&m.title),
+                    tstr_opt(&m.subtitle),
+                    obj_from_proplist(&m.props),
+                    hold(&m.commitment),
+                    None,
+                    !m.extras.is_empty(),
+                )?)?,
+                &m.br_name,
+            ),
+        };
 
-        Ok((
-            Obj::from(main_layout),
-            Obj::try_from(u32::try_from(br_code)?)?,
-            br_name,
-        )
-            .try_into()?)
+        Ok((Obj::from(layout), Obj::try_from(br_name.as_ref())?).try_into()?)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1460,6 +1457,7 @@ extern "C" fn new_process_ipc_extra(n_args: usize, args: *const Obj, kwargs: *mu
         let extras = match archived {
             Archived::<TrezorUiEnum>::ConfirmAction(m) => &m.extras,
             Archived::<TrezorUiEnum>::ConfirmValue(m) => &m.extras,
+            Archived::<TrezorUiEnum>::ConfirmData(m) => &m.extras,
             Archived::<TrezorUiEnum>::ConfirmSummary(m) => &m.extras,
             Archived::<TrezorUiEnum>::ConfirmProperties(m) => &m.extras,
             Archived::<TrezorUiEnum>::ShowNotice(m) => &m.extras,
@@ -1567,45 +1565,16 @@ extern "C" fn new_deserialize_progress_message(
 
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
-        fn obj_from_archived_borrowed_str_option(
-            s: &ArchivedOption<Archived<StrSlice>>,
-        ) -> Result<Obj, Error> {
-            match s.as_ref() {
-                Some(s) => Ok(Obj::try_from(s.as_ref())?),
-                None => Ok(Obj::const_none()),
-            }
-        }
-
         // Deserialize the rkyv archived data directly from the static buffer
         let archived = unsafe { rkyv::access_unchecked::<Archived<TrezorProgressEnum>>(data) };
 
-        // Access the archived data zero-copy using safe Deref access
         let result: Obj = match archived {
-            Archived::<TrezorProgressEnum>::Init {
-                description,
-                title,
-                indeterminate,
-                danger,
-            } => {
-                let description = description
-                    .as_ref()
-                    .map(|d| Obj::try_from(d.as_ref()))
-                    .unwrap_or(Ok(Obj::const_none()))?;
-                let title = obj_from_archived_borrowed_str_option(title)?;
-
-                (
-                    description,
-                    title,
-                    Obj::try_from(*indeterminate)?,
-                    Obj::try_from(*danger)?,
-                )
-                    .try_into()?
-            }
-            Archived::<TrezorProgressEnum>::Update { description, value } => {
-                let description = obj_from_archived_borrowed_str_option(description)?;
-                let value = Obj::try_from(value.to_native())?;
-                (description, value).try_into()?
-            }
+            Archived::<TrezorProgressEnum>::Init { label, total } => (
+                Obj::try_from(label.as_ref())?,
+                Obj::try_from(total.to_native())?,
+            )
+                .try_into()?,
+            Archived::<TrezorProgressEnum>::Step { units } => Obj::try_from(units.to_native())?,
             Archived::<TrezorProgressEnum>::End => Obj::const_none(),
         };
 
@@ -2526,8 +2495,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def process_ipc_message(
     ///     *,
     ///     data: bytes,
-    /// ) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
-    ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
+    /// ) -> tuple[LayoutObj[UiResult], str]:
+    ///     """Build the layout for an app's UI request; return it with the step name to announce."""
     Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
 
     /// def process_ipc_extra(
