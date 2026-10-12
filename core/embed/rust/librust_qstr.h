@@ -428,6 +428,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_iface_num;
   MP_QSTR_image;
   MP_QSTR_indeterminate;
+  MP_QSTR_index;
   MP_QSTR_info;
   MP_QSTR_info_button;
   MP_QSTR_init;
@@ -616,6 +617,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pm_event;
   MP_QSTR_prefill;
   MP_QSTR_prefill_word;
+  MP_QSTR_process_ipc_extra;
   MP_QSTR_process_ipc_message;
   MP_QSTR_production_year;
   MP_QSTR_progress__authenticity_check;
