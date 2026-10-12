@@ -9,13 +9,13 @@ use rkyv::{
     option::ArchivedOption,
     rancor::Failure,
     ser::{allocator::SubAllocator, writer::Buffer},
-    tuple::ArchivedTuple2,
     util::Align,
     Archived,
 };
 #[cfg(feature = "app_loading")]
-use trezor_app_sdk::ui::{
-    Property, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
+use trezor_app_sdk::structs::{
+    ArchivedCommitment, ArchivedValueKind, Commitment, Property, Severity as WireSeverity, Slice,
+    StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
 };
 
 use crate::io::BinaryData;
@@ -41,12 +41,12 @@ use crate::ui::layout::device_menu_result::DEVICE_MENU_RESULT;
 use crate::ui::layout::menu_item_intent::micropython::MENU_ITEM_INTENT_OBJ;
 #[cfg(feature = "app_loading")]
 use crate::ui::layout::menu_item_intent::MenuItemIntent;
-#[cfg(feature = "app_loading")]
-use crate::ui::layout::obj::LayoutMaybeTrace;
 use crate::ui::layout::obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ};
 use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 use crate::ui::layout::util::{upy_disable_animation, RecoveryType};
 use crate::ui::notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ};
+#[cfg(feature = "app_loading")]
+use crate::ui::ui_firmware::Severity;
 use crate::ui::ui_firmware::{
     FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
     MAX_WORD_QUIZ_ITEMS,
@@ -1260,332 +1260,243 @@ extern "C" fn new_tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+// The app says which step is its final yes; the gesture for it is ours.
+#[cfg(feature = "app_loading")]
+fn hold(commitment: &Archived<Commitment>) -> bool {
+    matches!(commitment, ArchivedCommitment::Final)
+}
+
+#[cfg(feature = "app_loading")]
+fn tstr(s: &Archived<StrSlice>) -> TString<'static> {
+    unwrap!(StrBuffer::alloc(s.as_ref())).into()
+}
+
+#[cfg(feature = "app_loading")]
+fn tstr_opt(s: &ArchivedOption<Archived<StrSlice>>) -> Option<TString<'static>> {
+    s.as_ref()
+        .map(|s| unwrap!(StrBuffer::alloc(s.as_ref())).into())
+}
+
+#[cfg(feature = "app_loading")]
+fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Obj {
+    let slice = archived.as_ref();
+    let mut list = unwrap!(List::with_capacity(slice.len()));
+    for item in slice {
+        let obj = unwrap!(Obj::try_from((
+            unwrap!(Obj::try_from(item.key.as_ref())),
+            unwrap!(Obj::try_from(item.value.as_ref())),
+            unwrap!(Obj::try_from(item.mono))
+        )));
+        unwrap!(list.append(obj));
+    }
+    unwrap!(List::alloc(unsafe { list.as_slice() })).into()
+}
+
+/// Builds the layout for an app's request, and returns it with the step name
+/// to announce for it.
+///
+/// Only what the app chose arrives; every other parameter of the layout is
+/// set here, the same for every app.
 #[cfg(feature = "app_loading")]
 extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
 
+        // Read in place, without copying.
         let archived =
             unsafe { access_unchecked::<Archived<TrezorUiEnum>>(unwrap!(get_buffer(obj))) };
 
-        // Helper to wrap a layout with br_code and optional br_name into the expected
-        // tuple
-        fn wrap(
-            layout: impl LayoutMaybeTrace + 'static,
-            br_code: i32,
-            br_name: Option<&Archived<StrSlice>>,
-        ) -> Result<(Gc<LayoutObj>, i32, Obj), Error> {
-            Ok((
-                LayoutObj::new_root(layout)?,
-                br_code,
-                match br_name {
-                    Some(s) => <Obj as TryFrom<&str>>::try_from(s.as_ref())?,
-                    None => Obj::const_none(),
-                },
-            ))
-        }
-
-        fn tstr(s: &Archived<StrSlice>) -> TString<'static> {
-            unwrap!(StrBuffer::alloc(s.as_ref())).into()
-        }
-
-        fn tstr_opt(s: &ArchivedOption<Archived<StrSlice>>) -> Option<TString<'static>> {
-            s.as_ref()
-                .map(|s| unwrap!(StrBuffer::alloc(s.as_ref())).into())
-        }
-
-        fn tstr_tuple_opt(
-            s: &ArchivedOption<ArchivedTuple2<Archived<StrSlice>, bool>>,
-        ) -> Option<(TString<'static>, bool)> {
-            s.as_ref()
-                .map(|s| (unwrap!(StrBuffer::alloc(s.0.as_ref())).into(), s.1))
-        }
-
-        fn obj_from_strextlist(archived: &Archived<Slice<StrExt>>) -> Obj {
-            let slice = archived.as_ref();
-            let mut list = unwrap!(List::with_capacity(slice.len()));
-            for item in slice {
-                let obj = unwrap!(Obj::try_from((
-                    unwrap!(Obj::try_from(item.key.as_ref())),
-                    unwrap!(Obj::try_from(item.mono))
-                )));
-                unwrap!(list.append(obj));
-            }
-            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
-        }
-
-        fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Obj {
-            let slice = archived.as_ref();
-            let mut list = unwrap!(List::with_capacity(slice.len()));
-            for item in slice {
-                let obj = unwrap!(Obj::try_from((
-                    unwrap!(Obj::try_from(item.key.as_ref())),
-                    unwrap!(Obj::try_from(item.value.as_ref())),
-                    unwrap!(Obj::try_from(item.mono))
-                )));
-                unwrap!(list.append(obj));
-            }
-            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
-        }
-
-        let (main_layout, br_code, br_name) =
-        // Access the archived data zero-copy using safe Deref access
-        match archived {
-        Archived::<TrezorUiEnum>::SelectMenu(m) => {
-            let mut vec = heapless::Vec::<SelectMenuItem, MAX_MENU_ITEMS>::new();
-            for item in m.items.as_ref() {
-                unwrap!(vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard)));
-            }
-            wrap(
-                ModelUI::select_menu(vec, 0)?,
-                m.br_code.to_native(),
-                None,
-            )?
-        }
-        Archived::<TrezorUiEnum>::ConfirmTrade(m) => wrap(
-            ModelUI::confirm_trade(
-                tstr(&m.title),
-                tstr(&m.subtitle),
-                tstr_opt(&m.sell),
-                tstr(&m.buy),
-                m.back_button,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmAction(m) => wrap(
-            ModelUI::confirm_action(
-                tstr(&m.title),
-                Some(tstr(&m.action)),
-                tstr_opt(&m.description),
-                tstr_opt(&m.subtitle),
-                tstr_opt(&m.verb),
-                m.cancel,
-                None,
-                m.hold,
-                false,
-                false,
-                false,
-                None,
-                m.external_menu,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowInfoWithCancel(m) => wrap(
-            ModelUI::show_info_with_cancel(
-                tstr(&m.title),
-                obj_from_proplist((&m.items).into()),
-                false,
-                m.chunkify,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmValueIntro(m) => (
-            ModelUI::confirm_value_intro(
-                tstr(&m.title),
-                m.value.as_ref().try_into()?,
-                tstr_opt(&m.subtitle),
-                tstr_opt(&m.verb),
-                tstr_opt(&m.verb_cancel),
-                tstr_opt(&m.verb_view_all),
-                m.hold,
-                m.chunkify,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::ConfirmSummary(m) => wrap(
-            ModelUI::confirm_summary(
-                tstr_opt(&m.amount),
-                tstr_opt(&m.amount_label),
-                tstr(&m.fee),
-                tstr(&m.fee_label),
-                Some(tstr(&m.title)),
-                m.account_items.as_ref().map(|i| obj_from_proplist(i)),
-                tstr_opt(&m.account_title),
-                m.extra_items.as_ref().map(|i| obj_from_proplist(i)),
-                tstr_opt(&m.extra_title),
-                None,
-                m.back_button,
-                false,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmValue(m) => wrap(
-            ModelUI::confirm_value(
-                tstr(&m.title),
-                Obj::try_from(m.value.as_ref())?,
-                tstr_opt(&m.description),
-                m.is_data,
-                None,
-                tstr_opt(&m.subtitle),
-                tstr_opt(&m.verb),
-                None,
-                m.info,
-                m.hold,
-                m.chunkify,
-                m.page_counter,
-                false,
-                m.cancel,
-                false,
-                tstr_tuple_opt(&m.footer),
-                m.external_menu,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowWarning(m) => (
-            ModelUI::show_warning(
-                Some(tstr(&m.title)),
-                tstr(&m.verb),
-                tstr(&m.content),
-                TString::empty(),
-                m.allow_cancel,
-                m.danger,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::ShowMismatch(m) => wrap(
-            ModelUI::show_mismatch(tstr(&m.title))?,
-            m.br_code.to_native(),
-            None,
-        )?,
-        Archived::<TrezorUiEnum>::ShowDanger(m) => wrap(
-            ModelUI::show_danger(
-                tstr(&m.title),
-                tstr(&m.content),
-                TString::empty(),
-                tstr_opt(&m.menu_title),
-                tstr_opt(&m.verb_cancel),
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowSuccess(m) => (
-            ModelUI::show_success(
-                tstr(&m.title),
-                tstr(&m.button),
-                tstr(&m.content),
-                false,
-                m.duration_ms.as_ref().map(|d| d.to_native()).unwrap_or(0),
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::RequestNumber(m) => wrap(
-            ModelUI::request_number(
-                tstr(&m.title),
-                m.initial.into(),
-                m.min.into(),
-                m.max.into(),
-                Some(tstr(&m.content)),
-                Some(|_| TString::empty()),
-            )?,
-            m.br_code.to_native(),
-            None,
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmProperties(m) => wrap(
-            ModelUI::confirm_properties(
-                tstr(&m.title),
-                tstr_opt(&m.subtitle),
-                obj_from_proplist(&m.props),
-                m.hold,
-                tstr_opt(&m.verb),
-                false,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowProperties(m) => wrap(
-            ModelUI::show_properties(
-                tstr(&m.title),
-                tstr_opt(&m.subtitle),
-                obj_from_proplist(&m.props),
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowPublicKey(m) => {
-            let account = tstr_opt(&m.account);
-            let pubkey = tstr(&m.pubkey);
-            wrap(
-                ModelUI::flow_get_pubkey(
-                    pubkey,
+        let (layout, br_name) = match archived {
+            Archived::<TrezorUiEnum>::ConfirmAction(m) => (
+                LayoutObj::new_root(ModelUI::confirm_action(
                     tstr(&m.title),
-                    account,
-                    tstr_opt(&m.warning),
-                    pubkey,
-                    account,
-                    tstr_opt(&m.path),
-                    11,
-                    tstr(&m.br_name),
-                )?,
-                m.br_code.to_native(),
-                None,
-            )?
-        }
-        Archived::<TrezorUiEnum>::ConfirmWithInfo(m) => (
-            ModelUI::confirm_with_info(
-                tstr(&m.title),
-                tstr_opt(&m.subtitle),
-                obj_from_strextlist(&m.items),
-                tstr(&m.verb),
-                tstr_opt(&m.verb_info),
-                None,
-                false,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::ShowAddress(m) => wrap(
-            ModelUI::flow_get_address(
-                tstr(&m.address),
-                tstr_opt(&m.title).unwrap_or("Receive".into()),
-                tstr_opt(&m.subtitle),
-                None,
-                None,
-                m.chunkify,
-                tstr(&m.address_qr),
-                m.case_sensitive,
-                tstr_opt(&m.account),
-                tstr_opt(&m.path),
-                obj_from_proplist(&m.xpubs),
-                10,
-                "show_address".into(),
-            )?,
-            m.br_code.to_native(),
-            None,
-        )?,
-    };
+                    Some(tstr(&m.action)),
+                    tstr_opt(&m.description),
+                    tstr_opt(&m.subtitle),
+                    None,
+                    // Every confirmation can be refused; how is the model's.
+                    true,
+                    None,
+                    hold(&m.commitment),
+                    false,
+                    false,
+                    false,
+                    None,
+                    !m.extras.is_empty(),
+                )?)?,
+                &m.br_name,
+            ),
+            Archived::<TrezorUiEnum>::ConfirmSummary(m) => (
+                LayoutObj::new_root(ModelUI::confirm_summary(
+                    tstr_opt(&m.amount),
+                    tstr_opt(&m.amount_label),
+                    // WIP: no model can leave the fee out; an empty one stands
+                    // in for it.
+                    tstr_opt(&m.fee).unwrap_or(TString::empty()),
+                    tstr_opt(&m.fee_label).unwrap_or(TString::empty()),
+                    Some(tstr(&m.title)),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    false,
+                    !m.extras.is_empty(),
+                )?)?,
+                &m.br_name,
+            ),
+            Archived::<TrezorUiEnum>::ConfirmValue(m) => (
+                LayoutObj::new_root(ModelUI::confirm_value(
+                    tstr(&m.title),
+                    Obj::try_from(m.value.as_ref())?,
+                    tstr_opt(&m.description),
+                    true,
+                    None,
+                    tstr_opt(&m.subtitle),
+                    None,
+                    None,
+                    false,
+                    hold(&m.commitment),
+                    matches!(m.kind, ArchivedValueKind::Address),
+                    false,
+                    false,
+                    // Every confirmation can be refused; how is the model's.
+                    true,
+                    false,
+                    tstr_opt(&m.footer).map(|text| (text, m.footer_warning)),
+                    !m.extras.is_empty(),
+                )?)?,
+                &m.br_name,
+            ),
+            // One chunk of the app's data. The bytes go to the layout as they
+            // are; it formats the hex itself, a page at a time.
+            Archived::<TrezorUiEnum>::ConfirmData(m) => (
+                LayoutObj::new_root(ModelUI::confirm_value(
+                    tstr(&m.title),
+                    Obj::try_from(m.data.as_ref())?,
+                    None,
+                    true,
+                    None,
+                    tstr_opt(&m.subtitle),
+                    None,
+                    None,
+                    false,
+                    false,
+                    false,
+                    true,
+                    false,
+                    // Every confirmation can be refused; how is the model's.
+                    true,
+                    false,
+                    None,
+                    !m.extras.is_empty(),
+                )?)?,
+                &m.br_name,
+            ),
+            Archived::<TrezorUiEnum>::ShowNotice(m) => {
+                // The app said what kind of news this is; the model decides
+                // what that looks like. This only translates the wire's word
+                // for it.
+                let severity = match m.severity {
+                    Archived::<WireSeverity>::Success => Severity::Success,
+                    Archived::<WireSeverity>::Done => Severity::Done,
+                    Archived::<WireSeverity>::Info => Severity::Info,
+                    Archived::<WireSeverity>::Warning => Severity::Warning,
+                    Archived::<WireSeverity>::Danger => Severity::Danger,
+                };
+                (
+                    ModelUI::show_notice(
+                        severity,
+                        tstr(&m.title),
+                        tstr(&m.content),
+                        !m.extras.is_empty(),
+                        m.cancel,
+                    )?,
+                    &m.br_name,
+                )
+            }
+            Archived::<TrezorUiEnum>::ConfirmProperties(m) => (
+                LayoutObj::new_root(ModelUI::confirm_properties(
+                    tstr(&m.title),
+                    tstr_opt(&m.subtitle),
+                    obj_from_proplist(&m.props),
+                    hold(&m.commitment),
+                    None,
+                    !m.extras.is_empty(),
+                )?)?,
+                &m.br_name,
+            ),
+        };
 
-        Ok((
-            Obj::from(main_layout),
-            Obj::try_from(u32::try_from(br_code)?)?,
-            br_name,
-        )
-            .try_into()?)
+        Ok((Obj::from(layout), Obj::try_from(br_name.as_ref())?).try_into()?)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 #[cfg(not(feature = "app_loading"))]
 extern "C" fn new_process_ipc_message(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+    unimplemented!()
+}
+
+/// One of a request's extras screens, built from the same request bytes as
+/// the block: its menu (`index` is `None`) or the extra at `index`.
+///
+/// The extras travel with the request, so core walks the menu without asking
+/// the app; only the block's final answer goes back.
+#[cfg(feature = "app_loading")]
+extern "C" fn new_process_ipc_extra(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+        let index: Option<u32> = kwargs
+            .get(Qstr::MP_QSTR_index)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+
+        let archived =
+            unsafe { access_unchecked::<Archived<TrezorUiEnum>>(unwrap!(get_buffer(obj))) };
+        let extras = match archived {
+            Archived::<TrezorUiEnum>::ConfirmAction(m) => &m.extras,
+            Archived::<TrezorUiEnum>::ConfirmValue(m) => &m.extras,
+            Archived::<TrezorUiEnum>::ConfirmData(m) => &m.extras,
+            Archived::<TrezorUiEnum>::ConfirmSummary(m) => &m.extras,
+            Archived::<TrezorUiEnum>::ConfirmProperties(m) => &m.extras,
+            Archived::<TrezorUiEnum>::ShowNotice(m) => &m.extras,
+        };
+
+        let layout = match index {
+            None => {
+                // More extras than the model's menu holds stops the app, not
+                // the device.
+                let mut items = heapless::Vec::<SelectMenuItem, MAX_MENU_ITEMS>::new();
+                for extra in extras.as_ref() {
+                    items
+                        .push(SelectMenuItem::new(
+                            tstr(&extra.label),
+                            MenuItemIntent::Standard,
+                        ))
+                        .map_err(|_| Error::OutOfRange)?;
+                }
+                LayoutObj::new_root(ModelUI::extapp_menu(items)?)?
+            }
+            Some(index) => {
+                let extra = extras
+                    .as_ref()
+                    .get(index as usize)
+                    .ok_or(Error::OutOfRange)?;
+                LayoutObj::new_root(ModelUI::show_properties(
+                    tstr(&extra.label),
+                    None,
+                    obj_from_proplist(&extra.props),
+                )?)?
+            }
+        };
+        Ok(layout.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_process_ipc_extra(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
     unimplemented!()
 }
 
@@ -1605,23 +1516,23 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
             }
         }));
 
-        // Map MicroPython UiResult object to Rust enum for serialization
+        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
+        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
+
+        // Say what the person did, rather than naming the button that did it.
+        // Only the block's final answer goes back: its menu and extras stay
+        // in core.
+        //
+        // WIP: chunk paging (`Forward`, `Backward`, `ConfirmedAll`) needs the
+        // request to carry the chunk's offset and the total length, so a
+        // screen can tell it is at an edge. No extapp screen returns `BACK`.
         let msg = if obj == CONFIRMED.as_obj() {
             TrezorUiResult::Confirmed
         } else if obj == CANCELLED.as_obj() {
             TrezorUiResult::Cancelled
-        } else if obj == BACK.as_obj() {
-            TrezorUiResult::Back
-        } else if obj == INFO.as_obj() {
-            TrezorUiResult::Info
-        } else if let Ok(val) = u32::try_from(obj) {
-            TrezorUiResult::Integer(val)
         } else {
             return Err(Error::TypeError);
         };
-
-        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
-        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
 
         let bytes = to_bytes_in_with_alloc::<_, _, Failure>(
             &msg,
@@ -1654,45 +1565,16 @@ extern "C" fn new_deserialize_progress_message(
 
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
-        fn obj_from_archived_borrowed_str_option(
-            s: &ArchivedOption<Archived<StrSlice>>,
-        ) -> Result<Obj, Error> {
-            match s.as_ref() {
-                Some(s) => Ok(Obj::try_from(s.as_ref())?),
-                None => Ok(Obj::const_none()),
-            }
-        }
-
         // Deserialize the rkyv archived data directly from the static buffer
         let archived = unsafe { rkyv::access_unchecked::<Archived<TrezorProgressEnum>>(data) };
 
-        // Access the archived data zero-copy using safe Deref access
         let result: Obj = match archived {
-            Archived::<TrezorProgressEnum>::Init {
-                description,
-                title,
-                indeterminate,
-                danger,
-            } => {
-                let description = description
-                    .as_ref()
-                    .map(|d| Obj::try_from(d.as_ref()))
-                    .unwrap_or(Ok(Obj::const_none()))?;
-                let title = obj_from_archived_borrowed_str_option(title)?;
-
-                (
-                    description,
-                    title,
-                    Obj::try_from(*indeterminate)?,
-                    Obj::try_from(*danger)?,
-                )
-                    .try_into()?
-            }
-            Archived::<TrezorProgressEnum>::Update { description, value } => {
-                let description = obj_from_archived_borrowed_str_option(description)?;
-                let value = Obj::try_from(value.to_native())?;
-                (description, value).try_into()?
-            }
+            Archived::<TrezorProgressEnum>::Init { label, total } => (
+                Obj::try_from(label.as_ref())?,
+                Obj::try_from(total.to_native())?,
+            )
+                .try_into()?,
+            Archived::<TrezorProgressEnum>::Step { units } => Obj::try_from(units.to_native())?,
             Archived::<TrezorProgressEnum>::End => Obj::const_none(),
         };
 
@@ -2613,13 +2495,21 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def process_ipc_message(
     ///     *,
     ///     data: bytes,
-    /// ) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
-    ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
+    /// ) -> tuple[LayoutObj[UiResult], str]:
+    ///     """Build the layout for an app's UI request; return it with the step name to announce."""
     Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
+
+    /// def process_ipc_extra(
+    ///     *,
+    ///     data: bytes,
+    ///     index: int | None = None,
+    /// ) -> LayoutObj[UiResult | int]:
+    ///     """Build one of an IPC request's extras screens: its menu, or the extra at `index`."""
+    Qstr::MP_QSTR_process_ipc_extra => obj_fn_kw!(0, new_process_ipc_extra).as_obj(),
 
     /// def send_ui_result(
     ///     *,
-    ///     result: UiResult | int | str | None,
+    ///     result: UiResult,
     ///     ipc_cb: Callable[[bytes], None] | None = None,
     /// ) -> None:
     ///     """Serialize a UI result into bytes and send it via the ipc_cb callback.."""

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from .session import Session
 
 _INIT = const(0)
-_REPORT = const(1)
+_STEP = const(1)
 _STOP = const(2)
 
 
@@ -28,18 +28,22 @@ def handle(session: Session, msg: IpcMessage) -> None:
     obj = trezorui_api.deserialize_progress_message(data=bytes(msg.data))
 
     if message_id == _INIT:
-        description, title, indeterminate, danger = obj
-        session.progress = progress(
-            description=description,
-            title=title,
-            indeterminate=indeterminate,
-            danger=danger,
-        )
-    elif message_id == _REPORT:
+        label, total = obj
+        session.progress_total = total
+        session.progress_done = 0
+        # A total of 0 means the app does not know it: motion, no fill.
+        session.progress = progress(description=label, indeterminate=total == 0)
+        # The layout only appears on its first report, and an indeterminate
+        # progress never reports: show it now.
+        session.progress.report(0)
+    elif message_id == _STEP:
         if session.progress is None:
             session.die(DataError("Progress not initialized"))
-        description, value = obj
-        session.progress.report(value, description=description)
+        total = session.progress_total
+        if total:
+            # Past the total pins the bar full rather than wrapping.
+            session.progress_done = min(session.progress_done + obj, total)
+            session.progress.report(session.progress_done * 1000 // total)
     elif message_id == _STOP:
         if session.progress is None:
             session.die(DataError("Progress not initialized"))

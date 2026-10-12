@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
-from trezor.messages import ExtAppMessage, ExtAppResponse, Failure
+from trezor.messages import ExtAppMessage, ExtAppResponse
 from trezor.wire import context
-from trezor.wire.errors import DataError
+from trezor.wire.errors import DataError, Error
 
-from .session import SERVICE_WIRE_CONTINUE, SERVICE_WIRE_START
+from .session import SERVICE_WIRE_CONTINUE
 
 if __debug__:
     from trezor import log
@@ -30,8 +30,13 @@ async def handle_continue(session: Session, msg: IpcMessage) -> None:
 
 
 async def handle_error(session: Session, msg: IpcMessage) -> None:
-    """Send the app's error to the host as a `Failure` and restart the app
-    with the host's next message."""
+    """End the request with the app's error, sent to the host as a `Failure`.
+
+    A failure ends the request, like a final response does. Waiting here for
+    the host's next message would keep the workflow alive, so the homescreen
+    would never come back. The app is already waiting for its next request,
+    which the next `run()` delivers.
+    """
     err_message = (
         msg.data.decode("utf-8", "replace")
         if isinstance(msg.data, (bytes, bytearray))
@@ -39,12 +44,10 @@ async def handle_error(session: Session, msg: IpcMessage) -> None:
     )
     if __debug__:
         log.debug(__name__, f"Received wire error message: {err_message}")
-    response = Failure(
-        code=msg.message_id,  # pyright: ignore [reportArgumentType]
-        message=err_message,
+    raise Error(
+        msg.message_id,  # pyright: ignore [reportArgumentType]
+        err_message,
     )
-    ack = await context.call(response, ExtAppMessage)
-    _forward_ack(session, SERVICE_WIRE_START, ack)
 
 
 def _forward_ack(session: Session, service: int, ack: ExtAppMessage) -> None:
