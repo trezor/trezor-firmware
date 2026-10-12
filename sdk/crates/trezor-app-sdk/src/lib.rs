@@ -45,16 +45,6 @@ mod alloc_types;
 #[cfg(feature = "app")]
 pub mod crypto;
 
-#[cfg(not(feature = "app"))]
-pub mod ui {
-    pub use crate::structs::{
-        Property, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
-    };
-}
-
-#[cfg(feature = "app")]
-pub mod ui;
-
 #[cfg(feature = "app")]
 pub mod log;
 
