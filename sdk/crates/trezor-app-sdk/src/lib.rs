@@ -50,6 +50,9 @@ mod alloc_types;
 pub mod crypto;
 
 #[cfg(feature = "app")]
+pub mod modui;
+
+#[cfg(feature = "app")]
 pub mod log;
 
 #[doc(hidden)]
