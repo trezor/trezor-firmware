@@ -35,3 +35,18 @@ class Display:
         """
         Stops screen recording.
         """
+
+    def record_read(self) -> tuple[list[bytes], bytes]:
+        """
+        Returns the hashes of distinct screens painted since the previous call
+        and the running hash over all screens since the recording started.
+        """
+
+    def record_read_screen(
+        self, offset: int, length: int
+    ) -> tuple[int, int, str, bytes, int, bytes]:
+        """
+        Reads a chunk of the displayed screen, converted the way the recorded
+        hashes are computed. Returns (width, height, mode, hash of the last
+        recorded screen, total size, data).
+        """

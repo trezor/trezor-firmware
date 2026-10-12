@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
@@ -25,6 +26,7 @@ import typing as t
 import warnings
 from contextlib import contextmanager
 from copy import deepcopy
+from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 from itertools import zip_longest
 from pathlib import Path
@@ -520,6 +522,23 @@ def _make_input_func(
     return input_func  # type: ignore [Parameter name mismatch]
 
 
+@dataclass
+class DebugScreen:
+    """A screen pulled from the device, in the layout `Image.frombytes` takes."""
+
+    width: int
+    height: int
+    mode: str
+    hash: bytes
+    data: bytes
+
+    @property
+    def consistent(self) -> bool:
+        """True if the pixels hash to what the device recorded last, i.e. the
+        screen did not change while it was being read."""
+        return hashlib.sha256(self.data).digest() == self.hash
+
+
 class DebugLink:
     def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
         transport.open(reopen=True)
@@ -534,6 +553,13 @@ class DebugLink:
 
         # Where screenshots are being saved
         self.screenshot_recording_dir: str | None = None
+        # Hashes of distinct screens the device reported while recording, and
+        # its running digest over all of them (see DebugLinkState).
+        self.screen_hashes: list[bytes] = []
+        self.screens_digest: bytes | None = None
+        # Called with the hash of the screen most likely still displayed
+        # (the last one of each state reply) while recording.
+        self.on_new_screen: t.Callable[[bytes], None] | None = None
 
         # For T1 screenshotting functionality in DebugUI
         self.t1_screenshot_directory: Path | None = None
@@ -613,8 +639,16 @@ class DebugLink:
         msg_type, msg_bytes = protocol_v1.read(self.transport, timeout=timeout)
         msg = self.mapping.decode(msg_type, msg_bytes)
 
-        # Collapse tokens to make log use less lines.
         if isinstance(msg, messages.DebugLinkState):
+            # Every state reply drains the device's screen-hash ring, whoever
+            # asked for it, so collect here rather than in the callers.
+            self.screen_hashes.extend(msg.screen_hashes)
+            if msg.screens_digest:
+                self.screens_digest = msg.screens_digest
+            if msg.screen_hashes and self.on_new_screen is not None:
+                # The reply is consumed, so the hook may talk to the device.
+                self.on_new_screen(msg.screen_hashes[-1])
+            # Collapse tokens to make log use less lines.
             msg.tokens = ["".join(msg.tokens)]
 
         return msg
@@ -857,6 +891,8 @@ class DebugLink:
 
     def start_recording(self, directory: str, refresh_index: int | None = None) -> None:
         self.screenshot_recording_dir = directory
+        self.screen_hashes = []
+        self.screens_digest = None
         # Different recording logic between core and legacy
         if self.model is not models.T1B1:
             self._call(
@@ -874,9 +910,41 @@ class DebugLink:
         self.screenshot_recording_dir = None
         # Different recording logic between TT and T1
         if self.model is not models.T1B1:
+            # Stopping resets the device's hashes, so fetch the last ones first.
+            self.state(wait_type=DebugWaitType.IMMEDIATE)
             self._call(messages.DebugLinkRecordScreen(target_directory=None))
         else:
             self.t1_take_screenshots = False
+
+    def read_screen(self, chunk_size: int = 4096) -> DebugScreen:
+        """Pull the displayed screen as the bytes its recorded hash was
+        computed over (recording only). The returned hash is the device's
+        hash of the last recorded screen; `DebugScreen.consistent` tells
+        whether the pixels still match it."""
+        data = bytearray()
+        offset = 0
+        mode: str | None = None
+        while True:
+            resp = self._call(
+                messages.DebugLinkGetScreen(offset=offset, length=chunk_size),
+                expect=messages.DebugLinkScreen,
+            )
+            if mode is None:
+                mode = resp.mode
+            if not resp.data:
+                break
+            data += resp.data
+            offset += len(resp.data)
+            if resp.total is not None and offset >= resp.total:
+                break
+        assert resp.width and resp.height and mode
+        return DebugScreen(
+            width=resp.width,
+            height=resp.height,
+            mode=mode,
+            hash=resp.hash or b"",
+            data=bytes(data),
+        )
 
     def erase_sd_card(self, format: bool = True) -> None:
         self._call(

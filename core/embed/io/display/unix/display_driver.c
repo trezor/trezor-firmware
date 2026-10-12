@@ -482,6 +482,11 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   return true;
 }
 
+bool display_get_displayed_frame_buffer(display_fb_info_t *fb) {
+  // Single buffer: what is drawn is what is shown
+  return display_get_frame_buffer(fb);
+}
+
 #else  // FRAMEBUFFER
 
 void display_wait_for_sync(void) {

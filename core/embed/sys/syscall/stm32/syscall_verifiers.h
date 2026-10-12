@@ -104,10 +104,17 @@ void boot_image_replace__verified(const boot_image_t *image);
 
 // ---------------------------------------------------------------------
 #include <io/display.h>
+#include <io/display_utils.h>
 
 #ifdef FRAMEBUFFER
 bool display_get_frame_buffer__verified(display_fb_info_t *fb);
 #endif
+
+void display_record_read__verified(display_record_info_t *info);
+
+size_t display_record_read_screen__verified(display_record_screen_t *info,
+                                            size_t offset, uint8_t *buf,
+                                            size_t len);
 
 void display_fill__verified(const gfx_bitblt_t *bb);
 

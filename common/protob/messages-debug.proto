@@ -146,6 +146,8 @@ message DebugLinkState {
     optional uint32 reset_word_pos = 11;  // index of mnemonic word the device is expecting during ResetDevice workflow
     optional management.BackupType mnemonic_type = 12;  // current mnemonic type (BIP-39/SLIP-39)
     repeated string tokens = 13;                        // current layout represented as a list of string tokens
+    repeated bytes screen_hashes = 14;                  // hashes of screens painted since the last state query (recording only)
+    optional bytes screens_digest = 15;                 // running hash over all screens painted since recording started
 }
 
 /**
@@ -350,4 +352,27 @@ message DebugLinkN1W1Read {
  */
 message DebugLinkN1W1Response {
     optional bytes value = 1;  // existing value is returned on write/delete, `None` if key is missing
+}
+
+/**
+ * Request: Read a chunk of the screen currently displayed (recording only)
+ * @start
+ * @next DebugLinkScreen
+ */
+message DebugLinkGetScreen {
+    optional uint32 offset = 1;  // offset into the converted screen bytes
+    optional uint32 length = 2;  // chunk size, at most 4096
+}
+
+/**
+ * Response: Chunk of the displayed screen
+ * @end
+ */
+message DebugLinkScreen {
+    optional uint32 width = 1;
+    optional uint32 height = 2;
+    optional string mode = 3;    // pixel layout as PIL names it ("RGB"/"RGBA")
+    optional bytes hash = 4;     // hash of the last recorded screen
+    optional uint32 total = 5;   // total size of the converted screen
+    optional bytes data = 6;     // the chunk
 }

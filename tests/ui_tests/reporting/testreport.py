@@ -332,6 +332,7 @@ def _copy_deduplicated(test: TestCase) -> None:
     """Copy the actual screenshots to the deduplicated dir."""
     html.store_images(*test.actual_screens)
     html.store_images(*test.recorded_screens)
+    html.store_images(*test.pulled_screens)
 
 
 def failed(result: TestResult) -> Path:

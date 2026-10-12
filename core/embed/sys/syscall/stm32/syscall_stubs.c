@@ -268,6 +268,38 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
 void display_refresh(void) { syscall_invoke0(SYSCALL_DISPLAY_REFRESH); }
 
 // =============================================================================
+// display_utils.h
+// =============================================================================
+
+#include <io/display_utils.h>
+
+void display_record_start(uint8_t *target_dir, size_t target_dir_len,
+                          int refresh_index) {
+  // The directory is an emulator concept; hardware records hashes only
+  syscall_invoke0(SYSCALL_DISPLAY_RECORD_START);
+}
+
+void display_record_stop(void) { syscall_invoke0(SYSCALL_DISPLAY_RECORD_STOP); }
+
+bool display_is_recording(void) {
+  return (bool)syscall_invoke0(SYSCALL_DISPLAY_IS_RECORDING);
+}
+
+void display_record_screen(void) {
+  syscall_invoke0(SYSCALL_DISPLAY_RECORD_SCREEN);
+}
+
+void display_record_read(display_record_info_t *info) {
+  syscall_invoke1((uint32_t)info, SYSCALL_DISPLAY_RECORD_READ);
+}
+
+size_t display_record_read_screen(display_record_screen_t *info, size_t offset,
+                                  uint8_t *buf, size_t len) {
+  return syscall_invoke4((uint32_t)info, offset, (uint32_t)buf, len,
+                         SYSCALL_DISPLAY_RECORD_READ_SCREEN);
+}
+
+// =============================================================================
 // usb.h
 // =============================================================================
 

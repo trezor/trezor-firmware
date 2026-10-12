@@ -412,6 +412,54 @@ access_violation:
 
 #endif  // FRAMEBUFFER
 
+void display_record_read__verified(display_record_info_t *info) {
+  if (!probe_write_access(info, sizeof(*info))) {
+    goto access_violation;
+  }
+
+  // Too big for the kernel stack, and never touched concurrently
+  static display_record_info_t info_copy;
+  display_record_read(&info_copy);
+
+  *info = info_copy;
+
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+size_t display_record_read_screen__verified(display_record_screen_t *info,
+                                            size_t offset, uint8_t *buf,
+                                            size_t len) {
+  if (len > DISPLAY_RECORD_CHUNK_SIZE) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(info, sizeof(*info))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(buf, len)) {
+    goto access_violation;
+  }
+
+  // Bounce buffers, never touched concurrently
+  static display_record_screen_t info_copy;
+  static uint8_t buf_copy[DISPLAY_RECORD_CHUNK_SIZE];
+
+  size_t copied = display_record_read_screen(&info_copy, offset, buf_copy, len);
+
+  *info = info_copy;
+  memcpy(buf, buf_copy, copied);
+
+  return copied;
+
+access_violation:
+  apptask_access_violation();
+  return 0;
+}
+
 void display_fill__verified(const gfx_bitblt_t *bb) {
   if (!probe_read_access(bb, sizeof(*bb))) {
     goto access_violation;

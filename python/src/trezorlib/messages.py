@@ -668,6 +668,8 @@ class MessageType(IntEnum):
     DebugLinkN1W1Read = 9016
     DebugLinkN1W1Response = 9017
     DebugLinkSetBatteryState = 9018
+    DebugLinkGetScreen = 9019
+    DebugLinkScreen = 9020
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4438,12 +4440,15 @@ class DebugLinkState(protobuf.MessageType):
         11: protobuf.Field("reset_word_pos", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("mnemonic_type", "BackupType", repeated=False, required=False, default=None),
         13: protobuf.Field("tokens", "string", repeated=True, required=False, default=None),
+        14: protobuf.Field("screen_hashes", "bytes", repeated=True, required=False, default=None),
+        15: protobuf.Field("screens_digest", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         tokens: Optional[Sequence["str"]] = None,
+        screen_hashes: Optional[Sequence["bytes"]] = None,
         layout: Optional["bytes"] = None,
         pin: Optional["str"] = None,
         matrix: Optional["str"] = None,
@@ -4456,8 +4461,10 @@ class DebugLinkState(protobuf.MessageType):
         recovery_word_pos: Optional["int"] = None,
         reset_word_pos: Optional["int"] = None,
         mnemonic_type: Optional["BackupType"] = None,
+        screens_digest: Optional["bytes"] = None,
     ) -> None:
         self.tokens: Sequence["str"] = tokens if tokens is not None else []
+        self.screen_hashes: Sequence["bytes"] = screen_hashes if screen_hashes is not None else []
         self.layout = layout
         self.pin = pin
         self.matrix = matrix
@@ -4470,6 +4477,7 @@ class DebugLinkState(protobuf.MessageType):
         self.recovery_word_pos = recovery_word_pos
         self.reset_word_pos = reset_word_pos
         self.mnemonic_type = mnemonic_type
+        self.screens_digest = screens_digest
 
 
 class DebugLinkGetPairingInfo(protobuf.MessageType):
@@ -4754,6 +4762,52 @@ class DebugLinkN1W1Response(protobuf.MessageType):
         value: Optional["bytes"] = None,
     ) -> None:
         self.value = value
+
+
+class DebugLinkGetScreen(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9019
+    FIELDS = {
+        1: protobuf.Field("offset", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("length", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        offset: Optional["int"] = None,
+        length: Optional["int"] = None,
+    ) -> None:
+        self.offset = offset
+        self.length = length
+
+
+class DebugLinkScreen(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9020
+    FIELDS = {
+        1: protobuf.Field("width", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("height", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("mode", "string", repeated=False, required=False, default=None),
+        4: protobuf.Field("hash", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("total", "uint32", repeated=False, required=False, default=None),
+        6: protobuf.Field("data", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        width: Optional["int"] = None,
+        height: Optional["int"] = None,
+        mode: Optional["str"] = None,
+        hash: Optional["bytes"] = None,
+        total: Optional["int"] = None,
+        data: Optional["bytes"] = None,
+    ) -> None:
+        self.width = width
+        self.height = height
+        self.mode = mode
+        self.hash = hash
+        self.total = total
+        self.data = data
 
 
 class DebugLinkGcInfoItem(protobuf.MessageType):

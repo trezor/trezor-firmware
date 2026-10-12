@@ -79,12 +79,10 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_orientation_obj,
 static mp_obj_t mod_trezorui_Display_record_start(mp_obj_t self,
                                                   mp_obj_t target_directory,
                                                   mp_obj_t refresh_index) {
-#ifdef TREZOR_EMULATOR
   mp_buffer_info_t target_dir;
   mp_int_t refresh_idx = mp_obj_get_int(refresh_index);
   mp_get_buffer_raise(target_directory, &target_dir, MP_BUFFER_READ);
   display_record_start(target_dir.buf, target_dir.len, refresh_idx);
-#endif
   return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_record_start_obj,
@@ -95,13 +93,72 @@ static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_record_start_obj,
 ///     Stops screen recording.
 ///     """
 static mp_obj_t mod_trezorui_Display_record_stop(mp_obj_t self) {
-#ifdef TREZOR_EMULATOR
   display_record_stop();
-#endif
   return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_record_stop_obj,
                                  mod_trezorui_Display_record_stop);
+
+/// def record_read(self) -> tuple[list[bytes], bytes]:
+///     """
+///     Returns the hashes of distinct screens painted since the previous call
+///     and the running hash over all screens since the recording started.
+///     """
+static mp_obj_t mod_trezorui_Display_record_read(mp_obj_t self) {
+  display_record_info_t info;
+  display_record_read(&info);
+
+  mp_obj_t hashes = mp_obj_new_list(0, NULL);
+  for (uint32_t i = 0; i < info.count && i < DISPLAY_RECORD_MAX_HASHES; i++) {
+    mp_obj_list_append(
+        hashes, mp_obj_new_bytes(info.hashes[i], DISPLAY_RECORD_HASH_SIZE));
+  }
+
+  mp_obj_t items[2] = {
+      hashes,
+      mp_obj_new_bytes(info.digest, DISPLAY_RECORD_HASH_SIZE),
+  };
+  return mp_obj_new_tuple(2, items);
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_record_read_obj,
+                                 mod_trezorui_Display_record_read);
+
+/// def record_read_screen(
+///     self, offset: int, length: int
+/// ) -> tuple[int, int, str, bytes, int, bytes]:
+///     """
+///     Reads a chunk of the displayed screen, converted the way the recorded
+///     hashes are computed. Returns (width, height, mode, hash of the last
+///     recorded screen, total size, data).
+///     """
+static mp_obj_t mod_trezorui_Display_record_read_screen(mp_obj_t self,
+                                                        mp_obj_t offset,
+                                                        mp_obj_t length) {
+  mp_int_t off = mp_obj_get_int(offset);
+  mp_int_t len = mp_obj_get_int(length);
+  if (off < 0 || len < 0 || len > DISPLAY_RECORD_CHUNK_SIZE) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid chunk"));
+  }
+
+  display_record_screen_t info;
+  vstr_t data;
+  vstr_init_len(&data, len);
+  size_t copied =
+      display_record_read_screen(&info, off, (uint8_t *)data.buf, len);
+  data.len = copied;
+
+  mp_obj_t items[6] = {
+      MP_OBJ_NEW_SMALL_INT(info.width),
+      MP_OBJ_NEW_SMALL_INT(info.height),
+      mp_obj_new_str(info.mode, strlen(info.mode)),
+      mp_obj_new_bytes(info.hash, DISPLAY_RECORD_HASH_SIZE),
+      mp_obj_new_int_from_uint(info.total),
+      mp_obj_new_bytes_from_vstr(&data),
+  };
+  return mp_obj_new_tuple(6, items);
+}
+static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_record_read_screen_obj,
+                                 mod_trezorui_Display_record_read_screen);
 
 static const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_orientation),
@@ -110,6 +167,10 @@ static const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorui_Display_record_start_obj)},
     {MP_ROM_QSTR(MP_QSTR_record_stop),
      MP_ROM_PTR(&mod_trezorui_Display_record_stop_obj)},
+    {MP_ROM_QSTR(MP_QSTR_record_read),
+     MP_ROM_PTR(&mod_trezorui_Display_record_read_obj)},
+    {MP_ROM_QSTR(MP_QSTR_record_read_screen),
+     MP_ROM_PTR(&mod_trezorui_Display_record_read_screen_obj)},
     {MP_ROM_QSTR(MP_QSTR_WIDTH), MP_ROM_INT(DISPLAY_RESX)},
     {MP_ROM_QSTR(MP_QSTR_HEIGHT), MP_ROM_INT(DISPLAY_RESY)},
 };

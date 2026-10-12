@@ -142,6 +142,12 @@ typedef struct {
 // Return `false` if the framebuffer is not available.
 bool display_get_frame_buffer(display_fb_info_t *fb);
 
+// Provides pointer to the frame buffer currently shown on the display.
+//
+// For test and debug use (screen capture); does not touch the MPU.
+// Returns `false` if the driver cannot tell which buffer is displayed.
+bool display_get_displayed_frame_buffer(display_fb_info_t *fb);
+
 #else  // FRAMEBUFFER
 
 // Waits for the vertical synchronization pulse.

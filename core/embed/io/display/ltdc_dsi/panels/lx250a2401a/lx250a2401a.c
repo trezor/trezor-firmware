@@ -24,6 +24,7 @@
 #include <sys/systick.h>
 
 #include "lx250a2401a.h"
+#include "lx250a2401a_corners.h"
 
 #include "../../display_internal.h"
 
@@ -32,43 +33,24 @@
 #define GFXMMU_LINE_H(line_offset, first_block, last_block) \
   ((((line_offset) - ((first_block))) & 0x3FFFF) << 4)
 
-typedef struct {
-  uint16_t limit;
-  uint8_t px;
-} lut_def_t;
-
 static uint32_t gfxmmu_lut_config[2 * GFXMMU_LUT_SIZE] = {0};
-
-static uint32_t lut_add_line(uint32_t line, uint32_t offset,
-                             uint32_t first_pixel) {
-  uint32_t pixel_cut = first_pixel - 1;
-  uint32_t first_block = pixel_cut >> 2;
-  uint32_t last_block = (DISPLAY_RESX - 1 - pixel_cut) >> 2;
-
-  gfxmmu_lut_config[line * 2] = GFXMMU_LINE_L(offset, first_block, last_block);
-  gfxmmu_lut_config[line * 2 + 1] =
-      GFXMMU_LINE_H(offset, first_block, last_block);
-
-  return last_block - first_block + 1;
-}
 
 const uint32_t *panel_lut_get(void) {
   uint32_t offset = 0;
-  uint32_t line = 0;
 
-  const lut_def_t lut[] = {
-      {1, 13}, {1, 11}, {1, 9},   {1, 8},  {1, 6},  {2, 5},  {1, 4},  {2, 3},
-      {2, 2},  {4, 1},  {411, 1}, {12, 1}, {7, 2},  {6, 3},  {5, 4},  {4, 5},
-      {4, 6},  {3, 7},  {4, 8},   {2, 9},  {4, 10}, {2, 11}, {3, 12}, {2, 13},
-      {3, 14}, {2, 15}, {2, 16},  {2, 17}, {3, 18}, {1, 19}, {3, 20}, {1, 21},
-      {2, 22}, {2, 23}, {2, 24},  {1, 25}, {2, 26}, {2, 27}, {1, 28}, {2, 29},
-      {1, 30}, {1, 32}, {1, 33},  {1, 36},
-  };
+  for (uint32_t line = 0; line < LCD_HEIGHT; line++) {
+    uint32_t first = 0;
+    uint32_t last = 0;
+    panel_visible_range(line, &first, &last);
+    uint32_t first_block = first / 4;
+    uint32_t last_block = last / 4;
 
-  for (uint32_t i = 0; i < sizeof(lut) / sizeof(lut_def_t); i++) {
-    for (uint32_t j = 0; j < lut[i].limit; j++) {
-      offset += lut_add_line(line++, offset, lut[i].px);
-    }
+    gfxmmu_lut_config[line * 2] =
+        GFXMMU_LINE_L(offset, first_block, last_block);
+    gfxmmu_lut_config[line * 2 + 1] =
+        GFXMMU_LINE_H(offset, first_block, last_block);
+
+    offset += last_block - first_block + 1;
   }
   return gfxmmu_lut_config;
 }

@@ -387,6 +387,20 @@ int display_get_orientation(void) {
   return drv->orientation_angle;
 }
 
+bool display_get_displayed_frame_buffer(display_fb_info_t *fb) {
+  display_driver_t *drv = &g_display_driver;
+
+  memset(fb, 0, sizeof(display_fb_info_t));
+
+  if (!drv->initialized) {
+    return false;
+  }
+  fb->ptr = &drv->framebuf[0];
+  fb->size = FRAME_BUFFER_SIZE;
+  fb->stride = DISPLAY_RESX;
+  return true;
+}
+
 bool display_get_frame_buffer(display_fb_info_t *fb) {
   display_driver_t *drv = &g_display_driver;
 

@@ -354,6 +354,37 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       display_fill__verified(bb);
     } break;
 
+    case SYSCALL_DISPLAY_RECORD_START: {
+      // The target directory only matters on the emulator, which has no
+      // syscalls; hardware recording keeps hashes only.
+      display_record_start(NULL, 0, 0);
+    } break;
+
+    case SYSCALL_DISPLAY_RECORD_STOP: {
+      display_record_stop();
+    } break;
+
+    case SYSCALL_DISPLAY_IS_RECORDING: {
+      args[0] = display_is_recording();
+    } break;
+
+    case SYSCALL_DISPLAY_RECORD_SCREEN: {
+      display_record_screen();
+    } break;
+
+    case SYSCALL_DISPLAY_RECORD_READ: {
+      display_record_info_t *info = (display_record_info_t *)args[0];
+      display_record_read__verified(info);
+    } break;
+
+    case SYSCALL_DISPLAY_RECORD_READ_SCREEN: {
+      display_record_screen_t *info = (display_record_screen_t *)args[0];
+      size_t offset = args[1];
+      uint8_t *buf = (uint8_t *)args[2];
+      size_t len = args[3];
+      args[0] = display_record_read_screen__verified(info, offset, buf, len);
+    } break;
+
 #ifdef USE_RGB_COLORS
     case SYSCALL_DISPLAY_COPY_RGB565: {
       const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];

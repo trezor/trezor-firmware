@@ -130,6 +130,8 @@ if __debug__:
     DebugLinkN1W1Read = 9016
     DebugLinkN1W1Response = 9017
     DebugLinkSetBatteryState = 9018
+    DebugLinkGetScreen = 9019
+    DebugLinkScreen = 9020
 if utils.USE_THP:
     ThpCreateNewSession = 1000
     ThpCredentialRequest = 1016

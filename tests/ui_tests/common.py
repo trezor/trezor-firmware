@@ -297,17 +297,51 @@ class TestCase:
     def recorded_dir(self) -> Path:
         return self.dir / "recorded"
 
+    @property
+    def pulled_dir(self) -> Path:
+        """Screens pulled from a hardware device because their hash was new."""
+        return self.dir / "pulled"
+
+    @cached_property
+    def pulled_screens(self) -> tuple[list[Path], list[str]]:
+        if not self.pulled_dir.exists():
+            return [], []
+        return screens_and_hashes(self.pulled_dir)
+
     @cached_property
     def recorded_screens(self) -> tuple[list[Path], list[str]]:
         return screens_and_hashes(self.recorded_dir)
 
-    def build_result(self, request: pytest.FixtureRequest) -> TestResult:
+    def build_result(
+        self,
+        request: pytest.FixtureRequest,
+        device_hashes: list[str] | None = None,
+        device_digest: str | None = None,
+    ) -> TestResult:
+        """Build the result from the recorded PNGs, or, when there are none
+        (hardware), from the hashes the device computed over the same bytes."""
         _rename_records(self.actual_dir)
+        paths, hashes = self.actual_screens
+        if paths:
+            actual_hash = _hash_files(self.actual_dir)
+            images = hashes
+            if device_digest and device_digest != actual_hash:
+                warnings.warn(
+                    f"{self.id}: device screen digest {device_digest[:16]} differs "
+                    f"from the recorded PNGs {actual_hash[:16]}"
+                )
+        elif device_digest:
+            actual_hash = device_digest
+            images = device_hashes or []
+        else:
+            actual_hash = _hash_files(self.actual_dir)
+            images = hashes
+
         result = TestResult(
             test=self,
             passed=get_last_call_test_result(request),
-            actual_hash=_hash_files(self.actual_dir),
-            images=self.actual_screens[1],
+            actual_hash=actual_hash,
+            images=images,
         )
         result.save_metadata()
         return result
@@ -388,6 +422,6 @@ class TestResult:
         _, expected_hashes = self.test.recorded_screens
         if not expected_hashes:
             warnings.warn("No recorded screens found, is this a new test?")
-        _, actual_hashes = self.test.actual_screens
-
-        return screens_diff(expected_hashes, actual_hashes)
+        # `images` holds the actual hashes whether they came from PNGs or from
+        # the device, so hardware runs diff as well.
+        return screens_diff(expected_hashes, self.images)

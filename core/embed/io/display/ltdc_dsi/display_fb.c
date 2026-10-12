@@ -137,6 +137,21 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   return true;
 }
 
+bool display_get_displayed_frame_buffer(display_fb_info_t *fb) {
+  display_driver_t *drv = &g_display_driver;
+
+  memset(fb, 0, sizeof(display_fb_info_t));
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  fb->ptr = get_fb_ptr(drv->active_frame);
+  fb->stride = FRAME_BUFFER_PIXELS_PER_LINE * FB_PIXEL_SIZE;
+  fb->size = fb->stride * DISPLAY_RESY;
+  return true;
+}
+
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
 

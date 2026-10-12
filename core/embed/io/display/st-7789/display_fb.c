@@ -207,6 +207,23 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   return true;
 }
 
+bool display_get_displayed_frame_buffer(display_fb_info_t *fb) {
+  memset(fb, 0, sizeof(display_fb_info_t));
+
+#if (FRAME_BUFFER_COUNT == 1)
+  display_driver_t *drv = &g_display_driver;
+  if (drv->initialized) {
+    fb->ptr = get_fb_ptr(0);
+    fb->stride = DISPLAY_RESX * sizeof(uint16_t);
+    fb->size = PHYSICAL_FRAME_BUFFER_SIZE;
+    return true;
+  }
+#endif
+  // With two buffers the displayed one is recycled right after the copy to
+  // the panel, so there is no stable buffer to read.
+  return false;
+}
+
 #ifdef BOARDLOADER
 // Copies the frame buffer with the given index to the display
 static void copy_fb_to_display(uint8_t index) {

@@ -3003,11 +3003,14 @@ if TYPE_CHECKING:
         reset_word_pos: "int | None"
         mnemonic_type: "BackupType | None"
         tokens: "list[str]"
+        screen_hashes: "list[AnyBytes]"
+        screens_digest: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             tokens: "list[str] | None" = None,
+            screen_hashes: "list[AnyBytes] | None" = None,
             layout: "AnyBytes | None" = None,
             pin: "str | None" = None,
             matrix: "str | None" = None,
@@ -3020,6 +3023,7 @@ if TYPE_CHECKING:
             recovery_word_pos: "int | None" = None,
             reset_word_pos: "int | None" = None,
             mnemonic_type: "BackupType | None" = None,
+            screens_digest: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -3281,6 +3285,46 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkN1W1Response"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkGetScreen(protobuf.MessageType):
+        offset: "int | None"
+        length: "int | None"
+
+        def __init__(
+            self,
+            *,
+            offset: "int | None" = None,
+            length: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkGetScreen"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkScreen(protobuf.MessageType):
+        width: "int | None"
+        height: "int | None"
+        mode: "str | None"
+        hash: "AnyBytes | None"
+        total: "int | None"
+        data: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            width: "int | None" = None,
+            height: "int | None" = None,
+            mode: "str | None" = None,
+            hash: "AnyBytes | None" = None,
+            total: "int | None" = None,
+            data: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkScreen"]:
             return isinstance(msg, cls)
 
     class DebugLinkGcInfoItem(protobuf.MessageType):

@@ -24,14 +24,13 @@ from contextlib import contextmanager
 import pytest
 from _pytest.nodes import Node
 from _pytest.outcomes import Failed
-
 from trezorlib.debuglink import TrezorTestContext as Client
 
 LOG = logging.getLogger(__name__)
 
 from . import common
 from .common import SCREENS_DIR, UI_TESTS_DIR, TestCase, TestResult
-from .reporting import testreport
+from .reporting import download, testreport
 
 FIXTURES_SUGGESTION_FILE = UI_TESTS_DIR / "fixtures.suggestion.json"
 FIXTURES_RESULTS_FILE = UI_TESTS_DIR / "fixtures.results.json"
@@ -52,6 +51,46 @@ def _process_tested(result: TestResult, item: Node) -> None:
         item.user_properties.append(("ui_failed", None))
     else:
         testreport.passed(result)
+
+
+def _setup_screen_pull(client: Client, testcase: TestCase) -> None:
+    """On hardware, pull the pixels of any screen whose hash is not among the
+    recorded ones, while it is still displayed, so the report can show it."""
+    expected_hash = TestResult(
+        test=testcase, passed=None, actual_hash="", images=[]
+    ).expected_hash
+    if expected_hash is None:
+        return
+
+    if not testcase.recorded_dir.exists():
+        testcase.recorded_dir.mkdir(parents=True)
+        try:
+            download.fetch_recorded(expected_hash, testcase.recorded_dir)
+        except Exception as e:
+            LOG.warning("could not fetch recorded screens for %s: %s", testcase.id, e)
+            return
+
+    _, recorded_hashes = testcase.recorded_screens
+    expected = set(recorded_hashes)
+    shutil.rmtree(testcase.pulled_dir, ignore_errors=True)
+    testcase.pulled_dir.mkdir()
+    pulled: set[str] = set()
+
+    def on_new_screen(screen_hash: bytes) -> None:
+        key = screen_hash.hex()
+        if key in expected or key in pulled:
+            return
+        pulled.add(key)
+        screen = client.debug.read_screen()
+        if not screen.consistent or screen.hash != screen_hash:
+            LOG.info("screen %s changed before it could be pulled", key[:12])
+            return
+        from PIL import Image
+
+        image = Image.frombytes(screen.mode, (screen.width, screen.height), screen.data)
+        image.save(testcase.pulled_dir / f"{key}.png")
+
+    client.debug.on_new_screen = on_new_screen
 
 
 @contextmanager
@@ -77,7 +116,10 @@ def screen_recording(
     client.sync_responses()
     try:
         # reseed right before recording to ensure consistent randomness.
-        client.debug.reseed(0)
+        if client.is_emulator:
+            client.debug.reseed(0)
+        else:
+            _setup_screen_pull(client, testcase)
         client.debug.start_recording(str(testcase.actual_dir))
         yield
     finally:
@@ -88,8 +130,15 @@ def screen_recording(
         # Otherwise there's a race condition between that and stopping recording.
         client.sync_responses()
         client.debug.stop_recording()
+        client.debug.on_new_screen = None
 
-    result = testcase.build_result(request)
+    # On hardware there are no PNGs; the device's own hashes stand in for them.
+    device_digest = client.debug.screens_digest
+    result = testcase.build_result(
+        request,
+        device_hashes=[h.hex() for h in client.debug.screen_hashes],
+        device_digest=device_digest.hex() if device_digest else None,
+    )
     if test_ui == "record":
         _process_recorded(result)
     else:

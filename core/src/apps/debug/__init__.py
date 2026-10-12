@@ -22,23 +22,25 @@ if __debug__:
 
         from trezor.enums import DebugButton, DebugPhysicalButton, DebugSwipeDirection
         from trezor.messages import (
-            DebugLinkDecision,
-            DebugLinkEraseSdCard,
-            DebugLinkGcInfo,
-            DebugLinkGetGcInfo,
-            DebugLinkGetPairingInfo,
-            DebugLinkGetState,
-            DebugLinkN1W1Connected,
-            DebugLinkOptigaSetSecMax,
-            DebugLinkPairingInfo,
-            DebugLinkRecordScreen,
-            DebugLinkReseedRandom,
-            DebugLinkSetBatteryState,
-            DebugLinkSetLogFilter,
-            DebugLinkState,
-            DebugLinkStop,
-            WipeDevice,
-        )
+        DebugLinkDecision,
+        DebugLinkEraseSdCard,
+        DebugLinkGcInfo,
+        DebugLinkGetGcInfo,
+        DebugLinkGetPairingInfo,
+        DebugLinkGetScreen,
+        DebugLinkGetState,
+        DebugLinkN1W1Connected,
+        DebugLinkOptigaSetSecMax,
+        DebugLinkPairingInfo,
+        DebugLinkRecordScreen,
+        DebugLinkReseedRandom,
+        DebugLinkScreen,
+        DebugLinkSetBatteryState,
+        DebugLinkSetLogFilter,
+        DebugLinkState,
+        DebugLinkStop,
+        WipeDevice,
+)
         from trezor.ui import Layout
         from trezor.wire import WireInterface
         from trezor.wire.protocol_common import Context
@@ -282,12 +284,34 @@ if __debug__:
         if ui.CURRENT_LAYOUT is not None:
             ui.CURRENT_LAYOUT.layout.trace(callback)
 
+        from trezor.ui import display
+
+        screen_hashes, screens_digest = display.record_read()
+
         return DebugLinkState(
             mnemonic_secret=mnemonic.get_secret(),
             mnemonic_type=mnemonic.get_type(),
             passphrase_protection=passphrase.is_enabled(),
             reset_entropy=storage.reset_internal_entropy,
             tokens=tokens,
+            screen_hashes=screen_hashes,
+            screens_digest=screens_digest,
+        )
+
+    async def dispatch_DebugLinkGetScreen(msg: DebugLinkGetScreen) -> DebugLinkScreen:
+        from trezor.messages import DebugLinkScreen
+        from trezor.ui import display
+
+        width, height, mode, screen_hash, total, data = display.record_read_screen(
+            msg.offset or 0, msg.length or 4096
+        )
+        return DebugLinkScreen(
+            width=width,
+            height=height,
+            mode=mode,
+            hash=screen_hash,
+            total=total,
+            data=data,
         )
 
     async def dispatch_DebugLinkGetPairingInfo(
@@ -601,6 +625,7 @@ if __debug__:
         MessageType.DebugLinkGetPairingInfo: dispatch_DebugLinkGetPairingInfo,
         MessageType.DebugLinkReseedRandom: dispatch_DebugLinkReseedRandom,
         MessageType.DebugLinkRecordScreen: dispatch_DebugLinkRecordScreen,
+        MessageType.DebugLinkGetScreen: dispatch_DebugLinkGetScreen,
         MessageType.DebugLinkEraseSdCard: dispatch_DebugLinkEraseSdCard,
         MessageType.DebugLinkOptigaSetSecMax: dispatch_DebugLinkOptigaSetSecMax,
         MessageType.DebugLinkWatchLayout: _no_op,

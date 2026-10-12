@@ -71,8 +71,12 @@ def write(fixture_test_path: Path, doc: document, filename: str) -> Path:
 def image_column(hash: str | None, cur_dir: Path, img_id: str | None = None) -> None:
     """Put image into table as one cell."""
     with td():
-        if hash:
+        if hash and (_IMAGE_DIR / f"{hash}.png").exists():
             image_link(hash, cur_dir, img_id=img_id)
+        elif hash:
+            # Hardware runs report hashes only; no image exists for a screen
+            # that differs from the recorded one.
+            i(f"no image ({hash[:12]})")
         else:
             i("missing")
 

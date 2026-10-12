@@ -49493,7 +49493,7 @@
 "T3W1_en_test_msg_loaddevice.py::test_load_device_slip39_advanced": "cd218b2cc381b62ce243d2d20795277deaa2998ed92a66f25142a19b0f2f1d70",
 "T3W1_en_test_msg_loaddevice.py::test_load_device_slip39_basic": "cd218b2cc381b62ce243d2d20795277deaa2998ed92a66f25142a19b0f2f1d70",
 "T3W1_en_test_msg_loaddevice.py::test_load_device_utf": "21e46fcc72f681f08d4dc88950061a2a2d319553ef61c3901336e495764fb89c",
-"T3W1_en_test_msg_ping.py::test_ping": "1afc437dcb4c267be1b973ee6909b090411af681fdfbbe874b538f9ad3abcdaa",
+"T3W1_en_test_msg_ping.py::test_ping": "a564a934df3caa01fa056ffede662a2d9615c725918aa37809795e44dc4f39aa",
 "T3W1_en_test_msg_wipedevice.py::test_autolock_not_retained": "7cf4839b61fae7dc830158725e1105c9b08b641c9eb340b654a9956173ff1334",
 "T3W1_en_test_msg_wipedevice.py::test_wipe_device": "0ad139df2afb6369df3aeebfbbb14a204ab0e4f6c8346510fc36ca7fae5a9d17",
 "T3W1_en_test_passphrase_slip39_advanced.py::test_128bit_passphrase": "3822ff8b9e799cacce5a1ecdb09af5fdbb3c946709cab8da780d2f3a787314d4",
