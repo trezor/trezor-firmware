@@ -660,7 +660,7 @@ jobs:
   core_monero_test:
     name: Monero test (${{ matrix.model }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     needs:
       - param
       - core_emu

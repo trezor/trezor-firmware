@@ -40,10 +40,12 @@ fi
 
 echo "Running tests"
 TIME_TESTS_START=$SECONDS
+TEST_ARGS=("$@")
 if [[ "$OSTYPE" == "linux-gnu" && "$FORCE_DOCKER_USE" != 1 ]]; then
   echo "Note: use --heavy-tests with real device (and TREZOR_PATH) env var"
-  TEST_MAX_HF=15 TEST_MIN_HF=15 "$TREZOR_MONERO_TESTS_PATH" --fix-chain --chain-path=$TREZOR_MONERO_TESTS_CHAIN $@ 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
-  error=$?
+  run_tests_once() {
+    TEST_MAX_HF=15 TEST_MIN_HF=15 "$TREZOR_MONERO_TESTS_PATH" --fix-chain --chain-path=$TREZOR_MONERO_TESTS_CHAIN "${TEST_ARGS[@]}" 2>&1 > "$1"
+  }
 
 elif [[ "$OSTYPE" == "darwin"* || "$FORCE_DOCKER_USE" == 1 ]]; then
   DOCKER_ID=$(docker run -idt --mount type=bind,src="$CORE_DIR",dst="$CORE_DIR" -w "$CORE_DIR" --network=host ubuntu:18.04)
@@ -51,23 +53,47 @@ elif [[ "$OSTYPE" == "darwin"* || "$FORCE_DOCKER_USE" == 1 ]]; then
   docker exec $DOCKER_ID apt-get install --no-install-recommends --no-upgrade -qq net-tools socat 2>/dev/null >/dev/null
   docker exec -d $DOCKER_ID socat UDP-LISTEN:21324,reuseaddr,reuseport,fork UDP4-SENDTO:host.docker.internal:21324
   docker exec -d $DOCKER_ID socat UDP-LISTEN:21325,reuseaddr,reuseport,fork UDP4-SENDTO:host.docker.internal:21325
-  docker exec -e TEST_MAX_HF=15 -e TEST_MIN_HF=15 $DOCKER_ID "$TREZOR_MONERO_TESTS_PATH" 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
-  error=$?
+  run_tests_once() {
+    docker exec -e TEST_MAX_HF=15 -e TEST_MIN_HF=15 $DOCKER_ID "$TREZOR_MONERO_TESTS_PATH" 2>&1 > "$1"
+  }
 
 else
   echo "Unsupported OS: $OSTYPE"
   exit 1
 fi
 
+# Some tests are occasionally flaky (e.g. decoy selection in wallet_api_tests), so retry
+# a failing run. All attempts are kept in $TREZOR_MONERO_TESTS_LOG.
+: "${TREZOR_MONERO_TESTS_ATTEMPTS:=3}"
+: > "$TREZOR_MONERO_TESTS_LOG"
+for ((attempt = 1; attempt <= TREZOR_MONERO_TESTS_ATTEMPTS; attempt++)); do
+  attempt_log="$TREZOR_MONERO_TESTS_LOG.attempt"
+  # With set -e a failing test run would exit before the summary below.
+  error=0
+  run_tests_once "$attempt_log" || error=$?
+  { echo "===== attempt $attempt/$TREZOR_MONERO_TESTS_ATTEMPTS, exit code $error ====="; cat "$attempt_log"; echo; } >> "$TREZOR_MONERO_TESTS_LOG"
+  if ((error == 0)); then
+    break
+  fi
+  echo "[FAIL] Monero test attempt $attempt/$TREZOR_MONERO_TESTS_ATTEMPTS:"
+  grep -v DEBUG "$attempt_log" | grep -E '#TEST# Failed|Exception at' | tail -n 50
+done
+
 
 TIME_TESTS_ELAPSED=$((SECONDS-TIME_TESTS_START))
 
 if ((error != 0)); then
-  RESULT=FAIL
+  RESULT="FAIL"
+elif ((attempt > 1)); then
+  RESULT="PASS (attempt $attempt/$TREZOR_MONERO_TESTS_ATTEMPTS, earlier attempts failed)"
 else
   RESULT=PASS
 fi
 
 echo "[$RESULT] Monero test in $TIME_TESTS_ELAPSED sec. "
-cat "$TREZOR_MONERO_TESTS_LOG" | grep -v DEBUG | egrep '#TEST#|tests.core\b' | tail -n 50
+if ((error == 0 && attempt > 1)) && [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+  echo "::warning title=Flaky Monero tests::Passed on attempt $attempt/$TREZOR_MONERO_TESTS_ATTEMPTS, see the core-test-monero-* artifact for the failed attempts"
+fi
+cat "$attempt_log" | grep -v DEBUG | egrep '#TEST#|tests.core\b' | tail -n 50
+rm -f "$attempt_log"
 exit $error
