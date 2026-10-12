@@ -17,7 +17,7 @@ working reference.
 
 | Module | Contents |
 | ------ | -------- |
-| `ui` | Screens and user interaction: confirmations, warnings, progress, and more |
+| `modui` | Screens: confirmations, notices and progress, one function per layout; backing out is `Err(Error::Cancelled)` |
 | `crypto` | Key derivation and signing (done by Core), plus hashing, HMAC, Base58, signature verification and CoSi (done locally) |
 | `log` | The `error!`, `warn!`, `info!` and `debug!` macros |
 | `error` | The SDK's `Error` and `Result` types, and `ResultExt` for call-site context |
