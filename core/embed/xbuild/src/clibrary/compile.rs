@@ -159,12 +159,14 @@ impl CLibrary {
             let input = join_paths_lexically(&base_dir, &src);
             let output = derive_output_path(&base_dir, &src, &out_dir, output_type.extension());
 
-            // Only generate .d files for object files compiled from C/C++ sources
+            // Only generate .d files for object files compiled from C/C++ sources.
+            // The output's extension is kept (e.g. `qstr.o.d`), so outputs of
+            // the same source in another stage don't share one .d file.
             let cc_dep = if src
                 .extension()
                 .is_some_and(|ext| ext == "c" || ext == "cpp" || ext == "cc")
             {
-                Some(output.with_extension("d"))
+                Some(output.with_added_extension("d"))
             } else {
                 None
             };
