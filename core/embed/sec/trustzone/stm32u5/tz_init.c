@@ -28,6 +28,7 @@
 #include <sys/trustzone.h>
 
 #include <sec/tz_init.h>
+#include <sec/tz_periph.h>
 
 #define SAU_INIT_CTRL_ENABLE 1
 #define SAU_INIT_CTRL_ALLNS 0
@@ -209,6 +210,22 @@ static void tz_configure_flash(void) {
   HAL_FLASHEx_ConfigBBAttributes(&flash_bb);
 }
 
+// The unprivileged application draws into the frame buffers. Unprivilege
+// the physical buffers first, so that the GFXMMU's own bus transactions
+// (the LTDC refresh, see RM0456 3.6.3) stay legal, then the GFXMMU itself.
+// The MPU keeps controlling which buffer the application may touch.
+static void tz_configure_display_fb(void) {
+#if defined(FB1_RAM_START) && FB1_RAM_SIZE > 0
+  tz_set_sram_unpriv(FB1_RAM_START, FB1_RAM_SIZE, true);
+#endif
+#if defined(FB2_RAM_START) && FB2_RAM_SIZE > 0
+  tz_set_sram_unpriv(FB2_RAM_START, FB2_RAM_SIZE, true);
+#endif
+#ifdef DISPLAY_GFXMMU
+  tz_set_gfxmmu_unpriv(true);
+#endif
+}
+
 #ifndef SECMON
 void tz_init(void) {
   tz_configure_arm();
@@ -221,6 +238,8 @@ void tz_init(void) {
   // Make all peripherals secure & privileged
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
+  tz_configure_display_fb();
 
   tz_enable_illegal_access_interrupt();
 }
@@ -404,6 +423,10 @@ void tz_init(void) {
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       TROPIC01_SPI_GTZC_PERIPH, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
 #endif
+
+  // The GFXMMU privilege attribute is locked below together with the rest
+  // of the TZSC configuration, so it has to be decided here.
+  tz_configure_display_fb();
 
   tz_enable_illegal_access_interrupt();
 

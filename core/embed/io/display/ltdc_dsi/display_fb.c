@@ -45,36 +45,6 @@ __attribute__((section(".fb2"),
     physical_frame_buffer_1[ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE];
 #endif
 
-#ifdef USE_TRUSTZONE
-void display_set_unpriv_access(bool unpriv) {
-  // To allow unprivileged access both GFXMMU virtual buffers area and
-  // underlying SRAM region must be configured as unprivileged.
-
-  // Order of GFXMMU and SRAM unprivileged access configuration is important
-  // to avoid the situation the virtual frame buffer has lower privileges
-  // than underlying frame buffer in physical memory so LTDC could not
-  // refresh the display properly.
-
-#ifdef DISPLAY_GFXMMU
-  if (!unpriv) {
-    tz_set_gfxmmu_unpriv(unpriv);
-  }
-#endif
-
-  tz_set_sram_unpriv((uint32_t)physical_frame_buffer_0,
-                     PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
-
-  tz_set_sram_unpriv((uint32_t)physical_frame_buffer_1,
-                     PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
-
-#ifdef DISPLAY_GFXMMU
-  if (unpriv) {
-    tz_set_gfxmmu_unpriv(unpriv);
-  }
-#endif
-}
-#endif  //  USE_TRUSTZONE
-
 // Returns the pointer to the physical frame buffer (0.. FRAME_BUFFER_COUNT-1)
 // Returns NULL if the framebuffer index is out of range.
 static uint8_t *get_fb_ptr(int16_t index) {
