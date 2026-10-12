@@ -60,6 +60,12 @@ TXHASH_1c022d = bytes.fromhex(
     "1c022d9da3aa8bc8cf2a617c42c8f2c343e810af76b3ab9770c5ab6ca54ddab5"
 )
 
+TX_API_SIGNET = TxCache("Signet")
+
+TXHASH_84f948 = bytes.fromhex(
+    "84f9482a55c8fc97f750f66f266e6ba0b5b9cee2baa8664a3dc84cc37f951a98"
+)
+
 
 def test_send_p2sh(session: Session):
     # input tx: 20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337
@@ -734,6 +740,81 @@ def test_send_multisig_4_change(session: Session):
         serialized_tx,
         hash_link="https://tbtc1.trezor.io/api/tx/b006619cf84ff4f36cfbd9a4f77a77678cc1b040d81b118c745dce5bbfe255d5",
         tx_hex="01000000000101a660b551efbe3f6e79b181d3c4445a7c3ffc4b970f6c1f5ef2f6284a0dfaabb90300000023220020fa6c73de618ec134eeec0c16f6dd04d46d4347e9a4fd0a95fd7938403a4949f9ffffffff01905f010000000000220020bcea2324dacbcde5a9db90cc26b8df9cbc72010e05cb68cf034df6f0e05239a20400473044022046de6458d0e1d7fcc1945d6ee027d5900c7ba18183416813a9b841c5b57b7417022011cfaa89ce7f60c876d569f51080e0f9e07c09ec34fbdbc3b0e26f1028e23e2501473044022027909365f0c3d2743ba2970e74ef2c375d0ae00243e2d75d206c075d6a0f219202206a429e7e6355f8a6e957d539add1d6a24533a20f5023d19e7c2aaf25221024c501695221036a5ec3abd10501409092246fe59c6d7a15fff1a933479483c3ba98b866c5b9742103559be875179d44e438db2c74de26e0bc9842cbdefd16018eae8a2ed989e474722103067b56aad037cd8b5f569b21f9025b76470a72dc69457813d2b76e98dc0cd01a53ae00000000",
+    )
+
+
+@pytest.mark.multisig
+def test_send_multisig_5_1of1(session: Session):
+    # input tx: 84f9482a55c8fc97f750f66f266e6ba0b5b9cee2baa8664a3dc84cc37f951a98
+    nodes = [
+        deserialize(
+            btc.get_public_node(
+                session, parse_path("m/48h/1h/0h/2h"), coin_name="Signet"
+            ).xpub
+        )
+    ]
+    # tb1quhs6wzttss4c62y5zwdmlfyc3yr4cd4nndxlujynxpfk4y60qd2q7w663a
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/48h/1h/0h/2h/0/0"),
+        prev_hash=TXHASH_84f948,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDWITNESS,
+        multisig=messages.MultisigRedeemScriptType(
+            nodes=nodes, address_n=[0, 0], m=1, signatures=[b""]
+        ),
+        amount=10_000,
+        sequence=0xFFFFFFFD,
+    )
+
+    out1 = messages.TxOutputType(
+        address_n=parse_path("m/48h/1h/0h/2h/1/0"),
+        multisig=messages.MultisigRedeemScriptType(nodes=nodes, address_n=[1, 0], m=1),
+        amount=4_752,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+    out2 = messages.TxOutputType(
+        address_n=parse_path("m/48h/1h/0h/2h/0/1"),
+        multisig=messages.MultisigRedeemScriptType(nodes=nodes, address_n=[0, 1], m=1),
+        amount=5_000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+    expected_responses = [
+        request_input(0),
+        request_output(0),
+        request_output(1),
+        messages.ButtonRequest(code=B.SignTx),  # lock time
+        messages.ButtonRequest(code=B.SignTx),  # total & fee
+        request_input(0),
+        request_meta(TXHASH_84f948),
+        request_input(0, TXHASH_84f948),
+        request_output(0, TXHASH_84f948),
+        request_output(1, TXHASH_84f948),
+        request_input(0),
+        request_output(0),
+        request_output(1),
+        request_input(0),
+        request_finished(),
+    ]
+    with session.test_ctx as client:
+        client.set_expected_responses(expected_responses)
+        signatures, serialized_tx = btc.sign_tx(
+            session,
+            "Signet",
+            inputs=[inp1],
+            outputs=[out1, out2],
+            version=2,
+            lock_time=326_157,
+            prev_txes=TX_API_SIGNET,
+        )
+    assert len(signatures) == 1
+    assert (
+        signatures[0].hex()
+        == "30440220552f28c3996a073efeaa618e335e2bb2eba3d676762665c0a048d8b6efebc6d102202101241051b2955e4c1fe468f2361aea9570f10cd235579977587617ccc582fb"
+    )
+    assert_tx_matches(
+        serialized_tx,
+        hash_link="https://mempool.space/signet/api/tx/b458e8ae9a4589c3eb630ff6d05a35979db08bc29f4d7ab5bd80448274c44f98",
+        tx_hex="02000000000101981a957fc34cc83d4a66a8bae2ceb9b5a06b6e266ff650f797fcc8552a48f9840000000000fdffffff029012000000000000220020728eca326f416ab497e2dc2b4c1d84f1c57f8b0017c2ace73041899c86c14d7b88130000000000002200203ff2ce9162c916baad2084b1300018abcd422c3cf134c944765c6443e1c82b6703004730440220552f28c3996a073efeaa618e335e2bb2eba3d676762665c0a048d8b6efebc6d102202101241051b2955e4c1fe468f2361aea9570f10cd235579977587617ccc582fb0125512102f3c111dbad52cf80f27925bb0cc9a34d47ba1f878c7334c68eeb3aea12a9244a51ae0dfa0400",
     )
 
 
