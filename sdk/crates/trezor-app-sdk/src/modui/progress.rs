@@ -36,7 +36,7 @@
 //!         prog.step(chunk.len() as u32);
 //!     }
 //!     hasher.finalize()
-//! })?;
+//! });
 //! ```
 //!
 //! Work a closure cannot span — phases spread across calls, a handle held in a
@@ -45,7 +45,7 @@
 //! it however the function left — `Ok`, `Err`, or `?` in between:
 //!
 //! ```text
-//! let mut prog = progress::Progress::start("Signing", progress::Total::Units(2))?;
+//! let mut prog = progress::Progress::start("Signing", progress::Total::Units(2));
 //! let digest = hash(tx)?;                    // early exit: prog drops, bar ends
 //! prog.step(1);
 //! confirm_the_person()?;                     // refusal: same
@@ -68,12 +68,11 @@
 //!         prog.step(chunk.len() as u32);
 //!     }
 //!     done
-//! })?;
+//! });
 //! ```
 
-use crate::app_runtime2::get_ui_or_die;
+use crate::app_runtime2::{get_ui_or_die, system_exit_fatal};
 use crate::traits::ui::UiV1Dyn as _;
-use crate::{IntoAppResult, Result};
 
 // ============================================================================
 // Data types
@@ -121,14 +120,10 @@ pub struct Progress {
 /// Use [`Total::Unknown`] when the amount of work is not known upfront; the
 /// person sees ongoing motion rather than a bar.
 ///
-/// # Errors
-///
-/// `Err` only if the progress could not be shown at all — the request never
-/// reached core, or core refused it. `work`'s own result passes through
-/// untouched.
-pub fn run<T>(label: &str, total: Total, work: impl FnOnce() -> T) -> Result<T> {
-    let _guard = Progress::start(label, total)?;
-    Ok(work())
+/// A progress that cannot be shown ends the app; see [`Progress::start`].
+pub fn run<T>(label: &str, total: Total, work: impl FnOnce() -> T) -> T {
+    let _guard = Progress::start(label, total);
+    work()
 }
 
 /// Runs `work` under a progress, handing it the [`Progress`] to report steps
@@ -136,13 +131,9 @@ pub fn run<T>(label: &str, total: Total, work: impl FnOnce() -> T) -> Result<T> 
 ///
 /// Same lifetime as [`run`]; the only difference is that `work` receives
 /// the handle, so it can call [`Progress::step`] as it goes.
-///
-/// # Errors
-///
-/// See [`run`]; `work`'s own result and errors pass through untouched.
-pub fn run_with<T>(label: &str, total: Total, work: impl FnOnce(&mut Progress) -> T) -> Result<T> {
-    let mut guard = Progress::start(label, total)?;
-    Ok(work(&mut guard))
+pub fn run_with<T>(label: &str, total: Total, work: impl FnOnce(&mut Progress) -> T) -> T {
+    let mut guard = Progress::start(label, total);
+    work(&mut guard)
 }
 
 impl Progress {
@@ -155,19 +146,20 @@ impl Progress {
     /// ending the progress before any work runs. Bind it (`let _p = ..`) and
     /// let scope end do the rest.
     ///
-    /// # Errors
-    ///
-    /// [`crate::Error::DataError`] if the request could not be sent or core
-    /// did not accept it.
-    pub fn start(label: &str, total: Total) -> Result<Self> {
+    /// If the request cannot reach core, the app ends; this never returns
+    /// without a running progress.
+    pub fn start(label: &str, total: Total) -> Self {
         let total = match total {
             Total::Units(units) => units,
             Total::Unknown => 0,
         };
-        get_ui_or_die()
+        if let Err(e) = get_ui_or_die()
             .init_progress(label.into(), total)
-            .into_app_result()?;
-        Ok(Self { _running: () })
+            .into_result()
+        {
+            system_exit_fatal(e.message(), file!(), line!());
+        }
+        Self { _running: () }
     }
 
     /// Reports that `units` of work are done, of the total given at the start.

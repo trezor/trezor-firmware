@@ -703,7 +703,7 @@ fn confirm_payment_request<'a>(
                     extra_menu_items,
                     can_go_back_from_trade,
                 )? {
-                    ui::UiReply::Backward => {
+                    ui::TrezorUiResult::Backward => {
                         back_from_confirm_trade = true;
                         break;
                     }
@@ -732,7 +732,7 @@ fn confirm_payment_request<'a>(
                     Some("confirm_payment_request"),
                     ButtonRequestType::SignTx.into(),
                 ))? {
-                    ui::UiReply::Backward => continue,
+                    ui::TrezorUiResult::Backward => continue,
                     // Anything but a yes here must not reach the signature.
                     reply => {
                         ui::error_if_not_confirmed(reply)?;
@@ -1688,7 +1688,7 @@ pub(crate) fn confirm_signverify(
                         "Address mismatch?",
                         ButtonRequestType::Other.into()
                     )),
-                    Ok(ui::UiReply::Confirmed)
+                    Ok(ui::TrezorUiResult::Confirmed)
                 ) {
                     return Err(Error::Cancelled);
                 } else {
@@ -1919,8 +1919,8 @@ pub(crate) fn confirm_blob_intro(
     ))?;
 
     match res {
-        ui::UiReply::Confirmed => Ok(true),
-        ui::UiReply::WantsMore => Ok(false),
+        ui::TrezorUiResult::Confirmed => Ok(true),
+        ui::TrezorUiResult::WantsMore => Ok(false),
         _ => Err(Error::Cancelled)?,
     }
 }

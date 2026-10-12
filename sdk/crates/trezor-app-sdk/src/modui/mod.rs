@@ -135,8 +135,7 @@
 //! }
 //! ```
 //!
-//! Every other `Err` is a failure the app cannot fix and should pass up the
-//! same way (see [errors](#errors)).
+//! No other `Err` comes back: a failure ends the app (see [errors](#errors)).
 //!
 //! How the person got there — which page they were on, whether they opened
 //! the extras, which button they pressed — is never reported: it happens in
@@ -202,9 +201,10 @@
 //!
 //! # Errors
 //!
-//! Apart from [`crate::Error::Cancelled`] (see [outcomes](#outcomes)), a
-//! block returns `Err` only when its request could not reach the device or
-//! the answer could not be read.
+//! A block's only `Err` is [`crate::Error::Cancelled`] (see
+//! [outcomes](#outcomes)), and a progress has none. A failure — the request
+//! did not reach core, or the answer cannot be read — ends the app, and the
+//! call never returns.
 //!
 //! The library checks nothing itself. A request core cannot take — more
 //! extras than a model's menu holds, more than fits in one IPC message —
@@ -219,10 +219,10 @@
 //!
 //! WIP: both of those outcomes are under discussion. There is no error path
 //! from core to the app: a screen core cannot draw stops the app's task, and
-//! the blocking call never returns. The cheap fix is a `UiReply` failure
-//! variant mapped to `Err` in `internal::answer`; a fuller one is an
-//! error-report service covering crypto and progress too. Whether to tell
-//! the app about a dropped menu is open.
+//! the blocking call never returns. The cheap fix is a `TrezorUiResult`
+//! failure variant carrying the reason, on which the block ends the app with
+//! it; a fuller one is an error-report service covering crypto and progress
+//! too. Whether to tell the app about a dropped menu is open.
 //!
 //! WIP: contract breaks left: a `Done` notice waits for a tap on bolt and
 //! caesar, and notices ignore `cancel`; see [`notice`].
@@ -285,19 +285,18 @@
 // it archived. Core runs the block's menu itself and replies once. There are
 // no mirror types and no conversions in between.
 //
-// So a new block means a `structs` type, a `UiV1` method and its shim in
-// `core/embed/api`, an arm in core's dispatch, and the block's function
-// here.
+// So a new block means a `structs` type and its `TrezorUiEnum` variant, an
+// arm in core's dispatch, and the block's function here. The `UiV1` vtable
+// has one `ui_call` for every block.
 //
 // ButtonRequests: the app names the step and nothing else. The `/menu` and
 // `/details` suffixes are core's, as are the `ButtonRequestType` (always
 // `Other`), page counts, and whether a repeat is a new step.
 //
 // Layout: the public surface is this file plus one module per kind of block
-// (`confirm`, `notice`, `progress`); `internal` holds what blocks share and
-// no app can name. A public file holds only what an app may use — the
-// block's function and the types an app names — so that reading a public
-// file is reading the API.
+// (`confirm`, `notice`, `progress`). A public file holds only what an app
+// may use — the block's function and the types an app names — so that
+// reading a public file is reading the API.
 //
 // A block file is dull on purpose: arguments in, one answer out, the wire
 // call in between. Anything cleverer belongs in the firmware, not here.
@@ -308,7 +307,6 @@
 // them by hand.
 pub mod confirm;
 mod extra;
-mod internal;
 pub mod notice;
 pub mod progress;
 

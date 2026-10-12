@@ -448,9 +448,10 @@ pub struct ConfirmProperties<'a> {
     pub extras: Slice<'a, ExtraItem<'a>>,
 }
 
-/// One UI request, as it crosses IPC: one variant per `modui` block.
-/// `core/embed/api` wraps the request the app passed through the `UiV1` vtable
-/// and serializes it.
+/// One UI request: one variant per `modui` block. The app passes it through
+/// the `UiV1` vtable, and `core/embed/api` serializes that same value for IPC.
+#[stabby::stabby]
+#[repr(C, u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorUiEnum<'a> {
     ConfirmAction(ConfirmAction<'a>),
@@ -470,23 +471,21 @@ pub enum TrezorUiEnum<'a> {
 #[stabby::stabby]
 #[repr(u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
-pub enum UiReply {
-    /// Yes, having seen all of it.
-    ///
-    /// WIP: until chunk paging exists, every chunk of a [`ConfirmData`]
-    /// answers this too.
+pub enum TrezorUiResult {
+    /// Confirmed.
     Confirmed,
-    /// Refused, or left without answering. `modui` turns it into
-    /// `Err(Error::Cancelled)`.
+    /// Refused, or left without answering.
     Cancelled,
-    // WIP: chunk paging. No screen produces these yet; they come back with it.
-    // /// Paged past the end of the content core holds; the sender has more.
-    // Forward,
-    // /// Paged back before the content core holds.
-    // Backward,
-    // /// Accepted the rest without reading it (on the screen or in the menu;
-    // /// undecided).
-    // ConfirmedAll,
+
+    // Chunk paging, answers to a `ConfirmData` chunk only. The firmware's
+    // chunk loop acts on them; `Forward` and `Backward` never reach `modui`.
+    // Unused: no screen sends them yet.
+    /// Paged past the end of the chunk; the next chunk is wanted.
+    Forward,
+    /// Paged back before the start of the chunk; the previous chunk is wanted.
+    Backward,
+    /// Accepted the rest of the data without reading it.
+    ConfirmedAll,
 }
 
 /// All crypto operations that can be requested from the app via IPC.

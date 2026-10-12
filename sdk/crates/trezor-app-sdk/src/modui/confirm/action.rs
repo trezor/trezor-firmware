@@ -1,11 +1,10 @@
 //! The generic yes/no block. The public docs live on [`action`].
 
-use crate::app_runtime2::get_ui_or_die;
-use crate::modui::internal::answer;
+use crate::app_runtime2::{get_ui_or_die, system_exit_fatal};
 use crate::modui::{Commitment, ExtraItem};
-use crate::structs::ConfirmAction;
+use crate::structs::{ConfirmAction, TrezorUiEnum, TrezorUiResult};
 use crate::traits::ui::UiV1Dyn as _;
-use crate::{IntoAppResult, Result};
+use crate::{Error, Result};
 
 /// Asks the person to confirm an action, and waits for the answer.
 ///
@@ -70,5 +69,13 @@ pub fn action(
         br_name: br.into(),
         extras: extras.into(),
     };
-    answer(get_ui_or_die().confirm_action(request).into_app_result()?)
+    match get_ui_or_die()
+        .ui_call(TrezorUiEnum::ConfirmAction(request))
+        .into_result()
+    {
+        Ok(TrezorUiResult::Confirmed) => Ok(()),
+        Ok(TrezorUiResult::Cancelled) => Err(Error::Cancelled),
+        Ok(_) => system_exit_fatal("unexpected UI reply", file!(), line!()),
+        Err(e) => system_exit_fatal(e.message(), file!(), line!()),
+    }
 }

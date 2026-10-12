@@ -16,13 +16,12 @@
 //! "menu button even without extras"; `extapp_menu` adds Cancel. Info and
 //! warning only. Bolt: no menus, keeps on-screen X. Caesar: waits on #7694.
 
-use crate::app_runtime2::get_ui_or_die;
+use crate::app_runtime2::{get_ui_or_die, system_exit_fatal};
 use crate::modui::ExtraItem;
-use crate::modui::internal::answer;
 pub use crate::structs::Severity;
-use crate::structs::ShowNotice;
+use crate::structs::{ShowNotice, TrezorUiEnum, TrezorUiResult};
 use crate::traits::ui::UiV1Dyn as _;
-use crate::{IntoAppResult, Result};
+use crate::{Error, Result};
 
 /// Tells the person something, and waits for them to move on.
 ///
@@ -112,5 +111,13 @@ pub fn show(
         br_name: br.into(),
         extras: extras.into(),
     };
-    answer(get_ui_or_die().show_notice(request).into_app_result()?)
+    match get_ui_or_die()
+        .ui_call(TrezorUiEnum::ShowNotice(request))
+        .into_result()
+    {
+        Ok(TrezorUiResult::Confirmed) => Ok(()),
+        Ok(TrezorUiResult::Cancelled) => Err(Error::Cancelled),
+        Ok(_) => system_exit_fatal("unexpected UI reply", file!(), line!()),
+        Err(e) => system_exit_fatal(e.message(), file!(), line!()),
+    }
 }

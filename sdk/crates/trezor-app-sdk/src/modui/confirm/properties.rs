@@ -1,12 +1,11 @@
 //! Confirming a list of key/value facts. The public docs live on
 //! [`properties`].
 
-use crate::app_runtime2::get_ui_or_die;
-use crate::modui::internal::answer;
+use crate::app_runtime2::{get_ui_or_die, system_exit_fatal};
 use crate::modui::{Commitment, ExtraItem};
-use crate::structs::{ConfirmProperties, Property};
+use crate::structs::{ConfirmProperties, Property, TrezorUiEnum, TrezorUiResult};
 use crate::traits::ui::UiV1Dyn as _;
-use crate::{IntoAppResult, Result};
+use crate::{Error, Result};
 
 /// Asks the person to confirm a list of facts, and waits for the answer.
 ///
@@ -53,9 +52,13 @@ pub fn properties(
         br_name: br.into(),
         extras: extras.into(),
     };
-    answer(
-        get_ui_or_die()
-            .confirm_properties(request)
-            .into_app_result()?,
-    )
+    match get_ui_or_die()
+        .ui_call(TrezorUiEnum::ConfirmProperties(request))
+        .into_result()
+    {
+        Ok(TrezorUiResult::Confirmed) => Ok(()),
+        Ok(TrezorUiResult::Cancelled) => Err(Error::Cancelled),
+        Ok(_) => system_exit_fatal("unexpected UI reply", file!(), line!()),
+        Err(e) => system_exit_fatal(e.message(), file!(), line!()),
+    }
 }

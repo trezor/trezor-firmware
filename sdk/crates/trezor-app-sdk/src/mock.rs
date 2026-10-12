@@ -31,10 +31,7 @@ use crate::traits::syslog::{
     LogCallbackDyn as _, LogCallbackRef, LogLevel, LogRecord, SyslogV1, SyslogV1Vtable,
 };
 use crate::traits::trezor_v1::{TrezorApiV1, TrezorApiV1Struct, TrezorApiV1Vtable};
-use crate::traits::ui::{
-    ConfirmAction, ConfirmData, ConfirmProperties, ConfirmSummary, ConfirmValue, ShowNotice,
-    StrSlice, UiReply, UiV1, UiV1Vtable,
-};
+use crate::traits::ui::{StrSlice, TrezorUiEnum, TrezorUiResult, UiV1, UiV1Vtable};
 use crate::traits::util::FastResult;
 use crate::traits::wire::{WireError, WireMessage, WireV1, WireV1Vtable};
 
@@ -321,42 +318,10 @@ impl WireV1 for DummyWire {
 struct DummyUi;
 
 impl UiV1 for DummyUi {
-    extern "C" fn confirm_action<'a>(
+    extern "C" fn ui_call<'a>(
         &self,
-        _value: ConfirmAction<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn confirm_value<'a>(
-        &self,
-        _value: ConfirmValue<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn confirm_data<'a>(
-        &self,
-        _value: ConfirmData<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn confirm_summary<'a>(
-        &self,
-        _value: ConfirmSummary<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn confirm_properties<'a>(
-        &self,
-        _value: ConfirmProperties<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn show_notice<'a>(&self, _value: ShowNotice<'a>) -> FastResult<UiReply, WireError> {
+        _request: TrezorUiEnum<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
         unimplemented!("not exercised by the current test suite")
     }
 

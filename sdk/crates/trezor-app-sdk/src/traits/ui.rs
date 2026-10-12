@@ -6,40 +6,21 @@
 
 use super::util::FastResult;
 use super::wire::WireError;
-pub use crate::structs::{
-    ConfirmAction, ConfirmData, ConfirmProperties, ConfirmSummary, ConfirmValue, ShowNotice,
-    StrSlice, UiReply,
-};
+pub use crate::structs::{StrSlice, TrezorUiEnum, TrezorUiResult};
 
 /// Talks to Core's UI/progress screens — implemented in `core/embed/api`
 /// against [`super::wire::WireV1`].
 ///
-/// Each screen method shows one block and returns once the person has decided
-/// it. Everything in between, such as the block's menu and extras, happens in
-/// Core.
 #[stabby::stabby(checked)]
 pub trait UiV1: Send + Sync {
-    extern "C" fn confirm_action<'a>(
-        &self,
-        value: ConfirmAction<'a>,
-    ) -> FastResult<UiReply, WireError>;
-    extern "C" fn confirm_value<'a>(
-        &self,
-        value: ConfirmValue<'a>,
-    ) -> FastResult<UiReply, WireError>;
-    /// Shows all of `value.data`, however long; the implementation sends it
+    /// Shows one block and returns once the person has decided it. Everything
+    /// in between, such as the block's menu and extras, happens in Core. A
+    /// `ConfirmData` is shown whole, however long; the implementation sends it
     /// to core in chunks.
-    extern "C" fn confirm_data<'a>(&self, value: ConfirmData<'a>)
-    -> FastResult<UiReply, WireError>;
-    extern "C" fn confirm_summary<'a>(
+    extern "C" fn ui_call<'a>(
         &self,
-        value: ConfirmSummary<'a>,
-    ) -> FastResult<UiReply, WireError>;
-    extern "C" fn confirm_properties<'a>(
-        &self,
-        value: ConfirmProperties<'a>,
-    ) -> FastResult<UiReply, WireError>;
-    extern "C" fn show_notice<'a>(&self, value: ShowNotice<'a>) -> FastResult<UiReply, WireError>;
+        request: TrezorUiEnum<'a>,
+    ) -> FastResult<TrezorUiResult, WireError>;
 
     /// `total` is in the app's own units; `0` means not known.
     extern "C" fn init_progress<'a>(

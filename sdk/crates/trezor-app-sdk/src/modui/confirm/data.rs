@@ -5,12 +5,11 @@
 //! it there is. Length is not the caller's problem: a blob of any size is one
 //! call returning one outcome. The firmware sends it to core in chunks.
 
-use crate::app_runtime2::get_ui_or_die;
+use crate::app_runtime2::{get_ui_or_die, system_exit_fatal};
 use crate::modui::ExtraItem;
-use crate::modui::internal::answer;
-use crate::structs::ConfirmData;
+use crate::structs::{ConfirmData, TrezorUiEnum, TrezorUiResult};
 use crate::traits::ui::UiV1Dyn as _;
-use crate::{IntoAppResult, Result};
+use crate::{Error, Result};
 
 /// Asks the person to confirm raw bytes, and waits for the answer.
 ///
@@ -56,5 +55,13 @@ pub fn data(
         br_name: br.into(),
         extras: extras.into(),
     };
-    answer(get_ui_or_die().confirm_data(request).into_app_result()?)
+    match get_ui_or_die()
+        .ui_call(TrezorUiEnum::ConfirmData(request))
+        .into_result()
+    {
+        Ok(TrezorUiResult::Confirmed | TrezorUiResult::ConfirmedAll) => Ok(()),
+        Ok(TrezorUiResult::Cancelled) => Err(Error::Cancelled),
+        Ok(_) => system_exit_fatal("unexpected UI reply", file!(), line!()),
+        Err(e) => system_exit_fatal(e.message(), file!(), line!()),
+    }
 }

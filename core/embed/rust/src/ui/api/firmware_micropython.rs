@@ -15,7 +15,7 @@ use rkyv::{
 #[cfg(feature = "app_loading")]
 use trezor_app_sdk::structs::{
     ArchivedCommitment, ArchivedValueKind, Commitment, Property, Severity as WireSeverity, Slice,
-    StrSlice, TrezorProgressEnum, TrezorUiEnum, UiReply,
+    StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
 };
 
 use crate::io::BinaryData;
@@ -1527,9 +1527,9 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
         // request to carry the chunk's offset and the total length, so a
         // screen can tell it is at an edge. No extapp screen returns `BACK`.
         let msg = if obj == CONFIRMED.as_obj() {
-            UiReply::Confirmed
+            TrezorUiResult::Confirmed
         } else if obj == CANCELLED.as_obj() {
-            UiReply::Cancelled
+            TrezorUiResult::Cancelled
         } else {
             return Err(Error::TypeError);
         };

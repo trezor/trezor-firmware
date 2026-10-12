@@ -1,18 +1,16 @@
 //! Implements [`trezor_app_sdk::traits::ui`]'s `UiV1` on top of
-//! [`crate::wire::ipc_call`]. Each method takes the request exactly as the app
-//! built it, serializes it, sends it to Core's UI/progress service and returns
-//! the reply. There is nothing to convert: the vtable carries the wire types.
+//! [`crate::wire::ipc_call`]. `ui_call` takes the request exactly as the app
+//! built it, serializes it, sends it to Core's UI service and returns the
+//! reply; the progress methods do the same for the progress service. There is
+//! nothing to convert: the vtable carries the wire types.
 //!
 //! This runs on the app's task but is part of the firmware, so anything an
 //! app would otherwise carry in its own binary belongs here or in core.
 
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
-use trezor_app_sdk::structs::{TrezorProgressEnum, TrezorUiEnum};
-use trezor_app_sdk::traits::ui::{
-    ConfirmAction, ConfirmData, ConfirmProperties, ConfirmSummary, ConfirmValue, ShowNotice,
-    StrSlice, UiReply, UiV1,
-};
+use trezor_app_sdk::structs::{ConfirmData, TrezorProgressEnum, TrezorUiEnum};
+use trezor_app_sdk::traits::ui::{StrSlice, TrezorUiResult, UiV1};
 use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
 use trezor_app_sdk::traits::wire::WireError;
 
@@ -30,12 +28,13 @@ const BYTES_PER_CHUNK: usize = 384;
 
 /// Serializes `request`, sends it to Core's UI service and waits for the
 /// block's final answer.
-fn ui_request(request: TrezorUiEnum) -> Result<UiReply, WireError> {
+fn ui_request(request: TrezorUiEnum) -> Result<TrezorUiResult, WireError> {
     let bytes = to_bytes::<Failure>(&request).map_err(|_| WireError::DecodeError)?;
     let (_id, data) = ipc_call(CoreIpcService::Ui.into(), 0, &bytes, TIMEOUT_MAX)?;
-    let archived = rkyv::access::<rkyv::Archived<UiReply>, Failure>(&data)
+    let archived = rkyv::access::<rkyv::Archived<TrezorUiResult>, Failure>(&data)
         .map_err(|_| WireError::DecodeError)?;
-    rkyv::api::low::deserialize::<UiReply, Failure>(archived).map_err(|_| WireError::DecodeError)
+    rkyv::api::low::deserialize::<TrezorUiResult, Failure>(archived)
+        .map_err(|_| WireError::DecodeError)
 }
 
 /// Shows `request.data` a chunk at a time, stopping as soon as the person
@@ -49,12 +48,13 @@ fn ui_request(request: TrezorUiEnum) -> Result<UiReply, WireError> {
 ///
 /// WIP, the direction: one continuous read, where the screen says when it is
 /// paging past the chunk it holds and the next one is fetched before the
-/// person gets there. The paging replies (`UiReply::Forward`, `Backward`,
-/// `ConfirmedAll`) are commented out until then.
+/// person gets there. The loop already follows the paging replies
+/// (`TrezorUiResult::Forward`, `Backward`, `ConfirmedAll`); no screen sends
+/// them yet.
 ///
 /// The app gets one answer for the whole content, and cannot learn that it
 /// was shown in more than one piece.
-fn confirm_in_chunks(request: ConfirmData) -> Result<UiReply, WireError> {
+fn confirm_in_chunks(request: ConfirmData) -> Result<TrezorUiResult, WireError> {
     let data = request.data.as_slice();
     // Empty content still gets one screen, or the person confirms nothing.
     let chunk_count = data.len().div_ceil(BYTES_PER_CHUNK).max(1);
@@ -75,13 +75,14 @@ fn confirm_in_chunks(request: ConfirmData) -> Result<UiReply, WireError> {
             // Core pages within a chunk, so a yes means the person has seen
             // all of it. Accepting the last chunk is the only way to a yes by
             // reading.
-            UiReply::Confirmed if index + 1 == chunk_count => return Ok(UiReply::Confirmed),
-            UiReply::Confirmed => index += 1,
-            UiReply::Cancelled => return Ok(UiReply::Cancelled),
-            // WIP: chunk paging (see `UiReply`).
-            // UiReply::Forward => index = (index + 1).min(chunk_count - 1),
-            // UiReply::Backward => index = index.saturating_sub(1),
-            // UiReply::ConfirmedAll => return Ok(UiReply::ConfirmedAll),
+            TrezorUiResult::Confirmed if index + 1 == chunk_count => {
+                return Ok(TrezorUiResult::Confirmed);
+            }
+            TrezorUiResult::Confirmed => index += 1,
+            TrezorUiResult::Cancelled => return Ok(TrezorUiResult::Cancelled),
+            TrezorUiResult::Forward => index = (index + 1).min(chunk_count - 1),
+            TrezorUiResult::Backward => index = index.saturating_sub(1),
+            TrezorUiResult::ConfirmedAll => return Ok(TrezorUiResult::ConfirmedAll),
         }
     }
 }
@@ -100,43 +101,15 @@ fn ipc_progress_call(value: &TrezorProgressEnum) -> Result<(), WireError> {
 pub struct TrezorUiV1Impl;
 
 impl UiV1 for TrezorUiV1Impl {
-    extern "C" fn confirm_action<'a>(
+    extern "C" fn ui_call<'a>(
         &self,
-        value: ConfirmAction<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        ui_request(TrezorUiEnum::ConfirmAction(value)).into()
-    }
-
-    extern "C" fn confirm_value<'a>(
-        &self,
-        value: ConfirmValue<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        ui_request(TrezorUiEnum::ConfirmValue(value)).into()
-    }
-
-    extern "C" fn confirm_data<'a>(
-        &self,
-        value: ConfirmData<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        confirm_in_chunks(value).into()
-    }
-
-    extern "C" fn confirm_summary<'a>(
-        &self,
-        value: ConfirmSummary<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        ui_request(TrezorUiEnum::ConfirmSummary(value)).into()
-    }
-
-    extern "C" fn confirm_properties<'a>(
-        &self,
-        value: ConfirmProperties<'a>,
-    ) -> FastResult<UiReply, WireError> {
-        ui_request(TrezorUiEnum::ConfirmProperties(value)).into()
-    }
-
-    extern "C" fn show_notice<'a>(&self, value: ShowNotice<'a>) -> FastResult<UiReply, WireError> {
-        ui_request(TrezorUiEnum::ShowNotice(value)).into()
+        request: TrezorUiEnum<'a>,
+    ) -> FastResult<TrezorUiResult, WireError> {
+        match request {
+            TrezorUiEnum::ConfirmData(data) => confirm_in_chunks(data),
+            request => ui_request(request),
+        }
+        .into()
     }
 
     extern "C" fn init_progress<'a>(
