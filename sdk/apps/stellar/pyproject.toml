@@ -10,6 +10,7 @@ requires-python = ">=3.9, <4"
 dev = [
     "pytest>=8.4.1",
     "pytest-xdist>=3.6.1",
+    "pytest-random-order>=1.2.0",
     "trezor",
     "Pillow>=11",
     "dominate",
@@ -24,7 +25,7 @@ dev = [
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 
-addopts = "-q"
+addopts = "-q --random-order"
 
 [tool.uv.sources]
 trezor = { path = "../../../python", editable = true }
