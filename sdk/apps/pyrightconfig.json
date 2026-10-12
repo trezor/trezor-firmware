@@ -1,6 +1,5 @@
 {
     "include": [
-        "ethereum/tests",
         "tron/tests"
     ],
     "exclude": [
