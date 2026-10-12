@@ -101,9 +101,10 @@
 //! says when it is paging towards the edge of the chunk it holds, and the
 //! next chunk is fetched before the person gets there — from the app, or
 //! through the app from the host — so content of any length reads as one
-//! document. That needs the total length known upfront, so core can count
-//! pages across chunks, and a way for the screen to ask for more; neither
-//! exists yet. The chunk loop in `core/embed/api` holds the details.
+//! document. The replies for it exist (`Forward`, `Backward` and
+//! `ConfirmedAll` in `TrezorUiResult`) and the chunk loop in `core/embed/api`
+//! follows them, but no screen sends them yet, and core cannot count pages
+//! across chunks without the total length upfront.
 //!
 //! # Outcomes
 //!
@@ -130,12 +131,11 @@
 //! ```text
 //! match confirm::action(..) {
 //!     Ok(()) => { /* yes */ }
-//!     Err(Error::Cancelled) => { /* no, carry on */ }
-//!     Err(e) => return Err(e),
+//!     Err(_) => { /* no, carry on */ }
 //! }
 //! ```
 //!
-//! No other `Err` comes back: a failure ends the app (see [errors](#errors)).
+//! A cancel is the only `Err`: a failure ends the app (see [errors](#errors)).
 //!
 //! How the person got there — which page they were on, whether they opened
 //! the extras, which button they pressed — is never reported: it happens in
@@ -259,12 +259,11 @@
 //! }
 //!
 //! // Or handle the cancel yourself, when leaving is not the end of the flow.
-//! fn offer_details(address: &str) -> trezor_app_sdk::Result<bool> {
+//! fn offer_details(address: &str) -> bool {
 //!     let kind = confirm::ValueKind::Address;
 //!     match confirm::value("Send", address, kind, None, None, None, Commitment::Step, "app/send", &[]) {
-//!         Ok(()) => Ok(true),
-//!         Err(trezor_app_sdk::Error::Cancelled) => Ok(false),
-//!         Err(e) => Err(e),
+//!         Ok(()) => true,
+//!         Err(_) => false,
 //!     }
 //! }
 //! ```
