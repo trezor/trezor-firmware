@@ -86,9 +86,9 @@ pub(crate) fn get_wire_or_die() -> StaticWireV1 {
     get_api_or_die().wire
 }
 
-/// UI/progress vtable — see [`crate::traits::ui::UiV1`]. Public: apps call
-/// this directly to show screens.
-pub fn get_ui_or_die() -> StaticUiV1 {
+/// UI/progress vtable — see [`crate::traits::ui::UiV1`]. Apps go through
+/// `modui`.
+pub(crate) fn get_ui_or_die() -> StaticUiV1 {
     get_api_or_die().ui
 }
 
