@@ -21,21 +21,31 @@ if [[ "$OSTYPE" != "linux-gnu" && "$OSTYPE" != "darwin"* ]]; then
   exit 0
 fi
 
-# When updating URL and sha256sum also update the URL in ci/shell.nix.
 error=1
-: "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.18.3.1-dev-tests-u18.04-01/trezor_tests}"
-: "${TREZOR_MONERO_TESTS_SHA256SUM:=d8938679b69f53132ddacea1de4b38b225b06b37b3309aa17911cfbe09b70b4a}"
 : "${TREZOR_MONERO_TESTS_PATH:=$CORE_DIR/tests/trezor_monero_tests}"
 : "${TREZOR_MONERO_TESTS_LOG:=$CORE_DIR/tests/trezor_monero_tests.log}"
 : "${TREZOR_MONERO_TESTS_CHAIN:=$CORE_DIR/tests/trezor_monero_tests.chain}"
 
+# The binary is built from ph4r05/monero and the patches in tests/monero/,
+# see docs/tests/monero-tests.md.
 if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" ]]; then
-  echo "Downloading Trezor monero tests binary ($TREZOR_MONERO_TESTS_SHA256SUM) to ${TREZOR_MONERO_TESTS_PATH}"
-  wget -O "$TREZOR_MONERO_TESTS_PATH" "$TREZOR_MONERO_TESTS_URL" \
-    && chmod +x "$TREZOR_MONERO_TESTS_PATH" \
-    && echo "${TREZOR_MONERO_TESTS_SHA256SUM}  ${TREZOR_MONERO_TESTS_PATH}" | shasum -a 256 -c
-else
-  echo "Trezor monero binary already present at $TREZOR_MONERO_TESTS_PATH - not downloading again."
+  echo "Trezor monero tests binary not found at $TREZOR_MONERO_TESTS_PATH."
+  echo "Build it with core/tests/monero/build.sh DIR (needs docker) and set TREZOR_MONERO_TESTS_PATH=DIR/trezor_tests."
+  exit 1
+fi
+if [[ -f "$TREZOR_MONERO_TESTS_PATH.sha256" ]]; then
+  (cd "$(dirname "$TREZOR_MONERO_TESTS_PATH")" && sha256sum -c "$(basename "$TREZOR_MONERO_TESTS_PATH").sha256")
+fi
+chmod +x "$TREZOR_MONERO_TESTS_PATH"
+
+# The binary uses the system dynamic loader. Where it is missing (NixOS), run a copy
+# patched to use the loader of the running bash (nix-provided in nix-shell).
+if command -v patchelf >/dev/null && [[ ! -e "$(patchelf --print-interpreter "$TREZOR_MONERO_TESTS_PATH")" ]]; then
+  patched="$CORE_DIR/tests/trezor_monero_tests.patched"
+  cp "$TREZOR_MONERO_TESTS_PATH" "$patched"
+  chmod u+w "$patched"
+  patchelf --set-interpreter "$(patchelf --print-interpreter "$(readlink -f "$(command -v bash)")")" "$patched"
+  TREZOR_MONERO_TESTS_PATH="$patched"
 fi
 
 echo "Running tests"

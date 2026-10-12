@@ -656,6 +656,31 @@ jobs:
       - uses: ./.github/actions/environment
       - run: $UV_RUN --project=. core/tools/size/checker.py core/build/artifacts/latest/firmware.elf
 
+  # Monero tests binary, built from ph4r05/monero and core/tests/monero/patches only when they change.
+  monero_tests_binary:
+    name: Monero tests binary
+    runs-on: ubuntu-26.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # actions/cache@v6.1.0
+        id: cache
+        with:
+          path: monero-tests
+          # Bump v1 to force a rebuild; all other build inputs are in core/tests/monero/.
+          key: monero-tests-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('core/tests/monero/**') }}
+      - if: steps.cache.outputs.cache-hit != 'true'
+        run: core/tests/monero/build.sh monero-tests
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: monero-tests
+          path: monero-tests/
+          retention-days: 7
+
   # Monero tests.
   core_monero_test:
     name: Monero test (${{ matrix.model }}, ${{ matrix.asan }})
@@ -664,6 +689,7 @@ jobs:
     needs:
       - param
       - core_emu
+      - monero_tests_binary
     strategy:
       fail-fast: false
       matrix:
@@ -672,6 +698,7 @@ jobs:
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
+      TREZOR_MONERO_TESTS_PATH: ${{ github.workspace }}/monero-tests/trezor_tests
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -681,6 +708,10 @@ jobs:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build/artifacts/latest
       - run: chmod +x core/build/artifacts/latest/firmware-emu*
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+        with:
+          name: monero-tests
+          path: monero-tests
       - uses: ./.github/actions/environment
         with:
           nix-dev-shell: everything
