@@ -667,12 +667,14 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           persist-credentials: false
+      - id: base
+        run: echo "commit=$(git rev-parse HEAD:vendor/monero)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # actions/cache@v6.1.0
         id: cache
         with:
           path: monero-tests
-          # Bump v1 to force a rebuild; all other build inputs are in core/tests/monero/.
-          key: monero-tests-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('core/tests/monero/**') }}
+          # Bump v1 to force a rebuild; the other build inputs are the vendor/monero commit and core/tests/monero/.
+          key: monero-tests-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.base.outputs.commit }}-${{ hashFiles('core/tests/monero/**') }}
       - if: steps.cache.outputs.cache-hit != 'true'
         run: core/tests/monero/build.sh monero-tests
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0

@@ -1,19 +1,17 @@
 #!/usr/bin/env bash
 # Builds trezor_tests (Monero's Trezor test harness used by
-# run_tests_device_emu_monero.sh) from the base below with the patches in
-# patches/, if any. Needs git and docker.
+# run_tests_device_emu_monero.sh) from the vendor/monero submodule commit with
+# the patches in patches/, if any. Needs git and docker. The submodule does not
+# need to be checked out: its commit is fetched from its URL.
 #
-# Every input of the build is in this directory: CI caches the binary under a
-# hash of it (see docs/tests/monero-tests.md).
+# The build inputs are the submodule commit and this directory: CI caches the
+# binary under both (see docs/tests/monero-tests.md).
 #
 # Usage: build.sh OUTDIR
 # Writes OUTDIR/trezor_tests and OUTDIR/trezor_tests.sha256.
 
 set -euo pipefail
 
-# Pin the base by commit (tags can move): tag v0.18.3.1-dev-tests-u18.04-01.
-BASE_URL=https://github.com/ph4r05/monero.git
-BASE_COMMIT=d9d6a6af310aba9dc1fac8592856f5e3464496c3
 # Base image of docker/tests/Dockerfile, pinned by digest.
 BASE_IMAGE=ubuntu:18.04@sha256:152dc042452c496007f07ca9127571cb9c29697f42acbfad72324b2bb2e43c98
 
@@ -23,6 +21,11 @@ if [[ $# -ne 1 ]]; then
 fi
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
+# The base: URL from .gitmodules, commit from the index (a staged pin change counts).
+BASE_URL="$(git -C "$REPO" config -f .gitmodules submodule.vendor/monero.url)"
+BASE_COMMIT="$(git -C "$REPO" ls-files -s vendor/monero | cut -d' ' -f2)"
+echo "Base: $BASE_URL $BASE_COMMIT"
 mkdir -p "$1"
 OUT="$(cd "$1" && pwd)"
 WORK="$(mktemp -d)"

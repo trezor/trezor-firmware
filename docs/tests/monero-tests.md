@@ -3,9 +3,9 @@
 `make -C core test_emu_monero` runs Monero's Trezor test suite (`trezor_tests`) against the emulator.
 Linux and macOS only.
 
-The suite is built from the `ph4r05/monero` commit pinned in `core/tests/monero/build.sh` with the
-patches in `core/tests/monero/patches/`. CI builds it in the `monero_tests_binary` job and caches it
-until `core/tests/monero/` changes.
+The suite is built from the `vendor/monero` submodule commit (`ph4r05/monero`) with the patches in
+`core/tests/monero/patches/`. CI builds it in the `monero_tests_binary` job and caches it until the
+submodule commit or `core/tests/monero/` changes.
 
 ## Running locally
 
@@ -41,7 +41,8 @@ log.
 To add a patch, check out the base commit, `git am` the existing patches, commit the change and
 regenerate the series with `git format-patch` into `core/tests/monero/patches/`.
 
-To move the base, set `BASE_URL` and `BASE_COMMIT` in `build.sh` and delete the patches it contains.
+To move the base, point the submodule at the new commit (`git -C vendor/monero checkout <tag>`,
+`git add vendor/monero`) and delete the patches it contains.
 
 ## Security fixes
 
