@@ -66,8 +66,6 @@ void display_deinit(display_content_mode_t mode) {
   drv->initialized = false;
 }
 
-void display_set_unpriv_access(bool unpriv) {}
-
 bool display_set_backlight(uint8_t level) {
   display_driver_t *drv = &g_display_driver;
 

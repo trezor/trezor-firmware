@@ -90,10 +90,6 @@ void display_suspend(display_wakeup_params_t *wakeup_params);
 void display_resume(const display_wakeup_params_t *wakeup_params);
 #endif  // USE_SUSPEND
 
-// Allows unprivileged access to the display framebuffer from
-// perspective of the GTZC (Global TrustZone Controller).
-void display_set_unpriv_access(bool unpriv);
-
 #endif  // KERNEL_MODE
 
 // Sets display backlight level ranging from 0 (off)..255 (maximum).
