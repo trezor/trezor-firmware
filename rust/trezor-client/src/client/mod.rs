@@ -82,7 +82,7 @@ impl Trezor {
                     resp = self.call_raw(ack)?;
                 }
                 MessageType_PinMatrixRequest => {
-                    return Err(Error::UnsupportedNetwork);
+                    return Err(Error::UnexpectedInteractionRequest(InteractionType::PinMatrix));
                 }
                 MessageType_Failure => {
                     let failure = resp.into_message()?;
