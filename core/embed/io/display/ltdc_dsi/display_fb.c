@@ -27,6 +27,10 @@
 #include <sys/systick.h>
 #include <sys/trustzone.h>
 
+#if defined(DISPLAY_GFXMMU) && defined(SECURE_MODE)
+#include <sec/tz_periph.h>
+#endif
+
 #include "display_internal.h"
 
 #define ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE \
@@ -55,7 +59,11 @@ void display_set_unpriv_access(bool unpriv) {
   // than underlying frame buffer in physical memory so LTDC could not
   // refresh the display properly.
 
-#ifdef DISPLAY_GFXMMU
+  // The GFXMMU attribute can only be written by secure code; in the secmon
+  // layout the secure monitor sets it in `tz_init()` before locking the
+  // TZSC, and the kernel configures the SRAM only.
+
+#if defined(DISPLAY_GFXMMU) && defined(SECURE_MODE)
   if (!unpriv) {
     tz_set_gfxmmu_unpriv(unpriv);
   }
@@ -67,7 +75,7 @@ void display_set_unpriv_access(bool unpriv) {
   tz_set_sram_unpriv((uint32_t)physical_frame_buffer_1,
                      PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
 
-#ifdef DISPLAY_GFXMMU
+#if defined(DISPLAY_GFXMMU) && defined(SECURE_MODE)
   if (unpriv) {
     tz_set_gfxmmu_unpriv(unpriv);
   }

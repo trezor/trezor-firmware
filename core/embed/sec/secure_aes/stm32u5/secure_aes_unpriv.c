@@ -106,14 +106,14 @@ __attribute((no_stack_protector)) void saes_unpriv_callback(void) {
 // -----------------------------------------------------------------------
 // Code running privileged mode
 
-#if defined(USE_APPLETS) && defined(KERNEL_MODE)
+#if defined(USE_APPLETS) && defined(KERNEL_MODE) && defined(SECURE_MODE)
 
 #include <sys/coreapp.h>
 #include <sys/mpu.h>
 #include <sys/systask.h>
 
 #ifdef USE_TRUSTZONE
-#include <sys/trustzone.h>
+#include <sec/tz_periph.h>
 #endif
 
 static void *secure_aes_unpriv_applet = NULL;
@@ -182,4 +182,4 @@ secbool secure_aes_unpriv_encrypt(const uint8_t *input, size_t size,
 
   return retval;
 }
-#endif  // USE_APPLETS && KERNEL_MODE
+#endif  // USE_APPLETS && KERNEL_MODE && SECURE_MODE

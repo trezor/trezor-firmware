@@ -96,6 +96,14 @@ void tz_set_sram_unpriv(uint32_t start, uint32_t size, bool unpriv) {
 
   uint32_t end = start + size;
 
+#ifdef SECMON
+  // Allow using both secure and non-secure SRAM regions
+  if (start >= SRAM1_BASE_NS && end < SRAM1_BASE_S) {
+    start += SRAM1_BASE_S - SRAM1_BASE_NS;
+    end += SRAM1_BASE_S - SRAM1_BASE_NS;
+  }
+#endif
+
   for (size_t idx = 0; idx < ARRAY_LENGTH(g_sram_regions); idx++) {
     const sram_region_t* r = &g_sram_regions[idx];
 
@@ -274,25 +282,5 @@ void tz_set_flash_unsecure(uint32_t start, uint32_t size, bool unsecure) {
 
   __ISB();
 }
-
-void tz_set_saes_unpriv(bool unpriv) {
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(
-      GTZC_PERIPH_SAES,
-      unpriv ? GTZC_TZSC_PERIPH_NPRIV : GTZC_TZSC_PERIPH_PRIV);
-}
-
-void tz_set_tamper_unpriv(bool unpriv) {
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(
-      GTZC_PERIPH_TAMP,
-      unpriv ? GTZC_TZSC_PERIPH_NPRIV : GTZC_TZSC_PERIPH_PRIV);
-}
-
-#if defined STM32U5A9xx || defined STM32U5G9xx
-void tz_set_gfxmmu_unpriv(bool unpriv) {
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(
-      GTZC_PERIPH_GFXMMU,
-      unpriv ? GTZC_TZSC_PERIPH_NPRIV : GTZC_TZSC_PERIPH_PRIV);
-}
-#endif
 
 #endif  // KERNEL_MODE
