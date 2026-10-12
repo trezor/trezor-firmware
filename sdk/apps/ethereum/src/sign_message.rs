@@ -32,9 +32,7 @@ pub fn sign_message(msg: SignMessage) -> Result<MessageSignature> {
 
     let hash = message_digest(&msg.message);
 
-    let encoded_network = msg.encoded_network.as_ref().map(|buf| buf.as_ref());
-    let mut signature =
-        crypto::sign_typed_hash(dp.as_ref(), &hash, encoded_network, None, None, false)?;
+    let mut signature = crypto::sign_typed_hash(dp.as_ref(), &hash, false)?;
     signature.rotate_left(1);
 
     let res = MessageSignature {

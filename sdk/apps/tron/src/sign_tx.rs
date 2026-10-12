@@ -95,7 +95,7 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
     let w_hash: [u8; 32] = hasher.finalize().as_slice().try_into().unwrap();
 
     // https://tronprotocol.github.io/documentation-en/mechanism-algorithm/account/#algorithm
-    let sig = crypto::sign_typed_hash(&msg.address_n, &w_hash, None, None, None, false).c()?;
+    let sig = crypto::sign_typed_hash(&msg.address_n, &w_hash, false).c()?;
 
     let mut signature = Vec::with_capacity(65);
     signature.extend_from_slice(&sig[1..65]);

@@ -1,6 +1,5 @@
 use stabby::alloc::string::String;
 use stabby::boxed::{Box, BoxedSlice};
-use stabby::option::Option as StabbyOption;
 use stabby::slice::Slice;
 use stabby::str::Str;
 
@@ -85,17 +84,11 @@ pub trait CryptoV1: Send + Sync {
     ) -> FastResult<BoxedSlice<u8>, WireError>;
     /// Signs a 32-byte typed-data hash (e.g. EIP-712) with the key at `address_n`.
     ///
-    /// `encoded_network`/`encoded_token` let Core resolve display metadata
-    /// for the confirmation prompt; `chain_id` is used for replay
-    /// protection. `show_progress` requests a progress indicator while
-    /// signing.
+    /// `show_progress` requests a progress indicator while signing.
     extern "C" fn sign_typed_hash<'a>(
         &self,
         address_n: Slice<'a, u32>,
         hash: [u8; 32],
-        encoded_network: StabbyOption<Slice<'a, u8>>,
-        encoded_token: StabbyOption<Slice<'a, u8>>,
-        chain_id: StabbyOption<u64>,
         show_progress: bool,
     ) -> FastResult<[u8; 65], WireError>;
     /// Signs a raw 32-byte digest with the key at `address_n`.
@@ -106,21 +99,23 @@ pub trait CryptoV1: Send + Sync {
         compressed: bool,
     ) -> FastResult<[u8; 65], WireError>;
     /// Verifies a MAC previously produced by [`Self::get_address_mac`] for
-    /// `address_n` and `address`, confirming the pairing hasn't been
-    /// tampered with.
+    /// `address_n`, `address` and the coin type `slip44`, confirming the
+    /// pairing hasn't been tampered with.
     extern "C" fn check_address_mac<'a>(
         &self,
         address_n: Slice<'a, u32>,
         mac: [u8; 32],
         address: Str<'a>,
+        slip44: u32,
     ) -> FastResult<bool, WireError>;
-    /// Computes a MAC binding `address_n` to `address`, so a cached `address`
-    /// can later be re-authenticated via [`Self::check_address_mac`] without
-    /// a full re-derivation.
+    /// Computes a MAC binding `address_n` to `address` of the coin type
+    /// `slip44`, so a cached `address` can later be re-authenticated via
+    /// [`Self::check_address_mac`] without a full re-derivation.
     extern "C" fn get_address_mac<'a>(
         &self,
         address_n: Slice<'a, u32>,
         address: Str<'a>,
+        slip44: u32,
     ) -> FastResult<[u8; 32], WireError>;
     /// Checks `nonce` against Core's cached-nonce store, returning whether
     /// it's still valid.

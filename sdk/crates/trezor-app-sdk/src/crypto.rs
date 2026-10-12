@@ -75,26 +75,14 @@ pub fn get_public_key(address_n: &[u32], compressed: bool) -> Result<Vec<u8>> {
 
 /// Signs a 32-byte typed-data hash (e.g. EIP-712) with the key at `address_n`.
 ///
-/// `encoded_network`/`encoded_token` let Core resolve display metadata for
-/// the confirmation prompt; `chain_id` is used for replay protection.
 /// `show_progress` requests a progress indicator while signing.
 pub fn sign_typed_hash(
     address_n: &[u32],
     hash: &[u8; 32],
-    encoded_network: Option<&[u8]>,
-    encoded_token: Option<&[u8]>,
-    chain_id: Option<u64>,
     show_progress: bool,
 ) -> Result<[u8; 65]> {
     get_crypto_or_die()
-        .sign_typed_hash(
-            address_n.into(),
-            *hash,
-            encoded_network.map(Into::into).into(),
-            encoded_token.map(Into::into).into(),
-            chain_id.into(),
-            show_progress,
-        )
+        .sign_typed_hash(address_n.into(), *hash, show_progress)
         .into_app_result()
         .c()
 }
@@ -111,20 +99,27 @@ pub fn sign_digest(address_n: &[u32], digest: &[u8; 32], compressed: bool) -> Re
         .c()
 }
 
-/// Verifies a MAC previously produced by [`get_address_mac`] for `address_n`
-/// and `address`, confirming the pairing hasn't been tampered with.
-pub fn check_address_mac(address_n: &[u32], mac: &[u8; 32], address: &str) -> Result<bool> {
+/// Verifies a MAC previously produced by [`get_address_mac`] for `address_n`,
+/// `address` and the coin type `slip44`, confirming the pairing hasn't been
+/// tampered with.
+pub fn check_address_mac(
+    address_n: &[u32],
+    mac: &[u8; 32],
+    address: &str,
+    slip44: u32,
+) -> Result<bool> {
     get_crypto_or_die()
-        .check_address_mac(address_n.into(), *mac, address.into())
+        .check_address_mac(address_n.into(), *mac, address.into(), slip44)
         .into_app_result()
         .c()
 }
 
-/// Computes a MAC binding `address_n` to `address`, so a cached `address` can
-/// later be re-authenticated via [`check_address_mac`] without a full re-derivation.
-pub fn get_address_mac(address_n: &[u32], address: &str) -> Result<[u8; 32]> {
+/// Computes a MAC binding `address_n` to `address` of the coin type `slip44`
+/// (as the built-in coin apps do), so a cached `address` can later be
+/// re-authenticated via [`check_address_mac`] without a full re-derivation.
+pub fn get_address_mac(address_n: &[u32], address: &str, slip44: u32) -> Result<[u8; 32]> {
     get_crypto_or_die()
-        .get_address_mac(address_n.into(), address.into())
+        .get_address_mac(address_n.into(), address.into(), slip44)
         .into_app_result()
         .c()
 }

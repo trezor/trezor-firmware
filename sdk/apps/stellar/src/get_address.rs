@@ -15,7 +15,7 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
 
     let pubkey = crypto::get_public_key(dp.as_slice(), false).c()?;
     let address = address_from_public_key(&pubkey);
-    let mac = crypto::get_address_mac(dp.as_ref(), &address).c()?;
+    let mac = crypto::get_address_mac(dp.as_ref(), &address, SLIP44_ID).c()?;
 
     if msg.show_display.unwrap_or(false) {
         let subtitle = fill(tr!("address__coin_address_template"), COIN);

@@ -153,9 +153,6 @@ impl CryptoV1 for DummyCrypto {
         &self,
         _address_n: Slice<'a, u32>,
         _hash: [u8; 32],
-        _encoded_network: stabby::option::Option<Slice<'a, u8>>,
-        _encoded_token: stabby::option::Option<Slice<'a, u8>>,
-        _chain_id: stabby::option::Option<u64>,
         _show_progress: bool,
     ) -> FastResult<[u8; 65], WireError> {
         unimplemented!("not exercised by the current test suite")
@@ -175,6 +172,7 @@ impl CryptoV1 for DummyCrypto {
         _address_n: Slice<'a, u32>,
         _mac: [u8; 32],
         _address: Str<'a>,
+        _slip44: u32,
     ) -> FastResult<bool, WireError> {
         unimplemented!("not exercised by the current test suite")
     }
@@ -183,6 +181,7 @@ impl CryptoV1 for DummyCrypto {
         &self,
         _address_n: Slice<'a, u32>,
         _address: Str<'a>,
+        _slip44: u32,
     ) -> FastResult<[u8; 32], WireError> {
         unimplemented!("not exercised by the current test suite")
     }

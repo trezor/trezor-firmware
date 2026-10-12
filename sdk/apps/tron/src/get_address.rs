@@ -17,7 +17,7 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
     address_bytes[1..].copy_from_slice(&get_pubkey_hash(&dp).c()?);
 
     let address = get_encoded_address(&address_bytes).c()?;
-    let mac = crypto::get_address_mac(dp.as_ref(), &address).c()?;
+    let mac = crypto::get_address_mac(dp.as_ref(), &address, SLIP44_ID).c()?;
 
     if let Some(true) = msg.show_display {
         // TODO: template translation

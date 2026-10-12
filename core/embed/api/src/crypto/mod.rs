@@ -3,7 +3,6 @@ use alloc::vec::Vec;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 use stabby::boxed::BoxedSlice;
-use stabby::option::Option as StabbyOption;
 use stabby::slice::Slice;
 use stabby::str::Str;
 use stabby::string::String;
@@ -176,20 +175,12 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         &self,
         address_n: Slice<'a, u32>,
         hash: [u8; 32],
-        encoded_network: StabbyOption<Slice<'a, u8>>,
-        encoded_token: StabbyOption<Slice<'a, u8>>,
-        chain_id: StabbyOption<u64>,
         show_progress: bool,
     ) -> FastResult<[u8; 65], WireError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::SignTypedHash {
                 address_n: address_n.as_slice().into(),
                 hash,
-                encoded_network: core::option::Option::from(encoded_network)
-                    .map(|s: Slice<'a, u8>| s.as_slice().into()),
-                encoded_token: core::option::Option::from(encoded_token)
-                    .map(|s: Slice<'a, u8>| s.as_slice().into()),
-                chain_id: chain_id.into(),
                 show_progress,
             })?;
             let archived = rkyv::access::<rkyv::Archived<TrezorCryptoResultRef>, Failure>(&data)
@@ -229,12 +220,14 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         address_n: Slice<'a, u32>,
         mac: [u8; 32],
         address: Str<'a>,
+        slip44: u32,
     ) -> FastResult<bool, WireError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::CheckAddressMac {
                 address_n: address_n.as_slice().into(),
                 mac,
                 address: address.as_str().into(),
+                slip44,
             })?;
             let archived = rkyv::access::<rkyv::Archived<TrezorCryptoResultRef>, Failure>(&data)
                 .map_err(|_| WireError::DecodeError)?;
@@ -250,11 +243,13 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         &self,
         address_n: Slice<'a, u32>,
         address: Str<'a>,
+        slip44: u32,
     ) -> FastResult<[u8; 32], WireError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::GetAddressMac {
                 address_n: address_n.as_slice().into(),
                 address: address.as_str().into(),
+                slip44,
             })?;
             let archived = rkyv::access::<rkyv::Archived<TrezorCryptoResultRef>, Failure>(&data)
                 .map_err(|_| WireError::DecodeError)?;

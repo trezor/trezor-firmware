@@ -45,6 +45,14 @@ impl Definitions {
         chain_id: Option<u64>,
         slip44: Option<u32>,
     ) -> Result<Self> {
+        // TODO: external (host-supplied) network and token definitions are not
+        // supported yet; they need the tier 1 API, as Core stays coin-independent.
+        if encoded_network.is_some() || encoded_token.is_some() {
+            return Err(Error::DataError(
+                "External definitions are not supported yet",
+            ));
+        }
+
         // if we have a built-in definition, use it
         let mut token = None;
         let mut network = if let Some(chain_id) = chain_id {

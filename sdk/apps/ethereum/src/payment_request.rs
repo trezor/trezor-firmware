@@ -171,7 +171,12 @@ impl PaymentRequestVerifier {
                     // TODO: proper error type
                     Error::DataError("Invalid MAC in refund memo")
                 })?;
-                if !crypto::check_address_mac(&refund_memo.address_n, mac, &refund_memo.address)? {
+                if !crypto::check_address_mac(
+                    &refund_memo.address_n,
+                    mac,
+                    &refund_memo.address,
+                    slip44_id,
+                )? {
                     return Err(Error::DataError("Invalid MAC in refund memo"))?;
                 }
 
@@ -190,6 +195,7 @@ impl PaymentRequestVerifier {
                     &coin_purchase_memo.address_n,
                     mac,
                     &coin_purchase_memo.address,
+                    coin_purchase_memo.coin_type,
                 )? {
                     return Err(Error::DataError("Invalid MAC in coin purchase memo"))?;
                 }

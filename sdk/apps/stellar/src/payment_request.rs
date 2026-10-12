@@ -186,6 +186,7 @@ impl PaymentRequestVerifier {
                     &refund_memo.address_n,
                     &refund_memo.mac,
                     &refund_memo.address,
+                    slip44_id,
                 )
                 .map_err(|_| Error::DataError("Invalid MAC in refund memo"))?;
                 h_pr.update(&MEMO_TYPE_REFUND.to_le_bytes());
@@ -195,6 +196,7 @@ impl PaymentRequestVerifier {
                     &coin_purchase_memo.address_n,
                     &coin_purchase_memo.mac,
                     &coin_purchase_memo.address,
+                    coin_purchase_memo.coin_type,
                 )
                 .map_err(|_| Error::DataError("Invalid MAC in coin purchase memo"))?;
                 h_pr.update(&MEMO_TYPE_COIN_PURCHASE.to_le_bytes());
@@ -271,11 +273,11 @@ impl PaymentRequestVerifier {
     }
 }
 
-fn check_mac(address_n: &[u32], mac: &[u8], address: &str) -> Result<()> {
+fn check_mac(address_n: &[u32], mac: &[u8], address: &str, slip44: u32) -> Result<()> {
     let mac: &[u8; 32] = mac
         .try_into()
         .map_err(|_| Error::DataError("Invalid MAC"))?;
-    if crypto::check_address_mac(address_n, mac, address).c()? {
+    if crypto::check_address_mac(address_n, mac, address, slip44).c()? {
         Ok(())
     } else {
         Err(Error::DataError("Invalid MAC"))

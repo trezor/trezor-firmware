@@ -15,7 +15,6 @@ from trezor.wire.errors import DataError
 
 from apps.common import paths
 from apps.common.keychain import Keychain, get_keychain
-from apps.ethereum.definitions import Definitions
 
 if __debug__:
     from trezor import log
@@ -45,33 +44,9 @@ _SERVICE_CRYPTO_CHECK_ADDRESS_MAC = const(5)
 _SERVICE_CRYPTO_VERIFY_NONCE_CACHE = const(6)
 
 
-def _extract_slip44_id(patterns: list[str]) -> int:
-    """Extract the app's SLIP-44 coin type from its allowed path patterns.
-
-    Every pattern is expected to hard-code the same coin type as its second
-    path component (e.g. `m/44'/60'/...`), so the value is derived from the
-    patterns themselves instead of being passed in separately.
-    """
-    if not patterns:
-        raise DataError("Expected at least one allowed path")
-
-    slip44_id: int | None = None
-    for pattern in patterns:
-        component = pattern.split("/")[2]
-        if component[-1] == "'":
-            component = component[:-1]
-        try:
-            coin_type = int(component)
-        except ValueError:
-            raise DataError(f"Invalid coin type in path pattern: {pattern}")
-
-        if slip44_id is None:
-            slip44_id = coin_type
-        elif slip44_id != coin_type:
-            raise DataError("Expected the same coin type in every allowed path")
-
-    assert slip44_id is not None
-    return slip44_id
+# The apps' allowed path patterns hardcode their coin type, so the SLIP-44 ID
+# only fills unused placeholders; 1 is the testnet ID.
+_SLIP44_ID = const(1)
 
 
 async def run(request: ExtAppMessage) -> ExtAppResponse:
@@ -93,16 +68,12 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
     curve = curves[0]
 
     patterns: list[str] = list(image.allowed_paths())
-    slip44_id: int = _extract_slip44_id(patterns)
 
     if __debug__:
-        log.debug(
-            __name__,
-            f"Allowed curves: {curves}, slip44_id: {slip44_id}, patterns: {patterns}",
-        )
+        log.debug(__name__, f"Allowed curves: {curves}, patterns: {patterns}")
     schemas = []
     for pattern in patterns:
-        schemas.append(paths.PathSchema.parse(pattern, slip44_id))
+        schemas.append(paths.PathSchema.parse(pattern, _SLIP44_ID))
     schemas: list[paths.PathSchema] = [s.copy() for s in schemas]
 
     if not image.is_running():
@@ -251,33 +222,18 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                         result = False
 
                 elif message_id == _SERVICE_CRYPTO_SIGN_TYPED_HASH:
-                    assert len(obj) == 6
+                    assert len(obj) == 3
                     address_n: list[int] = obj[0]
                     data_hash: bytes = obj[1]
-                    encoded_network: bytes | None = obj[2]
-                    encoded_token: bytes | None = obj[3]
-                    chain_id: int | None = obj[4]
-                    show_progress: bool = obj[5]
+                    show_progress: bool = obj[2]
                     try:
                         if __debug__:
                             log.debug(
                                 __name__, f"Signing typed hash for path: {address_n}"
                             )
-                        keychain = None
-                        if (
-                            encoded_network is None
-                            and encoded_token is None
-                            and chain_id is None
-                        ):
-                            keychain = await get_keychain(curve, schemas)
+                        keychain = await get_keychain(curve, schemas)
                         result = await _sign_typed_hash(
-                            address_n,
-                            data_hash,
-                            keychain,
-                            encoded_network,
-                            encoded_token,
-                            chain_id,
-                            show_progress,
+                            address_n, data_hash, keychain, show_progress
                         )
 
                     except Exception:
@@ -285,9 +241,10 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                         result = False
 
                 elif message_id == _SERVICE_CRYPTO_GET_ADDRESS_MAC:
-                    assert len(obj) == 2
+                    assert len(obj) == 3
                     address_n: list[int] = obj[0]
                     address_str: str = obj[1]
+                    slip44: int = obj[2]
                     try:
                         if __debug__:
                             log.debug(
@@ -298,16 +255,17 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                         from apps.common.address_mac import get_address_mac
 
                         result = get_address_mac(
-                            address_str, paths.unharden(slip44_id), address_n, keychain
+                            address_str, slip44, address_n, keychain
                         )
                     except Exception:
                         log.error(__name__, "Failed to get address MAC")
                         result = False
                 elif message_id == _SERVICE_CRYPTO_CHECK_ADDRESS_MAC:
-                    assert len(obj) == 3
+                    assert len(obj) == 4
                     address_n: list[int] = obj[0]
                     mac: bytes = obj[1]
                     address_str: str = obj[2]
+                    slip44: int = obj[3]
                     try:
                         if __debug__:
                             log.debug(
@@ -317,13 +275,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                         await paths.validate_path(keychain, address_n)
                         from apps.common.address_mac import check_address_mac
 
-                        check_address_mac(
-                            address_str,
-                            mac,
-                            paths.unharden(slip44_id),
-                            address_n,
-                            keychain,
-                        )
+                        check_address_mac(address_str, mac, slip44, address_n, keychain)
                         result = True
                     except Exception:
                         log.error(__name__, "Failed to check address MAC")
@@ -557,39 +509,12 @@ async def _sign_digest(
 async def _sign_typed_hash(
     address_n: list[int],
     data_hash: bytes,
-    keychain: Keychain | None,
-    encoded_network: bytes | None,
-    encoded_token: bytes | None,
-    chain_id: int | None,
+    keychain: Keychain,
     show_progress: bool,
 ) -> bytes:
     from trezor import TR
     from trezor.crypto.curve import secp256k1
     from trezor.ui.layouts.progress import progress
-
-    if keychain is None:
-        from apps.ethereum.keychain import (
-            PATTERNS_ADDRESS,
-            _schemas_from_network,
-            _slip44_from_address_n,
-        )
-
-        if chain_id is not None:
-            if __debug__:
-                log.debug(
-                    __name__,
-                    f"Getting definitions from encoded network and token for chain_id: {chain_id}",
-                )
-            defs = Definitions.from_encoded(
-                encoded_network, encoded_token, chain_id=chain_id
-            )
-        else:
-            slip44 = _slip44_from_address_n(address_n)
-            defs = Definitions.from_encoded(
-                encoded_network, encoded_token, slip44=slip44
-            )
-        schemas = _schemas_from_network(PATTERNS_ADDRESS, defs.network)
-        keychain = await get_keychain("secp256k1", schemas, [[b"SLIP-0024"]])
 
     await paths.validate_path(keychain, address_n)
 

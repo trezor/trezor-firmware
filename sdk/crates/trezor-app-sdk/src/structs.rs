@@ -849,19 +849,18 @@ pub enum TrezorCryptoEnum<'a> {
     SignTypedHash {
         address_n: Slice<'a, u32>,
         hash: [u8; 32],
-        encoded_network: Option<Slice<'a, u8>>,
-        encoded_token: Option<Slice<'a, u8>>,
-        chain_id: Option<u64>,
         show_progress: bool,
     },
     GetAddressMac {
         address_n: Slice<'a, u32>,
         address: StrSlice<'a>,
+        slip44: u32,
     },
     CheckAddressMac {
         address_n: Slice<'a, u32>,
         mac: [u8; 32],
         address: StrSlice<'a>,
+        slip44: u32,
     },
     VerifyNonceCache {
         nonce: Slice<'a, u8>,
@@ -1010,9 +1009,6 @@ mod tests {
                 SignTypedHash {
                     address_n: empty_u32.into(),
                     hash: [0u8; 32],
-                    encoded_network: None,
-                    encoded_token: None,
-                    chain_id: None,
                     show_progress: false,
                 }
                 .id(),
@@ -1022,6 +1018,7 @@ mod tests {
                 GetAddressMac {
                     address_n: empty_u32.into(),
                     address: "".into(),
+                    slip44: 0,
                 }
                 .id(),
                 "GetAddressMac",
@@ -1031,6 +1028,7 @@ mod tests {
                     address_n: empty_u32.into(),
                     mac: [0u8; 32],
                     address: "".into(),
+                    slip44: 0,
                 }
                 .id(),
                 "CheckAddressMac",

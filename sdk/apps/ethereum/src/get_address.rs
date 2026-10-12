@@ -22,7 +22,8 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
 
     let pubkey_hash = get_eth_pubkey_hash(&dp).c()?;
     let address = address_from_bytes(&pubkey_hash, Some(definitions.network())).c()?;
-    let mac = crypto::get_address_mac(dp.as_ref(), &address).c()?;
+    // The coin type depends on the network (ETH vs ETC...)
+    let mac = crypto::get_address_mac(dp.as_ref(), &address, slip44.unwrap_or(SLIP44_ID)).c()?;
 
     if let Some(true) = msg.show_display {
         // TODO: template translation

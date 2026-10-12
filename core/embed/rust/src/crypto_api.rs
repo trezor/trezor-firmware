@@ -80,37 +80,21 @@ extern "C" fn new_deserialize_crypto_message(
             Archived::<TrezorCryptoEnum>::SignTypedHash {
                 address_n,
                 hash,
-                encoded_network,
-                encoded_token,
-                chain_id,
                 show_progress,
-            } => {
-                let hash_obj = Obj::try_from(hash.as_slice())?;
-                let network_obj = match encoded_network.as_ref() {
-                    Some(network) => Obj::try_from(network.as_ref())?,
-                    None => Obj::const_none(),
-                };
-                let token_obj = match encoded_token.as_ref() {
-                    Some(token) => Obj::try_from(token.as_ref())?,
-                    None => Obj::const_none(),
-                };
-                let chain_id_obj = match chain_id.as_ref() {
-                    Some(id) => Obj::try_from(id.to_native())?,
-                    None => Obj::const_none(),
-                };
-                (
-                    obj_from_dp_slice(address_n),
-                    hash_obj,
-                    network_obj,
-                    token_obj,
-                    chain_id_obj,
-                    Obj::try_from(*show_progress)?,
-                )
-                    .try_into()?
-            }
-            Archived::<TrezorCryptoEnum>::GetAddressMac { address_n, address } => (
+            } => (
+                obj_from_dp_slice(address_n),
+                Obj::try_from(hash.as_slice())?,
+                Obj::try_from(*show_progress)?,
+            )
+                .try_into()?,
+            Archived::<TrezorCryptoEnum>::GetAddressMac {
+                address_n,
+                address,
+                slip44,
+            } => (
                 obj_from_dp_slice(address_n),
                 Obj::try_from(address.as_ref())?,
+                Obj::try_from(slip44.to_native())?,
             )
                 .try_into()?,
             Archived::<TrezorCryptoEnum>::VerifyNonceCache { nonce } => {
@@ -120,10 +104,12 @@ extern "C" fn new_deserialize_crypto_message(
                 address_n,
                 mac,
                 address,
+                slip44,
             } => (
                 obj_from_dp_slice(address_n),
                 Obj::try_from(mac.as_ref())?,
                 Obj::try_from(address.as_ref())?,
+                Obj::try_from(slip44.to_native())?,
             )
                 .try_into()?,
         };
