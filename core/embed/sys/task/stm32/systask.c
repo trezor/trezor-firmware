@@ -776,14 +776,19 @@ __attribute((naked, no_stack_protector)) void SVC_Handler(void) {
 
 __attribute__((naked, no_stack_protector)) void HardFault_Handler(void) {
   // A HardFault may also be caused by exception escalation.
-  // To ensure we have enough space to handle the exception,
-  // we set the stack pointer to the end of the stack.
+  // If the fault comes from a privileged context (MSP), we set the stack
+  // pointer to the end of the stack to ensure we have enough space to
+  // handle the exception. If the fault comes from an unprivileged task
+  // (PSP), the MSP still holds the suspended kernel task context and
+  // must be left intact.
 
   __asm__ volatile(
       "MRS      R0, MSP               \n"  // R0 = MSP
-      "LDR      R1, =%[estack]        \n"  // Reset main stack
-      "MSR      MSP, R1               \n"  //
       "MOV      R1, LR                \n"  // R1 = EXC_RETURN code
+      "TST      LR, #0x4              \n"  // Return stack (1=>PSP, 0=>MSP)
+      "ITT      EQ                    \n"
+      "LDREQ    R2, =%[estack]        \n"  // Reset main stack
+      "MSREQ    MSP, R2               \n"  // (privileged context only)
       "B        systask_exit_fault    \n"  // Exit task with fault
       :
       : [estack] "i"(&_stack_section_end)
