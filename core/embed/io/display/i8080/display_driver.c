@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC optimize ("O0")
+
 #include <trezor_rtl.h>
 
 #include <io/display.h>
@@ -166,8 +168,7 @@ int display_set_orientation(int angle) {
 
       display_panel_set_window(0, 0, INTERNAL_FB_WIDTH - 1,
                                INTERNAL_FB_HEIGHT - 1);
-      // Local copy: the display write pointer could alias the driver struct,
-      // which would force a reload of pixel_endian after every pixel write
+      // Local copy, so it is not reloaded after every volatile bus write
       display_pixel_endian_t endian = drv->pixel_endian;
       for (uint32_t i = 0; i < INTERNAL_FB_WIDTH * INTERNAL_FB_HEIGHT; i++) {
         // 2 bytes per pixel because we're using RGB 5-6-5 format

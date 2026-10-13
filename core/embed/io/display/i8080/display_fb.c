@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC optimize ("O0")
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -49,6 +51,13 @@
 
 // The following code supports only 1 or 2 frame buffers
 _Static_assert(FRAME_BUFFER_COUNT == 1 || FRAME_BUFFER_COUNT == 2);
+
+#ifdef DISPLAY_I8080_8BIT_DW
+// Big-endian panels on the 8-bit bus are fed by 16-bit DMA writes that the FMC
+// splits into two byte cycles at consecutive addresses. FMC_A0 toggles between
+// them, so it must not drive D/C.
+_Static_assert(DISPLAY_MEMORY_PIN > 0, "D/C must not be on FMC_A0");
+#endif
 
 // Hardware requires physical frame buffer alignment
 #ifdef USE_TRUSTZONE
@@ -148,7 +157,7 @@ static void start_fb_copy(void) {
       if (drv->pixel_endian == DISPLAY_PIXEL_BIG_ENDIAN) {
         // 16-bit DMA writes with byte exchange; the 8-bit FMC splits each
         // halfword into two bus cycles (lower address first), so the high
-        // byte of each pixel goes out first.
+        // byte of each pixel goes out first. D/C must not be on FMC_A0.
         bg_copy_start_const_out_16((const uint16_t *)get_fb_ptr(fb_idx),
                                    (uint16_t *)DISPLAY_DATA_ADDRESS,
                                    PHYSICAL_FRAME_BUFFER_SIZE, true,
@@ -233,8 +242,7 @@ static void copy_fb_to_display(uint8_t index) {
   if (fb != NULL) {
     mpu_set_active_fb(fb, PHYSICAL_FRAME_BUFFER_SIZE);
     display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-    // Local copy: the display write pointer could alias the driver struct,
-    // which would force a reload of pixel_endian after every pixel write
+    // Local copy, so it is not reloaded after every volatile bus write
     display_pixel_endian_t endian = drv->pixel_endian;
     for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
       // 2 bytes per pixel because we're using RGB 5-6-5 format

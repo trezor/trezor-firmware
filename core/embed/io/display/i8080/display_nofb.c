@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC optimize ("O0")
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
@@ -108,8 +110,7 @@ static inline bool gfx_bitblt_check_dst_xy(const gfx_bitblt_t* bb) {
 
 void display_fill(const gfx_bitblt_t* bb) {
   display_driver_t* drv = &g_display_driver;
-  // Local copy: the display write pointer could alias the driver struct,
-  // which would force a reload of pixel_endian after every pixel write
+  // Local copy, so it is not reloaded after every volatile bus write
   display_pixel_endian_t endian = drv->pixel_endian;
 
   if (!gfx_bitblt_check_dst_xy(bb)) {
@@ -129,8 +130,7 @@ void display_fill(const gfx_bitblt_t* bb) {
 
 void display_copy_rgb565(const gfx_bitblt_t* bb) {
   display_driver_t* drv = &g_display_driver;
-  // Local copy: the display write pointer could alias the driver struct,
-  // which would force a reload of pixel_endian after every pixel write
+  // Local copy, so it is not reloaded after every volatile bus write
   display_pixel_endian_t endian = drv->pixel_endian;
 
   if (!gfx_bitblt_check_dst_xy(bb) || !gfx_bitblt_check_src_x(bb, 16)) {
@@ -152,8 +152,7 @@ void display_copy_rgb565(const gfx_bitblt_t* bb) {
 
 void display_copy_mono1p(const gfx_bitblt_t* bb) {
   display_driver_t* drv = &g_display_driver;
-  // Local copy: the display write pointer could alias the driver struct,
-  // which would force a reload of pixel_endian after every pixel write
+  // Local copy, so it is not reloaded after every volatile bus write
   display_pixel_endian_t endian = drv->pixel_endian;
 
   if (!gfx_bitblt_check_dst_xy(bb) || !gfx_bitblt_check_src_x(bb, 1)) {

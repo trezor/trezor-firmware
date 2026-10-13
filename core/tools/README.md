@@ -126,6 +126,53 @@ Convert a JPG image to a C array that can be embedded into the firmware.
 
 (TODO could we replace it with xxd -i?)
 
+### `display_image_converter.py`
+
+Converts a regular image into a sequence of `display-image begin/chunk/end`
+commands for prodtest.
+
+Example:
+
+`python core/tools/display_image_converter.py input.png --width 240 --height 320 > upload.txt`
+
+Then paste `upload.txt` content into the prodtest CLI session.
+
+You can also send commands directly to a connected prodtest CLI tty:
+
+`python core/tools/display_image_converter.py input.png --width 240 --height 320 --tty /dev/ttyACM1`
+
+### `display_image_upload.py`
+
+Uploads an image to prodtest over serial by issuing `display-image begin/chunk/end`
+commands directly (no manual copy/paste).
+
+Example:
+
+`python core/tools/display_image_upload.py /dev/ttyACM1 input.png --width 240 --height 320`
+
+On macOS use `/dev/cu.*` instead of `/dev/tty.*` (the tool warns if you forget).
+
+Pass `--backlight LEVEL` (0–255) to set the display backlight before the image
+is shown.
+
+### `display_image_upload_multi.py`
+
+Uploads the same image (and, optionally, the same backlight level) to multiple
+prodtest devices at once — e.g. to show identical contents on several displays
+side by side. Each port is uploaded in its own thread so all displays refresh
+at roughly the same time; the image is converted only once.
+
+Example:
+
+`python core/tools/display_image_upload_multi.py \
+    /dev/ttyACM0 /dev/ttyACM1 /dev/ttyACM2 /dev/ttyACM3 input.png --width 240 --height 320 \
+    --backlight 180`
+
+Accepts the same `--width`/`--height`/`--chunk-size`/`--timings`/`--backlight`
+options as `display_image_upload.py`; ports are passed first (one or more),
+followed by the image path. If any port fails, the others still complete and
+the failures are summarized at the end.
+
 ### `make_cmakelists.py`
 
 Generate a CMakeLists.txt file for the core.
