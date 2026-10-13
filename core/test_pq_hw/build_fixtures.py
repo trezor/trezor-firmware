@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Build the binary fixtures for the PQ secure boot hardware tests (T3W1).
 
-Each source branch is built in its own persistent git worktree under work/, so
-the branches never share a checkout and rebuilds stay incremental. Outputs go to
-fixtures/, a worktree of the orphan branch tychovrahe/pq/hw_fixtures, and
+Each source branch is built in its own persistent git worktree under
+pqhw.paths.WORK, so the branches never share a checkout and rebuilds stay
+incremental. Outputs go to pqhw.paths.FIXTURES, a worktree of the orphan branch tychovrahe/pq/hw_fixtures, and
 fixtures/manifest.json records where every file came from.
 
 Run from anywhere inside the nix-shell, with the repo .venv present:
@@ -34,11 +34,11 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from pqhw.paths import FIXTURES, WORK
+
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-WORK = HERE / "work"
 LOGS = WORK / "logs"
-FIXTURES = HERE / "fixtures"
 FIXTURES_BRANCH = "tychovrahe/pq/hw_fixtures"
 MODEL = "T3W1"
 

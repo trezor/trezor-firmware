@@ -7,7 +7,8 @@ legacy->PQ migration. The plan it implements:
 ## Fixtures
 
 `build_fixtures.py` builds every binary the tests flash or install, from three
-source branches, each in its own persistent worktree under `work/`:
+source branches, each in its own persistent worktree under
+`~/.local/share/trezor-pqhw/work/`:
 
 | source | default ref | builds |
 | --- | --- | --- |
@@ -15,8 +16,8 @@ source branches, each in its own persistent worktree under `work/`:
 | `pq` | `tychovrahe/pq/bootloader12` | releases A, B, B-fix, C-minprev, E-mono |
 | `intermediary` | `tychovrahe/pq/intermediary_exp` | universal and btc-only intermediaries, embedding release A |
 
-Outputs go to `fixtures/`, a worktree of the local orphan branch
-`tychovrahe/pq/hw_fixtures`. `fixtures/manifest.json` records, for every file,
+Outputs go to `~/.local/share/trezor-pqhw/fixtures/`, a worktree of the local
+orphan branch `tychovrahe/pq/hw_fixtures`. Its `manifest.json` records, for every file,
 the source commit, build flags, source edits and sha256.
 
 ```sh
@@ -27,7 +28,11 @@ python core/test_pq_hw/build_fixtures.py --commit           # commit the set
 ```
 
 Run it inside the nix-shell with the repo `.venv` present. Logs are in
-`work/logs/<target>.log`.
+`work/logs/<target>.log` there.
+
+Both directories live outside the repository (override with `PQHW_HOME`): the
+worktrees are full repo checkouts, and the repo's style targets walk the tree
+with `find` and reformat in place.
 
 ### What the builds change
 

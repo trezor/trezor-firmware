@@ -19,6 +19,7 @@ from pqhw import cutpoint, flows
 from pqhw.cutpoint import CutPoint
 from pqhw.device import Unit
 from pqhw.fixtures import Fixtures
+from pqhw.paths import WORK
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from build_fixtures import check_elf_matches  # noqa: E402
@@ -51,10 +52,7 @@ def code_watch(fx: Fixtures):
 
 # The boardloader the suite flashes (built in the legacy worktree; not yet a
 # staged fixture). Only used for tracing, after a check that it is that build.
-BOARDLOADER_ELF = (
-    (Path(__file__).resolve().parents[1])
-    / "work/legacy/core/build-xtask/artifacts/T3W1/boardloader.elf"
-)
+BOARDLOADER_ELF = WORK / "legacy/core/build-xtask/artifacts/T3W1/boardloader.elf"
 
 
 def ucb_trace(fx: Fixtures) -> cutpoint.Trace:

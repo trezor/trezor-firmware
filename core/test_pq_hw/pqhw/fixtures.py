@@ -8,8 +8,10 @@ from pathlib import Path
 
 from trezorlib.firmware.pq_secure import PqSecureBundle
 
+from .paths import FIXTURES
+
 MODEL = "T3W1"
-DEFAULT_ROOT = Path(__file__).resolve().parents[1] / "fixtures"
+DEFAULT_ROOT = FIXTURES
 
 VARIANTS = ("universal", "btc-only")
 

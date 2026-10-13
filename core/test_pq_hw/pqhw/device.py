@@ -22,6 +22,8 @@ from trezorlib.debuglink import (
 from trezorlib.transport import Transport, get_transport
 from trezorlib.transport.webusb import WebUsbTransport
 
+from .paths import WORK
+
 LOG = logging.getLogger(__name__)
 
 REPO = Path(__file__).resolve().parents[3]
@@ -30,7 +32,7 @@ EMBED = REPO / "core" / "embed"
 # bootloader region is 64 KB larger), and `xtask flash -f` takes the address
 # from the tree it runs in. Legacy images are flashed from the legacy source
 # tree the fixture builder keeps.
-LEGACY_EMBED = REPO / "core" / "test_pq_hw" / "work" / "legacy" / "core" / "embed"
+LEGACY_EMBED = WORK / "legacy" / "core" / "embed"
 MODEL = "T3W1"
 BUTTONS = ScreenButtons(LayoutType.Eckhart)
 MAX_TAPS = 5
