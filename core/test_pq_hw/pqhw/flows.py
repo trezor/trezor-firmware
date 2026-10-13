@@ -22,6 +22,7 @@ from .device import (
     call_watching_prompt,
     close,
     describe_resetreas,
+    host_usb_devices,
     run_watching_stalls,
     tap_bootloader_intro,
 )
