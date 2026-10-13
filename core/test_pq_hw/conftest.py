@@ -40,11 +40,13 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
     group.addoption(
         "--nrf-jlink",
+        nargs="?",
+        const="auto",
         default=None,
         metavar="SERIAL",
-        help="J-Link wired to the nRF (serial, or 'auto'): every baseline then "
-        "puts the nRF on a known application image instead of whatever the "
-        "previous run left there",
+        help="J-Link wired to the nRF (serial; alone or 'auto' finds it): every "
+        "baseline then puts the nRF on a known application image instead of "
+        "whatever the previous run left there",
     )
     group.addoption(
         "--no-screens",
@@ -126,7 +128,7 @@ def recorder(request: pytest.FixtureRequest, fx: Fixtures) -> Recorder:
         },
         "screenshots": "off" if config.getoption("--no-screens") else "SWD",
         "nRF reset": (
-            f"J-Link {config.getoption('--nrf-jlink')}"
+            f"J-Link {_nrf_jlink(config)}"
             if config.getoption("--nrf-jlink")
             else "off (the nRF keeps what the previous run left)"
         ),
@@ -148,6 +150,17 @@ def recorder(request: pytest.FixtureRequest, fx: Fixtures) -> Recorder:
     return rec
 
 
+def _nrf_jlink(config: pytest.Config) -> str | None:
+    """--nrf-jlink with "auto" resolved to a serial, once per session and only
+    on hardware runs (the offline tests never touch the probe)."""
+    value = config.getoption("--nrf-jlink")
+    if value != "auto" or not config.getoption("--hw"):
+        return value
+    if not hasattr(config, "_pqhw_nrf_jlink"):
+        config._pqhw_nrf_jlink = Unit.find_nrf_jlink()  # type: ignore[attr-defined]
+    return config._pqhw_nrf_jlink  # type: ignore[attr-defined]
+
+
 @pytest.fixture(scope="session")
 def unit(request: pytest.FixtureRequest) -> Unit:
     config = request.config
@@ -155,7 +168,7 @@ def unit(request: pytest.FixtureRequest) -> Unit:
         path=config.getoption("--unit-path"),
         stall=config.getoption("--stall"),
         ask=_asker(config) if config.getoption("--operator") else None,
-        nrf_jlink=config.getoption("--nrf-jlink"),
+        nrf_jlink=_nrf_jlink(config),
     )
     if config.getoption("--hw"):
         unit.recorder = request.getfixturevalue("recorder")

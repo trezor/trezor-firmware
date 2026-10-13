@@ -95,7 +95,7 @@ pytest --hw                    # flash and drive the attached T3W1
 pytest --hw -k migration       # one area
 pytest --hw --operator -s      # with a person to rescue a stuck phase 2
 pytest --hw -m "not cut"       # everything but the SWD power-loss cuts
-pytest --hw --nrf-jlink 933001122   # also reset the nRF over J-Link (serial or "auto")
+pytest --hw --nrf-jlink             # also reset the nRF over J-Link (found, or pass a serial)
 ```
 
 ### The nRF over J-Link

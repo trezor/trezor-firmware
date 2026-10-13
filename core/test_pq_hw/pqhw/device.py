@@ -188,6 +188,35 @@ class Unit:
 
     # --- nRF over J-Link -------------------------------------------------------
 
+    @staticmethod
+    def find_nrf_jlink() -> str:
+        """The serial of the J-Link wired to the nRF: the only one attached,
+        or among several the only one whose target answers as an nRF52."""
+        res = subprocess.run(
+            ["nrfjprog", "--ids"], capture_output=True, text=True, timeout=30
+        )
+        serials = res.stdout.split() if res.returncode == 0 else []
+        if not serials:
+            raise UnitError(f"no J-Link found (nrfjprog --ids):\n{res.stderr}")
+        if len(serials) == 1:
+            return serials[0]
+        nrf = [
+            s
+            for s in serials
+            if subprocess.run(
+                ["nrfjprog", "-f", "NRF52", "-s", s, "--deviceversion"],
+                capture_output=True,
+                timeout=30,
+            ).returncode
+            == 0
+        ]
+        if len(nrf) != 1:
+            raise UnitError(
+                f"J-Links {serials}: {len(nrf)} answer as an nRF52; "
+                "pass --nrf-jlink SERIAL"
+            )
+        return nrf[0]
+
     def _nrfjprog(self, *args: str) -> str:
         cmd = ["nrfjprog", "-f", "NRF52"]
         if self.nrf_jlink and self.nrf_jlink != "auto":
