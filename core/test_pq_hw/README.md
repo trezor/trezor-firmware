@@ -156,7 +156,8 @@ Two device facts shape the suite:
 
 ## Flow report and screenshots
 
-A `--hw` run writes `reports/<timestamp>/index.html`: a summary table, then
+A `--hw` run writes `core/build/test_pq_hw/reports/<timestamp>/index.html`
+(under `core/build`, so reports survive branch switches): a summary table, then
 per test its steps in order (every reconnection, every bootloader tap with
 the screen being confirmed, each install phase) with a screenshot each, the
 failure traceback and the captured log. The path is printed at the end of

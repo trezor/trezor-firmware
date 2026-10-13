@@ -12,7 +12,8 @@ from pqhw.device import Unit  # noqa: E402
 from pqhw.fixtures import DEFAULT_ROOT, Fixtures  # noqa: E402
 from pqhw.report import Recorder  # noqa: E402
 
-REPORTS = Path(__file__).resolve().parent / "reports"
+# Under core/build, which every branch ignores: reports outlive branch switches.
+REPORTS = Path(__file__).resolve().parents[1] / "build" / "test_pq_hw" / "reports"
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -57,7 +58,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--report-dir",
         type=Path,
         default=REPORTS,
-        help="where the HTML flow report goes (default: core/test_pq_hw/reports)",
+        help="where the HTML flow report goes (default: core/build/test_pq_hw/reports)",
     )
     group.addoption(
         "--stall",
