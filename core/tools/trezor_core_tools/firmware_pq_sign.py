@@ -84,7 +84,8 @@ def parse_version(s: str) -> Version:
     parts = [int(p) for p in s.split(".")]
     if not 3 <= len(parts) <= 4 or not all(0 <= p <= 0xFF for p in parts):
         raise argparse.ArgumentTypeError(f"bad version {s!r} (want a.b.c[.d])")
-    return tuple(parts + [0] * (4 - len(parts)))  # type: ignore[return-value]
+    a, b, c, d = parts + [0] * (4 - len(parts))
+    return a, b, c, d
 
 
 def _fmt_version(v: Version) -> str:
