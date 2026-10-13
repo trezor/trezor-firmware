@@ -312,6 +312,15 @@ build_secmon: ## build security monitor image
 build_firmware: ## build firmware with frozen modules
 	xtask build firmware $(XTASK_BUILD_OPTS) $(XTASK_FIRMWARE_OPTS)
 
+upload_pq_test: ## [test] drive the PQ OTA harness, incl. --tamper fault injection
+	# Same install as `make upload`, through the test harness so a fault can be
+	# injected (trezorctl deliberately cannot). Needs a built release, e.g.:
+	#   make upload_pq_test UPLOAD_OPTS="--tamper consent-mismatch"
+	#   make upload_pq_test VARIANT=custom UPLOAD_OPTS="--tamper custom-app-size"
+	python tools/trezor_core_tools/firmware_pq_update.py \
+		--bundle build/artifacts/$(TREZOR_MODEL)/bundle.zip \
+		--variant $(VARIANT) $(UPLOAD_OPTS)
+
 build_unix: ## build unix port
 	xtask build firmware --emulator $(XTASK_BUILD_OPTS) --pyopt=false
 

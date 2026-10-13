@@ -1,0 +1,462 @@
+/*
+ * End-to-end test of the nRF's founder verification (mcuboot
+ * boot/bootutil/src/image_pq.c) against real signatures.
+ *
+ * Generates its own key pool (3 SLH-DSA + 3 Ed25519), builds a PQ-native
+ * MCUboot image, signs modelRoot as the founder does (SLH-DSA over modelRoot,
+ * Ed25519 over SHA256(modelRoot || slh_sig)) and checks that pq_image_verify
+ * accepts it and rejects each tampering. The message construction must match
+ * the STM's boot_header_check_signature; only the nRF side is executed here.
+ * Build: run_founder_sig.sh.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "bootutil/image_pq.h"
+
+/* sphincsplus via its containing dir, never with ref/ on the include path: its
+ * sha2.h would shadow trezor-crypto's. */
+#include "ext/sphincsplus/ref/api.h" /* crypto_sign_keypair / _signature */
+
+#include "ed25519-donna/ed25519.h"
+#include "sha2.h" /* trezor-crypto */
+
+/* trezor-crypto's consteq() fault hook; the bootloader's real one is in
+ * image_validate.c. */
+void tc_fault_handler(const char *msg) {
+  printf("FAULT: %s\n", msg);
+  abort();
+}
+
+/* Deterministic stand-in for sphincsplus' randombytes.c, so the test is
+ * reproducible. */
+static uint64_t prng_state = 0x123456789abcdefULL;
+void randombytes(unsigned char *x, unsigned long long xlen) {
+  for (unsigned long long i = 0; i < xlen; i++) {
+    prng_state = prng_state * 6364136223846793005ULL + 1442695040888963407ULL;
+    x[i] = (unsigned char)(prng_state >> 33);
+  }
+}
+
+/* ---- flat-buffer reader (stands in for the device's flash_area reader) --- */
+struct flat {
+  const uint8_t *buf;
+  uint32_t len;
+};
+static int flat_read(void *ctx, uint32_t off, void *dst, uint32_t len) {
+  const struct flat *f = (const struct flat *)ctx;
+  if ((uint64_t)off + len > (uint64_t)f->len) return -1;
+  memcpy(dst, f->buf + off, len);
+  return 0;
+}
+
+/* ---- MCUboot image construction ------------------------------------------ */
+#define IMG_MAGIC 0x96f3b83dU
+#define TLV_PROT_INFO_MAGIC 0x6908U
+#define TLV_INFO_MAGIC 0x6907U
+#define TLV_MODEL_ID 0x00A3U
+#define HDR_SIZE 32u
+#define PAYLOAD_SIZE 512u
+
+#define NUM_KEYS 3
+#define COPATH_NODES 4
+
+static uint8_t image[64 * 1024];
+static uint32_t image_len;
+static uint32_t off_slh[PQ_SIG_COUNT], off_ec[PQ_SIG_COUNT], off_copath;
+
+static void put16(uint32_t off, uint16_t v) {
+  image[off] = (uint8_t)(v & 0xff);
+  image[off + 1] = (uint8_t)(v >> 8);
+}
+static void put32(uint32_t off, uint32_t v) {
+  for (int i = 0; i < 4; i++) image[off + i] = (uint8_t)(v >> (8 * i));
+}
+
+/* Lay out a PQ-native image with the founder records contiguous and last, the
+ * shape the verifiers whitelist. The founder values are left zeroed: they are
+ * unprotected, outside the image hash, which is what makes signing possible. */
+/* -1 => omit the security-counter TLV entirely */
+static long g_sec_cnt = -1;
+/* absolute offset of the counter value in `image`, 0 when omitted */
+static size_t off_sec_cnt = 0;
+
+static void build_image(uint8_t sigmask) {
+  memset(image, 0, sizeof(image));
+
+  /* protected TLVs: model id + sigmask, both inside the image hash and the
+   * founder leaf */
+  uint8_t prot[64];
+  uint32_t pl = 0;
+  prot[pl++] = TLV_MODEL_ID & 0xff;
+  prot[pl++] = TLV_MODEL_ID >> 8;
+  prot[pl++] = 4;
+  prot[pl++] = 0;
+  /* model id from MODEL_IDENTIFIER, the same value the slot is built from */
+  prot[pl++] = (uint8_t)(MODEL_IDENTIFIER & 0xFFu);
+  prot[pl++] = (uint8_t)((MODEL_IDENTIFIER >> 8) & 0xFFu);
+  prot[pl++] = (uint8_t)((MODEL_IDENTIFIER >> 16) & 0xFFu);
+  prot[pl++] = (uint8_t)((MODEL_IDENTIFIER >> 24) & 0xFFu);
+  prot[pl++] = IMAGE_TLV_PQ_SIGMASK & 0xff;
+  prot[pl++] = IMAGE_TLV_PQ_SIGMASK >> 8;
+  prot[pl++] = 1;
+  prot[pl++] = 0;
+  prot[pl++] = sigmask;
+  /* security counter, protected like imgtool writes it; g_sec_cnt < 0 omits
+   * it (an image built without -s) */
+  size_t sec_cnt_rel = 0;
+  if (g_sec_cnt >= 0) {
+    sec_cnt_rel = pl + 4; /* value starts after this record's type+len */
+    prot[pl++] = IMAGE_TLV_PQ_SEC_CNT & 0xff;
+    prot[pl++] = IMAGE_TLV_PQ_SEC_CNT >> 8;
+    prot[pl++] = 4;
+    prot[pl++] = 0;
+    const uint32_t c = (uint32_t)g_sec_cnt;
+    prot[pl++] = c & 0xff;
+    prot[pl++] = (c >> 8) & 0xff;
+    prot[pl++] = (c >> 16) & 0xff;
+    prot[pl++] = (c >> 24) & 0xff;
+  }
+  const uint16_t prot_area = (uint16_t)(4 + pl);
+
+  put32(0, IMG_MAGIC);
+  put32(4, 0);
+  put16(8, (uint16_t)HDR_SIZE);
+  put16(10, prot_area);
+  put32(12, PAYLOAD_SIZE);
+  put32(16, 0);
+
+  for (uint32_t i = 0; i < PAYLOAD_SIZE; i++) image[HDR_SIZE + i] = (uint8_t)i;
+
+  uint32_t p = HDR_SIZE + PAYLOAD_SIZE;
+  put16(p, TLV_PROT_INFO_MAGIC);
+  put16(p + 2, prot_area);
+  memcpy(&image[p + 4], prot, pl);
+  /* absolute offset of the counter value, for the tamper case below */
+  off_sec_cnt = (g_sec_cnt >= 0) ? (p + 4 + sec_cnt_rel) : 0;
+  p += prot_area;
+
+  /* Unprotected area: the image-hash TLV (0x10) carrying the true hash over
+   * header+payload+protected TLVs, then the founder records. */
+  const uint16_t unprot_area =
+      (uint16_t)(4 + (4 + 32) + 2 * (4 + PQ_SLH_SIG_LEN) +
+                 2 * (4 + PQ_EC_SIG_LEN) + (4 + COPATH_NODES * 32));
+  put16(p, TLV_INFO_MAGIC);
+  put16(p + 2, unprot_area);
+  uint32_t q = p + 4;
+
+  {
+    SHA256_CTX c;
+    sha256_Init(&c);
+    sha256_Update(&c, image, p); /* header + payload + protected area */
+    put16(q, IMAGE_TLV_PQ_IMAGE_HASH);
+    put16(q + 2, 32);
+    sha256_Final(&c, &image[q + 4]);
+    q += 4 + 32;
+  }
+
+  const uint16_t slh_t[] = {IMAGE_TLV_PQ_SLH_SIG_0, IMAGE_TLV_PQ_SLH_SIG_1};
+  const uint16_t ec_t[] = {IMAGE_TLV_PQ_EC_SIG_0, IMAGE_TLV_PQ_EC_SIG_1};
+  for (int i = 0; i < PQ_SIG_COUNT; i++) {
+    put16(q, slh_t[i]);
+    put16(q + 2, PQ_SLH_SIG_LEN);
+    off_slh[i] = q + 4;
+    q += 4 + PQ_SLH_SIG_LEN;
+  }
+  for (int i = 0; i < PQ_SIG_COUNT; i++) {
+    put16(q, ec_t[i]);
+    put16(q + 2, PQ_EC_SIG_LEN);
+    off_ec[i] = q + 4;
+    q += 4 + PQ_EC_SIG_LEN;
+  }
+  put16(q, IMAGE_TLV_PQ_MERKLE_PROOF);
+  put16(q + 2, COPATH_NODES * 32);
+  off_copath = q + 4;
+  q += 4 + COPATH_NODES * 32;
+
+  image_len = q;
+}
+
+/* Recompute this image's leaf and modelRoot and write both founder signature
+ * pairs, slot i signed by the key slot_key[i] names. Must follow every
+ * build_image(): the sigmask and counter are protected, so a rebuild moves the
+ * root and zeroes the signature records. */
+static int sign_image(const uint8_t *copath, const int *slot_key,
+                      const uint8_t pq_sk[][CRYPTO_SECRETKEYBYTES],
+                      const uint8_t ec_sk[][32], uint8_t *root_out) {
+  struct flat img = {image, image_len};
+  uint8_t img_hash[32], leaf[32];
+  if (pq_image_hash(flat_read, &img, image_len, img_hash) != 0) {
+    printf("FAIL: pq_image_hash\n");
+    return 1;
+  }
+  {
+    /* the same 44 bytes mcuboot builds, model from MODEL_IDENTIFIER */
+    uint8_t slot[PQ_COPROC_SLOT_LEN];
+    memset(slot, 0, sizeof(slot));
+    memcpy(slot, PQ_COPROC_SLOT_TAG, 4);
+    slot[4] = (uint8_t)(MODEL_IDENTIFIER & 0xFFu);
+    slot[5] = (uint8_t)((MODEL_IDENTIFIER >> 8) & 0xFFu);
+    slot[6] = (uint8_t)((MODEL_IDENTIFIER >> 16) & 0xFFu);
+    slot[7] = (uint8_t)((MODEL_IDENTIFIER >> 24) & 0xFFu);
+    slot[8] = (uint8_t)PQ_COPROC_KIND_NRF;
+    slot[9] = (uint8_t)PQ_COPROC_INDEX;
+    memcpy(&slot[12], img_hash, 32);
+
+    SHA256_CTX c;
+    const uint8_t p0 = 0x00;
+    sha256_Init(&c);
+    sha256_Update(&c, &p0, 1);
+    sha256_Update(&c, slot, sizeof(slot));
+    sha256_Final(&c, leaf);
+  }
+  pq_merkle_fold(leaf, copath, COPATH_NODES, root_out);
+
+  /* SLH-DSA over modelRoot, then Ed25519 over SHA256(modelRoot || slh_sig) */
+  for (int slot = 0; slot < PQ_SIG_COUNT; slot++) {
+    size_t siglen = 0;
+    static uint8_t sig[CRYPTO_BYTES];
+    if (crypto_sign_signature(sig, &siglen, root_out, 32,
+                              pq_sk[slot_key[slot]]) != 0 ||
+        siglen != PQ_SLH_SIG_LEN) {
+      printf("FAIL: crypto_sign_signature (siglen=%zu)\n", siglen);
+      return 1;
+    }
+    memcpy(&image[off_slh[slot]], sig, PQ_SLH_SIG_LEN);
+
+    uint8_t hash[32];
+    SHA256_CTX ctx;
+    sha256_Init(&ctx);
+    sha256_Update(&ctx, root_out, 32);
+    sha256_Update(&ctx, sig, PQ_SLH_SIG_LEN);
+    sha256_Final(&ctx, hash);
+
+    uint8_t ec_sig[64];
+    ed25519_sign(hash, sizeof(hash), ec_sk[slot_key[slot]], ec_sig);
+    memcpy(&image[off_ec[slot]], ec_sig, sizeof(ec_sig));
+  }
+  return 0;
+}
+
+int main(void) {
+  int fails = 0;
+
+  /* --- key pool: 3 of each, 2-of-3 policy as on the STM --- */
+  static uint8_t pq_pk[NUM_KEYS][CRYPTO_PUBLICKEYBYTES];
+  static uint8_t pq_sk[NUM_KEYS][CRYPTO_SECRETKEYBYTES];
+  static uint8_t ec_pk[NUM_KEYS][32], ec_sk[NUM_KEYS][32];
+  const uint8_t *pq_keys[NUM_KEYS], *ec_keys[NUM_KEYS];
+
+  printf("generating %d SLH-DSA + %d Ed25519 keypairs (slow: 128s)...\n",
+         NUM_KEYS, NUM_KEYS);
+  for (int i = 0; i < NUM_KEYS; i++) {
+    if (crypto_sign_keypair(pq_pk[i], pq_sk[i]) != 0) {
+      printf("FAIL: crypto_sign_keypair\n");
+      return 1;
+    }
+    randombytes(ec_sk[i], sizeof(ec_sk[i]));
+    ed25519_publickey(ec_sk[i], ec_pk[i]);
+    pq_keys[i] = pq_pk[i];
+    ec_keys[i] = ec_pk[i];
+  }
+
+  /* sigmask 0b101 names keys 0 and 2, a non-adjacent pair so a wrong slot->key
+   * map is caught; slot i -> i-th lowest set bit, as on the STM */
+  const uint8_t sigmask = 0x05;
+  const int slot_key[PQ_SIG_COUNT] = {0, 2};
+
+  build_image(sigmask);
+  struct flat img = {image, image_len};
+
+  /* modelRoot = fold(H(0x00 || coproc_slot), co-path); the co-path is
+   * arbitrary here, the founder signs whatever root the tree yields */
+  uint8_t copath[COPATH_NODES * 32];
+  randombytes(copath, sizeof(copath));
+  memcpy(&image[off_copath], copath, sizeof(copath));
+
+  uint8_t root[32];
+  if (sign_image(copath, slot_key, pq_sk, ec_sk, root) != 0) {
+    return 1;
+  }
+
+  /* ---------------- positive ---------------- */
+  uint8_t got_root[32];
+  /* FIH: the real contract, as image_validate.c uses it -- FIH_CALL then
+   * compare against FIH_SUCCESS, a masked value under profile MEDIUM; a plain
+   * `!= 0` would invert every verdict below. */
+  FIH_DECLARE(fih_rc, FIH_FAILURE);
+  FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL, pq_keys,
+           ec_keys, NUM_KEYS, got_root);
+  if (FIH_NOT_EQ(fih_rc, FIH_SUCCESS)) {
+    printf("FAIL: genuine founder signature REJECTED\n");
+    fails++;
+  } else if (memcmp(got_root, root, 32) != 0) {
+    printf("FAIL: pq_image_verify returned the wrong modelRoot\n");
+    fails++;
+  } else {
+    printf("genuine hybrid 2-of-3 (keys 0,2) accepted, modelRoot matches: OK\n");
+  }
+
+  /* ---------------- negatives ---------------- */
+  static uint8_t good[sizeof(image)];
+  memcpy(good, image, image_len);
+#define RESTORE() memcpy(image, good, image_len)
+#define EXPECT_REJECT(label)                                            \
+  do {                                                                  \
+    FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL, \
+             pq_keys, ec_keys, NUM_KEYS, NULL);                         \
+    if (FIH_EQ(fih_rc, FIH_SUCCESS)) {                                  \
+      printf("FAIL: %s ACCEPTED\n", label);                             \
+      fails++;                                                          \
+    } else {                                                            \
+      printf("%s rejected: OK\n", label);                               \
+    }                                                                   \
+    RESTORE();                                                          \
+  } while (0)
+
+  image[off_slh[0]] ^= 0xFF;
+  EXPECT_REJECT("tampered SLH-DSA signature");
+
+  image[off_ec[0]] ^= 0xFF;
+  EXPECT_REJECT("tampered Ed25519 signature");
+
+  image[off_copath] ^= 0xFF;
+  EXPECT_REJECT("tampered co-path (different modelRoot)");
+
+  image[HDR_SIZE + 10] ^= 0xFF;
+  EXPECT_REJECT("tampered payload (leaf changes)");
+
+  /* reordering the (SLH, EC) pairs between slots must be rejected: the
+   * committed sigmask binds slot i to a specific key */
+  {
+    static uint8_t tmp[PQ_SLH_SIG_LEN];
+    memcpy(tmp, &good[off_slh[0]], PQ_SLH_SIG_LEN);
+    memcpy(&image[off_slh[0]], &good[off_slh[1]], PQ_SLH_SIG_LEN);
+    memcpy(&image[off_slh[1]], tmp, PQ_SLH_SIG_LEN);
+    uint8_t etmp[64];
+    memcpy(etmp, &good[off_ec[0]], 64);
+    memcpy(&image[off_ec[0]], &good[off_ec[1]], 64);
+    memcpy(&image[off_ec[1]], etmp, 64);
+    EXPECT_REJECT("reordered signature pairs (sigmask binds slot->key)");
+  }
+
+  /* Swap only the EC halves: slot i's Ed25519 now signs the other slot's
+   * slh_sig. This is the PQ<->EC binding that stops a PQ-signature
+   * substitution. */
+  memcpy(&image[off_ec[0]], &good[off_ec[1]], 64);
+  memcpy(&image[off_ec[1]], &good[off_ec[0]], 64);
+  EXPECT_REJECT("EC halves swapped (PQ<->EC binding broken)");
+
+  /* Sigmask naming keys 0+1 while keys 0+2 signed. The mask is protected, so
+   * the image is rebuilt rather than patched (patching would leave an
+   * inconsistent image hash). */
+  build_image(0x03);
+  img.len = image_len; /* a rebuild can change it */
+  memcpy(&image[off_copath], copath, sizeof(copath));
+  for (int slot = 0; slot < PQ_SIG_COUNT; slot++) {
+    memcpy(&image[off_slh[slot]], &good[off_slh[slot]], PQ_SLH_SIG_LEN);
+    memcpy(&image[off_ec[slot]], &good[off_ec[slot]], 64);
+  }
+  FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL, pq_keys,
+           ec_keys, NUM_KEYS, NULL);
+  if (FIH_EQ(fih_rc, FIH_SUCCESS)) {
+    printf("FAIL: altered sigmask ACCEPTED\n");
+    fails++;
+  } else {
+    printf("sigmask 0b011 vs signatures from keys 0,2 rejected: OK\n");
+  }
+
+  /* A single-key sigmask must not satisfy 2-of-3. Signed with the only key it
+   * names, in both slots, so the rejection is the popcount check and not an
+   * unsigned image. */
+  {
+    const int single[PQ_SIG_COUNT] = {0, 0};
+    build_image(0x01);
+    img.len = image_len; /* a rebuild can change it */
+    memcpy(&image[off_copath], copath, sizeof(copath));
+    if (sign_image(copath, single, pq_sk, ec_sk, root) != 0) return 1;
+  }
+  FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL, pq_keys,
+           ec_keys, NUM_KEYS, NULL);
+  if (FIH_EQ(fih_rc, FIH_SUCCESS)) {
+    printf("FAIL: single-key sigmask ACCEPTED (2-of-3 not enforced)\n");
+    fails++;
+  } else {
+    printf("single-key sigmask rejected (2-of-3 enforced): OK\n");
+  }
+
+  /* ---- security counter (rollback protection input) ---- */
+  {
+    /* absent reads as 0, not failure: absence can only be more restrictive */
+    g_sec_cnt = -1;
+    build_image(0x05);
+    img.len = image_len; /* a rebuild can change it */
+    memcpy(&image[off_copath], copath, sizeof(copath));
+    uint32_t got = 0xdeadbeef;
+    if (pq_image_security_counter(flat_read, &img, image_len, &got) != 0 ||
+        got != 0) {
+      printf("FAIL: absent security counter did not read as 0 (rc/val %u)\n",
+             (unsigned)got);
+      fails++;
+    } else {
+      printf("absent security counter reads as 0: OK\n");
+    }
+
+    /* present, and read little-endian */
+    g_sec_cnt = 0x01020304;
+    build_image(0x05);
+    img.len = image_len; /* a rebuild can change it */
+    memcpy(&image[off_copath], copath, sizeof(copath));
+    got = 0;
+    if (pq_image_security_counter(flat_read, &img, image_len, &got) != 0 ||
+        got != 0x01020304u) {
+      printf("FAIL: security counter read as 0x%08x, expected 0x01020304\n",
+             (unsigned)got);
+      fails++;
+    } else {
+      printf("security counter read little-endian (0x01020304): OK\n");
+    }
+
+    /* Protected, so inside the founder leaf: flipping it must break the
+     * signature. Sign and confirm first, or the rejection below proves only
+     * that an unsigned image fails. */
+    if (sign_image(copath, slot_key, pq_sk, ec_sk, root) != 0) return 1;
+    FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL, pq_keys,
+             ec_keys, NUM_KEYS, NULL);
+    if (FIH_NOT_EQ(fih_rc, FIH_SUCCESS)) {
+      printf("FAIL: re-signed counter image REJECTED (test setup broken)\n");
+      fails++;
+    }
+    image[off_sec_cnt] ^= 0xFF;
+    FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL, pq_keys,
+             ec_keys, NUM_KEYS, NULL);
+    if (FIH_EQ(fih_rc, FIH_SUCCESS)) {
+      printf("FAIL: tampered security counter ACCEPTED (not covered by the leaf)\n");
+      fails++;
+    } else {
+      printf("tampered security counter rejected (inside the founder leaf): OK\n");
+    }
+    g_sec_cnt = -1;
+  }
+
+  /* A sigmask naming a key outside the pool is rejected on range. Slot 1 gets
+   * a real key, so the out-of-range bit is the only thing wrong. */
+  build_image(0x09);   /* keys 0 and 3 -- key 3 does not exist */
+  img.len = image_len; /* a rebuild can change it */
+  memcpy(&image[off_copath], copath, sizeof(copath));
+  if (sign_image(copath, slot_key, pq_sk, ec_sk, root) != 0) return 1;
+  FIH_CALL(pq_image_verify, fih_rc, flat_read, &img, image_len, NULL, pq_keys,
+           ec_keys, NUM_KEYS, NULL);
+  if (FIH_EQ(fih_rc, FIH_SUCCESS)) {
+    printf("FAIL: sigmask naming a key outside the pool ACCEPTED\n");
+    fails++;
+  } else {
+    printf("sigmask naming out-of-pool key rejected: OK\n");
+  }
+
+  printf("\nRESULT: %s\n",
+         fails == 0 ? "all founder signature checks OK" : "FAILURES");
+  return fails != 0;
+}
