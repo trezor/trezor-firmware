@@ -1,7 +1,6 @@
 use crypto::{hmac, sha3, sha256, sha512};
 use stabby::boxed::{Box, BoxedSlice};
 use stabby::slice::Slice;
-use stabby::vec::Vec;
 use trezor_app_sdk::traits::crypto::Hasher;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
@@ -77,17 +76,25 @@ impl Sha512 {
     }
 }
 
-pub type Sha3 = ConsumableHasher<sha3::Sha3Ctx>;
+/// SHA-3 / Keccak state: the secret context plus the (public) variant flag,
+/// which picks the finalization. The digest size is derived from the context.
+#[derive(Default, Zeroize)]
+pub struct Sha3State {
+    ctx: sha3::Sha3Ctx,
+    is_keccak: bool,
+}
+
+pub type Sha3 = ConsumableHasher<Sha3State>;
 
 impl Sha3 {
     pub fn new(bit_size: u32, is_keccak: bool) -> Box<Self> {
-        let mut new = Box::new(Self(Some(Default::default())));
+        let mut new = Box::new(Self(Some(Sha3State {
+            is_keccak,
+            ..Default::default()
+        })));
         // COPY HAZARD: init is public information
         assert!(
-            new.borrow_mut()
-                .hazard_mut()
-                .init(bit_size, is_keccak)
-                .is_ok(),
+            new.borrow_mut().ctx.hazard_mut().init(bit_size).is_ok(),
             "Invalid parameters"
         );
         new
@@ -96,25 +103,27 @@ impl Sha3 {
 
 impl Hasher for Sha3 {
     extern "C" fn update<'a>(&mut self, data: Slice<'a, u8>) {
-        let ctx = self.borrow_mut();
+        let state = self.borrow_mut();
         // COPY HAZARD: we are heap-allocated and operating through a reference
-        let mut guard = sha3::Sha3Guard::hazard_new(ctx);
+        let mut guard = sha3::Sha3Guard::hazard_new(&mut state.ctx);
         guard.update(data.as_slice());
     }
 
     extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
-        let ctx = self.borrow_mut();
+        let state = self.borrow_mut();
+        let is_keccak = state.is_keccak;
         // COPY HAZARD: we are heap-allocated and operating through a reference
-        let mut guard = sha3::Sha3Guard::hazard_new(ctx);
-        // allocate an appropriately-sized buffer for the digest
-        let digest_size = guard.hazard_mut().bit_size() as usize / 8;
-        let mut digest = Vec::with_capacity(digest_size);
-        // SAFETY: `with_capacity` above reserved `digest_size` bytes; `finalize_into`
-        // (below) writes exactly that many bytes before `digest` is read from again.
-        unsafe { digest.set_len(digest_size) };
-        guard.finalize_into(&mut digest);
+        let mut guard = sha3::Sha3Guard::hazard_new(&mut state.ctx);
+        let mut buffer = [0u8; 64];
+        let digest = &mut buffer[..guard.hazard_mut().digest_size()];
+        if is_keccak {
+            guard.keccak_finalize(digest);
+        } else {
+            guard.sha3_finalize(digest);
+        }
+        let digest = BoxedSlice::from(&*digest);
         self.consume();
-        digest.into()
+        digest
     }
 }
 
