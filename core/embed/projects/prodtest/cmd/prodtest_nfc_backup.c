@@ -25,6 +25,7 @@
 #include <noise_xxpsk3.h>
 #include <rtl/cli.h>
 #include <rtl/printf.h>
+#include <rust_ui_prodtest.h>
 #include <sys/rng.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
@@ -1281,31 +1282,6 @@ static ts_t system_measure(cli_t *cli, uint32_t *frequency_khz) {
   cli_trace(cli, "NFC card MCU frequency: %lu.%02lu MHz",
             (unsigned long)(*frequency_khz / 1000U),
             (unsigned long)((*frequency_khz % 1000U) / 10U));
-
-  goto cleanup;
-
-cleanup:
-  TSH_RETURN;
-}
-
-static ts_t system_1k_write(cli_t *cli) {
-  TSH_DECLARE;
-  ts_t status;
-
-  nfc_apdu_message_t cmd = {0};
-  nfc_apdu_message_t rsp = {0};
-
-  status = nfc_backup_compose_apdu(0x20, 0x05, 0x00, 0x00, NULL, 0, &cmd);
-  TSH_CHECK_OK(status);
-
-  status =
-      nfc_backup_transceive_logged(cli, "system-1k-write", 0x05, &cmd, &rsp);
-  TSH_CHECK_OK(status);
-
-  TSH_CHECK(rsp.data_len == (2), TS_EINVAL);
-  TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
-                rsp.data[rsp.data_len - 1] == 0x00U,
-            TS_EINVAL);
 
   goto cleanup;
 
