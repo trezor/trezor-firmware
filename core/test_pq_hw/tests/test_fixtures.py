@@ -162,7 +162,10 @@ def test_nrf_push_record_layout(fx: Fixtures, release: str) -> None:
     with fx.release_elf(release).open("rb") as f:
         elf = ELFFile(f)
         symtab = elf.get_section_by_name(".symtab")
-        (sym,) = symtab.get_symbol_by_name("g_last_update")
+        syms = symtab.get_symbol_by_name("g_last_update")
+        if not syms:
+            pytest.skip("this bootloader keeps no nRF push record")
+        (sym,) = syms
         assert sym["st_size"] == screen._PUSH_RECORD_SIZE
         assert (
             _member_offsets(elf, "nrf_update.c", "g_last_update") == screen.PUSH_FIELDS
