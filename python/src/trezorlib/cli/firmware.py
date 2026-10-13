@@ -485,7 +485,13 @@ def _wait_for_device(obj: "TrezorConnection", message: str) -> None:
     click.echo(message)
     deadline = time.monotonic() + _REBOOT_DEPART_TIMEOUT
     while time.monotonic() < deadline:
-        if not (_answers(transport) if ble else obj.is_present()):
+        # a dropped BLE link already means it left; reconnecting here could
+        # also outlast the deadline
+        if ble:
+            present = transport.is_open() and _answers(transport)
+        else:
+            present = obj.is_present()
+        if not present:
             break
         time.sleep(0.1)
     if ble:
