@@ -1321,17 +1321,37 @@ class MiniscriptPolicy(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("descriptor", "string", repeated=False, required=True),
-        2: protobuf.Field("nodes", "HDNodeType", repeated=True, required=False, default=None),
+        2: protobuf.Field("keys", "MiniscriptKey", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         descriptor: "str",
-        nodes: Optional[Sequence["HDNodeType"]] = None,
+        keys: Optional[Sequence["MiniscriptKey"]] = None,
     ) -> None:
-        self.nodes: Sequence["HDNodeType"] = nodes if nodes is not None else []
+        self.keys: Sequence["MiniscriptKey"] = keys if keys is not None else []
         self.descriptor = descriptor
+
+
+class MiniscriptKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("node", "HDNodeType", repeated=False, required=True),
+        2: protobuf.Field("derivation_path", "uint32", repeated=True, required=False, default=None),
+        3: protobuf.Field("root_fingerprint", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        node: "HDNodeType",
+        derivation_path: Optional[Sequence["int"]] = None,
+        root_fingerprint: Optional["int"] = None,
+    ) -> None:
+        self.derivation_path: Sequence["int"] = derivation_path if derivation_path is not None else []
+        self.node = node
+        self.root_fingerprint = root_fingerprint
 
 
 class GetAddress(protobuf.MessageType):

@@ -13,37 +13,34 @@ def _trim(s: str, prefix: str, suffix: str) -> str:
     return s[len(prefix) : -len(suffix)]
 
 
-def parse_nodes(nodes: list[HDNodeType]) -> list[bip32.HDNode]:
+def parse_node(n: HDNodeType) -> bip32.HDNode:
     # Miniscript nodes use only secp256k1 curve.
-    return [
-        bip32.HDNode(
-            depth=n.depth,
-            fingerprint=n.fingerprint,
-            child_num=n.child_num,
-            chain_code=n.chain_code,
-            public_key=n.public_key,
-        )
-        for n in nodes
-    ]
+    return bip32.HDNode(
+        depth=n.depth,
+        fingerprint=n.fingerprint,
+        child_num=n.child_num,
+        chain_code=n.chain_code,
+        public_key=n.public_key,
+    )
 
 
 def compile(derivation: MiniscriptRedeemPolicyType) -> bytes:
     """Don't use this function directly; use derive_miniscript() instead to ensure the policy is registered."""
 
     policy = derivation.policy
-    nodes = parse_nodes(policy.nodes)
-    used = [False] * len(nodes)  # all keys must be used by the policy
+    keys = policy.keys
+    used = [False] * len(keys)  # all keys must be used by the policy
 
-    def _derive_fn(key: str) -> bytes:
+    def _derive_fn(key_expr: str) -> bytes:
         # KEY expression must be "@N/<I;J>/*"
         # Raises ValueError on invalid input:
-        key_idx, children = _trim(key, "@", "/*").split("/")
+        key_idx, children = _trim(key_expr, "@", "/*").split("/")
         external_idx, internal_idx = _trim(children, "<", ">").split(";")
         child_idx = int((external_idx, internal_idx)[derivation.internal])
         key_idx = int(key_idx)
 
-        if 0 <= key_idx < len(nodes):
-            node = nodes[key_idx].clone()  # since BIP-32 derivation is done in-place
+        if 0 <= key_idx < len(keys):
+            node = parse_node(keys[key_idx].node)
             node.derive(child_idx, True)
             node.derive(derivation.index, True)
             used[key_idx] = True

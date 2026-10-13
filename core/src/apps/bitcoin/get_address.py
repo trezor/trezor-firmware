@@ -161,7 +161,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
             )
         elif miniscript:
             account = miniscript.policy.descriptor
-            pubnodes = miniscript.policy.nodes
+            pubnodes = [key.node for key in miniscript.policy.keys]
             await show_address(
                 address_short,
                 subtitle=subtitle,

@@ -43,8 +43,10 @@ NAME = "signer"
 def sign_psbt(descriptor: str, src: str, dst: str, coin: str, spend: int) -> None:
     network = NETWORKS[coin]
     descriptor, *xpubs = descriptor.split("\n")
-    nodes = [xpub_deserialize(x.split("]")[1])[1] for x in xpubs]
-    policy = messages.MiniscriptPolicy(descriptor=descriptor, nodes=nodes)
+    nodes = [
+        messages.MiniscriptKey(node=xpub_deserialize(x.split("]")[1])[1]) for x in xpubs
+    ]
+    policy = messages.MiniscriptPolicy(descriptor=descriptor, keys=nodes)
     desc = descriptor
     for i, xpub in enumerate(xpubs):
         desc = desc.replace(f"@{i}", xpub)

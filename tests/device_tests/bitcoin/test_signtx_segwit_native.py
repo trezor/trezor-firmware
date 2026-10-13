@@ -668,7 +668,8 @@ def test_miniscript_send_multisig_2(session: Session):
     ]
     items = (f"@{i}/<0;1>/*" for i in range(len(nodes)))
     policy = messages.MiniscriptPolicy(
-        descriptor=f"wsh(multi(2,{','.join(items)}))", nodes=nodes
+        descriptor=f"wsh(multi(2,{','.join(items)}))",
+        keys=[messages.MiniscriptKey(node=node) for node in nodes],
     )
     reg = messages.MiniscriptRegisterPolicy(
         name="2-of-3", policy=policy, coin_name="Testnet"

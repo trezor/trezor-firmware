@@ -432,10 +432,10 @@ def register_policy(
     session: "Session",
     name: str,
     descriptor: str,
-    nodes: Sequence[messages.HDNodeType],
+    keys: Sequence[messages.MiniscriptKey],
     coin_name: str,
 ) -> messages.MiniscriptPolicy:
-    policy = messages.MiniscriptPolicy(descriptor=descriptor, nodes=nodes)
+    policy = messages.MiniscriptPolicy(descriptor=descriptor, keys=keys)
     session.call(
         messages.MiniscriptRegisterPolicy(
             policy=policy, name=name, coin_name=coin_name

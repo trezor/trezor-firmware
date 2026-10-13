@@ -501,18 +501,36 @@ if TYPE_CHECKING:
 
     class MiniscriptPolicy(protobuf.MessageType):
         descriptor: "str"
-        nodes: "list[HDNodeType]"
+        keys: "list[MiniscriptKey]"
 
         def __init__(
             self,
             *,
             descriptor: "str",
-            nodes: "list[HDNodeType] | None" = None,
+            keys: "list[MiniscriptKey] | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptPolicy"]:
+            return isinstance(msg, cls)
+
+    class MiniscriptKey(protobuf.MessageType):
+        node: "HDNodeType"
+        derivation_path: "list[int]"
+        root_fingerprint: "int | None"
+
+        def __init__(
+            self,
+            *,
+            node: "HDNodeType",
+            derivation_path: "list[int] | None" = None,
+            root_fingerprint: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["MiniscriptKey"]:
             return isinstance(msg, cls)
 
     class GetAddress(protobuf.MessageType):

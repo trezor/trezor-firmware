@@ -32,7 +32,7 @@ async def register_policy(
     msg: MiniscriptRegisterPolicy, keychain: Keychain, coin: CoinInfo
 ) -> Success:
     from storage.device import set_registered_miniscript
-    from trezor.crypto.miniscript import parse_nodes
+    from trezor.crypto.miniscript import parse_node
     from trezor.messages import MiniscriptRedeemPolicyType, Success
     from trezor.protobuf import dump_message_buffer
     from trezor.ui.layouts import confirm_properties, show_continue_in_app
@@ -59,17 +59,19 @@ async def register_policy(
     # TODO: segregate registration per coin
     # TODO: mark our xpub(s)
 
-    nodes = parse_nodes(policy.nodes)
-    props = [(name, policy.descriptor, True)]
-    for i, node in enumerate(nodes):
-        xpub = node.serialize_public(coin.xpub_magic)
-        props.append((f"Key @{i}", xpub, True))
-
     await confirm_properties(
-        title="Register policy?",
-        props=props,
+        title=f"Register {coin.coin_name} Miniscript policy?",
+        props=[(name, policy.descriptor, True)],
         br_name="/bitcoin/miniscript/register_policy",
     )
+
+    for i, key in enumerate(policy.keys):
+        xpub = parse_node(key.node).serialize_public(coin.xpub_magic)
+        await confirm_properties(
+            title=f"Key @{i}",
+            props=[(None, xpub, True)],
+            br_name="/bitcoin/miniscript/register_policy",
+        )
 
     set_registered_miniscript(dump_message_buffer(policy))
     show_continue_in_app("Policy registered")

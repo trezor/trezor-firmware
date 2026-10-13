@@ -26,43 +26,48 @@ from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
-
-def _parse_xpub(xpub: str) -> messages.HDNodeType:
-    if xpub.startswith("["):
-        xpub = xpub.split("]", 1)[1]  # Remove the derivation path prefix (if present)
-
-    node = HDKey.from_base58(xpub)
-    return messages.HDNodeType(
-        depth=node.depth,
-        fingerprint=int.from_bytes(node.fingerprint, "big"),
-        child_num=node.child_number,
-        chain_code=node.chain_code,
-        public_key=node.get_public_key().serialize(),
-    )
-
-
 pytestmark = [
     pytest.mark.capabilities(messages.Capability.Miniscript),
     pytest.mark.experimental,
 ]
 
-XPUBS = [
+
+def _parse_keys(*keys: str) -> list[Key]:
+    return [Key.from_string(k) for k in keys]
+
+
+def _to_protobuf(k: Key) -> messages.MiniscriptKey:
+    key = k.key
+    return messages.MiniscriptKey(
+        node=messages.HDNodeType(
+            depth=key.depth,
+            fingerprint=int.from_bytes(key.fingerprint, "big"),
+            child_num=key.child_number,
+            chain_code=key.chain_code,
+            public_key=key.get_public_key().serialize(),
+        ),
+        root_fingerprint=int.from_bytes(k.fingerprint, "big"),
+        derivation_path=k.derivation,
+    )
+
+
+MAIN = _parse_keys(
     # ALL x 12
     "[5c9e228d/84h/0h/0h]xpub6DDUPHpUo4pcy43iJeZjbSVWGav1SMMmuWdMHiGtkK8rhKmfbomtkwW6GKs1GGAKehT6QRocrmda3WWxXawpjmwaUHfFRXuKrXSapdckEYF",
     "[5c9e228d/84h/0h/1h]xpub6DDUPHpUo4pd1hyVtRaknvZvCgdPdEDMKx3bB5UFcx73pEHRDVK4rwEZUgeUbVuYWGMNLvuBHp5WeyPevN2Gv7m9FnLHQE6XaKNRPZcYcHH",
     "[5c9e228d/84h/0h/2h]xpub6DDUPHpUo4pd5Z4Dmuk7igUc5DcYBoJXcVA1NJbKaRX1M2WKsTqHF5igMbwLpA23iHBwPXY11cidR2kiJVsQWfuJgaQJuxFrjm7iEhsMm4y",
     "[5c9e228d/84h/0h/3h]xpub6DDUPHpUo4pd97vxcds4Qf1oN6zgLqSJLj17Es2mTozPawXwztmDTm9EDzBthkCoArbawqa66hd3v9Kx1h7ekiMKGb5ywWFCRJjTMNC85Zq",
     "[5c9e228d/84h/0h/4h]xpub6DDUPHpUo4pd9Uvp828RbCzZugQVZy78HupxyvtbwBCbWJWYRtf9eFAuVTgsQQS8wWzx8gHw3MUy8NAGUXBqM9Sm3YwzSYMF6gMcXGwV8Rp",
-]
+)
 
-TPUBS = [
+TEST = _parse_keys(
     # ALL x 12
     "[5c9e228d/84'/1'/0']tpubDCZB6sR48s4T5Cr8qHUYSZEFCQMMHRg8AoVKVmvcAP5bRw7ArDKeoNwKAJujV3xCPkBvXH5ejSgbgyN6kREmF7sMd41NdbuHa8n1DZNxSMg",
     # GYM x 12
     "[72758bc3/84'/1'/0']tpubDCNhwLKYSSu2FKssoMziAdwhAAKS3bASH7wZYkNmJ7sU5hW9LgDaAQPqe7ivAkskSF29B1CkRRg4g2mbovXgAL9Mby6i9xBdhZh2txDeSLb",
-]
+)
 
-TPUBS_48 = [
+TEST_48 = _parse_keys(
     # ALL x 12 with passphrases: "", "a", "b", "c", "d", "e", "f", "g",
     "[5c9e228d/48'/1'/0'/2']tpubDEGquuorgFNbDrg8vepq1HnaV2mgQu9TcSBgBYfXw4AX8VMgkWqvkxHNuJmiah8iVnA3Hgj4cSvaGAXEnq814yC6hMEreckLsd7zyLL3o76",
     "[6d96bc8f/48'/1'/0'/2']tpubDFNKLpb6iPByHNd6MRa7gxfAa97aTdtzwp17owgyLp9FFbkAuW1gMfD4Vrn7uVssvYfhiG41eHKmb2kaPz5qhqszYybAfiaBATMv8XfrGvg",
@@ -72,14 +77,14 @@ TPUBS_48 = [
     "[479c205a/48'/1'/0'/2']tpubDEPMzvruWArtmyH7aZy2FhWvarNBCKECXtV1fYS7LeVtUkHdeEWK85bRwnC1otxJ3pJ9eDtpPJF9dSfhTAn3CWtPA95JnxHdq9iHU9KLAXx",
     "[4dd3052b/48'/1'/0'/2']tpubDE6eirnmQdosibC43AKuiG1jb7LebhDAYXzFFemfWWW5LnJhjwdZo9Nwe19qp5tu3vsb1JZXefcHPbaMig92kEPVUcdyoNGnNV5t8ugMBw1",
     "[bc424d11/48'/1'/0'/2']tpubDF721Fe13ScDgtMcpPmgBbb2gCBcsPscm4E2iDfTJDDNyXM958LbVgVxvHJnDVLg6EkuvKuk1GAwDSz1J8u5UUBWQsevdmDW1LsB745UHt8",
-]
+)
 
 DATA = [
     (
         "single-pk",
         "wsh(pk(@0/<0;1>/*))",
         "Bitcoin",
-        XPUBS,
+        MAIN,
         [
             (0, 1, "bc1q7ufefmuhl8qsj5zpmud2p05uyuc3gggf5zvlj9dcxpxw4hd9npnqnnlnlq"),
         ],
@@ -88,7 +93,7 @@ DATA = [
         "multi-older",
         "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@1/<0;1>/*),older(1))))",
         "Testnet",
-        TPUBS,
+        TEST,
         [
             (0, 1, "tb1qzvr7ptes6kq2ee0745a7h2n639etfz43nsz9d2jn8u6wz8egx0hqnr5pza"),
         ],
@@ -97,7 +102,7 @@ DATA = [
         "single-older",
         "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@0/<2;3>/*),older(1))))",
         "Testnet",
-        TPUBS,
+        TEST,
         [
             (0, 1, "tb1q038uy2ghc75tfjxyc8sqdusyj6nq70pfa5hvrx9kekd6a6xcmxeskf0tjv"),
             (0, 2, "tb1qdl6uec9e4ajrlzesqjm3jqtv4986j20fullm46gq5c0r6qur6s8qhk48qu"),
@@ -107,7 +112,7 @@ DATA = [
         "2of2-expands-2of3",
         "wsh(or_i(and_v(v:thresh(2,pkh(@0/<2;3>/*),a:pkh(@1/<2;3>/*),a:pkh(@2/<0;1>/*)),older(52596)),and_v(v:pk(@0/<0;1>/*),pk(@1/<0;1>/*))))",
         "Bitcoin",
-        XPUBS,
+        MAIN,
         [
             (0, 1, "bc1qkye36enq7qzxadptuhh4v9t09zhelpw3cz9n0knvg2ayhdns5c7sc6vyde"),
         ],
@@ -116,7 +121,7 @@ DATA = [
         "1of2-large-index",
         "wsh(or_b(pk(@0/<0;1>/*),s:pk(@1/<0;1>/*)))",
         "Bitcoin",
-        XPUBS,
+        MAIN,
         [
             (0, 2048, "bc1qqfljvkn3v8fshem7hpvyw9d8vcwxgflatdgynkpr76gcgaaza0ms3x9gge"),
             (1, 2048, "bc1qpxxvxdhcx7x48zcjptka52qxsj9qlz3kc2kypnws49h9xc9hk0jsdpfzpg"),
@@ -126,7 +131,7 @@ DATA = [
         "2of3-or-after1of3",
         "wsh(and_v(v:multi(2,@0/<0;1>/*,@1/<0;1>/*,@2/<0;1>/*),after(1893456000)))",
         "Bitcoin",
-        XPUBS,
+        MAIN,
         [
             (0, 77, "bc1qksfktckxm2ca7540q3q4u26t4a4mz20mq3yv2c0afulyj836ud2q0gaszm"),
             (1, 77, "bc1qc7ewhxqxaure8rvnaktdw9wp8jfd8ayj0gd05y3yst439fya4g3sjhwqac"),
@@ -136,7 +141,7 @@ DATA = [
         "1of1-or-older3of5",
         "wsh(or_d(pk(@0/<0;1>/*),and_v(v:thresh(3,pkh(@1/<0;1>/*),a:pkh(@2/<0;1>/*),a:pkh(@3/<0;1>/*),a:pkh(@4/<0;1>/*)),older(65535))))",
         "Bitcoin",
-        XPUBS,
+        MAIN,
         [
             (0, 120, "bc1qmspe3w3xnkcqc96pf0ekzsr78zmhkdawf3arwegwxr9eu5nkf06qemzzkc"),
             (1, 120, "bc1qxrsupl645gndl64upgsmrjugpt4gf93lamrn0x8reqshv3gh85ksdp565h"),
@@ -146,7 +151,7 @@ DATA = [
         "5of5-decays-4of5-decays-3of5",
         "wsh(or_i(and_v(v:thresh(3,pkh(@0/<4;5>/*),a:pkh(@1/<4;5>/*),a:pkh(@2/<4;5>/*),a:pkh(@3/<4;5>/*),a:pkh(@4/<4;5>/*)),older(52596)),or_i(and_v(v:thresh(4,pkh(@0/<2;3>/*),a:pkh(@1/<2;3>/*),a:pkh(@2/<2;3>/*),a:pkh(@3/<2;3>/*),a:pkh(@4/<2;3>/*)),older(4383)),and_v(v:and_v(v:and_v(v:and_v(v:pk(@0/<0;1>/*),pk(@1/<0;1>/*)),pk(@2/<0;1>/*)),pk(@3/<0;1>/*)),pk(@4/<0;1>/*)))))",
         "Bitcoin",
-        XPUBS,
+        MAIN,
         [
             (0, 1, "bc1qvqvur38yke37wnzwkx2pr0twl4w4lfz47k50tkxn0lkcwsjz2ejslk63md"),
             (1, 1, "bc1q2xygdukalavq40nhf754ce954nufew3shqv5luylwauyxt4jxpwqzsxvm5"),
@@ -158,7 +163,7 @@ DATA = [
         "liana-simple1",
         "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@1/<0;1>/*),older(1))))",
         "Signet",
-        TPUBS,
+        TEST,
         [
             (0, 0, "tb1qwr00r4x9a2ycm7fn48c7kqm6kpsp56ydwx482ns5c3wxmrwqwu2stjh6cc"),
             (0, 1, "tb1qzvr7ptes6kq2ee0745a7h2n639etfz43nsz9d2jn8u6wz8egx0hqnr5pza"),
@@ -173,7 +178,7 @@ DATA = [
         "liana-simple2",
         "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@1/<0;1>/*),older(52596))))",
         "Signet",
-        TPUBS,
+        TEST,
         [
             (0, 1, "tb1qhuvpd22plqpuudu8pn7gm9f5cgyqtkr3vmadlknkazknaat9krrs5p6lyq"),
             (0, 2, "tb1q49avpm6vnwl8ywxk7geaxvp7us3alzu798ccs58jsk4j3c9rkrtqh3c5pz"),
@@ -184,7 +189,7 @@ DATA = [
         "liana-simple3",
         "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@1/<0;1>/*),older(52596))))",
         "Signet",
-        TPUBS,
+        TEST,
         [
             (0, 1, "tb1qhuvpd22plqpuudu8pn7gm9f5cgyqtkr3vmadlknkazknaat9krrs5p6lyq"),
             (0, 2, "tb1q49avpm6vnwl8ywxk7geaxvp7us3alzu798ccs58jsk4j3c9rkrtqh3c5pz"),
@@ -195,7 +200,7 @@ DATA = [
         "liana-large",
         "wsh(or_i(and_v(v:thresh(1,pkh(@0/<6;7>/*),a:pkh(@1/<6;7>/*),a:pkh(@2/<6;7>/*),a:pkh(@3/<6;7>/*),a:pkh(@4/<6;7>/*),a:pkh(@5/<6;7>/*),a:pkh(@6/<6;7>/*),a:pkh(@7/<6;7>/*)),older(3)),or_i(and_v(v:thresh(4,pkh(@0/<4;5>/*),a:pkh(@1/<4;5>/*),a:pkh(@2/<4;5>/*),a:pkh(@3/<4;5>/*),a:pkh(@4/<4;5>/*),a:pkh(@5/<4;5>/*),a:pkh(@6/<4;5>/*),a:pkh(@7/<4;5>/*)),older(2)),or_i(and_v(v:thresh(6,pkh(@0/<2;3>/*),a:pkh(@1/<2;3>/*),a:pkh(@2/<2;3>/*),a:pkh(@3/<2;3>/*),a:pkh(@4/<2;3>/*),a:pkh(@5/<2;3>/*),a:pkh(@6/<2;3>/*),a:pkh(@7/<2;3>/*)),older(1)),and_v(v:and_v(v:and_v(v:and_v(v:and_v(v:and_v(v:and_v(v:pk(@0/<0;1>/*),pk(@1/<0;1>/*)),pk(@2/<0;1>/*)),pk(@3/<0;1>/*)),pk(@4/<0;1>/*)),pk(@5/<0;1>/*)),pk(@6/<0;1>/*)),pk(@7/<0;1>/*))))))",
         "Signet",
-        TPUBS_48,
+        TEST_48,
         [
             (0, 1, "tb1qyt2q5ns8z88fj7n7gpxnvqp0frxjx8fnl7k6cywtneak8pq0a33sefyrd8"),
             (0, 2, "tb1q9yxxpms7d3kt4l8zf0g782hykquklmhye507a5q6n605fr50ht6s8l5afw"),
@@ -214,7 +219,7 @@ def test_miniscript_get_address(
     name: str,
     desc: str,
     coin: str,
-    keys: list[str],
+    keys: list[Key],
     tests: list[tuple[int, int, str]],
 ):
     indices = set(map(int, re.findall("@(\\d+)", desc)))
@@ -226,11 +231,10 @@ def test_miniscript_get_address(
         session,
         name=name,
         descriptor=desc,
-        nodes=list(map(_parse_xpub, keys)),
+        keys=list(map(_to_protobuf, keys)),
         coin_name=coin,
     )
     fpr = session.get_root_fingerprint()
-    keys = [Key.from_string(k) for k in keys]
     keys = [k for k in keys if k.fingerprint == fpr]  # drop unrelated keys
     assert keys
 
@@ -254,22 +258,20 @@ def test_miniscript_get_address(
             assert address == expected
 
 
-COIN = "Signet"
-
-
 def test_miniscript_spend(session: Session):
+    COIN = "Signet"
     # 1st always, or 2nd after 1 block
     DESC = "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@1/<0;1>/*),older(1))))"
-    NODES = list(map(_parse_xpub, TPUBS[:2]))
+    keys = list(map(_to_protobuf, TEST[:2]))
 
     node = btc.get_public_node(session, parse_path("m/84h/1h/0h"), coin_name=COIN)
-    assert node.node == NODES[0]
+    assert node.node == keys[0].node
 
     reg = messages.MiniscriptRegisterPolicy(
         name="Policy name",
         policy=messages.MiniscriptPolicy(
             descriptor=DESC,
-            nodes=NODES,
+            keys=keys,
         ),
         coin_name=COIN,
     )
@@ -337,20 +339,21 @@ def test_miniscript_spend(session: Session):
 
 
 def test_miniscript_spend_liana(session: Session):
+    COIN = "Signet"
     # 1st always, or 2nd after 1 block
     DESC = "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@1/<0;1>/*),older(52596))))"
-    TPUBS = [
+    TPUBS = _parse_keys(
         "[5c9e228d/48'/1'/0'/2']tpubDEGquuorgFNbDrg8vepq1HnaV2mgQu9TcSBgBYfXw4AX8VMgkWqvkxHNuJmiah8iVnA3Hgj4cSvaGAXEnq814yC6hMEreckLsd7zyLL3o76",  # ALL x 12
         "[72758bc3/84'/1'/0']tpubDCNhwLKYSSu2FKssoMziAdwhAAKS3bASH7wZYkNmJ7sU5hW9LgDaAQPqe7ivAkskSF29B1CkRRg4g2mbovXgAL9Mby6i9xBdhZh2txDeSLb",  # GYM x 12
-    ]
-    NODES = list(map(_parse_xpub, TPUBS))
+    )
+    keys = list(map(_to_protobuf, TPUBS))
 
     node = btc.get_public_node(session, parse_path("m/48h/1h/0h/2h"), coin_name=COIN)
-    assert _parse_xpub(node.xpub) == NODES[0]
+    assert _to_protobuf(Key.from_string(node.xpub)).node == keys[0].node
 
     reg = messages.MiniscriptRegisterPolicy(
         name="Policy name",
-        policy=messages.MiniscriptPolicy(descriptor=DESC, nodes=NODES),
+        policy=messages.MiniscriptPolicy(descriptor=DESC, keys=keys),
         coin_name=COIN,
     )
     session.call(reg, expect=messages.Success)
@@ -414,20 +417,22 @@ def test_miniscript_spend_liana(session: Session):
 
 
 def test_miniscript_spend_liana_decay(session: Session):
+    COIN = "Signet"
+    # 2-of-2, decays to 1-of-2
     DESC = "wsh(or_i(and_v(v:thresh(1,pkh(@1/<2;3>/*),a:pkh(@0/<2;3>/*)),older(1)),and_v(v:pk(@0/<0;1>/*),pk(@1/<0;1>/*))))"
-    TPUBS = [
+    TPUBS = _parse_keys(
         "[5c9e228d/48'/1'/0'/2']tpubDEGquuorgFNbDrg8vepq1HnaV2mgQu9TcSBgBYfXw4AX8VMgkWqvkxHNuJmiah8iVnA3Hgj4cSvaGAXEnq814yC6hMEreckLsd7zyLL3o76",  # ALL x 12
         "[6d96bc8f/48'/1'/0'/2']tpubDFNKLpb6iPByHNd6MRa7gxfAa97aTdtzwp17owgyLp9FFbkAuW1gMfD4Vrn7uVssvYfhiG41eHKmb2kaPz5qhqszYybAfiaBATMv8XfrGvg",  # ALL x 12, passphrase='a'
-    ]
-    NODES = list(map(_parse_xpub, TPUBS))
+    )
+    keys = [_to_protobuf(key) for key in TPUBS]
 
     node = btc.get_public_node(session, parse_path("m/48h/1h/0h/2h"), coin_name=COIN)
-    assert node.node == NODES[0]
+    assert node.node == keys[0].node
     pubkey = HDKey.from_string(node.xpub).derive("m/1/3").key
 
     reg = messages.MiniscriptRegisterPolicy(
         name="Policy name",
-        policy=messages.MiniscriptPolicy(descriptor=DESC, nodes=NODES),
+        policy=messages.MiniscriptPolicy(descriptor=DESC, keys=keys),
         coin_name=COIN,
     )
     session.call(reg, expect=messages.Success)
@@ -537,22 +542,24 @@ def test_miniscript_spend_liana_decay(session: Session):
 
 
 def test_miniscript_spend_sparrow(session: Session):
+    COIN = "Signet"
     DESC = "wsh(sortedmulti(2,@0/<0;1>/*,@1/<0;1>/*,@2/<0;1>/*))"
-    TPUBS = [
+    # 2-of-3 multisig
+    TPUBS = _parse_keys(
         "[5c9e228d/48h/1h/0h/2h]tpubDEGquuorgFNbDrg8vepq1HnaV2mgQu9TcSBgBYfXw4AX8VMgkWqvkxHNuJmiah8iVnA3Hgj4cSvaGAXEnq814yC6hMEreckLsd7zyLL3o76",  # ALL x 12, no passphrase
         "[cab51272/48h/1h/0h/2h]tpubDEbN34MtnQ1LWCT8Z1XKUHeB9tY9ebA4e7P84W5gmAMpqKiud1UWRN2ym68p1ijZ4kxAFqmPPAJVvYNPjopEj4cMUXCS8toffucdDgdXVok",  # ALL x 12, passphrase='d'
         "[6d96bc8f/48h/1h/0h/2h]tpubDFNKLpb6iPByHNd6MRa7gxfAa97aTdtzwp17owgyLp9FFbkAuW1gMfD4Vrn7uVssvYfhiG41eHKmb2kaPz5qhqszYybAfiaBATMv8XfrGvg",  # ALL x 12, passphrase='a'
-    ]
-    NODES = list(map(_parse_xpub, TPUBS))
+    )
+    keys = list(map(_to_protobuf, TPUBS))
 
     node = btc.get_public_node(session, parse_path("m/48h/1h/0h/2h"), coin_name=COIN)
-    assert _parse_xpub(node.xpub) == NODES[0]
+    assert node.node == keys[0].node
 
     policy = btc.register_policy(
         session,
         name="NAME",
         descriptor=DESC,
-        nodes=NODES,
+        keys=keys,
         coin_name=COIN,
     )
     redeem = messages.MiniscriptRedeemPolicyType(policy=policy, internal=False, index=0)
