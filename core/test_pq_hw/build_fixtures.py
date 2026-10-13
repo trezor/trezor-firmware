@@ -512,8 +512,18 @@ def bootloader_info(path: Path) -> dict:
 # targets
 
 
+def build_dir(wt: Path) -> Path:
+    """xtask's output directory in a source tree, from its cargo config:
+    core/build-xtask before the upstream rename, core/build after."""
+    cfg = (wt / "core" / "embed" / ".cargo" / "config.toml").read_text()
+    m = re.search(r'target-dir\s*=\s*"\.\./([^"]+)"', cfg)
+    if not m:
+        raise BuildError(f"no target-dir in {wt}/core/embed/.cargo/config.toml")
+    return wt / "core" / m.group(1)
+
+
 def artifacts(ctx: Ctx) -> Path:
-    return ctx.wt / "core" / "build-xtask" / "artifacts" / MODEL
+    return build_dir(ctx.wt) / "artifacts" / MODEL
 
 
 def build_vendorheader_btc(ctx: Ctx) -> None:
@@ -608,7 +618,7 @@ def build_legacy(ctx: Ctx) -> None:
 
 def build_release(ctx: Ctx, name: str) -> None:
     out = artifacts(ctx)
-    tree = ctx.wt / "core" / "build-xtask" / "tree"
+    tree = build_dir(ctx.wt) / "tree"
 
     xtask(ctx, "build", "boardloader", "-m", MODEL, *DEVEL)
     args_bl = ["build", "bootloader", "-m", MODEL, *DEVEL, *DEBUG_BL]
