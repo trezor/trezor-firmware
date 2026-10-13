@@ -1,0 +1,84 @@
+{
+  "format": "TRZL-set",
+  "format_version": 1,
+  "models": {
+    "T3W1": {
+      "bootloader": {
+        "code_sha256": "a1b519c52e38121a4186e2f76ca3ce2e86e21a3e8c973f5dcd0e62ae10882f70",
+        "file": "bootloader.bin",
+        "firmware_type": {
+          "bare": 3435973836,
+          "len": 4,
+          "offset": 16380
+        },
+        "founder_pool": "devel",
+        "sigmask": 3,
+        "signed_root": "7a433282fe7c5bb8cf3c4d55301ec39e949087bcf3349d2c9603452b574eb7c0"
+      },
+      "coprocessors": [
+        {
+          "co_path": [
+            "f8b54a8f0711b1c52806bc1deabddfa9634387bc40d3b5d49ac2e5485d0292db",
+            "a27267894c87895b9e70e584a4ee0d3da0f905e93fff797a7731fc93c3699d3e",
+            "b6bb95cd30aded12e540c4e1868ef03270a8df4bc81dec3bff8f8f9ee60621e2",
+            "f8ffc3c2f440c3669418adc870afa0cc53d32ceb490c3005c36ed5097fbb9506"
+          ],
+          "file": "trezor-ble-dev.bin",
+          "image_hash": "8da3ce38322729b629d46cfc93573fb18dfb0379f8f42e4579a357640c79d836",
+          "image_model_id": "T3W1",
+          "index": 0,
+          "kind": "nrf",
+          "length": 174768,
+          "model_root": "7a433282fe7c5bb8cf3c4d55301ec39e949087bcf3349d2c9603452b574eb7c0"
+        }
+      ],
+      "firmware_root": "d22099a2f8c2a6f4a7ee87435063f3d53da523c4f6385a36757855a8e021b1f5",
+      "format": "TRZL",
+      "format_version": 1,
+      "model": "T3W1",
+      "variants": [
+        {
+          "file": "universal.bin",
+          "firmware_type": 1515870810,
+          "leaf": "09691bc44c72fe35c10d82cccf3e7a4e7ff760ee0ec2c0143fb8e868e76eecd1",
+          "proof": [
+            "24323bc11c64255fb3fa2a18ce22495c2b054a7716c44abd2aa8fb4f2b32a83b",
+            "399f3d1839ed45c658fe95c5868293f6468149f8de4035f8cfab874c49f64e8a"
+          ],
+          "variant": "universal"
+        },
+        {
+          "file": "btc-only.bin",
+          "firmware_type": 2779096485,
+          "leaf": "d0f4f2b58956b6a4462952f2c1cc431a2475d8f8f2ea08c9d4ce8da8f23fb3b2",
+          "proof": [
+            "3817b0c2a0cb3a74680914fc3437737663859ef0cdef3f93125924e98de66684",
+            "16cb33c22c760f9deaa2945773f326fcf6549a8940443df35ad306d13c79dc33"
+          ],
+          "variant": "btc-only"
+        },
+        {
+          "authenticity_manifest": "54525a4433333333000000000000000000000000000000000000000000000000000000000000000000000000020000000100000001000000000400000020000000fc0200b4805a2efadbfbd09710d727672e4729daae79caf9bbcbc5bb600dbd4284d99e02000000000000000000030000200000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "file": "custom.bin",
+          "firmware_type": 858993459,
+          "leaf": "3817b0c2a0cb3a74680914fc3437737663859ef0cdef3f93125924e98de66684",
+          "proof": [
+            "d0f4f2b58956b6a4462952f2c1cc431a2475d8f8f2ea08c9d4ce8da8f23fb3b2",
+            "16cb33c22c760f9deaa2945773f326fcf6549a8940443df35ad306d13c79dc33"
+          ],
+          "variant": "custom"
+        },
+        {
+          "file": "prodtest.bin",
+          "firmware_type": 1717986918,
+          "leaf": "24323bc11c64255fb3fa2a18ce22495c2b054a7716c44abd2aa8fb4f2b32a83b",
+          "proof": [
+            "09691bc44c72fe35c10d82cccf3e7a4e7ff760ee0ec2c0143fb8e868e76eecd1",
+            "399f3d1839ed45c658fe95c5868293f6468149f8de4035f8cfab874c49f64e8a"
+          ],
+          "variant": "prodtest"
+        }
+      ]
+    }
+  }
+}
