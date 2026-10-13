@@ -1256,29 +1256,27 @@ fn hold(commitment: &Archived<Commitment>) -> bool {
 }
 
 #[cfg(feature = "app_loading")]
-fn tstr(s: &Archived<StrSlice>) -> TString<'static> {
-    unwrap!(StrBuffer::alloc(s.as_ref())).into()
+fn tstr(s: &Archived<StrSlice>) -> Result<TString<'static>, Error> {
+    Ok(StrBuffer::alloc(s.as_ref())?.into())
 }
 
 #[cfg(feature = "app_loading")]
-fn tstr_opt(s: &ArchivedOption<Archived<StrSlice>>) -> Option<TString<'static>> {
-    s.as_ref()
-        .map(|s| unwrap!(StrBuffer::alloc(s.as_ref())).into())
+fn tstr_opt(s: &ArchivedOption<Archived<StrSlice>>) -> Result<Option<TString<'static>>, Error> {
+    s.as_ref().map(tstr).transpose()
 }
 
 #[cfg(feature = "app_loading")]
-fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Obj {
+fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Result<Obj, Error> {
     let slice = archived.as_ref();
-    let mut list = unwrap!(List::with_capacity(slice.len()));
+    let mut list = List::with_capacity(slice.len())?;
     for item in slice {
-        let obj = unwrap!(Obj::try_from((
-            unwrap!(Obj::try_from(item.key.as_ref())),
-            unwrap!(Obj::try_from(item.value.as_ref())),
-            unwrap!(Obj::try_from(item.mono))
-        )));
-        unwrap!(list.append(obj));
+        list.append(Obj::try_from((
+            Obj::try_from(item.key.as_ref())?,
+            Obj::try_from(item.value.as_ref())?,
+            Obj::try_from(item.mono)?,
+        ))?)?;
     }
-    unwrap!(List::alloc(unsafe { list.as_slice() })).into()
+    Ok(List::alloc(unsafe { list.as_slice() })?.into())
 }
 
 /// Builds the layout for an app's request, and returns it with the step name
@@ -1292,17 +1290,16 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
 
         // Read in place, without copying.
-        let archived =
-            rkyv::access::<Archived<TrezorUiEnum>, Failure>(unwrap!(unsafe { get_buffer(obj) }))
-                .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
+        let archived = rkyv::access::<Archived<TrezorUiEnum>, Failure>(unsafe { get_buffer(obj) }?)
+            .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
 
         let (layout, br_name) = match archived {
             Archived::<TrezorUiEnum>::ConfirmAction(m) => (
                 LayoutObj::new_root(ModelUI::confirm_action(
-                    tstr(&m.title),
-                    Some(tstr(&m.action)),
-                    tstr_opt(&m.description),
-                    tstr_opt(&m.subtitle),
+                    tstr(&m.title)?,
+                    Some(tstr(&m.action)?),
+                    tstr_opt(&m.description)?,
+                    tstr_opt(&m.subtitle)?,
                     None,
                     // Every confirmation can be refused; how is the model's.
                     true,
@@ -1318,13 +1315,13 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             ),
             Archived::<TrezorUiEnum>::ConfirmSummary(m) => (
                 LayoutObj::new_root(ModelUI::confirm_summary(
-                    tstr_opt(&m.amount),
-                    tstr_opt(&m.amount_label),
+                    tstr_opt(&m.amount)?,
+                    tstr_opt(&m.amount_label)?,
                     // WIP: no model can leave the fee out; an empty one stands
                     // in for it.
-                    tstr_opt(&m.fee).unwrap_or(TString::empty()),
-                    tstr_opt(&m.fee_label).unwrap_or(TString::empty()),
-                    Some(tstr(&m.title)),
+                    tstr_opt(&m.fee)?.unwrap_or(TString::empty()),
+                    tstr_opt(&m.fee_label)?.unwrap_or(TString::empty()),
+                    Some(tstr(&m.title)?),
                     None,
                     None,
                     None,
@@ -1337,12 +1334,12 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             ),
             Archived::<TrezorUiEnum>::ConfirmValue(m) => (
                 LayoutObj::new_root(ModelUI::confirm_value(
-                    tstr(&m.title),
+                    tstr(&m.title)?,
                     Obj::try_from(m.value.as_ref())?,
-                    tstr_opt(&m.description),
+                    tstr_opt(&m.description)?,
                     true,
                     None,
-                    tstr_opt(&m.subtitle),
+                    tstr_opt(&m.subtitle)?,
                     None,
                     None,
                     false,
@@ -1353,7 +1350,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                     // Every confirmation can be refused; how is the model's.
                     true,
                     false,
-                    tstr_opt(&m.footer).map(|text| (text, m.footer_warning)),
+                    tstr_opt(&m.footer)?.map(|text| (text, m.footer_warning)),
                     !m.extras.is_empty(),
                 )?)?,
                 &m.br_name,
@@ -1362,12 +1359,12 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             // are; it formats the hex itself, a page at a time.
             Archived::<TrezorUiEnum>::ConfirmData(m) => (
                 LayoutObj::new_root(ModelUI::confirm_value(
-                    tstr(&m.title),
+                    tstr(&m.title)?,
                     Obj::try_from(m.data.as_ref())?,
                     None,
                     true,
                     None,
-                    tstr_opt(&m.subtitle),
+                    tstr_opt(&m.subtitle)?,
                     None,
                     None,
                     false,
@@ -1397,8 +1394,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 (
                     ModelUI::show_notice(
                         severity,
-                        tstr(&m.title),
-                        tstr(&m.content),
+                        tstr(&m.title)?,
+                        tstr(&m.content)?,
                         !m.extras.is_empty(),
                         m.cancel,
                     )?,
@@ -1407,9 +1404,9 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             }
             Archived::<TrezorUiEnum>::ConfirmProperties(m) => (
                 LayoutObj::new_root(ModelUI::confirm_properties(
-                    tstr(&m.title),
-                    tstr_opt(&m.subtitle),
-                    obj_from_proplist(&m.props),
+                    tstr(&m.title)?,
+                    tstr_opt(&m.subtitle)?,
+                    obj_from_proplist(&m.props)?,
                     hold(&m.commitment),
                     None,
                     !m.extras.is_empty(),
@@ -1442,9 +1439,8 @@ extern "C" fn new_process_ipc_extra(n_args: usize, args: *const Obj, kwargs: *mu
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
 
-        let archived =
-            rkyv::access::<Archived<TrezorUiEnum>, Failure>(unwrap!(unsafe { get_buffer(obj) }))
-                .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
+        let archived = rkyv::access::<Archived<TrezorUiEnum>, Failure>(unsafe { get_buffer(obj) }?)
+            .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
         let extras = match archived {
             Archived::<TrezorUiEnum>::ConfirmAction(m) => &m.extras,
             Archived::<TrezorUiEnum>::ConfirmValue(m) => &m.extras,
@@ -1462,7 +1458,7 @@ extern "C" fn new_process_ipc_extra(n_args: usize, args: *const Obj, kwargs: *mu
                 for extra in extras.as_ref() {
                     items
                         .push(SelectMenuItem::new(
-                            tstr(&extra.label),
+                            tstr(&extra.label)?,
                             MenuItemIntent::Standard,
                         ))
                         .map_err(|_| Error::OutOfRange)?;
@@ -1475,9 +1471,9 @@ extern "C" fn new_process_ipc_extra(n_args: usize, args: *const Obj, kwargs: *mu
                     .get(index as usize)
                     .ok_or(Error::OutOfRange)?;
                 LayoutObj::new_root(ModelUI::show_properties(
-                    tstr(&extra.label),
+                    tstr(&extra.label)?,
                     None,
-                    obj_from_proplist(&extra.props),
+                    obj_from_proplist(&extra.props)?,
                 )?)?
             }
         };
@@ -1496,16 +1492,7 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
 
-        let ipc_callback: Option<Obj> = kwargs
-            .get(Qstr::MP_QSTR_ipc_cb)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
-
-        let ipc_cb = unwrap!(ipc_callback.map(|cb| {
-            move |bytes: Obj| {
-                unwrap!(cb.call_with_n_args(&[bytes]));
-            }
-        }));
+        let ipc_cb: Obj = kwargs.get(Qstr::MP_QSTR_ipc_cb)?;
 
         // Say what the person did, rather than naming the button that did it.
         // Only the block's final answer goes back: its menu and extras stay
@@ -1524,8 +1511,9 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
 
         let bytes = crate::util::archive::to_bytes_obj(&msg)?;
 
-        //Send the response back via the ipc_cb callback
-        ipc_cb(bytes);
+        // Send the response back via the ipc_cb callback. A failure to send,
+        // such as a full app inbox, raises in the caller, which stops the app.
+        ipc_cb.call_with_n_args(&[bytes])?;
 
         Ok(Obj::const_none())
     };
@@ -1546,7 +1534,7 @@ extern "C" fn new_deserialize_progress_message(
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
 
-        let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
+        let data = unsafe { crate::micropython::buffer::get_buffer(obj)? };
 
         // Deserialize the rkyv archived data directly from the static buffer
         let archived = rkyv::access::<Archived<TrezorProgressEnum>, Failure>(data)
