@@ -31,6 +31,7 @@
 #include <sys/systick.h>
 
 #include "memzero.h"
+#include "prodtest.h"
 #include "prodtest_error_codes.h"
 
 #define NFC_BACKUP_MAX_PIN_TRIALS 10
@@ -975,6 +976,65 @@ cleanup:
   TSH_RETURN;
 }
 
+static ts_t api_integrity_check(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  nfc_apdu_message_t cmd = {0};
+  nfc_apdu_message_t rsp = {0};
+
+  status = nfc_backup_compose_apdu(0x80, 0x06, 0x00, 0x00, NULL, 0, &cmd);
+  TSH_CHECK_OK(status);
+
+  status =
+      nfc_backup_transceive_logged(cli, "integrity-check", 0x06, &cmd, &rsp);
+  TSH_CHECK_OK(status);
+
+  TSH_CHECK(rsp.data_len == 5 * 4 + 2U, TS_EINVAL);
+  TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
+                rsp.data[rsp.data_len - 1] == 0x00U,
+            TS_EINVAL);
+
+  uint32_t words[5] = {0};
+  for (size_t i = 0; i < 5; i++) {
+    const uint8_t *b = &rsp.data[i * 4];
+    words[i] = ((uint32_t)b[0] << 24) | ((uint32_t)b[1] << 16) |
+               ((uint32_t)b[2] << 8) | (uint32_t)b[3];
+  }
+
+  cli_trace(cli, "Integrity check:");
+  cli_trace(cli, "  1-bit errors: %lu", (unsigned long)words[0]);
+  cli_trace(cli, "  2-bit errors: %lu", (unsigned long)words[1]);
+  cli_trace(cli, "  3-bit errors: %lu", (unsigned long)words[2]);
+  cli_trace(cli, "  4-bit errors: %lu", (unsigned long)words[3]);
+  cli_trace(cli, "  First error address: 0x%08lX", (unsigned long)words[4]);
+
+cleanup:
+  TSH_RETURN;
+}
+
+static ts_t api_harden_memory(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  nfc_apdu_message_t cmd = {0};
+  nfc_apdu_message_t rsp = {0};
+
+  status = nfc_backup_compose_apdu(0x80, 0x07, 0x00, 0x00, NULL, 0, &cmd);
+  TSH_CHECK_OK(status);
+
+  status = nfc_backup_transceive_logged(cli, "harden-memory", 0x07, &cmd, &rsp);
+  TSH_CHECK_OK(status);
+
+  TSH_CHECK(rsp.data_len == 2U, TS_EINVAL);
+  TSH_CHECK(rsp.data[rsp.data_len - 2] == 0x90U &&
+                rsp.data[rsp.data_len - 1] == 0x00U,
+            TS_EINVAL);
+
+cleanup:
+  TSH_RETURN;
+}
+
 static ts_t api_read_pin_counter(cli_t *cli, uint8_t *pin_counter) {
   TSH_DECLARE;
   ts_t status;
@@ -1367,6 +1427,28 @@ static ts_t nfc_backup_set_pin(cli_t *cli) {
   TSH_CHECK_OK(status);
 
   status = api_set_pin(cli, new_pin, new_pin_len);
+  TSH_CHECK_OK(status);
+
+cleanup:
+  TSH_RETURN;
+}
+
+static ts_t nfc_backup_integrity_check(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  status = api_integrity_check(cli);
+  TSH_CHECK_OK(status);
+
+cleanup:
+  TSH_RETURN;
+}
+
+static ts_t nfc_backup_harden_memory(cli_t *cli) {
+  TSH_DECLARE;
+  ts_t status;
+
+  status = api_harden_memory(cli);
   TSH_CHECK_OK(status);
 
 cleanup:
@@ -1837,7 +1919,18 @@ REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_set_pin, &nfc_backup_set_pin,
                         "NFC set PIN failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_wipe, &nfc_backup_wipe,
-                        PRODTEST_ERR_NFC_BACKUP_WIPE_FAILED, "NFC wipe failed");
+                        PRODTEST_ERR_NFC_BACKUP_WIPE_FAILED, "NFC wipe failed",
+                        false);
+
+REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_integrity_check,
+                        &nfc_backup_integrity_check,
+                        PRODTEST_ERR_NFC_BACKUP_INTEGRITY_CHECK_FAILED,
+                        "NFC integrity check failed", false);
+
+REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_harden_memory,
+                        &nfc_backup_harden_memory,
+                        PRODTEST_ERR_NFC_BACKUP_HARDEN_MEMORY_FAILED,
+                        "NFC harden memory failed", false);
 
 REGISTER_NFC_BACKUP_CMD(prodtest_nfc_backup_read_pin_counter,
                         &nfc_backup_read_pin_counter,
@@ -1912,6 +2005,20 @@ PRODTEST_CLI_CMD(
 );
 
 PRODTEST_CLI_CMD(
+  .name = "nfc-backup-integrity-check",
+  .func = prodtest_nfc_backup_integrity_check,
+  .info = "Run nfc-backup integrity check test",
+  .args = ""
+);  
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-backup-harden",
+  .func = prodtest_nfc_backup_harden_memory,
+  .info = "Run nfc-backup harden memory test",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
   .name = "nfc-backup-read-pin-counter",
   .func = prodtest_nfc_backup_read_pin_counter,
   .info = "Run nfc-backup read pin counter",
@@ -1980,6 +2087,7 @@ PRODTEST_CLI_CMD(
   .info = "Run nfc-backup measure test",
   .args = ""
 );
+
 
 
 #endif  // USE_NFC
