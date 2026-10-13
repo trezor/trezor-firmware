@@ -92,6 +92,9 @@
 /// PM_EVENT: int  # interface id for power manager events
 ///
 /// NFC_EVENT: int  # interface id for NFC events
+/// NFC_CONNECTED: int  # connected to new tag
+/// NFC_DISCONNECTED: int  # disconnected from tag
+/// NFC_TRANSCEIVE_DONE: int  # transceive operation complete
 ///
 /// IPC2_EVENT: int  # interface id for IPC2 events
 ///
@@ -152,6 +155,10 @@ static const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 #endif
 #ifdef USE_NFC
     {MP_ROM_QSTR(MP_QSTR_NFC_EVENT), MP_ROM_INT(SYSHANDLE_NFC)},
+    {MP_ROM_QSTR(MP_QSTR_NFC_CONNECTED), MP_ROM_INT(NFC_EVENT_CONNECTED)},
+    {MP_ROM_QSTR(MP_QSTR_NFC_DISCONNECTED), MP_ROM_INT(NFC_EVENT_DISCONNECTED)},
+    {MP_ROM_QSTR(MP_QSTR_NFC_TRANSCEIVE_DONE),
+     MP_ROM_INT(NFC_EVENT_TRANSCEIVE_DONE)},
 #endif
 #ifdef USE_IPC
     {MP_ROM_QSTR(MP_QSTR_IPC2_EVENT), MP_ROM_INT(SYSHANDLE_IPC2)},

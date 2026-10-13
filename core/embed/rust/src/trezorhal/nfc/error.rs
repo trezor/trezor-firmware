@@ -9,7 +9,7 @@ pub enum NfcError {
     TimedOut,
     UnsupportedTag,
     CommandFailed(u16),
-    HandshakeFailed,
+    HandshakeFailed, // rename to CryptoError
     TagDisconnected,
 }
 

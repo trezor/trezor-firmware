@@ -8,15 +8,10 @@ use core::mem::MaybeUninit;
 use apdu::{Apdu, Instruction, StatusWord};
 use crypto::noise_xxpsk3::{NoiseXXpsk3, NoiseXXpsk3Ctx, DHLEN};
 pub use error::NfcError;
-use heapless::{String, Vec};
-use sys::time::Duration;
 use sys::ulog;
 
-use super::ffi;
-use super::sysevent::{sysevents_poll, /* sysevents_poll_timeout, */ Syshandle};
+use super::{ffi, random};
 use crate::strutil::hex_bytes;
-use crate::time::Stopwatch;
-use crate::ui::component::Event;
 use crate::ui::event::NfcEvent;
 
 pub const MAX_PIN_LEN: usize = 32;
@@ -72,16 +67,6 @@ pub fn start_discovery() -> Result<(), NfcError> {
     // SAFETY: ffi
     unsafe { ffi::nfc_start_discovery() }.ok()?;
     ulog::debug!("Starting discovery (connected: {}).", is_connected());
-    /*
-    // TODO: figure out why prodtest does this
-    if nfc_get_event().is_some() {
-        ulog::error!("Stale NFC event (connected: {}).", is_connected());
-    }
-    // TODO: figure out why prodtest does this
-    if sysevents_poll_timeout(&[Syshandle::Nfc], Duration::ZERO).is_some() {
-        ulog::error!("Stale NFC event 2 (connected: {}).", is_connected());
-    }
-    ulog::debug!("Started discovery."); */
     Ok(())
 }
 
@@ -89,9 +74,6 @@ pub fn stop_discovery() -> Result<(), NfcError> {
     // SAFETY: ffi
     unsafe { ffi::nfc_stop_discovery() }.ok()?;
     ulog::debug!("Stopped discovery.");
-    /*if sysevents_poll_timeout(&[Syshandle::Nfc], Duration::ZERO).is_some() {
-        ulog::debug!("Stale NFC event in stop_discovery (connected: {}).", is_connected());
-    }*/
     Ok(())
 }
 
@@ -107,7 +89,7 @@ pub fn transceive_start(command: &Apdu) -> Result<(), NfcError> {
         "Transceive start: {:?} {}.",
         command
             .ins()
-            .unwrap_or(Instruction::ActivateFlashloader /* yeah */),
+            .unwrap_or(Instruction::ActivateFlashloader /* FIXME */),
         hex_bytes(command)
     );
     // SAFETY: ffi, the command is copied before the call returns
@@ -135,245 +117,296 @@ pub fn transceive_psk_start(trezor_share: &[u8; NOISE_PSK_SHARE_LEN]) -> Result<
     Ok(())
 }
 
-// TODO: delete
-fn sysevents_wait_for(wanted_event: NfcEvent) -> Result<(), NfcError> {
-    let watch = Stopwatch::new_started();
-
-    while watch.is_running_within(Duration::from_secs(10)) {
-        let ev = sysevents_poll(&[Syshandle::Nfc]);
-        if ev == Some(Event::NFC(wanted_event)) {
-            return Ok(());
-        }
-        match ev {
-            None => ulog::debug!("Poll timeout."),
-            Some(Event::NFC(ne)) => ulog::debug!("NFC: {:?}.", ne),
-            Some(other) => ulog::debug!("Unexpected event {:?}.", other),
-        }
+fn combine_psk_shares(
+    trezor_share: &[u8],
+    card_share: &[u8],
+) -> Result<[u8; NOISE_PSK_LEN], NfcError> {
+    if trezor_share.len() != NOISE_PSK_SHARE_LEN || card_share.len() != NOISE_PSK_SHARE_LEN {
+        return Err(NfcError::InvalidData);
     }
-    ulog::error!("Timed out waiting for {:?}.", wanted_event);
-    Err(NfcError::TimedOut)
+    let mut result = [0u8; NOISE_PSK_LEN];
+    result[..NOISE_PSK_SHARE_LEN].copy_from_slice(trezor_share);
+    result[NOISE_PSK_SHARE_LEN..].copy_from_slice(card_share);
+    Ok(result)
 }
 
-struct DiscoGuard {}
-
-impl Drop for DiscoGuard {
-    fn drop(&mut self) {
-        if stop_discovery().is_err() {
-            ulog::error!("Failed to stop discovery.");
-        }
-    }
-}
-
-impl DiscoGuard {
-    fn new() -> Result<Self, NfcError> {
-        start_discovery()?;
-        Ok(Self {})
-    }
-
-    fn wait_for_tap(&self) -> Result<(), NfcError> {
-        ulog::debug!("Wait for tap.");
-        if is_connected() {
-            ulog::warning!("Tap: already connected.");
-            //return Ok(()) // returning here & transceiving causes ENOSTATE
-        }
-        sysevents_wait_for(NfcEvent::Connected)?;
-        assert!(is_connected());
-        Ok(())
-    }
-
-    pub fn transceive_blocking(&self, command: &Apdu) -> Result<Apdu, NfcError> {
-        transceive_start(command)?;
-        sysevents_wait_for(NfcEvent::TransceiveDone)?;
-        transceive_complete()
-    }
-
-    pub fn transceive_psk_blocking(
-        &self,
-        trezor_share: &[u8; NOISE_PSK_SHARE_LEN],
-    ) -> Result<[u8; NOISE_PSK_LEN], NfcError> {
-        transceive_psk_start(trezor_share)?;
-        sysevents_wait_for(NfcEvent::TransceiveDone)?;
-        let response = transceive_complete()?;
-        let card_share = response.as_slice();
-        if card_share.len() != NOISE_PSK_SHARE_LEN {
-            return Err(NfcError::InvalidData);
-        }
-        let mut result = [0u8; NOISE_PSK_LEN];
-        result[..NOISE_PSK_SHARE_LEN].copy_from_slice(trezor_share);
-        result[NOISE_PSK_SHARE_LEN..].copy_from_slice(card_share);
-        Ok(result)
-    }
-}
-
-const STATIC_PRIVATE_KEY: [u8; DHLEN] = [
-    0x43, 0xa1, 0x7e, 0x8a, 0xad, 0x8b, 0xf5, 0xb0, 0x26, 0x12, 0xfe, 0x6d, 0xeb, 0x77, 0xcd, 0xc0,
-    0x84, 0x59, 0xad, 0x05, 0xf4, 0xd6, 0xb7, 0x32, 0xc5, 0xb4, 0xa2, 0xe1, 0xbf, 0xec, 0x99, 0x7b,
-];
-const STATIC_PUBLIC_KEY: [u8; DHLEN] = [
-    0x8a, 0xd7, 0x10, 0xc4, 0xcd, 0xa6, 0x35, 0xf7, 0x3f, 0x06, 0x04, 0x99, 0x4f, 0x79, 0xbd, 0x19,
-    0xe9, 0xba, 0xfa, 0x10, 0x9c, 0xef, 0xe4, 0x22, 0xdd, 0x60, 0x86, 0x63, 0xc2, 0xe1, 0xa4, 0x58,
-];
-
-fn encode_pin(pin: &str) -> Result<Vec<u8, MAX_PIN_LEN>, NfcError> {
-    let mut res = Vec::new();
-    res.extend_from_slice(pin.as_bytes())
-        .map_err(|_| NfcError::InvalidData)?; // FIXME no
-    unwrap!(res.resize(MAX_PIN_LEN, 0xff));
+// TODO validate allowed characters?
+fn encode_pin(pin: &str) -> Result<[u8; MAX_PIN_LEN], NfcError> {
+    let mut res = [0xff; MAX_PIN_LEN];
+    let pin = pin.as_bytes();
+    res.get_mut(..pin.len())
+        .ok_or(NfcError::InvalidData)?
+        .copy_from_slice(pin);
     Ok(res)
-}
-
-pub fn tap(ins: Instruction, data: &[u8]) -> Result<Vec<u8, 256>, NfcError> {
-    let handshake = ins.needs_handshake();
-    let pin = ins.needs_auth().then_some("");
-
-    let g = DiscoGuard::new()?;
-    g.wait_for_tap()?;
-
-    let info = TagInfo::get()?;
-    ulog::info!("Tag UID: {}", hex_bytes(info.uid()));
-    info.check()?;
-
-    if !handshake {
-        let c_apdu = Apdu::compose(ins, 0, 0, data).unwrap();
-        let r_apdu = g.transceive_blocking(&c_apdu)?;
-        let data = r_apdu.response()?;
-        if data.len() > 0 {
-            ulog::info!("Success ({}): {}", data.len(), hex_bytes(data));
-        } else {
-            ulog::info!("Success (no data)");
-        }
-        return Ok(Vec::from_slice(data).unwrap());
-    }
-
-    let select_applet =
-        Apdu::compose(Instruction::Select, 0x04, 0x00, apdu::APPLET_TREZOR_N1W1).unwrap();
-    g.transceive_blocking(&select_applet)?.response_nodata()?;
-
-    let psk = g.transceive_psk_blocking(&[0u8; NOISE_PSK_SHARE_LEN])?;
-
-    let mut noise_buf = [0u8; 512];
-    let mut ctx = NoiseXXpsk3Ctx::default();
-    let mut noise = NoiseXXpsk3::new(&mut ctx, &psk, &STATIC_PRIVATE_KEY, &STATIC_PUBLIC_KEY)
-        .map_err(|_| NfcError::HandshakeFailed)?;
-
-    let request_len = noise
-        .create_request1(&[], &mut noise_buf)
-        .map_err(|_| NfcError::HandshakeFailed)?;
-    let c_apdu = Apdu::compose(
-        Instruction::Handshake,
-        0x00,
-        0x00,
-        &noise_buf[..request_len],
-    )
-    .unwrap();
-    let r_apdu = g.transceive_blocking(&c_apdu)?;
-    let response = r_apdu.response()?;
-    let mut remote_static_public_key = [0u8; 32];
-    let payload_len = noise
-        .handle_response1(response, &mut remote_static_public_key, &mut noise_buf)
-        .map_err(|_| NfcError::HandshakeFailed)?;
-    ulog::debug!("Got certificate: {} B.", payload_len);
-    // TODO verify that pubkey matches the one in certificate
-
-    let request_len = noise
-        .create_request2(&[], &mut noise_buf)
-        .map_err(|_| NfcError::HandshakeFailed)?;
-    let c_apdu = Apdu::compose(
-        Instruction::Handshake,
-        0x01,
-        0x00,
-        &noise_buf[..request_len],
-    )
-    .unwrap();
-    let r_apdu = g.transceive_blocking(&c_apdu)?;
-    let response = r_apdu.response()?;
-    let payload_len = noise
-        .receive_message(response, &mut noise_buf)
-        .map_err(|_| NfcError::HandshakeFailed)?;
-    ulog::info!(
-        "Tag says: {}.",
-        str::from_utf8(&noise_buf[..payload_len]).unwrap()
-    );
-
-    if let Some(pin) = pin {
-        // TODO: validate allowed characters?
-        //let mut pin_padded = [0xff; MAX_PIN_LEN];
-        //pin_padded[..pin.len()].copy_from_slice(pin.as_bytes());
-        let pin_padded = encode_pin(pin)?;
-        ulog::debug!("Pin: {}", hex_bytes(&pin_padded));
-        let encrypted_len = noise
-            .send_message(&pin_padded, &mut noise_buf)
-            .map_err(|_| NfcError::HandshakeFailed)?;
-        ulog::debug!(
-            "Encrypted: ({}) {}",
-            encrypted_len,
-            hex_bytes(&noise_buf[..encrypted_len])
-        );
-        let c_apdu = Apdu::compose(
-            Instruction::Authenticate,
-            0x00,
-            0x00,
-            &noise_buf[..encrypted_len],
-        )
-        .unwrap();
-        g.transceive_blocking(&c_apdu)?.response_nodata()?;
-        ulog::debug!("PIN auth OK.")
-    }
-
-    let c_apdu = if ins.encrypted_data() {
-        let encrypted_len = noise
-            .send_message(&data, &mut noise_buf)
-            .map_err(|_| NfcError::HandshakeFailed)?;
-        Apdu::compose(ins, 0, 0, &noise_buf[..encrypted_len]).unwrap()
-    } else {
-        Apdu::compose(ins, 0, 0, &data).unwrap()
-    };
-    let r_apdu = g.transceive_blocking(&c_apdu)?;
-    let response_data = r_apdu.response()?;
-    let ret = if response_data.len() > 0 {
-        let decrypted_data = if ins.encrypted_data() {
-            let payload_len = noise
-                .receive_message(&response_data, &mut noise_buf)
-                .map_err(|_| NfcError::HandshakeFailed)?;
-            &noise_buf[..payload_len]
-        } else {
-            &response_data
-        };
-        ulog::info!(
-            "Success ({}->{}): {}",
-            response_data.len(),
-            decrypted_data.len(),
-            hex_bytes(decrypted_data),
-        );
-        decrypted_data
-    } else {
-        ulog::info!("Success (no data)");
-        &[]
-    };
-
-    Ok(Vec::from_slice(ret).unwrap())
 }
 
 enum TapState {
     Init,
-    SelectApplet,
-    HandshakePsk,
-    Handshake1,
-    Handshake2,
-    Command,
+    SentSelectApplet,
+    SentHandshakePsk,
+    SentHandshake1,
+    SentHandshake2,
+    SentPin,
+    Ready,
+    // Failed?
 }
 
-struct TapContext {
-    state: TapState,
-    handshake_done: bool,
-    auth_done: bool,
-    // noise_state ...
-    pin: Option<String<MAX_PIN_LEN>>,
-    remote_static_public_key: [u8; DHLEN],
-    certificate: Vec<u8, MAX_CERT_LEN>,
-    current_command: Option<Apdu>,
+struct NoiseKeyPair {
+    private: [u8; DHLEN],
+    public: [u8; DHLEN],
 }
-// TODO context obj:
-//  pin
-//  noise state
-//  certificate
+
+struct TapContext<'a> {
+    state: TapState,
+    info: TagInfo,
+    // `noise` borrows `noise_ctx`, so it must be declared (and dropped) first.
+    // The struct must not be moved while `noise` is `Some`.
+    noise: Option<NoiseXXpsk3<&'a mut NoiseXXpsk3Ctx>>,
+    noise_ctx: NoiseXXpsk3Ctx,
+    pin: Option<[u8; MAX_PIN_LEN]>,
+    static_keys: Option<NoiseKeyPair>,
+    decrypt_response: bool,
+    max_response: u16,
+    // for decryption & psk, probably better than on stack
+    response_buf: [u8; Apdu::MAX_RESPONSE_DATA_LEN],
+}
+
+impl<'a> TapContext<'a> {
+    fn new(info: TagInfo) -> Self {
+        Self {
+            state: TapState::Init,
+            info,
+            noise: None,
+            noise_ctx: NoiseXXpsk3Ctx::default(),
+            pin: None,
+            static_keys: None,
+            decrypt_response: false,
+            max_response: 0,
+            response_buf: [0; _],
+        }
+    }
+
+    pub fn get() -> Result<Self, NfcError> {
+        let info = TagInfo::get()?;
+        Ok(Self::new(info))
+    }
+
+    pub fn set_keys(
+        &mut self,
+        static_private_key: &[u8],
+        static_public_key: &[u8],
+    ) -> Result<(), NfcError> {
+        self.static_keys = Some(NoiseKeyPair {
+            private: static_private_key
+                .try_into()
+                .map_err(|_| NfcError::InvalidData)?,
+            public: static_public_key
+                .try_into()
+                .map_err(|_| NfcError::InvalidData)?,
+        });
+        Ok(())
+    }
+
+    pub fn set_pin(&mut self, pin: &str) -> Result<(), NfcError> {
+        self.pin = Some(encode_pin(pin)?);
+        Ok(())
+    }
+
+    pub fn setup(
+        &mut self,
+        verify_fn: &dyn Fn(&[u8; DHLEN], &[u8]) -> bool,
+    ) -> Result<bool, NfcError> {
+        let next_state = match self.state {
+            TapState::Init => self.handle_init()?,
+            TapState::SentSelectApplet => self.handle_sent_select_applet()?,
+            TapState::SentHandshakePsk => self.handle_sent_handshake_psk()?,
+            TapState::SentHandshake1 => self.handle_sent_handshake1(verify_fn)?,
+            TapState::SentHandshake2 => self.handle_sent_handshake2()?,
+            TapState::SentPin => self.handle_sent_pin()?,
+            TapState::Ready => {
+                ulog::error!("Tag connection already setup.");
+                return Err(NfcError::InvalidData);
+            }
+        };
+        self.state = next_state;
+        Ok(matches!(self.state, TapState::Ready))
+    }
+
+    fn handle_init(&self) -> Result<TapState, NfcError> {
+        let select_applet = unwrap!(Apdu::compose(
+            Instruction::Select,
+            0x04,
+            0x00,
+            apdu::APPLET_TREZOR_N1W1
+        ));
+        transceive_start(&select_applet)?;
+        Ok(TapState::SentSelectApplet)
+    }
+
+    fn handle_sent_select_applet(&mut self) -> Result<TapState, NfcError> {
+        transceive_complete()?.response_nodata()?;
+        if self.static_keys.is_none() {
+            ulog::debug!("No keys, setup done.");
+            return Ok(TapState::Ready);
+        }
+        let trezor_share = unwrap!(self.response_buf.first_chunk_mut::<NOISE_PSK_SHARE_LEN>());
+        random::bytes(trezor_share);
+        transceive_psk_start(trezor_share)?;
+        Ok(TapState::SentHandshakePsk)
+    }
+
+    fn handle_sent_handshake_psk(&mut self) -> Result<TapState, NfcError> {
+        let r_apdu = transceive_complete()?;
+        let card_share = r_apdu.as_slice();
+        let trezor_share = &self.response_buf[..NOISE_PSK_SHARE_LEN];
+        let psk = combine_psk_shares(trezor_share, card_share)?;
+        let static_keys = unwrap!(self.static_keys.as_ref());
+        // drop any previous borrow of noise_ctx before resetting it
+        self.noise = None;
+        self.noise_ctx = NoiseXXpsk3Ctx::default();
+        // SAFETY: self-referential borrow. `noise_ctx` is only accessed through
+        // `noise` from now on, `noise` is dropped before `noise_ctx` (field
+        // order), and TapContext is not moved while `noise` is `Some`.
+        let noise_ctx: &'a mut NoiseXXpsk3Ctx = unsafe { &mut *(&raw mut self.noise_ctx) };
+        let noise = self.noise.insert(
+            NoiseXXpsk3::new(noise_ctx, &psk, &static_keys.private, &static_keys.public)
+                .map_err(|_| NfcError::HandshakeFailed)?,
+        );
+        let request_len = noise
+            .create_request1(&[], &mut self.response_buf)
+            .map_err(|_| NfcError::HandshakeFailed)?;
+        let c_apdu = unwrap!(Apdu::compose(
+            Instruction::Handshake,
+            0x00,
+            0x00,
+            &self.response_buf[..request_len],
+        ));
+        transceive_start(&c_apdu)?;
+        Ok(TapState::SentHandshake1)
+    }
+
+    fn handle_sent_handshake1(
+        &mut self,
+        verify_fn: &dyn Fn(&[u8; DHLEN], &[u8]) -> bool,
+    ) -> Result<TapState, NfcError> {
+        let r_apdu = transceive_complete()?;
+        let response = r_apdu.response()?;
+        let mut remote_static_public_key = [0u8; DHLEN];
+        let noise = unwrap!(self.noise.as_mut());
+        let payload_len = noise
+            .handle_response1(
+                response,
+                &mut remote_static_public_key,
+                &mut self.response_buf,
+            )
+            .map_err(|_| NfcError::HandshakeFailed)?;
+        let cert_ok = verify_fn(&remote_static_public_key, &self.response_buf[..payload_len]);
+        ulog::debug!(
+            "Got certificate ({} B), verification OK: {}.",
+            payload_len,
+            cert_ok
+        );
+        if !cert_ok {
+            return Err(NfcError::HandshakeFailed);
+        }
+        let request_len = noise
+            .create_request2(&[], &mut self.response_buf)
+            .map_err(|_| NfcError::HandshakeFailed)?;
+        let c_apdu = unwrap!(Apdu::compose(
+            Instruction::Handshake,
+            0x01,
+            0x00,
+            &self.response_buf[..request_len],
+        ));
+        transceive_start(&c_apdu)?;
+        Ok(TapState::SentHandshake2)
+    }
+
+    fn handle_sent_handshake2(&mut self) -> Result<TapState, NfcError> {
+        let r_apdu = transceive_complete()?;
+        let response = r_apdu.response()?;
+        let payload = self.noise_receive(response)?;
+        ulog::debug!(
+            "Handshake complete, tag says: {}.",
+            str::from_utf8(payload).unwrap_or("[invalid UTF-8]")
+        );
+        let Some(pin) = self.pin else {
+            return Ok(TapState::Ready);
+        };
+        let encrypted = self.noise_send(&pin)?;
+        let c_apdu = unwrap!(Apdu::compose(
+            Instruction::Authenticate,
+            0x00,
+            0x00,
+            encrypted,
+        ));
+        transceive_start(&c_apdu)?;
+        Ok(TapState::SentPin)
+    }
+
+    fn handle_sent_pin(&self) -> Result<TapState, NfcError> {
+        transceive_complete()?.response_nodata()?;
+        ulog::debug!("PIN auth OK.");
+        Ok(TapState::Ready)
+    }
+
+    pub fn command(&mut self, ins: Instruction, data: &[u8]) -> Result<(), NfcError> {
+        // TODO check state maybe
+        let c_apdu = if ins.encrypted_data() {
+            let encrypted = self.noise_send(&data)?;
+            Apdu::compose(ins, 0, 0, encrypted).unwrap()
+        } else {
+            Apdu::compose(ins, 0, 0, &data).unwrap()
+        };
+        transceive_start(&c_apdu)?;
+        self.decrypt_response = ins.encrypted_data();
+        self.max_response = ins.max_expected_response();
+        Ok(())
+    }
+
+    pub fn response(&mut self) -> Result<Option<&[u8]>, NfcError> {
+        let r_apdu = transceive_complete()?;
+        let response_data = r_apdu.response()?;
+        if response_data.len() > 0 {
+            let decrypted_data = if self.decrypt_response {
+                self.noise_receive(&response_data)?
+            } else {
+                let dest = &mut self.response_buf[..response_data.len()];
+                dest.copy_from_slice(response_data);
+                dest
+            };
+            ulog::info!(
+                "Success ({}->{}): {}",
+                response_data.len(),
+                decrypted_data.len(),
+                hex_bytes(decrypted_data),
+            );
+            Ok(Some(decrypted_data))
+        } else {
+            ulog::info!("Success (no data)");
+            Ok(None)
+        }
+    }
+
+    fn noise_receive(&mut self, ciphertext: &[u8]) -> Result<&[u8], NfcError> {
+        let noise = unwrap!(self.noise.as_mut());
+        let payload_len = noise
+            .receive_message(ciphertext, &mut self.response_buf)
+            .map_err(|_| NfcError::HandshakeFailed)?;
+        Ok(&self.response_buf[..payload_len])
+    }
+
+    fn noise_send(&mut self, plaintext: &[u8]) -> Result<&[u8], NfcError> {
+        let noise = unwrap!(self.noise.as_mut());
+        let payload_len = noise
+            .send_message(plaintext, &mut self.response_buf)
+            .map_err(|_| NfcError::HandshakeFailed)?;
+        Ok(&self.response_buf[..payload_len])
+    }
+
+    // TODO use, rename response_buf as it's not just for responses
+    fn clear_buf(&mut self) -> &mut [u8] {
+        self.response_buf.fill(0);
+        &mut self.response_buf
+    }
+}

@@ -22,6 +22,7 @@ log-crate = true
 when = { emulator = false }
 frozen = true
 pyopt = true
+source-lines = true
 
 [[test]]
 debug-link = true

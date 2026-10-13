@@ -482,14 +482,14 @@ if __debug__:
         finally:
             raise RestartEventLoop
 
-    if utils.USE_N1W1:
+    if utils.USE_N1W1 and utils.EMULATOR:
 
         async def dispatch_DebugLinkConnected(msg: DebugLinkN1W1Connected) -> Success:
             """Exchange a sequence of N1W1 messages."""
-            from .n1w1_mock import ctx
+            from apps.management.n1w1.context import ctx
 
             assert DEBUG_CONTEXT is not None
-            await ctx.handle(DEBUG_CONTEXT)
+            await ctx.handle(DEBUG_CONTEXT)  # type: ignore [Cannot access attribute "handle"]
             return Success()
 
     async def _no_op(_msg: Any) -> Success:
@@ -611,7 +611,7 @@ if __debug__:
         MessageType.WipeDevice: dispatch_WipeDevice,
     }
 
-    if utils.USE_N1W1:
+    if utils.USE_N1W1 and utils.EMULATOR:
         WORKFLOW_HANDLERS[MessageType.DebugLinkN1W1Connected] = (
             dispatch_DebugLinkConnected
         )

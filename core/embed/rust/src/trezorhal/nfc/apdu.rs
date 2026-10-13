@@ -27,8 +27,16 @@ pub enum Instruction {
 }
 
 impl From<Instruction> for u16 {
-    fn from(val: Instruction) -> Self {
-        val as u16
+    fn from(ins: Instruction) -> Self {
+        ins.code()
+    }
+}
+
+impl TryFrom<u16> for Instruction {
+    type Error = NfcError;
+
+    fn try_from(code: u16) -> Result<Self, NfcError> {
+        Instruction::from_u16(code).ok_or(NfcError::InvalidData)
     }
 }
 
@@ -88,6 +96,10 @@ impl Instruction {
 
     pub const fn encrypted_data(&self) -> bool {
         self.props().encrypted_data
+    }
+
+    pub const fn code(&self) -> u16 {
+        *self as u16
     }
 }
 
@@ -226,13 +238,10 @@ impl Apdu {
         Self::command(cla, ins, p1, p2, data, inst.max_expected_response())
     }
 
-    pub fn ins(&self) -> Result<Instruction, NfcError> {
-        let bytes = self
-            .as_slice()
-            .first_chunk::<2>()
-            .ok_or(NfcError::InvalidData)?;
-        Instruction::from_u16(u16::from_be_bytes(*bytes)).ok_or(NfcError::InvalidData)
-        // TODO handle unknown
+    pub fn ins(&self) -> Result<Instruction, u16> {
+        let bytes = self.as_slice().first_chunk::<2>().ok_or(0u16)?;
+        let code = u16::from_be_bytes(*bytes);
+        Instruction::try_from(code).map_err(|_| code)
     }
 
     pub fn sw(&self) -> Result<u16, NfcError> {

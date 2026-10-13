@@ -32,6 +32,12 @@ pub fn bytes(dest: &mut [u8]) {
     unsafe { super::ffi::random_buffer(dest.as_mut_ptr(), dest.len()) }
 }
 
+pub fn bytes_array<const N: usize>() -> [u8; N] {
+    let mut res = [0u8; N];
+    bytes(&mut res);
+    res
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -50,5 +56,11 @@ mod tests {
         for _ in 0..10 {
             assert!(uniform_between_except(10, 12, 11) != 11);
         }
+    }
+
+    #[test]
+    fn bytes_array_initialized() {
+        let ar = bytes_array::<32>();
+        assert!(ar.iter().any(|b| b != 0));
     }
 }

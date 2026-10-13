@@ -227,7 +227,7 @@ if utils.USE_N1W1:
     if TYPE_CHECKING:
         from buffer_types import AnyBytes
 
-        from apps.debug.n1w1_mock import N1W1Context
+        from apps.management.n1w1.context import N1W1Context
 
     class RetryWrite(Exception):
         def __init__(self, msg: str) -> None:
@@ -242,11 +242,12 @@ if utils.USE_N1W1:
             # TODO(N1W1): warn user about safety
 
             # backup all shares
+            # TODO: collect card IDs in case we want to abort & erase
             for share in iter_shares:
                 await self._backup_share(share)
 
         async def _backup_share(self, share: ShareInfo) -> None:
-            from apps.debug import n1w1_mock
+            import apps.management.n1w1.context as n1w1
 
             # TODO(N1W1): use protobuf?
             blob = " ".join(share.words).encode()
@@ -260,7 +261,7 @@ if utils.USE_N1W1:
 
             while True:
                 try:
-                    with n1w1_mock.ctx as ctx:
+                    with n1w1.ctx as ctx:
                         return await _write_share(ctx, description, button, blob)
                 except RetryWrite as exc:
                     import trezorui_api
@@ -288,7 +289,7 @@ if utils.USE_N1W1:
             br_name="backup_write",
         )
         # continue N1W1 communication (the tag is connected)
-        result = await ctx.read(key="mnemonic")
+        result = await ctx.read_share()
         if result is not None:
             raise RetryWrite(TR.n1w1__err_nonempty)
 
@@ -296,7 +297,7 @@ if utils.USE_N1W1:
         progress_obj.start()
         progress_obj.report(100)
         try:
-            await ctx.write(key="mnemonic", value=blob)
+            await ctx.write_share(value=blob)
             # TODO(N1W1): animate during I/O?
             progress_obj.report(1000)
         finally:
