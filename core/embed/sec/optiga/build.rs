@@ -22,6 +22,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     } else if cfg!(feature = "mcu_stm32") {
         lib.add_sources([
             "optiga/optiga_commands.c",
+            "optiga/optiga_metadata.c",
             "optiga/optiga_transport.c",
             "optiga/optiga.c",
             "optiga/stm32/optiga_hal.c",
