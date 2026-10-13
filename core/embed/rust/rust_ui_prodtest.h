@@ -16,6 +16,12 @@ void screen_prodtest_bars(const char* colors, size_t color_count);
 
 void screen_prodtest_show_text(const char* text, uint8_t text_len);
 
+// Displays a signal-strength style gauge for the NFC backup measurement.
+// `percent` is the connection quality (0 = worst, 100 = best), `label` is
+// a short human-readable description (e.g. "GOOD").
+void screen_prodtest_signal_meter(uint8_t percent, const char* label,
+                                  uint8_t label_len);
+
 void screen_prodtest_touch(int16_t x0, int16_t y0, int16_t w, int16_t h);
 
 void screen_prodtest_border(void);
