@@ -122,12 +122,25 @@ pub fn git_modified() -> Result<bool> {
 /// Parses a version file and returns the version string in the format
 /// "major.minor.patch".
 pub fn parse_version_file(file_name: &Path) -> Result<String> {
-    let [major, minor, patch, _] = parse_version_defines(file_name, "VERSION")?;
-    Ok(format!("{}.{}.{}", major, minor, patch))
+    let parts = read_defines(
+        file_name,
+        &["VERSION_MAJOR", "VERSION_MINOR", "VERSION_PATCH"],
+    )?;
+    Ok(parts.join("."))
 }
 
 /// Reads `<prefix>_MAJOR` .. `<prefix>_BUILD` from a version file.
 pub fn parse_version_defines(file_name: &Path, prefix: &str) -> Result<[String; 4]> {
+    let names = ["MAJOR", "MINOR", "PATCH", "BUILD"].map(|part| format!("{prefix}_{part}"));
+    let [major, minor, patch, build] = read_defines(file_name, &names)?
+        .try_into()
+        .map_err(|_| anyhow!("expected four version parts"))?;
+    Ok([major, minor, patch, build])
+}
+
+/// The values of `#define <name> <value>` lines in a version file, in the
+/// order of `names`.
+fn read_defines(file_name: &Path, names: &[impl AsRef<str>]) -> Result<Vec<String>> {
     let content = std::fs::read_to_string(file_name)
         .with_context(|| format!("Failed to read version file: {}", file_name.display()))?;
 
@@ -146,12 +159,10 @@ pub fn parse_version_defines(file_name: &Path, prefix: &str) -> Result<[String; 
         ))
     };
 
-    Ok([
-        parse_symbol(&format!("{prefix}_MAJOR"))?,
-        parse_symbol(&format!("{prefix}_MINOR"))?,
-        parse_symbol(&format!("{prefix}_PATCH"))?,
-        parse_symbol(&format!("{prefix}_BUILD"))?,
-    ])
+    names
+        .iter()
+        .map(|name| parse_symbol(name.as_ref()))
+        .collect()
 }
 
 /// Reads symbol from memory.ld file and parse it as an address.
