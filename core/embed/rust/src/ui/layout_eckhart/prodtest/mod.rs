@@ -11,7 +11,7 @@ use crate::ui::display;
 use crate::ui::display::Color;
 use crate::ui::event::TouchEvent;
 use crate::ui::event::TouchEvent::{TouchEnd, TouchMove, TouchStart};
-use crate::ui::geometry::{Alignment, Offset, Rect};
+use crate::ui::geometry::{Alignment, Insets, Offset, Rect};
 use crate::ui::layout::simplified::{process_frame_event, show};
 use crate::ui::shape::{self, render_on_display};
 use crate::ui::ui_prodtest::{ProdtestLayoutType, ProdtestUI};
@@ -49,6 +49,77 @@ impl ProdtestUI for UIEckhart {
                 .with_fg(Color::white())
                 .with_align(Alignment::Center)
                 .render(target);
+        });
+
+        display::refresh();
+    }
+
+    fn screen_prodtest_signal_meter(percent: u8, label: &str) {
+        display::sync();
+
+        let percent = percent.min(100);
+        let color = match percent {
+            80..=100 => Color::rgb(0, 200, 0),
+            60..=79 => Color::rgb(140, 200, 0),
+            40..=59 => Color::rgb(255, 180, 0),
+            20..=39 => Color::rgb(255, 100, 0),
+            _ => Color::rgb(220, 0, 0),
+        };
+
+        let percent_text = uformat!("{}%", percent);
+
+        let screen = screen();
+        let (title_area, rest) = screen.split_top(60);
+        let (_, rest) = rest.split_top(20);
+        let (percent_area, rest) = rest.split_top(90);
+        let (_, rest) = rest.split_top(20);
+        let (bar_area, rest) = rest.split_top(48);
+        let (_, label_area) = rest.split_top(20);
+        let bar_area = bar_area.inset(Insets::sides(40));
+
+        render_on_display(None, Some(Color::black()), |target| {
+            shape::Text::new(
+                title_area.top_center(),
+                "MCU FREQUENCY",
+                fonts::FONT_SATOSHI_REGULAR_22,
+            )
+            .with_fg(Color::rgb(160, 160, 160))
+            .with_align(Alignment::Center)
+            .render(target);
+
+            shape::Text::new(
+                percent_area.center(),
+                &percent_text,
+                fonts::FONT_SATOSHI_EXTRALIGHT_72,
+            )
+            .with_fg(color)
+            .with_align(Alignment::Center)
+            .render(target);
+
+            shape::Bar::new(bar_area)
+                .with_fg(Color::rgb(80, 80, 80))
+                .with_thickness(2)
+                .with_radius(8)
+                .render(target);
+
+            let inner = bar_area.shrink(4);
+            let fill_width = (inner.width() as u32 * percent as u32 / 100) as i16;
+            if fill_width > 0 {
+                let fill = inner.with_width(fill_width);
+                shape::Bar::new(fill)
+                    .with_bg(color)
+                    .with_radius(6)
+                    .render(target);
+            }
+
+            shape::Text::new(
+                label_area.top_center(),
+                label,
+                fonts::FONT_SATOSHI_REGULAR_22,
+            )
+            .with_fg(color)
+            .with_align(Alignment::Center)
+            .render(target);
         });
 
         display::refresh();

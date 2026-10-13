@@ -16,6 +16,10 @@ pub trait ProdtestUI {
 
     fn screen_prodtest_show_text(text: &str);
 
+    fn screen_prodtest_signal_meter(_percent: u8, _label: &str) {
+        unimplemented!()
+    }
+
     fn screen_prodtest_border();
 
     fn screen_prodtest_bars(colors: &str);
