@@ -387,7 +387,7 @@ class CoreEmulator(Emulator):
 
         if port:
             self.port = port
-        self.tropic_model_port = tropic_model_port
+        self.tropic_model_port = tropic_model_port or TropicModel.DEFAULT_PORT
 
         self.disable_animation = disable_animation
         self.main_args = list(main_args)
@@ -408,7 +408,7 @@ class CoreEmulator(Emulator):
             env["TREZOR_DISABLE_ANIMATION"] = "1"
         if self.display_scale is not None:
             env["TREZOR_EMULATOR_SCALE"] = str(self.display_scale)
-        env["TROPIC_MODEL_PORT"] = str(self.tropic_port())
+        env["TROPIC_MODEL_PORT"] = str(self.tropic_model_port)
 
         return env
 
@@ -432,11 +432,6 @@ class CoreEmulator(Emulator):
 
     def ble_port(self) -> tuple[int, int]:
         return (self.port + 4, self.port + 5)
-
-    # Tropic model can be managed externally, return configured port if set.
-    # Also TCP instead of UDP.
-    def tropic_port(self) -> int:
-        return self.tropic_model_port or (self.port + 6)
 
     def properties(self) -> dict[str, Any]:
         args = [str(self.executable), "--emulator-properties"]
