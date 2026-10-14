@@ -56,6 +56,9 @@ TREZOR_DEBUG_CHARACTERISTIC_RX = "8c000021-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_DEBUG_CHARACTERISTIC_TX = "8c000022-a59b-4d58-a9ad-073df69fa1b1"
 
 SCAN_INTERVAL_SECONDS = 3
+# Establishing the connection can take a few advertising intervals plus the
+# encryption setup; the scan interval is too short for that.
+CONNECT_TIMEOUT_SECONDS = 15
 SHUTDOWN_TIMEOUT_SECONDS = 10
 
 SHOULD_WRITE_WITH_RESPONSE = sys.platform == "darwin"
@@ -333,7 +336,7 @@ class BleAsync:
         client = BleakClient(
             periph.device,
             services=[TREZOR_SERVICE_UUID, TREZOR_DEBUG_SERVICE_UUID],
-            timeout=SCAN_INTERVAL_SECONDS,
+            timeout=CONNECT_TIMEOUT_SECONDS,
             disconnect_callback=disconnect_callback,
         )
         await client.connect()
