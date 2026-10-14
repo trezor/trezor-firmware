@@ -27,7 +27,7 @@ def unpack_event(buf: bytes) -> tuple[int, bytes]:
     return int.from_bytes(buf[:4], byteorder="little"), buf[4:]
 
 
-def parse_event(event: bytes) -> tuple[int, bytes | list | tuple[bytes]]:
+def parse_event(event: bytes) -> tuple[int, bytes | list | tuple[int]]:
     assert len(event) == EVENT_LENGTH
 
     ev_type, request = unpack_event(event)
