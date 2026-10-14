@@ -15,7 +15,7 @@ from trezorlib._internal.prodtest_emulator import get_prodtest_emulator
     context_settings=dict(ignore_unknown_options=True, allow_interspersed_args=False)
 )
 # fmt: off
-@click.option("-m", "--model", envvar="TREZOR_MODEL", required=True, help="Trezor model name (or set TREZOR_MODEL)")
+@click.option("-m", "--model", envvar="TREZOR_MODEL", default=None, help="Trezor model name (or set TREZOR_MODEL); defaults to the latest build")
 # fmt: on
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 def cli(model: str, command: list[str]) -> None:
