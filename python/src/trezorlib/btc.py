@@ -316,8 +316,10 @@ def sign_tx(
             outputs_count=len(outputs),
         )
         for name, value in kwargs.items():
-            if hasattr(signtx, name):
+            if messages.SignTx.get_field(name) is not None:
                 setattr(signtx, name, value)
+            else:
+                raise ValueError(f"Unknown attribute for SignTx: {name}")
 
     if unlock_path:
         session.call(
