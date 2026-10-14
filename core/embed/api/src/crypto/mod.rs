@@ -418,36 +418,44 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         .into()
     }
 
-    extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> String {
-        String::from(bs58::encode(data.as_slice()).into_string().as_str())
+    extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> FastResult<String, CryptoError> {
+        let mut buffer = [0u8; crypto::base58::MAX_ENCODED_LEN + 1];
+        crypto::base58::encode(data.as_slice(), &mut buffer)
+            .map(String::from)
+            .map_err(|_| CryptoError::InvalidEncoding)
+            .into()
     }
 
     extern "C" fn base58_decode<'a>(
         &self,
         data: Str<'a>,
     ) -> FastResult<BoxedSlice<u8>, CryptoError> {
-        match bs58::decode(data.as_str()).into_vec() {
-            Ok(bytes) => Ok(BoxedSlice::from(&bytes[..])).into(),
-            Err(_) => Err(CryptoError::InvalidEncoding).into(),
-        }
+        let mut buffer = [0u8; crypto::base58::MAX_DATA_LEN];
+        crypto::base58::decode(data.as_str(), &mut buffer)
+            .map(BoxedSlice::from)
+            .map_err(|_| CryptoError::InvalidEncoding)
+            .into()
     }
 
-    extern "C" fn base58check_encode<'a>(&self, data: Slice<'a, u8>) -> String {
-        String::from(
-            bs58::encode(data.as_slice())
-                .with_check()
-                .into_string()
-                .as_str(),
-        )
+    extern "C" fn base58check_encode<'a>(
+        &self,
+        data: Slice<'a, u8>,
+    ) -> FastResult<String, CryptoError> {
+        let mut buffer = [0u8; crypto::base58::MAX_ENCODED_LEN + 1];
+        crypto::base58::encode_check(data.as_slice(), &mut buffer)
+            .map(String::from)
+            .map_err(|_| CryptoError::InvalidEncoding)
+            .into()
     }
 
     extern "C" fn base58check_decode<'a>(
         &self,
         data: Str<'a>,
     ) -> FastResult<BoxedSlice<u8>, CryptoError> {
-        match bs58::decode(data.as_str()).with_check(None).into_vec() {
-            Ok(bytes) => Ok(BoxedSlice::from(&bytes[..])).into(),
-            Err(_) => Err(CryptoError::InvalidEncoding).into(),
-        }
+        let mut buffer = [0u8; crypto::base58::MAX_DATA_LEN];
+        crypto::base58::decode_check(data.as_str(), &mut buffer)
+            .map(BoxedSlice::from)
+            .map_err(|_| CryptoError::InvalidEncoding)
+            .into()
     }
 }

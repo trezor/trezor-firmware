@@ -240,7 +240,10 @@ impl CryptoV1 for DummyCrypto {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn base58_encode<'a>(&self, _data: Slice<'a, u8>) -> stabby::string::String {
+    extern "C" fn base58_encode<'a>(
+        &self,
+        _data: Slice<'a, u8>,
+    ) -> FastResult<stabby::string::String, CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 
@@ -251,7 +254,10 @@ impl CryptoV1 for DummyCrypto {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn base58check_encode<'a>(&self, _data: Slice<'a, u8>) -> stabby::string::String {
+    extern "C" fn base58check_encode<'a>(
+        &self,
+        _data: Slice<'a, u8>,
+    ) -> FastResult<stabby::string::String, CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 

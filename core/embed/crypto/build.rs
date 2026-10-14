@@ -149,6 +149,7 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
 
     lib.add_rust_bindings(|builder| {
         let mut builder = builder
+            .header(format!("{CRYPTO_PATH}/base58.h"))
             .header(format!("{CRYPTO_PATH}/ecdsa.h"))
             .header(format!("{CRYPTO_PATH}/ed25519-donna/ed25519.h"))
             .header(format!("{CRYPTO_PATH}/elligator2.h"))
@@ -162,6 +163,12 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
             builder = builder.header(format!("{CRYPTO_PATH}/zkp_context.h"));
         }
         Ok(builder
+            // base58
+            .allowlist_function("b58enc")
+            .allowlist_function("b58tobin")
+            .allowlist_function("b58check")
+            .allowlist_function("base58_encode_check")
+            .rustified_enum("HasherType")
             // curve25519
             .allowlist_function("curve25519_scalarmult")
             .allowlist_function("curve25519_scalarmult_basepoint")
