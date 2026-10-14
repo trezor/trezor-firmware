@@ -1,6 +1,6 @@
 //! Confirming an opaque byte blob. The public docs live on [`data`].
 //!
-//! This block exists because of *what* it shows — raw bytes with no meaning
+//! This layout exists because of *what* it shows — raw bytes with no meaning
 //! the device can interpret, rendered as hex — and not because of how much of
 //! it there is. Length is not the caller's problem: a blob of any size is one
 //! call returning one outcome. The firmware sends it to core in chunks.

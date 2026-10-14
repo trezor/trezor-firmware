@@ -5,11 +5,11 @@
 //! looks. That is the whole vocabulary: no menus, no trees, no callbacks
 //! deciding outcomes.
 
-/// One labelled piece of extra data, offered by a block's screen.
+/// One labelled piece of extra data, offered by a layout's screen.
 ///
 /// The label is what the person picks it by; the facts are shown when they
-/// do, and the block comes back as they left it when they are done. The extras
-/// travel with the block's request, and core presents them. See
+/// do, and the layout comes back as they left it when they are done. The extras
+/// travel with the layout's request, and core presents them. See
 /// [extras](crate::modui#extras-and-the-way-out).
 ///
 /// # Example

@@ -1,4 +1,4 @@
-//! The generic yes/no block. The public docs live on [`action`].
+//! The generic yes/no layout. The public docs live on [`action`].
 
 use crate::app_runtime::{get_ui_or_die, system_exit_fatal};
 use crate::modui::{Commitment, ExtraItem};
@@ -20,7 +20,7 @@ use crate::{Error, Result};
 ///   [extras](crate::modui#extras-and-the-way-out).
 ///
 /// Only what the screen says is the app's. The confirm gesture and its label
-/// are fixed by the block. The person can always refuse, so the block takes no
+/// are fixed by the layout. The person can always refuse, so the layout takes no
 /// `cancel`: the way out is on the screen, or in its menu where the menu
 /// button takes its place.
 ///
