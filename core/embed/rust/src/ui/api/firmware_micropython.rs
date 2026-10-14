@@ -1,18 +1,6 @@
-#[cfg(feature = "app_loading")]
-use core::mem::MaybeUninit;
-
 use heapless::Vec;
 #[cfg(feature = "app_loading")]
-use rkyv::{
-    access_unchecked,
-    api::low::to_bytes_in_with_alloc,
-    option::ArchivedOption,
-    rancor::Failure,
-    ser::{allocator::SubAllocator, writer::Buffer},
-    tuple::ArchivedTuple2,
-    util::Align,
-    Archived,
-};
+use rkyv::{option::ArchivedOption, rancor::Failure, tuple::ArchivedTuple2, Archived};
 #[cfg(feature = "app_loading")]
 use trezor_app_sdk::ui::{
     Property, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
@@ -1267,7 +1255,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
 
         let archived =
-            unsafe { access_unchecked::<Archived<TrezorUiEnum>>(unwrap!(get_buffer(obj))) };
+            rkyv::access::<Archived<TrezorUiEnum>, Failure>(unwrap!(unsafe { get_buffer(obj) }))
+                .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
 
         // Helper to wrap a layout with br_code and optional br_name into the expected
         // tuple
@@ -1601,8 +1590,8 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
             .try_into_option()?;
 
         let ipc_cb = unwrap!(ipc_callback.map(|cb| {
-            move |bytes: &[u8]| {
-                unwrap!(cb.call_with_n_args(&[unwrap!(bytes.try_into())]));
+            move |bytes: Obj| {
+                unwrap!(cb.call_with_n_args(&[bytes]));
             }
         }));
 
@@ -1621,18 +1610,10 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
             return Err(Error::TypeError);
         };
 
-        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
-        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
-
-        let bytes = to_bytes_in_with_alloc::<_, _, Failure>(
-            &msg,
-            Buffer::from(&mut *out),
-            SubAllocator::new(&mut arena),
-        )
-        .unwrap();
+        let bytes = crate::util::archive::to_bytes_obj(&msg)?;
 
         //Send the response back via the ipc_cb callback
-        ipc_cb(bytes.as_ref());
+        ipc_cb(bytes);
 
         Ok(Obj::const_none())
     };
@@ -1665,7 +1646,8 @@ extern "C" fn new_deserialize_progress_message(
         }
 
         // Deserialize the rkyv archived data directly from the static buffer
-        let archived = unsafe { rkyv::access_unchecked::<Archived<TrezorProgressEnum>>(data) };
+        let archived = rkyv::access::<Archived<TrezorProgressEnum>, Failure>(data)
+            .map_err(|_| Error::ValueError(c"Invalid progress message"))?;
 
         // Access the archived data zero-copy using safe Deref access
         let result: Obj = match archived {
