@@ -94,13 +94,18 @@ class BleTransport(Transport):
 
     @classmethod
     def find_by_path(cls, path: str, prefix_search: bool = False) -> BleTransport:
-        if not prefix_search:
-            raise TransportException
-
-        if prefix_search:
+        try:
             return super().find_by_path(path, prefix_search)
-        else:
-            raise TransportException(f"No BLE device: {path}")
+        except TransportException:
+            # A full address needs no scan to be useful: a device the system
+            # is already connected to (another tool holds the link) does not
+            # advertise, and connect() can still attach to it on Linux.
+            address = path[len(cls.PATH_PREFIX) + 1 :]
+            if len(address.split(":")) == 6 and all(
+                len(octet) == 2 for octet in address.split(":")
+            ):
+                return cls(address.upper())
+            raise
 
     def _open(self) -> None:
         self.ble_proxy().connect(self.device)
@@ -266,6 +271,8 @@ class BleAsync:
 
         periph = self.devices.get(address)
         if not periph:
+            periph = await self._known_to_system(address)
+        if not periph:
             raise RuntimeError(f"Device not found: {address}")
 
         if periph.client:
@@ -317,6 +324,32 @@ class BleAsync:
         periph.client = client
         periph.queue = queue
         LOG.info(f"Connected to {client.address}")
+
+    async def _known_to_system(self, address: str) -> Peripheral | None:
+        """A device BlueZ already has, typically connected by another tool and
+        therefore not advertising. bleak attaches to it by its D-Bus path
+        without a scan; the path is BlueZ's and is looked up by address, as it
+        keeps the address the device was first seen under. Linux only."""
+        if sys.platform != "linux":
+            return None
+        from bleak.backends.bluezdbus.manager import get_global_bluez_manager
+
+        manager = await get_global_bluez_manager()
+        for path, props in manager._properties.items():
+            dev = props.get("org.bluez.Device1")
+            if not dev or dev.get("Address", "").upper() != address.upper():
+                continue
+            LOG.debug(f"{address} not seen advertising, using BlueZ object {path}")
+            device = BLEDevice(
+                address.upper(), dev.get("Name"), {"path": path, "props": dev}
+            )
+            adv = AdvertisementData(
+                dev.get("Name"), {}, {}, list(dev.get("UUIDs", [])), None, -127, ()
+            )
+            periph = Peripheral(device, adv)
+            self.devices[address] = periph
+            return periph
+        return None
 
     async def is_connected(self, address: str) -> bool:
         periph = self.devices.get(address)

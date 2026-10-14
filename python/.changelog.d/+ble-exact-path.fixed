@@ -1,0 +1,1 @@
+BLE transport: `ble:ADDRESS` resolves an exact address (not only a prefix search), and a device the system already holds a connection to can be opened without a scan on Linux.
