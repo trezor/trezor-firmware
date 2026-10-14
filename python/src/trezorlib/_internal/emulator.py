@@ -54,19 +54,50 @@ def _rm_f(path: Path) -> None:
         pass
 
 
+def _reserve_free_port() -> tuple[Optional[socket.socket], int]:
+    """Reserve a free TCP port for the Tropic model.
+
+    The returned socket keeps the port bound until it is closed, so no other
+    process can take the port in the meantime and parallel runs never pick
+    the same port. `model_server` binds the port alongside the reservation:
+    Both set `SO_REUSEPORT`, which permits the duplicate binding, and the
+    connections go to the model, which is the only one listening.
+
+    Where `SO_REUSEPORT` is not available, fall back to just picking a free
+    port, with a small race window between closing the probe socket and the
+    model binding the port.
+    """
+    sock = socket.socket()
+    if hasattr(socket, "SO_REUSEPORT"):
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        sock.bind(("", 0))
+        return sock, sock.getsockname()[1]
+    with sock:
+        sock.bind(("", 0))
+        return None, sock.getsockname()[1]
+
+
 class TropicModel:
+    # The port where the emulators expect the Tropic model unless configured
+    # manually. The value matches `model_server`'s own default, so a manually
+    # started model listens where the emulators look. Models started by a
+    # launcher or a fixture use a free port (`port=None`) instead.
     DEFAULT_PORT = 28992
 
     def __init__(
         self,
         profile_dir: str,
         configfile: Path,
-        port: int = DEFAULT_PORT,
+        port: int | None = None,
         logfile: TextIO | str | Path | None = None,
         configfile_output: Path | None = None,
     ) -> None:
         self.profile_dir = Path(profile_dir).resolve()
-        self.port = port
+        self._port_reservation: Optional[socket.socket] = None
+        if port is not None:
+            self.port = port
+        else:
+            self._port_reservation, self.port = _reserve_free_port()
         self.configfile = configfile.resolve()
         self.configfile_output = (
             configfile_output or self.profile_dir / "tropic_model_config_output.yml"
@@ -100,6 +131,9 @@ class TropicModel:
                 LOG.info("Tropic model seems stuck. Sending kill signal.")
                 self.process.kill()
             _RUNNING_PIDS.remove(self.process)
+        if self._port_reservation is not None:
+            self._port_reservation.close()
+            self._port_reservation = None
 
     def _launch_process(self) -> subprocess.Popen:
         # Opening the file if it is not already opened
