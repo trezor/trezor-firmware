@@ -21,6 +21,8 @@
 
 #include <trezor_types.h>
 
+#include <io/ble_chan.h>
+
 /**
  * BLE console interface.
  *
@@ -43,20 +45,13 @@
  */
 
 /** Largest payload of one console packet, either direction. */
-#define BLE_CONSOLE_PACKET_SIZE 244
+#define BLE_CONSOLE_PACKET_SIZE BLE_CHAN_PACKET_SIZE
 
 /** Callback invoked from interrupt context when the interrupt byte arrives. */
-typedef void (*ble_console_intr_cb_t)(void);
+typedef ble_chan_intr_cb_t ble_console_intr_cb_t;
 
 /** Counters for diagnosing the link; all since init. */
-typedef struct {
-  uint32_t tx_packets;  /**< packets handed to the inter-MCU link */
-  uint32_t tx_credits;  /**< credits received back from the nRF */
-  uint32_t tx_timeouts; /**< packets given up without a credit */
-  uint32_t tx_failed;   /**< packets the inter-MCU link refused or aborted */
-  uint32_t rx_packets;  /**< packets queued for the consumer */
-  uint32_t rx_dropped;  /**< packets dropped, receive queue full or oversized */
-} ble_console_stats_t;
+typedef ble_chan_stats_t ble_console_stats_t;
 
 /**
  * @brief Initializes the console interface

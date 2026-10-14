@@ -19,7 +19,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     // does not exist there and consumers fall back to the VCP.
     if cfg!(feature = "ble_console") && !cfg!(feature = "emulator") {
         lib.add_define("USE_BLE_CONSOLE", Some("1"));
-        lib.add_sources(["ble/stm32/ble_console.c"]);
+        lib.add_sources(["ble/stm32/ble_chan.c", "ble/stm32/ble_console.c"]);
     }
 
     Ok(())
