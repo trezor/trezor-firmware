@@ -341,6 +341,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_connected_addr;
   MP_QSTR_connected_idx;
   MP_QSTR_connection_flags;
+  MP_QSTR_content;
   MP_QSTR_continue_recovery_homepage;
   MP_QSTR_count;
   MP_QSTR_coveragedata;
@@ -356,6 +357,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_description;
   MP_QSTR_deserialize_crypto_message;
   MP_QSTR_deserialize_progress_message;
+  MP_QSTR_deserialize_ui_message;
   MP_QSTR_details_title;
   MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
@@ -365,6 +367,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_disconnect;
   MP_QSTR_duration_ms;
   MP_QSTR_encode;
+  MP_QSTR_encode_ui_result;
   MP_QSTR_encoded_length;
   MP_QSTR_entropy__send;
   MP_QSTR_entropy__title_confirm;
@@ -428,7 +431,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_iface_num;
   MP_QSTR_image;
   MP_QSTR_indeterminate;
-  MP_QSTR_index;
   MP_QSTR_info;
   MP_QSTR_info_button;
   MP_QSTR_init;
@@ -617,8 +619,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_pm_event;
   MP_QSTR_prefill;
   MP_QSTR_prefill_word;
-  MP_QSTR_process_ipc_extra;
-  MP_QSTR_process_ipc_message;
   MP_QSTR_production_year;
   MP_QSTR_progress__authenticity_check;
   MP_QSTR_progress__done;
@@ -857,13 +857,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__you_are_contributing;
   MP_QSTR_send_crypto_result;
   MP_QSTR_send_transport_busy;
-  MP_QSTR_send_ui_result;
   MP_QSTR_set_brightness;
   MP_QSTR_set_enabled;
   MP_QSTR_set_high_speed;
   MP_QSTR_set_name;
   MP_QSTR_setting__adjust;
   MP_QSTR_setting__apply;
+  MP_QSTR_severity;
   MP_QSTR_share_words__words_in_order;
   MP_QSTR_share_words__wrote_down_all;
   MP_QSTR_show_address_details;
@@ -879,6 +879,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
+  MP_QSTR_show_notice;
   MP_QSTR_show_pairing_device_name;
   MP_QSTR_show_progress;
   MP_QSTR_show_progress_coinjoin;
