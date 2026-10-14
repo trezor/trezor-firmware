@@ -49,7 +49,8 @@ class Step:
         if exc is None:
             print(f"ok   {elapsed * 1000:7.0f} ms", flush=True)
         else:
-            print(f"FAIL {elapsed * 1000:7.0f} ms  {exc}", flush=True)
+            text = str(exc) or type(exc).__name__
+            print(f"FAIL {elapsed * 1000:7.0f} ms  {text}", flush=True)
         return False
 
 
@@ -168,7 +169,7 @@ def main() -> int:
             list_ble_neighbourhood()
         return 1
     except Exception as e:
-        print(f"\nfailed: {e}", file=sys.stderr)
+        print(f"\nfailed: {str(e) or type(e).__name__}", file=sys.stderr)
         if args.verbose:
             raise
         return 1
