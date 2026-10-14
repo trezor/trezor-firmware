@@ -37,7 +37,7 @@ ufmt.workspace = true
 unsize.workspace = true
 without-alloc.workspace = true
 zeroize = { workspace = true, optional = true }
-rkyv = { workspace = true, optional = true }
+rkyv = { workspace = true, optional = true, features = ["alloc", "bytecheck"] }
 trezor-app-sdk = { workspace = true, optional = true }
 
 # crates in embed/ directory
@@ -55,7 +55,7 @@ upymod = { workspace = true, optional = true }
 # Selectable components
 # --------------------------------------------------------------------------
 
-app_loading = ["dep:trezor-app-sdk", "dep:rkyv"]
+app_loading = ["dep:trezor-app-sdk", "dep:rkyv", "tracked_allocator"]
 backlight = []
 ble = []
 boot_ucb = []
