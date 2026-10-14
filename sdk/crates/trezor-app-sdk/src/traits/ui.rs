@@ -12,8 +12,8 @@ pub use crate::structs::{ConfirmData, StrSlice, TrezorUiEnum, TrezorUiResult};
 /// against [`super::wire::WireV1`].
 #[stabby::stabby(checked)]
 pub trait UiV1: Send + Sync {
-    /// Shows one block and returns once the person has decided it. Everything
-    /// in between, such as the block's menu and extras, happens in Core.
+    /// Shows one layout and returns once the person has decided it. Everything
+    /// in between, such as the layout's menu and extras, happens in Core.
     extern "C" fn ui_call<'a>(
         &self,
         request: TrezorUiEnum<'a>,

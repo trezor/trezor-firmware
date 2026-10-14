@@ -1,6 +1,6 @@
-//! Blocks that ask the person to confirm something: one yes or no each.
+//! Layouts that ask the person to confirm something: one yes or no each.
 //!
-//! One file per block; this module only re-exports them, so an app writes
+//! One file per layout; this module only re-exports them, so an app writes
 //! `confirm::value`, never `confirm::value::value`.
 
 mod action;

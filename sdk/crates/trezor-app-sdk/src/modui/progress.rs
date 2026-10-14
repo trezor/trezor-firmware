@@ -1,6 +1,6 @@
 //! Progress: telling the person that work is happening.
 //!
-//! Not a block. A block asks the person a question and waits; progress is the
+//! Not a layout. A layout asks the person a question and waits; progress is the
 //! opposite — the app is working, and the person should see that it has not
 //! stalled. Nothing is ever confirmed, nothing is answered, and the calls do
 //! not wait for the person.

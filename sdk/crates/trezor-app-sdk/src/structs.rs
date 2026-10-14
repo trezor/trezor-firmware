@@ -259,11 +259,11 @@ where
     }
 }
 
-/// More the person can look at from a block's screen: an entry in the block's
+/// More the person can look at from a layout's screen: an entry in the layout's
 /// menu, and the facts shown when it is picked.
 ///
-/// Travels with the block's request; core walks the menu itself and answers
-/// the app only when the block is decided.
+/// Travels with the layout's request; core walks the menu itself and answers
+/// the app only when the layout is decided.
 #[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ExtraItem<'a> {
@@ -272,7 +272,7 @@ pub struct ExtraItem<'a> {
     pub props: Slice<'a, Property<'a>>,
 }
 
-/// What confirming a block commits the person to.
+/// What confirming a layout commits the person to.
 ///
 /// The app knows which of its screens is the one that signs; the library does
 /// not. The app says so here, and core turns it into the gesture — a hold
@@ -291,7 +291,7 @@ pub enum Commitment {
     Final,
 }
 
-/// An action confirmation screen, sent as [`TrezorUiEnum::ConfirmAction`].
+/// An action confirmation layout, sent as [`TrezorUiEnum::ConfirmAction`].
 #[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmAction<'a> {
@@ -338,7 +338,7 @@ pub enum ValueKind {
     Address,
 }
 
-/// A value confirmation screen, sent as [`TrezorUiEnum::ConfirmValue`].
+/// A value confirmation layout, sent as [`TrezorUiEnum::ConfirmValue`].
 #[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmValue<'a> {
@@ -448,7 +448,7 @@ pub struct ConfirmProperties<'a> {
     pub extras: Slice<'a, ExtraItem<'a>>,
 }
 
-/// One UI request, as it crosses IPC: one variant per `modui` block. Blocks
+/// One UI request, as it crosses IPC: one variant per `modui` layout. Layouts
 /// pass it through `UiV1::ui_call` as is; `confirm::data` passes its
 /// `ConfirmData` to `UiV1::confirm_data` instead, which sends it a chunk at a
 /// time.
@@ -464,11 +464,11 @@ pub enum TrezorUiEnum<'a> {
     ShowNotice(ShowNotice<'a>),
 }
 
-/// How the person decided a block. Written by core, read by `modui`; apps
+/// How the person decided a layout. Written by core, read by `modui`; apps
 /// never see it.
 ///
 /// Variants say what the person *did*, not which button did it. Only the
-/// block's final answer crosses: what happens in its menu stays in core.
+/// layout's final answer crosses: what happens in its menu stays in core.
 #[must_use]
 #[stabby::stabby]
 #[repr(u8)]

@@ -1319,7 +1319,7 @@ fn obj_from_extras(archived: &Archived<Slice<ExtraItem>>) -> Result<Obj, Error> 
 /// flows use.
 ///
 /// Returns `(kind, br_name, *fields, extras)`: `kind` is one of the kinds
-/// above, `br_name` names the step for the host, `fields` carry the block's
+/// above, `br_name` names the step for the host, `fields` carry the layout's
 /// own values in the order its builder unpacks them, and `extras` is a list
 /// of `(label, properties)` with `properties` as `(key, value, mono)` triples.
 ///
@@ -1460,7 +1460,7 @@ extern "C" fn new_encode_ui_result(n_args: usize, args: *const Obj, kwargs: *mut
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
 
         // Say what the person did, rather than naming the button that did it.
-        // Only the block's final answer goes back: its menu and extras stay
+        // Only the layout's final answer goes back: its menu and extras stay
         // in core.
         //
         // WIP: chunk paging (`Forward`, `Backward`, `ConfirmedAll`) needs the
