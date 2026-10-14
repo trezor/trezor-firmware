@@ -76,6 +76,67 @@ LOG_DECLARE(coreapp_main)
 uint32_t ipc_buffer[IPC_COREAPP_BUFFER_SIZE / sizeof(uint32_t)];
 #endif
 
+void mp_hal_stdout_tail(char *buf, size_t buf_size);
+
+// Copies the last line of `text` matching `starts_with` (NULL: any non-empty
+// line) into `out`, trimmed of leading blanks and cut to fit.
+static void last_line(const char *text, const char *starts_with, char *out,
+                      size_t out_size) {
+  out[0] = '\0';
+  const char *line = text;
+  while (*line != '\0') {
+    const char *end = strchr(line, '\n');
+    size_t len = end != NULL ? (size_t)(end - line) : strlen(line);
+    const char *trimmed = line;
+    size_t tlen = len;
+    while (tlen > 0 && (*trimmed == ' ' || *trimmed == '\r')) {
+      trimmed++;
+      tlen--;
+    }
+    while (tlen > 0 &&
+           (trimmed[tlen - 1] == '\r' || trimmed[tlen - 1] == ' ')) {
+      tlen--;
+    }
+    if (tlen > 0 && (starts_with == NULL ||
+                     strncmp(trimmed, starts_with, strlen(starts_with)) == 0)) {
+      if (tlen > out_size - 1) {
+        tlen = out_size - 1;
+      }
+      memcpy(out, trimmed, tlen);
+      out[tlen] = '\0';
+    }
+    if (end == NULL) {
+      break;
+    }
+    line = end + 1;
+  }
+}
+
+static void __attribute__((noreturn)) python_exit_shutdown(void) {
+  static char tail[800];
+  static char frame[64];
+  static char exc[64];
+  static char title[64];
+
+  mp_hal_stdout_tail(tail, sizeof(tail));
+  last_line(tail, "File ", frame, sizeof(frame));
+  last_line(tail, NULL, exc, sizeof(exc));
+
+  // "ValueError: message" -> title "(PE) ValueError", message "message"
+  const char *message = exc;
+  char *sep = strstr(exc, ": ");
+  if (sep != NULL) {
+    *sep = '\0';
+    message = sep + 2;
+  }
+  // no printf in the coreapp's C: build "(PE) <exception>" by hand
+  strcpy(title, "(PE) ");
+  strncat(title, exc[0] != '\0' ? exc : "exit",
+          sizeof(title) - strlen(title) - 1);
+
+  error_shutdown_ex(title, message, frame[0] != '\0' ? frame : NULL);
+}
+
 int main_func(uint32_t cmd, void *arg) {
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
@@ -175,8 +236,11 @@ int main_func(uint32_t cmd, void *arg) {
   LOG_INF("Main script finished, cleaning up");
   mp_deinit();
 
-  // Python code shouldn't ever exit, avoid black screen if it does
-  error_shutdown("(PE)");
+  // Python code shouldn't ever exit, avoid black screen if it does. The
+  // script only ends on an uncaught exception, whose traceback MicroPython
+  // has just printed: show its last frame and the exception line, as the
+  // debug console is often not attached yet when this happens at boot.
+  python_exit_shutdown();
 
   return 0;
 }
