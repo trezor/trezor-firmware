@@ -110,7 +110,7 @@ display_rgba8888 = ["trezor_lib/display_rgba8888", "trezor_lib/ui_color_32bit"]
 # Selectable components
 # --------------------------------------------------------------------------
 
-app_loading = ["dep:api", "upymod/app_loading", "trezor_lib/app_loading", "io/ipc"]
+app_loading = ["dep:api", "upymod/app_loading", "trezor_lib/app_loading", "io/ipc", "tracked_allocator"]
 backlight = ["io/backlight", "upymod/backlight", "trezor_lib/backlight"]
 backup_ram = ["sec/backup_ram"]
 ble = ["io/ble", "upymod/ble", "trezor_lib/ble", "nrf", "nrf_auth"]

@@ -30,8 +30,10 @@ extern crate num_derive;
 #[macro_use]
 mod macros;
 
+// The firmware binary declares the `#[global_allocator]`: with app loading, it
+// combines this one with the apps' heaps.
 #[cfg(all(feature = "tracked_allocator", feature = "micropython"))]
-mod allocator;
+pub use micropython::tracked_allocator::TrackedAllocator;
 
 mod align;
 #[cfg(feature = "debug")]
