@@ -94,7 +94,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
 
     mac: bytes | None = None
     multisig_xpub_magic = coin.xpub_magic
-    if multisig or miniscript:
+    if multisig:
         if coin.segwit and not msg.ignore_xpub_magic:
             if (
                 script_type == InputScriptType.SPENDWITNESS
@@ -160,16 +160,14 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
                 chunkify=bool(msg.chunkify),
             )
         elif miniscript:
-            account = miniscript.policy.descriptor
-            pubnodes = [key.node for key in miniscript.policy.keys]
+            # TODO: warn (similar to multisig)?
+            # TODO: show XPUBs, origins and ownership information
             await show_address(
                 address_short,
                 subtitle=subtitle,
                 case_sensitive=address_case_sensitive,
-                path=path,
-                multisig_index=1,  # TODO: correct
-                xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
-                account=account,
+                path=path,  # TODO: do we need it?
+                account=miniscript.policy.name,
                 chunkify=bool(msg.chunkify),
             )
         else:

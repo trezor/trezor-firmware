@@ -268,8 +268,8 @@ def test_miniscript_spend(session: Session):
     assert node.node == keys[0].node
 
     reg = messages.MiniscriptRegisterPolicy(
-        name="Policy name",
         policy=messages.MiniscriptPolicy(
+            name="Liana",
             descriptor=DESC,
             keys=keys,
         ),
@@ -352,8 +352,7 @@ def test_miniscript_spend_liana(session: Session):
     assert _to_protobuf(Key.from_string(node.xpub)).node == keys[0].node
 
     reg = messages.MiniscriptRegisterPolicy(
-        name="Policy name",
-        policy=messages.MiniscriptPolicy(descriptor=DESC, keys=keys),
+        policy=messages.MiniscriptPolicy(name="Liana", descriptor=DESC, keys=keys),
         coin_name=COIN,
     )
     session.call(reg, expect=messages.Success)
@@ -431,8 +430,7 @@ def test_miniscript_spend_liana_decay(session: Session):
     pubkey = HDKey.from_string(node.xpub).derive("m/1/3").key
 
     reg = messages.MiniscriptRegisterPolicy(
-        name="Policy name",
-        policy=messages.MiniscriptPolicy(descriptor=DESC, keys=keys),
+        policy=messages.MiniscriptPolicy(name="Liana", descriptor=DESC, keys=keys),
         coin_name=COIN,
     )
     session.call(reg, expect=messages.Success)
@@ -562,15 +560,32 @@ def test_miniscript_spend_sparrow(session: Session):
         keys=keys,
         coin_name=COIN,
     )
-    redeem = messages.MiniscriptRedeemPolicyType(policy=policy, internal=False, index=0)
-    addr = btc.get_address(
-        session,
-        n=parse_path("m/48h/1h/0h/2h/0/0"),
-        script_type=messages.InputScriptType.SPENDWITNESS,
-        miniscript=redeem,
-        coin_name=COIN,
-    )
-    assert addr == "tb1q4wrndh4nmzs43mcdv6c7wftda6w9urzfvqt33xl6h77cnytuksxqss4y8c"
+
+    ADDRS = [
+        (
+            # external
+            "tb1q4wrndh4nmzs43mcdv6c7wftda6w9urzfvqt33xl6h77cnytuksxqss4y8c",
+            "tb1qes4nf8qaud4mac0es9nytzk0kky26ymdx64mnu6hwn3kmx7f4wfs8q7cnz",
+            "tb1qknf9mz4qm5p8xfznvntsndyptncxt756nmcgyvft6rauc3cghecqq0d2fk",
+        ),
+        (
+            # internal
+            "tb1q8e0wu6cp3zund45d229d08svwf0xpe3ctsl75m7aupdtnt5u525s3ffg7h",
+            "tb1qqusplm8zcf2923zr5p46tkjff4vs43f2zh7kymyx7uttxww25ams4e9kly",
+            "tb1qn5ntykjvq6jc5tcejx8ujpl70d5ahkjh4309hm0nj9x0pkkcf28qsxjeux",
+        ),
+    ]
+    for internal, addrs in enumerate(ADDRS):
+        for index, addr in enumerate(addrs):
+            assert addr == btc.get_address(
+                session,
+                n=parse_path(f"m/48h/1h/0h/2h/{internal}/{index}"),
+                script_type=messages.InputScriptType.SPENDWITNESS,
+                miniscript=messages.MiniscriptRedeemPolicyType(
+                    policy=policy, internal=bool(internal), index=index
+                ),
+                coin_name=COIN,
+            )
 
     psbt = PSBT.from_base64(
         "cHNidP8BAF4CAAAAAT7hiKaaKBeq7VZB1HUynxDvKbKFGwSWxo1cVNZ/nP6wAAAAAAD9////AayPAAAAAAAAIgAgzCs0nB3ja77h+YFmRYrPtYitE202q7nzV3TjbZvJq5P58gQATwEENYfPBDH8vcyAAAACP8N64hBDZxUueKl7mJ5lAnlVEAdZ4ad+BzmeHEsahzQCLscxG1LFIk2oYODSS//lfME9yKWcp4oLoXnvxXs4o88UXJ4ijTAAAIABAACAAAAAgAIAAIBPAQQ1h88ExuBP2YAAAAL+L+YczMjTx5UMTXTnfT75BSNsLqA6NTtpF7gQZOAzSgNUeD2qOp9CSxSjqz80ivIowlWxHG6ieqQMcADYwcvEJxRtlryPMAAAgAEAAIAAAACAAgAAgE8BBDWHzwRdbaTwgAAAAtTu3N4SVtHIdFsD24TvDAD6o8KfOObgOrV33zalySwaA5eEjTcfmIb3BeoTMldtlhOeXjDwyP89GHl5t1iogn84FMq1EnIwAACAAQAAgAAAAIACAACAAAEAXgIAAAABi1EYWmpmVTNbn9zxdWUZ2w1uZoOJXvMGIag4KOGjCbgAAAAAAP3///8BV5AAAAAAAAAiACCrhzbes9ihWO8NZrHnJW3unF4MSWAXGJv6v72JkXy0DPnyBAABAStXkAAAAAAAACIAIKuHNt6z2KFY7w1mseclbe6cXgxJYBcYm/q/vYmRfLQMAQMEAQAAAAEFaVIhAvPBEdutUs+A8nkluwzJo01Huh+HjHM0xo7rOuoSqSRKIQNzQgkSodhiRDiGeiiW1aPXth6Y4NgUk5k9zxnYLAVu4SED8YQRoqx2GPXlgq0iT+5NqE4MxtKcA4MdTT4JQQG4MWxTriIGAvPBEdutUs+A8nkluwzJo01Huh+HjHM0xo7rOuoSqSRKHFyeIo0wAACAAQAAgAAAAIACAACAAAAAAAAAAAAiBgPxhBGirHYY9eWCrSJP7k2oTgzG0pwDgx1NPglBAbgxbBxtlryPMAAAgAEAAIAAAACAAgAAgAAAAAAAAAAAIgYDc0IJEqHYYkQ4hnooltWj17YemODYFJOZPc8Z2CwFbuEcyrUScjAAAIABAACAAAAAgAIAAIAAAAAAAAAAAAABAWlSIQMLvluFREpuxjVrUUkWxDEPqSITNTPiKeWYp9KpmUPklSEDb6dXrxks+icpQ7cwPIw1HlzjmxJ+pvoYBA4aGdV8ULAhA5mS7fFoBW9veimPQ7NaT6yyjXP0UC3AZetccFUCnafCU64iAgMLvluFREpuxjVrUUkWxDEPqSITNTPiKeWYp9KpmUPklRxcniKNMAAAgAEAAIAAAACAAgAAgAAAAAABAAAAIgIDmZLt8WgFb296KY9Ds1pPrLKNc/RQLcBl61xwVQKdp8IcbZa8jzAAAIABAACAAAAAgAIAAIAAAAAAAQAAACICA2+nV68ZLPonKUO3MDyMNR5c45sSfqb6GAQOGhnVfFCwHMq1EnIwAACAAQAAgAAAAIACAACAAAAAAAEAAAAA"
@@ -583,7 +598,9 @@ def test_miniscript_spend_sparrow(session: Session):
             prev_hash=i.vin.txid,
             prev_index=i.vin.vout,
             script_type=messages.InputScriptType.SPENDWITNESS,
-            miniscript=redeem,
+            miniscript=messages.MiniscriptRedeemPolicyType(
+                policy=policy, internal=False, index=0
+            ),
             amount=i.utxo.value,
             sequence=i.vin.sequence,
         )

@@ -1082,8 +1082,6 @@ pub struct MiniscriptRegisterPolicy {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.MiniscriptRegisterPolicy.policy)
     pub policy: ::protobuf::MessageField<MiniscriptPolicy>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.MiniscriptRegisterPolicy.name)
-    pub name: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.MiniscriptRegisterPolicy.coin_name)
     pub coin_name: ::std::option::Option<::std::string::String>,
     // special fields
@@ -1100,42 +1098,6 @@ impl<'a> ::std::default::Default for &'a MiniscriptRegisterPolicy {
 impl MiniscriptRegisterPolicy {
     pub fn new() -> MiniscriptRegisterPolicy {
         ::std::default::Default::default()
-    }
-
-    // required string name = 2;
-
-    pub fn name(&self) -> &str {
-        match self.name.as_ref() {
-            Some(v) => v,
-            None => "",
-        }
-    }
-
-    pub fn clear_name(&mut self) {
-        self.name = ::std::option::Option::None;
-    }
-
-    pub fn has_name(&self) -> bool {
-        self.name.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_name(&mut self, v: ::std::string::String) {
-        self.name = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_name(&mut self) -> &mut ::std::string::String {
-        if self.name.is_none() {
-            self.name = ::std::option::Option::Some(::std::string::String::new());
-        }
-        self.name.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_name(&mut self) -> ::std::string::String {
-        self.name.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
     // optional string coin_name = 3;
@@ -1175,17 +1137,12 @@ impl MiniscriptRegisterPolicy {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, MiniscriptPolicy>(
             "policy",
             |m: &MiniscriptRegisterPolicy| { &m.policy },
             |m: &mut MiniscriptRegisterPolicy| { &mut m.policy },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "name",
-            |m: &MiniscriptRegisterPolicy| { &m.name },
-            |m: &mut MiniscriptRegisterPolicy| { &mut m.name },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "coin_name",
@@ -1207,9 +1164,6 @@ impl ::protobuf::Message for MiniscriptRegisterPolicy {
         if self.policy.is_none() {
             return false;
         }
-        if self.name.is_none() {
-            return false;
-        }
         for v in &self.policy {
             if !v.is_initialized() {
                 return false;
@@ -1223,9 +1177,6 @@ impl ::protobuf::Message for MiniscriptRegisterPolicy {
             match tag {
                 10 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.policy)?;
-                },
-                18 => {
-                    self.name = ::std::option::Option::Some(is.read_string()?);
                 },
                 26 => {
                     self.coin_name = ::std::option::Option::Some(is.read_string()?);
@@ -1246,9 +1197,6 @@ impl ::protobuf::Message for MiniscriptRegisterPolicy {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
-        if let Some(v) = self.name.as_ref() {
-            my_size += ::protobuf::rt::string_size(2, &v);
-        }
         if let Some(v) = self.coin_name.as_ref() {
             my_size += ::protobuf::rt::string_size(3, &v);
         }
@@ -1260,9 +1208,6 @@ impl ::protobuf::Message for MiniscriptRegisterPolicy {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.policy.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
-        }
-        if let Some(v) = self.name.as_ref() {
-            os.write_string(2, v)?;
         }
         if let Some(v) = self.coin_name.as_ref() {
             os.write_string(3, v)?;
@@ -1285,7 +1230,6 @@ impl ::protobuf::Message for MiniscriptRegisterPolicy {
 
     fn clear(&mut self) {
         self.policy.clear();
-        self.name = ::std::option::Option::None;
         self.coin_name = ::std::option::Option::None;
         self.special_fields.clear();
     }
@@ -1293,7 +1237,6 @@ impl ::protobuf::Message for MiniscriptRegisterPolicy {
     fn default_instance() -> &'static MiniscriptRegisterPolicy {
         static instance: MiniscriptRegisterPolicy = MiniscriptRegisterPolicy {
             policy: ::protobuf::MessageField::none(),
-            name: ::std::option::Option::None,
             coin_name: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -1533,6 +1476,8 @@ impl ::protobuf::reflect::ProtobufValue for MiniscriptRedeemPolicyType {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct MiniscriptPolicy {
     // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.MiniscriptPolicy.name)
+    pub name: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.MiniscriptPolicy.descriptor)
     pub descriptor: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.MiniscriptPolicy.keys)
@@ -1553,7 +1498,43 @@ impl MiniscriptPolicy {
         ::std::default::Default::default()
     }
 
-    // required string descriptor = 1;
+    // required string name = 1;
+
+    pub fn name(&self) -> &str {
+        match self.name.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_name(&mut self) {
+        self.name = ::std::option::Option::None;
+    }
+
+    pub fn has_name(&self) -> bool {
+        self.name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_name(&mut self, v: ::std::string::String) {
+        self.name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_name(&mut self) -> &mut ::std::string::String {
+        if self.name.is_none() {
+            self.name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_name(&mut self) -> ::std::string::String {
+        self.name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string descriptor = 2;
 
     pub fn descriptor(&self) -> &str {
         match self.descriptor.as_ref() {
@@ -1590,8 +1571,13 @@ impl MiniscriptPolicy {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "name",
+            |m: &MiniscriptPolicy| { &m.name },
+            |m: &mut MiniscriptPolicy| { &mut m.name },
+        ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "descriptor",
             |m: &MiniscriptPolicy| { &m.descriptor },
@@ -1614,6 +1600,9 @@ impl ::protobuf::Message for MiniscriptPolicy {
     const NAME: &'static str = "MiniscriptPolicy";
 
     fn is_initialized(&self) -> bool {
+        if self.name.is_none() {
+            return false;
+        }
         if self.descriptor.is_none() {
             return false;
         }
@@ -1629,9 +1618,12 @@ impl ::protobuf::Message for MiniscriptPolicy {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.descriptor = ::std::option::Option::Some(is.read_string()?);
+                    self.name = ::std::option::Option::Some(is.read_string()?);
                 },
                 18 => {
+                    self.descriptor = ::std::option::Option::Some(is.read_string()?);
+                },
+                26 => {
                     self.keys.push(is.read_message()?);
                 },
                 tag => {
@@ -1646,8 +1638,11 @@ impl ::protobuf::Message for MiniscriptPolicy {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.descriptor.as_ref() {
+        if let Some(v) = self.name.as_ref() {
             my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.descriptor.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
         }
         for value in &self.keys {
             let len = value.compute_size();
@@ -1659,11 +1654,14 @@ impl ::protobuf::Message for MiniscriptPolicy {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.descriptor.as_ref() {
+        if let Some(v) = self.name.as_ref() {
             os.write_string(1, v)?;
         }
+        if let Some(v) = self.descriptor.as_ref() {
+            os.write_string(2, v)?;
+        }
         for v in &self.keys {
-            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
         };
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1682,6 +1680,7 @@ impl ::protobuf::Message for MiniscriptPolicy {
     }
 
     fn clear(&mut self) {
+        self.name = ::std::option::Option::None;
         self.descriptor = ::std::option::Option::None;
         self.keys.clear();
         self.special_fields.clear();
@@ -1689,6 +1688,7 @@ impl ::protobuf::Message for MiniscriptPolicy {
 
     fn default_instance() -> &'static MiniscriptPolicy {
         static instance: MiniscriptPolicy = MiniscriptPolicy {
+            name: ::std::option::Option::None,
             descriptor: ::std::option::Option::None,
             keys: ::std::vec::Vec::new(),
             special_fields: ::protobuf::SpecialFields::new(),
@@ -13208,30 +13208,30 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x02(\x0b2%.hw.trezor.messages.common.HDNodeTypeR\x04node\x12\x12\n\
     \x04xpub\x18\x02\x20\x02(\tR\x04xpub\x12)\n\x10root_fingerprint\x18\x03\
     \x20\x01(\rR\x0frootFingerprint\x12\x1e\n\ndescriptor\x18\x04\x20\x01(\t\
-    R\ndescriptor\"\xa0\x01\n\x18MiniscriptRegisterPolicy\x12D\n\x06policy\
+    R\ndescriptor\"\x8c\x01\n\x18MiniscriptRegisterPolicy\x12D\n\x06policy\
     \x18\x01\x20\x02(\x0b2,.hw.trezor.messages.bitcoin.MiniscriptPolicyR\x06\
-    policy\x12\x12\n\x04name\x18\x02\x20\x02(\tR\x04name\x12$\n\tcoin_name\
-    \x18\x03\x20\x01(\t:\x07BitcoinR\x08coinName:\x04\x88\xb2\x19\x01\"\x9a\
-    \x01\n\x1aMiniscriptRedeemPolicyType\x12D\n\x06policy\x18\x01\x20\x02(\
-    \x0b2,.hw.trezor.messages.bitcoin.MiniscriptPolicyR\x06policy\x12\x1a\n\
-    \x08internal\x18\x02\x20\x02(\x08R\x08internal\x12\x14\n\x05index\x18\
-    \x03\x20\x02(\rR\x05index:\x04\x88\xb2\x19\x01\"w\n\x10MiniscriptPolicy\
-    \x12\x1e\n\ndescriptor\x18\x01\x20\x02(\tR\ndescriptor\x12=\n\x04keys\
-    \x18\x02\x20\x03(\x0b2).hw.trezor.messages.bitcoin.MiniscriptKeyR\x04key\
-    s:\x04\x88\xb2\x19\x01\"\xa4\x01\n\rMiniscriptKey\x129\n\x04node\x18\x01\
-    \x20\x02(\x0b2%.hw.trezor.messages.common.HDNodeTypeR\x04node\x12'\n\x0f\
-    derivation_path\x18\x02\x20\x03(\rR\x0ederivationPath\x12)\n\x10root_fin\
-    gerprint\x18\x03\x20\x01(\rR\x0frootFingerprint:\x04\x88\xb2\x19\x01\"\
-    \xc6\x03\n\nGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addre\
-    ssN\x12$\n\tcoin_name\x18\x02\x20\x01(\t:\x07BitcoinR\x08coinName\x12!\n\
-    \x0cshow_display\x18\x03\x20\x01(\x08R\x0bshowDisplay\x12P\n\x08multisig\
-    \x18\x04\x20\x01(\x0b24.hw.trezor.messages.bitcoin.MultisigRedeemScriptT\
-    ypeR\x08multisig\x12\\\n\nminiscript\x18\x08\x20\x01(\x0b26.hw.trezor.me\
-    ssages.bitcoin.MiniscriptRedeemPolicyTypeR\nminiscriptB\x04\xc8\xf0\x19\
-    \x01\x12Z\n\x0bscript_type\x18\x05\x20\x01(\x0e2+.hw.trezor.messages.bit\
-    coin.InputScriptType:\x0cSPENDADDRESSR\nscriptType\x12*\n\x11ignore_xpub\
-    _magic\x18\x06\x20\x01(\x08R\x0fignoreXpubMagic\x12\x1a\n\x08chunkify\
-    \x18\x07\x20\x01(\x08R\x08chunkify\"5\n\x07Address\x12\x18\n\x07address\
+    policy\x12$\n\tcoin_name\x18\x03\x20\x01(\t:\x07BitcoinR\x08coinName:\
+    \x04\x88\xb2\x19\x01\"\x9a\x01\n\x1aMiniscriptRedeemPolicyType\x12D\n\
+    \x06policy\x18\x01\x20\x02(\x0b2,.hw.trezor.messages.bitcoin.MiniscriptP\
+    olicyR\x06policy\x12\x1a\n\x08internal\x18\x02\x20\x02(\x08R\x08internal\
+    \x12\x14\n\x05index\x18\x03\x20\x02(\rR\x05index:\x04\x88\xb2\x19\x01\"\
+    \x8b\x01\n\x10MiniscriptPolicy\x12\x12\n\x04name\x18\x01\x20\x02(\tR\x04\
+    name\x12\x1e\n\ndescriptor\x18\x02\x20\x02(\tR\ndescriptor\x12=\n\x04key\
+    s\x18\x03\x20\x03(\x0b2).hw.trezor.messages.bitcoin.MiniscriptKeyR\x04ke\
+    ys:\x04\x88\xb2\x19\x01\"\xa4\x01\n\rMiniscriptKey\x129\n\x04node\x18\
+    \x01\x20\x02(\x0b2%.hw.trezor.messages.common.HDNodeTypeR\x04node\x12'\n\
+    \x0fderivation_path\x18\x02\x20\x03(\rR\x0ederivationPath\x12)\n\x10root\
+    _fingerprint\x18\x03\x20\x01(\rR\x0frootFingerprint:\x04\x88\xb2\x19\x01\
+    \"\xc6\x03\n\nGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08add\
+    ressN\x12$\n\tcoin_name\x18\x02\x20\x01(\t:\x07BitcoinR\x08coinName\x12!\
+    \n\x0cshow_display\x18\x03\x20\x01(\x08R\x0bshowDisplay\x12P\n\x08multis\
+    ig\x18\x04\x20\x01(\x0b24.hw.trezor.messages.bitcoin.MultisigRedeemScrip\
+    tTypeR\x08multisig\x12\\\n\nminiscript\x18\x08\x20\x01(\x0b26.hw.trezor.\
+    messages.bitcoin.MiniscriptRedeemPolicyTypeR\nminiscriptB\x04\xc8\xf0\
+    \x19\x01\x12Z\n\x0bscript_type\x18\x05\x20\x01(\x0e2+.hw.trezor.messages\
+    .bitcoin.InputScriptType:\x0cSPENDADDRESSR\nscriptType\x12*\n\x11ignore_\
+    xpub_magic\x18\x06\x20\x01(\x08R\x0fignoreXpubMagic\x12\x1a\n\x08chunkif\
+    y\x18\x07\x20\x01(\x08R\x08chunkify\"5\n\x07Address\x12\x18\n\x07address\
     \x18\x01\x20\x02(\tR\x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\
     \x03mac\"\x81\x02\n\x0eGetOwnershipId\x12\x1b\n\taddress_n\x18\x01\x20\
     \x03(\rR\x08addressN\x12$\n\tcoin_name\x18\x02\x20\x01(\t:\x07BitcoinR\

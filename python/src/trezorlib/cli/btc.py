@@ -438,15 +438,33 @@ def sign_tx(session: "Session", json_file: TextIO, chunkify: bool) -> None:
 
 @cli.command()
 @click.option("-c", "--coin", type=str)
-@click.argument("name", type=str)
-@click.argument("descriptor", type=str)
+@click.option("-n", "--name", type=str)
+@click.option("-d", "--descriptor", type=str)
+@click.option("-k", "--key", type=str, multiple=True, required=True)
 @with_session
-def register_policy(session: "Session", coin: str, name: str, descriptor: str) -> None:
+def register_policy(
+    session: "Session", coin: str, name: str, descriptor: str, keys: tuple[str, ...]
+) -> None:
     """Register a descriptor on the device."""
-    descriptor, *xpubs = descriptor.split("\n")
-    nodes = [xpub_deserialize(x.split("]")[1])[1] for x in xpubs]
     btc.register_policy(
-        session, name=name, descriptor=descriptor, nodes=nodes, coin_name=coin
+        session,
+        coin_name=coin,
+        name=name,
+        descriptor=descriptor,
+        keys=[
+            messages.MiniscriptKey(
+                node=messages.HDNodeType(
+                    depth=k.depth,
+                    fingerprint=int.from_bytes(k.fingerprint, "big"),
+                    child_num=k.child_number,
+                    chain_code=k.chain_code,
+                    public_key=k.get_public_key().serialize(),
+                ),
+                root_fingerprint=int.from_bytes(k.fingerprint, "big"),
+                derivation_path=k.derivation,
+            )
+            for k in map(Key.from_string, keys)
+        ],
     )
 
 

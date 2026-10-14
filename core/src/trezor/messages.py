@@ -465,14 +465,12 @@ if TYPE_CHECKING:
 
     class MiniscriptRegisterPolicy(protobuf.MessageType):
         policy: "MiniscriptPolicy"
-        name: "str"
         coin_name: "str"
 
         def __init__(
             self,
             *,
             policy: "MiniscriptPolicy",
-            name: "str",
             coin_name: "str | None" = None,
         ) -> None:
             pass
@@ -500,12 +498,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class MiniscriptPolicy(protobuf.MessageType):
+        name: "str"
         descriptor: "str"
         keys: "list[MiniscriptKey]"
 
         def __init__(
             self,
             *,
+            name: "str",
             descriptor: "str",
             keys: "list[MiniscriptKey] | None" = None,
         ) -> None:

@@ -660,20 +660,23 @@ def test_send_multisig_3_change(session: Session):
 def test_miniscript_send_multisig_2(session: Session):
     # input tx: b9abfa0d4a28f6f25e1f6c0f974bfc3f7c5a44c4d381b1796e3fbeef51b560a6
 
+    paths = [parse_path(f"m/84h/1h/{index}h") for index in range(1, 4)]
     nodes = [
-        btc.get_public_node(
-            session, parse_path(f"m/84h/1h/{index}h"), coin_name="Testnet"
-        ).node
-        for index in range(1, 4)
+        btc.get_public_node(session, n=path, coin_name="Testnet").node for path in paths
     ]
     items = (f"@{i}/<0;1>/*" for i in range(len(nodes)))
+    fpr = int.from_bytes(session.get_root_fingerprint(), "big")
     policy = messages.MiniscriptPolicy(
+        name="2-of-3",
         descriptor=f"wsh(multi(2,{','.join(items)}))",
-        keys=[messages.MiniscriptKey(node=node) for node in nodes],
+        keys=[
+            messages.MiniscriptKey(
+                node=node, root_fingerprint=fpr, derivation_path=path
+            )
+            for node, path in zip(nodes, paths)
+        ],
     )
-    reg = messages.MiniscriptRegisterPolicy(
-        name="2-of-3", policy=policy, coin_name="Testnet"
-    )
+    reg = messages.MiniscriptRegisterPolicy(policy=policy, coin_name="Testnet")
     session.call(reg, expect=messages.Success)
 
     redeem = messages.MiniscriptRedeemPolicyType(policy=policy, internal=False, index=1)

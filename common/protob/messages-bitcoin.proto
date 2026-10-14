@@ -117,7 +117,6 @@ message MiniscriptRegisterPolicy {
     option (experimental_message) = true;
 
     required MiniscriptPolicy policy = 1;                 // policy to register
-    required string name = 2;                             // human-readable name
     optional string coin_name = 3 [default = 'Bitcoin'];  // coin to use
 }
 
@@ -132,8 +131,9 @@ message MiniscriptRedeemPolicyType {
 message MiniscriptPolicy {
     option (experimental_message) = true;
 
-    required string descriptor = 1;   // BIP-388 wallet policy template (multipath descriptor)
-    repeated MiniscriptKey keys = 2;  // list of key expressions used in the miniscript policy
+    required string name = 1;         // human-readable name
+    required string descriptor = 2;   // BIP-388 wallet policy template (multipath descriptor)
+    repeated MiniscriptKey keys = 3;  // list of key expressions used in the miniscript policy
 }
 
 message MiniscriptKey {
