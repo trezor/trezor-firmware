@@ -32,8 +32,11 @@ typedef enum {
 
   SMCALL_BOOTARGS_GET_ARGS = 1,
 
+#ifndef PQ_SECURE_BOOT
+  // Legacy layout only: firmware-driven bootloader update
   SMCALL_BOOT_IMAGE_CHECK,
   SMCALL_BOOT_IMAGE_REPLACE,
+#endif
 
   SMCALL_REBOOT_DEVICE,
   SMCALL_REBOOT_TO_BOOTLOADER,

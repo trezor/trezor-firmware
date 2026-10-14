@@ -62,6 +62,11 @@ typedef enum {
 
 void management_init(void) { k_sem_give(&management_ok); }
 
+/* Key set declared in the info response; 0 is undeclared (older builds).
+ * Must match NRF_KEY_SET_* in the STM's io/nrf.h. */
+#define NRF_KEY_SET_DEVEL 1
+#define NRF_KEY_SET_PRODUCTION 2
+
 #define IMAGE_HASH_LEN 32
 #define IMAGE_TLV_SHA256 0x10
 
@@ -150,7 +155,11 @@ static void send_info(void) {
   data[2] = APP_VERSION_MINOR;
   data[3] = APP_PATCHLEVEL;
   data[4] = APP_TWEAK;
-  data[5] = 0;
+  /* Declared key set (prod.conf); the STM refuses a mismatched push. */
+
+  data[5] = IS_ENABLED(CONFIG_TREZOR_KEY_SET_PRODUCTION)
+                ? NRF_KEY_SET_PRODUCTION
+                : NRF_KEY_SET_DEVEL;
   data[6] = signals_is_stay_in_bootloader();
   data[7] = 0;
   data[8] = signals_out_get_reserved();

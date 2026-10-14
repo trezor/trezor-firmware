@@ -249,6 +249,8 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifndef PQ_SECURE_BOOT
+
 bool boot_image_check__verified(const boot_image_t *image) {
   if (!probe_read_access(image, sizeof(*image))) {
     goto access_violation;
@@ -288,6 +290,8 @@ void boot_image_replace__verified(const boot_image_t *image) {
 access_violation:
   apptask_access_violation();
 }
+
+#endif  // PQ_SECURE_BOOT
 
 // ---------------------------------------------------------------------
 
@@ -1074,7 +1078,7 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
-#ifdef USE_NRF
+#if defined(USE_NRF) && !defined(PQ_SECURE_BOOT)
 
 bool nrf_update_required__verified(const uint8_t *data, size_t len) {
   if (!probe_read_access(data, len)) {

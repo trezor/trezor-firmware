@@ -37,27 +37,9 @@ const boot_header_padded_t g_bootloader_header = {
         .magic = BOOT_HEADER_MAGIC_TRZQ,
         .hw_model = HW_MODEL,
         .hw_revision = HW_REVISION,
-        .version =
-            {
-                .major = VERSION_MAJOR,
-                .minor = VERSION_MINOR,
-                .patch = VERSION_PATCH,
-                .build = VERSION_BUILD,
-            },
-        .fix_version =
-            {
-                .major = FIX_VERSION_MAJOR,
-                .minor = FIX_VERSION_MINOR,
-                .patch = FIX_VERSION_PATCH,
-                .build = FIX_VERSION_BUILD,
-            },
-        .min_prev_version =
-            {
-                .major = 0,
-                .minor = 0,
-                .patch = 0,
-                .build = 0,
-            },
+        // version, fix_version and min_prev_version are release numbers,
+        // stamped by the release signer (firmware_pq_sign.py); 0.0.0.0 until
+        // then.
         .monotonic_version = BOOTLOADER_MONOTONIC_VERSION,
         // The sigmask field is properly initialized later by headertool_pq
         // (= 0 => no keys used for signature verification; prevents booting)

@@ -1,0 +1,17 @@
+/*
+ * MCUboot devicetree overlay for t3t2_dk (nRF54LS05B): the NSIB bl_storage
+ * node, which NCS defines for every other nRF54L part but not this one.
+ * Offset/size follow the family convention (UICR+0x500, length 0x460), must
+ * match provision.py's arguments in build_sign_flash.sh, and are not yet
+ * validated on hardware. Passed via -Dmcuboot_EXTRA_DTC_OVERLAY_FILE; keep it
+ * a flat file (sysbuild reads sysbuild/<image>/ as an app config dir).
+ */
+
+&uicr {
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	bl_storage: uicr@500 {
+		reg = <0x500 0x460>;
+	};
+};

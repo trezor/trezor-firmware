@@ -24,6 +24,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     } else if cfg!(feature = "mcu_stm32u5") {
         lib.add_source("flash/stm32u5/flash_layout.c");
 
+        // Uniform 8 KiB pages across STM32U5; consumed by flash_layout_ucb.c,
+        // which cannot read the HAL's FLASH_PAGE_SIZE on an emulator build.
+        lib.add_define("FLASH_LAYOUT_PAGE_SIZE", Some("0x2000"));
+
         if cfg!(feature = "emulator") {
             // TODO: do not use FLASH_BIT_ACCESS for emulating STM32U5
             // (keeping it for backward compatibility with the SCons build system,
@@ -56,6 +60,14 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         }
     } else {
         bail_unsupported!();
+    }
+
+    if cfg!(feature = "boot_ucb") {
+        // Shared across MCUs; needs the uniform page size defined above.
+        if !cfg!(feature = "mcu_stm32u5") {
+            bail_unsupported!();
+        }
+        lib.add_source("flash/flash_layout_ucb.c");
     }
 
     Ok(())
