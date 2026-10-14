@@ -754,37 +754,6 @@ impl FirmwareUI for UIDelizia {
         flow::util::single_page(layout)
     }
 
-    fn extapp_menu(
-        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
-        // The header has room for one button, and with a menu that is the
-        // menu: the screen's own way out moves in here, after the extras.
-        let cancel = items.len();
-        let mut menu_items = VerticalMenuItems::new();
-        let too_many = || Error::ValueError(c"too many extras for one menu");
-        for item in items {
-            menu_items
-                .push(VerticalMenuItem::Item(item.text))
-                .map_err(|_| too_many())?;
-        }
-        menu_items
-            .push(VerticalMenuItem::Cancel(TR::buttons__cancel.into()))
-            .map_err(|_| too_many())?;
-        let menu = ScrolledVerticalMenu::new(menu_items, 0);
-        let frame = Frame::with_header(
-            Header::left_aligned(TString::empty()).with_cancel_button(),
-            menu,
-        );
-        let layout = MsgMap::new(frame, move |msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) if i == cancel => {
-                Some(FlowMsg::Cancelled)
-            }
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            FrameMsg::Button(_) => Some(FlowMsg::Confirmed),
-        });
-        flow::util::single_page(layout)
-    }
-
     fn select_word(
         title: TString<'static>,
         description: TString<'static>,

@@ -428,19 +428,6 @@ pub trait FirmwareUI {
         current: usize,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
-    /// The menu of an external app's extras.
-    ///
-    /// Answers the chosen extra's index, or `CONFIRMED` when closed. A model
-    /// whose screens give their way out up to the menu button adds that way
-    /// out here and answers `CANCELLED` when it is taken; the caller never
-    /// asks for it. Separate from [`FirmwareUI::select_menu`], which core's
-    /// own flows use.
-    fn extapp_menu(
-        items: heapless::Vec<SelectMenuItem, MAX_MENU_ITEMS>,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
-        Self::select_menu(items, 0)
-    }
-
     fn select_word(
         title: TString<'static>,
         description: TString<'static>,
