@@ -1,0 +1,107 @@
+{
+    "setup": {
+        "mnemonic": "all all all all all all all all all all all all",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "empty",
+            "parameters": {
+                "data": ""
+            },
+            "result": {
+                "encoded": ""
+            }
+        },
+        {
+            "name": "zero_byte",
+            "parameters": {
+                "data": "00"
+            },
+            "result": {
+                "encoded": "1"
+            }
+        },
+        {
+            "name": "zero_bytes",
+            "parameters": {
+                "data": "00000000000000000000"
+            },
+            "result": {
+                "encoded": "1111111111"
+            }
+        },
+        {
+            "name": "leading_zeros",
+            "parameters": {
+                "data": "0000010203"
+            },
+            "result": {
+                "encoded": "11Ldp"
+            }
+        },
+        {
+            "name": "hello_world",
+            "parameters": {
+                "data": "68656c6c6f20776f726c64"
+            },
+            "result": {
+                "encoded": "StV1DL6CwTryKyV"
+            }
+        },
+        {
+            "name": "ff",
+            "parameters": {
+                "data": "ff"
+            },
+            "result": {
+                "encoded": "5Q"
+            }
+        },
+        {
+            "name": "ff_4",
+            "parameters": {
+                "data": "ffffffff"
+            },
+            "result": {
+                "encoded": "7YXq9G"
+            }
+        },
+        {
+            "name": "pattern_32",
+            "parameters": {
+                "data": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+            },
+            "result": {
+                "encoded": "1thX6LZfHDZZKUs92febYZhYRcXddmzfzF2NvTkPNE"
+            }
+        },
+        {
+            "name": "max_ff",
+            "parameters": {
+                "data": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            },
+            "result": {
+                "encoded": "TCQK6EStJfrNjc9cWq2Sj6UhZdDf6PzxEzibBRDEtmo4rfrcgpn2ZNwtAdNNMJ1TAw9FAToCeLPhrpuT6ZbQzEb7fgKt2ZYya6Qt6XsqUANCyiRgCfuxHKU8kKwK7tjAKUiUDrfQ8VijhUtwivXDb6irnaecaLyn3ftJd1VNbFErhEv"
+            }
+        },
+        {
+            "name": "max_zeros",
+            "parameters": {
+                "data": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "result": {
+                "encoded": "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+            }
+        },
+        {
+            "name": "max_pattern",
+            "parameters": {
+                "data": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f"
+            },
+            "result": {
+                "encoded": "12Mc55eJJSx97JNqXmW7TuJSoE9N3JhfHo9hbKS9Pm2qUNVUH1Tgd6xAdqeP8xAxDhjuR6vmAu7KR9Kt2PqaMEEcD2ThugBHeVLCJtW1V1iMZ13ZJfDH7h8E11Xz9hpEDcPUikMCe5p9EHLv7Y3wNXT2bBNYZarpY7Trn3cm8vvo7t"
+            }
+        }
+    ]
+}

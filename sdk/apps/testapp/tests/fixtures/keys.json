@@ -1,0 +1,116 @@
+{
+    "setup": {
+        "mnemonic": "all all all all all all all all all all all all",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "root",
+            "parameters": {
+                "path": "m"
+            },
+            "result": {
+                "tpub": "tpubD6NzVbkrYhZ4X8s4vJvup9qGvZLmN9P1VQ7UqJGrcPFzf6VMYapxCcW9mQmcC4GfFFKivzCYCivcinXuXAoadgTTTxkR5Hoe8EqEzhpRbrG",
+                "xpub": "xpub661MyMwAqRbcFLgDU7wpcEVubSF7NkswwmXBUkDiGUW6uopeUMys4AqKXNgpfZKRTLnpKQgffd6a2c3J8JxLkF1AQN17Pm9QYHEqEfo1Rsx",
+                "public_key_compressed": "03e3b30e8c21923752a408242e069941fedbaef7db7161f7e2c5f3fdafe7e25ddc",
+                "public_key_uncompressed": "04e3b30e8c21923752a408242e069941fedbaef7db7161f7e2c5f3fdafe7e25ddc35cd9b1f418aba7d51ad653bf0ac734cc5571554fe592924018dd108d3d928b1"
+            }
+        },
+        {
+            "name": "purpose",
+            "parameters": {
+                "path": "m/44h"
+            },
+            "result": {
+                "tpub": "tpubD8wcREsXStNQVnXE7eXsgTDgEe8VJ5J1vjQBDAE4eBPgqtXrRF1j2Trk2e2W5MWfskM4cyqftksxXcWyggTDTFWcQuhXXrjMxRaL3d1heuj",
+                "xpub": "xpub68Zyu13qjcQxDzLNfTYnUXtJuX2qJgnxP6osrcAvJGdo6bs9M2Adt2BunbwiYrZS5qpA1QKoMf3uqS2NHpbyZp4KMJxDrL58NTyvHXBeAv6",
+                "public_key_compressed": "034d600165882b6faf32a3f1f2c4755eeb0f0486954718d46fd9621e8ca40ca6b6",
+                "public_key_uncompressed": "044d600165882b6faf32a3f1f2c4755eeb0f0486954718d46fd9621e8ca40ca6b68e574c40d111c79bc833d35798890e9b1f8b09c795d94248fbcce3818768bb69"
+            }
+        },
+        {
+            "name": "account",
+            "parameters": {
+                "path": "m/44h/1h/0h"
+            },
+            "result": {
+                "tpub": "tpubDDKn3FtHc74CaRrRbi1WFdJNaaenZkDWqq9NsEhcafnDZ4VuKeuLG2aKHm5SuwuLgAhRkkfHqcCxpnVNSrs5kJYZXwa6Ud431VnevzzzK3U",
+                "xpub": "xpub6Cx9X24btq6kJdfa9X2R3hy1FTZ8aMiTJCZ5WgeUEm2KomqCFS4F7auV3izfPSx6tGAX9B9RJWNv8bzm411qrs6GULpno6PoRYCFAy3k7qf",
+                "public_key_compressed": "03c5fe38557afbe1584bb2ee13fe688b8b6d63be176e402b6c69f4370721b78056",
+                "public_key_uncompressed": "04c5fe38557afbe1584bb2ee13fe688b8b6d63be176e402b6c69f4370721b78056196c4f86bf56243808b78d04b43c195739e0ba05ff76b2387a03b63e3deb27e7"
+            }
+        },
+        {
+            "name": "address",
+            "parameters": {
+                "path": "m/44h/1h/0h/0/0"
+            },
+            "result": {
+                "tpub": "tpubDGwNSs8z8jZU2EcUiubR4frGvKqddvLBqCDNknnWhmoUd6EHrRWrqXmDaWBNddWzM5Yqh4e4TUYFK9hGCEnSrMKgV6cthRhArfZpwzihdw7",
+                "xpub": "xpub6GZjvdKJRTc1kSRdGicKrkWubCjyeXq8HZd5QEjNMs3asoZanCfmh66PLU6b78ZkZB1w5V8BvNiCcyCeoNwCxusPRVsb1u2wGhyRBxJHNgq",
+                "public_key_compressed": "030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0",
+                "public_key_uncompressed": "040e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0f387d19327df6ba6ae0e791c85694e84369bac41fc5cfb49883d562ae6db61ff"
+            }
+        },
+        {
+            "name": "address_change",
+            "parameters": {
+                "path": "m/44h/1h/0h/1/5"
+            },
+            "result": {
+                "tpub": "tpubDGe6FXThpj5BvMPUjK4oNHKHbkYa4bnsk5GJJDsxSxbgQD9TTHHLDHmPPNnxBqEPrjyoe9W6yqGHhsxMfLcmfKjs1qW9fG7DYyFXE2aoGuz",
+                "xpub": "xpub6GGTjHe27T7jeZCdH85iAMyvGdSv5DHpCSfzwfpp73qnevUkP4SF4r6Z9LiAfLHA4qSu2ZzESjSF1hTkGUmXmtHZxEkqyjSyy1f7U5FW7pR",
+                "public_key_compressed": "0242c61582525c2bb3420259afffa504bfad72d24153f3f308e0b2ad00a6d280ea",
+                "public_key_uncompressed": "0442c61582525c2bb3420259afffa504bfad72d24153f3f308e0b2ad00a6d280ea0b75ccc3879850b5b4ad915155770e22ff3db9991193f711164d57d46abd2c68"
+            }
+        },
+        {
+            "name": "unhardened_max",
+            "parameters": {
+                "path": "m/44h/1h/0h/0/2147483647"
+            },
+            "result": {
+                "tpub": "tpubDGwNSs98UQ6SBnzpLZhMEqrCcXaxDYckppWtnNwFMF3NZm27PwXfKxi7thhn1F1utveq1CkTZKdQwDcLYR6mBS3c3xpP5NL6R7ZELH9nGPU",
+                "xpub": "xpub6GZjvdKSm88yuzoxtNiG2vWqHQVJEA7hHBvbRpt71LHUpUMQKigaBX3HefczUk4g727vPdEb2DoNF37j9ZFXHzbJzN55Pqfrq9xpaHcrSiv",
+                "public_key_compressed": "02c92b355b65128dff36c34710e4e9b7011a42212f8c861a496a03b3957ffac03b",
+                "public_key_uncompressed": "04c92b355b65128dff36c34710e4e9b7011a42212f8c861a496a03b3957ffac03b24e83b28c59feab00b9a84e39e3fd54cccfe7c04641c3ca92eb41d541c229e2a"
+            }
+        },
+        {
+            "name": "hardened_max",
+            "parameters": {
+                "path": "m/2147483647h"
+            },
+            "result": {
+                "tpub": "tpubD8wcREsfnYuLhMYLjK7p3cED3cJG8jcyJmeWjp2WGC2HhwnvnvAzYYkDwVdpQQKcTW1gPwU6Vko6jDQKfDxXYEfs69RgiCw5TYrDZx8yiDb",
+                "xpub": "xpub68Zyu13z5GwtRZMVH88iqgtqiVCc9M7um94DPFyMvHGPxf8DihKuQ75PhTZ2suNNfbUmnMxDxey432uiGN7HeoDa2YgP2gGqsbFoouvUYt1",
+                "public_key_compressed": "0352c90b29a08fd019aad3d0e364d2173f132fdb99b0f8a16c50b4d5fbf41518fd",
+                "public_key_uncompressed": "0452c90b29a08fd019aad3d0e364d2173f132fdb99b0f8a16c50b4d5fbf41518fde146ac648be6a671a4b766c1728f37f66dae2514410c99cd249219ff3cc0f973"
+            }
+        },
+        {
+            "name": "other_coin",
+            "parameters": {
+                "path": "m/44h/0h/0h/0/0"
+            },
+            "result": {
+                "tpub": "tpubDFrqwRqRRnKvBFEWDndo9MtNw345DN4L96B3qkoLC1gv6EUwVzPvgRbj6Nj63ef5nF7pE1Zhqd6hSpkUqM3UEC3yiRZQw1vss2mxQmiuJpo",
+                "xpub": "xpub6FVDRC1jiWNTuT3embehwSZ1buxRDyZGbTakVCkBr6w2LwpERmYqXyvtrLeJX9hqzLaucS3qJXGekeFsSVCELkbgepp7FVGeH5BYekEgT9x",
+                "public_key_compressed": "03c6d9cc725bb7e19c026df03bf693ee1171371a8eaf25f04b7a58f6befabcd38c",
+                "public_key_uncompressed": "04c6d9cc725bb7e19c026df03bf693ee1171371a8eaf25f04b7a58f6befabcd38cd66eb9f1fdb3cfb470f54c6cfede94630c73f17441b87c16525c81dd0dd1b329"
+            }
+        },
+        {
+            "name": "deep",
+            "parameters": {
+                "path": "m/44h/1h/0h/0/0/0/0/0/0/0"
+            },
+            "result": {
+                "tpub": "tpubDSwGbgTVmLJuVr22g9eZd4M7T9632etbHP34CCQt2o6SwujdWGD4aKX9dkGgZ3UmtZYZVz9nn7Qi4wXrop3Nq1kzKEHFknVLBfaRxb1o94r",
+                "xpub": "xpub6SZe5Sdp44MTE3qBDxfUR91k81zP3GPXjkSkqeMjgtLZCd4vS3MyRsrKPiBu2YXY6f1etQdvF1afNm3FQxC8waJhFdXx5Fq6bhz2CUuBQxx",
+                "public_key_compressed": "035525b97e2639531762d3e0748e36f791d4e4bd700ca84b27d9a95d9903812095",
+                "public_key_uncompressed": "045525b97e2639531762d3e0748e36f791d4e4bd700ca84b27d9a95d990381209584a8a2d00c557943a22188fffbf45652a7cc03cc415726b96de254fb81f41f29"
+            }
+        }
+    ]
+}
