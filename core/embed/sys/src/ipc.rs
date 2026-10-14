@@ -4,6 +4,8 @@
 //! incoming messages; [`IpcMessage`] borrows from that buffer for as long as
 //! it's alive. [`send`] fires a message at another task directly.
 
+use rtl::CSlice;
+
 use crate::buffer::{KernelBuffer, KernelBufferPtr};
 use crate::task::TaskId;
 use crate::time::Timeout;
@@ -20,13 +22,14 @@ pub struct InboxAlreadyRegistered;
 /// Non-blocking: returns an error if the remote task has no buffer registered,
 /// or has no room left in it.
 pub fn send(remote: TaskId, service: u16, id: u16, data: &[u8]) -> Result<(), SendFailed> {
+    let data = CSlice::from(data);
     // SAFETY: `data` is valid for `data.len()` bytes for the duration of the call.
     if unsafe {
         ffi::ipc_send(
             remote.into(),
             service,
             id,
-            data.as_ptr() as *const _,
+            data.ptr() as *const _,
             data.len(),
         )
     } {
