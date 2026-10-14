@@ -4,8 +4,11 @@
 
 // GC9307C (LX200B4501CTP03A/B) over i8080 FMC bus.
 // The module has no tearing-effect (TE) output, so no DISPLAY_TE_* defines.
+// The following macros for bus widths are mutually exclusive. Only one at
+// a time shall be defined.
 // For 8-bit mode, use:
 // #define DISPLAY_I8080_8BIT_DW 1
+// For 16-bit mode, use:
 #define DISPLAY_I8080_16BIT_DW 1
 
 // Use a single framebuffer on this project (lower RAM use; there is no TE
