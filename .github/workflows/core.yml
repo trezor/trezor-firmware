@@ -639,7 +639,7 @@ jobs:
           name: core-firmware-${{ matrix.model }}-universal-normal  # FIXME: s/normal/debuglink/
           path: core/build/artifacts
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "uv run core/tools/size/checker.py core/build/artifacts/latest/firmware.elf"
+      - run: nix-shell --run "uv run --project=. core/tools/size/checker.py core/build/artifacts/latest/firmware.elf"
 
   # Monero tests.
   core_monero_test:
