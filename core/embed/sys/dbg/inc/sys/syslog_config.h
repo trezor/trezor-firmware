@@ -68,6 +68,15 @@
 #define SYSLOG_ble_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
 
+#ifndef SYSLOG_ble_chan_MAX_LOG_LEVEL
+#define SYSLOG_ble_chan_MAX_LOG_LEVEL LOG_LEVEL_DBG
+#endif
+
+#ifndef SYSLOG_ble_debug_MAX_LOG_LEVEL
+// Chatty on purpose while the BLE debuglink is being brought up
+#define SYSLOG_ble_debug_MAX_LOG_LEVEL LOG_LEVEL_DBG
+#endif
+
 #ifndef SYSLOG_app_loader_MAX_LOG_LEVEL
 #define SYSLOG_app_loader_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif

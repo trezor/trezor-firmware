@@ -763,6 +763,21 @@ uint32_t ble_read(uint8_t *data, uint16_t len) {
   return (uint32_t)syscall_invoke2((uint32_t)data, len, SYSCALL_BLE_READ);
 }
 
+#ifdef USE_BLE_DEBUG
+
+#include <io/ble_debug.h>
+
+bool ble_debug_write(const uint8_t *data, uint16_t len) {
+  return syscall_invoke2((uint32_t)data, len, SYSCALL_BLE_DEBUG_WRITE);
+}
+
+uint32_t ble_debug_read(uint8_t *data, uint16_t len) {
+  return (uint32_t)syscall_invoke2((uint32_t)data, len,
+                                   SYSCALL_BLE_DEBUG_READ);
+}
+
+#endif  // USE_BLE_DEBUG
+
 void ble_set_name(const uint8_t *name, size_t len) {
   syscall_invoke2((uint32_t)name, len, SYSCALL_BLE_SET_NAME);
 }

@@ -281,6 +281,81 @@ static BLE_INTERFACE_TYPE: FullType = obj_type! {
 
 static BLE_INTERFACE_OBJ: SimpleTypeObj = SimpleTypeObj::new(&BLE_INTERFACE_TYPE);
 
+// Debuglink over BLE. The object always exists so the module table is static;
+// without the interface (production build, emulator) the methods fail and
+// `trezorutils.USE_BLE_DEBUG` tells the coreapp not to use it.
+
+extern "C" fn py_debug_iface_num(_self: Obj) -> Obj {
+    Obj::small_int(unwrap!(ffi::syshandle_t_SYSHANDLE_BLE_IFACE_1.try_into()))
+}
+
+#[cfg(all(feature = "ble_debug", not(feature = "emulator")))]
+extern "C" fn py_debug_iface_write(_self: Obj, msg: Obj) -> Obj {
+    let block = || {
+        // SAFETY: reference is discarded at the end of the block
+        let buf = unsafe { get_buffer(msg)? };
+        // 0 means "not now": the codec waits for the interface to become
+        // writable and retries, like the USB interfaces.
+        if debug_write(buf).is_ok() {
+            Ok(buf.len().try_into()?)
+        } else {
+            Ok(Obj::small_int(0))
+        }
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+#[cfg(all(feature = "ble_debug", not(feature = "emulator")))]
+extern "C" fn py_debug_iface_read(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        // SAFETY: reference is discarded at the end of the block
+        let mut buf = unsafe { get_buffer_mut(args[1]) }?;
+
+        if args.len() > 2 {
+            let offset: usize = args[2].try_into()?;
+            buf = buf
+                .get_mut(offset..)
+                .ok_or(Error::ValueError(c"Offset out of bounds"))?;
+        }
+        if buf.len() < DEBUG_PACKET_SIZE {
+            return Err(Error::ValueError(c"Buffer too small"));
+        }
+        let read_len = debug_read(&mut buf[..DEBUG_PACKET_SIZE])?;
+        if read_len != DEBUG_PACKET_SIZE {
+            return Err(Error::ValueError(c"Unexpected read length"));
+        }
+        read_len.try_into()
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
+#[cfg(not(all(feature = "ble_debug", not(feature = "emulator"))))]
+extern "C" fn py_debug_iface_write(_self: Obj, _msg: Obj) -> Obj {
+    let block = || Err::<Obj, Error>(Error::ValueError(c"BLE debuglink not available"));
+    unsafe { util::try_or_raise(block) }
+}
+
+#[cfg(not(all(feature = "ble_debug", not(feature = "emulator"))))]
+extern "C" fn py_debug_iface_read(n_args: usize, args: *const Obj) -> Obj {
+    let block = |_args: &[Obj], _kwargs: &Map| {
+        Err::<Obj, Error>(Error::ValueError(c"BLE debuglink not available"))
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
+static BLE_DEBUG_INTERFACE_TYPE: FullType = obj_type! {
+    name: Qstr::MP_QSTR_BLEIF,
+    locals: &obj_dict!(obj_map! {
+        Qstr::MP_QSTR_iface_num => obj_fn_1!(py_debug_iface_num).as_obj(),
+        Qstr::MP_QSTR_write => obj_fn_2!(py_debug_iface_write).as_obj(),
+        Qstr::MP_QSTR_read => obj_fn_var!(2, 3, py_debug_iface_read).as_obj(),
+        Qstr::MP_QSTR_RX_PACKET_LEN => Obj::small_int(RX_PACKET_SIZE as u16),
+        Qstr::MP_QSTR_TX_PACKET_LEN => Obj::small_int(TX_PACKET_SIZE as u16),
+    }),
+};
+
+static BLE_DEBUG_INTERFACE_OBJ: SimpleTypeObj = SimpleTypeObj::new(&BLE_DEBUG_INTERFACE_TYPE);
+
 #[no_mangle]
 #[rustfmt::skip]
 pub static mp_module_trezorble: Module = obj_module! {
@@ -320,6 +395,11 @@ pub static mp_module_trezorble: Module = obj_module! {
     /// interface: BLEIF
     /// """BLE interface instance."""
     Qstr::MP_QSTR_interface => BLE_INTERFACE_OBJ.as_obj(),
+
+    /// debug_interface: BLEIF
+    /// """Debuglink interface over BLE; usable only when
+    /// `trezorutils.USE_BLE_DEBUG` is true."""
+    Qstr::MP_QSTR_debug_interface => BLE_DEBUG_INTERFACE_OBJ.as_obj(),
 
     /// mock:global
 

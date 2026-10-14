@@ -56,6 +56,8 @@ upymod = { workspace = true, optional = true }
 app_loading = []
 backlight = []
 ble = []
+# Debuglink over BLE; effective only with `ble` and `debuglink` on a device build
+ble_debug = []
 boot_ucb = []
 bootloader = []
 button = []

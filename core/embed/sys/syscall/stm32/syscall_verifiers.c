@@ -1025,6 +1025,36 @@ access_violation:
   return 0;
 }
 
+#ifdef USE_BLE_DEBUG
+
+#include <io/ble_debug.h>
+
+bool ble_debug_write__verified(const uint8_t *data, size_t len) {
+  if (!probe_read_access(data, len)) {
+    goto access_violation;
+  }
+
+  return ble_debug_write(data, len);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+uint32_t ble_debug_read__verified(uint8_t *data, size_t len) {
+  if (!probe_write_access(data, len)) {
+    goto access_violation;
+  }
+
+  return ble_debug_read(data, len);
+
+access_violation:
+  apptask_access_violation();
+  return 0;
+}
+
+#endif  // USE_BLE_DEBUG
+
 void ble_set_name__verified(const uint8_t *name, size_t len) {
   if (!probe_read_access(name, len)) {
     goto access_violation;

@@ -31,6 +31,7 @@ typedef enum {
   NRF_SERVICE_PRODTEST = 3,
   NRF_SERVICE_IDLE = 4,
   NRF_SERVICE_CONSOLE = 5,  // BLE console service, see ble/console.c
+  NRF_SERVICE_DEBUG = 6,    // BLE debuglink service, see ble/debug.c
 
   NRF_SERVICE_CNT  // Number of services
 } nrf_service_id_t;

@@ -63,6 +63,13 @@ it is built with `--dbg-console ble`. Reaches the device over BLE, a USB VCP ser
 port or the prodtest emulator's UDP; `--serve` exposes the console as a
 pseudo-terminal for other tools. Standalone (needs only `bleak`).
 
+### `debuglink_check.py`
+
+Smoke test of a device's debuglink over any transport path (`ble:ADDR`,
+`udp:HOST:PORT`, `webusb:...`): opens it, derives the debuglink, and times a
+state request, a layout read and a burst of round trips. Nothing on the device
+changes.
+
 ### `dialog-designer`
 
 Deprecated tool to visually preview multi-line dialogs in the old Trezor T UI.

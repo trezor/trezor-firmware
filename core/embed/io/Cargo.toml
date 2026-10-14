@@ -45,6 +45,8 @@ app_loading = ["sys/app_loading", "sec/mldsa44"]
 backlight = []
 ble = ["nrf"]
 ble_console = ["ble"]
+# Debuglink over BLE; takes effect only together with `ble` (see ble/build.rs)
+ble_debug = []
 button = []
 display = []
 dma2d = []

@@ -496,7 +496,9 @@ if __debug__:
         return Success()
 
     _EXIT_FLAG = False
-    _EXIT_BOX: loop.mailbox[None] = loop.mailbox()
+    # One per session: a mailbox takes a single waiting task, and there is a
+    # session per debug interface (USB, BLE).
+    _EXIT_BOXES: list[loop.mailbox[None]] = []
     _SESSION_TASK: loop.spawn[None] | None = None
 
     _CLOSE_TIMEOUT_MS = const(5000)
@@ -508,7 +510,8 @@ if __debug__:
         global _EXIT_FLAG
 
         _EXIT_FLAG = True
-        _EXIT_BOX.put(None)
+        for exit_box in _EXIT_BOXES:
+            exit_box.put(None, replace=True)
         if layout_change_box.is_empty():
             # make sure `DebugLinkGetState` won't get stuck
             layout_change_box.put(None)
@@ -533,9 +536,12 @@ if __debug__:
                 log.exception(__name__, e)
 
         read_wait = loop.wait(iface.iface_num() | io.POLL_READ)
+        exit_box: loop.mailbox[None] = loop.mailbox()
+        _EXIT_BOXES.append(exit_box)
 
         while not _EXIT_FLAG:
-            await loop.race(read_wait, _EXIT_BOX)
+            await loop.race(read_wait, exit_box)
+            log.debug(__name__, "debuglink wake on iface %d", iface.iface_num())
             if _EXIT_FLAG:
                 # in case both `read_wait` and `_EXIT_BOX` are ready,
                 # don't handle the message and exit the loop.
@@ -548,6 +554,10 @@ if __debug__:
                     log.exception(__name__, exc)
                     await ctx.write(wire.failure(exc))
                     continue
+
+                # The transport that spoke last gets the unsolicited replies
+                # (layout changes), see DEBUG_CONTEXT above.
+                DEBUG_CONTEXT = ctx
 
                 req_type = None
                 try:
@@ -626,4 +636,12 @@ if __debug__:
 
         global _SESSION_TASK
 
+        _EXIT_BOXES.clear()
         _SESSION_TASK = loop.spawn(handle_session(usb.iface_debug))
+
+        if utils.USE_BLE_DEBUG:
+            import trezorble
+
+            # Debuglink over BLE: a second session on the BLE debug interface.
+            # Whichever transport spoke last owns the layout notifications.
+            loop.spawn(handle_session(trezorble.debug_interface))

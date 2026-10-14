@@ -284,6 +284,8 @@ USE_NRF: bool
 """Whether the hardware has a nRF chip."""
 USE_DBG_CONSOLE: bool
 """Whether a debug console is enabled."""
+USE_BLE_DEBUG: bool
+"""Whether the debuglink has a BLE interface (trezorble.debug_interface)."""
 USE_APP_LOADING: bool
 """Whether the firmware supports loading 3rd-party applications."""
 USE_TELEMETRY: bool

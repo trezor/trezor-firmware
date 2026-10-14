@@ -17,9 +17,23 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     // and inter-MCU service id; never part of production firmware. The emulator
     // has no nRF and its console is the UDP-backed USB VCP, so the interface
     // does not exist there and consumers fall back to the VCP.
-    if cfg!(feature = "ble_console") && !cfg!(feature = "emulator") {
+    let console = cfg!(feature = "ble_console") && !cfg!(feature = "emulator");
+    // Debuglink over BLE: a debug-build interface next to the USB debug one.
+    // `ble_debug` does not imply `ble`, so a non-BLE board with debuglink gets
+    // nothing here.
+    let debug = cfg!(feature = "ble_debug") && cfg!(feature = "ble")
+        && !cfg!(feature = "emulator");
+
+    if console || debug {
+        lib.add_sources(["ble/stm32/ble_chan.c"]);
+    }
+    if console {
         lib.add_define("USE_BLE_CONSOLE", Some("1"));
-        lib.add_sources(["ble/stm32/ble_chan.c", "ble/stm32/ble_console.c"]);
+        lib.add_sources(["ble/stm32/ble_console.c"]);
+    }
+    if debug {
+        lib.add_define("USE_BLE_DEBUG", Some("1"));
+        lib.add_sources(["ble/stm32/ble_debug.c"]);
     }
 
     Ok(())

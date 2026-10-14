@@ -49,6 +49,9 @@
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif
+#ifdef USE_BLE_DEBUG
+#include <io/ble_debug.h>
+#endif
 
 #ifdef USE_NRF
 #include <io/nrf.h>
@@ -814,6 +817,20 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t len = args[1];
       args[0] = ble_read__verified(data, len);
     } break;
+
+#ifdef USE_BLE_DEBUG
+    case SYSCALL_BLE_DEBUG_WRITE: {
+      uint8_t *data = (uint8_t *)args[0];
+      size_t len = args[1];
+      args[0] = ble_debug_write__verified(data, len);
+    } break;
+
+    case SYSCALL_BLE_DEBUG_READ: {
+      uint8_t *data = (uint8_t *)args[0];
+      size_t len = args[1];
+      args[0] = ble_debug_read__verified(data, len);
+    } break;
+#endif
 
     case SYSCALL_BLE_SET_NAME: {
       const uint8_t *name = (const uint8_t *)args[0];

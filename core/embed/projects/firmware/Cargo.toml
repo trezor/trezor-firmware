@@ -31,7 +31,13 @@ bootloader_devel = ["sec/bootloader_devel"]
 clippy = ["trezor_lib/clippy"]
 dbg_console = ["sys/dbg_console", "trezor_lib/dbg_console"]
 debug = ["trezor_lib/debug"]
-debuglink = ["trezor_lib/debuglink", "io/usb_iface_debug"]
+debuglink = [
+    "trezor_lib/debuglink",
+    "trezor_lib/ble_debug",
+    "io/usb_iface_debug",
+    "io/ble_debug",
+    "upymod/ble_debug",
+]
 dev_keys = ["trezor_lib/dev_keys"]
 disable_animation = ["upymod/disable_animation"]
 emulator = ["io/emulator", "trezor_lib/emulator", "upymod/emulator", "io/kernel_mode", "io/secure_mode", "sys/applets"]

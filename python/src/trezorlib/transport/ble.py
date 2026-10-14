@@ -27,7 +27,6 @@ from multiprocessing.connection import Connection
 
 from ..log import DUMP_PACKETS
 from . import Timeout, Transport, TransportException
-from .udp import UdpTransport
 
 if t.TYPE_CHECKING:
     from ..models import TrezorModel
@@ -49,6 +48,13 @@ TREZOR_SERVICE_UUID = "8c000001-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_RX = "8c000002-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_TX = "8c000003-a59b-4d58-a9ad-073df69fa1b1"
 
+# Debuglink over BLE: a separate service on debug firmware with a debug nRF
+# image, the counterpart of the USB debug interface. Same connection as the
+# wire service, so both are driven from the one bleak client.
+TREZOR_DEBUG_SERVICE_UUID = "8c000020-a59b-4d58-a9ad-073df69fa1b1"
+TREZOR_DEBUG_CHARACTERISTIC_RX = "8c000021-a59b-4d58-a9ad-073df69fa1b1"
+TREZOR_DEBUG_CHARACTERISTIC_TX = "8c000022-a59b-4d58-a9ad-073df69fa1b1"
+
 SCAN_INTERVAL_SECONDS = 3
 SHUTDOWN_TIMEOUT_SECONDS = 10
 
@@ -69,8 +75,18 @@ class BleTransport(Transport):
     def get_path(self) -> str:
         return "{}:{}".format(self.PATH_PREFIX, self.device)
 
-    def find_debug(self) -> UdpTransport:
-        return UdpTransport("127.0.0.1:27315")
+    def find_debug(self) -> BleDebugTransport:
+        # The services are only known once connected; connecting here is what
+        # open() does anyway and the proxy keeps the one connection.
+        proxy = self.ble_proxy()
+        if not proxy.is_connected(self.device):
+            proxy.connect(self.device)
+        if not proxy.has_debug(self.device):
+            raise TransportException(
+                f"{self.get_path()} has no debuglink service "
+                "(needs debug firmware and a debug nRF image)"
+            )
+        return BleDebugTransport(self.device)
 
     @classmethod
     def enumerate(
@@ -118,12 +134,15 @@ class BleTransport(Transport):
     def is_open(self) -> bool:
         return self.ble_proxy().is_connected(self.device)
 
+    # which characteristic pair the chunks go through
+    DEBUG = False
+
     def write_chunk(self, chunk: bytes) -> None:
         LOG.log(DUMP_PACKETS, f"sending packet: {chunk.hex()}")
-        self.ble_proxy().write(self.device, chunk)
+        self.ble_proxy().write(self.device, chunk, self.DEBUG)
 
     def read_chunk(self, timeout: float | None = None) -> bytes:
-        chunk = self.ble_proxy().read(self.device, timeout)
+        chunk = self.ble_proxy().read(self.device, timeout, self.DEBUG)
         LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) not in (64, 244):
             LOG.error(f"{__name__}: unexpected chunk size: {len(chunk)}")
@@ -137,6 +156,29 @@ class BleTransport(Transport):
 
     def is_ready(self) -> bool:
         return self._ble is not None
+
+
+class BleDebugTransport(BleTransport):
+    """The debuglink of a BLE device, on the device's debug service.
+
+    Obtained through `BleTransport.find_debug()`; shares the wire transport's
+    connection and bond, only the characteristics differ. The device sends
+    and expects whole 244-byte codec v1 reports, which is this transport's
+    chunk size already.
+    """
+
+    PATH_PREFIX = "ble-debug"
+    DEBUG = True
+
+    @classmethod
+    def enumerate(
+        cls, models: t.Iterable[TrezorModel] | None = None
+    ) -> t.Iterable[BleDebugTransport]:
+        # Never a device of its own; reached through find_debug() only.
+        return []
+
+    def find_debug(self) -> BleDebugTransport:
+        return self
 
 
 class BleProxy:
@@ -186,6 +228,8 @@ class Peripheral:
     adv_data: AdvertisementData
     client: BleakClient | None = None
     queue: asyncio.Queue | None = None
+    # debuglink service, present on debug firmware with a debug nRF image
+    debug_queue: asyncio.Queue | None = None
 
     @property
     def address(self) -> str:
@@ -283,11 +327,12 @@ class BleAsync:
             LOG.error(f"Got disconnected from {periph.address}")
             self.devices[address].client = None
             self.devices[address].queue = None
+            self.devices[address].debug_queue = None
 
         LOG.debug(f"Connecting to {address}...")
         client = BleakClient(
             periph.device,
-            services=[TREZOR_SERVICE_UUID],
+            services=[TREZOR_SERVICE_UUID, TREZOR_DEBUG_SERVICE_UUID],
             timeout=SCAN_INTERVAL_SECONDS,
             disconnect_callback=disconnect_callback,
         )
@@ -321,8 +366,24 @@ class BleAsync:
             await queue.put(data)
 
         await client.start_notify(TREZOR_CHARACTERISTIC_TX, read_callback)
+
+        debug_queue = None
+        if client.services.get_characteristic(TREZOR_DEBUG_CHARACTERISTIC_TX):
+            debug_queue = asyncio.Queue()
+
+            async def debug_read_callback(
+                characteristic: BleakGATTCharacteristic, data: bytearray
+            ) -> None:
+                await debug_queue.put(data)
+
+            await client.start_notify(
+                TREZOR_DEBUG_CHARACTERISTIC_TX, debug_read_callback
+            )
+            LOG.debug(f"Debuglink service present on {client.address}")
+
         periph.client = client
         periph.queue = queue
+        periph.debug_queue = debug_queue
         LOG.info(f"Connected to {client.address}")
 
     async def _known_to_system(self, address: str) -> Peripheral | None:
@@ -357,6 +418,12 @@ class BleAsync:
             return False
         return bool(periph.client)
 
+    async def has_debug(self, address: str) -> bool:
+        periph = self.devices.get(address)
+        if not periph or not periph.client:
+            return False
+        return periph.debug_queue is not None
+
     async def disconnect(self, address: str) -> None:
         periph = self.devices.get(address)
         if not periph or not periph.client:
@@ -364,6 +431,8 @@ class BleAsync:
 
         try:
             await periph.client.stop_notify(TREZOR_CHARACTERISTIC_TX)
+            if periph.debug_queue is not None:
+                await periph.client.stop_notify(TREZOR_DEBUG_CHARACTERISTIC_TX)
             await periph.client.disconnect()
             LOG.info(f"Disconnected from {periph.address}")
         except EOFError:
@@ -374,22 +443,29 @@ class BleAsync:
         finally:
             periph.client = None
             periph.queue = None
+            periph.debug_queue = None
 
-    async def read(self, address: str, timeout: float | None) -> bytes:
+    async def read(
+        self, address: str, timeout: float | None, debug: bool = False
+    ) -> bytes:
         periph = self.devices[address]
-        if periph.queue is None:
+        queue = periph.debug_queue if debug else periph.queue
+        if queue is None:
             raise RuntimeError("Connect to peripheral before reading")
         try:
-            return await asyncio.wait_for(periph.queue.get(), timeout=timeout)
+            return await asyncio.wait_for(queue.get(), timeout=timeout)
         except (TimeoutError, asyncio.TimeoutError) as err:
             raise Timeout(f"Timeout reading BLE packet ({timeout}s)") from err
 
-    async def write(self, address: str, chunk: bytes) -> None:
+    async def write(self, address: str, chunk: bytes, debug: bool = False) -> None:
         periph = self.devices[address]
         if periph.client is None:
             raise RuntimeError("Connect to peripheral before writing")
+        if debug and periph.debug_queue is None:
+            raise RuntimeError("Peripheral has no debuglink service")
+        char = TREZOR_DEBUG_CHARACTERISTIC_RX if debug else TREZOR_CHARACTERISTIC_RX
         await periph.client.write_gatt_char(
-            TREZOR_CHARACTERISTIC_RX, chunk, response=SHOULD_WRITE_WITH_RESPONSE
+            char, chunk, response=SHOULD_WRITE_WITH_RESPONSE
         )
 
     async def shutdown(self) -> None:

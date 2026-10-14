@@ -43,4 +43,16 @@ config TRZ_CONSOLE
 	  there; still, leave this off for images that ship on models whose
 	  console stays on USB.
 
+config TRZ_DEBUG_LINK
+	bool "BLE debuglink service"
+	depends on BT_PERIPHERAL
+	select BT_GATT_DYNAMIC_DB
+	help
+	  Expose a GATT service that carries the debuglink between debug STM32
+	  firmware and a bonded host, the counterpart of the USB debug
+	  interface on models without USB. Forwarded on its own inter-MCU
+	  service id (NRF_SERVICE_DEBUG). Debug images only: never enable it
+	  in an image that ships, as debug STM32 firmware answers debuglink
+	  requests from any bonded host.
+
 endmenu

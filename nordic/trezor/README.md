@@ -203,6 +203,19 @@ that model) and, temporarily while the console is brought up on T3W1
 development units, also for `t3w1_revA_nrf52832`. Remove it from the T3W1 board
 config before building a T3W1 release image.
 
+#### BLE debuglink service
+
+`CONFIG_TRZ_DEBUG_LINK` adds a third service (`8c000020-…`, RX `8c000021`, TX
+`8c000022`) carrying the debuglink's codec v1 reports between debug STM32
+firmware (`--debug-link`) and a bonded host, the counterpart of the USB debug
+interface on models without USB. Own inter-MCU service id
+(`NRF_SERVICE_DEBUG`), same framing and one-packet credit as the console
+(`src/ble/aux_chan.c` implements both). It is on in the `t3t2_dk` and, for
+bring-up, the `t3w1_revA_nrf52832` board configs, and must never be in an
+image that ships: debug STM32 firmware answers debuglink requests from any
+bonded host. On the nRF52832 (T3W1) it does not fit next to the RTT logging
+of `debug.conf`; disable one of them when you need the other.
+
 
 ### Build Radio test application
 ```sh

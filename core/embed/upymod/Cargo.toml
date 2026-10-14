@@ -36,6 +36,8 @@ app_loading = ["io/app_loading", "io/ipc"]
 backlight = ["io/backlight"]
 benchmark = []
 ble = ["io/ble"]
+# Debuglink over BLE (only together with `ble` on a device build)
+ble_debug = ["io/ble_debug"]
 button = ["io/button"]
 decred = []
 disable_animation = []

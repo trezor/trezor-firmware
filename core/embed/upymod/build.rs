@@ -957,6 +957,10 @@ impl<'a> MpyBuilder<'a> {
 
         let backlight = py_bool(cfg!(feature = "backlight"));
         let ble = py_bool(cfg!(feature = "ble"));
+        // mirrors io/ble/build.rs: the interface exists only on a BLE device build
+        let ble_debug = py_bool(
+            cfg!(feature = "ble_debug") && cfg!(feature = "ble") && !cfg!(feature = "emulator"),
+        );
         let btc_only = py_bool(cfg!(not(feature = "universal_fw")));
         let button = py_bool(cfg!(feature = "button"));
         let emulator = py_bool(cfg!(feature = "emulator"));
@@ -985,6 +989,7 @@ impl<'a> MpyBuilder<'a> {
             format!(r"s/utils\.BITCOIN_ONLY/{btc_only}/g"),
             format!(r"s/utils\.EMULATOR/{emulator}/g"),
             format!(r"s/utils\.USE_BACKLIGHT/{backlight}/g"),
+            format!(r"s/utils\.USE_BLE_DEBUG/{ble_debug}/g"), // must be before USE_BLE
             format!(r"s/utils\.USE_BLE/{ble}/g"),
             format!(r"s/utils\.USE_BUTTON/{button}/g"),
             format!(r"s/utils\.USE_HAPTIC/{haptic}/g"),

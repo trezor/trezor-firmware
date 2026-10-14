@@ -350,6 +350,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_data_hash;
   MP_QSTR_data_len;
   MP_QSTR_debug;
+  MP_QSTR_debug_interface;
   MP_QSTR_decode;
   MP_QSTR_deinit;
   MP_QSTR_description;

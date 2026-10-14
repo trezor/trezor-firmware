@@ -229,6 +229,23 @@ static mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
       return mp_const_true;
     }
 
+#ifdef USE_BLE_DEBUG
+    // Debuglink over BLE (trezorble.debug_interface). An event on a handle
+    // nobody reports here would spin this loop forever, so every handle the
+    // coreapp waits on needs its branch.
+    if (signalled.read_ready & (1 << SYSHANDLE_BLE_IFACE_1)) {
+      ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_BLE_IFACE_1);
+      ret->items[1] = MP_OBJ_NEW_SMALL_INT(BLE_RX_PACKET_SIZE);
+      return mp_const_true;
+    }
+
+    if (signalled.write_ready & (1 << SYSHANDLE_BLE_IFACE_1)) {
+      ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_BLE_IFACE_1 | POLL_WRITE);
+      ret->items[1] = mp_const_none;
+      return mp_const_true;
+    }
+#endif
+
     if (signalled.read_ready & (1 << SYSHANDLE_BLE)) {
       ble_event_t event = {0};
       if (ble_get_event(&event)) {

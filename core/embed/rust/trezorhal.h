@@ -20,6 +20,10 @@
 #include <io/ble.h>
 #endif
 
+#ifdef USE_BLE_DEBUG
+#include <io/ble_debug.h>
+#endif
+
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif

@@ -282,6 +282,10 @@ fn generate_trezorhal_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_function("ble_set_high_speed")
             .allowlist_function("ble_set_enabled")
             .allowlist_function("ble_get_enabled")
+            // ble debuglink
+            .allowlist_var("BLE_DEBUG_PACKET_SIZE")
+            .allowlist_function("ble_debug_write")
+            .allowlist_function("ble_debug_read")
             .allowlist_type("ble_command_t")
             .allowlist_type("ble_state_t")
             .allowlist_type("ble_event_t")

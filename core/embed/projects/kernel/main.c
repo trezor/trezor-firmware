@@ -54,6 +54,10 @@
 #include <sys/dbg_console.h>
 #endif
 
+#ifdef USE_BLE_DEBUG
+#include <io/ble_debug.h>
+#endif
+
 #ifdef USE_NFC
 #include <io/nfc.h>
 #endif
@@ -219,6 +223,11 @@ void drivers_init() {
   bool ble_console_ok = ble_console_init();
   dbg_printf("BLE debug console %s\n",
              ble_console_ok ? "ready" : "unavailable");
+#endif
+#ifdef USE_BLE_DEBUG
+  // Debuglink over BLE, next to the USB debug interface. Not fatal: the
+  // debuglink then simply has no BLE transport.
+  ble_debug_init();
 #endif
 
 #ifdef USE_NFC

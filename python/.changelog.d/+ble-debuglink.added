@@ -1,0 +1,1 @@
+Debuglink over BLE: `BleTransport.find_debug()` returns a transport on the device's debuglink service when debug firmware with a debug nRF image exposes it.

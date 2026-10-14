@@ -259,6 +259,12 @@ bool ble_write__verified(const uint8_t *data, size_t len);
 
 secbool ble_read__verified(uint8_t *data, size_t len);
 
+#ifdef USE_BLE_DEBUG
+bool ble_debug_write__verified(const uint8_t *data, size_t len);
+
+uint32_t ble_debug_read__verified(uint8_t *data, size_t len);
+#endif
+
 void ble_set_name__verified(const uint8_t *name, size_t len);
 
 bool ble_unpair__verified(const bt_le_addr_t *addr);

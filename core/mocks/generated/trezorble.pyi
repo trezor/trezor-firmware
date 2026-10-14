@@ -29,6 +29,9 @@ class BLEIF:
         """
 interface: BLEIF
 """BLE interface instance."""
+debug_interface: BLEIF
+"""Debuglink interface over BLE; usable only when
+`trezorutils.USE_BLE_DEBUG` is true."""
 
 
 # rust/src/trezorhal/ble/micropython.rs

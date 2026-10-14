@@ -134,6 +134,10 @@ bool ble_init(void) {
   // MGMT_CMD_CONSOLE_ENABLE. Not fatal: the wire protocol works without it.
   console_init();
 #endif
+#if IS_ENABLED(CONFIG_TRZ_DEBUG_LINK)
+  // Debug images only; not fatal either.
+  debug_init();
+#endif
 
   advertising_init();
   ble_management_init();

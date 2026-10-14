@@ -210,6 +210,31 @@ pub fn write(bytes: &[u8]) -> Result<(), BleError> {
     }
 }
 
+#[cfg(all(feature = "ble_debug", not(feature = "emulator")))]
+pub const DEBUG_PACKET_SIZE: usize = ffi::BLE_DEBUG_PACKET_SIZE as usize;
+
+/// Writes one debuglink report; `Err` means "not now", retry once the
+/// interface is writable (one packet in flight, or no host).
+#[cfg(all(feature = "ble_debug", not(feature = "emulator")))]
+pub fn debug_write(bytes: &[u8]) -> Result<(), BleError> {
+    if bytes.len() != DEBUG_PACKET_SIZE {
+        return Err(BleError::WriteFailed);
+    }
+    let success = unsafe { ffi::ble_debug_write(bytes.as_ptr(), bytes.len() as u16) };
+    if success {
+        Ok(())
+    } else {
+        Err(BleError::WriteFailed)
+    }
+}
+
+#[cfg(all(feature = "ble_debug", not(feature = "emulator")))]
+pub fn debug_read(buf: &mut [u8]) -> Result<usize, BleError> {
+    let len = buf.len().min(u16::MAX as usize) as u16;
+    let read_len = unsafe { ffi::ble_debug_read(buf.as_mut_ptr(), len) };
+    Ok(read_len as usize)
+}
+
 pub fn read(buf: &mut [u8]) -> Result<usize, BleError> {
     // Derived from `buf` so the two cannot disagree. `ble_read` writes a
     // fixed-size packet and uses this only to check the buffer is big enough,

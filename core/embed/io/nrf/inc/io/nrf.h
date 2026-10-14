@@ -33,6 +33,7 @@ typedef enum : uint8_t {
   NRF_SERVICE_PRODTEST = 3,
   NRF_SERVICE_IDLE = 4,
   NRF_SERVICE_CONSOLE = 5,  // BLE console service (prodtest CLI, debug logs)
+  NRF_SERVICE_DEBUG = 6,    // BLE debuglink service (debug builds)
 
   NRF_SERVICE_CNT  // Number of services
 } nrf_service_id_t;

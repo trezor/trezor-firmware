@@ -71,6 +71,24 @@
 #define BT_UUID_TRZ_CONSOLE_RX BT_UUID_DECLARE_128(BT_UUID_TRZ_CONSOLE_RX_VAL)
 #define BT_UUID_TRZ_CONSOLE_TX BT_UUID_DECLARE_128(BT_UUID_TRZ_CONSOLE_TX_VAL)
 
+// Debuglink service (see debug.c). Same vendor base, next block.
+
+/** @brief UUID of the Debuglink Service. **/
+#define BT_UUID_TRZ_DEBUG_VAL \
+  BT_UUID_128_ENCODE(0x8c000020, 0xa59b, 0x4d58, 0xa9ad, 0x073df69fa1b1)
+
+/** @brief UUID of the Debuglink RX Characteristic (host -> device). **/
+#define BT_UUID_TRZ_DEBUG_RX_VAL \
+  BT_UUID_128_ENCODE(0x8c000021, 0xa59b, 0x4d58, 0xa9ad, 0x073df69fa1b1)
+
+/** @brief UUID of the Debuglink TX Characteristic (device -> host). **/
+#define BT_UUID_TRZ_DEBUG_TX_VAL \
+  BT_UUID_128_ENCODE(0x8c000022, 0xa59b, 0x4d58, 0xa9ad, 0x073df69fa1b1)
+
+#define BT_UUID_TRZ_DEBUG_SERVICE BT_UUID_DECLARE_128(BT_UUID_TRZ_DEBUG_VAL)
+#define BT_UUID_TRZ_DEBUG_RX BT_UUID_DECLARE_128(BT_UUID_TRZ_DEBUG_RX_VAL)
+#define BT_UUID_TRZ_DEBUG_TX BT_UUID_DECLARE_128(BT_UUID_TRZ_DEBUG_TX_VAL)
+
 #define BLE_TX_PACKET_SIZE 244
 #define BLE_RX_PACKET_SIZE 244
 
@@ -250,3 +268,7 @@ void service_send_busy(void);
 // Console service functions (console.c, CONFIG_TRZ_CONSOLE)
 // Register the console service and start forwarding
 int console_init(void);
+
+// Debuglink service functions (debug.c, CONFIG_TRZ_DEBUG_LINK)
+// Register the debuglink service and start forwarding
+int debug_init(void);

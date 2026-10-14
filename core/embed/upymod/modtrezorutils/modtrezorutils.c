@@ -872,6 +872,8 @@ static const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the hardware has a nRF chip."""
 /// USE_DBG_CONSOLE: bool
 /// """Whether a debug console is enabled."""
+/// USE_BLE_DEBUG: bool
+/// """Whether the debuglink has a BLE interface (trezorble.debug_interface)."""
 /// USE_APP_LOADING: bool
 /// """Whether the firmware supports loading 3rd-party applications."""
 /// USE_TELEMETRY: bool
@@ -1126,6 +1128,11 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_DBG_CONSOLE), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_DBG_CONSOLE), mp_const_false},
+#endif
+#ifdef USE_BLE_DEBUG
+    {MP_ROM_QSTR(MP_QSTR_USE_BLE_DEBUG), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_BLE_DEBUG), mp_const_false},
 #endif
 #ifdef USE_APP_LOADING
     {MP_ROM_QSTR(MP_QSTR_USE_APP_LOADING), mp_const_true},
