@@ -34,7 +34,7 @@ pub enum Footer<'a> {
 /// - `extras` — more the person can look at from this screen; see
 ///   [extras](crate::modui#extras-and-the-way-out).
 ///
-/// The person can always refuse, so the block takes no `cancel`: the way out
+/// The person can always refuse, so the layout takes no `cancel`: the way out
 /// is on the screen, or in its menu where the menu button takes its place.
 ///
 /// # Errors

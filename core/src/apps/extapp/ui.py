@@ -36,9 +36,9 @@ _KIND_NOTICE = const(5)
 
 
 async def handle(session: Session, msg: IpcMessage) -> None:
-    """Show the block the app asked for and send the app the person's answer."""
+    """Show the layout the app asked for and send the app the person's answer."""
     try:
-        await _show_block(bytes(msg.data))
+        await _show_layout(bytes(msg.data))
         result = trezorui_api.CONFIRMED
     except ActionCancelled:
         result = trezorui_api.CANCELLED
@@ -55,13 +55,13 @@ async def handle(session: Session, msg: IpcMessage) -> None:
         session.die(DataError(f"Cannot send the screen's answer: {e}"))
 
 
-async def _show_block(data: bytes) -> None:
-    """Show one block of an app, with its extras menu if it has one.
+async def _show_layout(data: bytes) -> None:
+    """Show one layout of an app, with its extras menu if it has one.
 
-    The request carries the block's extras, so the menu is walked here: the
+    The request carries the layout's extras, so the menu is walked here: the
     person can open the menu, look at extras and come back as often as they
     like, and only the decision reaches the caller. Raises `ActionCancelled`
-    when the block is refused, by whatever way out the model offers.
+    when the layout is refused, by whatever way out the model offers.
     """
     kind, br_name, *fields, extras = trezorui_api.deserialize_ui_message(data=data)
     menu = Menu(
@@ -199,7 +199,7 @@ def _ctx_notice(
     )
 
 
-# One builder per kind; each takes the block's decoded fields and its extras.
+# One builder per kind; each takes the layout's decoded fields and its extras.
 _BLOCKS = {
     _KIND_ACTION: _ctx_action,
     _KIND_VALUE: _ctx_value,

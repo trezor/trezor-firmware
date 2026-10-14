@@ -27,7 +27,7 @@ use crate::wire::{CoreIpcService, ipc_call, to_bytes};
 const BYTES_PER_CHUNK: usize = 384;
 
 /// Serializes `request`, sends it to Core's UI service and waits for the
-/// block's final answer.
+/// layout's final answer.
 fn ui_request(request: TrezorUiEnum) -> Result<TrezorUiResult, WireError> {
     let bytes = to_bytes(&request).map_err(|_| WireError::DecodeError)?;
     let (_id, data) = ipc_call(CoreIpcService::Ui.into(), 0, &bytes, TIMEOUT_MAX)?;

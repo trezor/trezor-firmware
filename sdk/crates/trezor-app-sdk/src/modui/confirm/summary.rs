@@ -19,7 +19,7 @@ use crate::{Error, Result};
 ///   The paying account belongs here, like anything else worth listing.
 ///
 /// Usually the last screen before signing: `Ok` is the person's yes to
-/// the whole transaction. The person can always refuse it, so the block takes
+/// the whole transaction. The person can always refuse it, so the layout takes
 /// no `cancel`.
 ///
 /// # Errors

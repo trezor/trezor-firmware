@@ -1,6 +1,6 @@
 //! Building-block UI library: one typed function per screen an app can show.
 //!
-//! An app decides which blocks to call and in what order, and what each one
+//! An app decides which layouts to call and in what order, and what each one
 //! says. It does not decide how anything looks or behaves: that is an
 //! implementation detail of this library and core, invisible to the app.
 //!
@@ -24,24 +24,24 @@
 //!
 //! And the words for what moves between them:
 //!
-//! - **a block** — one typed function of this library: one call, one
+//! - **a layout** — one typed function of this library: one call, one
 //!   question, one answer (see [outcomes](#outcomes)), and the call does
 //!   not return until the person has answered. The app's only way to show anything.
-//! - **a screen** — what the person sees at one moment. A block may show
+//! - **a screen** — what the person sees at one moment. A layout may show
 //!   several — its own, the extras menu, pages of content; the app never
 //!   counts them.
-//! - **the flow** — the app's sequence of blocks, in the order it calls
-//!   them. The app owns it; this library never sees past one block.
+//! - **the flow** — the app's sequence of layouts, in the order it calls
+//!   them. The app owns it; this library never sees past one layout.
 //! - **a step name** — the `br` string naming one step of the flow for the
 //!   host; see [step names](#step-names).
 //! - **extras** — labelled pieces of additional information reachable from
-//!   a block's screen; see [extras](#extras-and-the-way-out).
+//!   a layout's screen; see [extras](#extras-and-the-way-out).
 //! - **a session** — one run of the app, from the host's request to its
 //!   response. A refusal ends it.
 //!
-//! # Blocks
+//! # Layouts
 //!
-//! | Block | Shows | Extras |
+//! | Layout | Shows | Extras |
 //! |---|---|---|
 //! | [`confirm::action`] | a question about an action | yes |
 //! | [`confirm::value`] | one value, e.g. an address or an amount | yes |
@@ -50,10 +50,10 @@
 //! | [`confirm::summary`] | the closing amount and fee of a transaction | yes |
 //! | [`notice::show`] | a notice of some [`notice::Severity`] | depends on the severity |
 //!
-//! Every block is one function taking every parameter, and blocks until the
+//! Every layout is one function taking every parameter, and does not return until the
 //! person answers.
 //!
-//! WIP: possible additional blocks, none decided:
+//! WIP: possible additional layouts, none decided:
 //!
 //! ```text
 //! show_qr          — a value as a QR code, to scan (needs a wire extension)
@@ -66,7 +66,7 @@
 //!
 //! # Showing an address
 //!
-//! There is no `show_address` block: an app shows an address as
+//! There is no `show_address` layout: an app shows an address as
 //! [`confirm::value`] with [`confirm::ValueKind::Address`], passing the account and
 //! derivation path in `extras`.
 //!
@@ -85,7 +85,7 @@
 //! - **Chunking** is the firmware's, and exists because core's memory is
 //!   limited: long data — the bytes given to [`confirm::data`] — is cut into
 //!   chunks so core never holds a whole blob at once, and each chunk is sent to
-//!   core as a request of its own. It happens behind the block's one call,
+//!   core as a request of its own. It happens behind the layout's one call,
 //!   outside the app.
 //! - **Pagination** is core's, and exists because the screen is small. Core
 //!   splits whatever one request carries across as many screens as it takes
@@ -108,7 +108,7 @@
 //!
 //! # Outcomes
 //!
-//! What a block returns depends on what kind of block it is:
+//! What a layout returns depends on what kind of layout it is:
 //!
 //! - **A confirmation** ([`confirm`]) and **a notice** ([`notice::show`])
 //!   return `Result<()>`: `Ok(())` when the person said yes or moved on,
@@ -139,26 +139,26 @@
 //!
 //! How the person got there — which page they were on, whether they opened
 //! the extras, which button they pressed — is never reported: it happens in
-//! core, and only the block's answer comes back.
+//! core, and only the layout's answer comes back.
 //!
 //! # Step names
 //!
-//! Every block takes a *step name*, the `br` parameter: the name
+//! Every layout takes a *step name*, the `br` parameter: the name
 //! the host sees for this screen, such as `"tron/send"` or
 //! `"tron/approve/amount"`. Only the app knows its flow, so only the app can
 //! name its steps. Use `"<app>/<step>"`, keep it stable across releases, and
 //! give each distinct screen its own name — hosts and tests match on it.
 //!
 //! Core adds to it, and the app should not: screens that exist only because a
-//! block offered extras are named after the block, with `/menu` and
+//! layout offered extras are named after the layout, with `/menu` and
 //! `/details` appended.
 //!
 //! # Extras and the way out
 //!
-//! Every block takes `extras`, a list of labelled [`ExtraItem`]s: more that
+//! Every layout takes `extras`, a list of labelled [`ExtraItem`]s: more that
 //! the person may want to see, such as the account a payment comes from. They
-//! travel with the block's request, and core presents them from the block's
-//! screen; looking at one comes back to the block as the person left it. How
+//! travel with the layout's request, and core presents them from the layout's
+//! screen; looking at one comes back to the layout as the person left it. How
 //! they are presented is core's, per model, and may change without any
 //! signature changing.
 //!
@@ -176,11 +176,11 @@
 //!
 //! Not everything the app shows waits for the person. While the app works —
 //! hashing, fetching, signing — it can hold up a progress, so the person
-//! sees that the device has not stalled. A progress is not a block: it asks
-//! nothing, answers nothing, and never blocks. It appears when the work
+//! sees that the device has not stalled. A progress is not a layout: it asks
+//! nothing, answers nothing, and never layouts. It appears when the work
 //! starts and disappears when it ends, including through `?`, because the
 //! app never ends one by hand: the library owns the ending, the same way it
-//! owns a block's screens.
+//! owns a layout's screens.
 //!
 //! Two forms cover the usual cases, both closures: [`progress::run`] for work
 //! that needs no step reporting, [`progress::run_with`] for work that does —
@@ -201,7 +201,7 @@
 //!
 //! # Errors
 //!
-//! A block's only `Err` is [`crate::Error::Cancelled`] (see
+//! A layout's only `Err` is [`crate::Error::Cancelled`] (see
 //! [outcomes](#outcomes)), and a progress has none. A failure — the request
 //! did not reach core, or the answer cannot be read — ends the app, and the
 //! call never returns.
@@ -220,7 +220,7 @@
 //! WIP: both of those outcomes are under discussion. There is no error path
 //! from core to the app: a screen core cannot draw stops the app's task, and
 //! the blocking call never returns. The cheap fix is a `TrezorUiResult`
-//! failure variant carrying the reason, on which the block ends the app with
+//! failure variant carrying the reason, on which the layout ends the app with
 //! it; a fuller one is an error-report service covering crypto and progress
 //! too. Whether to tell the app about a dropped menu is open.
 //!
@@ -232,7 +232,7 @@
 //! ```no_run
 //! use trezor_app_sdk::modui::{Commitment, confirm};
 //!
-//! // A sequence of blocks is just a sequence of calls. Cancelling any one of
+//! // A sequence of layouts is just a sequence of calls. Cancelling any one of
 //! // them stops the flow, because a cancel is an `Err`.
 //! fn confirm_send(address: &str) -> trezor_app_sdk::Result<()> {
 //!     confirm::value(
@@ -274,18 +274,18 @@
 // points, and are removed before merge.
 //
 // This module is compiled into every app, so it holds as little code as it
-// can: a block puts its arguments into the `crate::structs` request and makes
+// can: a layout puts its arguments into the `crate::structs` request and makes
 // one `UiV1` call. Anything with behaviour — chunking, the menu, the
 // progress count, every default — is in the firmware: `core/embed/api` (which
 // runs on the app's task) or core.
 //
 // One type per request, from the app to core. The request crosses the `UiV1`
 // vtable as is, `core/embed/api` serializes that same value, and core reads
-// it archived. Core runs the block's menu itself and replies once. There are
+// it archived. Core runs the layout's menu itself and replies once. There are
 // no mirror types and no conversions in between.
 //
-// So a new block means a `structs` type and its `TrezorUiEnum` variant, an
-// arm in core's dispatch, and the block's function here. Every block goes
+// So a new layout means a `structs` type and its `TrezorUiEnum` variant, an
+// arm in core's dispatch, and the layout's function here. Every layout goes
 // through `UiV1::ui_call`, except `confirm::data`: its own
 // `UiV1::confirm_data` lets the firmware send the data in chunks.
 //
@@ -293,14 +293,14 @@
 // `/details` suffixes are core's, as are the `ButtonRequestType` (always
 // `Other`), page counts, and whether a repeat is a new step.
 //
-// Layout: the public surface is this file plus one module per kind of block
+// Layout: the public surface is this file plus one module per kind of layout
 // (`confirm`, `notice`, `progress`). A public file holds only what an app
-// may use — the block's function and the types an app names — so that
+// may use — the layout's function and the types an app names — so that
 // reading a public file is reading the API.
 //
-// A block file is dull on purpose: arguments in, one answer out, the wire
+// A layout file is dull on purpose: arguments in, one answer out, the wire
 // call in between. Anything cleverer belongs in the firmware, not here.
-// Each block's own example lives on its function, where rustdoc shows it;
+// Each layout's own example lives on its function, where rustdoc shows it;
 // the files inside `confirm/` are private modules re-exported by
 // `confirm/mod.rs`, so their `//!` docs are for maintainers. The re-exports
 // below are grouped by rustfmt (`group_imports`), so do not try to arrange

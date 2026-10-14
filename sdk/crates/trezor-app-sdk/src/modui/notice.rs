@@ -1,6 +1,6 @@
 //! Telling the person something. The public docs live on [`show`].
 //!
-//! One block for every callout, one contract across models: the same request
+//! One layout for every callout, one contract across models: the same request
 //! answers the same way everywhere. Failures are not among the callouts; see
 //! [`Severity`].
 //!
