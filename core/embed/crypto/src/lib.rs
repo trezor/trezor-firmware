@@ -7,6 +7,7 @@ use core::hint::black_box;
 
 #[cfg(feature = "aes_gcm")]
 pub mod aesgcm;
+pub mod base58;
 pub mod cosi;
 pub mod crc32;
 pub mod curve25519;
