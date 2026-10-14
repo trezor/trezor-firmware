@@ -18,8 +18,8 @@ from trezorlib._internal.prodtest_emulator import get_prodtest_emulator
     "-m",
     "--model",
     envvar="TREZOR_MODEL",
-    required=True,
-    help="Trezor model name (or set TREZOR_MODEL)",
+    default=None,
+    help="Trezor model name (or set TREZOR_MODEL); defaults to the latest build",
 )
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 def cli(model: str, command: list[str]) -> None:
