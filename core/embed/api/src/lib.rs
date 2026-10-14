@@ -1,11 +1,13 @@
 #![no_std]
+#![cfg_attr(not(target_os = "none"), feature(thread_local))]
 
 use rtl::fatal_error;
 use trezor_app_sdk::traits::{ApiGetter, ApiVariant};
 
 extern crate alloc;
 
-mod allocator;
+pub mod allocator;
+mod app_state;
 mod crypto;
 mod syslog;
 mod ui;
@@ -30,12 +32,11 @@ pub extern "C" fn coreapp_api_get(version: u32) -> ApiVariant {
 // and passes `applet_main` to it, so Core gets to run on the app's task
 // before the app does.
 //
-// The point of the inversion is [`allocator::init`]: the app's
-// `#[global_allocator]` forwards every allocation over the API vtable into
-// Core's `APP_ALLOCATOR`, so that allocator has to be pointed at this app's
-// heap region before the app executes a single instruction. Doing it here
-// means an app can allocate from the very first line of `applet_main`,
-// rather than only after it has called back into `TrezorApiV1::init`.
+// The point of the inversion is the app's [`app_state::AppState`]: it lives
+// in this function's frame on the app's own stack, for as long as
+// `applet_main` runs, and has to be in place before the app executes a single
+// instruction — the app's `#[global_allocator]` forwards every allocation
+// over the API vtable to the allocator in that state.
 //
 // Same "C only ever takes its address" contract as `coreapp_api_get` above:
 // `core/embed/sys/task/*/coreapp.c` declares this as
@@ -45,9 +46,13 @@ pub extern "C" fn coreapp_api_get(version: u32) -> ApiVariant {
 pub extern "C" fn coreapp_app_entry(
     applet_main: extern "C" fn(ApiGetter) -> core::ffi::c_int,
 ) -> core::ffi::c_int {
-    allocator::init();
-    // Must follow `allocator::init`: the inbox is allocated out of the heap
-    // that call just claimed.
-    wire::register_inbox();
-    applet_main(coreapp_api_get)
+    let heap = io::get_heap();
+    // SAFETY: the loader hands this app a heap of its own, which lives as
+    // long as the app's task; the state created here is its only owner.
+    let state = unsafe { app_state::AppState::new(heap.cast(), heap.len()) };
+    app_state::with_app_state(&state, || {
+        // The inbox is allocated out of the app's heap, so it needs the state.
+        wire::register_inbox();
+        applet_main(coreapp_api_get)
+    })
 }
