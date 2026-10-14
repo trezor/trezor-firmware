@@ -150,6 +150,7 @@ def _from_env(name: str) -> bool:
 @click.option("-t", "--temporary-profile", is_flag=True, help="Create an empty temporary profile")
 @click.option("--tropic-emulator/--no-tropic-emulator", default=None, help="Start Tropic01 model")
 @click.option("--tropic-emulator-config", type=click.Path(exists=True, dir_okay=False), default=TROPIC_MODEL_CONFIG, help="Tropic01 model configuration file")
+@click.option("--tropic-model-port", type=int, default=None, help="Port of the Tropic01 model. Defaults to a free port for the auto-started model, or to 28992 for an externally managed one (--no-tropic-emulator).")
 @click.option("-V", "--valgrind", is_flag=True, help="Use valgrind instead of debugger (-D)")
 @click.option("-w", "--watch", is_flag=True, help="Restart emulator if sources change")
 @click.option("-X", "--extra-arg", "extra_args", multiple=True, help="Extra argument to pass to micropython")
@@ -181,6 +182,7 @@ def cli(
     temporary_profile: bool,
     tropic_emulator: bool | None,
     tropic_emulator_config: Path,
+    tropic_model_port: int | None,
     valgrind: bool,
     watch: bool,
     extra_args: list[str],
@@ -291,7 +293,7 @@ def cli(
         heap_size=heap_size,
         disable_animation=disable_animation,
         workdir=SRC_DIR,
-        tropic_model_port=TropicModel.DEFAULT_PORT,
+        tropic_model_port=tropic_model_port,
         display_scale=display_scale,
     )
 
@@ -313,18 +315,23 @@ def cli(
         os.environ["TREZOR_MEMPERF"] = "1"
 
     tropic_model = None
-    if tropic_emulator is None:
-        tropic_emulator = emulator.properties().get("tropic", False)
-    if tropic_emulator:
+    tropic_emulator_needed = tropic_emulator
+    if tropic_emulator_needed is None:
+        tropic_emulator_needed = emulator.properties().get("tropic", False)
+    if tropic_emulator_needed:
         tropic_model = TropicModel(
             profile_dir=str(profile_dir),
             configfile=tropic_emulator_config,
-            port=TropicModel.DEFAULT_PORT,
+            port=tropic_model_port,
         )
         try:
             tropic_model.start()
+            emulator.tropic_model_port = tropic_model.port
         except Exception as exc:
             click.echo(f"Failed to start Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
+    if tropic_emulator is not None or tropic_emulator_needed:
+        click.echo(f"TROPIC_MODEL_PORT={emulator.tropic_model_port}")
+        os.environ["TROPIC_MODEL_PORT"] = str(emulator.tropic_model_port)
 
     if debugger or valgrind:
         run_debugger(emulator, script_gdb_file, valgrind, command, tropic_model)
