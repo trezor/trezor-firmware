@@ -1,14 +1,5 @@
 #[cfg(feature = "app_loading")]
-use core::mem::MaybeUninit;
-
-#[cfg(feature = "app_loading")]
-use rkyv::{
-    api::low::to_bytes_in_with_alloc,
-    rancor::Failure,
-    ser::{allocator::SubAllocator, writer::Buffer},
-    util::Align,
-    Archived,
-};
+use rkyv::{rancor::Failure, Archived};
 #[cfg(feature = "app_loading")]
 use trezor_app_sdk::structs::{Slice, TrezorCryptoEnum, TrezorCryptoResultRef};
 
@@ -43,10 +34,9 @@ extern "C" fn new_deserialize_crypto_message(
             unwrap!(List::alloc(unsafe { list.as_slice() })).into()
         }
 
-        // Deserialize the rkyv archived data directly from the static buffer
-        let archived = unsafe { rkyv::access_unchecked::<Archived<TrezorCryptoEnum>>(data) };
+        let archived = rkyv::access::<Archived<TrezorCryptoEnum>, Failure>(data)
+            .map_err(|_| Error::ValueError(c"Invalid crypto message"))?;
 
-        // Access the archived data zero-copy using safe Deref access
         let result: Obj = match archived {
             Archived::<TrezorCryptoEnum>::GetXpub {
                 address_n,
@@ -139,8 +129,8 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
             .try_into_option()?;
 
         let ipc_cb = unwrap!(ipc_callback.map(|cb| {
-            move |bytes: &[u8]| {
-                unwrap!(cb.call_with_n_args(&[unwrap!(bytes.try_into())]));
+            move |bytes: Obj| {
+                unwrap!(cb.call_with_n_args(&[bytes]));
             }
         }));
 
@@ -198,16 +188,9 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
             }
         };
 
-        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
-        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
-
-        let bytes = unwrap!(to_bytes_in_with_alloc::<_, _, Failure>(
-            &msg,
-            Buffer::from(&mut *out),
-            SubAllocator::new(&mut arena),
-        ));
+        let bytes = crate::util::archive::to_bytes_obj(&msg)?;
         //Send the response back via the ipc_cb callback
-        ipc_cb(bytes.as_ref());
+        ipc_cb(bytes);
 
         Ok(Obj::const_none())
     };

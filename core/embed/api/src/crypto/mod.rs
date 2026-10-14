@@ -1,7 +1,6 @@
 use alloc::vec::Vec;
 
 use rkyv::rancor::Failure;
-use rkyv::to_bytes;
 use stabby::boxed::BoxedSlice;
 use stabby::slice::Slice;
 use stabby::str::Str;
@@ -13,7 +12,7 @@ use trezor_app_sdk::traits::crypto::{
 use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
 use trezor_app_sdk::traits::wire::WireError;
 
-use crate::wire::{CoreIpcService, ipc_call};
+use crate::wire::{CoreIpcService, ipc_call, to_bytes};
 
 mod hashers;
 
@@ -26,7 +25,7 @@ mod hashers;
 /// archived buffer, so there is no single owned shape that fits every
 /// variant).
 fn ipc_crypto_call(value: &TrezorCryptoEnum) -> Result<BoxedSlice<u8>, WireError> {
-    let bytes = to_bytes::<Failure>(value).map_err(|_| WireError::DecodeError)?;
+    let bytes = to_bytes(value).map_err(|_| WireError::DecodeError)?;
     let (_id, data) = ipc_call(
         CoreIpcService::Crypto.into(),
         value.id() as u16,

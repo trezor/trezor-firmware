@@ -5,7 +5,6 @@
 //! response back.
 
 use rkyv::rancor::Failure;
-use rkyv::to_bytes;
 use stabby::option::Option as StabbyOption;
 use stabby::slice::Slice;
 use trezor_app_sdk::structs::{
@@ -20,7 +19,7 @@ use trezor_app_sdk::traits::ui::{
 use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
 use trezor_app_sdk::traits::wire::WireError;
 
-use crate::wire::{CoreIpcService, ipc_call};
+use crate::wire::{CoreIpcService, ipc_call, to_bytes};
 
 fn opt_str(bytes: StabbyOption<Slice<'_, u8>>) -> Option<structs::StrSlice<'_>> {
     as_opt_str(bytes).map(Into::into)
@@ -44,7 +43,7 @@ fn to_str_exts<'a>(items: &[StrExt<'a>], out: &mut alloc::vec::Vec<structs::StrE
 
 /// Sends `value` to Core's UI service and deserializes the (owned) result.
 fn ipc_ui_call(value: &TrezorUiEnum) -> Result<WireTrezorUiResult, WireError> {
-    let bytes = to_bytes::<Failure>(value).map_err(|_| WireError::DecodeError)?;
+    let bytes = to_bytes(value).map_err(|_| WireError::DecodeError)?;
     let (_id, data) = ipc_call(CoreIpcService::Ui.into(), 0, &bytes, TIMEOUT_MAX)?;
     let archived = rkyv::access::<rkyv::Archived<WireTrezorUiResult>, Failure>(&data)
         .map_err(|_| WireError::DecodeError)?;
@@ -83,7 +82,7 @@ fn ui_call_void(value: &TrezorUiEnum) -> Result<(), WireError> {
 }
 
 fn ipc_progress_call(value: &TrezorProgressEnum) -> Result<(), WireError> {
-    let bytes = to_bytes::<Failure>(value).map_err(|_| WireError::DecodeError)?;
+    let bytes = to_bytes(value).map_err(|_| WireError::DecodeError)?;
     ipc_call(
         CoreIpcService::Progress.into(),
         value.id(),
