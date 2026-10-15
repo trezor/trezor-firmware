@@ -1,7 +1,7 @@
 use minicbor::data::Type;
 use minicbor::{Decoder, Encoder, decode};
 use rtl::error::unwrap;
-use sys::time::Duration;
+use sys::time::{Duration, Instant};
 
 use super::{
     MsgType, SMP_CMD_ID_IMAGE_UPLOAD, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_WRITE, SmpBuffer,
@@ -120,20 +120,33 @@ pub fn upload_image(
 /// MCUboot answers an out-of-sequence chunk with `rc == 0` and the offset it
 /// actually expects, and a late response to an earlier attempt carries an
 /// earlier offset, so only a matching offset proves this chunk was written.
+/// Such a stale response is skipped and the wait continues until the deadline;
+/// otherwise it would fail the attempt and the re-sent chunk would produce
+/// another stale response for the next chunk.
 fn wait_for_upload_ack(expected_off: usize) -> bool {
-    let mut resp_buffer = [0u8; 64];
-    let Ok(len) = wait_for_response(
-        MsgType::ImageUploadResponse,
-        &mut resp_buffer,
-        Duration::from_millis(500),
-    ) else {
-        return false;
-    };
+    let deadline = unwrap!(Instant::now().checked_add(Duration::from_millis(500)));
 
-    matches!(
-        parse_upload_response(&resp_buffer[..len]),
-        Ok((0, Some(off))) if off as usize == expected_off
-    )
+    loop {
+        let mut resp_buffer = [0u8; 64];
+        let Ok(len) = wait_for_response(
+            MsgType::ImageUploadResponse,
+            &mut resp_buffer,
+            deadline.saturating_duration_since(Instant::now()),
+        ) else {
+            return false;
+        };
+
+        match parse_upload_response(&resp_buffer[..len]) {
+            Ok((0, Some(off))) if off as usize == expected_off => return true,
+            // Late response to an earlier attempt of a previous chunk.
+            Ok((0, Some(off))) if (off as usize) < expected_off => {
+                if receiver_acquire().is_err() {
+                    return false;
+                }
+            }
+            _ => return false,
+        }
+    }
 }
 
 // Walk CBOR: { "rc": <int>, "off": <uint>, ... }; a missing "rc" means success.
