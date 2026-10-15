@@ -211,8 +211,7 @@ message CosiVerify {
  * Response: the function succeeded
  * @end
  */
-message Success {
-}
+message Success {}
 
 /**
  * Request: crypto::cosi_combine_publickeys; every public key must be 32 bytes
