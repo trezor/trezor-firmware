@@ -553,6 +553,11 @@ ts_t app_get_heap(void** heap_ptr, size_t* heap_size) {
   applet_t* applet = applet_active();
   return applet_get_heap(applet, heap_ptr, heap_size);
 }
+
+ts_t app_get_ipc_buffer_size(size_t* ipc_buffer_size) {
+  applet_t* applet = applet_active();
+  return applet_get_ipc_buffer_size(applet, ipc_buffer_size);
+}
 #endif
 
 // ---- app_arena event handling ----
