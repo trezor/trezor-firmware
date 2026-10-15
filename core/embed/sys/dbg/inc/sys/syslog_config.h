@@ -19,14 +19,11 @@
  */
 #pragma once
 
-#ifdef TREZOR_EMULATOR
-#define SYSLOG_DEFAULT_LOG_LEVEL LOG_LEVEL_INF
-#endif
-
 // Maximum default log level for all modules if not overriden in
 // by defining SYSLOG_<module_name>_MAX_LOG_LEVEL during compilation
+// Normally the macro is already defined by sys/dbg/build.rs
 #ifndef SYSLOG_DEFAULT_LOG_LEVEL
-#define SYSLOG_DEFAULT_LOG_LEVEL LOG_LEVEL_WARN
+#define SYSLOG_DEFAULT_LOG_LEVEL LOG_LEVEL_OFF
 #endif
 
 // Maximum default log level for specific modules
