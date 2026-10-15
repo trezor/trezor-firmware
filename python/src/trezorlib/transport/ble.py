@@ -105,7 +105,12 @@ class BleTransport(Transport):
             raise TransportException(f"No BLE device: {path}")
 
     def _open(self) -> None:
-        self.ble_proxy().connect(self.device)
+        try:
+            self.ble_proxy().connect(self.device)
+        except TransportException:
+            raise
+        except Exception as e:
+            raise TransportException(f"BLE connect failed: {e}") from e
 
     def _close(self) -> None:
         # would be a logical place to call self.ble_proxy().disconnect()
@@ -117,10 +122,20 @@ class BleTransport(Transport):
 
     def write_chunk(self, chunk: bytes) -> None:
         LOG.log(DUMP_PACKETS, f"sending packet: {chunk.hex()}")
-        self.ble_proxy().write(self.device, chunk)
+        try:
+            self.ble_proxy().write(self.device, chunk)
+        except TransportException:
+            raise
+        except Exception as e:
+            raise TransportException(f"BLE write failed: {e}") from e
 
     def read_chunk(self, timeout: float | None = None) -> bytes:
-        chunk = self.ble_proxy().read(self.device, timeout)
+        try:
+            chunk = self.ble_proxy().read(self.device, timeout)
+        except TransportException:
+            raise
+        except Exception as e:
+            raise TransportException(f"BLE read failed: {e}") from e
         LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) not in (64, 244):
             LOG.error(f"{__name__}: unexpected chunk size: {len(chunk)}")
