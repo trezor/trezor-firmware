@@ -9,24 +9,12 @@ from .keychain import with_keychain
 if TYPE_CHECKING:
     from trezor.messages import (
         MiniscriptPolicy,
-        MiniscriptRedeemPolicyType,
         MiniscriptRegisterPolicy,
         Success,
     )
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
-
-
-def derive_miniscript(derivation: MiniscriptRedeemPolicyType) -> bytes:
-    from storage.device import get_registered_miniscript
-
-    if get_registered_miniscript() == dump_message_buffer(derivation.policy):
-        return compile(derivation)
-
-    from trezor.wire import ProcessError
-
-    raise ProcessError("Unregistered policy")
 
 
 async def derive_xpubs(

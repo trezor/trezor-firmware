@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from trezor.messages import (
+        MiniscriptRedeemPolicyType,
         MultisigRedeemScriptType,
         TxInput,
     )
@@ -126,6 +127,19 @@ def output_derive_script(address: str, coin: CoinInfo) -> AnyBytes:
     raise DataError("Invalid address type")
 
 
+def derive_miniscript(redeem: MiniscriptRedeemPolicyType) -> bytes:
+    from storage.device import get_registered_miniscript
+    from trezor.crypto.miniscript import compile
+    from trezor.protobuf import dump_message_buffer
+
+    if get_registered_miniscript() == dump_message_buffer(redeem.policy):
+        return compile(redeem)
+
+    from trezor.wire import ProcessError
+
+    raise ProcessError("Unregistered policy")
+
+
 # see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
 # item 5 for details
 def write_bip143_script_code_prefixed(
@@ -136,7 +150,11 @@ def write_bip143_script_code_prefixed(
     coin: CoinInfo,
 ) -> None:
     if utils.USE_MINISCRIPT and txi.miniscript is not None:
-        script = derive_miniscript(txi)
+        if txi.script_type != InputScriptType.SPENDWITNESS:
+            raise DataError("Unsupported input script type for miniscript")
+
+        # TODO: make sure txi.address_n matches one of the xpubs
+        script = derive_miniscript(txi.miniscript)
         write_compact_size(w, len(script))
         w.extend(script)
         return
@@ -159,20 +177,6 @@ def write_bip143_script_code_prefixed(
         )
     else:
         raise DataError("Unknown input script type for bip143 script code")
-
-
-if utils.USE_MINISCRIPT:
-
-    def derive_miniscript(txi: TxInput) -> bytes:
-        # TODO: only `wsh()` is supported
-        # TODO: make sure txi.address_n matches one of the xpubs
-        if txi.script_type != InputScriptType.SPENDWITNESS:
-            raise DataError("Invalid script type")
-
-        from . import register_policy
-
-        assert txi.miniscript is not None
-        return register_policy.derive_miniscript(txi.miniscript)
 
 
 # P2PKH, P2SH

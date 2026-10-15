@@ -66,7 +66,7 @@ def get_address(
             return _address_multisig_p2wsh(pubkeys, multisig.m, coin.bech32_prefix)
         # wsh miniscript
         if miniscript is not None:
-            from .register_policy import derive_miniscript
+            from .scripts import derive_miniscript
 
             # TODO: only `wsh()` is supported
             # TODO: make sure our key is included

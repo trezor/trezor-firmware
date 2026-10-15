@@ -956,7 +956,8 @@ class Bitcoin:
             node = self.keychain.derive(txi.address_n)
 
         if utils.USE_MINISCRIPT and txi.miniscript is not None:
-            script = scripts.derive_miniscript(txi)
+            # TODO: only `wsh()` is supported
+            script = scripts.derive_miniscript(txi.miniscript)
 
             assert self.coin.bech32_prefix is not None
             address = addresses._address_p2wsh(
