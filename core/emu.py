@@ -34,8 +34,8 @@ SRC_DIR = HERE / "src"
 PROFILE_BASE = Path.home() / ".trezoremu"
 
 TREZOR_STORAGE_FILES = (
-    "trezor.flash",
-    "trezor.sdcard",
+    CoreEmulator.STORAGE_FILENAME,
+    CoreEmulator.SDCARD_FILENAME,
 )
 
 

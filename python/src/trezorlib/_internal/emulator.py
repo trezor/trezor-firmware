@@ -195,6 +195,7 @@ class TropicModel:
 
 class Emulator:
     STORAGE_FILENAME: str
+    SDCARD_FILENAME = "trezor.sdcard"
 
     def __init__(
         self,
@@ -256,7 +257,10 @@ class Emulator:
         return []
 
     def make_env(self) -> dict[str, str]:
-        return os.environ.copy()
+        env = os.environ.copy()
+        env["TREZOR_FLASH_FILENAME"] = self.STORAGE_FILENAME
+        env["TREZOR_SDCARD_FILENAME"] = self.SDCARD_FILENAME
+        return env
 
     def _get_transport(self) -> UdpTransport:
         return UdpTransport(f"127.0.0.1:{self.port}")
@@ -415,7 +419,7 @@ class CoreEmulator(Emulator):
         if workdir is not None:
             self.workdir = Path(workdir).resolve()
 
-        self.sdcard = self.profile_dir / "trezor.sdcard"
+        self.sdcard = self.profile_dir / self.SDCARD_FILENAME
         if sdcard is not None:
             self.sdcard.write_bytes(sdcard)
 
