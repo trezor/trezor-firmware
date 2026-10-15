@@ -38,10 +38,9 @@ def cli() -> None:
 
 
 @cli.command()
-@click.argument("app_id", type=str)
 @click.argument(
-    "app_dir",
-    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    "tapp_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
 )
 @click.option(
     "--min-version",
@@ -58,18 +57,18 @@ def cli() -> None:
 def load(
     session: "Session",
     min_version: str | None,
-    app_id: str,
-    app_dir: Path,
+    tapp_file: Path,
     match_fingerprint: bool,
 ) -> None:
     """Load an external application onto the device.
 
-    APP_ID is the application id and APP_DIR the directory holding the app,
-    its proof and the root packets. The app binary is expected to be named
-    '{app_id}_{version}.tapp' and its proof '{app_id}_{version}.proof'.
+    TAPP_FILE is the serialized app produced by the app build. Its proof is
+    expected next to it with a '.proof' suffix, and the root packets in the
+    'root-packets' directory at the root of the serialized artifacts tree
+    ('<root>/<app_id>/<version>/<app>.tapp').
 
     Example:
-        trezorctl extapp load --min-version 0.1 ethereum.trezor.com ./apps
+        trezorctl extapp load --min-version 0.1 serialized/ethereum.trezor.com/0.1.0.0/ethereum.trezor.com_0.1.0.0_sdk0.1_armv8m_abi1_T3W1_en.tapp
     """
     try:
         version = None
@@ -81,35 +80,9 @@ def load(
                 )
             version = t.cast(tuple[int, int, int, int], parts + (0,) * (4 - len(parts)))
 
-        # Locate the app by its id only, matching '{app_id}_*.tapp' in the given directory.
-        candidates = sorted(app_dir.glob(f"{app_id}_*.tapp"))
-        if not candidates:
-            raise ValueError(f"No app found for id '{app_id}' in {app_dir}")
-        app_path = candidates[0]
-        if len(candidates) > 1:
-            click.echo(
-                f"Warning: multiple versions found for '{app_id}', picked {app_path.name}"
-            )
-        proof_path = app_path.with_suffix(".proof")
-
-        app_binary = app_path.read_bytes()
-        proof = proof_path.read_bytes()
-
-        # Pick the root packet based on the app ring stored in the app header:
-        # ring 0 -> rootpacket_0, rings 1 and 2 -> rootpacket_12.
-        app_ring = extapp.AppImage.parse(app_binary).header.app_ring
-        root_packet_name = (
-            "rootpacket_0-timestamped-signed.tmr"
-            if app_ring == 0
-            else "rootpacket_12-timestamped-signed.tmr"
-        )
-        root_packet = (app_dir / root_packet_name).read_bytes()
-
-        instance_id = extapp.load(
+        instance_id = extapp.load_tapp(
             session,
-            binary=app_binary,
-            proof=proof,
-            root_packet=root_packet,
+            tapp_file,
             min_version=version,
             match_fingerprint=match_fingerprint,
         )
