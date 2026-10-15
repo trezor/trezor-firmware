@@ -24,7 +24,7 @@ def parse_node(n: HDNodeType) -> bip32.HDNode:
     )
 
 
-def compile(derivation: MiniscriptRedeemPolicyType) -> bytes:
+def compile_internal(derivation: MiniscriptRedeemPolicyType) -> bytes:
     """Don't use this function directly; use `scripts.derive_miniscript()` instead to ensure the policy is registered."""
 
     policy = derivation.policy

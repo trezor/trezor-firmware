@@ -134,9 +134,9 @@ def derive_miniscript(redeem: MiniscriptRedeemPolicyType) -> bytes:
 
     digest = sha256(dump_message_buffer(redeem.policy)).digest()
     if get_registered_miniscript() == digest:
-        from trezor.crypto.miniscript import compile
+        from trezor.crypto.miniscript import compile_internal
 
-        return compile(redeem)
+        return compile_internal(redeem)
 
     from trezor.wire import ProcessError
 

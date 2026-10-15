@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor.crypto.miniscript import compile
+from trezor.crypto.miniscript import compile_internal
 from trezor.protobuf import dump_message_buffer
 from trezor.wire import DataError
 
@@ -64,8 +64,12 @@ async def register_policy(
     # Make sure the policy is valid and can be compiled into a script, before user confirmation
     # (derive first external & internal addresses)
     try:
-        compile(MiniscriptRedeemPolicyType(policy=policy, internal=False, index=0))
-        compile(MiniscriptRedeemPolicyType(policy=policy, internal=True, index=0))
+        compile_internal(
+            MiniscriptRedeemPolicyType(policy=policy, internal=False, index=0)
+        )
+        compile_internal(
+            MiniscriptRedeemPolicyType(policy=policy, internal=True, index=0)
+        )
     except ValueError:
         raise DataError("Invalid policy")
 
