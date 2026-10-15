@@ -68,7 +68,7 @@ async def register_policy(
     policy = msg.policy
 
     # TODO: avoid similar names
-    if not (name := policy.name):
+    if not (name := msg.name):
         raise DataError("Empty name")
 
     # TODO: verify that descriptor should match coin - i.e. xpub-vs-tpub, no altcoin support?

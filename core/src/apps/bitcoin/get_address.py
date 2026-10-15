@@ -167,7 +167,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
                 subtitle=subtitle,
                 case_sensitive=address_case_sensitive,
                 path=path,  # TODO: do we need it?
-                account=miniscript.policy.name,
+                account="NAME",
                 chunkify=bool(msg.chunkify),
             )
         else:

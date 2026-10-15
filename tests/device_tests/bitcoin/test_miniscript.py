@@ -268,19 +268,10 @@ def test_miniscript_spend(session: Session):
     node = btc.get_public_node(session, parse_path("m/84h/1h/0h"), coin_name=COIN)
     assert node.node == keys[0].node
 
-    reg = messages.MiniscriptRegisterPolicy(
-        policy=messages.MiniscriptPolicy(
-            name="Liana",
-            descriptor=DESC,
-            keys=keys,
-        ),
-        coin_name=COIN,
+    policy = btc.register_policy(
+        session, name="Liana", descriptor=DESC, keys=keys, coin_name=COIN
     )
-    session.call(msg=reg, expect=messages.Success)
-
-    redeem = messages.MiniscriptRedeemPolicyType(
-        policy=reg.policy, internal=False, index=2
-    )
+    redeem = messages.MiniscriptRedeemPolicyType(policy=policy, internal=False, index=2)
     addr = btc.get_address(
         session,
         n=parse_path("m/84h/1h/0h/0/2"),
@@ -352,15 +343,10 @@ def test_miniscript_spend_liana(session: Session):
     node = btc.get_public_node(session, parse_path("m/48h/1h/0h/2h"), coin_name=COIN)
     assert _to_protobuf(Key.from_string(node.xpub)).node == keys[0].node
 
-    reg = messages.MiniscriptRegisterPolicy(
-        policy=messages.MiniscriptPolicy(name="Liana", descriptor=DESC, keys=keys),
-        coin_name=COIN,
+    policy = btc.register_policy(
+        session, name="Liana", descriptor=DESC, keys=keys, coin_name=COIN
     )
-    session.call(reg, expect=messages.Success)
-
-    redeem = messages.MiniscriptRedeemPolicyType(
-        policy=reg.policy, internal=False, index=1
-    )
+    redeem = messages.MiniscriptRedeemPolicyType(policy=policy, internal=False, index=1)
     addr = btc.get_address(
         session,
         n=parse_path("m/84h/1h/0h/0/1"),
@@ -430,16 +416,12 @@ def test_miniscript_spend_liana_decay(session: Session):
     assert node.node == keys[0].node
     pubkey = HDKey.from_string(node.xpub).derive("m/1/3").key
 
-    reg = messages.MiniscriptRegisterPolicy(
-        policy=messages.MiniscriptPolicy(name="Liana", descriptor=DESC, keys=keys),
-        coin_name=COIN,
+    policy = btc.register_policy(
+        session, name="Liana", descriptor=DESC, keys=keys, coin_name=COIN
     )
-    session.call(reg, expect=messages.Success)
 
     # Spend from primary path
-    redeem = messages.MiniscriptRedeemPolicyType(
-        policy=reg.policy, internal=True, index=3
-    )
+    redeem = messages.MiniscriptRedeemPolicyType(policy=policy, internal=True, index=3)
     addr = btc.get_address(
         session,
         n=parse_path("m/48h/1h/0h/2h/1/3"),
@@ -488,9 +470,7 @@ def test_miniscript_spend_liana_decay(session: Session):
     )
 
     # Spend from recovery path
-    redeem = messages.MiniscriptRedeemPolicyType(
-        policy=reg.policy, internal=False, index=2
-    )
+    redeem = messages.MiniscriptRedeemPolicyType(policy=policy, internal=False, index=2)
     addr = btc.get_address(
         session,
         n=parse_path("m/48h/1h/0h/2h/2/2"),
@@ -553,11 +533,7 @@ def test_miniscript_spend_sparrow(session: Session):
     )
     keys = list(map(_to_protobuf, TPUBS))
     policy = btc.register_policy(
-        session,
-        name="NAME",
-        descriptor=DESC,
-        keys=keys,
-        coin_name=COIN,
+        session, name="2-of-3", descriptor=DESC, keys=keys, coin_name=COIN
     )
     ADDRS = [
         (

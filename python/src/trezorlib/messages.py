@@ -1281,6 +1281,7 @@ class MiniscriptRegisterPolicy(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2301
     FIELDS = {
         1: protobuf.Field("policy", "MiniscriptPolicy", repeated=False, required=True),
+        2: protobuf.Field("name", "string", repeated=False, required=True),
         3: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Bitcoin'),
     }
 
@@ -1288,9 +1289,11 @@ class MiniscriptRegisterPolicy(protobuf.MessageType):
         self,
         *,
         policy: "MiniscriptPolicy",
+        name: "str",
         coin_name: Optional["str"] = 'Bitcoin',
     ) -> None:
         self.policy = policy
+        self.name = name
         self.coin_name = coin_name
 
 
@@ -1317,20 +1320,17 @@ class MiniscriptRedeemPolicyType(protobuf.MessageType):
 class MiniscriptPolicy(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("name", "string", repeated=False, required=True),
-        2: protobuf.Field("descriptor", "string", repeated=False, required=True),
-        3: protobuf.Field("keys", "MiniscriptKey", repeated=True, required=False, default=None),
+        1: protobuf.Field("descriptor", "string", repeated=False, required=True),
+        2: protobuf.Field("keys", "MiniscriptKey", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        name: "str",
         descriptor: "str",
         keys: Optional[Sequence["MiniscriptKey"]] = None,
     ) -> None:
         self.keys: Sequence["MiniscriptKey"] = keys if keys is not None else []
-        self.name = name
         self.descriptor = descriptor
 
 

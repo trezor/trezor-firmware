@@ -435,9 +435,11 @@ def register_policy(
     keys: Sequence[messages.MiniscriptKey],
     coin_name: str,
 ) -> messages.MiniscriptPolicy:
-    policy = messages.MiniscriptPolicy(name=name, descriptor=descriptor, keys=keys)
+    policy = messages.MiniscriptPolicy(descriptor=descriptor, keys=keys)
     session.call(
-        messages.MiniscriptRegisterPolicy(policy=policy, coin_name=coin_name),
+        messages.MiniscriptRegisterPolicy(
+            policy=policy, name=name, coin_name=coin_name
+        ),
         expect=messages.Success,
     )
     return policy
