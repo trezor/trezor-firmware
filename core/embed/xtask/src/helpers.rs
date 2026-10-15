@@ -13,13 +13,31 @@ pub fn elf_path(args: &ResolvedBuildArgs) -> Result<PathBuf> {
     Ok(profile_dir(args)?.join(elf_name))
 }
 
+/// Returns the explicit `--target` triple passed to cargo, if any.
+///
+/// Hardware builds target the model's MCU. Emulator builds normally rely on
+/// cargo's implicit host target, except with ASAN, where an explicit host
+/// triple is needed to keep the sanitizer rustflags out of proc-macros and
+/// build scripts (see `features::configure_cargo`). Cargo places the output
+/// under `build/<triple>/` whenever a target is given, so `profile_dir` must
+/// follow the same rule.
+pub fn target_triple(args: &ResolvedBuildArgs) -> Result<Option<String>> {
+    if !args.emulator {
+        let model_config = args.model.config()?;
+        return Ok(Some(model_config.target_triple()?.to_owned()));
+    }
+    if args.asan {
+        return Ok(Some(host_triple()?));
+    }
+    Ok(None)
+}
+
 /// Returns the profile output directory (e.g.
 /// `build/thumbv7em-none-eabihf/release`).
 pub fn profile_dir(args: &ResolvedBuildArgs) -> Result<PathBuf> {
     let mut path = build_dir()?;
-    if !args.emulator {
-        let model_config = args.model.config()?;
-        path = path.join(model_config.target_triple()?);
+    if let Some(triple) = target_triple(args)? {
+        path = path.join(triple);
     }
 
     let name = match args.cargo_profile_name() {

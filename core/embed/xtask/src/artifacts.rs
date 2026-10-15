@@ -2,7 +2,7 @@ use std::fs;
 use std::os::unix;
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, ensure};
 
 use crate::args::Project;
 use crate::helpers;
@@ -76,6 +76,11 @@ pub fn collect_artifacts(args: &ResolvedBuildArgs, is_dependency: bool) -> Resul
     let binary_name = args.project.binary_name();
     let profile_dir = helpers::profile_dir(args)?;
     let elf = helpers::elf_path(args)?;
+    ensure!(
+        elf.exists(),
+        "Built binary `{}` not found, cannot collect artifacts",
+        elf.display()
+    );
     let package = args.project.package_name();
     let compile_commands = profile_dir.join(format!("{package}.cc.json"));
 
