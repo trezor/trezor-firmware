@@ -10,9 +10,8 @@ extern crate alloc;
 
 use alloc::string::String;
 
-use miniscript::bitcoin::hashes::{hash160, ripemd160, sha256};
 use miniscript::bitcoin::{PublicKey, ScriptBuf};
-use miniscript::{hash256, TranslateErr, Translator};
+use miniscript::{TranslateErr, Translator};
 
 // TODO: better error handling?
 impl From<crate::miniscript::Error> for Error {
@@ -35,22 +34,6 @@ impl Translator<String> for Derive {
         let buf_slice: &[u8] = unsafe { get_buffer(buf)? };
         // TODO: check compression?
         PublicKey::from_slice(buf_slice).map_err(|_| Error::RuntimeError(c"Bad pubkey"))
-    }
-
-    fn sha256(&mut self, _sha256: &String) -> Result<sha256::Hash, Error> {
-        Err(Error::NotImplementedError)
-    }
-
-    fn hash256(&mut self, _hash256: &String) -> Result<hash256::Hash, Error> {
-        Err(Error::NotImplementedError)
-    }
-
-    fn ripemd160(&mut self, _ripemd160: &String) -> Result<ripemd160::Hash, Error> {
-        Err(Error::NotImplementedError)
-    }
-
-    fn hash160(&mut self, _hash160: &String) -> Result<hash160::Hash, Error> {
-        Err(Error::NotImplementedError)
     }
 }
 
