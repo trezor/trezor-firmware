@@ -581,7 +581,7 @@ int bootloader_main(void) {
       connect_to_host = sectrue;
       break;
     case BOOT_COMMAND_INSTALL_UPGRADE:
-      if (fw.firmware_present == sectrue) {
+      if (fw.header_present == sectrue) {
         // continue without user interaction
         auto_upgrade = sectrue;
       }
@@ -647,7 +647,7 @@ int bootloader_main(void) {
 #endif
 
     if (fw.header_present == sectrue) {
-      if (auto_upgrade == sectrue && fw.firmware_present == sectrue) {
+      if (auto_upgrade == sectrue) {
         result = workflow_auto_update(&fw);
       } else {
         result = workflow_bootloader(&fw, connect_to_host);
