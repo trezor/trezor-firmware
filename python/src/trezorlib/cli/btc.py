@@ -446,6 +446,8 @@ def register_policy(
     session: "Session", coin: str, name: str, descriptor: str, keys: tuple[str, ...]
 ) -> None:
     """Register a descriptor on the device."""
+    from embit.descriptor import Key
+
     btc.register_policy(
         session,
         coin_name=coin,

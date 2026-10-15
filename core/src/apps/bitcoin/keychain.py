@@ -99,7 +99,9 @@ SLIP44_TESTNET = const(1)
 def _get_patterns_for_script_type(
     coin: coininfo.CoinInfo,
     script_type: InputScriptType,
-    multisig: bool,
+    *,
+    multisig: bool = False,
+    miniscript: bool = False,
     include_fw_signing: bool = False,
 ) -> set[str]:
     patterns: set[str] = set()
@@ -143,10 +145,10 @@ def _get_patterns_for_script_type(
 
     elif coin.segwit and script_type == InputScriptType.SPENDWITNESS:
         add(PATTERN_BIP84)
-        # TODO: proper gating
-        add(PATTERN_BIP48_LIANA)
         if multisig:
             add(PATTERN_BIP48_SEGWIT)
+        if miniscript:
+            add(PATTERN_BIP48_LIANA)
         if slip44 == SLIP44_BITCOIN:
             add(PATTERN_GREENADDRESS_A)
             add(PATTERN_GREENADDRESS_B)
@@ -167,20 +169,27 @@ def validate_path_against_script_type(
     address_n: Bip32Path | None = None,
     script_type: InputScriptType | None = None,
     multisig: bool = False,
+    miniscript: bool = False,
 ) -> bool:
     if msg is not None:
         assert address_n is None and script_type is None
         address_n = msg.address_n
         script_type = msg.script_type or InputScriptType.SPENDADDRESS
         multisig = bool(getattr(msg, "multisig", False))
+        miniscript = bool(getattr(msg, "miniscript", False))
 
     else:
         assert address_n is not None and script_type is not None
 
     patterns = _get_patterns_for_script_type(
-        coin, script_type, multisig, include_fw_signing=SignMessage.is_type_of(msg)
+        coin,
+        script_type,
+        multisig=multisig,
+        miniscript=miniscript,
+        include_fw_signing=SignMessage.is_type_of(msg),
     )
 
+    # TODO: fail on miniscript?
     if SignMessage.is_type_of(msg):
         patterns |= _get_patterns_for_script_type(coin, script_type, multisig=True)
         # Export points of every script type, since signing hosts may send

@@ -226,6 +226,7 @@ def test_miniscript_get_address(
     assert min(indices) == 0
     assert max(indices) == len(indices) - 1
     keys = keys[: len(indices)]
+    assert len(indices) == len(keys)
 
     policy = btc.register_policy(
         session,
@@ -539,20 +540,18 @@ def test_miniscript_spend_liana_decay(session: Session):
     )
 
 
+@pytest.mark.setup_client(passphrase=True)
 def test_miniscript_spend_sparrow(session: Session):
     COIN = "Signet"
     DESC = "wsh(sortedmulti(2,@0/<0;1>/*,@1/<0;1>/*,@2/<0;1>/*))"
+
     # 2-of-3 multisig
     TPUBS = _parse_keys(
         "[5c9e228d/48h/1h/0h/2h]tpubDEGquuorgFNbDrg8vepq1HnaV2mgQu9TcSBgBYfXw4AX8VMgkWqvkxHNuJmiah8iVnA3Hgj4cSvaGAXEnq814yC6hMEreckLsd7zyLL3o76",  # ALL x 12, no passphrase
-        "[cab51272/48h/1h/0h/2h]tpubDEbN34MtnQ1LWCT8Z1XKUHeB9tY9ebA4e7P84W5gmAMpqKiud1UWRN2ym68p1ijZ4kxAFqmPPAJVvYNPjopEj4cMUXCS8toffucdDgdXVok",  # ALL x 12, passphrase='d'
         "[6d96bc8f/48h/1h/0h/2h]tpubDFNKLpb6iPByHNd6MRa7gxfAa97aTdtzwp17owgyLp9FFbkAuW1gMfD4Vrn7uVssvYfhiG41eHKmb2kaPz5qhqszYybAfiaBATMv8XfrGvg",  # ALL x 12, passphrase='a'
+        "[cab51272/48h/1h/0h/2h]tpubDEbN34MtnQ1LWCT8Z1XKUHeB9tY9ebA4e7P84W5gmAMpqKiud1UWRN2ym68p1ijZ4kxAFqmPPAJVvYNPjopEj4cMUXCS8toffucdDgdXVok",  # ALL x 12, passphrase='d'
     )
     keys = list(map(_to_protobuf, TPUBS))
-
-    node = btc.get_public_node(session, parse_path("m/48h/1h/0h/2h"), coin_name=COIN)
-    assert node.node == keys[0].node
-
     policy = btc.register_policy(
         session,
         name="NAME",
@@ -560,7 +559,6 @@ def test_miniscript_spend_sparrow(session: Session):
         keys=keys,
         coin_name=COIN,
     )
-
     ADDRS = [
         (
             # external
@@ -587,48 +585,59 @@ def test_miniscript_spend_sparrow(session: Session):
                 coin_name=COIN,
             )
 
-    psbt = PSBT.from_base64(
-        "cHNidP8BAF4CAAAAAT7hiKaaKBeq7VZB1HUynxDvKbKFGwSWxo1cVNZ/nP6wAAAAAAD9////AayPAAAAAAAAIgAgzCs0nB3ja77h+YFmRYrPtYitE202q7nzV3TjbZvJq5P58gQATwEENYfPBDH8vcyAAAACP8N64hBDZxUueKl7mJ5lAnlVEAdZ4ad+BzmeHEsahzQCLscxG1LFIk2oYODSS//lfME9yKWcp4oLoXnvxXs4o88UXJ4ijTAAAIABAACAAAAAgAIAAIBPAQQ1h88ExuBP2YAAAAL+L+YczMjTx5UMTXTnfT75BSNsLqA6NTtpF7gQZOAzSgNUeD2qOp9CSxSjqz80ivIowlWxHG6ieqQMcADYwcvEJxRtlryPMAAAgAEAAIAAAACAAgAAgE8BBDWHzwRdbaTwgAAAAtTu3N4SVtHIdFsD24TvDAD6o8KfOObgOrV33zalySwaA5eEjTcfmIb3BeoTMldtlhOeXjDwyP89GHl5t1iogn84FMq1EnIwAACAAQAAgAAAAIACAACAAAEAXgIAAAABi1EYWmpmVTNbn9zxdWUZ2w1uZoOJXvMGIag4KOGjCbgAAAAAAP3///8BV5AAAAAAAAAiACCrhzbes9ihWO8NZrHnJW3unF4MSWAXGJv6v72JkXy0DPnyBAABAStXkAAAAAAAACIAIKuHNt6z2KFY7w1mseclbe6cXgxJYBcYm/q/vYmRfLQMAQMEAQAAAAEFaVIhAvPBEdutUs+A8nkluwzJo01Huh+HjHM0xo7rOuoSqSRKIQNzQgkSodhiRDiGeiiW1aPXth6Y4NgUk5k9zxnYLAVu4SED8YQRoqx2GPXlgq0iT+5NqE4MxtKcA4MdTT4JQQG4MWxTriIGAvPBEdutUs+A8nkluwzJo01Huh+HjHM0xo7rOuoSqSRKHFyeIo0wAACAAQAAgAAAAIACAACAAAAAAAAAAAAiBgPxhBGirHYY9eWCrSJP7k2oTgzG0pwDgx1NPglBAbgxbBxtlryPMAAAgAEAAIAAAACAAgAAgAAAAAAAAAAAIgYDc0IJEqHYYkQ4hnooltWj17YemODYFJOZPc8Z2CwFbuEcyrUScjAAAIABAACAAAAAgAIAAIAAAAAAAAAAAAABAWlSIQMLvluFREpuxjVrUUkWxDEPqSITNTPiKeWYp9KpmUPklSEDb6dXrxks+icpQ7cwPIw1HlzjmxJ+pvoYBA4aGdV8ULAhA5mS7fFoBW9veimPQ7NaT6yyjXP0UC3AZetccFUCnafCU64iAgMLvluFREpuxjVrUUkWxDEPqSITNTPiKeWYp9KpmUPklRxcniKNMAAAgAEAAIAAAACAAgAAgAAAAAABAAAAIgIDmZLt8WgFb296KY9Ds1pPrLKNc/RQLcBl61xwVQKdp8IcbZa8jzAAAIABAACAAAAAgAIAAIAAAAAAAQAAACICA2+nV68ZLPonKUO3MDyMNR5c45sSfqb6GAQOGhnVfFCwHMq1EnIwAACAAQAAgAAAAIACAACAAAAAAAEAAAAA"
-    )
+    client = session.client
+    expected_sigs = [
+        "304402202ef958e880e7b4941983ecd2be4aec62c4160e81971992c2ddc87caec76435bf02207ee489081cfa2c0bed32feeaf1554683435ffa8ecb2caa42c80d1d626cef4b54",
+        "3044022023924b17e02e72172270562f92442eb17dba63f4bb87b1edd57515bda66ca56a0220413abaf216b5f5adb955242dd1b43a2f0ac02a05a0a783d2611bd855307ea4ab",
+        "3045022100c50d7f39af5bffac21c8249e340455e7b038b3e5d509632932db06ba7ac53ccb02204f7323e8d4c7e82e8211d02abcab24634686c74be3ff915f457fbc395f0bdcd4",
+    ]
+    for i, passphrase in enumerate(("", "a", "d")):
+        session = client.get_session(passphrase=passphrase)
+        node = btc.get_public_node(
+            session, parse_path("m/48h/1h/0h/2h"), coin_name=COIN
+        )
+        assert node.node == keys[i].node
 
-    pubkey = HDKey.from_string(node.xpub).derive("m/0/0").key
-    inputs = [
-        messages.TxInputType(
-            address_n=i.bip32_derivations[pubkey].derivation,
-            prev_hash=i.vin.txid,
-            prev_index=i.vin.vout,
-            script_type=messages.InputScriptType.SPENDWITNESS,
-            miniscript=messages.MiniscriptRedeemPolicyType(
-                policy=policy, internal=False, index=0
-            ),
-            amount=i.utxo.value,
-            sequence=i.vin.sequence,
+        psbt = PSBT.from_base64(
+            "cHNidP8BAF4CAAAAAT7hiKaaKBeq7VZB1HUynxDvKbKFGwSWxo1cVNZ/nP6wAAAAAAD9////AayPAAAAAAAAIgAgzCs0nB3ja77h+YFmRYrPtYitE202q7nzV3TjbZvJq5P58gQATwEENYfPBDH8vcyAAAACP8N64hBDZxUueKl7mJ5lAnlVEAdZ4ad+BzmeHEsahzQCLscxG1LFIk2oYODSS//lfME9yKWcp4oLoXnvxXs4o88UXJ4ijTAAAIABAACAAAAAgAIAAIBPAQQ1h88ExuBP2YAAAAL+L+YczMjTx5UMTXTnfT75BSNsLqA6NTtpF7gQZOAzSgNUeD2qOp9CSxSjqz80ivIowlWxHG6ieqQMcADYwcvEJxRtlryPMAAAgAEAAIAAAACAAgAAgE8BBDWHzwRdbaTwgAAAAtTu3N4SVtHIdFsD24TvDAD6o8KfOObgOrV33zalySwaA5eEjTcfmIb3BeoTMldtlhOeXjDwyP89GHl5t1iogn84FMq1EnIwAACAAQAAgAAAAIACAACAAAEAXgIAAAABi1EYWmpmVTNbn9zxdWUZ2w1uZoOJXvMGIag4KOGjCbgAAAAAAP3///8BV5AAAAAAAAAiACCrhzbes9ihWO8NZrHnJW3unF4MSWAXGJv6v72JkXy0DPnyBAABAStXkAAAAAAAACIAIKuHNt6z2KFY7w1mseclbe6cXgxJYBcYm/q/vYmRfLQMAQMEAQAAAAEFaVIhAvPBEdutUs+A8nkluwzJo01Huh+HjHM0xo7rOuoSqSRKIQNzQgkSodhiRDiGeiiW1aPXth6Y4NgUk5k9zxnYLAVu4SED8YQRoqx2GPXlgq0iT+5NqE4MxtKcA4MdTT4JQQG4MWxTriIGAvPBEdutUs+A8nkluwzJo01Huh+HjHM0xo7rOuoSqSRKHFyeIo0wAACAAQAAgAAAAIACAACAAAAAAAAAAAAiBgPxhBGirHYY9eWCrSJP7k2oTgzG0pwDgx1NPglBAbgxbBxtlryPMAAAgAEAAIAAAACAAgAAgAAAAAAAAAAAIgYDc0IJEqHYYkQ4hnooltWj17YemODYFJOZPc8Z2CwFbuEcyrUScjAAAIABAACAAAAAgAIAAIAAAAAAAAAAAAABAWlSIQMLvluFREpuxjVrUUkWxDEPqSITNTPiKeWYp9KpmUPklSEDb6dXrxks+icpQ7cwPIw1HlzjmxJ+pvoYBA4aGdV8ULAhA5mS7fFoBW9veimPQ7NaT6yyjXP0UC3AZetccFUCnafCU64iAgMLvluFREpuxjVrUUkWxDEPqSITNTPiKeWYp9KpmUPklRxcniKNMAAAgAEAAIAAAACAAgAAgAAAAAABAAAAIgIDmZLt8WgFb296KY9Ds1pPrLKNc/RQLcBl61xwVQKdp8IcbZa8jzAAAIABAACAAAAAgAIAAIAAAAAAAQAAACICA2+nV68ZLPonKUO3MDyMNR5c45sSfqb6GAQOGhnVfFCwHMq1EnIwAACAAQAAgAAAAIACAACAAAAAAAEAAAAA"
         )
-        for i in psbt.inputs
-    ]
-    outputs = [
-        messages.TxOutputType(
-            address=o.vout.script_pubkey.address(NETWORKS["test"]),
-            amount=o.vout.value,
-            script_type=messages.OutputScriptType.PAYTOWITNESS,
+
+        pubkey = HDKey.from_string(node.xpub).derive("m/0/0").key
+        inputs = [
+            messages.TxInputType(
+                address_n=i.bip32_derivations[pubkey].derivation,
+                prev_hash=i.vin.txid,
+                prev_index=i.vin.vout,
+                script_type=messages.InputScriptType.SPENDWITNESS,
+                miniscript=messages.MiniscriptRedeemPolicyType(
+                    policy=policy, internal=False, index=0
+                ),
+                amount=i.utxo.value,
+                sequence=i.vin.sequence,
+            )
+            for i in psbt.inputs
+        ]
+        outputs = [
+            messages.TxOutputType(
+                address=o.vout.script_pubkey.address(NETWORKS["test"]),
+                amount=o.vout.value,
+                script_type=messages.OutputScriptType.PAYTOWITNESS,
+            )
+            for o in psbt.outputs
+        ]
+        signatures, _serialized = btc.sign_tx(
+            session,
+            COIN,
+            inputs,
+            outputs,
+            version=psbt.tx_version,
+            lock_time=psbt.locktime,
+            serialize=False,
+            prev_txes=prev_txs(psbt),
         )
-        for o in psbt.outputs
-    ]
-    signatures, _serialized = btc.sign_tx(
-        session,
-        COIN,
-        inputs,
-        outputs,
-        version=psbt.tx_version,
-        lock_time=psbt.locktime,
-        serialize=False,
-        prev_txes=prev_txs(psbt),
-    )
-    assert len(signatures) == 1
-    assert (
-        signatures[0].hex()
-        == "304402202ef958e880e7b4941983ecd2be4aec62c4160e81971992c2ddc87caec76435bf02207ee489081cfa2c0bed32feeaf1554683435ffa8ecb2caa42c80d1d626cef4b54"
-    )
+        # https://mempool.space/signet/tx/9805d1cd6fe5cf8206d34a9f346ba105d3043931f610b7ed657e144c8b522df1
+        assert len(signatures) == 1
+        assert signatures[0].hex() == expected_sigs[i]
 
 
 def prev_txs(psbt: PSBT) -> dict[bytes, messages.TransactionType]:

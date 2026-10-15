@@ -29,7 +29,9 @@ def derive_miniscript(derivation: MiniscriptRedeemPolicyType) -> bytes:
     raise ProcessError("Unregistered policy")
 
 
-async def derive_xpubs(policy: MiniscriptPolicy, coin: CoinInfo) -> list[tuple[bool, str]]:
+async def derive_xpubs(
+    policy: MiniscriptPolicy, coin: CoinInfo
+) -> list[tuple[bool, str]]:
     from trezor.crypto.miniscript import parse_node
 
     from ..common.keychain import get_keychain
