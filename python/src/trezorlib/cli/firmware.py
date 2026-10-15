@@ -31,6 +31,7 @@ from . import ChoiceType, with_session
 
 if TYPE_CHECKING:
     from ..client import Session, TrezorClient
+    from ..mapping import ProtobufMapping
     from ..transport import Transport
     from . import TrezorConnection
 
@@ -449,20 +450,22 @@ _REBOOT_DEPART_TIMEOUT = 5.0
 _PROBE_TIMEOUT = 1.0
 
 
-def _answers(transport: "Transport", reconnect: bool) -> bool:
+def _answers(
+    transport: "Transport", mapping: "ProtobufMapping", reconnect: bool
+) -> bool:
     """Whether the device answers a message right now. A Busy failure does not
     count: the nRF sends it on its own while the main MCU is not accepting
     messages, e.g. during a reboot. Without `reconnect`, a closed link counts
     as not answering."""
-    from .. import mapping, protocol_v1
+    from .. import protocol_v1
 
     try:
         if not transport.is_open():
             if not reconnect:
                 return False
             transport.open()
-        protocol_v1.write(transport, *mapping.DEFAULT_MAPPING.encode(messages.Cancel()))
-        resp = mapping.DEFAULT_MAPPING.decode(
+        protocol_v1.write(transport, *mapping.encode(messages.Cancel()))
+        resp = mapping.decode(
             *protocol_v1.read(transport, timeout=_PROBE_TIMEOUT, _ignore_bad_magic=True)
         )
     except exceptions.TrezorException:
@@ -472,7 +475,9 @@ def _answers(transport: "Transport", reconnect: bool) -> bool:
     )
 
 
-def _wait_for_device(obj: "TrezorConnection", message: str) -> None:
+def _wait_for_device(
+    obj: "TrezorConnection", mapping: "ProtobufMapping", message: str
+) -> None:
     """Close the connection and wait for the device to leave and come back: the
     device still answers for a moment before it reboots, so a reconnect could
     reach it instead of the rebooted one. Features cannot tell them apart when
@@ -490,11 +495,13 @@ def _wait_for_device(obj: "TrezorConnection", message: str) -> None:
     while time.monotonic() < deadline:
         # a dropped BLE link already means it left; reconnecting here could
         # also outlast the deadline
-        if not (_answers(transport, reconnect=False) if ble else obj.is_present()):
+        if not (
+            _answers(transport, mapping, reconnect=False) if ble else obj.is_present()
+        ):
             break
         time.sleep(0.1)
     if ble:
-        while not _answers(transport, reconnect=True):
+        while not _answers(transport, mapping, reconnect=True):
             time.sleep(0.5)
     while True:
         time.sleep(0.5)
@@ -730,7 +737,7 @@ def update(
             else:
                 device.reboot_to_bootloader(seedless_session)
 
-            _wait_for_device(obj, "Waiting for bootloader...")
+            _wait_for_device(obj, client.mapping, "Waiting for bootloader...")
 
     with obj.client_context() as client:
         if not client.features.bootloader_mode:
