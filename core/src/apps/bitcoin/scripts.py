@@ -135,6 +135,12 @@ def write_bip143_script_code_prefixed(
     threshold: int,
     coin: CoinInfo,
 ) -> None:
+    if utils.USE_MINISCRIPT and txi.miniscript is not None:
+        script = derive_miniscript(txi)
+        write_compact_size(w, len(script))
+        w.extend(script)
+        return
+
     if len(public_keys) > 1:
         write_output_script_multisig(w, public_keys, threshold, prefixed=True)
         return
