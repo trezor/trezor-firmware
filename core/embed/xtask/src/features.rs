@@ -9,7 +9,7 @@ use crate::{config, helpers};
 #[derive(Debug)]
 pub struct ResolvedBuildFeatures {
     pub features: Vec<String>,
-    pub target_triple: Option<&'static str>,
+    pub target_triple: Option<String>,
     pub board_header: String,
 }
 
@@ -71,15 +71,9 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
     }
     features.extend(board_features);
 
-    let target_triple = if args.emulator {
-        None
-    } else {
-        Some(model_config.target_triple()?)
-    };
-
     Ok(ResolvedBuildFeatures {
         features,
-        target_triple,
+        target_triple: helpers::target_triple(args)?,
         board_header: board_def.board_header,
     })
 }
@@ -127,7 +121,7 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
         rebuild_std = true;
     }
 
-    if let Some(triple) = resolved.target_triple {
+    if let Some(triple) = &resolved.target_triple {
         cmd.args(["--target", triple]);
     }
 
@@ -152,11 +146,10 @@ pub fn configure_cargo(args: &ResolvedBuildArgs, cmd: &mut process::Command) -> 
         //
         // Without an explicit --target, cargo compiles proc-macros and the firmware in
         // the same pass and RUSTFLAGS leaks into proc-macro crates, causing
-        // "can't find crate" errors. Passing --target explicitly (even the same
-        // triple as the host) makes cargo separate the host (proc-macros /
-        // build scripts) and target (firmware) compilation units, so RUSTFLAGS
-        // only reaches the firmware crates.
-        cmd.args(["--target", &helpers::host_triple()?]);
+        // "can't find crate" errors. `helpers::target_triple` therefore selects
+        // the host triple for ASAN builds (passed above), which makes cargo
+        // separate the host (proc-macros / build scripts) and target (firmware)
+        // compilation units, so RUSTFLAGS only reaches the firmware crates.
         cmd.args([
             "--config",
             "build.rustflags=[\"-Zsanitizer=address\", \"-Clink-arg=-lgcc_s\"]",

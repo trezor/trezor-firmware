@@ -19,7 +19,7 @@ struct RustAnalyzerToml {
 struct RustAnalyzerCargoConfig {
     features: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    target: Option<&'static str>,
+    target: Option<String>,
     #[serde(rename = "allTargets")]
     all_targets: bool,
 }
@@ -32,7 +32,7 @@ struct RustAnalyzerCheckConfig {
 
 struct ResolvedRustAnalyzerConfig {
     features: Vec<String>,
-    target: Option<&'static str>,
+    target: Option<String>,
 }
 
 fn resolve_config(args: &RaConfigArgs) -> Result<ResolvedRustAnalyzerConfig> {
@@ -117,7 +117,10 @@ mod tests {
     #[test]
     fn resolves_target_and_sorted_features() {
         let hardware = resolve_config(&args(false)).unwrap();
-        assert_eq!(hardware.target, Some("thumbv8m.main-none-eabihf"));
+        assert_eq!(
+            hardware.target.as_deref(),
+            Some("thumbv8m.main-none-eabihf")
+        );
         assert!(hardware.features.is_sorted());
         assert!(hardware.features.windows(2).all(|pair| pair[0] != pair[1]));
         assert!(hardware.features.contains(&"models/model_t3w1".into()));
