@@ -70,6 +70,22 @@ void applet_set_heap(applet_t* applet, void* heap_ptr, size_t heap_size) {
   applet->heap_size = heap_size;
 }
 
+void applet_set_ipc_buffer_size(applet_t* applet, size_t ipc_buffer_size) {
+  applet->ipc_buffer_size = ipc_buffer_size;
+}
+
+ts_t applet_get_ipc_buffer_size(applet_t* applet, size_t* ipc_buffer_size) {
+  TSH_DECLARE;
+
+  TSH_CHECK_ARG(applet != NULL);
+  TSH_CHECK_ARG(ipc_buffer_size != NULL);
+
+  *ipc_buffer_size = applet->ipc_buffer_size;
+
+cleanup:
+  TSH_RETURN;
+}
+
 ts_t applet_get_heap(applet_t* applet, void** heap_ptr, size_t* heap_size) {
   TSH_DECLARE;
 
