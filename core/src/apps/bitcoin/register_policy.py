@@ -86,6 +86,9 @@ async def register_policy(
 
     # TODO: segregate registration per coin
     # TODO: canonicalize policy (e.g. @K ordering)
-    set_registered_miniscript(dump_message_buffer(policy))
+    from trezor.crypto.hashlib import sha256
+
+    digest = sha256(dump_message_buffer(policy)).digest()
+    set_registered_miniscript(digest)
     show_continue_in_app("Policy registered")
     return Success()

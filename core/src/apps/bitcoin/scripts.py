@@ -129,10 +129,13 @@ def output_derive_script(address: str, coin: CoinInfo) -> AnyBytes:
 
 def derive_miniscript(redeem: MiniscriptRedeemPolicyType) -> bytes:
     from storage.device import get_registered_miniscript
-    from trezor.crypto.miniscript import compile
+    from trezor.crypto.hashlib import sha256
     from trezor.protobuf import dump_message_buffer
 
-    if get_registered_miniscript() == dump_message_buffer(redeem.policy):
+    digest = sha256(dump_message_buffer(redeem.policy)).digest()
+    if get_registered_miniscript() == digest:
+        from trezor.crypto.miniscript import compile
+
         return compile(redeem)
 
     from trezor.wire import ProcessError
