@@ -33,8 +33,10 @@ static uintptr_t coreapp_emu_trampoline(uintptr_t argc, uintptr_t argv,
   return (uintptr_t)coreapp_emu((int)argc, (char**)argv);
 }
 
-// API getter function implemented in the coreapp
-extern const void* coreapp_api_get(uint32_t version);
+// App entry point implemented in the coreapp (Rust, see
+// `core/embed/api/src/lib.rs`). Called with the loaded app's own
+// `applet_main` pointer; only its address is ever taken here.
+extern int coreapp_app_entry(void* applet_main);
 
 bool coreapp_init(applet_t* applet, int argc, char** argv) {
   const applet_privileges_t coreapp_privileges = {0};
@@ -54,7 +56,7 @@ bool coreapp_init(applet_t* applet, int argc, char** argv) {
 }
 
 #ifdef USE_APP_LOADING
-void* coreapp_get_api_getter(void) { return (void*)coreapp_api_get; }
+void* coreapp_get_app_entry(void) { return (void*)coreapp_app_entry; }
 #endif
 
 #endif  // USE_APPLETS

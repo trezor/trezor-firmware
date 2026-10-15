@@ -1,0 +1,2 @@
+[alias]
+app-tool = "run --manifest-path ../crates/trezor-app-tool/Cargo.toml --"

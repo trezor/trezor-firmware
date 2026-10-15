@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use xtask::args::{Cli, Cmd};
-use xtask::{cargo, combine, flash, helpers, raconfig, upload};
+use xtask::{apptool, cargo, combine, flash, helpers, raconfig, upload};
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -20,5 +20,6 @@ fn main() -> Result<()> {
         Cmd::Combine(args) => combine::combine(args),
         Cmd::PrintVersion(args) => helpers::print_version(args),
         Cmd::RaConfig(args) => raconfig::generate(args),
+        Cmd::Apps(args) => apptool::run(args),
     }
 }

@@ -1,15 +1,33 @@
+//! App and Rust logging into the C syslog.
+//!
+//! Always available. Without the `dbg_console` feature the C syslog is not
+//! built, and every record is dropped, just like the C `LOG_*` macros.
+
+#[cfg(feature = "dbg_console")]
 use rtl::CSlice;
 
+#[cfg(feature = "dbg_console")]
 use super::ffi;
 
+/// Log level, numbered as the C `log_level_t`.
 #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+#[repr(u8)]
 pub enum LogLevel {
-    Debug = ffi::log_level_t_LOG_LEVEL_DBG as _,
-    Info = ffi::log_level_t_LOG_LEVEL_INF as _,
-    Warn = ffi::log_level_t_LOG_LEVEL_WARN as _,
-    Error = ffi::log_level_t_LOG_LEVEL_ERR as _,
+    Error = 1,
+    Warn = 2,
+    Info = 3,
+    Debug = 4,
 }
 
+#[cfg(feature = "dbg_console")]
+const _: () = {
+    assert!(LogLevel::Error as ffi::log_level_t == ffi::log_level_t_LOG_LEVEL_ERR);
+    assert!(LogLevel::Warn as ffi::log_level_t == ffi::log_level_t_LOG_LEVEL_WARN);
+    assert!(LogLevel::Info as ffi::log_level_t == ffi::log_level_t_LOG_LEVEL_INF);
+    assert!(LogLevel::Debug as ffi::log_level_t == ffi::log_level_t_LOG_LEVEL_DBG);
+};
+
+#[cfg(feature = "dbg_console")]
 impl From<&str> for ffi::log_source_t {
     fn from(s: &str) -> Self {
         let ptr = CSlice::from(s);
@@ -20,11 +38,18 @@ impl From<&str> for ffi::log_source_t {
     }
 }
 
+#[cfg(feature = "dbg_console")]
 fn syslog_start_record(module: &str, level: LogLevel) -> bool {
     let syslog_info = module.into();
     unsafe { ffi::syslog_start_record(&syslog_info, level as ffi::log_level_t) }
 }
 
+#[cfg(not(feature = "dbg_console"))]
+fn syslog_start_record(_module: &str, _level: LogLevel) -> bool {
+    false
+}
+
+#[cfg(feature = "dbg_console")]
 fn syslog_write_chunk(text: &str, end_record: bool) -> Result<usize, ()> {
     let text = CSlice::from(text);
     let bytes_written = unsafe { ffi::syslog_write_chunk(text.ptr(), text.len(), end_record) };
@@ -33,6 +58,11 @@ fn syslog_write_chunk(text: &str, end_record: bool) -> Result<usize, ()> {
     } else {
         Ok(bytes_written as usize)
     }
+}
+
+#[cfg(not(feature = "dbg_console"))]
+fn syslog_write_chunk(_text: &str, _end_record: bool) -> Result<usize, ()> {
+    Err(())
 }
 
 /// Object for writing to the syslog chunk.

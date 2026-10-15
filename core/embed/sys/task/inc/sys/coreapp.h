@@ -37,8 +37,9 @@ typedef struct {
   mpu_area_t stack;
   // TLS area
   mpu_area_t tls;
-  // API interface getter
-  void* api_getter;
+  // Entry point Core runs on behalf of a newly loaded app (see
+  // `coreapp_get_app_entry()`)
+  void* app_entry;
   // Unprivileged SAES input buffer
   void* saes_input;
   // Unprivileged SAES output buffer
@@ -75,7 +76,15 @@ mpu_area_t coreapp_get_tls_area(void);
 #endif  // TREZOR_EMULATOR
 
 #ifdef USE_APP_LOADING
-void* coreapp_get_api_getter(void);
+// Returns the coreapp function that a loaded app's task is started on.
+//
+// The loader does not jump into the app's own `applet_main` directly.
+// Instead it schedules this coreapp function, passing `applet_main` to it as
+// its only argument. That inversion lets Core run per-launch setup -- most
+// importantly claiming the app's heap for the Rust global allocator the app
+// allocates from -- before any app code executes, and it is Core, not the
+// loader, that hands the API getter to `applet_main`.
+void* coreapp_get_app_entry(void);
 #endif
 
 #endif  // KERNEL_MODE

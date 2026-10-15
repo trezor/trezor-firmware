@@ -1,3 +1,4 @@
+use std::ffi::OsString;
 use std::path::PathBuf;
 
 use anyhow::{Result, anyhow};
@@ -6,6 +7,12 @@ use serde::Deserialize;
 
 pub use crate::model::Model;
 use crate::options::BuildOptions;
+
+pub struct ResolvedBuild {
+    pub features: Vec<String>,
+    pub target_triple: Option<&'static str>,
+    pub board_header: String,
+}
 
 #[derive(ValueEnum, Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -148,9 +155,11 @@ pub enum Cmd {
     PrintVersion(PrintVersionArgs),
     /// Generate Rust Analyzer configuration for the specified model.
     RaConfig(RaConfigArgs),
+    /// Run the Trezor App Tool command
+    Apps(AppsArgs),
 }
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug, Clone, Default)]
 #[command(override_usage = "xtask build <PROJECT> --model <MODEL> [OPTIONS]")]
 pub struct BuildArgs {
     pub project: Project,
@@ -275,4 +284,10 @@ pub struct RaConfigArgs {
     /// Write the configuration to a file instead of stdout
     #[arg(long)]
     pub file: Option<PathBuf>,
+}
+
+#[derive(Args, Debug)]
+pub struct AppsArgs {
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+    pub args: Vec<OsString>,
 }
