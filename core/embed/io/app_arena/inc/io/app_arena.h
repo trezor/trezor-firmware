@@ -67,6 +67,8 @@ typedef struct {
    * Each entry is a null-terminated string, and the list
    * is zero-padded to the maximum length */
   char paths[APP_HEADER_PATHS_MAX_LEN];
+  /** Size, in bytes, of the IPC inbox Core registers for this app. */
+  size_t ipc_buffer_size;
 
 } app_image_info_t;
 
