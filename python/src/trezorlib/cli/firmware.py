@@ -449,14 +449,17 @@ _REBOOT_DEPART_TIMEOUT = 5.0
 _PROBE_TIMEOUT = 1.0
 
 
-def _answers(transport: "Transport") -> bool:
+def _answers(transport: "Transport", reconnect: bool) -> bool:
     """Whether the device answers a message right now. A Busy failure does not
     count: the nRF sends it on its own while the main MCU is not accepting
-    messages, e.g. during a reboot."""
+    messages, e.g. during a reboot. Without `reconnect`, a closed link counts
+    as not answering."""
     from .. import mapping, protocol_v1
 
     try:
         if not transport.is_open():
+            if not reconnect:
+                return False
             transport.open()
         protocol_v1.write(transport, *mapping.DEFAULT_MAPPING.encode(messages.Cancel()))
         resp = mapping.DEFAULT_MAPPING.decode(
@@ -487,15 +490,11 @@ def _wait_for_device(obj: "TrezorConnection", message: str) -> None:
     while time.monotonic() < deadline:
         # a dropped BLE link already means it left; reconnecting here could
         # also outlast the deadline
-        if ble:
-            present = transport.is_open() and _answers(transport)
-        else:
-            present = obj.is_present()
-        if not present:
+        if not (_answers(transport, reconnect=False) if ble else obj.is_present()):
             break
         time.sleep(0.1)
     if ble:
-        while not _answers(transport):
+        while not _answers(transport, reconnect=True):
             time.sleep(0.5)
     while True:
         time.sleep(0.5)
