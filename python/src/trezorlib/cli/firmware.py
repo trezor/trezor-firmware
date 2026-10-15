@@ -474,9 +474,9 @@ def _answers(transport: "Transport", reconnect: bool) -> bool:
 
 def _wait_for_device(obj: "TrezorConnection", message: str) -> None:
     """Close the connection and wait for the device to leave and come back: the
-    pre-reboot device still answers for a moment, and after phase 1
-    bootloader_mode is the same on both sides of the reboot, so a reconnect
-    could hit a rebooting device.
+    device still answers for a moment before it reboots, so a reconnect could
+    reach it instead of the rebooted one. Features cannot tell them apart when
+    the device reboots from the bootloader into the bootloader again.
 
     Over BLE the link can outlive the reboot (the nRF keeps running), so the
     device is watched to stop and resume answering instead of enumerating."""
