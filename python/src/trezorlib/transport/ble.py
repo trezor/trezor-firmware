@@ -159,8 +159,12 @@ class BleProxy:
             assert self.pipe is not None
             self.pipe.send((name, args, kwargs))
             result = self.pipe.recv()
-            if isinstance(result, BaseException):
+            if isinstance(result, TransportException):
                 raise result
+            if isinstance(result, BaseException):
+                # errors from the BLE process (RuntimeError, BleakError, ...)
+                # surface as the transport's own exception type
+                raise TransportException(f"BLE {name} failed: {result}") from result
             return result
 
         return f
