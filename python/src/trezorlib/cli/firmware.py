@@ -465,7 +465,7 @@ def _answers(transport: "Transport", reconnect: bool) -> bool:
         resp = mapping.DEFAULT_MAPPING.decode(
             *protocol_v1.read(transport, timeout=_PROBE_TIMEOUT, _ignore_bad_magic=True)
         )
-    except Exception:
+    except exceptions.TrezorException:
         return False
     return not (
         isinstance(resp, messages.Failure) and resp.code == messages.FailureType.Busy
@@ -502,6 +502,8 @@ def _wait_for_device(obj: "TrezorConnection", message: str) -> None:
             obj.open()
             break
         except Exception:
+            # Broad on purpose: a device that is still rebooting fails to open
+            # in transport-specific ways, e.g. a raw usb1.USBError from WebUSB.
             pass
 
 

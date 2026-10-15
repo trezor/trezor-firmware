@@ -286,7 +286,7 @@ class TrezorConnection:
         try:
             self._get_transport()
             return True
-        except Exception:
+        except click.ClickException:
             return False
 
     def open(self) -> None:
