@@ -33,18 +33,21 @@
     return varname;     \
   }
 
-#define GETENV(varname, envname, fallback) \
-  varname = getenv(envname);               \
-  if (!varname) {                          \
-    varname = fallback;                    \
+#define GETENV(varname, envname, fallback)       \
+  varname = getenv(envname);                     \
+  if (varname && !*varname) {                    \
+    error_shutdown(envname " is set but empty"); \
+  }                                              \
+  if (!varname) {                                \
+    varname = fallback;                          \
   }
 
-#define FILE_PATH(varname, filename)                           \
-  if (asprintf(&varname, "%s/" filename, profile_dir()) < 0) { \
-    varname = NULL;                                            \
-  }                                                            \
-  if (!varname) {                                              \
-    varname = PROFILE_DIR_DEFAULT filename;                    \
+#define FILE_PATH(varname, filename)                              \
+  if (asprintf(&varname, "%s/%s", profile_dir(), filename) < 0) { \
+    varname = NULL;                                               \
+  }                                                               \
+  if (!varname) {                                                 \
+    error_shutdown("asprintf failed");                            \
   }
 
 const char *profile_name(void) {
@@ -61,18 +64,22 @@ const char *profile_dir(void) {
 
 const char *profile_flash_path(void) {
   SVAR(_flash_path);
-  FILE_PATH(_flash_path, "/trezor.flash");
+  char *filename = NULL;
+  GETENV(filename, "TREZOR_FLASH_FILENAME", "trezor.flash");
+  FILE_PATH(_flash_path, filename);
   return _flash_path;
 }
 
 const char *profile_sdcard_path(void) {
   SVAR(_sdcard_path);
-  FILE_PATH(_sdcard_path, "/trezor.sdcard");
+  char *filename = NULL;
+  GETENV(filename, "TREZOR_SDCARD_FILENAME", "trezor.sdcard");
+  FILE_PATH(_sdcard_path, filename);
   return _sdcard_path;
 }
 
 const char *profile_usb_disconnect_path(void) {
   SVAR(_disconnect_path);
-  FILE_PATH(_disconnect_path, "/trezor.usb_data_disconnected");
+  FILE_PATH(_disconnect_path, "trezor.usb_data_disconnected");
   return _disconnect_path;
 }
