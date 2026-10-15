@@ -22,6 +22,10 @@ rustflags = [
     "link-arg=-mfloat-abi=hard",
     "-C",
     "link-arg=-mfpu=fpv4-sp-d16",
+    # Suppress linker warning that built ELF "has a LOAD segment with RWX permissions" since
+    # the segment permissions are not used to actually configure MPU.
+    "-C",
+    "link-arg=-Wl,--no-warn-rwx-segments",
     "-D",
     "linker-messages",
     # Adds an ELF section with Rust functions' stack sizes. See the following links for more details:
@@ -47,6 +51,8 @@ rustflags = [
     "link-arg=-mfloat-abi=hard",
     "-C",
     "link-arg=-mfpu=fpv5-sp-d16",
+    "-C",
+    "link-arg=-Wl,--no-warn-rwx-segments",
     "-D",
     "linker-messages",
     "-Z",
