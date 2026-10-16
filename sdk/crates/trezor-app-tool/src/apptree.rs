@@ -37,10 +37,10 @@ pub fn generate() -> Result<()> {
     println!("app-tool: Building app proofs and dev-signed RootPacket");
     println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
 
-    let status = cmd.status().context("Failed to spawn `extapp_tool.py`")?;
+    let status = cmd.status().context("Failed to spawn `apptree_tool.py`")?;
     ensure!(
         status.success(),
-        "`extapp_tool.py build-dev-bundle` failed with status: {status}"
+        "`apptree_tool.py post-build` failed with status: {status}"
     );
 
     Ok(())
