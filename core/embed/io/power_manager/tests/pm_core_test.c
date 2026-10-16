@@ -26,8 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../core/pm_core.h"
 #include "../fuel_gauge/battery.h"
-#include "../managed/pm_core.h"
 #include "../pmic/pmic_charger.h"
 
 // --- Fake fuel gauge ---------------------------------------------------------

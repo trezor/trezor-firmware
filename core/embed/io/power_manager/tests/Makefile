@@ -1,4 +1,4 @@
-# Host unit test for the pure power-manager core (managed/pm_core*.c and the
+# Host unit test for the pure power-manager core (core/pm_core*.c and the
 # charger leaf), linked against a fake fuel gauge and a fake charger.
 #
 #   make -C core/embed/io/power_manager/tests
@@ -13,9 +13,9 @@ CPPFLAGS := -DKERNEL_MODE -DTREZOR_EMULATOR \
   -I $(EMBED)/io/suspend/inc
 
 SRCS := \
-  ../managed/pm_core.c \
-  ../managed/pm_core_states.c \
-  ../managed/power_charging.c \
+  ../core/pm_core.c \
+  ../core/pm_core_states.c \
+  ../core/charging.c \
   pm_core_test.c
 
 BUILD := build
@@ -26,7 +26,7 @@ all: test
 test: $(BUILD)/pm_core_test
 	$(BUILD)/pm_core_test
 
-$(BUILD)/pm_core_test: $(SRCS) ../managed/pm_core.h fake/trezor_bsp.h
+$(BUILD)/pm_core_test: $(SRCS) ../core/pm_core.h fake/trezor_bsp.h
 	@mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $(SRCS) -lm
 

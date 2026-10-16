@@ -37,9 +37,9 @@
 #include "../wireless/stwlc38/stwlc38.h"
 #endif
 
-#include "pm_core.h"
+#include "../core/pm_core.h"
 
-// Glue side of the managed policy: what power_manager.c owns around the pure
+// Glue side of the policy: what stm32/power_manager.c owns around the pure
 // core in pm_core.h - the lock, the sampling timer, suspend bookkeeping, the
 // RTC, backup RAM and the hardware sub-drivers.
 
@@ -63,7 +63,7 @@
 //   PM_SUSPEND_CURRENT_MA            board drain in suspend [mA]     (USE_RTC)
 //   PM_HIBERNATION_CURRENT_MA        board drain in hibernation [mA] (USE_RTC)
 //   BATTERY_CHARGING_CURRENT_MAX_MA  pack's max charging current [mA]
-//                                    (charger leaf only, power_charging.c)
+//                                    (charger leaf only, core/charging.c)
 //   BATTERY_CHARGE_TEMP_BANDS        {max_temp_C, current factor} bands,
 //                                    ascending (charger leaf only)
 //

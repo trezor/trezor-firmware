@@ -15,11 +15,11 @@ The module is organized by *capability*, not by chip. A board's power hardware i
 | Wireless charger | `wireless/stwlc38/stwlc38.h` | `wireless/stwlc38/`, or none |
 | Charger present | `pmic/pmic_charger.h` | capability flag, derived from the PMIC |
 
-Above them sits a single hardware policy, `managed/`, which implements the public `<io/power_manager.h>` API: the power state machine, charging control, thermal limiting, suspend/hibernate handling, and state recovery from backup RAM. It talks only to the interfaces above and contains no chip-specific code — no PMIC registers, no I2C.
+Above them sits a single policy, `core/` with its `stm32/` glue, which implements the public `<io/power_manager.h>` API: the power state machine, charging control, thermal limiting, suspend/hibernate handling, and state recovery from backup RAM. It talks only to the interfaces above and contains no chip-specific code — no PMIC registers, no I2C.
 
 Separating the policy from the PMIC driver is the point of the split. A PMIC is a hardware device, a fuel gauge is an algorithm, a wireless charger is a *different* hardware device, and the policy is orchestration. Grouping any of them under a chip name welds unrelated kinds of thing together and makes the policy look chip-specific when it is not.
 
-The charger is a capability flag rather than a fifth directory, because a PMIC without one — a boost regulator for primary cells, or a bare GPIO power latch — needs the same policy with the charging controller removed, not a policy of its own. This is why there is a single `managed` policy rather than one per chip, or one per battery chemistry.
+The charger is a capability flag rather than a fifth directory, because a PMIC without one — a boost regulator for primary cells, or a bare GPIO power latch — needs the same policy with the charging controller removed, not a policy of its own. This is why there is a single policy rather than one per chip, or one per battery chemistry.
 
 ## 2. Directory layout
 
@@ -27,12 +27,11 @@ The charger is a capability flag rather than a fifth directory, because a PMIC w
 power_manager/
   inc/io/                   public headers: power_manager.h, pmic.h
   power_manager_poll.{c,h}  shared poll/event plumbing
-  managed/                  hardware policy; never names a chip
-    pm_core.{c,h}, pm_core_states.c   pure core: pipeline, state machine, recovery
-    power_charging[_none].c   charger leaf, exactly one built per PMIC capability
-    power_manager.c           glue: lock, timer, backup RAM, RTC, hardware
-  tests/                    host unit test of the pure core (make -C ... tests)
-  unix/                     emulator policy
+  core/                     pure policy: pipeline, state machine, recovery,
+                            charger leaf (charging[_none].c, one built per PMIC)
+  stm32/                    device glue: lock, timer, backup RAM, RTC, hardware
+  unix/                     emulator policy (mock of the public API, see below)
+  tests/                    host unit test of core/ (make -C ... tests)
   pmic/                     PMIC drivers behind pmic.h, plus pmic_charger.h
   fuel_gauge/               SoC estimators behind battery.h
   wireless/                 wireless-charger drivers
@@ -70,7 +69,7 @@ Two build shapes exist. The boardloader is *PMIC-only*: it maps `power_manager` 
 
 ### Board tunables
 
-Numbers that describe the board or its battery pack do not live in the policy. The board header defines them, and the policy (`power_manager_internal.h`, or `power_charging.c` for the charger's own) requires them with an `#error` naming the missing one, so a new board cannot silently inherit another product's battery figures:
+Numbers that describe the board or its battery pack do not live in the policy. The board header defines them, and the policy (`stm32/power_manager_internal.h`, or `core/charging.c` for the charger's own) requires them with an `#error` naming the missing one, so a new board cannot silently inherit another product's battery figures:
 
 | Define | Meaning | Required when |
 | ------ | ------- | ------------- |
@@ -84,17 +83,17 @@ The line between the two kinds: a constant that would change if the same policy 
 
 ## 4. Core and glue
 
-`managed/` is split in two along the line between *deciding* and *doing*.
+The policy is split in two directories along the line between *deciding* and *doing*.
 
-**The core** (`pm_core.h`, `pm_core.c`, `pm_core_states.c`, and the charger leaf) is pure: every step is a function of the core's state, an input and a time. `pm_core_sample()` takes a PMIC sample and a millisecond tick and runs the whole per-sample pipeline — power-source detection, brownout, the fuel gauge, the charging controller, the state machine. `pm_core_request()` feeds a suspend / hibernate / turn-on request into the state machine. Both return a `pm_actions_t` describing what must now happen in the world: notify listeners, cap the backlight, set the charger's limit and enable state, enter ship mode, persist the recovery data and power off. The core never calls a timer, a lock, backup RAM, the RTC, telemetry or a driver. Time only ever arrives as an argument, so the shutdown timeout and the thermal debounce are deadlines compared against the tick instead of hardware timers. Elapsed real time for self-discharge compensation arrives the same way, as seconds, in `pm_core_init()` and `pm_core_resume()`.
+**The core** (`core/`: `pm_core.h`, `pm_core.c`, `pm_core_states.c`, and the charger leaf) is pure: every step is a function of the core's state, an input and a time. `pm_core_sample()` takes a PMIC sample and a millisecond tick and runs the whole per-sample pipeline — power-source detection, brownout, the fuel gauge, the charging controller, the state machine. `pm_core_request()` feeds a suspend / hibernate / turn-on request into the state machine. Both return a `pm_actions_t` describing what must now happen in the world: notify listeners, cap the backlight, set the charger's limit and enable state, enter ship mode, persist the recovery data and power off. The core never calls a timer, a lock, backup RAM, the RTC, telemetry or a driver. Time only ever arrives as an argument, so the shutdown timeout and the thermal debounce are deadlines compared against the tick instead of hardware timers. Elapsed real time for self-discharge compensation arrives the same way, as seconds, in `pm_core_init()` and `pm_core_resume()`.
 
-**The glue** (`power_manager.c`) implements `<io/power_manager.h>` by driving the core with real time and real samples and carrying out the actions. It owns the interrupt lock, the sampling timer, the recovery data's version and RTC timestamp, the auto-hibernate RTC event, telemetry, and the hardware sub-drivers. It also builds the core's `pm_config_t` from the board tunables. Nothing in the glue decides policy; everything in it owns a side effect.
+**The device glue** (`stm32/power_manager.c`) implements `<io/power_manager.h>` by driving the core with real time and real samples and carrying out the actions. It owns the interrupt lock, the sampling timer, the recovery data's version and RTC timestamp, the auto-hibernate RTC event, telemetry, and the hardware sub-drivers. It also builds the core's `pm_config_t` from the board tunables. Nothing in the glue decides policy; everything in it owns a side effect.
 
-The charger leaf keeps the same discipline with two marked exceptions: `pm_charging_init()` asks the charger driver for its minimum limit once, and `pm_charging_apply()` is the leaf's own glue, the one function that carries the controller's decision to the charger. That keeps `USE_CHARGER` out of `power_manager.c` as before.
+The charger leaf keeps the same discipline with two marked exceptions: `pm_charging_init()` asks the charger driver for its minimum limit once, and `pm_charging_apply()` is the leaf's own glue, the one function that carries the controller's decision to the charger. That keeps `USE_CHARGER` out of the glue.
 
 What the split buys is `tests/pm_core_test.c`: a host program that links the core against a fake fuel gauge and a fake charger, advances a fake clock, and walks the policy through cold boot, turn-on, the low-battery threshold, brownout with the shutdown timeout, charging with thermal derating and fault clearing, the suspend cycle, recovery and inheritance. The same logic that ships on the device runs there, with no emulator, in well under a second. Run it with `make -C core/embed/io/power_manager/tests`.
 
-The rule: a constant or a decision belongs in the core; a clock, a lock, a bus or a persistent store belongs in the glue. If a change to `managed/` needs a new `#include <sys/...>` or `<io/...>` in a core file, it is going in the wrong half.
+The rule: a constant or a decision belongs in `core/`; a clock, a lock, a bus or a persistent store belongs in a glue directory. If a change needs a new `#include <sys/...>` or a driver header in a core file, it is going in the wrong half. There is no `managed/` any more: it named "the real policy" as opposed to the `unix/` mock, and once the emulator becomes a second glue around the same core that distinction is gone.
 
 ## 5. The PMIC report is chip-neutral
 
@@ -106,10 +105,10 @@ This is what lets one policy serve every PMIC without knowing which one it has. 
 
 ## 6. The charger capability
 
-The charger is the only part of the policy that depends on which PMIC is fitted, so it is isolated as a **leaf**: a pair of alternative sources in `managed/`, of which `build.rs` compiles exactly one on the PMIC's charger capability:
+The charger is the only part of the policy that depends on which PMIC is fitted, so it is isolated as a **leaf**: a pair of alternative sources in `core/`, of which `build.rs` compiles exactly one on the PMIC's charger capability:
 
-- `power_charging.c` — the real leaf for a charger-capable PMIC (npm1300): the charging controller, the thermal (charging-current) limiter with its board-supplied derating bands, the charging-limited detector, and the leaf's half of the public charging API (the glue validates and locks, the leaf changes the state). It is the only policy file that includes `pmic_charger.h`.
-- `power_charging_none.c` — the leaf for a PMIC without a charger (npm2100): every entry point is a no-op or a rejection. Enabling, disabling and the SoC target are accepted and ignored; `pm_charging_set_max_current()` is rejected rather than reported as applied, because it never would be.
+- `charging.c` — the real leaf for a charger-capable PMIC (npm1300): the charging controller, the thermal (charging-current) limiter with its board-supplied derating bands, the charging-limited detector, and the leaf's half of the public charging API (the glue validates and locks, the leaf changes the state). It is the only policy file that includes `pmic_charger.h`.
+- `charging_none.c` — the leaf for a PMIC without a charger (npm2100): every entry point is a no-op or a rejection. Enabling, disabling and the SoC target are accepted and ignored; `pm_charging_set_max_current()` is rejected rather than reported as applied, because it never would be.
 
 The rest of the policy calls the leaf unconditionally through a small internal interface (`pm_charging_init`, `pm_charging_step`, `pm_charging_active`, `pm_charging_update_limited`, the `pm_charging_set_*` requests and `pm_charging_apply`), so **`USE_CHARGER` does not appear in any shared policy source**. It survives only as the build-time selector of the leaf and as the gate for prodtest's charging commands.
 
@@ -149,7 +148,7 @@ The tradeoff is that the emulator exercises **none** of the real policy: not the
 
 These are the rules the layout above is meant to enforce. They are worth re-reading before widening any of the interfaces.
 
-- **One kind of thing per directory.** `pmic/*` is only hardware; `managed/` is only orchestration and never mentions a chip; `fuel_gauge/*` and `wireless/*` are their own kinds.
+- **One kind of thing per directory.** `pmic/*` is only hardware; `core/` is only decisions and never mentions a chip; `stm32/` and `unix/` are only glue; `fuel_gauge/*` and `wireless/*` are their own kinds.
 - **Do not abstract from a single implementation.** Buck-mode control stayed npm1300-private because nothing else consumed it, and `battery.h` still carries `P` explicitly instead of an opaque state blob because there is only one real estimator to design that blob against — and because changing it changes the versioned backup-RAM recovery format, which needs an on-device test rather than a blind edit.
 - **Decide in the core, do in the glue.** The core takes time as an argument and returns actions; anything that needs a clock, a lock, a bus or a store is glue. The host test is the check.
 - **A capability only some hardware has becomes a flag on the existing policy,** not a policy of its own, and the flag gates a no-op leaf, not a hole in shared logic. `USE_CHARGER` is the worked example.

@@ -19,11 +19,11 @@
 
 #ifdef KERNEL_MODE
 
-// Charger leaf of the managed power-manager policy for a PMIC without a
+// Charger leaf of the power-manager policy for a PMIC without a
 // charger (e.g. the npm2100 boost regulator for primary cells). Every entry
 // point is a no-op or a rejection, so the rest of the policy can call the
 // charger leaf unconditionally. Selected by build.rs when USE_CHARGER is not
-// set; power_charging.c is the real implementation.
+// set; charging.c is the real implementation.
 
 #include <trezor_rtl.h>
 

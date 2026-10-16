@@ -21,7 +21,7 @@
  * @file battery.h
  * @brief Fuel-gauge (battery state-of-charge) interface.
  *
- * Chemistry-neutral interface between the `managed` power-manager policy and a
+ * Chemistry-neutral interface between the power-manager policy core and a
  * concrete fuel-gauge implementation. The board selects an implementation via
  * `fuel_gauge = "io/fuel_gauge_..."`; the policy speaks only to this header and
  * never reaches into an implementation's directory. Current implementations:

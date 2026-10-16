@@ -19,7 +19,7 @@
 
 #ifdef KERNEL_MODE
 
-// Glue of the managed power-manager policy: implements <io/power_manager.h>
+// Device glue of the power-manager policy: implements <io/power_manager.h>
 // by driving the pure core (pm_core.h) with real time and real samples, and
 // carrying out the actions it returns on the hardware and the OS services.
 // Nothing in here decides policy; everything in here owns a side effect.

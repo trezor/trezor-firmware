@@ -26,7 +26,7 @@
 // Only charger-capable PMICs implement this surface (currently the npm1300).
 // PMICs without a charger - e.g. the npm2100 boost regulator for primary cells,
 // or a bare GPIO power latch - do not implement it, and it is called only from
-// charger-enabled power-manager policy code (the `managed` policy's charging
+// charger-enabled power-manager policy code (the policy core's charging
 // controller).
 //
 // Regulator/buck-mode control is deliberately NOT here: it currently has no

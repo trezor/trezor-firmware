@@ -24,15 +24,16 @@
 #include <io/pmic.h>
 #include <io/power_manager.h>
 
-// Pure core of the managed power-manager policy.
+// Pure core of the power-manager policy.
 //
 // Everything in here is a function of (core state, inputs, time): the power
 // state machine, the per-sample pipeline (power sources, brownout, fuel gauge,
 // charging), recovery snapshot/restore and the requests (suspend, hibernate,
 // turn on). It never touches hardware, timers, locks, backup RAM, the RTC or
-// telemetry. Instead each step returns a `pm_actions_t` that the glue in
-// power_manager.c carries out. Time arrives as a millisecond tick from the
-// glue, and elapsed real time (for self-discharge compensation) as seconds.
+// telemetry. Instead each step returns a `pm_actions_t` that the glue
+// (stm32/power_manager.c on the device) carries out. Time arrives as a
+// millisecond tick from the glue, and elapsed real time (for self-discharge
+// compensation) as seconds.
 //
 // That is what makes it testable: a host test links this core against a fake
 // fuel gauge and a fake charger, feeds it samples with a fake clock, and checks
@@ -74,7 +75,7 @@ typedef struct {
   float current_factor;
 } pm_temp_band_t;
 
-// Charger leaf state. Owned and interpreted by power_charging[_none].c; the
+// Charger leaf state. Owned and interpreted by charging[_none].c; the
 // shared core only stores it.
 typedef struct {
   // configuration (from the leaf)
@@ -240,8 +241,8 @@ static inline bool pm_core_deadline_passed(uint32_t now_ms,
 }
 
 // --- Charger leaf ------------------------------------------------------------
-// Implemented by exactly one of power_charging.c (PMIC with a charger) and
-// power_charging_none.c (no charger), selected by build.rs. The shared core
+// Implemented by exactly one of charging.c (PMIC with a charger) and
+// charging_none.c (no charger), selected by build.rs. The shared core
 // calls these unconditionally.
 
 // Sets the leaf's configuration and defaults. The one place the leaf may ask

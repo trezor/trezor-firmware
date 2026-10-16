@@ -19,11 +19,11 @@
 
 #ifdef KERNEL_MODE
 
-// Charger leaf of the managed power-manager policy for a PMIC with a charger:
+// Charger leaf of the power-manager policy for a PMIC with a charger:
 // the charging controller, the thermal (charging-current) limiter, the
 // charging-limited detector and the leaf's part of the public charging API.
 // Built only when the selected PMIC has a charger (USE_CHARGER); boards
-// without one build power_charging_none.c instead.
+// without one build charging_none.c instead.
 //
 // Pure, like the rest of pm_core: it decides and records the decision in
 // pm_actions_t. The two exceptions are marked below: pm_charging_init() asks
@@ -40,7 +40,7 @@
 #include "pm_core.h"
 
 // --- Board tunables this leaf needs ------------------------------------------
-// See the board-tunables section in power_manager_internal.h.
+// See the board-tunables section in stm32/power_manager_internal.h.
 #ifndef BATTERY_CHARGING_CURRENT_MAX_MA
 #error "Board header must define BATTERY_CHARGING_CURRENT_MAX_MA"
 #endif
