@@ -56,7 +56,10 @@ PATTERN_BIP48_RAW = "m/48'/coin_type'/account'/0'/change/address_index"
 PATTERN_BIP48_P2SHSEGWIT = "m/48'/coin_type'/account'/1'/change/address_index"
 PATTERN_BIP48_SEGWIT = "m/48'/coin_type'/account'/2'/change/address_index"
 
-# TODO: Liana uses non-standard change index derivation
+# Liana uses BIP-48 with non-standard change index derivation
+# (to allow reusing the same signer in different spending paths)
+# TODO: enable only for Miniscript
+# TODO: don't allow existing multisig to use it
 PATTERN_BIP48_LIANA = "m/48'/coin_type'/account'/2'/[0-9]/address_index"
 
 # BIP-49 for segwit-in-P2SH: https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki

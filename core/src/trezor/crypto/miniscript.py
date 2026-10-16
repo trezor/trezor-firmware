@@ -13,15 +13,20 @@ def _trim(s: str, prefix: str, suffix: str) -> str:
     return s[len(prefix) : -len(suffix)]
 
 
-def parse_node(n: HDNodeType) -> bip32.HDNode:
+def derive_node(n: HDNodeType, change: int, index: int) -> bip32.HDNode:
     # Miniscript nodes use only secp256k1 curve.
-    return bip32.HDNode(
+    node = bip32.HDNode(
         depth=n.depth,
         fingerprint=n.fingerprint,
         child_num=n.child_num,
         chain_code=n.chain_code,
         public_key=n.public_key,
     )
+    # `True` = public child key derivation
+    node.derive(change, True)
+    node.derive(index, True)
+    return node
+
 
 def _parse_index(s: str) -> int:
     # TODO: check for non-canonical representations
@@ -46,11 +51,10 @@ def compile_internal(derivation: MiniscriptRedeemPolicyType) -> bytes:
         child_idx = (external_idx, internal_idx)[derivation.internal]
 
         if 0 <= key_idx < len(keys):
-            node = parse_node(keys[key_idx].node)
-            node.derive(child_idx, True)
-            node.derive(derivation.index, True)
+            node = keys[key_idx].node
+            pubkey = derive_node(node, child_idx, derivation.index).public_key()
             used[key_idx] = True
-            return node.public_key()
+            return pubkey
 
         raise ValueError
 

@@ -24,7 +24,6 @@ from embit.networks import NETWORKS
 from embit.psbt import PSBT
 
 from trezorlib import btc, client, messages
-from trezorlib.cli.btc import xpub_deserialize
 
 NAME = "signer"
 
@@ -36,7 +35,9 @@ NAME = "signer"
 @click.option("-o", "--output", "dst", type=click.Path(writable=True, dir_okay=False))
 @click.option("--coin", type=str)
 @click.option("--spend", type=int)
-def sign_psbt(descriptor: str, key: tuple[str, ...], src: str, dst: str, coin: str, spend: int) -> None:
+def sign_psbt(
+    descriptor: str, key: tuple[str, ...], src: str, dst: str, coin: str, spend: int
+) -> None:
     network = NETWORKS[coin]
     desc = descriptor
     for i, k in enumerate(key):
@@ -80,17 +81,17 @@ def sign_psbt(descriptor: str, key: tuple[str, ...], src: str, dst: str, coin: s
         assert node.xpub == k.key.to_string()
         keys.append(k)
 
-    key = keys[spend]
-    print(key.to_string())
+    spend_key = keys[spend]
+    print(spend_key.to_string())
 
     inputs = []
     pubkeys = []
     for i in psbt.inputs:
         for pk, der in i.bip32_derivations.items():
-            res = key.check_derivation(der)
+            res = spend_key.check_derivation(der)
             if res is not None:
                 idx, branch_idx = res
-                derived = key.derive(idx, branch_index=branch_idx)
+                derived = spend_key.derive(idx, branch_index=branch_idx)
                 assert derived.key.key == pk
                 pubkeys.append(pk)
                 address_n = derived.origin.derivation

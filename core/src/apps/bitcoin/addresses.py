@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
 from trezor.crypto import base58
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType
@@ -65,7 +66,7 @@ def get_address(
             pubkeys = multisig_get_pubkeys(multisig)
             return _address_multisig_p2wsh(pubkeys, multisig.m, coin.bech32_prefix)
         # wsh miniscript
-        if miniscript is not None:
+        if utils.USE_MINISCRIPT and miniscript is not None:
             from .scripts import derive_miniscript
 
             # TODO: only `wsh()` is supported

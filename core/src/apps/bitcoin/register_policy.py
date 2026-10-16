@@ -18,28 +18,27 @@ if TYPE_CHECKING:
 
 
 async def derive_xpubs(
-    policy: MiniscriptPolicy, coin: CoinInfo
+    policy: MiniscriptPolicy,
+    keychain: Keychain,
+    xpub_magic: int,
 ) -> list[tuple[bool, str]]:
-    from trezor.crypto.miniscript import parse_node
+    from trezor.crypto.miniscript import derive_node
 
-    from ..common.keychain import get_keychain
-    from ..common.paths import AlwaysMatchingSchema
-
-    xpub_magic = coin.xpub_magic
-
-    # TODO: use Miniscript-specific schema (also in GetAddress & SignTx)
-    keychain = await get_keychain(coin.curve_name, [AlwaysMatchingSchema])
     root_fingerprint = keychain.root_fingerprint()
 
+    child_path = [0, 0]  # change=0, index=0
     result = []
     for key in policy.keys:
-        # make sure provided node can be parsed and serialized
-        key_xpub = parse_node(key.node).serialize_public(xpub_magic)
+        # make sure provided node can be parsed and derived
+        key_xpub = derive_node(key.node, *child_path).serialize_public(xpub_magic)
         is_ours = False
         if (fpr := key.root_fingerprint) is not None and fpr == root_fingerprint:
-            our_xpub = keychain.derive(key.derivation_path).serialize_public(xpub_magic)
-            is_ours = our_xpub == key_xpub
+            # will raise if this path is underivable on this device
+            is_ours = keychain.derive(key.derivation_path + child_path).serialize_public(xpub_magic) == key_xpub
         result.append((is_ours, key_xpub))
+
+    if not any(is_ours for is_ours, _ in result):
+        raise DataError("No keys owned by this device")
 
     return result
 
@@ -73,7 +72,8 @@ async def register_policy(
     except ValueError:
         raise DataError("Invalid policy")
 
-    derived: list[tuple[bool, str]] = await derive_xpubs(policy, coin)
+    # Miniscript is using descriptors with xpub/tpubs:
+    derived = await derive_xpubs(policy, keychain, coin.xpub_magic)
     await confirm_properties(
         title=f"Register {coin.coin_name} Miniscript policy?",
         subtitle=name,
