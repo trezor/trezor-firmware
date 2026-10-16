@@ -1653,14 +1653,56 @@ OK
 
 ### nfc-backup commands
 
-The NFC backup command group performs secure communication with the NFC backup
-card over ISO-DEP. Most commands run this sequence:
+The NFC backup command group communicates with the NFC backup card over
+ISO-DEP. Every command (except `nfc-backup-transparent-mode`) runs this
+sequence:
 
 1. Enable NFC discovery and wait for card tap.
-2. Run secure handshake (applet select, PSK exchange, Noise XXpsk3).
-3. Run one or more APDU commands.
+2. Run the command body (see below).
+3. Print the elapsed time, disable NFC and respond with `OK` or `ERROR`.
 
 The operation can be aborted at any time by pressing `CTRL+C`.
+
+Commands that touch the backup applet's protected data run the secure handshake
+(applet select, PSK exchange, Noise XXpsk3) first, and all following APDUs are
+then encrypted with the Noise transport state (the status word `SW1 SW2` is
+always sent in plaintext):
+
+- `nfc-backup-handshake`, `nfc-backup-authenticate`, `nfc-backup-set-pin`,
+  `nfc-backup-wipe`, `nfc-backup-write-seed-metadata`, `nfc-backup-read-seed`,
+  `nfc-backup-write-seed`
+
+All other commands send their APDU in plaintext without the handshake:
+
+- `nfc-backup-read-pin-counter`, `nfc-backup-read-success-log`,
+  `nfc-backup-read-failure-logs`, `nfc-backup-read-seed-metadata`,
+  `nfc-backup-activate-flashloader`, `nfc-backup-get-os-version`,
+  `nfc-backup-get-uid`, `nfc-backup-measure`, `nfc-backup-integrity-check`,
+  `nfc-backup-harden`
+
+APDU overview:
+
+| Command                         | CLA    | INS    | Data                       |
+|---------------------------------|--------|--------|----------------------------|
+| authenticate                    | `0x80` | `0x03` | PIN, `0xFF`-padded to 32 B |
+| set-pin                         | `0x80` | `0x04` | PIN, `0xFF`-padded to 32 B |
+| wipe                            | `0x80` | `0x05` | -                          |
+| read-pin-counter                | `0x80` | `0x06` | -                          |
+| read-success-log                | `0x80` | `0x07` | -                          |
+| read-failure-logs               | `0x80` | `0x08` | -                          |
+| read-seed-metadata              | `0x80` | `0x09` | -                          |
+| write-seed-metadata             | `0x80` | `0x0A` | 256 B metadata             |
+| read-seed                       | `0x80` | `0x0B` | -                          |
+| write-seed                      | `0x80` | `0x0C` | 256 B seed                 |
+| get-os-version                  | `0x20` | `0x01` | -                          |
+| get-uid                         | `0x20` | `0x02` | -                          |
+| measure                         | `0x20` | `0x03` | -                          |
+| harden                          | `0x20` | `0x04` | -                          |
+| integrity-check                 | `0x20` | `0x05` | -                          |
+| activate-flashloader            | `0xC2` | `0xA0` | -                          |
+
+PINs are limited to 32 characters. If a PIN argument is omitted, an empty PIN
+(32 bytes of `0xFF`) is used.
 
 Common runtime traces:
 
@@ -1674,14 +1716,48 @@ Common runtime traces:
   - `# Handshake step 2/4: exchanging PSK.`
   - `# Handshake step 3/4: running Noise XXpsk3.`
   - `# Handshake step 4/4: secure channel established.`
+  - `# Handshake: completed`
 - APDU traces for API calls:
   - `# APDU <name>: TX INS=0x.. (<bytes> bytes)`
   - `# APDU <name>: RX SW=0x.... (<bytes> bytes)`
 
-By default, sensitive values are printed in shortened form (head/tail preview).
+  The byte counts are the plaintext APDU sizes (before encryption / after
+  decryption on a secure channel), including the 2-byte status word on RX.
+
+By default, sensitive values longer than 16 bytes are printed in shortened
+form (head/tail preview).
+
+Command-specific error codes (in addition to the general ones):
+
+| Code  | Meaning                                    |
+|-------|--------------------------------------------|
+| 26010 | NFC initialization failed                  |
+| 26011 | NFC start discovery failed                 |
+| 26012 | Unexpected card type (not NFC type A)      |
+| 26013 | PSK exchange failed                        |
+| 26014 | Noise handshake failed                     |
+| 26015 | `nfc-backup-handshake` failed              |
+| 26016 | `nfc-backup-authenticate` failed           |
+| 26017 | `nfc-backup-set-pin` failed                |
+| 26018 | `nfc-backup-wipe` failed                   |
+| 26019 | `nfc-backup-read-pin-counter` failed       |
+| 26020 | `nfc-backup-read-success-log` failed       |
+| 26021 | `nfc-backup-read-failure-logs` failed      |
+| 26022 | `nfc-backup-read-seed-metadata` failed     |
+| 26023 | `nfc-backup-write-seed-metadata` failed    |
+| 26024 | `nfc-backup-read-seed` failed              |
+| 26025 | `nfc-backup-write-seed` failed             |
+| 26026 | `nfc-backup-activate-flashloader` failed   |
+| 26028 | `nfc-backup-get-os-version` failed         |
+| 26029 | `nfc-backup-get-uid` failed                |
+| 26030 | `nfc-backup-measure` failed                |
+| 26031 | `nfc-backup-harden` failed                 |
+| 26032 | `nfc-backup-integrity-check` failed        |
 
 #### nfc-backup-handshake
-Runs only the secure handshake and prints card certificate details.
+Runs only the secure handshake and prints the card certificate details and the
+card welcome message. The handshake fails if the public key in the certificate
+does not match the card static key received during the Noise handshake.
 
 Arguments: none
 
@@ -1700,10 +1776,18 @@ nfc-backup-handshake
 #   Version: v3
 #   Serial: 0x00000001 (1)
 #   Subject CN: NFC Backup Card
+#   Subject serial: N/A
+#   Subject dnQualifier: N/A
 #   Issuer CN: Trezor NFC CA
+#   Issuer O: SatoshiLabs
+#   Issuer C: CZ
 #   Valid from: 26-06-15 15:41:43 UTC
 #   Valid to: 36-06-15 15:41:43 UTC
+#   Basic constraints: CA=false
+#   Key usage: 0x80 (digitalSignature)
 #   Public key: 1122334455667788...99AABBCCDDEEFF00 (32 bytes)
+#   Authority key id: 0102030405060708...0D0E0F1011121314 (20 bytes)
+#   Signature: A1A2A3A4A5A6A7A8...B1B2B3B4B5B6B7B8 (64 bytes)
 # Card welcome message: Hello
 # Handshake step 4/4: secure channel established.
 # Handshake: completed
@@ -1720,14 +1804,14 @@ Example:
 ```
 nfc-backup-authenticate 1234
 # ... handshake traces ...
-# APDU authenticate: TX INS=0x03 (9 bytes)
+# APDU authenticate: TX INS=0x03 (37 bytes)
 # APDU authenticate: RX SW=0x9000 (2 bytes)
 # STEP 3/3: Command finished in 312 ms.
 OK
 ```
 
 #### nfc-backup-set-pin
-Runs handshake, authenticates with `old_pin` (or empty PIN if omitted), then sends `SET PIN` using `new_pin`.
+Runs handshake, authenticates with `old_pin` (or empty PIN if omitted), then sends `SET PIN` using `new_pin` (or empty PIN if omitted).
 
 Arguments: `[new_pin] [old_pin]`
 
@@ -1735,9 +1819,9 @@ Example:
 ```
 nfc-backup-set-pin 9876 1234
 # ... handshake traces ...
-# APDU authenticate: TX INS=0x03 (9 bytes)
+# APDU authenticate: TX INS=0x03 (37 bytes)
 # APDU authenticate: RX SW=0x9000 (2 bytes)
-# APDU set-pin: TX INS=0x04 (9 bytes)
+# APDU set-pin: TX INS=0x04 (37 bytes)
 # APDU set-pin: RX SW=0x9000 (2 bytes)
 OK
 ```
@@ -1757,28 +1841,28 @@ OK
 ```
 
 #### nfc-backup-read-pin-counter
-Reads current PIN counter value from card.
+Reads current PIN counter value from card. No handshake is performed.
 
 Arguments: none
 
 Example:
 ```
 nfc-backup-read-pin-counter
-# APDU read-pin-counter: TX INS=0x08 (5 bytes)
+# APDU read-pin-counter: TX INS=0x06 (5 bytes)
 # APDU read-pin-counter: RX SW=0x9000 (3 bytes)
 # PIN counter: 10
 OK
 ```
 
 #### nfc-backup-read-success-log
-Reads success log record.
+Reads the success log record (up to 32 bytes). No handshake is performed.
 
 Arguments: none
 
 Example:
 ```
 nfc-backup-read-success-log
-# APDU read-success-log: TX INS=0x09 (5 bytes)
+# APDU read-success-log: TX INS=0x07 (5 bytes)
 # APDU read-success-log: RX SW=0x9000 (34 bytes)
 # Success log (32 bytes): 00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF
 OK
@@ -1790,14 +1874,14 @@ If empty:
 ```
 
 #### nfc-backup-read-failure-logs
-Reads failure log records. Each entry is 32 bytes.
+Reads failure log records. Each entry is 32 bytes, at most 10 entries. No handshake is performed.
 
 Arguments: none
 
 Example:
 ```
 nfc-backup-read-failure-logs
-# APDU read-failure-logs: TX INS=0x0A (5 bytes)
+# APDU read-failure-logs: TX INS=0x08 (5 bytes)
 # APDU read-failure-logs: RX SW=0x9000 (66 bytes)
 # Failure log entries: 2
 #   Entry 1/2: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
@@ -1811,14 +1895,14 @@ If empty:
 ```
 
 #### nfc-backup-read-seed-metadata
-Reads seed metadata blob.
+Reads seed metadata blob (up to 256 bytes). No handshake is performed.
 
 Arguments: none
 
 Example:
 ```
 nfc-backup-read-seed-metadata
-# APDU read-seed-metadata: TX INS=0x0B (5 bytes)
+# APDU read-seed-metadata: TX INS=0x09 (5 bytes)
 # APDU read-seed-metadata: RX SW=0x9000 (258 bytes)
 #   Seed metadata: 0001020304050607...F8F9FAFBFCFDFEFF (256 bytes)
 OK
@@ -1832,7 +1916,7 @@ If empty:
 #### nfc-backup-write-seed-metadata
 Runs handshake, authenticates, then writes metadata.
 
-Current implementation writes a test pattern `0x00..0xFF` (256 bytes).
+Current implementation writes a test pattern `0x00..0xFF` (256 bytes), sent as an extended-length APDU.
 
 Arguments: `[pin]`
 
@@ -1840,15 +1924,15 @@ Example:
 ```
 nfc-backup-write-seed-metadata 1234
 # ... handshake traces ...
-# APDU authenticate: TX INS=0x03 (... bytes)
+# APDU authenticate: TX INS=0x03 (37 bytes)
 # APDU authenticate: RX SW=0x9000 (2 bytes)
-# APDU write-seed-metadata: TX INS=0x0C (263 bytes)
+# APDU write-seed-metadata: TX INS=0x0A (263 bytes)
 # APDU write-seed-metadata: RX SW=0x9000 (2 bytes)
 OK
 ```
 
 #### nfc-backup-read-seed
-Runs handshake, authenticates, reads encrypted seed, decrypts it via Noise transport state, and prints a shortened preview.
+Runs handshake, authenticates, reads the seed over the secure channel and prints a shortened preview. The seed must be exactly 256 bytes (or empty).
 
 Arguments: `[pin]`
 
@@ -1856,10 +1940,10 @@ Example:
 ```
 nfc-backup-read-seed 1234
 # ... handshake traces ...
-# APDU authenticate: TX INS=0x03 (... bytes)
+# APDU authenticate: TX INS=0x03 (37 bytes)
 # APDU authenticate: RX SW=0x9000 (2 bytes)
-# APDU read-seed: TX INS=0x0D (5 bytes)
-# APDU read-seed: RX SW=0x9000 (274 bytes)
+# APDU read-seed: TX INS=0x0B (5 bytes)
+# APDU read-seed: RX SW=0x9000 (258 bytes)
 #   Seed: AAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAA (256 bytes)
 OK
 ```
@@ -1870,9 +1954,9 @@ If empty:
 ```
 
 #### nfc-backup-write-seed
-Runs handshake, authenticates, encrypts and writes seed.
+Runs handshake, authenticates, then writes the seed over the secure channel.
 
-Current implementation writes a test seed filled with `0xAA` (256 bytes).
+Current implementation writes a test seed filled with `0xAA` (256 bytes), sent as an extended-length APDU.
 
 Arguments: `[pin]`
 
@@ -1880,24 +1964,185 @@ Example:
 ```
 nfc-backup-write-seed 1234
 # ... handshake traces ...
-# APDU authenticate: TX INS=0x03 (... bytes)
+# APDU authenticate: TX INS=0x03 (37 bytes)
 # APDU authenticate: RX SW=0x9000 (2 bytes)
-# APDU write-seed: TX INS=0x0E (... bytes)
+# APDU write-seed: TX INS=0x0C (263 bytes)
 # APDU write-seed: RX SW=0x9000 (2 bytes)
 OK
 ```
 
 #### nfc-backup-activate-flashloader
-Sends flashloader activation command to the currently connected card/session.
+Sends the flashloader activation APDU (`C2 A0 00 00 00`) to the tapped card. No handshake is performed and the APDU is not traced.
 
 Arguments: none
 
 Example:
 ```
 nfc-backup-activate-flashloader
+# STEP 1/3: Waiting for NFC backup card tap.
+# Instruction: place card flat on antenna and hold still. Press Ctrl+C to abort.
+# STEP 2/3: NFC card detected.
+# STEP 3/3: Command finished in 35 ms.
 OK
 ```
 
+#### nfc-backup-get-os-version
+Reads the card OS version (`major.minor.patch`). No handshake is performed.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-get-os-version
+# ... tap traces ...
+# APDU get-fw-version: TX INS=0x01 (5 bytes)
+# APDU get-fw-version: RX SW=0x9000 (5 bytes)
+# OS Version: 1.2.0
+# STEP 3/3: Command finished in 40 ms.
+OK
+```
+
+#### nfc-backup-get-uid
+Reads the 7-byte unique ID of the card chip. No handshake is performed.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-get-uid
+# ... tap traces ...
+# APDU get-uid: TX INS=0x02 (5 bytes)
+# APDU get-uid: RX SW=0x9000 (9 bytes)
+# UID: 04A1B2C3D4E5F6
+# STEP 3/3: Command finished in 38 ms.
+OK
+```
+
+#### nfc-backup-measure
+Continuously measures the coupling quality between the reader and the card.
+The card reports its MCU oscillator frequency, which depends on how well the
+card is powered by the reader field. The frequency is mapped linearly to a
+quality percentage between 3 MHz (0 %) and 100 MHz (100 %) and labelled:
+
+| Quality     | Label       |
+|-------------|-------------|
+| >= 80 %     | `EXCELLENT` |
+| >= 60 %     | `GOOD`      |
+| >= 40 %     | `FAIR`      |
+| >= 20 %     | `POOR`      |
+| < 20 %      | `BAD`       |
+
+Each measurement is reported as a `PROGRESS` line and shown on the display as
+a signal meter. Measuring continues while the card stays on the antenna; when
+the card is removed, the command waits for the next tap and resumes. Press
+`CTRL+C` to stop; the homescreen is then restored and `OK` is returned.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-measure
+# STEP 1/3: Waiting for NFC backup card tap.
+# Instruction: place card flat on antenna and hold still. Press Ctrl+C to abort.
+# Keep the card on the antenna to measure continuously.
+# Remove the card to stop, then tap again to restart.
+# STEP 2/3: NFC card detected.
+# APDU system-measure: TX INS=0x03 (5 bytes)
+# APDU system-measure: RX SW=0x9000 (6 bytes)
+# NFC card MCU frequency: 48.00 MHz
+PROGRESS frequency=48.00MHz quality=46% (FAIR)
+# APDU system-measure: TX INS=0x03 (5 bytes)
+# APDU system-measure: RX SW=0x9000 (6 bytes)
+# NFC card MCU frequency: 85.50 MHz
+PROGRESS frequency=85.50MHz quality=85% (EXCELLENT)
+...
+# Aborted by operator.
+OK
+```
+
+#### nfc-backup-integrity-check
+Asks the card to run a memory integrity check and prints the number of ECC
+errors per category reported by the card. No handshake is performed.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-integrity-check
+# ... tap traces ...
+# APDU system-integrity-check: TX INS=0x05 (5 bytes)
+# APDU system-integrity-check: RX SW=0x9000 (14 bytes)
+#   ECC1 errors: 0
+#   ECC2 errors: 0
+#   ECC3 errors: 0
+# STEP 3/3: Command finished in 120 ms.
+OK
+```
+
+#### nfc-backup-harden
+Sends the full memory hardening command to the card. No handshake is performed.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-harden
+# ... tap traces ...
+# APDU system-full-mem-harden: TX INS=0x04 (5 bytes)
+# APDU system-full-mem-harden: RX SW=0x9000 (2 bytes)
+# STEP 3/3: Command finished in 150 ms.
+OK
+```
+
+#### nfc-backup-transparent-mode
+Enters an interactive line-based mode in which the host controls the NFC
+reader directly and exchanges raw APDUs with the card. Unlike the other
+commands it does not wait for a tap; the NFC field is off until the `on`
+command is issued.
+
+Input lines (terminated by `\r` or `\n`, max. 1023 characters) are handled by
+the transparent mode itself, not by the prodtest CLI. Each command replies with
+a single plain line (without `#`, `OK` or `ERROR` prefix handling of the
+regular CLI):
+
+| Command            | Description                                                                 | Response                  |
+|--------------------|-----------------------------------------------------------------------------|---------------------------|
+| `on`               | Initialize NFC and start discovery                                          | `OK` / `ERROR...`         |
+| `off`              | Stop discovery and deinitialize NFC                                         | `OK` / `ERROR...`         |
+| `reset`            | Power-cycle the NFC field and restart discovery                             | `OK` / `ERROR`            |
+| `noise`            | Run the secure handshake with the connected card (handshake traces printed) | `OK` / `ERROR: ...`       |
+| `transceive <hex>` | Send an APDU given as hex; encrypted if `noise` succeeded before            | response hex incl. SW / `ERROR: ...` |
+
+Possible error responses: `ERROR: already on`, `ERROR: already off`,
+`ERROR: no card connected`, `ERROR: handshake failed`,
+`ERROR: invalid hex argument`, `ERROR: transceive failed`.
+
+Card events are reported asynchronously as `# NFC card connected.` and
+`# NFC card removed.`; unknown commands produce `# Unknown command: <cmd>`.
+Press `CTRL+C` to leave the mode; NFC is turned off on exit.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-transparent-mode
+# Entering transparent mode. Commands: on, off, reset, noise, transceive <hex>.
+on
+OK
+# NFC card connected.
+transceive 00A4040007A0000009590001
+9000
+noise
+# Handshake: start
+# ... handshake traces ...
+# Handshake: completed
+OK
+transceive 8006000000
+0A9000
+off
+OK
+# Aborted by operator.
+```
 
 
 ### unit-test-run
