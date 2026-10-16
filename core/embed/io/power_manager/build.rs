@@ -42,9 +42,11 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         );
         let (_feature, source) = drivers[0];
 
-        // The concrete PMIC drivers are STM32U5 parts with no emulator build.
+        // The concrete PMIC drivers are STM32U5 parts with no emulator build;
+        // the emulator gets an emulated PMIC behind the same interface, so the
+        // policy core runs over editable physical inputs on the host too.
         if cfg!(feature = "emulator") {
-            // no hardware PMIC in the emulator
+            lib.add_source("power_manager/pmic/emu/pmic_emu.c");
         } else if cfg!(feature = "mcu_stm32u5") {
             lib.add_source(source);
         } else {
@@ -93,33 +95,40 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     // (this point in the code) is enough to build the policy on top of it. The
     // only requirement is that a PMIC driver was actually selected.
     //
-    // The emulator is a special case: it reimplements power_manager.h on the
-    // host (SDL) and takes precedence over whatever hardware backend the model
-    // nominally enables.
+    // The pure core (core/) is the same on the device and in the emulator;
+    // only the glue that drives it differs (stm32/ vs unix/). It can also be
+    // built standalone on the host; see power_manager/tests/.
+    lib.add_sources([
+        "power_manager/core/pm_core.c",
+        "power_manager/core/pm_core_states.c",
+    ]);
+
+    // Charger leaf: exactly one of the two, decided by the PMIC's capability
+    // (see `has_charger` above).
+    lib.add_source(if has_charger {
+        "power_manager/core/charging.c"
+    } else {
+        "power_manager/core/charging_none.c"
+    });
+
     if cfg!(feature = "emulator") {
-        lib.add_source("power_manager/unix/power_manager.c");
+        // Emulator glue: a virtual clock, in-memory recovery data and SDL in
+        // place of system_suspend(), over the emulated PMIC (selected above)
+        // and a fuel gauge whose answers the test sets. The board's gauge
+        // selection is not used: the emulator is about the policy, not the
+        // estimator.
+        lib.add_sources([
+            "power_manager/unix/power_manager.c",
+            "power_manager/fuel_gauge/emu/battery.c",
+        ]);
     } else {
         ensure!(
             cfg!(feature = "pmic"),
             "power_manager: a PMIC driver must be selected \
              (set `pmic = \"io/pmic_...\"` in the board's [power_manager] section)"
         );
-        // The pure core (core/) plus the device glue that drives it
-        // (stm32/). The core can also be built on the host; see
-        // power_manager/tests/.
-        lib.add_sources([
-            "power_manager/core/pm_core.c",
-            "power_manager/core/pm_core_states.c",
-            "power_manager/stm32/power_manager.c",
-        ]);
-
-        // Charger leaf: exactly one of the two, decided by the PMIC's
-        // capability (see `has_charger` above).
-        lib.add_source(if has_charger {
-            "power_manager/core/charging.c"
-        } else {
-            "power_manager/core/charging_none.c"
-        });
+        // Device glue
+        lib.add_source("power_manager/stm32/power_manager.c");
 
         // Fuel gauge (SoC estimator). The policy speaks only to the
         // chemistry-neutral fuel_gauge/battery.h interface; the board picks a

@@ -273,4 +273,13 @@ void pm_set_emu_battery_state(int soc, int usb_connected,
                               int wireless_connected, int ntc_connected,
                               int charging_limited, int temp_control_active,
                               int battery_connected);
+
+/**
+ * @brief Move the power manager's clock forward (emulator only).
+ *
+ * The emulator runs the device's policy on a virtual clock; this skips past
+ * its timeouts (shutdown, charging-limited filter, thermal debounce) without
+ * waiting.
+ */
+void pm_emu_advance_ms(uint32_t ms);
 #endif

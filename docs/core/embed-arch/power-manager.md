@@ -30,10 +30,12 @@ power_manager/
   core/                     pure policy: pipeline, state machine, recovery,
                             charger leaf (charging[_none].c, one built per PMIC)
   stm32/                    device glue: lock, timer, backup RAM, RTC, hardware
-  unix/                     emulator policy (mock of the public API, see below)
+  unix/                     emulator glue: virtual clock, SDL, in-memory recovery
   tests/                    host unit test of core/ (make -C ... tests)
   pmic/                     PMIC drivers behind pmic.h, plus pmic_charger.h
+                            (emu/: the emulated PMIC the host build uses)
   fuel_gauge/               SoC estimators behind battery.h
+                            (emu/: a gauge whose answers the test sets)
   wireless/                 wireless-charger drivers
 ```
 
@@ -140,9 +142,16 @@ The principle: brownout belongs to the voltage domain, where it is robust and ga
 
 ## 9. Emulator
 
-The emulator is exempt from the composition matrix. `unix/` is not a driver but a complete reimplementation of `power_manager.h` on the host: `pm_get_state()` copies out a hand-set emulator state, and `pm_set_emu_battery_state()` — exposed to Python through `trezorio` — injects it. This matches the convention of every other `io/*/unix/`, which mocks its module's *public API* using host facilities rather than simulating the chip over a fake bus. One emulator therefore serves every board variant, because the npm1300, fuel-gauge, and wireless differences all live below `pmic.h` and `battery.h`, and the emulator sits above both.
+The emulator runs the **same policy core as the device**. `unix/power_manager.c` is a second glue around `core/`, and the only things in it are what differ about a host:
 
-The tradeoff is that the emulator exercises **none** of the real policy: not the state machine, the fuel gauge, the charging controller, or backup-RAM recovery. Emulator and device tests validate the mock, not that logic. That logic is covered instead by the host test of the pure core (section 4), which needs no emulator. Running the real core *inside* the emulator, over a fake PMIC driven from the debuglink, is the remaining step; the core/glue split makes it a matter of writing a `unix/` glue rather than restructuring the policy.
+- **Time is a virtual clock**: wall-clock by default, plus `pm_emu_advance_ms()` to jump past the policy's timeouts (the 15 s shutdown, the 5 s charging-limited filter, the 2 min thermal debounce) without waiting.
+- **Sampling is pull-based**: there is no systimer on the host, so the core takes a sample whenever the state is read and the virtual clock has moved a sampling period. The emulator's poll loop reads the state constantly, which drives the policy forward.
+- **The hardware is emulated behind the same seams**: `pmic/emu/` implements `pmic.h` and `pmic_charger.h` as an editable report plus a recorder of what the charger was told, and `fuel_gauge/emu/` implements `battery.h` as a gauge whose state of charge and brownout verdict the test sets. The board's real gauge selection is not used in the emulator: the emulator is about the policy, not the estimator.
+- Recovery data lives in memory, suspend is an SDL wait for a key, and the "power off" action exits the process, as the mock always did.
+
+The debuglink's `DebugLinkSetBatteryState` keeps its seven *reported* fields, but `pm_set_emu_battery_state()` now maps each onto the **physical condition that produces it**: `usb_connected` becomes VBUS present, `battery_connected` becomes the cell voltage, `ntc_connected` becomes the thermistor reading open, `temp_control_active` becomes a 44 °C cell, and `charging_limited` becomes a charger stuck in constant current below its target for longer than the filter. The policy then derives `charging_status`, `power_status`, `charging_limited` and `temp_control_active` the way the device does, instead of the test asserting them into existence. One visible consequence: the emulator now refuses to hibernate while an external source is connected, exactly as the device does.
+
+So the emulator and the device tests exercise the real state machine, brownout handling, charging controller and recovery path, and the UI shows transitions the device really makes.
 
 ## 10. Design rules
 
