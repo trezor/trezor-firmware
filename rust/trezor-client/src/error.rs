@@ -51,6 +51,11 @@ pub enum Error {
     /// Provided entropy is not 32 bytes.
     #[error("provided entropy is not 32 bytes")]
     InvalidEntropy,
+
+    /// Invalid TRON transaction.
+    #[cfg(feature = "tron")]
+    #[error("invalid Tron transaction: {0}")]
+    InvalidTronTransaction(String),
     /// The device erenced a non-existing input or output index.
     #[error("device referenced non-existing input or output index: {0}")]
     TxRequestInvalidIndex(usize),
