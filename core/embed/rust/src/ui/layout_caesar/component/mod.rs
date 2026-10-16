@@ -1,4 +1,3 @@
-pub mod bl_confirm;
 mod button;
 mod button_controller;
 mod error;

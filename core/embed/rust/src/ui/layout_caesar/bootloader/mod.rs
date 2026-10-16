@@ -1,6 +1,7 @@
 use heapless::String;
 use ufmt::uwrite;
 
+mod confirm;
 mod intro;
 mod menu;
 mod welcome;
@@ -9,18 +10,18 @@ mod connect;
 
 use sys::time;
 
+use self::confirm::{Confirm, ConfirmMsg};
 use self::connect::Connect;
 use self::intro::Intro;
-use self::menu::Menu;
+use self::menu::{Menu, MenuMsg, MENU_ITEMS};
 use self::welcome::Welcome;
-use super::component::bl_confirm::{Confirm, ConfirmMsg};
 use super::component::{ResultScreen, WelcomeScreen};
 use super::theme::bootloader::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, ICON_SUCCESS};
 use super::theme::{ICON_ARM_LEFT, ICON_ARM_RIGHT, TEXT_BOLD, TEXT_NORMAL};
 use super::{cshape, fonts, UICaesar};
 use crate::bootloader::run;
-use crate::ui::component::Label;
 use crate::ui::component::LineBreaking::BreakWordsNoHyphen;
+use crate::ui::component::{ComponentExt, Label};
 use crate::ui::constant::{self, HEIGHT, SCREEN};
 use crate::ui::display::toif::Toif;
 use crate::ui::display::{self, Color, Icon};
@@ -92,7 +93,7 @@ impl BootloaderUI for UICaesar {
     }
 
     fn screen_menu(_initial_setup: bool, communication: bool) -> (u32, u32) {
-        let mut frame = Menu::new();
+        let mut frame = Menu::new(MENU_ITEMS).map(MenuMsg::from_selection);
         run(&mut frame, true, communication)
     }
 
@@ -174,15 +175,8 @@ impl BootloaderUI for UICaesar {
             TEXT_NORMAL,
         ));
 
-        let mut frame = Confirm::new(
-            BLD_BG,
-            title_str.into(),
-            message,
-            alert,
-            "INSTALL".into(),
-            false,
-        )
-        .with_info_screen("FW FINGERPRINT".into(), fingerprint);
+        let mut frame = Confirm::new(BLD_BG, title_str.into(), message, alert, "INSTALL".into())
+            .with_menu("Fingerprint", "FW FINGERPRINT".into(), fingerprint);
 
         let (_, res) = run(&mut frame, true, false);
         res
@@ -198,7 +192,6 @@ impl BootloaderUI for UICaesar {
             message,
             None,
             "RESET".into(),
-            false,
         );
 
         let (_, res) = run(&mut frame, true, false);
@@ -218,7 +211,6 @@ impl BootloaderUI for UICaesar {
             message,
             None,
             "UNLOCK".into(),
-            true,
         );
 
         let (_, res) = run(&mut frame, true, false);
