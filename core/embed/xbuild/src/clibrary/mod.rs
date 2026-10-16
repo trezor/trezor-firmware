@@ -56,7 +56,14 @@ pub struct CLibrary {
     // Builders for generating Rust bindings to this library, keyed by output
     // filename.
     builders: BTreeMap<String, bindgen::Builder>,
+
+    // Options applied to every builder above, no matter which module
+    // registered it.
+    builder_defaults: Vec<BuilderFunc>,
 }
+
+/// Function customizing a bindgen builder.
+pub(crate) type BuilderFunc = Box<dyn Fn(bindgen::Builder) -> Result<bindgen::Builder>>;
 
 impl CLibrary {
     /// Creates a new `CLibrary` instance with default attributes and no sources
@@ -74,6 +81,7 @@ impl CLibrary {
             libs: Vec::new(),
             external_libs: Vec::new(),
             builders: BTreeMap::new(),
+            builder_defaults: Vec::new(),
         }
     }
 
