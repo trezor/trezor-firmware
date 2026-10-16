@@ -105,12 +105,7 @@ class BleTransport(Transport):
             raise TransportException(f"No BLE device: {path}")
 
     def _open(self) -> None:
-        try:
-            self.ble_proxy().connect(self.device)
-        except TransportException:
-            raise
-        except Exception as e:
-            raise TransportException(f"BLE connect failed: {e}") from e
+        self.ble_proxy().connect(self.device)
 
     def _close(self) -> None:
         # would be a logical place to call self.ble_proxy().disconnect()
@@ -122,20 +117,10 @@ class BleTransport(Transport):
 
     def write_chunk(self, chunk: bytes) -> None:
         LOG.log(DUMP_PACKETS, f"sending packet: {chunk.hex()}")
-        try:
-            self.ble_proxy().write(self.device, chunk)
-        except TransportException:
-            raise
-        except Exception as e:
-            raise TransportException(f"BLE write failed: {e}") from e
+        self.ble_proxy().write(self.device, chunk)
 
     def read_chunk(self, timeout: float | None = None) -> bytes:
-        try:
-            chunk = self.ble_proxy().read(self.device, timeout)
-        except TransportException:
-            raise
-        except Exception as e:
-            raise TransportException(f"BLE read failed: {e}") from e
+        chunk = self.ble_proxy().read(self.device, timeout)
         LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) not in (64, 244):
             LOG.error(f"{__name__}: unexpected chunk size: {len(chunk)}")
@@ -174,8 +159,12 @@ class BleProxy:
             assert self.pipe is not None
             self.pipe.send((name, args, kwargs))
             result = self.pipe.recv()
-            if isinstance(result, BaseException):
+            if isinstance(result, TransportException):
                 raise result
+            if isinstance(result, BaseException):
+                # errors from the BLE process (RuntimeError, BleakError, ...)
+                # surface as the transport's own exception type
+                raise TransportException(f"BLE {name} failed: {result}") from result
             return result
 
         return f
