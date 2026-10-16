@@ -30,7 +30,12 @@
 #endif
 #include <sys/systimer.h>
 
+#ifdef USE_WIRELESS_CHARGER
+// The only wireless-charger driver so far; included only on boards that have
+// one, so a board without wireless never compiles the policy against a chip
+// it does not carry.
 #include "../wireless/stwlc38/stwlc38.h"
+#endif
 
 #ifdef USE_CHARGER
 // Charger extension to the core PMIC interface. Implemented only by
@@ -152,7 +157,9 @@ typedef struct {
 
   // Power source hardware state
   pmic_report_t pmic_data;
+#ifdef USE_WIRELESS_CHARGER
   stwlc38_report_t wireless_data;
+#endif
   uint64_t pmic_last_update_us;
   uint32_t pmic_sampling_period_ms;
   bool pmic_measurement_ready;

@@ -30,7 +30,6 @@
 #endif
 
 #include "../fuel_gauge/battery.h"
-#include "../wireless/stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
 #ifdef USE_CHARGER
@@ -326,16 +325,14 @@ static void pm_parse_power_source_state(pm_driver_t* drv) {
   }
 
   // Check wireless charger status
-  if (drv->wireless_data.vout_ready) {
-    if (!drv->wireless_connected) {
-      drv->wireless_connected = true;
-      notify_send(NOTIFY_POWER_STATUS_CHANGE);
-    }
-  } else {
-    if (drv->wireless_connected) {
-      drv->wireless_connected = false;
-      notify_send(NOTIFY_POWER_STATUS_CHANGE);
-    }
+#ifdef USE_WIRELESS_CHARGER
+  bool wireless_connected = drv->wireless_data.vout_ready;
+#else
+  bool wireless_connected = false;
+#endif
+  if (wireless_connected != drv->wireless_connected) {
+    drv->wireless_connected = wireless_connected;
+    notify_send(NOTIFY_POWER_STATUS_CHANGE);
   }
 
   // Battery-critical (brownout) evaluation.
