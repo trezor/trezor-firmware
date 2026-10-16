@@ -158,23 +158,30 @@ def create_app_indices(out_dir: Path) -> None:
                     },
                     "model": app_json["model"],
                     "language": app_json["language"],
-                    "ring": app_json["app_ring"],
                     "file": str(file.relative_to(dir)),
                     "sha256": hashlib.file_digest(f, "sha256").hexdigest(),
                     "fingerprint": sha256(
                         base64_decode(app_json["header"])
                     ).hexdigest(),
-                    "rootPacket": get_serialized_rootpacket(
-                        out_dir, dir, ring=app_json["app_ring"]
-                    ),
                 }
                 releases[
-                    (tuple(app_json["version"]), tuple(app_json["sdk_version"]))
+                    (
+                        format_version_str_to_tuple(app_json["version"]),
+                        format_version_str_to_tuple(app_json["sdk_version"]),
+                        get_serialized_rootpacket(
+                            out_dir, dir, ring=app_json["app_ring"]
+                        ),
+                    )
                 ].append(app_description)
 
         out_releases = [
-            {"version": version, "sdkVersion": sdk_version, "builds": builds}
-            for (version, sdk_version), builds in sorted(releases.items())
+            {
+                "version": version,
+                "sdkVersion": sdk_version,
+                "rootPacket": rootpacket,
+                "builds": builds,
+            }
+            for (version, sdk_version, rootpacket), builds in sorted(releases.items())
         ]
         output_dict = {"id": str(dir.relative_to(out_dir)), "releases": out_releases}
         index = dict_as_json_str(output_dict)
