@@ -90,6 +90,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_UnpairAllDevices;
   MP_QSTR_UnpairDevice;
   MP_QSTR_WARNING;
+  MP_QSTR_WardError;
   MP_QSTR_WipeDevice;
   MP_QSTR___del__;
   MP_QSTR___dict__;
@@ -352,6 +353,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_debug;
   MP_QSTR_decode;
   MP_QSTR_deinit;
+  MP_QSTR_delete;
   MP_QSTR_description;
   MP_QSTR_details_title;
   MP_QSTR_device_name;
@@ -531,6 +533,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_n1w1__reading;
   MP_QSTR_n1w1__writing;
   MP_QSTR_needs_params_refresh;
+  MP_QSTR_next_entry;
   MP_QSTR_next_timeout;
   MP_QSTR_notification;
   MP_QSTR_packet_in;
@@ -848,6 +851,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
   MP_QSTR_send_transport_busy;
+  MP_QSTR_set;
   MP_QSTR_set_brightness;
   MP_QSTR_set_enabled;
   MP_QSTR_set_high_speed;
