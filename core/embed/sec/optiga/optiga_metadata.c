@@ -83,6 +83,11 @@ optiga_result optiga_parse_metadata(const uint8_t *serialized,
       return OPTIGA_ERR_PARAM;
     }
 
+    uint8_t len = serialized[pos + 1];
+    if (pos + 2 + len > serialized_size) {
+      return OPTIGA_ERR_PARAM;
+    }
+
     // Determine metadata type from tag.
     optiga_metadata_item *item = NULL;
     for (size_t i = 0; i < METADATA_TAG_COUNT; ++i) {
@@ -98,8 +103,8 @@ optiga_result optiga_parse_metadata(const uint8_t *serialized,
     }
 
     item->ptr = &serialized[pos + 2];
-    item->len = serialized[pos + 1];
-    pos += 2 + serialized[pos + 1];
+    item->len = len;
+    pos += 2 + len;
   }
 
   if (pos != serialized_size) {
