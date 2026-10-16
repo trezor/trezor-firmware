@@ -88,7 +88,7 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
 
 #ifdef USE_TELEMETRY
   // Update telemetry with the current battery temperature
-  if (!drv->pmic_data.ntc_disconnected) {
+  if (drv->pmic_data.ntc_present && !drv->pmic_data.ntc_disconnected) {
     telemetry_update_battery_temp(drv->pmic_data.ntc_temp);
   }
 #endif
@@ -146,8 +146,8 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
                     drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
     }
 
-    // Charging completed flag from PMIC controller
-    if (drv->pmic_data.charge_status & 0x2) {
+    // Charger reports termination: the battery is full.
+    if (drv->pmic_data.charge_complete) {
       // Force fuel gauge to 100%, keep the covariance
       drv->fully_charged = true;
       bat_fg_get_state(&fg_state);
@@ -224,7 +224,8 @@ void pm_charging_controller(pm_driver_t* drv) {
   pm_temperature_controller(drv);
 #endif
 
-  if (drv->pmic_data.ntc_disconnected) {
+  if (pm_ntc_fault(drv)) {
+    // Never charge a cell whose temperature we cannot see.
     drv->i_chg_target_ma = 0;
   }
 
@@ -272,7 +273,7 @@ void pm_charging_controller(pm_driver_t* drv) {
     pmic_set_charging(false);
   } else {
     // Clear and release charger if it has any errors
-    if (drv->pmic_data.charge_err || drv->pmic_data.charge_sensor_err) {
+    if (drv->pmic_data.charger_fault) {
       pmic_clear_charger_errors();
     }
 
@@ -317,7 +318,7 @@ static void pm_temperature_controller(pm_driver_t* drv) {
 
 static void pm_parse_power_source_state(pm_driver_t* drv) {
   // Check USB power source status
-  if (drv->pmic_data.usb_status != 0x0) {
+  if (drv->pmic_data.vbus_present) {
     if (!drv->usb_connected) {
       drv->usb_connected = true;
       notify_send(NOTIFY_POWER_STATUS_CHANGE);

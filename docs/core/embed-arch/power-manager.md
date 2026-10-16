@@ -2,7 +2,7 @@
 
 This document describes how the power-management module (`core/embed/io/power_manager/`) is composed: the axes along which it varies per board, how a board selects an implementation, and the design rules that keep the pieces separable.
 
-The module is built only for models with a battery — currently Trezor Safe 7 (`T3W1`). Models without one do not enable it.
+The module is built only for models with a battery — Trezor Safe 7 (`T3W1`, npm1300 + LiFePO4 + wireless) and the `T3T2` devkit (npm2100, primary cell, no charger). Models without one do not enable it.
 
 ## 1. Composition axes
 
@@ -10,7 +10,7 @@ The module is organized by *capability*, not by chip. A board's power hardware i
 
 | Axis | Interface | Implementations |
 | ---- | --------- | --------------- |
-| PMIC driver | `<io/pmic.h>` | `pmic/npm1300/` |
+| PMIC driver | `<io/pmic.h>` | `pmic/npm1300/` (charger, Li-ion), `pmic/npm2100/` (boost, primary cell) |
 | Fuel gauge (state-of-charge estimator) | `fuel_gauge/battery.h` | `fuel_gauge/lifepo4/`, `fuel_gauge/mock/` |
 | Wireless charger | `wireless/stwlc38/stwlc38.h` | `wireless/stwlc38/`, or none |
 | Charger present | `pmic/pmic_charger.h` | capability flag, derived from the PMIC |
@@ -64,13 +64,21 @@ The module exposes its configuration to C through these defines:
 
 Two build shapes exist. The boardloader is *PMIC-only*: it maps `power_manager` to just the PMIC driver, since it must hold the rail up before any policy exists. The bootloader, kernel, firmware, and prodtest take the full policy.
 
-## 4. The charger capability
+## 4. The PMIC report is chip-neutral
+
+`pmic_report_t` is the only data that crosses from a PMIC driver into the policy, so it carries no raw register values. Each driver decodes its own registers into fields that mean the same thing on every chip: measurements (`vbat`, `vsys`, `ibat`, `ntc_temp`, `die_temp`), *what this chip can measure* (`ibat_valid`, `ntc_present`), and decoded status (`vbus_present`, `ntc_disconnected`, `battery_disconnected`, `charge_complete`, `charger_fault`, `cc_phase`, `cv_phase`).
+
+The capability flags are the important part. A boost regulator for primary cells has no current sense and no thermistor; it says so with `ibat_valid = false` and `ntc_present = false` rather than reporting zero current or an "NTC disconnected" fault for a thermistor that was never wired. The policy treats "absent" and "disconnected" differently: only a *present* NTC that reads open is a fault, and only a *valid* current reading drives the charging-limited detector or the idle/discharging distinction. Charger flags are simply false on a chip without a charger.
+
+This is what lets one policy serve every PMIC without knowing which one it has. If a field is tempting to add as a raw register, decode it in the driver instead.
+
+## 5. The charger capability
 
 With `USE_CHARGER` off, the policy does not reference the charger extension at all: `pmic_charger.h` is not included, its charging-current bounds are not defined, the charging controller compiles to a no-op, the thermal controller compiles out entirely (it exists only to limit *charging* current by temperature), and `pm_charging_set_max_current()` rejects the request rather than reporting success for a limit that would never be applied. The rest of the public charging API still exists and does nothing. A chargerless PMIC therefore simply does not implement the extension, and nothing in `managed/` looks for it.
 
 Regulator and buck-mode control are deliberately *not* part of this extension. The npm1300's buck-mode control has no cross-chip consumer, so it lives as an npm1300-private detail in `pmic/npm1300/npm1300_defs.h`. Should a policy ever need regulator control, it should get an agnostic interface with generic modes (auto / low-noise / high-efficiency), which apply to switching regulators in general, rather than exposing buck-specific names through `pmic.h`.
 
-## 5. Fuel gauge
+## 6. Fuel gauge
 
 `fuel_gauge/battery.h` is the chemistry-neutral seam between the policy and a concrete estimator. The policy speaks only to this header and never reaches into an implementation directory.
 
@@ -78,7 +86,7 @@ The estimator's internal state `P` is opaque to the policy: it is persisted to b
 
 `fuel_gauge/lifepo4/` is the reference implementation, an EKF estimator for LiFePO4 cells. `fuel_gauge/mock/` reports a permanently full, healthy cell and exists for boards with no gauged battery.
 
-## 6. Battery-critical (brownout)
+## 7. Battery-critical (brownout)
 
 Brownout protection is a *voltage-domain* concern and is deliberately kept out of the fuel gauge's precision budget, since not every chemistry can support a precise state-of-charge threshold.
 
@@ -88,17 +96,18 @@ For LiFePO4, undervoltage sets the condition and snaps the state-of-charge estim
 
 The principle: brownout belongs to the voltage domain, where it is robust and gauge-independent; the user-facing battery percentage belongs to the gauge domain, where precision varies by chemistry.
 
-## 7. Emulator
+## 8. Emulator
 
 The emulator is exempt from the composition matrix. `unix/` is not a driver but a complete reimplementation of `power_manager.h` on the host: `pm_get_state()` copies out a hand-set emulator state, and `pm_set_emu_battery_state()` — exposed to Python through `trezorio` — injects it. This matches the convention of every other `io/*/unix/`, which mocks its module's *public API* using host facilities rather than simulating the chip over a fake bus. One emulator therefore serves every board variant, because the npm1300, fuel-gauge, and wireless differences all live below `pmic.h` and `battery.h`, and the emulator sits above both.
 
 The tradeoff is that the emulator exercises **none** of the real policy: not the state machine, the fuel gauge, the charging controller, or backup-RAM recovery. Emulator and device tests validate the mock, not that logic. Covering it is a job for a native host unit test that links the real `managed/` and `fuel_gauge/` code (largely pure math) against a fake `pmic.h`; the host stubs such a test needs already exist in `sys/time/unix` and `sec/backup_ram/unix`.
 
-## 8. Design rules
+## 9. Design rules
 
 These are the rules the layout above is meant to enforce. They are worth re-reading before widening any of the interfaces.
 
 - **One kind of thing per directory.** `pmic/*` is only hardware; `managed/` is only orchestration and never mentions a chip; `fuel_gauge/*` and `wireless/*` are their own kinds.
 - **Do not abstract from a single implementation.** Buck-mode control stayed npm1300-private because nothing else consumed it, and `battery.h` still carries `P` explicitly instead of an opaque state blob because there is only one real estimator to design that blob against — and because changing it changes the versioned backup-RAM recovery format, which needs an on-device test rather than a blind edit.
 - **A capability only some hardware has becomes a flag on the existing policy,** not a policy of its own. `USE_CHARGER` is the worked example.
+- **Decode in the driver, never in the policy.** `pmic_report_t` carries meanings, not registers, and says what it cannot measure instead of reporting zeros.
 - **Brownout decisions belong to the voltage domain; battery percentages belong to the gauge.**

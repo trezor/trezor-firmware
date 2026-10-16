@@ -183,6 +183,12 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report);
 // pm_monitor_power_sources() to control the charging current and state.
 void pm_charging_controller(pm_driver_t* drv);
 
+// True when the battery thermistor reads as a fault. A board without an NTC
+// never reports one (see pmic_report_t::ntc_present).
+static inline bool pm_ntc_fault(const pm_driver_t* drv) {
+  return drv->pmic_data.ntc_present && drv->pmic_data.ntc_disconnected;
+}
+
 // Store power manager data to backup RAM
 pm_status_t pm_store_data_to_backup_ram(void);
 

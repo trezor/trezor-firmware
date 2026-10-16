@@ -229,7 +229,8 @@ pm_status_t pm_get_state(pm_state_t* state) {
 
   state->usb_connected = drv->usb_connected;
   state->wireless_connected = drv->wireless_connected;
-  state->ntc_connected = !drv->pmic_data.ntc_disconnected;
+  // A board without a thermistor has nothing to be disconnected.
+  state->ntc_connected = !pm_ntc_fault(drv);
 
 #ifdef USE_CHARGER
   if (pm_is_charging()) {

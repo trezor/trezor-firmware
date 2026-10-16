@@ -725,16 +725,25 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
   report->vsys = (vsys_adc * 6.375f) / 1023.0f;
 
   // Populate measurement and status flags from the raw data
-  report->ibat_meas_status = r->adc_ibat_meas_status;
-  report->buck_status = r->buck_status;
-  report->usb_status = r->usb_status;
-  report->charge_status = r->charging_status;
-  // Decode and expose charging phase flags
-  // Bit 3 -> Constant-Current phase, Bit 4 -> Constant-Voltage phase
+  // The npm1300 senses battery current and has the board NTC wired to it.
+  report->ibat_valid = true;
+  report->ntc_present = true;
+
+  // Decode the status registers into the chip-neutral report. The register
+  // layouts are an npm1300 detail and stop here.
+  //
+  // USBCDETECTSTATUS: any non-zero value means VBUS is present (the value
+  // encodes the detected charger type, which the policy does not need).
+  report->vbus_present = (r->usb_status != 0);
+
+  // BCHGCHARGESTATUS bits: 1 COMPLETED, 3 CONSTANTCURRENT, 4 CONSTANTVOLTAGE.
+  report->charge_complete = (r->charging_status & 0x02) != 0;
   report->cc_phase = (r->charging_status & 0x08) != 0;
   report->cv_phase = (r->charging_status & 0x10) != 0;
-  report->charge_err = r->charging_err;
-  report->charge_sensor_err = r->charging_sensor_err;
+
+  // Any latched BCHGERRREASON / BCHGERRSENSOR bit is a charger fault.
+  report->charger_fault =
+      (r->charging_err != 0) || (r->charging_sensor_err != 0);
 }
 
 // I2C operation for writing constant value to the npm1300 register
