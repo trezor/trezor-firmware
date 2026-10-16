@@ -79,7 +79,7 @@ optiga_result optiga_parse_metadata(const uint8_t *serialized,
 
   size_t pos = 2;
   while (pos < serialized_size) {
-    if (pos + 2 >= serialized_size) {
+    if (pos + 2 > serialized_size) {
       return OPTIGA_ERR_PARAM;
     }
 
