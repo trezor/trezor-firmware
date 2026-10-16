@@ -369,13 +369,6 @@ impl ButtonDetails {
             .with_fixed_width(theme::ARMED_ICON_WIDTH)
     }
 
-    /// Info icon with an outline.
-    pub fn info_icon() -> Self {
-        Self::text("i".into())
-            .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-            .with_font(fonts::FONT_NORMAL)
-    }
-
     /// Left arrow to signal going back. No outline.
     pub fn left_arrow_icon() -> Self {
         Self::icon(theme::ICON_ARROW_LEFT).with_offset(Offset::new(4, -3))
@@ -534,15 +527,6 @@ impl ButtonLayout {
         )
     }
 
-    /// Left cancel, armed text and right info icon.
-    pub fn cancel_armed_info(middle: TString<'static>) -> Self {
-        Self::new(
-            Some(ButtonDetails::cancel_icon()),
-            Some(ButtonDetails::armed_text(middle)),
-            Some(ButtonDetails::info_icon()),
-        )
-    }
-
     /// Left cancel, armed text and blank on right.
     pub fn cancel_armed_none(middle: TString<'static>) -> Self {
         Self::new(
@@ -576,15 +560,6 @@ impl ButtonLayout {
             Some(ButtonDetails::from_text_possible_icon(text)),
             None,
             Some(ButtonDetails::right_arrow_icon()),
-        )
-    }
-
-    /// Only right text.
-    pub fn none_none_text(text: TString<'static>) -> Self {
-        Self::new(
-            None,
-            None,
-            Some(ButtonDetails::from_text_possible_icon(text)),
         )
     }
 
@@ -656,9 +631,34 @@ impl ButtonLayout {
         Self::new(None, Some(ButtonDetails::armed_text(text)), None)
     }
 
-    /// Only left arrow.
-    pub fn arrow_none_none() -> Self {
-        Self::new(Some(ButtonDetails::left_arrow_icon()), None, None)
+    /// Only cancel cross on the left.
+    pub fn cancel_none_none() -> Self {
+        Self::new(Some(ButtonDetails::cancel_icon()), None, None)
+    }
+
+    /// Context menu on the left and text on the right.
+    pub fn menu_none_text(text: TString<'static>) -> Self {
+        Self::new(
+            Some(ButtonDetails::menu_icon()),
+            None,
+            Some(ButtonDetails::text(text)),
+        )
+    }
+
+    /// Item of a context menu carousel: arrows to move and an arrow glyph to
+    /// enter the item. The first item has a cross closing the menu instead of
+    /// the left arrow, the last one has no right arrow.
+    pub fn menu_item(is_first: bool, is_last: bool) -> Self {
+        let btn_left = if is_first {
+            ButtonDetails::cancel_icon()
+        } else {
+            ButtonDetails::left_arrow_icon()
+        };
+        Self::new(
+            Some(btn_left),
+            Some(ButtonDetails::menu_select_icon()),
+            (!is_last).then(ButtonDetails::right_arrow_icon),
+        )
     }
 
     /// Only right arrow facing down.

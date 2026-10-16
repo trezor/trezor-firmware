@@ -1,14 +1,8 @@
-use super::super::component::{ButtonLayout, Choice, ChoiceFactory, ChoiceMsg, ChoicePage};
-use super::super::fonts;
-use super::super::theme::bootloader::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH};
-#[cfg(feature = "ui_debug")]
-use crate::trace::{Trace, Tracer};
-use crate::ui::component::{Child, Component, Event, EventCtx, Pad};
-use crate::ui::constant::screen;
-use crate::ui::display::Icon;
-use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
+use super::super::component::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage};
+use super::super::theme::bootloader::BLD_BG;
+use crate::ui::component::{Component, Event, EventCtx, Pad};
+use crate::ui::geometry::Rect;
 use crate::ui::layout::simplified::ReturnToC;
-use crate::ui::shape;
 use crate::ui::shape::Renderer;
 
 #[repr(u32)]
@@ -24,115 +18,69 @@ impl ReturnToC for MenuMsg {
     }
 }
 
-const CHOICE_LENGTH: usize = 3;
-const SCREEN_CENTER: Point = screen().center();
+/// Items of the bootloader menu, see `MenuMsg::from_selection`.
+pub const MENU_ITEMS: [&str; 2] = ["Reboot", "Factory reset"];
 
-pub struct MenuChoice {
-    first_line: &'static str,
-    second_line: &'static str,
-    icon: Icon,
-}
-
-impl MenuChoice {
-    pub fn new(first_line: &'static str, second_line: &'static str, icon: Icon) -> Self {
-        Self {
-            first_line,
-            second_line,
-            icon,
-        }
+impl MenuMsg {
+    pub fn from_selection(selection: MenuSelection) -> Option<Self> {
+        Some(match selection {
+            MenuSelection::Close => Self::Close,
+            MenuSelection::Item(0) => Self::Reboot,
+            MenuSelection::Item(1) => Self::FactoryReset,
+            // Unknown items do nothing irreversible
+            MenuSelection::Item(_) => Self::Close,
+        })
     }
 }
 
-impl Choice for MenuChoice {
-    fn render_center<'s>(&self, target: &mut impl Renderer<'s>, _area: Rect, _inverse: bool) {
-        // Icon on top and two lines of text below
-        shape::ToifImage::new(SCREEN_CENTER + Offset::y(-20), self.icon.toif)
-            .with_align(Alignment2D::CENTER)
-            .with_fg(BLD_FG)
-            .render(target);
-
-        shape::Text::new(SCREEN_CENTER, self.first_line, fonts::FONT_NORMAL)
-            .with_align(Alignment::Center)
-            .with_fg(BLD_FG)
-            .render(target);
-
-        shape::Text::new(
-            SCREEN_CENTER + Offset::y(10),
-            self.second_line,
-            fonts::FONT_NORMAL,
-        )
-        .with_align(Alignment::Center)
-        .with_fg(BLD_FG)
-        .render(target);
-    }
-
-    fn btn_layout(&self) -> ButtonLayout {
-        ButtonLayout::arrow_armed_arrow("SELECT".into())
-    }
+#[derive(Copy, Clone)]
+pub enum MenuSelection {
+    /// The menu was closed by the cross on its first item
+    Close,
+    /// Index of the selected item
+    Item(usize),
 }
 
-#[cfg(feature = "ui_debug")]
-impl Trace for MenuChoice {
-    fn trace(&self, t: &mut dyn Tracer) {
-        t.component("MenuChoice");
-    }
+pub struct MenuChoiceFactory<const N: usize> {
+    items: [&'static str; N],
 }
 
-pub struct MenuChoiceFactory {}
-
-impl MenuChoiceFactory {
-    const CHOICES: [(&'static str, &'static str, Icon); CHOICE_LENGTH] = [
-        ("Factory", "reset", ICON_TRASH),
-        ("Exit", "menu", ICON_EXIT),
-        ("Reboot", "Trezor", ICON_REDO),
-    ];
-
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-impl ChoiceFactory for MenuChoiceFactory {
-    type Action = MenuMsg;
-    type Item = MenuChoice;
+impl<const N: usize> ChoiceFactory for MenuChoiceFactory<N> {
+    type Action = usize;
+    type Item = ChoiceItem;
 
     fn count(&self) -> usize {
-        CHOICE_LENGTH
+        N
     }
 
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
-        let choice_item = MenuChoice::new(
-            Self::CHOICES[choice_index].0,
-            Self::CHOICES[choice_index].1,
-            Self::CHOICES[choice_index].2,
-        );
-        let action = match choice_index {
-            0 => MenuMsg::FactoryReset,
-            1 => MenuMsg::Close,
-            2 => MenuMsg::Reboot,
-            _ => unreachable!(),
-        };
-        (choice_item, action)
+        let btn_layout = ButtonLayout::menu_item(choice_index == 0, choice_index == N - 1);
+        (
+            ChoiceItem::new(self.items[choice_index], btn_layout),
+            choice_index,
+        )
     }
 }
 
-pub struct Menu {
+/// Context menu carousel, the same as the firmware `select_menu`. The cross on
+/// the first item closes the menu.
+pub struct Menu<const N: usize> {
     pad: Pad,
-    choice_page: Child<ChoicePage<MenuChoiceFactory, MenuMsg>>,
+    choice_page: ChoicePage<MenuChoiceFactory<N>, usize>,
 }
 
-impl Menu {
-    pub fn new() -> Self {
-        let choices = MenuChoiceFactory::new();
+impl<const N: usize> Menu<N> {
+    pub fn new(items: [&'static str; N]) -> Self {
+        let choices = MenuChoiceFactory { items };
         Self {
             pad: Pad::with_background(BLD_BG).with_clear(),
-            choice_page: Child::new(ChoicePage::new(choices).with_only_one_item(true)),
+            choice_page: ChoicePage::new(choices).with_incomplete(true),
         }
     }
 }
 
-impl Component for Menu {
-    type Msg = MenuMsg;
+impl<const N: usize> Component for Menu<N> {
+    type Msg = MenuSelection;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.pad.place(bounds);
@@ -142,8 +90,9 @@ impl Component for Menu {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match self.choice_page.event(ctx, event) {
-            Some(ChoiceMsg::Choice { item, .. }) => Some(item),
-            _ => None,
+            Some(ChoiceMsg::Choice { item, .. }) => Some(MenuSelection::Item(item)),
+            Some(ChoiceMsg::Cancel) => Some(MenuSelection::Close),
+            None => None,
         }
     }
 
