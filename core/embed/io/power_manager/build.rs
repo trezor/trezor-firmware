@@ -15,6 +15,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     // Selection is a table + "exactly one" check rather than a chain of
     // independent `if`s, so a mis-mapped or duplicate feature is a clear build
     // error instead of two drivers compiling into duplicate symbols.
+    // Which selected PMICs carry a charger. Decided once, here, and used both
+    // for the USE_CHARGER define and for the policy's charger-leaf source.
+    let has_charger = cfg!(feature = "pmic_npm1300");
+
     if cfg!(feature = "pmic") {
         lib.add_define("USE_PMIC", Some("1"));
 
@@ -47,11 +51,11 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             bail_unsupported!();
         }
 
-        // Charger capability of the selected PMIC. Gates the `managed` policy's
-        // charging controller (see USE_CHARGER in power_monitoring.c). npm1300
-        // has an integrated charger; a chargerless PMIC (npm2100, a bare GPIO
-        // power latch) simply doesn't define it.
-        if cfg!(feature = "pmic_npm1300") {
+        // Charger capability of the selected PMIC: selects the `managed`
+        // policy's charger leaf below and gates prodtest's charging commands.
+        // npm1300 has an integrated charger; a chargerless PMIC (npm2100, a
+        // bare GPIO power latch) simply doesn't define it.
+        if has_charger {
             lib.add_define("USE_CHARGER", Some("1"));
         }
     }
@@ -79,9 +83,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
     // --- Power manager backend --------------------------------------------
     // There is a single hardware policy - `managed` - for every PMIC. It
-    // implements power_manager.h on top of the core PMIC interface and gates
-    // charger-only logic behind USE_CHARGER (set above per PMIC capability).
-    // A latch board simply runs `managed` with USE_CHARGER off.
+    // implements power_manager.h on top of the core PMIC interface. Its only
+    // chip-dependent part is the charger leaf, a pair of alternative sources
+    // (real / no-op) selected on the PMIC's charger capability, so the shared
+    // policy sources carry no charger switch at all.
     //
     // There is therefore no per-backend feature: the board selects only a PMIC
     // (`pmic = "io/pmic_..."`), and the project opting into `power_manager`
@@ -99,11 +104,22 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             "power_manager: a PMIC driver must be selected \
              (set `pmic = \"io/pmic_...\"` in the board's [power_manager] section)"
         );
+        // The pure core (pm_core*.c) plus the glue that drives it
+        // (power_manager.c). The core can also be built on the host; see
+        // power_manager/tests/.
         lib.add_sources([
+            "power_manager/managed/pm_core.c",
+            "power_manager/managed/pm_core_states.c",
             "power_manager/managed/power_manager.c",
-            "power_manager/managed/power_monitoring.c",
-            "power_manager/managed/power_states.c",
         ]);
+
+        // Charger leaf: exactly one of the two, decided by the PMIC's
+        // capability (see `has_charger` above).
+        lib.add_source(if has_charger {
+            "power_manager/managed/power_charging.c"
+        } else {
+            "power_manager/managed/power_charging_none.c"
+        });
 
         // Fuel gauge (SoC estimator). The `managed` policy speaks only to the
         // chemistry-neutral fuel_gauge/battery.h interface; the board picks a
