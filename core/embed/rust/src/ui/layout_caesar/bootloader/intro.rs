@@ -9,8 +9,7 @@ use crate::ui::layout::simplified::ReturnToC;
 use crate::ui::shape;
 use crate::ui::shape::Renderer;
 
-const LEFT_BUTTON_TEXT: &str = "Init connection";
-const RIGHT_BUTTON_TEXT: &str = "MENU";
+const RIGHT_BUTTON_TEXT: &str = "CONNECT";
 
 #[repr(u32)]
 #[derive(Copy, Clone)]
@@ -37,8 +36,7 @@ impl<'a> Intro<'a> {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
             title: Child::new(Label::centered(title, TEXT_NORMAL).vertically_centered()),
-            buttons: Child::new(ButtonController::new(ButtonLayout::text_none_text(
-                LEFT_BUTTON_TEXT.into(),
+            buttons: Child::new(ButtonController::new(ButtonLayout::menu_none_text(
                 RIGHT_BUTTON_TEXT.into(),
             ))),
             text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
@@ -79,10 +77,10 @@ impl<'a> Component for Intro<'a> {
         let msg = self.buttons.event(ctx, event);
 
         if let Some(Triggered(ButtonPos::Left, _)) = msg {
-            return Some(Self::Msg::InstallFirmware);
+            return Some(Self::Msg::GoToMenu);
         };
         if let Some(Triggered(ButtonPos::Right, _)) = msg {
-            return Some(Self::Msg::GoToMenu);
+            return Some(Self::Msg::InstallFirmware);
         };
         None
     }

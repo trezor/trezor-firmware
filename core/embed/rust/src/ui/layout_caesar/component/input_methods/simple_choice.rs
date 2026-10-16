@@ -57,11 +57,8 @@ impl ChoiceFactory for ChoiceFactorySimple {
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         let text = &self.choices[choice_index];
         let btn_layout = if self.menu_buttons {
-            ButtonLayout::new(
-                Some(ButtonDetails::left_arrow_icon()),
-                Some(ButtonDetails::menu_select_icon()),
-                Some(ButtonDetails::right_arrow_icon()),
-            )
+            // The first/last item buttons are adjusted below.
+            ButtonLayout::menu_item(false, false)
         } else {
             ButtonLayout::arrow_armed_arrow(self.select_text)
         };
