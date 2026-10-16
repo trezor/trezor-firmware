@@ -192,11 +192,15 @@ impl GlyphData {
             '\u{00a0}' => '\u{0020}',
             c => c,
         };
-        let gl_data = self.get_glyph_data(ch as u16);
+        let gl_data = self.get_glyph_data(ch);
         Glyph::load(gl_data)
     }
 
-    fn get_glyph_data(&self, codepoint: u16) -> &[u8] {
+    fn get_glyph_data(&self, ch: char) -> &[u8] {
+        let Some(codepoint) = u16::try_from(ch).ok() else {
+            return self.font.glyph_nonprintable;
+        };
+
         if codepoint >= ' ' as u16 && codepoint < 0x7F {
             // ASCII character
             let offset = codepoint - ' ' as u16;
@@ -635,5 +639,21 @@ mod tests {
             FONT.longest_prefix_break_words(w_full.saturating_add(500), text),
             text
         );
+    }
+
+    #[test]
+    fn get_glyph_supplementary_plane_is_nonprintable() {
+        // A char outside the BMP (Basic Multilingual Plane) must not alias
+        // the BMP glyph sharing its low 16 bits (e.g. U+10041 rendering as 'A').
+        let nonprintable = super::Glyph::load(FONT.glyph_nonprintable).data;
+        FONT.with_glyph_data(|data| {
+            assert_ne!(data.get_glyph('A').data, nonprintable);
+            for plane in 1..=16 {
+                for low in (u32::from(' ')..=u32::from('~')).chain([0xa0]) {
+                    let ch = unwrap!(char::from_u32((plane << 16) | low));
+                    assert_eq!(data.get_glyph(ch).data, nonprintable, "{ch:?}");
+                }
+            }
+        });
     }
 }
