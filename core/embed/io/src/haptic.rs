@@ -9,16 +9,12 @@ pub enum HapticEffect {
 
 pub fn play(effect: HapticEffect) {
     unsafe {
-        if !ffi::haptic_play(effect as _).is_ok() {
-            log::error!("haptic_play failed");
-        }
+        let _ = ffi::haptic_play(effect as _);
     }
 }
 
 pub fn play_custom(amplitude_pct: i8, duration_ms: u16) {
     unsafe {
-        if !ffi::haptic_play_custom(amplitude_pct, duration_ms).is_ok() {
-            log::error!("haptic_play_custom failed");
-        }
+        let _ = ffi::haptic_play_custom(amplitude_pct, duration_ms);
     }
 }
