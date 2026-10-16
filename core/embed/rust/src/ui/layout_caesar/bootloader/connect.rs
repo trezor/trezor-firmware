@@ -31,7 +31,7 @@ impl Connect {
             bg: Pad::with_background(bg),
             message: message.into(),
             font,
-            buttons: ButtonController::new(ButtonLayout::none_none_text("Cancel".into())),
+            buttons: ButtonController::new(ButtonLayout::cancel_none_none()),
         };
 
         instance.bg.clear();
@@ -55,7 +55,7 @@ impl Component for Connect {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(ButtonControllerMsg::Triggered(ButtonPos::Right, false)) =
+        if let Some(ButtonControllerMsg::Triggered(ButtonPos::Left, _)) =
             self.buttons.event(ctx, event)
         {
             return Some(ConnectMsg::Cancel);
