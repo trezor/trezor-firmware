@@ -210,7 +210,7 @@ pub fn convert_elf_to_bin(
 }
 
 /// Returns the path of the serialized app (`.tapp`) that
-/// `extapp_tool_advanced.py post-build` writes into `serialized_dir` for the
+/// `apptree_tool.py post-build` writes into `serialized_dir` for the
 /// app binary at `bin_path`. The path is derived from the binary's header and
 /// must match `get_app_name` in that tool:
 /// `<id>/<version>/<id>_<version>_sdk<major.minor>_<arch>_abi<abi>_<model>_<lang>.tapp`.
