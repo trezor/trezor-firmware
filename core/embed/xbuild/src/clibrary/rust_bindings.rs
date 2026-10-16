@@ -2,10 +2,24 @@ use bindgen;
 use color_eyre::Result;
 use color_eyre::eyre::WrapErr;
 
-use super::CLibrary;
+use super::{BuilderFunc, CLibrary};
 use crate::helpers::{links_name, path_from_env};
 
 impl CLibrary {
+    /// Applies the provided function to every bindings builder of this library.
+    ///
+    /// Unlike `add_rust_bindings`, this does not declare a bindings file on its
+    /// own; it only customizes the files declared elsewhere. Use it for options
+    /// that concern the library as a whole, such as blocklisting a type shared
+    /// with another crate. If no module declares any bindings, the function is
+    /// never applied.
+    pub fn configure_rust_bindings(
+        &mut self,
+        func: impl Fn(bindgen::Builder) -> Result<bindgen::Builder> + 'static,
+    ) {
+        self.builder_defaults.push(Box::new(func));
+    }
+
     /// Configures the default bindgen builder with the provided function.
     ///
     /// The function takes a `bindgen::Builder` as input and returns a modified
@@ -38,6 +52,7 @@ impl CLibrary {
         let out_dir = path_from_env("OUT_DIR")?;
         let default_filename = format!("{}.rs", links_name()?);
         let builders = std::mem::take(&mut self.builders);
+        let defaults = std::mem::take(&mut self.builder_defaults);
         let has_default_builder = builders.contains_key(&default_filename);
 
         if !builders.is_empty() {
@@ -56,7 +71,7 @@ impl CLibrary {
 
             for (filename, builder) in builders {
                 let mut content = Vec::<u8>::new();
-                builder
+                apply_defaults(builder, &defaults)?
                     .clang_args(attrs.to_compiler_args())
                     // Customize the standard types.
                     .use_core()
@@ -89,6 +104,13 @@ impl CLibrary {
         }
         Ok(())
     }
+}
+
+/// Applies the library-wide builder options to a single builder.
+fn apply_defaults(builder: bindgen::Builder, defaults: &[BuilderFunc]) -> Result<bindgen::Builder> {
+    defaults
+        .iter()
+        .try_fold(builder, |builder, func| func(builder))
 }
 
 fn maybe_replace(src_content: Vec<u8>, dst: &std::path::Path) -> Result<()> {
