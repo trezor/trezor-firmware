@@ -75,18 +75,6 @@ static __attribute__((section(".fb2"),
     physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 #endif
 
-#ifdef USE_TRUSTZONE
-void display_set_unpriv_access(bool unpriv) {
-  tz_set_sram_unpriv((uint32_t)physical_frame_buffer_0,
-                     PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
-
-#if (FRAME_BUFFER_COUNT > 1)
-  tz_set_sram_unpriv((uint32_t)physical_frame_buffer_1,
-                     PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
-#endif
-}
-#endif  // USE_TRUSTZONE
-
 void display_fb_init(void) {
   display_driver_t *drv = &g_display_driver;
 
