@@ -38,7 +38,6 @@
 
 #include "../fuel_gauge/battery.h"
 #include "../power_manager_poll.h"
-#include "../wireless/stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
 // Global driver instance
@@ -461,10 +460,17 @@ pm_status_t pm_get_report(pm_report_t* report) {
   report->battery_soc_latched = fg_state.soc_latched;
 
   report->pmic_temp_c = drv->pmic_data.die_temp;
+#ifdef USE_WIRELESS_CHARGER
   report->wireless_rectifier_voltage_v = drv->wireless_data.vrect;
   report->wireless_output_voltage_v = drv->wireless_data.vout;
   report->wireless_current_ma = drv->wireless_data.icur;
   report->wireless_temp_c = drv->wireless_data.tmeas;
+#else
+  report->wireless_rectifier_voltage_v = 0.0f;
+  report->wireless_output_voltage_v = 0.0f;
+  report->wireless_current_ma = 0.0f;
+  report->wireless_temp_c = 0.0f;
+#endif
 
   irq_unlock(irq_key);
 
