@@ -43,7 +43,8 @@ fn main() -> Result<()> {
     xbuild::build(|lib| {
         lib.import_lib("sec")?;
 
-        lib.add_rust_bindings(|builder| Ok(builder.blocklist_type("ts_t")))?;
+        // `ts_t` is re-exported from the `rtl` crate, see `src/ffi.rs`.
+        lib.configure_rust_bindings(|builder| Ok(builder.blocklist_type("ts_t")));
 
         build_mods!(
             lib,
