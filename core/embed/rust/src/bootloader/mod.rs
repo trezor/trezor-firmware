@@ -109,7 +109,7 @@ pub fn run(
             if let Some(t) = button_pressed_time {
                 if let Some(elapsed) = Instant::now().checked_duration_since(t) {
                     if elapsed >= HIBERNATE_TIME && !haptic_played {
-                        play(HapticEffect::BootloaderEntry);
+                        let _ = play(HapticEffect::BootloaderEntry);
                         haptic_played = true;
                     }
                 }

@@ -259,7 +259,7 @@ impl Component for Button {
                         if touch_area.contains(pos) {
                             #[cfg(feature = "haptic")]
                             if self.haptics {
-                                haptic::play(HapticEffect::ButtonPress);
+                                let _ = haptic::play(HapticEffect::ButtonPress);
                             }
                             self.set(ctx, State::Pressed);
                             if self.long_press != ShortDuration::ZERO {
@@ -303,7 +303,7 @@ impl Component for Button {
                 if matches!(self.state, State::Pressed) {
                     #[cfg(feature = "haptic")]
                     if self.haptics {
-                        haptic::play(HapticEffect::ButtonPress);
+                        let _ = haptic::play(HapticEffect::ButtonPress);
                     }
                     self.set(ctx, State::Initial);
                     return Some(ButtonMsg::LongPressed);
