@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <trezor_bsp.h>
 #include <trezor_types.h>
 
 #include <io/pmic.h>
@@ -38,34 +39,26 @@
 #include "../pmic/pmic_charger.h"
 #endif
 
-// Power manager thresholds & timings
+// --- Policy constants -------------------------------------------------------
+// Behaviour of the state machine itself. The same on every board; anything
+// that depends on the board or the battery pack is a board tunable below.
+
 #define PM_TIMER_PERIOD_MS 100
 #define PM_SHUTDOWN_TIMEOUT_MS 15000
-// Battery-critical (brownout) thresholds moved into the chemistry-specific
-// gauge (see bat_eval_critical() in fuel_gauge/*), since the correct set/clear
-// mechanism depends on the cell and the gauge's precision.
-#define PM_BATTERY_LOW_THRESHOLD_SOC 15
-
-#ifdef USE_CHARGER
-// Charging-current bounds are a property of the charger, so they come from the
-// selected PMIC's charger extension rather than being restated by the policy.
-// Undefined without a charger: every user is charger-only code.
-#define PM_BATTERY_CHARGING_CURRENT_MAX PMIC_CHARGING_LIMIT_MAX
-#define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
-#endif
-
-#define PM_BATTERY_DISCONNECTED_THR_V 0.5f  // battery disconnection detection
-#define PM_BATTERY_DISCONNECTED_REC_V \
-  0.8f  // recovery from disconnect detection
-
-#define PM_SELF_DISG_RATE_HIBERNATION_MA 0.004f
-#define PM_SELF_DISG_RATE_SUSPEND_MA 0.032f
+#define PM_STABILIZATION_TIMEOUT_MS 2000
 
 // Timeout after which the device automatically transit from suspend to
 // hibernation
 #define PM_AUTO_HIBERNATE_TIMEOUT_S (2 * 60 * 60)  // 2 hours
 
-#define PM_STABILIZATION_TIMEOUT_MS 2000
+// Battery disconnection detection (no cell of any chemistry sits this low)
+#define PM_BATTERY_DISCONNECTED_THR_V 0.5f  // battery disconnection detection
+#define PM_BATTERY_DISCONNECTED_REC_V \
+  0.8f  // recovery from disconnect detection
+
+// Battery-critical (brownout) thresholds live in the chemistry-specific gauge
+// (see bat_eval_critical() in fuel_gauge/*), since the correct set/clear
+// mechanism depends on the cell and the gauge's precision.
 
 // Thermal controller switch, comment out to disable the thermal controller.
 // The thermal controller limits the *charging* current by temperature, so it
@@ -74,12 +67,46 @@
 #define PM_ENABLE_TEMP_CONTROL
 #endif
 
-// Temperature controller parameters
-#define PM_TEMP_CONTROL_IDLE_PERIOD_MS 2 * 60 * 1000  // 2 minutes
-#define PM_TEMP_CONTROL_BAND_1_MAX_TEMP 39.0f
-#define PM_TEMP_CONTROL_BAND_2_MAX_TEMP 43.0f
-#define PM_TEMP_CONTROL_BAND_3_MAX_TEMP 45.0f
-#define PM_TEMP_CONTROL_BAND_4_MAX_TEMP 47.0f
+// Debounce between thermal-limit changes
+#define PM_TEMP_CONTROL_IDLE_PERIOD_MS (2 * 60 * 1000)  // 2 minutes
+
+// --- Board tunables ---------------------------------------------------------
+// Supplied by the board header (<trezor_bsp.h>), because they describe the
+// board and its battery pack rather than the policy. Required, not defaulted:
+// a missing value is a build error naming it, not a silently inherited number
+// from another product. See docs/core/embed-arch/power-manager.md.
+//
+//   BATTERY_LOW_SOC_PERCENT          SoC [%] at/below which power-save starts
+//   PM_POWER_SAVE_BACKLIGHT_LIMIT    backlight cap in power-save mode (0-255)
+//   PM_SUSPEND_CURRENT_MA            board drain in suspend [mA]     (USE_RTC)
+//   PM_HIBERNATION_CURRENT_MA        board drain in hibernation [mA] (USE_RTC)
+//   BATTERY_CHARGING_CURRENT_MAX_MA  pack's max charging current [mA]
+//                                                                 (USE_CHARGER)
+//   BATTERY_CHARGE_TEMP_BANDS        {max_temp_C, current factor} bands,
+//                                    ascending                    (USE_CHARGER)
+
+#ifndef BATTERY_LOW_SOC_PERCENT
+#error "Board header must define BATTERY_LOW_SOC_PERCENT"
+#endif
+#ifndef PM_POWER_SAVE_BACKLIGHT_LIMIT
+#error "Board header must define PM_POWER_SAVE_BACKLIGHT_LIMIT"
+#endif
+#ifdef USE_RTC
+#ifndef PM_SUSPEND_CURRENT_MA
+#error "Board header must define PM_SUSPEND_CURRENT_MA"
+#endif
+#ifndef PM_HIBERNATION_CURRENT_MA
+#error "Board header must define PM_HIBERNATION_CURRENT_MA"
+#endif
+#endif
+#ifdef USE_CHARGER
+#ifndef BATTERY_CHARGING_CURRENT_MAX_MA
+#error "Board header must define BATTERY_CHARGING_CURRENT_MAX_MA"
+#endif
+#ifndef BATTERY_CHARGE_TEMP_BANDS
+#error "Board header must define BATTERY_CHARGE_TEMP_BANDS"
+#endif
+#endif
 
 // Power manager core driver structure
 typedef struct {

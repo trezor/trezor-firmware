@@ -34,13 +34,6 @@
 // (npm1300_defs.h) rather than a public interface. Promote it to an agnostic
 // <io/pmic_regulator.h> if and when a policy needs to control regulator mode.
 
-// Charging current limits
-// - range of pmic is 32-800mA
-// - used battery limit is 180mA
-#define PMIC_CHARGING_LIMIT_MIN 32       // mA
-#define PMIC_CHARGING_LIMIT_MAX 180      // mA
-#define PMIC_CHARGING_LIMIT_DEFAULT 180  // mA
-
 // Enables or disables the charging.
 //
 // The function returns `false` if the operation cannot be performed.
@@ -48,11 +41,20 @@ bool pmic_set_charging(bool enable);
 
 // Sets the charging current limit [mA].
 //
-// The current value must be in the range defined by the
-// `PMIC_CHARGING_LIMIT_MIN` and `PMIC_CHARGING_LIMIT_MAX` constants.
+// The value must lie within the range the charger hardware accepts, which is
+// a property of the chip and lives in its driver. The battery pack's own
+// maximum is a board property (BATTERY_CHARGING_CURRENT_MAX_MA in the board
+// header); the driver checks at compile time that it fits the chip's range.
 //
-// The function returns `false` if the operation cannot be performed.
+// The function returns `false` if the operation cannot be performed, including
+// when the value is out of range.
 bool pmic_set_charging_limit(int i_charge);
+
+// Smallest charging current limit the charger hardware accepts [mA].
+//
+// The policy uses it to reject a requested maximum the charger could never
+// honour, instead of asking for it every tick and being refused.
+int pmic_charging_limit_min(void);
 
 // Gets the charging current limit [mA].
 int pmic_get_charging_limit(void);
