@@ -210,10 +210,14 @@ static void tz_configure_flash(void) {
   HAL_FLASHEx_ConfigBBAttributes(&flash_bb);
 }
 
+#if defined(SECMON) || defined(USE_APPLETS)
 // The unprivileged application draws into the frame buffers. Unprivilege
 // the physical buffers first, so that the GFXMMU's own bus transactions
 // (the LTDC refresh, see RM0456 3.6.3) stay legal, then the GFXMMU itself.
 // The MPU keeps controlling which buffer the application may touch.
+//
+// Only images hosting an applet need it: the kernel, or the secure monitor
+// on behalf of the non-secure kernel.
 static void tz_configure_display_fb(void) {
 #if defined(FB1_RAM_START) && FB1_RAM_SIZE > 0
   tz_set_sram_unpriv(FB1_RAM_START, FB1_RAM_SIZE, true);
@@ -225,6 +229,7 @@ static void tz_configure_display_fb(void) {
   tz_set_gfxmmu_unpriv(true);
 #endif
 }
+#endif  // SECMON || USE_APPLETS
 
 #ifndef SECMON
 void tz_init(void) {
@@ -239,7 +244,9 @@ void tz_init(void) {
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
 
+#ifdef USE_APPLETS
   tz_configure_display_fb();
+#endif
 
   tz_enable_illegal_access_interrupt();
 }
