@@ -255,6 +255,7 @@ def test_get_address(client: Client):
         _get_test_address(session)
 
 
+@pytest.mark.ble(wipe=True)
 def test_wipe_device(client: Client):
     _assert_protection(client)
     session = client.get_seedless_session()
