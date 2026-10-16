@@ -12,6 +12,9 @@ xbuild.workspace = true
 [dependencies]
 cty.workspace = true
 minicbor = { workspace = true, optional = true }
+cortex-m = { workspace = true, features = ["critical-section-single-core"] }
+critical-section = { workspace = true }
+stm32-metapac = { workspace = true, features = ["pac"] }
 
 models.workspace = true
 rtl.workspace = true
@@ -24,10 +27,10 @@ sys.workspace = true
 # MCU selection - only enable one of these at a time
 # --------------------------------------------------------------------------
 
-mcu_stm32f427 = ["sec/mcu_stm32f427", "mcu_stm32f4"]
+mcu_stm32f427 = ["sec/mcu_stm32f427", "mcu_stm32f4", "stm32-metapac/stm32f427vi"]
 mcu_stm32f429 = ["sec/mcu_stm32f429", "mcu_stm32f4"]
-mcu_stm32u58 = ["sec/mcu_stm32u58", "mcu_stm32u5"]
-mcu_stm32u5g = ["sec/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_stm32u58 = ["sec/mcu_stm32u58", "mcu_stm32u5", "stm32-metapac/stm32u585qi"]
+mcu_stm32u5g = ["sec/mcu_stm32u5g", "mcu_stm32u5", "stm32-metapac/stm32u5g9zj"]
 mcu_stm32u5a = ["sec/mcu_stm32u5a", "mcu_stm32u5"]
 
 # --------------------------------------------------------------------------
