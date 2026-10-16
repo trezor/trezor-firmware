@@ -1674,7 +1674,8 @@ always sent in plaintext):
 
 All other commands send their APDU in plaintext without the handshake:
 
-- `nfc-backup-read-pin-counter`, `nfc-backup-read-success-log`,
+- `nfc-backup-pin-unlocked`, `nfc-backup-read-pin-counter`,
+  `nfc-backup-read-success-log`,
   `nfc-backup-read-failure-logs`, `nfc-backup-read-seed-metadata`,
   `nfc-backup-activate-flashloader`, `nfc-backup-get-os-version`,
   `nfc-backup-get-uid`, `nfc-backup-measure`, `nfc-backup-integrity-check`,
@@ -1684,16 +1685,17 @@ APDU overview:
 
 | Command                         | CLA    | INS    | Data                       |
 |---------------------------------|--------|--------|----------------------------|
-| authenticate                    | `0x80` | `0x03` | PIN, `0xFF`-padded to 32 B |
-| set-pin                         | `0x80` | `0x04` | PIN, `0xFF`-padded to 32 B |
-| wipe                            | `0x80` | `0x05` | -                          |
-| read-pin-counter                | `0x80` | `0x06` | -                          |
-| read-success-log                | `0x80` | `0x07` | -                          |
-| read-failure-logs               | `0x80` | `0x08` | -                          |
-| read-seed-metadata              | `0x80` | `0x09` | -                          |
-| write-seed-metadata             | `0x80` | `0x0A` | 256 B metadata             |
-| read-seed                       | `0x80` | `0x0B` | -                          |
-| write-seed                      | `0x80` | `0x0C` | 256 B seed                 |
+| pin-unlocked                    | `0x80` | `0x03` | -                          |
+| authenticate                    | `0x80` | `0x04` | PIN, `0xFF`-padded to 32 B |
+| set-pin                         | `0x80` | `0x05` | PIN, `0xFF`-padded to 32 B |
+| wipe                            | `0x80` | `0x06` | -                          |
+| read-pin-counter                | `0x80` | `0x07` | -                          |
+| read-success-log                | `0x80` | `0x08` | -                          |
+| read-failure-logs               | `0x80` | `0x09` | -                          |
+| read-seed-metadata              | `0x80` | `0x0A` | -                          |
+| write-seed-metadata             | `0x80` | `0x0B` | 256 B metadata             |
+| read-seed                       | `0x80` | `0x0C` | -                          |
+| write-seed                      | `0x80` | `0x0D` | 256 B seed                 |
 | get-os-version                  | `0x20` | `0x01` | -                          |
 | get-uid                         | `0x20` | `0x02` | -                          |
 | measure                         | `0x20` | `0x03` | -                          |
@@ -1737,22 +1739,24 @@ Command-specific error codes (in addition to the general ones):
 | 26013 | PSK exchange failed                        |
 | 26014 | Noise handshake failed                     |
 | 26015 | `nfc-backup-handshake` failed              |
-| 26016 | `nfc-backup-authenticate` failed           |
-| 26017 | `nfc-backup-set-pin` failed                |
-| 26018 | `nfc-backup-wipe` failed                   |
-| 26019 | `nfc-backup-read-pin-counter` failed       |
-| 26020 | `nfc-backup-read-success-log` failed       |
-| 26021 | `nfc-backup-read-failure-logs` failed      |
-| 26022 | `nfc-backup-read-seed-metadata` failed     |
-| 26023 | `nfc-backup-write-seed-metadata` failed    |
-| 26024 | `nfc-backup-read-seed` failed              |
-| 26025 | `nfc-backup-write-seed` failed             |
-| 26026 | `nfc-backup-activate-flashloader` failed   |
-| 26028 | `nfc-backup-get-os-version` failed         |
-| 26029 | `nfc-backup-get-uid` failed                |
-| 26030 | `nfc-backup-measure` failed                |
-| 26031 | `nfc-backup-harden` failed                 |
-| 26032 | `nfc-backup-integrity-check` failed        |
+| 26016 | `nfc-backup-pin-unlocked` failed           |
+| 26017 | `nfc-backup-authenticate` failed           |
+| 26018 | `nfc-backup-set-pin` failed                |
+| 26019 | `nfc-backup-wipe` failed                   |
+| 26020 | `nfc-backup-read-pin-counter` failed       |
+| 26021 | `nfc-backup-read-success-log` failed       |
+| 26022 | `nfc-backup-read-failure-logs` failed      |
+| 26023 | `nfc-backup-read-seed-metadata` failed     |
+| 26024 | `nfc-backup-write-seed-metadata` failed    |
+| 26025 | `nfc-backup-read-seed` failed              |
+| 26026 | `nfc-backup-write-seed` failed             |
+| 26027 | `nfc-backup-activate-flashloader` failed   |
+| 26028 | NFC APDU encryption failed                 |
+| 26029 | `nfc-backup-get-os-version` failed         |
+| 26030 | `nfc-backup-get-uid` failed                |
+| 26031 | `nfc-backup-measure` failed                |
+| 26032 | `nfc-backup-harden` failed                 |
+| 26033 | `nfc-backup-integrity-check` failed        |
 
 #### nfc-backup-handshake
 Runs only the secure handshake and prints the card certificate details and the
@@ -1793,6 +1797,32 @@ nfc-backup-handshake
 # Handshake: completed
 # STEP 3/3: Command finished in 245 ms.
 OK
+```
+
+#### nfc-backup-pin-unlocked
+Checks whether the backup card currently considers its PIN unlocked. The
+command sends the `pin-unlocked` APDU without a secure handshake. A response
+status word of `0x9000` is reported as unlocked; any other status word is
+reported as locked. A locked PIN is a successful check, so the command still
+returns `OK`.
+
+Arguments: none
+
+Example:
+```
+nfc-backup-pin-unlocked
+# ... tap traces ...
+# APDU pin-unlocked: TX INS=0x03 (5 bytes)
+# APDU pin-unlocked: RX SW=0x9000 (2 bytes)
+# PIN is unlocked
+# STEP 3/3: Command finished in 38 ms.
+OK
+```
+
+When the PIN is locked, the response trace reports the card's status word and
+the command prints:
+```
+# PIN is locked
 ```
 
 #### nfc-backup-authenticate
@@ -2229,5 +2259,4 @@ Example:
 telemetry-reset
 OK
 ```
-
 
