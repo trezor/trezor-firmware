@@ -321,6 +321,12 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
     return PM_NOT_INITIALIZED;
   }
 
+#ifndef USE_SUSPEND
+  // This board has no low-power suspend path (no `suspend` feature), so there
+  // is nothing to put the CPU into. Reject before touching the state machine
+  // rather than parking it in PM_STATE_SUSPEND with the core still running.
+  return PM_REQUEST_REJECTED;
+#else
   irq_key_t irq_key = irq_lock();
   drv->request_suspend = true;
 
@@ -373,6 +379,7 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   }
 
   return PM_OK;
+#endif /* USE_SUSPEND */
 }
 
 pm_status_t pm_hibernate(void) {
