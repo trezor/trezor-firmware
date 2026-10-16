@@ -36,4 +36,15 @@ enum MessageType {
     MessageType_Base58CheckDecode = 24;
     MessageType_Base58 = 25;
     MessageType_Data = 26;
+    MessageType_ConfirmAction = 27;
+    MessageType_ConfirmValue = 28;
+    MessageType_ConfirmData = 29;
+    MessageType_ConfirmProperties = 30;
+    MessageType_ConfirmSummary = 31;
+    MessageType_ShowNotice = 32;
+    MessageType_ShowProgress = 33;
+    MessageType_UiResult = 34;
+    MessageType_ProgressTick = 35;
+    MessageType_ProgressStep = 36;
+    MessageType_ProgressEnd = 37;
 }
