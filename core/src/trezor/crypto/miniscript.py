@@ -23,6 +23,9 @@ def parse_node(n: HDNodeType) -> bip32.HDNode:
         public_key=n.public_key,
     )
 
+def _parse_index(s: str) -> int:
+    # TODO: check for non-canonical representations
+    return int(s)
 
 def compile_internal(derivation: MiniscriptRedeemPolicyType) -> bytes:
     """Don't use this function directly; use `scripts.derive_miniscript()` instead to ensure the policy is registered."""
@@ -35,9 +38,12 @@ def compile_internal(derivation: MiniscriptRedeemPolicyType) -> bytes:
         # KEY expression must be "@N/<I;J>/*"
         # Raises ValueError on invalid input:
         key_idx, children = _trim(key_expr, "@", "/*").split("/")
+        key_idx = _parse_index(key_idx)
+
         external_idx, internal_idx = _trim(children, "<", ">").split(";")
-        child_idx = int((external_idx, internal_idx)[derivation.internal])
-        key_idx = int(key_idx)
+        external_idx = _parse_index(external_idx)
+        internal_idx = _parse_index(internal_idx)
+        child_idx = (external_idx, internal_idx)[derivation.internal]
 
         if 0 <= key_idx < len(keys):
             node = parse_node(keys[key_idx].node)

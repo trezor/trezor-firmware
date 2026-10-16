@@ -443,7 +443,7 @@ def sign_tx(session: "Session", json_file: TextIO, chunkify: bool) -> None:
 @click.option("-k", "--key", type=str, multiple=True, required=True)
 @with_session
 def register_policy(
-    session: "Session", coin: str, name: str, descriptor: str, keys: tuple[str, ...]
+    session: "Session", coin: str, name: str, descriptor: str, key: tuple[str, ...]
 ) -> None:
     """Register a descriptor on the device."""
     from embit.descriptor import Key
@@ -456,16 +456,16 @@ def register_policy(
         keys=[
             messages.MiniscriptKey(
                 node=messages.HDNodeType(
-                    depth=k.depth,
-                    fingerprint=int.from_bytes(k.fingerprint, "big"),
-                    child_num=k.child_number,
-                    chain_code=k.chain_code,
+                    depth=k.key.depth,
+                    fingerprint=int.from_bytes(k.key.fingerprint, "big"),
+                    child_num=k.key.child_number,
+                    chain_code=k.key.chain_code,
                     public_key=k.get_public_key().serialize(),
                 ),
                 root_fingerprint=int.from_bytes(k.fingerprint, "big"),
                 derivation_path=k.derivation,
             )
-            for k in map(Key.from_string, keys)
+            for k in map(Key.from_string, key)
         ],
     )
 

@@ -19,7 +19,7 @@
 from pathlib import Path
 
 import click
-from embit.descriptor import Descriptor
+from embit.descriptor import Descriptor, Key
 from embit.networks import NETWORKS
 from embit.psbt import PSBT
 
@@ -30,29 +30,35 @@ NAME = "signer"
 
 
 @click.command()
-@click.option(
-    "-d",
-    "--descriptor",
-    type=str,
-    help="BIP-388 template policy (xpubs separated by newlines)",
-)
+@click.option("-d", "--descriptor", type=str)
+@click.option("-k", "--key", type=str, multiple=True, required=True)
 @click.option("-i", "--input", "src", type=click.Path(exists=True, dir_okay=False))
 @click.option("-o", "--output", "dst", type=click.Path(writable=True, dir_okay=False))
 @click.option("--coin", type=str)
 @click.option("--spend", type=int)
-def sign_psbt(descriptor: str, src: str, dst: str, coin: str, spend: int) -> None:
+def sign_psbt(descriptor: str, key: tuple[str, ...], src: str, dst: str, coin: str, spend: int) -> None:
     network = NETWORKS[coin]
-    descriptor, *xpubs = descriptor.split("\n")
-    nodes = [
-        messages.MiniscriptKey(node=xpub_deserialize(x.split("]")[1])[1]) for x in xpubs
-    ]
-    policy = messages.MiniscriptPolicy(descriptor=descriptor, keys=nodes)
     desc = descriptor
-    for i, xpub in enumerate(xpubs):
-        desc = desc.replace(f"@{i}", xpub)
-
+    for i, k in enumerate(key):
+        desc = desc.replace(f"@{i}", k)
     desc = Descriptor.from_string(desc)
-    print("Policy:", desc)
+    print("Descriptor:", desc)
+
+    keys = [
+        messages.MiniscriptKey(
+            node=messages.HDNodeType(
+                depth=k.key.depth,
+                fingerprint=int.from_bytes(k.key.fingerprint, "big"),
+                child_num=k.key.child_number,
+                chain_code=k.key.chain_code,
+                public_key=k.get_public_key().serialize(),
+            ),
+            root_fingerprint=int.from_bytes(k.fingerprint, "big"),
+            derivation_path=k.derivation,
+        )
+        for k in map(Key.from_string, key)
+    ]
+    policy = messages.MiniscriptPolicy(descriptor=descriptor, keys=keys)
 
     psbt = PSBT.from_base64(Path(src).read_text())
     assert all(desc.owns(i) for i in psbt.inputs)

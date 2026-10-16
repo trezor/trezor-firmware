@@ -29,6 +29,7 @@ impl Translator<String> for Derive {
     fn pk(&mut self, pk: &String) -> Result<Self::TargetPk, Self::Error> {
         // TODO: check global xpubs structure
         // TODO: avoid cloning
+        // TODO: safety semantics of `self.0`
         let buf: Obj = self.0.call_with_n_args(&[pk.as_str().try_into()?])?;
         // SAFETY: reference is discarded at the end of the block
         let buf_slice: &[u8] = unsafe { get_buffer(buf)? };
