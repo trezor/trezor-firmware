@@ -20,7 +20,7 @@ def cli() -> None:
     """Trezor app tooling."""
 
 
-# Rings sharing a single RootPacket, as (ring_mask, rings, base name).
+# Rings sharing a single RootPacket, as (ring_mask, rings).
 ROOT_PACKET_GROUPS: tuple[tuple[int, tuple[int, ...]], ...] = (
     (1, (0,)),  # Rootpacket 0
     (6, (1, 2)),  # Rootpacket 1,2
@@ -35,7 +35,9 @@ DEV_SIGNING_SEEDS = (
 
 ROOT_PACKET_DIR = "root-packets"
 INDEX_FILENAME = "index.v1.json"
-APP_EXT = "tapp"
+EXT_APP = "tapp"
+EXT_PROOF = "proof"
+EXT_ROOTPACKET = "tmr"
 APP_LANGUAGES = ("en", "cs", "de", "es", "fr", "id", "pt")
 
 
@@ -68,11 +70,6 @@ def dict_as_json_str(dict: dict[str, t.Any]) -> str:
 def parse_bytes_to_appimage(app_bytes: bytes) -> AppImage:
     app_image = AppImage.parse(app_bytes, strict=True)
     return app_image
-
-
-def parse_appimage_to_bytes(app_image: AppImage) -> bytes:
-    app_bytes = app_image.build()
-    return app_bytes
 
 
 def parse_appimage_to_json(app_image: AppImage) -> str:
@@ -147,31 +144,33 @@ def create_app_indices(out_dir: Path) -> None:
 
     for dir in app_dirs:
         releases: defaultdict[tuple, list[dict]] = defaultdict(list)
-        for file in dir.glob(f"*/*{APP_EXT}"):
-            if file.is_file():
-                with open(file, "rb") as f:
-                    app_json = json.load(f)
-                    assert app_json["id"] == str(dir.relative_to(out_dir))
-                    app_description = {
-                        "abi": {
-                            "platform": app_json["target_arch"],
-                            "version": app_json["abi_version"],
-                        },
-                        "model": app_json["model"],
-                        "language": app_json["language"],
-                        "ring": app_json["app_ring"],
-                        "file": str(file.relative_to(dir)),
-                        "sha256": hashlib.file_digest(f, "sha256").hexdigest(),
-                        "fingerprint": sha256(
-                            base64_decode(app_json["header"])
-                        ).hexdigest(),
-                        "rootPacket": get_serialized_rootpacket(
-                            out_dir, dir, ring=app_json["app_ring"]
-                        ),
-                    }
-                    releases[
-                        (tuple(app_json["version"]), tuple(app_json["sdk_version"]))
-                    ].append(app_description)
+        for file in dir.glob(f"*/*{EXT_APP}"):
+            if not file.is_file():
+                continue
+
+            with open(file, "rb") as f:
+                app_json = json.load(f)
+                assert app_json["id"] == str(dir.relative_to(out_dir))
+                app_description = {
+                    "abi": {
+                        "platform": app_json["target_arch"],
+                        "version": app_json["abi_version"],
+                    },
+                    "model": app_json["model"],
+                    "language": app_json["language"],
+                    "ring": app_json["app_ring"],
+                    "file": str(file.relative_to(dir)),
+                    "sha256": hashlib.file_digest(f, "sha256").hexdigest(),
+                    "fingerprint": sha256(
+                        base64_decode(app_json["header"])
+                    ).hexdigest(),
+                    "rootPacket": get_serialized_rootpacket(
+                        out_dir, dir, ring=app_json["app_ring"]
+                    ),
+                }
+                releases[
+                    (tuple(app_json["version"]), tuple(app_json["sdk_version"]))
+                ].append(app_description)
 
         out_releases = [
             {"version": version, "sdkVersion": sdk_version, "builds": builds}
@@ -204,6 +203,67 @@ def get_serialized_rootpacket(out_dir: Path, index_dir: Path, ring: int) -> str:
     raise Exception("Failed to find a serialized rootpacket.")
 
 
+def serialize_app_as_json(app: Path, out_dir: Path) -> None:
+    app_bytes = app.read_bytes()
+    app_image = parse_bytes_to_appimage(app_bytes)
+    app_json_str = parse_appimage_to_json(app_image)
+    header = app_image.header
+
+    app_dir = out_dir / header.id / format_version_tuple_to_str(header.version)
+    app_dir.mkdir(parents=True, exist_ok=True)
+    out_file = app_dir / get_app_name(app_image)
+
+    out_file.write_text(app_json_str)
+
+
+def list_serialized_apps(dir: Path) -> list[AppInfo]:
+    app_infos: list[AppInfo] = []
+
+    for file in dir.glob(f"*/*/*{EXT_APP}"):
+        if file.is_file():
+            app_json = json.loads(file.read_text())
+            app_header = AppHeader.parse(base64_decode(app_json["header"]))
+
+            digest = app_header.fingerprint()
+            app_ring = app_header.app_ring
+            app_infos.append(AppInfo(file, digest, app_ring))
+    return app_infos
+
+
+def create_roopacket(
+    app_infos: list[AppInfo],
+    ring_mask: int,
+    rings: set[int],
+    timestamp: int,
+    rp_dir: Path,
+) -> None:
+    trees = {ring: _get_tree(_filter_apps(app_infos, ring), ring) for ring in rings}
+    if not any(trees.values()):
+        return
+
+    for ring, tree in trees.items():
+        if tree is not None:
+            _create_proofs(_filter_apps(app_infos, ring), tree, store=True)
+
+    rp = _make_root_packet(
+        ring_mask=ring_mask,
+        root_rings=[
+            tree.get_root_hash() if tree is not None else b"\x00" * 32
+            for tree in trees.values()
+        ],
+        timestamp=timestamp,
+        chain_timestamp=0 if 0 in rings else timestamp,
+    )
+    _apply_dev_signatures(rp)
+
+    rings_str = "".join(str(r) for r in rings)
+    rootpacket_json_str = parse_rootpacket_to_json(rp)
+
+    out_file = rp_dir / f"rootpacket_ring{rings_str}.{EXT_ROOTPACKET}"
+    out_file.write_text(rootpacket_json_str)
+    print(f"Dev-signed RootPacket (timestamp {timestamp}) written to {out_file}")
+
+
 @cli.command(name="post-build")
 @click.argument(
     "apps",
@@ -220,30 +280,11 @@ def get_serialized_rootpacket(out_dir: Path, index_dir: Path, ring: int) -> str:
 def post_build(apps: tuple[Path, ...], out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    app_infos: list[AppInfo] = []
-
-    # Serialize bin apps to JSONs with the structure in the outdir
     for app in apps:
-        app_bytes = app.read_bytes()
-        app_image = parse_bytes_to_appimage(app_bytes)
-        app_json_str = parse_appimage_to_json(app_image)
-        header = app_image.header
-
-        app_dir = out_dir / header.id / format_version_tuple_to_str(header.version)
-        app_dir.mkdir(parents=True, exist_ok=True)
-        out_file = app_dir / get_app_name(app_image)
-
-        out_file.write_text(app_json_str)
+        serialize_app_as_json(app, out_dir)
 
     # Take all serialized apps (even previously created ones)
-    for file in out_dir.glob(f"*/*/*{APP_EXT}"):
-        if file.is_file():
-            app_json = json.loads(file.read_text())
-            app_header = AppHeader.parse(base64_decode(app_json["header"]))
-
-            digest = app_header.fingerprint()
-            app_ring = app_header.app_ring
-            app_infos.append(AppInfo(file, digest, app_ring))
+    app_infos = list_serialized_apps(out_dir)
 
     timestamp = int(datetime.now(timezone.utc).timestamp())
 
@@ -252,31 +293,13 @@ def post_build(apps: tuple[Path, ...], out_dir: Path) -> None:
 
     # Create trees/rootpackets/proofs
     for ring_mask, rings in ROOT_PACKET_GROUPS:
-        trees = {ring: _get_tree(_filter_apps(app_infos, ring), ring) for ring in rings}
-        if not any(trees.values()):
-            continue
-
-        for ring, tree in trees.items():
-            if tree is not None:
-                _create_proofs(_filter_apps(app_infos, ring), tree, store=True)
-
-        rp = _make_root_packet(
+        create_roopacket(
+            app_infos=app_infos,
             ring_mask=ring_mask,
-            root_rings=[
-                tree.get_root_hash() if tree is not None else b"\x00" * 32
-                for tree in trees.values()
-            ],
+            rings=set(rings),
             timestamp=timestamp,
-            chain_timestamp=0 if 0 in rings else timestamp,
+            rp_dir=rp_dir,
         )
-        _apply_dev_signatures(rp)
-
-        rings_str = "".join(str(r) for r in rings)
-        rootpacket_json_str = parse_rootpacket_to_json(rp)
-
-        out_file = rp_dir / f"rootpacket_ring{rings_str}.tmr"
-        out_file.write_text(rootpacket_json_str)
-        print(f"Dev-signed RootPacket (timestamp {timestamp}) written to {out_file}")
 
     # Create JSON indices (index.v1.json)
     create_main_index(out_dir)
@@ -304,7 +327,7 @@ def _create_proofs(apps: list[AppInfo], tree: MerkleTree, store: bool = False) -
             if store:
                 proof_hex = [p.hex() for p in proof]
                 proof_json_str = dict_as_json_str({"proof": proof_hex})
-                out_file = app.path.with_suffix(".proof")
+                out_file = app.path.with_suffix(f".{EXT_PROOF}")
                 out_file.write_text(proof_json_str)
 
         except KeyError:
@@ -357,7 +380,7 @@ def get_app_name(app_image: AppImage) -> str:
     model = header.model
     language = get_language(header.language)
 
-    return f"{app_id}_{app_version}_sdk{sdk_version}_{target_arch}_abi{abi_version}_{model}_{language}.{APP_EXT}"
+    return f"{app_id}_{app_version}_sdk{sdk_version}_{target_arch}_abi{abi_version}_{model}_{language}.{EXT_APP}"
 
 
 def format_version_tuple_to_str(version: tuple[int, ...]) -> str:
