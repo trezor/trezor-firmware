@@ -39,6 +39,15 @@
 #define BACKLIGHT_PWM_PORT_CLK_EN __HAL_RCC_GPIOE_CLK_ENABLE
 #define BACKLIGHT_PWM_PINS (GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6)
 
+// Power-management tunables consumed by the power-manager policy
+// (io/power_manager/managed). The npm2100 has no charger and the model has no
+// RTC, so the charging and low-power-drain tunables are not needed here.
+
+// State of charge [%] at or below which the device enters power-save mode.
+#define BATTERY_LOW_SOC_PERCENT 15
+// Backlight level cap while in power-save mode (0-255).
+#define PM_POWER_SAVE_BACKLIGHT_LIMIT 130
+
 #define BTN_POWER_PIN GPIO_PIN_3
 #define BTN_POWER_PORT GPIOD
 #define BTN_POWER_CLK_ENA __HAL_RCC_GPIOD_CLK_ENABLE

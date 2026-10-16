@@ -46,16 +46,12 @@ static void pm_parse_power_source_state(pm_driver_t* drv);
 
 #ifdef PM_ENABLE_TEMP_CONTROL
 
-// Temperature controller LUT
+// Temperature controller LUT: the battery pack's charging-current derating
+// bands, supplied by the board header.
 static const struct {
   float max_temp;
   float current_limit_factor;
-} temp_bands[] = {
-    {PM_TEMP_CONTROL_BAND_1_MAX_TEMP, 1.0f},
-    {PM_TEMP_CONTROL_BAND_2_MAX_TEMP, 0.7f},
-    {PM_TEMP_CONTROL_BAND_3_MAX_TEMP, 0.5f},
-    {PM_TEMP_CONTROL_BAND_4_MAX_TEMP, 0.3f},
-};
+} temp_bands[] = BATTERY_CHARGE_TEMP_BANDS;
 
 #endif
 
@@ -126,7 +122,7 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
 
       bat_fg_get_state(&fg_state);
       bat_fg_compensate_soc(&fg_state.soc, drv->time_in_suspend_s,
-                            PM_SELF_DISG_RATE_SUSPEND_MA, 25.0f);
+                            PM_SUSPEND_CURRENT_MA, 25.0f);
 
       // TODO: Currently in suspend mode we use single self-discharge rate
       // but in practice the discharge rate may change in case some components
@@ -163,10 +159,9 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
     drv->soc_ceiled = (uint8_t)(fg_state.soc_latched * 100 + 0.999f);
 
     // Check battery voltage for low threshold
-    if (drv->soc_ceiled <= PM_BATTERY_LOW_THRESHOLD_SOC && !drv->battery_low) {
+    if (drv->soc_ceiled <= BATTERY_LOW_SOC_PERCENT && !drv->battery_low) {
       drv->battery_low = true;
-    } else if (drv->soc_ceiled > PM_BATTERY_LOW_THRESHOLD_SOC &&
-               drv->battery_low) {
+    } else if (drv->soc_ceiled > BATTERY_LOW_SOC_PERCENT && drv->battery_low) {
       drv->battery_low = false;
     }
 
@@ -205,10 +200,10 @@ void pm_charging_controller(pm_driver_t* drv) {
       return;
     }
   } else if (drv->usb_connected) {
-    drv->i_chg_target_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+    drv->i_chg_target_ma = BATTERY_CHARGING_CURRENT_MAX_MA;
 
   } else if (drv->wireless_connected) {
-    drv->i_chg_target_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+    drv->i_chg_target_ma = BATTERY_CHARGING_CURRENT_MAX_MA;
 
   } else {
     // Charging enabled but no external power source, clear charging target
@@ -291,7 +286,7 @@ static void pm_temperature_controller(pm_driver_t* drv) {
     i_chg_temp_limit_ma = 0;  // Default to safety limit
     for (size_t i = 0; i < sizeof(temp_bands) / sizeof(temp_bands[0]); ++i) {
       if (drv->pmic_data.ntc_temp < temp_bands[i].max_temp) {
-        i_chg_temp_limit_ma = (uint16_t)(PM_BATTERY_CHARGING_CURRENT_MAX *
+        i_chg_temp_limit_ma = (uint16_t)(BATTERY_CHARGING_CURRENT_MAX_MA *
                                          temp_bands[i].current_limit_factor);
         break;
       }

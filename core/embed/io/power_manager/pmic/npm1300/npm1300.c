@@ -37,6 +37,14 @@
 
 #ifdef KERNEL_MODE
 
+// The board's battery pack maximum must be something this charger can be
+// programmed with; both numbers are known here, so check it once at compile
+// time instead of discovering it as a refused limit at runtime.
+_Static_assert(BATTERY_CHARGING_CURRENT_MAX_MA >= NPM1300_CHARGING_LIMIT_MIN &&
+                   BATTERY_CHARGING_CURRENT_MAX_MA <=
+                       NPM1300_CHARGING_LIMIT_MAX,
+               "BATTERY_CHARGING_CURRENT_MAX_MA outside the npm1300 range");
+
 // Default timeout for all I2C operations
 #define NPM1300_I2C_TIMEOUT 10
 
@@ -372,8 +380,9 @@ bool pmic_init(void) {
 
   memset(drv, 0, sizeof(npm1300_driver_t));
 
-  drv->i_charge = PMIC_CHARGING_LIMIT_DEFAULT;  // mA
-  drv->i_limit = 500;                           // mA  (268mA-1340mA)
+  // Start at the pack's maximum; the power-manager policy lowers it as needed.
+  drv->i_charge = BATTERY_CHARGING_CURRENT_MAX_MA;  // mA
+  drv->i_limit = 500;                               // mA  (268mA-1340mA)
 
   drv->i_charge_set = drv->i_charge;
   drv->i_charge_requested = drv->i_charge;
@@ -506,6 +515,8 @@ bool pmic_enter_shipmode(void) {
   return true;
 }
 
+int pmic_charging_limit_min(void) { return NPM1300_CHARGING_LIMIT_MIN; }
+
 int pmic_get_charging_limit(void) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
@@ -523,8 +534,8 @@ bool pmic_set_charging_limit(int i_charge) {
     return false;
   }
 
-  if (i_charge < PMIC_CHARGING_LIMIT_MIN ||
-      i_charge > PMIC_CHARGING_LIMIT_MAX) {
+  if (i_charge < NPM1300_CHARGING_LIMIT_MIN ||
+      i_charge > NPM1300_CHARGING_LIMIT_MAX) {
     // The value is out of range
     return false;
   }

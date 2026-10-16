@@ -64,6 +64,20 @@ The module exposes its configuration to C through these defines:
 
 Two build shapes exist. The boardloader is *PMIC-only*: it maps `power_manager` to just the PMIC driver, since it must hold the rail up before any policy exists. The bootloader, kernel, firmware, and prodtest take the full policy.
 
+### Board tunables
+
+Numbers that describe the board or its battery pack do not live in the policy. The board header defines them, and `managed/power_manager_internal.h` requires them with an `#error` naming the missing one, so a new board cannot silently inherit another product's battery figures:
+
+| Define | Meaning | Required when |
+| ------ | ------- | ------------- |
+| `BATTERY_LOW_SOC_PERCENT` | SoC at or below which power-save mode starts | always |
+| `PM_POWER_SAVE_BACKLIGHT_LIMIT` | backlight cap in power-save mode | always |
+| `PM_SUSPEND_CURRENT_MA`, `PM_HIBERNATION_CURRENT_MA` | board drain in each low-power mode, for fuel-gauge compensation | `USE_RTC` |
+| `BATTERY_CHARGING_CURRENT_MAX_MA` | the pack's maximum charging current | `USE_CHARGER` |
+| `BATTERY_CHARGE_TEMP_BANDS` | `{max_temp_C, current factor}` derating bands, ascending | `USE_CHARGER` |
+
+The line between the two kinds: a constant that would change if the same policy ran on a different board or pack is a tunable; a constant that describes the state machine itself (sampling period, shutdown timeout, stabilization timeout, auto-hibernate timeout, the thermal debounce) stays in the policy. The charger's accepted current range is a property of the chip and lives in its driver (`NPM1300_CHARGING_LIMIT_MIN/MAX`); the pack's maximum is a board tunable, and the driver checks at compile time that the one fits inside the other. The policy learns the chip's minimum through `pmic_charging_limit_min()` so it can reject a requested limit the charger could never honour.
+
 ## 4. The PMIC report is chip-neutral
 
 `pmic_report_t` is the only data that crosses from a PMIC driver into the policy, so it carries no raw register values. Each driver decodes its own registers into fields that mean the same thing on every chip: measurements (`vbat`, `vsys`, `ibat`, `ntc_temp`, `die_temp`), *what this chip can measure* (`ibat_valid`, `ntc_present`), and decoded status (`vbus_present`, `ntc_disconnected`, `battery_disconnected`, `charge_complete`, `charger_fault`, `cc_phase`, `cv_phase`).

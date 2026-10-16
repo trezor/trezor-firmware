@@ -131,7 +131,7 @@ pm_status_t pm_init(bool inherit_state) {
         if (rtc_timestamp >= recovery.last_capture_timestamp) {
           bat_fg_compensate_soc(&recovery.soc,
                                 rtc_timestamp - recovery.last_capture_timestamp,
-                                PM_SELF_DISG_RATE_HIBERNATION_MA, 25.0f);
+                                PM_HIBERNATION_CURRENT_MA, 25.0f);
         }
       }
     }
@@ -170,11 +170,11 @@ pm_status_t pm_init(bool inherit_state) {
   // Set default SOC target and max charging current limit
   drv->soc_target = 100;
 #ifdef USE_CHARGER
-  drv->i_chg_max_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+  drv->i_chg_max_limit_ma = BATTERY_CHARGING_CURRENT_MAX_MA;
 #endif
 
 #ifdef PM_ENABLE_TEMP_CONTROL
-  drv->i_chg_temp_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+  drv->i_chg_temp_limit_ma = BATTERY_CHARGING_CURRENT_MAX_MA;
 #endif
 
   irq_unlock(irq_key);
@@ -511,11 +511,11 @@ pm_status_t pm_charging_set_max_current(uint16_t current_ma) {
   (void)current_ma;
   return PM_REQUEST_REJECTED;
 #else
-  if (current_ma > PM_BATTERY_CHARGING_CURRENT_MAX) {
+  if (current_ma > BATTERY_CHARGING_CURRENT_MAX_MA) {
     return PM_REQUEST_REJECTED;
   }
 
-  if (current_ma < PM_BATTERY_CHARGING_CURRENT_MIN) {
+  if (current_ma < pmic_charging_limit_min()) {
     return PM_REQUEST_REJECTED;
   }
 

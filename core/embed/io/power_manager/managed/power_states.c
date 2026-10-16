@@ -283,7 +283,7 @@ static void pm_enter_shutting_down(pm_driver_t* drv) {
 
 static void pm_enter_power_save(pm_driver_t* drv) {
   // Limit backlight
-  backlight_set_max_level(130);
+  backlight_set_max_level(PM_POWER_SAVE_BACKLIGHT_LIMIT);
 }
 
 static void pm_enter_active(pm_driver_t* drv) {

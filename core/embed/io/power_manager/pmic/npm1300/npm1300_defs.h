@@ -332,4 +332,8 @@ bool npm1300_set_buck_mode(npm1300_buck_mode_t buck_mode);
 #define NPM1300_GPIOMODE_GPOLOGIC1 0x08
 #define NPM1300_GPIOMODE_GPOLOGIC0 0x09
 
+// Range of charging current limits the charger accepts [mA]
+#define NPM1300_CHARGING_LIMIT_MIN 32
+#define NPM1300_CHARGING_LIMIT_MAX 800
+
 #endif  // TREZORHAL_NPM1300_DEFS_H
