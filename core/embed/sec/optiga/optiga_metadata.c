@@ -144,7 +144,7 @@ optiga_result optiga_serialize_metadata(const optiga_metadata *metadata,
   }
 
   // Set length byte.
-  if (pos - 2 > 256) {
+  if (pos - 2 > 255) {
     return OPTIGA_ERR_SIZE;
   }
   serialized[1] = pos - 2;
