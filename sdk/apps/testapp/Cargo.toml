@@ -1,7 +1,8 @@
 cargo-features = ["panic-immediate-abort"]
 
-# A test-only app: exposes every SDK crypto function to the host, so device
-# tests can exercise it. Dev-signed only; it must never ship.
+# A test-only app: exposes every SDK crypto function and every modui layout to
+# the host, so device tests can exercise the crypto API and the UI can be
+# tested by hand. Dev-signed only; it must never ship.
 
 [package]
 name = "testapp"

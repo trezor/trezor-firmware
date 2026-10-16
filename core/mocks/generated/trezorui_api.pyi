@@ -879,20 +879,31 @@ def tutorial() -> LayoutContext[UiResult]:
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def process_ipc_message(
+def deserialize_ui_message(
     *,
     data: bytes,
-) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
-    """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
+) -> tuple[Any, ...]:
+    """Read an app's UI request into plain data for the extapp UI driver."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def send_ui_result(
+def show_notice(
     *,
-    result: UiResult | int | str | None,
-    ipc_cb: Callable[[bytes], None] | None = None,
-) -> None:
-    """Serialize a UI result into bytes and send it via the ipc_cb callback.."""
+    severity: int,
+    title: str,
+    content: str,
+    cancel: bool = True,
+    external_menu: bool = False,
+) -> LayoutContext[None]:
+    """Show a notice of some severity, as an int in the wire's order."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def encode_ui_result(
+    *,
+    result: UiResult,
+) -> bytes:
+    """Serialize a UI result into the bytes the extapp driver sends back to the app."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
