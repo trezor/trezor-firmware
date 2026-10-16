@@ -200,7 +200,7 @@ impl Component for HoldToConfirmAnim {
                 self.render_clipped_border(clip, top_gap, u8::MAX, target);
 
                 #[cfg(feature = "haptic")]
-                haptic::play_custom(self.get_haptic(elapsed), 100);
+                let _ = haptic::play_custom(self.get_haptic(elapsed), 100);
             }
             AnimState::Finalizing { stopwatch } => {
                 let elapsed = stopwatch.elapsed();

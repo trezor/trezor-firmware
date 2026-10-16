@@ -788,7 +788,7 @@ impl Component for Button {
                         if touch_area.contains(pos) {
                             #[cfg(feature = "haptic")]
                             if matches!(self.haptic, HapticMode::OnPress) {
-                                play(HapticEffect::ButtonPress);
+                                let _ = play(HapticEffect::ButtonPress);
                             }
                             self.set(ctx, State::Pressed);
                             if let Some((duration, _danger)) = self.long_press() {
@@ -820,7 +820,7 @@ impl Component for Button {
                         // Touch finished in our area, we got clicked.
                         #[cfg(feature = "haptic")]
                         if matches!(self.haptic, HapticMode::OnClick) {
-                            play(HapticEffect::ButtonPress);
+                            let _ = play(HapticEffect::ButtonPress);
                         }
                         self.set(ctx, State::Initial);
                         return Some(ButtonMsg::Clicked);
@@ -862,7 +862,7 @@ impl Component for Button {
                 if matches!(self.state, State::Pressed) {
                     #[cfg(feature = "haptic")]
                     if !matches!(self.haptic, HapticMode::Off) {
-                        play(HapticEffect::ButtonPress);
+                        let _ = play(HapticEffect::ButtonPress);
                     }
                     self.set(ctx, State::Initial);
                     return Some(ButtonMsg::LongPressed);

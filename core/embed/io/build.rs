@@ -43,6 +43,8 @@ fn main() -> Result<()> {
     xbuild::build(|lib| {
         lib.import_lib("sec")?;
 
+        lib.add_rust_bindings(|builder| Ok(builder.blocklist_type("ts_t")))?;
+
         build_mods!(
             lib,
             [

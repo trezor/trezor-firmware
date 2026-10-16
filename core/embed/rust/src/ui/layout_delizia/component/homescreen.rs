@@ -887,7 +887,7 @@ impl Component for Lockscreen {
             // Always dismiss on TouchEnd in the middle area
             Event::Touch(TouchEvent::TouchEnd(pos)) if middle(pos) => {
                 #[cfg(feature = "haptic")]
-                play(HapticEffect::ButtonPress);
+                let _ = play(HapticEffect::ButtonPress);
                 return Some(HomescreenMsg::Dismissed);
             }
             // Do nothing on TouchStart in the middle area

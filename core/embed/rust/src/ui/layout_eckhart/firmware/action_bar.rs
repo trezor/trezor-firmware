@@ -305,7 +305,7 @@ impl ActionBar {
                 } else {
                     // Animations disabled, return confirmed
                     #[cfg(feature = "haptic")]
-                    haptic::play(HapticEffect::HoldToConfirm);
+                    let _ = haptic::play(HapticEffect::HoldToConfirm);
                     return Some(ActionBarMsg::Confirmed);
                 }
             }
@@ -319,7 +319,7 @@ impl ActionBar {
             }
             (ButtonMsg::LongPressed, true) => {
                 #[cfg(feature = "haptic")]
-                haptic::play(HapticEffect::HoldToConfirm);
+                let _ = haptic::play(HapticEffect::HoldToConfirm);
                 return Some(ActionBarMsg::Confirmed);
             }
             (ButtonMsg::Clicked, false) => {

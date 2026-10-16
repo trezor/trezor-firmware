@@ -180,7 +180,7 @@ impl Component for Loader {
 
                 if self.is_completely_grown(now) {
                     #[cfg(feature = "haptic")]
-                    play(HapticEffect::HoldToConfirm);
+                    let _ = play(HapticEffect::HoldToConfirm);
                     return Some(LoaderMsg::GrownCompletely);
                 } else if self.is_completely_shrunk(now) {
                     return Some(LoaderMsg::ShrunkCompletely);

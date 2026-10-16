@@ -1,3 +1,5 @@
+use rtl::error::Error;
+
 use super::ffi;
 
 #[derive(PartialEq, Debug, Eq, Clone, Copy)]
@@ -7,14 +9,10 @@ pub enum HapticEffect {
     BootloaderEntry = ffi::haptic_effect_t_HAPTIC_BOOTLOADER_ENTRY as _,
 }
 
-pub fn play(effect: HapticEffect) {
-    unsafe {
-        let _ = ffi::haptic_play(effect as _);
-    }
+pub fn play(effect: HapticEffect) -> Result<(), Error> {
+    unsafe { ffi::haptic_play(effect as _).ok() }
 }
 
-pub fn play_custom(amplitude_pct: i8, duration_ms: u16) {
-    unsafe {
-        let _ = ffi::haptic_play_custom(amplitude_pct, duration_ms);
-    }
+pub fn play_custom(amplitude_pct: i8, duration_ms: u16) -> Result<(), Error> {
+    unsafe { ffi::haptic_play_custom(amplitude_pct, duration_ms).ok() }
 }

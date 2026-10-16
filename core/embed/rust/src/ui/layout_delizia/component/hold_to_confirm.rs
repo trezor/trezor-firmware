@@ -221,7 +221,7 @@ impl Component for HoldToConfirm {
             Some(ButtonMsg::Clicked) => {
                 if animation_disabled() {
                     #[cfg(feature = "haptic")]
-                    haptic::play(HapticEffect::HoldToConfirm);
+                    let _ = haptic::play(HapticEffect::HoldToConfirm);
                     return Some(());
                 }
                 if !self.anim.is_locked() {
@@ -247,7 +247,7 @@ impl Component for HoldToConfirm {
                 if self.anim.is_locked() && !self.finalizing {
                     self.finalizing = true;
                     #[cfg(feature = "haptic")]
-                    haptic::play(HapticEffect::HoldToConfirm);
+                    let _ = haptic::play(HapticEffect::HoldToConfirm);
                 }
             } else if self.anim.is_locked() {
                 return Some(());
@@ -337,7 +337,7 @@ impl Component for HoldToConfirm {
         {
             let hap = self.anim.get_haptic(elapsed);
             if hap > 0 && !self.anim.is_locked() {
-                haptic::play_custom(hap as i8, 100);
+                let _ = haptic::play_custom(hap as i8, 100);
             }
         }
     }

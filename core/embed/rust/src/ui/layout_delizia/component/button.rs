@@ -345,7 +345,7 @@ impl Component for Button {
                 if matches!(self.state, State::Pressed) {
                     #[cfg(feature = "haptic")]
                     if self.haptic {
-                        play(HapticEffect::ButtonPress);
+                        let _ = play(HapticEffect::ButtonPress);
                     }
                     self.set(ctx, State::Initial);
                     return Some(ButtonMsg::LongPressed);
