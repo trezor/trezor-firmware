@@ -3,12 +3,11 @@ use heapless::Vec;
 use ufmt::uwrite;
 
 use super::super::fonts;
-use super::scrollbar::SCROLLBAR_SPACE;
-use super::{theme, ScrollBar};
+use super::theme;
 use crate::strutil::{ShortString, TString};
 use crate::translations::TR;
 use crate::ui::component::text::util::text_multiline;
-use crate::ui::component::{Child, Component, Event, EventCtx, Never, Paginate};
+use crate::ui::component::{Component, Event, EventCtx, Never, Paginate};
 use crate::ui::display::Font;
 use crate::ui::geometry::{Alignment, Offset, Rect};
 use crate::ui::shape::{self, Renderer};
@@ -26,7 +25,6 @@ const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 /// Showing the given share words.
 pub struct ShareWords<'a> {
     area: Rect,
-    scrollbar: Child<ScrollBar>,
     share_words: Vec<TString<'a>, MAX_WORDS>,
     pager: Pager,
 }
@@ -40,7 +38,6 @@ impl<'a> ShareWords<'a> {
         };
         Self {
             area: Rect::zero(),
-            scrollbar: Child::new(ScrollBar::new(total_page_count)),
             share_words,
             pager: Pager::new(total_page_count),
         }
@@ -104,26 +101,15 @@ impl<'a> Component for ShareWords<'a> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (top_area, _) = bounds.split_top(theme::FONT_HEADER.line_height());
-
-        let (_, scrollbar_area) =
-            top_area.split_right(self.scrollbar.inner().overall_width() + SCROLLBAR_SPACE);
-
-        self.scrollbar.place(scrollbar_area);
-
         self.area = bounds;
         self.area
     }
 
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.scrollbar.event(ctx, event);
+    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        // Showing scrollbar in all cases
-        // Individual pages are responsible for not colliding with it
-        self.scrollbar.render(target);
         if self.pager().is_last() {
             self.render_final_page(target);
         } else {
@@ -139,7 +125,6 @@ impl<'a> Paginate for ShareWords<'a> {
 
     fn change_page(&mut self, active_page: u16) {
         self.pager.set_current(active_page);
-        self.scrollbar.change_page(self.pager.current());
     }
 }
 

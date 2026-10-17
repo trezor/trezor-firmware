@@ -1,5 +1,5 @@
-use super::super::component::{ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos};
-use super::super::theme::{BUTTON_HEIGHT, TITLE_AREA_HEIGHT};
+use super::super::theme::bootloader::{BUTTON_HEIGHT, TITLE_AREA_HEIGHT};
+use super::buttons::{Button, ButtonPos, Buttons};
 use crate::strutil::TString;
 use crate::ui::component::{Component, Event, EventCtx, Pad};
 use crate::ui::display::{Color, Font};
@@ -18,7 +18,7 @@ pub struct Connect {
     bg: Pad,
     message: TString<'static>,
     font: Font,
-    buttons: ButtonController,
+    buttons: Buttons,
 }
 
 impl Connect {
@@ -31,7 +31,7 @@ impl Connect {
             bg: Pad::with_background(bg),
             message: message.into(),
             font,
-            buttons: ButtonController::new(ButtonLayout::none_none_text("Cancel".into())),
+            buttons: Buttons::new(Some(Button::cancel()), None, None),
         };
 
         instance.bg.clear();
@@ -55,9 +55,7 @@ impl Component for Connect {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(ButtonControllerMsg::Triggered(ButtonPos::Right, false)) =
-            self.buttons.event(ctx, event)
-        {
+        if let Some(ButtonPos::Left) = self.buttons.event(ctx, event) {
             return Some(ConnectMsg::Cancel);
         }
 

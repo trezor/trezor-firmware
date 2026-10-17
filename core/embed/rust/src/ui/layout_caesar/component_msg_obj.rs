@@ -1,9 +1,9 @@
 use core::convert::TryInto;
 
 use super::component::{
-    AddressDetails, ButtonPage, CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress,
-    ConfirmHomescreen, Flow, Frame, Homescreen, Lockscreen, NumberInput, NumberInputAction, Page,
-    PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShowMore, WordlistEntry,
+    AddressDetails, ButtonPage, CancelConfirmMsg, CoinJoinProgress, ConfirmHomescreen, Flow, Frame,
+    Homescreen, Lockscreen, NumberInput, NumberInputAction, Page, PassphraseEntry, PinEntry,
+    Progress, ScrollableFrame, WordlistEntry,
 };
 use crate::micropython::{Error, Obj};
 use crate::ui::component::base::Component;
@@ -24,19 +24,6 @@ impl From<CancelConfirmMsg> for Obj {
     }
 }
 
-impl<T> ComponentMsgObj for ShowMore<T>
-where
-    T: Component<Msg = Never>,
-{
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            CancelInfoConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
-            CancelInfoConfirmMsg::Info => Ok(INFO.as_obj()),
-            CancelInfoConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
-        }
-    }
-}
-
 impl<'a, T> ComponentMsgObj for Paragraphs<T>
 where
     T: ParagraphSource<'a>,
@@ -53,6 +40,7 @@ where
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             PageMsg::Confirmed => Ok(CONFIRMED.as_obj()),
+            PageMsg::Cancelled if self.cancelled_is_back() => Ok(BACK.as_obj()),
             PageMsg::Cancelled => Ok(CANCELLED.as_obj()),
             PageMsg::Info => Ok(INFO.as_obj()),
             _ => Err(Error::TypeError),
@@ -66,15 +54,14 @@ where
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            CancelInfoConfirmMsg::Confirmed => {
+            CancelConfirmMsg::Confirmed => {
                 if let Some(index) = self.confirmed_index() {
                     index.try_into()
                 } else {
                     Ok(CONFIRMED.as_obj())
                 }
             }
-            CancelInfoConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
-            CancelInfoConfirmMsg::Info => Ok(INFO.as_obj()),
+            CancelConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -194,15 +181,6 @@ impl ComponentMsgObj for ConfirmHomescreen {
         match msg {
             CancelConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             CancelConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
-        }
-    }
-}
-
-impl ComponentMsgObj for super::component::bl_confirm::Confirm<'_> {
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            super::component::bl_confirm::ConfirmMsg::Cancel => Ok(CANCELLED.as_obj()),
-            super::component::bl_confirm::ConfirmMsg::Confirm => Ok(CONFIRMED.as_obj()),
         }
     }
 }

@@ -2,9 +2,10 @@ use heapless::Vec;
 
 use super::super::{
     ButtonDetails, ButtonLayout, ChoiceControls, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
+    ScrollBar,
 };
 use crate::strutil::TString;
-use crate::ui::component::{Component, Event, EventCtx};
+use crate::ui::component::{Component, Event, EventCtx, Paginate};
 use crate::ui::geometry::Rect;
 use crate::ui::shape::Renderer;
 
@@ -23,6 +24,8 @@ struct ChoiceFactorySimple {
     choices: Vec<TString<'static>, MAX_LENGTH>,
     controls: ChoiceControls,
     select_text: TString<'static>,
+    /// Using the context menu buttons - arrow glyph to enter an item.
+    menu_buttons: bool,
 }
 
 impl ChoiceFactorySimple {
@@ -35,6 +38,7 @@ impl ChoiceFactorySimple {
             choices,
             controls,
             select_text,
+            menu_buttons: false,
         }
     }
 
@@ -53,8 +57,13 @@ impl ChoiceFactory for ChoiceFactorySimple {
 
     fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
         let text = &self.choices[choice_index];
-        let mut choice_item =
-            text.map(|t| ChoiceItem::new(t, ButtonLayout::arrow_armed_arrow(self.select_text)));
+        let btn_layout = if self.menu_buttons {
+            // The first/last item buttons are adjusted below.
+            ButtonLayout::menu_item(false, false)
+        } else {
+            ButtonLayout::arrow_armed_arrow(self.select_text)
+        };
+        let mut choice_item = text.map(|t| ChoiceItem::new(t, btn_layout));
 
         // Disabling prev/next buttons for the first/last choice when not in carousel.
         // (could be done to the same item if there is only one)
@@ -82,6 +91,10 @@ pub struct SimpleChoice {
     page_count: u16,
     return_index: bool,
     ignore_cancelled: bool,
+    /// Which items are dangerous (e.g. cancelling the whole flow).
+    danger_items: Vec<bool, MAX_LENGTH>,
+    /// Page counter at the top right, shown in context menus.
+    scrollbar: Option<ScrollBar>,
 }
 
 impl SimpleChoice {
@@ -98,6 +111,8 @@ impl SimpleChoice {
             page_count,
             return_index: false,
             ignore_cancelled: false,
+            danger_items: Vec::new(),
+            scrollbar: None,
         }
     }
 
@@ -131,6 +146,25 @@ impl SimpleChoice {
         self
     }
 
+    /// Using the context menu buttons - arrow glyph to enter an item - and
+    /// the page counter. `danger_items` marks the items that are dangerous.
+    pub fn with_menu_buttons(mut self, danger_items: Vec<bool, MAX_LENGTH>) -> Self {
+        self.choice_page = self.choice_page.with_choice_factory(|choices| {
+            choices.menu_buttons = true;
+        });
+        self.danger_items = danger_items;
+        self.scrollbar = Some(ScrollBar::new(self.page_count));
+        self
+    }
+
+    /// Keeping the page counter in sync with the current item.
+    fn update_scrollbar(&mut self) {
+        let page = self.choice_page.page_index() as u16;
+        if let Some(scrollbar) = &mut self.scrollbar {
+            scrollbar.change_page(page);
+        }
+    }
+
     /// Translating the resulting index into actual string choice.
     pub fn result_by_index(&self, index: usize) -> TString<'static> {
         self.choice_page.choice_factory().get_string(index)
@@ -141,16 +175,22 @@ impl Component for SimpleChoice {
     type Msg = ChoiceMsg<usize>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        self.update_scrollbar();
+        self.scrollbar.place(bounds);
         self.choice_page.place(bounds)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         ctx.set_page_count(self.page_count);
-        self.choice_page.event(ctx, event)
+        let msg = self.choice_page.event(ctx, event);
+        // The choice page repaints the whole screen when the item changes
+        self.update_scrollbar();
+        msg
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.choice_page.render(target);
+        self.scrollbar.render(target);
     }
 }
 
@@ -190,5 +230,10 @@ impl crate::trace::Trace for SimpleChoice {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("SimpleChoice");
         t.child("choice_page", &self.choice_page);
+        t.in_list("danger_items", &|l| {
+            for danger in self.danger_items.iter() {
+                l.bool(*danger);
+            }
+        });
     }
 }

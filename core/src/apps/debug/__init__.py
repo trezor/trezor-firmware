@@ -130,9 +130,7 @@ if __debug__:
             ui.CURRENT_LAYOUT.layout.touch_event, io.TOUCH_END, x, y
         )
 
-    async def _layout_press_button(
-        debug_btn: DebugPhysicalButton, hold_ms: int = 0
-    ) -> None:
+    def _physical_buttons(debug_btn: DebugPhysicalButton) -> list[int]:
         from trezor.enums import DebugPhysicalButton
 
         buttons = []
@@ -144,6 +142,17 @@ if __debug__:
         elif debug_btn == DebugPhysicalButton.MIDDLE_BTN:
             buttons.append(io.BUTTON_LEFT)
             buttons.append(io.BUTTON_RIGHT)
+        return buttons
+
+    def _layout_button_event(debug_btn: DebugPhysicalButton, event: int) -> None:
+        assert isinstance(ui.CURRENT_LAYOUT, ui.Layout)
+        for btn in _physical_buttons(debug_btn):
+            ui.CURRENT_LAYOUT._event(ui.CURRENT_LAYOUT.layout.button_event, event, btn)
+
+    async def _layout_press_button(
+        debug_btn: DebugPhysicalButton, hold_ms: int = 0
+    ) -> None:
+        buttons = _physical_buttons(debug_btn)
 
         assert isinstance(ui.CURRENT_LAYOUT, ui.Layout)
         for btn in buttons:
@@ -245,7 +254,13 @@ if __debug__:
                     await _layout_click(x, y, msg.hold_ms or 0)
             # press specific button
             elif msg.physical_button is not None:
-                await _layout_press_button(msg.physical_button, msg.hold_ms or 0)
+                # `touch_event_type` allows holding a button while pressing another
+                if msg.touch_event_type == DebugTouchEventType.TOUCH_START:
+                    _layout_button_event(msg.physical_button, io.BUTTON_PRESSED)
+                elif msg.touch_event_type == DebugTouchEventType.TOUCH_END:
+                    _layout_button_event(msg.physical_button, io.BUTTON_RELEASED)
+                else:
+                    await _layout_press_button(msg.physical_button, msg.hold_ms or 0)
             elif msg.swipe is not None:
                 await _layout_swipe(msg.swipe)
             elif msg.button is not None:
