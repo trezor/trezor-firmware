@@ -631,20 +631,6 @@ impl ButtonLayout {
         Self::new(None, Some(ButtonDetails::armed_text(text)), None)
     }
 
-    /// Only cancel cross on the left.
-    pub fn cancel_none_none() -> Self {
-        Self::new(Some(ButtonDetails::cancel_icon()), None, None)
-    }
-
-    /// Context menu on the left and text on the right.
-    pub fn menu_none_text(text: TString<'static>) -> Self {
-        Self::new(
-            Some(ButtonDetails::menu_icon()),
-            None,
-            Some(ButtonDetails::text(text)),
-        )
-    }
-
     /// Item of a context menu carousel: arrows to move and an arrow glyph to
     /// enter the item. The first item has a cross closing the menu instead of
     /// the left arrow, the last one has no right arrow.
