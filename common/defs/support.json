@@ -115,7 +115,6 @@
       "misc:XTZ": "not implemented",
       "misc:tADA": "not implemented",
       "misc:tXRP": "not implemented",
-      "eth:tHOL:17000": "Deprecated testnet",
       "misc:TRX": "not implemented"
     }
   },
@@ -235,8 +234,7 @@
       "nem:DIMTOK": "not for T2B1 (#2793)",
       "nem:PAC:CHS": "not for T2B1 (#2793)",
       "nem:PAC:HRT": "not for T2B1 (#2793)",
-      "nem:XEM": "not for T2B1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "nem:XEM": "not for T2B1 (#2793)"
     }
   },
   "T2T1": {
@@ -355,8 +353,7 @@
       "bitcoin:PART": "incompatible fork",
       "bitcoin:TRC": "address_type collides with Bitcoin",
       "bitcoin:tPART": "incompatible fork",
-      "misc:LSK": "Incompatible mainnet hard-fork",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "misc:LSK": "Incompatible mainnet hard-fork"
     }
   },
   "T3B1": {
@@ -475,8 +472,7 @@
       "nem:DIMTOK": "not for T3B1 (#2793)",
       "nem:PAC:CHS": "not for T3B1 (#2793)",
       "nem:PAC:HRT": "not for T3B1 (#2793)",
-      "nem:XEM": "not for T3B1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "nem:XEM": "not for T3B1 (#2793)"
     }
   },
   "T3T1": {
@@ -595,8 +591,7 @@
       "nem:DIMTOK": "not for T3T1 (#2793)",
       "nem:PAC:CHS": "not for T3T1 (#2793)",
       "nem:PAC:HRT": "not for T3T1 (#2793)",
-      "nem:XEM": "not for T3T1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "nem:XEM": "not for T3T1 (#2793)"
     }
   },
   "T3W1": {
@@ -715,8 +710,7 @@
       "nem:DIMTOK": "not for T3W1 (#2793)",
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
-      "nem:XEM": "not for T3W1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "nem:XEM": "not for T3W1 (#2793)"
     }
   },
 
@@ -836,8 +830,7 @@
       "nem:DIMTOK": "not for T3W1 (#2793)",
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
-      "nem:XEM": "not for T3W1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "nem:XEM": "not for T3W1 (#2793)"
     }
   },
 
@@ -957,8 +950,7 @@
       "nem:DIMTOK": "not for T3W1 (#2793)",
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
-      "nem:XEM": "not for T3W1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "nem:XEM": "not for T3W1 (#2793)"
     }
   }
 }
