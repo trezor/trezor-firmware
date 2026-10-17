@@ -156,6 +156,64 @@ static void nfc_backup_format_key_usage(uint16_t key_usage, char *out,
   }
 }
 
+static ts_t nfc_wait_for(cli_t *cli, nfc_event_t which_event) {
+  sysevents_t awaited_events = {0};
+  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
+
+  while (true) {
+    if (cli_aborted(cli)) {
+      cli_trace(cli, "Aborted by operator.");
+      break;
+    }
+
+    sysevents_t signalled_events = {0};
+    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
+
+    if ((signalled_events.read_ready & 1 << SYSHANDLE_NFC) == 0) {
+      continue;
+    }
+
+    nfc_event_t event_flag;
+    if (nfc_get_event(&event_flag) && event_flag == which_event) {
+      return TS_OK;
+    }
+  }
+
+  return TS_ETIMEDOUT;
+}
+
+ts_t prodtest_nfc_transceive(cli_t *cli, const nfc_apdu_message_t *cmd,
+                             nfc_apdu_message_t *resp) {
+  TSH_DECLARE;
+  TSH_CHECK_OK(nfc_transceive_start(cmd));
+  TSH_CHECK_OK(nfc_wait_for(cli, NFC_EVENT_TRANSCEIVE_DONE));
+  TSH_CHECK_OK(nfc_transceive_complete(resp));
+
+cleanup:
+  TSH_RETURN;
+}
+
+static ts_t nfc_transceive_psk(cli_t *cli, const uint8_t *pcd_psk,
+                               size_t pcd_psk_len, uint8_t *picc_psk,
+                               size_t picc_psk_max_len,
+                               uint16_t *picc_psk_len) {
+  TSH_DECLARE;
+  TSH_CHECK_ARG(picc_psk != NULL);
+  TSH_CHECK_ARG(picc_psk_len != NULL);
+
+  TSH_CHECK_OK(nfc_transceive_psk_start(pcd_psk, pcd_psk_len));
+  TSH_CHECK_OK(nfc_wait_for(cli, NFC_EVENT_TRANSCEIVE_DONE));
+  nfc_apdu_message_t resp = {0};
+  TSH_CHECK_OK(nfc_transceive_complete(&resp));
+  TSH_CHECK(resp.data_len <= picc_psk_max_len, TS_ENOMEM);
+
+  memcpy(picc_psk, resp.data, resp.data_len);
+  *picc_psk_len = resp.data_len;
+
+cleanup:
+  TSH_RETURN;
+}
+
 static ts_t nfc_backup_transceive_logged(cli_t *cli, const char *api_name,
                                          uint8_t ins,
                                          const nfc_apdu_message_t *cmd,
@@ -165,7 +223,7 @@ static ts_t nfc_backup_transceive_logged(cli_t *cli, const char *api_name,
   cli_trace(cli, "APDU %s: TX INS=0x%02X (%u bytes)", api_name, ins,
             (unsigned)cmd->data_len);
 
-  status = nfc_transceive(cmd, rsp);
+  status = prodtest_nfc_transceive(cli, cmd, rsp);
   if (ts_error(status)) {
     cli_trace(cli, "APDU %s: transceive failed (%s/%d)", api_name,
               ts_string(status), ts_code(status));
@@ -225,50 +283,25 @@ static ts_t nfc_wait_for_tap(cli_t *cli, on_tap_callback_t callback) {
             "Instruction: place card flat on antenna and hold still. Press "
             "Ctrl+C to abort.");
 
-  sysevents_t awaited_events = {0};
-  sysevents_t signalled_events = {0};
-  nfc_event_t event_flag;
+  TSH_CHECK_OK(nfc_wait_for(cli, NFC_EVENT_CONNECTED));
+  cli_trace(cli, "STEP 2/3: NFC card detected.");
 
-  awaited_events.read_ready = 1 << SYSHANDLE_NFC;
+  nfc_dev_info_t dev_info;
+  nfc_get_device_info(&dev_info);
 
-  while (true) {
-    if (cli_aborted(cli)) {
-      cli_trace(cli, "Aborted by operator.");
-      goto cleanup;
-    }
-
-    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
-
-    if ((signalled_events.read_ready & 1 << SYSHANDLE_NFC) == 0) {
-      continue;
-    }
-
-    if (!nfc_get_event(&event_flag)) {
-      continue;
-    }
-
-    if (event_flag == NFC_EVENT_CONNECTED) {
-      cli_trace(cli, "STEP 2/3: NFC card detected.");
-
-      nfc_dev_info_t dev_info;
-      nfc_get_device_info(&dev_info);
-
-      if (dev_info.type != NFC_DEV_TYPE_A) {
-        cli_error(cli, PRODTEST_ERR_NFC_BACKUP_UNEXPECTED_CARD_TYPE,
-                  "Unexpected card type (%d). Expected Type A NFC backup card.",
-                  dev_info.type);
-        TSH_CHECK(false, TS_EINVAL);
-      }
-
-      // Call ON-TAP callback function
-      uint32_t tic = systick_ms();
-      status = (callback)(cli);
-      cli_trace(cli, "STEP 3/3: Command finished in %lu ms.",
-                (unsigned long)(systick_ms() - tic));
-      TSH_CHECK_OK(status);
-      break;
-    }
+  if (dev_info.type != NFC_DEV_TYPE_A) {
+    cli_error(cli, PRODTEST_ERR_NFC_BACKUP_UNEXPECTED_CARD_TYPE,
+              "Unexpected card type (%d). Expected Type A NFC backup card.",
+              dev_info.type);
+    TSH_CHECK(false, TS_EINVAL);
   }
+
+  // Call ON-TAP callback function
+  uint32_t tic = systick_ms();
+  status = (callback)(cli);
+  cli_trace(cli, "STEP 3/3: Command finished in %lu ms.",
+            (unsigned long)(systick_ms() - tic));
+  TSH_CHECK_OK(status);
 
 cleanup:
   TSH_RETURN;
@@ -671,7 +704,7 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
                                    request_size, &cmd);
   TSH_CHECK_OK(status);
 
-  status = nfc_transceive(&cmd, &rsp);
+  status = prodtest_nfc_transceive(cli, &cmd, &rsp);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(rsp.data_len >= 2U, TS_EINVAL);
@@ -706,7 +739,7 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
                                    request_size, &cmd);
   TSH_CHECK_OK(status);
 
-  status = nfc_transceive(&cmd, &rsp);
+  status = prodtest_nfc_transceive(cli, &cmd, &rsp);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(rsp.data_len >= 2U, TS_EINVAL);
@@ -744,7 +777,7 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
 
   nfc_apdu_message_t resp = {0};
 
-  status = nfc_transceive(&cmd, &resp);
+  status = prodtest_nfc_transceive(cli, &cmd, &resp);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(resp.data_len == 2U, TS_EINVAL);
@@ -758,7 +791,7 @@ static ts_t nfc_backup_handshake(cli_t *cli) {
 
   rng_fill_buffer(pcd_psk, sizeof(pcd_psk));
 
-  status = nfc_transceive_psk(pcd_psk, sizeof(pcd_psk), picc_psk,
+  status = nfc_transceive_psk(cli, pcd_psk, sizeof(pcd_psk), picc_psk,
                               sizeof(picc_psk), &picc_psk_len);
 
   if (ts_error(status) || picc_psk_len != sizeof(picc_psk)) {
@@ -1153,7 +1186,7 @@ static ts_t nfc_backup_activate_flashloader(cli_t *cli) {
                             .data_len = 5};
   nfc_apdu_message_t rsp = {0};
 
-  status = nfc_transceive(&cmd, &rsp);
+  status = prodtest_nfc_transceive(cli, &cmd, &rsp);
   TSH_CHECK_OK(status);
 
   TSH_CHECK(rsp.data_len == 2U, TS_EINVAL);
