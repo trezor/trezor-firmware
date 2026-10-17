@@ -15,6 +15,8 @@ pub const TEXT_BOLD: TextStyle = TextStyle::new(fonts::FONT_BOLD, BLD_FG, BLD_BG
 
 pub const FONT_BUTTON: Font = fonts::FONT_NORMAL_UPPER;
 pub const FONT_MENU_ITEM: Font = fonts::FONT_NORMAL;
+/// Page counter, the same digits as the firmware header font
+pub const FONT_PAGE_COUNTER: Font = fonts::FONT_BOLD;
 
 pub const TITLE_AREA_HEIGHT: i16 = 12;
 
@@ -46,6 +48,10 @@ include_icon!(
 ); // 4*7
 include_icon!(ICON_CLOSE, "layout_caesar/res/bootloader/close.toif"); // 8*7
 include_icon!(ICON_MENU, "layout_caesar/res/bootloader/menu.toif"); // 6*7
+include_icon!(
+    ICON_PAGE_SEPARATOR,
+    "layout_caesar/res/bootloader/page_separator.toif"
+); // 3*5
 include_icon!(
     ICON_SELECT,
     "layout_caesar/res/bootloader/mid_button_arrow_down.toif"
