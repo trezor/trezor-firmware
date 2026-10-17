@@ -139,9 +139,26 @@ static void start_fb_copy(void) {
 
     if (fb_idx >= 0) {
       display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-      bg_copy_start_const_out_8(get_fb_ptr(fb_idx),
-                                (uint8_t *)DISPLAY_DATA_ADDRESS,
-                                PHYSICAL_FRAME_BUFFER_SIZE, bg_copy_callback);
+#if defined(DISPLAY_I8080_16BIT_DW)
+      bg_copy_start_const_out_16((const uint16_t *)get_fb_ptr(fb_idx),
+                                 (uint16_t *)DISPLAY_DATA_ADDRESS,
+                                 PHYSICAL_FRAME_BUFFER_SIZE, false,
+                                 bg_copy_callback);
+#else
+      if (drv->pixel_endian == DISPLAY_PIXEL_BIG_ENDIAN) {
+        // 16-bit DMA writes with byte exchange; the 8-bit FMC splits each
+        // halfword into two bus cycles (lower address first), so the high
+        // byte of each pixel goes out first.
+        bg_copy_start_const_out_16((const uint16_t *)get_fb_ptr(fb_idx),
+                                   (uint16_t *)DISPLAY_DATA_ADDRESS,
+                                   PHYSICAL_FRAME_BUFFER_SIZE, true,
+                                   bg_copy_callback);
+      } else {
+        bg_copy_start_const_out_8(get_fb_ptr(fb_idx),
+                                  (uint8_t *)DISPLAY_DATA_ADDRESS,
+                                  PHYSICAL_FRAME_BUFFER_SIZE, bg_copy_callback);
+      }
+#endif
     }
   }
 }
@@ -210,14 +227,18 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
 #ifdef BOARDLOADER
 // Copies the frame buffer with the given index to the display
 static void copy_fb_to_display(uint8_t index) {
+  display_driver_t *drv = &g_display_driver;
   uint16_t *fb = (uint16_t *)get_fb_ptr(index);
 
   if (fb != NULL) {
     mpu_set_active_fb(fb, PHYSICAL_FRAME_BUFFER_SIZE);
     display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+    // Local copy: the display write pointer could alias the driver struct,
+    // which would force a reload of pixel_endian after every pixel write
+    display_pixel_endian_t endian = drv->pixel_endian;
     for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
       // 2 bytes per pixel because we're using RGB 5-6-5 format
-      ISSUE_PIXEL_DATA(fb[i]);
+      ISSUE_PIXEL_DATA(endian, fb[i]);
     }
   }
 

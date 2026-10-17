@@ -58,6 +58,10 @@ fn set_panel_lx154a2422cpt23(lib: &mut CLibrary) {
     lib.add_define("TOUCH_PANEL_LX154A2422CPT23", Some("1"));
 }
 
+fn set_panel_lx200b4501ctp03(lib: &mut CLibrary) {
+    lib.add_define("TOUCH_PANEL_LX200B4501CTP03", Some("1"));
+}
+
 fn set_panel_lx250a2410a(lib: &mut CLibrary) {
     lib.add_define("TOUCH_PANEL_LX250A2410A", Some("1"));
 }
@@ -74,6 +78,9 @@ fn add_driver_ft6x36(lib: &mut CLibrary) -> Result<()> {
     } else if cfg!(feature = "touch_panel_lx154a2422cpt23") {
         set_panel_lx154a2422cpt23(lib);
         lib.add_source("touch/ft6x36/panels/lx154a2422cpt23.c");
+    } else if cfg!(feature = "touch_panel_lx200b4501ctp03") {
+        set_panel_lx200b4501ctp03(lib);
+        lib.add_source("touch/ft6x36/panels/lx200b4501ctp03.c");
     } else {
         bail_unsupported!();
     }
