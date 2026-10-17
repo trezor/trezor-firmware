@@ -1,9 +1,11 @@
 use super::super::theme::bootloader::{
-    BLD_BG, BLD_FG, BUTTON_HEIGHT, BUTTON_OUTLINE, FONT_MENU_ITEM,
+    BLD_BG, BLD_FG, BUTTON_HEIGHT, BUTTON_OUTLINE, FONT_MENU_ITEM, FONT_PAGE_COUNTER,
+    ICON_PAGE_SEPARATOR,
 };
 use super::buttons::{Button, ButtonPos, Buttons};
+use crate::strutil::ShortString;
 use crate::ui::component::{Component, Event, EventCtx, Pad};
-use crate::ui::geometry::{Offset, Rect};
+use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
 use crate::ui::layout::simplified::ReturnToC;
 use crate::ui::shape::{self, Renderer};
 
@@ -83,6 +85,34 @@ impl<const N: usize> Menu<N> {
         self.pad.clear();
         ctx.request_paint();
     }
+
+    /// "current/total" page counter at the top right, like the firmware
+    /// `ScrollBar`.
+    fn render_page_counter<'s>(&self, target: &mut impl Renderer<'s>) {
+        let font = FONT_PAGE_COUNTER;
+        let current: ShortString = uformat!("{}", self.index + 1);
+        let total: ShortString = uformat!("{}", N);
+        let baseline = self.pad.area.top_right() + Offset::y(font.text_height() - 1);
+        // One pixel gap on both sides of the separator
+        let current_right =
+            baseline.x - font.text_width(&total) - ICON_PAGE_SEPARATOR.toif.width() - 2;
+
+        shape::Text::new(baseline, &total, font)
+            .with_align(Alignment::End)
+            .with_fg(BLD_FG)
+            .render(target);
+        shape::ToifImage::new(
+            Point::new(current_right + 1, baseline.y),
+            ICON_PAGE_SEPARATOR.toif,
+        )
+        .with_align(Alignment2D::BOTTOM_LEFT)
+        .with_fg(BLD_FG)
+        .render(target);
+        shape::Text::new(Point::new(current_right, baseline.y), &current, font)
+            .with_align(Alignment::End)
+            .with_fg(BLD_FG)
+            .render(target);
+    }
 }
 
 impl<const N: usize> Component for Menu<N> {
@@ -109,6 +139,9 @@ impl<const N: usize> Component for Menu<N> {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.buttons.render(target);
+        if N > 1 {
+            self.render_page_counter(target);
+        }
 
         // The item is outlined, and inverted while the middle button is down
         let text = self.items[self.index];
