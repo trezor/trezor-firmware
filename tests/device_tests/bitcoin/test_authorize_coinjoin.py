@@ -267,6 +267,11 @@ def test_sign_tx(session: Session, chunkify: bool):
             chunkify=chunkify,
         )
 
+    # spent rounds leave a plaintext seed while locked; locking again must not crash
+    session.call(messages.LockDevice())
+    session.refresh_features()
+    assert session.features.unlocked is False
+
 
 def test_sign_tx_large(session: Session):
     # NOTE: FAKE input tx

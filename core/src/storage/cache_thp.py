@@ -7,11 +7,12 @@ from storage.cache_common import (
     LAST_USAGE,
     SESSION_ID,
     SESSION_STATE,
-    DataCache,
+    EncryptableDataCache,
 )
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from collections.abc import Sequence
 
 # THP specific constants
 _MAX_SESSIONS_COUNT = const(20)
@@ -24,7 +25,7 @@ _ALLOCATED_STATE = const(1)
 _SEEDLESS_STATE = const(2)
 
 
-class SessionThpCache(DataCache):
+class SessionThpCache(EncryptableDataCache):
     def __init__(self) -> None:
         from trezor import utils
 
@@ -71,6 +72,16 @@ class SessionThpCache(DataCache):
 
     def clear(self) -> None:
         super().clear()
+
+    def fields_to_encrypt(self) -> Sequence[int]:
+        from storage.cache_thp_keys import CACHE_ENCRYPTED_KEYS_THP
+
+        return CACHE_ENCRYPTED_KEYS_THP
+
+    def is_preauthorized(self) -> bool:
+        from storage.cache_thp_keys import APP_COMMON_AUTHORIZATION_TYPE
+
+        return self.is_set(APP_COMMON_AUTHORIZATION_TYPE)
 
 
 _SESSIONS: list[SessionThpCache] = []

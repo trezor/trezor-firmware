@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+import storage
 import storage.device as storage_device
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
 from trezor import config, io, utils, wire, workflow
@@ -203,7 +204,7 @@ def can_lock_device() -> bool:
 
 def lock_device(interrupt_workflow: bool = True) -> None:
     if can_lock_device():
-        config.lock()
+        storage.lock()
         filters.append(_pinlock_filter)
         set_homescreen()
         if interrupt_workflow:
