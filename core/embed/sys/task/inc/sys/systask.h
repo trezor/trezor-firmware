@@ -22,6 +22,7 @@
 #include <trezor_types.h>
 
 #include <sys/mpu.h>
+#include <sys/systick.h>
 
 #ifdef TREZOR_EMULATOR
 #include <pthread.h>
@@ -33,6 +34,7 @@ typedef enum {
   TASK_TERM_REASON_ERROR,
   TASK_TERM_REASON_FATAL,
   TASK_TERM_REASON_FAULT,
+  TASK_TERM_REASON_WATCHDOG,
 
 } systask_term_reason_t;
 
@@ -162,6 +164,11 @@ typedef struct {
   /** Applet bound to the task */
   void* applet;
 
+#ifdef USE_APPLETS
+  /** Watchdog timeout or 0 if not used */
+  ticks_t watchdog_timeout;
+#endif
+
 #ifndef TREZOR_EMULATOR
   /** MPU mode the task is running in */
   mpu_mode_t mpu_mode;
@@ -183,6 +190,7 @@ typedef struct {
 
   /** Set if the task is processing the kernel callback */
   bool in_callback;
+
 #else
   /** System thread handle */
   pthread_t pthread;
@@ -228,6 +236,20 @@ systask_t* systask_kernel(void);
  * @param tls TLS MPU area.
  */
 void systask_enable_tls(systask_t* task, mpu_area_t tls);
+#endif
+
+#ifdef USE_APPLETS
+/**
+ * @brief Enables the watchdog for the specified task with the given timeout.
+ *
+ * The task is killed with TASK_TERM_REASON_WATCHDOG if it runs for
+ * `timeout` without switching to the kernel. The watchdog is armed
+ * when the task is next scheduled to run. Ignored for the kernel task.
+ *
+ * @param task Pointer to the task for which to enable the watchdog.
+ * @param timeout Watchdog timeout value. Must be greater than 0.
+ */
+void systask_enable_watchdog(systask_t* task, ticks_t timeout);
 #endif
 
 /**
