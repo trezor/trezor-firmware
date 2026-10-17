@@ -1,5 +1,5 @@
-use super::super::component::{ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos};
-use super::super::theme::{BUTTON_HEIGHT, TEXT_BOLD, TITLE_AREA_HEIGHT};
+use super::super::theme::bootloader::{BUTTON_HEIGHT, TEXT_BOLD, TITLE_AREA_HEIGHT};
+use super::buttons::{Button, ButtonPos, Buttons};
 use super::menu::{Menu, MenuSelection};
 use crate::strutil::TString;
 use crate::ui::component::{Component, ComponentExt, Event, EventCtx, Label, Pad};
@@ -38,8 +38,8 @@ pub struct Confirm<'a> {
     info_title: Option<Label<'a>>,
     info_text: Option<Label<'a>>,
     menu: Option<ConfirmMenu>,
-    button_text: TString<'static>,
-    buttons: ButtonController,
+    button_text: &'static str,
+    buttons: Buttons,
     state: ConfirmState,
 }
 
@@ -51,9 +51,9 @@ impl<'a> Confirm<'a> {
         title: TString<'a>,
         message: Label<'a>,
         alert: Option<Label<'a>>,
-        button_text: TString<'static>,
+        button_text: &'static str,
     ) -> Self {
-        Self {
+        let mut confirm = Self {
             bg: Pad::with_background(bg_color).with_clear(),
             title: Label::left_aligned(title, TEXT_BOLD),
             message,
@@ -63,9 +63,11 @@ impl<'a> Confirm<'a> {
             info_text: None,
             menu: None,
             button_text,
-            buttons: ButtonController::new(ButtonLayout::cancel_armed_none(button_text)),
+            buttons: Buttons::new(None, None, None),
             state: ConfirmState::Main,
-        }
+        };
+        confirm.set_buttons();
+        confirm
     }
 
     /// Adding a context menu on the left with an info screen and cancel. The
@@ -79,7 +81,7 @@ impl<'a> Confirm<'a> {
         self.info_name = Some(info_name);
         self.info_title = Some(Label::left_aligned(info_title, TEXT_BOLD));
         self.info_text = Some(info_text);
-        self.buttons = ButtonController::new(self.get_button_layout());
+        self.set_buttons();
         self
     }
 
@@ -87,27 +89,32 @@ impl<'a> Confirm<'a> {
         Menu::new([info_name, "Cancel"])
     }
 
-    fn get_button_layout(&self) -> ButtonLayout {
-        match self.state {
+    fn set_buttons(&mut self) {
+        let (left, middle, right) = match self.state {
             ConfirmState::Main if self.info_name.is_some() => {
-                ButtonLayout::menu_none_text(self.button_text)
+                (Button::menu(), None, Some(Button::Text(self.button_text)))
             }
-            ConfirmState::Main => ButtonLayout::cancel_armed_none(self.button_text),
+            ConfirmState::Main => (
+                Button::cancel(),
+                Some(Button::ArmedText(self.button_text)),
+                None,
+            ),
             // The menu has its own buttons
-            ConfirmState::Menu | ConfirmState::Info => ButtonLayout::cancel_none_none(),
-        }
+            ConfirmState::Menu | ConfirmState::Info => (Button::cancel(), None, None),
+        };
+        self.buttons.set(Some(left), middle, right);
     }
 
     fn set_state(&mut self, ctx: &mut EventCtx, state: ConfirmState) {
         self.state = state;
         self.bg.clear();
-        self.buttons.set(self.get_button_layout());
+        self.set_buttons();
         self.request_complete_repaint(ctx);
     }
 
     fn event_main(&mut self, ctx: &mut EventCtx, event: Event) -> Option<ConfirmMsg> {
         match self.buttons.event(ctx, event) {
-            Some(ButtonControllerMsg::Triggered(ButtonPos::Left, _)) => {
+            Some(ButtonPos::Left) => {
                 let Some(info_name) = self.info_name else {
                     return Some(ConfirmMsg::Cancel);
                 };
@@ -118,10 +125,8 @@ impl<'a> Confirm<'a> {
                 self.set_state(ctx, ConfirmState::Menu);
                 None
             }
-            Some(ButtonControllerMsg::Triggered(ButtonPos::Middle | ButtonPos::Right, _)) => {
-                Some(ConfirmMsg::Confirm)
-            }
-            _ => None,
+            Some(ButtonPos::Middle | ButtonPos::Right) => Some(ConfirmMsg::Confirm),
+            None => None,
         }
     }
 }
@@ -170,9 +175,7 @@ impl Component for Confirm<'_> {
             }
             ConfirmState::Info => {
                 // Going back to the menu with the cross
-                if let Some(ButtonControllerMsg::Triggered(ButtonPos::Left, _)) =
-                    self.buttons.event(ctx, event)
-                {
+                if let Some(ButtonPos::Left) = self.buttons.event(ctx, event) {
                     self.set_state(ctx, ConfirmState::Menu);
                 }
                 None

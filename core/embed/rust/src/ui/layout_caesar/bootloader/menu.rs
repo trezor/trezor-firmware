@@ -1,9 +1,11 @@
-use super::super::component::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage};
-use super::super::theme::bootloader::BLD_BG;
+use super::super::theme::bootloader::{
+    BLD_BG, BLD_FG, BUTTON_HEIGHT, BUTTON_OUTLINE, FONT_MENU_ITEM,
+};
+use super::buttons::{Button, ButtonPos, Buttons};
 use crate::ui::component::{Component, Event, EventCtx, Pad};
-use crate::ui::geometry::Rect;
+use crate::ui::geometry::{Offset, Rect};
 use crate::ui::layout::simplified::ReturnToC;
-use crate::ui::shape::Renderer;
+use crate::ui::shape::{self, Renderer};
 
 #[repr(u32)]
 #[derive(Copy, Clone)]
@@ -39,41 +41,45 @@ pub enum MenuSelection {
     Item(usize),
 }
 
-pub struct MenuChoiceFactory<const N: usize> {
-    items: [&'static str; N],
-}
-
-impl<const N: usize> ChoiceFactory for MenuChoiceFactory<N> {
-    type Action = usize;
-    type Item = ChoiceItem;
-
-    fn count(&self) -> usize {
-        N
-    }
-
-    fn get(&self, choice_index: usize) -> (Self::Item, Self::Action) {
-        let btn_layout = ButtonLayout::menu_item(choice_index == 0, choice_index == N - 1);
-        (
-            ChoiceItem::new(self.items[choice_index], btn_layout),
-            choice_index,
-        )
-    }
-}
-
-/// Context menu carousel, the same as the firmware `select_menu`. The cross on
-/// the first item closes the menu.
+/// Context menu carousel showing one item at a time, with the same buttons as
+/// the firmware `select_menu`. The cross on the first item closes the menu.
+/// Items must fit on one line.
 pub struct Menu<const N: usize> {
     pad: Pad,
-    choice_page: ChoicePage<MenuChoiceFactory<N>, usize>,
+    items: [&'static str; N],
+    index: usize,
+    item_area: Rect,
+    buttons: Buttons,
 }
 
 impl<const N: usize> Menu<N> {
     pub fn new(items: [&'static str; N]) -> Self {
-        let choices = MenuChoiceFactory { items };
-        Self {
+        let mut menu = Self {
             pad: Pad::with_background(BLD_BG).with_clear(),
-            choice_page: ChoicePage::new(choices).with_incomplete(true),
-        }
+            items,
+            index: 0,
+            item_area: Rect::zero(),
+            buttons: Buttons::new(None, None, None),
+        };
+        menu.set_buttons();
+        menu
+    }
+
+    fn set_buttons(&mut self) {
+        let left = if self.index == 0 {
+            Button::cancel()
+        } else {
+            Button::left_arrow()
+        };
+        let right = (self.index < N - 1).then_some(Button::right_arrow());
+        self.buttons.set(Some(left), Some(Button::select()), right);
+    }
+
+    fn go_to(&mut self, ctx: &mut EventCtx, index: usize) {
+        self.index = index;
+        self.set_buttons();
+        self.pad.clear();
+        ctx.request_paint();
     }
 }
 
@@ -81,21 +87,56 @@ impl<const N: usize> Component for Menu<N> {
     type Msg = MenuSelection;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        let (item_area, button_area) = bounds.split_bottom(BUTTON_HEIGHT);
         self.pad.place(bounds);
-        self.choice_page.place(bounds);
+        self.item_area = item_area;
+        self.buttons.place(button_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        match self.choice_page.event(ctx, event) {
-            Some(ChoiceMsg::Choice { item, .. }) => Some(MenuSelection::Item(item)),
-            Some(ChoiceMsg::Cancel) => Some(MenuSelection::Close),
-            None => None,
+        match self.buttons.event(ctx, event)? {
+            ButtonPos::Left if self.index == 0 => return Some(MenuSelection::Close),
+            ButtonPos::Left => self.go_to(ctx, self.index - 1),
+            ButtonPos::Right => self.go_to(ctx, self.index + 1),
+            ButtonPos::Middle => return Some(MenuSelection::Item(self.index)),
         }
+        None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
-        self.choice_page.render(target);
+        self.buttons.render(target);
+
+        // The item is outlined, and inverted while the middle button is down
+        let text = self.items[self.index];
+        let font = FONT_MENU_ITEM;
+        let text_size = Offset::new(font.visible_text_width(text), font.allcase_text_height());
+        let text_area = Rect::from_center_and_size(self.item_area.center(), text_size);
+        let outline = Rect::from_center_and_size(
+            text_area.center() + Offset::y(1),
+            text_size + Offset::uniform(2 * BUTTON_OUTLINE),
+        );
+        let inverse = self.buttons.pressed() == Some(ButtonPos::Middle);
+
+        shape::Bar::new(outline)
+            .with_radius(1)
+            .with_bg(BLD_FG)
+            .render(target);
+        if !inverse {
+            shape::Bar::new(outline.shrink(1))
+                .with_radius(1)
+                .with_bg(BLD_BG)
+                .render(target);
+        }
+
+        let fg = if inverse { BLD_BG } else { BLD_FG };
+        shape::Text::new(
+            text_area.bottom_left() - Offset::x(font.start_x_bearing(text)),
+            text,
+            font,
+        )
+        .with_fg(fg)
+        .render(target);
     }
 }
