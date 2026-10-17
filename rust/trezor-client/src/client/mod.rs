@@ -58,6 +58,41 @@ impl Trezor {
         self.transport.read_message().map_err(Error::TransportReceiveMessage)
     }
 
+    /// Sends a message and returns the raw response, transparently handling
+    /// interaction requests ([`protos::ButtonRequest`], [`protos::PassphraseRequest`])
+    /// and [`protos::Failure`].
+    ///
+    /// Unlike [`Self::call`] it does not require the expected response type up
+    /// front, so it can be used for flows where the device may reply with one of
+    /// several message types (e.g. `EthereumTxRequest` or
+    /// `EthereumDefinitionRequest`).
+    pub(crate) fn call_raw_interactive<S: TrezorMessage>(
+        &mut self,
+        message: S,
+    ) -> Result<ProtoMessage> {
+        let mut resp = self.call_raw(message)?;
+        loop {
+            match resp.message_type() {
+                MessageType_ButtonRequest => {
+                    resp = self.call_raw(protos::ButtonAck::new())?;
+                }
+                MessageType_PassphraseRequest => {
+                    let mut ack = protos::PassphraseAck::new();
+                    ack.set_on_device(true);
+                    resp = self.call_raw(ack)?;
+                }
+                MessageType_PinMatrixRequest => {
+                    return Err(Error::UnexpectedInteractionRequest(InteractionType::PinMatrix));
+                }
+                MessageType_Failure => {
+                    let failure = resp.into_message()?;
+                    return Err(Error::FailureResponse(failure));
+                }
+                _ => return Ok(resp),
+            }
+        }
+    }
+
     /// Sends a message without waiting for a response.
     /// Useful for fire-and-forget debug messages such as `DebugLinkDecision`, which the
     /// firmware may not reply to.
