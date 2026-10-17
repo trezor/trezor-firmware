@@ -134,6 +134,7 @@ LDFLAGS  += --static \
             -lc \
             -lgcc \
             -lnosys \
+            --specs=nano.specs \
             -Wl,--end-group \
             -L$(TOOLCHAIN_DIR)/lib \
             -T$(LDSCRIPT) \
