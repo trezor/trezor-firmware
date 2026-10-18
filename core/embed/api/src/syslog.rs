@@ -20,8 +20,7 @@ struct LogRecordProxy<'a>(&'a mut syslog::SyslogChunkWriter);
 
 impl LogRecord for LogRecordProxy<'_> {
     extern "C" fn write<'a>(&self, string: Str<'a>) -> FastResult<(), ()> {
-        self.0.write(string.as_str());
-        Ok(()).into()
+        self.0.write(string.as_str()).into()
     }
 }
 
