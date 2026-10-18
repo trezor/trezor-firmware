@@ -161,9 +161,8 @@ pub fn build_and_link(target: &str, f: impl FnOnce(&mut CLibrary) -> Result<()>)
         lib.compile()?;
         lib.generate_compile_commands()?;
         lib.merge_compile_commands()?;
+        lib.link_as(target)?;
     }
-
-    lib.link_as(target)?;
 
     // The build succeeded — release the collected `cargo::` directives.
     cargo_out::flush();
