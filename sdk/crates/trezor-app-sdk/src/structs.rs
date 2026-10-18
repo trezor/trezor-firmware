@@ -845,11 +845,9 @@ pub enum TrezorCryptoEnum<'a> {
         address_n: Slice<'a, u32>,
         digest: [u8; 32],
         compressed: bool,
-    },
-    SignTypedHash {
-        address_n: Slice<'a, u32>,
-        hash: [u8; 32],
-        show_progress: bool,
+        /// A [`CanonicalSig`](crate::traits::crypto::CanonicalSig), as its
+        /// `u8` value.
+        canonical: u8,
     },
     GetAddressMac {
         address_n: Slice<'a, u32>,
@@ -873,10 +871,9 @@ impl<'a> TrezorCryptoEnum<'a> {
             Self::GetXpub { .. } => 0,
             Self::GetPublicKey { .. } => 1,
             Self::SignDigest { .. } => 2,
-            Self::SignTypedHash { .. } => 3,
-            Self::GetAddressMac { .. } => 4,
-            Self::CheckAddressMac { .. } => 5,
-            Self::VerifyNonceCache { .. } => 6,
+            Self::GetAddressMac { .. } => 3,
+            Self::CheckAddressMac { .. } => 4,
+            Self::VerifyNonceCache { .. } => 5,
         }
     }
 }
@@ -1001,18 +998,10 @@ mod tests {
                     address_n: empty_u32.into(),
                     digest: [0u8; 32],
                     compressed: false,
+                    canonical: 0,
                 }
                 .id(),
                 "SignDigest",
-            ),
-            (
-                SignTypedHash {
-                    address_n: empty_u32.into(),
-                    hash: [0u8; 32],
-                    show_progress: false,
-                }
-                .id(),
-                "SignTypedHash",
             ),
             (
                 GetAddressMac {
@@ -1045,7 +1034,7 @@ mod tests {
         for (id, name) in variants {
             assert!(seen.insert(id), "duplicate id {} for variant {}", id, name);
         }
-        assert_eq!(variants.len(), 7, "new variant added but test not updated");
+        assert_eq!(variants.len(), 6, "new variant added but test not updated");
     }
 
     /// Ensures every variant of TrezorProgressEnum has a unique id()
