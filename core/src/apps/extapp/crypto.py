@@ -27,10 +27,13 @@ if TYPE_CHECKING:
 _GET_XPUB = const(0)
 _GET_PUBLIC_KEY = const(1)
 _SIGN_DIGEST = const(2)
-_SIGN_TYPED_HASH = const(3)
-_GET_ADDRESS_MAC = const(4)
-_CHECK_ADDRESS_MAC = const(5)
-_VERIFY_NONCE_CACHE = const(6)
+_GET_ADDRESS_MAC = const(3)
+_CHECK_ADDRESS_MAC = const(4)
+_VERIFY_NONCE_CACHE = const(5)
+
+# `CanonicalSig` values in the SDK.
+_CANONICAL_ANY = const(0)
+_CANONICAL_ETHEREUM = const(1)
 
 _SLIP24_NAMESPACE = [b"SLIP-0024"]
 
@@ -110,7 +113,7 @@ async def _get_public_key(session: Session, obj: Any) -> list:
 
 
 async def _sign_digest(session: Session, obj: Any) -> bytes:
-    address_n, digest, compressed = obj
+    address_n, digest, compressed, canonical = obj
     keychain = await get_keychain(session.curve, session.schemas, [_SLIP24_NAMESPACE])
     await paths.validate_path(keychain, address_n)
     private_key = keychain.derive(address_n).private_key()
@@ -119,8 +122,17 @@ async def _sign_digest(session: Session, obj: Any) -> bytes:
     if curve == "secp256k1":
         from trezor.crypto.curve import secp256k1
 
-        return secp256k1.sign(private_key, digest, compressed)
-    elif curve == "nist256p1":
+        if canonical == _CANONICAL_ANY:
+            return secp256k1.sign(private_key, digest, compressed)
+        if canonical == _CANONICAL_ETHEREUM:
+            return secp256k1.sign(
+                private_key, digest, compressed, secp256k1.CANONICAL_SIG_ETHEREUM
+            )
+        raise DataError("Unsupported canonical signature type")
+
+    if canonical != _CANONICAL_ANY:
+        raise DataError(f"Canonical signatures are not supported on {curve}")
+    if curve == "nist256p1":
         from trezor.crypto.curve import nist256p1
 
         return nist256p1.sign(private_key, digest, compressed)
@@ -137,27 +149,6 @@ async def _sign_digest(session: Session, obj: Any) -> bytes:
         return bip340.sign(private_key, digest)
     else:
         raise DataError(f"Unsupported curve: {curve} for signing digest")
-
-
-async def _sign_typed_hash(session: Session, obj: Any) -> bytes:
-    from trezor import TR
-    from trezor.crypto.curve import secp256k1
-    from trezor.ui.layouts.progress import progress
-
-    address_n, data_hash, show_progress = obj
-    keychain = await get_keychain(session.curve, session.schemas)
-    await paths.validate_path(keychain, address_n)
-    node = keychain.derive(address_n)
-
-    if show_progress:
-        progress_obj = progress(title=TR.progress__signing_transaction)
-        progress_obj.report(600)
-    signature = secp256k1.sign(
-        node.private_key(), data_hash, False, secp256k1.CANONICAL_SIG_ETHEREUM
-    )
-    if show_progress:
-        progress_obj.stop()
-    return signature
 
 
 async def _address_mac_keychain(session: Session, address_n: list[int]) -> Keychain:
@@ -196,7 +187,6 @@ _HANDLERS: dict[int, CryptoHandler] = {
     _GET_XPUB: _get_xpub,
     _GET_PUBLIC_KEY: _get_public_key,
     _SIGN_DIGEST: _sign_digest,
-    _SIGN_TYPED_HASH: _sign_typed_hash,
     _GET_ADDRESS_MAC: _get_address_mac,
     _CHECK_ADDRESS_MAC: _check_address_mac,
     _VERIFY_NONCE_CACHE: _verify_nonce_cache,
