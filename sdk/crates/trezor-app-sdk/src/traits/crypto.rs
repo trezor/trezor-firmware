@@ -62,6 +62,19 @@ pub enum EcCurve {
     Ed25519,
 }
 
+/// Extra constraint on a secp256k1 signature, matching trezor-crypto's
+/// `is_canonical` callbacks. Core keeps re-signing until the signature
+/// satisfies it.
+#[stabby::stabby]
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum CanonicalSig {
+    /// Any valid signature.
+    Any = 0,
+    /// Ethereum's: the recovery id fits in one bit, and `s` is low.
+    Ethereum = 1,
+}
+
 #[stabby::stabby(checked)]
 pub trait CryptoV1: Send + Sync {
     extern "C" fn get_hasher(&self, algorithm: HashingAlgorithm) -> BoxedHasher;
@@ -82,21 +95,16 @@ pub trait CryptoV1: Send + Sync {
         address_n: Slice<'a, u32>,
         compressed: bool,
     ) -> FastResult<BoxedSlice<u8>, WireError>;
-    /// Signs a 32-byte typed-data hash (e.g. EIP-712) with the key at `address_n`.
-    ///
-    /// `show_progress` requests a progress indicator while signing.
-    extern "C" fn sign_typed_hash<'a>(
-        &self,
-        address_n: Slice<'a, u32>,
-        hash: [u8; 32],
-        show_progress: bool,
-    ) -> FastResult<[u8; 65], WireError>;
     /// Signs a raw 32-byte digest with the key at `address_n`.
+    ///
+    /// `canonical` is only supported on secp256k1; any other curve rejects
+    /// anything but [`CanonicalSig::Any`].
     extern "C" fn sign_digest<'a>(
         &self,
         address_n: Slice<'a, u32>,
         digest: [u8; 32],
         compressed: bool,
+        canonical: CanonicalSig,
     ) -> FastResult<[u8; 65], WireError>;
     /// Verifies a MAC previously produced by [`Self::get_address_mac`] for
     /// `address_n`, `address` and the coin type `slip44`, confirming the

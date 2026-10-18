@@ -20,7 +20,9 @@ use stabby::slice::Slice;
 
 use crate::alloc_types::{String, Vec};
 use crate::app_runtime::get_crypto_or_die;
-pub use crate::traits::crypto::{BoxedHasher, EcCurve, HashingAlgorithm, HmacAlgorithm};
+pub use crate::traits::crypto::{
+    BoxedHasher, CanonicalSig, EcCurve, HashingAlgorithm, HmacAlgorithm,
+};
 use crate::traits::crypto::{CryptoV1Dyn as _, HasherDynMut};
 use crate::{IntoAppResult, Result, ResultExt};
 
@@ -73,28 +75,23 @@ pub fn get_public_key(address_n: &[u32], compressed: bool) -> Result<Vec<u8>> {
         .map(|b| b.as_ref().to_vec())
 }
 
-/// Signs a 32-byte typed-data hash (e.g. EIP-712) with the key at `address_n`.
-///
-/// `show_progress` requests a progress indicator while signing.
-pub fn sign_typed_hash(
-    address_n: &[u32],
-    hash: &[u8; 32],
-    show_progress: bool,
-) -> Result<[u8; 65]> {
-    get_crypto_or_die()
-        .sign_typed_hash(address_n.into(), *hash, show_progress)
-        .into_app_result()
-        .c()
-}
-
 /// Signs a raw 32-byte digest with the key at `address_n`.
 ///
 /// The signature type is shared by all curves, so it is 65 bytes long. For
 /// ECDSA curves that is the recoverable signature; for Ed25519 the 64-byte
 /// signature comes zero-padded, i.e. only the first 64 bytes are meaningful.
-pub fn sign_digest(address_n: &[u32], digest: &[u8; 32], compressed: bool) -> Result<[u8; 65]> {
+///
+/// `canonical` constrains a secp256k1 signature further, e.g.
+/// [`CanonicalSig::Ethereum`] for Ethereum transactions and messages. Other
+/// curves only accept [`CanonicalSig::Any`].
+pub fn sign_digest(
+    address_n: &[u32],
+    digest: &[u8; 32],
+    compressed: bool,
+    canonical: CanonicalSig,
+) -> Result<[u8; 65]> {
     get_crypto_or_die()
-        .sign_digest(address_n.into(), *digest, compressed)
+        .sign_digest(address_n.into(), *digest, compressed, canonical)
         .into_app_result()
         .c()
 }

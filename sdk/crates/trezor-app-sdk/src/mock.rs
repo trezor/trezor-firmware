@@ -24,8 +24,8 @@ use stabby::str::Str;
 use crate::traits::ApiVariant;
 use crate::traits::allocator::{FfiLayout, GlobalAllocatorV1, GlobalAllocatorV1Vtable};
 use crate::traits::crypto::{
-    BoxedHasher, CryptoError, CryptoV1, CryptoV1Vtable, EcCurve, Hasher, HashingAlgorithm,
-    HmacAlgorithm,
+    BoxedHasher, CanonicalSig, CryptoError, CryptoV1, CryptoV1Vtable, EcCurve, Hasher,
+    HashingAlgorithm, HmacAlgorithm,
 };
 use crate::traits::syslog::{
     LogCallbackDyn as _, LogCallbackRef, LogLevel, LogRecord, SyslogV1, SyslogV1Vtable,
@@ -149,20 +149,12 @@ impl CryptoV1 for DummyCrypto {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn sign_typed_hash<'a>(
-        &self,
-        _address_n: Slice<'a, u32>,
-        _hash: [u8; 32],
-        _show_progress: bool,
-    ) -> FastResult<[u8; 65], WireError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
     extern "C" fn sign_digest<'a>(
         &self,
         _address_n: Slice<'a, u32>,
         _digest: [u8; 32],
         _compressed: bool,
+        _canonical: CanonicalSig,
     ) -> FastResult<[u8; 65], WireError> {
         unimplemented!("not exercised by the current test suite")
     }
