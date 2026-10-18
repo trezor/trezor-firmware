@@ -878,63 +878,18 @@ impl<'a> TrezorCryptoEnum<'a> {
     }
 }
 
-/// Result returned by the Core task after a crypto operation, borrowed
-/// directly from the archived IPC buffer.
+/// Result of a crypto operation, sent by the Core task and borrowed directly
+/// from the archived IPC buffer.
 ///
-/// See [`TrezorCryptoResult`] for the owned, app-facing equivalent.
-#[derive(Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
-pub enum TrezorCryptoResultRef<'a> {
-    Xpub([u8; 111]),
-    PublicKey(Slice<'a, u8>), // 32, 33 or 65 bytes depending on the curve
-    Signature([u8; 65]),
-    AddressMac([u8; 32]),
+/// Deliberately generic: each caller knows which shape its operation returns,
+/// and checks for it (including any fixed length) itself. Core reports a
+/// failed operation as `Boolean(false)`, which no caller expecting data
+/// accepts.
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
+pub enum TrezorCryptoResult<'a> {
+    String(StrSlice<'a>),
+    Bytes(Slice<'a, u8>),
     Boolean(bool),
-}
-
-// Manual uDebug: `[u8; 111]`/`[u8; 65]` are too long for ufmt's built-in
-// fixed-size-array uDebug impls (only implemented up to length 32), so the
-// large byte arrays are debug-printed as slices instead.
-impl<'a> ufmt::uDebug for TrezorCryptoResultRef<'a> {
-    fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
-    where
-        W: ufmt::uWrite,
-    {
-        match self {
-            Self::Xpub(xpub) => f.debug_tuple("Xpub")?.field(&&xpub[..])?.finish(),
-            Self::PublicKey(key) => f.debug_tuple("PublicKey")?.field(key)?.finish(),
-            Self::Signature(sig) => f.debug_tuple("Signature")?.field(&&sig[..])?.finish(),
-            Self::AddressMac(mac) => f.debug_tuple("AddressMac")?.field(mac)?.finish(),
-            Self::Boolean(b) => f.debug_tuple("Boolean")?.field(b)?.finish(),
-        }
-    }
-}
-
-/// Owned result of a crypto operation, returned by the `crypto` module's
-/// public functions.
-///
-/// See [`TrezorCryptoResultRef`] for the borrowed, wire-level equivalent.
-#[derive(Clone, PartialEq, Eq)]
-#[cfg(feature = "app")]
-pub enum TrezorCryptoResult {
-    XpubBytes([u8; 33]),
-    Signature([u8; 65]),
-    AddressMac([u8; 32]),
-    Boolean(bool),
-}
-
-#[cfg(feature = "app")]
-impl ufmt::uDebug for TrezorCryptoResult {
-    fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
-    where
-        W: ufmt::uWrite,
-    {
-        match self {
-            Self::XpubBytes(xpub) => f.debug_tuple("XpubBytes")?.field(&&xpub[..])?.finish(),
-            Self::Signature(sig) => f.debug_tuple("Signature")?.field(&&sig[..])?.finish(),
-            Self::AddressMac(mac) => f.debug_tuple("AddressMac")?.field(mac)?.finish(),
-            Self::Boolean(b) => f.debug_tuple("Boolean")?.field(b)?.finish(),
-        }
-    }
 }
 
 /// Progress bar operations that can be requested from the app via IPC.
