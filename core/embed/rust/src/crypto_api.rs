@@ -58,25 +58,17 @@ extern "C" fn new_deserialize_crypto_message(
                 address_n,
                 digest,
                 compressed,
+                canonical,
             } => {
                 let digest_obj = Obj::try_from(digest.as_slice())?;
                 (
                     obj_from_dp_slice(address_n),
                     digest_obj,
                     Obj::try_from(*compressed)?,
+                    Obj::from(*canonical),
                 )
                     .try_into()?
             }
-            Archived::<TrezorCryptoEnum>::SignTypedHash {
-                address_n,
-                hash,
-                show_progress,
-            } => (
-                obj_from_dp_slice(address_n),
-                Obj::try_from(hash.as_slice())?,
-                Obj::try_from(*show_progress)?,
-            )
-                .try_into()?,
             Archived::<TrezorCryptoEnum>::GetAddressMac {
                 address_n,
                 address,
