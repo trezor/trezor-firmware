@@ -6,7 +6,9 @@
 //! `InvalidArgument` before the function is called; every other error is the
 //! function's own.
 
-use trezor_app_sdk::crypto::{self as sdk, EcCurve, HasherExt, HashingAlgorithm, HmacAlgorithm};
+use trezor_app_sdk::crypto::{
+    self as sdk, CanonicalSig, EcCurve, HasherExt, HashingAlgorithm, HmacAlgorithm,
+};
 use trezor_app_sdk::{Error, Result};
 
 use crate::alloc_types::{String, Vec};
@@ -65,14 +67,12 @@ pub fn get_public_key(m: wire::GetPublicKey) -> Result<wire::PublicKey> {
 }
 
 pub fn sign_digest(m: wire::SignDigest) -> Result<wire::Signature> {
-    let signature = sdk::sign_digest(&m.address_n, array(&m.digest)?, m.compressed)?;
-    Ok(wire::Signature {
-        signature: signature.to_vec(),
-    })
-}
-
-pub fn sign_typed_hash(m: wire::SignTypedHash) -> Result<wire::Signature> {
-    let signature = sdk::sign_typed_hash(&m.address_n, array(&m.hash)?, m.show_progress)?;
+    let signature = sdk::sign_digest(
+        &m.address_n,
+        array(&m.digest)?,
+        m.compressed,
+        canonical(m.canonical)?,
+    )?;
     Ok(wire::Signature {
         signature: signature.to_vec(),
     })
@@ -112,6 +112,14 @@ pub fn ec_verify_recover_digest(m: wire::EcVerifyRecoverDigest) -> Result<wire::
 pub fn ec_recover_pubkey(m: wire::EcRecoverPubkey) -> Result<wire::PublicKey> {
     let public_key = sdk::ec_recover_pubkey(curve(m.curve)?, &m.signature, &m.digest)?;
     Ok(wire::PublicKey { public_key })
+}
+
+fn canonical(value: i32) -> Result<CanonicalSig> {
+    match wire::CanonicalSig::try_from(value) {
+        Ok(wire::CanonicalSig::Any) => Ok(CanonicalSig::Any),
+        Ok(wire::CanonicalSig::Ethereum) => Ok(CanonicalSig::Ethereum),
+        Err(_) => Err(Error::InvalidArgument),
+    }
 }
 
 fn curve(value: i32) -> Result<EcCurve> {

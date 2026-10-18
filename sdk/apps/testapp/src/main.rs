@@ -25,7 +25,7 @@ use proto::messages::MessageType;
 use proto::testapp::{
     Base58CheckDecode, Base58CheckEncode, Base58Decode, Base58Encode, CheckAddressMac,
     CosiCombinePublicKeys, CosiVerify, EcRecoverPubkey, EcVerifyRecover, EcVerifyRecoverDigest,
-    GetAddressMac, GetPublicKey, GetXpub, Hash, Hmac, SignDigest, SignTypedHash, VerifyNonceCache,
+    GetAddressMac, GetPublicKey, GetXpub, Hash, Hmac, SignDigest, VerifyNonceCache,
 };
 
 /// Wire codec for [`wire_handler!`] — encodes/decodes messages via [`prost`].
@@ -77,13 +77,6 @@ wire_handler!(
     SignDigest,
     MessageType::Signature,
     crypto::sign_digest
-);
-wire_handler!(
-    handle_sign_typed_hash,
-    ProstCodec,
-    SignTypedHash,
-    MessageType::Signature,
-    crypto::sign_typed_hash
 );
 wire_handler!(
     handle_get_address_mac,
@@ -187,7 +180,6 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::GetXpub) => handle_get_xpub(data),
         Ok(MessageType::GetPublicKey) => handle_get_public_key(data),
         Ok(MessageType::SignDigest) => handle_sign_digest(data),
-        Ok(MessageType::SignTypedHash) => handle_sign_typed_hash(data),
         Ok(MessageType::GetAddressMac) => handle_get_address_mac(data),
         Ok(MessageType::CheckAddressMac) => handle_check_address_mac(data),
         Ok(MessageType::VerifyNonceCache) => handle_verify_nonce_cache(data),
