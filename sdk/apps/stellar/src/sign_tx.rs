@@ -284,7 +284,7 @@ pub fn sign_tx(msg: SignTx) -> Result<SignedTx> {
 /// Core returns the 64-byte Ed25519 signature zero-padded to the 65 bytes of
 /// the signature type shared with the ECDSA curves.
 pub(crate) fn sign_digest(address_n: &[u32], digest: &[u8; 32]) -> Result<[u8; 64]> {
-    let signature = crypto::sign_digest(address_n, digest, false).c()?;
+    let signature = crypto::sign_digest(address_n, digest, false, crypto::CanonicalSig::Any).c()?;
     let mut out = [0u8; 64];
     out.copy_from_slice(&signature[..64]);
     Ok(out)
