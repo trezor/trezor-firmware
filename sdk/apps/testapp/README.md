@@ -25,7 +25,6 @@ called.
 | `GetXpub` | `get_xpub` | `Xpub` |
 | `GetPublicKey` | `get_public_key` | `PublicKey` |
 | `SignDigest` | `sign_digest` | `Signature` |
-| `SignTypedHash` | `sign_typed_hash` | `Signature` |
 | `GetAddressMac` | `get_address_mac` | `AddressMac` |
 | `CheckAddressMac` | `check_address_mac` | `Bool` |
 | `VerifyNonceCache` | `verify_nonce_cache` | `Bool` |

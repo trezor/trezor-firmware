@@ -28,6 +28,11 @@ enum EcCurve {
     Ed25519 = 2;
 }
 
+enum CanonicalSig {
+    Any = 0;
+    Ethereum = 1;
+}
+
 /**
  * Request: crypto::get_hasher, fed `chunks` one update at a time
  * @next Digest
@@ -97,16 +102,7 @@ message SignDigest {
     repeated uint32 address_n = 1;
     required bytes digest = 2;
     required bool compressed = 3;
-}
-
-/**
- * Request: crypto::sign_typed_hash; `hash` must be 32 bytes
- * @next Signature
- */
-message SignTypedHash {
-    repeated uint32 address_n = 1;
-    required bytes hash = 2;
-    required bool show_progress = 3;
+    required CanonicalSig canonical = 4;
 }
 
 /**
