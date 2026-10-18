@@ -27,7 +27,7 @@ struct RustAnalyzerCargoConfig {
 #[derive(Serialize)]
 struct RustAnalyzerCheckConfig {
     #[serde(rename = "extraArgs")]
-    extra_args: [&'static str; 4],
+    extra_args: Vec<String>,
 }
 
 struct ResolvedRustAnalyzerConfig {
@@ -76,15 +76,32 @@ fn resolve_config(args: &RaConfigArgs) -> Result<ResolvedRustAnalyzerConfig> {
 pub fn generate(args: RaConfigArgs) -> Result<()> {
     let ResolvedRustAnalyzerConfig { features, target } = resolve_config(&args)?;
 
+    // Workspace members that cannot be analyzed in this configuration.
+    let mut excluded = Vec::new();
+
+    if !args.model.config()?.secmon {
+        excluded.push("secmon");
+    }
+
+    if !args.emulator {
+        excluded.extend(["xtask", "xbuild"]);
+    }
+
+    // Nothing to exclude means no `check` section at all.
+    let check = (!excluded.is_empty()).then(|| RustAnalyzerCheckConfig {
+        extra_args: excluded
+            .into_iter()
+            .flat_map(|package| ["--exclude".to_owned(), package.to_owned()])
+            .collect(),
+    });
+
     let config = RustAnalyzerToml {
         cargo: RustAnalyzerCargoConfig {
             features,
             target,
             all_targets: false,
         },
-        check: (!args.emulator).then_some(RustAnalyzerCheckConfig {
-            extra_args: ["--exclude", "xtask", "--exclude", "xbuild"],
-        }),
+        check,
     };
 
     let output = toml::to_string_pretty(&config)?;
