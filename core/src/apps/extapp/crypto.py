@@ -80,7 +80,7 @@ async def _get_xpub(session: Session, obj: Any) -> str:
     return keychain.derive(address_n).serialize_public(xpub_magic)
 
 
-async def _get_public_key(session: Session, obj: Any) -> list:
+async def _get_public_key(session: Session, obj: Any) -> bytes:
     address_n, compressed = obj
     _check_not_slip25(address_n)
     keychain = await get_keychain(session.curve, [paths.AlwaysMatchingSchema])
@@ -109,7 +109,7 @@ async def _get_public_key(session: Session, obj: Any) -> list:
         public_key = bip340.publickey(private_key)
     else:
         raise DataError(f"Unsupported curve: {curve}")
-    return [0, public_key]
+    return public_key
 
 
 async def _sign_digest(session: Session, obj: Any) -> bytes:
@@ -139,9 +139,9 @@ async def _sign_digest(session: Session, obj: Any) -> bytes:
     elif curve == "ed25519":
         from trezor.crypto.curve import ed25519
 
-        # The signature crosses the IPC boundary as a fixed 65 bytes shared by all
-        # curves (see `TrezorCryptoResult::Signature`), so the 64-byte Ed25519
-        # signature is zero-padded; the app uses the first 64 bytes.
+        # The app expects a fixed 65-byte signature shared by all curves (see
+        # `sign_digest` in the SDK), so the 64-byte Ed25519 signature is
+        # zero-padded; the app uses the first 64 bytes.
         return ed25519.sign(private_key, digest) + b"\x00"
     elif curve == "bip340":
         from trezor.crypto.curve import bip340
