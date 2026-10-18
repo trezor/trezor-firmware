@@ -47,7 +47,7 @@ pub fn sign_typed_data(msg: SignTypedData) -> Result<TypedDataSignature> {
     let data_hash =
         generate_typed_data_hash(&msg.primary_type, metamask_v4_compat, show_message_hash)?;
 
-    let mut signature = crypto::sign_typed_hash(dp.as_ref(), &data_hash, true)?;
+    let mut signature = crate::helpers::sign_digest(dp.as_ref(), &data_hash, true)?;
 
     signature.rotate_left(1);
 
