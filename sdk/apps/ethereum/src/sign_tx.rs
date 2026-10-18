@@ -212,7 +212,7 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
 }
 
 fn sign_digest(msg: &SignTx, digest: &[u8; 32]) -> Result<TxRequest> {
-    let signature = crypto::sign_typed_hash(&msg.address_n, digest, true).c()?;
+    let signature = helpers::sign_digest(&msg.address_n, digest, true).c()?;
 
     let mut req = TxRequest::default();
     let mut signature_v: u32 = signature[0].into();

@@ -260,7 +260,7 @@ fn access_list_item_length(item: &AccessList) -> Result<u32> {
 }
 
 fn sign_digest(msg: &SignTxEip1559, digest: &[u8; 32]) -> Result<TxRequest> {
-    let signature = crypto::sign_typed_hash(&msg.address_n, digest, true)?;
+    let signature = helpers::sign_digest(&msg.address_n, digest, true)?;
 
     let req = TxRequest {
         signature_v: Some(signature[0] as u32 - 27),
