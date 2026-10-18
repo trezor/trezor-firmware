@@ -5,10 +5,12 @@ from buffer_types import *
 # rust/src/crypto_api.rs
 def send_crypto_result(
     *,
-    result: CryptoResult,
+    result: str | bytes | bool,
     ipc_cb: Callable[[bytes], None],
 ) -> None:
-    """Serialize a crypto result (e.g. CryptoResult) into bytes and send it back via the ipc_cb callback."""
+    """Serialize a crypto result into bytes and send it back via the ipc_cb callback.
+    A failed operation is sent as `False`.
+    """
 
 
 # rust/src/crypto_api.rs
