@@ -7,7 +7,7 @@ use stabby::str::Str;
 use stabby::string::String;
 use trezor_app_sdk::structs::{TrezorCryptoEnum, TrezorCryptoResultRef};
 use trezor_app_sdk::traits::crypto::{
-    BoxedHasher, CryptoError, CryptoV1, EcCurve, HashingAlgorithm, HmacAlgorithm,
+    BoxedHasher, CanonicalSig, CryptoError, CryptoV1, EcCurve, HashingAlgorithm, HmacAlgorithm,
 };
 use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
 use trezor_app_sdk::traits::wire::WireError;
@@ -170,39 +170,19 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         .into()
     }
 
-    extern "C" fn sign_typed_hash<'a>(
-        &self,
-        address_n: Slice<'a, u32>,
-        hash: [u8; 32],
-        show_progress: bool,
-    ) -> FastResult<[u8; 65], WireError> {
-        (|| {
-            let data = ipc_crypto_call(&TrezorCryptoEnum::SignTypedHash {
-                address_n: address_n.as_slice().into(),
-                hash,
-                show_progress,
-            })?;
-            let archived = rkyv::access::<rkyv::Archived<TrezorCryptoResultRef>, Failure>(&data)
-                .map_err(|_| WireError::DecodeError)?;
-            match archived {
-                rkyv::Archived::<TrezorCryptoResultRef>::Signature(sig) => Ok(*sig),
-                _ => Err(WireError::UnexpectedResponse),
-            }
-        })()
-        .into()
-    }
-
     extern "C" fn sign_digest<'a>(
         &self,
         address_n: Slice<'a, u32>,
         digest: [u8; 32],
         compressed: bool,
+        canonical: CanonicalSig,
     ) -> FastResult<[u8; 65], WireError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::SignDigest {
                 address_n: address_n.as_slice().into(),
                 digest,
                 compressed,
+                canonical: canonical as u8,
             })?;
             let archived = rkyv::access::<rkyv::Archived<TrezorCryptoResultRef>, Failure>(&data)
                 .map_err(|_| WireError::DecodeError)?;
