@@ -1,10 +1,10 @@
 #[cfg(feature = "app_loading")]
 use rkyv::{rancor::Failure, Archived};
 #[cfg(feature = "app_loading")]
-use trezor_app_sdk::structs::{Slice, TrezorCryptoEnum, TrezorCryptoResultRef};
+use trezor_app_sdk::structs::{Slice, TrezorCryptoEnum, TrezorCryptoResult};
 
 #[cfg(feature = "app_loading")]
-use crate::micropython::gc::{Gc, GcBox};
+use crate::micropython::gc::GcBox;
 use crate::micropython::macros::{obj_fn_kw, obj_module};
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
@@ -131,69 +131,25 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
             }
         }));
 
-        // Map MicroPython CryptoResult object to Rust enum for serialization.
-        // `kwargs` keeps the result object, and so every buffer read from it
-        // below, alive for the whole block. `msg` borrows from those buffers
-        // only until it is serialized into `bytes`, before `ipc_cb` runs any
-        // MicroPython code.
-        let msg = if obj.is_str() {
-            // SAFETY: a str is immutable, and no MicroPython code runs while
-            // `data` is borrowed (see above).
+        // Map the handler's return value to the generic result; the app checks
+        // it against the shape its operation expects. `kwargs` keeps the result
+        // object alive for the whole block, and `msg` borrows from it only until
+        // it is serialized into `bytes`, before `ipc_cb` runs any MicroPython
+        // code.
+        let msg = if obj.is_str() || obj.is_bytes() {
+            // SAFETY: str and bytes are immutable, and no MicroPython code runs
+            // while `data` is borrowed (see above).
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
-            match data.len() {
-                111 => TrezorCryptoResultRef::Xpub(unwrap!(data.try_into())),
-                _ => {
-                    log::debug!("Unexpected data length for crypto result: {}", data.len());
-                    return Err(Error::TypeError);
-                }
-            }
-        } else if obj.is_bytes() {
-            // SAFETY: bytes are immutable, and no MicroPython code runs while
-            // `data` is borrowed (see above).
-            let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
-            match data.len() {
-                32 => TrezorCryptoResultRef::AddressMac(unwrap!(data.try_into())),
-                65 => TrezorCryptoResultRef::Signature(unwrap!(data.try_into())),
-                _ => {
-                    log::debug!("Unexpected data length for crypto result: {}", data.len());
-                    return Err(Error::TypeError);
-                }
+            if obj.is_str() {
+                let string = core::str::from_utf8(data).map_err(|_| Error::TypeError)?;
+                TrezorCryptoResult::String(string.into())
+            } else {
+                TrezorCryptoResult::Bytes(data.into())
             }
         } else if obj.is_immediate() {
-            TrezorCryptoResultRef::Boolean(unwrap!(bool::try_from(obj)))
+            TrezorCryptoResult::Boolean(bool::try_from(obj)?)
         } else {
-            log::debug!("Tuple serialization for crypto result");
-            // Expect a (type_tag: int, bytes) tuple for ambiguous lengths (e.g. 65 bytes)
-            let list: Gc<List> = obj.try_into()?;
-            log::debug!("Tuple length: {}", list.len());
-            assert!(
-                list.len() == 2,
-                "Expected a tuple of (type_tag: int, bytes)"
-            );
-            log::debug!("Getting tag");
-            let tag_obj = list.get(0)?;
-            let tag: u8 = unwrap!(tag_obj.try_into());
-            log::debug!("Tag: {}", tag);
-            log::debug!("Getting bytes");
-            let bytes_obj = list.get(1)?;
-            // SAFETY: `list` keeps `bytes_obj` alive, and no MicroPython code
-            // runs while `data` is borrowed (see above), so nothing can modify
-            // the buffer even if it is mutable.
-            let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(bytes_obj) });
-            log::debug!("Data length: {}", data.len());
-            match tag {
-                0 => {
-                    assert!(
-                        data.len() == 32 || data.len() == 33 || data.len() == 65,
-                        "Expected public key to be 32, 33 or 65 bytes"
-                    );
-                    TrezorCryptoResultRef::PublicKey(unwrap!(data.try_into()))
-                }
-                _ => {
-                    log::debug!("Unexpected type tag for crypto result: {}", tag);
-                    return Err(Error::TypeError);
-                }
-            }
+            return Err(Error::TypeError);
         };
 
         let bytes = crate::util::archive::to_bytes_obj(&msg)?;
@@ -220,10 +176,13 @@ pub static mp_module_trezorcrypto_api: Module = obj_module! {
 
     /// def send_crypto_result(
     ///     *,
-    ///     result: CryptoResult,
+    ///     result: str | bytes | bool,
     ///     ipc_cb: Callable[[bytes], None],
     /// ) -> None:
-    ///     """Serialize a crypto result (e.g. CryptoResult) into bytes and send it back via the ipc_cb callback."""
+    ///     """Serialize a crypto result into bytes and send it back via the ipc_cb callback.
+    ///
+    ///     A failed operation is sent as `False`.
+    ///     """
     Qstr::MP_QSTR_send_crypto_result => obj_fn_kw!(0, new_send_crypto_result).as_obj(),
 
 
