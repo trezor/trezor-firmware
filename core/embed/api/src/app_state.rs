@@ -12,6 +12,7 @@
 //! When an app is stopped, its task, stack and heap go away together with its
 //! state, so Core is left holding nothing that points into the stopped app.
 
+use alloc::boxed::Box;
 use core::ptr::null_mut;
 use core::sync::atomic::{AtomicPtr, Ordering};
 
@@ -27,7 +28,19 @@ pub(crate) struct AppState {
     /// `#[global_allocator]` on the app's task (see [`crate::allocator`]).
     pub allocator: Mutex<Talc<Manual, DefaultBinning>>,
     /// The app's IPC inbox, registered by [`crate::wire::register_inbox`].
-    pub inbox: Once<IpcInbox<&'static mut [usize]>>,
+    pub inbox: Once<IpcInbox<Box<[usize]>>>,
+}
+
+impl Drop for AppState {
+    fn drop(&mut self) {
+        // The inbox buffer lives on the app's heap, so it must go back to this
+        // state's allocator. By now `with_app_state` has uninstalled the state,
+        // and the global allocator would hand the buffer to Core's heap
+        // instead. Drop the inbox with the state installed again; the
+        // allocator itself is only dropped after this function returns.
+        let inbox = core::mem::replace(&mut self.inbox, Once::new());
+        with_app_state(self, || drop(inbox));
+    }
 }
 
 impl AppState {
