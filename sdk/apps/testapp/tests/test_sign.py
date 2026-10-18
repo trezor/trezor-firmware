@@ -133,52 +133,45 @@ def test_sign_digest_forbidden_path(session: Session, instance_id: int, path: st
 
 
 # ============================================================================
-# sign_typed_hash
+# sign_digest with an Ethereum-canonical signature
 # ============================================================================
 
 
 @pytest.mark.parametrize("digest", DIGESTS)
-@pytest.mark.parametrize("show_progress", [False, True])
-def test_sign_typed_hash(
-    session: Session, instance_id: int, digest: bytes, show_progress: bool
+def test_sign_digest_canonical_ethereum(
+    session: Session, instance_id: int, digest: bytes
 ):
-    signature = testapp_ext.sign_typed_hash(
-        session, instance_id, ADDRESS_N, digest, show_progress
+    signature = testapp_ext.sign_digest(
+        session, instance_id, ADDRESS_N, digest, False, m.CanonicalSig.Ethereum
     )
-    # Ethereum-style: v = 27 + recovery id.
+    # Ethereum-style: v = 27 + recovery id, which fits in one bit.
     recid = check_signature(signature, public_key(session, instance_id), digest, 27)
     assert recid in (0, 1)
 
 
-def test_sign_typed_hash_deterministic(session: Session, instance_id: int):
-    digest = hashlib.sha256(b"typed").digest()
-    a = testapp_ext.sign_typed_hash(session, instance_id, ADDRESS_N, digest, False)
-    b = testapp_ext.sign_typed_hash(session, instance_id, ADDRESS_N, digest, True)
-    assert a == b
-
-
-@pytest.mark.parametrize("show_progress", [False, True])
-def test_sign_typed_hash_zero_digest(
-    session: Session, instance_id: int, show_progress: bool
-):
-    """An all-zero hash is refused: its signature could be forged for any key."""
+def test_sign_digest_canonical_ethereum_zero_digest(session: Session, instance_id: int):
+    """An all-zero digest is refused: its signature could be forged for any key."""
     with raises(SdkError.DataError, UNEXPECTED_RESPONSE):
-        testapp_ext.sign_typed_hash(
-            session, instance_id, ADDRESS_N, b"\x00" * 32, show_progress
-        )
-
-
-@pytest.mark.parametrize("length", [0, 31, 33])
-def test_sign_typed_hash_wrong_length(session: Session, instance_id: int, length: int):
-    with raises(SdkError.InvalidArgument):
-        testapp_ext.sign_typed_hash(
-            session, instance_id, ADDRESS_N, b"\x01" * length, False
+        testapp_ext.sign_digest(
+            session,
+            instance_id,
+            ADDRESS_N,
+            b"\x00" * 32,
+            False,
+            m.CanonicalSig.Ethereum,
         )
 
 
 @pytest.mark.parametrize("path", FORBIDDEN_PATHS)
-def test_sign_typed_hash_forbidden_path(session: Session, instance_id: int, path: str):
+def test_sign_digest_canonical_ethereum_forbidden_path(
+    session: Session, instance_id: int, path: str
+):
     with raises(SdkError.DataError, UNEXPECTED_RESPONSE):
-        testapp_ext.sign_typed_hash(
-            session, instance_id, parse_path(path), b"\x01" * 32, False
+        testapp_ext.sign_digest(
+            session,
+            instance_id,
+            parse_path(path),
+            b"\x01" * 32,
+            False,
+            m.CanonicalSig.Ethereum,
         )

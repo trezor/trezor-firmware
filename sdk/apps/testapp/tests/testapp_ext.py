@@ -180,30 +180,16 @@ def sign_digest(
     address_n: "Address",
     digest: bytes,
     compressed: bool,
+    canonical: m.CanonicalSig = m.CanonicalSig.Any,
 ) -> bytes:
     res = call_ext(
         session,
         instance_id,
         msg_data=m.SignDigest(
-            address_n=list(address_n), digest=digest, compressed=compressed
-        ),
-        expect=[m.Signature],
-    )
-    return res.signature
-
-
-def sign_typed_hash(
-    session: "Session",
-    instance_id: int,
-    address_n: "Address",
-    hash: bytes,
-    show_progress: bool,
-) -> bytes:
-    res = call_ext(
-        session,
-        instance_id,
-        msg_data=m.SignTypedHash(
-            address_n=list(address_n), hash=hash, show_progress=show_progress
+            address_n=list(address_n),
+            digest=digest,
+            compressed=compressed,
+            canonical=canonical,
         ),
         expect=[m.Signature],
     )
