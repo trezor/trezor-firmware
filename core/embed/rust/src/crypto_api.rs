@@ -22,6 +22,9 @@ extern "C" fn new_deserialize_crypto_message(
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
 
+        // SAFETY: `kwargs` keeps `obj` alive for the whole block, and no
+        // MicroPython code runs while `data` is borrowed (the block only
+        // allocates the result objects), so nothing can modify the buffer.
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
         fn obj_from_dp_slice(slice: &Archived<Slice<u32>>) -> Obj {
@@ -31,6 +34,8 @@ extern "C" fn new_deserialize_crypto_message(
             for &item in slice {
                 unwrap!(list.append(unwrap!(Obj::try_from(item.to_native()))));
             }
+            // SAFETY: `list` is local and is not modified while the slice is
+            // alive; `List::alloc` only copies the items out of it.
             unwrap!(List::alloc(unsafe { list.as_slice() })).into()
         }
 
@@ -98,6 +103,8 @@ extern "C" fn new_deserialize_crypto_message(
 
         Ok(result)
     };
+    // SAFETY: MicroPython calls this as a keyword function, so `args` points to
+    // `n_args` objects and `kwargs` to a valid map.
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
@@ -126,8 +133,14 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
             }
         }));
 
-        // Map MicroPython CryptoResult object to Rust enum for serialization
+        // Map MicroPython CryptoResult object to Rust enum for serialization.
+        // `kwargs` keeps the result object, and so every buffer read from it
+        // below, alive for the whole block. `msg` borrows from those buffers
+        // only until it is serialized into `bytes`, before `ipc_cb` runs any
+        // MicroPython code.
         let msg = if obj.is_str() {
+            // SAFETY: a str is immutable, and no MicroPython code runs while
+            // `data` is borrowed (see above).
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
             match data.len() {
                 111 => TrezorCryptoResultRef::Xpub(unwrap!(data.try_into())),
@@ -137,6 +150,8 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
                 }
             }
         } else if obj.is_bytes() {
+            // SAFETY: bytes are immutable, and no MicroPython code runs while
+            // `data` is borrowed (see above).
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
             match data.len() {
                 32 => TrezorCryptoResultRef::AddressMac(unwrap!(data.try_into())),
@@ -163,6 +178,9 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
             log::debug!("Tag: {}", tag);
             log::debug!("Getting bytes");
             let bytes_obj = list.get(1)?;
+            // SAFETY: `list` keeps `bytes_obj` alive, and no MicroPython code
+            // runs while `data` is borrowed (see above), so nothing can modify
+            // the buffer even if it is mutable.
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(bytes_obj) });
             log::debug!("Data length: {}", data.len());
             match tag {
@@ -186,6 +204,8 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
 
         Ok(Obj::const_none())
     };
+    // SAFETY: MicroPython calls this as a keyword function, so `args` points to
+    // `n_args` objects and `kwargs` to a valid map.
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
