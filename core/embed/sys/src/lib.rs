@@ -13,7 +13,13 @@ pub mod buffer;
 pub mod ipc;
 pub mod irq;
 pub mod sysevent;
+#[cfg(feature = "dbg_console")]
 pub mod syslog;
+
+#[cfg(not(feature = "dbg_console"))]
+pub mod syslog_fallback;
+#[cfg(not(feature = "dbg_console"))]
+pub use syslog_fallback as syslog;
 pub mod task;
 
 #[cfg(all(feature = "dbg_console", feature = "log_external"))]
