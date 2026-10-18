@@ -4,7 +4,7 @@ use rkyv::{rancor::Failure, Archived};
 use trezor_app_sdk::structs::{Slice, TrezorCryptoEnum, TrezorCryptoResultRef};
 
 #[cfg(feature = "app_loading")]
-use crate::micropython::gc::Gc;
+use crate::micropython::gc::{Gc, GcBox};
 use crate::micropython::macros::{obj_fn_kw, obj_module};
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
@@ -34,9 +34,7 @@ extern "C" fn new_deserialize_crypto_message(
             for &item in slice {
                 unwrap!(list.append(unwrap!(Obj::try_from(item.to_native()))));
             }
-            // SAFETY: `list` is local and is not modified while the slice is
-            // alive; `List::alloc` only copies the items out of it.
-            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
+            GcBox::leak(list).into()
         }
 
         let archived = rkyv::access::<Archived<TrezorCryptoEnum>, Failure>(data)
