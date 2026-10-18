@@ -5,7 +5,7 @@ use stabby::boxed::BoxedSlice;
 use stabby::slice::Slice;
 use stabby::str::Str;
 use stabby::string::String;
-use trezor_app_sdk::structs::{TrezorCryptoEnum, TrezorCryptoResultRef};
+use trezor_app_sdk::structs::{TrezorCryptoEnum, TrezorCryptoResult};
 use trezor_app_sdk::traits::crypto::{
     BoxedHasher, CanonicalSig, CryptoError, CryptoV1, EcCurve, HashingAlgorithm, HmacAlgorithm,
 };
@@ -17,13 +17,9 @@ use crate::wire::{CoreIpcService, ipc_call, to_bytes};
 mod hashers;
 
 /// Serializes `value` and sends it to Core's crypto service, returning the
-/// raw response bytes. Callers deserialize themselves — each `CryptoV1`
-/// method knows exactly which [`TrezorCryptoResultRef`] variant to expect,
-/// borrows it from the archived form, and copies out its own owned return
-/// value before the buffer goes out of scope (rather than round-tripping
-/// through an owned intermediate — `PublicKey`'s payload borrows from the
-/// archived buffer, so there is no single owned shape that fits every
-/// variant).
+/// raw response bytes. Each `CryptoV1` method reads the [`TrezorCryptoResult`]
+/// shape it expects out of them with one of the `expect_*` helpers below, and
+/// copies out its own return value before the buffer goes out of scope.
 fn ipc_crypto_call(value: &TrezorCryptoEnum) -> Result<BoxedSlice<u8>, WireError> {
     let bytes = to_bytes(value).map_err(|_| WireError::DecodeError)?;
     let (_id, data) = ipc_call(
@@ -33,6 +29,43 @@ fn ipc_crypto_call(value: &TrezorCryptoEnum) -> Result<BoxedSlice<u8>, WireError
         TIMEOUT_MAX,
     )?;
     Ok(data)
+}
+
+/// The archived [`TrezorCryptoResult`] in a crypto service response.
+fn access_result(data: &[u8]) -> Result<&rkyv::Archived<TrezorCryptoResult<'_>>, WireError> {
+    rkyv::access::<rkyv::Archived<TrezorCryptoResult>, Failure>(data)
+        .map_err(|_| WireError::DecodeError)
+}
+
+/// A `Bytes` result.
+fn expect_bytes(data: &[u8]) -> Result<&[u8], WireError> {
+    match access_result(data)? {
+        rkyv::Archived::<TrezorCryptoResult>::Bytes(bytes) => Ok(bytes.as_ref()),
+        _ => Err(WireError::UnexpectedResponse),
+    }
+}
+
+/// A `Bytes` result of exactly `N` bytes.
+fn expect_array<const N: usize>(data: &[u8]) -> Result<[u8; N], WireError> {
+    expect_bytes(data)?
+        .try_into()
+        .map_err(|_| WireError::UnexpectedResponse)
+}
+
+/// A `String` result.
+fn expect_str(data: &[u8]) -> Result<&str, WireError> {
+    match access_result(data)? {
+        rkyv::Archived::<TrezorCryptoResult>::String(string) => Ok(string.as_ref()),
+        _ => Err(WireError::UnexpectedResponse),
+    }
+}
+
+/// A `Boolean` result.
+fn expect_bool(data: &[u8]) -> Result<bool, WireError> {
+    match access_result(data)? {
+        rkyv::Archived::<TrezorCryptoResult>::Boolean(value) => Ok(*value),
+        _ => Err(WireError::UnexpectedResponse),
+    }
 }
 
 /// Maps an [`EcCurve`] to the Weierstrass curve `crypto::ecdsa` understands.
@@ -138,12 +171,10 @@ impl CryptoV1 for TrezorCryptoV1Impl {
                 address_n: address_n.as_slice().into(),
                 xpub_magic,
             })?;
-            let archived = rkyv::access::<rkyv::Archived<TrezorCryptoResultRef>, Failure>(&data)
-                .map_err(|_| WireError::DecodeError)?;
-            match archived {
-                rkyv::Archived::<TrezorCryptoResultRef>::Xpub(xpub) => Ok(*xpub),
-                _ => Err(WireError::UnexpectedResponse),
-            }
+            expect_str(&data)?
+                .as_bytes()
+                .try_into()
+                .map_err(|_| WireError::UnexpectedResponse)
         })()
         .into()
     }
@@ -158,12 +189,9 @@ impl CryptoV1 for TrezorCryptoV1Impl {
                 address_n: address_n.as_slice().into(),
                 compressed,
             })?;
-            let archived = rkyv::access::<rkyv::Archived<TrezorCryptoResultRef>, Failure>(&data)
-                .map_err(|_| WireError::DecodeError)?;
-            match archived {
-                rkyv::Archived::<TrezorCryptoResultRef>::PublicKey(key) => {
-                    Ok(BoxedSlice::from(key.as_ref()))
-                }
+            let key = expect_bytes(&data)?;
+            match key.len() {
+                32 | 33 | 65 => Ok(BoxedSlice::from(key)),
                 _ => Err(WireError::UnexpectedResponse),
             }
         })()
@@ -184,12 +212,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
                 compressed,
                 canonical: canonical as u8,
             })?;
-            let archived = rkyv::access::<rkyv::Archived<TrezorCryptoResultRef>, Failure>(&data)
-                .map_err(|_| WireError::DecodeError)?;
-            match archived {
-                rkyv::Archived::<TrezorCryptoResultRef>::Signature(sig) => Ok(*sig),
-                _ => Err(WireError::UnexpectedResponse),
-            }
+            expect_array::<65>(&data)
         })()
         .into()
     }
@@ -208,12 +231,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
                 address: address.as_str().into(),
                 slip44,
             })?;
-            let archived = rkyv::access::<rkyv::Archived<TrezorCryptoResultRef>, Failure>(&data)
-                .map_err(|_| WireError::DecodeError)?;
-            match archived {
-                rkyv::Archived::<TrezorCryptoResultRef>::Boolean(valid) => Ok(*valid),
-                _ => Err(WireError::UnexpectedResponse),
-            }
+            expect_bool(&data)
         })()
         .into()
     }
@@ -230,12 +248,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
                 address: address.as_str().into(),
                 slip44,
             })?;
-            let archived = rkyv::access::<rkyv::Archived<TrezorCryptoResultRef>, Failure>(&data)
-                .map_err(|_| WireError::DecodeError)?;
-            match archived {
-                rkyv::Archived::<TrezorCryptoResultRef>::AddressMac(mac) => Ok(*mac),
-                _ => Err(WireError::UnexpectedResponse),
-            }
+            expect_array::<32>(&data)
         })()
         .into()
     }
@@ -248,12 +261,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
             let data = ipc_crypto_call(&TrezorCryptoEnum::VerifyNonceCache {
                 nonce: nonce.as_slice().into(),
             })?;
-            let archived = rkyv::access::<rkyv::Archived<TrezorCryptoResultRef>, Failure>(&data)
-                .map_err(|_| WireError::DecodeError)?;
-            match archived {
-                rkyv::Archived::<TrezorCryptoResultRef>::Boolean(valid) => Ok(*valid),
-                _ => Err(WireError::UnexpectedResponse),
-            }
+            expect_bool(&data)
         })()
         .into()
     }
