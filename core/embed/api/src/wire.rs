@@ -143,16 +143,17 @@ pub(crate) fn ipc_call(
 /// rather than one hardcoded size for everyone. Called once per launch by
 /// [`crate::coreapp_app_entry`], before any app code runs — Core never
 /// allocates memory of its own for IPC, it only ever borrows a buffer carved
-/// out of the app's own heap. The buffer is leaked: it lives as long as the
-/// app's heap.
+/// out of the app's own heap. The inbox owns the buffer and frees it when the
+/// app's state is dropped (see [`app_state::AppState`]).
 ///
 /// The byte size is a power of two of at least 8 (enforced at header
 /// verification), so it always divides evenly into `usize` words on both the
 /// 32-bit target and the 64-bit emulator.
 pub(crate) fn register_inbox() {
     let inbox_words = io::get_ipc_buffer_size() / core::mem::size_of::<usize>();
-    let buffer: &'static mut [usize] =
-        alloc::boxed::Box::leak(alloc::vec![0usize; inbox_words].into_boxed_slice());
+    let buffer = alloc::boxed::Box::<[usize]>::new_zeroed_slice(inbox_words);
+    // SAFETY: an all-zero `usize` is a valid `usize`.
+    let buffer = unsafe { buffer.assume_init() };
     app_state::get().inbox.call_once(|| {
         unwrap!(
             IpcInbox::new(coreapp(), buffer),

@@ -23,7 +23,7 @@ crypto.workspace = true
 models.workspace = true
 rtl.workspace = true
 sec.workspace = true
-sys.workspace = true
+sys = { workspace = true, features = ["alloc"] }
 io.workspace = true
 
 [features]
