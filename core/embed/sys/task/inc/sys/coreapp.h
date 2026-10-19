@@ -79,8 +79,9 @@ mpu_area_t coreapp_get_tls_area(void);
 // Returns the coreapp function that a loaded app's task is started on.
 //
 // The loader does not jump into the app's own `applet_main` directly.
-// Instead it schedules this coreapp function, passing `applet_main` to it as
-// its only argument. That inversion lets Core run per-launch setup -- most
+// Instead it schedules this coreapp function, passing it a pointer to the
+// app's launch arguments (`app_args_t`, copied onto the app's stack), which
+// include `applet_main`. That inversion lets Core run per-launch setup -- most
 // importantly claiming the app's heap for the Rust global allocator the app
 // allocates from -- before any app code executes, and it is Core, not the
 // loader, that hands the API getter to `applet_main`.
