@@ -35,10 +35,6 @@
 #include <io/touch.h>
 #endif
 
-#ifdef USE_NFC
-#include <io/nfc.h>
-#endif
-
 #include <io/usb.h>
 
 #define CHECK_PARAM_RANGE(value, minimum, maximum) \
@@ -69,9 +65,6 @@
 #ifdef USE_POWER_MANAGER
 #include "modtrezorio-pm.h"
 #endif
-#ifdef USE_NFC
-#include "modtrezorio-nfc.h"
-#endif
 #ifdef USE_IPC
 #include "modtrezorio-ipc.h"
 #endif
@@ -84,7 +77,6 @@
 ///     fatfs,
 ///     haptic,
 ///     ipc,
-///     nfc,
 ///     pm,
 ///     rgb_led,
 ///     sdcard,
@@ -100,6 +92,9 @@
 /// PM_EVENT: int  # interface id for power manager events
 ///
 /// NFC_EVENT: int  # interface id for NFC events
+/// NFC_CONNECTED: int  # connected to new tag
+/// NFC_DISCONNECTED: int  # disconnected from tag
+/// NFC_TRANSCEIVE_DONE: int  # transceive operation complete
 ///
 /// IPC2_EVENT: int  # interface id for IPC2 events
 ///
@@ -159,8 +154,11 @@ static const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_PM_EVENT), MP_ROM_INT(SYSHANDLE_POWER_MANAGER)},
 #endif
 #ifdef USE_NFC
-    {MP_ROM_QSTR(MP_QSTR_nfc), MP_ROM_PTR(&mod_trezorio_nfc_module)},
     {MP_ROM_QSTR(MP_QSTR_NFC_EVENT), MP_ROM_INT(SYSHANDLE_NFC)},
+    {MP_ROM_QSTR(MP_QSTR_NFC_CONNECTED), MP_ROM_INT(NFC_EVENT_CONNECTED)},
+    {MP_ROM_QSTR(MP_QSTR_NFC_DISCONNECTED), MP_ROM_INT(NFC_EVENT_DISCONNECTED)},
+    {MP_ROM_QSTR(MP_QSTR_NFC_TRANSCEIVE_DONE),
+     MP_ROM_INT(NFC_EVENT_TRANSCEIVE_DONE)},
 #endif
 #ifdef USE_IPC
     {MP_ROM_QSTR(MP_QSTR_IPC2_EVENT), MP_ROM_INT(SYSHANDLE_IPC2)},

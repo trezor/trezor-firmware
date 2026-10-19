@@ -7,7 +7,8 @@ pub mod usb;
 
 #[cfg(feature = "ble")]
 mod ble;
-
+#[cfg(feature = "n1w1")]
+mod nfc;
 #[cfg(feature = "power_manager")]
 mod power_manager;
 
@@ -15,6 +16,8 @@ mod power_manager;
 pub use ble::BLEEvent;
 #[cfg(feature = "button")]
 pub use button::{ButtonEvent, PhysicalButton};
+#[cfg(feature = "n1w1")]
+pub use nfc::NfcEvent;
 #[cfg(feature = "power_manager")]
 pub use power_manager::PMEvent;
 #[cfg(feature = "touch")]

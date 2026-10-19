@@ -103,7 +103,6 @@ from . import (
     fatfs,
     haptic,
     ipc,
-    nfc,
     pm,
     rgb_led,
     sdcard,
@@ -118,6 +117,9 @@ BLE_EVENT: int # interface id for BLE events
 PM_EVENT: int  # interface id for power manager events
 
 NFC_EVENT: int  # interface id for NFC events
+NFC_CONNECTED: int  # connected to new tag
+NFC_DISCONNECTED: int  # disconnected from tag
+NFC_TRANSCEIVE_DONE: int  # transceive operation complete
 
 IPC2_EVENT: int  # interface id for IPC2 events
 
