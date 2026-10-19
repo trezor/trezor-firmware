@@ -77,10 +77,10 @@ _SIGNING_UI_STUBS = (
 
 
 def stub_signing_ui() -> None:
-    from apps.bitcoin.sign_tx import helpers
+    from apps.bitcoin.sign_tx import layout
 
     for name in _SIGNING_UI_STUBS:
-        setattr(helpers, name, _auto_confirm)
+        setattr(layout, name, _auto_confirm)
 
 
 class ScriptedContext:
