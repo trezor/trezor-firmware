@@ -60,6 +60,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_MsgDef;
   MP_QSTR_NONE;
   MP_QSTR_NORMAL;
+  MP_QSTR_NfcCommand;
   MP_QSTR_NfcCommandFailed;
   MP_QSTR_NfcError;
   MP_QSTR_NotificationLevel;

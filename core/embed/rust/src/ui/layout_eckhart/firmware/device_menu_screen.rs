@@ -44,12 +44,35 @@ pub enum DeviceMenuId {
     WipeCode,
     Device,
     Power,
+    #[cfg(all(feature = "n1w1", feature = "debug"))]
+    Nfc,
 }
 
 // FIXME: use mem::variant_count when it becomes stable
-const MAX_SUBMENUS: usize = 9;
+const MAX_SUBMENUS: usize = 9 + cfg!(all(feature = "n1w1", feature = "debug")) as usize;
 // submenus, device + hostinfo screen couples, regulatory and about screens
 const MAX_SUBSCREENS: usize = MAX_SUBMENUS + 2 * MAX_PAIRED_DEVICES + 2;
+
+/// Labels of the NFC debug menu items. `DeviceMenuMsg::NfcCommand` carries the
+/// index into this list, the application layer maps it to the actual command.
+#[cfg(all(feature = "n1w1", feature = "debug"))]
+const NFC_COMMANDS: [&str; 10] = [
+    "Wipe",
+    "ReadSeed",
+    "WriteSeed",
+    "ReadSeedMeta",
+    "WriteSeedMeta",
+    "SetPin",
+    "ReadPinCounter",
+    // "ReadSuccessLog",
+    "ReadFailureLogs",
+    // "GetOsVersion",
+    "GetUid",
+    "MeasureCpuFreq",
+    //"HardenMemory",
+    //"IntegrityCheck",
+    //"PinUnlocked",
+];
 
 #[derive(Clone)]
 enum Action {
@@ -71,6 +94,8 @@ impl DeviceMenuScreen {
             DeviceMenuMsg::DisconnectDevice => DeviceMenuId::PairAndConnect,
             DeviceMenuMsg::UnpairDevice(_) => DeviceMenuId::PairAndConnect,
             DeviceMenuMsg::UnpairAllDevices => DeviceMenuId::PairAndConnect,
+            #[cfg(all(feature = "n1w1", feature = "debug"))]
+            DeviceMenuMsg::NfcCommand(_) => DeviceMenuId::Nfc,
             DeviceMenuMsg::TurnOff => DeviceMenuId::Power,
             DeviceMenuMsg::Reboot => DeviceMenuId::Power,
             DeviceMenuMsg::RebootToBootloader => DeviceMenuId::Power,
@@ -389,6 +414,8 @@ impl DeviceMenuScreen {
         }
 
         screen.register_pair_and_connect_menu(paired_devices, submenu_indices, connected_idx);
+        #[cfg(all(feature = "n1w1", feature = "debug"))]
+        screen.register_nfc_menu();
         let pin_unset = pin_enabled == Some(false);
         screen.register_root_menu(backup_failed, backup_needed, pin_unset, connected_subtext);
 
@@ -457,6 +484,19 @@ impl DeviceMenuScreen {
         items.add(unpair_all_item);
 
         self.register_submenu(DeviceMenuId::PairAndConnect, Submenu::new(items));
+    }
+
+    #[cfg(all(feature = "n1w1", feature = "debug"))]
+    fn register_nfc_menu(&mut self) {
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
+        for (i, name) in (0u8..).zip(NFC_COMMANDS) {
+            items.add(MenuItem::return_msg(
+                name.into(),
+                DeviceMenuMsg::NfcCommand(i),
+            ));
+        }
+
+        self.register_submenu(DeviceMenuId::Nfc, Submenu::new(items));
     }
 
     fn register_settings_menu(&mut self, ble_enabled: bool) {
@@ -763,6 +803,11 @@ impl DeviceMenuScreen {
             ));
         }
 
+        #[cfg(all(feature = "n1w1", feature = "debug"))]
+        if self.has_submenu(DeviceMenuId::Nfc) {
+            items.add(MenuItem::go_to_submenu("NFC".into(), DeviceMenuId::Nfc));
+        }
+
         self.register_submenu(DeviceMenuId::Root, Submenu::new(items).with_battery());
     }
 
@@ -1015,6 +1060,8 @@ impl DeviceMenuScreen {
                 DeviceMenuId::WipeCode => DeviceMenuId::Security,
                 DeviceMenuId::Device => DeviceMenuId::Settings,
                 DeviceMenuId::Power => DeviceMenuId::Root,
+                #[cfg(all(feature = "n1w1", feature = "debug"))]
+                DeviceMenuId::Nfc => DeviceMenuId::Root,
             },
             Subscreen::DeviceScreen(..) => DeviceMenuId::PairAndConnect,
             Subscreen::AboutScreen | Subscreen::RegulatoryScreen => DeviceMenuId::Device,

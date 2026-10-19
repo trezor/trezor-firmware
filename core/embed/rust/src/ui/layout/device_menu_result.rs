@@ -16,6 +16,10 @@ pub enum DeviceMenuMsg {
     UnpairDevice(u8), // unpair a device
     UnpairAllDevices,
 
+    // NFC
+    #[cfg(all(feature = "n1w1", feature = "debug"))]
+    NfcCommand(u8), // run an NFC command
+
     // Power
     TurnOff,
     Reboot,
@@ -51,6 +55,8 @@ impl DeviceMenuMsg {
             Self::DisconnectDevice => Qstr::MP_QSTR_DisconnectDevice,
             Self::UnpairDevice(_) => Qstr::MP_QSTR_UnpairDevice,
             Self::UnpairAllDevices => Qstr::MP_QSTR_UnpairAllDevices,
+            #[cfg(all(feature = "n1w1", feature = "debug"))]
+            Self::NfcCommand(_) => Qstr::MP_QSTR_NfcCommand,
             Self::TurnOff => Qstr::MP_QSTR_TurnOff,
             Self::Reboot => Qstr::MP_QSTR_Reboot,
             Self::RebootToBootloader => Qstr::MP_QSTR_RebootToBootloader,
@@ -75,6 +81,8 @@ impl DeviceMenuMsg {
     pub fn args_to_obj(&self) -> Obj {
         match self {
             Self::UnpairDevice(id) => (*id).into(),
+            #[cfg(all(feature = "n1w1", feature = "debug"))]
+            Self::NfcCommand(id) => (*id).into(),
             _ => Obj::const_none(),
         }
     }
@@ -90,6 +98,7 @@ static DEVICE_MENU_RESULT_TYPE: FullType = obj_type! {
         Qstr::MP_QSTR_DisconnectDevice => Qstr::MP_QSTR_DisconnectDevice.to_obj(),
         Qstr::MP_QSTR_UnpairDevice => Qstr::MP_QSTR_UnpairDevice.to_obj(),
         Qstr::MP_QSTR_UnpairAllDevices => Qstr::MP_QSTR_UnpairAllDevices.to_obj(),
+        Qstr::MP_QSTR_NfcCommand => Qstr::MP_QSTR_NfcCommand.to_obj(),
         Qstr::MP_QSTR_TurnOff => Qstr::MP_QSTR_TurnOff.to_obj(),
         Qstr::MP_QSTR_Reboot => Qstr::MP_QSTR_Reboot.to_obj(),
         Qstr::MP_QSTR_RebootToBootloader => Qstr::MP_QSTR_RebootToBootloader.to_obj(),
