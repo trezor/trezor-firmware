@@ -177,6 +177,7 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
             .allowlist_function("ecdsa_verify_digest")
             .allowlist_function("ecdsa_recover_pub_from_sig")
             .allowlist_function("zkp_context_init")
+            .allowlist_function("zkp_context_size")
             .allowlist_function("zkp_context_init_unrandomized")
             // ed25519
             .allowlist_type("ed25519_signature")
