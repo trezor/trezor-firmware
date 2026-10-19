@@ -326,9 +326,12 @@ def cli(
         )
         try:
             tropic_model.start()
-            emulator.tropic_model_port = tropic_model.port
         except Exception as exc:
-            click.echo(f"Failed to start Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
+            raise click.ClickException(
+                f"Failed to start the Tropic01 model: {exc.__class__.__name__}: {exc}. "
+                "Use --no-tropic-emulator to point the emulator at an external model."
+            )
+        emulator.tropic_model_port = tropic_model.port
     if tropic_emulator is not None or tropic_emulator_needed:
         click.echo(f"TROPIC_MODEL_PORT={emulator.tropic_model_port}")
         os.environ["TROPIC_MODEL_PORT"] = str(emulator.tropic_model_port)
