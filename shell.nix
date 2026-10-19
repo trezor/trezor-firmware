@@ -74,7 +74,7 @@ in
 with nixpkgs;
 stdenvNoCC.mkDerivation ({
   name = "trezor-firmware-env";
-  nativeBuildInputs = lib.optionals (!stdenv.isDarwin) [ autoPatchelfHook ];
+  nativeBuildInputs = lib.optionals (!stdenv.hostPlatform.isDarwin) [ autoPatchelfHook ];
   buildInputs = lib.optionals fullDeps [
     bitcoind
     sdl2-compat # for running old emulators used in upgrade tests
@@ -116,10 +116,10 @@ stdenvNoCC.mkDerivation ({
     wget
     zlib
     moreutils
-  ] ++ lib.optionals (!stdenv.isDarwin) [
+  ] ++ lib.optionals (!stdenv.hostPlatform.isDarwin) [
     procps
     valgrind
-  ] ++ lib.optionals (stdenv.isDarwin) [
+  ] ++ lib.optionals (stdenv.hostPlatform.isDarwin) [
     libiconv
   ] ++ lib.optionals hardwareTest [
     uhubctl
@@ -134,7 +134,7 @@ stdenvNoCC.mkDerivation ({
     tio
     shellcheck
     openocd-stm
-  ] ++ lib.optionals (devTools && !stdenv.isDarwin) [
+  ] ++ lib.optionals (devTools && !stdenv.hostPlatform.isDarwin) [
     gdb
     kdePackages.kcachegrind
   ] ++ lib.optionals (devTools && acceptJlink) [
@@ -158,7 +158,7 @@ stdenvNoCC.mkDerivation ({
 
   # don't try to use stack protector for Apple Silicon (emulator) binaries
   # it's broken at the moment
-  hardeningDisable = lib.optionals (stdenv.isDarwin && stdenv.isAarch64) [ "stackprotector" ];
+  hardeningDisable = lib.optionals (stdenv.hostPlatform.isDarwin && stdenv.hostPlatform.isAarch64) [ "stackprotector" ];
 
   # Enabling rust-analyzer extension in VSCode
   RUST_SRC_PATH = "${rustProfiles.rust-src}/lib/rustlib/src/rust/library";
