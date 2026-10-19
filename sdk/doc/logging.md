@@ -45,28 +45,29 @@ cargo app-tool build --log-level error
 
 This automatically enables the corresponding `log_level_<level>` Cargo feature — no manual `Cargo.toml` changes are needed.
 
-> **Note:** On hardware, memory is limited. Prefer higher log levels (e.g., `warning`) in production builds.
+> **Note:** On hardware, memory is limited. Prefer higher log levels (e.g., `warn`) in production builds.
 
 ---
 
 ## Log Format in the Emulator
 
-In the emulator, each log message is prefixed with a timestamp, the **crate name**, and the **relative path** to the module where it was emitted, followed by the severity level:
+In the emulator, each log message is prefixed with a timestamp and a **source name**, followed by the severity level:
 
 ```sh
-<timestamp> <crate>::<path/to/module> <LEVEL> <message>
+<timestamp> <source> <LEVEL> <message>
 ```
 
 For example:
 
 ```sh
-5.248 apps.extapp.run ERR Failed to get public key bytes due to exception: format string needs more arguments
-5.248 apps.extapp.run DBG Serializing crypto result
-5.248 apps.extapp.run DBG Sending crypto result
-5.249 tron ERR ApiError
+5.248 apps.extapp.crypto ERR Crypto operation 2 failed: Forbidden key path
+5.249 extapp ERR DataError: received unexpected response message
 ```
 
-Messages related to the modular app `apps.extapp.run` (core app services + modular app orchestration ), `<app_name>` (e.g. `tron`) or `trezor-app-sdk` for SDK-internal messages.
+Messages related to modular apps come from two kinds of sources:
+
+- `apps.extapp.*` (e.g. `apps.extapp.run`, `apps.extapp.crypto`) — Core's side: app orchestration and the services Core provides to apps.
+- `extapp` — everything the app logs, both its own messages and the SDK's. The source name is the same for every app for now; it doesn't carry the app's name or module path.
 
 ---
 
@@ -80,7 +81,7 @@ trezorctl debug set-log-filter <filter>
 
 ### Filter Syntax
 
-The filter string is a sequence of rules parsed left-to-right, separated by commas. Each rule has the form:
+The filter string is a sequence of rules parsed left-to-right, separated by spaces. Each rule has the form:
 
 ```sh
 <op>[<level>]<module>[*]
@@ -98,34 +99,24 @@ Rules are applied in order — later rules override earlier ones for matching so
 
 ### Examples
 
-**Show only your app (all levels):**
+App and SDK messages share the `extapp` source (see [Log Format in the Emulator](#log-format-in-the-emulator)), so they can only be filtered together. A filter starting with `+` already excludes everything it doesn't name, so there is no need to end it with `-*` — that would exclude everything again, since later rules override earlier ones.
+
+**Show only app and SDK logs (all levels):**
 
 ```sh
-trezorctl debug set-log-filter "+tron*,-*"
+trezorctl debug set-log-filter "+extapp"
 ```
 
-**Show only SDK logs (all levels):**
+**App and SDK at `INFO` and above, everything else off:**
 
 ```sh
-trezorctl debug set-log-filter "+trezor-app-sdk*,-*"
+trezorctl debug set-log-filter "+3extapp"
 ```
 
-**Show only your app and SDK, suppress everything else:**
+**App and SDK, plus Core's app services and orchestration, everything else off:**
 
 ```sh
-trezorctl debug set-log-filter "+tron*,+trezor-app-sdk*,-*"
-```
-
-**Your app at `DBG`, SDK at `WARN` and above, everything else off:**
-
-```sh
-trezorctl debug set-log-filter "+4tron*,+2trezor-app-sdk*,-*"
-```
-
-**Your app at `INFO` and above, SDK errors only, everything else off:**
-
-```sh
-trezorctl debug set-log-filter "+3tron*,+1trezor-app-sdk*,-*"
+trezorctl debug set-log-filter "+extapp +apps.extapp*"
 ```
 
 **Suppress only debug noise from core orchestration, keep everything else:**
@@ -142,7 +133,7 @@ In release builds, it is not straightforward to trace where an error originates.
 
 ### 1. Enable the `debug` Feature
 
-Build with `--log-level debug` to compile in the debug feature. This enables two things:
+Build with `-d`/`--debug` to compile in the `debug` feature (see [Cargo Features](development.md#cargo-features)). This enables two things:
 
 - more verbose log output including file and line information
 - the `ResultExt` trait functionality (see below)
@@ -154,7 +145,7 @@ Without the `debug` feature, `ResultExt` calls are compiled out entirely and hav
 When the `debug` feature is enabled, the `ResultExt` trait adds a `.c()` method on `Result` that wraps any error with its call-site location (relative file path + line number):
 
 ```rust
-use sdk::ResultExt;
+use trezor_app_sdk::ResultExt;
 
 fn my_function() -> Result<(), Error> {
     some_operation().c()?;  // wraps error with file + line on failure
