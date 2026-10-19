@@ -40,11 +40,14 @@ class Session:
         self.schemas = schemas
         # progress layout opened by the app via `SERVICE_PROGRESS`
         self.progress: ProgressLayout | None = None
+        # set once the app was stopped because of an error
+        self.dead = False
 
     def send(self, service: int, message_id: int, data: AnyBytes) -> None:
         io.ipc_send(self.task_id, service, message_id, data)
 
     def die(self, exception: Exception) -> NoReturn:
+        self.dead = True
         if __debug__:
             log.error(__name__, f"Task died due to exception: {exception}")
         self.image.stop()  # TODO or image.delete ???
