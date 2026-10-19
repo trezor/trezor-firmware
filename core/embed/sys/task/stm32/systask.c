@@ -68,6 +68,7 @@ static systask_scheduler_t g_systask_scheduler = {
     .waiting_task = &g_systask_scheduler.kernel_task,
     .task_id_map = 0x00000001,  // Kernel task is always present
     .kernel_task = {
+        .initialized = true,
         .sp_lim = (uint32_t)&_stack_section_start,
         .id = 0,  // Kernel task ID == 0
         .stack_base = (uint32_t)&_stack_section_start,
@@ -84,6 +85,7 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
   scheduler->waiting_task = scheduler->active_task;
   scheduler->task_id_map = 0x00000001;  // Kernel task is always present
 
+  scheduler->kernel_task.initialized = true;
   scheduler->kernel_task.sp_lim = (uint32_t)&_stack_section_start;
   scheduler->kernel_task.stack_base = (uint32_t)&_stack_section_start;
   scheduler->kernel_task.stack_end = (uint32_t)&_stack_section_end;
@@ -141,6 +143,10 @@ static void systask_yield(void) {
 
 void systask_yield_to(systask_t* task) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
+
+  if (!systask_is_alive(task)) {
+    error_shutdown("Yield to dead task");
+  }
 
   irq_key_t irq_key = irq_lock();
   scheduler->waiting_task = task;
@@ -286,6 +292,12 @@ uint32_t systask_invoke_callback(systask_t* task, uintptr_t arg1,
                                  uintptr_t arg2, uintptr_t arg3,
                                  void* callback) {
   uint32_t original_sp = task->sp;
+
+  if (task->killed) {
+    // Invoking a callback on a killed task
+    error_shutdown("Callback to killed task");
+  }
+
   if (!systask_push_call(task, callback, arg1, arg2, arg3)) {
     // There is not enough space on the unprivileged stack
     error_shutdown("Callback stack low");
