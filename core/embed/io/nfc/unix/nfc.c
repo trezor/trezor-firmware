@@ -19,7 +19,21 @@
 
 #include <io/nfc.h>
 
-bool nfc_get_event(nfc_event_t* event) { return false; }
+bool nfc_get_event(nfc_event_t *event) { return false; }
 
 ts_t nfc_start_discovery(void) { return TS_OK; }
 ts_t nfc_stop_discovery(void) { return TS_OK; }
+
+bool nfc_get_state(void) {
+  return true;  // FIXME
+}
+
+ts_t nfc_get_device_info(nfc_dev_info_t *dev_info) { return TS_ENOSTATE; }
+
+ts_t nfc_transceive_start(const nfc_apdu_message_t *cmd) { return TS_ENOSTATE; }
+
+ts_t nfc_transceive_psk_start(const uint8_t *pcd_psk, size_t pcd_psk_len) {
+  return TS_ENOSTATE;
+}
+
+ts_t nfc_transceive_complete(nfc_apdu_message_t *resp) { return TS_ENOSTATE; }

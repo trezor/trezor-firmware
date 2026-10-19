@@ -34,8 +34,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_DisconnectDevice;
   MP_QSTR_ExternalDataError;
   MP_QSTR_FAILED;
+  MP_QSTR_GET_OS_VERSION;
+  MP_QSTR_GET_UID;
+  MP_QSTR_HARDEN_MEMORY;
   MP_QSTR_INFO;
   MP_QSTR_INITIAL;
+  MP_QSTR_INTEGRITY_CHECK;
   MP_QSTR_KEY_REQUIRED;
   MP_QSTR_KEY_REQUIRED_UNLOCK;
   MP_QSTR_LOW;
@@ -45,6 +49,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_MAX_BONDS;
   MP_QSTR_MAX_CREDENTIAL_LEN;
   MP_QSTR_MAX_DEVICE_PROPERTIES_LEN;
+  MP_QSTR_MEASURE_CPU_FREQUENCY;
   MP_QSTR_MESSAGE_NAME;
   MP_QSTR_MESSAGE_READY;
   MP_QSTR_MESSAGE_READY_ACK;
@@ -55,8 +60,16 @@ static void _librust_qstrs(void) {
   MP_QSTR_MsgDef;
   MP_QSTR_NONE;
   MP_QSTR_NORMAL;
+  MP_QSTR_NfcCommandFailed;
+  MP_QSTR_NfcError;
   MP_QSTR_NotificationLevel;
+  MP_QSTR_PIN_UNLOCKED;
   MP_QSTR_PairDevice;
+  MP_QSTR_READ_FAILURE_LOGS;
+  MP_QSTR_READ_PIN_COUNTER;
+  MP_QSTR_READ_SEED;
+  MP_QSTR_READ_SEED_METADATA;
+  MP_QSTR_READ_SUCCESS_LOG;
   MP_QSTR_RESUME;
   MP_QSTR_RX_PACKET_LEN;
   MP_QSTR_Reboot;
@@ -65,6 +78,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_RemoveWipeCode;
   MP_QSTR_ReviewFailedBackup;
   MP_QSTR_SEND_BUFFER_OVERHEAD;
+  MP_QSTR_SET_PIN;
   MP_QSTR_STANDARD;
   MP_QSTR_SUCCESS;
   MP_QSTR_SWIPE_DOWN;
@@ -80,6 +94,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_TR;
   MP_QSTR_TRANSITIONING;
   MP_QSTR_TX_PACKET_LEN;
+  MP_QSTR_TagConnection;
   MP_QSTR_ThpError;
   MP_QSTR_ToggleBluetooth;
   MP_QSTR_ToggleHaptics;
@@ -90,6 +105,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_UnpairAllDevices;
   MP_QSTR_UnpairDevice;
   MP_QSTR_WARNING;
+  MP_QSTR_WIPE;
+  MP_QSTR_WRITE_SEED;
+  MP_QSTR_WRITE_SEED_METADATA;
   MP_QSTR_WipeDevice;
   MP_QSTR___del__;
   MP_QSTR___dict__;
@@ -339,6 +357,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_value_intro;
   MP_QSTR_confirm_with_info;
+  MP_QSTR_connect;
   MP_QSTR_connected_addr;
   MP_QSTR_connected_idx;
   MP_QSTR_connection_flags;
@@ -683,6 +702,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__x_of_y_entered_template;
   MP_QSTR_recovery__you_have_entered;
   MP_QSTR_recovery_type;
+  MP_QSTR_recv_response;
   MP_QSTR_regulatory__title;
   MP_QSTR_reject_pairing;
   MP_QSTR_remaining_shares;
@@ -848,6 +868,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_id;
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
+  MP_QSTR_send_command;
   MP_QSTR_send_transport_busy;
   MP_QSTR_set_brightness;
   MP_QSTR_set_enabled;
@@ -855,6 +876,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_set_name;
   MP_QSTR_setting__adjust;
   MP_QSTR_setting__apply;
+  MP_QSTR_setup;
   MP_QSTR_share_words__words_in_order;
   MP_QSTR_share_words__wrote_down_all;
   MP_QSTR_show_address_details;
@@ -893,6 +915,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_sn__title;
   MP_QSTR_start_advertising;
   MP_QSTR_start_comm;
+  MP_QSTR_start_discovery;
+  MP_QSTR_stop_discovery;
   MP_QSTR_storage_msg__processing;
   MP_QSTR_storage_msg__starting;
   MP_QSTR_storage_msg__verifying_pin;
@@ -934,6 +958,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_trezorble;
   MP_QSTR_trezorlog;
   MP_QSTR_trezorminiscript;
+  MP_QSTR_trezornfc;
   MP_QSTR_trezorproto;
   MP_QSTR_trezorthp;
   MP_QSTR_trezorui_api;
@@ -987,6 +1012,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_tutorial__what_is_tropic;
   MP_QSTR_type_for_name;
   MP_QSTR_type_for_wire;
+  MP_QSTR_uid;
   MP_QSTR_unpair;
   MP_QSTR_update_params;
   MP_QSTR_usb_event;
