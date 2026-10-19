@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.recovery as storage_recovery
 import storage.recovery_shares as storage_recovery_shares
-from trezor import TR, utils
+from trezor import TR, log, utils
 from trezor.ui.layouts.recovery import (  # noqa: F401
     request_word_count,
     show_already_added,
@@ -294,6 +294,8 @@ if not utils.USE_N1W1:
         return _DisplayHandler
 
 else:
+    import apps.management.n1w1.context as n1w1
+
     if TYPE_CHECKING:
         from .recover import Slip39State
 
@@ -320,29 +322,43 @@ else:
         def __init__(self, msg: str) -> None:
             self.msg = msg
 
-    async def _read_share() -> str:
-        from apps.debug import n1w1_mock
+    async def _read_share(
+        ctx: n1w1.N1W1Context, description: str, hint: str | None
+    ) -> str:
+        from trezor.ui.layouts.progress import progress
 
-        with n1w1_mock.ctx as ctx:
-            # returns `None` on cancellation or retriable error.
-            await ctx.confirm_connect(
-                title=TR.recovery__title,
-                description=TR.n1w1__hold_next,
-                button=TR.n1w1__footer_next,
-                br_name="backup_read",
-            )
-            # continue N1W1 communication (the tag is connected)
+        if hint:
+            description = f"{description}\n\n{hint}"
 
-            # TODO(N1W1): animate during read?
-            if (blob := await ctx.read(key="mnemonic")) is None:
+        await ctx.confirm_connect(
+            title="Recover wallet",
+            description=description,
+            br_name="backup_read",
+        )
+        # continue N1W1 communication (the tag is connected)
+
+        progress_obj = progress(title="Reading N1W1...", description="Wait")
+
+        try:
+            progress_obj.start()
+            progress_cb = n1w1.time_based_progress(progress_obj)
+
+            blob = await ctx.read_share(progress_cb=progress_cb)
+            if blob is None:
                 raise RetryRead(TR.n1w1__err_empty)
+            progress_obj.report(1000)
+        except Exception as exc:
+            if (reason := n1w1.is_retryable(exc)) is not None:
+                raise RetryRead(reason)
+            raise
+        finally:
+            progress_obj.stop()
 
-            # TODO(N1W1): use protobuf?
-            blob = bytes(blob)
-            try:
-                return blob.decode()
-            except ValueError:
-                raise RetryRead(TR.n1w1__err_damaged)
+        blob = bytes(blob)
+        try:
+            return blob.decode()
+        except ValueError:
+            raise RetryRead(TR.n1w1__err_damaged)
 
     class _N1W1Handler:
         def __init__(
@@ -360,20 +376,57 @@ else:
             return cls(recovery_type, load_slip39_state())
 
         async def show_state(self, is_retry: bool) -> None:
+            import trezorui_api
+            from trezor.ui.layouts.common import raise_if_not_confirmed
+
             if is_retry or self.slip39_state is None:
                 # don't show recovery state on retries and before the first share is entered
                 return
-            word_count = self.slip39_state[0]
-            await _request_share_first_screen(word_count, self.recovery_type)
+
+            # TODO: don't show when >1 shares are entered?
+
+            remaining = storage_recovery.fetch_slip39_remaining_shares()
+            if not remaining:
+                log.error(
+                    __name__, "Screen not implemented"
+                )  # TODO can it ever happen?
+                return
+
+            description = "Your wallet backup is on multiple N1W1s."
+            hint = None
+            group_count = storage_recovery.get_slip39_group_count()
+            if group_count == 1:
+                entered = len(storage_recovery_shares.fetch_group(0))
+                threshold = entered + remaining[0]
+                total = "3"  # FIXME
+                hint = f"Recovery requires {threshold} of {total} cards."
+                description = f"{description}\n\n{hint}"  # TODO use layout with hint
+
+            with trezorui_api.show_info(
+                title="Information",
+                description=description,
+                button=("Continue", True),
+            ) as layout:
+                await raise_if_not_confirmed(layout, br_name=None)
 
         async def request_mnemonic(self) -> str | None:
             """Return the mnemonic or `None` on cancellation/validation error."""
             import trezorui_api
             from trezor.ui.layouts.common import raise_if_not_confirmed
 
+            hint = None
+            if remaining_shares := storage_recovery.fetch_slip39_remaining_shares():
+                description = "Read any unread card to continue recovery."
+                if len(remaining_shares) == 1:
+                    cards_remaining = remaining_shares[0]
+                    hint = f"{cards_remaining} card{'s' if cards_remaining > 1 else ''} remaining"
+            else:
+                description = "Start with any N1W1."
+
             while True:
                 try:
-                    share = await _read_share()
+                    with n1w1.ctx as ctx:
+                        share = await _read_share(ctx, description, hint)
                     break
                 except RetryRead as exc:
                     with trezorui_api.show_warning(
@@ -389,7 +442,6 @@ else:
             return await self.check_words(share)
 
         async def check_words(self, share: str) -> str | None:
-            from trezor.ui.layouts.progress import progress
 
             from .word_validity import WordValidityResult, check
 
@@ -397,14 +449,10 @@ else:
             backup_type = self.slip39_state and self.slip39_state[1]
             share_words = share.split(" ")
 
-            progress_obj = progress(description=TR.n1w1__reading)
-            progress_obj.start()
-
             try:
-                # Re-verify mnemonic prefixes:
+                # Re-verify mnemonic prefixes: # XXX why?
                 steps = len(share_words)
                 for prefix_len in range(1, 1 + steps):
-                    progress_obj.report((1000 * prefix_len) // steps)
                     check(backup_type, partial_mnemonic=share_words[:prefix_len])
 
                 return share
@@ -413,4 +461,4 @@ else:
                 await exc.show_error()
                 return None
             finally:
-                progress_obj.stop()
+                pass  # progress_obj.stop()
