@@ -443,6 +443,12 @@
     },
     "buttons__select": "Select",
     "buttons__set": "Set",
+    "buttons__shift": {
+      "Bolt": "",
+      "Caesar": "Shift",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "buttons__show_all": "Show all",
     "buttons__show_details": "Show details",
     "buttons__show_next": {
@@ -2807,12 +2813,7 @@
     "sign_message__confirm_address": "Signing address",
     "sign_message__confirm_message": "Confirm message",
     "sign_message__confirm_without_review": "Confirm without review",
-    "sign_message__message_size": {
-      "Bolt": "Message size",
-      "Caesar": "",
-      "Delizia": "Message size",
-      "Eckhart": "Message size"
-    },
+    "sign_message__message_size": "Message size",
     "sign_message__verify_address": "Verify address",
     "sn__action": {
       "Bolt": "",
@@ -3069,6 +3070,12 @@
     },
     "tron__owner_address": "Owner address",
     "tron__undelegate_resource": "Undelegate resource",
+    "tutorial__complete": {
+      "Bolt": "",
+      "Caesar": "Complete tutorial",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3093,6 +3100,12 @@
       "Delizia": "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.",
       "Eckhart": ""
     },
+    "tutorial__hold_left_press_right": {
+      "Bolt": "",
+      "Caesar": "Hold LEFT, press RIGHT.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__last_one": {
       "Bolt": "",
       "Caesar": "",
@@ -3101,13 +3114,13 @@
     },
     "tutorial__lets_begin": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Learn the basics of navigating your device.",
       "Delizia": "Learn how to use and navigate this device with ease.",
       "Eckhart": ""
     },
     "tutorial__menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Find context-specific actions and options in the menu.",
       "Delizia": "Find context-specific actions and options in the menu.",
       "Eckhart": "Find context-specific actions and options in the menu."
     },
@@ -3117,9 +3130,15 @@
       "Delizia": "",
       "Eckhart": "View more info, quit flow..."
     },
+    "tutorial__menu_later": {
+      "Bolt": "",
+      "Caesar": "The menu provides context information. We will cover this later.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__middle_click": {
       "Bolt": "",
-      "Caesar": "Press both left and right at the same\ntime to confirm.",
+      "Caesar": "Press both left and right at the same time to view next screen.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3143,13 +3162,25 @@
     },
     "tutorial__press_and_hold": {
       "Bolt": "",
-      "Caesar": "Press and hold the right button to\napprove important operations.",
+      "Caesar": "Hold down the right button to approve important operations.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__press_both": {
+      "Bolt": "",
+      "Caesar": "Press BOTH buttons at once.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__press_left": {
+      "Bolt": "",
+      "Caesar": "Press LEFT.",
       "Delizia": "",
       "Eckhart": ""
     },
     "tutorial__ready_to_use": {
       "Bolt": "",
-      "Caesar": "You're ready to\nuse Trezor.",
+      "Caesar": "You're ready to use your Trezor.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3161,13 +3192,19 @@
     },
     "tutorial__restart_tutorial": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Restart tutorial",
       "Delizia": "Restart tutorial",
       "Eckhart": "Restart tutorial"
     },
     "tutorial__scroll_down": {
       "Bolt": "",
-      "Caesar": "Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up.",
+      "Caesar": "Press RIGHT to view next screen.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__scroll_up": {
+      "Bolt": "",
+      "Caesar": "Hold LEFT and press RIGHT to scroll up.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3201,9 +3238,15 @@
       "Delizia": "Easy navigation",
       "Eckhart": ""
     },
+    "tutorial__title_go_back": {
+      "Bolt": "",
+      "Caesar": "Need to go back?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_handy_menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Menu",
       "Delizia": "Handy menu",
       "Eckhart": "Handy menu"
     },
@@ -3225,9 +3268,21 @@
       "Delizia": "Let's begin",
       "Eckhart": ""
     },
+    "tutorial__title_middle_button": {
+      "Bolt": "",
+      "Caesar": "Middle button",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_remember": {
+      "Bolt": "",
+      "Caesar": "Remember",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_screen_scroll": {
       "Bolt": "",
-      "Caesar": "Screen scroll",
+      "Caesar": "Try scrolling",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3240,6 +3295,12 @@
     "tutorial__title_tutorial_complete": {
       "Bolt": "",
       "Caesar": "Tutorial complete",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_welcome": {
+      "Bolt": "",
+      "Caesar": "Welcome to Trezor",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3257,7 +3318,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Use Trezor by\nclicking the left and right buttons.\n\rContinue right.",
+      "Caesar": "Use Trezor by pressing left and right buttons.",
       "Delizia": "",
       "Eckhart": ""
     },
