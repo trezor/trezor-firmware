@@ -8,6 +8,7 @@
 int secp256k1_context_writable_randomize(secp256k1_context *context);
 bool zkp_context_is_initialized(void);
 int zkp_context_init(void);
+int zkp_context_init_unrandomized(void);
 void zkp_context_destroy(void);
 const secp256k1_context *zkp_context_get_read_only(void);
 secp256k1_context *zkp_context_acquire_writable(void);
