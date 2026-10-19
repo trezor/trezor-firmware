@@ -741,17 +741,28 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
   );
 }
 
+#define systask_fatal_error(task, message)                       \
+  do {                                                           \
+    const char* filename = __FILE_NAME__;                        \
+    systask_exit_fatal(task, message, strlen(message), filename, \
+                       strlen(filename), __LINE__);              \
+  } while (0)
+
 __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
     uint32_t* stack, uint32_t* msp, uint32_t exc_return, uint32_t r4,
     uint32_t r5, uint32_t r6) {
   IRQ_LOG_ENTER();
 
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
+  systask_t* task = systask_active();
   uint8_t svc_number = ((uint8_t*)stack[6])[-2];
-
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
   switch (svc_number) {
     case SVC_SYSTASK_YIELD:
+      if (task != &scheduler->kernel_task) {
+        systask_fatal_error(task, "Illegal SVC number");
+      }
       // Yield to the waiting task
       systask_yield();
       break;
@@ -768,6 +779,8 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
       break;
 #endif
     default:
+      // Unknown SVC number, kill the current task
+      systask_fatal_error(task, "Illegal SVC number");
       break;
   }
 
