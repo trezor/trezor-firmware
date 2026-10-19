@@ -53,6 +53,8 @@ impl CLibrary {
             // Remove GCC-only flags that make clang fail.
             attrs.remove_flag("-mcmse");
             attrs.remove_flag("-fsingle-precision-constant");
+            attrs.remove_flag("--param=asan-use-after-return=0");
+            attrs.remove_flag("-fsanitize-address-use-after-return=never");
 
             for (filename, builder) in builders {
                 let mut content = Vec::<u8>::new();
