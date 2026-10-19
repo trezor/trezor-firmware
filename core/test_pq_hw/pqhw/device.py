@@ -161,7 +161,7 @@ class Unit:
 
     def xtask(self, *args: str, embed: Path = EMBED) -> None:
         cmd = ["cargo", "xtask", *args]
-        LOG.info("$ %s   (in %s)", " ".join(cmd), embed.relative_to(REPO))
+        LOG.info("$ %s   (in %s)", " ".join(cmd), embed)
         res = subprocess.run(cmd, cwd=embed, capture_output=True, text=True)
         if res.returncode != 0:
             raise UnitError(f"{' '.join(cmd)} failed:\n{res.stdout}\n{res.stderr}")

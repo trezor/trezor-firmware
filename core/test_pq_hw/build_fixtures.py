@@ -112,7 +112,7 @@ def log(msg: str) -> None:
 def run(cmd: list[str], cwd: Path, logname: str, env: dict | None = None) -> None:
     LOGS.mkdir(parents=True, exist_ok=True)
     logfile = LOGS / f"{logname}.log"
-    log(f"$ {' '.join(cmd)}   (in {cwd.relative_to(REPO)}, log {logfile.name})")
+    log(f"$ {' '.join(cmd)}   (in {cwd}, log {logfile.name})")
     with logfile.open("a") as f:
         f.write(f"\n$ {' '.join(cmd)}\n")
         f.flush()
