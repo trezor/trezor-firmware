@@ -625,7 +625,17 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   prev_task->sp_lim = sp_lim;
 #endif
   prev_task->exc_return = exc_return;
-  prev_task->mpu_mode = mpu_get_mode();
+
+  systask_id_t prev_task_id = *(volatile systask_id_t*)&prev_task->id;  // FIH
+  if (prev_task == &scheduler->kernel_task && prev_task_id == 0) {      // FIH
+    // Save the MPU mode of the kernel task
+    // (other tasks can't switch its MPU mode)
+    prev_task->mpu_mode = mpu_get_mode();
+  } else if (prev_task->mpu_mode != mpu_get_mode()) {
+    // Shut down immediately if the MPU mode of the previous task has
+    // changed unexpectedly. (FIH)
+    error_shutdown("MPU mode changed unexpectedly");
+  }
 
   if (prev_task->tls_size != 0) {
     systask_set_mpu(prev_task);
@@ -645,11 +655,10 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   __set_CONTROL(control);
 
   // Set task privilege level
-  if (next_task == &scheduler->kernel_task) {
-    if (next_task->id == 0) {
-      control &= ~CONTROL_nPRIV_Msk;
-      __set_CONTROL(control);
-    }
+  systask_id_t next_task_id = *(volatile systask_id_t*)&next_task->id;  // FIH
+  if (next_task == &scheduler->kernel_task && next_task_id == 0) {
+    control &= ~CONTROL_nPRIV_Msk;
+    __set_CONTROL(control);
   }
 
   // Check if the privilege level is correct for the next task (FIH)
