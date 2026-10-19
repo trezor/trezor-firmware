@@ -6,13 +6,13 @@ This document covers what's needed to build and try out a modular app: getting a
 
 Testing a modular app requires a Trezor firmware build with external app loading enabled, running in the emulator.
 
-From a Trezor nix environment, build the firmware with the `--apps` flag:
+From a Trezor nix environment, build the firmware with the `--apps` flag. Device tests also need debuglink, which the `test-live` preset enables:
 
 ```sh
-xtask build firmware -m t3w1 -e --apps -d
+xtask build firmware -m t3w1 -e --apps -p test-live
 ```
 
-Then run the emulator:
+Then, from `core/`, run the emulator:
 
 ```sh
 uv run ./emu.py
@@ -23,10 +23,10 @@ uv run ./emu.py
 With a Nix environment set up, build the app with:
 
 ```sh
-cargo app-tool build -e
+cargo app-tool build -m t3w1 -e
 ```
 
-> When developing an app inside the `trezor-firmware` repo (i.e. under `sdk/apps`), run the same command from `sdk/apps` and select the app with `-p <app-name>`, e.g. `cargo app-tool build -p <app-name> -e`. The rest is the same.
+> When developing an app inside the `trezor-firmware` repo (i.e. under `sdk/apps`), run the same command from `sdk/apps` and select the app with `-p <app-name>`, e.g. `cargo app-tool build -p <app-name> -m t3w1 -e`. The rest is the same.
 
 Besides the app binary, this build also generates the app's Merkle proof and the signed root packet needed to load it — both are written alongside the binary in the artifact directory, so no separate step is needed to produce them for device tests.
 
@@ -111,20 +111,14 @@ To view the UI results (also shown automatically at the end of a run):
 uv run ./tests/show_results.py
 ```
 
-If a UI diff is expected (e.g. a layout was intentionally changed), update the recorded screenshots with:
-
-```sh
-uv run ./tests/update_fixtures.py local
-```
-
-Alternatively, update tests one by one from the browser view opened by `show_results.py`.
+If a UI diff is expected (e.g. a layout was intentionally changed), update the recorded screenshots from the browser view opened by `show_results.py`.
 
 ### On Failure
 
 If a test fails, rebuild the app with the [`debug`](development.md#cargo-features) feature to get a traceback instead of a bare error. This enables the [`ResultExt`](logging.md#2-use-the-resultext-trait) trait's `.c()` method, which wraps a `Result`'s error with its call-site location:
 
 ```rust
-use sdk::ResultExt;
+use trezor_app_sdk::ResultExt;
 
 fn my_function() -> Result<(), Error> {
     some_operation().c()?;  // wraps error with file + line on failure
