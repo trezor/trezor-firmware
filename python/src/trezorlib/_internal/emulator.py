@@ -131,6 +131,7 @@ class TropicModel:
                 LOG.info("Tropic model seems stuck. Sending kill signal.")
                 self.process.kill()
             _RUNNING_PIDS.remove(self.process)
+            self.process = None
         if self._port_reservation is not None:
             self._port_reservation.close()
             self._port_reservation = None
