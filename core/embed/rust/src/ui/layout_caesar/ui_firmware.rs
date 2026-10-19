@@ -6,9 +6,9 @@ use super::component::{
     AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, ChoiceControls,
     CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen, MenuNav,
     NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords,
-    SimpleChoice, WordlistEntry, WordlistType, SIMPLE_CHOICE_MAX_LENGTH,
+    SimpleChoice, Tutorial, WordlistEntry, WordlistType, SIMPLE_CHOICE_MAX_LENGTH,
 };
-use super::{constant, fonts, theme, UICaesar};
+use super::{fonts, theme, UICaesar};
 use crate::io::BinaryData;
 use crate::maybe_trace::MaybeTrace;
 use crate::micropython::buffer::StrBuffer;
@@ -743,16 +743,8 @@ impl FirmwareUI for UICaesar {
             .iter()
             .map(|item| item.intent == MenuItemIntent::Danger)
             .collect();
-        // Returning the index of the selected menu item. The select text is not
-        // used, the menu buttons show an arrow glyph instead.
-        let layout = RootComponent::new(
-            SimpleChoice::new(labels, ChoiceControls::Cancellable, TString::empty())
-                .with_menu_buttons(danger_items)
-                .with_initial_page_counter(current)
-                .with_show_incomplete()
-                .with_return_index()
-                .with_ignore_cancelled(),
-        );
+        // Returning the index of the selected menu item.
+        let layout = RootComponent::new(SimpleChoice::menu(labels, danger_items, current));
         Ok(layout)
     }
 
@@ -1219,76 +1211,7 @@ impl FirmwareUI for UICaesar {
     }
 
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
-        const PAGE_COUNT: usize = 7;
-
-        let get_page = move |page_index| {
-            // Lazy-loaded list of screens to show, with custom content,
-            // buttons and actions triggered by these buttons.
-            // Cancelling the first screen will point to the last one,
-            // which asks for confirmation whether user wants to
-            // really cancel the tutorial.
-            match page_index {
-                // title, text, btn_layout, btn_actions
-                0 => tutorial_screen(
-                    TR::tutorial__title_hello.into(),
-                    TR::tutorial__welcome_press_right,
-                    ButtonLayout::cancel_none_arrow(),
-                    ButtonActions::last_none_next(),
-                ),
-                1 => tutorial_screen(
-                    "".into(),
-                    TR::tutorial__use_trezor,
-                    ButtonLayout::arrow_none_arrow(),
-                    ButtonActions::prev_none_next(),
-                ),
-                2 => tutorial_screen(
-                    TR::instructions__hold_to_confirm.into(),
-                    TR::tutorial__press_and_hold,
-                    ButtonLayout::arrow_none_htc(TR::buttons__hold_to_confirm.into()),
-                    ButtonActions::prev_none_next(),
-                ),
-                3 => tutorial_screen(
-                    TR::tutorial__title_screen_scroll.into(),
-                    TR::tutorial__scroll_down,
-                    ButtonLayout::arrow_none_text(TR::buttons__continue.into()),
-                    ButtonActions::prev_none_next(),
-                ),
-                4 => tutorial_screen(
-                    TR::buttons__confirm.into(),
-                    TR::tutorial__middle_click,
-                    ButtonLayout::none_armed_none(TR::buttons__confirm.into()),
-                    ButtonActions::none_next_none(),
-                ),
-                5 => tutorial_screen(
-                    TR::tutorial__title_tutorial_complete.into(),
-                    TR::tutorial__ready_to_use,
-                    ButtonLayout::text_none_text(
-                        TR::buttons__again.into(),
-                        TR::buttons__continue.into(),
-                    ),
-                    ButtonActions::beginning_none_confirm(),
-                ),
-                6 => tutorial_screen(
-                    TR::tutorial__title_skip.into(),
-                    TR::tutorial__sure_you_want_skip,
-                    ButtonLayout::arrow_none_text(TR::buttons__skip.into()),
-                    ButtonActions::beginning_none_cancel(),
-                ),
-                _ => unreachable!(),
-            }
-        };
-
-        let pages = FlowPages::new(get_page, PAGE_COUNT);
-
-        // Setting the ignore-second-button to mimic all the Choice pages, to teach user
-        // that they should really press both buttons at the same time to achieve
-        // middle-click.
-        let layout = RootComponent::new(
-            Flow::new(pages)
-                .with_scrollbar(false)
-                .with_ignore_second_button_ms(constant::IGNORE_OTHER_BTN_MS),
-        );
-        Ok(layout)
+        Ok(RootComponent::new(Tutorial::new()))
     }
 }
 
@@ -1345,20 +1268,6 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     }
 
     Ok(RootComponent::new(frame))
-}
-
-/// General pattern of most tutorial screens.
-/// (title, text, btn_layout, btn_actions, text_y_offset)
-fn tutorial_screen(
-    title: TString<'static>,
-    text: TR,
-    btn_layout: ButtonLayout,
-    btn_actions: ButtonActions,
-) -> Page {
-    let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-    ops.add_text_with_font(text, fonts::FONT_NORMAL);
-    let formatted = FormattedText::new(ops).vertically_centered();
-    Page::new(btn_layout, btn_actions, formatted).with_title(title)
 }
 
 fn add_paragraphs<'a>(

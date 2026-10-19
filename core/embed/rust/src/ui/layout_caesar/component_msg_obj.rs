@@ -3,7 +3,7 @@ use core::convert::TryInto;
 use super::component::{
     AddressDetails, ButtonPage, CancelConfirmMsg, CoinJoinProgress, ConfirmHomescreen, Flow, Frame,
     Homescreen, Lockscreen, NumberInput, NumberInputAction, Page, PassphraseEntry, PinEntry,
-    Progress, ScrollableFrame, WordlistEntry,
+    Progress, ScrollableFrame, Tutorial, WordlistEntry,
 };
 use crate::micropython::{Error, Obj};
 use crate::ui::component::base::Component;
@@ -63,6 +63,12 @@ where
             }
             CancelConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
+    }
+}
+
+impl ComponentMsgObj for Tutorial {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        Ok(msg.into())
     }
 }
 
