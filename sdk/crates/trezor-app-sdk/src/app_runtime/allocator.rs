@@ -14,7 +14,7 @@ static REMOTE_ALLOCATOR: RedirAllocator = RedirAllocator;
 pub struct RedirAllocator;
 
 impl RedirAllocator {
-    fn allocator(&self) -> GlobalAllocatorV1Ref {
+    fn allocator(&self) -> GlobalAllocatorV1Ref<'_> {
         super::get_api_or_die().allocator
     }
 }

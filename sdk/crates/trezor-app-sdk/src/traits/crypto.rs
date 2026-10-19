@@ -102,7 +102,7 @@ pub trait CryptoV1: Send + Sync {
     extern "C" fn sign_digest<'a>(
         &self,
         address_n: Slice<'a, u32>,
-        digest: [u8; 32],
+        digest: &'a [u8; 32],
         compressed: bool,
         canonical: CanonicalSig,
     ) -> FastResult<[u8; 65], WireError>;
@@ -112,7 +112,7 @@ pub trait CryptoV1: Send + Sync {
     extern "C" fn check_address_mac<'a>(
         &self,
         address_n: Slice<'a, u32>,
-        mac: [u8; 32],
+        mac: &'a [u8; 32],
         address: Str<'a>,
         slip44: u32,
     ) -> FastResult<bool, WireError>;
