@@ -152,7 +152,7 @@ impl CryptoV1 for DummyCrypto {
     extern "C" fn sign_digest<'a>(
         &self,
         _address_n: Slice<'a, u32>,
-        _digest: [u8; 32],
+        _digest: &'a [u8; 32],
         _compressed: bool,
         _canonical: CanonicalSig,
     ) -> FastResult<[u8; 65], WireError> {
@@ -162,7 +162,7 @@ impl CryptoV1 for DummyCrypto {
     extern "C" fn check_address_mac<'a>(
         &self,
         _address_n: Slice<'a, u32>,
-        _mac: [u8; 32],
+        _mac: &'a [u8; 32],
         _address: Str<'a>,
         _slip44: u32,
     ) -> FastResult<bool, WireError> {

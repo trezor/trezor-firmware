@@ -91,7 +91,7 @@ pub fn sign_digest(
     canonical: CanonicalSig,
 ) -> Result<[u8; 65]> {
     get_crypto_or_die()
-        .sign_digest(address_n.into(), *digest, compressed, canonical)
+        .sign_digest(address_n.into(), digest, compressed, canonical)
         .into_app_result()
         .c()
 }
@@ -106,7 +106,7 @@ pub fn check_address_mac(
     slip44: u32,
 ) -> Result<bool> {
     get_crypto_or_die()
-        .check_address_mac(address_n.into(), *mac, address.into(), slip44)
+        .check_address_mac(address_n.into(), mac, address.into(), slip44)
         .into_app_result()
         .c()
 }

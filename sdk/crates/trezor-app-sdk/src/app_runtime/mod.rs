@@ -120,7 +120,7 @@ fn eh_personality() -> ! {
 #[cfg(all(feature = "debug", not(feature = "test"), feature = "nightly"))]
 #[unsafe(no_mangle)]
 unsafe extern "C" fn _Unwind_Resume() {
-    unsafe { core::intrinsics::unreachable() };
+    unsafe { core::hint::unreachable_unchecked() };
 }
 
 #[cfg(all(feature = "debug", not(feature = "test")))]
