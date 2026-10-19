@@ -29,8 +29,8 @@ pub extern "C" fn coreapp_api_get(version: u32) -> ApiVariant {
 // The entry point a newly loaded app's task is started on, instead of the
 // app's own `applet_main`. The loader (`core/embed/io/app_arena/*/
 // app_loader.c`, via `coreapp_get_app_entry()`) schedules *this* function
-// and passes `applet_main` to it, so Core gets to run on the app's task
-// before the app does.
+// and passes it the app's launch arguments ([`io::AppArgs`]), including
+// `applet_main`, so Core gets to run on the app's task before the app does.
 //
 // The point of the inversion is the app's [`app_state::AppState`]: it lives
 // in this function's frame on the app's own stack, for as long as
@@ -38,15 +38,21 @@ pub extern "C" fn coreapp_api_get(version: u32) -> ApiVariant {
 // instruction — the app's `#[global_allocator]` forwards every allocation
 // over the API vtable to the allocator in that state.
 //
+// The launch arguments are copied onto the app's stack (or into its data
+// area on the emulator), so no syscall is needed to query them.
+//
 // Same "C only ever takes its address" contract as `coreapp_api_get` above:
 // `core/embed/sys/task/*/coreapp.c` declares this as
-// `extern int coreapp_app_entry(void* applet_main)` and never calls it, so
+// `extern int coreapp_app_entry(const void* args)` and never calls it, so
 // the declared C parameter type does not need to match the real one below.
 #[unsafe(no_mangle)]
-pub extern "C" fn coreapp_app_entry(
-    applet_main: extern "C" fn(ApiGetter) -> core::ffi::c_int,
-) -> core::ffi::c_int {
-    let heap = io::get_heap();
+pub extern "C" fn coreapp_app_entry(args: &io::AppArgs) -> core::ffi::c_int {
+    let args = *args;
+    // SAFETY: the loader sets `applet_main` to the app's own entry point
+    // (checked non-null), which has exactly this signature.
+    let applet_main: extern "C" fn(ApiGetter) -> core::ffi::c_int =
+        unsafe { core::mem::transmute(args.applet_main) };
+    let heap = core::ptr::slice_from_raw_parts_mut(args.heap_ptr.cast::<u8>(), args.heap_size);
     // SAFETY: the loader hands this app a heap of its own, which lives as
     // long as the app's task; the state created here is its only owner.
     let state = unsafe { app_state::AppState::new(heap.cast(), heap.len()) };
@@ -57,7 +63,7 @@ pub extern "C" fn coreapp_app_entry(
     }
     app_state::with_app_state(&state, || {
         // The inbox is allocated out of the app's heap, so it needs the state.
-        wire::register_inbox();
+        wire::register_inbox(args.ipc_buffer_size);
         applet_main(coreapp_api_get)
     })
 }
