@@ -16,7 +16,8 @@ id = "tron.trezor.com"
 name = "Tron"
 vendor = "SatoshiLabs"
 stack-size = 16384
-heap-size = 8192
+heap-size = 65536
+ipc-buffer-size = 8192
 app-ring = 2
 curves = ["secp256k1"]
 paths = [
@@ -33,6 +34,7 @@ paths = [
 | `vendor` | App vendor name |
 | `stack-size` | Stack memory allocated for the app in bytes |
 | `heap-size` | Heap memory allocated for the app in bytes |
+| `ipc-buffer-size` | Size of the app's IPC inbox in bytes (optional, see below) |
 | `app-ring` | Privilege ring level; `0` is the most privileged |
 | `curves` | List of elliptic curves the app is permitted to use |
 | `paths` | Allowed BIP32 derivation path patterns (see below) |
@@ -52,7 +54,11 @@ The exact amount of heap the app receives depends on the target:
 - On real hardware, the kernel reserves exactly `heap-size` bytes (rounded up for alignment) for the app in the RAM arena — no more, no less.
 - On the Unix emulator, the app instead receives *all* remaining arena memory, regardless of `heap-size`.
 
-> ⚠️ Today the SDK's Rust global allocator does not actually consume that kernel-reserved region — `applet_main` hardcodes a fixed 16 KiB heap in the app's own static memory, independent of `heap-size`. Until this is wired up, treat `heap-size` as reserving kernel-side RAM for the app rather than sizing the allocator you actually get.
+Before the app's own code runs, Core sets up an allocator over this region, and the SDK's global allocator forwards every allocation to it. The app's IPC inbox (see below) is carved out of the same heap, so `heap-size` has to cover both.
+
+### IPC buffer size
+
+`ipc-buffer-size` is the size, in bytes, of the inbox Core registers for the app at launch: everything Core sends to the app (API replies and host wire messages) lands there. It must be a power of two between 256 bytes and 64 KiB, and no larger than `heap-size`. If it's omitted or `0`, the build tool uses 1 KiB, which only covers fixed API replies; an app that receives host wire messages needs to declare enough for its largest one.
 
 ### Application privilege
 
@@ -60,13 +66,13 @@ The exact amount of heap the app receives depends on the target:
 
 | Ring | Trust level | Status |
 | ------ | ------------- | -------- |
-| `0` | Most trusted | Not implemented yet |
-| `1` | Privileged | Not implemented yet |
+| `0` | Most trusted | Loads; no extra capabilities yet |
+| `1` | Privileged | Loads; no extra capabilities yet |
 | `2` | Least trusted — normal apps | Available; UI and Crypto services are provided |
 
 Each ring has its own root of trust: an app is only allowed to run if it proves membership (via a Merkle proof) in a signed "root packet" published for its ring. Core recomputes the Merkle root from the app's header and proof and compares it against the ring's expected root before starting the app.
 
-Ring `2` is available today and follows the normal app review process. Rings `0` and `1` are intended to grant extra capabilities — for example, access to a public key scoped to a specific derivation path — but that functionality does not exist yet. If your app genuinely needs privileged access, contact us with your reasoning before building against it.
+Ring `2` follows the normal app review process. Apps in rings `0` and `1` load the same way, each against its own ring's root packet, and are intended to get extra capabilities — for example, access to a public key scoped to a specific derivation path — but that functionality does not exist yet, so today every ring gets the same services. If your app genuinely needs privileged access, contact us with your reasoning before building against it.
 
 ### Curves
 
@@ -248,7 +254,7 @@ pub fn app() -> Result<()> {
 
 The function runs an infinite loop that drives the app's message handling:
 
-1. **Wait** — `wire_receive_wire_start()` blocks until Trezor Core sends a `WireStart` message carrying a new protobuf request from the host. Anything else received on that service is rejected with `Error::InvalidMessage`.
+1. **Wait** — `wire_receive_wire_start()` blocks until Trezor Core sends a `WireStart` message carrying a new protobuf request from the host.
 2. **Handle** — `handle_wire_message()` is called to process the request.
 
 This runs indefinitely, for the lifetime of the app — the loop has no exit condition of its own. The only way out is `handle_wire_message()` returning an `Err` (via `.c()?`), which unwinds `app()` and terminates the app.
@@ -343,37 +349,38 @@ While handling a wire message, the app can call into other Core services via IPC
 | `Progress` | Report progress of long-running operations |
 | `WireContinue` | Request additional data chunks from the host when the payload is too large to fit in a single message |
 | `Crypto` | Seed-based cryptographic operations (key derivation, signing) |
-| `CryptoDirect` | Cryptographic functions that do **not** access the seed (hashing, encoding, etc.) |
 
 These calls are synchronous — the app blocks until Core responds.
 
-Which services an app may use is a function of its [`app-ring`](#application-privilege). Ring `2` — the only ring available today — gets `UI` and the seed-based `Crypto` service, matching the `[package.metadata.trezor]` table above. Privileged rings are meant to unlock additional services beyond this table, but since ring 0/1 support isn't implemented yet, every app that can currently load runs at ring `2` and sees the full service set listed here.
+Cryptographic functions that don't touch the seed (hashing, HMAC, Base58, signature verification and recovery, CoSi) are not a service: the SDK runs them directly on the app's own task, without IPC.
+
+Which services an app may use is meant to depend on its [`app-ring`](#application-privilege), with privileged rings unlocking more than this table. That isn't implemented yet, so every app gets the services listed here, whatever its ring.
 
 ---
 
 ## App Lifecycle
 
-The real entry point of every modular app is `applet_main`, provided by the SDK. The user-defined `app()` function is called only after the SDK has fully initialized the environment. The initialization sequence is strictly ordered — functionality is not available before its initialization step completes.
+Core doesn't jump straight into the app. It starts the app's task in its own entry point, prepares the environment there, and only then calls `applet_main`, which the SDK provides. `applet_main` in turn calls the user-defined `app()` function. The steps are strictly ordered — functionality is not available before its step completes.
 
 ### Initialization Sequence
 
-#### 1. API Version Check
+#### 1. Heap (Core)
 
-The SDK verifies that the API version required by the app is available on the running firmware. If the version is not supported, the app crashes immediately. This check is handled automatically by `trezorlib` — no user code is needed.
+Core sets up the allocator over the app's heap region (see [Heap Size](#heap-size)) and installs it for the app's task.
 
-> ⚠️ No SDK functionality is available before this point.
+> ⚠️ No allocated types (`Box`, `Vec`, `String`, etc.) can be used before this point.
 
-#### 2. IPC Buffer Initialization
+#### 2. IPC Inbox (Core)
 
-The IPC buffer used for communication with Trezor Core is set up. Its size is configured via the `static_service!` macro and must be large enough to hold the largest message the app sends to Core.
+Core allocates the app's IPC inbox out of that heap, sized by `ipc-buffer-size` (see [IPC buffer size](#ipc-buffer-size)), and registers it.
 
 > ⚠️ No communication with Core (UI, Crypto, WireContinue, etc.) is available before this point.
 
-#### 3. Heap Initialization
+#### 3. API Version Check (SDK)
 
-The heap allocator is initialized with the memory region defined by `heap-size` in `Cargo.toml`. The default heap is 16 KiB.
+`applet_main` requests the API version the SDK was built against. If the firmware doesn't provide it, the app is terminated immediately.
 
-> ⚠️ No allocated types (`Box`, `Vec`, `String`, etc.) can be used before this point.
+> ⚠️ No SDK functionality is available before this point.
 
 #### 4. User App
 
@@ -384,24 +391,26 @@ The user-defined `app()` function is called. From this point, the full SDK is av
 `applet_main()` reacts to `app()`'s result:
 
 - **`Ok(())`** — exits cleanly via `system_exit()`. A conforming app never actually takes this branch, though: as covered in [App Entry Point](#app-entry-point), `app()`'s loop has no exit condition of its own, so it has no way to produce `Ok(())`. This arm exists as `applet_main`'s general contract, not something `app()` is expected to hit.
-- **`Err(e)`** — the error type, code, and message are logged, and the app exits with `system_exit_error()`, reporting the failure to Core. This is the only way `app()` is expected to return, and only for an irreversible issue.
+- **`Err(e)`** — the error is logged, and the app exits with `system_exit_error()`, reporting the failure to Core. This is the only way `app()` is expected to return, and only for an irreversible issue.
 
 ### Sequence Diagram
 
 ```sh
-applet_main()
+Core entry point
     │
-    ├─ 1. init API version
-    │       └─ incompatible → crash (handled by trezorlib)
-    │
-    ├─ 2. init IPC buffer (CORE_SERVICE)
-    │       └─ no Core communication before this
-    │
-    ├─ 3. init heap (HEAP)
+    ├─ 1. set up heap allocator
     │       └─ no alloc types before this
     │
-    └─ 4. call app()  (loops forever; never returns Ok)
+    ├─ 2. allocate and register IPC inbox (ipc-buffer-size)
+    │       └─ no Core communication before this
+    │
+    └─ applet_main()  (SDK)
             │
-            ├─ Ok(())   → system_exit()            [unreachable in practice]
-            └─ Err(e)   → log error → system_exit_error()  [irreversible issue]
+            ├─ 3. request API version
+            │       └─ unsupported → app terminated
+            │
+            └─ 4. call app()  (loops forever; never returns Ok)
+                    │
+                    ├─ Ok(())   → system_exit()            [unreachable in practice]
+                    └─ Err(e)   → log error → system_exit_error()  [irreversible issue]
 ```
