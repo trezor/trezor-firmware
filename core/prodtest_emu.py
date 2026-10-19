@@ -35,7 +35,7 @@ PROFILE_BASE = Path.home() / ".trezoremu"
 @click.option("-h", "--headless", is_flag=True, help="Headless mode (no display)")
 @click.option("-p", "--profile", metavar="NAME", help="Profile name or path (persistent; overrides --temporary-profile)")
 @click.option("-t", "--temporary-profile/--no-temporary-profile", default=True, help="Create an empty temporary profile")
-@click.option("--tropic-emulator/--no-tropic-emulator", default=True, help="Start a TROPIC01 model")
+@click.option("--tropic-emulator/--no-tropic-emulator", default=None, help="Start a TROPIC01 model")
 @click.option("--tropic-emulator-config", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=TROPIC_MODEL_CONFIG, help="TROPIC01 model configuration file")
 @click.option("--tropic-model-port", type=int, default=None, help="Port of the TROPIC01 model. Defaults to a free port for the auto-started model, or to 28992 for an externally managed one (--no-tropic-emulator).")
 # fmt: on
@@ -47,7 +47,7 @@ def cli(
     headless: bool,
     profile: str | None,
     temporary_profile: bool,
-    tropic_emulator: bool,
+    tropic_emulator: bool | None,
     tropic_emulator_config: Path,
     tropic_model_port: int | None,
     command: list[str],
@@ -92,8 +92,18 @@ def cli(
     if erase:
         (profile_dir / ProdtestEmulator.STORAGE_FILENAME).unlink(missing_ok=True)
 
+    emulator = get_prodtest_emulator(
+        model=model,
+        profile_dir=str(profile_dir),
+        headless=headless,
+        tropic_model_port=tropic_model_port,
+    )
+
     tropic_model = None
-    if tropic_emulator:
+    tropic_emulator_needed = tropic_emulator
+    if tropic_emulator_needed is None:
+        tropic_emulator_needed = emulator.properties().get("tropic", False)
+    if tropic_emulator_needed:
         tropic_model = TropicModel(
             profile_dir=str(profile_dir),
             configfile=tropic_emulator_config,
@@ -101,21 +111,16 @@ def cli(
         )
         try:
             tropic_model.start()
-            tropic_model_port = tropic_model.port
+            emulator.tropic_model_port = tropic_model.port
         except Exception as exc:
             click.echo(f"Failed to start Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
 
-    emulator = get_prodtest_emulator(
-        model=model,
-        profile_dir=str(profile_dir),
-        headless=headless,
-        tropic_model_port=tropic_model_port,
-    )
     with emulator:
         emulator.start()
         click.echo(f"VCP_PORT={emulator.vcp_port}")
-        click.echo(f"TROPIC_MODEL_PORT={emulator.tropic_model_port}")
-        os.environ["TROPIC_MODEL_PORT"] = str(emulator.tropic_model_port)
+        if tropic_emulator is not None or tropic_emulator_needed:
+            click.echo(f"TROPIC_MODEL_PORT={emulator.tropic_model_port}")
+            os.environ["TROPIC_MODEL_PORT"] = str(emulator.tropic_model_port)
         if run_command:
             process = subprocess.Popen(command)
             signal.signal(signal.SIGINT, signal.SIG_IGN)
