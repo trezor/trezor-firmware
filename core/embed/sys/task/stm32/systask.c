@@ -206,7 +206,7 @@ void systask_set_mpu(systask_t* task) {
   if (task->applet != NULL) {
     applet_t* applet = (applet_t*)task->applet;
     mpu_set_active_applet(&applet->layout,
-                          applet->privileges.framebuffer_access);
+                          applet->privileges.framebuffer_access == sectrue);
   }
 }
 

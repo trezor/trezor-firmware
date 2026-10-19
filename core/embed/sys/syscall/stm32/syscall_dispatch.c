@@ -29,6 +29,7 @@
 #include <io/usb.h>
 #include <sec/boot_image.h>
 #include <sec/fwutils.h>
+#include <sec/random_delays.h>
 #include <sec/rng_strong.h>
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
@@ -98,58 +99,13 @@
 #include "syscall_internal.h"
 #include "syscall_verifiers.h"
 
-static inline bool syscall_is_allowed(const applet_t *applet,
-                                      uint32_t syscall) {
-  if (applet == NULL) {
-    return false;
-  }
-
-  if (applet->privileges.unlimited_syscalls) {
-    return true;
-  }
-
-  // Applets without the `unlimited_syscalls` privilege may only
-  // invoke the syscalls listed below - the subset exposed through
-  // `trezor_api_v1_t`. Keep this list in sync with trezor_api_v1.h.
-  switch (syscall) {
-    case SYSCALL_SYSTEM_EXIT:
-    case SYSCALL_SYSTEM_EXIT_ERROR:
-    case SYSCALL_SYSTEM_EXIT_FATAL:
-    case SYSCALL_SYSTICK_MS:
-    case SYSCALL_SYSEVENTS_POLL:
-    case SYSCALL_SYSLOG_START_RECORD:
-    case SYSCALL_SYSLOG_WRITE_CHUNK:
-    case SYSCALL_IPC_REGISTER:
-    case SYSCALL_IPC_UNREGISTER:
-    case SYSCALL_IPC_TRY_RECEIVE:
-    case SYSCALL_IPC_FREE_MESSAGE:
-    case SYSCALL_IPC_SEND:
-    case SYSCALL_APP_GET_HEAP:
-      return true;
-  }
-
-  return false;
-}
-
-__attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
-                                                       uint32_t syscall,
-                                                       void *applet_ptr) {
+// Limited syscall handler for applets without unlimited_syscalls privilege
+// (optimize("no-jump-tables") used for FIH)
+__attribute((no_stack_protector, optimize("no-jump-tables"))) static void
+syscall_handler_limited(uint32_t *args, uint32_t syscall, void *applet_ptr) {
   applet_t *applet = (applet_t *)applet_ptr;
 
-  syscall_set_context(applet);
-
-  if (!syscall_is_allowed(applet, syscall)) {
-    applet_exit_fatal(applet, "Forbidden syscall", __FILE_NAME__, __LINE__);
-    return;
-  }
-
   switch (syscall) {
-    case SYSCALL_RETURN_FROM_CALLBACK: {
-      syscall_get_context()->task.in_callback = false;
-      systask_yield_to(systask_kernel());
-      break;
-    }
-
     case SYSCALL_SYSTEM_EXIT: {
       int exit_code = (int)args[0];
       system_exit__verified(exit_code);
@@ -175,27 +131,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       system_exit_fatal__verified(message, message_len, file, file_len, line);
     } break;
 
-    case SYSCALL_SYSTICK_CYCLES: {
-      uint64_t cycles = systick_cycles();
-      args[0] = cycles & 0xFFFFFFFF;
-      args[1] = cycles >> 32;
-    } break;
-
-    case SYSCALL_SYSTICK_US: {
-      uint64_t cycles = systick_us();
-      args[0] = cycles & 0xFFFFFFFF;
-      args[1] = cycles >> 32;
-    } break;
-
     case SYSCALL_SYSTICK_MS: {
       args[0] = systick_ms();
-    } break;
-
-    case SYSCALL_SYSTICK_US_TO_CYCLES: {
-      uint64_t us = args[0] + ((uint64_t)args[1] << 32);
-      uint64_t cycles = systick_us_to_cycles(us);
-      args[0] = cycles & 0xFFFFFFFF;
-      args[1] = cycles >> 32;
     } break;
 
     case SYSCALL_SYSEVENTS_POLL: {
@@ -207,33 +144,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       }
     } break;
 
-    case SYSCALL_SYSHANDLE_READ: {
-      syshandle_t handle = (syshandle_t)args[0];
-      void *buffer = (void *)args[1];
-      size_t buffer_size = (size_t)args[2];
-      args[0] = syshandle_read__verified(handle, buffer, buffer_size);
-    } break;
-
-    case SYSCALL_SYSHANDLE_WRITE: {
-      syshandle_t handle = (syshandle_t)args[0];
-      const void *data = (const void *)args[1];
-      size_t data_size = (size_t)args[2];
-      args[0] = syshandle_write__verified(handle, data, data_size);
-    } break;
-
 #ifdef USE_DBG_CONSOLE
-    case SYSCALL_DBG_CONSOLE_READ: {
-      void *buffer = (void *)args[0];
-      size_t buffer_size = (size_t)args[1];
-      args[0] = dbg_console_read__verified(buffer, buffer_size);
-    } break;
-
-    case SYSCALL_DBG_CONSOLE_WRITE: {
-      const void *data = (const void *)args[0];
-      size_t data_size = (size_t)args[1];
-      args[0] = dbg_console_write__verified(data, data_size);
-    } break;
-
     case SYSCALL_SYSLOG_START_RECORD: {
       const log_source_t *source = (const log_source_t *)args[0];
       uint8_t level = (uint8_t)args[1];
@@ -246,13 +157,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       bool end_record = (bool)args[2];
       args[0] = syslog_write_chunk__verified(text, text_len, end_record);
     } break;
-
-    case SYSCALL_SYSLOG_SET_FILTER: {
-      const char *filter = (const char *)args[0];
-      size_t filter_len = (size_t)args[1];
-      args[0] = syslog_set_filter__verified(filter, filter_len);
-    } break;
-#endif
+#endif  // USE_DBG_CONSOLE
 
 #ifdef USE_IPC
     case SYSCALL_IPC_REGISTER: {
@@ -287,6 +192,92 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
           ipc_send__verified(remote, service, message_id, data, data_size);
     } break;
 #endif  // USE_IPC
+
+#ifdef USE_APP_LOADING
+    case SYSCALL_APP_GET_HEAP: {
+      void **heap_ptr = (void **)args[0];
+      size_t *heap_size = (size_t *)args[1];
+      ts_t status = app_get_heap__verified(heap_ptr, heap_size);
+      args[0] = ts_code(status);
+    } break;
+#endif  // USE_APP_LOADING
+
+    default:
+      applet_exit_fatal(applet, "Invalid syscall", __FILE_NAME__, __LINE__);
+      break;
+  }
+}
+
+// Syscall handler for applets with unlimited_syscalls privilege
+__attribute((no_stack_protector)) static void syscall_handler_default(
+    uint32_t *args, uint32_t syscall, void *applet_ptr) {
+  applet_t *applet = (applet_t *)applet_ptr;
+
+  __COMPILER_BARRIER();  // FIH
+  if (applet->privileges.unlimited_syscalls != sectrue) {
+    applet_exit_fatal(applet, "Invalid syscall", __FILE_NAME__, __LINE__);
+    return;
+  }
+
+  switch (syscall) {
+    case SYSCALL_RETURN_FROM_CALLBACK: {
+      syscall_get_context()->task.in_callback = false;
+      systask_yield_to(systask_kernel());
+      break;
+    }
+
+    case SYSCALL_SYSTICK_CYCLES: {
+      uint64_t cycles = systick_cycles();
+      args[0] = cycles & 0xFFFFFFFF;
+      args[1] = cycles >> 32;
+    } break;
+
+    case SYSCALL_SYSTICK_US: {
+      uint64_t cycles = systick_us();
+      args[0] = cycles & 0xFFFFFFFF;
+      args[1] = cycles >> 32;
+    } break;
+
+    case SYSCALL_SYSTICK_US_TO_CYCLES: {
+      uint64_t us = args[0] + ((uint64_t)args[1] << 32);
+      uint64_t cycles = systick_us_to_cycles(us);
+      args[0] = cycles & 0xFFFFFFFF;
+      args[1] = cycles >> 32;
+    } break;
+
+    case SYSCALL_SYSHANDLE_READ: {
+      syshandle_t handle = (syshandle_t)args[0];
+      void *buffer = (void *)args[1];
+      size_t buffer_size = (size_t)args[2];
+      args[0] = syshandle_read__verified(handle, buffer, buffer_size);
+    } break;
+
+    case SYSCALL_SYSHANDLE_WRITE: {
+      syshandle_t handle = (syshandle_t)args[0];
+      const void *data = (const void *)args[1];
+      size_t data_size = (size_t)args[2];
+      args[0] = syshandle_write__verified(handle, data, data_size);
+    } break;
+
+#ifdef USE_DBG_CONSOLE
+    case SYSCALL_DBG_CONSOLE_READ: {
+      void *buffer = (void *)args[0];
+      size_t buffer_size = (size_t)args[1];
+      args[0] = dbg_console_read__verified(buffer, buffer_size);
+    } break;
+
+    case SYSCALL_DBG_CONSOLE_WRITE: {
+      const void *data = (const void *)args[0];
+      size_t data_size = (size_t)args[1];
+      args[0] = dbg_console_write__verified(data, data_size);
+    } break;
+
+    case SYSCALL_SYSLOG_SET_FILTER: {
+      const char *filter = (const char *)args[0];
+      size_t filter_len = (size_t)args[1];
+      args[0] = syslog_set_filter__verified(filter, filter_len);
+    } break;
+#endif
 
     case SYSCALL_BOOT_IMAGE_CHECK: {
       const boot_image_t *image = (const boot_image_t *)args[0];
@@ -1150,18 +1141,35 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = ts_code(status);
     } break;
 
-    case SYSCALL_APP_GET_HEAP: {
-      void **heap_ptr = (void **)args[0];
-      size_t *heap_size = (size_t *)args[1];
-      ts_t status = app_get_heap__verified(heap_ptr, heap_size);
-      args[0] = ts_code(status);
-    } break;
 #endif
 
     default:
-      applet_exit_fatal(applet, "Invalid syscall", __FILE_NAME__, __LINE__);
+      syscall_handler_limited(args, syscall, applet_ptr);
       break;
   }
+}
+
+__attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
+                                                       uint32_t syscall,
+                                                       void *applet_ptr) {
+  applet_t *applet = (applet_t *)applet_ptr;
+
+  if (applet->privileges.unlimited_syscalls != sectrue) {
+    wait_random();  // FIH
+  }
+
+  applet_t *prev_context = syscall_get_context();
+  syscall_set_context(applet);
+
+  __COMPILER_BARRIER();  // FIH
+  if (applet->privileges.unlimited_syscalls == sectrue) {
+    syscall_handler_default(args, syscall, applet_ptr);
+  } else {
+    syscall_handler_limited(args, syscall, applet_ptr);
+  }
+
+  // FIH: Clears (or restores) the current applet context
+  syscall_set_context(prev_context);
 }
 
 #endif  // KERNEL
