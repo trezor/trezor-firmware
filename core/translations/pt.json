@@ -2885,12 +2885,7 @@
     "sign_message__confirm_address": "End. signatário",
     "sign_message__confirm_message": "Confirmar mensagem",
     "sign_message__confirm_without_review": "Confirmar sem revisão",
-    "sign_message__message_size": {
-      "Bolt": "Tam. mensagem",
-      "Caesar": "",
-      "Delizia": "Tam. mensagem",
-      "Eckhart": "Tam. mensagem"
-    },
+    "sign_message__message_size": "Tam. mensagem",
     "sign_message__verify_address": "Verificar endereço",
     "sn__action": {
       "Bolt": "",
