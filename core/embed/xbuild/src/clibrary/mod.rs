@@ -374,6 +374,13 @@ impl CLibrary {
         }
     }
 
+    /// Returns whether the library's configured C compiler is Clang-like.
+    pub fn uses_clang(&self) -> bool {
+        self.get_merged_attrs()
+            .get_configured_compiler()
+            .is_like_clang()
+    }
+
     /// Returns the merged compile attributes for the library, combining both
     /// private and public attributes.
     pub fn get_merged_attrs(&self) -> CompileAttrs {

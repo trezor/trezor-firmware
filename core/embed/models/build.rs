@@ -63,10 +63,27 @@ fn main() -> Result<()> {
             lib.add_flags(["-fstack-protector-all", "-fno-omit-frame-pointer", "-O1"]);
 
             if cfg!(feature = "asan") {
+                // ASAN's stack-use-after-return detection moves address-taken
+                // locals to a heap-allocated fake stack, which breaks
+                // MicroPython's C stack depth check (mp_cstack_check) and
+                // makes it raise RuntimeError on startup. Upstream MicroPython
+                // disables it in its ASAN CI builds for the same reason.
+                // The flag is spelled differently for gcc and clang (clang
+                // rejects the gcc param as unused under -Werror).
+                let use_after_return_flag = if lib.uses_clang() {
+                    "-fsanitize-address-use-after-return=never"
+                } else {
+                    "--param=asan-use-after-return=0"
+                };
+
                 lib.add_flags([
                     "-fsanitize=address,undefined",
                     "-fno-optimize-sibling-calls",
+                    use_after_return_flag,
                 ]);
+
+                // Default ASAN runtime options (disables leak detection)
+                lib.add_source("asan.c");
             }
         } else if cfg!(feature = "mcu_stm32") {
             // arm-none-eabi-gcc uses short enums (-fshort-enums) by default,
