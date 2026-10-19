@@ -33,8 +33,8 @@ try:
         QWidget,
     )
 except Exception:
-    from PyQt4.QtCore import QT_VERSION_STR, SIGNAL, QObject, QRegExp, Qt  # noqa: I
-    from PyQt4.QtGui import (  # noqa: I
+    from PyQt4.QtCore import QT_VERSION_STR, SIGNAL, QObject, QRegExp, Qt  # noqa: I900
+    from PyQt4.QtGui import (  # noqa: I900
         QApplication,
         QGridLayout,
         QHBoxLayout,
