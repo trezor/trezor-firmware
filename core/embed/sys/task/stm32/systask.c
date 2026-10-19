@@ -34,6 +34,10 @@
 #include <sys/system.h>
 #include <sys/systimer.h>
 
+#if defined(__ARM_FEATURE_CMSE) && ((__ARM_FEATURE_CMSE & 1U) != 0)
+#include <arm_cmse.h>
+#endif
+
 // Disable stack protector for this file since it  may interfere
 // with the stack manipulation and fault handling
 #pragma GCC optimize("no-stack-protector")
@@ -514,8 +518,9 @@ static uint32_t get_return_addr(bool secure, bool privileged, uint32_t sp) {
 
   // Verify that ret_addr is in a readable region for
   // the context that caused the exception.
-#ifdef SECMON
-  // In Secure-Monitor mode, use CMSE intrinsics to check:
+
+#if defined(__ARM_FEATURE_CMSE) && ((__ARM_FEATURE_CMSE & 1U) != 0)
+  // Prepare flags for cmse_check_address_range()
   // - CMSE_MPU_READ indicates we only need read access
   // - CMSE_MPU_UNPRIV if the fault originated from an unprivileged context
   // - CMSE_NONSECURE if the fault originated from Non-Secure state
@@ -523,12 +528,69 @@ static uint32_t get_return_addr(bool secure, bool privileged, uint32_t sp) {
   if (!privileged) {
     flags |= CMSE_MPU_UNPRIV;
   }
+#if (__ARM_FEATURE_CMSE & 2U) != 0
   if (!secure) {
     flags |= CMSE_NONSECURE;
   }
+#endif
+#endif
+
+  // We checked that ret_addr is valid, but the kernel/secmon may not
+  // have access to the entire memory region where the stack resides =>
+  // we need to temporarily reconfigure the MPU to read the return address.
+
+#ifdef SECMON
   if (!cmse_check_address_range(ret_addr, sizeof(uint32_t), flags)) {
     return 0;
   }
+
+  uint32_t addr = 0;
+
+  if (secure) {
+    // Secure context => the stack is in the secmon's own RAM, which is
+    // always accessible in MPU_MODE_DEFAULT.
+    mpu_mode_t mode = mpu_reconfig(MPU_MODE_DEFAULT);
+    addr = *ret_addr;
+    mpu_restore(mode);
+  } else {
+    // Non-Secure context => read through the Non-Secure alias (bit 28
+    // cleared). The bus transaction is then Non-Secure and the GTZC rejects
+    // it for any Secure-attributed memory, regardless of the checks above.
+    // (FIH)
+    // The pointer is volatile to hide the masked value from the optimizer,
+    // otherwise the compiler proves that bit 28 is clear and removes the
+    // check below. (FIH)
+    uint32_t* volatile ns_ptr = (uint32_t*)((uint32_t)ret_addr & ~(1 << 28));
+
+    // The MPU must be disabled since the NS stack (e.g. in the app arena)
+    // is not necessarily covered by the secmon's MPU regions.
+    mpu_mode_t mode = mpu_reconfig(MPU_MODE_DISABLED);
+    addr = *ns_ptr;
+    mpu_restore(mode);
+
+    if (((uint32_t)ns_ptr & (1 << 28)) != 0) {
+      // Alias masking was bypassed, discard the value (FIH)
+      return 0;
+    }
+
+    if (!cmse_check_address_range(ret_addr, sizeof(uint32_t), flags)) {
+      // The first check was bypassed, discard the value (FIH)
+      return 0;
+    }
+  }
+
+  // A genuine return address points to a 2-byte aligned instruction that
+  // is readable by the faulting context. Anything else is not a return
+  // address and must not reach the post-mortem info (and the RSOD). (FIH)
+  if ((addr & 1) != 0) {
+    return 0;
+  }
+
+  if (!cmse_check_address_range((void*)(uintptr_t)addr, sizeof(uint16_t),
+                                flags)) {
+    return 0;
+  }
+
 #else
   systask_scheduler_t* sched = &g_systask_scheduler;
   systask_t* task = privileged ? &sched->kernel_task : sched->active_task;
@@ -538,14 +600,23 @@ static uint32_t get_return_addr(bool secure, bool privileged, uint32_t sp) {
       ret_addr >= (uint32_t*)(task->stack_end)) {
     return 0;
   }
-#endif
 
-  // We checked that ret_addr is valid, but kernel/secmon need not
-  // to have access to the entire memory region where the stack resides =>
-  // MPU temporarily to read the return address.
-  mpu_mode_t mode = mpu_reconfig(MPU_MODE_DISABLED);
-  uint32_t addr = *ret_addr;
+  // In kernel mode, we can setup the MPU according to the privilege level
+  // to safely read the return address. For unprivileged task,
+  // we use LDRT to not read anything from privileged memory.
+  mpu_mode_t mode = mpu_reconfig(privileged ? MPU_MODE_DEFAULT : MPU_MODE_APP);
+
+#if defined(__ARM_FEATURE_CMSE) && ((__ARM_FEATURE_CMSE & 1U) != 0)
+  // Check if the return address first to prevent any invalid memory access
+  // that would lead into a hard fault.
+  if (!cmse_check_address_range(ret_addr, sizeof(uint32_t), flags)) {
+    mpu_restore(mode);
+    return 0;
+  }
+#endif
+  uint32_t addr = privileged ? *ret_addr : __LDRT(ret_addr);
   mpu_restore(mode);
+#endif
 
   return addr;
 }
