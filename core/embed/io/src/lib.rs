@@ -10,6 +10,8 @@ pub mod nrf;
 #[cfg(feature = "smp")]
 pub mod smp;
 
+pub mod iorust;
+
 /// Returns the heap the loader set aside for the currently active applet.
 ///
 /// Its length is what the loader reserved, which can differ from the heap size
