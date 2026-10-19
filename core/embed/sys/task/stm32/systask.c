@@ -639,14 +639,25 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   // Load the scheduled task context
   systask_t* next_task = scheduler->active_task;
 
-  // Set task privilege level
+  // Lower the privilege level initially (FIH)
   uint32_t control = __get_CONTROL();
-  if (next_task == &scheduler->kernel_task) {
-    control &= ~CONTROL_nPRIV_Msk;
-  } else {
-    control |= CONTROL_nPRIV_Msk;
-  }
+  control |= CONTROL_nPRIV_Msk;
   __set_CONTROL(control);
+
+  // Set task privilege level
+  if (next_task == &scheduler->kernel_task) {
+    if (next_task->id == 0) {
+      control &= ~CONTROL_nPRIV_Msk;
+      __set_CONTROL(control);
+    }
+  }
+
+  // Check if the privilege level is correct for the next task (FIH)
+  control = __get_CONTROL();
+  if ((control & CONTROL_nPRIV_Msk) == 0 &&
+      next_task != &scheduler->kernel_task) {
+    error_shutdown("Privileged task is not the kernel task");
+  }
 
   // Setup the MPU for the new task
   mpu_reconfig(next_task->mpu_mode);
