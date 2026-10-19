@@ -327,7 +327,10 @@ def cli(
         try:
             tropic_model.start()
         except Exception as exc:
-            click.echo(f"Failed to start Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
+            raise click.ClickException(
+                f"Failed to start the Tropic01 model: {exc.__class__.__name__}: {exc}. "
+                "Use --no-tropic-emulator to point the emulator at an external model."
+            )
         # Without `--tropic-model-port`, the model reserved a free port while
         # the emulator still holds the default, so point the emulator at the
         # model. With the option, both already use it and this changes nothing.
