@@ -16,9 +16,10 @@ from trezorlib._internal.prodtest_emulator import get_prodtest_emulator
 )
 # fmt: off
 @click.option("-m", "--model", envvar="TREZOR_MODEL", default=None, help="Trezor model name (or set TREZOR_MODEL); defaults to the latest build")
+@click.option("-h", "--headless", is_flag=True, help="Headless mode (no display)")
 # fmt: on
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
-def cli(model: str, command: list[str]) -> None:
+def cli(model: str, headless: bool, command: list[str]) -> None:
     """Run a command with the prodtest emulator.
 
     \b
@@ -26,7 +27,9 @@ def cli(model: str, command: list[str]) -> None:
     TREZOR_MODEL=t3w1 ./prodtest_emu.py pytest ../tests/prodtest_tests
     """
     with tempfile.TemporaryDirectory(prefix="prodtest_emu_") as profile_dir:
-        emulator = get_prodtest_emulator(model=model, profile_dir=profile_dir)
+        emulator = get_prodtest_emulator(
+            model=model, profile_dir=profile_dir, headless=headless
+        )
         with emulator:
             emulator.start()
             process = subprocess.Popen(command)
