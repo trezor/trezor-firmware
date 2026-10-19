@@ -116,6 +116,23 @@ impl SimpleChoice {
         }
     }
 
+    /// Context menu: menu buttons, page counter and the neighbouring items
+    /// shown. Returns the index of the selected item, closing it is not
+    /// reported as cancelling to MicroPython. Shared by `select_menu` and the
+    /// tutorial menu.
+    pub fn menu(
+        labels: Vec<TString<'static>, MAX_LENGTH>,
+        danger_items: Vec<bool, MAX_LENGTH>,
+        current: usize,
+    ) -> Self {
+        Self::new(labels, ChoiceControls::Cancellable, TString::empty())
+            .with_menu_buttons(danger_items)
+            .with_initial_page_counter(current)
+            .with_show_incomplete()
+            .with_return_index()
+            .with_ignore_cancelled()
+    }
+
     /// Set the page counter at the very beginning.
     pub fn with_initial_page_counter(mut self, page_counter: usize) -> Self {
         self.choice_page = self.choice_page.with_initial_page_counter(page_counter);

@@ -28,10 +28,6 @@ where
     buttons: Child<ButtonController>,
     page_counter: usize,
     return_confirmed_index: bool,
-    show_scrollbar: bool,
-    /// Possibly enforcing the second button to be ignored after some time after
-    /// pressing the first button
-    ignore_second_button_ms: Option<u32>,
 }
 
 impl<F> Flow<F>
@@ -56,8 +52,6 @@ where
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
             page_counter: 0,
             return_confirmed_index: false,
-            show_scrollbar: true,
-            ignore_second_button_ms: None,
         }
     }
 
@@ -72,18 +66,6 @@ where
     /// Causing the Flow to return the index of the page that was confirmed.
     pub fn with_return_confirmed_index(mut self) -> Self {
         self.return_confirmed_index = true;
-        self
-    }
-
-    /// Show scrollbar or not.
-    pub fn with_scrollbar(mut self, show_scrollbar: bool) -> Self {
-        self.show_scrollbar = show_scrollbar;
-        self
-    }
-
-    /// Ignoring the second button duration
-    pub fn with_ignore_second_button_ms(mut self, ignore_second_button_ms: u32) -> Self {
-        self.ignore_second_button_ms = Some(ignore_second_button_ms);
         self
     }
 
@@ -225,11 +207,8 @@ where
         // (scrollbar will be active - counting pages - even when not placed and
         // painted)
         if self.title.is_some() {
-            let (title_area, scrollbar_area) = if self.show_scrollbar {
-                title_area.split_right(self.scrollbar.inner().overall_width() + SCROLLBAR_SPACE)
-            } else {
-                (title_area, Rect::zero())
-            };
+            let (title_area, scrollbar_area) =
+                title_area.split_right(self.scrollbar.inner().overall_width() + SCROLLBAR_SPACE);
 
             self.title.place(title_area);
             self.title_area = title_area;
@@ -238,14 +217,7 @@ where
 
         // We finally found how long is the first page, and can set its button layout.
         self.current_page.place(content_area);
-        if let Some(ignore_ms) = self.ignore_second_button_ms {
-            self.buttons = Child::new(
-                ButtonController::new(self.current_page.btn_layout())
-                    .with_ignore_btn_delay(ignore_ms),
-            );
-        } else {
-            self.buttons = Child::new(ButtonController::new(self.current_page.btn_layout()));
-        }
+        self.buttons = Child::new(ButtonController::new(self.current_page.btn_layout()));
 
         self.pad.place(title_content_area);
         self.buttons.place(button_area);
@@ -296,11 +268,9 @@ where
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
-        // Scrollbars are painted only with a title and when requested
+        // Scrollbars are painted only with a title
         if self.title.is_some() {
-            if self.show_scrollbar {
-                self.scrollbar.render(target);
-            }
+            self.scrollbar.render(target);
             self.title.render(target);
         }
         self.buttons.render(target);

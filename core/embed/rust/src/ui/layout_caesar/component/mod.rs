@@ -64,6 +64,8 @@ mod scrollbar;
 mod share_words;
 #[cfg(not(feature = "bootloader"))]
 mod title;
+#[cfg(feature = "translations")]
+mod tutorial;
 
 #[cfg(all(feature = "micropython", feature = "translations"))]
 pub use address_details::AddressDetails;
@@ -95,3 +97,5 @@ pub use progress::Progress;
 pub use scrollbar::ScrollBar;
 #[cfg(feature = "translations")]
 pub use share_words::ShareWords;
+#[cfg(feature = "translations")]
+pub use tutorial::Tutorial;
