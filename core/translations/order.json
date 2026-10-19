@@ -1298,5 +1298,16 @@
   "1296": "address__title_multisig_xpub_template",
   "1297": "stellar__deploy_contract",
   "1298": "stellar__wasm_hash",
-  "1299": "ethereum__vault_owner_address"
+  "1299": "ethereum__vault_owner_address",
+  "1300": "buttons__shift",
+  "1301": "tutorial__complete",
+  "1302": "tutorial__hold_left_press_right",
+  "1303": "tutorial__menu_later",
+  "1304": "tutorial__press_both",
+  "1305": "tutorial__press_left",
+  "1306": "tutorial__scroll_up",
+  "1307": "tutorial__title_go_back",
+  "1308": "tutorial__title_middle_button",
+  "1309": "tutorial__title_remember",
+  "1310": "tutorial__title_welcome"
 }
