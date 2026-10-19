@@ -1704,36 +1704,6 @@ access_violation:
   return TS_EACCES;
 }
 
-// ---------------------------------------------------------------------
-
-ts_t app_get_heap__verified(void **heap_ptr, size_t *heap_size) {
-  if (!probe_write_access(heap_ptr, sizeof(*heap_ptr))) {
-    goto access_violation;
-  }
-
-  if (!probe_write_access(heap_size, sizeof(*heap_size))) {
-    goto access_violation;
-  }
-
-  return applet_get_heap(syscall_get_context(), heap_ptr, heap_size);
-
-access_violation:
-  apptask_access_violation();
-  return TS_EACCES;
-}
-
-ts_t app_get_ipc_buffer_size__verified(size_t *ipc_buffer_size) {
-  if (!probe_write_access(ipc_buffer_size, sizeof(*ipc_buffer_size))) {
-    goto access_violation;
-  }
-
-  return applet_get_ipc_buffer_size(syscall_get_context(), ipc_buffer_size);
-
-access_violation:
-  apptask_access_violation();
-  return TS_EACCES;
-}
-
 #endif  // USE_APP_LOADING
 
 #endif  // KERNEL

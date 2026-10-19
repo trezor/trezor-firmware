@@ -414,10 +414,6 @@ ts_t app_image_run__verified(app_image_handle_t handle, systask_id_t *task_id);
 ts_t app_image_get_pminfo__verified(app_image_handle_t handle,
                                     systask_postmortem_t *pminfo);
 
-ts_t app_get_heap__verified(void **heap_ptr, size_t *heap_size);
-
-ts_t app_get_ipc_buffer_size__verified(size_t *ipc_buffer_size);
-
 #endif
 
 #endif  // KERNEL

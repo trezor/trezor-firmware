@@ -124,8 +124,6 @@ static inline bool syscall_is_allowed(const applet_t *applet,
     case SYSCALL_IPC_TRY_RECEIVE:
     case SYSCALL_IPC_FREE_MESSAGE:
     case SYSCALL_IPC_SEND:
-    case SYSCALL_APP_GET_HEAP:
-    case SYSCALL_APP_GET_IPC_BUFFER_SIZE:
       return true;
   }
 
@@ -1148,19 +1146,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       app_image_handle_t handle = (app_image_handle_t)args[0];
       systask_postmortem_t *pminfo = (systask_postmortem_t *)args[1];
       ts_t status = app_image_get_pminfo__verified(handle, pminfo);
-      args[0] = ts_code(status);
-    } break;
-
-    case SYSCALL_APP_GET_HEAP: {
-      void **heap_ptr = (void **)args[0];
-      size_t *heap_size = (size_t *)args[1];
-      ts_t status = app_get_heap__verified(heap_ptr, heap_size);
-      args[0] = ts_code(status);
-    } break;
-
-    case SYSCALL_APP_GET_IPC_BUFFER_SIZE: {
-      size_t *ipc_buffer_size = (size_t *)args[0];
-      ts_t status = app_get_ipc_buffer_size__verified(ipc_buffer_size);
       args[0] = ts_code(status);
     } break;
 #endif
