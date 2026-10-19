@@ -83,6 +83,24 @@ impl Curve {
 
 /// Check that `pubkey` is a compressed (`0x02`/`0x03`) or uncompressed (`0x04`)
 /// SEC1 encoding of the expected length.
+/// TEMPORARY: gives the current task its own secp256k1-zkp context, unless
+/// it already has one.
+///
+/// The context lives in task-local storage, so that external app tasks, which
+/// the MPU keeps out of Core's RAM, can verify and recover secp256k1
+/// signatures. The context is not randomized, so the task must not sign with
+/// it. Does nothing without the `secp256k1_zkp` feature.
+pub fn init_task_context() -> Result<(), Error> {
+    #[cfg(feature = "secp256k1_zkp")]
+    {
+        // SAFETY: only touches the current task's own context.
+        if unsafe { ffi::zkp_context_init_unrandomized() } != 0 {
+            return Err(Error::InvalidContext);
+        }
+    }
+    Ok(())
+}
+
 fn verify_pubkey_slice(pubkey: &[u8]) -> Result<(), Error> {
     if pubkey.is_empty() {
         return Err(Error::InvalidEncoding);
