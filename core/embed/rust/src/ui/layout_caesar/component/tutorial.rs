@@ -69,8 +69,7 @@ enum ContentMsg {
 /// the information screen or the tutorial menu instead.
 ///
 /// Added elsewhere only for the tutorial: `ButtonPage::with_middle_btn`,
-/// `ButtonPage::with_shift_label`, `ButtonDetails::ghost` and
-/// `ButtonDetails::with_pressed_arm`.
+/// `ButtonDetails::ghost` and `ButtonDetails::with_pressed_arm`.
 pub struct Tutorial {
     screen: Screen,
     /// Where `Screen::MenuInfo` goes back to
@@ -202,7 +201,6 @@ impl Tutorial {
                 text(&[TR::tutorial__hold_left_press_right])
                     .with_menu_nav(MenuNav::ChoiceMenu)
                     .with_back_on_first_page()
-                    .with_shift_label(TR::buttons__shift.into())
                     .with_confirm_btn(Some(ButtonDetails::ghost())),
             ),
             Screen::Remember => framed(
