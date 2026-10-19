@@ -58,6 +58,20 @@ class TestPathSchemas(unittest.TestCase):
             f"Schemas differ:\nA = {repr(schema_a)}\nB = {repr(schema_b)}",
         )
 
+    def test_address_n_to_str(self):
+        self.assertEqual(address_n_to_str([]), "m")
+        self.assertEqual(address_n_to_str([H_(44)]), "m/44'")
+        self.assertEqual(address_n_to_str([H_(44), H_(0)]), "m/44'/0'")
+        self.assertEqual(address_n_to_str([H_(44), H_(0), 0]), "m/44'/0'/0")
+        self.assertEqual(address_n_to_str([H_(44), H_(0), 1, 2]), "m/44'/0'/1/2")
+
+        self.assertEqual(address_n_to_str([], prefix="PREFIX"), "PREFIX")
+        self.assertEqual(address_n_to_str([H_(44)], prefix="PREFIX"), "PREFIX/44'")
+        self.assertEqual(
+            address_n_to_str([H_(44), H_(0), 0, 1], prefix="PREFIX"),
+            "PREFIX/44'/0'/0/1",
+        )
+
     def test_always_never_matching(self):
         paths = [
             [],

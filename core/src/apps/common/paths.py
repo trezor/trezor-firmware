@@ -356,17 +356,17 @@ def path_is_hardened(address_n: Bip32Path) -> bool:
     return all(is_hardened(n) for n in address_n)
 
 
-def address_n_to_str(address_n: Iterable[int]) -> str:
+def address_n_to_str(address_n: Iterable[int], prefix: str = "m") -> str:
     def _path_item(i: int) -> str:
         if i & HARDENED:
-            return str(i ^ HARDENED) + "'"
+            return f"/{i ^ HARDENED}'"
         else:
-            return str(i)
+            return f"/{i}"
 
     if not address_n:
-        return "m"
+        return prefix
 
-    return "m/" + "/".join(_path_item(i) for i in address_n)
+    return prefix + "".join(_path_item(i) for i in address_n)
 
 
 def address_n_slip21_to_str(address_n: Slip21Path) -> str:
