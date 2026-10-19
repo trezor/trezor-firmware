@@ -50,6 +50,11 @@ pub extern "C" fn coreapp_app_entry(
     // SAFETY: the loader hands this app a heap of its own, which lives as
     // long as the app's task; the state created here is its only owner.
     let state = unsafe { app_state::AppState::new(heap.cast(), heap.len()) };
+    // TEMPORARY: the app task needs its own secp256k1-zkp context to verify
+    // and recover secp256k1 signatures (see `::crypto::ecdsa::init_task_context`).
+    if ::crypto::ecdsa::init_task_context().is_err() {
+        fatal_error!("failed to create the app's secp256k1 context");
+    }
     app_state::with_app_state(&state, || {
         // The inbox is allocated out of the app's heap, so it needs the state.
         wire::register_inbox();

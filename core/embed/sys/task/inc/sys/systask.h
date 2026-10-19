@@ -186,7 +186,9 @@ typedef struct {
   /** Number of bytes used in the TLS area */
   size_t tls_size;
   /** TLS copy if the task is inactive */
-  uint32_t tls_copy[20];
+  // TEMPORARY: sized to also hold the secp256k1-zkp context, which lives in
+  // TLS so that app tasks get their own (see `crypto/zkp_context.c`).
+  uint32_t tls_copy[64];
 
   /** Set if the task is processing the kernel callback */
   bool in_callback;
