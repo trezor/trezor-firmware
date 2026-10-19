@@ -41,6 +41,7 @@ pub struct Button {
     decoration: Option<Decoration>,
     fixed_width: Option<i16>,
     offset: Offset,
+    pressed_arm: Option<ButtonPos>,
     state: State,
 }
 
@@ -53,6 +54,7 @@ impl Button {
             decoration: btn_details.decoration,
             fixed_width: btn_details.fixed_width,
             offset: btn_details.offset,
+            pressed_arm: btn_details.pressed_arm,
             bounds: Rect::zero(),
             state: State::Released,
         }
@@ -191,14 +193,31 @@ impl Component for Button {
         }
 
         // Optionally display "arms" at both sides of content - always in FG and BG
-        // colors (they are not inverted).
+        // colors (they are not inverted). A pressed arm is dotted and one pixel
+        // shorter on the outer side.
         if matches!(self.decoration, Some(Decoration::Arms)) {
-            shape::ToifImage::new(area.left_center(), theme::ICON_ARM_LEFT.toif)
+            let (left_arm, left_point) = if self.pressed_arm == Some(ButtonPos::Left) {
+                (
+                    theme::ICON_MID_BUTTON_PRESSED_L,
+                    area.left_center() - Offset::x(1),
+                )
+            } else {
+                (theme::ICON_ARM_LEFT, area.left_center())
+            };
+            shape::ToifImage::new(left_point, left_arm.toif)
                 .with_align(Alignment2D::TOP_RIGHT)
                 .with_fg(theme::FG)
                 .render(target);
 
-            shape::ToifImage::new(area.right_center(), theme::ICON_ARM_RIGHT.toif)
+            let (right_arm, right_point) = if self.pressed_arm == Some(ButtonPos::Right) {
+                (
+                    theme::ICON_MID_BUTTON_PRESSED_R,
+                    area.right_center() + Offset::x(1),
+                )
+            } else {
+                (theme::ICON_ARM_RIGHT, area.right_center())
+            };
+            shape::ToifImage::new(right_point, right_arm.toif)
                 .with_align(Alignment2D::TOP_LEFT)
                 .with_fg(theme::FG)
                 .render(target);
@@ -285,6 +304,8 @@ pub struct ButtonDetails {
     /// Holding this (left) button acts as "Shift", turning the right button
     /// into its secondary function.
     pub shift: bool,
+    /// Arm drawn dotted, see `with_pressed_arm`.
+    pressed_arm: Option<ButtonPos>,
 }
 
 impl ButtonDetails {
@@ -300,6 +321,7 @@ impl ButtonDetails {
             send_long_press: false,
             long_press_ms: None,
             shift: false,
+            pressed_arm: None,
         }
     }
 
@@ -315,6 +337,7 @@ impl ButtonDetails {
             send_long_press: false,
             long_press_ms: None,
             shift: false,
+            pressed_arm: None,
         }
     }
 
@@ -360,6 +383,13 @@ impl ButtonDetails {
             .with_fixed_width(theme::ICON_CLOSE_SHIFT.toif.width())
             .with_offset(Offset::new(0, -3))
             .with_shift()
+    }
+
+    /// Dotted outline without content, showing that the right button does
+    /// nothing on its own. Used by the tutorial, on the screen teaching
+    /// "Shift".
+    pub fn ghost() -> Self {
+        Self::icon(theme::ICON_GHOST_BUTTON).with_fixed_width(theme::ICON_GHOST_BUTTON.toif.width())
     }
 
     /// Arrow glyph between arms, entering the selected menu item.
@@ -464,6 +494,14 @@ impl ButtonDetails {
         self
     }
 
+    /// Drawing the arm on the `pos` side dotted (armed buttons only). Used by
+    /// the tutorial to show which button was pressed alone, when both should
+    /// be pressed.
+    pub fn with_pressed_arm(mut self, pos: Option<ButtonPos>) -> Self {
+        self.pressed_arm = pos;
+        self
+    }
+
     /// Holding the (left) button engages "Shift" after `SHIFT_HOLD_MS`.
     pub fn with_shift(mut self) -> Self {
         self.shift = true;
@@ -563,30 +601,12 @@ impl ButtonLayout {
         )
     }
 
-    /// Left and right arrow icons for navigation.
-    pub fn arrow_none_arrow() -> Self {
-        Self::new(
-            Some(ButtonDetails::left_arrow_icon()),
-            None,
-            Some(ButtonDetails::right_arrow_icon()),
-        )
-    }
-
     /// Left arrow and right text.
     pub fn arrow_none_text(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::left_arrow_icon()),
             None,
             Some(ButtonDetails::from_text_possible_icon(text)),
-        )
-    }
-
-    /// Cancel cross on left and right arrow.
-    pub fn cancel_none_arrow() -> Self {
-        Self::new(
-            Some(ButtonDetails::cancel_icon()),
-            None,
-            Some(ButtonDetails::right_arrow_icon()),
         )
     }
 
@@ -612,15 +632,6 @@ impl ButtonLayout {
     pub fn cancel_none_htc(text: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
-            None,
-            Some(ButtonDetails::text(text).with_default_duration()),
-        )
-    }
-
-    /// Arrow back on left and hold-to-confirm text on the right.
-    pub fn arrow_none_htc(text: TString<'static>) -> Self {
-        Self::new(
-            Some(ButtonDetails::left_arrow_icon()),
             None,
             Some(ButtonDetails::text(text).with_default_duration()),
         )
@@ -693,15 +704,6 @@ impl ButtonActions {
         }
     }
 
-    /// Going back with left, going further with right
-    pub fn prev_none_next() -> Self {
-        Self::new(
-            Some(ButtonAction::PrevPage),
-            None,
-            Some(ButtonAction::NextPage),
-        )
-    }
-
     /// Going back with left, going further with middle
     pub fn prev_next_none() -> Self {
         Self::new(
@@ -723,15 +725,6 @@ impl ButtonActions {
     /// Only confirming with middle
     pub fn none_confirm_none() -> Self {
         Self::new(None, Some(ButtonAction::Confirm), None)
-    }
-
-    /// Going to last page with left, to the next page with right
-    pub fn last_none_next() -> Self {
-        Self::new(
-            Some(ButtonAction::LastPage),
-            None,
-            Some(ButtonAction::NextPage),
-        )
     }
 
     /// Going to last page with left, to the next page with right and confirm
@@ -759,11 +752,6 @@ impl ButtonActions {
         Self::new(None, None, Some(ButtonAction::NextPage))
     }
 
-    /// Only going to the next page with middle
-    pub fn none_next_none() -> Self {
-        Self::new(None, Some(ButtonAction::NextPage), None)
-    }
-
     /// Cancelling with left, confirming with right
     pub fn cancel_none_confirm() -> Self {
         Self::new(
@@ -779,24 +767,6 @@ impl ButtonActions {
             Some(ButtonAction::Cancel),
             Some(ButtonAction::Confirm),
             Some(ButtonAction::NextPage),
-        )
-    }
-
-    /// Going to the beginning with left, confirming with right
-    pub fn beginning_none_confirm() -> Self {
-        Self::new(
-            Some(ButtonAction::FirstPage),
-            None,
-            Some(ButtonAction::Confirm),
-        )
-    }
-
-    /// Going to the beginning with left, cancelling with right
-    pub fn beginning_none_cancel() -> Self {
-        Self::new(
-            Some(ButtonAction::FirstPage),
-            None,
-            Some(ButtonAction::Cancel),
         )
     }
 

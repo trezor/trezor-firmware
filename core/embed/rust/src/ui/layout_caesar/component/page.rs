@@ -1,6 +1,8 @@
+use super::super::fonts;
 use super::{
     constant, theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos,
 };
+use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::{
     Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate,
@@ -35,6 +37,8 @@ where
     pad: Pad,
     cancel_btn_details: Option<ButtonDetails>,
     confirm_btn_details: Option<ButtonDetails>,
+    /// Middle button, confirming (without menu navigation only).
+    middle_btn_details: Option<ButtonDetails>,
     back_btn_details: Option<ButtonDetails>,
     next_btn_details: Option<ButtonDetails>,
     /// Menu navigation, replacing the cancel/back/next buttons.
@@ -44,6 +48,9 @@ where
     back_on_first_page: bool,
     /// Whether the left button is being held as "Shift" (menu navigation only).
     shift_active: bool,
+    /// Text shown on the left button while "Shift" is held, see
+    /// `with_shift_label`.
+    shift_label: Option<TString<'static>>,
     buttons: Child<ButtonController>,
 }
 
@@ -57,11 +64,13 @@ where
             pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text(TR::buttons__confirm.into())),
+            middle_btn_details: None,
             back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             menu_nav: None,
             back_on_first_page: false,
             shift_active: false,
+            shift_label: None,
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call
             // `content.page_count()`.
@@ -76,6 +85,14 @@ where
 
     pub fn with_confirm_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.confirm_btn_details = btn_details;
+        self
+    }
+
+    /// Middle button (pressing both buttons) confirming the screen. Only
+    /// without the menu navigation. Used by the tutorial, on the screen
+    /// teaching the middle button.
+    pub fn with_middle_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
+        self.middle_btn_details = btn_details;
         self
     }
 
@@ -97,6 +114,14 @@ where
     /// button does not cancel.
     pub fn with_back_on_first_page(mut self) -> Self {
         self.back_on_first_page = true;
+        self
+    }
+
+    /// While "Shift" is held, the left button shows `label` instead of the
+    /// bracketed icon (menu navigation only). Used by the tutorial, on the
+    /// screen teaching "Shift".
+    pub fn with_shift_label(mut self, label: TString<'static>) -> Self {
+        self.shift_label = Some(label);
         self
     }
 
@@ -165,7 +190,7 @@ where
         } else {
             self.confirm_btn_details.clone()
         };
-        ButtonLayout::new(btn_left, None, btn_right)
+        ButtonLayout::new(btn_left, self.middle_btn_details.clone(), btn_right)
     }
 
     fn get_menu_nav_button_layout(
@@ -178,11 +203,14 @@ where
         // there is somewhere to go back to. It stays while "Shift" is held.
         let can_go_back = has_prev || self.back_on_first_page;
         let shift = can_go_back || self.shift_active;
-        let btn_left = match (menu_nav, shift) {
-            (MenuNav::Menu | MenuNav::ChoiceMenu, false) => ButtonDetails::menu_icon(),
-            (MenuNav::Menu | MenuNav::ChoiceMenu, true) => ButtonDetails::menu_shift_icon(),
-            (MenuNav::Close, false) => ButtonDetails::cancel_icon(),
-            (MenuNav::Close, true) => ButtonDetails::cancel_shift_icon(),
+        let btn_left = match (menu_nav, shift, self.shift_label) {
+            (_, _, Some(label)) if self.shift_active => ButtonDetails::text(label)
+                .with_font(fonts::FONT_NORMAL)
+                .with_shift(),
+            (MenuNav::Menu | MenuNav::ChoiceMenu, false, _) => ButtonDetails::menu_icon(),
+            (MenuNav::Menu | MenuNav::ChoiceMenu, true, _) => ButtonDetails::menu_shift_icon(),
+            (MenuNav::Close, false, _) => ButtonDetails::cancel_icon(),
+            (MenuNav::Close, true, _) => ButtonDetails::cancel_shift_icon(),
         };
         let btn_right = if self.shift_active {
             can_go_back.then(ButtonDetails::scroll_up_wide)
