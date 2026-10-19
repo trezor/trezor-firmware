@@ -34,9 +34,9 @@ static uintptr_t coreapp_emu_trampoline(uintptr_t argc, uintptr_t argv,
 }
 
 // App entry point implemented in the coreapp (Rust, see
-// `core/embed/api/src/lib.rs`). Called with the loaded app's own
-// `applet_main` pointer; only its address is ever taken here.
-extern int coreapp_app_entry(void* applet_main);
+// `core/embed/api/src/lib.rs`). Called with the loaded app's launch
+// arguments; only its address is ever taken here.
+extern int coreapp_app_entry(const void* args);
 
 bool coreapp_init(applet_t* applet, int argc, char** argv) {
   const applet_privileges_t coreapp_privileges = {0};

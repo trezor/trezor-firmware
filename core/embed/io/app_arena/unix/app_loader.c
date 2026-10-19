@@ -19,6 +19,8 @@
 
 #include <trezor_rtl.h>
 
+#include <io/app_arena.h>
+#include <rtl/sizedefs.h>
 #include <sys/applet.h>
 #include <sys/coreapp.h>
 #include <sys/logging.h>
@@ -85,14 +87,6 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
 
   applet_init(applet, &privileges, app_loader_applet_unload);
 
-  // The inbox is allocated out of the app's heap at launch, so an app that
-  // asks for more inbox than heap can never start. The build tool rejects
-  // this too; re-check here because the header is attacker-supplied.
-  TSH_CHECK(header->ipc_buffer_size <= data_size, TS_ENOMEM);
-
-  applet_set_heap(applet, data, data_size);
-  applet_set_ipc_buffer_size(applet, header->ipc_buffer_size);
-
   // Isolate the applet file from other users before loading it.
   rc = asprintf(&directory, "%s/trezor_ext_app.XXXXXX", profile_dir());
   TSH_CHECK(rc >= 0, TS_ENOMEM);
@@ -120,14 +114,35 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
   bool ok = systask_init(&applet->task, 0, 0, 0, applet);
   TSH_CHECK(ok, TS_ENOMEM);
 
-  // Start the task in Core's own app entry point, handing it `applet_main`,
-  // rather than jumping into `applet_main` directly. Core then sets up the
-  // app's global allocator and calls `applet_main` itself.
+  // The emulator task runs on its own thread stack, which does not exist
+  // yet, so the launch arguments are placed at the start of the app's data
+  // area instead, and the heap takes the rest of it.
+  uintptr_t args_addr = ALIGN_UP((uintptr_t)data, _Alignof(app_args_t));
+  uintptr_t heap_addr = args_addr + sizeof(app_args_t);
+  TSH_CHECK(heap_addr <= (uintptr_t)data + data_size, TS_ENOMEM);
+  size_t heap_size = (uintptr_t)data + data_size - heap_addr;
+
+  // The inbox is allocated out of the app's heap at launch, so an app that
+  // asks for more inbox than heap can never start. The build tool rejects
+  // this too; re-check here because the header is attacker-supplied.
+  TSH_CHECK(header->ipc_buffer_size <= heap_size, TS_ENOMEM);
+
+  app_args_t* args = (app_args_t*)args_addr;
+  *args = (app_args_t){
+      .applet_main = applet_main,
+      .heap_ptr = (void*)heap_addr,
+      .heap_size = heap_size,
+      .ipc_buffer_size = header->ipc_buffer_size,
+  };
+
+  // Start the task in Core's own app entry point, handing it the launch
+  // arguments (including `applet_main`), rather than jumping into
+  // `applet_main` directly. Core then sets up the app's global allocator and
+  // calls `applet_main` itself.
   void* app_entry = coreapp_get_app_entry();
   TSH_CHECK(app_entry != NULL, TS_EBADMSG);
 
-  ok =
-      systask_push_call(&applet->task, app_entry, (uintptr_t)applet_main, 0, 0);
+  ok = systask_push_call(&applet->task, app_entry, (uintptr_t)args, 0, 0);
   TSH_CHECK(ok, TS_ENOMEM);
 
 cleanup:

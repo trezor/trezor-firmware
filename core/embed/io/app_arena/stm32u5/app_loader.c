@@ -22,6 +22,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <io/app_arena.h>
 #include <rtl/sizedefs.h>
 #include <sys/applet.h>
 #include <sys/coreapp.h>
@@ -517,9 +518,6 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
   // this too; re-check here because the header is attacker-supplied.
   TSH_CHECK(header->ipc_buffer_size <= map.heap_size, TS_ENOMEM);
 
-  applet_set_heap(applet, (void*)map.heap_p_addr, map.heap_size);
-  applet_set_ipc_buffer_size(applet, header->ipc_buffer_size);
-
   applet->layout = (applet_layout_t){
       .code1.start = map.ro_p_addr,
       .code1.size = map.ro_size,
@@ -537,6 +535,16 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
                          map.rw_p_addr, applet);
   TSH_CHECK(ok, TS_ENOMEM);
 
+  // Copy the launch arguments onto the applet stack
+  const app_args_t args = {
+      .applet_main = applet_main,
+      .heap_ptr = (void*)map.heap_p_addr,
+      .heap_size = map.heap_size,
+      .ipc_buffer_size = header->ipc_buffer_size,
+  };
+  void* args_copy = systask_push_data(&applet->task, &args, sizeof(args));
+  TSH_CHECK(args_copy != NULL, TS_ENOMEM);
+
   // Enable coreapp TLS area swapping
   systask_enable_tls(&applet->task, coreapp_get_tls_area());
 
@@ -549,8 +557,8 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
   TSH_CHECK(app_entry != NULL, TS_EBADMSG);
 
   // Prepare the applet to run - push exception frame on the stack
-  // with Core's app entry point address
-  ok = systask_push_call(&applet->task, app_entry, (uint32_t)applet_main, 0, 0);
+  // with Core's app entry point address and the launch arguments
+  ok = systask_push_call(&applet->task, app_entry, (uint32_t)args_copy, 0, 0);
   TSH_CHECK(ok, TS_ENOMEM);
 
   systask_set_mpu(systask_active());
