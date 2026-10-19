@@ -205,7 +205,7 @@ where
     }
 }
 
-/// A menu of selectable string items, shown via [`crate::ui::select_menu`].
+/// A menu of selectable string items.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct SelectMenu<'a> {
     pub items: Slice<'a, StrSlice<'a>>,
