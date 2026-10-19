@@ -292,7 +292,9 @@ async def _backup_slip39_basic(
     )
 
     # show and confirm individual shares
-    await layout.slip39_basic_show_and_confirm_shares(handler, mnemonics[0])
+    await layout.slip39_basic_show_and_confirm_shares(
+        handler, mnemonics[0], share_threshold
+    )
 
 
 async def _prompt_slip39_groups(
@@ -441,7 +443,12 @@ async def _backup_slip39_advanced(
     )
 
     # show and confirm individual shares
-    await layout.slip39_advanced_show_and_confirm_shares(handler, mnemonics)
+    await layout.slip39_advanced_show_and_confirm_shares(
+        handler,
+        mnemonics,
+        thresholds=[m for (m, n) in groups],
+        group_threshold=group_threshold,
+    )
 
 
 async def backup_slip39_custom(
@@ -467,7 +474,9 @@ async def backup_slip39_custom(
                 ),
                 verb=TR.buttons__continue,
             )
-            await layout.slip39_basic_show_and_confirm_shares(handler, mnemonics[0])
+            await layout.slip39_basic_show_and_confirm_shares(
+                handler, mnemonics[0], groups[0][0]
+            )
         else:
             await confirm_action(
                 "warning_shamir_advanced_backup",
@@ -494,7 +503,12 @@ async def backup_slip39_custom(
                 br_code=BR_CODE_OTHER,
                 verb=TR.buttons__continue,
             )
-            await layout.slip39_advanced_show_and_confirm_shares(handler, mnemonics)
+            await layout.slip39_advanced_show_and_confirm_shares(
+                handler,
+                mnemonics,
+                thresholds=[m for (m, n) in groups],
+                group_threshold=group_threshold,
+            )
 
 
 def _get_slip39_mnemonics(
