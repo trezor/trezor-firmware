@@ -52,6 +52,8 @@ enum RemoteSysTask {
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(u16)]
 pub(crate) enum CoreIpcService {
+    // Only Core sends it, to start a request; apps receive it.
+    #[allow(dead_code)]
     WireStart = 0,
     WireContinue = 1,
     WireEnd = 2,
