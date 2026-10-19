@@ -19,15 +19,11 @@
 #![cfg_attr(not(feature = "test"), no_std)]
 #![allow(internal_features)]
 #![allow(dead_code)]
-#![cfg_attr(feature = "nightly", feature(core_intrinsics))]
 #![cfg_attr(
     all(feature = "debug", not(feature = "test"), feature = "nightly"),
     feature(lang_items)
 )]
 // #![warn(missing_docs)]
-#![feature(allocator_api)]
-#![feature(const_trait_impl)]
-#![feature(panic_internals)]
 
 extern crate alloc;
 
