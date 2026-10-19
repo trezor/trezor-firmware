@@ -395,7 +395,26 @@ class Emulator:
     def get_storage(self) -> bytes:
         return self.storage.read_bytes()
 
-    def properties(self) -> dict:
+    def properties(self) -> dict[str, Any]:
+        args = [str(self.executable), "--emulator-properties"]
+        try:
+            stdout = subprocess.check_output(
+                args,
+                cwd=self.workdir,
+                env=self.make_env(),
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=5,
+            )
+            props = json.loads(stdout)
+            assert isinstance(props, dict)
+            return props
+        except subprocess.CalledProcessError as exc:
+            LOG.warning(
+                f"{' '.join(args)} failed: {exc}\nstdout: {exc.stdout}\nstderr: {exc.stderr}"
+            )
+        except Exception as exc:
+            LOG.warning(f"{' '.join(args)} failed: {exc}")
         return {}
 
 
@@ -471,31 +490,14 @@ class CoreEmulator(Emulator):
     def ble_port(self) -> tuple[int, int]:
         return (self.port + 4, self.port + 5)
 
-    def properties(self) -> dict[str, Any]:
-        args = [str(self.executable), "--emulator-properties"]
-        try:
-            stdout = subprocess.check_output(
-                args,
-                cwd=self.workdir,
-                env=self.make_env(),
-                stderr=subprocess.PIPE,
-                text=True,
-                timeout=5,
-            )
-            props = json.loads(stdout)
-            assert isinstance(props, dict)
-            return props
-        except subprocess.CalledProcessError as exc:
-            LOG.warning(
-                f"{' '.join(args)} failed: {exc}\nstdout: {exc.stdout}\nstderr: {exc.stderr}"
-            )
-        except Exception as exc:
-            LOG.warning(f"{' '.join(args)} failed: {exc}")
-        return {}
-
 
 class LegacyEmulator(Emulator):
     STORAGE_FILENAME = "emulator.img"
+
+    def properties(self) -> dict[str, Any]:
+        # The legacy emulator ignores command-line arguments altogether, so
+        # running it with `--emulator-properties` would just start it.
+        return {}
 
     def make_env(self) -> dict[str, str]:
         env = super().make_env()
