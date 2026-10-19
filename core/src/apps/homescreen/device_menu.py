@@ -297,6 +297,88 @@ async def handle_UnpairDevice(index: int) -> None:
         await unpair(BleUnpair(addr=bonds[index]))
 
 
+if __debug__ and utils.USE_N1W1:
+
+    async def handle_NfcCommand(index: int) -> None:
+        import trezornfc as nfc
+        from trezor.ui.layouts.progress import progress
+
+        from apps.management.n1w1.context import ctx, time_based_progress
+
+        def do_noise(ins: int) -> bool:
+            return ins in [
+                nfc.READ_SEED_METADATA,
+                nfc.WRITE_SEED_METADATA,
+                nfc.READ_SEED,
+                nfc.WRITE_SEED,
+                nfc.WIPE,
+                nfc.SET_PIN,
+            ]
+
+        # Order must match NFC_COMMANDS in device_menu_screen.rs
+        ins, data = (
+            (nfc.WIPE, None),
+            (nfc.READ_SEED, None),
+            (nfc.WRITE_SEED, bytes(range(256))),
+            (nfc.READ_SEED_METADATA, None),
+            (nfc.WRITE_SEED_METADATA, bytes(0xBE for _ in range(256))),
+            (nfc.SET_PIN, b"1234"),
+            (nfc.READ_PIN_COUNTER, None),
+            # (nfc.READ_SUCCESS_LOG, None),
+            (nfc.READ_FAILURE_LOGS, None),
+            # (nfc.GET_OS_VERSION, None),
+            (nfc.GET_UID, None),
+            (nfc.MEASURE_CPU_FREQUENCY, None),
+            # (nfc.HARDEN_MEMORY, None),
+            # (nfc.INTEGRITY_CHECK, None),
+            # (nfc.PIN_UNLOCKED, None),
+        )[index]
+
+        done = False
+        while not done:
+            try:
+                with ctx as ctx:
+                    progress_obj = progress(
+                        title="NFC operation in progress",
+                        description="Wait",
+                    )
+                    await ctx.confirm_connect(
+                        title="NFC test",
+                        description="Tap the card",
+                        br_name=None,
+                        pin=(None if ins == nfc.WIPE else ""),
+                    )
+                    progress_obj.start()
+                    cb = time_based_progress(progress_obj)
+                    if do_noise(ins):
+                        await ctx._ensure_secure_channel(cb)
+                    response = await ctx._command(ins, data, cb)
+                done = True
+            except nfc.NfcCommandFailed as e:
+                log.exception(__name__, e)
+                response = f"{e.args[0]:04x}: {e.args[1]}"
+            except Exception as e:
+                log.exception(__name__, e)
+                response = f"{e.__class__.__name__}: {str(e)}"
+            finally:
+                progress_obj.stop()
+            if not done:
+                title = "NFC ERROR"
+            elif response:
+                title = f"NFC response ({len(response)} B)"
+            else:
+                title = "NFC response"
+            with trezorui_api.confirm_value(
+                title=title,
+                value=response[:81] if response else "Success",
+                is_data=True,
+                verb=None if done else "Retry",
+                cancel=not done,
+                description=None,
+            ) as layout:
+                await raise_if_not_confirmed(layout, None)
+
+
 async def handle_ToggleBluetooth() -> None:
     ble_enable(not ble.get_enabled())
     if ble.get_enabled() and ble.peer_count() > 0:
@@ -539,3 +621,6 @@ _MENU_HANDLERS = {
     DeviceMenuResult.Reboot: handle_Reboot,
     DeviceMenuResult.RebootToBootloader: handle_RebootToBootloader,
 }
+
+if __debug__ and utils.USE_N1W1:
+    _MENU_HANDLERS[DeviceMenuResult.NfcCommand] = handle_NfcCommand
