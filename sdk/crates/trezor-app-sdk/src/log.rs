@@ -44,10 +44,10 @@
 //! Each level implies all levels above it (e.g. `log_level_info` enables `error`,
 //! `warn`, and `info`). If no feature is enabled, all log output is compiled out.
 //!
-//! The preferred way to set the log level is via `xtask`:
+//! The preferred way to set the log level is via `cargo app-tool`:
 //!
 //! ```bash
-//! cargo xtask build --log-level info
+//! cargo app-tool build --log-level info
 //! ```
 //!
 //! Alternatively, pass the feature flag directly to Cargo:
