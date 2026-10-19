@@ -230,23 +230,20 @@ ts_t app_image_get_pminfo(app_image_handle_t handle,
                           systask_postmortem_t *pminfo);
 
 /**
- * @brief Gets the heap pointer and size for the currently active applet.
+ * Launch arguments of a loaded app.
  *
- * @param heap_ptr Pointer to a variable to store the heap pointer.
- * @param heap_size Pointer to a variable to store the heap size.
- *
- * @return TS_OK on success, or an error code on failure.
+ * The loader copies this structure onto the app's own stack and passes
+ * a pointer to it, as the only argument, to Core's app entry point
+ * (`coreapp_app_entry`), which sets up the app's runtime from it before
+ * calling the app's `applet_main`.
  */
-ts_t app_get_heap(void **heap_ptr, size_t *heap_size);
-
-/**
- * @brief Gets the IPC inbox size, in bytes, for the currently active applet.
- *
- * The value comes from the app's manifest via its header; Core uses it to
- * size the inbox it allocates and registers on the app's behalf at launch.
- *
- * @param ipc_buffer_size Pointer to a variable to store the inbox size.
- *
- * @return TS_OK on success, or an error code on failure.
- */
-ts_t app_get_ipc_buffer_size(size_t *ipc_buffer_size);
+typedef struct {
+  /** The app's own entry point (`applet_main`) */
+  void *applet_main;
+  /** Pointer to the app's heap */
+  void *heap_ptr;
+  /** Size of the app's heap, in bytes */
+  size_t heap_size;
+  /** Size of the app's IPC inbox, in bytes */
+  size_t ipc_buffer_size;
+} app_args_t;

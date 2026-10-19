@@ -65,41 +65,6 @@ applet_t* applet_active(void) {
   return (applet_t*)task->applet;
 }
 
-void applet_set_heap(applet_t* applet, void* heap_ptr, size_t heap_size) {
-  applet->heap_ptr = heap_ptr;
-  applet->heap_size = heap_size;
-}
-
-void applet_set_ipc_buffer_size(applet_t* applet, size_t ipc_buffer_size) {
-  applet->ipc_buffer_size = ipc_buffer_size;
-}
-
-ts_t applet_get_ipc_buffer_size(applet_t* applet, size_t* ipc_buffer_size) {
-  TSH_DECLARE;
-
-  TSH_CHECK_ARG(applet != NULL);
-  TSH_CHECK_ARG(ipc_buffer_size != NULL);
-
-  *ipc_buffer_size = applet->ipc_buffer_size;
-
-cleanup:
-  TSH_RETURN;
-}
-
-ts_t applet_get_heap(applet_t* applet, void** heap_ptr, size_t* heap_size) {
-  TSH_DECLARE;
-
-  TSH_CHECK_ARG(applet != NULL);
-  TSH_CHECK_ARG(heap_ptr != NULL);
-  TSH_CHECK_ARG(heap_size != NULL);
-
-  *heap_ptr = applet->heap_ptr;
-  *heap_size = applet->heap_size;
-
-cleanup:
-  TSH_RETURN;
-}
-
 void applet_exit_fatal(applet_t* applet, const char* message, const char* file,
                        int line) {
   systask_t* task = applet != NULL ? &applet->task : NULL;
