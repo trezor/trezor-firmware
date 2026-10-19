@@ -201,14 +201,14 @@ impl CryptoV1 for TrezorCryptoV1Impl {
     extern "C" fn sign_digest<'a>(
         &self,
         address_n: Slice<'a, u32>,
-        digest: [u8; 32],
+        digest: &'a [u8; 32],
         compressed: bool,
         canonical: CanonicalSig,
     ) -> FastResult<[u8; 65], WireError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::SignDigest {
                 address_n: address_n.as_slice().into(),
-                digest,
+                digest: *digest,
                 compressed,
                 canonical: canonical as u8,
             })?;
@@ -220,14 +220,14 @@ impl CryptoV1 for TrezorCryptoV1Impl {
     extern "C" fn check_address_mac<'a>(
         &self,
         address_n: Slice<'a, u32>,
-        mac: [u8; 32],
+        mac: &'a [u8; 32],
         address: Str<'a>,
         slip44: u32,
     ) -> FastResult<bool, WireError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::CheckAddressMac {
                 address_n: address_n.as_slice().into(),
-                mac,
+                mac: *mac,
                 address: address.as_str().into(),
                 slip44,
             })?;
