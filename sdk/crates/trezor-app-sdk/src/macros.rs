@@ -22,7 +22,7 @@ impl<T, E> UnwrapOrFatalError<T> for Result<T, E> {
 
 /// Unwraps an [`Option`] or [`Result`], triggering a fatal error on failure.
 ///
-/// On failure calls [`system_exit_fatal`](crate::app_runtime::system_exit_fatal)
+/// On failure calls `system_exit_fatal`
 /// with the file name, line number, and an optional custom message.
 ///
 /// # Forms
