@@ -69,6 +69,7 @@ void usage(void) {
 #ifdef LOCKABLE_BOOTLOADER
   printf("  -l  lock bootloader\n");
 #endif
+  printf("  -p  print the emulator properties as JSON and exit\n");
   printf("  -h  show this help\n");
   printf("\n");
   printf("On exit, the boot command for the next run is written to\n");
@@ -134,6 +135,20 @@ bool preload_firmware_image(const char *filename) {
                                                  read, 0x0, FIRMWARE_MAXSIZE);
 }
 
+// Prints what a test harness needs to interpret the flash file: the
+// model and where the storage areas sit inside it.
+static void print_properties(void) {
+  const uint8_t *base = flash_get_address(0, 0, 0);
+  printf("{\"model\": \"%s\", \"storage_areas\": [", MODEL_INTERNAL_NAME);
+  for (size_t i = 0; i < ARRAY_LENGTH(STORAGE_AREAS); i++) {
+    const uint8_t *area = flash_area_get_address(&STORAGE_AREAS[i], 0, 0);
+    printf("%s{\"offset\": %u, \"size\": %u}", i > 0 ? ", " : "",
+           (unsigned)(area - base),
+           (unsigned)flash_area_get_size(&STORAGE_AREAS[i]));
+  }
+  printf("]}\n");
+}
+
 static bool sdl_event_filter(void *userdata, SDL_Event *event) {
   switch (event->type) {
     case SDL_EVENT_QUIT:
@@ -170,11 +185,14 @@ int main(int argc, char **argv) {
   uint8_t set_variant = 0xff;
   uint8_t color_variant = 0;
   uint8_t bitcoin_only = 0;
-  while ((opt = getopt(argc, argv, "ahslewc:b:f:i:r:B:WR")) != -1) {
+  while ((opt = getopt(argc, argv, "ahpslewc:b:f:i:r:B:WR")) != -1) {
     switch (opt) {
       case 'a':
         disable_animation(true);
         break;
+      case 'p':
+        print_properties();
+        exit(0);
       case 's':
         bootargs_set(BOOT_COMMAND_STOP_AND_WAIT, NULL, 0);
         break;
