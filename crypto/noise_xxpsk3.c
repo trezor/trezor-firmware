@@ -367,12 +367,9 @@ static bool ss_decrypt_and_hash(noise_xxpsk3_symmetric_state_t *ss,
   return true;
 }
 
-static bool noise_xxpsk3_init_state(
-    noise_xxpsk3_handshake_state_t *state,
-    const uint8_t psk[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN],
-    const uint8_t *prologue, size_t prologue_len) {
+static bool noise_xxpsk3_init_state(noise_xxpsk3_handshake_state_t *state,
+                                    const uint8_t *prologue,
+                                    size_t prologue_len) {
   static const uint8_t XX_PROTOCOL_NAME[] = "Noise_XXpsk3_25519_AESGCM_SHA256";
 
   if (prologue == NULL && prologue_len != 0) {
@@ -382,12 +379,7 @@ static bool noise_xxpsk3_init_state(
   ss_init(&state->symmetric_state, XX_PROTOCOL_NAME,
           sizeof(XX_PROTOCOL_NAME) - 1);  // -1 substract the string terminator
 
-  memcpy(state->static_private, static_private_key, NOISE_XXPSK3_DHLEN);
-  memcpy(state->static_public, static_public_key, NOISE_XXPSK3_DHLEN);
-
   ss_mix_hash(&state->symmetric_state, prologue, prologue_len);
-
-  memcpy(state->psk, psk, NOISE_XXPSK3_DHLEN);
 
   state->has_ephemeral_private = false;
   state->has_remote_ephemeral_public = false;
@@ -396,24 +388,19 @@ static bool noise_xxpsk3_init_state(
 
 #ifdef USE_NOISE_XXPSK3_RESPONDER
 
-bool noise_xxpsk3_responder_init(
-    noise_xxpsk3_responder_t *rspn, const uint8_t psk[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN]) {
+bool noise_xxpsk3_responder_init(noise_xxpsk3_responder_t *rspn) {
   if (rspn == NULL) {
     return false;
   }
 
-  if (rspn->initialized || psk == NULL || static_private_key == NULL ||
-      static_public_key == NULL) {
+  if (rspn->initialized) {
     goto cleanup;
   }
 
   // Clear the responder structure
   memset(rspn, 0, sizeof(noise_xxpsk3_responder_t));
 
-  if (!noise_xxpsk3_init_state(&rspn->handshake_state, psk, static_private_key,
-                               static_public_key, NULL, 0)) {
+  if (!noise_xxpsk3_init_state(&rspn->handshake_state, NULL, 0)) {
     goto cleanup;
   }
 
@@ -489,15 +476,19 @@ cleanup:
 }
 
 bool noise_xxpsk3_responder_create_response1(
-    noise_xxpsk3_responder_t *rspn, const uint8_t *payload, size_t payload_size,
-    uint8_t *response, size_t max_response_size, size_t *response_size) {
+    noise_xxpsk3_responder_t *rspn,
+    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
+    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN], const uint8_t *payload,
+    size_t payload_size, uint8_t *response, size_t max_response_size,
+    size_t *response_size) {
   if (rspn == NULL) {
     return false;
   }
 
   noise_xxpsk3_handshake_state_t *state = &rspn->handshake_state;
 
-  if (!rspn->initialized || response == NULL || response_size == NULL ||
+  if (!rspn->initialized || static_private_key == NULL ||
+      static_public_key == NULL || response == NULL || response_size == NULL ||
       rspn->handshake_stage != NOISE_XXPSK3_RSPN_READY_FOR_RESPONSE1 ||
       !state->has_remote_ephemeral_public ||
       (payload == NULL && payload_size != 0)) {
@@ -531,13 +522,13 @@ bool noise_xxpsk3_responder_create_response1(
   memzero(input_key_material, sizeof(input_key_material));
 
   // Encrypt static public key
-  if (!ss_encrypt_and_hash(&state->symmetric_state, state->static_public,
+  if (!ss_encrypt_and_hash(&state->symmetric_state, static_public_key,
                            NOISE_XXPSK3_DHLEN, response + NOISE_XXPSK3_DHLEN)) {
     goto cleanup;
   }
 
-  dh(&state->static_private, &state->remote_ephemeral_public,
-     &input_key_material);
+  dh((const uint8_t (*)[NOISE_XXPSK3_DHLEN])static_private_key,
+     &state->remote_ephemeral_public, &input_key_material);
   ss_mix_key(&state->symmetric_state, &input_key_material);
   memzero(input_key_material, sizeof(input_key_material));
 
@@ -560,7 +551,8 @@ cleanup:
 }
 
 bool noise_xxpsk3_responder_handle_request2(
-    noise_xxpsk3_responder_t *rspn, const uint8_t *request, size_t request_len,
+    noise_xxpsk3_responder_t *rspn, const uint8_t psk[NOISE_XXPSK3_DHLEN],
+    const uint8_t *request, size_t request_len,
     uint8_t remote_static_public_key[NOISE_XXPSK3_DHLEN], uint8_t *payload,
     size_t max_payload_size, size_t *payload_size) {
   if (rspn == NULL) {
@@ -569,7 +561,7 @@ bool noise_xxpsk3_responder_handle_request2(
 
   noise_xxpsk3_handshake_state_t *state = &rspn->handshake_state;
 
-  if (!rspn->initialized || request == NULL ||
+  if (!rspn->initialized || psk == NULL || request == NULL ||
       remote_static_public_key == NULL ||
       rspn->handshake_stage != NOISE_XXPSK3_RSPN_WAITING_FOR_REQUEST2 ||
       !state->has_ephemeral_private ||
@@ -596,7 +588,8 @@ bool noise_xxpsk3_responder_handle_request2(
   ss_mix_key(&state->symmetric_state, &input_key_material);
   memzero(input_key_material, sizeof(input_key_material));
 
-  ss_mix_key_and_hash(&state->symmetric_state, &state->psk);
+  ss_mix_key_and_hash(&state->symmetric_state,
+                      (const uint8_t (*)[NOISE_XXPSK3_HASHLEN])psk);
 
   size_t ciphertext_len =
       request_len - (NOISE_XXPSK3_DHLEN + NOISE_XXPSK3_TAG_SIZE);
@@ -636,24 +629,19 @@ cleanup:
 
 #ifdef USE_NOISE_XXPSK3_INITIATOR
 
-bool noise_xxpsk3_initiator_init(
-    noise_xxpsk3_initiator_t *intr, const uint8_t psk[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN]) {
+bool noise_xxpsk3_initiator_init(noise_xxpsk3_initiator_t *intr) {
   if (intr == NULL) {
     return false;
   }
 
-  if (intr->initialized || psk == NULL || static_private_key == NULL ||
-      static_public_key == NULL) {
+  if (intr->initialized) {
     goto cleanup;
   }
 
   // Clear the initiator structure
   memset(intr, 0, sizeof(noise_xxpsk3_initiator_t));
 
-  if (!noise_xxpsk3_init_state(&intr->handshake_state, psk, static_private_key,
-                               static_public_key, NULL, 0)) {
+  if (!noise_xxpsk3_init_state(&intr->handshake_state, NULL, 0)) {
     goto cleanup;
   }
 
@@ -801,13 +789,18 @@ cleanup:
 }
 
 bool noise_xxpsk3_initiator_create_request2(
-    noise_xxpsk3_initiator_t *intr, const uint8_t *payload, size_t payload_size,
-    uint8_t *request, size_t max_request_size, size_t *request_size) {
+    noise_xxpsk3_initiator_t *intr,
+    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
+    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN],
+    const uint8_t psk[NOISE_XXPSK3_DHLEN], const uint8_t *payload,
+    size_t payload_size, uint8_t *request, size_t max_request_size,
+    size_t *request_size) {
   if (intr == NULL) {
     return false;
   }
 
-  if (!intr->initialized ||
+  if (!intr->initialized || static_private_key == NULL ||
+      static_public_key == NULL || psk == NULL ||
       intr->handshake_stage != NOISE_XXPSK3_INTR_READY_FOR_REQUEST2 ||
       (payload == NULL && payload_size != 0) || request == NULL ||
       request_size == NULL) {
@@ -826,18 +819,19 @@ bool noise_xxpsk3_initiator_create_request2(
 
   noise_xxpsk3_handshake_state_t *state = &intr->handshake_state;
 
-  if (!ss_encrypt_and_hash(&state->symmetric_state, state->static_public,
+  if (!ss_encrypt_and_hash(&state->symmetric_state, static_public_key,
                            NOISE_XXPSK3_DHLEN, request)) {
     goto cleanup;
   }
 
   uint8_t input_key_material[NOISE_XXPSK3_DHLEN] = {0};
-  dh(&state->static_private, &state->remote_ephemeral_public,
-     &input_key_material);
+  dh((const uint8_t (*)[NOISE_XXPSK3_DHLEN])static_private_key,
+     &state->remote_ephemeral_public, &input_key_material);
   ss_mix_key(&state->symmetric_state, &input_key_material);
   memzero(input_key_material, sizeof(input_key_material));
 
-  ss_mix_key_and_hash(&state->symmetric_state, &state->psk);
+  ss_mix_key_and_hash(&state->symmetric_state,
+                      (const uint8_t (*)[NOISE_XXPSK3_HASHLEN])psk);
 
   if (!ss_encrypt_and_hash(
           &state->symmetric_state, payload, payload_size,

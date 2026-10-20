@@ -61,9 +61,6 @@ typedef struct {
 
 typedef struct {
   noise_xxpsk3_symmetric_state_t symmetric_state;
-  uint8_t static_private[NOISE_XXPSK3_DHLEN];
-  uint8_t static_public[NOISE_XXPSK3_DHLEN];
-  uint8_t psk[NOISE_XXPSK3_DHLEN];
 
   bool has_ephemeral_private;
   uint8_t ephemeral_private[NOISE_XXPSK3_DHLEN];
@@ -116,8 +113,7 @@ typedef struct {
  * Noise_XXpsk3_25519_AESGCM_SHA256 protocol and has to be used in the following
  * order:
  *
- * 1. noise_xxpsk3_initiator_init() - to initialize the initiator structure with
- * the pre-shared key and static key pair
+ * 1. noise_xxpsk3_initiator_init() - to initialize the initiator structure
  * 2. noise_xxpsk3_initiator_create_request1() - to create the first message,
  * which includes the initiator's ephemeral public key and an encrypted payload
  * 3. noise_xxpsk3_initiator_handle_response1() - to handle the response from
@@ -134,20 +130,12 @@ typedef struct {
  */
 
 /**
- * @brief Initialize the initiator structure with the pre-shared key and static
- * key pair.
+ * @brief Initialize the initiator structure.
  *
  * @param intr Pointer to the initiator structure to initialize
- * @param psk Pre-shared key for the Noise protocol (32 bytes)
- * @param static_private_key Static private key for the initiator (32 bytes)
- * @param static_public_key Static public key corresponding to
- * `static_private_key` (32 bytes)
  * @return true if the initiator was initialized correctly, false otherwise
  */
-bool noise_xxpsk3_initiator_init(
-    noise_xxpsk3_initiator_t *intr, const uint8_t psk[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN]);
+bool noise_xxpsk3_initiator_init(noise_xxpsk3_initiator_t *intr);
 
 /**
  * @brief Deinitialize the initiator structure and clear any sensitive data.
@@ -218,6 +206,10 @@ bool noise_xxpsk3_initiator_handle_response1(
  * <encrypted_static_public_key[48B]><encrypted_payload[payload_size + 16B]>
  *
  * @param intr Pointer to the initiator structure
+ * @param static_private_key Static private key of the initiator (32 bytes)
+ * @param static_public_key Static public key corresponding to
+ * `static_private_key` (32 bytes)
+ * @param psk Pre-shared key for the Noise protocol (32 bytes)
  * @param payload Plain payload to send (may be empty)
  * @param payload_size Length of the payload in bytes
  * @param request Output buffer for the request message
@@ -226,8 +218,12 @@ bool noise_xxpsk3_initiator_handle_response1(
  * @return true if the request was created correctly, false otherwise
  */
 bool noise_xxpsk3_initiator_create_request2(
-    noise_xxpsk3_initiator_t *intr, const uint8_t *payload, size_t payload_size,
-    uint8_t *request, size_t max_request_size, size_t *request_size);
+    noise_xxpsk3_initiator_t *intr,
+    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
+    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN],
+    const uint8_t psk[NOISE_XXPSK3_DHLEN], const uint8_t *payload,
+    size_t payload_size, uint8_t *request, size_t max_request_size,
+    size_t *request_size);
 
 #endif /* USE_NOISE_XXPSK3_INITIATOR */
 
@@ -238,8 +234,7 @@ bool noise_xxpsk3_initiator_create_request2(
  * Noise_XXpsk3_25519_AESGCM_SHA256 protocol and has to be used in the following
  * order:
  *
- * 1. noise_xxpsk3_responder_init() - to initialize the responder structure with
- * the pre-shared key and static key pair
+ * 1. noise_xxpsk3_responder_init() - to initialize the responder structure
  * 2. noise_xxpsk3_responder_handle_request1() - to handle the first message
  * from the initiator and extract the initiator's ephemeral public key
  * 3. noise_xxpsk3_responder_create_response1() - to create the response to the
@@ -256,20 +251,12 @@ bool noise_xxpsk3_initiator_create_request2(
  */
 
 /**
- * @brief Initialize the responder structure with the pre-shared key and static
- * key pair.
+ * @brief Initialize the responder structure.
  *
  * @param rspn Pointer to the responder structure to initialize
- * @param psk Pre-shared key for the Noise protocol (32 bytes)
- * @param static_private_key Static private key for the responder (32 bytes)
- * @param static_public_key Static public key corresponding to
- * `static_private_key` (32 bytes)
  * @return true if the responder was initialized correctly, false otherwise
  */
-bool noise_xxpsk3_responder_init(
-    noise_xxpsk3_responder_t *rspn, const uint8_t psk[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
-    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN]);
+bool noise_xxpsk3_responder_init(noise_xxpsk3_responder_t *rspn);
 
 /**
  * @brief Deinitialize the responder structure and clear any sensitive data.
@@ -310,6 +297,9 @@ bool noise_xxpsk3_responder_handle_request1(
  * + 16B]>
  *
  * @param rspn Pointer to the responder structure
+ * @param static_private_key Static private key of the responder (32 bytes)
+ * @param static_public_key Static public key corresponding to
+ * `static_private_key` (32 bytes)
  * @param payload Plain payload to send (may be empty)
  * @param payload_size Length of the payload in bytes
  * @param response Output buffer for the response message
@@ -319,8 +309,11 @@ bool noise_xxpsk3_responder_handle_request1(
  * @return true if the response was created correctly, false otherwise
  */
 bool noise_xxpsk3_responder_create_response1(
-    noise_xxpsk3_responder_t *rspn, const uint8_t *payload, size_t payload_size,
-    uint8_t *response, size_t max_response_size, size_t *response_size);
+    noise_xxpsk3_responder_t *rspn,
+    const uint8_t static_private_key[NOISE_XXPSK3_DHLEN],
+    const uint8_t static_public_key[NOISE_XXPSK3_DHLEN], const uint8_t *payload,
+    size_t payload_size, uint8_t *response, size_t max_response_size,
+    size_t *response_size);
 
 /**
  * @brief Handle the second handshake message.
@@ -334,6 +327,7 @@ bool noise_xxpsk3_responder_create_response1(
  * Out:   Decrypted payload
  *
  * @param rspn Pointer to the responder structure
+ * @param psk Pre-shared key for the Noise protocol (32 bytes)
  * @param request Incoming request buffer
  * @param request_len Length of the incoming request buffer
  * @param remote_static_public_key Output buffer for the initiator's static
@@ -344,7 +338,8 @@ bool noise_xxpsk3_responder_create_response1(
  * @return true if the request was handled correctly, false otherwise
  */
 bool noise_xxpsk3_responder_handle_request2(
-    noise_xxpsk3_responder_t *rspn, const uint8_t *request, size_t request_len,
+    noise_xxpsk3_responder_t *rspn, const uint8_t psk[NOISE_XXPSK3_DHLEN],
+    const uint8_t *request, size_t request_len,
     uint8_t remote_static_public_key[NOISE_XXPSK3_DHLEN], uint8_t *payload,
     size_t max_payload_size, size_t *payload_size);
 
