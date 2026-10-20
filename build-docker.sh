@@ -363,7 +363,7 @@ for TREZOR_MODEL in ${MODELS[@]}; do
           src=\${src##*/}
           {
             echo "# core${DIRSUFFIX}/\$item/\${src:-\$item.bin}"
-            uv run ../python/tools/firmware-fingerprint.py \
+            uv run --project=.. ../python/tools/firmware-fingerprint.py \
                 build/artifacts/$TREZOR_MODEL/\$item.bin
             echo
           } >> /local/build/${COMMIT_HASH}.fingerprints
@@ -541,7 +541,7 @@ if echo "${MODELS[@]}" | grep -q T1B1 && echo "${CORE_TARGETS[@]}" | grep -qw fi
       src=\${src##*/}
       {
         echo "# legacy${DIRSUFFIX}/firmware/\${src:-firmware.bin}"
-        uv run ../python/tools/firmware-fingerprint.py build/firmware/firmware.bin
+        uv run --project=.. ../python/tools/firmware-fingerprint.py build/firmware/firmware.bin
         echo
       } >> /local/build/${COMMIT_HASH}.fingerprints
       chown -R $USER:$GROUP /build
