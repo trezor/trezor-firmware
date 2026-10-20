@@ -50,6 +50,8 @@ void usage(void) {
   printf("Options:\n");
   printf("  -a  disable animations\n");
   printf("  -s  stay in bootloader\n");
+  printf("  -B FILE  boot with the command and arguments from FILE (the\n");
+  printf("           format a previous run wrote to trezor.bootargs)\n");
   printf("  -w  wipe any firmware before booting\n");
   printf("  -e MESSAGE [TITLE [FOOTER]]  display error screen and stop\n");
   printf("  -c COLOR_VARIANT  set color variant\n");
@@ -163,13 +165,18 @@ int main(int argc, char **argv) {
   uint8_t set_variant = 0xff;
   uint8_t color_variant = 0;
   uint8_t bitcoin_only = 0;
-  while ((opt = getopt(argc, argv, "ahslewc:b:f:i:")) != -1) {
+  while ((opt = getopt(argc, argv, "ahslewc:b:f:i:B:")) != -1) {
     switch (opt) {
       case 'a':
         disable_animation(true);
         break;
       case 's':
         bootargs_set(BOOT_COMMAND_STOP_AND_WAIT, NULL, 0);
+        break;
+      case 'B':
+        if (!bootargs_emu_load_file(optarg)) {
+          exit(BOOTUTILS_EMU_EXIT_USAGE);
+        }
         break;
       case 'e':
         display_error = true;
