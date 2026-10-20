@@ -823,6 +823,9 @@
 }
 },
 "T2T1": {
+"bootloader_tests": {
+"T2T1_en_test_wipe_device.py::test_host_wipe_empty_device": "b6191ce75493d680be9520f0690369c4f24102f16d10d4baaf0dfe2a4e55f21c"
+},
 "click_tests": {
 "T2T1_cs_test_autolock.py::test_autolock_does_not_interrupt_preauthorized": "9fc8997bdcbbc7f2c9b42c3c1da731e15cb488d773a4f0f6a3b39e0495e023e5",
 "T2T1_cs_test_autolock.py::test_autolock_does_not_interrupt_signing": "b5e998f0ef6e189aae9fae91fd6e9d8e885ad33065b44121c990e23209c944b5",
@@ -15081,6 +15084,9 @@
 }
 },
 "T3B1": {
+"bootloader_tests": {
+"T3B1_en_test_wipe_device.py::test_host_wipe_empty_device": "39e5989d0f0df970e7f01f629226e4b02ba0a3fc756e612aed1e3e1f985e5904"
+},
 "click_tests": {
 "T3B1_cs_test_autolock.py::test_autolock_does_not_interrupt_preauthorized": "066c0cc11191382b571b0afae34de49fd8a5d2b53094086219f625b0d8e6afa5",
 "T3B1_cs_test_autolock.py::test_autolock_does_not_interrupt_signing": "eaf56b1c58bf2cd7543ef9f08fbb1347c530048c2764a46cd913b885fdde79f6",
@@ -28847,6 +28853,9 @@
 }
 },
 "T3T1": {
+"bootloader_tests": {
+"T3T1_en_test_wipe_device.py::test_host_wipe_empty_device": "fd02778cde4db18ee4c5269dcf2ec198f1107913f7ddff0f5727a9a688a35385"
+},
 "click_tests": {
 "T3T1_cs_test_autolock.py::test_autolock_does_not_interrupt_preauthorized": "d4dc437b60a798a6a63ebb6d9a57849a42c4ad22f3aec1b51c77495441f100ed",
 "T3T1_cs_test_autolock.py::test_autolock_does_not_interrupt_signing": "4b03fd19a51ee6f9132c3a18291a6f58e7896edd3fd4e55abb99fd2352f1f761",
@@ -42940,6 +42949,9 @@
 }
 },
 "T3W1": {
+"bootloader_tests": {
+"T3W1_en_test_wipe_device.py::test_host_wipe_empty_device": "402b6021bd2617a09b00644285edcd94d1cca7035497c26b44adfd1e039a9f83"
+},
 "click_tests": {
 "T3W1_cs_device_menu-test_auto_lock.py::test_auto_lock_battery_cancel": "4b7f5e5041cd1d4fbee7d7e8c84569a98210f97e9093a7eddaed0323abc4048a",
 "T3W1_cs_device_menu-test_auto_lock.py::test_auto_lock_battery_change": "2d748e480935f0b210708094f8774547b36af224a685ca5cfdee617c8616dce2",
