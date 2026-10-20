@@ -111,6 +111,10 @@ typedef enum {
 // profile directory and terminates the emulator process with the given
 // exit code.
 void __attribute__((noreturn)) emulator_exit(emulator_exit_code_t code);
+
+// Sets the boot command and arguments from a file in the format written
+// by `emulator_exit()`. Returns false if the file cannot be read.
+bool bootargs_load_file(const char *path);
 #endif
 
 // Platform dependent alignment for vector table addresses
