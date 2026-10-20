@@ -146,14 +146,6 @@ int main(int argc, char **argv) {
 
   FIRMWARE_START = (uintptr_t)flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
-  // simulate non-empty storage so that we know whether it was erased or not
-  if (storage_empty(&STORAGE_AREAS[0])) {
-    uint32_t data = 0x12345678;
-    secbool ret =
-        flash_area_write_data(&STORAGE_AREAS[0], 0, &data, sizeof(data));
-    (void)ret;
-  }
-
   int opt;
   bool display_error = false;
   uint8_t set_variant = 0xff;
@@ -205,6 +197,15 @@ int main(int argc, char **argv) {
         usage();
         exit(1);
     }
+  }
+
+  // simulate non-empty storage so that we know whether it was erased or
+  // not (after option parsing, so that e.g. -h does not touch the flash file)
+  if (storage_empty(&STORAGE_AREAS[0])) {
+    uint32_t data = 0x12345678;
+    secbool ret =
+        flash_area_write_data(&STORAGE_AREAS[0], 0, &data, sizeof(data));
+    (void)ret;
   }
 
   if (display_error) {
