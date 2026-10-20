@@ -141,7 +141,14 @@ bool preload_firmware_image(const char *filename) {
 // model and where the storage areas sit inside it. Works from the sector
 // layout alone, before the flash file is mapped.
 static void print_properties(void) {
-  printf("{\"model\": \"%s\", \"storage_areas\": [", MODEL_INTERNAL_NAME);
+#ifdef USE_SECMON_VERIFICATION
+  const char *secmon = "true";
+#else
+  const char *secmon = "false";
+#endif
+  printf("{\"model\": \"%s\", \"code_alignment\": %u, ", MODEL_INTERNAL_NAME,
+         (unsigned)CODE_ALIGNMENT);
+  printf("\"secmon_verification\": %s, \"storage_areas\": [", secmon);
   for (size_t i = 0; i < ARRAY_LENGTH(STORAGE_AREAS); i++) {
     // storage areas are single subareas, see storage_empty()
     const flash_area_t *area = &STORAGE_AREAS[i];
