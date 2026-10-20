@@ -33,9 +33,10 @@ import typing as t
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
 from enum import IntEnum
+from hashlib import blake2s
 from pathlib import Path
 
-from .. import firmware, mapping, messages, models, protobuf, protocol_v1
+from .. import mapping, messages, models, protobuf, protocol_v1
 from ..debuglink import DebugLink
 from ..exceptions import TrezorFailure
 from ..messages import DebugWaitType
@@ -201,7 +202,7 @@ class BootloaderWire:
     def call(
         self,
         msg: protobuf.MessageType,
-        expect: type[MT] = protobuf.MessageType,  # type: ignore [assignment]
+        expect: type[MT] = protobuf.MessageType,
         timeout: float | None = None,
     ) -> MT:
         self.write(msg)
@@ -213,7 +214,7 @@ class BootloaderWire:
     def call_in_background(
         self,
         msg: protobuf.MessageType,
-        expect: type[MT] = protobuf.MessageType,  # type: ignore [assignment]
+        expect: type[MT] = protobuf.MessageType,
         timeout: float | None = None,
     ) -> Future[MT]:
         return self._pool.submit(self.call, msg, expect, timeout)
@@ -274,7 +275,21 @@ class BootloaderTestContext:
     def firmware_update(
         self, data: bytes, progress_update: t.Callable[[int], t.Any] = lambda _: None
     ) -> None:
-        firmware.update(self.wire, data, progress_update)  # type: ignore [arg-type]
+        """Upload `data` the way `trezorlib.firmware.update()` does.
+
+        The bootloader answers FirmwareErase with the first FirmwareRequest
+        only after the user confirmed on screen, if a confirmation is due.
+        """
+        resp = self.wire.call(messages.FirmwareErase(length=len(data)))
+        while isinstance(resp, messages.FirmwareRequest):
+            payload = data[resp.offset : resp.offset + resp.length]
+            resp = self.wire.call(
+                messages.FirmwareUpload(payload=payload, hash=blake2s(payload).digest())
+            )
+            progress_update(
+                resp.length if isinstance(resp, messages.FirmwareRequest) else 0
+            )
+        messages.Success.ensure_isinstance(resp)
 
     def close(self) -> None:
         self.wire.close()
@@ -315,6 +330,7 @@ class BootloaderEmulator(Emulator):
         self.startup = startup or BootloaderStartup()
         if port is not None:
             self.port = port
+        self._ctx: BootloaderTestContext | None = None
         # skip the delays that let a human read the screen before an exit
         self.fast_exit = fast_exit
         self._properties: dict[str, t.Any] | None = None
@@ -328,10 +344,11 @@ class BootloaderEmulator(Emulator):
         return self.profile_dir / BOOTARGS_FILENAME
 
     @property
-    def client(self) -> BootloaderTestContext:  # type: ignore [override]
-        if self._client is None:
-            raise RuntimeError("Emulator not started")
-        return self._client  # type: ignore [return-value]
+    def ctx(self) -> BootloaderTestContext:
+        """Both links to the running bootloader."""
+        if self._ctx is None:
+            raise RuntimeError("Emulator not started, or its run already ended")
+        return self._ctx
 
     def make_args(self) -> list[str]:
         return self.startup.to_args()
@@ -375,9 +392,7 @@ class BootloaderEmulator(Emulator):
             probe.close()
         LOG.info("Bootloader emulator ready after %.3fs", time.monotonic() - start)
 
-    def start(  # type: ignore [override]
-        self, startup: BootloaderStartup | None = None
-    ) -> None:
+    def start(self, startup: BootloaderStartup | None = None) -> None:
         if startup is not None:
             self.startup = startup
         if self.process:
@@ -406,27 +421,27 @@ class BootloaderEmulator(Emulator):
         (self.profile_dir / "trezor.pid").write_text(str(self.process.pid) + "\n")
         (self.profile_dir / "trezor.port").write_text(str(self.port) + "\n")
 
-        self._client = BootloaderTestContext(  # type: ignore [assignment]
+        self._ctx = BootloaderTestContext(
             transport=self.transport,
             debug_transport=self._get_debug_transport(),
             auto_interact=self.auto_interact,
         )
 
     def stop(self) -> None:
-        if self._client is not None:
-            self.client.close()
-            self._client = None
+        if self._ctx is not None:
+            self._ctx.close()
+            self._ctx = None
         super().stop()
 
-    def restart(self, startup: BootloaderStartup | None = None) -> None:  # type: ignore [override]
+    def restart(self, startup: BootloaderStartup | None = None) -> None:
         self.restart_amount += 1
         prev_screenshot_dir = (
-            self.client.debug.screenshot_recording_dir if self._client else None
+            self._ctx.debug.screenshot_recording_dir if self._ctx else None
         )
         self.stop()
         self.start(startup)
         if prev_screenshot_dir:
-            self.client.debug.start_recording(
+            self.ctx.debug.start_recording(
                 prev_screenshot_dir, refresh_index=self.restart_amount
             )
 
@@ -436,9 +451,9 @@ class BootloaderEmulator(Emulator):
         code = self.process.wait(timeout=timeout)
         emulator._RUNNING_PIDS.discard(self.process)
         self.process = None
-        if self._client is not None:
-            self.client.close()
-            self._client = None
+        if self._ctx is not None:
+            self._ctx.close()
+            self._ctx = None
         emulator._rm_f(self.profile_dir / "trezor.pid")
         emulator._rm_f(self.profile_dir / "trezor.port")
 
@@ -471,7 +486,8 @@ class BootloaderEmulator(Emulator):
 
     def properties(self) -> dict[str, t.Any]:
         """Model and flash layout, as printed by ``bootloader-emu -p``."""
-        if self._properties is None:
+        properties = self._properties
+        if properties is None:
             out = subprocess.run(
                 [str(self.executable), "-p"],
                 cwd=self.workdir,
@@ -480,8 +496,9 @@ class BootloaderEmulator(Emulator):
                 text=True,
                 check=True,
             ).stdout
-            self._properties = json.loads(out)
-        return self._properties
+            properties = json.loads(out)
+            self._properties = properties
+        return properties
 
     def storage_erased(self) -> bool | None:
         """Whether both storage areas in the flash file are blank."""

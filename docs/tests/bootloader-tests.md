@@ -40,7 +40,7 @@ boot screens are part of the fixtures.
 ## Writing a test
 
 Use the `bootloader` fixture. `bootloader.start(BootloaderStartup(...))` starts a
-run and returns the emulator; its `client` carries the debug link (`debug`) and
+run and returns the emulator; its `ctx` carries the debug link (`debug`) and
 the wire channel (`wire`). A wire call that needs an on-screen confirmation is
 made with `wire.call_in_background()` while the test clicks through the screen.
 Finish with `bootloader.wait_exit()` for a run that ends by itself, or

@@ -45,7 +45,7 @@ def confirm_wipe(ctx) -> None:
 def test_host_wipe_empty_device(bootloader: "BootloaderRunner") -> None:
     """An empty device wipes its storage on the host's request."""
     emu = bootloader.start(BootloaderStartup())
-    ctx = emu.client
+    ctx = emu.ctx
     assert ctx.features.bootloader_mode
     assert not ctx.features.firmware_present
 
