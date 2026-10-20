@@ -25,21 +25,10 @@ from trezorlib._internal.bootloader_emulator import BootloaderStartup, ExitKind
 from trezorlib.debuglink import LayoutType
 from trezorlib.messages import DebugWaitType
 
+from .common import confirm
+
 if t.TYPE_CHECKING:
     from .conftest import BootloaderRunner
-
-
-def confirm_wipe(ctx) -> None:
-    """Press the confirming button of the wipe-confirmation screen."""
-    layout = ctx.layout_type
-    if layout in (LayoutType.Bolt, LayoutType.Delizia):
-        ctx.debug.click((180, 212))
-    elif layout is LayoutType.Eckhart:
-        ctx.debug.click((285, 475))
-    elif layout is LayoutType.Caesar:
-        ctx.debug.press_right()
-    else:
-        raise NotImplementedError(layout)
 
 
 def test_host_wipe_empty_device(bootloader: "BootloaderRunner") -> None:
@@ -53,7 +42,7 @@ def test_host_wipe_empty_device(bootloader: "BootloaderRunner") -> None:
     # confirmation on screen
     with ctx.debug.wait_for_layout_change():
         reply = ctx.wire.call_in_background(messages.WipeDevice(), timeout=60)
-    confirm_wipe(ctx)
+    confirm(ctx)
     assert isinstance(reply.result(timeout=60), messages.Success)
 
     # Success is sent 100 ms before the success screen is drawn; without
