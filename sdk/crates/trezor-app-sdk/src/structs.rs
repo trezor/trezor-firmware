@@ -5,6 +5,12 @@
 //! the core task. A UI request is also what the app builds: `modui`'s params
 //! types are these, under their own names. Fields are `pub` because core reads
 //! them straight off the archived form.
+//!
+//! The UI types also cross the `UiV1` vtable by value, between an app and a
+//! firmware that are built apart, so their layout is the app ABI. That is why
+//! the UI enums number their variants explicitly: within one API version a
+//! new variant goes at the end with a new value, and no value is ever
+//! renumbered or reused.
 
 use rkyv::boxed::{ArchivedBox, BoxResolver};
 use rkyv::option::ArchivedOption;
@@ -286,9 +292,9 @@ pub struct ExtraItem<'a> {
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum Commitment {
     /// One step of a longer flow. Confirming it only moves on.
-    Step,
+    Step = 0,
     /// The last confirmation before the app signs or otherwise acts.
-    Final,
+    Final = 1,
 }
 
 /// An action confirmation layout, sent as [`TrezorUiEnum::ConfirmAction`].
@@ -333,9 +339,9 @@ pub struct ConfirmSummary<'a> {
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum ValueKind {
     /// Shown as written.
-    Text,
+    Text = 0,
     /// Grouped into chunks so it can be compared by eye.
-    Address,
+    Address = 1,
 }
 
 /// A value confirmation layout, sent as [`TrezorUiEnum::ConfirmValue`].
@@ -395,7 +401,7 @@ pub enum Severity {
     ///
     /// For example a signature that verified. Distinct from
     /// [`Severity::Done`], which is the last screen of a flow.
-    Success,
+    Success = 0,
     /// The flow finished; the person goes back to the host.
     ///
     /// The last screen an app shows. Nothing on the device follows it, so
@@ -404,13 +410,13 @@ pub enum Severity {
     /// after the call returns is the model's business.
     ///
     /// WIP: bolt and caesar wait for a tap.
-    Done,
+    Done = 1,
     /// Something to read before going on. Nothing is at stake.
-    Info,
+    Info = 2,
     /// Something to consider before going on.
-    Warning,
+    Warning = 3,
     /// Going on is risky; the person has to choose it deliberately.
-    Danger,
+    Danger = 4,
 }
 
 /// A notice of some [`Severity`], sent as [`TrezorUiEnum::ShowNotice`].
@@ -456,12 +462,12 @@ pub struct ConfirmProperties<'a> {
 #[repr(C, u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorUiEnum<'a> {
-    ConfirmAction(ConfirmAction<'a>),
-    ConfirmSummary(ConfirmSummary<'a>),
-    ConfirmValue(ConfirmValue<'a>),
-    ConfirmData(ConfirmData<'a>),
-    ConfirmProperties(ConfirmProperties<'a>),
-    ShowNotice(ShowNotice<'a>),
+    ConfirmAction(ConfirmAction<'a>) = 0,
+    ConfirmSummary(ConfirmSummary<'a>) = 1,
+    ConfirmValue(ConfirmValue<'a>) = 2,
+    ConfirmData(ConfirmData<'a>) = 3,
+    ConfirmProperties(ConfirmProperties<'a>) = 4,
+    ShowNotice(ShowNotice<'a>) = 5,
 }
 
 /// How the person decided a layout. Written by core, read by `modui`; apps
@@ -475,19 +481,19 @@ pub enum TrezorUiEnum<'a> {
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum TrezorUiResult {
     /// Confirmed.
-    Confirmed,
+    Confirmed = 0,
     /// Refused, or left without answering.
-    Cancelled,
+    Cancelled = 1,
 
     // Chunk paging, answers to a `ConfirmData` chunk only. The firmware's
     // chunk loop acts on them; `Forward` and `Backward` never reach `modui`.
     // Unused: no screen sends them yet.
     /// Paged past the end of the chunk; the next chunk is wanted.
-    Forward,
+    Forward = 2,
     /// Paged back before the start of the chunk; the previous chunk is wanted.
-    Backward,
+    Backward = 3,
     /// Accepted the rest of the data without reading it.
-    ConfirmedAll,
+    ConfirmedAll = 4,
 }
 
 /// All crypto operations that can be requested from the app via IPC.
