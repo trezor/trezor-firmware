@@ -54,6 +54,7 @@
   - [UI Tests](tests/ui-tests.md)
   - [Click Tests](tests/click-tests.md)
   - [Clear-signing Tests](tests/clear-signing-tests.md)
+  - [Bootloader Tests](tests/bootloader-tests.md)
 - [Miscellaneous](misc/index.md)
   - [Affected third-parties](misc/third-parties.md)
   - [Changelog](misc/changelog.md)

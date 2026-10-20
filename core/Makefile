@@ -9,7 +9,7 @@
 	test_emu_persistence test_emu_persistence_ui test_emu_upgrade \
 	test_emu_ui test_emu_ui_multicore test_emu_ui_record test_emu_ui_record_multicore \
 	test_emu_clear_signing_ui test_emu_clear_signing_ui_record \
-	test_emu_prodtest \
+	test_emu_prodtest test_emu_bootloader test_emu_bootloader_ui \
 	pylint mypy typecheck pyright clippy \
 	audit_rust vet_rust \
 	templates templates_check translations translations_check \
@@ -218,6 +218,13 @@ test_emu_clear_signing_ui_record: ## record the screens of all clear-signing reg
 
 test_emu_prodtest: ## run prodtest device tests
 	$(PRODTEST_EMU) --headless -c $(PYTEST) $(TESTPATH)/prodtest_tests $(TESTOPTS)
+
+test_emu_bootloader: ## run bootloader emulator tests
+	TREZOR_PYTEST_LOGS_DIR=$(TESTPATH) $(PYTEST) $(TESTPATH)/bootloader_tests $(TESTOPTS)
+
+test_emu_bootloader_ui: ## run bootloader emulator tests with UI recording
+	TREZOR_PYTEST_LOGS_DIR=$(TESTPATH) $(PYTEST) $(TESTPATH)/bootloader_tests $(TESTOPTS) \
+		--ui=test --ui-check-missing --do-master-diff
 
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
