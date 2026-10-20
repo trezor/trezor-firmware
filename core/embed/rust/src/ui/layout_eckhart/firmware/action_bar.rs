@@ -1,11 +1,11 @@
+#[cfg(feature = "haptic")]
+use io::haptic::{self, HapticEffect};
 use sys::time::Duration;
 
 use super::super::component::{Button, ButtonMsg};
 use super::{theme, HoldToConfirmAnim};
 use crate::strutil::TString;
 use crate::translations::TR;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic::{self, HapticEffect};
 use crate::ui::component::{Component, Event, EventCtx, Timeout};
 use crate::ui::geometry::{Alignment2D, Insets, Offset, Rect};
 use crate::ui::shape::{self, Renderer};
@@ -305,7 +305,7 @@ impl ActionBar {
                 } else {
                     // Animations disabled, return confirmed
                     #[cfg(feature = "haptic")]
-                    haptic::play(HapticEffect::HoldToConfirm);
+                    let _ = haptic::play(HapticEffect::HoldToConfirm);
                     return Some(ActionBarMsg::Confirmed);
                 }
             }
@@ -319,7 +319,7 @@ impl ActionBar {
             }
             (ButtonMsg::LongPressed, true) => {
                 #[cfg(feature = "haptic")]
-                haptic::play(HapticEffect::HoldToConfirm);
+                let _ = haptic::play(HapticEffect::HoldToConfirm);
                 return Some(ActionBarMsg::Confirmed);
             }
             (ButtonMsg::Clicked, false) => {

@@ -5,6 +5,8 @@
 
 mod ffi;
 
+#[cfg(feature = "haptic")]
+pub mod haptic;
 #[cfg(feature = "nrf")]
 pub mod nrf;
 #[cfg(feature = "smp")]

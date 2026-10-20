@@ -1,9 +1,9 @@
+#[cfg(feature = "haptic")]
+use io::haptic::{play, HapticEffect};
 use sys::time::ShortDuration;
 
 use super::theme;
 use crate::strutil::TString;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic::{play, HapticEffect};
 use crate::ui::component::text::{LineBreaking, PageBreaking, TextStyle};
 use crate::ui::component::{Component, Event, EventCtx, TextLayout, Timer};
 use crate::ui::display::toif::Icon;
@@ -275,7 +275,7 @@ impl Component for Button {
                         if touch_area.contains(pos) {
                             #[cfg(feature = "haptic")]
                             if self.haptic {
-                                play(HapticEffect::ButtonPress);
+                                let _ = play(HapticEffect::ButtonPress);
                             }
                             self.set(ctx, State::Pressed);
                             if self.long_press != ShortDuration::ZERO {
@@ -345,7 +345,7 @@ impl Component for Button {
                 if matches!(self.state, State::Pressed) {
                     #[cfg(feature = "haptic")]
                     if self.haptic {
-                        play(HapticEffect::ButtonPress);
+                        let _ = play(HapticEffect::ButtonPress);
                     }
                     self.set(ctx, State::Initial);
                     return Some(ButtonMsg::LongPressed);
