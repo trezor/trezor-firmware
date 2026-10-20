@@ -654,8 +654,7 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
       0x99, 0x4f, 0x79, 0xbd, 0x19, 0xe9, 0xba, 0xfa, 0x10, 0x9c, 0xef,
       0xe4, 0x22, 0xdd, 0x60, 0x86, 0x63, 0xc2, 0xe1, 0xa4, 0x58};
 
-  noise_status = noise_xxpsk3_initiator_init(&intr, *psk, static_private_key,
-                                             static_public_key);
+  noise_status = noise_xxpsk3_initiator_init(&intr);
   TSH_CHECK(noise_status, TS_EINVAL);
 
   uint8_t request[256] = {0};
@@ -699,7 +698,8 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
   }
 
   noise_status = noise_xxpsk3_initiator_create_request2(
-      &intr, NULL, 0, request, sizeof(request), &request_size);
+      &intr, static_private_key, static_public_key, *psk, NULL, 0, request,
+      sizeof(request), &request_size);
   TSH_CHECK(noise_status, TS_EINVAL);
 
   status = nfc_backup_compose_apdu(0x80, 0x01, 0x01, 0x00, request,
