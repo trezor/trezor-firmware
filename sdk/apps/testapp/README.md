@@ -73,9 +73,10 @@ cargo app-tool device-test -p testapp -m t3w1 -e
 
 The app calls the layout and answers with how it ended (`UiResult`):
 `Confirmed` or `Cancelled`, for a confirmation and a notice alike; a progress
-answers `Confirmed` once it has run. A layout that fails ends the app, as
-every app's would. The host picks every parameter, including the step name
-(`br`).
+answers `Confirmed` once it has run. A request the app refuses, such as a
+value with both a hint and a warning, comes back as a `Failure`; one Core
+cannot draw ends the app, as every app's would. The host picks every
+parameter, including the step name (`br`).
 
 | Request | Layout |
 |---|---|
@@ -87,8 +88,12 @@ every app's would. The host picks every parameter, including the step name
 | `ShowNotice` | `modui::notice::show` |
 | `ShowProgress` | `modui::progress::run_with`, paced by the host (below) |
 
-There are no automated UI tests yet; debuglink cannot read an app's screens.
-The host library below is written so they can be added on top of it.
+`tests/test_modui.py` runs with the device tests above. Core draws an app's
+screens, so debuglink reads and drives them like any other: each layout is
+confirmed and cancelled, its extras menu opened and left, and every layout
+must send exactly one ButtonRequest, named by `br`, however long the menu is
+open (a paged layout sends one per page). Where a model draws less than a
+layout asks for, the test is reported as an expected failure (`GAPS`).
 
 ### Run by hand
 

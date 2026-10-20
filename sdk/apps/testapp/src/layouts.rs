@@ -199,11 +199,13 @@ impl<'a> Extras<'a> {
 }
 
 /// A layout's answer, as the host receives it. A cancel is a reply on this
-/// wire; it is the only `Err` a layout returns.
+/// wire; any other error, such as a request the layout refuses, stays an
+/// error and reaches the host as a `Failure`.
 fn decided(outcome: Result<()>) -> Result<wire::UiResult> {
     match outcome {
         Ok(()) => answer(Reply::Confirmed),
-        Err(_) => answer(Reply::Cancelled),
+        Err(e) if e.code() == Error::Cancelled.code() => answer(Reply::Cancelled),
+        Err(e) => Err(e),
     }
 }
 
