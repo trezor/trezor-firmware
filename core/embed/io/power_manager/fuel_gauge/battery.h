@@ -27,6 +27,7 @@
  * never reaches into an implementation's directory. Current implementations:
  *   - `fuel_gauge/lifepo4/` - Extended Kalman Filter estimator for LiFePO4
  *     cells (the reference implementation; `P` below is its error covariance).
+ *   - `fuel_gauge/alkaline/` - Alkaline battery model with voltage-to-SOC conversion.
  *   - `fuel_gauge/mock/`    - trivial stub for boards with no gauged battery
  *     (e.g. a latch board); reports a fixed healthy state.
  *

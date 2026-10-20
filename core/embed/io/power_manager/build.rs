@@ -125,6 +125,16 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
                 ],
             ));
         }
+        if cfg!(feature = "fuel_gauge_alkaline") {
+            gauges.push((
+                "fuel_gauge_alkaline",
+                &[
+                "power_manager/fuel_gauge/alkaline/battery.c",
+                "power_manager/fuel_gauge/alkaline/fuel_gauge.c",
+                "power_manager/fuel_gauge/alkaline/battery_model.c",
+                ],
+            ));
+        }
         if cfg!(feature = "fuel_gauge_mock") {
             gauges.push((
                 "fuel_gauge_mock",
