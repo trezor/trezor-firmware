@@ -23,6 +23,8 @@
 #include "emulator.h"
 #include "rust_ui_common.h"
 
+#include <sys/bootutils.h>
+
 LOG_DECLARE(emulator)
 
 #undef FIRMWARE_START
@@ -44,7 +46,7 @@ bool storage_empty(const flash_area_t *area) {
 }
 
 void usage(void) {
-  printf("Usage: ./build/bootloader/bootloader_emu [options]\n");
+  printf("Usage: bootloader-emu [options]\n");
   printf("Options:\n");
   printf("  -a  disable animations\n");
   printf("  -s  stay in bootloader\n");
@@ -59,6 +61,14 @@ void usage(void) {
   printf("  -l  lock bootloader\n");
 #endif
   printf("  -h  show this help\n");
+  printf("\n");
+  printf("On exit, the boot command for the next run is written to\n");
+  printf("trezor.bootargs in the profile directory. The exit code tells\n");
+  printf("how the run ended: %d reboot, %d jump to firmware, %d power off,\n",
+         EMULATOR_EXIT_REBOOT, EMULATOR_EXIT_JUMP, EMULATOR_EXIT_POWER_OFF);
+  printf("%d halt after RSOD, %d closed by the user (no file written).\n",
+         EMULATOR_EXIT_HALT, EMULATOR_EXIT_QUIT);
+  printf("TREZOR_EMULATOR_FAST_EXIT=1 skips the delays before exiting.\n");
 }
 
 bool load_firmware(const char *filename, uint8_t *hash) {
@@ -118,7 +128,7 @@ bool preload_firmware_image(const char *filename) {
 static bool sdl_event_filter(void *userdata, SDL_Event *event) {
   switch (event->type) {
     case SDL_EVENT_QUIT:
-      exit(3);
+      exit(EMULATOR_EXIT_QUIT);
       return false;
     case SDL_EVENT_KEY_UP:
       if (event->key.repeat) {
@@ -126,7 +136,7 @@ static bool sdl_event_filter(void *userdata, SDL_Event *event) {
       }
       switch (event->key.key) {
         case SDLK_ESCAPE:
-          exit(3);
+          exit(EMULATOR_EXIT_QUIT);
           return false;
         case SDLK_S:
           display_save("emu");
@@ -243,11 +253,12 @@ void jump_to_next_stage(uint32_t address, const startup_args_t *args) {
 
   if (storage_is_erased) {
     LOG_WARN("Storage was erased");
-    error_shutdown_ex("BOOTLOADER EXIT", "Jumped to firmware",
-                      "STORAGE WAS ERASED");
   } else {
     LOG_WARN("Storage was retained");
-    error_shutdown_ex("BOOTLOADER EXIT", "Jumped to firmware",
-                      "STORAGE WAS RETAINED");
   }
+  LOG_WARN("Jumped to firmware");
+
+  // The next stage starts with a clean command, as on hardware
+  bootargs_set(BOOT_COMMAND_NONE, NULL, 0);
+  emulator_exit(EMULATOR_EXIT_JUMP);
 }

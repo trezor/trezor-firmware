@@ -87,6 +87,32 @@ void __attribute__((noreturn)) reboot_and_wipe(
 //    specified duration and then resets the device.
 void __attribute__((noreturn)) reboot_or_halt_after_rsod(void);
 
+#ifdef TREZOR_EMULATOR
+// Process exit codes of the emulator. Every exit path maps to one of these
+// so that a test harness can tell them apart. The boot command and its
+// arguments are persisted to `trezor.bootargs` in the profile directory
+// before the process ends.
+typedef enum {
+  // Closed by the user (window closed, ESC) or by a signal; the boot
+  // arguments are not persisted.
+  EMULATOR_EXIT_QUIT = 2,
+  // Rebooted by one of the `reboot_*` calls; the persisted boot command
+  // tells which one.
+  EMULATOR_EXIT_REBOOT = 3,
+  // Jumped to the next boot stage (bootloader to firmware).
+  EMULATOR_EXIT_JUMP = 10,
+  // Powered off.
+  EMULATOR_EXIT_POWER_OFF = 11,
+  // Halted after showing the RSOD.
+  EMULATOR_EXIT_HALT = 12,
+} emulator_exit_code_t;
+
+// Writes the boot command and arguments to `trezor.bootargs` in the
+// profile directory and terminates the emulator process with the given
+// exit code.
+void __attribute__((noreturn)) emulator_exit(emulator_exit_code_t code);
+#endif
+
 // Platform dependent alignment for vector table addresses
 #define IMAGE_CODE_ALIGN(addr) \
   ((((uintptr_t)addr) + (CODE_ALIGNMENT - 1)) & ~(CODE_ALIGNMENT - 1))
