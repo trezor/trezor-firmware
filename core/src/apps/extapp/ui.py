@@ -38,8 +38,7 @@ _KIND_NOTICE = const(5)
 async def handle(session: Session, msg: IpcMessage) -> None:
     """Show the layout the app asked for and send the app the person's answer."""
     try:
-        await _show_layout(bytes(msg.data))
-        result = trezorui_api.CONFIRMED
+        result = await _show_layout(bytes(msg.data))
     except ActionCancelled:
         result = trezorui_api.CANCELLED
     except Exception as e:
@@ -50,13 +49,20 @@ async def handle(session: Session, msg: IpcMessage) -> None:
         log.debug(__name__, f"UI interaction result: {result}")
 
     try:
-        session.send(SERVICE_UI, 0, trezorui_api.encode_ui_result(result=result))
+        # Only a decision is an answer. Anything else a layout ends with is a
+        # bug, never a yes, and the app stops.
+        answer = trezorui_api.encode_ui_result(result=result)
+    except Exception as e:
+        session.die(DataError(f"Unexpected layout result: {e}"))
+    try:
+        session.send(SERVICE_UI, 0, answer)
     except Exception as e:
         session.die(DataError(f"Cannot send the screen's answer: {e}"))
 
 
-async def _show_layout(data: bytes) -> None:
-    """Show one layout of an app, with its extras menu if it has one.
+async def _show_layout(data: bytes) -> Any:
+    """Show one layout of an app, with its extras menu if it has one, and
+    return the layout's result.
 
     The request carries the layout's extras, so the menu is walked here: the
     person can open the menu, look at extras and come back as often as they
@@ -69,7 +75,7 @@ async def _show_layout(data: bytes) -> None:
         + [cancel_leaf(TR.buttons__cancel)]
     )
     with _BLOCKS[kind](*fields, extras) as layout:
-        await interact_with_menu(layout, menu, br_name)
+        return await interact_with_menu(layout, menu, br_name)
 
 
 def _properties_leaf(label: str, props: list) -> "MenuLeaf[None]":
