@@ -55,3 +55,7 @@ typedef enum {
 // exit code.
 void __attribute__((noreturn)) bootutils_emu_exit(
     bootutils_emu_exit_code_t code);
+
+// Sets the boot command and arguments from a file in the format written
+// by `bootutils_emu_exit()`. Returns false if the file cannot be read.
+bool bootargs_emu_load_file(const char *path);

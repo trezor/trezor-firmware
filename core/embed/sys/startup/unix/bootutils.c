@@ -56,6 +56,26 @@ static const char* bootargs_path(void) {
   return path;
 }
 
+bool bootargs_emu_load_file(const char* path) {
+  FILE* f = fopen(path, "rb");
+  if (f == NULL) {
+    LOG_ERR("cannot open bootargs file '%s'", path);
+    return false;
+  }
+
+  bootargs_file_t file = {0};
+  size_t read = fread(&file, 1, sizeof(file), f);
+  fclose(f);
+
+  if (read != sizeof(file)) {
+    LOG_ERR("malformed bootargs file '%s'", path);
+    return false;
+  }
+
+  bootargs_set((boot_command_t)file.command, file.args, BOOT_ARGS_MAX_SIZE);
+  return true;
+}
+
 void bootargs_set(boot_command_t command, const void* args, size_t args_size) {
   // save boot command
   g_boot_command = command;
