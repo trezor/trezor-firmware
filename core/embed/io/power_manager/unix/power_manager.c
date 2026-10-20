@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include "SDL3/SDL_events.h"
 
+#include <sys/bootargs.h>
+#include <sys/unix/bootutils_emu.h>
 #include "../power_manager_poll.h"
 
 typedef struct {
@@ -71,8 +73,9 @@ pm_status_t pm_init(bool inherit_state) {
 void pm_deinit(void) { pm_poll_deinit(); }
 
 pm_status_t pm_hibernate(void) {
-  exit(1);
-  return PM_OK;
+  // a cold start follows on the device, so no boot command is recorded
+  bootargs_set(BOOT_COMMAND_NONE, NULL, 0);
+  bootutils_emu_exit(BOOTUTILS_EMU_EXIT_POWER_OFF);
 }
 
 pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
@@ -81,7 +84,7 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   SDL_Event event;
   while (SDL_WaitEvent(&event)) {
     if (event.type == SDL_EVENT_QUIT) {
-      exit(1);
+      exit(BOOTUTILS_EMU_EXIT_QUIT);
     }
     if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) {
       if (wakeup_reason != NULL) {
