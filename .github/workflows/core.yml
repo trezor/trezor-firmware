@@ -465,6 +465,47 @@ jobs:
         continue-on-error: true
       - uses: ./.github/actions/upload-coverage
 
+  # Bootloader emulator tests - UI.
+  # See [docs/tests/bootloader-tests](../tests/bootloader-tests.md) for more info.
+  core_bootloader_test:
+    name: Bootloader tests (${{ matrix.model }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [T2T1, T3B1, T3T1, T3W1]
+    env:
+      TREZOR_MODEL: ${{ matrix.model }}
+      # the test images are signed with the development keys
+      BOOTLOADER_DEVEL: 1
+      # debuglink and no animations
+      PYOPT: 0
+      PYTEST_TIMEOUT: 400
+      TESTOPTS: "--durations 10"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "uv run make -C core build_bootloader_emu"
+      - run: nix-shell --run "uv run make -C core test_emu_bootloader_ui"
+      - run: tail -v -n50 tests/trezor*.log || true
+        if: failure()
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: core-test-bootloader-${{ matrix.model }}
+          path: tests/trezor*.log
+          retention-days: 7
+        if: always()
+      - uses: ./.github/actions/ui-report
+        with:
+          model: ${{ matrix.model }}
+          lang: en
+          status: ${{ job.status }}
+        if: always()
+        continue-on-error: true
+
   # Upgrade tests.
   # See [docs/tests/upgrade-tests](../tests/upgrade-tests.md) for more info.
   core_upgrade_test:
