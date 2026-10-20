@@ -201,6 +201,10 @@ class chacha20poly1305_encrypt:
     """
     ChaCha20Poly1305 context for encryption.
     """
+    key_size: int
+    nonce_size: int
+    block_size: int
+    tag_size: int
 
     def __init__(self, key: AnyBytes, nonce: AnyBytes) -> None:
         """
@@ -232,6 +236,10 @@ class chacha20poly1305_decrypt:
     """
     ChaCha20Poly1305 context for decryption.
     """
+    key_size: int
+    nonce_size: int
+    block_size: int
+    tag_size: int
 
     def __init__(self, key: AnyBytes, nonce: AnyBytes) -> None:
         """

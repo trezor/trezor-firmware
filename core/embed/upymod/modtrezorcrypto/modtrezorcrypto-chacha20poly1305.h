@@ -29,6 +29,10 @@
 ///     """
 ///     ChaCha20Poly1305 context for encryption.
 ///     """
+///     key_size: int
+///     nonce_size: int
+///     block_size: int
+///     tag_size: int
 typedef struct _mp_obj_ChaCha20Poly1305_t {
   mp_obj_base_t base;
   chacha20poly1305_ctx ctx;
@@ -52,10 +56,10 @@ static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
   mp_buffer_info_t key = {0}, nonce = {0};
   mp_get_buffer_raise(args[0], &key, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &nonce, MP_BUFFER_READ);
-  if (key.len != 32) {
+  if (key.len != CHACHA20POLY1305_KEY_SIZE) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of key"));
   }
-  if (nonce.len != 12) {
+  if (nonce.len != RFC7539_NONCE_SIZE) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of nonce"));
   }
   mp_obj_ChaCha20Poly1305_t *o =
@@ -125,7 +129,7 @@ static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt_finish(
 
   o->state = FINISHED;
   vstr_t mac = {0};
-  vstr_init_len(&mac, 16);
+  vstr_init_len(&mac, CHACHA20POLY1305_TAG_SIZE);
   rfc7539_finish(&(o->ctx), o->alen, o->plen, (uint8_t *)mac.buf);
   return mp_obj_new_bytes_from_vstr(&mac);
 }
@@ -137,6 +141,10 @@ static MP_DEFINE_CONST_FUN_OBJ_1(
 ///     """
 ///     ChaCha20Poly1305 context for decryption.
 ///     """
+///     key_size: int
+///     nonce_size: int
+///     block_size: int
+///     tag_size: int
 
 /// def __init__(self, key: AnyBytes, nonce: AnyBytes) -> None:
 ///     """
@@ -188,12 +196,12 @@ static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt_finish(
   o->state = FINISHED;
   mp_buffer_info_t exp_mac = {0};
   mp_get_buffer_raise(expected_mac, &exp_mac, MP_BUFFER_READ);
-  if (exp_mac.len != 16) {
+  if (exp_mac.len != CHACHA20POLY1305_TAG_SIZE) {
     mp_raise_ValueError(MP_ERROR_TEXT(
         "Invalid length of the expected mac. It has to be 16 bytes."));
   }
   vstr_t mac = {0};
-  vstr_init_len(&mac, 16);
+  vstr_init_len(&mac, CHACHA20POLY1305_TAG_SIZE);
   rfc7539_finish(&(o->ctx), o->alen, o->plen, (uint8_t *)mac.buf);
 
   if (!consteq(mac.buf, exp_mac.buf, exp_mac.len)) {
@@ -227,6 +235,11 @@ static const mp_rom_map_elem_t
          MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305_encrypt_finish_obj)},
         {MP_ROM_QSTR(MP_QSTR___del__),
          MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305___del___obj)},
+        {MP_ROM_QSTR(MP_QSTR_key_size), MP_ROM_INT(CHACHA20POLY1305_KEY_SIZE)},
+        {MP_ROM_QSTR(MP_QSTR_nonce_size), MP_ROM_INT(RFC7539_NONCE_SIZE)},
+        {MP_ROM_QSTR(MP_QSTR_block_size),
+         MP_ROM_INT(CHACHA20POLY1305_BLOCK_SIZE)},
+        {MP_ROM_QSTR(MP_QSTR_tag_size), MP_ROM_INT(CHACHA20POLY1305_TAG_SIZE)},
 };
 static MP_DEFINE_CONST_DICT(
     mod_trezorcrypto_ChaCha20Poly1305Encrypt_locals_dict,
@@ -242,6 +255,11 @@ static const mp_rom_map_elem_t
          MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305_decrypt_finish_obj)},
         {MP_ROM_QSTR(MP_QSTR___del__),
          MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305___del___obj)},
+        {MP_ROM_QSTR(MP_QSTR_key_size), MP_ROM_INT(CHACHA20POLY1305_KEY_SIZE)},
+        {MP_ROM_QSTR(MP_QSTR_nonce_size), MP_ROM_INT(RFC7539_NONCE_SIZE)},
+        {MP_ROM_QSTR(MP_QSTR_block_size),
+         MP_ROM_INT(CHACHA20POLY1305_BLOCK_SIZE)},
+        {MP_ROM_QSTR(MP_QSTR_tag_size), MP_ROM_INT(CHACHA20POLY1305_TAG_SIZE)},
 };
 static MP_DEFINE_CONST_DICT(
     mod_trezorcrypto_ChaCha20Poly1305Decrypt_locals_dict,
