@@ -13,5 +13,13 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         bail_unsupported!();
     }
 
+    lib.add_rust_bindings(|builder| {
+        Ok(builder
+            .header("haptic/inc/io/haptic.h")
+            .allowlist_type("haptic_effect_t")
+            .allowlist_function("haptic_play")
+            .allowlist_function("haptic_play_custom"))
+    })?;
+
     Ok(())
 }

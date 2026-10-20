@@ -1,3 +1,5 @@
+#[cfg(feature = "haptic")]
+use io::haptic::{play, HapticEffect};
 use sys::time::{Duration, Instant};
 
 use super::super::cshape::{self, UnlockOverlay};
@@ -9,8 +11,6 @@ use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::time::Stopwatch;
 use crate::translations::TR;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic::{play, HapticEffect};
 use crate::trezorhal::usb::usb_configured;
 use crate::ui::component::base::AttachType;
 use crate::ui::component::{Component, Event, EventCtx, Label, Timer};
@@ -887,7 +887,7 @@ impl Component for Lockscreen {
             // Always dismiss on TouchEnd in the middle area
             Event::Touch(TouchEvent::TouchEnd(pos)) if middle(pos) => {
                 #[cfg(feature = "haptic")]
-                play(HapticEffect::ButtonPress);
+                let _ = play(HapticEffect::ButtonPress);
                 return Some(HomescreenMsg::Dismissed);
             }
             // Do nothing on TouchStart in the middle area

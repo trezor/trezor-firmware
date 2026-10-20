@@ -1,10 +1,10 @@
+#[cfg(feature = "haptic")]
+use io::haptic::{self, HapticEffect};
 use sys::time::{Duration, Instant};
 
 use super::super::constant;
 use super::super::cshape::{render_loader, LoaderRange};
 use super::theme;
-#[cfg(feature = "haptic")]
-use crate::trezorhal::haptic::{self, HapticEffect};
 use crate::ui::animation::Animation;
 use crate::ui::component::{Component, Event, EventCtx, Pad};
 use crate::ui::display::toif::Icon;
@@ -176,7 +176,7 @@ impl Component for Loader {
 
                 if self.is_completely_grown(now) {
                     #[cfg(feature = "haptic")]
-                    haptic::play(HapticEffect::HoldToConfirm);
+                    let _ = haptic::play(HapticEffect::HoldToConfirm);
                     return Some(LoaderMsg::GrownCompletely);
                 } else if self.is_completely_shrunk(now) {
                     return Some(LoaderMsg::ShrunkCompletely);
@@ -189,7 +189,7 @@ impl Component for Loader {
                             let progress = f32::from(self.progress(now).unwrap())
                                 / f32::from(display::LOADER_MAX);
                             let ampl = i16::lerp(0, HAPTIC_AMPLITUDE_MAX_PCT, progress);
-                            haptic::play_custom(ampl as i8, HAPTIC_AMPLITUDE_DURATION_MS);
+                            let _ = haptic::play_custom(ampl as i8, HAPTIC_AMPLITUDE_DURATION_MS);
                         }
                     }
 
