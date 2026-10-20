@@ -63,6 +63,7 @@ from .input_flows_helpers import (
     PinFlow,
     RecoveryFlow,
     n1w1_handle_write,
+    read_caesar_menu_item,
 )
 
 B = messages.ButtonRequestType
@@ -403,21 +404,21 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
         yield
         self.debug.press_yes()
 
+        # paginate through the whole message and confirm it
         br = yield
-        self.debug.press_info()
-
-        # paginate through the whole message
-        br = yield
-        # TODO: try load the message_read the same way as in UI bolt (T)
-        if br.pages is not None:
-            for i in range(br.pages):
-                if i < br.pages - 1:
-                    self.debug.swipe_up()
+        layouts: list[LayoutContent] = []
+        assert br.pages is not None
+        for i in range(br.pages):
+            layouts.append(self.debug.read_layout())
+            if i < br.pages - 1:
+                self.debug.swipe_up()
+        self.message_read = multipage_content(layouts)
         self.debug.press_yes()
 
-        # confirm message
-        yield
-        self.debug.press_yes()
+        if self.verify:
+            # "The signature is valid!" screen
+            br = yield
+            self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         # collect screen contents into `message_read`.
@@ -500,6 +501,18 @@ class InputFlowSignMessageInfo(InputFlowBase):
         self.debug.press_yes()
         yield
 
+    def input_flow_caesar(self) -> BRGeneratorType:
+        yield
+        # show address/message info (visits "More info", skips "Cancel")
+        self.client.ui.visit_menu_items()
+        # cancel signature
+        self.debug.press_left()
+        self.debug.button_actions.navigate_to_menu_item(1)
+        # address mismatch? - "Quit" button aborts the flow
+        self.debug.synchronize_at("Flow")
+        self.debug.press_right()
+        yield
+
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
         # show address/message info
@@ -541,25 +554,29 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
-        # Find out the page-length of the address
-        br = yield
-        if br.pages is not None:
-            address_swipes = br.pages - 1
-        else:
-            address_swipes = 0
-        for _ in range(address_swipes):
-            self.debug.press_right()
-
-        # Go into details
-        self.debug.press_right()
-        # Go through details and back
-        self.debug.press_right()
+        yield
+        # menu
         self.debug.press_left()
-        self.debug.press_left()
-        # Confirm
-        for _ in range(address_swipes):
-            self.debug.press_right()
+        layout = self.debug.synchronize_at("SimpleChoice")
+        assert layout.page_count() == 3
+        # qr code
         self.debug.press_middle()
+        self.debug.synchronize_at("Qr")
+        self.debug.press_left()
+        # account info
+        self.debug.synchronize_at("SimpleChoice")
+        self.debug.press_right()
+        self.debug.press_middle()
+        self.debug.synchronize_at("Paragraphs")
+        self.debug.press_left()
+        # close the menu
+        self.debug.synchronize_at("SimpleChoice")
+        self.debug.press_left()
+        self.debug.press_left()
+        # scroll through the address and confirm
+        layout = self.debug.synchronize_at("ButtonPage")
+        for _ in range(layout.page_count()):
+            self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
@@ -630,15 +647,24 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
 
     def input_flow_caesar(self) -> BRGeneratorType:
         yield
-        # Go into details
+        # menu
+        self.debug.press_left()
+        self.debug.synchronize_at("SimpleChoice")
+        # qr code
+        self.debug.press_middle()
+        self.debug.synchronize_at("Qr")
+        self.debug.press_left()
+        # account info
+        self.debug.synchronize_at("SimpleChoice")
         self.debug.press_right()
-        # Go through details and back
+        self.debug.press_middle()
+        self.debug.synchronize_at("Paragraphs")
+        self.debug.press_left()
+        # cancel
+        self.debug.synchronize_at("SimpleChoice")
         self.debug.press_right()
-        self.debug.press_left()
-        self.debug.press_left()
-        # Cancel
-        self.debug.press_left()
-        # Confirm address mismatch
+        self.debug.press_middle()
+        # address mismatch - quit
         # Clicking right twice, as some languages can have two pages
         self.debug.press_right()
         self.debug.press_right()
@@ -720,27 +746,25 @@ class InputFlowShowAddressAccount(InputFlowBase):
         yield  # path warning
         self.debug.press_yes()
 
-        br = yield  # show address
-        # Find out the page-length of the address
-        if br.pages is not None:
-            address_swipes = br.pages - 1
-        else:
-            address_swipes = 0
-        for _ in range(address_swipes):
-            self.debug.press_right()
-
-        # qr code
-        self.debug.press_right()
-        # address details
-        self.debug.press_right()
-        self._assert_account()
-
-        # Go back and confirm
+        yield  # show address
+        # menu
         self.debug.press_left()
-        self.debug.press_left()
-        for _ in range(address_swipes):
-            self.debug.press_right()
+        self.debug.synchronize_at("SimpleChoice")
+        # account info
+        self.debug.press_right()
         self.debug.press_middle()
+        self.debug.synchronize_at("Paragraphs")
+        self._assert_account()
+        self.debug.press_left()
+
+        # close the menu
+        self.debug.synchronize_at("SimpleChoice")
+        self.debug.press_left()
+        self.debug.press_left()
+        # scroll through the address and confirm
+        layout = self.debug.synchronize_at("ButtonPage")
+        for _ in range(layout.page_count()):
+            self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield  # path warning
@@ -852,37 +876,55 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         assert "(MULTISIG)" in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
-        self.debug.press_right()
-        assert "Qr" in self.all_components()
-
-        self.debug.press_right()
-        layout = self.debug.read_layout()
-        # address details
-        # TODO: locate it more precisely
-        assert "Multisig 2 of 3" in layout.json_str
-
-        # Three xpub pages with the same testing logic
-        for xpub_num in range(3):
-            self.debug.press_right()
-            layout = self.debug.read_layout()
-            self._assert_xpub_title(layout.title(), xpub_num)
-            xpub_part_1 = layout.text_content().replace(" ", "")
-            # Press "SHOW MORE"
-            self.debug.press_middle()
-            layout = self.debug.read_layout()
-            xpub_part_2 = layout.text_content().replace(" ", "")
-            # Go back
-            self.debug.press_left()
-            assert self.xpubs[xpub_num] == xpub_part_1 + xpub_part_2
-
-        for _ in range(5):
-            self.debug.press_left()
-        # show address
+        # menu
         self.debug.press_left()
-        # address mismatch
-        self.debug.press_left()
-        # show address
+        self.debug.synchronize_at("SimpleChoice")
+        # qr code
         self.debug.press_middle()
+        self.debug.synchronize_at("Qr")
+        self.debug.press_left()
+
+        # account info
+        self.debug.synchronize_at("SimpleChoice")
+        self.debug.press_right()
+        self.debug.press_middle()
+        layout = self.debug.synchronize_at("Paragraphs")
+        assert "Multisig 2 of 3" in layout.text_content()
+        content = ""
+        for page in range(layout.page_count()):
+            if page > 0:
+                self.debug.press_right()
+            content += self.debug.read_layout().text_content()
+        content = "".join(content.split())
+        for xpub_num in range(3):
+            xpub_title = TR.format(
+                "address__title_multisig_xpub_template", xpub_num + 1
+            ) + (
+                TR.address__title_yours
+                if self.index == xpub_num
+                else TR.address__title_cosigner
+            )
+            assert "".join(xpub_title.split()) in content
+            # Xpubs are split into lines and pages
+            assert self.xpubs[xpub_num][:20] in content
+        # hold left as "Shift" to scroll back up to the first page
+        self.debug.press_right_with_shift(layout.page_count() - 1)
+        assert self.debug.read_layout().active_page() == 0
+        self.debug.press_left()
+
+        # cancel
+        self.debug.synchronize_at("SimpleChoice")
+        self.debug.press_right()
+        self.debug.press_middle()
+        # address mismatch - go back to the menu
+        self.debug.press_left()
+        # close the menu
+        self.debug.synchronize_at("SimpleChoice")
+        for _ in range(3):
+            self.debug.press_left()
+        # show address
+        self.debug.synchronize_at("ButtonPage")
+        self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield  # multisig address warning
@@ -1021,19 +1063,29 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             self.debug.press_yes()
             br = yield
 
-        # Go into details
-        self.debug.press_right()
-        # Go through details and back
-        self.debug.press_right()
-        self.debug.press_right()
-        self.debug.press_right()
+        # qr code
         self.debug.press_left()
+        self.debug.button_actions.navigate_to_menu_item(0)
+        self.debug.synchronize_at("Qr")
         self.debug.press_left()
-        assert br.pages is not None
-        for _ in range(br.pages - 1):
+        # account info
+        self.debug.button_actions.navigate_to_menu_item(1)
+        self.debug.synchronize_at("Paragraphs")
+        self.debug.press_left()
+        self.debug.button_actions.close_menu()
+
+        # scroll down through the xpub, back up with "Shift" and down again
+        layout = self.debug.synchronize_at("ButtonPage")
+        pages = layout.page_count()
+        for _ in range(pages - 1):
             self.debug.press_right()
+        if pages > 1:
+            self.debug.press_right_with_shift(pages - 1)
+            assert self.debug.read_layout().active_page() == 0
+            for _ in range(pages - 1):
+                self.debug.press_right()
         # Confirm
-        self.debug.press_middle()
+        self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         if self.passphrase_request_expected:
@@ -1317,21 +1369,39 @@ def sign_tx_go_to_info_caesar(
         client.debug.press_middle()
         yield
 
-    client.debug.press_right()
-    layout = client.debug.read_layout()
-    screen_texts.append(layout.visible_screen())
-
-    client.debug.press_right()
-    layout = client.debug.read_layout()
-    screen_texts.append(layout.visible_screen())
-
-    client.debug.press_left()
-    client.debug.press_left()
+    # fee info and account info in the menu
+    for item in range(2):
+        screen_texts.append(read_caesar_menu_item(client.debug, item))
 
     return "\n".join(screen_texts)
 
 
 class InputFlowSignTxBackFromAmount(InputFlowBase):
+    def input_flow_caesar(self) -> BRGeneratorType:
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.press_right()
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__amount + " #1" in layout.title()
+        # "Shift" + right button goes back
+        self.debug.press_right_with_shift()
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.press_right()
+
+        yield
+        self.debug.read_layout()
+        self.debug.press_right()
+
+        yield
+        self.debug.read_layout()
+        self.debug.press_yes()
+
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
         layout = self.debug.read_layout()
@@ -1388,6 +1458,19 @@ class InputFlowSignTxBackFromAmount(InputFlowBase):
 
 
 class InputFlowSignTxCancelFromAmount(InputFlowBase):
+    def input_flow_caesar(self) -> BRGeneratorType:
+        yield  # confirm address
+        self.debug.read_layout()
+        self.debug.press_right()
+
+        yield  # amount screen
+        layout = self.debug.read_layout()
+        assert TR.words__amount + " #1" in layout.title()
+        # cancel is the last menu item
+        self.debug.press_left()
+        menu = self.debug.synchronize_at("SimpleChoice")
+        self.debug.button_actions.navigate_to_menu_item(menu.page_count() - 1)
+
     def input_flow_delizia(self) -> BRGeneratorType:
         yield  # confirm address
         layout = self.debug.read_layout()
@@ -1493,7 +1576,9 @@ class InputFlowSignTxInformationCancel(InputFlowBase):
 
     def input_flow_caesar(self) -> BRGeneratorType:
         yield from sign_tx_go_to_info_caesar(self.client)
+        # cancel from the menu
         self.debug.press_left()
+        self.debug.button_actions.navigate_to_menu_item(2)
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield from sign_tx_go_to_info_delizia(self.client)
@@ -1539,9 +1624,8 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         yield  # modify amount - amount
         self.debug.press_right()
         yield  # modify fee
-        self.debug.press_right()
-        self.debug.press_right()
-        self.debug.press_right()
+        for _ in range(self.debug.read_layout().page_count()):
+            self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield  # confirm txid
@@ -1729,7 +1813,8 @@ class InputFlowEIP712ShowMore(InputFlowBase):
         if self.layout_type is LayoutType.Bolt:
             self.debug.click(self.SHOW_MORE)
         elif self.layout_type is LayoutType.Caesar:
-            self.debug.press_right()
+            self.debug.press_left()
+            self.debug.button_actions.navigate_to_menu_item(0)
         elif self.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.button_actions.navigate_to_menu_item(0)
@@ -1866,7 +1951,9 @@ class InputFlowEthereumSignTxData(InputFlowBase):
             confirm_tx.send(br)
 
     def _go_to_next_page(self, is_intro: bool):
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar) or is_intro:
+        if self.client.layout_type is LayoutType.Caesar:
+            self.debug.press_yes()  # pagination is the right button
+        elif self.client.layout_type is LayoutType.Bolt or is_intro:
             self.debug.press_info()  # pagination is a special button
         elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.press_yes()  # pagination is a regular button
@@ -1877,7 +1964,15 @@ class InputFlowEthereumSignTxData(InputFlowBase):
         self.debug.press_no()
 
     def _confirm_all(self, is_intro: bool):
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar) or is_intro:
+        if self.client.layout_type is LayoutType.Caesar:
+            layout = self.debug.read_layout()
+            if TR.buttons__confirm_all.lower() in layout.json_str.lower():
+                self.debug.press_yes()  # confirmation is the right button
+            else:
+                # the right button scrolls, confirmation is in the menu
+                self.debug.press_left()
+                self.debug.button_actions.navigate_to_menu_item(0)
+        elif self.client.layout_type is LayoutType.Bolt or is_intro:
             self.debug.press_yes()  # confirmation is a regular button
         elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.press_info()  # confirmation is available via menu
@@ -4016,8 +4111,19 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
         assert TR.backup__new_wallet_created in self.text_content()
+        assert self.debug.read_layout().title() == TR.words__title_success
+        # second page and back with "Shift"
         self.debug.press_right()
-        self.debug.press_no()
+        layout = self.debug.read_layout()
+        assert layout.title() == TR.backup__title_backup_wallet
+        assert TR.backup__recover_anytime in layout.text_content()
+        self.debug.press_right_with_shift()
+        layout = self.debug.read_layout()
+        assert layout.title() == TR.words__title_success
+        assert TR.backup__new_wallet_created in layout.text_content()
+        # skip from the menu
+        self.debug.press_left()
+        self.debug.button_actions.navigate_to_menu_item(0)
         yield  # Confirm skip backup
         assert TR.backup__want_to_skip in self.text_content()
         self.debug.press_no()

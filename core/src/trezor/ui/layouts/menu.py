@@ -222,7 +222,7 @@ if TYPE_CHECKING:
         menu: "Menu[None]",
         br_name: str | None,
         br_code: ButtonRequestType = ButtonRequestType.Other,
-        raise_on_cancel: ExceptionType = ActionCancelled,
+        raise_on_cancel: ExceptionType | None = ActionCancelled,
         *,
         layout_type: type[Layout] = Layout,
     ) -> T:
@@ -234,7 +234,7 @@ if TYPE_CHECKING:
         menu: "Menu[R]",
         br_name: str | None,
         br_code: ButtonRequestType = ButtonRequestType.Other,
-        raise_on_cancel: ExceptionType = ActionCancelled,
+        raise_on_cancel: ExceptionType | None = ActionCancelled,
         *,
         layout_type: type[Layout] = Layout,
     ) -> T | MenuResult[R]:
@@ -246,7 +246,7 @@ async def interact_with_menu(
     menu: Menu[R],
     br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
-    raise_on_cancel: ExceptionType = ActionCancelled,
+    raise_on_cancel: ExceptionType | None = ActionCancelled,
     *,
     layout_type: type[Layout] = Layout,
 ) -> T | MenuResult[R]:

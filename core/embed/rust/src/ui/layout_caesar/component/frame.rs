@@ -1,3 +1,5 @@
+use heapless::Vec;
+
 use super::super::constant;
 use super::scrollbar::SCROLLBAR_SPACE;
 use super::title::Title;
@@ -102,9 +104,14 @@ where
     T: Component + Paginate,
 {
     title: Option<Child<Title>>,
+    /// Titles of the individual pages, replacing `title` when the page changes.
+    page_titles: Vec<TString<'static>, MAX_PAGE_TITLES>,
     scrollbar: ScrollBar,
     content: Child<T>,
 }
+
+/// How many pages can have their own title in `ScrollableFrame`.
+const MAX_PAGE_TITLES: usize = 2;
 
 impl<T> ScrollableFrame<T>
 where
@@ -113,6 +120,7 @@ where
     pub fn new(content: T) -> Self {
         Self {
             title: None,
+            page_titles: Vec::new(),
             scrollbar: ScrollBar::to_be_filled_later(),
             content: Child::new(content),
         }
@@ -124,6 +132,13 @@ where
 
     pub fn with_title(mut self, title: TString<'static>) -> Self {
         self.title = Some(Child::new(Title::new(title)));
+        self
+    }
+
+    /// Each page with its own title. Pages after the last title keep it.
+    pub fn with_page_titles(mut self, titles: [TString<'static>; MAX_PAGE_TITLES]) -> Self {
+        self = self.with_title(titles[0]);
+        self.page_titles = Vec::from_iter(titles);
         self
     }
 }
@@ -145,7 +160,7 @@ where
                 (bounds, Rect::zero(), Rect::zero())
             } else {
                 let (scrollbar_area, content_area) =
-                    bounds.split_top(ScrollBar::MAX_DOT_SIZE + constant::LINE_SPACE);
+                    bounds.split_top(self.scrollbar.overall_height() + constant::LINE_SPACE);
                 (content_area, scrollbar_area, Rect::zero())
             }
         } else {
@@ -182,6 +197,16 @@ where
         if self.scrollbar.pager().current() != content_active_page {
             self.scrollbar.change_page(content_active_page);
             self.scrollbar.request_complete_repaint(ctx);
+            let page_title = self
+                .page_titles
+                .get(content_active_page as usize)
+                .or(self.page_titles.last());
+            if let (Some(&page_title), Some(title)) = (page_title, &mut self.title) {
+                title.mutate(ctx, |ctx, title| {
+                    title.set_text(ctx, page_title);
+                    title.request_complete_repaint(ctx);
+                });
+            }
         }
         self.title.event(ctx, event);
         msg

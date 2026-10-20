@@ -25,6 +25,21 @@ from trezorlib.testing.common import BRGeneratorType, get_text_possible_paginati
 B = messages.ButtonRequestType
 
 
+def read_caesar_menu_item(debug: DebugLink, idx: int) -> str:
+    """Open the context menu (Caesar), read all pages of its `idx`-th item,
+    close the item and the menu."""
+    debug.press_left()
+    debug.button_actions.navigate_to_menu_item(idx)
+    layout = debug.synchronize_at(["Paragraphs", "Qr"])
+    contents = [layout.text_content()]
+    for _ in range(layout.page_count() - 1):
+        debug.press_right()
+        contents.append(debug.read_layout().text_content())
+    debug.press_left()
+    debug.button_actions.close_menu()
+    return " ".join(contents)
+
+
 class PinFlow:
     def __init__(self, client: Client):
         self.client = client
@@ -498,18 +513,17 @@ class EthereumFlow:
         assert (yield).name == "confirm_ethereum_tx"
         assert TR.send__maximum_fee in self.debug.read_layout().text_content()
         if go_back_from_summary:
-            self.debug.press_left()
+            # "Shift" + right goes back from the first page
+            self.debug.press_right_with_shift()
             assert (yield).name == "confirm_ethereum_tx"
             self.debug.press_right()
             assert (yield).name == "confirm_ethereum_tx"
         if info:
-            self.debug.press_right()
-            assert TR.ethereum__gas_limit in self.debug.read_layout().text_content()
-            self.debug.press_right()
-            assert TR.ethereum__gas_price in self.debug.read_layout().text_content()
-            self.debug.press_left()
-            self.debug.press_left()
-        self.debug.press_middle()
+            text = read_caesar_menu_item(self.debug, 0)
+            assert TR.ethereum__gas_limit in text
+            assert TR.ethereum__gas_price in text
+        # hold to confirm
+        self.debug.press_yes()
         assert (yield).name == "confirm_ethereum_tx"
 
     def _confirm_tx_delizia(
@@ -666,26 +680,23 @@ class EthereumFlow:
         elif self.client.layout_type is LayoutType.Caesar:
             # confirm intro
             if info:
-                self.debug.press_right()  # enter menu
-                self.debug.press_middle()  # choose item
-                assert self.debug.read_layout().title() in (
+                self.debug.press_left()  # enter menu
+                self.debug.button_actions.navigate_to_menu_item(0)
+                assert self.debug.synchronize_at("Paragraphs").title() in (
                     TR.ethereum__staking_stake_address,
                     TR.ethereum__staking_claim_address,
                 )
                 self.debug.press_left()  # back to menu
-                self.debug.press_left()  # close menu
-            self.debug.press_middle()
+                self.debug.button_actions.close_menu()
+            self.debug.press_right()
             yield
 
             # confirm summary
             if info:
-                self.debug.press_right()
-                assert TR.ethereum__gas_limit in self.debug.read_layout().text_content()
-                self.debug.press_right()
-                assert TR.ethereum__gas_price in self.debug.read_layout().text_content()
-                self.debug.press_left()
-                self.debug.press_left()
-            self.debug.press_middle()
+                text = read_caesar_menu_item(self.debug, 0)
+                assert TR.ethereum__gas_limit in text
+                assert TR.ethereum__gas_price in text
+            self.debug.press_yes()  # hold to confirm
             yield
 
             self.debug.press_yes()

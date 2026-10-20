@@ -216,7 +216,8 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
             debug.click(debug.screen_buttons.ok(), wait=False)
         elif debug.layout_type is LayoutType.Caesar:
-            debug.press_middle(wait=False)
+            # confirm immediately (holding the button would postpone the autolock)
+            debug.press_yes(wait=False)
         elif debug.layout_type is LayoutType.Delizia:
             debug.click(debug.screen_buttons.tap_to_confirm(), wait=False)
         else:

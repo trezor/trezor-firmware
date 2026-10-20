@@ -1,7 +1,7 @@
-use super::super::component::ButtonControllerMsg::Triggered;
-use super::super::component::{ButtonController, ButtonLayout, ButtonPos};
-use super::super::theme::bootloader::{BLD_BG, BLD_FG, TEXT_NORMAL};
-use super::super::theme::{BUTTON_HEIGHT, ICON_WARN_TITLE, TITLE_AREA_HEIGHT};
+use super::super::theme::bootloader::{
+    BLD_BG, BLD_FG, BUTTON_HEIGHT, ICON_WARN_TITLE, TEXT_NORMAL, TITLE_AREA_HEIGHT,
+};
+use super::buttons::{Button, ButtonPos, Buttons};
 use crate::strutil::TString;
 use crate::ui::component::{Child, Component, Event, EventCtx, Label, Pad};
 use crate::ui::geometry::{Alignment, Alignment2D, Rect};
@@ -9,8 +9,7 @@ use crate::ui::layout::simplified::ReturnToC;
 use crate::ui::shape;
 use crate::ui::shape::Renderer;
 
-const LEFT_BUTTON_TEXT: &str = "Init connection";
-const RIGHT_BUTTON_TEXT: &str = "MENU";
+const RIGHT_BUTTON_TEXT: &str = "CONNECT";
 
 #[repr(u32)]
 #[derive(Copy, Clone)]
@@ -27,7 +26,7 @@ impl ReturnToC for IntroMsg {
 pub struct Intro<'a> {
     bg: Pad,
     title: Child<Label<'a>>,
-    buttons: Child<ButtonController>,
+    buttons: Buttons,
     text: Child<Label<'a>>,
     warn: Option<Child<Label<'a>>>,
 }
@@ -37,10 +36,11 @@ impl<'a> Intro<'a> {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
             title: Child::new(Label::centered(title, TEXT_NORMAL).vertically_centered()),
-            buttons: Child::new(ButtonController::new(ButtonLayout::text_none_text(
-                LEFT_BUTTON_TEXT.into(),
-                RIGHT_BUTTON_TEXT.into(),
-            ))),
+            buttons: Buttons::new(
+                Some(Button::menu()),
+                None,
+                Some(Button::Text(RIGHT_BUTTON_TEXT)),
+            ),
             text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
             warn: (!fw_ok).then_some(Child::new(
                 Label::new("FIRMWARE CORRUPTED".into(), Alignment::Start, TEXT_NORMAL)
@@ -76,15 +76,11 @@ impl<'a> Component for Intro<'a> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let msg = self.buttons.event(ctx, event);
-
-        if let Some(Triggered(ButtonPos::Left, _)) = msg {
-            return Some(Self::Msg::InstallFirmware);
-        };
-        if let Some(Triggered(ButtonPos::Right, _)) = msg {
-            return Some(Self::Msg::GoToMenu);
-        };
-        None
+        match self.buttons.event(ctx, event)? {
+            ButtonPos::Left => Some(Self::Msg::GoToMenu),
+            ButtonPos::Right => Some(Self::Msg::InstallFirmware),
+            ButtonPos::Middle => None,
+        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
