@@ -23,6 +23,7 @@
 #include "emulator.h"
 #include "rust_ui_common.h"
 
+#include <io/display_utils.h>
 #include <sys/systask.h>
 #include <sys/unix/bootutils_emu.h>
 
@@ -57,6 +58,7 @@ void usage(void) {
 #endif
   printf("  -B FILE  boot with the command and arguments from FILE (the\n");
   printf("           format a previous run wrote to trezor.bootargs)\n");
+  printf("  -r DIR  record every screen refresh as PNG into DIR\n");
   printf("  -w  wipe any firmware before booting\n");
   printf("  -e MESSAGE [TITLE [FOOTER]]  display error screen and stop\n");
   printf("  -c COLOR_VARIANT  set color variant\n");
@@ -170,7 +172,7 @@ int main(int argc, char **argv) {
   uint8_t set_variant = 0xff;
   uint8_t color_variant = 0;
   uint8_t bitcoin_only = 0;
-  while ((opt = getopt(argc, argv, "ahslewc:b:f:i:B:WR")) != -1) {
+  while ((opt = getopt(argc, argv, "ahslewc:b:f:i:r:B:WR")) != -1) {
     switch (opt) {
       case 'a':
         disable_animation(true);
@@ -200,6 +202,9 @@ int main(int argc, char **argv) {
         bootargs_set(BOOT_COMMAND_SHOW_RSOD, &pminfo, sizeof(pminfo));
       } break;
 #endif
+      case 'r':
+        display_record_start((uint8_t *)optarg, strlen(optarg), 0);
+        break;
       case 'B':
         if (!bootargs_emu_load_file(optarg)) {
           exit(BOOTUTILS_EMU_EXIT_USAGE);
