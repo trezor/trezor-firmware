@@ -82,8 +82,12 @@ static uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
 static uint8_t *FLASH_BUFFER = NULL;
 static uint32_t FLASH_SIZE;
 
-void flash_init(void) {
-  if (FLASH_BUFFER) return;
+// The sector layout is known without the flash file, so that the layout
+// can be queried before (or without) mapping it.
+static void flash_layout_init(void) {
+  static bool initialized = false;
+  if (initialized) return;
+  initialized = true;
 
 #if defined STM32U585xx || defined STM32U5G9xx
   for (size_t i = 0; i < FLASH_SECTOR_COUNT; i++) {
@@ -93,6 +97,12 @@ void flash_init(void) {
 #endif
 
   FLASH_SIZE = FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT] - FLASH_SECTOR_TABLE[0];
+}
+
+void flash_init(void) {
+  if (FLASH_BUFFER) return;
+
+  flash_layout_init();
 
   // check whether the file exists and it has the correct size
   struct stat sb;
@@ -145,6 +155,7 @@ const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
 }
 
 uint32_t flash_sector_size(uint16_t first_sector, uint16_t sector_count) {
+  flash_layout_init();
   if (first_sector + sector_count > FLASH_SECTOR_COUNT) {
     return 0;
   }
@@ -153,6 +164,7 @@ uint32_t flash_sector_size(uint16_t first_sector, uint16_t sector_count) {
 }
 
 uint16_t flash_sector_find(uint16_t first_sector, uint32_t offset) {
+  flash_layout_init();
   uint16_t sector = first_sector;
 
   while (sector < FLASH_SECTOR_COUNT) {

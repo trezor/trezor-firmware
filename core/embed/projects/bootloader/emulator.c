@@ -69,6 +69,7 @@ void usage(void) {
 #ifdef LOCKABLE_BOOTLOADER
   printf("  -l  lock bootloader\n");
 #endif
+  printf("  -p  print the emulator properties as JSON and exit\n");
   printf("  -h  show this help\n");
   printf("\n");
   printf("On exit, the boot command for the next run is written to\n");
@@ -136,6 +137,21 @@ bool preload_firmware_image(const char *filename) {
                                                  read, 0x0, FIRMWARE_MAXSIZE);
 }
 
+// Prints what a test harness needs to interpret the flash file: the
+// model and where the storage areas sit inside it. Works from the sector
+// layout alone, before the flash file is mapped.
+static void print_properties(void) {
+  printf("{\"model\": \"%s\", \"storage_areas\": [", MODEL_INTERNAL_NAME);
+  for (size_t i = 0; i < ARRAY_LENGTH(STORAGE_AREAS); i++) {
+    // storage areas are single subareas, see storage_empty()
+    const flash_area_t *area = &STORAGE_AREAS[i];
+    printf("%s{\"offset\": %u, \"size\": %u}", i > 0 ? ", " : "",
+           (unsigned)flash_sector_size(0, area->subarea[0].first_sector),
+           (unsigned)flash_area_get_size(area));
+  }
+  printf("]}\n");
+}
+
 static bool sdl_event_filter(void *userdata, SDL_Event *event) {
   switch (event->type) {
     case SDL_EVENT_QUIT:
@@ -158,7 +174,27 @@ static bool sdl_event_filter(void *userdata, SDL_Event *event) {
   return true;
 }
 
+#define EMULATOR_OPTSTRING "ahpslewc:b:f:i:r:B:WR"
+
 int main(int argc, char **argv) {
+  int opt;
+
+  // The informational options answer before the display opens and before
+  // the flash file is mapped, which would create it if missing.
+  opterr = 0;
+  while ((opt = getopt(argc, argv, EMULATOR_OPTSTRING)) != -1) {
+    if (opt == 'p') {
+      print_properties();
+      exit(0);
+    }
+    if (opt == 'h') {
+      usage();
+      exit(0);
+    }
+  }
+  opterr = 1;
+  optind = 1;
+
   SDL_SetEventFilter(sdl_event_filter, NULL);
 
   display_init(DISPLAY_RESET_CONTENT);
@@ -167,12 +203,11 @@ int main(int argc, char **argv) {
 
   FIRMWARE_START = (uintptr_t)flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
-  int opt;
   bool display_error = false;
   uint8_t set_variant = 0xff;
   uint8_t color_variant = 0;
   uint8_t bitcoin_only = 0;
-  while ((opt = getopt(argc, argv, "ahslewc:b:f:i:r:B:WR")) != -1) {
+  while ((opt = getopt(argc, argv, EMULATOR_OPTSTRING)) != -1) {
     switch (opt) {
       case 'a':
         disable_animation(true);
