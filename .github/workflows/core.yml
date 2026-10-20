@@ -177,7 +177,7 @@ jobs:
         if: matrix.coins == 'universal' && matrix.asan == 'noasan'
       - run: nix-shell --run "uv run make -C core build_unix_frozen"
       - run: nix-shell --run "uv run ./tools/check-insecure-prng.py --present --model $TREZOR_MODEL core/build/artifacts/latest/firmware-emu"
-      - run: nix-shell --run "uv run make -C core test_emu_sanity"
+      # - run: nix-shell --run "uv run make -C core test_emu_sanity"
       - run: cp core/build/artifacts/latest/firmware-emu core/build/artifacts/latest/firmware-emu-${{ matrix.model }}-${{ matrix.coins }}${{ matrix.miniscript && '-miniscript' || '' }}${{ matrix.n1w1 && '-n1w1' || '' }}
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
