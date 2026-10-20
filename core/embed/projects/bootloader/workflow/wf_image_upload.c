@@ -28,6 +28,11 @@
 
 #include "protob/protob.h"
 #include "wf_image_upload.h"
+
+#ifdef DEBUGLINK
+#include "debuglink.h"
+#endif
+
 #include "workflow.h"
 
 #define MESSAGE_RX_TIMEOUT 10000
@@ -327,11 +332,23 @@ workflow_result_t run_image_upload(protob_io_t *iface,
     sysevents_t awaited = {0};
     sysevents_t signalled = {0};
 
-    awaited.read_ready = 1 << protob_get_iface_flag(iface);
+    const uint32_t wire_flag = 1 << protob_get_iface_flag(iface);
+
+    awaited.read_ready = wire_flag;
+#ifdef DEBUGLINK
+    awaited.read_ready |= 1 << SYSHANDLE_USB_DEBUG;
+#endif
 
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
-    if (awaited.read_ready != signalled.read_ready) {
+#ifdef DEBUGLINK
+    // keep the debuglink responsive while the host uploads
+    if (signalled.read_ready & (1 << SYSHANDLE_USB_DEBUG)) {
+      debuglink_process();
+    }
+#endif
+
+    if ((signalled.read_ready & wire_flag) == 0) {
       if (ticks_expired(msg_deadline)) {
         // timeout
         handler->ui->fail(UPLOAD_ERR_COMMUNICATION);
