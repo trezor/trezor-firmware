@@ -125,12 +125,14 @@ async def prompt_backup() -> bool:
 def confirm_path_warning(
     path: str,
     path_type: str | None = None,
+    description: str | None = None,
 ) -> Awaitable[None]:
-    description = (
-        TR.addr_mismatch__wrong_derivation_path
-        if not path_type
-        else f"{TR.words__unknown} {path_type.lower()}."
-    )
+    if description is None:
+        description = (
+            TR.addr_mismatch__wrong_derivation_path
+            if not path_type
+            else f"{TR.words__unknown} {path_type.lower()}."
+        )
     return show_danger(
         "path_warning",
         description,

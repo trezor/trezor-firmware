@@ -32,6 +32,68 @@ class TestPaths(unittest.TestCase):
         self.assertFalse(path_is_hardened([0]))
         self.assertFalse(path_is_hardened([H_(44), H_(1), H_(0), H_(0), 0]))
 
+    def test_is_xpub_export_restricted(self):
+        restricted = [
+            [],
+            [0],
+            [1],
+            [H_(1)],
+            [1, H_(1)],
+            [H_(44)],
+            [H_(48)],
+            [H_(84), H_(0)],
+            [H_(44), H_(60)],
+            [H_(3), H_(1)],
+            [4, 255],
+            [1195487518],
+            [1195487518, 6],
+            [H_(4541509)],
+            [H_(4541509), H_(0)],
+            [H_(10015), H_(0)],
+            [H_(10015), H_(0), 1, 2],
+            [H_(10016), 0],
+            [H_(10016), 0, 0, 0, 0],
+            [H_(83696968)],
+            [H_(83696968), H_(2), H_(0)],
+            [H_(83696968), H_(39), H_(0), H_(12), H_(0)],
+        ]
+        allowed = [
+            [H_(0)],
+            [H_(0), 1],
+            [H_(45)],
+            [H_(45), 0],
+            [H_(45), H_(5)],
+            [H_(4541509), H_(1112098098)],
+            [H_(84), H_(0), H_(0)],
+            [H_(44), H_(60), H_(0), 0],
+            [H_(1852), H_(1815), H_(0)],
+            [H_(10025), H_(0), H_(0), H_(1)],
+        ]
+        for path in restricted:
+            self.assertTrue(
+                is_xpub_export_restricted(path),
+                f"Expected {address_n_to_str(path)} to be restricted",
+            )
+        for path in allowed:
+            self.assertFalse(
+                is_xpub_export_restricted(path),
+                f"Expected {address_n_to_str(path)} to be allowed",
+            )
+
+    def test_xpub_export_rule_invariants(self):
+        from apps.common.paths import (
+            _XPUB_EXPORT_ALLOWED_PREFIXES,
+            _XPUB_EXPORT_DENIED_PURPOSES,
+        )
+
+        for prefix in _XPUB_EXPORT_ALLOWED_PREFIXES:
+            # Allowing the root would allow exporting every subtree.
+            self.assertTrue(len(prefix) > 0)
+            # Denied subtrees are checked first, so an allowed prefix under a
+            # denied purpose would be dead code; it must not be an ancestor of
+            # a denied purpose either.
+            self.assertFalse(prefix[0] in _XPUB_EXPORT_DENIED_PURPOSES)
+
 
 class TestPathSchemas(unittest.TestCase):
     def assertMatch(self, schema, path):

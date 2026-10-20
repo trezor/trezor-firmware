@@ -131,6 +131,9 @@ typedef struct {
   secbool seedCached;
   MessageType authorization_type;
   AuthorizeCoinJoin coinjoin_authorization;
+  uint32_t xpub_confirmed_path[XPUB_CONFIRMED_MAX_DEPTH];
+  uint32_t xpub_confirmed_path_count;
+  bool xpubConfirmed;
 } Session;
 
 static void session_clearCache(Session *session);
@@ -434,6 +437,9 @@ void session_clearCache(Session *session) {
   session->authorization_type = 0;
   memzero(&session->coinjoin_authorization,
           sizeof(session->coinjoin_authorization));
+  memzero(session->xpub_confirmed_path, sizeof(session->xpub_confirmed_path));
+  session->xpub_confirmed_path_count = 0;
+  session->xpubConfirmed = false;
 }
 
 void config_lockDevice(void) {
@@ -682,6 +688,33 @@ const AuthorizeCoinJoin *config_getCoinJoinAuthorization(void) {
   }
 
   return &activeSessionCache->coinjoin_authorization;
+}
+
+void config_setXpubExportConfirmed(uint32_t address_n_count,
+                                   const uint32_t *address_n) {
+  if (activeSessionCache == NULL ||
+      address_n_count > XPUB_CONFIRMED_MAX_DEPTH) {
+    return;
+  }
+
+  memzero(activeSessionCache->xpub_confirmed_path,
+          sizeof(activeSessionCache->xpub_confirmed_path));
+  memcpy(activeSessionCache->xpub_confirmed_path, address_n,
+         address_n_count * sizeof(uint32_t));
+  activeSessionCache->xpub_confirmed_path_count = address_n_count;
+  activeSessionCache->xpubConfirmed = true;
+}
+
+bool config_isXpubExportConfirmed(uint32_t address_n_count,
+                                  const uint32_t *address_n) {
+  if (activeSessionCache == NULL || !activeSessionCache->xpubConfirmed ||
+      address_n_count < activeSessionCache->xpub_confirmed_path_count) {
+    return false;
+  }
+
+  return memcmp(activeSessionCache->xpub_confirmed_path, address_n,
+                activeSessionCache->xpub_confirmed_path_count *
+                    sizeof(uint32_t)) == 0;
 }
 
 static bool config_loadNode(const StorageHDNode *node, const char *curve,

@@ -86,6 +86,11 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
     return;
   }
 
+  if (!fsm_checkXpubExport(msg->address_n_count, msg->address_n)) {
+    layoutHome();
+    return;
+  }
+
   const char *curve = coin->curve_name;
   uint32_t fingerprint;
   HDNode *node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count,

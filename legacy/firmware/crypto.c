@@ -1090,3 +1090,38 @@ bool descriptor_format(InputScriptType script_type, uint32_t root_fingerprint,
   memzero(dest, dest_size);
   return false;
 }
+
+// Exported xpubs may be broken by a quantum computer, revealing the private
+// key of the node and of its whole subtree.
+bool xpub_export_restricted(uint32_t address_n_count,
+                            const uint32_t *address_n) {
+  // Never export xpubs from subtrees which derive secrets from private keys:
+  // SLIP-15, SLIP-16 and BIP-85.
+  static const uint32_t denied_purposes[] = {
+      PATH_HARDENED | 10015,
+      PATH_HARDENED | 10016,
+      PATH_HARDENED | 83696968,
+  };
+  if (address_n_count > 0) {
+    for (size_t i = 0; i < sizeof(denied_purposes) / sizeof(*denied_purposes);
+         i++) {
+      if (address_n[0] == denied_purposes[i]) {
+        return true;
+      }
+    }
+  }
+
+  // Subtrees used by third parties despite being shallower than
+  // XPUB_EXPORT_MIN_DEPTH: root fingerprint (trezorlib), Casa / BIP-45
+  // multisig and Electrum wallet file encryption.
+  if (address_n_count >= 1 && (address_n[0] == (PATH_HARDENED | 0) ||
+                               address_n[0] == (PATH_HARDENED | 45))) {
+    return false;
+  }
+  if (address_n_count >= 2 && address_n[0] == (PATH_HARDENED | 4541509) &&
+      address_n[1] == (PATH_HARDENED | 1112098098)) {
+    return false;
+  }
+
+  return address_n_count < XPUB_EXPORT_MIN_DEPTH;
+}

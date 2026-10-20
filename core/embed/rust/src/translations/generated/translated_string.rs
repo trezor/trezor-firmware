@@ -1691,6 +1691,7 @@ pub enum TranslatedString {
     tutorial__title_middle_button = 1309,  // {"Bolt": "", "Caesar": "Middle button", "Delizia": "", "Eckhart": ""}
     tutorial__title_remember = 1310,  // {"Bolt": "", "Caesar": "Remember", "Delizia": "", "Eckhart": ""}
     tutorial__title_welcome = 1311,  // {"Bolt": "", "Caesar": "Welcome to Trezor", "Delizia": "", "Eckhart": ""}
+    address__xpub_export_warning = 1312,  // "Exporting this public key may expose all keys derived from it."
 }
 
 impl TranslatedString {
@@ -3010,6 +3011,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4327,6 +4329,7 @@ impl TranslatedString {
                 19030,
                 19030,
                 19030,
+                19092,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5643,6 +5646,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6960,6 +6964,7 @@ impl TranslatedString {
                 19030,
                 19030,
                 19030,
+                19092,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8276,6 +8281,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9593,6 +9599,7 @@ impl TranslatedString {
                 19030,
                 19030,
                 19030,
+                19092,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10909,6 +10916,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12226,6 +12234,7 @@ impl TranslatedString {
                 19030,
                 19030,
                 19030,
+                19092,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13543,6 +13552,7 @@ impl TranslatedString {
                 "Middle button",
                 "Remember",
                 "Welcome to Trezor",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14860,6 +14870,7 @@ impl TranslatedString {
                 17158,
                 17166,
                 17183,
+                17245,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16176,6 +16187,7 @@ impl TranslatedString {
                 "Middle button",
                 "Remember",
                 "Welcome to Trezor",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17493,6 +17505,7 @@ impl TranslatedString {
                 17158,
                 17166,
                 17183,
+                17245,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18809,6 +18822,7 @@ impl TranslatedString {
                 "Middle button",
                 "Remember",
                 "Welcome to Trezor",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -20126,6 +20140,7 @@ impl TranslatedString {
                 17158,
                 17166,
                 17183,
+                17245,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21442,6 +21457,7 @@ impl TranslatedString {
                 "Middle button",
                 "Remember",
                 "Welcome to Trezor",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22759,6 +22775,7 @@ impl TranslatedString {
                 17158,
                 17166,
                 17183,
+                17245,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -24076,6 +24093,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25393,6 +25411,7 @@ impl TranslatedString {
                 18873,
                 18873,
                 18873,
+                18935,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26709,6 +26728,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -28026,6 +28046,7 @@ impl TranslatedString {
                 18873,
                 18873,
                 18873,
+                18935,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29342,6 +29363,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30659,6 +30681,7 @@ impl TranslatedString {
                 18873,
                 18873,
                 18873,
+                18935,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31975,6 +31998,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -33292,6 +33316,7 @@ impl TranslatedString {
                 18873,
                 18873,
                 18873,
+                18935,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -34609,6 +34634,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -35926,6 +35952,7 @@ impl TranslatedString {
                 20338,
                 20338,
                 20338,
+                20400,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37242,6 +37269,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -38559,6 +38587,7 @@ impl TranslatedString {
                 20338,
                 20338,
                 20338,
+                20400,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39875,6 +39904,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -41192,6 +41222,7 @@ impl TranslatedString {
                 20338,
                 20338,
                 20338,
+                20400,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42508,6 +42539,7 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Exporting this public key may expose all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -43825,6 +43857,7 @@ impl TranslatedString {
                 20338,
                 20338,
                 20338,
+                20400,
             ];
 
         }
@@ -43857,6 +43890,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_address__title_yours, Self::address__title_yours),
         (Qstr::MP_QSTR_address__warning_not_yours, Self::address__warning_not_yours),
         (Qstr::MP_QSTR_address__xpub, Self::address__xpub),
+        (Qstr::MP_QSTR_address__xpub_export_warning, Self::address__xpub_export_warning),
         (Qstr::MP_QSTR_address_details__account_info, Self::address_details__account_info),
         (Qstr::MP_QSTR_address_details__derivation_path, Self::address_details__derivation_path),
         (Qstr::MP_QSTR_address_details__title_receive_address, Self::address_details__title_receive_address),

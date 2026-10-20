@@ -61,6 +61,7 @@
       "Delizia": "",
       "Eckhart": "This is NOT your address"
     },
+    "address__xpub_export_warning": "Exporting this public key may expose all keys derived from it.",
     "address__xpub": {
       "Bolt": "XPUB",
       "Caesar": "XPUB",

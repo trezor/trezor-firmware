@@ -4,6 +4,26 @@ from typing import TYPE_CHECKING
 HARDENED = const(0x8000_0000)
 SLIP25_PURPOSE = const(10025 | HARDENED)
 
+# Exported xpubs may be broken by a quantum computer, revealing the private key
+# of the node and of its whole subtree. Never export xpubs from subtrees which
+# derive secrets from private keys: SLIP-15, SLIP-16 and BIP-85.
+_XPUB_EXPORT_DENIED_PURPOSES = (
+    10015 | HARDENED,
+    10016 | HARDENED,
+    83696968 | HARDENED,
+)
+# Subtrees used by third parties despite being shallower than
+# _XPUB_EXPORT_MIN_DEPTH: root fingerprint (trezorlib), Casa / BIP-45 multisig
+# and Electrum wallet file encryption.
+_XPUB_EXPORT_ALLOWED_PREFIXES = (
+    [0 | HARDENED],
+    [45 | HARDENED],
+    [4541509 | HARDENED, 1112098098 | HARDENED],
+)
+_XPUB_EXPORT_MIN_DEPTH = const(3)
+# Maximum depth of a confirmed restricted xpub remembered in the session cache.
+_XPUB_EXPORT_CONFIRMED_MAX_DEPTH = const(8)
+
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Callable, Collection, Container, Iterable, Sequence
@@ -346,6 +366,52 @@ async def show_path_warning(path: Bip32Path) -> None:
     from trezor.ui.layouts import confirm_path_warning
 
     await confirm_path_warning(address_n_to_str(path))
+
+
+def is_xpub_export_restricted(path: Bip32Path) -> bool:
+    if path and path[0] in _XPUB_EXPORT_DENIED_PURPOSES:
+        return True
+    for prefix in _XPUB_EXPORT_ALLOWED_PREFIXES:
+        if path[: len(prefix)] == prefix:
+            return False
+    return len(path) < _XPUB_EXPORT_MIN_DEPTH
+
+
+async def validate_xpub_export(path: Bip32Path) -> None:
+    """Forbid exporting a restricted xpub, unless the user confirms it with
+    safety checks disabled. Once confirmed, the node and its whole subtree
+    require no further confirmation in the current session."""
+    from storage.cache_common import APP_COMMON_XPUB_EXPORT_CONFIRMED
+    from trezor import TR
+    from trezor.ui.layouts import confirm_path_warning
+    from trezor.wire import context
+
+    from apps.common import safety_checks
+    from apps.common.keychain import ForbiddenKeyPath
+
+    if not is_xpub_export_restricted(path):
+        return
+    if safety_checks.is_strict():
+        raise ForbiddenKeyPath()
+
+    confirmed = context.cache_get(APP_COMMON_XPUB_EXPORT_CONFIRMED)
+    if confirmed is not None:
+        prefix = [
+            int.from_bytes(confirmed[i : i + 4], "big")
+            for i in range(0, len(confirmed), 4)
+        ]
+        if path[: len(prefix)] == prefix:
+            return
+
+    await confirm_path_warning(
+        address_n_to_str(path), description=TR.address__xpub_export_warning
+    )
+
+    if len(path) <= _XPUB_EXPORT_CONFIRMED_MAX_DEPTH:
+        context.cache_set(
+            APP_COMMON_XPUB_EXPORT_CONFIRMED,
+            b"".join(i.to_bytes(4, "big") for i in path),
+        )
 
 
 def is_hardened(i: int) -> bool:

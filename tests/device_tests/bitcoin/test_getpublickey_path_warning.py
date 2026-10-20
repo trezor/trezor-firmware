@@ -42,8 +42,9 @@ VECTORS_SILENT = (  # path, script_type
 VECTORS_WARN = (  # path, script_type
     # One level deeper is neither the deepest hardened prefix nor the account
     pytest.param("m/45h/0", IST.SPENDADDRESS, id="below_casa"),
-    # A pattern with no hardened component has no export point
-    pytest.param("m/1", IST.SPENDADDRESS, id="unhardened"),
+    # A pattern with no hardened component has no export point (paths shorter
+    # than 3 levels are restricted, see test_getpublickey_restricted.py)
+    pytest.param("m/1/2/3", IST.SPENDADDRESS, id="unhardened"),
 )
 
 

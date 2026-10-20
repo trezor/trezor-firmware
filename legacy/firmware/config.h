@@ -108,6 +108,13 @@ bool config_setCoinJoinAuthorization(const AuthorizeCoinJoin *authorization);
 MessageType config_getAuthorizationType(void);
 const AuthorizeCoinJoin *config_getCoinJoinAuthorization(void);
 
+// Maximum depth of a confirmed restricted xpub remembered in the session.
+#define XPUB_CONFIRMED_MAX_DEPTH 8
+void config_setXpubExportConfirmed(uint32_t address_n_count,
+                                   const uint32_t *address_n);
+bool config_isXpubExportConfirmed(uint32_t address_n_count,
+                                  const uint32_t *address_n);
+
 bool config_getU2FRoot(HDNode *node);
 bool config_getRootNode(HDNode *node, const char *curve);
 

@@ -178,8 +178,13 @@ async def prompt_backup() -> bool:
 def confirm_path_warning(
     path: str,
     path_type: str | None = None,
+    description: str | None = None,
 ) -> Awaitable[None]:
-    title = f"{TR.words__unknown} {path_type if path_type else 'path'}"
+    if description is None:
+        title = f"{TR.words__unknown} {path_type if path_type else 'path'}"
+    else:
+        title = TR.words__warning
+        path = f"{description}\n{path}"
     return _placeholder_confirm(
         "path_warning",
         title,

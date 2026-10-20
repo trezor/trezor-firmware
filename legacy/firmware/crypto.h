@@ -40,6 +40,8 @@
 // use and still allow to quickly brute-force the correct bip32 path.
 #define PATH_MAX_ADDRESS_INDEX 1000000
 #define PATH_SLIP25_PURPOSE (PATH_HARDENED | 10025)
+// Minimum depth of an exported xpub, unless allowed by xpub_export_restricted
+#define XPUB_EXPORT_MIN_DEPTH 3
 
 // The number of bip32 levels used in a wallet (chain and address)
 #define BIP32_WALLET_DEPTH 2
@@ -109,6 +111,9 @@ bool cryptoCosiVerify(const ed25519_signature signature, const uint8_t *message,
 bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
                      uint32_t address_n_count, const uint32_t *address_n,
                      bool has_multisig, PathSchema unlock, bool full_check);
+
+bool xpub_export_restricted(uint32_t address_n_count,
+                            const uint32_t *address_n);
 
 bool is_multisig_input_script_type(InputScriptType script_type);
 bool is_multisig_output_script_type(OutputScriptType script_type);

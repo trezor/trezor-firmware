@@ -501,6 +501,34 @@ bool fsm_layoutPathWarning(void) {
   return true;
 }
 
+bool fsm_checkXpubExport(uint32_t address_n_count, const uint32_t *address_n) {
+  if (!xpub_export_restricted(address_n_count, address_n)) {
+    return true;
+  }
+
+  if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+    return false;
+  }
+
+  // Once a node is confirmed, its whole subtree requires no confirmation.
+  if (config_isXpubExportConfirmed(address_n_count, address_n)) {
+    return true;
+  }
+
+  layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
+                    _("Exporting this public"), _("key may expose all"),
+                    _("keys derived from it."), _("Continue at your"),
+                    _("own risk!"), NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_UnknownDerivationPath,
+                     false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    return false;
+  }
+  config_setXpubExportConfirmed(address_n_count, address_n);
+  return true;
+}
+
 bool fsm_layoutDifferentPathsWarning(void) {
   layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
                     _("Using different paths"), _("for different XPUBs."), NULL,

@@ -30,6 +30,7 @@ class SessionCache(DataCache):
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
                 32,  # APP_COMMON_NONCE
+                4 * 8,  # APP_COMMON_XPUB_EXPORT_CONFIRMED
             )
         else:
             self.fields = (
@@ -37,6 +38,7 @@ class SessionCache(DataCache):
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
                 32,  # APP_COMMON_NONCE
+                4 * 8,  # APP_COMMON_XPUB_EXPORT_CONFIRMED
                 0,  # APP_COMMON_DERIVE_CARDANO
                 96,  # APP_CARDANO_ICARUS_SECRET
                 96,  # APP_CARDANO_ICARUS_TREZOR_SECRET

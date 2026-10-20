@@ -56,6 +56,11 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
     }
   }
 
+  if (!fsm_checkXpubExport(msg->address_n_count, msg->address_n)) {
+    layoutHome();
+    return;
+  }
+
   // Make sure we never display the temporary XPUB to the user.
   if (seed != NULL && msg->show_display) {
     fsm_sendFailure(FailureType_Failure_DataError,
