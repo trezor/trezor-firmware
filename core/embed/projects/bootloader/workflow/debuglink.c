@@ -188,7 +188,8 @@ debuglink_result_t debuglink_process(void) {
         res = debuglink_process_record_screen(&g_debug_io);
         break;
       default:
-        send_msg_success(&g_debug_io, "success");
+        send_msg_failure(&g_debug_io, FailureType_Failure_UnexpectedMessage,
+                         "Unexpected message");
         break;
     }
   }
