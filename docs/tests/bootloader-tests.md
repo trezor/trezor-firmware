@@ -48,6 +48,13 @@ Finish with `bootloader.wait_exit()` for a run that ends by itself, or
 device. Both return an `ExitRecord` with `kind`, `bootargs` and
 `storage_erased`.
 
+Firmware images come from `bootloader_tests/images.py`: `make_firmware(model,
+vendor=..., version=...)` builds a dev-key signed image with filler code for
+any model, vendor trust level and version. The emulator never runs firmware,
+it only verifies it, so that is enough for the install, upgrade and boot
+flows. The suite therefore needs a bootloader built with the development
+keys (`BOOTLOADER_DEVEL=1`).
+
 The bootloader emulator prints its flash layout with `-p` and takes a boot
 command from a file with `-B`; `BootArgs.wipe(...)`, `BootArgs.show_rsod(...)`
 and friends build such files.
