@@ -1457,22 +1457,10 @@ extern "C" fn new_show_notice(_n_args: usize, _args: *const Obj, _kwargs: *mut M
 #[cfg(feature = "app_loading")]
 extern "C" fn new_encode_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
-
         // Say what the person did, rather than naming the button that did it.
         // Only the layout's final answer goes back: its menu and extras stay
-        // in core.
-        //
-        // WIP: chunk paging (`Forward`, `Backward`, `ConfirmedAll`) needs the
-        // request to carry the chunk's offset and the total length, so a
-        // screen can tell it is at an edge. No extapp screen returns `BACK`.
-        let msg = if obj == CONFIRMED.as_obj() {
-            TrezorUiResult::Confirmed
-        } else if obj == CANCELLED.as_obj() {
-            TrezorUiResult::Cancelled
-        } else {
-            return Err(Error::TypeError);
-        };
+        // in core. Which answers those are is `result.rs`'s to say.
+        let msg: TrezorUiResult = kwargs.get(Qstr::MP_QSTR_result)?.try_into()?;
 
         let bytes = crate::util::archive::to_bytes_obj(&msg)?;
 
