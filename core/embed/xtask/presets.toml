@@ -12,6 +12,9 @@
 # Build defaults (applied to all builds as a base layer)
 
 [[defaults]]
+tropic-rev = "acab"
+
+[[defaults]]
 when = { emulator = true }
 dbg-console = "swo" # required by prodtest test
 debug = true

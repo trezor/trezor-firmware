@@ -130,6 +130,7 @@ fn resolve_sources(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::args::TropicRev;
 
     fn args() -> BuildArgs {
         BuildArgs {
@@ -312,5 +313,19 @@ mod tests {
 
         let options = resolve_sources(&shared, &user, &build_args).unwrap();
         assert_eq!(options.pyopt, Some(false));
+    }
+
+    #[test]
+    fn shared_defaults_select_acab() {
+        // Trezor Bench lists ABAB first, so its ACAB default comes from presets.toml.
+        let shared =
+            PresetsFile::load(&helpers::workspace_dir().unwrap().join("xtask/presets.toml"))
+                .unwrap();
+        let mut build_args = args();
+        build_args.preset = None;
+        build_args.emulator = false;
+
+        let options = resolve_sources(&shared, &PresetsFile::default(), &build_args).unwrap();
+        assert_eq!(options.tropic_rev, Some(TropicRev::Acab));
     }
 }

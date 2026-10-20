@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Args;
 use serde::Deserialize;
 
-use crate::args::{BuildArgs, ConsoleType, LogLevel, Model, Project};
+use crate::args::{BuildArgs, ConsoleType, LogLevel, Model, Project, TropicRev};
 use crate::presets;
 
 /// How an option's `Option<T>` value from the defaults/presets/CLI layers is
@@ -30,6 +30,14 @@ impl ResolveValue for ConsoleType {
 
 impl ResolveValue for LogLevel {
     type Resolved = LogLevel;
+    fn resolve(value: Option<Self>) -> Self::Resolved {
+        value.unwrap_or_default()
+    }
+}
+
+/// Unset resolves to [`TropicRev::Acab`].
+impl ResolveValue for TropicRev {
+    type Resolved = TropicRev;
     fn resolve(value: Option<Self>) -> Self::Resolved {
         value.unwrap_or_default()
     }
@@ -268,6 +276,10 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     opt disable_tropic: bool,
 
+    /// TROPIC silicon revision to build for
+    #[arg(long)]
+    map tropic_rev: TropicRev,
+
     /// Enable insecure storage test mode
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map storage_insecure_testing_mode: bool,
@@ -379,6 +391,25 @@ pub struct LogLevelMap {
     pub debug: Vec<String>,
 }
 
+impl MapValue for TropicRev {
+    type Map = TropicRevMap;
+    fn select(map: &Self::Map, value: Self) -> &[String] {
+        match value {
+            TropicRev::Abab => &map.abab,
+            TropicRev::Acab => &map.acab,
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
+#[serde(deny_unknown_fields, rename_all = "kebab-case")]
+pub struct TropicRevMap {
+    #[serde(default)]
+    pub abab: Vec<String>,
+    #[serde(default)]
+    pub acab: Vec<String>,
+}
+
 /// A feature selected from the `[build-options]` table, together with the
 /// option that activated it (for error reporting).
 pub struct ActivatedFeature {
@@ -444,6 +475,12 @@ mod tests {
     #[test]
     fn rejects_unknown_console_types() {
         let result: Result<OptionsMap, _> = toml::from_str(r#"dbg-console = { uart = ["x"] }"#);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn rejects_unknown_tropic_revisions() {
+        let result: Result<OptionsMap, _> = toml::from_str(r#"tropic-rev = { abba = ["x"] }"#);
         assert!(result.is_err());
     }
 }
