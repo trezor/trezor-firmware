@@ -148,7 +148,8 @@ static debuglink_result_t debuglink_process_record_screen(protob_io_t *io) {
   size_t dir_len = strnlen(buffer, sizeof(buffer));
 
   if (dir_len > 0) {
-    display_record_start((uint8_t *)buffer, dir_len, 0);
+    display_record_start((uint8_t *)buffer, dir_len,
+                         msg.has_refresh_index ? msg.refresh_index : 0);
     res = DEBUGLINK_RESULT_REPAINT;
   } else {
     display_record_stop();
