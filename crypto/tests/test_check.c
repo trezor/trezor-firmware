@@ -12139,14 +12139,8 @@ static void test_noise_xxpsk3_handshake(uint32_t seed,
   curve25519_scalarmult_basepoint(initiator_public_key, initiator_private_key);
   curve25519_scalarmult_basepoint(responder_public_key, responder_private_key);
 
-  ck_assert_int_eq(
-      noise_xxpsk3_initiator_init(initiator, psk, initiator_private_key,
-                                  initiator_public_key),
-      true);
-  ck_assert_int_eq(
-      noise_xxpsk3_responder_init(responder, psk, responder_private_key,
-                                  responder_public_key),
-      true);
+  ck_assert_int_eq(noise_xxpsk3_initiator_init(initiator), true);
+  ck_assert_int_eq(noise_xxpsk3_responder_init(responder), true);
 
   uint8_t request1[256] = {0}, response1[256] = {0}, request2[256] = {0};
   size_t request1_size = 0, response1_size = 0, request2_size = 0;
@@ -12165,10 +12159,10 @@ static void test_noise_xxpsk3_handshake(uint32_t seed,
 
   // response1 = ephemeral_public_key[32] + encrypted_static_public_key[48] +
   //             encrypted_payload[0 + 16]
-  ck_assert_int_eq(
-      noise_xxpsk3_responder_create_response1(
-          responder, NULL, 0, response1, sizeof(response1), &response1_size),
-      true);
+  ck_assert_int_eq(noise_xxpsk3_responder_create_response1(
+                       responder, responder_private_key, responder_public_key,
+                       NULL, 0, response1, sizeof(response1), &response1_size),
+                   true);
   ck_assert_int_eq(response1_size, 32 + 48 + 16);
   ck_assert_int_eq(noise_xxpsk3_initiator_handle_response1(
                        initiator, response1, response1_size,
@@ -12179,12 +12173,13 @@ static void test_noise_xxpsk3_handshake(uint32_t seed,
 
   // request2 = encrypted_static_public_key[48] + encrypted_payload[0 + 16]
   ck_assert_int_eq(
-      noise_xxpsk3_initiator_create_request2(initiator, NULL, 0, request2,
-                                             sizeof(request2), &request2_size),
+      noise_xxpsk3_initiator_create_request2(
+          initiator, initiator_private_key, initiator_public_key, psk, NULL, 0,
+          request2, sizeof(request2), &request2_size),
       true);
   ck_assert_int_eq(request2_size, 48 + 16);
   ck_assert_int_eq(noise_xxpsk3_responder_handle_request2(
-                       responder, request2, request2_size,
+                       responder, psk, request2, request2_size,
                        received_initiator_public_key, NULL, 0, NULL),
                    true);
   ck_assert_mem_eq(received_initiator_public_key, initiator_public_key,
@@ -12284,15 +12279,10 @@ START_TEST(test_noise_xxpsk3) {
                    NOISE_XXPSK3_HASHLEN);
 
   // --- Double-init should fail ---
-  // The arguments are irrelevant, an already initialized structure is rejected
-  // before they are looked at
-  uint8_t unused_key[32] = {0};
-  ret = noise_xxpsk3_initiator_init(&initiator, unused_key, unused_key,
-                                    unused_key);
+  ret = noise_xxpsk3_initiator_init(&initiator);
   ck_assert_int_eq(ret, false);
 
-  ret = noise_xxpsk3_responder_init(&responder, unused_key, unused_key,
-                                    unused_key);
+  ret = noise_xxpsk3_responder_init(&responder);
   ck_assert_int_eq(ret, false);
 
   // Cleanup
@@ -12319,18 +12309,10 @@ START_TEST(test_noise_xxpsk3_limits) {
   bool ret = false;
 
   // --- Handshake message size limit ---
-  // Any static key pair will do, the calls below are rejected on the length
-  // before any key is used
   random_reseed(2748932008);
-  uint8_t psk[32] = "this_is_a_32byte_preshared_key!!";
-  uint8_t static_private_key[32] = {0};
-  uint8_t static_public_key[32] = {0};
-  random_buffer(static_private_key, sizeof(static_private_key));
-  curve25519_scalarmult_basepoint(static_public_key, static_private_key);
 
   // request1 = ephemeral_public_key[32] + encrypted_payload[payload + 16]
-  ret = noise_xxpsk3_initiator_init(&initiator, psk, static_private_key,
-                                    static_public_key);
+  ret = noise_xxpsk3_initiator_init(&initiator);
   ck_assert_int_eq(ret, true);
   ret = noise_xxpsk3_initiator_create_request1(
       &initiator, payload_buf, NOISE_XXPSK3_MAX_MESSAGE_SIZE - (32 + 16) + 1,
@@ -12339,8 +12321,7 @@ START_TEST(test_noise_xxpsk3_limits) {
   // A rejected call deinitializes the initiator
   ck_assert_int_eq(initiator.initialized, false);
 
-  ret = noise_xxpsk3_responder_init(&responder, psk, static_private_key,
-                                    static_public_key);
+  ret = noise_xxpsk3_responder_init(&responder);
   ck_assert_int_eq(ret, true);
   // The sentinel shows that the message was rejected for its size before it was
   // decrypted, a failed tag verification would have wiped the output buffer
@@ -12547,11 +12528,9 @@ START_TEST(test_noise_xxpsk3_vectors) {
     noise_xxpsk3_responder_t responder = {0};
     bool ret;
 
-    ret = noise_xxpsk3_initiator_init(&initiator, psk, initiator_private_key,
-                                      initiator_public_key);
+    ret = noise_xxpsk3_initiator_init(&initiator);
     ck_assert_int_eq(ret, true);
-    ret = noise_xxpsk3_responder_init(&responder, psk, responder_private_key,
-                                      responder_public_key);
+    ret = noise_xxpsk3_responder_init(&responder);
     ck_assert_int_eq(ret, true);
 
     uint8_t req1[512] = {0};
@@ -12573,7 +12552,8 @@ START_TEST(test_noise_xxpsk3_vectors) {
     uint8_t rsp1[512] = {0};
     size_t rsp1_size = 0;
     ret = noise_xxpsk3_responder_create_response1(
-        &responder, rsp1_payload, rsp1_plen, rsp1, sizeof(rsp1), &rsp1_size);
+        &responder, responder_private_key, responder_public_key, rsp1_payload,
+        rsp1_plen, rsp1, sizeof(rsp1), &rsp1_size);
     ck_assert_int_eq(ret, true);
     ck_assert_mem_eq(rsp1, fromhex(vectors[v].expected_response1), rsp1_size);
 
@@ -12592,7 +12572,8 @@ START_TEST(test_noise_xxpsk3_vectors) {
     uint8_t req2[512] = {0};
     size_t req2_size = 0;
     ret = noise_xxpsk3_initiator_create_request2(
-        &initiator, req2_payload, req2_plen, req2, sizeof(req2), &req2_size);
+        &initiator, initiator_private_key, initiator_public_key, psk,
+        req2_payload, req2_plen, req2, sizeof(req2), &req2_size);
     ck_assert_int_eq(ret, true);
     ck_assert_mem_eq(req2, fromhex(vectors[v].expected_request2), req2_size);
 
@@ -12600,8 +12581,8 @@ START_TEST(test_noise_xxpsk3_vectors) {
     size_t req2_dec_size = 0;
     uint8_t received_initiator_public_key[32] = {0};
     ret = noise_xxpsk3_responder_handle_request2(
-        &responder, req2, req2_size, received_initiator_public_key, req2_dec,
-        sizeof(req2_dec), &req2_dec_size);
+        &responder, psk, req2, req2_size, received_initiator_public_key,
+        req2_dec, sizeof(req2_dec), &req2_dec_size);
     ck_assert_int_eq(ret, true);
     ck_assert_mem_eq(received_initiator_public_key, initiator_public_key,
                      sizeof(initiator_public_key));
