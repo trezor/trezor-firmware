@@ -350,6 +350,10 @@ class BootloaderEmulator(Emulator):
             raise RuntimeError("Emulator not started, or its run already ended")
         return self._ctx
 
+    @property
+    def running(self) -> bool:
+        return self.process is not None and self.process.poll() is None
+
     def make_args(self) -> list[str]:
         return self.startup.to_args()
 
@@ -369,9 +373,14 @@ class BootloaderEmulator(Emulator):
     def _get_debug_transport(self) -> UdpTransport:
         return UdpTransport(f"127.0.0.1:{self.debug_port}")
 
-    def _wait_until_ready(self, timeout: float = emulator.EMULATOR_WAIT_TIME) -> None:
-        # Probe the debug port: the wire port is polled only on host-facing
-        # screens, the debug port on every screen.
+    def _wait_until_ready(self, timeout: float = emulator.EMULATOR_WAIT_TIME) -> bool:
+        """Wait for the debug port to answer.
+
+        Returns False when the run ended first. That is a legitimate
+        outcome: a boot into trusted firmware takes the bootloader no time
+        at all. The wire port is not probed because it is polled only on
+        host-facing screens.
+        """
         assert self.process is not None, "Emulator not started"
         probe = self._get_debug_transport()
         probe.open()
@@ -382,15 +391,18 @@ class BootloaderEmulator(Emulator):
                 if probe.is_ready():
                     break
                 if self.process.poll() is not None:
-                    raise RuntimeError(
-                        f"Emulator exited prematurely (code {self.process.returncode})"
+                    LOG.info(
+                        "Bootloader emulator ended before answering (code %d)",
+                        self.process.returncode,
                     )
+                    return False
                 if time.monotonic() - start >= timeout:
                     raise TimeoutError("Can't connect to bootloader emulator")
                 time.sleep(0.1)
         finally:
             probe.close()
         LOG.info("Bootloader emulator ready after %.3fs", time.monotonic() - start)
+        return True
 
     def start(self, startup: BootloaderStartup | None = None) -> None:
         if startup is not None:
@@ -412,11 +424,16 @@ class BootloaderEmulator(Emulator):
         self.process = self._launch_process()
         emulator._RUNNING_PIDS.add(self.process)
         try:
-            self._wait_until_ready()
+            ready = self._wait_until_ready()
         except TimeoutError:
             LOG.warning("Bootloader emulator did not come up in time")
             self.process.kill()
             raise
+
+        if not ready:
+            # the run is over; wait_exit() reports how it ended and there is
+            # no client to talk to
+            return
 
         (self.profile_dir / "trezor.pid").write_text(str(self.process.pid) + "\n")
         (self.profile_dir / "trezor.port").write_text(str(self.port) + "\n")
