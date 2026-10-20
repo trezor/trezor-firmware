@@ -2050,9 +2050,9 @@ if not utils.BITCOIN_ONLY:
         with trezorui_api.confirm_summary(
             title=title or TR.words__title_summary,
             amount=display_amount,
-            amount_label=display_amount_label,
+            amount_label=with_colon(display_amount_label),
             fee=display_fee,
-            fee_label=display_fee_label,
+            fee_label=with_colon(display_fee_label),
             account_items=with_colon(account_items),
             account_title=TR.address_details__account_info,
         ) as layout:
