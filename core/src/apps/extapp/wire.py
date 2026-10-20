@@ -50,4 +50,9 @@ async def handle_error(session: Session, msg: IpcMessage) -> None:
 def _forward_ack(session: Session, service: int, ack: ExtAppMessage) -> None:
     if ack.message_id > 0xFFFF:
         session.die(DataError("Invalid message ID."))
-    session.send(service, ack.message_id, ack.data)
+    try:
+        session.send(service, ack.message_id, ack.data)
+    except Exception:
+        # e.g. the message does not fit the app's inbox; the app would keep
+        # waiting for it, so stop the app instead
+        session.die(DataError("Failed to send host message to app"))
