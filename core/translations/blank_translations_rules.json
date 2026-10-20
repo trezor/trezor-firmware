@@ -214,7 +214,8 @@
       "reset__use_your_backup",
       "reset__you_need_one_share",
       "send__title_receiving_to",
-      "wipe_code__wipe_code_mismatch"
+      "wipe_code__wipe_code_mismatch",
+      "words__undelegate"
     ],
     "allowedLayouts": [ "Bolt" ],
     "description": "These are specific to Bolt layout"
@@ -333,6 +334,7 @@
       "joint__to_the_total_amount",
       "joint__you_are_contributing",
       "modify_fee__fee_rate",
+      "modify_fee__title",
       "pin__cursor_will_change",
       "pin__please_check_again",
       "pin__reenter_to_confirm",

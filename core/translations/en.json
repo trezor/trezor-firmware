@@ -1373,7 +1373,12 @@
       "Delizia": "Fee did not change.\n",
       "Eckhart": "Fee did not change"
     },
-    "modify_fee__title": "Modify fee",
+    "modify_fee__title": {
+      "Bolt": "",
+      "Caesar": "Modify fee",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "modify_fee__transaction_fee": {
       "Bolt": "Transaction fee:",
       "Caesar": "Transaction fee:",
@@ -3640,7 +3645,12 @@
       "Delizia": "Try again.",
       "Eckhart": "Try again"
     },
-    "words__undelegate": "Undelegate",
+    "words__undelegate": {
+      "Bolt": "Undelegate",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__unknown": "Unknown",
     "words__unlimited": "Unlimited",
     "words__unlocked": {
