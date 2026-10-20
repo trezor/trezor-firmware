@@ -599,7 +599,7 @@
     "coinjoin__max_rounds": "Max rounds",
     "coinjoin__title": "Authorize coinjoin",
     "coinjoin__title_progress": "Coinjoin in progress...",
-    "coinjoin__waiting_for_others": "Waiting for others",
+    "coinjoin__waiting_for_others": "Waiting for others...",
     "confirm_total__fee_rate": "Fee rate",
     "confirm_total__title_fee": "Fee info",
     "confirm_total__title_sending_from": {
@@ -957,7 +957,7 @@
       "Bolt": "Unknown contract address.",
       "Caesar": "Unknown contract address",
       "Delizia": "Unknown contract address.",
-      "Eckhart": "Unknown token contract address."
+      "Eckhart": "Unknown contract address."
     },
     "ethereum__unknown_token": "Unknown token",
     "ethereum__valid_signature": "The signature is valid.",
@@ -1269,12 +1269,7 @@
       "Eckhart": ""
     },
     "language__change_to_template": "Change language to {0}?",
-    "language__changed": {
-      "Bolt": "Language changed successfully.",
-      "Caesar": "Language changed successfully",
-      "Delizia": "Language changed successfully.",
-      "Eckhart": "Language changed successfully."
-    },
+    "language__changed": "Language changed successfully.",
     "language__progress": "Changing language...",
     "language__title": "Language settings",
     "led__disable": {
@@ -2042,12 +2037,7 @@
     "recovery__type_word_x_of_y_template": "Type word {0} of {1}",
     "recovery__unlock_repeated_backup": "Create additional backup?",
     "recovery__unlock_repeated_backup_verb": "Create backup",
-    "recovery__wallet_recovered": {
-      "Bolt": "Wallet recovery completed.",
-      "Caesar": "Wallet recovery completed",
-      "Delizia": "Wallet recovery completed.",
-      "Eckhart": "Wallet recovery completed."
-    },
+    "recovery__wallet_recovered": "Wallet recovery completed.",
     "recovery__wanna_cancel_dry_run": "Are you sure you want to cancel the backup check?",
     "recovery__wanna_cancel_recovery": "Are you sure you want to cancel the recovery process?",
     "recovery__word_count_template": "({0} words)",
@@ -2753,7 +2743,12 @@
       "Eckhart": ""
     },
     "send__maximum_fee": "Maximum fee",
-    "send__multisig_different_paths": "Using different paths for different XPUBs.",
+    "send__multisig_different_paths": {
+      "Bolt": "Using different paths for different XPUBs.",
+      "Caesar": "Using different paths for different XPUBs",
+      "Delizia": "Using different paths for different XPUBs.",
+      "Eckhart": "Using different paths for different XPUBs."
+    },
     "send__receiving_to_multisig": "Receiving to a multisig address.",
     "send__send_from": "Send from",
     "send__send_in_the_app": {
@@ -2894,7 +2889,7 @@
     "stellar__high": "High",
     "stellar__home_domain": "Home Domain",
     "stellar__inflation": "Inflation",
-    "stellar__invoke_contract": "Invoke Contract",
+    "stellar__invoke_contract": "Invoke contract",
     "stellar__issuer_template": "{0} issuer",
     "stellar__key": "Key",
     "stellar__limit": "Limit",
