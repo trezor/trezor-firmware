@@ -162,7 +162,6 @@ static debuglink_result_t debuglink_process_record_screen(protob_io_t *io) {
 
 debuglink_result_t debuglink_process(void) {
   fw_check_info_t fw = {0};
-  fw_check(&fw);
 
   debuglink_result_t res = DEBUGLINK_RESULT_NONE;
 
@@ -170,9 +169,11 @@ debuglink_result_t debuglink_process(void) {
   if (protob_get_msg_header(&g_debug_io, &msg_id) == sectrue) {
     switch (msg_id) {
       case MessageType_MessageType_Initialize:
+        fw_check(&fw);
         workflow_initialize(&g_debug_io, &fw);
         break;
       case MessageType_MessageType_GetFeatures:
+        fw_check(&fw);
         workflow_get_features(&g_debug_io, &fw);
         break;
       case MessageType_MessageType_Ping:
