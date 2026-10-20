@@ -5,6 +5,10 @@
 #include "ecrypt-sync.h"
 #include "poly1305-donna.h"
 
+#define CHACHA20POLY1305_KEY_SIZE 32
+#define CHACHA20POLY1305_BLOCK_SIZE 64
+#define CHACHA20POLY1305_TAG_SIZE 16
+
 typedef struct {
     ECRYPT_ctx       chacha20;
     poly1305_context poly1305;

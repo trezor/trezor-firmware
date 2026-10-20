@@ -121,7 +121,7 @@ const uint32_t V0_PIN_EMPTY = 1;
 #define HARDWARE_SALT_SIZE SHA256_DIGEST_LENGTH
 
 // The length of the data encryption key in bytes.
-#define DEK_SIZE 32
+#define DEK_SIZE CHACHA20POLY1305_KEY_SIZE
 
 // The length of the storage authentication key in bytes.
 #define SAK_SIZE 16
@@ -135,15 +135,6 @@ const uint32_t V0_PIN_EMPTY = 1;
 
 // The length of the storage authentication tag in bytes.
 #define STORAGE_TAG_SIZE 16
-
-// The length of the Poly1305 authentication tag in bytes.
-#define POLY1305_TAG_SIZE 16
-
-// The length of the ChaCha20 IV (aka nonce) in bytes as per RFC 7539.
-#define CHACHA20_IV_SIZE 12
-
-// The length of the ChaCha20 block in bytes.
-#define CHACHA20_BLOCK_SIZE 64
 
 // The byte length of the salt used in checking the wipe code.
 #define WIPE_CODE_SALT_SIZE 8
@@ -857,7 +848,8 @@ static secbool __wur derive_kek_unlock(
 static secbool set_pin(const uint8_t *pin, size_t pin_len,
                        const uint8_t *ext_salt) {
   // Encrypt the cached keys using the new PIN and set the new PVC.
-  uint8_t buffer[STORAGE_SALT_SIZE + KEYS_SIZE + POLY1305_TAG_SIZE] = {0};
+  uint8_t buffer[STORAGE_SALT_SIZE + KEYS_SIZE + CHACHA20POLY1305_TAG_SIZE] = {
+      0};
   uint8_t *rand_salt = buffer;
   uint8_t *ekeys = buffer + STORAGE_SALT_SIZE;
   uint8_t *pvc = buffer + STORAGE_SALT_SIZE + KEYS_SIZE;
@@ -1125,7 +1117,8 @@ static secbool __wur decrypt_dek(const uint8_t *pin, size_t pin_len,
   }
 
   uint8_t keys[KEYS_SIZE] = {0};
-  uint8_t tag[POLY1305_TAG_SIZE] __attribute__((aligned(sizeof(uint32_t))));
+  uint8_t tag[CHACHA20POLY1305_TAG_SIZE]
+      __attribute__((aligned(sizeof(uint32_t))));
   chacha20poly1305_ctx ctx = {0};
 
   // Decrypt the data encryption key and the storage authentication key and
@@ -1396,11 +1389,11 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
     return secfalse;
   }
 
-  if (*len < CHACHA20_IV_SIZE + POLY1305_TAG_SIZE) {
+  if (*len < RFC7539_NONCE_SIZE + CHACHA20POLY1305_TAG_SIZE) {
     handle_fault("ciphertext length check");
     return secfalse;
   }
-  *len -= CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
+  *len -= RFC7539_NONCE_SIZE + CHACHA20POLY1305_TAG_SIZE;
 
   if (val_dest == NULL) {
     return sectrue;
@@ -1412,9 +1405,9 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
 
   const uint8_t *iv = (const uint8_t *)val_stored;
   const uint8_t *tag_stored =
-      (const uint8_t *)val_stored + CHACHA20_IV_SIZE + *len;
-  const uint8_t *ciphertext = (const uint8_t *)val_stored + CHACHA20_IV_SIZE;
-  uint8_t tag_computed[POLY1305_TAG_SIZE] = {0};
+      (const uint8_t *)val_stored + RFC7539_NONCE_SIZE + *len;
+  const uint8_t *ciphertext = (const uint8_t *)val_stored + RFC7539_NONCE_SIZE;
+  uint8_t tag_computed[CHACHA20POLY1305_TAG_SIZE] = {0};
   chacha20poly1305_ctx ctx = {0};
   rfc7539_init(&ctx, cached_dek, iv);
   rfc7539_auth(&ctx, (const uint8_t *)&key, sizeof(key));
@@ -1423,7 +1416,8 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
   memzero(&ctx, sizeof(ctx));
 
   // Verify authentication tag.
-  if (secequal(tag_computed, tag_stored, POLY1305_TAG_SIZE) != sectrue) {
+  if (secequal(tag_computed, tag_stored, CHACHA20POLY1305_TAG_SIZE) !=
+      sectrue) {
     memzero(val_dest, max_len);
     memzero(tag_computed, sizeof(tag_computed));
     handle_fault("authentication tag check");
@@ -1489,21 +1483,22 @@ end:
  */
 static secbool storage_set_encrypted(const uint16_t key, const void *val,
                                      const uint16_t len) {
-  if (len > UINT16_MAX - CHACHA20_IV_SIZE - POLY1305_TAG_SIZE) {
+  if (len > UINT16_MAX - RFC7539_NONCE_SIZE - CHACHA20POLY1305_TAG_SIZE) {
     return secfalse;
   }
 
   // Preallocate space on the flash storage.
   if (sectrue !=
-      auth_set(key, NULL, CHACHA20_IV_SIZE + POLY1305_TAG_SIZE + len)) {
+      auth_set(key, NULL,
+               RFC7539_NONCE_SIZE + CHACHA20POLY1305_TAG_SIZE + len)) {
     return secfalse;
   }
 
   // Write the IV to the flash.
-  uint8_t buffer[CHACHA20_BLOCK_SIZE] = {0};
-  rng_fill_buffer(buffer, CHACHA20_IV_SIZE);
+  uint8_t buffer[CHACHA20POLY1305_BLOCK_SIZE] = {0};
+  rng_fill_buffer(buffer, RFC7539_NONCE_SIZE);
 
-  if (sectrue != norcow_update_bytes(key, buffer, CHACHA20_IV_SIZE)) {
+  if (sectrue != norcow_update_bytes(key, buffer, RFC7539_NONCE_SIZE)) {
     return secfalse;
   }
   // Encrypt all blocks except for the last one.
@@ -1511,10 +1506,12 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
   rfc7539_init(&ctx, cached_dek, buffer);
   rfc7539_auth(&ctx, (const uint8_t *)&key, sizeof(key));
   size_t i = 0;
-  for (i = 0; i + CHACHA20_BLOCK_SIZE < len; i += CHACHA20_BLOCK_SIZE) {
+  for (i = 0; i + CHACHA20POLY1305_BLOCK_SIZE < len;
+       i += CHACHA20POLY1305_BLOCK_SIZE) {
     chacha20poly1305_encrypt(&ctx, ((const uint8_t *)val) + i, buffer,
-                             CHACHA20_BLOCK_SIZE);
-    if (sectrue != norcow_update_bytes(key, buffer, CHACHA20_BLOCK_SIZE)) {
+                             CHACHA20POLY1305_BLOCK_SIZE);
+    if (sectrue !=
+        norcow_update_bytes(key, buffer, CHACHA20POLY1305_BLOCK_SIZE)) {
       memzero(&ctx, sizeof(ctx));
       memzero(buffer, sizeof(buffer));
       return secfalse;
@@ -1526,7 +1523,7 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
   secbool ret = norcow_update_bytes(key, buffer, len - i);
   if (sectrue == ret) {
     rfc7539_finish(&ctx, sizeof(key), len, buffer);
-    ret = norcow_update_bytes(key, buffer, POLY1305_TAG_SIZE);
+    ret = norcow_update_bytes(key, buffer, CHACHA20POLY1305_TAG_SIZE);
   }
   memzero(&ctx, sizeof(ctx));
   memzero(buffer, sizeof(buffer));
@@ -2025,15 +2022,16 @@ static secbool storage_upgrade(void) {
       if (((app & FLAG_PUBLIC) == 0) &&
           (app != APP_STORAGE || key == VERSION_KEY)) {
         const uint8_t *iv = (const uint8_t *)val;
-        const uint8_t *tag = (const uint8_t *)val + CHACHA20_IV_SIZE;
-        const uint8_t *ciphertext =
-            (const uint8_t *)val + CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
+        const uint8_t *tag = (const uint8_t *)val + RFC7539_NONCE_SIZE;
+        const uint8_t *ciphertext = (const uint8_t *)val + RFC7539_NONCE_SIZE +
+                                    CHACHA20POLY1305_TAG_SIZE;
         const size_t ciphertext_len =
-            len - CHACHA20_IV_SIZE - POLY1305_TAG_SIZE;
+            len - RFC7539_NONCE_SIZE - CHACHA20POLY1305_TAG_SIZE;
         if (sectrue != norcow_set(key, NULL, len) ||
-            sectrue != norcow_update_bytes(key, iv, CHACHA20_IV_SIZE) ||
+            sectrue != norcow_update_bytes(key, iv, RFC7539_NONCE_SIZE) ||
             sectrue != norcow_update_bytes(key, ciphertext, ciphertext_len) ||
-            sectrue != norcow_update_bytes(key, tag, POLY1305_TAG_SIZE)) {
+            sectrue !=
+                norcow_update_bytes(key, tag, CHACHA20POLY1305_TAG_SIZE)) {
           return secfalse;
         }
       } else {

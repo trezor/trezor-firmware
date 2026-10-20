@@ -18,7 +18,7 @@ def encrypt(
     """
     from trezor.crypto import random
 
-    nonce = random.bytes(12)
+    nonce = random.bytes(chacha20poly1305_encrypt.nonce_size)
     cipher = chacha20poly1305_encrypt(key, nonce)
     if associated_data:
         cipher.auth(associated_data)
@@ -40,7 +40,8 @@ def _decrypt(
     cipher = chacha20poly1305_decrypt(key, iv)
     if associated_data:
         cipher.auth(associated_data)
-    exp_tag, ciphertext = ciphertext[-16:], ciphertext[:-16]
+    tag_size = chacha20poly1305_decrypt.tag_size
+    exp_tag, ciphertext = ciphertext[-tag_size:], ciphertext[:-tag_size]
     plaintext = cipher.decrypt(ciphertext)
     try:
         cipher.finish(exp_tag)

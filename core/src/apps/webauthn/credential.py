@@ -175,7 +175,7 @@ class Fido2Credential(Credential):
         key = seed.derive_slip21_node_without_passphrase(
             [b"SLIP-0022", _CRED_ID_VERSION, b"Encryption key"]
         ).key()
-        iv = random.bytes(12)
+        iv = random.bytes(chacha20poly1305_encrypt.nonce_size)
         ctx = chacha20poly1305_encrypt(key, iv)
         ctx.auth(self.rp_id_hash)
         ciphertext = ctx.encrypt(cbor.encode(data))
@@ -195,9 +195,10 @@ class Fido2Credential(Credential):
         key = seed.derive_slip21_node_without_passphrase(
             [b"SLIP-0022", cred_id[0:4], b"Encryption key"]
         ).key()
-        iv = cred_id[4:16]
-        ciphertext = cred_id[16:-16]
-        tag = cred_id[-16:]
+        iv_end = len(_CRED_ID_VERSION) + chacha20poly1305_decrypt.nonce_size
+        iv = cred_id[len(_CRED_ID_VERSION) : iv_end]
+        ciphertext = cred_id[iv_end : -chacha20poly1305_decrypt.tag_size]
+        tag = cred_id[-chacha20poly1305_decrypt.tag_size :]
 
         if rp_id_hash is None:
             ctx = chacha20poly1305_decrypt(key, iv)

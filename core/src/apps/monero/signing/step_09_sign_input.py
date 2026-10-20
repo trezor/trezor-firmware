@@ -229,7 +229,7 @@ def _protect_signature(state: State, mg_buffer: list[bytes]) -> list[bytes]:
 
     nonce = offloading_keys.key_signature(
         state.opening_key, state.current_input_index, True
-    )[:12]
+    )[: chacha20poly1305_encrypt.nonce_size]
 
     key = offloading_keys.key_signature(
         state.opening_key, state.current_input_index, False
@@ -240,7 +240,7 @@ def _protect_signature(state: State, mg_buffer: list[bytes]) -> list[bytes]:
     # cipher.update() input has to be 512 bit long (besides the last block).
     # Thus we go over mg_buffer and buffer 512 bit input blocks before
     # calling cipher.update().
-    CHACHA_BLOCK = 64  # 512 bit chacha key-stream block size
+    CHACHA_BLOCK = chacha20poly1305_encrypt.block_size
     buff = bytearray(CHACHA_BLOCK)
     buff_len = 0  # valid bytes in the block buffer
 
