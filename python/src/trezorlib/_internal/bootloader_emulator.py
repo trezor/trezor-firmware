@@ -273,21 +273,34 @@ class BootloaderTestContext:
         pass
 
     def firmware_update(
-        self, data: bytes, progress_update: t.Callable[[int], t.Any] = lambda _: None
+        self,
+        data: bytes,
+        progress_update: t.Callable[[int], t.Any] = lambda _: None,
+        timeout: float = 60,
     ) -> None:
         """Upload `data` the way `trezorlib.firmware.update()` does.
 
         The bootloader answers FirmwareErase with the first FirmwareRequest
         only after the user confirmed on screen, if a confirmation is due.
+        `timeout` limits the wait for each response, not the whole upload.
         """
-        resp = self.wire.call(messages.FirmwareErase(length=len(data)))
+        resp = self.wire.call(messages.FirmwareErase(length=len(data)), timeout=timeout)
         while isinstance(resp, messages.FirmwareRequest):
             payload = data[resp.offset : resp.offset + resp.length]
             resp = self.wire.call(
-                messages.FirmwareUpload(payload=payload, hash=blake2s(payload).digest())
+                messages.FirmwareUpload(
+                    payload=payload, hash=blake2s(payload).digest()
+                ),
+                timeout=timeout,
             )
             progress_update(len(payload))
         messages.Success.ensure_isinstance(resp)
+
+    def firmware_update_in_background(
+        self, data: bytes, timeout: float = 60
+    ) -> Future[None]:
+        """Start an update that the bootloader will ask to confirm on screen."""
+        return self.wire._pool.submit(self.firmware_update, data, timeout=timeout)
 
     def close(self) -> None:
         self.wire.close()
