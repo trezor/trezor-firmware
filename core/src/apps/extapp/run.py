@@ -105,6 +105,13 @@ async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse:
                 io.IPC2_EVENT | io.POLL_READ, timeout_ms=_IPC_TIMEOUT_MS
             )
         except loop.Timeout:
+            # Core is not woken when the app is killed (e.g. by the watchdog),
+            # so report a dead app as stopped rather than as a timeout.
+            if not session.image.is_running():
+                session.dead = True
+                raise DataError(
+                    f"App {request.instance_id} stopped after service {last_service}"
+                )
             session.die(
                 DataError(
                     f"No message from app within {_IPC_TIMEOUT_MS} ms after service {last_service}"
@@ -142,9 +149,12 @@ async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse:
             # failures with their own code and message, and workflow control flow
             raise
         except Exception as e:
-            # a bare exception would reach the host as an empty `FirmwareError`
-            raise FirmwareError(
-                f"Service {service} (message {msg.message_id}) failed: {e.__class__.__name__}: {e}"
+            # a bare exception would reach the host as an empty `FirmwareError`;
+            # stop the app too, it may still be waiting for Core's answer
+            session.die(
+                FirmwareError(
+                    f"Service {service} (message {msg.message_id}) failed: {e.__class__.__name__}: {e}"
+                )
             )
 
 
