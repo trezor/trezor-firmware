@@ -234,6 +234,11 @@ class BootArgs:
         return cls(BootCommand.STOP_AND_WAIT)
 
     @classmethod
+    def stop_and_connect(cls) -> BootArgs:
+        """Stay in the bootloader on the host-waiting screen."""
+        return cls(BootCommand.STOP_AND_CONNECT)
+
+    @classmethod
     def install_upgrade(cls, header_hash: bytes) -> BootArgs:
         if len(header_hash) != 32:
             raise ValueError("header hash must be 32 bytes")

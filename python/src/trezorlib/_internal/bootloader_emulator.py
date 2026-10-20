@@ -291,6 +291,10 @@ class BootloaderTestContext:
             )
         messages.Success.ensure_isinstance(resp)
 
+    def firmware_update_in_background(self, data: bytes) -> Future[None]:
+        """Start an update that the bootloader will ask to confirm on screen."""
+        return self.wire._pool.submit(self.firmware_update, data)
+
     def close(self) -> None:
         self.wire.close()
         self.debug.close()
