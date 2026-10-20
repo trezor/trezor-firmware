@@ -24,6 +24,7 @@
 #include "rust_ui_common.h"
 
 #include <sys/bootutils.h>
+#include <sys/systask.h>
 
 LOG_DECLARE(emulator)
 
@@ -50,6 +51,10 @@ void usage(void) {
   printf("Options:\n");
   printf("  -a  disable animations\n");
   printf("  -s  stay in bootloader\n");
+  printf("  -W  boot with the wipe command (BOOT_COMMAND_WIPE)\n");
+#ifdef USE_BOOTARGS_RSOD
+  printf("  -R  boot with the RSOD command (BOOT_COMMAND_SHOW_RSOD)\n");
+#endif
   printf("  -B FILE  boot with the command and arguments from FILE (the\n");
   printf("           format a previous run wrote to trezor.bootargs)\n");
   printf("  -w  wipe any firmware before booting\n");
@@ -171,7 +176,7 @@ int main(int argc, char **argv) {
   uint8_t set_variant = 0xff;
   uint8_t color_variant = 0;
   uint8_t bitcoin_only = 0;
-  while ((opt = getopt(argc, argv, "ahslewc:b:f:i:B:")) != -1) {
+  while ((opt = getopt(argc, argv, "ahslewc:b:f:i:B:WR")) != -1) {
     switch (opt) {
       case 'a':
         disable_animation(true);
@@ -179,6 +184,28 @@ int main(int argc, char **argv) {
       case 's':
         bootargs_set(BOOT_COMMAND_STOP_AND_WAIT, NULL, 0);
         break;
+      case 'W': {
+        bootutils_wipe_info_t info = {
+            .title = "WIPE REQUESTED",
+            .message = "Wipe command set by the emulator command line",
+            .footer = "",
+        };
+        bootargs_set(BOOT_COMMAND_WIPE, &info, sizeof(info));
+      } break;
+#ifdef USE_BOOTARGS_RSOD
+      case 'R': {
+        systask_postmortem_t pminfo = {
+            .reason = TASK_TERM_REASON_ERROR,
+            .error =
+                {
+                    .title = "RSOD REQUESTED",
+                    .message = "RSOD command set by the emulator command line",
+                    .footer = "",
+                },
+        };
+        bootargs_set(BOOT_COMMAND_SHOW_RSOD, &pminfo, sizeof(pminfo));
+      } break;
+#endif
       case 'B':
         if (!bootargs_load_file(optarg)) {
           exit(1);
