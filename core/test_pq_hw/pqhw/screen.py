@@ -308,6 +308,98 @@ def usb_controller_state() -> str:
     return "; ".join(parts)
 
 
+# USB OTG_HS global interrupt on STM32U5 (CMSIS OTG_HS_IRQn).
+_OTG_HS_IRQ = 73
+# NVIC, read through the secure view: ISER at +0x000, ISPR +0x100, IABR +0x200,
+# ITNS +0x280, IPR (one byte per IRQ) +0x300.
+_NVIC = 0xE000E100
+
+
+def _u32(b: bytes, off: int) -> int:
+    return int.from_bytes(b[off : off + 4], "little")
+
+
+def _cpu_state() -> str:
+    """PC, active exception and interrupt masks: halts the core briefly, reads
+    its registers and lets it run on."""
+    out = _openocd("init; halt; reg; resume; exit")
+    regs = {}
+    for name, value in re.findall(
+        r"\b([a-z_A-Z]+)\s*\(/\d+\):\s*(0x[0-9a-fA-F]+)", out
+    ):
+        regs.setdefault(name.lower(), int(value, 16))
+    if "pc" not in regs:
+        tail = " | ".join(out.strip().splitlines()[-3:])
+        raise ScreenError(f"no registers in the halt output: {tail}")
+    ipsr = regs.get("xpsr", 0) & 0x1FF
+    where = (
+        "thread mode"
+        if ipsr == 0
+        else (f"IRQ {ipsr - 16} handler" if ipsr >= 16 else f"exception {ipsr} handler")
+    )
+    masks = ", ".join(
+        f"{n} {regs[n]:#x}"
+        for n in (
+            "primask_s",
+            "basepri_s",
+            "primask_ns",
+            "basepri_ns",
+            "primask",
+            "basepri",
+        )
+        if n in regs
+    )
+    return f"PC {regs['pc']:#010x} in {where} ({masks})"
+
+
+def usb_stall_state() -> str:
+    """Why a firmware that runs never answers USB: is the OTG_HS interrupt
+    enabled, pending, being served, and what is the CPU doing instead."""
+    if probe_holder is not None:
+        return f"not read: SWD probe held by {probe_holder}"
+    parts = []
+    try:
+        nvic = read_memory(_NVIC, 0x400)
+        word, bit = 4 * (_OTG_HS_IRQ // 32), 1 << (_OTG_HS_IRQ % 32)
+        flag = lambda off: bool(_u32(nvic, off + word) & bit)  # noqa: E731
+        parts.append(
+            f"IRQ {_OTG_HS_IRQ}: {'enabled' if flag(0x000) else 'DISABLED'}, "
+            f"{'PENDING' if flag(0x100) else 'not pending'}, "
+            f"{'ACTIVE' if flag(0x200) else 'not active'}, "
+            f"targets {'non-secure' if flag(0x280) else 'secure'}, "
+            f"priority {nvic[0x300 + _OTG_HS_IRQ]:#04x}"
+        )
+    except ScreenError as e:
+        parts.append(f"NVIC unreadable ({e})")
+    for name, base in _OTG_HS.items():
+        try:
+            core = read_memory(base, 0x20)
+            dev = read_memory(base + 0x800, 0x20)
+            ep_in = read_memory(base + 0x900, 0x10)
+            ep_out = read_memory(base + 0xB00, 0x14)
+        except ScreenError as e:
+            parts.append(f"OTG {name} unreadable ({e})")
+            continue
+        gahbcfg, gintsts, gintmsk = _u32(core, 0x08), _u32(core, 0x14), _u32(core, 0x18)
+        if not (gahbcfg | gintsts | gintmsk):
+            continue  # the alias the firmware does not use reads as zero
+        daint, daintmsk = _u32(dev, 0x18), _u32(dev, 0x1C)
+        parts.append(
+            f"OTG {name}: global int {'on' if gahbcfg & 1 else 'OFF'}, "
+            f"pending&unmasked {gintsts & gintmsk:#010x} "
+            f"(GINTSTS {gintsts:#010x} GINTMSK {gintmsk:#010x}), "
+            f"DAINT {daint:#010x}/{daintmsk:#010x}, "
+            f"EP0 in ctl {_u32(ep_in, 0):#010x} int {_u32(ep_in, 8):#010x}, "
+            f"out ctl {_u32(ep_out, 0):#010x} int {_u32(ep_out, 8):#010x} "
+            f"tsiz {_u32(ep_out, 0x10):#010x}"
+        )
+    try:
+        parts.append(_cpu_state())
+    except ScreenError as e:
+        parts.append(f"CPU unreadable ({e})")
+    return "; ".join(parts)
+
+
 def _read_cfbar() -> tuple[int, int]:
     """(register address that answered, its value)."""
     errors = []

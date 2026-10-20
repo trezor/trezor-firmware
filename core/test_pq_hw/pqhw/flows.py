@@ -122,6 +122,10 @@ def wait_firmware(unit: Unit, timeout: float = REBOOT) -> TrezorTestContext:
                             f"STM USB controller: {screen.usb_controller_state()}",
                             screenshot=False,
                         )
+                        unit.step(
+                            f"STM USB interrupt: {screen.usb_stall_state()}",
+                            screenshot=False,
+                        )
                         raise
                     screens.tick()
     finally:
