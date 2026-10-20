@@ -47,6 +47,7 @@ from trezorlib._internal.bootloader_emulator import (
 from .. import ui_tests
 from ..emulators import _get_port, delete_profile, get_logfile
 from ..ui_tests.common import TestCase
+from .images import make_firmware
 
 LOG = logging.getLogger(__name__)
 
@@ -87,17 +88,44 @@ class BootloaderRunner:
         self._runs = 0
         self._testcase: TestCase | None = None
         self._record_dir: Path | None = None
+        self._properties: dict[str, t.Any] | None = None
 
     @property
     def recording(self) -> bool:
         return bool(self.request.config.getoption("ui"))
 
+    @property
+    def properties(self) -> dict[str, t.Any]:
+        """What the emulator binary reports with -p: model, flash layout."""
+        if self._properties is None:
+            # a wrapper that is never started: only its properties are read
+            probe = BootloaderEmulator(
+                self.executable, self.profile_dir, port=self.port, logfile=self.logfile
+            )
+            self._properties = probe.properties()
+        return self._properties
+
+    @property
+    def model(self) -> str:
+        """Internal model name of the emulator binary, e.g. "T3T1"."""
+        return self.properties["model"]
+
+    def make_firmware(self, **kwargs: t.Any) -> bytes:
+        """A dev-key signed firmware image the emulator's bootloader accepts."""
+        return make_firmware(
+            self.model,
+            secmon=self.properties["secmon_verification"],
+            code_alignment=self.properties["code_alignment"],
+            **kwargs,
+        )
+
     def _prepare_recording(self, emu: BootloaderEmulator) -> Path:
         # TestCase needs the model and language, which only a running
         # emulator reports; take them from a throwaway properties query.
-        model = emu.properties()["model"]
         name, group = ui_tests.common._get_test_name_and_group(self.request.node.nodeid)
-        self._testcase = TestCase(model=model, group=group, name=name, language="en")
+        self._testcase = TestCase(
+            model=emu.properties()["model"], group=group, name=name, language="en"
+        )
         self._testcase.dir.mkdir(exist_ok=True, parents=True)
         shutil.rmtree(self._testcase.actual_dir, ignore_errors=True)
         self._testcase.actual_dir.mkdir()
