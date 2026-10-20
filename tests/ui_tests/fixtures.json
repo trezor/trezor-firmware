@@ -824,6 +824,9 @@
 },
 "T2T1": {
 "bootloader_tests": {
+"T2T1_en_test_firmware_install.py::test_boot_installed_firmware": "3ca26a8d6780a606d1bce3c2a6738b022ca562e9e22a2e9cd0296ef87c367702",
+"T2T1_en_test_firmware_install.py::test_install_on_device_with_firmware": "62ee82b0ba580763c1d8aedd2027e40df33824f14ea3671c86487a31ba1690ee",
+"T2T1_en_test_firmware_install.py::test_install_on_empty_device": "36524c8efba791c6df4a8cd90a6bad63f6cfc4fd38ed23a81d0c70b7e5ba2809",
 "T2T1_en_test_wipe_device.py::test_host_wipe_empty_device": "b6191ce75493d680be9520f0690369c4f24102f16d10d4baaf0dfe2a4e55f21c"
 },
 "click_tests": {
@@ -15085,6 +15088,9 @@
 },
 "T3B1": {
 "bootloader_tests": {
+"T3B1_en_test_firmware_install.py::test_boot_installed_firmware": "f4521a6e1979e44a1050c326098f98ae88a3a255461919644cb74f6f28369971",
+"T3B1_en_test_firmware_install.py::test_install_on_device_with_firmware": "3b30493bf6fc73432a6470f47280cf619a67d4ee1a30e1ec976d349486f27aa1",
+"T3B1_en_test_firmware_install.py::test_install_on_empty_device": "ecfe2b4d2595158e586344a455d6f9ca046aa961485e5fd119f4c4f6625d8546",
 "T3B1_en_test_wipe_device.py::test_host_wipe_empty_device": "39e5989d0f0df970e7f01f629226e4b02ba0a3fc756e612aed1e3e1f985e5904"
 },
 "click_tests": {
@@ -28854,6 +28860,9 @@
 },
 "T3T1": {
 "bootloader_tests": {
+"T3T1_en_test_firmware_install.py::test_boot_installed_firmware": "450643b7b1b612dbe103c7f32a9d6ec0120b0ecd26e0bc5853174f827f01d3f5",
+"T3T1_en_test_firmware_install.py::test_install_on_device_with_firmware": "17a39ff8c2d099e9263b67358fda858a8109b97f9abeec3bb6faa9bdce790222",
+"T3T1_en_test_firmware_install.py::test_install_on_empty_device": "6f26ca8bb2396a941dfaad85af08f91c647d8266b700d0065acdbc7bb7fb386e",
 "T3T1_en_test_wipe_device.py::test_host_wipe_empty_device": "fd02778cde4db18ee4c5269dcf2ec198f1107913f7ddff0f5727a9a688a35385"
 },
 "click_tests": {
@@ -42950,6 +42959,9 @@
 },
 "T3W1": {
 "bootloader_tests": {
+"T3W1_en_test_firmware_install.py::test_boot_installed_firmware": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"T3W1_en_test_firmware_install.py::test_install_on_device_with_firmware": "3238083a441e44c12de3a0e505e15481730ec61f426260161d53330722ceedfb",
+"T3W1_en_test_firmware_install.py::test_install_on_empty_device": "5b4f1f014313128053e583250d4354a11aea3eb3076b967f75005792e39e0635",
 "T3W1_en_test_wipe_device.py::test_host_wipe_empty_device": "402b6021bd2617a09b00644285edcd94d1cca7035497c26b44adfd1e039a9f83"
 },
 "click_tests": {
