@@ -34,6 +34,10 @@
 #error "No input method defined"
 #endif
 
+#ifdef DEBUGLINK
+#include "workflow/debuglink.h"
+#endif
+
 #define TIME_TO_HIBERNATE_MS 40000
 
 typedef enum {
@@ -95,6 +99,9 @@ void ui_click(void) {
 #elif defined USE_BUTTON
   awaited.read_ready |= 1 << SYSHANDLE_BUTTON;
 #endif
+#ifdef DEBUGLINK
+  awaited.read_ready |= 1 << SYSHANDLE_USB_DEBUG;
+#endif
 
 #ifdef USE_TOUCH
   // flush touch events if any
@@ -116,6 +123,11 @@ void ui_click(void) {
   while (true) {
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
     if (signalled.read_ready != 0) {
+#ifdef DEBUGLINK
+      if (signalled.read_ready & (1 << SYSHANDLE_USB_DEBUG)) {
+        debuglink_process();
+      }
+#endif
       switch (process_event(&layout_state, &signalled)) {
         case RES_CLICKED:
           return;
