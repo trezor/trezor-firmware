@@ -189,7 +189,7 @@ debuglink_result_t debuglink_process(void) {
         res = debuglink_process_record_screen(&g_debug_io);
         break;
       default:
-        send_msg_success(&g_debug_io, "success");
+        recv_msg_unknown(&g_debug_io);
         break;
     }
   }
