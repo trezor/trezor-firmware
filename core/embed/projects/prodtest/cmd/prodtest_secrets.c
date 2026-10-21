@@ -245,17 +245,16 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
   const uint8_t ENCODED_EMPTY_CONTEXT_STRING[] = {0, 0};
   uint8_t challenge[CHALLENGE_SIZE] = {0};
   uint8_t signature[MCU_ATTESTATION_SIG_SIZE] = {0};
-  size_t siglen = 0;
-  if (mldsa_signature_internal(signature, &siglen, challenge, sizeof(challenge),
-                               ENCODED_EMPTY_CONTEXT_STRING,
-                               sizeof(ENCODED_EMPTY_CONTEXT_STRING), rnd,
-                               mcu_private, 0) != 0) {
+  if (mldsa_signature_internal(
+          signature, challenge, sizeof(challenge), ENCODED_EMPTY_CONTEXT_STRING,
+          sizeof(ENCODED_EMPTY_CONTEXT_STRING), rnd, mcu_private, 0) != 0) {
     cli_error(cli, PRODTEST_ERR_SECRETS_SIGN_SIGNATURE,
               "`mldsa_signature_internal()` failed.");
     goto cleanup;
   }
 
-  if (!check_cert_chain(cli, chain, chain_size, signature, siglen, challenge)) {
+  if (!check_cert_chain(cli, chain, chain_size, signature, sizeof(signature),
+                        challenge)) {
     // Error returned by check_cert_chain().
     goto cleanup;
   }

@@ -355,12 +355,12 @@ static bool verify_signature(alg_id_t alg_id, const uint8_t* pub_key,
 
 #ifdef USE_MCU_ATTESTATION
   if (alg_id == ALG_ID_MLDSA44) {
-    if (pub_key_size != MCU_ATTESTATION_PUBKEY_SIZE) {
+    if (pub_key_size != MCU_ATTESTATION_PUBKEY_SIZE ||
+        sig_size != MCU_ATTESTATION_SIG_SIZE) {
       return false;
     }
 
-    if (mldsa_verify(sig, sig_size, msg, msg_size, (const uint8_t*)"", 0,
-                     pub_key) != 0) {
+    if (mldsa_verify(sig, msg, msg_size, (const uint8_t*)"", 0, pub_key) != 0) {
       return false;
     }
 
