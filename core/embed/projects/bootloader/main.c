@@ -562,6 +562,9 @@ int bootloader_main(void) {
 
   fw_check_info_t fw;
   fw_check(&fw);
+  // A trusted header forbids going below its version from now on, whether
+  // or not its body is intact.
+  fw_commit_min_version(&fw);
 
 #if PRODUCTION && !defined STM32U5
   // for STM32U5, this check is moved to boardloader
