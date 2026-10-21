@@ -54,7 +54,7 @@ def _rm_f(path: Path) -> None:
         pass
 
 
-def _reserve_free_port() -> tuple[Optional[socket.socket], int]:
+def _reserve_free_port() -> tuple[socket.socket | None, int]:
     """Reserve a free TCP port for the Tropic model.
 
     The returned socket keeps the port bound until it is closed, so no other
@@ -93,7 +93,7 @@ class TropicModel:
         configfile_output: Path | None = None,
     ) -> None:
         self.profile_dir = Path(profile_dir).resolve()
-        self._port_reservation: Optional[socket.socket] = None
+        self._port_reservation: socket.socket | None = None
         if port is not None:
             self.port = port
         else:
@@ -246,7 +246,7 @@ class Emulator:
 
     @property
     def client(self) -> TrezorTestContext:
-        """So that type-checkers do not see `client` as `Optional`.
+        """So that type-checkers do not see `client` as optional.
 
         (it is not None between `start()` and `stop()` calls)
         """
