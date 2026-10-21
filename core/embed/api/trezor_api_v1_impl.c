@@ -17,6 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <io/app_arena.h>
+
+#include "trezor_api.h"
 #include "trezor_api_v1.h"
 
 #ifndef USE_DBG_CONSOLE
@@ -48,4 +51,12 @@ const void* coreapp_api_get(uint32_t version) {
     return &trezor_api_v1;
   }
   return NULL;
+}
+
+// Entry point the loader starts a loaded app's task on (see `app_args_t`):
+// calls the app's `applet_main` with the API getter.
+int coreapp_app_entry(const app_args_t* args) {
+  typedef int (*applet_main_t)(trezor_api_getter_t api_getter);
+  applet_main_t applet_main = (applet_main_t)args->applet_main;
+  return applet_main((trezor_api_getter_t)coreapp_api_get);
 }
