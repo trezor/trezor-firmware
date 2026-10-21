@@ -146,7 +146,8 @@ void fw_check(fw_check_info_t *fw_info) {
 #endif
 
   if (sectrue == secmon_valid) {
-    ensure_firmware_min_version(hdr->monotonic);
+    fw_info->version_trusted = secmon_valid;
+    fw_info->monotonic = hdr->monotonic;
     fw_info->firmware_present = check_image_contents(
         hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, &FIRMWARE_AREA);
     fw_info->firmware_present_backup = fw_info->firmware_present;
@@ -265,4 +266,10 @@ void fw_run_prepare(fw_run_info_t *info) {
   info->entry_address =
       IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE) +
       secmon_code_offset;
+}
+
+void fw_commit_min_version(const fw_check_info_t *fw_info) {
+  if (sectrue == fw_info->version_trusted) {
+    ensure_firmware_min_version(fw_info->monotonic);
+  }
 }

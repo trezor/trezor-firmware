@@ -65,6 +65,16 @@ firmware image is present. */
   volatile secbool firmware_present_backup; /**< True if a valid, bootable
                                         firmware image is present - backup for
                                       glitch protection. */
+
+  volatile secbool version_trusted; /**< True if the firmware header (and the
+                                    secure monitor, where verified) passed all
+                                    checks, so that `monotonic` may be committed
+                                    to the rollback counter. Independent of
+                                    `firmware_present`: a signed header with a
+                                    corrupt body still counts. */
+
+  uint8_t monotonic; /**< Monotonic version from the firmware header; valid
+                        when `version_trusted` is set. */
 } fw_check_info_t;
 
 /**
@@ -88,6 +98,18 @@ secbool __wur check_vendor_header_lock(const vendor_header *const vhdr);
  *                decisions.
  */
 void fw_check(fw_check_info_t *fw_info);
+
+/**
+ * @brief Commit the firmware's monotonic version to the rollback counter.
+ *
+ * Does nothing unless `fw_check()` found the header trusted
+ * (`version_trusted`). `fw_check()` itself never writes anything, so status
+ * queries over the wire or the debug link can call it freely; the boot path
+ * calls this right after it.
+ *
+ * @param fw_info Result of `fw_check()`.
+ */
+void fw_commit_min_version(const fw_check_info_t *fw_info);
 
 /**
  * @brief Everything `real_jump_to_firmware()` needs to hand control to the
