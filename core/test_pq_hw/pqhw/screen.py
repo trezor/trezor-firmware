@@ -322,14 +322,25 @@ def _u32(b: bytes, off: int) -> int:
 def _cpu_state() -> str:
     """PC, active exception and interrupt masks: halts the core briefly, reads
     its registers and lets it run on."""
-    out = _openocd("init; halt; reg; resume; exit")
+    # `reg` prints to the console, which -c does not reliably surface: take
+    # its output with `capture` into a file. The halt line ("xPSR: .. pc: ..")
+    # comes through the log and is the fallback.
+    with tempfile.TemporaryDirectory() as tmp:
+        dump = Path(tmp) / "regs.txt"
+        out = _openocd(
+            f"init; halt; set r [capture reg]; resume; "
+            f"set f [open {dump} w]; puts $f $r; close $f; exit"
+        )
+        text = (dump.read_text() if dump.exists() else "") + "\n" + out
     regs = {}
     for name, value in re.findall(
-        r"\b([a-z_A-Z]+)\s*\(/\d+\):\s*(0x[0-9a-fA-F]+)", out
+        r"\b([a-z_A-Z]+)\s*\(/\d+\):\s*(0x[0-9a-fA-F]+)", text
     ):
         regs.setdefault(name.lower(), int(value, 16))
+    for name, value in re.findall(r"\b(xPSR|pc|msp|psp):\s*(0x[0-9a-fA-F]+)", text):
+        regs.setdefault(name.lower(), int(value, 16))
     if "pc" not in regs:
-        tail = " | ".join(out.strip().splitlines()[-3:])
+        tail = " | ".join(text.strip().splitlines()[-3:])
         raise ScreenError(f"no registers in the halt output: {tail}")
     ipsr = regs.get("xpsr", 0) & 0x1FF
     where = (
@@ -377,6 +388,7 @@ def usb_stall_state() -> str:
             dev = read_memory(base + 0x800, 0x20)
             ep_in = read_memory(base + 0x900, 0x10)
             ep_out = read_memory(base + 0xB00, 0x14)
+            pcgcctl = _u32(read_memory(base + 0xE00, 4), 0)
         except ScreenError as e:
             parts.append(f"OTG {name} unreadable ({e})")
             continue
@@ -391,7 +403,11 @@ def usb_stall_state() -> str:
             f"DAINT {daint:#010x}/{daintmsk:#010x}, "
             f"EP0 in ctl {_u32(ep_in, 0):#010x} int {_u32(ep_in, 8):#010x}, "
             f"out ctl {_u32(ep_out, 0):#010x} int {_u32(ep_out, 8):#010x} "
-            f"tsiz {_u32(ep_out, 0x10):#010x}"
+            f"tsiz {_u32(ep_out, 0x10):#010x}, "
+            f"PCGCCTL {pcgcctl:#010x} (PHY clock "
+            f"{'STOPPED' if pcgcctl & 1 else 'running'}, bus clock "
+            f"{'GATED' if pcgcctl & 2 else 'on'}"
+            f"{', PHY suspended' if pcgcctl & 0x10 else ''})"
         )
     try:
         parts.append(_cpu_state())
