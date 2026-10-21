@@ -152,6 +152,13 @@ void usb_stop(void) {
 
     sock_stop(&iface->sock);
     syshandle_unregister(iface->handle);
+
+    // Drop packets queued for a reader that never came, so that a later
+    // `usb_start()` does not deliver them to the next session.
+    memzero(&iface->rx_buf, sizeof(iface->rx_buf));
+    memzero(&iface->rx_len, sizeof(iface->rx_len));
+    iface->rx_head = 0;
+    iface->rx_count = 0;
   }
 }
 
