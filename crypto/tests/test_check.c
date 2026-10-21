@@ -12127,7 +12127,8 @@ static void test_noise_xxpsk3_handshake(uint32_t seed,
                                         noise_xxpsk3_responder_t *responder) {
   random_reseed(seed);
 
-  uint8_t psk[32] = "this_is_a_32byte_preshared_key!!";
+  __attribute__((nonstring)) uint8_t psk[32] =
+      "this_is_a_32byte_preshared_key!!";
 
   uint8_t initiator_private_key[32] = {0};
   uint8_t responder_private_key[32] = {0};
@@ -12322,7 +12323,8 @@ START_TEST(test_noise_xxpsk3_limits) {
   // Any static key pair will do, the calls below are rejected on the length
   // before any key is used
   random_reseed(2748932008);
-  uint8_t psk[32] = "this_is_a_32byte_preshared_key!!";
+  __attribute__((nonstring)) uint8_t psk[32] =
+      "this_is_a_32byte_preshared_key!!";
   uint8_t static_private_key[32] = {0};
   uint8_t static_public_key[32] = {0};
   random_buffer(static_private_key, sizeof(static_private_key));
