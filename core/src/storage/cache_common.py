@@ -146,7 +146,8 @@ class EncryptableDataCache(DataCache):
         self.nonce = bytearray(_NONCE_LENGTH)
         self.authentication_tag = bytearray(_TAG_LENGTH)
         self.is_encrypted: bool = False
-        self.was_preauthorized: bool = False
+        if __debug__:
+            self.was_preauthorized: bool = False
 
     @staticmethod
     def _get_cache_encryption_key() -> bytes:
@@ -160,7 +161,7 @@ class EncryptableDataCache(DataCache):
         return _get_slip21_key(path, device_secret)
 
     def _read_set_fields(self) -> list[tuple[int, bytes]]:
-        return [(f, self.get(f)) for f in self.fields_to_encrypt() if self.is_set(f)]  # type: ignore
+        return [(f, self.get(f)) for f in self.fields_to_encrypt() if self.is_set(f)]  # type: ignore [is not assignable to return type]
 
     def _write_split(self, fields: list[tuple[int, bytes]], data: bytes) -> None:
         view = memoryview(data)
@@ -189,7 +190,8 @@ class EncryptableDataCache(DataCache):
         # Zero in place to keep the preallocated buffers
         self.nonce[:] = bytes(_NONCE_LENGTH)
         self.authentication_tag[:] = bytes(_TAG_LENGTH)
-        self.was_preauthorized = False
+        if __debug__:
+            self.was_preauthorized = False
 
     def encrypt(self) -> None:
         """
@@ -201,7 +203,8 @@ class EncryptableDataCache(DataCache):
         if self.is_encrypted or not self.has_secrets():
             return
         if self.is_preauthorized():
-            self.was_preauthorized = True
+            if __debug__:
+                self.was_preauthorized = True
             return
 
         if any(self.nonce) or any(self.authentication_tag):
@@ -224,7 +227,8 @@ class EncryptableDataCache(DataCache):
         """
         from trezorcrypto import chacha20poly1305_decrypt
 
-        self.was_preauthorized = False  # plaintext secrets are no longer deliberate
+        if __debug__:
+            self.was_preauthorized = False  # plaintext secrets are no longer deliberate
         if not self.is_encrypted:
             return
 
