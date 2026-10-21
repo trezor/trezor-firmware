@@ -137,6 +137,10 @@ optiga_result optiga_serialize_metadata(const optiga_metadata *metadata,
       return OPTIGA_ERR_SIZE;
     }
 
+    if (item->len > 255) {
+      return OPTIGA_ERR_SIZE;
+    }
+
     serialized[pos++] = METADATA_OFFSET_TAG_MAP[i].tag;
     serialized[pos++] = item->len;
     memcpy(&serialized[pos], item->ptr, item->len);
