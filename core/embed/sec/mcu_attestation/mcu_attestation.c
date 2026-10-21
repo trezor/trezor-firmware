@@ -79,11 +79,9 @@ secbool mcu_attestation_sign(const uint8_t *challenge, size_t challenge_size,
   rng_fill_buffer(rnd, sizeof(rnd));
 
   const uint8_t ENCODED_EMPTY_CONTEXT_STRING[] = {0, 0};
-  size_t siglen = 0;
-  if (mldsa_signature_internal(signature, &siglen, challenge, challenge_size,
-                               ENCODED_EMPTY_CONTEXT_STRING,
-                               sizeof(ENCODED_EMPTY_CONTEXT_STRING), rnd,
-                               mcu_private, 0) != 0) {
+  if (mldsa_signature_internal(
+          signature, challenge, challenge_size, ENCODED_EMPTY_CONTEXT_STRING,
+          sizeof(ENCODED_EMPTY_CONTEXT_STRING), rnd, mcu_private, 0) != 0) {
     goto cleanup;
   }
 

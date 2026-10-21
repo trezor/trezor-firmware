@@ -361,6 +361,7 @@ fn add_mldsa(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
             "src/poly.c",
             "src/poly_kl.c",
             "src/polyvec.c",
+            "src/polyvec_lazy.c",
             "src/sign.c",
         ],
         Some(attrs.clone()),
