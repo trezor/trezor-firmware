@@ -33,7 +33,7 @@ void fuel_gauge_reset(fuel_gauge_state_t* state) {
   state->soc_latched = 0.0f;
 }
 
-void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc, float P) {
+void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc) {
   soc = fmaxf(0.0f, fminf(soc, 1.0f));  // Clamp SOC to [0, 1]
 
   // Set SOC directly
@@ -41,99 +41,63 @@ void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc, float P) {
   state->soc_latched = soc;
 }
 
+float fuel_gauge_rint(float voltage_V_low, float current_mA_low,
+                      float voltage_V_high, float current_mA_high) {
+  float delta_voltage = voltage_V_low - voltage_V_high;
+  float delta_current = current_mA_high - current_mA_low;
+  if (fabsf(delta_current) < 1e-6f) {
+    return 0.0f;  // Avoid division by zero
+  }
+  return delta_voltage / (delta_current / 1000.0f);  // Convert mA to A
+}
+
+float fuel_gauge_meas_to_ocv(float battery_esr, float voltage_V,
+                             float current_mA, float temperature) {
+  // Convert mA to A by dividing by 1000
+  float current_A = current_mA / 1000.0f;
+
+  // Calculate OCV: V_OC = V_term + I * ESR
+  return voltage_V + (current_A * battery_esr);
+}
+
 void fuel_gauge_initial_guess(fuel_gauge_state_t* state, battery_model_t* model,
                               float voltage_V, float current_mA,
                               float temperature) {
-  // Determine if we're in discharge mode
-  bool discharging_mode = current_mA >= 0.0f;
-
   // Calculate OCV from terminal voltage and current
-  float ocv = battery_meas_to_ocv(model, voltage_V, current_mA, temperature);
+  float esr =
+      model->bat_esr_ocv > 0.0f ? model->bat_esr_ocv : model->bat_esr_init;
+  float ocv = fuel_gauge_meas_to_ocv(esr, voltage_V, current_mA, temperature);
 
   // Extract SoC from battery model
-  state->soc = soc_ocv_lut(model, ocv, temperature, discharging_mode);
+  state->soc =
+      soc_ocv_lut((uint16_t)(ocv * 1000.0f), (int16_t)(temperature)) / 1000.0f;
   state->soc = fmaxf(0.0f, fminf(state->soc, 1.0f));  // Clamp SOC to [0, 1]
   state->soc_latched = state->soc;
 }
 
 float fuel_gauge_update(fuel_gauge_state_t* state, battery_model_t* model,
-                        uint32_t dt_ms, float voltage_V, float current_mA,
-                        float temperature) {
-  if (current_mA == 0.0f) {
+                        float voltage_V, float current_mA, float temperature,
+                        uint32_t timestamp) {
+  if ((current_mA < 1.0f) || (voltage_V < 0.5f)) {
     // No current flow, return latched SOC without updating
     return state->soc_latched;
   }
 
-  // Choose filter parameters based on temperature and SOC
-  float R = FUEL_GAUGE_R;
-  float Q = FUEL_GAUGE_Q;
+  // 1. Fill buffer to calculate ESR
 
-  // When in low temperature or at the edge of the charging/dischargins
-  // profile, use more agressive EKF settings to rely more on the ocv
-  // curves rather then on current model
-  if (temperature < 10.0f) {
-    R = FUEL_GAUGE_R_AGGRESSIVE;
-    Q = FUEL_GAUGE_Q_AGGRESSIVE;
-  } else {
-    if (discharging_mode && state->soc_latched < 0.2f) {
-      R = FUEL_GAUGE_R_AGGRESSIVE;
-      Q = FUEL_GAUGE_Q_AGGRESSIVE;
-    } else if (!discharging_mode && state->soc_latched > 0.8f) {
-      R = FUEL_GAUGE_R_AGGRESSIVE;
-      Q = FUEL_GAUGE_Q_AGGRESSIVE;
-    }
-  }
+  // 2. When filled with pre-pulse and pulse => calculate ESR, OCV, SoC
 
-  // Convert milliseconds to seconds
-  float dt_sec = dt_ms / 1000.0f;
-
-  // Get total capacity at current temperature
-  float total_capacity =
-      battery_total_capacity(model, temperature, discharging_mode);
-
-  // State prediction (coulomb counting)
-  // SOC_k+1 = SOC_k - (I*dt)/(3600*capacity)
-  float x_k1_k =
-      state->soc - (current_mA / (3600.0f * total_capacity)) * dt_sec;
-
-  // Calculate Jacobian of measurement function h(x) = dOCV/dSOC
-  float h_jacobian =
-      battery_ocv_slope(model, x_k1_k, temperature, discharging_mode);
-
-  // Error covariance prediction
-  float P_k1_k = state->P + Q;
-
-  // Calculate innovation covariance
-  float S = h_jacobian * P_k1_k * h_jacobian + R;
+  // TODO: add filtering of measured SoC
 
   // Calculate Kalman gain
-  float K_k1_k = P_k1_k * h_jacobian / S;
-
   // Calculate predicted terminal voltage
-  float v_pred = battery_ocv(model, x_k1_k, temperature, discharging_mode) -
-                 (current_mA / 1000.0f) * battery_rint(model, temperature);
-
   // State update
-  float x_k1_k1 = x_k1_k + K_k1_k * (voltage_V - v_pred);
-
   // Error covariance update
-  float P_k1_k1 = (1.0f - K_k1_k * h_jacobian) * P_k1_k;
-
   // Enforce SOC boundaries
-  state->soc = (x_k1_k1 < 0.0f) ? 0.0f : ((x_k1_k1 > 1.0f) ? 1.0f : x_k1_k1);
-  state->P = P_k1_k1;
 
-  // Update latched SOC based on current direction
-  if (current_mA > 0.0f) {
-    // Discharging, SOC should move only in negative direction
-    if (state->soc < state->soc_latched) {
-      state->soc_latched = state->soc;
-    }
-  } else {
-    // Charging, SOC should move only in positive direction
-    if (state->soc > state->soc_latched) {
-      state->soc_latched = state->soc;
-    }
+  // Discharging, SOC should move only in negative direction
+  if (state->soc < state->soc_latched) {
+    state->soc_latched = state->soc;
   }
 
   return state->soc_latched;

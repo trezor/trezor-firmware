@@ -20,7 +20,7 @@ panel = "io/touch_panel_lx154a2422cpt23"
 
 [power_manager]
 pmic = "io/pmic_npm2100"
-fuel_gauge = "io/fuel_gauge_mock"
+fuel_gauge = "io/fuel_gauge_alkaline"
 
 [ble]
 

@@ -81,7 +81,9 @@ pm_status_t pm_init(bool inherit_state) {
   }
 
   // Initialize battery model with fuel gauge estimator
-  bat_init();
+  if (ts_error(bat_init())) {
+    return PM_ERROR;
+  }
 
   // Create monitoring timer
   drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
@@ -107,6 +109,7 @@ pm_status_t pm_init(bool inherit_state) {
   bool recovery_ok = pm_load_recovery_data(&recovery);
 
   if (!recovery_ok) {
+    // TODO: 1s delay for initial battery measurement should be model dependant.
     // Wait for 1s to sample battery data
     systick_delay_ms(1000);
   }

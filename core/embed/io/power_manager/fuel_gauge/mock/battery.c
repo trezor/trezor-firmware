@@ -42,7 +42,10 @@
 // backup-RAM recovery path) is consistent.
 static float g_soc = 1.0f;
 
-void bat_init(void) { g_soc = 1.0f; }
+ts_t bat_init(void) {
+  g_soc = 1.0f;
+  return TS_OK;
+}
 
 ts_t bat_fg_set_soc(float soc, float P) {
   (void)P;

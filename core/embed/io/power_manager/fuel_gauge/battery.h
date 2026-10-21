@@ -27,7 +27,8 @@
  * never reaches into an implementation's directory. Current implementations:
  *   - `fuel_gauge/lifepo4/` - Extended Kalman Filter estimator for LiFePO4
  *     cells (the reference implementation; `P` below is its error covariance).
- *   - `fuel_gauge/alkaline/` - Alkaline battery model with voltage-to-SOC conversion.
+ *   - `fuel_gauge/alkaline/` - Alkaline battery model with voltage-to-SOC
+ * conversion.
  *   - `fuel_gauge/mock/`    - trivial stub for boards with no gauged battery
  *     (e.g. a latch board); reports a fixed healthy state.
  *
@@ -57,8 +58,6 @@
 
 #include <trezor_rtl.h>
 
-#define BAT_FG_SAMPLE_BUF_SIZE 10
-
 /** @brief Bat fuel gauge state structure */
 typedef struct {
   float soc;          ///< State of charge estimate (0.0 to 1.0)
@@ -68,8 +67,9 @@ typedef struct {
 
 /**
  * @brief Initialize the battery module
+ * @return TS_OK on success, error code otherwise
  */
-void bat_init(void);
+ts_t bat_init(void);
 
 /**
  * @brief Set the fuel gauge state to given SOC value

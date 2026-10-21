@@ -213,6 +213,11 @@
 #define NPM2100_EXTI_INTERRUPT_HANDLER EXTI12_IRQHandler
 #endif
 
+// Current Dummy Load
+#define CUR_DUMMY_EN_PIN GPIO_PIN_5
+#define CUR_DUMMY_EN_PORT GPIOA
+#define CUR_DUMMY_EN_PIN_CLK_EN __HAL_RCC_GPIOA_CLK_ENABLE
+
 // reserved, replace with real pins when available
 #define HW_REVISION_PUPD GPIO_PULLUP
 #define HW_REVISION_0_PIN GPIO_PIN_6
