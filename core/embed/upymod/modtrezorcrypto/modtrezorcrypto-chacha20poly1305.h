@@ -40,6 +40,7 @@ typedef struct _mp_obj_ChaCha20Poly1305_t {
   enum {
     INIT,
     PROCESSING,
+    LAST,
     FINISHED,
   } state;
 } mp_obj_ChaCha20Poly1305_t;
@@ -104,9 +105,9 @@ static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt(mp_obj_t self,
   if (o->state != INIT && o->state != PROCESSING) {
     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
   }
-  o->state = PROCESSING;
   mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
+  o->state = (in.len % CHACHA20POLY1305_BLOCK_SIZE == 0) ? PROCESSING : LAST;
   vstr_t vstr = {0};
   vstr_init_len(&vstr, in.len);
   chacha20poly1305_encrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
@@ -123,7 +124,7 @@ static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_encrypt_obj,
 static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt_finish(
     mp_obj_t self) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
-  if (o->state != INIT && o->state != PROCESSING) {
+  if (o->state != INIT && o->state != PROCESSING && o->state != LAST) {
     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
   }
 
@@ -170,9 +171,9 @@ static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt(mp_obj_t self,
   if (o->state != INIT && o->state != PROCESSING) {
     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
   }
-  o->state = PROCESSING;
   mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
+  o->state = (in.len % CHACHA20POLY1305_BLOCK_SIZE == 0) ? PROCESSING : LAST;
   vstr_t vstr = {0};
   vstr_init_len(&vstr, in.len);
   chacha20poly1305_decrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
@@ -189,7 +190,7 @@ static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_decrypt_obj,
 static mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt_finish(
     mp_obj_t self, mp_obj_t expected_mac) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
-  if (o->state != INIT && o->state != PROCESSING) {
+  if (o->state != INIT && o->state != PROCESSING && o->state != LAST) {
     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
   }
 
