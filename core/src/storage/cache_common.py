@@ -159,6 +159,16 @@ class EncryptableDataCache(DataCache):
         path = [b"TREZOR", b"Storage cache encryption key"]
         return _get_slip21_key(path, device_secret)
 
+    def _read_set_fields(self) -> list[tuple[int, bytes]]:
+        return [(f, self.get(f)) for f in self.fields_to_encrypt() if self.is_set(f)]  # type: ignore
+
+    def _write_split(self, fields: list[tuple[int, bytes]], data: bytes) -> None:
+        view = memoryview(data)
+        offset = 0
+        for field, value in fields:
+            self.set(field, view[offset : offset + len(value)])
+            offset += len(value)
+
     def check_key(self, key: int) -> None:
         """
         Do not allow access to an encrypted field's *value*. Writing or deleting one
@@ -201,10 +211,10 @@ class EncryptableDataCache(DataCache):
         self.nonce[:] = random.bytes(_NONCE_LENGTH)
         cipher = chacha20poly1305_encrypt(encryption_key, self.nonce)
 
-        for field in self.fields_to_encrypt():
-            value = self.get(field)
-            if value is not None:
-                self.set(field, cipher.encrypt(value))
+        set_fields = self._read_set_fields()
+        encrypted_buffer = cipher.encrypt(b"".join(v for _, v in set_fields))
+        self._write_split(set_fields, encrypted_buffer)
+
         self.authentication_tag[:] = cipher.finish()
         self.is_encrypted = True
 
@@ -227,18 +237,14 @@ class EncryptableDataCache(DataCache):
         # The cache is not decrypted yet, but this lifts the restriction on accessing
         # encrypted fields so that they can be decrypted in the next step.
         self.is_encrypted = False
-        decrypted_fields = {}
         try:
-            for field in self.fields_to_encrypt():
-                value = self.get(field)
-                if value is not None:
-                    decrypted_fields[field] = cipher.decrypt(value)
+            set_fields = self._read_set_fields()
+            decrypted_buffer = cipher.decrypt(b"".join(v for _, v in set_fields))
             cipher.finish(self.authentication_tag)
         except Exception:
             self.is_encrypted = True
             raise
-        for field, value in decrypted_fields.items():
-            self.set(field, value)
+        self._write_split(set_fields, decrypted_buffer)
         # Erase the now-spent nonce and tag; zero in place to keep the buffers.
         self.nonce[:] = bytes(_NONCE_LENGTH)
         self.authentication_tag[:] = bytes(_TAG_LENGTH)

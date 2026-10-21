@@ -283,17 +283,15 @@ class TestStorageCacheEncryption(unittest.TestCase):
 
         # derive the key independently of `_get_slip21_key`
         node = Slip21Node(seed=get_device_secret())
-        node.derive_path([b"TREZOR", b"STORAGE", b"CACHE", b"encryption_key"])
+        node.derive_path([b"TREZOR", b"Storage cache encryption key"])
         decryption_key = node.key()
 
         ctx = chacha20poly1305_decrypt(decryption_key, session.nonce)
-        decrypted = {}
-        for key in self.KEYS:
-            decrypted[key] = ctx.decrypt(self._ciphertext(session, key))
+        ciphertext = b"".join(self._ciphertext(session, key) for key in self.KEYS)
+        plaintext = ctx.decrypt(ciphertext)
         ctx.finish(session.authentication_tag)  # raises if the tag is wrong
 
-        for key in self.KEYS:
-            self.assertEqual(values[key], decrypted[key])
+        self.assertEqual(b"".join(values[key] for key in self.KEYS), plaintext)
 
     # --- access while encrypted --------------------------------------------
 
