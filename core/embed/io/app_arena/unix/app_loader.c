@@ -87,6 +87,9 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
 
   applet_set_heap(applet, data, data_size);
 
+  // The inbox is allocated from the heap (header is untrusted)
+  TSH_CHECK(header->ipc_buffer_size <= data_size, TS_ENOMEM);
+
   // Isolate the applet file from other users before loading it.
   rc = asprintf(&directory, "%s/trezor_ext_app.XXXXXX", profile_dir());
   TSH_CHECK(rc >= 0, TS_ENOMEM);
