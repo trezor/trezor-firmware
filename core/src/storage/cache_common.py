@@ -156,7 +156,7 @@ class EncryptableDataCache(DataCache):
         from storage.device import get_device_secret
 
         device_secret = get_device_secret()
-        path = [b"TREZOR", b"STORAGE", b"CACHE", b"encryption_key"]
+        path = [b"TREZOR", b"Storage cache encryption key"]
         return _get_slip21_key(path, device_secret)
 
     def check_key(self, key: int) -> None:
