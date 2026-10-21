@@ -65,7 +65,7 @@ class AppHeader(SanityCheckedStruct):
     # Size of each chunk of the binary payload
     chunk_size: int
     # Reserved for future use
-    reserved_2: bytes | None = None
+    reserved_2: bytes
     # Curves used for the app (e.g., secp256k1, ed25519)
     curves: list[str]
     # Allowed BIP32 path prefixes
@@ -73,7 +73,7 @@ class AppHeader(SanityCheckedStruct):
     # Size in bytes of the IPC inbox Core registers for the app at launch
     ipc_buffer_size: int
     # Reserved for future use
-    reserved_3: bytes | None = None
+    reserved_3: bytes
 
     SUBCON = c.Struct(
         "_start_offset" / c.Tell,
