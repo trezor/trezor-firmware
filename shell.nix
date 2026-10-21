@@ -5,11 +5,11 @@
  }:
 
 let
-  # the last commit from master as of 2026-03-16
+  # the last commit from master as of 2026-10-21
   # when updating please also bump rustProfiles below
   rustOverlay = import (builtins.fetchTarball {
-    url = "https://github.com/oxalica/rust-overlay/archive/f600ea449c7b5bb596fa1cf21c871cc5b9e31316.tar.gz";
-    sha256 = "0x70l5b4v5zljnwkzbv7yi5ld04vb75zb6wk620sfm6vd406166c";
+    url = "https://github.com/oxalica/rust-overlay/archive/83dd732f2428827f35d997deae108a2ced5125f4.tar.gz";
+    sha256 = "14wicypn8mavj1bzwdmvi82gvga7p554hxlvyd45lfyia363xcws";
   });
   # define this variable and devTools if you want nrf{util,connect}
   acceptJlink = builtins.getEnv "TREZOR_FIRMWARE_ACCEPT_JLINK_LICENSE" == "yes";
@@ -49,7 +49,7 @@ let
       done
     '';
   # NOTE: don't forget to update Minimum Supported Rust Version in docs/core/build/emulator.md
-  rustProfiles = nixpkgs.rust-bin.nightly."2026-03-16";
+  rustProfiles = nixpkgs.rust-bin.nightly."2026-10-21";
   rustNightly = rustProfiles.minimal.override {
     targets = [
       "thumbv8m.main-none-eabihf" # T3
