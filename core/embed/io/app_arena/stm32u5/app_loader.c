@@ -210,6 +210,9 @@ ts_t app_loader_verify_payload(const app_header_t* header, const void* code,
   // Check that the heap size is reasonable
   TSH_CHECK(chdr->heap_size < APP_ARENA_RAM_SIZE, TS_ENOMEM);
 
+  // Check that the IPC inbox fits in the heap it is allocated from
+  TSH_CHECK(header->ipc_buffer_size <= chdr->heap_size, TS_EBADMSG);
+
   // Check that the entrypoint is within the RO segment
   TSH_CHECK(chdr->entry_va >= chdr->ro_va, TS_EBADMSG);
   TSH_CHECK(chdr->entry_va < chdr->ro_va + chdr->ro_size, TS_EBADMSG);
