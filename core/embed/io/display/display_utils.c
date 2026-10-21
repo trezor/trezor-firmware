@@ -43,14 +43,14 @@ typedef struct {
   // Screen recording status
   bool recording;
   uint8_t target_directory[256];
-  int refresh_index;
+  uint32_t refresh_index;
 
 } display_recording_t;
 
 static display_recording_t g_display_recording = {0};
 
 void display_record_start(uint8_t *target_dir, size_t target_dir_len,
-                          int refresh_index) {
+                          uint32_t refresh_index) {
   display_recording_t *rec = &g_display_recording;
 
   rec->recording = true;
@@ -89,15 +89,15 @@ void display_record_screen(void) {
   }
 
   char prefix[512];
-  snprintf(prefix, sizeof(prefix), "%s/refresh%02d-", rec->target_directory,
-           rec->refresh_index);
+  snprintf(prefix, sizeof(prefix), "%s/refresh%02" PRIu32 "-",
+           rec->target_directory, rec->refresh_index);
 
   display_save(prefix);
 }
 
 #else
 void display_record_start(uint8_t *target_dir, size_t target_dir_len,
-                          int refresh_index) {}
+                          uint32_t refresh_index) {}
 void display_record_stop(void) {}
 bool display_is_recording(void) { return false; }
 void display_record_screen(void) {}

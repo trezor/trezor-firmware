@@ -35,7 +35,7 @@ void display_fade(uint8_t start, uint8_t end, int delay);
  * @note Only available in emulator builds
  */
 void display_record_start(uint8_t *target_dir, size_t target_dir_len,
-                          int refresh_index);
+                          uint32_t refresh_index);
 
 /**
  * @brief Stops the display recording
