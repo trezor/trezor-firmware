@@ -99,6 +99,90 @@ class TestCryptoChaCha20Poly1305(unittest.TestCase):
                 ctx.finish(invalid_mac)
             self.assertEqual(e.value.value, "Authentication failed.")
 
+    def test_chacha20poly1305_invalid_key_nonce_len(self):
+        key = b"\x00" * chacha20poly1305_encrypt.key_size
+        nonce = b"\x00" * chacha20poly1305_encrypt.nonce_size
+        for cls in (chacha20poly1305_encrypt, chacha20poly1305_decrypt):
+            for bad_key in (b"", key[:-1], key + b"\x00"):
+                with self.assertRaises(ValueError):
+                    cls(bad_key, nonce)
+            for bad_nonce in (b"", nonce[:-1], nonce + b"\x00"):
+                with self.assertRaises(ValueError):
+                    cls(key, bad_nonce)
+
+    def test_chacha20poly1305_state(self):
+        block_size = chacha20poly1305_encrypt.block_size
+        key = b"\x00" * chacha20poly1305_encrypt.key_size
+        nonce = b"\x00" * chacha20poly1305_encrypt.nonce_size
+        tag = b"\x00" * chacha20poly1305_encrypt.tag_size
+        aad = b"\x01" * 5
+        full = b"\x02" * block_size
+        partial = b"\x03" * (block_size - 1)
+
+        for cls, operation, finish_args in (
+            (chacha20poly1305_encrypt, "encrypt", ()),
+            (chacha20poly1305_decrypt, "decrypt", (tag,)),
+        ):
+
+            def process(ctx, chunk):
+                return getattr(ctx, operation)(chunk)
+
+            def finish(ctx):
+                try:
+                    return ctx.finish(*finish_args)
+                except AuthenticationError:
+                    # The MAC check follows the state check, so an
+                    # AuthenticationError means the state was accepted.
+                    return None
+
+            # Multiple full blocks followed by a final partial block, then
+            # finish, is valid usage. Empty data does not end the stream.
+            ctx = cls(key, nonce)
+            ctx.auth(aad)
+            process(ctx, b"")
+            process(ctx, full)
+            process(ctx, full * 2)
+            process(ctx, b"")
+            process(ctx, partial)
+            finish(ctx)
+
+            # Finishing straight away or after auth only is valid usage.
+            finish(cls(key, nonce))
+            ctx = cls(key, nonce)
+            ctx.auth(aad)
+            finish(ctx)
+
+            # auth() must be called at most once and before any data.
+            ctx = cls(key, nonce)
+            ctx.auth(aad)
+            with self.assertRaises(RuntimeError):
+                ctx.auth(aad)
+            ctx = cls(key, nonce)
+            process(ctx, full)
+            with self.assertRaises(RuntimeError):
+                ctx.auth(aad)
+
+            # No data may follow a partial block.
+            for last in (partial, full + partial, b"\x04"):
+                ctx = cls(key, nonce)
+                process(ctx, last)
+                for more in (b"", full, partial):
+                    with self.assertRaises(RuntimeError):
+                        process(ctx, more)
+                finish(ctx)
+
+            # Nothing may follow finish().
+            for before in (b"", full, partial):
+                ctx = cls(key, nonce)
+                process(ctx, before)
+                finish(ctx)
+                with self.assertRaises(RuntimeError):
+                    ctx.auth(aad)
+                with self.assertRaises(RuntimeError):
+                    process(ctx, full)
+                with self.assertRaises(RuntimeError):
+                    finish(ctx)
+
 
 if __name__ == "__main__":
     unittest.main()
