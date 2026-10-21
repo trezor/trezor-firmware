@@ -66,22 +66,28 @@ def reset(excluded: tuple[AnyBytes, AnyBytes] | None) -> None:
 
 def lock() -> None:
     """Lock the storage. Encrypts the cache first, so the two stay in sync."""
+    import gc
+
     if not config.is_unlocked():
         # Load-bearing, not an optimization: `LockDevice` on an already locked device would
         # have `encrypt_cache` try to store a new device secret, and crash.
         return
     cache.encrypt_cache()
     config.lock()
+    gc.collect()
 
 
 def unlock(pin: str, salt: AnyBytes | None) -> bool:
     """Unlock the storage and decrypt the cache. False if the PIN was wrong."""
+    import gc
+
     was_locked = not config.is_unlocked()
     if not config.unlock(pin, salt):
         return False
     # debug-only: catches a lock path that skipped encryption
     assert not was_locked or cache.no_unexpected_plaintext()
     cache.decrypt_cache()
+    gc.collect()
     return True
 
 
