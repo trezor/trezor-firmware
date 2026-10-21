@@ -22,7 +22,6 @@ APP_MISC_COSI_NONCE = const(4 | SESSIONLESS_FLAG)
 APP_MISC_COSI_COMMITMENT = const(5 | SESSIONLESS_FLAG)
 APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | SESSIONLESS_FLAG)
 
-# Order and membership are part of the ciphertext layout -- see `EncryptableDataCache`.
 CACHE_ENCRYPTED_KEYS_SEEDLESS = (APP_COMMON_SEED_WITHOUT_PASSPHRASE,)
 
 
@@ -42,16 +41,38 @@ class InvalidSessionError(Exception):
     pass
 
 
+def _get_slip21_key(path: Sequence[bytes], seed: bytes) -> bytes:
+    from trezorcrypto import hmac
+
+    data = hmac(hmac.SHA512, b"Symmetric key seed", seed).digest()
+    for label in path:
+        h = hmac(hmac.SHA512, data[0:32], b"\x00")
+        h.update(label)
+        data = h.digest()
+    return data[32:64]
+
+
 class DataCache:
     """
     A single unit of cache storage, designed to store common-type
     values efficiently in bytearrays in a sequential manner.
+
+    Its sensitive fields are encrypted while the device is locked.
+    The fields listed by `fields_to_encrypt()` that are *set* are encrypted together as
+    one ChaCha20-Poly1305 stream, with a single nonce and tag. Unset fields are skipped.
+    Decrypt must consume the keystream in the same order and lengths or the tag check fails.
+    `check_key` keeps that set stable by refusing writes and deletes while encrypted.
     """
 
     fields: Sequence[int]  # field sizes
 
     def __init__(self) -> None:
         self.data = [bytearray(f + 1) for f in self.fields]
+        self.nonce = bytearray(_NONCE_LENGTH)
+        self.authentication_tag = bytearray(_TAG_LENGTH)
+        self.is_encrypted: bool = False
+        if __debug__:
+            self.was_preauthorized: bool = False
 
     if TYPE_CHECKING:
 
@@ -64,7 +85,13 @@ class DataCache:
             ...
 
     def check_key(self, key: int) -> None:
+        """
+        Do not allow access to an encrypted field's *value*. Writing or deleting one
+        would shift the shared keystream and break every field after it.
+        """
         utils.ensure(key < len(self.fields))
+        if self.is_encrypted and self._is_encrypted_field(key):
+            raise RuntimeError  # encrypted fields are inaccessible while locked
 
     def get(self, key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
         self.check_key(key)
@@ -112,42 +139,20 @@ class DataCache:
         self.data[key][:] = b"\x00"
 
     def clear(self) -> None:
+        # `is_encrypted` must come first: `delete` refuses encrypted fields,
+        # so the other order would raise on the first encrypted field.
+        self.is_encrypted = False
         for i in range(len(self.fields)):
             self.delete(i)
+        # Zero in place to keep the preallocated buffers
+        self.nonce[:] = bytes(_NONCE_LENGTH)
+        self.authentication_tag[:] = bytes(_TAG_LENGTH)
+        if __debug__:
+            self.was_preauthorized = False
 
     def _get_length(self, key: int) -> int:
         utils.ensure(key < len(self.fields))
         return self.fields[key]
-
-
-def _get_slip21_key(path: Sequence[bytes], seed: bytes) -> bytes:
-    from trezorcrypto import hmac
-
-    data = hmac(hmac.SHA512, b"Symmetric key seed", seed).digest()
-    for label in path:
-        h = hmac(hmac.SHA512, data[0:32], b"\x00")
-        h.update(label)
-        data = h.digest()
-    return data[32:64]
-
-
-class EncryptableDataCache(DataCache):
-    """
-    A DataCache whose sensitive fields are encrypted while the device is locked.
-
-    The fields listed by `fields_to_encrypt()` that are *set* are encrypted together as
-    one ChaCha20-Poly1305 stream, with a single nonce and tag. Unset fields are skipped.
-    Decrypt must consume the keystream in the same order and lengths or the tag check fails.
-    `check_key` keeps that set stable by refusing writes and deletes while encrypted.
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.nonce = bytearray(_NONCE_LENGTH)
-        self.authentication_tag = bytearray(_TAG_LENGTH)
-        self.is_encrypted: bool = False
-        if __debug__:
-            self.was_preauthorized: bool = False
 
     @staticmethod
     def _get_cache_encryption_key() -> bytes:
@@ -170,28 +175,8 @@ class EncryptableDataCache(DataCache):
             self.set(field, view[offset : offset + len(value)])
             offset += len(value)
 
-    def check_key(self, key: int) -> None:
-        """
-        Do not allow access to an encrypted field's *value*. Writing or deleting one
-        would shift the shared keystream and break every field after it.
-        """
-        super().check_key(key)
-        if self.is_encrypted and self._is_encrypted_field(key):
-            raise RuntimeError  # encrypted fields are inaccessible while locked
-
     def _is_encrypted_field(self, key: int) -> bool:
         return key in self.fields_to_encrypt()
-
-    def clear(self) -> None:
-        # `is_encrypted` must come first: `delete` refuses encrypted fields,
-        # so the other order would raise on the first encrypted field.
-        self.is_encrypted = False
-        super().clear()
-        # Zero in place to keep the preallocated buffers
-        self.nonce[:] = bytes(_NONCE_LENGTH)
-        self.authentication_tag[:] = bytes(_TAG_LENGTH)
-        if __debug__:
-            self.was_preauthorized = False
 
     def encrypt(self) -> None:
         """
@@ -273,7 +258,7 @@ class EncryptableDataCache(DataCache):
         return False
 
 
-class SessionlessCache(EncryptableDataCache):
+class SessionlessCache(DataCache):
     """
     A cache for values that are independent of both
     passphrase seed derivation and the active session.

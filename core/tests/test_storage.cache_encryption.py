@@ -13,7 +13,7 @@ from storage.cache_common import (
     APP_COMMON_BUSY_DEADLINE_MS,
     CACHE_ENCRYPTED_KEYS_SEEDLESS,
     SESSIONLESS_FLAG,
-    EncryptableDataCache,
+    DataCache,
 )
 from trezor import config, utils
 from trezor.crypto import random
@@ -54,10 +54,10 @@ class TestStorageCacheEncryption(unittest.TestCase):
 
     # --- helpers -----------------------------------------------------------
 
-    def _session(self, index: int = 0) -> EncryptableDataCache:
+    def _session(self, index: int = 0) -> DataCache:
         return protocol_cache._SESSIONS[index]
 
-    def _fill(self, cache_instance: EncryptableDataCache, keys: Sequence[int]) -> dict:
+    def _fill(self, cache_instance: DataCache, keys: Sequence[int]) -> dict:
         values = {}
         for key in keys:
             cache_instance.set(key, random.bytes(cache_instance._get_length(key)))
@@ -65,25 +65,23 @@ class TestStorageCacheEncryption(unittest.TestCase):
             self.assertIsNotNone(values[key])
         return values
 
-    def _ciphertext(self, cache_instance: EncryptableDataCache, key: int) -> bytes:
+    def _ciphertext(self, cache_instance: DataCache, key: int) -> bytes:
         # `get` refuses encrypted fields so read the buffer directly
         return bytes(cache_instance.data[key & ~SESSIONLESS_FLAG][1:])
 
-    def assert_encrypted(self, cache_instance: EncryptableDataCache) -> None:
+    def assert_encrypted(self, cache_instance: DataCache) -> None:
         self.assertTrue(cache_instance.is_encrypted)
         nonce, tag = cache_instance.nonce, cache_instance.authentication_tag
         self.assertTrue(any(nonce))
         self.assertTrue(any(tag))
 
-    def assert_plaintext(self, cache_instance: EncryptableDataCache) -> None:
+    def assert_plaintext(self, cache_instance: DataCache) -> None:
         self.assertFalse(cache_instance.is_encrypted)
         nonce, tag = cache_instance.nonce, cache_instance.authentication_tag
         self.assertFalse(any(nonce))
         self.assertFalse(any(tag))
 
-    def _roundtrip(
-        self, cache_instance: EncryptableDataCache, keys: Sequence[int]
-    ) -> None:
+    def _roundtrip(self, cache_instance: DataCache, keys: Sequence[int]) -> None:
         values = self._fill(cache_instance, keys)
         self.assert_plaintext(cache_instance)
 
@@ -140,7 +138,7 @@ class TestStorageCacheEncryption(unittest.TestCase):
 
     # --- corruption --------------------------------------------------------
 
-    def _assert_decrypt_fails(self, session: EncryptableDataCache) -> None:
+    def _assert_decrypt_fails(self, session: DataCache) -> None:
         ciphertext = {key: self._ciphertext(session, key) for key in self.KEYS}
         # `decrypt_cache` would hide the `AuthenticationError` behind the halt
         with self.assertRaises(AuthenticationError):
@@ -295,7 +293,7 @@ class TestStorageCacheEncryption(unittest.TestCase):
 
     # --- access while encrypted --------------------------------------------
 
-    def assert_guarded(self, cache_instance: EncryptableDataCache, key: int) -> None:
+    def assert_guarded(self, cache_instance: DataCache, key: int) -> None:
         with self.assertRaises(RuntimeError):
             cache_instance.get(key)
         with self.assertRaises(RuntimeError):

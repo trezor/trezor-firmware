@@ -7,7 +7,7 @@ from storage.cache_common import (
     LAST_USAGE,
     SESSION_ID,
     SESSION_STATE,
-    EncryptableDataCache,
+    DataCache,
 )
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ _ALLOCATED_STATE = const(1)
 _SEEDLESS_STATE = const(2)
 
 
-class SessionThpCache(EncryptableDataCache):
+class SessionThpCache(DataCache):
     def __init__(self) -> None:
         from trezor import utils
 

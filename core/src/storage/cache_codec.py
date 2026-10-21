@@ -2,7 +2,7 @@ import builtins
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage.cache_common import EncryptableDataCache
+from storage.cache_common import DataCache
 from trezor import utils
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ _MAX_SESSIONS_COUNT = const(10)
 _SESSION_ID_LENGTH = const(32)
 
 
-class SessionCache(EncryptableDataCache):
+class SessionCache(DataCache):
     """
     A cache for storing values that depend on seed derivation
     or are specific to a `protocol_v1` session.

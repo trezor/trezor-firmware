@@ -2,11 +2,7 @@ import builtins
 import gc
 from typing import TYPE_CHECKING
 
-from storage.cache_common import (
-    SESSIONLESS_FLAG,
-    EncryptableDataCache,
-    SessionlessCache,
-)
+from storage.cache_common import SESSIONLESS_FLAG, DataCache, SessionlessCache
 from trezor import utils
 
 if TYPE_CHECKING:
@@ -30,9 +26,7 @@ _PROTOCOL_CACHE.initialize()
 _SESSIONLESS_CACHE.clear()
 
 # Built once, at import: the lock path must not allocate.
-_ALL_CACHES: Sequence[EncryptableDataCache] = _PROTOCOL_CACHE._SESSIONS + [
-    _SESSIONLESS_CACHE
-]
+_ALL_CACHES: Sequence[DataCache] = _PROTOCOL_CACHE._SESSIONS + [_SESSIONLESS_CACHE]
 
 gc.collect()
 

@@ -19,7 +19,6 @@ if utils.USE_THP:
         APP_MONERO_LIVE_REFRESH = const(11)
         APP_EXTAPP_IDS = const(12)
 
-    # Order and membership are part of the ciphertext layout -- see `EncryptableDataCache`.
     if utils.BITCOIN_ONLY:
         CACHE_ENCRYPTED_KEYS_THP = (
             APP_COMMON_SEED,
