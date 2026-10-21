@@ -152,7 +152,10 @@ def terminal_summary(
         println("-------- UI tests summary: --------")
         for result in TestResult.recent_results():
             if result.passed and not result.ui_passed:
-                println(f"UI_FAILED: {result.test.id} ({result.actual_hash})")
+                if result.expected_hash is None:
+                    println(f"UI_MISSING: {result.test.id} ({result.actual_hash})")
+                else:
+                    println(f"UI_FAILED: {result.test.id} ({result.actual_hash})")
         println("Run ./tests/show_results.py to open test summary")
         println("")
 

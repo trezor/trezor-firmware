@@ -40,11 +40,15 @@ use crate::ui::layout::util::{
 };
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    DeviceMenuParams, FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-    MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
+    DeviceMenuParams, FirmwareUI, SelectMenuItem, Severity, MAX_CHECKLIST_ITEMS,
+    MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
 use crate::util::interpolate;
+
+/// How long the closing notice stays up before dismissing itself; the same as
+/// `show_continue_in_app`.
+const NOTICE_DONE_TIMEOUT_MS: u32 = 3200;
 
 impl FirmwareUI for UIEckhart {
     fn confirm_action(
@@ -105,10 +109,12 @@ impl FirmwareUI for UIEckhart {
             header = header.with_right_button(Button::with_icon(theme::ICON_MENU), HeaderMsg::Menu);
         }
 
+        // With a menu, the way out lives in it, as on this
+        // model's own screens, so the screen draws none of its own.
         let mut screen = TextScreen::new(paragraphs)
             .with_header(header)
             .with_external_menu(external_menu)
-            .with_action_bar(if cancel {
+            .with_action_bar(if cancel && !external_menu {
                 ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button)
             } else {
                 ActionBar::new_single(right_button)
@@ -531,7 +537,9 @@ impl FirmwareUI for UIEckhart {
             Header::new(title)
         };
 
-        let action_bar = if cancel {
+        // With a menu, the way out lives in it, as on this
+        // model's own screens, so the screen draws none of its own.
+        let action_bar = if cancel && !external_menu {
             ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button)
         } else if back_button {
             ActionBar::new_double(Button::with_icon(theme::ICON_CHEVRON_UP), right_button)
@@ -1328,6 +1336,60 @@ impl FirmwareUI for UIEckhart {
 
         let layout = RootComponent::new(screen);
         Ok(layout)
+    }
+
+    fn show_notice(
+        severity: Severity,
+        title: TString<'static>,
+        content: TString<'static>,
+        external_menu: bool,
+        _cancel: bool,
+    ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: only the info screen has a menu a caller can drive. The notice is drawn
+        // without it, so the caller's extras are unreachable here.
+        let external_menu = if external_menu && severity != Severity::Info {
+            log::warn!("show_notice: external_menu is not supported for this severity, ignored");
+            false
+        } else {
+            external_menu
+        };
+        match severity {
+            Severity::Info => Self::show_info(
+                title,
+                content,
+                Some((TR::buttons__continue.into(), true)),
+                0,
+                external_menu,
+            ),
+            // Mid-flow: the person reads it and moves on themselves.
+            Severity::Success => {
+                Self::show_success(title, TR::buttons__continue.into(), content, false, 0)
+            }
+            // End of flow: the same screen as `show_continue_in_app`, which
+            // sends the person back to the host and does not wait for them.
+            Severity::Done => Self::show_success(
+                title,
+                TR::instructions__continue_in_app.into(),
+                content,
+                false,
+                NOTICE_DONE_TIMEOUT_MS,
+            ),
+            Severity::Warning => Self::show_warning(
+                Some(title),
+                TR::buttons__continue.into(),
+                TString::empty(),
+                content,
+                true, // allow_cancel: like core's own warnings
+                false,
+            ),
+            Severity::Danger => LayoutObj::new_root(Self::show_danger(
+                title,
+                content,
+                TString::empty(),
+                None,
+                Some(TR::buttons__cancel.into()),
+            )?),
+        }
     }
 
     fn show_progress(
