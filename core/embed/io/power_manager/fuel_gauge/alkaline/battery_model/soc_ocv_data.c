@@ -2,17 +2,25 @@
  * calibration set points: -10 degC, 0 degC, 25 degC, 45 degC */
 #include "soc_ocv_data.h"
 
-const int8_t soc_ocv_lut_span[SOC_OCV_LUT_TEMPS][2] = {{-22, -22}, {-1, -1}, {38, 60}, {89, 89}};
-const uint16_t soc_ocv_lut_vrange[SOC_OCV_LUT_TEMPS][2] = {{1323U, 1599U}, {1218U, 1609U}, {1158U, 1606U}, {1115U, 1605U}};
+const int8_t soc_ocv_lut_span[SOC_OCV_LUT_TEMPS][2] = {
+    {-22, -22}, {-1, -1}, {38, 60}, {89, 89}};
+const uint16_t soc_ocv_lut_vrange[SOC_OCV_LUT_TEMPS][2] = {
+    {1323U, 1599U}, {1218U, 1609U}, {1158U, 1606U}, {1115U, 1605U}};
 const uint8_t soc_ocv_lut_soc[SOC_OCV_LUT_TEMPS][SOC_OCV_LUT_POINTS] = {
-    {1U, 13U, 19U, 40U, 56U, 78U, 94U, 114U, 128U, 142U, 152U, 167U, 170U, 177U, 185U, 188U, 200U, 200U, 200U, 200U},
-    {0U, 8U, 38U, 50U, 65U, 74U, 85U, 101U, 117U, 131U, 146U, 161U, 170U, 178U, 187U, 190U, 194U, 198U, 200U, 200U},
-    {0U, 8U, 13U, 25U, 44U, 67U, 96U, 120U, 135U, 152U, 165U, 176U, 183U, 188U, 192U, 195U, 196U, 198U, 200U, 200U},
-    {0U, 4U, 9U, 19U, 27U, 40U, 55U, 75U, 101U, 123U, 142U, 156U, 171U, 183U, 189U, 193U, 196U, 198U, 199U, 200U},
+    {1U,   13U,  19U,  40U,  56U,  78U,  94U,  114U, 128U, 142U,
+     152U, 167U, 170U, 177U, 185U, 188U, 200U, 200U, 200U, 200U},
+    {0U,   8U,   38U,  50U,  65U,  74U,  85U,  101U, 117U, 131U,
+     146U, 161U, 170U, 178U, 187U, 190U, 194U, 198U, 200U, 200U},
+    {0U,   8U,   13U,  25U,  44U,  67U,  96U,  120U, 135U, 152U,
+     165U, 176U, 183U, 188U, 192U, 195U, 196U, 198U, 200U, 200U},
+    {0U,   4U,   9U,   19U,  27U,  40U,  55U,  75U,  101U, 123U,
+     142U, 156U, 171U, 183U, 189U, 193U, 196U, 198U, 199U, 200U},
 };
 
-const int8_t soc_ocv_poly_span[SOC_OCV_POLY_TEMPS][2] = {{-22, -22}, {-1, -1}, {38, 60}, {89, 89}};
-const uint16_t soc_ocv_poly_vrange[SOC_OCV_POLY_TEMPS][2] = {{1323U, 1599U}, {1218U, 1609U}, {1158U, 1606U}, {1115U, 1605U}};
+const int8_t soc_ocv_poly_span[SOC_OCV_POLY_TEMPS][2] = {
+    {-22, -22}, {-1, -1}, {38, 60}, {89, 89}};
+const uint16_t soc_ocv_poly_vrange[SOC_OCV_POLY_TEMPS][2] = {
+    {1323U, 1599U}, {1218U, 1609U}, {1158U, 1606U}, {1115U, 1605U}};
 const int16_t soc_ocv_poly_coef[SOC_OCV_POLY_TEMPS][SOC_OCV_POLY_COEFS] = {
     {7433, 5856, -4214, -815, 1933},
     {6887, 5855, -1650, -737, -86},
