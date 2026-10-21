@@ -78,11 +78,13 @@ typedef struct {
   /** Allowed BIP32 path prefixes
    * (array of null-terminated strings, zero-padded) */
   char paths[APP_HEADER_PATHS_MAX_LEN];
+  /** Size of the app's IPC inbox in bytes (allocated from its heap) */
+  uint32_t ipc_buffer_size;
 
 } app_header_t;
 
 _Static_assert(
-    sizeof(app_header_t) == 484,
+    sizeof(app_header_t) == 488,
     "app_header_t layout changed; the image format is not compatible");
 
 _Static_assert(sizeof(app_header_t) <= APP_HEADER_MAX_SIZE,
