@@ -2,15 +2,16 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 import trezorui_api
-from trezor import TR
+from trezor import TR, loop
+from trezor.ui import Shutdown
 from trezor.ui.layouts.menu import (
     Menu,
     cancel_leaf,
     interact_with_menu,
     leaf_from_layout,
 )
-from trezor.wire import ActionCancelled
-from trezor.wire.errors import DataError
+from trezor.wire import ActionCancelled, context
+from trezor.wire.errors import DataError, Error
 
 from .session import SERVICE_UI
 
@@ -41,6 +42,17 @@ async def handle(session: Session, msg: IpcMessage) -> None:
         result = await _show_layout(bytes(msg.data))
     except ActionCancelled:
         result = trezorui_api.CANCELLED
+    except (
+        Error,
+        MemoryError,
+        loop.TaskClosed,
+        Shutdown,
+        context.UnexpectedMessageException,
+    ):
+        # The workflow's own control flow, such as the host cancelling while
+        # the screen is up: not the app's request at fault, so it goes on up
+        # as `run.py` passes it on.
+        raise
     except Exception as e:
         # The request cannot be drawn. Answering would leave the app waiting on
         # a screen that never existed, so the app stops.
