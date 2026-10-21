@@ -60,8 +60,8 @@ typedef struct {
   uint8_t target_arch;
   /** Application privilege ring */
   uint8_t app_ring;
-  /** Reserved for future use */
-  uint8_t reserved1;
+  /** Application language */
+  uint8_t language;
   /** Size of the binary payload in bytes. */
   uint32_t code_size;
   /** Size of RAM required by the app (includes stack, heap, and static data) */
