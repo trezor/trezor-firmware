@@ -230,16 +230,6 @@ ts_t app_image_get_pminfo(app_image_handle_t handle,
                           systask_postmortem_t *pminfo);
 
 /**
- * @brief Gets the heap pointer and size for the currently active applet.
- *
- * @param heap_ptr Pointer to a variable to store the heap pointer.
- * @param heap_size Pointer to a variable to store the heap size.
- *
- * @return TS_OK on success, or an error code on failure.
- */
-ts_t app_get_heap(void **heap_ptr, size_t *heap_size);
-
-/**
  * Launch arguments of a loaded app.
  *
  * The loader copies this structure onto the app's own stack and passes

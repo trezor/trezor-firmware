@@ -511,8 +511,6 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
 
   applet_init(applet, &privileges, unload_cb);
 
-  applet_set_heap(applet, (void*)map.heap_p_addr, map.heap_size);
-
   // The inbox is allocated from the heap (header is untrusted)
   TSH_CHECK(header->ipc_buffer_size <= map.heap_size, TS_ENOMEM);
 
