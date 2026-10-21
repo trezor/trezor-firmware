@@ -26,7 +26,7 @@ import subprocess
 import time
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any, Optional, TextIO, Union, cast
+from typing import Any, TextIO, cast
 
 from ..debuglink import DebugLinkNotFound, TrezorTestContext
 from ..transport import Transport
@@ -54,7 +54,7 @@ def _rm_f(path: Path) -> None:
         pass
 
 
-def _reserve_free_port() -> tuple[Optional[socket.socket], int]:
+def _reserve_free_port() -> tuple[socket.socket | None, int]:
     """Reserve a free TCP port for the Tropic model.
 
     The returned socket keeps the port bound until it is closed, so no other
@@ -93,7 +93,7 @@ class TropicModel:
         configfile_output: Path | None = None,
     ) -> None:
         self.profile_dir = Path(profile_dir).resolve()
-        self._port_reservation: Optional[socket.socket] = None
+        self._port_reservation: socket.socket | None = None
         if port is not None:
             self.port = port
         else:
@@ -103,7 +103,7 @@ class TropicModel:
             configfile_output or self.profile_dir / "tropic_model_config_output.yml"
         )
         self.logfile = logfile or self.profile_dir / "trezor-tropic-model.log"
-        self.process: Optional[subprocess.Popen] = None
+        self.process: subprocess.Popen | None = None
 
     def start(self) -> None:
         self.process = self._launch_process()
@@ -203,8 +203,8 @@ class Emulator:
         executable: Path,
         profile_dir: str,
         *,
-        logfile: Union[TextIO, str, Path, None] = None,
-        storage: Optional[bytes] = None,
+        logfile: TextIO | str | Path | None = None,
+        storage: bytes | None = None,
         headless: bool = False,
         debug: bool = True,
         auto_interact: bool = True,
@@ -246,7 +246,7 @@ class Emulator:
 
     @property
     def client(self) -> TrezorTestContext:
-        """So that type-checkers do not see `client` as `Optional`.
+        """So that type-checkers do not see `client` as optional.
 
         (it is not None between `start()` and `stop()` calls)
         """
@@ -288,7 +288,7 @@ class Emulator:
 
         LOG.info(f"Emulator ready after {time.monotonic() - start:.3f} seconds")
 
-    def wait(self, timeout: Optional[float] = None) -> int:
+    def wait(self, timeout: float | None = None) -> int:
         assert self.process is not None, "Emulator not started"
         ret = self.process.wait(timeout=timeout)
         _RUNNING_PIDS.remove(self.process)
@@ -317,8 +317,8 @@ class Emulator:
 
     def start(
         self,
-        transport: Optional[UdpTransport] = None,
-        debug_transport: Optional[Transport] = None,
+        transport: UdpTransport | None = None,
+        debug_transport: Transport | None = None,
     ) -> None:
         if self.process:
             if self.process.poll() is not None:
@@ -425,14 +425,14 @@ class CoreEmulator(Emulator):
     def __init__(
         self,
         *args: Any,
-        tropic_model_port: Optional[int] = None,
-        port: Optional[int] = None,
+        tropic_model_port: int | None = None,
+        port: int | None = None,
         main_args: Sequence[str] = ("-m", "main"),
-        workdir: Optional[Path] = None,
-        sdcard: Optional[bytes] = None,
+        workdir: Path | None = None,
+        sdcard: bytes | None = None,
         disable_animation: bool = True,
         heap_size: str = "20M",
-        display_scale: Optional[float] = None,
+        display_scale: float | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
