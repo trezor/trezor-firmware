@@ -373,6 +373,70 @@ side-channel attacker a precise trigger and unlimited repetitions.
 | Repeated SAES unwraps of the same input give unlimited identical traces | Relies on SAES DPA countermeasures |
 | Ed25519 has no scalar blinding | Pre-existing, now in the kernel |
 
+## Potential improvements
+
+The architecture stays: movable sealed records in coreapp, bounded owner state
+in the kernel, and operations that return only public results or new records.
+It needs no kernel allocation per secret and allows allocation-free holders.
+SAES protects the record keys; wallet plaintext still exists briefly inside
+kernel crypto operations, and coreapp supplies owner identities, so request
+ownership manages lifetime but cannot stop compromised coreapp from asking for
+signatures. In order of priority:
+
+1. **Fix `ethereum_pubkeyhash()`.** A vault HDNode returns an all-zero address:
+   the binding passes the public view, whose private key is zeroed, to
+   `hdnode_get_ethereum_pubkeyhash()` and ignores its failure. A unit test
+   derives `m/44'/60'/0'/0/0` from the "all" mnemonic and gets
+   `0x0000…0000` instead of `0x73d0385F…36A8`. Ethereum and Tron signing and
+   address display are blocked earlier today (canonical signing and SLIP-21 are
+   not migrated), so no wrong address reaches a user yet. Compute the hash from
+   the public key returned by the vault, and fail on error.
+2. **Validate the SAES key path with a known key.** The new-key self-test
+   proves that sealing and opening are consistent, but a consistently wrong key
+   would pass too. A hardware test build should wrap a known key, compare
+   ciphertext and tag with an independent GCM computation, and check wrong-key
+   rejection and key replacement. This also settles the `KEYSEL` question,
+   which the software stand-in cannot.
+3. **Let the sealing key own its nonce.** One secure-world object per key holds
+   the wrapped key, counter, exhaustion and failure state. SEAL allocates and
+   returns the IV; OPEN takes the stored one. Key and counter can then never
+   restart independently (GCM's uniqueness requirement,
+   [NIST SP 800-38D](https://csrc.nist.gov/pubs/sp/800/38/d/final)). A 32-bit
+   counter with enforced exhaustion would then suffice.
+4. **Derive whole paths in one operation.** `derive_path()` makes one syscall
+   per index, and each repeats opening, ZKP context setup, fingerprinting,
+   sealing and cleanup. A bounded `VAULT_DERIVE_PATH` fits the existing limit
+   of 32 indexes (128 B of the 256 B request data): open once, derive, seal
+   once, computing intermediate public keys only when derivation needs them.
+   Today a failure partway leaves the node partly derived; committing only
+   after the whole path succeeds is more predictable but changes behavior.
+5. **Fetch the public view once.** `public_key()` and `serialize_public()` each
+   make two `VAULT_PUBLIC` calls. The shared fake `HDNode` view also hardcodes
+   the secp256k1 curve, which breaks `nem_address()` and would pick the wrong
+   hashers for other curves; item 1 has the same root. Replace it with a
+   public-information structure that carries the curve.
+6. **Compact records only where it pays.** With 16 B GC blocks, a 12-byte GCM
+   header (32-bit counter, after item 3) saves nothing for 32-byte keys
+   (80 B) or 64-byte seeds (112 B) and 16 B per node (160 → 144 B). Dropping the
+   33-byte cached public key from the 107-byte node encoding saves 32 B per
+   node but costs a point multiplication per use. Keep the full tag and
+   address-independent IVs; measure heap, signing latency and energy.
+7. **Give sealed values a purpose.** Seeds, signing keys and MAC keys all use
+   `SECRET_BYTES`, and a `private_key()` snapshot loses its node's curve, so
+   one scalar can sign on any curve or key an HMAC. Authenticate a purpose in
+   the existing kind byte, enforce it in the kernel, and sign directly from
+   nodes for more algorithms to avoid snapshots.
+8. **Narrow production capabilities.** Exclude ECB, which the build only warns
+   about, and plaintext imports (`IMPORT_BYTES`, `IMPORT_NODE`,
+   `from_seed(bytes)`) from production builds. Document that `destroy()`
+   erases one copy and owner destruction revokes all. In `take()`, check the
+   source record's length byte against the source allocation before copying:
+   a corrupted record would otherwise make it read past the source object.
+
+Suggested order: 1, then hardware key validation (2), nonce ownership (3),
+batched derivation and single public fetches (4, 5), measured compaction (6)
+and purpose restrictions (7). Temporary-stack cleanup stays deferred.
+
 ## Limits and open gaps
 
 | Gap | Proposal |
@@ -382,6 +446,7 @@ side-channel attacker a precise trigger and unlimited repetitions.
 | Owners are activated from a scheduler task table | Activate the scope in `with_context()` |
 | C3's SAES path has not run on hardware; switching `KEYSEL` may clear the unwrapped key | Run the native and device suites on a U5 device; the self-test fails closed if the key is not loaded. If it fails, keep `KEYSEL` at `CRYP_KEYSEL_HW` for the GCM pass |
 | The kernel chooses the GCM nonces for records sealed in secmon | Let the secure world own the nonce counter per key and return the IV on SEAL |
+| `ethereum_pubkeyhash()` returns an all-zero address for vault HDNodes | Hash the vault's public key; see Potential improvements, item 1 |
 | Kernel stack headroom is 1,120 B on T3B1 and T3T1 | Measure the high-water mark on hardware; lower the 2,048 B Ed25519 bound if needed |
 | Ed25519 messages over 2,048 B are refused | Chunked transfer into a bounded kernel buffer |
 | Groestlcoin's curve is not on the vault allow-list; its signing fails | Add the curve or keep it on the legacy path |
