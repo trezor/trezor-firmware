@@ -67,8 +67,6 @@ OBJS += ethereum.o
 OBJS += ethereum_definitions.o
 OBJS += ethereum_networks.o
 OBJS += ethereum_tokens.o
-OBJS += nem2.o
-OBJS += nem_mosaics.o
 OBJS += stellar.o
 endif
 
@@ -129,8 +127,6 @@ OBJS += ../vendor/trezor-crypto/chacha20poly1305/rfc7539.o
 
 OBJS += ../vendor/trezor-crypto/consteq.o
 
-OBJS += ../vendor/trezor-crypto/nem.o
-
 OBJS += ../vendor/QR-Code-generator/c/qrcodegen.o
 
 OBJS += ../vendor/trezor-storage/storage.o
@@ -152,7 +148,6 @@ ifneq ($(BITCOIN_ONLY),1)
 OBJS += ../vendor/trezor-crypto/cash_addr.o
 OBJS += protob/messages-ethereum.pb.o
 OBJS += protob/messages-definitions.pb.o
-OBJS += protob/messages-nem.pb.o
 OBJS += protob/messages-stellar.pb.o
 endif
 
@@ -175,11 +170,9 @@ CFLAGS += -DUSE_OPTIGA=0
 CFLAGS += -DUSE_TROPIC=0
 ifneq ($(BITCOIN_ONLY),1)
 CFLAGS += -DUSE_ETHEREUM=1
-CFLAGS += -DUSE_NEM=1
 MAKO_RENDER_FLAG =
 else
 CFLAGS += -DUSE_ETHEREUM=0
-CFLAGS += -DUSE_NEM=0
 MAKO_RENDER_FLAG = --bitcoin-only
 endif
 

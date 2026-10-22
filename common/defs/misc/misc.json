@@ -56,13 +56,6 @@
         "decimals": 6
     },
     {
-        "name": "EOS",
-        "shortcut": "EOS",
-        "slip44": 194,
-        "curve": "secp256k1",
-        "decimals": 4
-    },
-    {
         "name": "MaidSafeCoin",
         "shortcut": "MAID",
         "slip44": 0,

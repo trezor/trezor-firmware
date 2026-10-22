@@ -58,8 +58,6 @@
 #include "ethereum.h"
 #include "ethereum_definitions.h"
 #include "ethereum_networks.h"
-#include "nem.h"
-#include "nem2.h"
 #include "stellar.h"
 #endif
 
@@ -520,7 +518,6 @@ bool fsm_layoutDifferentPathsWarning(void) {
 #if !BITCOIN_ONLY
 
 #include "fsm_msg_ethereum.h"
-#include "fsm_msg_nem.h"
 #include "fsm_msg_stellar.h"
 
 #endif

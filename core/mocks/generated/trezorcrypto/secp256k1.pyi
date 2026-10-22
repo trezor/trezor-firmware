@@ -15,7 +15,6 @@ def publickey(secret_key: AnyBytes, compressed: bool = True) -> bytes:
     Computes public key from secret key.
     """
 CANONICAL_SIG_ETHEREUM: int = 1
-CANONICAL_SIG_EOS: int = 2
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secp256k1.h

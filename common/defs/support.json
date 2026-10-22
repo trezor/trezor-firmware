@@ -92,13 +92,7 @@
       "eth:tSEP:11155111": "1.11.3",
       "misc:MAID": "1.7.2",
       "misc:USDT": "1.7.2",
-      "misc:XLM": "1.7.1",
-      "nem:BREEZE": "1.6.2",
-      "nem:DIM": "1.6.2",
-      "nem:DIMTOK": "1.6.2",
-      "nem:PAC:CHS": "1.6.2",
-      "nem:PAC:HRT": "1.6.2",
-      "nem:XEM": "1.6.2"
+      "misc:XLM": "1.7.1"
     },
     "unsupported": {
       "bitcoin:PART": "incompatible fork",
@@ -107,7 +101,6 @@
       "misc:ADA": "not implemented",
       "misc:BNB": "not implemented",
       "misc:DSOL": "not implemented for T1",
-      "misc:EOS": "not implemented",
       "misc:LSK": "Incompatible mainnet hard-fork",
       "misc:SOL": "not implemented for T1",
       "misc:XMR": "not implemented",
@@ -228,14 +221,7 @@
       "bitcoin:VTC": "not for T2B1 (#2793)",
       "bitcoin:tDASH": "not for T2B1 (#2793)",
       "bitcoin:tPART": "incompatible fork",
-      "misc:EOS": "not for T2B1 (#2793)",
       "misc:LSK": "Incompatible mainnet hard-fork",
-      "nem:BREEZE": "not for T2B1 (#2793)",
-      "nem:DIM": "not for T2B1 (#2793)",
-      "nem:DIMTOK": "not for T2B1 (#2793)",
-      "nem:PAC:CHS": "not for T2B1 (#2793)",
-      "nem:PAC:HRT": "not for T2B1 (#2793)",
-      "nem:XEM": "not for T2B1 (#2793)",
       "eth:tHOL:17000": "Deprecated testnet"
     }
   },
@@ -333,7 +319,6 @@
       "misc:ADA": "2.0.8",
       "misc:BNB": "2.1.5",
       "misc:DSOL": "2.6.4",
-      "misc:EOS": "2.1.1",
       "misc:MAID": "2.0.10",
       "misc:SOL": "2.6.4",
       "misc:USDT": "2.0.10",
@@ -343,12 +328,6 @@
       "misc:XTZ": "2.0.8",
       "misc:tADA": "2.0.8",
       "misc:tXRP": "2.0.8",
-      "nem:BREEZE": "2.0.7",
-      "nem:DIM": "2.0.7",
-      "nem:DIMTOK": "2.0.7",
-      "nem:PAC:CHS": "2.0.7",
-      "nem:PAC:HRT": "2.0.7",
-      "nem:XEM": "2.0.7",
       "misc:TRX": "2.10.1"
     },
     "unsupported": {
@@ -468,14 +447,7 @@
       "bitcoin:VTC": "not for T3B1 (#2793)",
       "bitcoin:tDASH": "not for T3B1 (#2793)",
       "bitcoin:tPART": "incompatible fork",
-      "misc:EOS": "not for T3B1 (#2793)",
       "misc:LSK": "Incompatible mainnet hard-fork",
-      "nem:BREEZE": "not for T3B1 (#2793)",
-      "nem:DIM": "not for T3B1 (#2793)",
-      "nem:DIMTOK": "not for T3B1 (#2793)",
-      "nem:PAC:CHS": "not for T3B1 (#2793)",
-      "nem:PAC:HRT": "not for T3B1 (#2793)",
-      "nem:XEM": "not for T3B1 (#2793)",
       "eth:tHOL:17000": "Deprecated testnet"
     }
   },
@@ -588,14 +560,7 @@
       "bitcoin:VTC": "not for T3T1 (#2793)",
       "bitcoin:tDASH": "not for T3T1 (#2793)",
       "bitcoin:tPART": "incompatible fork",
-      "misc:EOS": "not for T3T1 (#2793)",
       "misc:LSK": "Incompatible mainnet hard-fork",
-      "nem:BREEZE": "not for T3T1 (#2793)",
-      "nem:DIM": "not for T3T1 (#2793)",
-      "nem:DIMTOK": "not for T3T1 (#2793)",
-      "nem:PAC:CHS": "not for T3T1 (#2793)",
-      "nem:PAC:HRT": "not for T3T1 (#2793)",
-      "nem:XEM": "not for T3T1 (#2793)",
       "eth:tHOL:17000": "Deprecated testnet"
     }
   },
@@ -708,14 +673,7 @@
       "bitcoin:VTC": "not for T3W1 (#2793)",
       "bitcoin:tDASH": "not for T3W1 (#2793)",
       "bitcoin:tPART": "incompatible fork",
-      "misc:EOS": "not for T3W1 (#2793)",
       "misc:LSK": "Incompatible mainnet hard-fork",
-      "nem:BREEZE": "not for T3W1 (#2793)",
-      "nem:DIM": "not for T3W1 (#2793)",
-      "nem:DIMTOK": "not for T3W1 (#2793)",
-      "nem:PAC:CHS": "not for T3W1 (#2793)",
-      "nem:PAC:HRT": "not for T3W1 (#2793)",
-      "nem:XEM": "not for T3W1 (#2793)",
       "eth:tHOL:17000": "Deprecated testnet"
     }
   },
@@ -829,14 +787,7 @@
       "bitcoin:VTC": "not for T3W1 (#2793)",
       "bitcoin:tDASH": "not for T3W1 (#2793)",
       "bitcoin:tPART": "incompatible fork",
-      "misc:EOS": "not for T3W1 (#2793)",
       "misc:LSK": "Incompatible mainnet hard-fork",
-      "nem:BREEZE": "not for T3W1 (#2793)",
-      "nem:DIM": "not for T3W1 (#2793)",
-      "nem:DIMTOK": "not for T3W1 (#2793)",
-      "nem:PAC:CHS": "not for T3W1 (#2793)",
-      "nem:PAC:HRT": "not for T3W1 (#2793)",
-      "nem:XEM": "not for T3W1 (#2793)",
       "eth:tHOL:17000": "Deprecated testnet"
     }
   },
@@ -950,14 +901,7 @@
       "bitcoin:VTC": "not for T3W1 (#2793)",
       "bitcoin:tDASH": "not for T3W1 (#2793)",
       "bitcoin:tPART": "incompatible fork",
-      "misc:EOS": "not for T3W1 (#2793)",
       "misc:LSK": "Incompatible mainnet hard-fork",
-      "nem:BREEZE": "not for T3W1 (#2793)",
-      "nem:DIM": "not for T3W1 (#2793)",
-      "nem:DIMTOK": "not for T3W1 (#2793)",
-      "nem:PAC:CHS": "not for T3W1 (#2793)",
-      "nem:PAC:HRT": "not for T3W1 (#2793)",
-      "nem:XEM": "not for T3W1 (#2793)",
       "eth:tHOL:17000": "Deprecated testnet"
     }
   }

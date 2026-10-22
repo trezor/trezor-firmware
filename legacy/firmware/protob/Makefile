@@ -4,7 +4,7 @@ ifneq ($(V),1)
 Q := @
 endif
 
-SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tezos Tron WebAuthn \
+SKIPPED_MESSAGES := Cardano DebugMonero Monero Ontology Ripple SdProtect Tezos Tron WebAuthn \
 	DebugLinkGetPairingInfo DebugLinkPairingInfo DebugLinkGetGcInfo DebugLinkGcInfoItem \
 	DebugLinkGcInfo DebugLinkRecordScreen DebugLinkEraseSdCard DebugLinkWatchLayout \
 	DebugLinkLayout DebugLinkResetDebugEvents  DebugLinkSetBatteryState \
@@ -30,11 +30,11 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	ExtAppMessage ExtAppResponse
 
 ifeq ($(BITCOIN_ONLY), 1)
-SKIPPED_MESSAGES += Ethereum NEM Stellar
+SKIPPED_MESSAGES += Ethereum Stellar
 endif
 
 PROTO_NAMES = messages messages-bitcoin messages-common messages-crypto messages-debug \
-	messages-ethereum messages-definitions messages-management messages-nem \
+	messages-ethereum messages-definitions messages-management \
 	messages-stellar options
 
 PROTO_OPTIONS = $(PROTO_NAMES:=.options)

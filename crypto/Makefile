@@ -87,7 +87,6 @@ CFLAGS += -I..
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_KECCAK=1
 CFLAGS += -DUSE_MONERO=1
-CFLAGS += -DUSE_NEM=1
 CFLAGS += -DUSE_CARDANO=1
 CFLAGS += -DUSE_INSECURE_PRNG=1
 CFLAGS += -DAES_128
@@ -122,7 +121,6 @@ SRCS  += chacha_drbg.c
 SRCS  += groestl.c
 SRCS  += chacha20poly1305/chacha20poly1305.c chacha20poly1305/chacha_merged.c chacha20poly1305/poly1305-donna.c chacha20poly1305/rfc7539.c
 SRCS  += rc4.c
-SRCS  += nem.c
 SRCS  += segwit_addr.c cash_addr.c
 SRCS  += memzero.c
 SRCS  += shamir.c

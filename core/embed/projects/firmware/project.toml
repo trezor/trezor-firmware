@@ -42,8 +42,6 @@ uses = [
 
     # Legacy coin support
     "decred",
-    "eos",
-    "nem",
 ]
 
 # ELF sections to be included in the final binary.

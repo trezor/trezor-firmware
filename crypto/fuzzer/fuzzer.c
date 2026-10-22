@@ -49,7 +49,6 @@
 #include "hmac_drbg.h"
 #include "memzero.h"
 #include "monero/monero.h"
-#include "nem.h"
 #include "nist256p1.h"
 #include "pbkdf2.h"
 #include "rand.h"
@@ -586,51 +585,6 @@ int fuzz_xmr_serialize_varint(void) {
   // IDEA cross-check write/read results
 
   free(in_buffer);
-  return 0;
-}
-
-// arbitrarily chosen maximum size
-#define NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN 128
-
-int fuzz_nem_validate_address(void) {
-  if (fuzzer_length < 1 || fuzzer_length > NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN) {
-    return FUZZ_MARK_UNINTERESTING;
-  }
-
-  uint8_t network = fuzzer_input(1)[0];
-  size_t raw_inlen = fuzzer_length + 1;
-  char *in_buffer = malloc(raw_inlen);
-  RETURN_IF_NULL(in_buffer);
-
-  // mutate the buffer
-  memcpy(in_buffer, fuzzer_input(raw_inlen - 1), raw_inlen - 1);
-  // force null-termination
-  in_buffer[raw_inlen - 1] = 0;
-
-  nem_validate_address(in_buffer, network);
-
-  free(in_buffer);
-  return 0;
-}
-
-int fuzz_nem_get_address(void) {
-  unsigned char ed25519_public_key_fuzz[32] = {0};
-  uint8_t version = 0;
-
-  // TODO switch to < comparison?
-  if (fuzzer_length != (sizeof(ed25519_public_key_fuzz) + sizeof(version))) {
-    return FUZZ_MARK_UNINTERESTING;
-  }
-
-  char address[NEM_ADDRESS_SIZE + 1] = {0};
-
-  memcpy(ed25519_public_key_fuzz, fuzzer_input(sizeof(ed25519_public_key_fuzz)),
-         sizeof(ed25519_public_key_fuzz));
-  memcpy(&version, fuzzer_input(sizeof(version)), sizeof(version));
-
-  nem_get_address(ed25519_public_key_fuzz, version, address);
-
-  check_msan(&address, sizeof(address));
   return 0;
 }
 
@@ -1501,12 +1455,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       break;
     case 7:
       target_result = fuzz_xmr_serialize_varint();
-      break;
-    case 8:
-      target_result = fuzz_nem_validate_address();
-      break;
-    case 9:
-      target_result = fuzz_nem_get_address();
       break;
     case 10:
       target_result = fuzz_xmr_get_subaddress_secret_key();
