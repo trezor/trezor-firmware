@@ -17,26 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// TODO: Constants copied from LX154A2422CPT23's correction as a placeholder;
-// this panel uses a different touch glass, so CORRECTION is not yet verified
-// against real hardware measurements for this module.
+// TODO: Calibrate the touch panel (i.e. correction function, etc.).
 
 #include "lx200b4501ctp03.h"
 
 void lx200b4501ctp03_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
                                       uint16_t *y_new) {
-#define CENTER (DISPLAY_RESX / 2)
-#define CORRECTION 30
-
-  int x_corrected = CENTER + ((x - CENTER) * (CORRECTION + CENTER) / CENTER);
-
-  if (x_corrected < 0) {
-    *x_new = 0;
-  } else if (x_corrected >= DISPLAY_RESX) {
-    *x_new = DISPLAY_RESX - 1;
-  } else {
-    *x_new = (uint16_t)x_corrected;
-  }
-
+  *x_new = x;
   *y_new = y;
 }
