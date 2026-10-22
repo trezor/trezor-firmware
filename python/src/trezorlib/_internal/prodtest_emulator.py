@@ -44,7 +44,7 @@ class ProdtestEmulator(Emulator):
     :func:`get_prodtest_emulator` factory.
     """
 
-    STORAGE_FILENAME = "prodtest.flash"
+    STORAGE_FILENAME = "trezor_prodtest.flash"
 
     def __init__(
         self,
