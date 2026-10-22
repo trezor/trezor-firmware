@@ -73,9 +73,10 @@ package = false
 exclude-newer = "30 days"
 
 [tool.uv.exclude-newer-package]
-urllib3 = "2026-09-15T19:29:37Z"
 mako = "2026-09-22T20:54:33.129Z"
-virtualenv = "2026-10-02T17:42:25.614Z"
+pillow = "2026-10-16T22:18:09.719Z"
+certifi = "2026-10-20T02:24:16.605Z"
+virtualenv = "2026-10-21T01:58:51.725Z"
 
 [tool.uv.sources]
 trezor = { path = "./python", editable = true }
