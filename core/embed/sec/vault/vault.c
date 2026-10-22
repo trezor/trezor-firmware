@@ -67,6 +67,47 @@ typedef struct {
   const uint8_t *data;
 } vault_command_t;
 
+/* The dispatcher scopes one transient ZKP context around wallet operations. */
+static bool vault_schnorr(const vault_command_t *r, vault_response_t *out,
+                          secret_payload_t **made) {
+  bool ok = false;
+  size_t length = 0;
+  secret_payload_t *key = NULL;
+  if (r->op == VAULT_SCHNORR_GENERATE) {
+    *made = secret_scratch_take();
+    if (!*made) goto cleanup;
+    do {
+      random_buffer((*made)->bytes, 32);
+    } while (!hdnode_validate_private_key(get_curve_by_name(SECP256K1_NAME),
+                                          (*made)->bytes));
+    ok = true;
+    goto cleanup;
+  }
+  key = secret_open(r->blob, r->owner, SECRET_BYTES, &length);
+  if (!key || length != 32) goto cleanup;
+  switch (r->op) {
+    case VAULT_SCHNORR_PUBLIC:
+      ok = zkp_bip340_get_public_key(key->bytes, out->signature) == 0;
+      break;
+    case VAULT_SCHNORR_SIGN:
+      if (r->length != 32) break;
+      ok = zkp_bip340_sign_digest(key->bytes, r->data, out->signature, NULL) ==
+           0;
+      break;
+    case VAULT_SCHNORR_TWEAK:
+      if ((r->length != 0 && r->length != 32) ||
+          !(*made = secret_scratch_take()))
+        break;
+      ok = zkp_bip340_tweak_private_key(key->bytes, r->length ? r->data : NULL,
+                                        (*made)->bytes) == 0;
+      break;
+    default:
+      break;
+  }
+cleanup:
+  return ok;
+}
+
 /* No caller-owned pointers are used by the implementation. The syscall verifier
  * copies requests before entry and copies only this public response out. */
 static bool vault_execute(uintptr_t caller, const vault_command_t *r,
@@ -246,6 +287,14 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
       if (ok) out->signature[0] = 27 + recovery + 4 * r->arg;
       break;
     }
+    case VAULT_SCHNORR_GENERATE:
+    case VAULT_SCHNORR_PUBLIC:
+    case VAULT_SCHNORR_TWEAK:
+    case VAULT_SCHNORR_SIGN:
+      made_kind = SECRET_BYTES;
+      made_length = 32;
+      ok = vault_schnorr(r, out, &made);
+      break;
 #ifndef VAULT_TEST
     case VAULT_SEED_STORAGE: {
       char mnemonic[256] = {0};
@@ -290,7 +339,8 @@ static bool vault_dispatch_inner(uintptr_t caller, const vault_command_t *r,
   secret_transaction_begin();
   /* All wallet ECC operations can reach the ZKP backend, including HDNode
    * public-key caching and ECDSA after enabling kernel Schnorr support. */
-  bool ecc = (r->op >= VAULT_FROM_SEED && r->op <= VAULT_SIGN);
+  bool ecc = (r->op >= VAULT_FROM_SEED && r->op <= VAULT_SIGN) ||
+             (r->op >= VAULT_SCHNORR_GENERATE && r->op <= VAULT_SCHNORR_SIGN);
   bool own_context = ecc && !zkp_context_is_initialized();
   bool ready = !own_context || zkp_context_init() == 0;
   bool ok = ready && vault_execute(caller, r, out, unlocked, message, length);
