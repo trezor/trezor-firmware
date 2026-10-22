@@ -25,6 +25,7 @@
 #include "ed25519-donna/ed25519.h"
 
 /// package: trezorcrypto.ed25519
+/// from trezorcrypto import secbytes
 
 /// def generate_secret() -> bytes:
 ///     """
@@ -39,7 +40,7 @@ static mp_obj_t mod_trezorcrypto_ed25519_generate_secret() {
 static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_ed25519_generate_secret_obj,
                                  mod_trezorcrypto_ed25519_generate_secret);
 
-/// def publickey(secret_key: AnyBytes) -> bytes:
+/// def publickey(secret_key: AnyBytes | secbytes) -> bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
@@ -59,7 +60,7 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ed25519_publickey_obj,
                                  mod_trezorcrypto_ed25519_publickey);
 
 /// def sign(
-///     secret_key: AnyBytes, message: AnyBytes, hasher: str = ""
+///     secret_key: AnyBytes | secbytes, message: AnyBytes, hasher: str = ""
 /// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of message.

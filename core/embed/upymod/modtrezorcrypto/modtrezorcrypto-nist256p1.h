@@ -25,6 +25,7 @@
 #include "nist256p1.h"
 
 /// package: trezorcrypto.nist256p1
+/// from trezorcrypto import secbytes
 
 /// def generate_secret() -> bytes:
 ///     """
@@ -57,7 +58,8 @@ static mp_obj_t mod_trezorcrypto_nist256p1_generate_secret() {
 static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_nist256p1_generate_secret_obj,
                                  mod_trezorcrypto_nist256p1_generate_secret);
 
-/// def publickey(secret_key: AnyBytes, compressed: bool = True) -> bytes:
+/// def publickey(secret_key: AnyBytes | secbytes, compressed: bool = True) ->
+/// bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
@@ -90,7 +92,8 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_nist256p1_publickey);
 
 /// def sign(
-///     secret_key: AnyBytes, digest: AnyBytes, compressed: bool = True
+///     secret_key: AnyBytes | secbytes, digest: AnyBytes, compressed: bool =
+///     True
 /// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of the digest.

@@ -1,5 +1,6 @@
 from typing import *
 from buffer_types import *
+from trezorcrypto import secbytes
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
@@ -10,7 +11,8 @@ def generate_secret() -> bytes:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
-def publickey(secret_key: AnyBytes, compressed: bool = True) -> bytes:
+def publickey(secret_key: AnyBytes | secbytes, compressed: bool = True) ->
+bytes:
     """
     Computes public key from secret key.
     """
@@ -18,7 +20,8 @@ def publickey(secret_key: AnyBytes, compressed: bool = True) -> bytes:
 
 # upymod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
 def sign(
-    secret_key: AnyBytes, digest: AnyBytes, compressed: bool = True
+    secret_key: AnyBytes | secbytes, digest: AnyBytes, compressed: bool =
+    True
 ) -> bytes:
     """
     Uses secret key to produce the signature of the digest.

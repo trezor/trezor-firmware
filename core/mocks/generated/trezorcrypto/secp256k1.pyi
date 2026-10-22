@@ -1,5 +1,6 @@
 from typing import *
 from buffer_types import *
+from trezorcrypto import secbytes
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
@@ -20,7 +21,7 @@ CANONICAL_SIG_EOS: int = 2
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
 def sign(
-    secret_key: AnyBytes,
+    secret_key: AnyBytes | secbytes,
     digest: AnyBytes,
     compressed: bool = True,
     canonical: int | None = None,

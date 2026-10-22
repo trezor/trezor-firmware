@@ -25,6 +25,7 @@
 #include "trezor-crypto/secp256k1.h"
 
 /// package: trezorcrypto.secp256k1
+/// from trezorcrypto import secbytes
 
 /// def generate_secret() -> bytes:
 ///     """
@@ -117,7 +118,7 @@ enum {
 #endif
 
 /// def sign(
-///     secret_key: AnyBytes,
+///     secret_key: AnyBytes | secbytes,
 ///     digest: AnyBytes,
 ///     compressed: bool = True,
 ///     canonical: int | None = None,

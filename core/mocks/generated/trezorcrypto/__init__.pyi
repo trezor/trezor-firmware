@@ -381,6 +381,11 @@ class ripemd160:
         """
 
 
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+class secbytes:
+    """Opaque immutable secret. No buffer or plaintext interface."""
+
+
 # upymod/modtrezorcrypto/modtrezorcrypto-sha256.h
 class sha256:
     """

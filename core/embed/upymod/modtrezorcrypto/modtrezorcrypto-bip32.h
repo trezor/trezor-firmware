@@ -31,6 +31,7 @@
 #endif
 
 /// package: trezorcrypto.bip32
+/// from trezorcrypto import secbytes
 
 /// class HDNode:
 ///     """
@@ -309,7 +310,7 @@ static mp_obj_t mod_trezorcrypto_HDNode_chain_code(mp_obj_t self) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_chain_code_obj,
                                  mod_trezorcrypto_HDNode_chain_code);
 
-/// def private_key(self) -> bytes:
+/// def private_key(self) -> secbytes:
 ///     """
 ///     Returns a private key of the HD node.
 ///     """
@@ -320,7 +321,7 @@ static mp_obj_t mod_trezorcrypto_HDNode_private_key(mp_obj_t self) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_private_key_obj,
                                  mod_trezorcrypto_HDNode_private_key);
 
-/// def private_key_ext(self) -> bytes:
+/// def private_key_ext(self) -> secbytes:
 ///     """
 ///     Returns a private key extension of the HD node.
 ///     """
@@ -525,7 +526,7 @@ MP_DEFINE_CONST_OBJ_TYPE(mod_trezorcrypto_HDNode_type,
 
 /// mock:global
 
-/// def from_seed(seed: AnyBytes, curve_name: str) -> HDNode:
+/// def from_seed(seed: AnyBytes | secbytes, curve_name: str) -> HDNode:
 ///     """
 ///     Construct a BIP0032 HD node from a BIP0039 seed value.
 ///     """

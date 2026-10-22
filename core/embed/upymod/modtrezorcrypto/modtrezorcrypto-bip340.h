@@ -26,8 +26,9 @@
 #include "zkp_bip340.h"
 
 /// package: trezorcrypto.bip340
+/// from trezorcrypto import secbytes
 
-/// def generate_secret() -> bytes:
+/// def generate_secret() -> secbytes:
 ///     """
 ///     Generate secret key.
 ///     """
@@ -58,7 +59,7 @@ static mp_obj_t mod_trezorcrypto_bip340_generate_secret() {
 static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_bip340_generate_secret_obj,
                                  mod_trezorcrypto_bip340_generate_secret);
 
-/// def publickey(secret_key: AnyBytes) -> bytes:
+/// def publickey(secret_key: AnyBytes | secbytes) -> bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
@@ -83,7 +84,7 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip340_publickey_obj,
                                  mod_trezorcrypto_bip340_publickey);
 
 /// def sign(
-///     secret_key: AnyBytes,
+///     secret_key: AnyBytes | secbytes,
 ///     digest: AnyBytes,
 /// ) -> bytes:
 ///     """
@@ -205,9 +206,9 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_bip340_tweak_public_key);
 
 /// def tweak_secret_key(
-///     secret_key: AnyBytes,
+///     secret_key: AnyBytes | secbytes,
 ///     root_hash: AnyBytes | None = None,
-/// ) -> bytes:
+/// ) -> secbytes:
 ///     """
 ///     Tweaks the secret key with the specified root_hash.
 ///     """
