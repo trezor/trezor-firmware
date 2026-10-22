@@ -148,7 +148,8 @@ static debuglink_result_t debuglink_process_record_screen(protob_io_t *io) {
   size_t dir_len = strnlen(buffer, sizeof(buffer));
 
   if (dir_len > 0) {
-    display_record_start((uint8_t *)buffer, dir_len, 0);
+    display_record_start((uint8_t *)buffer, dir_len,
+                         msg.has_refresh_index ? msg.refresh_index : 0);
     res = DEBUGLINK_RESULT_REPAINT;
   } else {
     display_record_stop();
@@ -159,9 +160,19 @@ static debuglink_result_t debuglink_process_record_screen(protob_io_t *io) {
   return res;
 }
 
+static void fw_check_lazy(fw_check_info_t *fw, bool *checked) {
+  if (!*checked) {
+    fw_check(fw);
+    *checked = true;
+  }
+}
+
 debuglink_result_t debuglink_process(void) {
+  // The firmware check hashes the whole image, so run it only for the
+  // messages that report on it. The debuglink may be polled during an
+  // upload, when the image is incomplete anyway.
   fw_check_info_t fw = {0};
-  fw_check(&fw);
+  bool fw_checked = false;
 
   debuglink_result_t res = DEBUGLINK_RESULT_NONE;
 
@@ -169,9 +180,11 @@ debuglink_result_t debuglink_process(void) {
   if (protob_get_msg_header(&g_debug_io, &msg_id) == sectrue) {
     switch (msg_id) {
       case MessageType_MessageType_Initialize:
+        fw_check_lazy(&fw, &fw_checked);
         workflow_initialize(&g_debug_io, &fw);
         break;
       case MessageType_MessageType_GetFeatures:
+        fw_check_lazy(&fw, &fw_checked);
         workflow_get_features(&g_debug_io, &fw);
         break;
       case MessageType_MessageType_Ping:
@@ -187,7 +200,8 @@ debuglink_result_t debuglink_process(void) {
         res = debuglink_process_record_screen(&g_debug_io);
         break;
       default:
-        send_msg_success(&g_debug_io, "success");
+        send_msg_failure(&g_debug_io, FailureType_Failure_UnexpectedMessage,
+                         "Unexpected message");
         break;
     }
   }

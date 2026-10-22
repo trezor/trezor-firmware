@@ -89,8 +89,13 @@ def screen_recording(
         client.sync_responses()
         client.debug.stop_recording()
 
+    record_result(testcase, request)
+
+
+def record_result(testcase: TestCase, request: pytest.FixtureRequest) -> None:
+    """Hash the screens recorded for `testcase` and file the result."""
     result = testcase.build_result(request)
-    if test_ui == "record":
+    if request.config.getoption("ui") == "record":
         _process_recorded(result)
     else:
         _process_tested(result, request.node)
