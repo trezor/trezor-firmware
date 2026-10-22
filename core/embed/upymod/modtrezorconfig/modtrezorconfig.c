@@ -73,6 +73,8 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1,
 ///     """
 ///     Attempts to unlock the storage with the given PIN and external salt.
 ///     Returns True on success, False on failure.
+///     Firmware code should call `storage.unlock()`, which also decrypts
+///     the cache.
 ///     """
 static mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t ext_salt) {
   mp_buffer_info_t pin_b = {0};
@@ -146,6 +148,7 @@ static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_unlock_obj,
 ///     """
 ///     Check the given PIN with the given external salt.
 ///     Returns True on success, False on failure.
+///     Also unlocks the storage, so call it only when already unlocked.
 ///     """
 static mp_obj_t mod_trezorconfig_check_pin(mp_obj_t pin, mp_obj_t ext_salt) {
   return mod_trezorconfig_unlock(pin, ext_salt);
@@ -156,6 +159,8 @@ static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_check_pin_obj,
 /// def lock() -> None:
 ///     """
 ///     Locks the storage.
+///     Firmware code should call `storage.lock()`, which also encrypts
+///     the cache.
 ///     """
 static mp_obj_t mod_trezorconfig_lock(void) {
   storage_lock();
