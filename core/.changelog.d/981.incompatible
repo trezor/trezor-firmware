@@ -1,0 +1,1 @@
+Experimental secure-buffer vault restricts Bitcoin-only signing to BIP39/secp256k1 and blocks generic mnemonic exports.
