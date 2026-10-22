@@ -19,6 +19,7 @@
 
 #include <io/app_header.h>
 #include <io/app_root.h>
+#include <sys/ipc.h>
 
 #include <sha2.h>
 
@@ -39,6 +40,15 @@ const app_header_t* app_header_verify(const void* header_ptr,
   TSH_CHECK(header->header_size == header_size, TS_EBADMSG);
   TSH_CHECK(header->abi_version == 1, TS_EBADMSG);
   TSH_CHECK(header->app_ring < APP_RING_COUNT, TS_EBADMSG);
+
+  // The inbox is registered with the kernel verbatim and allocated as a
+  // `usize` array, so reject anything the kernel would refuse or that would
+  // not divide evenly into words on either target. A power of two at or above
+  // 8 covers both (see `metadata::ipc_buffer_size` in modular-xtask).
+  uint32_t ipc_size = header->ipc_buffer_size;
+  TSH_CHECK(ipc_size >= 8, TS_EBADMSG);
+  TSH_CHECK(ipc_size <= IPC_MAX_BUFFER_SIZE, TS_EBADMSG);
+  TSH_CHECK((ipc_size & (ipc_size - 1)) == 0, TS_EBADMSG);
 
   retval = header;
 

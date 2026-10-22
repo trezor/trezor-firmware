@@ -1,0 +1,38 @@
+syntax = "proto2";
+package hw.trezor.messages;
+
+/**
+ * Messages for Trezor communication
+ */
+
+/**
+ * Mapping between Trezor wire identifier (uint) and a protobuf message
+ */
+enum MessageType {
+    MessageType_Hash = 0;
+    MessageType_Hmac = 1;
+    MessageType_Digest = 2;
+    MessageType_GetXpub = 3;
+    MessageType_Xpub = 4;
+    MessageType_GetPublicKey = 5;
+    MessageType_PublicKey = 6;
+    MessageType_SignDigest = 7;
+    MessageType_Signature = 8;
+    MessageType_GetAddressMac = 9;
+    MessageType_AddressMac = 10;
+    MessageType_CheckAddressMac = 11;
+    MessageType_VerifyNonceCache = 12;
+    MessageType_Bool = 13;
+    MessageType_EcVerifyRecover = 14;
+    MessageType_EcVerifyRecoverDigest = 15;
+    MessageType_EcRecoverPubkey = 16;
+    MessageType_CosiVerify = 17;
+    MessageType_Success = 18;
+    MessageType_CosiCombinePublicKeys = 19;
+    MessageType_Base58Encode = 20;
+    MessageType_Base58Decode = 21;
+    MessageType_Base58CheckEncode = 22;
+    MessageType_Base58CheckDecode = 23;
+    MessageType_Base58 = 24;
+    MessageType_Data = 25;
+}

@@ -48,6 +48,9 @@ components:
       - name: U5 - Firmware (Kernel)
         when: all(target(hardware), any(model(t3b1), model(t3t1), model(t3w1), model(d002)))
         template: u5-kernel+coreapp.json
+      - name: U5 - Firmware (Extapp)
+        when: all(target(hardware), any(model(t3w1)))
+        template: u5-kernel+coreapp+extapp.json
       - name: U5 - Firmware  (Secmon)
         when: all(target(hardware), any(model(t3w1), model(d002)))
         template: u5-secmon+kernel+coreapp.json

@@ -1,0 +1,266 @@
+syntax = "proto2";
+package hw.trezor.testapp;
+
+/**
+ * One request per SDK crypto function (`trezor_app_sdk::crypto`), mirroring
+ * its parameters one to one, so the host exercises the same surface an app
+ * uses. The app answers with the function's result; an error the function
+ * returns comes back as a Failure.
+ */
+
+enum HashAlgorithm {
+    Sha256 = 0;
+    Sha3_256 = 1;
+    Sha512 = 2;
+    Keccak256 = 3;
+    Sha3_512 = 4;
+    Keccak512 = 5;
+}
+
+enum HmacAlgorithm {
+    HmacSha256 = 0;
+    HmacSha512 = 1;
+}
+
+enum EcCurve {
+    Secp256k1 = 0;
+    Nist256p1 = 1;
+    Ed25519 = 2;
+}
+
+enum CanonicalSig {
+    Any = 0;
+    Ethereum = 1;
+}
+
+/**
+ * Request: crypto::get_hasher, fed `chunks` one update at a time
+ * @next Digest
+ */
+message Hash {
+    required HashAlgorithm algorithm = 1;
+    repeated bytes chunks = 2;
+}
+
+/**
+ * Request: crypto::get_hmac, fed `chunks` one update at a time
+ * @next Digest
+ */
+message Hmac {
+    required HmacAlgorithm algorithm = 1;
+    required bytes key = 2;
+    repeated bytes chunks = 3;
+}
+
+/**
+ * Response: a hasher's final digest
+ * @end
+ */
+message Digest {
+    required bytes digest = 1;
+}
+
+/**
+ * Request: crypto::get_xpub
+ * @next Xpub
+ */
+message GetXpub {
+    repeated uint32 address_n = 1;
+    required uint32 xpub_magic = 2;
+}
+
+/**
+ * Response: a base58check-encoded extended public key
+ * @end
+ */
+message Xpub {
+    required string xpub = 1;
+}
+
+/**
+ * Request: crypto::get_public_key
+ * @next PublicKey
+ */
+message GetPublicKey {
+    repeated uint32 address_n = 1;
+    required bool compressed = 2;
+}
+
+/**
+ * Response: a public key
+ * @end
+ */
+message PublicKey {
+    required bytes public_key = 1;
+}
+
+/**
+ * Request: crypto::sign_digest; `digest` must be 32 bytes
+ * @next Signature
+ */
+message SignDigest {
+    repeated uint32 address_n = 1;
+    required bytes digest = 2;
+    required bool compressed = 3;
+    required CanonicalSig canonical = 4;
+}
+
+/**
+ * Response: a 65-byte signature
+ * @end
+ */
+message Signature {
+    required bytes signature = 1;
+}
+
+/**
+ * Request: crypto::get_address_mac
+ * @next AddressMac
+ */
+message GetAddressMac {
+    repeated uint32 address_n = 1;
+    required string address = 2;
+    required uint32 slip44 = 3;
+}
+
+/**
+ * Response: a 32-byte address MAC
+ * @end
+ */
+message AddressMac {
+    required bytes mac = 1;
+}
+
+/**
+ * Request: crypto::check_address_mac; `mac` must be 32 bytes
+ * @next Bool
+ */
+message CheckAddressMac {
+    repeated uint32 address_n = 1;
+    required bytes mac = 2;
+    required string address = 3;
+    required uint32 slip44 = 4;
+}
+
+/**
+ * Request: crypto::verify_nonce_cache
+ * @next Bool
+ */
+message VerifyNonceCache {
+    required bytes nonce = 1;
+}
+
+/**
+ * Response: a boolean result
+ * @end
+ */
+message Bool {
+    required bool value = 1;
+}
+
+/**
+ * Request: crypto::ec_verify_recover
+ * @next PublicKey
+ */
+message EcVerifyRecover {
+    required EcCurve curve = 1;
+    required bytes public_key = 2;
+    required bytes signature = 3;
+    required bytes message = 4;
+}
+
+/**
+ * Request: crypto::ec_verify_recover_digest
+ * @next PublicKey
+ */
+message EcVerifyRecoverDigest {
+    required EcCurve curve = 1;
+    required bytes public_key = 2;
+    required bytes signature = 3;
+    required bytes digest = 4;
+}
+
+/**
+ * Request: crypto::ec_recover_pubkey
+ * @next PublicKey
+ */
+message EcRecoverPubkey {
+    required EcCurve curve = 1;
+    required bytes signature = 2;
+    required bytes digest = 3;
+}
+
+/**
+ * Request: crypto::cosi_verify; `threshold` and `sigmask` must fit in a
+ * byte, every public key must be 32 bytes
+ * @next Success
+ */
+message CosiVerify {
+    required uint32 threshold = 1;
+    required bytes message = 2;
+    repeated bytes public_keys = 3;
+    required uint32 sigmask = 4;
+    required bytes signature = 5;
+}
+
+/**
+ * Response: the function succeeded
+ * @end
+ */
+message Success {}
+
+/**
+ * Request: crypto::cosi_combine_publickeys; every public key must be 32 bytes
+ * @next PublicKey
+ */
+message CosiCombinePublicKeys {
+    repeated bytes public_keys = 1;
+}
+
+/**
+ * Request: crypto::base58_encode
+ * @next Base58
+ */
+message Base58Encode {
+    required bytes data = 1;
+}
+
+/**
+ * Request: crypto::base58_decode
+ * @next Data
+ */
+message Base58Decode {
+    required string encoded = 1;
+}
+
+/**
+ * Request: crypto::base58check_encode
+ * @next Base58
+ */
+message Base58CheckEncode {
+    required bytes data = 1;
+}
+
+/**
+ * Request: crypto::base58check_decode
+ * @next Data
+ */
+message Base58CheckDecode {
+    required string encoded = 1;
+}
+
+/**
+ * Response: a base58 string
+ * @end
+ */
+message Base58 {
+    required string encoded = 1;
+}
+
+/**
+ * Response: decoded bytes
+ * @end
+ */
+message Data {
+    required bytes data = 1;
+}

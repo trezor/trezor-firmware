@@ -22,6 +22,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <io/app_arena.h>
 #include <rtl/sizedefs.h>
 #include <sys/applet.h>
 #include <sys/coreapp.h>
@@ -34,6 +35,8 @@ LOG_DECLARE(app_loader)
 
 #define MPU_ALIGNMENT 32   // Required alignment for MPU regions
 #define STACK_ALIGNMENT 8  // Required alignment for stack end
+
+#define WATCHDOG_TIMEOUT 20000  // ms
 
 // RO segment has been relocated to RW segment
 #define RUNTIME_FLAG_RO_SEGMENT_RELOCATED (1 << 0)
@@ -501,16 +504,19 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
                              RELOC_FLAG_NORMAL | RELOC_FLAG_RW_SEGMENT);
   TSH_CHECK_OK(status);
 
-  // Get entrypoint address
-  void* entrypoint = map_va(&map, chdr->entry_va);
-  TSH_CHECK(entrypoint != NULL, TS_EBADMSG);
+  // Get the app's own entry point address
+  void* applet_main = map_va(&map, chdr->entry_va);
+  TSH_CHECK(applet_main != NULL, TS_EBADMSG);
 
   // Initialize applet privileges
   applet_privileges_t privileges = {0};
 
   applet_init(applet, &privileges, unload_cb);
 
-  applet_set_heap(applet, (void*)map.heap_p_addr, map.heap_size);
+  // The inbox is allocated out of the app's heap at launch, so an app that
+  // asks for more inbox than heap can never start. The build tool rejects
+  // this too; re-check here because the header is attacker-supplied.
+  TSH_CHECK(header->ipc_buffer_size <= map.heap_size, TS_ENOMEM);
 
   applet->layout = (applet_layout_t){
       .code1.start = map.ro_p_addr,
@@ -529,14 +535,30 @@ ts_t app_loader_prepare_applet(const app_header_t* header, void* code,
                          map.rw_p_addr, applet);
   TSH_CHECK(ok, TS_ENOMEM);
 
+  // Copy the launch arguments onto the applet stack
+  const app_args_t args = {
+      .applet_main = applet_main,
+      .heap_ptr = (void*)map.heap_p_addr,
+      .heap_size = map.heap_size,
+      .ipc_buffer_size = header->ipc_buffer_size,
+  };
+  void* args_copy = systask_push_data(&applet->task, &args, sizeof(args));
+  TSH_CHECK(args_copy != NULL, TS_ENOMEM);
+
   // Enable coreapp TLS area swapping
   systask_enable_tls(&applet->task, coreapp_get_tls_area());
 
-  uint32_t api_getter = (uint32_t)coreapp_get_api_getter();
+  systask_enable_watchdog(&applet->task, WATCHDOG_TIMEOUT);
+
+  // Start the task in Core's own app entry point, handing it `applet_main`,
+  // rather than jumping into `applet_main` directly. Core then sets up the
+  // app's global allocator and calls `applet_main` itself.
+  void* app_entry = coreapp_get_app_entry();
+  TSH_CHECK(app_entry != NULL, TS_EBADMSG);
 
   // Prepare the applet to run - push exception frame on the stack
-  // with the entrypoint address
-  ok = systask_push_call(&applet->task, entrypoint, api_getter, 0, 0);
+  // with Core's app entry point address and the launch arguments
+  ok = systask_push_call(&applet->task, app_entry, (uint32_t)args_copy, 0, 0);
   TSH_CHECK(ok, TS_ENOMEM);
 
   systask_set_mpu(systask_active());
