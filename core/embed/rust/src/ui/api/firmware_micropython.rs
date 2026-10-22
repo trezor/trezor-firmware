@@ -1476,7 +1476,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     prompt_title: str | None = None,
     ///     external_menu: bool = False,
     /// ) -> LayoutContext[UiResult]:
-    ///     """Confirm action."""
+    ///     """Confirm action. Delizia: with an external menu and no text, only the hold prompt
+    ///     is shown."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
 
     /// def confirm_address(

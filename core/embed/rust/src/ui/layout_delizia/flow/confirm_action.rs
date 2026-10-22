@@ -1,7 +1,8 @@
 use heapless::Vec;
 
 use super::super::component::{
-    Footer, Frame, Header, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+    Footer, Frame, FrameMsg, Header, PromptMsg, PromptScreen, SwipeContent, VerticalMenu,
+    VerticalMenuChoiceMsg,
 };
 use super::super::theme;
 use crate::maybe_trace::MaybeTrace;
@@ -12,7 +13,7 @@ use crate::ui::component::swipe_detect::SwipeSettings;
 use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, VecExt,
 };
-use crate::ui::component::{Component, ComponentExt, EventCtx, Paginate};
+use crate::ui::component::{Component, ComponentExt, EventCtx, MsgMap, Paginate};
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
 use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
 use crate::ui::geometry::Direction;
@@ -292,6 +293,7 @@ pub fn new_confirm_action(
     action: Option<TString<'static>>,
     description: Option<TString<'static>>,
     subtitle: Option<TString<'static>>,
+    verb: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
     reverse: bool,
     hold: bool,
@@ -300,6 +302,27 @@ pub fn new_confirm_action(
     prompt_title: TString<'static>,
     external_menu: bool,
 ) -> Result<SwipeFlow, Error> {
+    let mut options = ConfirmActionOptions::new().with_danger(danger);
+    options = if hold && danger {
+        options.with_hold_danger()
+    } else {
+        options.with_hold(hold)
+    };
+
+    if external_menu && hold && action.is_none() && description.is_none() {
+        // nothing to show before the prompt, so show the prompt alone
+        let content =
+            prompt_frame(title, subtitle, options.hold, danger, true, verb).with_external_menu();
+        // not `Frame::map`, which would pass on `FlowMsg::Next` from a tap on the
+        // footer, confirming without the hold
+        let content = MsgMap::new(content, |msg| match msg {
+            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
+            FrameMsg::Button(FlowMsg::Info) => Some(FlowMsg::Info),
+            _ => None,
+        });
+        return super::util::single_page(content);
+    }
+
     let paragraphs = {
         let action = action.unwrap_or("".into());
         let description = description.unwrap_or("".into());
@@ -316,18 +339,6 @@ pub fn new_confirm_action(
         paragraphs.into_paragraphs()
     };
 
-    if external_menu && (prompt_screen || hold) {
-        return Err(Error::ValueError(
-            c"external_menu currently not supported in tandem with prompt_screen/hold",
-        ));
-    }
-
-    let mut options = ConfirmActionOptions::new().with_danger(danger);
-    options = if hold && danger {
-        options.with_hold_danger()
-    } else {
-        options.with_hold(hold)
-    };
     new_confirm_action_simple(
         paragraphs,
         if external_menu {
@@ -503,21 +514,50 @@ fn create_confirm(
     prompt_title: TString<'static>,
     prompt_state: &'static dyn FlowController,
 ) -> Result<(), Error> {
-    let (prompt, prompt_action) = if let Some(hold) = hold {
-        let prompt = match hold {
-            HoldTheme::Normal => PromptScreen::new_hold_to_confirm(),
-            HoldTheme::Danger => PromptScreen::new_hold_to_confirm_danger(),
-        };
-        (prompt, TR::instructions__hold_to_confirm.into())
-    } else {
-        (
+    let content_confirm = prompt_frame(
+        prompt_title,
+        subtitle,
+        hold,
+        danger,
+        matches!(extra, ConfirmActionExtra::Menu(_)),
+        None,
+    )
+    .with_swipe(Direction::Down, SwipeSettings::Default);
+
+    flow.add_page(
+        prompt_state,
+        content_confirm.map(super::util::map_to_confirm),
+    )?;
+    Ok(())
+}
+
+// The "Tap to confirm" or "Hold to confirm" screen, `instruction` overrides its
+// footer.
+fn prompt_frame(
+    title: TString<'static>,
+    subtitle: Option<TString<'static>>,
+    hold: Option<HoldTheme>,
+    danger: bool,
+    menu_button: bool,
+    instruction: Option<TString<'static>>,
+) -> Frame<SwipeContent<PromptScreen>> {
+    let (prompt, default_instruction) = match hold {
+        Some(HoldTheme::Normal) => (
+            PromptScreen::new_hold_to_confirm(),
+            TR::instructions__hold_to_confirm,
+        ),
+        Some(HoldTheme::Danger) => (
+            PromptScreen::new_hold_to_confirm_danger(),
+            TR::instructions__hold_to_confirm,
+        ),
+        None => (
             PromptScreen::new_tap_to_confirm(),
-            TR::instructions__tap_to_confirm.into(),
-        )
+            TR::instructions__tap_to_confirm,
+        ),
     };
 
-    let mut header = Header::left_aligned(prompt_title);
-    if matches!(extra, ConfirmActionExtra::Menu(_)) {
+    let mut header = Header::left_aligned(title);
+    if menu_button {
         header = header.with_menu_button();
     }
     if danger {
@@ -528,15 +568,8 @@ fn create_confirm(
     if let Some(subtitle) = subtitle {
         header = header.with_subtitle(subtitle);
     }
-    let content_confirm = Frame::with_header(header, SwipeContent::new(prompt))
-        .with_footer(prompt_action, None)
-        .with_swipe(Direction::Down, SwipeSettings::Default);
-
-    flow.add_page(
-        prompt_state,
-        content_confirm.map(super::util::map_to_confirm),
-    )?;
-    Ok(())
+    Frame::with_header(header, SwipeContent::new(prompt))
+        .with_footer(instruction.unwrap_or(default_instruction.into()), None)
 }
 
 #[inline(never)]
