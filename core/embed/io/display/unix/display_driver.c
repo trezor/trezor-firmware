@@ -616,6 +616,8 @@ static void display_refresh_internal(void) {
   SDL_RenderPresent(drv->renderer);
 }
 
+#ifdef USE_APPLETS
+
 static void display_refresh_trampoline(uintptr_t arg1, uintptr_t arg2,
                                        uintptr_t arg3) {
   display_refresh_internal();
@@ -632,6 +634,12 @@ void display_refresh(void) {
     systask_yield_to(systask_kernel());
   }
 }
+
+#else
+
+void display_refresh(void) { display_refresh_internal(); }
+
+#endif  // USE_APPLETS
 
 #ifndef DISPLAY_MONO
 
@@ -822,6 +830,8 @@ cleanup:
   SDL_SetRenderDrawColor(drv->renderer, 0, 0, 0, 255);
 }
 
+#ifdef USE_APPLETS
+
 static void display_draw_suspend_overlay_trampoline(uintptr_t arg1,
                                                     uintptr_t arg2,
                                                     uintptr_t arg3) {
@@ -840,5 +850,13 @@ void display_draw_suspend_overlay(void) {
     systask_yield_to(systask_kernel());
   }
 }
+
+#else
+
+void display_draw_suspend_overlay(void) {
+  display_draw_suspend_overlay_internal();
+}
+
+#endif  // USE_APPLETS
 
 #endif

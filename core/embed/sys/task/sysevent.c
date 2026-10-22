@@ -224,7 +224,9 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
   dispatcher->pollers[prio].deadline = deadline;
 
   if (active_task != kernel_task) {
+#ifdef USE_APPLETS
     systask_yield_to(kernel_task);
+#endif
     return;
   }
 
@@ -279,7 +281,9 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
         if (task == kernel_task) {
           return;
         } else {
+#ifdef USE_APPLETS
           systask_yield_to(task);
+#endif
           break;
         }
       }
@@ -331,6 +335,7 @@ void sysevents_notify_task_killed(systask_t *task) {
   }
 }
 
+#ifdef USE_APPLETS
 // Yields the active task and schedules it to be resumed
 //
 // Adds the current active taqsk to the polling list without waiting for any
@@ -357,6 +362,7 @@ void sysevents_yield_and_reschedule(systask_t *task) {
 
   systask_yield_to(task);
 }
+#endif  // USE_APPLETS
 
 #endif  // KERNEL_MODE
 

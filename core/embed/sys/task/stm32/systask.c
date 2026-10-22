@@ -102,11 +102,13 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
 #endif
 }
 
+#ifdef USE_APPLETS
 void systask_enable_tls(systask_t* task, mpu_area_t tls) {
   ensure((tls.size <= sizeof(task->tls_copy)) * sectrue, "TLS area too large");
   task->tls_addr = (void*)tls.start;
   task->tls_size = tls.size;
 }
+#endif  // USE_APPLETS
 
 systask_t* systask_active(void) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
@@ -120,6 +122,7 @@ systask_t* systask_kernel(void) {
   return &scheduler->kernel_task;
 }
 
+#ifdef USE_APPLETS
 static void systask_yield(void) {
   bool handler_mode = (__get_IPSR() & IPSR_ISR_Msk) != 0;
 
@@ -145,6 +148,11 @@ void systask_yield_to(systask_t* task) {
 
   systask_yield();
 }
+#endif
+
+systask_id_t systask_id(const systask_t* task) { return task->id; }
+
+#ifdef USE_APPLETS
 
 static systask_id_t systask_get_unused_id(void) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
@@ -174,9 +182,9 @@ bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
   task->exc_return = 0xFFFFFFAC;  // Thread mode, use PSP, pop FP context
 #endif
   task->id = id;
-  task->mpu_mode = MPU_MODE_APP;
   task->stack_base = stack_base;
   task->stack_end = stack_base + stack_size;
+  task->mpu_mode = MPU_MODE_APP;
   task->applet = applet;
   task->sb_addr = sb_addr;
 
@@ -188,9 +196,6 @@ bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
   return true;
 }
 
-systask_id_t systask_id(const systask_t* task) { return task->id; }
-
-#ifdef USE_APPLETS
 void systask_set_mpu(systask_t* task) {
   if (task->applet != NULL) {
     applet_t* applet = (applet_t*)task->applet;
@@ -198,7 +203,6 @@ void systask_set_mpu(systask_t* task) {
                           applet->privileges.framebuffer_access);
   }
 }
-#endif  // USE_APPLETS
 
 uint32_t* systask_push_data(systask_t* task, const void* data, size_t size) {
   if (task->sp < task->sp_lim) {
@@ -228,9 +232,7 @@ void systask_pop_data(systask_t* task, size_t size) { task->sp += size; }
 
 bool systask_push_call(systask_t* task, void* entrypoint, uintptr_t arg1,
                        uintptr_t arg2, uintptr_t arg3) {
-#ifdef USE_APPLETS
   systask_set_mpu(task);
-#endif
 
   uint32_t original_sp = task->sp;
 
@@ -322,9 +324,7 @@ void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1) {
     stack += 8;   // Skip R4-R11
   }
 
-#ifdef USE_APPLETS
   systask_set_mpu(task);
-#endif
 
   stack[STK_FRAME_R0] = r0;
   stack[STK_FRAME_R1] = r1;
@@ -341,6 +341,8 @@ uint32_t systask_get_r0(systask_t* task) {
   return stack[STK_FRAME_R0];
 }
 
+#endif  // USE_APPLETS
+
 static void systask_kill(systask_t* task) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
@@ -348,6 +350,7 @@ static void systask_kill(systask_t* task) {
 
   task->killed = 1;
 
+#ifdef USE_APPLETS
   if (task == &scheduler->kernel_task) {
     // Call panic handler
     if (scheduler->error_handler != NULL) {
@@ -368,6 +371,12 @@ static void systask_kill(systask_t* task) {
       systask_yield_to(&scheduler->kernel_task);
     }
   }
+#else
+  if (scheduler->error_handler != NULL) {
+    scheduler->error_handler(&task->pminfo);
+  }
+  reboot_device();
+#endif
 }
 
 bool systask_is_alive(const systask_t* task) {
@@ -582,6 +591,7 @@ __attribute((used)) static void systask_exit_fault(uint32_t msp,
   systask_exit_fault_ex(msp, exc_return, false);
 }
 
+#ifdef USE_APPLETS
 // C part of PendSV handler that switches tasks
 //
 // `sp` is the stack pointer of the current task
@@ -606,10 +616,7 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   prev_task->mpu_mode = mpu_get_mode();
 
   if (prev_task->tls_size != 0) {
-#ifdef USE_APPLETS
     systask_set_mpu(prev_task);
-#endif
-
     // Save the TLS of the previous task
     memcpy(prev_task->tls_copy, prev_task->tls_addr, prev_task->tls_size);
   }
@@ -632,14 +639,12 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   // Setup the MPU for the new task
   mpu_reconfig(next_task->mpu_mode);
 
-#ifdef USE_APPLETS
   systask_set_mpu(next_task);
 
   if (next_task->tls_size != 0) {
     // Restore the TLS of the next task
     memcpy(next_task->tls_addr, next_task->tls_copy, next_task->tls_size);
   }
-#endif
 
   IRQ_LOG_EXIT();
 
@@ -791,6 +796,8 @@ __attribute((naked, no_stack_protector)) void SVC_Handler(void) {
       "BX       R0                  \n"  // Branch to the returned value
   );
 }
+
+#endif  // USE_APPLETS
 
 __attribute__((naked, no_stack_protector)) void HardFault_Handler(void) {
   // A HardFault may also be caused by exception escalation.
