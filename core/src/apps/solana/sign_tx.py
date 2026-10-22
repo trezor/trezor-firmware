@@ -26,7 +26,11 @@ async def sign_tx(
     from trezor.crypto.curve import ed25519
     from trezor.enums import ButtonRequestType
     from trezor.messages import SolanaTxSignature
-    from trezor.ui.layouts import confirm_metadata, show_continue_in_app, show_warning
+    from trezor.ui.layouts import (
+        confirm_metadata,
+        confirm_solana_blind_signing,
+        show_continue_in_app,
+    )
 
     from apps.common import seed
 
@@ -48,13 +52,12 @@ async def sign_tx(
     except Exception:
         raise DataError("Invalid transaction")
 
+    skip_review = False
     if transaction.blind_signing:
-        await show_warning(
-            "warning_blind_signing",
-            TR.solana__transaction_contains_unknown_instructions,
-        )
+        # reviewing a lengthy transaction may run into timeouts on the host
+        skip_review = await confirm_solana_blind_signing()
 
-    if transaction.required_signers_count > 1:
+    if not skip_review and transaction.required_signers_count > 1:
         await confirm_metadata(
             "multiple_signers",
             TR.solana__multiple_signers,
@@ -106,7 +109,7 @@ async def sign_tx(
 
         verifier.verify()
 
-    if not await try_confirm_predefined_transaction(
+    if not skip_review and not await try_confirm_predefined_transaction(
         transaction,
         fee,
         address_n,
