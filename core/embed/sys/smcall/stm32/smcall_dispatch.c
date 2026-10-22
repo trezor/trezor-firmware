@@ -478,13 +478,36 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
   }
 }
 
+// Return true if the non-secure caller is privileged
+static inline bool is_caller_privileged(void) {
+  bool thread_mode = (__get_IPSR() & IPSR_ISR_Msk) == 0;
+  bool ns_unprivileged = (__TZ_get_CONTROL_NS() & CONTROL_nPRIV_Msk) != 0;
+  return !(thread_mode && ns_unprivileged);
+}
+
 __attribute__((cmse_nonsecure_entry)) void smcall_invoke(
     smcall_args_t *args, smcall_number_t smcall) {
+  // Allow only calls from non-secure privileged context (kernel)
+  if (!is_caller_privileged()) {
+    system_exit_fatal("Unprivileged smcall", __FILE__, __LINE__);
+  }
+
   if (!probe_write_access(args, sizeof(*args))) {
     system_exit_fatal("Invalid smcall args", __FILE__, __LINE__);
   }
 
+  // FIH: check caller privilege again
+  if (!is_caller_privileged()) {
+    reboot_device();
+  }
+
   smcall_handler(args->arg, smcall);
+
+  // FIH: check caller privilege again before returning
+  // (harder to bypass than the first check)
+  if (!is_caller_privileged()) {
+    reboot_device();
+  }
 }
 
 #endif  // SECMON
