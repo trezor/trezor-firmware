@@ -452,7 +452,8 @@ static bool app_dispatch(const app_vault_command_t *r, vault_response_t *out,
 }
 static bool vault_coreapp_call(const vault_request_t *r,
                                vault_response_t *out) {
-  if (r->op <= VAULT_IMPORT_BYTES) return vault_call(r, out);
+  if (r->op <= VAULT_SIGN || r->op == VAULT_SEED_STORAGE)
+    return vault_call(r, out);
   app_vault_command_t c = {.abi = r->abi,
                            .op = r->op,
                            .owner = r->owner,

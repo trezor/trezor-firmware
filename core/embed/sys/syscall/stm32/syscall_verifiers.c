@@ -22,6 +22,10 @@
 #pragma GCC optimize("no-stack-protector")
 
 #include <trezor_rtl.h>
+#ifdef USE_VAULT
+#include <sec/vault.h>
+#include "memzero.h"
+#endif
 
 #include <sys/applet.h>
 #include <sys/systask.h>
@@ -828,6 +832,12 @@ secbool storage_get__verified(const uint16_t key, void *val,
     goto access_violation;
   }
 
+#ifdef USE_VAULT
+  if (!vault_storage_key_allowed(key)) {
+    *len = 0;
+    return secfalse;
+  }
+#endif
   return storage_get(key, val, max_len, len);
 
 access_violation:
@@ -1729,7 +1739,6 @@ access_violation:
 #ifdef USE_VAULT
 #include <sec/vault.h>
 #include "syscall_context.h"
-#include "memzero.h"
 bool vault_call__verified(const vault_request_t *request,
                           vault_response_t *response) {
   if (!probe_read_access(request, sizeof(*request)) ||
@@ -1746,4 +1755,5 @@ bool vault_call__verified(const vault_request_t *request,
   memzero(&out, sizeof(out));
   return ok;
 }
+
 #endif

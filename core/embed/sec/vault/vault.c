@@ -1,9 +1,29 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #include <sec/vault.h>
+#include "curves.h"
+#include "ecdsa.h"
+#include "ed25519-donna/ed25519-keccak.h"
+#include "ed25519-donna/ed25519.h"
+#include "hmac.h"
+#include "nist256p1.h"
+#include "rand.h"
+#include "ripemd160.h"
+#include "secp256k1.h"
+#include "sha2.h"
 #include "store.h"
+#include "zkp_bip340.h"
+#include "zkp_context.h"
 #ifndef VAULT_TEST
 #include <sec/storage.h>
+#include "bip39.h"
 #endif
+
+bool vault_storage_key_allowed(uint16_t key) {
+  /* Strip public/writable-lock namespace flags as well: no alias bypass. */
+  key &= 0x3fff;
+  return key != 0x0102 && key != 0x0125;
+}
+
 void vault_wipe(void) {
   secret_revoke_all();
   /* Rotate the per-boot key: every outstanding blob stops authenticating. */
@@ -16,10 +36,47 @@ void vault_revoke_caller(uintptr_t caller) {
       secret_owner_destroy(secret_owners[i].id);
 }
 
-static bool vault_execute(uintptr_t caller, const vault_request_t *r,
-                          vault_response_t *out, bool unlocked) {
+static bool node_has_private_key(const HDNode *node) {
+  /* Public-only nodes carry an all-zero private key. */
+  return memcmp(node->private_key, (uint8_t[32]){0}, 32) != 0;
+}
+
+/* All vault curves use HASH160 fingerprints. Avoid the generic runtime hash
+ * dispatcher, which links unrelated coin hash implementations into the kernel.
+ * Check the invariant explicitly before admitting another curve. */
+static bool vault_fingerprint(HDNode *node, uint32_t *fingerprint) {
+  if (node->curve->hasher_pubkey != HASHER_SHA2_RIPEMD ||
+      hdnode_fill_public_key(node) != 0)
+    return false;
+  uint8_t digest[32] = {0}, hash160[20] = {0};
+  sha256_Raw(node->public_key, sizeof(node->public_key), digest);
+  ripemd160(digest, sizeof(digest), hash160);
+  *fingerprint = ((uint32_t)hash160[0] << 24) | ((uint32_t)hash160[1] << 16) |
+                 ((uint32_t)hash160[2] << 8) | hash160[3];
+  memzero(digest, sizeof(digest));
+  memzero(hash160, sizeof(hash160));
+  return true;
+}
+
+/* Kernel-local view of a validated snapshot. Public inputs stay in the
+ * originating snapshot; compact message requests need no full RPC envelope. */
+typedef struct {
+  uint32_t abi, op, owner, arg, length, child_num;
+  const vault_blob_t *blob;
+  const char *curve;
+  const uint8_t *data;
+} vault_command_t;
+
+/* No caller-owned pointers are used by the implementation. The syscall verifier
+ * copies requests before entry and copies only this public response out. */
+static bool vault_execute(uintptr_t caller, const vault_command_t *r,
+                          vault_response_t *out, bool unlocked,
+                          const uint8_t *message, size_t message_length) {
+  (void)message;
+  (void)message_length;
   memset(out, 0, sizeof(*out));
-  if (!caller || r->abi != VAULT_ABI || r->length > VAULT_DATA_SIZE)
+  if (!caller || r->abi != VAULT_ABI || r->length > VAULT_DATA_SIZE ||
+      (r->curve && !memchr(r->curve, 0, VAULT_CURVE_SIZE)))
     return false;
   secret_owner_t *owner = secret_owner_find(r->owner);
   if (r->op == VAULT_OWNER_CREATE) {
@@ -50,41 +107,170 @@ static bool vault_execute(uintptr_t caller, const vault_request_t *r,
   /* Session existence survives lock. Every operation using secret state is
    * independently gated by trusted storage state. Cleanup remains available. */
   if (!unlocked) return false;
+  /* The result, if any, is sealed for `made_owner` into out->blob. */
   secret_payload_t *made = NULL;
-  secret_kind_t made_kind = SECRET_BYTES;
-  size_t made_length = r->length;
+  secret_kind_t made_kind = SECRET_NODE;
+  size_t made_length = sizeof(HDNode);
   uint32_t made_owner = r->owner;
+  HDNode *node = NULL;
   bool ok = false;
   switch (r->op) {
-    case VAULT_RETAIN:
-      if ((r->arg != SECRET_BYTES && r->arg != SECRET_NODE) || !owner->parent ||
-          secret_get32(r->blob.bytes) != r->owner)
-        break;
-      made_kind = r->arg;
-      made = secret_open(&r->blob, r->owner, made_kind, &made_length);
-      made_owner = owner->parent;
-      ok = made != NULL;
-      break;
     case VAULT_OPEN_NATIVE: {
       size_t length = 0;
-      secret_payload_t *p = secret_open(&r->blob, r->owner, r->arg, &length);
+      secret_payload_t *p = secret_open(r->blob, r->owner, r->arg, &length);
       if (!p) break;
-      memcpy(out->opened, p->bytes, length);
-      out->value = length;
+      secret_encode(r->arg, length, p, out->opened);
+      out->value = r->arg == SECRET_NODE ? VAULT_NODE_SIZE : length;
       ok = true;
       break;
     }
+    case VAULT_RETAIN: {
+      /* Re-seal a request secret for its session. */
+      if (r->arg != SECRET_BYTES && r->arg != SECRET_NODE) break;
+      if (!owner->parent || secret_get32(r->blob->bytes) != r->owner) break;
+      made_kind = r->arg;
+      made = secret_open(r->blob, r->owner, made_kind, &made_length);
+      made_owner = owner->parent;
+      ok = made != NULL;
+      break;
+    }
     case VAULT_IMPORT_BYTES:
-      made_kind = r->arg ? r->arg : SECRET_BYTES;
-      if ((made_kind != SECRET_BYTES && made_kind != SECRET_NODE) ||
-          (made_kind == SECRET_NODE && r->length != VAULT_NODE_SIZE))
-        break;
       if (!r->length || r->length > VAULT_SECRET_SIZE ||
           !(made = secret_scratch_take()))
         break;
+      made_kind = SECRET_BYTES;
+      made_length = r->length;
       memcpy(made->bytes, r->data, r->length);
       ok = true;
       break;
+    case VAULT_FROM_SEED: {
+      if (!secret_curve_allowed(r->curve)) break;
+      const uint8_t *seed = r->data;
+      size_t len = r->length;
+      if (r->arg) {
+        secret_payload_t *p =
+            secret_open(r->blob, r->owner, SECRET_BYTES, &len);
+        seed = p ? p->bytes : NULL;
+      }
+      if (!seed || !len || !(made = secret_scratch_take())) break;
+      ok = hdnode_from_seed(seed, len, r->curve, &made->node) != 0;
+      break;
+    }
+    case VAULT_IMPORT_NODE: {
+      if (!secret_curve_allowed(r->curve)) break;
+      /* Wire format: chain[32], private[32], public[33], presence flags.
+       * Ed25519 public keys start with zero; do not infer presence from it. */
+      if (r->length != 98 || !r->data[97] || r->data[97] > 3 ||
+          !(made = secret_scratch_take()))
+        break;
+      node = &made->node;
+      node->curve = get_curve_by_name(r->curve);
+      if (!node->curve) break;
+      /* HDNode has no private-presence bit. Require a private field for
+       * Ed25519 imports so the valid all-zero seed cannot be confused with
+       * a public-only node. Public-only imports remain supported for ECDSA. */
+      if (node->curve->params == NULL && !(r->data[97] & 1)) break;
+      node->depth = r->arg;
+      node->child_num = r->child_num;
+      memcpy(node->chain_code, r->data, 32);
+      if (r->data[97] & 1) memcpy(node->private_key, r->data + 32, 32);
+      if (r->data[97] & 2) memcpy(node->public_key, r->data + 64, 33);
+      node->is_public_key_set = (r->data[97] & 2) != 0;
+      ok = (!(r->data[97] & 1) ||
+            hdnode_validate_private_key(node->curve, node->private_key)) &&
+           (!node->is_public_key_set ||
+            hdnode_validate_public_key(node->curve, node->public_key));
+      break;
+    }
+    case VAULT_PUBLIC: {
+      secret_payload_t *p = secret_open(r->blob, r->owner, SECRET_NODE, NULL);
+      if (!p) break;
+      node = &p->node;
+      bool computed = !node->is_public_key_set;
+      if (hdnode_fill_public_key(node)) break;
+      out->depth = node->depth;
+      out->child_num = node->child_num;
+      memcpy(out->chain_code, node->chain_code, 32);
+      memcpy(out->public_key, node->public_key, 33);
+      /* Hand back a blob that carries the computed key, so the client does
+       * not pay for the point multiplication again. */
+      if (computed) {
+        made = p;
+        made_owner = secret_get32(r->blob->bytes);
+      }
+      ok = true;
+      break;
+    }
+    case VAULT_DERIVE: {
+      if (r->length != 4) break;
+      made = secret_open(r->blob, r->owner, SECRET_NODE, NULL);
+      if (!made) break;
+      made_owner = secret_get32(r->blob->bytes);
+      uint32_t index;
+      memcpy(&index, r->data, 4);
+      if (!vault_fingerprint(&made->node, &out->value)) break;
+      ok = (r->arg ? hdnode_public_ckd(&made->node, index)
+                   : hdnode_private_ckd(&made->node, index)) != 0;
+      break;
+    }
+    case VAULT_SNAPSHOT: {
+      secret_payload_t *p = secret_open(r->blob, r->owner, SECRET_NODE, NULL);
+      if (!p || r->arg > 1 || !(made = secret_scratch_take())) break;
+      made_kind = SECRET_BYTES;
+      made_length = 32;
+      memcpy(made->bytes,
+             r->arg ? p->node.private_key_extension : p->node.private_key, 32);
+      ok = true;
+      break;
+    }
+    case VAULT_SIGN: {
+      size_t len = 0;
+      const uint8_t *key = NULL;
+      if (r->blob->bytes[4] == SECRET_BYTES) {
+        secret_payload_t *p =
+            secret_open(r->blob, r->owner, SECRET_BYTES, &len);
+        key = p ? p->bytes : NULL;
+      } else {
+        /* Sign from a node in place: no snapshot, no second key copy. */
+        secret_payload_t *p = secret_open(r->blob, r->owner, SECRET_NODE, NULL);
+        if (p && p->node.curve && p->node.curve->params == &secp256k1 &&
+            node_has_private_key(&p->node)) {
+          key = p->node.private_key;
+          len = 32;
+        }
+      }
+      uint8_t recovery = 0;
+      if (!key || len != 32 || r->length != 32 || r->arg > 1) break;
+      ok = ecdsa_sign_digest(&secp256k1, key, r->data, out->signature + 1,
+                             &recovery, NULL) == 0;
+      if (ok) out->signature[0] = 27 + recovery + 4 * r->arg;
+      break;
+    }
+#ifndef VAULT_TEST
+    case VAULT_SEED_STORAGE: {
+      char mnemonic[256] = {0};
+      uint8_t backup_type = 0;
+      uint16_t len = 0;
+      /* Narrow BIP39 path; SLIP39 is explicitly unsupported. */
+      bool bip39 = storage_get(0x010e, &backup_type, 1, &len) != sectrue ||
+                   (len == 1 && backup_type == 0);
+      if (bip39 && r->length <= 200 && !memchr(r->data, 0, r->length) &&
+          storage_get(0x0102, mnemonic, sizeof(mnemonic) - 1, &len) ==
+              sectrue &&
+          len && len < sizeof(mnemonic) && !memchr(mnemonic, 0, len) &&
+          (made = secret_scratch_take())) {
+        char passphrase[201] = {0};
+        memcpy(passphrase, r->data, r->length);
+        mnemonic_to_seed(mnemonic, passphrase, made->bytes, NULL);
+        memzero(passphrase, sizeof(passphrase));
+        made_kind = SECRET_BYTES;
+        made_length = 64;
+        ok = true;
+      }
+      memzero(mnemonic, sizeof(mnemonic));
+      break;
+    }
+#endif
     default:
       break;
   }
@@ -93,19 +279,42 @@ static bool vault_execute(uintptr_t caller, const vault_request_t *r,
   if (!ok) memzero(out, sizeof(*out));
   return ok;
 }
-bool vault_dispatch(uintptr_t caller, const vault_request_t *r,
-                    vault_response_t *out, bool unlocked) {
+
+static bool vault_dispatch_inner(uintptr_t caller, const vault_command_t *r,
+                                 vault_response_t *out, bool unlocked,
+                                 const uint8_t *message, size_t length) {
   if (secret_busy) {
     memzero(out, sizeof(*out));
     return false;
   }
   secret_transaction_begin();
-  bool ok = vault_execute(caller, r, out, unlocked);
+  /* All wallet ECC operations can reach the ZKP backend, including HDNode
+   * public-key caching and ECDSA after enabling kernel Schnorr support. */
+  bool ecc = (r->op >= VAULT_FROM_SEED && r->op <= VAULT_SIGN);
+  bool own_context = ecc && !zkp_context_is_initialized();
+  bool ready = !own_context || zkp_context_init() == 0;
+  bool ok = ready && vault_execute(caller, r, out, unlocked, message, length);
+  if (own_context && ready) zkp_context_destroy();
+  if (!ready) memzero(out, sizeof(*out));
   if (!secret_transaction_end()) {
     memzero(out, sizeof(*out));
     ok = false;
   }
   return ok;
+}
+
+bool vault_dispatch(uintptr_t caller, const vault_request_t *r,
+                    vault_response_t *out, bool unlocked) {
+  vault_command_t command = {.abi = r->abi,
+                             .op = r->op,
+                             .owner = r->owner,
+                             .arg = r->arg,
+                             .length = r->length,
+                             .child_num = r->child_num,
+                             .blob = &r->blob,
+                             .curve = r->curve,
+                             .data = r->data};
+  return vault_dispatch_inner(caller, &command, out, unlocked, NULL, 0);
 }
 #if defined(TREZOR_EMULATOR) && !defined(VAULT_TEST)
 bool vault_call(const vault_request_t *request, vault_response_t *response) {
@@ -115,7 +324,9 @@ bool vault_call(const vault_request_t *request, vault_response_t *response) {
   memzero(&copy, sizeof(copy));
   return ok;
 }
+
 #endif
+
 #ifndef VAULT_TEST
 void systask_revoke_secrets(void *applet) {
   vault_revoke_caller((uintptr_t)applet);
