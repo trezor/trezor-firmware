@@ -440,6 +440,9 @@ def cli(
                 f"Failed to start the Tropic01 model: {exc.__class__.__name__}: {exc}. "
                 "Use --no-tropic-emulator to point the emulator at an external model."
             )
+        # Without `--tropic-model-port`, the model reserved a free port while
+        # the emulator still holds the default, so point the emulator at the
+        # model. With the option, both already use it and this changes nothing.
         emulator.tropic_model_port = tropic_model.port
     if tropic_emulator is not None or tropic_emulator_needed:
         click.echo(f"TROPIC_MODEL_PORT={emulator.tropic_model_port}")
