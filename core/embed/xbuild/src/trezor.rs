@@ -184,6 +184,11 @@ fn configure_compiler_defaults(lib: &mut CLibrary) {
     if mode == "ecb" {
         cargo_out::warning("Vault AES-ECB is experimental and unauthenticated");
     }
+    // Per-phase cycle counts of each vault syscall, logged by the vault module.
+    cargo_out::rerun_if_env_changed("TREZOR_VAULT_TIMING");
+    if env::var("TREZOR_VAULT_TIMING").is_ok_and(|v| v == "1") {
+        lib.add_define("VAULT_TIMING", Some("1"));
+    }
 
     if !has_feature("emulator") {
         // Override the default `-fno-omit-frame-pointer` from the `cc` crate
