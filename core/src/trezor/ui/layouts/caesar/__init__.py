@@ -1660,6 +1660,14 @@ if not utils.BITCOIN_ONLY:
             title=TR.solana__unknown_token_address,
         )
 
+    async def confirm_solana_blind_signing() -> bool:
+        """Skipping the review is not offered on this layout."""
+        await show_warning(
+            "warning_blind_signing",
+            TR.solana__transaction_contains_unknown_instructions,
+        )
+        return False
+
     def confirm_solana_recipient(
         recipient: str,
         title: str,

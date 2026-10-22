@@ -1722,6 +1722,77 @@ if not utils.BITCOIN_ONLY:
             verb_cancel=TR.buttons__cancel_sign,
         )
 
+    async def confirm_solana_blind_signing() -> bool:
+        """Warn about blind signing.
+
+        Return True if the user chooses to sign without reviewing the details,
+        False to review them. Raises ActionCancelled if the user cancels.
+        """
+        from trezor.ui.layouts.menu import (
+            Menu,
+            MenuLeaf,
+            MenuResult,
+            cancel_leaf,
+            interact_with_menu,
+        )
+
+        async def chosen() -> bool:
+            return True  # any value leaves the menu
+
+        with trezorui_api.confirm_action(
+            title=TR.solana__title_blind_signing,
+            action=TR.solana__transaction_contains_unknown_instructions,
+            description=TR.solana__skip_details_hint,
+            verb=TR.buttons__continue,
+            danger=True,
+            external_menu=True,
+        ) as layout:
+            result = await interact_with_menu(
+                layout,
+                Menu(
+                    [
+                        MenuLeaf(
+                            TR.solana__skip_details,
+                            chosen,
+                            intent=trezorui_api.MenuItemIntent.DANGER,
+                        ),
+                        cancel_leaf(TR.buttons__cancel),
+                    ]
+                ),
+                "warning_blind_signing",
+                ButtonRequestType.Warning,
+            )
+        if result is CONFIRMED:
+            return False  # review the details
+        if not isinstance(result, MenuResult):
+            raise RuntimeError  # unexpected result
+
+        with trezorui_api.confirm_action(
+            title=TR.solana__title_blind_signing,
+            action=None,
+            description=None,
+            verb=TR.instructions__hold_to_sign,
+            hold=True,
+            danger=True,
+            external_menu=True,
+        ) as layout:
+            result = await interact_with_menu(
+                layout,
+                Menu(
+                    [
+                        MenuLeaf(TR.buttons__show_details, chosen),
+                        cancel_leaf(TR.buttons__cancel),
+                    ]
+                ),
+                "confirm_blind_signing",
+                ButtonRequestType.SignTx,
+            )
+        if result is CONFIRMED:
+            return True  # sign without the review
+        if not isinstance(result, MenuResult):
+            raise RuntimeError  # unexpected result
+        return False  # back to the details
+
     def confirm_solana_recipient(
         recipient: str,
         title: str,

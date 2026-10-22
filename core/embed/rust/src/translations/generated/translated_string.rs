@@ -1691,6 +1691,16 @@ pub enum TranslatedString {
     tutorial__title_middle_button = 1309,  // {"Bolt": "", "Caesar": "Middle button", "Delizia": "", "Eckhart": ""}
     tutorial__title_remember = 1310,  // {"Bolt": "", "Caesar": "Remember", "Delizia": "", "Eckhart": ""}
     tutorial__title_welcome = 1311,  // {"Bolt": "", "Caesar": "Welcome to Trezor", "Delizia": "", "Eckhart": ""}
+    #[cfg(feature = "universal_fw")]
+    solana__details_not_reviewed = 1312,  // "You are about to sign without reviewing the transaction details."
+    #[cfg(feature = "universal_fw")]
+    solana__skip_details = 1313,  // "Skip details"
+    #[cfg(feature = "universal_fw")]
+    solana__skip_details_hint = 1314,  // "If you are experiencing timeouts, skip straight to signing in the menu."
+    #[cfg(feature = "universal_fw")]
+    solana__title_blind_signing = 1315,  // "Blind signing"
+    #[cfg(feature = "universal_fw")]
+    solana__view_details_in_menu = 1316,  // "View details in the menu."
 }
 
 impl TranslatedString {
@@ -3010,6 +3020,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4327,6 +4342,11 @@ impl TranslatedString {
                 19030,
                 19030,
                 19030,
+                19094,
+                19106,
+                19177,
+                19190,
+                19215,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5643,6 +5663,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6960,6 +6985,11 @@ impl TranslatedString {
                 19030,
                 19030,
                 19030,
+                19094,
+                19106,
+                19177,
+                19190,
+                19215,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8276,6 +8306,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9593,6 +9628,11 @@ impl TranslatedString {
                 19030,
                 19030,
                 19030,
+                19094,
+                19106,
+                19177,
+                19190,
+                19215,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10909,6 +10949,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12226,6 +12271,11 @@ impl TranslatedString {
                 19030,
                 19030,
                 19030,
+                19094,
+                19106,
+                19177,
+                19190,
+                19215,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13543,6 +13593,11 @@ impl TranslatedString {
                 "Middle button",
                 "Remember",
                 "Welcome to Trezor",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14860,6 +14915,11 @@ impl TranslatedString {
                 17158,
                 17166,
                 17183,
+                17247,
+                17259,
+                17330,
+                17343,
+                17368,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16176,6 +16236,11 @@ impl TranslatedString {
                 "Middle button",
                 "Remember",
                 "Welcome to Trezor",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17493,6 +17558,11 @@ impl TranslatedString {
                 17158,
                 17166,
                 17183,
+                17247,
+                17259,
+                17330,
+                17343,
+                17368,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18809,6 +18879,11 @@ impl TranslatedString {
                 "Middle button",
                 "Remember",
                 "Welcome to Trezor",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -20126,6 +20201,11 @@ impl TranslatedString {
                 17158,
                 17166,
                 17183,
+                17247,
+                17259,
+                17330,
+                17343,
+                17368,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21442,6 +21522,11 @@ impl TranslatedString {
                 "Middle button",
                 "Remember",
                 "Welcome to Trezor",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22759,6 +22844,11 @@ impl TranslatedString {
                 17158,
                 17166,
                 17183,
+                17247,
+                17259,
+                17330,
+                17343,
+                17368,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -24076,6 +24166,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25393,6 +25488,11 @@ impl TranslatedString {
                 19317,
                 19317,
                 19317,
+                19381,
+                19393,
+                19464,
+                19477,
+                19502,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26709,6 +26809,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -28026,6 +28131,11 @@ impl TranslatedString {
                 19317,
                 19317,
                 19317,
+                19381,
+                19393,
+                19464,
+                19477,
+                19502,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29342,6 +29452,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30659,6 +30774,11 @@ impl TranslatedString {
                 19317,
                 19317,
                 19317,
+                19381,
+                19393,
+                19464,
+                19477,
+                19502,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31975,6 +32095,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -33292,6 +33417,11 @@ impl TranslatedString {
                 19317,
                 19317,
                 19317,
+                19381,
+                19393,
+                19464,
+                19477,
+                19502,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -34609,6 +34739,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -35926,6 +36061,11 @@ impl TranslatedString {
                 20338,
                 20338,
                 20338,
+                20402,
+                20414,
+                20485,
+                20498,
+                20523,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37242,6 +37382,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -38559,6 +38704,11 @@ impl TranslatedString {
                 20338,
                 20338,
                 20338,
+                20402,
+                20414,
+                20485,
+                20498,
+                20523,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39875,6 +40025,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -41192,6 +41347,11 @@ impl TranslatedString {
                 20338,
                 20338,
                 20338,
+                20402,
+                20414,
+                20485,
+                20498,
+                20523,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42508,6 +42668,11 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "You are about to sign without reviewing the transaction details.",
+                "Skip details",
+                "If you are experiencing timeouts, skip straight to signing in the menu.",
+                "Blind signing",
+                "View details in the menu.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -43825,6 +43990,11 @@ impl TranslatedString {
                 20338,
                 20338,
                 20338,
+                20402,
+                20414,
+                20485,
+                20498,
+                20523,
             ];
 
         }
@@ -45082,6 +45252,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__confirm_multisig, Self::solana__confirm_multisig),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__details_not_reviewed, Self::solana__details_not_reviewed),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__expected_fee, Self::solana__expected_fee),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__instruction_accounts_template, Self::solana__instruction_accounts_template),
@@ -45102,6 +45274,10 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__priority_fee, Self::solana__priority_fee),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__skip_details, Self::solana__skip_details),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__skip_details_hint, Self::solana__skip_details_hint),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__stake, Self::solana__stake),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__stake_account, Self::solana__stake_account),
@@ -45114,6 +45290,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__stake_withdrawal_warning_title, Self::solana__stake_withdrawal_warning_title),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__title_blind_signing, Self::solana__title_blind_signing),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__transaction_contains_unknown_instructions, Self::solana__transaction_contains_unknown_instructions),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__transaction_requires_x_signers_template, Self::solana__transaction_requires_x_signers_template),
@@ -45125,6 +45303,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_solana__unstake, Self::solana__unstake),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__unstake_question, Self::solana__unstake_question),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__view_details_in_menu, Self::solana__view_details_in_menu),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__vote_account, Self::solana__vote_account),
         #[cfg(feature = "universal_fw")]
