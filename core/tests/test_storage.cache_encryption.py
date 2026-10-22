@@ -14,6 +14,7 @@ from storage.cache_common import (
     CACHE_ENCRYPTED_KEYS_SEEDLESS,
     SESSIONLESS_FLAG,
     DataCache,
+    get_cache_encryption_key,
 )
 from trezor import config, utils
 from trezor.crypto import random
@@ -36,6 +37,10 @@ class HaltCalled(Exception):
 def _fake_halt(msg: str | None = None) -> None:
     # the real `halt` ends the emulator, which would skip every remaining test
     raise HaltCalled(msg)
+
+
+def _failing_device_secret() -> bytes:
+    raise RuntimeError
 
 
 class TestStorageCacheEncryption(unittest.TestCase):
@@ -142,7 +147,7 @@ class TestStorageCacheEncryption(unittest.TestCase):
         ciphertext = {key: self._ciphertext(session, key) for key in self.KEYS}
         # `decrypt_cache` would hide the `AuthenticationError` behind the halt
         with self.assertRaises(AuthenticationError):
-            session.decrypt()
+            session.decrypt(get_cache_encryption_key())
         # a failed decrypt must leave the fields guarded
         self.assert_encrypted(session)
         # unauthenticated plaintext must never be written back
@@ -401,6 +406,19 @@ class TestStorageCacheEncryption(unittest.TestCase):
         with self.assertRaises(HaltCalled):
             decrypt_cache()
 
+    def test_encrypt_cache_halts_on_key_failure(self) -> None:
+        self._fill(self._session(), self.KEYS)
+        with patch(storage.device, "get_device_secret", _failing_device_secret):
+            with self.assertRaises(HaltCalled):
+                encrypt_cache()
+
+    def test_decrypt_cache_halts_on_key_failure(self) -> None:
+        self._fill(self._session(), self.KEYS)
+        encrypt_cache()
+        with patch(storage.device, "get_device_secret", _failing_device_secret):
+            with self.assertRaises(HaltCalled):
+                decrypt_cache()
+
     # --- desync checks -----------------------------------------------------
 
     def test_encrypt_refuses_live_nonce_or_tag(self) -> None:
@@ -410,7 +428,7 @@ class TestStorageCacheEncryption(unittest.TestCase):
         for buffer in (session.nonce, session.authentication_tag):
             buffer[0] = 1
             with self.assertRaises(RuntimeError):
-                session.encrypt()
+                session.encrypt(get_cache_encryption_key())
             buffer[0] = 0
         for key in self.KEYS:
             self.assertEqual(values[key], session.get(key))
@@ -424,7 +442,7 @@ class TestStorageCacheEncryption(unittest.TestCase):
             encrypt_cache()
             buffer[:] = bytes(len(buffer))
             with self.assertRaises(RuntimeError):
-                session.decrypt()
+                session.decrypt(get_cache_encryption_key())
 
 
 if __name__ == "__main__":

@@ -2,7 +2,12 @@ import builtins
 import gc
 from typing import TYPE_CHECKING
 
-from storage.cache_common import SESSIONLESS_FLAG, DataCache, SessionlessCache
+from storage.cache_common import (
+    SESSIONLESS_FLAG,
+    DataCache,
+    SessionlessCache,
+    get_cache_encryption_key,
+)
 from trezor import utils
 
 if TYPE_CHECKING:
@@ -95,30 +100,32 @@ def encrypt_cache() -> None:
     """
     Encrypts seeds in all the cached sessions and the sessionless cache.
     """
-    for session in _ALL_CACHES:
-        try:
-            session.encrypt()
-        except Exception as e:
-            if __debug__:
-                from trezor import log
+    try:
+        encryption_key = get_cache_encryption_key()
+        for session in _ALL_CACHES:
+            session.encrypt(encryption_key)
+    except Exception as e:
+        if __debug__:
+            from trezor import log
 
-                log.exception(__name__, e)
-            utils.halt(e.__class__.__name__)
+            log.exception(__name__, e)
+        utils.halt(e.__class__.__name__)
 
 
 def decrypt_cache() -> None:
     """
     Decrypts seeds in all the cached sessions and the sessionless cache.
     """
-    for session in _ALL_CACHES:
-        try:
-            session.decrypt()
-        except Exception as e:
-            if __debug__:
-                from trezor import log
+    try:
+        encryption_key = get_cache_encryption_key()
+        for session in _ALL_CACHES:
+            session.decrypt(encryption_key)
+    except Exception as e:
+        if __debug__:
+            from trezor import log
 
-                log.exception(__name__, e)
-            utils.halt(e.__class__.__name__)
+            log.exception(__name__, e)
+        utils.halt(e.__class__.__name__)
 
 
 if __debug__:

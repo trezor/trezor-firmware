@@ -52,6 +52,17 @@ def _get_slip21_key(path: Sequence[bytes], seed: bytes) -> bytes:
     return data[32:64]
 
 
+def get_cache_encryption_key() -> bytes:
+    """
+    Returns the cache encryption key, derived from the device secret.
+    """
+    from storage.device import get_device_secret
+
+    device_secret = get_device_secret()
+    path = [b"TREZOR", b"Storage cache encryption key"]
+    return _get_slip21_key(path, device_secret)
+
+
 class DataCache:
     """
     A single unit of cache storage, designed to store common-type
@@ -154,17 +165,6 @@ class DataCache:
         utils.ensure(key < len(self.fields))
         return self.fields[key]
 
-    @staticmethod
-    def _get_cache_encryption_key() -> bytes:
-        """
-        Returns the cache encryption key, derived from the device secret.
-        """
-        from storage.device import get_device_secret
-
-        device_secret = get_device_secret()
-        path = [b"TREZOR", b"Storage cache encryption key"]
-        return _get_slip21_key(path, device_secret)
-
     def _read_set_fields(self) -> list[tuple[int, bytes]]:
         return [(f, self.get(f)) for f in self.fields_to_encrypt() if self.is_set(f)]  # type: ignore [is not assignable to return type]
 
@@ -178,7 +178,7 @@ class DataCache:
     def _is_encrypted_field(self, key: int) -> bool:
         return key in self.fields_to_encrypt()
 
-    def encrypt(self) -> None:
+    def encrypt(self, encryption_key: bytes) -> None:
         """
         Encrypts this cache's fields using one ChaCha20-Poly1305 stream.
         Does nothing if there is nothing to protect, or if the session is preauthorized.
@@ -195,7 +195,6 @@ class DataCache:
         if any(self.nonce) or any(self.authentication_tag):
             raise RuntimeError  # nonce and tag must be erased before encrypt
 
-        encryption_key = self._get_cache_encryption_key()
         self.nonce[:] = random.bytes(_NONCE_LENGTH)
         cipher = chacha20poly1305_encrypt(encryption_key, self.nonce)
 
@@ -206,7 +205,7 @@ class DataCache:
         self.authentication_tag[:] = cipher.finish()
         self.is_encrypted = True
 
-    def decrypt(self) -> None:
+    def decrypt(self, encryption_key: bytes) -> None:
         """
         Decrypts this cache's fields, verifying the authentication tag.
         """
@@ -220,7 +219,6 @@ class DataCache:
         if not any(self.nonce) or not any(self.authentication_tag):
             raise RuntimeError  # nonce and tag must be set before decrypt
 
-        encryption_key = self._get_cache_encryption_key()
         cipher = chacha20poly1305_decrypt(encryption_key, self.nonce)
 
         # The cache is not decrypted yet, but this lifts the restriction on accessing
