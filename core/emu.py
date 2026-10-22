@@ -124,7 +124,6 @@ def _from_env(name: str) -> bool:
 @click.command(
     context_settings=dict(ignore_unknown_options=True, allow_interspersed_args=False)
 )
-# fmt: off
 @click.option("-a", "--disable-animation/--enable-animation", default=_from_env("TREZOR_DISABLE_ANIMATION"), help="Disable animation")
 @click.option("-c", "--command", "run_command", is_flag=True, help="Run command while emulator is running")
 @click.option("-d", "--production/--no-production", default=_from_env("PYOPT"), help="Production mode (debuglink disabled)")
@@ -154,7 +153,6 @@ def _from_env(name: str) -> bool:
 @click.option("-V", "--valgrind", is_flag=True, help="Use valgrind instead of debugger (-D)")
 @click.option("-w", "--watch", is_flag=True, help="Restart emulator if sources change")
 @click.option("-X", "--extra-arg", "extra_args", multiple=True, help="Extra argument to pass to micropython")
-# fmt: on
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 def cli(
     disable_animation: bool,
