@@ -3,7 +3,18 @@ from micropython import const
 ADDRESS_SIZE = const(32)
 
 SOLANA_BASE_FEE_LAMPORTS = const(5000)
-SOLANA_COMPUTE_UNIT_LIMIT = const(200000)
+
+# Default compute unit limit, if not set by the transaction:
+# https://github.com/anza-xyz/agave/blob/a203300045b405f86c9c84308b2eae76af69ac3b/compute-budget-instruction/src/compute_budget_instruction_details.rs#L196-L219
+SOLANA_BUILTIN_INSTRUCTION_COMPUTE_UNIT_LIMIT = const(3000)
+SOLANA_DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT = const(200000)
+SOLANA_MAX_COMPUTE_UNIT_LIMIT = const(1400000)
+# Builtins may become non-builtins, so only the recognized ones are listed:
+# https://github.com/anza-xyz/agave/blob/a203300045b405f86c9c84308b2eae76af69ac3b/builtins-default-costs/src/lib.rs#L108-L120
+SOLANA_BUILTIN_PROGRAM_IDS = (
+    "11111111111111111111111111111111",  # System
+    "ComputeBudget111111111111111111111111111111",
+)
 
 # 1 lamport has 1M microlamports
 MICROLAMPORTS_PER_LAMPORT = const(1000000)

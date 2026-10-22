@@ -10,7 +10,10 @@ from apps.common.readers import read_uint16_le, read_uint32_le, read_uint64_le
 from ..constants import (
     MICROLAMPORTS_PER_LAMPORT,
     SOLANA_BASE_FEE_LAMPORTS,
-    SOLANA_COMPUTE_UNIT_LIMIT,
+    SOLANA_BUILTIN_INSTRUCTION_COMPUTE_UNIT_LIMIT,
+    SOLANA_BUILTIN_PROGRAM_IDS,
+    SOLANA_DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT,
+    SOLANA_MAX_COMPUTE_UNIT_LIMIT,
 )
 from ..types import AddressType, is_address_reference
 from .instruction import Instruction
@@ -81,6 +84,7 @@ class Transaction:
     def __init__(self, serialized_tx: AnyBytes) -> None:
         self._parse_transaction(serialized_tx)
         self._create_instructions()
+        self._check_compute_budget_instructions()
         self._determine_if_blind_signing()
 
     def _parse_transaction(self, serialized_tx: AnyBytes) -> None:
@@ -285,6 +289,17 @@ class Transaction:
 
             self.instructions.append(instruction)
 
+    def _check_compute_budget_instructions(self) -> None:
+        # Duplicates are rejected by the runtime:
+        # https://github.com/anza-xyz/agave/blob/a203300045b405f86c9c84308b2eae76af69ac3b/compute-budget-instruction/src/compute_budget_instruction_details.rs#L155-L189
+        seen_instruction_ids = []
+        for instruction in self.instructions:
+            if instruction.program_id != COMPUTE_BUDGET_PROGRAM_ID:
+                continue
+            if instruction.instruction_id in seen_instruction_ids:
+                raise DataError("Duplicate compute budget instruction")
+            seen_instruction_ids.append(instruction.instruction_id)
+
     def _determine_if_blind_signing(self) -> None:
         for instruction in self.instructions:
             if (
@@ -327,26 +342,32 @@ class Transaction:
             return self.config_priority_fee
 
         unit_price = 0
-        is_unit_price_set = False
-        unit_limit = SOLANA_COMPUTE_UNIT_LIMIT
-        is_unit_limit_set = False
+        unit_limit = None
+        # Used when the unit limit is not set explicitly.
+        default_unit_limit = 0
 
         for instruction in self.instructions:
             if instruction.program_id == COMPUTE_BUDGET_PROGRAM_ID:
+                # Duplicates are rejected in _check_compute_budget_instructions().
                 if (
                     instruction.instruction_id
                     == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT
-                    and not is_unit_limit_set
                 ):
                     unit_limit = instruction.units
-                    is_unit_limit_set = True
                 elif (
                     instruction.instruction_id
                     == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE
-                    and not is_unit_price_set
                 ):
                     unit_price = instruction.lamports
-                    is_unit_price_set = True
+
+            if instruction.program_id in SOLANA_BUILTIN_PROGRAM_IDS:
+                default_unit_limit += SOLANA_BUILTIN_INSTRUCTION_COMPUTE_UNIT_LIMIT
+            else:
+                default_unit_limit += SOLANA_DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
+
+        if unit_limit is None:
+            unit_limit = default_unit_limit
+        unit_limit = min(unit_limit, SOLANA_MAX_COMPUTE_UNIT_LIMIT)
 
         priority_fee = unit_price * unit_limit  # in microlamports
         return (
