@@ -43,6 +43,7 @@ encryption (C3). Every commit builds for T3T1. The prototype is not ready for pr
 | C3 | `5db2ea9a11` feat(core): use SAES records on U5 by default | U5 targets default to `saes`; F4 and the emulator keep SIV. |
 | C3 | `bba64819b9` test(core): verify SAES record sealing | Native `saes` mode with a software stand-in for the secure world; ELF checks. |
 | C3 | `563f9edd31` feat(core): seal the storage key cache in SAES | Storage DEK/SAK cache sealed in SAES under its own DHUK-wrapped key; BHK wrap smcall dropped from SAES builds. **C3 checkpoint.** |
+| C3 | `f7934b6500` fix(core): replace the SAES record key per kernel run | The kernel resets the SAES record key before its first record, so its nonce counter never meets an old key. |
 
 ## Footprint by stage
 
@@ -316,9 +317,23 @@ per-boot nonce counter and coreapp code are those of the GCM mode.
   secmon no longer exposes the `vault_kek_wrap` smcall.
 - **Not verified on hardware.** The SAES driver path has only been compiled: wrapped-key
   loading followed by GCM with `pKey = NULL` and `CRYP_KEYNOCONFIG` follows the
-  HAL's documented pattern, but has not run on hardware. If the key does not
-  survive the reconfiguration, the `KEYVALID` and round-trip checks fail
-  closed and the vault refuses to seal.
+  HAL's documented pattern, but has not run on hardware. The open question is
+  whether switching `KEYSEL` from `CRYP_KEYSEL_HW` to `CRYP_KEYSEL_NORMAL` for
+  the GCM pass clears the unwrapped key. If it does, the `KEYVALID` and
+  round-trip checks fail closed: the vault refuses to seal, so U5 builds are
+  unusable but not insecure. The likely fix is to keep `KEYSEL` at
+  `CRYP_KEYSEL_HW` during the GCM pass.
+- **Key and nonce lifetime.** On secmon models the record key lives in secmon
+  and the GCM nonce counter in the kernel. Their lifetimes matched only because
+  every kernel restart is a full MCU reset, which also clears secmon. The
+  kernel now replaces the record key before its first record of every run
+  (`f7934b6500`), so a restarted counter cannot meet an old key. A better fix
+  is to let the secure world own the nonce: keep a counter in each SAES key
+  slot, build the IV there on SEAL and return it for the record header, and
+  reset it with the key. Then no kernel bug, restored counter or compromised
+  secmon-model kernel can cause GCM nonce reuse, which would expose the XOR of
+  two plaintexts and the GHASH key. The record format and smcall layout stay
+  the same; the storage cache could drop its own counter the same way.
 
 ## Syscall timing
 
@@ -365,7 +380,8 @@ side-channel attacker a precise trigger and unlimited repetitions.
 | ECB accepts relabelled and altered records | Remove it, or limit it to test builds |
 | Copies of a record replay while the owner lives | Accept for immutable values; `destroy()` is not revocation |
 | Owners are activated from a scheduler task table | Activate the scope in `with_context()` |
-| C3's SAES path has not run on hardware | Run the native and device suites on a U5 device; the self-test fails closed if the key is not loaded |
+| C3's SAES path has not run on hardware; switching `KEYSEL` may clear the unwrapped key | Run the native and device suites on a U5 device; the self-test fails closed if the key is not loaded. If it fails, keep `KEYSEL` at `CRYP_KEYSEL_HW` for the GCM pass |
+| The kernel chooses the GCM nonces for records sealed in secmon | Let the secure world own the nonce counter per key and return the IV on SEAL |
 | Kernel stack headroom is 1,120 B on T3B1 and T3T1 | Measure the high-water mark on hardware; lower the 2,048 B Ed25519 bound if needed |
 | Ed25519 messages over 2,048 B are refused | Chunked transfer into a bounded kernel buffer |
 | Groestlcoin's curve is not on the vault allow-list; its signing fails | Add the curve or keep it on the legacy path |
