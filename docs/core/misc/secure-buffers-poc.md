@@ -44,6 +44,7 @@ encryption (C3). Every commit builds for T3T1. The prototype is not ready for pr
 | C3 | `bba64819b9` test(core): verify SAES record sealing | Native `saes` mode with a software stand-in for the secure world; ELF checks. |
 | C3 | `563f9edd31` feat(core): seal the storage key cache in SAES | Storage DEK/SAK cache sealed in SAES under its own DHUK-wrapped key; BHK wrap smcall dropped from SAES builds. **C3 checkpoint.** |
 | C3 | `f7934b6500` fix(core): replace the SAES record key per kernel run | The kernel resets the SAES record key before its first record, so its nonce counter never meets an old key. |
+| — | `af9c59efcb` fix(core): derive Ethereum addresses from vault keys | `ethereum_pubkeyhash()` hashes the vault's public key; `VAULT_PUBLIC` reports the node's curve. |
 
 ## Footprint by stage
 
@@ -383,14 +384,14 @@ kernel crypto operations, and coreapp supplies owner identities, so request
 ownership manages lifetime but cannot stop compromised coreapp from asking for
 signatures. In order of priority:
 
-1. **Fix `ethereum_pubkeyhash()`.** A vault HDNode returns an all-zero address:
-   the binding passes the public view, whose private key is zeroed, to
-   `hdnode_get_ethereum_pubkeyhash()` and ignores its failure. A unit test
-   derives `m/44'/60'/0'/0/0` from the "all" mnemonic and gets
-   `0x0000…0000` instead of `0x73d0385F…36A8`. Ethereum and Tron signing and
-   address display are blocked earlier today (canonical signing and SLIP-21 are
-   not migrated), so no wrong address reaches a user yet. Compute the hash from
-   the public key returned by the vault, and fail on error.
+1. **Fixed: `ethereum_pubkeyhash()` (`af9c59efcb`).** A vault HDNode returned
+   an all-zero address: the binding passed the public view, whose private key
+   is zeroed, to `hdnode_get_ethereum_pubkeyhash()` and ignored its failure.
+   It now hashes the public key the vault returns and raises on error, and a
+   unit test checks the `m/44'/60'/0'/0/0` address of the "all" mnemonic.
+   Ethereum and Tron signing and address display were blocked earlier anyway
+   (canonical signing and SLIP-21 are not migrated), so no wrong address
+   reached a user.
 2. **Validate the SAES key path with a known key.** The new-key self-test
    proves that sealing and opening are consistent, but a consistently wrong key
    would pass too. A hardware test build should wrap a known key, compare
@@ -411,10 +412,10 @@ signatures. In order of priority:
    Today a failure partway leaves the node partly derived; committing only
    after the whole path succeeds is more predictable but changes behavior.
 5. **Fetch the public view once.** `public_key()` and `serialize_public()` each
-   make two `VAULT_PUBLIC` calls. The shared fake `HDNode` view also hardcodes
-   the secp256k1 curve, which breaks `nem_address()` and would pick the wrong
-   hashers for other curves; item 1 has the same root. Replace it with a
-   public-information structure that carries the curve.
+   make two `VAULT_PUBLIC` calls. Since `af9c59efcb` the kernel reports the
+   node's curve and the shared `HDNode` view uses it instead of assuming
+   secp256k1. Replacing the view with a dedicated public-information
+   structure remains.
 6. **Compact records only where it pays.** With 16 B GC blocks, a 12-byte GCM
    header (32-bit counter, after item 3) saves nothing for 32-byte keys
    (80 B) or 64-byte seeds (112 B) and 16 B per node (160 → 144 B). Dropping the
@@ -433,7 +434,7 @@ signatures. In order of priority:
    source record's length byte against the source allocation before copying:
    a corrupted record would otherwise make it read past the source object.
 
-Suggested order: 1, then hardware key validation (2), nonce ownership (3),
+Suggested order after the fix in 1: hardware key validation (2), nonce ownership (3),
 batched derivation and single public fetches (4, 5), measured compaction (6)
 and purpose restrictions (7). Temporary-stack cleanup stays deferred.
 
@@ -446,7 +447,6 @@ and purpose restrictions (7). Temporary-stack cleanup stays deferred.
 | Owners are activated from a scheduler task table | Activate the scope in `with_context()` |
 | C3's SAES path has not run on hardware; switching `KEYSEL` may clear the unwrapped key | Run the native and device suites on a U5 device; the self-test fails closed if the key is not loaded. If it fails, keep `KEYSEL` at `CRYP_KEYSEL_HW` for the GCM pass |
 | The kernel chooses the GCM nonces for records sealed in secmon | Let the secure world own the nonce counter per key and return the IV on SEAL |
-| `ethereum_pubkeyhash()` returns an all-zero address for vault HDNodes | Hash the vault's public key; see Potential improvements, item 1 |
 | Kernel stack headroom is 1,120 B on T3B1 and T3T1 | Measure the high-water mark on hardware; lower the 2,048 B Ed25519 bound if needed |
 | Ed25519 messages over 2,048 B are refused | Chunked transfer into a bounded kernel buffer |
 | Groestlcoin's curve is not on the vault allow-list; its signing fails | Add the curve or keep it on the legacy path |
