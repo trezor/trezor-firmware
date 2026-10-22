@@ -55,6 +55,9 @@ mod trustzone;
 #[path = "unit_properties/build.rs"]
 mod unit_properties;
 
+#[path = "vault/build.rs"]
+mod vault;
+
 fn main() -> Result<()> {
     xbuild::build(|lib| {
         lib.import_lib("sys")?;
@@ -62,6 +65,7 @@ fn main() -> Result<()> {
         build_mods!(
             lib,
             [
+                vault if cfg!(feature = "vault"),
                 backup_ram if cfg!(feature = "backup_ram"),
                 board_capabilities,
                 consumption_mask if cfg!(feature = "consumption_mask"),
