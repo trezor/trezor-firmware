@@ -66,7 +66,7 @@ async def confirm_action(
     verb: str | None = None,
     verb_cancel: str | None = "",
     hold: bool = False,
-    hold_danger: bool = False,
+    danger: bool = False,
     reverse: bool = False,
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_CODE_OTHER,

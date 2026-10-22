@@ -73,6 +73,7 @@ pub struct ConfirmActionOptions {
     pub page_limit: Option<u16>,
     pub page_counter: bool,
     pub frame_margin: u8,
+    pub danger: bool,
 }
 
 impl ConfirmActionOptions {
@@ -84,7 +85,13 @@ impl ConfirmActionOptions {
             page_limit: None,
             page_counter: false,
             frame_margin: 0,
+            danger: false,
         }
+    }
+
+    pub fn with_danger(mut self, danger: bool) -> Self {
+        self.danger = danger;
+        self
     }
 
     pub fn with_hold(mut self, hold: bool) -> Self {
@@ -288,7 +295,7 @@ pub fn new_confirm_action(
     verb_cancel: Option<TString<'static>>,
     reverse: bool,
     hold: bool,
-    hold_danger: bool,
+    danger: bool,
     prompt_screen: bool,
     prompt_title: TString<'static>,
     external_menu: bool,
@@ -309,14 +316,14 @@ pub fn new_confirm_action(
         paragraphs.into_paragraphs()
     };
 
-    if external_menu && (prompt_screen || hold || hold_danger) {
+    if external_menu && (prompt_screen || hold) {
         return Err(Error::ValueError(
             c"external_menu currently not supported in tandem with prompt_screen/hold",
         ));
     }
 
-    let mut options = ConfirmActionOptions::new();
-    options = if hold_danger {
+    let mut options = ConfirmActionOptions::new().with_danger(danger);
+    options = if hold && danger {
         options.with_hold_danger()
     } else {
         options.with_hold(hold)
@@ -354,6 +361,11 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
         ConfirmActionExtra::Menu(_) => header.with_menu_button(),
         ConfirmActionExtra::Cancel => header.with_cancel_button(),
     };
+    if options.danger {
+        header = header
+            .with_icon(theme::ICON_WARNING, theme::ORANGE_LIGHT)
+            .styled(theme::label_title_danger());
+    }
     if let Some(subtitle) = strings.subtitle {
         header = header.with_subtitle(subtitle);
     }
@@ -411,6 +423,7 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
             &extra,
             strings.subtitle,
             options.hold,
+            options.danger,
             prompt_title,
             prompt_state,
         )?;
@@ -486,6 +499,7 @@ fn create_confirm(
     extra: &ConfirmActionExtra,
     subtitle: Option<TString<'static>>,
     hold: Option<HoldTheme>,
+    danger: bool,
     prompt_title: TString<'static>,
     prompt_state: &'static dyn FlowController,
 ) -> Result<(), Error> {
@@ -505,6 +519,11 @@ fn create_confirm(
     let mut header = Header::left_aligned(prompt_title);
     if matches!(extra, ConfirmActionExtra::Menu(_)) {
         header = header.with_menu_button();
+    }
+    if danger {
+        header = header
+            .with_icon(theme::ICON_WARNING, theme::ORANGE_LIGHT)
+            .styled(theme::label_title_danger());
     }
     if let Some(subtitle) = subtitle {
         header = header.with_subtitle(subtitle);

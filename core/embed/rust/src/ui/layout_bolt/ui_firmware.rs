@@ -47,7 +47,7 @@ impl FirmwareUI for UIBolt {
         _cancel: bool,
         verb_cancel: Option<TString<'static>>,
         hold: bool,
-        hold_danger: bool,
+        danger: bool,
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
@@ -74,7 +74,7 @@ impl FirmwareUI for UIBolt {
         } else {
             ButtonPage::new(paragraphs, theme::BG).with_cancel_confirm(verb_cancel, verb)
         };
-        if hold && hold_danger {
+        if hold && danger {
             page = page.with_confirm_style(theme::button_danger())
         }
         let layout = RootComponent::new(Frame::left_aligned(theme::label_title(), title, page));

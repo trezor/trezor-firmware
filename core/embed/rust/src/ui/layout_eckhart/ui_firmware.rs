@@ -56,7 +56,7 @@ impl FirmwareUI for UIEckhart {
         cancel: bool,
         _verb_cancel: Option<TString<'static>>,
         hold: bool,
-        hold_danger: bool,
+        danger: bool,
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
@@ -83,17 +83,20 @@ impl FirmwareUI for UIEckhart {
         let right_button = match (hold, verb) {
             (true, verb) => {
                 let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
-                let (style, gradient) = if hold_danger {
+                let (style, gradient) = if danger {
                     (button_actionbar_danger(), theme::Gradient::Alert)
                 } else {
                     (button_confirm(), theme::Gradient::SignGreen)
                 };
                 Button::with_text(verb)
                     .with_long_press(theme::CONFIRM_HOLD_DURATION)
-                    .with_long_press_danger(hold_danger)
+                    .with_long_press_danger(danger)
                     .with_gradient(gradient)
                     .styled(style)
             }
+            (false, Some(verb)) if danger => Button::with_text(verb)
+                .styled(button_actionbar_danger())
+                .with_gradient(theme::Gradient::Alert),
             (false, Some(verb)) => Button::with_text(verb),
             (false, None) => {
                 Button::with_text(TR::buttons__confirm.into()).styled(button_confirm())
@@ -101,6 +104,11 @@ impl FirmwareUI for UIEckhart {
         };
 
         let mut header = Header::new(title);
+        if danger {
+            header = header
+                .with_icon(theme::ICON_WARNING, theme::ORANGE)
+                .with_text_style(theme::label_title_danger());
+        }
         if external_menu {
             header = header.with_right_button(Button::with_icon(theme::ICON_MENU), HeaderMsg::Menu);
         }

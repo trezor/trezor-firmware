@@ -46,7 +46,7 @@ impl FirmwareUI for UICaesar {
         _cancel: bool,
         verb_cancel: Option<TString<'static>>,
         hold: bool,
-        _hold_danger: bool,
+        _danger: bool,
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
