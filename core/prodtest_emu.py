@@ -95,7 +95,6 @@ def cli(
     By default the emulator runs in an empty temporary profile, which is
     removed on exit. Use -p for a persistent profile instead.
 
-    \b
     ./prodtest_emu.py -m t3w1 -c pytest ../tests/prodtest_tests
     TREZOR_MODEL=t3w1 ./prodtest_emu.py
     """
