@@ -332,7 +332,6 @@ ts_t app_image_get_info(app_image_handle_t handle, app_image_info_t* info) {
   info->code_size = entry->header->code_size;
   info->data_size = entry->header->data_size;
   info->chunk_size = entry->header->chunk_size;
-  info->ipc_buffer_size = entry->header->ipc_buffer_size;
   info->version = entry->header->version;
   info->fingerprint = entry->fingerprint;
   info->ring = entry->header->app_ring;
