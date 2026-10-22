@@ -119,13 +119,18 @@ pub fn is_unlocked() -> bool {
     ffi::sectrue == unsafe { ffi::storage_is_unlocked() }
 }
 
-/// Lock storage.
+/// Lock storage. Test-only: skips cache encryption, firmware locks via Python
+/// `storage.lock()`.
+#[cfg(test)]
 pub fn lock() {
     unsafe { ffi::storage_lock() }
 }
 
 /// Unlock storage with PIN and optional external salt.
 /// Returns true if the PIN + salt combination is correct.
+/// Test-only: skips cache decryption, firmware unlocks via Python
+/// `storage.unlock()`.
+#[cfg(test)]
 pub fn unlock(pin: &str, salt: Option<&ExternalSalt>) -> bool {
     let salt = salt.map(|s| s.as_ptr()).unwrap_or_default();
     let result = unsafe { ffi::storage_unlock(pin.as_ptr() as *const _, pin.len(), salt) };
