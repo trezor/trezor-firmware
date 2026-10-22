@@ -162,7 +162,8 @@ def confirm_action(
     prompt_title: str | None = None,
     external_menu: bool = False,
 ) -> LayoutContext[UiResult]:
-    """Confirm action."""
+    """Confirm action. Delizia: with an external menu and no text, only the hold prompt
+    is shown."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
