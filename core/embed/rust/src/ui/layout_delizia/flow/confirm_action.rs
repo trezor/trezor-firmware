@@ -61,13 +61,9 @@ impl ConfirmActionStrings {
     }
 }
 
-pub enum HoldTheme {
-    Normal,
-    Danger,
-}
-
 pub struct ConfirmActionOptions {
-    pub hold: Option<HoldTheme>,
+    pub hold: bool,
+    pub danger: bool,
     pub swipe_down: bool,
     pub swipe_up: bool,
     pub page_limit: Option<u16>,
@@ -78,7 +74,8 @@ pub struct ConfirmActionOptions {
 impl ConfirmActionOptions {
     pub fn new() -> Self {
         Self {
-            hold: None,
+            hold: false,
+            danger: false,
             swipe_down: false,
             swipe_up: false,
             page_limit: None,
@@ -88,12 +85,12 @@ impl ConfirmActionOptions {
     }
 
     pub fn with_hold(mut self, hold: bool) -> Self {
-        self.hold = if hold { Some(HoldTheme::Normal) } else { None };
+        self.hold = hold;
         self
     }
 
-    pub fn with_hold_danger(mut self) -> Self {
-        self.hold = Some(HoldTheme::Danger);
+    pub fn with_danger(mut self, danger: bool) -> Self {
+        self.danger = danger;
         self
     }
 
@@ -288,7 +285,7 @@ pub fn new_confirm_action(
     verb_cancel: Option<TString<'static>>,
     reverse: bool,
     hold: bool,
-    hold_danger: bool,
+    danger: bool,
     prompt_screen: bool,
     prompt_title: TString<'static>,
     external_menu: bool,
@@ -309,18 +306,12 @@ pub fn new_confirm_action(
         paragraphs.into_paragraphs()
     };
 
-    if external_menu && (prompt_screen || hold || hold_danger) {
+    if external_menu && (prompt_screen || hold) {
         return Err(Error::ValueError(
             c"external_menu currently not supported in tandem with prompt_screen/hold",
         ));
     }
 
-    let mut options = ConfirmActionOptions::new();
-    options = if hold_danger {
-        options.with_hold_danger()
-    } else {
-        options.with_hold(hold)
-    };
     new_confirm_action_simple(
         paragraphs,
         if external_menu {
@@ -329,7 +320,9 @@ pub fn new_confirm_action(
             ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_cancel(verb_cancel))
         },
         ConfirmActionStrings::new(title, subtitle, None, prompt_screen.then_some(prompt_title)),
-        options,
+        ConfirmActionOptions::new()
+            .with_hold(hold)
+            .with_danger(danger),
     )
 }
 
@@ -340,12 +333,8 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
     strings: ConfirmActionStrings,
     options: ConfirmActionOptions,
 ) -> Result<SwipeFlow, Error> {
-    let (prompt_screen, prompt_pages, mut flow, page) = create_flow(
-        strings.title,
-        strings.prompt_screen,
-        options.hold.is_some(),
-        &extra,
-    );
+    let (prompt_screen, prompt_pages, mut flow, page) =
+        create_flow(strings.title, strings.prompt_screen, options.hold, &extra);
 
     let header = Header::left_aligned(strings.title);
     let has_external_menu = matches!(extra, ConfirmActionExtra::ExternalMenu);
@@ -354,6 +343,9 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
         ConfirmActionExtra::Menu(_) => header.with_menu_button(),
         ConfirmActionExtra::Cancel => header.with_cancel_button(),
     };
+    if options.danger {
+        header = danger_header(header);
+    }
     if let Some(subtitle) = strings.subtitle {
         header = header.with_subtitle(subtitle);
     }
@@ -411,6 +403,7 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
             &extra,
             strings.subtitle,
             options.hold,
+            options.danger,
             prompt_title,
             prompt_state,
         )?;
@@ -485,26 +478,32 @@ fn create_confirm(
     flow: &mut SwipeFlow,
     extra: &ConfirmActionExtra,
     subtitle: Option<TString<'static>>,
-    hold: Option<HoldTheme>,
+    hold: bool,
+    danger: bool,
     prompt_title: TString<'static>,
     prompt_state: &'static dyn FlowController,
 ) -> Result<(), Error> {
-    let (prompt, prompt_action) = if let Some(hold) = hold {
-        let prompt = match hold {
-            HoldTheme::Normal => PromptScreen::new_hold_to_confirm(),
-            HoldTheme::Danger => PromptScreen::new_hold_to_confirm_danger(),
-        };
-        (prompt, TR::instructions__hold_to_confirm.into())
-    } else {
-        (
+    let (prompt, prompt_action) = match (hold, danger) {
+        (true, false) => (
+            PromptScreen::new_hold_to_confirm(),
+            TR::instructions__hold_to_confirm.into(),
+        ),
+        (true, true) => (
+            PromptScreen::new_hold_to_confirm_danger(),
+            TR::instructions__hold_to_confirm.into(),
+        ),
+        (false, _) => (
             PromptScreen::new_tap_to_confirm(),
             TR::instructions__tap_to_confirm.into(),
-        )
+        ),
     };
 
     let mut header = Header::left_aligned(prompt_title);
     if matches!(extra, ConfirmActionExtra::Menu(_)) {
         header = header.with_menu_button();
+    }
+    if danger {
+        header = danger_header(header);
     }
     if let Some(subtitle) = subtitle {
         header = header.with_subtitle(subtitle);
@@ -518,6 +517,12 @@ fn create_confirm(
         content_confirm.map(super::util::map_to_confirm),
     )?;
     Ok(())
+}
+
+fn danger_header(header: Header) -> Header {
+    header
+        .with_static_icon(theme::ICON_WARNING, theme::ORANGE_LIGHT)
+        .styled(theme::label_title_danger())
 }
 
 #[inline(never)]

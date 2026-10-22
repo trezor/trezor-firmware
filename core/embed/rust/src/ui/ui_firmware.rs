@@ -142,7 +142,7 @@ pub trait FirmwareUI {
         cancel: bool,
         verb_cancel: Option<TString<'static>>,
         hold: bool,
-        hold_danger: bool,
+        danger: bool,
         reverse: bool,
         prompt_screen: bool,
         prompt_title: Option<TString<'static>>,
