@@ -51,19 +51,34 @@ static bool vault_execute(uintptr_t caller, const vault_request_t *r,
    * independently gated by trusted storage state. Cleanup remains available. */
   if (!unlocked) return false;
   secret_payload_t *made = NULL;
+  secret_kind_t made_kind = SECRET_BYTES;
   size_t made_length = r->length;
   uint32_t made_owner = r->owner;
   bool ok = false;
   switch (r->op) {
     case VAULT_RETAIN:
-      if (r->arg != SECRET_BYTES || !owner->parent ||
+      if ((r->arg != SECRET_BYTES && r->arg != SECRET_NODE) || !owner->parent ||
           secret_get32(r->blob.bytes) != r->owner)
         break;
-      made = secret_open(&r->blob, r->owner, SECRET_BYTES, &made_length);
+      made_kind = r->arg;
+      made = secret_open(&r->blob, r->owner, made_kind, &made_length);
       made_owner = owner->parent;
       ok = made != NULL;
       break;
+    case VAULT_OPEN_NATIVE: {
+      size_t length = 0;
+      secret_payload_t *p = secret_open(&r->blob, r->owner, r->arg, &length);
+      if (!p) break;
+      memcpy(out->opened, p->bytes, length);
+      out->value = length;
+      ok = true;
+      break;
+    }
     case VAULT_IMPORT_BYTES:
+      made_kind = r->arg ? r->arg : SECRET_BYTES;
+      if ((made_kind != SECRET_BYTES && made_kind != SECRET_NODE) ||
+          (made_kind == SECRET_NODE && r->length != VAULT_NODE_SIZE))
+        break;
       if (!r->length || r->length > VAULT_SECRET_SIZE ||
           !(made = secret_scratch_take()))
         break;
@@ -74,7 +89,7 @@ static bool vault_execute(uintptr_t caller, const vault_request_t *r,
       break;
   }
   if (ok && made)
-    ok = secret_seal(made_owner, SECRET_BYTES, made_length, made, &out->blob);
+    ok = secret_seal(made_owner, made_kind, made_length, made, &out->blob);
   if (!ok) memzero(out, sizeof(*out));
   return ok;
 }
