@@ -64,7 +64,12 @@ static HDNode *hdnode_require(mp_obj_HDNode_t *o) {
   memzero(&public_view, sizeof(public_view));
   public_view.depth = out.depth;
   public_view.child_num = out.child_num;
-  public_view.curve = get_curve_by_name(SECP256K1_NAME);
+  /* VAULT_PUBLIC reports the node's curve; the view carries no private key. */
+  static const char *const curves[] = {SECP256K1_NAME, NIST256P1_NAME,
+                                       ED25519_NAME};
+  if (out.value >= sizeof(curves) / sizeof(curves[0]))
+    mp_raise_ValueError(MP_ERROR_TEXT("Unknown node curve"));
+  public_view.curve = get_curve_by_name(curves[out.value]);
   memcpy(public_view.chain_code, out.chain_code, 32);
   memcpy(public_view.public_key, out.public_key, 33);
   public_view.is_public_key_set = true;

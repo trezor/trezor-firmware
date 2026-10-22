@@ -235,6 +235,7 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
       if (hdnode_fill_public_key(node)) break;
       out->depth = node->depth;
       out->child_num = node->child_num;
+      out->value = secret_curve_id(node);
       memcpy(out->chain_code, node->chain_code, 32);
       memcpy(out->public_key, node->public_key, 33);
       /* Hand back a blob that carries the computed key, so the client does

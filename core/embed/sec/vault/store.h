@@ -140,6 +140,12 @@ static const char *secret_curve_name(uint8_t id) {
       return NULL;
   }
 }
+/* Inverse of secret_curve_name() for the curves a node can carry. */
+static uint8_t secret_curve_id(const HDNode *n) {
+  return n->curve == get_curve_by_name(NIST256P1_NAME) ? 1
+         : n->curve == get_curve_by_name(ED25519_NAME) ? 2
+                                                       : 0;
+}
 static bool secret_curve_allowed(const char *name) {
   for (uint8_t i = 0; secret_curve_name(i); i++)
     if (!strcmp(name, secret_curve_name(i))) return true;
@@ -161,9 +167,7 @@ static void secret_encode(secret_kind_t kind, size_t length,
   memcpy(data + 40, n->private_key, 32);
   memcpy(data + 72, n->public_key, 33);
   data[105] = n->is_public_key_set;
-  data[106] = n->curve == get_curve_by_name(NIST256P1_NAME) ? 1
-              : n->curve == get_curve_by_name(ED25519_NAME) ? 2
-                                                            : 0;
+  data[106] = secret_curve_id(n);
 }
 static bool secret_decode(secret_kind_t kind, size_t length,
                           const uint8_t data[VAULT_RECORD_SIZE],

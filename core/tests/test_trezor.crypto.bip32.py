@@ -793,6 +793,23 @@ class TestCryptoBip32(unittest.TestCase):
             "xpub6FnCn6nSzZAw5Tw7cgR9bi15UV96gLZhjDstkXXxvCLsUXBGXPdSnLFbdpq8p9HmGsApME5hQTZ3emM2rnY5agb9rXpVGyy3bdW6EEgAtqt",
         )
 
+    def test_ethereum_pubkeyhash(self):
+        # m/44'/60'/0'/0/0 of the "all all ... all" mnemonic.
+        from trezor.crypto import bip39
+
+        seed = bip39.seed(" ".join(["all"] * 12), "")
+        node = bip32.from_seed(seed, SECP256K1_NAME)
+        node.derive_path([44 | HARDENED, 60 | HARDENED, HARDENED, 0, 0])
+        self.assertEqual(
+            node.ethereum_pubkeyhash().hex(),
+            "73d0385f4d8e00c5e6504c6030f47bf6212736a8",
+        )
+        # Only secp256k1 nodes have an Ethereum address.
+        for curve in ("nist256p1", "ed25519"):
+            other = bip32.from_seed(seed, curve)
+            with self.assertRaises(ValueError):
+                other.ethereum_pubkeyhash()
+
 
 if __name__ == "__main__":
     unittest.main()
