@@ -158,9 +158,11 @@ static uint32_t ui_total = 0;
 static uint32_t ui_begin = 0;
 static uint32_t ui_next_update = 0;
 static enum storage_ui_message_t ui_message = NO_MSG;
+#ifdef STORAGE_KEY_CACHE_PROTECTED
+#include "key_cache.h"
+#else
 CONFIDENTIAL static uint8_t cached_keys[KEYS_SIZE] = {0};
-CONFIDENTIAL static uint8_t *const cached_dek = cached_keys;
-CONFIDENTIAL static uint8_t *const cached_sak = cached_keys + DEK_SIZE;
+#endif
 CONFIDENTIAL static uint8_t authentication_sum[SHA256_DIGEST_LENGTH] = {0};
 CONFIDENTIAL static uint8_t hardware_salt[HARDWARE_SALT_SIZE] = {0};
 CONFIDENTIAL static uint32_t norcow_active_version = 0;
@@ -178,6 +180,59 @@ static uint32_t pin_to_int(const uint8_t *pin, size_t pin_len);
 static secbool storage_upgrade(void);
 static secbool storage_upgrade_unlocked(const uint8_t *pin, size_t pin_len,
                                         const uint8_t *ext_salt);
+/* Core can seal this cache without changing the persistent storage format.
+ * Legacy/test builds retain the existing native cache behind the same helpers.
+ */
+static void cached_keys_clear(void) {
+#ifdef STORAGE_KEY_CACHE_PROTECTED
+  storage_key_cache_wipe();
+#else
+  memzero(cached_keys, sizeof(cached_keys));
+#endif
+}
+static secbool cached_keys_store(const uint8_t keys[KEYS_SIZE]) {
+#ifdef STORAGE_KEY_CACHE_PROTECTED
+  return storage_key_cache_set(keys) ? sectrue : secfalse;
+#else
+  memcpy(cached_keys, keys, KEYS_SIZE);
+  return sectrue;
+#endif
+}
+static void cached_keys_read(uint8_t *out, size_t offset, size_t length) {
+#ifdef STORAGE_KEY_CACHE_PROTECTED
+  ensure(sectrue * storage_key_cache_get(out, offset, length),
+         "storage key cache authentication failed");
+#else
+  memcpy(out, cached_keys + offset, length);
+#endif
+}
+static void cached_keys_generate(void) {
+  uint8_t keys[KEYS_SIZE] = {0};
+  rng_fill_buffer_strong(keys, sizeof(keys));
+  secbool ok = cached_keys_store(keys);
+  memzero(keys, sizeof(keys));
+  ensure(ok, "storage key cache sealing failed");
+}
+static void cached_sak_hmac(const uint8_t *data, size_t length,
+                            uint8_t out[SHA256_DIGEST_LENGTH]) {
+  uint8_t sak[SAK_SIZE] = {0};
+  cached_keys_read(sak, DEK_SIZE, sizeof(sak));
+  hmac_sha256(sak, sizeof(sak), data, length, out);
+  memzero(sak, sizeof(sak));
+}
+static void cached_sak_prepare(uint32_t odig[8], uint32_t idig[8]) {
+  uint8_t sak[SAK_SIZE] = {0};
+  cached_keys_read(sak, DEK_SIZE, sizeof(sak));
+  hmac_sha256_prepare(sak, sizeof(sak), odig, idig);
+  memzero(sak, sizeof(sak));
+}
+static void cached_dek_init(chacha20poly1305_ctx *ctx, const uint8_t iv[12]) {
+  uint8_t dek[DEK_SIZE] = {0};
+  cached_keys_read(dek, 0, sizeof(dek));
+  rfc7539_init(ctx, dek, iv);
+  memzero(dek, sizeof(dek));
+}
+
 static secbool storage_set_encrypted(const uint16_t key, const void *val,
                                      const uint16_t len);
 static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
@@ -244,8 +299,7 @@ static secbool is_protected(uint16_t key) {
 static secbool auth_init(void) {
   uint8_t tag[SHA256_DIGEST_LENGTH] = {0};
   memzero(authentication_sum, sizeof(authentication_sum));
-  hmac_sha256(cached_sak, SAK_SIZE, authentication_sum,
-              sizeof(authentication_sum), tag);
+  cached_sak_hmac(authentication_sum, sizeof(authentication_sum), tag);
   return norcow_set(STORAGE_TAG_KEY, tag, STORAGE_TAG_SIZE);
 }
 
@@ -258,12 +312,11 @@ static secbool auth_update(uint16_t key) {
   }
 
   uint8_t tag[SHA256_DIGEST_LENGTH] = {0};
-  hmac_sha256(cached_sak, SAK_SIZE, (uint8_t *)&key, sizeof(key), tag);
+  cached_sak_hmac((uint8_t *)&key, sizeof(key), tag);
   for (uint32_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
     authentication_sum[i] ^= tag[i];
   }
-  hmac_sha256(cached_sak, SAK_SIZE, authentication_sum,
-              sizeof(authentication_sum), tag);
+  cached_sak_hmac(authentication_sum, sizeof(authentication_sum), tag);
   return norcow_set(STORAGE_TAG_KEY, tag, STORAGE_TAG_SIZE);
 }
 
@@ -295,7 +348,7 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len) {
   // Prepare inner and outer digest.
   uint32_t odig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)] = {0};
   uint32_t idig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)] = {0};
-  hmac_sha256_prepare(cached_sak, SAK_SIZE, odig, idig);
+  cached_sak_prepare(odig, idig);
 
   // Prepare SHA-256 message padding.
   uint32_t g[SHA256_BLOCK_LENGTH / sizeof(uint32_t)] = {0};
@@ -862,7 +915,10 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
          "derive_kek_set failed");
   rfc7539_init(&ctx, kek, keiv);
   memzero(kek, sizeof(kek));
-  chacha20poly1305_encrypt(&ctx, cached_keys, ekeys, KEYS_SIZE);
+  uint8_t keys[KEYS_SIZE] = {0};
+  cached_keys_read(keys, 0, sizeof(keys));
+  chacha20poly1305_encrypt(&ctx, keys, ekeys, KEYS_SIZE);
+  memzero(keys, sizeof(keys));
   rfc7539_finish(&ctx, 0, KEYS_SIZE, pvc);
   memzero(&ctx, sizeof(ctx));
   secbool ret = norcow_set(EDEK_PVC_KEY, buffer,
@@ -924,7 +980,7 @@ static void init_wiped_storage(void) {
     return;
   }
 
-  rng_fill_buffer_strong(cached_keys, sizeof(cached_keys));
+  cached_keys_generate();
   unlocked = sectrue;
   uint32_t version = NORCOW_VERSION;
   ensure(auth_init(), "set_storage_auth_tag failed");
@@ -954,7 +1010,7 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
 
   initialized = secfalse;
   unlocked = secfalse;
-  memzero(cached_keys, sizeof(cached_keys));
+  cached_keys_clear();
   norcow_init(&norcow_active_version);
   initialized = sectrue;
   ui_callback = callback;
@@ -999,7 +1055,7 @@ secbool storage_is_unlocked(void) {
 
 void storage_lock(void) {
   unlocked = secfalse;
-  memzero(cached_keys, sizeof(cached_keys));
+  cached_keys_clear();
   memzero(authentication_sum, sizeof(authentication_sum));
 }
 
@@ -1135,10 +1191,10 @@ static secbool __wur decrypt_dek(const uint8_t *pin, size_t pin_len,
     memzero(tag, sizeof(tag));
     return secfalse;
   }
-  memcpy(cached_keys, keys, sizeof(keys));
+  secbool cached = cached_keys_store(keys);
   memzero(keys, sizeof(keys));
   memzero(tag, sizeof(tag));
-  return sectrue;
+  return cached;
 }
 
 static void ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
@@ -1409,7 +1465,7 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
   const uint8_t *ciphertext = (const uint8_t *)val_stored + RFC7539_NONCE_SIZE;
   uint8_t tag_computed[CHACHA20POLY1305_TAG_SIZE] = {0};
   chacha20poly1305_ctx ctx = {0};
-  rfc7539_init(&ctx, cached_dek, iv);
+  cached_dek_init(&ctx, iv);
   rfc7539_auth(&ctx, (const uint8_t *)&key, sizeof(key));
   chacha20poly1305_decrypt(&ctx, ciphertext, (uint8_t *)val_dest, *len);
   rfc7539_finish(&ctx, sizeof(key), *len, tag_computed);
@@ -1503,7 +1559,7 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
   }
   // Encrypt all blocks except for the last one.
   chacha20poly1305_ctx ctx = {0};
-  rfc7539_init(&ctx, cached_dek, buffer);
+  cached_dek_init(&ctx, buffer);
   rfc7539_auth(&ctx, (const uint8_t *)&key, sizeof(key));
   size_t i = 0;
   for (i = 0; i + CHACHA20POLY1305_BLOCK_SIZE < len;
@@ -1804,7 +1860,7 @@ void storage_wipe(void) {
   norcow_wipe();
   norcow_active_version = NORCOW_VERSION;
   memzero(authentication_sum, sizeof(authentication_sum));
-  memzero(cached_keys, sizeof(cached_keys));
+  cached_keys_clear();
   init_wiped_storage();
   mpu_restore(mpu_mode);
 }
@@ -1959,7 +2015,7 @@ static secbool storage_upgrade(void) {
   const uint16_t V0_PIN_FAIL_KEY = 0x0001;
   secbool ret = secfalse;
   if (norcow_active_version == 0) {
-    rng_fill_buffer_strong(cached_keys, sizeof(cached_keys));
+    cached_keys_generate();
 
     // Initialize the storage authentication tag.
     auth_init();
@@ -2009,7 +2065,7 @@ static secbool storage_upgrade(void) {
     }
 
     unlocked = secfalse;
-    memzero(cached_keys, sizeof(cached_keys));
+    cached_keys_clear();
   } else
 #endif
 

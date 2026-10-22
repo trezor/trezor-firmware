@@ -78,6 +78,7 @@ default = [
     "sec/kernel_mode",
     "sec/secure_mode",
     "sec/storage",
+    "sec/storage_key_cache",
     "sec/rdi",
     "crypto/aes_gcm",
     ]

@@ -17,6 +17,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("kernel")
     parser.add_argument("coreapp")
+    parser.add_argument("--secmon", help="secmon ELF on models where it owns storage")
     parser.add_argument("--nm", default="arm-none-eabi-nm")
     args = parser.parse_args()
     kernel = symbols(args.nm, args.kernel)
@@ -36,6 +37,9 @@ def main():
         assert name not in coreapp, f"vault symbol leaked into coreapp: {name}"
     # Sealed blobs replaced the kernel slot table.
     assert "secret_entries" not in kernel, "kernel still has a secret slot table"
+    storage = symbols(args.nm, args.secmon) if args.secmon else kernel
+    assert "sealed_storage_keys" in storage, "missing sealed storage key cache"
+    assert "cached_keys" not in storage, "plaintext storage key cache remains"
     assert "vault_call" in coreapp, "missing coreapp syscall stub"
     assert "vault_call_message" in coreapp, "missing message syscall stub"
     print("vault ELF placement checks passed")

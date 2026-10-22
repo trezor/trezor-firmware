@@ -1,8 +1,11 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* Byte-buffer ownership and encryption, independent of EC operations. */
+#pragma push_macro("main")
+#undef main
 #define main sealing_test_main
 #include "test_vault_sealing.c"
 #undef main
+#pragma pop_macro("main")
 #include "../../embed/sec/vault/vault.c"
 
 /* Used only if later kernel-operation tests link an EC-enabled dispatcher. */
