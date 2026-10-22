@@ -1,0 +1,88 @@
+name: "PR approvals"
+
+# PRs opened by someone outside of the Trezor org need two approvals, so that a maintainer
+# cannot open a PR from a second account and approve it themselves.
+
+on:
+  # Uses the workflow from the base branch, so a fork PR cannot change the check on open/push.
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+  # Re-evaluate every time the approvals may have changed.
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions:
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  approvals:
+    name: External contributor approvals
+    # A skipped job needs no runner and counts as passed. Public org members and bots are skipped here,
+    # everyone else (private org members show up as CONTRIBUTOR) is resolved by repository write permission below.
+    if: github.repository == 'trezor/trezor-firmware' && !contains(fromJSON('["OWNER", "MEMBER"]'), github.event.pull_request.author_association) && !endsWith(github.event.pull_request.user.login, '[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require two approvals for external contributors
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd  # actions/github-script@v8.0.0
+        with:
+          script: |
+            const REQUIRED_APPROVALS = 2;
+            const pr = context.payload.pull_request;
+            const { owner, repo } = context.repo;
+
+            // same condition as for an approval to count towards branch protection
+            async function hasWriteAccess(username) {
+              try {
+                const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner,
+                  repo,
+                  username,
+                });
+                // the "maintain" role is reported as "write"
+                return ["admin", "write"].includes(data.permission);
+              } catch (e) {
+                if (e.status === 404) return false;
+                throw e;
+              }
+            }
+
+            if (await hasWriteAccess(pr.user.login)) {
+              core.info(`${pr.user.login} has write access, no extra approval needed.`);
+              return;
+            }
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+
+            // latest approval-relevant review of each reviewer (reviews are in chronological order)
+            const latest = new Map();
+            for (const review of reviews) {
+              if (review.user && ["APPROVED", "CHANGES_REQUESTED", "DISMISSED"].includes(review.state)) {
+                latest.set(review.user.login, review);
+              }
+            }
+
+            const approvers = [];
+            for (const [login, review] of latest) {
+              if (review.state === "APPROVED" && (await hasWriteAccess(login))) {
+                approvers.push(login);
+              }
+            }
+
+            const result =
+              `${approvers.length}/${REQUIRED_APPROVALS} approvals` +
+              (approvers.length ? ` (${approvers.join(", ")})` : "");
+            if (approvers.length < REQUIRED_APPROVALS) {
+              core.setFailed(`${pr.user.login} is an external contributor: ${result}.`);
+            } else {
+              core.info(result);
+            }
