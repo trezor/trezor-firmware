@@ -1,5 +1,9 @@
 // clang-format off
 // source: https://github.com/eyalroz/printf/blob/v6.3.0/src/printf/printf.c
+// cherry-picked fixes:
+// * https://github.com/eyalroz/printf/commit/a4434bcd35caedf3354eb12e943255331f8c53fa
+// * https://github.com/eyalroz/printf/commit/e1943ca492d2d313d32c20ddd80627bdc261cb23
+
 
 /**
  * @author (c) Eyal Rozenberg <eyalroz1@gmx.com>
@@ -480,15 +484,18 @@ static inline output_gadget_t extern_putchar_gadget(void)
 }
 
 /*
- * internal secure strlen
- * @return The length of the string (excluding the terminating 0) limited by 'maxsize'
- * @note strlen uses size_t, but wes only use this function with printf_size_t
- * variables - hence the signature.
+ * A variant of C11's `strnlen_s` (i.e. POSIX's `strnlen`), for internal use,
+ * on non-null pointers.
+ *
+ * @return The length of the string {@param str}, excluding the terminating
+ *     '\0' character, but never more than {@param maxsize}.
+ * @note the standard library strlen uses `size_t`, but we only use this
+ * function with `printf_size_t` variables - hence the signature.
  */
 static inline printf_size_t strnlen_s_(const char* str, printf_size_t maxsize)
 {
   const char* s;
-  for (s = str; *s && maxsize--; ++s);
+  for (s = str; maxsize && *s; ++s, --maxsize);
   return (printf_size_t)(s - str);
 }
 
@@ -1498,7 +1505,7 @@ static inline void format_string_loop(output_gadget_t* output, const char* forma
           out_rev_(output, ")llun(", 6, width, flags);
         }
         else {
-          printf_size_t l = strnlen_s_(p, precision ? precision : PRINTF_MAX_POSSIBLE_BUFFER_SIZE);
+          printf_size_t l = strnlen_s_(p, (flags & FLAGS_PRECISION) ? precision : PRINTF_MAX_POSSIBLE_BUFFER_SIZE);
           /* pre padding */
           if (flags & FLAGS_PRECISION) {
             l = (l < precision ? l : precision);
@@ -1509,9 +1516,9 @@ static inline void format_string_loop(output_gadget_t* output, const char* forma
             }
           }
           /* string output */
-          while ((*p != 0) && (!(flags & FLAGS_PRECISION) || precision)) {
+          while ((!(flags & FLAGS_PRECISION) || precision) && (*p != 0)) {
             putchar_via_gadget(output, *(p++));
-            --precision;
+            --precision; /* Note: If the precision was not set, the ignored `precision` value will underflow; this is defined behavior. */
           }
           /* post padding */
           if (flags & FLAGS_LEFT) {
