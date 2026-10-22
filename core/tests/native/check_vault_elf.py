@@ -40,8 +40,10 @@ def main():
             assert name not in kernel, f"software record key in kernel: {name}"
         if args.secmon:
             secmon = symbols(args.nm, args.secmon)
-            assert "record_key_wrapped" in secmon, "SAES record key not in secmon"
-            assert "record_key_wrapped" not in kernel, "SAES record key in kernel"
+            for name in ("record_key", "storage_key"):
+                assert name in secmon, f"SAES key not in secmon: {name}"
+                assert name not in kernel, f"SAES key in kernel: {name}"
+            assert "vault_kek_wrap__verified" not in secmon, "BHK wrap smcall exposed"
     else:
         for name in ("record_ctx", "wrapped_dek"):
             assert name in kernel, f"missing kernel vault symbol: {name}"
@@ -50,6 +52,8 @@ def main():
     storage = symbols(args.nm, args.secmon) if args.secmon else kernel
     assert "sealed_storage_keys" in storage, "missing sealed storage key cache"
     assert "cached_keys" not in storage, "plaintext storage key cache remains"
+    if "vault_saes_storage" in storage:
+        assert "cache_context" not in storage, "software storage key cache remains"
     assert "vault_call" in coreapp, "missing coreapp syscall stub"
     assert "vault_call_message" in coreapp, "missing message syscall stub"
     print("vault ELF placement checks passed")

@@ -1,12 +1,15 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
-/* Stage C3: kernel-side SAES record sealing. A software GCM stand-in plays the
- * secure world; the SAES driver itself only runs on hardware. */
+/* Stage C3: kernel-side SAES record sealing and the SAES storage key cache. A
+ * software GCM stand-in plays the secure world; the SAES driver itself only
+ * runs on hardware. */
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #define VAULT_TEST 1
 #include "../../embed/sec/vault/seal.c"
 #include "../../embed/sec/vault/vault.c"
+#define STORAGE_KEY_CACHE_SAES_TEST 1
+#include "../../embed/sec/storage/key_cache.c"
 
 /* Unused by SAES sealing; declared by seal.c for the software backends. */
 bool vault_wrap_block(bool encrypt, const uint8_t in[16], uint8_t out[16]) {
@@ -30,31 +33,35 @@ void __attribute__((noreturn)) system_exit_error(const char *title,
 
 /* --- Secure-world stand-in ----------------------------------------------- */
 
-static uint8_t sw_key[32];
-static bool sw_key_ready;
+typedef struct {
+  uint8_t key[32];
+  bool ready;
+  vault_saes_request_t last;
+} sw_key_t;
+static sw_key_t sw_record, sw_storage;
 static uint8_t sw_generation;
 static uint32_t sw_calls;
 static vault_saes_request_t sw_last;
 static enum { SW_NORMAL, SW_HW_FAIL, SW_CORRUPT_RESULT } sw_mode = SW_NORMAL;
 
-uint32_t vault_saes_record(vault_saes_request_t *r) {
+static uint32_t sw_request(sw_key_t *k, vault_saes_request_t *r) {
   sw_calls++;
-  sw_last = *r;
+  sw_last = k->last = *r;
   if (r->op == VAULT_SAES_RESET) {
-    memset(sw_key, 0, sizeof(sw_key));
-    sw_key_ready = false;
+    memset(k->key, 0, sizeof(k->key));
+    k->ready = false;
     return VAULT_SAES_OK;
   }
   if (sw_mode == SW_HW_FAIL) {
     memset(r->data, 0, sizeof(r->data));
     return VAULT_SAES_FAILED;
   }
-  if (!sw_key_ready) {
-    memset(sw_key, ++sw_generation, sizeof(sw_key));
-    sw_key_ready = true;
+  if (!k->ready) {
+    memset(k->key, ++sw_generation, sizeof(k->key));
+    k->ready = true;
   }
   gcm_ctx ctx;
-  assert(gcm_init_and_key(sw_key, sizeof(sw_key), &ctx) == RETURN_GOOD);
+  assert(gcm_init_and_key(k->key, sizeof(k->key), &ctx) == RETURN_GOOD);
   int ret =
       r->op == VAULT_SAES_SEAL
           ? gcm_encrypt_message(r->iv, sizeof(r->iv), r->aad, sizeof(r->aad),
@@ -67,6 +74,12 @@ uint32_t vault_saes_record(vault_saes_request_t *r) {
     return VAULT_SAES_AUTH_FAILED;
   }
   return sw_mode == SW_CORRUPT_RESULT ? VAULT_SAES_OK ^ 1 : VAULT_SAES_OK;
+}
+uint32_t vault_saes_record(vault_saes_request_t *r) {
+  return sw_request(&sw_record, r);
+}
+uint32_t vault_saes_storage(vault_saes_request_t *r) {
+  return sw_request(&sw_storage, r);
 }
 
 /* --- Tests ------------------------------------------------------------------
@@ -190,15 +203,64 @@ static void test_dispatcher(void) {
                           .blob = blob};
     assert(call(1, &r, &out));
   }
-  /* Revoking everything resets the SAES record key. */
+  /* Revoking everything resets the SAES record key, not the storage key. */
+  sw_storage.ready = true;
   vault_wipe();
-  assert(sw_last.op == VAULT_SAES_RESET && !sw_key_ready);
+  assert(sw_last.op == VAULT_SAES_RESET && !sw_record.ready);
+  assert(sw_storage.ready);
+  sw_storage.ready = false;
+}
+
+static void test_storage_key_cache(void) {
+  uint8_t keys[STORAGE_CACHED_KEYS_SIZE], out[STORAGE_CACHED_KEYS_SIZE];
+  for (size_t i = 0; i < sizeof(keys); i++) keys[i] = 0x80 + i;
+  assert(!storage_key_cache_get(out, 0, sizeof(out))); /* nothing cached */
+  assert(storage_key_cache_set(keys));
+  /* Sealed under the storage key, with its own IV prefix and AAD. */
+  assert(sw_storage.ready && !sw_record.ready);
+  assert(!memcmp(sw_storage.last.iv, "SK01", 4));
+  assert(sw_storage.last.length == STORAGE_CACHED_KEYS_SIZE);
+  assert(memcmp(sealed_storage_keys.ciphertext, keys, sizeof(keys)));
+  assert(storage_key_cache_get(out, 0, sizeof(out)));
+  assert(!memcmp(out, keys, sizeof(keys)));
+  assert(storage_key_cache_get(out, 32, 16) && !memcmp(out, keys + 32, 16));
+  assert(!storage_key_cache_get(out, 40, 16));
+  assert(!storage_key_cache_get(out, 49, 0));
+
+  /* Each update uses a fresh nonce. */
+  uint64_t nonce = sealed_storage_keys.nonce;
+  assert(storage_key_cache_set(keys) && sealed_storage_keys.nonce == nonce + 1);
+
+  /* Tampering fails closed and drops both the cache and the storage key. */
+  for (size_t i = 0; i < sizeof(keys) + 16; i++) {
+    assert(storage_key_cache_set(keys));
+    if (i < sizeof(keys))
+      sealed_storage_keys.ciphertext[i] ^= 1;
+    else
+      sealed_storage_keys.tag[i - sizeof(keys)] ^= 1;
+    memset(out, 0xff, sizeof(out));
+    assert(!storage_key_cache_get(out, 0, sizeof(out)));
+    assert(is_zero(out, sizeof(out)));
+    assert(!sealed_storage_keys.ready && !sw_storage.ready);
+  }
+
+  /* Wipe erases the sealed cache and requests a new storage key. */
+  assert(storage_key_cache_set(keys));
+  storage_key_cache_wipe();
+  assert(is_zero(&sealed_storage_keys, sizeof(sealed_storage_keys)));
+  assert(!sw_storage.ready && sw_storage.last.op == VAULT_SAES_RESET);
+
+  /* A hardware failure leaves nothing cached. */
+  sw_mode = SW_HW_FAIL;
+  assert(!storage_key_cache_set(keys) && !sealed_storage_keys.ready);
+  sw_mode = SW_NORMAL;
 }
 
 int main(void) {
   test_records();
   test_failures();
   test_dispatcher();
-  puts("SAES record sealing tests passed");
+  test_storage_key_cache();
+  puts("SAES record sealing and storage key cache tests passed");
   return 0;
 }

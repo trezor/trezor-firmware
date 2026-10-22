@@ -687,6 +687,7 @@ access_violation:
 
 #include "memzero.h"
 
+#ifndef VAULT_SEAL_HW
 secbool vault_kek_wrap__verified(bool encrypt, uint8_t value[40]) {
   if (!probe_write_access(value, 40)) {
     apptask_access_violation();
@@ -702,6 +703,7 @@ secbool vault_kek_wrap__verified(bool encrypt, uint8_t value[40]) {
   memzero(tmp, sizeof(tmp));
   return ok;
 }
+#endif  // VAULT_SEAL_HW
 
 uint32_t vault_saes_record__verified(vault_saes_request_t *request) {
   if (!probe_write_access(request, sizeof(*request))) {

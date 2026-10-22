@@ -41,3 +41,7 @@ typedef struct {
 /* SEAL encrypts data in place and fills tag; OPEN verifies tag and decrypts
  * data in place, zeroing it on any failure. Runs in the secure world. */
 uint32_t vault_saes_record(vault_saes_request_t* request);
+
+/* The same with a separate key for the storage key cache. Secure world only:
+ * no smcall reaches it, so the kernel cannot use the storage key. */
+uint32_t vault_saes_storage(vault_saes_request_t* request);

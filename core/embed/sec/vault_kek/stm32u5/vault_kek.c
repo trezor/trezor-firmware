@@ -49,9 +49,13 @@ secbool vault_kek_wrap(bool encrypt, uint8_t value[40]) {
 
 #define SAES_TIMEOUT 100
 
-/* The per-boot record key, wrapped under DHUK by SAES itself. */
-static uint32_t record_key_wrapped[8];
-static bool record_key_ready;
+/* Per-boot keys, wrapped under DHUK by SAES itself: one for vault records,
+ * one for the storage key cache. Only the record key is reachable by smcall. */
+typedef struct {
+  uint32_t wrapped[8];
+  bool ready;
+} saes_key_t;
+static saes_key_t record_key, storage_key;
 
 static bool saes_setup(CRYP_HandleTypeDef* h, uint32_t key_mode,
                        uint32_t key_select, uint32_t algorithm) {
@@ -72,15 +76,15 @@ static bool saes_key_valid(void) {
   return (SAES->SR & AES_SR_KEYVALID) == AES_SR_KEYVALID;
 }
 
-/* Load the record key into the SAES key registers without exposing it. */
-static bool saes_load_record_key(CRYP_HandleTypeDef* h) {
+/* Load a key into the SAES key registers without exposing it. */
+static bool saes_load_key(CRYP_HandleTypeDef* h, saes_key_t* key) {
   return saes_setup(h, CRYP_KEYMODE_WRAPPED, CRYP_KEYSEL_HW, CRYP_AES_ECB) &&
-         HAL_CRYPEx_UnwrapKey(h, record_key_wrapped, SAES_TIMEOUT) == HAL_OK &&
+         HAL_CRYPEx_UnwrapKey(h, key->wrapped, SAES_TIMEOUT) == HAL_OK &&
          saes_key_valid();
 }
 
 /* One GCM pass with the key already in the key registers. */
-static uint32_t saes_gcm(vault_saes_request_t* r) {
+static uint32_t saes_gcm(saes_key_t* key, vault_saes_request_t* r) {
   uint32_t data[VAULT_SAES_RECORD_SIZE / 4] = {0};
   uint32_t out[VAULT_SAES_RECORD_SIZE / 4] = {0};
   uint32_t aad[VAULT_SAES_AAD_SIZE / 4] = {0};
@@ -95,7 +99,7 @@ static uint32_t saes_gcm(vault_saes_request_t* r) {
   CRYP_HandleTypeDef h;
   CRYP_ConfigTypeDef conf = {0};
   bool encrypt = r->op == VAULT_SAES_SEAL;
-  if (!saes_load_record_key(&h) || HAL_CRYP_GetConfig(&h, &conf) != HAL_OK)
+  if (!saes_load_key(&h, key) || HAL_CRYP_GetConfig(&h, &conf) != HAL_OK)
     goto cleanup;
   conf.Algorithm = CRYP_AES_GCM_GMAC;
   conf.KeyMode = CRYP_KEYMODE_NORMAL;
@@ -140,44 +144,44 @@ cleanup:
   return result;
 }
 
-static void record_key_drop(void) {
-  memzero(record_key_wrapped, sizeof(record_key_wrapped));
-  record_key_ready = false;
+static void saes_key_drop(saes_key_t* key) {
+  memzero(key->wrapped, sizeof(key->wrapped));
+  key->ready = false;
 }
 
-/* Generate and wrap a new record key, then check it with a round trip. */
-static bool record_key_create(void) {
-  uint32_t key[8] = {0};
+/* Generate and wrap a new key, then check it with a round trip. */
+static bool saes_key_create(saes_key_t* key) {
+  uint32_t plain[8] = {0};
   CRYP_HandleTypeDef h;
-  rng_fill_buffer_strong(key, sizeof(key));
+  rng_fill_buffer_strong(plain, sizeof(plain));
   bool ok =
       saes_setup(&h, CRYP_KEYMODE_WRAPPED, CRYP_KEYSEL_HW, CRYP_AES_ECB) &&
-      HAL_CRYPEx_WrapKey(&h, key, record_key_wrapped, SAES_TIMEOUT) == HAL_OK;
-  memzero(key, sizeof(key));
+      HAL_CRYPEx_WrapKey(&h, plain, key->wrapped, SAES_TIMEOUT) == HAL_OK;
+  memzero(plain, sizeof(plain));
   if (secure_aes_init() != sectrue) ok = false;
   if (!ok) {
-    record_key_drop();
+    saes_key_drop(key);
     return false;
   }
-  record_key_ready = true;
+  key->ready = true;
 
   /* A key that did not reach the key registers fails here, not later. */
   vault_saes_request_t probe = {.op = VAULT_SAES_SEAL, .length = 16};
   memset(probe.data, 0x5c, 16);
-  ok = saes_gcm(&probe) == VAULT_SAES_OK;
+  ok = saes_gcm(key, &probe) == VAULT_SAES_OK;
   bool changed = false;
   for (size_t i = 0; i < 16; i++) changed |= probe.data[i] != 0x5c;
   probe.op = VAULT_SAES_OPEN;
-  ok = ok && changed && saes_gcm(&probe) == VAULT_SAES_OK;
+  ok = ok && changed && saes_gcm(key, &probe) == VAULT_SAES_OK;
   for (size_t i = 0; ok && i < 16; i++) ok = probe.data[i] == 0x5c;
   memzero(&probe, sizeof(probe));
-  if (!ok) record_key_drop();
+  if (!ok) saes_key_drop(key);
   return ok;
 }
 
-uint32_t vault_saes_record(vault_saes_request_t* r) {
+static uint32_t saes_request(saes_key_t* key, vault_saes_request_t* r) {
   if (r->op == VAULT_SAES_RESET) {
-    record_key_drop();
+    saes_key_drop(key);
     return VAULT_SAES_OK;
   }
   if ((r->op != VAULT_SAES_SEAL && r->op != VAULT_SAES_OPEN) || !r->length ||
@@ -185,12 +189,19 @@ uint32_t vault_saes_record(vault_saes_request_t* r) {
     memzero(r->data, sizeof(r->data));
     return VAULT_SAES_FAILED;
   }
-  if (secure_aes_init() != sectrue ||
-      (!record_key_ready && !record_key_create())) {
+  if (secure_aes_init() != sectrue || (!key->ready && !saes_key_create(key))) {
     memzero(r->data, sizeof(r->data));
     return VAULT_SAES_FAILED;
   }
-  return saes_gcm(r);
+  return saes_gcm(key, r);
+}
+
+uint32_t vault_saes_record(vault_saes_request_t* r) {
+  return saes_request(&record_key, r);
+}
+
+uint32_t vault_saes_storage(vault_saes_request_t* r) {
+  return saes_request(&storage_key, r);
 }
 
 #endif  // SECURE_MODE
