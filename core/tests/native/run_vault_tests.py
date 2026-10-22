@@ -85,7 +85,7 @@ def main():
         for mode in args.mode or ("gcm", "siv", "ecb"):
             selection = {"siv": 1, "ecb": 2, "gcm": 3}[mode]
             print(f"Vault mode: {mode}", flush=True)
-            names = ["test_vault_sealing"]
+            names = ["test_vault_sealing", "test_vault_bytes"]
             if mode == "siv":
                 names += ["test_vault_siv"]
             for name in names:

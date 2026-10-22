@@ -1158,6 +1158,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 #endif
 
+#ifdef USE_VAULT
+    case SYSCALL_VAULT_CALL: {
+      args[0] = vault_call__verified((const vault_request_t *)args[0],
+                                     (vault_response_t *)args[1]);
+    } break;
+#endif
+
     default:
       applet_exit_fatal(applet, "Invalid syscall", __FILE_NAME__, __LINE__);
       break;
