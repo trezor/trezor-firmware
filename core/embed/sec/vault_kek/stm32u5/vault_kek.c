@@ -1,6 +1,9 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #ifdef SECURE_MODE
 
+#include <trezor_bsp.h>
+
+#include <sec/rng_strong.h>
 #include <sec/secure_aes.h>
 #include <sec/vault_kek.h>
 
@@ -39,6 +42,155 @@ secbool vault_kek_wrap(bool encrypt, uint8_t value[40]) {
   if (secure_aes_init() != sectrue) ok = false;
   if (!ok) memzero(value, 40);
   return ok ? sectrue : secfalse;
+}
+
+/* ------------------------------------------------------------------------- */
+/* SAES record sealing (C3) */
+
+#define SAES_TIMEOUT 100
+
+/* The per-boot record key, wrapped under DHUK by SAES itself. */
+static uint32_t record_key_wrapped[8];
+static bool record_key_ready;
+
+static bool saes_setup(CRYP_HandleTypeDef* h, uint32_t key_mode,
+                       uint32_t key_select, uint32_t algorithm) {
+  memset(h, 0, sizeof(*h));
+  h->Instance = SAES;
+  h->Init.DataType = CRYP_NO_SWAP;
+  h->Init.KeySize = CRYP_KEYSIZE_256B;
+  h->Init.KeySelect = key_select;
+  h->Init.KeyMode = key_mode;
+  h->Init.Algorithm = algorithm;
+  h->Init.DataWidthUnit = CRYP_DATAWIDTHUNIT_BYTE;
+  h->Init.HeaderWidthUnit = CRYP_HEADERWIDTHUNIT_BYTE;
+  h->Init.KeyIVConfigSkip = CRYP_KEYIVCONFIG_ALWAYS;
+  return HAL_CRYP_Init(h) == HAL_OK;
+}
+
+static bool saes_key_valid(void) {
+  return (SAES->SR & AES_SR_KEYVALID) == AES_SR_KEYVALID;
+}
+
+/* Load the record key into the SAES key registers without exposing it. */
+static bool saes_load_record_key(CRYP_HandleTypeDef* h) {
+  return saes_setup(h, CRYP_KEYMODE_WRAPPED, CRYP_KEYSEL_HW, CRYP_AES_ECB) &&
+         HAL_CRYPEx_UnwrapKey(h, record_key_wrapped, SAES_TIMEOUT) == HAL_OK &&
+         saes_key_valid();
+}
+
+/* One GCM pass with the key already in the key registers. */
+static uint32_t saes_gcm(vault_saes_request_t* r) {
+  uint32_t data[VAULT_SAES_RECORD_SIZE / 4] = {0};
+  uint32_t out[VAULT_SAES_RECORD_SIZE / 4] = {0};
+  uint32_t aad[VAULT_SAES_AAD_SIZE / 4] = {0};
+  uint32_t tag[4] = {0};
+  uint32_t iv[4] = {0};
+  memcpy(iv, r->iv, sizeof(r->iv));
+  iv[3] = 2; /* J0 counter for a 96-bit IV, as SAES expects */
+  memcpy(aad, r->aad, sizeof(aad));
+  memcpy(data, r->data, r->length);
+
+  uint32_t result = VAULT_SAES_FAILED;
+  CRYP_HandleTypeDef h;
+  CRYP_ConfigTypeDef conf = {0};
+  bool encrypt = r->op == VAULT_SAES_SEAL;
+  if (!saes_load_record_key(&h) || HAL_CRYP_GetConfig(&h, &conf) != HAL_OK)
+    goto cleanup;
+  conf.Algorithm = CRYP_AES_GCM_GMAC;
+  conf.KeyMode = CRYP_KEYMODE_NORMAL;
+  conf.KeySelect = CRYP_KEYSEL_NORMAL;
+  conf.pKey = NULL; /* keep the unwrapped key in the key registers */
+  conf.KeyIVConfigSkip = CRYP_KEYNOCONFIG;
+  conf.pInitVect = iv;
+  conf.Header = aad;
+  conf.HeaderSize = VAULT_SAES_AAD_SIZE;
+  if (HAL_CRYP_SetConfig(&h, &conf) != HAL_OK || !saes_key_valid())
+    goto cleanup;
+  if ((encrypt ? HAL_CRYP_Encrypt(&h, data, r->length, out, SAES_TIMEOUT)
+               : HAL_CRYP_Decrypt(&h, data, r->length, out, SAES_TIMEOUT)) !=
+          HAL_OK ||
+      HAL_CRYPEx_AESGCM_GenerateAuthTAG(&h, tag, SAES_TIMEOUT) != HAL_OK)
+    goto cleanup;
+
+  if (encrypt) {
+    memcpy(r->tag, tag, sizeof(r->tag));
+    memcpy(r->data, out, r->length);
+    result = VAULT_SAES_OK;
+  } else {
+    /* Compared twice: one skipped branch must not release altered data. */
+    volatile uint8_t diff = 0;
+    for (size_t i = 0; i < sizeof(r->tag); i++)
+      diff |= r->tag[i] ^ ((const uint8_t*)tag)[i];
+    if (diff) {
+      result = VAULT_SAES_AUTH_FAILED;
+    } else {
+      memcpy(r->data, out, r->length);
+      result = diff ? VAULT_SAES_AUTH_FAILED : VAULT_SAES_OK;
+    }
+  }
+
+cleanup:
+  if (result != VAULT_SAES_OK) memzero(r->data, sizeof(r->data));
+  memzero(data, sizeof(data));
+  memzero(out, sizeof(out));
+  memzero(tag, sizeof(tag));
+  /* Clear the key and data registers, as vault_kek_wrap() does. */
+  if (secure_aes_init() != sectrue) result = VAULT_SAES_FAILED;
+  return result;
+}
+
+static void record_key_drop(void) {
+  memzero(record_key_wrapped, sizeof(record_key_wrapped));
+  record_key_ready = false;
+}
+
+/* Generate and wrap a new record key, then check it with a round trip. */
+static bool record_key_create(void) {
+  uint32_t key[8] = {0};
+  CRYP_HandleTypeDef h;
+  rng_fill_buffer_strong(key, sizeof(key));
+  bool ok =
+      saes_setup(&h, CRYP_KEYMODE_WRAPPED, CRYP_KEYSEL_HW, CRYP_AES_ECB) &&
+      HAL_CRYPEx_WrapKey(&h, key, record_key_wrapped, SAES_TIMEOUT) == HAL_OK;
+  memzero(key, sizeof(key));
+  if (secure_aes_init() != sectrue) ok = false;
+  if (!ok) {
+    record_key_drop();
+    return false;
+  }
+  record_key_ready = true;
+
+  /* A key that did not reach the key registers fails here, not later. */
+  vault_saes_request_t probe = {.op = VAULT_SAES_SEAL, .length = 16};
+  memset(probe.data, 0x5c, 16);
+  ok = saes_gcm(&probe) == VAULT_SAES_OK;
+  bool changed = false;
+  for (size_t i = 0; i < 16; i++) changed |= probe.data[i] != 0x5c;
+  probe.op = VAULT_SAES_OPEN;
+  ok = ok && changed && saes_gcm(&probe) == VAULT_SAES_OK;
+  for (size_t i = 0; ok && i < 16; i++) ok = probe.data[i] == 0x5c;
+  memzero(&probe, sizeof(probe));
+  if (!ok) record_key_drop();
+  return ok;
+}
+
+uint32_t vault_saes_record(vault_saes_request_t* r) {
+  if (r->op == VAULT_SAES_RESET) {
+    record_key_drop();
+    return VAULT_SAES_OK;
+  }
+  if ((r->op != VAULT_SAES_SEAL && r->op != VAULT_SAES_OPEN) || !r->length ||
+      r->length > VAULT_SAES_RECORD_SIZE) {
+    memzero(r->data, sizeof(r->data));
+    return VAULT_SAES_FAILED;
+  }
+  if (secure_aes_init() != sectrue ||
+      (!record_key_ready && !record_key_create())) {
+    memzero(r->data, sizeof(r->data));
+    return VAULT_SAES_FAILED;
+  }
+  return saes_gcm(r);
 }
 
 #endif  // SECURE_MODE

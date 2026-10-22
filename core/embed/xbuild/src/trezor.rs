@@ -177,10 +177,13 @@ fn configure_compiler_defaults(lib: &mut CLibrary) {
     let value = match mode.as_str() {
         "siv" => "1",
         "ecb" => "2",
-        "gcm" => "3",
-        _ => panic!("TREZOR_VAULT_MODE must be siv, ecb or gcm"),
+        "gcm" | "saes" => "3",
+        _ => panic!("TREZOR_VAULT_MODE must be saes, siv, ecb or gcm"),
     };
     lib.add_define("VAULT_SEAL_MODE", Some(value));
+    if mode == "saes" {
+        lib.add_define("VAULT_SEAL_HW", Some("1"));
+    }
     if mode == "ecb" {
         cargo_out::warning("Vault AES-ECB is experimental and unauthenticated");
     }

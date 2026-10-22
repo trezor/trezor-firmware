@@ -11,6 +11,63 @@
 #ifdef VAULT_TIMING
 vault_timing_t vault_timing;
 #endif
+
+/* Stage C3: GCM records sealed in SAES, built with TREZOR_VAULT_MODE=saes.
+ * Where SAES is not reachable (no vault_kek), the same GCM records are sealed
+ * in software below. Native tests substitute vault_saes_record(). */
+#if VAULT_SEAL_MODE == VAULT_SEAL_AES_GCM && defined(VAULT_SEAL_HW) && \
+    (defined(USE_VAULT_KEK) || defined(VAULT_TEST))
+#include <sec/vault_kek.h>
+
+_Static_assert(VAULT_SAES_RECORD_SIZE == VAULT_RECORD_SIZE, "record size");
+_Static_assert(VAULT_SAES_AAD_SIZE == VAULT_AAD_SIZE, "AAD size");
+
+/* False after a hardware or key failure; the next wipe makes a new key. */
+static bool saes_ready = true;
+
+void vault_seal_end(void) {}
+void vault_seal_wipe(void) {
+  vault_saes_request_t r = {.op = VAULT_SAES_RESET};
+  saes_ready = vault_saes_record(&r) == VAULT_SAES_OK;
+}
+bool vault_seal_ready(void) { return saes_ready; }
+/* No record key or expanded schedule ever exists in kernel RAM. */
+bool vault_seal_idle(void) { return true; }
+
+bool vault_seal_record(bool encrypt, uint64_t nonce,
+                       const uint8_t aad[VAULT_AAD_SIZE],
+                       uint8_t data[VAULT_RECORD_SIZE], size_t length,
+                       uint8_t tag[16]) {
+  if (!length || length > VAULT_RECORD_SIZE || !saes_ready) return false;
+  vault_saes_request_t r = {
+      .op = encrypt ? VAULT_SAES_SEAL : VAULT_SAES_OPEN,
+      .length = length,
+      .iv = {'S', 'V', '0', '1'},
+  };
+  for (size_t i = 0; i < 8; i++) r.iv[4 + i] = nonce >> (56 - 8 * i);
+  memcpy(r.aad, aad, VAULT_AAD_SIZE);
+  memcpy(r.data, data, length);
+  if (!encrypt) memcpy(r.tag, tag, sizeof(r.tag));
+  uint32_t start = vault_cycles();
+  uint32_t result = vault_saes_record(&r);
+  VAULT_TIMING_ADD(record, start);
+#ifdef VAULT_TIMING
+  vault_timing.records++;
+#endif
+  bool ok = result == VAULT_SAES_OK;
+  /* A tag mismatch is the caller's data; anything else is the key's. */
+  if (!ok && result != VAULT_SAES_AUTH_FAILED) saes_ready = false;
+  if (ok) {
+    memcpy(data, r.data, length);
+    if (encrypt) memcpy(tag, r.tag, sizeof(r.tag));
+  } else {
+    memzero(data, VAULT_RECORD_SIZE);
+  }
+  memzero(&r, sizeof(r));
+  return ok;
+}
+
+#else  // software sealing
 #if defined(VAULT_TEST)
 #include "keywrap.h"
 /* Tests inject AES and entropy, never the production binary. */
@@ -183,3 +240,5 @@ bool vault_seal_record(bool encrypt, uint64_t nonce,
   }
   return true;
 }
+
+#endif  // software sealing

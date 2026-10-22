@@ -478,6 +478,11 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       uint8_t *value = (uint8_t *)args[1];
       args[0] = vault_kek_wrap__verified(encrypt, value);
     } break;
+
+    case SMCALL_VAULT_SAES_RECORD: {
+      vault_saes_request_t *request = (vault_saes_request_t *)args[0];
+      args[0] = vault_saes_record__verified(request);
+    } break;
 #endif
 
     default:

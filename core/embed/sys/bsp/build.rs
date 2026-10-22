@@ -45,6 +45,7 @@ fn add_stm32u5_bsp(lib: &mut CLibrary) -> Result<()> {
             "stm32u5xx_hal.c",
             "stm32u5xx_hal_cortex.c",
             "stm32u5xx_hal_cryp.c",
+            "stm32u5xx_hal_cryp_ex.c",
             "stm32u5xx_hal_dma2d.c",
             "stm32u5xx_hal_dma.c",
             "stm32u5xx_hal_dma_ex.c",

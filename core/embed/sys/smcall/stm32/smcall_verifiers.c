@@ -703,6 +703,22 @@ secbool vault_kek_wrap__verified(bool encrypt, uint8_t value[40]) {
   return ok;
 }
 
+uint32_t vault_saes_record__verified(vault_saes_request_t *request) {
+  if (!probe_write_access(request, sizeof(*request))) {
+    apptask_access_violation();
+    return VAULT_SAES_FAILED;
+  }
+
+  /* Secure-world copy: the caller can neither alter the request while SAES
+   * runs nor observe intermediate state. */
+  vault_saes_request_t tmp;
+  memcpy(&tmp, request, sizeof(tmp));
+  uint32_t result = vault_saes_record(&tmp);
+  memcpy(request, &tmp, sizeof(tmp));
+  memzero(&tmp, sizeof(tmp));
+  return result;
+}
+
 #endif  // USE_VAULT_KEK
 
 #endif  // SECMON
