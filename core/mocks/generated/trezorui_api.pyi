@@ -156,7 +156,7 @@ def confirm_action(
     cancel: bool = True,
     verb_cancel: str | None = None,
     hold: bool = False,
-    hold_danger: bool = False,
+    danger: bool = False,  # unused on caesar
     reverse: bool = False,
     prompt_screen: bool = False,
     prompt_title: str | None = None,

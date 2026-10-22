@@ -29,7 +29,7 @@ async def wipe_device(msg: WipeDevice) -> None:
         reverse=True,
         verb=TR.buttons__hold_to_confirm,
         hold=True,
-        hold_danger=True,
+        danger=True,
         br_code=ButtonRequestType.WipeDevice,
     )
 

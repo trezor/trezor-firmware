@@ -56,7 +56,7 @@ impl FirmwareUI for UIEckhart {
         cancel: bool,
         _verb_cancel: Option<TString<'static>>,
         hold: bool,
-        hold_danger: bool,
+        danger: bool,
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
@@ -80,27 +80,34 @@ impl FirmwareUI for UIEckhart {
             )
         };
 
-        let right_button = match (hold, verb) {
-            (true, verb) => {
-                let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
-                let (style, gradient) = if hold_danger {
-                    (button_actionbar_danger(), theme::Gradient::Alert)
-                } else {
-                    (button_confirm(), theme::Gradient::SignGreen)
-                };
-                Button::with_text(verb)
-                    .with_long_press(theme::CONFIRM_HOLD_DURATION)
-                    .with_long_press_danger(hold_danger)
-                    .with_gradient(gradient)
-                    .styled(style)
-            }
-            (false, Some(verb)) => Button::with_text(verb),
-            (false, None) => {
-                Button::with_text(TR::buttons__confirm.into()).styled(button_confirm())
-            }
+        let default_verb = if hold {
+            TR::buttons__hold_to_confirm
+        } else {
+            TR::buttons__confirm
+        };
+        let mut right_button = Button::with_text(verb.unwrap_or(default_verb.into()));
+        if hold {
+            right_button = right_button
+                .with_long_press(theme::CONFIRM_HOLD_DURATION)
+                .with_long_press_danger(danger);
+        }
+        let right_button = match (danger, hold, verb) {
+            (true, _, _) => right_button
+                .styled(button_actionbar_danger())
+                .with_gradient(Gradient::Alert),
+            (false, true, _) => right_button
+                .styled(button_confirm())
+                .with_gradient(Gradient::SignGreen),
+            (false, false, None) => right_button.styled(button_confirm()),
+            (false, false, Some(_)) => right_button,
         };
 
         let mut header = Header::new(title);
+        if danger {
+            header = header
+                .with_icon(theme::ICON_WARNING, theme::ORANGE)
+                .with_text_style(theme::label_title_danger());
+        }
         if external_menu {
             header = header.with_right_button(Button::with_icon(theme::ICON_MENU), HeaderMsg::Menu);
         }
