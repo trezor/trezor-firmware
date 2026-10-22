@@ -4,6 +4,9 @@ use super::ffi;
 use super::obj::{Obj, ObjBase};
 use super::qstr::{Attribute, QstrValue};
 
+/// Warning: do not define new types as constants - as they are not guaranteed
+/// to have a fixed address, inlining can break `id()` and `isinstance()`. Use
+/// `static` instead.
 pub type Type = ffi::mp_obj_type_t;
 
 /// Empty type struct, representing a type with no slots.

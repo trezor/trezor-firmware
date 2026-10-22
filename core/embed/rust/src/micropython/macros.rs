@@ -112,6 +112,9 @@ macro_rules! obj_dict {
 }
 
 /// Compose a `Type` object definition.
+/// Warning: Do not use this macro to define a constant - as they are not
+/// guaranteed to have a fixed address, inlining can break `id()` and
+/// `isinstance()`. Use `static` instead.
 macro_rules! obj_type {
     (name: $name:expr,
      $(base: $base:expr,)?
