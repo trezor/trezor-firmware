@@ -25,8 +25,6 @@ def main():
     for name in (
         "secret_owners",
         "secret_scratch",
-        "record_ctx",
-        "wrapped_dek",
         "vault_dispatch",
         "vault_dispatch_message",
         "vault_message_snapshot",
@@ -35,6 +33,18 @@ def main():
     ):
         assert name in kernel, f"missing kernel vault symbol: {name}"
         assert name not in coreapp, f"vault symbol leaked into coreapp: {name}"
+    # SAES builds (C3) keep no record key or expanded schedule in the kernel;
+    # software builds keep the wrapped key and a transient context there.
+    if "vault_saes_record" in kernel:
+        for name in ("record_ctx", "wrapped_dek"):
+            assert name not in kernel, f"software record key in kernel: {name}"
+        if args.secmon:
+            secmon = symbols(args.nm, args.secmon)
+            assert "record_key_wrapped" in secmon, "SAES record key not in secmon"
+            assert "record_key_wrapped" not in kernel, "SAES record key in kernel"
+    else:
+        for name in ("record_ctx", "wrapped_dek"):
+            assert name in kernel, f"missing kernel vault symbol: {name}"
     # Sealed blobs replaced the kernel slot table.
     assert "secret_entries" not in kernel, "kernel still has a secret slot table"
     storage = symbols(args.nm, args.secmon) if args.secmon else kernel
