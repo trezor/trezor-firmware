@@ -184,10 +184,14 @@ static void generate_k_random(bignum256 *k, const bignum256 *prime) {
   } while (bn_is_zero(k) || !bn_is_less(k, prime));
 }
 
+// Neutral K = 1 for operations that work with public data only. It disables
+// the side-channel blinding of the Jacobian z coordinate.
+static const bignum256 ECDSA_NEUTRAL_K = {{1}};
+
 void curve_to_jacobian(const curve_point *p, jacobian_curve_point *jp,
-                       const bignum256 *prime) {
+                       const bignum256 *prime, const bignum256 *blinding_k) {
   // randomize z coordinate
-  generate_k_random(&jp->z, prime);
+  jp->z = *blinding_k;
 
   jp->x = jp->z;
   bn_multiply(&jp->z, &jp->x, prime);
@@ -407,8 +411,9 @@ void point_jacobian_double(jacobian_curve_point *p, const ecdsa_curve *curve) {
 
 // res = k * p
 // returns 0 on success
-int point_multiply(const ecdsa_curve *curve, const bignum256 *k,
-                   const curve_point *p, curve_point *res) {
+static int point_multiply_inner(const ecdsa_curve *curve, const bignum256 *k,
+                                const curve_point *p, curve_point *res,
+                                const bignum256 *blinding_k) {
   // this algorithm is loosely based on
   //  Katsuyuki Okeya and Tsuyoshi Takagi, The Width-w NAF Method Provides
   //  Small Memory and Fast Elliptic Scalar Multiplications Secure against
@@ -488,7 +493,7 @@ int point_multiply(const ecdsa_curve *curve, const bignum256 *k,
   sign = (bits >> 4) - 1;
   bits ^= sign;
   bits &= 15;
-  curve_to_jacobian(&pmult[bits >> 1], &jres, prime);
+  curve_to_jacobian(&pmult[bits >> 1], &jres, prime, blinding_k);
   for (i = 62; i >= 0; i--) {
     // sign = sign(a[i+1])  (0xffffffff for negative, 0 for positive)
     // invariant jres = (-1)^sign sum_{j=i+1..63} (a[j] * 16^{j-i-1} * p)
@@ -532,13 +537,25 @@ int point_multiply(const ecdsa_curve *curve, const bignum256 *k,
   return 0;
 }
 
+// res = k * p
+// returns 0 on success
+int point_multiply(const ecdsa_curve *curve, const bignum256 *k,
+                   const curve_point *p, curve_point *res) {
+  bignum256 random_k = {0};
+  generate_k_random(&random_k, &curve->prime);
+  int result = point_multiply_inner(curve, k, p, res, &random_k);
+  memzero(&random_k, sizeof(random_k));
+  return result;
+}
+
 #if USE_PRECOMPUTED_CP
 
 // res = k * G
 // k must be a normalized number with 0 <= k < curve->order
 // returns 0 on success
-int scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
-                    curve_point *res) {
+static int scalar_multiply_inner(const ecdsa_curve *curve, const bignum256 *k,
+                                 curve_point *res,
+                                 const bignum256 *blinding_k) {
   if (!bn_is_less(k, &curve->order)) {
     return 1;
   }
@@ -595,7 +612,7 @@ int scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
   lowbits = a.val[0] & ((1 << 5) - 1);
   lowbits ^= (lowbits >> 4) - 1;
   lowbits &= 15;
-  curve_to_jacobian(&curve->cp[0][lowbits >> 1], &jres, prime);
+  curve_to_jacobian(&curve->cp[0][lowbits >> 1], &jres, prime, blinding_k);
   for (i = 1; i < 64; i++) {
     // invariant res = sign(a[i-1]) sum_{j=0..i-1} (a[j] * 16^j * G)
 
@@ -628,12 +645,25 @@ int scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
 
 #else
 
-int scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
-                    curve_point *res) {
-  return point_multiply(curve, k, &curve->G, res);
+static int scalar_multiply_inner(const ecdsa_curve *curve, const bignum256 *k,
+                                 curve_point *res,
+                                 const bignum256 *blinding_k) {
+  return point_multiply_inner(curve, k, &curve->G, res, blinding_k);
 }
 
 #endif
+
+// res = k * G
+// k must be a normalized number with 0 <= k < curve->order
+// returns 0 on success
+int scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
+                    curve_point *res) {
+  bignum256 random_k = {0};
+  generate_k_random(&random_k, &curve->prime);
+  int result = scalar_multiply_inner(curve, k, res, &random_k);
+  memzero(&random_k, sizeof(random_k));
+  return result;
+}
 
 int tc_ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
                      const uint8_t *pub_key, uint8_t *session_key) {
@@ -1090,9 +1120,9 @@ int tc_ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key,
   bn_multiply(&r, &s, &curve->order);
   bn_mod(&s, &curve->order);
   // cp = s * r^-1 * k * G
-  point_multiply(curve, &s, &cp, &cp);
+  point_multiply_inner(curve, &s, &cp, &cp, &ECDSA_NEUTRAL_K);
   // cp2 = -digest * r^-1 * G
-  scalar_multiply(curve, &e, &cp2);
+  scalar_multiply_inner(curve, &e, &cp2, &ECDSA_NEUTRAL_K);
   // cp = (s * r^-1 * k - digest * r^-1) * G = Pub
   point_add(curve, &cp2, &cp);
   // The point at infinity is not considered to be a valid public key.
@@ -1141,8 +1171,10 @@ int tc_ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key,
     bn_mod(&z, &curve->order);
     bn_multiply(&r, &s, &curve->order);  // s = r * s  [u2 = r * s^-1 mod n]
     bn_mod(&s, &curve->order);
-    scalar_multiply(curve, &z, &res);       // res = z * G    [= u1 * G]
-    point_multiply(curve, &s, &pub, &pub);  // pub = s * pub  [= u2 * Q]
+    scalar_multiply_inner(curve, &z, &res,
+                          &ECDSA_NEUTRAL_K);  // res = z * G    [= u1 * G]
+    point_multiply_inner(curve, &s, &pub, &pub,
+                         &ECDSA_NEUTRAL_K);  // pub = s * pub  [= u2 * Q]
     point_add(curve, &pub, &res);  // res = pub + res  [R = u1 * G + u2 * Q]
     if (point_is_infinity(&res)) {
       // R == Infinity
@@ -1193,7 +1225,7 @@ ecdsa_tweak_pubkey_result tc_ecdsa_tweak_pubkey(
     goto end;
   }
 
-  (void)scalar_multiply(curve, &tweak, &public_tweak);
+  (void)scalar_multiply_inner(curve, &tweak, &public_tweak, &ECDSA_NEUTRAL_K);
   point_add(curve, &public_tweak, &public_key);
 
   if (point_is_infinity(&public_key)) {
