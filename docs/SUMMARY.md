@@ -22,6 +22,7 @@
     - [Exceptions usage](core/misc/exceptions.md)
     - [Memory fragmentation management](core/misc/fragmentation.md)
     - [Memory layout](core/misc/memory.md)
+    - [Secure buffers POC](core/misc/secure-buffers-poc.md)
     - [TrustZone](core/misc/trustzone.md)
     - [SLIP-39](core/misc/slip0039.md)
     - [Translation data format](core/misc/translations.md)
