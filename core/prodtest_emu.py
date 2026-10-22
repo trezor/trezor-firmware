@@ -28,17 +28,51 @@ PROFILE_BASE = Path.home() / ".trezoremu"
 @click.command(
     context_settings=dict(ignore_unknown_options=True, allow_interspersed_args=False)
 )
-# fmt: off
-@click.option("-m", "--model", envvar="TREZOR_MODEL", default=None, help="Trezor model name (or set TREZOR_MODEL); defaults to the latest build")
-@click.option("-c", "--command", "run_command", is_flag=True, help="Run command while emulator is running")
+@click.option(
+    "-m",
+    "--model",
+    envvar="TREZOR_MODEL",
+    default=None,
+    help="Trezor model name (or set TREZOR_MODEL); defaults to the latest build",
+)
+@click.option(
+    "-c",
+    "--command",
+    "run_command",
+    is_flag=True,
+    help="Run command while emulator is running",
+)
 @click.option("-e", "--erase", is_flag=True, help="Erase profile before running")
 @click.option("-h", "--headless", is_flag=True, help="Headless mode (no display)")
-@click.option("-p", "--profile", metavar="NAME", help="Profile name or path (persistent; overrides --temporary-profile)")
-@click.option("-t", "--temporary-profile/--no-temporary-profile", default=True, help="Create an empty temporary profile")
-@click.option("--tropic-emulator/--no-tropic-emulator", default=None, help="Start a TROPIC01 model")
-@click.option("--tropic-emulator-config", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=TROPIC_MODEL_CONFIG, help="TROPIC01 model configuration file")
-@click.option("--tropic-model-port", type=int, default=None, help="Port of the TROPIC01 model. Defaults to a free port for the auto-started model, or to 28992 for an externally managed one (--no-tropic-emulator).")
-# fmt: on
+@click.option(
+    "-p",
+    "--profile",
+    metavar="NAME",
+    help="Profile name or path (persistent; overrides --temporary-profile)",
+)
+@click.option(
+    "-t",
+    "--temporary-profile/--no-temporary-profile",
+    default=True,
+    help="Create an empty temporary profile",
+)
+@click.option(
+    "--tropic-emulator/--no-tropic-emulator",
+    default=None,
+    help="Start a TROPIC01 model",
+)
+@click.option(
+    "--tropic-emulator-config",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=TROPIC_MODEL_CONFIG,
+    help="TROPIC01 model configuration file",
+)
+@click.option(
+    "--tropic-model-port",
+    type=int,
+    default=None,
+    help="Port of the TROPIC01 model. Defaults to a free port for the auto-started model, or to 28992 for an externally managed one (--no-tropic-emulator).",
+)
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 def cli(
     model: str | None,
@@ -136,7 +170,10 @@ def cli(
         try:
             tropic_model.stop()
         except Exception as exc:
-            click.echo(f"Error stopping Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
+            click.echo(
+                f"Error stopping Tropic01 model: {exc.__class__.__name__}: {exc}",
+                err=True,
+            )
 
     if tempdir is not None:
         tempdir.cleanup()
