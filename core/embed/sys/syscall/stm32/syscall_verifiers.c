@@ -1755,5 +1755,28 @@ bool vault_call__verified(const vault_request_t *request,
   memzero(&out, sizeof(out));
   return ok;
 }
-
+bool vault_call_message__verified(const vault_message_request_t *request,
+                                  const uint8_t *message, size_t length,
+                                  vault_response_t *response) {
+  if (!probe_write_access(response, sizeof(*response))) {
+    apptask_access_violation();
+    return false;
+  }
+  if (!length || length > VAULT_ED25519_MAX_MESSAGE) {
+    memzero(response, sizeof(*response));
+    return false;
+  }
+  if (!probe_read_access(request, sizeof(*request)) ||
+      !probe_read_access(message, length)) {
+    apptask_access_violation();
+    return false;
+  }
+  vault_response_t out = {0};
+  bool ok =
+      vault_message_snapshot((uintptr_t)syscall_get_context(), request, message,
+                             length, &out, storage_is_unlocked() == sectrue);
+  memcpy(response, &out, sizeof(out));
+  memzero(&out, sizeof(out));
+  return ok;
+}
 #endif

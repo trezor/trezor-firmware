@@ -29,6 +29,9 @@
 #include <io/usb.h>
 #include <sec/boot_image.h>
 #include <sec/fwutils.h>
+#ifdef USE_VAULT
+#include <sec/vault.h>
+#endif
 #include <sec/rng_strong.h>
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
@@ -604,6 +607,9 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_STORAGE_WIPE: {
+#ifdef USE_VAULT
+      vault_wipe();
+#endif
       storage_wipe();
     } break;
 
@@ -665,6 +671,18 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint16_t key = (uint16_t)args[0];
       args[0] = storage_has(key);
     } break;
+
+#ifdef USE_VAULT
+    case SYSCALL_VAULT_CALL: {
+      args[0] = vault_call__verified((const vault_request_t *)args[0],
+                                     (vault_response_t *)args[1]);
+    } break;
+    case SYSCALL_VAULT_CALL_MESSAGE: {
+      args[0] = vault_call_message__verified(
+          (const vault_message_request_t *)args[0], (const uint8_t *)args[1],
+          args[2], (vault_response_t *)args[3]);
+    } break;
+#endif
 
     case SYSCALL_STORAGE_GET: {
       uint16_t key = (uint16_t)args[0];
@@ -1155,13 +1173,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t *heap_size = (size_t *)args[1];
       ts_t status = app_get_heap__verified(heap_ptr, heap_size);
       args[0] = ts_code(status);
-    } break;
-#endif
-
-#ifdef USE_VAULT
-    case SYSCALL_VAULT_CALL: {
-      args[0] = vault_call__verified((const vault_request_t *)args[0],
-                                     (vault_response_t *)args[1]);
     } break;
 #endif
 

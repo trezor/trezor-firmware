@@ -113,8 +113,6 @@ cleanup:
 static bool vault_execute(uintptr_t caller, const vault_command_t *r,
                           vault_response_t *out, bool unlocked,
                           const uint8_t *message, size_t message_length) {
-  (void)message;
-  (void)message_length;
   memset(out, 0, sizeof(*out));
   if (!caller || r->abi != VAULT_ABI || r->length > VAULT_DATA_SIZE ||
       (r->curve && !memchr(r->curve, 0, VAULT_CURVE_SIZE)))
@@ -287,6 +285,28 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
       if (ok) out->signature[0] = 27 + recovery + 4 * r->arg;
       break;
     }
+    case VAULT_ED_PUBLIC:
+    case VAULT_ED_SIGN: {
+      size_t length = 0;
+      secret_payload_t *key =
+          secret_open(r->blob, r->owner, SECRET_BYTES, &length);
+      if (!key || length != 32 || r->length || r->arg > 1) break;
+      if (r->op == VAULT_ED_PUBLIC) {
+        if (r->arg) break;
+        ed25519_publickey(key->bytes, out->signature);
+      } else {
+        if (!message || !message_length ||
+            message_length > VAULT_ED25519_MAX_MESSAGE)
+          break;
+        if (r->arg)
+          ed25519_sign_keccak(message, message_length, key->bytes,
+                              out->signature);
+        else
+          ed25519_sign(message, message_length, key->bytes, out->signature);
+      }
+      ok = true;
+      break;
+    }
     case VAULT_NIST_PUBLIC:
     case VAULT_NIST_SIGN:
     case VAULT_HMAC_TAG: {
@@ -399,6 +419,75 @@ bool vault_dispatch(uintptr_t caller, const vault_request_t *r,
                              .data = r->data};
   return vault_dispatch_inner(caller, &command, out, unlocked, NULL, 0);
 }
+bool vault_dispatch_message(uintptr_t caller, const vault_message_request_t *r,
+                            const uint8_t *message, size_t length,
+                            vault_response_t *out, bool unlocked) {
+  if (r->op != VAULT_ED_SIGN || !message || !length ||
+      length > VAULT_ED25519_MAX_MESSAGE) {
+    memzero(out, sizeof(*out));
+    return false;
+  }
+  vault_command_t command = {.abi = r->abi,
+                             .op = r->op,
+                             .owner = r->owner,
+                             .arg = r->arg,
+                             .length = r->length,
+                             .blob = &r->blob};
+  return vault_dispatch_inner(caller, &command, out, unlocked, message, length);
+}
+
+/* Separate noinline workspaces keep the large reservation off small calls.
+ * Every buffer is bounded at compile time; no VLA or persistent workspace. */
+static inline __attribute__((always_inline)) bool vault_snapshot_into(
+    uintptr_t caller, const vault_message_request_t *request,
+    const uint8_t *message, size_t length, vault_response_t *response,
+    bool unlocked, uint8_t *snapshot) {
+  vault_message_request_t copy = *request;
+  memcpy(snapshot, message, length);
+  bool ok = vault_dispatch_message(caller, &copy, snapshot, length, response,
+                                   unlocked);
+  memzero(&copy, sizeof(copy));
+  return ok;
+}
+
+static __attribute__((noinline)) bool vault_snapshot_small(
+    uintptr_t caller, const vault_message_request_t *request,
+    const uint8_t *message, size_t length, vault_response_t *response,
+    bool unlocked) {
+  uint8_t snapshot[256];
+  bool ok = vault_snapshot_into(caller, request, message, length, response,
+                                unlocked, snapshot);
+  memzero(snapshot, sizeof(snapshot));
+  return ok;
+}
+
+static __attribute__((noinline)) bool vault_snapshot_large(
+    uintptr_t caller, const vault_message_request_t *request,
+    const uint8_t *message, size_t length, vault_response_t *response,
+    bool unlocked) {
+  uint8_t snapshot[VAULT_ED25519_MAX_MESSAGE];
+  bool ok = vault_snapshot_into(caller, request, message, length, response,
+                                unlocked, snapshot);
+  memzero(snapshot, sizeof(snapshot));
+  return ok;
+}
+
+/* Ed25519 reads twice; both passes must use one immutable kernel snapshot. */
+bool vault_message_snapshot(uintptr_t caller,
+                            const vault_message_request_t *request,
+                            const uint8_t *message, size_t length,
+                            vault_response_t *response, bool unlocked) {
+  if (!message || !length || length > VAULT_ED25519_MAX_MESSAGE) {
+    memzero(response, sizeof(*response));
+    return false;
+  }
+  if (length <= 256)
+    return vault_snapshot_small(caller, request, message, length, response,
+                                unlocked);
+  return vault_snapshot_large(caller, request, message, length, response,
+                              unlocked);
+}
+
 #if defined(TREZOR_EMULATOR) && !defined(VAULT_TEST)
 bool vault_call(const vault_request_t *request, vault_response_t *response) {
   vault_request_t copy = *request;
@@ -406,6 +495,12 @@ bool vault_call(const vault_request_t *request, vault_response_t *response) {
       vault_dispatch(1, &copy, response, storage_is_unlocked() == sectrue);
   memzero(&copy, sizeof(copy));
   return ok;
+}
+bool vault_call_message(const vault_message_request_t *request,
+                        const uint8_t *message, size_t length,
+                        vault_response_t *response) {
+  return vault_message_snapshot(1, request, message, length, response,
+                                storage_is_unlocked() == sectrue);
 }
 
 #endif
