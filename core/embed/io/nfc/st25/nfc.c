@@ -24,6 +24,7 @@
 
 #include <io/nfc.h>
 #include <sys/irq.h>
+#include <sys/logging.h>
 #include <sys/systick.h>
 
 #include "nfc_internal.h"
@@ -34,6 +35,8 @@
 #include "rfal_t2t.h"
 #include "rfal_utils.h"
 #include "sys/mpu.h"
+
+LOG_DECLARE(nfc_driver);
 
 // Interval to poll NFC device if still present (ms)
 #define NFC_POLLING_INTERVAL_MS 300u
@@ -46,6 +49,13 @@
 #define NFC_PSK_FRAME_PAYLOAD_LEN \
   (NFC_PSK_SHARE_LEN * NFC_PSK_SHARE_REPEAT_COUNT)
 #define NFC_PSK_FRAME_LEN (NFC_PSK_FRAME_PAYLOAD_LEN + 4)
+
+#define NFC_SPI_RX_FIFO_SIZE                            \
+  ((uint16_t)(IS_SPI_LIMITED_INSTANCE(NFC_SPI_INSTANCE) \
+                  ? SPI_LOWEND_FIFO_SIZE                \
+                  : SPI_HIGHEND_FIFO_SIZE))
+
+#define NFC_SPI_TIMEOUT_MS 100U
 
 #define NFC_CRC_A_PRELOAD 0x6363U
 #define NFC_CRC_A_POLY 0x8408U
@@ -74,6 +84,8 @@ typedef struct {
   uint8_t psk_rx_frame[NFC_PSK_FRAME_LEN];
   uint16_t psk_rx_bits;
   ts_t result;
+  // Set when an SPI transfer fails (also from the IRQ handler).
+  volatile bool spi_error;
 } nfc_xfer_t;
 
 typedef struct {
@@ -300,6 +312,10 @@ ts_t nfc_init(void) {
   drv->hspi.Init.NSS = SPI_NSS_SOFT;  // For RFAL lib purpose, use software NSS
   drv->hspi.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
   drv->hspi.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
+  // TODO: The HAL disables the SPI between transfers, while RFAL keeps chip
+  // select asserted across several of them (command byte + data, FIFO read
+  // chunks). Without this, SCK may float in between. Consider enabling.
+  // drv->hspi.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE;
 
   HAL_StatusTypeDef status;
   status = HAL_SPI_Init(&drv->hspi);
@@ -516,6 +532,7 @@ ts_t nfc_transceive_start(const nfc_apdu_message_t *cmd) {
 
   xfer->rx_data = NULL;
   xfer->rx_data_len = NULL;
+  xfer->spi_error = false;
 
   ReturnCode err = rfalNfcDataExchangeStart((uint8_t *)cmd->data, cmd->data_len,
                                             &xfer->rx_data, &xfer->rx_data_len,
@@ -550,6 +567,7 @@ ts_t nfc_transceive_psk_start(const uint8_t *pcd_psk, size_t pcd_psk_len) {
 
   memset(xfer->psk_rx_frame, 0, sizeof(xfer->psk_rx_frame));
   xfer->psk_rx_bits = 0;
+  xfer->spi_error = false;
   uint16_t tx_bits = nfc_build_psk_frame(
       pcd_psk, pcd_psk_len, xfer->psk_tx_frame, sizeof(xfer->psk_tx_frame));
 
@@ -635,7 +653,11 @@ bool nfc_transceive_process(void) {
     return true;
   }
 
-  nfc_transceive_finish(err == RFAL_ERR_NONE ? TS_OK : TS_ENOEN);
+  if (xfer->spi_error) {
+    nfc_transceive_finish(TS_EIO);
+  } else {
+    nfc_transceive_finish(err == RFAL_ERR_NONE ? TS_OK : TS_ENOEN);
+  }
 
   return false;
 }
@@ -701,12 +723,36 @@ HAL_StatusTypeDef nfc_spi_transmit_receive(const uint8_t *tx_data,
   HAL_StatusTypeDef status;
 
   if ((tx_data != NULL) && (rx_data == NULL)) {
-    status = HAL_SPI_Transmit(&drv->hspi, (uint8_t *)tx_data, length, 1000);
-  } else if ((tx_data == NULL) && (rx_data != NULL)) {
-    status = HAL_SPI_Receive(&drv->hspi, rx_data, length, 1000);
+    status = HAL_SPI_Transmit(&drv->hspi, (uint8_t *)tx_data, length,
+                              NFC_SPI_TIMEOUT_MS);
   } else {
-    status = HAL_SPI_TransmitReceive(&drv->hspi, (uint8_t *)tx_data, rx_data,
-                                     length, 1000);
+    // The polled HAL transfer keeps the TX FIFO full regardless of the RX
+    // FIFO. If an interrupt preempts it for longer than a few byte times,
+    // the RX FIFO overruns and the rest of the data is lost. Transfers of at
+    // most the RX FIFO size cannot overrun.
+    // (SPI_MASTER_RX_AUTOSUSP_ENABLE avoids the overrun too, but the
+    // suspended transfer is never resumed by the polled HAL functions.)
+    status = HAL_OK;
+    uint16_t offset = 0;
+    while (status == HAL_OK && offset < length) {
+      uint16_t chunk = MIN(length - offset, NFC_SPI_RX_FIFO_SIZE);
+      if (tx_data == NULL) {
+        status = HAL_SPI_Receive(&drv->hspi, &rx_data[offset], chunk,
+                                 NFC_SPI_TIMEOUT_MS);
+      } else {
+        status = HAL_SPI_TransmitReceive(
+            &drv->hspi, (uint8_t *)&tx_data[offset], &rx_data[offset], chunk,
+            NFC_SPI_TIMEOUT_MS);
+      }
+      offset += chunk;
+    }
+  }
+
+  // Propagate the error since RFAL ignores the result.
+  if (status != HAL_OK) {
+    drv->xfer.spi_error = true;
+    LOG_ERR("SPI transfer failed: status=%d err=0x%lx len=%u", status,
+            (unsigned long)drv->hspi.ErrorCode, length);
   }
 
   return status;

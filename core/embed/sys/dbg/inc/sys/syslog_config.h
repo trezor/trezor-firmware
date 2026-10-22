@@ -82,4 +82,8 @@
 #define SYSLOG_optiga_transport_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
 
+#ifndef SYSLOG_nfc_driver_MAX_LOG_LEVEL
+#define SYSLOG_nfc_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
 // Add more module-specific max log level definitions here...
