@@ -33,6 +33,7 @@ model_t2t1 = ["models/model_t2t1"]
 emulator = ["models/emulator"]
 
 aes_gcm = []
+bip32_vault = []
 ed25519_no_precomp = []
 eos = []
 mldsa = []

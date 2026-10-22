@@ -112,6 +112,22 @@ int main(void) {
       mr = original;
       message[0] ^= 1;
       assert(!memcmp(signature, out.signature, 64));
+      uint8_t public_key[32];
+      if (variant) {
+        ed25519_publickey_keccak(expected.private_key, public_key);
+        assert(ed25519_sign_open_keccak(message, length, public_key,
+                                        out.signature) == 0);
+        out.signature[0] ^= 1;
+        assert(ed25519_sign_open_keccak(message, length, public_key,
+                                        out.signature) != 0);
+      } else {
+        ed25519_publickey(expected.private_key, public_key);
+        assert(ed25519_sign_open(message, length, public_key, out.signature) ==
+               0);
+        out.signature[0] ^= 1;
+        assert(ed25519_sign_open(message, length, public_key, out.signature) !=
+               0);
+      }
       assert(is_zero(secret_scratch, sizeof(secret_scratch)));
     }
   }

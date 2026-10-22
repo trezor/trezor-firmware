@@ -42,8 +42,10 @@ void vault_revoke_caller(uintptr_t caller) {
 }
 
 static bool node_has_private_key(const HDNode *node) {
-  /* Public-only nodes carry an all-zero private key. */
-  return memcmp(node->private_key, (uint8_t[32]){0}, 32) != 0;
+  /* Public-only ECDSA nodes carry an all-zero private key. Ed25519 imports
+   * require a private seed, and an all-zero seed is valid. */
+  return !node->curve->params ||
+         memcmp(node->private_key, (uint8_t[32]){0}, 32) != 0;
 }
 
 /* All vault curves use HASH160 fingerprints. Avoid the generic runtime hash
@@ -216,6 +218,13 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
             hdnode_validate_private_key(node->curve, node->private_key)) &&
            (!node->is_public_key_set ||
             hdnode_validate_public_key(node->curve, node->public_key));
+      /* A supplied cache must describe the private key. Otherwise public
+       * derivation and signing would silently use different identities. */
+      if (ok && r->data[97] == 3) {
+        node->is_public_key_set = false;
+        ok = hdnode_fill_public_key(node) == 0 &&
+             memcmp(node->public_key, r->data + 64, 33) == 0;
+      }
       break;
     }
     case VAULT_PUBLIC: {
@@ -238,9 +247,10 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
       break;
     }
     case VAULT_DERIVE: {
-      if (r->length != 4) break;
+      if (r->length != 4 || r->arg > 1) break;
       made = secret_open(r->blob, r->owner, SECRET_NODE, NULL);
       if (!made) break;
+      if (!r->arg && !node_has_private_key(&made->node)) break;
       made_owner = secret_get32(r->blob->bytes);
       uint32_t index;
       memcpy(&index, r->data, 4);
@@ -251,7 +261,9 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
     }
     case VAULT_SNAPSHOT: {
       secret_payload_t *p = secret_open(r->blob, r->owner, SECRET_NODE, NULL);
-      if (!p || r->arg > 1 || !(made = secret_scratch_take())) break;
+      if (!p || !node_has_private_key(&p->node) || r->arg > 1 ||
+          !(made = secret_scratch_take()))
+        break;
       made_kind = SECRET_BYTES;
       made_length = 32;
       memcpy(made->bytes,

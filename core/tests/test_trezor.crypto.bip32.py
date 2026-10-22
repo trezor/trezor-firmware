@@ -51,6 +51,29 @@ class TestCryptoBip32(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             secp256k1.sign(public_only, digest)
+        for index in (1, HARDENED):
+            with self.assertRaises(ValueError):
+                public_only.derive(index)
+        for snapshot in (public_only.private_key, public_only.private_key_ext):
+            with self.assertRaises(ValueError):
+                snapshot()
+        self.assertEqual(public_only.public_key(), n.public_key())
+        public_only.derive(1, True)
+        n.derive(1)
+        self.assertEqual(public_only.public_key(), n.public_key())
+
+    def test_import_rejects_mismatched_key_pair(self):
+        private_key = b"\x00" * 31 + b"\x01"
+        public_key = secp256k1.publickey(private_key)
+        args = dict(depth=0, fingerprint=0, child_num=0, chain_code=b"\x00" * 32)
+        node = bip32.HDNode(**args, private_key=private_key, public_key=public_key)
+        self.assertEqual(node.public_key(), public_key)
+        with self.assertRaises(ValueError):
+            bip32.HDNode(
+                **args,
+                private_key=b"\x00" * 31 + b"\x02",
+                public_key=public_key,
+            )
 
     def test_from_seed_invalid(self):
         for c in [SECP256K1_NAME]:

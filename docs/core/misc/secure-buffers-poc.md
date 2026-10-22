@@ -90,6 +90,23 @@ C3 because the software key wrap and then the software record AES leave it. C3
 frees kernel RAM everywhere it applies, since `record_ctx`, `wrapped_dek` and
 the cache's software keys go.
 
+After C3, the kernel enables `crypto/bip32_vault` and
+`crypto/ed25519_no_precomp`. HDNode includes only secp256k1, NIST P-256 and
+Ed25519; standalone Ed25519-Keccak signing remains available. Ed25519
+verification computes a small basepoint table on the stack instead of linking
+the 3,840-byte table. Its three-bit window bounds that temporary table to
+320 B, at the cost of more point additions during verification. Coreapp keeps
+its existing crypto configuration.
+
+On T3T1, full-coin `-p test` builds before and after this change reduce kernel
+`.flash` from 205,824 to 200,704 B and the padded firmware image from 1,638.5 to
+1,630.5 KiB. Kernel `.bss` is unchanged at 9,100 B. The vault message path stays
+at 7,072 B of stack; the bootloader replacement path now uses 7,256 B including
+SVC entry, leaving 936 B of the 8,192-byte kernel stack before the MSPLIM
+reserve and interrupts. The previous five-bit window in table-free Ed25519
+verification would exhaust that stack, so it must not be restored without
+checking the complete replacement path.
+
 Where the remaining space is:
 
 | Model | Coreapp code: Δ B | Δ C1 | Padding before coreapp: C1 → C2 → C3 | Kernel RAM region free at C3 |

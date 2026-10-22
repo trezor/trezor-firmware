@@ -46,6 +46,11 @@ def main():
     parser.add_argument("--crypto-archive", type=Path)
     parser.add_argument("--sanitize", action="store_true")
     parser.add_argument(
+        "--vault-curves",
+        action="store_true",
+        help="Compile the kernel's restricted HDNode and compact Ed25519 verifier",
+    )
+    parser.add_argument(
         "--sealing-only",
         action="store_true",
         help="Test AES sealing/cache without EC code",
@@ -71,6 +76,8 @@ def main():
     compiler = "clang" if args.sanitize else "cc"
     if args.sanitize:
         flags += ["-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
+    if args.vault_curves:
+        flags += ["-DUSE_BIP32_VAULT=1", "-DED25519_NO_PRECOMP"]
     with tempfile.TemporaryDirectory(prefix="vault-native-") as output:
         suite = json.loads(
             (
@@ -122,6 +129,17 @@ def main():
                     names += ["test_ecdsa_cleanup"]
             for name in names:
                 inputs = [f"core/tests/native/{name}.c", str(archive)]
+                if args.vault_curves and name in (
+                    "test_vault_bytes",
+                    "test_secret_store",
+                    "test_vault",
+                    "test_vault_encrypted",
+                    "test_fido_keys",
+                    "test_ed25519_keys",
+                    "test_vault_saes",
+                ):
+                    inputs.insert(1, "crypto/bip32.c")
+                    inputs.insert(2, "crypto/ed25519-donna/ed25519-donna-impl-base.c")
                 if name == "test_ecdsa_cleanup":
                     inputs += [
                         f"-Wl,--wrap={symbol}"

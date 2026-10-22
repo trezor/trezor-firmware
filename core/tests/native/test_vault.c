@@ -59,6 +59,14 @@ static bool is_zero(const void *p, size_t len) {
 }
 
 static void fingerprint_vectors(void) {
+#if USE_BIP32_VAULT
+  const char *excluded[] = {SECP256K1_DECRED_NAME, SECP256K1_GROESTL_NAME,
+                            SECP256K1_SMART_NAME,  ED25519_SHA3_NAME,
+                            ED25519_KECCAK_NAME,   ED25519_CARDANO_NAME,
+                            CURVE25519_NAME};
+  for (size_t i = 0; i < sizeof(excluded) / sizeof(*excluded); i++)
+    assert(get_curve_by_name(excluded[i]) == NULL);
+#endif
   const char *curves[] = {SECP256K1_NAME, NIST256P1_NAME, ED25519_NAME};
   const uint8_t seed[16] = {1, 2, 3};
   for (size_t c = 0; c < sizeof(curves) / sizeof(*curves); c++) {
@@ -91,6 +99,48 @@ static void fingerprint_vectors(void) {
   HDNode unsupported = {.curve = &secp256k1_decred_info};
   uint32_t fingerprint = 0;
   assert(!vault_fingerprint(&unsupported, &fingerprint));
+}
+
+static void node_import_vectors(void) {
+  const char *curves[] = {SECP256K1_NAME, NIST256P1_NAME, ED25519_NAME};
+  uint32_t owner = owner_create(1, 0);
+  for (size_t c = 0; c < sizeof(curves) / sizeof(*curves); c++) {
+    HDNode expected = {0};
+    uint8_t private_key[32] = {0};
+    private_key[31] = c == 2 ? 0 : 1; /* Zero is a valid Ed25519 seed. */
+    assert(hdnode_from_xprv(0, 0, (uint8_t[32]){0}, private_key, curves[c],
+                            &expected));
+    assert(zkp_context_init() == 0);
+    assert(hdnode_fill_public_key(&expected) == 0);
+    zkp_context_destroy();
+    vault_request_t r = {.op = VAULT_IMPORT_NODE, .owner = owner, .length = 98};
+    strcpy(r.curve, curves[c]);
+    memcpy(r.data + 32, private_key, 32);
+    memcpy(r.data + 64, expected.public_key, 33);
+    r.data[97] = 3;
+    vault_response_t out = {0};
+    assert(call(1, &r, &out));
+    vault_blob_t node = out.blob;
+    /* A different, valid public key must not be accepted as this key's cache.
+     */
+    expected.private_key[31]++;
+    expected.is_public_key_set = false;
+    assert(zkp_context_init() == 0);
+    assert(hdnode_fill_public_key(&expected) == 0);
+    zkp_context_destroy();
+    memcpy(r.data + 64, expected.public_key, 33);
+    assert(!call(1, &r, &out));
+    assert(is_zero(&out, sizeof(out)));
+    r = (vault_request_t){.op = VAULT_SNAPSHOT, .owner = owner, .blob = node};
+    assert(call(1, &r, &out));
+    r = (vault_request_t){
+        .op = VAULT_DERIVE, .owner = owner, .blob = node, .length = 4};
+    uint32_t index = 0x80000000;
+    memcpy(r.data, &index, sizeof(index));
+    assert(call(1, &r, &out));
+    memzero(&expected, sizeof(expected));
+  }
+  secret_owner_destroy(owner);
 }
 
 static void schnorr_vectors(void) {
@@ -226,6 +276,30 @@ int main(void) {
   assert(call(1, &r, &out));
   vault_blob_t public_only = out.blob;
   assert(!sign(request, &public_only, NULL));
+  vault_request_t import = r;
+  r = (vault_request_t){
+      .op = VAULT_DERIVE, .owner = request, .blob = public_only, .length = 4};
+  for (uint32_t index = 0; index <= 1; index++) {
+    uint32_t child_index = index ? 0x80000000 : 1;
+    memcpy(r.data, &child_index, sizeof(child_index));
+    assert(!call(1, &r, &out));
+    assert(is_zero(&out, sizeof(out)));
+  }
+  r.arg = 1; /* Public derivation still works, and remains public-only. */
+  uint32_t public_index = 1;
+  memcpy(r.data, &public_index, sizeof(public_index));
+  assert(call(1, &r, &out));
+  vault_blob_t public_child = out.blob;
+  assert(!sign(request, &public_child, NULL));
+  for (uint32_t field = 0; field < 2; field++) {
+    r = (vault_request_t){.op = VAULT_SNAPSHOT,
+                          .owner = request,
+                          .blob = public_only,
+                          .arg = field};
+    assert(!call(1, &r, &out));
+    assert(is_zero(&out, sizeof(out)));
+  }
+  r = import;
   r.data[97] = 1; /* explicitly supplied zero is an invalid ECDSA key */
   assert(!call(1, &r, &out));
 
@@ -287,6 +361,7 @@ int main(void) {
          sizeof(secret_owners), sizeof(secret_scratch), VAULT_BLOB_SIZE);
   schnorr_vectors();
   fingerprint_vectors();
+  node_import_vectors();
   assert(!zkp_context_is_initialized());
   puts("vault boundary tests passed");
   return 0;
