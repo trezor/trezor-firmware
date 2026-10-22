@@ -1,6 +1,7 @@
 from typing import *
 from buffer_types import *
 from trezorcrypto import secbytes
+MAX_MESSAGE_SIZE: int
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
@@ -23,6 +24,8 @@ def sign(
 ) -> bytes:
     """
     Uses secret key to produce the signature of message.
+    Opaque-key messages are bounded to 2048 bytes and copied into the
+    kernel.
     """
 
 

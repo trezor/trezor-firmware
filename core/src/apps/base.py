@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import storage.device as storage_device
-from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS, APP_COMMON_SEED
+from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
 from trezor import TR, config, utils, wire, workflow
 from trezor.enums import HomescreenFormat, MessageType
 from trezor.messages import Success, UnlockPath
@@ -391,7 +391,9 @@ else:
             from storage.cache_common import APP_COMMON_DERIVE_CARDANO
 
             derive_cardano = context.cache_get_bool(APP_COMMON_DERIVE_CARDANO)
-            have_seed = context.cache_is_set(APP_COMMON_SEED)
+            session_cache = cache_codec.get_active_session()
+            assert session_cache is not None
+            have_seed = not session_cache.vault_seed.empty()
             if (
                 have_seed
                 and msg.derive_cardano is not None

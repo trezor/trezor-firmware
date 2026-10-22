@@ -138,7 +138,37 @@ static mp_obj_t mod_trezorcrypto_Hmac___del__(mp_obj_t self) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Hmac___del___obj,
                                  mod_trezorcrypto_Hmac___del__);
 
+/// @staticmethod
+/// def tag(hashtype: int, key: secbytes, message: AnyBytes) -> bytes:
+///     """Compute a public authentication tag in the kernel. Message is limited
+///     to 256 bytes. For public MACs only; not a secret-output KDF
+///     interface."""
+static mp_obj_t mod_trezorcrypto_Hmac_tag(mp_obj_t hashtype, mp_obj_t key,
+                                          mp_obj_t message) {
+  mp_obj_secbytes_t *secret = secbytes_object(key);
+  mp_buffer_info_t msg = {0};
+  mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
+  mp_int_t algorithm = mp_obj_get_int(hashtype);
+  if ((algorithm != SHA256 && algorithm != SHA512) || msg.len > VAULT_DATA_SIZE)
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid tag parameters"));
+  vault_request_t r = {.op = VAULT_HMAC_TAG,
+                       .arg = algorithm,
+                       .blob = secbytes_blob(secret),
+                       .length = msg.len};
+  vault_response_t out = {0};
+  memcpy(r.data, msg.buf, msg.len);
+  vault_raise(&r, &out);
+  return mp_obj_new_bytes(out.signature, algorithm == SHA256 ? 32 : 64);
+}
+static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_Hmac_tag_obj,
+                                 mod_trezorcrypto_Hmac_tag);
+
+static MP_DEFINE_CONST_STATICMETHOD_OBJ(
+    mod_trezorcrypto_Hmac_tag_static,
+    MP_ROM_PTR(&mod_trezorcrypto_Hmac_tag_obj));
+
 static const mp_rom_map_elem_t mod_trezorcrypto_Hmac_locals_dict_table[] = {
+    {MP_ROM_QSTR(MP_QSTR_tag), MP_ROM_PTR(&mod_trezorcrypto_Hmac_tag_static)},
     {MP_ROM_QSTR(MP_QSTR_update),
      MP_ROM_PTR(&mod_trezorcrypto_Hmac_update_obj)},
     {MP_ROM_QSTR(MP_QSTR_digest),

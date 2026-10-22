@@ -23,13 +23,58 @@
 #include "py/obj.h"
 
 #include "bip32.h"
+#include "curves.h"
+#include "modtrezorcrypto-secbytes.h"
 
 typedef struct _mp_obj_HDNode_t {
   mp_obj_base_t base;
   uint32_t fingerprint;
-  HDNode hdnode;
+  struct {
+    uint8_t bytes[VAULT_NODE_BLOB_SIZE];
+  } blob;
 } mp_obj_HDNode_t;
 
 extern const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 
+/* Expand compact ciphertext into the canonical zero-padded syscall envelope.
+ * Neither helper opens a node or puts private plaintext in coreapp. */
+static vault_blob_t hdnode_blob(const mp_obj_HDNode_t *o) {
+  vault_blob_t blob = {0};
+  memcpy(blob.bytes, o->blob.bytes, sizeof(o->blob.bytes));
+  return blob;
+}
+static void hdnode_set_blob(mp_obj_HDNode_t *o, const vault_blob_t *blob) {
+  memcpy(o->blob.bytes, blob->bytes, sizeof(o->blob.bytes));
+}
+
+static mp_obj_HDNode_t *hdnode_object(mp_obj_t self) {
+  if (!mp_obj_is_type(self, &mod_trezorcrypto_HDNode_type))
+    mp_raise_TypeError(MP_ERROR_TEXT("Expected HDNode"));
+  return MP_OBJ_TO_PTR(self);
+}
+
+/* Public-only view. No private bytes or kernel pointers cross the ABI. */
+static HDNode *hdnode_require(mp_obj_HDNode_t *o) {
+  static HDNode public_view;
+  vault_request_t r = {.op = VAULT_PUBLIC, .blob = hdnode_blob(o)};
+  vault_response_t out = {0};
+  vault_raise(&r, &out);
+  /* The kernel returns a blob when it computed the public key; keep it. */
+  if (!secret_blob_empty(&out.blob)) hdnode_set_blob(o, &out.blob);
+  memzero(&public_view, sizeof(public_view));
+  public_view.depth = out.depth;
+  public_view.child_num = out.child_num;
+  public_view.curve = get_curve_by_name(SECP256K1_NAME);
+  memcpy(public_view.chain_code, out.chain_code, 32);
+  memcpy(public_view.public_key, out.public_key, 33);
+  public_view.is_public_key_set = true;
+  return &public_view;
+}
+static mp_obj_HDNode_t *hdnode_new(void) {
+  mp_obj_HDNode_t *o = mp_obj_malloc_with_finaliser(
+      mp_obj_HDNode_t, &mod_trezorcrypto_HDNode_type);
+  memzero(&o->blob, sizeof(o->blob));
+  o->fingerprint = 0;
+  return o;
+}
 #endif

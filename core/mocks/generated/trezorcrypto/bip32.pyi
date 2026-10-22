@@ -115,3 +115,9 @@ def from_seed(seed: AnyBytes | secbytes, curve_name: str) -> HDNode:
     """
     Construct a BIP0032 HD node from a BIP0039 seed value.
     """
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-bip32.h
+def from_storage(passphrase: str = "") -> secbytes:
+    """Derive a BIP39 seed inside the vault; return only an opaque
+    handle."""

@@ -1,6 +1,7 @@
 from typing import *
 from buffer_types import *
 from trezorcrypto import secbytes
+from trezorcrypto.bip32 import HDNode
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
@@ -21,13 +22,14 @@ CANONICAL_SIG_EOS: int = 2
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
 def sign(
-    secret_key: AnyBytes | secbytes,
+    secret_key: AnyBytes | secbytes | HDNode,
     digest: AnyBytes,
     compressed: bool = True,
     canonical: int | None = None,
 ) -> bytes:
     """
-    Uses secret key to produce the signature of the digest.
+    Uses secret key to produce the signature of the digest. An HDNode is
+    signed with in the vault, without copying its private key out.
     """
 
 

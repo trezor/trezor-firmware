@@ -29,89 +29,57 @@
 /// from trezorcrypto import secbytes
 
 /// def generate_secret() -> secbytes:
-///     """
-///     Generate secret key.
-///     """
+///     """Generate a private key in the kernel; return an opaque value."""
 static mp_obj_t mod_trezorcrypto_bip340_generate_secret() {
-  vstr_t sk = {0};
-  vstr_init_len(&sk, 32);
-  for (;;) {
-    rng_fill_buffer((uint8_t *)sk.buf, sk.len);
-    // check whether secret > 0 && secret < curve_order
-    if (0 ==
-        memcmp(
-            sk.buf,
-            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
-            32))
-      continue;
-    if (0 <=
-        memcmp(
-            sk.buf,
-            "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFE"
-            "\xBA\xAE\xDC\xE6\xAF\x48\xA0\x3B\xBF\xD2\x5E\x8C\xD0\x36\x41\x41",
-            32))
-      continue;
-    break;
-  }
-  return mp_obj_new_bytes_from_vstr(&sk);
+  mp_obj_secbytes_t *value = secbytes_new(32);
+  vault_request_t r = {.op = VAULT_SCHNORR_GENERATE};
+  vault_response_t out = {0};
+  vault_raise(&r, &out);
+  secbytes_set_blob(value, &out.blob);
+  return MP_OBJ_FROM_PTR(value);
 }
 static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_bip340_generate_secret_obj,
                                  mod_trezorcrypto_bip340_generate_secret);
 
+static vault_blob_t bip340_key_blob(mp_obj_t key) {
+  if (!mp_obj_is_type(key, &mod_trezorcrypto_secbytes_type)) {
+    mp_buffer_info_t b = {0};
+    mp_get_buffer_raise(key, &b, MP_BUFFER_READ);
+    if (b.len != 32)
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
+    key = secbytes_copy(b.buf, b.len);
+  }
+  return secbytes_blob(MP_OBJ_TO_PTR(key));
+}
+
 /// def publickey(secret_key: AnyBytes | secbytes) -> bytes:
-///     """
-///     Computes public key from secret key.
-///     """
+///     """Compute the public key without exporting private material."""
 static mp_obj_t mod_trezorcrypto_bip340_publickey(mp_obj_t secret_key) {
-  mp_buffer_info_t sk = {0};
-  mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
-  if (sk.len != 32) {
-    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
-  }
-  vstr_t pk = {0};
-  vstr_init_len(&pk, 32);
-  int ret =
-      zkp_bip340_get_public_key((const uint8_t *)sk.buf, (uint8_t *)pk.buf);
-  if (0 != ret) {
-    vstr_clear(&pk);
-    mp_raise_ValueError(MP_ERROR_TEXT("Invalid secret key"));
-  }
-  return mp_obj_new_bytes_from_vstr(&pk);
+  vault_request_t r = {.op = VAULT_SCHNORR_PUBLIC,
+                       .blob = bip340_key_blob(secret_key)};
+  vault_response_t out = {0};
+  vault_raise(&r, &out);
+  return mp_obj_new_bytes(out.signature, 32);
 }
 
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip340_publickey_obj,
                                  mod_trezorcrypto_bip340_publickey);
 
-/// def sign(
-///     secret_key: AnyBytes | secbytes,
-///     digest: AnyBytes,
-/// ) -> bytes:
-///     """
-///     Uses secret key to produce the signature of the digest.
-///     """
+/// def sign(secret_key: AnyBytes | secbytes, digest: AnyBytes) -> bytes:
+///     """Sign in the kernel; return only the public signature."""
 static mp_obj_t mod_trezorcrypto_bip340_sign(mp_obj_t secret_key,
                                              mp_obj_t digest) {
-  mp_buffer_info_t sk = {0}, dig = {0};
-  mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
+  mp_buffer_info_t dig = {0};
   mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
-  if (sk.len != 32) {
-    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
-  }
-  if (dig.len != 32) {
+  if (dig.len != 32)
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of digest"));
-  }
-
-  vstr_t sig = {0};
-  vstr_init_len(&sig, 64);
-  int ret =
-      zkp_bip340_sign_digest((const uint8_t *)sk.buf, (const uint8_t *)dig.buf,
-                             (uint8_t *)sig.buf, NULL);
-  if (0 != ret) {
-    vstr_clear(&sig);
-    mp_raise_ValueError(MP_ERROR_TEXT("Signing failed"));
-  }
-  return mp_obj_new_bytes_from_vstr(&sig);
+  vault_request_t r = {.op = VAULT_SCHNORR_SIGN,
+                       .blob = bip340_key_blob(secret_key),
+                       .length = 32};
+  vault_response_t out = {0};
+  memcpy(r.data, dig.buf, 32);
+  vault_raise(&r, &out);
+  return mp_obj_new_bytes(out.signature, 64);
 }
 
 static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip340_sign_obj,
@@ -209,36 +177,24 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 ///     secret_key: AnyBytes | secbytes,
 ///     root_hash: AnyBytes | None = None,
 /// ) -> secbytes:
-///     """
-///     Tweaks the secret key with the specified root_hash.
-///     """
+///     """Return an independent opaque snapshot of the tweaked key."""
 static mp_obj_t mod_trezorcrypto_bip340_tweak_secret_key(size_t n_args,
                                                          const mp_obj_t *args) {
-  mp_buffer_info_t sk = {0};
-  mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
-  if (sk.len != 32) {
-    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
-  }
-
-  mp_buffer_info_t rh = {0};
-  const uint8_t *rh_ptr = NULL;
+  mp_buffer_info_t root = {0};
   if (n_args > 1 && args[1] != mp_const_none) {
-    mp_get_buffer_raise(args[1], &rh, MP_BUFFER_READ);
-    if (rh.len != 32) {
+    mp_get_buffer_raise(args[1], &root, MP_BUFFER_READ);
+    if (root.len != 32)
       mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of root hash"));
-    }
-    rh_ptr = (const uint8_t *)rh.buf;
   }
-
-  vstr_t tsk = {0};
-  vstr_init_len(&tsk, 32);
-  int ret = zkp_bip340_tweak_private_key((const uint8_t *)sk.buf, rh_ptr,
-                                         (uint8_t *)tsk.buf);
-  if (ret != 0) {
-    vstr_clear(&tsk);
-    mp_raise_ValueError(MP_ERROR_TEXT("Failed to tweak secret key"));
-  }
-  return mp_obj_new_bytes_from_vstr(&tsk);
+  mp_obj_secbytes_t *value = secbytes_new(32);
+  vault_request_t r = {.op = VAULT_SCHNORR_TWEAK,
+                       .blob = bip340_key_blob(args[0]),
+                       .length = root.len};
+  vault_response_t out = {0};
+  if (root.len) memcpy(r.data, root.buf, root.len);
+  vault_raise(&r, &out);
+  secbytes_set_blob(value, &out.blob);
+  return MP_OBJ_FROM_PTR(value);
 }
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(

@@ -87,7 +87,7 @@ extern const mp_obj_type_t mp_type_AuthenticationError;
 
 /// package: trezorcrypto.__init__
 /// def retain_secret(value: Any) -> None:
-///     """Explicitly transfer an encrypted byte value from this request to its
+///     """Explicitly transfer a node or snapshot from this request to its
 ///     session."""
 static mp_obj_t retain_secret(mp_obj_t obj) {
   vault_blob_t compact;
@@ -97,12 +97,17 @@ static mp_obj_t retain_secret(mp_obj_t obj) {
     compact = secbytes_blob(MP_OBJ_TO_PTR(obj));
     h = &compact;
     kind = SECRET_BYTES;
+  } else if (mp_obj_is_type(obj, &mod_trezorcrypto_HDNode_type)) {
+    compact = hdnode_blob(hdnode_object(obj));
+    h = &compact;
+    kind = SECRET_NODE;
   } else {
     mp_raise_TypeError(MP_ERROR_TEXT("Expected secret value"));
   }
   if (!secret_retain(h, secret_owner, kind))
     mp_raise_ValueError(MP_ERROR_TEXT("Cannot retain secret"));
   if (kind == SECRET_BYTES) secbytes_set_blob(MP_OBJ_TO_PTR(obj), h);
+  if (kind == SECRET_NODE) hdnode_set_blob(hdnode_object(obj), h);
   return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(retain_secret_obj, retain_secret);

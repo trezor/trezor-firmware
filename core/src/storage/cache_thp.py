@@ -34,7 +34,7 @@ class SessionThpCache(DataCache):
                 1,  # SESSION_ID
                 1,  # SESSION_STATE
                 4,  # LAST_USAGE
-                64,  # APP_COMMON_SEED
+                0,  # APP_COMMON_SEED: seed lives in vault_seed
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
                 32,  # APP_COMMON_NONCE
@@ -45,7 +45,7 @@ class SessionThpCache(DataCache):
                 1,  # SESSION_ID
                 1,  # SESSION_STATE
                 4,  # LAST_USAGE
-                64,  # APP_COMMON_SEED
+                0,  # APP_COMMON_SEED: seed lives in vault_seed
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
                 32,  # APP_COMMON_NONCE

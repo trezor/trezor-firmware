@@ -1,10 +1,9 @@
 from typing import TYPE_CHECKING
 
 import storage.device as storage_device
-from storage.cache_common import APP_COMMON_SEED, APP_COMMON_SEED_WITHOUT_PASSPHRASE
+from storage.cache_common import APP_COMMON_SEED_WITHOUT_PASSPHRASE
 from trezor import utils
 from trezor.crypto import hmac
-from trezor.wire import context
 from trezor.wire.context import get_context
 from trezor.wire.errors import DataError
 
@@ -14,6 +13,8 @@ from . import mnemonic
 from .passphrase import get_passphrase
 
 if TYPE_CHECKING:
+    from trezorcrypto import secbytes
+
     from trezor.crypto import bip32
     from trezor.messages import ThpCreateNewSession
     from trezor.wire.protocol_common import Context
@@ -21,10 +22,7 @@ if TYPE_CHECKING:
     from .paths import Bip32Path, Slip21Path
 
 if not utils.BITCOIN_ONLY:
-    from storage.cache_common import (
-        APP_CARDANO_ICARUS_SECRET,
-        APP_COMMON_DERIVE_CARDANO,
-    )
+    from storage.cache_common import APP_COMMON_DERIVE_CARDANO
 
 if not utils.USE_THP:
     from .passphrase import get as get_passphrase_legacy
@@ -68,104 +66,61 @@ class Slip21Node:
         return Slip21Node(data=self.data)
 
 
+def _store_common_seed(ctx: Context, passphrase: str) -> None:
+    from trezorcrypto import retain_secret
+
+    from trezor.crypto import bip32
+
+    seed = bip32.from_storage(passphrase)
+    retain_secret(seed)
+    ctx.cache.vault_seed.take(seed)
+
+
+def _check_cardano_supported(requested: bool) -> None:
+    if requested:
+        from trezor.wire.errors import ProcessError
+
+        # Never reintroduce Python mnemonic access to service an unsupported
+        # derivation. Native Cardano roots are a separate migration.
+        raise ProcessError("Protected Cardano derivation is not implemented")
+
+
 if utils.USE_THP:
 
-    async def get_seed() -> bytes:  # type: ignore [obscured-by-same-name]
-        common_seed = context.cache_get(APP_COMMON_SEED)
-        assert common_seed is not None
+    async def get_seed() -> secbytes:
+        common_seed = get_context().cache.vault_seed
+        assert not common_seed.empty()
         return common_seed
 
-    if utils.BITCOIN_ONLY:
-        # === Bitcoin_only variant ===
-        # We want to derive the normal seed ONLY
-
-        async def derive_and_store_roots(
-            ctx: Context, msg: ThpCreateNewSession
-        ) -> None:
-
-            if msg.passphrase is not None and msg.on_device:
-                raise DataError("Passphrase provided when it shouldn't be!")
-
-            raise_if_not_initialized()
-
-            if ctx.cache.is_set(APP_COMMON_SEED):
-                raise Exception("Seed is already set!")
-
-            passphrase = await get_passphrase(msg)
-            common_seed = mnemonic.get_seed(passphrase)
-            ctx.cache.set(APP_COMMON_SEED, common_seed)
-
-    else:
-        # === Cardano variant ===
-        # We want to derive both the normal seed and the Cardano seed together
-        async def derive_and_store_roots(
-            ctx: Context, msg: ThpCreateNewSession
-        ) -> None:
-
-            if msg.passphrase is not None and msg.on_device:
-                raise DataError("Passphrase provided when it shouldn't be!")
-
-            raise_if_not_initialized()
-
-            if ctx.cache.is_set(APP_CARDANO_ICARUS_SECRET):
-                raise Exception("Cardano icarus secret is already set!")
-
-            passphrase = await get_passphrase(msg)
-            common_seed = mnemonic.get_seed(passphrase)
-            ctx.cache.set(APP_COMMON_SEED, common_seed)
-
-            if msg.derive_cardano:
-                from apps.cardano.seed import derive_and_store_secrets
-
-                ctx.cache.set_bool(APP_COMMON_DERIVE_CARDANO, True)
-                derive_and_store_secrets(ctx, passphrase)
+    async def derive_and_store_roots(ctx: Context, msg: ThpCreateNewSession) -> None:
+        if msg.passphrase is not None and msg.on_device:
+            raise DataError("Passphrase provided when it shouldn't be!")
+        raise_if_not_initialized()
+        if not ctx.cache.vault_seed.empty():
+            raise Exception("Seed is already set!")
+        if not utils.BITCOIN_ONLY:
+            _check_cardano_supported(msg.derive_cardano)
+        passphrase = await get_passphrase(msg)
+        _store_common_seed(ctx, passphrase)
 
 else:  # v1 protocol
-    if utils.BITCOIN_ONLY:
-        # === Bitcoin-only variant ===
-        # We use the simple version of `get_seed` that never needs to derive anything else.
 
-        @cache.stored_async(APP_COMMON_SEED)
-        async def get_seed() -> bytes:
-            raise_if_not_initialized()
-
-            passphrase = await get_passphrase_legacy()
-            return mnemonic.get_seed(passphrase=passphrase)
-
-    else:
-        # === Cardano variant ===
-        # We want to derive both the normal seed and the Cardano seed together, AND
-        # expose a method for Cardano to do the same
-
-        @cache.stored_async(APP_COMMON_SEED)
-        async def get_seed() -> bytes:
+    async def get_seed() -> secbytes:
+        ctx = get_context()
+        raise_if_not_initialized()
+        if ctx.cache.vault_seed.empty():
             await derive_and_store_roots_legacy()
-            common_seed = context.cache_get(APP_COMMON_SEED)
-            assert common_seed is not None
-            return common_seed
+        return ctx.cache.vault_seed
 
-        async def derive_and_store_roots_legacy() -> None:
-            raise_if_not_initialized()
-
-            ctx = get_context()
-            need_seed = not ctx.cache.is_set(APP_COMMON_SEED)
-            need_cardano_secret = ctx.cache.get_bool(
-                APP_COMMON_DERIVE_CARDANO
-            ) and not ctx.cache.is_set(APP_CARDANO_ICARUS_SECRET)
-
-            if not need_seed and not need_cardano_secret:
-                return
-
-            passphrase = await get_passphrase_legacy()
-
-            if need_seed:
-                common_seed = mnemonic.get_seed(passphrase)
-                ctx.cache.set(APP_COMMON_SEED, common_seed)
-
-            if need_cardano_secret:
-                from apps.cardano.seed import derive_and_store_secrets
-
-                derive_and_store_secrets(ctx, passphrase)
+    async def derive_and_store_roots_legacy() -> None:
+        raise_if_not_initialized()
+        ctx = get_context()
+        if not utils.BITCOIN_ONLY:
+            _check_cardano_supported(ctx.cache.get_bool(APP_COMMON_DERIVE_CARDANO))
+        if not ctx.cache.vault_seed.empty():
+            return
+        passphrase = await get_passphrase_legacy()
+        _store_common_seed(ctx, passphrase)
 
 
 @cache.stored(APP_COMMON_SEED_WITHOUT_PASSPHRASE)
@@ -180,7 +135,7 @@ def derive_node_without_passphrase(
 ) -> bip32.HDNode:
     from trezor.crypto import bip32
 
-    seed = _get_seed_without_passphrase()
+    seed = bip32.from_storage()
     node = bip32.from_seed(seed, curve_name)
     node.derive_path(path)
     return node

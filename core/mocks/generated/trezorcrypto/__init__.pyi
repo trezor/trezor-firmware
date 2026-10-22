@@ -325,6 +325,12 @@ class hmac:
         Return the digest of processed data so far.
         """
 
+    @staticmethod
+    def tag(hashtype: int, key: secbytes, message: AnyBytes) -> bytes:
+        """Compute a public authentication tag in the kernel. Message is limited
+        to 256 bytes. For public MACs only; not a secret-output KDF
+        interface."""
+
 
 # upymod/modtrezorcrypto/modtrezorcrypto-pbkdf2.h
 class pbkdf2:
@@ -574,5 +580,5 @@ class sha512:
 
 # upymod/modtrezorcrypto/modtrezorcrypto.c
 def retain_secret(value: Any) -> None:
-    """Explicitly transfer an encrypted byte value from this request to its
+    """Explicitly transfer a node or snapshot from this request to its
     session."""

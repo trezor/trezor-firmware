@@ -65,6 +65,15 @@ static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_nist256p1_generate_secret_obj,
 ///     """
 static mp_obj_t mod_trezorcrypto_nist256p1_publickey(size_t n_args,
                                                      const mp_obj_t *args) {
+  if (mp_obj_is_type(args[0], &mod_trezorcrypto_secbytes_type)) {
+    bool compressed = n_args < 2 || args[1] == mp_const_true;
+    vault_request_t r = {.op = VAULT_NIST_PUBLIC,
+                         .arg = compressed,
+                         .blob = secbytes_blob(MP_OBJ_TO_PTR(args[0]))};
+    vault_response_t out = {0};
+    vault_raise(&r, &out);
+    return mp_obj_new_bytes(out.signature, compressed ? 33 : 65);
+  }
   mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   if (sk.len != 32) {
@@ -100,6 +109,20 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 ///     """
 static mp_obj_t mod_trezorcrypto_nist256p1_sign(size_t n_args,
                                                 const mp_obj_t *args) {
+  if (mp_obj_is_type(args[0], &mod_trezorcrypto_secbytes_type)) {
+    mp_buffer_info_t digest = {0};
+    mp_get_buffer_raise(args[1], &digest, MP_BUFFER_READ);
+    if (digest.len != 32)
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of digest"));
+    vault_request_t r = {.op = VAULT_NIST_SIGN,
+                         .arg = n_args < 3 || args[2] == mp_const_true,
+                         .blob = secbytes_blob(MP_OBJ_TO_PTR(args[0])),
+                         .length = 32};
+    vault_response_t out = {0};
+    memcpy(r.data, digest.buf, 32);
+    vault_raise(&r, &out);
+    return mp_obj_new_bytes(out.signature, 65);
+  }
   mp_buffer_info_t sk = {0};
   mp_buffer_info_t dig = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
