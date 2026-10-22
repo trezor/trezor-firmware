@@ -24,11 +24,16 @@ _Static_assert(VAULT_SAES_AAD_SIZE == VAULT_AAD_SIZE, "AAD size");
 
 /* False after a hardware or key failure; the next wipe makes a new key. */
 static bool saes_ready = true;
+/* The record key may live in secmon, which can outlive this kernel; the
+ * nonce counter lives here. Replace the key before the first record of every
+ * kernel run, so a restarted counter never meets an old key. */
+static bool saes_fresh;
 
 void vault_seal_end(void) {}
 void vault_seal_wipe(void) {
   vault_saes_request_t r = {.op = VAULT_SAES_RESET};
   saes_ready = vault_saes_record(&r) == VAULT_SAES_OK;
+  saes_fresh = saes_ready;
 }
 bool vault_seal_ready(void) { return saes_ready; }
 /* No record key or expanded schedule ever exists in kernel RAM. */
@@ -39,6 +44,10 @@ bool vault_seal_record(bool encrypt, uint64_t nonce,
                        uint8_t data[VAULT_RECORD_SIZE], size_t length,
                        uint8_t tag[16]) {
   if (!length || length > VAULT_RECORD_SIZE || !saes_ready) return false;
+  if (!saes_fresh) {
+    vault_seal_wipe();
+    if (!saes_ready) return false;
+  }
   vault_saes_request_t r = {
       .op = encrypt ? VAULT_SAES_SEAL : VAULT_SAES_OPEN,
       .length = length,

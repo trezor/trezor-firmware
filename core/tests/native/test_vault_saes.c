@@ -102,6 +102,20 @@ static bool open(uint64_t nonce, const uint8_t aad[VAULT_AAD_SIZE],
   return vault_seal_record(false, nonce, aad, data, length, tag);
 }
 
+/* The first record of a kernel run replaces the record key first. */
+static void test_fresh_key(void) {
+  sw_record.ready = true; /* a key left over from an earlier kernel run */
+  uint8_t aad[VAULT_AAD_SIZE] = {0}, data[VAULT_RECORD_SIZE] = {1}, tag[16];
+  uint32_t calls = sw_calls;
+  assert(vault_seal_record(true, 1, aad, data, 32, tag));
+  assert(sw_calls == calls + 2 && sw_record.last.op == VAULT_SAES_SEAL);
+  assert(sw_record.ready);
+  /* Only once per run. */
+  calls = sw_calls;
+  assert(vault_seal_record(true, 2, aad, data, 32, tag));
+  assert(sw_calls == calls + 1);
+}
+
 static void test_records(void) {
   uint8_t aad[VAULT_AAD_SIZE] = {7}, original[VAULT_RECORD_SIZE];
   for (size_t n = 1; n <= VAULT_RECORD_SIZE; n++) {
@@ -257,6 +271,7 @@ static void test_storage_key_cache(void) {
 }
 
 int main(void) {
+  test_fresh_key();
   test_records();
   test_failures();
   test_dispatcher();
