@@ -68,6 +68,7 @@ static systask_scheduler_t g_systask_scheduler = {
     .waiting_task = &g_systask_scheduler.kernel_task,
     .task_id_map = 0x00000001,  // Kernel task is always present
     .kernel_task = {
+        .initialized = true,
         .sp_lim = (uint32_t)&_stack_section_start,
         .id = 0,  // Kernel task ID == 0
         .stack_base = (uint32_t)&_stack_section_start,
@@ -84,6 +85,7 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
   scheduler->waiting_task = scheduler->active_task;
   scheduler->task_id_map = 0x00000001;  // Kernel task is always present
 
+  scheduler->kernel_task.initialized = true;
   scheduler->kernel_task.sp_lim = (uint32_t)&_stack_section_start;
   scheduler->kernel_task.stack_base = (uint32_t)&_stack_section_start;
   scheduler->kernel_task.stack_end = (uint32_t)&_stack_section_end;
@@ -102,11 +104,13 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
 #endif
 }
 
+#ifdef USE_APPLETS
 void systask_enable_tls(systask_t* task, mpu_area_t tls) {
   ensure((tls.size <= sizeof(task->tls_copy)) * sectrue, "TLS area too large");
   task->tls_addr = (void*)tls.start;
   task->tls_size = tls.size;
 }
+#endif  // USE_APPLETS
 
 systask_t* systask_active(void) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
@@ -120,6 +124,7 @@ systask_t* systask_kernel(void) {
   return &scheduler->kernel_task;
 }
 
+#ifdef USE_APPLETS
 static void systask_yield(void) {
   bool handler_mode = (__get_IPSR() & IPSR_ISR_Msk) != 0;
 
@@ -139,12 +144,21 @@ static void systask_yield(void) {
 void systask_yield_to(systask_t* task) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
+  if (!systask_is_alive(task)) {
+    error_shutdown("Yield to dead task");
+  }
+
   irq_key_t irq_key = irq_lock();
   scheduler->waiting_task = task;
   irq_unlock(irq_key);
 
   systask_yield();
 }
+#endif
+
+systask_id_t systask_id(const systask_t* task) { return task->id; }
+
+#ifdef USE_APPLETS
 
 static systask_id_t systask_get_unused_id(void) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
@@ -174,9 +188,9 @@ bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
   task->exc_return = 0xFFFFFFAC;  // Thread mode, use PSP, pop FP context
 #endif
   task->id = id;
-  task->mpu_mode = MPU_MODE_APP;
   task->stack_base = stack_base;
   task->stack_end = stack_base + stack_size;
+  task->mpu_mode = MPU_MODE_APP;
   task->applet = applet;
   task->sb_addr = sb_addr;
 
@@ -188,17 +202,13 @@ bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
   return true;
 }
 
-systask_id_t systask_id(const systask_t* task) { return task->id; }
-
-#ifdef USE_APPLETS
 void systask_set_mpu(systask_t* task) {
   if (task->applet != NULL) {
     applet_t* applet = (applet_t*)task->applet;
     mpu_set_active_applet(&applet->layout,
-                          applet->privileges.framebuffer_access);
+                          applet->privileges.framebuffer_access == sectrue);
   }
 }
-#endif  // USE_APPLETS
 
 uint32_t* systask_push_data(systask_t* task, const void* data, size_t size) {
   if (task->sp < task->sp_lim) {
@@ -228,9 +238,7 @@ void systask_pop_data(systask_t* task, size_t size) { task->sp += size; }
 
 bool systask_push_call(systask_t* task, void* entrypoint, uintptr_t arg1,
                        uintptr_t arg2, uintptr_t arg3) {
-#ifdef USE_APPLETS
   systask_set_mpu(task);
-#endif
 
   uint32_t original_sp = task->sp;
 
@@ -284,6 +292,12 @@ uint32_t systask_invoke_callback(systask_t* task, uintptr_t arg1,
                                  uintptr_t arg2, uintptr_t arg3,
                                  void* callback) {
   uint32_t original_sp = task->sp;
+
+  if (task->killed) {
+    // Invoking a callback on a killed task
+    error_shutdown("Callback to killed task");
+  }
+
   if (!systask_push_call(task, callback, arg1, arg2, arg3)) {
     // There is not enough space on the unprivileged stack
     error_shutdown("Callback stack low");
@@ -322,9 +336,7 @@ void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1) {
     stack += 8;   // Skip R4-R11
   }
 
-#ifdef USE_APPLETS
   systask_set_mpu(task);
-#endif
 
   stack[STK_FRAME_R0] = r0;
   stack[STK_FRAME_R1] = r1;
@@ -341,6 +353,8 @@ uint32_t systask_get_r0(systask_t* task) {
   return stack[STK_FRAME_R0];
 }
 
+#endif  // USE_APPLETS
+
 static void systask_kill(systask_t* task) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
@@ -348,6 +362,7 @@ static void systask_kill(systask_t* task) {
 
   task->killed = 1;
 
+#ifdef USE_APPLETS
   if (task == &scheduler->kernel_task) {
     // Call panic handler
     if (scheduler->error_handler != NULL) {
@@ -368,6 +383,12 @@ static void systask_kill(systask_t* task) {
       systask_yield_to(&scheduler->kernel_task);
     }
   }
+#else
+  if (scheduler->error_handler != NULL) {
+    scheduler->error_handler(&task->pminfo);
+  }
+  reboot_device();
+#endif
 }
 
 bool systask_is_alive(const systask_t* task) {
@@ -496,12 +517,66 @@ static uint32_t get_return_addr(bool secure, bool privileged, uint32_t sp) {
   }
 #endif
 
-  // We checked that ret_addr is valid, but kernel/secmon need not
-  // to have access to the entire memory region where the stack resides =>
-  // MPU temporarily to read the return address.
-  mpu_mode_t mode = mpu_reconfig(MPU_MODE_DISABLED);
-  uint32_t addr = *ret_addr;
+  // We checked that ret_addr is valid, but the kernel/secmon may not
+  // have access to the entire memory region where the stack resides =>
+  // we need to temporarily reconfigure the MPU to read the return address.
+
+#ifdef SECMON
+  uint32_t addr = 0;
+
+  if (secure) {
+    // Secure context => the stack is in the secmon's own RAM, which is
+    // always accessible in MPU_MODE_DEFAULT.
+    mpu_mode_t mode = mpu_reconfig(MPU_MODE_DEFAULT);
+    addr = *ret_addr;
+    mpu_restore(mode);
+  } else {
+    // Non-Secure context => read through the Non-Secure alias (bit 28
+    // cleared). The bus transaction is then Non-Secure and the GTZC rejects
+    // it for any Secure-attributed memory, regardless of the checks above.
+    // (FIH)
+    // The pointer is volatile to hide the masked value from the optimizer,
+    // otherwise the compiler proves that bit 28 is clear and removes the
+    // check below. (FIH)
+    uint32_t* volatile ns_ptr = (uint32_t*)((uint32_t)ret_addr & ~(1 << 28));
+
+    // The MPU must be disabled since the NS stack (e.g. in the app arena)
+    // is not necessarily covered by the secmon's MPU regions.
+    mpu_mode_t mode = mpu_reconfig(MPU_MODE_DISABLED);
+    addr = *ns_ptr;
+    mpu_restore(mode);
+
+    if (((uint32_t)ns_ptr & (1 << 28)) != 0) {
+      // Alias masking was bypassed, discard the value (FIH)
+      return 0;
+    }
+
+    if (cmse_check_address_range(ret_addr, sizeof(uint32_t), flags) == NULL) {
+      // The first check was bypassed, discard the value (FIH)
+      return 0;
+    }
+  }
+
+  // A genuine return address points to a 2-byte aligned instruction that
+  // is readable by the faulting context. Anything else is not a return
+  // address and must not reach the post-mortem info (and the RSOD). (FIH)
+  if ((addr & 1) != 0) {
+    return 0;
+  }
+
+  if (cmse_check_address_range((void*)(uintptr_t)addr, sizeof(uint16_t),
+                               flags) == NULL) {
+    return 0;
+  }
+
+#else
+  // In kernel mode, we can setup the MPU according to the privilege level
+  // to safely read the return address. For unprivileged task,
+  // we use LDRT to not read anything from privileged memory.
+  mpu_mode_t mode = mpu_reconfig(privileged ? MPU_MODE_DEFAULT : MPU_MODE_APP);
+  uint32_t addr = privileged ? *ret_addr : __LDRT(ret_addr);
   mpu_restore(mode);
+#endif
 
   return addr;
 }
@@ -582,6 +657,7 @@ __attribute((used)) static void systask_exit_fault(uint32_t msp,
   systask_exit_fault_ex(msp, exc_return, false);
 }
 
+#ifdef USE_APPLETS
 // C part of PendSV handler that switches tasks
 //
 // `sp` is the stack pointer of the current task
@@ -603,13 +679,20 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   prev_task->sp_lim = sp_lim;
 #endif
   prev_task->exc_return = exc_return;
-  prev_task->mpu_mode = mpu_get_mode();
+
+  systask_id_t prev_task_id = *(volatile systask_id_t*)&prev_task->id;  // FIH
+  if (prev_task == &scheduler->kernel_task && prev_task_id == 0) {      // FIH
+    // Save the MPU mode of the kernel task
+    // (other tasks can't switch its MPU mode)
+    prev_task->mpu_mode = mpu_get_mode();
+  } else if (prev_task->mpu_mode != mpu_get_mode()) {
+    // Shut down immediately if the MPU mode of the previous task has
+    // changed unexpectedly. (FIH)
+    error_shutdown("MPU mode changed unexpectedly");
+  }
 
   if (prev_task->tls_size != 0) {
-#ifdef USE_APPLETS
     systask_set_mpu(prev_task);
-#endif
-
     // Save the TLS of the previous task
     memcpy(prev_task->tls_copy, prev_task->tls_addr, prev_task->tls_size);
   }
@@ -620,26 +703,34 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   // Load the scheduled task context
   systask_t* next_task = scheduler->active_task;
 
-  // Set task privilege level
+  // Lower the privilege level initially (FIH)
   uint32_t control = __get_CONTROL();
-  if (next_task == &scheduler->kernel_task) {
-    control &= ~CONTROL_nPRIV_Msk;
-  } else {
-    control |= CONTROL_nPRIV_Msk;
-  }
+  control |= CONTROL_nPRIV_Msk;
   __set_CONTROL(control);
+
+  // Set task privilege level
+  systask_id_t next_task_id = *(volatile systask_id_t*)&next_task->id;  // FIH
+  if (next_task == &scheduler->kernel_task && next_task_id == 0) {
+    control &= ~CONTROL_nPRIV_Msk;
+    __set_CONTROL(control);
+  }
+
+  // Check if the privilege level is correct for the next task (FIH)
+  control = __get_CONTROL();
+  if ((control & CONTROL_nPRIV_Msk) == 0 &&
+      next_task != &scheduler->kernel_task) {
+    error_shutdown("Privileged task is not the kernel task");
+  }
 
   // Setup the MPU for the new task
   mpu_reconfig(next_task->mpu_mode);
 
-#ifdef USE_APPLETS
   systask_set_mpu(next_task);
 
   if (next_task->tls_size != 0) {
     // Restore the TLS of the next task
     memcpy(next_task->tls_addr, next_task->tls_copy, next_task->tls_size);
   }
-#endif
 
   IRQ_LOG_EXIT();
 
@@ -736,17 +827,28 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
   );
 }
 
+#define systask_fatal_error(task, message)                       \
+  do {                                                           \
+    const char* filename = __FILE_NAME__;                        \
+    systask_exit_fatal(task, message, strlen(message), filename, \
+                       strlen(filename), __LINE__);              \
+  } while (0)
+
 __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
     uint32_t* stack, uint32_t* msp, uint32_t exc_return, uint32_t r4,
     uint32_t r5, uint32_t r6) {
   IRQ_LOG_ENTER();
 
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
+  systask_t* task = systask_active();
   uint8_t svc_number = ((uint8_t*)stack[6])[-2];
-
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
   switch (svc_number) {
     case SVC_SYSTASK_YIELD:
+      if (task != &scheduler->kernel_task) {
+        systask_fatal_error(task, "Illegal SVC number");
+      }
       // Yield to the waiting task
       systask_yield();
       break;
@@ -763,6 +865,8 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
       break;
 #endif
     default:
+      // Unknown SVC number, kill the current task
+      systask_fatal_error(task, "Illegal SVC number");
       break;
   }
 
@@ -791,6 +895,8 @@ __attribute((naked, no_stack_protector)) void SVC_Handler(void) {
       "BX       R0                  \n"  // Branch to the returned value
   );
 }
+
+#endif  // USE_APPLETS
 
 __attribute__((naked, no_stack_protector)) void HardFault_Handler(void) {
   // A HardFault may also be caused by exception escalation.
