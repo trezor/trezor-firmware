@@ -13,8 +13,12 @@ def wipe(clear_cache: bool = True) -> None:
     If the device should communicate after wipe, use `clear_cache=False` and clear cache manually later using
     `wipe_cache()`.
     """
+    from trezorcrypto import revoke_secrets
+
     from trezor import config
 
+    # Even clear_cache=False (preserving transport for the reply) must erase vaults.
+    revoke_secrets()
     config.wipe()
     if clear_cache:
         cache.clear_all()
