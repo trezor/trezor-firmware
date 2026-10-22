@@ -45,6 +45,8 @@ encryption (C3). Every commit builds for T3T1. The prototype is not ready for pr
 | C3 | `563f9edd31` feat(core): seal the storage key cache in SAES | Storage DEK/SAK cache sealed in SAES under its own DHUK-wrapped key; BHK wrap smcall dropped from SAES builds. **C3 checkpoint.** |
 | C3 | `f7934b6500` fix(core): replace the SAES record key per kernel run | The kernel resets the SAES record key before its first record, so its nonce counter never meets an old key. |
 | — | `af9c59efcb` fix(core): derive Ethereum addresses from vault keys | `ethereum_pubkeyhash()` hashes the vault's public key; `VAULT_PUBLIC` reports the node's curve. |
+| — | `3497858812` fix(core): sign canonical ECDSA in the vault | `VAULT_SIGN` takes a canonical selector (Ethereum, EOS); the kernel owns the callbacks. |
+| — | `db8479db0e` feat(core): derive SLIP-21 keys in the vault | `VAULT_SLIP21` returns sealed nodes and keys; MACs use kernel tags; only Evolu nodes are exported. |
 
 ## Footprint by stage
 
@@ -146,6 +148,9 @@ Kernel stack, static worst case, bytes. Stack size is from each kernel ELF:
 - On T3B1 and T3T1 that leaves 1,120 B at C3; MSPLIM reserves 128 B of it, and
   interrupts nested in the syscall need the rest. C3 adds 24 B to the vault
   paths (the deepest regular op is then 6,228 B).
+- The SLIP-21 op runs in its own noinline frame, so canonical signing and
+  SLIP-21 leave the T3T1 vault paths at 6,220 B (regular op) and 7,064 B
+  (Ed25519 message). Inlined, they had grown `vault_execute` by 336 B.
 - C2 adds 476 B to kernel storage unlock (1,540 → 2,016 B) on U5 kernels, and
   484 B to secmon storage unlock on T3W1 (1,444 → 1,928 B). The new
   `vault_kek_wrap` smcall needs 568 B of secmon stack, and C3's
@@ -390,8 +395,8 @@ signatures. In order of priority:
    It now hashes the public key the vault returns and raises on error, and a
    unit test checks the `m/44'/60'/0'/0/0` address of the "all" mnemonic.
    Ethereum and Tron signing and address display were blocked earlier anyway
-   (canonical signing and SLIP-21 are not migrated), so no wrong address
-   reached a user.
+   (canonical signing and SLIP-21 were not migrated), so no wrong address
+   reached a user. Both are migrated now (`3497858812`, `db8479db0e`).
 2. **Validate the SAES key path with a known key.** The new-key self-test
    proves that sealing and opening are consistent, but a consistently wrong key
    would pass too. A hardware test build should wrap a known key, compare
@@ -451,7 +456,10 @@ and purpose restrictions (7). Temporary-stack cleanup stays deferred.
 | Ed25519 messages over 2,048 B are refused | Chunked transfer into a bounded kernel buffer |
 | Groestlcoin's curve is not on the vault allow-list; its signing fails | Add the curve or keep it on the legacy path |
 | `IMPORT_BYTES`, `IMPORT_NODE` and `from_seed(bytes)` accept plaintext | Compile into test builds only |
-| SLIP-21, SLIP39, Cardano, CredRandom, passphrase/PIN input, recovery | Remaining migration items |
+| WebAuthn credential IDs and CredRandom still take the SLIP-21 key in coreapp | A kernel ChaCha20-Poly1305 operation for credential IDs; CredRandom through `hmac.tag` |
+| A 64-byte seed record is accepted where `VAULT_SLIP21` expects a node | Outputs stay sealed; type records by purpose if that matters |
+| Preauthorized flows (`DoPreauthorized`, CoinJoin) fail opening the seed | Retain the seed for the authorization's lifetime |
+| SLIP39, Cardano, passphrase/PIN input, recovery | Remaining migration items |
 
 Request and session owners are cooperative inside coreapp: compromised coreapp
 can still ask the vault to sign with its own handles. Backup and recovery
