@@ -192,6 +192,65 @@ impl ufmt::uDebug for StrBuffer {
     }
 }
 
+#[repr(C)]
+#[derive(Copy, Clone)]
+#[cfg_attr(test, derive(Debug))]
+pub struct Bytes {
+    ptr: *const u8,
+    len: u16,
+}
+
+impl Bytes {
+    // SAFETY:
+    // Caller is responsible for ensuring that data under `ptr` is valid for the
+    // whole lifetime of the result, plus possible copies/clones/offsets.
+    // This generally holds for GC-managed pointers and for static data.
+    // Dangerous with anything else.
+    pub unsafe fn from_ptr_and_len(ptr: *const u8, len: u16) -> Self {
+        Self { ptr, len }
+    }
+
+    fn as_bytes(&self) -> &[u8] {
+        if self.ptr.is_null() {
+            &[]
+        } else {
+            unsafe { slice::from_raw_parts(self.ptr, self.len.into()) }
+        }
+    }
+}
+
+impl TryFrom<Obj> for Bytes {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        let is_bytes = unsafe { ffi::mp_type_bytes.is_type_of(obj) };
+        if !is_bytes {
+            return Err(Error::TypeError);
+        }
+
+        let bufinfo = get_buffer_info(obj, ffi::MP_BUFFER_READ)?;
+        let len: u16 = bufinfo.len.try_into()?;
+        // SAFETY: bufinfo.buf should point to a GC head pointer or static data.
+        let new = unsafe { Self::from_ptr_and_len(bufinfo.buf as _, len) };
+
+        Ok(new)
+    }
+}
+
+impl Deref for Bytes {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        self.as_ref()
+    }
+}
+
+impl AsRef<[u8]> for Bytes {
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
+    }
+}
+
 fn get_buffer_info(obj: Obj, flags: u32) -> Result<ffi::mp_buffer_info_t, Error> {
     let mut bufinfo = ffi::mp_buffer_info_t {
         buf: ptr::null_mut(),
