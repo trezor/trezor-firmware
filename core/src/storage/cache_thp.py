@@ -98,6 +98,10 @@ def initialize() -> None:
         session.clear()
 
 
+def get_sessions() -> list[SessionThpCache]:
+    return _SESSIONS
+
+
 def update_channel_last_used(channel_id: AnyBytes) -> None:
     from trezorthp import channel_update_last_usage
 

@@ -30,8 +30,7 @@ else:
 _PROTOCOL_CACHE.initialize()
 _SESSIONLESS_CACHE.clear()
 
-# Built once, at import: the lock path must not allocate.
-_ALL_CACHES: Sequence[DataCache] = _PROTOCOL_CACHE._SESSIONS + [_SESSIONLESS_CACHE]
+_ALL_CACHES: Sequence[DataCache] = _PROTOCOL_CACHE.get_sessions() + [_SESSIONLESS_CACHE]
 
 gc.collect()
 

@@ -90,6 +90,10 @@ def initialize() -> None:
         session.clear()
 
 
+def get_sessions() -> list[SessionCache]:
+    return _SESSIONS
+
+
 _active_session_idx: int | None = None
 _session_usage_counter = 0
 
