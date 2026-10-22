@@ -568,5 +568,115 @@ class TestSolanaTransactionV1(unittest.TestCase):
             self.assertEqual(fee.priority, priority_fee)
 
 
+UNKNOWN_PROGRAM = b"u" * 32
+VOTE_PROGRAM = base58.decode("Vote111111111111111111111111111111111111111")
+
+
+def set_compute_unit_limit(units: int) -> RawInstruction:
+    return (3, (), b"\x02" + units.to_bytes(4, "little"))
+
+
+def set_compute_unit_price(microlamports: int) -> RawInstruction:
+    return (3, (), b"\x03" + microlamports.to_bytes(8, "little"))
+
+
+UNKNOWN_INSTRUCTION: RawInstruction = (4, (0,), b"\x00")
+# Builtin, but not in SOLANA_BUILTIN_PROGRAM_IDS
+VOTE_INSTRUCTION: RawInstruction = (5, (0,), b"\x00\x00\x00\x00")
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestSolanaTransactionFee(unittest.TestCase):
+    def build_transaction(self, instructions: Sequence[RawInstruction]) -> Transaction:
+        accounts = (
+            SIGNER,
+            RECIPIENT,
+            SYSTEM_PROGRAM,
+            COMPUTE_BUDGET_PROGRAM,
+            UNKNOWN_PROGRAM,
+            VOTE_PROGRAM,
+        )
+        return Transaction(build_tx((1, 0, 4), accounts, instructions))
+
+    def assert_fee(
+        self, instructions: Sequence[RawInstruction], expected_priority_fee: int
+    ):
+        fee = self.build_transaction(instructions).calculate_fee()
+        assert fee is not None
+        self.assertEqual(fee.base, 5000)
+        self.assertEqual(fee.priority, expected_priority_fee)
+        self.assertEqual(fee.rent, 0)
+        self.assertEqual(fee.total, 5000 + expected_priority_fee)
+
+    def test_no_compute_budget(self):
+        self.assert_fee([TRANSFER_INSTRUCTION], 0)
+        self.assert_fee([UNKNOWN_INSTRUCTION] * 6, 0)
+
+    def test_default_unit_limit(self):
+        # price of 1 lamport per compute unit
+        price = 1_000_000
+        # 3000 units per builtin instruction
+        self.assert_fee([set_compute_unit_price(price), TRANSFER_INSTRUCTION], 6000)
+        # 200000 units per non-builtin instruction
+        self.assert_fee(
+            [set_compute_unit_price(price), TRANSFER_INSTRUCTION, UNKNOWN_INSTRUCTION],
+            206000,
+        )
+        # unrecognized builtins are overestimated
+        self.assert_fee([set_compute_unit_price(price), VOTE_INSTRUCTION], 203000)
+        # clamped to 1400000 units
+        self.assert_fee(
+            [set_compute_unit_price(price)] + [UNKNOWN_INSTRUCTION] * 7, 1400000
+        )
+
+    def test_default_unit_limit_rounding(self):
+        # 1203000 * 1_000_000_000 microlamports
+        self.assert_fee(
+            [set_compute_unit_price(1_000_000_000)] + [UNKNOWN_INSTRUCTION] * 6,
+            1203000000,
+        )
+        # 6000 * 1 microlamports, rounded up
+        self.assert_fee([set_compute_unit_price(1), TRANSFER_INSTRUCTION], 1)
+
+    def test_explicit_unit_limit(self):
+        price = 1_000_000
+        self.assert_fee(
+            [
+                set_compute_unit_limit(300),
+                set_compute_unit_price(price),
+                UNKNOWN_INSTRUCTION,
+                UNKNOWN_INSTRUCTION,
+            ],
+            300,
+        )
+        self.assert_fee(
+            [set_compute_unit_price(price), set_compute_unit_limit(0)]
+            + [UNKNOWN_INSTRUCTION] * 6,
+            0,
+        )
+        # clamped to 1400000 units
+        self.assert_fee(
+            [set_compute_unit_limit(2_000_000), set_compute_unit_price(price)],
+            1400000,
+        )
+        # no price, no priority fee
+        self.assert_fee([set_compute_unit_limit(300), UNKNOWN_INSTRUCTION], 0)
+
+    def test_duplicate_compute_budget_instructions(self):
+        vectors = (
+            [set_compute_unit_price(1), set_compute_unit_price(2)],
+            [set_compute_unit_limit(1), set_compute_unit_limit(2)],
+            [
+                set_compute_unit_price(1),
+                set_compute_unit_limit(1),
+                TRANSFER_INSTRUCTION,
+                set_compute_unit_price(1),
+            ],
+        )
+        for instructions in vectors:
+            with self.assertRaises(DataError):
+                self.build_transaction(instructions)
+
+
 if __name__ == "__main__":
     unittest.main()
