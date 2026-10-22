@@ -419,3 +419,9 @@ ts_t app_get_heap__verified(void **heap_ptr, size_t *heap_size);
 #endif
 
 #endif  // KERNEL
+
+#ifdef USE_VAULT
+#include <sec/vault.h>
+bool vault_call__verified(const vault_request_t *request,
+                          vault_response_t *response);
+#endif

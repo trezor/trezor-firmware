@@ -363,7 +363,11 @@ uint32_t systask_get_r0(systask_t* task) {
   return stack[STK_FRAME_R0];
 }
 
+__attribute__((weak)) void systask_revoke_secrets(void* applet) {
+  (void)applet;
+}
 static void systask_kill(systask_t* task) {
+  systask_revoke_secrets(task->applet);
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
   systask_print_pminfo(task);
