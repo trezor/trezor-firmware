@@ -60,8 +60,7 @@ typedef enum {
   VAULT_NIST_SIGN,
   VAULT_HMAC_TAG,
   VAULT_ED_PUBLIC,
-  VAULT_ED_SIGN,
-  VAULT_OPEN_NATIVE = 128
+  VAULT_ED_SIGN
 } vault_op_t;
 typedef struct {
   uint32_t abi, op, owner, arg, length, child_num;
@@ -82,7 +81,6 @@ typedef struct {
       uint8_t chain_code[32], public_key[33];
     };
     uint8_t signature[65];
-    uint8_t opened[VAULT_SECRET_SIZE];
   };
 } vault_response_t;
 /* Client entrypoint: syscall on hardware, same dispatcher in emulator. */

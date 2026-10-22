@@ -154,15 +154,6 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
   HDNode *node = NULL;
   bool ok = false;
   switch (r->op) {
-    case VAULT_OPEN_NATIVE: {
-      size_t length = 0;
-      secret_payload_t *p = secret_open(r->blob, r->owner, r->arg, &length);
-      if (!p) break;
-      secret_encode(r->arg, length, p, out->opened);
-      out->value = r->arg == SECRET_NODE ? VAULT_NODE_SIZE : length;
-      ok = true;
-      break;
-    }
     case VAULT_RETAIN: {
       /* Re-seal a request secret for its session. */
       if (r->arg != SECRET_BYTES && r->arg != SECRET_NODE) break;

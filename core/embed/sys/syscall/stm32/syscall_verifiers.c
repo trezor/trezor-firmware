@@ -1752,7 +1752,6 @@ bool vault_call__verified(const vault_request_t *request,
                            storage_is_unlocked() == sectrue);
   memzero(&copy, sizeof(copy));
   memcpy(response, &out, sizeof(out));
-  memzero(&out, sizeof(out));
   return ok;
 }
 bool vault_call_message__verified(const vault_message_request_t *request,
@@ -1776,7 +1775,6 @@ bool vault_call_message__verified(const vault_message_request_t *request,
       vault_message_snapshot((uintptr_t)syscall_get_context(), request, message,
                              length, &out, storage_is_unlocked() == sectrue);
   memcpy(response, &out, sizeof(out));
-  memzero(&out, sizeof(out));
   return ok;
 }
 #endif
