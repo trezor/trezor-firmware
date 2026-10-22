@@ -138,6 +138,72 @@ static mp_obj_t revoke_secrets(void) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_0(revoke_secrets_obj, revoke_secrets);
 
+/* Pack SLIP-0021 labels as length-prefixed strings for VAULT_SLIP21. */
+static void slip21_request(vault_request_t *r, mp_obj_t source, mp_obj_t path,
+                           uint32_t arg) {
+  size_t count = 0;
+  mp_obj_t *labels = NULL;
+  mp_obj_get_array(path, &count, &labels);
+  *r = (vault_request_t){.op = VAULT_SLIP21,
+                         .blob = secbytes_blob(secbytes_object(source)),
+                         .arg = arg};
+  for (size_t i = 0; i < count; i++) {
+    mp_buffer_info_t label = {0};
+    mp_get_buffer_raise(labels[i], &label, MP_BUFFER_READ);
+    if (label.len > 255 || label.len + 1 > VAULT_DATA_SIZE - r->length)
+      mp_raise_ValueError(MP_ERROR_TEXT("SLIP-21 path too long"));
+    r->data[r->length++] = label.len;
+    memcpy(r->data + r->length, label.buf, label.len);
+    r->length += label.len;
+  }
+}
+
+/// def slip21_derive(
+///     source: secbytes,
+///     path: Sequence[AnyBytes],
+///     root: bool = False,
+///     key: bool = False,
+/// ) -> secbytes:
+///     """SLIP-0021 in the vault: derive from a seed (root) or a 64-byte node
+///     along path. Return the sealed node or, with key, its sealed key."""
+static mp_obj_t slip21_derive(size_t n_args, const mp_obj_t *pos,
+                              mp_map_t *kw) {
+  enum { ARG_source, ARG_path, ARG_root, ARG_key };
+  static const mp_arg_t allowed[] = {
+      {MP_QSTR_source, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none}},
+      {MP_QSTR_path, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none}},
+      {MP_QSTR_root, MP_ARG_BOOL, {.u_bool = false}},
+      {MP_QSTR_key, MP_ARG_BOOL, {.u_bool = false}},
+  };
+  mp_arg_val_t args[MP_ARRAY_SIZE(allowed)];
+  mp_arg_parse_all(n_args, pos, kw, MP_ARRAY_SIZE(allowed), allowed, args);
+  bool key = args[ARG_key].u_bool;
+  mp_obj_secbytes_t *value = secbytes_new(key ? 32 : 64);
+  vault_request_t r;
+  slip21_request(&r, args[ARG_source].u_obj, args[ARG_path].u_obj,
+                 (args[ARG_root].u_bool ? VAULT_SLIP21_ROOT : 0) |
+                     (key ? VAULT_SLIP21_KEY : VAULT_SLIP21_NODE));
+  vault_response_t out = {0};
+  vault_raise(&r, &out);
+  secbytes_set_blob(value, &out.blob);
+  return MP_OBJ_FROM_PTR(value);
+}
+static MP_DEFINE_CONST_FUN_OBJ_KW(slip21_derive_obj, 2, slip21_derive);
+
+/// def slip21_export(seed: secbytes, path: Sequence[AnyBytes]) -> bytes:
+///     """Return a SLIP-0021 node in plaintext, for protocols that hand it to
+///     the host. The kernel allows only the Evolu namespace."""
+static mp_obj_t slip21_export(mp_obj_t seed, mp_obj_t path) {
+  vault_request_t r;
+  slip21_request(&r, seed, path, VAULT_SLIP21_ROOT | VAULT_SLIP21_EXPORT);
+  vault_response_t out = {0};
+  vault_raise(&r, &out);
+  mp_obj_t node = mp_obj_new_bytes(out.signature, 64);
+  memzero(&out, sizeof(out));
+  return node;
+}
+static MP_DEFINE_CONST_FUN_OBJ_2(slip21_export_obj, slip21_export);
+
 /// class SecretOwner:
 ///     """Explicit native session owner, or request owner beneath a session."""
 /// def __init__(

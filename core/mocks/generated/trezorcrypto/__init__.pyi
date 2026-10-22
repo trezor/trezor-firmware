@@ -416,6 +416,23 @@ def revoke_secrets() -> None:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+def slip21_derive(
+    source: secbytes,
+    path: Sequence[AnyBytes],
+    root: bool = False,
+    key: bool = False,
+) -> secbytes:
+    """SLIP-0021 in the vault: derive from a seed (root) or a 64-byte node
+    along path. Return the sealed node or, with key, its sealed key."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+def slip21_export(seed: secbytes, path: Sequence[AnyBytes]) -> bytes:
+    """Return a SLIP-0021 node in plaintext, for protocols that hand it to
+    the host. The kernel allows only the Evolu namespace."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
 class SecretOwner:
     """Explicit native session owner, or request owner beneath a session."""
 

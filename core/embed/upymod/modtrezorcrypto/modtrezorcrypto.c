@@ -132,6 +132,8 @@ static const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_secbytes),
      MP_ROM_PTR(&mod_trezorcrypto_secbytes_type)},
     {MP_ROM_QSTR(MP_QSTR_revoke_secrets), MP_ROM_PTR(&revoke_secrets_obj)},
+    {MP_ROM_QSTR(MP_QSTR_slip21_derive), MP_ROM_PTR(&slip21_derive_obj)},
+    {MP_ROM_QSTR(MP_QSTR_slip21_export), MP_ROM_PTR(&slip21_export_obj)},
     {MP_ROM_QSTR(MP_QSTR_AuthenticationError),
      MP_ROM_PTR(&mp_type_AuthenticationError)},
     {MP_ROM_QSTR(MP_QSTR_aes), MP_ROM_PTR(&mod_trezorcrypto_AES_type)},

@@ -131,6 +131,74 @@ static int vault_eos_canonical(uint8_t v, uint8_t signature[64]) {
          !(signature[32] == 0 && !(signature[33] & 0x80));
 }
 
+/* SLIP-0021: each label replaces the 64-byte node by
+ * HMAC-SHA512(node[0:32], 0x00 || label). Labels are length-prefixed. */
+static bool vault_slip21_derive(uint8_t node[64], const uint8_t *data,
+                                size_t length) {
+  static const uint8_t zero = 0;
+  for (size_t i = 0; i < length;) {
+    size_t n = data[i++];
+    if (n > length - i) return false;
+    HMAC_SHA512_CTX ctx = {0};
+    hmac_sha512_Init(&ctx, node, 32);
+    hmac_sha512_Update(&ctx, &zero, 1);
+    hmac_sha512_Update(&ctx, data + i, n);
+    hmac_sha512_Final(&ctx, node);
+    i += n;
+  }
+  return true;
+}
+/* Evolu hands its node to the host: TREZOR/Evolu, or TREZOR/Evolu Index plus
+ * one index label. No other SLIP-0021 node leaves the vault. */
+static bool vault_slip21_exportable(const uint8_t *data, size_t length) {
+  static const uint8_t evolu[] = "\006TREZOR\005Evolu";
+  static const uint8_t evolu_index[] = "\006TREZOR\013Evolu Index";
+  const size_t evolu_len = sizeof(evolu) - 1,
+               index_len = sizeof(evolu_index) - 1;
+  if (length == evolu_len && !memcmp(data, evolu, evolu_len)) return true;
+  return length > index_len + 1 && !memcmp(data, evolu_index, index_len) &&
+         data[index_len] == length - index_len - 1;
+}
+
+/* Noinline: the SLIP-0021 workspace stays off every other vault op's frame. */
+static __attribute__((noinline)) bool vault_slip21(const vault_command_t *r,
+                                                   vault_response_t *out,
+                                                   secret_payload_t **made,
+                                                   size_t *made_length) {
+  bool root = r->arg & VAULT_SLIP21_ROOT;
+  uint32_t output = r->arg & ~(uint32_t)VAULT_SLIP21_ROOT;
+  if (output != VAULT_SLIP21_NODE && output != VAULT_SLIP21_KEY &&
+      output != VAULT_SLIP21_EXPORT)
+    return false;
+  if (output == VAULT_SLIP21_EXPORT &&
+      !(root && vault_slip21_exportable(r->data, r->length)))
+    return false;
+  size_t len = 0;
+  secret_payload_t *src = secret_open(r->blob, r->owner, SECRET_BYTES, &len);
+  if (!src || (!root && len != 64)) return false;
+  uint8_t node[64] = {0};
+  if (root) {
+    static const char salt[] = "Symmetric key seed";
+    hmac_sha512((const uint8_t *)salt, sizeof(salt) - 1, src->bytes, len, node);
+  } else {
+    memcpy(node, src->bytes, 64);
+  }
+  bool ok = false;
+  if (vault_slip21_derive(node, r->data, r->length)) {
+    if (output == VAULT_SLIP21_EXPORT) {
+      memcpy(out->signature, node, 64);
+      ok = true;
+    } else if ((*made = secret_scratch_take())) {
+      *made_length = output == VAULT_SLIP21_KEY ? 32 : 64;
+      memcpy((*made)->bytes, output == VAULT_SLIP21_KEY ? node + 32 : node,
+             *made_length);
+      ok = true;
+    }
+  }
+  memzero(node, sizeof(node));
+  return ok;
+}
+
 static bool vault_execute(uintptr_t caller, const vault_command_t *r,
                           vault_response_t *out, bool unlocked,
                           const uint8_t *message, size_t message_length) {
@@ -372,6 +440,10 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
       }
       break;
     }
+    case VAULT_SLIP21:
+      made_kind = SECRET_BYTES;
+      ok = vault_slip21(r, out, &made, &made_length);
+      break;
     case VAULT_SCHNORR_GENERATE:
     case VAULT_SCHNORR_PUBLIC:
     case VAULT_SCHNORR_TWEAK:

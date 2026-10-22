@@ -60,8 +60,17 @@ typedef enum {
   VAULT_NIST_SIGN,
   VAULT_HMAC_TAG,
   VAULT_ED_PUBLIC,
-  VAULT_ED_SIGN
+  VAULT_ED_SIGN,
+  VAULT_SLIP21
 } vault_op_t;
+/* VAULT_SLIP21: derive from a seed (VAULT_SLIP21_ROOT) or a 64-byte node
+ * along length-prefixed labels in data; the other arg bits select the output.
+ * Export returns the node in signature and is allowed only from a seed under
+ * the Evolu namespace, which hands that node to the host by design. */
+#define VAULT_SLIP21_ROOT 1
+#define VAULT_SLIP21_NODE 0
+#define VAULT_SLIP21_KEY 2
+#define VAULT_SLIP21_EXPORT 4
 /* VAULT_SIGN canonical selector, in arg bits 1-2 beside compressed (bit 0).
  * Values match secp256k1.CANONICAL_SIG_*. */
 #define VAULT_CANONICAL_NONE 0
