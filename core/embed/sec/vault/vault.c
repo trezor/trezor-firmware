@@ -287,6 +287,39 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
       if (ok) out->signature[0] = 27 + recovery + 4 * r->arg;
       break;
     }
+    case VAULT_NIST_PUBLIC:
+    case VAULT_NIST_SIGN:
+    case VAULT_HMAC_TAG: {
+      size_t length = 0;
+      secret_payload_t *key =
+          secret_open(r->blob, r->owner, SECRET_BYTES, &length);
+      if (!key) break;
+      if (r->op == VAULT_HMAC_TAG) {
+        if (r->arg == 256) {
+          hmac_sha256(key->bytes, length, r->data, r->length, out->signature);
+          ok = true;
+        } else if (r->arg == 512) {
+          hmac_sha512(key->bytes, length, r->data, r->length, out->signature);
+          ok = true;
+        }
+        break;
+      }
+      if (length != 32 || r->arg > 1) break;
+      if (r->op == VAULT_NIST_PUBLIC) {
+        if (r->length) break;
+        ok = (r->arg ? ecdsa_get_public_key33(&nist256p1, key->bytes,
+                                              out->signature)
+                     : ecdsa_get_public_key65(&nist256p1, key->bytes,
+                                              out->signature)) == 0;
+      } else {
+        uint8_t recovery = 0;
+        if (r->length != 32) break;
+        ok = ecdsa_sign_digest(&nist256p1, key->bytes, r->data,
+                               out->signature + 1, &recovery, NULL) == 0;
+        if (ok) out->signature[0] = 27 + recovery + 4 * r->arg;
+      }
+      break;
+    }
     case VAULT_SCHNORR_GENERATE:
     case VAULT_SCHNORR_PUBLIC:
     case VAULT_SCHNORR_TWEAK:
