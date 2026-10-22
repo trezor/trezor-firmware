@@ -171,6 +171,20 @@ pub fn build_and_link(target: &str, f: impl FnOnce(&mut CLibrary) -> Result<()>)
 }
 
 fn configure_compiler_defaults(lib: &mut CLibrary) {
+    // The entire C build must agree on record layout, including syscall verifiers.
+    cargo_out::rerun_if_env_changed("TREZOR_VAULT_MODE");
+    let mode = env::var("TREZOR_VAULT_MODE").unwrap_or_else(|_| "siv".into());
+    let value = match mode.as_str() {
+        "siv" => "1",
+        "ecb" => "2",
+        "gcm" => "3",
+        _ => panic!("TREZOR_VAULT_MODE must be siv, ecb or gcm"),
+    };
+    lib.add_define("VAULT_SEAL_MODE", Some(value));
+    if mode == "ecb" {
+        cargo_out::warning("Vault AES-ECB is experimental and unauthenticated");
+    }
+
     if !has_feature("emulator") {
         // Override the default `-fno-omit-frame-pointer` from the `cc` crate
         // which causes binary size to increase on embedded targets.
