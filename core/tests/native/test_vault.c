@@ -57,6 +57,55 @@ static bool is_zero(const void *p, size_t len) {
     if (((const uint8_t *)p)[i]) return false;
   return true;
 }
+static int test_ethereum_canonical(uint8_t v, uint8_t signature[64]) {
+  (void)signature;
+  return (v & 2) == 0;
+}
+static int test_eos_canonical(uint8_t v, uint8_t signature[64]) {
+  (void)v;
+  return !(signature[0] & 0x80) &&
+         !(signature[0] == 0 && !(signature[1] & 0x80)) &&
+         !(signature[32] & 0x80) &&
+         !(signature[32] == 0 && !(signature[33] & 0x80));
+}
+/* Canonical vault signatures equal trezor-crypto's for the same key. */
+static void canonical_vectors(uint32_t owner, const vault_blob_t *key,
+                              const uint8_t private_key[32]) {
+  int (*const forms[])(uint8_t, uint8_t[64]) = {NULL, test_ethereum_canonical,
+                                                test_eos_canonical};
+  for (uint32_t canonical = 0; canonical < 3; canonical++) {
+    for (uint32_t compressed = 0; compressed < 2; compressed++) {
+      for (uint8_t d = 1; d <= 16; d++) { /* a zero digest is refused */
+        vault_request_t r = {.op = VAULT_SIGN,
+                             .owner = owner,
+                             .blob = *key,
+                             .length = 32,
+                             .arg = compressed | canonical << 1};
+        memset(r.data, d, 32);
+        vault_response_t out = {0};
+        assert(call(1, &r, &out));
+        uint8_t expected[65] = {0}, recovery = 0;
+        /* The vault keeps no ZKP context between calls; neither does this. */
+        assert(zkp_context_init() == 0);
+        assert(ecdsa_sign_digest(&secp256k1, private_key, r.data, expected + 1,
+                                 &recovery, forms[canonical]) == 0);
+        zkp_context_destroy();
+        expected[0] = 27 + recovery + 4 * compressed;
+        assert(!memcmp(out.signature, expected, 65));
+        if (canonical)
+          assert(forms[canonical](out.signature[0] - 27 - 4 * compressed,
+                                  out.signature + 1));
+      }
+    }
+  }
+  vault_request_t r = {.op = VAULT_SIGN,
+                       .owner = owner,
+                       .blob = *key,
+                       .length = 32,
+                       .arg = 1 | 3 << 1}; /* unknown selector */
+  vault_response_t out = {0};
+  assert(!call(1, &r, &out) && is_zero(&out, sizeof(out)));
+}
 
 static void fingerprint_vectors(void) {
 #if USE_BIP32_VAULT
@@ -224,6 +273,15 @@ int main(void) {
   assert(sign(request, &key, signature));
   assert(sign(request, &node, again)); /* sign from the node in place */
   assert(!memcmp(signature, again, 65));
+  {
+    uint8_t seed[16];
+    for (int i = 0; i < 16; i++) seed[i] = i;
+    HDNode plain = {0};
+    assert(hdnode_from_seed(seed, 16, "secp256k1", &plain));
+    canonical_vectors(request, &key, plain.private_key);
+    canonical_vectors(request, &node, plain.private_key);
+    memzero(&plain, sizeof(plain));
+  }
   r = (vault_request_t){
       .op = VAULT_SIGN, .owner = request, .blob = key, .length = 32};
   memset(r.data, 0x42, 32);

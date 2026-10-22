@@ -62,6 +62,11 @@ typedef enum {
   VAULT_ED_PUBLIC,
   VAULT_ED_SIGN
 } vault_op_t;
+/* VAULT_SIGN canonical selector, in arg bits 1-2 beside compressed (bit 0).
+ * Values match secp256k1.CANONICAL_SIG_*. */
+#define VAULT_CANONICAL_NONE 0
+#define VAULT_CANONICAL_ETHEREUM 1
+#define VAULT_CANONICAL_EOS 2
 typedef struct {
   uint32_t abi, op, owner, arg, length, child_num;
   vault_blob_t blob;

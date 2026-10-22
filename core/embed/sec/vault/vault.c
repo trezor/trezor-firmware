@@ -117,6 +117,20 @@ cleanup:
 
 /* No caller-owned pointers are used by the implementation. The syscall verifier
  * copies requests before entry and copies only this public response out. */
+/* Canonical ECDSA forms, selected by VAULT_SIGN's canonical field. Coreapp
+ * passes a selector, never a callback. */
+static int vault_ethereum_canonical(uint8_t v, uint8_t signature[64]) {
+  (void)signature;
+  return (v & 2) == 0;
+}
+static int vault_eos_canonical(uint8_t v, uint8_t signature[64]) {
+  (void)v;
+  return !(signature[0] & 0x80) &&
+         !(signature[0] == 0 && !(signature[1] & 0x80)) &&
+         !(signature[32] & 0x80) &&
+         !(signature[32] == 0 && !(signature[33] & 0x80));
+}
+
 static bool vault_execute(uintptr_t caller, const vault_command_t *r,
                           vault_response_t *out, bool unlocked,
                           const uint8_t *message, size_t message_length) {
@@ -288,11 +302,19 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
           len = 32;
         }
       }
+      /* arg: bit 0 compressed, bits 1-2 VAULT_CANONICAL_*. */
+      uint32_t compressed = r->arg & 1, canonical = r->arg >> 1;
+      int (*is_canonical)(uint8_t, uint8_t[64]) =
+          canonical == VAULT_CANONICAL_ETHEREUM ? vault_ethereum_canonical
+          : canonical == VAULT_CANONICAL_EOS    ? vault_eos_canonical
+                                                : NULL;
       uint8_t recovery = 0;
-      if (!key || len != 32 || r->length != 32 || r->arg > 1) break;
+      if (!key || len != 32 || r->length != 32 ||
+          canonical > VAULT_CANONICAL_EOS)
+        break;
       ok = ecdsa_sign_digest(&secp256k1, key, r->data, out->signature + 1,
-                             &recovery, NULL) == 0;
-      if (ok) out->signature[0] = 27 + recovery + 4 * r->arg;
+                             &recovery, is_canonical) == 0;
+      if (ok) out->signature[0] = 27 + recovery + 4 * compressed;
       break;
     }
     case VAULT_ED_PUBLIC:
