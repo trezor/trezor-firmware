@@ -38,8 +38,6 @@ where
     confirm_btn_details: Option<ButtonDetails>,
     /// Middle button, confirming (without menu navigation only).
     middle_btn_details: Option<ButtonDetails>,
-    back_btn_details: Option<ButtonDetails>,
-    next_btn_details: Option<ButtonDetails>,
     /// Menu navigation, replacing the cancel/back/next buttons.
     menu_nav: Option<MenuNav>,
     /// Whether "Shift" + right button on the first page goes back to the
@@ -61,8 +59,6 @@ where
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text(TR::buttons__confirm.into())),
             middle_btn_details: None,
-            back_btn_details: Some(ButtonDetails::up_arrow_icon()),
-            next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             menu_nav: None,
             back_on_first_page: false,
             shift_active: false,
@@ -109,16 +105,6 @@ where
     /// button does not cancel.
     pub fn with_back_on_first_page(mut self) -> Self {
         self.back_on_first_page = true;
-        self
-    }
-
-    pub fn with_back_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
-        self.back_btn_details = btn_details;
-        self
-    }
-
-    pub fn with_next_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
-        self.next_btn_details = btn_details;
         self
     }
 
@@ -170,10 +156,10 @@ where
         let btn_left = if !has_prev {
             self.cancel_btn_details.clone()
         } else {
-            self.back_btn_details.clone()
+            Some(ButtonDetails::up_arrow_icon())
         };
         let btn_right = if has_next {
-            self.next_btn_details.clone()
+            Some(ButtonDetails::down_arrow_icon_wide())
         } else {
             self.confirm_btn_details.clone()
         };
