@@ -169,7 +169,7 @@
             ];
 
             env = rec {
-              LD_LIBRARY_PATH = lib.makeLibraryPath [ libffi libjpeg libusb1 libressl ];
+              LD_LIBRARY_PATH = lib.makeLibraryPath [ libffi libjpeg libusb1 libressl zlib ];
               DYLD_LIBRARY_PATH = LD_LIBRARY_PATH;
 
               # Fix bdist-wheel problem by setting source date epoch to a more recent date
