@@ -96,6 +96,7 @@ tropic = ["sec/tropic"]
 
 default = [
     "sec/vault",
+    "crypto/secp256k1_small_precomp",
     "sys/applets",
     "io/display",
     "io/kernel_mode",

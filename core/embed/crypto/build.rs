@@ -289,6 +289,12 @@ fn add_secp256k1_zkp(lib: &mut CLibrary, _attrs: &CompileAttrs) -> Result<()> {
         ("ENABLE_MODULE_ECDH", None),
     ]);
 
+    if cfg!(feature = "secp256k1_small_precomp") {
+        // The vault adds a second generator table in the kernel. Select the
+        // library's supported 2 KiB comb table; coreapp keeps its default.
+        lib.add_defines([("COMB_BLOCKS", Some("2")), ("COMB_TEETH", Some("5"))]);
+    }
+
     // TODO get rid of #include <vendor/... includes in crypto/zkp_*.c
     // lib.add_include(PathBuf::from(SECP256K1_PATH).join("include"));
     lib.add_include("../.."); // points to vendor folder
