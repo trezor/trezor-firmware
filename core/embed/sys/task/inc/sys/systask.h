@@ -191,6 +191,11 @@ typedef struct {
 
   /** Emulation of the call pushed onto the stack */
   systask_fn_call_t pushed_fn_call;
+  /** Emulation of the stack area `systask_push_data()` pushes onto (the
+   * task's thread stack does not exist before it runs) */
+  uint8_t pushed_data[256] __attribute__((aligned(16)));
+  /** Number of bytes pushed, at the end of `pushed_data` */
+  size_t pushed_data_size;
 #endif
 
 } systask_t;

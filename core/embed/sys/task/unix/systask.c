@@ -19,6 +19,7 @@
 
 #include <trezor_rtl.h>
 
+#include <rtl/sizedefs.h>
 #include <sys/bootutils.h>
 #include <sys/sysevent_source.h>
 #include <sys/systask.h>
@@ -221,6 +222,41 @@ bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
   sysevents_notify_task_created(task);
 
   return true;
+}
+
+uint32_t* systask_push_data(systask_t* task, const void* data, size_t size) {
+  size_t free_size = sizeof(task->pushed_data) - task->pushed_data_size;
+
+  // Checked before rounding up, which could wrap around for a huge `size`
+  if (size > free_size) {
+    // Not enough space
+    return NULL;
+  }
+
+  // Every push stays aligned for any type, as on the stack on hardware
+  size_t aligned_size = ALIGN_UP(size, _Alignof(max_align_t));
+
+  if (aligned_size > free_size) {
+    // Not enough space
+    return NULL;
+  }
+
+  task->pushed_data_size += aligned_size;
+  uint8_t* ptr =
+      &task->pushed_data[sizeof(task->pushed_data) - task->pushed_data_size];
+
+  if (data != NULL) {
+    memcpy(ptr, data, size);
+  } else {
+    memset(ptr, 0, size);
+  }
+
+  return (uint32_t*)ptr;
+}
+
+void systask_pop_data(systask_t* task, size_t size) {
+  size_t aligned_size = ALIGN_UP(size, _Alignof(max_align_t));
+  task->pushed_data_size -= MIN(aligned_size, task->pushed_data_size);
 }
 
 bool systask_push_call(systask_t* task, void* fn, uintptr_t arg1,

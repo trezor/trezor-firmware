@@ -67,6 +67,8 @@ typedef struct {
    * Each entry is a null-terminated string, and the list
    * is zero-padded to the maximum length */
   char paths[APP_HEADER_PATHS_MAX_LEN];
+  /** Size, in bytes, of the IPC inbox Core registers for this app. */
+  size_t ipc_buffer_size;
 
 } app_image_info_t;
 
@@ -228,11 +230,20 @@ ts_t app_image_get_pminfo(app_image_handle_t handle,
                           systask_postmortem_t *pminfo);
 
 /**
- * @brief Gets the heap pointer and size for the currently active applet.
+ * Launch arguments of a loaded app.
  *
- * @param heap_ptr Pointer to a variable to store the heap pointer.
- * @param heap_size Pointer to a variable to store the heap size.
- *
- * @return TS_OK on success, or an error code on failure.
+ * The loader copies this structure onto the app's own stack and passes
+ * a pointer to it, as the only argument, to Core's app entry point
+ * (`coreapp_app_entry`), which sets up the app's runtime from it before
+ * calling the app's `applet_main`.
  */
-ts_t app_get_heap(void **heap_ptr, size_t *heap_size);
+typedef struct {
+  /** The app's own entry point (`applet_main`) */
+  void *applet_main;
+  /** Pointer to the app's heap */
+  void *heap_ptr;
+  /** Size of the app's heap, in bytes */
+  size_t heap_size;
+  /** Size of the app's IPC inbox, in bytes */
+  size_t ipc_buffer_size;
+} app_args_t;
