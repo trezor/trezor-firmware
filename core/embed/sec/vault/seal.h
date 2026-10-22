@@ -13,5 +13,7 @@ bool vault_seal_record(bool encrypt, uint64_t nonce,
                        uint8_t tag[16]);
 /* False after a trusted wrapping/key-setup failure, unlike an invalid tag. */
 bool vault_seal_ready(void);
+/* True when no expanded record key remains in RAM. */
+bool vault_seal_idle(void);
 void vault_seal_end(void);
 void vault_seal_wipe(void);

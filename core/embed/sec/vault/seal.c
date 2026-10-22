@@ -87,6 +87,12 @@ void vault_seal_wipe(void) {
 #endif
 }
 bool vault_seal_ready(void) { return key_ready; }
+bool vault_seal_idle(void) {
+  volatile uint8_t residue = key_active;
+  for (size_t i = 0; i < sizeof(record_ctx); i++)
+    residue |= ((const uint8_t *)&record_ctx)[i];
+  return !residue;
+}
 static bool vault_seal_begin(bool encrypt) {
 #if VAULT_SEAL_MODE == VAULT_SEAL_AES_ECB
   if (key_active && key_encrypt_active == encrypt) return true;

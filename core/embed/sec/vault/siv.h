@@ -112,6 +112,10 @@ static bool vault_siv_record(const vault_siv_ctx *ctx, bool encrypt,
                              const uint8_t *aad, size_t aad_length,
                              uint8_t *data, size_t length, uint8_t tag[16]) {
   uint8_t expected[16] = {0};
+  /* A decrypted record is released only if two independent tag comparisons
+   * agree: with CTR, one skipped check would turn bit flips in the
+   * ciphertext into chosen bit flips of the key. */
+  volatile uint8_t diff = 0;
   bool ok;
   if (encrypt) {
     ok = siv_s2v(ctx, aad, aad_length, data, length, tag) &&
@@ -120,8 +124,12 @@ static bool vault_siv_record(const vault_siv_ctx *ctx, bool encrypt,
     ok = siv_ctr(ctx, tag, data, length) &&
          siv_s2v(ctx, aad, aad_length, data, length, expected) &&
          consteq(tag, expected, 16);
+    for (size_t i = 0; i < 16; i++) diff |= tag[i] ^ expected[i];
   }
-  if (!ok) memzero(data, length);
+  if (!ok || diff) {
+    memzero(data, length);
+    ok = false;
+  }
   memzero(expected, sizeof(expected));
   return ok;
 }

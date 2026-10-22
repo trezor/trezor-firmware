@@ -145,7 +145,8 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
   }
   /* Session existence survives lock. Every operation using secret state is
    * independently gated by trusted storage state. Cleanup remains available. */
-  if (!unlocked) return false;
+  volatile bool unlocked_check = unlocked;
+  if (!unlocked_check) return false;
   /* The result, if any, is sealed for `made_owner` into out->blob. */
   secret_payload_t *made = NULL;
   secret_kind_t made_kind = SECRET_NODE;
@@ -367,6 +368,8 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
     default:
       break;
   }
+  /* Second, independent unlock test before any result leaves the vault. */
+  if (!unlocked_check) ok = false;
   if (ok && made)
     ok = secret_seal(made_owner, made_kind, made_length, made, &out->blob);
   if (!ok) memzero(out, sizeof(*out));
