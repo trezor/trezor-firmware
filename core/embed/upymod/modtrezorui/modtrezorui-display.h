@@ -82,8 +82,12 @@ static mp_obj_t mod_trezorui_Display_record_start(mp_obj_t self,
 #ifdef TREZOR_EMULATOR
   mp_buffer_info_t target_dir;
   mp_int_t refresh_idx = mp_obj_get_int(refresh_index);
+  // the recording API takes a uint32_t: reject what would not round-trip
+  if (refresh_idx < 0 || refresh_idx != (mp_int_t)(uint32_t)refresh_idx) {
+    mp_raise_ValueError(MP_ERROR_TEXT("refresh_index out of range"));
+  }
   mp_get_buffer_raise(target_directory, &target_dir, MP_BUFFER_READ);
-  display_record_start(target_dir.buf, target_dir.len, refresh_idx);
+  display_record_start(target_dir.buf, target_dir.len, (uint32_t)refresh_idx);
 #endif
   return mp_const_none;
 }
