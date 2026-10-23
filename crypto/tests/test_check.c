@@ -6408,6 +6408,19 @@ START_TEST(test_blake2b) {
                      0);
     ck_assert_int_eq(blake2b_Final(&ctx, digest, sizeof(digest)), 0);
     ck_assert_mem_eq(digest, fromhex(tests[i].hash), BLAKE2B_DIGEST_LENGTH);
+
+    // Test that `blake2b_Final` writes only the digest length
+    uint8_t out[2 * BLAKE2B_DIGEST_LENGTH];
+    memset(out, 0xcc, sizeof(out));
+    ck_assert_int_eq(
+        blake2b_InitKey(&ctx, BLAKE2B_DIGEST_LENGTH, key, sizeof(key)), 0);
+    ck_assert_int_eq(blake2b_Update(&ctx, fromhex(tests[i].msg), msg_len), 0);
+    ck_assert_int_eq(blake2b_Final(&ctx, out, BLAKE2B_DIGEST_LENGTH - 1), -1);
+    ck_assert_int_eq(blake2b_Final(&ctx, out, sizeof(out)), 0);
+    ck_assert_mem_eq(out, fromhex(tests[i].hash), BLAKE2B_DIGEST_LENGTH);
+    for (size_t j = BLAKE2B_DIGEST_LENGTH; j < sizeof(out); j++) {
+      ck_assert_uint_eq(out[j], 0xcc);
+    }
   }
 }
 END_TEST
@@ -6521,6 +6534,19 @@ START_TEST(test_blake2s) {
                      0);
     ck_assert_int_eq(blake2s_Final(&ctx, digest, sizeof(digest)), 0);
     ck_assert_mem_eq(digest, fromhex(tests[i].hash), BLAKE2S_DIGEST_LENGTH);
+
+    // Test that `blake2s_Final` writes only the digest length
+    uint8_t out[2 * BLAKE2S_DIGEST_LENGTH];
+    memset(out, 0xcc, sizeof(out));
+    ck_assert_int_eq(
+        blake2s_InitKey(&ctx, BLAKE2S_DIGEST_LENGTH, key, sizeof(key)), 0);
+    ck_assert_int_eq(blake2s_Update(&ctx, fromhex(tests[i].msg), msg_len), 0);
+    ck_assert_int_eq(blake2s_Final(&ctx, out, BLAKE2S_DIGEST_LENGTH - 1), -1);
+    ck_assert_int_eq(blake2s_Final(&ctx, out, sizeof(out)), 0);
+    ck_assert_mem_eq(out, fromhex(tests[i].hash), BLAKE2S_DIGEST_LENGTH);
+    for (size_t j = BLAKE2S_DIGEST_LENGTH; j < sizeof(out); j++) {
+      ck_assert_uint_eq(out[j], 0xcc);
+    }
   }
 }
 END_TEST
