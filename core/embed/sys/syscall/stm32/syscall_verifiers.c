@@ -22,6 +22,10 @@
 #pragma GCC optimize("no-stack-protector")
 
 #include <trezor_rtl.h>
+#ifdef USE_VAULT
+#include <sec/vault.h>
+#include "memzero.h"
+#endif
 
 #include <sys/applet.h>
 #include <sys/systask.h>
@@ -828,6 +832,12 @@ secbool storage_get__verified(const uint16_t key, void *val,
     goto access_violation;
   }
 
+#ifdef USE_VAULT
+  if (!vault_storage_key_allowed(key)) {
+    *len = 0;
+    return secfalse;
+  }
+#endif
   return storage_get(key, val, max_len, len);
 
 access_violation:
@@ -1729,7 +1739,6 @@ access_violation:
 #ifdef USE_VAULT
 #include <sec/vault.h>
 #include "syscall_context.h"
-#include "memzero.h"
 bool vault_call__verified(const vault_request_t *request,
                           vault_response_t *response) {
   if (!probe_read_access(request, sizeof(*request)) ||
@@ -1743,7 +1752,29 @@ bool vault_call__verified(const vault_request_t *request,
                            storage_is_unlocked() == sectrue);
   memzero(&copy, sizeof(copy));
   memcpy(response, &out, sizeof(out));
-  memzero(&out, sizeof(out));
+  return ok;
+}
+bool vault_call_message__verified(const vault_message_request_t *request,
+                                  const uint8_t *message, size_t length,
+                                  vault_response_t *response) {
+  if (!probe_write_access(response, sizeof(*response))) {
+    apptask_access_violation();
+    return false;
+  }
+  if (!length || length > VAULT_ED25519_MAX_MESSAGE) {
+    memzero(response, sizeof(*response));
+    return false;
+  }
+  if (!probe_read_access(request, sizeof(*request)) ||
+      !probe_read_access(message, length)) {
+    apptask_access_violation();
+    return false;
+  }
+  vault_response_t out = {0};
+  bool ok =
+      vault_message_snapshot((uintptr_t)syscall_get_context(), request, message,
+                             length, &out, storage_is_unlocked() == sectrue);
+  memcpy(response, &out, sizeof(out));
   return ok;
 }
 #endif

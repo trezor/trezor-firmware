@@ -61,8 +61,7 @@ typedef enum {
   VAULT_HMAC_TAG,
   VAULT_ED_PUBLIC,
   VAULT_ED_SIGN,
-  VAULT_SLIP21,
-  VAULT_OPEN_NATIVE = 128
+  VAULT_SLIP21
 } vault_op_t;
 /* VAULT_SLIP21: derive from a seed (VAULT_SLIP21_ROOT) or a 64-byte node
  * along length-prefixed labels in data; the other arg bits select the output.
@@ -96,7 +95,6 @@ typedef struct {
       uint8_t chain_code[32], public_key[33];
     };
     uint8_t signature[65];
-    uint8_t opened[VAULT_SECRET_SIZE];
   };
 } vault_response_t;
 /* Client entrypoint: syscall on hardware, same dispatcher in emulator. */

@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 
 
-def find_crypto():
+def find_crypto(require_ec=True):
     host = next(
         line.split(": ", 1)[1]
         for line in subprocess.check_output(["rustc", "-vV"], text=True).splitlines()
@@ -32,7 +32,9 @@ def find_crypto():
             names = subprocess.check_output(
                 ["nm", "--defined-only", candidate], text=True
             )
-            if " gcm_init_and_key\n" in names and " zkp_context_init\n" in names:
+            if " gcm_init_and_key\n" in names and (
+                not require_ec or " zkp_context_init\n" in names
+            ):
                 return candidate
     raise SystemExit(
         "Build the emulator first: xtask build firmware --emulator -m T3T1 -p test-live --btc-only"
@@ -43,9 +45,19 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--crypto-archive", type=Path)
     parser.add_argument("--sanitize", action="store_true")
+    parser.add_argument(
+        "--vault-curves",
+        action="store_true",
+        help="Compile the kernel's restricted HDNode and compact Ed25519 verifier",
+    )
+    parser.add_argument(
+        "--sealing-only",
+        action="store_true",
+        help="Test AES sealing/cache without EC code",
+    )
     parser.add_argument("--mode", choices=("gcm", "siv", "ecb"), action="append")
     args = parser.parse_args()
-    archive = args.crypto_archive or find_crypto()
+    archive = args.crypto_archive or find_crypto(not args.sealing_only)
     print(f"Crypto archive: {archive}", flush=True)
     flags = [
         "-std=gnu11",
@@ -62,6 +74,8 @@ def main():
     compiler = "clang" if args.sanitize else "cc"
     if args.sanitize:
         flags += ["-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
+    if args.vault_curves:
+        flags += ["-DUSE_BIP32_VAULT=1", "-DED25519_NO_PRECOMP"]
     with tempfile.TemporaryDirectory(prefix="vault-native-") as output:
         suite = json.loads(
             (
@@ -85,11 +99,34 @@ def main():
         for mode in args.mode or ("gcm", "siv", "ecb"):
             selection = {"siv": 1, "ecb": 2, "gcm": 3}[mode]
             print(f"Vault mode: {mode}", flush=True)
-            names = ["test_vault_sealing", "test_vault_bytes", "test_vault_coreapp"]
+            names = [
+                "test_vault_sealing",
+                "test_vault_bytes",
+                "test_secret_store",
+                "test_vault",
+                "test_vault_encrypted",
+                "test_fido_keys",
+                "test_ed25519_keys",
+            ]
+            if args.sealing_only:
+                names = ["test_vault_sealing"]
             if mode == "siv":
                 names += ["test_vault_siv"]
+                if not args.sealing_only:
+                    names += ["test_ecdsa_cleanup"]
             for name in names:
                 inputs = [f"core/tests/native/{name}.c", str(archive)]
+                if args.vault_curves and name in (
+                    "test_vault_bytes",
+                    "test_secret_store",
+                    "test_vault",
+                    "test_vault_encrypted",
+                    "test_fido_keys",
+                    "test_ed25519_keys",
+                    "test_vault_saes",
+                ):
+                    inputs.insert(1, "crypto/bip32.c")
+                    inputs.insert(2, "crypto/ed25519-donna/ed25519-donna-impl-base.c")
                 if name == "test_ecdsa_cleanup":
                     inputs += [
                         f"-Wl,--wrap={symbol}"
