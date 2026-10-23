@@ -631,21 +631,33 @@ async def terminal(link) -> int:
             return
         outgoing.put_nowait(data)
 
+    def connection_lost(reason: str) -> None:
+        print(f"\r\n(connection lost{reason})\r\n", file=sys.stderr)
+        done.set()
+
     async def pump_keys() -> None:
         while not done.is_set():
             try:
                 data = await asyncio.wait_for(outgoing.get(), 0.2)
             except asyncio.TimeoutError:
                 continue
-            await link.write(data)
+            try:
+                await link.write(data)
+            except Exception as e:
+                connection_lost(f": {e}")
+                return
 
     async def pump_device() -> None:
         while not done.is_set():
+            if link.lost.is_set():
+                # A BLE read only waits on its queue; the disconnect callback
+                # is the signal that nothing more is coming.
+                connection_lost("")
+                return
             try:
                 data = await link.read(0.2)
             except Exception as e:
-                print(f"\r\n(connection lost: {e})\r\n", file=sys.stderr)
-                done.set()
+                connection_lost(f": {e}")
                 return
             if data:
                 out.write(data)
