@@ -23,6 +23,7 @@ from .common import COSE_ALG_EDDSA, COSE_ALG_ES256, COSE_CURVE_ED25519, COSE_CUR
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Iterable
+    from trezorcrypto import secbytes
 
     from trezor.crypto import bip32
 
@@ -92,7 +93,7 @@ class Credential:
     def public_key(self) -> bytes:
         raise NotImplementedError
 
-    def _private_key(self) -> bytes:
+    def _private_key(self) -> secbytes:
         raise NotImplementedError
 
     def sign(self, data: Iterable[bytes]) -> bytes:
@@ -305,7 +306,7 @@ class Fido2Credential(Credential):
         else:
             return None
 
-    def _private_key(self) -> bytes:
+    def _private_key(self) -> secbytes:
         path = [HARDENED | 10022, HARDENED | int.from_bytes(self.id[:4], "big")] + [
             HARDENED | i for i in struct.unpack(">4L", self.id[-16:])
         ]
@@ -389,10 +390,6 @@ class Fido2Credential(Credential):
 
 
 class U2fCredential(Credential):
-    def __init__(self) -> None:
-        super().__init__()
-        self.node: bip32.HDNode | None = None
-
     def __lt__(self, other: "Credential") -> bool:
         # Sort U2F credentials after FIDO2 credentials.
         if isinstance(other, Fido2Credential):
@@ -401,10 +398,15 @@ class U2fCredential(Credential):
         # Sort U2F credentials lexicographically amongst each other.
         return self.id < other.id
 
-    def _private_key(self) -> bytes:
-        if self.node is None:
-            return b""
-        return self.node.private_key()
+    def _private_key(self) -> secbytes:
+        # HID polling and the confirmation workflow have separate owners.
+        # Keep the authenticated public handle, never an old request's node.
+        node = self._node_from_key_handle(self.rp_id_hash, self.id, "<8L")
+        if node is None:
+            node = self._node_from_key_handle(self.rp_id_hash, self.id, ">8L")
+        if node is None:
+            raise ValueError("Invalid credential key handle")
+        return node.private_key()
 
     def public_key(self) -> bytes:
         return nist256p1.publickey(self._private_key(), False)
@@ -421,16 +423,14 @@ class U2fCredential(Credential):
         nodepath = [_U2F_KEY_PATH] + path
 
         # prepare signing key from random path, compute decompressed public key
-        self.node = seed.derive_node_without_passphrase(nodepath, "nist256p1")
+        node = seed.derive_node_without_passphrase(nodepath, "nist256p1")
 
         # first half of keyhandle is keypath
         keypath = struct.pack("<8L", *path)
 
         # second half of keyhandle is a hmac of rp_id_hash and keypath
-        mac = hmac(hmac.SHA256, self.node.private_key(), self.rp_id_hash)
-        mac.update(keypath)
-
-        self.id = keypath + mac.digest()
+        mac = hmac.tag(hmac.SHA256, node.private_key(), self.rp_id_hash + keypath)
+        self.id = keypath + mac
 
     def app_name(self) -> str:
         from . import knownapps
@@ -462,7 +462,6 @@ class U2fCredential(Credential):
         cred = U2fCredential()
         cred.id = key_handle
         cred.rp_id_hash = rp_id_hash
-        cred.node = node
         return cred
 
     @staticmethod
@@ -487,11 +486,10 @@ class U2fCredential(Credential):
         node = seed.derive_node_without_passphrase(nodepath, "nist256p1")
 
         # second half of keyhandle is a hmac of rp_id_hash and keypath
-        mac = hmac(hmac.SHA256, node.private_key(), rp_id_hash)
-        mac.update(keypath)
+        mac = hmac.tag(hmac.SHA256, node.private_key(), rp_id_hash + keypath)
 
         # verify the hmac
-        if not utils.consteq(mac.digest(), keyhandle[32:]):
+        if not utils.consteq(mac, keyhandle[32:]):
             if __debug__:
                 log.warning(__name__, "invalid key handle")
             return None

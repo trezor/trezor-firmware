@@ -9,10 +9,11 @@ static uint32_t secret_owner;
 typedef struct {
   uint32_t id, parent;
 } secret_owner_t;
+#include "vault_coreapp.h"
 static bool secret_rpc(vault_request_t *r, vault_response_t *out) {
   r->abi = VAULT_ABI;
   if (!r->owner) r->owner = secret_owner;
-  bool ok = vault_call(r, out);
+  bool ok = vault_coreapp_call(r, out);
   memzero(r, sizeof(*r));
   return ok;
 }
@@ -42,6 +43,17 @@ static void secret_owner_destroy(uint32_t id) {
 /* Blobs are sealed by the kernel and hold no kernel state: dropping one is a
  * local wipe, and copying one shares the same secret. Revocation happens in
  * the kernel, by owner. */
+static bool secret_blob_empty(const vault_blob_t *b) {
+  for (size_t i = 0; i < sizeof(b->bytes); i++)
+    if (b->bytes[i]) return false;
+  return true;
+}
+/* Non-empty and owned by a live owner; does not authenticate the blob. */
+static bool secret_blob_live(const vault_blob_t *b) {
+  uint32_t owner = 0;
+  for (size_t i = 0; i < 4; i++) owner |= (uint32_t)b->bytes[i] << (8 * i);
+  return owner && secret_owner_find(owner) != NULL;
+}
 static bool secret_retain(vault_blob_t *b, uint32_t active,
                           secret_kind_t kind) {
   vault_request_t r = {

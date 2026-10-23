@@ -12,7 +12,7 @@ if utils.USE_THP:
 
     _PROTOCOL_CACHE = cache_thp
 
-    KEY = cache_thp_keys.APP_COMMON_SEED
+    KEY = cache_thp_keys.APP_COMMON_NONCE
 
     def _copy_data(dc: DataCache) -> list[bytearray]:
         return [bytearray(f) for f in dc.data]
@@ -26,7 +26,7 @@ else:
 
     _PROTOCOL_CACHE = cache_codec
 
-    KEY = cache_codec_keys.APP_COMMON_SEED
+    KEY = cache_codec_keys.APP_COMMON_NONCE
 
     def is_session_started() -> bool:
         return cache_codec.get_active_session() is not None
@@ -36,6 +36,20 @@ else:
 
 
 class TestStorageCache(TestCaseWithContext):
+    def test_seed_cache_layout(self):
+        if utils.USE_THP:
+            dc = cache_thp.SessionThpCache()
+            seed_key = cache_thp_keys.APP_COMMON_SEED
+        else:
+            dc = cache_codec.SessionCache()
+            seed_key = cache_codec_keys.APP_COMMON_SEED
+        # Keep key indices stable; common seeds only occupy the opaque holder.
+        self.assertEqual(dc.fields[seed_key], 0)
+        self.assertEqual(len(dc.data[seed_key]), 1)
+        self.assertTrue(dc.vault_seed.empty())
+        with self.assertRaises(AssertionError):
+            dc.set(seed_key, b"x")
+
     if utils.USE_THP:
 
         def setUp(self):

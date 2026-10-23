@@ -26,14 +26,14 @@ class SessionCache(DataCache):
         self.session_id = bytearray(_SESSION_ID_LENGTH)
         if utils.BITCOIN_ONLY:
             self.fields = (
-                64,  # APP_COMMON_SEED
+                0,  # APP_COMMON_SEED: seed lives in vault_seed
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
                 32,  # APP_COMMON_NONCE
             )
         else:
             self.fields = (
-                64,  # APP_COMMON_SEED
+                0,  # APP_COMMON_SEED: seed lives in vault_seed
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
                 32,  # APP_COMMON_NONCE
