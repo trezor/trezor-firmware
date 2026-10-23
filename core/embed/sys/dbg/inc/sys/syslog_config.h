@@ -79,4 +79,9 @@
 #define SYSLOG_optiga_transport_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
 
+// Vault per-syscall cycle counts, built with TREZOR_VAULT_TIMING=1
+#ifndef SYSLOG_vault_MAX_LOG_LEVEL
+#define SYSLOG_vault_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
 // Add more module-specific max log level definitions here...
