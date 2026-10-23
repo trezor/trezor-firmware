@@ -424,4 +424,7 @@ ts_t app_get_heap__verified(void **heap_ptr, size_t *heap_size);
 #include <sec/vault.h>
 bool vault_call__verified(const vault_request_t *request,
                           vault_response_t *response);
+bool vault_call_message__verified(const vault_message_request_t *request,
+                                  const uint8_t *message, size_t length,
+                                  vault_response_t *response);
 #endif

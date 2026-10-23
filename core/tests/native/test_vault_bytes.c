@@ -64,6 +64,12 @@ int main(void) {
   vault_response_t out = {0};
   assert(call(1, &r, &out));
   vault_blob_t old = out.blob;
+  r = (vault_request_t){
+      .op = 128, .owner = request, .arg = SECRET_BYTES, .blob = old};
+  assert(!call(1, &r, &out)); /* retired native plaintext-open operation */
+  assert(is_zero(&out, sizeof(out)));
+  assert(secret_owner_find(request));
+
   vault_revoke_caller(1);
   assert(!secret_owner_find(request) && !secret_owner_find(session));
   uint32_t fresh = owner_create(1, 0);

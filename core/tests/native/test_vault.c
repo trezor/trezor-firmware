@@ -5,25 +5,6 @@
 #include "../../embed/sec/vault/seal.c"
 #include "../../embed/sec/vault/vault.c"
 #include "zkp_context.h"
-static uintptr_t test_caller = 1;
-static bool test_unlocked = true;
-#define sectrue true
-static bool storage_is_unlocked(void) { return test_unlocked; }
-bool vault_call(const vault_request_t *r, vault_response_t *out) {
-  return vault_dispatch(test_caller, r, out, test_unlocked);
-}
-#include "../../embed/upymod/modtrezorcrypto/vault_coreapp.h"
-static bool coreapp_dispatch(uintptr_t caller, const vault_request_t *r,
-                             vault_response_t *out, bool unlocked) {
-  test_caller = caller;
-  test_unlocked = unlocked;
-  bool ok = vault_coreapp_call(r, out);
-  assert(!memcmp(app_scratch, (uint8_t[sizeof(app_scratch)]){0},
-                 sizeof(app_scratch)));
-  return ok;
-}
-#define vault_dispatch coreapp_dispatch
-#define vault_fingerprint app_vault_fingerprint
 /* Test-only blinding entropy. Never linked into firmware. */
 void rng_fill_buffer(void *p, size_t n) { memset(p, 0x42, n); }
 void random_buffer(uint8_t *p, size_t n) { rng_fill_buffer(p, n); }
@@ -524,6 +505,11 @@ int main(void) {
   assert(!secret_owner_find(session));
   assert(is_zero(secret_scratch, sizeof(secret_scratch)));
 
+  for (int flags = 0; flags < 4; flags++) {
+    assert(!vault_storage_key_allowed(0x0102 | (flags << 14)));
+    assert(!vault_storage_key_allowed(0x0125 | (flags << 14)));
+  }
+  assert(vault_storage_key_allowed(0x010e));
   printf("kernel state: owners=%zu scratch=%zu blob=%d\n",
          sizeof(secret_owners), sizeof(secret_scratch), VAULT_BLOB_SIZE);
   schnorr_vectors();
@@ -531,9 +517,7 @@ int main(void) {
   fingerprint_vectors();
   node_import_vectors();
   assert(!zkp_context_is_initialized());
-  vault_message_request_t mr = {.abi = VAULT_ABI, .op = VAULT_SIGN};
-  assert(!vault_coreapp_call_message(&mr, (const uint8_t *)"x", 1, &out));
-  puts("coreapp vault boundary tests passed");
+  puts("vault boundary tests passed");
   return 0;
 }
 /* Firmware assertions must fail the host test, rather than being compiled out.

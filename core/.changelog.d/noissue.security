@@ -1,0 +1,1 @@
+Reject private derivation and key snapshots from public-only vault nodes, and reject inconsistent imported key pairs.
