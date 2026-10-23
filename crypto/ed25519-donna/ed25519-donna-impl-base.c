@@ -257,7 +257,9 @@ void ge25519_set_neutral(ge25519 *r)
 #define S1_SWINDOWSIZE 5
 #define S1_TABLE_SIZE (1<<(S1_SWINDOWSIZE-2))
 #ifdef ED25519_NO_PRECOMP
-#define S2_SWINDOWSIZE 5
+/* Keep the temporary basepoint table to 320 bytes. A larger window saves
+ * additions but consumes scarce stack in firmware signature verification. */
+#define S2_SWINDOWSIZE 3
 #else
 #define S2_SWINDOWSIZE 7
 #endif

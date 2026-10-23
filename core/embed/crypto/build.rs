@@ -55,6 +55,9 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
     if cfg!(feature = "ed25519_no_precomp") {
         lib.add_define("ED25519_NO_PRECOMP", None);
     }
+    if cfg!(feature = "bip32_vault") {
+        lib.add_define("USE_BIP32_VAULT", Some("1"));
+    }
 
     lib.add_source("src/fault_handler.c");
 
@@ -298,6 +301,12 @@ fn add_secp256k1_zkp(lib: &mut CLibrary, _attrs: &CompileAttrs) -> Result<()> {
         ("ENABLE_MODULE_EXTRAKEYS", None),
         ("ENABLE_MODULE_ECDH", None),
     ]);
+
+    if cfg!(feature = "secp256k1_small_precomp") {
+        // The vault adds a second generator table in the kernel. Select the
+        // library's supported 2 KiB comb table; coreapp keeps its default.
+        lib.add_defines([("COMB_BLOCKS", Some("2")), ("COMB_TEETH", Some("5"))]);
+    }
 
     // TODO get rid of #include <vendor/... includes in crypto/zkp_*.c
     // lib.add_include(PathBuf::from(SECP256K1_PATH).join("include"));
