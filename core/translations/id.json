@@ -194,7 +194,6 @@
     },
     "bitcoin__multiple_accounts": "Banyak akun",
     "bitcoin__new_fee_rate": "Kurs biaya baru",
-    "bitcoin__simple_send_of": "Kirim sederhana sebesar",
     "bitcoin__ticket_amount": "Jumlah tiket",
     "bitcoin__title_confirm_details": "Konfirmasi detail",
     "bitcoin__title_finalize_transaction": "Finalisasi transaksi",
@@ -206,7 +205,6 @@
     "bitcoin__title_purchase_ticket": "Beli tiket",
     "bitcoin__title_update_transaction": "Perbarui transaksi",
     "bitcoin__unknown_path": "Jalur tidak dikenal",
-    "bitcoin__unknown_transaction": "Transaksi tidak dikenal",
     "bitcoin__unusually_high_fee": "Biaya sedang tinggi.",
     "bitcoin__unverified_external_inputs": "Transaksi berisi input eksternal yang belum diverifikasi.",
     "bitcoin__valid_signature": "Tanda tangan valid.",
@@ -441,6 +439,12 @@
     },
     "buttons__select": "Pilih",
     "buttons__set": "Atur",
+    "buttons__shift": {
+      "Bolt": "",
+      "Caesar": "Geser",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "buttons__show_all": "Lihat semua",
     "buttons__show_details": "Lihat detail",
     "buttons__show_next": {
@@ -591,7 +595,7 @@
     "coinjoin__max_rounds": "Maks. putaran",
     "coinjoin__title": "Otorisasi coinjoin",
     "coinjoin__title_progress": "Coinjoin berlangsung...",
-    "coinjoin__waiting_for_others": "Menunggu yang lain",
+    "coinjoin__waiting_for_others": "Menunggu yang lain...",
     "confirm_total__fee_rate": "Kurs biaya",
     "confirm_total__title_fee": "Info biaya",
     "confirm_total__title_sending_from": {
@@ -861,7 +865,7 @@
     "ethereum__calldata_digest": "Digest ERC-8213",
     "ethereum__calldata_suffix": "Sufiks calldata",
     "ethereum__confirm_contract": "Konfirmasi kontrak",
-    "ethereum__contract_address": "Alamat kontrak",
+    "ethereum__contract_address": "Alamat kontrak penyedia",
     "ethereum__data_size_template": "Ukuran: {0} byte",
     "ethereum__delegate_done": {
       "Bolt": "",
@@ -956,6 +960,7 @@
     "ethereum__vault_claim_intro": "Klaim imbalan dari Merkl.xyz",
     "ethereum__vault_claim_to": "Klaim ke",
     "ethereum__vault_deposit_intro": "Tinjau detail untuk deposit ke vault.",
+    "ethereum__vault_owner_address": "Alamat pemilik",
     "ethereum__vault_redeem_intro": "Tinjau detail untuk tukar dari vault.",
     "ethereum__vault_redeem_to": "Tukar ke",
     "ethereum__vault_withdraw_intro": "Tinjau detail untuk menarik dari vault.",
@@ -1260,12 +1265,7 @@
       "Eckhart": ""
     },
     "language__change_to_template": "Ubah bahasa ke {0}?",
-    "language__changed": {
-      "Bolt": "Bahasa berhasil diubah.",
-      "Caesar": "Bahasa berhasil diubah",
-      "Delizia": "Bahasa berhasil diubah.",
-      "Eckhart": "Bahasa berhasil diubah."
-    },
+    "language__changed": "Bahasa berhasil diubah.",
     "language__progress": "Mengubah bahasa...",
     "language__title": "Pengaturan bahasa",
     "led__disable": {
@@ -1369,7 +1369,12 @@
       "Delizia": "Biaya tidak berubah.\n",
       "Eckhart": "Biaya tidak berubah"
     },
-    "modify_fee__title": "Atur biaya",
+    "modify_fee__title": {
+      "Bolt": "",
+      "Caesar": "Atur biaya",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "modify_fee__transaction_fee": {
       "Bolt": "Biaya transaksi:",
       "Caesar": "Biaya transaksi:",
@@ -1978,12 +1983,7 @@
     "recovery__type_word_x_of_y_template": "Ketik kata {0} dari {1}",
     "recovery__unlock_repeated_backup": "Buat cadangan tambahan?",
     "recovery__unlock_repeated_backup_verb": "Buat cadangan",
-    "recovery__wallet_recovered": {
-      "Bolt": "Pemulihan dompet selesai.",
-      "Caesar": "Pemulihan dompet selesai",
-      "Delizia": "Pemulihan dompet selesai.",
-      "Eckhart": "Pemulihan dompet selesai."
-    },
+    "recovery__wallet_recovered": "Pemulihan dompet selesai.",
     "recovery__wanna_cancel_dry_run": "Anda yakin ingin membatalkan pemeriksaan cadangan?",
     "recovery__wanna_cancel_recovery": "Anda yakin ingin membatalkan proses pemulihan?",
     "recovery__word_count_template": "({0} kata)",
@@ -2684,7 +2684,12 @@
       "Eckhart": ""
     },
     "send__maximum_fee": "Maks. biaya",
-    "send__multisig_different_paths": "Menggunakan jalur berbeda untuk XPUB berbeda.",
+    "send__multisig_different_paths": {
+      "Bolt": "Menggunakan jalur berbeda untuk XPUB berbeda.",
+      "Caesar": "Menggunakan jalur berbeda untuk XPUB berbeda",
+      "Delizia": "Menggunakan jalur berbeda untuk XPUB berbeda.",
+      "Eckhart": "Menggunakan jalur berbeda untuk XPUB berbeda."
+    },
     "send__receiving_to_multisig": "Menerima ke alamat multisig.",
     "send__send_from": "Kirim dari",
     "send__send_in_the_app": {
@@ -2818,12 +2823,7 @@
     "stellar__destination": "Tujuan",
     "stellar__exchanges_require_memo": "Memo belum diatur. Biasanya dibutuhkan ketika mengirim ke bursa.",
     "stellar__ext_auth": "Otorisasi Eksternal",
-    "stellar__ext_auth_message": {
-      "Bolt": "Transaksi berisi panggilan berotorisasi eksternal.",
-      "Caesar": "Transaksi berisi pemanggilan yang diotorisasi secara eksternal.",
-      "Delizia": "Transaksi berisi pemanggilan yang diotorisasi secara eksternal.",
-      "Eckhart": "Transaksi berisi pemanggilan yang diotorisasi secara eksternal."
-    },
+    "stellar__ext_auth_message": "Transaksi berisi panggilan berotorisasi eksternal.",
     "stellar__final_confirm": "Konfirmasi akhir",
     "stellar__from": "Dari",
     "stellar__hash": "Hash",
@@ -2901,49 +2901,49 @@
     "thp__autoconnect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Izinkan {0} untuk terhubung otomatis ke Trezor ini?",
+      "Delizia": "",
       "Eckhart": "Izinkan {0} untuk terhubung otomatis ke Trezor ini?"
     },
     "thp__autoconnect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Izinkan {0} di {1} untuk terhubung otomatis ke Trezor ini?",
+      "Delizia": "",
       "Eckhart": "Izinkan {0} di {1} untuk terhubung otomatis ke Trezor ini?"
     },
     "thp__autoconnect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Kredensial hubung otomatis",
+      "Delizia": "",
       "Eckhart": "Kredensial hubung otomatis"
     },
     "thp__code_entry": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Masukkan kode keamanan sekali pakai di {0}",
+      "Delizia": "",
       "Eckhart": "Masukkan kode keamanan sekali pakai di {0}"
     },
     "thp__code_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Selangkah lagi",
+      "Delizia": "",
       "Eckhart": "Selangkah lagi"
     },
     "thp__connect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Izinkan {0} untuk terhubung dengan Trezor ini?",
+      "Delizia": "",
       "Eckhart": "Izinkan {0} untuk terhubung dengan Trezor ini?"
     },
     "thp__connect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Izinkan {0} di {1} untuk terhubung dengan Trezor ini?",
+      "Delizia": "",
       "Eckhart": "Izinkan {0} di {1} untuk terhubung dengan Trezor ini?"
     },
     "thp__connect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Dialog koneksi",
+      "Delizia": "",
       "Eckhart": "Dialog koneksi"
     },
     "thp__nfc_text": {
@@ -2955,37 +2955,37 @@
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Izinkan {0} untuk terpasang dengan Trezor ini?",
+      "Delizia": "",
       "Eckhart": "Izinkan {0} untuk terpasang dengan Trezor ini?"
     },
     "thp__pair_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Izinkan {0} di {1} untuk terpasang dengan Trezor ini?",
+      "Delizia": "",
       "Eckhart": "Izinkan {0} di {1} untuk terpasang dengan Trezor ini?"
     },
     "thp__pair_name": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "{0} adalah nama Trezor Anda.",
+      "Delizia": "",
       "Eckhart": "{0} adalah nama Trezor Anda."
     },
     "thp__pair_new_device": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Pasang dengan perangkat baru",
+      "Delizia": "",
       "Eckhart": "Pasang dengan perangkat baru"
     },
     "thp__pair_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Sebelum melanjutkan",
+      "Delizia": "",
       "Eckhart": "Sebelum melanjutkan"
     },
     "thp__qr_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Pindai kode QR untuk memasangkan",
+      "Delizia": "",
       "Eckhart": "Pindai kode QR untuk memasangkan"
     },
     "tron__claim_unfrozen_balance": "Klaim saldo yang dicairkan?",
@@ -3006,6 +3006,12 @@
     },
     "tron__owner_address": "Alamat pemilik",
     "tron__undelegate_resource": "Cabut delegasi sumber daya",
+    "tutorial__complete": {
+      "Bolt": "",
+      "Caesar": "Selesaikan tutorial",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3030,6 +3036,12 @@
       "Delizia": "Trezor Model One, dibuat di 2013, merupakan dompet perangkat keras pertama dunia.",
       "Eckhart": ""
     },
+    "tutorial__hold_left_press_right": {
+      "Bolt": "",
+      "Caesar": "Tahan KIRI, tekan KANAN.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__last_one": {
       "Bolt": "",
       "Caesar": "",
@@ -3038,13 +3050,13 @@
     },
     "tutorial__lets_begin": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Pelajari dasar menavigasi perangkat Anda.",
       "Delizia": "Pelajari cara menggunakan perangkat ini dengan mudah.",
       "Eckhart": ""
     },
     "tutorial__menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Temukan tindakan dan opsi yang sesuai konteks di menu.",
       "Delizia": "Temukan tindakan dan opsi yang sesuai konteks di menu.",
       "Eckhart": "Temukan tindakan dan opsi yang sesuai konteks di menu."
     },
@@ -3054,6 +3066,7 @@
       "Delizia": "",
       "Eckhart": "Lihat selengkapnya, keluar dari alur..."
     },
+    "tutorial__menu_later": "",
     "tutorial__middle_click": {
       "Bolt": "",
       "Caesar": "Tekan kedua tombol kiri dan kanan bersamaan untuk konfirmasi.",
@@ -3084,6 +3097,18 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "tutorial__press_both": {
+      "Bolt": "",
+      "Caesar": "Tekan KEDUA tombol bersamaan.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__press_left": {
+      "Bolt": "",
+      "Caesar": "Tekan KIRI.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__ready_to_use": {
       "Bolt": "",
       "Caesar": "Anda siap\nmenggunakan Trezor.",
@@ -3098,13 +3123,19 @@
     },
     "tutorial__restart_tutorial": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Ulangi tutorial",
       "Delizia": "Ulangi tutorial",
       "Eckhart": "Ulangi tutorial"
     },
     "tutorial__scroll_down": {
       "Bolt": "",
       "Caesar": "Tekan kanan untuk menggulir ke bawah dan membaca seluruh konten jika teks tidak muat pada layar.\n\rTekan kiri untuk menggulir ke atas.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__scroll_up": {
+      "Bolt": "",
+      "Caesar": "Tahan KIRI dan tekan KANAN untuk gulir ke atas.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3138,9 +3169,15 @@
       "Delizia": "Navigasi mudah",
       "Eckhart": ""
     },
+    "tutorial__title_go_back": {
+      "Bolt": "",
+      "Caesar": "Ingin kembali?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_handy_menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Menu",
       "Delizia": "Menu praktis",
       "Eckhart": "Menu praktis"
     },
@@ -3162,6 +3199,18 @@
       "Delizia": "Mari mulai",
       "Eckhart": ""
     },
+    "tutorial__title_middle_button": {
+      "Bolt": "",
+      "Caesar": "Tombol tengah",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_remember": {
+      "Bolt": "",
+      "Caesar": "Ingat",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_screen_scroll": {
       "Bolt": "",
       "Caesar": "Gulir layar",
@@ -3177,6 +3226,12 @@
     "tutorial__title_tutorial_complete": {
       "Bolt": "",
       "Caesar": "Tutorial selesai",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_welcome": {
+      "Bolt": "",
+      "Caesar": "Selamat datang di Trezor",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3521,7 +3576,12 @@
       "Delizia": "Coba lagi.",
       "Eckhart": "Coba lagi"
     },
-    "words__undelegate": "Batalkan delegasi",
+    "words__undelegate": {
+      "Bolt": "Batalkan delegasi",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__unknown": "Tidak dikenal",
     "words__unlimited": "Tanpa batas",
     "words__unlocked": {

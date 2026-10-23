@@ -130,7 +130,7 @@
       "Eckhart": "Bloqueo auto."
     },
     "backup__can_back_up_anytime": {
-      "Bolt": "Puedes hacer una c. seg. del Trezor cuando quieras.",
+      "Bolt": "Puedes hacer un respaldo del Trezor cuando quieras.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -138,22 +138,22 @@
     "backup__create_backup_to_prevent_loss": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Crea una c. seg. para evitar perder el acceso a tus fondos.",
-      "Eckhart": "Crea una c. seg. para evitar perder el acceso a tus fondos."
+      "Delizia": "Crea un respaldo de la billetera para evitar perder el acceso a tus fondos.",
+      "Eckhart": "Crea un respaldo de la billetera para evitar perder el acceso a tus fondos."
     },
-    "backup__info_multi_group_backup": "Tu copia de seguridad contiene {0} grupos con un umbral de grupo de {1}.",
-    "backup__info_multi_share_backup": "La c. seg. de la billetera contiene varias listas de palabras en un orden concreto (partes).",
+    "backup__info_multi_group_backup": "Tu respaldo de la billetera contiene {0} grupos con un umbral de grupo de {1}.",
+    "backup__info_multi_share_backup": "El respaldo de la billetera contiene varias listas de palabras en un orden concreto (partes).",
     "backup__info_n_of_m_template": "{0} de {1}",
-    "backup__info_single_share_backup": "La c. seg. de la billetera contiene {0} palabras en un orden concreto.",
+    "backup__info_single_share_backup": "El respaldo de la billetera contiene {0} palabras en un orden concreto.",
     "backup__it_should_be_backed_up": {
-      "Bolt": "Debes realizar una c. seg. de tu billetera.",
+      "Bolt": "Debes realizar un respaldo de tu billetera.",
       "Caesar": "",
-      "Delizia": "Debes realizar una c. seg. de tu billetera.",
-      "Eckhart": "Crea una c. seg. de tu billetera ahora."
+      "Delizia": "Debes realizar un respaldo de tu billetera.",
+      "Eckhart": "Crea un respaldo de tu billetera ahora."
     },
     "backup__it_should_be_backed_up_now": {
       "Bolt": "",
-      "Caesar": "¡Debes hacerle una c. seg. ahora!",
+      "Caesar": "¡Debes hacerle un respaldo ahora!",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -173,40 +173,40 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "No recomendamos omitir la creación de la c. seg. de la billetera."
+      "Eckhart": "No recomendamos omitir la creación del respaldo de la billetera."
     },
     "backup__recover_anytime": {
       "Bolt": "",
-      "Caesar": "La c. seg. te permite recuperar siempre la billetera.",
+      "Caesar": "El respaldo te permite recuperar la billetera en cualquier momento.",
       "Delizia": "",
       "Eckhart": ""
     },
     "backup__title_backup_completed": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "C. seg. de la billetera completada.",
-      "Eckhart": "Copia de seguridad de la billetera completada."
+      "Delizia": "El respaldo de la billetera está completado.",
+      "Eckhart": "El respaldo de la billetera está completado."
     },
     "backup__title_backup_wallet": {
       "Bolt": "",
-      "Caesar": "C. seg. billetera",
+      "Caesar": "El respaldo de la billetera",
       "Delizia": "",
       "Eckhart": ""
     },
-    "backup__title_create_wallet_backup": "Crear copia de seguridad",
+    "backup__title_create_wallet_backup": "Crear el respaldo de la billetera",
     "backup__title_skip": {
       "Bolt": "",
-      "Caesar": "Omitir c. seg.",
-      "Delizia": "Omitir c. seg.",
-      "Eckhart": "Omitir c. seg."
+      "Caesar": "Omitir el respaldo",
+      "Delizia": "Omitir el respaldo",
+      "Eckhart": "Omitir el respaldo"
     },
     "backup__type_create": "",
     "backup__type_have": "",
     "backup__type_n1w1": "",
     "backup__type_wordlist": "",
     "backup__want_to_skip": {
-      "Bolt": "¿Quieres omitir la copia de seguridad?",
-      "Caesar": "¿Quieres omitir la copia de seguridad?",
+      "Bolt": "¿Quieres omitir el respaldo?",
+      "Caesar": "¿Quieres omitir el respaldo?",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -225,7 +225,6 @@
     },
     "bitcoin__multiple_accounts": "Múltiples cuentas",
     "bitcoin__new_fee_rate": "Nueva tasa de comisión",
-    "bitcoin__simple_send_of": "Envío simple de",
     "bitcoin__ticket_amount": "Importe del ticket",
     "bitcoin__title_confirm_details": "Confirmar detalles",
     "bitcoin__title_finalize_transaction": "Finalizar transacción",
@@ -237,7 +236,6 @@
     "bitcoin__title_purchase_ticket": "Comprar ticket",
     "bitcoin__title_update_transaction": "Actualizar transacción",
     "bitcoin__unknown_path": "Ruta desconocida",
-    "bitcoin__unknown_transaction": "Transacc. desconocida",
     "bitcoin__unusually_high_fee": "Comisión inusualmente alta.",
     "bitcoin__unverified_external_inputs": "La transacción contiene entradas externas sin verificar.",
     "bitcoin__valid_signature": "La firma es válida.",
@@ -399,7 +397,7 @@
       "Eckhart": "Autenticar"
     },
     "buttons__back": "Atrás",
-    "buttons__back_up": "C. seg.",
+    "buttons__back_up": "Respaldar",
     "buttons__cancel": "Cancelar",
     "buttons__cancel_and_exit": "Cancelar y salir",
     "buttons__cancel_sign": "Cancelar firma",
@@ -467,6 +465,7 @@
     },
     "buttons__select": "Seleccionar",
     "buttons__set": "Ajustar",
+    "buttons__shift": "",
     "buttons__show_all": "Mostrar todo",
     "buttons__show_details": {
       "Bolt": "Mostrar más",
@@ -632,7 +631,7 @@
     },
     "coinjoin__title": "Autorizar coinjoin",
     "coinjoin__title_progress": "Coinjoin en curso...",
-    "coinjoin__waiting_for_others": "Esperando a los demás",
+    "coinjoin__waiting_for_others": "Esperando a los demás...",
     "confirm_total__fee_rate": "Comisión",
     "confirm_total__title_fee": "Info. comisiones",
     "confirm_total__title_sending_from": {
@@ -649,7 +648,7 @@
       "Eckhart": "No es recomendado cargar una semilla privada"
     },
     "device_name__change_template": "¿Cambiar el nombre del disp. a {0}?",
-    "device_name__enter": "Ingresa nom. del disp.",
+    "device_name__enter": "Ingresa nombre del dispositivo",
     "device_name__title": "Nombre dispositivo",
     "entropy__send": "¿Quieres enviar la entropía?",
     "entropy__title_confirm": "Confirmar entropía",
@@ -1005,13 +1004,14 @@
       "Bolt": "Dirección de contrato desconocida.",
       "Caesar": "Dirección de contrato desconocida",
       "Delizia": "Dirección de contrato desconocida.",
-      "Eckhart": "Dirección de contrato de token desconocida."
+      "Eckhart": "Dirección de contrato desconocida."
     },
     "ethereum__unknown_token": "Token desconocido",
     "ethereum__valid_signature": "La firma es válida.",
     "ethereum__vault_claim_intro": "Reclamar recompensas de Merkl.xyz",
     "ethereum__vault_claim_to": "Reclamar en",
     "ethereum__vault_deposit_intro": "Verifica los detalles para depositar en la bóveda.",
+    "ethereum__vault_owner_address": "Dirección del propietario",
     "ethereum__vault_redeem_intro": "Verifica los detalles para redimir de la bóveda.",
     "ethereum__vault_redeem_to": "Redimir en",
     "ethereum__vault_withdraw_intro": "Verifica los detalles para retirar de la bóveda.",
@@ -1105,7 +1105,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Abre Trezor Suite y crea una c. seg. de tu billetera. Esta es la única forma de recuperar tus activos."
+      "Eckhart": "Abre Trezor Suite y crea el respaldo de tu billetera. Esta es la única forma de recuperar tus activos."
     },
     "homescreen__click_to_connect": {
       "Bolt": "",
@@ -1134,8 +1134,8 @@
       "Delizia": "Fondo de pantalla",
       "Eckhart": ""
     },
-    "homescreen__title_backup_failed": "Error c. seg.",
-    "homescreen__title_backup_needed": "C. seg. necesaria",
+    "homescreen__title_backup_failed": "El respaldo falló",
+    "homescreen__title_backup_needed": "El respaldo es necesario",
     "homescreen__title_coinjoin_authorized": "Coinjoin autorizado",
     "homescreen__title_experimental_mode": "Modo experimental",
     "homescreen__title_no_usb_connection": {
@@ -1167,7 +1167,7 @@
     },
     "inputs__enter": {
       "Bolt": "",
-      "Caesar": "INTRODUCIR",
+      "Caesar": "INGRESA",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -1316,12 +1316,7 @@
       "Eckhart": ""
     },
     "language__change_to_template": "¿Cambiar el idioma a {0}?",
-    "language__changed": {
-      "Bolt": "El idioma cambió con éxito.",
-      "Caesar": "El idioma cambió con éxito",
-      "Delizia": "El idioma cambió con éxito.",
-      "Eckhart": "El idioma cambió con éxito."
-    },
+    "language__changed": "El idioma cambió con éxito.",
     "language__progress": "Cambiando lenguaje...",
     "language__title": "Configuración de idioma",
     "led__disable": {
@@ -1420,7 +1415,12 @@
       "Eckhart": "Nueva comisión de transacción"
     },
     "modify_fee__no_change": "Comisión no alterada.",
-    "modify_fee__title": "Modificar comisión",
+    "modify_fee__title": {
+      "Bolt": "",
+      "Caesar": "Modificar comisión",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "modify_fee__transaction_fee": {
       "Bolt": "Comisión de la transacción:",
       "Caesar": "Comisión de la transacción:",
@@ -1769,7 +1769,7 @@
       "Delizia": "¿Acceder a la Billetera con passphrase?",
       "Eckhart": "Acceder a la Billetera con passphrase"
     },
-    "passphrase__always_on_device": "¿Introducir siempre la passphrase en Trezor?",
+    "passphrase__always_on_device": "¿Ingresar siempre la passphrase en Trezor?",
     "passphrase__continue_with_empty_passphrase": "¿Continuar con la passphrase vacía?",
     "passphrase__from_host_not_shown": "Se usará la passphrase proveída por la aplicación conectada, pero no se verá debido a la configuración.",
     "passphrase__hide": {
@@ -1779,7 +1779,7 @@
       "Eckhart": "¿Ocultar la passphrase ingresada en la aplicación conectada?"
     },
     "passphrase__next_screen_will_show_passphrase": "La siguiente pantalla muestra tu passphrase.",
-    "passphrase__please_enter": "Escribe tu passphrase.",
+    "passphrase__please_enter": "Ingresa tu passphrase por favor.",
     "passphrase__revoke_on_device": "¿Quieres revocar la config. de passphrase en el dispositivo?",
     "passphrase__show": {
       "Bolt": "",
@@ -1788,7 +1788,7 @@
       "Eckhart": "Mostrar passphrase"
     },
     "passphrase__title_confirm": "Confirmar passphrase",
-    "passphrase__title_enter": "Ingresa passphrase",
+    "passphrase__title_enter": "Ingresa la passphrase",
     "passphrase__title_hide": {
       "Bolt": "Ocultar passphrase",
       "Caesar": "Ocultar passphrase",
@@ -1853,7 +1853,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "pin__diff_from_wipe_code": "El nuevo PIN debe ser diferente al código de borrar.",
+    "pin__diff_from_wipe_code": "El nuevo PIN debe ser diferente al código de borrado.",
     "pin__disabled": "Protección con PIN desactivada.",
     "pin__enabled": {
       "Bolt": "Protección con PIN activada.",
@@ -1861,7 +1861,7 @@
       "Delizia": "Protección con PIN activada.",
       "Eckhart": ""
     },
-    "pin__enter": "Ingresar el PIN",
+    "pin__enter": "Ingresa el PIN",
     "pin__enter_new": "Ingresa el nuevo PIN",
     "pin__entered_not_valid": "El PIN ingresado no es válido.",
     "pin__info": {
@@ -1885,8 +1885,8 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "pin__reenter": "Reingresar el PIN",
-    "pin__reenter_new": "Reingresar el nuevo PIN",
+    "pin__reenter": "Reingresa el PIN",
+    "pin__reenter_new": "Reingresa el nuevo PIN",
     "pin__reenter_to_confirm": {
       "Bolt": "",
       "Caesar": "Reingresa el PIN para confirmar.",
@@ -1923,8 +1923,8 @@
     },
     "pin__turn_off": "¿Quieres desactivar la protección con PIN?",
     "pin__turn_on": "¿Activar la protección con PIN?",
-    "pin__wipe_code_exists_description": "El cód. borrar debe ser desactivado antes de desactivar el PIN.",
-    "pin__wipe_code_exists_title": "Cód. borrar configurado",
+    "pin__wipe_code_exists_description": "El código de borrado debe ser desactivado antes de desactivar el PIN.",
+    "pin__wipe_code_exists_title": "Código de borrado configurado",
     "pin__wrong_pin": "PIN incorrecto",
     "plurals__contains_x_keys": "clave|claves",
     "plurals__days": "día|días",
@@ -1957,14 +1957,14 @@
     "recovery__cancel_dry_run": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Cancelar verif. de la c. seg.",
+      "Delizia": "Cancelar verificación del respaldo.",
       "Eckhart": ""
     },
     "recovery__check_dry_run": {
-      "Bolt": "¿Verificar tu copia de seguridad?",
-      "Caesar": "¿Verificar tu copia de seguridad?",
-      "Delizia": "Verifiquemos tu copia de seguridad.",
-      "Eckhart": "Verifiquemos tu copia de seguridad."
+      "Bolt": "¿Verificar tu respaldo?",
+      "Caesar": "¿Verificar tu respaldo?",
+      "Delizia": "Hagamos verificación del respaldo de la billetera.",
+      "Eckhart": "Hagamos verificación del respaldo de la billetera."
     },
     "recovery__cursor_will_change": {
       "Bolt": "",
@@ -1972,32 +1972,32 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "recovery__dry_run_bip39_valid_match": "La c. seg. de la billetera es válida y coincide con la de este dispositivo.",
-    "recovery__dry_run_bip39_valid_mismatch": "La c. seg. de la billetera indicada es válida pero no coincide con la de este dispositivo.",
-    "recovery__dry_run_slip39_valid_match": "La c. seg. de la billetera es válida y coincide con la de este dispositivo.",
-    "recovery__dry_run_slip39_valid_mismatch": "La c. seg. de la billetera indicada es válida pero no coincide con la de este dispositivo.",
-    "recovery__enter_any_share": "Introduce cualquier parte.",
-    "recovery__enter_backup": "Introduce tu c. seg.",
+    "recovery__dry_run_bip39_valid_match": "El respaldo de la billetera es válido y coincide con el respaldo en este dispositivo.",
+    "recovery__dry_run_bip39_valid_mismatch": "El respaldo de la billetera indicado es válido pero no coincide con el respaldo en este dispositivo.",
+    "recovery__dry_run_slip39_valid_match": "El respaldo de la billetera es válido y coincide con el respaldo en este dispositivo.",
+    "recovery__dry_run_slip39_valid_mismatch": "El respaldo de la billetera indicado es válido pero no coincide con el respaldo en este dispositivo.",
+    "recovery__enter_any_share": "Ingresa cualquier parte.",
+    "recovery__enter_backup": "Ingresa tu respaldo.",
     "recovery__enter_different_share": {
-      "Bolt": "Introduce una parte distinta.",
-      "Caesar": "Introduce una parte distinta.",
-      "Delizia": "Introduce una parte distinta.",
+      "Bolt": "Ingresa una parte distinta.",
+      "Caesar": "Ingresa una parte distinta.",
+      "Delizia": "Ingresa una parte distinta.",
       "Eckhart": ""
     },
-    "recovery__enter_each_word": "Introduce cada palabra de la c. seg. de la billetera en orden.",
-    "recovery__enter_share_from_diff_group": "Introduce una parte de otro grupo.",
+    "recovery__enter_each_word": "Entra cada palabra del respaldo de la billetera en orden.",
+    "recovery__enter_share_from_diff_group": "Ingresa una parte de otro grupo.",
     "recovery__group_num_template": "Grupo {0}",
     "recovery__group_threshold_reached": "Umbral de grupo alcanzado.",
     "recovery__invalid_share_entered": "La parte de recuperación es inválida.",
-    "recovery__invalid_wallet_backup_entered": "La c. seg. de la billetera es inválida.",
+    "recovery__invalid_wallet_backup_entered": "El respaldo de la billetera es inválido.",
     "recovery__more_shares_needed": "Se necesitan más partes.",
-    "recovery__num_of_words": "Elige el número de palabras de la c. seg.",
+    "recovery__num_of_words": "Elige el número de palabras en tu respaldo.",
     "recovery__progress_will_be_lost": "Se perderá todo el progreso.",
     "recovery__share_already_entered": {
-      "Bolt": "Ya se ha introducido esta parte.",
-      "Caesar": "Ya se ha introducido esta parte",
-      "Delizia": "Ya se ha introducido esta parte",
-      "Eckhart": "Ya se ha introducido esta parte. Ingresa una distinta."
+      "Bolt": "Ya se ha ingresado esta parte.",
+      "Caesar": "Ya se ha ingresado esta parte",
+      "Delizia": "Ya se ha ingresado esta parte",
+      "Eckhart": "Ya se ha ingresado esta parte. Ingresa una parte distinta."
     },
     "recovery__share_does_not_match": {
       "Bolt": "",
@@ -2005,37 +2005,32 @@
       "Delizia": "",
       "Eckhart": "La parte no coincide"
     },
-    "recovery__share_from_another_multi_share_backup": "Has introducido una parte de una c. seg. diferente.",
+    "recovery__share_from_another_multi_share_backup": "Has ingresado parte de un respaldo diferente.",
     "recovery__share_from_group_entered_template": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Parte {0} del grupo {1} introducida."
+      "Eckhart": "Parte {0} del grupo {1} ingresada."
     },
     "recovery__share_num_template": "Parte {0}",
     "recovery__start_entering": "Empieza a ingresar",
     "recovery__title": "Recuperar billetera",
     "recovery__title_cancel_dry_run": {
-      "Bolt": "Canc. verif. c. seg",
-      "Caesar": "Cancelar verif. c. seg.",
-      "Delizia": "Cancelar verif. c. seg.",
+      "Bolt": "Cancelar verificación del respaldo",
+      "Caesar": "Cancelar verificación del respaldo",
+      "Delizia": "Cancelar verificación del respaldo",
       "Eckhart": ""
     },
     "recovery__title_cancel_recovery": "Anular recuperación",
-    "recovery__title_dry_run": "Verif. c. seg.",
+    "recovery__title_dry_run": "Verificación del respaldo",
     "recovery__title_recover": "Recuperar billetera",
     "recovery__title_remaining_shares": "Partes restantes",
     "recovery__title_unlock_repeated_backup": "Respaldo con múltiples partes",
     "recovery__type_word_x_of_y_template": "Escribe palabra {0} de {1}",
-    "recovery__unlock_repeated_backup": "¿Crear copia de seguridad adicional?",
-    "recovery__unlock_repeated_backup_verb": "Crear c. seg",
-    "recovery__wallet_recovered": {
-      "Bolt": "Recuperación de la billetera completada.",
-      "Caesar": "Recuperación de la billetera completada",
-      "Delizia": "Recuperación de la billetera completada.",
-      "Eckhart": "Recuperación de la billetera completada."
-    },
-    "recovery__wanna_cancel_dry_run": "¿Quieres cancelar la revisión de la copia de seguridad?",
+    "recovery__unlock_repeated_backup": "¿Crear el respaldo adicional?",
+    "recovery__unlock_repeated_backup_verb": "Crear el respaldo",
+    "recovery__wallet_recovered": "Recuperación de la billetera completada.",
+    "recovery__wanna_cancel_dry_run": "¿Quieres cancelar la verificación del respaldo?",
     "recovery__wanna_cancel_recovery": "¿Quieres cancelar el proceso de recuperación?",
     "recovery__word_count_template": "({0} palabras)",
     "recovery__word_x_of_y_template": {
@@ -2057,15 +2052,15 @@
       "Eckhart": "Se necesita(n) {count} {plural} más."
     },
     "recovery__x_of_y_entered_template": {
-      "Bolt": "{0} de {1} partes introducidas",
-      "Caesar": "{0} de {1} partes introducidas",
-      "Delizia": "{0} de {1} partes introducidas",
-      "Eckhart": "{0} de {1} partes introducidas."
+      "Bolt": "{0} de {1} partes ingresadas",
+      "Caesar": "{0} de {1} partes ingresadas",
+      "Delizia": "{0} de {1} partes ingresadas",
+      "Eckhart": "{0} de {1} partes ingresadas."
     },
     "recovery__you_have_entered": {
-      "Bolt": "Has introducido",
-      "Caesar": "Has introducido",
-      "Delizia": "Has introducido",
+      "Bolt": "Has ingresado",
+      "Caesar": "Has ingresado",
+      "Delizia": "Has ingresado",
       "Eckhart": ""
     },
     "regulatory__title": {
@@ -2114,14 +2109,14 @@
     "reset__check_backup_instructions": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Verifiquemos tu copia de seguridad.",
-      "Eckhart": "Verifiquemos tu copia de seguridad."
+      "Delizia": "Hagamos una breve verificación del respaldo.",
+      "Eckhart": "Hagamos una breve verificación del respaldo."
     },
     "reset__check_backup_title": {
       "Bolt": "",
-      "Caesar": "Verificar c. seg.",
+      "Caesar": "Verificar el respaldo",
       "Delizia": "",
-      "Eckhart": "Verificar c. seg."
+      "Eckhart": "Verificar el respaldo"
     },
     "reset__check_group_share_title_template": {
       "Bolt": "Parte {1} del grupo {0}",
@@ -2141,12 +2136,12 @@
       "Delizia": "Verif. parte {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": "Verificar c. seg.",
+    "reset__check_wallet_backup_title": "Verificar el respaldo de la billetera",
     "reset__continue_with_next_share": {
       "Bolt": "Continúa con la próxima parte.",
       "Caesar": "Continúa con la próxima parte.",
       "Delizia": "Continúa con la próxima parte.",
-      "Eckhart": "Ingresa la siguiente parte"
+      "Eckhart": "Ingresar la siguiente parte"
     },
     "reset__continue_with_share_template": {
       "Bolt": "Continúa con la parte {0}.",
@@ -2154,7 +2149,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__create_x_of_y_multi_share_backup_template": "¿Quieres crear {0} de {1} c. seg. de múltiples partes?",
+    "reset__create_x_of_y_multi_share_backup_template": "¿Quieres crear {0} de {1} de múltiples partes del respaldo?",
     "reset__finished_verifying_group_template": {
       "Bolt": "Has verificado tus partes de recuperación del grupo {0}.",
       "Caesar": "Has verificado tus partes de recuperación del grupo {0}.",
@@ -2168,8 +2163,8 @@
       "Eckhart": ""
     },
     "reset__finished_verifying_wallet_backup": {
-      "Bolt": "Has verificado la c. seg de tu billetera.",
-      "Caesar": "Has verificado la c. seg. de tu billetera.",
+      "Bolt": "Has verificado el respaldo de tu billetera.",
+      "Caesar": "Has verificado el respaldo de tu billetera.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2233,7 +2228,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__never_make_digital_copy": "Nunca guardes tu c. seg. de forma digital.",
+    "reset__never_make_digital_copy": "Nunca guardes tu respaldo de forma digital.",
     "reset__num_of_share_holders_template": {
       "Bolt": "{0} partes, una por persona o sitio.",
       "Caesar": "",
@@ -2255,14 +2250,14 @@
     "reset__num_of_shares_how_many": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "¿Cuántas partes de la c. seg quieres crear?",
-      "Eckhart": "¿Cuántas partes de la c. seg quieres crear?"
+      "Delizia": "¿Cuántas partes del respaldo de la billetera quieres crear?",
+      "Eckhart": "¿Cuántas partes del respaldo de la billetera quieres crear?"
     },
     "reset__num_of_shares_long_info_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Cada parte de la c. seg. es una lista de {0} palabras.\nGuarda cada lista de palabras en un lugar seguro y separado o compártelas con personas de confianza. Reúnelas cuando sea necesario recuperar tu billetera.",
-      "Eckhart": "Cada parte de la c. seg. es una lista de {0} palabras.\nGuarda cada lista de palabras en un lugar seguro y separado o compártelas con personas de confianza. Reúnelas cuando sea necesario recuperar tu billetera."
+      "Delizia": "Cada parte del respaldo es una lista de {0} palabras.\nGuarda cada lista de palabras en un lugar seguro y separado o compártelas con personas de confianza. Reúnelas cuando sea necesario recuperar tu billetera.",
+      "Eckhart": "Cada parte del respaldo es una lista de {0} palabras.\nGuarda cada lista de palabras en un lugar seguro y separado o compártelas con personas de confianza. Reúnelas cuando sea necesario recuperar tu billetera."
     },
     "reset__num_shares_for_group_template": {
       "Bolt": "Número de partes requeridas para formar el grupo {0}.",
@@ -2272,7 +2267,7 @@
     },
     "reset__number_of_shares_info": {
       "Bolt": "",
-      "Caesar": "= número total de parte usadas para la c. seg.",
+      "Caesar": "= número total de partes usadas para el respaldo de la billetera.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2294,14 +2289,14 @@
       "Delizia": "",
       "Eckhart": "Una parte de recuperación es la lista de palabras que anotaste al configurar tu Trezor."
     },
-    "reset__recovery_share_number": "Tu c. seg. de la billetera consta de 1 a 16 partes.",
+    "reset__recovery_share_number": "Tu respaldo de la billetera consiste de 1 a 16 partes.",
     "reset__recovery_share_title_template": {
       "Bolt": "Parte de recup. {0}",
       "Caesar": "",
       "Delizia": "Parte de recup. {0}",
       "Eckhart": ""
     },
-    "reset__recovery_wallet_backup_title": "C. seg. de billetera",
+    "reset__recovery_wallet_backup_title": "El respaldo de la billetera",
     "reset__repeat_for_all_shares": {
       "Bolt": "",
       "Caesar": "",
@@ -2336,7 +2331,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Selecciona la palabra {0} de la c. seg. de tu billetera"
+      "Eckhart": "Selecciona la palabra {0} de tu respaldo de la billetera"
     },
     "reset__select_word_x_of_y_template": {
       "Bolt": "La palabra {0} de {1} es:",
@@ -2364,7 +2359,7 @@
     },
     "reset__share_words_title": {
       "Bolt": "",
-      "Caesar": "C. seg. estándar",
+      "Caesar": "El respaldo estándar",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2377,8 +2372,8 @@
     "reset__slip39_checklist_more_info_threshold_example_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Si fijas {0} de {1} partes, necesitarás {0} partes de la c. seg. para recuperar tu billetera.",
-      "Eckhart": "Si fijas {0} de {1} partes, necesitarás {0} partes de la c. seg. para recuperar tu billetera."
+      "Delizia": "Si fijas {0} de {1} partes, necesitarás {0} partes del respaldo para recuperar tu billetera.",
+      "Eckhart": "Si fijas {0} de {1} partes, necesitarás {0} partes del respaldo para recuperar tu billetera."
     },
     "reset__slip39_checklist_num_groups": {
       "Bolt": "",
@@ -2441,8 +2436,8 @@
       "Eckhart": "Umbral de recuperación: {0}"
     },
     "reset__slip39_checklist_title": {
-      "Bolt": "Lista c. seg.",
-      "Caesar": "Lista c. seg.",
+      "Bolt": "Siguientes pasos",
+      "Caesar": "Siguientes pasos",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2471,7 +2466,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__title_backup_is_done": "C. seg. completa",
+    "reset__title_backup_is_done": "El respaldo está completo",
     "reset__title_create_wallet": "Crear billetera",
     "reset__title_group_threshold": {
       "Bolt": "",
@@ -2530,7 +2525,7 @@
       "Eckhart": "Fija el total de partes del grupo {0}."
     },
     "reset__use_your_backup": {
-      "Bolt": "Usa la copia de seguridad para recuperar tu billetera.",
+      "Bolt": "Usa tu respaldo cuado necesitas recuperar tu billetera.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2560,7 +2555,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__your_backup_is_done": "C. seg. completa.",
+    "reset__your_backup_is_done": "Tu respaldo está completo.",
     "ripple__account_deletion_warning": "¿Eliminar la cuenta Ripple?",
     "ripple__account_to_be_deleted": "A ser eliminado",
     "ripple__confirm_tag": "Confirmar etiqueta",
@@ -2575,8 +2570,8 @@
     "safety_checks__approve_unsafe_always": "Trezor te permitirá aprobar algunas acciones que podrían no ser seguras.",
     "safety_checks__approve_unsafe_temporary": "Trezor te permitirá aprobar temporalmente algunas acciones que podrían no ser seguras.",
     "safety_checks__enforce_strict": "¿Quieres aplicar controles de seguridad estrictos (recomendado)?",
-    "safety_checks__title": "Verif. de seguridad",
-    "safety_checks__title_safety_override": "Anulación seguridad",
+    "safety_checks__title": "Verificaciones de seguridad",
+    "safety_checks__title_safety_override": "Anulación de seguridad",
     "sd_card__all_data_will_be_lost": {
       "Bolt": "Se perderán todos los datos de la tarjeta SD.",
       "Caesar": "",
@@ -2730,7 +2725,12 @@
       "Eckhart": ""
     },
     "send__maximum_fee": "Comisión máxima",
-    "send__multisig_different_paths": "Usando rutas de derivación distintas para diferentes XPUB.",
+    "send__multisig_different_paths": {
+      "Bolt": "Usando rutas de derivación distintas para diferentes XPUB.",
+      "Caesar": "Usando rutas de derivación distintas para diferentes XPUB",
+      "Delizia": "Usando rutas de derivación distintas para diferentes XPUB.",
+      "Eckhart": "Usando rutas de derivación distintas para diferentes XPUB."
+    },
     "send__receiving_to_multisig": "Recibiendo en una dirección multifirma.",
     "send__send_from": "Enviar desde",
     "send__send_in_the_app": {
@@ -2814,6 +2814,7 @@
     "solana__expected_fee": "Comisión esperada",
     "solana__instruction_accounts_template": "La instrucción contiene {0} cuentas y sus datos tienen {1} bytes.",
     "solana__instruction_data": "Datos de instrucción",
+    "solana__instruction_is_multisig": "La siguiente instrucción es una instrucción multifirma.",
     "solana__is_provided_via_lookup_table_template": "Se proporciona {0} a través de una tabla de consulta.",
     "solana__lookup_table_address": "Dirección de la tabla de consulta",
     "solana__max_fees_rent": "Comisiones máximas y renta",
@@ -2863,14 +2864,19 @@
     "stellar__destination": "Destino",
     "stellar__exchanges_require_memo": "Memo no definido. Normalmente es necesario cuando envías a exchanges.",
     "stellar__ext_auth": "Autorizaciones Externas",
-    "stellar__ext_auth_message": "La transacción contiene invocaciones adicionales autorizadas externamente.",
+    "stellar__ext_auth_message": {
+      "Bolt": "La transacción contiene invocaciones autorizadas externamente.",
+      "Caesar": "La transacción contiene invocaciones adicionales autorizadas externamente.",
+      "Delizia": "La transacción contiene invocaciones adicionales autorizadas externamente.",
+      "Eckhart": "La transacción contiene invocaciones adicionales autorizadas externamente."
+    },
     "stellar__final_confirm": "Confirmación final",
     "stellar__from": "De",
     "stellar__hash": "Hash",
     "stellar__high": "Alto",
     "stellar__home_domain": "Dominio de origen",
     "stellar__inflation": "Inflación",
-    "stellar__invoke_contract": "Invocar Contrato",
+    "stellar__invoke_contract": "Invocar contrato",
     "stellar__issuer_template": "Emisor de {0}",
     "stellar__key": "Clave",
     "stellar__limit": "Límite",
@@ -2946,49 +2952,49 @@
     "thp__autoconnect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "¿Permitir que {0} se conecte automáticamente a este Trezor?",
+      "Delizia": "",
       "Eckhart": "¿Permitir que {0} se conecte automáticamente a este Trezor?"
     },
     "thp__autoconnect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "¿Permitir que {0} en {1} se conecte automáticamente a este Trezor?",
+      "Delizia": "",
       "Eckhart": "¿Permitir que {0} en {1} se conecte automáticamente a este Trezor?"
     },
     "thp__autoconnect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Credencial de conexión automática",
+      "Delizia": "",
       "Eckhart": "Credencial de conexión automática"
     },
     "thp__code_entry": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Ingresa este código de seguridad de un solo uso en {0}",
+      "Delizia": "",
       "Eckhart": "Ingresa este código de seguridad de un solo uso en {0}"
     },
     "thp__code_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Un paso más",
+      "Delizia": "",
       "Eckhart": "Un paso más"
     },
     "thp__connect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "¿Permitir que {0} se conecte a este Trezor?",
+      "Delizia": "",
       "Eckhart": "¿Permitir que {0} se conecte a este Trezor?"
     },
     "thp__connect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "¿Permitir que {0} en {1} se conecte a este Trezor?",
+      "Delizia": "",
       "Eckhart": "¿Permitir que {0} en {1} se conecte a este Trezor?"
     },
     "thp__connect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Diálogo de conexión",
+      "Delizia": "",
       "Eckhart": "Diálogo de conexión"
     },
     "thp__nfc_text": {
@@ -3000,37 +3006,37 @@
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "¿Permitir que {0} se empareje con este Trezor?",
+      "Delizia": "",
       "Eckhart": "¿Permitir que {0} se empareje con este Trezor?"
     },
     "thp__pair_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "¿Permitir que {0} en {1} se empareje con este Trezor?",
+      "Delizia": "",
       "Eckhart": "¿Permitir que {0} en {1} se empareje con este Trezor?"
     },
     "thp__pair_name": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "{0} es el nombre de tu Trezor.",
+      "Delizia": "",
       "Eckhart": "{0} es el nombre de tu Trezor."
     },
     "thp__pair_new_device": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Vincular nuevo dispositivo",
+      "Delizia": "",
       "Eckhart": "Vincular nuevo dispositivo"
     },
     "thp__pair_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Antes de continuar",
+      "Delizia": "",
       "Eckhart": "Antes de continuar"
     },
     "thp__qr_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Escanea el QR para emparejar",
+      "Delizia": "",
       "Eckhart": "Escanea el QR para emparejar"
     },
     "tron__claim_unfrozen_balance": "¿Reclamar balance descongelado?",
@@ -3051,6 +3057,12 @@
     },
     "tron__owner_address": "Dirección del propietario",
     "tron__undelegate_resource": "Remover delegación del recurso",
+    "tutorial__complete": {
+      "Bolt": "",
+      "Caesar": "Completar tutorial",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3075,6 +3087,12 @@
       "Delizia": "Trezor Model One, creada en 2013,\nfue la primera billetera física de la historia.",
       "Eckhart": ""
     },
+    "tutorial__hold_left_press_right": {
+      "Bolt": "",
+      "Caesar": "Mantén IZQUIERDA, presiona DERECHA.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__last_one": {
       "Bolt": "",
       "Caesar": "",
@@ -3083,13 +3101,13 @@
     },
     "tutorial__lets_begin": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Aprende las bases para navegar tu dispositivo.",
       "Delizia": "Aprende a usar y navegar este dispositivo con facilidad.",
       "Eckhart": ""
     },
     "tutorial__menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Encuentra acciones y opciones específicas del contexto en el menú.",
       "Delizia": "Encuentra acciones y opciones específicas del contexto en el menú.",
       "Eckhart": "Encuentra acciones y opciones específicas del contexto en el menú."
     },
@@ -3099,9 +3117,15 @@
       "Delizia": "",
       "Eckhart": "Ver más info, salir del flujo..."
     },
+    "tutorial__menu_later": {
+      "Bolt": "",
+      "Caesar": "Este menú provee información de contexto. Cubriremos esto más tarde.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__middle_click": {
       "Bolt": "",
-      "Caesar": "Pulsa ambos botones a la vez\npara confirmar.",
+      "Caesar": "Pulsa el botón izquierdo y derecho al mismo tiempo para ver la siguiente pantalla.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3129,9 +3153,21 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "tutorial__press_both": {
+      "Bolt": "",
+      "Caesar": "Presiona AMBOS botones al mismo tiempo.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__press_left": {
+      "Bolt": "",
+      "Caesar": "Presiona IZQUIERDA.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__ready_to_use": {
       "Bolt": "",
-      "Caesar": "Ya puedes\nusar Trezor.",
+      "Caesar": "Ya puede usar tu Trezor.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3143,13 +3179,19 @@
     },
     "tutorial__restart_tutorial": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Reiniciar tutorial",
       "Delizia": "Reiniciar tutorial",
       "Eckhart": "Reiniciar tutorial"
     },
     "tutorial__scroll_down": {
       "Bolt": "",
-      "Caesar": "Pulsa el botón derecho para ir bajando y leer todo cuando el texto no quepa en una pantalla.\n\rPulsa el botón izquierdo para ir hacia arriba.",
+      "Caesar": "Presiona DERECHA para ver la siguiente pantalla.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__scroll_up": {
+      "Bolt": "",
+      "Caesar": "Mantén IZQUIERDA Y presiona DERECHA para desplazarte hacia arriba.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3183,9 +3225,15 @@
       "Delizia": "Navegación fácil",
       "Eckhart": ""
     },
+    "tutorial__title_go_back": {
+      "Bolt": "",
+      "Caesar": "¿Necesitas regresar?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_handy_menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Menú",
       "Delizia": "Menú útil",
       "Eckhart": "Menú útil"
     },
@@ -3207,9 +3255,21 @@
       "Delizia": "Comencemos",
       "Eckhart": ""
     },
+    "tutorial__title_middle_button": {
+      "Bolt": "",
+      "Caesar": "Botón del medio",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_remember": {
+      "Bolt": "",
+      "Caesar": "Recordar",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_screen_scroll": {
       "Bolt": "",
-      "Caesar": "Desplazar la pantalla",
+      "Caesar": "Prueba desplazar",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3222,6 +3282,12 @@
     "tutorial__title_tutorial_complete": {
       "Bolt": "",
       "Caesar": "Tutorial completo",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_welcome": {
+      "Bolt": "",
+      "Caesar": "Bienvenido a Trezor",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3239,7 +3305,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Usa tu Trezor pulsando los botones izquierdo y derecho. Continúa con el botón derecho.",
+      "Caesar": "Usa tu Trezor pulsando los botones izquierdo y derecho.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3278,64 +3344,39 @@
     "wipe_code__cancel_setup": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Cancelar configuración del cód. borrar.",
-      "Eckhart": "¿Cancelar configuración del cód. borrar?"
+      "Delizia": "Cancelar configuración del código de borrado.",
+      "Eckhart": "¿Cancelar configuración del código de borrado?"
     },
     "wipe_code__change": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Cambiar el código de borrar"
+      "Eckhart": "Cambiar el código de borrado"
     },
-    "wipe_code__change_question": {
-      "Bolt": "¿Cambiar el cód. borrar?",
-      "Caesar": "¿Cambiar el cód. borrar?",
-      "Delizia": "¿Cambiar el cód. borrar?",
-      "Eckhart": "¿Cambiar el código de borrar?"
-    },
-    "wipe_code__changed": {
-      "Bolt": "Cód. borrar modificado.",
-      "Caesar": "Cód. borrar modificado.",
-      "Delizia": "Cód. borrar modificado.",
-      "Eckhart": "El código de borrar se ha cambiado."
-    },
-    "wipe_code__diff_from_pin": "El código de borrar debe ser diferente del PIN.",
-    "wipe_code__disabled": {
-      "Bolt": "Cód. borrar desactivado.",
-      "Caesar": "Cód. borrar desactivado.",
-      "Delizia": "Cód. borrar desactivado.",
-      "Eckhart": "El código de borrar se ha desactivado."
-    },
-    "wipe_code__enabled": {
-      "Bolt": "Cód. borrar activado.",
-      "Caesar": "Cód. borrar activado.",
-      "Delizia": "Cód. borrar activado.",
-      "Eckhart": "El código de borrar se ha activado."
-    },
-    "wipe_code__enter_new": "Nuevo cód. borrar",
+    "wipe_code__change_question": "¿Cambiar el código de borrado?",
+    "wipe_code__changed": "Código de borrado modificado.",
+    "wipe_code__diff_from_pin": "El código de borrado debe ser diferente del PIN.",
+    "wipe_code__disabled": "Código de borrado desactivado.",
+    "wipe_code__enabled": "Código de borrado activado.",
+    "wipe_code__enter_new": "Nuevo código de borrado",
     "wipe_code__info": {
-      "Bolt": "Con el cód. borrar eliminarás todos los datos del dispositivo.",
-      "Caesar": "Con el cód. borrar eliminarás todos los datos del dispositivo.",
+      "Bolt": "Con el código de borrado eliminarás todos los datos del dispositivo.",
+      "Caesar": "Con el código de borrado eliminarás todos los datos del dispositivo.",
       "Delizia": "",
-      "Eckhart": "Con el cód. borrar eliminarás todos los datos del dispositivo."
+      "Eckhart": "Con el código de borrado eliminarás todos los datos del dispositivo."
     },
     "wipe_code__invalid": {
-      "Bolt": "Cód. borrar inválido",
+      "Bolt": "Código de borrado inválido",
       "Caesar": "",
-      "Delizia": "Cód. borrar inválido",
+      "Delizia": "Código de borrado inválido",
       "Eckhart": ""
     },
-    "wipe_code__mismatch": "Los códigos de borrar no coinciden.",
-    "wipe_code__pin_not_set_description": {
-      "Bolt": "Debes config. un PIN antes de activar el cód. borrar.",
-      "Caesar": "Debes config. un PIN antes de activar el cód. borrar.",
-      "Delizia": "Debes config. un PIN antes de activar el cód. borrar.",
-      "Eckhart": "Debes configurar un PIN antes de activar el código de borrado."
-    },
-    "wipe_code__reenter": "Reingresar cód. bor.",
+    "wipe_code__mismatch": "Los códigos de borrado no coinciden.",
+    "wipe_code__pin_not_set_description": "Debes configurar un PIN antes de activar el código de borrado.",
+    "wipe_code__reenter": "Reingresa código de borrado",
     "wipe_code__reenter_to_confirm": {
       "Bolt": "",
-      "Caesar": "Reingresa cód.borrar para confirmar.",
+      "Caesar": "Reingresa código de borrado para confirmar.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3343,32 +3384,32 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Eliminar el código de borrar"
+      "Eckhart": "Eliminar el código de borrado"
     },
     "wipe_code__title": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Código de borrar"
+      "Eckhart": "Código de borrado"
     },
     "wipe_code__title_check": {
       "Bolt": "",
-      "Caesar": "Verif. cód. borrar",
+      "Caesar": "Verificar el código de borrado",
       "Delizia": "",
       "Eckhart": ""
     },
     "wipe_code__title_invalid": {
       "Bolt": "",
-      "Caesar": "Cód. borrar inválido",
+      "Caesar": "Código de borrado inválido",
       "Delizia": "",
       "Eckhart": ""
     },
-    "wipe_code__title_settings": "Config. cód. borrar",
-    "wipe_code__turn_off": "¿Desactivar protección con cód. borrar?",
+    "wipe_code__title_settings": "Configuración del código de borrado",
+    "wipe_code__turn_off": "¿Desactivar la protección con código de borrado?",
     "wipe_code__turn_on": {
-      "Bolt": "¿Activar protección con cód. borrar?",
-      "Caesar": "¿Activar protección con cód. borrar?",
-      "Delizia": "¿Activar protección con cód. borrar?",
+      "Bolt": "¿Activar la protección con código de borrado?",
+      "Caesar": "¿Activar la protección con código de borrado?",
+      "Delizia": "¿Activar la protección con código de borrado?",
       "Eckhart": ""
     },
     "wipe_code__wipe_code_mismatch": {
@@ -3511,9 +3552,9 @@
     "words__power": "Energía",
     "words__provider": "Proveedor",
     "words__really_wanna": {
-      "Bolt": "¿Seguro que quieres",
+      "Bolt": "¿Seguro que quieres?",
       "Caesar": "",
-      "Delizia": "¿Seguro que quieres",
+      "Delizia": "¿Seguro que quieres?",
       "Eckhart": ""
     },
     "words__receive": {
@@ -3596,7 +3637,12 @@
       "Delizia": "Reintentar.",
       "Eckhart": "Reintentar."
     },
-    "words__undelegate": "Anular delegación",
+    "words__undelegate": {
+      "Bolt": "Anular delegación",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__unknown": "Desconocido",
     "words__unlimited": "Ilimitado",
     "words__unlocked": {
