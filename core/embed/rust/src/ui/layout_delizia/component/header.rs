@@ -56,6 +56,7 @@ impl AttachAnimation {
 }
 
 const BUTTON_EXPAND_BORDER: i16 = 32;
+const ICON_SPACING: i16 = 6;
 
 #[derive(Clone, Copy)]
 pub enum HeaderMsg {
@@ -206,6 +207,15 @@ impl Header {
         self
     }
 
+    /// Static icon left of the title, which wraps next to it.
+    #[inline(never)]
+    pub fn with_static_icon(mut self, icon: Icon, color: Color) -> Self {
+        self.anim = None;
+        self.icon = Some(icon);
+        self.color = Some(color);
+        self
+    }
+
     #[inline(never)]
     pub fn with_result_icon(mut self, icon: Icon, color: Color) -> Self {
         self.anim = Some(AttachAnimation::default());
@@ -231,6 +241,14 @@ impl Component for Header {
             bounds
         }
         .inset(Insets::sides(theme::SPACING));
+        // a static icon takes space from the title, the result icon is revealed
+        // by the title sliding away
+        let header_area = match self.icon {
+            Some(icon) if self.anim.is_none() => {
+                header_area.inset(Insets::left(icon.toif.width() + ICON_SPACING))
+            }
+            _ => header_area,
+        };
 
         if self.subtitle.is_some() {
             let title_area = self.title.place(header_area);
@@ -293,15 +311,22 @@ impl Component for Header {
 
         self.button.render(target);
 
-        target.in_clip(self.title.area().split_left(offset.x).0, &|target| {
-            if let Some(icon) = self.icon {
-                let color = self.color.unwrap_or(theme::GREEN);
-                shape::ToifImage::new(self.title.area().left_center(), icon.toif)
-                    .with_fg(color)
+        if let Some(icon) = self.icon {
+            let title_left = self.title.area().left_center();
+            let image = |pos| {
+                shape::ToifImage::new(pos, icon.toif)
+                    .with_fg(self.color.unwrap_or(theme::GREEN))
                     .with_align(Alignment2D::CENTER_LEFT)
-                    .render(target);
+            };
+            if self.anim.is_some() {
+                // revealed by the title sliding to the right
+                target.in_clip(self.title.area().split_left(offset.x).0, &|target| {
+                    image(title_left).render(target);
+                });
+            } else {
+                image(title_left - Offset::x(icon.toif.width() + ICON_SPACING)).render(target);
             }
-        });
+        }
 
         target.with_origin(offset, &|target| {
             self.title.render(target);
