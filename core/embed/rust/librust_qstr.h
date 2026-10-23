@@ -402,7 +402,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_haptics_enabled;
   MP_QSTR_hint;
   MP_QSTR_hold;
-  MP_QSTR_hold_danger;
   MP_QSTR_homescreen__backup_needed_info;
   MP_QSTR_homescreen__click_to_connect;
   MP_QSTR_homescreen__click_to_unlock;
@@ -1477,6 +1476,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_solana__claim_question;
   MP_QSTR_solana__claim_recipient_warning;
   MP_QSTR_solana__confirm_multisig;
+  MP_QSTR_solana__details_not_reviewed;
   MP_QSTR_solana__expected_fee;
   MP_QSTR_solana__instruction_accounts_template;
   MP_QSTR_solana__instruction_data;
@@ -1487,18 +1487,22 @@ static void _librust_qstrs(void) {
   MP_QSTR_solana__multiple_signers;
   MP_QSTR_solana__offchain_is_multisig;
   MP_QSTR_solana__priority_fee;
+  MP_QSTR_solana__skip_details;
+  MP_QSTR_solana__skip_details_hint;
   MP_QSTR_solana__stake;
   MP_QSTR_solana__stake_account;
   MP_QSTR_solana__stake_on_question;
   MP_QSTR_solana__stake_question;
   MP_QSTR_solana__stake_withdrawal_warning;
   MP_QSTR_solana__stake_withdrawal_warning_title;
+  MP_QSTR_solana__title_blind_signing;
   MP_QSTR_solana__transaction_contains_unknown_instructions;
   MP_QSTR_solana__transaction_requires_x_signers_template;
   MP_QSTR_solana__unknown_token;
   MP_QSTR_solana__unknown_token_address;
   MP_QSTR_solana__unstake;
   MP_QSTR_solana__unstake_question;
+  MP_QSTR_solana__view_details_in_menu;
   MP_QSTR_solana__vote_account;
   MP_QSTR_stellar__account_merge;
   MP_QSTR_stellar__account_thresholds;

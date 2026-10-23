@@ -156,13 +156,14 @@ def confirm_action(
     cancel: bool = True,
     verb_cancel: str | None = None,
     hold: bool = False,
-    hold_danger: bool = False,
+    danger: bool = False,  # unused on caesar
     reverse: bool = False,
     prompt_screen: bool = False,
     prompt_title: str | None = None,
     external_menu: bool = False,
 ) -> LayoutContext[UiResult]:
-    """Confirm action."""
+    """Confirm action. Delizia: with an external menu and no text, only the hold prompt
+    is shown."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

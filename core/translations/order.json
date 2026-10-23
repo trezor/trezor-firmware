@@ -1310,5 +1310,10 @@
   "1308": "tutorial__title_go_back",
   "1309": "tutorial__title_middle_button",
   "1310": "tutorial__title_remember",
-  "1311": "tutorial__title_welcome"
+  "1311": "tutorial__title_welcome",
+  "1312": "solana__details_not_reviewed",
+  "1313": "solana__skip_details",
+  "1314": "solana__skip_details_hint",
+  "1315": "solana__title_blind_signing",
+  "1316": "solana__view_details_in_menu"
 }

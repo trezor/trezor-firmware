@@ -61,7 +61,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
-        let hold_danger: bool = kwargs.get_or(Qstr::MP_QSTR_hold_danger, false)?;
+        let danger: bool = kwargs.get_or(Qstr::MP_QSTR_danger, false)?;
         let reverse: bool = kwargs.get_or(Qstr::MP_QSTR_reverse, false)?;
         let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, false)?;
         let prompt_title: Option<TString> = kwargs
@@ -79,7 +79,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             cancel,
             verb_cancel,
             hold,
-            hold_danger,
+            danger,
             reverse,
             prompt_screen,
             prompt_title,
@@ -1470,13 +1470,14 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     cancel: bool = True,
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
-    ///     hold_danger: bool = False,
+    ///     danger: bool = False,  # unused on caesar
     ///     reverse: bool = False,
     ///     prompt_screen: bool = False,
     ///     prompt_title: str | None = None,
     ///     external_menu: bool = False,
     /// ) -> LayoutContext[UiResult]:
-    ///     """Confirm action."""
+    ///     """Confirm action. Delizia: with an external menu and no text, only the hold prompt
+    ///     is shown."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
 
     /// def confirm_address(

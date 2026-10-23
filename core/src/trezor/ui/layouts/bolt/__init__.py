@@ -39,7 +39,7 @@ async def confirm_action(
     verb: str | None = None,
     verb_cancel: str | None = None,
     hold: bool = False,
-    hold_danger: bool = False,
+    danger: bool = False,
     reverse: bool = False,
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_CODE_OTHER,
@@ -54,7 +54,7 @@ async def confirm_action(
         verb=verb,
         verb_cancel=verb_cancel,
         hold=hold,
-        hold_danger=hold_danger,
+        danger=danger,
         reverse=reverse,
     ) as layout:
         return await raise_if_not_confirmed(
@@ -1643,6 +1643,14 @@ if not utils.BITCOIN_ONLY:
         return show_danger(
             "unknown_token_warning", content=TR.solana__unknown_token_address
         )
+
+    async def confirm_solana_blind_signing() -> bool:
+        """Skipping the review is not offered on this layout."""
+        await show_warning(
+            "warning_blind_signing",
+            TR.solana__transaction_contains_unknown_instructions,
+        )
+        return False
 
     def confirm_solana_recipient(
         recipient: str,
