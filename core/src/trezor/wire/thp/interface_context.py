@@ -2,6 +2,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 import trezorthp
+from storage import device
 from storage.cache_thp import PREEMPTING_PACKET, clear_sessions_without_channel
 from trezor import config, io, loop, utils
 from trezor.loop import Timeout, race, wait
@@ -9,7 +10,6 @@ from trezor.loop import Timeout, race, wait
 from ..protocol_common import ChannelPreemptedException
 from . import get_encoded_device_properties
 from .channel import TREZOR_STATE_PAIRED, TREZOR_STATE_UNPAIRED, Channel
-from .crypto import get_trezor_static_private_key
 
 if __debug__:
     from trezor import log
@@ -411,12 +411,22 @@ class InterfaceContext:
         for ifctx in self.thp_ctx._iface_ctxs:
             ifctx._read_box.put(None, replace=True)
 
+    def _provide_handshake_key(self) -> None:
+        try:
+            trezorthp.handshake_key_from_device_secret(
+                self._iface.iface_num(), device.get_device_secret()
+            )
+        except Exception as exc:
+            if __debug__:
+                log.exception(__name__, exc, iface=self._iface)
+            # Abort pending handshakes on this interface; keep the read task alive.
+            trezorthp.handshake_key_from_device_secret(self._iface.iface_num(), None)
+
     def handle_handshake_key(self, try_to_unlock: bool) -> None:
         if config.is_unlocked():
-            trezor_static_privkey = get_trezor_static_private_key()
-            trezorthp.handshake_key(self._iface.iface_num(), trezor_static_privkey)
+            self._provide_handshake_key()
         elif not try_to_unlock:
-            trezorthp.handshake_key(self._iface.iface_num(), None)
+            trezorthp.handshake_key_from_device_secret(self._iface.iface_num(), None)
         elif self._handshake_key_task is None:
             if __debug__:
                 log.debug(
@@ -437,13 +447,11 @@ class InterfaceContext:
             # Register the unlock prompt with the workflow management system
             # (in order to avoid immediately respawning the lockscreen task)
             await workflow.spawn(unlock_device())
-            trezor_static_privkey = get_trezor_static_private_key()
+            self._provide_handshake_key()
         except Exception as e:
             if __debug__:
                 log.exception(__name__, e)
-            trezorthp.handshake_key(self._iface.iface_num(), None)
-        else:
-            trezorthp.handshake_key(self._iface.iface_num(), trezor_static_privkey)
+            trezorthp.handshake_key_from_device_secret(self._iface.iface_num(), None)
         finally:
             self.request_write()
             self._handshake_key_task = None

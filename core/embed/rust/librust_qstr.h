@@ -394,7 +394,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
   MP_QSTR_handshake_hash;
-  MP_QSTR_handshake_key;
+  MP_QSTR_handshake_key_from_device_secret;
   MP_QSTR_haptic_feedback__disable;
   MP_QSTR_haptic_feedback__enable;
   MP_QSTR_haptic_feedback__subtitle;
@@ -893,6 +893,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_sn__title;
   MP_QSTR_start_advertising;
   MP_QSTR_start_comm;
+  MP_QSTR_static_public_key;
   MP_QSTR_storage_msg__processing;
   MP_QSTR_storage_msg__starting;
   MP_QSTR_storage_msg__verifying_pin;
