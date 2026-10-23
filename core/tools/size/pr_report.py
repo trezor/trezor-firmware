@@ -55,13 +55,27 @@ BLOB_REGIONS = {
 }
 CODE_REGION = "code"
 
-# Images shown as columns of the compact grid, in this order. Every other
-# image (kernel, secmon, bootloader_ci, ...) is listed in the expanded part only.
+# Images shown as columns of the grid, in this order. Any other image that
+# changed gets a column of its own, after these.
 GRID_IMAGES = ["firmware", "bootloader", "boardloader", "prodtest"]
+
+# Images that are part of the firmware image: they are shown as rows of the
+# firmware cell, measured from their own ELF, never as columns.
+FOLDED_IMAGES = {"kernel", "secmon"}
+
+# Order of the rows in the firmware cell.
+ROW_ORDER = ["coreapp", "kernel", "secmon", "nrf blob", "bootloader blob"]
 
 # An image delta that differs from the content delta by at least this much
 # means an alignment boundary was crossed and is flagged in the report.
 BOUNDARY_WARN_BYTES = 4096
+
+# An image with less free space than this in its flash area is flagged.
+LIMIT_WARN_BYTES = 1024
+
+# Images linked against their own flash area, where free space means something.
+# The kernel and the secmon are linked against the whole flash and embedded elsewhere.
+AREA_IMAGES = {"firmware", "bootloader", "bootloader_ci", "boardloader", "prodtest"}
 
 COMMENT_MARKER = "<!-- size-comment-Core -->"
 
@@ -75,6 +89,7 @@ NOT_BUILT = "—"  # em dash
 # ---------------------------------------------------------------------------
 # ELF section headers (ELF32 little endian, which is all the firmware uses)
 
+SHF_WRITE = 0x1
 SHF_ALLOC = 0x2
 
 
@@ -88,6 +103,10 @@ class ElfSection:
     @property
     def alloc(self) -> bool:
         return bool(self.flags & SHF_ALLOC)
+
+    @property
+    def writable(self) -> bool:
+        return bool(self.flags & SHF_WRITE)
 
 
 def read_elf_sections(path: Path) -> list[ElfSection]:
@@ -172,6 +191,57 @@ class MapSection:
     @property
     def end(self) -> int:
         return self.addr + self.size
+
+
+_MEMORY_RE = re.compile(
+    r"^(?P<name>\S+)\s+0x(?P<origin>[0-9a-f]+)\s+0x(?P<length>[0-9a-f]+)\s+(?P<attrs>\S+)"
+)
+
+
+@dataclass(frozen=True)
+class MemoryArea:
+    origin: int
+    end: int
+    writable: bool  # RAM, as opposed to flash
+
+    def holds(self, addr: int) -> bool:
+        return self.origin <= addr < self.end
+
+
+def read_map_memory(path: Path) -> list[MemoryArea]:
+    """The regions of the map's Memory Configuration, i.e. the linker script's MEMORY."""
+    areas: list[MemoryArea] = []
+    started = False
+    with path.open(errors="replace") as f:
+        for line in f:
+            if line.startswith("Linker script and memory map"):
+                break
+            if not started:
+                started = line.startswith("Memory Configuration")
+                continue
+            match = _MEMORY_RE.match(line)
+            if match and match.group("name") != "*default*":
+                origin = int(match.group("origin"), 16)
+                areas.append(
+                    MemoryArea(
+                        origin,
+                        origin + int(match.group("length"), 16),
+                        "w" in match.group("attrs"),
+                    )
+                )
+    return areas
+
+
+def trailing_fill(section: MapSection) -> int:
+    """Padding at the very end of an output section."""
+    total = 0
+    edge = section.end
+    for item in reversed(section.items):
+        if item.kind != "fill" or item.addr + item.size != edge:
+            break
+        total += item.size
+        edge = item.addr
+    return total
 
 
 def read_map_sections(path: Path) -> list[MapSection]:
@@ -271,6 +341,7 @@ class ImageSize:
     flash: int  # bytes written to flash
     fill: int
     ram: int  # statically allocated RAM
+    free: int | None  # free bytes in the image's flash area, None when unknown
     regions: dict[str, Region]
     warnings: list[str] = field(default_factory=list)
 
@@ -279,16 +350,15 @@ class ImageSize:
         return self.flash - self.fill
 
     @property
-    def slack(self) -> int:
-        # the trailing padding of the last region is the image's own tail padding
-        return next(reversed(self.regions.values())).slack if self.regions else 0
+    def near_limit(self) -> bool:
+        return self.free is not None and self.free < LIMIT_WARN_BYTES
 
     def as_dict(self) -> dict:
         return {
             "flash": self.flash,
             "content": self.content,
             "fill": self.fill,
-            "slack": self.slack,
+            "free": self.free,
             "ram": self.ram,
             "regions": {
                 name: region.as_dict() for name, region in self.regions.items()
@@ -351,13 +421,36 @@ def measure_image(elf_path: Path, projects_dir: Path) -> ImageSize:
         raise ValueError(f"{elf_path}: none of {flash_names} present")
     flash = sum(s.size for s in flash_sections)
 
-    lo = min(s.addr for s in flash_sections)
-    hi = max(s.addr + s.size for s in flash_sections)
-    ram = sum(s.size for s in elf_sections if s.alloc and not lo <= s.addr < hi)
-
     warnings: list[str] = []
-    regions: dict[str, Region] = {}
     map_path = elf_path.with_suffix(".map")
+    memory = read_map_memory(map_path) if map_path.exists() else []
+    flash_areas = [a for a in memory if not a.writable]
+    free: int | None = None
+    if flash_areas:
+        # `.data` is written to flash but lives in RAM; the map's memory areas tell them apart
+        in_flash = [
+            s for s in flash_sections if any(a.holds(s.addr) for a in flash_areas)
+        ]
+        ram = sum(
+            s.size
+            for s in elf_sections
+            if s.alloc and not any(a.holds(s.addr) for a in flash_areas)
+        )
+        used = [a for a in flash_areas if any(a.holds(s.addr) for s in in_flash)]
+        free = sum(
+            a.end - max(s.addr + s.size for s in in_flash if a.holds(s.addr))
+            for a in used
+        )
+    else:
+        in_flash = flash_sections
+        lo = min(s.addr for s in in_flash)
+        hi = max(s.addr + s.size for s in in_flash)
+        ram = sum(s.size for s in elf_sections if s.alloc and not lo <= s.addr < hi)
+    if image not in AREA_IMAGES:
+        free = None
+    last = max(in_flash, key=lambda s: s.addr)
+
+    regions: dict[str, Region] = {}
     if map_path.exists():
         by_name: dict[str, list[MapSection]] = defaultdict(list)
         for section in read_map_sections(map_path):
@@ -374,6 +467,8 @@ def measure_image(elf_path: Path, projects_dir: Path) -> ImageSize:
                 regions.setdefault(CODE_REGION, Region()).size += section.size
                 continue
             mapped = candidates[0]
+            if section is last and free is not None:
+                free += trailing_fill(mapped)  # a bootloader is padded up to its limit
             if mapped.size != section.size:
                 warnings.append(
                     f"section {section.name}: map says {mapped.size} B, ELF says {section.size} B"
@@ -387,7 +482,7 @@ def measure_image(elf_path: Path, projects_dir: Path) -> ImageSize:
         regions[CODE_REGION] = Region(size=flash)
 
     return ImageSize(
-        flash, sum(r.fill for r in regions.values()), ram, regions, warnings
+        flash, sum(r.fill for r in regions.values()), ram, free, regions, warnings
     )
 
 
@@ -410,6 +505,16 @@ class Build:
     @property
     def is_release(self) -> bool:
         return self.coins == "universal" and self.kind == "normal" and not self.extra
+
+    @property
+    def sort_key(self) -> tuple[bool, bool, int, str]:
+        kinds = ["normal", "debuglink", "production"]
+        return (
+            not self.is_release,
+            self.coins != "universal",
+            kinds.index(self.kind),
+            self.extra,
+        )
 
 
 def find_builds(root: Path | None) -> Iterator[tuple[Build, Path]]:
@@ -452,6 +557,13 @@ def fmt_delta(n: int) -> str:
     return f"{'+' if n > 0 else '-'}{fmt(abs(n))}"
 
 
+def fmt_signed(n: int) -> str:
+    """A delta with its colour: red when it grew, green when it shrank."""
+    if n == 0:
+        return "0"
+    return f"{SIGNAL_GREW if n > 0 else SIGNAL_SHRANK} {fmt_delta(n)}"
+
+
 def signal(deltas: Iterable[int]) -> str:
     grew = shrank = False
     for d in deltas:
@@ -466,17 +578,133 @@ def signal(deltas: Iterable[int]) -> str:
     return SIGNAL_SAME
 
 
-def boundary_crossed(old: ImageSize, new: ImageSize) -> bool:
+# ---------------------------------------------------------------------------
+# What the report shows per build and image
+
+
+@dataclass
+class Row:
+    name: str
+    content: int
+    size: int
+    slack: int
+
+
+@dataclass
+class View:
+    """One image of one build as the comment presents it."""
+
+    content: int
+    flash: int
+    ram: int
+    free: int | None
+    rows: list[Row]  # region rows; empty for an image with a single region
+    warnings: list[str]
+
+    @property
+    def near_limit(self) -> bool:
+        return self.free is not None and self.free < LIMIT_WARN_BYTES
+
+
+def tail_slack(image: ImageSize) -> int:
+    return next(reversed(image.regions.values())).slack if image.regions else 0
+
+
+def firmware_view(images: dict[str, ImageSize]) -> View:
+    """The firmware image with the kernel and the secmon as rows of their own.
+
+    Both ride inside the kernel blob of the firmware image. Measured from their
+    own ELFs their content is exact, while the blob only shows padded steps.
+    """
+    firmware = images["firmware"]
+    rows: list[Row] = []
+    warnings = list(firmware.warnings)
+    for name, region in firmware.regions.items():
+        if name == "kernel blob" and "kernel" in images:
+            kernel, secmon = images["kernel"], images.get("secmon")
+            # a development build may keep the secmon out of the blob; then the room is the kernel's alone
+            inside = secmon is not None and region.size >= kernel.flash + secmon.flash
+            room = (
+                region.size - kernel.flash - (secmon.flash if secmon and inside else 0)
+            )
+            rows.append(Row("kernel", kernel.content, kernel.flash, room))
+            warnings += kernel.warnings
+            if secmon:
+                rows.append(
+                    Row("secmon", secmon.content, secmon.flash, tail_slack(secmon))
+                )
+                warnings += secmon.warnings
+            continue
+        rows.append(
+            Row(
+                "coreapp" if name == CODE_REGION else name,
+                region.content,
+                region.size,
+                region.slack,
+            )
+        )
+    rows.sort(
+        key=lambda r: ROW_ORDER.index(r.name) if r.name in ROW_ORDER else len(ROW_ORDER)
+    )
+    return View(
+        sum(r.content for r in rows),
+        firmware.flash,
+        firmware.ram,
+        firmware.free,
+        rows,
+        warnings,
+    )
+
+
+def view_of(images: dict[str, ImageSize], image: str) -> View | None:
+    if image not in images:
+        return None
+    if image == "firmware":
+        return firmware_view(images)
+    size = images[image]
+    rows = (
+        [Row(n, r.content, r.size, r.slack) for n, r in size.regions.items()]
+        if len(size.regions) > 1
+        else []
+    )
+    return View(size.content, size.flash, size.ram, size.free, rows, size.warnings)
+
+
+def boundary_crossed(old: View, new: View) -> bool:
     return (
         abs((new.flash - old.flash) - (new.content - old.content))
         >= BOUNDARY_WARN_BYTES
     )
 
 
-def changed(old: ImageSize | None, new: ImageSize | None) -> bool:
+def changed(old: View | None, new: View | None) -> bool:
     if old is None or new is None:
         return old is not new
     return old.content != new.content or old.flash != new.flash or old.ram != new.ram
+
+
+Pair = tuple[Build, View | None, View | None]
+
+
+def html_table(columns: list[tuple[str, bool]], rows: list[list[str]]) -> str:
+    """A one-line HTML table, as a markdown table cell can hold; (title, right-aligned) per column."""
+    head = "".join(
+        f'<th align="right">{t}</th>' if r else f"<th>{t}</th>" for t, r in columns
+    )
+    body = "".join(
+        "<tr>"
+        + "".join(
+            f'<td align="right">{v}</td>' if r else f"<td>{v}</td>"
+            for v, (_t, r) in zip(row, columns)
+        )
+        + "</tr>"
+        for row in rows
+    )
+    return f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
+
+
+# ---------------------------------------------------------------------------
+# Report
 
 
 @dataclass
@@ -497,7 +725,7 @@ class Report:
         builds = {b for b in self.new if b.model == model} | {
             b for b in self.base if b.model == model
         }
-        return sorted(builds, key=lambda b: (not b.is_release, b))
+        return sorted(builds, key=lambda b: b.sort_key)
 
     def images_of(self, model: str) -> list[str]:
         images = {
@@ -506,34 +734,54 @@ class Report:
             for tree in (self.base, self.new)
             for img in tree.get(b, {})
         }
-        return [i for i in GRID_IMAGES if i in images] + sorted(
-            images - set(GRID_IMAGES)
-        )
+        return sorted(images - FOLDED_IMAGES)
 
-    def pair(
-        self, build: Build, image: str
-    ) -> tuple[ImageSize | None, ImageSize | None]:
-        return self.base.get(build, {}).get(image), self.new.get(build, {}).get(image)
-
-    def pairs(
-        self, model: str, image: str
-    ) -> list[tuple[Build, ImageSize | None, ImageSize | None]]:
-        found = [(b, *self.pair(b, image)) for b in self.builds_of(model)]
+    def pairs(self, model: str, image: str) -> list[Pair]:
+        found = [
+            (
+                b,
+                view_of(self.base.get(b, {}), image),
+                view_of(self.new.get(b, {}), image),
+            )
+            for b in self.builds_of(model)
+        ]
         return [
             (b, old, new) for b, old, new in found if old is not None or new is not None
         ]
 
-    # -- compact grid -------------------------------------------------------
+    def columns(self) -> list[str]:
+        extra = {
+            image
+            for model in self.models
+            for image in self.images_of(model)
+            if image not in GRID_IMAGES
+            and any(changed(old, new) for _b, old, new in self.pairs(model, image))
+        }
+        return GRID_IMAGES + sorted(extra)
 
-    def cell(self, model: str, image: str) -> str:
-        """Signal and content delta of one image across every build of the model."""
-        pairs = self.pairs(model, image)
-        if not pairs:
-            return NOT_BUILT
+    def anything_changed(self) -> bool:
+        return any(
+            changed(old, new)
+            for model in self.models
+            for image in self.images_of(model)
+            for _b, old, new in self.pairs(model, image)
+        )
+
+    def delta(self, value: int, before: int | None) -> str:
         if self.base_label is None:
-            return fmt(next(n for _b, _o, n in pairs if n is not None).content)
+            return ""
+        return fmt_signed(value - before) if before is not None else "new"
+
+    # -- one grid cell ------------------------------------------------------
+
+    def summary(self, pairs: list[Pair]) -> str:
+        """Signal and content delta of one image across every build of the model."""
+        near_limit = any(new.near_limit for _b, _o, new in pairs if new)
+        warn = f" {SIGNAL_WARN}" if near_limit else ""
+        if self.base_label is None:
+            return fmt(next(n for _b, _o, n in pairs if n is not None).content) + warn
         if all(old is None for _b, old, _n in pairs):
-            return "new"
+            return "new" + warn
         if all(new is None for _b, _o, new in pairs):
             return "gone"
         complete = [
@@ -549,216 +797,132 @@ class Report:
         text = f"{sig} {fmt_delta(deltas[headline])}"
         if sig == SIGNAL_MIXED:
             text += " mixed"
-        if any(boundary_crossed(old, new) for _b, old, new in complete):
+        crossed = any(boundary_crossed(old, new) for _b, old, new in complete)
+        # the limit warning is for changes this PR makes, not a permanent badge
+        if crossed or (near_limit and sig != SIGNAL_SAME):
             text += f" {SIGNAL_WARN}"
         return text
 
+    def region_table(self, old: View | None, new: View) -> str:
+        columns = [
+            ("Region", False),
+            ("Content", True),
+            ("\u0394", True),
+            ("Image", True),
+            ("\u0394", True),
+            ("Slack", True),
+        ]
+        rows: list[list[str]] = []
+        for row in new.rows:
+            before = (
+                next((r for r in old.rows if r.name == row.name), None) if old else None
+            )
+            rows.append(
+                [
+                    row.name,
+                    fmt(row.content),
+                    self.delta(row.content, before.content if before else None),
+                    fmt(row.size),
+                    self.delta(row.size, before.size if before else None),
+                    fmt(row.slack),
+                ]
+            )
+        rows.append(
+            [
+                "<b>total</b>",
+                fmt(new.content),
+                self.delta(new.content, old.content if old else None),
+                fmt(new.flash),
+                self.delta(new.flash, old.flash if old else None),
+                "",
+            ]
+        )
+        return html_table(columns, rows)
+
+    def variant_table(self, pairs: list[Pair]) -> str:
+        several = len(pairs) > 1
+        columns = ([("Variant", False)] if several else []) + [
+            ("Content", True),
+            ("\u0394", True),
+            ("Image", True),
+            ("\u0394", True),
+            ("RAM", True),
+            ("\u0394", True),
+            ("Free", True),
+        ]
+        rows: list[list[str]] = []
+        for build, old, new in pairs:
+            label = [build.variant] if several else []
+            if new is None:
+                rows.append(label + ["gone", "", "", "", "", "", ""])
+                continue
+            free = (
+                ""
+                if new.free is None
+                else (f"{SIGNAL_WARN} " if new.near_limit else "") + fmt(new.free)
+            )
+            rows.append(
+                label
+                + [
+                    fmt(new.content),
+                    self.delta(new.content, old.content if old else None),
+                    fmt(new.flash),
+                    self.delta(new.flash, old.flash if old else None),
+                    fmt(new.ram),
+                    self.delta(new.ram, old.ram if old else None),
+                    free,
+                ]
+            )
+        return html_table(columns, rows)
+
+    def cell(self, model: str, image: str) -> str:
+        pairs = self.pairs(model, image)
+        if not pairs:
+            return NOT_BUILT
+        summary = self.summary(pairs)
+        if self.base_label is not None and not any(
+            changed(old, new) for _b, old, new in pairs
+        ):
+            return summary
+        _build, old, new = next((p for p in pairs if p[0].is_release), pairs[0])
+        if new is None:
+            return summary
+        parts = [self.region_table(old, new)] if new.rows else []
+        parts.append(self.variant_table(pairs))
+        parts += [f"<br>{SIGNAL_WARN} {w}" for w in new.warnings]
+        return f"<details><summary>{summary}</summary>{''.join(parts)}</details>"
+
+    # -- whole document -----------------------------------------------------
+
     def grid(self) -> list[str]:
+        columns = self.columns()
         lines = [
-            "| Model | " + " | ".join(GRID_IMAGES) + " |",
-            "| --- |" + " ---: |" * len(GRID_IMAGES),
+            "| Model | " + " | ".join(columns) + " |",
+            "| --- |" + " ---: |" * len(columns),
         ]
         for model in self.models:
             lines.append(
                 f"| {model} | "
-                + " | ".join(self.cell(model, image) for image in GRID_IMAGES)
+                + " | ".join(self.cell(model, image) for image in columns)
                 + " |"
             )
         return lines
 
-    def anything_changed(self) -> bool:
-        return any(
-            changed(old, new)
-            for model in self.models
-            for image in self.images_of(model)
-            for _b, old, new in self.pairs(model, image)
-        )
-
-    # -- expanded view ------------------------------------------------------
-
-    def model_summary(self, model: str) -> str:
-        """One line naming the images that changed, for the details summary."""
-        parts: list[str] = []
-        for image in self.images_of(model):
-            for build, old, new in self.pairs(model, image):
-                if old is None or new is None:
-                    parts.append(f"{image} {'new' if old is None else 'gone'}")
-                    continue
-                delta = new.content - old.content
-                if delta or boundary_crossed(old, new):
-                    text = f"{image} {fmt_delta(delta)} B"
-                    if not build.is_release:
-                        text += f" ({build.variant})"
-                    if boundary_crossed(old, new):
-                        text += (
-                            f" {SIGNAL_WARN} image {fmt_delta(new.flash - old.flash)} B"
-                        )
-                    parts.append(text)
-                if build.is_release:
-                    break  # the release build speaks for the image unless it is not built there
-        return ", ".join(parts) if parts else "no change"
-
-    def details(self, model: str) -> list[str]:
-        """The expanded part of a model: one block per image that changed."""
-        lines: list[str] = []
-        unchanged: list[str] = []
-        for image in self.images_of(model):
-            pairs = self.pairs(model, image)
-            if self.base_label is not None and not any(
-                changed(old, new) for _b, old, new in pairs
-            ):
-                unchanged.append(image)
-                continue
-            lines += self.image_block(image, pairs)
-        if not lines:
-            return []  # nothing to expand, the summary line says it all
-        if unchanged:
-            lines.append("Unchanged: " + ", ".join(unchanged))
-        while lines and not lines[-1]:
-            lines.pop()
-        return lines
-
-    def delta(self, value: int, before: int | None) -> str:
-        if self.base_label is None:
-            return ""
-        return fmt_delta(value - before) if before is not None else "new"
-
-    def image_block(
-        self, image: str, pairs: list[tuple[Build, ImageSize | None, ImageSize | None]]
-    ) -> list[str]:
-        build, old, new = next((p for p in pairs if p[0].is_release), pairs[0])
-        several = len(pairs) > 1
-        lines = [
-            f"**{image}**" + self.image_summary(build if several else None, old, new),
-            "",
-        ]
-        if new is None:
-            return lines
-        lines += self.region_table(build if several else None, old, new) + [""]
-        if several:
-            lines += self.variant_table(pairs) + [""]
-            # other variants whose regions moved differently from the headline one
-            for other, other_old, other_new in pairs:
-                if (
-                    other is build
-                    or other_new is None
-                    or not changed(other_old, other_new)
-                ):
-                    continue
-                if self.region_deltas(other_old, other_new) != self.region_deltas(
-                    old, new
-                ):
-                    lines += self.region_table(other, other_old, other_new) + [""]
-        for warning in new.warnings:
-            lines += [f"{SIGNAL_WARN} {warning}", ""]
-        return lines
-
-    def image_summary(
-        self, build: Build | None, old: ImageSize | None, new: ImageSize | None
-    ) -> str:
-        who = f" {build.variant}:" if build else ""
-        if new is None:
-            return f" \u00b7{who} gone"
-        if self.base_label is None:
-            return f" \u00b7{who} content {fmt(new.content)} B, image {fmt(new.flash)} B, RAM {fmt(new.ram)} B"
-        if old is None:
-            return f" \u00b7{who} new, content {fmt(new.content)} B, image {fmt(new.flash)} B"
-        text = (
-            f" \u00b7{who} content {fmt_delta(new.content - old.content)} B,"
-            f" image {fmt_delta(new.flash - old.flash)} B, RAM {fmt_delta(new.ram - old.ram)} B,"
-            f" slack {fmt(new.slack)} B"
-        )
-        if boundary_crossed(old, new):
-            text += f" {SIGNAL_WARN} alignment boundary crossed"
-        return text
-
-    @staticmethod
-    def region_deltas(
-        old: ImageSize | None, new: ImageSize
-    ) -> tuple[tuple[str, int, int], ...] | None:
-        if old is None:
-            return None
-        return tuple(
-            (
-                name,
-                region.content - old.regions[name].content,
-                region.size - old.regions[name].size,
-            )
-            for name, region in new.regions.items()
-            if name in old.regions
-        )
-
-    def region_table(
-        self, build: Build | None, old: ImageSize | None, new: ImageSize
-    ) -> list[str]:
-        label = f"Region ({build.variant})" if build else "Region"
-        lines = [
-            f"| {label} | Content | \u0394 content | Image | \u0394 image | Slack |",
-            "| --- | ---: | ---: | ---: | ---: | ---: |",
-        ]
-        for name, region in new.regions.items():
-            before = old.regions.get(name) if old else None
-            lines.append(
-                f"| {name} | {fmt(region.content)} | {self.delta(region.content, before.content if before else None)}"
-                f" | {fmt(region.size)} | {self.delta(region.size, before.size if before else None)}"
-                f" | {fmt(region.slack)} |"
-            )
-        if len(new.regions) > 1:
-            lines.append(
-                f"| **total** | {fmt(new.content)} | {self.delta(new.content, old.content if old else None)}"
-                f" | {fmt(new.flash)} | {self.delta(new.flash, old.flash if old else None)} | |"
-            )
-        return lines
-
-    def variant_table(
-        self, pairs: list[tuple[Build, ImageSize | None, ImageSize | None]]
-    ) -> list[str]:
-        lines = [
-            "| Variant | Content | \u0394 content | Image | \u0394 image | RAM | \u0394 RAM |",
-            "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
-        ]
-        for build, old, new in pairs:
-            if new is None:
-                lines.append(f"| {build.variant} | gone | | | | | |")
-                continue
-            lines.append(
-                f"| {build.variant} | {fmt(new.content)} | {self.delta(new.content, old.content if old else None)}"
-                f" | {fmt(new.flash)} | {self.delta(new.flash, old.flash if old else None)}"
-                f" | {fmt(new.ram)} | {self.delta(new.ram, old.ram if old else None)} |"
-            )
-        return lines
-
-    # -- whole document -----------------------------------------------------
-
     def markdown(self) -> str:
         out = [COMMENT_MARKER]
         if self.base_label is None:
-            title = (
-                "**Binary sizes** · no reference build found, sizes of this build only"
-            )
+            title = "**Binary sizes** \u00b7 no reference build found, sizes of this build only"
         else:
             title = f"**Binary sizes** vs {self.base_label}"
             if self.base_note:
                 title += f" ({self.base_note})"
         if self.run_url:
-            title += f" · [re-run]({self.run_url})"
+            title += f" \u00b7 [re-run]({self.run_url})"
         out += [title, ""]
-
         if self.base_label is not None and not self.anything_changed():
             out.append(f"{SIGNAL_SAME} No binary size changes.")
-            return "\n".join(out) + "\n"
-
-        out += self.grid()
-        for model in self.models:
-            body = self.details(model)
-            if not body:
-                continue
-            summary = (
-                self.model_summary(model) if self.base_label is not None else "sizes"
-            )
-            out += ["", f"<details><summary>{model} — {summary}</summary>", ""]
-            out += body
-            out += ["", "</details>"]
+        else:
+            out += self.grid()
         return "\n".join(out) + "\n"
 
     def as_dict(self) -> dict:
