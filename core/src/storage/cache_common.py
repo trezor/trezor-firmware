@@ -26,6 +26,7 @@ APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | SESSIONLESS_FLAG)
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Sequence
+    from trezorcrypto import SecretOwner
     from typing import TypeVar, overload
 
     T = TypeVar("T")
@@ -44,7 +45,20 @@ class DataCache:
     fields: Sequence[int]  # field sizes
 
     def __init__(self) -> None:
+        from trezorcrypto import SecretOwner, secbytes
+
+        # Long-lived holders, preallocated like `data` below. Caches outlive
+        # the main loop restart, so their values change in place: allocating
+        # new objects here would be a heap leak across restarts.
+        self._secret_owner = SecretOwner(None, False)
+        self.vault_seed = secbytes(None, 64)
         self.data = [bytearray(f + 1) for f in self.fields]
+
+    def get_secret_owner(self) -> SecretOwner:
+        owner = self._secret_owner
+        if not owner.valid():
+            owner.renew()
+        return owner
 
     if TYPE_CHECKING:
 
@@ -102,6 +116,9 @@ class DataCache:
         self.data[key][:] = b"\x00"
 
     def clear(self) -> None:
+        # Revoke before cache operations which can allocate or raise.
+        self._secret_owner.destroy()
+        self.vault_seed.destroy()
         for i in range(len(self.fields)):
             self.delete(i)
 
@@ -153,5 +170,4 @@ class SessionlessCache(DataCache):
         super().delete(key & ~SESSIONLESS_FLAG)
 
     def clear(self) -> None:
-        for i in range(len(self.fields)):
-            self.delete(i)
+        super().clear()
