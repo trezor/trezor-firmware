@@ -592,6 +592,8 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
         valid = valid && (address_n[2] <= PATH_MAX_ACCOUNT);
         valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
         valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+      } else {
+        return false;
       }
     } else {
       return false;
