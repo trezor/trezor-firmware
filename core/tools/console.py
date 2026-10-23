@@ -32,8 +32,8 @@ With --line and commands piped on stdin, one connection runs them all in order:
 
     printf 'ping\nprodtest-version\n' | console.py --line
 
-For anything more involved, run --serve and drive the device from Python
-through trezorlib's ProdtestClient over SerialTransport on the served tty.
+For anything more involved, run --serve and open the served tty from any
+serial tool or script, as you would the USB VCP.
 
 Examples:
     console.py                             # the one unit with a console in range
@@ -142,12 +142,12 @@ class BleLink:
         self,
         client: BleakClient,
         queue: "asyncio.Queue[bytes]",
-        agent: object,
+        agent: "PairingAgent | None",
         lost: asyncio.Event,
     ) -> None:
         self.client = client
         self.queue = queue
-        self.agent = agent  # keeps the agent's bus connection alive
+        self.agent = agent  # its bus connection lives as long as the link
         self.lost = lost  # set when the peripheral disconnects
 
     async def read(self, timeout: float) -> bytes:
@@ -168,6 +168,8 @@ class BleLink:
             await self.client.disconnect()
         except Exception:
             LOG.debug("disconnect failed", exc_info=True)
+        if self.agent is not None:
+            self.agent.close()
 
 
 class UdpLink:
@@ -320,6 +322,12 @@ class PairingAgent:
         self.bus = bus
         LOG.debug("pairing agent registered")
 
+    def close(self) -> None:
+        """Drops the bus connection; BlueZ unregisters the agent with it."""
+        if self.bus is not None:
+            self.bus.disconnect()
+            self.bus = None
+
 
 async def forget_device(device: BLEDevice) -> None:
     """Removes the device and its bond from the local adapter."""
@@ -457,7 +465,7 @@ async def connect(device: BLEDevice, forget_bond: bool) -> BleLink:
         timeout=CONNECT_TIMEOUT,
         disconnected_callback=on_disconnect,
     )
-    agent: object = None
+    agent: PairingAgent | None = None
     try:
         # With a stale host bond BlueZ tries to encrypt during service
         # discovery, the device refuses, and the link drops right here.
@@ -489,6 +497,8 @@ async def connect(device: BLEDevice, forget_bond: bool) -> BleLink:
             await client.disconnect()
         except Exception:
             pass
+        if agent is not None:
+            agent.close()
         if forget_bond or sys.platform != "linux":
             if forget_bond:
                 LOG.error(

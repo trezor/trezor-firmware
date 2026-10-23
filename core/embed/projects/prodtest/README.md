@@ -22,10 +22,8 @@ standalone terminal for it (`--serial` for the USB VCP, `--udp` for the
 emulator; needs only `bleak`, plus `pyserial` for `--serial`; no trezorlib).
 Its `--serve` mode keeps the connection up, reconnecting across device reboots,
 and exposes the console as a pseudo-terminal at `/tmp/ttyVCP0` for any terminal
-or serial tool, including the prodtest test suite via
-`--prodtest-serial /tmp/ttyVCP0`; for the emulator this replaces the former
-socat step. The tool also speaks the BLE console service of boards that route
-the CLI over BLE.
+or serial tool; for the emulator this replaces the former socat step. The tool
+also speaks the BLE console service of boards that route the CLI over BLE.
 
 ### Commands
 These commands begin with the command name and may optionally include parameters separated by spaces.
