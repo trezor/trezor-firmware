@@ -14,6 +14,10 @@ on:
     branches:
       - 'release/**'
       - 'secfix/**'
+      # Reference builds: every commit on main builds the firmware matrix and keeps the
+      # artifacts, so a PR can be compared against the exact main commit it was merged with.
+      # Only the core_firmware job runs for these pushes; every other job is gated below.
+      - main
 
 # cancel any previous runs on the same PR
 concurrency:
@@ -33,6 +37,7 @@ env:
 jobs:
   param:
     name: Determine pipeline parameters
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'  # not for reference builds
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -49,6 +54,7 @@ jobs:
 
   core_build_tools_test:
     name: Rust build-tool tests
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'  # not for reference builds
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -67,7 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: ${{ fromJSON(github.event_name == 'push' && '["T2B1", "T2T1", "T3B1", "T3T1", "T3W1"]' || '["T2T1", "T3B1", "T3T1", "T3W1"]') }}
+        model: ${{ fromJSON((github.event_name == 'push' && github.ref != 'refs/heads/main') && '["T2B1", "T2T1", "T3B1", "T3T1", "T3W1"]' || '["T2T1", "T3B1", "T3T1", "T3W1"]') }}
         coins: [universal, btconly]
         type: ${{ fromJSON(github.event_name == 'schedule' && '["normal", "debuglink", "production"]' || '["normal", "debuglink"]') }}
         miniscript: [false]
@@ -129,6 +135,7 @@ jobs:
           path: |
             core/build/artifacts/latest/*.bin
             core/build/artifacts/latest/*.elf
+            core/build/artifacts/latest/*.map
             core/build/artifacts/pub/*
           retention-days: 7
 
@@ -235,6 +242,7 @@ jobs:
 
   prodtest_emu:
     name: Build and test prodtest emu (${{ matrix.model }})
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'  # not for reference builds
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -623,6 +631,7 @@ jobs:
   # Fails if the free space is less than certain threshold
   core_flash_size_check:
     name: Flash size check
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'  # not for reference builds
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: core_firmware
@@ -800,6 +809,7 @@ jobs:
 
   binaries_size_report:
     name: Binaries' size report
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'  # not for reference builds
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs:
@@ -929,6 +939,7 @@ jobs:
 
   rust_deps_check:
     name: Rust dependencies check
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'  # not for reference builds
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -941,7 +952,7 @@ jobs:
 
   unsigned_firmware_archive:
     name: Unsigned firmware archive  # for release QA purposes
-    if: github.event_name == 'push'  # release branches only, only those currently trigger push
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main'  # release branches only
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: core_firmware
