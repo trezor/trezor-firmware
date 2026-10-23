@@ -93,15 +93,25 @@ def test_btc_get_address(session: Session, path: str):
     assert result.output.strip() == expected
 
 
-def test_get_session(session: Session, path: str):
+@pytest.mark.setup_client(passphrase="TREZOR")
+def test_get_session(
+    client: Client, session: Session, path: str, monkeypatch: pytest.MonkeyPatch
+):
     expected = expected_address(session)
-    result = trezorctl(path, "get-session")
+    monkeypatch.setenv("PASSPHRASE", "TREZOR")
+    result = trezorctl_confirm(client, path, "--passphrase-on-host", "get-session")
     assert result.exit_code == 0, result.output
-    session_id = result.output.strip()
+    session_id = result.output.splitlines()[-1]
 
-    result = trezorctl(path, "-s", session_id, "btc", "get-address", "-n", PATH)
+    # with no passphrase available, only the resumed session can answer
+    monkeypatch.delenv("PASSPHRASE")
+    get_address = ("--passphrase-on-host", "btc", "get-address", "-n", PATH)
+    result = trezorctl(path, "-s", session_id, *get_address)
     assert result.exit_code == 0, result.output
     assert result.output.strip() == expected
+
+    result = trezorctl(path, *get_address)
+    assert result.exit_code != 0, result.output
 
 
 def test_btc_sign_message(client: Client, session: Session, path: str):
