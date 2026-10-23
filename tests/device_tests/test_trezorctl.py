@@ -110,7 +110,8 @@ def test_get_session(
     assert result.exit_code == 0, result.output
     assert result.output.strip() == expected
 
-    result = trezorctl(path, *get_address)
+    # an empty -s overrides a TREZOR_SESSION_ID from the environment
+    result = trezorctl(path, "-s", "", *get_address)
     assert result.exit_code != 0, result.output
 
 
