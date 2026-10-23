@@ -21,38 +21,53 @@
 
 #include <trezor_types.h>
 
-// (Re)starts calculation of the firmware hash
-//
-// `challenge` is a pointer to the challenge data (optional, can be NULL).
-// `challenge_len` is the length of the challenge data (1..32).
-//
-// Return 0 on success, -1 on error.
-int firmware_hash_start(const uint8_t* challenge, size_t challenge_len);
+/**
+ * @brief A firmware hash.
+ */
+typedef struct {
+  uint8_t bytes[32];
+} firmware_hash_t;
 
-// Continues with the firmware hash calculation.
-//
-// `hash` is a pointer to a buffer where the hash will be stored.
-// `hash_len` is size of the buffer (must be at least 32).
-//
-// Return value between 0 and 100 indicates the progress of the hash
-// calculation. 100 means the hash was calculated successfully and
-// `hash` contains the hash. -1 means an error occurred during the
-int firmware_hash_continue(uint8_t* hash, size_t hash_len);
+/**
+ * @brief Starts or restarts the firmware hash calculation.
+ *
+ * @param challenge Optional challenge data, or NULL.
+ * @param challenge_len Length of the challenge data in bytes (1 to 32).
+ * @return TS_OK on success, TS_EINVAL if the challenge cannot initialize the
+ * hash.
+ */
+ts_t firmware_hash_start(const uint8_t* challenge, size_t challenge_len);
 
-// Reads the firmware vendor string from the header in the firmware area.
-//
-// `buff` is a pointer to a buffer where the vendor string will be stored.
-// `buff_size` is the length of the buffer (reserve at least 64 bytes).
-//
-// Returns `sectrue` if the vendor string was read successfully, `secfalse`
-// otherwise.
-secbool firmware_get_vendor(char* buff, size_t buff_size);
+/**
+ * @brief Continues the firmware hash calculation.
+ *
+ * Call repeatedly until @p progress is 100. At that point, @p hash contains
+ * the completed firmware hash.
+ *
+ * @param[out] hash Buffer that receives the completed firmware hash.
+ * @param[out] progress Hash calculation progress, from 0 to 100.
+ * @return TS_OK on success, TS_ENOINIT if no hash calculation was started, or
+ * TS_EINVAL if updating or finalizing the hash fails.
+ */
+ts_t firmware_hash_continue(firmware_hash_t* hash, int32_t* progress);
+
+/**
+ * @brief Reads the firmware vendor string from the firmware header.
+ *
+ * @param[out] buff Buffer that receives the vendor string.
+ * @param buff_size Size of @p buff in bytes; reserve at least 64 bytes.
+ * @return TS_OK if the vendor string was read successfully.
+ */
+ts_t firmware_get_vendor(char* buff, size_t buff_size);
 
 #ifdef SECURE_MODE
 
-// Invalidates the firmware by erasing the first 1KB of the firmware area.
-//
-// Note: only works when write access to firmware area is enabled by MPU
+/**
+ * @brief Invalidates the firmware by erasing the first 1 KiB of the firmware
+ * area.
+ *
+ * Requires MPU write access to the firmware area.
+ */
 void firmware_invalidate_header(void);
 
 #endif  // SECURE_MODE

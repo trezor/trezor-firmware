@@ -469,8 +469,8 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
-int firmware_hash_start__verified(const uint8_t *challenge,
-                                  size_t challenge_len) {
+ts_t firmware_hash_start__verified(const uint8_t *challenge,
+                                   size_t challenge_len) {
   // challenge is optional, so we allow NULL with size 0
   if (!probe_read_access_opt(challenge, challenge_len)) {
     goto access_violation;
@@ -480,22 +480,27 @@ int firmware_hash_start__verified(const uint8_t *challenge,
 
 access_violation:
   apptask_access_violation();
-  return -1;
+  return TS_EACCES;
 }
 
-int firmware_hash_continue__verified(uint8_t *hash, size_t hash_len) {
-  if (!probe_write_access(hash, hash_len)) {
+ts_t firmware_hash_continue__verified(firmware_hash_t *hash,
+                                      int32_t *progress) {
+  if (!probe_write_access(hash, sizeof(firmware_hash_t))) {
     goto access_violation;
   }
 
-  return firmware_hash_continue(hash, hash_len);
+  if (!probe_write_access(progress, sizeof(*progress))) {
+    goto access_violation;
+  }
+
+  return firmware_hash_continue(hash, progress);
 
 access_violation:
   apptask_access_violation();
-  return -1;
+  return TS_EACCES;
 }
 
-secbool firmware_get_vendor__verified(char *buff, size_t buff_size) {
+ts_t firmware_get_vendor__verified(char *buff, size_t buff_size) {
   if (!probe_write_access(buff, buff_size)) {
     goto access_violation;
   }
@@ -504,7 +509,7 @@ secbool firmware_get_vendor__verified(char *buff, size_t buff_size) {
 
 access_violation:
   apptask_access_violation();
-  return secfalse;
+  return TS_EACCES;
 }
 
 // ---------------------------------------------------------------------
