@@ -734,19 +734,22 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_FIRMWARE_GET_VENDOR: {
       char *buff = (char *)args[0];
       size_t buff_size = args[1];
-      args[0] = firmware_get_vendor__verified(buff, buff_size);
+      ts_t status = firmware_get_vendor__verified(buff, buff_size);
+      args[0] = ts_code(status);
     } break;
 
     case SYSCALL_FIRMWARE_HASH_START: {
       const uint8_t *challenge = (const uint8_t *)args[0];
       size_t challenge_len = args[1];
-      args[0] = firmware_hash_start__verified(challenge, challenge_len);
+      ts_t status = firmware_hash_start__verified(challenge, challenge_len);
+      args[0] = ts_code(status);
     } break;
 
     case SYSCALL_FIRMWARE_HASH_CONTINUE: {
-      uint8_t *hash = (uint8_t *)args[0];
-      size_t hash_len = args[1];
-      args[0] = firmware_hash_continue__verified(hash, hash_len);
+      firmware_hash_t *hash = (firmware_hash_t *)args[0];
+      int32_t *progress = (int32_t *)args[1];
+      ts_t status = firmware_hash_continue__verified(hash, progress);
+      args[0] = ts_code(status);
     } break;
 
 #ifdef USE_BLE
