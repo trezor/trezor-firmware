@@ -6,6 +6,7 @@ from trezor import utils
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from trezorcrypto import secbytes
     from typing import Literal
 
     from trezor.enums import BackupType, DisplayRotation
@@ -457,17 +458,10 @@ def get_hide_passphrase_from_host() -> bool:
 
 if utils.USE_THP:
 
-    def get_device_secret() -> bytes:
-        """
-        Device secret is used to derive keys that are independent of the seed.
-        """
-        device_secret = common.get(_NAMESPACE, DEVICE_SECRET)
-        if not device_secret:
-            from trezor.crypto import random
+    def get_device_secret() -> secbytes:
+        from trezorcrypto import thp_device_secret
 
-            device_secret = random.bytes(16, True)
-            common.set(_NAMESPACE, DEVICE_SECRET, device_secret)
-        return device_secret
+        return thp_device_secret()
 
     def get_cred_auth_key_counter() -> bytes:
         return common.get(_NAMESPACE, CRED_AUTH_KEY_COUNTER) or bytes(4)

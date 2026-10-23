@@ -372,12 +372,12 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
 
     fn send_initiation_response(
         &mut self,
-        static_privkey: &[u8; PRIVKEY_LEN],
+        static_privkey: <B::DH as super::DH>::Key,
     ) -> Result<(), Error> {
         prepare_zeroed(&mut self.send_buffer);
         let len = self
             .noise
-            .write_initiation_response(static_privkey, &mut self.send_buffer)?;
+            .write_initiation_response_key(static_privkey, &mut self.send_buffer)?;
         self.send_buffer.truncate(len);
         let header = Header::new_handshake(
             self.channel.channel_id,
@@ -472,6 +472,16 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
     /// Set static private key to be used for handshake. The key is not stored and can be
     /// disposed of after returning from this function.
     pub fn set_static_key(&mut self, static_privkey: &[u8; PRIVKEY_LEN]) -> Result<(), Error> {
+        self.set_static_key_native(<<B::DH as super::DH>::Key as super::U8Array>::from_slice(
+            static_privkey,
+        ))
+    }
+
+    /// Supply an opaque backend key without exporting its scalar.
+    pub fn set_static_key_native(
+        &mut self,
+        static_privkey: <B::DH as super::DH>::Key,
+    ) -> Result<(), Error> {
         if !self.static_key_required() {
             return Err(Error::not_ready());
         }

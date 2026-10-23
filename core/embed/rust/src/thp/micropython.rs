@@ -295,10 +295,8 @@ extern "C" fn thp_handshake_key_from_device_secret(iface_num: Obj, device_secret
         if device_secret == Obj::const_none() {
             thp.send_device_locked(iface_num)?;
         } else {
-            // SAFETY: reference is discarded at the end of this block.
-            let secret = unsafe { get_buffer(device_secret)? };
-            crypto::thp::with_static_key(secret, |key| thp.handshake_static_key(iface_num, key))
-                .map_err(|_| MpyError::ValueError(c"Invalid device secret"))??;
+            let identity = super::crypto::VaultIdentity::from_secret(device_secret)?;
+            thp.handshake_identity(iface_num, &super::crypto::DhKey::Vault(identity))?;
         }
         Ok(Obj::const_none())
     };
@@ -308,16 +306,8 @@ extern "C" fn thp_handshake_key_from_device_secret(iface_num: Obj, device_secret
 
 extern "C" fn thp_static_public_key(device_secret: Obj) -> Obj {
     let block = || {
-        use crypto::curve25519::{Point, Scalar};
-        use trezor_thp::channel::U8Array;
-
-        // SAFETY: reference is discarded at the end of this block.
-        let secret = unsafe { get_buffer(device_secret)? };
-        crypto::thp::with_static_key(secret, |key| {
-            let scalar = Scalar::from_slice(key);
-            Point::from_secret(&scalar).as_slice().try_into()
-        })
-        .map_err(|_| MpyError::ValueError(c"Invalid device secret"))?
+        let identity = super::crypto::VaultIdentity::from_secret(device_secret)?;
+        identity.public().try_into()
     };
 
     unsafe { util::try_or_raise(block) }
@@ -572,7 +562,8 @@ pub static mp_module_trezorthp: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_next_timeout => obj_fn_1!(thp_next_timeout).as_obj(),
 
-    /// def handshake_key_from_device_secret(iface_num: int, device_secret: AnyBytes | None) -> None:
+    /// from trezorcrypto import secbytes
+    /// def handshake_key_from_device_secret(iface_num: int, device_secret: secbytes | None) -> None:
     ///     """
     ///     Derive the device static key natively to progress a handshake after `packet_in`
     ///     returned `KEY_REQUIRED`. If the second argument is None, handshake is aborted
@@ -580,7 +571,7 @@ pub static mp_module_trezorthp: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_handshake_key_from_device_secret => obj_fn_2!(thp_handshake_key_from_device_secret).as_obj(),
 
-    /// def static_public_key(device_secret: AnyBytes) -> bytes:
+    /// def static_public_key(device_secret: secbytes) -> bytes:
     ///     """Derive the legacy THP public identity without exporting its private key."""
     Qstr::MP_QSTR_static_public_key => obj_fn_1!(thp_static_public_key).as_obj(),
 };

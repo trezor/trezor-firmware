@@ -61,7 +61,12 @@ typedef enum {
   VAULT_HMAC_TAG,
   VAULT_ED_PUBLIC,
   VAULT_ED_SIGN,
-  VAULT_SLIP21
+  VAULT_SLIP21,
+  VAULT_THP_STORAGE,
+  VAULT_THP_DERIVE,
+  VAULT_THP_PUBLIC,
+  VAULT_THP_DH,
+  VAULT_THP_RESET
 } vault_op_t;
 /* VAULT_SLIP21: derive from a seed (VAULT_SLIP21_ROOT) or a 64-byte node
  * along length-prefixed labels in data; the other arg bits select the output.

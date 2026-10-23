@@ -21,7 +21,7 @@
 bool vault_storage_key_allowed(uint16_t key) {
   /* Strip public/writable-lock namespace flags as well: no alias bypass. */
   key &= 0x3fff;
-  return key != 0x0102 && key != 0x0125;
+  return key != 0x0102 && key != 0x0125 && key != 0x0117;
 }
 
 void vault_wipe(void) {
@@ -258,6 +258,78 @@ static bool vault_execute(uintptr_t caller, const vault_command_t *r,
       memcpy(made->bytes, r->data, r->length);
       ok = true;
       break;
+    case VAULT_THP_DERIVE: {
+      size_t length = 0;
+      secret_payload_t *seed =
+          secret_open(r->blob, r->owner, SECRET_BYTES, &length);
+      if (!seed || length != 16 || !(made = secret_scratch_take())) break;
+      /* Legacy SLIP-10 curve25519 root and hardened 0x80544850 child.
+       * Independent of the restricted wallet HDNode curve implementation. */
+      uint8_t root[64] = {0}, child[64] = {0}, data[37] = {0};
+      hmac_sha512((const uint8_t *)"curve25519 seed", 15, seed->bytes, 16,
+                  root);
+      memcpy(data + 1, root, 32);
+      data[33] = 0x80;
+      data[34] = 0x54;
+      data[35] = 0x48;
+      data[36] = 0x50;
+      hmac_sha512(root + 32, 32, data, sizeof(data), child);
+      memcpy(made->bytes, child, 32);
+      memzero(root, sizeof(root));
+      memzero(child, sizeof(child));
+      memzero(data, sizeof(data));
+      made_kind = SECRET_BYTES;
+      made_length = 32;
+      ok = true;
+      break;
+    }
+    case VAULT_THP_PUBLIC:
+    case VAULT_THP_DH: {
+      size_t length = 0;
+      secret_payload_t *key =
+          secret_open(r->blob, r->owner, SECRET_BYTES, &length);
+      if (!key || length != 32 || (r->op == VAULT_THP_DH && r->length != 32))
+        break;
+      if (r->op == VAULT_THP_PUBLIC) {
+        curve25519_scalarmult_basepoint(out->signature, key->bytes);
+        ok = true;
+      } else {
+        curve25519_scalarmult(out->signature, key->bytes, r->data);
+        uint8_t nonzero = 0;
+        for (size_t i = 0; i < 32; i++) nonzero |= out->signature[i];
+        ok = nonzero != 0;
+      }
+      break;
+    }
+#ifndef VAULT_TEST
+    case VAULT_THP_STORAGE: {
+      if (!(made = secret_scratch_take())) break;
+      uint16_t length = 0;
+      if (storage_has(0x0117) == sectrue) {
+        ok = storage_get(0x0117, made->bytes, 16, &length) == sectrue &&
+             length == 16;
+      } else {
+        random_buffer(made->bytes, 16);
+        ok = storage_set(0x0117, made->bytes, 16) == sectrue;
+      }
+      made_kind = SECRET_BYTES;
+      made_length = 16;
+      break;
+    }
+    case VAULT_THP_RESET: {
+      /* Reset preserves the transport identity without exporting its seed.
+       * All old vault records are revoked after this transaction completes. */
+      uint8_t seed[16] = {0};
+      uint16_t length = 0;
+      if (storage_get(0x0117, seed, sizeof(seed), &length) == sectrue &&
+          length == sizeof(seed)) {
+        storage_wipe();
+        ok = storage_set(0x0117, seed, sizeof(seed)) == sectrue;
+      }
+      memzero(seed, sizeof(seed));
+      break;
+    }
+#endif
     case VAULT_FROM_SEED: {
       if (!secret_curve_allowed(r->curve)) break;
       const uint8_t *seed = r->data;
@@ -504,6 +576,7 @@ static bool vault_dispatch_inner(uintptr_t caller, const vault_command_t *r,
     memzero(out, sizeof(*out));
     ok = false;
   }
+  if (r->op == VAULT_THP_RESET) vault_wipe();
   return ok;
 }
 

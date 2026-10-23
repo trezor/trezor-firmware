@@ -107,6 +107,7 @@ def main():
                 "test_secret_store",
                 "test_vault",
                 "test_vault_encrypted",
+                "test_vault_thp",
                 "test_storage_key_cache",
                 "test_fido_keys",
                 "test_ed25519_keys",
@@ -117,7 +118,7 @@ def main():
             if mode == "saes":
                 # GCM records with the SAES backend; a software stand-in plays
                 # the secure world.
-                names = ["test_vault_saes"]
+                names = ["test_vault_saes", "test_vault_thp"]
                 mode_flags = [
                     "-DVAULT_SEAL_HW=1",
                     "-Icore/embed/rtl/inc",
@@ -132,6 +133,7 @@ def main():
                 if args.vault_curves and name in (
                     "test_vault_bytes",
                     "test_secret_store",
+                    "test_vault_thp",
                     "test_vault",
                     "test_vault_encrypted",
                     "test_fido_keys",

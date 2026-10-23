@@ -595,6 +595,23 @@ class sha512:
         """
 
 
+# upymod/modtrezorcrypto/modtrezorcrypto-thp.h
+def thp_device_secret() -> secbytes:
+    """Read or create the device secret directly into a device-owned vault
+    record."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-thp.h
+def thp_credential_mac(counter: AnyBytes, data: AnyBytes) -> bytes:
+    """Authenticate a credential without exposing its SLIP-21 key."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-thp.h
+def thp_reset_storage() -> None:
+    """Wipe storage, preserve the THP seed natively and revoke all vault
+    records."""
+
+
 # upymod/modtrezorcrypto/modtrezorcrypto.c
 def retain_secret(value: Any) -> None:
     """Explicitly transfer a node or snapshot from this request to its

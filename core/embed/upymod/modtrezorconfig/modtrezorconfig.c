@@ -333,7 +333,8 @@ static mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
   uint16_t appkey = (app << 8) | key;
 #ifdef USE_VAULT
   /* Match kernel policy in the single-process emulator as well. */
-  if ((appkey & 0x3fff) == 0x0102 || (appkey & 0x3fff) == 0x0125)
+  if ((appkey & 0x3fff) == 0x0102 || (appkey & 0x3fff) == 0x0125 ||
+      (appkey & 0x3fff) == 0x0117)
     return mp_const_none;
 #endif
   uint16_t len = 0;

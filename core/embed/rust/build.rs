@@ -44,6 +44,7 @@ fn generate_micropython_bindings(lib: &mut CLibrary) -> Result<()> {
     lib.add_rust_bindings_ex("micropython", |builder| {
         Ok(builder
             .header("micropython.h")
+            .allowlist_function("trezorcrypto_thp_.*")
             // Needed to call header statics like mp_obj_list_set_len. See also upymod/build.rs.
             .wrap_static_fns(true)
             //.wrap_static_fns_path(PathBuf::from(out_dir.clone()).join("bindgen-static"))

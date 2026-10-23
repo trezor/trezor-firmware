@@ -64,6 +64,9 @@ extern const mp_obj_type_t mp_type_AuthenticationError;
 #include "modtrezorcrypto-ripemd160.h"
 #include "modtrezorcrypto-secp256k1.h"
 #include "modtrezorcrypto-secret-lifecycle.h"
+#ifdef USE_THP
+#include "modtrezorcrypto-thp.h"
+#endif
 #include "modtrezorcrypto-sha256.h"
 #include "modtrezorcrypto-sha3-256.h"
 #include "modtrezorcrypto-sha3-512.h"
@@ -129,6 +132,14 @@ static const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_SecretOwner_type)},
     {MP_ROM_QSTR(MP_QSTR__secret_owner_activate),
      MP_ROM_PTR(&owner_activate_obj)},
+#ifdef USE_THP
+    {MP_ROM_QSTR(MP_QSTR_thp_device_secret),
+     MP_ROM_PTR(&thp_device_secret_obj)},
+    {MP_ROM_QSTR(MP_QSTR_thp_credential_mac),
+     MP_ROM_PTR(&thp_credential_mac_obj)},
+    {MP_ROM_QSTR(MP_QSTR_thp_reset_storage),
+     MP_ROM_PTR(&thp_reset_storage_obj)},
+#endif
     {MP_ROM_QSTR(MP_QSTR_secbytes),
      MP_ROM_PTR(&mod_trezorcrypto_secbytes_type)},
     {MP_ROM_QSTR(MP_QSTR_revoke_secrets), MP_ROM_PTR(&revoke_secrets_obj)},

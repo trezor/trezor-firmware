@@ -1,1 +1,1 @@
-Reject private derivation and key snapshots from public-only vault nodes, and reject inconsistent imported key pairs.
+Protect THP device secrets, identity keys and credential authentication keys with vault-backed operations.
