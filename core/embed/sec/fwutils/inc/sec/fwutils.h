@@ -41,8 +41,9 @@ ts_t firmware_hash_start(const uint8_t* challenge, size_t challenge_len);
 /**
  * @brief Continues the firmware hash calculation.
  *
- * Call repeatedly until @p progress is 100. At that point, @p hash contains
- * the completed firmware hash.
+ * Call repeatedly while the call succeeds and @p progress is less than 100.
+ * When the call succeeds and @p progress is 100, @p hash contains the completed
+ * firmware hash.
  *
  * @param[out] hash Buffer that receives the completed firmware hash.
  * @param[out] progress Hash calculation progress, from 0 to 100.
