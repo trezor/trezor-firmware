@@ -205,6 +205,7 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
 
   memset(signalled, 0, sizeof(*signalled));
 
+#ifdef USE_APPLETS
   systask_t *kernel_task = systask_kernel();
   systask_t *active_task = systask_active();
 
@@ -212,6 +213,9 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
   // - Kernel task has the highest priority so it is always first in the list
   // - Unprivileged task use round-robin scheduling
   uint32_t prio = (active_task == kernel_task) ? 0 : dispatcher->pollers_count;
+#else
+  uint32_t prio = 0;
+#endif
 
   insert_poller(dispatcher, prio);
 
@@ -223,12 +227,12 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
   dispatcher->pollers[prio].signalled_arg = signalled;
   dispatcher->pollers[prio].deadline = deadline;
 
-  if (active_task != kernel_task) {
 #ifdef USE_APPLETS
+  if (active_task != kernel_task) {
     systask_yield_to(kernel_task);
-#endif
     return;
   }
+#endif
 
   for (;;) {
 #ifdef TREZOR_EMULATOR
@@ -270,22 +274,21 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
                    (poller->signalled.write_ready != 0);
       if (ready || timed_out) {
         events_processed = true;
-        systask_t *task = poller->task;
 #ifdef USE_APPLETS
+        systask_t *task = poller->task;
         systask_set_mpu(task);
 #endif
         if (poller->signalled_arg != NULL) {
           *poller->signalled_arg = poller->signalled;
         }
         remove_poller(dispatcher, prio);
-        if (task == kernel_task) {
-          return;
-        } else {
 #ifdef USE_APPLETS
+        if (task != kernel_task) {
           systask_yield_to(task);
-#endif
           break;
         }
+#endif
+        return;
       }
     }
 
