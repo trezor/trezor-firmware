@@ -386,6 +386,11 @@ static void systask_kill(systask_t* task) {
     sysevents_notify_task_killed(task);
 
     if (task == scheduler->active_task) {
+      // The killed task may have an SVC call that is still pending
+      // (its entry was interrupted by a fault or by an IRQ). Cancel it,
+      // otherwise the SVC handler would run before PendSV and execute
+      // the syscall for a task that no longer exists.
+      SCB->SHCSR &= ~SCB_SHCSR_SVCALLPENDED_Msk;
       // Switch to the kernel task
       systask_yield_to(&scheduler->kernel_task);
     }
@@ -597,11 +602,33 @@ static void systask_exit_fault_ex(uint32_t msp, uint32_t exc_return,
   mpu_restore(mpu_mode);
 }
 
+static void systask_switch_to_kernel(void);
+
 // Terminate active task from fault/exception handler
 // (entered directly from the naked exception handlers)
 __attribute((used)) static void systask_exit_fault(uint32_t msp,
                                                    uint32_t exc_return) {
   systask_exit_fault_ex(msp, exc_return, false);
+
+  // If the kernel task was terminated, we never get here.
+
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
+
+  if (scheduler->active_task->killed) {
+    // The task was killed, so we have to switch to the kernel task.
+    //
+    // We can't just rely on the PendSV pended by `systask_kill()` and
+    // return from this handler. The task's stack frame may be unusable
+    // (e.g. the fault happened while the frame was being pushed during
+    // SVC entry). The CPU always tries to pop that frame before it
+    // takes the pending PendSV, the pop faults again, and we would end
+    // up here forever without the kernel ever getting control.
+    //
+    // Instead, switch to the kernel task directly. Its context is restored
+    // and the exception return is done with the kernel's EXC_RETURN, so the
+    // killed task's frame is never touched.
+    systask_switch_to_kernel();
+  }
 }
 
 #ifdef USE_APPLETS
@@ -717,6 +744,69 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   return (uint32_t)next_task;
 }
 
+// Switches to the waiting task and performs the exception return into it
+//
+// `sp`, `sp_lim` and `exc_return` describe the saved context of the
+// active task (all zero if the context was not saved because the task
+// was killed). Must be entered from handler mode and never returns.
+__attribute__((naked, noreturn, no_stack_protector, used)) static void
+systask_switch_context(uint32_t sp, uint32_t sp_lim, uint32_t exc_return) {
+  __asm__ volatile(
+      "BL       scheduler_pendsv   \n"  // Save SP value of current task
+      "LDR      LR, [R0, #8]       \n"  // Get the EXC_RETURN value
+      "LDR      R1, [R0, #4]       \n"  // Get the SP_LIM value
+      "LDR      R0, [R0, #0]       \n"  // Get the SP value
+
+      "TST      LR, #0x10          \n"  // Check EXC_RETURN.Ftype bit to see if
+                                        // the next thread has a FP context
+      "IT       EQ                 \n"
+      "VLDMIAEQ R0!, {S16-S31}     \n"  // If so, restore S16-S31
+      "LDMIA    R0!, {R4-R11}      \n"  // Restore R4-R11
+
+      "TST      LR, #0x4           \n"  // Return stack (1=>PSP, 0=>MSP)
+#if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__)
+      "ITEE     EQ                 \n"
+      "MSREQ    MSP, R0            \n"  // Update MSP
+      "MSRNE    PSPLIM, R1         \n"  // Update PSPLIM & PSP
+      "MSRNE    PSP, R0            \n"
+#else
+      "ITE      EQ                 \n"
+      "MSREQ    MSP, R0            \n"  // Update the MSP
+      "MSRNE    PSP, R0            \n"  // Update the PSP
+#endif
+      "BX       LR                 \n");
+}
+
+// Switches from the active (killed) task to the kernel task
+//
+// Must be called from handler mode after the active task was killed.
+// The context of the killed task is not saved, since its stack may be
+// unusable (stack overflow, stacking fault, ...). The caller's frame on
+// the main stack is discarded and the function never returns: it ends
+// with an exception return into the kernel task.
+__attribute__((naked, noreturn, no_stack_protector, used)) static void
+systask_switch_to_kernel(void) {
+  __asm__ volatile(
+      "LDR     R0, =%[kernel_task] \n"
+      "LDR     R1, =%[waiting_task]\n"
+      "STR     R0, [R1]            \n"  // waiting_task = &kernel_task
+
+      "LDR     R1, = 0xE000EF34    \n"  // FPU->FPCCR
+      "LDR     R0, [R1]            \n"
+      "BIC     R0, R0, #1          \n"  // Clear LSPACT to suppress later lazy
+      "STR     R0, [R1]            \n"  // stacking to the killed task stack
+
+      "MOV     R0, #0              \n"  // No context to save
+      "MOV     R1, R0              \n"  //
+      "MOV     R2, R0              \n"  //
+      "B       systask_switch_context\n"
+      :                                                        // No output
+      : [kernel_task] "i"(&g_systask_scheduler.kernel_task),   // Input
+        [waiting_task] "i"(&g_systask_scheduler.waiting_task)  // Input
+      :                                                        // Clobber
+  );
+}
+
 __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
   __asm__ volatile(
       "LDR     R0, =%[active_task] \n"
@@ -724,27 +814,11 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
       "LDR     R1, =%[waiting_task]\n"
       "LDR     R1, [R1]            \n"  // R1 =  waiting_task
       "CMP     R0, R1              \n"
-      "BEQ     3f                  \n"  // No task switch needed
+      "BEQ     1f                  \n"  // No task switch needed
 
       "LDR     R0, [R0, #12]       \n"  // R0 =  active_task->killed
       "CMP     R0, #0              \n"
-      "BEQ     1f                  \n"  // =0 => normal processing
-
-      // We are switching from a killed task to the kernel task.
-      // Since the reason might be a stack overflow, we must not
-      // attempt to save the task context.
-
-      "LDR     R1, = 0xE000EF34    \n"  // FPU->FPCCR
-      "LDR     R0, [R1]            \n"
-      "BIC     R0, R0, #1          \n"  // Clear LSPACT to suppress later lazy
-      "STR     R0, [R1]            \n"  // stacking to the killed task stack
-
-      "MOV     R0, #0              \n"  // Skip context save
-      "MOV     R1, R0              \n"  //
-      "MOV     R2, R0              \n"  //
-      "B       2f                  \n"  //
-
-      "1:                          \n"
+      "BNE     systask_switch_to_kernel\n"  // Killed => don't save context
 
       // Save the current task context on its stack before switching
 
@@ -774,31 +848,9 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
       "VSTMDBEQ R0!, {S16-S31}     \n"  // If so, save S16-S31 FP addition
                                         // context, that will also trigger lazy
                                         // fp context preservation of S0-S15
-      "2:                          \n"
+      "B        systask_switch_context\n"
 
-      "BL       scheduler_pendsv   \n"  // Save SP value of current task
-      "LDR      LR, [R0, #8]       \n"  // Get the EXC_RETURN value
-      "LDR      R1, [R0, #4]       \n"  // Get the SP_LIM value
-      "LDR      R0, [R0, #0]       \n"  // Get the SP value
-
-      "TST      LR, #0x10          \n"  // Check EXC_RETURN.Ftype bit to see if
-                                        // the next thread has a FP context
-      "IT       EQ                 \n"
-      "VLDMIAEQ R0!, {S16-S31}     \n"  // If so, restore S16-S31
-      "LDMIA    R0!, {R4-R11}      \n"  // Restore R4-R11
-
-      "TST      LR, #0x4           \n"  // Return stack (1=>PSP, 0=>MSP)
-#if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__)
-      "ITEE     EQ                 \n"
-      "MSREQ    MSP, R0            \n"  // Update MSP
-      "MSRNE    PSPLIM, R1         \n"  // Update PSPLIM & PSP
-      "MSRNE    PSP, R0            \n"
-#else
-      "ITE      EQ                 \n"
-      "MSREQ    MSP, R0            \n"  // Update the MSP
-      "MSRNE    PSP, R0            \n"  // Update the PSP
-#endif
-      "3:                          "
+      "1:                          \n"
       "BX       LR                 \n"
       :                                                        // No output
       : [active_task] "i"(&g_systask_scheduler.active_task),   // Input
