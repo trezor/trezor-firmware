@@ -312,10 +312,6 @@ def _split_regions(section: MapSection, regions: dict[str, Region]) -> None:
     """
     inputs = [i for i in section.items if i.kind == "input"]
     fills = [i for i in section.items if i.kind == "fill"]
-    if not inputs:
-        regions.setdefault(CODE_REGION, Region()).size += section.size
-        regions[CODE_REGION].fill += sum(f.size for f in fills)
-        return
 
     # runs of consecutive inputs belonging to the same region: [(label, start)]
     runs: list[tuple[str, int]] = []
@@ -323,7 +319,12 @@ def _split_regions(section: MapSection, regions: dict[str, Region]) -> None:
         label = region_of(item.name)
         if not runs or runs[-1][0] != label:
             runs.append((label, item.addr))
-    runs[0] = (runs[0][0], section.addr)  # leading padding belongs to the first run
+    if runs:
+        runs[0] = (runs[0][0], section.addr)  # leading padding belongs to the first run
+    else:
+        # a section without input sections, e.g. the one that pads the
+        # bootloader up to its maximum size: all of it is code region padding
+        runs.append((CODE_REGION, section.addr))
 
     for index, (label, start) in enumerate(runs):
         end = runs[index + 1][1] if index + 1 < len(runs) else section.end
@@ -598,59 +599,134 @@ class Report:
         return ", ".join(parts) if parts else "no change"
 
     def details(self, model: str) -> list[str]:
-        header = [
-            "| Build | Image | Region | Content | Δ content | Image | Δ image | Slack |",
-            "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
-        ]
-        rows: list[str] = []
+        """The expanded part of a model: one block per image that changed."""
+        lines: list[str] = []
         unchanged: list[str] = []
-        for build in self.builds_of(model):
-            for image in self.images_of(model):
-                old, new = self.pair(build, image)
-                if new is None and old is None:
-                    continue
-                if new is None:
-                    rows.append(f"| {build.variant} | {image} | gone | | | | | |")
-                    continue
-                if self.base_label is not None and not changed(old, new):
-                    unchanged.append(f"{build.variant} / {image}")
-                    continue
-                rows += self.image_rows(build, image, old, new)
-        if not rows:
+        for image in self.images_of(model):
+            pairs = self.pairs(model, image)
+            if self.base_label is not None and not any(
+                changed(old, new) for _b, old, new in pairs
+            ):
+                unchanged.append(image)
+                continue
+            lines += self.image_block(image, pairs)
+        if not lines:
             return []  # nothing to expand, the summary line says it all
-        lines = header + rows
         if unchanged:
-            lines += ["", "Unchanged: " + ", ".join(unchanged)]
+            lines.append("Unchanged: " + ", ".join(unchanged))
+        while lines and not lines[-1]:
+            lines.pop()
         return lines
 
-    def image_rows(
-        self, build: Build, image: str, old: ImageSize | None, new: ImageSize
-    ) -> list[str]:
-        def delta(value: int, before: int | None) -> str:
-            return fmt_delta(value - before) if before is not None else "new"
+    def delta(self, value: int, before: int | None) -> str:
+        if self.base_label is None:
+            return ""
+        return fmt_delta(value - before) if before is not None else "new"
 
-        rows: list[str] = []
+    def image_block(
+        self, image: str, pairs: list[tuple[Build, ImageSize | None, ImageSize | None]]
+    ) -> list[str]:
+        build, old, new = next((p for p in pairs if p[0].is_release), pairs[0])
+        several = len(pairs) > 1
+        lines = [
+            f"**{image}**" + self.image_summary(build if several else None, old, new),
+            "",
+        ]
+        if new is None:
+            return lines
+        lines += self.region_table(build if several else None, old, new) + [""]
+        if several:
+            lines += self.variant_table(pairs) + [""]
+            # other variants whose regions moved differently from the headline one
+            for other, other_old, other_new in pairs:
+                if (
+                    other is build
+                    or other_new is None
+                    or not changed(other_old, other_new)
+                ):
+                    continue
+                if self.region_deltas(other_old, other_new) != self.region_deltas(
+                    old, new
+                ):
+                    lines += self.region_table(other, other_old, other_new) + [""]
+        for warning in new.warnings:
+            lines += [f"{SIGNAL_WARN} {warning}", ""]
+        return lines
+
+    def image_summary(
+        self, build: Build | None, old: ImageSize | None, new: ImageSize | None
+    ) -> str:
+        who = f" {build.variant}:" if build else ""
+        if new is None:
+            return f" \u00b7{who} gone"
+        if self.base_label is None:
+            return f" \u00b7{who} content {fmt(new.content)} B, image {fmt(new.flash)} B, RAM {fmt(new.ram)} B"
+        if old is None:
+            return f" \u00b7{who} new, content {fmt(new.content)} B, image {fmt(new.flash)} B"
+        text = (
+            f" \u00b7{who} content {fmt_delta(new.content - old.content)} B,"
+            f" image {fmt_delta(new.flash - old.flash)} B, RAM {fmt_delta(new.ram - old.ram)} B,"
+            f" slack {fmt(new.slack)} B"
+        )
+        if boundary_crossed(old, new):
+            text += f" {SIGNAL_WARN} alignment boundary crossed"
+        return text
+
+    @staticmethod
+    def region_deltas(
+        old: ImageSize | None, new: ImageSize
+    ) -> tuple[tuple[str, int, int], ...] | None:
+        if old is None:
+            return None
+        return tuple(
+            (
+                name,
+                region.content - old.regions[name].content,
+                region.size - old.regions[name].size,
+            )
+            for name, region in new.regions.items()
+            if name in old.regions
+        )
+
+    def region_table(
+        self, build: Build | None, old: ImageSize | None, new: ImageSize
+    ) -> list[str]:
+        label = f"Region ({build.variant})" if build else "Region"
+        lines = [
+            f"| {label} | Content | \u0394 content | Image | \u0394 image | Slack |",
+            "| --- | ---: | ---: | ---: | ---: | ---: |",
+        ]
         for name, region in new.regions.items():
             before = old.regions.get(name) if old else None
-            rows.append(
-                f"| {build.variant} | {image} | {name} | {fmt(region.content)} "
-                f"| {delta(region.content, before.content if before else None)} | {fmt(region.size)} "
-                f"| {delta(region.size, before.size if before else None)} | {fmt(region.slack)} |"
+            lines.append(
+                f"| {name} | {fmt(region.content)} | {self.delta(region.content, before.content if before else None)}"
+                f" | {fmt(region.size)} | {self.delta(region.size, before.size if before else None)}"
+                f" | {fmt(region.slack)} |"
             )
         if len(new.regions) > 1:
-            rows.append(
-                f"| {build.variant} | {image} | **total** | {fmt(new.content)} "
-                f"| {delta(new.content, old.content if old else None)} | {fmt(new.flash)} "
-                f"| {delta(new.flash, old.flash if old else None)} | |"
+            lines.append(
+                f"| **total** | {fmt(new.content)} | {self.delta(new.content, old.content if old else None)}"
+                f" | {fmt(new.flash)} | {self.delta(new.flash, old.flash if old else None)} | |"
             )
-        rows.append(
-            f"| {build.variant} | {image} | RAM | {fmt(new.ram)} | {delta(new.ram, old.ram if old else None)} | | | |"
-        )
-        for warning in new.warnings:
-            rows.append(
-                f"| {build.variant} | {image} | {SIGNAL_WARN} {warning} | | | | | |"
+        return lines
+
+    def variant_table(
+        self, pairs: list[tuple[Build, ImageSize | None, ImageSize | None]]
+    ) -> list[str]:
+        lines = [
+            "| Variant | Content | \u0394 content | Image | \u0394 image | RAM | \u0394 RAM |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        ]
+        for build, old, new in pairs:
+            if new is None:
+                lines.append(f"| {build.variant} | gone | | | | | |")
+                continue
+            lines.append(
+                f"| {build.variant} | {fmt(new.content)} | {self.delta(new.content, old.content if old else None)}"
+                f" | {fmt(new.flash)} | {self.delta(new.flash, old.flash if old else None)}"
+                f" | {fmt(new.ram)} | {self.delta(new.ram, old.ram if old else None)} |"
             )
-        return rows
+        return lines
 
     # -- whole document -----------------------------------------------------
 
