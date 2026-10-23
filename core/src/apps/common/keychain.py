@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from trezor.protobuf import MessageType
     from typing_extensions import Protocol
 
-    from .seed import Slip21Node
+    from .seed import Slip21Node, VaultSlip21Node
 
     T = TypeVar("T")
 
@@ -157,19 +157,16 @@ class Keychain:
             new_root=lambda: bip32.from_seed(self.seed, self.curve),
         )
 
-    def derive_slip21(self, path: paths.Slip21Path) -> Slip21Node:
-        from .seed import Slip21Node
+    def derive_slip21(self, path: paths.Slip21Path) -> Slip21Node | VaultSlip21Node:
+        from .seed import slip21_root
 
         seed = self.seed
-        if not isinstance(seed, bytes):
-            raise DataError("SLIP21 vault operations not migrated")
-
         self.verify_slip21_path(path)
 
         return self._derive_with_cache(
             1,
             path,
-            new_root=lambda: Slip21Node(seed=seed),
+            new_root=lambda: slip21_root(seed),
         )
 
     def __enter__(self) -> "Keychain":

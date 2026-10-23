@@ -484,12 +484,11 @@ async def handle_DoPreauthorized(msg: DoPreauthorized) -> protobuf.MessageType:
 
 
 async def handle_UnlockPath(msg: UnlockPath) -> protobuf.MessageType:
-    from trezor.crypto import hmac
     from trezor.messages import UnlockedPathRequest
     from trezor.wire.context import call_any
 
     from apps.common.paths import SLIP25_PURPOSE
-    from apps.common.seed import Slip21Node, get_seed
+    from apps.common.seed import get_seed, slip21_mac, slip21_root
     from apps.common.writers import write_uint32_le
 
     _KEYCHAIN_MAC_KEY_PATH = [b"TREZOR", b"Keychain MAC key"]
@@ -501,12 +500,12 @@ async def handle_UnlockPath(msg: UnlockPath) -> protobuf.MessageType:
         raise wire.DataError("Invalid path")
 
     seed = await get_seed()
-    node = Slip21Node(seed)
+    node = slip21_root(seed)
     node.derive_path(_KEYCHAIN_MAC_KEY_PATH)
-    mac = utils.HashWriter(hmac(hmac.SHA256, node.key()))
+    mac_msg = bytearray()
     for i in msg.address_n:
-        write_uint32_le(mac, i)
-    expected_mac = mac.get_digest()
+        write_uint32_le(mac_msg, i)
+    expected_mac = slip21_mac(node.key(), mac_msg)
 
     # Require confirmation to access SLIP25 paths unless already authorized.
     if msg.mac:

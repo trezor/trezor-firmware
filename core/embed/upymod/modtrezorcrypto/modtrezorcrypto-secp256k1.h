@@ -139,14 +139,17 @@ static mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args,
   mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
   bool compressed = (n_args < 3) || (args[2] == mp_const_true);
   int (*is_canonical)(uint8_t by, uint8_t sig[64]) = NULL;
+  uint32_t vault_canonical = VAULT_CANONICAL_NONE;
 #if !BITCOIN_ONLY
   mp_int_t canonical = (n_args > 3) ? mp_obj_get_int(args[3]) : 0;
   switch (canonical) {
     case CANONICAL_SIG_ETHEREUM:
       is_canonical = ethereum_is_canonical;
+      vault_canonical = VAULT_CANONICAL_ETHEREUM;
       break;
     case CANONICAL_SIG_EOS:
       is_canonical = eos_is_canonical;
+      vault_canonical = VAULT_CANONICAL_EOS;
       break;
   }
 #endif
@@ -159,15 +162,12 @@ static mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args,
   vstr_t sig = {0};
   vstr_init_len(&sig, 65);
   if (opaque) {
-    if (is_canonical) {
-      vstr_clear(&sig);
-      mp_raise_ValueError(MP_ERROR_TEXT("Canonical mode not migrated"));
-    }
+    /* The kernel applies the canonical form; no callback crosses. */
     vault_request_t r = {.op = VAULT_SIGN,
                          .blob = node ? hdnode_blob(hdnode_object(args[0]))
                                       : secbytes_blob(MP_OBJ_TO_PTR(args[0])),
                          .length = 32,
-                         .arg = compressed};
+                         .arg = compressed | (vault_canonical << 1)};
     vault_response_t out = {0};
     memcpy(r.data, dig.buf, 32);
     if (!secret_rpc(&r, &out)) {

@@ -4,7 +4,9 @@
  * the kernel and finally remove VAULT_OPEN_NATIVE. */
 #ifndef TREZOR_COREAPP_VAULT_H
 #define TREZOR_COREAPP_VAULT_H
+#ifndef VAULT_TEST
 #include <sec/storage.h>
+#endif
 #include "bip32.h"
 #include "bip39.h"
 #include "curves.h"
@@ -20,7 +22,9 @@
 #include "sha2.h"
 #include "zkp_bip340.h"
 #include "zkp_context.h"
+#ifndef VAULT_RECORD_SIZE
 #define VAULT_RECORD_SIZE VAULT_SECRET_SIZE
+#endif
 typedef union {
   HDNode node;
   uint8_t bytes[VAULT_SECRET_SIZE];
@@ -56,6 +60,11 @@ static const char *app_secret_curve_name(uint8_t id) {
     default:
       return NULL;
   }
+}
+static uint8_t app_secret_curve_id(const HDNode *n) {
+  return n->curve == get_curve_by_name(NIST256P1_NAME) ? 1
+         : n->curve == get_curve_by_name(ED25519_NAME) ? 2
+                                                       : 0;
 }
 static bool app_secret_curve_allowed(const char *name) {
   for (uint8_t i = 0; app_secret_curve_name(i); i++)
@@ -145,8 +154,10 @@ static bool app_secret_seal(uint32_t owner, secret_kind_t kind, size_t length,
   return ok;
 }
 static bool app_node_has_private_key(const HDNode *node) {
-  /* Public-only nodes carry an all-zero private key. */
-  return memcmp(node->private_key, (uint8_t[32]){0}, 32) != 0;
+  /* Public-only ECDSA nodes carry an all-zero private key. Ed25519 imports
+   * require a private seed, and an all-zero seed is valid. */
+  return !node->curve->params ||
+         memcmp(node->private_key, (uint8_t[32]){0}, 32) != 0;
 }
 
 /* All vault curves use HASH160 fingerprints. Avoid the generic runtime hash
@@ -217,6 +228,87 @@ cleanup:
   return ok;
 }
 
+static int vault_ethereum_canonical(uint8_t v, uint8_t signature[64]) {
+  (void)signature;
+  return (v & 2) == 0;
+}
+static int vault_eos_canonical(uint8_t v, uint8_t signature[64]) {
+  (void)v;
+  return !(signature[0] & 0x80) &&
+         !(signature[0] == 0 && !(signature[1] & 0x80)) &&
+         !(signature[32] & 0x80) &&
+         !(signature[32] == 0 && !(signature[33] & 0x80));
+}
+
+/* SLIP-0021: each label replaces the 64-byte node by
+ * HMAC-SHA512(node[0:32], 0x00 || label). Labels are length-prefixed. */
+static bool vault_slip21_derive(uint8_t node[64], const uint8_t *data,
+                                size_t length) {
+  static const uint8_t zero = 0;
+  for (size_t i = 0; i < length;) {
+    size_t n = data[i++];
+    if (n > length - i) return false;
+    HMAC_SHA512_CTX ctx = {0};
+    hmac_sha512_Init(&ctx, node, 32);
+    hmac_sha512_Update(&ctx, &zero, 1);
+    hmac_sha512_Update(&ctx, data + i, n);
+    hmac_sha512_Final(&ctx, node);
+    i += n;
+  }
+  return true;
+}
+/* Evolu hands its node to the host: TREZOR/Evolu, or TREZOR/Evolu Index plus
+ * one index label. No other SLIP-0021 node leaves the vault. */
+static bool vault_slip21_exportable(const uint8_t *data, size_t length) {
+  static const uint8_t evolu[] = "\006TREZOR\005Evolu";
+  static const uint8_t evolu_index[] = "\006TREZOR\013Evolu Index";
+  const size_t evolu_len = sizeof(evolu) - 1,
+               index_len = sizeof(evolu_index) - 1;
+  if (length == evolu_len && !memcmp(data, evolu, evolu_len)) return true;
+  return length > index_len + 1 && !memcmp(data, evolu_index, index_len) &&
+         data[index_len] == length - index_len - 1;
+}
+
+/* Noinline: the SLIP-0021 workspace stays off every other vault op's frame. */
+static __attribute__((noinline)) bool vault_slip21(const app_vault_command_t *r,
+                                                   vault_response_t *out,
+                                                   app_secret_payload_t **made,
+                                                   size_t *made_length) {
+  bool root = r->arg & VAULT_SLIP21_ROOT;
+  uint32_t output = r->arg & ~(uint32_t)VAULT_SLIP21_ROOT;
+  if (output != VAULT_SLIP21_NODE && output != VAULT_SLIP21_KEY &&
+      output != VAULT_SLIP21_EXPORT)
+    return false;
+  if (output == VAULT_SLIP21_EXPORT &&
+      !(root && vault_slip21_exportable(r->data, r->length)))
+    return false;
+  size_t len = 0;
+  app_secret_payload_t *src =
+      app_secret_open(r->blob, r->owner, SECRET_BYTES, &len);
+  if (!src || (!root && len != 64)) return false;
+  uint8_t node[64] = {0};
+  if (root) {
+    static const char salt[] = "Symmetric key seed";
+    hmac_sha512((const uint8_t *)salt, sizeof(salt) - 1, src->bytes, len, node);
+  } else {
+    memcpy(node, src->bytes, 64);
+  }
+  bool ok = false;
+  if (vault_slip21_derive(node, r->data, r->length)) {
+    if (output == VAULT_SLIP21_EXPORT) {
+      memcpy(out->signature, node, 64);
+      ok = true;
+    } else if ((*made = app_secret_scratch_take())) {
+      *made_length = output == VAULT_SLIP21_KEY ? 32 : 64;
+      memcpy((*made)->bytes, output == VAULT_SLIP21_KEY ? node + 32 : node,
+             *made_length);
+      ok = true;
+    }
+  }
+  memzero(node, sizeof(node));
+  return ok;
+}
+
 static bool app_execute(const app_vault_command_t *r, vault_response_t *out,
                         const uint8_t *message, size_t message_length) {
   /* The result, if any, is sealed for `made_owner` into out->blob. */
@@ -264,6 +356,13 @@ static bool app_execute(const app_vault_command_t *r, vault_response_t *out,
             hdnode_validate_private_key(node->curve, node->private_key)) &&
            (!node->is_public_key_set ||
             hdnode_validate_public_key(node->curve, node->public_key));
+      /* A supplied cache must describe the private key. Otherwise public
+       * derivation and signing would silently use different identities. */
+      if (ok && r->data[97] == 3) {
+        node->is_public_key_set = false;
+        ok = hdnode_fill_public_key(node) == 0 &&
+             memcmp(node->public_key, r->data + 64, 33) == 0;
+      }
       break;
     }
     case VAULT_PUBLIC: {
@@ -275,6 +374,7 @@ static bool app_execute(const app_vault_command_t *r, vault_response_t *out,
       if (hdnode_fill_public_key(node)) break;
       out->depth = node->depth;
       out->child_num = node->child_num;
+      out->value = app_secret_curve_id(node);
       memcpy(out->chain_code, node->chain_code, 32);
       memcpy(out->public_key, node->public_key, 33);
       /* Hand back a blob that carries the computed key, so the client does
@@ -287,9 +387,10 @@ static bool app_execute(const app_vault_command_t *r, vault_response_t *out,
       break;
     }
     case VAULT_DERIVE: {
-      if (r->length != 4) break;
+      if (r->length != 4 || r->arg > 1) break;
       made = app_secret_open(r->blob, r->owner, SECRET_NODE, NULL);
       if (!made) break;
+      if (!r->arg && !app_node_has_private_key(&made->node)) break;
       made_owner = app_secret_get32(r->blob->bytes);
       uint32_t index;
       memcpy(&index, r->data, 4);
@@ -301,7 +402,9 @@ static bool app_execute(const app_vault_command_t *r, vault_response_t *out,
     case VAULT_SNAPSHOT: {
       app_secret_payload_t *p =
           app_secret_open(r->blob, r->owner, SECRET_NODE, NULL);
-      if (!p || r->arg > 1 || !(made = app_secret_scratch_take())) break;
+      if (!p || !app_node_has_private_key(&p->node) || r->arg > 1 ||
+          !(made = app_secret_scratch_take()))
+        break;
       made_kind = SECRET_BYTES;
       made_length = 32;
       memcpy(made->bytes,
@@ -326,11 +429,19 @@ static bool app_execute(const app_vault_command_t *r, vault_response_t *out,
           len = 32;
         }
       }
+      /* arg: bit 0 compressed, bits 1-2 VAULT_CANONICAL_*. */
+      uint32_t compressed = r->arg & 1, canonical = r->arg >> 1;
+      int (*is_canonical)(uint8_t, uint8_t[64]) =
+          canonical == VAULT_CANONICAL_ETHEREUM ? vault_ethereum_canonical
+          : canonical == VAULT_CANONICAL_EOS    ? vault_eos_canonical
+                                                : NULL;
       uint8_t recovery = 0;
-      if (!key || len != 32 || r->length != 32 || r->arg > 1) break;
+      if (!key || len != 32 || r->length != 32 ||
+          canonical > VAULT_CANONICAL_EOS)
+        break;
       ok = ecdsa_sign_digest(&secp256k1, key, r->data, out->signature + 1,
-                             &recovery, NULL) == 0;
-      if (ok) out->signature[0] = 27 + recovery + 4 * r->arg;
+                             &recovery, is_canonical) == 0;
+      if (ok) out->signature[0] = 27 + recovery + 4 * compressed;
       break;
     }
     case VAULT_ED_PUBLIC:
@@ -388,6 +499,10 @@ static bool app_execute(const app_vault_command_t *r, vault_response_t *out,
       }
       break;
     }
+    case VAULT_SLIP21:
+      made_kind = SECRET_BYTES;
+      ok = vault_slip21(r, out, &made, &made_length);
+      break;
     case VAULT_SCHNORR_GENERATE:
     case VAULT_SCHNORR_PUBLIC:
     case VAULT_SCHNORR_TWEAK:
@@ -396,6 +511,7 @@ static bool app_execute(const app_vault_command_t *r, vault_response_t *out,
       made_length = 32;
       ok = app_vault_schnorr(r, out, &made);
       break;
+#ifndef VAULT_TEST
     case VAULT_SEED_STORAGE: {
       char mnemonic[256] = {0};
       uint8_t backup_type = 0;
@@ -419,6 +535,7 @@ static bool app_execute(const app_vault_command_t *r, vault_response_t *out,
       memzero(mnemonic, sizeof(mnemonic));
       break;
     }
+#endif
     default:
       break;
   }

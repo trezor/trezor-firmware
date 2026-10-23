@@ -25,7 +25,9 @@
 #include "bip32.h"
 #include "bip39.h"
 #include "curves.h"
+#include "ecdsa.h"
 #include "memzero.h"
+#include "sha3.h"
 #if !BITCOIN_ONLY
 #include "nem.h"
 #endif
@@ -445,10 +447,19 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 static mp_obj_t mod_trezorcrypto_HDNode_ethereum_pubkeyhash(mp_obj_t self) {
   mp_obj_HDNode_t *o = hdnode_object(self);
 
-  vstr_t pkh = {0};
-  vstr_init_len(&pkh, 20);
-  hdnode_get_ethereum_pubkeyhash(hdnode_require(o), (uint8_t *)pkh.buf);
-  return mp_obj_new_bytes_from_vstr(&pkh);
+  /* The public view has no private key, so hash the vault's public key
+   * rather than calling hdnode_get_ethereum_pubkeyhash(). */
+  const HDNode *node = hdnode_require(o);
+  uint8_t pub[65] = {0}, hash[32] = {0};
+  if (node->curve != get_curve_by_name(SECP256K1_NAME) ||
+      !ecdsa_uncompress_pubkey(node->curve->params, node->public_key, pub)) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Failed to compute pubkeyhash"));
+  }
+  SHA3_CTX ctx = {0};
+  sha3_256_Init(&ctx);
+  sha3_Update(&ctx, pub + 1, 64);
+  keccak_Final(&ctx, hash);
+  return mp_obj_new_bytes(hash + 12, 20);
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj,
