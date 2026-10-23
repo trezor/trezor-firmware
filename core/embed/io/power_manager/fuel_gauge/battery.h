@@ -63,6 +63,8 @@ typedef struct {
   float soc;          ///< State of charge estimate (0.0 to 1.0)
   float soc_latched;  ///< Latched SOC (the one that gets reported)
   float P;            ///< Error covariance
+  float voltage_V;    //!< Battery voltage [V]
+  float current_mA;   //!< Battery current [mA]
 } bat_fg_state_t;
 
 /**
@@ -70,6 +72,8 @@ typedef struct {
  * @return TS_OK on success, error code otherwise
  */
 ts_t bat_init(void);
+
+ts_t bat_fg_recovery(float soc, float P, float voltage_V, float current_A);
 
 /**
  * @brief Set the fuel gauge state to given SOC value

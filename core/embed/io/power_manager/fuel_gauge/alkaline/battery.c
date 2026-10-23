@@ -19,6 +19,7 @@
 
 #ifdef KERNEL_MODE
 
+#include <math.h>
 #include <sys/irq.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
@@ -28,34 +29,13 @@
 #include "dummy_load.h"
 #include "fuel_gauge.h"
 
-#define BAT_FG_SAMPLE_BUF_SIZE 3
-
-//!< Maximum duration of CUR_DUMMY pin is on.
-#define BAT_FG_CUR_DUMMY_TIMEOUT_MS 500
-//!< Expected battery current during bootloader [mA].
-#define BAT_FG_CUR_BOOTLOADER_MA 50.0f
-//!< Minimum battery current during bootloader + CUR_DUMMY
-#define BAT_FG_CUR_BOOTLOADER_DUMMY_MIN_MA \
-  (DUMMY_LOAD_MA + BAT_FG_CUR_BOOTLOADER_MA) * 0.7f
-//!< Maximum battery current during bootloader + CUR_DUMMY
-#define BAT_FG_CUR_BOOTLOADER_DUMMY_MAX_MA \
-  (DUMMY_LOAD_MA + BAT_FG_CUR_BOOTLOADER_MA) * 1.3f
+#ifndef NAN
+#error "Missing definition of NaN !!"
+#endif
 
 // Alkaline brownout thresholds. Kept with the chemistry, not the policy.
 #define BAT_UNDERVOLT_THR_V 0.8f         // set critical below this
 #define BAT_CRITICAL_RECOVERY_SOC 0.02f  // clear critical at/above this SoC
-
-typedef struct {
-  float voltage_V;
-  float current_mA;
-  float temp_C;
-  uint32_t timestamp_ms;
-} bat_sample_t;
-
-typedef struct {
-  bat_sample_t samples[BAT_FG_SAMPLE_BUF_SIZE];
-  uint8_t head_idx;
-} bat_sample_buffer_t;
 
 typedef struct {
   bool initialized;
@@ -65,11 +45,8 @@ typedef struct {
   bool fg_locked;
 
   fuel_gauge_state_t fg_state;
+  fuel_gauge_buffer_t sample_buf;
   battery_model_t battery_model;
-  bat_sample_buffer_t sample_buf;
-
-  systimer_t* pulse_timer;
-  // uint32_t timestamp_init;
 
 } bat_driver_t;
 
@@ -85,16 +62,32 @@ ts_t bat_init(void) {
   }
   memset(drv, 0, sizeof(bat_driver_t));
 
-  fuel_gauge_init(&drv->fg_state);
+  fuel_gauge_init(&drv->fg_state, &drv->sample_buf);
 
-  if (ts_error(dummy_load_init(drv->pulse_timer))) {
+  if (ts_error(dummy_load_init(drv->sample_buf.pulse_timer))) {
     return TS_ENOMEM;
   }
 
+  drv->battery_model.bat_esr_nfc = NAN;
   drv->fg_locked = false;
   drv->initialized = true;
 
   return TS_OK;
+}
+
+ts_t bat_fg_recovery(float soc, float P, float voltage_V, float current_mA) {
+  bat_driver_t* drv = &g_bat_driver;
+
+  if (!drv->initialized) {
+    return TS_ENOINIT;
+  }
+
+  // needed for ESR(nfc) calculation
+  drv->sample_buf.sample_boot.voltage_V = voltage_V;
+  drv->sample_buf.sample_boot.current_mA = current_mA;
+  drv->sample_buf.sample_boot.timestamp_ms = systick_ms();
+
+  return bat_fg_set_soc(soc, P);
 }
 
 ts_t bat_fg_set_soc(float soc, float P) {
@@ -125,6 +118,13 @@ ts_t bat_fg_feed_sample(float voltage_V, float current_mA, float temp_C) {
     return TS_ENOMEM;  // Buffer is full, cannot feed more samples
   }
 
+  const fuel_gauge_sample_t sample = {.current_mA = current_mA,
+                                      .voltage_V = voltage_V,
+                                      .temp_C = temp_C,
+                                      .timestamp_ms = timestamp_ms};
+  fuel_gauge_feed_buffer(&drv->sample_buf, &sample);
+
+  /*
   // TODO: Accept only exact order of input samples in order to correctly
   // calculate initial ESR, OCV and SoC.
 
@@ -155,8 +155,9 @@ ts_t bat_fg_feed_sample(float voltage_V, float current_mA, float temp_C) {
     // current > 100 mA.
     // dTime >= 2 seconds.
     // -> Calculation more accurate ESR, OCV and SoC.
-    if ((timestamp_ms - drv->sample_buf.samples[1].timestamp_ms) < 2000)
+    if ((timestamp_ms - drv->sample_buf.samples[1].timestamp_ms) < 2000) {
       return TS_EINVAL;
+    }
   }
 
   // TODO: enable-nfc flag related ESR can be calculated during Application.
@@ -174,6 +175,7 @@ ts_t bat_fg_feed_sample(float voltage_V, float current_mA, float temp_C) {
   drv->sample_buf.samples[drv->sample_buf.head_idx].temp_C = temp_C;
   drv->sample_buf.samples[drv->sample_buf.head_idx].timestamp_ms = timestamp_ms;
   drv->sample_buf.head_idx++;
+  */
   irq_unlock(key);
 
   return TS_OK;
@@ -186,30 +188,15 @@ ts_t bat_fg_initial_guess() {
     return TS_ENOINIT;
   }
 
-  if (drv->sample_buf.head_idx == 0) {
-    // Buffer is empty, no data to process
+  if (drv->sample_buf.buffer_state >= FG_SAMPLE_INIT_READY) {
+    // Buffer is not ready, no data to process
     return TS_EINVAL;
   }
 
   irq_key_t key = irq_lock();
 
-  // Calculate ESR and OCV.
-  drv->battery_model.bat_esr_init =
-      fuel_gauge_rint(drv->sample_buf.samples[0].voltage_V,
-                      drv->sample_buf.samples[0].current_mA,
-                      drv->sample_buf.samples[1].voltage_V,
-                      drv->sample_buf.samples[1].current_mA);
-  if (drv->sample_buf.head_idx == 2) {
-    drv->battery_model.bat_esr_ocv =
-        fuel_gauge_rint(drv->sample_buf.samples[0].voltage_V,
-                        drv->sample_buf.samples[0].current_mA,
-                        drv->sample_buf.samples[2].voltage_V,
-                        drv->sample_buf.samples[2].current_mA);
-  }
-
-  fuel_gauge_initial_guess(
-      &drv->fg_state, &drv->battery_model, drv->sample_buf.samples[2].voltage_V,
-      drv->sample_buf.samples[2].current_mA, drv->sample_buf.samples[2].temp_C);
+  fuel_gauge_initial_guess(&drv->fg_state, &drv->battery_model,
+                           &drv->sample_buf);
 
   irq_unlock(key);
 
@@ -241,7 +228,9 @@ ts_t bat_fg_get_state(bat_fg_state_t* data) {
 
   data->soc = drv->fg_state.soc;
   data->soc_latched = drv->fg_state.soc_latched;
-  data->P = 0;
+  data->P = 0.0f;
+  data->voltage_V = drv->sample_buf.sample_boot.voltage_V;
+  data->current_mA = drv->sample_buf.sample_boot.current_mA;
 
   return TS_OK;
 }
@@ -259,8 +248,12 @@ ts_t bat_fg_update(uint32_t dt_ms, float voltage_V, float current_mA,
 
   irq_key_t key = irq_lock();
 
-  fuel_gauge_update(&drv->fg_state, &drv->battery_model, voltage_V, current_mA,
-                    temp_C, dt_ms);
+  const fuel_gauge_sample_t sample = {.current_mA = current_mA,
+                                      .voltage_V = voltage_V,
+                                      .temp_C = temp_C,
+                                      .timestamp_ms = systick_ms()};
+  fuel_gauge_update(&drv->fg_state, &drv->battery_model, &drv->sample_buf,
+                    &sample);
 
   irq_unlock(key);
 
@@ -269,25 +262,10 @@ ts_t bat_fg_update(uint32_t dt_ms, float voltage_V, float current_mA,
 
 bool bat_eval_critical(bool currently_critical, float voltage_V,
                        float current_mA, float temp_C) {
-  bat_driver_t* drv = &g_bat_driver;
+  (void)voltage_V;
   (void)current_mA;
   (void)temp_C;
-
-  // Set on undervoltage. Voltage is a reliable SoC indicator in the critical
-  // region (steep curve), so snap the estimate to empty - keeping the
-  // covariance - as bat_fg_set_soc() does.
-  if (voltage_V < BAT_UNDERVOLT_THR_V && !currently_critical) {
-    bat_fg_set_soc(0.0f, 0.0f);
-    return true;
-  }
-
-  // Recover only on a genuine SoC rise (recharge). Raw voltage rebounds on
-  // relaxation without the cell actually recovering, so a voltage-based clear
-  // would falsely un-latch at rest; the persisted SoC also guards boot across
-  // hibernation.
-  if (drv->fg_state.soc_latched >= BAT_CRITICAL_RECOVERY_SOC) {
-    return false;
-  }
+  // TODO: implement this function
 
   return currently_critical;
 }

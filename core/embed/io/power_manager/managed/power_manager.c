@@ -59,6 +59,10 @@ typedef struct {
   float soc;
   /** Fuel gauge covariance */
   float P;
+  /** Initial volrage measurement */
+  float voltage_V;
+  /** Initial current measurement */
+  float current_A;
   /** Critical battery level flag **/
   bool bat_critical;
   /** RTC time at which SOC was captured */
@@ -169,7 +173,8 @@ pm_status_t pm_init(bool inherit_state) {
 #endif
 
     drv->battery_critical = recovery.bat_critical;
-    bat_fg_set_soc(recovery.soc, recovery.P);
+    bat_fg_recovery(recovery.soc, recovery.P, recovery.voltage_V,
+                    recovery.current_A);
   } else {
     bat_fg_initial_guess();
   }
@@ -579,6 +584,8 @@ pm_status_t pm_store_data_to_backup_ram() {
 
   recovery.soc = fg_state.soc;
   recovery.P = fg_state.P;
+  recovery.voltage_V = fg_state.voltage_V;
+  recovery.current_A = fg_state.current_mA;
 
   // Power manager state
   recovery.bat_critical = drv->battery_critical;

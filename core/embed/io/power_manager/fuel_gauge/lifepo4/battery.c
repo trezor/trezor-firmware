@@ -78,6 +78,12 @@ ts_t bat_init(void) {
   return TS_OK;
 }
 
+ts_t bat_fg_recovery(float soc, float P, float voltage_V, float current_A) {
+  (void)voltage_V;
+  (void)current_A;
+  return bat_fg_set_soc(soc, P);
+}
+
 ts_t bat_fg_set_soc(float soc, float P) {
   bat_driver_t* drv = &g_bat_driver;
 
@@ -198,6 +204,8 @@ ts_t bat_fg_get_state(bat_fg_state_t* data) {
   data->soc = drv->fg_state.soc;
   data->soc_latched = drv->fg_state.soc_latched;
   data->P = drv->fg_state.P;
+  data->voltage_V = 0.0f;
+  data->current_mA = 0.0f;
 
   return TS_OK;
 }

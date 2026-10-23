@@ -19,7 +19,34 @@
 
 #pragma once
 
+#include <sys/systimer.h>
 #include <trezor_types.h>
+
+//!< 10 samples for periodical reading + 1 current pulse
+#define BAT_FG_SAMPLE_BUF_SIZE (10 + 1)
+
+typedef enum {
+  FG_SAMPLE_INIT = 0,    //!< Read V, I in bootloader
+  FG_SAMPLE_INIT_PULSE,  //!< Read V, I in bootloader + CUR_DUMMY pulse
+  FG_SAMPLE_INIT_READY,  //!< Initial phase is ready, bootloader stay here
+  FG_SAMPLE_APP,
+  FG_SAMPLE_APP_PULSE,
+} fuel_gauge_buffer_state_e;
+
+typedef struct {
+  float voltage_V;
+  float current_mA;
+  float temp_C;
+  uint32_t timestamp_ms;
+} fuel_gauge_sample_t;
+
+typedef struct {
+  fuel_gauge_sample_t sample_boot;
+  fuel_gauge_sample_t samples[BAT_FG_SAMPLE_BUF_SIZE];
+  uint8_t head_idx;
+  fuel_gauge_buffer_state_e buffer_state;
+  systimer_t* pulse_timer;
+} fuel_gauge_buffer_t;
 
 /**
  * @brief Fuel gauge state structure
@@ -27,15 +54,14 @@
 typedef struct {
   float soc;          ///< State of charge estimate (0.0 to 1.0)
   float soc_latched;  ///< Latched SOC (the one that gets reported)
-
-  
 } fuel_gauge_state_t;
 
 typedef struct {
   // TODO: consider to delete bat_esr_init and use only bat_esr_ocv
   float bat_esr_init;  ///< Battery internal resistance of 100ms current pulse
-                       ///< [Ohm]
-  float bat_esr_ocv;   ///< Battery internal resistance of 2 second load [Ohm]
+                       ///< during bootloader [Ohm]
+  float bat_esr_ocv;   ///< Battery internal resistance of 2 second in
+                       ///< Application [Ohm]
   float bat_esr_nfc;   ///< Battery internal resistance for NFC survival [Ohm]
 } battery_model_t;
 
@@ -44,7 +70,8 @@ typedef struct {
  *
  * @param state Pointer to the fuel gauge state structure to be initialized
  */
-void fuel_gauge_init(fuel_gauge_state_t* state);
+void fuel_gauge_init(fuel_gauge_state_t* state,
+                     fuel_gauge_buffer_t* sample_buf);
 
 /**
  * @brief Reset the EKF state
@@ -91,8 +118,7 @@ void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc);
  * @param temperature Battery temperature (°C)
  */
 void fuel_gauge_initial_guess(fuel_gauge_state_t* state, battery_model_t* model,
-                              float voltage_V, float current_mA,
-                              float temperature);
+                              fuel_gauge_buffer_t* buffer);
 
 /**
  * @brief Update the fuel gauge with new measurements
@@ -105,6 +131,9 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, battery_model_t* model,
  * @return Updated SOC estimate (0.0 to 1.0)
  */
 float fuel_gauge_update(fuel_gauge_state_t* state,
-                        battery_model_t* battery_model, float voltage_V,
-                        float current_mA, float temperature,
-                        uint32_t timestamp);
+                        battery_model_t* battery_model,
+                        fuel_gauge_buffer_t* buffer,
+                        const fuel_gauge_sample_t* sample);
+
+bool fuel_gauge_feed_buffer(fuel_gauge_buffer_t* buffer,
+                            const fuel_gauge_sample_t* sample);
