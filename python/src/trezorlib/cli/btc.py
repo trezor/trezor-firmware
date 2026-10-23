@@ -214,7 +214,7 @@ def get_address(
         script_type = guess_script_type_from_path(address_n)
 
     multisig: Optional[messages.MultisigRedeemScriptType]
-    if multisig_xpub:
+    if multisig_xpub and multisig_threshold:
         if multisig_threshold is None:
             raise click.ClickException("Please specify signature threshold")
 
@@ -245,6 +245,7 @@ def get_address(
         multisig=multisig,
         unlock_path=get_unlock_path(address_n),
         chunkify=chunkify,
+        ignore_xpub_magic=True,
     )
 
 
@@ -433,6 +434,40 @@ def sign_tx(session: "Session", json_file: TextIO, chunkify: bool) -> None:
     click.echo()
     click.echo("Signed Transaction:")
     click.echo(serialized_tx.hex())
+
+
+@cli.command()
+@click.option("-c", "--coin", type=str)
+@click.option("-n", "--name", type=str)
+@click.option("-d", "--descriptor", type=str)
+@click.option("-k", "--key", type=str, multiple=True, required=True)
+@with_session
+def register_policy(
+    session: "Session", coin: str, name: str, descriptor: str, key: tuple[str, ...]
+) -> None:
+    """Register a descriptor on the device."""
+    from embit.descriptor import Key
+
+    btc.register_policy(
+        session,
+        coin_name=coin,
+        name=name,
+        descriptor=descriptor,
+        keys=[
+            messages.MiniscriptKey(
+                node=messages.HDNodeType(
+                    depth=k.key.depth,
+                    fingerprint=int.from_bytes(k.key.fingerprint, "big"),
+                    child_num=k.key.child_number,
+                    chain_code=k.key.chain_code,
+                    public_key=k.get_public_key().serialize(),
+                ),
+                root_fingerprint=int.from_bytes(k.fingerprint, "big"),
+                derivation_path=k.derivation,
+            )
+            for k in map(Key.from_string, key)
+        ],
+    )
 
 
 #

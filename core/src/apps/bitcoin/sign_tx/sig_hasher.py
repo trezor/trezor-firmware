@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from apps.common import coininfo
 
     from ..common import SigHashType
+    from ..miniscript import RegisteredPolicy
 
     class SigHasher(Protocol):
         def add_input(self, txi: TxInput, script_pubkey: AnyBytes) -> None: ...
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
             tx: SignTx | PrevTx,
             coin: coininfo.CoinInfo,
             hash_type: int,
+            registered_policies: Sequence[RegisteredPolicy] = (),
         ) -> bytes: ...
 
         def hash341(
@@ -80,6 +82,7 @@ class BitcoinSigHasher:
         tx: SignTx | PrevTx,
         coin: coininfo.CoinInfo,
         hash_type: int,
+        registered_policies: Sequence[RegisteredPolicy] = (),
     ) -> bytes:
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
@@ -106,7 +109,12 @@ class BitcoinSigHasher:
 
         # scriptCode
         scripts.write_bip143_script_code_prefixed(
-            h_preimage, txi, public_keys, threshold, coin
+            h_preimage,
+            txi,
+            public_keys,
+            threshold,
+            coin,
+            registered_policies,
         )
 
         # amount
