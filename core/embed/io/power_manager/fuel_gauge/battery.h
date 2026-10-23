@@ -34,16 +34,17 @@
  *   - `fuel_gauge/mock/`    - trivial stub for boards with no gauged battery
  *     (e.g. a latch board); reports a fixed healthy state.
  *
- * `P` is treated as opaque estimator state by the policy: it is persisted to
- * backup RAM and handed back verbatim, but never interpreted. An estimator that
- * has no covariance (e.g. the mock) simply ignores it.
+ * The estimator state that has to survive a reset is collected in
+ * `bat_fg_recovery_data_t`, whose layout is chemistry specific. The policy
+ * persists it to backup RAM and hands it back verbatim; apart from `soc`
+ * (common to every layout) it never interprets its contents.
  *
  * ## Usage:
  * 1. Initialize the driver with `bat_init()`
  * 2. Set the initial fuel gauge state using one of two approaches:
  *    - **If SOC is already known** (e.g., from persistent storage): Use
- * `bat_fg_set_soc()` to directly set the fuel gauge state and lock it for
- * operation
+ * `bat_fg_recovery()` (state from backup RAM) or `bat_fg_set_soc()` to
+ * directly set the fuel gauge state and lock it for operation
  *    - **If SOC is unknown**: Feed several measurement samples using
  * `bat_fg_feed_sample()`, then call `bat_fg_initial_guess()` to estimate the
  * initial SOC based on the collected voltage, current, and temperature data
@@ -65,9 +66,42 @@ typedef struct {
   float soc;          ///< State of charge estimate (0.0 to 1.0)
   float soc_latched;  ///< Latched SOC (the one that gets reported)
   float P;            ///< Error covariance
-  float voltage_V;    //!< Battery voltage [V]
-  float current_mA;   //!< Battery current [mA]
 } bat_fg_state_t;
+
+/**
+ * @brief Fuel gauge state persisted in backup RAM across resets
+ *
+ * The layout is specific to the selected fuel gauge implementation. Every
+ * layout starts with `soc`, the only member the policy reads directly.
+ *
+ * This structure is part of the versioned backup-RAM recovery format
+ * (`PM_RECOVERY_DATA_VERSION`), so changing a layout requires a version bump.
+ */
+#if defined(USE_FUEL_GAUGE_LIFEPO4) || defined(USE_FUEL_GAUGE_MOCK)
+// Current version of the power management recovery data structure
+#define PM_RECOVERY_DATA_VERSION 0x0001
+
+typedef struct {
+  /** Fuel gauge state of charge <0, 1> */
+  float soc;
+  /** Fuel gauge covariance */
+  float P;
+} bat_fg_recovery_data_t;
+#elif defined(USE_FUEL_GAUGE_ALKALINE)
+// Current version of the power management recovery data structure
+#define PM_RECOVERY_DATA_VERSION 0x0002
+
+typedef struct {
+  /** Fuel gauge state of charge <0, 1> */
+  float soc;
+  /** Initial voltage measurement [V] */
+  float voltage_V;
+  /** Initial current measurement [A] */
+  float current_mA;
+} bat_fg_recovery_data_t;
+#else
+#error "Unknown fuel gauge implementation"
+#endif
 
 /**
  * @brief Initialize the battery module
@@ -77,6 +111,25 @@ ts_t bat_init(void);
 
 /** @brief Deinitialize the battery module */
 void bat_deinit(void);
+
+/**
+ * @brief Restore the fuel gauge state from recovery data
+ *
+ * Sets the fuel gauge state from data previously obtained with
+ * `bat_fg_get_recovery_data()` (e.g. stored in backup RAM) and locks it.
+ *
+ * @param data Pointer to the recovery data
+ * @return TS_OK on success, error code otherwise
+ */
+ts_t bat_fg_recovery(const bat_fg_recovery_data_t* data);
+
+/**
+ * @brief Get the fuel gauge state to be persisted across resets
+ *
+ * @param data Pointer to the recovery data structure to be filled
+ * @return TS_OK on success, error code otherwise
+ */
+ts_t bat_fg_get_recovery_data(bat_fg_recovery_data_t* data);
 
 /**
  * @brief Set the fuel gauge state to given SOC value

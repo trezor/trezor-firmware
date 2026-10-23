@@ -49,10 +49,21 @@ ts_t bat_init(void) {
 
 void bat_deinit(void) {}
   
-ts_t bat_fg_recovery(float soc, float P, float voltage_V, float current_A) {
-  (void)voltage_V;
-  (void)current_A;
-  return bat_fg_set_soc(soc, P);
+ts_t bat_fg_recovery(const bat_fg_recovery_data_t* data) {
+  if (data == NULL) {
+    return TS_EINVAL;
+  }
+  return bat_fg_set_soc(data->soc, data->P);
+}
+
+ts_t bat_fg_get_recovery_data(bat_fg_recovery_data_t* data) {
+  if (data == NULL) {
+    return TS_EINVAL;
+  }
+  data->soc = g_soc;
+  data->P = 0.0f;
+
+  return TS_OK;
 }
 
 ts_t bat_fg_set_soc(float soc, float P) {
@@ -79,8 +90,6 @@ ts_t bat_fg_get_state(bat_fg_state_t* data) {
   data->soc = g_soc;
   data->soc_latched = g_soc;
   data->P = 0.0f;
-  data->voltage_V = 0.0f;
-  data->current_mA = 0.0f;
 
   return TS_OK;
 }

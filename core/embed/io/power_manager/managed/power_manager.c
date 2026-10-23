@@ -56,14 +56,8 @@
 typedef struct {
   /** Data version */
   uint16_t version;
-  /** Fuel gauge state of charge <0, 1> */
-  float soc;
-  /** Fuel gauge covariance */
-  float P;
-  /** Initial volrage measurement */
-  float voltage_V;
-  /** Initial current measurement */
-  float current_A;
+  /** Fuel gauge state (layout depends on the fuel gauge implementation) */
+  bat_fg_recovery_data_t fg;
   /** Critical battery level flag **/
   bool bat_critical;
   /** RTC time at which SOC was captured */
@@ -165,7 +159,7 @@ pm_status_t pm_init(bool inherit_state) {
         // If the RTC timestamp is older than the last captured timestamp,
         // we will not use it.
         if (rtc_timestamp >= recovery.last_capture_timestamp) {
-          bat_fg_compensate_soc(&recovery.soc,
+          bat_fg_compensate_soc(&recovery.fg.soc,
                                 rtc_timestamp - recovery.last_capture_timestamp,
                                 PM_SELF_DISG_RATE_HIBERNATION_MA, 25.0f);
         }
@@ -175,8 +169,7 @@ pm_status_t pm_init(bool inherit_state) {
 #endif
 
     drv->battery_critical = recovery.bat_critical;
-    bat_fg_recovery(recovery.soc, recovery.P, recovery.voltage_V,
-                    recovery.current_A);
+    bat_fg_recovery(&recovery.fg);
   } else {
     bat_fg_initial_guess();
   }
@@ -583,13 +576,7 @@ pm_status_t pm_store_data_to_backup_ram() {
 
   pm_recovery_data_t recovery = {.version = PM_RECOVERY_DATA_VERSION};
 
-  bat_fg_state_t fg_state;
-  bat_fg_get_state(&fg_state);
-
-  recovery.soc = fg_state.soc;
-  recovery.P = fg_state.P;
-  recovery.voltage_V = fg_state.voltage_V;
-  recovery.current_A = fg_state.current_mA;
+  bat_fg_get_recovery_data(&recovery.fg);
 
   // Power manager state
   recovery.bat_critical = drv->battery_critical;
@@ -650,7 +637,8 @@ static bool pm_load_recovery_data(pm_recovery_data_t* recovery) {
 
   *recovery = data.v1;
 
-  if (recovery->soc < 0.0f || recovery->soc > 1.0f) {
+  if (recovery->fg.soc < 0.0f || recovery->fg.soc > 1.0f ||
+      isnan(recovery->fg.soc)) {
     return false;
   }
 

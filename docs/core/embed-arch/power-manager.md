@@ -74,7 +74,7 @@ Regulator and buck-mode control are deliberately *not* part of this extension. T
 
 `fuel_gauge/battery.h` is the chemistry-neutral seam between the policy and a concrete estimator. The policy speaks only to this header and never reaches into an implementation directory.
 
-The estimator's internal state `P` is opaque to the policy: it is persisted to backup RAM and handed back verbatim, but never interpreted. In the `lifepo4` implementation it is the error covariance of an extended Kalman filter; an estimator without a covariance ignores it.
+The estimator state that has to survive a reset is collected in `bat_fg_recovery_data_t`. Its layout is chemistry specific and is selected by the `USE_FUEL_GAUGE_*` define that the build emits for the chosen gauge: `lifepo4` (and `mock`) store the state of charge and the error covariance `P` of the extended Kalman filter, while `alkaline` also stores the initial voltage and current measurements. The policy obtains it with `bat_fg_get_recovery_data()`, persists it to backup RAM and hands it back verbatim through `bat_fg_recovery()`; apart from the `soc` member, which every layout starts with, it never interprets the contents.
 
 `fuel_gauge/lifepo4/` is the reference implementation, an EKF estimator for LiFePO4 cells. `fuel_gauge/mock/` reports a permanently full, healthy cell and exists for boards with no gauged battery.
 
@@ -99,6 +99,6 @@ The tradeoff is that the emulator exercises **none** of the real policy: not the
 These are the rules the layout above is meant to enforce. They are worth re-reading before widening any of the interfaces.
 
 - **One kind of thing per directory.** `pmic/*` is only hardware; `managed/` is only orchestration and never mentions a chip; `fuel_gauge/*` and `wireless/*` are their own kinds.
-- **Do not abstract from a single implementation.** Buck-mode control stayed npm1300-private because nothing else consumed it, and `battery.h` still carries `P` explicitly instead of an opaque state blob because there is only one real estimator to design that blob against — and because changing it changes the versioned backup-RAM recovery format, which needs an on-device test rather than a blind edit.
+- **Do not abstract from a single implementation.** Buck-mode control stayed npm1300-private because nothing else consumed it, and the fuel gauge's backup-RAM state became a per-chemistry `bat_fg_recovery_data_t` only once a second real estimator (`alkaline`) needed different fields. Changing any of its layouts changes the versioned backup-RAM recovery format, which needs an on-device test rather than a blind edit.
 - **A capability only some hardware has becomes a flag on the existing policy,** not a policy of its own. `USE_CHARGER` is the worked example.
 - **Brownout decisions belong to the voltage domain; battery percentages belong to the gauge.**

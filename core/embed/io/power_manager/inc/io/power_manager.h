@@ -105,9 +105,6 @@ typedef struct {
   float wireless_temp_c;
 } pm_report_t;
 
-// Current version of the power management recovery data structure
-#define PM_RECOVERY_DATA_VERSION 0x0001
-
 /**
  * @brief Initialize the power manager
  * @param inherit_state Whether to inherit previous power state from backup
