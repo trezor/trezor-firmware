@@ -287,7 +287,7 @@ int blake2s_Final(blake2s_state *S, void *out, size_t outlen) {
   for (i = 0; i < 8; ++i) /* Output full hash to temp buffer */
     store32(buffer + sizeof(S->h[i]) * i, S->h[i]);
 
-  memcpy(out, buffer, outlen);
+  memcpy(out, buffer, S->outlen);
   memzero(buffer, sizeof(buffer));
   return 0;
 }
