@@ -45,6 +45,8 @@ Examples:
     console.py --udp 21427                 # emulator started with TREZOR_UDP_PORT=21424
     console.py --line
     console.py ping                        # one command, then exit
+    console.py ping --udp                  # the command goes before --ble/--udp,
+    console.py --udp -- ping               # or after --: their value is optional
 
 Without a name or address the last unit's address is remembered, so the next
 start connects to it directly and only scans if it is not in range. Bonds are kept
@@ -844,7 +846,9 @@ def main() -> int:
         const=None,
         metavar="ADDRESS|NAME",
         help="BLE console service of the device; the default, and without a value "
-        "any unit with the service (the last one used, if in range)",
+        "any unit with the service (the last one used, if in range). The value is "
+        "optional, so a bare word right after this option is taken as the "
+        "address or name: put a command before it, or after --",
     )
     target.add_argument("--serial", metavar="PORT", help="USB VCP serial port")
     target.add_argument(
@@ -853,7 +857,8 @@ def main() -> int:
         const=str(EMULATOR_VCP_PORT),
         metavar="[HOST:]PORT",
         help=f"the prodtest emulator's VCP: TREZOR_UDP_PORT + 3, "
-        f"{EMULATOR_VCP_PORT} when omitted",
+        f"{EMULATOR_VCP_PORT} when omitted. A bare word right after this option "
+        "is taken as the port: put a command before it, or after --",
     )
     parser.add_argument(
         "--forget-bond",
