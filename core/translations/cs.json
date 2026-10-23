@@ -91,7 +91,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "To NENÍ Vaše adresa"
+      "Eckhart": "To NENÍ vaše adresa"
     },
     "address__xpub": {
       "Bolt": "XPUB",
@@ -220,7 +220,6 @@
     },
     "bitcoin__multiple_accounts": "Více účtů",
     "bitcoin__new_fee_rate": "Nová výše poplatku",
-    "bitcoin__simple_send_of": "Jednoduché odeslání",
     "bitcoin__ticket_amount": "Částka za lístek",
     "bitcoin__title_confirm_details": "Potvrdit údaje",
     "bitcoin__title_finalize_transaction": "Dokončit transakci",
@@ -230,14 +229,8 @@
     "bitcoin__title_payjoin": "Payjoin",
     "bitcoin__title_proof_of_ownership": "Důkaz vlastnictví",
     "bitcoin__title_purchase_ticket": "Koupit lístek",
-    "bitcoin__title_update_transaction": {
-      "Bolt": "Aktualizovat transakci",
-      "Caesar": "Aktualiz. transakci",
-      "Delizia": "Aktualizovat transakci",
-      "Eckhart": "Aktualizovat transakci"
-    },
+    "bitcoin__title_update_transaction": "Aktualizovat transakci",
     "bitcoin__unknown_path": "Neznámá cesta",
-    "bitcoin__unknown_transaction": "Neznámá transakce",
     "bitcoin__unusually_high_fee": "Nezvykle vysoký poplatek.",
     "bitcoin__unverified_external_inputs": "Transakce obsahuje neověřené externí vstupy.",
     "bitcoin__valid_signature": "Podpis je platný.",
@@ -462,6 +455,12 @@
     },
     "buttons__select": "Vybrat",
     "buttons__set": "Nastavit",
+    "buttons__shift": {
+      "Bolt": "",
+      "Caesar": "Shift",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "buttons__show_all": "Zobrazit vše",
     "buttons__show_details": "Ukázat podrobnosti",
     "buttons__show_next": {
@@ -612,7 +611,7 @@
     "coinjoin__max_rounds": "Maximum kol",
     "coinjoin__title": "Schválení coinjoinu",
     "coinjoin__title_progress": "Probíhá coinjoin...",
-    "coinjoin__waiting_for_others": "Čeká se na ostatní",
+    "coinjoin__waiting_for_others": "Čeká se na ostatní...",
     "confirm_total__fee_rate": "Výše poplatku",
     "confirm_total__title_fee": "Informace o poplatcích",
     "confirm_total__title_sending_from": {
@@ -853,7 +852,7 @@
     },
     "ethereum__approve_amount_allowance": "Limit částky",
     "ethereum__approve_chain_id": "ID sítě",
-    "ethereum__approve_intro": "Zkontrolujte údaje pro schválení utracení tokenu.",
+    "ethereum__approve_intro": "Zkontrolujte údaje pro schválení utrácení tokenu.",
     "ethereum__approve_intro_revoke": "Zkontrolujte údaje pro odvolání schválení tokenu.",
     "ethereum__approve_intro_title": "Schválení tokenu",
     "ethereum__approve_intro_title_revoke": "Odvolání tokenu",
@@ -975,13 +974,14 @@
       "Bolt": "Neznámá adresa kontraktu.",
       "Caesar": "Neznámá adresa kontraktu",
       "Delizia": "Neznámá adresa kontraktu.",
-      "Eckhart": "Neznámá adresa kontraktu tokenu."
+      "Eckhart": "Neznámá adresa kontraktu."
     },
     "ethereum__unknown_token": "Neznámý token",
     "ethereum__valid_signature": "Podpis je platný.",
     "ethereum__vault_claim_intro": "Vyzvednutí odměn od Merkl.xyz",
     "ethereum__vault_claim_to": "Vyzvednutí na",
     "ethereum__vault_deposit_intro": "Zkontrolujte údaje pro vklad do trezoru.",
+    "ethereum__vault_owner_address": "Adresa vlastníka",
     "ethereum__vault_redeem_intro": "Zkontrolujte údaje pro odkup z trezoru.",
     "ethereum__vault_redeem_to": "Odkup na",
     "ethereum__vault_withdraw_intro": "Zkontrolujte údaje pro výběr z trezoru.",
@@ -1286,12 +1286,7 @@
       "Eckhart": ""
     },
     "language__change_to_template": "Změnit jazyk na {0}?",
-    "language__changed": {
-      "Bolt": "Jazyk byl úspěšně změněn.",
-      "Caesar": "Jazyk byl úspěšně změněn",
-      "Delizia": "Jazyk byl úspěšně změněn.",
-      "Eckhart": "Jazyk byl úspěšně změněn."
-    },
+    "language__changed": "Jazyk byl úspěšně změněn.",
     "language__progress": "Změna jazyka...",
     "language__title": "Nastavení jazyka",
     "led__disable": {
@@ -1395,7 +1390,12 @@
       "Delizia": "Poplatek se nezměnil.\n",
       "Eckhart": "Poplatek se nezměnil"
     },
-    "modify_fee__title": "Upravit poplatek",
+    "modify_fee__title": {
+      "Bolt": "",
+      "Caesar": "Upravit poplatek",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "modify_fee__transaction_fee": {
       "Bolt": "Transakční poplatek:",
       "Caesar": "Transakční poplatek:",
@@ -1928,7 +1928,7 @@
     "progress__x_seconds_left_template": "Zbývá {0} s",
     "reboot_to_bootloader__restart": "Trezor se restartuje v režimu bootloaderu.",
     "reboot_to_bootloader__title": "Vstup do bootloaderu",
-    "reboot_to_bootloader__version_by_template": "Verze firmwaru {0}\n{1}",
+    "reboot_to_bootloader__version_by_template": "Verze firmwaru {0}\nod firmy {1}",
     "recovery__cancel_dry_run": {
       "Bolt": "",
       "Caesar": "",
@@ -2019,12 +2019,7 @@
     "recovery__type_word_x_of_y_template": "Zadejte slovo {0} z {1}",
     "recovery__unlock_repeated_backup": "Vytvořit další zálohu?",
     "recovery__unlock_repeated_backup_verb": "Vytvořit zálohu",
-    "recovery__wallet_recovered": {
-      "Bolt": "Obnovení peněženky dokončeno.",
-      "Caesar": "Obnovení peněženky dokončeno",
-      "Delizia": "Obnovení peněženky dokončeno.",
-      "Eckhart": "Obnovení peněženky dokončeno."
-    },
+    "recovery__wallet_recovered": "Obnovení peněženky dokončeno.",
     "recovery__wanna_cancel_dry_run": "Opravdu chcete zrušit kontrolu zálohy?",
     "recovery__wanna_cancel_recovery": "Opravdu chcete proces obnovení zrušit?",
     "recovery__word_count_template": "({0} slov)",
@@ -2560,12 +2555,7 @@
     "safety_checks__approve_unsafe_always": "Trezor vám umožní schválit některé akce, které by mohly být nebezpečné.",
     "safety_checks__approve_unsafe_temporary": "Trezor vám dočasně umožní schválit některé akce, které by mohly být nebezpečné.",
     "safety_checks__enforce_strict": "Opravdu chcete zavést přísné bezpečnostní kontroly (doporučeno)?",
-    "safety_checks__title": {
-      "Bolt": "Bezpečn. kontroly",
-      "Caesar": "Bezpečn. kontroly",
-      "Delizia": "Bezpečnostní kontroly",
-      "Eckhart": "Bezpečnostní kontroly"
-    },
+    "safety_checks__title": "Bezpečnostní kontroly",
     "safety_checks__title_safety_override": "Vyřazení zabezpečení",
     "sd_card__all_data_will_be_lost": {
       "Bolt": "Všechna data na SD kartě budou ztracena.",
@@ -2720,7 +2710,12 @@
       "Eckhart": ""
     },
     "send__maximum_fee": "Maximální poplatek",
-    "send__multisig_different_paths": "Jsou použity různé cesty pro různé XPUBy.",
+    "send__multisig_different_paths": {
+      "Bolt": "Jsou použity různé cesty pro různé XPUBy.",
+      "Caesar": "Jsou použity různé cesty pro různé XPUBy",
+      "Delizia": "Jsou použity různé cesty pro různé XPUBy.",
+      "Eckhart": "Jsou použity různé cesty pro různé XPUBy."
+    },
     "send__receiving_to_multisig": "Příjem na adresách multisig.",
     "send__send_from": "Odeslání z",
     "send__send_in_the_app": {
@@ -2798,21 +2793,17 @@
     "solana__associated_token_account": "Přidružený tokenový účet",
     "solana__base_fee": "Základní poplatek",
     "solana__claim": "Vybrat",
-    "solana__claim_question": "Vybrat SOL z stake účtu?",
+    "solana__claim_question": "Vybrat SOL ze stake účtu?",
     "solana__claim_recipient_warning": "Vybrat SOL na adresu mimo tuto peněženku.",
     "solana__confirm_multisig": "Potvrďte multisig",
     "solana__expected_fee": "Očekávaný poplatek",
     "solana__instruction_accounts_template": "Pokyn obsahuje účty ({0}) a jeho data mají velikost {1} bajtů.",
     "solana__instruction_data": "Pokyny",
+    "solana__instruction_is_multisig": "Následující pokyn představuje pokyn multisig.",
     "solana__is_provided_via_lookup_table_template": "{0} pochází z vyhledávací tabulky.",
     "solana__lookup_table_address": "Adresa vyhledávací tabulky",
     "solana__max_fees_rent": "Maximalní poplatky a nájemné",
-    "solana__max_rent_fee": {
-      "Bolt": "Maximální poplatek za nájem",
-      "Caesar": "Maximální poplatek za nájem",
-      "Delizia": "Max. poplatek za nájem",
-      "Eckhart": "Maximální poplatek za nájem"
-    },
+    "solana__max_rent_fee": "Maximální poplatek za nájem",
     "solana__multiple_signers": "Více podepisujících",
     "solana__offchain_is_multisig": "Následující zpráva vyžaduje více podepisujících.",
     "solana__priority_fee": "Poplatek za prioritu",
@@ -2936,49 +2927,49 @@
     "thp__autoconnect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Povolit {0} automatické připojení k tomuto Trezoru?",
+      "Delizia": "",
       "Eckhart": "Povolit {0} automatické připojení k tomuto Trezoru?"
     },
     "thp__autoconnect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Povolit aplikaci {0} na zařízení {1} se automaticky připojovat k tomuto Trezoru?",
+      "Delizia": "",
       "Eckhart": "Povolit aplikaci {0} na zařízení {1} se automaticky připojovat k tomuto Trezoru?"
     },
     "thp__autoconnect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Údaje automatického připojení",
+      "Delizia": "",
       "Eckhart": "Údaje automatického připojení"
     },
     "thp__code_entry": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Zadejte tento jednorázový bezpečnostní kód na {0}",
+      "Delizia": "",
       "Eckhart": "Zadejte tento jednorázový bezpečnostní kód na {0}"
     },
     "thp__code_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Ještě jeden krok",
+      "Delizia": "",
       "Eckhart": "Ještě jeden krok"
     },
     "thp__connect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Povolit {0} připojení k tomuto Trezoru?",
+      "Delizia": "",
       "Eckhart": "Povolit {0} připojení k tomuto Trezoru?"
     },
     "thp__connect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Povolit aplikaci {0} na zařízení {1} se připojit k tomuto Trezoru?",
+      "Delizia": "",
       "Eckhart": "Povolit aplikaci {0} na zařízení {1} se připojit k tomuto Trezoru?"
     },
     "thp__connect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Dialog připojení",
+      "Delizia": "",
       "Eckhart": "Dialog připojení"
     },
     "thp__nfc_text": {
@@ -2990,37 +2981,37 @@
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Povolit {0} spárování s tímto Trezorem?",
+      "Delizia": "",
       "Eckhart": "Povolit {0} spárování s tímto Trezorem?"
     },
     "thp__pair_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Povolit aplikaci {0} na zařízení {1} spárování s tímto Trezorem?",
+      "Delizia": "",
       "Eckhart": "Povolit aplikaci {0} na zařízení {1} spárování s tímto Trezorem?"
     },
     "thp__pair_name": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "{0} je název vašeho Trezoru.",
+      "Delizia": "",
       "Eckhart": "{0} je název vašeho Trezoru."
     },
     "thp__pair_new_device": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Párování s novým zařízením",
+      "Delizia": "",
       "Eckhart": "Párování s novým zařízením"
     },
     "thp__pair_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Než budete pokračovat",
+      "Delizia": "",
       "Eckhart": "Než budete pokračovat"
     },
     "thp__qr_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Naskenujte QR kód pro spárování",
+      "Delizia": "",
       "Eckhart": "Naskenujte QR kód pro spárování"
     },
     "tron__claim_unfrozen_balance": "Vybrat rozmrazený zůstatek?",
@@ -3041,6 +3032,12 @@
     },
     "tron__owner_address": "Adresa vlastníka",
     "tron__undelegate_resource": "Zrušení delegace zdroje",
+    "tutorial__complete": {
+      "Bolt": "",
+      "Caesar": "Dokončit tutoriál",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3065,6 +3062,12 @@
       "Delizia": "Trezor Model One, vyrobený v roce 2013,\nbyl první hardwarovou peněženkou na světě.",
       "Eckhart": ""
     },
+    "tutorial__hold_left_press_right": {
+      "Bolt": "",
+      "Caesar": "Držte LEVÉ, stiskněte PRAVÉ.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__last_one": {
       "Bolt": "",
       "Caesar": "",
@@ -3073,13 +3076,13 @@
     },
     "tutorial__lets_begin": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Naučte se základy ovládání vašeho zařízení.",
       "Delizia": "Naučte se pohodlně používat toto zřízení.",
       "Eckhart": ""
     },
     "tutorial__menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "V nabídce najdete související akce a volby.",
       "Delizia": "V nabídce najdete související akce a volby.",
       "Eckhart": "V nabídce najdete související akce a volby."
     },
@@ -3089,9 +3092,15 @@
       "Delizia": "",
       "Eckhart": "Zobrazit více informací, ukončit proces..."
     },
+    "tutorial__menu_later": {
+      "Bolt": "",
+      "Caesar": "Nabídka poskytuje související informace. O tom si řekneme později.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__middle_click": {
       "Bolt": "",
-      "Caesar": "Stiskněte současně levé i pravé tlačítko\npro potvrzení.",
+      "Caesar": "Pro zobrazení další obrazovky stiskněte současně levé a pravé tlačítko.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3115,13 +3124,25 @@
     },
     "tutorial__press_and_hold": {
       "Bolt": "",
-      "Caesar": "Podržením pravého tlačítka\nschválíte důležité operace.",
+      "Caesar": "Pro schválení důležitých operací podržete pravé tlačítko.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__press_both": {
+      "Bolt": "",
+      "Caesar": "Stiskněte OBĚ tlačítka zároveň.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__press_left": {
+      "Bolt": "",
+      "Caesar": "Stiskněte LEVÉ.",
       "Delizia": "",
       "Eckhart": ""
     },
     "tutorial__ready_to_use": {
       "Bolt": "",
-      "Caesar": "Teď můžete\npoužívat Trezor.",
+      "Caesar": "Váš Trezor je připraven k použití.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3133,13 +3154,19 @@
     },
     "tutorial__restart_tutorial": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Restartovat tutoriál",
       "Delizia": "Restartovat tutoriál",
       "Eckhart": "Restartovat tutoriál"
     },
     "tutorial__scroll_down": {
       "Bolt": "",
-      "Caesar": "Když se text nevejde na jednu obrazovku, pravým tlačítkem posunete text dolů.\n\rLevým tlačítkem se posunete nahoru.",
+      "Caesar": "Pro zobrazení další obrazovky stiskněte PRAVÉ.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__scroll_up": {
+      "Bolt": "",
+      "Caesar": "Pro posun nahoru držte LEVÉ a stiskněte PRAVÉ.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3173,9 +3200,15 @@
       "Delizia": "Základní navigace",
       "Eckhart": ""
     },
+    "tutorial__title_go_back": {
+      "Bolt": "",
+      "Caesar": "Chcete se vrátit?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_handy_menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Nabídka",
       "Delizia": "Užitečná nabídka",
       "Eckhart": "Užitečná nabídka"
     },
@@ -3197,9 +3230,21 @@
       "Delizia": "Jdeme na to",
       "Eckhart": ""
     },
+    "tutorial__title_middle_button": {
+      "Bolt": "",
+      "Caesar": "Prostřední tlačítko",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_remember": {
+      "Bolt": "",
+      "Caesar": "Pamatujte",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_screen_scroll": {
       "Bolt": "",
-      "Caesar": "Posunutí obrazovky",
+      "Caesar": "Posuňte obrazovku",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3212,6 +3257,12 @@
     "tutorial__title_tutorial_complete": {
       "Bolt": "",
       "Caesar": "Tutoriál dokončen",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_welcome": {
+      "Bolt": "",
+      "Caesar": "Vítá vás Trezor",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3229,7 +3280,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Trezor se ovládá\nstisky levého a pravého tlačítka.\n\rPokračujte vpravo.",
+      "Caesar": "Trezor se ovládá stisky levého a pravého tlačítka.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3242,7 +3293,7 @@
     "tutorial__welcome_safe5": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Vítá vás Trezor Safe 5",
+      "Delizia": "Vítá vás\nTrezor Safe 5",
       "Eckhart": ""
     },
     "tutorial__welcome_safe7": {
@@ -3571,7 +3622,12 @@
       "Delizia": "Zkuste to znovu.",
       "Eckhart": "Zkusit znovu"
     },
-    "words__undelegate": "Zrušení delegace",
+    "words__undelegate": {
+      "Bolt": "Zrušení delegace",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__unknown": "Neznámé",
     "words__unlimited": "Bez limitu",
     "words__unlocked": {

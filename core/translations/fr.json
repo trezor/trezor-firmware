@@ -275,7 +275,6 @@
     },
     "bitcoin__multiple_accounts": "Plusieurs comptes",
     "bitcoin__new_fee_rate": "Nouveau taux de frais",
-    "bitcoin__simple_send_of": "Envoi simple de",
     "bitcoin__ticket_amount": "Montant du ticket",
     "bitcoin__title_confirm_details": {
       "Bolt": "Conf. détails",
@@ -302,7 +301,6 @@
       "Eckhart": "Mettre à jour la transaction"
     },
     "bitcoin__unknown_path": "Chemin inconnu",
-    "bitcoin__unknown_transaction": "Transaction inconnue",
     "bitcoin__unusually_high_fee": {
       "Bolt": "Frais anormalement élevés.",
       "Caesar": "Frais exceptionnellement élevés.",
@@ -557,6 +555,7 @@
     },
     "buttons__select": "Sélectionner",
     "buttons__set": "Définir",
+    "buttons__shift": "",
     "buttons__show_all": "Tout afficher",
     "buttons__show_details": "Afficher les détails",
     "buttons__show_next": {
@@ -727,7 +726,7 @@
     "coinjoin__max_rounds": "Nombre max de tours",
     "coinjoin__title": "Autoriser le Coinjoin",
     "coinjoin__title_progress": "Coinjoin en cours...",
-    "coinjoin__waiting_for_others": "En attente des autres",
+    "coinjoin__waiting_for_others": "En attente des autres...",
     "confirm_total__fee_rate": "Taux des frais",
     "confirm_total__title_fee": "Infos sur les frais",
     "confirm_total__title_sending_from": {
@@ -1125,7 +1124,7 @@
       "Bolt": "Adresse de contrat inconnue.",
       "Caesar": "Adresse de contrat inconnue",
       "Delizia": "Adresse de contrat inconnue.",
-      "Eckhart": "Adresse de contrat du jeton inconnue."
+      "Eckhart": "Adresse de contrat inconnue."
     },
     "ethereum__unknown_token": "Jeton inconnu",
     "ethereum__valid_signature": "La signature est valide.",
@@ -1137,6 +1136,7 @@
       "Delizia": "Vérifiez pour déposer dans le coffre.",
       "Eckhart": "Vérifiez les détails pour déposer dans le coffre."
     },
+    "ethereum__vault_owner_address": "Adresse du propriétaire",
     "ethereum__vault_redeem_intro": {
       "Bolt": "Vérifiez pour récupérer depuis le coffre.",
       "Caesar": "Vérifiez pour récupérer depuis le coffre.",
@@ -1461,12 +1461,7 @@
       "Eckhart": ""
     },
     "language__change_to_template": "Changer la langue en {0} ?",
-    "language__changed": {
-      "Bolt": "La langue a été changée avec succès.",
-      "Caesar": "La langue a été changée avec succès",
-      "Delizia": "La langue a été changée avec succès.",
-      "Eckhart": "La langue a été changée avec succès."
-    },
+    "language__changed": "La langue a été changée avec succès.",
     "language__progress": "Changement de langue...",
     "language__title": "Paramètres de langue",
     "led__disable": {
@@ -1570,7 +1565,12 @@
       "Delizia": "Frais inchangés.",
       "Eckhart": "Frais inchangés"
     },
-    "modify_fee__title": "Modifier les frais",
+    "modify_fee__title": {
+      "Bolt": "",
+      "Caesar": "Modifier les frais",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "modify_fee__transaction_fee": {
       "Bolt": "Frais de transaction :",
       "Caesar": "Frais de transaction :",
@@ -1996,7 +1996,7 @@
       "Eckhart": "Modifier le PIN"
     },
     "pin__change_question": "Modifier le PIN ?",
-    "pin__changed": "PIN modifié.",
+    "pin__changed": "Code PIN modifié.",
     "pin__cursor_will_change": {
       "Bolt": "",
       "Caesar": "La position du curseur changera entre les saisies pour une meilleure sécurité.",
@@ -2074,7 +2074,7 @@
     "pin__turn_off": "Voulez-vous vraiment désactiver la protection par PIN ?",
     "pin__turn_on": "Activer la protection par code PIN ?",
     "pin__wipe_code_exists_description": {
-      "Bolt": "Le code d'effacement doit être désactivé avant le code PIN.",
+      "Bolt": "Désactivez le code d'effacement avant le PIN.",
       "Caesar": "Désactivez le code d'effacement avant de désactiver la protection par code PIN.",
       "Delizia": "Désactivez le code d'effacement avant de désactiver la protection par code PIN.",
       "Eckhart": "Désactivez le code d'effacement avant de désactiver la protection par code PIN."
@@ -2234,12 +2234,7 @@
     "recovery__type_word_x_of_y_template": "Tapez le mot {0} sur {1}",
     "recovery__unlock_repeated_backup": "Créer une sauvegarde supplémentaire ?",
     "recovery__unlock_repeated_backup_verb": "Créer une sauvegarde",
-    "recovery__wallet_recovered": {
-      "Bolt": "Récupération du portefeuille terminée.",
-      "Caesar": "Récupération du portefeuille terminée",
-      "Delizia": "Récupération du portefeuille terminée.",
-      "Eckhart": "Récupération du portefeuille terminée."
-    },
+    "recovery__wallet_recovered": "Récupération du portefeuille terminée.",
     "recovery__wanna_cancel_dry_run": "Voulez-vous vraiment annuler la vérification de la sauvegarde ?",
     "recovery__wanna_cancel_recovery": "Voulez-vous vraiment annuler le processus de récupération ?",
     "recovery__word_count_template": "({0} mots)",
@@ -2950,7 +2945,12 @@
       "Eckhart": ""
     },
     "send__maximum_fee": "Frais max",
-    "send__multisig_different_paths": "Utiliser des chemins différents pour différents XPUB.",
+    "send__multisig_different_paths": {
+      "Bolt": "Utiliser des chemins différents pour différents XPUB.",
+      "Caesar": "Utiliser des chemins différents pour différents XPUB",
+      "Delizia": "Utiliser des chemins différents pour différents XPUB.",
+      "Eckhart": "Utiliser des chemins différents pour différents XPUB."
+    },
     "send__receiving_to_multisig": "Réception sur une adresse multisig.",
     "send__send_from": "Envoyer depuis",
     "send__send_in_the_app": {
@@ -3034,6 +3034,7 @@
     "solana__expected_fee": "Frais attendus",
     "solana__instruction_accounts_template": "L'instruction contient {0} comptes et ses données font {1} octets.",
     "solana__instruction_data": "Données d'instruction",
+    "solana__instruction_is_multisig": "L'instruction suivante est une instruction multisig.",
     "solana__is_provided_via_lookup_table_template": "{0} est fourni via une table de correspondance.",
     "solana__lookup_table_address": {
       "Bolt": "Adresse de table de correspondance",
@@ -3093,7 +3094,7 @@
     "stellar__destination": "Destination",
     "stellar__exchanges_require_memo": "Mémo non défini. Généralement requis pour un envoi vers une plateforme d'échange.",
     "stellar__ext_auth": "Autorisations Externes",
-    "stellar__ext_auth_message": "La transaction contient des invocations autorisées de manière externe.",
+    "stellar__ext_auth_message": "Transaction incluant des appels autorisés par un tiers.",
     "stellar__final_confirm": "Confirmation finale",
     "stellar__from": "Depuis",
     "stellar__hash": "Hash",
@@ -3176,13 +3177,13 @@
     "thp__autoconnect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Autoriser {0} à se connecter automatiquement à ce Trezor ?",
+      "Delizia": "",
       "Eckhart": "Autoriser {0} à se connecter automatiquement à ce Trezor ?"
     },
     "thp__autoconnect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Autoriser {0} sur {1} à se connecter automatiquement à ce Trezor ?",
+      "Delizia": "",
       "Eckhart": "Autoriser {0} sur {1} à se connecter automatiquement à ce Trezor ?"
     },
     "thp__autoconnect_title": {
@@ -3194,31 +3195,31 @@
     "thp__code_entry": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Entrez ce code de sécurité à usage unique sur {0}",
+      "Delizia": "",
       "Eckhart": "Entrez ce code de sécurité à usage unique sur {0}"
     },
     "thp__code_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Encore une étape",
+      "Delizia": "",
       "Eckhart": "Encore une étape"
     },
     "thp__connect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Autoriser {0} à se connecter avec ce Trezor ?",
+      "Delizia": "",
       "Eckhart": "Autoriser {0} à se connecter avec ce Trezor ?"
     },
     "thp__connect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Autoriser {0} sur {1} à se connecter avec ce Trezor ?",
+      "Delizia": "",
       "Eckhart": "Autoriser {0} sur {1} à se connecter avec ce Trezor ?"
     },
     "thp__connect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Dialogue de connexion",
+      "Delizia": "",
       "Eckhart": "Dialogue de connexion"
     },
     "thp__nfc_text": {
@@ -3230,37 +3231,37 @@
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Autoriser {0} à s'appairer avec ce Trezor ?",
+      "Delizia": "",
       "Eckhart": "Autoriser {0} à s'appairer avec ce Trezor ?"
     },
     "thp__pair_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Autoriser {0} sur {1} à s'appairer avec ce Trezor ?",
+      "Delizia": "",
       "Eckhart": "Autoriser {0} sur {1} à s'appairer avec ce Trezor ?"
     },
     "thp__pair_name": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "{0} est le nom de votre Trezor.",
+      "Delizia": "",
       "Eckhart": "{0} est le nom de votre Trezor."
     },
     "thp__pair_new_device": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Appairer avec un nouvel appareil",
+      "Delizia": "",
       "Eckhart": "Appairer avec un nouvel appareil"
     },
     "thp__pair_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Avant de continuer",
+      "Delizia": "",
       "Eckhart": "Avant de continuer"
     },
     "thp__qr_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Scannez le code QR pour appairer",
+      "Delizia": "",
       "Eckhart": "Scannez le code QR pour appairer"
     },
     "tron__claim_unfrozen_balance": "Réclamer les fonds disponibles ?",
@@ -3281,6 +3282,12 @@
     },
     "tron__owner_address": "Adresse du propriétaire",
     "tron__undelegate_resource": "Annuler la délégation",
+    "tutorial__complete": {
+      "Bolt": "",
+      "Caesar": "Conclure le tutoriel",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3305,6 +3312,7 @@
       "Delizia": "Le Trezor Model One, créé en 2013,\nétait le premier portefeuille physique crypto au monde.",
       "Eckhart": ""
     },
+    "tutorial__hold_left_press_right": "",
     "tutorial__last_one": {
       "Bolt": "",
       "Caesar": "",
@@ -3319,7 +3327,7 @@
     },
     "tutorial__menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Trouvez des actions et options spécifiques au contexte dans le menu.",
       "Delizia": "Trouvez des actions et options spécifiques au contexte dans le menu.",
       "Eckhart": "Trouvez des actions et options spécifiques au contexte dans le menu."
     },
@@ -3329,6 +3337,7 @@
       "Delizia": "",
       "Eckhart": "Afficher plus d'infos, quitter le flux ..."
     },
+    "tutorial__menu_later": "",
     "tutorial__middle_click": {
       "Bolt": "",
       "Caesar": "Appuyez simultanément sur les boutons de gauche et de droite\npour confirmer",
@@ -3359,9 +3368,11 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "tutorial__press_both": "",
+    "tutorial__press_left": "",
     "tutorial__ready_to_use": {
       "Bolt": "",
-      "Caesar": "Vous êtes prêt à\nutiliser votre Trezor.",
+      "Caesar": "Vous êtes prêt à utiliser votre Trezor.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3373,7 +3384,7 @@
     },
     "tutorial__restart_tutorial": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Recommencer le tutoriel",
       "Delizia": "Recommencer le tutoriel",
       "Eckhart": "Recommencer le tutoriel"
     },
@@ -3383,6 +3394,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "tutorial__scroll_up": "",
     "tutorial__suite_restart": {
       "Bolt": "",
       "Caesar": "",
@@ -3413,9 +3425,15 @@
       "Delizia": "Navigation facile",
       "Eckhart": ""
     },
+    "tutorial__title_go_back": {
+      "Bolt": "",
+      "Caesar": "Besoin de revenir en arrière ?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_handy_menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Menu",
       "Delizia": "Menu pratique",
       "Eckhart": "Menu pratique"
     },
@@ -3437,6 +3455,18 @@
       "Delizia": "Commençons",
       "Eckhart": ""
     },
+    "tutorial__title_middle_button": {
+      "Bolt": "",
+      "Caesar": "Bouton du milieu",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_remember": {
+      "Bolt": "",
+      "Caesar": "Mémoriser",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_screen_scroll": {
       "Bolt": "",
       "Caesar": "Défilement de l'écran",
@@ -3455,6 +3485,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "tutorial__title_welcome": "",
     "tutorial__title_well_done": {
       "Bolt": "",
       "Caesar": "",
@@ -3469,7 +3500,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Utilisez votre Trezor\navec les boutons de gauche et de droite.\n\rContinuez avec droite.",
+      "Caesar": "Utilisez votre Trezor avec les boutons gauche et droite.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3811,7 +3842,12 @@
       "Delizia": "Réessayez.",
       "Eckhart": "Réessayer"
     },
-    "words__undelegate": "Révoquer la délégation",
+    "words__undelegate": {
+      "Bolt": "Révoquer la délégation",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__unknown": "Inconnu(e)(s)",
     "words__unlimited": "Illimité(e)(s)",
     "words__unlocked": {
