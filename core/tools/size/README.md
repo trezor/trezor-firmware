@@ -24,8 +24,12 @@ Checks the size of the current firmware against the size limits of its flash sec
 ### commit.sh <commit_id>
 Gets the size difference introduced by a specified commit
 
-### compare_master.py
-Compares the size of the current firmware with the size of the latest master.
+### pr_report.py <--new dir> [--base dir]
+Compares the images of two sets of CI artifacts (`core-firmware-*` directories as
+`actions/download-artifact` leaves them) and renders the pull request comment with
+the flash, content (without alignment padding) and RAM deltas per model and image.
+CI runs it in the `binaries_size_report` job against the reference build of the
+PR's base commit. Needs only the standard library, no `binsize`.
 
 ### compare.sh <old_elf_file> <new_elf_file>
 Compares the size of two firmware binaries.
