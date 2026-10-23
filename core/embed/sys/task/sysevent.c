@@ -176,9 +176,11 @@ void syshandle_signal_write_ready(syshandle_t handle, void *param) {
 
 static inline void remove_poller(sysevent_dispatcher_t *dispatcher,
                                  size_t idx) {
-  for (size_t j = idx; j < dispatcher->pollers_count - 1; j++) {
-    dispatcher->pollers[j] = dispatcher->pollers[j + 1];
+  for (size_t j = idx + 1;
+       j < dispatcher->pollers_count && j < SYSTASK_MAX_TASKS; j++) {
+    dispatcher->pollers[j - 1] = dispatcher->pollers[j];
   }
+
   --dispatcher->pollers_count;
 }
 
