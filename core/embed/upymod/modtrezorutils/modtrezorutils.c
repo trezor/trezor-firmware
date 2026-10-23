@@ -246,7 +246,6 @@ static mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
       vstr_clear(&vstr);
       mp_raise_msg(&mp_type_RuntimeError,
                    MP_ERROR_TEXT("Failed to calculate firmware hash."));
-      break;
     }
 
     if (mp_obj_is_callable(ui_wait_callback)) {
