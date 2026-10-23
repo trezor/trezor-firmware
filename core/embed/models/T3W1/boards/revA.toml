@@ -26,7 +26,7 @@ panel = "io/touch_panel_lx250a2410a"
 
 [power_manager]
 pmic = "io/pmic_npm1300"
-driver = "io/power_manager_npm1300"
+fuel_gauge = "io/fuel_gauge_lifepo4"
 wireless = "io/wireless_stwlc38"
 
 [nfc]

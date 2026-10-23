@@ -36,9 +36,9 @@
 #include <sec/telemetry.h>
 #endif
 
-#include "../battery/battery.h"
+#include "../fuel_gauge/battery.h"
 #include "../power_manager_poll.h"
-#include "../stwlc38/stwlc38.h"
+#include "../wireless/stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
 // Global driver instance
@@ -169,7 +169,9 @@ pm_status_t pm_init(bool inherit_state) {
 
   // Set default SOC target and max charging current limit
   drv->soc_target = 100;
+#ifdef USE_CHARGER
   drv->i_chg_max_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+#endif
 
 #ifdef PM_ENABLE_TEMP_CONTROL
   drv->i_chg_temp_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
@@ -277,6 +279,13 @@ pm_status_t pm_get_state(pm_state_t* state) {
   state->soc = drv->soc_ceiled;
   state->battery_temp = drv->pmic_data.ntc_temp;
   state->battery_ocv = drv->battery_ocv;
+#ifdef PM_ENABLE_TEMP_CONTROL
+  state->temp_control_active = drv->temp_control_active;
+#else
+  // No thermal controller in this build, so it is never active. Assigned
+  // explicitly because pm_get_state() does not zero the caller's struct.
+  state->temp_control_active = false;
+#endif
 
   irq_unlock(irq_key);
 
@@ -485,6 +494,12 @@ pm_status_t pm_charging_set_max_current(uint16_t current_ma) {
     return PM_NOT_INITIALIZED;
   }
 
+#ifndef USE_CHARGER
+  // No charger on this PMIC, so there is no charging current to limit. Reject
+  // rather than report success for a limit that would never be applied.
+  (void)current_ma;
+  return PM_REQUEST_REJECTED;
+#else
   if (current_ma > PM_BATTERY_CHARGING_CURRENT_MAX) {
     return PM_REQUEST_REJECTED;
   }
@@ -499,6 +514,7 @@ pm_status_t pm_charging_set_max_current(uint16_t current_ma) {
   irq_unlock(irq_key);
 
   return PM_OK;
+#endif
 }
 
 pm_status_t pm_store_data_to_backup_ram() {
