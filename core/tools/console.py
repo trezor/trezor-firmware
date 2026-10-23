@@ -449,6 +449,10 @@ async def open_ble(target: str | None, forget_bond: bool) -> BleLink:
     return link
 
 
+class NoConsoleService(RuntimeError):
+    """The device is reachable but routes no console to BLE."""
+
+
 async def connect(device: BLEDevice, forget_bond: bool) -> BleLink:
     if forget_bond and sys.platform == "linux":
         await forget_device(device)
@@ -479,7 +483,7 @@ async def connect(device: BLEDevice, forget_bond: bool) -> BleLink:
             pass  # macOS pairs on first encrypted access
 
         if client.services.get_characteristic(CONSOLE_TX_UUID) is None:
-            raise RuntimeError(
+            raise NoConsoleService(
                 f"{device.address} has no BLE console service; it needs prodtest "
                 "for a board with [ble_console] or firmware built with "
                 "--dbg-console ble"
@@ -499,6 +503,10 @@ async def connect(device: BLEDevice, forget_bond: bool) -> BleLink:
             pass
         if agent is not None:
             agent.close()
+        if isinstance(e, (NoConsoleService, TimeoutError, asyncio.TimeoutError)):
+            # Not a bond problem: the device answered without a console, or
+            # did not answer at all. Forgetting the bond would not help.
+            raise
         if forget_bond or sys.platform != "linux":
             if forget_bond:
                 LOG.error(
