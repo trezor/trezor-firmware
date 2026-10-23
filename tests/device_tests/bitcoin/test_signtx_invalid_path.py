@@ -23,7 +23,13 @@ from trezorlib.tools import H_, parse_path
 
 from ...common import is_core
 from ...input_flows import InputFlowConfirmAllWarnings
-from .signtx import forge_prevtx, request_input
+from .signtx import (
+    forge_prevtx,
+    request_finished,
+    request_input,
+    request_meta,
+    request_output,
+)
 
 B = messages.ButtonRequestType
 
@@ -31,6 +37,11 @@ B = messages.ButtonRequestType
 INPUT_ADDRESS = "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
 PREV_HASH, PREV_TX = forge_prevtx([(INPUT_ADDRESS, 390_000)])
 PREV_TXES = {PREV_HASH: PREV_TX}
+
+# 2-of-3 multisig address of m/45h/0h/{0,1,2}h/0/0 at seed "all all all..."
+MULTISIG_INPUT_ADDRESS = "39sEofM1QCi3cDa8mjwrujEctBoNvMbytL"
+MULTISIG_PREV_HASH, MULTISIG_PREV_TX = forge_prevtx([(MULTISIG_INPUT_ADDRESS, 390_000)])
+MULTISIG_PREV_TXES = {MULTISIG_PREV_HASH: MULTISIG_PREV_TX}
 
 
 # Litecoin does not have strong replay protection using SIGHASH_FORKID,
@@ -86,6 +97,92 @@ def test_invalid_path_prompt(session: Session):
             client.set_input_flow(IF.get())
 
         btc.sign_tx(session, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
+
+
+def _unchained_removed_multisig_input(session: Session) -> messages.TxInputType:
+    # Removed Unchained pattern, now an unknown path:
+    # m/45'/coin_type'/account'/[0-1000000]/address_index
+    nodes = [
+        btc.get_public_node(
+            session, parse_path(f"m/45h/0h/{i}h"), coin_name="Bitcoin"
+        ).node
+        for i in range(3)
+    ]
+    multisig = messages.MultisigRedeemScriptType(
+        nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
+    )
+    return messages.TxInputType(
+        address_n=parse_path("m/45h/0h/0h/0/0"),
+        amount=390_000,
+        prev_hash=MULTISIG_PREV_HASH,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDMULTISIG,
+        multisig=multisig,
+    )
+
+
+# Spending a multisig input from an unknown Bitcoin path on Litecoin should fail.
+@pytest.mark.altcoin
+@pytest.mark.multisig
+def test_invalid_path_multisig_fail(session: Session):
+    inp1 = _unchained_removed_multisig_input(session)
+
+    # address is converted from 1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1 by changing the version
+    out1 = messages.TxOutputType(
+        address="LfWz9wLHmqU9HoDkMg9NqbRosrHvEixeVZ",
+        amount=390_000 - 10_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with pytest.raises(TrezorFailure) as exc:
+        btc.sign_tx(session, "Litecoin", [inp1], [out1], prev_txes=MULTISIG_PREV_TXES)
+
+    assert exc.value.code == messages.FailureType.DataError
+    assert exc.value.message.endswith("Forbidden key path")
+
+
+# With safety checks set to prompt, the same spend should pass only after the
+# unknown path warning.
+@pytest.mark.altcoin
+@pytest.mark.multisig
+def test_invalid_path_multisig_prompt(session: Session):
+    inp1 = _unchained_removed_multisig_input(session)
+
+    # address is converted from 1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1 by changing the version
+    out1 = messages.TxOutputType(
+        address="LfWz9wLHmqU9HoDkMg9NqbRosrHvEixeVZ",
+        amount=390_000 - 10_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    device.apply_settings(
+        session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+    )
+
+    with session.test_ctx as client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                messages.ButtonRequest(code=B.UnknownDerivationPath),
+                request_output(0),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_meta(MULTISIG_PREV_HASH),
+                request_input(0, MULTISIG_PREV_HASH),
+                request_output(0, MULTISIG_PREV_HASH),
+                request_input(0),
+                request_output(0),
+                request_output(0),
+                request_finished(),
+            ]
+        )
+        if is_core(session):
+            IF = InputFlowConfirmAllWarnings(session)
+            client.set_input_flow(IF.get())
+
+        btc.sign_tx(session, "Litecoin", [inp1], [out1], prev_txes=MULTISIG_PREV_TXES)
 
 
 # Bcash does have strong replay protection using SIGHASH_FORKID,

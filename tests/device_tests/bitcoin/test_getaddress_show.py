@@ -136,6 +136,40 @@ def test_show_unrecognized_path(session: Session):
         )
 
 
+# Removed Unchained pattern m/45'/coin_type'/account'/[0-1000000]/address_index
+@pytest.mark.multisig
+@pytest.mark.parametrize(
+    "coin_name, account, address_n",
+    (
+        pytest.param("Bitcoin", 0, [0, 0], id="bitcoin"),
+        pytest.param("Testnet", 0, [0, 0], id="bitcoin_path_on_testnet"),
+        pytest.param("Bitcoin", 7777, [1, 5_000_000], id="unenumerable"),
+    ),
+)
+def test_show_multisig_unrecognized_path(
+    session: Session, coin_name: str, account: int, address_n: list[int]
+):
+    nodes = [
+        btc.get_public_node(
+            session, tools.parse_path(f"m/45h/0h/{account + i}h"), coin_name="Bitcoin"
+        ).node
+        for i in range(3)
+    ]
+    multisig = messages.MultisigRedeemScriptType(
+        nodes=nodes, signatures=[b"", b"", b""], m=2, address_n=address_n
+    )
+
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        btc.get_address(
+            session,
+            coin_name,
+            tools.parse_path(f"m/45h/0h/{account}h") + address_n,
+            show_display=True,
+            multisig=multisig,
+            script_type=messages.InputScriptType.SPENDMULTISIG,
+        )
+
+
 @pytest.mark.multisig
 def test_show_multisig_3(session: Session):
     nodes = [
