@@ -163,6 +163,24 @@ if utils.USE_THP:
         if not utils.BITCOIN_ONLY:
             _check_cardano_supported(msg.derive_cardano)
         passphrase = await get_passphrase(msg)
+        from trezorcrypto import SecretOwner
+
+        from trezor import loop
+        from trezor.wire.context import with_context
+
+        # Creation arrives on a seedless context. Retain the seed for the new
+        # session, not the seedless request's parent. Keep all UI in the original
+        # workflow: a nested UI workflow would cancel its waiting parent.
+        owner = SecretOwner(ctx.cache.get_secret_owner())
+        try:
+            await loop.spawn(
+                with_context(ctx, _store_thp_seed(ctx, passphrase)), secret_owner=owner
+            )
+        finally:
+            owner.destroy()
+
+    async def _store_thp_seed(ctx: Context, passphrase: str) -> None:
+        # No UI or awaits: only this native derivation needs the new owner.
         _store_common_seed(ctx, passphrase)
 
 else:  # v1 protocol
