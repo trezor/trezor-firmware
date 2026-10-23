@@ -683,4 +683,26 @@ access_violation:
 
 #endif  // USE_MLDSA44
 
+#ifdef USE_VAULT_KEK
+
+#include "memzero.h"
+
+secbool vault_kek_wrap__verified(bool encrypt, uint8_t value[40]) {
+  if (!probe_write_access(value, 40)) {
+    apptask_access_violation();
+    return secfalse;
+  }
+
+  /* Work on a secure-world copy so the caller cannot observe or alter
+   * intermediate key-wrap state while SAES is running. */
+  uint8_t tmp[40];
+  memcpy(tmp, value, sizeof(tmp));
+  secbool ok = vault_kek_wrap(encrypt, tmp);
+  memcpy(value, tmp, sizeof(tmp));
+  memzero(tmp, sizeof(tmp));
+  return ok;
+}
+
+#endif  // USE_VAULT_KEK
+
 #endif  // SECMON

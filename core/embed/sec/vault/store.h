@@ -269,6 +269,9 @@ static secret_payload_t *secret_open(const vault_blob_t *blob, uint32_t active,
   bool ok = vault_seal_record(false, nonce, aad, data, encoded_length, tag) &&
             secret_decode(kind, len, data, p);
   memzero(data, sizeof(data));
+  /* Re-evaluated after decryption: one skipped access check above must not
+   * release another owner's secret. */
+  if (!secret_owner_access(active, secret_get32(b))) ok = false;
   if (!ok) {
     if (!vault_seal_ready()) secret_crypto_failed = true;
     memzero(p, sizeof(*p));
@@ -289,6 +292,11 @@ static bool secret_transaction_end(void) {
   memzero(secret_scratch, sizeof(secret_scratch));
   memzero(secret_scratch_used, sizeof(secret_scratch_used));
   vault_seal_end();
+  /* A skipped wipe would leave plaintext in kernel RAM; verify it. */
+  volatile uint8_t residue = 0;
+  for (size_t i = 0; i < sizeof(secret_scratch); i++)
+    residue |= ((const uint8_t *)secret_scratch)[i];
+  if (residue || !vault_seal_idle()) ok = false;
   secret_busy = false;
   if (!ok) {
     secret_revoke_all();

@@ -29,12 +29,17 @@ static bool vault_keywrap(bool encrypt, uint8_t value[40],
       memcpy(work + 8 * i, b + 8, 8);
     }
   }
+  /* Integrity is tested twice, so one skipped branch releases no key. */
+  volatile uint8_t diff = 0;
   if (!encrypt) {
-    uint8_t diff = 0;
     for (size_t i = 0; i < 8; i++) diff |= work[i] ^ 0xa6;
     if (diff) goto cleanup;
   }
   memcpy(value, work, 40);
+  if (diff) {
+    memzero(value, 40);
+    goto cleanup;
+  }
   ok = true;
 cleanup:
   if (!ok) memzero(value, 40);

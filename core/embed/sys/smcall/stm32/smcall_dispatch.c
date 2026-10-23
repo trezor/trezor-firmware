@@ -472,6 +472,14 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     } break;
 #endif
 
+#ifdef USE_VAULT_KEK
+    case SMCALL_VAULT_KEK_WRAP: {
+      bool encrypt = args[0] != 0;
+      uint8_t *value = (uint8_t *)args[1];
+      args[0] = vault_kek_wrap__verified(encrypt, value);
+    } break;
+#endif
+
     default:
       system_exit_fatal("Invalid smcall", __FILE__, __LINE__);
       break;

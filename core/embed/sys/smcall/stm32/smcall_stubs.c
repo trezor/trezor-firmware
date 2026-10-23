@@ -485,4 +485,19 @@ ts_t mldsa44_verify(const mldsa44_signature_t *sig, const void *m, size_t mlen,
 
 #endif  // USE_MLDSA44
 
+// =============================================================================
+// vault_kek.h
+// =============================================================================
+
+#ifdef USE_VAULT_KEK
+
+#include <sec/vault_kek.h>
+
+secbool vault_kek_wrap(bool encrypt, uint8_t value[40]) {
+  return (secbool)smcall_invoke2((uint32_t)encrypt, (uint32_t)value,
+                                 SMCALL_VAULT_KEK_WRAP);
+}
+
+#endif  // USE_VAULT_KEK
+
 #endif  // defined(KERNEL) && defined(USE_SECMON_LAYOUT)

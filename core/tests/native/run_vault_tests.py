@@ -105,11 +105,12 @@ def main():
                 "test_secret_store",
                 "test_vault",
                 "test_vault_encrypted",
+                "test_storage_key_cache",
                 "test_fido_keys",
                 "test_ed25519_keys",
             ]
             if args.sealing_only:
-                names = ["test_vault_sealing"]
+                names = ["test_vault_sealing", "test_storage_key_cache"]
             if mode == "siv":
                 names += ["test_vault_siv"]
                 if not args.sealing_only:
