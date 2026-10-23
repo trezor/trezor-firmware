@@ -55,7 +55,9 @@ def main():
         action="store_true",
         help="Test AES sealing/cache without EC code",
     )
-    parser.add_argument("--mode", choices=("gcm", "siv", "ecb"), action="append")
+    parser.add_argument(
+        "--mode", choices=("gcm", "siv", "ecb", "saes"), action="append"
+    )
     args = parser.parse_args()
     archive = args.crypto_archive or find_crypto(not args.sealing_only)
     print(f"Crypto archive: {archive}", flush=True)
@@ -96,8 +98,8 @@ def main():
             "typedef struct {const char *key, *aad, *message, *ciphertext; bool valid;} vector_t;\n"
             "static const vector_t vectors[] = {" + ",\n".join(rows) + "};\n"
         )
-        for mode in args.mode or ("gcm", "siv", "ecb"):
-            selection = {"siv": 1, "ecb": 2, "gcm": 3}[mode]
+        for mode in args.mode or ("gcm", "siv", "ecb", "saes"):
+            selection = {"siv": 1, "ecb": 2, "gcm": 3, "saes": 3}[mode]
             print(f"Vault mode: {mode}", flush=True)
             names = [
                 "test_vault_sealing",
@@ -111,6 +113,16 @@ def main():
             ]
             if args.sealing_only:
                 names = ["test_vault_sealing", "test_storage_key_cache"]
+            mode_flags = []
+            if mode == "saes":
+                # GCM records with the SAES backend; a software stand-in plays
+                # the secure world.
+                names = ["test_vault_saes"]
+                mode_flags = [
+                    "-DVAULT_SEAL_HW=1",
+                    "-Icore/embed/rtl/inc",
+                    "-Icore/embed/sec/vault_kek/inc",
+                ]
             if mode == "siv":
                 names += ["test_vault_siv"]
                 if not args.sealing_only:
@@ -145,6 +157,7 @@ def main():
                         *flags,
                         "-I" + output,
                         f"-DVAULT_SEAL_MODE={selection}",
+                        *mode_flags,
                         *inputs,
                         "-o",
                         binary,

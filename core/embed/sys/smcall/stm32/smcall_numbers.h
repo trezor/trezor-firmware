@@ -117,5 +117,6 @@ typedef enum {
   SMCALL_TROPIC_GET_UPDATE_STATE,
 
   SMCALL_VAULT_KEK_WRAP,
+  SMCALL_VAULT_SAES_RECORD,
 
 } smcall_number_t;
