@@ -182,12 +182,12 @@ options:
     group: Features
     type: multistate
     states:
-      - value: abab
-        name: ABAB
-        description: Development silicon.
       - value: acab
         name: ACAB
         description: Production silicon.
+      - value: abab
+        name: ABAB
+        description: Development silicon.
 
   - id: debug
     name: Debug Build
