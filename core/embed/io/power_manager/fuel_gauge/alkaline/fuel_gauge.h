@@ -57,9 +57,6 @@ typedef struct {
 } fuel_gauge_state_t;
 
 typedef struct {
-  // TODO: consider to delete bat_esr_init and use only bat_esr_ocv
-  float bat_esr_init;  ///< Battery internal resistance of 100ms current pulse
-                       ///< during bootloader [Ohm]
   float bat_esr_ocv;   ///< Battery internal resistance of 2 second in
                        ///< Application [Ohm]
   float bat_esr_nfc;   ///< Battery internal resistance for NFC survival [Ohm]

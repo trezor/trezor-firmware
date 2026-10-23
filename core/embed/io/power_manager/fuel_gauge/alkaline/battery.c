@@ -86,6 +86,7 @@ ts_t bat_fg_recovery(float soc, float P, float voltage_V, float current_mA) {
   drv->sample_buf.sample_boot.voltage_V = voltage_V;
   drv->sample_buf.sample_boot.current_mA = current_mA;
   drv->sample_buf.sample_boot.timestamp_ms = systick_ms();
+  drv->sample_buf.buffer_state = FG_SAMPLE_APP;
 
   return bat_fg_set_soc(soc, P);
 }
@@ -124,58 +125,6 @@ ts_t bat_fg_feed_sample(float voltage_V, float current_mA, float temp_C) {
                                       .timestamp_ms = timestamp_ms};
   fuel_gauge_feed_buffer(&drv->sample_buf, &sample);
 
-  /*
-  // TODO: Accept only exact order of input samples in order to correctly
-  // calculate initial ESR, OCV and SoC.
-
-  if (drv->sample_buf.head_idx == 0) {
-    // TODO: consider read more samples and count average of 1st samples if
-    // there is enough time for that.
-    // TODO: Check how long we stay in bootloader mode with low power
-    // consumption.
-
-    // 1. sample - first measurement of V, I and Temp. Expect low current < 50mA
-    if (current_mA > BAT_FG_CUR_BOOTLOADER_MA) {
-      return TS_EINVAL;
-    }
-    dummy_load_on(drv->pulse_timer, BAT_FG_CUR_DUMMY_TIMEOUT_MS);
-  } else if (drv->sample_buf.head_idx == 1) {
-    // 2. sample - current pulse measurement of V, I and Temp. Expect DUMMY
-    // current between 100 and 200 mA (TBD).
-    // dTime >= 100 ms.
-    // -> Calculation initial ESR, OCV and SoC.
-    if (((timestamp_ms - drv->sample_buf.samples[0].timestamp_ms) < 100) ||
-        (current_mA < BAT_FG_CUR_BOOTLOADER_DUMMY_MIN_MA) ||
-        (current_mA > BAT_FG_CUR_BOOTLOADER_DUMMY_MAX_MA)) {
-      return TS_EINVAL;
-    }
-    dummy_load_off();
-  } else if (drv->sample_buf.head_idx == 2) {
-    // 3. sample - measurement of V, I and Temp in Application mode. Expect
-    // current > 100 mA.
-    // dTime >= 2 seconds.
-    // -> Calculation more accurate ESR, OCV and SoC.
-    if ((timestamp_ms - drv->sample_buf.samples[1].timestamp_ms) < 2000) {
-      return TS_EINVAL;
-    }
-  }
-
-  // TODO: enable-nfc flag related ESR can be calculated during Application.
-  // In bat_fg_update() function.
-  // else if (drv->sample_buf.head_idx == 3) {
-  //   // 4. sample - measurement of V, I, Temp in Application mode. Expect
-  //   low
-  //   // current > 100 mA. dTime = 10 seconds.
-  //   // -> Calcualtion precise ESR for enable-nfc flag.
-  // }
-
-  // Store battery data in the buffer
-  drv->sample_buf.samples[drv->sample_buf.head_idx].voltage_V = voltage_V;
-  drv->sample_buf.samples[drv->sample_buf.head_idx].current_mA = current_mA;
-  drv->sample_buf.samples[drv->sample_buf.head_idx].temp_C = temp_C;
-  drv->sample_buf.samples[drv->sample_buf.head_idx].timestamp_ms = timestamp_ms;
-  drv->sample_buf.head_idx++;
-  */
   irq_unlock(key);
 
   return TS_OK;
@@ -197,6 +146,7 @@ ts_t bat_fg_initial_guess() {
 
   fuel_gauge_initial_guess(&drv->fg_state, &drv->battery_model,
                            &drv->sample_buf);
+  drv->sample_buf.buffer_state = FG_SAMPLE_APP;
 
   irq_unlock(key);
 

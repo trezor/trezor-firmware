@@ -84,13 +84,13 @@ float fuel_gauge_meas_to_ocv(float battery_esr, float voltage_V,
 void fuel_gauge_initial_guess(fuel_gauge_state_t* state, battery_model_t* model,
                               fuel_gauge_buffer_t* buffer) {
   // Calculate ESR and OCV.
-  model->bat_esr_init = fuel_gauge_rint(
+  model->bat_esr_ocv = fuel_gauge_rint(
       buffer->samples[0].voltage_V, buffer->samples[0].current_mA,
       buffer->samples[1].voltage_V, buffer->samples[1].current_mA);
 
   // Calculate OCV from terminal voltage and current
   float ocv = fuel_gauge_meas_to_ocv(
-      model->bat_esr_init, buffer->samples[1].voltage_V,
+      model->bat_esr_ocv, buffer->samples[1].voltage_V,
       buffer->samples[1].current_mA, buffer->samples[1].temp_C);
 
   // Extract SoC from battery model
@@ -152,24 +152,26 @@ bool fuel_gauge_feed_buffer(fuel_gauge_buffer_t* buffer,
   fuel_gauge_buffer_state_e state = buffer->buffer_state;
   bool buffer_ready = false;
 
-  // TODO: Accept only exact order of input samples in order to correctly
+  // Accept only exact order of input samples in order to correctly
   // calculate initial ESR, OCV and SoC.
   switch (state) {
     // TODO: Check how long we stay in bootloader mode with low power
     // consumption.
 
-    // 1. sample - first measurement of V, I and Temp. Expect low current < 50mA
+    // Bootloader mode - first measurement of V, I and Temp.
+    // Expect low current < 50mA
     case FG_SAMPLE_INIT: {
       if (sample->current_mA > BAT_FG_CUR_BOOTLOADER_MA) {
         return buffer_ready;
       }
 
+      memcpy((void*)&buffer->sample_boot, (void*)sample, sizeof(*sample));
       dummy_load_on(buffer->pulse_timer, BAT_FG_CUR_DUMMY_TIMEOUT_MS);
       state = FG_SAMPLE_INIT_PULSE;
       break;
     }
-    // 2. sample - current pulse measurement of V, I and Temp. Expect DUMMY
-    // current between 100 and 200 mA (TBD).
+    // Bootloader + Dummy Load measurement.
+    // Expect DUMMY current between 100 and 200 mA (TBD).
     // dTime >= 100 ms.
     // -> Calculation initial ESR, OCV and SoC.
     case FG_SAMPLE_INIT_PULSE: {
@@ -180,22 +182,20 @@ bool fuel_gauge_feed_buffer(fuel_gauge_buffer_t* buffer,
       }
 
       dummy_load_off();
-
-      memcpy((void*)&buffer->sample_boot, (void*)&buffer->samples[0],
-             sizeof(buffer->samples[0]));
       state = FG_SAMPLE_INIT_READY;
       break;
     }
     case FG_SAMPLE_INIT_READY: {
+      return buffer_ready;
       break;
     }
-    // Application sample - measurement of V, I and Temp in Application mode.
-    // Expect current > 50 mA.
-    // dTime >= 1 second.
     case FG_SAMPLE_APP: {
-      if (((sample->timestamp_ms -
-            buffer->samples[buffer->head_idx].timestamp_ms) < 1000)
-          /*|| (sample->current_mA < BAT_FG_CUR_BOOTLOADER_MA)*/) {
+      // Application sample - measurement of V, I and Temp in Application mode.
+      // dTime >= 1 second.
+      uint8_t prev_idx = buffer->head_idx > 0 ? buffer->head_idx - 1
+                                              : BAT_FG_SAMPLE_BUF_SIZE - 1;
+      if (((sample->timestamp_ms - buffer->samples[prev_idx].timestamp_ms) <
+           1000)) {
         return buffer_ready;
       }
 
@@ -207,7 +207,13 @@ bool fuel_gauge_feed_buffer(fuel_gauge_buffer_t* buffer,
     }
     case FG_SAMPLE_APP_PULSE: {
       // Application mode + Dummy pulse.
+      // dTime >= 1 second.
       // -> Calculation more accurate ESR, OCV and SoC.
+      if (((sample->timestamp_ms -
+            buffer->samples[buffer->head_idx - 1].timestamp_ms) < 1000)) {
+        return buffer_ready;
+      }
+
       dummy_load_off();
       state = FG_SAMPLE_APP;
       buffer_ready = true;
@@ -222,23 +228,6 @@ bool fuel_gauge_feed_buffer(fuel_gauge_buffer_t* buffer,
   memcpy((void*)&buffer->samples[buffer->head_idx], (void*)sample,
          sizeof(*sample));
   buffer->head_idx = (buffer->head_idx + 1) % BAT_FG_SAMPLE_BUF_SIZE;
-
-  // switch (state) {
-  //   case FG_SAMPLE_INIT: {
-  //     break;
-  //   }
-  //   case FG_SAMPLE_INIT_PULSE: {
-  //     break;
-  //   }
-  //   case FG_SAMPLE_APP: {
-  //     break;
-  //   }
-  //   case FG_SAMPLE_APP_PULSE: {
-  //     break;
-  //   }
-  //   default:
-  //     break;
-  // }
 
   return buffer_ready;
 }
