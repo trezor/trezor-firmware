@@ -98,6 +98,22 @@ def main():
             "typedef struct {const char *key, *aad, *message, *ciphertext; bool valid;} vector_t;\n"
             "static const vector_t vectors[] = {" + ",\n".join(rows) + "};\n"
         )
+        for unrolled in (False, True):
+            binary = str(Path(output) / f"sha2-erasure-{unrolled}")
+            subprocess.run(
+                [
+                    compiler,
+                    *flags,
+                    *(["-DSHA2_UNROLL_TRANSFORM"] if unrolled else []),
+                    "core/tests/native/test_sha2_erasure.c",
+                    "crypto/memzero.c",
+                    "-o",
+                    binary,
+                ],
+                cwd=ROOT,
+                check=True,
+            )
+            subprocess.run([binary], cwd=ROOT, check=True)
         for mode in args.mode or ("gcm", "siv", "ecb", "saes"):
             selection = {"siv": 1, "ecb": 2, "gcm": 3, "saes": 3}[mode]
             print(f"Vault mode: {mode}", flush=True)
@@ -127,7 +143,7 @@ def main():
             if mode == "siv":
                 names += ["test_vault_siv"]
                 if not args.sealing_only:
-                    names += ["test_ecdsa_cleanup"]
+                    names += ["test_ecdsa_cleanup", "test_ed25519_cleanup"]
             for name in names:
                 inputs = [f"core/tests/native/{name}.c", str(archive)]
                 if args.vault_curves and name in (

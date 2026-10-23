@@ -13,6 +13,12 @@
 #include "store.h"
 #include "zkp_bip340.h"
 #include "zkp_context.h"
+#if !defined(TREZOR_EMULATOR) && !defined(VAULT_TEST)
+#include <sys/stack_utils.h>
+#define vault_scrub_stack() clear_unused_stack()
+#else
+#define vault_scrub_stack() ((void)0)
+#endif
 #ifndef VAULT_TEST
 #include <sec/storage.h>
 #include "bip39.h"
@@ -577,6 +583,7 @@ static bool vault_dispatch_inner(uintptr_t caller, const vault_command_t *r,
     ok = false;
   }
   if (r->op == VAULT_THP_RESET) vault_wipe();
+  vault_scrub_stack();
   return ok;
 }
 

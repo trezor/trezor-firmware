@@ -1,0 +1,1 @@
+Erase returned vault and secure-call stack scratch after crypto operations.
