@@ -173,7 +173,14 @@ pub fn build_and_link(target: &str, f: impl FnOnce(&mut CLibrary) -> Result<()>)
 fn configure_compiler_defaults(lib: &mut CLibrary) {
     // The entire C build must agree on record layout, including syscall verifiers.
     cargo_out::rerun_if_env_changed("TREZOR_VAULT_MODE");
-    let mode = env::var("TREZOR_VAULT_MODE").unwrap_or_else(|_| "siv".into());
+    // U5 targets seal records in SAES (GCM records); others use software SIV.
+    let target = env::var("TARGET").unwrap_or_default();
+    let default_mode = if target.starts_with("thumbv8m") {
+        "saes"
+    } else {
+        "siv"
+    };
+    let mode = env::var("TREZOR_VAULT_MODE").unwrap_or_else(|_| default_mode.into());
     let value = match mode.as_str() {
         "siv" => "1",
         "ecb" => "2",
