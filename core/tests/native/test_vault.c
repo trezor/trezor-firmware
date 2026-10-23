@@ -109,9 +109,11 @@ static void canonical_vectors(uint32_t owner, const vault_blob_t *key,
 
 static void fingerprint_vectors(void) {
 #if USE_BIP32_VAULT
+  /* Bitcoin-only archives omit the Cardano name symbol; still check the name.
+   */
   const char *excluded[] = {SECP256K1_DECRED_NAME, SECP256K1_GROESTL_NAME,
                             SECP256K1_SMART_NAME,  ED25519_SHA3_NAME,
-                            ED25519_KECCAK_NAME,   ED25519_CARDANO_NAME,
+                            ED25519_KECCAK_NAME,   "ed25519 cardano seed",
                             CURVE25519_NAME};
   for (size_t i = 0; i < sizeof(excluded) / sizeof(*excluded); i++)
     assert(get_curve_by_name(excluded[i]) == NULL);
