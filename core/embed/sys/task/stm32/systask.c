@@ -351,16 +351,7 @@ static void systask_kill(systask_t* task) {
   task->killed = 1;
 
 #ifdef USE_APPLETS
-  if (task == &scheduler->kernel_task) {
-    // Call panic handler
-    if (scheduler->error_handler != NULL) {
-      scheduler->error_handler(&task->pminfo);
-    }
-
-    // We reach this point only if error_handler is NULL or
-    // if it returns. Neither is expected to happen.
-    reboot_device();
-  } else {
+  if (task != &scheduler->kernel_task) {
     // Free task ID
     scheduler->task_id_map &= ~(1 << task->id);
     // Notify all event sources about the task termination
@@ -370,13 +361,18 @@ static void systask_kill(systask_t* task) {
       // Switch to the kernel task
       systask_yield_to(&scheduler->kernel_task);
     }
+    return;
   }
-#else
+#endif
+
+  // Call panic handler
   if (scheduler->error_handler != NULL) {
     scheduler->error_handler(&task->pminfo);
   }
+
+  // We reach this point only if error_handler is NULL or
+  // if it returns. Neither is expected to happen.
   reboot_device();
-#endif
 }
 
 bool systask_is_alive(const systask_t* task) {
