@@ -142,6 +142,9 @@ pm_status_t pm_init(bool inherit_state) {
   if (!recovery_ok) {
     // TODO: 1s delay for initial battery measurement should be model dependant.
     // Wait for 1s to sample battery data
+
+    // TODO: how can we can be sure that all initial measurements were already
+    // finished?
     systick_delay_ms(1000);
   }
 

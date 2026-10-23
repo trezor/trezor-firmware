@@ -39,6 +39,10 @@
 #endif
 
 // Power manager thresholds & timings
+
+// TODO: should be product dependant, PICO => 1000 ms
+// maybe dependant on the battery library, in PICO would be good to have fast
+// sampling 100ms at boot phase, then relax to 1000ms
 #define PM_TIMER_PERIOD_MS 100
 #define PM_SHUTDOWN_TIMEOUT_MS 15000
 // Battery-critical (brownout) thresholds moved into the chemistry-specific
