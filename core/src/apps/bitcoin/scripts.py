@@ -25,7 +25,11 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Sequence
 
-    from trezor.messages import MultisigRedeemScriptType, TxInput
+    from trezor.messages import (
+        MiniscriptPolicy,
+        MultisigRedeemScriptType,
+        TxInput,
+    )
 
     from apps.common.coininfo import CoinInfo
 
@@ -131,7 +135,21 @@ def write_bip143_script_code_prefixed(
     public_keys: Sequence[AnyBytes],
     threshold: int,
     coin: CoinInfo,
+    policies: Sequence[MiniscriptPolicy] = (),
 ) -> None:
+    if utils.USE_MINISCRIPT and (redeem := txi.miniscript) is not None:
+        from .miniscript import derive_miniscript
+
+        if txi.script_type != InputScriptType.SPENDWITNESS:
+            raise DataError("Unsupported input script type for miniscript")
+
+        # TODO: make sure txi.address_n matches one of the xpubs
+        policy = policies[redeem.policy_index]
+        script = derive_miniscript(policy, redeem.derivation)
+        write_compact_size(w, len(script))
+        w.extend(script)
+        return
+
     if len(public_keys) > 1:
         write_output_script_multisig(w, public_keys, threshold, prefixed=True)
         return

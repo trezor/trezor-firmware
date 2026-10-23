@@ -1,7 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import workflow
+from trezor import utils, workflow
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import HashWriter, empty_bytearray, ensure
@@ -952,10 +952,16 @@ class Bitcoin:
             assert txi.script_pubkey is not None  # checked in _sanitize_tx_input
             return txi.script_pubkey
 
-        if node is None:
-            node = self.keychain.derive(txi.address_n)
+        if utils.USE_MINISCRIPT and (redeem := txi.miniscript) is not None:
+            policy = self.tx_info.tx.policies[redeem.policy_index]  # from SignTx
+            address = addresses.address_miniscript(policy, redeem.derivation, self.coin)
+        else:
+            if node is None:
+                node = self.keychain.derive(txi.address_n)
+            address = addresses.get_address(
+                txi.script_type, self.coin, node, txi.multisig
+            )
 
-        address = addresses.get_address(txi.script_type, self.coin, node, txi.multisig)
         return scripts.output_derive_script(address, self.coin)
 
     def output_derive_script(self, txo: TxOutput) -> AnyBytes:

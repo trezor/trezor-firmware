@@ -82,6 +82,7 @@ class BitcoinSigHasher:
         hash_type: int,
     ) -> bytes:
         from trezor.crypto.hashlib import sha256
+        from trezor.messages import SignTx
         from trezor.utils import HashWriter
 
         from .. import scripts
@@ -106,7 +107,12 @@ class BitcoinSigHasher:
 
         # scriptCode
         scripts.write_bip143_script_code_prefixed(
-            h_preimage, txi, public_keys, threshold, coin
+            h_preimage,
+            txi,
+            public_keys,
+            threshold,
+            coin,
+            tx.policies if SignTx.is_type_of(tx) else (),
         )
 
         # amount

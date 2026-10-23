@@ -116,6 +116,7 @@ class TxWeightCalculator:
                     self.counter += 4 * (2 + _TXSIZE_WITNESSPKHASH)
             else:
                 self.counter += 4  # empty script_sig (1 byte)
+                # TODO: handle miniscript weight
             self.counter += 1 + input_script_size  # discounted witness
         elif script_type == InputScriptType.EXTERNAL:
             if i.ownership_proof:

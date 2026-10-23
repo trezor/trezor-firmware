@@ -17,7 +17,11 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from trezor.crypto import bip32
-    from trezor.messages import MultisigRedeemScriptType
+    from trezor.messages import (
+        MiniscriptDerivation,
+        MiniscriptPolicy,
+        MultisigRedeemScriptType,
+    )
 
     from apps.common.coininfo import CoinInfo
 
@@ -179,3 +183,20 @@ def address_short(coin: CoinInfo, address: str) -> str:
         return address[len(coin.cashaddr_prefix) + 1 :]
     else:
         return address
+
+
+def address_miniscript(
+    policy: MiniscriptPolicy, derivation: MiniscriptDerivation, coin: CoinInfo
+) -> str:
+    from .miniscript import derive_miniscript
+
+    if coin.bech32_prefix is None:
+        raise ValueError  # Unsupported coin
+
+    # TODO: make sure our key is included
+    if policy.descriptor.startswith("wsh("):
+        script = derive_miniscript(policy, derivation)
+        return _address_p2wsh(sha256(script).digest(), coin.bech32_prefix)
+
+    # TODO: only `wsh()` is supported
+    raise ValueError  # Unsupported descriptor

@@ -183,6 +183,7 @@ class BasicApprover(Approver):
             address_n=txo.address_n,
             script_type=CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[txo.script_type],
             multisig=bool(txo.multisig),
+            miniscript=bool(txo.miniscript),
         ):
             await helpers.confirm_foreign_address(txo.address_n)
 
