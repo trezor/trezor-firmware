@@ -1986,6 +1986,8 @@ requires-dist = [
     { name = "construct", specifier = ">=2.9,!=2.10.55" },
     { name = "construct-classes", specifier = ">=0.1.2" },
     { name = "cryptography", specifier = ">=47" },
+    { name = "embit", marker = "extra == 'full'", specifier = ">=0.8.0,<0.9" },
+    { name = "embit", marker = "extra == 'miniscript'", specifier = ">=0.8.0,<0.9" },
     { name = "hidapi", marker = "extra == 'full'", specifier = ">=0.7.99.post20" },
     { name = "hidapi", marker = "extra == 'hidapi'", specifier = ">=0.7.99.post20" },
     { name = "keyring", specifier = ">=25.7.0" },
@@ -2008,7 +2010,7 @@ requires-dist = [
     { name = "web3", marker = "extra == 'ethereum'", specifier = ">=5" },
     { name = "web3", marker = "extra == 'full'", specifier = ">=5" },
 ]
-provides-extras = ["hidapi", "ethereum", "qt-widgets", "extra", "stellar", "ble", "full"]
+provides-extras = ["hidapi", "ethereum", "qt-widgets", "extra", "stellar", "ble", "miniscript", "full"]
 
 [package.metadata.requires-dev]
 dev = [
