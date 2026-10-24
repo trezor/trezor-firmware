@@ -99,6 +99,7 @@ trezor_lib = { path = "rust", default-features = false }
 anyhow = "1.0"
 bindgen = { version = "0.72.1", default-features = false, features = ["runtime"] }
 cargo_metadata = "0.23.1"
+cbindgen = { version = "0.29.4", default-features = false }
 cc = "1.0.69"
 clap = { version = "4.6.0", default-features = false }
 color-eyre = { version = "0.6.5", default-features = false, features = ["track-caller"] }
