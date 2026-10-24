@@ -1,0 +1,1 @@
+Remove deprecated `details` argument from `btc.sign_tx()`.

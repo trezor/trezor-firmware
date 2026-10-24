@@ -16,7 +16,6 @@
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Sequence
 from copy import copy
 from decimal import Decimal
@@ -276,7 +275,6 @@ def sign_tx(
     coin_name: str,
     inputs: Sequence[messages.TxInputType],
     outputs: Sequence[messages.TxOutputType],
-    details: Optional[messages.SignTx] = None,
     prev_txes: Optional["TxCacheType"] = None,
     payment_reqs: Sequence[messages.PaymentRequest] = (),
     preauthorized: bool = False,
@@ -298,26 +296,16 @@ def sign_tx(
     if prev_txes is None:
         prev_txes = {}
 
-    if details is not None:
-        warnings.warn(
-            "'details' argument is deprecated, use kwargs instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        signtx = details
-        signtx.coin_name = coin_name
-        signtx.inputs_count = len(inputs)
-        signtx.outputs_count = len(outputs)
-
-    else:
-        signtx = messages.SignTx(
-            coin_name=coin_name,
-            inputs_count=len(inputs),
-            outputs_count=len(outputs),
-        )
-        for name, value in kwargs.items():
-            if hasattr(signtx, name):
-                setattr(signtx, name, value)
+    signtx = messages.SignTx(
+        coin_name=coin_name,
+        inputs_count=len(inputs),
+        outputs_count=len(outputs),
+    )
+    for name, value in kwargs.items():
+        if messages.SignTx.get_field(name) is not None:
+            setattr(signtx, name, value)
+        else:
+            raise ValueError(f"Unknown attribute for SignTx: {name}")
 
     if unlock_path:
         session.call(
