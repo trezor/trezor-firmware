@@ -316,6 +316,8 @@ UI_LAYOUT: str
 """UI layout identifier (BOLT/CAESAR/DELIZIA/ECKHART)."""
 USE_THP: bool
 """Whether the firmware supports Trezor-Host Protocol (version 2)."""
+BOOT_WIPE: bool
+"""Whether the firmware wipes the storage on every boot (test builds)."""
 NOTIFY_BOOT: int
 """Notification event: boot completed."""
 NOTIFY_UNLOCK: int
