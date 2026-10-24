@@ -871,7 +871,8 @@ class Report:
             moved = any(
                 (before := row_of(old, name)) is not None
                 and (after := row_of(new, name)) is not None
-                and (before.content != after.content or before.size != after.size)
+                and before.content
+                != after.content  # padding shifts of a blob are not a change
                 for _b, old, new in builds
             )
             if (
