@@ -1991,9 +1991,18 @@ def _cbor_reset(req: Cmd, dialog_mgr: DialogManager) -> Cmd | None:
         # Return success, because the authenticator is already in factory default state.
         return cbor_error(req.cid, _ERR_NONE)
 
-    if not dialog_mgr.set_state(Fido2ConfirmReset(req.cid, dialog_mgr.iface)):
+    if config.is_unlocked():
+        state = _cbor_reset_process(req, dialog_mgr)
+    else:
+        state = Fido2Unlock(_cbor_reset_process, req, dialog_mgr)
+
+    if not dialog_mgr.set_state(state):
         return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
     return None
+
+
+def _cbor_reset_process(req: Cmd, dialog_mgr: DialogManager) -> State:
+    return Fido2ConfirmReset(req.cid, dialog_mgr.iface)
 
 
 def cmd_keepalive(cid: int, status: int) -> Cmd:
