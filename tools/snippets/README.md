@@ -28,6 +28,11 @@ These scripts do not need to have a high standard, but each of those should have
   from `data.trezor.io`, so the tests reflect what customers see.
 - Verifies the production signatures; definitions missing upstream are kept and reported.
 
+## [eth_defs_dat_to_json.py](./eth_defs_dat_to_json.py)
+- Converts a single signed `.dat` definition into the JSON fixture format, reusing
+  `dat_to_dict` from `eth_defs_refresh_json.py`.
+- Verifies the signature (production keys, or `--dev`); writes next to the input, to `-o FILE`, or to stdout with `-o -`.
+
 ## [recalc_optiga_for_emulator.py](./recalc_optiga_for_emulator.py)
 - Takes a valid Infineon certificate from an Optiga and replaces its public key with
   a pubkey for private key 0x01000000..., so that the staging HSM can sign the resulting

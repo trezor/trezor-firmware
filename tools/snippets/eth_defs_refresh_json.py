@@ -45,11 +45,11 @@ DEFAULT_DIR = (
 )
 
 
-def dat_to_dict(dat: bytes) -> dict:
-    """Verify a production-signed definition and decode it into the JSON
-    fixture format (definition type and message)."""
+def dat_to_dict(dat: bytes, dev: bool = False) -> dict:
+    """Verify a signed definition (production keys unless `dev`) and decode it
+    into the JSON fixture format (definition type and message)."""
     definition = definitions.Definition.parse(dat)
-    definition.verify()
+    definition.verify(dev=dev)
     payload = definition.payload
     msg_type = MESSAGE_TYPES[payload.data_type]
     msg = protobuf.load_message(io.BytesIO(payload.data), msg_type)
