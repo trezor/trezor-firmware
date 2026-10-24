@@ -36,7 +36,7 @@ force_bootloader_upgrade = []
 optiga_testing = ["sec/optiga_testing"]
 production = ["io/production"]
 storage_insecure_testing_mode = ["sec/storage_insecure_testing_mode"]
-universal_fw = ["io/usb_iface_webauthn"]
+universal_fw = ["io/usb_iface_webauthn", "crypto/universal_fw"]
 unsafe_fw = []
 
 # --------------------------------------------------------------------------

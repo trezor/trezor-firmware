@@ -48,7 +48,7 @@ def main():
     parser.add_argument(
         "--vault-curves",
         action="store_true",
-        help="Compile the kernel's restricted HDNode and compact Ed25519 verifier",
+        help="Compile the compact kernel Ed25519 verifier",
     )
     parser.add_argument(
         "--sealing-only",
@@ -77,7 +77,7 @@ def main():
     if args.sanitize:
         flags += ["-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
     if args.vault_curves:
-        flags += ["-DUSE_BIP32_VAULT=1", "-DED25519_NO_PRECOMP"]
+        flags += ["-DED25519_NO_PRECOMP"]
     with tempfile.TemporaryDirectory(prefix="vault-native-") as output:
         suite = json.loads(
             (
@@ -114,6 +114,23 @@ def main():
                 check=True,
             )
             subprocess.run([binary], cwd=ROOT, check=True)
+        binary = str(Path(output) / "bip39-compact")
+        subprocess.run(
+            [
+                compiler,
+                *flags,
+                "-DUSE_BIP39_COMPACT=1",
+                "core/tests/native/test_bip39_compact.c",
+                "crypto/bip39.c",
+                "crypto/bip39_english.c",
+                str(archive),
+                "-o",
+                binary,
+            ],
+            cwd=ROOT,
+            check=True,
+        )
+        subprocess.run([binary], cwd=ROOT, check=True)
         for mode in args.mode or ("gcm", "siv", "ecb", "saes"):
             selection = {"siv": 1, "ecb": 2, "gcm": 3, "saes": 3}[mode]
             print(f"Vault mode: {mode}", flush=True)

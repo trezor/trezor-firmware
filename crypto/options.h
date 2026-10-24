@@ -83,6 +83,11 @@
 #define BIP39_CACHE_SIZE 4
 #endif
 
+// Lossless, constant-work dictionary lookup for kernel-only BIP39 migration.
+#ifndef USE_BIP39_COMPACT
+#define USE_BIP39_COMPACT 0
+#endif
+
 // support Ethereum operations
 #ifndef USE_ETHEREUM
 #define USE_ETHEREUM 0

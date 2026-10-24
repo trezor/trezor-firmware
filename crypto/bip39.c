@@ -32,6 +32,9 @@
 #include "pbkdf2.h"
 #include "rand.h"
 #include "sha2.h"
+#if USE_BIP39_COMPACT
+#include "bip39_english_compact.h"
+#endif
 
 #if USE_BIP39_CACHE
 
@@ -246,6 +249,38 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
  * argument is provided within at least 9 characters big buffer to avoid
  * out-of-bounds reads.
  */
+#if USE_BIP39_COMPACT
+found_word mnemonic_find_word(const char *word) {
+  found_word result = {.index = -1, .length = 0};
+  char candidate[9] = {0}, decoded[9] = {0};
+  uint32_t terminated = 0;
+  for (size_t i = 0; i < sizeof(candidate); ++i) {
+    candidate[i] = word[i] & -(int32_t)(!terminated);
+    terminated |= word[i] == 0;
+  }
+  const uint8_t *p = bip39_english_compact;
+  /* Decode every dictionary entry and compare all nine padded bytes. The
+   * access pattern depends only on the public dictionary, not the word. */
+  for (uint32_t index = 0; index < BIP39_WORD_COUNT; ++index) {
+    uint8_t header = *p++;
+    size_t prefix = header >> 4, suffix = header & 15;
+    memset(decoded + prefix, 0, sizeof(decoded) - prefix);
+    for (size_t i = 0; i < suffix; ++i) {
+      size_t bit = i * 5;
+      uint32_t value = p[bit / 8] >> (bit % 8);
+      if (bit % 8 > 3) value |= (uint32_t)p[bit / 8 + 1] << (8 - bit % 8);
+      decoded[prefix + i] = 'a' + (value & 31);
+    }
+    p += (suffix * 5 + 7) / 8;
+    int32_t mask = -(int32_t)consteq(candidate, decoded, sizeof(candidate));
+    result.index = (index & mask) | (result.index & ~mask);
+    result.length = ((prefix + suffix) & mask) | (result.length & ~mask);
+  }
+  memzero(candidate, sizeof(candidate));
+  memzero(decoded, sizeof(decoded));
+  return result;
+}
+#else
 found_word mnemonic_find_word(const char *word) {
   int result_index = -1;
   size_t result_length = 0;
@@ -262,6 +297,7 @@ found_word mnemonic_find_word(const char *word) {
   }
   return (found_word){.index = result_index, .length = result_length};
 }
+#endif
 
 const char *mnemonic_complete_word(const char *prefix, size_t len) {
   // we need to perform linear search,

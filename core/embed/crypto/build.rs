@@ -55,8 +55,9 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
     if cfg!(feature = "ed25519_no_precomp") {
         lib.add_define("ED25519_NO_PRECOMP", None);
     }
+
     if cfg!(feature = "bip32_vault") {
-        lib.add_define("USE_BIP32_VAULT", Some("1"));
+        lib.add_define("USE_BIP39_COMPACT", Some("1"));
     }
 
     lib.add_source("src/fault_handler.c");
