@@ -24,14 +24,15 @@ def sign(
 ) -> bytes:
     """
     Uses secret key to produce the signature of message.
-    Opaque-key messages are bounded to 2048 bytes and copied into the
+    Opaque-key messages are bounded to 4096 bytes and copied into the
     kernel.
     """
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
 def sign_ext(
-    secret_scalar: AnyBytes, secret_extension: AnyBytes, message: AnyBytes
+    secret_scalar: AnyBytes | secbytes, secret_extension: AnyBytes |
+    secbytes, message: AnyBytes
 ) -> bytes:
     """
     Uses extended secret key to produce the cardano signature of message.

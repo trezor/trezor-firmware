@@ -1,5 +1,6 @@
 import struct
 from micropython import const
+from trezorcrypto import vault_chacha
 from typing import TYPE_CHECKING
 
 import storage.device as storage_device
@@ -109,7 +110,7 @@ class Credential:
     def bogus_signature(self) -> bytes:
         raise NotImplementedError
 
-    def hmac_secret_key(self) -> bytes | None:
+    def hmac_secret_key(self) -> secbytes | None:
         return None
 
     def next_signature_counter(self) -> int:
@@ -177,10 +178,7 @@ class Fido2Credential(Credential):
             [b"SLIP-0022", _CRED_ID_VERSION, b"Encryption key"]
         ).key()
         iv = random.bytes(chacha20poly1305_encrypt.nonce_size)
-        ctx = chacha20poly1305_encrypt(key, iv)
-        ctx.auth(self.rp_id_hash)
-        ciphertext = ctx.encrypt(cbor.encode(data))
-        tag = ctx.finish()
+        ciphertext, tag = vault_chacha(key, iv, cbor.encode(data), self.rp_id_hash)
         self.id = _CRED_ID_VERSION + iv + ciphertext + tag
 
         if len(self.id) > CRED_ID_MAX_LENGTH:
@@ -202,19 +200,15 @@ class Fido2Credential(Credential):
         tag = cred_id[-chacha20poly1305_decrypt.tag_size :]
 
         if rp_id_hash is None:
-            ctx = chacha20poly1305_decrypt(key, iv)
-            data = ctx.decrypt(ciphertext)
+            data, _ = vault_chacha(key, iv, ciphertext, b"", None, True)
             try:
                 rp_id = cbor.decode(data)[_CRED_ID_RP_ID]
             except Exception as e:
                 raise ValueError from e  # CBOR decoding failed
             rp_id_hash = hashlib.sha256(rp_id).digest()
 
-        ctx = chacha20poly1305_decrypt(key, iv)
-        ctx.auth(rp_id_hash)
-        data = ctx.decrypt(ciphertext)
         try:
-            ctx.finish(tag)
+            data, _ = vault_chacha(key, iv, ciphertext, rp_id_hash, tag, True)
         except AuthenticationError:
             raise ValueError  # inauthentic ciphertext
 
@@ -371,7 +365,7 @@ class Fido2Credential(Credential):
 
         raise TypeError
 
-    def hmac_secret_key(self) -> bytes | None:
+    def hmac_secret_key(self) -> secbytes | None:
         # Returns the symmetric key for the hmac-secret extension also known as CredRandom.
 
         if not self.hmac_secret:

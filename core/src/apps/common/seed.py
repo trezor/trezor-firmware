@@ -1,15 +1,11 @@
 from typing import TYPE_CHECKING
 
 import storage.device as storage_device
-from storage.cache_common import APP_COMMON_SEED_WITHOUT_PASSPHRASE
 from trezor import utils
 from trezor.crypto import hmac
 from trezor.wire.context import get_context
 from trezor.wire.errors import DataError
 
-from apps.common import cache
-
-from . import mnemonic
 from .passphrase import get_passphrase
 
 if TYPE_CHECKING:
@@ -136,15 +132,10 @@ def _store_common_seed(ctx: Context, passphrase: str) -> None:
     seed = bip32.from_storage(passphrase)
     retain_secret(seed)
     ctx.cache.vault_seed.take(seed)
+    if not utils.BITCOIN_ONLY and ctx.cache.get_bool(APP_COMMON_DERIVE_CARDANO):
+        from apps.cardano.seed import derive_and_store_secrets
 
-
-def _check_cardano_supported(requested: bool) -> None:
-    if requested:
-        from trezor.wire.errors import ProcessError
-
-        # Never reintroduce Python mnemonic access to service an unsupported
-        # derivation. Native Cardano roots are a separate migration.
-        raise ProcessError("Protected Cardano derivation is not implemented")
+        derive_and_store_secrets(ctx, passphrase)
 
 
 if utils.USE_THP:
@@ -161,7 +152,7 @@ if utils.USE_THP:
         if not ctx.cache.vault_seed.empty():
             raise Exception("Seed is already set!")
         if not utils.BITCOIN_ONLY:
-            _check_cardano_supported(msg.derive_cardano)
+            ctx.cache.set_bool(APP_COMMON_DERIVE_CARDANO, msg.derive_cardano)
         passphrase = await get_passphrase(msg)
         from trezorcrypto import SecretOwner
 
@@ -195,19 +186,17 @@ else:  # v1 protocol
     async def derive_and_store_roots_legacy() -> None:
         raise_if_not_initialized()
         ctx = get_context()
-        if not utils.BITCOIN_ONLY:
-            _check_cardano_supported(ctx.cache.get_bool(APP_COMMON_DERIVE_CARDANO))
         if not ctx.cache.vault_seed.empty():
             return
         passphrase = await get_passphrase_legacy()
         _store_common_seed(ctx, passphrase)
 
 
-@cache.stored(APP_COMMON_SEED_WITHOUT_PASSPHRASE)
-def _get_seed_without_passphrase() -> bytes:
-    if not storage_device.is_initialized():
-        raise Exception("Device is not initialized")
-    return mnemonic.get_seed(progress_bar=False)
+def _get_seed_without_passphrase() -> secbytes:
+    from trezor.crypto import bip32
+
+    raise_if_not_initialized()
+    return bip32.from_storage()
 
 
 def derive_node_without_passphrase(
@@ -221,9 +210,9 @@ def derive_node_without_passphrase(
     return node
 
 
-def derive_slip21_node_without_passphrase(path: Slip21Path) -> Slip21Node:
+def derive_slip21_node_without_passphrase(path: Slip21Path) -> VaultSlip21Node:
     seed = _get_seed_without_passphrase()
-    node = Slip21Node(seed)
+    node = VaultSlip21Node(seed)
     node.derive_path(path)
     return node
 

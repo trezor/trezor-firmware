@@ -2,11 +2,10 @@
 from common import *  # isort:skip
 
 from mock_storage import mock_storage
-from storage import cache, cache_common
+from storage import cache
 from trezor import wire
 from trezor.crypto import bip39
 from trezor.enums import SafetyCheckLevel
-from trezor.wire import context
 
 from apps.common import safety_checks
 from apps.common.keychain import Keychain, LRUCache, get_keychain, with_slip44_keychain
@@ -16,13 +15,15 @@ if not utils.USE_THP:
     from storage import cache_codec
 
 
-class TestKeychain(TestCaseWithContext):
+class TestKeychain(VaultTestCase):
     if not utils.USE_THP:
 
         def setUp(self):
+            super().setUp()
             cache_codec.start_session()
 
     def tearDown(self):
+        super().tearDown()
         cache.clear_all()
 
     @mock_storage
@@ -78,7 +79,7 @@ class TestKeychain(TestCaseWithContext):
 
     def test_get_keychain(self):
         seed = bip39.seed(" ".join(["all"] * 12), "")
-        context.cache_set(cache_common.APP_COMMON_SEED, seed)
+        cache_seed(seed)
 
         schema = PathSchema.parse("m/44'/1'", 0)
         keychain = await_result(get_keychain("secp256k1", [schema]))
@@ -92,7 +93,7 @@ class TestKeychain(TestCaseWithContext):
 
     def test_with_slip44(self):
         seed = bip39.seed(" ".join(["all"] * 12), "")
-        context.cache_set(cache_common.APP_COMMON_SEED, seed)
+        cache_seed(seed)
 
         slip44_id = 42
         valid_path = [H_(44), H_(slip44_id), H_(0)]

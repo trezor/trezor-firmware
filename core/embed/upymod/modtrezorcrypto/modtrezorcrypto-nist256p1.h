@@ -58,8 +58,9 @@ static mp_obj_t mod_trezorcrypto_nist256p1_generate_secret() {
 static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_nist256p1_generate_secret_obj,
                                  mod_trezorcrypto_nist256p1_generate_secret);
 
-/// def publickey(secret_key: AnyBytes | secbytes, compressed: bool = True) ->
-/// bytes:
+/// def publickey(
+///     secret_key: AnyBytes | secbytes, compressed: bool = True
+/// ) -> bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
@@ -221,13 +222,29 @@ static mp_obj_t mod_trezorcrypto_nist256p1_verify_recover(mp_obj_t signature,
 static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nist256p1_verify_recover_obj,
                                  mod_trezorcrypto_nist256p1_verify_recover);
 
-/// def multiply(secret_key: AnyBytes, public_key: AnyBytes) -> bytes:
+/// def multiply(
+///     secret_key: AnyBytes | secbytes, public_key: AnyBytes
+/// ) -> bytes:
 ///     """
 ///     Multiplies point defined by public_key with scalar defined by
 ///     secret_key. Useful for ECDH.
 ///     """
 static mp_obj_t mod_trezorcrypto_nist256p1_multiply(mp_obj_t secret_key,
                                                     mp_obj_t public_key) {
+  if (mp_obj_is_type(secret_key, &mod_trezorcrypto_secbytes_type)) {
+    mp_buffer_info_t peer = {0};
+    mp_get_buffer_raise(public_key, &peer, MP_BUFFER_READ);
+    if (peer.len > 65)
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid peer key length"));
+    vault_request_t r = {.op = VAULT_ECDH,
+                         .arg = 1,
+                         .blob = secbytes_blob(MP_OBJ_TO_PTR(secret_key)),
+                         .length = peer.len};
+    memcpy(r.data, peer.buf, peer.len);
+    vault_response_t out = {0};
+    vault_raise(&r, &out);
+    return mp_obj_new_bytes(out.signature, 65);
+  }
   mp_buffer_info_t sk = {0}, pk = {0};
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);

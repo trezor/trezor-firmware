@@ -24,6 +24,7 @@
 #include "ed25519-donna/ed25519.h"
 
 /// package: trezorcrypto.curve25519
+/// from trezorcrypto import secbytes
 
 /// def generate_secret() -> bytes:
 ///     """
@@ -61,13 +62,29 @@ static mp_obj_t mod_trezorcrypto_curve25519_publickey(mp_obj_t secret_key) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_curve25519_publickey_obj,
                                  mod_trezorcrypto_curve25519_publickey);
 
-/// def multiply(secret_key: AnyBytes, public_key: AnyBytes) -> bytes:
+/// def multiply(
+///     secret_key: AnyBytes | secbytes, public_key: AnyBytes
+/// ) -> bytes:
 ///     """
 ///     Multiplies point defined by public_key with scalar defined by
 ///     secret_key. Useful for ECDH.
 ///     """
 static mp_obj_t mod_trezorcrypto_curve25519_multiply(mp_obj_t secret_key,
                                                      mp_obj_t public_key) {
+  if (mp_obj_is_type(secret_key, &mod_trezorcrypto_secbytes_type)) {
+    mp_buffer_info_t peer = {0};
+    mp_get_buffer_raise(public_key, &peer, MP_BUFFER_READ);
+    if (peer.len > 65)
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid peer key length"));
+    vault_request_t r = {.op = VAULT_ECDH,
+                         .arg = 2,
+                         .blob = secbytes_blob(MP_OBJ_TO_PTR(secret_key)),
+                         .length = peer.len};
+    memcpy(r.data, peer.buf, peer.len);
+    vault_response_t out = {0};
+    vault_raise(&r, &out);
+    return mp_obj_new_bytes(out.signature, 32);
+  }
   mp_buffer_info_t sk = {0}, pk = {0};
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);

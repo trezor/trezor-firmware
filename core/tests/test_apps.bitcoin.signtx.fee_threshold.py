@@ -34,7 +34,7 @@ from apps.common.paths import AlwaysMatchingSchema
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
 
 
-class TestSignTxFeeThreshold(unittest.TestCase):
+class TestSignTxFeeThreshold(VaultTestCase):
     # pylint: disable=C0301
 
     # the following test is disabled, because there are not enough

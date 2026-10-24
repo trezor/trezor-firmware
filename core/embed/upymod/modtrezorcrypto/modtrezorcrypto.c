@@ -117,8 +117,141 @@ static MP_DEFINE_CONST_FUN_OBJ_1(retain_secret_obj, retain_secret);
 
 MP_DEFINE_EXCEPTION(AuthenticationError, Exception)
 
+/// package: trezorcrypto.__init__
+/// def vault_chacha(
+///     key: secbytes, nonce: AnyBytes, data: AnyBytes,
+///     aad: AnyBytes = b"", tag: AnyBytes | None = None,
+///     decrypt: bool = False,
+/// ) -> tuple[bytes, bytes]:
+///     """Encrypt/decrypt public credential data with an opaque key.
+///     With decrypt=True and tag=None the result is unauthenticated metadata;
+///     callers must authenticate before using it as a credential."""
+static mp_obj_t vault_chacha(size_t n_args, const mp_obj_t *args) {
+  if (!mp_obj_is_type(args[0], &mod_trezorcrypto_secbytes_type))
+    mp_raise_TypeError(MP_ERROR_TEXT("Expected opaque key"));
+  mp_buffer_info_t nonce = {0}, data = {0}, aad = {0}, tag = {0};
+  mp_get_buffer_raise(args[1], &nonce, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[2], &data, MP_BUFFER_READ);
+  if (n_args > 3) mp_get_buffer_raise(args[3], &aad, MP_BUFFER_READ);
+  if (n_args > 4 && args[4] != mp_const_none)
+    mp_get_buffer_raise(args[4], &tag, MP_BUFFER_READ);
+  bool decrypt = n_args > 5 && mp_obj_is_true(args[5]);
+  if (nonce.len != 12 || aad.len > 32 ||
+      data.len > VAULT_ED25519_MAX_MESSAGE - 32 || (tag.len && tag.len != 16))
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid credential data length"));
+  vault_blob_t key = secbytes_blob(MP_OBJ_TO_PTR(args[0]));
+  vstr_t output = {0};
+  vstr_init_len(&output, data.len);
+  vault_response_t out = {0};
+  for (size_t offset = 0; offset < data.len; offset += VAULT_DATA_SIZE) {
+    size_t n = MIN((size_t)VAULT_DATA_SIZE, data.len - offset);
+    vault_request_t r = {.op = VAULT_CHACHA_BLOCK,
+                         .blob = key,
+                         .arg = decrypt,
+                         .child_num = offset,
+                         .length = n};
+    memcpy(r.curve, nonce.buf, 12);
+    memcpy(r.data, (const uint8_t *)data.buf + offset, n);
+    if (!secret_rpc(&r, &out)) {
+      vstr_clear(&output);
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid credential key"));
+    }
+    memcpy(output.buf + offset, out.data, n);
+  }
+  /* AAD and ciphertext are public and may remain in coreapp. The kernel
+   * snapshots them before computing the authenticator. */
+  vstr_t authenticated = {0};
+  vstr_init_len(&authenticated, aad.len + data.len);
+  if (aad.len) memcpy(authenticated.buf, aad.buf, aad.len);
+  if (data.len)
+    memcpy(authenticated.buf + aad.len, decrypt ? data.buf : output.buf,
+           data.len);
+  vault_message_request_t r = {.abi = VAULT_ABI,
+                               .op = VAULT_CHACHA_TAG,
+                               .owner = secret_owner,
+                               .blob = key,
+                               .arg = aad.len};
+  memcpy(r.extension.bytes, nonce.buf, 12);
+  bool ok = vault_call_message(&r, (const uint8_t *)authenticated.buf,
+                               authenticated.len, &out);
+  vstr_clear(&authenticated);
+  if (!ok || (decrypt && tag.len && !consteq(tag.buf, out.signature, 16))) {
+    vstr_clear(&output);
+    mp_raise_msg(&mp_type_AuthenticationError,
+                 MP_ERROR_TEXT("Invalid credential tag"));
+  }
+  mp_obj_t result[2] = {mp_obj_new_bytes_from_vstr(&output),
+                        mp_obj_new_bytes(out.signature, 16)};
+  memzero(&out, sizeof(out));
+  return mp_obj_new_tuple(2, result);
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(vault_chacha_obj, 3, 6,
+                                           vault_chacha);
+
+/// package: trezorcrypto.__init__
+/// from trezorcrypto.bip32 import HDNode
+/// def cipher_key_value(
+///     node: HDNode, label: AnyBytes, value: AnyBytes, encrypt: bool,
+///     ask_on_encrypt: bool, ask_on_decrypt: bool, iv: AnyBytes = b"",
+/// ) -> bytes:
+///     """SLIP-0011 key derivation and AES-CBC with a protected HDNode."""
+static mp_obj_t cipher_key_value(size_t n_args, const mp_obj_t *args) {
+  mp_buffer_info_t label = {0}, input = {0}, supplied_iv = {0};
+  mp_get_buffer_raise(args[1], &label, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[2], &input, MP_BUFFER_READ);
+  if (n_args > 6) mp_get_buffer_raise(args[6], &supplied_iv, MP_BUFFER_READ);
+  if (label.len > VAULT_ED25519_MAX_MESSAGE - 4 || input.len % 16)
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid key-value length"));
+  bool encrypt = mp_obj_is_true(args[3]);
+  vstr_t derivation = {0};
+  vstr_init_len(&derivation, label.len + 4);
+  if (label.len) memcpy(derivation.buf, label.buf, label.len);
+  memcpy(derivation.buf + label.len, mp_obj_is_true(args[4]) ? "E1" : "E0", 2);
+  memcpy(derivation.buf + label.len + 2, mp_obj_is_true(args[5]) ? "D1" : "D0",
+         2);
+  vault_message_request_t request = {
+      .abi = VAULT_ABI,
+      .op = VAULT_KEYVALUE_DERIVE,
+      .owner = secret_owner,
+      .blob = hdnode_blob(hdnode_object(args[0]))};
+  vstr_t output = {0};
+  vstr_init_len(&output, input.len);
+  vault_response_t out = {0};
+  bool ok = vault_call_message(&request, (const uint8_t *)derivation.buf,
+                               derivation.len, &out);
+  vstr_clear(&derivation);
+  if (!ok) {
+    vstr_clear(&output);
+    mp_raise_ValueError(MP_ERROR_TEXT("Key-value derivation failed"));
+  }
+  vault_blob_t key = out.blob;
+  uint8_t iv[16] = {0};
+  memcpy(iv, supplied_iv.len == 16 ? supplied_iv.buf : out.chain_code, 16);
+  for (size_t offset = 0; offset < input.len; offset += VAULT_DATA_SIZE) {
+    size_t n = MIN((size_t)VAULT_DATA_SIZE, input.len - offset);
+    vault_request_t r = {
+        .op = VAULT_AES_CBC, .arg = encrypt, .blob = key, .length = n};
+    memcpy(r.curve, iv, 16);
+    memcpy(r.data, (const uint8_t *)input.buf + offset, n);
+    if (!encrypt) memcpy(iv, r.data + n - 16, 16);
+    if (!secret_rpc(&r, &out)) {
+      vstr_clear(&output);
+      mp_raise_ValueError(MP_ERROR_TEXT("Key-value cipher failed"));
+    }
+    if (encrypt) memcpy(iv, out.data + n - 16, 16);
+    memcpy(output.buf + offset, out.data, n);
+  }
+  memzero(&out, sizeof(out));
+  memzero(&key, sizeof(key));
+  return mp_obj_new_bytes_from_vstr(&output);
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(cipher_key_value_obj, 6, 7,
+                                           cipher_key_value);
+
 static const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorcrypto)},
+    {MP_ROM_QSTR(MP_QSTR__secret_task_rebind),
+     MP_ROM_PTR(&secret_task_rebind_obj)},
     {MP_ROM_QSTR(MP_QSTR__secret_task_register),
      MP_ROM_PTR(&secret_task_register_obj)},
     {MP_ROM_QSTR(MP_QSTR__secret_task_enter),
@@ -127,6 +260,10 @@ static const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
      MP_ROM_PTR(&secret_task_finish_obj)},
     {MP_ROM_QSTR(MP_QSTR__secret_tasks_clear),
      MP_ROM_PTR(&secret_tasks_clear_obj)},
+    {MP_ROM_QSTR(MP_QSTR_begin_preauthorized_request),
+     MP_ROM_PTR(&begin_preauthorized_request_obj)},
+    {MP_ROM_QSTR(MP_QSTR_authorize_locked_session),
+     MP_ROM_PTR(&authorize_locked_session_obj)},
     {MP_ROM_QSTR(MP_QSTR_retain_secret), MP_ROM_PTR(&retain_secret_obj)},
     {MP_ROM_QSTR(MP_QSTR_SecretOwner),
      MP_ROM_PTR(&mod_trezorcrypto_SecretOwner_type)},
@@ -140,6 +277,8 @@ static const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_thp_reset_storage),
      MP_ROM_PTR(&thp_reset_storage_obj)},
 #endif
+    {MP_ROM_QSTR(MP_QSTR_cipher_key_value), MP_ROM_PTR(&cipher_key_value_obj)},
+    {MP_ROM_QSTR(MP_QSTR_vault_chacha), MP_ROM_PTR(&vault_chacha_obj)},
     {MP_ROM_QSTR(MP_QSTR_secbytes),
      MP_ROM_PTR(&mod_trezorcrypto_secbytes_type)},
     {MP_ROM_QSTR(MP_QSTR_revoke_secrets), MP_ROM_PTR(&revoke_secrets_obj)},

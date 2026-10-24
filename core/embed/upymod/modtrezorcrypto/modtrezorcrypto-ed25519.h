@@ -73,7 +73,7 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ed25519_publickey_obj,
 /// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of message.
-///     Opaque-key messages are bounded to 2048 bytes and copied into the
+///     Opaque-key messages are bounded to 4096 bytes and copied into the
 ///     kernel.
 ///     """
 static mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
@@ -138,7 +138,8 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_ed25519_sign_obj, 2,
 #if !BITCOIN_ONLY
 
 /// def sign_ext(
-///     secret_scalar: AnyBytes, secret_extension: AnyBytes, message: AnyBytes
+///     secret_scalar: AnyBytes | secbytes, secret_extension: AnyBytes |
+///     secbytes, message: AnyBytes
 /// ) -> bytes:
 ///     """
 ///     Uses extended secret key to produce the cardano signature of message.
@@ -146,6 +147,24 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_ed25519_sign_obj, 2,
 static mp_obj_t mod_trezorcrypto_ed25519_sign_ext(mp_obj_t secret_scalar,
                                                   mp_obj_t secret_extension,
                                                   mp_obj_t message) {
+  if (mp_obj_is_type(secret_scalar, &mod_trezorcrypto_secbytes_type) ||
+      mp_obj_is_type(secret_extension, &mod_trezorcrypto_secbytes_type)) {
+    if (!mp_obj_is_type(secret_scalar, &mod_trezorcrypto_secbytes_type) ||
+        !mp_obj_is_type(secret_extension, &mod_trezorcrypto_secbytes_type))
+      mp_raise_TypeError(MP_ERROR_TEXT("Both extended keys must be opaque"));
+    mp_buffer_info_t data = {0};
+    mp_get_buffer_raise(message, &data, MP_BUFFER_READ);
+    vault_message_request_t r = {
+        .abi = VAULT_ABI,
+        .op = VAULT_ED_SIGN_EXT,
+        .owner = secret_owner,
+        .blob = secbytes_blob(MP_OBJ_TO_PTR(secret_scalar)),
+        .extension = secbytes_blob(MP_OBJ_TO_PTR(secret_extension))};
+    vault_response_t out = {0};
+    if (!vault_call_message(&r, data.buf, data.len, &out))
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid extended key or message"));
+    return mp_obj_new_bytes(out.signature, 64);
+  }
   mp_buffer_info_t sk = {0}, skext = {0}, msg = {0};
   mp_get_buffer_raise(secret_scalar, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(secret_extension, &skext, MP_BUFFER_READ);

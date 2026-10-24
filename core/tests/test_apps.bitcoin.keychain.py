@@ -1,10 +1,8 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from storage import cache_common
 from trezor import wire
 from trezor.crypto import bip39
-from trezor.wire import context
 
 from apps.bitcoin.keychain import (
     _get_coin_by_name,
@@ -20,19 +18,21 @@ if not utils.USE_THP:
     from storage import cache_codec
 
 
-class TestBitcoinKeychain(TestCaseWithContext):
+class TestBitcoinKeychain(VaultTestCase):
     if utils.USE_THP:
 
         def setUp(self):
+            super().setUp()
             seed = bip39.seed(" ".join(["all"] * 12), "")
-            context.cache_set(cache_common.APP_COMMON_SEED, seed)
+            cache_seed(seed)
 
     else:
 
         def setUp(self):
+            super().setUp()
             cache_codec.start_session()
             seed = bip39.seed(" ".join(["all"] * 12), "")
-            cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
+            cache_seed(seed)
 
     def test_bitcoin(self):
         coin = _get_coin_by_name("Bitcoin")
@@ -108,19 +108,21 @@ class TestBitcoinKeychain(TestCaseWithContext):
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestAltcoinKeychains(TestCaseWithContext):
+class TestAltcoinKeychains(VaultTestCase):
     if utils.USE_THP:
 
         def setUp(self):
+            super().setUp()
             seed = bip39.seed(" ".join(["all"] * 12), "")
-            context.cache_set(cache_common.APP_COMMON_SEED, seed)
+            cache_seed(seed)
 
     else:
 
         def setUp(self):
+            super().setUp()
             cache_codec.start_session()
             seed = bip39.seed(" ".join(["all"] * 12), "")
-            cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
+            cache_seed(seed)
 
     def test_bcash(self):
         coin = _get_coin_by_name("Bcash")
@@ -195,7 +197,7 @@ class TestAltcoinKeychains(TestCaseWithContext):
             self.assertRaises(wire.DataError, keychain.derive, addr)
 
 
-class TestValidateXpubPath(unittest.TestCase):
+class TestValidateXpubPath(VaultTestCase):
     def test_export_points(self):
         from trezor.enums import InputScriptType
 
@@ -225,7 +227,7 @@ class TestValidateXpubPath(unittest.TestCase):
         self.assertFalse(is_export_point([], InputScriptType.SPENDADDRESS))
 
 
-class TestAccountNames(unittest.TestCase):
+class TestAccountNames(VaultTestCase):
     """The 45'-rooted multisig schemes, at their export points and leaves."""
 
     def _name(self, address_n, script_type, export_point=False):
@@ -458,21 +460,23 @@ class TestAccountNames(unittest.TestCase):
         )
 
 
-class TestSignMessageBip48(TestCaseWithContext):
+class TestSignMessageBip48(VaultTestCase):
     """BIP-48 message signing: the account node and the leaf."""
 
     if utils.USE_THP:
 
         def setUp(self):
+            super().setUp()
             seed = bip39.seed(" ".join(["all"] * 12), "")
-            context.cache_set(cache_common.APP_COMMON_SEED, seed)
+            cache_seed(seed)
 
     else:
 
         def setUp(self):
+            super().setUp()
             cache_codec.start_session()
             seed = bip39.seed(" ".join(["all"] * 12), "")
-            cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
+            cache_seed(seed)
 
     def _sign_message(self, address_n, script_type, coin_name="Bitcoin"):
         from trezor.messages import SignMessage

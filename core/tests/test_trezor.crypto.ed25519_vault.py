@@ -38,10 +38,10 @@ class TestEd25519Vault(unittest.TestCase):
         self.assertTrue(ed25519.verify(public, signature, public))
 
     def test_message_bounds_and_keccak(self):
-        self.assertEqual(ed25519.MAX_MESSAGE_SIZE, 2048)
+        self.assertEqual(ed25519.MAX_MESSAGE_SIZE, 4096)
         raw_key = b"\x17" * 32
         key = secbytes(raw_key)
-        for length in (1, 256, 257, 1232, 1536, 2048):
+        for length in (1, 256, 257, 1232, 1536, 2048, 4096):
             message = b"\x42" * length
             signature = ed25519.sign(key, message)
             self.assertEqual(signature, ed25519.sign(raw_key, message))
@@ -50,7 +50,7 @@ class TestEd25519Vault(unittest.TestCase):
                 ed25519.sign(key, message, "keccak"),
                 ed25519.sign(raw_key, message, "keccak"),
             )
-        for message in (b"", b"x" * 2049):
+        for message in (b"", b"x" * 4097):
             with self.assertRaises(ValueError):
                 ed25519.sign(key, message)
         for hasher in ("", "sha512", "keccak!", b"k"):

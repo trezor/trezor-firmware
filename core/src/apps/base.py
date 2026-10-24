@@ -473,6 +473,9 @@ async def handle_DoPreauthorized(msg: DoPreauthorized) -> protobuf.MessageType:
     wire_types = authorization.get_wire_types()
     utils.ensure(bool(wire_types), "Unsupported preauthorization found")
 
+    from trezorcrypto import begin_preauthorized_request
+
+    begin_preauthorized_request()
     req = await call_any(PreauthorizedRequest(), *wire_types)
 
     assert req.MESSAGE_WIRE_TYPE is not None

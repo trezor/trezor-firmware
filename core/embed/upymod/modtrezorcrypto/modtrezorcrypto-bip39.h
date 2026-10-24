@@ -111,11 +111,66 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_mnemonic_to_bits_obj,
                                  mod_trezorcrypto_bip39_mnemonic_to_bits);
 #endif  // !BITCOIN_ONLY
 
+/// def backup_secret() -> bytes:
+///     """Explicitly disclose the stored backup to the confirmed backup UI.
+///     Wallet derivation must use bip32.from_storage instead."""
+static mp_obj_t mod_trezorcrypto_bip39_backup_secret(void) {
+  vstr_t value = {0};
+  vstr_init_len(&value, 255);
+  vault_request_t r = {.op = VAULT_MNEMONIC};
+  vault_response_t out = {0};
+  if (!secret_rpc(&r, &out)) {
+    vstr_clear(&value);
+    mp_raise_ValueError(MP_ERROR_TEXT("Backup unavailable"));
+  }
+  size_t length = out.data[0];
+  memcpy(value.buf, out.data + 1, length);
+  memzero(value.buf + length, value.len - length);
+  value.len = length;
+  memzero(&out, sizeof(out));
+  return mp_obj_new_bytes_from_vstr(&value);
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_bip39_backup_secret_obj,
+                                 mod_trezorcrypto_bip39_backup_secret);
+
+/// def compare_backup(secret: AnyBytes) -> bool:
+///     """Compare a recovered backup inside the vault without reading
+///     storage."""
+static mp_obj_t mod_trezorcrypto_bip39_compare_backup(mp_obj_t secret) {
+  mp_buffer_info_t input = {0};
+  mp_get_buffer_raise(secret, &input, MP_BUFFER_READ);
+  if (input.len > VAULT_DATA_SIZE) return mp_const_false;
+  vault_request_t r = {.op = VAULT_MNEMONIC, .arg = 1, .length = input.len};
+  memcpy(r.data, input.buf, input.len);
+  vault_response_t out = {0};
+  vault_raise(&r, &out);
+  return mp_obj_new_bool(out.value);
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_compare_backup_obj,
+                                 mod_trezorcrypto_bip39_compare_backup);
+
+/// def migrate_binary_mnemonic() -> None:
+///     """Populate the protected binary mnemonic without exporting words."""
+static mp_obj_t mod_trezorcrypto_bip39_migrate_binary(void) {
+  vault_request_t r = {.op = VAULT_MNEMONIC, .arg = 2};
+  vault_response_t out = {0};
+  vault_raise(&r, &out);
+  return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_bip39_migrate_binary_obj,
+                                 mod_trezorcrypto_bip39_migrate_binary);
+
 static const mp_rom_map_elem_t mod_trezorcrypto_bip39_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_bip39)},
     {MP_ROM_QSTR(MP_QSTR_from_data),
      MP_ROM_PTR(&mod_trezorcrypto_bip39_from_data_obj)},
     {MP_ROM_QSTR(MP_QSTR_check), MP_ROM_PTR(&mod_trezorcrypto_bip39_check_obj)},
+    {MP_ROM_QSTR(MP_QSTR_backup_secret),
+     MP_ROM_PTR(&mod_trezorcrypto_bip39_backup_secret_obj)},
+    {MP_ROM_QSTR(MP_QSTR_compare_backup),
+     MP_ROM_PTR(&mod_trezorcrypto_bip39_compare_backup_obj)},
+    {MP_ROM_QSTR(MP_QSTR_migrate_binary_mnemonic),
+     MP_ROM_PTR(&mod_trezorcrypto_bip39_migrate_binary_obj)},
     {MP_ROM_QSTR(MP_QSTR_seed), MP_ROM_PTR(&mod_trezorcrypto_bip39_seed_obj)},
 #if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_mnemonic_to_bits),

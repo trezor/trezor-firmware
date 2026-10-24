@@ -61,6 +61,12 @@ def reset(excluded: tuple[AnyBytes, AnyBytes] | None) -> None:
     else:
         wipe(clear_cache=False)
     wipe_cache(excluded)
+    from trezor import loop
+
+    # Setup continues after reset, but may never reuse the old wallet's
+    # ownership. Bind a fresh request to the now-empty session cache.
+    if loop.this_task is not None:
+        loop.renew_secret_owner(cache.get_sessionless_cache().get_secret_owner())
     common.set(common.APP_DEVICE, device.DEVICE_ID, device_id.encode(), public=True)
     if utils.USE_THP:
         common.set(
@@ -92,14 +98,14 @@ def _migrate_from_version_02() -> None:
 
     # This update concerns Cardano derivation. There is no need for update for Bitcoin-only builds
     if not utils.BITCOIN_ONLY:
-        from storage.device import get_backup_type, store_binary_mnemonic
+        from storage.device import get_backup_type
         from trezor.enums import BackupType
 
         if get_backup_type() == BackupType.Bip39:
             # Ensure binary mnemonic is stored
-            secret = device.get_mnemonic_secret()
-            if secret is not None:
-                store_binary_mnemonic(secret)
+            from trezor.crypto import bip39
+
+            bip39.migrate_binary_mnemonic()
 
     # set_current_version
     device.set_version(common.STORAGE_VERSION_CURRENT)

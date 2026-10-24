@@ -137,15 +137,9 @@ async def _continue_recovery_process(method: BackupMethod | None) -> Success:
 def _check_secret_against_stored_secret(
     secret: bytes, is_slip39: bool, backup_type: BackupType
 ) -> bool:
-    from trezor import utils
-    from trezor.crypto.hashlib import sha256
+    from trezor.crypto import bip39
 
-    from apps.common import mnemonic
-
-    digest_input = sha256(secret).digest()
-    stored = mnemonic.get_secret()
-    digest_stored = sha256(stored).digest()
-    result = utils.consteq(digest_stored, digest_input)
+    result = bip39.compare_backup(secret)
 
     is_slip39 = backup_types.is_slip39_backup_type(backup_type)
     # Check that the identifier, extendable backup flag and iteration exponent match as well

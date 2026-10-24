@@ -1886,9 +1886,9 @@ def _cbor_get_assertion_hmac_secret(
         return None
 
     # Compute the hmac-secret output.
-    output = hmac(hmac.SHA256, cred_random, salt[:32]).digest()
+    output = hmac.tag(hmac.SHA256, cred_random, salt[:32])
     if len(salt) == 64:
-        output += hmac(hmac.SHA256, cred_random, salt[32:]).digest()
+        output += hmac.tag(hmac.SHA256, cred_random, salt[32:])
 
     # Encrypt the hmac-secret output.
     return aes(aes.CBC, shared_secret).encrypt(output)

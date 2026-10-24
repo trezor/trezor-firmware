@@ -15,7 +15,7 @@ def node_derive(root, path):
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestAddressGRS(unittest.TestCase):
+class TestAddressGRS(VaultTestCase):
     # pylint: disable=C0301
 
     def test_p2pkh_node_derive_address(self):

@@ -411,6 +411,18 @@ class secbytes:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+def authorize_locked_session(authorized: bool) -> None:
+    """Grant/revoke the current session's confirmed CoinJoin permission.
+    Granting requires unlocked storage and a live request."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+def begin_preauthorized_request() -> None:
+    """Delegate a confirmed CoinJoin session grant to this request. It
+    survives consuming the last round until this request is torn down."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
 def revoke_secrets() -> None:
     """Erase all native owners and entries; emergency teardown only."""
 
@@ -463,6 +475,12 @@ def _secret_owner_activate(owner: SecretOwner | None) -> None:
 # upymod/modtrezorcrypto/modtrezorcrypto-secret-lifecycle.h
 def _secret_task_register(task: Any, owner: SecretOwner | None) -> None:
     """Bind a request root, or inherit the active request for a child."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secret-lifecycle.h
+def _secret_task_rebind(task: Any, owner: SecretOwner) -> None:
+    """Start a fresh request after an explicit storage reset. Existing
+    bindings may be replaced only after their old owner was revoked."""
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secret-lifecycle.h
@@ -616,3 +634,23 @@ def thp_reset_storage() -> None:
 def retain_secret(value: Any) -> None:
     """Explicitly transfer a node or snapshot from this request to its
     session."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto.c
+def vault_chacha(
+    key: secbytes, nonce: AnyBytes, data: AnyBytes,
+    aad: AnyBytes = b"", tag: AnyBytes | None = None,
+    decrypt: bool = False,
+) -> tuple[bytes, bytes]:
+    """Encrypt/decrypt public credential data with an opaque key.
+    With decrypt=True and tag=None the result is unauthenticated metadata;
+    callers must authenticate before using it as a credential."""
+from trezorcrypto.bip32 import HDNode
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto.c
+def cipher_key_value(
+    node: HDNode, label: AnyBytes, value: AnyBytes, encrypt: bool,
+    ask_on_encrypt: bool, ask_on_decrypt: bool, iv: AnyBytes = b"",
+) -> bytes:
+    """SLIP-0011 key derivation and AES-CBC with a protected HDNode."""

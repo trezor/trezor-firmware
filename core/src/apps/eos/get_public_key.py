@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 
 @auto_keychain(__name__)
 async def get_public_key(msg: EosGetPublicKey, keychain: Keychain) -> EosPublicKey:
-    from trezor.crypto.curve import secp256k1
     from trezor.messages import EosPublicKey
 
     from apps.common import lock_manager, paths
@@ -24,7 +23,7 @@ async def get_public_key(msg: EosGetPublicKey, keychain: Keychain) -> EosPublicK
 
     node = keychain.derive(msg.address_n)
 
-    public_key = secp256k1.publickey(node.private_key(), True)
+    public_key = node.public_key()
     wif = public_key_to_wif(public_key)
 
     if msg.show_display:

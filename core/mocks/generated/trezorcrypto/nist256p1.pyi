@@ -11,8 +11,9 @@ def generate_secret() -> bytes:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
-def publickey(secret_key: AnyBytes | secbytes, compressed: bool = True) ->
-bytes:
+def publickey(
+    secret_key: AnyBytes | secbytes, compressed: bool = True
+) -> bytes:
     """
     Computes public key from secret key.
     """
@@ -47,7 +48,9 @@ def verify_recover(signature: AnyBytes, digest: AnyBytes) -> bytes:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
-def multiply(secret_key: AnyBytes, public_key: AnyBytes) -> bytes:
+def multiply(
+    secret_key: AnyBytes | secbytes, public_key: AnyBytes
+) -> bytes:
     """
     Multiplies point defined by public_key with scalar defined by
     secret_key. Useful for ECDH.

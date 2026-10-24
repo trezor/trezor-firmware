@@ -36,7 +36,11 @@ static mp_obj_t secret_task_register(mp_obj_t task, mp_obj_t owner) {
   if (root) id = owner_object(owner)->id;
   if (!id && !root) return mp_const_none;
   secret_owner_t *o = secret_owner_find(id);
-  if (!o || !o->parent)
+  /* Revocation can happen inside a running workflow (wipe, reset, lock).
+   * Its public UI/transport children must still be schedulable. Bind them
+   * to the same revoked identity, so entering them cannot regain access.
+   * An explicitly supplied root must always be a live request. */
+  if ((root && !o) || (o && !o->parent))
     mp_raise_ValueError(MP_ERROR_TEXT("Expected live request owner"));
   for (size_t i = 0; i < SECRET_TASK_CAPACITY; i++) {
     if (MP_STATE_VM(secret_task_roots)[i] == MP_OBJ_NULL) {
@@ -51,6 +55,27 @@ static mp_obj_t secret_task_register(mp_obj_t task, mp_obj_t owner) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_2(secret_task_register_obj,
                                  secret_task_register);
+
+/// def _secret_task_rebind(task: Any, owner: SecretOwner) -> None:
+///     """Start a fresh request after an explicit storage reset. Existing
+///     bindings may be replaced only after their old owner was revoked."""
+static mp_obj_t secret_task_rebind(mp_obj_t task, mp_obj_t owner) {
+  int i = secret_task_find(task);
+  uint32_t id = owner_object(owner)->id;
+  secret_owner_t *new_owner = secret_owner_find(id);
+  if (!new_owner || !new_owner->parent ||
+      (i >= 0 && secret_owner_find(secret_tasks[i].owner)))
+    mp_raise_ValueError(
+        MP_ERROR_TEXT("Expected revoked request and fresh owner"));
+  if (i >= 0) {
+    secret_tasks[i] = (secret_task_t){id, true};
+  } else {
+    secret_task_register(task, owner);
+  }
+  secret_owner = id;
+  return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_2(secret_task_rebind_obj, secret_task_rebind);
 
 /// def _secret_task_enter(task: Any) -> bool:
 ///     """Activate task ownership. False means the task has been revoked."""

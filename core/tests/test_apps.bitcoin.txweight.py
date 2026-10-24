@@ -12,7 +12,7 @@ from apps.common.keychain import Keychain
 from apps.common.paths import AlwaysMatchingSchema
 
 
-class TestCalculateTxWeight(unittest.TestCase):
+class TestCalculateTxWeight(VaultTestCase):
     # pylint: disable=C0301
 
     def test_p2pkh_txweight(self):

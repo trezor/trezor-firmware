@@ -13,16 +13,19 @@ async def get_watch_only(msg: MoneroGetWatchKey, keychain: Keychain) -> MoneroWa
     from trezor.messages import MoneroWatchKey
 
     from apps.common import paths
-    from apps.monero import layout, misc
-    from apps.monero.xmr import crypto_helpers
+    from apps.monero import layout
+    from apps.monero.xmr import addresses, crypto
+    from apps.monero.xmr.networks import net_version
 
     await paths.validate_path(keychain, msg.address_n)
 
     await layout.require_confirm_watchkey()
 
-    creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
-    address = creds.address
-    assert address is not None
-    watch_key = crypto_helpers.encodeint(creds.view_key_private)
+    node = keychain.derive(msg.address_n)
+    public_spend, public_view, watch_key = crypto.wallet_public(node, 0, 0, True)
+    assert watch_key is not None
+    address = addresses.encode_addr(
+        net_version(msg.network_type), public_spend, public_view
+    )
 
     return MoneroWatchKey(watch_key=watch_key, address=address.encode())

@@ -52,6 +52,9 @@ class DataCache:
         # new objects here would be a heap leak across restarts.
         self._secret_owner = SecretOwner(None, False)
         self.vault_seed = secbytes(None, 64)
+        self.cardano_secrets = (
+            () if utils.BITCOIN_ONLY else (secbytes(None, 96), secbytes(None, 96))
+        )
         self.data = [bytearray(f + 1) for f in self.fields]
 
     def get_secret_owner(self) -> SecretOwner:
@@ -119,6 +122,8 @@ class DataCache:
         # Revoke before cache operations which can allocate or raise.
         self._secret_owner.destroy()
         self.vault_seed.destroy()
+        for secret in self.cardano_secrets:
+            secret.destroy()
         for i in range(len(self.fields)):
             self.delete(i)
 

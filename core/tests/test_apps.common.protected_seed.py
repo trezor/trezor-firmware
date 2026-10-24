@@ -133,13 +133,24 @@ class TestProtectedCommonSeed(unittest.TestCase):
         self.assertIsNone(self.ctx.cache.get(APP_COMMON_SEED))
 
     @unittest.skipUnless(not utils.BITCOIN_ONLY, "full-coin setup")
-    def test_cardano_fails_explicitly_without_python_seed(self):
-        from trezor.wire.errors import ProcessError
+    def test_cardano_roots_without_python_seed(self):
+        from trezor.crypto import cardano
 
-        with self.assertRaises(ProcessError):
-            self.derive(cardano=True)
-        self.assertEqual(self.prompts, 0)
-        self.assertTrue(self.ctx.cache.vault_seed.empty())
+        value = self.derive(cardano=True)
+        self.assertIsInstance(value, secbytes)
+        self.assertEqual(self.prompts, 1)
+        for index, trezor_derivation in enumerate((False, True)):
+            actual = self.ctx.cache.cardano_secrets[index]
+            self.assertFalse(actual.empty())
+            expected = cardano.derive_icarus(
+                bip39.mnemonic_to_bits(self.MNEMONIC), "TREZOR", trezor_derivation
+            )
+            self.assertEqual(
+                cardano.from_secret(actual).public_key(),
+                cardano.from_secret(expected).public_key(),
+            )
+            with self.assertRaises(TypeError):
+                bytes(actual)
 
 
 if __name__ == "__main__":

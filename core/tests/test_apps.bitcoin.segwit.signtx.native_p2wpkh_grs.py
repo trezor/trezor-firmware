@@ -36,7 +36,7 @@ EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
 
 # https://groestlsight-test.groestlcoin.org/api/tx/9b5c4859a8a31e69788cb4402812bb28f14ad71cbd8c60b09903478bc56f79a3
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
+class TestSignSegwitTxNativeP2WPKH_GRS(VaultTestCase):
     # pylint: disable=C0301
 
     def test_send_native_p2wpkh(self):

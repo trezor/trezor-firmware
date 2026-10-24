@@ -130,6 +130,31 @@ MP_DEFINE_CONST_OBJ_TYPE(mod_trezorcrypto_secbytes_type, MP_QSTR_secbytes,
                          secbytes_print, locals_dict, &secbytes_locals);
 
 /// mock:global
+/// def authorize_locked_session(authorized: bool) -> None:
+///     """Grant/revoke the current session's confirmed CoinJoin permission.
+///     Granting requires unlocked storage and a live request."""
+static mp_obj_t authorize_locked_session(mp_obj_t authorized) {
+  vault_request_t r = {.op = VAULT_AUTHORIZE_LOCKED,
+                       .arg = mp_obj_is_true(authorized)};
+  vault_response_t out = {0};
+  vault_raise(&r, &out);
+  return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(authorize_locked_session_obj,
+                                 authorize_locked_session);
+
+/// def begin_preauthorized_request() -> None:
+///     """Delegate a confirmed CoinJoin session grant to this request. It
+///     survives consuming the last round until this request is torn down."""
+static mp_obj_t begin_preauthorized_request(void) {
+  vault_request_t r = {.op = VAULT_AUTHORIZE_LOCKED, .arg = 2};
+  vault_response_t out = {0};
+  vault_raise(&r, &out);
+  return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(begin_preauthorized_request_obj,
+                                 begin_preauthorized_request);
+
 /// def revoke_secrets() -> None:
 ///     """Erase all native owners and entries; emergency teardown only."""
 static mp_obj_t revoke_secrets(void) {

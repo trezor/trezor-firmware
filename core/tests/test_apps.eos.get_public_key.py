@@ -2,7 +2,6 @@
 from common import *  # isort:skip
 
 from trezor.crypto import bip32, bip39
-from trezor.crypto.curve import secp256k1
 
 if not utils.BITCOIN_ONLY:
     from apps.eos.helpers import public_key_to_wif
@@ -10,14 +9,13 @@ if not utils.BITCOIN_ONLY:
 
 # NOTE: copy-pasted from apps.eos.get_public_key
 def _get_public_key(node: bip32.HDNode) -> tuple[str, bytes]:
-    seckey = node.private_key()
-    public_key = secp256k1.publickey(seckey, True)
+    public_key = node.public_key()
     wif = public_key_to_wif(public_key)
     return wif, public_key
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestEosGetPublicKey(unittest.TestCase):
+class TestEosGetPublicKey(VaultTestCase):
     def test_get_public_key_scheme(self):
         mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
         seed = bip39.seed(mnemonic, "")

@@ -149,6 +149,33 @@ class TestSecretLifecycle(unittest.TestCase):
         for key in values:
             self.assert_invalid(key)
 
+    def test_revoked_workflow_can_schedule_public_teardown(self):
+        children, completed = [], []
+
+        def child():
+            self.assertRaises(ValueError, secbytes, KEY)
+            completed.append(True)
+            yield None
+
+        def parent():
+            # Reset/wipe may revoke the active request midway through a
+            # workflow that still needs UI and transport tasks to finish.
+            owner.destroy()
+            children.append(child())
+            loop.schedule(children[0])
+            yield None
+
+        task = parent()
+        session, owner = self.root(task)
+        self.step(task)
+        self.step(children[0])
+        self.assertEqual(completed, [True])
+        self.assertFalse(owner.valid())
+        with self.assertRaises(ValueError):
+            loop.schedule(child(), secret_owner=owner)
+        loop.close(task)
+        session.destroy()
+
     def test_await_race_cancels_child_only(self):
         values, racers = [], []
 

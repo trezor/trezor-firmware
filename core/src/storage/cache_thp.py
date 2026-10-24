@@ -50,8 +50,8 @@ class SessionThpCache(DataCache):
                 128,  # APP_COMMON_AUTHORIZATION_DATA
                 32,  # APP_COMMON_NONCE
                 0,  # APP_COMMON_DERIVE_CARDANO
-                96,  # APP_CARDANO_ICARUS_SECRET
-                96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
+                0,  # APP_CARDANO_ICARUS_SECRET: sealed in cardano_secrets
+                0,  # APP_CARDANO_ICARUS_TREZOR_SECRET: sealed in cardano_secrets
                 0,  # APP_MONERO_LIVE_REFRESH
                 4 + 4,  # APP_EXTAPP_IDS
             )

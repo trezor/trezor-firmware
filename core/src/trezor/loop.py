@@ -13,6 +13,7 @@ from trezorcrypto import (
     _secret_owner_activate,
     _secret_task_enter,
     _secret_task_finish,
+    _secret_task_rebind,
     _secret_task_register,
     _secret_tasks_clear,
 )
@@ -85,6 +86,19 @@ def schedule(
     except BaseException:
         _secret_task_finish(task)
         _finalizers.pop(id(task), None)
+        raise
+
+
+def renew_secret_owner(parent: SecretOwner) -> None:
+    """Resume reset/setup under a new request after revoking all old secrets."""
+    from trezorcrypto import SecretOwner
+
+    assert this_task is not None
+    owner = SecretOwner(parent)
+    try:
+        _secret_task_rebind(this_task, owner)
+    except BaseException:
+        owner.destroy()
         raise
 
 
