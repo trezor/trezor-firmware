@@ -252,6 +252,23 @@ def validate_xpub_path_against_script_type(
     )
 
 
+def is_bip48_segwit_account(
+    coin: coininfo.CoinInfo,
+    address_n: Bip32Path,
+    script_type: InputScriptType,
+) -> bool:
+    """True if address_n is a BIP-48 SegWit multisig account node."""
+    if not coin.segwit:
+        return False
+    if script_type == InputScriptType.SPENDWITNESS:
+        account = "m/48'/coin_type'/account'/2'"
+    elif script_type == InputScriptType.SPENDP2SHWITNESS:
+        account = "m/48'/coin_type'/account'/1'"
+    else:
+        return False
+    return PathSchema.parse(account, coin.slip44).match(address_n)
+
+
 def _get_schemas_for_coin(
     coin: coininfo.CoinInfo, extra_schemas: Iterable[PathSchema] = ()
 ) -> Iterable[PathSchema]:
