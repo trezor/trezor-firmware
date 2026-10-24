@@ -132,7 +132,7 @@ def write_bip143_script_code_prefixed(
     threshold: int,
     coin: CoinInfo,
 ) -> None:
-    if len(public_keys) > 1:
+    if txi.multisig or len(public_keys) > 1:
         write_output_script_multisig(w, public_keys, threshold, prefixed=True)
         return
 
