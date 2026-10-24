@@ -14,8 +14,8 @@ from typing import TextIO
 import click
 
 import trezorlib.debuglink
-from trezorlib.cli.debug import record_screen
 from trezorlib._internal.emulator import CoreEmulator, TropicModel
+from trezorlib.cli.debug import record_screen
 from trezorlib.testing import translations
 
 try:
@@ -34,8 +34,8 @@ SRC_DIR = HERE / "src"
 PROFILE_BASE = Path.home() / ".trezoremu"
 
 TREZOR_STORAGE_FILES = (
-    "trezor.flash",
-    "trezor.sdcard",
+    CoreEmulator.STORAGE_FILENAME,
+    CoreEmulator.SDCARD_FILENAME,
 )
 
 
@@ -75,7 +75,7 @@ def run_debugger(
     emulator: CoreEmulator,
     gdb_script_file: str | Path | None,
     valgrind: bool = False,
-    run_command: list[str] = [],
+    run_command: list[str] | None = None,
     tropic_model: TropicModel | None = None,
 ) -> None:
     os.chdir(emulator.workdir)
@@ -107,7 +107,10 @@ def run_debugger(
 
     if not run_command:
         if tropic_model and tropic_model.process and tropic_model.process.pid:
-            click.echo(f"Warning: Tropic01 model (PID {tropic_model.process.pid}) left running", err=True)
+            click.echo(
+                f"Warning: Tropic01 model (PID {tropic_model.process.pid}) left running",
+                err=True,
+            )
         os.execvpe(dbg_command[0], dbg_command, env)
     else:
         dbg_process = subprocess.Popen(dbg_command, env=env)
@@ -124,36 +127,143 @@ def _from_env(name: str) -> bool:
 @click.command(
     context_settings=dict(ignore_unknown_options=True, allow_interspersed_args=False)
 )
-# fmt: off
-@click.option("-a", "--disable-animation/--enable-animation", default=_from_env("TREZOR_DISABLE_ANIMATION"), help="Disable animation")
-@click.option("-c", "--command", "run_command", is_flag=True, help="Run command while emulator is running")
-@click.option("-d", "--production/--no-production", default=_from_env("PYOPT"), help="Production mode (debuglink disabled)")
-@click.option("-D", "--debugger", is_flag=True, help="Run emulator in debugger (gdb/lldb)")
+@click.option(
+    "-a",
+    "--disable-animation/--enable-animation",
+    default=_from_env("TREZOR_DISABLE_ANIMATION"),
+    help="Disable animation",
+)
+@click.option(
+    "-c",
+    "--command",
+    "run_command",
+    is_flag=True,
+    help="Run command while emulator is running",
+)
+@click.option(
+    "-d",
+    "--production/--no-production",
+    default=_from_env("PYOPT"),
+    help="Production mode (debuglink disabled)",
+)
+@click.option(
+    "-D", "--debugger", is_flag=True, help="Run emulator in debugger (gdb/lldb)"
+)
 @click.option("-e", "--erase", is_flag=True, help="Erase profile before running")
-@click.option("--display-scale", type=click.FloatRange(0.25, 16), default=1, show_default=True, help="Scale emulator window by this factor, e.g. 0.5 for half size")
-@click.option("--executable", type=click.Path(exists=True, dir_okay=False), default=os.environ.get("MICROPYTHON"), help="Alternate emulator executable")
-@click.option("-g", "--profiling/--no-profiling", default=_from_env("TREZOR_PROFILING"), help="Run with profiler wrapper")
-@click.option("-G", "--alloc-profiling/--no-alloc-profiling", default=_from_env("TREZOR_MEMPERF"), help="Profile memory allocation (requires special micropython build)")
-@click.option("-h", "--headless", is_flag=True, help="Headless mode (no display, disables animation)")
+@click.option(
+    "--display-scale",
+    type=click.FloatRange(0.25, 16),
+    default=1,
+    show_default=True,
+    help="Scale emulator window by this factor, e.g. 0.5 for half size",
+)
+@click.option(
+    "--executable",
+    type=click.Path(exists=True, dir_okay=False),
+    default=os.environ.get("MICROPYTHON"),
+    help="Alternate emulator executable",
+)
+@click.option(
+    "-g",
+    "--profiling/--no-profiling",
+    default=_from_env("TREZOR_PROFILING"),
+    help="Run with profiler wrapper",
+)
+@click.option(
+    "-G",
+    "--alloc-profiling/--no-alloc-profiling",
+    default=_from_env("TREZOR_MEMPERF"),
+    help="Profile memory allocation (requires special micropython build)",
+)
+@click.option(
+    "-h",
+    "--headless",
+    is_flag=True,
+    help="Headless mode (no display, disables animation)",
+)
 @click.option("--heap-size", metavar="SIZE", default="20M", help="Configure heap size")
-@click.option( "-l", "--lang", type=click.Choice(translations.LANGUAGES), help="Set device language (e.g. cs)")
+@click.option(
+    "-l",
+    "--lang",
+    type=click.Choice(translations.LANGUAGES),
+    help="Set device language (e.g. cs)",
+)
 @click.option("--main", help="Path to python main file")
-@click.option("--mnemonic", "mnemonics", multiple=True, help="Initialize device with given mnemonic. Specify multiple times for Shamir shares.")
-@click.option("--log-memory/--no-log-memory", default=_from_env("TREZOR_LOG_MEMORY"), help="Print memory usage after workflows")
-@click.option("-o", "--output", type=click.File("w"), default="-", help="Redirect emulator output to file")
+@click.option(
+    "--mnemonic",
+    "mnemonics",
+    multiple=True,
+    help="Initialize device with given mnemonic. Specify multiple times for Shamir shares.",
+)
+@click.option(
+    "--log-memory/--no-log-memory",
+    default=_from_env("TREZOR_LOG_MEMORY"),
+    help="Print memory usage after workflows",
+)
+@click.option(
+    "-o",
+    "--output",
+    type=click.File("w"),
+    default="-",
+    help="Redirect emulator output to file",
+)
 @click.option("-p", "--profile", metavar="NAME", help="Profile name or path")
-@click.option("-P", "--port", metavar="PORT", type=int, default=int(os.environ.get("TREZOR_UDP_PORT", 0)) or None, help="UDP port number")
+@click.option(
+    "-P",
+    "--port",
+    metavar="PORT",
+    type=int,
+    default=int(os.environ.get("TREZOR_UDP_PORT", 0)) or None,
+    help="UDP port number",
+)
 @click.option("-q", "--quiet", is_flag=True, help="Silence emulator output")
-@click.option("-r", "--record-dir", help="Directory where to record screen changes", type=click.Path(file_okay=False, dir_okay=True, path_type=Path))
-@click.option("-s", "--slip0014", is_flag=True, help="Initialize device with SLIP-14 seed (all all all...)")
-@click.option("-S", "--script-gdb-file", type=click.Path(exists=True, dir_okay=False), help="Run gdb with an init file")
-@click.option("-t", "--temporary-profile", is_flag=True, help="Create an empty temporary profile")
-@click.option("--tropic-emulator/--no-tropic-emulator", default=None, help="Start Tropic01 model")
-@click.option("--tropic-emulator-config", type=click.Path(exists=True, dir_okay=False), default=TROPIC_MODEL_CONFIG, help="Tropic01 model configuration file")
-@click.option("-V", "--valgrind", is_flag=True, help="Use valgrind instead of debugger (-D)")
+@click.option(
+    "-r",
+    "--record-dir",
+    help="Directory where to record screen changes",
+    type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
+)
+@click.option(
+    "-s",
+    "--slip0014",
+    is_flag=True,
+    help="Initialize device with SLIP-14 seed (all all all...)",
+)
+@click.option(
+    "-S",
+    "--script-gdb-file",
+    type=click.Path(exists=True, dir_okay=False),
+    help="Run gdb with an init file",
+)
+@click.option(
+    "-t", "--temporary-profile", is_flag=True, help="Create an empty temporary profile"
+)
+@click.option(
+    "--tropic-emulator/--no-tropic-emulator", default=None, help="Start Tropic01 model"
+)
+@click.option(
+    "--tropic-emulator-config",
+    type=click.Path(exists=True, dir_okay=False),
+    default=TROPIC_MODEL_CONFIG,
+    help="Tropic01 model configuration file",
+)
+@click.option(
+    "--tropic-model-port",
+    type=int,
+    default=None,
+    help="Port of the Tropic01 model. Defaults to a free port for the auto-started model, or to 28992 for an externally managed one (--no-tropic-emulator).",
+)
+@click.option(
+    "-V", "--valgrind", is_flag=True, help="Use valgrind instead of debugger (-D)"
+)
 @click.option("-w", "--watch", is_flag=True, help="Restart emulator if sources change")
-@click.option("-X", "--extra-arg", "extra_args", multiple=True, help="Extra argument to pass to micropython")
-# fmt: on
+@click.option(
+    "-X",
+    "--extra-arg",
+    "extra_args",
+    multiple=True,
+    help="Extra argument to pass to micropython",
+)
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 def cli(
     disable_animation: bool,
@@ -181,11 +291,12 @@ def cli(
     temporary_profile: bool,
     tropic_emulator: bool | None,
     tropic_emulator_config: Path,
+    tropic_model_port: int | None,
     valgrind: bool,
     watch: bool,
     extra_args: list[str],
     command: list[str],
-):
+) -> None:
     """Run the trezor-core emulator.
 
     If -c is specified, extra arguments are treated as a command that is executed with
@@ -291,7 +402,7 @@ def cli(
         heap_size=heap_size,
         disable_animation=disable_animation,
         workdir=SRC_DIR,
-        tropic_model_port=TropicModel.DEFAULT_PORT,
+        tropic_model_port=tropic_model_port,
         display_scale=display_scale,
     )
 
@@ -313,18 +424,29 @@ def cli(
         os.environ["TREZOR_MEMPERF"] = "1"
 
     tropic_model = None
-    if tropic_emulator is None:
-        tropic_emulator = emulator.properties().get("tropic", False)
-    if tropic_emulator:
+    tropic_emulator_needed = tropic_emulator
+    if tropic_emulator_needed is None:
+        tropic_emulator_needed = emulator.properties().get("tropic", False)
+    if tropic_emulator_needed:
         tropic_model = TropicModel(
             profile_dir=str(profile_dir),
             configfile=tropic_emulator_config,
-            port=TropicModel.DEFAULT_PORT,
+            port=tropic_model_port,
         )
         try:
             tropic_model.start()
         except Exception as exc:
-            click.echo(f"Failed to start Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
+            raise click.ClickException(
+                f"Failed to start the Tropic01 model: {exc.__class__.__name__}: {exc}. "
+                "Use --no-tropic-emulator to point the emulator at an external model."
+            )
+        # Without `--tropic-model-port`, the model reserved a free port while
+        # the emulator still holds the default, so point the emulator at the
+        # model. With the option, both already use it and this changes nothing.
+        emulator.tropic_model_port = tropic_model.port
+    if tropic_emulator is not None or tropic_emulator_needed:
+        click.echo(f"TROPIC_MODEL_PORT={emulator.tropic_model_port}")
+        os.environ["TROPIC_MODEL_PORT"] = str(emulator.tropic_model_port)
 
     if debugger or valgrind:
         run_debugger(emulator, script_gdb_file, valgrind, command, tropic_model)
@@ -371,7 +493,10 @@ def cli(
         try:
             tropic_model.stop()
         except Exception as exc:
-            click.echo(f"Error stopping Tropic01 model: {exc.__class__.__name__}: {exc}", err=True)
+            click.echo(
+                f"Error stopping Tropic01 model: {exc.__class__.__name__}: {exc}",
+                err=True,
+            )
 
     if tempdir is not None:
         tempdir.cleanup()

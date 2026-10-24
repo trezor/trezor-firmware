@@ -1,4 +1,6 @@
 ^common/
+^core/emu\.py$
+^core/prodtest_emu\.py$
 ^core/src/
 ^core/site_scons/
 ^core/tests/

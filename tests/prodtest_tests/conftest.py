@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import os
 import shutil
-import socket
 import tempfile
 import typing as t
 from contextlib import contextmanager
@@ -119,14 +118,9 @@ def tropic_prodtest(
         config = Path(tropic_model_configfile or DEFAULT_TROPIC_MODEL_CONFIGFILE)
         model_dir = tempfile.mkdtemp(prefix="prodtest_tropic_model_")
         created_dirs.append(model_dir)
-        # Let the OS pick a free TCP port for the Tropic model.
-        with socket.socket() as s:
-            s.bind(("", 0))
-            tropic_model_port = s.getsockname()[1]
         tropic_model = TropicModel(
             profile_dir=model_dir,
             configfile=config,
-            port=tropic_model_port,
         )
         tropic_model.start()
         try:
