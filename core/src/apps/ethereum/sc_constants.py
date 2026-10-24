@@ -9,18 +9,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
-def lookup_known_address(chain_id: int, address: bytes) -> str | None:
-    """Return a human-readable name of a well-known smart contract,
-    or `None` if the address is not known.
-    """
-    for known_chain_id, known_address, name in _known_address_iterator():
-        if chain_id == known_chain_id and address == known_address:
-            return name
-    return None
-
-
-def _known_address_iterator() -> Iterator[tuple[int, bytes, str]]:
-    # NOTE: implementing the `_known_address_iterator` as a generator instead of an if-tree of `return` statements saves flash size (Same trick as in `apps.ethereum.tokens`.)
+def known_address_iterator() -> Iterator[tuple[int, bytes, str]]:
+    # NOTE: implementing the `known_address_iterator` as a generator instead of an if-tree of `return` statements saves flash size (Same trick as in `apps.ethereum.tokens`.)
 
     yield (1, b"\x68\xb3\x46\x58\x33\xfb\x72\xa7\x0e\xcd\xf4\x85\xe0\xe4\xc7\xbd\x86\x65\xfc\x45", "Uniswap V3 Router")
     yield (1, b"\xe5\x92\x42\x7a\x0a\xec\xe9\x2d\xe3\xed\xee\x1f\x18\xe0\x15\x7c\x05\x86\x15\x64", "Uniswap V3 Router")

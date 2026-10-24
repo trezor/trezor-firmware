@@ -75,6 +75,18 @@ def bytes_from_address(address: str) -> bytes:
     raise wire.ProcessError("Ethereum: Invalid address length")
 
 
+def lookup_known_address(chain_id: int, address: bytes) -> str | None:
+    """Return a human-readable name of a well-known smart contract,
+    or `None` if the address is not known.
+    """
+    from .sc_constants import known_address_iterator
+
+    for known_chain_id, known_address, name in known_address_iterator():
+        if chain_id == known_chain_id and address == known_address:
+            return name
+    return None
+
+
 def get_type_name(field: EthereumFieldType) -> str:
     """Create a string from type definition (like uint256 or bytes16)."""
     from trezor.enums import EthereumDataType

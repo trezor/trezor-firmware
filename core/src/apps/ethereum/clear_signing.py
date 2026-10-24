@@ -10,6 +10,7 @@ from .helpers import (
     bytes_from_address,
     format_ethereum_amount,
     get_account_and_path,
+    lookup_known_address,
 )
 
 if TYPE_CHECKING:
@@ -1257,7 +1258,6 @@ async def _expand_one_subcall(
     callee and the raw hex blob, instead of failing the outer transaction.
     `index` is the subcall's 1-based position when it comes from an array of
     subcalls, reflected in the label prefix: "(Subcall #<index>)"."""
-    from .sc_constants import lookup_known_address
 
     if not isinstance(blob, bytes):
         # Calldata should be a bytes field
@@ -1418,7 +1418,6 @@ async def _handle_approve(
     fee_items: Iterable[StrPropertyType],
 ) -> None:
     from .layout import require_confirm_approve
-    from .sc_constants import lookup_known_address
     from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
 
     # approve() is not payable; surface any native ETH sent along with it.
@@ -1570,7 +1569,6 @@ async def _handle_generic_ui(
     from .helpers import bytes_from_address
     from .layout import require_confirm_clear_signing
     from .networks import UNKNOWN_NETWORK
-    from .sc_constants import lookup_known_address
 
     # Surface the native ETH value in the summary when non-zero - unless one of
     # the display format's own fields already renders it (e.g. a swap's "Amount
