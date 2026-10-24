@@ -28,6 +28,7 @@ permissions:
   id-token: write       # for fetching the OIDC token
   contents: read        # for actions/checkout
   pull-requests: write  # for dflook comments on PR
+  actions: read         # for downloading the reference build's artifacts (binaries_size_report)
 
 env:
   SDL_VIDEODRIVER: dummy
@@ -809,24 +810,66 @@ jobs:
 
   binaries_size_report:
     name: Binaries' size report
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'  # not for reference builds
+    # Compares the images of this build with the reference build of the main commit the PR
+    # was merged with (see core/tools/size/pr_report.py). The report goes to the job summary;
+    # the PR comment is posted for internal PRs only, fork PRs have no token for that.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 40  # waits up to 20 minutes for an unfinished reference build
     needs:
       - core_firmware
     steps:
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+      - name: Find the reference build of the base commit
+        id: reference
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python ci/find_reference_run.py --repo "${{ github.repository }}" --sha "${{ github.event.pull_request.base.sha }}"
+      - name: Download the reference build
+        if: steps.reference.outputs.run_id != ''
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           pattern: core-firmware-*
-          path: artifacts
-      - run: |
-          for build_type in normal debuglink
-          do
-            (echo '##' ${build_type}; \
-             echo '```'; \
-             find artifacts/core-firmware-*-${build_type}/ -name '*-*-*.bin' -printf "%10s %f\n" | sort -k 2; \
-             echo '```') >> $GITHUB_STEP_SUMMARY
-          done
+          path: size-report/base
+          run-id: ${{ steps.reference.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download this build
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+        with:
+          pattern: core-firmware-*
+          path: size-report/new
+      - name: Compare
+        run: |
+          python core/tools/size/pr_report.py \
+            --new size-report/new --base size-report/base \
+            --base-label "main@${{ steps.reference.outputs.short_sha }}" \
+            --base-note "${{ steps.reference.outputs.note }}" \
+            --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --markdown size-report/report.md --json size-report/report.json
+          cat size-report/report.md >> $GITHUB_STEP_SUMMARY
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: core-binaries-size-report
+          path: size-report/report.*
+          retention-days: 7
+      - name: Find the size comment
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad  # peter-evans/find-comment@v4
+        id: size_comment
+        if: github.event.pull_request.head.repo.full_name == github.repository && github.repository == 'trezor/trezor-firmware'
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: size-comment-Core
+      - name: Create or update the size comment
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9  # peter-evans/create-or-update-comment@v5
+        if: github.event.pull_request.head.repo.full_name == github.repository && github.repository == 'trezor/trezor-firmware'
+        with:
+          comment-id: ${{ steps.size_comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: size-report/report.md
+          edit-mode: replace
 
 
   core_ui_comment:
