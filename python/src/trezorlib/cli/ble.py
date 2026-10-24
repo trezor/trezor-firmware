@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 import click
 
 from .. import ble, exceptions
-from ..transport.ble import BleProxy
+from ..transport.ble import BleTransport
 from . import with_session
 
 if TYPE_CHECKING:
@@ -62,7 +62,7 @@ def connect() -> None:
 
     If the device hasn't been paired you also need to have system bluetooth pairing dialog open.
     """
-    ble = BleProxy()
+    ble = BleTransport.ble_proxy()
 
     click.echo("Scanning...")
     devices = ble.scan()
