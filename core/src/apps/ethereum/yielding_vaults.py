@@ -158,7 +158,7 @@ async def get_token_label(
         return "MORPHO"
 
     if try_fetch_definitions and msg.supports_definition_request:
-        from .clear_signing import request_definitions
+        from .helpers import request_definitions
 
         addr = bytes(token_addr)
         received_definitions, _ = await request_definitions(
@@ -172,13 +172,11 @@ async def get_token_label(
     return "UNKNOWN"
 
 
-def lookup_vault(
-    network: EthereumNetworkInfo, vault_addr: AnyBytes
-) -> EthereumVaultInfo:
-    """Returns the vault info for the given address and network"""
+def lookup_vault(chain_id: int, vault_addr: AnyBytes) -> EthereumVaultInfo:
+    """Returns the vault info for the given address and chain"""
 
     for vault in KNOWN_VAULTS:
-        if network.chain_id == vault.chain_id and vault_addr == vault.address:
+        if chain_id == vault.chain_id and vault_addr == vault.address:
             return vault
 
     return UNKNOWN_VAULT
