@@ -17,11 +17,11 @@
 from __future__ import annotations
 
 import typing as t
-from hashlib import blake2s
+from hashlib import blake2s, sha256
 
 from typing_extensions import Protocol, TypeGuard
 
-from .. import messages
+from .. import messages, protobuf
 from .core import VendorFirmware
 from .legacy import LegacyFirmware, LegacyV2Firmware
 from .models import Model
@@ -33,6 +33,7 @@ if True:
     from .core import *  # noqa: F401, F403
     from .legacy import *  # noqa: F401, F403
     from .nrf import *  # noqa: F401, F403
+    from .pq_secure import *  # noqa: F401, F403
     from .sanity_struct import *  # noqa: F401, F403
     from .secmon import *  # noqa: F401, F403
     from .util import (  # noqa: F401
@@ -81,12 +82,26 @@ def update(
     session: Session,
     data: bytes,
     progress_update: t.Callable[[int], t.Any] = lambda _: None,
+    prev_hashes: t.Optional[dict[int, bytes]] = None,
 ) -> None:
     if session.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")
 
+    # pq_secure_boot phase 2: prev_hashes maps a chunk's end offset to its chain
+    # H_prev (see PqSecureFirmware.chunk_prev_hashes); None for a legacy update
     resp = session.call(messages.FirmwareErase(length=len(data)))
+    _stream_firmware_upload(session, data, resp, progress_update, prev_hashes)
 
+
+def _stream_firmware_upload(
+    session: Session,
+    data: bytes,
+    resp: protobuf.MessageType,
+    progress_update: t.Callable[[int], t.Any],
+    prev_hashes: t.Optional[dict[int, bytes]] = None,
+) -> protobuf.MessageType:
+    """Drive the FirmwareRequest/FirmwareUpload loop from the FirmwareErase
+    response `resp`; returns the final Success."""
     # TREZORv1 method
     if isinstance(resp, messages.Success):
         resp = session.call(
@@ -99,10 +114,66 @@ def update(
         length = resp.length
         payload = data[resp.offset : resp.offset + length]
         digest = blake2s(payload).digest()
-        resp = session.call(messages.FirmwareUpload(payload=payload, hash=digest))
+        # keyed by the block's END offset; None for an innermost chunk or the header
+        prev_hash = prev_hashes.get(resp.offset + length) if prev_hashes else None
+        resp = session.call(
+            messages.FirmwareUpload(payload=payload, hash=digest, prev_hash=prev_hash)
+        )
         progress_update(length)
 
     messages.Success.ensure_isinstance(resp)
+    return resp
+
+
+def firmware_begin(
+    session: Session,
+    boot_header: bytes,
+    module_headers: bytes,
+    code: t.Optional[bytes] = None,
+    nrf_image: t.Optional[bytes] = None,
+    nrf_co_path: t.Optional[bytes] = None,
+    nrf_image_hash: t.Optional[bytes] = None,
+    progress_update: t.Callable[[int], t.Any] = lambda _: None,
+) -> dict[str, int]:
+    """Phase 1 of a Merkle-tree firmware update: send the signed boot header and
+    the manifest region; the device authenticates them, confirms with the user,
+    stages the header and reboots. It requests `code` (bootloader code after the
+    header) only if its own code changed, and the nRF image only if the running
+    one is stale. Returns bytes streamed per image, keyed "code" and "nrf".
+    After the reboot, reconnect and call `update()` for phase 2.
+    """
+    if session.features.bootloader_mode is False:
+        raise RuntimeError("Device must be in bootloader mode")
+
+    resp = session.call(
+        messages.FirmwareBegin(
+            boot_header=boot_header,
+            module_headers=module_headers,
+            code_length=len(code) if code else None,
+            # lets the device check the signature before the code streams; it
+            # rehashes what it receives
+            code_hash=sha256(code).digest() if code else None,
+            nrf_length=len(nrf_image) if nrf_image else None,
+            nrf_co_path=nrf_co_path,
+            nrf_image_hash=nrf_image_hash,
+        )
+    )
+
+    # coprocessor_index routes each request: 0 = bootloader code, 1 = nRF image
+    served = {"code": 0, "nrf": 0}
+    while isinstance(resp, messages.FirmwareRequest):
+        is_nrf = (resp.coprocessor_index or 0) != 0
+        src = nrf_image if is_nrf else code
+        assert src is not None, "device requested image bytes but none supplied"
+        length = resp.length
+        payload = src[resp.offset : resp.offset + length]
+        digest = blake2s(payload).digest()
+        resp = session.call(messages.FirmwareUpload(payload=payload, hash=digest))
+        served["nrf" if is_nrf else "code"] += length
+        progress_update(length)
+
+    messages.Success.ensure_isinstance(resp)
+    return served
 
 
 def get_hash(session: Session, challenge: bytes | None) -> bytes:

@@ -64,6 +64,7 @@ trezor_message_impl! {
     FirmwareUpload => MessageType_FirmwareUpload,
     FirmwareRequest => MessageType_FirmwareRequest,
     ProdTestT1 => MessageType_ProdTestT1,
+    FirmwareBegin => MessageType_FirmwareBegin,
     BleUnpair => MessageType_BleUnpair,
     CipherKeyValue => MessageType_CipherKeyValue,
     CipheredKeyValue => MessageType_CipheredKeyValue,

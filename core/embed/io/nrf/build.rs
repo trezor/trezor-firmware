@@ -14,6 +14,8 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             "nrf/stm32u5/nrf_spi.c",
             "nrf/stm32u5/nrf_update.c",
             "nrf/crc8.c",
+            // Founder-tree verification of pushed images; MCU-independent.
+            "nrf/nrf_image.c",
         ]);
 
         if cfg!(feature = "smp") {
