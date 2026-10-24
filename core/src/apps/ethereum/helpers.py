@@ -8,10 +8,16 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Awaitable, Callable, Sequence
 
-    from trezor.messages import EthereumFieldType, EthereumTokenInfo
+    from trezor.messages import (
+        EthereumDisplayFormatInfo,
+        EthereumFieldType,
+        EthereumTokenInfo,
+    )
     from trezor.ui.layouts import StrPropertyType
     from trezor.utils import HashWriter
 
+    from .definitions import Definitions
+    from .keychain import MsgInSignTx
     from .networks import EthereumNetworkInfo
 
     # Fetch the next calldata chunk from host.
@@ -75,15 +81,93 @@ def bytes_from_address(address: str) -> bytes:
     raise wire.ProcessError("Ethereum: Invalid address length")
 
 
-def lookup_known_address(chain_id: int, address: bytes) -> str | None:
+async def request_definitions(
+    chain_id: int, token_address: bytes, func_sig: bytes | None
+) -> tuple[Definitions | None, EthereumDisplayFormatInfo | None]:
+    """Ask the host for definitions of the network and the token at the address,
+    or for the display format of `func_sig` called on the address."""
+    from trezor.messages import (
+        EthereumDefinitionAck,
+        EthereumDefinitionRequest,
+        EthereumDisplayFormatInfo,
+    )
+    from trezor.wire.context import call
+
+    from apps.common.definitions import decode_definition
+
+    from .definitions import Definitions
+
+    req = EthereumDefinitionRequest(
+        chain_id=chain_id,
+        token_address=token_address,
+        func_sig=func_sig,
+    )
+    res = await call(req, EthereumDefinitionAck)
+
+    if res.definitions is None:
+        return None, None
+
+    definitions = Definitions.from_encoded(
+        res.definitions.encoded_network, res.definitions.encoded_token, chain_id
+    )
+
+    display_format = (
+        decode_definition(
+            res.definitions.encoded_display_format, EthereumDisplayFormatInfo
+        )
+        if res.definitions.encoded_display_format is not None
+        else None
+    )
+
+    return definitions, display_format
+
+
+async def lookup_known_address(
+    chain_id: int, address: bytes, msg: MsgInSignTx | None = None
+) -> str | None:
     """Return a human-readable name of a well-known smart contract,
     or `None` if the address is not known.
+
+    Built-in names and known vaults are tried first. If `msg` is given, the host is then asked
+    for a display format of the address, whose provider name is used, and failing that,
+    for a token definition of the address, whose name is used.
     """
     from .sc_constants import known_address_iterator
+    from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
 
     for known_chain_id, known_address, name in known_address_iterator():
         if chain_id == known_chain_id and address == known_address:
             return name
+
+    vault = lookup_vault(chain_id, address)
+    if vault is not UNKNOWN_VAULT:
+        return vault.name
+
+    if msg is not None and msg.supports_definition_request:
+        from .tokens import UNKNOWN_TOKEN
+
+        # Host can send any display formatter, we just care about the provider name.
+        # TODO: definitions should have a simple 000.. display formatter for each contract we clear sign, potentially even unsupported providers.
+        # Name-only definitions use an 8-byte null selector, so they can't collide with a real 4-byte one.
+        _, display_format = await request_definitions(
+            chain_id, address, b"\x00\x00\x00\x00\x00\x00\x00\x00"
+        )
+
+        if (
+            display_format is not None
+            and display_format.chain_id == chain_id
+            and bytes(display_format.address) == address
+            and display_format.provider_name is not None
+        ):
+            return display_format.provider_name
+
+        # No display format: the address may be an ERC-20 token.
+        definitions, _ = await request_definitions(chain_id, address, None)
+        if definitions is not None:
+            token = definitions.get_token(address)
+            if token is not UNKNOWN_TOKEN:
+                return token.name
+
     return None
 
 

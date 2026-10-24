@@ -211,13 +211,13 @@ async def get_approver(
     else:
         return None
 
-    vault = lookup_vault(defs.network, address_bytes)
+    vault = lookup_vault(msg.chain_id, address_bytes)
 
     if func_sig == FUNC_SIG_REDEEM:
         # redeem() amount is denominated in vault shares
         token = vault.vault_token
         if vault is UNKNOWN_VAULT and msg.supports_definition_request:
-            from .clear_signing import request_definitions
+            from .helpers import request_definitions
 
             token_defs, _ = await request_definitions(msg.chain_id, address_bytes, None)
             if token_defs is not None:
@@ -259,8 +259,8 @@ async def _get_asset_token(
     from .clear_signing import (
         TokenAmountFormatter,
         find_display_format,
-        request_definitions,
     )
+    from .helpers import request_definitions
     from .tokens import UNKNOWN_TOKEN
 
     ext_display_format = await find_display_format(func_sig, address_bytes, msg)

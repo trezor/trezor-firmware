@@ -11,6 +11,7 @@ from .helpers import (
     format_ethereum_amount,
     get_account_and_path,
     lookup_known_address,
+    request_definitions,
 )
 
 if TYPE_CHECKING:
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import (
         EthereumABIValueInfo,
+        EthereumDisplayFormatInfo,
         EthereumERC7730FieldInfo,
         EthereumTokenInfo,
     )
@@ -1114,8 +1116,14 @@ class DisplayFormat:
 
         from apps.common.definitions import decode_definition
 
-        proto = decode_definition(encoded, EthereumDisplayFormatInfo)
+        return cls.from_proto(decode_definition(encoded, EthereumDisplayFormatInfo))
 
+    @classmethod
+    def from_proto(cls, proto: EthereumDisplayFormatInfo) -> Self:
+        # Clear signing needs a 4-byte selector. Name-only definitions (see
+        # `lookup_known_address`) use a longer one and must not be used for clear signing.
+        if len(proto.func_sig) != SC_FUNC_SIG_BYTES:
+            raise DataError("Invalid display format")
         return cls(
             binding_context=BindingContext([(proto.chain_id, bytes(proto.address))]),
             func_sig=bytes(proto.func_sig),
@@ -1128,35 +1136,6 @@ class DisplayFormat:
                 FieldDefinition.from_proto(f) for f in proto.field_definitions
             ],
         )
-
-
-async def request_definitions(
-    chain_id: int, token_address: bytes, func_sig: bytes | None
-) -> tuple[Definitions | None, DisplayFormat | None]:
-    from trezor.messages import EthereumDefinitionAck, EthereumDefinitionRequest
-    from trezor.wire.context import call
-
-    req = EthereumDefinitionRequest(
-        chain_id=chain_id,
-        token_address=token_address,
-        func_sig=func_sig,
-    )
-    res = await call(req, EthereumDefinitionAck)
-
-    if res.definitions is None:
-        return None, None
-
-    definitions = Definitions.from_encoded(
-        res.definitions.encoded_network, res.definitions.encoded_token, chain_id
-    )
-
-    display_format = (
-        DisplayFormat.from_encoded(res.definitions.encoded_display_format)
-        if res.definitions.encoded_display_format is not None
-        else None
-    )
-
-    return definitions, display_format
 
 
 async def find_display_format(
@@ -1180,9 +1159,8 @@ async def find_display_format(
             return display_format
 
     if msg.supports_definition_request:
-        _, display_format = await request_definitions(
-            msg.chain_id, contract_address, func_sig
-        )
+        _, proto = await request_definitions(msg.chain_id, contract_address, func_sig)
+        display_format = DisplayFormat.from_proto(proto) if proto is not None else None
         if display_format is not None and display_format.matches_call(
             func_sig, msg.chain_id, contract_address
         ):
@@ -1270,12 +1248,14 @@ async def _expand_one_subcall(
     if index is not None:
         subcall = f"{subcall} #{index}"
 
-    def callee_str() -> str:
-        return lookup_known_address(msg.chain_id, callee) or address_from_bytes(
-            callee, defs.network
+    async def callee_str() -> str:
+        # already inside a subcall: no tertiary lookups
+        known = await lookup_known_address(
+            msg.chain_id, callee, None if nested else msg
         )
+        return known or address_from_bytes(callee, defs.network)
 
-    def raw_rows() -> list[RenderedField]:
+    async def raw_rows() -> list[RenderedField]:
         """No subparsing. Show the callee and the raw hex blob."""
         to_label = TR.ethereum__subcall_to
         blob_label = field_definition.label
@@ -1283,13 +1263,13 @@ async def _expand_one_subcall(
             to_label = f"({subcall}) {TR.ethereum__to}"
             blob_label = f"({subcall}) {blob_label}"
         return [
-            ((to_label, callee_str(), None), None, None),
+            ((to_label, await callee_str(), None), None, None),
             ((blob_label, blob.hex(), None), None, None),
         ]
 
     if nested:
         # already inside a subcall: no tertiary lookups
-        return raw_rows()
+        return await raw_rows()
 
     if formatter.selector is not None:
         # per ERC-7730, an explicit selector means the blob is args-only
@@ -1299,12 +1279,12 @@ async def _expand_one_subcall(
         func_sig = bytes(blob[:SC_FUNC_SIG_BYTES])
         body = memoryview(blob)[SC_FUNC_SIG_BYTES:]
     else:
-        return raw_rows()
+        return await raw_rows()
 
     try:
         inner_format = await find_display_format(func_sig, callee, msg, nested=True)
         if inner_format is None:
-            return raw_rows()
+            return await raw_rows()
         _, inner_fields = await inner_format.parse_calldata(
             body, msg, defs, nested=True, override_callee=callee
         )
@@ -1318,13 +1298,13 @@ async def _expand_one_subcall(
                 field_definition.label,
                 type(e).__name__,
             )
-        return raw_rows()
+        return await raw_rows()
 
     rows: list[RenderedField] = [
         (
             (
                 f"({subcall}) {TR.words__provider}",
-                inner_format.provider_name or callee_str(),
+                inner_format.provider_name or await callee_str(),
                 None,
             ),
             None,
@@ -1418,7 +1398,6 @@ async def _handle_approve(
     fee_items: Iterable[StrPropertyType],
 ) -> None:
     from .layout import require_confirm_approve
-    from .yielding_vaults import UNKNOWN_VAULT, lookup_vault
 
     # approve() is not payable; surface any native ETH sent along with it.
     native_value = int.from_bytes(msg.value, "big")
@@ -1448,18 +1427,10 @@ async def _handle_approve(
 
     assert isinstance(arg1_raw_value, int)
 
-    recipient_str = (
-        lookup_known_address(msg.chain_id, arg0_raw_value)
-        if display_format.provider_name is None
-        else display_format.provider_name
-    )
+    recipient_str = display_format.provider_name
 
-    # Ideally our vault name and definition should also be added in the ERC-7730 registry
-    # Until that is verified, we'll keep our vault information hardcoded.
     if recipient_str is None:
-        vault = lookup_vault(defs.network, arg0_raw_value)
-        if vault is not UNKNOWN_VAULT:
-            recipient_str = vault.name
+        recipient_str = await lookup_known_address(msg.chain_id, arg0_raw_value, msg)
 
     # In revocation, the approved amount is set to zero:
     is_revoke = arg1_raw_value == 0
@@ -1599,7 +1570,10 @@ async def _handle_generic_ui(
             properties_to_confirm.append(token_address_property)
 
     contract_name = (
-        (lookup_known_address(msg.chain_id, bytes_from_address(msg.to)) or msg.to)
+        (
+            await lookup_known_address(msg.chain_id, bytes_from_address(msg.to), msg)
+            or msg.to
+        )
         if display_format.provider_name is None
         else display_format.provider_name
     )
