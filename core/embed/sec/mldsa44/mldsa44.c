@@ -26,11 +26,10 @@
 #include <mldsa_native.h>
 
 _Static_assert(MLDSA44_PUBLICKEY_SIZE ==
-                   MLDSA_PUBLICKEYBYTES(MLD_CONFIG_API_PARAMETER_SET),
+                   MLDSA_PUBLICKEYBYTES(MLD_CONFIG_PARAMETER_SET),
                "MLDSA44_PUBLICKEY_SIZE mismatch");
 
-_Static_assert(MLDSA44_SIGNATURE_SIZE ==
-                   MLDSA_BYTES(MLD_CONFIG_API_PARAMETER_SET),
+_Static_assert(MLDSA44_SIGNATURE_SIZE == MLDSA_BYTES(MLD_CONFIG_PARAMETER_SET),
                "MLDSA44_SIGNATURE_SIZE mismatch");
 
 ts_t mldsa44_verify(const mldsa44_signature_t *sig, const void *m, size_t mlen,
@@ -44,8 +43,8 @@ ts_t mldsa44_verify(const mldsa44_signature_t *sig, const void *m, size_t mlen,
   TSH_CHECK_ARG(m != NULL);
   TSH_CHECK_ARG(pk != NULL);
 
-  if (mldsa_verify(sig->bytes, MLDSA44_SIGNATURE_SIZE, m, mlen,
-                   (const uint8_t *)"", 0, pk->bytes) == 0) {
+  if (mldsa_verify(sig->bytes, m, mlen, (const uint8_t *)"", 0, pk->bytes) ==
+      0) {
     *valid = sectrue;
   }
 
