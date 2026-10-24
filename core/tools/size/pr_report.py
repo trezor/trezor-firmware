@@ -884,6 +884,10 @@ class Report:
         columns = ([("Variant", False)] if several else []) + [
             (n, True) for n in wanted
         ]
+        if not wanted:
+            columns.append(
+                ("content", True)
+            )  # no regions: the content delta needs a column of its own
         columns += [("image", True), ("RAM", True), ("free", True)]
         rows: list[list[str]] = []
         for build, old, new in builds:
@@ -895,6 +899,8 @@ class Report:
                     if after
                     else NOT_BUILT
                 )
+            if not wanted:
+                cells.append(self.hover_cell(new.content, old.content if old else None))
             cells.append(self.hover_cell(new.flash, old.flash if old else None))
             cells.append(self.hover_cell(new.ram, old.ram if old else None))
             cells.append(
@@ -908,7 +914,7 @@ class Report:
                 rows.append(
                     ([build.variant] if several else [])
                     + ["gone"]
-                    + [""] * (len(wanted) + 2)
+                    + [""] * (len(columns) - 2 - (1 if several else 0))
                 )
         return md_table(columns, rows)
 
