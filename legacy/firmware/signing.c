@@ -792,7 +792,7 @@ void phase1_request_next_input(void) {
       if (!is_rbf_enabled(&info) && is_rbf_enabled(&orig_info)) {
         description = _("Finalize TXID:");
       } else {
-        description = _("Update TXID:");
+        description = _("Speed up TXID:");
       }
 
       // Confirm original TXID.
