@@ -611,18 +611,20 @@ def tail_slack(image: ImageSize) -> int:
 
 
 def firmware_view(images: dict[str, ImageSize]) -> View:
-    """The firmware image with the kernel and the secmon as rows of their own.
+    """The firmware with the kernel and the secmon as rows of their own.
 
-    Both ride inside the kernel blob of the firmware image. Measured from their
-    own ELFs their content is exact, while the blob only shows padded steps.
+    The kernel rides inside the kernel blob of the firmware image; the secmon
+    is flashed next to the firmware unless the blob is big enough to hold it.
+    Measured from their own ELFs their content is exact, while the blob only
+    shows padded steps.
     """
     firmware = images["firmware"]
     rows: list[Row] = []
     warnings = list(firmware.warnings)
+    flash = firmware.flash
     for name, region in firmware.regions.items():
         if name == "kernel blob" and "kernel" in images:
             kernel, secmon = images["kernel"], images.get("secmon")
-            # a development build may keep the secmon out of the blob; then the room is the kernel's alone
             inside = secmon is not None and region.size >= kernel.flash + secmon.flash
             room = (
                 region.size - kernel.flash - (secmon.flash if secmon and inside else 0)
@@ -634,6 +636,10 @@ def firmware_view(images: dict[str, ImageSize]) -> View:
                     Row("secmon", secmon.content, secmon.flash, tail_slack(secmon))
                 )
                 warnings += secmon.warnings
+                if not inside:
+                    flash += (
+                        secmon.flash
+                    )  # a separate image, counted with the firmware's
             continue
         rows.append(
             Row(
@@ -647,12 +653,7 @@ def firmware_view(images: dict[str, ImageSize]) -> View:
         key=lambda r: ROW_ORDER.index(r.name) if r.name in ROW_ORDER else len(ROW_ORDER)
     )
     return View(
-        sum(r.content for r in rows),
-        firmware.flash,
-        firmware.ram,
-        firmware.free,
-        rows,
-        warnings,
+        sum(r.content for r in rows), flash, firmware.ram, firmware.free, rows, warnings
     )
 
 
@@ -686,21 +687,14 @@ def changed(old: View | None, new: View | None) -> bool:
 Pair = tuple[Build, View | None, View | None]
 
 
-def html_table(columns: list[tuple[str, bool]], rows: list[list[str]]) -> str:
-    """A one-line HTML table, as a markdown table cell can hold; (title, right-aligned) per column."""
-    head = "".join(
-        f'<th align="right">{t}</th>' if r else f"<th>{t}</th>" for t, r in columns
-    )
-    body = "".join(
-        "<tr>"
-        + "".join(
-            f'<td align="right">{v}</td>' if r else f"<td>{v}</td>"
-            for v, (_t, r) in zip(row, columns)
-        )
-        + "</tr>"
-        for row in rows
-    )
-    return f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
+def md_table(columns: list[tuple[str, bool]], rows: list[list[str]]) -> list[str]:
+    """A markdown table; (title, right-aligned) per column."""
+    lines = [
+        "| " + " | ".join(t for t, _r in columns) + " |",
+        "|" + "|".join(" ---: " if r else " --- " for _t, r in columns) + "|",
+    ]
+    lines += ["| " + " | ".join(row) + " |" for row in rows]
+    return lines
 
 
 # ---------------------------------------------------------------------------
@@ -734,7 +728,10 @@ class Report:
             for tree in (self.base, self.new)
             for img in tree.get(b, {})
         }
-        return sorted(images - FOLDED_IMAGES)
+        images -= FOLDED_IMAGES
+        return [i for i in GRID_IMAGES if i in images] + sorted(
+            images - set(GRID_IMAGES)
+        )
 
     def pairs(self, model: str, image: str) -> list[Pair]:
         found = [
@@ -772,127 +769,55 @@ class Report:
             return ""
         return fmt_signed(value - before) if before is not None else "new"
 
-    # -- one grid cell ------------------------------------------------------
+    # -- the grid -----------------------------------------------------------
+
+    @staticmethod
+    def movers(old: View, new: View) -> list[int]:
+        """The deltas one build is judged by: every row's content and the whole image.
+
+        The image delta includes padding and alignment, so it is not the sum of
+        the rows: a small kernel change that crosses the coreapp boundary moves
+        the image by a whole alignment step, and that is the delta to headline.
+        """
+        before = {r.name: r for r in old.rows}
+        rows = [
+            r.content - before[r.name].content for r in new.rows if r.name in before
+        ]
+        return (rows or [new.content - old.content]) + [new.flash - old.flash]
 
     def summary(self, pairs: list[Pair]) -> str:
-        """Signal and content delta of one image across every build of the model."""
+        """Signal and the biggest delta across every build and row of one image."""
         near_limit = any(new.near_limit for _b, _o, new in pairs if new)
         warn = f" {SIGNAL_WARN}" if near_limit else ""
         if self.base_label is None:
-            return fmt(next(n for _b, _o, n in pairs if n is not None).content) + warn
+            release = next(
+                (n for b, _o, n in pairs if b.is_release and n),
+                next(n for _b, _o, n in pairs if n),
+            )
+            return fmt(release.content) + warn
         if all(old is None for _b, old, _n in pairs):
             return "new" + warn
         if all(new is None for _b, _o, new in pairs):
             return "gone"
-        complete = [
-            (b, old, new)
-            for b, old, new in pairs
-            if old is not None and new is not None
+        deltas = [
+            d for _b, old, new in pairs if old and new for d in self.movers(old, new)
         ]
-        if not complete:
+        if not deltas:
             return "n/a"
-        deltas = {b: new.content - old.content for b, old, new in complete}
-        sig = signal(deltas.values())
-        headline = next((b for b in deltas if b.is_release), next(iter(deltas)))
-        text = f"{sig} {fmt_delta(deltas[headline])}"
+        sig = signal(deltas)
+        headline = (
+            max(deltas) if max(deltas) > 0 else min(deltas)
+        )  # growth has priority
+        text = f"{sig} {fmt_delta(headline)}"
         if sig == SIGNAL_MIXED:
             text += " mixed"
-        crossed = any(boundary_crossed(old, new) for _b, old, new in complete)
+        crossed = any(
+            boundary_crossed(old, new) for _b, old, new in pairs if old and new
+        )
         # the limit warning is for changes this PR makes, not a permanent badge
         if crossed or (near_limit and sig != SIGNAL_SAME):
             text += f" {SIGNAL_WARN}"
         return text
-
-    def region_table(self, old: View | None, new: View) -> str:
-        columns = [
-            ("Region", False),
-            ("Content", True),
-            ("\u0394", True),
-            ("Image", True),
-            ("\u0394", True),
-            ("Slack", True),
-        ]
-        rows: list[list[str]] = []
-        for row in new.rows:
-            before = (
-                next((r for r in old.rows if r.name == row.name), None) if old else None
-            )
-            rows.append(
-                [
-                    row.name,
-                    fmt(row.content),
-                    self.delta(row.content, before.content if before else None),
-                    fmt(row.size),
-                    self.delta(row.size, before.size if before else None),
-                    fmt(row.slack),
-                ]
-            )
-        rows.append(
-            [
-                "<b>total</b>",
-                fmt(new.content),
-                self.delta(new.content, old.content if old else None),
-                fmt(new.flash),
-                self.delta(new.flash, old.flash if old else None),
-                "",
-            ]
-        )
-        return html_table(columns, rows)
-
-    def variant_table(self, pairs: list[Pair]) -> str:
-        several = len(pairs) > 1
-        columns = ([("Variant", False)] if several else []) + [
-            ("Content", True),
-            ("\u0394", True),
-            ("Image", True),
-            ("\u0394", True),
-            ("RAM", True),
-            ("\u0394", True),
-            ("Free", True),
-        ]
-        rows: list[list[str]] = []
-        for build, old, new in pairs:
-            label = [build.variant] if several else []
-            if new is None:
-                rows.append(label + ["gone", "", "", "", "", "", ""])
-                continue
-            free = (
-                ""
-                if new.free is None
-                else (f"{SIGNAL_WARN} " if new.near_limit else "") + fmt(new.free)
-            )
-            rows.append(
-                label
-                + [
-                    fmt(new.content),
-                    self.delta(new.content, old.content if old else None),
-                    fmt(new.flash),
-                    self.delta(new.flash, old.flash if old else None),
-                    fmt(new.ram),
-                    self.delta(new.ram, old.ram if old else None),
-                    free,
-                ]
-            )
-        return html_table(columns, rows)
-
-    def cell(self, model: str, image: str) -> str:
-        pairs = self.pairs(model, image)
-        if not pairs:
-            return NOT_BUILT
-        summary = self.summary(pairs)
-        if self.base_label is not None and not any(
-            changed(old, new) for _b, old, new in pairs
-        ):
-            return summary
-        _build, old, new = next((p for p in pairs if p[0].is_release), pairs[0])
-        if new is None:
-            return summary
-        parts = [self.region_table(old, new)] if new.rows else []
-        parts.append(self.variant_table(pairs))
-        parts += [f"<br>{SIGNAL_WARN} {w}" for w in new.warnings]
-        return f"<details><summary>{summary}</summary>{''.join(parts)}</details>"
-
-    # -- whole document -----------------------------------------------------
 
     def grid(self) -> list[str]:
         columns = self.columns()
@@ -901,12 +826,126 @@ class Report:
             "| --- |" + " ---: |" * len(columns),
         ]
         for model in self.models:
-            lines.append(
-                f"| {model} | "
-                + " | ".join(self.cell(model, image) for image in columns)
-                + " |"
-            )
+            cells = [
+                self.summary(self.pairs(model, image))
+                if self.pairs(model, image)
+                else NOT_BUILT
+                for image in columns
+            ]
+            lines.append(f"| {model} | " + " | ".join(cells) + " |")
         return lines
+
+    # -- the details --------------------------------------------------------
+
+    def hover_cell(self, value: int, before: int | None) -> str:
+        """The delta, with the absolute size as the tooltip."""
+        if self.base_label is None:
+            return fmt(value)
+        if before is None:
+            return "new"
+        return f'<span title="{fmt(value)} B">{fmt_signed(value - before)}</span>'
+
+    def image_table(self, pairs: list[Pair]) -> list[str]:
+        """Deltas of one image, a row per variant.
+
+        Columns are the firmware's regions (the blobs only when one changed),
+        the whole image, RAM and free space; the absolute sizes are the
+        tooltips of the cells.
+        """
+        builds = [(b, old, new) for b, old, new in pairs if new is not None]
+        several = len(pairs) > 1
+
+        def row_of(view: View | None, name: str) -> Row | None:
+            return (
+                next((r for r in view.rows if r.name == name), None) if view else None
+            )
+
+        names: list[str] = []
+        for _b, _o, new in builds:
+            names += [r.name for r in new.rows if r.name not in names]
+        names.sort(
+            key=lambda n: ROW_ORDER.index(n) if n in ROW_ORDER else len(ROW_ORDER)
+        )
+        wanted = []
+        for name in names:
+            moved = any(
+                (before := row_of(old, name)) is not None
+                and (after := row_of(new, name)) is not None
+                and (before.content != after.content or before.size != after.size)
+                for _b, old, new in builds
+            )
+            if (
+                name in ("coreapp", "kernel", "secmon")
+                or moved
+                or self.base_label is None
+            ):
+                wanted.append(name)
+
+        columns = ([("Variant", False)] if several else []) + [
+            (n, True) for n in wanted
+        ]
+        columns += [("image", True), ("RAM", True), ("free", True)]
+        rows: list[list[str]] = []
+        for build, old, new in builds:
+            cells = [build.variant] if several else []
+            for name in wanted:
+                after, before = row_of(new, name), row_of(old, name)
+                cells.append(
+                    self.hover_cell(after.content, before.content if before else None)
+                    if after
+                    else NOT_BUILT
+                )
+            cells.append(self.hover_cell(new.flash, old.flash if old else None))
+            cells.append(self.hover_cell(new.ram, old.ram if old else None))
+            cells.append(
+                ""
+                if new.free is None
+                else (f"{SIGNAL_WARN} " if new.near_limit else "") + fmt(new.free)
+            )
+            rows.append(cells)
+        for build, _old, new in pairs:
+            if new is None:
+                rows.append(
+                    ([build.variant] if several else [])
+                    + ["gone"]
+                    + [""] * (len(wanted) + 2)
+                )
+        return md_table(columns, rows)
+
+    def model_block(self, model: str) -> list[str]:
+        """A collapsed block with a table for every image of the model that changed."""
+        parts: list[str] = []
+        signals: list[str] = []
+        for image in self.images_of(model):
+            pairs = self.pairs(model, image)
+            if not pairs or (
+                self.base_label is not None
+                and not any(changed(old, new) for _b, old, new in pairs)
+            ):
+                continue
+            summary = self.summary(pairs)
+            signals.append(
+                f"{image} {summary}"
+                if summary.startswith(("new", "gone"))
+                else f"{summary.split()[0]} {image}"
+            )
+            parts += [f"**{image}**", ""]
+            if all(new is None for _b, _o, new in pairs):
+                parts += ["gone", ""]
+                continue
+            parts += self.image_table(pairs) + [""]
+            warnings = sorted({w for _b, _o, new in pairs if new for w in new.warnings})
+            parts += [f"{SIGNAL_WARN} {w}" for w in warnings] + (
+                [""] if warnings else []
+            )
+        if not parts:
+            return []
+        title = (
+            " \u00b7 ".join([model] + signals) if self.base_label is not None else model
+        )
+        return [f"<details><summary>{title}</summary>", ""] + parts + ["</details>", ""]
+
+    # -- whole document -----------------------------------------------------
 
     def markdown(self) -> str:
         out = [COMMENT_MARKER]
@@ -921,8 +960,11 @@ class Report:
         out += [title, ""]
         if self.base_label is not None and not self.anything_changed():
             out.append(f"{SIGNAL_SAME} No binary size changes.")
-        else:
-            out += self.grid()
+            return "\n".join(out) + "\n"
+        out += self.grid() + [""]
+        blocks = [line for model in self.models for line in self.model_block(model)]
+        if blocks:
+            out += ["<details><summary>Details</summary>", ""] + blocks + ["</details>"]
         return "\n".join(out) + "\n"
 
     def as_dict(self) -> dict:
