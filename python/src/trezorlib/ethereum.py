@@ -194,13 +194,15 @@ def _answer_definition_request(
         encoded_display_format = source.get_eth_display_format(
             req.chain_id, req.token_address, req.func_sig
         )
-        if encoded_display_format is None:
-            return messages.EthereumDefinitionAck(definitions=None)
-        return messages.EthereumDefinitionAck(
-            definitions=messages.EthereumDefinitions(
-                encoded_display_format=encoded_display_format,
+        if encoded_display_format is not None:
+            return messages.EthereumDefinitionAck(
+                definitions=messages.EthereumDefinitions(
+                    encoded_display_format=encoded_display_format,
+                )
             )
-        )
+        # null func_sig = address name request. Lookup tokens now.
+        if req.func_sig != b"\x00\x00\x00\x00\x00\x00\x00\x00":
+            return messages.EthereumDefinitionAck(definitions=None)
 
     encoded_network = source.get_eth_network(req.chain_id)
     encoded_token = (
