@@ -53,18 +53,8 @@ WETH_DEPLOYMENTS = [
 
 %>
 
-def lookup_known_address(chain_id: int, address: bytes) -> str | None:
-    """Return a human-readable name of a well-known smart contract,
-    or `None` if the address is not known.
-    """
-    for known_chain_id, known_address, name in _known_address_iterator():
-        if chain_id == known_chain_id and address == known_address:
-            return name
-    return None
-
-
-def _known_address_iterator() -> Iterator[tuple[int, bytes, str]]:
-    # NOTE: implementing the `_known_address_iterator` as a generator instead of an if-tree of `return` statements saves flash size (Same trick as in `apps.ethereum.tokens`.)
+def known_address_iterator() -> Iterator[tuple[int, bytes, str]]:
+    # NOTE: implementing the `known_address_iterator` as a generator instead of an if-tree of `return` statements saves flash size (Same trick as in `apps.ethereum.tokens`.)
 
     % for chain_id, addr, name in KNOWN_ADDRESSES:
     yield (${chain_id}, ${fmt_addr(addr)}, "${name}")
