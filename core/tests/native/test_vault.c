@@ -57,6 +57,53 @@ static bool is_zero(const void *p, size_t len) {
     if (((const uint8_t *)p)[i]) return false;
   return true;
 }
+static void locked_authorization(void) {
+  secret_revoke_all();
+  uint32_t session = owner_create(1, 0), request = owner_create(1, session);
+  vault_request_t r = {
+      .op = VAULT_IMPORT_BYTES, .owner = request, .length = 32};
+  memset(r.data, 1, 32);
+  vault_response_t out = {0};
+  assert(call(1, &r, &out));
+  vault_blob_t key = out.blob;
+  r = (vault_request_t){.abi = VAULT_ABI,
+                        .op = VAULT_SIGN,
+                        .owner = request,
+                        .blob = key,
+                        .length = 32,
+                        .arg = 1};
+  memset(r.data, 0x42, 32);
+  assert(vault_dispatch(1, &r, &out, true));
+  assert(!vault_dispatch(1, &r, &out, false));
+  vault_request_t grant = {.abi = VAULT_ABI,
+                           .op = VAULT_AUTHORIZE_LOCKED,
+                           .owner = request,
+                           .arg = 1};
+  assert(!vault_dispatch(1, &grant, &out, false));
+  assert(vault_dispatch(1, &grant, &out, true));
+  assert(
+      vault_dispatch(1, &grant, &out, false)); /* preserve an existing grant */
+  assert(!vault_dispatch(1, &r, &out, false));
+  grant.arg = 2;
+  assert(vault_dispatch(1, &grant, &out, false));
+  assert(vault_dispatch(1, &r, &out, false));
+  vault_request_t storage = {
+      .abi = VAULT_ABI, .op = VAULT_SEED_STORAGE, .owner = request};
+  assert(!vault_dispatch(1, &storage, &out, false));
+  grant.arg = 0;
+  assert(vault_dispatch(1, &grant, &out, false));
+  /* Consuming the last round must not invalidate its in-flight signature. */
+  assert(vault_dispatch(1, &r, &out, false));
+  secret_owner_destroy(request);
+  request = owner_create(1, session);
+  r.owner = request;
+  grant.owner = request;
+  grant.arg = 2;
+  assert(!vault_dispatch(1, &grant, &out, false));
+  assert(!vault_dispatch(1, &r, &out, false));
+  secret_owner_destroy(session);
+}
+
 static int test_ethereum_canonical(uint8_t v, uint8_t signature[64]) {
   (void)signature;
   return (v & 2) == 0;
@@ -147,7 +194,7 @@ static void fingerprint_vectors(void) {
     secret_owner_destroy(owner);
   }
   /* Unsupported hashing must fail explicitly when adding new curves. */
-  HDNode unsupported = {.curve = &secp256k1_decred_info};
+  HDNode unsupported = {0};
   uint32_t fingerprint = 0;
   assert(!vault_fingerprint(&unsupported, &fingerprint));
 }
@@ -519,6 +566,7 @@ int main(void) {
   fingerprint_vectors();
   node_import_vectors();
   assert(!zkp_context_is_initialized());
+  locked_authorization();
   puts("vault boundary tests passed");
   return 0;
 }

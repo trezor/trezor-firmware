@@ -32,6 +32,7 @@ typedef struct {
   uint32_t id;
   uint32_t parent;
   uintptr_t caller;
+  bool authorized_locked;
 } secret_owner_t;
 static secret_owner_t secret_owners[SECRET_OWNER_CAPACITY];
 static uint32_t secret_next_owner = 1;
@@ -129,26 +130,22 @@ static void secret_aad(const uint8_t header[SECRET_BLOB_HEADER],
 
 /* Stable wire IDs, never serialize native curve pointers. */
 static const char *secret_curve_name(uint8_t id) {
-  switch (id) {
-    case 0:
-      return SECP256K1_NAME;
-    case 1:
-      return NIST256P1_NAME;
-    case 2:
-      return ED25519_NAME;
-    default:
-      return NULL;
-  }
+  static const char *const curves[] = {
+      SECP256K1_NAME,         NIST256P1_NAME,         ED25519_NAME,
+      SECP256K1_DECRED_NAME,  SECP256K1_GROESTL_NAME, SECP256K1_SMART_NAME,
+      "ed25519 cardano seed", ED25519_SHA3_NAME,      ED25519_KECCAK_NAME,
+      CURVE25519_NAME};
+  return id < sizeof(curves) / sizeof(curves[0]) ? curves[id] : NULL;
 }
-/* Inverse of secret_curve_name() for the curves a node can carry. */
 static uint8_t secret_curve_id(const HDNode *n) {
-  return n->curve == get_curve_by_name(NIST256P1_NAME) ? 1
-         : n->curve == get_curve_by_name(ED25519_NAME) ? 2
-                                                       : 0;
+  for (uint8_t i = 0; secret_curve_name(i); ++i)
+    if (n->curve == get_curve_by_name(secret_curve_name(i))) return i;
+  return UINT8_MAX;
 }
 static bool secret_curve_allowed(const char *name) {
-  for (uint8_t i = 0; secret_curve_name(i); i++)
-    if (!strcmp(name, secret_curve_name(i))) return true;
+  for (uint8_t i = 0; secret_curve_name(i); ++i)
+    if (!strcmp(name, secret_curve_name(i)))
+      return get_curve_by_name(name) != NULL;
   return false;
 }
 /* Canonical node encoding: no struct padding, addresses or curve pointers. */
@@ -168,6 +165,7 @@ static void secret_encode(secret_kind_t kind, size_t length,
   memcpy(data + 72, n->public_key, 33);
   data[105] = n->is_public_key_set;
   data[106] = secret_curve_id(n);
+  memcpy(data + 107, n->private_key_extension, 32);
 }
 static bool secret_decode(secret_kind_t kind, size_t length,
                           const uint8_t data[VAULT_RECORD_SIZE],
@@ -186,6 +184,7 @@ static bool secret_decode(secret_kind_t kind, size_t length,
   memcpy(n->chain_code, data + 8, 32);
   memcpy(n->private_key, data + 40, 32);
   memcpy(n->public_key, data + 72, 33);
+  memcpy(n->private_key_extension, data + 107, 32);
   n->is_public_key_set = data[105];
   n->curve = get_curve_by_name(secret_curve_name(data[106]));
   return n->curve != NULL;
@@ -199,8 +198,9 @@ static bool secret_seal(uint32_t owner, secret_kind_t kind, size_t length,
       (kind != SECRET_BYTES && kind != SECRET_NODE) ||
       (kind == SECRET_BYTES && (!length || length > VAULT_SECRET_SIZE)) ||
       (kind == SECRET_NODE &&
-       (length != sizeof(HDNode) ||
-        memcmp(p->node.private_key_extension, (uint8_t[32]){0}, 32))))
+       (length != sizeof(HDNode) || secret_curve_id(&p->node) == UINT8_MAX ||
+        (memcmp(p->node.private_key_extension, (uint8_t[32]){0}, 32) &&
+         p->node.curve != get_curve_by_name("ed25519 cardano seed")))))
     return false;
   uint64_t nonce = 0;
 #if VAULT_SEAL_MODE == VAULT_SEAL_AES_GCM

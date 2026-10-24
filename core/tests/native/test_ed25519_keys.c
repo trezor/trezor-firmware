@@ -29,11 +29,22 @@ void __real_ed25519_sign(const unsigned char *, size_t,
                          const ed25519_secret_key, ed25519_signature);
 void __real_ed25519_sign_keccak(const unsigned char *, size_t,
                                 const ed25519_secret_key, ed25519_signature);
+static void check_nested_snapshot(const unsigned char *message, size_t length) {
+  if (length <= 256) return;
+  assert(vault_large_message_busy);
+  uint8_t first = message[0];
+  vault_message_request_t nested = *source_request;
+  vault_response_t response = {0};
+  assert(!vault_message_snapshot(1, &nested, source, length, &response, true));
+  assert(is_zero(&response, sizeof(response)));
+  assert(message[0] == first);
+}
 void __wrap_ed25519_sign(const unsigned char *message, size_t length,
                          const ed25519_secret_key key, ed25519_signature sig) {
   if (source) {
     observed_snapshot = message;
     assert(message != source);
+    check_nested_snapshot(message, length);
     source[0] ^=
         1; /* an adversarial caller cannot change the kernel snapshot */
     memset(source_request, 0xff, sizeof(*source_request));
@@ -47,6 +58,7 @@ void __wrap_ed25519_sign_keccak(const unsigned char *message, size_t length,
   if (source) {
     observed_snapshot = message;
     assert(message != source);
+    check_nested_snapshot(message, length);
     source[0] ^= 1;
     memset(source_request, 0xff, sizeof(*source_request));
     signs++;
@@ -133,6 +145,8 @@ int main(void) {
   }
   assert(signs == 14);
   assert(snapshot_erases == signs);
+  assert(!vault_large_message_busy);
+  assert(is_zero(vault_large_message, sizeof(vault_large_message)));
   assert(request_erases == signs);
   assert(!vault_message_snapshot(1, &mr, message, 0, &out, true));
   assert(!vault_message_snapshot(1, &mr, message, sizeof(message), &out, true));

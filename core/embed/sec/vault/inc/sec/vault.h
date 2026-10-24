@@ -7,16 +7,16 @@
 /* Versioned, bounded, pointer-free wire messages. Never return a private field.
  */
 #include <sec/vault_mode.h>
-#define VAULT_ABI (22 + VAULT_SEAL_MODE)
+#define VAULT_ABI (26 + VAULT_SEAL_MODE)
 #define VAULT_DATA_SIZE 256
 /* Covers FIDO self-attestation and Solana packets without enlarging normal
  * RPCs. */
-#define VAULT_ED25519_MAX_MESSAGE 2048
+#define VAULT_ED25519_MAX_MESSAGE 4096
 #define VAULT_SECRET_SIZE 160
-/* Supported SLIP-10 nodes need no private-key extension. Encode depth/child,
- * chain code, private seed/scalar, cached public key, cache flag and curve ID.
+/* Encode depth/child, chain code, private scalar, cached public key,
+ * cache flag, curve ID and the Cardano private-key extension.
  */
-#define VAULT_NODE_SIZE 107
+#define VAULT_NODE_SIZE 139
 #if VAULT_SEAL_MODE == VAULT_SEAL_AES_ECB
 #define VAULT_NODE_CIPHERTEXT_SIZE ((VAULT_NODE_SIZE + 15) & ~15)
 #else
@@ -66,7 +66,17 @@ typedef enum {
   VAULT_THP_DERIVE,
   VAULT_THP_PUBLIC,
   VAULT_THP_DH,
-  VAULT_THP_RESET
+  VAULT_THP_RESET,
+  VAULT_CARDANO,
+  VAULT_ED_SIGN_EXT,
+  VAULT_CHACHA_BLOCK,
+  VAULT_CHACHA_TAG,
+  VAULT_MNEMONIC,
+  VAULT_AUTHORIZE_LOCKED,
+  VAULT_MONERO_PUBLIC,
+  VAULT_ECDH,
+  VAULT_KEYVALUE_DERIVE,
+  VAULT_AES_CBC
 } vault_op_t;
 /* VAULT_SLIP21: derive from a seed (VAULT_SLIP21_ROOT) or a 64-byte node
  * along length-prefixed labels in data; the other arg bits select the output.
@@ -91,6 +101,7 @@ typedef struct {
 typedef struct {
   uint32_t abi, op, owner, arg, length;
   vault_blob_t blob;
+  vault_blob_t extension;
 } vault_message_request_t;
 typedef struct {
   union {
@@ -100,6 +111,7 @@ typedef struct {
       uint8_t chain_code[32], public_key[33];
     };
     uint8_t signature[65];
+    uint8_t data[VAULT_DATA_SIZE];
   };
 } vault_response_t;
 /* Client entrypoint: syscall on hardware, same dispatcher in emulator. */
