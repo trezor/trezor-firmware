@@ -144,7 +144,7 @@ async def lookup_known_address(
 
         # Host can send any displa formatter, we just care about the provider name.
         # TODO: definitions should have a simple 000.. display formatter for each contract we clear sign, potentially even unsupported providers.
-        # TODO: Host (Connect, trezolib, trezor-connect) should lookup ERC-20 tokens when contracts are not available.
+        # TODO: Host (Connect, trezor-connect) should lookup ERC-20 tokens when contracts are not available.
         definitions, display_format = await request_definitions(
             chain_id, address, b"\x00\x00\x00\x00"
         )
