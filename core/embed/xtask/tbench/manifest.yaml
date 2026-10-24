@@ -175,6 +175,20 @@ options:
     when: component(firmware)
     type: checkbox
 
+  - id: tropic-rev
+    name: TROPIC Silicon Revision
+    description: Selects the TROPIC silicon revision the build targets.
+    when: all(model(t3w1), any(component(firmware), component(prodtest)))
+    group: Features
+    type: multistate
+    states:
+      - value: acab
+        name: ACAB
+        description: Production silicon.
+      - value: abab
+        name: ABAB
+        description: Development silicon.
+
   - id: debug
     name: Debug Build
     description: Enables debug symbols and disables some optimizations.
