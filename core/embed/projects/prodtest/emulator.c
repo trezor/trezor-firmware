@@ -19,12 +19,10 @@ int prodtest_main(void);
 void usage(void) {
   printf("Usage: ./build/prodtest/prodtest_emu [options]\n");
   printf(
-      "To connect via terminal, install socat (i.e. 'sudo apt-get install "
-      "socat' in Ubuntu)\n");
-  printf(
-      "Bind the UDP with 'socat -d -d  "
-      "pty,link=/dev/ttyVCP0,mode=666,raw,echo=0   UDP:127.0.0.1:21327'\n");
-  printf("Then you can connect with you terminal to /dev/ttyVCP0\n");
+      "The CLI is on UDP port 21327 (TREZOR_UDP_PORT + 3). To talk to it:\n"
+      "  core/tools/console.py --udp 21327           terminal\n"
+      "  core/tools/console.py --udp 21327 --serve   tty at /tmp/ttyVCP0 "
+      "for any terminal or serial tool\n");
   printf("  -h  show this help\n");
 }
 
