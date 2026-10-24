@@ -3432,6 +3432,7 @@ if TYPE_CHECKING:
         callee_path: "EthereumERC7730Path | None"
         selector: "AnyBytes | None"
         enum_values: "list[EthereumERC7730EnumEntry]"
+        lookup_address: "bool"
 
         def __init__(
             self,
@@ -3450,6 +3451,7 @@ if TYPE_CHECKING:
             const_token_address: "AnyBytes | None" = None,
             callee_path: "EthereumERC7730Path | None" = None,
             selector: "AnyBytes | None" = None,
+            lookup_address: "bool | None" = None,
         ) -> None:
             pass
 

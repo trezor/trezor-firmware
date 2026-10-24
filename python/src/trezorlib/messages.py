@@ -4925,6 +4925,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         10: protobuf.Field("callee_path", "EthereumERC7730Path", repeated=False, required=False, default=None),
         11: protobuf.Field("selector", "bytes", repeated=False, required=False, default=None),
         12: protobuf.Field("enum_values", "EthereumERC7730EnumEntry", repeated=True, required=False, default=None),
+        15: protobuf.Field("lookup_address", "bool", repeated=False, required=False, default=False),
     }
 
     def __init__(
@@ -4944,6 +4945,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         const_token_address: Optional["bytes"] = None,
         callee_path: Optional["EthereumERC7730Path"] = None,
         selector: Optional["bytes"] = None,
+        lookup_address: Optional["bool"] = False,
     ) -> None:
         self.native_currency_address: Sequence["bytes"] = native_currency_address if native_currency_address is not None else []
         self.enum_values: Sequence["EthereumERC7730EnumEntry"] = enum_values if enum_values is not None else []
@@ -4959,6 +4961,7 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         self.const_token_address = const_token_address
         self.callee_path = callee_path
         self.selector = selector
+        self.lookup_address = lookup_address
 
 
 class EthereumERC7730EnumEntry(protobuf.MessageType):

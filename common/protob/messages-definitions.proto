@@ -204,6 +204,11 @@ message EthereumERC7730FieldInfo {
 
     // EnumFormatter params
     repeated EthereumERC7730EnumEntry enum_values = 12;
+
+    // AddressNameFormatter params
+    // https://eips.ethereum.org/EIPS/eip-7730#address-types-and-sources
+    // True when the addressName has `types` parameter in (contract, token)
+    optional bool lookup_address = 15 [default = false];  // whether to lookup the address in the token list
 }
 
 /**

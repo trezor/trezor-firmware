@@ -1677,6 +1677,8 @@ pub struct EthereumERC7730FieldInfo {
     pub selector: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumERC7730FieldInfo.enum_values)
     pub enum_values: ::std::vec::Vec<EthereumERC7730EnumEntry>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumERC7730FieldInfo.lookup_address)
+    pub lookup_address: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.definitions.EthereumERC7730FieldInfo.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1969,8 +1971,27 @@ impl EthereumERC7730FieldInfo {
         self.selector.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bool lookup_address = 15;
+
+    pub fn lookup_address(&self) -> bool {
+        self.lookup_address.unwrap_or(false)
+    }
+
+    pub fn clear_lookup_address(&mut self) {
+        self.lookup_address = ::std::option::Option::None;
+    }
+
+    pub fn has_lookup_address(&self) -> bool {
+        self.lookup_address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_lookup_address(&mut self, v: bool) {
+        self.lookup_address = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(14);
+        let mut fields = ::std::vec::Vec::with_capacity(15);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, EthereumERC7730Path>(
             "path",
@@ -2041,6 +2062,11 @@ impl EthereumERC7730FieldInfo {
             "enum_values",
             |m: &EthereumERC7730FieldInfo| { &m.enum_values },
             |m: &mut EthereumERC7730FieldInfo| { &mut m.enum_values },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "lookup_address",
+            |m: &EthereumERC7730FieldInfo| { &m.lookup_address },
+            |m: &mut EthereumERC7730FieldInfo| { &mut m.lookup_address },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumERC7730FieldInfo>(
             "EthereumERC7730FieldInfo",
@@ -2131,6 +2157,9 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
                 98 => {
                     self.enum_values.push(is.read_message()?);
                 },
+                120 => {
+                    self.lookup_address = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2189,6 +2218,9 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         };
+        if let Some(v) = self.lookup_address {
+            my_size += 1 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2237,6 +2269,9 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
         for v in &self.enum_values {
             ::protobuf::rt::write_message_field_with_cached_size(12, v, os)?;
         };
+        if let Some(v) = self.lookup_address {
+            os.write_bool(15, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2268,6 +2303,7 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
         self.callee_path.clear();
         self.selector = ::std::option::Option::None;
         self.enum_values.clear();
+        self.lookup_address = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2287,6 +2323,7 @@ impl ::protobuf::Message for EthereumERC7730FieldInfo {
             callee_path: ::protobuf::MessageField::none(),
             selector: ::std::option::Option::None,
             enum_values: ::std::vec::Vec::new(),
+            lookup_address: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3397,7 +3434,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     h\x18\x02\x20\x01(\x0e2<.hw.trezor.messages.definitions.EthereumERC7730C\
     ontainerPathR\rcontainerPath\x12\x1f\n\x0bconst_value\x18\x03\x20\x01(\t\
     R\nconstValue\x12\x1f\n\x0bslice_start\x18\x04\x20\x01(\x11R\nsliceStart\
-    \x12\x1b\n\tslice_end\x18\x05\x20\x01(\x11R\x08sliceEnd\"\xf6\x05\n\x18E\
+    \x12\x1b\n\tslice_end\x18\x05\x20\x01(\x11R\x08sliceEnd\"\xa4\x06\n\x18E\
     thereumERC7730FieldInfo\x12G\n\x04path\x18\x01\x20\x02(\x0b23.hw.trezor.\
     messages.definitions.EthereumERC7730PathR\x04path\x12\x14\n\x05label\x18\
     \x02\x20\x02(\tR\x05label\x12_\n\tformatter\x18\x03\x20\x02(\x0e2A.hw.tr\
@@ -3413,7 +3450,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     w.trezor.messages.definitions.EthereumERC7730PathR\ncalleePath\x12\x1a\n\
     \x08selector\x18\x0b\x20\x01(\x0cR\x08selector\x12Y\n\x0benum_values\x18\
     \x0c\x20\x03(\x0b28.hw.trezor.messages.definitions.EthereumERC7730EnumEn\
-    tryR\nenumValues\"B\n\x18EthereumERC7730EnumEntry\x12\x10\n\x03key\x18\
+    tryR\nenumValues\x12,\n\x0elookup_address\x18\x0f\x20\x01(\x08:\x05false\
+    R\rlookupAddress\"B\n\x18EthereumERC7730EnumEntry\x12\x10\n\x03key\x18\
     \x01\x20\x02(\rR\x03key\x12\x14\n\x05value\x18\x02\x20\x02(\tR\x05value\
     \"\xfa\x02\n\x19EthereumDisplayFormatInfo\x12\x19\n\x08chain_id\x18\x01\
     \x20\x02(\x04R\x07chainId\x12\x18\n\x07address\x18\x02\x20\x02(\x0cR\x07\

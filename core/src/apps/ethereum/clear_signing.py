@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from trezor import TR
 from trezor.wire import DataError
+from trezor.wire.context import UnexpectedMessageException
 
 from .definitions import Definitions
 from .helpers import (
@@ -299,10 +300,13 @@ class FieldFormatter:
 
 
 class AddressNameFormatter(FieldFormatter):
+    def __init__(self, lookup_address: bool = False) -> None:
+        self.lookup_address = lookup_address
+
     async def format(
         self,
         address: AnyValue,
-        _msg: MsgInSignTx,
+        msg: MsgInSignTx,
         defs: Definitions,
         _path_walker: PathWalker,
     ) -> FormattedValue:
@@ -313,6 +317,18 @@ class AddressNameFormatter(FieldFormatter):
         else:
             if not isinstance(address, bytes):
                 raise InvalidFormatDefinition
+            if self.lookup_address:
+                try:
+                    address_name = await lookup_known_address(
+                        msg.chain_id, address, msg
+                    )
+                except UnexpectedMessageException:
+                    # the host may abort the workflow by sending a new message
+                    raise
+                except Exception:
+                    address_name = None
+                if address_name is not None:
+                    return address_name, None, None
             return address_from_bytes(address, defs.network), None, None
 
 
@@ -868,7 +884,7 @@ class FieldDefinition:
 
         fmt_type = info.formatter
         if fmt_type == FT.FORMATTER_ADDRESS_NAME:
-            formatter = AddressNameFormatter
+            formatter = AddressNameFormatter(info.lookup_address)
         elif fmt_type == FT.FORMATTER_AMOUNT:
             formatter = AmountFormatter
         elif fmt_type == FT.FORMATTER_TOKEN_AMOUNT:
