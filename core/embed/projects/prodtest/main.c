@@ -32,13 +32,14 @@
 #include <sec/rsod_special.h>
 #include <sec/unit_properties.h>
 #include <sys/flash_otp.h>
+#include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 
 #include "commands.h"
+#include "console.h"
 #include "rust_types.h"
 #include "rust_ui_prodtest.h"
-#include "sys/sysevent.h"
 
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -129,20 +130,25 @@ struct {
   bool set;
 } g_layout __attribute__((aligned(4))) = {0};
 
-static ssize_t console_read(void *context, char *buf, size_t size) {
-  return syshandle_read(SYSHANDLE_USB_VCP, buf, size);
-}
+// Ctrl-C from the console host aborts the running command
+static void cli_abort_cb(void *context) { cli_abort((cli_t *)context); }
 
-static ssize_t console_write(void *context, const char *buf, size_t size) {
-  static uint32_t timeout = 2000;
-  ssize_t rc = syshandle_write_blocking(SYSHANDLE_USB_VCP, buf, size, timeout);
-  // Do not wait too long if the host is not connected.
-  // This is a workaround that needs to be fixed properly later.
-  timeout = (rc < 0) || ((size_t)rc < size) ? 100 : 2000;
-  return rc;
-}
+// Reads console input, runs a command if a full line arrived, flushes output
+static void prodtest_process_cli(void) {
+  do {
+    const cli_command_t *cmd = cli_process_io(&g_cli);
 
-static void usb_vcp_intr_callback(void) { cli_abort(&g_cli); }
+    if (cmd != NULL) {
+      screen_prodtest_bars("", 0);
+      memzero(&g_layout, sizeof(g_layout));
+      cli_process_command(&g_cli, cmd);
+    }
+    // Bytes the transport already took from the driver are not announced by
+    // another event; keep going until the console holds nothing unread.
+  } while (console_input_pending());
+
+  console_flush();
+}
 
 // Set if the RGB LED must not be controlled by the main loop
 static bool g_rgbled_control_disabled = false;
@@ -231,9 +237,11 @@ int prodtest_main(void) {
 
   drivers_init();
 
-  ensure(usb_configure(&usb_vcp_intr_callback), "usb_configure failed");
+  ensure(usb_configure(&console_usb_intr), "usb_configure failed");
 
   ensure(usb_start(NULL), "usb_start failed");
+
+  console_init(cli_abort_cb, &g_cli);
 
   // Initialize command line interface
   cli_init(&g_cli, console_read, console_write, NULL);
@@ -264,7 +272,7 @@ int prodtest_main(void) {
 
   while (true) {
     sysevents_t awaited = {0};
-    awaited.read_ready |= 1 << SYSHANDLE_USB_VCP;
+    awaited.read_ready |= console_poll_mask();
 #ifdef USE_BUTTON
     awaited.read_ready |= 1 << SYSHANDLE_BUTTON;
 #endif
@@ -277,15 +285,8 @@ int prodtest_main(void) {
     sysevents_t signalled = {0};
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
-    if (signalled.read_ready & (1 << SYSHANDLE_USB_VCP)) {
-      const cli_command_t *cmd = cli_process_io(&g_cli);
-
-      if (cmd != NULL) {
-        screen_prodtest_bars("", 0);
-        memzero(&g_layout, sizeof(g_layout));
-        cli_process_command(&g_cli, cmd);
-      }
-
+    if (signalled.read_ready & console_poll_mask()) {
+      prodtest_process_cli();
       continue;
     }
 
