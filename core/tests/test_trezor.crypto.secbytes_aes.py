@@ -31,7 +31,7 @@ class TestEncryptedBytes(unittest.TestCase):
             with self.assertRaises(TypeError):
                 convert(value)
         with self.assertRaises(TypeError):
-            value[0]
+            value[0]  # pylint: disable=pointless-statement
         with self.assertRaises(AttributeError):
             value.hex()
         self.assertEqual(repr(value), "<secbytes>")
