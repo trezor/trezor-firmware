@@ -31,7 +31,6 @@
 
 #include "stellar.h"
 #include <stdbool.h>
-#include <time.h>
 #include "base32.h"
 #include "bignum.h"
 #include "bip32.h"
@@ -1891,15 +1890,14 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
   memzero(str_lines, sizeof(str_lines));
 
   // Timebound: lower
-  time_t timebound;
+  uint32_t timebound;
   char str_timebound[32] = {0};
-  const struct tm *tm = NULL;
 
-  timebound = (time_t)msg->timebounds_start;
+  timebound = msg->timebounds_start;
   strlcpy(str_lines[0], _("Valid from:"), sizeof(str_lines[0]));
   if (timebound) {
-    tm = gmtime(&timebound);
-    strftime(str_timebound, sizeof(str_timebound), "%F %T (UTC)", tm);
+    layoutFormatTimestampUtc(timebound, str_timebound, sizeof(str_timebound));
+    strlcat(str_timebound, " (UTC)", sizeof(str_timebound));
     strlcpy(str_lines[1], str_timebound, sizeof(str_lines[1]));
   } else {
     strlcpy(str_lines[1], _("[no restriction]"), sizeof(str_lines[1]));
@@ -1908,11 +1906,11 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
   // Reset for timebound_max
   memzero(str_timebound, sizeof(str_timebound));
 
-  timebound = (time_t)msg->timebounds_end;
+  timebound = msg->timebounds_end;
   strlcpy(str_lines[2], _("Valid to:"), sizeof(str_lines[2]));
   if (timebound) {
-    tm = gmtime(&timebound);
-    strftime(str_timebound, sizeof(str_timebound), "%F %T (UTC)", tm);
+    layoutFormatTimestampUtc(timebound, str_timebound, sizeof(str_timebound));
+    strlcat(str_timebound, " (UTC)", sizeof(str_timebound));
     strlcpy(str_lines[3], str_timebound, sizeof(str_lines[3]));
   } else {
     strlcpy(str_lines[3], _("[no restriction]"), sizeof(str_lines[3]));
