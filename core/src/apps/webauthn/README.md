@@ -42,7 +42,9 @@ Credential selection is supported directly on the device. The `authenticatorGetN
 
 ## AAGUID
 
-The AAGUID is a 128-bit globally unique identifier indicating the type (e.g. make and model) of the authenticator. The AAGUID for Trezor T is d6d0bdc3-62ee-c4db-de8d-7a656e4a4487.
+The AAGUID is a 128-bit globally unique identifier indicating the type (e.g. make and model) of the authenticator.
+
+All Trezor models that support FIDO2 share the same AAGUID: d6d0bdc3-62ee-c4db-de8d-7a656e4a4487
 
 ## Certificates for basic attestation
 
