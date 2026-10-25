@@ -36,6 +36,22 @@ class TestCardanoBech32(unittest.TestCase):
 
             self.assertEqual(actual_bech, expected_bech)
 
+    def test_drep_id_cip129(self):
+        # https://cips.cardano.org/cip/CIP-0129#drep-credential
+        key_hash = bytes.fromhex(
+            "00000000000000000000000000000000000000000000000000000000"
+        )
+        expected_bech = "drep1ygqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq7vlc9n"
+
+        self.assertEqual(
+            bech32.encode(bech32.HRP_DREP, bech32.DREP_HEADER_KEY_HASH + key_hash),
+            expected_bech,
+        )
+        self.assertEqual(
+            bech32._decode(bech32.HRP_DREP, expected_bech),
+            bech32.DREP_HEADER_KEY_HASH + key_hash,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

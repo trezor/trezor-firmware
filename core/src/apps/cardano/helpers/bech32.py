@@ -20,8 +20,13 @@ HRP_STAKE_KEY_HASH = "stake_vkh"
 HRP_REQUIRED_SIGNER_KEY_HASH = "req_signer_vkh"
 HRP_OUTPUT_DATUM_HASH = "datum"
 HRP_SCRIPT_DATA_HASH = "script_data"
-HRP_DREP_KEY_HASH = "drep"
-HRP_DREP_SCRIPT_HASH = "drep_script"
+
+HRP_DREP = "drep"
+# https://cips.cardano.org/cip/CIP-0129#key-type
+# Higher bits => Key Type => 2 = b0010
+# Lower bits => Credential Type: 2 for Key, 3 for Script
+DREP_HEADER_KEY_HASH = b"\x22"
+DREP_HEADER_SCRIPT_HASH = b"\x23"
 
 
 def encode(hrp: str, data: AnyBytes) -> str:
