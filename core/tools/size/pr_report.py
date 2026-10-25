@@ -79,12 +79,12 @@ AREA_IMAGES = {"firmware", "bootloader", "bootloader_ci", "boardloader", "prodte
 
 COMMENT_MARKER = "<!-- size-comment-Core -->"
 
-# A coloured marker for the kind of change and an arrow for its direction;
-# a GitHub comment can carry nothing but native emoji and plain characters.
-SIGNAL_GREW = "\U0001f534 \u2191"  # red circle, up
-SIGNAL_SHRANK = "\U0001f7e2 \u2193"  # green circle, down
-SIGNAL_MIXED = "\U0001f7e1 \u2195"  # yellow circle, up-down
-SIGNAL_SAME = "\U0001f535 ="  # blue circle, equals
+# A coloured marker for the kind of change; a GitHub comment can carry
+# nothing but native emoji and plain characters.
+SIGNAL_GREW = "\U0001f534"  # red circle
+SIGNAL_SHRANK = "\U0001f7e2"  # green circle
+SIGNAL_MIXED = "\U0001f7e1"  # yellow circle
+SIGNAL_SAME = "\U0001f535"  # blue circle
 SIGNAL_WARN = "⚠"  # warning sign
 NOT_BUILT = "—"  # em dash
 
@@ -989,7 +989,7 @@ class Report:
             title += f" \u00b7 [re-run]({self.run_url})"
         out += [title, ""]
         if self.base_label is not None and not self.anything_changed():
-            out.append(f"{SIGNAL_SAME.split()[0]} No binary size changes.")
+            out.append(f"{SIGNAL_SAME} No binary size changes.")
             return "\n".join(out) + "\n"
         out += self.grid() + [""]
         blocks = [line for model in self.models for line in self.model_block(model)]
