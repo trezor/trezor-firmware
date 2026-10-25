@@ -920,9 +920,13 @@ class Report:
         return md_table(columns, rows)
 
     def model_block(self, model: str) -> list[str]:
-        """A collapsed block with a table for every image of the model that changed."""
+        """A collapsed block with a table for every image of the model that changed.
+
+        The block starts with its `<details>` line and ends with `</details>`,
+        no blank lines around, so that consecutive blocks share one HTML block
+        and nothing is rendered between the rows.
+        """
         parts: list[str] = []
-        signals: list[str] = []
         for image in self.images_of(model):
             pairs = self.pairs(model, image)
             if not pairs or (
@@ -930,13 +934,7 @@ class Report:
                 and not any(changed(old, new) for _b, old, new in pairs)
             ):
                 continue
-            summary = self.summary(pairs)
-            signals.append(
-                f"{image} {summary}"
-                if summary.startswith(("new", "gone"))
-                else f"{summary.split()[0]} {image}"
-            )
-            parts += [f"**{image}**", ""]
+            parts += [f"### {image}", ""]
             if all(new is None for _b, _o, new in pairs):
                 parts += ["gone", ""]
                 continue
@@ -947,10 +945,7 @@ class Report:
             )
         if not parts:
             return []
-        title = (
-            " \u00b7 ".join([model] + signals) if self.base_label is not None else model
-        )
-        return [f"<details><summary>{title}</summary>", ""] + parts + ["</details>", ""]
+        return [f"<details><summary>{model}</summary>", ""] + parts + ["</details>"]
 
     # -- whole document -----------------------------------------------------
 
@@ -971,7 +966,7 @@ class Report:
         out += self.grid() + [""]
         blocks = [line for model in self.models for line in self.model_block(model)]
         if blocks:
-            out += ["<details><summary>Details</summary>", ""] + blocks + ["</details>"]
+            out += ["<details><summary>Details</summary>"] + blocks + ["</details>"]
         return "\n".join(out) + "\n"
 
     def as_dict(self) -> dict:
