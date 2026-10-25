@@ -79,10 +79,12 @@ AREA_IMAGES = {"firmware", "bootloader", "bootloader_ci", "boardloader", "prodte
 
 COMMENT_MARKER = "<!-- size-comment-Core -->"
 
-SIGNAL_GREW = "\U0001f534"  # red circle
-SIGNAL_SHRANK = "\U0001f7e2"  # green circle
-SIGNAL_MIXED = "\U0001f7e1"  # yellow circle
-SIGNAL_SAME = "⚪"  # white circle
+# A coloured marker for the kind of change and an arrow for its direction;
+# a GitHub comment can carry nothing but native emoji and plain characters.
+SIGNAL_GREW = "\U0001f534 \u2191"  # red circle, up
+SIGNAL_SHRANK = "\U0001f7e2 \u2193"  # green circle, down
+SIGNAL_MIXED = "\U0001f7e1 \u2195"  # yellow circle, up-down
+SIGNAL_SAME = "\U0001f535 ="  # blue circle, equals
 SIGNAL_WARN = "⚠"  # warning sign
 NOT_BUILT = "—"  # em dash
 
@@ -710,6 +712,14 @@ class Report:
     )  # e.g. "main@1a2b3c4"; None when no reference build was found
     base_note: str | None  # e.g. "2 commits behind the base of this PR"
     run_url: str | None
+    incomplete: bool = (
+        False  # the reference build did not succeed, some of its images may be missing
+    )
+
+    @property
+    def missing(self) -> str:
+        """What a build without a counterpart on the reference side is called."""
+        return "no reference" if self.incomplete else "new"
 
     @property
     def models(self) -> list[str]:
@@ -796,28 +806,37 @@ class Report:
             )
             return fmt(release.content) + warn
         if all(old is None for _b, old, _n in pairs):
-            return "new" + warn
+            return self.missing + warn
         if all(new is None for _b, _o, new in pairs):
             return "gone"
+        added = sum(old is None for _b, old, _n in pairs)
+        removed = sum(new is None for _b, _o, new in pairs)
+        changes = ""
+        if added:
+            changes += (
+                f" +{added} variant{'s' if added > 1 else ''}"
+                if not self.incomplete
+                else f" ({added} without reference)"
+            )
+        if removed:
+            changes += f" -{removed} variant{'s' if removed > 1 else ''}"
         deltas = [
             d for _b, old, new in pairs if old and new for d in self.movers(old, new)
         ]
         if not deltas:
-            return "n/a"
+            return "n/a" + changes
         sig = signal(deltas)
         headline = (
             max(deltas) if max(deltas) > 0 else min(deltas)
         )  # growth has priority
         text = f"{sig} {fmt_delta(headline)}"
-        if sig == SIGNAL_MIXED:
-            text += " mixed"
         crossed = any(
             boundary_crossed(old, new) for _b, old, new in pairs if old and new
         )
         # the limit warning is for changes this PR makes, not a permanent badge
         if crossed or (near_limit and sig != SIGNAL_SAME):
             text += f" {SIGNAL_WARN}"
-        return text
+        return text + changes
 
     def grid(self) -> list[str]:
         columns = self.columns()
@@ -842,7 +861,7 @@ class Report:
         if self.base_label is None:
             return fmt(value)
         if before is None:
-            return "new"
+            return fmt(value)  # nothing to compare with: the size itself
         return f'<span title="{fmt(value)} B">{fmt_signed(value - before)}</span>'
 
     def image_table(self, pairs: list[Pair]) -> list[str]:
@@ -892,7 +911,8 @@ class Report:
         columns += [("image", True), ("RAM", True), ("free", True)]
         rows: list[list[str]] = []
         for build, old, new in builds:
-            cells = [build.variant] if several else []
+            label = build.variant + (f" ({self.missing})" if old is None else "")
+            cells = [label] if several else []
             for name in wanted:
                 after, before = row_of(new, name), row_of(old, name)
                 cells.append(
@@ -955,13 +975,21 @@ class Report:
             title = "**Binary sizes** \u00b7 no reference build found, sizes of this build only"
         else:
             title = f"**Binary sizes** vs {self.base_label}"
-            if self.base_note:
-                title += f" ({self.base_note})"
+            notes = [
+                n
+                for n in (
+                    self.base_note,
+                    "reference build incomplete" if self.incomplete else "",
+                )
+                if n
+            ]
+            if notes:
+                title += f" ({', '.join(notes)})"
         if self.run_url:
             title += f" \u00b7 [re-run]({self.run_url})"
         out += [title, ""]
         if self.base_label is not None and not self.anything_changed():
-            out.append(f"{SIGNAL_SAME} No binary size changes.")
+            out.append(f"{SIGNAL_SAME.split()[0]} No binary size changes.")
             return "\n".join(out) + "\n"
         out += self.grid() + [""]
         blocks = [line for model in self.models for line in self.model_block(model)]
@@ -1008,6 +1036,11 @@ def main() -> int:
         "--run-url", help="link to the workflow run, for re-running the comparison"
     )
     parser.add_argument(
+        "--reference-incomplete",
+        action="store_true",
+        help="the reference build did not succeed: builds it lacks are not new",
+    )
+    parser.add_argument(
         "--projects",
         type=Path,
         default=PROJECTS_DIR,
@@ -1025,7 +1058,12 @@ def main() -> int:
         return 1
     base = measure_tree(args.base, args.projects)
     report = Report(
-        base, new, args.base_label if base else None, args.base_note, args.run_url
+        base,
+        new,
+        args.base_label if base else None,
+        args.base_note,
+        args.run_url,
+        args.reference_incomplete,
     )
 
     text = report.markdown()

@@ -9,8 +9,10 @@ progress it is awaited. If it does not exist or did not succeed, the nearest
 ancestor commit with a successful run is used instead and the distance is
 reported, so the comment can say that the reference is a few commits behind.
 
-Writes `run_id`, `sha`, `short_sha`, `behind` and `note` to $GITHUB_OUTPUT.
-`run_id` is empty when no reference build could be found; that is not an error.
+Writes `run_id`, `sha`, `short_sha`, `behind`, `note` and `incomplete` (the run
+did not succeed, so some artifacts may be missing) to $GITHUB_OUTPUT. `run_id`
+is empty when no reference build could be found or the API failed; neither is
+an error of the pull request.
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Any
@@ -67,33 +70,8 @@ def write_outputs(**values: str) -> None:
     print("\n".join(lines))
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument("--repo", required=True, help="owner/name")
-    parser.add_argument("--sha", required=True, help="base commit of the pull request")
-    parser.add_argument("--workflow", default="core.yml", help="workflow file name")
-    parser.add_argument(
-        "--branch", default="main", help="branch the reference builds run on"
-    )
-    parser.add_argument(
-        "--max-behind", type=int, default=20, help="how many ancestors to try"
-    )
-    parser.add_argument(
-        "--wait-minutes",
-        type=int,
-        default=20,
-        help="how long to wait for an unfinished build",
-    )
-    parser.add_argument("--poll-seconds", type=int, default=30)
-    args = parser.parse_args()
-
-    token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        print("GITHUB_TOKEN is not set", file=sys.stderr)
-        return 1
-
+def find(args: argparse.Namespace, token: str) -> dict[str, str]:
+    """The outputs for the best reference build, or empty ones when there is none."""
     # ancestors of the base commit, the base itself first
     commits = api(
         f"/repos/{args.repo}/commits", token, sha=args.sha, per_page=args.max_behind
@@ -117,9 +95,10 @@ def main() -> int:
         if not completed:
             continue
         run = completed[0]
-        if behind > 0 and run["conclusion"] != "success":
+        incomplete = run["conclusion"] != "success"
+        if behind > 0 and incomplete:
             continue
-        if run["conclusion"] != "success":
+        if incomplete:
             # the exact base is worth more than a clean ancestor: whatever it built is usable
             print(
                 f"build of {sha[:10]} concluded with {run['conclusion']}, using what it produced"
@@ -132,17 +111,63 @@ def main() -> int:
         print(
             f"reference build: run {run['id']} of {sha[:10]} ({note or 'the base commit'})"
         )
-        write_outputs(
-            run_id=str(run["id"]),
-            sha=sha,
-            short_sha=sha[:7],
-            behind=str(behind),
-            note=note,
-        )
-        return 0
+        return {
+            "run_id": str(run["id"]),
+            "sha": sha,
+            "short_sha": sha[:7],
+            "behind": str(behind),
+            "note": note,
+            "incomplete": "true" if incomplete else "false",
+        }
 
     print(f"no reference build found within {len(commits)} commits of {args.sha[:10]}")
-    write_outputs(run_id="", sha="", short_sha="", behind="", note="")
+    return {}
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--repo", required=True, help="owner/name")
+    parser.add_argument("--sha", required=True, help="base commit of the pull request")
+    parser.add_argument("--workflow", default="core.yml", help="workflow file name")
+    parser.add_argument(
+        "--branch",
+        default="main",
+        help="branch the reference builds run on, the PR's base branch",
+    )
+    parser.add_argument(
+        "--max-behind", type=int, default=20, help="how many ancestors to try"
+    )
+    parser.add_argument(
+        "--wait-minutes",
+        type=int,
+        default=20,
+        help="how long to wait for an unfinished build",
+    )
+    parser.add_argument("--poll-seconds", type=int, default=30)
+    args = parser.parse_args()
+
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        print("GITHUB_TOKEN is not set", file=sys.stderr)
+        return 1
+
+    empty = {
+        "run_id": "",
+        "sha": "",
+        "short_sha": "",
+        "behind": "",
+        "note": "",
+        "incomplete": "",
+    }
+    try:
+        found = find(args, token)
+    except (urllib.error.URLError, OSError, KeyError, ValueError) as e:
+        # a GitHub API hiccup is not a size problem: report without a reference
+        print(f"could not look up the reference build: {e}", file=sys.stderr)
+        found = {}
+    write_outputs(**(found or empty))
     return 0
 
 
