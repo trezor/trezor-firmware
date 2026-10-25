@@ -297,11 +297,14 @@ impl FirmwareUI for UICaesar {
         description: TString<'static>,
         _fingerprint: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        // The fingerprint is shown in the context menu.
+        // The fingerprint is shown in the context menu. Installing is confirmed
+        // by holding (pressing both buttons would clash with "Shift").
         let paragraphs = Paragraph::new(&theme::TEXT_NORMAL, description).into_paragraphs();
         let content = ButtonPage::new(paragraphs, theme::BG)
             .with_menu_nav(MenuNav::Menu)
-            .with_confirm_btn(Some(ButtonDetails::text(TR::buttons__install.into())));
+            .with_confirm_btn(Some(
+                ButtonDetails::text(TR::buttons__hold_to_confirm.into()).with_default_duration(),
+            ));
         let frame = ScrollableFrame::new(content).with_title(TR::firmware_update__title.into());
         Ok(RootComponent::new(frame))
     }
