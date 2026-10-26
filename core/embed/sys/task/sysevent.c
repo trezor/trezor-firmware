@@ -176,9 +176,11 @@ void syshandle_signal_write_ready(syshandle_t handle, void *param) {
 
 static inline void remove_poller(sysevent_dispatcher_t *dispatcher,
                                  size_t idx) {
-  for (size_t j = idx; j < dispatcher->pollers_count - 1; j++) {
-    dispatcher->pollers[j] = dispatcher->pollers[j + 1];
+  for (size_t j = idx + 1;
+       j < dispatcher->pollers_count && j < SYSTASK_MAX_TASKS; j++) {
+    dispatcher->pollers[j - 1] = dispatcher->pollers[j];
   }
+
   --dispatcher->pollers_count;
 }
 
@@ -205,6 +207,7 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
 
   memset(signalled, 0, sizeof(*signalled));
 
+#ifdef USE_APPLETS
   systask_t *kernel_task = systask_kernel();
   systask_t *active_task = systask_active();
 
@@ -212,6 +215,9 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
   // - Kernel task has the highest priority so it is always first in the list
   // - Unprivileged task use round-robin scheduling
   uint32_t prio = (active_task == kernel_task) ? 0 : dispatcher->pollers_count;
+#else
+  uint32_t prio = 0;
+#endif
 
   insert_poller(dispatcher, prio);
 
@@ -223,10 +229,12 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
   dispatcher->pollers[prio].signalled_arg = signalled;
   dispatcher->pollers[prio].deadline = deadline;
 
+#ifdef USE_APPLETS
   if (active_task != kernel_task) {
     systask_yield_to(kernel_task);
     return;
   }
+#endif
 
   for (;;) {
 #ifdef TREZOR_EMULATOR
@@ -268,20 +276,21 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
                    (poller->signalled.write_ready != 0);
       if (ready || timed_out) {
         events_processed = true;
-        systask_t *task = poller->task;
 #ifdef USE_APPLETS
+        systask_t *task = poller->task;
         systask_set_mpu(task);
 #endif
         if (poller->signalled_arg != NULL) {
           *poller->signalled_arg = poller->signalled;
         }
         remove_poller(dispatcher, prio);
-        if (task == kernel_task) {
-          return;
-        } else {
+#ifdef USE_APPLETS
+        if (task != kernel_task) {
           systask_yield_to(task);
           break;
         }
+#endif
+        return;
       }
     }
 
@@ -331,6 +340,7 @@ void sysevents_notify_task_killed(systask_t *task) {
   }
 }
 
+#ifdef USE_APPLETS
 // Yields the active task and schedules it to be resumed
 //
 // Adds the current active taqsk to the polling list without waiting for any
@@ -357,6 +367,7 @@ void sysevents_yield_and_reschedule(systask_t *task) {
 
   systask_yield_to(task);
 }
+#endif  // USE_APPLETS
 
 #endif  // KERNEL_MODE
 

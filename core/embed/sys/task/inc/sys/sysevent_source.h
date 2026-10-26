@@ -118,6 +118,7 @@ void sysevents_notify_task_created(systask_t *task);
 // event source.
 void sysevents_notify_task_killed(systask_t *task);
 
+#ifdef USE_APPLETS
 // Yields the CPU from the active task and schedules it to be resumed as
 // soon as possible.
 //
@@ -126,5 +127,6 @@ void sysevents_notify_task_killed(systask_t *task);
 // schedules the task to resume as soon as possible when another task
 // gives up the CPU.
 void sysevents_yield_and_reschedule(systask_t *task);
+#endif  //  USE_APPLETS
 
 #endif  // KERNEL_MODE
