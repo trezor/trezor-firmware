@@ -4,6 +4,29 @@ from typing import TYPE_CHECKING
 HARDENED = const(0x8000_0000)
 SLIP25_PURPOSE = const(10025 | HARDENED)
 
+# Exported xpubs may be broken by a quantum computer, revealing the private key
+# of the node and of its whole subtree. Never export xpubs from subtrees which
+# derive secrets from private keys. Purposes are matched regardless of
+# hardening.
+_XPUB_EXPORT_DENIED_PURPOSES = (
+    10015,  # SLIP-15: labeling encryption key
+    10016,  # SLIP-16: password manager encryption key
+    83696968,  # BIP-85: derived seeds, keys and passwords
+)
+# Purposes whose depth-1 nodes are exported by third parties despite being
+# shallower than _XPUB_EXPORT_MIN_DEPTH.
+_XPUB_EXPORT_ALLOWED_PURPOSES = (
+    0,  # trezorlib, HWI, Electrum: root fingerprint
+    1,  # Blockstream Green: main multisig account
+    44,  # BTCPay Server vault: fingerprint, passphrase prompt
+    45,  # Casa, Caravan, Nunchuk: BIP-45 multisig
+    48,  # Nunchuk desktop: fingerprint fallback
+    18241,  # Blockstream Green: multisig registration
+    1195487518,  # Blockstream Green: login
+    1885434739,  # Blockstream Green: client secret
+)
+_XPUB_EXPORT_MIN_DEPTH = const(2)
+
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Callable, Collection, Container, Iterable, Sequence
@@ -346,6 +369,35 @@ async def show_path_warning(path: Bip32Path) -> None:
     from trezor.ui.layouts import confirm_path_warning
 
     await confirm_path_warning(address_n_to_str(path))
+
+
+def is_xpub_export_restricted(path: Bip32Path) -> bool:
+    if path:
+        purpose = unharden(path[0])
+        if purpose in _XPUB_EXPORT_DENIED_PURPOSES:
+            return True
+        if purpose in _XPUB_EXPORT_ALLOWED_PURPOSES:
+            return False
+    return len(path) < _XPUB_EXPORT_MIN_DEPTH
+
+
+async def validate_xpub_export(path: Bip32Path) -> None:
+    """Forbid exporting a restricted xpub, unless the user confirms it with
+    safety checks disabled."""
+    from trezor import TR
+    from trezor.ui.layouts import confirm_path_warning
+
+    from apps.common import safety_checks
+    from apps.common.keychain import ForbiddenKeyPath
+
+    if not is_xpub_export_restricted(path):
+        return
+    if safety_checks.is_strict():
+        raise ForbiddenKeyPath()
+
+    await confirm_path_warning(
+        address_n_to_str(path), description=TR.address__xpub_export_warning
+    )
 
 
 def is_hardened(i: int) -> bool:

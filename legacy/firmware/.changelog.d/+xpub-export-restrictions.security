@@ -1,0 +1,1 @@
+Restrict xpub export for paths shorter than 2 levels and for SLIP-15, SLIP-16 and BIP-85 paths.

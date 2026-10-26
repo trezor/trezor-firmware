@@ -157,8 +157,12 @@ async def prompt_backup() -> bool:
     return result is CONFIRMED
 
 
-async def confirm_path_warning(path: str, path_type: str | None = None) -> None:
-    title = (
+async def confirm_path_warning(
+    path: str,
+    path_type: str | None = None,
+    description: str | None = None,
+) -> None:
+    title = description or (
         TR.addr_mismatch__wrong_derivation_path
         if not path_type
         else f"{TR.words__unknown} {path_type.lower()}."

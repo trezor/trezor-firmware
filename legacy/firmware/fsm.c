@@ -501,6 +501,28 @@ bool fsm_layoutPathWarning(void) {
   return true;
 }
 
+bool fsm_checkXpubExport(uint32_t address_n_count, const uint32_t *address_n) {
+  if (!xpub_export_restricted(address_n_count, address_n)) {
+    return true;
+  }
+
+  if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+    return false;
+  }
+
+  layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
+                    _("A quantum computer"), _("could use this key to"),
+                    _("reveal all keys"), _("derived from it."),
+                    _("Continue at own risk!"), NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_UnknownDerivationPath,
+                     false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    return false;
+  }
+  return true;
+}
+
 bool fsm_layoutDifferentPathsWarning(void) {
   layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
                     _("Using different paths"), _("for different XPUBs."), NULL,

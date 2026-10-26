@@ -32,6 +32,77 @@ class TestPaths(unittest.TestCase):
         self.assertFalse(path_is_hardened([0]))
         self.assertFalse(path_is_hardened([H_(44), H_(1), H_(0), H_(0), 0]))
 
+    def test_is_xpub_export_restricted(self):
+        restricted = [
+            [],
+            [2],
+            [H_(3)],
+            [H_(84)],
+            [H_(60)],
+            [1195487519],
+            [H_(4541509)],
+            [H_(10015), H_(0)],
+            [H_(10015), H_(0), 1, 2],
+            [H_(10016), 0],
+            [H_(10016), 0, 0, 0, 0],
+            [10015, 0],
+            [10016, H_(0), 1],
+            [83696968, 2, 0],
+            [H_(83696968)],
+            [H_(83696968), H_(2), H_(0)],
+            [H_(83696968), H_(39), H_(0), H_(12), H_(0)],
+        ]
+        allowed = [
+            [0],
+            [H_(0)],
+            [H_(0), 1],
+            [45],
+            [H_(45)],
+            [1],
+            [H_(1)],
+            [44],
+            [H_(44)],
+            [H_(48)],
+            [H_(18241)],
+            [1195487518],
+            [H_(1885434739)],
+            [H_(45), 0],
+            [H_(45), H_(5)],
+            [1, H_(1)],
+            [H_(84), H_(0)],
+            [H_(44), H_(60)],
+            [H_(3), H_(1)],
+            [4, 255],
+            [1195487518, 6],
+            [H_(4541509), H_(0)],
+            [H_(4541509), H_(1112098098)],
+            [H_(84), H_(0), H_(0)],
+            [H_(44), H_(60), H_(0), 0],
+            [H_(1852), H_(1815), H_(0)],
+            [H_(10025), H_(0), H_(0), H_(1)],
+        ]
+        for path in restricted:
+            self.assertTrue(
+                is_xpub_export_restricted(path),
+                f"Expected {address_n_to_str(path)} to be restricted",
+            )
+        for path in allowed:
+            self.assertFalse(
+                is_xpub_export_restricted(path),
+                f"Expected {address_n_to_str(path)} to be allowed",
+            )
+
+    def test_xpub_export_rule_invariants(self):
+        from apps.common.paths import (
+            _XPUB_EXPORT_ALLOWED_PURPOSES,
+            _XPUB_EXPORT_DENIED_PURPOSES,
+        )
+
+        for purpose in _XPUB_EXPORT_ALLOWED_PURPOSES:
+            # Denied purposes are checked first, so an allowed purpose which is
+            # also denied would be dead code.
+            self.assertFalse(purpose in _XPUB_EXPORT_DENIED_PURPOSES)
+
 
 class TestPathSchemas(unittest.TestCase):
     def assertMatch(self, schema, path):

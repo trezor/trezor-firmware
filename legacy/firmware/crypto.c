@@ -1090,3 +1090,46 @@ bool descriptor_format(InputScriptType script_type, uint32_t root_fingerprint,
   memzero(dest, dest_size);
   return false;
 }
+
+// Exported xpubs may be broken by a quantum computer, revealing the private
+// key of the node and of its whole subtree.
+bool xpub_export_restricted(uint32_t address_n_count,
+                            const uint32_t *address_n) {
+  // Never export xpubs from subtrees which derive secrets from private keys.
+  // Purposes are matched regardless of hardening.
+  static const uint32_t denied_purposes[] = {
+      10015,     // SLIP-15: labeling encryption key
+      10016,     // SLIP-16: password manager encryption key
+      83696968,  // BIP-85: derived seeds, keys and passwords
+  };
+  if (address_n_count > 0) {
+    uint32_t purpose = address_n[0] & ~PATH_HARDENED;
+    for (size_t i = 0; i < sizeof(denied_purposes) / sizeof(*denied_purposes);
+         i++) {
+      if (purpose == denied_purposes[i]) {
+        return true;
+      }
+    }
+
+    // Purposes whose depth-1 nodes are exported by third parties despite
+    // being shallower than XPUB_EXPORT_MIN_DEPTH.
+    static const uint32_t allowed_purposes[] = {
+        0,           // trezorlib, HWI, Electrum: root fingerprint
+        1,           // Blockstream Green: main multisig account
+        44,          // BTCPay Server vault: fingerprint, passphrase prompt
+        45,          // Casa, Caravan, Nunchuk: BIP-45 multisig
+        48,          // Nunchuk desktop: fingerprint fallback
+        18241,       // Blockstream Green: multisig registration
+        1195487518,  // Blockstream Green: login
+        1885434739,  // Blockstream Green: client secret
+    };
+    for (size_t i = 0; i < sizeof(allowed_purposes) / sizeof(*allowed_purposes);
+         i++) {
+      if (purpose == allowed_purposes[i]) {
+        return false;
+      }
+    }
+  }
+
+  return address_n_count < XPUB_EXPORT_MIN_DEPTH;
+}

@@ -25,6 +25,7 @@ async def get_public_key(
 
     address_n = msg.address_n  # local_cache_attribute
 
+    await paths.validate_xpub_export(address_n)
     await paths.validate_path(
         keychain,
         address_n,

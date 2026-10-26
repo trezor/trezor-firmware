@@ -16,8 +16,9 @@
 
 import pytest
 
-from trezorlib import btc, messages
+from trezorlib import btc, device, messages
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...common import is_core
@@ -108,13 +109,47 @@ VECTORS_MULTISIG = (  # paths, address_index
 )
 
 
+def _is_xpub_export_restricted(path: str) -> bool:
+    # None of the vectors lie in a denied subtree and m/1 and m/1195487518 are
+    # the only allowed depth-1 nodes, see test_getpublickey_restricted.py.
+    return len(parse_path(path)) < 2 and path not in ("m/1", "m/1195487518")
+
+
+def _get_public_nodes(session: Session, paths: list[str]) -> list[messages.HDNodeType]:
+    if any(_is_xpub_export_restricted(path) for path in paths):
+        device.apply_settings(
+            session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+        )
+    nodes = []
+    for path in paths:
+        with session.test_ctx as client:
+            if is_core(session):
+                IF = InputFlowConfirmAllWarnings(session)
+                client.set_input_flow(IF.get())
+            nodes.append(
+                btc.get_public_node(session, parse_path(path), coin_name="Bitcoin").node
+            )
+    return nodes
+
+
 # Has AlwaysMatchingSchema but let's make sure the nonstandard paths are
-# accepted in case we make this more restrictive in the future.
+# accepted in case we make this more restrictive in the future. Paths shorter
+# than 2 levels are restricted.
 @pytest.mark.parametrize("path, script_types", VECTORS)
 def test_getpublicnode(
     session: Session, path: str, script_types: list[messages.InputScriptType]
 ):
     for script_type in script_types:
+        if _is_xpub_export_restricted(path):
+            with pytest.raises(TrezorFailure, match="Forbidden key path"):
+                btc.get_public_node(
+                    session,
+                    parse_path(path),
+                    coin_name="Bitcoin",
+                    script_type=script_type,
+                )
+            continue
+
         res = btc.get_public_node(
             session, parse_path(path), coin_name="Bitcoin", script_type=script_type
         )
@@ -210,13 +245,8 @@ def test_getaddress_multisig(
     session: Session, paths: list[str], address_index: list[int]
 ):
     pubs = [
-        messages.HDNodePathType(
-            node=btc.get_public_node(
-                session, parse_path(path), coin_name="Bitcoin"
-            ).node,
-            address_n=address_index,
-        )
-        for path in paths
+        messages.HDNodePathType(node=node, address_n=address_index)
+        for node in _get_public_nodes(session, paths)
     ]
     multisig = messages.MultisigRedeemScriptType(pubkeys=pubs, m=2)
 
@@ -240,13 +270,8 @@ def test_getaddress_multisig(
 @pytest.mark.parametrize("paths, address_index", VECTORS_MULTISIG)
 def test_signtx_multisig(session: Session, paths: list[str], address_index: list[int]):
     pubs = [
-        messages.HDNodePathType(
-            node=btc.get_public_node(
-                session, parse_path(path), coin_name="Bitcoin"
-            ).node,
-            address_n=address_index,
-        )
-        for path in paths
+        messages.HDNodePathType(node=node, address_n=address_index)
+        for node in _get_public_nodes(session, paths)
     ]
     signatures = [b""] * 3
     multisig = messages.MultisigRedeemScriptType(
