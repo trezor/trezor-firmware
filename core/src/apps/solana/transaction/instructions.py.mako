@@ -69,6 +69,29 @@ if TYPE_CHECKING:
 ${getProgramId(program)} = "${program["id"]}"
 % endfor
 
+<%
+    from trezorlib.tools import b58decode
+
+    # Make sure that every `*_sysvar` reference has a known account to check against.
+    sysvars = programs["sysvars"]
+    for name, sysvar in sysvars.items():
+        if not name.endswith("_sysvar"):
+            raise Exception(f"Sysvar \"{name}\" must be named \"*_sysvar\".")
+        if len(b58decode(sysvar)) != 32:
+            raise Exception(f"Sysvar \"{name}\" has an invalid account \"{sysvar}\".")
+    for program in programs["programs"]:
+        for instruction in program["instructions"]:
+            for reference in instruction["references"]:
+                if reference.endswith("_sysvar") and reference not in sysvars:
+                    raise Exception(f"Instruction \"{instruction['name']}\" references an unknown sysvar \"{reference}\".")
+%>
+# Accounts that the `*_sysvar` references must hold.
+SYSVAR_ACCOUNTS: dict[str, bytes] = {
+% for name, sysvar in sysvars.items():
+    "${name}": ${repr(b58decode(sysvar))},
+% endfor
+}
+
 % for program in programs["programs"]:
     % for instruction in program["instructions"]:
       % if isinstance(instruction["id"], int):

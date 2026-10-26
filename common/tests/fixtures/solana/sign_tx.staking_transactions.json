@@ -383,14 +383,15 @@
           "header": {
             "signers": 1,
             "readonly_signers": 0,
-            "readonly_non_signers": 3
+            "readonly_non_signers": 4
           },
           "accounts": [
             "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
             "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
             "Stake11111111111111111111111111111111111111",
             "SysvarC1ock11111111111111111111111111111111",
-            "ComputeBudget111111111111111111111111111111"
+            "ComputeBudget111111111111111111111111111111",
+            "SysvarStakeHistory1111111111111111111111111"
           ],
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
@@ -408,7 +409,7 @@
                 "stake_account": 1,
                 "recipient_account": 0,
                 "clock_sysvar": 3,
-                "stake_history_sysvar": 4,
+                "stake_history_sysvar": 5,
                 "withdrawal_authority": 0,
                 "lockup_authority": 0
               },
@@ -422,7 +423,7 @@
         }
       },
       "result": {
-        "expected_signature": "4edf71d1b4d075c6717617ef43cd896a80153f418dbe4cca5e66ee9f27bd5652bec67d30ee9a14e3bd7062dd72ed619cf238e6f5538b150dae34d24bee650303"
+        "expected_signature": "31f428aa2e363b07bdb920438502a723ccfebfcc252b60022cf9f41c661d5b1f107380f6c151a851383d2347698ff51d0cff06aba78872480be7c1273b022c05"
       }
     },
     {
@@ -434,7 +435,7 @@
           "header": {
             "signers": 1,
             "readonly_signers": 0,
-            "readonly_non_signers": 3
+            "readonly_non_signers": 4
           },
           "accounts": [
             "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
@@ -442,7 +443,8 @@
             "Stake11111111111111111111111111111111111111",
             "SysvarC1ock11111111111111111111111111111111",
             "ComputeBudget111111111111111111111111111111",
-            "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq"
+            "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq",
+            "SysvarStakeHistory1111111111111111111111111"
           ],
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
@@ -460,7 +462,7 @@
                 "stake_account": 1,
                 "recipient_account": 0,
                 "clock_sysvar": 3,
-                "stake_history_sysvar": 4,
+                "stake_history_sysvar": 6,
                 "withdrawal_authority": 0,
                 "lockup_authority": 0
               },
@@ -475,7 +477,7 @@
                 "stake_account": 5,
                 "recipient_account": 0,
                 "clock_sysvar": 3,
-                "stake_history_sysvar": 4,
+                "stake_history_sysvar": 6,
                 "withdrawal_authority": 0,
                 "lockup_authority": 0
               },
@@ -489,7 +491,7 @@
         }
       },
       "result": {
-        "expected_signature": "87a376794de2e69b6bd46b2f48081aa915d97139706a1fa9aef9d5efd95615bb1f71c8bc64155b2d602cb259a2ac5d3a91a0cc6d95afc0d573bcf17f2bbc2e09"
+        "expected_signature": "8e9cfeea62b1cb7b17a5bfbc0630a9cc16f3f31d6387ee1383cc1801431c3cd681ea262266ce57653e8de94cc7935f80698fd9826696ede02040b06088b52b08"
       }
     },
     {
@@ -501,7 +503,7 @@
           "header": {
             "signers": 1,
             "readonly_signers": 0,
-            "readonly_non_signers": 3
+            "readonly_non_signers": 4
           },
           "accounts": [
             "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
@@ -509,7 +511,8 @@
             "Stake11111111111111111111111111111111111111",
             "SysvarC1ock11111111111111111111111111111111",
             "ComputeBudget111111111111111111111111111111",
-            "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq"
+            "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq",
+            "SysvarStakeHistory1111111111111111111111111"
           ],
           "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
           "instructions": [
@@ -527,7 +530,7 @@
                 "stake_account": 1,
                 "recipient_account": 5,
                 "clock_sysvar": 3,
-                "stake_history_sysvar": 4,
+                "stake_history_sysvar": 6,
                 "withdrawal_authority": 0,
                 "lockup_authority": 0
               },
@@ -541,7 +544,7 @@
         }
       },
       "result": {
-        "expected_signature": "53e953033988f8ce3cca4f7d1f94da41d8f3d1467724785f5cd9c4d16250198429a5d27bc474a66d4c1bf4a936c680f51973d54a3b16a2b73e62ecbb1f062104"
+        "expected_signature": "9964ba4386e8245a34c3e808344958b96560c8628eb4145e2e9bcd4c7765cdad35b2c5febaf423b491d2ee3178e91e9cd3ebb80ee33754ed72306d6151bb1f0b"
       }
     }
   ]
