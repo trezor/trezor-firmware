@@ -186,6 +186,13 @@ static void process_command(uint8_t *data, uint16_t len) {
         pairing_num_comp_reply(false, NULL);
       }
 
+      // Auxiliary services follow the STM32 build: registered while asked
+      // for, gone otherwise. Before advertising_start() so the console flag
+      // in the advertising data matches.
+#if IS_ENABLED(CONFIG_TRZ_CONSOLE)
+      console_set_enabled(cmd->flags.console != 0);
+#endif
+
       advertising_start(cmd->flags.whitelist != 0, cmd->flags.user_disconnect,
                         cmd->color, cmd->device_code, cmd->static_addr,
                         (char *)cmd->name, name_len);

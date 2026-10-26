@@ -28,5 +28,19 @@ config DEFAULT_THREAD_STACK_SIZE
 config MODEL_IDENTIFIER
     int "Model identifier"
 
+config TRZ_CONSOLE
+	bool "BLE console service"
+	depends on BT_PERIPHERAL
+	select BT_GATT_DYNAMIC_DB
+	help
+	  Expose a second GATT service that carries an opaque byte console
+	  between the STM32 and a bonded host: the prodtest CLI on
+	  production-test firmware, debug logs on debug firmware. The bytes are
+	  forwarded on their own inter-MCU service id (NRF_SERVICE_CONSOLE) and
+	  are not interpreted by the nRF. The service is registered only while
+	  the STM32 asks for it (the console flag of the advertising-on command,
+	  set by prodtest and debug builds), so production STM32 firmware never
+	  exposes it even from an image that carries this option. Leave it off
+	  for models whose console stays on USB.
 
 endmenu

@@ -186,6 +186,24 @@ manifest first (see [Selecting the nRF Connect SDK version](#selecting-the-nrf-c
 west build ./trezor-ble -b t3t2_dk/nrf54ls05b/cpuapp --sysbuild -- -DOVERLAY_CONFIG=debug.conf
 ```
 
+#### BLE console service
+
+`CONFIG_TRZ_CONSOLE` adds a second GATT service (`8c000010-…`, RX `8c000011`,
+TX `8c000012`) that carries an opaque byte console between the STM32 and a
+bonded host: the prodtest CLI on production-test firmware, debug logs on debug
+firmware. It has its own inter-MCU service id (`NRF_SERVICE_CONSOLE`) and
+exists only while the STM32 asks for it: the advertising-on command carries a
+`console` flag that prodtest and debug STM32 builds set and production firmware
+leaves clear, and the service is registered or unregistered at runtime to
+match, so a production nRF image that carries the code exposes nothing. While
+registered, its presence is announced by bit `0x10` of the flags byte in the
+advertising manufacturer data, since the 128-bit UUID does not fit into the
+scan response, so a host can pick a device by service before connecting.
+
+It is selected per board in `boards/<board>.conf`: on for `t3t2_dk` (no USB on
+that model) and, temporarily while the console is brought up on T3W1
+development units, also for `t3w1_revA_nrf52832`.
+
 
 ### Build Radio test application
 ```sh
