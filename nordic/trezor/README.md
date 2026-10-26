@@ -215,9 +215,8 @@ only while the `debuglink` flag of the advertising-on command is set, which
 `--debug-link` STM32 builds do, so a shipping image can carry it; the firmware
 that turns it on is the debug one, which answers debuglink requests from any
 bonded host. While registered it is announced by bit `0x20` of the advertising
-flags byte, next to the console's `0x10`. It is on in the `t3t2_dk` and, for
-bring-up, the `t3w1_revA_nrf52832` board configs; on the nRF52832 (T3W1) it
-fits next to the RTT logging of `debug.conf` with about 1 KB of RAM to spare.
+flags byte, next to the console's `0x10`. It is on in the `t3t2_dk` board
+config only.
 
 
 ### Build Radio test application
