@@ -20,7 +20,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 from . import testapp_ext
-from .testapp_ext import DEFAULT_BIP32_PATH, UNEXPECTED_RESPONSE, SdkError, raises
+from .testapp_ext import DEFAULT_BIP32_PATH, OPERATION_FAILED, SdkError, raises
 
 ADDRESS_N = parse_path(DEFAULT_BIP32_PATH)
 ADDRESS = "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
@@ -68,7 +68,8 @@ def test_address_mac_binds_inputs(session: Session, instance_id: int, change: di
     other = get_mac(session, instance_id, **change)
     assert other != mac
     assert check_mac(session, instance_id, other, **change) is True
-    assert check_mac(session, instance_id, mac, **change) is False
+    with raises(SdkError.DataError, OPERATION_FAILED):
+        check_mac(session, instance_id, mac, **change)
 
 
 def test_check_address_mac_wrong_mac(session: Session, instance_id: int):
@@ -76,8 +77,10 @@ def test_check_address_mac_wrong_mac(session: Session, instance_id: int):
     for i in (0, 31):
         corrupted = bytearray(mac)
         corrupted[i] ^= 0x01
-        assert check_mac(session, instance_id, bytes(corrupted)) is False
-    assert check_mac(session, instance_id, b"\x00" * 32) is False
+        with raises(SdkError.DataError, OPERATION_FAILED):
+            check_mac(session, instance_id, bytes(corrupted))
+    with raises(SdkError.DataError, OPERATION_FAILED):
+        check_mac(session, instance_id, b"\x00" * 32)
 
 
 @pytest.mark.parametrize("length", [0, 31, 33])
@@ -102,14 +105,12 @@ def test_address_mac_long_address(session: Session, instance_id: int):
     ],
 )
 def test_get_address_mac_forbidden_path(session: Session, instance_id: int, path: str):
-    with raises(SdkError.DataError, UNEXPECTED_RESPONSE):
+    with raises(SdkError.DataError, OPERATION_FAILED):
         get_mac(session, instance_id, address_n=parse_path(path))
 
 
 def test_check_address_mac_forbidden_path(session: Session, instance_id: int):
-    """A path the app may not use never checks, even with its own valid MAC."""
+    """A path the app may not use fails, even with its own valid MAC."""
     mac = get_mac(session, instance_id)
-    assert (
+    with raises(SdkError.DataError, OPERATION_FAILED):
         check_mac(session, instance_id, mac, address_n=parse_path("m/44h/0h/0h/0/0"))
-        is False
-    )

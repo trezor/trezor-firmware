@@ -35,13 +35,12 @@ class SdkError(IntEnum):
     ValueError = 8
 
 
-# `DataError` messages: a `CryptoError` the SDK function returned, or a reply
-# from Core that isn't the expected result (Core reports a failed operation to
-# the app as `False`).
+# `DataError` messages: a `CryptoError` the SDK function returned, or an
+# operation Core reported as failed.
 INVALID_PUBLIC_KEY = "invalid public key"
 INVALID_SIGNATURE = "invalid signature"
 INVALID_ENCODING = "invalid encoding"
-UNEXPECTED_RESPONSE = "received unexpected response message"
+OPERATION_FAILED = "operation failed in Core"
 
 
 @contextmanager
