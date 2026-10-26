@@ -8,9 +8,7 @@ def send_crypto_result(
     result: str | bytes | bool,
     ipc_cb: Callable[[bytes], None],
 ) -> None:
-    """Serialize a crypto result into bytes and send it back via the ipc_cb callback.
-    A failed operation is sent as `False`.
-    """
+    """Serialize a crypto result into bytes and send it back via the ipc_cb callback."""
 
 
 # rust/src/crypto_api.rs
