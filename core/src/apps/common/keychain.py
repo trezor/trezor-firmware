@@ -9,10 +9,9 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Iterable
     from typing import Any, TypeVar
 
+    from trezor.crypto.slip21 import Slip21Node
     from trezor.protobuf import MessageType
     from typing_extensions import Protocol
-
-    from .seed import Slip21Node
 
     T = TypeVar("T")
 
@@ -157,7 +156,7 @@ class Keychain:
         )
 
     def derive_slip21(self, path: paths.Slip21Path) -> Slip21Node:
-        from .seed import Slip21Node
+        from trezor.crypto.slip21 import Slip21Node
 
         self.verify_slip21_path(path)
 

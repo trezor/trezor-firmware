@@ -9,10 +9,10 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Collection, Container, Iterable, Sequence
     from typing import Any, TypeVar
 
+    from trezor.crypto.slip21 import Slip21Path
     from typing_extensions import Protocol
 
     Bip32Path = list[int]
-    Slip21Path = Sequence[AnyBytes]
     PathType = TypeVar("PathType", Bip32Path, Slip21Path, contravariant=True)
 
     class PathSchemaType(Protocol):

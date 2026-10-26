@@ -483,11 +483,12 @@ async def handle_DoPreauthorized(msg: DoPreauthorized) -> protobuf.MessageType:
 
 async def handle_UnlockPath(msg: UnlockPath) -> protobuf.MessageType:
     from trezor.crypto import hmac
+    from trezor.crypto.slip21 import Slip21Node
     from trezor.messages import UnlockedPathRequest
     from trezor.wire.context import call_any
 
     from apps.common.paths import SLIP25_PURPOSE
-    from apps.common.seed import Slip21Node, get_seed
+    from apps.common.seed import get_seed
     from apps.common.writers import write_uint32_le
 
     _KEYCHAIN_MAC_KEY_PATH = [b"TREZOR", b"Keychain MAC key"]
