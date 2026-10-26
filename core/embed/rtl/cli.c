@@ -45,6 +45,26 @@ void cli_set_commands(cli_t* cli, const cli_command_t* cmd_array,
   cli->cmd_count = cmd_count;
 }
 
+const cli_command_t* cli_next_command(cli_t* cli, const char* prefix,
+                                      const cli_command_t* prev) {
+  // The command array is const, so instead of sorting it, select the
+  // smallest name greater than the previous one.
+  const cli_command_t* next = NULL;
+  for (size_t i = 0; i < cli->cmd_count; i++) {
+    const cli_command_t* cmd = &cli->cmd_array[i];
+    if (cmd->name[0] == '$' || !cstr_starts_with(cmd->name, prefix)) {
+      continue;
+    }
+    if (prev != NULL && strcmp(cmd->name, prev->name) <= 0) {
+      continue;
+    }
+    if (next == NULL || strcmp(cmd->name, next->name) < 0) {
+      next = cmd;
+    }
+  }
+  return next;
+}
+
 static void cli_vprintf(cli_t* cli, const char* format, va_list args) {
   char buffer[CLI_LINE_BUFFER_SIZE];
   int len = vsnprintf_(buffer, sizeof(buffer), format, args);
