@@ -200,9 +200,8 @@ registered, its presence is announced by bit `0x10` of the flags byte in the
 advertising manufacturer data, since the 128-bit UUID does not fit into the
 scan response, so a host can pick a device by service before connecting.
 
-It is selected per board in `boards/<board>.conf`: on for `t3t2_dk` (no USB on
-that model) and, temporarily while the console is brought up on T3W1
-development units, also for `t3w1_revA_nrf52832`.
+It is selected per board in `boards/<board>.conf`: on for `t3t2_dk` only, the
+model without USB.
 
 #### BLE debuglink service
 
