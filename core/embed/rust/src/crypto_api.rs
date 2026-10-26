@@ -173,10 +173,7 @@ pub static mp_module_trezorcrypto_api: Module = obj_module! {
     ///     result: str | bytes | bool,
     ///     ipc_cb: Callable[[bytes], None],
     /// ) -> None:
-    ///     """Serialize a crypto result into bytes and send it back via the ipc_cb callback.
-    ///
-    ///     A failed operation is sent as `False`.
-    ///     """
+    ///     """Serialize a crypto result into bytes and send it back via the ipc_cb callback."""
     Qstr::MP_QSTR_send_crypto_result => obj_fn_kw!(0, new_send_crypto_result).as_obj(),
 
 
