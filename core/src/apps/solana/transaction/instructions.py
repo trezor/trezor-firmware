@@ -40,6 +40,15 @@ _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA
 _MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
 _MEMO_LEGACY_PROGRAM_ID = "Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo"
 
+
+# Accounts that the `*_sysvar` references must hold.
+SYSVAR_ACCOUNTS: dict[str, bytes] = {
+    "clock_sysvar": b"\x06\xa7\xd5\x17\x18\xc7t\xc9(Vc\x98i\x1d^\xb6\x8b^\xb8\xa3\x9bKm\\sU[!\x00\x00\x00\x00",
+    "rent_sysvar": b"\x06\xa7\xd5\x17\x19,\\Q!\x8c\xc9L=J\xf1\x7fX\xda\xee\x08\x9b\xa1\xfdD\xe3\xdb\xd9\x8a\x00\x00\x00\x00",
+    "stake_history_sysvar": b"\x06\xa7\xd5\x17\x195\x84\xd0\xfe\xed\x9b\xb3C\x1d\x13 k\xe5D(\x1bW\xb8Vl\xc57_\xf4\x00\x00\x00",
+    "recent_blockhashes_sysvar": b"\x06\xa7\xd5\x17\x19,V\x8e\xe0\x8a\x84_s\xd2\x97\x88\xcf\x03\\1E\xb2\x1a\xb3D\xd8\x06.\xa9@\x00\x00",
+}
+
 _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT = const(0)
 _SYSTEM_PROGRAM_ID_INS_ASSIGN = const(1)
 _SYSTEM_PROGRAM_ID_INS_TRANSFER = const(2)

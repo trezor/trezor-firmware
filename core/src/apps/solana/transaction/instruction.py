@@ -65,6 +65,9 @@ class Instruction:
         accounts_required: int,
         account_templates: tuple[str, ...],
     ) -> dict[str, Account]:
+        from ..types import is_address_reference
+        from .instructions import SYSVAR_ACCOUNTS
+
         parsed_accounts = {}
         if len(accounts) < accounts_required:
             raise ValueError  # "Account is missing
@@ -72,7 +75,13 @@ class Instruction:
         for i, account_name in enumerate(account_templates):
             if i >= len(accounts):
                 break
-            parsed_accounts[account_name] = accounts[i]
+            account = accounts[i]
+            sysvar = SYSVAR_ACCOUNTS.get(account_name)
+            if sysvar is not None and (
+                is_address_reference(account) or account[0] != sysvar
+            ):
+                raise ValueError  # Sysvar slot does not hold the expected sysvar
+            parsed_accounts[account_name] = account
         return parsed_accounts
 
     def __init__(

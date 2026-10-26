@@ -2586,6 +2586,12 @@
       ]
     }
   ],
+  "sysvars": {
+    "clock_sysvar": "SysvarC1ock11111111111111111111111111111111",
+    "rent_sysvar": "SysvarRent111111111111111111111111111111111",
+    "stake_history_sysvar": "SysvarStakeHistory1111111111111111111111111",
+    "recent_blockhashes_sysvar": "SysvarRecentB1ockHashes11111111111111111111"
+  },
   "types": {
     "u8": {
       "parse": "parse_byte",
