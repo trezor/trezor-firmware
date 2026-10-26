@@ -22,7 +22,7 @@ from trezorlib.tools import parse_path
 
 from . import testapp_ext
 from .common import parametrize_using_common_fixtures
-from .testapp_ext import TPUB_MAGIC, UNEXPECTED_RESPONSE, XPUB_MAGIC, SdkError, raises
+from .testapp_ext import OPERATION_FAILED, TPUB_MAGIC, XPUB_MAGIC, SdkError, raises
 
 # SLIP-25 paths need an UnlockPath first, which an app can't do.
 SLIP25_PATH = parse_path("m/10025h/1h/0h/1h")
@@ -73,7 +73,7 @@ def test_get_xpub_any_path(session: Session, instance_id: int):
 
 
 def test_get_xpub_slip25_forbidden(session: Session, instance_id: int):
-    with raises(SdkError.DataError, UNEXPECTED_RESPONSE):
+    with raises(SdkError.DataError, OPERATION_FAILED):
         testapp_ext.get_xpub(session, instance_id, SLIP25_PATH, TPUB_MAGIC)
 
 
@@ -81,13 +81,13 @@ def test_get_xpub_slip25_forbidden(session: Session, instance_id: int):
 def test_get_public_key_slip25_forbidden(
     session: Session, instance_id: int, compressed: bool
 ):
-    with raises(SdkError.DataError, UNEXPECTED_RESPONSE):
+    with raises(SdkError.DataError, OPERATION_FAILED):
         testapp_ext.get_public_key(session, instance_id, SLIP25_PATH, compressed)
 
 
 def test_app_still_works_after_failure(session: Session, instance_id: int):
     """A failed operation doesn't stop the app."""
-    with raises(SdkError.DataError, UNEXPECTED_RESPONSE):
+    with raises(SdkError.DataError, OPERATION_FAILED):
         testapp_ext.get_xpub(session, instance_id, SLIP25_PATH, TPUB_MAGIC)
     address_n = parse_path("m/44h/1h/0h")
     assert testapp_ext.get_xpub(session, instance_id, address_n, TPUB_MAGIC).startswith(
