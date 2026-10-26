@@ -108,14 +108,14 @@ pub trait CryptoV1: Send + Sync {
     ) -> FastResult<[u8; 65], WireError>;
     /// Verifies a MAC previously produced by [`Self::get_address_mac`] for
     /// `address_n`, `address` and the coin type `slip44`, confirming the
-    /// pairing hasn't been tampered with.
+    /// pairing hasn't been tampered with. Fails on a wrong MAC.
     extern "C" fn check_address_mac<'a>(
         &self,
         address_n: Slice<'a, u32>,
         mac: &'a [u8; 32],
         address: Str<'a>,
         slip44: u32,
-    ) -> FastResult<bool, WireError>;
+    ) -> FastResult<(), WireError>;
     /// Computes a MAC binding `address_n` to `address` of the coin type
     /// `slip44`, so a cached `address` can later be re-authenticated via
     /// [`Self::check_address_mac`] without a full re-derivation.

@@ -165,7 +165,7 @@ impl CryptoV1 for DummyCrypto {
         _mac: &'a [u8; 32],
         _address: Str<'a>,
         _slip44: u32,
-    ) -> FastResult<bool, WireError> {
+    ) -> FastResult<(), WireError> {
         unimplemented!("not exercised by the current test suite")
     }
 
