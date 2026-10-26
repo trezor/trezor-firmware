@@ -52,10 +52,9 @@ pub extern "C" fn coreapp_app_entry(args: &io::AppArgs) -> core::ffi::c_int {
     // (checked non-null), which has exactly this signature.
     let applet_main: extern "C" fn(ApiGetter) -> core::ffi::c_int =
         unsafe { core::mem::transmute(args.applet_main) };
-    let heap = core::ptr::slice_from_raw_parts_mut(args.heap_ptr.cast::<u8>(), args.heap_size);
     // SAFETY: the loader hands this app a heap of its own, which lives as
     // long as the app's task; the state created here is its only owner.
-    let state = unsafe { app_state::AppState::new(heap.cast(), heap.len()) };
+    let state = unsafe { app_state::AppState::new(args.heap_ptr.cast(), args.heap_size) };
     app_state::with_app_state(&state, || {
         // The inbox is allocated out of the app's heap, so it needs the state.
         wire::register_inbox(args.ipc_buffer_size);
