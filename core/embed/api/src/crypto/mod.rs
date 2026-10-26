@@ -22,12 +22,12 @@ mod hashers;
 /// copies out its own return value before the buffer goes out of scope.
 fn ipc_crypto_call(value: &TrezorCryptoEnum) -> Result<BoxedSlice<u8>, WireError> {
     let bytes = to_bytes(value).map_err(|_| WireError::DecodeError)?;
-    let (_id, data) = ipc_call(
-        CoreIpcService::Crypto.into(),
-        value.id() as u16,
-        &bytes,
-        TIMEOUT_MAX,
-    )?;
+    let id = value.id() as u16;
+    let (response_id, data) = ipc_call(CoreIpcService::Crypto.into(), id, &bytes, TIMEOUT_MAX)?;
+    // Core answers with the id of the request
+    if response_id != id {
+        return Err(WireError::UnexpectedResponse);
+    }
     Ok(data)
 }
 
