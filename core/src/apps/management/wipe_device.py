@@ -2,42 +2,24 @@ import utime
 from typing import TYPE_CHECKING
 
 from trezor import utils
-from trezor.wire.context import get_context, try_get_ctx_ids
+from trezor.wire.context import Context, try_get_ctx_ids
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from trezor.messages import WipeDevice
 
 if __debug__:
     from trezor import log
 
 
-async def wipe_device(msg: WipeDevice) -> None:
+async def _do_wipe(get_context_fn: Callable[[], Context]) -> None:
+    """Called also via DebugLink."""
     import storage
-    from trezor import TR, config, translations
-    from trezor.enums import ButtonRequestType
+    from trezor import translations
     from trezor.messages import Success
-    from trezor.pin import render_empty_loader
-    from trezor.ui.layouts import confirm_action
 
     from apps.common.lock_manager import reload_settings_from_storage
-
-    await confirm_action(
-        "confirm_wipe",
-        TR.wipe__title,
-        TR.wipe__info,
-        TR.wipe__want_to_wipe,
-        reverse=True,
-        verb=TR.buttons__hold_to_confirm,
-        hold=True,
-        hold_danger=True,
-        br_code=ButtonRequestType.WipeDevice,
-    )
-
-    if __debug__:
-        log.debug(__name__, "Device wipe - start")
-
-    # start an empty progress screen so that the screen is not blank while waiting
-    render_empty_loader(config.StorageMessage.PROCESSING_MSG, danger=True)
 
     # wipe storage
     storage.wipe(clear_cache=False)
@@ -49,7 +31,7 @@ async def wipe_device(msg: WipeDevice) -> None:
     translations.deinit()
     translations.erase()
     try:
-        await get_context().write(Success(message="Device wiped"))
+        await get_context_fn().write(Success(message="Device wiped"))
     except Exception:
         if __debug__:
             log.debug(__name__, "Failed to send Success message after wipe.")
@@ -70,6 +52,34 @@ async def wipe_device(msg: WipeDevice) -> None:
 
         # raise an exception if bonds erasing fails
         erase_bonds()
+
+
+async def wipe_device(msg: WipeDevice) -> None:
+    from trezor import TR, config
+    from trezor.enums import ButtonRequestType
+    from trezor.pin import render_empty_loader
+    from trezor.ui.layouts import confirm_action
+    from trezor.wire.context import get_context
+
+    await confirm_action(
+        "confirm_wipe",
+        TR.wipe__title,
+        TR.wipe__info,
+        TR.wipe__want_to_wipe,
+        reverse=True,
+        verb=TR.buttons__hold_to_confirm,
+        hold=True,
+        hold_danger=True,
+        br_code=ButtonRequestType.WipeDevice,
+    )
+
+    if __debug__:
+        log.debug(__name__, "Device wipe - start")
+
+    # start an empty progress screen so that the screen is not blank while waiting
+    render_empty_loader(config.StorageMessage.PROCESSING_MSG, danger=True)
+
+    await _do_wipe(get_context_fn=get_context)
 
     if __debug__:
         log.debug(__name__, "Device wipe - finished")

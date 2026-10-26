@@ -473,12 +473,12 @@ if __debug__:
 
     async def dispatch_WipeDevice(msg: WipeDevice) -> None:
         """Wipe the device and restart the event loop."""
-        from storage import wipe
+        from apps.management.wipe_device import _do_wipe
 
         try:
-            wipe(clear_cache=True)
-            assert DEBUG_CONTEXT is not None
-            await DEBUG_CONTEXT.write(Success())
+            ctx = DEBUG_CONTEXT
+            assert ctx is not None
+            await _do_wipe(lambda: ctx)
         finally:
             raise RestartEventLoop
 
