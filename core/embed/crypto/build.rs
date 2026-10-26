@@ -21,8 +21,8 @@ fn main() -> Result<()> {
             add_aes_gcm(lib, &attrs)?;
         }
 
-        if cfg!(feature = "noise") {
-            add_noise(lib, &attrs)?;
+        if cfg!(feature = "noise_kk1") {
+            add_noise_kk1(lib, &attrs)?;
         }
 
         if cfg!(feature = "secp256k1_zkp") {
@@ -256,12 +256,8 @@ fn add_aes_gcm(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
     Ok(())
 }
 
-fn add_noise(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
-    lib.add_sources_in_dir_with_attrs(
-        CRYPTO_PATH,
-        ["noise_kk1.c", "noise_xxpsk3.c"],
-        Some(attrs.clone()),
-    );
+fn add_noise_kk1(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
+    lib.add_sources_in_dir_with_attrs(CRYPTO_PATH, ["noise_kk1.c"], Some(attrs.clone()));
 
     Ok(())
 }

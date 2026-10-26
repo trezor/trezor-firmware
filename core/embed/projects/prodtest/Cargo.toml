@@ -123,7 +123,7 @@ default = [
     "rtl/sprintf",
     "crypto/aes_gcm",
     "crypto/mldsa",
-    "crypto/noise",
+    "crypto/noise_kk1",
 
     "trezor_lib/crypto",
     "trezor_lib/prodtest",
