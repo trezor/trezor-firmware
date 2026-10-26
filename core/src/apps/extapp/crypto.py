@@ -176,6 +176,7 @@ async def _check_address_mac(session: Session, obj: Any) -> bool:
 
     address_n, mac, address, slip44 = obj
     keychain = await _address_mac_keychain(session, address_n)
+    # raises on a wrong MAC
     check_address_mac(address, mac, slip44, address_n, keychain)
     return True
 
