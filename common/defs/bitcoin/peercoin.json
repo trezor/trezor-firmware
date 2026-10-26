@@ -39,6 +39,5 @@
   "cooldown": 100,
   "overwintered": false,
   "extra_data": false,
-  "timestamp": true,
-  "confidential_assets": null
+  "timestamp": true
 }

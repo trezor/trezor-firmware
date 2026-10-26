@@ -41,7 +41,6 @@ class CoinInfo:
         extra_data: bool,
         timestamp: bool,
         overwintered: bool,
-        confidential_assets: dict[str, Any] | None,
     ) -> None:
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut
@@ -68,7 +67,6 @@ class CoinInfo:
         self.extra_data = extra_data
         self.timestamp = timestamp
         self.overwintered = overwintered
-        self.confidential_assets = confidential_assets
         if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
             self.sign_hash_double = False
@@ -122,7 +120,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Regtest":
             return CoinInfo(
@@ -151,7 +148,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Signet":
             return CoinInfo(
@@ -180,7 +176,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Testnet":
             return CoinInfo(
@@ -209,7 +204,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if not utils.BITCOIN_ONLY:
             if name == "Actinium":
@@ -239,7 +233,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Axe":
                 return CoinInfo(
@@ -268,7 +261,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash":
                 return CoinInfo(
@@ -297,7 +289,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash Testnet":
                 return CoinInfo(
@@ -326,7 +317,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bprivate":
                 return CoinInfo(
@@ -355,7 +345,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bitcore":
                 return CoinInfo(
@@ -384,7 +373,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "CPUchain":
                 return CoinInfo(
@@ -413,7 +401,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Crown":
                 return CoinInfo(
@@ -442,7 +429,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Dogecoin":
                 return CoinInfo(
@@ -471,7 +457,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Elements":
                 return CoinInfo(
@@ -500,7 +485,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    {'address_prefix': 4, 'blech32_prefix': 'el'},  # confidential_assets
                 )
             if name == "Feathercoin":
                 return CoinInfo(
@@ -529,7 +513,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo":
                 return CoinInfo(
@@ -558,7 +541,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo Testnet":
                 return CoinInfo(
@@ -587,7 +569,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Florincoin":
                 return CoinInfo(
@@ -616,7 +597,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Fujicoin":
                 return CoinInfo(
@@ -645,7 +625,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin":
                 return CoinInfo(
@@ -674,7 +653,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin Testnet":
                 return CoinInfo(
@@ -703,7 +681,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Komodo":
                 return CoinInfo(
@@ -732,7 +709,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Koto":
                 return CoinInfo(
@@ -761,7 +737,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin":
                 return CoinInfo(
@@ -790,7 +765,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin Testnet":
                 return CoinInfo(
@@ -819,7 +793,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Monacoin":
                 return CoinInfo(
@@ -848,7 +821,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin":
                 return CoinInfo(
@@ -877,7 +849,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin Testnet":
                 return CoinInfo(
@@ -906,7 +877,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Primecoin":
                 return CoinInfo(
@@ -935,7 +905,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum":
                 return CoinInfo(
@@ -964,7 +933,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum Testnet":
                 return CoinInfo(
@@ -993,7 +961,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin":
                 return CoinInfo(
@@ -1022,7 +989,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin Testnet":
                 return CoinInfo(
@@ -1051,7 +1017,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ritocoin":
                 return CoinInfo(
@@ -1080,7 +1045,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash":
                 return CoinInfo(
@@ -1109,7 +1073,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash Testnet":
                 return CoinInfo(
@@ -1138,7 +1101,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Stakenet":
                 return CoinInfo(
@@ -1167,7 +1129,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Syscoin":
                 return CoinInfo(
@@ -1196,7 +1157,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Unobtanium":
                 return CoinInfo(
@@ -1225,7 +1185,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "VIPSTARCOIN":
                 return CoinInfo(
@@ -1254,7 +1213,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Verge":
                 return CoinInfo(
@@ -1283,7 +1241,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Viacoin":
                 return CoinInfo(
@@ -1312,7 +1269,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "ZCore":
                 return CoinInfo(
@@ -1341,7 +1297,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash":
                 return CoinInfo(
@@ -1370,7 +1325,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash Testnet":
                 return CoinInfo(
@@ -1399,7 +1353,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ecash":
                 return CoinInfo(
@@ -1428,7 +1381,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Brhodium":
                 return CoinInfo(
@@ -1457,7 +1409,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
         raise ValueError  # Unknown coin name
     if utils.INTERNAL_MODEL == "T2T1":
@@ -1488,7 +1439,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Regtest":
             return CoinInfo(
@@ -1517,7 +1467,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Signet":
             return CoinInfo(
@@ -1546,7 +1495,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Testnet":
             return CoinInfo(
@@ -1575,7 +1523,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if not utils.BITCOIN_ONLY:
             if name == "Actinium":
@@ -1605,7 +1552,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Axe":
                 return CoinInfo(
@@ -1634,7 +1580,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash":
                 return CoinInfo(
@@ -1663,7 +1608,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash Testnet":
                 return CoinInfo(
@@ -1692,7 +1636,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bgold":
                 return CoinInfo(
@@ -1721,7 +1664,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bgold Testnet":
                 return CoinInfo(
@@ -1750,7 +1692,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bprivate":
                 return CoinInfo(
@@ -1779,7 +1720,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bitcore":
                 return CoinInfo(
@@ -1808,7 +1748,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "CPUchain":
                 return CoinInfo(
@@ -1837,7 +1776,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Crown":
                 return CoinInfo(
@@ -1866,7 +1804,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Dash":
                 return CoinInfo(
@@ -1895,7 +1832,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Dash Testnet":
                 return CoinInfo(
@@ -1924,7 +1860,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Decred":
                 return CoinInfo(
@@ -1953,7 +1888,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Decred Testnet":
                 return CoinInfo(
@@ -1982,7 +1916,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "DigiByte":
                 return CoinInfo(
@@ -2011,7 +1944,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Dogecoin":
                 return CoinInfo(
@@ -2040,7 +1972,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Elements":
                 return CoinInfo(
@@ -2069,7 +2000,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    {'address_prefix': 4, 'blech32_prefix': 'el'},  # confidential_assets
                 )
             if name == "Feathercoin":
                 return CoinInfo(
@@ -2098,7 +2028,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo":
                 return CoinInfo(
@@ -2127,7 +2056,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo Testnet":
                 return CoinInfo(
@@ -2156,7 +2084,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Florincoin":
                 return CoinInfo(
@@ -2185,7 +2112,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Fujicoin":
                 return CoinInfo(
@@ -2214,7 +2140,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin":
                 return CoinInfo(
@@ -2243,7 +2168,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin Testnet":
                 return CoinInfo(
@@ -2272,7 +2196,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Komodo":
                 return CoinInfo(
@@ -2301,7 +2224,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Koto":
                 return CoinInfo(
@@ -2330,7 +2252,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin":
                 return CoinInfo(
@@ -2359,7 +2280,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin Testnet":
                 return CoinInfo(
@@ -2388,7 +2308,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Monacoin":
                 return CoinInfo(
@@ -2417,7 +2336,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Namecoin":
                 return CoinInfo(
@@ -2446,7 +2364,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin":
                 return CoinInfo(
@@ -2475,7 +2392,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin Testnet":
                 return CoinInfo(
@@ -2504,7 +2420,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Primecoin":
                 return CoinInfo(
@@ -2533,7 +2448,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum":
                 return CoinInfo(
@@ -2562,7 +2476,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum Testnet":
                 return CoinInfo(
@@ -2591,7 +2504,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin":
                 return CoinInfo(
@@ -2620,7 +2532,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin Testnet":
                 return CoinInfo(
@@ -2649,7 +2560,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ritocoin":
                 return CoinInfo(
@@ -2678,7 +2588,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash":
                 return CoinInfo(
@@ -2707,7 +2616,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash Testnet":
                 return CoinInfo(
@@ -2736,7 +2644,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Stakenet":
                 return CoinInfo(
@@ -2765,7 +2672,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Syscoin":
                 return CoinInfo(
@@ -2794,7 +2700,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Unobtanium":
                 return CoinInfo(
@@ -2823,7 +2728,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "VIPSTARCOIN":
                 return CoinInfo(
@@ -2852,7 +2756,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Verge":
                 return CoinInfo(
@@ -2881,7 +2784,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Vertcoin":
                 return CoinInfo(
@@ -2910,7 +2812,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Viacoin":
                 return CoinInfo(
@@ -2939,7 +2840,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "ZCore":
                 return CoinInfo(
@@ -2968,7 +2868,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash":
                 return CoinInfo(
@@ -2997,7 +2896,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash Testnet":
                 return CoinInfo(
@@ -3026,7 +2924,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ecash":
                 return CoinInfo(
@@ -3055,7 +2952,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Brhodium":
                 return CoinInfo(
@@ -3084,7 +2980,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
         raise ValueError  # Unknown coin name
     if utils.INTERNAL_MODEL == "T3B1":
@@ -3115,7 +3010,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Regtest":
             return CoinInfo(
@@ -3144,7 +3038,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Signet":
             return CoinInfo(
@@ -3173,7 +3066,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Testnet":
             return CoinInfo(
@@ -3202,7 +3094,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if not utils.BITCOIN_ONLY:
             if name == "Actinium":
@@ -3232,7 +3123,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Axe":
                 return CoinInfo(
@@ -3261,7 +3151,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash":
                 return CoinInfo(
@@ -3290,7 +3179,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash Testnet":
                 return CoinInfo(
@@ -3319,7 +3207,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bprivate":
                 return CoinInfo(
@@ -3348,7 +3235,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bitcore":
                 return CoinInfo(
@@ -3377,7 +3263,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "CPUchain":
                 return CoinInfo(
@@ -3406,7 +3291,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Crown":
                 return CoinInfo(
@@ -3435,7 +3319,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Dogecoin":
                 return CoinInfo(
@@ -3464,7 +3347,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Elements":
                 return CoinInfo(
@@ -3493,7 +3375,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    {'address_prefix': 4, 'blech32_prefix': 'el'},  # confidential_assets
                 )
             if name == "Feathercoin":
                 return CoinInfo(
@@ -3522,7 +3403,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo":
                 return CoinInfo(
@@ -3551,7 +3431,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo Testnet":
                 return CoinInfo(
@@ -3580,7 +3459,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Florincoin":
                 return CoinInfo(
@@ -3609,7 +3487,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Fujicoin":
                 return CoinInfo(
@@ -3638,7 +3515,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin":
                 return CoinInfo(
@@ -3667,7 +3543,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin Testnet":
                 return CoinInfo(
@@ -3696,7 +3571,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Komodo":
                 return CoinInfo(
@@ -3725,7 +3599,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Koto":
                 return CoinInfo(
@@ -3754,7 +3627,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin":
                 return CoinInfo(
@@ -3783,7 +3655,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin Testnet":
                 return CoinInfo(
@@ -3812,7 +3683,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Monacoin":
                 return CoinInfo(
@@ -3841,7 +3711,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin":
                 return CoinInfo(
@@ -3870,7 +3739,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin Testnet":
                 return CoinInfo(
@@ -3899,7 +3767,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Primecoin":
                 return CoinInfo(
@@ -3928,7 +3795,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum":
                 return CoinInfo(
@@ -3957,7 +3823,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum Testnet":
                 return CoinInfo(
@@ -3986,7 +3851,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin":
                 return CoinInfo(
@@ -4015,7 +3879,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin Testnet":
                 return CoinInfo(
@@ -4044,7 +3907,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ritocoin":
                 return CoinInfo(
@@ -4073,7 +3935,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash":
                 return CoinInfo(
@@ -4102,7 +3963,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash Testnet":
                 return CoinInfo(
@@ -4131,7 +3991,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Stakenet":
                 return CoinInfo(
@@ -4160,7 +4019,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Syscoin":
                 return CoinInfo(
@@ -4189,7 +4047,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Unobtanium":
                 return CoinInfo(
@@ -4218,7 +4075,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "VIPSTARCOIN":
                 return CoinInfo(
@@ -4247,7 +4103,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Verge":
                 return CoinInfo(
@@ -4276,7 +4131,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Viacoin":
                 return CoinInfo(
@@ -4305,7 +4159,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "ZCore":
                 return CoinInfo(
@@ -4334,7 +4187,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash":
                 return CoinInfo(
@@ -4363,7 +4215,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash Testnet":
                 return CoinInfo(
@@ -4392,7 +4243,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ecash":
                 return CoinInfo(
@@ -4421,7 +4271,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Brhodium":
                 return CoinInfo(
@@ -4450,7 +4299,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
         raise ValueError  # Unknown coin name
     if utils.INTERNAL_MODEL == "T3T1":
@@ -4481,7 +4329,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Regtest":
             return CoinInfo(
@@ -4510,7 +4357,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Signet":
             return CoinInfo(
@@ -4539,7 +4385,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Testnet":
             return CoinInfo(
@@ -4568,7 +4413,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if not utils.BITCOIN_ONLY:
             if name == "Actinium":
@@ -4598,7 +4442,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Axe":
                 return CoinInfo(
@@ -4627,7 +4470,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash":
                 return CoinInfo(
@@ -4656,7 +4498,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash Testnet":
                 return CoinInfo(
@@ -4685,7 +4526,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bprivate":
                 return CoinInfo(
@@ -4714,7 +4554,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bitcore":
                 return CoinInfo(
@@ -4743,7 +4582,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "CPUchain":
                 return CoinInfo(
@@ -4772,7 +4610,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Crown":
                 return CoinInfo(
@@ -4801,7 +4638,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Dogecoin":
                 return CoinInfo(
@@ -4830,7 +4666,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Elements":
                 return CoinInfo(
@@ -4859,7 +4694,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    {'address_prefix': 4, 'blech32_prefix': 'el'},  # confidential_assets
                 )
             if name == "Feathercoin":
                 return CoinInfo(
@@ -4888,7 +4722,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo":
                 return CoinInfo(
@@ -4917,7 +4750,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo Testnet":
                 return CoinInfo(
@@ -4946,7 +4778,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Florincoin":
                 return CoinInfo(
@@ -4975,7 +4806,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Fujicoin":
                 return CoinInfo(
@@ -5004,7 +4834,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin":
                 return CoinInfo(
@@ -5033,7 +4862,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin Testnet":
                 return CoinInfo(
@@ -5062,7 +4890,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Komodo":
                 return CoinInfo(
@@ -5091,7 +4918,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Koto":
                 return CoinInfo(
@@ -5120,7 +4946,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin":
                 return CoinInfo(
@@ -5149,7 +4974,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin Testnet":
                 return CoinInfo(
@@ -5178,7 +5002,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Monacoin":
                 return CoinInfo(
@@ -5207,7 +5030,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin":
                 return CoinInfo(
@@ -5236,7 +5058,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin Testnet":
                 return CoinInfo(
@@ -5265,7 +5086,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Primecoin":
                 return CoinInfo(
@@ -5294,7 +5114,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum":
                 return CoinInfo(
@@ -5323,7 +5142,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum Testnet":
                 return CoinInfo(
@@ -5352,7 +5170,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin":
                 return CoinInfo(
@@ -5381,7 +5198,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin Testnet":
                 return CoinInfo(
@@ -5410,7 +5226,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ritocoin":
                 return CoinInfo(
@@ -5439,7 +5254,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash":
                 return CoinInfo(
@@ -5468,7 +5282,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash Testnet":
                 return CoinInfo(
@@ -5497,7 +5310,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Stakenet":
                 return CoinInfo(
@@ -5526,7 +5338,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Syscoin":
                 return CoinInfo(
@@ -5555,7 +5366,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Unobtanium":
                 return CoinInfo(
@@ -5584,7 +5394,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "VIPSTARCOIN":
                 return CoinInfo(
@@ -5613,7 +5422,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Verge":
                 return CoinInfo(
@@ -5642,7 +5450,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Viacoin":
                 return CoinInfo(
@@ -5671,7 +5478,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "ZCore":
                 return CoinInfo(
@@ -5700,7 +5506,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash":
                 return CoinInfo(
@@ -5729,7 +5534,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash Testnet":
                 return CoinInfo(
@@ -5758,7 +5562,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ecash":
                 return CoinInfo(
@@ -5787,7 +5590,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Brhodium":
                 return CoinInfo(
@@ -5816,7 +5618,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
         raise ValueError  # Unknown coin name
     if utils.INTERNAL_MODEL == "T3W1":
@@ -5847,7 +5648,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Regtest":
             return CoinInfo(
@@ -5876,7 +5676,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Signet":
             return CoinInfo(
@@ -5905,7 +5704,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Testnet":
             return CoinInfo(
@@ -5934,7 +5732,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if not utils.BITCOIN_ONLY:
             if name == "Actinium":
@@ -5964,7 +5761,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Axe":
                 return CoinInfo(
@@ -5993,7 +5789,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash":
                 return CoinInfo(
@@ -6022,7 +5817,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash Testnet":
                 return CoinInfo(
@@ -6051,7 +5845,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bprivate":
                 return CoinInfo(
@@ -6080,7 +5873,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bitcore":
                 return CoinInfo(
@@ -6109,7 +5901,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "CPUchain":
                 return CoinInfo(
@@ -6138,7 +5929,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Crown":
                 return CoinInfo(
@@ -6167,7 +5957,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Dogecoin":
                 return CoinInfo(
@@ -6196,7 +5985,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Elements":
                 return CoinInfo(
@@ -6225,7 +6013,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    {'address_prefix': 4, 'blech32_prefix': 'el'},  # confidential_assets
                 )
             if name == "Feathercoin":
                 return CoinInfo(
@@ -6254,7 +6041,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo":
                 return CoinInfo(
@@ -6283,7 +6069,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo Testnet":
                 return CoinInfo(
@@ -6312,7 +6097,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Florincoin":
                 return CoinInfo(
@@ -6341,7 +6125,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Fujicoin":
                 return CoinInfo(
@@ -6370,7 +6153,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin":
                 return CoinInfo(
@@ -6399,7 +6181,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin Testnet":
                 return CoinInfo(
@@ -6428,7 +6209,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Komodo":
                 return CoinInfo(
@@ -6457,7 +6237,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Koto":
                 return CoinInfo(
@@ -6486,7 +6265,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin":
                 return CoinInfo(
@@ -6515,7 +6293,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin Testnet":
                 return CoinInfo(
@@ -6544,7 +6321,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Monacoin":
                 return CoinInfo(
@@ -6573,7 +6349,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin":
                 return CoinInfo(
@@ -6602,7 +6377,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin Testnet":
                 return CoinInfo(
@@ -6631,7 +6405,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Primecoin":
                 return CoinInfo(
@@ -6660,7 +6433,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum":
                 return CoinInfo(
@@ -6689,7 +6461,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum Testnet":
                 return CoinInfo(
@@ -6718,7 +6489,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin":
                 return CoinInfo(
@@ -6747,7 +6517,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin Testnet":
                 return CoinInfo(
@@ -6776,7 +6545,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ritocoin":
                 return CoinInfo(
@@ -6805,7 +6573,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash":
                 return CoinInfo(
@@ -6834,7 +6601,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash Testnet":
                 return CoinInfo(
@@ -6863,7 +6629,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Stakenet":
                 return CoinInfo(
@@ -6892,7 +6657,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Syscoin":
                 return CoinInfo(
@@ -6921,7 +6685,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Unobtanium":
                 return CoinInfo(
@@ -6950,7 +6713,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "VIPSTARCOIN":
                 return CoinInfo(
@@ -6979,7 +6741,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Verge":
                 return CoinInfo(
@@ -7008,7 +6769,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Viacoin":
                 return CoinInfo(
@@ -7037,7 +6797,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "ZCore":
                 return CoinInfo(
@@ -7066,7 +6825,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash":
                 return CoinInfo(
@@ -7095,7 +6853,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash Testnet":
                 return CoinInfo(
@@ -7124,7 +6881,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ecash":
                 return CoinInfo(
@@ -7153,7 +6909,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Brhodium":
                 return CoinInfo(
@@ -7182,7 +6937,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
         raise ValueError  # Unknown coin name
     if utils.INTERNAL_MODEL == "D001":
@@ -7213,7 +6967,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Regtest":
             return CoinInfo(
@@ -7242,7 +6995,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Signet":
             return CoinInfo(
@@ -7271,7 +7023,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Testnet":
             return CoinInfo(
@@ -7300,7 +7051,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if not utils.BITCOIN_ONLY:
             if name == "Actinium":
@@ -7330,7 +7080,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Axe":
                 return CoinInfo(
@@ -7359,7 +7108,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash":
                 return CoinInfo(
@@ -7388,7 +7136,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash Testnet":
                 return CoinInfo(
@@ -7417,7 +7164,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bprivate":
                 return CoinInfo(
@@ -7446,7 +7192,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bitcore":
                 return CoinInfo(
@@ -7475,7 +7220,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "CPUchain":
                 return CoinInfo(
@@ -7504,7 +7248,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Crown":
                 return CoinInfo(
@@ -7533,7 +7276,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Dogecoin":
                 return CoinInfo(
@@ -7562,7 +7304,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Elements":
                 return CoinInfo(
@@ -7591,7 +7332,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    {'address_prefix': 4, 'blech32_prefix': 'el'},  # confidential_assets
                 )
             if name == "Feathercoin":
                 return CoinInfo(
@@ -7620,7 +7360,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo":
                 return CoinInfo(
@@ -7649,7 +7388,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo Testnet":
                 return CoinInfo(
@@ -7678,7 +7416,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Florincoin":
                 return CoinInfo(
@@ -7707,7 +7444,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Fujicoin":
                 return CoinInfo(
@@ -7736,7 +7472,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin":
                 return CoinInfo(
@@ -7765,7 +7500,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin Testnet":
                 return CoinInfo(
@@ -7794,7 +7528,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Komodo":
                 return CoinInfo(
@@ -7823,7 +7556,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Koto":
                 return CoinInfo(
@@ -7852,7 +7584,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin":
                 return CoinInfo(
@@ -7881,7 +7612,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin Testnet":
                 return CoinInfo(
@@ -7910,7 +7640,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Monacoin":
                 return CoinInfo(
@@ -7939,7 +7668,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin":
                 return CoinInfo(
@@ -7968,7 +7696,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin Testnet":
                 return CoinInfo(
@@ -7997,7 +7724,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Primecoin":
                 return CoinInfo(
@@ -8026,7 +7752,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum":
                 return CoinInfo(
@@ -8055,7 +7780,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum Testnet":
                 return CoinInfo(
@@ -8084,7 +7808,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin":
                 return CoinInfo(
@@ -8113,7 +7836,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin Testnet":
                 return CoinInfo(
@@ -8142,7 +7864,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ritocoin":
                 return CoinInfo(
@@ -8171,7 +7892,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash":
                 return CoinInfo(
@@ -8200,7 +7920,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash Testnet":
                 return CoinInfo(
@@ -8229,7 +7948,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Stakenet":
                 return CoinInfo(
@@ -8258,7 +7976,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Syscoin":
                 return CoinInfo(
@@ -8287,7 +8004,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Unobtanium":
                 return CoinInfo(
@@ -8316,7 +8032,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "VIPSTARCOIN":
                 return CoinInfo(
@@ -8345,7 +8060,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Verge":
                 return CoinInfo(
@@ -8374,7 +8088,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Viacoin":
                 return CoinInfo(
@@ -8403,7 +8116,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "ZCore":
                 return CoinInfo(
@@ -8432,7 +8144,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash":
                 return CoinInfo(
@@ -8461,7 +8172,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash Testnet":
                 return CoinInfo(
@@ -8490,7 +8200,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ecash":
                 return CoinInfo(
@@ -8519,7 +8228,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Brhodium":
                 return CoinInfo(
@@ -8548,7 +8256,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
         raise ValueError  # Unknown coin name
     if utils.INTERNAL_MODEL == "D002":
@@ -8579,7 +8286,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Regtest":
             return CoinInfo(
@@ -8608,7 +8314,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Signet":
             return CoinInfo(
@@ -8637,7 +8342,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if name == "Testnet":
             return CoinInfo(
@@ -8666,7 +8370,6 @@ def by_name(name: str) -> CoinInfo:
                 False,  # extra_data
                 False,  # timestamp
                 False,  # overwintered
-                None,  # confidential_assets
             )
         if not utils.BITCOIN_ONLY:
             if name == "Actinium":
@@ -8696,7 +8399,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Axe":
                 return CoinInfo(
@@ -8725,7 +8427,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash":
                 return CoinInfo(
@@ -8754,7 +8455,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bcash Testnet":
                 return CoinInfo(
@@ -8783,7 +8483,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bprivate":
                 return CoinInfo(
@@ -8812,7 +8511,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Bitcore":
                 return CoinInfo(
@@ -8841,7 +8539,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "CPUchain":
                 return CoinInfo(
@@ -8870,7 +8567,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Crown":
                 return CoinInfo(
@@ -8899,7 +8595,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Dogecoin":
                 return CoinInfo(
@@ -8928,7 +8623,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Elements":
                 return CoinInfo(
@@ -8957,7 +8651,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    {'address_prefix': 4, 'blech32_prefix': 'el'},  # confidential_assets
                 )
             if name == "Feathercoin":
                 return CoinInfo(
@@ -8986,7 +8679,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo":
                 return CoinInfo(
@@ -9015,7 +8707,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Firo Testnet":
                 return CoinInfo(
@@ -9044,7 +8735,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Florincoin":
                 return CoinInfo(
@@ -9073,7 +8763,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Fujicoin":
                 return CoinInfo(
@@ -9102,7 +8791,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin":
                 return CoinInfo(
@@ -9131,7 +8819,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Groestlcoin Testnet":
                 return CoinInfo(
@@ -9160,7 +8847,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Komodo":
                 return CoinInfo(
@@ -9189,7 +8875,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Koto":
                 return CoinInfo(
@@ -9218,7 +8903,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin":
                 return CoinInfo(
@@ -9247,7 +8931,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Litecoin Testnet":
                 return CoinInfo(
@@ -9276,7 +8959,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Monacoin":
                 return CoinInfo(
@@ -9305,7 +8987,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin":
                 return CoinInfo(
@@ -9334,7 +9015,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Peercoin Testnet":
                 return CoinInfo(
@@ -9363,7 +9043,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Primecoin":
                 return CoinInfo(
@@ -9392,7 +9071,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum":
                 return CoinInfo(
@@ -9421,7 +9099,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Qtum Testnet":
                 return CoinInfo(
@@ -9450,7 +9127,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin":
                 return CoinInfo(
@@ -9479,7 +9155,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ravencoin Testnet":
                 return CoinInfo(
@@ -9508,7 +9183,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ritocoin":
                 return CoinInfo(
@@ -9537,7 +9211,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash":
                 return CoinInfo(
@@ -9566,7 +9239,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "SmartCash Testnet":
                 return CoinInfo(
@@ -9595,7 +9267,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Stakenet":
                 return CoinInfo(
@@ -9624,7 +9295,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Syscoin":
                 return CoinInfo(
@@ -9653,7 +9323,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Unobtanium":
                 return CoinInfo(
@@ -9682,7 +9351,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "VIPSTARCOIN":
                 return CoinInfo(
@@ -9711,7 +9379,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Verge":
                 return CoinInfo(
@@ -9740,7 +9407,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     True,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Viacoin":
                 return CoinInfo(
@@ -9769,7 +9435,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "ZCore":
                 return CoinInfo(
@@ -9798,7 +9463,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash":
                 return CoinInfo(
@@ -9827,7 +9491,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Zcash Testnet":
                 return CoinInfo(
@@ -9856,7 +9519,6 @@ def by_name(name: str) -> CoinInfo:
                     True,  # extra_data
                     False,  # timestamp
                     True,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Ecash":
                 return CoinInfo(
@@ -9885,7 +9547,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
             if name == "Brhodium":
                 return CoinInfo(
@@ -9914,7 +9575,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
-                    None,  # confidential_assets
                 )
         raise ValueError  # Unknown coin name
     raise ValueError  # Unknown model
