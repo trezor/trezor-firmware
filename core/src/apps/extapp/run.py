@@ -21,6 +21,7 @@ from .session import (
     SERVICE_WIRE_ERROR,
     SERVICE_WIRE_START,
     Session,
+    describe,
 )
 
 if __debug__:
@@ -55,13 +56,6 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
         raise
 
 
-def _describe(exception: BaseException) -> str:
-    """Text of `exception`, falling back to its type when it has none."""
-    # `wire.Error` keeps its text in `.message`, its `str()` is empty
-    message = getattr(exception, "message", None) or str(exception)
-    return message or exception.__class__.__name__
-
-
 async def _show_error(session: Session, exception: Exception) -> None:
     """Briefly show why the app was stopped."""
     try:
@@ -72,14 +66,14 @@ async def _show_error(session: Session, exception: Exception) -> None:
         with error_popup(
             TR.words__error,
             "{}",
-            description_param=_describe(exception),
+            description_param=describe(exception),
             timeout_ms=_ERROR_POPUP_TIMEOUT_MS,
         ) as popup:
             await interact_simple(popup)
     except Exception as e:
         # never let the screen hide the app's real failure
         if __debug__:
-            log.error(__name__, f"Failed to show error screen: {_describe(e)}")
+            log.error(__name__, f"Failed to show error screen: {describe(e)}")
 
 
 async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse:
@@ -88,7 +82,7 @@ async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse:
     except Exception as e:
         session.die(
             DataError(
-                f"Failed to send request {request.message_id} to app: {_describe(e)}"
+                f"Failed to send request {request.message_id} to app: {describe(e)}"
             )
         )
 
