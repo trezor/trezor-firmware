@@ -118,10 +118,14 @@ typedef void (*systask_error_handler_t)(const systask_postmortem_t* pminfo);
  * 2. coreapp
  * 3. user app
  */
-#ifdef USE_APP_LOADING
-#define SYSTASK_MAX_TASKS 3
+#ifndef USE_APPLETS
+#define SYSTASK_MAX_TASKS 1
 #else
+#ifndef USE_APP_LOADING
 #define SYSTASK_MAX_TASKS 2
+#else
+#define SYSTASK_MAX_TASKS 3
+#endif
 #endif
 
 /** Zero-based task ID (up SYSTASK_MAX_TASKS - 1) */
@@ -161,21 +165,24 @@ typedef struct {
   systask_id_t id;
   /** Task post-mortem information */
   systask_postmortem_t pminfo;
-  /** Applet bound to the task */
-  void* applet;
 
 #ifdef USE_APPLETS
+  /** Applet bound to the task */
+  void* applet;
   /** Watchdog timeout or 0 if not used */
   ticks_t watchdog_timeout;
 #endif
 
 #ifndef TREZOR_EMULATOR
-  /** MPU mode the task is running in */
-  mpu_mode_t mpu_mode;
+
   /** Original stack base */
   uint32_t stack_base;
   /** Original stack end */
   uint32_t stack_end;
+
+#ifdef USE_APPLETS
+  /** MPU mode the task is running in */
+  mpu_mode_t mpu_mode;
 
   /** Static base (SB) address of RW segment used with dynamically linked
    * apps, otherwise set to 0. */
@@ -190,6 +197,7 @@ typedef struct {
 
   /** Set if the task is processing the kernel callback */
   bool in_callback;
+#endif  // USE_APPLETS
 
 #else
   /** System thread handle */
@@ -199,7 +207,7 @@ typedef struct {
 
   /** Emulation of the call pushed onto the stack */
   systask_fn_call_t pushed_fn_call;
-#endif
+#endif  // TREZOR_EMULATOR
 
 } systask_t;
 
@@ -224,6 +232,79 @@ systask_t* systask_active(void);
  * @return Pointer to the kernel task.
  */
 systask_t* systask_kernel(void);
+
+/**
+ * @brief Returns true if the task is alive (not terminated, killed or crashed)
+ * @param task Pointer to the task.
+ * @return true if the task is alive, false otherwise.
+ */
+bool systask_is_alive(const systask_t* task);
+
+/**
+ * @brief Gets the ID (zero-based index up SYSTASK_MAX_TASKS - 1) of the given
+ * task.
+ * @param task Pointer to the task.
+ * @return Task ID.
+ */
+systask_id_t systask_id(const systask_t* task);
+
+/**
+ * @brief Terminates the task with the given exit code
+ *
+ * If the task is not specified (NULL), it's automatically determined:
+ *  1) If the function is called in thread mode, the active task will be
+ *     terminated.
+ *  2) If the function is called in handler mode, the kernel task will be
+ *     terminated even if it is not the active task.
+ *
+ * If the terminated task is unprivileged, the kernel task will be scheduled
+ * next.
+ *
+ * @param task Pointer to the task to terminate, or NULL.
+ * @param exit_code Exit code for the task.
+ */
+void systask_exit(systask_t* task, int exit_code);
+
+/**
+ * @brief Terminates the task with an error message
+ *
+ * (see `systask_exit()` for more details)
+ *
+ * @param task Pointer to the task.
+ * @param title Title string.
+ * @param title_len Length of the title.
+ * @param message Message string.
+ * @param message_len Length of the message.
+ * @param footer Footer string.
+ * @param footer_len Length of the footer.
+ */
+void systask_exit_error(systask_t* task, const char* title, size_t title_len,
+                        const char* message, size_t message_len,
+                        const char* footer, size_t footer_len);
+
+/**
+ * @brief Terminates the task with a fatal error message
+ *
+ * (see `systask_exit()` for more details)
+ *
+ * @param task Pointer to the task.
+ * @param message Message string.
+ * @param message_len Length of the message.
+ * @param file File string.
+ * @param file_len Length of the file string.
+ * @param line Line number.
+ */
+void systask_exit_fatal(systask_t* task, const char* message,
+                        size_t message_len, const char* file, size_t file_len,
+                        int line);
+
+/**
+ * @brief Prints the post-mortem information about the task to the debug output
+ * @param task Pointer to the task.
+ */
+void systask_print_pminfo(systask_t* task);
+
+#ifdef USE_APPLETS
 
 #ifndef TREZOR_EMULATOR
 /**
@@ -272,13 +353,6 @@ void systask_yield_to(systask_t* task);
  */
 bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
                   uint32_t sb_addr, void* context);
-
-/**
- * @brief Returns true if the task is alive (not terminated, killed or crashed)
- * @param task Pointer to the task.
- * @return true if the task is alive, false otherwise.
- */
-bool systask_is_alive(const systask_t* task);
 
 /**
  * @brief Sets the MPU configuration for the given task
@@ -359,68 +433,6 @@ void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1);
 uint32_t systask_get_r0(systask_t* task);
 #endif
 
-/**
- * @brief Gets the ID (zero-based index up SYSTASK_MAX_TASKS - 1) of the given
- * task.
- * @param task Pointer to the task.
- * @return Task ID.
- */
-systask_id_t systask_id(const systask_t* task);
-
-/**
- * @brief Terminates the task with the given exit code
- *
- * If the task is not specified (NULL), it's automatically determined:
- *  1) If the function is called in thread mode, the active task will be
- *     terminated.
- *  2) If the function is called in handler mode, the kernel task will be
- *     terminated even if it is not the active task.
- *
- * If the terminated task is unprivileged, the kernel task will be scheduled
- * next.
- *
- * @param task Pointer to the task to terminate, or NULL.
- * @param exit_code Exit code for the task.
- */
-void systask_exit(systask_t* task, int exit_code);
-
-/**
- * @brief Terminates the task with an error message
- *
- * (see `systask_exit()` for more details)
- *
- * @param task Pointer to the task.
- * @param title Title string.
- * @param title_len Length of the title.
- * @param message Message string.
- * @param message_len Length of the message.
- * @param footer Footer string.
- * @param footer_len Length of the footer.
- */
-void systask_exit_error(systask_t* task, const char* title, size_t title_len,
-                        const char* message, size_t message_len,
-                        const char* footer, size_t footer_len);
-
-/**
- * @brief Terminates the task with a fatal error message
- *
- * (see `systask_exit()` for more details)
- *
- * @param task Pointer to the task.
- * @param message Message string.
- * @param message_len Length of the message.
- * @param file File string.
- * @param file_len Length of the file string.
- * @param line Line number.
- */
-void systask_exit_fatal(systask_t* task, const char* message,
-                        size_t message_len, const char* file, size_t file_len,
-                        int line);
-
-/**
- * @brief Prints the post-mortem information about the task to the debug output
- * @param task Pointer to the task.
- */
-void systask_print_pminfo(systask_t* task);
+#endif  // USE_APPLETS
 
 #endif  // KERNEL_MODE

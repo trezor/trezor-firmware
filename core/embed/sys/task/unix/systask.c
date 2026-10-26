@@ -83,7 +83,6 @@ systask_id_t systask_id(const systask_t* task) { return task->id; }
 
 #ifdef USE_APPLETS
 void systask_set_mpu(systask_t* task) {}
-#endif
 
 static uint32_t invoke_pushed_fn_call(systask_t* task) {
   systask_fn_call_t call = task->pushed_fn_call;
@@ -237,6 +236,8 @@ bool systask_push_call(systask_t* task, void* fn, uintptr_t arg1,
   return true;
 }
 
+#endif  // USE_APPLETS
+
 static void systask_kill(systask_t* task) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
@@ -246,18 +247,8 @@ static void systask_kill(systask_t* task) {
 
   task->killed = 1;
 
-  if (task == &scheduler->kernel_task) {
-    pthread_mutex_unlock(&scheduler->lock);
-
-    // Call panic handler
-    if (scheduler->error_handler != NULL) {
-      scheduler->error_handler(&task->pminfo);
-    }
-
-    // We reach this point only if error_handler is NULL or
-    // if it returns. Neither is expected to happen.
-    reboot_device();
-  } else {
+#ifdef USE_APPLETS
+  if (task != &scheduler->kernel_task) {
     // Free task ID
     scheduler->task_id_map &= ~(1 << task->id);
     bool task_is_active = (scheduler->active_task == task);
@@ -275,7 +266,20 @@ static void systask_kill(systask_t* task) {
       // Switch to the kernel task
       systask_yield_to(&scheduler->kernel_task);
     }
+    return;
   }
+#endif  // USE_APPLETS
+
+  pthread_mutex_unlock(&scheduler->lock);
+
+  // Call panic handler
+  if (scheduler->error_handler != NULL) {
+    scheduler->error_handler(&task->pminfo);
+  }
+
+  // We reach this point only if error_handler is NULL or
+  // if it returns. Neither is expected to happen.
+  reboot_device();
 }
 
 bool systask_is_alive(const systask_t* task) {
