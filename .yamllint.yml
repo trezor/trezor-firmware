@@ -3,6 +3,7 @@ extends: default
 ignore: |
   /.venv
   vendor/
+  /sdk/crates/stabby/
   /common/defs/ethereum/chains/
   /common/defs/ethereum/tokens/
   /nordic/
