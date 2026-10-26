@@ -49,6 +49,7 @@ jobs:
   param:
     name: Determine pipeline parameters
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       extapp_test_lang: ${{ steps.set_vars.outputs.extapp_test_lang }}
     steps:
@@ -61,6 +62,7 @@ jobs:
   sdk_fmt_check:
     name: trezor-app-sdk / Format check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -71,6 +73,7 @@ jobs:
   sdk_check:
     name: trezor-app-sdk / Cargo check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -81,6 +84,7 @@ jobs:
   sdk_clippy:
     name: trezor-app-sdk / Clippy
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -91,6 +95,7 @@ jobs:
   sdk_unit_tests:
     name: trezor-app-sdk / Unit tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -101,6 +106,7 @@ jobs:
   sdk_doc_tests:
     name: trezor-app-sdk / Doc tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -111,6 +117,7 @@ jobs:
   sdk_doc_build:
     name: trezor-app-sdk / Doc build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -121,6 +128,7 @@ jobs:
   sdk_deps_check:
     name: trezor-app-sdk / Dependency check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -266,6 +274,7 @@ jobs:
   extapp_firmware:
     name: extapp / Build firmware (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -291,6 +300,7 @@ jobs:
   extapp_emu:
     name: extapp / Build emu (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: param
     strategy:
       fail-fast: false
@@ -321,6 +331,7 @@ jobs:
   extapp_unit_tests:
     name: extapp / Unit tests (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -341,6 +352,7 @@ jobs:
   extapp_device_test:
     name: extapp / Device tests (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     needs:
       - param
       - extapp_emu
@@ -389,6 +401,7 @@ jobs:
   extapp_fmt_check:
     name: extapp / Style check (Rust, Python, translations)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -399,6 +412,7 @@ jobs:
   extapp_clippy:
     name: extapp / Clippy (${{ matrix.app }}, ${{ matrix.model }}, ${{ matrix.lang }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -419,6 +433,7 @@ jobs:
   extapp_vet:
     name: extapp / Dependency check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -436,6 +451,7 @@ jobs:
     # run UI comment job only for 'trezor/trezor-firmware' scheduled workflows and internal PRs (see #5381)
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && github.repository == 'trezor/trezor-firmware'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs:
       - param
       - extapp_device_test
