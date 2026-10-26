@@ -98,13 +98,13 @@ pub fn sign_digest(
 
 /// Verifies a MAC previously produced by [`get_address_mac`] for `address_n`,
 /// `address` and the coin type `slip44`, confirming the pairing hasn't been
-/// tampered with.
+/// tampered with. Fails on a wrong MAC.
 pub fn check_address_mac(
     address_n: &[u32],
     mac: &[u8; 32],
     address: &str,
     slip44: u32,
-) -> Result<bool> {
+) -> Result<()> {
     get_crypto_or_die()
         .check_address_mac(address_n.into(), mac, address.into(), slip44)
         .into_app_result()
