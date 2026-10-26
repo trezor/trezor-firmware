@@ -199,6 +199,16 @@ def confirm_path_warning(
     )
 
 
+def confirm_xpub_export_warning(path: str) -> Awaitable[None]:
+    return _placeholder_confirm(
+        "warning_xpub_export",
+        TR.words__warning,
+        TR.address__xpub_export_warning,
+        description=path,
+        br_code=ButtonRequestType.UnknownDerivationPath,
+    )
+
+
 def confirm_multisig_warning() -> Awaitable[ui.UiResult]:
     return show_warning(
         "warning_multisig",

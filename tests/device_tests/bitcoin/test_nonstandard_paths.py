@@ -108,6 +108,24 @@ VECTORS_MULTISIG = (  # paths, address_index
 )
 
 
+def _get_public_node(
+    session: Session, path: str, **kwargs: object
+) -> messages.PublicKey:
+    # Paths shorter than 2 levels show an xpub export warning, see
+    # test_getpublickey_restricted.py.
+    with session.test_ctx as client:
+        if is_core(session):
+            IF = InputFlowConfirmAllWarnings(session)
+            client.set_input_flow(IF.get())
+        return btc.get_public_node(
+            session, parse_path(path), coin_name="Bitcoin", **kwargs
+        )
+
+
+def _get_public_nodes(session: Session, paths: list[str]) -> list[messages.HDNodeType]:
+    return [_get_public_node(session, path).node for path in paths]
+
+
 # Has AlwaysMatchingSchema but let's make sure the nonstandard paths are
 # accepted in case we make this more restrictive in the future.
 @pytest.mark.parametrize("path, script_types", VECTORS)
@@ -115,9 +133,7 @@ def test_getpublicnode(
     session: Session, path: str, script_types: list[messages.InputScriptType]
 ):
     for script_type in script_types:
-        res = btc.get_public_node(
-            session, parse_path(path), coin_name="Bitcoin", script_type=script_type
-        )
+        res = _get_public_node(session, path, script_type=script_type)
 
         assert res.xpub
 
@@ -210,13 +226,8 @@ def test_getaddress_multisig(
     session: Session, paths: list[str], address_index: list[int]
 ):
     pubs = [
-        messages.HDNodePathType(
-            node=btc.get_public_node(
-                session, parse_path(path), coin_name="Bitcoin"
-            ).node,
-            address_n=address_index,
-        )
-        for path in paths
+        messages.HDNodePathType(node=node, address_n=address_index)
+        for node in _get_public_nodes(session, paths)
     ]
     multisig = messages.MultisigRedeemScriptType(pubkeys=pubs, m=2)
 
@@ -240,13 +251,8 @@ def test_getaddress_multisig(
 @pytest.mark.parametrize("paths, address_index", VECTORS_MULTISIG)
 def test_signtx_multisig(session: Session, paths: list[str], address_index: list[int]):
     pubs = [
-        messages.HDNodePathType(
-            node=btc.get_public_node(
-                session, parse_path(path), coin_name="Bitcoin"
-            ).node,
-            address_n=address_index,
-        )
-        for path in paths
+        messages.HDNodePathType(node=node, address_n=address_index)
+        for node in _get_public_nodes(session, paths)
     ]
     signatures = [b""] * 3
     multisig = messages.MultisigRedeemScriptType(
