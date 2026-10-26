@@ -171,14 +171,13 @@ impl PaymentRequestVerifier {
                     // TODO: proper error type
                     Error::DataError("Invalid MAC in refund memo")
                 })?;
-                if !crypto::check_address_mac(
+                crypto::check_address_mac(
                     &refund_memo.address_n,
                     mac,
                     &refund_memo.address,
                     slip44_id,
-                )? {
-                    return Err(Error::DataError("Invalid MAC in refund memo"))?;
-                }
+                )
+                .map_err(|_| Error::DataError("Invalid MAC in refund memo"))?;
 
                 h_pr.update(&MEMO_TYPE_REFUND.to_le_bytes());
                 let address = &refund_memo.address.as_bytes();
@@ -191,14 +190,13 @@ impl PaymentRequestVerifier {
                     .as_slice()
                     .try_into()
                     .map_err(|_| Error::DataError("Invalid MAC in coin purchase memo"))?;
-                if !crypto::check_address_mac(
+                crypto::check_address_mac(
                     &coin_purchase_memo.address_n,
                     mac,
                     &coin_purchase_memo.address,
                     coin_purchase_memo.coin_type,
-                )? {
-                    return Err(Error::DataError("Invalid MAC in coin purchase memo"))?;
-                }
+                )
+                .map_err(|_| Error::DataError("Invalid MAC in coin purchase memo"))?;
                 h_pr.update(&MEMO_TYPE_COIN_PURCHASE.to_le_bytes());
                 h_pr.update(&coin_purchase_memo.coin_type.to_le_bytes());
 
