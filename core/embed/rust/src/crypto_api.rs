@@ -9,7 +9,7 @@ use crate::micropython::module::Module;
 use crate::micropython::obj::Obj;
 use crate::micropython::qstr::Qstr;
 #[cfg(feature = "app_loading")]
-use crate::micropython::{error::Error, list::List, util};
+use crate::micropython::{buffer::StrBuffer, error::Error, list::List, util};
 
 #[cfg(feature = "app_loading")]
 extern "C" fn new_deserialize_crypto_message(
@@ -130,20 +130,16 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
         }));
 
         // Map the handler's return value to the generic result; the app checks
-        // it against the shape its operation expects. `kwargs` keeps the result
-        // object alive for the whole block, and `msg` borrows from it only until
-        // it is serialized into `bytes`, before `ipc_cb` runs any MicroPython
-        // code.
-        let msg = if obj.is_str() || obj.is_bytes() {
-            // SAFETY: str and bytes are immutable, and no MicroPython code runs
-            // while `data` is borrowed (see above).
+        // it against the shape its operation expects.
+        let string = StrBuffer::try_from(obj);
+        let msg = if let Ok(string) = &string {
+            TrezorCryptoResult::String(string.as_ref().into())
+        } else if obj.is_bytes() {
+            // SAFETY: bytes are immutable, `kwargs` keeps `obj` alive for the
+            // whole block, and `data` is only borrowed until it is serialized
+            // into `bytes`, before `ipc_cb` runs any MicroPython code.
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
-            if obj.is_str() {
-                let string = core::str::from_utf8(data).map_err(|_| Error::TypeError)?;
-                TrezorCryptoResult::String(string.into())
-            } else {
-                TrezorCryptoResult::Bytes(data.into())
-            }
+            TrezorCryptoResult::Bytes(data.into())
         } else if obj.is_immediate() {
             TrezorCryptoResult::Boolean(bool::try_from(obj)?)
         } else {
