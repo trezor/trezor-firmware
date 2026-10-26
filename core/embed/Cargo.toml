@@ -79,7 +79,7 @@ pareen = { version = "0.3.3", path = "../../rust/pareen", default-features = fal
 qrcodegen-no-heap = { version = "1.8.1", path = "../vendor/QR-Code-generator/rust-no-heap" }
 rkyv = { version = "0.8.0", default-features = false }
 spin = { version = "0.9.9", features = ["rwlock", "spin_mutex", "lazy"], default-features = false }
-stabby = { version = "72.1.8", path = "../../sdk/crates/stabby/stabby", default-features = false, features = ["alloc-rs"] }
+stabby = { version = "72.1.8", path = "../../vendor/stabby/stabby", default-features = false, features = ["alloc-rs"] }
 static-alloc = "0.2.6"
 talc = { version = "5.0.4", default-features = false }
 trezor-thp = { path = "../../rust/trezor-thp" }
