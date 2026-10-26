@@ -55,7 +55,9 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
 #
 # Note: The need for node rotation has diminished recently as we now handle data deletion through other mechanisms.
 async def derive_evolu_node(index: int) -> bytes:
-    from apps.common.seed import Slip21Node, get_seed
+    from trezor.crypto.slip21 import Slip21Node
+
+    from apps.common.seed import get_seed
 
     seed = await get_seed()
     node = Slip21Node(seed)

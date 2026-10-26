@@ -7,7 +7,9 @@ async def derive_wallet_id() -> bytes:
     Derived from the passphrase-dependent seed, so every passphrase wallet has
     its own id.
     """
-    from apps.common.seed import Slip21Node, get_seed
+    from trezor.crypto.slip21 import Slip21Node
+
+    from apps.common.seed import get_seed
 
     node = Slip21Node(await get_seed())
     node.derive_path(_WARD_KEY_PATH_PREFIX + [b"Wallet ID"])
