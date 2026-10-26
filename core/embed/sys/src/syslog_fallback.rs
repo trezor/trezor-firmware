@@ -10,7 +10,7 @@ pub struct SyslogChunkWriter(());
 
 impl SyslogChunkWriter {
     pub fn write(&self, _s: &str) -> Result<(), ()> {
-        Err(())
+        unreachable!()
     }
 }
 
