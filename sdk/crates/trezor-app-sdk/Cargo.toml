@@ -25,7 +25,7 @@ mock_hmac_sha256 = { package = "hmac-sha256", version = "1.1", optional = true }
 mock_hmac_sha512 = { package = "hmac-sha512", version = "1.1", optional = true }
 stabby = { version = "72.1.8", default-features = false, features = [
     "alloc-rs",
-], path = "../stabby/stabby" }
+], path = "../../../vendor/stabby/stabby" }
 
 [features]
 # --------------------------------------------------------------------------
