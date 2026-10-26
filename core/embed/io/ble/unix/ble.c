@@ -110,6 +110,11 @@ static bool is_enabled(const ble_driver_t *drv) {
 
 bool ble_init(void) {
   ble_driver_t *drv = &g_ble_driver;
+
+  if (drv->initialized) {
+    return true;
+  }
+
   memset(drv, 0, sizeof(*drv));
   sock_init(&drv->data_sock);
   sock_init(&drv->event_sock);
