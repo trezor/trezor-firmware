@@ -76,7 +76,7 @@ def _check_not_slip25(address_n: list[int]) -> None:
 
     if address_n and address_n[0] == paths.SLIP25_PURPOSE:
         # UnlockPath is required to access SLIP25 paths.
-        raise ForbiddenKeyPath()
+        raise ForbiddenKeyPath
 
 
 async def _get_xpub(session: Session, obj: Any) -> str:
