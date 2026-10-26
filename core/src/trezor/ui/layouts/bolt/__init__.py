@@ -176,6 +176,20 @@ async def confirm_path_warning(path: str, path_type: str | None = None) -> None:
         )
 
 
+async def confirm_xpub_export_warning(path: str) -> None:
+    with trezorui_api.show_warning(
+        title=TR.address__xpub_export_warning,
+        value=path,
+        description=TR.words__continue_anyway_question,
+        button=TR.buttons__continue,
+    ) as layout:
+        return await raise_if_not_confirmed(
+            layout,
+            "warning_xpub_export",
+            br_code=ButtonRequestType.UnknownDerivationPath,
+        )
+
+
 def confirm_multisig_warning() -> Awaitable[None]:
     return show_warning(
         "warning_multisig",

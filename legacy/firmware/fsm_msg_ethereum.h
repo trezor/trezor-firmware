@@ -86,6 +86,14 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
     return;
   }
 
+  // Unreachable while only m/44' and m/45' subtrees are allowed above, since
+  // both purposes are allowed by is_xpub_export_restricted(). Kept as a
+  // fail-safe in case the restriction above is relaxed.
+  if (!fsm_checkXpubExport(msg->address_n_count, msg->address_n)) {
+    layoutHome();
+    return;
+  }
+
   const char *curve = coin->curve_name;
   uint32_t fingerprint;
   HDNode *node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count,

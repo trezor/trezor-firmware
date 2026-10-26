@@ -43,6 +43,8 @@ async def get_public_key(
     if not keychain:
         keychain = await get_keychain(curve_name, [paths.AlwaysMatchingSchema])
 
+    await paths.validate_xpub_export(address_n)
+
     node = keychain.derive(address_n)
 
     if (
