@@ -410,6 +410,55 @@ class TestSolanaTransactionAlts(unittest.TestCase):
             Transaction(b"\x80" + legacy_tx)
 
 
+STAKE_PROGRAM = base58.decode("Stake11111111111111111111111111111111111111")
+CLOCK_SYSVAR = base58.decode("SysvarC1ock11111111111111111111111111111111")
+STAKE_ACCOUNT = b"a" * 32
+# Deactivate (instruction 5) the stake account at index 1, with the Clock sysvar
+# at index 3 and the signer as the stake authority.
+DEACTIVATE_INSTRUCTION: RawInstruction = (2, (1, 3, 0), (5).to_bytes(4, "little"))
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestSolanaSysvarAccounts(unittest.TestCase):
+    def test_sysvar(self):
+        transaction = Transaction(
+            build_tx(
+                (1, 0, 2),
+                (SIGNER, STAKE_ACCOUNT, STAKE_PROGRAM, CLOCK_SYSVAR),
+                [DEACTIVATE_INSTRUCTION],
+            )
+        )
+        (deactivate,) = transaction.instructions
+        self.assertEqual(
+            deactivate.clock_sysvar, (CLOCK_SYSVAR, AddressType.AddressReadOnly)
+        )
+        self.assertEqual(deactivate.stake_authority, (SIGNER, AddressType.AddressSig))
+
+    def test_other_account(self):
+        with self.assertRaises(ValueError):
+            Transaction(
+                build_tx(
+                    (1, 0, 2),
+                    (SIGNER, STAKE_ACCOUNT, STAKE_PROGRAM, b"x" * 32),
+                    [DEACTIVATE_INSTRUCTION],
+                )
+            )
+
+    def test_alt_reference(self):
+        # The Clock slot refers to index 3, i.e. the first address loaded from
+        # the table right after the static accounts, which can't be verified.
+        with self.assertRaises(ValueError):
+            Transaction(
+                build_tx(
+                    (1, 0, 1),
+                    (SIGNER, STAKE_ACCOUNT, STAKE_PROGRAM),
+                    [DEACTIVATE_INSTRUCTION],
+                    version=0,
+                    alts=[(b"t" * 32, (), (7,))],
+                )
+            )
+
+
 def raw_instructions(transaction: Transaction) -> list[tuple]:
     # Instruction data are memoryviews, which can't be compared directly.
     return [

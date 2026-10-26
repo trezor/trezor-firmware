@@ -1,0 +1,1 @@
+Solana: Reject instructions whose sysvar account slot holds a different account or a lookup-table reference.
