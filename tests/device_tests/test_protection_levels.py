@@ -241,7 +241,7 @@ def test_get_public_key(client: Client):
         )
 
         session = client.get_session()
-        session.call(messages.GetPublicKey(address_n=[]))
+        session.call(messages.GetPublicKey(address_n=parse_path("m/44h/0h/0h")))
 
 
 def test_get_address(client: Client):

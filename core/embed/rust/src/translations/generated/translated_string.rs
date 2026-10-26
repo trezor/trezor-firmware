@@ -1701,6 +1701,7 @@ pub enum TranslatedString {
     solana__title_blind_signing = 1315,  // "Blind signing"
     #[cfg(feature = "universal_fw")]
     solana__view_details_in_menu = 1316,  // "View details in the menu."
+    address__xpub_export_warning = 1317,  // "A quantum computer could use this public key to reveal all keys derived from it."
 }
 
 impl TranslatedString {
@@ -3025,6 +3026,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4347,6 +4349,7 @@ impl TranslatedString {
                 19177,
                 19190,
                 19215,
+                19295,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5668,6 +5671,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6990,6 +6994,7 @@ impl TranslatedString {
                 19177,
                 19190,
                 19215,
+                19295,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8311,6 +8316,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9633,6 +9639,7 @@ impl TranslatedString {
                 19177,
                 19190,
                 19215,
+                19295,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10954,6 +10961,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12276,6 +12284,7 @@ impl TranslatedString {
                 19177,
                 19190,
                 19215,
+                19295,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13598,6 +13607,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14920,6 +14930,7 @@ impl TranslatedString {
                 17330,
                 17343,
                 17368,
+                17448,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16241,6 +16252,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17563,6 +17575,7 @@ impl TranslatedString {
                 17330,
                 17343,
                 17368,
+                17448,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18884,6 +18897,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -20206,6 +20220,7 @@ impl TranslatedString {
                 17330,
                 17343,
                 17368,
+                17448,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21527,6 +21542,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22849,6 +22865,7 @@ impl TranslatedString {
                 17330,
                 17343,
                 17368,
+                17448,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -24171,6 +24188,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25493,6 +25511,7 @@ impl TranslatedString {
                 19464,
                 19477,
                 19502,
+                19582,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26814,6 +26833,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -28136,6 +28156,7 @@ impl TranslatedString {
                 19464,
                 19477,
                 19502,
+                19582,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29457,6 +29478,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30779,6 +30801,7 @@ impl TranslatedString {
                 19464,
                 19477,
                 19502,
+                19582,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -32100,6 +32123,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -33422,6 +33446,7 @@ impl TranslatedString {
                 19464,
                 19477,
                 19502,
+                19582,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -34744,6 +34769,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -36066,6 +36092,7 @@ impl TranslatedString {
                 20485,
                 20498,
                 20523,
+                20603,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37387,6 +37414,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -38709,6 +38737,7 @@ impl TranslatedString {
                 20485,
                 20498,
                 20523,
+                20603,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -40030,6 +40059,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -41352,6 +41382,7 @@ impl TranslatedString {
                 20485,
                 20498,
                 20523,
+                20603,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42673,6 +42704,7 @@ impl TranslatedString {
                 "If you are experiencing timeouts, skip straight to signing in the menu.",
                 "Blind signing",
                 "View details in the menu.",
+                "A quantum computer could use this public key to reveal all keys derived from it.",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -43995,6 +44027,7 @@ impl TranslatedString {
                 20485,
                 20498,
                 20523,
+                20603,
             ];
 
         }
@@ -44027,6 +44060,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_address__title_yours, Self::address__title_yours),
         (Qstr::MP_QSTR_address__warning_not_yours, Self::address__warning_not_yours),
         (Qstr::MP_QSTR_address__xpub, Self::address__xpub),
+        (Qstr::MP_QSTR_address__xpub_export_warning, Self::address__xpub_export_warning),
         (Qstr::MP_QSTR_address_details__account_info, Self::address_details__account_info),
         (Qstr::MP_QSTR_address_details__derivation_path, Self::address_details__derivation_path),
         (Qstr::MP_QSTR_address_details__title_receive_address, Self::address_details__title_receive_address),

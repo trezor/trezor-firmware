@@ -25,6 +25,7 @@ class TR:
     address__title_yours: str = "(yours)"
     address__warning_not_yours: str = "This is NOT your address"
     address__xpub: str = "XPUB"
+    address__xpub_export_warning: str = "A quantum computer could use this public key to reveal all keys derived from it."
     address_details__account_info: str = "Account info"
     address_details__derivation_path: str = "Derivation path"
     address_details__title_receive_address: str = "Receive address"

@@ -31,6 +31,7 @@ async def get_public_key(
         # path must match the PUBKEY schema
         SCHEMA_PUBKEY.match(address_n) or SCHEMA_MINT.match(address_n),
     )
+    await paths.validate_xpub_export(address_n)
 
     try:
         key = _get_public_key(keychain, address_n)
