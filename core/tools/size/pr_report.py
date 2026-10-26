@@ -163,15 +163,18 @@ def flash_sections_of(image: str, projects_dir: Path) -> list[str]:
 # ---------------------------------------------------------------------------
 # Linker map: input sections and fill records per output section
 
+_LOAD_RE = r"(?:\s+load address\s+0x(?P<load>[0-9a-f]+))?"
 _OUT_SECTION_RE = re.compile(
-    r"^(?P<name>\.\S+)(?:\s+0x(?P<addr>[0-9a-f]+)\s+0x(?P<size>[0-9a-f]+))?"
+    r"^(?P<name>\.\S+)(?:\s+0x(?P<addr>[0-9a-f]+)\s+0x(?P<size>[0-9a-f]+)"
+    + _LOAD_RE
+    + ")?"
 )
 _IN_SECTION_RE = re.compile(
     r"^ (?P<name>\.\S+)(?:\s+0x(?P<addr>[0-9a-f]+)\s+0x(?P<size>[0-9a-f]+)\s+\S.*)?$"
 )
 _FILL_RE = re.compile(r"^ \*fill\*\s+0x(?P<addr>[0-9a-f]+)\s+0x(?P<size>[0-9a-f]+)")
 _CONTINUATION_RE = re.compile(
-    r"^\s+0x(?P<addr>[0-9a-f]+)\s+0x(?P<size>[0-9a-f]+)(?:\s+\S.*)?$"
+    r"^\s+0x(?P<addr>[0-9a-f]+)\s+0x(?P<size>[0-9a-f]+)" + _LOAD_RE + r"(?:\s+\S.*)?$"
 )
 
 
@@ -188,11 +191,18 @@ class MapSection:
     name: str
     addr: int
     size: int
+    load: int | None = (
+        None  # where the section is stored when that differs (`.data` lives in RAM)
+    )
     items: list[MapItem] = field(default_factory=list)
 
     @property
     def end(self) -> int:
         return self.addr + self.size
+
+    @property
+    def lma(self) -> int:
+        return self.addr if self.load is None else self.load
 
 
 _MEMORY_RE = re.compile(
@@ -281,6 +291,7 @@ def read_map_sections(path: Path) -> list[MapSection]:
                             name,
                             int(cont.group("addr"), 16),
                             int(cont.group("size"), 16),
+                            int(cont.group("load"), 16) if cont.group("load") else None,
                         )
                         sections.append(current)
                     else:
@@ -309,6 +320,7 @@ def read_map_sections(path: Path) -> list[MapSection]:
                         out.group("name"),
                         int(out.group("addr"), 16),
                         int(out.group("size"), 16),
+                        int(out.group("load"), 16) if out.group("load") else None,
                     )
                     sections.append(current)
 
@@ -425,24 +437,48 @@ def measure_image(elf_path: Path, projects_dir: Path) -> ImageSize:
 
     warnings: list[str] = []
     map_path = elf_path.with_suffix(".map")
+    map_sections = read_map_sections(map_path) if map_path.exists() else []
+    by_name: dict[str, list[MapSection]] = defaultdict(list)
+    for section in map_sections:
+        if section.size:
+            by_name[section.name].append(section)
+
+    def mapped_of(section: ElfSection) -> MapSection | None:
+        return next(
+            (m for m in by_name.get(section.name, []) if m.addr == section.addr), None
+        )
+
+    def lma(section: ElfSection) -> int:
+        """Where the section is stored in flash: `.data` lives in RAM but is loaded from flash."""
+        mapped = mapped_of(section)
+        return section.addr if mapped is None else mapped.lma
+
     memory = read_map_memory(map_path) if map_path.exists() else []
     flash_areas = [a for a in memory if not a.writable]
     free: int | None = None
     if flash_areas:
-        # `.data` is written to flash but lives in RAM; the map's memory areas tell them apart
         in_flash = [
-            s for s in flash_sections if any(a.holds(s.addr) for a in flash_areas)
+            s for s in flash_sections if any(a.holds(lma(s)) for a in flash_areas)
         ]
         ram = sum(
             s.size
             for s in elf_sections
             if s.alloc and not any(a.holds(s.addr) for a in flash_areas)
         )
-        used = [a for a in flash_areas if any(a.holds(s.addr) for s in in_flash)]
-        free = sum(
-            a.end - max(s.addr + s.size for s in in_flash if a.holds(s.addr))
-            for a in used
-        )
+        # per flash area: what is left after the last stored section, plus the padding
+        # at the end of that section (a bootloader is padded up to its limit)
+        free = 0
+        for area in flash_areas:
+            stored = [s for s in in_flash if area.holds(lma(s))]
+            if not stored:
+                continue
+            tail = max(stored, key=lma)
+            mapped = mapped_of(tail)
+            free += (
+                area.end
+                - (lma(tail) + tail.size)
+                + (trailing_fill(mapped) if mapped else 0)
+            )
     else:
         in_flash = flash_sections
         lo = min(s.addr for s in in_flash)
@@ -450,27 +486,17 @@ def measure_image(elf_path: Path, projects_dir: Path) -> ImageSize:
         ram = sum(s.size for s in elf_sections if s.alloc and not lo <= s.addr < hi)
     if image not in AREA_IMAGES:
         free = None
-    last = max(in_flash, key=lambda s: s.addr)
 
     regions: dict[str, Region] = {}
     if map_path.exists():
-        by_name: dict[str, list[MapSection]] = defaultdict(list)
-        for section in read_map_sections(map_path):
-            if section.size:
-                by_name[section.name].append(section)
-        for section in sorted(flash_sections, key=lambda s: s.addr):
-            candidates = [
-                m for m in by_name.get(section.name, []) if m.addr == section.addr
-            ]
-            if not candidates:
+        for section in sorted(flash_sections, key=lma):
+            mapped = mapped_of(section)
+            if mapped is None:
                 warnings.append(
                     f"section {section.name} at {section.addr:#x} missing from the map"
                 )
                 regions.setdefault(CODE_REGION, Region()).size += section.size
                 continue
-            mapped = candidates[0]
-            if section is last and free is not None:
-                free += trailing_fill(mapped)  # a bootloader is padded up to its limit
             if mapped.size != section.size:
                 warnings.append(
                     f"section {section.name}: map says {mapped.size} B, ELF says {section.size} B"
