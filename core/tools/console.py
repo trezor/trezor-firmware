@@ -304,6 +304,8 @@ class PairingAgent:
                 LOG.debug("pairing cancelled")
 
         bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
+        # Held from here on, so close() can drop it if registration fails.
+        self.bus = bus
         bus.export(self.PATH, Agent())
         for member, signature, body in (
             ("RegisterAgent", "os", [self.PATH, "KeyboardDisplay"]),
@@ -321,7 +323,6 @@ class PairingAgent:
             )
             if reply is None or reply.error_name:
                 raise RuntimeError(f"{member} failed: {reply and reply.error_name}")
-        self.bus = bus
         LOG.debug("pairing agent registered")
 
     def close(self) -> None:
