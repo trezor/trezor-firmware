@@ -57,7 +57,7 @@ async def handle(session: Session, msg: IpcMessage) -> None:
         result = False
 
     def send(data: bytes) -> None:
-        session.send(SERVICE_CRYPTO, 0, data)
+        session.send(SERVICE_CRYPTO, msg.message_id, data)
 
     try:
         trezorcrypto_api.send_crypto_result(result=result, ipc_cb=send)
