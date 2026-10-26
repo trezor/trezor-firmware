@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 from storage.cache_common import APP_COMMON_SEED, APP_COMMON_SEED_WITHOUT_PASSPHRASE
 from trezor import utils
-from trezor.crypto import hmac
 from trezor.wire import context
 from trezor.wire.context import get_context
 from trezor.wire.errors import DataError
@@ -15,6 +14,7 @@ from .passphrase import get_passphrase
 
 if TYPE_CHECKING:
     from trezor.crypto import bip32
+    from trezor.crypto.slip21 import Slip21Node
     from trezor.messages import ThpCreateNewSession
     from trezor.wire.protocol_common import Context
 
@@ -35,37 +35,6 @@ def raise_if_not_initialized() -> None:
         from trezor.wire import NotInitialized
 
         raise NotInitialized("Device is not initialized")
-
-
-class Slip21Node:
-    """
-    This class implements the SLIP-0021 hierarchical derivation of symmetric keys, see
-    https://github.com/satoshilabs/slips/blob/master/slip-0021.md.
-    """
-
-    def __init__(self, seed: bytes | None = None, data: bytes | None = None) -> None:
-        assert seed is None or data is None, "Specify exactly one of: seed, data"
-        if data is not None:
-            self.data = data
-        elif seed is not None:
-            self.data = hmac(hmac.SHA512, b"Symmetric key seed", seed).digest()
-        else:
-            raise ValueError  # neither seed nor data specified
-
-    def __del__(self) -> None:
-        del self.data
-
-    def derive_path(self, path: Slip21Path) -> None:
-        for label in path:
-            h = hmac(hmac.SHA512, self.data[0:32], b"\x00")
-            h.update(label)
-            self.data = h.digest()
-
-    def key(self) -> bytes:
-        return self.data[32:64]
-
-    def clone(self) -> "Slip21Node":
-        return Slip21Node(data=self.data)
 
 
 if utils.USE_THP:
@@ -187,6 +156,8 @@ def derive_node_without_passphrase(
 
 
 def derive_slip21_node_without_passphrase(path: Slip21Path) -> Slip21Node:
+    from trezor.crypto.slip21 import Slip21Node
+
     seed = _get_seed_without_passphrase()
     node = Slip21Node(seed)
     node.derive_path(path)
