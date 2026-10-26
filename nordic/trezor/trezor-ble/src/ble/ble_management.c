@@ -192,6 +192,9 @@ static void process_command(uint8_t *data, uint16_t len) {
 #if IS_ENABLED(CONFIG_TRZ_CONSOLE)
       console_set_enabled(cmd->flags.console != 0);
 #endif
+#if IS_ENABLED(CONFIG_TRZ_DEBUG_LINK)
+      debug_set_enabled(cmd->flags.debuglink != 0);
+#endif
 
       advertising_start(cmd->flags.whitelist != 0, cmd->flags.user_disconnect,
                         cmd->color, cmd->device_code, cmd->static_addr,

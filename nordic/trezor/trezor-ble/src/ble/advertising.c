@@ -50,6 +50,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 // connecting, as their 128-bit UUIDs do not fit into the scan response next
 // to the wire-protocol one.
 #define ADV_FLAG_CONSOLE 0x10
+#define ADV_FLAG_DEBUG_LINK 0x20
 
 #define ADV_INTERVAL_FAST_MIN_MS 20
 #define ADV_INTERVAL_FAST_MAX_MS 25
@@ -174,6 +175,11 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
 #if IS_ENABLED(CONFIG_TRZ_CONSOLE)
   if (console_enabled()) {
     manufacturer_data[2] |= ADV_FLAG_CONSOLE;
+  }
+#endif
+#if IS_ENABLED(CONFIG_TRZ_DEBUG_LINK)
+  if (debug_enabled()) {
+    manufacturer_data[2] |= ADV_FLAG_DEBUG_LINK;
   }
 #endif
 

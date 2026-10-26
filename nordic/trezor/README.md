@@ -204,6 +204,22 @@ It is selected per board in `boards/<board>.conf`: on for `t3t2_dk` (no USB on
 that model) and, temporarily while the console is brought up on T3W1
 development units, also for `t3w1_revA_nrf52832`.
 
+#### BLE debuglink service
+
+`CONFIG_TRZ_DEBUG_LINK` adds a third service (`8c000020-…`, RX `8c000021`, TX
+`8c000022`) carrying the debuglink's codec v1 reports between debug STM32
+firmware (`--debug-link`) and a bonded host, the counterpart of the USB debug
+interface on models without USB. Own inter-MCU service id
+(`NRF_SERVICE_DEBUG`), same framing and one-packet credit as the console
+(`src/ble/aux_chan.c` implements both), and the same enable rule: registered
+only while the `debuglink` flag of the advertising-on command is set, which
+`--debug-link` STM32 builds do, so a shipping image can carry it; the firmware
+that turns it on is the debug one, which answers debuglink requests from any
+bonded host. While registered it is announced by bit `0x20` of the advertising
+flags byte, next to the console's `0x10`. It is on in the `t3t2_dk` and, for
+bring-up, the `t3w1_revA_nrf52832` board configs; on the nRF52832 (T3W1) it
+fits next to the RTT logging of `debug.conf` with about 1 KB of RAM to spare.
+
 
 ### Build Radio test application
 ```sh

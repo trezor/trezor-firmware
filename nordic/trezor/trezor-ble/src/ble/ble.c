@@ -135,6 +135,9 @@ bool ble_init(void) {
 #if IS_ENABLED(CONFIG_TRZ_CONSOLE)
   console_init();
 #endif
+#if IS_ENABLED(CONFIG_TRZ_DEBUG_LINK)
+  debug_init();
+#endif
 
   advertising_init();
   ble_management_init();

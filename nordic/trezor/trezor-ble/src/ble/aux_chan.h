@@ -21,8 +21,8 @@
 
 // Auxiliary GATT channel: the machinery shared by the services that carry an
 // opaque packet stream between the STM32 and a bonded host next to the
-// wire-protocol service, each on its own inter-MCU service id; the console
-// (console.c) is the first instance.
+// wire-protocol service, each on its own inter-MCU service id: the console
+// (console.c) and the debuglink (debug.c).
 //
 // Both characteristics are variable-length up to AUX_CHAN_PACKET_SIZE. The
 // SPI frame stays fixed-size and carries the real length in its header, so
