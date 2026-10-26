@@ -41,7 +41,6 @@ class CoinInfo:
         extra_data: bool,
         timestamp: bool,
         overwintered: bool,
-        confidential_assets: dict[str, Any] | None,
     ) -> None:
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut
@@ -68,7 +67,6 @@ class CoinInfo:
         self.extra_data = extra_data
         self.timestamp = timestamp
         self.overwintered = overwintered
-        self.confidential_assets = confidential_assets
         if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
             self.sign_hash_double = False
@@ -131,7 +129,6 @@ ATTRIBUTES = (
     ("extra_data", bool),
     ("timestamp", bool),
     ("overwintered", bool),
-    ("confidential_assets", optional_dict),
 )
 
 btc_names = ["Bitcoin", "Testnet", "Regtest", "Signet"]

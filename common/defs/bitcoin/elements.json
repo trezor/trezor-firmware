@@ -39,9 +39,5 @@
   "cooldown": 100,
   "overwintered": false,
   "extra_data": false,
-  "timestamp": false,
-  "confidential_assets": {
-    "address_prefix": 4,
-    "blech32_prefix": "el"
-  }
+  "timestamp": false
 }
