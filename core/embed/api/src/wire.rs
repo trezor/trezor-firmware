@@ -63,6 +63,9 @@ pub(crate) enum CoreIpcService {
     Crypto = 6,
 }
 
+/// Message id of a Core reply reporting a failed request.
+pub(crate) const MSG_ID_ERROR: u16 = 0xFFFF;
+
 impl From<CoreIpcService> for u16 {
     fn from(service: CoreIpcService) -> Self {
         service as u16
