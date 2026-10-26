@@ -24,6 +24,16 @@ SERVICE_UI = const(4)
 SERVICE_PROGRESS = const(5)
 SERVICE_CRYPTO = const(6)
 
+# message id of a Core reply reporting a failed request
+MSG_ID_ERROR = const(0xFFFF)
+
+
+def describe(exception: BaseException) -> str:
+    """Text of `exception`, falling back to its type when it has none."""
+    # `wire.Error` keeps its text in `.message`, its `str()` is empty
+    message = getattr(exception, "message", None) or str(exception)
+    return message or exception.__class__.__name__
+
 
 class Session:
     """State of a single `ExtAppMessage` exchange with a running external app."""

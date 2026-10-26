@@ -8,7 +8,7 @@ from trezor.wire.errors import DataError
 from apps.common import paths
 from apps.common.keychain import get_keychain
 
-from .session import SERVICE_CRYPTO
+from .session import MSG_ID_ERROR, SERVICE_CRYPTO, describe
 
 if __debug__:
     from trezor import log
@@ -41,8 +41,8 @@ _SLIP24_NAMESPACE = [b"SLIP-0024"]
 async def handle(session: Session, msg: IpcMessage) -> None:
     """Run a crypto operation requested by the app and send it the result.
 
-    A failed operation is reported to the app as `False`; only a malformed
-    request or a failure to reply kills the app.
+    A failed operation is reported to the app as `MSG_ID_ERROR`; only an
+    unknown operation or a failure to reply kills the app.
     """
     handler = _HANDLERS.get(msg.message_id)
     if handler is None:
@@ -53,8 +53,14 @@ async def handle(session: Session, msg: IpcMessage) -> None:
         result = await handler(session, obj)
     except Exception as e:
         if __debug__:
-            log.error(__name__, f"Crypto operation {msg.message_id} failed: {e}")
-        result = False
+            log.error(
+                __name__, f"Crypto operation {msg.message_id} failed: {describe(e)}"
+            )
+        try:
+            session.send(SERVICE_CRYPTO, MSG_ID_ERROR, b"")
+        except Exception:
+            session.die(DataError("Failed to send crypto error"))
+        return
 
     def send(data: bytes) -> None:
         session.send(SERVICE_CRYPTO, msg.message_id, data)
