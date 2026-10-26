@@ -18,6 +18,8 @@ pub enum WireError {
     UnexpectedResponse,
     /// The response could not be decoded.
     DecodeError,
+    /// Core failed to perform the requested operation.
+    OperationFailed,
 }
 
 impl WireError {
@@ -29,6 +31,7 @@ impl WireError {
             Self::UnexpectedService => "received message from unexpected service",
             Self::UnexpectedResponse => "received unexpected response message",
             Self::DecodeError => "failed to decode response",
+            Self::OperationFailed => "operation failed in Core",
         }
     }
 }
