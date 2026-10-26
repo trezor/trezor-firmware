@@ -23,7 +23,7 @@ from trezorlib.tools import parse_path
 
 from . import signing, testapp_ext
 from .generated import messages as m
-from .testapp_ext import DEFAULT_BIP32_PATH, UNEXPECTED_RESPONSE, SdkError, raises
+from .testapp_ext import DEFAULT_BIP32_PATH, OPERATION_FAILED, SdkError, raises
 
 ADDRESS_N = parse_path(DEFAULT_BIP32_PATH)
 
@@ -112,7 +112,7 @@ def test_sign_digest_other_address(session: Session, instance_id: int):
 @pytest.mark.parametrize("compressed", [True, False])
 def test_sign_digest_zero_digest(session: Session, instance_id: int, compressed: bool):
     """An all-zero digest is refused: its signature could be forged for any key."""
-    with raises(SdkError.DataError, UNEXPECTED_RESPONSE):
+    with raises(SdkError.DataError, OPERATION_FAILED):
         testapp_ext.sign_digest(
             session, instance_id, ADDRESS_N, b"\x00" * 32, compressed
         )
@@ -126,7 +126,7 @@ def test_sign_digest_wrong_length(session: Session, instance_id: int, length: in
 
 @pytest.mark.parametrize("path", FORBIDDEN_PATHS)
 def test_sign_digest_forbidden_path(session: Session, instance_id: int, path: str):
-    with raises(SdkError.DataError, UNEXPECTED_RESPONSE):
+    with raises(SdkError.DataError, OPERATION_FAILED):
         testapp_ext.sign_digest(
             session, instance_id, parse_path(path), b"\x01" * 32, True
         )
@@ -151,7 +151,7 @@ def test_sign_digest_canonical_ethereum(
 
 def test_sign_digest_canonical_ethereum_zero_digest(session: Session, instance_id: int):
     """An all-zero digest is refused: its signature could be forged for any key."""
-    with raises(SdkError.DataError, UNEXPECTED_RESPONSE):
+    with raises(SdkError.DataError, OPERATION_FAILED):
         testapp_ext.sign_digest(
             session,
             instance_id,
@@ -166,7 +166,7 @@ def test_sign_digest_canonical_ethereum_zero_digest(session: Session, instance_i
 def test_sign_digest_canonical_ethereum_forbidden_path(
     session: Session, instance_id: int, path: str
 ):
-    with raises(SdkError.DataError, UNEXPECTED_RESPONSE):
+    with raises(SdkError.DataError, OPERATION_FAILED):
         testapp_ext.sign_digest(
             session,
             instance_id,
