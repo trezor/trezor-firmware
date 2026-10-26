@@ -530,7 +530,6 @@ int bootloader_main(void) {
     erase_storage(NULL);
 
 #ifdef USE_BLE
-    ble_init();
     ble_wait_until_ready();
     wipe_bonds(NULL);
 #endif
