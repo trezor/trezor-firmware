@@ -226,7 +226,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         mac: &'a [u8; 32],
         address: Str<'a>,
         slip44: u32,
-    ) -> FastResult<bool, WireError> {
+    ) -> FastResult<(), WireError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::CheckAddressMac {
                 address_n: address_n.as_slice().into(),
@@ -234,7 +234,11 @@ impl CryptoV1 for TrezorCryptoV1Impl {
                 address: address.as_str().into(),
                 slip44,
             })?;
-            expect_bool(&data)
+            // a wrong MAC comes back as `MSG_ID_ERROR`
+            match expect_bool(&data)? {
+                true => Ok(()),
+                false => Err(WireError::OperationFailed),
+            }
         })()
         .into()
     }
