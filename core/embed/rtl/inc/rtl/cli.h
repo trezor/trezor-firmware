@@ -111,6 +111,8 @@ struct cli {
   int hist_idx;
   /** prefix to search in the history */
   int hist_prefix;
+  /** previous character was a tab */
+  bool last_tab;
 
   /** Command name (pointer to the line buffer) */
   const char* cmd_name;
