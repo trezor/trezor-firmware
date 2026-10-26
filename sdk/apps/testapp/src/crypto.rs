@@ -83,9 +83,9 @@ pub fn get_address_mac(m: wire::GetAddressMac) -> Result<wire::AddressMac> {
     Ok(wire::AddressMac { mac: mac.to_vec() })
 }
 
-pub fn check_address_mac(m: wire::CheckAddressMac) -> Result<wire::Bool> {
-    let value = sdk::check_address_mac(&m.address_n, array(&m.mac)?, &m.address, m.slip44)?;
-    Ok(wire::Bool { value })
+pub fn check_address_mac(m: wire::CheckAddressMac) -> Result<wire::Success> {
+    sdk::check_address_mac(&m.address_n, array(&m.mac)?, &m.address, m.slip44)?;
+    Ok(wire::Success {})
 }
 
 pub fn verify_nonce_cache(m: wire::VerifyNonceCache) -> Result<wire::Bool> {
