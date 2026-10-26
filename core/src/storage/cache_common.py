@@ -41,26 +41,18 @@ class InvalidSessionError(Exception):
     pass
 
 
-def _get_slip21_key(path: Sequence[bytes], seed: bytes) -> bytes:
-    from trezorcrypto import hmac
-
-    data = hmac(hmac.SHA512, b"Symmetric key seed", seed).digest()
-    for label in path:
-        h = hmac(hmac.SHA512, data[0:32], b"\x00")
-        h.update(label)
-        data = h.digest()
-    return data[32:64]
-
-
 def get_cache_encryption_key() -> bytes:
     """
     Returns the cache encryption key, derived from the device secret.
     """
     from storage.device import get_device_secret
+    from trezor.crypto.slip21 import Slip21Node
 
     device_secret = get_device_secret()
     path = [b"TREZOR", b"Storage cache encryption key"]
-    return _get_slip21_key(path, device_secret)
+    node = Slip21Node(device_secret)
+    node.derive_path(path)
+    return node.key()
 
 
 class DataCache:

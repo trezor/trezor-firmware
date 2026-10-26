@@ -277,14 +277,13 @@ class TestStorageCacheEncryption(unittest.TestCase):
     def test_cache_encryption_algorithm(self) -> None:
         from storage.device import get_device_secret
         from trezor.crypto import chacha20poly1305_decrypt
-
-        from apps.common.seed import Slip21Node
+        from trezor.crypto.slip21 import Slip21Node
 
         session = self._session()
         values = self._fill(session, self.KEYS)
         encrypt_cache()
 
-        # derive the key independently of `_get_slip21_key`
+        # derive the key independently of `get_cache_encryption_key`
         node = Slip21Node(seed=get_device_secret())
         node.derive_path([b"TREZOR", b"Storage cache encryption key"])
         decryption_key = node.key()
