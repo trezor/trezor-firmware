@@ -22,7 +22,7 @@ algorithm, extended to work on other curves.
 | Ethereum | secp256k1 | `44'/c'/0'/a`      | yes         | [2](#Ethereum) |
 | Ripple   | secp256k1 | `44'/144'/a'/0/0`  |             | [3](#Ripple)   |
 | EOS      | secp256k1 | `44'/194'/a'/0/0`  |             | [3](#Ripple)   |
-| Tron     | secp256k1 | TODO               |             | TODO           |
+| Tron     | secp256k1 | `44'/195'/a'/y/i`  |             |                |
 | Cardano  | ed25519   | `44'/1815'/a'/y/i` | yes         | [4](#Cardano)  |
 | Stellar  | ed25519   | `44'/148'/a'`      |             |                |
 | NEM      | ed25519   | `44'/43'/a'`       |             | [5](#NEM)      |
