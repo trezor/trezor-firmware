@@ -220,16 +220,15 @@ def check_address_mac(
     mac: bytes,
     address: str,
     slip44: int,
-) -> bool:
-    res = call_ext(
+) -> None:
+    call_ext(
         session,
         instance_id,
         msg_data=m.CheckAddressMac(
             address_n=list(address_n), mac=mac, address=address, slip44=slip44
         ),
-        expect=[m.Bool],
+        expect=[m.Success],
     )
-    return res.value
 
 
 def verify_nonce_cache(session: "Session", instance_id: int, nonce: bytes) -> bool:

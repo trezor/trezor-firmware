@@ -133,7 +133,7 @@ message AddressMac {
 
 /**
  * Request: crypto::check_address_mac; `mac` must be 32 bytes
- * @next Bool
+ * @next Success
  */
 message CheckAddressMac {
     repeated uint32 address_n = 1;

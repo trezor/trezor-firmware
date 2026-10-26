@@ -34,9 +34,9 @@ def get_mac(session: Session, instance_id: int, **kw) -> bytes:
     )
 
 
-def check_mac(session: Session, instance_id: int, mac: bytes, **kw) -> bool:
+def check_mac(session: Session, instance_id: int, mac: bytes, **kw) -> None:
     args = {"address_n": ADDRESS_N, "address": ADDRESS, "slip44": SLIP44, **kw}
-    return testapp_ext.check_address_mac(
+    testapp_ext.check_address_mac(
         session, instance_id, args["address_n"], mac, args["address"], args["slip44"]
     )
 
@@ -44,7 +44,7 @@ def check_mac(session: Session, instance_id: int, mac: bytes, **kw) -> bool:
 def test_address_mac_roundtrip(session: Session, instance_id: int):
     mac = get_mac(session, instance_id)
     assert len(mac) == 32
-    assert check_mac(session, instance_id, mac) is True
+    check_mac(session, instance_id, mac)
 
 
 def test_address_mac_deterministic(session: Session, instance_id: int):
@@ -67,7 +67,7 @@ def test_address_mac_binds_inputs(session: Session, instance_id: int, change: di
     mac = get_mac(session, instance_id)
     other = get_mac(session, instance_id, **change)
     assert other != mac
-    assert check_mac(session, instance_id, other, **change) is True
+    check_mac(session, instance_id, other, **change)
     with raises(SdkError.DataError, OPERATION_FAILED):
         check_mac(session, instance_id, mac, **change)
 
@@ -94,7 +94,7 @@ def test_check_address_mac_wrong_length(
 def test_address_mac_long_address(session: Session, instance_id: int):
     address = "a" * 1000
     mac = get_mac(session, instance_id, address=address)
-    assert check_mac(session, instance_id, mac, address=address) is True
+    check_mac(session, instance_id, mac, address=address)
 
 
 @pytest.mark.parametrize(

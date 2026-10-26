@@ -89,7 +89,7 @@ wire_handler!(
     handle_check_address_mac,
     ProstCodec,
     CheckAddressMac,
-    MessageType::Bool,
+    MessageType::Success,
     crypto::check_address_mac
 );
 wire_handler!(
