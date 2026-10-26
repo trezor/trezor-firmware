@@ -12,7 +12,7 @@ use trezor_app_sdk::traits::crypto::{
 use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
 use trezor_app_sdk::traits::wire::WireError;
 
-use crate::wire::{CoreIpcService, ipc_call, to_bytes};
+use crate::wire::{CoreIpcService, MSG_ID_ERROR, ipc_call, to_bytes};
 
 mod hashers;
 
@@ -24,6 +24,9 @@ fn ipc_crypto_call(value: &TrezorCryptoEnum) -> Result<BoxedSlice<u8>, WireError
     let bytes = to_bytes(value).map_err(|_| WireError::DecodeError)?;
     let id = value.id() as u16;
     let (response_id, data) = ipc_call(CoreIpcService::Crypto.into(), id, &bytes, TIMEOUT_MAX)?;
+    if response_id == MSG_ID_ERROR {
+        return Err(WireError::OperationFailed);
+    }
     // Core answers with the id of the request
     if response_id != id {
         return Err(WireError::UnexpectedResponse);
