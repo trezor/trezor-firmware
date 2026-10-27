@@ -28,15 +28,15 @@ extern "C" fn py_erase_bonds() -> Obj {
 }
 
 extern "C" fn py_unpair(obj: Obj) -> Obj {
-    // Accepts: None OR a 6-byte MAC address (bytes-like)
-    let addr_bytes_opt = if obj == Obj::const_none() {
-        None
-    } else {
-        let bytes: [u8; 6] = unwrap!(util::iter_into_array(obj));
-        Some(bytes)
-    };
-
     let block = || {
+        // Accepts: None OR a 6-byte MAC address (bytes-like)
+        let addr_bytes_opt = if obj == Obj::const_none() {
+            None
+        } else {
+            let bytes: [u8; 6] = util::iter_into_array(obj)?;
+            Some(bytes)
+        };
+
         if let Some(bytes) = addr_bytes_opt {
             // Scan bonds, unpair on match, and stop.
             get_bonds(|bonds| -> Result<(), Error> {
