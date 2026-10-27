@@ -27,7 +27,14 @@ async def handle_continue(session: Session, msg: IpcMessage) -> None:
     """Forward an intermediate response to the host and pass its ack to the app."""
     response = ExtAppResponse(message_id=msg.message_id, data=msg.data, finished=False)
     ack = await context.call(response, ExtAppMessage)
-    _forward_ack(session, SERVICE_WIRE_CONTINUE, ack)
+    if ack.message_id > 0xFFFF:
+        session.die(DataError("Invalid message ID."))
+    try:
+        session.send(SERVICE_WIRE_CONTINUE, ack.message_id, ack.data)
+    except Exception:
+        # e.g. the message does not fit the app's inbox; the app would keep
+        # waiting for it, so stop the app instead
+        session.die(DataError("Failed to send host message to app"))
 
 
 def handle_error(msg: IpcMessage) -> NoReturn:
@@ -41,14 +48,3 @@ def handle_error(msg: IpcMessage) -> NoReturn:
     if __debug__:
         log.debug(__name__, f"Received wire error message: {err_message}")
     raise Error(msg.message_id, err_message)  # pyright: ignore [reportArgumentType]
-
-
-def _forward_ack(session: Session, service: int, ack: ExtAppMessage) -> None:
-    if ack.message_id > 0xFFFF:
-        session.die(DataError("Invalid message ID."))
-    try:
-        session.send(service, ack.message_id, ack.data)
-    except Exception:
-        # e.g. the message does not fit the app's inbox; the app would keep
-        # waiting for it, so stop the app instead
-        session.die(DataError("Failed to send host message to app"))
