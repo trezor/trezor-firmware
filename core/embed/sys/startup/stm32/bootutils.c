@@ -40,6 +40,12 @@
 #endif
 #endif
 
+// STM32F4 jumps to the bootloader without a reset, so an IRQ handler that
+// faulted would stay active in the bootloader and mask its interrupts.
+#if defined(STM32F4) && defined(USE_BOOTARGS_RSOD)
+#error "USE_BOOTARGS_RSOD is not supported on STM32F4"
+#endif
+
 #ifdef SECURE_MODE
 
 #ifdef STM32U5

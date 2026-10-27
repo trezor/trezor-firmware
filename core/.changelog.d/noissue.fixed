@@ -1,0 +1,1 @@
+[T2T1,T2B1,T3B1,T3T1] Show the error screen instead of freezing when the firmware crashes inside an interrupt handler.
