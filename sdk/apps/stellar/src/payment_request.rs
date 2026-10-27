@@ -4,7 +4,7 @@
 use crate::{alloc_types::Vec, proto::common::PaymentRequest};
 use trezor_app_sdk::{
     Error, Result, ResultExt,
-    crypto::{self, BoxedHasher, EcCurve, HasherExt, HashingAlgorithm},
+    crypto::{self, BoxedHasher, EcdsaCurve, HasherExt, HashingAlgorithm},
 };
 
 const SLIP44_ID_UNDEFINED: u32 = 0xFFFF_FFFF;
@@ -237,8 +237,8 @@ impl PaymentRequestVerifier {
         self.h_pr.update(&hash_outputs);
         let digest = self.h_pr.finalize();
 
-        let mut valid = crypto::ec_verify_recover_digest(
-            EcCurve::Nist256p1,
+        let mut valid = crypto::ecdsa_verify_digest(
+            EcdsaCurve::Nist256p1,
             &PUBLIC_KEY,
             &self.signature,
             &digest,
@@ -247,8 +247,8 @@ impl PaymentRequestVerifier {
 
         #[cfg(feature = "dev_keys")]
         if !valid {
-            valid = crypto::ec_verify_recover_digest(
-                EcCurve::Nist256p1,
+            valid = crypto::ecdsa_verify_digest(
+                EcdsaCurve::Nist256p1,
                 &DEBUG_PUBLIC_KEY,
                 &self.signature,
                 &digest,
