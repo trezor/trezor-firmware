@@ -59,5 +59,5 @@ class Session:
         self.dead = True
         if __debug__:
             log.error(__name__, f"Task died due to exception: {exception}")
-        self.image.stop()  # TODO or image.delete ???
+        self.image.stop()
         raise exception
