@@ -3443,8 +3443,8 @@
     "tutorial__menu": {
       "Bolt": "",
       "Caesar": "Finde Kontext-Abhängige Aktionen und Optionen im Menü.",
-      "Delizia": "Finde kontextspezifische Aktionen und Optionen im Menü.",
-      "Eckhart": "Finde kontextspezifische Aktionen und Optionen im Menü."
+      "Delizia": "Finde Kontext-Abhängige Aktionen und Optionen im Menü.",
+      "Eckhart": "Finde Kontext-Abhängige Aktionen und Optionen im Menü."
     },
     "tutorial__menu_appendix": {
       "Bolt": "",
@@ -3515,8 +3515,8 @@
     "tutorial__restart_tutorial": {
       "Bolt": "",
       "Caesar": "Tutorial neu starten",
-      "Delizia": "Tutorial neustarten",
-      "Eckhart": "Tutorial neustarten"
+      "Delizia": "Tutorial neu starten",
+      "Eckhart": "Tutorial neu starten"
     },
     "tutorial__scroll_down": {
       "Bolt": "",
@@ -3640,7 +3640,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Verwende Trezor durch\nDrücken der linken und rechten Tasten.",
+      "Caesar": "Verwende Trezor durch Drücken der linken und rechten Tasten.",
       "Delizia": "",
       "Eckhart": ""
     },

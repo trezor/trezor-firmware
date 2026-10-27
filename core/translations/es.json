@@ -1376,9 +1376,24 @@
     "misc__enable_labeling": "¿Habilitar el etiquetado?",
     "misc__encrypt_value": "Cifrar valor",
     "misc__title_suite_labeling": "Etiquetado suite",
-    "modify_amount__decrease_amount": "Reducir la cantidad en:",
-    "modify_amount__increase_amount": "Aumentar la cantidad en:",
-    "modify_amount__new_amount": "Nueva cantidad:",
+    "modify_amount__decrease_amount": {
+      "Bolt": "Reducir la cantidad en:",
+      "Caesar": "Reducir la cantidad en:",
+      "Delizia": "Reducir la cantidad en",
+      "Eckhart": "Reducir la cantidad en"
+    },
+    "modify_amount__increase_amount": {
+      "Bolt": "Aumentar la cantidad en:",
+      "Caesar": "Aumentar la cantidad en:",
+      "Delizia": "Aumentar la cantidad en",
+      "Eckhart": "Aumentar la cantidad en"
+    },
+    "modify_amount__new_amount": {
+      "Bolt": "Nueva cantidad:",
+      "Caesar": "Nueva cantidad:",
+      "Delizia": "Nueva cantidad",
+      "Eckhart": "Nueva cantidad"
+    },
     "modify_amount__title": "Modificar cantidad",
     "modify_fee__decrease_fee": {
       "Bolt": "Reducir comisión en:",
@@ -1958,12 +1973,7 @@
       "Eckhart": ""
     },
     "recovery__dry_run_bip39_valid_match": "El respaldo ingresado es válido y coincide con el respaldo en este dispositivo.",
-    "recovery__dry_run_bip39_valid_mismatch": {
-      "Bolt": "El respaldo ingresado es válido pero no coincide con el respaldo en este dispositivo.",
-      "Caesar": "El respaldo  ingresado es válido pero no coincide con el respaldo en este dispositivo.",
-      "Delizia": "El respaldo ingresado es válido pero no coincide con el respaldo en este dispositivo.",
-      "Eckhart": "El respaldo ingresado es válido pero no coincide con el respaldo en este dispositivo."
-    },
+    "recovery__dry_run_bip39_valid_mismatch": "El respaldo ingresado es válido pero no coincide con el respaldo en este dispositivo.",
     "recovery__dry_run_slip39_valid_match": "El respaldo ingresado es válido y coincide con el respaldo en este dispositivo.",
     "recovery__dry_run_slip39_valid_mismatch": "El respaldo ingresado es válido pero no coincide con el respaldo en este dispositivo.",
     "recovery__enter_any_share": "Ingresa cualquier parte.",
