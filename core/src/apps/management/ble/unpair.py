@@ -11,7 +11,11 @@ if TYPE_CHECKING:
 async def unpair(msg: BleUnpair) -> None:
     from trezor.messages import Success
     from trezor.ui.layouts import show_success, show_warning
+    from trezor.wire import DataError
     from trezor.wire.context import NoWireContext, get_context
+
+    if not msg.all and msg.addr is not None and len(msg.addr) != 6:
+        raise DataError("Invalid address length")
 
     if msg.all:
         await show_warning(
