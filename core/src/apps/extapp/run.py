@@ -50,9 +50,8 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
     try:
         return await _serve(session, request)
     except Exception as e:
-        if not session.dead:
-            raise
-        await _show_error(session, e)
+        if session.dead:
+            await _show_error(session, e)
         raise
 
 
