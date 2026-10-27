@@ -31,6 +31,11 @@ const LABEL_OUTSET: i16 = 3;
 const NOTIFICATION_FONT: Font = fonts::FONT_NORMAL_UPPER;
 const NOTIFICATION_ICON: Icon = theme::ICON_WARNING;
 const COINJOIN_CORNER: Point = AREA.top_right().ofs(Offset::new(-2, 2));
+/// Area of the notification text when it is shown between the warning icons.
+const NOTIFICATION_TEXT_AREA: Rect = AREA
+    .split_top(NOTIFICATION_HEIGHT)
+    .0
+    .inset(Insets::sides(NOTIFICATION_ICON.toif.width() + 1));
 
 const HOLD_TO_LOCK_MS: u32 = 1000;
 
@@ -55,6 +60,8 @@ pub struct Homescreen {
     // always painted, so we need to always paint the label too
     label: Marquee,
     notification: Option<Notification>,
+    /// Notification text that does not fit is scrolling in this marquee.
+    notification_marquee: Marquee,
     custom_image: Option<BinaryData<'static>>,
     /// Used for HTC functionality to lock device from homescreen
     invisible_buttons: Child<ButtonController>,
@@ -82,6 +89,12 @@ impl Homescreen {
             label: Marquee::new(label, fonts::FONT_BIG, theme::FG, theme::BG)
                 .with_alignment(Alignment::Center),
             notification,
+            notification_marquee: Marquee::new(
+                TString::empty(),
+                NOTIFICATION_FONT,
+                theme::FG,
+                theme::BG,
+            ),
             custom_image: get_homescreen_image(),
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
             loader,
@@ -101,46 +114,77 @@ impl Homescreen {
         }
     }
 
-    fn render_notification<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let baseline = TOP_CENTER + Offset::y(NOTIFICATION_FONT.line_height());
+    /// Currently shown notification text and whether it is accompanied by the
+    /// warning icons.
+    fn current_notification(&self) -> Option<(TString<'static>, bool)> {
         if !usb_configured() {
-            shape::Bar::new(AREA.split_top(NOTIFICATION_HEIGHT).0)
-                .with_bg(theme::BG)
-                .render(target);
-
             // TODO: fill warning icons here as well?
-            TR::homescreen__title_no_usb_connection.map_translated(|t| {
+            Some((TR::homescreen__title_no_usb_connection.into(), false))
+        } else {
+            self.notification.as_ref().map(|n| (n.text, true))
+        }
+    }
+
+    /// Area of the notification text, the marquee draws the baseline at
+    /// `text_height - 1` from its top, so it is shifted to match the baseline
+    /// of the non-scrolling text.
+    fn notification_area(with_icons: bool) -> Rect {
+        let area = if with_icons {
+            NOTIFICATION_TEXT_AREA
+        } else {
+            AREA.split_top(NOTIFICATION_HEIGHT).0
+        };
+        let top = NOTIFICATION_FONT.line_height() - (NOTIFICATION_FONT.text_height() - 1);
+        area.inset(Insets::top(top))
+    }
+
+    /// Update the notification marquee to the currently shown notification
+    /// and (re)start it when it changed.
+    fn update_notification(&mut self, ctx: &mut EventCtx, restart: bool) {
+        let Some((text, with_icons)) = self.current_notification() else {
+            return;
+        };
+        if restart || self.notification_marquee.text() != text {
+            self.notification_marquee.set_text(text);
+            self.notification_marquee
+                .place(Self::notification_area(with_icons));
+            self.notification_marquee.reset();
+            self.notification_marquee.start(ctx, Instant::now());
+        }
+    }
+
+    fn render_notification<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let Some((text, with_icons)) = self.current_notification() else {
+            return;
+        };
+        shape::Bar::new(AREA.split_top(NOTIFICATION_HEIGHT).0)
+            .with_bg(theme::BG)
+            .render(target);
+
+        let text_width = text.map(|t| NOTIFICATION_FONT.text_width(t));
+        if text_width <= Self::notification_area(with_icons).width() {
+            let baseline = TOP_CENTER + Offset::y(NOTIFICATION_FONT.line_height());
+            text.map(|t| {
                 shape::Text::new(baseline, t, NOTIFICATION_FONT)
                     .with_align(Alignment::Center)
                     .render(target)
             });
-        } else if let Some(notification) = &self.notification {
-            shape::Bar::new(AREA.split_top(NOTIFICATION_HEIGHT).0)
+        } else {
+            // Text too long, scrolling it (between the icons, if any).
+            self.notification_marquee.render(target);
+        }
+
+        if with_icons {
+            shape::ToifImage::new(AREA.top_left(), NOTIFICATION_ICON.toif)
+                .with_align(Alignment2D::TOP_LEFT)
+                .with_fg(theme::FG)
                 .with_bg(theme::BG)
                 .render(target);
-
-            notification.text.map(|c| {
-                shape::Text::new(baseline, c, NOTIFICATION_FONT)
-                    .with_align(Alignment::Center)
-                    .render(target)
-            });
-
-            // Painting warning icons in top corners when the text is short enough not to
-            // collide with them
-            let icon_width = NOTIFICATION_ICON.toif.width();
-            let text_width = notification.text.map(|c| NOTIFICATION_FONT.text_width(c));
-            if AREA.width() >= text_width + (icon_width + 1) * 2 {
-                shape::ToifImage::new(AREA.top_left(), NOTIFICATION_ICON.toif)
-                    .with_align(Alignment2D::TOP_LEFT)
-                    .with_fg(theme::FG)
-                    .with_bg(theme::BG)
-                    .render(target);
-                shape::ToifImage::new(AREA.top_right(), NOTIFICATION_ICON.toif)
-                    .with_align(Alignment2D::TOP_RIGHT)
-                    .with_fg(theme::FG)
-                    .with_bg(theme::BG)
-                    .render(target);
-            }
+            shape::ToifImage::new(AREA.top_right(), NOTIFICATION_ICON.toif)
+                .with_align(Alignment2D::TOP_RIGHT)
+                .with_fg(theme::FG)
+                .with_bg(theme::BG)
+                .render(target);
         }
     }
 
@@ -180,6 +224,7 @@ impl Homescreen {
 
     fn event_usb(&mut self, ctx: &mut EventCtx, event: Event) {
         if let Event::USB(_) = event {
+            self.update_notification(ctx, false);
             ctx.request_paint();
         }
     }
@@ -204,8 +249,10 @@ impl Component for Homescreen {
 
         if let Event::Attach(_) = event {
             self.label.start(ctx, Instant::now());
+            self.update_notification(ctx, true);
         } else {
             let _ = self.label.event(ctx, event);
+            let _ = self.notification_marquee.event(ctx, event);
         }
 
         // Only care about button and loader events when there is a possibility of
