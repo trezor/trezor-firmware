@@ -82,6 +82,19 @@ void SystemInit(void) {
   SCB_NS->CPACR |= ((3UL << 20U) | (3UL << 22U));
 #endif
 
+  // Each boot stage calls SystemInit() again with PLL1 possibly already running
+  // as the system clock. PLL1 configuration registers can only be written while
+  // the PLL is disabled, so fall back to HSI and stop PLL1 first.
+  RCC->CR |= RCC_CR_HSION;
+  while ((RCC->CR & RCC_CR_HSIRDY) == 0U) {
+  }
+  MODIFY_REG(RCC->CFGR1, RCC_CFGR1_SW, RCC_SYSCLKSOURCE_HSI);
+  while (__HAL_RCC_GET_SYSCLK_SOURCE() != RCC_SYSCLKSOURCE_STATUS_HSI) {
+  }
+  __HAL_RCC_PLL1_DISABLE();
+  while ((RCC->CR & RCC_CR_PLL1RDY) != 0U) {
+  }
+
   // Voltage scaling VOS0 is required for the 250 MHz maximum. Raise it before
   // increasing the flash latency and the clock frequency.
   (void)HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE0);
@@ -92,10 +105,18 @@ void SystemInit(void) {
   while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_LATENCY_5) {
   }
 
+  // Flash programming delay for 168..250 MHz. The HAL never sets it and the
+  // reset value only covers 84..168 MHz.
+  __HAL_FLASH_SET_PROGRAM_DELAY(FLASH_PROGRAMMING_DELAY_2);
+
   // HSE: 48 MHz crystal on PH0/PH1 of the STM32H5F5J-DK (crystal, not bypass).
   RCC->CR |= RCC_CR_HSEON;
   while ((RCC->CR & RCC_CR_HSERDY) == 0U) {
   }
+
+  // Enable the HSE clock security system; a failure raises the NMI handled
+  // in systask (RCC_CIFR_HSECSSF). Once set, it can only be cleared by reset.
+  RCC->CR |= RCC_CR_HSECSSON;
 
   // PLL1 -> 250 MHz system clock from the 48 MHz HSE (see PLL1_* above).
   __HAL_RCC_PLL1_CONFIG(RCC_PLL1_SOURCE_HSE, PLL1_M, PLL1_N, PLL1_P, PLL1_Q,
@@ -103,7 +124,7 @@ void SystemInit(void) {
   __HAL_RCC_PLL1_FRACN_DISABLE();
   __HAL_RCC_PLL1_VCIRANGE(PLL1_VCIRANGE);
   __HAL_RCC_PLL1_VCORANGE(
-      RCC_PLL1_VCORANGE_WIDE);  // 500 MHz VCO (128..560 MHz)
+      RCC_PLL1_VCORANGE_WIDE);  // 500 MHz VCO (192..836 MHz)
   __HAL_RCC_PLL1_CLKOUT_ENABLE(RCC_PLL1_DIVP | RCC_PLL1_DIVQ | RCC_PLL1_DIVR);
   __HAL_RCC_PLL1_ENABLE();
   while ((RCC->CR & RCC_CR_PLL1RDY) == 0U) {
