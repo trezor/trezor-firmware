@@ -1957,7 +1957,7 @@
     "recovery__cancel_dry_run": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Cancelar verificación del respaldo.",
+      "Delizia": "Cancelar verificación",
       "Eckhart": ""
     },
     "recovery__check_dry_run": {
@@ -2136,7 +2136,12 @@
       "Delizia": "Verif. parte {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": "Verificar el respaldo de la billetera",
+    "reset__check_wallet_backup_title": {
+      "Bolt": "Verificar el respaldo",
+      "Caesar": "Verificar el respaldo de la billetera",
+      "Delizia": "Verificar el respaldo",
+      "Eckhart": "Verificar el respaldo de la billetera"
+    },
     "reset__continue_with_next_share": {
       "Bolt": "Continúa con la próxima parte.",
       "Caesar": "Continúa con la próxima parte.",
