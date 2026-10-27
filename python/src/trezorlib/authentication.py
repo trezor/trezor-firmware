@@ -69,8 +69,6 @@ OID_TO_NAME = {
     NameOID.DN_QUALIFIER: "DNQ",
 }
 
-MLDSA44_SIGNATURE_ALG_OID = ObjectIdentifier("2.16.840.1.101.3.4.3.17")
-
 
 class DeviceNotAuthentic(Exception):
     pass
@@ -104,7 +102,7 @@ class PublicKey:
             return EcdsaPublicKey.from_bytes(data, ec.SECP256R1())
         elif oid == SignatureAlgorithmOID.ED25519:
             return Ed25519PublicKey.from_bytes(data)
-        elif oid == MLDSA44_SIGNATURE_ALG_OID:
+        elif oid == SignatureAlgorithmOID.ML_DSA_44:
             return Mldsa44PublicKey.from_bytes(data)
         else:
             raise ValueError("Unsupported key type.")
@@ -285,7 +283,7 @@ class RootCertificate(t.NamedTuple):
             if self.ed25519_pubkey is None:
                 raise ValueError("ED25519 public key not set.")
             return self.ed25519_pubkey
-        elif oid == MLDSA44_SIGNATURE_ALG_OID:
+        elif oid == SignatureAlgorithmOID.ML_DSA_44:
             if self.mldsa44_pubkey is None:
                 raise ValueError("ML-DSA-44 public key not set.")
             return self.mldsa44_pubkey
