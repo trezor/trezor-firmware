@@ -125,7 +125,7 @@ where
     }
 }
 
-impl ComponentMsgObj for PinKeyboard<'_> {
+impl ComponentMsgObj for PinKeyboard {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             PinKeyboardMsg::Confirmed => self.pin().try_into(),
