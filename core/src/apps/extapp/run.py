@@ -159,7 +159,7 @@ def _open_session(request: ExtAppMessage) -> Session:
 
     instance_ids = context.cache_get(cc.APP_EXTAPP_IDS)
     if instance_ids is None:
-        raise DataError(f"No app running for instance ID: {request.instance_id}")
+        raise DataError("Invalid instance ID")
     image_handle, instance_id = ustruct.unpack("<II", instance_ids)
     if instance_id != request.instance_id:
         raise DataError(
