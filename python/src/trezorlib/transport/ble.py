@@ -209,6 +209,10 @@ class Peripheral:
         return self.device.address
 
 
+class PeripheralDisconnected(Exception):
+    pass
+
+
 class BleAsync:
     class Shutdown(Exception):
         pass
@@ -298,17 +302,25 @@ class BleAsync:
             LOG.debug(f"Already connected to {periph.address}")
             return
 
-        async def disconnect_callback(client: BleakClient) -> None:
+        def disconnected_callback(client: BleakClient) -> None:
             LOG.error(f"Got disconnected from {periph.address}")
-            self.devices[address].client = None
-            self.devices[address].queue = None
+            if not (device := self.devices.get(address)):
+                return
+            if device.queue is not None:
+                try:
+                    # switch to Queue.shutdown() on 3.13+
+                    device.queue.put_nowait(PeripheralDisconnected(periph.address))
+                except Exception:
+                    LOG.exception(f"Error handling {periph.address} disconnection:")
+            device.queue = None
+            device.client = None
 
         LOG.debug(f"Connecting to {address}...")
         client = BleakClient(
             periph.device,
+            disconnected_callback=disconnected_callback,
             services=[TREZOR_SERVICE_UUID],
             timeout=CONNECT_TIMEOUT_SECONDS,
-            disconnect_callback=disconnect_callback,
         )
         await client.connect()
 
@@ -373,9 +385,12 @@ class BleAsync:
         if periph.queue is None:
             raise RuntimeError("Connect to peripheral before reading")
         try:
-            return await asyncio.wait_for(periph.queue.get(), timeout=timeout)
+            result = await asyncio.wait_for(periph.queue.get(), timeout=timeout)
         except (TimeoutError, asyncio.TimeoutError) as err:
             raise Timeout(f"Timeout reading BLE packet ({timeout}s)") from err
+        if isinstance(result, BaseException):
+            raise result
+        return result
 
     async def write(self, address: str, chunk: bytes) -> None:
         periph = self.devices[address]
