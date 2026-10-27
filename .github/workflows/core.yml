@@ -431,7 +431,6 @@ jobs:
     needs:
       - param
       - core_emu
-    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
@@ -443,7 +442,8 @@ jobs:
       # MULTICORE: 4  # more could interfere with other jobs
       PYTEST_TIMEOUT: 400
       TEST_LANG: ${{ matrix.lang }}
-      TESTOPTS: "--durations 10"
+      TESTOPTS: "--durations 10 --session-timeout '1800'"  # pytest global timeout (30m)
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
