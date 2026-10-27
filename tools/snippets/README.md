@@ -27,6 +27,8 @@ These scripts do not need to have a high standard, but each of those should have
   (`common/tests/fixtures/ethereum/definitions`) with the latest production ones
   from `data.trezor.io`, so the tests reflect what customers see.
 - Verifies the production signatures; definitions missing upstream are kept and reported.
+- With `--dev`, fetches the dev definitions (`dev.firmware.sldev.cz`, internal network only)
+  and verifies them with the development keys instead.
 
 ## [eth_defs_dat_to_json.py](./eth_defs_dat_to_json.py)
 - Converts a single signed `.dat` definition into the JSON fixture format, reusing
