@@ -1,4 +1,3 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import io
@@ -16,16 +15,16 @@ if TYPE_CHECKING:
     from apps.common.paths import PathSchema
 
 # IPC services between Core and a running external app
-SERVICE_WIRE_START = const(0)
-SERVICE_WIRE_CONTINUE = const(1)
-SERVICE_WIRE_END = const(2)
-SERVICE_WIRE_ERROR = const(3)
-SERVICE_UI = const(4)
-SERVICE_PROGRESS = const(5)
-SERVICE_CRYPTO = const(6)
+SERVICE_WIRE_START = 0
+SERVICE_WIRE_CONTINUE = 1
+SERVICE_WIRE_END = 2
+SERVICE_WIRE_ERROR = 3
+SERVICE_UI = 4
+SERVICE_PROGRESS = 5
+SERVICE_CRYPTO = 6
 
 # message id of a Core reply reporting a failed request
-MSG_ID_ERROR = const(0xFFFF)
+MSG_ID_ERROR = 0xFFFF
 
 
 def describe(exception: BaseException) -> str:
