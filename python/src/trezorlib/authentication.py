@@ -351,6 +351,8 @@ ROOT_PUBLIC_KEYS = [
         "Trezor Safe 7",
         True,
         _pk_p256(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
+        _pk_ed25519(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_ED25519_HEX),
+        _pk_mldsa44(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_MLDSA44_HEX),
     ),
     RootCertificate(
         # Root staging keys for T3W1.
