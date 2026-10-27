@@ -1997,7 +1997,7 @@
     "recovery__cancel_dry_run": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Cancelar verificação do backup",
+      "Delizia": "Cancelar verificação",
       "Eckhart": ""
     },
     "recovery__check_dry_run": {
@@ -2196,7 +2196,12 @@
       "Delizia": "Verificar share {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": "Verificação do backup da carteira",
+    "reset__check_wallet_backup_title": {
+      "Bolt": "Verificação do backup",
+      "Caesar": "Verificação do backup da carteira",
+      "Delizia": "Verificação do backup",
+      "Eckhart": "Verificação do backup da carteira"
+    },
     "reset__continue_with_next_share": {
       "Bolt": "Continue com o próximo share.",
       "Caesar": "Continue com o próximo share.",
