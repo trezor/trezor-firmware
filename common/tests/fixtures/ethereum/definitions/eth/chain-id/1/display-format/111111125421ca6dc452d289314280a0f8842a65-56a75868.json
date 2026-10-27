@@ -65,7 +65,11 @@
             0,
             4
           ]
-        }
+        },
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "0000000000000000000000000000000000000000"
+        ]
       },
       {
         "path": {
@@ -81,7 +85,11 @@
             0,
             3
           ]
-        }
+        },
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "0000000000000000000000000000000000000000"
+        ]
       },
       {
         "path": {
@@ -96,7 +104,11 @@
             0,
             4
           ]
-        }
+        },
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "0000000000000000000000000000000000000000"
+        ]
       },
       {
         "path": {
