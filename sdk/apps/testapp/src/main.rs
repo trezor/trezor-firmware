@@ -24,8 +24,9 @@ pub(crate) mod proto;
 use proto::messages::MessageType;
 use proto::testapp::{
     Base58CheckDecode, Base58CheckEncode, Base58Decode, Base58Encode, CheckAddressMac,
-    CosiCombinePublicKeys, CosiVerify, EcRecoverPubkey, EcVerifyRecover, EcVerifyRecoverDigest,
-    GetAddressMac, GetPublicKey, GetXpub, Hash, Hmac, SignDigest, VerifyNonceCache,
+    CosiCombinePublicKeys, CosiVerify, EcdsaRecoverPubkey, EcdsaSignDigest, EcdsaVerify,
+    EcdsaVerifyDigest, Ed25519Sign, Ed25519Verify, GetAddressMac, GetPublicKey, GetXpub, Hash,
+    Hmac, VerifyNonceCache,
 };
 
 /// Wire codec for [`wire_handler!`] — encodes/decodes messages via [`prost`].
@@ -72,11 +73,18 @@ wire_handler!(
     crypto::get_public_key
 );
 wire_handler!(
-    handle_sign_digest,
+    handle_ecdsa_sign_digest,
     ProstCodec,
-    SignDigest,
+    EcdsaSignDigest,
     MessageType::Signature,
-    crypto::sign_digest
+    crypto::ecdsa_sign_digest
+);
+wire_handler!(
+    handle_ed25519_sign,
+    ProstCodec,
+    Ed25519Sign,
+    MessageType::Signature,
+    crypto::ed25519_sign
 );
 wire_handler!(
     handle_get_address_mac,
@@ -100,25 +108,32 @@ wire_handler!(
     crypto::verify_nonce_cache
 );
 wire_handler!(
-    handle_ec_verify_recover,
+    handle_ecdsa_verify,
     ProstCodec,
-    EcVerifyRecover,
-    MessageType::PublicKey,
-    crypto::ec_verify_recover
+    EcdsaVerify,
+    MessageType::Success,
+    crypto::ecdsa_verify
 );
 wire_handler!(
-    handle_ec_verify_recover_digest,
+    handle_ecdsa_verify_digest,
     ProstCodec,
-    EcVerifyRecoverDigest,
-    MessageType::PublicKey,
-    crypto::ec_verify_recover_digest
+    EcdsaVerifyDigest,
+    MessageType::Success,
+    crypto::ecdsa_verify_digest
 );
 wire_handler!(
-    handle_ec_recover_pubkey,
+    handle_ecdsa_recover_pubkey,
     ProstCodec,
-    EcRecoverPubkey,
+    EcdsaRecoverPubkey,
     MessageType::PublicKey,
-    crypto::ec_recover_pubkey
+    crypto::ecdsa_recover_pubkey
+);
+wire_handler!(
+    handle_ed25519_verify,
+    ProstCodec,
+    Ed25519Verify,
+    MessageType::Success,
+    crypto::ed25519_verify
 );
 wire_handler!(
     handle_cosi_verify,
@@ -179,13 +194,15 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::Hmac) => handle_hmac(data),
         Ok(MessageType::GetXpub) => handle_get_xpub(data),
         Ok(MessageType::GetPublicKey) => handle_get_public_key(data),
-        Ok(MessageType::SignDigest) => handle_sign_digest(data),
+        Ok(MessageType::EcdsaSignDigest) => handle_ecdsa_sign_digest(data),
+        Ok(MessageType::Ed25519Sign) => handle_ed25519_sign(data),
         Ok(MessageType::GetAddressMac) => handle_get_address_mac(data),
         Ok(MessageType::CheckAddressMac) => handle_check_address_mac(data),
         Ok(MessageType::VerifyNonceCache) => handle_verify_nonce_cache(data),
-        Ok(MessageType::EcVerifyRecover) => handle_ec_verify_recover(data),
-        Ok(MessageType::EcVerifyRecoverDigest) => handle_ec_verify_recover_digest(data),
-        Ok(MessageType::EcRecoverPubkey) => handle_ec_recover_pubkey(data),
+        Ok(MessageType::EcdsaVerify) => handle_ecdsa_verify(data),
+        Ok(MessageType::EcdsaVerifyDigest) => handle_ecdsa_verify_digest(data),
+        Ok(MessageType::EcdsaRecoverPubkey) => handle_ecdsa_recover_pubkey(data),
+        Ok(MessageType::Ed25519Verify) => handle_ed25519_verify(data),
         Ok(MessageType::CosiVerify) => handle_cosi_verify(data),
         Ok(MessageType::CosiCombinePublicKeys) => handle_cosi_combine_publickeys(data),
         Ok(MessageType::Base58Encode) => handle_base58_encode(data),

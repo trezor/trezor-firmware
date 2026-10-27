@@ -11,13 +11,13 @@ from ecdsa.util import sigdecode_string, sigencode_string_canonize
 
 from .generated import messages as m
 
-CURVES: dict[m.EcCurve, Curve] = {
-    m.EcCurve.Secp256k1: SECP256k1,
-    m.EcCurve.Nist256p1: NIST256p,
+CURVES: dict[m.EcdsaCurve, Curve] = {
+    m.EcdsaCurve.Secp256k1: SECP256k1,
+    m.EcdsaCurve.Nist256p1: NIST256p,
 }
 
 
-def ecdsa_key(curve: m.EcCurve, secret: int) -> SigningKey:
+def ecdsa_key(curve: m.EcdsaCurve, secret: int) -> SigningKey:
     return SigningKey.from_secret_exponent(
         secret, curve=CURVES[curve], hashfunc=hashlib.sha256
     )
@@ -35,7 +35,9 @@ def ecdsa_sign(key: SigningKey, digest: bytes) -> bytes:
     )
 
 
-def recovery_id(curve: m.EcCurve, public_key: bytes, rs: bytes, digest: bytes) -> int:
+def recovery_id(
+    curve: m.EcdsaCurve, public_key: bytes, rs: bytes, digest: bytes
+) -> int:
     """The recovery id (R's y parity) under which `rs` recovers to `public_key`."""
     c = CURVES[curve]
     vk = VerifyingKey.from_string(public_key, curve=c)
@@ -54,7 +56,9 @@ def recovery_id(curve: m.EcCurve, public_key: bytes, rs: bytes, digest: bytes) -
     raise ValueError("signature does not recover to the public key")
 
 
-def ecdsa_verify(public_key: bytes, curve: m.EcCurve, rs: bytes, digest: bytes) -> bool:
+def ecdsa_verify(
+    public_key: bytes, curve: m.EcdsaCurve, rs: bytes, digest: bytes
+) -> bool:
     vk = VerifyingKey.from_string(public_key, curve=CURVES[curve])
     return vk.verify_digest(rs, digest, sigdecode=sigdecode_string)
 

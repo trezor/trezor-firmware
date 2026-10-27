@@ -173,7 +173,7 @@ def get_public_key(
     return res.public_key
 
 
-def sign_digest(
+def ecdsa_sign_digest(
     session: "Session",
     instance_id: int,
     address_n: "Address",
@@ -184,12 +184,24 @@ def sign_digest(
     res = call_ext(
         session,
         instance_id,
-        msg_data=m.SignDigest(
+        msg_data=m.EcdsaSignDigest(
             address_n=list(address_n),
             digest=digest,
             compressed=compressed,
             canonical=canonical,
         ),
+        expect=[m.Signature],
+    )
+    return res.signature
+
+
+def ed25519_sign(
+    session: "Session", instance_id: int, address_n: "Address", message: bytes
+) -> bytes:
+    res = call_ext(
+        session,
+        instance_id,
+        msg_data=m.Ed25519Sign(address_n=list(address_n), message=message),
         expect=[m.Signature],
     )
     return res.signature
@@ -246,58 +258,73 @@ def verify_nonce_cache(session: "Session", instance_id: int, nonce: bytes) -> bo
 # ============================================================================
 
 
-def ec_verify_recover(
+def ecdsa_verify(
     session: "Session",
     instance_id: int,
-    curve: m.EcCurve,
+    curve: m.EcdsaCurve,
     public_key: bytes,
     signature: bytes,
     message: bytes,
-) -> bytes:
-    res = call_ext(
+) -> None:
+    call_ext(
         session,
         instance_id,
-        msg_data=m.EcVerifyRecover(
+        msg_data=m.EcdsaVerify(
             curve=curve, public_key=public_key, signature=signature, message=message
         ),
-        expect=[m.PublicKey],
+        expect=[m.Success],
     )
-    return res.public_key
 
 
-def ec_verify_recover_digest(
+def ecdsa_verify_digest(
     session: "Session",
     instance_id: int,
-    curve: m.EcCurve,
+    curve: m.EcdsaCurve,
     public_key: bytes,
     signature: bytes,
     digest: bytes,
-) -> bytes:
-    res = call_ext(
+) -> None:
+    call_ext(
         session,
         instance_id,
-        msg_data=m.EcVerifyRecoverDigest(
+        msg_data=m.EcdsaVerifyDigest(
             curve=curve, public_key=public_key, signature=signature, digest=digest
         ),
-        expect=[m.PublicKey],
+        expect=[m.Success],
     )
-    return res.public_key
 
 
-def ec_recover_pubkey(
+def ecdsa_recover_pubkey(
     session: "Session",
     instance_id: int,
-    curve: m.EcCurve,
+    curve: m.EcdsaCurve,
     signature: bytes,
     digest: bytes,
 ) -> bytes:
     res = call_ext(
         session,
         instance_id,
-        msg_data=m.EcRecoverPubkey(curve=curve, signature=signature, digest=digest),
+        msg_data=m.EcdsaRecoverPubkey(curve=curve, signature=signature, digest=digest),
         expect=[m.PublicKey],
     )
     return res.public_key
+
+
+def ed25519_verify(
+    session: "Session",
+    instance_id: int,
+    public_key: bytes,
+    signature: bytes,
+    message: bytes,
+) -> None:
+    call_ext(
+        session,
+        instance_id,
+        msg_data=m.Ed25519Verify(
+            public_key=public_key, signature=signature, message=message
+        ),
+        expect=[m.Success],
+    )
 
 
 # ============================================================================
