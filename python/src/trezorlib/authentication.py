@@ -20,14 +20,16 @@ import io
 import logging
 import secrets
 import typing as t
+from enum import Enum
 
 from cryptography import exceptions, x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, ed25519, mldsa, types, utils
-from cryptography.x509.oid import NameOID, ObjectIdentifier, SignatureAlgorithmOID
+from cryptography.x509.oid import NameOID, ObjectIdentifier
 
-from . import _root_keys, device
+from . import _root_keys, device, models
 from .client import Session
+from .exceptions import OutdatedFirmwareError
 from .tools import compact_size, workflow
 
 LOG = logging.getLogger(__name__)
@@ -46,6 +48,10 @@ def _pk_mldsa44(pubkey_hex: str) -> PublicKey:
 
 
 CHALLENGE_HEADER = b"AuthenticateDevice:"
+# First firmware version that sends the MCU (ML-DSA-44) authenticity proof.
+MCU_ATTESTATION_MIN_VERSION = (2, 12, 1)
+# Safe 3 and Safe 5 attest only with Optiga.
+OPTIGA_ONLY_MODELS = (models.T2B1, models.T3B1, models.T3T1)
 
 
 def get_challenge_message(challenge: bytes) -> bytes:
@@ -70,6 +76,12 @@ OID_TO_NAME = {
 }
 
 
+class AttestationSource(Enum):
+    MCU = "mcu"
+    OPTIGA = "optiga"
+    TROPIC = "tropic"
+
+
 class DeviceNotAuthentic(Exception):
     pass
 
@@ -86,6 +98,10 @@ class AllowList:
             raise ValueError(
                 "Invalid allow list: no CA public keys or revoked public keys."
             )
+        if self.whitelist is not None and self.blacklist is not None:
+            raise ValueError(
+                "Invalid allow list: both CA public keys and revoked public keys present."
+            )
 
     def is_allowed(self, pubkey: bytes) -> bool:
         if self.whitelist is not None:
@@ -97,15 +113,17 @@ class AllowList:
 
 class PublicKey:
     @staticmethod
-    def from_bytes_and_oid(data: bytes, oid: ObjectIdentifier) -> PublicKey:
-        if oid == SignatureAlgorithmOID.ECDSA_WITH_SHA256:
+    def from_bytes_and_attestation_source(
+        data: bytes, source: AttestationSource
+    ) -> PublicKey:
+        if source is AttestationSource.OPTIGA:
             return EcdsaPublicKey.from_bytes(data, ec.SECP256R1())
-        elif oid == SignatureAlgorithmOID.ED25519:
+        if source is AttestationSource.TROPIC:
             return Ed25519PublicKey.from_bytes(data)
-        elif oid == SignatureAlgorithmOID.ML_DSA_44:
+        if source is AttestationSource.MCU:
             return Mldsa44PublicKey.from_bytes(data)
-        else:
-            raise ValueError("Unsupported key type.")
+
+        raise ValueError("Unknown attestation source.")
 
     @staticmethod
     def from_public_key(pubkey: types.CertificatePublicKeyTypes) -> PublicKey:
@@ -159,7 +177,10 @@ class EcdsaPublicKey(PublicKey):
     def verify_certificate(self, certificate: x509.Certificate) -> None:
         fixed_signature = self.fix_signature(certificate.signature)
         algo_params = certificate.signature_algorithm_parameters
-        assert isinstance(algo_params, ec.ECDSA)
+        if not isinstance(algo_params, ec.ECDSA) or not isinstance(
+            algo_params.algorithm, hashes.SHA256
+        ):
+            raise ValueError("Unsupported signature algorithm.")
         self.pubkey.verify(
             fixed_signature,
             certificate.tbs_certificate_bytes,
@@ -268,97 +289,110 @@ class Mldsa44PublicKey(PublicKey):
         )
 
 
-class RootCertificate(t.NamedTuple):
+class RootKeyType(Enum):
+    PROD = "prod"
+    PROD_BACKUP = "prod_backup"
+    DEBUG = "debug"
+    STAGING = "staging"
+
+
+class RootPublicKeys(t.NamedTuple):
     name: str
-    device: str
-    devel: bool
+    trezor_models: tuple[models.TrezorModel, ...]
+    key_type: RootKeyType
     p256_pubkey: PublicKey
     ed25519_pubkey: PublicKey | None = None
     mldsa44_pubkey: PublicKey | None = None
 
-    def pubkey_for_oid(self, oid: ObjectIdentifier) -> PublicKey:
-        if oid == SignatureAlgorithmOID.ECDSA_WITH_SHA256:
+    @property
+    def devel(self) -> bool:
+        return self.key_type in (RootKeyType.DEBUG, RootKeyType.STAGING)
+
+    def pubkey_for_attestation_source(self, source: AttestationSource) -> PublicKey:
+        if source is AttestationSource.OPTIGA:
             return self.p256_pubkey
-        elif oid == SignatureAlgorithmOID.ED25519:
+
+        if source is AttestationSource.TROPIC:
             if self.ed25519_pubkey is None:
                 raise ValueError("ED25519 public key not set.")
             return self.ed25519_pubkey
-        elif oid == SignatureAlgorithmOID.ML_DSA_44:
+
+        if source is AttestationSource.MCU:
             if self.mldsa44_pubkey is None:
                 raise ValueError("ML-DSA-44 public key not set.")
             return self.mldsa44_pubkey
-        else:
-            raise ValueError("Unsupported key type.")
+
+        raise ValueError("Unknown attestation source.")
 
 
 ROOT_PUBLIC_KEYS = [
-    RootCertificate(
+    RootPublicKeys(
         # Root production key for T2B1.
         "Trezor Company",
-        "Trezor Safe 3",
-        False,
+        (models.T2B1,),
+        RootKeyType.PROD,
         _pk_p256(_root_keys.T2B1_DEV_AUTH_ROOT_PROD_P256_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root production key for T3B1.
         "Trezor Company",
-        "Trezor Safe 3",
-        False,
+        (models.T3B1,),
+        RootKeyType.PROD,
         _pk_p256(_root_keys.T3B1_DEV_AUTH_ROOT_PROD_P256_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root production key for T3T1.
         "Trezor Company",
-        "Trezor Safe 5",
-        False,
+        (models.T3T1,),
+        RootKeyType.PROD,
         _pk_p256(_root_keys.T3T1_DEV_AUTH_ROOT_PROD_P256_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root production keys for T3W1.
         "Trezor Company",
-        "Trezor Safe 7",
-        False,
+        (models.T3W1,),
+        RootKeyType.PROD,
         _pk_p256(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_P256_HEX),
         _pk_ed25519(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_ED25519_HEX),
         _pk_mldsa44(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_MLDSA44_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root backup production keys for T3W1.
         "Trezor Company",
-        "Trezor Safe 7",
-        False,
+        (models.T3W1,),
+        RootKeyType.PROD_BACKUP,
         _pk_p256(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_BACKUP_P256_HEX),
         _pk_ed25519(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_BACKUP_ED25519_HEX),
         _pk_mldsa44(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_BACKUP_MLDSA44_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root debug key for T2B1 and T3B1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
-        "Trezor Safe 3",
-        True,
+        (models.T2B1, models.T3B1),
+        RootKeyType.DEBUG,
         _pk_p256(_root_keys.T2B1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root debug key for T3T1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
-        "Trezor Safe 5",
-        True,
+        (models.T3T1,),
+        RootKeyType.DEBUG,
         _pk_p256(_root_keys.T3T1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root debug keys for T3W1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
-        "Trezor Safe 7",
-        True,
+        (models.T3W1,),
+        RootKeyType.DEBUG,
         _pk_p256(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
         _pk_ed25519(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_ED25519_HEX),
         _pk_mldsa44(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_MLDSA44_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root staging keys for T3W1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
-        "Trezor Safe 7",
-        True,
+        (models.T3W1,),
+        RootKeyType.STAGING,
         _pk_p256(_root_keys.T3W1_DEV_AUTH_ROOT_STAGING_P256_HEX),
         _pk_ed25519(_root_keys.T3W1_DEV_AUTH_ROOT_STAGING_ED25519_HEX),
         _pk_mldsa44(_root_keys.T3W1_DEV_AUTH_ROOT_STAGING_MLDSA44_HEX),
@@ -482,15 +516,21 @@ class AuthenticationResult(t.NamedTuple):
     end-entity (device) certificate.
     """
 
-    root: RootCertificate | None
-    common_name: str | None
+    root: RootPublicKeys | None
+    common_name: str
     serial_number: str | None
+
+
+def roots_for_model(model: models.TrezorModel) -> list[RootPublicKeys]:
+    """Built-in root certificates that can attest the given model."""
+    return [r for r in ROOT_PUBLIC_KEYS if model in r.trezor_models]
 
 
 def verify_authentication_response(
     challenge: bytes,
     signature: bytes,
     cert_chain: t.Iterable[bytes],
+    attestation_source: AttestationSource,
     *,
     allowlist: AllowList | None,
     allow_development_devices: bool = False,
@@ -504,6 +544,10 @@ def verify_authentication_response(
     When done, raises DeviceNotAuthentic if the device is not authentic. Otherwise
     returns an `AuthenticationResult` describing the matched root and the device
     certificate's subject.
+
+    `attestation_source` identifies the chip that produced the signature and
+    certificate chain, and selects the type of the root public key: P-256 for Optiga,
+    Ed25519 for Tropic and ML-DSA-44 for the MCU.
 
     The optional argument `root_pubkey` allows you to specify a root public key either
     as a `PublicKey` object or as a byte-string.
@@ -521,7 +565,13 @@ def verify_authentication_response(
         raise DeviceNotAuthentic
 
     device_common_name = cert.subject_common_name()
+    if device_common_name is None:
+        LOG.error("Device certificate has no common_name attribute.")
+        raise DeviceNotAuthentic
+
     device_serial_number = cert.subject_serial_number()
+
+    device_model = models.by_internal_name(device_common_name.partition(" ")[0])
 
     try:
         cert.public_key.verify_message(signature=signature, message=challenge_bytes)
@@ -556,12 +606,13 @@ def verify_authentication_response(
         cert_label = f"CA #{i} certificate"
 
     if isinstance(root_pubkey, (bytes, bytearray, memoryview)):
-        root_pubkey = PublicKey.from_bytes_and_oid(
-            root_pubkey, cert.signature_algorithm_oid()
+        root_pubkey = PublicKey.from_bytes_and_attestation_source(
+            root_pubkey, attestation_source
         )
 
     if root_pubkey is not None:
         root = None
+        LOG.warning("Using user specified root pubkey for certificate verification.")
         try:
             root_pubkey.verify_certificate(cert.cert)
         except Exception:
@@ -571,9 +622,13 @@ def verify_authentication_response(
             LOG.info(f"{cert_label} was issued by the specified root.")
 
     else:
-        for root in ROOT_PUBLIC_KEYS:
+        if device_model is None:
+            LOG.error("Unknown model in device certificate: %s", device_common_name)
+            raise DeviceNotAuthentic
+
+        for root in roots_for_model(device_model):
             try:
-                root_pubkey = root.pubkey_for_oid(cert.signature_algorithm_oid())
+                root_pubkey = root.pubkey_for_attestation_source(attestation_source)
                 root_pubkey.verify_certificate(cert.cert)
             except Exception:
                 continue
@@ -591,7 +646,7 @@ def verify_authentication_response(
             LOG.log(
                 level,
                 "Successfully verified a %s manufactured by %s.",
-                root.device,
+                f"Trezor {device_model.name}",
                 root.name,
             )
             break
@@ -615,7 +670,7 @@ def authenticate_device(
     p256_root_pubkey: bytes | PublicKey | None = None,
     ed25519_root_pubkey: bytes | PublicKey | None = None,
     mldsa44_root_pubkey: bytes | PublicKey | None = None,
-) -> None:
+) -> RootPublicKeys | None:
     if challenge is None:
         challenge = secrets.token_bytes(16)
 
@@ -625,6 +680,7 @@ def authenticate_device(
         challenge,
         resp.optiga_signature,
         resp.optiga_certificates,
+        AttestationSource.OPTIGA,
         allowlist=allowlist,
         allow_development_devices=allow_development_devices,
         root_pubkey=p256_root_pubkey,
@@ -632,10 +688,9 @@ def authenticate_device(
 
     results = [optiga_auth_result]
 
-    if (
-        getattr(optiga_auth_result.root, "ed25519_pubkey", None) is not None
-        or ed25519_root_pubkey is not None
-    ):
+    optiga_only = session.model in OPTIGA_ONLY_MODELS
+
+    if not optiga_only or ed25519_root_pubkey is not None:
         if not resp.tropic_signature:
             LOG.error("Missing Tropic signature.")
             raise DeviceNotAuthentic
@@ -644,6 +699,7 @@ def authenticate_device(
             challenge,
             resp.tropic_signature,
             resp.tropic_certificates,
+            AttestationSource.TROPIC,
             allowlist=allowlist,
             allow_development_devices=allow_development_devices,
             root_pubkey=ed25519_root_pubkey,
@@ -651,10 +707,18 @@ def authenticate_device(
 
         results.append(tropic_auth_result)
 
-    if (
-        getattr(optiga_auth_result.root, "mldsa44_pubkey", None) is not None
-        or mldsa44_root_pubkey is not None
-    ):
+    if not optiga_only or mldsa44_root_pubkey is not None:
+        if session.version < MCU_ATTESTATION_MIN_VERSION:
+            err_msg = (
+                "Firmware %s does not support MCU attestation, update to %s or newer."
+            )
+            args = (
+                ".".join(map(str, session.version)),
+                ".".join(map(str, MCU_ATTESTATION_MIN_VERSION)),
+            )
+            LOG.error(err_msg, *args)
+            raise OutdatedFirmwareError(err_msg % args)
+
         if not resp.mcu_signature:
             LOG.error("Missing MCU signature.")
             raise DeviceNotAuthentic
@@ -663,6 +727,7 @@ def authenticate_device(
             challenge,
             resp.mcu_signature,
             resp.mcu_certificates,
+            AttestationSource.MCU,
             allowlist=allowlist,
             allow_development_devices=allow_development_devices,
             root_pubkey=mldsa44_root_pubkey,
@@ -670,18 +735,17 @@ def authenticate_device(
 
         results.append(mcu_auth_result)
 
-    # All chains must be issued by the same root authority. Chains rooted in different built-in
-    # authorities and any mix of custom and built-in roots are rejected; chains rooted entirely in
-    # custom keys (all None) are accepted as the caller's deliberate choice.
-    if len(set(r.root for r in results)) != 1:
-        LOG.error("Certificates issued by different root authorities.")
-        raise DeviceNotAuthentic
-
-    # All chains must share the same serial number and common name, and the common name
+    # All chains must share the same serial number (if present) and common name, and the common name
     # must identify the model reported in the device's features.
 
-    if len(set(r.serial_number for r in results)) != 1:
+    serial_numbers = set(r.serial_number for r in results)
+    if len(serial_numbers) != 1:
         LOG.error("Device certificates have inconsistent serial numbers.")
+        raise DeviceNotAuthentic
+
+    # Safe 3 and Safe 5 certificates don't contain a serial number.
+    if not optiga_only and not all(serial_numbers):
+        LOG.error("Missing serial number in device certificates.")
         raise DeviceNotAuthentic
 
     common_names = set(r.common_name for r in results)
@@ -690,12 +754,20 @@ def authenticate_device(
         raise DeviceNotAuthentic
 
     common_name = common_names.pop()
-    if common_name is None or not common_name.startswith(
-        session.model.internal_name + " "
-    ):
+    if not common_name.startswith(session.model.internal_name + " "):
         LOG.error(
             "Device certificate common name %s does not match model %s.",
             common_name,
             session.model.internal_name,
         )
         raise DeviceNotAuthentic
+
+    # All chains must be issued by the same root authority. Chains rooted in different built-in
+    # authorities and any mix of custom and built-in roots are rejected; chains rooted entirely in
+    # custom keys (all None) are accepted as the caller's deliberate choice.
+    roots = set(r.root for r in results)
+    if len(roots) != 1:
+        LOG.error("Certificates issued by different root authorities.")
+        raise DeviceNotAuthentic
+
+    return roots.pop()
