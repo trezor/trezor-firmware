@@ -25,10 +25,11 @@ if TYPE_CHECKING:
 
 _GET_XPUB = 0
 _GET_PUBLIC_KEY = 1
-_SIGN_DIGEST = 2
-_GET_ADDRESS_MAC = 3
-_CHECK_ADDRESS_MAC = 4
-_VERIFY_NONCE_CACHE = 5
+_ECDSA_SIGN_DIGEST = 2
+_ED25519_SIGN = 3
+_GET_ADDRESS_MAC = 4
+_CHECK_ADDRESS_MAC = 5
+_VERIFY_NONCE_CACHE = 6
 
 # `CanonicalSig` values in the SDK.
 _CANONICAL_ANY = 0
@@ -115,7 +116,7 @@ async def _get_public_key(session: Session, obj: Any) -> bytes:
     return public_key
 
 
-async def _sign_digest(session: Session, obj: Any) -> bytes:
+async def _ecdsa_sign_digest(session: Session, obj: Any) -> bytes:
     address_n, digest, compressed, canonical = obj
     keychain = await get_keychain(session.curve, session.schemas, [_SLIP24_NAMESPACE])
     await paths.validate_path(keychain, address_n)
@@ -139,19 +140,19 @@ async def _sign_digest(session: Session, obj: Any) -> bytes:
         from trezor.crypto.curve import nist256p1
 
         return nist256p1.sign(private_key, digest, compressed)
-    elif curve == "ed25519":
-        from trezor.crypto.curve import ed25519
+    raise DataError(f"ECDSA signing is not supported on {curve}")
 
-        # The app expects a fixed 65-byte signature shared by all curves (see
-        # `sign_digest` in the SDK), so the 64-byte Ed25519 signature is
-        # zero-padded; the app uses the first 64 bytes.
-        return ed25519.sign(private_key, digest) + b"\x00"
-    elif curve == "bip340":
-        from trezor.crypto.curve import bip340
 
-        return bip340.sign(private_key, digest)
-    else:
-        raise DataError(f"Unsupported curve: {curve} for signing digest")
+async def _ed25519_sign(session: Session, obj: Any) -> bytes:
+    from trezor.crypto.curve import ed25519
+
+    address_n, message = obj
+    if session.curve != "ed25519":
+        raise DataError(f"Ed25519 signing is not supported on {session.curve}")
+    keychain = await get_keychain(session.curve, session.schemas, [_SLIP24_NAMESPACE])
+    await paths.validate_path(keychain, address_n)
+    private_key = keychain.derive(address_n).private_key()
+    return ed25519.sign(private_key, message)
 
 
 async def _address_mac_keychain(session: Session, address_n: list[int]) -> Keychain:
@@ -190,7 +191,8 @@ async def _verify_nonce_cache(session: Session, obj: Any) -> bool:
 _HANDLERS: dict[int, CryptoHandler] = {
     _GET_XPUB: _get_xpub,
     _GET_PUBLIC_KEY: _get_public_key,
-    _SIGN_DIGEST: _sign_digest,
+    _ECDSA_SIGN_DIGEST: _ecdsa_sign_digest,
+    _ED25519_SIGN: _ed25519_sign,
     _GET_ADDRESS_MAC: _get_address_mac,
     _CHECK_ADDRESS_MAC: _check_address_mac,
     _VERIFY_NONCE_CACHE: _verify_nonce_cache,
