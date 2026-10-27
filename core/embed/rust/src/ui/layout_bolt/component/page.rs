@@ -39,6 +39,8 @@ pub struct ButtonPage<T> {
     swipe_left: bool,
     /// Whether to pass-through right swipe to parent component.
     swipe_right: bool,
+    /// Vertical space between the content and the buttons.
+    content_spacing: i16,
     /// Fade to given backlight level on next paint().
     fade: Cell<Option<u8>>,
 }
@@ -62,6 +64,7 @@ where
             cancel_from_any_page: false,
             swipe_left: false,
             swipe_right: false,
+            content_spacing: theme::BUTTON_SPACING,
             fade: Cell::new(None),
         }
     }
@@ -115,6 +118,14 @@ where
 
     pub fn with_confirm_style(mut self, style: ButtonStyleSheet) -> Self {
         self.button_confirm = self.button_confirm.styled(style);
+        self
+    }
+
+    /// Let the content area extend all the way down to the buttons. Meant for
+    /// content which keeps its own distance from the buttons, e.g. vertically
+    /// centered text.
+    pub fn without_content_spacing(mut self) -> Self {
+        self.content_spacing = 0;
         self
     }
 
@@ -287,7 +298,7 @@ where
                 _ => true,
             },
         };
-        let layout = PageLayout::new(bounds, small_left_button);
+        let layout = PageLayout::new(bounds, small_left_button, self.content_spacing);
         self.pad.place(bounds);
         self.swipe.place(bounds);
         self.button_cancel.place(layout.button_left);
@@ -387,7 +398,9 @@ where
         }
         if self.button_cancel.is_some() && self.is_cancel_visible() {
             self.button_cancel.render(target);
-        } else {
+        } else if !self.scrollbar.pager().is_single() {
+            // On a single page without cancel, the confirm button spans both
+            // button areas, so there is no space for the prev button.
             self.button_prev.render(target);
         }
         if self.scrollbar.has_next_page() {
@@ -433,9 +446,9 @@ impl PageLayout {
     const SCROLLBAR_WIDTH: i16 = 8;
     const SCROLLBAR_SPACE: i16 = 5;
 
-    pub fn new(area: Rect, small_left_button: bool) -> Self {
+    pub fn new(area: Rect, small_left_button: bool, content_spacing: i16) -> Self {
         let (area, button_both) = area.split_bottom(theme::BUTTON_HEIGHT);
-        let area = area.inset(Insets::bottom(theme::BUTTON_SPACING));
+        let area = area.inset(Insets::bottom(content_spacing));
         let (_space, content) = area.split_left(theme::CONTENT_BORDER);
         let (content_single_page, _space) = content.split_right(theme::CONTENT_BORDER);
         let (content, scrollbar) =

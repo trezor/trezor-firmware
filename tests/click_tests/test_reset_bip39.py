@@ -23,7 +23,7 @@ from trezorlib.testing import translations as TR
 
 from ..common import MOCK_GET_ENTROPY
 from . import reset
-from .common import LayoutType, go_next
+from .common import LayoutType
 
 if TYPE_CHECKING:
     from trezorlib.testing.device_handler import BackgroundDeviceHandler
@@ -86,7 +86,7 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
 
     # Your backup is done
     if debug.layout_type is not LayoutType.Eckhart:
-        go_next(debug)
+        reset.confirm_read(debug)
 
     # TODO: some validation of the generated secret?
 
