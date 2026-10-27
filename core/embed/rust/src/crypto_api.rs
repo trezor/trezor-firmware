@@ -25,14 +25,14 @@ extern "C" fn new_deserialize_crypto_message(
         // allocates the result objects), so nothing can modify the buffer.
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
-        fn obj_from_dp_slice(slice: &Archived<Slice<u32>>) -> Obj {
+        fn obj_from_dp_slice(slice: &Archived<Slice<u32>>) -> Result<Obj, Error> {
             let slice = slice.as_ref();
-            let mut list = unwrap!(List::with_capacity(slice.len()));
+            let mut list = List::with_capacity(slice.len())?;
 
             for &item in slice {
-                unwrap!(list.append(unwrap!(Obj::try_from(item.to_native()))));
+                list.append(Obj::try_from(item.to_native())?)?;
             }
-            list.leak().into()
+            Ok(list.leak().into())
         }
 
         let archived = rkyv::access::<Archived<TrezorCryptoEnum>, Failure>(data)
@@ -43,7 +43,7 @@ extern "C" fn new_deserialize_crypto_message(
                 address_n,
                 xpub_magic,
             } => {
-                let dp_obj = obj_from_dp_slice(address_n);
+                let dp_obj = obj_from_dp_slice(address_n)?;
                 let magic_obj = unwrap!(Obj::try_from(xpub_magic.to_native()));
                 (dp_obj, magic_obj).try_into()?
             }
@@ -51,7 +51,7 @@ extern "C" fn new_deserialize_crypto_message(
                 address_n,
                 compressed,
             } => {
-                let dp_obj = obj_from_dp_slice(address_n);
+                let dp_obj = obj_from_dp_slice(address_n)?;
                 let compressed_obj = unwrap!(Obj::try_from(*compressed));
                 (dp_obj, compressed_obj).try_into()?
             }
@@ -63,7 +63,7 @@ extern "C" fn new_deserialize_crypto_message(
             } => {
                 let digest_obj = Obj::try_from(digest.as_slice())?;
                 (
-                    obj_from_dp_slice(address_n),
+                    obj_from_dp_slice(address_n)?,
                     digest_obj,
                     Obj::try_from(*compressed)?,
                     Obj::from(*canonical),
@@ -75,7 +75,7 @@ extern "C" fn new_deserialize_crypto_message(
                 address,
                 slip44,
             } => (
-                obj_from_dp_slice(address_n),
+                obj_from_dp_slice(address_n)?,
                 Obj::try_from(address.as_ref())?,
                 Obj::try_from(slip44.to_native())?,
             )
@@ -89,7 +89,7 @@ extern "C" fn new_deserialize_crypto_message(
                 address,
                 slip44,
             } => (
-                obj_from_dp_slice(address_n),
+                obj_from_dp_slice(address_n)?,
                 Obj::try_from(mac.as_ref())?,
                 Obj::try_from(address.as_ref())?,
                 Obj::try_from(slip44.to_native())?,
