@@ -177,6 +177,6 @@ def _open_session(request: ExtAppMessage) -> Session:
     schemas = [s.copy() for s in schemas]
 
     if not image.is_running():
-        raise DataError(f"Task not running: {request.instance_id}")
+        raise DataError("Task not running")
 
     return Session(image, curves[0], schemas)
