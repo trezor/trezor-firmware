@@ -11,7 +11,8 @@ use crate::ui::shape::{self, Renderer};
 use crate::ui::util::Pager;
 
 const WORDS_PER_PAGE: usize = 4;
-const TOP_PADDING_OFFSET: i16 = 13;
+/// Baseline of the first word, relative to the top of the content area.
+const TOP_PADDING_OFFSET: i16 = 42;
 const WORD_FONT: Font = fonts::FONT_MONO;
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 
@@ -50,7 +51,7 @@ impl<'a> Component for ShareWords<'a> {
         let ordinal_largest_on_this_page =
             (WORDS_PER_PAGE * (self.pager.current() as usize + 1)).min(self.share_words.len());
         let is_largest_double_digit = ordinal_largest_on_this_page >= 10;
-        let mut y_offset = self.area.top_left().y + TOP_PADDING_OFFSET;
+        let mut y_offset = TOP_PADDING_OFFSET;
 
         for (word_idx, word) in self
             .share_words
