@@ -55,7 +55,7 @@ extern "C" fn new_deserialize_crypto_message(
                 let compressed_obj = unwrap!(Obj::try_from(*compressed));
                 (dp_obj, compressed_obj).try_into()?
             }
-            Archived::<TrezorCryptoEnum>::SignDigest {
+            Archived::<TrezorCryptoEnum>::EcdsaSignDigest {
                 address_n,
                 digest,
                 compressed,
@@ -70,6 +70,11 @@ extern "C" fn new_deserialize_crypto_message(
                 )
                     .try_into()?
             }
+            Archived::<TrezorCryptoEnum>::Ed25519Sign { address_n, message } => (
+                obj_from_dp_slice(address_n)?,
+                Obj::try_from(message.as_ref())?,
+            )
+                .try_into()?,
             Archived::<TrezorCryptoEnum>::GetAddressMac {
                 address_n,
                 address,
@@ -80,9 +85,6 @@ extern "C" fn new_deserialize_crypto_message(
                 Obj::try_from(slip44.to_native())?,
             )
                 .try_into()?,
-            Archived::<TrezorCryptoEnum>::VerifyNonceCache { nonce } => {
-                Obj::try_from(nonce.as_ref())?
-            }
             Archived::<TrezorCryptoEnum>::CheckAddressMac {
                 address_n,
                 mac,
@@ -95,6 +97,9 @@ extern "C" fn new_deserialize_crypto_message(
                 Obj::try_from(slip44.to_native())?,
             )
                 .try_into()?,
+            Archived::<TrezorCryptoEnum>::VerifyNonceCache { nonce } => {
+                Obj::try_from(nonce.as_ref())?
+            }
         };
 
         Ok(result)
