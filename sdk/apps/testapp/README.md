@@ -24,13 +24,15 @@ called.
 | `Hmac` | `get_hmac`, fed `chunks` one update at a time | `Digest` |
 | `GetXpub` | `get_xpub` | `Xpub` |
 | `GetPublicKey` | `get_public_key` | `PublicKey` |
-| `SignDigest` | `sign_digest` | `Signature` |
+| `EcdsaSignDigest` | `ecdsa_sign_digest` | `Signature` |
+| `Ed25519Sign` | `ed25519_sign` | `Signature` |
 | `GetAddressMac` | `get_address_mac` | `AddressMac` |
 | `CheckAddressMac` | `check_address_mac` | `Bool` |
 | `VerifyNonceCache` | `verify_nonce_cache` | `Bool` |
-| `EcVerifyRecover` | `ec_verify_recover` | `PublicKey` |
-| `EcVerifyRecoverDigest` | `ec_verify_recover_digest` | `PublicKey` |
-| `EcRecoverPubkey` | `ec_recover_pubkey` | `PublicKey` |
+| `EcdsaVerify` | `ecdsa_verify_digest` of the message's SHA-256 digest | `Success` |
+| `EcdsaVerifyDigest` | `ecdsa_verify_digest` | `Success` |
+| `EcdsaRecoverPubkey` | `ecdsa_recover_pubkey` | `PublicKey` |
+| `Ed25519Verify` | `ed25519_verify` | `Success` |
 | `CosiVerify` | `cosi_verify` | `Success` |
 | `CosiCombinePublicKeys` | `cosi_combine_publickeys` | `PublicKey` |
 | `Base58Encode` / `Base58Decode` | `base58_encode` / `base58_decode` | `Base58` / `Data` |

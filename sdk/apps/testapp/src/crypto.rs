@@ -7,7 +7,7 @@
 //! function's own.
 
 use trezor_app_sdk::crypto::{
-    self as sdk, CanonicalSig, EcCurve, HasherExt, HashingAlgorithm, HmacAlgorithm,
+    self as sdk, CanonicalSig, EcdsaCurve, HasherExt, HashingAlgorithm, HmacAlgorithm,
 };
 use trezor_app_sdk::{Error, Result};
 
@@ -66,13 +66,20 @@ pub fn get_public_key(m: wire::GetPublicKey) -> Result<wire::PublicKey> {
     Ok(wire::PublicKey { public_key })
 }
 
-pub fn sign_digest(m: wire::SignDigest) -> Result<wire::Signature> {
-    let signature = sdk::sign_digest(
+pub fn ecdsa_sign_digest(m: wire::EcdsaSignDigest) -> Result<wire::Signature> {
+    let signature = sdk::ecdsa_sign_digest(
         &m.address_n,
         array(&m.digest)?,
         m.compressed,
         canonical(m.canonical)?,
     )?;
+    Ok(wire::Signature {
+        signature: signature.to_vec(),
+    })
+}
+
+pub fn ed25519_sign(m: wire::Ed25519Sign) -> Result<wire::Signature> {
+    let signature = sdk::ed25519_sign(&m.address_n, &m.message)?;
     Ok(wire::Signature {
         signature: signature.to_vec(),
     })
@@ -97,21 +104,28 @@ pub fn verify_nonce_cache(m: wire::VerifyNonceCache) -> Result<wire::Bool> {
 // Signature verification and key recovery
 // ============================================================================
 
-pub fn ec_verify_recover(m: wire::EcVerifyRecover) -> Result<wire::PublicKey> {
-    let public_key =
-        sdk::ec_verify_recover(curve(m.curve)?, &m.public_key, &m.signature, &m.message)?;
+/// `ecdsa_verify_digest` of the message's SHA-256 digest.
+pub fn ecdsa_verify(m: wire::EcdsaVerify) -> Result<wire::Success> {
+    let mut hasher = sdk::get_hasher(HashingAlgorithm::Sha256);
+    hasher.update(&m.message);
+    let digest = hasher.finalize();
+    sdk::ecdsa_verify_digest(curve(m.curve)?, &m.public_key, &m.signature, &digest)?;
+    Ok(wire::Success {})
+}
+
+pub fn ecdsa_verify_digest(m: wire::EcdsaVerifyDigest) -> Result<wire::Success> {
+    sdk::ecdsa_verify_digest(curve(m.curve)?, &m.public_key, &m.signature, &m.digest)?;
+    Ok(wire::Success {})
+}
+
+pub fn ecdsa_recover_pubkey(m: wire::EcdsaRecoverPubkey) -> Result<wire::PublicKey> {
+    let public_key = sdk::ecdsa_recover_pubkey(curve(m.curve)?, &m.signature, &m.digest)?;
     Ok(wire::PublicKey { public_key })
 }
 
-pub fn ec_verify_recover_digest(m: wire::EcVerifyRecoverDigest) -> Result<wire::PublicKey> {
-    let public_key =
-        sdk::ec_verify_recover_digest(curve(m.curve)?, &m.public_key, &m.signature, &m.digest)?;
-    Ok(wire::PublicKey { public_key })
-}
-
-pub fn ec_recover_pubkey(m: wire::EcRecoverPubkey) -> Result<wire::PublicKey> {
-    let public_key = sdk::ec_recover_pubkey(curve(m.curve)?, &m.signature, &m.digest)?;
-    Ok(wire::PublicKey { public_key })
+pub fn ed25519_verify(m: wire::Ed25519Verify) -> Result<wire::Success> {
+    sdk::ed25519_verify(&m.public_key, &m.signature, &m.message)?;
+    Ok(wire::Success {})
 }
 
 fn canonical(value: i32) -> Result<CanonicalSig> {
@@ -122,11 +136,10 @@ fn canonical(value: i32) -> Result<CanonicalSig> {
     }
 }
 
-fn curve(value: i32) -> Result<EcCurve> {
-    match wire::EcCurve::try_from(value) {
-        Ok(wire::EcCurve::Secp256k1) => Ok(EcCurve::Secp256k1),
-        Ok(wire::EcCurve::Nist256p1) => Ok(EcCurve::Nist256p1),
-        Ok(wire::EcCurve::Ed25519) => Ok(EcCurve::Ed25519),
+fn curve(value: i32) -> Result<EcdsaCurve> {
+    match wire::EcdsaCurve::try_from(value) {
+        Ok(wire::EcdsaCurve::Secp256k1) => Ok(EcdsaCurve::Secp256k1),
+        Ok(wire::EcdsaCurve::Nist256p1) => Ok(EcdsaCurve::Nist256p1),
         Err(_) => Err(Error::InvalidArgument),
     }
 }
