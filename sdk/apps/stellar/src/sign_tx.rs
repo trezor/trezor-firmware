@@ -279,13 +279,8 @@ pub fn sign_tx(msg: SignTx) -> Result<SignedTx> {
     })
 }
 
-/// Signs `digest` with the Ed25519 key at `address_n`.
-///
-/// Core returns the 64-byte Ed25519 signature zero-padded to the 65 bytes of
-/// the signature type shared with the ECDSA curves.
+/// Signs `digest` with the Ed25519 key at `address_n`; Stellar signs the
+/// transaction hash as the Ed25519 message.
 pub(crate) fn sign_digest(address_n: &[u32], digest: &[u8; 32]) -> Result<[u8; 64]> {
-    let signature = crypto::sign_digest(address_n, digest, false, crypto::CanonicalSig::Any).c()?;
-    let mut out = [0u8; 64];
-    out.copy_from_slice(&signature[..64]);
-    Ok(out)
+    crypto::ed25519_sign(address_n, digest).c()
 }
