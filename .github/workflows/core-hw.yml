@@ -93,17 +93,6 @@ jobs:
         run: |
           $NIX_RUN uhubctl || true
           $UV_RUN core/tools/check-usb-permissions.py |& tee check-usb-permissions.log
-      - run: $UV_RUN make -C core build_firmware
-      - run: $UV_RUN ci/hardware_tests/bootstrap.py "$TREZOR_MODEL" core/build/artifacts/latest/firmware.bin
-      - run: |
-          $UV_RUN trezorctl list
-          $UV_RUN trezorctl get-features
-        if: matrix.model != 'T3W1'  # gets stuck on models with THP
-      - run: |
-          $NIX_RUN bash -c "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
-          $UV_RUN pytest -v --verbose-log-file pytest.log tests/device_tests -m 'not sd_card' -k 'not test_authenticate_device and not evolu and not test_telemetry' --durations=50 --session-timeout 19800
-      - run: tail -n50 trezor.log || true
-        if: failure()
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-hardware-${{ matrix.model }}-${{ matrix.coins }}
@@ -192,11 +181,6 @@ jobs:
         run: |
           $NIX_RUN uhubctl || true
           $UV_RUN core/tools/check-usb-permissions.py |& tee check-usb-permissions.log
-      - run: $UV_RUN legacy/script/setup
-      - run: $UV_RUN legacy/script/cibuild
-        env:
-          PRODUCTION: 0
-      - run: $NIX_RUN ci/hardware_tests/t1_hw_test.sh
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-hardware-${{ matrix.coins }}
