@@ -119,7 +119,7 @@ async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse:
             elif service == SERVICE_WIRE_CONTINUE:
                 await wire.handle_continue(session, msg)
             elif service == SERVICE_WIRE_ERROR:
-                await wire.handle_error(session, msg)
+                wire.handle_error(msg)
             elif service == SERVICE_UI:
                 await ui.handle(session, msg)
             elif service == SERVICE_PROGRESS:
