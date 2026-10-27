@@ -27,6 +27,7 @@ cmd("ls -vl `find /sys/bus/usb/devices/usb*/ -name disable`")
 cmd(
     'for F in `find /sys/bus/usb/devices/usb*/ -name disable | sort -V`; do echo -n "$F "; cat $F; done'
 )
+cmd("lspci -v")
 cmd("lsusb --tree -v")
 cmd("uhubctl --version")
 cmd("ldd `which uhubctl`")

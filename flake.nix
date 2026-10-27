@@ -166,6 +166,7 @@
               # CI hardware tests:
               strace
               usbutils
+              pciutils
             ];
 
             env = rec {
