@@ -121,6 +121,8 @@ NFC_EVENT: int  # interface id for NFC events
 
 IPC2_EVENT: int  # interface id for IPC2 events
 
+APP_ARENA_EVENT: int  # interface id for app arena events
+
 TOUCH: int  # interface id of the touch events
 TOUCH_START: int  # event id of touch start event
 TOUCH_MOVE: int  # event id of touch move event
