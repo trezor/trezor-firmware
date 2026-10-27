@@ -155,7 +155,7 @@ def _open_session(request: ExtAppMessage) -> Session:
     """Check that `request` targets the app launched in this session and that
     it is still running."""
     if request.message_id > 0xFFFF:
-        raise DataError(f"Invalid message ID: {request.message_id}")
+        raise DataError("Invalid message ID")
 
     instance_ids = context.cache_get(cc.APP_EXTAPP_IDS)
     if instance_ids is None:
