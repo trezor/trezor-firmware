@@ -162,9 +162,7 @@ def _open_session(request: ExtAppMessage) -> Session:
         raise DataError("Invalid instance ID")
     image_handle, instance_id = ustruct.unpack("<II", instance_ids)
     if instance_id != request.instance_id:
-        raise DataError(
-            f"Invalid instance ID: {request.instance_id} (running: {instance_id})"
-        )
+        raise DataError("Invalid instance ID")
 
     image = app.image_by_handle(image_handle)
 
