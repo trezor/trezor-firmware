@@ -255,6 +255,8 @@ class BleAsync:
             except Exception as e:
                 LOG.exception("Error in async BLE process:")
                 await ready(pipe, write=True)
+                # some exceptions get mangled, others cannot be pickled at all
+                e = TransportException(f"{type(e).__name__}: {e}")
                 pipe.send(e)
             else:
                 await ready(pipe, write=True)
@@ -321,13 +323,13 @@ class BleAsync:
             device.client = None
 
         LOG.debug(f"Connecting to {address}...")
-        client = BleakClient(
+        periph.client = BleakClient(
             periph.device,
             disconnected_callback=disconnected_callback,
             services=[TREZOR_SERVICE_UUID],
             timeout=CONNECT_TIMEOUT_SECONDS,
         )
-        await client.connect()
+        await periph.client.connect()
 
         # here we should set up the pairing agent
         # https://github.com/hbldh/bleak/pull/1100
@@ -338,7 +340,7 @@ class BleAsync:
         # if there is no pairing agent we get (on linux)
         # bleak.exc.BleakDBusError: [org.bluez.Error.AuthenticationFailed] Authentication Failed
         try:
-            await client.pair()
+            await periph.client.pair()
         except BleakError:
             LOG.error("BLE pairing failed - make sure to open system pairing dialog")
             raise
@@ -356,10 +358,9 @@ class BleAsync:
         ) -> None:
             await queue.put(data)
 
-        await client.start_notify(TREZOR_CHARACTERISTIC_TX, read_callback)
-        periph.client = client
+        await periph.client.start_notify(TREZOR_CHARACTERISTIC_TX, read_callback)
         periph.queue = queue
-        LOG.info(f"Connected to {client.address}")
+        LOG.info(f"Connected to {periph.client.address}")
 
     async def is_connected(self, address: str) -> bool:
         periph = self.devices.get(address)
@@ -373,14 +374,12 @@ class BleAsync:
             return
 
         try:
-            await periph.client.stop_notify(TREZOR_CHARACTERISTIC_TX)
             await periph.client.disconnect()
             LOG.info(f"Disconnected from {periph.address}")
         except EOFError:
             LOG.debug(f"EOF when disconnecting from {periph.address}")
-        except Exception as ex:
-            LOG.error(f"Failed to disconnect from {periph.address}")
-            LOG.exception(ex)
+        except Exception:
+            LOG.exception(f"Failed to disconnect from {periph.address}:")
         finally:
             periph.client = None
             periph.queue = None
