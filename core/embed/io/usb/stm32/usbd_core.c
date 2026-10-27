@@ -378,7 +378,7 @@ USBD_StatusTypeDef USBD_LL_DataInStage(USBD_HandleTypeDef *pdev ,uint8_t epnum, 
         /* Prepare endpoint for premature end of transfer */
         USBD_LL_PrepareReceive (pdev,
                                 0,
-                                NULL,
+                                pdev->ep0_buf,
                                 0);
       }
       else
@@ -394,7 +394,7 @@ USBD_StatusTypeDef USBD_LL_DataInStage(USBD_HandleTypeDef *pdev ,uint8_t epnum, 
         /* Prepare endpoint for premature end of transfer */
         USBD_LL_PrepareReceive (pdev,
                                 0,
-                                NULL,
+                                pdev->ep0_buf,
                                 0);
         }
         else
