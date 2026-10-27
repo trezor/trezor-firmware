@@ -36,6 +36,9 @@
 #ifdef STM32U5
 #include "stm32u5xx_ll_utils.h"
 #endif
+#ifdef STM32H5
+#include "stm32h5xx_ll_utils.h"
+#endif
 #ifdef STM32F4
 #include "stm32f4xx_ll_utils.h"
 #endif
