@@ -2,8 +2,7 @@ header = "T3T2/boards/devkit.h"
 emulator_header = "T3T2/boards/unix.h"
 
 [display]
-driver = "io/display_st7789"
-panel = "io/display_panel_dem240320b1"
+driver = "io/display_none"
 
 [backlight]
 driver = "io/backlight_pwm"
@@ -13,8 +12,7 @@ driver = "io/backlight_pwm"
 [suspend]
 
 [touch]
-driver = "io/touch_ft6x36"
-panel = "io/touch_panel_lx154a2422cpt23"
+driver = "io/touch_none"
 
 [optiga]
 

@@ -68,6 +68,21 @@ void display_deinit(display_content_mode_t mode) {
 
 void display_set_unpriv_access(bool unpriv) {}
 
+#ifdef USE_SUSPEND
+void display_suspend(display_wakeup_params_t *wakeup_params) {
+  display_driver_t *drv = &g_display_driver;
+  wakeup_params->backlight_level = drv->backlight_level;
+}
+
+void display_resume(const display_wakeup_params_t *wakeup_params) {
+  display_driver_t *drv = &g_display_driver;
+
+  // Handles both the light-suspend and the full-deinit case
+  display_init(DISPLAY_RESET_CONTENT);
+  drv->backlight_level = wakeup_params->backlight_level;
+}
+#endif  // USE_SUSPEND
+
 bool display_set_backlight(uint8_t level) {
   display_driver_t *drv = &g_display_driver;
 
