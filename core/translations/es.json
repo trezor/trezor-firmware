@@ -50,8 +50,8 @@
     "address__cancel_contact_support": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Si la dirección de destino no coincide, contacta con el servicio de atención al cliente de Trezor en trezor.io/support.",
-      "Eckhart": "Si la dirección no coincide, contacta al soporte de Trezor en trezor.io/support."
+      "Delizia": "Si la dirección de recepción no coincide, contacta con el servicio de atención al cliente de Trezor en trezor.io/support.",
+      "Eckhart": "Si la dirección de recepción no coincide, contacta al soporte de Trezor en trezor.io/support."
     },
     "address__cancel_receive": {
       "Bolt": "",
@@ -67,10 +67,10 @@
     },
     "address__coin_address_template": "Dirección {0}",
     "address__confirmed": {
-      "Bolt": "Dirección de destino confirmada",
-      "Caesar": "Dirección de destino confirmada",
-      "Delizia": "Dirección de destino confirmada.",
-      "Eckhart": "Dirección de destino confirmada."
+      "Bolt": "Dirección de recepción confirmada",
+      "Caesar": "Dirección de recepción confirmada",
+      "Delizia": "Dirección de recepción confirmada.",
+      "Eckhart": "Dirección de recepción confirmada."
     },
     "address__public_key": "Clave pública",
     "address__public_key_confirmed": {
@@ -89,7 +89,7 @@
       "Delizia": "Dirección del proveedor",
       "Eckhart": "Dirección del proveedor"
     },
-    "address__title_receive_address": "Dirección destino",
+    "address__title_receive_address": "Dirección de recepción",
     "address__title_refund_address": "Dirección de reembolso",
     "address__title_yours": "(tuya)",
     "address__warning_not_yours": {
@@ -106,7 +106,7 @@
     },
     "address_details__account_info": "Info. cuenta",
     "address_details__derivation_path": "Ruta de derivación",
-    "address_details__title_receive_address": "Dirección destino",
+    "address_details__title_receive_address": "Dirección de recepción",
     "authenticate__confirm_template": "¿Permitir que la aplicación conectada verifique que tu {0} es original?",
     "authenticate__header": "Autenticar dispositivo",
     "auto_lock__change_template": "¿Bloquear auto. tras {0} de inactividad?",
@@ -225,12 +225,12 @@
     },
     "bitcoin__multiple_accounts": "Múltiples cuentas",
     "bitcoin__new_fee_rate": "Nueva tasa de comisión",
-    "bitcoin__ticket_amount": "Importe del ticket",
+    "bitcoin__ticket_amount": "Cantidad del ticket",
     "bitcoin__title_confirm_details": "Confirmar detalles",
     "bitcoin__title_finalize_transaction": "Finalizar transacción",
     "bitcoin__title_high_mining_fee": "Com. minería alta",
     "bitcoin__title_meld_transaction": "Fusionar transacción",
-    "bitcoin__title_modify_amount": "Modificar importe",
+    "bitcoin__title_modify_amount": "Modificar cantidad",
     "bitcoin__title_payjoin": "Payjoin",
     "bitcoin__title_proof_of_ownership": "Prueba de propiedad",
     "bitcoin__title_purchase_ticket": "Comprar ticket",
@@ -451,7 +451,7 @@
     },
     "buttons__info": "Info.",
     "buttons__install": "Instalar",
-    "buttons__more_info": "Más info.",
+    "buttons__more_info": "Más información",
     "buttons__ok_i_understand": "Ok, lo entiendo",
     "buttons__purchase": "Comprar",
     "buttons__quit": "Salir",
@@ -465,7 +465,12 @@
     },
     "buttons__select": "Seleccionar",
     "buttons__set": "Ajustar",
-    "buttons__shift": "",
+    "buttons__shift": {
+      "Bolt": "",
+      "Caesar": "Shift",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "buttons__show_all": "Mostrar todo",
     "buttons__show_details": {
       "Bolt": "Mostrar más",
@@ -500,14 +505,9 @@
     "cardano__address_no_staking": "dirección - sin recompensas de staking.",
     "cardano__always_abstain": "Abstenerse siempre",
     "cardano__always_no_confidence": "No Confianza siempre",
-    "cardano__amount_burned_decimals_unknown": {
-      "Bolt": "Importe quemado (decimales desconocidos)",
-      "Caesar": "Cantidad quemada (decimales desconocidos)",
-      "Delizia": "Cantidad quemada (decimales desconocidos)",
-      "Eckhart": "Cantidad quemada (decimales desconocidos)"
-    },
+    "cardano__amount_burned_decimals_unknown": "Cantidad quemada (decimales desconocidos)",
     "cardano__amount_minted_decimals_unknown": "Cantidad acuñada (decimales desconocidos)",
-    "cardano__amount_sent_decimals_unknown": "Importe enviado (decimales desconocidos)",
+    "cardano__amount_sent_decimals_unknown": "Cantidad enviada (decimales desconocidos)",
     "cardano__anonymous_pool": "El pool no tiene metadatos (anónimo)",
     "cardano__asset_fingerprint": "Huella digital del activo",
     "cardano__auxiliary_data_hash": "Hash de datos auxiliares",
@@ -608,7 +608,7 @@
     "cardano__transaction_no_script_data_hash": "La transacción no contiene hash de datos de script. El script de Plutus no se podrá ejecutar.",
     "cardano__transaction_output_contains_tokens": "La siguiente salida de transacción contiene tokens.",
     "cardano__ttl": "TTL",
-    "cardano__unknown_collateral_amount": "Importe de garantía desconocido.",
+    "cardano__unknown_collateral_amount": "Cantidad de garantía desconocida.",
     "cardano__unusual_path": "La ruta es inusual.",
     "cardano__valid_since": "Válido desde",
     "cardano__verify_script": "Verificar script",
@@ -875,7 +875,7 @@
       "Delizia": "Aprobar",
       "Eckhart": ""
     },
-    "ethereum__approve_amount_allowance": "Importe autorizado",
+    "ethereum__approve_amount_allowance": "Cantidad autorizada",
     "ethereum__approve_chain_id": "ID de cadena",
     "ethereum__approve_intro": "Revisa los detalles para permitir el gasto de tokens.",
     "ethereum__approve_intro_revoke": "Revisa los detalles para revocar la aprobación de tokens.",
@@ -917,7 +917,7 @@
     "ethereum__delegate_title": "Delegación EIP-7702",
     "ethereum__delegate_warn": "¿Delegar tu cuenta a un contrato de terceros?",
     "ethereum__delegating": "Delegando",
-    "ethereum__deposit_amount": "Importe del depósito",
+    "ethereum__deposit_amount": "Cantidad del depósito",
     "ethereum__deposit_to": "Depositar a",
     "ethereum__eip_712_empty_domain": "¡dApp no se identificó!",
     "ethereum__gas_limit": "Límite de gas",
@@ -928,7 +928,7 @@
     "ethereum__no_message_field": "Sin campo de mensaje.",
     "ethereum__priority_fee": "Comisión máx. de prioridad",
     "ethereum__redeem": "Redimir",
-    "ethereum__redeem_amount": "Redimir importe",
+    "ethereum__redeem_amount": "Cantidad a canjear",
     "ethereum__redeem_from": "Redimir de",
     "ethereum__revoke_done": {
       "Bolt": "",
@@ -985,7 +985,7 @@
       "Delizia": "Datos",
       "Eckhart": "Datos:\n{0} / {1} bytes"
     },
-    "ethereum__title_signing_address": "Dirección firma",
+    "ethereum__title_signing_address": "Dirección de firma",
     "ethereum__title_token_contract": {
       "Bolt": "Contrato del token",
       "Caesar": "Dirección del contrato del token",
@@ -1135,7 +1135,12 @@
       "Eckhart": ""
     },
     "homescreen__title_backup_failed": "El respaldo falló",
-    "homescreen__title_backup_needed": "El respaldo es necesario",
+    "homescreen__title_backup_needed": {
+      "Bolt": "El respaldo es necesario",
+      "Caesar": "Respaldo necesario",
+      "Delizia": "El respaldo es necesario",
+      "Eckhart": "El respaldo es necesario"
+    },
     "homescreen__title_coinjoin_authorized": "Coinjoin autorizado",
     "homescreen__title_experimental_mode": "Modo experimental",
     "homescreen__title_no_usb_connection": {
@@ -1305,7 +1310,7 @@
     },
     "joint__to_the_total_amount": {
       "Bolt": "",
-      "Caesar": "Al importe total",
+      "Caesar": "Al la cantidad total",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -1371,25 +1376,10 @@
     "misc__enable_labeling": "¿Habilitar el etiquetado?",
     "misc__encrypt_value": "Cifrar valor",
     "misc__title_suite_labeling": "Etiquetado suite",
-    "modify_amount__decrease_amount": {
-      "Bolt": "Reducir el importe en:",
-      "Caesar": "Reducir el importe en:",
-      "Delizia": "Reducir el importe en",
-      "Eckhart": "Reducir el importe en"
-    },
-    "modify_amount__increase_amount": {
-      "Bolt": "Aumentar importe en:",
-      "Caesar": "Aumentar importe en:",
-      "Delizia": "Aumentar importe en",
-      "Eckhart": "Aumentar importe en"
-    },
-    "modify_amount__new_amount": {
-      "Bolt": "Nuevo importe:",
-      "Caesar": "Nuevo importe:",
-      "Delizia": "Nuevo importe",
-      "Eckhart": "Nuevo importe"
-    },
-    "modify_amount__title": "Modificar importe",
+    "modify_amount__decrease_amount": "Reducir la cantidad en:",
+    "modify_amount__increase_amount": "Aumentar la cantidad en:",
+    "modify_amount__new_amount": "Nueva cantidad:",
+    "modify_amount__title": "Modificar cantidad",
     "modify_fee__decrease_fee": {
       "Bolt": "Reducir comisión en:",
       "Caesar": "Reducir comisión en:",
@@ -1780,7 +1770,7 @@
     },
     "passphrase__next_screen_will_show_passphrase": "La siguiente pantalla muestra tu passphrase.",
     "passphrase__please_enter": "Ingresa tu passphrase por favor.",
-    "passphrase__revoke_on_device": "¿Quieres revocar la config. de passphrase en el dispositivo?",
+    "passphrase__revoke_on_device": "¿Quieres revocar la configuración de ingresar la passphrase en el dispositivo?",
     "passphrase__show": {
       "Bolt": "",
       "Caesar": "",
@@ -1802,10 +1792,10 @@
       "Eckhart": ""
     },
     "passphrase__title_settings": {
-      "Bolt": "Config. passphrase",
-      "Caesar": "Config. passphrase",
+      "Bolt": "Configuración de passphrase",
+      "Caesar": "Configuración de passphrase",
       "Delizia": "",
-      "Eckhart": "Config. passphrase"
+      "Eckhart": "Configuración de passphrase"
     },
     "passphrase__title_source": {
       "Bolt": "Origen passphrase",
@@ -1814,12 +1804,7 @@
       "Eckhart": ""
     },
     "passphrase__turn_off": "¿Desactivar protección con passphrase?",
-    "passphrase__turn_on": {
-      "Bolt": "¿Activar la protección con passphrase?",
-      "Caesar": "¿Activar la protección con passphrase?",
-      "Delizia": "¿Activar la protección con passphrase?",
-      "Eckhart": "¿Activar la protección por passphrase?"
-    },
+    "passphrase__turn_on": "¿Activar la protección con passphrase?",
     "passphrase__wallet": "Billetera con passphrase",
     "pin__cancel_description": {
       "Bolt": "",
@@ -1919,11 +1904,11 @@
       "Bolt": "rest.",
       "Caesar": "intentos restantes",
       "Delizia": "rest.",
-      "Eckhart": "intentos"
+      "Eckhart": "intentos restantes"
     },
     "pin__turn_off": "¿Quieres desactivar la protección con PIN?",
     "pin__turn_on": "¿Activar la protección con PIN?",
-    "pin__wipe_code_exists_description": "El código de borrado debe ser desactivado antes de desactivar el PIN.",
+    "pin__wipe_code_exists_description": "Antes de desactivar el PIN debe ser desactivado el código de borrado.",
     "pin__wipe_code_exists_title": "Código de borrado configurado",
     "pin__wrong_pin": "PIN incorrecto",
     "plurals__contains_x_keys": "clave|claves",
@@ -1972,10 +1957,15 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "recovery__dry_run_bip39_valid_match": "El respaldo de la billetera es válido y coincide con el respaldo en este dispositivo.",
-    "recovery__dry_run_bip39_valid_mismatch": "El respaldo de la billetera indicado es válido pero no coincide con el respaldo en este dispositivo.",
-    "recovery__dry_run_slip39_valid_match": "El respaldo de la billetera es válido y coincide con el respaldo en este dispositivo.",
-    "recovery__dry_run_slip39_valid_mismatch": "El respaldo de la billetera indicado es válido pero no coincide con el respaldo en este dispositivo.",
+    "recovery__dry_run_bip39_valid_match": "El respaldo ingresado es válido y coincide con el respaldo en este dispositivo.",
+    "recovery__dry_run_bip39_valid_mismatch": {
+      "Bolt": "El respaldo ingresado es válido pero no coincide con el respaldo en este dispositivo.",
+      "Caesar": "El respaldo  ingresado es válido pero no coincide con el respaldo en este dispositivo.",
+      "Delizia": "El respaldo ingresado es válido pero no coincide con el respaldo en este dispositivo.",
+      "Eckhart": "El respaldo ingresado es válido pero no coincide con el respaldo en este dispositivo."
+    },
+    "recovery__dry_run_slip39_valid_match": "El respaldo ingresado es válido y coincide con el respaldo en este dispositivo.",
+    "recovery__dry_run_slip39_valid_mismatch": "El respaldo ingresado es válido pero no coincide con el respaldo en este dispositivo.",
     "recovery__enter_any_share": "Ingresa cualquier parte.",
     "recovery__enter_backup": "Ingresa tu respaldo.",
     "recovery__enter_different_share": {
@@ -1990,7 +1980,12 @@
     "recovery__group_threshold_reached": "Umbral de grupo alcanzado.",
     "recovery__invalid_share_entered": "La parte de recuperación es inválida.",
     "recovery__invalid_wallet_backup_entered": "El respaldo de la billetera es inválido.",
-    "recovery__more_shares_needed": "Se necesitan más partes.",
+    "recovery__more_shares_needed": {
+      "Bolt": "Se necesitan más partes",
+      "Caesar": "Se necesitan más partes",
+      "Delizia": "Se necesitan más partes",
+      "Eckhart": "Se necesitan más partes."
+    },
     "recovery__num_of_words": "Elige el número de palabras en tu respaldo.",
     "recovery__progress_will_be_lost": "Se perderá todo el progreso.",
     "recovery__share_already_entered": {
@@ -2088,8 +2083,8 @@
       "Eckhart": ""
     },
     "reset__button_create": {
-      "Bolt": "Crear billet.",
-      "Caesar": "Crear billet.",
+      "Bolt": "Crear billetera",
+      "Caesar": "Crear billetera",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2210,7 +2205,7 @@
       "Eckhart": ""
     },
     "reset__need_all_share_template": {
-      "Bolt": "Para la recup. necesitas todas las {0} partes.",
+      "Bolt": "Para la recuperación necesitas todas las {0} partes.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2296,9 +2291,9 @@
     },
     "reset__recovery_share_number": "Tu respaldo de la billetera consiste de 1 a 16 partes.",
     "reset__recovery_share_title_template": {
-      "Bolt": "Parte de recup. {0}",
+      "Bolt": "Parte de recuperación {0}",
       "Caesar": "",
-      "Delizia": "Parte de recup. {0}",
+      "Delizia": "Parte de recuperación {0}",
       "Eckhart": ""
     },
     "reset__recovery_wallet_backup_title": "El respaldo de la billetera",
@@ -2555,12 +2550,17 @@
       "Eckhart": ""
     },
     "reset__you_need_one_share": {
-      "Bolt": "Para la recup. necesitas 1 parte.",
+      "Bolt": "Para la recuperación necesitas 1 parte.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__your_backup_is_done": "Tu respaldo está completo.",
+    "reset__your_backup_is_done": {
+      "Bolt": "Respaldo completo.",
+      "Caesar": "Tu respaldo está completo.",
+      "Delizia": "Tu respaldo está completo.",
+      "Eckhart": "Tu respaldo está completo."
+    },
     "ripple__account_deletion_warning": "¿Eliminar la cuenta Ripple?",
     "ripple__account_to_be_deleted": "A ser eliminado",
     "ripple__confirm_tag": "Confirmar etiqueta",
@@ -2715,7 +2715,7 @@
       "Delizia": "Cancelar firma",
       "Eckhart": "¿Cancelar firma?"
     },
-    "send__confirm_sending": "Enviando importe",
+    "send__confirm_sending": "Enviando cantidad",
     "send__from_multiple_accounts": "Enviando desde varias cuentas.",
     "send__incl_transaction_fee": {
       "Bolt": "",
@@ -2755,15 +2755,15 @@
       "Eckhart": ""
     },
     "send__title_sending": "Enviando",
-    "send__title_sending_amount": "Enviando importe",
+    "send__title_sending_amount": "Enviando cantidad",
     "send__title_sending_to": "Enviando a",
     "send__to_the_total_amount": {
-      "Bolt": "Al importe total:",
+      "Bolt": "A la cantidad total:",
       "Caesar": "",
-      "Delizia": "Al importe total:",
-      "Eckhart": "Al importe total:"
+      "Delizia": "A la cantidad total:",
+      "Eckhart": "A la cantidad total:"
     },
-    "send__total_amount": "Importe total",
+    "send__total_amount": "Cantidad total",
     "send__transaction_id": "ID de la transacción",
     "send__transaction_signed": {
       "Bolt": "Transacción firmada",
@@ -2861,7 +2861,7 @@
     "stellar__confirm_issuer": "Confirmar emisor",
     "stellar__confirm_memo": "Confirmar nota",
     "stellar__confirm_operation": "Confirmar operación",
-    "stellar__debited_amount": "Importe debitado",
+    "stellar__debited_amount": "Cantidad debitada",
     "stellar__delete": "Eliminar",
     "stellar__delete_passive_offer": "Eliminar oferta pasiva",
     "stellar__delete_trust": "Eliminar Trust",
@@ -2870,7 +2870,7 @@
     "stellar__exchanges_require_memo": "Memo no definido. Normalmente es necesario cuando envías a exchanges.",
     "stellar__ext_auth": "Autorizaciones Externas",
     "stellar__ext_auth_message": {
-      "Bolt": "La transacción contiene invocaciones autorizadas externamente.",
+      "Bolt": "La transacción contiene invocaciones auto- rizadas externamente.",
       "Caesar": "La transacción contiene invocaciones adicionales autorizadas externamente.",
       "Delizia": "La transacción contiene invocaciones adicionales autorizadas externamente.",
       "Eckhart": "La transacción contiene invocaciones adicionales autorizadas externamente."
@@ -3341,7 +3341,7 @@
     "u2f__get": "¿Aumentar y recuperar el contador U2F?",
     "u2f__set_template": "¿Ajustar el contador U2F a {0}?",
     "u2f__title_get": "Recibir cont. U2F",
-    "u2f__title_set": "Config. cont. U2F",
+    "u2f__title_set": "Configurar contador U2F",
     "wipe__info": "Se borrarán todos los datos.",
     "wipe__start_again": "Borra tu Trezor y reinicia la configuración.",
     "wipe__title": "Borrar dispositivo",
@@ -3349,7 +3349,7 @@
     "wipe_code__cancel_setup": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Cancelar configuración del código de borrado.",
+      "Delizia": "Cancelar configuración del código de borrado",
       "Eckhart": "¿Cancelar configuración del código de borrado?"
     },
     "wipe_code__change": {
@@ -3428,7 +3428,7 @@
     "words__account": "Cuenta",
     "words__account_deletion": "Eliminar cuenta",
     "words__address": "Dirección",
-    "words__amount": "Importe",
+    "words__amount": "Cantidad",
     "words__are_you_sure": "¿Seguro?",
     "words__arguments": "Argumentos",
     "words__array_of": "Arreglo de",

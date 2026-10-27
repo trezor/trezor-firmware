@@ -138,18 +138,18 @@
     "backup__create_backup_to_prevent_loss": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Erstelle ein Backup, um den Zugriff auf deine Assets nicht zu verlieren.",
-      "Eckhart": "Erstelle ein Backup, um den Zugriff auf deine Assets nicht zu verlieren."
+      "Delizia": "Erstelle ein Wallet-Backup, um den Zugriff auf deine Assets nicht zu verlieren.",
+      "Eckhart": "Erstelle ein Wallet-Backup, um den Zugriff auf deine Assets nicht zu verlieren."
     },
     "backup__info_multi_group_backup": "Dein Wallet-Backup enthält {0} Gruppen mit einem Gruppen-Schwellenwert von {1}.",
     "backup__info_multi_share_backup": "Dein Wallet-Backup enthält mehrere Listen von Wörtern in einer bestimmten Reihenfolge (Shares).",
     "backup__info_n_of_m_template": "{0}-von-{1}",
     "backup__info_single_share_backup": "Dein Wallet-Backup enthält {0} Wörter in einer bestimmten Reihenfolge.",
     "backup__it_should_be_backed_up": {
-      "Bolt": "Du solltest jetzt dein neues Wallet sichern.",
+      "Bolt": "Du solltest jetzt deine neue Wallet sichern.",
       "Caesar": "",
-      "Delizia": "Du solltest jetzt dein neues Wallet sichern.",
-      "Eckhart": "Du solltest jetzt dein neues Wallet sichern."
+      "Delizia": "Du solltest jetzt deine neue Wallet sichern.",
+      "Eckhart": "Du solltest jetzt deine neue Wallet sichern."
     },
     "backup__it_should_be_backed_up_now": {
       "Bolt": "",
@@ -177,7 +177,7 @@
     },
     "backup__recover_anytime": {
       "Bolt": "",
-      "Caesar": "Mit dem Backup kannst du immer dein Wallet wiederherstellen.",
+      "Caesar": "Mit dem Backup kannst du immer deine Wallet wiederherstellen.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -201,7 +201,12 @@
       "Eckhart": "Backup überspringen"
     },
     "backup__type_create": "",
-    "backup__type_have": "",
+    "backup__type_have": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Welche Art von Wallet-Backup hast du?"
+    },
     "backup__type_n1w1": "",
     "backup__type_wordlist": "",
     "backup__want_to_skip": {
@@ -480,7 +485,12 @@
     },
     "buttons__select": "Auswählen",
     "buttons__set": "Festlegen",
-    "buttons__shift": "",
+    "buttons__shift": {
+      "Bolt": "",
+      "Caesar": "Shift",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "buttons__show_all": "Alle anzeigen",
     "buttons__show_details": {
       "Bolt": "Detailansicht",
@@ -1021,12 +1031,7 @@
     "ethereum__calldata_digest": "ERC-8213-Digest",
     "ethereum__calldata_suffix": "Calldata-Suffix",
     "ethereum__confirm_contract": "Vertrag bestätigen",
-    "ethereum__contract_address": {
-      "Bolt": "{provider} Kontraktadresse",
-      "Caesar": "{provider} Kontraktadresse",
-      "Delizia": "Provider Vertragsadresse",
-      "Eckhart": "{provider} Kontraktadresse"
-    },
+    "ethereum__contract_address": "Contract-Adresse",
     "ethereum__data_size_template": "Größe: {0} Bytes",
     "ethereum__delegate_done": {
       "Bolt": "",
@@ -1144,14 +1149,14 @@
       "Bolt": "Unbekannte Contract-Adresse.",
       "Caesar": "Unbekannte Contract-Adresse",
       "Delizia": "Unbekannte Contract-Adresse.",
-      "Eckhart": "Unbekannte Token-Contract-Adresse."
+      "Eckhart": "Unbekannte Contract-Adresse."
     },
     "ethereum__unknown_token": "Ungültiger Token",
     "ethereum__valid_signature": "Die Signatur ist gültig.",
     "ethereum__vault_claim_intro": "Belohungen von Merkl.xyz beanspruchen",
     "ethereum__vault_claim_to": "Beanspruchen auf",
     "ethereum__vault_deposit_intro": "Prüfe die Details, um in den Vault einzuzahlen.",
-    "ethereum__vault_owner_address": "",
+    "ethereum__vault_owner_address": "Adresse des Eigentümers",
     "ethereum__vault_redeem_intro": "Prüfe die Details, um aus dem Vault einzulösen.",
     "ethereum__vault_redeem_to": "Einlösen auf",
     "ethereum__vault_withdraw_intro": "Prüfe die Details, um aus dem Vault abzuheben.",
@@ -2259,12 +2264,7 @@
     "recovery__type_word_x_of_y_template": "Tippe Wort {0} von {1}",
     "recovery__unlock_repeated_backup": "Zusätzliches Backup erstellen?",
     "recovery__unlock_repeated_backup_verb": "Backup erstellen",
-    "recovery__wallet_recovered": {
-      "Bolt": "Wiederherstellung des Wallets abgeschlossen.",
-      "Caesar": "Wiederherstellung des Wallets abgeschlossen.",
-      "Delizia": "Wiederherstellung des Wallets abgeschlossen.",
-      "Eckhart": "Wiederherstellung der Wallet abgeschlossen."
-    },
+    "recovery__wallet_recovered": "Wiederherstellung des Wallets abgeschlossen.",
     "recovery__wanna_cancel_dry_run": "Möchtest du die Backup-Prüfung wirklich abbrechen?",
     "recovery__wanna_cancel_recovery": "Möchtest du die Wiederherstellung wirklich abbrechen?",
     "recovery__word_count_template": "({0} Wörter)",
@@ -3201,7 +3201,7 @@
       "Eckhart": "Startdomain"
     },
     "stellar__inflation": "Inflation",
-    "stellar__invoke_contract": "Vertrag aufrufen",
+    "stellar__invoke_contract": "Contract aufrufen",
     "stellar__issuer_template": "{0} Aussteller",
     "stellar__key": "Key",
     "stellar__limit": "Grenze",
@@ -3392,7 +3392,12 @@
     },
     "tron__owner_address": "Adresse des Eigentümers",
     "tron__undelegate_resource": "Nicht delegierte Ressource",
-    "tutorial__complete": "",
+    "tutorial__complete": {
+      "Bolt": "",
+      "Caesar": "Tutorial abschließen",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3417,7 +3422,12 @@
       "Delizia": "Der Trezor Model One war 2013 die erste Hardware-Wallet\nder Welt.",
       "Eckhart": ""
     },
-    "tutorial__hold_left_press_right": "",
+    "tutorial__hold_left_press_right": {
+      "Bolt": "",
+      "Caesar": "Halte LINKS, drücke RECHTS.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__last_one": {
       "Bolt": "",
       "Caesar": "",
@@ -3426,13 +3436,13 @@
     },
     "tutorial__lets_begin": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Lerne die Basics der Navigation deines Gerätes.",
       "Delizia": "Lerne, wie du dieses Gerät ganz einfach benutzt und bedienst.",
       "Eckhart": ""
     },
     "tutorial__menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Finde Kontext-Abhängige Aktionen und Optionen im Menü.",
       "Delizia": "Finde kontextspezifische Aktionen und Optionen im Menü.",
       "Eckhart": "Finde kontextspezifische Aktionen und Optionen im Menü."
     },
@@ -3442,10 +3452,15 @@
       "Delizia": "",
       "Eckhart": "Mehr Infos ansehen, Ablauf beenden ..."
     },
-    "tutorial__menu_later": "",
+    "tutorial__menu_later": {
+      "Bolt": "",
+      "Caesar": "Das Menü bietet Kontext Informationen. Wir schauen uns das später an.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__middle_click": {
       "Bolt": "",
-      "Caesar": "Drücke gleichzeitig rechts und links,\num zu bestätigen.",
+      "Caesar": "Drücke links und rechts gleichzeitig um den nächsten Bildschirm zu sehen.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3473,11 +3488,21 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__press_both": "",
-    "tutorial__press_left": "",
+    "tutorial__press_both": {
+      "Bolt": "",
+      "Caesar": "Drücke BEIDE Knöpfe gleichzeitig.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__press_left": {
+      "Bolt": "",
+      "Caesar": "Drücke LINKS.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__ready_to_use": {
       "Bolt": "",
-      "Caesar": "Du kannst jetzt\nTrezor verwenden.",
+      "Caesar": "Du kannst jetzt deinen Trezor verwenden.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3489,17 +3514,22 @@
     },
     "tutorial__restart_tutorial": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Tutorial neu starten",
       "Delizia": "Tutorial neustarten",
       "Eckhart": "Tutorial neustarten"
     },
     "tutorial__scroll_down": {
       "Bolt": "",
-      "Caesar": "Drücke rechts, um nach unten zu scrollen und alles zu lesen, wenn der Text nicht auf einen Bildschirm passt.\n\rDrücke links, um nach oben zu scrollen.",
+      "Caesar": "Drücke RECHTS um den nächsten Bildschirm zu sehen.",
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__scroll_up": "",
+    "tutorial__scroll_up": {
+      "Bolt": "",
+      "Caesar": "Halte LINKS und drücke REGHTS um nach oben zu scrollen.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__suite_restart": {
       "Bolt": "",
       "Caesar": "",
@@ -3530,10 +3560,15 @@
       "Delizia": "Einfache Navigation",
       "Eckhart": ""
     },
-    "tutorial__title_go_back": "",
+    "tutorial__title_go_back": {
+      "Bolt": "",
+      "Caesar": "Möchtest du zurück?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_handy_menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Menü",
       "Delizia": "Nützliches Menü",
       "Eckhart": "Praktisches Menü"
     },
@@ -3555,11 +3590,21 @@
       "Delizia": "Lass uns beginnen",
       "Eckhart": ""
     },
-    "tutorial__title_middle_button": "",
-    "tutorial__title_remember": "",
+    "tutorial__title_middle_button": {
+      "Bolt": "",
+      "Caesar": "Mittlerer Knopf",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_remember": {
+      "Bolt": "",
+      "Caesar": "Merken",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_screen_scroll": {
       "Bolt": "",
-      "Caesar": "Bildschirm scrollen",
+      "Caesar": "Versuche zu scrollen",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3575,7 +3620,12 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__title_welcome": "",
+    "tutorial__title_welcome": {
+      "Bolt": "",
+      "Caesar": "Willkommen bei Trezor",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_well_done": {
       "Bolt": "",
       "Caesar": "",
@@ -3590,7 +3640,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Verwende Trezor durch\nDrücken der linken und rechten Tasten.\n\rWeiter rechts.",
+      "Caesar": "Verwende Trezor durch\nDrücken der linken und rechten Tasten.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3626,12 +3676,7 @@
       "Delizia": "U2F-zähler erhalten",
       "Eckhart": "U2F-Zähler erhalten"
     },
-    "u2f__title_set": {
-      "Bolt": "U2F-zähler wählen",
-      "Caesar": "U2F-zähler wählen",
-      "Delizia": "U2F-zähler wählen",
-      "Eckhart": "U2F-Zähler wählen"
-    },
+    "u2f__title_set": "U2F-Zähler wählen",
     "wipe__info": "Alle Daten werden gelöscht.",
     "wipe__start_again": {
       "Bolt": "Lösche deinen Trezor und beginne noch einmal mit dem Einrichtungsprozess.",
