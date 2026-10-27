@@ -421,6 +421,10 @@ def test_wipe_code_same_as_pin(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler, Situation.WIPE_CODE_SETUP, old_pin="1") as debug:
         _input_see_confirm(debug, "1")
         # Try again
+        if debug.layout_type is LayoutType.Bolt:
+            # long translations may not fit on a single page
+            for _ in range(debug.read_layout().page_count() - 1):
+                debug.swipe_up()
         go_next(debug)
         _enter_two_times(debug, "2", "2")
 

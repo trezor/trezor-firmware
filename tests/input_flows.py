@@ -2203,9 +2203,7 @@ def load_N_shares(
         else:
             raise RuntimeError
 
-    br = yield
-    assert br.code == B.Success
-    assert br.name == "success_backup"
+    yield from swipe_if_necessary(debug, B.Success, "success_backup")
     debug.press_yes()
 
     return mnemonics
@@ -2241,9 +2239,7 @@ def load_N_groups(
                 raise RuntimeError
         mnemonics.append(group_mnemonics)
 
-    br = yield
-    assert br.code == B.Success
-    assert br.name == "success_backup"
+    yield from swipe_if_necessary(debug, B.Success, "success_backup")
     debug.press_yes()
 
     return mnemonics

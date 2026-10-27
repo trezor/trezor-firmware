@@ -4,10 +4,11 @@ use crate::ui::component::image::BlendedImage;
 use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
 };
-use crate::ui::component::text::TextStyle;
-use crate::ui::component::{Child, Component, Event, EventCtx, Never};
+use crate::ui::component::text::{PageBreaking, TextStyle};
+use crate::ui::component::{Child, Component, Empty, Event, EventCtx, Never, Paginate};
 use crate::ui::geometry::{Insets, LinearPlacement, Rect};
 use crate::ui::shape::Renderer;
+use crate::ui::util::Pager;
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum DialogMsg<T, U> {
@@ -80,10 +81,17 @@ where
     }
 }
 
+// Text styles of a paginated `IconDialog`, see `IconDialog::style`.
+const TEXT_DEMIBOLD_CUT: TextStyle = theme::TEXT_DEMIBOLD.with_page_breaking(PageBreaking::Cut);
+const TEXT_NORMAL_OFF_WHITE_CUT: TextStyle =
+    theme::TEXT_NORMAL_OFF_WHITE.with_page_breaking(PageBreaking::Cut);
+const TEXT_MONO_DATA_CUT: TextStyle = theme::TEXT_MONO_DATA.with_page_breaking(PageBreaking::Cut);
+
 pub struct IconDialog<U> {
     image: Option<Child<BlendedImage>>,
     paragraphs: Paragraphs<ParagraphVecShort<'static>>,
     controls: Child<U>,
+    allow_pagination: bool,
 }
 
 impl<U> IconDialog<U>
@@ -95,8 +103,18 @@ where
         title: Option<impl Into<TString<'static>>>,
         controls: U,
     ) -> Self {
+        Self::new_inner(icon, title, controls, false)
+    }
+
+    fn new_inner(
+        icon: BlendedImage,
+        title: Option<impl Into<TString<'static>>>,
+        controls: U,
+        allow_pagination: bool,
+    ) -> Self {
         let (image, paragraphs) = if let Some(title) = title {
-            let title = Paragraph::new(&theme::TEXT_DEMIBOLD, title).centered();
+            let style = Self::style(allow_pagination, &theme::TEXT_DEMIBOLD, &TEXT_DEMIBOLD_CUT);
+            let title = Paragraph::new(style, title).centered();
             let para = ParagraphVecShort::from_iter([title]);
             (Some(Child::new(icon)), para)
         } else {
@@ -110,6 +128,22 @@ where
                     .with_spacing(Self::VALUE_SPACE),
             ),
             controls: Child::new(controls),
+            allow_pagination,
+        }
+    }
+
+    /// When paginating, the container signals that the content continues
+    /// (scrollbar, "next page" button), so the text doesn't need to mark the
+    /// page breaks.
+    fn style(
+        allow_pagination: bool,
+        style: &'static TextStyle,
+        paginated_style: &'static TextStyle,
+    ) -> &'static TextStyle {
+        if allow_pagination {
+            paginated_style
+        } else {
+            style
         }
     }
 
@@ -127,11 +161,21 @@ where
     }
 
     pub fn with_description(self, description: impl Into<TString<'static>>) -> Self {
-        self.with_text(&theme::TEXT_NORMAL_OFF_WHITE, description)
+        let style = Self::style(
+            self.allow_pagination,
+            &theme::TEXT_NORMAL_OFF_WHITE,
+            &TEXT_NORMAL_OFF_WHITE_CUT,
+        );
+        self.with_text(style, description)
     }
 
     pub fn with_value(self, value: impl Into<TString<'static>>) -> Self {
-        self.with_text(&theme::TEXT_MONO_DATA, value)
+        let style = Self::style(
+            self.allow_pagination,
+            &theme::TEXT_MONO_DATA,
+            &TEXT_MONO_DATA_CUT,
+        );
+        self.with_text(style, value)
     }
 
     pub fn new_shares(lines: [impl Into<TString<'static>>; 4], controls: U) -> Self {
@@ -153,12 +197,22 @@ where
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical().align_at_center()),
             controls: Child::new(controls),
+            allow_pagination: false,
         }
     }
 
     pub const ICON_AREA_PADDING: i16 = 2;
     pub const ICON_AREA_HEIGHT: i16 = 60;
     pub const VALUE_SPACE: i16 = 5;
+}
+
+impl IconDialog<Empty> {
+    /// Dialog whose content can paginate. To be placed inside a paginating
+    /// container such as `ButtonPage`, which then supplies the controls and the
+    /// border insets.
+    pub fn new_paginated(icon: BlendedImage, title: Option<impl Into<TString<'static>>>) -> Self {
+        Self::new_inner(icon, title, Empty, true)
+    }
 }
 
 impl<U> Component for IconDialog<U>
@@ -168,9 +222,14 @@ where
     type Msg = DialogMsg<Never, U::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let bounds = bounds
-            .inset(theme::borders())
-            .inset(Insets::top(Self::ICON_AREA_PADDING));
+        // When paginating inside a container (e.g. `ButtonPage`), the border
+        // insets are supplied by the container.
+        let bounds = if self.allow_pagination {
+            bounds
+        } else {
+            bounds.inset(theme::borders())
+        };
+        let bounds = bounds.inset(Insets::top(Self::ICON_AREA_PADDING));
 
         let controls_area = self.controls.place(bounds);
         let content_area = bounds.inset(Insets::bottom(controls_area.height()));
@@ -198,6 +257,22 @@ where
         }
         self.paragraphs.render(target);
         self.controls.render(target);
+    }
+}
+
+/// `IconDialog` can paginate its content when placed inside a paginating
+/// container such as `ButtonPage` (see `IconDialog::new_paginated`). The
+/// icon stays visible on all pages, only the text is paginated.
+impl<U> Paginate for IconDialog<U>
+where
+    U: Component,
+{
+    fn pager(&self) -> Pager {
+        self.paragraphs.pager()
+    }
+
+    fn change_page(&mut self, active_page: u16) {
+        self.paragraphs.change_page(active_page);
     }
 }
 

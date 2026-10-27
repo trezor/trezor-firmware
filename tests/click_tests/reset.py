@@ -47,7 +47,12 @@ def confirm_new_wallet(debug: "DebugLink") -> None:
 
 
 def confirm_read(debug: "DebugLink", middle_r: bool = False) -> None:
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
+    if debug.layout_type is LayoutType.Bolt:
+        # long translations may not fit on a single page
+        for _ in range(debug.read_layout().page_count() - 1):
+            debug.swipe_up()
+        debug.click(debug.screen_buttons.ok())
+    elif debug.layout_type is LayoutType.Eckhart:
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Caesar:
         page_count = debug.read_layout().page_count()
