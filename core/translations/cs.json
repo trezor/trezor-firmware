@@ -2126,7 +2126,12 @@
       "Delizia": "Kontrola podílu {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": "Kontrola zálohy peněženky",
+    "reset__check_wallet_backup_title": {
+      "Bolt": "Kontrola zálohy",
+      "Caesar": "Kontrola zálohy peněženky",
+      "Delizia": "Kontrola zálohy",
+      "Eckhart": "Kontrola zálohy peněženky"
+    },
     "reset__continue_with_next_share": {
       "Bolt": "Pokračujte dalším podílem.",
       "Caesar": "Následuje další podíl.",

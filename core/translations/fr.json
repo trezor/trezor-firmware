@@ -3337,7 +3337,7 @@
     },
     "tutorial__menu": {
       "Bolt": "",
-      "Caesar": "Trouvez des actions et options contextuelles dans le menu.",
+      "Caesar": "Trouvez des actions et options spécifiques au contexte dans le menu.",
       "Delizia": "Trouvez des actions et options spécifiques au contexte dans le menu.",
       "Eckhart": "Trouvez des actions et options spécifiques au contexte dans le menu."
     },
@@ -3409,7 +3409,7 @@
     },
     "tutorial__restart_tutorial": {
       "Bolt": "",
-      "Caesar": "Relancer le tutoriel",
+      "Caesar": "Recommencer le tutoriel",
       "Delizia": "Recommencer le tutoriel",
       "Eckhart": "Recommencer le tutoriel"
     },
