@@ -186,6 +186,38 @@ pub fn read_symbol_from_content(content: &str, symbol: &str) -> Result<u32> {
     parse_address(value).with_context(|| format!("Invalid address `{value}` for `{symbol}`"))
 }
 
+/// Splits a firmware image into the flash segments it occupies, as
+/// `(address, bytes)` pairs in ascending address order.
+///
+/// A firmware image is one logical blob, the same one the bootloader receives
+/// on upload. On models whose firmware area is split into two parts
+/// (`FIRMWARE_P1_*` and `FIRMWARE_P2_*` in memory.ld, STM32F4), the bytes past
+/// `FIRMWARE_P1_MAXSIZE` belong at `FIRMWARE_P2_START`, not right after part 1
+/// -- between the two parts lie the secret, assets and storage sectors.
+pub fn firmware_segments<'a>(memory_ld: &str, image: &'a [u8]) -> Result<Vec<(u32, &'a [u8])>> {
+    let Ok(p1_size) = read_symbol_from_content(memory_ld, "FIRMWARE_P1_MAXSIZE") else {
+        let start = read_symbol_from_content(memory_ld, "FIRMWARE_START")?;
+        return Ok(vec![(start, image)]);
+    };
+
+    let p1_start = read_symbol_from_content(memory_ld, "FIRMWARE_P1_START")?;
+    if image.len() <= p1_size as usize {
+        return Ok(vec![(p1_start, image)]);
+    }
+
+    let p2_start = read_symbol_from_content(memory_ld, "FIRMWARE_P2_START")?;
+    let p2_size = read_symbol_from_content(memory_ld, "FIRMWARE_P2_MAXSIZE")?;
+    let (part1, part2) = image.split_at(p1_size as usize);
+    anyhow::ensure!(
+        part2.len() <= p2_size as usize,
+        "firmware image ({} bytes) does not fit FIRMWARE_P1 + FIRMWARE_P2 ({} bytes)",
+        image.len(),
+        p1_size as usize + p2_size as usize
+    );
+
+    Ok(vec![(p1_start, part1), (p2_start, part2)])
+}
+
 /// Parses a string as a u32 address, supporting both decimal and
 /// hexadecimal formats.
 fn parse_address(value: &str) -> Result<u32> {
@@ -216,7 +248,46 @@ pub fn print_version(args: PrintVersionArgs) -> Result<()> {
 mod tests {
     use std::fs;
 
-    use super::{parse_address, parse_version_file, read_symbol_from_content};
+    use super::{firmware_segments, parse_address, parse_version_file, read_symbol_from_content};
+
+    const SPLIT_MEMORY_LD: &str = "FIRMWARE_START = 0x8040000;\n\
+        FIRMWARE_P1_START = 0x8040000;\nFIRMWARE_P1_MAXSIZE = 0x10;\n\
+        FIRMWARE_P2_START = 0x8120000;\nFIRMWARE_P2_MAXSIZE = 0x8;\n";
+
+    #[test]
+    fn firmware_segments_without_split_is_one_segment() {
+        let image = [1u8; 32];
+        let segments = firmware_segments("FIRMWARE_START = 0x8010000;\n", &image).unwrap();
+
+        assert_eq!(segments, vec![(0x0801_0000, &image[..])]);
+    }
+
+    #[test]
+    fn firmware_segments_fitting_part1_is_one_segment() {
+        let image = [1u8; 0x10];
+        let segments = firmware_segments(SPLIT_MEMORY_LD, &image).unwrap();
+
+        assert_eq!(segments, vec![(0x0804_0000, &image[..])]);
+    }
+
+    #[test]
+    fn firmware_segments_places_tail_at_part2() {
+        let image: Vec<u8> = (0..0x14).collect();
+        let segments = firmware_segments(SPLIT_MEMORY_LD, &image).unwrap();
+
+        assert_eq!(
+            segments,
+            vec![(0x0804_0000, &image[..0x10]), (0x0812_0000, &image[0x10..])]
+        );
+    }
+
+    #[test]
+    fn firmware_segments_rejects_image_larger_than_both_parts() {
+        let image = [1u8; 0x19];
+        let error = firmware_segments(SPLIT_MEMORY_LD, &image).unwrap_err();
+
+        assert!(error.to_string().contains("does not fit"));
+    }
 
     #[test]
     fn parses_version_file_symbols() {

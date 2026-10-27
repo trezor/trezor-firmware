@@ -150,11 +150,17 @@ pub fn combine(args: CombineArgs) -> Result<()> {
     })?;
 
     for (symbol, project) in sections {
-        place_section(
-            &mut binary,
-            offset_of(symbol)?,
-            &load_binary(args.model, *project)?,
-        )?;
+        let data = load_binary(args.model, *project)?;
+        if *project == Project::Firmware {
+            // On STM32F4 the firmware image spans two flash areas
+            let content = fs::read_to_string(&memory_ld)
+                .with_context(|| format!("Failed to read `{}`", memory_ld.display()))?;
+            for (address, segment) in helpers::firmware_segments(&content, &data)? {
+                place_section(&mut binary, (address - base) as usize, segment)?;
+            }
+        } else {
+            place_section(&mut binary, offset_of(symbol)?, &data)?;
+        }
     }
 
     erase_boot_ucb(&mut binary, &memory_ld, base)?;

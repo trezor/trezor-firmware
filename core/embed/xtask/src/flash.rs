@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{fs, process};
 
 use anyhow::{Context, Result, ensure};
@@ -39,6 +39,19 @@ pub fn flash(args: FlashArgs) -> Result<()> {
     let memory_ld = args.model.model_memory_ld()?;
     let address = helpers::read_symbol(&memory_ld, flash_start)?;
 
+    // On STM32F4 the firmware image spans two flash areas, and writing it in
+    // one piece would put its tail over the secret and storage sectors.
+    if args.project == Project::Firmware {
+        let content = fs::read_to_string(&memory_ld)
+            .with_context(|| format!("Failed to read `{}`", memory_ld.display()))?;
+        let image =
+            fs::read(&binary).with_context(|| format!("Failed to read `{}`", binary.display()))?;
+        let segments = helpers::firmware_segments(&content, &image)?;
+        if segments.len() > 1 {
+            return flash_segments(args.model, &binary, &segments);
+        }
+    }
+
     println!(
         "Flashing `{}` to address 0x{:08X}",
         binary.display(),
@@ -48,6 +61,34 @@ pub fn flash(args: FlashArgs) -> Result<()> {
     let flash_instruction = build_flash_write_instruction(&binary, address)?;
 
     run_openocd(args.model, &flash_instruction)
+}
+
+/// Flashes an image split into `(address, bytes)` segments, each written to
+/// its own address in a single OpenOCD session.
+fn flash_segments(model: Model, binary: &Path, segments: &[(u32, &[u8])]) -> Result<()> {
+    let tmp_dir = std::env::temp_dir();
+    let mut files = Vec::new();
+    for (i, (address, data)) in segments.iter().enumerate() {
+        let path = tmp_dir.join(format!("xtask-flash-{}-{i}.bin", process::id()));
+        fs::write(&path, data).with_context(|| format!("Failed to write `{}`", path.display()))?;
+        println!(
+            "Flashing `{}` part {} ({} bytes) to address 0x{:08X}",
+            binary.display(),
+            i + 1,
+            data.len(),
+            address
+        );
+        files.push((path, *address));
+    }
+
+    let result = build_flash_write_segments_instruction(&files)
+        .and_then(|instruction| run_openocd(model, &instruction));
+
+    for (path, _) in &files {
+        let _ = fs::remove_file(path);
+    }
+
+    result
 }
 
 /// Flash the combined image: the whole boot chain in one write.
@@ -181,11 +222,20 @@ fn tcl_quote_path(path: &Path) -> Result<String> {
 }
 
 fn build_flash_write_instruction(binary: &Path, address: u32) -> Result<String> {
-    Ok(format!(
-        "init; reset halt; flash write_image erase {} 0x{:X}; exit",
-        tcl_quote_path(binary)?,
-        address
-    ))
+    build_flash_write_segments_instruction(&[(binary.to_path_buf(), address)])
+}
+
+fn build_flash_write_segments_instruction(files: &[(PathBuf, u32)]) -> Result<String> {
+    let mut instr = String::from("init; reset halt; ");
+    for (path, address) in files {
+        instr.push_str(&format!(
+            "flash write_image erase {} 0x{:X}; ",
+            tcl_quote_path(path)?,
+            address
+        ));
+    }
+    instr.push_str("exit");
+    Ok(instr)
 }
 
 fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result<String> {
@@ -226,9 +276,12 @@ fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
-    use super::{build_flash_erase_instruction, build_flash_write_instruction, tcl_quote_path};
+    use super::{
+        build_flash_erase_instruction, build_flash_write_instruction,
+        build_flash_write_segments_instruction, tcl_quote_path,
+    };
     use crate::args::FlashSection;
 
     #[test]
@@ -239,6 +292,21 @@ mod tests {
         assert_eq!(
             instruction,
             "init; reset halt; flash write_image erase {/tmp/fw.bin} 0x8004000; exit"
+        );
+    }
+
+    #[test]
+    fn builds_flash_write_segments_instruction() {
+        let instruction = build_flash_write_segments_instruction(&[
+            (PathBuf::from("/tmp/p1.bin"), 0x0804_0000),
+            (PathBuf::from("/tmp/p2.bin"), 0x0812_0000),
+        ])
+        .unwrap();
+
+        assert_eq!(
+            instruction,
+            "init; reset halt; flash write_image erase {/tmp/p1.bin} 0x8040000; \
+             flash write_image erase {/tmp/p2.bin} 0x8120000; exit"
         );
     }
 
