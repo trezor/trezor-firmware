@@ -62,11 +62,9 @@ async def handle(session: Session, msg: IpcMessage) -> None:
             session.die(DataError("Failed to send crypto error"))
         return
 
-    def send(data: bytes) -> None:
-        session.send(SERVICE_CRYPTO, msg.message_id, data)
-
     try:
-        trezorcrypto_api.send_crypto_result(result=result, ipc_cb=send)
+        data = trezorcrypto_api.serialize_crypto_result(result=result)
+        session.send(SERVICE_CRYPTO, msg.message_id, data)
     except Exception:
         session.die(DataError("Failed to serialize or send crypto result"))
 
