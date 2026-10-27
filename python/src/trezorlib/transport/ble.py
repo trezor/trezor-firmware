@@ -19,18 +19,20 @@ from __future__ import annotations
 import asyncio
 import atexit
 import logging
+import multiprocessing
 import sys
 import time
 import typing as t
 from dataclasses import dataclass
-from multiprocessing import Pipe, Process
-from multiprocessing.connection import Connection
 
 from .. import log
 from ..log import DUMP_PACKETS
 from . import Timeout, Transport, TransportException, _get_transport_prefer_full
 
 if t.TYPE_CHECKING:
+    from multiprocessing.connection import Connection
+    from multiprocessing.process import BaseProcess
+
     from ..models import TrezorModel
 
 try:
@@ -152,7 +154,7 @@ class BleTransport(Transport):
 
 class BleProxy:
     pipe: Connection[t.Any, t.Any] | None = None
-    process: Process | None = None
+    process: BaseProcess | None = None
 
     def __init__(self) -> None:
         if not BLEAK_IMPORTED:
@@ -161,9 +163,12 @@ class BleProxy:
         if self.pipe is not None:
             return
 
-        parent_pipe, child_pipe = Pipe()
+        # Explicitly use forkserver in <3.14. Otherwise the other end of the pipe
+        # leaks to the child which causes it to never see EOFError.
+        ctx = multiprocessing.get_context("forkserver")
+        parent_pipe, child_pipe = ctx.Pipe()
         self.pipe = parent_pipe
-        self.process = Process(
+        self.process = ctx.Process(
             target=BleAsync, args=(child_pipe, log._STDERR_VERBOSITY), daemon=True
         )
         self.process.start()
