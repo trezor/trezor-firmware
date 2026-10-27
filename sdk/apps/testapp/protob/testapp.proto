@@ -22,10 +22,9 @@ enum HmacAlgorithm {
     HmacSha512 = 1;
 }
 
-enum EcCurve {
+enum EcdsaCurve {
     Secp256k1 = 0;
     Nist256p1 = 1;
-    Ed25519 = 2;
 }
 
 enum CanonicalSig {
@@ -95,10 +94,10 @@ message PublicKey {
 }
 
 /**
- * Request: crypto::sign_digest; `digest` must be 32 bytes
+ * Request: crypto::ecdsa_sign_digest; `digest` must be 32 bytes
  * @next Signature
  */
-message SignDigest {
+message EcdsaSignDigest {
     repeated uint32 address_n = 1;
     required bytes digest = 2;
     required bool compressed = 3;
@@ -106,7 +105,16 @@ message SignDigest {
 }
 
 /**
- * Response: a 65-byte signature
+ * Request: crypto::ed25519_sign
+ * @next Signature
+ */
+message Ed25519Sign {
+    repeated uint32 address_n = 1;
+    required bytes message = 2;
+}
+
+/**
+ * Response: a 65-byte ECDSA or a 64-byte Ed25519 signature
  * @end
  */
 message Signature {
@@ -159,35 +167,45 @@ message Bool {
 }
 
 /**
- * Request: crypto::ec_verify_recover
- * @next PublicKey
+ * Request: crypto::ecdsa_verify_digest of the message's SHA-256 digest
+ * @next Success
  */
-message EcVerifyRecover {
-    required EcCurve curve = 1;
+message EcdsaVerify {
+    required EcdsaCurve curve = 1;
     required bytes public_key = 2;
     required bytes signature = 3;
     required bytes message = 4;
 }
 
 /**
- * Request: crypto::ec_verify_recover_digest
- * @next PublicKey
+ * Request: crypto::ecdsa_verify_digest
+ * @next Success
  */
-message EcVerifyRecoverDigest {
-    required EcCurve curve = 1;
+message EcdsaVerifyDigest {
+    required EcdsaCurve curve = 1;
     required bytes public_key = 2;
     required bytes signature = 3;
     required bytes digest = 4;
 }
 
 /**
- * Request: crypto::ec_recover_pubkey
+ * Request: crypto::ecdsa_recover_pubkey
  * @next PublicKey
  */
-message EcRecoverPubkey {
-    required EcCurve curve = 1;
+message EcdsaRecoverPubkey {
+    required EcdsaCurve curve = 1;
     required bytes signature = 2;
     required bytes digest = 3;
+}
+
+/**
+ * Request: crypto::ed25519_verify
+ * @next Success
+ */
+message Ed25519Verify {
+    required bytes public_key = 1;
+    required bytes signature = 2;
+    required bytes message = 3;
 }
 
 /**
