@@ -555,7 +555,12 @@
     },
     "buttons__select": "Sélectionner",
     "buttons__set": "Définir",
-    "buttons__shift": "",
+    "buttons__shift": {
+      "Bolt": "",
+      "Caesar": "Shift",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "buttons__show_all": "Tout afficher",
     "buttons__show_details": "Afficher les détails",
     "buttons__show_next": {
@@ -2252,7 +2257,7 @@
     },
     "recovery__x_more_shares_needed_template_plural": {
       "Bolt": "{count} {plural} supplémentaire(s) requis",
-      "Caesar": "{count} {plural} restant(s)",
+      "Caesar": "{count} {plural} supplémentaire(s) requis",
       "Delizia": "{count} {plural} supplémentaire(s) requis",
       "Eckhart": "{count} {plural} supplémentaire(s) requis."
     },
@@ -2293,8 +2298,8 @@
       "Eckhart": ""
     },
     "reset__button_create": {
-      "Bolt": "Créer un portef.",
-      "Caesar": "Créer un portef.",
+      "Bolt": "Créer un portefeuille",
+      "Caesar": "Créer un portefeuille",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3284,7 +3289,7 @@
     "tron__undelegate_resource": "Annuler la délégation",
     "tutorial__complete": {
       "Bolt": "",
-      "Caesar": "Conclure le tutoriel",
+      "Caesar": "Finir le tutoriel",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3312,7 +3317,12 @@
       "Delizia": "Le Trezor Model One, créé en 2013,\nétait le premier portefeuille physique crypto au monde.",
       "Eckhart": ""
     },
-    "tutorial__hold_left_press_right": "",
+    "tutorial__hold_left_press_right": {
+      "Bolt": "",
+      "Caesar": "Maintenez GAUCHE, appuyez sur DROITE.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__last_one": {
       "Bolt": "",
       "Caesar": "",
@@ -3321,13 +3331,13 @@
     },
     "tutorial__lets_begin": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Découvrez les bases de la navigation de votre appareil.",
       "Delizia": "Apprenez à utiliser et naviguer facilement sur cet appareil.",
       "Eckhart": ""
     },
     "tutorial__menu": {
       "Bolt": "",
-      "Caesar": "Trouvez des actions et options spécifiques au contexte dans le menu.",
+      "Caesar": "Trouvez des actions et options contextuelles dans le menu.",
       "Delizia": "Trouvez des actions et options spécifiques au contexte dans le menu.",
       "Eckhart": "Trouvez des actions et options spécifiques au contexte dans le menu."
     },
@@ -3337,10 +3347,15 @@
       "Delizia": "",
       "Eckhart": "Afficher plus d'infos, quitter le flux ..."
     },
-    "tutorial__menu_later": "",
+    "tutorial__menu_later": {
+      "Bolt": "",
+      "Caesar": "Le menu donne des informations contextuelles. Nous y reviendrons.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__middle_click": {
       "Bolt": "",
-      "Caesar": "Appuyez simultanément sur les boutons de gauche et de droite\npour confirmer",
+      "Caesar": "Appuyez simultanément sur les boutons gauche et droit pour continuer.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3364,12 +3379,22 @@
     },
     "tutorial__press_and_hold": {
       "Bolt": "",
-      "Caesar": "Maintenez enfoncé le bouton de droite pour accepter les opérations importantes.",
+      "Caesar": "Maintenez DROITE pour valider les opérations importantes.",
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__press_both": "",
-    "tutorial__press_left": "",
+    "tutorial__press_both": {
+      "Bolt": "",
+      "Caesar": "Appuyez sur les DEUX boutons en même temps.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__press_left": {
+      "Bolt": "",
+      "Caesar": "Appuyez sur GAUCHE.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__ready_to_use": {
       "Bolt": "",
       "Caesar": "Vous êtes prêt à utiliser votre Trezor.",
@@ -3384,17 +3409,22 @@
     },
     "tutorial__restart_tutorial": {
       "Bolt": "",
-      "Caesar": "Recommencer le tutoriel",
+      "Caesar": "Relancer le tutoriel",
       "Delizia": "Recommencer le tutoriel",
       "Eckhart": "Recommencer le tutoriel"
     },
     "tutorial__scroll_down": {
       "Bolt": "",
-      "Caesar": "Appuyez sur le bouton droit pour lire tout le contenu lorsqu'il dépasse de l'écran.\nAppuyez sur le bouton gauch pour défiler vers le haut.",
+      "Caesar": "Appuyez sur DROITE pour continuer.",
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__scroll_up": "",
+    "tutorial__scroll_up": {
+      "Bolt": "",
+      "Caesar": "Maintenez GAUCHE et appuyez sur DROITE pour faire défiler l'écran.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__suite_restart": {
       "Bolt": "",
       "Caesar": "",
@@ -3427,7 +3457,7 @@
     },
     "tutorial__title_go_back": {
       "Bolt": "",
-      "Caesar": "Besoin de revenir en arrière ?",
+      "Caesar": "Revenir en arrière ?",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3469,7 +3499,7 @@
     },
     "tutorial__title_screen_scroll": {
       "Bolt": "",
-      "Caesar": "Défilement de l'écran",
+      "Caesar": "Essayez de faire défiler",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3485,7 +3515,12 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__title_welcome": "",
+    "tutorial__title_welcome": {
+      "Bolt": "",
+      "Caesar": "Bienvenue sur Trezor",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_well_done": {
       "Bolt": "",
       "Caesar": "",
@@ -3500,7 +3535,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Utilisez votre Trezor avec les boutons gauche et droite.",
+      "Caesar": "Utilisez votre Trezor en appuyant sur les boutons gauche et droit.",
       "Delizia": "",
       "Eckhart": ""
     },

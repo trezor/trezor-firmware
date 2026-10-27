@@ -471,7 +471,7 @@
       "Eckhart": "Informações"
     },
     "buttons__install": "Instalar",
-    "buttons__more_info": "Mais inform.",
+    "buttons__more_info": "Mais informações",
     "buttons__ok_i_understand": "OK, entendo",
     "buttons__purchase": "Comprar",
     "buttons__quit": "Sair",
@@ -485,7 +485,12 @@
     },
     "buttons__select": "Selecionar",
     "buttons__set": "Definir",
-    "buttons__shift": "",
+    "buttons__shift": {
+      "Bolt": "",
+      "Caesar": "Shift",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "buttons__show_all": "Exibir tudo",
     "buttons__show_details": "Exibir detalhes",
     "buttons__show_next": {
@@ -911,7 +916,7 @@
     "ethereum__calldata_digest": "Resumo ERC-8213",
     "ethereum__calldata_suffix": "Sufixo calldata",
     "ethereum__confirm_contract": "Confirmar contrato",
-    "ethereum__contract_address": "Endereço de contr. do provedor",
+    "ethereum__contract_address": "Endereço de contrato",
     "ethereum__data_size_template": "Tamanho: {0} bytes",
     "ethereum__delegate_done": {
       "Bolt": "",
@@ -1005,7 +1010,7 @@
       "Delizia": "Dados",
       "Eckhart": "Dados:\n{0} / {1} bytes"
     },
-    "ethereum__title_signing_address": "Endereço de assinatura",
+    "ethereum__title_signing_address": "Endereço signatário",
     "ethereum__title_token_contract": {
       "Bolt": "Contrato do token",
       "Caesar": "Endereço do contrato de token",
@@ -1024,14 +1029,14 @@
       "Bolt": "Endereço de contrato desconhecido.",
       "Caesar": "Endereço de contrato desconhecido",
       "Delizia": "Endereço de contrato desconhecido.",
-      "Eckhart": "Endereço desconhecido de contrato de token."
+      "Eckhart": "Endereço de contrato desconhecido."
     },
     "ethereum__unknown_token": "Token desconhecido",
     "ethereum__valid_signature": "A assinatura é válida.",
     "ethereum__vault_claim_intro": "Resgatar recompensas de Merkl.xyz",
     "ethereum__vault_claim_to": "Resgatar para",
     "ethereum__vault_deposit_intro": "Revise os detalhes para depósito no cofre.",
-    "ethereum__vault_owner_address": "",
+    "ethereum__vault_owner_address": "Endereço do proprietário",
     "ethereum__vault_redeem_intro": "Revise os detalhes para resgatar do cofre.",
     "ethereum__vault_redeem_to": "Resgatar para",
     "ethereum__vault_withdraw_intro": "Revise os detalhes para sacar do cofre.",
@@ -1946,10 +1951,10 @@
     "pin__title_settings": "Configurações do PIN",
     "pin__title_wrong_pin": "PIN incorreto",
     "pin__tries_left": {
-      "Bolt": "restantes",
+      "Bolt": "rest.",
       "Caesar": "tentativas restantes",
-      "Delizia": "restantes",
-      "Eckhart": "tentativas"
+      "Delizia": "rest.",
+      "Eckhart": "tentativas restantes"
     },
     "pin__turn_off": "Deseja mesmo desligar a proteção por PIN?",
     "pin__turn_on": "Ligar proteção por PIN?",
@@ -2036,12 +2041,7 @@
       "Delizia": "Mais shares necessários",
       "Eckhart": "Mais shares necessários."
     },
-    "recovery__num_of_words": {
-      "Bolt": "Selecione o nº de palavras do seu backup.",
-      "Caesar": "Selecione o número de palavras do seu backup.",
-      "Delizia": "Selecione o número de palavras do seu backup.",
-      "Eckhart": "Selecione o número de palavras do seu backup."
-    },
+    "recovery__num_of_words": "Selecione o número de palavras do seu backup.",
     "recovery__progress_will_be_lost": "Todo o progresso será perdido.",
     "recovery__share_already_entered": {
       "Bolt": "Share já inserido",
@@ -2862,7 +2862,7 @@
       "Delizia": "{0} bytes",
       "Eckhart": "{0} Bytes"
     },
-    "sign_message__confirm_address": "Endereço de assinatura",
+    "sign_message__confirm_address": "Endereço signatário",
     "sign_message__confirm_message": "Confirmar mensagem",
     "sign_message__confirm_without_review": "Confirmar sem revisão",
     "sign_message__message_size": "Tamanho da mensagem",
@@ -2951,7 +2951,7 @@
     "stellar__high": "Alto",
     "stellar__home_domain": "Domínio de Origem",
     "stellar__inflation": "Inflação",
-    "stellar__invoke_contract": "Invocar Contrato",
+    "stellar__invoke_contract": "Invocar contrato",
     "stellar__issuer_template": "Emissor {0}",
     "stellar__key": "Chave",
     "stellar__limit": "Limite",
@@ -2969,7 +2969,7 @@
     "stellar__pay_at_most": "Pagar no máximo",
     "stellar__preauth_transaction": "Transação pré-autorizada",
     "stellar__price_per_template": "Preço por {0}",
-    "stellar__remove_signer": "Remover Signatário",
+    "stellar__remove_signer": "Remover signatário",
     "stellar__revoke_approval": "Revogar aprovação",
     "stellar__revoke_trust": "Revogar Trust",
     "stellar__selling": "Vendendo",
@@ -3127,7 +3127,12 @@
     },
     "tron__owner_address": "Endereço do proprietário",
     "tron__undelegate_resource": "Desdelegar recurso",
-    "tutorial__complete": "",
+    "tutorial__complete": {
+      "Bolt": "",
+      "Caesar": "Concluir tutorial",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__continue": {
       "Bolt": "",
       "Caesar": "",
@@ -3152,7 +3157,12 @@
       "Delizia": "A Trezor Model One, criada em 2013,\nfoi a primeira carteira física de cripto do mundo.",
       "Eckhart": ""
     },
-    "tutorial__hold_left_press_right": "",
+    "tutorial__hold_left_press_right": {
+      "Bolt": "",
+      "Caesar": "Segure ESQUERDA, aperte DIREITA",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__last_one": {
       "Bolt": "",
       "Caesar": "",
@@ -3161,13 +3171,13 @@
     },
     "tutorial__lets_begin": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Saiba como navegar por seu dispositivo.",
       "Delizia": "Saiba como usar e navegar este dispositivo com facilidade.",
       "Eckhart": ""
     },
     "tutorial__menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "No menu você encontra ações e opções para cada contexto.",
       "Delizia": "Encontre no menu opções e ações específicas ao contexto.",
       "Eckhart": "Encontre no menu opções e ações específicas ao contexto."
     },
@@ -3177,10 +3187,15 @@
       "Delizia": "",
       "Eckhart": "Ver mais informação, sair da operação..."
     },
-    "tutorial__menu_later": "",
+    "tutorial__menu_later": {
+      "Bolt": "",
+      "Caesar": "O menu exibe informações contextuais. Explicaremos depois.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__middle_click": {
       "Bolt": "",
-      "Caesar": "Pressione os dois botões\njuntos para confirmar.",
+      "Caesar": "Aperte esquerda e direita ao mesmo tempo p/ ver a próxima tela.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3204,15 +3219,25 @@
     },
     "tutorial__press_and_hold": {
       "Bolt": "",
-      "Caesar": "Fique segurando o botão direito para\naprovar operações importantes.",
+      "Caesar": "Segure o botão direito para aprovar operações importantes.",
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__press_both": "",
-    "tutorial__press_left": "",
+    "tutorial__press_both": {
+      "Bolt": "",
+      "Caesar": "Aperte AMBOS os botões ao mesmo tempo.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__press_left": {
+      "Bolt": "",
+      "Caesar": "Aperte ESQUERDA.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__ready_to_use": {
       "Bolt": "",
-      "Caesar": "Sua Trezor está\npronta para uso.",
+      "Caesar": "Você já pode usar sua Trezor.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3224,17 +3249,22 @@
     },
     "tutorial__restart_tutorial": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Reiniciar tutorial",
       "Delizia": "Reiniciar tutorial",
       "Eckhart": "Reiniciar tutorial"
     },
     "tutorial__scroll_down": {
       "Bolt": "",
-      "Caesar": "Pressione o botão direito para rolar para baixo e ler todo o conteúdo quando o texto não couber na tela. Pressione o botão esquerdo para rolar para cima.",
+      "Caesar": "Aperte DIREITA para ver a próxima tela.",
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__scroll_up": "",
+    "tutorial__scroll_up": {
+      "Bolt": "",
+      "Caesar": "Segure ESQUERDA e aperte DIREITA para rolar para cima.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__suite_restart": {
       "Bolt": "",
       "Caesar": "",
@@ -3265,10 +3295,15 @@
       "Delizia": "Fácil navegação",
       "Eckhart": ""
     },
-    "tutorial__title_go_back": "",
+    "tutorial__title_go_back": {
+      "Bolt": "",
+      "Caesar": "Precisa voltar?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_handy_menu": {
       "Bolt": "",
-      "Caesar": "",
+      "Caesar": "Menu",
       "Delizia": "Menu prático",
       "Eckhart": "Menu prático"
     },
@@ -3290,11 +3325,21 @@
       "Delizia": "Vamos começar",
       "Eckhart": ""
     },
-    "tutorial__title_middle_button": "",
-    "tutorial__title_remember": "",
+    "tutorial__title_middle_button": {
+      "Bolt": "",
+      "Caesar": "Botão do meio",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_remember": {
+      "Bolt": "",
+      "Caesar": "Lembre-se",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_screen_scroll": {
       "Bolt": "",
-      "Caesar": "Rolar a tela",
+      "Caesar": "Tente rolar a tela",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3310,7 +3355,12 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__title_welcome": "",
+    "tutorial__title_welcome": {
+      "Bolt": "",
+      "Caesar": "Bem-vindo à Trezor",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_well_done": {
       "Bolt": "",
       "Caesar": "",
@@ -3325,7 +3375,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Use a Trezor pressionando os botões esquerdo e direito.\n\rSiga à direita.",
+      "Caesar": "Use a Trezor com os botões esquerdo e direito.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3356,7 +3406,7 @@
     "u2f__get": "Aumentar e obter valor do contador U2F?",
     "u2f__set_template": "Def. contador U2F para {0}?",
     "u2f__title_get": "Obter contador U2F",
-    "u2f__title_set": "Def. contador U2F",
+    "u2f__title_set": "Definir contador U2F",
     "wipe__info": "Todos os dados serão apagados.",
     "wipe__start_again": "Limpe sua Trezor e recomece o processo de configuração.",
     "wipe__title": "Limpar dispositivo",

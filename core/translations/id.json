@@ -865,7 +865,7 @@
     "ethereum__calldata_digest": "Digest ERC-8213",
     "ethereum__calldata_suffix": "Sufiks calldata",
     "ethereum__confirm_contract": "Konfirmasi kontrak",
-    "ethereum__contract_address": "Alamat kontrak penyedia",
+    "ethereum__contract_address": "Alamat kontrak",
     "ethereum__data_size_template": "Ukuran: {0} byte",
     "ethereum__delegate_done": {
       "Bolt": "",
@@ -953,7 +953,7 @@
       "Bolt": "Alamat kontrak tidak dikenal.",
       "Caesar": "Alamat kontrak tidak dikenal",
       "Delizia": "Alamat kontrak tidak dikenal.",
-      "Eckhart": "Alamat kontrak token tidak dikenal."
+      "Eckhart": "Alamat kontrak tidak dikenal."
     },
     "ethereum__unknown_token": "Token tidak dikenal",
     "ethereum__valid_signature": "Tanda tangan valid.",
@@ -3066,10 +3066,15 @@
       "Delizia": "",
       "Eckhart": "Lihat selengkapnya, keluar dari alur..."
     },
-    "tutorial__menu_later": "",
+    "tutorial__menu_later": {
+      "Bolt": "",
+      "Caesar": "Menu menyediakan informasi konteks. Kita akan membahasnya nanti.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__middle_click": {
       "Bolt": "",
-      "Caesar": "Tekan kedua tombol kiri dan kanan bersamaan untuk konfirmasi.",
+      "Caesar": "Tekan tombol kiri dan kanan bersamaan untuk melihat layar berikutnya.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3093,7 +3098,7 @@
     },
     "tutorial__press_and_hold": {
       "Bolt": "",
-      "Caesar": "Tekan dan tahan tombol kanan untuk menyetujui operasi penting.",
+      "Caesar": "Tahan tombol kanan untuk menyetujui operasi penting.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3111,7 +3116,7 @@
     },
     "tutorial__ready_to_use": {
       "Bolt": "",
-      "Caesar": "Anda siap\nmenggunakan Trezor.",
+      "Caesar": "Anda siap menggunakan Trezor.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3129,7 +3134,7 @@
     },
     "tutorial__scroll_down": {
       "Bolt": "",
-      "Caesar": "Tekan kanan untuk menggulir ke bawah dan membaca seluruh konten jika teks tidak muat pada layar.\n\rTekan kiri untuk menggulir ke atas.",
+      "Caesar": "Tekan KANAN untuk melihat layar berikutnya.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3213,7 +3218,7 @@
     },
     "tutorial__title_screen_scroll": {
       "Bolt": "",
-      "Caesar": "Gulir layar",
+      "Caesar": "Coba gulir",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3249,7 +3254,7 @@
     },
     "tutorial__use_trezor": {
       "Bolt": "",
-      "Caesar": "Gunakan Trezor dengan\nmenekan tombol kiri dan kanan.\n\rLanjut ke kanan.",
+      "Caesar": "Gunakan Trezor dengan menekan tombol kiri dan kanan.",
       "Delizia": "",
       "Eckhart": ""
     },
