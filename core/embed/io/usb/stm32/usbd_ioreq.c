@@ -204,7 +204,7 @@ USBD_StatusTypeDef  USBD_CtlReceiveStatus (USBD_HandleTypeDef  *pdev)
  /* Start the transfer */
   USBD_LL_PrepareReceive ( pdev,
                     0,
-                    NULL,
+                    pdev->ep0_buf,
                     0);
 
   return USBD_OK;
