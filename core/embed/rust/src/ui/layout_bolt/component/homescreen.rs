@@ -8,7 +8,7 @@ use crate::strutil::TString;
 use crate::translations::TR;
 use crate::trezorhal::usb::usb_configured;
 use crate::ui::component::text::TextStyle;
-use crate::ui::component::{Component, Event, EventCtx, Pad, Timer};
+use crate::ui::component::{Component, Event, EventCtx, Label, Pad, Timer};
 use crate::ui::constant::{HEIGHT, WIDTH};
 use crate::ui::display::image::{ImageInfo, ToifFormat};
 use crate::ui::display::toif::Icon;
@@ -220,8 +220,12 @@ impl Component for Homescreen {
                 const NOTIFICATION_HEIGHT: i16 = 36;
                 const NOTIFICATION_BORDER: i16 = 6;
                 const TEXT_ICON_SPACE: i16 = 8;
+                const TEXT_PADDING: i16 = 2;
 
                 let (color, icon) = Self::level_to_style(notif.level);
+                let style = theme::TEXT_BOLD;
+                let font = style.text_font;
+                let icon_width = icon.toif.width() + TEXT_ICON_SPACE;
 
                 let banner = self
                     .pad
@@ -230,32 +234,47 @@ impl Component for Homescreen {
                     .with_height(NOTIFICATION_HEIGHT)
                     .translate(Offset::y(NOTIFICATION_BORDER));
 
+                // Text too long for one line wraps into two lines in the text
+                // column right of the icon, and the banner grows by one line
+                // height.
+                let text_column =
+                    banner.inset(Insets::new(0, TEXT_PADDING, 0, TEXT_PADDING + icon_width));
+                let two_lines = notif.text.map(|t| font.text_width(t) > text_column.width());
+                let banner = if two_lines {
+                    banner.with_height(NOTIFICATION_HEIGHT + font.line_height())
+                } else {
+                    banner
+                };
+
                 shape::Bar::new(banner)
                     .with_radius(2)
                     .with_bg(color)
                     .render(target);
 
-                notif.text.map(|t| {
-                    let style = theme::TEXT_BOLD;
-                    let icon_width = icon.toif.width() + TEXT_ICON_SPACE;
-                    let text_pos = Point::new(
-                        style
-                            .text_font
-                            .horz_center(banner.x0 + icon_width, banner.x1, t),
-                        style.text_font.vert_center(banner.y0, banner.y1, "A"),
-                    );
+                let text_x0 = if two_lines {
+                    let mut label = Label::centered(notif.text, style).vertically_centered();
+                    label.place(text_column.with_height(banner.height()));
+                    label.render_with_alpha(target, 255);
+                    text_column.x0
+                } else {
+                    notif.text.map(|t| {
+                        let text_pos = Point::new(
+                            font.horz_center(banner.x0 + icon_width, banner.x1, t),
+                            font.vert_center(banner.y0, banner.y1, "A"),
+                        );
+                        shape::Text::new(text_pos, t, font)
+                            .with_fg(style.text_color)
+                            .render(target);
+                        text_pos.x
+                    })
+                };
 
-                    shape::Text::new(text_pos, t, style.text_font)
-                        .with_fg(style.text_color)
-                        .render(target);
+                let icon_pos = Point::new(text_x0 - icon_width, banner.center().y);
 
-                    let icon_pos = Point::new(text_pos.x - icon_width, banner.center().y);
-
-                    shape::ToifImage::new(icon_pos, icon.toif)
-                        .with_fg(style.text_color)
-                        .with_align(Alignment2D::CENTER_LEFT)
-                        .render(target);
-                });
+                shape::ToifImage::new(icon_pos, icon.toif)
+                    .with_fg(style.text_color)
+                    .with_align(Alignment2D::CENTER_LEFT)
+                    .render(target);
             }
         }
     }
