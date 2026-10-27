@@ -114,20 +114,13 @@ extern "C" fn new_deserialize_crypto_message(
 }
 
 #[cfg(feature = "app_loading")]
-extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_serialize_crypto_result(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
-
-        let ipc_callback: Option<Obj> = kwargs
-            .get(Qstr::MP_QSTR_ipc_cb)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
-
-        let ipc_cb = unwrap!(ipc_callback.map(|cb| {
-            move |bytes: Obj| {
-                unwrap!(cb.call_with_n_args(&[bytes]));
-            }
-        }));
 
         // Map the handler's return value to the generic result; the app checks
         // it against the shape its operation expects.
@@ -136,8 +129,7 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
             TrezorCryptoResult::String(string.as_ref().into())
         } else if obj.is_bytes() {
             // SAFETY: bytes are immutable, `kwargs` keeps `obj` alive for the
-            // whole block, and `data` is only borrowed until it is serialized
-            // into `bytes`, before `ipc_cb` runs any MicroPython code.
+            // whole block, and `data` is only borrowed until it is serialized.
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
             TrezorCryptoResult::Bytes(data.into())
         } else if obj.is_immediate() {
@@ -146,11 +138,7 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
             return Err(Error::TypeError);
         };
 
-        let bytes = crate::util::archive::to_bytes_obj(&msg)?;
-        //Send the response back via the ipc_cb callback
-        ipc_cb(bytes);
-
-        Ok(Obj::const_none())
+        crate::util::archive::to_bytes_obj(&msg)
     };
     // SAFETY: MicroPython calls this as a keyword function, so `args` points to
     // `n_args` objects and `kwargs` to a valid map.
@@ -158,7 +146,11 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
 }
 
 #[cfg(not(feature = "app_loading"))]
-extern "C" fn new_send_crypto_result(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+extern "C" fn new_serialize_crypto_result(
+    _n_args: usize,
+    _args: *const Obj,
+    _kwargs: *mut Map,
+) -> Obj {
     unimplemented!()
 }
 
@@ -168,13 +160,12 @@ pub static mp_module_trezorcrypto_api: Module = obj_module! {
     /// mock:global
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorcrypto_api.to_obj(),
 
-    /// def send_crypto_result(
+    /// def serialize_crypto_result(
     ///     *,
     ///     result: str | bytes | bool,
-    ///     ipc_cb: Callable[[bytes], None],
-    /// ) -> None:
-    ///     """Serialize a crypto result into bytes and send it back via the ipc_cb callback."""
-    Qstr::MP_QSTR_send_crypto_result => obj_fn_kw!(0, new_send_crypto_result).as_obj(),
+    /// ) -> bytes:
+    ///     """Serialize a crypto result into bytes to send to the app."""
+    Qstr::MP_QSTR_serialize_crypto_result => obj_fn_kw!(0, new_serialize_crypto_result).as_obj(),
 
 
 

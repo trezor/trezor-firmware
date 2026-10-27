@@ -853,9 +853,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_id;
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
-  MP_QSTR_send_crypto_result;
   MP_QSTR_send_transport_busy;
   MP_QSTR_send_ui_result;
+  MP_QSTR_serialize_crypto_result;
   MP_QSTR_set_brightness;
   MP_QSTR_set_enabled;
   MP_QSTR_set_high_speed;
