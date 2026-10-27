@@ -16,6 +16,19 @@ pub fn combined_artifact(model: Model, project: Project) -> Result<PathBuf> {
         .join(format!("{COMBINED_PREFIX}{}.bin", project.binary_name())))
 }
 
+/// The flash address a combined image starts at: the boardloader's, since
+/// the image runs from the bottom of the boot chain up.
+fn combined_start(memory_ld: &str) -> Result<u32> {
+    helpers::read_symbol_from_content(memory_ld, "BOARDLOADER_START")
+}
+
+/// Where a combined image lands in flash, as `(address, bytes)` pairs: one
+/// segment from [`combined_start`], gaps included, exactly as [`combine`] laid
+/// it out.
+pub fn combined_segments<'a>(memory_ld: &str, image: &'a [u8]) -> Result<Vec<(u32, &'a [u8])>> {
+    Ok(vec![(combined_start(memory_ld)?, image)])
+}
+
 /// Byte used to pad the gaps between combined sections. Matches the original
 /// `combine_firmware.py`, which padded with zero bytes.
 const SECTION_PADDING: u8 = 0x00;
@@ -79,36 +92,30 @@ fn place_section(binary: &mut Vec<u8>, offset: usize, data: &[u8]) -> Result<()>
     Ok(())
 }
 
-/// The sections a combined image holds ABOVE the boardloader, in flash order:
-/// the linker symbol naming where the section starts, paired with the project
-/// whose binary goes there. `None` if the project cannot head a combined image.
+/// The projects a combined image holds ABOVE the boardloader, in flash order.
+/// Where each one lands comes from [`helpers::project_segments`]. `None` if the
+/// project cannot head a combined image.
 ///
 /// This is the single source of truth for what can be combined. `flash
 /// --combined` asks the same question through [`supported`] rather than keeping
 /// its own list, so the two cannot disagree about which projects are valid.
-fn sections(project: Project) -> Option<&'static [(&'static str, Project)]> {
+fn projects(project: Project) -> Option<&'static [Project]> {
     Some(match project {
-        Project::Bootloader => &[("BOOTLOADER_START", Project::Bootloader)],
-        Project::BootloaderCi => &[("BOOTLOADER_START", Project::BootloaderCi)],
-        Project::Firmware => &[
-            ("BOOTLOADER_START", Project::Bootloader),
-            ("FIRMWARE_START", Project::Firmware),
-        ],
-        Project::Prodtest => &[
-            ("BOOTLOADER_START", Project::Bootloader),
-            ("FIRMWARE_START", Project::Prodtest),
-        ],
+        Project::Bootloader => &[Project::Bootloader],
+        Project::BootloaderCi => &[Project::BootloaderCi],
+        Project::Firmware => &[Project::Bootloader, Project::Firmware],
+        Project::Prodtest => &[Project::Bootloader, Project::Prodtest],
         _ => return None,
     })
 }
 
-/// Whether a combined image can be built for `project` -- see [`sections`].
+/// Whether a combined image can be built for `project` -- see [`projects`].
 pub fn supported(project: Project) -> bool {
-    sections(project).is_some()
+    projects(project).is_some()
 }
 
 /// The projects that can head a combined image, as a comma-separated list.
-/// Derived from [`sections`] so error messages cannot name a stale set.
+/// Derived from [`projects`] so error messages cannot name a stale set.
 pub fn supported_projects() -> String {
     Project::value_variants()
         .iter()
@@ -121,27 +128,18 @@ pub fn supported_projects() -> String {
 /// Combines multiple firmware projects into a single binary for flashing.
 ///
 /// The combined image starts at `BOARDLOADER_START` (the address it is flashed
-/// to) and places every section at its real offset within flash, padding the
-/// gaps between sections. Which sections those are comes from [`sections`].
+/// to) and places every project at its real offset within flash, padding the
+/// gaps between them. Which projects those are comes from [`projects`].
 pub fn combine(args: CombineArgs) -> Result<()> {
     let memory_ld = args.model.model_memory_ld()?;
+    let content = fs::read_to_string(&memory_ld)
+        .with_context(|| format!("Failed to read `{}`", memory_ld.display()))?;
 
     // All offsets are relative to the boardloader, which sits at the start of
     // the combined image.
-    let base = helpers::read_symbol(&memory_ld, "BOARDLOADER_START")?;
-    let offset_of = |symbol: &str| -> Result<usize> {
-        Ok((helpers::read_symbol(&memory_ld, symbol)? - base) as usize)
-    };
+    let base = combined_start(&content)?;
 
-    let mut binary = Vec::new();
-
-    place_section(
-        &mut binary,
-        0,
-        &load_binary(args.model, Project::Boardloader)?,
-    )?;
-
-    let sections = sections(args.project).ok_or_else(|| {
+    let projects = projects(args.project).ok_or_else(|| {
         anyhow::anyhow!(
             "Combining is not supported for `{}` -- only {}",
             args.project.binary_name(),
@@ -149,12 +147,13 @@ pub fn combine(args: CombineArgs) -> Result<()> {
         )
     })?;
 
-    for (symbol, project) in sections {
-        place_section(
-            &mut binary,
-            offset_of(symbol)?,
-            &load_binary(args.model, *project)?,
-        )?;
+    let mut binary = Vec::new();
+
+    for project in [Project::Boardloader].iter().chain(projects) {
+        let data = load_binary(args.model, *project)?;
+        for (address, segment) in helpers::project_segments(&content, *project, &data)? {
+            place_section(&mut binary, (address - base) as usize, segment)?;
+        }
     }
 
     erase_boot_ucb(&mut binary, &memory_ld, base)?;
@@ -188,7 +187,18 @@ pub fn combine(args: CombineArgs) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{ERASED_PADDING, SECTION_PADDING, erase_boot_ucb, place_section};
+    use super::{
+        ERASED_PADDING, SECTION_PADDING, combined_segments, erase_boot_ucb, place_section,
+    };
+
+    /// A combined image is written whole from the boardloader, gaps included.
+    #[test]
+    fn combined_image_is_one_segment_from_the_boardloader() {
+        let image = [1u8; 32];
+        let segments = combined_segments("BOARDLOADER_START = 0xc004000;\n", &image).unwrap();
+
+        assert_eq!(segments, vec![(0x0c00_4000, &image[..])]);
+    }
 
     #[test]
     fn places_sections_at_their_offsets_and_pads_gaps() {
