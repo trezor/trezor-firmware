@@ -7,7 +7,7 @@ use stabby::str::Str;
 use stabby::string::String;
 use trezor_app_sdk::structs::{TrezorCryptoEnum, TrezorCryptoResult};
 use trezor_app_sdk::traits::crypto::{
-    BoxedHasher, CanonicalSig, CryptoError, CryptoV1, EcCurve, HashingAlgorithm, HmacAlgorithm,
+    BoxedHasher, CanonicalSig, CryptoError, CryptoV1, EcdsaCurve, HashingAlgorithm, HmacAlgorithm,
 };
 use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
 use trezor_app_sdk::traits::wire::WireError;
@@ -71,23 +71,12 @@ fn expect_bool(data: &[u8]) -> Result<bool, WireError> {
     }
 }
 
-/// Maps an [`EcCurve`] to the Weierstrass curve `crypto::ecdsa` understands.
-/// `None` for `Ed25519`, which isn't a Weierstrass curve and has no ECDSA
-/// recovery scheme.
-fn ecdsa_curve(curve: EcCurve) -> Option<crypto::ecdsa::Curve> {
+/// Maps an [`EcdsaCurve`] to the curve `crypto::ecdsa` understands.
+fn ecdsa_curve(curve: EcdsaCurve) -> crypto::ecdsa::Curve {
     match curve {
-        EcCurve::Secp256k1 => Some(crypto::ecdsa::Curve::Secp256k1),
-        EcCurve::Nist256p1 => Some(crypto::ecdsa::Curve::Nist256p1),
-        EcCurve::Ed25519 => None,
+        EcdsaCurve::Secp256k1 => crypto::ecdsa::Curve::Secp256k1,
+        EcdsaCurve::Nist256p1 => crypto::ecdsa::Curve::Nist256p1,
     }
-}
-
-/// Single-round SHA-256 of `data` — the digest algorithm `ec_verify_recover`
-/// uses to turn a `message` into the digest ECDSA recovery operates on.
-/// Coin-specific message framing (e.g. Bitcoin's magic-prefixed
-/// double-SHA256) is the caller's job; this is deliberately just a plain hash.
-fn sha256_digest(data: &[u8]) -> [u8; crypto::sha256::DIGEST_SIZE] {
-    crypto::sha256::Sha256::digest(data)
 }
 
 /// Compresses an uncompressed (0x04-prefixed, 65-byte) SEC1 public key into
@@ -109,18 +98,15 @@ fn pubkey_matches(recovered: &crypto::ecdsa::EcdsaPublicKey, expected: &[u8]) ->
     }
 }
 
-/// Shared implementation for `ec_verify_recover`/`ec_verify_recover_digest`:
-/// tries every ECDSA recovery id against `digest`, and if any recovered
-/// pubkey matches `public_key`, returns `public_key` back as confirmation.
-fn ecdsa_verify_recover_digest(
-    curve: EcCurve,
+/// Verifies `signature` of `digest` by trying every ECDSA recovery id and
+/// checking whether any recovered pubkey matches `public_key`.
+fn ecdsa_verify_by_recovery(
+    curve: EcdsaCurve,
     public_key: &[u8],
     signature: &[u8],
     digest: &[u8],
-) -> Result<BoxedSlice<u8>, CryptoError> {
-    let Some(curve) = ecdsa_curve(curve) else {
-        return Err(CryptoError::InvalidSignature);
-    };
+) -> Result<(), CryptoError> {
+    let curve = ecdsa_curve(curve);
     let signature: &crypto::ecdsa::EcdsaSignature = signature
         .try_into()
         .map_err(|_| CryptoError::InvalidEncoding)?;
@@ -136,7 +122,7 @@ fn ecdsa_verify_recover_digest(
             digest,
         ) {
             if pubkey_matches(&recovered, public_key) {
-                return Ok(BoxedSlice::from(public_key));
+                return Ok(());
             }
         }
     }
@@ -201,7 +187,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         .into()
     }
 
-    extern "C" fn sign_digest<'a>(
+    extern "C" fn ecdsa_sign_digest<'a>(
         &self,
         address_n: Slice<'a, u32>,
         digest: &'a [u8; 32],
@@ -209,13 +195,28 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         canonical: CanonicalSig,
     ) -> FastResult<[u8; 65], WireError> {
         (|| {
-            let data = ipc_crypto_call(&TrezorCryptoEnum::SignDigest {
+            let data = ipc_crypto_call(&TrezorCryptoEnum::EcdsaSignDigest {
                 address_n: address_n.as_slice().into(),
                 digest: *digest,
                 compressed,
                 canonical: canonical as u8,
             })?;
             expect_array::<65>(&data)
+        })()
+        .into()
+    }
+
+    extern "C" fn ed25519_sign<'a>(
+        &self,
+        address_n: Slice<'a, u32>,
+        message: Slice<'a, u8>,
+    ) -> FastResult<[u8; 64], WireError> {
+        (|| {
+            let data = ipc_crypto_call(&TrezorCryptoEnum::Ed25519Sign {
+                address_n: address_n.as_slice().into(),
+                message: message.as_slice().into(),
+            })?;
+            expect_array::<64>(&data)
         })()
         .into()
     }
@@ -273,73 +274,30 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         .into()
     }
 
-    extern "C" fn ec_verify_recover<'a>(
+    extern "C" fn ecdsa_verify_digest<'a>(
         &self,
-        curve: EcCurve,
-        public_key: Slice<'a, u8>,
-        signature: Slice<'a, u8>,
-        message: Slice<'a, u8>,
-    ) -> FastResult<BoxedSlice<u8>, CryptoError> {
-        match curve {
-            EcCurve::Secp256k1 | EcCurve::Nist256p1 => {
-                let digest = sha256_digest(message.as_slice());
-                ecdsa_verify_recover_digest(
-                    curve,
-                    public_key.as_slice(),
-                    signature.as_slice(),
-                    &digest,
-                )
-                .into()
-            }
-            EcCurve::Ed25519 => {
-                let public_key: &crypto::ed25519::PublicKey = match public_key.as_slice().try_into()
-                {
-                    Ok(pk) => pk,
-                    Err(_) => return Err(CryptoError::InvalidEncoding).into(),
-                };
-                let signature: &crypto::ed25519::Signature = match signature.as_slice().try_into() {
-                    Ok(sig) => sig,
-                    Err(_) => return Err(CryptoError::InvalidEncoding).into(),
-                };
-                match crypto::ed25519::verify(message.as_slice(), public_key, signature) {
-                    Ok(()) => Ok(BoxedSlice::from(&public_key[..])).into(),
-                    Err(_) => Err(CryptoError::InvalidSignature).into(),
-                }
-            }
-        }
-    }
-
-    extern "C" fn ec_verify_recover_digest<'a>(
-        &self,
-        curve: EcCurve,
+        curve: EcdsaCurve,
         public_key: Slice<'a, u8>,
         signature: Slice<'a, u8>,
         digest: Slice<'a, u8>,
-    ) -> FastResult<BoxedSlice<u8>, CryptoError> {
-        match curve {
-            EcCurve::Secp256k1 | EcCurve::Nist256p1 => ecdsa_verify_recover_digest(
-                curve,
-                public_key.as_slice(),
-                signature.as_slice(),
-                digest.as_slice(),
-            )
-            .into(),
-            // EdDSA has no notion of signing/verifying a pre-hashed digest —
-            // it always hashes the message itself as part of the scheme.
-            EcCurve::Ed25519 => Err(CryptoError::InvalidSignature).into(),
-        }
+    ) -> FastResult<(), CryptoError> {
+        ecdsa_verify_by_recovery(
+            curve,
+            public_key.as_slice(),
+            signature.as_slice(),
+            digest.as_slice(),
+        )
+        .into()
     }
 
-    extern "C" fn ec_recover_pubkey<'a>(
+    extern "C" fn ecdsa_recover_pubkey<'a>(
         &self,
-        curve: EcCurve,
+        curve: EcdsaCurve,
         signature: Slice<'a, u8>,
         digest: Slice<'a, u8>,
     ) -> FastResult<BoxedSlice<u8>, CryptoError> {
         (|| {
-            let Some(curve) = ecdsa_curve(curve) else {
-                return Err(CryptoError::InvalidSignature);
-            };
+            let curve = ecdsa_curve(curve);
             let (recid_byte, rs) = signature
                 .as_slice()
                 .split_first()
@@ -355,6 +313,27 @@ impl CryptoV1 for TrezorCryptoV1Impl {
             let pubkey = crypto::ecdsa::verify_recover(curve, rs, recid, digest)
                 .map_err(|_| CryptoError::InvalidSignature)?;
             Ok(BoxedSlice::from(&pubkey[..]))
+        })()
+        .into()
+    }
+
+    extern "C" fn ed25519_verify<'a>(
+        &self,
+        public_key: Slice<'a, u8>,
+        signature: Slice<'a, u8>,
+        message: Slice<'a, u8>,
+    ) -> FastResult<(), CryptoError> {
+        (|| {
+            let public_key: &crypto::ed25519::PublicKey = public_key
+                .as_slice()
+                .try_into()
+                .map_err(|_| CryptoError::InvalidEncoding)?;
+            let signature: &crypto::ed25519::Signature = signature
+                .as_slice()
+                .try_into()
+                .map_err(|_| CryptoError::InvalidEncoding)?;
+            crypto::ed25519::verify(message.as_slice(), public_key, signature)
+                .map_err(|_| CryptoError::InvalidSignature)
         })()
         .into()
     }
