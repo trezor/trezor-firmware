@@ -190,7 +190,8 @@ def filter_changelog(changelog_file: Path, internal_name: str) -> None:
 
 def _iter_fragments(project: Path) -> Iterator[Path]:
     fragments_dir = project / ".changelog.d"
-    for fragment in fragments_dir.iterdir():
+    files = (f for f in fragments_dir.iterdir() if f.is_file())
+    for fragment in files:
         if fragment.name in IGNORED_FILES:
             continue
         yield fragment
