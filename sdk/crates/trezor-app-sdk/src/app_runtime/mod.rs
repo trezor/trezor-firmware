@@ -75,7 +75,7 @@ pub(crate) fn try_get_syslog() -> Option<StaticSyslogV1> {
     API.get().map(|api| api.syslog)
 }
 
-/// Local, no-IPC crypto vtable (hashing, `ec_verify_recover`, `base58*`) —
+/// Local, no-IPC crypto vtable (hashing, signature verification, `base58*`) —
 /// see [`crate::traits::crypto::CryptoV1`]. Public: apps call this directly
 /// (see e.g. `trezor_app_sdk::hasher`), not just SDK-internal code.
 pub fn get_crypto_or_die() -> StaticCryptoV1 {

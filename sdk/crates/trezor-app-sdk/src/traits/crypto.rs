@@ -56,10 +56,9 @@ pub enum HmacAlgorithm {
 
 #[stabby::stabby]
 #[repr(u8)]
-pub enum EcCurve {
+pub enum EcdsaCurve {
     Secp256k1,
     Nist256p1,
-    Ed25519,
 }
 
 /// Extra constraint on a secp256k1 signature, matching trezor-crypto's
@@ -95,17 +94,24 @@ pub trait CryptoV1: Send + Sync {
         address_n: Slice<'a, u32>,
         compressed: bool,
     ) -> FastResult<BoxedSlice<u8>, WireError>;
-    /// Signs a raw 32-byte digest with the key at `address_n`.
+    /// Signs a raw 32-byte digest with the ECDSA key at `address_n`; Ed25519
+    /// has no digest signing, see [`Self::ed25519_sign`].
     ///
     /// `canonical` is only supported on secp256k1; any other curve rejects
     /// anything but [`CanonicalSig::Any`].
-    extern "C" fn sign_digest<'a>(
+    extern "C" fn ecdsa_sign_digest<'a>(
         &self,
         address_n: Slice<'a, u32>,
         digest: &'a [u8; 32],
         compressed: bool,
         canonical: CanonicalSig,
     ) -> FastResult<[u8; 65], WireError>;
+    /// Signs `message` with the Ed25519 key at `address_n`.
+    extern "C" fn ed25519_sign<'a>(
+        &self,
+        address_n: Slice<'a, u32>,
+        message: Slice<'a, u8>,
+    ) -> FastResult<[u8; 64], WireError>;
     /// Verifies a MAC previously produced by [`Self::get_address_mac`] for
     /// `address_n`, `address` and the coin type `slip44`, confirming the
     /// pairing hasn't been tampered with. Fails on a wrong MAC.
@@ -132,34 +138,36 @@ pub trait CryptoV1: Send + Sync {
         nonce: Slice<'a, u8>,
     ) -> FastResult<bool, WireError>;
 
-    extern "C" fn ec_verify_recover<'a>(
+    /// Verifies a 64-byte `r||s` ECDSA `signature` of `digest` against
+    /// `public_key`, given in compressed or uncompressed SEC1 form.
+    extern "C" fn ecdsa_verify_digest<'a>(
         &self,
-        curve: EcCurve,
+        curve: EcdsaCurve,
+        public_key: Slice<'a, u8>,
+        signature: Slice<'a, u8>,
+        digest: Slice<'a, u8>,
+    ) -> FastResult<(), CryptoError>;
+    /// Recovers the uncompressed public key from an ECDSA `signature` over
+    /// `digest`, with no candidate public key to check against (unlike
+    /// [`Self::ecdsa_verify_digest`], which confirms `signature` matches a
+    /// given key — this instead always returns whichever key the signature's
+    /// own recovery id points to). `signature` is 65 bytes: a 1-byte recovery
+    /// id (`0..=3`) followed by the 64-byte `r||s` signature (Trezor's
+    /// `[v, r, s]` convention).
+    extern "C" fn ecdsa_recover_pubkey<'a>(
+        &self,
+        curve: EcdsaCurve,
+        signature: Slice<'a, u8>,
+        digest: Slice<'a, u8>,
+    ) -> FastResult<BoxedSlice<u8>, CryptoError>;
+    /// Verifies a 64-byte Ed25519 `signature` of `message` against the
+    /// 32-byte `public_key`.
+    extern "C" fn ed25519_verify<'a>(
+        &self,
         public_key: Slice<'a, u8>,
         signature: Slice<'a, u8>,
         message: Slice<'a, u8>,
-    ) -> FastResult<BoxedSlice<u8>, CryptoError>;
-    extern "C" fn ec_verify_recover_digest<'a>(
-        &self,
-        curve: EcCurve,
-        public_key: Slice<'a, u8>,
-        signature: Slice<'a, u8>,
-        digest: Slice<'a, u8>,
-    ) -> FastResult<BoxedSlice<u8>, CryptoError>;
-    /// Recovers the uncompressed public key from an ECDSA `signature` over
-    /// `digest`, with no candidate public key to check against (unlike
-    /// [`Self::ec_verify_recover_digest`], which confirms `signature`
-    /// matches a given key — this instead always returns whichever key the
-    /// signature's own recovery id points to). `signature` is 65 bytes: a
-    /// 1-byte recovery id (`0..=3`) followed by the 64-byte `r||s` signature
-    /// (Trezor's `[v, r, s]` convention). Only defined for the Weierstrass
-    /// curves (`Secp256k1`/`Nist256p1`) — `Ed25519` has no ECDSA recovery scheme.
-    extern "C" fn ec_recover_pubkey<'a>(
-        &self,
-        curve: EcCurve,
-        signature: Slice<'a, u8>,
-        digest: Slice<'a, u8>,
-    ) -> FastResult<BoxedSlice<u8>, CryptoError>;
+    ) -> FastResult<(), CryptoError>;
 
     /// Verifies a CoSi (collective Ed25519) `signature` of `message` against
     /// `public_keys`, combining the ones selected by `sigmask` (bit 0 =

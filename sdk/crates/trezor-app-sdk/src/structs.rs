@@ -841,13 +841,17 @@ pub enum TrezorCryptoEnum<'a> {
         address_n: Slice<'a, u32>,
         compressed: bool,
     },
-    SignDigest {
+    EcdsaSignDigest {
         address_n: Slice<'a, u32>,
         digest: [u8; 32],
         compressed: bool,
         /// A [`CanonicalSig`](crate::traits::crypto::CanonicalSig), as its
         /// `u8` value.
         canonical: u8,
+    },
+    Ed25519Sign {
+        address_n: Slice<'a, u32>,
+        message: Slice<'a, u8>,
     },
     GetAddressMac {
         address_n: Slice<'a, u32>,
@@ -870,10 +874,11 @@ impl<'a> TrezorCryptoEnum<'a> {
         match self {
             Self::GetXpub { .. } => 0,
             Self::GetPublicKey { .. } => 1,
-            Self::SignDigest { .. } => 2,
-            Self::GetAddressMac { .. } => 3,
-            Self::CheckAddressMac { .. } => 4,
-            Self::VerifyNonceCache { .. } => 5,
+            Self::EcdsaSignDigest { .. } => 2,
+            Self::Ed25519Sign { .. } => 3,
+            Self::GetAddressMac { .. } => 4,
+            Self::CheckAddressMac { .. } => 5,
+            Self::VerifyNonceCache { .. } => 6,
         }
     }
 }
@@ -949,14 +954,22 @@ mod tests {
                 "GetPublicKey",
             ),
             (
-                SignDigest {
+                EcdsaSignDigest {
                     address_n: empty_u32.into(),
                     digest: [0u8; 32],
                     compressed: false,
                     canonical: 0,
                 }
                 .id(),
-                "SignDigest",
+                "EcdsaSignDigest",
+            ),
+            (
+                Ed25519Sign {
+                    address_n: empty_u32.into(),
+                    message: empty_u8.into(),
+                }
+                .id(),
+                "Ed25519Sign",
             ),
             (
                 GetAddressMac {
@@ -989,7 +1002,7 @@ mod tests {
         for (id, name) in variants {
             assert!(seen.insert(id), "duplicate id {} for variant {}", id, name);
         }
-        assert_eq!(variants.len(), 6, "new variant added but test not updated");
+        assert_eq!(variants.len(), 7, "new variant added but test not updated");
     }
 
     /// Ensures every variant of TrezorProgressEnum has a unique id()

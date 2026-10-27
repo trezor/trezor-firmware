@@ -24,7 +24,7 @@ use stabby::str::Str;
 use crate::traits::ApiVariant;
 use crate::traits::allocator::{FfiLayout, GlobalAllocatorV1, GlobalAllocatorV1Vtable};
 use crate::traits::crypto::{
-    BoxedHasher, CanonicalSig, CryptoError, CryptoV1, CryptoV1Vtable, EcCurve, Hasher,
+    BoxedHasher, CanonicalSig, CryptoError, CryptoV1, CryptoV1Vtable, EcdsaCurve, Hasher,
     HashingAlgorithm, HmacAlgorithm,
 };
 use crate::traits::syslog::{
@@ -149,13 +149,21 @@ impl CryptoV1 for DummyCrypto {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn sign_digest<'a>(
+    extern "C" fn ecdsa_sign_digest<'a>(
         &self,
         _address_n: Slice<'a, u32>,
         _digest: &'a [u8; 32],
         _compressed: bool,
         _canonical: CanonicalSig,
     ) -> FastResult<[u8; 65], WireError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn ed25519_sign<'a>(
+        &self,
+        _address_n: Slice<'a, u32>,
+        _message: Slice<'a, u8>,
+    ) -> FastResult<[u8; 64], WireError> {
         unimplemented!("not exercised by the current test suite")
     }
 
@@ -185,32 +193,31 @@ impl CryptoV1 for DummyCrypto {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn ec_verify_recover<'a>(
+    extern "C" fn ecdsa_verify_digest<'a>(
         &self,
-        _curve: EcCurve,
+        _curve: EcdsaCurve,
+        _public_key: Slice<'a, u8>,
+        _signature: Slice<'a, u8>,
+        _digest: Slice<'a, u8>,
+    ) -> FastResult<(), CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn ecdsa_recover_pubkey<'a>(
+        &self,
+        _curve: EcdsaCurve,
+        _signature: Slice<'a, u8>,
+        _digest: Slice<'a, u8>,
+    ) -> FastResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn ed25519_verify<'a>(
+        &self,
         _public_key: Slice<'a, u8>,
         _signature: Slice<'a, u8>,
         _message: Slice<'a, u8>,
-    ) -> FastResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn ec_verify_recover_digest<'a>(
-        &self,
-        _curve: EcCurve,
-        _public_key: Slice<'a, u8>,
-        _signature: Slice<'a, u8>,
-        _digest: Slice<'a, u8>,
-    ) -> FastResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn ec_recover_pubkey<'a>(
-        &self,
-        _curve: EcCurve,
-        _signature: Slice<'a, u8>,
-        _digest: Slice<'a, u8>,
-    ) -> FastResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
+    ) -> FastResult<(), CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 

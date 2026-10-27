@@ -21,7 +21,7 @@ use stabby::slice::Slice;
 use crate::alloc_types::{String, Vec};
 use crate::app_runtime::get_crypto_or_die;
 pub use crate::traits::crypto::{
-    BoxedHasher, CanonicalSig, EcCurve, HashingAlgorithm, HmacAlgorithm,
+    BoxedHasher, CanonicalSig, EcdsaCurve, HashingAlgorithm, HmacAlgorithm,
 };
 use crate::traits::crypto::{CryptoV1Dyn as _, HasherDynMut};
 use crate::{IntoAppResult, Result, ResultExt};
@@ -75,23 +75,29 @@ pub fn get_public_key(address_n: &[u32], compressed: bool) -> Result<Vec<u8>> {
         .map(|b| b.as_ref().to_vec())
 }
 
-/// Signs a raw 32-byte digest with the key at `address_n`.
-///
-/// The signature type is shared by all curves, so it is 65 bytes long. For
-/// ECDSA curves that is the recoverable signature; for Ed25519 the 64-byte
-/// signature comes zero-padded, i.e. only the first 64 bytes are meaningful.
+/// Signs a raw 32-byte digest with the ECDSA key at `address_n`, returning
+/// the 65-byte recoverable signature. Ed25519 has no digest signing, see
+/// [`ed25519_sign`].
 ///
 /// `canonical` constrains a secp256k1 signature further, e.g.
 /// [`CanonicalSig::Ethereum`] for Ethereum transactions and messages. Other
 /// curves only accept [`CanonicalSig::Any`].
-pub fn sign_digest(
+pub fn ecdsa_sign_digest(
     address_n: &[u32],
     digest: &[u8; 32],
     compressed: bool,
     canonical: CanonicalSig,
 ) -> Result<[u8; 65]> {
     get_crypto_or_die()
-        .sign_digest(address_n.into(), digest, compressed, canonical)
+        .ecdsa_sign_digest(address_n.into(), digest, compressed, canonical)
+        .into_app_result()
+        .c()
+}
+
+/// Signs `message` with the Ed25519 key at `address_n`.
+pub fn ed25519_sign(address_n: &[u32], message: &[u8]) -> Result<[u8; 64]> {
+    get_crypto_or_die()
+        .ed25519_sign(address_n.into(), message.into())
         .into_app_result()
         .c()
 }
@@ -129,45 +135,39 @@ pub fn verify_nonce_cache(nonce: &[u8]) -> Result<bool> {
         .c()
 }
 
-/// Recovers the public key from `signature` over `message` (hashed with
-/// SHA-256 for the Weierstrass curves) and confirms it matches `public_key`.
-pub fn ec_verify_recover(
-    curve: EcCurve,
-    public_key: &[u8],
-    signature: &[u8],
-    message: &[u8],
-) -> Result<Vec<u8>> {
-    get_crypto_or_die()
-        .ec_verify_recover(curve, public_key.into(), signature.into(), message.into())
-        .into_app_result()
-        .c()
-        .map(|b| b.as_ref().to_vec())
-}
-
-/// Like [`ec_verify_recover`], but takes an already-hashed `digest` directly.
-pub fn ec_verify_recover_digest(
-    curve: EcCurve,
+/// Verifies a 64-byte `r||s` ECDSA `signature` of `digest` against
+/// `public_key` (compressed or uncompressed SEC1).
+pub fn ecdsa_verify_digest(
+    curve: EcdsaCurve,
     public_key: &[u8],
     signature: &[u8],
     digest: &[u8],
-) -> Result<Vec<u8>> {
+) -> Result<()> {
     get_crypto_or_die()
-        .ec_verify_recover_digest(curve, public_key.into(), signature.into(), digest.into())
+        .ecdsa_verify_digest(curve, public_key.into(), signature.into(), digest.into())
         .into_app_result()
         .c()
-        .map(|b| b.as_ref().to_vec())
 }
 
 /// Recovers the uncompressed public key from an ECDSA `signature` over
 /// `digest`, with no candidate public key to check against — see
-/// [`traits::crypto::CryptoV1::ec_recover_pubkey`](crate::traits::crypto::CryptoV1::ec_recover_pubkey)
+/// [`traits::crypto::CryptoV1::ecdsa_recover_pubkey`](crate::traits::crypto::CryptoV1::ecdsa_recover_pubkey)
 /// for `signature`'s exact byte layout.
-pub fn ec_recover_pubkey(curve: EcCurve, signature: &[u8], digest: &[u8]) -> Result<Vec<u8>> {
+pub fn ecdsa_recover_pubkey(curve: EcdsaCurve, signature: &[u8], digest: &[u8]) -> Result<Vec<u8>> {
     get_crypto_or_die()
-        .ec_recover_pubkey(curve, signature.into(), digest.into())
+        .ecdsa_recover_pubkey(curve, signature.into(), digest.into())
         .into_app_result()
         .c()
         .map(|b| b.as_ref().to_vec())
+}
+
+/// Verifies a 64-byte Ed25519 `signature` of `message` against the 32-byte
+/// `public_key`.
+pub fn ed25519_verify(public_key: &[u8], signature: &[u8], message: &[u8]) -> Result<()> {
+    get_crypto_or_die()
+        .ed25519_verify(public_key.into(), signature.into(), message.into())
+        .into_app_result()
+        .c()
 }
 
 /// Verifies a CoSi (collective Ed25519) `signature` of `message` against
