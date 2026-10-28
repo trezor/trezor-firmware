@@ -34,7 +34,7 @@ use trezor_app_sdk::{Error, Result, ResultExt, WireEncode, unwrap, wire_request_
 use trezor_app_sdk::{
     crypto,
     crypto::{HasherExt as _, HashingAlgorithm},
-    modui::{self, Property, notice},
+    modui::{self, Field},
 };
 
 // Maximum chain_id which returns the full signature_v (which must fit into an uint32).
@@ -106,15 +106,7 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
     signature.push(sig[0]);
 
     // The last screen of the flow; it offers no way back out.
-    modui::notice::show(
-        notice::Severity::Done,
-        tr!("words__title_done"),
-        tr!("send__transaction_signed"),
-        false,
-        "tron/signed",
-        &[],
-    )
-    .c()?;
+    modui::done("signed", tr!("send__transaction_signed"));
 
     Ok(Signature { signature })
 }
@@ -423,8 +415,6 @@ fn process_known_trc20_contract(
 }
 
 fn confirm_votes(contract: &VoteWitnessContract) -> Result<()> {
-    let votes_label = uformat!("\n{}", tr!("words__votes"));
-
     let mut addresses = Vec::with_capacity(contract.votes.len());
     let mut counts = Vec::with_capacity(contract.votes.len());
     for vote in &contract.votes {
@@ -432,10 +422,10 @@ fn confirm_votes(contract: &VoteWitnessContract) -> Result<()> {
         counts.push(uformat!("{}", vote.count));
     }
 
-    let mut voting_list = Vec::new();
+    let mut voting_list = Vec::with_capacity(contract.votes.len() * 2);
     for (address, count) in addresses.iter().zip(counts.iter()) {
-        voting_list.push(Property::mono(tr!("words__address"), address));
-        voting_list.push(Property::plain(&votes_label, count));
+        voting_list.push(Field::address(tr!("words__address"), address));
+        voting_list.push(Field::text(tr!("words__votes"), count));
     }
 
     confirm_tron_voting(&voting_list).c()?;
