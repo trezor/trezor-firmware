@@ -168,6 +168,33 @@ impl FieldStyles {
     }
 }
 
+/// What the third element of a contract C3 item says about its value.
+enum ValueKind {
+    /// A bool `true`: the value is machine-like and may hold raw bytes.
+    Mono,
+    /// A bool `false` or `None`: the value is plain.
+    Plain,
+    /// A `FieldKind` 0–5.
+    Field(PropKind),
+}
+
+/// Reads the third element of a contract C3 item.
+///
+/// The bools and `None` are checked first, by identity, because in Python
+/// `True == 1`, which is [`FieldKind::Amount`]; core's own layouts pass `None`
+/// for "no special styling". Only then is the element read as an int kind.
+fn value_kind(kind: Obj) -> Result<ValueKind, Error> {
+    if kind == Obj::const_true() {
+        return Ok(ValueKind::Mono);
+    }
+    if kind == Obj::const_false() || kind == Obj::const_none() {
+        return Ok(ValueKind::Plain);
+    }
+    Ok(ValueKind::Field(PropKind::from_field_kind(i32::try_from(
+        kind,
+    )?)?))
+}
+
 pub struct PropsList {
     items: Gc<List>,
     key_font: &'static TextStyle,
@@ -208,23 +235,17 @@ impl PropsList {
 
     /// The style for a value, from the third element of its item, and whether
     /// that kind may hold raw bytes.
-    ///
-    /// Contract C3: a bool keeps today's meaning (`true` = mono, `false` =
-    /// plain); an int is a `FieldKind` 0–5. The bool is checked first, by
-    /// identity, because in Python `True == 1`, which is `FieldKind::Amount`.
     fn value_style(&self, kind: Obj) -> Result<(&'static TextStyle, bool), Error> {
-        if kind == Obj::const_true() {
-            return Ok((self.value_mono_font, true));
-        }
-        if kind == Obj::const_false() {
-            return Ok((self.value_font, false));
-        }
+        let kind = match value_kind(kind)? {
+            ValueKind::Mono => return Ok((self.value_mono_font, true)),
+            ValueKind::Plain => return Ok((self.value_font, false)),
+            ValueKind::Field(kind) => kind,
+        };
 
-        let kind = PropKind::from_field_kind(i32::try_from(kind)?)?;
         let style = match self.field_styles {
             Some(styles) => styles.style(kind),
-            // WIP: P4 and P5 give their model's styles. Until then every
-            // kind is plain, and mono, address and data keep the mono font.
+            // Bolt and Caesar have no styles for these kinds yet, so every kind
+            // falls back to plain, and mono, address and data keep the mono font.
             None => match kind {
                 PropKind::Mono | PropKind::Address | PropKind::Data => self.value_mono_font,
                 _ => self.value_font,
@@ -373,3 +394,24 @@ pub enum ContentType {
 /// Maximum number of extended public keys (xpubs) that can be displayed in
 /// a layout or flow.
 pub const MAX_XPUBS: usize = 16;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Contract C3: `true` is mono, `false` and `None` are plain, and the bools
+    /// are read before the ints. Core's own layouts pass `None`, so reading it
+    /// as an int would break them.
+    #[test]
+    fn bool_and_none_kinds_are_read_before_ints() {
+        assert!(matches!(value_kind(Obj::const_true()), Ok(ValueKind::Mono)));
+        assert!(matches!(
+            value_kind(Obj::const_false()),
+            Ok(ValueKind::Plain)
+        ));
+        assert!(matches!(
+            value_kind(Obj::const_none()),
+            Ok(ValueKind::Plain)
+        ));
+    }
+}
