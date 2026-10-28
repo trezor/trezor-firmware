@@ -341,7 +341,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_connected_addr;
   MP_QSTR_connected_idx;
   MP_QSTR_connection_flags;
-  MP_QSTR_content;
   MP_QSTR_continue_recovery_homepage;
   MP_QSTR_count;
   MP_QSTR_coveragedata;
@@ -862,7 +861,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_set_name;
   MP_QSTR_setting__adjust;
   MP_QSTR_setting__apply;
-  MP_QSTR_severity;
   MP_QSTR_share_words__words_in_order;
   MP_QSTR_share_words__wrote_down_all;
   MP_QSTR_show_address_details;
@@ -878,7 +876,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
-  MP_QSTR_show_notice;
   MP_QSTR_show_pairing_device_name;
   MP_QSTR_show_progress;
   MP_QSTR_show_progress_coinjoin;

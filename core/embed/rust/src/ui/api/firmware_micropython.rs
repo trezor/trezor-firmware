@@ -3,8 +3,8 @@ use heapless::Vec;
 use rkyv::{option::ArchivedOption, rancor::Failure, Archived};
 #[cfg(feature = "app_loading")]
 use trezor_app_sdk::structs::{
-    ArchivedCommitment, ArchivedValueKind, Commitment, ExtraItem, Property,
-    Severity as WireSeverity, Slice, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
+    FieldKind, Slice, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult, WireExtra,
+    WireField,
 };
 
 use crate::io::BinaryData;
@@ -34,8 +34,6 @@ use crate::ui::layout::obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ};
 use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 use crate::ui::layout::util::{upy_disable_animation, RecoveryType};
 use crate::ui::notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ};
-#[cfg(feature = "app_loading")]
-use crate::ui::ui_firmware::Severity;
 use crate::ui::ui_firmware::{
     FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
     MAX_WORD_QUIZ_ITEMS,
@@ -865,8 +863,14 @@ extern "C" fn new_show_danger(n_args: usize, args: *const Obj, kwargs: *mut Map)
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        // The app's facts, when it has them; the message page shows them
+        // instead of `description`, which may then be empty.
+        let items: Obj = kwargs
+            .get(Qstr::MP_QSTR_items)
+            .unwrap_or_else(|_| Obj::const_none());
 
-        let layout = ModelUI::show_danger(title, description, value, menu_title, verb_cancel)?;
+        let layout =
+            ModelUI::show_danger(title, description, value, items, menu_title, verb_cancel)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1250,12 +1254,6 @@ extern "C" fn new_tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-// The app says which step is its final yes; the gesture for it is ours.
-#[cfg(feature = "app_loading")]
-fn hold(commitment: &Archived<Commitment>) -> bool {
-    matches!(commitment, ArchivedCommitment::Final)
-}
-
 #[cfg(feature = "app_loading")]
 fn tstr(s: &Archived<StrSlice>) -> Result<TString<'static>, Error> {
     Ok(StrBuffer::alloc(s.as_ref())?.into())
@@ -1266,28 +1264,50 @@ fn tstr_opt(s: &ArchivedOption<Archived<StrSlice>>) -> Result<Option<TString<'st
     s.as_ref().map(tstr).transpose()
 }
 
+/// The wire's `FieldKind` discriminant (contract C1) and whether the value is
+/// raw bytes rather than UTF-8.
 #[cfg(feature = "app_loading")]
-fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Result<Obj, Error> {
+fn field_kind(kind: &Archived<FieldKind>) -> (u8, bool) {
+    match kind {
+        Archived::<FieldKind>::Text => (0, false),
+        Archived::<FieldKind>::Amount => (1, false),
+        Archived::<FieldKind>::Address => (2, false),
+        Archived::<FieldKind>::Data => (3, true),
+        Archived::<FieldKind>::Note => (4, false),
+        Archived::<FieldKind>::Warning => (5, false),
+    }
+}
+
+/// One fact of a request, as `(kind, label, value)`: `kind` is the wire's
+/// `FieldKind` discriminant, `label` is `None` for notes and warnings, and
+/// `value` is `str` for the text kinds and `bytes` for `Data`.
+#[cfg(feature = "app_loading")]
+fn obj_from_field(field: &Archived<WireField<'_>>) -> Result<Obj, Error> {
+    let (kind, is_data) = field_kind(&field.kind);
+    let value = if is_data {
+        Obj::try_from(field.value.as_ref())?
+    } else {
+        // The text kinds carry UTF-8, as the app wrote it.
+        let text = core::str::from_utf8(field.value.as_ref())
+            .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
+        Obj::try_from(text)?
+    };
+    Ok(Obj::try_from((
+        Obj::from(kind),
+        opt_obj(tstr_opt(&field.label)?)?,
+        value,
+    ))?)
+}
+
+#[cfg(feature = "app_loading")]
+fn obj_from_fields(archived: &Archived<Slice<'_, WireField<'_>>>) -> Result<Obj, Error> {
     let slice = archived.as_ref();
     let mut list = List::with_capacity(slice.len())?;
-    for item in slice {
-        list.append(Obj::try_from((
-            Obj::try_from(item.key.as_ref())?,
-            Obj::try_from(item.value.as_ref())?,
-            Obj::try_from(item.mono)?,
-        ))?)?;
+    for field in slice {
+        list.append(obj_from_field(field)?)?;
     }
     Ok(List::alloc(unsafe { list.as_slice() })?.into())
 }
-
-/// Kinds of an app's UI request, decoded for the driver in
-/// `core/src/apps/extapp/ui.py`, whose `_KIND_*` constants match these.
-const KIND_ACTION: u32 = 0;
-const KIND_VALUE: u32 = 1;
-const KIND_DATA: u32 = 2;
-const KIND_SUMMARY: u32 = 3;
-const KIND_PROPERTIES: u32 = 4;
-const KIND_NOTICE: u32 = 5;
 
 #[cfg(feature = "app_loading")]
 fn opt_obj<T>(value: Option<T>) -> Result<Obj, Error>
@@ -1302,13 +1322,13 @@ where
 }
 
 #[cfg(feature = "app_loading")]
-fn obj_from_extras(archived: &Archived<Slice<ExtraItem>>) -> Result<Obj, Error> {
+fn obj_from_extras(archived: &Archived<Slice<WireExtra>>) -> Result<Obj, Error> {
     let slice = archived.as_ref();
     let mut list = List::with_capacity(slice.len())?;
     for extra in slice {
         list.append(Obj::try_from((
             tstr(&extra.label)?,
-            obj_from_proplist(&extra.props)?,
+            obj_from_fields(&extra.fields)?,
         ))?)?;
     }
     Ok(List::alloc(unsafe { list.as_slice() })?.into())
@@ -1318,10 +1338,14 @@ fn obj_from_extras(archived: &Archived<Slice<ExtraItem>>) -> Result<Obj, Error> 
 /// which builds and runs the screens with the same calls the firmware's own
 /// flows use.
 ///
-/// Returns `(kind, br_name, *fields, extras)`: `kind` is one of the kinds
-/// above, `br_name` names the step for the host, `fields` carry the layout's
-/// own values in the order its builder unpacks them, and `extras` is a list
-/// of `(label, properties)` with `properties` as `(key, value, mono)` triples.
+/// Returns `(kind, step, ...)`: `kind` is the `TrezorUiEnum` discriminant,
+/// `step` names the step as the app gave it (the driver prefixes the app's name),
+/// and the rest follows the variant: a review is `(kind, step, title, fields,
+/// extras, is_final)`, a danger or details is `(kind, step, title, fields)`, a
+/// verify is `(kind, step, value, account, path)`, and a done is `(kind, step,
+/// text)`. `fields` is a list of `(kind, label, value)` with the wire's
+/// `FieldKind` as an int, no label for notes and warnings, and bytes only for
+/// `Data`; `extras` is a list of `(label, fields)`.
 ///
 /// Only what the app chose arrives; every other parameter of the screens is
 /// the driver's, the same for every app.
@@ -1335,76 +1359,44 @@ extern "C" fn new_deserialize_ui_message(n_args: usize, args: *const Obj, kwargs
             .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
 
         let fields: &[Obj] = match archived {
-            Archived::<TrezorUiEnum>::ConfirmAction(m) => &[
-                Obj::try_from(KIND_ACTION)?,
-                Obj::try_from(m.br_name.as_ref())?,
-                tstr(&m.title)?.try_into()?,
-                opt_obj(Some(tstr(&m.action)?))?,
-                opt_obj(tstr_opt(&m.description)?)?,
-                opt_obj(tstr_opt(&m.subtitle)?)?,
-                Obj::try_from(hold(&m.commitment))?,
+            Archived::<TrezorUiEnum>::Review(m) => &[
+                Obj::from(0u8),
+                Obj::try_from(m.step.as_ref())?,
+                Obj::try_from(m.title.as_ref())?,
+                obj_from_fields(&m.fields)?,
                 obj_from_extras(&m.extras)?,
+                Obj::try_from(m.is_final)?,
             ],
-            Archived::<TrezorUiEnum>::ConfirmValue(m) => &[
-                Obj::try_from(KIND_VALUE)?,
-                Obj::try_from(m.br_name.as_ref())?,
-                tstr(&m.title)?.try_into()?,
+            Archived::<TrezorUiEnum>::Danger(m) => &[
+                Obj::from(1u8),
+                Obj::try_from(m.step.as_ref())?,
+                Obj::try_from(m.title.as_ref())?,
+                obj_from_fields(&m.fields)?,
+            ],
+            Archived::<TrezorUiEnum>::Details(m) => &[
+                Obj::from(2u8),
+                Obj::try_from(m.step.as_ref())?,
+                Obj::try_from(m.title.as_ref())?,
+                obj_from_fields(&m.fields)?,
+            ],
+            Archived::<TrezorUiEnum>::VerifyAddress(m) => &[
+                Obj::from(3u8),
+                Obj::try_from(m.step.as_ref())?,
                 Obj::try_from(m.value.as_ref())?,
-                opt_obj(tstr_opt(&m.description)?)?,
-                opt_obj(tstr_opt(&m.subtitle)?)?,
-                // An address is grouped into chunks so it can be compared by
-                // eye; a text value is shown as written.
-                Obj::try_from(matches!(m.kind, ArchivedValueKind::Address))?,
-                opt_obj(tstr_opt(&m.footer)?.map(|text| (text, m.footer_warning)))?,
-                Obj::try_from(hold(&m.commitment))?,
-                obj_from_extras(&m.extras)?,
+                opt_obj(tstr_opt(&m.account)?)?,
+                opt_obj(tstr_opt(&m.path)?)?,
             ],
-            // One chunk of the app's data. The bytes go to the screen as they
-            // are; it formats the hex itself, a page at a time.
-            Archived::<TrezorUiEnum>::ConfirmData(m) => &[
-                Obj::try_from(KIND_DATA)?,
-                Obj::try_from(m.br_name.as_ref())?,
-                tstr(&m.title)?.try_into()?,
-                Obj::try_from(m.data.as_ref())?,
-                opt_obj(tstr_opt(&m.subtitle)?)?,
-                obj_from_extras(&m.extras)?,
+            Archived::<TrezorUiEnum>::VerifyPubkey(m) => &[
+                Obj::from(4u8),
+                Obj::try_from(m.step.as_ref())?,
+                Obj::try_from(m.value.as_ref())?,
+                opt_obj(tstr_opt(&m.account)?)?,
+                opt_obj(tstr_opt(&m.path)?)?,
             ],
-            Archived::<TrezorUiEnum>::ConfirmSummary(m) => &[
-                Obj::try_from(KIND_SUMMARY)?,
-                Obj::try_from(m.br_name.as_ref())?,
-                tstr(&m.title)?.try_into()?,
-                opt_obj(tstr_opt(&m.amount)?)?,
-                opt_obj(tstr_opt(&m.amount_label)?)?,
-                opt_obj(tstr_opt(&m.fee)?)?,
-                opt_obj(tstr_opt(&m.fee_label)?)?,
-                obj_from_extras(&m.extras)?,
-            ],
-            Archived::<TrezorUiEnum>::ConfirmProperties(m) => &[
-                Obj::try_from(KIND_PROPERTIES)?,
-                Obj::try_from(m.br_name.as_ref())?,
-                tstr(&m.title)?.try_into()?,
-                opt_obj(tstr_opt(&m.subtitle)?)?,
-                obj_from_proplist(&m.props)?,
-                Obj::try_from(hold(&m.commitment))?,
-                obj_from_extras(&m.extras)?,
-            ],
-            Archived::<TrezorUiEnum>::ShowNotice(m) => &[
-                Obj::try_from(KIND_NOTICE)?,
-                Obj::try_from(m.br_name.as_ref())?,
-                // The app said what kind of news this is; the screen decides
-                // what that looks like. In the wire's order: success, done,
-                // info, warning, danger.
-                Obj::try_from(match m.severity {
-                    Archived::<WireSeverity>::Success => 0u32,
-                    Archived::<WireSeverity>::Done => 1u32,
-                    Archived::<WireSeverity>::Info => 2u32,
-                    Archived::<WireSeverity>::Warning => 3u32,
-                    Archived::<WireSeverity>::Danger => 4u32,
-                })?,
-                tstr(&m.title)?.try_into()?,
-                tstr(&m.content)?.try_into()?,
-                Obj::try_from(m.cancel)?,
-                obj_from_extras(&m.extras)?,
+            Archived::<TrezorUiEnum>::Done(m) => &[
+                Obj::from(5u8),
+                Obj::try_from(m.step.as_ref())?,
+                Obj::try_from(m.text.as_ref())?,
             ],
         };
 
@@ -1422,45 +1414,25 @@ extern "C" fn new_deserialize_ui_message(
     unimplemented!()
 }
 
-/// Shows a notice of some severity. The severity is one of the wire's, as an
-/// int in their order: success, done, info, warning, danger.
-#[cfg(feature = "app_loading")]
-extern "C" fn new_show_notice(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let severity: u32 = kwargs.get(Qstr::MP_QSTR_severity)?.try_into()?;
-        let severity = match severity {
-            0 => Severity::Success,
-            1 => Severity::Done,
-            2 => Severity::Info,
-            3 => Severity::Warning,
-            4 => Severity::Danger,
-            _ => return Err(Error::ValueError(c"unknown severity")),
-        };
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let content: TString = kwargs.get(Qstr::MP_QSTR_content)?.try_into()?;
-        let cancel: bool = kwargs.get_or(Qstr::MP_QSTR_cancel, true)?;
-        let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
-
-        let layout = ModelUI::show_notice(severity, title, content, external_menu, cancel)?;
-        Ok(layout.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-#[cfg(not(feature = "app_loading"))]
-extern "C" fn new_show_notice(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
-    unimplemented!()
-}
-
 /// Serializes a UI result into the bytes the extapp driver sends back to
-/// the app.
+/// the app. `result` is a `TrezorUiResult` discriminant.
 #[cfg(feature = "app_loading")]
 extern "C" fn new_encode_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         // Say what the person did, rather than naming the button that did it.
         // Only the layout's final answer goes back: its menu and extras stay
         // in core. Which answers those are is `result.rs`'s to say.
-        let msg: TrezorUiResult = kwargs.get(Qstr::MP_QSTR_result)?.try_into()?;
+        let result: u32 = kwargs.get(Qstr::MP_QSTR_result)?.try_into()?;
+        let msg = match result {
+            0 => TrezorUiResult::Confirmed,
+            1 => TrezorUiResult::Cancelled,
+            // Chunk paging, WIP: P10 decides whether these survive.
+            2 => TrezorUiResult::Forward,
+            3 => TrezorUiResult::Backward,
+            4 => TrezorUiResult::ConfirmedAll,
+            5 => TrezorUiResult::ShowDetails,
+            _ => return Err(Error::ValueError(c"unknown UI result")),
+        };
 
         let bytes = crate::util::archive::to_bytes_obj(&msg)?;
 
@@ -1496,6 +1468,7 @@ extern "C" fn new_deserialize_progress_message(
             )
                 .try_into()?,
             Archived::<TrezorProgressEnum>::Step { units } => Obj::try_from(units.to_native())?,
+            Archived::<TrezorProgressEnum>::Label { label } => Obj::try_from(label.as_ref())?,
             Archived::<TrezorProgressEnum>::End => Obj::const_none(),
         };
 
@@ -1568,11 +1541,12 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// # cannot be `bytes` and started getting rid of `PropertyType` uses.
     /// # There are still a few instances where properties use `bytes`,
     /// # but we should probably get rid of all and drop `PropertyType` completely.
-    /// # The next goal would be to replace the `bool` with something
-    /// # that can encode actual types / rendering strategies.
+    /// # The third component is being replaced by a `FieldKind` int (0-5),
+    /// # which can encode actual types / rendering strategies; a bool keeps
+    /// # today's meaning for the code that still passes one.
     /// # See more details here: https://github.com/trezor/trezor-firmware/issues/5411
-    /// PropertyType = tuple[str | None, StrOrBytes | None, bool | None]
-    /// StrPropertyType = tuple[str | None, str | None, bool | None]
+    /// PropertyType = tuple[str | None, StrOrBytes | None, bool | int | None]
+    /// StrPropertyType = tuple[str | None, str | None, bool | int | None]
     ///
     ///
     /// T = TypeVar("T")
@@ -1912,8 +1886,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     verb: str | None = None,
     ///     external_menu: bool = False,
     /// ) -> LayoutContext[UiResult]:
-    ///     """Confirm list of key-value pairs. The third component in the tuple should be True if
-    ///     the value is to be rendered as binary with monospace font, False otherwise."""
+    ///     """Confirm list of key-value pairs. The third component in the tuple says how
+    ///     the value is drawn: a bool keeps today's meaning (True renders it as binary
+    ///     with monospace font), an int is a `FieldKind` 0-5."""
     Qstr::MP_QSTR_confirm_properties => obj_fn_kw!(0, new_confirm_properties).as_obj(),
 
     /// def confirm_reset_device(recovery: bool) -> LayoutContext[UiResult]:
@@ -2165,8 +2140,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     value: str = "",
     ///     menu_title: str | None = None,
     ///     verb_cancel: str | None = None,
+    ///     items: Sequence[PropertyType] | None = None,
     /// ) -> LayoutContext[UiResult]:
-    ///     """Warning modal that makes it easier to cancel than to continue."""
+    ///     """Warning modal that makes it easier to cancel than to continue. With
+    ///     `items`, the message page shows them and `description` may be empty."""
     Qstr::MP_QSTR_show_danger => obj_fn_kw!(0, new_show_danger).as_obj(),
 
     /// def show_error(
@@ -2340,7 +2317,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     value: Sequence[PropertyType] | str,
     ///     subtitle: str | None = None,
     /// ) -> LayoutContext[None]:
-    ///     """Show a list of key-value pairs, or a monospace string."""
+    ///     """Show a list of key-value pairs, or a monospace string. The third
+    ///     component of a pair says how the value is drawn, as in
+    ///     `confirm_properties`."""
     Qstr::MP_QSTR_show_properties => obj_fn_kw!(0, new_show_properties).as_obj(),
 
     /// def show_remaining_shares(
@@ -2417,25 +2396,17 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     data: bytes,
     /// ) -> tuple[Any, ...]:
-    ///     """Read an app's UI request into plain data for the extapp UI driver."""
+    ///     """Read an app's UI request into plain data for the extapp UI driver. The
+    ///     first element is the request's `TrezorUiEnum` discriminant; the rest
+    ///     follows the variant."""
     Qstr::MP_QSTR_deserialize_ui_message => obj_fn_kw!(0, new_deserialize_ui_message).as_obj(),
-
-    /// def show_notice(
-    ///     *,
-    ///     severity: int,
-    ///     title: str,
-    ///     content: str,
-    ///     cancel: bool = True,
-    ///     external_menu: bool = False,
-    /// ) -> LayoutContext[None]:
-    ///     """Show a notice of some severity, as an int in the wire's order."""
-    Qstr::MP_QSTR_show_notice => obj_fn_kw!(0, new_show_notice).as_obj(),
 
     /// def encode_ui_result(
     ///     *,
-    ///     result: UiResult,
+    ///     result: int,
     /// ) -> bytes:
-    ///     """Serialize a UI result into the bytes the extapp driver sends back to the app."""
+    ///     """Serialize a UI result, by its `TrezorUiResult` discriminant, into the
+    ///     bytes the extapp driver sends back to the app."""
     Qstr::MP_QSTR_encode_ui_result => obj_fn_kw!(0, new_encode_ui_result).as_obj(),
 
     /// def deserialize_progress_message(
