@@ -222,10 +222,12 @@ if [ $INIT -eq 1 ]; then
   echo ">>> DOCKER BUILD ALPINE_VERSION=$ALPINE_VERSION ALPINE_ARCH=$ALPINE_ARCH NIX_VERSION=$NIX_VERSION -t $CONTAINER_NAME"
   echo
 
-  # some Nix installations have problem with shell.nix -> ci/shell.nix symlink
-  # docker can't handle ci/shell.nix -> shell.nix
-  # let's copy the file and try to fix paths ...
-  sed "s|./ci/|./|" < shell.nix > ci/shell.nix
+  # The docker build context is ci/, so copy the nix environment definition
+  # there. shell.nix evaluates flake.nix (pinned by flake.lock) with src = ./.,
+  # so the files need a directory of their own.
+  rm -rf ci/env
+  mkdir ci/env
+  cp shell.nix flake.nix flake.lock ci/env/
 
   $DOCKER build \
     "${DOCKER_PLATFORM_ARGS[@]}" \
@@ -278,11 +280,13 @@ EOF
 
 if [ $INIT -eq 0 ]; then
   cat <<EOF >> "$SCRIPT_NAME"
-  if ! sed "s|./ci/|./|" shell.nix | cmp -s - /shell.nix; then
-    echo "shell.nix changed since this environment was initialized."
-    echo "Re-run without --no-init to rebuild it."
-    exit 1
-  fi
+  for f in shell.nix flake.nix flake.lock; do
+    if ! cmp -s "\$f" "/env/\$f"; then
+      echo "\$f changed since this environment was initialized."
+      echo "Re-run without --no-init to rebuild it."
+      exit 1
+    fi
+  done
 EOF
 fi
 
