@@ -181,6 +181,12 @@ jobs:
           ./build-docker.sh --no-init --models ${{ matrix.model }} --targets 'firmware' ${REF}
           cd build/ && cp -v --recursive --parents * ../_artifacts/
 
+      - name: Build nRF firmware
+        if: ${{ matrix.model == 'T3W1' }}
+        run: |
+          ./build-docker.sh --no-init --models ${{ matrix.model }} --targets '' --nrf ${REF}
+          cd build/ && cp -v --recursive --parents * ../_artifacts/
+
       - name: Show fingerprints
         run: |
           tree _artifacts
