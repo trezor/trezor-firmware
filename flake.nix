@@ -107,6 +107,7 @@
               cargo-audit
               cargo-vet
               check
+              cmake # for nRF build
               curl # for connect tests
               editorconfig-checker
               gcc-arm-embedded-13
@@ -119,6 +120,7 @@
               libjpeg
               libusb1
               llvmPackages.clang
+              ninja # for nRF build
               openssl
               perl
               pkg-config
@@ -146,8 +148,6 @@
               libiconv
             ]
             ++ lib.optionals devTools [
-              cmake
-              ninja
               tio
               shellcheck
               crowdin-cli # for translations, pulls in openjdk

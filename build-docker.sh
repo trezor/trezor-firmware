@@ -456,6 +456,9 @@ if [ "$OPT_BUILD_NRF" -eq 1 ]; then
     # variant: nrf build
     set -e -o pipefail
 
+    # use the arm-none-eabi toolchain provided by nix-shell
+    export GNUARMEMB_TOOLCHAIN_PATH="\$(dirname "\$(dirname "\$(readlink -f "\$(command -v arm-none-eabi-gcc)")")")"
+
     echo "=== Toolchain Debug Info ==="
     echo "ZEPHYR_TOOLCHAIN_VARIANT: \$ZEPHYR_TOOLCHAIN_VARIANT"
     echo "GNUARMEMB_TOOLCHAIN_PATH: \$GNUARMEMB_TOOLCHAIN_PATH"
@@ -468,7 +471,9 @@ if [ "$OPT_BUILD_NRF" -eq 1 ]; then
     $GIT_CLEAN_REPO
     echo "=== west initializing workspace ==="
     cd /reproducible-build/trezor-firmware/nordic
-    uv run west init -l ./trezor || echo "West already initialized"
+    # t3w1_revA_nrf52832 is pinned to NCS 2.9, see verify_environment() in
+    # build_sign_flash.sh
+    uv run west init -l --mf west-ncs2.9.yml ./trezor || echo "West already initialized"
     echo "=== west update ==="
     uv run west update
 
@@ -550,12 +555,10 @@ EOF
     -v "$DIR:/local" \
     -v "$DIR/build/nrf":/build:z \
     --env PRODUCTION="$PRODUCTION" \
-    --env TREZOR_FIRMWARE_ACCEPT_JLINK_LICENSE="yes" \
     --env ZEPHYR_TOOLCHAIN_VARIANT="gnuarmemb" \
-    --env GNUARMEMB_TOOLCHAIN_PATH="/nix/store/n6qhvpsx5ldqazhmx5lc9lyjdbmq8zj2-gcc-arm-embedded-13.3.rel1" \
     --init \
     "$SNAPSHOT_NAME" \
-    /nix/var/nix/profiles/default/bin/nix-shell --arg devTools true --run "bash /local/build/$SCRIPT_NAME"
+    /nix/var/nix/profiles/default/bin/nix-shell --run "bash /local/build/$SCRIPT_NAME"
 fi
 
 # build legacy
