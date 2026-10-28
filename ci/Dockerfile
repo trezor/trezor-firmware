@@ -38,7 +38,6 @@ ENV \
 
 # Trezor specific stuff starts here
 
-COPY shell.nix shell.nix
 # add and install git-filter-repo for common sync job
 COPY common_sync/git-filter-repo git-filter-repo
 RUN mv git-filter-repo $(git --exec-path)
@@ -48,6 +47,10 @@ RUN mv git-filter-repo $(git --exec-path)
 ARG FULLDEPS_TESTING=0
 ENV FULLDEPS_TESTING=${FULLDEPS_TESTING}
 
+# nix-shell picks up shell.nix from the working directory, both here and in
+# the containers started by build-docker.sh
+COPY env/ /env/
+WORKDIR /env
 RUN nix-shell --arg fullDeps "$([ ${FULLDEPS_TESTING} = 1 ] && echo true || echo false)" --run "echo deps pre-installed"
 
 CMD [ "nix-shell" ]
