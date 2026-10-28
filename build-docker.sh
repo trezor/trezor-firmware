@@ -427,6 +427,9 @@ EOF
     echo "    (targets: ${CORE_TARGETS[@]})"
     echo
 
+    # create the bind mount source, otherwise docker creates it owned by root
+    mkdir -p "build/core$DIRSUFFIX"
+
     $DOCKER run \
       "${DOCKER_PLATFORM_ARGS[@]}" \
       --network=host \
@@ -538,6 +541,8 @@ EOF
   echo ">>> DOCKER RUN nrf PRODUCTION=$PRODUCTION"
   echo
 
+  mkdir -p build/nrf
+
   $DOCKER run \
     "${DOCKER_PLATFORM_ARGS[@]}" \
     --network=host \
@@ -592,6 +597,8 @@ EOF
     echo
     echo ">>> DOCKER RUN legacy BITCOIN_ONLY=$BITCOIN_ONLY PRODUCTION=$PRODUCTION"
     echo
+
+    mkdir -p "build/legacy$DIRSUFFIX"
 
     $DOCKER run \
       "${DOCKER_PLATFORM_ARGS[@]}" \
