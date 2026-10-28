@@ -17,6 +17,7 @@ mod progressive_render;
 mod qrcode;
 mod rawimage;
 mod render;
+mod rotated_bar;
 mod text;
 mod toif;
 mod utils;
@@ -42,6 +43,7 @@ pub use progressive_render::ProgressiveRenderer;
 pub use qrcode::QrImage;
 pub use rawimage::RawImage;
 pub use render::{DirectRenderer, Renderer, ScopedRenderer};
+pub use rotated_bar::RotatedBar;
 pub use text::Text;
 pub use toif::ToifImage;
 #[cfg(feature = "ui_image_buffer")]

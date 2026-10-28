@@ -10,6 +10,7 @@
 // (when building for TR, a lot of code only used in TT would get marked as unused).
 #![allow(dead_code)]
 #![feature(const_trait_impl)]
+#![feature(core_float_math)]
 #![feature(custom_test_frameworks)]
 #![feature(pointer_is_aligned_to)]
 #![no_main]
