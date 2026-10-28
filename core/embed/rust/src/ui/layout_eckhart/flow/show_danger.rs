@@ -6,14 +6,15 @@ use super::super::firmware::{
     VerticalMenuScreenMsg,
 };
 use super::super::theme;
-use crate::micropython::Error;
+use crate::micropython::{Error, Obj};
 use crate::strutil::TString;
 use crate::translations::TR;
-use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource, Paragraphs};
 use crate::ui::component::ComponentExt;
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
 use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
 use crate::ui::geometry::{Direction, LinearPlacement};
+use crate::ui::layout::util::PropsList;
 
 const TIMEOUT: Duration = Duration::from_secs(2);
 
@@ -51,28 +52,77 @@ pub fn new_show_danger(
     title: TString<'static>,
     description: TString<'static>,
     value: TString<'static>,
+    items: Obj,
     menu_title: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
 ) -> Result<SwipeFlow, Error> {
     let verb_cancel = verb_cancel.unwrap_or(TR::buttons__cancel_and_exit.into());
 
-    // Message
-    let paragraphs = [
-        Paragraph::new(&theme::TEXT_REGULAR, description),
-        Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, value),
-    ]
-    .into_paragraphs()
-    .with_placement(LinearPlacement::vertical().with_spacing(theme::TEXT_VERTICAL_SPACING));
+    // Contract C3: `None` keeps the plain message. A list of items shows the
+    // fields to weigh instead of `value`, and their `Warning` ones are drawn as
+    // caution rows.
+    let items = if items == Obj::const_none() {
+        None
+    } else {
+        Some(PropsList::new(items)?.with_field_styles(theme::field_styles()))
+    };
 
-    let content_message = TextScreen::new(paragraphs)
-        .with_header(
-            Header::new(title)
-                .with_menu_button()
-                .with_icon(theme::ICON_INFO, theme::ORANGE)
-                .with_text_style(theme::label_title_danger()),
-        )
+    match items {
+        // Contract C3: the fields carry the message and page through the
+        // screen's pager. A description, when there is one, sits under the
+        // title rather than above the fields.
+        Some(items) => {
+            let paragraphs = items
+                .into_paragraphs()
+                .with_placement(LinearPlacement::vertical());
+            let subtitle = if description.is_empty() {
+                None
+            } else {
+                Some(description)
+            };
+            build_flow(paragraphs, title, subtitle, None, menu_title, verb_cancel)
+        }
+        // The plain message: a description and the one value to weigh.
+        None => {
+            let paragraphs = [
+                Paragraph::new(&theme::TEXT_REGULAR, description),
+                Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, value),
+            ]
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical().with_spacing(theme::TEXT_VERTICAL_SPACING));
+            build_flow(paragraphs, title, None, Some(1), menu_title, verb_cancel)
+        }
+    }
+}
+
+/// The flow of `show_danger`: the message, the menu to continue anyway or
+/// leave, and the cancelled screen on the way out.
+fn build_flow<P>(
+    paragraphs: Paragraphs<P>,
+    title: TString<'static>,
+    subtitle: Option<TString<'static>>,
+    page_limit: Option<u16>,
+    menu_title: Option<TString<'static>>,
+    verb_cancel: TString<'static>,
+) -> Result<SwipeFlow, Error>
+where
+    P: ParagraphSource<'static> + 'static,
+{
+    // Message
+    let mut content_message = TextScreen::new(paragraphs).with_header(
+        Header::new(title)
+            .with_menu_button()
+            .with_icon(theme::ICON_INFO, theme::ORANGE)
+            .with_text_style(theme::label_title_danger()),
+    );
+    if let Some(subtitle) = subtitle {
+        content_message = content_message.with_subtitle(subtitle);
+    }
+    if let Some(page_limit) = page_limit {
+        content_message = content_message.with_page_limit(page_limit);
+    }
+    let content_message = content_message
         .with_action_bar(ActionBar::new_single(Button::with_text(verb_cancel)))
-        .with_page_limit(1)
         .map(|msg| match msg {
             TextScreenMsg::Menu => Some(FlowMsg::Info),
             TextScreenMsg::Confirmed => Some(FlowMsg::Cancelled),
