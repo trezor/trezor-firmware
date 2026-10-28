@@ -16,7 +16,8 @@ if TYPE_CHECKING:
 
 _INIT = 0
 _STEP = 1
-_STOP = 2
+_LABEL = 2
+_STOP = 3
 
 
 def handle(session: Session, msg: IpcMessage) -> None:
@@ -43,6 +44,11 @@ def handle(session: Session, msg: IpcMessage) -> None:
             # Past the total pins the bar full rather than wrapping.
             session.progress_done = min(session.progress_done + obj, total)
             session.progress.report(session.progress_done * 1000 // total)
+    elif message_id == _LABEL:
+        if session.progress is None:
+            session.die(DataError("Progress not initialized"))
+        # The label changes under the bar; the fill and the count are ours.
+        session.progress.report(session.progress.value, description=obj)
     elif message_id == _STOP:
         if session.progress is None:
             session.die(DataError("Progress not initialized"))

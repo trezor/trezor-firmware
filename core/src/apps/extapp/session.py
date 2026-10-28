@@ -55,6 +55,17 @@ class Session:
         # set once the app was stopped because of an error
         self.dead = False
 
+    @property
+    def app_name(self) -> str:
+        """The app's own name, the prefix of every step it asks for.
+
+        The image ID is the app's unique reverse-domain identifier
+        (`<package>.<domain>`); the package name is its first label. The display
+        name is for people and cannot name a screen, and the request's own step
+        never reaches the host unprefixed.
+        """
+        return self.image.id().split(".")[0]
+
     def send(self, service: int, message_id: int, data: AnyBytes) -> None:
         io.ipc_send(self.task_id, service, message_id, data)
 
