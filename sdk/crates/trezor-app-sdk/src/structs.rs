@@ -22,42 +22,6 @@ use stabby::slice::Slice as StabbySlice;
 use stabby::str::Str;
 use ufmt::derive::uDebug;
 
-/// A key-value pair with an optional monospace flag, used in UI detail views.
-#[stabby::stabby]
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct Property<'a> {
-    /// The label, such as `"Amount"`.
-    pub key: StrSlice<'a>,
-    /// The content shown under the label.
-    pub value: StrSlice<'a>,
-    /// Whether the value is shown in a fixed-width font.
-    pub mono: bool,
-}
-
-impl<'a> Property<'a> {
-    /// A fact with `key` as its label and `value` as its content. `mono` shows
-    /// the value in a fixed-width font; prefer [`Property::plain`] or
-    /// [`Property::mono`], which say which.
-    pub fn new(key: &'a str, value: &'a str, mono: bool) -> Self {
-        Self {
-            key: key.into(),
-            value: value.into(),
-            mono,
-        }
-    }
-
-    /// A fact whose value is machine-like — a hash, a hex string — and reads
-    /// better in a fixed-width font.
-    pub fn mono(key: &'a str, value: &'a str) -> Self {
-        Self::new(key, value, true)
-    }
-
-    /// A fact whose value is ordinary text.
-    pub fn plain(key: &'a str, value: &'a str) -> Self {
-        Self::new(key, value, false)
-    }
-}
-
 // ============================================================================
 // Field types
 // ============================================================================
@@ -265,216 +229,115 @@ where
     }
 }
 
-/// More the person can look at from a layout's screen: an entry in the layout's
-/// menu, and the facts shown when it is picked.
+/// What a fact *is*, which decides how core formats and draws it.
 ///
-/// Travels with the layout's request; core walks the menu itself and answers
-/// the app only when the layout is decided.
-#[stabby::stabby]
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ExtraItem<'a> {
-    /// The menu entry's label, and the title of its screen.
-    pub label: StrSlice<'a>,
-    pub props: Slice<'a, Property<'a>>,
-}
-
-/// What confirming a layout commits the person to.
-///
-/// The app knows which of its screens is the one that signs; the library does
-/// not. The app says so here, and core turns it into the gesture — a hold
-/// rather than a tap — so the person's last yes is harder to give by accident.
-/// The gesture itself is not the app's to name.
-///
-/// WIP: on caesar a screen with extras has a menu instead of the hold, so
-/// `Final` is a tap there (#7694).
+/// The app chooses the kind by what the value is, never by how it should look.
+/// The discriminants are the wire's (contract C1): a new kind goes at the end
+/// with a new value, and no value is ever renumbered or reused.
 #[stabby::stabby]
 #[repr(u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub enum Commitment {
-    /// One step of a longer flow. Confirming it only moves on.
-    Step = 0,
-    /// The last confirmation before the app signs or otherwise acts.
-    Final = 1,
-}
-
-/// An action confirmation layout, sent as [`TrezorUiEnum::ConfirmAction`].
-#[stabby::stabby]
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmAction<'a> {
-    pub title: StrSlice<'a>,
-    pub action: StrSlice<'a>,
-    pub subtitle: OptStrSlice<'a>,
-    pub description: OptStrSlice<'a>,
-    pub commitment: Commitment,
-    /// The step's name, announced to the host.
-    pub br_name: StrSlice<'a>,
-    /// Reached from the screen's menu button, which core draws when there
-    /// are any.
-    pub extras: Slice<'a, ExtraItem<'a>>,
-}
-
-/// A transaction summary, sent as [`TrezorUiEnum::ConfirmSummary`].
-#[stabby::stabby]
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmSummary<'a> {
-    pub title: StrSlice<'a>,
-    pub amount: OptStrSlice<'a>,
-    pub amount_label: OptStrSlice<'a>,
-    pub fee: OptStrSlice<'a>,
-    pub fee_label: OptStrSlice<'a>,
-    /// The step's name, announced to the host.
-    pub br_name: StrSlice<'a>,
-    /// Reached from the screen's menu button, which core draws when there
-    /// are any.
-    pub extras: Slice<'a, ExtraItem<'a>>,
-}
-
-/// What a value *is*, which decides how it is formatted.
-///
-/// There is deliberately no `chunkify` flag: grouping an address into chunks
-/// is a consequence of it being an address, not a separate choice. Raw bytes
-/// are not a kind of value: they go as [`ConfirmData`].
-#[stabby::stabby]
-#[repr(u8)]
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub enum ValueKind {
-    /// Shown as written.
+pub enum FieldKind {
+    /// Words or a number, shown as written.
     Text = 0,
-    /// Grouped into chunks so it can be compared by eye.
-    Address = 1,
+    /// A sum with its unit, already formatted by the app.
+    Amount = 1,
+    /// Something compared character by character: grouped and fixed-width.
+    Address = 2,
+    /// Raw bytes, shown as hex. At most one per review.
+    Data = 3,
+    /// A sentence with no label: a question or an explanation.
+    Note = 4,
+    /// A sentence to weigh before confirming; a caution row.
+    Warning = 5,
 }
 
-/// A value confirmation layout, sent as [`TrezorUiEnum::ConfirmValue`].
+/// One fact in a [`ReviewRequest`] or [`FieldsRequest`].
+///
+/// `label` is `None` for [`FieldKind::Note`] and [`FieldKind::Warning`].
+/// `value` is UTF-8 for the text kinds and the bytes themselves for
+/// [`FieldKind::Data`]. `len` is `value.len()`; for `Data` after P10 it is the
+/// total length core pulls, and the value travels empty.
 #[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmValue<'a> {
+pub struct WireField<'a> {
+    pub kind: FieldKind,
+    pub label: OptStrSlice<'a>,
+    pub value: Slice<'a, u8>,
+    pub len: u32,
+}
+
+/// More the person can open from a review's menu: the entry's label, and the
+/// facts shown when it is picked.
+#[stabby::stabby]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct WireExtra<'a> {
+    pub label: StrSlice<'a>,
+    pub fields: Slice<'a, WireField<'a>>,
+}
+
+/// Facts for the person to confirm or refuse, sent as
+/// [`TrezorUiEnum::Review`].
+#[stabby::stabby]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct ReviewRequest<'a> {
+    pub step: StrSlice<'a>,
     pub title: StrSlice<'a>,
+    pub fields: Slice<'a, WireField<'a>>,
+    pub extras: Slice<'a, WireExtra<'a>>,
+    /// The last yes before the app signs or acts: core makes it a hold.
+    pub is_final: bool,
+}
+
+/// A risky decision, sent as [`TrezorUiEnum::Danger`].
+#[stabby::stabby]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct FieldsRequest<'a> {
+    pub step: StrSlice<'a>,
+    pub title: StrSlice<'a>,
+    pub fields: Slice<'a, WireField<'a>>,
+}
+
+/// An address or public key of the person's own, sent as
+/// [`TrezorUiEnum::VerifyAddress`] or [`TrezorUiEnum::VerifyPubkey`].
+#[stabby::stabby]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct VerifyRequest<'a> {
+    pub step: StrSlice<'a>,
     pub value: StrSlice<'a>,
-    pub kind: ValueKind,
-    pub subtitle: OptStrSlice<'a>,
-    pub description: OptStrSlice<'a>,
-    /// A note along the bottom of the screen.
-    pub footer: OptStrSlice<'a>,
-    /// Whether the note is something to weigh before confirming.
-    pub footer_warning: bool,
-    pub commitment: Commitment,
-    /// The step's name, announced to the host.
-    pub br_name: StrSlice<'a>,
-    /// Reached from the screen's menu button, which core draws when there
-    /// are any.
-    pub extras: Slice<'a, ExtraItem<'a>>,
+    pub account: OptStrSlice<'a>,
+    pub path: OptStrSlice<'a>,
 }
 
-/// A raw-bytes confirmation, sent as [`TrezorUiEnum::ConfirmData`].
-///
-/// The app passes all of its bytes. `core/embed/api` sends them to core a
-/// chunk at a time, each chunk as a request of its own with `data` narrowed
-/// to it, so core never holds a whole blob at once. Core shows them as hex.
+/// The end of a flow, sent as [`TrezorUiEnum::Done`].
 #[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmData<'a> {
-    pub title: StrSlice<'a>,
-    pub data: Slice<'a, u8>,
-    pub subtitle: OptStrSlice<'a>,
-    /// The step's name, announced to the host.
-    pub br_name: StrSlice<'a>,
-    /// Reached from the screen's menu button, which core draws when there
-    /// are any.
-    pub extras: Slice<'a, ExtraItem<'a>>,
+pub struct DoneRequest<'a> {
+    pub step: StrSlice<'a>,
+    pub text: StrSlice<'a>,
 }
 
-/// What kind of news a notice is.
+/// One UI request, as it crosses IPC: one variant per decision an app asks.
 ///
-/// The only thing the app decides about a notice. The screen, its button words
-/// and its timeout follow from it, and are core's, per model — which is why
-/// this travels as a meaning rather than as a look.
-///
-/// There is no error severity, on purpose. A failure is not a notice a flow
-/// carries on from: an app fails by returning `Err`, and whether the person
-/// sees a screen for that is core's to decide on the failure path, as
-/// `show_error_and_raise` does for core's own flows.
-#[stabby::stabby]
-#[repr(u8)]
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub enum Severity {
-    /// A step worked, and the flow continues after this screen.
-    ///
-    /// For example a signature that verified. Distinct from
-    /// [`Severity::Done`], which is the last screen of a flow.
-    Success = 0,
-    /// The flow finished; the person goes back to the host.
-    ///
-    /// The last screen an app shows. Nothing on the device follows it, so
-    /// the call does not wait for the person to dismiss it — the host's
-    /// response should not wait on an acknowledgement. What the screen does
-    /// after the call returns is the model's business.
-    ///
-    /// WIP: bolt and caesar wait for a tap.
-    Done = 1,
-    /// Something to read before going on. Nothing is at stake.
-    Info = 2,
-    /// Something to consider before going on.
-    Warning = 3,
-    /// Going on is risky; the person has to choose it deliberately.
-    Danger = 4,
-}
-
-/// A notice of some [`Severity`], sent as [`TrezorUiEnum::ShowNotice`].
-///
-/// Carries what the notice says and nothing about how it looks: no button
-/// words, no timeout, no choice of screen. Core derives those from `severity`.
-#[stabby::stabby]
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowNotice<'a> {
-    pub severity: Severity,
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    /// The notice must offer a way to back out. How is the model's.
-    /// WIP: ignored by every model.
-    pub cancel: bool,
-    /// The step's name, announced to the host.
-    pub br_name: StrSlice<'a>,
-    /// Reached from the screen's menu button, which core draws when there
-    /// are any.
-    pub extras: Slice<'a, ExtraItem<'a>>,
-}
-
-/// A property-list confirmation, sent as [`TrezorUiEnum::ConfirmProperties`].
-#[stabby::stabby]
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmProperties<'a> {
-    pub title: StrSlice<'a>,
-    pub props: Slice<'a, Property<'a>>,
-    pub subtitle: OptStrSlice<'a>,
-    pub commitment: Commitment,
-    /// The step's name, announced to the host.
-    pub br_name: StrSlice<'a>,
-    /// Reached from the screen's menu button, which core draws when there
-    /// are any.
-    pub extras: Slice<'a, ExtraItem<'a>>,
-}
-
-/// One UI request, as it crosses IPC: one variant per `modui` layout. Layouts
-/// pass it through `UiV1::ui_call` as is; `confirm::data` passes its
-/// `ConfirmData` to `UiV1::confirm_data` instead, which sends it a chunk at a
-/// time.
+/// The discriminants are the wire's (contract C1): a new variant goes at the end
+/// with a new value, and no value is ever renumbered or reused.
 #[stabby::stabby]
 #[repr(C, u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorUiEnum<'a> {
-    ConfirmAction(ConfirmAction<'a>) = 0,
-    ConfirmSummary(ConfirmSummary<'a>) = 1,
-    ConfirmValue(ConfirmValue<'a>) = 2,
-    ConfirmData(ConfirmData<'a>) = 3,
-    ConfirmProperties(ConfirmProperties<'a>) = 4,
-    ShowNotice(ShowNotice<'a>) = 5,
+    Review(ReviewRequest<'a>) = 0,
+    Danger(FieldsRequest<'a>) = 1,
+    Details(FieldsRequest<'a>) = 2,
+    VerifyAddress(VerifyRequest<'a>) = 3,
+    VerifyPubkey(VerifyRequest<'a>) = 4,
+    Done(DoneRequest<'a>) = 5,
 }
 
-/// How the person decided a layout. Written by core, read by `modui`; apps
+/// How the person decided a request. Written by core, read by the app; apps
 /// never see it.
 ///
 /// Variants say what the person *did*, not which button did it. Only the
-/// layout's final answer crosses: what happens in its menu stays in core.
+/// request's final answer crosses: what happens in its menu stays in core.
 #[must_use]
 #[stabby::stabby]
 #[repr(u8)]
@@ -485,15 +348,18 @@ pub enum TrezorUiResult {
     /// Refused, or left without answering.
     Cancelled = 1,
 
-    // Chunk paging, answers to a `ConfirmData` chunk only. The firmware's
-    // chunk loop acts on them; `Forward` and `Backward` never reach `modui`.
-    // Unused: no screen sends them yet.
+    // Chunk paging, answers to a `Data` chunk only. The firmware's chunk loop
+    // acts on them; `Forward` and `Backward` never reach the app.
+    // WIP: P10 decides whether these survive the pulled-data protocol.
     /// Paged past the end of the chunk; the next chunk is wanted.
     Forward = 2,
     /// Paged back before the start of the chunk; the previous chunk is wanted.
     Backward = 3,
     /// Accepted the rest of the data without reading it.
     ConfirmedAll = 4,
+
+    /// The person asked to see details.
+    ShowDetails = 5,
 }
 
 /// All crypto operations that can be requested from the app via IPC.
@@ -569,11 +435,11 @@ pub enum TrezorCryptoResult<'a> {
 ///
 /// Built by `core/embed/api`; apps use `modui::progress`.
 ///
-/// The three variants are one lifecycle: `Init` opens the progress, `Step`
-/// reports work done, and `End` closes it. Core keeps the count and turns it
-/// into the bar. The app SDK pairs them with a guard that sends `End` on
-/// drop, so an app cannot leave a progress on screen for work that stopped;
-/// see the `modui` progress docs.
+/// `Init` opens the progress, `Step` reports work done, `Label` changes the
+/// text under the bar, and `End` closes it. Core keeps the count and turns it
+/// into the bar. The app SDK pairs them with a guard that sends `End` on drop,
+/// so an app cannot leave a progress on screen for work that stopped; see the
+/// `modui` progress docs.
 ///
 /// Only what the app chose travels; how the progress looks is core's.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
@@ -589,6 +455,11 @@ pub enum TrezorProgressEnum<'a> {
         /// Units of work done since the last step.
         units: u32,
     },
+    /// Changes the text under the bar while the work goes on.
+    Label {
+        /// What the work is now, such as `"Signing input 2/3"`.
+        label: StrSlice<'a>,
+    },
     End,
 }
 
@@ -597,7 +468,8 @@ impl<'a> TrezorProgressEnum<'a> {
         match self {
             TrezorProgressEnum::Init { .. } => 0,
             TrezorProgressEnum::Step { .. } => 1,
-            TrezorProgressEnum::End => 2,
+            TrezorProgressEnum::Label { .. } => 2,
+            TrezorProgressEnum::End => 3,
         }
     }
 }
@@ -697,6 +569,7 @@ mod tests {
                 "Init",
             ),
             (Step { units: 0 }.id(), "Step"),
+            (Label { label: "".into() }.id(), "Label"),
             (End.id(), "End"),
         ];
         // all IDs must be unique
@@ -705,6 +578,6 @@ mod tests {
             assert!(seen.insert(id), "duplicate id {} for variant {}", id, name);
         }
         // total count must match — add new variants here when extending the enum
-        assert_eq!(variants.len(), 3, "new variant added but test not updated");
+        assert_eq!(variants.len(), 4, "new variant added but test not updated");
     }
 }

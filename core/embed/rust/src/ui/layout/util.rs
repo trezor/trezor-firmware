@@ -96,6 +96,78 @@ impl ParagraphSource<'static> for ConfirmValueParams {
     }
 }
 
+/// How a value in a property list is drawn.
+///
+/// Contract C3 picks one from the third element of an item: a bool keeps
+/// today's meaning (`true` = mono, `false` = plain), an int is a `FieldKind`
+/// 0–5. The bool is checked first, by identity, because in Python `True == 1`,
+/// which is `FieldKind::Amount`.
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum PropKind {
+    Plain,
+    Mono,
+    Text,
+    Amount,
+    Address,
+    Data,
+    Note,
+    Warning,
+}
+
+impl PropKind {
+    fn from_field_kind(kind: i32) -> Result<Self, Error> {
+        Ok(match kind {
+            0 => Self::Text,
+            1 => Self::Amount,
+            2 => Self::Address,
+            3 => Self::Data,
+            4 => Self::Note,
+            5 => Self::Warning,
+            _ => return Err(Error::TypeError),
+        })
+    }
+}
+
+/// A model's styles for the field kinds of contract C3.
+///
+/// P4 and P5 fill this in for Eckhart and Delizia. Until then
+/// [`PropsList::new`] leaves it unset, which draws every kind in the plain
+/// value font, except mono, address and data in the mono one.
+#[derive(Copy, Clone)]
+pub struct FieldStyles {
+    pub text: &'static TextStyle,
+    pub amount: &'static TextStyle,
+    pub address: &'static TextStyle,
+    pub data: &'static TextStyle,
+    pub note: &'static TextStyle,
+    pub warning: &'static TextStyle,
+}
+
+impl FieldStyles {
+    /// A model that has not chosen styles: every kind is plain text.
+    pub const fn plain(text: &'static TextStyle) -> Self {
+        Self {
+            text,
+            amount: text,
+            address: text,
+            data: text,
+            note: text,
+            warning: text,
+        }
+    }
+
+    pub fn style(&self, kind: PropKind) -> &'static TextStyle {
+        match kind {
+            PropKind::Plain | PropKind::Text => self.text,
+            PropKind::Mono | PropKind::Address => self.address,
+            PropKind::Amount => self.amount,
+            PropKind::Data => self.data,
+            PropKind::Note => self.note,
+            PropKind::Warning => self.warning,
+        }
+    }
+}
+
 pub struct PropsList {
     items: Gc<List>,
     key_font: &'static TextStyle,
@@ -103,6 +175,9 @@ pub struct PropsList {
     value_mono_font: &'static TextStyle,
     key_value_padding: i16,
     props_padding: i16,
+    /// A model's styles for contract C3's field kinds; `None` until P4 and P5
+    /// fill theirs in.
+    field_styles: Option<FieldStyles>,
 }
 
 impl PropsList {
@@ -121,7 +196,42 @@ impl PropsList {
             value_mono_font,
             key_value_padding,
             props_padding,
+            field_styles: None,
         })
+    }
+
+    /// Draws contract C3's int kinds with the model's own styles.
+    pub fn with_field_styles(mut self, styles: FieldStyles) -> Self {
+        self.field_styles = Some(styles);
+        self
+    }
+
+    /// The style for a value, from the third element of its item, and whether
+    /// that kind may hold raw bytes.
+    ///
+    /// Contract C3: a bool keeps today's meaning (`true` = mono, `false` =
+    /// plain); an int is a `FieldKind` 0–5. The bool is checked first, by
+    /// identity, because in Python `True == 1`, which is `FieldKind::Amount`.
+    fn value_style(&self, kind: Obj) -> Result<(&'static TextStyle, bool), Error> {
+        if kind == Obj::const_true() {
+            return Ok((self.value_mono_font, true));
+        }
+        if kind == Obj::const_false() {
+            return Ok((self.value_font, false));
+        }
+
+        let kind = PropKind::from_field_kind(i32::try_from(kind)?)?;
+        let style = match self.field_styles {
+            Some(styles) => styles.style(kind),
+            // WIP: P4 and P5 give their model's styles. Until then every
+            // kind is plain, and mono, address and data keep the mono font.
+            None => match kind {
+                PropKind::Mono | PropKind::Address | PropKind::Data => self.value_mono_font,
+                _ => self.value_font,
+            },
+        };
+        let allow_bytes = matches!(kind, PropKind::Mono | PropKind::Address | PropKind::Data);
+        Ok((style, allow_bytes))
     }
 
     pub fn new(obj: Obj) -> Result<Self, Error> {
@@ -145,10 +255,10 @@ impl ParagraphSource<'static> for PropsList {
     fn at(&self, index: usize, offset: usize) -> Paragraph<'static> {
         let block = move || {
             let entry = self.items.get(index / 2)?;
-            let [key, value, value_is_mono]: [Obj; 3] = iter_into_array(entry)?;
-            let value_is_mono: bool = bool::try_from(value_is_mono)?;
+            let [key, value, kind]: [Obj; 3] = iter_into_array(entry)?;
             let obj: Obj;
             let style: &TextStyle;
+            let allow_bytes: bool;
 
             if index.is_multiple_of(2) {
                 if !key.is_str() && key != Obj::const_none() {
@@ -156,15 +266,9 @@ impl ParagraphSource<'static> for PropsList {
                 }
                 style = self.key_font;
                 obj = key;
+                allow_bytes = false;
             } else {
-                if value_is_mono {
-                    style = self.value_mono_font;
-                } else {
-                    if value.is_bytes() {
-                        return Err(Error::TypeError);
-                    }
-                    style = self.value_font;
-                }
+                (style, allow_bytes) = self.value_style(kind)?;
                 obj = value;
             };
 
@@ -178,6 +282,9 @@ impl ParagraphSource<'static> for PropsList {
                 let content: StrBuffer = obj.try_into()?;
                 Paragraph::new(style, content.skip_prefix(offset))
             } else if obj.is_bytes() {
+                if !allow_bytes {
+                    return Err(Error::TypeError);
+                }
                 let content = hexlify_bytes(obj, offset, MAX_HEX_CHARS_ON_SCREEN)?;
                 Paragraph::new(style, content)
             } else {
