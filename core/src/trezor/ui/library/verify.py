@@ -6,6 +6,12 @@ are all drawn by the model's `flow_get_address` and `flow_get_pubkey`. So this i
 the one place the driver uses the stage-A layout calls rather than the new field
 kinds: a single value has no fields to carry, and the flow around it is already the
 same one core's own apps use.
+
+WIP: `flow_get_address` and `flow_get_pubkey` are `NotImplementedError` on Bolt
+and Caesar (`layout_bolt/ui_firmware.rs`, `layout_caesar/ui_firmware.rs`), so
+neither screen runs there. The pinned stage-A exception is
+`trezor.ui.layouts.show_address` / `show_pubkey`, which do work on all four
+models.
 """
 
 import trezorui_api

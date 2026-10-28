@@ -9,6 +9,11 @@ because this screen is the same on every model: the check mark, the title, the
 description and the timeout. Only `name` differs between callers — `done` names the
 step, so a host sees the ButtonRequest, while a verified address has already sent
 its own and asks for none.
+
+WIP: `show_success` is `NotImplementedError` on Caesar
+(`layout_caesar/ui_firmware.rs`), so `done` does not run there. A Caesar app would
+probably be stopped before it answers the host. `show_info` with `time_ms` is the
+timeout screen Bolt and Caesar do have.
 """
 
 import trezorui_api
