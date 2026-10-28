@@ -132,6 +132,5 @@ pub fn details<'a>(step: &'a str, title: &'a str, fields: &'a [Field<'a>]) -> Re
         TrezorUiResult::ShowDetails => Ok(Details::Show),
         TrezorUiResult::Confirmed => Ok(Details::Skip),
         TrezorUiResult::Cancelled => Err(Error::Cancelled),
-        _ => Err(Error::DataError("unexpected UI answer")),
     }
 }

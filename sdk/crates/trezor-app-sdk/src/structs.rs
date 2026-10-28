@@ -256,8 +256,8 @@ pub enum FieldKind {
 ///
 /// `label` is `None` for [`FieldKind::Note`] and [`FieldKind::Warning`].
 /// `value` is UTF-8 for the text kinds and the bytes themselves for
-/// [`FieldKind::Data`]. `len` is `value.len()`; for `Data` after P10 it is the
-/// total length core pulls, and the value travels empty.
+/// [`FieldKind::Data`]. `len` is `value.len()`; for `Data` it is the total
+/// length core pulls, and the value crosses empty.
 #[stabby::stabby]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct WireField<'a> {
@@ -348,16 +348,8 @@ pub enum TrezorUiResult {
     /// Refused, or left without answering.
     Cancelled = 1,
 
-    // Chunk paging, answers to a `Data` chunk only. The firmware's chunk loop
-    // acts on them; `Forward` and `Backward` never reach the app.
-    // WIP: P10 decides whether these survive the pulled-data protocol.
-    /// Paged past the end of the chunk; the next chunk is wanted.
-    Forward = 2,
-    /// Paged back before the start of the chunk; the previous chunk is wanted.
-    Backward = 3,
-    /// Accepted the rest of the data without reading it.
-    ConfirmedAll = 4,
-
+    // 2, 3 and 4 were the old inline-data paging answers. Data is pulled
+    // now, so they are reserved and never reused.
     /// The person asked to see details.
     ShowDetails = 5,
 }

@@ -1280,12 +1280,19 @@ fn field_kind(kind: &Archived<FieldKind>) -> (u8, bool) {
 
 /// One fact of a request, as `(kind, label, value)`: `kind` is the wire's
 /// `FieldKind` discriminant, `label` is `None` for notes and warnings, and
-/// `value` is `str` for the text kinds and `bytes` for `Data`.
+/// `value` is `str` for the text kinds and `(total, offset, chunk)` for `Data`.
+///
+/// A `Data` value travels as its length alone, so its chunk is empty here: the
+/// driver pulls each chunk from the app while the person pages.
 #[cfg(feature = "app_loading")]
 fn obj_from_field(field: &Archived<WireField<'_>>) -> Result<Obj, Error> {
     let (kind, is_data) = field_kind(&field.kind);
     let value = if is_data {
-        Obj::try_from(field.value.as_ref())?
+        Obj::try_from((
+            Obj::try_from(u64::from(field.len.to_native()))?,
+            Obj::from(0u8),
+            Obj::try_from(field.value.as_ref())?,
+        ))?
     } else {
         // The text kinds carry UTF-8, as the app wrote it.
         let text = core::str::from_utf8(field.value.as_ref())
@@ -1339,13 +1346,14 @@ fn obj_from_extras(archived: &Archived<Slice<WireExtra>>) -> Result<Obj, Error> 
 /// flows use.
 ///
 /// Returns `(kind, step, ...)`: `kind` is the `TrezorUiEnum` discriminant,
-/// `step` names the step as the app gave it (the driver prefixes the app's name),
-/// and the rest follows the variant: a review is `(kind, step, title, fields,
-/// extras, is_final)`, a danger or details is `(kind, step, title, fields)`, a
-/// verify is `(kind, step, value, account, path)`, and a done is `(kind, step,
-/// text)`. `fields` is a list of `(kind, label, value)` with the wire's
-/// `FieldKind` as an int, no label for notes and warnings, and bytes only for
-/// `Data`; `extras` is a list of `(label, fields)`.
+/// `step` names the step as the app gave it (the driver prefixes the app's
+/// name), and the rest follows the variant: a review is `(kind, step, title,
+/// fields, extras, is_final)`, a danger or details is `(kind, step, title,
+/// fields)`, a verify is `(kind, step, value, account, path)`, and a done is
+/// `(kind, step, text)`. `fields` is a list of `(kind, label, value)` with the
+/// wire's `FieldKind` as an int, no label for notes and warnings, and for
+/// `Data` a `(total, offset, chunk)` triple whose chunk is empty until the
+/// driver pulls it; `extras` is a list of `(label, fields)`.
 ///
 /// Only what the app chose arrives; every other parameter of the screens is
 /// the driver's, the same for every app.
@@ -1414,8 +1422,10 @@ extern "C" fn new_deserialize_ui_message(
     unimplemented!()
 }
 
-/// Serializes a UI result into the bytes the extapp driver sends back to
-/// the app. `result` is a `TrezorUiResult` discriminant.
+/// Serializes a UI decision into the bytes the extapp driver sends back to
+/// the app. `result` is a `TrezorUiResult` decision discriminant: 0 confirmed,
+/// 1 cancelled, or 5 show details. Chunk requests are core's own, never the
+/// driver's, so they cannot be encoded here.
 #[cfg(feature = "app_loading")]
 extern "C" fn new_encode_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
@@ -1426,10 +1436,6 @@ extern "C" fn new_encode_ui_result(n_args: usize, args: *const Obj, kwargs: *mut
         let msg = match result {
             0 => TrezorUiResult::Confirmed,
             1 => TrezorUiResult::Cancelled,
-            // Chunk paging, WIP: P10 decides whether these survive.
-            2 => TrezorUiResult::Forward,
-            3 => TrezorUiResult::Backward,
-            4 => TrezorUiResult::ConfirmedAll,
             5 => TrezorUiResult::ShowDetails,
             _ => return Err(Error::ValueError(c"unknown UI result")),
         };

@@ -1,9 +1,12 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 import trezorui_api
-from trezor import loop
+import ustruct  # pyright: ignore[reportMissingImports]
+from trezor import io, loop
 from trezor.ui import Shutdown
 from trezor.ui.library import CANCELLED, run
+from trezor.ui.library.fields import set_data_puller
 from trezor.wire import ActionCancelled, context
 from trezor.wire.errors import DataError, Error
 
@@ -17,9 +20,16 @@ if TYPE_CHECKING:
 
     from .session import Session
 
+# Message id of a chunk request on the UI service, as the app-side shim reads it.
+_MSG_ID_CHUNK = const(1)
+
+# how long Core waits for the app's next chunk
+_IPC_TIMEOUT_MS = const(20000)
+
 
 async def handle(session: Session, msg: IpcMessage) -> None:
     """Show the screen the app asked for and send the app the person's answer."""
+    set_data_puller(_data_puller(session))
     try:
         result = await run(
             trezorui_api.deserialize_ui_message(data=bytes(msg.data)),
@@ -42,6 +52,8 @@ async def handle(session: Session, msg: IpcMessage) -> None:
         # The request cannot be drawn. Answering would leave the app waiting on
         # a screen that never existed, so the app stops.
         session.die(DataError(f"Cannot show the app's screen: {e}"))
+    finally:
+        set_data_puller(None)
     if __debug__:
         log.debug(__name__, f"UI interaction result: {result}")
 
@@ -55,3 +67,27 @@ async def handle(session: Session, msg: IpcMessage) -> None:
         session.send(SERVICE_UI, 0, answer)
     except Exception as e:
         session.die(DataError(f"Cannot send the screen's answer: {e}"))
+
+
+def _data_puller(session: Session):
+    """The driver's way to ask the app for a `Data` chunk.
+
+    Core sends the range it wants and the app answers with those bytes. The
+    app's own bytes never leave its memory in full, and the answer doubles as
+    the wait for core's next request or its decision.
+    """
+
+    async def pull(field: int, offset: int, length: int) -> bytes:
+        session.send(
+            SERVICE_UI,
+            _MSG_ID_CHUNK,
+            ustruct.pack("<HII", field, offset, length),
+        )
+        msg = await loop.wait(io.IPC2_EVENT | io.POLL_READ, timeout_ms=_IPC_TIMEOUT_MS)
+        if msg.service != SERVICE_UI or msg.message_id != _MSG_ID_CHUNK:
+            session.die(DataError("Unexpected message while pulling data"))
+        # The app's `ipc_call` is still waiting; core's next message — another
+        # request, or the decision — is its answer.
+        return bytes(msg.data)
+
+    return pull

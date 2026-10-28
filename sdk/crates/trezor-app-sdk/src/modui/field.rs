@@ -7,13 +7,6 @@
 use crate::structs::{FieldKind, OptStrSlice, Slice, WireField};
 use crate::{Error, Result};
 
-/// How many bytes a [`data`](Field::data) field may carry inline.
-///
-/// WIP: P10 replaces this cap: a `data` field will cross the wire with its
-/// length only, and core will pull the bytes from the app in chunks while the
-/// person pages.
-pub(crate) const MAX_INLINE_DATA: usize = 1024;
-
 /// One thing the person reads: a label and a value, or a sentence on its own.
 ///
 /// What a fact *is* decides how it looks, on every model; the app never picks a
@@ -103,9 +96,6 @@ impl<'a> Field<'a> {
     /// while the person pages, so the app hands over the whole value and never
     /// learns how many chunks it took.
     ///
-    /// WIP: until P10 the bytes travel inline, capped at 1024 bytes; a
-    /// longer value is [`Error::ValueError`](crate::Error::ValueError).
-    ///
     /// # Example
     ///
     /// ```no_run
@@ -183,9 +173,10 @@ pub(crate) fn wire_fields<'a>(fields: &'a [Field<'a>]) -> Slice<'a, WireField<'a
 }
 
 /// Checks what a request can carry before it is built: at most one
-/// [`data`](Field::data) field, and only as many bytes as travel inline.
+/// [`data`](Field::data) field.
 ///
-/// WIP: once core pulls the data (P10), only the count stays a limit here.
+/// The bytes themselves are not limited: core pulls them from the app, so the
+/// request only carries their length.
 pub(crate) fn check_fields(fields: &[Field<'_>]) -> Result<()> {
     let mut data = 0;
     for field in fields {
@@ -193,9 +184,6 @@ pub(crate) fn check_fields(fields: &[Field<'_>]) -> Result<()> {
             continue;
         }
         data += 1;
-        if field.byte_len() as usize > MAX_INLINE_DATA {
-            return Err(Error::ValueError("data field too long"));
-        }
     }
     if data > 1 {
         return Err(Error::DataError("more than one data field"));
@@ -234,17 +222,15 @@ mod tests {
     }
 
     #[test]
-    fn data_longer_than_the_inline_cap_is_refused() {
-        let bytes = [0u8; MAX_INLINE_DATA + 1];
+    fn data_of_any_length_is_accepted() {
+        let bytes = [0u8; 4096];
         let fields = [Field::data("a", &bytes)];
-        assert!(matches!(
-            check_fields(&fields),
-            Err(Error::ValueError("data field too long"))
-        ));
+        assert!(check_fields(&fields).is_ok());
+        assert_eq!(fields[0].byte_len(), 4096);
     }
 
     #[test]
-    fn one_short_data_field_is_accepted() {
+    fn one_data_field_beside_text_is_accepted() {
         let fields = [Field::data("a", &[1, 2, 3]), Field::text("b", "c")];
         assert!(check_fields(&fields).is_ok());
     }

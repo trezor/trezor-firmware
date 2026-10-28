@@ -161,10 +161,6 @@
 //! Neither is the app's: an app hands over the whole value and gets one
 //! outcome, and never learns how many chunks or pages it took.
 //!
-//! WIP: until core pulls the data itself (P10), a `data` field travels inline
-//! and is capped at 1024 bytes; a longer one is
-//! [`crate::Error::ValueError`].
-//!
 //! # Progress
 //!
 //! Not everything the app shows waits for the person. While the app works —
@@ -251,8 +247,8 @@
 //
 // So a new layout means a `structs` type and its `TrezorUiEnum` variant, an
 // arm in core's dispatch, and the layout's function here. Every layout goes
-// through `UiV1::ui_call`: a `data` field is pulled by core from the app's
-// slice until P10 lands.
+// through `UiV1::ui_call`: a `data` field crosses as its length, and core
+// pulls the bytes from the app's slice while the person pages.
 //
 // ButtonRequests: the app names the step and nothing else. Core prefixes the
 // app's identity, its image ID (`testapp.trezor.io`), and adds the `/menu` and

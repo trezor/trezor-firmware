@@ -17,14 +17,17 @@ from trezor.ui.library.fields import (
     ADDRESS,
     AMOUNT,
     DATA,
+    DATA_CHUNK_BYTES,
     NOTE,
     TEXT,
     WARNING,
+    Pager,
     button_request_name,
     details_items,
     has_warning,
     items,
     notes,
+    set_data_puller,
     values,
 )
 from trezor.wire import ActionCancelled, context
@@ -38,7 +41,7 @@ APP = "tron.trezor.com"
 TEXT_FACT = (TEXT, "Recipient", "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE")
 AMOUNT_FACT = (AMOUNT, "Amount", "1.5 TRX")
 ADDRESS_FACT = (ADDRESS, "From", "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE")
-DATA_FACT = (DATA, "Data", b"\x01\x02\xff")
+DATA_FACT = (DATA, "Data", (3, 0, b"\x01\x02\xff"))
 NOTE_FACT = (NOTE, None, "Only send to people you trust.")
 WARNING_FACT = (WARNING, None, "This cannot be undone.")
 
@@ -116,7 +119,7 @@ class TestItems(unittest.TestCase):
             ],
         )
 
-    def test_data_value_stays_bytes(self):
+    def test_data_value_is_its_current_chunk(self):
         # only the renderers turn data into hex; the item keeps the bytes
         self.assertEqual(items([DATA_FACT]), [(DATA_FACT[1], b"\x01\x02\xff", DATA)])
 
@@ -178,6 +181,70 @@ class TestNotes(unittest.TestCase):
 
     def test_empty(self):
         self.assertEqual(notes([TEXT_FACT]), "")
+
+
+class TestPager(unittest.TestCase):
+    """`Pager` pulls a `data` fact one chunk at a time, and only when asked."""
+
+    def puller(self, data: bytes, pulls: list):
+        async def pull(index: int, offset: int, length: int) -> bytes:
+            pulls.append((index, offset, length))
+            return data[offset : offset + length]
+
+        return pull
+
+    def test_no_data_is_one_page(self):
+        pulls = []
+        set_data_puller(self.puller(b"", pulls))
+        try:
+            pages = Pager([TEXT_FACT])
+            self.assertEqual(await_result(pages.next()), ([TEXT_FACT], True))
+            self.assertIsNone(await_result(pages.next()))
+        finally:
+            set_data_puller(None)
+        self.assertEqual(pulls, [])
+
+    def test_data_is_pulled_page_by_page(self):
+        data = bytes(range(200)) * 4  # 800 bytes: 384 + 384 + 32
+        pulls = []
+        set_data_puller(self.puller(data, pulls))
+        try:
+            pages = Pager([(DATA, "Data", (len(data), 0, b""))])
+            chunked, last = await_result(pages.next())
+            self.assertEqual(chunked[0][2], data[:DATA_CHUNK_BYTES])
+            self.assertFalse(last)
+            chunked, last = await_result(pages.next())
+            self.assertEqual(
+                chunked[0][2], data[DATA_CHUNK_BYTES : 2 * DATA_CHUNK_BYTES]
+            )
+            self.assertFalse(last)
+            chunked, last = await_result(pages.next())
+            self.assertEqual(chunked[0][2], data[2 * DATA_CHUNK_BYTES :])
+            self.assertTrue(last)
+            self.assertIsNone(await_result(pages.next()))
+        finally:
+            set_data_puller(None)
+        self.assertEqual(
+            pulls,
+            [
+                (0, 0, DATA_CHUNK_BYTES),
+                (0, DATA_CHUNK_BYTES, DATA_CHUNK_BYTES),
+                (0, 2 * DATA_CHUNK_BYTES, len(data) - 2 * DATA_CHUNK_BYTES),
+            ],
+        )
+
+    def test_an_extra_starts_at_its_flat_index(self):
+        data = bytes(400)
+        pulls = []
+        set_data_puller(self.puller(data, pulls))
+        try:
+            pages = Pager([(DATA, "Data", (len(data), 0, b""))], 2)
+            chunked, last = await_result(pages.next())
+            self.assertEqual(chunked[0][2], data[:DATA_CHUNK_BYTES])
+            self.assertFalse(last)
+        finally:
+            set_data_puller(None)
+        self.assertEqual(pulls, [(2, 0, DATA_CHUNK_BYTES)])
 
 
 class TestAppId(unittest.TestCase):
@@ -372,16 +439,13 @@ class TestDriver(unittest.TestCase):
                 await_result(run(REVIEW, APP))
             self.review.error = None
 
-    # Core does not check the review limits yet: the app-side SDK refuses more
-    # than five extras and more than one data field, and the driver draws what
-    # it is given. Unskip once `confirm.review` validates them.
-    @unittest.skip("core does not enforce the review limits; the SDK does")
+    # The SDK refuses the same limits before sending, so an app never reaches
+    # these; core checks again rather than trust it.
     def test_six_extras_is_data_error(self):
         extras = [(f"extra {i}", []) for i in range(6)]
         with self.assertRaises(DataError):
             await_result(run((0, "send", "Send", FACTS, extras, False), APP))
 
-    @unittest.skip("core does not enforce the review limits; the SDK does")
     def test_two_data_fields_is_data_error(self):
         facts = [DATA_FACT, DATA_FACT]
         with self.assertRaises(DataError):
