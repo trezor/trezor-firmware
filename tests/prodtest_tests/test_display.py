@@ -60,3 +60,45 @@ def test_display_set_backlight_rejects_out_of_range(
         client, ProdtestCommand(Cmd.DISPLAY_SET_BACKLIGHT, "256")
     )
     assert resp.error_code == CLI_ERROR_INVALID_ARG
+
+
+def test_display_shapes(client: ProdtestClient) -> None:
+    """display-shapes should render at the default and at an explicit angle."""
+    client.command_ok(ProdtestCommand(Cmd.DISPLAY_SHAPES))
+    resp = client.command_ok(ProdtestCommand(Cmd.DISPLAY_SHAPES, "135"))
+    assert resp.traces is not None
+    assert any("Frame time" in line for line in resp.traces)
+
+
+def test_display_shapes_rejects_out_of_range(client: ProdtestClient) -> None:
+    """An angle of 360 degrees or more should be rejected."""
+    resp = assert_command_fails(client, ProdtestCommand(Cmd.DISPLAY_SHAPES, "360"))
+    assert resp.error_code == CLI_ERROR_INVALID_ARG
+
+
+def test_display_shapes_spin(client: ProdtestClient) -> None:
+    """display-shapes-spin should render a full turn and report frame times."""
+    resp = client.command_ok(ProdtestCommand(Cmd.DISPLAY_SHAPES_SPIN, "45"))
+    assert resp.traces is not None
+    assert any("8 frames" in line for line in resp.traces)
+
+
+def test_display_stripes(client: ProdtestClient) -> None:
+    """display-stripes should animate the requested number of frames."""
+    resp = client.command_ok(ProdtestCommand(Cmd.DISPLAY_STRIPES, "5", "7"))
+    assert resp.traces is not None
+    assert any("5 frames" in line for line in resp.traces)
+
+
+def test_display_stripes_rejects_bad_speed(client: ProdtestClient) -> None:
+    """display-stripes should reject a speed out of range."""
+    resp = assert_command_fails(client, ProdtestCommand(Cmd.DISPLAY_STRIPES, "5", "0"))
+    assert resp.error_code == CLI_ERROR_INVALID_ARG
+
+
+def test_display_shapes_bench(client: ProdtestClient) -> None:
+    """display-shapes-bench should report all measurements."""
+    resp = client.command_ok(ProdtestCommand(Cmd.DISPLAY_SHAPES_BENCH))
+    assert resp.traces is not None
+    # 14 measurements, plus the CPU clock on hardware
+    assert len(resp.traces) >= 14

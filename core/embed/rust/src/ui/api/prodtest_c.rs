@@ -8,7 +8,7 @@ use crate::trezorhal::layout_buf::{c_layout_t, LayoutBuffer};
 use crate::trezorhal::sysevent::{parse_event, sysevents_t};
 #[cfg(feature = "touch")]
 use crate::ui::geometry::{Offset, Point, Rect};
-use crate::ui::ui_prodtest::{ProdtestLayoutType, ProdtestUI};
+use crate::ui::ui_prodtest::{ProdtestLayoutType, ProdtestUI, BENCH_RESULTS};
 use crate::ui::ModelUI;
 #[cfg(feature = "touch")]
 use crate::ui::{event::TouchEvent, layout::simplified::touch_unpack};
@@ -62,6 +62,23 @@ extern "C" fn screen_prodtest_border() {
 extern "C" fn screen_prodtest_bars(colors: *const cty::c_char, colors_len: u8) {
     let colors = unsafe { CSlice::from_ptr_and_len(colors, colors_len as usize) };
     ModelUI::screen_prodtest_bars(colors.as_ascii_str().unwrap_or_default());
+}
+
+#[no_mangle]
+extern "C" fn screen_prodtest_shapes(angle: cty::int16_t) -> cty::uint32_t {
+    ModelUI::screen_prodtest_shapes(f32::from(angle))
+}
+
+#[no_mangle]
+extern "C" fn screen_prodtest_stripes(pos: cty::uint16_t) -> cty::uint32_t {
+    ModelUI::screen_prodtest_stripes(pos)
+}
+
+#[no_mangle]
+unsafe extern "C" fn screen_prodtest_shapes_bench(results: *mut cty::uint32_t) {
+    // SAFETY: caller must provide space for `BENCH_RESULTS` values
+    let results = unsafe { &mut *results.cast::<[u32; BENCH_RESULTS]>() };
+    ModelUI::screen_prodtest_shapes_bench(results);
 }
 
 #[no_mangle]

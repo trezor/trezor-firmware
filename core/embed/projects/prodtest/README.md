@@ -391,6 +391,67 @@ display-bars RxGxBx
 OK
 ```
 
+### display-shapes
+Draws a 2x2 grid of rotated rectangles with rounded corners (filled, outlined, bordered and sharp) and reports the frame time, both in total and spent drawing the shapes only (the latter is meaningful only on displays with a framebuffer).
+
+`display-shapes [<angle>]`
+
+* `angle` - Rotation in degrees (0-359), default 30.
+
+Example:
+```
+display-shapes 20
+# Drawing shapes rotated by 20 degrees...
+# Frame time <frame> us, shapes <shapes> us
+OK
+```
+
+### display-shapes-spin
+Rotates the `display-shapes` screen through a full turn and reports frame time statistics.
+
+`display-shapes-spin [<step>]`
+
+* `step` - Rotation step in degrees (1-90), default 2.
+
+Example:
+```
+display-shapes-spin 2
+# Spinning shapes by 2 degree steps...
+# 180 frames, frame time avg <avg> us, min <min> us, max <max> us
+# shapes only avg <avg> us, max <max> us
+OK
+```
+
+### display-stripes
+Animates ten white rounded stripes at 45 degrees covering the whole screen, sliding diagonally back and forth along their length (odd stripes in the opposite direction to even ones), and reports frame time statistics like `display-shapes-spin`. The animation repeats every 240 pixels of movement.
+
+`display-stripes [<frames>] [<speed>]`
+
+* `frames` - Number of frames to draw (1-10000), default 240.
+* `speed` - Movement in pixels per frame along each axis (1-60), default 4.
+
+Example:
+```
+display-stripes 240 4
+# Animating stripes for 240 frames at 4 px/frame...
+# 240 frames, frame time avg <avg> us, min <min> us, max <max> us
+# stripes only avg <avg> us, max <max> us
+OK
+```
+
+### display-shapes-bench
+Measures the drawing primitives used by `display-shapes` directly on the framebuffer: single pixel writes and blends, DMA fills of various sizes (each followed by a pixel write, which waits for the fill to finish), one evaluation of the shape's distance function and each of the four shapes. The background clear started before drawing is reported separately, and the pixel writes are repeated on a small bitmap in regular RAM for comparison. On hardware, the CPU clock is reported too.
+
+Example:
+```
+display-shapes-bench
+# background clear wait [us]: <us>
+# draw_pixel [ns]: <ns>
+...
+# sharp shape [us]: <us>
+OK
+```
+
 ### display-set-backlight
 Adjusts the display backlight level.
 

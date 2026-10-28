@@ -20,4 +20,14 @@ void screen_prodtest_touch(int16_t x0, int16_t y0, int16_t w, int16_t h);
 
 void screen_prodtest_border(void);
 
+// Returns the time in microseconds spent drawing the shapes
+uint32_t screen_prodtest_shapes(int16_t angle);
+
+// Draws the stripes animation moved by `pos` pixels, the animation repeats
+// every 240 pixels. Returns the time in microseconds spent drawing the stripes
+uint32_t screen_prodtest_stripes(uint16_t pos);
+
+// Measures the drawing primitives, fills 14 results (see ui_prodtest.rs)
+void screen_prodtest_shapes_bench(uint32_t* results);
+
 void screen_prodtest_draw(uint32_t* events, uint32_t events_len);
