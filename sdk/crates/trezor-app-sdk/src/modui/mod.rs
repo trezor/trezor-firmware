@@ -1,6 +1,6 @@
-//! Building-block UI library: one typed function per screen an app can show.
+//! Building-block UI library: one typed function per decision an app asks.
 //!
-//! An app decides which layouts to call and in what order, and what each one
+//! An app decides which decisions to ask and in what order, and what each one
 //! says. It does not decide how anything looks or behaves: that is an
 //! implementation detail of this library and core, invisible to the app.
 //!
@@ -26,16 +26,19 @@
 //!
 //! - **a layout** — one typed function of this library: one call, one
 //!   question, one answer (see [outcomes](#outcomes)), and the call does
-//!   not return until the person has answered. The app's only way to show anything.
+//!   not return until the person has answered. The app's only way to show
+//!   anything.
+//! - **a fact** — one thing the person reads, a [`Field`]. What it *is*
+//!   decides how it looks; see [facts](#facts).
 //! - **a screen** — what the person sees at one moment. A layout may show
 //!   several — its own, the extras menu, pages of content; the app never
 //!   counts them.
 //! - **the flow** — the app's sequence of layouts, in the order it calls
 //!   them. The app owns it; this library never sees past one layout.
-//! - **a step name** — the `br` string naming one step of the flow for the
-//!   host; see [step names](#step-names).
+//! - **a step name** — the name of one step of the flow for the host; see
+//!   [step names](#step-names).
 //! - **extras** — labelled pieces of additional information reachable from
-//!   a layout's screen; see [extras](#extras-and-the-way-out).
+//!   a review's screen; see [extras](#extras-and-the-way-out).
 //! - **a session** — one run of the app, from the host's request to its
 //!   response. A refusal ends it.
 //!
@@ -43,78 +46,45 @@
 //!
 //! | Layout | Shows | Extras |
 //! |---|---|---|
-//! | [`confirm::action`] | a question about an action | yes |
-//! | [`confirm::value`] | one value, e.g. an address or an amount | yes |
-//! | [`confirm::properties`] | a list of key/value facts | yes |
-//! | [`confirm::data`] | raw bytes, as hex, of any length | yes |
-//! | [`confirm::summary`] | the closing amount and fee of a transaction | yes |
-//! | [`notice::show`] | a notice of some [`notice::Severity`] | depends on the severity |
+//! | [`review`] | facts to read before a yes | yes |
+//! | [`danger`] | facts that make going on risky | — |
+//! | [`details`] | facts the person may skip | — |
+//! | [`verify_address`] | one of the person's own addresses | — |
+//! | [`verify_pubkey`] | one of the person's own public keys | — |
+//! | [`done`] | the end of the flow | — |
 //!
-//! Every layout is one function taking every parameter, and does not return until the
-//! person answers.
+//! Every layout is one function taking every parameter, and does not return
+//! until the person answers — except [`done`], which returns at once.
 //!
 //! WIP: possible additional layouts, none decided:
 //!
 //! ```text
-//! show_qr          — a value as a QR code, to scan (needs a wire extension)
 //! request_number   — the person enters a number (needs a wire extension)
 //! choose           — the person picks one of a list; a decisive screen, not
 //!                    the navigational extras menu, and collides with the
 //!                    no-app-menus rule — decide that boundary explicitly
 //! ```
 //!
+//! # Facts
 //!
-//! # Showing an address
-//!
-//! There is no `show_address` layout: an app shows an address as
-//! [`confirm::value`] with [`confirm::ValueKind::Address`], passing the account and
-//! derivation path in `extras`.
-//!
-//! WIP: deliberate, and open to discussion. An address is a special case:
-//! core's own receive screen is a multi-screen flow — chunked address, QR,
-//! account info — whose refusal means a suspected mismatch, not a change of
-//! mind. This library cannot express that flow, and refuses to imply it. The
-//! QR view is therefore unsupported for now; it returns when the wire can
-//! carry a QR view of its own.
-//!
-//! # Long content
-//!
-//! Content can be longer than one screen, and two different things split it,
-//! each for its own reason:
-//!
-//! - **Chunking** is the firmware's, and exists because core's memory is
-//!   limited: long data — the bytes given to [`confirm::data`] — is cut into
-//!   chunks so core never holds a whole blob at once, and each chunk is sent to
-//!   core as a request of its own. It happens behind the layout's one call,
-//!   outside the app.
-//! - **Pagination** is core's, and exists because the screen is small. Core
-//!   splits whatever one request carries across as many screens as it takes
-//!   — a screen holds a few hundred bytes at most, on the largest model — as
-//!   the person scrolls.
-//!
-//! Neither is the app's: an app hands over the whole value and gets one
-//! outcome, and never learns how many chunks or pages it took.
-//!
-//! WIP: today the two meet only at a chunk's edge — each chunk is shown on
-//! its own, core pages within it, and the person's yes on its last page
-//! moves to the next chunk. The direction is one continuous read: the screen
-//! says when it is paging towards the edge of the chunk it holds, and the
-//! next chunk is fetched before the person gets there — from the app, or
-//! through the app from the host — so content of any length reads as one
-//! document. The replies for it exist (`Forward`, `Backward` and
-//! `ConfirmedAll` in `TrezorUiResult`) and the chunk loop in `core/embed/api`
-//! follows them, but no screen sends them yet, and core cannot count pages
-//! across chunks without the total length upfront.
+//! Every layout that asks takes its content as [`Field`]s. The constructor
+//! names what the value *is* — words, a sum, something to compare character
+//! by character, raw bytes, a note, a warning — and core decides how that kind
+//! looks on every model: its styling, its grouping, its paging and its font.
+//! The app never picks a style, and one list may mix all six kinds.
 //!
 //! # Outcomes
 //!
 //! What a layout returns depends on what kind of layout it is:
 //!
-//! - **A confirmation** ([`confirm`]) and **a notice** ([`notice::show`])
-//!   return `Result<()>`: `Ok(())` when the person said yes or moved on,
-//!   and `Err(`[`crate::Error::Cancelled`]`)` when they backed out, by
-//!   whatever way out the model offers. A notice answers `Cancelled` only
-//!   where it offers a way back out.
+//! - **[`review`], [`danger`], [`verify_address`] and [`verify_pubkey`]**
+//!   return `Result<()>`: `Ok(())` when the person said yes, and
+//!   `Err(`[`crate::Error::Cancelled`]`)` when they refused, by whatever
+//!   way out the model offers.
+//! - **[`details`]** returns `Result<`[`Details`]`>`: `Show` when the person
+//!   asked for the details, `Skip` when they accepted without them, and
+//!   `Err(Cancelled)` when they refused.
+//! - **[`done`]** returns nothing: it is the last screen of the flow.
 //! - **A progress** ([`progress`]) returns what the work returned.
 //!
 //! A cancel is an `Err` so that `?` stops the flow on it: nothing after the
@@ -123,19 +93,18 @@
 //! nothing to write and nothing to forget:
 //!
 //! ```text
-//! confirm::action(..)?;
+//! modui::review("send", "Send", &facts).confirm()?;
 //! ```
 //!
-//! Where backing out is not the end of the flow, match it:
+//! Where refusing is not the end of the flow, match it:
 //!
 //! ```text
-//! match confirm::action(..) {
-//!     Ok(()) => { /* yes */ }
+//! match modui::details("message", "Confirm message", &facts) {
+//!     Ok(Details::Show) => { /* the person wants the details */ }
+//!     Ok(Details::Skip) => { /* they accepted without them */ }
 //!     Err(_) => { /* no, carry on */ }
 //! }
 //! ```
-//!
-//! A cancel is the only `Err`: a failure ends the app (see [errors](#errors)).
 //!
 //! How the person got there — which page they were on, whether they opened
 //! the extras, which button they pressed — is never reported: it happens in
@@ -143,72 +112,89 @@
 //!
 //! # Step names
 //!
-//! Every layout takes a *step name*, the `br` parameter: the name
-//! the host sees for this screen, such as `"tron/send"` or
-//! `"tron/approve/amount"`. Only the app knows its flow, so only the app can
-//! name its steps. Use `"<app>/<step>"`, keep it stable across releases, and
-//! give each distinct screen its own name — hosts and tests match on it.
+//! Every layout takes a *step name*: the name the host sees for this screen,
+//! relative to the app, such as `"send"` or `"approve/amount"`. Only the app
+//! knows its flow, so only the app can name its steps. Keep it stable across
+//! releases, and give each distinct screen its own name — hosts and tests match
+//! on it.
 //!
-//! Core adds to it, and the app should not: screens that exist only because a
-//! layout offered extras are named after the layout, with `/menu` and
-//! `/details` appended.
+//! Core adds the app's name in front, and the app should not: `"send"` reaches
+//! the host as `"tron/send"`. Screens that exist only because a review
+//! offered extras are named after the review, with `/menu` and `/details`
+//! appended.
 //!
 //! # Extras and the way out
 //!
-//! Every layout takes `extras`, a list of labelled [`ExtraItem`]s: more that
-//! the person may want to see, such as the account a payment comes from. They
-//! travel with the layout's request, and core presents them from the layout's
-//! screen; looking at one comes back to the layout as the person left it. How
-//! they are presented is core's, per model, and may change without any
-//! signature changing.
+//! A [`review`] can take extras, a list of labelled facts the person may want
+//! to see, such as the account a payment comes from; see
+//! [`Review::extra`]. They travel with the review's request, and core presents
+//! them from the review's screen; looking at one comes back to the review as the
+//! person left it. How they are presented is core's, per model, and may change
+//! without any signature changing.
+//!
+//! Up to five extras per review: the menu holds six entries and one is the way
+//! out. A sixth is an `Err`; see [errors](#errors).
 //!
 //! WIP: where a screen has no menu, its extras cannot be reached: bolt has no
-//! menus, delizia's summary draws without one, and notices have one only for
-//! some severities (see [`notice`]).
+//! menus.
 //!
-//! Every confirmation can be refused, and that is never the app's to switch
-//! off: no confirmation takes `cancel`. Where the way out is drawn — on the
-//! screen, or in the extras on a model whose menu button takes its place — is
-//! the model's, and the app neither sees nor chooses it. A notice takes
-//! `cancel`: whether the person may back out of it.
+//! Every layout can be refused, and that is never the app's to switch off: no
+//! layout takes `cancel`. Where the way out is drawn — on the screen, or in the
+//! extras on a model whose menu button takes its place — is the model's, and the
+//! app neither sees nor chooses it.
+//!
+//! # Long content
+//!
+//! Content can be longer than one screen, and two different things split it,
+//! each for its own reason:
+//!
+//! - **Chunking** is the firmware's, and exists because core's memory is
+//!   limited: long data — the bytes given to [`Field::data`] — is cut into
+//!   chunks so core never holds a whole blob at once. The bytes stay in the
+//!   app; core pulls each chunk while the person pages, and the call does not
+//!   return until the last one is read.
+//! - **Pagination** is core's, and exists because the screen is small. Core
+//!   splits whatever one request carries across as many screens as it takes
+//!   — a screen holds a few hundred bytes at most, on the largest model — as
+//!   the person scrolls.
+//!
+//! Neither is the app's: an app hands over the whole value and gets one
+//! outcome, and never learns how many chunks or pages it took.
+//!
+//! WIP: until core pulls the data itself (P10), a `data` field travels inline
+//! and is capped at 1024 bytes; a longer one is
+//! [`crate::Error::ValueError`].
 //!
 //! # Progress
 //!
 //! Not everything the app shows waits for the person. While the app works —
-//! hashing, fetching, signing — it can hold up a progress, so the person
-//! sees that the device has not stalled. A progress is not a layout: it asks
-//! nothing, answers nothing, and never layouts. It appears when the work
-//! starts and disappears when it ends, including through `?`, because the
-//! app never ends one by hand: the library owns the ending, the same way it
-//! owns a layout's screens.
+//! hashing, fetching, signing — it can hold up a progress, so the person sees
+//! that the device has not stalled. A progress is not a layout: it asks nothing,
+//! answers nothing, and never layouts. It appears when the work starts and
+//! disappears when it ends, including through `?`, because the app never ends one
+//! by hand: the library owns the ending, the same way it owns a layout's screens.
 //!
-//! Two forms cover the usual cases, both closures: [`progress::run`] for work
-//! that needs no step reporting, [`progress::run_with`] for work that does —
-//! [`progress::Progress::step`] along the way, in whatever unit the app counts. The
-//! percent is never the app's arithmetic: core computes it from the
-//! [`progress::Total`] given at the start, and a step past the total pins the bar
-//! full rather than wrapping it. [`progress::Total::Unknown`] shows motion without
-//! a fill, and steps on it do nothing.
+//! [`progress`] runs the work as one closure and hands it a [`Progress`] to
+//! report steps with, in whatever unit the app counts. The percent is never the
+//! app's arithmetic: core computes it from the total given at the start, and a
+//! step past the total pins the bar full rather than wrapping it. No total shows
+//! motion without a fill, and steps on it do nothing.
 //!
-//! A step is deliberately infallible. It is a status note, not a step of
-//! the work: an update that cannot be delivered must not abort the work it
+//! A step is deliberately infallible. It is a status note, not a step of the
+//! work: an update that cannot be delivered must not abort the work it
 //! describes, so the person at worst sees a stale bar until the next one.
-//!
-//! [`progress::Progress::start`] is the escape hatch for work that cannot be a
-//! closure, and carries the one trap: the binding must hold the value,
-//! because dropping it is what ends the progress. `let _ = ...` ends it
-//! at once.
 //!
 //! # Errors
 //!
-//! A layout's only `Err` is [`crate::Error::Cancelled`] (see
-//! [outcomes](#outcomes)), and a progress has none. A failure — the request
-//! did not reach core, or the answer cannot be read — ends the app, and the
-//! call never returns.
+//! A layout's `Err` is [`crate::Error::Cancelled`] when the person refuses
+//! (see [outcomes](#outcomes)). What the library can tell before it asks —
+//! more than five extras, more than one `data` field, a `data` field too long
+//! to travel inline — is also an `Err`, and `?` ends the flow on it, the same
+//! way: that is a mistake in the app, not a state to handle.
 //!
-//! The library checks nothing itself. A request core cannot take — more
-//! extras than a model's menu holds, more than fits in one IPC message —
-//! stops the app: that is a mistake in the app, not a state to handle.
+//! A failure — the request did not reach core, or the answer cannot be read —
+//! ends the app, and the call never returns. So does a request core cannot
+//! draw: that is a mistake in the app too, but only core can see it.
 //!
 //! Core also checks what it is asked to draw, per model, and the same call
 //! may fare differently on each. What a model cannot draw at all — a screen
@@ -224,45 +210,24 @@
 //! it; a fuller one is an error-report service covering crypto and progress
 //! too. Whether to tell the app about a dropped menu is open.
 //!
-//! WIP: contract breaks left: a `Done` notice waits for a tap on bolt and
-//! caesar, and notices ignore `cancel`; see [`notice`].
-//!
 //! # Example
 //!
 //! ```no_run
-//! use trezor_app_sdk::modui::{Commitment, confirm};
+//! use trezor_app_sdk::modui::{self, Details, Field};
 //!
 //! // A sequence of layouts is just a sequence of calls. Cancelling any one of
 //! // them stops the flow, because a cancel is an `Err`.
-//! fn confirm_send(address: &str) -> trezor_app_sdk::Result<()> {
-//!     confirm::value(
-//!         "Send",
-//!         address,
-//!         confirm::ValueKind::Address,
-//!         Some("Recipient"),
-//!         None,
-//!         None,
-//!         Commitment::Step,
-//!         "app/send/recipient",
-//!         &[],
-//!     )?;
+//! fn confirm_send(address: &str, amount: &str) -> trezor_app_sdk::Result<()> {
+//!     modui::review("send", "Send", &[Field::address("Recipient", address)]).confirm()?;
 //!
-//!     confirm::action(
-//!         "Send",
-//!         "Sign the transaction?",
-//!         None,
-//!         None,
-//!         Commitment::Step,
-//!         "app/send/confirm",
-//!         &[],
-//!     )
+//!     modui::review("summary", "Send", &[Field::amount("Amount", amount)]).confirm_final()
 //! }
 //!
 //! // Or handle the cancel yourself, when leaving is not the end of the flow.
 //! fn offer_details(address: &str) -> bool {
-//!     let kind = confirm::ValueKind::Address;
-//!     match confirm::value("Send", address, kind, None, None, None, Commitment::Step, "app/send", &[]) {
-//!         Ok(()) => true,
+//!     match modui::details("send", "Send", &[Field::address("Recipient", address)]) {
+//!         Ok(Details::Show) => true,
+//!         Ok(Details::Skip) => false,
 //!         Err(_) => false,
 //!     }
 //! }
@@ -286,35 +251,36 @@
 //
 // So a new layout means a `structs` type and its `TrezorUiEnum` variant, an
 // arm in core's dispatch, and the layout's function here. Every layout goes
-// through `UiV1::ui_call`, except `confirm::data`: its own
-// `UiV1::confirm_data` lets the firmware send the data in chunks.
+// through `UiV1::ui_call`: a `data` field is pulled by core from the app's
+// slice until P10 lands.
 //
-// ButtonRequests: the app names the step and nothing else. The `/menu` and
-// `/details` suffixes are core's, as are the `ButtonRequestType` (always
-// `Other`), page counts, and whether a repeat is a new step.
+// ButtonRequests: the app names the step and nothing else. Core prefixes the
+// app's name, and adds the `/menu` and `/details` suffixes, the
+// `ButtonRequestType` (always `Other`), page counts, and whether a repeat is a
+// new step.
 //
-// Layout: the public surface is this file plus one module per kind of layout
-// (`confirm`, `notice`, `progress`). A public file holds only what an app
-// may use — the layout's function and the types an app names — so that
-// reading a public file is reading the API.
+// Layout: the public surface is this file plus one private module per layout
+// (`review`, `decision`, `verify`, `done`, `progress`) and one for the facts
+// they show (`field`). A public file holds only what an app may use — the
+// layout's function and the types an app names — so that reading a public file
+// is reading the API.
 //
 // A layout file is dull on purpose: arguments in, one answer out, the wire
 // call in between. Anything cleverer belongs in the firmware, not here.
-// Each layout's own example lives on its function, where rustdoc shows it;
-// the files inside `confirm/` are private modules re-exported by
-// `confirm/mod.rs`, so their `//!` docs are for maintainers. The re-exports
-// below are grouped by rustfmt (`group_imports`), so do not try to arrange
-// them by hand.
-pub mod confirm;
-mod extra;
-pub mod notice;
-pub mod progress;
+// Each layout's own example lives on its function, where rustdoc shows it; the
+// private modules' `//!` docs are for maintainers. The re-exports below are
+// grouped by rustfmt (`group_imports`), so do not try to arrange them by hand.
+mod call;
+mod decision;
+mod done;
+mod field;
+mod progress;
+mod review;
+mod verify;
 
-// ============================================================================
-// Data types
-// ============================================================================
-pub use extra::ExtraItem;
-
-pub use crate::structs::Commitment;
-/// A key/value fact, as shown in a list or on an extra's screen.
-pub use crate::structs::Property;
+pub use decision::{Details, danger, details};
+pub use done::done;
+pub use field::Field;
+pub use progress::{Progress, progress};
+pub use review::{Review, review};
+pub use verify::{verify_address, verify_pubkey};
