@@ -19,7 +19,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 from . import testapp_ext
 from .generated import messages as m
@@ -39,26 +39,36 @@ def show(
     return m.Reply(result.reply)
 
 
+def showcase(session: "Session", instance_id: int, name: str) -> m.Reply:
+    """Run one flow from the API reference's examples, by name."""
+    return show(session, instance_id, m.Showcase(name=name))
+
+
 def progress(
     session: "Session",
     instance_id: int,
     label: str,
     total: int | None,
-    steps: Iterable[int] = (),
+    steps: Iterable[Union[int, str]] = (),
 ) -> m.Reply:
-    """Run a progress, report `steps` units of work one by one, then end it."""
+    """Run a progress, report `steps` one by one, then end it.
+
+    An int reports that many units of work done; a str changes the label under
+    the bar.
+    """
     testapp_ext.call_ext(
         session,
         instance_id,
         msg_data=m.ShowProgress(label=label, total=total),
         expect=[m.ProgressTick],
     )
-    for units in steps:
+    for step in steps:
+        if isinstance(step, str):
+            request = m.ProgressLabel(label=step)
+        else:
+            request = m.ProgressStep(units=step)
         testapp_ext.call_ext(
-            session,
-            instance_id,
-            msg_data=m.ProgressStep(units=units),
-            expect=[m.ProgressTick],
+            session, instance_id, msg_data=request, expect=[m.ProgressTick]
         )
     result = testapp_ext.call_ext(
         session, instance_id, msg_data=m.ProgressEnd(), expect=[m.UiResult]
@@ -66,11 +76,46 @@ def progress(
     return m.Reply(result.reply)
 
 
-def props(pairs: Iterable[tuple[str, str]]) -> list[m.Property]:
-    """Properties from (key, value) pairs."""
-    return [m.Property(key=k, value=v) for k, v in pairs]
+def field(
+    kind: m.FieldKind, value: Union[str, bytes], label: str | None = None
+) -> m.Field:
+    """One fact: what it is, its value, and a label unless it is a note or
+    warning. A string value is UTF-8 on the wire."""
+    if isinstance(value, str):
+        value = value.encode()
+    return m.Field(kind=kind, label=label, value=value)
 
 
-def extras(*items: tuple[str, Iterable[tuple[str, str]]]) -> list[m.ExtraItem]:
-    """Extras from (label, [(key, value), ...]) pairs."""
-    return [m.ExtraItem(label=label, props=props(pairs)) for label, pairs in items]
+def text(label: str, value: str) -> m.Field:
+    """Words or a number, shown as written."""
+    return field(m.FieldKind.Text, value, label)
+
+
+def amount(label: str, value: str) -> m.Field:
+    """A sum with its unit, already formatted by the app."""
+    return field(m.FieldKind.Amount, value, label)
+
+
+def address(label: str, value: str) -> m.Field:
+    """Something compared character by character."""
+    return field(m.FieldKind.Address, value, label)
+
+
+def data(label: str, value: bytes) -> m.Field:
+    """Raw bytes, shown as hex and paged."""
+    return field(m.FieldKind.Data, value, label)
+
+
+def note(value: str) -> m.Field:
+    """A sentence with no label."""
+    return field(m.FieldKind.Note, value)
+
+
+def warning(value: str) -> m.Field:
+    """A sentence to weigh before confirming."""
+    return field(m.FieldKind.Warning, value)
+
+
+def extras(*items: tuple[str, Iterable[m.Field]]) -> list[m.Extra]:
+    """Extras from (label, fields) pairs."""
+    return [m.Extra(label=label, fields=list(fields)) for label, fields in items]

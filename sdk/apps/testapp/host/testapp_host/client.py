@@ -8,7 +8,7 @@ from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from trezorlib import extapp, protobuf
 from trezorlib.messages import ExtAppMessage, ExtAppResponse
@@ -29,18 +29,33 @@ ARTIFACTS = REPO / "sdk" / "apps" / "target" / "artifacts"
 # Every request `TestApp.call` sends, by class; the wire id is the MessageType
 # of the same name. A progress is not one: it is `TestApp.progress`.
 REQUESTS = (
-    m.ConfirmAction,
-    m.ConfirmValue,
-    m.ConfirmData,
-    m.ConfirmProperties,
-    m.ConfirmSummary,
-    m.ShowNotice,
+    m.Review,
+    m.Danger,
+    m.Details,
+    m.VerifyAddress,
+    m.VerifyPubkey,
+    m.Done,
+    m.Showcase,
+)
+
+# The API reference's examples, by the name `TestApp.showcase` dispatches on.
+SHOWCASES = (
+    "send",
+    "delegate",
+    "claim-owner",
+    "unknown-contract",
+    "path-warning",
+    "typed-data",
+    "get-address",
+    "get-pubkey",
+    "contract-data",
+    "signing-progress",
 )
 
 
 @dataclass(frozen=True)
 class UiResult:
-    """How the layout ended: Confirmed or Cancelled."""
+    """How the layout ended: Confirmed, Cancelled or ShowDetails."""
 
     reply: m.Reply
 
@@ -70,14 +85,49 @@ def connect(
     return get_default_client(app_name, transport).get_session()
 
 
-def props(pairs: Iterable[tuple[str, str]], mono: bool = False) -> list[m.Property]:
-    """Properties from (key, value) pairs."""
-    return [m.Property(key=k, value=v, mono=mono) for k, v in pairs]
+def field(
+    kind: m.FieldKind, value: Union[str, bytes], label: Optional[str] = None
+) -> m.Field:
+    """One fact: what it is, its value, and a label unless it is a note or
+    warning. A string value is UTF-8 on the wire."""
+    if isinstance(value, str):
+        value = value.encode()
+    return m.Field(kind=kind, label=label, value=value)
 
 
-def extras(items: Iterable[tuple[str, Iterable[tuple[str, str]]]]) -> list[m.ExtraItem]:
-    """Extras from (label, [(key, value), ...]) pairs."""
-    return [m.ExtraItem(label=label, props=props(pairs)) for label, pairs in items]
+def text(label: str, value: str) -> m.Field:
+    """Words or a number, shown as written."""
+    return field(m.FieldKind.Text, value, label)
+
+
+def amount(label: str, value: str) -> m.Field:
+    """A sum with its unit, already formatted by the app."""
+    return field(m.FieldKind.Amount, value, label)
+
+
+def address(label: str, value: str) -> m.Field:
+    """Something compared character by character."""
+    return field(m.FieldKind.Address, value, label)
+
+
+def data(label: str, value: bytes) -> m.Field:
+    """Raw bytes, shown as hex and paged."""
+    return field(m.FieldKind.Data, value, label)
+
+
+def note(value: str) -> m.Field:
+    """A sentence with no label."""
+    return field(m.FieldKind.Note, value)
+
+
+def warning(value: str) -> m.Field:
+    """A sentence to weigh before confirming."""
+    return field(m.FieldKind.Warning, value)
+
+
+def extras(*items: tuple[str, Iterable[m.Field]]) -> list[m.Extra]:
+    """Extras from (label, fields) pairs."""
+    return [m.Extra(label=label, fields=list(fields)) for label, fields in items]
 
 
 class TestApp:
@@ -126,6 +176,12 @@ class TestApp:
         if not isinstance(request, REQUESTS):
             raise TypeError(f"Not a test app request: {type(request).__name__}")
         return _result(self._exchange(request, timeout))
+
+    def showcase(self, name: str, timeout: Optional[float] = None) -> UiResult:
+        """Run one flow from the API reference's examples, by name."""
+        if name not in SHOWCASES:
+            raise ValueError(f"Unknown showcase: {name}")
+        return self.call(m.Showcase(name=name), timeout)
 
     @contextmanager
     def progress(self, label: str, total: Optional[int] = None) -> Iterator[Progress]:
@@ -176,6 +232,13 @@ class Progress:
         """Report `units` more units of work done."""
         _expect(
             self._app._exchange(m.ProgressStep(units=units)), m.MessageType.ProgressTick
+        )
+
+    def label(self, text: str) -> None:
+        """Change the text under the bar."""
+        _expect(
+            self._app._exchange(m.ProgressLabel(label=text)),
+            m.MessageType.ProgressTick,
         )
 
 

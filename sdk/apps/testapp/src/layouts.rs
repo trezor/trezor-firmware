@@ -1,7 +1,11 @@
 //! One handler per modui layout: build the layout's parameters from the
 //! request, call the layout, and hand its answer back.
+//!
+//! The API reference's examples are in [`crate::showcase`].
 
-use trezor_app_sdk::modui::{self, Commitment, ExtraItem, Property, confirm, notice, progress};
+use core::str;
+
+use trezor_app_sdk::modui::{self, Details, Field};
 use trezor_app_sdk::{Error, Result, WireDecode, WireEncode, wire_request_raw};
 
 use crate::ProstCodec;
@@ -13,45 +17,53 @@ use crate::proto::testapp::{self as wire, ui_result::Reply};
 // Handlers
 // ============================================================================
 
-pub fn confirm_action(m: wire::ConfirmAction) -> Result<wire::UiResult> {
-    decided(run_confirm_action(&m))
+pub fn review(m: wire::Review) -> Result<wire::UiResult> {
+    decided(run_review(&m))
 }
 
-pub fn confirm_value(m: wire::ConfirmValue) -> Result<wire::UiResult> {
-    decided(run_confirm_value(&m))
+pub fn danger(m: wire::Danger) -> Result<wire::UiResult> {
+    let fields = fields(&m.fields)?;
+    decided(modui::danger(&m.step, &m.title, &fields))
 }
 
-pub fn confirm_data(m: wire::ConfirmData) -> Result<wire::UiResult> {
-    let extras = Extras::new(&m.extras);
-    decided(modui::confirm::data(
-        &m.title,
-        &m.data,
-        m.subtitle.as_deref(),
-        &m.br,
-        &extras.items(),
+pub fn details(m: wire::Details) -> Result<wire::UiResult> {
+    let fields = fields(&m.fields)?;
+    match modui::details(&m.step, &m.title, &fields) {
+        Ok(Details::Show) => answer(Reply::ShowDetails),
+        Ok(Details::Skip) => answer(Reply::Confirmed),
+        Err(e) if e.code() == Error::Cancelled.code() => answer(Reply::Cancelled),
+        Err(e) => Err(e),
+    }
+}
+
+pub fn verify_address(m: wire::VerifyAddress) -> Result<wire::UiResult> {
+    decided(modui::verify_address(
+        &m.step,
+        &m.value,
+        m.account.as_deref(),
+        m.path.as_deref(),
     ))
 }
 
-pub fn confirm_properties(m: wire::ConfirmProperties) -> Result<wire::UiResult> {
-    decided(run_confirm_properties(&m))
+pub fn verify_pubkey(m: wire::VerifyPubkey) -> Result<wire::UiResult> {
+    decided(modui::verify_pubkey(
+        &m.step,
+        &m.value,
+        m.account.as_deref(),
+        m.path.as_deref(),
+    ))
 }
 
-pub fn confirm_summary(m: wire::ConfirmSummary) -> Result<wire::UiResult> {
-    decided(run_confirm_summary(&m))
-}
-
-pub fn show_notice(m: wire::ShowNotice) -> Result<wire::UiResult> {
-    decided(run_show_notice(&m))
+pub fn done(m: wire::Done) -> Result<wire::UiResult> {
+    modui::done(&m.step, &m.text);
+    answer(Reply::Confirmed)
 }
 
 /// Runs a progress for as long as the host keeps it going: each tick asks the
 /// host what next, and the progress ends when the host says so — or when the
 /// exchange fails, since leaving the closure drops the progress either way.
 pub fn show_progress(m: wire::ShowProgress) -> Result<wire::UiResult> {
-    let total = m
-        .total
-        .map_or(progress::Total::Unknown, progress::Total::Units);
-    modui::progress::run_with(&m.label, total, |progress| -> Result<()> {
+    modui::progress(&m.label, m.total, |progress| -> Result<()> {
         loop {
             let tick = ProstCodec::encode(&wire::ProgressTick {});
             let (id, data) = wire_request_raw(&tick, MessageType::ProgressTick as u16)?;
@@ -59,6 +71,10 @@ pub fn show_progress(m: wire::ShowProgress) -> Result<wire::UiResult> {
                 Ok(MessageType::ProgressStep) => {
                     let step: wire::ProgressStep = ProstCodec::decode(&data)?;
                     progress.step(step.units());
+                }
+                Ok(MessageType::ProgressLabel) => {
+                    let label: wire::ProgressLabel = ProstCodec::decode(&data)?;
+                    progress.label(&label.label);
                 }
                 Ok(MessageType::ProgressEnd) => {
                     let _: wire::ProgressEnd = ProstCodec::decode(&data)?;
@@ -76,125 +92,62 @@ pub fn show_progress(m: wire::ShowProgress) -> Result<wire::UiResult> {
 // Layouts
 // ============================================================================
 
-fn run_confirm_action(m: &wire::ConfirmAction) -> Result<()> {
-    let extras = Extras::new(&m.extras);
-    modui::confirm::action(
-        &m.title,
-        &m.action,
-        m.subtitle.as_deref(),
-        m.description.as_deref(),
-        commitment(m.commitment()),
-        &m.br,
-        &extras.items(),
-    )
-}
-
-fn run_confirm_value(m: &wire::ConfirmValue) -> Result<()> {
-    let footer = match (m.footer_hint.as_deref(), m.footer_warning.as_deref()) {
-        (None, None) => None,
-        (Some(hint), None) => Some(confirm::Footer::Hint(hint)),
-        (None, Some(warning)) => Some(confirm::Footer::Warning(warning)),
-        (Some(_), Some(_)) => {
-            return Err(Error::ValueError(
-                "set footer_hint or footer_warning, not both",
-            ));
-        }
-    };
-    let kind = match m.kind() {
-        wire::ValueKind::Text => confirm::ValueKind::Text,
-        wire::ValueKind::Address => confirm::ValueKind::Address,
-    };
-    let extras = Extras::new(&m.extras);
-    modui::confirm::value(
-        &m.title,
-        &m.value,
-        kind,
-        m.subtitle.as_deref(),
-        m.description.as_deref(),
-        footer,
-        commitment(m.commitment()),
-        &m.br,
-        &extras.items(),
-    )
-}
-
-fn run_confirm_properties(m: &wire::ConfirmProperties) -> Result<()> {
-    let props = properties(&m.props);
-    let extras = Extras::new(&m.extras);
-    modui::confirm::properties(
-        &m.title,
-        &props,
-        m.subtitle.as_deref(),
-        commitment(m.commitment()),
-        &m.br,
-        &extras.items(),
-    )
-}
-
-fn run_confirm_summary(m: &wire::ConfirmSummary) -> Result<()> {
-    let amount = m.amount_label.as_deref().zip(m.amount.as_deref());
-    let fee = m.fee_label.as_deref().zip(m.fee.as_deref());
-    let extras = Extras::new(&m.extras);
-    modui::confirm::summary(&m.title, amount, fee, &m.br, &extras.items())
-}
-
-fn run_show_notice(m: &wire::ShowNotice) -> Result<()> {
-    let severity = match m.severity() {
-        wire::Severity::Info => notice::Severity::Info,
-        wire::Severity::Success => notice::Severity::Success,
-        wire::Severity::Done => notice::Severity::Done,
-        wire::Severity::Warning => notice::Severity::Warning,
-        wire::Severity::Danger => notice::Severity::Danger,
-    };
-    let extras = Extras::new(&m.extras);
-    modui::notice::show(
-        severity,
-        &m.title,
-        &m.content,
-        m.cancel(),
-        &m.br,
-        &extras.items(),
-    )
+fn run_review(m: &wire::Review) -> Result<()> {
+    let fields = fields(&m.fields)?;
+    let extras = Extras::new(&m.extras)?;
+    let mut review = modui::review(&m.step, &m.title, &fields);
+    for (label, fields) in extras.labels.iter().zip(&extras.fields) {
+        review = review.extra(label, fields);
+    }
+    if m.is_final() {
+        review.confirm_final()
+    } else {
+        review.confirm()
+    }
 }
 
 // ============================================================================
 // Conversions
 // ============================================================================
 
-fn commitment(c: wire::Commitment) -> Commitment {
-    match c {
-        wire::Commitment::Step => Commitment::Step,
-        wire::Commitment::Final => Commitment::Final,
-    }
+/// One wire fact as a [`Field`]. A text kind must carry UTF-8, and every kind
+/// but a note and a warning must carry a label; anything else is refused before
+/// the layout is called.
+fn field(f: &wire::Field) -> Result<Field<'_>> {
+    let text = || str::from_utf8(&f.value).map_err(|_| Error::InvalidArgument);
+    Ok(match f.kind() {
+        wire::FieldKind::Text => Field::text(label(f)?, text()?),
+        wire::FieldKind::Amount => Field::amount(label(f)?, text()?),
+        wire::FieldKind::Address => Field::address(label(f)?, text()?),
+        wire::FieldKind::Data => Field::data(label(f)?, &f.value),
+        wire::FieldKind::Note => Field::note(text()?),
+        wire::FieldKind::Warning => Field::warning(text()?),
+    })
 }
 
-fn properties(props: &[wire::Property]) -> Vec<Property<'_>> {
-    props
-        .iter()
-        .map(|p| Property::new(&p.key, &p.value, p.mono()))
-        .collect()
+fn fields(items: &[wire::Field]) -> Result<Vec<Field<'_>>> {
+    items.iter().map(field).collect()
 }
 
-/// The extras of one request, kept alive while the layout borrows them.
+fn label(f: &wire::Field) -> Result<&str> {
+    f.label.as_deref().ok_or(Error::InvalidArgument)
+}
+
+/// The extras of one review, kept alive while the review borrows them.
 struct Extras<'a> {
     labels: Vec<&'a str>,
-    props: Vec<Vec<Property<'a>>>,
+    fields: Vec<Vec<Field<'a>>>,
 }
 
 impl<'a> Extras<'a> {
-    fn new(items: &'a [wire::ExtraItem]) -> Self {
-        Self {
+    fn new(items: &'a [wire::Extra]) -> Result<Self> {
+        Ok(Self {
             labels: items.iter().map(|item| item.label.as_str()).collect(),
-            props: items.iter().map(|item| properties(&item.props)).collect(),
-        }
-    }
-
-    fn items(&self) -> Vec<ExtraItem<'_>> {
-        self.labels
-            .iter()
-            .zip(&self.props)
-            .map(|(label, props)| ExtraItem::simple(label, props))
-            .collect()
+            fields: items
+                .iter()
+                .map(|item| fields(&item.fields))
+                .collect::<Result<_>>()?,
+        })
     }
 }
 

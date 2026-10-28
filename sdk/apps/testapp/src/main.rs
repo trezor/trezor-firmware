@@ -22,14 +22,15 @@ pub(crate) mod alloc_types;
 mod crypto;
 mod layouts;
 pub(crate) mod proto;
+mod showcase;
 
 use proto::messages::MessageType;
 use proto::testapp::{
     Base58CheckDecode, Base58CheckEncode, Base58Decode, Base58Encode, CheckAddressMac,
-    ConfirmAction, ConfirmData, ConfirmProperties, ConfirmSummary, ConfirmValue,
-    CosiCombinePublicKeys, CosiVerify, EcdsaRecoverPubkey, EcdsaSignDigest, EcdsaVerify,
-    EcdsaVerifyDigest, Ed25519Sign, Ed25519Verify, GetAddressMac, GetPublicKey, GetXpub, Hash,
-    Hmac, ShowNotice, ShowProgress, VerifyNonceCache,
+    CosiCombinePublicKeys, CosiVerify, Danger, Details, Done, EcdsaRecoverPubkey, EcdsaSignDigest,
+    EcdsaVerify, EcdsaVerifyDigest, Ed25519Sign, Ed25519Verify, GetAddressMac, GetPublicKey,
+    GetXpub, Hash, Hmac, Review, ShowProgress, Showcase, VerifyAddress, VerifyNonceCache,
+    VerifyPubkey,
 };
 
 /// Wire codec for [`wire_handler!`] — encodes/decodes messages via [`prost`].
@@ -181,46 +182,46 @@ wire_handler!(
     crypto::base58check_decode
 );
 wire_handler!(
-    handle_confirm_action,
+    handle_review,
     ProstCodec,
-    ConfirmAction,
+    Review,
     MessageType::UiResult,
-    layouts::confirm_action
+    layouts::review
 );
 wire_handler!(
-    handle_confirm_value,
+    handle_danger,
     ProstCodec,
-    ConfirmValue,
+    Danger,
     MessageType::UiResult,
-    layouts::confirm_value
+    layouts::danger
 );
 wire_handler!(
-    handle_confirm_data,
+    handle_details,
     ProstCodec,
-    ConfirmData,
+    Details,
     MessageType::UiResult,
-    layouts::confirm_data
+    layouts::details
 );
 wire_handler!(
-    handle_confirm_properties,
+    handle_verify_address,
     ProstCodec,
-    ConfirmProperties,
+    VerifyAddress,
     MessageType::UiResult,
-    layouts::confirm_properties
+    layouts::verify_address
 );
 wire_handler!(
-    handle_confirm_summary,
+    handle_verify_pubkey,
     ProstCodec,
-    ConfirmSummary,
+    VerifyPubkey,
     MessageType::UiResult,
-    layouts::confirm_summary
+    layouts::verify_pubkey
 );
 wire_handler!(
-    handle_show_notice,
+    handle_done,
     ProstCodec,
-    ShowNotice,
+    Done,
     MessageType::UiResult,
-    layouts::show_notice
+    layouts::done
 );
 wire_handler!(
     handle_show_progress,
@@ -228,6 +229,13 @@ wire_handler!(
     ShowProgress,
     MessageType::UiResult,
     layouts::show_progress
+);
+wire_handler!(
+    handle_showcase,
+    ProstCodec,
+    Showcase,
+    MessageType::UiResult,
+    showcase::show
 );
 
 #[unsafe(no_mangle)]
@@ -261,13 +269,14 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::Base58Decode) => handle_base58_decode(data),
         Ok(MessageType::Base58CheckEncode) => handle_base58check_encode(data),
         Ok(MessageType::Base58CheckDecode) => handle_base58check_decode(data),
-        Ok(MessageType::ConfirmAction) => handle_confirm_action(data),
-        Ok(MessageType::ConfirmValue) => handle_confirm_value(data),
-        Ok(MessageType::ConfirmData) => handle_confirm_data(data),
-        Ok(MessageType::ConfirmProperties) => handle_confirm_properties(data),
-        Ok(MessageType::ConfirmSummary) => handle_confirm_summary(data),
-        Ok(MessageType::ShowNotice) => handle_show_notice(data),
+        Ok(MessageType::Review) => handle_review(data),
+        Ok(MessageType::Danger) => handle_danger(data),
+        Ok(MessageType::Details) => handle_details(data),
+        Ok(MessageType::VerifyAddress) => handle_verify_address(data),
+        Ok(MessageType::VerifyPubkey) => handle_verify_pubkey(data),
+        Ok(MessageType::Done) => handle_done(data),
         Ok(MessageType::ShowProgress) => handle_show_progress(data),
+        Ok(MessageType::Showcase) => handle_showcase(data),
         Ok(_) => {
             error!("Invalid function: {:?}", id);
             Err(Error::InvalidFunction)

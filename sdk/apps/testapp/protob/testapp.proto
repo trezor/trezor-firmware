@@ -286,134 +286,116 @@ message Data {
 /**
  * One request per modui layout. Each mirrors its layout's parameters one to
  * one, so the host drives the library through the same surface an app uses.
- * `br` is the step name the host sees for that screen. The app answers with
+ * `step` is the step name the host sees for that screen. The app answers with
  * a UiResult.
  */
 
-enum Commitment {
-    Step = 0;
-    Final = 1;
-}
-
-enum ValueKind {
-    Text = 0;
-    Address = 1;
-}
-
-// Prefixed because enum values share the package's namespace (`Success` is
-// also a message); prost and the Python generator both strip the prefix.
-enum Severity {
-    Severity_Info = 0;
-    Severity_Success = 1;
-    Severity_Done = 2;
-    Severity_Warning = 3;
-    Severity_Danger = 4;
-}
-
-message Property {
-    required string key = 1;
-    required string value = 2;
-    optional bool mono = 3 [default = false];
+// Prefixed because enum values share the package's namespace (`Data` is also a
+// message); prost and the Python generator both strip the prefix.
+enum FieldKind {
+    FieldKind_Text = 0;
+    FieldKind_Amount = 1;
+    FieldKind_Address = 2;
+    FieldKind_Data = 3;
+    FieldKind_Note = 4;
+    FieldKind_Warning = 5;
 }
 
 /**
- * Something the person can look at from the layout's menu.
+ * One fact the person reads. `label` is absent for a note and a warning;
+ * `value` is UTF-8 for the text kinds and the bytes themselves for `Data`.
  */
-message ExtraItem {
+message Field {
+    optional FieldKind kind = 1 [default = FieldKind_Text];
+    optional string label = 2;
+    required bytes value = 3;
+}
+
+/**
+ * More the person can open from a review's menu.
+ */
+message Extra {
     required string label = 1;
-    repeated Property props = 2;
+    repeated Field fields = 2;
 }
 
 /**
- * Request: modui::confirm_action
+ * Request: modui::review, confirmed by `is_final`
  * @next UiResult
  */
-message ConfirmAction {
-    required string title = 1;
-    required string action = 2;
-    optional string description = 3;
-    optional string subtitle = 4;
-    optional Commitment commitment = 5 [default = Step];
-    required string br = 6;
-    repeated ExtraItem extras = 7;
-}
-
-/**
- * Request: modui::confirm_value
- * At most one of `footer_hint` and `footer_warning`.
- * @next UiResult
- */
-message ConfirmValue {
-    required string title = 1;
-    required string value = 2;
-    optional ValueKind kind = 3 [default = Text];
-    optional string subtitle = 4;
-    optional string description = 5;
-    optional string footer_hint = 6;
-    optional string footer_warning = 7;
-    optional Commitment commitment = 8 [default = Step];
-    required string br = 9;
-    repeated ExtraItem extras = 10;
-}
-
-/**
- * Request: modui::confirm_data
- * @next UiResult
- */
-message ConfirmData {
-    required string title = 1;
-    required bytes data = 2;
-    optional string subtitle = 3;
-    required string br = 4;
-    repeated ExtraItem extras = 5;
-}
-
-/**
- * Request: modui::confirm_properties
- * @next UiResult
- */
-message ConfirmProperties {
-    required string title = 1;
-    repeated Property props = 2;
-    optional string subtitle = 3;
-    optional Commitment commitment = 4 [default = Step];
-    required string br = 5;
-    repeated ExtraItem extras = 6;
-}
-
-/**
- * Request: modui::confirm_summary
- * An amount or a fee is shown only when both its label and its value are set.
- * @next UiResult
- */
-message ConfirmSummary {
-    required string title = 1;
-    optional string amount_label = 2;
-    optional string amount = 3;
-    optional string fee_label = 4;
-    optional string fee = 5;
-    required string br = 6;
-    repeated ExtraItem extras = 7;
-}
-
-/**
- * Request: modui::show_notice
- * @next UiResult
- */
-message ShowNotice {
-    optional Severity severity = 1 [default = Severity_Info];
+message Review {
+    required string step = 1;
     required string title = 2;
-    required string content = 3;
-    required string br = 4;
-    repeated ExtraItem extras = 5;
-    optional bool cancel = 6 [default = false];
+    repeated Field fields = 3;
+    repeated Extra extras = 4;
+    optional bool is_final = 5 [default = false];
 }
 
 /**
- * Request: modui::progress_with, paced by the host.
+ * Request: modui::danger
+ * @next UiResult
+ */
+message Danger {
+    required string step = 1;
+    required string title = 2;
+    repeated Field fields = 3;
+}
+
+/**
+ * Request: modui::details
+ * @next UiResult
+ */
+message Details {
+    required string step = 1;
+    required string title = 2;
+    repeated Field fields = 3;
+}
+
+/**
+ * Request: modui::verify_address
+ * @next UiResult
+ */
+message VerifyAddress {
+    required string step = 1;
+    required string value = 2;
+    optional string account = 3;
+    optional string path = 4;
+}
+
+/**
+ * Request: modui::verify_pubkey
+ * @next UiResult
+ */
+message VerifyPubkey {
+    required string step = 1;
+    required string value = 2;
+    optional string account = 3;
+    optional string path = 4;
+}
+
+/**
+ * Request: modui::done; the app answers once the screen is up.
+ * @next UiResult
+ */
+message Done {
+    required string step = 1;
+    required string text = 2;
+}
+
+/**
+ * Request: one flow from the API reference's examples, by name; see
+ * `src/showcase.rs`.
+ * @next UiResult
+ */
+message Showcase {
+    required string name = 1;
+}
+
+/**
+ * Request: modui::progress, paced by the host.
  * The progress stays up while the app asks for steps with `ProgressTick`; the
- * host answers each tick with `ProgressStep`, or with `ProgressEnd` to finish.
- * Without `total` the progress is indeterminate.
+ * host answers each tick with `ProgressStep` or `ProgressLabel`, or with
+ * `ProgressEnd` to finish. Without `total` the progress is indeterminate.
  * @next ProgressTick
  */
 message ShowProgress {
@@ -424,6 +406,7 @@ message ShowProgress {
 /**
  * The app's question while a progress runs: what next?
  * @next ProgressStep
+ * @next ProgressLabel
  * @next ProgressEnd
  */
 message ProgressTick {}
@@ -437,13 +420,22 @@ message ProgressStep {
 }
 
 /**
+ * Change the text under the bar.
+ * @next ProgressTick
+ */
+message ProgressLabel {
+    required string label = 1;
+}
+
+/**
  * The work is over; the progress goes away.
  * @next UiResult
  */
 message ProgressEnd {}
 
 /**
- * Response: how the layout ended, `Confirmed` or `Cancelled`. A progress
+ * Response: how the layout ended. A details answers `ShowDetails` when the
+ * person asked for them and `Confirmed` when they skipped them; a progress
  * answers `Confirmed` once it has run.
  * @end
  */
@@ -451,6 +443,7 @@ message UiResult {
     enum Reply {
         Confirmed = 0;
         Cancelled = 1;
+        ShowDetails = 5;
     }
     required Reply reply = 1;
 }
