@@ -32,7 +32,7 @@ from trezor.wire.errors import DataError
 
 from apps.extapp.session import Session
 
-APP = "tron"
+APP = "tron.trezor.com"
 
 # A decoded fact, as an app sends it: `(kind, label, value)`.
 TEXT_FACT = (TEXT, "Recipient", "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE")
@@ -82,16 +82,18 @@ class TestFieldKinds(unittest.TestCase):
 
 
 class TestButtonRequestName(unittest.TestCase):
-    def test_app_name_is_the_prefix(self):
-        self.assertEqual(button_request_name("tron", "send"), "tron/send")
+    def test_app_id_is_the_prefix(self):
+        self.assertEqual(
+            button_request_name("tron.trezor.com", "send"), "tron.trezor.com/send"
+        )
 
     def test_step_is_never_bare(self):
         name = button_request_name(APP, "confirm")
-        self.assertEqual(name, "tron/confirm")
+        self.assertEqual(name, f"{APP}/confirm")
         self.assertNotEqual(name, "confirm")
 
     def test_empty_step(self):
-        self.assertEqual(button_request_name("testapp", ""), "testapp/")
+        self.assertEqual(button_request_name(APP, ""), f"{APP}/")
 
 
 class TestItems(unittest.TestCase):
@@ -178,7 +180,7 @@ class TestNotes(unittest.TestCase):
         self.assertEqual(notes([TEXT_FACT]), "")
 
 
-class TestAppName(unittest.TestCase):
+class TestAppId(unittest.TestCase):
     def session(self, image_id: str) -> Session:
         class Image:
             def id(self) -> str:
@@ -189,12 +191,13 @@ class TestAppName(unittest.TestCase):
 
         return Session(Image(), "secp256k1", [])
 
-    def test_first_label_of_the_image_id(self):
-        self.assertEqual(self.session("tron.trezor.com").app_name, "tron")
-        self.assertEqual(self.session("testapp.trezor.io").app_name, "testapp")
+    def test_the_whole_image_id(self):
+        self.assertEqual(self.session("tron.trezor.com").app_id, "tron.trezor.com")
+        self.assertEqual(self.session("testapp.trezor.io").app_id, "testapp.trezor.io")
 
-    def test_the_whole_id_is_not_the_name(self):
-        self.assertNotEqual(self.session("tron.trezor.com").app_name, "tron.trezor.com")
+    def test_the_display_name_is_not_the_id(self):
+        # the image's `name()` is for people (`Test app`), never a prefix
+        self.assertNotEqual(self.session("testapp.trezor.io").app_id, "Test app")
 
 
 class TestDriver(unittest.TestCase):
@@ -252,7 +255,7 @@ class TestDriver(unittest.TestCase):
         self.assertEqual(await_result(run(REVIEW, APP)), CONFIRMED)
         self.assertEqual(
             self.review.calls,
-            [("tron/send", "Send", FACTS, EXTRAS, False)],
+            [(f"{APP}/send", "Send", FACTS, EXTRAS, False)],
         )
         self.assert_only(self.review)
 
@@ -261,7 +264,7 @@ class TestDriver(unittest.TestCase):
         self.assertEqual(await_result(run(REVIEW_FINAL, APP)), CONFIRMED)
         self.assertEqual(
             self.review.calls,
-            [("tron/send", "Send", FACTS, EXTRAS, True)],
+            [(f"{APP}/send", "Send", FACTS, EXTRAS, True)],
         )
 
     def test_review_cancelled_discriminant(self):
@@ -272,19 +275,19 @@ class TestDriver(unittest.TestCase):
     def test_danger(self):
         self.danger.result = trezorui_api.CONFIRMED
         self.assertEqual(await_result(run(DANGER, APP)), CONFIRMED)
-        self.assertEqual(self.danger.calls, [("tron/risky", "Risky", FACTS)])
+        self.assertEqual(self.danger.calls, [(f"{APP}/risky", "Risky", FACTS)])
         self.assert_only(self.danger)
 
     def test_details_show(self):
         self.details.result = True
         self.assertEqual(await_result(run(DETAILS, APP)), SHOW_DETAILS)
-        self.assertEqual(self.details.calls, [("tron/details", "Details", FACTS)])
+        self.assertEqual(self.details.calls, [(f"{APP}/details", "Details", FACTS)])
         self.assert_only(self.details)
 
     def test_details_skip(self):
         self.details.result = False
         self.assertEqual(await_result(run(DETAILS, APP)), CONFIRMED)
-        self.assertEqual(self.details.calls, [("tron/details", "Details", FACTS)])
+        self.assertEqual(self.details.calls, [(f"{APP}/details", "Details", FACTS)])
 
     def test_verify_address(self):
         self.assertEqual(await_result(run(VERIFY_ADDRESS, APP)), CONFIRMED)
@@ -292,7 +295,7 @@ class TestDriver(unittest.TestCase):
             self.address.calls,
             [
                 (
-                    "tron/address",
+                    f"{APP}/address",
                     ADDRESS_FACT[2],
                     "TRX #1",
                     "m/44'/195'/0'/0/0",
@@ -306,20 +309,20 @@ class TestDriver(unittest.TestCase):
         self.assertEqual(await_result(run(request, APP)), CONFIRMED)
         self.assertEqual(
             self.address.calls,
-            [("tron/address", ADDRESS_FACT[2], None, None)],
+            [(f"{APP}/address", ADDRESS_FACT[2], None, None)],
         )
 
     def test_verify_pubkey(self):
         self.assertEqual(await_result(run(VERIFY_PUBKEY, APP)), CONFIRMED)
         self.assertEqual(
             self.pubkey.calls,
-            [("tron/pubkey", "02abc", None, None)],
+            [(f"{APP}/pubkey", "02abc", None, None)],
         )
         self.assert_only(self.pubkey)
 
     def test_done(self):
         self.assertEqual(await_result(run(DONE, APP)), CONFIRMED)
-        self.assertEqual(self.show.calls, [("tron/done", "All done")])
+        self.assertEqual(self.show.calls, [(f"{APP}/done", "All done")])
         self.assert_only(self.show)
 
     def test_refusal_is_cancelled(self):

@@ -27,23 +27,24 @@ _VERIFY_PUBKEY = const(4)
 _DONE = const(5)
 
 
-async def run(request: tuple, app_name: str) -> int:
+async def run(request: tuple, app_id: str) -> int:
     """Show the screen `request` asks for and return the person's answer.
 
-    `request` is a decoded UI request; `app_name` prefixes the name of every
-    ButtonRequest sent. A refusal returns `CANCELLED` rather than raising, and a
-    request this driver cannot draw raises `DataError`.
+    `request` is a decoded UI request; `app_id` is the app's identity, the image
+    ID (`testapp.trezor.io`), and it prefixes the name of every ButtonRequest
+    sent. A refusal returns `CANCELLED` rather than raising, and a request this
+    driver cannot draw raises `DataError`.
     """
     try:
-        return await _show(request, app_name)
+        return await _show(request, app_id)
     except ActionCancelled:
         return CANCELLED
 
 
-async def _show(request: tuple, app_name: str) -> int:
+async def _show(request: tuple, app_id: str) -> int:
     """Pick the screen for the request's kind and run it."""
     kind, step, *args = request
-    name = button_request_name(app_name, step)
+    name = button_request_name(app_id, step)
 
     if kind == _REVIEW:
         return _decision(await confirm.review(name, *args))

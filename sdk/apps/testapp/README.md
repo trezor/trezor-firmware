@@ -102,7 +102,7 @@ label, or the end.
 `tests/test_modui.py` runs with the device tests above. Core draws an app's
 screens, so debuglink reads and drives them like any other: each layout is
 confirmed and cancelled, its extras menu opened and left, and every asking
-layout must send exactly one ButtonRequest, named `testapp/<step>`, however
+layout must send exactly one ButtonRequest, named `testapp.trezor.io/<step>`, however
 long the menu is open (a paged layout sends one per page). Where a model draws
 less than a layout asks for, the test is reported as an expected failure
 (`GAPS`). `tests/test_showcase.py` drives every showcase the same way.

@@ -23,7 +23,7 @@ async def handle(session: Session, msg: IpcMessage) -> None:
     try:
         result = await run(
             trezorui_api.deserialize_ui_message(data=bytes(msg.data)),
-            session.app_name,
+            session.app_id,
         )
     except ActionCancelled:
         result = CANCELLED

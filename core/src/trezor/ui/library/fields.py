@@ -64,9 +64,10 @@ def details_items(fields: Iterable["Field"]) -> "list[InfoItem]":
     return [(utils.hexlify_if_bytes(value), kind == DATA) for kind, _, value in fields]
 
 
-def button_request_name(app_name: str, step: str) -> str:
+def button_request_name(app_id: str, step: str) -> str:
     """The name a host sees for a step of the app.
 
-    Core prefixes the app's name, so the app names the step alone.
+    Core prefixes the app's identity, the image ID (`testapp.trezor.io`), so the
+    app names the step alone.
     """
-    return f"{app_name}/{step}"
+    return f"{app_id}/{step}"

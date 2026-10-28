@@ -82,8 +82,8 @@ fn confirm_send(recipient: &str, amount: &str) -> trezor_app_sdk::Result<()> {
 A refusal is `Err(Error::Cancelled)`, so `?` ends the flow on it. A `details`
 answers `Details::Show` when the person wants the details, and `Details::Skip`
 when they accept without them. Every call that waits takes a step name relative
-to the app; Core prefixes the app's name, so `"send"` reaches the host as
-`"tron/send"` in the `ButtonRequest`.
+to the app; Core prefixes the app's identity, its image ID, so `"send"` reaches
+the host as `"tron.trezor.com/send"` in the `ButtonRequest`.
 
 See the [`modui` rustdoc](src/modui/mod.rs) for the full contract: layouts,
 facts, extras, long content and progress.

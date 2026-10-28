@@ -56,15 +56,16 @@ class Session:
         self.dead = False
 
     @property
-    def app_name(self) -> str:
-        """The app's own name, the prefix of every step it asks for.
+    def app_id(self) -> str:
+        """The app's identity, the prefix of every step it asks for.
 
         The image ID is the app's unique reverse-domain identifier
-        (`<package>.<domain>`); the package name is its first label. The display
-        name is for people and cannot name a screen, and the request's own step
-        never reaches the host unprefixed.
+        (`<package>.<domain>`), and the whole of it names the app: a package name
+        alone could be shared by two vendors. The display name is for people and
+        cannot name a screen, and the request's own step never reaches the host
+        unprefixed.
         """
-        return self.image.id().split(".")[0]
+        return self.image.id()
 
     def send(self, service: int, message_id: int, data: AnyBytes) -> None:
         io.ipc_send(self.task_id, service, message_id, data)

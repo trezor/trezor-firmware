@@ -118,10 +118,10 @@
 //! releases, and give each distinct screen its own name — hosts and tests match
 //! on it.
 //!
-//! Core adds the app's name in front, and the app should not: `"send"` reaches
-//! the host as `"tron/send"`. Screens that exist only because a review
-//! offered extras are named after the review, with `/menu` and `/details`
-//! appended.
+//! Core adds the app's identity in front, and the app should not: `"send"`
+//! reaches the host as `"tron.trezor.com/send"`. Screens that exist only
+//! because a review offered extras are named after the review, with `/menu` and
+//! `/details` appended.
 //!
 //! # Extras and the way out
 //!
@@ -255,9 +255,9 @@
 // slice until P10 lands.
 //
 // ButtonRequests: the app names the step and nothing else. Core prefixes the
-// app's name, and adds the `/menu` and `/details` suffixes, the
-// `ButtonRequestType` (always `Other`), page counts, and whether a repeat is a
-// new step.
+// app's identity, its image ID (`testapp.trezor.io`), and adds the `/menu` and
+// `/details` suffixes, the `ButtonRequestType` (always `Other`), page counts,
+// and whether a repeat is a new step.
 //
 // Layout: the public surface is this file plus one private module per layout
 // (`review`, `decision`, `verify`, `done`, `progress`) and one for the facts
