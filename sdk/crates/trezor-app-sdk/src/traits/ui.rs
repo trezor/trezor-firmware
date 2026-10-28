@@ -6,23 +6,17 @@
 
 use super::util::FastResult;
 use super::wire::WireError;
-pub use crate::structs::{ConfirmData, StrSlice, TrezorUiEnum, TrezorUiResult};
+pub use crate::structs::{StrSlice, TrezorUiEnum, TrezorUiResult};
 
 /// Talks to Core's UI/progress screens — implemented in `core/embed/api`
 /// against [`super::wire::WireV1`].
 #[stabby::stabby(checked)]
 pub trait UiV1: Send + Sync {
-    /// Shows one layout and returns once the person has decided it. Everything
-    /// in between, such as the layout's menu and extras, happens in Core.
+    /// Shows one request and returns once the person has decided it. Everything
+    /// in between, such as the request's menu and extras, happens in Core.
     extern "C" fn ui_call<'a>(
         &self,
         request: TrezorUiEnum<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    /// Shows all of `request.data`, however long; the implementation sends it
-    /// to core in chunks.
-    extern "C" fn confirm_data<'a>(
-        &self,
-        request: ConfirmData<'a>,
     ) -> FastResult<TrezorUiResult, WireError>;
 
     /// `total` is in the app's own units; `0` means not known.
@@ -33,6 +27,8 @@ pub trait UiV1: Send + Sync {
     ) -> FastResult<(), WireError>;
     /// Reports `units` more of the total done.
     extern "C" fn step_progress(&self, units: u32) -> FastResult<(), WireError>;
+    /// Changes the text under the bar while the work goes on.
+    extern "C" fn label_progress<'a>(&self, label: StrSlice<'a>) -> FastResult<(), WireError>;
     extern "C" fn end_progress(&self) -> FastResult<(), WireError>;
 }
 
