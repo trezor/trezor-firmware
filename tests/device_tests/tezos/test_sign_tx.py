@@ -292,13 +292,13 @@ def test_tezos_sign_tx_reveal(session: Session):
     )
     assert (
         resp.signature
-        == "edsigtcqDr47paEVgr8X8gmvFt9UnNWACkMVCGdVFZ2yUq849oxmTbx2FqjToveUNwNujC9qmoi5kXWy78qZY2d5Qeryx6kCbGs"
+        == "edsigtf1pp4qnMtgXA2sZUjkmVE7peeiQC33AtXyZDU1FneEicPciFnZw3CtqXm1ocx2XviBvjNXrwzeFXVczLbvapXtHb61G1h"
     )
     assert (
         resp.sig_op_contents.hex()
-        == "f26502c204619c4bdab2e59efc50c79bc0136d781304b8f7fad389263550300e6b00001e65c88ae6317cd62a638c8abd1e71c83c8475a09c01d0ba22a09c010000200da2c0200927dd8168b2b62e1322637521fcefb3184e61c1c3123c7c00bb956c00001e65c88ae6317cd62a638c8abd1e71c83c8475d08603d1ba22a09c0100a08d0600005f450441f41ee11eee78a31d1e1e55627c783bd60026690d65407d6cda03cde8e3c17a22ffd0351f78c18c500f3997cbe311e12e6cc4b5ff40b339c7fba8b4c7d62329ea45da662340113a6da98b7510b40042f204"
+        == "f26502c204619c4bdab2e59efc50c79bc0136d781304b8f7fad389263550300e6b00001e65c88ae6317cd62a638c8abd1e71c83c8475a09c01d0ba22a09c010000200da2c0200927dd8168b2b62e1322637521fcefb3184e61c1c3123c7c00bb95006c00001e65c88ae6317cd62a638c8abd1e71c83c8475d08603d1ba22a09c0100a08d0600005f450441f41ee11eee78a31d1e1e55627c783bd600371848e9cf4de81940da9d02cbe025afc5f201faeb2740e231acd689fbc526dc931901728bc103c4262bd07b95fef6a37b1629c6b5987a34e44dfe14c2057808"
     )
-    assert resp.operation_hash == "oo9JFiWTnTSvUZfajMNwQe1VyFN2pqwiJzZPkpSAGfGD57Z6mZJ"
+    assert resp.operation_hash == "oom5aWhsh9GawzhFpKxhtLwXk7MmmddYGHeiJ5RGWgzWsq8WfSJ"
 
 
 def test_tezos_smart_contract_delegation(session: Session):
