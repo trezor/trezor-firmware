@@ -17,7 +17,7 @@ working reference.
 
 | Module | Contents |
 | ------ | -------- |
-| `modui` | Screens: confirmations, notices and progress, one function per layout; backing out is `Err(Error::Cancelled)` |
+| `modui` | Screens: one typed function per decision an app asks, from a review to a progress bar; a refusal is `Err(Error::Cancelled)` |
 | `crypto` | Key derivation and signing (done by Core), plus hashing, HMAC, Base58, signature verification and CoSi (done locally) |
 | `log` | The `error!`, `warn!`, `info!` and `debug!` macros |
 | `error` | The SDK's `Error` and `Result` types, and `ResultExt` for call-site context |
@@ -43,6 +43,50 @@ pub fn app() -> Result<()> {
 
 See [App Entry Point](../../doc/development.md#app-entry-point) for how
 `handle_wire_message` dispatches and answers requests.
+
+## UI
+
+An app names the facts and the steps; Core draws them. `modui` turns one
+call into one request, and Core owns the rest: how each kind of fact looks on
+each model, the extras menu, the paging, whether a yes is a tap or a hold, and
+where the way out sits. The app never picks a style, a font or a screen.
+
+| Call | Asks the person | Answer |
+| ---- | --------------- | ------ |
+| `review(step, title, &fields).confirm()` | to read facts and say yes | `Result<()>` |
+| `review(…).confirm_final()` | the same, as the last yes before signing | `Result<()>` |
+| `danger(step, title, &fields)` | to go on with something risky | `Result<()>` |
+| `details(step, title, &fields)` | whether to see the details | `Result<Details>` |
+| `verify_address(step, address, account, path)` | to check one of their own addresses | `Result<()>` |
+| `verify_pubkey(step, pubkey, account, path)` | to check one of their own public keys | `Result<()>` |
+| `done(step, text)` | nothing: the flow has ended | — |
+| `progress(label, total, work)` | nothing: the app is working | what `work` returns |
+
+Facts are `Field`s, named by what the value *is* rather than by how it
+should look: `text`, `amount`, `address`, `data`, `note` and `warning`. One
+list may mix all six.
+
+```rust
+use trezor_app_sdk::modui::{self, Field};
+
+fn confirm_send(recipient: &str, amount: &str) -> trezor_app_sdk::Result<()> {
+    let account = [Field::text("Account", "TRX #1")];
+    modui::review("send", "Send", &[Field::address("Recipient", recipient)])
+        .extra("Account info", &account)
+        .confirm()?;
+    modui::review("summary", "Send", &[Field::amount("Amount", amount)])
+        .confirm_final()
+}
+```
+
+A refusal is `Err(Error::Cancelled)`, so `?` ends the flow on it. A `details`
+answers `Details::Show` when the person wants the details, and `Details::Skip`
+when they accept without them. Every call that waits takes a step name relative
+to the app; Core prefixes the app's name, so `"send"` reaches the host as
+`"tron/send"` in the `ButtonRequest`.
+
+See the [`modui` rustdoc](src/modui/mod.rs) for the full contract: layouts,
+facts, extras, long content and progress.
 
 ## Logging
 
