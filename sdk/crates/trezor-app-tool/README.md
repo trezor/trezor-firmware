@@ -86,7 +86,7 @@ app-tool test [--package <PACKAGE>] [options]
 
 ## Device Tests
 
-Runs an app's Python device tests against an already-built artifact and a running emulator or reachable physical device. It does not start the emulator. Use `-t`, `--test <TEST>` to select a test, and `--ui` to enable UI screenshot testing.
+Runs an app's Python device tests against an already-built artifact and a running emulator or reachable physical device. It does not start the emulator. Use `-t`, `--test <TEST>` to select a test, and `--ui [test|record]` to check UI screenshots against the app's fixtures or record them (`--ui` alone means `test`).
 
 ```sh
 app-tool device-test [--package <PACKAGE>] [options]
