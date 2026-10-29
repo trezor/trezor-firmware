@@ -294,9 +294,9 @@ fn add_secp256k1_zkp(lib: &mut CLibrary, _attrs: &CompileAttrs) -> Result<()> {
     lib.add_include("../.."); // points to vendor folder
 
     if cfg!(feature = "emulator") {
-        lib.add_define("SECP256K1_CONTEXT_SIZE", Some("208"));
+        lib.add_define("SECP256K1_CONTEXT_SIZE", Some("216"));
     } else {
-        lib.add_define("SECP256K1_CONTEXT_SIZE", Some("180"));
+        lib.add_define("SECP256K1_CONTEXT_SIZE", Some("184"));
         lib.add_define("USE_EXTERNAL_ASM", None);
         lib.add_sources_in_dir(SECP256K1_PATH, ["src/asm/field_10x26_arm.s"]);
     }
