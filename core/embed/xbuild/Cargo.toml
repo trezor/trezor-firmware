@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 bindgen.workspace = true
+cbindgen.workspace = true
 cc.workspace = true
 color-eyre.workspace = true
 globset.workspace = true
@@ -12,3 +13,6 @@ pathdiff.workspace = true
 pkg-config.workspace = true
 serde_json.workspace = true
 zlib-rs.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
