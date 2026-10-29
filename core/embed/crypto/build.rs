@@ -114,6 +114,7 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
             "sha2.c",
             "sha3.c",
             "shamir.c",
+            "slip21.c",
             "slip39.c",
             "slip39_english.c",
             "tls_prf.c",
