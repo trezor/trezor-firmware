@@ -607,7 +607,9 @@ static void systask_exit_fault_ex(uint32_t msp, uint32_t exc_return,
   mpu_restore(mpu_mode);
 }
 
+#ifdef USE_APPLETS
 static void systask_switch_to_kernel(void);
+#endif
 
 // Terminate active task from fault/exception handler
 // (entered directly from the naked exception handlers)
@@ -617,6 +619,7 @@ __attribute((used)) static void systask_exit_fault(uint32_t msp,
 
   // If the kernel task was terminated, we never get here.
 
+#ifdef USE_APPLETS
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
   if (scheduler->active_task->killed) {
@@ -634,6 +637,7 @@ __attribute((used)) static void systask_exit_fault(uint32_t msp,
     // killed task's frame is never touched.
     systask_switch_to_kernel();
   }
+#endif
 }
 
 #ifdef USE_APPLETS
