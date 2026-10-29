@@ -29,6 +29,7 @@
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
+#include <sys/stack_utils.h>
 #include <sys/system.h>
 
 #ifdef USE_SECRET
@@ -502,6 +503,7 @@ __attribute__((cmse_nonsecure_entry)) void smcall_invoke(
   }
 
   smcall_handler(args->arg, smcall);
+  clear_unused_stack();
 
   // FIH: check caller privilege again before returning
   // (harder to bypass than the first check)

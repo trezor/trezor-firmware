@@ -1,0 +1,1 @@
+Erase returned privileged crypto stack scratch and temporary Ed25519/SHA-2 intermediates.
