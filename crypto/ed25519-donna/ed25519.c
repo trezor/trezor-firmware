@@ -81,6 +81,10 @@ ED25519_FN(ed25519_cosi_sign) (const unsigned char *m, size_t mlen, const ed2551
 	if (!is_reduced256_modm(r)) {
 		memzero(&extsk, sizeof(extsk));
 		memzero(&r, sizeof(r));
+		memzero(&S, sizeof(S));
+		memzero(&a, sizeof(a));
+		memzero(&hram, sizeof(hram));
+		memzero(sig, sizeof(ed25519_cosi_signature));
 		return -1;
 	}
 
@@ -100,6 +104,8 @@ ED25519_FN(ed25519_cosi_sign) (const unsigned char *m, size_t mlen, const ed2551
 
 	/* S = (r + H(R,A,m)a) mod L */
 	contract256_modm(sig, S);
+	memzero(&S, sizeof(S));
+	memzero(&hram, sizeof(hram));
 
 	return 0;
 }
@@ -146,6 +152,12 @@ ED25519_FN(ed25519_sign_ext) (const unsigned char *m, size_t mlen, const ed25519
 
 	/* S = (r + H(R,A,m)a) mod L */
 	contract256_modm(RS + 32, S);
+	memzero(&S, sizeof(S));
+	memzero(&hram, sizeof(hram));
+	memzero(&ctx, sizeof(ctx));
+	memzero(&R, sizeof(R));
+	memzero(&A, sizeof(A));
+	memzero(&pk, sizeof(pk));
 }
 
 void
@@ -194,6 +206,10 @@ ED25519_FN(ed25519_scalarmult) (ed25519_public_key res, const ed25519_secret_key
 	memzero(&extsk, sizeof(extsk));
 
 	if (!ge25519_unpack_negative_vartime(&P, pk)) {
+		memzero(&a, sizeof(a));
+		memzero(&P, sizeof(P));
+		memzero(&A, sizeof(A));
+		memzero(res, sizeof(ed25519_public_key));
 		return -1;
 	}
 
@@ -201,6 +217,8 @@ ED25519_FN(ed25519_scalarmult) (ed25519_public_key res, const ed25519_secret_key
 	memzero(&a, sizeof(a));
 	curve25519_neg(A.x, A.x);
 	ge25519_pack(res, &A);
+	memzero(&P, sizeof(P));
+	memzero(&A, sizeof(A));
 	return 0;
 }
 
@@ -220,6 +238,7 @@ ed25519_publickey_ext(const ed25519_secret_key extsk, ed25519_public_key pk) {
 	ge25519_scalarmult_base_wrapper(&A, a);
 	memzero(&a, sizeof(a));
 	ge25519_pack(pk, &A);
+	memzero(&A, sizeof(A));
 }
 
 int
