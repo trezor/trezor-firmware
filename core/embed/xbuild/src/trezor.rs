@@ -171,6 +171,12 @@ pub fn build_and_link(target: &str, f: impl FnOnce(&mut CLibrary) -> Result<()>)
 }
 
 fn configure_compiler_defaults(lib: &mut CLibrary) {
+    // All consumers share the software-GCM record layout at these stages.
+    cargo_out::rerun_if_env_changed("TREZOR_VAULT_MODE");
+    let mode = env::var("TREZOR_VAULT_MODE").unwrap_or_else(|_| "gcm".into());
+    assert_eq!(mode, "gcm", "This stage supports only GCM records");
+    lib.add_define("VAULT_SEAL_MODE", Some("3"));
+
     if !has_feature("emulator") {
         // Override the default `-fno-omit-frame-pointer` from the `cc` crate
         // which causes binary size to increase on embedded targets.

@@ -381,6 +381,89 @@ class ripemd160:
         """
 
 
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+class secbytes:
+    """Opaque immutable native secret. No buffer or plaintext interface."""
+
+    def __init__(self, value: AnyBytes | None, capacity: int = 160) -> None:
+        """Copy existing plaintext; this does not erase its Python source.
+        None makes an empty holder for a long-lived slot, see take().
+        capacity limits an empty holder; populated values use their actual
+        size."""
+
+    def destroy(self) -> None:
+        """Erase this value. Idempotent."""
+
+    def take(self, other: secbytes) -> None:
+        """Erase this value, then move other's secret into this object, leaving
+        other empty. Lets long-lived holders change value without allocating.
+        An oversized move raises ValueError and leaves both values unchanged;
+        populated objects have capacity equal to their initial secret length."""
+
+    def empty(self) -> bool:
+        """Return whether this object holds no secret (local check only)."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+def revoke_secrets() -> None:
+    """Erase all native owners and entries; emergency teardown only."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+class SecretOwner:
+    """Explicit native session owner, or request owner beneath a session."""
+
+    def __init__(
+        self, parent: SecretOwner | None = None, bound: bool = True
+    ) -> None:
+        """Allocate a bounded, generation-checked owner identity. With
+        bound=False, make an unbound holder for a long-lived slot, see renew().
+        """
+
+    def destroy(self) -> None:
+        """Erase this owner and its descendants without allocating."""
+
+    def renew(self, parent: SecretOwner | None = None) -> None:
+        """Erase the current identity and bind a fresh one in place, so a
+        long-lived holder never needs a new heap object."""
+
+    def valid(self) -> bool:
+        """Return whether this owner is still live."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+def _secret_owner_activate(owner: SecretOwner | None) -> None:
+    """Scheduler hook; None disables secret operations. Lifetime only, not
+    isolation."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secret-lifecycle.h
+def _secret_task_register(task: Any, owner: SecretOwner | None) -> None:
+    """Bind a request root, or inherit the active request for a child."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secret-lifecycle.h
+def _secret_task_rebind(task: Any, owner: SecretOwner) -> None:
+    """Start a fresh request after an explicit storage reset. Existing
+    bindings may be replaced only after their old owner was revoked."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secret-lifecycle.h
+def _secret_task_enter(task: Any) -> bool:
+    """Activate task ownership. False means the task has been revoked."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secret-lifecycle.h
+def _secret_task_finish(task: Any) -> None:
+    """Revoke roots before callbacks; children release only their
+    binding."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secret-lifecycle.h
+def _secret_tasks_clear() -> None:
+    """Erase request owners and forget tasks, preserving sessions."""
+
+
 # upymod/modtrezorcrypto/modtrezorcrypto-sha256.h
 class sha256:
     """
@@ -493,3 +576,9 @@ class sha512:
         """
         Returns the digest of hashed data.
         """
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto.c
+def retain_secret(value: Any) -> None:
+    """Explicitly transfer an encrypted byte value from this request to its
+    session."""
