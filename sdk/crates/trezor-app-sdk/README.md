@@ -48,14 +48,15 @@ See [App Entry Point](../../doc/development.md#app-entry-point) for how
 
 An app names the facts and the steps; Core draws them. `modui` turns one
 call into one request, and Core owns the rest: how each kind of fact looks on
-each model, the extras menu, the paging, whether a yes is a tap or a hold, and
-where the way out sits. The app never picks a style, a font or a screen.
+each model, the extras menu, the paging, whether a yes is a tap, a hold, or a
+deliberate detour, and where the way out sits. The app never picks a style, a
+font or a screen.
 
 | Call | Asks the person | Answer |
 | ---- | --------------- | ------ |
 | `review(step, title, &fields).confirm()` | to read facts and say yes | `Result<()>` |
 | `review(…).confirm_final()` | the same, as the last yes before signing | `Result<()>` |
-| `danger(step, title, &fields)` | to go on with something risky | `Result<()>` |
+| `review(…).confirm_danger()` | to go on with something risky | `Result<()>` |
 | `details(step, title, &fields)` | whether to see the details | `Result<Details>` |
 | `verify_address(step, address, account, path)` | to check one of their own addresses | `Result<()>` |
 | `verify_pubkey(step, pubkey, account, path)` | to check one of their own public keys | `Result<()>` |

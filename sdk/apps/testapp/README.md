@@ -87,7 +87,7 @@ included (`--step`, defaulting to the layout's name).
 | `Review` | `modui::review(step, title, &fields).confirm()` |
 | `Review` (final) | the same, with `.confirm_final()` |
 | `Extra` | `Extra::new(label, &fields)`, in a review's `.extras(&[...])` |
-| `Danger` | `modui::danger(step, title, &fields)` |
+| `Danger` | `modui::review(step, title, &fields).confirm_danger()` |
 | `Details` | `modui::details(step, title, &fields)` |
 | `VerifyAddress` | `modui::verify_address(step, address, account, path)` |
 | `VerifyPubkey` | `modui::verify_pubkey(step, pubkey, account, path)` |
