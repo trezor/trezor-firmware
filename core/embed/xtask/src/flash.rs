@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::{fs, process};
 
@@ -66,11 +67,17 @@ pub fn flash(args: FlashArgs) -> Result<()> {
 /// Flashes an image split into `(address, bytes)` segments, each written to
 /// its own address in a single OpenOCD session.
 fn flash_segments(model: Model, binary: &Path, segments: &[(u32, &[u8])]) -> Result<()> {
-    let tmp_dir = std::env::temp_dir();
+    let mut temp_files = Vec::new();
     let mut files = Vec::new();
     for (i, (address, data)) in segments.iter().enumerate() {
-        let path = tmp_dir.join(format!("xtask-flash-{}-{i}.bin", process::id()));
-        fs::write(&path, data).with_context(|| format!("Failed to write `{}`", path.display()))?;
+        let mut file = tempfile::Builder::new()
+            .prefix("xtask-flash-")
+            .suffix(".bin")
+            .tempfile()
+            .context("Failed to create a temporary file")?;
+        file.write_all(data)
+            .and_then(|()| file.flush())
+            .with_context(|| format!("Failed to write `{}`", file.path().display()))?;
         println!(
             "Flashing `{}` part {} ({} bytes) to address 0x{:08X}",
             binary.display(),
@@ -78,17 +85,12 @@ fn flash_segments(model: Model, binary: &Path, segments: &[(u32, &[u8])]) -> Res
             data.len(),
             address
         );
-        files.push((path, *address));
+        files.push((file.path().to_path_buf(), *address));
+        temp_files.push(file);
     }
 
-    let result = build_flash_write_segments_instruction(&files)
-        .and_then(|instruction| run_openocd(model, &instruction));
-
-    for (path, _) in &files {
-        let _ = fs::remove_file(path);
-    }
-
-    result
+    let instruction = build_flash_write_segments_instruction(&files)?;
+    run_openocd(model, &instruction)
 }
 
 /// Flash the combined image: the whole boot chain in one write.
