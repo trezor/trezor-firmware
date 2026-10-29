@@ -28,6 +28,7 @@
 #include "py/repl.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
+#include "secret_lifecycle.h"
 #include "shared/runtime/pyexec.h"
 
 #include "ports/stm32/gccollect.h"
@@ -163,6 +164,7 @@ int main_func(uint32_t cmd, void *arg) {
 
   // Interpreter init
   LOG_INF("Starting interpreter");
+  trezorcrypto_secret_reset();
   mp_init();
   mp_obj_list_init(mp_sys_path, 0);
   mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__dot_frozen));
@@ -173,6 +175,7 @@ int main_func(uint32_t cmd, void *arg) {
 
   // Clean up
   LOG_INF("Main script finished, cleaning up");
+  trezorcrypto_secret_reset();
   mp_deinit();
 
   // Python code shouldn't ever exit, avoid black screen if it does

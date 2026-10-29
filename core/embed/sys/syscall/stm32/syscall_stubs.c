@@ -24,6 +24,13 @@
 #include <trezor_types.h>
 
 #include "syscall_internal.h"
+#ifdef USE_VAULT
+#include <sec/vault.h>
+bool vault_call(const vault_request_t *request, vault_response_t *response) {
+  return syscall_invoke2((uint32_t)request, (uint32_t)response,
+                         SYSCALL_VAULT_CALL) != 0;
+}
+#endif
 
 // =============================================================================
 // system.h

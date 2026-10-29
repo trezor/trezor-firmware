@@ -1725,3 +1725,24 @@ access_violation:
 #endif  // USE_APP_LOADING
 
 #endif  // KERNEL
+
+#ifdef USE_VAULT
+#include <sec/vault.h>
+#include "memzero.h"
+#include "syscall_context.h"
+bool vault_call__verified(const vault_request_t *request,
+                          vault_response_t *response) {
+  if (!probe_read_access(request, sizeof(*request)) ||
+      !probe_write_access(response, sizeof(*response))) {
+    apptask_access_violation();
+    return false;
+  }
+  vault_request_t copy = *request;
+  vault_response_t out = {0};
+  bool ok = vault_dispatch((uintptr_t)syscall_get_context(), &copy, &out,
+                           storage_is_unlocked() == sectrue);
+  memzero(&copy, sizeof(copy));
+  memcpy(response, &out, sizeof(out));
+  return ok;
+}
+#endif

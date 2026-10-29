@@ -12,6 +12,8 @@ use xbuild::{
 
 fn main() -> Result<()> {
     xbuild::build(|lib| {
+        lib.add_include(".");
+
         let mpy_dir = "../../vendor/micropython";
 
         lib.import_lib("io")?;

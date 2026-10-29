@@ -40,6 +40,8 @@ extern const mp_obj_type_t mp_type_AuthenticationError;
 #endif
 #include "modtrezorcrypto-bech32.h"
 #include "modtrezorcrypto-bip32.h"
+/// package: trezorcrypto.__init__
+#include "modtrezorcrypto-secbytes.h"
 #ifdef USE_SECP256K1_ZKP
 #include "modtrezorcrypto-bip340.h"
 #endif
@@ -61,6 +63,7 @@ extern const mp_obj_type_t mp_type_AuthenticationError;
 #include "modtrezorcrypto-random.h"
 #include "modtrezorcrypto-ripemd160.h"
 #include "modtrezorcrypto-secp256k1.h"
+#include "modtrezorcrypto-secret-lifecycle.h"
 #include "modtrezorcrypto-sha256.h"
 #include "modtrezorcrypto-sha3-256.h"
 #include "modtrezorcrypto-sha3-512.h"
@@ -82,10 +85,50 @@ extern const mp_obj_type_t mp_type_AuthenticationError;
 #include "modtrezorcrypto-nem.h"
 #endif
 
+/// package: trezorcrypto.__init__
+/// def retain_secret(value: Any) -> None:
+///     """Explicitly transfer an encrypted byte value from this request to its
+///     session."""
+static mp_obj_t retain_secret(mp_obj_t obj) {
+  vault_blob_t compact;
+  vault_blob_t *h;
+  secret_kind_t kind;
+  if (mp_obj_is_type(obj, &mod_trezorcrypto_secbytes_type)) {
+    compact = secbytes_blob(MP_OBJ_TO_PTR(obj));
+    h = &compact;
+    kind = SECRET_BYTES;
+  } else {
+    mp_raise_TypeError(MP_ERROR_TEXT("Expected secret value"));
+  }
+  if (!secret_retain(h, secret_owner, kind))
+    mp_raise_ValueError(MP_ERROR_TEXT("Cannot retain secret"));
+  if (kind == SECRET_BYTES) secbytes_set_blob(MP_OBJ_TO_PTR(obj), h);
+  return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(retain_secret_obj, retain_secret);
+
 MP_DEFINE_EXCEPTION(AuthenticationError, Exception)
 
 static const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorcrypto)},
+    {MP_ROM_QSTR(MP_QSTR__secret_task_rebind),
+     MP_ROM_PTR(&secret_task_rebind_obj)},
+    {MP_ROM_QSTR(MP_QSTR__secret_task_register),
+     MP_ROM_PTR(&secret_task_register_obj)},
+    {MP_ROM_QSTR(MP_QSTR__secret_task_enter),
+     MP_ROM_PTR(&secret_task_enter_obj)},
+    {MP_ROM_QSTR(MP_QSTR__secret_task_finish),
+     MP_ROM_PTR(&secret_task_finish_obj)},
+    {MP_ROM_QSTR(MP_QSTR__secret_tasks_clear),
+     MP_ROM_PTR(&secret_tasks_clear_obj)},
+    {MP_ROM_QSTR(MP_QSTR_retain_secret), MP_ROM_PTR(&retain_secret_obj)},
+    {MP_ROM_QSTR(MP_QSTR_SecretOwner),
+     MP_ROM_PTR(&mod_trezorcrypto_SecretOwner_type)},
+    {MP_ROM_QSTR(MP_QSTR__secret_owner_activate),
+     MP_ROM_PTR(&owner_activate_obj)},
+    {MP_ROM_QSTR(MP_QSTR_secbytes),
+     MP_ROM_PTR(&mod_trezorcrypto_secbytes_type)},
+    {MP_ROM_QSTR(MP_QSTR_revoke_secrets), MP_ROM_PTR(&revoke_secrets_obj)},
     {MP_ROM_QSTR(MP_QSTR_AuthenticationError),
      MP_ROM_PTR(&mp_type_AuthenticationError)},
     {MP_ROM_QSTR(MP_QSTR_aes), MP_ROM_PTR(&mod_trezorcrypto_AES_type)},

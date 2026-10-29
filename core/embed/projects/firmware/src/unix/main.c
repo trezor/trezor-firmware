@@ -64,6 +64,7 @@
 #include "py/objstr.h"
 #include "py/repl.h"
 #include "py/runtime.h"
+#include "secret_lifecycle.h"
 #include "shared/runtime/pyexec.h"
 #include "stack_size.h"
 
@@ -543,6 +544,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
   mp_pystack_init(pystack, &pystack[MP_ARRAY_SIZE(pystack)]);
 #endif
 
+  trezorcrypto_secret_reset();
   mp_init();
 
 #if MICROPY_EMIT_NATIVE
@@ -770,6 +772,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
   gc_sweep_all();
 #endif
 
+  trezorcrypto_secret_reset();
   mp_deinit();
 
 #if MICROPY_ENABLE_GC && !defined(NDEBUG)

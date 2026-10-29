@@ -9,12 +9,21 @@ See `schedule`, `run`, and syscalls `sleep`, `wait`, `signal` and `race`.
 
 import timeq
 import utime
+from trezorcrypto import (
+    _secret_owner_activate,
+    _secret_task_enter,
+    _secret_task_finish,
+    _secret_task_rebind,
+    _secret_task_register,
+    _secret_tasks_clear,
+)
 from typing import TYPE_CHECKING
 
 from trezor import io, log
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Coroutine, Generator
+    from trezorcrypto import SecretOwner
     from typing import Any, Generic, TypeVar
 
     from .loop import wait
@@ -39,10 +48,14 @@ _finalizers: dict[int, Finalizer] = {}
 
 # reference to the task that is currently executing
 this_task: Task | None = None
+_clear_entry = [0, 0, 0]
 
 
 class TaskClosed(Exception):
     pass
+
+
+_closed_exception = GeneratorExit()
 
 
 def schedule(
@@ -51,6 +64,7 @@ def schedule(
     deadline: int | None = None,
     finalizer: Finalizer | None = None,
     reschedule: bool = False,
+    secret_owner: SecretOwner | None = None,
 ) -> None:
     """
     Schedule task to be executed with `value` on given `deadline` (in
@@ -60,13 +74,32 @@ def schedule(
 
     If `reschedule` is set, updates an existing entry.
     """
-    if reschedule:
-        _queue.discard(task)
-    if deadline is None:
-        deadline = utime.ticks_ms()
-    if finalizer is not None:
-        _finalizers[id(task)] = finalizer
-    _queue.push(deadline, task, value)
+    _secret_task_register(task, secret_owner)
+    try:
+        if reschedule:
+            _queue.discard(task)
+        if deadline is None:
+            deadline = utime.ticks_ms()
+        if finalizer is not None:
+            _finalizers[id(task)] = finalizer
+        _queue.push(deadline, task, value)
+    except BaseException:
+        _secret_task_finish(task)
+        _finalizers.pop(id(task), None)
+        raise
+
+
+def renew_secret_owner(parent: SecretOwner) -> None:
+    """Resume reset/setup under a new request after revoking all old secrets."""
+    from trezorcrypto import SecretOwner
+
+    assert this_task is not None
+    owner = SecretOwner(parent)
+    try:
+        _secret_task_rebind(this_task, owner)
+    except BaseException:
+        owner.destroy()
+        raise
 
 
 def pause(task: Task, iface: int) -> None:
@@ -75,6 +108,7 @@ def pause(task: Task, iface: int) -> None:
     is activated.  It is most probably wrong to call `pause` from user code,
     see the `wait` syscall for the correct concept.
     """
+    _secret_task_register(task, None)
     tasks = _paused.get(iface, None)
     if tasks is None:
         tasks = _paused[iface] = set()
@@ -83,6 +117,7 @@ def pause(task: Task, iface: int) -> None:
 
 def finalize(task: Task, value: Any) -> None:
     """Call and remove any finalization callbacks registered for given task."""
+    _secret_task_finish(task)
     fn = _finalizers.pop(id(task), None)
     if fn is not None:
         fn(task, value)
@@ -93,14 +128,21 @@ def close(task: Task) -> None:
     Unschedule and unblock a task, close it so it can release all resources, and
     call its finalizer.
     """
-    for iface in _paused:  # pylint: disable=consider-using-dict-items
-        _paused[iface].discard(task)
-    for iface in _paused:  # pylint: disable=consider-using-dict-items
-        if not _paused[iface]:
-            del _paused[iface]
-    _queue.discard(task)
-    task.close()
-    finalize(task, GeneratorExit())
+    _secret_task_enter(task)
+    _secret_task_finish(task)  # revoke before coroutine code or queue mutations
+    try:
+        for iface in _paused:  # pylint: disable=consider-using-dict-items
+            _paused[iface].discard(task)
+        for iface in _paused:  # pylint: disable=consider-using-dict-items
+            if not _paused[iface]:
+                del _paused[iface]
+        _queue.discard(task)
+        task.close()
+    finally:
+        try:
+            finalize(task, _closed_exception)
+        finally:
+            _secret_task_enter(this_task)
 
 
 def run() -> None:
@@ -136,13 +178,14 @@ def run() -> None:
 def clear() -> None:
     """Clear all queue state.  Any scheduled or paused tasks will be forgotten."""
     global this_task
+    _secret_tasks_clear()  # no unwinding or workflow callbacks needed
     this_task = None
 
-    _ = [0, 0, 0]
     while _queue:
-        _queue.pop(_)
+        _queue.pop(_clear_entry)
     _paused.clear()
     _finalizers.clear()
+    _clear_entry[0] = _clear_entry[1] = _clear_entry[2] = 0
 
 
 def _step(task: Task, value: Any) -> None:
@@ -162,28 +205,44 @@ def _step(task: Task, value: Any) -> None:
             - This should not happen - error.
     """
     global this_task
+    previous_task = this_task
     this_task = task
     try:
-        if isinstance(value, BaseException):
-            result = task.throw(value)
-        else:
-            result = task.send(value)
-    except StopIteration as e:
-        if __debug__:
-            log.debug(__name__, "finish: %s", task)
-        finalize(task, e.value)
-    except Exception as e:
-        if __debug__:
-            log.exception(__name__, e)
-        finalize(task, e)
-    else:
-        if isinstance(result, _RealSyscall):
-            result.handle(task)
-        elif result is None:
-            schedule(task)
-        else:
+        # Revoked requests may finish public protocol teardown (EndSession/wipe),
+        # but have no active owner and cannot access or allocate native secrets.
+        _secret_task_enter(task)
+        try:
+            if isinstance(value, BaseException):
+                result = task.throw(value)
+            else:
+                result = task.send(value)
+        except StopIteration as e:
             if __debug__:
-                log.error(__name__, "unknown syscall: %s", result)
+                log.debug(__name__, "finish: %s", task)
+            finalize(task, e.value)
+        except Exception as e:
+            if __debug__:
+                log.exception(__name__, e)
+            finalize(task, e)
+        else:
+            if isinstance(result, _RealSyscall):
+                result.handle(task)
+            elif result is None:
+                schedule(task)
+            else:
+                if __debug__:
+                    log.error(__name__, "unknown syscall: %s", result)
+                finalize(task, TypeError("Unknown syscall"))
+    except BaseException:
+        _secret_task_finish(task)
+        raise
+    finally:
+        # race/wait can synchronously step another task inside this one.
+        this_task = previous_task
+        if previous_task is None:
+            _secret_owner_activate(None)
+        else:
+            _secret_task_enter(previous_task)
 
 
 class _RealSyscall(Generic[T]):
@@ -272,6 +331,7 @@ class wait(Syscall[T]):
     throw = send
 
     def close(self) -> None:
+        _secret_task_finish(self)
         _queue.discard(self)
         if self.msg_iface in _paused:
             _paused[self.msg_iface].discard(self)
@@ -502,7 +562,7 @@ class spawn(Syscall[T]):
     the original return value (or raise the original exception).
     """
 
-    def __init__(self, task: Task[T]) -> None:
+    def __init__(self, task: Task[T], secret_owner: SecretOwner | None = None) -> None:
         self.task = task
         self.callback: Task | None = None
         self.finalizer_callback: Callable[["spawn"], None] | None = None
@@ -514,7 +574,7 @@ class spawn(Syscall[T]):
             log.debug(__name__, "spawn new task: %s", task)
 
         assert isinstance(task, _type_gen)
-        schedule(task, finalizer=self._finalize)
+        schedule(task, finalizer=self._finalize, secret_owner=secret_owner)
 
     def _finalize(self, task: Task, value: Any) -> None:
         # sanity check: make sure finalizer is for our task

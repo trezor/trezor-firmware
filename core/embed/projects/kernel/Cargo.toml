@@ -95,6 +95,7 @@ tropic = ["sec/tropic"]
 # --------------------------------------------------------------------------
 
 default = [
+    "sec/vault",
     "sys/applets",
     "io/display",
     "io/kernel_mode",

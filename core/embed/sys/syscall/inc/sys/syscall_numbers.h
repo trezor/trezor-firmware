@@ -246,4 +246,6 @@ typedef enum {
   SYSCALL_STORAGE_SET_COUNTER,
   SYSCALL_STORAGE_NEXT_COUNTER,
 
+  SYSCALL_VAULT_CALL,
+
 } syscall_number_t;
