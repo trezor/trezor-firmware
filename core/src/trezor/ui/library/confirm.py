@@ -52,6 +52,8 @@ async def review(
     A request the screens cannot draw — more than five extras, or more than one
     `data` fact — raises `DataError`, and the app is stopped.
     """
+    # An extra with no facts has nothing to show, so it is no entry at all.
+    extras = [extra for extra in extras if extra[1]]
     if len(extras) > MAX_EXTRAS:
         raise DataError("more than 5 extras")
     if sum(1 for kind, _, _ in facts if kind == DATA) > 1:

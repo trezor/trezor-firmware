@@ -2,7 +2,7 @@
 from common import *  # isort:skip
 
 import trezorui_api
-from trezor import loop
+from trezor import TR, loop
 from trezor.ui import Shutdown
 from trezor.ui.library import (
     CANCELLED,
@@ -71,6 +71,30 @@ class Screen:
         if self.error is not None:
             raise self.error
         return self.result
+
+
+class Layout:
+    """A stand-in for a layout context: entered and left, but never drawn."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        return None
+
+
+class Layouts:
+    """The `trezorui_api` factories `review()` draws with, recorded instead."""
+
+    # the decision `review()` compares against, as the real module's
+    CONFIRMED = trezorui_api.CONFIRMED
+
+    def __init__(self) -> None:
+        self.calls = []
+
+    def confirm_action(self, **kwargs):
+        self.calls.append(kwargs)
+        return Layout()
 
 
 class TestFieldKinds(unittest.TestCase):
@@ -439,17 +463,78 @@ class TestDriver(unittest.TestCase):
                 await_result(run(REVIEW, APP))
             self.review.error = None
 
-    # The SDK refuses the same limits before sending, so an app never reaches
-    # these; core checks again rather than trust it.
-    def test_six_extras_is_data_error(self):
-        extras = [(f"extra {i}", []) for i in range(6)]
-        with self.assertRaises(DataError):
-            await_result(run((0, "send", "Send", FACTS, extras, False), APP))
-
+    # The SDK refuses more than one `data` fact before sending, so an app never
+    # reaches this; core checks again rather than trust it.
     def test_two_data_fields_is_data_error(self):
         facts = [DATA_FACT, DATA_FACT]
         with self.assertRaises(DataError):
             await_result(run((0, "send", "Send", facts, [], False), APP))
+
+
+class TestReviewExtras(unittest.TestCase):
+    """`review()`'s extras: an extra with no facts is never offered."""
+
+    def setUp(self):
+        self.layouts = Layouts()
+        self.menu = Screen()
+        self.menu.result = trezorui_api.CONFIRMED
+        self._originals = [
+            (confirm, "trezorui_api", confirm.trezorui_api),
+            (confirm, "interact_with_menu", confirm.interact_with_menu),
+        ]
+        confirm.trezorui_api = self.layouts
+        confirm.interact_with_menu = self.menu
+
+    def tearDown(self):
+        for module, name, original in self._originals:
+            setattr(module, name, original)
+
+    def review(self, extras):
+        # a note-only review draws one action screen, then offers its extras
+        return await_result(
+            confirm.review(f"{APP}/send", "Send", [NOTE_FACT], extras, False)
+        )
+
+    def labels(self) -> "list[str]":
+        """The entries of the menu the review drew."""
+        (_layout, menu, _name) = self.menu.calls[0]
+        return [leaf.name for leaf in menu.children]
+
+    # The SDK refuses the same limit before sending, so an app never reaches
+    # this; core checks again rather than trust it.
+    def test_six_extras_is_data_error(self):
+        extras = [(f"extra {i}", [(TEXT, "Account", f"TRX #{i}")]) for i in range(6)]
+        with self.assertRaises(DataError):
+            self.review(extras)
+        # the limit is checked before anything is drawn
+        self.assertEqual(self.layouts.calls, [])
+        self.assertEqual(self.menu.calls, [])
+
+    def test_empty_extra_is_not_offered(self):
+        # an extra with no facts has nothing to show, so it is no entry
+        extras = [
+            ("empty", []),
+            ("Account info", [(TEXT, "Account", "TRX #1")]),
+            ("other", [(TEXT, "x", "y")]),
+        ]
+        self.assertEqual(self.review(extras), trezorui_api.CONFIRMED)
+        self.assertEqual(self.labels(), ["Account info", "other", TR.buttons__cancel])
+        # the step's own ButtonRequest is still sent, exactly once
+        self.assertEqual(len(self.menu.calls), 1)
+        self.assertEqual(self.menu.calls[0][2], f"{APP}/send")
+        # one action screen, still offering the menu it now has
+        self.assertEqual(len(self.layouts.calls), 1)
+        self.assertTrue(self.layouts.calls[0]["external_menu"])
+
+    def test_five_extras_with_one_empty_pass(self):
+        # the empty extra is dropped before the count, so five still fit
+        extras = [(f"extra {i}", [(TEXT, "Account", f"TRX #{i}")]) for i in range(5)]
+        extras.append(("empty", []))
+        self.assertEqual(self.review(extras), trezorui_api.CONFIRMED)
+        self.assertEqual(
+            self.labels(),
+            [f"extra {i}" for i in range(5)] + [TR.buttons__cancel],
+        )
 
 
 if __name__ == "__main__":
