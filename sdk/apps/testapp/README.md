@@ -146,7 +146,9 @@ sdk/apps/testapp/host/testappctl stream-data --length 1025
 ```
 
 `testappctl showcase --help` lists the names. The app is loaded afresh each run,
-so a rebuilt app is what runs; `--no-reload` skips that.
+so a rebuilt app is what runs; `--no-reload` skips that. Like `trezorctl`, it
+talks to the device at `TREZOR_PATH` (such as `udp:127.0.0.1:32500` for an
+emulator started with `-P 32500`), or to the first one it finds.
 
 ### Host library
 

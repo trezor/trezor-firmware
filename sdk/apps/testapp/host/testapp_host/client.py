@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import os
 import time
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
@@ -67,7 +68,8 @@ class UiResult:
 def connect(
     transport: Optional["Transport"] = None, app_name: str = "testapp"
 ) -> "Session":
-    """Open a standard session on the first device found (the emulator).
+    """Open a standard session on the device at `TREZOR_PATH`, as `trezorctl`
+    does, or on the first device found (the emulator).
 
     Pairs over THP where the device needs it; may show one pairing screen.
     """
@@ -77,12 +79,18 @@ def connect(
     if transport is None:
         # The emulator answers a single short ping, which it can miss while
         # still busy with the previous request, so a miss is retried.
+        path = os.environ.get("TREZOR_PATH")
         deadline = time.monotonic() + 5
-        while not (devices := transport_module.enumerate_devices()):
-            if time.monotonic() > deadline:
-                raise RuntimeError("No Trezor found; start the emulator first.")
-            time.sleep(0.2)
-        transport = devices[0]
+        while True:
+            try:
+                transport = transport_module.get_transport(path)
+                break
+            except transport_module.TransportException:
+                if time.monotonic() > deadline:
+                    raise RuntimeError(
+                        "No Trezor found; start the emulator first."
+                    ) from None
+                time.sleep(0.2)
     return get_default_client(app_name, transport).get_session()
 
 
