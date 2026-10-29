@@ -161,6 +161,16 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
         if cfg!(feature = "secp256k1_zkp") {
             builder = builder.header(format!("{CRYPTO_PATH}/zkp_context.h"));
         }
+
+        if cfg!(feature = "thp") {
+            builder = builder
+                .header(format!("{CRYPTO_PATH}/bip32.h"))
+                .allowlist_type("HDNode")
+                .no_copy("HDNode")
+                .rustified_enum("HasherType")
+                .allowlist_function("hdnode_from_seed")
+                .allowlist_function("hdnode_private_ckd");
+        }
         Ok(builder
             // curve25519
             .allowlist_function("curve25519_scalarmult")

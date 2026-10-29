@@ -192,9 +192,14 @@ def next_timeout(iface_num: int) -> tuple[int, int] | None:
 
 
 # rust/src/thp/micropython.rs
-def handshake_key(iface_num: int, trezor_static_private_key: AnyBytes | None) -> None:
+def handshake_key_from_device_secret(iface_num: int, device_secret: AnyBytes | None) -> None:
     """
-    Provide device static key in order to progress a handshake after `packet_in`
+    Derive the device static key natively to progress a handshake after `packet_in`
     returned `KEY_REQUIRED`. If the second argument is None, handshake is aborted
     and `DEVICE_LOCKED` sent to the peer.
     """
+
+
+# rust/src/thp/micropython.rs
+def static_public_key(device_secret: AnyBytes) -> bytes:
+    """Derive the legacy THP public identity without exporting its private key."""

@@ -31,7 +31,9 @@ extern "C" fn thp_init(iface_num: Obj, device_properties: Obj) -> Obj {
 
         #[cfg(feature = "debug")]
         if thp.message_out_ready(iface_num).is_some() {
-            sys::ulog::error!("Message ready from previous event loop session but buffer is lost, waiting for retransmission.");
+            sys::ulog::error!(
+                "Message ready from previous event loop session but buffer is lost, waiting for retransmission."
+            );
         }
 
         Ok(Obj::const_none())
@@ -286,19 +288,36 @@ extern "C" fn thp_next_timeout(iface_num: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn thp_handshake_key(iface_num: Obj, local_static_privkey: Obj) -> Obj {
+extern "C" fn thp_handshake_key_from_device_secret(iface_num: Obj, device_secret: Obj) -> Obj {
     let block = || {
         let iface_num: u8 = iface_num.try_into()?;
-
         let mut thp = try_lock_thp()?;
-        if local_static_privkey == Obj::const_none() {
+        if device_secret == Obj::const_none() {
             thp.send_device_locked(iface_num)?;
         } else {
             // SAFETY: reference is discarded at the end of this block.
-            let key = unsafe { get_buffer(local_static_privkey)? };
-            thp.handshake_static_key(iface_num, key)?;
+            let secret = unsafe { get_buffer(device_secret)? };
+            crypto::thp::with_static_key(secret, |key| thp.handshake_static_key(iface_num, key))
+                .map_err(|_| MpyError::ValueError(c"Invalid device secret"))??;
         }
         Ok(Obj::const_none())
+    };
+
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn thp_static_public_key(device_secret: Obj) -> Obj {
+    let block = || {
+        use crypto::curve25519::{Point, Scalar};
+        use trezor_thp::channel::U8Array;
+
+        // SAFETY: reference is discarded at the end of this block.
+        let secret = unsafe { get_buffer(device_secret)? };
+        crypto::thp::with_static_key(secret, |key| {
+            let scalar = Scalar::from_slice(key);
+            Point::from_secret(&scalar).as_slice().try_into()
+        })
+        .map_err(|_| MpyError::ValueError(c"Invalid device secret"))?
     };
 
     unsafe { util::try_or_raise(block) }
@@ -553,11 +572,15 @@ pub static mp_module_trezorthp: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_next_timeout => obj_fn_1!(thp_next_timeout).as_obj(),
 
-    /// def handshake_key(iface_num: int, trezor_static_private_key: AnyBytes | None) -> None:
+    /// def handshake_key_from_device_secret(iface_num: int, device_secret: AnyBytes | None) -> None:
     ///     """
-    ///     Provide device static key in order to progress a handshake after `packet_in`
+    ///     Derive the device static key natively to progress a handshake after `packet_in`
     ///     returned `KEY_REQUIRED`. If the second argument is None, handshake is aborted
     ///     and `DEVICE_LOCKED` sent to the peer.
     ///     """
-    Qstr::MP_QSTR_handshake_key => obj_fn_2!(thp_handshake_key).as_obj(),
+    Qstr::MP_QSTR_handshake_key_from_device_secret => obj_fn_2!(thp_handshake_key_from_device_secret).as_obj(),
+
+    /// def static_public_key(device_secret: AnyBytes) -> bytes:
+    ///     """Derive the legacy THP public identity without exporting its private key."""
+    Qstr::MP_QSTR_static_public_key => obj_fn_1!(thp_static_public_key).as_obj(),
 };
