@@ -133,13 +133,21 @@ USBD_StatusTypeDef  USBD_CtlContinueSendData (USBD_HandleTypeDef  *pdev,
 *         receive data on the ctl pipe
 * @param  pdev: device instance
 * @param  buff: pointer to data buffer
+* @param  buff_size: size of the data buffer
 * @param  len: length of data to be received
-* @retval status
+* @retval status: USBD_FAIL and EP0 stalled if len exceeds buff_size
 */
 USBD_StatusTypeDef  USBD_CtlPrepareRx (USBD_HandleTypeDef  *pdev,
                                   uint8_t *pbuf,
+                                  uint16_t buff_size,
                                   uint16_t len)
 {
+  if (len > buff_size)
+  {
+    USBD_CtlError(pdev, &pdev->request);
+    return USBD_FAIL;
+  }
+
   /* Set EP0 State */
   pdev->ep0_state = USBD_EP0_DATA_OUT;
   pdev->ep_out[0].total_length = len;

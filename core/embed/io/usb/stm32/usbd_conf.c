@@ -851,6 +851,14 @@ USBD_StatusTypeDef USBD_LL_PrepareReceive(USBD_HandleTypeDef *pdev,
       pbuf = ep0_rx.buf;
     }
   }
+  else
+  {
+    /* The OTG core rounds OUT transfers up to whole max-size packets, so the
+       buffer must hold exactly that many to not be overrun by the host. */
+    uint32_t mps = ((PCD_HandleTypeDef *)pdev->pData)->OUT_ep[ep_addr & 0x7F].maxpacket;
+    ensure(sectrue * (size > 0 && mps > 0 && size % mps == 0),
+           "USB OUT size not packet aligned");
+  }
 
   HAL_PCD_EP_Receive(pdev->pData, ep_addr, pbuf, size);
   return USBD_OK;
