@@ -150,7 +150,7 @@ def main():
             [
                 "cc",
                 "-DSECURE_MODE",
-                "-DVAULT_SEAL_MODE=3",
+                "-DVAULT_SEAL_MODE=1",
                 "-DPRODUCTION=1",
                 "-ffunction-sections",
                 "-Wl,--gc-sections",

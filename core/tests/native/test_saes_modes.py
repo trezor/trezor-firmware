@@ -1,17 +1,17 @@
-"""Check the actual SAES driver against independent GCM vectors."""
+"""Check the actual SAES driver against independent SIV vectors."""
 
 import argparse
 import subprocess
 import tempfile
 from pathlib import Path
 
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.ciphers.aead import AESSIV
 from saes_test_hal import HAL_MODEL
 from test_saes_key_ready import HEADERS
 
 PROGRAM = (
     HAL_MODEL
-    + '\n#include "vectors.h"\n\nstatic void zero_data(const vault_saes_request_t*r){\n for(size_t i=0;i<sizeof(r->data);i++)assert(!r->data[i]);\n}\nstatic void install(saes_key_t *slot,const uint8_t *key){\n for(unsigned i=0;i<8;i++)slot->wrapped[i]=saes_be32(key+4*i);\n slot->ready=true;\n}\nstatic void check_bad(vault_saes_request_t r){\n r.op=VAULT_SAES_OPEN;\n assert(vault_saes_record(&r)==VAULT_SAES_AUTH_FAILED);zero_data(&r);\n}\nint main(void){\n distinct_rng=true;\n assert(saes_known_answer());\n for(size_t v=0;v<sizeof(vectors)/sizeof(vectors[0]);v++){\n  const vector_t *vector=&vectors[v];unsigned n=vector->length;\n  uint8_t key[64],plain[160];\n  for(unsigned i=0;i<64;i++)key[i]=vector->seed+7*i;\n  install(&record_key,key);\n  vault_saes_request_t r={.op=VAULT_SAES_SEAL,.length=n};\n  for(unsigned i=0;i<12;i++)r.iv[i]=n+3*i;\n  for(unsigned i=0;i<32;i++)r.aad[i]=1+7*i;\n  for(unsigned i=0;i<n;i++)plain[i]=r.data[i]=n+19*i;\n  assert(vault_saes_record(&r)==VAULT_SAES_OK);\n  assert(!memcmp(r.data,vector->ciphertext,n));\n  assert(!memcmp(r.tag,vector->tag,VAULT_TAG_SIZE));\n  vault_saes_request_t bad=r;bad.data[n-1]^=1;check_bad(bad);\n  bad=r;bad.aad[0]^=1;check_bad(bad);\n  for(unsigned i=0;i<VAULT_TAG_SIZE;i++){bad=r;bad.tag[i]^=1;check_bad(bad);}\n  bad=r;bad.iv[0]^=1;check_bad(bad);\n  r.op=VAULT_SAES_OPEN;assert(vault_saes_record(&r)==VAULT_SAES_OK);\n  assert(!memcmp(r.data,plain,n));\n  // Internal errors, including the final reset, never release output.\n  r.op=VAULT_SAES_SEAL;fail_at=blocks+1;\n  assert(vault_saes_record(&r)==VAULT_SAES_FAILED);zero_data(&r);fail_at=0;\n }\n vault_saes_request_t r={.op=VAULT_SAES_RESET};\n assert(vault_saes_record(&r)==VAULT_SAES_OK && !record_key.ready);\n r=(vault_saes_request_t){.op=VAULT_SAES_SEAL,.length=32};\n assert(vault_saes_record(&r)==VAULT_SAES_OK);\n r.op=VAULT_SAES_OPEN;reset_failure_at=resets+2;\n assert(vault_saes_record(&r)==VAULT_SAES_FAILED);zero_data(&r);reset_failure_at=0;\n r=(vault_saes_request_t){.op=VAULT_SAES_SEAL,.length=161};\n assert(vault_saes_record(&r)==VAULT_SAES_FAILED);zero_data(&r);\n // Storage cache stays authenticated GCM even in ECB/SIV record builds.\n r=(vault_saes_request_t){.op=VAULT_SAES_SEAL,.length=48};\n assert(vault_saes_storage(&r)==VAULT_SAES_OK);\n r.op=VAULT_SAES_OPEN;r.tag[0]^=1;\n assert(vault_saes_storage(&r)==VAULT_SAES_AUTH_FAILED);zero_data(&r);\n puts("SAES mode: independent vectors, tampering, distinct keys, reset and failures passed");\n}\n'
+    + '\n#include "vectors.h"\n\nstatic void zero_data(const vault_saes_request_t*r){\n for(size_t i=0;i<sizeof(r->data);i++)assert(!r->data[i]);\n}\nstatic void install(saes_key_t *slot,const uint8_t *key){\n for(unsigned i=0;i<8;i++)slot->wrapped[i]=saes_be32(key+4*i);\n slot->ready=true;\n}\nstatic void check_bad(vault_saes_request_t r){\n r.op=VAULT_SAES_OPEN;\n assert(vault_saes_record(&r)==VAULT_SAES_AUTH_FAILED);zero_data(&r);\n}\nint main(void){\n distinct_rng=true;\n assert(saes_known_answer());\n for(size_t v=0;v<sizeof(vectors)/sizeof(vectors[0]);v++){\n  const vector_t *vector=&vectors[v];unsigned n=vector->length;\n  uint8_t key[64],plain[160];\n  for(unsigned i=0;i<64;i++)key[i]=vector->seed+7*i;\n  install(&record_mac_key,key);install(&record_key,key+32);\n  vault_saes_request_t r={.op=VAULT_SAES_SEAL,.length=n};\n  for(unsigned i=0;i<12;i++)r.iv[i]=n+3*i;\n  for(unsigned i=0;i<32;i++)r.aad[i]=1+7*i;\n  for(unsigned i=0;i<n;i++)plain[i]=r.data[i]=n+19*i;\n  assert(vault_saes_record(&r)==VAULT_SAES_OK);\n  assert(!memcmp(r.data,vector->ciphertext,n));\n  assert(!memcmp(r.tag,vector->tag,VAULT_TAG_SIZE));\n  vault_saes_request_t bad=r;bad.data[n-1]^=1;check_bad(bad);\n  bad=r;bad.aad[0]^=1;check_bad(bad);\n  for(unsigned i=0;i<VAULT_TAG_SIZE;i++){bad=r;bad.tag[i]^=1;check_bad(bad);}\n  r.op=VAULT_SAES_OPEN;assert(vault_saes_record(&r)==VAULT_SAES_OK);\n  assert(!memcmp(r.data,plain,n));\n  // Internal errors, including the final reset, never release output.\n  r.op=VAULT_SAES_SEAL;fail_at=blocks+1;\n  assert(vault_saes_record(&r)==VAULT_SAES_FAILED);zero_data(&r);fail_at=0;\n }\n vault_saes_request_t r={.op=VAULT_SAES_RESET};\n assert(vault_saes_record(&r)==VAULT_SAES_OK && !record_key.ready);\n assert(!record_mac_key.ready);\n r=(vault_saes_request_t){.op=VAULT_SAES_SEAL,.length=32};\n assert(vault_saes_record(&r)==VAULT_SAES_OK);\n assert(memcmp(record_key.wrapped,record_mac_key.wrapped,32));\n r.op=VAULT_SAES_OPEN;reset_failure_at=resets+2;\n assert(vault_saes_record(&r)==VAULT_SAES_FAILED);zero_data(&r);reset_failure_at=0;\n r=(vault_saes_request_t){.op=VAULT_SAES_SEAL,.length=161};\n assert(vault_saes_record(&r)==VAULT_SAES_FAILED);zero_data(&r);\n // Storage cache stays authenticated GCM even in ECB/SIV record builds.\n r=(vault_saes_request_t){.op=VAULT_SAES_SEAL,.length=48};\n assert(vault_saes_storage(&r)==VAULT_SAES_OK);\n r.op=VAULT_SAES_OPEN;r.tag[0]^=1;\n assert(vault_saes_storage(&r)==VAULT_SAES_AUTH_FAILED);zero_data(&r);\n puts("SAES mode: independent vectors, tampering, distinct keys, reset and failures passed");\n}\n'
 )
 
 
@@ -29,8 +29,8 @@ def vectors(mode):
             plain = bytes(((length + 19 * i) % 256 for i in range(length)))
             aad = bytes(((1 + 7 * i) % 256 for i in range(32)))
             iv = bytes(((length + 3 * i) % 256 for i in range(12)))
-            result = AESGCM(key[:32]).encrypt(iv, plain, aad)
-            ciphertext, tag = (result[:-16], result[-16:])
+            result = AESSIV(key).encrypt(plain, [aad])
+            tag, ciphertext = (result[:16], result[16:])
             rows.append(
                 f"{{{seed},{length},{values(ciphertext)},{values(tag or bytes(16))}}}"
             )
@@ -73,7 +73,7 @@ def main():
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(source.read_text())
         (work / "test.c").write_text(PROGRAM)
-        for mode, selection in (("kw", 4), ("siv", 1), ("ecb", 2), ("gcm", 3)):
+        for mode, selection in (("siv", 1),):
             (work / "vectors.h").write_text(vectors(mode))
             binary = work / mode
             subprocess.run(

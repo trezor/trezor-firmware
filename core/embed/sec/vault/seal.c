@@ -77,7 +77,7 @@ bool vault_seal_record(bool encrypt, uint64_t nonce,
 }
 
 #else  // software sealing
-#include "aes/aesgcm.h"
+#include "siv.h"
 #if defined(VAULT_TEST)
 #include "keywrap.h"
 /* Tests inject AES and entropy, never the production binary. */
@@ -130,7 +130,7 @@ static bool vault_kek(bool encrypt, uint8_t value[40]) {
 
 static uint8_t wrapped_dek[40 * VAULT_KEY_COUNT];
 static bool key_ready, key_active;
-static gcm_ctx record_ctx;
+static vault_siv_ctx record_ctx;
 
 void vault_seal_end(void) {
   memzero(&record_ctx, sizeof(record_ctx));
@@ -172,7 +172,9 @@ static bool vault_seal_begin(bool encrypt) {
     if (!vault_kek(false, key + 40 * i)) goto cleanup;
   VAULT_TIMING_ADD(unwrap, start);
   start = vault_cycles();
-  if (gcm_init_and_key(key + 8, 32, &record_ctx) != RETURN_GOOD) goto cleanup;
+  if (aes_encrypt_key256(key + 8, &record_ctx.mac) != 0 ||
+      aes_encrypt_key256(key + 48, &record_ctx.ctr) != 0)
+    goto cleanup;
   VAULT_TIMING_ADD(expand, start);
   key_active = true;
   ok = true;
@@ -188,13 +190,9 @@ bool vault_seal_record(bool encrypt, uint64_t nonce,
   if (!length || length > VAULT_RECORD_SIZE || !vault_seal_begin(encrypt))
     return false;
   uint32_t start = vault_cycles();
-  uint8_t iv[12] = {'S', 'V', '0', '1'};
-  for (size_t i = 0; i < 8; i++) iv[4 + i] = nonce >> (56 - 8 * i);
-  int ret = encrypt ? gcm_encrypt_message(iv, sizeof(iv), aad, VAULT_AAD_SIZE,
-                                          data, length, tag, 16, &record_ctx)
-                    : gcm_decrypt_message(iv, sizeof(iv), aad, VAULT_AAD_SIZE,
-                                          data, length, tag, 16, &record_ctx);
-  bool ok = ret == RETURN_GOOD;
+  (void)nonce;
+  bool ok = vault_siv_record(&record_ctx, encrypt, aad, VAULT_AAD_SIZE, data,
+                             length, tag);
   VAULT_TIMING_ADD(record, start);
 #ifdef VAULT_TIMING
   vault_timing.records++;

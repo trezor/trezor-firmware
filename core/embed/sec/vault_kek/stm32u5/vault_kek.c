@@ -1,8 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #ifdef SECURE_MODE
-#if defined(VAULT_SEAL_HW)
-#error "Select a record-sealing feature before enabling hardware records"
-#endif
 
 #include <trezor_bsp.h>
 
@@ -13,6 +10,7 @@
 
 #include "../../vault/inc/sec/vault_mode.h"
 #include "../../vault/keywrap.h"
+#include "../../vault/siv_core.h"
 
 static bool vault_kek_block(bool encrypt, const uint8_t in[16],
                             uint8_t out[16]) {
@@ -60,7 +58,8 @@ typedef struct {
   uint32_t wrapped[8];
   bool ready;
 } saes_key_t;
-static saes_key_t storage_key;
+static saes_key_t record_key, storage_key;
+static saes_key_t record_mac_key;
 
 /* HAL_CRYP_Init starts DHUK loading but does not wait for that load.
  * WrapKey/UnwrapKey enable SAES directly, so their callers must wait first. */
@@ -171,6 +170,48 @@ static uint32_t saes_gcm(saes_key_t* key, vault_saes_request_t* r) {
   return result;
 }
 
+typedef struct {
+  CRYP_HandleTypeDef handle;
+  saes_key_t *mac, *ctr, *loaded;
+  bool failed;
+} saes_siv_context;
+
+static bool saes_siv_block(const void* context, bool mac, const uint8_t in[16],
+                           uint8_t out[16]) {
+  saes_siv_context* ctx = (saes_siv_context*)context;
+  saes_key_t* key = mac ? ctx->mac : ctx->ctr;
+  if (ctx->failed) return false;
+  if (ctx->loaded != key) {
+    if (!saes_cipher_key(&ctx->handle, key)) {
+      ctx->failed = true;
+      return false;
+    }
+    ctx->loaded = key;
+  }
+  if (!saes_block(&ctx->handle, in, out)) {
+    ctx->failed = true;
+    return false;
+  }
+  return true;
+}
+
+static uint32_t saes_siv(saes_key_t* mac, saes_key_t* ctr,
+                         vault_saes_request_t* r) {
+  saes_siv_context context = {.mac = mac, .ctr = ctr};
+  const vault_siv_cipher cipher = {&context, saes_siv_block};
+  /* SIV decrypts into the secure request before recomputing S2V. That private
+   * plaintext is released only after both tag checks in the shared core. */
+  bool ok = vault_siv_cipher_record(&cipher, r->op == VAULT_SAES_SEAL, r->aad,
+                                    sizeof(r->aad), r->data, r->length, r->tag);
+  uint32_t result = ok               ? VAULT_SAES_OK
+                    : context.failed ? VAULT_SAES_FAILED
+                                     : VAULT_SAES_AUTH_FAILED;
+  memzero(&context, sizeof(context));
+  if (secure_aes_init() != sectrue) result = VAULT_SAES_FAILED;
+  if (result != VAULT_SAES_OK) memzero(r->data, sizeof(r->data));
+  return result;
+}
+
 static void saes_key_drop(saes_key_t* key) {
   memzero(key->wrapped, sizeof(key->wrapped));
   key->ready = false;
@@ -207,6 +248,49 @@ static bool saes_key_create(saes_key_t* key) {
 }
 
 #if !PRODUCTION
+
+#if !PRODUCTION
+static bool saes_modes_known_answer(saes_key_t* zero_key) {
+  static const uint8_t siv[17] = {0x7e, 0xb5, 0x83, 0x24, 0xb6, 0x02,
+                                  0x40, 0xf4, 0x72, 0x9e, 0xc6, 0x09,
+                                  0x64, 0xfb, 0x83, 0xa4, 0x00};
+  static const uint8_t tag[16] = {0x00, 0x17, 0x26, 0xe3, 0x3f, 0x79,
+                                  0xab, 0x3d, 0xa2, 0x33, 0x3f, 0x5f,
+                                  0x77, 0x1f, 0xd4, 0x00};
+  vault_saes_request_t probe = {0};
+  bool ok = false;
+  uint32_t plain[8];
+  for (size_t i = 0; i < 8; i++) plain[i] = 0x00010203U + 0x04040404U * i;
+  saes_key_t ctr = {0};
+  CRYP_HandleTypeDef handle;
+  ok =
+      saes_setup(&handle, CRYP_KEYMODE_WRAPPED, CRYP_KEYSEL_HW, CRYP_AES_ECB) &&
+      HAL_CRYPEx_WrapKey(&handle, plain, ctr.wrapped, SAES_TIMEOUT) == HAL_OK;
+  memzero(plain, sizeof(plain));
+  if (secure_aes_init() != sectrue) ok = false;
+  ensure_true(ok, "SAES self-test: SIV key wrap");
+  probe = (vault_saes_request_t){.op = VAULT_SAES_SEAL, .length = 17};
+  for (size_t i = 0; i < 32; i++) probe.aad[i] = i + 1;
+  for (size_t i = 0; i < 17; i++) probe.data[i] = 3 + 17 * i;
+  ok = saes_siv(zero_key, &ctr, &probe) == VAULT_SAES_OK &&
+       memcmp(probe.data, siv, 17) == 0 && memcmp(probe.tag, tag, 16) == 0;
+  ensure_true(ok, "SAES self-test: SIV seal");
+  probe.op = VAULT_SAES_OPEN;
+  ok = saes_siv(zero_key, &ctr, &probe) == VAULT_SAES_OK;
+  for (size_t i = 0; ok && i < 17; i++)
+    ok = probe.data[i] == (uint8_t)(3 + 17 * i);
+  ensure_true(ok, "SAES self-test: SIV open");
+  memcpy(probe.data, siv, 17);
+  probe.tag[0] ^= 1;
+  ok = saes_siv(zero_key, &ctr, &probe) == VAULT_SAES_AUTH_FAILED &&
+       memcmp(probe.data, (uint8_t[VAULT_SAES_RECORD_SIZE]){0},
+              sizeof(probe.data)) == 0;
+  ensure_true(ok, "SAES self-test: SIV bad tag");
+  saes_key_drop(&ctr);
+  memzero(&probe, sizeof(probe));
+  return ok;
+}
+#endif
 
 /* Independent AES-256-GCM vectors: zero key, IV 00..0b, AAD 01..20,
  * plaintext byte i = 3 + 17*i. Exercise full and partial blocks on hardware. */
@@ -281,6 +365,7 @@ static bool saes_known_answer(void) {
     ensure_true(ok, "SAES self-test: bad tag");
     memzero(&probe, sizeof(probe));
   }
+  ok = ok && saes_modes_known_answer(&key);
   saes_key_drop(&key);
   passed = ok;
   return ok;
@@ -309,8 +394,32 @@ static uint32_t saes_request(saes_key_t* key, vault_saes_request_t* r) {
 }
 
 uint32_t vault_saes_record(vault_saes_request_t* r) {
-  memzero(r->data, sizeof(r->data));
-  return VAULT_SAES_FAILED;
+  if (r->op == VAULT_SAES_RESET) {
+    saes_key_drop(&record_key);
+    saes_key_drop(&record_mac_key);
+    return VAULT_SAES_OK;
+  }
+  if ((r->op != VAULT_SAES_SEAL && r->op != VAULT_SAES_OPEN) || !r->length ||
+      r->length > VAULT_SAES_RECORD_SIZE) {
+    memzero(r->data, sizeof(r->data));
+    return VAULT_SAES_FAILED;
+  }
+  bool ok = secure_aes_init() == sectrue;
+#if !PRODUCTION
+  ok = ok && saes_known_answer();
+#endif
+  ok = ok && (record_key.ready || saes_key_create(&record_key));
+  ok = ok && (record_mac_key.ready || saes_key_create(&record_mac_key));
+  uint32_t result = VAULT_SAES_FAILED;
+  if (ok) {
+    result = saes_siv(&record_mac_key, &record_key, r);
+  }
+  if (result == VAULT_SAES_FAILED) {
+    saes_key_drop(&record_key);
+    saes_key_drop(&record_mac_key);
+    memzero(r->data, sizeof(r->data));
+  }
+  return result;
 }
 
 uint32_t vault_saes_storage(vault_saes_request_t* r) {

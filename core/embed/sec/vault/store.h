@@ -89,7 +89,6 @@ static secret_payload_t secret_scratch[SECRET_SCRATCH_CAPACITY];
 static bool secret_scratch_used[SECRET_SCRATCH_CAPACITY];
 static bool secret_crypto_failed, secret_busy;
 /* Monotonic for the entire boot, including across key rotations/VM resets. */
-static uint64_t secret_nonce;
 
 static secret_payload_t *secret_scratch_take(void) {
   for (size_t i = 0; i < SECRET_SCRATCH_CAPACITY; i++) {
@@ -207,16 +206,11 @@ static bool secret_seal(uint32_t owner, uint8_t type, size_t length,
          p->node.curve != get_curve_by_name("ed25519 cardano seed")))))
     return false;
   uint64_t nonce = 0;
-  /* Advance before encryption: failed writes never reuse a nonce. */
-  if (secret_nonce == UINT64_MAX) return false;
-  nonce = ++secret_nonce;
   uint8_t *b = out->bytes;
   secret_put32(b, owner);
   b[4] = kind;
   b[5] = kind == SECRET_BYTES ? length : 0;
   b[6] = type;
-  secret_put32(b + 8, nonce);
-  secret_put32(b + 12, nonce >> 32);
   uint8_t data[VAULT_RECORD_SIZE], aad[VAULT_AAD_SIZE];
   secret_encode(kind, length, p, data);
   secret_aad(b, aad);
@@ -272,7 +266,6 @@ static secret_payload_t *secret_open(const vault_blob_t *blob, uint32_t active,
   memcpy(tag, b + SECRET_BLOB_HEADER + encoded_length, VAULT_TAG_SIZE);
   secret_aad(b, aad);
   uint64_t nonce = 0;
-  nonce = secret_get64(b + 8);
   bool ok = vault_seal_record(false, nonce, aad, data, encoded_length, tag) &&
             secret_decode(kind, len, data, p);
   memzero(data, sizeof(data));

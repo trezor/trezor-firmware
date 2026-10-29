@@ -2,19 +2,19 @@
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Cipher {
-    Gcm = 3,
+    Siv = 1,
 }
 impl Cipher {
     fn parse(value: &str) -> Result<Self, String> {
         match value {
-            "gcm" => Ok(Self::Gcm),
+            "siv" => Ok(Self::Siv),
             _ => Err(format!(
-                "This feature branch supports only gcm records: {value}"
+                "This feature branch supports only siv records: {value}"
             )),
         }
     }
     pub fn define(self) -> &'static str {
-        "3"
+        "1"
     }
 }
 
@@ -59,7 +59,7 @@ impl Selection {
         }
         let (cipher, hardware, legacy_fallback) = if let Some(mode) = mode {
             let (name, requested) = if mode == "saes" {
-                ("gcm", true)
+                ("siv", true)
             } else if let Some(name) = mode.strip_prefix("saes-") {
                 (name, true)
             } else {
@@ -72,13 +72,13 @@ impl Selection {
             )
         } else {
             let hardware = match backend.unwrap_or("auto") {
-                "auto" => false,
+                "auto" => caps.saes,
                 "software" => false,
                 "saes" if caps.saes => true,
                 "saes" => return Err("SAES backend requested on an MCU without SAES".into()),
                 value => return Err(format!("Unsupported vault backend: {value}")),
             };
-            (Cipher::parse(cipher.unwrap_or("gcm"))?, hardware, false)
+            (Cipher::parse(cipher.unwrap_or("siv"))?, hardware, false)
         };
         Ok(Self {
             cipher,
@@ -110,7 +110,7 @@ mod tests {
             assert_eq!(
                 Selection::resolve(None, Some(name), Some("software"), Capabilities::default())
                     .is_ok(),
-                name == "gcm"
+                name == "siv"
             );
         }
     }
@@ -133,7 +133,7 @@ mod tests {
     #[test]
     fn mixed_configuration_is_rejected() {
         assert!(
-            Selection::resolve(Some("gcm"), Some("gcm"), None, Capabilities::default()).is_err()
+            Selection::resolve(Some("siv"), Some("siv"), None, Capabilities::default()).is_err()
         );
         assert!(Selection::resolve(None, None, Some("saes"), Capabilities::default()).is_err());
     }
