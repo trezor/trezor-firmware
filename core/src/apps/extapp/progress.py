@@ -1,4 +1,3 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
 import trezorui_api
@@ -15,9 +14,9 @@ if TYPE_CHECKING:
 
     from .session import Session
 
-_INIT = const(0)
-_REPORT = const(1)
-_STOP = const(2)
+_INIT = 0
+_REPORT = 1
+_STOP = 2
 
 
 def handle(session: Session, msg: IpcMessage) -> None:

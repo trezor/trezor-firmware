@@ -1,4 +1,3 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
 import trezorcrypto_api
@@ -24,16 +23,16 @@ if TYPE_CHECKING:
 
     CryptoHandler = Callable[[Session, Any], Awaitable[Any]]
 
-_GET_XPUB = const(0)
-_GET_PUBLIC_KEY = const(1)
-_SIGN_DIGEST = const(2)
-_GET_ADDRESS_MAC = const(3)
-_CHECK_ADDRESS_MAC = const(4)
-_VERIFY_NONCE_CACHE = const(5)
+_GET_XPUB = 0
+_GET_PUBLIC_KEY = 1
+_SIGN_DIGEST = 2
+_GET_ADDRESS_MAC = 3
+_CHECK_ADDRESS_MAC = 4
+_VERIFY_NONCE_CACHE = 5
 
 # `CanonicalSig` values in the SDK.
-_CANONICAL_ANY = const(0)
-_CANONICAL_ETHEREUM = const(1)
+_CANONICAL_ANY = 0
+_CANONICAL_ETHEREUM = 1
 
 _SLIP24_NAMESPACE = [b"SLIP-0024"]
 
