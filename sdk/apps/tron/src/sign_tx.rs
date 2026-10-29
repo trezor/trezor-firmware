@@ -95,7 +95,7 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
     let w_hash: [u8; 32] = hasher.finalize().as_slice().try_into().unwrap();
 
     // https://tronprotocol.github.io/documentation-en/mechanism-algorithm/account/#algorithm
-    let sig = crypto::sign_digest(
+    let sig = crypto::ecdsa_sign_digest(
         &msg.address_n,
         &w_hash,
         false,

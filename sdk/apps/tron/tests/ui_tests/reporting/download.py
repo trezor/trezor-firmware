@@ -9,7 +9,7 @@ from typing import Any
 import requests
 
 RECORDS_WEBSITE = "https://data.trezor.io/dev/firmware/ui_tests/"
-FIXTURES_MASTER = "https://raw.githubusercontent.com/trezor/trezor-firmware/master/sdk/apps/tron/tests/ui_tests/fixtures.json"
+MASTER_WEBSITE = "https://raw.githubusercontent.com/trezor/trezor-firmware/master/"
 FIXTURES_CURRENT = Path(__file__).resolve().parent.parent / "fixtures.json"
 
 
@@ -27,7 +27,22 @@ def fetch_recorded(hash: str, path: Path) -> None:
     Path(dest).unlink()
 
 
+class MasterFixturesMissing(Exception):
+    """Master has no fixtures for this app yet."""
+
+
+def fixtures_master_url() -> str:
+    """URL of this app's fixtures.json on master."""
+    for root in FIXTURES_CURRENT.parents:
+        if (root / ".git").exists():
+            return MASTER_WEBSITE + FIXTURES_CURRENT.relative_to(root).as_posix()
+    raise RuntimeError(f"{FIXTURES_CURRENT} is not in a git checkout")
+
+
 def fetch_fixtures_master() -> dict[str, Any]:
-    r = requests.get(FIXTURES_MASTER)
+    url = fixtures_master_url()
+    r = requests.get(url)
+    if r.status_code == 404:
+        raise MasterFixturesMissing(url)
     r.raise_for_status()
     return r.json()
