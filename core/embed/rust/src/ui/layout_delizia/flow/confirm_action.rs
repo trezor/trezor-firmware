@@ -203,6 +203,7 @@ impl FlowController for ConfirmActionWithConfirmation {
             (Self::Action, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
             (Self::Action, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
             (Self::Confirmation, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Confirmation, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
             _ => self.do_nothing(),
         }
     }
@@ -498,15 +499,21 @@ fn create_confirm(
     prompt_title: TString<'static>,
     prompt_state: &'static dyn FlowController,
 ) -> Result<(), Error> {
-    let content_confirm = prompt_frame(
+    let mut content_confirm = prompt_frame(
         prompt_title,
         subtitle,
         hold,
         danger,
-        matches!(extra, ConfirmActionExtra::Menu(_)),
+        matches!(
+            extra,
+            ConfirmActionExtra::Menu(_) | ConfirmActionExtra::ExternalMenu
+        ),
         None,
     )
     .with_swipe(Direction::Down, SwipeSettings::Default);
+    if matches!(extra, ConfirmActionExtra::ExternalMenu) {
+        content_confirm = content_confirm.with_external_menu();
+    }
 
     flow.add_page(
         prompt_state,
