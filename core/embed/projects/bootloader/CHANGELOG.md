@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.18 [18th November 2026]
+
+### Changed
+- [T2B1,T3B1] New navigation: the left button opens the menu (or cancels when there is none), the firmware fingerprint is shown from the installation menu, and factory reset is confirmed with both buttons.  [#7694]
+
 ## 2.1.17 [21st May 2026]
 
 ### Added
@@ -249,3 +254,4 @@ Internal only release for Model R prototypes.
 [#6245]: https://github.com/trezor/trezor-firmware/pull/6245
 [#6307]: https://github.com/trezor/trezor-firmware/pull/6307
 [#6807]: https://github.com/trezor/trezor-firmware/pull/6807
+[#7694]: https://github.com/trezor/trezor-firmware/pull/7694
