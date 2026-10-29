@@ -21,6 +21,11 @@
 #include "sha2.h"
 #include "slip21.h"
 #include "store.h"
+#include "timing.h"
+#ifdef VAULT_TIMING
+#include <sys/logging.h>
+LOG_DECLARE(vault)
+#endif
 #if !defined(TREZOR_EMULATOR) && !defined(VAULT_TEST)
 #include <sys/stack_utils.h>
 #define vault_scrub_stack() clear_unused_stack()
@@ -43,7 +48,8 @@ static bool vault_backup_granted;
 bool vault_storage_key_allowed(uint16_t key) {
   /* Strip public/writable-lock namespace flags as well: no alias bypass. */
   key &= 0x3fff;
-  return key != 0x0102 && key != 0x0125 && key != VAULT_BACKUP_PENDING;
+  return key != 0x0102 && key != 0x0125 && key != 0x0117 &&
+         key != VAULT_BACKUP_PENDING;
 }
 #ifndef VAULT_TEST
 /* The mnemonic is write-once: the first store goes to the canonical private
@@ -1094,6 +1100,10 @@ static bool vault_dispatch_inner(uintptr_t caller, const vault_command_t *r,
     return false;
   }
   secret_transaction_begin();
+#ifdef VAULT_TIMING
+  memset(&vault_timing, 0, sizeof(vault_timing));
+  uint32_t t0 = vault_cycles();
+#endif
   /* All wallet ECC operations can reach the ZKP backend, including HDNode
    * public-key caching and ECDSA after enabling kernel Schnorr support. */
   bool ecc = r->op == VAULT_ECDH || r->op == VAULT_NIST_PUBLIC ||
@@ -1101,7 +1111,13 @@ static bool vault_dispatch_inner(uintptr_t caller, const vault_command_t *r,
              (r->op >= VAULT_SCHNORR_GENERATE && r->op <= VAULT_SCHNORR_SIGN);
   bool own_context = ecc && !zkp_context_is_initialized();
   bool ready = !own_context || zkp_context_init() == 0;
+#ifdef VAULT_TIMING
+  uint32_t t1 = vault_cycles();
+#endif
   bool ok = ready && vault_execute(caller, r, out, unlocked, message, length);
+#ifdef VAULT_TIMING
+  uint32_t t2 = vault_cycles();
+#endif
   if (own_context && ready) zkp_context_destroy();
   if (!ready) memzero(out, sizeof(*out));
   if (!secret_transaction_end()) {
@@ -1110,6 +1126,25 @@ static bool vault_dispatch_inner(uintptr_t caller, const vault_command_t *r,
   }
   if (r->op == VAULT_THP_RESET) vault_wipe();
   vault_scrub_stack();
+#ifdef VAULT_TIMING
+  /* Teardown includes record-key/context wipes and residual stack scrub. */
+  uint32_t t3 = vault_cycles();
+  uint32_t aes =
+      vault_timing.unwrap + vault_timing.expand + vault_timing.record;
+  LOG_INF(
+      "op=%u ok=%u ctx=%lu unwrap=%lu expand=%lu record=%lu/%lu op=%lu "
+      "end=%lu total=%lu",
+      (unsigned)r->op, ok, (unsigned long)(t1 - t0),
+      (unsigned long)vault_timing.unwrap, (unsigned long)vault_timing.expand,
+      (unsigned long)vault_timing.record, (unsigned long)vault_timing.records,
+      (unsigned long)(t2 - t1 - aes), (unsigned long)(t3 - t2),
+      (unsigned long)(t3 - t0));
+  (void)t0;
+  (void)t1;
+  (void)t2;
+  (void)t3;
+  (void)aes;
+#endif
   return ok;
 }
 

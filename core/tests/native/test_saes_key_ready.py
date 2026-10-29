@@ -138,12 +138,9 @@ def main():
             (root / "embed/sec/vault/inc/sec/vault_mode.h").read_text()
         )
         for name in ("gcm.h", "record_backend.h", "kwp.h", "inc/sec/vault_cipher.h"):
-            source = root / "embed/sec/vault" / name
-            if not source.exists():
-                continue
             path = vault / name
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(source.read_text())
+            path.write_text((root / "embed/sec/vault" / name).read_text())
         (work / "test.c").write_text(PROGRAM)
         binary = work / "test"
         subprocess.run(

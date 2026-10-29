@@ -59,21 +59,15 @@ def main():
         )
         vault = work / "embed/sec/vault"
         for name in ("keywrap.h", "kwp.h", "siv_core.h", "inc/sec/vault_mode.h"):
-            source = root / "embed/sec/vault" / name
-            if not source.exists():
-                continue
             path = vault / name
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(source.read_text())
+            path.write_text((root / "embed/sec/vault" / name).read_text())
         for name in ("gcm.h", "record_backend.h", "kwp.h", "inc/sec/vault_cipher.h"):
-            source = root / "embed/sec/vault" / name
-            if not source.exists():
-                continue
             path = vault / name
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(source.read_text())
+            path.write_text((root / "embed/sec/vault" / name).read_text())
         (work / "test.c").write_text(PROGRAM)
-        for mode, selection in (("gcm", 3),):
+        for mode, selection in (("kw", 4), ("siv", 1), ("ecb", 2), ("gcm", 3)):
             (work / "vectors.h").write_text(vectors(mode))
             binary = work / mode
             subprocess.run(

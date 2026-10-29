@@ -342,7 +342,7 @@ static mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
 #ifdef USE_VAULT
   /* Match kernel policy in the single-process emulator as well. */
   if ((appkey & 0x3fff) == 0x0102 || (appkey & 0x3fff) == 0x0125 ||
-      (appkey & 0x3fff) == 0x0129)
+      (appkey & 0x3fff) == 0x0117 || (appkey & 0x3fff) == 0x0129)
     return mp_const_none;
 #endif
   uint16_t len = 0;
@@ -384,7 +384,8 @@ static mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
   /* Match the kernel verifier: a write-once mnemonic, and keys that only the
    * kernel creates. */
   uint16_t protected_key = appkey & 0x3fff;
-  if (protected_key == 0x0129 || protected_key == 0x0125 ||
+  if (protected_key == 0x0117 || protected_key == 0x0129 ||
+      protected_key == 0x0125 ||
       (protected_key == 0x0102 &&
        (appkey != protected_key || sectrue == storage_has(appkey)))) {
     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Could not save value"));
@@ -427,7 +428,8 @@ static mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
   uint16_t appkey = (app << 8) | key;
 #ifdef USE_VAULT
   /* Match the kernel: only the canonical protected keys are refused. */
-  if (appkey == 0x0102 || appkey == 0x0125 || appkey == 0x0129)
+  if (appkey == 0x0102 || appkey == 0x0125 || appkey == 0x0117 ||
+      appkey == 0x0129)
     return mp_const_false;
 #endif
   if (sectrue != storage_delete(appkey)) {
