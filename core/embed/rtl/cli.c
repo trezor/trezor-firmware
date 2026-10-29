@@ -335,14 +335,16 @@ static const char* cli_history_fwd(cli_t* cli, int* idx, char* line,
 
 #define ESC_SEQ(ch) (0x200 + (ch))
 
+// Maximum numeric code accepted in a VT sequence (ESC[<number>~)
+#define ESC_CODE_MAX 64
+
 // Reads a character from the console input and return it.
 // Comple escape sequences translates into ESC_SEQ values
 //   - ESC[<letter> => ESC_SEQ(letter),   e.g. ESC[A => ESC_SEQ('A')
 //   - ESC[<number>~ => ESC_SEQ(number) , e.g. ESC[3~ => ESC_SEQ(3)
 static int cli_readch(cli_t* cli) {
-  int esc_len = 0;   // >0 if we are in the middle of an escape sequence
-  int esc_code = 0;  // numeric code of the escape sequence
-
+  // The parser state lives in `cli`, so a sequence split across reads
+  // (e.g. ESC in one USB packet, "[A" in the next) is still recognized.
   for (;;) {
     char ch;
     ssize_t len = cli->read(cli->callback_context, &ch, 1);
@@ -353,32 +355,44 @@ static int cli_readch(cli_t* cli) {
 
     if (ch == '\e') {
       // Escape sequence start
-      esc_len = 1;
-    } else if (esc_len == 1) {
+      cli->esc_len = 1;
+    } else if (cli->esc_len == 1) {
       if (ch == '\e') {
+        cli->esc_len = 0;
         return 'e';
       } else if (ch == '[') {
         // Control sequence introducer
-        esc_len = 2;
-        esc_code = 0;
+        cli->esc_len = 2;
+        cli->esc_code = 0;
       } else {
-        esc_len = 0;
+        cli->esc_len = 0;
       }
-    } else if (esc_len == 2 && ch >= 'A' && ch <= 'Z') {
+    } else if (cli->esc_len == 2 && ch >= 'A' && ch <= 'Z') {
       // XTERM sequences - ESC[<letter>
+      cli->esc_len = 0;
       return ESC_SEQ(ch);
-    } else if (esc_len >= 2 && ch >= '0' && ch <= '9') {
+    } else if (cli->esc_len >= 2 && ch >= '0' && ch <= '9') {
       // VT sequences - ESC[<number>~
-      esc_code = esc_code * 10 + (ch - '0');
-      esc_len++;
-    } else if (esc_len >= 3 && ch == '~') {
+      if (cli->esc_code >= 0) {
+        int code = cli->esc_code * 10 + (ch - '0');
+        // Number too large, ignore the whole sequence
+        cli->esc_code = (code > ESC_CODE_MAX) ? -1 : code;
+      }
+      if (cli->esc_len < 3) {
+        cli->esc_len++;
+      }
+    } else if (cli->esc_len >= 3 && ch == '~') {
       // End of VT sequence
-      return ESC_SEQ(esc_code);
-    } else if (esc_len >= 3) {
+      cli->esc_len = 0;
+      if (cli->esc_code >= 0) {
+        return ESC_SEQ(cli->esc_code);
+      }
+    } else if (cli->esc_len >= 3) {
       // Invalid VT sequence
-      esc_len = 0;
+      cli->esc_len = 0;
     } else {
       // Non-escape character
+      cli->esc_len = 0;
       return ch;
     }
   }
