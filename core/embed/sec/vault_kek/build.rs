@@ -2,6 +2,7 @@ use xbuild::{CLibrary, Result, bail_unsupported};
 
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("vault_kek/inc");
+    lib.add_include("vault/inc");
 
     if cfg!(feature = "emulator") {
         // The emulator vault seals with a software-only key (vault/seal.c).

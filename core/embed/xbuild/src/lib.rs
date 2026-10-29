@@ -6,6 +6,7 @@ mod helpers;
 mod input_files;
 mod parallel;
 mod trezor;
+mod vault;
 
 pub use attrs::CompileAttrs;
 pub use clibrary::CLibrary;
@@ -22,7 +23,9 @@ pub use helpers::{
 };
 pub use input_files::InputFiles;
 pub use parallel::{optimal_parallel_job_count, run_parallel};
-pub use trezor::{build, build_and_link, current_model_id, model_ids, vendor_header_path};
+pub use trezor::{
+    build, build_and_link, current_mcu, current_model_id, model_ids, vendor_header_path,
+};
 
 /// Return early with an error.
 ///

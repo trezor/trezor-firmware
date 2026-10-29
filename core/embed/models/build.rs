@@ -25,6 +25,7 @@ fn main() -> Result<()> {
         ""
     };
     cargo_out::metadata("model", model_id);
+    cargo_out::metadata("mcu", xbuild::current_mcu());
 
     // Board header is resolved by xtask from the selected board's TOML and
     // passed here so the correct revision header is used regardless of which

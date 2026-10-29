@@ -645,8 +645,8 @@ int main(void) {
     assert(!vault_storage_key_allowed(0x0125 | (flags << 14)));
   }
   assert(vault_storage_key_allowed(0x010e));
-  printf("kernel state: owners=%zu scratch=%zu blob=%d\n",
-         sizeof(secret_owners), sizeof(secret_scratch), VAULT_BLOB_SIZE);
+  printf("kernel state: owners=%zu scratch=%zu blob=%zu\n",
+         sizeof(secret_owners), sizeof(secret_scratch), sizeof(vault_blob_t));
   schnorr_vectors();
   slip21_vectors();
   fingerprint_vectors();

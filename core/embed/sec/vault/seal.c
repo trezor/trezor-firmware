@@ -1,8 +1,83 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #include "seal.h"
 #include "aes/aes.h"
-#include "aes/aesgcm.h"
 #include "memzero.h"
+#include "timing.h"
+#ifdef VAULT_TIMING
+vault_timing_t vault_timing;
+#endif
+
+/* SAES records use the selected cipher; saes-gcm is the U5 default.
+ * Software sealing below is only for builds that do not select SAES. Native
+ * tests substitute vault_saes_record(). */
+#if defined(VAULT_SEAL_HW) && !defined(USE_VAULT_KEK) && !defined(VAULT_TEST)
+/* Never fall back to a RAM-held key when hardware sealing was selected. */
+#error "VAULT_SEAL_HW requires USE_VAULT_KEK"
+#endif
+#if defined(VAULT_SEAL_HW) && (defined(USE_VAULT_KEK) || defined(VAULT_TEST))
+#include <sec/vault_kek.h>
+
+_Static_assert(VAULT_SAES_RECORD_SIZE == VAULT_RECORD_SIZE, "record size");
+_Static_assert(VAULT_SAES_AAD_SIZE == VAULT_AAD_SIZE, "AAD size");
+
+/* False after a hardware or key failure; the next wipe makes a new key. */
+static bool saes_ready = true;
+/* The record key may live in secmon, which can outlive this kernel; the
+ * nonce counter lives here. Replace the key before the first record of every
+ * kernel run, so a restarted counter never meets an old key. */
+static bool saes_fresh;
+
+void vault_seal_end(void) {}
+void vault_seal_wipe(void) {
+  vault_saes_request_t r = {.abi = VAULT_CIPHER_REQUEST_ABI,
+                            .op = VAULT_SAES_RESET};
+  saes_ready = vault_saes_record(&r) == VAULT_SAES_OK;
+  saes_fresh = saes_ready;
+}
+bool vault_seal_ready(void) { return saes_ready; }
+/* No record key or expanded schedule ever exists in kernel RAM. */
+bool vault_seal_idle(void) { return true; }
+
+bool vault_seal_record(bool encrypt, uint64_t nonce,
+                       const uint8_t aad[VAULT_AAD_SIZE],
+                       uint8_t data[VAULT_RECORD_SIZE], size_t length,
+                       uint8_t tag[VAULT_TAG_BUFFER_SIZE]) {
+  if (!length || length > VAULT_RECORD_SIZE || !saes_ready) return false;
+  if (!saes_fresh) {
+    vault_seal_wipe();
+    if (!saes_ready) return false;
+  }
+  vault_saes_request_t r = {
+      .abi = VAULT_CIPHER_REQUEST_ABI,
+      .op = encrypt ? VAULT_SAES_SEAL : VAULT_SAES_OPEN,
+      .length = length,
+      .iv = {'S', 'V', '0', '1'},
+  };
+  for (size_t i = 0; i < 8; i++) r.iv[4 + i] = nonce >> (56 - 8 * i);
+  memcpy(r.aad, aad, VAULT_AAD_SIZE);
+  memcpy(r.data, data, length);
+  if (!encrypt) memcpy(r.tag, tag, sizeof(r.tag));
+  uint32_t start = vault_cycles();
+  uint32_t result = vault_saes_record(&r);
+  VAULT_TIMING_ADD(record, start);
+#ifdef VAULT_TIMING
+  vault_timing.records++;
+#endif
+  bool ok = result == VAULT_SAES_OK;
+  /* A tag mismatch is the caller's data; anything else is the key's. */
+  if (!ok && result != VAULT_SAES_AUTH_FAILED) saes_ready = false;
+  if (ok) {
+    memcpy(data, r.data, length);
+    if (encrypt) memcpy(tag, r.tag, sizeof(r.tag));
+  } else {
+    memzero(data, VAULT_RECORD_SIZE);
+  }
+  memzero(&r, sizeof(r));
+  return ok;
+}
+
+#else  // software sealing
+#include "aes/aesgcm.h"
 #if defined(VAULT_TEST)
 #include "keywrap.h"
 /* Tests inject AES and entropy, never the production binary. */
@@ -82,6 +157,7 @@ static bool vault_seal_begin(bool encrypt) {
   if (key_active) return true;
   uint8_t key[40 * VAULT_KEY_COUNT] = {0};
   bool ok = false;
+  uint32_t start = 0;
   if (!key_ready) {
     for (size_t i = 0; i < VAULT_KEY_COUNT; i++) {
       vault_random(key + 40 * i + 8, 32);
@@ -91,9 +167,13 @@ static bool vault_seal_begin(bool encrypt) {
     key_ready = true;
   }
   memcpy(key, wrapped_dek, sizeof(key));
+  start = vault_cycles();
   for (size_t i = 0; i < VAULT_KEY_COUNT; i++)
     if (!vault_kek(false, key + 40 * i)) goto cleanup;
+  VAULT_TIMING_ADD(unwrap, start);
+  start = vault_cycles();
   if (gcm_init_and_key(key + 8, 32, &record_ctx) != RETURN_GOOD) goto cleanup;
+  VAULT_TIMING_ADD(expand, start);
   key_active = true;
   ok = true;
 cleanup:
@@ -104,9 +184,10 @@ cleanup:
 bool vault_seal_record(bool encrypt, uint64_t nonce,
                        const uint8_t aad[VAULT_AAD_SIZE],
                        uint8_t data[VAULT_RECORD_SIZE], size_t length,
-                       uint8_t tag[16]) {
+                       uint8_t tag[VAULT_TAG_BUFFER_SIZE]) {
   if (!length || length > VAULT_RECORD_SIZE || !vault_seal_begin(encrypt))
     return false;
+  uint32_t start = vault_cycles();
   uint8_t iv[12] = {'S', 'V', '0', '1'};
   for (size_t i = 0; i < 8; i++) iv[4 + i] = nonce >> (56 - 8 * i);
   int ret = encrypt ? gcm_encrypt_message(iv, sizeof(iv), aad, VAULT_AAD_SIZE,
@@ -114,6 +195,10 @@ bool vault_seal_record(bool encrypt, uint64_t nonce,
                     : gcm_decrypt_message(iv, sizeof(iv), aad, VAULT_AAD_SIZE,
                                           data, length, tag, 16, &record_ctx);
   bool ok = ret == RETURN_GOOD;
+  VAULT_TIMING_ADD(record, start);
+#ifdef VAULT_TIMING
+  vault_timing.records++;
+#endif
 #if !VAULT_CACHE_RECORD_CONTEXT
   vault_seal_end();
 #endif
@@ -123,3 +208,5 @@ bool vault_seal_record(bool encrypt, uint64_t nonce,
   }
   return true;
 }
+
+#endif  // software sealing

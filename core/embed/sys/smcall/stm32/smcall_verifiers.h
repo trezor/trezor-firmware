@@ -215,6 +215,8 @@ ts_t mldsa44_verify__verified(const mldsa44_signature_t *sig, const void *m,
 
 secbool vault_kek_wrap__verified(bool encrypt, uint8_t value[40]);
 
+uint32_t vault_saes_record__verified(vault_saes_request_t *request);
+
 #endif  // USE_VAULT_KEK
 
 #endif  // SECMON

@@ -33,6 +33,25 @@ pub fn current_model_id() -> Result<String> {
     Ok(model)
 }
 
+/// Model metadata is shared by every C-building crate, including crates that
+/// do not themselves carry MCU Cargo features. The models crate uses features.
+pub fn current_mcu() -> String {
+    env::var("DEP_MODELS_MCU").unwrap_or_else(|_| {
+        [
+            "stm32f427",
+            "stm32f429",
+            "stm32u58",
+            "stm32u5a",
+            "stm32u5g",
+            "stm32h5f4",
+        ]
+        .into_iter()
+        .find(|mcu| has_feature(&format!("mcu_{mcu}")))
+        .unwrap_or("")
+        .into()
+    })
+}
+
 /// Returns the sorted list of model ids found in `models_dir` — the names of
 /// subdirectories that contain a `model.toml`. Emits `rerun-if-changed` for the
 /// directory and each `model.toml` so callers rebuild when the model set
@@ -171,11 +190,53 @@ pub fn build_and_link(target: &str, f: impl FnOnce(&mut CLibrary) -> Result<()>)
 }
 
 fn configure_compiler_defaults(lib: &mut CLibrary) {
-    // All consumers share the software-GCM record layout at these stages.
-    cargo_out::rerun_if_env_changed("TREZOR_VAULT_MODE");
-    let mode = env::var("TREZOR_VAULT_MODE").unwrap_or_else(|_| "gcm".into());
-    assert_eq!(mode, "gcm", "This stage supports only GCM records");
-    lib.add_define("VAULT_SEAL_MODE", Some("3"));
+    // The cipher fixes the ABI; the backend changes only implementation.
+    for name in [
+        "TREZOR_VAULT_MODE",
+        "TREZOR_VAULT_CIPHER",
+        "TREZOR_VAULT_BACKEND",
+    ] {
+        cargo_out::rerun_if_env_changed(name);
+    }
+    let target = env::var("TARGET").unwrap_or_default();
+    let mcu = current_mcu();
+    let caps = if target.starts_with("thumb") {
+        crate::vault::Capabilities::for_mcu(&mcu)
+    } else {
+        crate::vault::Capabilities::default()
+    };
+    let mode = env::var("TREZOR_VAULT_MODE").ok();
+    let cipher = env::var("TREZOR_VAULT_CIPHER").ok();
+    let backend = env::var("TREZOR_VAULT_BACKEND").ok();
+    let selected = crate::vault::Selection::resolve(
+        mode.as_deref(),
+        cipher.as_deref(),
+        backend.as_deref(),
+        caps,
+    )
+    .unwrap_or_else(|error| panic!("{error}"));
+    lib.add_define("VAULT_SEAL_MODE", Some(selected.cipher.define()));
+    if selected.hardware {
+        lib.add_define("VAULT_SEAL_HW", Some("1"));
+    }
+    if selected.native_gcm {
+        lib.add_define("VAULT_NATIVE_GCM", Some("1"));
+    }
+    if selected.legacy_fallback {
+        cargo_out::warning(format!(
+            "No SAES on {mcu}/{target}: legacy vault mode uses its software cipher"
+        ));
+    }
+    // Per-phase cycle counts of each vault syscall, logged by the vault module.
+    cargo_out::rerun_if_env_changed("TREZOR_VAULT_TIMING");
+    if env::var("TREZOR_VAULT_TIMING").is_ok_and(|v| v == "1") {
+        if has_feature("production") {
+            panic!("Vault timing logs are not allowed in production");
+        }
+        lib.add_define("VAULT_TIMING", Some("1"));
+        lib.add_define("SYSLOG_vault_MAX_LOG_LEVEL", Some("LOG_LEVEL_INF"));
+        lib.add_private_flag("-fstack-usage");
+    }
 
     if !has_feature("emulator") {
         // Override the default `-fno-omit-frame-pointer` from the `cc` crate

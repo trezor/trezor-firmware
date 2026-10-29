@@ -3,17 +3,17 @@
 #ifndef VAULT_CACHE_RECORD_CONTEXT
 #define VAULT_CACHE_RECORD_CONTEXT 0
 #endif
-#include <sec/vault_mode.h>
+#include <sec/vault_cipher.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#define VAULT_RECORD_SIZE 160
-#define VAULT_AAD_SIZE 32
+#define VAULT_RECORD_SIZE VAULT_CIPHER_RECORD_SIZE
+#define VAULT_AAD_SIZE VAULT_CIPHER_AAD_SIZE
 /* Private kernel implementation; never exported through sec/vault.h. */
 bool vault_seal_record(bool encrypt, uint64_t nonce,
                        const uint8_t aad[VAULT_AAD_SIZE],
                        uint8_t data[VAULT_RECORD_SIZE], size_t length,
-                       uint8_t tag[16]);
+                       uint8_t tag[VAULT_TAG_BUFFER_SIZE]);
 /* False after a trusted wrapping/key-setup failure, unlike an invalid tag. */
 bool vault_seal_ready(void);
 /* True when no expanded record key remains in RAM. */

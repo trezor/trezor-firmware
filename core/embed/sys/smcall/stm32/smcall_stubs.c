@@ -498,6 +498,10 @@ secbool vault_kek_wrap(bool encrypt, uint8_t value[40]) {
                                  SMCALL_VAULT_KEK_WRAP);
 }
 
+uint32_t vault_saes_record(vault_saes_request_t *request) {
+  return smcall_invoke1((uint32_t)request, SMCALL_VAULT_SAES_RECORD);
+}
+
 #endif  // USE_VAULT_KEK
 
 #endif  // defined(KERNEL) && defined(USE_SECMON_LAYOUT)

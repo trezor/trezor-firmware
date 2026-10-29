@@ -222,7 +222,7 @@ static bool secret_seal(uint32_t owner, uint8_t type, size_t length,
   secret_aad(b, aad);
   size_t encoded_length =
       vault_ciphertext_size(kind == SECRET_BYTES ? length : VAULT_NODE_SIZE);
-  uint8_t tag[16] = {0};
+  uint8_t tag[VAULT_TAG_BUFFER_SIZE] = {0};
   bool ok = vault_seal_record(true, nonce, aad, data, encoded_length, tag);
   if (ok && VAULT_TAG_SIZE)
     memcpy(b + SECRET_BLOB_HEADER + encoded_length, tag, VAULT_TAG_SIZE);
@@ -266,7 +266,8 @@ static secret_payload_t *secret_open(const vault_blob_t *blob, uint32_t active,
     if (b[i]) return NULL;
   secret_payload_t *p = secret_scratch_take();
   if (!p) return NULL;
-  uint8_t data[VAULT_RECORD_SIZE] = {0}, tag[16] = {0}, aad[VAULT_AAD_SIZE];
+  uint8_t data[VAULT_RECORD_SIZE] = {0}, tag[VAULT_TAG_BUFFER_SIZE] = {0},
+          aad[VAULT_AAD_SIZE];
   memcpy(data, b + SECRET_BLOB_HEADER, encoded_length);
   memcpy(tag, b + SECRET_BLOB_HEADER + encoded_length, VAULT_TAG_SIZE);
   secret_aad(b, aad);
