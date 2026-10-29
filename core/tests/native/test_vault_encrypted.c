@@ -91,8 +91,8 @@ static void keywrap_vector(void) {
 static void gcm_reference(void) {
   /* Independent cryptography.AESGCM reference: key=0^256,
    * IV="SV01" || be64(1), AAD=0^256, plaintext=0^1280. */
-  uint8_t key[40] = {0}, data[VAULT_RECORD_SIZE] = {0}, tag[16], expected[176],
-          aad[VAULT_AAD_SIZE] = {0};
+  uint8_t key[40] = {0}, data[VAULT_RECORD_SIZE] = {0},
+          tag[VAULT_TAG_BUFFER_SIZE], expected[176], aad[VAULT_AAD_SIZE] = {0};
   assert(vault_keywrap(true, key, vault_wrap_block));
   memcpy(wrapped_dek, key, 40);
   key_ready = true;

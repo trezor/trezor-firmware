@@ -37,7 +37,7 @@ int main(void) {
   for (size_t n = 1; n <= VAULT_RECORD_SIZE; n++) {
     for (size_t i = 0; i < sizeof(original); i++) original[i] = i + n;
     size_t length = vault_ciphertext_size(n);
-    uint8_t data[VAULT_RECORD_SIZE] = {0}, tag[16] = {0};
+    uint8_t data[VAULT_RECORD_SIZE] = {0}, tag[VAULT_TAG_BUFFER_SIZE] = {0};
     memcpy(data, original, n);
     assert(vault_seal_record(true, n, aad, data, length, tag));
     assert(memcmp(data, original, n));
@@ -66,7 +66,7 @@ int main(void) {
   }
   assert(vault_seal_ready());
   wrapped_dek[8] ^= 1;
-  uint8_t data[16] = {0}, tag[16] = {0};
+  uint8_t data[16] = {0}, tag[VAULT_TAG_BUFFER_SIZE] = {0};
   assert(!vault_seal_record(true, 1, aad, data, sizeof(data), tag));
   assert(!vault_seal_ready());
   assert(is_zero(&record_ctx, sizeof(record_ctx)));

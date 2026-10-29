@@ -6,6 +6,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from cryptography.hazmat.primitives.keywrap import aes_key_wrap_with_padding
+
 ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -98,6 +100,16 @@ def main():
             + ",\n".join(rows)
             + "};\n"
         )
+        kwp_rows = []
+        for length in range(1, 173):
+            plain = bytes(((i + length) % 256 for i in range(length)))
+            ciphertext = aes_key_wrap_with_padding(bytes(range(32)), plain)
+            kwp_rows.append("{" + ",".join(map(str, ciphertext)) + "}")
+        (Path(output) / "vault_kwp_vectors.h").write_text(
+            "static const uint8_t kwp_vectors[][184] = {"
+            + ",\n".join(kwp_rows)
+            + "};\n"
+        )
         for unrolled in (False, True):
             binary = str(Path(output) / f"sha2-erasure-{unrolled}")
             subprocess.run(
@@ -136,6 +148,8 @@ def main():
             print(f"Vault mode: {mode}", flush=True)
             names = [
                 "test_vault_sealing",
+                "test_vault_cipher_provider",
+                "test_vault_native_gcm",
                 "test_vault_bytes",
                 "test_secret_store",
                 "test_vault",
@@ -146,11 +160,24 @@ def main():
                 "test_ed25519_keys",
             ]
             if args.sealing_only:
-                names = ["test_vault_sealing"]
+                names = [
+                    "test_vault_sealing",
+                    "test_vault_cipher_provider",
+                    "test_vault_native_gcm",
+                    "test_storage_key_cache",
+                ]
+            mode_flags = []
+            if mode == "saes" or mode.startswith("saes-"):
+                names = ["test_vault_saes"]
+                mode_flags = [
+                    "-DVAULT_SEAL_HW=1",
+                    "-Icore/embed/rtl/inc",
+                    "-Icore/embed/sec/vault_kek/inc",
+                ]
             if True:
-                names += ["test_ed25519_cleanup"]
+                names += []
                 if not args.sealing_only:
-                    names += ["test_ecdsa_cleanup"]
+                    names += ["test_ecdsa_cleanup", "test_ed25519_cleanup"]
             for name in names:
                 inputs = [f"core/tests/native/{name}.c", str(archive)]
                 if (
@@ -166,7 +193,6 @@ def main():
                     "test_vault",
                     "test_vault_encrypted",
                     "test_cardano_signing",
-                    "test_storage_key_cache",
                     "test_fido_keys",
                     "test_ed25519_keys",
                     "test_vault_saes",
@@ -190,6 +216,7 @@ def main():
                         *flags,
                         "-I" + output,
                         f"-DVAULT_SEAL_MODE={selection}",
+                        *mode_flags,
                         *inputs,
                         "-o",
                         binary,

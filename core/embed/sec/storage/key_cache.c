@@ -1,6 +1,86 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #include "key_cache.h"
 
+/* Wherever SAES exists, in its secure world, the cache is sealed with AES-GCM
+ * in SAES under its own DHUK-wrapped key, which no smcall reaches. That holds
+ * for every vault record mode, hardware or software. Without SAES (F4 and the
+ * emulator) the cached keys are wrapped in software below. Tests substitute
+ * vault_saes_storage(). */
+#if (defined(USE_VAULT_KEK) && defined(SECURE_MODE)) || \
+    defined(STORAGE_KEY_CACHE_SAES_TEST)
+#include <sec/vault_kek.h>
+#include <string.h>
+#include "memzero.h"
+
+_Static_assert(STORAGE_CACHED_KEYS_SIZE <= VAULT_SAES_RECORD_SIZE, "size");
+
+static struct {
+  uint8_t ciphertext[STORAGE_CACHED_KEYS_SIZE];
+  uint8_t tag[16];
+  uint64_t nonce;
+  bool ready;
+} sealed_storage_keys;
+/* Monotonic for the whole boot; a wipe also replaces the key. */
+static uint64_t cache_nonce;
+static const uint8_t cache_aad[VAULT_SAES_AAD_SIZE] =
+    "Trezor storage key cache v2";
+
+static void cache_request(vault_saes_request_t *r, uint32_t op,
+                          uint64_t nonce) {
+  memset(r, 0, sizeof(*r));
+  r->op = op;
+  r->length = STORAGE_CACHED_KEYS_SIZE;
+  memcpy(r->iv, "SK01", 4);
+  for (size_t i = 0; i < 8; i++) r->iv[4 + i] = nonce >> (56 - 8 * i);
+  memcpy(r->aad, cache_aad, sizeof(r->aad));
+}
+
+void storage_key_cache_wipe(void) {
+  memzero(&sealed_storage_keys, sizeof(sealed_storage_keys));
+  vault_saes_request_t r = {.op = VAULT_SAES_RESET};
+  vault_saes_storage(&r);
+}
+
+bool storage_key_cache_set(const uint8_t keys[STORAGE_CACHED_KEYS_SIZE]) {
+  vault_saes_request_t r;
+  bool ok = cache_nonce != UINT64_MAX;
+  uint64_t nonce = ok ? ++cache_nonce : 0;
+  cache_request(&r, VAULT_SAES_SEAL, nonce);
+  memcpy(r.data, keys, STORAGE_CACHED_KEYS_SIZE);
+  ok = ok && vault_saes_storage(&r) == VAULT_SAES_OK;
+  if (ok) {
+    memcpy(sealed_storage_keys.ciphertext, r.data, STORAGE_CACHED_KEYS_SIZE);
+    memcpy(sealed_storage_keys.tag, r.tag, sizeof(sealed_storage_keys.tag));
+    sealed_storage_keys.nonce = nonce;
+    sealed_storage_keys.ready = true;
+  }
+  memzero(&r, sizeof(r));
+  if (!ok) storage_key_cache_wipe();
+  return ok;
+}
+
+bool storage_key_cache_get(uint8_t *out, size_t offset, size_t length) {
+  if (offset > STORAGE_CACHED_KEYS_SIZE ||
+      length > STORAGE_CACHED_KEYS_SIZE - offset)
+    return false;
+  vault_saes_request_t r;
+  cache_request(&r, VAULT_SAES_OPEN, sealed_storage_keys.nonce);
+  memcpy(r.data, sealed_storage_keys.ciphertext, STORAGE_CACHED_KEYS_SIZE);
+  memcpy(r.tag, sealed_storage_keys.tag, sizeof(sealed_storage_keys.tag));
+  bool ok =
+      sealed_storage_keys.ready && vault_saes_storage(&r) == VAULT_SAES_OK;
+  if (ok) {
+    memcpy(out, r.data + offset, length);
+  } else {
+    memzero(out, length);
+    storage_key_cache_wipe();
+  }
+  memzero(&r, sizeof(r));
+  return ok;
+}
+
+#else  // software AES key wrap
+
 #include <string.h>
 #include "../vault/keywrap.h"
 #include "aes/aes.h"
@@ -139,3 +219,5 @@ bool storage_key_cache_get(uint8_t *out, size_t offset, size_t length) {
   memzero(keys, sizeof(keys));
   return ok;
 }
+
+#endif  // software AES key wrap

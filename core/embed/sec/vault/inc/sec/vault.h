@@ -17,7 +17,7 @@
  * cache flag, curve ID and the Cardano private-key extension.
  */
 #define VAULT_NODE_SIZE 139
-#define VAULT_NODE_CIPHERTEXT_SIZE VAULT_NODE_SIZE
+#define VAULT_NODE_CIPHERTEXT_SIZE VAULT_CIPHERTEXT_SIZE(VAULT_NODE_SIZE)
 #define VAULT_NODE_BLOB_SIZE \
   (VAULT_HEADER_SIZE + VAULT_NODE_CIPHERTEXT_SIZE + VAULT_TAG_SIZE)
 #define VAULT_CURVE_SIZE 32
@@ -46,7 +46,9 @@ typedef enum {
  * GCM adds a nonce u64, actual-length ciphertext and a 16-byte tag.
  * The complete header is authenticated. Nodes encode VAULT_NODE_SIZE bytes;
  * wire padding is zero. Records are opaque; an all-zero blob is empty. */
-#define VAULT_BLOB_SIZE (VAULT_HEADER_SIZE + VAULT_SECRET_SIZE + VAULT_TAG_SIZE)
+#define VAULT_BLOB_SIZE                                           \
+  (VAULT_HEADER_SIZE + VAULT_CIPHERTEXT_SIZE(VAULT_SECRET_SIZE) + \
+   VAULT_TAG_SIZE)
 typedef struct {
   uint8_t bytes[VAULT_BLOB_SIZE];
 } vault_blob_t;

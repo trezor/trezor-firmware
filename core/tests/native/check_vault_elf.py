@@ -66,6 +66,12 @@ def main():
     parser.add_argument("coreapp")
     parser.add_argument("--nm", default="arm-none-eabi-nm")
     parser.add_argument("--vcp", action="store_true", help="require F4 VCP ring checks")
+    parser.add_argument("--secmon", help="secure-monitor ELF on split-world models")
+    parser.add_argument(
+        "--mode",
+        choices=("siv", "ecb", "gcm", "saes-siv", "saes-ecb", "saes-gcm", "saes"),
+    )
+    parser.add_argument("--require-storage-cache", action="store_true")
     args = parser.parse_args()
     check_f4_memory(args.nm, args.kernel, args.coreapp, args.vcp)
     kernel = symbols(args.nm, args.kernel)
@@ -73,8 +79,6 @@ def main():
     for name in (
         "secret_owners",
         "secret_scratch",
-        "record_ctx",
-        "wrapped_dek",
         "vault_dispatch",
         "vault_dispatch_message",
         "vault_message_snapshot",
@@ -83,6 +87,33 @@ def main():
     ):
         assert name in kernel, f"missing kernel vault symbol: {name}"
         assert name not in coreapp, f"vault symbol leaked into coreapp: {name}"
+    secmon = symbols(args.nm, args.secmon) if args.secmon else set()
+    hardware = "vault_saes_record" in kernel
+    if args.mode:
+        assert hardware == args.mode.startswith("saes"), "wrong record backend"
+    if hardware:
+        for name in ("record_ctx", "wrapped_dek"):
+            assert name not in kernel, f"software record key in kernel: {name}"
+        secure = secmon if args.secmon else kernel
+        keys = ["record_key", "storage_key"]
+        if args.mode == "saes-siv":
+            keys += ["record_mac_key"]
+        for name in keys:
+            assert name in secure, f"missing hardware key slot: {name}"
+            assert name not in coreapp, f"hardware key slot in coreapp: {name}"
+            if args.secmon:
+                assert name not in kernel, f"secure-monitor key in kernel: {name}"
+        if args.secmon:
+            assert "vault_kek_wrap__verified" not in secmon, "BHK wrap smcall exposed"
+    else:
+        for name in ("record_ctx", "wrapped_dek"):
+            assert name in kernel, f"missing kernel vault symbol: {name}"
+    storage = secmon if args.secmon else kernel
+    if args.require_storage_cache or "sealed_storage_keys" in storage:
+        assert "sealed_storage_keys" in storage, "missing sealed storage key cache"
+        assert "cached_keys" not in storage, "plaintext storage key cache remains"
+        if hardware:
+            assert "cache_context" not in storage, "software storage key cache remains"
     # Sealed blobs replaced the kernel slot table.
     assert "secret_entries" not in kernel, "kernel still has a secret slot table"
     assert "vault_call" in coreapp, "missing coreapp syscall stub"
