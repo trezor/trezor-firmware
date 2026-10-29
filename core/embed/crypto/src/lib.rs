@@ -20,6 +20,8 @@ pub mod secret;
 pub mod sha256;
 pub mod sha3;
 pub mod sha512;
+#[cfg(feature = "thp")]
+pub mod thp;
 
 #[cfg(test)]
 mod testutil;
