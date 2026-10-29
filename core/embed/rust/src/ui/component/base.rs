@@ -311,6 +311,19 @@ pub enum AttachType {
     Swipe(Direction),
 }
 
+#[cfg(feature = "touch")]
+impl AttachType {
+    /// Direction in which the attached content moves, `None` if it appears in
+    /// place. `Swipe(Direction::Up)` means the content moves up, i.e. it
+    /// enters from below.
+    pub fn motion(self) -> Option<Direction> {
+        match self {
+            Self::Swipe(dir) => Some(dir),
+            _ => None,
+        }
+    }
+}
+
 /// Fresh construction parameters handed to a layout by the application layer,
 /// in response to a `EventCtx::request_params()` request.
 ///

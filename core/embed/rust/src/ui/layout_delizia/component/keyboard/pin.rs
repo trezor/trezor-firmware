@@ -1,5 +1,6 @@
 use core::mem;
 
+use easer::functions::Cubic;
 use sys::time::{Duration, Instant};
 
 use super::super::super::component::button::ButtonMsg::{self, Clicked};
@@ -10,11 +11,12 @@ use super::super::super::fonts::FONT_MONO;
 use crate::strutil::{ShortString, TString};
 use crate::time::Stopwatch;
 use crate::trezorhal::random;
-use crate::ui::component::base::{AttachType, ComponentExt};
+use crate::ui::component::attach_anim::{ease_in_out, fade_in, AttachAnim};
+use crate::ui::component::base::ComponentExt;
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{Component, Event, EventCtx, Marquee, Never, Pad, Timer};
 use crate::ui::event::TouchEvent;
-use crate::ui::geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Point, Rect};
+use crate::ui::geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Point, Rect};
 use crate::ui::shape::{Bar, Renderer, Text, ToifImage};
 use crate::ui::util::{animation_disabled, DisplayStyle};
 
@@ -40,108 +42,8 @@ const HEADER_PADDING: Insets = Insets::new(
 
 const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
 
-#[derive(Default, Clone)]
-struct AttachAnimation {
-    pub attach_top: bool,
-    pub timer: Stopwatch,
-    pub active: bool,
-    pub duration: Duration,
-}
-
-impl AttachAnimation {
-    const DURATION_MS: u32 = 750;
-    fn is_active(&self) -> bool {
-        if animation_disabled() {
-            return false;
-        }
-
-        self.timer.is_running_within(self.duration)
-    }
-
-    fn eval(&self) -> f32 {
-        if animation_disabled() {
-            return 1.0;
-        }
-
-        self.timer.elapsed().to_millis() as f32 / 1000.0
-    }
-
-    fn opacity(&self, t: f32, pos_x: usize, pos_y: usize) -> u8 {
-        if animation_disabled() {
-            return 255;
-        }
-
-        let diag = pos_x + pos_y;
-
-        let start = diag as f32 * 0.05;
-
-        let f = pareen::constant(0.0)
-            .seq_ease_in_out(
-                start,
-                easer::functions::Cubic,
-                0.1,
-                pareen::constant(1.0).eval(self.eval()),
-            )
-            .eval(t);
-
-        (f * 255.0) as u8
-    }
-
-    fn header_opacity(&self, t: f32) -> u8 {
-        if animation_disabled() {
-            return 255;
-        }
-        let f = pareen::constant(0.0)
-            .seq_ease_in_out(
-                0.65,
-                easer::functions::Linear,
-                0.1,
-                pareen::constant(1.0).eval(self.eval()),
-            )
-            .eval(t);
-
-        (f * 255.0) as u8
-    }
-
-    fn start(&mut self) {
-        self.active = true;
-        self.timer.start();
-    }
-
-    fn reset(&mut self) {
-        self.active = false;
-        self.timer = Stopwatch::new_stopped();
-    }
-
-    fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event) {
-        if let Event::Attach(_) = event {
-            if let Event::Attach(AttachType::Swipe(Direction::Up))
-            | Event::Attach(AttachType::Swipe(Direction::Down))
-            | Event::Attach(AttachType::Initial) = event
-            {
-                self.attach_top = true;
-                self.duration = Duration::from_millis(Self::DURATION_MS);
-            } else {
-                self.duration = Duration::from_millis(Self::DURATION_MS);
-            }
-            self.reset();
-            ctx.request_anim_frame();
-        }
-        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if !self.timer.is_running() {
-                self.start();
-            }
-            if self.is_active() {
-                ctx.request_anim_frame();
-                ctx.request_paint();
-            } else if self.active {
-                self.active = false;
-                ctx.request_anim_frame();
-                ctx.request_paint();
-            }
-        }
-    }
-}
+/// Duration of the attach animation.
+const ATTACH_DURATION: Duration = Duration::from_millis(750);
 
 #[derive(Default, Clone)]
 struct CloseAnimation {
@@ -248,7 +150,7 @@ pub struct PinKeyboard {
     confirm_btn: Button,
     digit_btns: [(Button, usize); DIGIT_COUNT],
     warning_timer: Timer,
-    attach_animation: AttachAnimation,
+    attach_anim: AttachAnim,
     close_animation: CloseAnimation,
     close_confirm: bool,
 }
@@ -288,7 +190,7 @@ impl PinKeyboard {
                 .initially_enabled(false),
             digit_btns: Self::generate_digit_buttons(),
             warning_timer: Timer::new(),
-            attach_animation: AttachAnimation::default(),
+            attach_anim: AttachAnim::new(ATTACH_DURATION),
             close_animation: CloseAnimation::default(),
             close_confirm: false,
         }
@@ -381,16 +283,24 @@ impl PinKeyboard {
         self.minor_prompt.text().map(|t| font.text_width(t))
     }
 
-    fn get_button_alpha(&self, x: usize, y: usize, attach_time: f32, close_time: f32) -> u8 {
-        self.attach_animation
-            .opacity(attach_time, x, y)
-            .min(self.close_animation.opacity(close_time, x, y))
+    /// Opacity of the button at grid position `x`, `y`. On attach, the
+    /// buttons fade in diagonally from the top left corner.
+    fn get_button_alpha(&self, x: usize, y: usize, close_time: f32) -> u8 {
+        let diag = (x + y) as u32;
+        let attach = fade_in(ease_in_out::<Cubic>(
+            self.attach_anim
+                .window(Duration::from_millis(50 * diag), Duration::from_millis(100)),
+        ));
+        attach.min(self.close_animation.opacity(close_time, x, y))
     }
 
-    fn get_textbox_alpha(&self, attach_time: f32, close_time: f32) -> u8 {
-        self.attach_animation
-            .header_opacity(attach_time)
-            .min(self.close_animation.header_opacity(close_time))
+    /// Opacity of the textbox. On attach, it fades in after the buttons.
+    fn get_textbox_alpha(&self, close_time: f32) -> u8 {
+        let attach = fade_in(
+            self.attach_anim
+                .window(Duration::from_millis(650), Duration::from_millis(100)),
+        );
+        attach.min(self.close_animation.header_opacity(close_time))
     }
 }
 
@@ -458,7 +368,7 @@ impl Component for PinKeyboard {
             });
         }
 
-        self.attach_animation.lazy_start(ctx, event);
+        self.attach_anim.event(ctx, event);
 
         // Start and drive the prompt marquees only while they are visible,
         // i.e. while the PIN textbox is empty (matching render). While the
@@ -554,10 +464,9 @@ impl Component for PinKeyboard {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let t_attach = self.attach_animation.eval();
         let t_close = self.close_animation.eval();
 
-        let erase_alpha = self.get_button_alpha(0, 3, t_attach, t_close);
+        let erase_alpha = self.get_button_alpha(0, 3, t_close);
 
         if self.show_erase {
             self.erase_btn.render_with_alpha(target, erase_alpha);
@@ -580,14 +489,14 @@ impl Component for PinKeyboard {
         Bar::new(self.textbox_area)
             .with_bg(theme::label_default().background_color)
             .with_fg(theme::label_default().background_color)
-            .with_alpha(255 - self.get_textbox_alpha(t_attach, t_close))
+            .with_alpha(255 - self.get_textbox_alpha(t_close))
             .render(target);
 
-        let alpha = self.get_button_alpha(2, 3, t_attach, t_close);
+        let alpha = self.get_button_alpha(2, 3, t_close);
         self.confirm_btn.render_with_alpha(target, alpha);
 
         for btn in &self.digit_btns {
-            let alpha = self.get_button_alpha(btn.1 % 3, btn.1 / 3, t_attach, t_close);
+            let alpha = self.get_button_alpha(btn.1 % 3, btn.1 / 3, t_close);
             btn.0.render_with_alpha(target, alpha);
         }
 
