@@ -1,73 +1,14 @@
-//! Decisions that are not a plain yes. The public docs live on [`danger`] and
-//! [`details`].
+//! One decision that is not a plain yes. The public docs live on [`details`].
 //!
-//! Both take the same facts a review would show; they differ in what the answer
-//! can be. Going on after a `danger` takes a deliberate extra step, and a
-//! `details` screen lets the person skip what it offers.
+//! It takes the same facts a review would show, and differs in what the answer
+//! can be: it lets the person skip what it offers. A danger is a review's
+//! answer, [`Review::confirm_danger`](crate::modui::Review::confirm_danger).
 
 use crate::modui::Field;
-use crate::modui::call::{call, yes_or_no};
+use crate::modui::call::call;
 use crate::modui::field::{check_fields, wire_fields};
 use crate::structs::{FieldsRequest, TrezorUiEnum, TrezorUiResult};
 use crate::{Error, Result};
-
-/// Asks the person to go on with something risky, and waits for the answer.
-///
-/// Refusing is the default, and continuing takes a deliberate extra step.
-/// `Ok(())` only if the person chooses to go on. It takes fields, so the screen
-/// can show *what* is risky, such as the unknown contract's address. Usually a
-/// [`Field::note`] that says what the risk is, and the value it concerns.
-///
-/// - `step` — the step name, relative to the app, such as
-///   `"unknown_contract"`; see
-///   [step names](crate::modui#step-names).
-/// - `title` — the screen's heading, such as `"Important"`.
-/// - `fields` — what is risky, in the order shown.
-///
-/// # Errors
-///
-/// See [errors](crate::modui#errors).
-///
-/// # Example
-///
-/// ```no_run
-/// use trezor_app_sdk::modui::{self, Field};
-///
-/// fn warn_unknown_contract(contract_address: &str) -> trezor_app_sdk::Result<()> {
-///     modui::danger(
-///         "unknown_contract",
-///         "Important",
-///         &[
-///             Field::note("This contract is unknown. Continue only if you trust it."),
-///             Field::address("Contract", contract_address),
-///         ],
-///     )
-/// }
-/// ```
-///
-/// ```no_run
-/// use trezor_app_sdk::modui::{self, Field};
-///
-/// fn warn_unknown_path(path: &str) -> trezor_app_sdk::Result<()> {
-///     modui::danger(
-///         "path_warning",
-///         "Unknown path",
-///         &[
-///             Field::note("This path is not usual for this coin."),
-///             Field::text("Derivation path", path),
-///         ],
-///     )
-/// }
-/// ```
-pub fn danger<'a>(step: &'a str, title: &'a str, fields: &'a [Field<'a>]) -> Result<()> {
-    check_fields(fields)?;
-    let request = FieldsRequest {
-        step: step.into(),
-        title: title.into(),
-        fields: wire_fields(fields),
-    };
-    yes_or_no(call(TrezorUiEnum::Danger(request)))
-}
 
 /// The answer to [`details`]: whether the person wants to see the details.
 ///

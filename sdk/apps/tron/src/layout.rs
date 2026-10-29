@@ -308,7 +308,9 @@ fn confirm_ethereum_unknown_contract_warning() -> Result<()> {
     );
 
     let warning = [Field::note(&content)];
-    modui::danger("unknown_contract", tr!("words__important"), &warning).c()
+    modui::review("unknown_contract", tr!("words__important"), &warning)
+        .confirm_danger()
+        .c()
 }
 
 pub fn confirm_unknown_smart_contract(

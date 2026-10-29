@@ -3,12 +3,12 @@
 //!
 //! A review is a set of facts the person reads before deciding, with at most
 //! five extras they can open from its menu. Nothing is shown until the review is
-//! confirmed, so a `Review` that is never confirmed is a mistake.
+//! answered, so a `Review` that is never answered is a mistake.
 
 use crate::modui::Field;
 use crate::modui::call::{call, yes_or_no};
 use crate::modui::field::{check_fields, wire_fields};
-use crate::structs::{ReviewRequest, Slice, TrezorUiEnum, WireExtra};
+use crate::structs::{FieldsRequest, ReviewRequest, Slice, TrezorUiEnum, WireExtra};
 use crate::{Error, Result};
 
 /// How many extras one review may offer: the menu holds six entries, and one of
@@ -90,11 +90,27 @@ fn offered_extras<'a>(extras: &'a [Extra<'a>]) -> Result<([WireExtra<'a>; MAX_EX
     Ok((kept, used))
 }
 
+/// Refuses extras on a danger: its menu already holds the way forward, so there
+/// is no room for entries of the app's.
+///
+/// The same rule as [`offered_extras`], the other way round: an extra with no
+/// facts is not offered, so it is fine and dropped; one with facts is the app's
+/// mistake.
+fn check_no_extras(extras: &[Extra<'_>]) -> Result<()> {
+    if extras
+        .iter()
+        .any(|extra| !extra.wire.fields.as_slice().is_empty())
+    {
+        return Err(Error::DataError("a danger offers no extras"));
+    }
+    Ok(())
+}
+
 /// Builds a set of facts for the person to read, then confirm or refuse.
 ///
-/// Nothing is shown until [`Review::confirm`] or [`Review::confirm_final`] is
-/// called. `Review` is `#[must_use]`, so a review that is never confirmed is a
-/// compiler warning.
+/// Nothing is shown until [`Review::confirm`], [`Review::confirm_final`] or
+/// [`Review::confirm_danger`] is called. `Review` is `#[must_use]`, so a review
+/// that is never answered is a compiler warning.
 ///
 /// - `step` — the step name, relative to the app, such as `"send"`; see
 ///   [step names](crate::modui#step-names).
@@ -143,7 +159,7 @@ pub fn review<'a>(step: &'a str, title: &'a str, fields: &'a [Field<'a>]) -> Rev
 
 /// A review waiting for its answer: the facts, and the extras offered beside
 /// them. See [`review`].
-#[must_use = "a review shows nothing until `confirm` or `confirm_final` is called"]
+#[must_use = "a review shows nothing until `confirm`, `confirm_final` or `confirm_danger` is called"]
 pub struct Review<'a> {
     step: &'a str,
     title: &'a str,
@@ -163,7 +179,8 @@ impl<'a> Review<'a> {
     ///
     /// **Limits.** Up to five offered extras per review: the menu holds six
     /// entries and one is the way out. A sixth one is
-    /// [`Error::DataError`](crate::Error::DataError) from `confirm`. Facts per
+    /// [`Error::DataError`](crate::Error::DataError) from `confirm`, and any
+    /// offered extra is one from `confirm_danger`, whose menu is full. Facts per
     /// extra are not limited: core pages through them.
     ///
     /// # Example
@@ -187,6 +204,9 @@ impl<'a> Review<'a> {
     }
 
     /// Shows the review and waits for the answer.
+    ///
+    /// The plainest yes of the three: a tap, with the menu still there for the
+    /// extras and the way out.
     ///
     /// `Ok(())`: the person said yes and the flow moves on.
     /// `Err(`[`crate::Error::Cancelled`]`)`: they refused, by whatever way
@@ -222,10 +242,10 @@ impl<'a> Review<'a> {
 
     /// Shows the review as the last yes before the app signs or acts.
     ///
-    /// Core makes it harder to give by accident: a hold, on every model, with
-    /// the menu still there. It is always the same fact screen; an `amount` field
-    /// gets the summary styling. The app does not choose a separate "summary"
-    /// screen.
+    /// Harder than [`Review::confirm`]: core makes it harder to give by
+    /// accident, with a hold on every model, and the menu still there. It is
+    /// always the same fact screen; an `amount` field gets the summary styling.
+    /// The app does not choose a separate "summary" screen.
     ///
     /// # Errors
     ///
@@ -249,6 +269,77 @@ impl<'a> Review<'a> {
     /// ```
     pub fn confirm_final(self) -> Result<()> {
         self.decide(true)
+    }
+
+    /// Shows the review as a danger: what is risky, before the person goes on.
+    ///
+    /// The hardest of the three to reach: neither a tap nor a hold but a
+    /// deliberate detour, so going on is never one press away. Refusing is the
+    /// default, and `Ok(())` only if the person chooses to go on. The facts are
+    /// the ones a review would show, so the screen can say *what* is risky, such
+    /// as the unknown contract's address: usually a [`Field::note`] that says
+    /// what the risk is, and the value it concerns.
+    ///
+    /// **No extras.** A danger's menu already holds the way forward, so there is
+    /// no room for entries of the app's: an extra with no facts is fine and
+    /// dropped, the way a review drops it, and one with facts is
+    /// [`Error::DataError`](crate::Error::DataError).
+    ///
+    /// # Errors
+    ///
+    /// See [errors](crate::modui#errors).
+    ///
+    /// # Example
+    ///
+    /// An unknown contract:
+    ///
+    /// ```no_run
+    /// use trezor_app_sdk::modui::{self, Field};
+    ///
+    /// fn warn_unknown_contract(contract_address: &str) -> trezor_app_sdk::Result<()> {
+    ///     modui::review(
+    ///         "unknown_contract",
+    ///         "Important",
+    ///         &[
+    ///             Field::note("This contract is unknown. Continue only if you trust it."),
+    ///             Field::address("Contract", contract_address),
+    ///         ],
+    ///     )
+    ///     .confirm_danger()
+    /// }
+    /// ```
+    ///
+    /// An unusual derivation path:
+    ///
+    /// ```no_run
+    /// use trezor_app_sdk::modui::{self, Field};
+    ///
+    /// fn warn_unknown_path(path: &str) -> trezor_app_sdk::Result<()> {
+    ///     modui::review(
+    ///         "path_warning",
+    ///         "Unknown path",
+    ///         &[
+    ///             Field::note("This path is not usual for this coin."),
+    ///             Field::text("Derivation path", path),
+    ///         ],
+    ///     )
+    ///     .confirm_danger()
+    /// }
+    /// ```
+    pub fn confirm_danger(self) -> Result<()> {
+        yes_or_no(call(TrezorUiEnum::Danger(self.danger_request()?)))
+    }
+
+    /// The danger request this review would send, once the app's mistakes are
+    /// refused: an offered extra, or a bad set of facts.
+    fn danger_request(self) -> Result<FieldsRequest<'a>> {
+        check_no_extras(self.extras)?;
+        check_fields(self.fields)?;
+        Ok(FieldsRequest {
+            step: self.step.into(),
+            title: self.title.into(),
+            fields: wire_fields(self.fields),
+        })
     }
 
     fn decide(self, is_final: bool) -> Result<()> {
@@ -316,5 +407,40 @@ mod tests {
         ];
         let (_, used) = offered_extras(&extras).unwrap();
         assert_eq!(used, MAX_EXTRAS);
+    }
+
+    #[test]
+    fn a_danger_refuses_an_offered_extra() {
+        let facts = [Field::text("a", "b")];
+        assert!(matches!(
+            review("step", "title", &facts)
+                .extras(&[Extra::new("a", &facts)])
+                .confirm_danger(),
+            Err(Error::DataError("a danger offers no extras"))
+        ));
+    }
+
+    #[test]
+    fn a_danger_checks_its_extras_before_its_facts() {
+        let facts = [Field::data("a", &[1]), Field::data("b", &[2])];
+        assert!(matches!(
+            review("step", "title", &facts)
+                .extras(&[Extra::new("a", &facts)])
+                .confirm_danger(),
+            Err(Error::DataError("a danger offers no extras"))
+        ));
+    }
+
+    #[test]
+    fn a_danger_accepts_empty_extras() {
+        let facts = [Field::text("a", "b")];
+        let extras = [Extra::new("empty", &[])];
+        let request = review("step", "title", &facts)
+            .extras(&extras)
+            .danger_request()
+            .unwrap();
+        assert_eq!(request.step.as_str(), "step");
+        assert_eq!(request.title.as_str(), "title");
+        assert_eq!(request.fields.as_slice().len(), 1);
     }
 }

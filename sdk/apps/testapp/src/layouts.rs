@@ -23,7 +23,7 @@ pub fn review(m: wire::Review) -> Result<wire::UiResult> {
 
 pub fn danger(m: wire::Danger) -> Result<wire::UiResult> {
     let fields = fields(&m.fields)?;
-    decided(modui::danger(&m.step, &m.title, &fields))
+    decided(modui::review(&m.step, &m.title, &fields).confirm_danger())
 }
 
 pub fn details(m: wire::Details) -> Result<wire::UiResult> {

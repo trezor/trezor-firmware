@@ -149,7 +149,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="confirm_final (hold) instead of confirm",
     )
 
-    p = layout("danger", "modui::danger", "Important")
+    p = layout("danger", "modui::review(...).confirm_danger()", "Important")
     with_fields(p)
 
     p = layout("details", "modui::details", "Confirm message")

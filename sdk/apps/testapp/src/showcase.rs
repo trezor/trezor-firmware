@@ -116,7 +116,7 @@ fn claim_owner() -> Result<()> {
 
 /// The reference's `danger` example for an unknown contract.
 fn unknown_contract() -> Result<()> {
-    modui::danger(
+    modui::review(
         "unknown_contract",
         "Important",
         &[
@@ -124,11 +124,12 @@ fn unknown_contract() -> Result<()> {
             Field::address("Contract", CONTRACT),
         ],
     )
+    .confirm_danger()
 }
 
 /// The reference's `danger` example for an unusual path.
 fn path_warning() -> Result<()> {
-    modui::danger(
+    modui::review(
         "path_warning",
         "Unknown path",
         &[
@@ -136,6 +137,7 @@ fn path_warning() -> Result<()> {
             Field::text("Derivation path", PATH),
         ],
     )
+    .confirm_danger()
 }
 
 /// The reference's EIP-712 example: the person may skip the details, and the

@@ -332,7 +332,7 @@ message Review {
 }
 
 /**
- * Request: modui::danger
+ * Request: modui::review(...).confirm_danger()
  * @next UiResult
  */
 message Danger {

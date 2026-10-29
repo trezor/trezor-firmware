@@ -47,11 +47,15 @@
 //! | Layout | Shows | Extras |
 //! |---|---|---|
 //! | [`review`] | facts to read before a yes | yes |
-//! | [`danger`] | facts that make going on risky | — |
 //! | [`details`] | facts the person may skip | — |
 //! | [`verify_address`] | one of the person's own addresses | — |
 //! | [`verify_pubkey`] | one of the person's own public keys | — |
 //! | [`done`] | the end of the flow | — |
+//!
+//! A [`review`] answers in three ways, each a harder yes than the last:
+//! [`Review::confirm`] is a tap, [`Review::confirm_final`] a hold, and
+//! [`Review::confirm_danger`] a deliberate detour past what is risky. A danger is
+//! an answer, not a layout of its own.
 //!
 //! Every layout is one function taking every parameter, and does not return
 //! until the person answers — except [`done`], which returns at once.
@@ -77,8 +81,9 @@
 //!
 //! What a layout returns depends on what kind of layout it is:
 //!
-//! - **[`review`], [`danger`], [`verify_address`] and [`verify_pubkey`]**
-//!   return `Result<()>`: `Ok(())` when the person said yes, and
+//! - **[`review`]** (in all three of its answers),
+//!   **[`verify_address`]** and **[`verify_pubkey`]** return `Result<()>`:
+//!   `Ok(())` when the person said yes, and
 //!   `Err(`[`crate::Error::Cancelled`]`)` when they refused, by whatever
 //!   way out the model offers.
 //! - **[`details`]** returns `Result<`[`Details`]`>`: `Show` when the person
@@ -185,8 +190,9 @@
 //!
 //! A layout's `Err` is [`crate::Error::Cancelled`] when the person refuses
 //! (see [outcomes](#outcomes)). What the library can tell before it asks —
-//! more than five extras, more than one `data` field, a `data` field too long
-//! to travel inline — is also an `Err`, and `?` ends the flow on it, the same
+//! more than five extras, an extra beside a danger, more than one `data` field, a
+//! `data` field too long to travel inline — is also an `Err`, and `?` ends the
+//! flow on it, the same
 //! way: that is a mistake in the app, not a state to handle.
 //!
 //! A failure — the request did not reach core, or the answer cannot be read —
@@ -275,7 +281,7 @@ mod progress;
 mod review;
 mod verify;
 
-pub use decision::{Details, danger, details};
+pub use decision::{Details, details};
 pub use done::done;
 pub use field::Field;
 pub use progress::{Progress, progress};
