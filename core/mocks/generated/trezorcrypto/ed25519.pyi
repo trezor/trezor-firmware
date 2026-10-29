@@ -1,5 +1,7 @@
 from typing import *
 from buffer_types import *
+from trezorcrypto import secbytes
+MAX_MESSAGE_SIZE: int
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
@@ -10,7 +12,7 @@ def generate_secret() -> bytes:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
-def publickey(secret_key: AnyBytes) -> bytes:
+def publickey(secret_key: AnyBytes | secbytes) -> bytes:
     """
     Computes public key from secret key.
     """
@@ -18,16 +20,19 @@ def publickey(secret_key: AnyBytes) -> bytes:
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
 def sign(
-    secret_key: AnyBytes, message: AnyBytes, hasher: str = ""
+    secret_key: AnyBytes | secbytes, message: AnyBytes, hasher: str = ""
 ) -> bytes:
     """
     Uses secret key to produce the signature of message.
+    Opaque-key messages are bounded to 4096 bytes and copied into the
+    kernel.
     """
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
 def sign_ext(
-    secret_scalar: AnyBytes, secret_extension: AnyBytes, message: AnyBytes
+    secret_scalar: AnyBytes | secbytes, secret_extension: AnyBytes |
+    secbytes, message: AnyBytes
 ) -> bytes:
     """
     Uses extended secret key to produce the cardano signature of message.

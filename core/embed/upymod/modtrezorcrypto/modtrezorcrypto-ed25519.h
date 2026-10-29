@@ -25,6 +25,9 @@
 #include "ed25519-donna/ed25519.h"
 
 /// package: trezorcrypto.ed25519
+/// from trezorcrypto import secbytes
+
+/// MAX_MESSAGE_SIZE: int
 
 /// def generate_secret() -> bytes:
 ///     """
@@ -39,11 +42,18 @@ static mp_obj_t mod_trezorcrypto_ed25519_generate_secret() {
 static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_ed25519_generate_secret_obj,
                                  mod_trezorcrypto_ed25519_generate_secret);
 
-/// def publickey(secret_key: AnyBytes) -> bytes:
+/// def publickey(secret_key: AnyBytes | secbytes) -> bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
 static mp_obj_t mod_trezorcrypto_ed25519_publickey(mp_obj_t secret_key) {
+  if (mp_obj_is_type(secret_key, &mod_trezorcrypto_secbytes_type)) {
+    vault_request_t r = {.op = VAULT_ED_PUBLIC,
+                         .blob = secbytes_blob(MP_OBJ_TO_PTR(secret_key))};
+    vault_response_t out = {0};
+    vault_raise(&r, &out);
+    return mp_obj_new_bytes(out.signature, 32);
+  }
   mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   if (sk.len != 32) {
@@ -59,13 +69,39 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ed25519_publickey_obj,
                                  mod_trezorcrypto_ed25519_publickey);
 
 /// def sign(
-///     secret_key: AnyBytes, message: AnyBytes, hasher: str = ""
+///     secret_key: AnyBytes | secbytes, message: AnyBytes, hasher: str = ""
 /// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of message.
+///     Opaque-key messages are bounded to 4096 bytes and copied into the
+///     kernel.
 ///     """
 static mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
                                               const mp_obj_t *args) {
+  if (mp_obj_is_type(args[0], &mod_trezorcrypto_secbytes_type)) {
+    mp_buffer_info_t message = {0};
+    mp_get_buffer_raise(args[1], &message, MP_BUFFER_READ);
+    if (!message.len || message.len > VAULT_ED25519_MAX_MESSAGE)
+      mp_raise_ValueError(MP_ERROR_TEXT("Message length outside vault bound"));
+    uint32_t hasher = 0;
+    if (n_args == 3) {
+      mp_buffer_info_t name = {0};
+      mp_get_buffer_raise(args[2], &name, MP_BUFFER_READ);
+      if (name.len != 6 || memcmp(name.buf, "keccak", 6))
+        mp_raise_ValueError(MP_ERROR_TEXT("Unknown hash function"));
+      hasher = 1;
+    }
+    vault_message_request_t r = {.abi = VAULT_ABI,
+                                 .op = VAULT_ED_SIGN,
+                                 .owner = secret_owner,
+                                 .arg = hasher,
+                                 .blob = secbytes_blob(MP_OBJ_TO_PTR(args[0]))};
+    vault_response_t out = {0};
+    bool ok = vault_coreapp_call_message(&r, message.buf, message.len, &out);
+    memzero(&r, sizeof(r));
+    if (!ok) mp_raise_ValueError(MP_ERROR_TEXT("Invalid or locked vault"));
+    return mp_obj_new_bytes(out.signature, 64);
+  }
   mp_buffer_info_t sk = {0}, msg = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &msg, MP_BUFFER_READ);
@@ -82,7 +118,7 @@ static mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
   if (n_args == 3) {
     mp_get_buffer_raise(args[2], &hash_func, MP_BUFFER_READ);
     // if hash_func == 'keccak':
-    if (memcmp(hash_func.buf, "keccak", sizeof("keccak")) == 0) {
+    if (hash_func.len == 6 && memcmp(hash_func.buf, "keccak", 6) == 0) {
       ed25519_sign_keccak(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
                           *(ed25519_signature *)sig.buf);
     } else {
@@ -102,7 +138,8 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_ed25519_sign_obj, 2,
 #if !BITCOIN_ONLY
 
 /// def sign_ext(
-///     secret_scalar: AnyBytes, secret_extension: AnyBytes, message: AnyBytes
+///     secret_scalar: AnyBytes | secbytes, secret_extension: AnyBytes |
+///     secbytes, message: AnyBytes
 /// ) -> bytes:
 ///     """
 ///     Uses extended secret key to produce the cardano signature of message.
@@ -110,6 +147,24 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_ed25519_sign_obj, 2,
 static mp_obj_t mod_trezorcrypto_ed25519_sign_ext(mp_obj_t secret_scalar,
                                                   mp_obj_t secret_extension,
                                                   mp_obj_t message) {
+  if (mp_obj_is_type(secret_scalar, &mod_trezorcrypto_secbytes_type) ||
+      mp_obj_is_type(secret_extension, &mod_trezorcrypto_secbytes_type)) {
+    if (!mp_obj_is_type(secret_scalar, &mod_trezorcrypto_secbytes_type) ||
+        !mp_obj_is_type(secret_extension, &mod_trezorcrypto_secbytes_type))
+      mp_raise_TypeError(MP_ERROR_TEXT("Both extended keys must be opaque"));
+    mp_buffer_info_t data = {0};
+    mp_get_buffer_raise(message, &data, MP_BUFFER_READ);
+    vault_message_request_t r = {
+        .abi = VAULT_ABI,
+        .op = VAULT_ED_SIGN_EXT,
+        .owner = secret_owner,
+        .blob = secbytes_blob(MP_OBJ_TO_PTR(secret_scalar)),
+        .extension = secbytes_blob(MP_OBJ_TO_PTR(secret_extension))};
+    vault_response_t out = {0};
+    if (!vault_coreapp_call_message(&r, data.buf, data.len, &out))
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid extended key or message"));
+    return mp_obj_new_bytes(out.signature, 64);
+  }
   mp_buffer_info_t sk = {0}, skext = {0}, msg = {0};
   mp_get_buffer_raise(secret_scalar, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(secret_extension, &skext, MP_BUFFER_READ);
@@ -314,6 +369,8 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 
 static const mp_rom_map_elem_t mod_trezorcrypto_ed25519_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_ed25519)},
+    {MP_ROM_QSTR(MP_QSTR_MAX_MESSAGE_SIZE),
+     MP_ROM_INT(VAULT_ED25519_MAX_MESSAGE)},
     {MP_ROM_QSTR(MP_QSTR_generate_secret),
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_generate_secret_obj)},
     {MP_ROM_QSTR(MP_QSTR_publickey),

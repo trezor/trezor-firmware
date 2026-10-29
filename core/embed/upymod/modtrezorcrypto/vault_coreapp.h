@@ -464,6 +464,35 @@ static bool app_execute(const app_vault_command_t *r, vault_response_t *out,
       break;
     }
 #endif
+    case VAULT_CHACHA_BLOCK:
+    case VAULT_CHACHA_TAG: {
+      size_t key_length = 0;
+      app_secret_payload_t *key =
+          app_secret_open(r->blob, r->owner, SECRET_BYTES, &key_length);
+      if (!key || key_length != 32) break;
+      chacha20poly1305_ctx ctx = {0};
+      if (r->op == VAULT_CHACHA_BLOCK) {
+        if (!r->curve || r->arg > 1 || r->child_num % 64 ||
+            r->child_num > VAULT_ED25519_MAX_MESSAGE)
+          break;
+        rfc7539_init(&ctx, key->bytes, (const uint8_t *)r->curve);
+        ctx.chacha20.input[12] += r->child_num / 64;
+        if (r->arg)
+          chacha20poly1305_decrypt(&ctx, r->data, out->data, r->length);
+        else
+          chacha20poly1305_encrypt(&ctx, r->data, out->data, r->length);
+        ok = true;
+      } else if (r->extension && message && r->arg <= 32 &&
+                 r->arg <= message_length) {
+        rfc7539_init(&ctx, key->bytes, r->extension->bytes);
+        rfc7539_auth(&ctx, message, r->arg);
+        chacha20poly1305_auth(&ctx, message + r->arg, message_length - r->arg);
+        rfc7539_finish(&ctx, r->arg, message_length - r->arg, out->signature);
+        ok = true;
+      }
+      memzero(&ctx, sizeof(ctx));
+      break;
+    }
 #if USE_MONERO
     case VAULT_MONERO_PUBLIC:
       ok = vault_monero_public(r, out);

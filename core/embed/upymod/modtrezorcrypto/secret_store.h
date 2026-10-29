@@ -3,6 +3,7 @@
 #define TREZOR_SECRET_STORE_H
 #include <sec/vault.h>
 #include "memzero.h"
+#include "vault_coreapp.h"
 #include "vault_slip21.h"
 #define SECRET_OWNER_CAPACITY 64
 #define SECRET_STORE_BYTES VAULT_SECRET_SIZE
@@ -15,7 +16,7 @@ static bool secret_rpc(vault_request_t *r, vault_response_t *out) {
   if (!r->owner) r->owner = secret_owner;
   bool ok = (r->op == VAULT_SLIP21 || r->op == VAULT_HMAC_TAG)
                 ? vault_slip21_call(r, out)
-                : vault_call(r, out);
+                : vault_coreapp_call(r, out);
   memzero(r, sizeof(*r));
   return ok;
 }

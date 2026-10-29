@@ -250,9 +250,11 @@ def derive_node_without_passphrase(
     return node
 
 
-def derive_slip21_node_without_passphrase(path: Slip21Path) -> Slip21Node:
+def derive_slip21_node_without_passphrase(
+    path: Slip21Path,
+) -> Slip21Node | VaultSlip21Node:
     seed = _get_seed_without_passphrase()
-    node = Slip21Node(seed)
+    node = slip21_root(seed)
     node.derive_path(path)
     return node
 
