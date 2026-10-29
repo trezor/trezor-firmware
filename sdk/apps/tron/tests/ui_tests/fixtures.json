@@ -329,6 +329,6 @@
         "T3W1_pt-test_sign_tx.py::test_ui_cancel_flow[Stake_for_Bandwidth]": "dca86136501a88373c32bf5afe4a2303788c89bcb8b9634b63f20e0117dc377a",
         "T3W1_pt-test_sign_tx.py::test_ui_cancel_flow[Stake_for_Energy]": "9793534d7f6b6a0466072422426d0a182dbb11dfc8b690f6e3cc67ef63b4548c",
         "T3W1_pt-test_sign_tx.py::test_ui_cancel_flow[TriggerSmartContract_USDT_transfer]": "dc37b0c4262e1dbea1e37345a868c8ed38d71e73ad8c6b631cec42f648a568c1",
-        "T3W1_pt-test_sign_tx.py::test_ui_cancel_unknown_contract[TriggerSmartContract_unknown_contract]": "3eddc27dbc58752ac56ce0c13a8202feeef62e911ace1134c2832bc29dc6b3b1",
+        "T3W1_pt-test_sign_tx.py::test_ui_cancel_unknown_contract[TriggerSmartContract_unknown_contract]": "3eddc27dbc58752ac56ce0c13a8202feeef62e911ace1134c2832bc29dc6b3b1"
     }
 }
