@@ -21,7 +21,7 @@
 	app_build_test app_build_doc \
 	app_build_audit app_build_vet \
 	extapp_build_firmware extapp_build_emu \
-	extapp_unit_tests extapp_test_emu extapp_test_emu_ui \
+	extapp_unit_tests extapp_test_emu extapp_test_emu_ui extapp_test_emu_ui_record \
 	extapp_fmt extapp_fmt_check \
 	extapp_clippy extapp_vet \
 	typecheck pyright \
@@ -324,7 +324,11 @@ extapp_test_emu: ## run device tests for an extapp against a universal firmware 
 
 extapp_test_emu_ui: ## run device tests with UI screenshot testing for an extapp against a universal firmware emulator (set EXTAPP/EXTAPP_MODEL/TEST_LANG)
 	@echo [EXTAPP-TEST-EMU-UI]
-	$(EMU_TEST) env -C sdk/apps cargo app-tool device-test -p $(EXTAPP) -m $(EXTAPP_MODEL) -e --ui --lang $(TEST_LANG)
+	$(EMU_TEST) env -C sdk/apps cargo app-tool device-test -p $(EXTAPP) -m $(EXTAPP_MODEL) -e --ui test --lang $(TEST_LANG)
+
+extapp_test_emu_ui_record: ## record and hash screens for an extapp's device tests against a universal firmware emulator (set EXTAPP/EXTAPP_MODEL/TEST_LANG)
+	@echo [EXTAPP-TEST-EMU-UI-RECORD]
+	$(EMU_TEST) env -C sdk/apps cargo app-tool device-test -p $(EXTAPP) -m $(EXTAPP_MODEL) -e --ui record --lang $(TEST_LANG)
 
 extapp_fmt: ## apply rust, python and translation style on all extapps
 	@echo [EXTAPP-RUSTFMT]
