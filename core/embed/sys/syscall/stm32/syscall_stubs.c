@@ -40,6 +40,12 @@ bool vault_call(const vault_request_t *request, vault_response_t *response) {
   return syscall_invoke2((uint32_t)request, (uint32_t)response,
                          SYSCALL_VAULT_CALL) != 0;
 }
+bool vault_call_message(const vault_message_request_t *request,
+                        const uint8_t *message, size_t length,
+                        vault_response_t *response) {
+  return syscall_invoke4((uint32_t)request, (uint32_t)message, length,
+                         (uint32_t)response, SYSCALL_VAULT_CALL_MESSAGE) != 0;
+}
 #endif
 
 // =============================================================================

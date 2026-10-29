@@ -76,6 +76,9 @@ mpu_driver_t g_mpu_driver = {
     .mode = MPU_MODE_DISABLED,
 };
 
+_Static_assert(DMABUF_RAM_START == SRAM_BASE && DMABUF_RAM_SIZE == SIZE_8K,
+               "kernel I/O MPU region misconfigured");
+
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_1_MAXSIZE, "norcow misconfigured");
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 _Static_assert(NORCOW_SECTOR_SIZE == SIZE_64K, "norcow misconfigured");
@@ -353,7 +356,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
     case MPU_MODE_APP:
       // Kernel data in DMA accessible SRAM (Privileged, Read-Write, Non-Executable)
       // (overlaps with unprivileged SRAM region)
-      SET_REGION( 5, SRAM_BASE,             SIZE_1KB,  0x00, SRAM, PRIV_RW );
+      SET_REGION( 5, SRAM_BASE,             SIZE_8KB,  0x00, SRAM, PRIV_RW );
       // Assets (Unprivileged, Read-Only, Non-Executable)
       // Subregion: 32KB = 64KB except 2/8 at start and 2/8 at end
       SET_REGION( 6, FLASH_BASE + 0x104000, SIZE_64KB, 0xC3, FLASH_DATA, PRIV_RO_URO );
@@ -371,7 +374,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
     case MPU_MODE_APP:
       // Kernel data in DMA accessible SRAM (Privileged, Read-Write, Non-Executable)
       // (overlaps with unprivileged SRAM region)
-      SET_REGION( 5, SRAM_BASE,             SIZE_1KB,  0x00, SRAM, PRIV_RW );
+      SET_REGION( 5, SRAM_BASE,             SIZE_8KB,  0x00, SRAM, PRIV_RW );
       // Assets (Unprivileged, Read-Only, Non-Executable)
       // Subregion: 48KB = 64KB except 2/8 at end
       SET_REGION( 6, FLASH_BASE + 0x100000, SIZE_64KB, 0xC0, FLASH_DATA, PRIV_RO_URO );

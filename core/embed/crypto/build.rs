@@ -56,6 +56,10 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
         lib.add_define("ED25519_NO_PRECOMP", None);
     }
 
+    if cfg!(feature = "bip32_vault") {
+        lib.add_define("USE_BIP39_COMPACT", Some("1"));
+    }
+
     lib.add_source("src/fault_handler.c");
 
     lib.add_sources_in_dir_with_attrs(
@@ -299,6 +303,11 @@ fn add_secp256k1_zkp(lib: &mut CLibrary, _attrs: &CompileAttrs) -> Result<()> {
         ("ENABLE_MODULE_EXTRAKEYS", None),
         ("ENABLE_MODULE_ECDH", None),
     ]);
+
+    if cfg!(feature = "secp256k1_small_precomp") {
+        // Select the library's supported 2 KiB table for constrained images.
+        lib.add_defines([("COMB_BLOCKS", Some("2")), ("COMB_TEETH", Some("5"))]);
+    }
 
     // TODO get rid of #include <vendor/... includes in crypto/zkp_*.c
     // lib.add_include(PathBuf::from(SECP256K1_PATH).join("include"));

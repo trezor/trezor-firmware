@@ -22,6 +22,10 @@
 #pragma GCC optimize("no-stack-protector")
 
 #include <trezor_rtl.h>
+#ifdef USE_VAULT
+#include <sec/vault.h>
+#include "memzero.h"
+#endif
 
 #include <sys/applet.h>
 #include <sys/systask.h>
@@ -751,7 +755,11 @@ storage_unlock_result_t storage_unlock__verified(const uint8_t *pin,
     goto access_violation;
   }
 
-  return storage_unlock(pin, pin_len, ext_salt);
+  storage_unlock_result_t result = storage_unlock(pin, pin_len, ext_salt);
+#ifdef USE_VAULT
+  if (result == UNLOCK_OK) vault_storage_unlocked();
+#endif
+  return result;
 
 access_violation:
   apptask_access_violation();
@@ -828,6 +836,12 @@ secbool storage_get__verified(const uint16_t key, void *val,
     goto access_violation;
   }
 
+#ifdef USE_VAULT
+  if (!vault_storage_key_allowed(key)) {
+    *len = 0;
+    return secfalse;
+  }
+#endif
   return storage_get(key, val, max_len, len);
 
 access_violation:
@@ -842,7 +856,16 @@ secbool storage_set__verified(const uint16_t key, const void *val,
     goto access_violation;
   }
 
+#ifdef USE_VAULT
+  if (!vault_storage_write_allowed(key)) {
+    return secfalse;
+  }
+  secbool ok = storage_set(key, val, len);
+  if (ok == sectrue) vault_storage_written(key);
+  return ok;
+#else
   return storage_set(key, val, len);
+#endif
 
 access_violation:
   apptask_access_violation();
@@ -1728,7 +1751,6 @@ access_violation:
 
 #ifdef USE_VAULT
 #include <sec/vault.h>
-#include "memzero.h"
 #include "syscall_context.h"
 bool vault_lifecycle__verified(const vault_lifecycle_request_t *request,
                                vault_lifecycle_response_t *response) {
@@ -1757,7 +1779,29 @@ bool vault_call__verified(const vault_request_t *request,
                            storage_is_unlocked() == sectrue);
   memzero(&copy, sizeof(copy));
   memcpy(response, &out, sizeof(out));
-  memzero(&out, sizeof(out));
+  return ok;
+}
+bool vault_call_message__verified(const vault_message_request_t *request,
+                                  const uint8_t *message, size_t length,
+                                  vault_response_t *response) {
+  if (!probe_write_access(response, sizeof(*response))) {
+    apptask_access_violation();
+    return false;
+  }
+  if (!length || length > VAULT_ED25519_MAX_MESSAGE) {
+    memzero(response, sizeof(*response));
+    return false;
+  }
+  if (!probe_read_access(request, sizeof(*request)) ||
+      !probe_read_access(message, length)) {
+    apptask_access_violation();
+    return false;
+  }
+  vault_response_t out = {0};
+  bool ok =
+      vault_message_snapshot((uintptr_t)syscall_get_context(), request, message,
+                             length, &out, storage_is_unlocked() == sectrue);
+  memcpy(response, &out, sizeof(out));
   return ok;
 }
 #endif

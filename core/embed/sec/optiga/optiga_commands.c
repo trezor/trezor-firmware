@@ -45,7 +45,11 @@ LOG_DECLARE(optiga)
 #define AUTO_STATES_MAX_COUNT 5
 
 // Static buffer for commands and responses.
+#if defined(STM32F427xx) || defined(STM32F429xx)
+static uint8_t tx_buffer[OPTIGA_MAX_APDU_SIZE] __attribute__((section(".buf")));
+#else
 static uint8_t tx_buffer[OPTIGA_MAX_APDU_SIZE] = {0};
+#endif
 static size_t tx_size = 0;
 
 // List of all OIDs with auto-state.
@@ -180,6 +184,9 @@ static void write_prefixed_data(uint8_t **ptr, const uint8_t *data,
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#openapplication
  */
 optiga_result optiga_open_application(void) {
+#if defined(STM32F427xx) || defined(STM32F429xx)
+  memzero(tx_buffer, sizeof(tx_buffer));
+#endif
   static const uint8_t OPEN_APP[] = {
       0xF0, 0x00, 0x00, 0x10, 0xD2, 0x76, 0x00, 0x00, 0x04, 0x47,
       0x65, 0x6E, 0x41, 0x75, 0x74, 0x68, 0x41, 0x70, 0x70, 0x6C,

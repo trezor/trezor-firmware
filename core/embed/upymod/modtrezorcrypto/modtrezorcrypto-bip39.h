@@ -149,10 +149,9 @@ static mp_obj_t mod_trezorcrypto_bip39_compare_backup(mp_obj_t secret) {
 static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_compare_backup_obj,
                                  mod_trezorcrypto_bip39_compare_backup);
 
-/// def migrate_binary_mnemonic() -> None:
-///     """Populate the protected binary mnemonic without exporting words."""
-static mp_obj_t mod_trezorcrypto_bip39_migrate_binary(void) {
-  vault_request_t r = {.op = VAULT_MNEMONIC, .arg = 2};
+/* Runs a fixed, non-exporting mnemonic operation. */
+static bool bip39_storage_op(uint32_t arg) {
+  vault_request_t r = {.op = VAULT_MNEMONIC, .arg = arg};
   vault_response_t out = {0};
   /* Boot-time storage migration can precede any wire request. Scope a
    * temporary owner to this fixed, non-exporting operation only. */
@@ -166,11 +165,29 @@ static mp_obj_t mod_trezorcrypto_bip39_migrate_binary(void) {
   bool ok = secret_rpc(&r, &out);
   secret_owner_destroy(temporary_owner);
   memzero(&out, sizeof(out));
-  if (!ok) mp_raise_ValueError(MP_ERROR_TEXT("Mnemonic migration failed"));
+  return ok;
+}
+
+/// def migrate_binary_mnemonic() -> None:
+///     """Populate the protected binary mnemonic without exporting words."""
+static mp_obj_t mod_trezorcrypto_bip39_migrate_binary(void) {
+  if (!bip39_storage_op(2))
+    mp_raise_ValueError(MP_ERROR_TEXT("Mnemonic migration failed"));
   return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_bip39_migrate_binary_obj,
                                  mod_trezorcrypto_bip39_migrate_binary);
+
+/// def backup_done() -> None:
+///     """Withdraw the stored mnemonic's first-backup disclosure, for a
+///     mnemonic that needs no backup."""
+static mp_obj_t mod_trezorcrypto_bip39_backup_done(void) {
+  if (!bip39_storage_op(3))
+    mp_raise_ValueError(MP_ERROR_TEXT("Backup state failed"));
+  return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_bip39_backup_done_obj,
+                                 mod_trezorcrypto_bip39_backup_done);
 
 static const mp_rom_map_elem_t mod_trezorcrypto_bip39_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_bip39)},
@@ -183,6 +200,8 @@ static const mp_rom_map_elem_t mod_trezorcrypto_bip39_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_bip39_compare_backup_obj)},
     {MP_ROM_QSTR(MP_QSTR_migrate_binary_mnemonic),
      MP_ROM_PTR(&mod_trezorcrypto_bip39_migrate_binary_obj)},
+    {MP_ROM_QSTR(MP_QSTR_backup_done),
+     MP_ROM_PTR(&mod_trezorcrypto_bip39_backup_done_obj)},
     {MP_ROM_QSTR(MP_QSTR_seed), MP_ROM_PTR(&mod_trezorcrypto_bip39_seed_obj)},
 #if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_mnemonic_to_bits),

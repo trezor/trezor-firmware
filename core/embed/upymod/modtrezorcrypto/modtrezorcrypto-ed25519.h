@@ -97,7 +97,7 @@ static mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
                                  .arg = hasher,
                                  .blob = secbytes_blob(MP_OBJ_TO_PTR(args[0]))};
     vault_response_t out = {0};
-    bool ok = vault_coreapp_call_message(&r, message.buf, message.len, &out);
+    bool ok = vault_call_message(&r, message.buf, message.len, &out);
     memzero(&r, sizeof(r));
     if (!ok) mp_raise_ValueError(MP_ERROR_TEXT("Invalid or locked vault"));
     return mp_obj_new_bytes(out.signature, 64);
@@ -158,7 +158,7 @@ static mp_obj_t mod_trezorcrypto_ed25519_sign_ext(size_t n_args,
                                  .owner = secret_owner,
                                  .blob = hdnode_blob(node)};
     vault_response_t out = {0};
-    if (!vault_coreapp_call_message(&r, data.buf, data.len, &out))
+    if (!vault_call_message(&r, data.buf, data.len, &out))
       mp_raise_ValueError(MP_ERROR_TEXT("Expected private Cardano node"));
     return mp_obj_new_bytes(out.signature, 64);
   }

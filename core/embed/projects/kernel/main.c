@@ -122,6 +122,10 @@
 #include <io/usb_config.h>
 #endif
 
+#ifdef USE_VAULT
+#include "zkp_context.h"
+#endif
+
 void drivers_init() {
   ts_t status;
 
@@ -225,6 +229,12 @@ void drivers_init() {
 #ifdef USE_APP_LOADING
   status = app_arena_init();
   ensure_ok(status, "app_arena_init failed");
+#endif
+
+#ifdef USE_VAULT
+  /* Vault ECC calls share one blinded context for the whole boot; blinding a
+   * fresh context costs a full generator multiplication per call. */
+  ensure(sectrue * (zkp_context_init() == 0), "zkp_context_init failed");
 #endif
 }
 

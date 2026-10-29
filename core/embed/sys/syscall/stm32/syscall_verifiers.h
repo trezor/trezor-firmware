@@ -426,4 +426,7 @@ bool vault_lifecycle__verified(const vault_lifecycle_request_t *request,
                                vault_lifecycle_response_t *response);
 bool vault_call__verified(const vault_request_t *request,
                           vault_response_t *response);
+bool vault_call_message__verified(const vault_message_request_t *request,
+                                  const uint8_t *message, size_t length,
+                                  vault_response_t *response);
 #endif

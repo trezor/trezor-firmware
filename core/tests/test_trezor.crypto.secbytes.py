@@ -51,7 +51,7 @@ class TestSecbytes(unittest.TestCase):
         self.assertEqual("{}".format(key), "<secbytes>")  # pylint: disable=consider-using-f-string
 
     def test_access_and_destroy(self):
-        key = secbytes(MASTER)
+        key = secbytes(MASTER, secbytes.SECP256K1)
         self.assert_opaque(key)
         self.assertEqual(secp256k1.sign(key, DIGEST), secp256k1.sign(MASTER, DIGEST))
         key.destroy()
@@ -97,7 +97,7 @@ class TestSecbytes(unittest.TestCase):
             node.clone()
         self.assert_opaque(key)
         _secret_owner_activate(SecretOwner())
-        replacement = secbytes(MASTER)
+        replacement = secbytes(MASTER, secbytes.SECP256K1)
         key.destroy()  # stale cleanup cannot destroy the replacement
         self.assertEqual(
             secp256k1.sign(replacement, DIGEST), secp256k1.sign(MASTER, DIGEST)
@@ -106,12 +106,12 @@ class TestSecbytes(unittest.TestCase):
     def test_errors_and_revocation(self):
         with self.assertRaises(TypeError):
             secp256k1.sign(SecretOwner(), DIGEST)
-        key = secbytes(MASTER)
+        key = secbytes(MASTER, secbytes.SECP256K1)
         with self.assertRaises(ValueError):
             secp256k1.sign(key, b"short")
         # An error does not silently destroy independently owned input values.
         self.assertEqual(secp256k1.sign(key, DIGEST), secp256k1.sign(MASTER, DIGEST))
-        values = [secbytes(MASTER) for _ in range(65)]
+        values = [secbytes(MASTER, secbytes.SECP256K1) for _ in range(65)]
         revoke_secrets()
         # Revocation reaches every blob, wherever the client keeps it.
         for value in values:
@@ -119,7 +119,8 @@ class TestSecbytes(unittest.TestCase):
                 secp256k1.sign(value, DIGEST)
         _secret_owner_activate(SecretOwner())
         self.assertEqual(
-            secp256k1.sign(secbytes(MASTER), DIGEST), secp256k1.sign(MASTER, DIGEST)
+            secp256k1.sign(secbytes(MASTER, secbytes.SECP256K1), DIGEST),
+            secp256k1.sign(MASTER, DIGEST),
         )
 
     def test_dead_clone(self):
@@ -151,12 +152,12 @@ class TestSecbytes(unittest.TestCase):
 
     def test_constructor_copy(self):
         source = bytearray(MASTER)
-        key = secbytes(source)
+        key = secbytes(source, secbytes.SECP256K1)
         source[:] = b"\x00" * 32
         self.assertEqual(secp256k1.sign(key, DIGEST), secp256k1.sign(MASTER, DIGEST))
 
     def test_wrong_receiver(self):
-        key = secbytes(MASTER)
+        key = secbytes(MASTER, secbytes.SECP256K1)
         node = bip32.from_seed(SEED, "secp256k1")
         with self.assertRaises(TypeError):
             secbytes.destroy(node)
@@ -188,7 +189,7 @@ class TestSecbytes(unittest.TestCase):
         self.assert_opaque(holder)
         with self.assertRaises(ValueError):
             secp256k1.sign(holder, DIGEST)
-        first = secbytes(MASTER)
+        first = secbytes(MASTER, secbytes.SECP256K1)
         holder.take(first)
         self.assertFalse(holder.empty())
         self.assertTrue(first.empty())
@@ -197,7 +198,7 @@ class TestSecbytes(unittest.TestCase):
             secp256k1.sign(first, DIGEST)
         # Taking a new value erases the previous one.
         holder.take(holder)
-        holder.take(secbytes(b"\x01" * 32))
+        holder.take(secbytes(b"\x01" * 32, secbytes.SECP256K1))
         self.assertNotEqual(
             secp256k1.sign(holder, DIGEST), secp256k1.sign(MASTER, DIGEST)
         )
@@ -231,7 +232,7 @@ class TestSecbytes(unittest.TestCase):
         session = SecretOwner()
         request = SecretOwner(session)
         _secret_owner_activate(request)
-        key = secbytes(MASTER)
+        key = secbytes(MASTER, secbytes.SECP256K1)
         retain_secret(key)
         request.destroy()
         _secret_owner_activate(SecretOwner(session))
@@ -239,14 +240,14 @@ class TestSecbytes(unittest.TestCase):
 
     def test_bounded_holder(self):
         holder = secbytes(None, 32)
-        holder.take(secbytes(MASTER))
+        holder.take(secbytes(MASTER, secbytes.SECP256K1))
         larger = secbytes(b"x" * 64)
         with self.assertRaises(ValueError):
             holder.take(larger)
         self.assertFalse(larger.empty())
         self.assertEqual(secp256k1.sign(holder, DIGEST), secp256k1.sign(MASTER, DIGEST))
         # A shorter move must erase the previous tag and trailing ciphertext.
-        holder.take(secbytes(b"x"))
+        holder.take(secbytes(b"x", secbytes.SEED))
         node = bip32.from_seed(holder, "secp256k1")
         self.assertEqual(
             node.public_key(), bip32.from_seed(b"x", "secp256k1").public_key()
@@ -256,7 +257,8 @@ class TestSecbytes(unittest.TestCase):
         for invalid in (-1, 161):
             with self.assertRaises(ValueError):
                 secbytes(None, invalid)
-        with self.assertRaises(TypeError):
+        # A populated value takes a key type, and 32 is none.
+        with self.assertRaises(ValueError):
             secbytes(MASTER, 32)
 
     def test_compact_heap_footprint(self):
@@ -323,7 +325,7 @@ class TestSecbytes(unittest.TestCase):
         self.assertTrue(owner.valid())
         child = SecretOwner(owner)
         _secret_owner_activate(child)
-        key = secbytes(MASTER)
+        key = secbytes(MASTER, secbytes.SECP256K1)
         # Renewing erases the old identity and everything beneath it.
         owner.renew()
         self.assertTrue(owner.valid())
@@ -343,21 +345,21 @@ class TestSecbytes(unittest.TestCase):
         for _ in range(3):  # warm up method lookups and the vault
             owner.renew()
             _secret_owner_activate(SecretOwner(owner))
-            holder.take(secbytes(MASTER))
+            holder.take(secbytes(MASTER, secbytes.SECP256K1))
             owner.destroy()
         gc.collect()
         before = gc.mem_free()
         for _ in range(10):
             owner.renew()
             _secret_owner_activate(SecretOwner(owner))
-            holder.take(secbytes(MASTER))
+            holder.take(secbytes(MASTER, secbytes.SECP256K1))
             owner.destroy()
         gc.collect()
         # Only short-lived objects are created; nothing survives a collection.
         self.assertTrue(gc.mem_free() >= before)
 
     def test_options(self):
-        key = secbytes(MASTER)
+        key = secbytes(MASTER, secbytes.SECP256K1)
         for compressed in (True, False):
             self.assertEqual(
                 secp256k1.sign(key, DIGEST, compressed),

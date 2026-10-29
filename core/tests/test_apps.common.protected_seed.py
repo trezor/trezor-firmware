@@ -131,6 +131,42 @@ class TestProtectedCommonSeed(unittest.TestCase):
                 bip39.migrate_binary_mnemonic()
         self.assertTrue(config.unlock("", None))
 
+    def test_backup_disclosure_needs_kernel_permission(self):
+        # setUp stored a mnemonic that needs no backup.
+        with self.assertRaises(ValueError):
+            bip39.backup_secret()
+        # Neither the kernel's backup state nor coreapp's flag grants it.
+        with self.assertRaises(RuntimeError):
+            config.set(1, 0x29, b"\x01")
+        config.set(1, 0x07, b"\x01")
+        with self.assertRaises(ValueError):
+            bip39.backup_secret()
+        # A matching backup check allows exactly one disclosure.
+        self.assertFalse(bip39.compare_backup(b"abandon " * 11 + b"about"))
+        with self.assertRaises(ValueError):
+            bip39.backup_secret()
+        self.assertTrue(bip39.compare_backup(self.MNEMONIC.encode()))
+        self.assertEqual(bip39.backup_secret(), self.MNEMONIC.encode())
+        with self.assertRaises(ValueError):
+            bip39.backup_secret()
+        # Locking revokes an unused grant.
+        self.assertTrue(bip39.compare_backup(self.MNEMONIC.encode()))
+        config.lock()
+        self.assertTrue(config.unlock("", None))
+        with self.assertRaises(ValueError):
+            bip39.backup_secret()
+
+    def test_first_backup_disclosed_once(self):
+        config.wipe()
+        self.assertTrue(config.unlock("", None))
+        self.ctx.cache.clear()
+        self.owner = SecretOwner(self.ctx.cache.get_secret_owner())
+        _secret_owner_activate(self.owner)
+        storage.device.store_mnemonic_secret(self.MNEMONIC.encode(), needs_backup=True)
+        self.assertEqual(bip39.backup_secret(), self.MNEMONIC.encode())
+        with self.assertRaises(ValueError):
+            bip39.backup_secret()
+
     def test_protected_seed_cache_and_request_reuse(self):
         value = self.derive()
         self.assertIsInstance(value, secbytes)
@@ -167,6 +203,31 @@ class TestProtectedCommonSeed(unittest.TestCase):
             self.ctx.cache.get(APP_COMMON_SEED)
 
     @unittest.skipUnless(not utils.BITCOIN_ONLY, "full-coin setup")
+    @unittest.skipUnless(not utils.BITCOIN_ONLY, "cardano")
+    def test_icarus_ignores_binary_mnemonic_copy(self):
+        from trezor.crypto import cardano
+
+        # Words stored without the binary copy, as after a Bitcoin-only
+        # firmware; coreapp cannot plant the copy either.
+        config.wipe()
+        self.assertTrue(config.unlock("", None))
+        self.ctx.cache.clear()
+        self.owner = SecretOwner(self.ctx.cache.get_secret_owner())
+        _secret_owner_activate(self.owner)
+        config.set(1, 2, self.MNEMONIC.encode())
+        config.set(1, 0x0E, b"\x00")
+        with self.assertRaises(RuntimeError):
+            config.set(1, 0x25, b"\x00" * 17)
+        for trezor_derivation in (False, True):
+            actual = cardano.derive_icarus(None, "", trezor_derivation)
+            expected = cardano.derive_icarus(
+                bip39.mnemonic_to_bits(self.MNEMONIC), "", trezor_derivation
+            )
+            self.assertEqual(
+                cardano.from_secret(actual).public_key(),
+                cardano.from_secret(expected).public_key(),
+            )
+
     def test_cardano_roots_without_python_seed(self):
         from trezor.crypto import cardano
 

@@ -29,6 +29,9 @@
 #include <io/usb.h>
 #include <sec/boot_image.h>
 #include <sec/fwutils.h>
+#ifdef USE_VAULT
+#include <sec/vault.h>
+#endif
 #include <sec/rng_strong.h>
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
@@ -605,6 +608,9 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_STORAGE_WIPE: {
+#ifdef USE_VAULT
+      vault_wipe();
+#endif
       storage_wipe();
     } break;
 
@@ -613,6 +619,9 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_STORAGE_LOCK: {
+#ifdef USE_VAULT
+      vault_storage_locked();
+#endif
       storage_lock();
     } break;
 
@@ -667,6 +676,18 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = storage_has(key);
     } break;
 
+#ifdef USE_VAULT
+    case SYSCALL_VAULT_CALL: {
+      args[0] = vault_call__verified((const vault_request_t *)args[0],
+                                     (vault_response_t *)args[1]);
+    } break;
+    case SYSCALL_VAULT_CALL_MESSAGE: {
+      args[0] = vault_call_message__verified(
+          (const vault_message_request_t *)args[0], (const uint8_t *)args[1],
+          args[2], (vault_response_t *)args[3]);
+    } break;
+#endif
+
     case SYSCALL_STORAGE_GET: {
       uint16_t key = (uint16_t)args[0];
       void *val = (void *)args[1];
@@ -684,6 +705,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_STORAGE_DELETE: {
       uint16_t key = (uint16_t)args[0];
+#ifdef USE_VAULT
+      /* Protected values live only under their canonical private key; a
+       * flagged alias such as a public counter is a separate entry. */
+      if (key == (key & 0x3fff) && !vault_storage_key_allowed(key)) {
+        args[0] = secfalse;
+        break;
+      }
+#endif
       args[0] = storage_delete(key);
     } break;
 
@@ -1164,10 +1193,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] =
           vault_lifecycle__verified((const vault_lifecycle_request_t *)args[0],
                                     (vault_lifecycle_response_t *)args[1]);
-    } break;
-    case SYSCALL_VAULT_CALL: {
-      args[0] = vault_call__verified((const vault_request_t *)args[0],
-                                     (vault_response_t *)args[1]);
     } break;
 #endif
 

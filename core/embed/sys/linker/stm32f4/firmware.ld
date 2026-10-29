@@ -31,6 +31,18 @@ SECTIONS {
     KEEP(*(.header));
   } >FLASH AT>FLASH
 
+  /* Both application flash banks are executable (coreapp.code1/code2).
+   * Keep the app's secp256k1 implementation in bank two so the larger vault
+   * kernel can grow without overflowing the first bank. */
+  .flash2 : ALIGN(512) {
+    *libcrypto.a:secp256k1.o(.text*);
+    . = ALIGN(4);
+    *frozen_mpy.o(.rodata*);
+    . = ALIGN(4);
+    *(.rodata*);
+    . = ALIGN(512);
+  } >FLASH2 AT>FLASH2
+
   .flash : ALIGN(512) {
     KEEP(*(.kernel));
     . = ALIGN(COREAPP_ALIGNMENT);
@@ -42,13 +54,6 @@ SECTIONS {
     *(.bootloader*);
     . = ALIGN(4);
   } >FLASH AT>FLASH
-
-  .flash2 : ALIGN(512) {
-    *frozen_mpy.o(.rodata*);
-    . = ALIGN(4);
-    *(.rodata*);
-    . = ALIGN(512);
-  } >FLASH2 AT>FLASH2
 
   .stack : ALIGN(8) {
     . += 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */

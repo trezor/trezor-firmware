@@ -150,6 +150,33 @@ static mp_obj_t vault_chacha(size_t n_args, const mp_obj_t *args) {
   vstr_t output = {0};
   vstr_init_len(&output, data.len);
   vault_response_t out = {0};
+  if (decrypt && tag.len && data.len && data.len <= VAULT_DATA_SIZE) {
+    /* One kernel call authenticates, then decrypts. */
+    vstr_t sealed = {0};
+    vstr_init_len(&sealed, aad.len + data.len + tag.len);
+    if (aad.len) memcpy(sealed.buf, aad.buf, aad.len);
+    memcpy(sealed.buf + aad.len, data.buf, data.len);
+    memcpy(sealed.buf + aad.len + data.len, tag.buf, tag.len);
+    vault_message_request_t r = {.abi = VAULT_ABI,
+                                 .op = VAULT_CHACHA_OPEN,
+                                 .owner = secret_owner,
+                                 .blob = key,
+                                 .arg = aad.len};
+    memcpy(r.extension.bytes, nonce.buf, 12);
+    bool ok =
+        vault_call_message(&r, (const uint8_t *)sealed.buf, sealed.len, &out);
+    vstr_clear(&sealed);
+    if (!ok) {
+      vstr_clear(&output);
+      mp_raise_msg(&mp_type_AuthenticationError,
+                   MP_ERROR_TEXT("Invalid credential tag"));
+    }
+    memcpy(output.buf, out.data, data.len);
+    memzero(&out, sizeof(out));
+    mp_obj_t result[2] = {mp_obj_new_bytes_from_vstr(&output),
+                          mp_obj_new_bytes(tag.buf, 16)};
+    return mp_obj_new_tuple(2, result);
+  }
   for (size_t offset = 0; offset < data.len; offset += VAULT_DATA_SIZE) {
     size_t n = MIN((size_t)VAULT_DATA_SIZE, data.len - offset);
     vault_request_t r = {.op = VAULT_CHACHA_BLOCK,
@@ -179,8 +206,8 @@ static mp_obj_t vault_chacha(size_t n_args, const mp_obj_t *args) {
                                .blob = key,
                                .arg = aad.len};
   memcpy(r.extension.bytes, nonce.buf, 12);
-  bool ok = vault_coreapp_call_message(&r, (const uint8_t *)authenticated.buf,
-                                       authenticated.len, &out);
+  bool ok = vault_call_message(&r, (const uint8_t *)authenticated.buf,
+                               authenticated.len, &out);
   vstr_clear(&authenticated);
   if (!ok || (decrypt && tag.len && !consteq(tag.buf, out.signature, 16))) {
     vstr_clear(&output);
@@ -224,8 +251,8 @@ static mp_obj_t cipher_key_value(size_t n_args, const mp_obj_t *args) {
   vstr_t output = {0};
   vstr_init_len(&output, input.len);
   vault_response_t out = {0};
-  bool ok = vault_coreapp_call_message(
-      &request, (const uint8_t *)derivation.buf, derivation.len, &out);
+  bool ok = vault_call_message(&request, (const uint8_t *)derivation.buf,
+                               derivation.len, &out);
   vstr_clear(&derivation);
   if (!ok) {
     vstr_clear(&output);

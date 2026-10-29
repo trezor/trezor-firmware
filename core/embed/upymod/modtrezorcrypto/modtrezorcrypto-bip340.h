@@ -47,7 +47,7 @@ static vault_blob_t bip340_key_blob(mp_obj_t key) {
     mp_get_buffer_raise(key, &b, MP_BUFFER_READ);
     if (b.len != 32)
       mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
-    key = secbytes_copy(b.buf, b.len);
+    key = secbytes_copy(b.buf, b.len, VAULT_KEY_SECP256K1);
   }
   return secbytes_blob(MP_OBJ_TO_PTR(key));
 }

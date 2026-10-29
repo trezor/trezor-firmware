@@ -7,7 +7,7 @@
 /* Versioned, bounded, pointer-free wire messages. Private wallet values stay
  * sealed, except the explicit backup and protocol export operations. */
 #include <sec/vault_mode.h>
-#define VAULT_ABI (35 + VAULT_SEAL_MODE)
+#define VAULT_ABI (39 + VAULT_SEAL_MODE)
 #define VAULT_DATA_SIZE 256
 /* Covers FIDO self-attestation and Solana packets without enlarging normal
  * RPCs. */
@@ -22,6 +22,26 @@
   (VAULT_HEADER_SIZE + VAULT_NODE_CIPHERTEXT_SIZE + VAULT_TAG_SIZE)
 #define VAULT_CURVE_SIZE 32
 typedef enum { SECRET_BYTES = 1, SECRET_NODE = 2 } secret_kind_t;
+/* Authenticated key type of a record. It fixes the curve and representation
+ * of the secret; the kernel decides which operations accept each type. */
+typedef enum {
+  VAULT_KEY_NODE = 1,       /* HD node, its curve inside the record */
+  VAULT_KEY_SEED,           /* BIP-39/SLIP-39 seed */
+  VAULT_KEY_SLIP21_NODE,    /* 64-byte SLIP-0021 node */
+  VAULT_KEY_SYMMETRIC,      /* HMAC, ChaCha20 and AES keys */
+  VAULT_KEY_SECP256K1,      /* ECDSA, BIP-340 and ECDH scalar */
+  VAULT_KEY_NIST256P1,      /* ECDSA and ECDH scalar */
+  VAULT_KEY_ED25519_SEED,   /* RFC 8032 secret */
+  VAULT_KEY_X25519,         /* X25519 scalar */
+  VAULT_KEY_THP_DEVICE,     /* THP device secret */
+  VAULT_KEY_CARDANO_SECRET, /* 96-byte Cardano master secret */
+  VAULT_KEY_TYPE_END,
+} vault_key_type_t;
+#define VAULT_KEY(type) (1U << (type))
+/* Every type of a SECRET_BYTES record. */
+#define VAULT_KEY_ANY_BYTES                           \
+  (((1U << VAULT_KEY_TYPE_END) - 1) & ~VAULT_KEY(0) & \
+   ~VAULT_KEY(VAULT_KEY_NODE))
 /* Kernel-sealed, client-held records start with owner, kind, length and type.
  * GCM adds a nonce u64, actual-length ciphertext and a 16-byte tag.
  * The complete header is authenticated. Nodes encode VAULT_NODE_SIZE bytes;
@@ -55,7 +75,12 @@ typedef enum {
   VAULT_ED_PUBLIC,
   VAULT_ED_SIGN,
   VAULT_SLIP21,
-  VAULT_CARDANO = 30,
+  VAULT_THP_STORAGE,
+  VAULT_THP_DERIVE,
+  VAULT_THP_PUBLIC,
+  VAULT_THP_DH,
+  VAULT_THP_RESET,
+  VAULT_CARDANO,
   VAULT_ED_SIGN_EXT,
   VAULT_CHACHA_BLOCK,
   VAULT_CHACHA_TAG,
@@ -65,8 +90,8 @@ typedef enum {
   VAULT_ECDH,
   VAULT_KEYVALUE_DERIVE,
   VAULT_AES_CBC,
+  VAULT_CHACHA_OPEN,
   VAULT_NEM_SHARED = 50,
-  VAULT_OPEN_NATIVE = 128
 } vault_op_t;
 /* VAULT_SLIP21: derive from a seed (VAULT_SLIP21_ROOT) or a 64-byte node
  * along length-prefixed labels in data; the other arg bits select the output.
@@ -102,7 +127,6 @@ typedef struct {
     };
     uint8_t signature[65];
     uint8_t data[VAULT_DATA_SIZE];
-    uint8_t opened[VAULT_SECRET_SIZE];
   };
 } vault_response_t;
 /* Owner bookkeeping is bounded and safe inside a storage UI callback. */
@@ -142,4 +166,9 @@ bool vault_message_snapshot(uintptr_t caller,
 void vault_revoke_caller(uintptr_t caller);
 void vault_wipe(void);
 bool vault_storage_key_allowed(uint16_t key);
+bool vault_storage_write_allowed(uint16_t key);
+/* Storage events that maintain the kernel-only backup disclosure state. */
+void vault_storage_written(uint16_t key);
+void vault_storage_unlocked(void);
+void vault_storage_locked(void);
 #endif

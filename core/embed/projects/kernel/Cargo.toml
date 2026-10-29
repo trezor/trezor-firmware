@@ -36,7 +36,8 @@ force_bootloader_upgrade = []
 optiga_testing = ["sec/optiga_testing"]
 production = ["io/production"]
 storage_insecure_testing_mode = ["sec/storage_insecure_testing_mode"]
-universal_fw = ["io/usb_iface_webauthn"]
+universal_fw = ["io/usb_iface_webauthn", "crypto/universal_fw"]
+nem = ["crypto/nem"]
 unsafe_fw = []
 
 # --------------------------------------------------------------------------
@@ -96,6 +97,10 @@ tropic = ["sec/tropic"]
 
 default = [
     "sec/vault",
+    # Keep HDNode variants and the Ed25519 verification table out of the kernel.
+    "crypto/bip32_vault",
+    "crypto/ed25519_no_precomp",
+    "crypto/secp256k1_small_precomp",
     "sys/applets",
     "io/display",
     "io/kernel_mode",

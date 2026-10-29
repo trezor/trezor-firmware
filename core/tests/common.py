@@ -83,7 +83,7 @@ def cache_seed(seed):
     from storage.cache_common import APP_COMMON_SEED
 
     if isinstance(seed, bytes):
-        seed = secbytes(seed)
+        seed = secbytes(seed, secbytes.SEED)
     context.get_context().cache.take_secret(APP_COMMON_SEED, seed)
 
 

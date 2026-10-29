@@ -25,7 +25,8 @@ class TestEd25519Vault(unittest.TestCase):
         key = secbytes(
             bytes.fromhex(
                 "26c76712d89d906e6672dafa614c42e5cb1caac8c6568e4d2493087db51f0d36"
-            )
+            ),
+            secbytes.ED25519_SEED,
         )
         public = bytes.fromhex(
             "c2247870536a192d142d056abefca68d6193158e7c1a59c1654c954eccaff894"
@@ -40,7 +41,7 @@ class TestEd25519Vault(unittest.TestCase):
     def test_message_bounds_and_keccak(self):
         self.assertEqual(ed25519.MAX_MESSAGE_SIZE, 4096)
         raw_key = b"\x17" * 32
-        key = secbytes(raw_key)
+        key = secbytes(raw_key, secbytes.ED25519_SEED)
         for length in (1, 256, 257, 1232, 1536, 2048, 4096):
             message = b"\x42" * length
             signature = ed25519.sign(key, message)
@@ -110,7 +111,7 @@ class TestEd25519Vault(unittest.TestCase):
             )
 
     def test_invalid_keys_lock_and_revocation(self):
-        bad_key = secbytes(b"x" * 31)
+        bad_key = secbytes(b"x" * 31, secbytes.ED25519_SEED)
         with self.assertRaises(ValueError):
             ed25519.sign(bad_key, b"message")
         with self.assertRaises(ValueError):

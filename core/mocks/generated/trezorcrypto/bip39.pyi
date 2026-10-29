@@ -49,3 +49,9 @@ def compare_backup(secret: AnyBytes) -> bool:
 # upymod/modtrezorcrypto/modtrezorcrypto-bip39.h
 def migrate_binary_mnemonic() -> None:
     """Populate the protected binary mnemonic without exporting words."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-bip39.h
+def backup_done() -> None:
+    """Withdraw the stored mnemonic's first-backup disclosure, for a
+    mnemonic that needs no backup."""

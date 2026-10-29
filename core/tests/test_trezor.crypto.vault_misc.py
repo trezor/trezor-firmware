@@ -10,12 +10,23 @@ from trezor.crypto.curve import curve25519, nist256p1, secp256k1
 class TestVaultMisc(VaultTestCase):
     def test_ecdh_and_public_keys(self):
         raw = b"\x01" * 32
-        key = secbytes(raw)
-        for curve in (secp256k1, nist256p1, curve25519):
+        curves = (
+            (secp256k1, secbytes.SECP256K1),
+            (nist256p1, secbytes.NIST256P1),
+            (curve25519, secbytes.X25519),
+        )
+        keys = [secbytes(raw, key_type) for _, key_type in curves]
+        for i, (curve, _) in enumerate(curves):
             peer = curve.publickey(b"\x02" * 32)
-            self.assertEqual(curve.multiply(key, peer), curve.multiply(raw, peer))
+            self.assertEqual(curve.multiply(keys[i], peer), curve.multiply(raw, peer))
             with self.assertRaises(ValueError):
-                curve.multiply(key, peer[:31])
+                curve.multiply(keys[i], peer[:31])
+            # A key works only on its own curve.
+            for j in range(len(curves)):
+                if j != i:
+                    with self.assertRaises(ValueError):
+                        curve.multiply(keys[j], peer)
+        key = keys[0]
         for compressed in (False, True):
             self.assertEqual(
                 secp256k1.publickey(key, compressed),

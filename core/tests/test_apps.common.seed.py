@@ -73,7 +73,7 @@ class TestSeed(unittest.TestCase):
         _secret_owner_activate(SecretOwner(session))
         try:
             plain = bip39.seed(" ".join(["all"] * 12), "")
-            seed = secbytes(plain)
+            seed = secbytes(plain, secbytes.SEED)
             keychain = Keychain(seed, "", [], slip21_namespaces=[[b"SLIP-0021"]])
             msg = b"vault slip21"
             path = [b"SLIP-0021", b"Authentication key"]
