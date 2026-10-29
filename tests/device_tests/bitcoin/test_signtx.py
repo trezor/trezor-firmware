@@ -1747,8 +1747,7 @@ def test_information_cancel(session: Session):
         )
 
 
-@pytest.mark.models("core")
-def test_information_replacement(session: Session):
+def _sign_tx_information_replacement(session: Session, cancel: bool) -> None:
     # Use the change output and an external output to bump the fee.
     # Originally fee was 3780, now 108060 (94280 from change and 10000 from external).
 
@@ -1781,7 +1780,7 @@ def test_information_replacement(session: Session):
     )
 
     with session.test_ctx as client:
-        IF = InputFlowSignTxInformationReplacement(session)
+        IF = InputFlowSignTxInformationReplacement(session, cancel=cancel)
         client.set_input_flow(IF.get())
 
         btc.sign_tx(
@@ -1791,3 +1790,14 @@ def test_information_replacement(session: Session):
             [out1],
             prev_txes=TX_CACHE_TESTNET,
         )
+
+
+@pytest.mark.models("core")
+def test_information_replacement(session: Session):
+    _sign_tx_information_replacement(session, cancel=False)
+
+
+@pytest.mark.models("core")
+def test_information_replacement_cancel(session: Session):
+    with pytest.raises(Cancelled):
+        _sign_tx_information_replacement(session, cancel=True)
