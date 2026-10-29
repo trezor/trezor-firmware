@@ -33,6 +33,7 @@
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
+#include <sys/stack_utils.h>
 #include <sys/sysevent.h>
 #include <sys/systask.h>
 #include <sys/system.h>
@@ -1162,6 +1163,15 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       applet_exit_fatal(applet, "Invalid syscall", __FILE_NAME__, __LINE__);
       break;
   }
+#ifdef USE_STORAGE
+  /* Storage crypto runs here on secure-mode models, and via secmon elsewhere.
+   * Scrub only after the verifier and vendor frames have returned. */
+  if ((syscall >= SYSCALL_STORAGE_SETUP &&
+       syscall <= SYSCALL_STORAGE_NEXT_COUNTER) ||
+      syscall == SYSCALL_STORAGE_GET) {
+    clear_unused_stack();
+  }
+#endif
 }
 
 #endif  // KERNEL

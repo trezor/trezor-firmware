@@ -21,17 +21,29 @@
 
 #include <sys/linker_utils.h>
 
+/* No prologue: the bound is the caller's SP, so active frames survive. */
 __attribute((naked, no_stack_protector)) void clear_unused_stack(void) {
   __asm__ volatile(
-      "    MOV     R0, #0              \n"
+      "    MRS     R2, PRIMASK         \n"
+      "    CPSID   i                   \n"
       "    LDR     R1, =%[sstack]      \n"
+      "    MOV     R3, SP              \n"
+      "    LDR     R12, =%[estack]     \n"
+      "    CMP     R3, R1              \n"
+      "    BLO     2f                  \n"
+      "    CMP     R3, R12             \n"
+      "    BHI     2f                  \n"
+      "    MOV     R0, #0              \n"
       "1:                              \n"
+      "    CMP     R1, R3              \n"
+      "    BHS     2f                  \n"
       "    STR     R0, [R1], #4        \n"
-      "    CMP     R1, SP              \n"
-      "    BNE     1b                  \n"
+      "    B       1b                  \n"
+      "2:                              \n"
+      "    MSR     PRIMASK, R2         \n"
       "    BX      LR                  \n"
-      :  // no output
-      : [sstack] "i"((uint32_t)&_stack_section_start)
-      :  // no clobber
-  );
+      :
+      : [sstack] "i"((uint32_t)&_stack_section_start),
+        [estack] "i"((uint32_t)&_stack_section_end)
+      :);
 }

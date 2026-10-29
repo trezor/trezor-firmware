@@ -19,11 +19,9 @@
 
 #pragma once
 
-// Clears the unused portion of the stack.
-//
-// This includes memory between the start of the stack
-// and the current stack pointer (SP).
-//
-// It's safe to call this function at any time, but it's
-// recommended to call it only during the startup sequence.
+// Erase unused words from the linked stack base up to the caller's SP.
+// Active frames and other task/interrupt stacks are untouched. Out-of-range
+// SP is ignored. Privileged callers preserve PRIMASK and mask interrupts
+// while erasing; unprivileged callers cannot provide that interrupt guarantee.
+// Call only after sensitive locals and crypto contexts have been wiped.
 void clear_unused_stack(void);
