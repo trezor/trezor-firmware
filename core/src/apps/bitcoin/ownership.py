@@ -151,10 +151,10 @@ def read_scriptsig_witness(ownership_proof: AnyBytes) -> tuple[memoryview, memor
 
 
 def get_identifier(script_pubkey: AnyBytes, keychain: Keychain) -> bytes:
-    from trezor.crypto import hmac
+    from apps.common.seed import slip21_mac
 
     # k = Key(m/"SLIP-0019"/"Ownership identification key")
     node = keychain.derive_slip21(_OWNERSHIP_ID_KEY_PATH)
 
     # id = HMAC-SHA256(key = k, msg = scriptPubKey)
-    return hmac(hmac.SHA256, node.key(), script_pubkey).digest()
+    return slip21_mac(node.key(), script_pubkey)

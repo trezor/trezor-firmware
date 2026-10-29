@@ -7,12 +7,13 @@ from . import paths, safety_checks
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Iterable
+    from trezorcrypto import secbytes
     from typing import Any, TypeVar
 
     from trezor.protobuf import MessageType
     from typing_extensions import Protocol
 
-    from .seed import Slip21Node
+    from .seed import Slip21Node, VaultSlip21Node
 
     T = TypeVar("T")
 
@@ -78,7 +79,7 @@ class LRUCache:
 class Keychain:
     def __init__(
         self,
-        seed: bytes,
+        seed: bytes | secbytes,
         curve: str,
         schemas: Iterable[paths.PathSchemaType],
         slip21_namespaces: Iterable[paths.Slip21Path] = (),
@@ -138,33 +139,40 @@ class Keychain:
         return node
 
     def root_fingerprint(self) -> int:
+        seed = self.seed
+        if not isinstance(seed, bytes):
+            raise DataError("Protected BIP32 is not enabled")
         if self._root_fingerprint is None:
             # derive m/0' to obtain root_fingerprint
             n = self._derive_with_cache(
                 0,
                 [0 | paths.HARDENED],
-                new_root=lambda: bip32.from_seed(self.seed, self.curve),
+                new_root=lambda: bip32.from_seed(seed, self.curve),
             )
             self._root_fingerprint = n.fingerprint()
         return self._root_fingerprint
 
     def derive(self, path: paths.Bip32Path) -> bip32.HDNode:
+        seed = self.seed
+        if not isinstance(seed, bytes):
+            raise DataError("Protected BIP32 is not enabled")
         self.verify_path(path)
         return self._derive_with_cache(
             3,
             path,
-            new_root=lambda: bip32.from_seed(self.seed, self.curve),
+            new_root=lambda: bip32.from_seed(seed, self.curve),
         )
 
-    def derive_slip21(self, path: paths.Slip21Path) -> Slip21Node:
-        from .seed import Slip21Node
+    def derive_slip21(self, path: paths.Slip21Path) -> Slip21Node | VaultSlip21Node:
+        from .seed import slip21_root
 
+        seed = self.seed
         self.verify_slip21_path(path)
 
         return self._derive_with_cache(
             1,
             path,
-            new_root=lambda: Slip21Node(seed=self.seed),
+            new_root=lambda: slip21_root(seed),
         )
 
     def __enter__(self) -> "Keychain":

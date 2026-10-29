@@ -1,12 +1,15 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.crypto import bip39
+from trezorcrypto import SecretOwner, _secret_owner_activate, revoke_secrets, secbytes
+
+from trezor import config
+from trezor.crypto import bip39, hmac
 from trezor.wire import DataError
 
 from apps.common.keychain import ForbiddenKeyPath, Keychain
 from apps.common.paths import address_n_slip21_to_str
-from apps.common.seed import Slip21Node
+from apps.common.seed import Slip21Node, VaultSlip21Node, slip21_export, slip21_mac
 
 
 class TestSeed(unittest.TestCase):
@@ -60,6 +63,56 @@ class TestSeed(unittest.TestCase):
 
         # Verify that ForbiddenKeyPath is a subclass of DataError
         self.assertTrue(issubclass(ForbiddenKeyPath, DataError))
+
+    def test_vault_slip21(self):
+        config.init()
+        config.wipe()
+        self.assertTrue(config.unlock("", None))
+        revoke_secrets()
+        session = SecretOwner()
+        _secret_owner_activate(SecretOwner(session))
+        try:
+            plain = bip39.seed(" ".join(["all"] * 12), "")
+            seed = secbytes(plain)
+            keychain = Keychain(seed, "", [], slip21_namespaces=[[b"SLIP-0021"]])
+            msg = b"vault slip21"
+            path = [b"SLIP-0021", b"Authentication key"]
+
+            expected = Slip21Node(plain)
+            expected.derive_path(path)
+            want = hmac(hmac.SHA256, expected.key(), msg).digest()
+
+            node = keychain.derive_slip21(path)
+            self.assertIsInstance(node, VaultSlip21Node)
+            self.assertIsInstance(node.key(), secbytes)
+            self.assertEqual(slip21_mac(node.key(), msg), want)
+            # Cached nodes and stepwise derivation give the same key.
+            self.assertEqual(slip21_mac(keychain.derive_slip21(path).key(), msg), want)
+            node = VaultSlip21Node(seed)
+            clone = node.clone()
+            node.derive_path(path[:1])
+            node.derive_path(path[1:])
+            self.assertEqual(slip21_mac(node.key(), msg), want)
+            clone.derive_path(path)
+            self.assertEqual(slip21_mac(clone.key(), msg), want)
+
+            # Only the Evolu namespace leaves the vault.
+            for evolu in ([b"TREZOR", b"Evolu"], [b"TREZOR", b"Evolu Index", b"1"]):
+                expected = Slip21Node(plain)
+                expected.derive_path(evolu)
+                self.assertEqual(slip21_export(seed, evolu), expected.data)
+            for other in (
+                [],
+                path,
+                [b"TREZOR", b"Evolu", b"x"],
+                [b"TREZOR", b"Evolu Index"],
+                [b"TREZOR", b"Evolu Index", b"1", b"2"],
+                [b"TREZOR", b"Keychain MAC key"],
+            ):
+                with self.assertRaises(Exception):
+                    slip21_export(seed, other)
+        finally:
+            revoke_secrets()
 
     def test_slip21_to_str(self):
         # Empty path is "m"
