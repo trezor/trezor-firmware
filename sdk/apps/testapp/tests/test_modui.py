@@ -209,6 +209,24 @@ def open_extra(debug, items, index: int = 0) -> None:
     debug.click(debug.screen_buttons.menu())  # close the menu
 
 
+def menu_labels(debug) -> list[str]:
+    """The labels a menu offers, whichever menu the model draws."""
+    layout = debug.read_layout()
+    menu = layout.find_unique_value_by_key("menu_items", default=None, only_type=dict)
+    if menu is None:
+        return layout.vertical_menu_content()
+    labels = []
+    while True:
+        labels.extend(item.get("item", item.get("cancel")) for item in menu["current"])
+        if not menu["has_next"]:
+            return labels
+        _prev, next_button = debug.screen_buttons.vertical_menu_prev_next()
+        debug.click(next_button)
+        menu = debug.read_layout().find_unique_value_by_key(
+            key="menu_items", default=None, only_type=dict
+        )
+
+
 def read_all_pages(debug, pages: int | None = None) -> list[str]:
     """Read every page of a paged layout, leaving the last one up.
 
@@ -226,6 +244,25 @@ def read_all_pages(debug, pages: int | None = None) -> list[str]:
             debug.click(debug.screen_buttons.ok())
         texts.append(debug.read_layout().text_content())
     return texts
+
+
+def read_extra_pages(debug, value: bytes) -> str:
+    """Page an extra's screen until the whole value has been read.
+
+    An extra's screen is one layout that pages itself: Eckhart with its action
+    bar, Delizia with a swipe. Delizia's own trace has no page count, so the value
+    itself says when the last page has been read.
+    """
+    text = flat("".join(debug.read_layout().text_content()))
+    for _ in range(8):
+        if value.hex() in text:
+            break
+        if debug.layout_type is LayoutType.Delizia:
+            debug.swipe_up()
+        else:
+            debug.click(debug.screen_buttons.ok())
+        text += flat("".join(debug.read_layout().text_content()))
+    return text
 
 
 def open_account_info(
@@ -410,6 +447,31 @@ def test_review_long_menu_one_button_request(session: Session, instance_id: int)
         yield
         open_extra(session.debug, long_extras, index=4)
         confirm(session.debug)
+
+    with session.test_ctx as client:
+        client.set_input_flow(input_flow)
+        client.set_expected_responses(expect_one_button_request(request.step))
+        assert modui_ext.show(session, instance_id, request) is m.Reply.Confirmed
+
+
+def test_an_empty_extra_is_not_offered(session: Session, instance_id: int):
+    """An extra with no facts is dropped, so the menu offers only the rest."""
+    request = m.Review(
+        step="extras",
+        title="Extras",
+        fields=[modui_ext.text("Resource", "Energy")],
+        extras=extras(EXTRAS[0], ("Empty info", []), EXTRAS[1]),
+    )
+
+    def input_flow():
+        yield
+        debug = session.debug
+        open_extras_menu(debug)
+        menu = menu_labels(debug)
+        # The extras with facts, in order, and nothing else before the way out.
+        assert menu[:-1] == [label for label, _ in EXTRAS]
+        debug.click(debug.screen_buttons.menu())  # close the menu
+        confirm(debug)
 
     with session.test_ctx as client:
         client.set_input_flow(input_flow)
@@ -775,7 +837,7 @@ def test_field_data_paging(session: Session, instance_id: int):
         first = read_all_pages(session.debug, br.pages)
         assert value[:384].hex() in flat("".join(first))
         confirm(session.debug)  # the last page of the chunk reads "Continue"
-        second = read_all_pages(session.debug, br.pages)
+        second = read_all_pages(session.debug)
         assert value[384:].hex() in flat("".join(second))
         confirm(session.debug)
 
@@ -824,9 +886,37 @@ def test_field_data_long_value(session: Session, instance_id: int):
         for _ in range(2):  # the second and third chunks
             confirm(session.debug)
             session.debug.read_layout(wait=True)
-            text += "".join(read_all_pages(session.debug, br.pages))
+            text += "".join(read_all_pages(session.debug))
         confirm(session.debug)
         assert value.hex() in flat(text)
+
+    with session.test_ctx as client:
+        client.set_input_flow(input_flow)
+        client.set_expected_responses(expect_one_button_request(request.step))
+        assert modui_ext.show(session, instance_id, request) is m.Reply.Confirmed
+
+
+def test_data_in_an_extra(session: Session, instance_id: int):
+    """A data field inside an extra is paged there, and the review stays one
+    step."""
+    value = bytes(range(192))
+    request = m.Review(
+        step="data",
+        title="Data",
+        fields=[modui_ext.text("Resource", "Energy")],
+        extras=extras(("Input data", [modui_ext.data("Input data", value)])),
+    )
+
+    def input_flow():
+        yield
+        debug = session.debug
+        open_extras_menu(debug)
+        debug.button_actions.navigate_to_menu_item(0)
+        assert "Input data" in debug.read_layout().title()
+        assert value.hex() in read_extra_pages(debug, value)
+        debug.click(debug.screen_buttons.menu())  # close the extra
+        debug.click(debug.screen_buttons.menu())  # close the menu
+        confirm(debug)
 
     with session.test_ctx as client:
         client.set_input_flow(input_flow)
