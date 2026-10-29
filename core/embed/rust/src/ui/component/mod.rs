@@ -1,5 +1,7 @@
 //#![forbid(unsafe_code)]
 
+#[cfg(feature = "touch")]
+pub mod attach_anim;
 pub mod bar;
 pub mod base;
 #[cfg(feature = "ble")]
