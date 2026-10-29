@@ -57,10 +57,6 @@
 use crate::app_runtime::{get_ui_or_die, system_exit_fatal};
 use crate::traits::ui::UiV1Dyn as _;
 
-// ============================================================================
-// Data types
-// ============================================================================
-
 /// A progress that is running. Dismissing it is not the app's to do: it goes
 /// away when this value is dropped, whatever happened to the work.
 ///
@@ -70,10 +66,6 @@ pub struct Progress {
     // ends a progress that is running. Core keeps the count.
     _running: (),
 }
-
-// ============================================================================
-// Entry point
-// ============================================================================
 
 /// Runs `work` under a progress of the given label, and returns what it
 /// returns.
@@ -122,25 +114,19 @@ pub struct Progress {
 /// }
 /// ```
 pub fn progress<T>(label: &str, total: Option<u32>, work: impl FnOnce(&mut Progress) -> T) -> T {
-    let mut guard = Progress::start(label, total.unwrap_or(0));
-    work(&mut guard)
+    // If the start cannot reach core, the app ends, so a `Progress` only ever
+    // exists while one is running, and dropping it always ends that one.
+    if let Err(e) = get_ui_or_die()
+        .init_progress(label.into(), total.unwrap_or(0))
+        .into_result()
+    {
+        system_exit_fatal(e.message(), file!(), line!());
+    }
+    let mut running = Progress { _running: () };
+    work(&mut running)
 }
 
 impl Progress {
-    /// Starts a progress and returns it, running. Dropping the value ends it.
-    ///
-    /// If the request cannot reach core, the app ends; this never returns
-    /// without a running progress.
-    fn start(label: &str, total: u32) -> Self {
-        if let Err(e) = get_ui_or_die()
-            .init_progress(label.into(), total)
-            .into_result()
-        {
-            system_exit_fatal(e.message(), file!(), line!());
-        }
-        Self { _running: () }
-    }
-
     /// Reports that `units` of work are done, of the total given at the start.
     ///
     /// Deliberately infallible: an update is a status note, not a step of the
