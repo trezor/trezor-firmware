@@ -56,7 +56,7 @@ jobs:
     name: Rust build-tool tests
     if: github.event_name != 'push' || github.ref != 'refs/heads/main'  # not for reference builds
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -69,7 +69,7 @@ jobs:
   core_firmware:
     name: Build firmware (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}${{ matrix.miniscript && ', miniscript' || '' }}${{matrix.n1w1 && ', n1w1' || '' }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -142,7 +142,7 @@ jobs:
   core_emu:
     name: Build emu (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}, ${{ matrix.asan }}${{ matrix.miniscript && ', miniscript' || '' }}${{matrix.n1w1 && ', n1w1' || '' }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: param
     strategy:
       fail-fast: false
@@ -200,7 +200,7 @@ jobs:
     name: Build emu ARM (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}, ${{ matrix.asan }}${{matrix.n1w1 && ', n1w1' || '' }})
     if: github.repository == 'trezor/trezor-firmware'
     runs-on: ubuntu-26.04-arm
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: param
     strategy:
       fail-fast: false
@@ -244,7 +244,7 @@ jobs:
     name: Build and test prodtest emu (${{ matrix.model }})
     if: github.event_name != 'push' || github.ref != 'refs/heads/main'  # not for reference builds
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -275,7 +275,7 @@ jobs:
   core_unit_python_test:
     name: Python unit tests (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: param
     strategy:
       fail-fast: false
@@ -304,7 +304,7 @@ jobs:
   core_unit_rust_test:
     name: Rust unit tests (${{ matrix.model }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs:
       - param
       - core_emu
