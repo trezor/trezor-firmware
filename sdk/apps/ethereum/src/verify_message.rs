@@ -10,7 +10,7 @@ use crate::{
 };
 use trezor_app_sdk::{
     Error, Result, ResultExt,
-    crypto::{self, EcCurve, HasherExt, HashingAlgorithm},
+    crypto::{self, EcdsaCurve, HasherExt, HashingAlgorithm},
     ui,
 };
 
@@ -27,13 +27,13 @@ pub fn verify_message(msg: VerifyMessage) -> Result<Success> {
     // Ethereum's wire `v` is `27 + recid` (or `31 + recid` for a compressed-key
     // signature, which never applies here since we only ever recover the
     // uncompressed key) — reject anything outside that range and normalize down
-    // to the raw `0..=3` recovery id `ec_recover_pubkey` expects.
+    // to the raw `0..=3` recovery id `ecdsa_recover_pubkey` expects.
     if !(27..=34).contains(&sig[0]) {
         return Err(Error::DataError("Invalid signature"));
     }
     sig[0] = (sig[0] - 27) & 3;
 
-    let pubkey = crypto::ec_recover_pubkey(EcCurve::Secp256k1, &sig, &digest)
+    let pubkey = crypto::ecdsa_recover_pubkey(EcdsaCurve::Secp256k1, &sig, &digest)
         .map_err(|_| Error::DataError("Invalid signature"))?;
 
     let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
