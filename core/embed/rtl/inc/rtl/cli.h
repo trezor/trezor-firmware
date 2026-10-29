@@ -113,6 +113,10 @@ struct cli {
   int hist_prefix;
   /** previous character was a tab */
   bool last_tab;
+  /** escape sequence parser: >0 inside a sequence, its length (capped at 3) */
+  int esc_len;
+  /** numeric code of the escape sequence being parsed, -1 if too large */
+  int esc_code;
 
   /** Command name (pointer to the line buffer) */
   const char* cmd_name;
