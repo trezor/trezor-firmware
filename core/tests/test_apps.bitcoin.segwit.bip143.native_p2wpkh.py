@@ -14,7 +14,7 @@ from apps.common.keychain import Keychain
 from apps.common.paths import AlwaysMatchingSchema
 
 
-class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
+class TestSegwitBip143NativeP2WPKH(VaultTestCase):
     # pylint: disable=C0301
 
     tx = SignTx(

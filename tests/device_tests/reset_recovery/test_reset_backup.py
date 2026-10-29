@@ -21,7 +21,7 @@ from trezorlib import device
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.messages import BackupAvailability, BackupMethod, BackupType
 
-from ...common import MOCK_GET_ENTROPY
+from ...common import MOCK_GET_ENTROPY, assert_seed_matches
 from ...input_flows import (
     InputFlowBip39Backup,
     InputFlowResetSkipBackup,
@@ -37,7 +37,9 @@ def backup_flow_bip39(session: Session, method: BackupMethod) -> bytes:
         device.backup(session, backup_method=method)
 
     assert IF.mnemonic is not None
-    return IF.mnemonic.encode()
+    from mnemonic import Mnemonic
+
+    return Mnemonic.to_seed(IF.mnemonic)
 
 
 def backup_flow_slip39_basic(session: Session, method: BackupMethod):
@@ -48,7 +50,7 @@ def backup_flow_slip39_basic(session: Session, method: BackupMethod):
 
     groups = shamir.decode_mnemonics(IF.mnemonics[:3])
     ems = shamir.recover_ems(groups)
-    return ems.ciphertext
+    return ems.decrypt(b"")
 
 
 def backup_flow_slip39_advanced(session: Session, method: BackupMethod):
@@ -62,7 +64,7 @@ def backup_flow_slip39_advanced(session: Session, method: BackupMethod):
     mnemonics = IF.mnemonics[0:3] + IF.mnemonics[5:8] + IF.mnemonics[10:13]
     groups = shamir.decode_mnemonics(mnemonics)
     ems = shamir.recover_ems(groups)
-    return ems.ciphertext
+    return ems.decrypt(b"")
 
 
 VECTORS = [
@@ -107,7 +109,8 @@ def test_skip_backup_msg(
     assert secret is not None
     state = session.debug.state()
     assert state.mnemonic_type is backup_type
-    assert state.mnemonic_secret == secret
+    assert state.mnemonic_secret is None
+    assert_seed_matches(session, secret)
 
 
 @pytest.mark.models("core")
@@ -147,4 +150,5 @@ def test_skip_backup_manual(
     assert secret is not None
     state = session.debug.state()
     assert state.mnemonic_type is backup_type
-    assert state.mnemonic_secret == secret
+    assert state.mnemonic_secret is None
+    assert_seed_matches(session, secret)

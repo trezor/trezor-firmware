@@ -1298,9 +1298,7 @@ class Signer:
         from trezor.crypto.curve import ed25519
 
         node = self.keychain.derive(path)
-        return ed25519.sign_ext(
-            node.private_key(), node.private_key_ext(), tx_body_hash
-        )
+        return ed25519.sign_ext(node, tx_body_hash)
 
     async def _fail_or_warn_if_invalid_path(
         self, schema: PathSchema, path: list[int], path_name: str

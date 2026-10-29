@@ -19,7 +19,12 @@ import pytest
 from trezorlib import device, exceptions, messages
 from trezorlib.debuglink import DebugSession as Session
 
-from ...common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_ADVANCED_33
+from ...common import (
+    MNEMONIC_SLIP39_ADVANCED_20,
+    MNEMONIC_SLIP39_ADVANCED_33,
+    assert_seed_matches,
+    seed_from_shares,
+)
 from ...input_flows import (
     InputFlowSlip39AdvancedRecovery,
     InputFlowSlip39AdvancedRecoveryAbort,
@@ -63,7 +68,8 @@ def _test_secret(
     assert session.features.pin_protection is False
     assert session.features.passphrase_protection is False
     assert session.features.backup_type is messages.BackupType.Slip39_Advanced
-    assert session.debug.state().mnemonic_secret.hex() == secret
+    assert session.debug.state().mnemonic_secret is None
+    assert_seed_matches(session, seed_from_shares(shares, secret))
 
 
 @pytest.mark.parametrize("shares, secret", VECTORS)

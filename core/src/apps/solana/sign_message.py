@@ -25,6 +25,8 @@ async def sign_message(
 
     offchain_message = msg.message
     serialized = serialize_offchain_message(offchain_message)
+    if len(serialized) > ed25519.MAX_MESSAGE_SIZE:
+        raise DataError("Message too large")
 
     node = keychain.derive(msg.address_n)
     public_key = seed.remove_ed25519_prefix(node.public_key())

@@ -1,5 +1,7 @@
 from typing import *
 from buffer_types import *
+from trezorcrypto import secbytes
+from trezorcrypto.bip32 import HDNode
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
@@ -10,7 +12,9 @@ def generate_secret() -> bytes:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
-def publickey(secret_key: AnyBytes, compressed: bool = True) -> bytes:
+def publickey(
+    secret_key: AnyBytes | secbytes, compressed: bool = True
+) -> bytes:
     """
     Computes public key from secret key.
     """
@@ -20,13 +24,14 @@ CANONICAL_SIG_EOS: int = 2
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
 def sign(
-    secret_key: AnyBytes,
+    secret_key: AnyBytes | secbytes | HDNode,
     digest: AnyBytes,
     compressed: bool = True,
     canonical: int | None = None,
 ) -> bytes:
     """
-    Uses secret key to produce the signature of the digest.
+    Uses secret key to produce the signature of the digest. An HDNode is
+    signed with in the vault, without copying its private key out.
     """
 
 
@@ -49,7 +54,9 @@ def verify_recover(signature: AnyBytes, digest: AnyBytes) -> bytes:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
-def multiply(secret_key: AnyBytes, public_key: AnyBytes) -> bytes:
+def multiply(
+    secret_key: AnyBytes | secbytes, public_key: AnyBytes
+) -> bytes:
     """
     Multiplies point defined by public_key with scalar defined by
     secret_key. Useful for ECDH.

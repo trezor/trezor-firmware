@@ -6,6 +6,8 @@ from trezor import utils
 from . import backup_types
 
 if TYPE_CHECKING:
+    from trezorcrypto import secbytes
+
     from trezor.enums import BackupType
     from trezor.ui import ProgressLayout
 
@@ -78,29 +80,12 @@ if not utils.BITCOIN_ONLY:
         passphrase: str = "",
         trezor_derivation: bool = True,
         progress_bar: bool = True,
-    ) -> bytes:
-        if not is_bip39():
-            raise ValueError  # should not be called for SLIP-39
-
-        binary_mnemonic = storage_device.get_binary_mnemonic()
-        if binary_mnemonic is None:
-            raise RuntimeError("Failed to get binary mnemonic.")
-
-        render_func = None
-        if progress_bar and not utils.DISABLE_ANIMATION:
-            _start_progress()
-            render_func = _render_progress
-
+    ) -> secbytes:
         from trezor.crypto import cardano
 
-        seed = cardano.derive_icarus(
-            binary_mnemonic,
-            passphrase,
-            trezor_derivation,
-            render_func,
-        )
-        _finish_progress()
-        return seed
+        if not is_bip39():
+            raise ValueError
+        return cardano.derive_icarus(None, passphrase, trezor_derivation)
 
 
 _progress_obj: ProgressLayout | None = None

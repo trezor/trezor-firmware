@@ -35,7 +35,7 @@ from apps.common.keychain import Keychain
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
 
 
-class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
+class TestSignSegwitTxP2WPKHInP2SH(VaultTestCase):
     # pylint: disable=C0301
 
     def test_send_p2wpkh_in_p2sh(self):

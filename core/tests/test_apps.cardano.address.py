@@ -22,8 +22,9 @@ if not utils.BITCOIN_ONLY:
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestCardanoAddress(unittest.TestCase):
+class TestCardanoAddress(VaultTestCase):
     def setUp(self):
+        super().setUp()
         mnemonic = "all all all all all all all all all all all all"
         binary_mnemonic = bip39.mnemonic_to_bits(mnemonic)
         passphrase = ""
@@ -83,8 +84,7 @@ class TestCardanoAddress(unittest.TestCase):
             n = self.keychain.derive(
                 [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000 + i]
             )
-            self.assertEqual(n.private_key().hex(), priv)
-            self.assertEqual(n.private_key_ext().hex(), ext)
+            assert_cardano_key(self, n, bytes.fromhex(priv), bytes.fromhex(ext))
             self.assertEqual(seed.remove_ed25519_prefix(n.public_key()).hex(), pub)
             self.assertEqual(n.chain_code().hex(), chain)
 
@@ -134,8 +134,7 @@ class TestCardanoAddress(unittest.TestCase):
             n = self.keychain.derive(
                 [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i]
             )
-            self.assertEqual(n.private_key().hex(), priv)
-            self.assertEqual(n.private_key_ext().hex(), ext)
+            assert_cardano_key(self, n, bytes.fromhex(priv), bytes.fromhex(ext))
             self.assertEqual(seed.remove_ed25519_prefix(n.public_key()).hex(), pub)
             self.assertEqual(n.chain_code().hex(), chain)
 
@@ -163,8 +162,7 @@ class TestCardanoAddress(unittest.TestCase):
         )
 
         n = self.keychain.derive([0x80000000 | 44, 0x80000000 | 1815])
-        self.assertEqual(n.private_key().hex(), priv)
-        self.assertEqual(n.private_key_ext().hex(), ext)
+        assert_cardano_key(self, n, bytes.fromhex(priv), bytes.fromhex(ext))
         self.assertEqual(seed.remove_ed25519_prefix(n.public_key()).hex(), pub)
         self.assertEqual(n.chain_code().hex(), chain)
 
@@ -207,8 +205,9 @@ class TestCardanoAddress(unittest.TestCase):
         root_pub = "83e3ecaf57f90f022c45e10d1b8cb78499c30819515ad9a81ad82139fdb12a90"
         root_chain = "22c12755afdd192742613b3062069390743ea232bc1b366c8f41e37292af9305"
 
-        self.assertEqual(node.private_key().hex(), root_priv)
-        self.assertEqual(node.private_key_ext().hex(), root_ext)
+        assert_cardano_key(
+            self, node, bytes.fromhex(root_priv), bytes.fromhex(root_ext)
+        )
         self.assertEqual(seed.remove_ed25519_prefix(node.public_key()).hex(), root_pub)
         self.assertEqual(node.chain_code().hex(), root_chain)
 
@@ -253,8 +252,7 @@ class TestCardanoAddress(unittest.TestCase):
             )
             n = keychain.derive([0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
             self.assertEqual(a, address)
-            self.assertEqual(n.private_key().hex(), priv)
-            self.assertEqual(n.private_key_ext().hex(), ext)
+            assert_cardano_key(self, n, bytes.fromhex(priv), bytes.fromhex(ext))
             self.assertEqual(seed.remove_ed25519_prefix(n.public_key()).hex(), pub)
             self.assertEqual(n.chain_code().hex(), chain)
 
@@ -281,8 +279,9 @@ class TestCardanoAddress(unittest.TestCase):
         root_pub = "eea170f0ef97b59d22907cb429888029721ed67d3e7a1b56b81731086ab7db64"
         root_chain = "04f1de750b62725fcc1ae1b93ca4063acb53c486b959cadaa100ebd7828e5460"
 
-        self.assertEqual(node.private_key().hex(), root_priv)
-        self.assertEqual(node.private_key_ext().hex(), root_ext)
+        assert_cardano_key(
+            self, node, bytes.fromhex(root_priv), bytes.fromhex(root_ext)
+        )
         self.assertEqual(seed.remove_ed25519_prefix(node.public_key()).hex(), root_pub)
         self.assertEqual(node.chain_code().hex(), root_chain)
 
@@ -327,8 +326,7 @@ class TestCardanoAddress(unittest.TestCase):
             )
             n = keychain.derive([0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
             self.assertEqual(a, address)
-            self.assertEqual(n.private_key().hex(), priv)
-            self.assertEqual(n.private_key_ext().hex(), ext)
+            assert_cardano_key(self, n, bytes.fromhex(priv), bytes.fromhex(ext))
             self.assertEqual(seed.remove_ed25519_prefix(n.public_key()).hex(), pub)
             self.assertEqual(n.chain_code().hex(), chain)
 

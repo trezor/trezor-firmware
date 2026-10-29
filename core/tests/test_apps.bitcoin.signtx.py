@@ -34,7 +34,7 @@ from apps.common.keychain import Keychain
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
 
 
-class TestSignTx(unittest.TestCase):
+class TestSignTx(VaultTestCase):
     # pylint: disable=C0301
 
     def test_one_one_fee(self):

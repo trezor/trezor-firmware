@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from storage.cache_common import (
     APP_COMMON_SEED,
+    APP_COMMON_SEED_WITHOUT_PASSPHRASE,
     CHANNEL_ID,
     LAST_USAGE,
     SESSION_ID,
@@ -42,6 +43,9 @@ class SessionThpCache(DataCache):
             APP_CARDANO_ICARUS_TREZOR_SECRET,
         )
     )
+
+    if not utils.BITCOIN_ONLY:
+        secret_fields += (APP_COMMON_SEED_WITHOUT_PASSPHRASE,)
 
     def __init__(self) -> None:
         if utils.BITCOIN_ONLY:

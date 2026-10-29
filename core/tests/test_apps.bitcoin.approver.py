@@ -20,8 +20,9 @@ from apps.bitcoin.sign_tx.tx_info import TxInfo
 from apps.common import coins
 
 
-class TestApprover(TestCaseWithContext):
+class TestApprover(VaultTestCase):
     def setUp(self):
+        super().setUp()
         self.coin = coins.by_name("Bitcoin")
         self.fee_rate_percent = 0.3
         self.no_fee_threshold = 1000000

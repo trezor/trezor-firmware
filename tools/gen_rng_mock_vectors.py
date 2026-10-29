@@ -32,11 +32,13 @@ def prng_stream(tag: str, length: int, seed: int = 0, offset: int = 0) -> bytes:
     return out
 
 
-def strong(model: str, length: int, seed: int = 0, mcu_offset: int = 0) -> bytes:
+def strong(
+    model: str, length: int, seed: int = 0, mcu_offset: int = 0, se_offset: int = 0
+) -> bytes:
     """Expected rng_fill_buffer_strong() output of `length` bytes."""
     out = bytearray(prng_stream(MCU_TAG, length, seed, mcu_offset))
     for tag in MODEL_SE_TAGS[model]:
-        stream = prng_stream(tag, length, seed)
+        stream = prng_stream(tag, length, seed, se_offset)
         for i in range(length):
             out[i] ^= stream[i]
     return bytes(out)
@@ -66,6 +68,13 @@ def plain(length: int, seed: int = 0, mcu_offset: int = 0) -> bytes:
     "plain-RNG consumption after the reseed.",
 )
 @click.option(
+    "--se-offset",
+    type=int,
+    default=0,
+    metavar="N",
+    help="Skip N PRNG blocks of each secure-element stream before mixing.",
+)
+@click.option(
     "-p",
     "--plain",
     "plain_only",
@@ -73,12 +82,17 @@ def plain(length: int, seed: int = 0, mcu_offset: int = 0) -> bytes:
     help="random.bytes() instead of random.bytes(n, True): MCU stream only.",
 )
 def main(
-    model: str | None, length: int, seed: int, mcu_offset: int, plain_only: bool
+    model: str | None,
+    length: int,
+    seed: int,
+    mcu_offset: int,
+    se_offset: int,
+    plain_only: bool,
 ) -> None:
     if plain_only:
         click.echo(plain(length, seed, mcu_offset).hex())
     elif model:
-        click.echo(strong(model, length, seed, mcu_offset).hex())
+        click.echo(strong(model, length, seed, mcu_offset, se_offset).hex())
     else:
         raise click.UsageError("need --model or --plain")
 

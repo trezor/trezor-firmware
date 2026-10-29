@@ -89,6 +89,12 @@ async def authorize_coinjoin(
             ButtonRequestType.FeeOverThreshold,
         )
 
+    from trezorcrypto import authorize_locked_session
+
+    # This grant follows the user's confirmation. Updating the remaining
+    # round count while locked must not attempt to grant a new permission.
+    # Grant first, so a failed grant leaves no cached authorization behind.
+    authorize_locked_session(True)
     authorization.set(msg)
 
     return Success(message="Coinjoin authorized")

@@ -327,6 +327,4 @@ def _create_cvote_registration_payload_signature(
         outlen=_CVOTE_REGISTRATION_HASH_SIZE,
     ).digest()
 
-    return ed25519.sign_ext(
-        node.private_key(), node.private_key_ext(), cvote_registration_hash
-    )
+    return ed25519.sign_ext(node, cvote_registration_hash)

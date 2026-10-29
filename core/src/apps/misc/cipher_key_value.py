@@ -8,8 +8,9 @@ if TYPE_CHECKING:
 
 
 async def cipher_key_value(msg: CipherKeyValue) -> CipheredKeyValue:
+    from trezorcrypto import cipher_key_value as native_cipher
+
     from trezor import TR
-    from trezor.crypto import aes, hmac
     from trezor.messages import CipheredKeyValue
     from trezor.ui.layouts import confirm_action
     from trezor.wire import DataError
@@ -45,23 +46,14 @@ async def cipher_key_value(msg: CipherKeyValue) -> CipheredKeyValue:
 
     node = keychain.derive(msg.address_n)
 
-    # compute_cipher_key_value
-    seckey = node.private_key()
-    data = msg.key.encode()
-    data += b"E1" if msg.ask_on_encrypt else b"E0"
-    data += b"D1" if msg.ask_on_decrypt else b"D0"
-    data = hmac(hmac.SHA512, seckey, data).digest()
-    key = data[:32]
-    if msg.iv and len(msg.iv) == 16:
-        iv = msg.iv
-    else:
-        iv = data[32:48]
-
-    hash_ctx = aes(aes.CBC, key, iv)
-    if msg.encrypt:
-        value = hash_ctx.encrypt(msg.value)
-    else:
-        value = hash_ctx.decrypt(msg.value)
-    # END compute_cipher_key_value
+    value = native_cipher(
+        node,
+        msg.key.encode(),
+        msg.value,
+        bool(msg.encrypt),
+        bool(msg.ask_on_encrypt),
+        bool(msg.ask_on_decrypt),
+        msg.iv or b"",
+    )
 
     return CipheredKeyValue(value=value)

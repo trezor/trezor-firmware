@@ -1,5 +1,6 @@
 from typing import *
 from buffer_types import *
+from trezorcrypto.bip32 import HDNode
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
@@ -356,3 +357,11 @@ def ct_equals(a: AnyBytes, b: AnyBytes) -> bool:
     """
 BP_GI_PLUS_PRE: bytes
 BP_HI_PLUS_PRE: bytes
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-monero.h
+def wallet_public(
+    node: HDNode, major: int = 0, minor: int = 0, watch_only: bool = False,
+) -> tuple[bytes, bytes, bytes | None]:
+    """Derive public wallet/subaddress keys in the vault. Watch-only export
+    returns the private view key, which the host receives by design."""

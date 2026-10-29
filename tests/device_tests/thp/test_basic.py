@@ -87,3 +87,17 @@ def test_message_length(test_ctx: Client):
             n=parse_path("m/44h/0h/0h/0/0"),
             message=("u" * 8_700),
         )
+
+
+@pytest.mark.setup_client(uninitialized=False, passphrase=True)
+@pytest.mark.parametrize("passphrase", ["", "TREZOR"])
+def test_session_seed_survives_requests(test_ctx: Client, passphrase: str):
+    session = test_ctx.get_session(passphrase=passphrase)
+    args = dict(
+        coin_name="Bitcoin",
+        n=parse_path("m/44h/0h/0h/0/0"),
+        message="THP session seed lifetime",
+    )
+    first = btc.sign_message(session, **args)
+    second = btc.sign_message(session, **args)
+    assert first == second

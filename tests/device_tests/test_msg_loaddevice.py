@@ -40,7 +40,10 @@ def test_load_device_1(test_ctx: TrezorTestContext):
         label="test",
     )
     state = test_ctx.debug.state()
-    assert state.mnemonic_secret == MNEMONIC12.encode()
+    if test_ctx.model is models.T1B1:
+        assert state.mnemonic_secret == MNEMONIC12.encode()
+    else:
+        assert state.mnemonic_secret is None
     assert state.pin is None
     assert state.passphrase_protection is False
 
@@ -59,7 +62,10 @@ def test_load_device_2(test_ctx: TrezorTestContext):
     session = test_ctx.get_session(passphrase="passphrase")
 
     state = test_ctx.debug.state()
-    assert state.mnemonic_secret == MNEMONIC12.encode()
+    if test_ctx.model is models.T1B1:
+        assert state.mnemonic_secret == MNEMONIC12.encode()
+    else:
+        assert state.mnemonic_secret is None
 
     if test_ctx.model is models.T1B1:
         # we do not send PIN in DebugLinkState in Core

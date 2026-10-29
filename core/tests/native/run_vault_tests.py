@@ -106,8 +106,9 @@ def main():
             names = [
                 "test_vault_sealing",
                 "test_vault_bytes",
-                "test_vault_coreapp",
                 "test_vault_slip21",
+                "test_vault_coreapp",
+                "test_cardano_signing",
             ]
             if True:
                 names += ["test_ed25519_cleanup"]
@@ -131,6 +132,15 @@ def main():
                 subprocess.run(
                     [
                         compiler,
+                        *(
+                            ["-DTEST_COREAPP=1"]
+                            if name == "test_cardano_signing"
+                            and (
+                                ROOT
+                                / "core/embed/upymod/modtrezorcrypto/vault_coreapp.h"
+                            ).exists()
+                            else []
+                        ),
                         *flags,
                         "-I" + output,
                         f"-DVAULT_SEAL_MODE={selection}",

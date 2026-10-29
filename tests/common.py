@@ -384,3 +384,48 @@ def get_test_address(session: "Session") -> str:
 
 def is_core(session: Client | Session) -> bool:
     return session.model is not models.T1B1
+
+
+def assert_seed_matches(session: Any, seed: bytes) -> None:
+    """Verify a known wallet seed through a public account key, never debug export."""
+    import hashlib
+    import hmac
+
+    from ecdsa.curves import SECP256k1
+
+    path = tools.parse_path("m/44h/1h/0h")
+    digest = hmac.digest(b"Bitcoin seed", seed, hashlib.sha512)
+    private, chain = digest[:32], digest[32:]
+    for index in path:
+        digest = hmac.digest(
+            chain, b"\x00" + private + index.to_bytes(4, "big"), hashlib.sha512
+        )
+        private = (
+            (int.from_bytes(private, "big") + int.from_bytes(digest[:32], "big"))
+            % SECP256k1.order
+        ).to_bytes(32, "big")
+        chain = digest[32:]
+    from .bip32 import point_to_pubkey
+
+    public = point_to_pubkey(int.from_bytes(private, "big") * SECP256k1.generator)
+    derived = session.test_ctx.get_session(passphrase="")
+    node = btc.get_public_node(derived, path, coin_name="Testnet").node
+    assert node.public_key == public
+    assert node.chain_code == chain
+
+
+def seed_from_shares(shares: list[str], expected_ems: str) -> bytes:
+    """Recover a test vector with the independent host SLIP-39 implementation."""
+    from shamir_mnemonic import shamir
+
+    groups = shamir.decode_mnemonics(shares)
+    threshold = next(iter(groups.values())).common_parameters().group_threshold
+    complete = {
+        index: group.get_minimal_group()
+        for index, group in groups.items()
+        if group.is_complete()
+    }
+    selected = dict(list(complete.items())[:threshold])
+    ems = shamir.recover_ems(selected)
+    assert ems.ciphertext.hex() == expected_ems
+    return ems.decrypt(b"")

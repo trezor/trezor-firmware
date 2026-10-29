@@ -51,10 +51,8 @@ async def sign_message(
         chunkify=bool(msg.chunkify),
     )
 
-    seckey = node.private_key()
-
     digest = message_digest(coin, message)
-    signature = secp256k1.sign(seckey, digest)
+    signature = secp256k1.sign(node, digest)
 
     if script_type == InputScriptType.SPENDADDRESS:
         script_type_info = 0

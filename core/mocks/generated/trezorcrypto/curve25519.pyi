@@ -1,5 +1,6 @@
 from typing import *
 from buffer_types import *
+from trezorcrypto import secbytes
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-curve25519.h
@@ -17,7 +18,9 @@ def publickey(secret_key: AnyBytes) -> bytes:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-curve25519.h
-def multiply(secret_key: AnyBytes, public_key: AnyBytes) -> bytes:
+def multiply(
+    secret_key: AnyBytes | secbytes, public_key: AnyBytes
+) -> bytes:
     """
     Multiplies point defined by public_key with scalar defined by
     secret_key. Useful for ECDH.

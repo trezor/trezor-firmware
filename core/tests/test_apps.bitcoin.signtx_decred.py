@@ -70,7 +70,7 @@ if (
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 @unittest.skipUnless(utils.INTERNAL_MODEL == "T2T1", "only for T2T1")
-class TestSignTxDecred(unittest.TestCase):
+class TestSignTxDecred(VaultTestCase):
     # pylint: disable=C0301
 
     def test_one_one_fee(self):

@@ -81,6 +81,9 @@ class Bitcoin:
 
         # Following steps can take a long time, make sure autolock doesn't kick in.
         # This is set to True again after workflow is finished in start_default().
+        from trezorcrypto import begin_confirmed_request
+
+        begin_confirmed_request()
         workflow.autolock_interrupts_workflow = False
 
         # Verify the transaction input amounts by requesting each previous transaction

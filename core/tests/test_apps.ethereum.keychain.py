@@ -3,17 +3,11 @@ from common import *  # isort:skip
 
 import unittest
 
-from storage import cache_common
 from trezor import wire
 from trezor.crypto import bip39
-from trezor.wire import context
 
 from apps.common.keychain import get_keychain
 from apps.common.paths import HARDENED
-
-if not utils.USE_THP:
-    from storage import cache_codec
-
 
 if not utils.BITCOIN_ONLY:
     from ethereum_common import encode_eth_network, make_eth_network
@@ -39,7 +33,7 @@ if not utils.BITCOIN_ONLY:
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestEthereumKeychain(TestCaseWithContext):
+class TestEthereumKeychain(VaultTestCase):
     def _check_keychain(self, keychain, slip44_id):
         # valid address should succeed
         valid_addresses = (
@@ -77,18 +71,10 @@ class TestEthereumKeychain(TestCaseWithContext):
                 addr,
             )
 
-    if utils.USE_THP:
-
-        def setUp(self):
-            seed = bip39.seed(" ".join(["all"] * 12), "")
-            context.cache_set(cache_common.APP_COMMON_SEED, seed)
-
-    else:
-
-        def setUp(self):
-            cache_codec.start_session()
-            seed = bip39.seed(" ".join(["all"] * 12), "")
-            cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
+    def setUp(self):
+        super().setUp()
+        seed = bip39.seed(" ".join(["all"] * 12), "")
+        cache_seed(seed)
 
     def from_address_n(self, address_n):
         slip44 = _slip44_from_address_n(address_n)

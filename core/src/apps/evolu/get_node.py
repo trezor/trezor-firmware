@@ -55,13 +55,11 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
 #
 # Note: The need for node rotation has diminished recently as we now handle data deletion through other mechanisms.
 async def derive_evolu_node(index: int) -> bytes:
-    from apps.common.seed import Slip21Node, get_seed
+    from apps.common.seed import get_seed, slip21_export
 
     seed = await get_seed()
-    node = Slip21Node(seed)
     if index == 0:
-        node.derive_path(_EVOLU_KEY_PATH_PREFIX)
+        path = _EVOLU_KEY_PATH_PREFIX
     else:
-        node.derive_path(_EVOLU_KEY_PATH_PREFIX_INDEX + [str(index).encode()])
-
-    return node.data
+        path = _EVOLU_KEY_PATH_PREFIX_INDEX + [str(index).encode()]
+    return slip21_export(seed, path)

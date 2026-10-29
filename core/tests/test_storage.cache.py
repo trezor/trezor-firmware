@@ -12,10 +12,15 @@ if utils.USE_THP:
 
     _PROTOCOL_CACHE = cache_thp
 
-    KEY = cache_thp_keys.APP_COMMON_SEED
+    KEY = cache_thp_keys.APP_COMMON_NONCE
 
     def _copy_data(dc: DataCache) -> list[bytearray]:
-        return [bytearray(f) for f in dc.data]
+        return [
+            bytearray(f)
+            if isinstance(f, bytearray)
+            else bytearray([int(not f.empty())])
+            for f in dc.data
+        ]
 
 else:
     from mock_storage import mock_storage
@@ -26,7 +31,7 @@ else:
 
     _PROTOCOL_CACHE = cache_codec
 
-    KEY = cache_codec_keys.APP_COMMON_SEED
+    KEY = cache_codec_keys.APP_COMMON_NONCE
 
     def is_session_started() -> bool:
         return cache_codec.get_active_session() is not None
@@ -36,6 +41,20 @@ else:
 
 
 class TestStorageCache(TestCaseWithContext):
+    def test_seed_cache_layout(self):
+        if utils.USE_THP:
+            dc = cache_thp.SessionThpCache()
+            seed_key = cache_thp_keys.APP_COMMON_SEED
+        else:
+            dc = cache_codec.SessionCache()
+            seed_key = cache_codec_keys.APP_COMMON_SEED
+        # Keep key indices stable; common seeds only occupy the opaque holder.
+        self.assertEqual(dc.fields[seed_key], 64)
+        self.assertTrue(dc.data[seed_key].empty())
+        self.assertIsNone(dc.get_secret(seed_key))
+        with self.assertRaises(TypeError):
+            dc.set(seed_key, b"x")
+
     if utils.USE_THP:
 
         def setUp(self):
@@ -131,16 +150,16 @@ class TestStorageCache(TestCaseWithContext):
                 sessions_B.append(_copy_data(s))
 
             for i in range(3):
-                self.assertEqual(sesions_A[i], cache_thp._SESSIONS[i].data)
+                self.assertEqual(sesions_A[i], _copy_data(cache_thp._SESSIONS[i]))
             for i in range(3, cache_thp._MAX_SESSIONS_COUNT):
-                self.assertEqual(sessions_B[i - 3], cache_thp._SESSIONS[i].data)
+                self.assertEqual(sessions_B[i - 3], _copy_data(cache_thp._SESSIONS[i]))
 
             # Assert that new session replaces the oldest (least used) one (_SESSIONS[0])
             new_session = cache_thp.create_or_replace_session(
                 channel_B.channel_id_bytes(), b"\xab"
             )
             self.assertEqual(new_session, cache_thp._SESSIONS[0])
-            self.assertNotEqual(new_session.data, sesions_A[0])
+            self.assertNotEqual(_copy_data(new_session), sesions_A[0])
 
             # Assert that creating a new session on channel B shifts the "last usage" again
             # and that _SESSIONS[1] was not replaced, but that _SESSIONS[2] was replaced
@@ -150,9 +169,11 @@ class TestStorageCache(TestCaseWithContext):
                     channel_B.channel_id_bytes(), b"\xaa"
                 )
             )
-            self.assertEqualExceptLastUsage(sesions_A[1], cache_thp._SESSIONS[1].data)
-            self.assertNotEqual(sesions_A[2], cache_thp._SESSIONS[2].data)
-            self.assertEqual(new_new_session, cache_thp._SESSIONS[2].data)
+            self.assertEqualExceptLastUsage(
+                sesions_A[1], _copy_data(cache_thp._SESSIONS[1])
+            )
+            self.assertNotEqual(sesions_A[2], _copy_data(cache_thp._SESSIONS[2]))
+            self.assertEqual(new_new_session, _copy_data(cache_thp._SESSIONS[2]))
 
         def test_clear(self):
             channel_A = thp_common.get_new_channel(self.interface)

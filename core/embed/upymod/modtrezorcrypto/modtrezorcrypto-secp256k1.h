@@ -25,6 +25,8 @@
 #include "trezor-crypto/secp256k1.h"
 
 /// package: trezorcrypto.secp256k1
+/// from trezorcrypto import secbytes
+/// from trezorcrypto.bip32 import HDNode
 
 /// def generate_secret() -> bytes:
 ///     """
@@ -57,12 +59,23 @@ static mp_obj_t mod_trezorcrypto_secp256k1_generate_secret() {
 static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_secp256k1_generate_secret_obj,
                                  mod_trezorcrypto_secp256k1_generate_secret);
 
-/// def publickey(secret_key: AnyBytes, compressed: bool = True) -> bytes:
+/// def publickey(
+///     secret_key: AnyBytes | secbytes, compressed: bool = True
+/// ) -> bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
 static mp_obj_t mod_trezorcrypto_secp256k1_publickey(size_t n_args,
                                                      const mp_obj_t *args) {
+  if (mp_obj_is_type(args[0], &mod_trezorcrypto_secbytes_type)) {
+    bool compressed = n_args < 2 || args[1] == mp_const_true;
+    vault_request_t r = {.op = VAULT_NIST_PUBLIC,
+                         .arg = 2 | compressed,
+                         .blob = secbytes_blob(MP_OBJ_TO_PTR(args[0]))};
+    vault_response_t out = {0};
+    vault_raise(&r, &out);
+    return mp_obj_new_bytes(out.signature, compressed ? 33 : 65);
+  }
   mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   if (sk.len != 32) {
@@ -117,34 +130,41 @@ enum {
 #endif
 
 /// def sign(
-///     secret_key: AnyBytes,
+///     secret_key: AnyBytes | secbytes | HDNode,
 ///     digest: AnyBytes,
 ///     compressed: bool = True,
 ///     canonical: int | None = None,
 /// ) -> bytes:
 ///     """
-///     Uses secret key to produce the signature of the digest.
+///     Uses secret key to produce the signature of the digest. An HDNode is
+///     signed with in the vault, without copying its private key out.
 ///     """
 static mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args,
                                                 const mp_obj_t *args) {
   mp_buffer_info_t sk = {0};
   mp_buffer_info_t dig = {0};
-  mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
+  bool node = mp_obj_is_type(args[0], &mod_trezorcrypto_HDNode_type);
+  bool opaque =
+      node || mp_obj_is_type(args[0], &mod_trezorcrypto_secbytes_type);
+  if (!opaque) mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
   bool compressed = (n_args < 3) || (args[2] == mp_const_true);
   int (*is_canonical)(uint8_t by, uint8_t sig[64]) = NULL;
+  uint32_t vault_canonical = VAULT_CANONICAL_NONE;
 #if !BITCOIN_ONLY
   mp_int_t canonical = (n_args > 3) ? mp_obj_get_int(args[3]) : 0;
   switch (canonical) {
     case CANONICAL_SIG_ETHEREUM:
       is_canonical = ethereum_is_canonical;
+      vault_canonical = VAULT_CANONICAL_ETHEREUM;
       break;
     case CANONICAL_SIG_EOS:
       is_canonical = eos_is_canonical;
+      vault_canonical = VAULT_CANONICAL_EOS;
       break;
   }
 #endif
-  if (sk.len != 32) {
+  if (!opaque && sk.len != 32) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   if (dig.len != 32) {
@@ -152,6 +172,22 @@ static mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args,
   }
   vstr_t sig = {0};
   vstr_init_len(&sig, 65);
+  if (opaque) {
+    /* The kernel applies the canonical form; no callback crosses. */
+    vault_request_t r = {.op = VAULT_SIGN,
+                         .blob = node ? hdnode_blob(hdnode_object(args[0]))
+                                      : secbytes_blob(MP_OBJ_TO_PTR(args[0])),
+                         .length = 32,
+                         .arg = compressed | (vault_canonical << 1)};
+    vault_response_t out = {0};
+    memcpy(r.data, dig.buf, 32);
+    if (!secret_rpc(&r, &out)) {
+      vstr_clear(&sig);
+      mp_raise_ValueError(MP_ERROR_TEXT("Vault signing failed"));
+    }
+    memcpy(sig.buf, out.signature, 65);
+    return mp_obj_new_bytes_from_vstr(&sig);
+  }
   uint8_t pby = 0;
   if (0 != ecdsa_sign_digest(&secp256k1, (const uint8_t *)sk.buf,
                              (const uint8_t *)dig.buf, (uint8_t *)sig.buf + 1,
@@ -237,13 +273,29 @@ static mp_obj_t mod_trezorcrypto_secp256k1_verify_recover(mp_obj_t signature,
 static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_secp256k1_verify_recover_obj,
                                  mod_trezorcrypto_secp256k1_verify_recover);
 
-/// def multiply(secret_key: AnyBytes, public_key: AnyBytes) -> bytes:
+/// def multiply(
+///     secret_key: AnyBytes | secbytes, public_key: AnyBytes
+/// ) -> bytes:
 ///     """
 ///     Multiplies point defined by public_key with scalar defined by
 ///     secret_key. Useful for ECDH.
 ///     """
 static mp_obj_t mod_trezorcrypto_secp256k1_multiply(mp_obj_t secret_key,
                                                     mp_obj_t public_key) {
+  if (mp_obj_is_type(secret_key, &mod_trezorcrypto_secbytes_type)) {
+    mp_buffer_info_t peer = {0};
+    mp_get_buffer_raise(public_key, &peer, MP_BUFFER_READ);
+    if (peer.len > 65)
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid peer key length"));
+    vault_request_t r = {.op = VAULT_ECDH,
+                         .arg = 0,
+                         .blob = secbytes_blob(MP_OBJ_TO_PTR(secret_key)),
+                         .length = peer.len};
+    memcpy(r.data, peer.buf, peer.len);
+    vault_response_t out = {0};
+    vault_raise(&r, &out);
+    return mp_obj_new_bytes(out.signature, 65);
+  }
   mp_buffer_info_t sk = {0}, pk = {0};
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);

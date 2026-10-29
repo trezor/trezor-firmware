@@ -21,7 +21,7 @@ from apps.common.keychain import Keychain
 from apps.common.paths import HARDENED, AlwaysMatchingSchema
 
 
-class TestOwnershipProof(unittest.TestCase):
+class TestOwnershipProof(VaultTestCase):
     def test_p2wpkh_gen_proof(self):
         # SLIP-0019 test vector 1
         coin = coins.by_name("Bitcoin")
