@@ -57,6 +57,8 @@ mod unit_properties;
 
 #[path = "vault/build.rs"]
 mod vault;
+#[path = "vault_kek/build.rs"]
+mod vault_kek;
 
 fn main() -> Result<()> {
     xbuild::build(|lib| {
@@ -94,6 +96,7 @@ fn main() -> Result<()> {
                 trustzone if cfg!(feature = "trustzone"),
                 unit_properties,
                 vault if cfg!(feature = "vault"),
+                vault_kek if cfg!(feature = "vault_kek"),
             ]
         );
 

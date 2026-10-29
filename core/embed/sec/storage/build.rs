@@ -16,6 +16,13 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_define("STORAGE_INSECURE_TESTING_MODE", Some("1"));
     }
 
+    // Wherever storage runs: the kernel, or secmon on secmon models.
+    if cfg!(feature = "storage_key_cache") {
+        lib.add_define("STORAGE_KEY_CACHE_PROTECTED", Some("1"));
+        lib.add_include("storage");
+        lib.add_source("storage/key_cache.c");
+    }
+
     lib.add_source("storage/storage_setup.c");
 
     lib.add_sources_in_dir(

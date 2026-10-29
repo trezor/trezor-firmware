@@ -62,7 +62,7 @@ nrf_auth = ["sec/nrf_auth"]
 optiga = ["sec/optiga"]
 secmon_layout = ["models/secmon_layout"]
 secret = ["sec/secret"]
-secure_aes = ["sec/secure_aes"]
+secure_aes = ["sec/secure_aes", "sec/vault_kek"]
 suspend = ["sec/suspend"]
 tamper = ["sec/tamper"]
 telemetry = ["sec/telemetry"]
@@ -78,6 +78,7 @@ default = [
     "sec/kernel_mode",
     "sec/secure_mode",
     "sec/storage",
+    "sec/storage_key_cache",
     "sec/rdi",
     "crypto/aes_gcm",
     ]

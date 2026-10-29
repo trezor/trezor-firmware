@@ -158,7 +158,11 @@ static uint32_t ui_total = 0;
 static uint32_t ui_begin = 0;
 static uint32_t ui_next_update = 0;
 static enum storage_ui_message_t ui_message = NO_MSG;
+#ifdef STORAGE_KEY_CACHE_PROTECTED
+#include "key_cache.h"
+#else
 CONFIDENTIAL static uint8_t cached_keys[KEYS_SIZE] = {0};
+#endif
 CONFIDENTIAL static uint8_t authentication_sum[SHA256_DIGEST_LENGTH] = {0};
 CONFIDENTIAL static uint8_t hardware_salt[HARDWARE_SALT_SIZE] = {0};
 CONFIDENTIAL static uint32_t norcow_active_version = 0;
@@ -180,14 +184,27 @@ static secbool storage_upgrade_unlocked(const uint8_t *pin, size_t pin_len,
  * Legacy/test builds retain the existing native cache behind the same helpers.
  */
 static void cached_keys_clear(void) {
+#ifdef STORAGE_KEY_CACHE_PROTECTED
+  storage_key_cache_wipe();
+#else
   memzero(cached_keys, sizeof(cached_keys));
+#endif
 }
 static secbool cached_keys_store(const uint8_t keys[KEYS_SIZE]) {
+#ifdef STORAGE_KEY_CACHE_PROTECTED
+  return storage_key_cache_set(keys) ? sectrue : secfalse;
+#else
   memcpy(cached_keys, keys, KEYS_SIZE);
   return sectrue;
+#endif
 }
 static void cached_keys_read(uint8_t *out, size_t offset, size_t length) {
+#ifdef STORAGE_KEY_CACHE_PROTECTED
+  ensure(sectrue * storage_key_cache_get(out, offset, length),
+         "storage key cache authentication failed");
+#else
   memcpy(out, cached_keys + offset, length);
+#endif
 }
 static void cached_keys_generate(void) {
   uint8_t keys[KEYS_SIZE] = {0};
