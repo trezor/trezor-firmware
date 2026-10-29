@@ -176,6 +176,18 @@ def cache_get(key: int, default: T | None = None) -> bytes | T | None:  # noqa: 
     return cache.get(key, default)
 
 
+def cache_get_secret(key: int) -> bytes | None:
+    return _get_cache_for_key(key).get_secret(key)
+
+
+def cache_take_secret(key: int, value: AnyBytes) -> None:
+    _get_cache_for_key(key).take_secret(key, value)
+
+
+def cache_delete_secret(key: int) -> None:
+    _get_cache_for_key(key).delete_secret(key)
+
+
 def cache_get_bool(key: int) -> bool:  # noqa: F811
     cache = _get_cache_for_key(key)
     return cache.get_bool(key)

@@ -2,8 +2,14 @@ import builtins
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage.cache_common import DataCache
+from storage.cache_common import APP_COMMON_SEED, DataCache
 from trezor import utils
+
+if not utils.BITCOIN_ONLY:
+    from storage.cache_common import (
+        APP_CARDANO_ICARUS_SECRET,
+        APP_CARDANO_ICARUS_TREZOR_SECRET,
+    )
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -21,6 +27,16 @@ class SessionCache(DataCache):
     A cache for storing values that depend on seed derivation
     or are specific to a `protocol_v1` session.
     """
+
+    secret_fields = (
+        (APP_COMMON_SEED,)
+        if utils.BITCOIN_ONLY
+        else (
+            APP_COMMON_SEED,
+            APP_CARDANO_ICARUS_SECRET,
+            APP_CARDANO_ICARUS_TREZOR_SECRET,
+        )
+    )
 
     def __init__(self) -> None:
         self.session_id = bytearray(_SESSION_ID_LENGTH)
