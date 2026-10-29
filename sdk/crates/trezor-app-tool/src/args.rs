@@ -66,6 +66,15 @@ impl TargetArch {
     }
 }
 
+/// How `app-tool device-test` handles UI screenshots.
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UiMode {
+    /// Check the screens against the app's fixtures.
+    Test,
+    /// Record the screens into the app's fixtures.
+    Record,
+}
+
 /// Verbosity of an app's runtime logging, baked in at build time via a
 /// cargo feature (see [`LogLevel::feature_name`]).
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
@@ -358,9 +367,9 @@ pub struct DeviceTestArgs {
     #[arg(long, short = 't', default_value = "")]
     pub test: String,
 
-    /// Run with UI screenshot testing enabled.
-    #[arg(long)]
-    pub ui: bool,
+    /// Run with UI screenshot testing; a bare `--ui` means `--ui test`.
+    #[arg(long, num_args = 0..=1, default_missing_value = "test")]
+    pub ui: Option<UiMode>,
 
     /// Language of the device UI for this test run.
     #[arg(long)]
