@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import warnings
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -88,7 +89,7 @@ def setup(main_runner: bool) -> None:
     html.set_image_dir(IMAGES_PATH)
 
 
-def index() -> Path:
+def index(master_diff_note: str | None = None) -> Path:
     """Generate index.html with all the test results - lists of failed and passed tests."""
     passed_tests = list((TESTREPORT_PATH / "passed").iterdir())
     failed_tests = list((TESTREPORT_PATH / "failed").iterdir())
@@ -109,6 +110,8 @@ def index() -> Path:
             p("All tests succeeded!", style="color: green; font-weight: bold;")
         else:
             p("Some tests failed!", style="color: red; font-weight: bold;")
+        if master_diff_note:
+            p(master_diff_note, style="color: darkorange; font-weight: bold;")
         hr()
 
         h2("Failed", style="color: red;")
@@ -300,13 +303,19 @@ def master_index() -> Path:
 def generate_reports(do_master_diff: bool = False) -> None:
     """Generate HTML reports for the test."""
     html.set_image_dir(IMAGES_PATH)
-    index()
+    master_diff_note = None
+    if do_master_diff:
+        try:
+            master_diff()
+            master_index()
+        except download.MasterFixturesMissing as e:
+            # shown in pytest's warnings summary and final line
+            master_diff_note = f"Master diff skipped: no master fixtures at {e}"
+            warnings.warn(master_diff_note)
+    index(master_diff_note)
     all_screens()
     all_unique_screens()
     differing_screens()
-    if do_master_diff:
-        master_diff()
-        master_index()
 
 
 def _copy_deduplicated(test: TestCase) -> None:
