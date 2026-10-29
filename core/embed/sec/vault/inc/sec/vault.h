@@ -65,6 +65,7 @@ typedef enum {
   VAULT_ECDH,
   VAULT_KEYVALUE_DERIVE,
   VAULT_AES_CBC,
+  VAULT_NEM_SHARED = 50,
   VAULT_OPEN_NATIVE = 128
 } vault_op_t;
 /* VAULT_SLIP21: derive from a seed (VAULT_SLIP21_ROOT) or a 64-byte node

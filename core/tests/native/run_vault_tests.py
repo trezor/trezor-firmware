@@ -103,7 +103,7 @@ def main():
         for mode in args.mode or ("gcm",):
             selection = {"gcm": 3}[mode]
             print(f"Vault mode: {mode}", flush=True)
-            names = ["test_vault_sealing", "test_vault_bytes"]
+            names = ["test_vault_sealing", "test_vault_bytes", "test_vault_coreapp"]
             if True:
                 names += ["test_ed25519_cleanup"]
             for name in names:
