@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 1.14.3 [18th November 2026]
+
+### Removed
+- Remove Omni support.  [#7968]
+
+### Security
+- Treat the removed Unchained Capital multisig path as an unknown path.
+- Warn on xpub export for paths shorter than 2 levels and for SLIP-15, SLIP-16 and BIP-85 paths.
+
 ## 1.14.2 [21st October 2026]
 
 ### Changed
@@ -702,3 +711,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#5257]: https://github.com/trezor/trezor-firmware/pull/5257
 [#5942]: https://github.com/trezor/trezor-firmware/pull/5942
 [#6358]: https://github.com/trezor/trezor-firmware/pull/6358
+[#7968]: https://github.com/trezor/trezor-firmware/pull/7968
