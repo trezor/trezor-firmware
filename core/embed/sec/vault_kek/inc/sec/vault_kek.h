@@ -11,7 +11,7 @@
  * as this exposes a wrap/unwrap oracle under it to the caller. */
 secbool vault_kek_wrap(bool encrypt, uint8_t value[40]);
 
-/* Hardware GCM record sealing. Key representation is MCU-private: U5 retains
+/* Hardware KWP record sealing. Key representation is MCU-private: U5 retains
  * generated keys wrapped under DHUK and loads them directly into SAES. Every
  * backend must preserve separate record/cache key domains, fresh keys across
  * counter restarts, RESET invalidation, and no software export of hardware

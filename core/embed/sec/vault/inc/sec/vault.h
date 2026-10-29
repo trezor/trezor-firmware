@@ -43,7 +43,7 @@ typedef enum {
   (((1U << VAULT_KEY_TYPE_END) - 1) & ~VAULT_KEY(0) & \
    ~VAULT_KEY(VAULT_KEY_NODE))
 /* Kernel-sealed, client-held records start with owner, kind, length and type.
- * GCM adds a nonce u64, actual-length ciphertext and a 16-byte tag.
+ * KWP wraps authenticated metadata and the padded payload with RFC 5649.
  * The complete header is authenticated. Nodes encode VAULT_NODE_SIZE bytes;
  * wire padding is zero. Records are opaque; an all-zero blob is empty. */
 #define VAULT_BLOB_SIZE                                           \

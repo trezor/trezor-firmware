@@ -88,30 +88,6 @@ static void keywrap_vector(void) {
   }
   fail_after = -1;
 }
-static void gcm_reference(void) {
-  /* Independent cryptography.AESGCM reference: key=0^256,
-   * IV="SV01" || be64(1), AAD=0^256, plaintext=0^1280. */
-  uint8_t key[40] = {0}, data[VAULT_RECORD_SIZE] = {0},
-          tag[VAULT_TAG_BUFFER_SIZE], expected[176], aad[VAULT_AAD_SIZE] = {0};
-  assert(vault_keywrap(true, key, vault_wrap_block));
-  memcpy(wrapped_dek, key, 40);
-  key_ready = true;
-  unhex(
-      "182475f27c1399d17930e8b97e107697bf9f04c724f0236bbfc7e1b7eb30338fe68ba0b0"
-      "0ac22c026a1386d01b55391d6fb418065d0e6856dd2e08091fa50b681a21cb0d981f03e2"
-      "5300c3a5ad28f35f6f419eb03648f570092d622bd8462138dc058f6a289fb99ba24ca44b"
-      "f195c1270cf076c9f99715bbd9d71d457518ef673f2f574c19e1138752cdb587be8eb83f"
-      "1d0fb6e15f71c8f374dd88157483a734715d59d763265123a867bc5c0072b322",
-      expected, sizeof(expected));
-  assert(vault_seal_record(true, 1, aad, data, sizeof(data), tag));
-  assert(!memcmp(data, expected, sizeof(data)) &&
-         !memcmp(tag, expected + sizeof(data), 16));
-  assert(vault_seal_record(false, 1, aad, data, sizeof(data), tag));
-  zero(data, sizeof(data));
-  vault_seal_end();
-  idle();
-  vault_seal_wipe();
-}
 /* Exercise every compact record size, including both sides of AES block
  * boundaries. Wire padding must remain zero and length/tag tampering fails. */
 static void compact_records(void) {
@@ -195,7 +171,6 @@ static void compact_nodes(void) {
 int main(void) {
   compact_nodes();
   keywrap_vector();
-  gcm_reference();
   compact_records();
   assert(vault_boundary_main() == 0);
   idle();
@@ -234,7 +209,7 @@ int main(void) {
                         .length = 32};
   memset(r.data, 1, 32);
   assert(call(1, &r, &out));
-  assert(memcmp(&out.blob, &h, sizeof(h))); /* fresh nonce, fresh blob */
+  assert(!memcmp(&out.blob, &h, sizeof(h))); /* deterministic modes */
   assert(sign_key(&out.blob) && sign_key(&h));
 
   /* Bounded scratch: exhaustion is an ordinary failure. */
@@ -265,19 +240,6 @@ int main(void) {
     assert(!secret_owner_find(owner));
   }
   fail_after = -1;
-
-  /* Nonce exhaustion never wraps, including failed writes. */
-  h = new_key();
-  secret_nonce = UINT64_MAX;
-  r = (vault_request_t){.op = VAULT_IMPORT_BYTES,
-                        .arg = VAULT_KEY_SECP256K1,
-                        .owner = key_owner,
-                        .length = 32};
-  assert(!call(1, &r, &out));
-  assert(secret_nonce == UINT64_MAX);
-  idle();
-  assert(sign_key(&h)); /* opening needs no nonce */
-  secret_nonce = 10000; /* test-only fresh boot state */
 
   /* Failing the DEK unwrap on use: the call fails and nothing leaks. */
   for (int step = 0; step < 24 * VAULT_KEY_COUNT; step++) {

@@ -1,8 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #ifdef SECURE_MODE
-#if defined(VAULT_SEAL_HW)
-#error "Select a record-sealing feature before enabling hardware records"
-#endif
 
 #include <trezor_bsp.h>
 
@@ -60,7 +57,7 @@ typedef struct {
   uint32_t wrapped[8];
   bool ready;
 } saes_key_t;
-static saes_key_t storage_key;
+static saes_key_t record_key, storage_key;
 
 /* HAL_CRYP_Init starts DHUK loading but does not wait for that load.
  * WrapKey/UnwrapKey enable SAES directly, so their callers must wait first. */
@@ -166,6 +163,41 @@ static uint32_t saes_gcm(saes_key_t* key, vault_saes_request_t* r) {
   if (saes_cipher_key(&handle, key))
     result = vault_gcm_cipher_record(&cipher, r);
   memzero(&handle, sizeof(handle));
+  if (secure_aes_init() != sectrue) result = VAULT_SAES_FAILED;
+  if (result != VAULT_SAES_OK) memzero(r->data, sizeof(r->data));
+  return result;
+}
+
+#include "../../vault/kwp.h"
+typedef struct {
+  CRYP_HandleTypeDef handle;
+  saes_key_t* key;
+} saes_kw_context;
+static bool saes_kw_block(const void* context, bool encrypt,
+                          const uint8_t in[16], uint8_t out[16]) {
+  saes_kw_context* ctx = (saes_kw_context*)context;
+  uint32_t input[4], output[4] = {0};
+  /* Reload before each block: HAL decryption prepares the key schedule.
+   * Reusing that derived key for another preparation corrupts unwrap. */
+  bool ok = saes_cipher_key(&ctx->handle, ctx->key);
+  for (size_t i = 0; i < 4; i++) input[i] = saes_be32(in + 4 * i);
+  if (ok)
+    ok = (encrypt
+              ? HAL_CRYP_Encrypt(&ctx->handle, input, 16, output, SAES_TIMEOUT)
+              : HAL_CRYP_Decrypt(&ctx->handle, input, 16, output,
+                                 SAES_TIMEOUT)) == HAL_OK;
+  if (ok)
+    for (size_t i = 0; i < 4; i++) saes_put_be32(out + 4 * i, output[i]);
+  memzero(input, sizeof(input));
+  memzero(output, sizeof(output));
+  return ok;
+}
+static uint32_t saes_kw(saes_key_t* key, vault_saes_request_t* r) {
+  saes_kw_context context = {.key = key};
+  const vault_cipher_provider_t cipher = {.context = &context,
+                                          .block = saes_kw_block};
+  uint32_t result = vault_kwp_backend_record(&cipher, r);
+  memzero(&context, sizeof(context));
   if (secure_aes_init() != sectrue) result = VAULT_SAES_FAILED;
   if (result != VAULT_SAES_OK) memzero(r->data, sizeof(r->data));
   return result;
@@ -309,8 +341,29 @@ static uint32_t saes_request(saes_key_t* key, vault_saes_request_t* r) {
 }
 
 uint32_t vault_saes_record(vault_saes_request_t* r) {
-  memzero(r->data, sizeof(r->data));
-  return VAULT_SAES_FAILED;
+  if (r->op == VAULT_SAES_RESET) {
+    saes_key_drop(&record_key);
+    return VAULT_SAES_OK;
+  }
+  if ((r->op != VAULT_SAES_SEAL && r->op != VAULT_SAES_OPEN) || !r->length ||
+      r->length > VAULT_SAES_RECORD_SIZE || r->length % 8) {
+    memzero(r->data, sizeof(r->data));
+    return VAULT_SAES_FAILED;
+  }
+  bool ok = secure_aes_init() == sectrue;
+#if !PRODUCTION
+  ok = ok && saes_known_answer();
+#endif
+  ok = ok && (record_key.ready || saes_key_create(&record_key));
+  uint32_t result = VAULT_SAES_FAILED;
+  if (ok) {
+    result = saes_kw(&record_key, r);
+  }
+  if (result == VAULT_SAES_FAILED) {
+    saes_key_drop(&record_key);
+    memzero(r->data, sizeof(r->data));
+  }
+  return result;
 }
 
 uint32_t vault_saes_storage(vault_saes_request_t* r) {

@@ -107,7 +107,7 @@ def main():
                 "-g",
                 "-fsanitize=address,undefined",
                 "-DSECURE_MODE",
-                "-DVAULT_SEAL_MODE=3",
+                "-DVAULT_SEAL_MODE=4",
                 "-DPRODUCTION=0",
                 "-ffunction-sections",
                 "-Wl,--gc-sections",

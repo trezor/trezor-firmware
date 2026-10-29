@@ -138,6 +138,19 @@ int main(void) {
   invalid.data[0] = 1;
   assert(vault_gcm_cipher_record(&missing, &invalid) == VAULT_CIPHER_FAILED);
   zero_data(&invalid);
+  vault_cipher_request_t kw = {
+      .op = VAULT_CIPHER_SEAL, .length = 32, .data = {7}};
+  calls = engine.native_calls;
+  assert(vault_kwp_backend_record(&native, &kw) == VAULT_CIPHER_OK);
+  assert(engine.native_calls ==
+         calls); /* KWP uses ECB even on native-GCM MCUs */
+  kw.op = VAULT_CIPHER_OPEN;
+  assert(vault_kwp_backend_record(&native, &kw) == VAULT_CIPHER_OK &&
+         kw.data[0] == 7);
+  kw.op = VAULT_CIPHER_SEAL;
+  engine.fail = true;
+  assert(vault_kwp_backend_record(&native, &kw) == VAULT_CIPHER_FAILED);
+  zero_data(&kw);
   memzero(&engine, sizeof(engine));
   puts(
       "native/ECB GCM interoperability, authenticated release and KWP provider "
