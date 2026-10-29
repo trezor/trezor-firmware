@@ -1,1 +1,0 @@
-Fix characters above U+FFFF being displayed as unrelated characters.
