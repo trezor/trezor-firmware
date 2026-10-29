@@ -1,4 +1,5 @@
-//! Asking for a yes. The public docs live on [`review`] and [`Review`].
+//! Asking for a yes. The public docs live on [`review`], [`Review`] and
+//! [`Extra`].
 //!
 //! A review is a set of facts the person reads before deciding, with at most
 //! five extras they can open from its menu. Nothing is shown until the review is
@@ -13,6 +14,78 @@ use crate::{Error, Result};
 /// How many extras one review may offer: the menu holds six entries, and one of
 /// them is the way out.
 const MAX_EXTRAS: usize = 5;
+
+/// Facts the person can open from a review's menu, under a label of their own.
+///
+/// An extra with no facts is not offered: there is nothing to show in it. Build
+/// one from an `Option` when the facts may be missing, and let it drop:
+///
+/// ```no_run
+/// use trezor_app_sdk::modui::{Extra, Field};
+///
+/// let refund = Some("TQ9JfxgJ9JBz4GZ4MRDrjJeBdA6Mx5yYhq");
+/// let refund = refund.map(|address| Field::address("Refund address", address));
+/// let extra = Extra::new("Refund", refund.as_slice());
+/// ```
+///
+/// `Extra` is a `#[repr(transparent)]` wrapper around the wire's extra, the way
+/// [`Field`] is around the wire's fact, so a slice of extras has the layout of a
+/// slice of wire extras.
+#[derive(Copy, Clone)]
+#[repr(transparent)]
+pub struct Extra<'a> {
+    wire: WireExtra<'a>,
+}
+
+impl<'a> Extra<'a> {
+    /// The menu entry, the heading of the screen it opens, and the facts shown
+    /// when it is picked.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use trezor_app_sdk::modui::{Extra, Field};
+    ///
+    /// let account = [
+    ///     Field::text("Account", "TRX #1"),
+    ///     Field::text("Derivation path", "m/44'/195'/0'/0/0"),
+    /// ];
+    /// let info = Extra::new("Account info", &account);
+    /// ```
+    pub fn new(label: &'a str, fields: &'a [Field<'a>]) -> Self {
+        Self {
+            wire: WireExtra {
+                label: label.into(),
+                fields: wire_fields(fields),
+            },
+        }
+    }
+}
+
+/// The extras a request carries: the ones with facts, in order.
+///
+/// An extra with no facts is not offered, so it is dropped here rather than sent
+/// as a blank menu entry. Returns the wire extras and how many there are; the rest
+/// of the array is padding.
+fn offered_extras<'a>(extras: &'a [Extra<'a>]) -> Result<([WireExtra<'a>; MAX_EXTRAS], usize)> {
+    let empty = WireExtra {
+        label: "".into(),
+        fields: Slice::new(&[]),
+    };
+    let mut kept = [empty; MAX_EXTRAS];
+    let mut used = 0;
+    for extra in extras {
+        if extra.wire.fields.as_slice().is_empty() {
+            continue;
+        }
+        if used == MAX_EXTRAS {
+            return Err(Error::DataError("more than 5 extras"));
+        }
+        kept[used] = extra.wire;
+        used += 1;
+    }
+    Ok((kept, used))
+}
 
 /// Builds a set of facts for the person to read, then confirm or refuse.
 ///
@@ -61,8 +134,7 @@ pub fn review<'a>(step: &'a str, title: &'a str, fields: &'a [Field<'a>]) -> Rev
         step,
         title,
         fields,
-        extras: [None; MAX_EXTRAS],
-        overflow: false,
+        extras: &[],
     }
 }
 
@@ -73,31 +145,28 @@ pub struct Review<'a> {
     step: &'a str,
     title: &'a str,
     fields: &'a [Field<'a>],
-    extras: [Option<(&'a str, &'a [Field<'a>])>; MAX_EXTRAS],
-    // Set when a sixth extra is added, so that `confirm` can refuse the review
-    // instead of dropping one without a word.
-    overflow: bool,
+    extras: &'a [Extra<'a>],
 }
 
 impl<'a> Review<'a> {
-    /// Adds facts the person can open from this screen's menu and come back
-    /// from, such as the account a payment comes from.
+    /// Facts the person can open from this screen's menu and come back from,
+    /// such as the account a payment comes from.
     ///
-    /// Optional, and can be called more than once. The person can open extras as
+    /// Optional, and replaces any extras set before. The person can open extras as
     /// often as they like; only the final decision reaches the app.
     ///
-    /// - `label` — the menu entry, and the heading of the screen it opens.
-    /// - `fields` — the facts shown when the entry is picked.
+    /// - `extras` — one [`Extra`] per menu entry: its label, and the facts shown
+    ///   when it is picked. An extra with no facts is not offered.
     ///
-    /// **Limits.** Up to five extras per review: the menu holds six entries and
-    /// one is the way out. A sixth one is
+    /// **Limits.** Up to five offered extras per review: the menu holds six
+    /// entries and one is the way out. A sixth one is
     /// [`Error::DataError`](crate::Error::DataError) from `confirm`. Facts per
     /// extra are not limited: core pages through them.
     ///
     /// # Example
     ///
     /// ```no_run
-    /// use trezor_app_sdk::modui::{self, Field};
+    /// use trezor_app_sdk::modui::{self, Extra, Field};
     ///
     /// fn confirm_send(recipient: &str, account_name: &str, path: &str) -> trezor_app_sdk::Result<()> {
     ///     let account = [
@@ -105,15 +174,12 @@ impl<'a> Review<'a> {
     ///         Field::text("Derivation path", path),
     ///     ];
     ///     modui::review("send", "Send", &[Field::address("Recipient", recipient)])
-    ///         .extra("Account info", &account)
+    ///         .extras(&[Extra::new("Account info", &account)])
     ///         .confirm()
     /// }
     /// ```
-    pub fn extra(mut self, label: &'a str, fields: &'a [Field<'a>]) -> Self {
-        match self.extras.iter().position(Option::is_none) {
-            Some(slot) => self.extras[slot] = Some((label, fields)),
-            None => self.overflow = true,
-        }
+    pub fn extras(mut self, extras: &'a [Extra<'a>]) -> Self {
+        self.extras = extras;
         self
     }
 
@@ -183,21 +249,8 @@ impl<'a> Review<'a> {
     }
 
     fn decide(self, is_final: bool) -> Result<()> {
-        if self.overflow {
-            return Err(Error::DataError("more than 5 extras"));
-        }
+        let (extras, used) = offered_extras(self.extras)?;
         check_fields(self.fields)?;
-        let extras: [WireExtra<'a>; MAX_EXTRAS] = core::array::from_fn(|i| match self.extras[i] {
-            Some((label, fields)) => WireExtra {
-                label: label.into(),
-                fields: wire_fields(fields),
-            },
-            None => WireExtra {
-                label: "".into(),
-                fields: Slice::new(&[]),
-            },
-        });
-        let used = self.extras.iter().flatten().count();
         let request = ReviewRequest {
             step: self.step.into(),
             title: self.title.into(),
@@ -214,25 +267,51 @@ mod tests {
     use super::*;
 
     #[test]
-    fn extras_fill_the_free_slots_in_order() {
+    fn the_extras_slice_is_passed_through() {
         let facts = [Field::text("a", "b")];
-        let review = review("step", "title", &facts)
-            .extra("one", &facts)
-            .extra("two", &facts);
-        assert_eq!(review.extras.iter().flatten().count(), 2);
-        assert_eq!(review.extras[0].map(|(label, _)| label), Some("one"));
-        assert_eq!(review.extras[1].map(|(label, _)| label), Some("two"));
-        assert!(!review.overflow);
+        let extras = [Extra::new("one", &facts), Extra::new("two", &facts)];
+        let (wire, used) = offered_extras(&extras).unwrap();
+        assert_eq!(used, 2);
+        assert_eq!(wire[0].label.as_str(), "one");
+        assert_eq!(wire[1].label.as_str(), "two");
+        assert_eq!(wire[0].fields.as_slice().len(), 1);
     }
 
     #[test]
-    fn a_sixth_extra_is_recorded_as_an_overflow() {
+    fn an_empty_extra_is_not_offered() {
         let facts = [Field::text("a", "b")];
-        let mut review = review("step", "title", &facts);
-        for _ in 0..MAX_EXTRAS {
-            review = review.extra("again", &facts);
-        }
-        assert!(!review.overflow);
-        assert!(review.extra("too many", &facts).overflow);
+        let extras = [
+            Extra::new("empty", &[]),
+            Extra::new("full", &facts),
+            Extra::new("also empty", &[]),
+        ];
+        let (wire, used) = offered_extras(&extras).unwrap();
+        assert_eq!(used, 1);
+        assert_eq!(wire[0].label.as_str(), "full");
+    }
+
+    #[test]
+    fn a_sixth_offered_extra_is_refused() {
+        let facts = [Field::text("a", "b")];
+        let extras = [Extra::new("again", &facts); 6];
+        assert!(matches!(
+            offered_extras(&extras),
+            Err(Error::DataError("more than 5 extras"))
+        ));
+    }
+
+    #[test]
+    fn five_offered_extras_beside_an_empty_one_are_accepted() {
+        let facts = [Field::text("a", "b")];
+        let extras = [
+            Extra::new("one", &facts),
+            Extra::new("two", &facts),
+            Extra::new("three", &facts),
+            Extra::new("four", &facts),
+            Extra::new("five", &facts),
+            Extra::new("empty", &[]),
+        ];
+        let (_, used) = offered_extras(&extras).unwrap();
+        assert_eq!(used, MAX_EXTRAS);
     }
 }

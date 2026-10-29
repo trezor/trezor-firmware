@@ -5,7 +5,7 @@
 
 use core::str;
 
-use trezor_app_sdk::modui::{self, Details, Field};
+use trezor_app_sdk::modui::{self, Details, Extra, Field};
 use trezor_app_sdk::{Error, Result, WireDecode, WireEncode, wire_request_raw};
 
 use crate::ProstCodec;
@@ -95,10 +95,8 @@ pub fn show_progress(m: wire::ShowProgress) -> Result<wire::UiResult> {
 fn run_review(m: &wire::Review) -> Result<()> {
     let fields = fields(&m.fields)?;
     let extras = Extras::new(&m.extras)?;
-    let mut review = modui::review(&m.step, &m.title, &fields);
-    for (label, fields) in extras.labels.iter().zip(&extras.fields) {
-        review = review.extra(label, fields);
-    }
+    let offered = extras.as_slice();
+    let review = modui::review(&m.step, &m.title, &fields).extras(&offered);
     if m.is_final() {
         review.confirm_final()
     } else {
@@ -148,6 +146,15 @@ impl<'a> Extras<'a> {
                 .map(|item| fields(&item.fields))
                 .collect::<Result<_>>()?,
         })
+    }
+
+    /// One [`Extra`] per menu entry, borrowing the facts kept in `self`.
+    fn as_slice(&self) -> Vec<Extra<'_>> {
+        self.labels
+            .iter()
+            .zip(&self.fields)
+            .map(|(&label, facts)| Extra::new(label, facts))
+            .collect()
     }
 }
 

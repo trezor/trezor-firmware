@@ -11,7 +11,7 @@ use crate::{
 use primitive_types::U256;
 use trezor_app_sdk::{
     Result, ResultExt,
-    modui::{self, Field},
+    modui::{self, Extra, Field},
 };
 
 /// The facts behind the "Account info" extra: the account's name when it has one,
@@ -25,15 +25,6 @@ fn account_facts<'a>(name: Option<&'a str>, path: Option<&'a str>) -> Vec<Field<
         facts.push(Field::text(tr!("address_details__derivation_path"), path));
     }
     facts
-}
-
-/// Offers the "Account info" extra, unless there is nothing to show in it.
-fn with_account_info<'a>(review: modui::Review<'a>, facts: &'a [Field<'a>]) -> modui::Review<'a> {
-    if facts.is_empty() {
-        review
-    } else {
-        review.extra(tr!("address_details__account_info"), facts)
-    }
 }
 
 /// A note attached to a transaction: free-form text supplied by the sender.
@@ -182,7 +173,8 @@ pub fn confirm_tron_claim(
     let account = account_facts(account, account_path);
     let question = [Field::note(intro_question)];
 
-    with_account_info(modui::review("claim", title, &question), &account)
+    modui::review("claim", title, &question)
+        .extras(&[Extra::new(tr!("address_details__account_info"), &account)])
         .confirm_final()
         .c()
 }
@@ -204,12 +196,10 @@ fn confirm_tron_summary(
     let account =
         account_details.map_or_else(Vec::new, |(name, path)| account_facts(name, Some(path)));
 
-    with_account_info(
-        modui::review("summary", title.unwrap_or(tr!("words__send")), &summary),
-        &account,
-    )
-    .confirm_final()
-    .c()
+    modui::review("summary", title.unwrap_or(tr!("words__send")), &summary)
+        .extras(&[Extra::new(tr!("address_details__account_info"), &account)])
+        .confirm_final()
+        .c()
 }
 
 fn confirm_tron_send(
@@ -221,12 +211,10 @@ fn confirm_tron_send(
     let account = account_facts(account_details.0, Some(account_details.1));
     let recipient = [Field::address(tr!("words__recipient"), address)];
 
-    with_account_info(
-        modui::review("send", tr!("words__send"), &recipient),
-        &account,
-    )
-    .confirm()
-    .c()?;
+    modui::review("send", tr!("words__send"), &recipient)
+        .extras(&[Extra::new(tr!("address_details__account_info"), &account)])
+        .confirm()
+        .c()?;
 
     confirm_tron_summary(Some(tr!("words__send")), amount, fee, Some(account_details))
 }

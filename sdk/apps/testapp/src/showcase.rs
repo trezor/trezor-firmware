@@ -9,7 +9,7 @@
 use core::fmt::Write as _;
 
 use trezor_app_sdk::crypto::{self as sdk, HasherExt, HashingAlgorithm};
-use trezor_app_sdk::modui::{self, Details, Field};
+use trezor_app_sdk::modui::{self, Details, Extra, Field};
 use trezor_app_sdk::{Error, Result};
 
 use crate::alloc_types::{String, Vec};
@@ -62,7 +62,7 @@ fn send() -> Result<()> {
         Field::text("Derivation path", PATH),
     ];
     modui::review("send", "Send", &[Field::address("Recipient", RECIPIENT)])
-        .extra("Account info", &account)
+        .extras(&[Extra::new("Account info", &account)])
         .confirm()?;
     modui::review(
         "summary",
@@ -72,7 +72,7 @@ fn send() -> Result<()> {
             Field::amount("Fee limit", "10 TRX"),
         ],
     )
-    .extra("Account info", &account)
+    .extras(&[Extra::new("Account info", &account)])
     .confirm_final()
 }
 

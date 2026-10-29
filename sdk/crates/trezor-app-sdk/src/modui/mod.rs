@@ -127,13 +127,14 @@
 //!
 //! A [`review`] can take extras, a list of labelled facts the person may want
 //! to see, such as the account a payment comes from; see
-//! [`Review::extra`]. They travel with the review's request, and core presents
+//! [`Review::extras`]. They travel with the review's request, and core presents
 //! them from the review's screen; looking at one comes back to the review as the
 //! person left it. How they are presented is core's, per model, and may change
 //! without any signature changing.
 //!
-//! Up to five extras per review: the menu holds six entries and one is the way
-//! out. A sixth is an `Err`; see [errors](#errors).
+//! Up to five offered extras per review: the menu holds six entries and one is the
+//! way out, and an extra with no facts is not offered at all. A sixth is an `Err`;
+//! see [errors](#errors).
 //!
 //! WIP: where a screen has no menu, its extras cannot be reached: bolt has no
 //! menus.
@@ -278,5 +279,5 @@ pub use decision::{Details, danger, details};
 pub use done::done;
 pub use field::Field;
 pub use progress::{Progress, progress};
-pub use review::{Review, review};
+pub use review::{Extra, Review, review};
 pub use verify::{verify_address, verify_pubkey};
