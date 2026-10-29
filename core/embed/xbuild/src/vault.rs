@@ -72,7 +72,7 @@ impl Selection {
             )
         } else {
             let hardware = match backend.unwrap_or("auto") {
-                "auto" => false,
+                "auto" => caps.saes,
                 "software" => false,
                 "saes" if caps.saes => true,
                 "saes" => return Err("SAES backend requested on an MCU without SAES".into()),

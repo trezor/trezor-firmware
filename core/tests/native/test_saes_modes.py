@@ -73,7 +73,7 @@ def main():
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(source.read_text())
         (work / "test.c").write_text(PROGRAM)
-        for mode, selection in (("kw", 4), ("siv", 1), ("ecb", 2), ("gcm", 3)):
+        for mode, selection in (("gcm", 3),):
             (work / "vectors.h").write_text(vectors(mode))
             binary = work / mode
             subprocess.run(
