@@ -205,4 +205,16 @@ ts_t mldsa44_verify__verified(const mldsa44_signature_t *sig, const void *m,
 
 #endif  // USE_MLDSA44
 
+// ---------------------------------------------------------------------
+// vault_kek
+// ---------------------------------------------------------------------
+
+#ifdef USE_VAULT_KEK
+
+#include <sec/vault_kek.h>
+
+secbool vault_kek_wrap__verified(bool encrypt, uint8_t value[40]);
+
+#endif  // USE_VAULT_KEK
+
 #endif  // SECMON

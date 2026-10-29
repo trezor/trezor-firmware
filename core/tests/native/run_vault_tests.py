@@ -141,6 +141,7 @@ def main():
                 "test_vault",
                 "test_vault_encrypted",
                 "test_cardano_signing",
+                "test_storage_key_cache",
                 "test_fido_keys",
                 "test_ed25519_keys",
             ]
@@ -165,6 +166,7 @@ def main():
                     "test_vault",
                     "test_vault_encrypted",
                     "test_cardano_signing",
+                    "test_storage_key_cache",
                     "test_fido_keys",
                     "test_ed25519_keys",
                     "test_vault_saes",
