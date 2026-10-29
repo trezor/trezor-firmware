@@ -16,6 +16,7 @@ if __debug__:
     from trezor import log
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
     from trezorio import IpcMessage
 
     from .session import Session
@@ -69,7 +70,9 @@ async def handle(session: Session, msg: IpcMessage) -> None:
         session.die(DataError(f"Cannot send the screen's answer: {e}"))
 
 
-def _data_puller(session: Session):
+def _data_puller(
+    session: Session,
+) -> "Callable[[int, int, int], Awaitable[bytes]]":
     """The driver's way to ask the app for a `Data` chunk.
 
     Core sends the range it wants and the app answers with those bytes. The

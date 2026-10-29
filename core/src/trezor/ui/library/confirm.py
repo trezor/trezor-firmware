@@ -93,15 +93,15 @@ async def review(
         ) as layout:
             return await _with_extras(layout, name, extras, base)
 
-    kind, _, value = facts_with_values[0]
+    kind, _, _value = facts_with_values[0]
     pages = Pager(facts)
     while True:
         page = await pages.next()
         if page is None:
             raise DataError("No data chunks")
         chunked, last = page
-        if kind == DATA:
-            value = values(chunked)[0][2]
+        # The pager has already put this page's chunk in a data fact's place.
+        value = items(chunked)[0][1]
         with trezorui_api.confirm_value(
             title=title,
             value=value,
