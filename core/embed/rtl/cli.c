@@ -388,15 +388,18 @@ static int cli_readch(cli_t* cli) {
 }
 
 // Finds the next character that can be used for autocomplete.
-// Returns '\0' if there are no more characters.
+// Returns '\0' if there are no more characters, including when a command
+// name ends at the prefix and a longer one continues it.
 static char cli_autocomplete(cli_t* cli, const char* prefix) {
+  bool found = false;
   char next_char = '\0';
   size_t prefix_len = strlen(prefix);
   for (size_t i = 0; i < cli->cmd_count; i++) {
     const char* cmd = cli->cmd_array[i].name;
     if (cstr_starts_with(cmd, prefix)) {
       char ch = cmd[prefix_len];
-      if (next_char == '\0') {
+      if (!found) {
+        found = true;
         next_char = ch;
       } else if (ch != next_char) {
         return '\0';
