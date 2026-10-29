@@ -438,6 +438,8 @@ class LayoutContent(UnstructuredJSONReader):
                 "scrollbar_page_count", default=0, only_type=int
             )
             or self.find_unique_value_by_key("page_count", default=0, only_type=int)
+            # Delizia's footer page counter spells the same number this way.
+            or self.find_unique_value_by_key("page max", default=0, only_type=int)
             or 1
         )
 
