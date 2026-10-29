@@ -1,0 +1,1 @@
+Prevent vault owner bookkeeping from interrupting storage progress callbacks.

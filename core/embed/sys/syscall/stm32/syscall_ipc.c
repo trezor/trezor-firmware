@@ -59,6 +59,13 @@ bool syscall_ipc_init(void) {
 }
 
 void syscall_ipc_enqueue(uint32_t* args, syscall_number_t number) {
+  systask_t* task = systask_active();
+  if (task->in_callback) {
+    const char message[] = "Thread syscall in callback";
+    systask_exit_fatal(task, message, sizeof(message) - 1, __FILE_NAME__,
+                       sizeof(__FILE_NAME__) - 1, __LINE__);
+    return;
+  }
   syscall_ipc_t* ipc = &g_syscall_ipc;
 
   // Enqueue the syscall

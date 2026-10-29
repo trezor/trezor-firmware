@@ -1730,6 +1730,20 @@ access_violation:
 #include <sec/vault.h>
 #include "memzero.h"
 #include "syscall_context.h"
+bool vault_lifecycle__verified(const vault_lifecycle_request_t *request,
+                               vault_lifecycle_response_t *response) {
+  if (!probe_read_access(request, sizeof(*request)) ||
+      !probe_write_access(response, sizeof(*response))) {
+    apptask_access_violation();
+    return false;
+  }
+  vault_lifecycle_request_t copy = *request;
+  vault_lifecycle_response_t out = {0};
+  bool ok =
+      vault_lifecycle_dispatch((uintptr_t)syscall_get_context(), &copy, &out);
+  memcpy(response, &out, sizeof(out));
+  return ok;
+}
 bool vault_call__verified(const vault_request_t *request,
                           vault_response_t *response) {
   if (!probe_read_access(request, sizeof(*request)) ||

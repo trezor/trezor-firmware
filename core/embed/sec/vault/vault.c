@@ -22,10 +22,14 @@ void vault_revoke_caller(uintptr_t caller) {
       secret_owner_destroy(secret_owners[i].id);
 }
 
-static bool vault_execute(uintptr_t caller, const vault_request_t *r,
-                          vault_response_t *out, bool unlocked) {
+/* Bounded owner bookkeeping also runs inside storage UI callbacks.
+ * Never enter a crypto transaction or access storage from this entry. */
+bool vault_lifecycle_dispatch(uintptr_t caller,
+                              const vault_lifecycle_request_t *r,
+                              vault_lifecycle_response_t *out) {
   memset(out, 0, sizeof(*out));
-  if (!caller || r->abi != VAULT_ABI || r->length > VAULT_DATA_SIZE)
+  if (!caller || r->abi != VAULT_ABI || !vault_is_lifecycle(r->op) ||
+      secret_busy)
     return false;
   secret_owner_t *owner = secret_owner_find(r->owner);
   if (r->op == VAULT_OWNER_CREATE) {
@@ -47,29 +51,81 @@ static bool vault_execute(uintptr_t caller, const vault_request_t *r,
   if (!owner || owner->caller != caller) return false;
   if (r->op == VAULT_OWNER_INFO) {
     out->parent = owner->parent;
+    out->value = owner->parent && owner->authorized_locked;
     return true;
   }
   if (r->op == VAULT_OWNER_DESTROY) {
     secret_owner_destroy(r->owner);
     return true;
   }
+  return false;
+}
+
+static bool vault_execute(uintptr_t caller, const vault_request_t *r,
+                          vault_response_t *out, bool unlocked) {
+  memset(out, 0, sizeof(*out));
+  if (!caller || r->abi != VAULT_ABI || r->length > VAULT_DATA_SIZE)
+    return false;
+  secret_owner_t *owner = secret_owner_find(r->owner);
+  if (!owner || owner->caller != caller) return false;
+  if (r->op == VAULT_AUTHORIZE_LOCKED) {
+    /* Only an unlocked, live request can grant the existing CoinJoin
+     * session authorization. Revocation is also allowed while locked. */
+    if (r->arg > 3 || !owner->parent) return false;
+    if (r->arg == 3) {
+      /* A transaction confirmed while unlocked may finish after autolock.
+       * This grant belongs only to this request, never its session. */
+      if (!unlocked && !owner->authorized_locked) return false;
+      owner->authorized_locked = true;
+      return true;
+    }
+    secret_owner_t *session = secret_owner_find(owner->parent);
+    if (!session || session->caller != caller) return false;
+    if (r->arg == 2) {
+      if (!session->authorized_locked) return false;
+      owner->authorized_locked = true;
+      return true;
+    }
+    if (r->arg && !unlocked && !session->authorized_locked) return false;
+    session->authorized_locked = r->arg;
+    return true;
+  }
   /* Session existence survives lock. Every operation using secret state is
    * independently gated by trusted storage state. Cleanup remains available. */
-  if (!unlocked) return false;
+  bool native_crypto = r->op == VAULT_OPEN_NATIVE || r->op == VAULT_RETAIN ||
+                       (r->op == VAULT_IMPORT_BYTES && r->child_num == 1);
+  if (!unlocked &&
+      !(owner->parent && owner->authorized_locked && native_crypto))
+    return false;
   secret_payload_t *made = NULL;
+  secret_kind_t made_kind = SECRET_BYTES;
   size_t made_length = r->length;
   uint32_t made_owner = r->owner;
   bool ok = false;
   switch (r->op) {
     case VAULT_RETAIN:
-      if (r->arg != SECRET_BYTES || !owner->parent ||
+      if ((r->arg != SECRET_BYTES && r->arg != SECRET_NODE) || !owner->parent ||
           secret_get32(r->blob.bytes) != r->owner)
         break;
-      made = secret_open(&r->blob, r->owner, SECRET_BYTES, &made_length);
+      made_kind = r->arg;
+      made = secret_open(&r->blob, r->owner, made_kind, &made_length);
       made_owner = owner->parent;
       ok = made != NULL;
       break;
+    case VAULT_OPEN_NATIVE: {
+      size_t length = 0;
+      secret_payload_t *p = secret_open(&r->blob, r->owner, r->arg, &length);
+      if (!p) break;
+      memcpy(out->opened, p->bytes, length);
+      out->value = length;
+      ok = true;
+      break;
+    }
     case VAULT_IMPORT_BYTES:
+      made_kind = r->arg ? r->arg : SECRET_BYTES;
+      if ((made_kind != SECRET_BYTES && made_kind != SECRET_NODE) ||
+          (made_kind == SECRET_NODE && r->length != VAULT_NODE_SIZE))
+        break;
       if (!r->length || r->length > VAULT_SECRET_SIZE ||
           !(made = secret_scratch_take()))
         break;
@@ -80,12 +136,21 @@ static bool vault_execute(uintptr_t caller, const vault_request_t *r,
       break;
   }
   if (ok && made)
-    ok = secret_seal(made_owner, SECRET_BYTES, made_length, made, &out->blob);
+    ok = secret_seal(made_owner, made_kind, made_length, made, &out->blob);
   if (!ok) memzero(out, sizeof(*out));
   return ok;
 }
 bool vault_dispatch(uintptr_t caller, const vault_request_t *r,
                     vault_response_t *out, bool unlocked) {
+  if (vault_is_lifecycle(r->op)) {
+    vault_lifecycle_request_t request = {r->abi, r->op, r->owner};
+    vault_lifecycle_response_t response = {0};
+    bool ok = vault_lifecycle_dispatch(caller, &request, &response);
+    memset(out, 0, sizeof(*out));
+    out->value = response.value;
+    out->parent = response.parent;
+    return ok;
+  }
   if (secret_busy) {
     memzero(out, sizeof(*out));
     return false;
