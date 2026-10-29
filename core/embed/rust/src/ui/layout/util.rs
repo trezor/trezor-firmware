@@ -168,31 +168,19 @@ impl FieldStyles {
     }
 }
 
-/// What the third element of a contract C3 item says about its value.
-enum ValueKind {
-    /// A bool `true`: the value is machine-like and may hold raw bytes.
-    Mono,
-    /// A bool `false` or `None`: the value is plain.
-    Plain,
-    /// A `FieldKind` 0–5.
-    Field(PropKind),
-}
-
 /// Reads the third element of a contract C3 item.
 ///
 /// The bools and `None` are checked first, by identity, because in Python
 /// `True == 1`, which is [`FieldKind::Amount`]; core's own layouts pass `None`
 /// for "no special styling". Only then is the element read as an int kind.
-fn value_kind(kind: Obj) -> Result<ValueKind, Error> {
+fn prop_kind(kind: Obj) -> Result<PropKind, Error> {
     if kind == Obj::const_true() {
-        return Ok(ValueKind::Mono);
+        return Ok(PropKind::Mono);
     }
     if kind == Obj::const_false() || kind == Obj::const_none() {
-        return Ok(ValueKind::Plain);
+        return Ok(PropKind::Plain);
     }
-    Ok(ValueKind::Field(PropKind::from_field_kind(i32::try_from(
-        kind,
-    )?)?))
+    PropKind::from_field_kind(i32::try_from(kind)?)
 }
 
 pub struct PropsList {
@@ -236,22 +224,18 @@ impl PropsList {
     /// The style for a value, from the third element of its item, and whether
     /// that kind may hold raw bytes.
     fn value_style(&self, kind: Obj) -> Result<(&'static TextStyle, bool), Error> {
-        let kind = match value_kind(kind)? {
-            ValueKind::Mono => return Ok((self.value_mono_font, true)),
-            ValueKind::Plain => return Ok((self.value_font, false)),
-            ValueKind::Field(kind) => kind,
-        };
-
-        let style = match self.field_styles {
-            Some(styles) => styles.style(kind),
-            // Bolt and Caesar have no styles for these kinds yet, so every kind
-            // falls back to plain, and mono, address and data keep the mono font.
-            None => match kind {
-                PropKind::Mono | PropKind::Address | PropKind::Data => self.value_mono_font,
-                _ => self.value_font,
-            },
-        };
+        let kind = prop_kind(kind)?;
         let allow_bytes = matches!(kind, PropKind::Mono | PropKind::Address | PropKind::Data);
+        let style = match (kind, self.field_styles) {
+            // Core's own layouts pass a bool: they keep this list's own fonts.
+            (PropKind::Plain, _) => self.value_font,
+            (PropKind::Mono, _) => self.value_mono_font,
+            (kind, Some(styles)) => styles.style(kind),
+            // Bolt and Caesar have no styles for the field kinds yet: address and
+            // data keep the mono font, every other kind is plain.
+            (_, None) if allow_bytes => self.value_mono_font,
+            (_, None) => self.value_font,
+        };
         Ok((style, allow_bytes))
     }
 
@@ -404,14 +388,8 @@ mod tests {
     /// as an int would break them.
     #[test]
     fn bool_and_none_kinds_are_read_before_ints() {
-        assert!(matches!(value_kind(Obj::const_true()), Ok(ValueKind::Mono)));
-        assert!(matches!(
-            value_kind(Obj::const_false()),
-            Ok(ValueKind::Plain)
-        ));
-        assert!(matches!(
-            value_kind(Obj::const_none()),
-            Ok(ValueKind::Plain)
-        ));
+        assert!(matches!(prop_kind(Obj::const_true()), Ok(PropKind::Mono)));
+        assert!(matches!(prop_kind(Obj::const_false()), Ok(PropKind::Plain)));
+        assert!(matches!(prop_kind(Obj::const_none()), Ok(PropKind::Plain)));
     }
 }
