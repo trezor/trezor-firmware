@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.13.1] (18th November 2026)
+
+### Added
+- [T3T1,T3W1] Solana: Allow skipping the review of transactions with unknown instructions to avoid host timeouts.  [#7918]
+- Solana: Add support for v1 transactions.  [#8055]
+- Ethereum: Show names of well known addresses.  [#8089]
+- [T2B1,T3B1] Show account, derivation path and message size in the context menu when signing or verifying a message.
+
+### Changed
+- [T2B1,T3B1] New navigation: the left button opens the context menu (or cancels when there is none), holding it activates Shift to scroll back with the right button. Summaries are confirmed by holding the right button.  [#7694]
+
+### Removed
+- Remove Omni support.  [#7968]
+
+### Fixed
+- Cardano: Use CIP-0129 to encode DRep credentials.  [#6192]
+- Cardano: Support change outputs in SLIP-24 payment requests.  [#7216]
+
+### Security
+- Fix characters above U+FFFF being displayed as unrelated characters.
+- Solana: Fixed priority fee calculation for transactions without an explicit compute unit limit.
+- Solana: Reject instructions whose sysvar account slot holds a different account or a lookup-table reference.
+- Warn on xpub export for paths shorter than 2 levels and for SLIP-15, SLIP-16 and BIP-85 paths.
+
 ## [2.13.0] (21st October 2026)
 
 ### Added
@@ -1550,6 +1574,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6145]: https://github.com/trezor/trezor-firmware/pull/6145
 [#6165]: https://github.com/trezor/trezor-firmware/pull/6165
 [#6186]: https://github.com/trezor/trezor-firmware/pull/6186
+[#6192]: https://github.com/trezor/trezor-firmware/pull/6192
 [#6202]: https://github.com/trezor/trezor-firmware/pull/6202
 [#6211]: https://github.com/trezor/trezor-firmware/pull/6211
 [#6225]: https://github.com/trezor/trezor-firmware/pull/6225
@@ -1600,6 +1625,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#7101]: https://github.com/trezor/trezor-firmware/pull/7101
 [#7140]: https://github.com/trezor/trezor-firmware/pull/7140
 [#7202]: https://github.com/trezor/trezor-firmware/pull/7202
+[#7216]: https://github.com/trezor/trezor-firmware/pull/7216
 [#7252]: https://github.com/trezor/trezor-firmware/pull/7252
 [#7310]: https://github.com/trezor/trezor-firmware/pull/7310
 [#7311]: https://github.com/trezor/trezor-firmware/pull/7311
@@ -1614,10 +1640,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#7652]: https://github.com/trezor/trezor-firmware/pull/7652
 [#7678]: https://github.com/trezor/trezor-firmware/pull/7678
 [#7691]: https://github.com/trezor/trezor-firmware/pull/7691
+[#7694]: https://github.com/trezor/trezor-firmware/pull/7694
 [#7717]: https://github.com/trezor/trezor-firmware/pull/7717
 [#7754]: https://github.com/trezor/trezor-firmware/pull/7754
 [#7823]: https://github.com/trezor/trezor-firmware/pull/7823
 [#7850]: https://github.com/trezor/trezor-firmware/pull/7850
 [#7869]: https://github.com/trezor/trezor-firmware/pull/7869
+[#7918]: https://github.com/trezor/trezor-firmware/pull/7918
 [#7929]: https://github.com/trezor/trezor-firmware/pull/7929
+[#7968]: https://github.com/trezor/trezor-firmware/pull/7968
 [#7984]: https://github.com/trezor/trezor-firmware/pull/7984
+[#8055]: https://github.com/trezor/trezor-firmware/pull/8055
+[#8089]: https://github.com/trezor/trezor-firmware/pull/8089
