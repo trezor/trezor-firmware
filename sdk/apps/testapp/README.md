@@ -86,6 +86,7 @@ included (`--step`, defaulting to the layout's name).
 | ------- | ------ |
 | `Review` | `modui::review(step, title, &fields).confirm()` |
 | `Review` (final) | the same, with `.confirm_final()` |
+| `Extra` | `Extra::new(label, &fields)`, in a review's `.extras(&[...])` |
 | `Danger` | `modui::danger(step, title, &fields)` |
 | `Details` | `modui::details(step, title, &fields)` |
 | `VerifyAddress` | `modui::verify_address(step, address, account, path)` |
@@ -95,17 +96,17 @@ included (`--step`, defaulting to the layout's name).
 | `ProgressLabel` | `Progress::label(text)`, while a progress runs |
 
 `account` and `path` are optional in the verify layouts. A review's extras
-travel with its request. A progress stays on the device while the app works: the
-app asks the host for each step, and the host answers with the next step, a new
-label, or the end.
+travel with its request, as one `.extras(&[Extra::new(label, &fields), ...])`
+call, and an extra with no facts is not offered. A progress stays on the device
+while the app works: the app asks the host for each step, and the host answers
+with the next step, a new label, or the end.
 
 `tests/test_modui.py` runs with the device tests above. Core draws an app's
 screens, so debuglink reads and drives them like any other: each layout is
 confirmed and cancelled, its extras menu opened and left, and every asking
 layout must send exactly one ButtonRequest, named `testapp.trezor.io/<step>`, however
-long the menu is open (a paged layout sends one per page). Where a model draws
-less than a layout asks for, the test is reported as an expected failure
-(`GAPS`). `tests/test_showcase.py` drives every showcase the same way.
+long the menu is open (a paged layout sends one per page).
+`tests/test_showcase.py` drives every showcase the same way.
 
 ### Showcase
 

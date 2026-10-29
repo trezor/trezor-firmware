@@ -64,15 +64,17 @@ where the way out sits. The app never picks a style, a font or a screen.
 
 Facts are `Field`s, named by what the value *is* rather than by how it
 should look: `text`, `amount`, `address`, `data`, `note` and `warning`. One
-list may mix all six.
+list may mix all six. A review can also offer extras, each a label and its own
+facts, passed as one `.extras(&[Extra::new(label, &fields), ...])` call; an
+extra with no facts is not offered.
 
 ```rust
-use trezor_app_sdk::modui::{self, Field};
+use trezor_app_sdk::modui::{self, Extra, Field};
 
 fn confirm_send(recipient: &str, amount: &str) -> trezor_app_sdk::Result<()> {
     let account = [Field::text("Account", "TRX #1")];
     modui::review("send", "Send", &[Field::address("Recipient", recipient)])
-        .extra("Account info", &account)
+        .extras(&[Extra::new("Account info", &account)])
         .confirm()?;
     modui::review("summary", "Send", &[Field::amount("Amount", amount)])
         .confirm_final()

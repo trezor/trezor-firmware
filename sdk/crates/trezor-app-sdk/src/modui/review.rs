@@ -17,6 +17,9 @@ const MAX_EXTRAS: usize = 5;
 
 /// Facts the person can open from a review's menu, under a label of their own.
 ///
+/// An extra may hold a [`data`](Field::data) field like a review's own facts:
+/// core pulls it while the person pages through it.
+///
 /// An extra with no facts is not offered: there is nothing to show in it. Build
 /// one from an `Option` when the facts may be missing, and let it drop:
 ///
