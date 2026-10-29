@@ -10,6 +10,7 @@
         "src/typing.py",
         "tools/bluez_emu_bridge",
         "tools/codegen/get_trezor_keys.py",
+        "tools/.venv",
         "tools/snippets"
     ],
     "stubPath": "mocks/generated",
