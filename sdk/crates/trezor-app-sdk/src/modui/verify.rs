@@ -21,6 +21,9 @@ use crate::structs::{TrezorUiEnum, VerifyRequest};
 /// - `account` — the account's name, such as `"TRX #1"`.
 /// - `path` — the derivation path.
 ///
+/// WIP: multisig addresses are not supported: the request has no slot for the
+/// cosigners' xpubs, which core's `show_address` shows.
+///
 /// `Ok(())`: it matches. `Err(`[`crate::Error::Cancelled`]`)`: it does not, or
 /// the person refused.
 ///
