@@ -1,5 +1,6 @@
 from typing import *
 from buffer_types import *
+from trezorcrypto import secbytes
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip32.h
@@ -62,14 +63,9 @@ class HDNode:
         Returns a chain code of the HD node.
         """
 
-    def private_key(self) -> bytes:
+    def private_key(self) -> secbytes:
         """
         Returns a private key of the HD node.
-        """
-
-    def private_key_ext(self) -> bytes:
-        """
-        Returns a private key extension of the HD node.
         """
 
     def public_key(self) -> bytes:
@@ -110,7 +106,13 @@ class HDNode:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip32.h
-def from_seed(seed: AnyBytes, curve_name: str) -> HDNode:
+def from_seed(seed: AnyBytes | secbytes, curve_name: str) -> HDNode:
     """
     Construct a BIP0032 HD node from a BIP0039 seed value.
     """
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-bip32.h
+def from_storage(passphrase: str = "") -> secbytes:
+    """Derive a BIP39 seed inside the vault; return only an opaque
+    handle."""

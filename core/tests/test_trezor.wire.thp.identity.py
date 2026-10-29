@@ -2,6 +2,8 @@
 from common import *  # isort:skip
 
 if utils.USE_THP:
+    from trezorcrypto import _secret_owner_activate, revoke_secrets
+
     import trezorthp
     from mock import Mock, patch
     from mock_wire_interface import MockHID
@@ -28,9 +30,12 @@ if utils.USE_THP:
             config.init()
             config.wipe()
             self.assertTrue(config.unlock("", None))
+            revoke_secrets()
+            _secret_owner_activate(None)
 
         def tearDown(self):
             loop.clear()
+            revoke_secrets()
 
         def test_legacy_public_identity_without_wallet_owner(self):
             for secret, expected in VECTORS:
@@ -39,6 +44,8 @@ if utils.USE_THP:
                 self.assertEqual(public.hex(), expected)
                 with patch(device, "get_device_secret", lambda: secret):
                     self.assertEqual(crypto.get_trezor_static_public_key(), public)
+                revoke_secrets()
+                self.assertEqual(trezorthp.static_public_key(secret), public)
 
         def test_invalid_device_secret(self):
             for length in (0, 1, 15, 17, 32, 64):

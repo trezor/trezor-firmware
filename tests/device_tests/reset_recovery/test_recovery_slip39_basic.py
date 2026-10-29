@@ -24,6 +24,8 @@ from ...common import (
     MNEMONIC_SLIP39_BASIC_20_3of6_SECRET,
     MNEMONIC_SLIP39_BASIC_EXT_20_2of3,
     MNEMONIC_SLIP39_BASIC_EXT_20_2of3_SECRET,
+    assert_seed_matches,
+    seed_from_shares,
 )
 from ...input_flows import (
     InputFlowSlip39BasicRecovery,
@@ -99,7 +101,8 @@ def test_secret(
     assert session.features.backup_type is backup_type
 
     # Check mnemonic
-    assert session.debug.state().mnemonic_secret.hex() == secret
+    assert session.debug.state().mnemonic_secret is None
+    assert_seed_matches(session, seed_from_shares(shares, secret))
 
 
 def test_recover_with_pin_passphrase(session: Session):

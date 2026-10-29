@@ -35,7 +35,7 @@ EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestSignTx_GRS(unittest.TestCase):
+class TestSignTx_GRS(VaultTestCase):
     # pylint: disable=C0301
 
     def test_one_one_fee(self):

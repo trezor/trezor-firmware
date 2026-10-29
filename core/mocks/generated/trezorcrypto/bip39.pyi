@@ -32,3 +32,20 @@ def mnemonic_to_bits(mnemonic: str) -> bytes:
     """
     Convert the mnemonic to its binary representation (including checksum).
     """
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-bip39.h
+def backup_secret() -> bytes:
+    """Explicitly disclose the stored backup to the confirmed backup UI.
+    Wallet derivation must use bip32.from_storage instead."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-bip39.h
+def compare_backup(secret: AnyBytes) -> bool:
+    """Compare a recovered backup inside the vault without reading
+    storage."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-bip39.h
+def migrate_binary_mnemonic() -> None:
+    """Populate the protected binary mnemonic without exporting words."""

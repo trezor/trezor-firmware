@@ -38,17 +38,16 @@ pytestmark = pytest.mark.models("core")
 # Internal entropy of the final ResetDevice round, per model, after
 # random.reseed(MOCK_SEED).
 # Generated with:
-#   tools/gen_rng_mock_vectors.py --model MODEL --seed 3735928559 --mcu-offset 6
-# Unrelated firmware code consumes 48 words of plain RNG between the reseed and
-# the final round. If the vectors fail unexpectedly, that consumption probably
-# changed, shifting the stream; regenerate with the matching --mcu-offset.
+#   tools/gen_rng_mock_vectors.py --model MODEL --seed 3735928559 --mcu-offset 15 --se-offset 3
+# Native vault initialization advances the MCU and secure-element streams.
+# Regenerate both offsets if the intervening native initialization changes.
 MOCK_SEED = 0xDEADBEEF
 MOCK_INTERNAL_ENTROPY = {
-    "T2T1": "3f23f500a7890ccce4d155d762b32f1945cdf3341917f444c0fbbe553a6bb618",
-    "T2B1": "ab347f0f69415b32f942f5bbe3884800e87025a70ab99c7fc910d91b20524b5c",
-    "T3B1": "ab347f0f69415b32f942f5bbe3884800e87025a70ab99c7fc910d91b20524b5c",
-    "T3T1": "ab347f0f69415b32f942f5bbe3884800e87025a70ab99c7fc910d91b20524b5c",
-    "T3W1": "c548d5685b1996e777094285b4ae74a50fc3a83be0a5424e483e13c65f626c2a",
+    "T2T1": "c083306d7ddae57c9a7b20a136bdd623377bc2d0f45bc15fa5b39196ba4eba96",
+    "T2B1": "4b2745730e47ad3390d7e17cd7fc34c05ab11ccca9dfb364fcfe35be6bbffd04",
+    "T3B1": "4b2745730e47ad3390d7e17cd7fc34c05ab11ccca9dfb364fcfe35be6bbffd04",
+    "T3T1": "4b2745730e47ad3390d7e17cd7fc34c05ab11ccca9dfb364fcfe35be6bbffd04",
+    "T3W1": "cd65ad1ff073e091bba0f6ca431716de4f8f1d34d902d864f0ad8f65f46d6c0e",
 }
 
 FLOW_ADAPTERS = [

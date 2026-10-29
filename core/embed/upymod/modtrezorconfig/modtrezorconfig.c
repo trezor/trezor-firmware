@@ -26,6 +26,9 @@
 #if MICROPY_PY_TREZORCONFIG
 
 #include <sec/storage.h>
+#ifdef USE_VAULT
+#include <sec/vault.h>
+#endif
 
 #include "../trezorobj.h"
 
@@ -328,6 +331,11 @@ static mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
     app |= FLAG_PUBLIC;
   }
   uint16_t appkey = (app << 8) | key;
+#ifdef USE_VAULT
+  /* Match kernel policy in the single-process emulator as well. */
+  if ((appkey & 0x3fff) == 0x0102 || (appkey & 0x3fff) == 0x0125)
+    return mp_const_none;
+#endif
   uint16_t len = 0;
   if (sectrue != storage_get(appkey, NULL, 0, &len)) {
     return mp_const_none;
@@ -467,6 +475,9 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_next_counter_obj, 2,
 ///     Erases the whole config. Use with caution!
 ///     """
 static mp_obj_t mod_trezorconfig_wipe(void) {
+#if defined(USE_VAULT) && defined(TREZOR_EMULATOR)
+  vault_wipe();
+#endif
   storage_wipe();
   return mp_const_none;
 }

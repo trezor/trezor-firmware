@@ -9,7 +9,7 @@ if not utils.BITCOIN_ONLY:
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestCardanoGetPublicKey(unittest.TestCase):
+class TestCardanoGetPublicKey(VaultTestCase):
     @staticmethod
     def make_keychain_bip39(mnemonic, passphrase):
         binary_mnemonic = bip39.mnemonic_to_bits(mnemonic)

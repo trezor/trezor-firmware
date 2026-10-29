@@ -20,6 +20,7 @@ from .protocol_common import Context, Message
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Callable, Coroutine, Generator
+    from trezorcrypto import secbytes
     from typing import Any, TypeVar, overload
 
     from storage.cache_common import DataCache
@@ -176,16 +177,31 @@ def cache_get(key: int, default: T | None = None) -> bytes | T | None:  # noqa: 
     return cache.get(key, default)
 
 
-def cache_get_secret(key: int) -> bytes | None:
-    return _get_cache_for_key(key).get_secret(key)
+def cache_get_secret(key: int) -> secbytes | None:
+    return _get_cache_for_secret(key).get_secret(key)
 
 
-def cache_take_secret(key: int, value: AnyBytes) -> None:
-    _get_cache_for_key(key).take_secret(key, value)
+def cache_take_secret(key: int, value: secbytes) -> None:
+    _get_cache_for_secret(key).take_secret(key, value)
 
 
 def cache_delete_secret(key: int) -> None:
-    _get_cache_for_key(key).delete_secret(key)
+    _get_cache_for_secret(key).delete_secret(key)
+
+
+def _get_cache_for_secret(key: int) -> DataCache:
+    # Sealed values cannot cross owner domains. Partition the established
+    # sessionless seed by the current owner; real FIDO/no-session requests
+    # retain the original sessionless placement. Public metadata routing stays
+    # unchanged.
+    if key & SESSIONLESS_FLAG and CURRENT_CONTEXT is not None:
+        from storage.cache_common import InvalidSessionError
+
+        try:
+            return CURRENT_CONTEXT.cache
+        except InvalidSessionError:
+            pass
+    return _get_cache_for_key(key)
 
 
 def cache_get_bool(key: int) -> bool:  # noqa: F811

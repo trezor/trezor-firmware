@@ -18,7 +18,6 @@ async def perform_backup(
     from trezor import TR
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_action
-    from trezor.utils import ensure
 
     from apps.common import backup, backup_types, mnemonic
 
@@ -34,9 +33,6 @@ async def perform_backup(
             verb=TR.recovery__unlock_repeated_backup_verb,
         )
 
-    mnemonic_secret = mnemonic.get_secret()
-    ensure(mnemonic_secret is not None)  # checked at run-time
-    assert mnemonic_secret is not None  # checked at type-check time
     backup_type = mnemonic.get_type()
 
     # upgrade Single to Basic if necessary
@@ -56,6 +52,11 @@ async def perform_backup(
 
     # Choose backup handler (prompt the user if method is `None`)
     handler = await layout.choose_backup_handler(method)
+    from trezor.crypto import bip39
+
+    # This value is deliberately disclosed by the backup UI. It is never
+    # obtained through the general storage getter or wallet seed derivation.
+    mnemonic_secret = bip39.backup_secret()
 
     if group_threshold is not None:
         # Parameters provided from host side.

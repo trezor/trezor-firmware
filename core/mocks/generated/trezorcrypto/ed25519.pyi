@@ -27,16 +27,22 @@ def sign(
     Opaque-key messages are bounded to 4096 bytes and copied into the
     kernel.
     """
+from trezorcrypto.bip32 import HDNode
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
+@overload
+def sign_ext(node: HDNode, message: AnyBytes) -> bytes:
+    """Sign from one authenticated Cardano node; no separate key halves."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
+@overload
 def sign_ext(
-    secret_scalar: AnyBytes | secbytes, secret_extension: AnyBytes |
-    secbytes, message: AnyBytes
+    secret_scalar: AnyBytes, secret_extension: AnyBytes, message: AnyBytes
 ) -> bytes:
-    """
-    Uses extended secret key to produce the cardano signature of message.
-    """
+    """Plaintext reference/vector API. Opaque scalar/prefix inputs are
+    rejected."""
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h

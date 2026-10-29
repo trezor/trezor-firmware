@@ -137,34 +137,36 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_ed25519_sign_obj, 2,
 
 #if !BITCOIN_ONLY
 
+/// from trezorcrypto.bip32 import HDNode
+/// @overload
+/// def sign_ext(node: HDNode, message: AnyBytes) -> bytes:
+///     """Sign from one authenticated Cardano node; no separate key halves."""
+/// @overload
 /// def sign_ext(
-///     secret_scalar: AnyBytes | secbytes, secret_extension: AnyBytes |
-///     secbytes, message: AnyBytes
+///     secret_scalar: AnyBytes, secret_extension: AnyBytes, message: AnyBytes
 /// ) -> bytes:
-///     """
-///     Uses extended secret key to produce the cardano signature of message.
-///     """
-static mp_obj_t mod_trezorcrypto_ed25519_sign_ext(mp_obj_t secret_scalar,
-                                                  mp_obj_t secret_extension,
-                                                  mp_obj_t message) {
-  if (mp_obj_is_type(secret_scalar, &mod_trezorcrypto_secbytes_type) ||
-      mp_obj_is_type(secret_extension, &mod_trezorcrypto_secbytes_type)) {
-    if (!mp_obj_is_type(secret_scalar, &mod_trezorcrypto_secbytes_type) ||
-        !mp_obj_is_type(secret_extension, &mod_trezorcrypto_secbytes_type))
-      mp_raise_TypeError(MP_ERROR_TEXT("Both extended keys must be opaque"));
+///     """Plaintext reference/vector API. Opaque scalar/prefix inputs are
+///     rejected."""
+static mp_obj_t mod_trezorcrypto_ed25519_sign_ext(size_t n_args,
+                                                  const mp_obj_t *args) {
+  if (n_args == 2) {
+    mp_obj_HDNode_t *node = hdnode_object(args[0]);
     mp_buffer_info_t data = {0};
-    mp_get_buffer_raise(message, &data, MP_BUFFER_READ);
-    vault_message_request_t r = {
-        .abi = VAULT_ABI,
-        .op = VAULT_ED_SIGN_EXT,
-        .owner = secret_owner,
-        .blob = secbytes_blob(MP_OBJ_TO_PTR(secret_scalar)),
-        .extension = secbytes_blob(MP_OBJ_TO_PTR(secret_extension))};
+    mp_get_buffer_raise(args[1], &data, MP_BUFFER_READ);
+    vault_message_request_t r = {.abi = VAULT_ABI,
+                                 .op = VAULT_ED_SIGN_EXT,
+                                 .owner = secret_owner,
+                                 .blob = hdnode_blob(node)};
     vault_response_t out = {0};
     if (!vault_coreapp_call_message(&r, data.buf, data.len, &out))
-      mp_raise_ValueError(MP_ERROR_TEXT("Invalid extended key or message"));
+      mp_raise_ValueError(MP_ERROR_TEXT("Expected private Cardano node"));
     return mp_obj_new_bytes(out.signature, 64);
   }
+  mp_obj_t secret_scalar = args[0], secret_extension = args[1],
+           message = args[2];
+  if (mp_obj_is_type(secret_scalar, &mod_trezorcrypto_secbytes_type) ||
+      mp_obj_is_type(secret_extension, &mod_trezorcrypto_secbytes_type))
+    mp_raise_ValueError(MP_ERROR_TEXT("Use one protected Cardano node"));
   mp_buffer_info_t sk = {0}, skext = {0}, msg = {0};
   mp_get_buffer_raise(secret_scalar, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(secret_extension, &skext, MP_BUFFER_READ);
@@ -186,8 +188,9 @@ static mp_obj_t mod_trezorcrypto_ed25519_sign_ext(mp_obj_t secret_scalar,
                    *(ed25519_signature *)sig.buf);
   return mp_obj_new_bytes_from_vstr(&sig);
 }
-static MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_ed25519_sign_ext_obj,
-                                 mod_trezorcrypto_ed25519_sign_ext);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorcrypto_ed25519_sign_ext_obj, 2, 3,
+    mod_trezorcrypto_ed25519_sign_ext);
 
 #endif
 

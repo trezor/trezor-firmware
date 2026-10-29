@@ -140,7 +140,7 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Hmac___del___obj,
 
 /// @staticmethod
 /// def tag(hashtype: int, key: secbytes, message: AnyBytes) -> bytes:
-///     """Compute a public authentication tag natively. Message is limited
+///     """Compute a public authentication tag in the kernel. Message is limited
 ///     to 256 bytes. For public MACs only; not a secret-output KDF
 ///     interface."""
 static mp_obj_t mod_trezorcrypto_Hmac_tag(mp_obj_t hashtype, mp_obj_t key,

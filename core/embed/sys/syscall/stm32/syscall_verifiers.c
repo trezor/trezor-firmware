@@ -1757,6 +1757,7 @@ bool vault_call__verified(const vault_request_t *request,
                            storage_is_unlocked() == sectrue);
   memzero(&copy, sizeof(copy));
   memcpy(response, &out, sizeof(out));
+  memzero(&out, sizeof(out));
   return ok;
 }
 #endif

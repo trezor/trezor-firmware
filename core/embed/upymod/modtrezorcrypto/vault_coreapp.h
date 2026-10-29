@@ -28,6 +28,7 @@
 #include "ripemd160.h"
 #include "secp256k1.h"
 #include "sha2.h"
+#include "vault_slip21.h"
 #include "zkp_bip340.h"
 #include "zkp_context.h"
 #ifndef VAULT_RECORD_SIZE
@@ -859,6 +860,7 @@ static bool app_dispatch(const app_vault_command_t *r, vault_response_t *out,
 }
 static bool vault_coreapp_call(const vault_request_t *r,
                                vault_response_t *out) {
+  if (r->op == VAULT_SLIP21) return vault_slip21_call(r, out);
   if (r->op <= VAULT_IMPORT_BYTES || r->op == VAULT_AUTHORIZE_LOCKED)
     return vault_call(r, out);
   app_vault_command_t c = {.abi = r->abi,

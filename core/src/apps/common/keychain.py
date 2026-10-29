@@ -139,28 +139,22 @@ class Keychain:
         return node
 
     def root_fingerprint(self) -> int:
-        seed = self.seed
-        if not isinstance(seed, bytes):
-            raise DataError("Protected BIP32 is not enabled")
         if self._root_fingerprint is None:
             # derive m/0' to obtain root_fingerprint
             n = self._derive_with_cache(
                 0,
                 [0 | paths.HARDENED],
-                new_root=lambda: bip32.from_seed(seed, self.curve),
+                new_root=lambda: bip32.from_seed(self.seed, self.curve),
             )
             self._root_fingerprint = n.fingerprint()
         return self._root_fingerprint
 
     def derive(self, path: paths.Bip32Path) -> bip32.HDNode:
-        seed = self.seed
-        if not isinstance(seed, bytes):
-            raise DataError("Protected BIP32 is not enabled")
         self.verify_path(path)
         return self._derive_with_cache(
             3,
             path,
-            new_root=lambda: bip32.from_seed(seed, self.curve),
+            new_root=lambda: bip32.from_seed(self.seed, self.curve),
         )
 
     def derive_slip21(self, path: paths.Slip21Path) -> Slip21Node | VaultSlip21Node:

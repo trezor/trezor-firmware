@@ -1,7 +1,10 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
+from trezorcrypto import SecretOwner, _secret_owner_activate, revoke_secrets
+
 from trezor.crypto import bip32
+from trezor.crypto.curve import secp256k1
 
 SECP256K1_NAME = "secp256k1"
 HARDENED = 0x80000000
@@ -9,6 +12,69 @@ VERSION_PUBLIC = 0x0488B21E
 
 
 class TestCryptoBip32(unittest.TestCase):
+    def setUp(self):
+        from trezor import config
+
+        config.init()
+        config.wipe()
+        self.assertTrue(config.unlock("", None))
+        revoke_secrets()
+        _secret_owner_activate(SecretOwner())
+
+    def tearDown(self):
+        revoke_secrets()
+
+    def assertPrivateKey(self, key, expected):
+        # Compare cryptographic results without a plaintext export interface.
+        digest = b"\x42" * 32
+        self.assertEqual(secp256k1.sign(key, digest), secp256k1.sign(expected, digest))
+        key.destroy()
+
+    def test_sign_with_node(self):
+        seed = bytes.fromhex("000102030405060708090a0b0c0d0e0f")
+        digest = b"\x42" * 32
+        n = bip32.from_seed(seed, SECP256K1_NAME)
+        expected = bytes.fromhex(
+            "e8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35"
+        )
+        for compressed in (True, False):
+            self.assertEqual(
+                secp256k1.sign(n, digest, compressed),
+                secp256k1.sign(expected, digest, compressed),
+            )
+        public_only = bip32.HDNode(
+            depth=n.depth(),
+            fingerprint=n.fingerprint(),
+            child_num=n.child_num(),
+            chain_code=n.chain_code(),
+            public_key=n.public_key(),
+        )
+        with self.assertRaises(ValueError):
+            secp256k1.sign(public_only, digest)
+        for index in (1, HARDENED):
+            with self.assertRaises(ValueError):
+                public_only.derive(index)
+        with self.assertRaises(ValueError):
+            public_only.private_key()
+        self.assertFalse(hasattr(public_only, "private_key_ext"))
+        self.assertEqual(public_only.public_key(), n.public_key())
+        public_only.derive(1, True)
+        n.derive(1)
+        self.assertEqual(public_only.public_key(), n.public_key())
+
+    def test_import_rejects_mismatched_key_pair(self):
+        private_key = b"\x00" * 31 + b"\x01"
+        public_key = secp256k1.publickey(private_key)
+        args = dict(depth=0, fingerprint=0, child_num=0, chain_code=b"\x00" * 32)
+        node = bip32.HDNode(**args, private_key=private_key, public_key=public_key)
+        self.assertEqual(node.public_key(), public_key)
+        with self.assertRaises(ValueError):
+            bip32.HDNode(
+                **args,
+                private_key=b"\x00" * 31 + b"\x02",
+                public_key=public_key,
+            )
+
     def test_from_seed_invalid(self):
         for c in [SECP256K1_NAME]:
             with self.assertRaises(ValueError):
@@ -46,7 +112,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "873dff81c02f525623fd1fe5167eac3a55a049de3d314bb42ee227ffed37d508"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "e8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35"
@@ -73,7 +139,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "47fdacbd0f1097043b78c63c20c34ef4ed9a111d980047ad16282c7ae6236141"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "edb2e14f9ee77d26dd93b4ecede8d16ed408ce149b6cd80b0715a2d911a0afea"
@@ -100,7 +166,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "2a7857631386ba23dacac34180dd1983734e444fdbf774041578e9b6adb37c19"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "3c6cb8d0f6a264c91ea8b5030fadaa8e538b020f0a387421a12de9319dc93368"
@@ -127,7 +193,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "04466b9cc8e161e966409ca52986c584f07e9dc81f735db683c3ff6ec7b1503f"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "cbce0d719ecf7431d88e6a89fa1483e02e35092af60c042b1df2ff59fa424dca"
@@ -154,7 +220,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "cfb71883f01676f587d023cc53a35bc7f88f724b1f8c2892ac1275ac822a3edd"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "0f479245fb19a38a1954c5c7c0ebab2f9bdfd96a17563ef28a6a4b1a2a764ef4"
@@ -181,7 +247,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "c783e67b921d2beb8f6b389cc646d7263b4145701dadd2161548a8b078e65e9e"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8"
@@ -219,7 +285,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "60499f801b896d83179a4374aeb7822aaeaceaa0db1f85ee3e904c4defbd9689"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "4b03d6fc340455b363f51020ad3ecca4f0850280cf436c70c727923f6db46c3e"
@@ -246,7 +312,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "f0909affaa7ee7abe5dd4e100598d4dc53cd709d5a5c2cac40e7412f232f7c9c"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "abe74a98f6c7eabee0428f53798f0ab8aa1bd37873999041703c742f15ac7e1e"
@@ -273,7 +339,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "be17a268474a6bb9c61e1d720cf6215e2a88c5406c4aee7b38547f585c9a37d9"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "877c779ad9687164e9c2f4f0f4ff0340814392330693ce95a58fe18fd52e6e93"
@@ -300,7 +366,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "f366f48f1ea9f2d1d3fe958c95ca84ea18e4c4ddb9366c336c927eb246fb38cb"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "704addf544a06e5ee4bea37098463c23613da32020d604506da8c0518e1da4b7"
@@ -327,7 +393,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "637807030d55d01f9a0cb3a7839515d796bd07706386a6eddf06cc29a65a0e29"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "f1c7c871a54a804afe328b4c83a1c33b8e5ff48f5087273f04efa83b247d6a2d"
@@ -354,7 +420,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "9452b549be8cea3ecb7a84bec10dcfd94afe4d129ebfd3b3cb58eedf394ed271"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "bb7d39bdb83ecf58f2fd82b6d918341cbef428661ef01ab97c28a4842125ac23"
@@ -390,7 +456,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "873dff81c02f525623fd1fe5167eac3a55a049de3d314bb42ee227ffed37d508"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "e8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35"
@@ -418,7 +484,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "47fdacbd0f1097043b78c63c20c34ef4ed9a111d980047ad16282c7ae6236141"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "edb2e14f9ee77d26dd93b4ecede8d16ed408ce149b6cd80b0715a2d911a0afea"
@@ -446,7 +512,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "2a7857631386ba23dacac34180dd1983734e444fdbf774041578e9b6adb37c19"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "3c6cb8d0f6a264c91ea8b5030fadaa8e538b020f0a387421a12de9319dc93368"
@@ -474,7 +540,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "04466b9cc8e161e966409ca52986c584f07e9dc81f735db683c3ff6ec7b1503f"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "cbce0d719ecf7431d88e6a89fa1483e02e35092af60c042b1df2ff59fa424dca"
@@ -502,7 +568,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "cfb71883f01676f587d023cc53a35bc7f88f724b1f8c2892ac1275ac822a3edd"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "0f479245fb19a38a1954c5c7c0ebab2f9bdfd96a17563ef28a6a4b1a2a764ef4"
@@ -530,7 +596,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "c783e67b921d2beb8f6b389cc646d7263b4145701dadd2161548a8b078e65e9e"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8"
@@ -569,7 +635,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "60499f801b896d83179a4374aeb7822aaeaceaa0db1f85ee3e904c4defbd9689"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "4b03d6fc340455b363f51020ad3ecca4f0850280cf436c70c727923f6db46c3e"
@@ -597,7 +663,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "f0909affaa7ee7abe5dd4e100598d4dc53cd709d5a5c2cac40e7412f232f7c9c"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "abe74a98f6c7eabee0428f53798f0ab8aa1bd37873999041703c742f15ac7e1e"
@@ -625,7 +691,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "be17a268474a6bb9c61e1d720cf6215e2a88c5406c4aee7b38547f585c9a37d9"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "877c779ad9687164e9c2f4f0f4ff0340814392330693ce95a58fe18fd52e6e93"
@@ -653,7 +719,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "f366f48f1ea9f2d1d3fe958c95ca84ea18e4c4ddb9366c336c927eb246fb38cb"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "704addf544a06e5ee4bea37098463c23613da32020d604506da8c0518e1da4b7"
@@ -681,7 +747,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "637807030d55d01f9a0cb3a7839515d796bd07706386a6eddf06cc29a65a0e29"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "f1c7c871a54a804afe328b4c83a1c33b8e5ff48f5087273f04efa83b247d6a2d"
@@ -709,7 +775,7 @@ class TestCryptoBip32(unittest.TestCase):
                 "9452b549be8cea3ecb7a84bec10dcfd94afe4d129ebfd3b3cb58eedf394ed271"
             ),
         )
-        self.assertEqual(
+        self.assertPrivateKey(
             n.private_key(),
             bytes.fromhex(
                 "bb7d39bdb83ecf58f2fd82b6d918341cbef428661ef01ab97c28a4842125ac23"
@@ -726,6 +792,24 @@ class TestCryptoBip32(unittest.TestCase):
             ns,
             "xpub6FnCn6nSzZAw5Tw7cgR9bi15UV96gLZhjDstkXXxvCLsUXBGXPdSnLFbdpq8p9HmGsApME5hQTZ3emM2rnY5agb9rXpVGyy3bdW6EEgAtqt",
         )
+
+    @unittest.skipUnless(not utils.BITCOIN_ONLY, "Ethereum requires universal firmware")
+    def test_ethereum_pubkeyhash(self):
+        # m/44'/60'/0'/0/0 of the "all all ... all" mnemonic.
+        from trezor.crypto import bip39
+
+        seed = bip39.seed(" ".join(["all"] * 12), "")
+        node = bip32.from_seed(seed, SECP256K1_NAME)
+        node.derive_path([44 | HARDENED, 60 | HARDENED, HARDENED, 0, 0])
+        self.assertEqual(
+            node.ethereum_pubkeyhash().hex(),
+            "73d0385f4d8e00c5e6504c6030f47bf6212736a8",
+        )
+        # Only secp256k1 nodes have an Ethereum address.
+        for curve in ("nist256p1", "ed25519"):
+            other = bip32.from_seed(seed, curve)
+            with self.assertRaises(ValueError):
+                other.ethereum_pubkeyhash()
 
 
 if __name__ == "__main__":

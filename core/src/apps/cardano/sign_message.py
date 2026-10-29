@@ -146,9 +146,7 @@ def _sign_sig_structure(
 
     node = keychain.derive(path)
 
-    return ed25519.sign_ext(
-        node.private_key(), node.private_key_ext(), serialized_sig_structure
-    )
+    return ed25519.sign_ext(node, serialized_sig_structure)
 
 
 @seed.with_keychain

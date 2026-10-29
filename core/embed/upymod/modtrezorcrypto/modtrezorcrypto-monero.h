@@ -29,6 +29,7 @@
 #include "monero/monero.h"
 
 /// package: trezorcrypto.monero
+/// from trezorcrypto.bip32 import HDNode
 
 typedef struct _mp_obj_hasher_t {
   mp_obj_base_t base;
@@ -2146,7 +2147,37 @@ static const mp_obj_str_t mod_trezorcrypto_monero_BP_PLUS_HI_PRE_obj = {{&mp_typ
 "\xd3\x3a\xb9\xb1\x12\x23\xee\x67\xea\x78\xb1\xd3\x8a\x6a\xe3\xeb"
 };
 
+/// def wallet_public(
+///     node: HDNode, major: int = 0, minor: int = 0, watch_only: bool = False,
+/// ) -> tuple[bytes, bytes, bytes | None]:
+///     """Derive public wallet/subaddress keys in the vault. Watch-only export
+///     returns the private view key, which the host receives by design."""
+static mp_obj_t mod_trezorcrypto_monero_wallet_public(size_t n_args,
+                                                      const mp_obj_t *args) {
+  uint32_t major = n_args > 1 ? trezor_obj_get_uint(args[1]) : 0;
+  uint32_t minor = n_args > 2 ? trezor_obj_get_uint(args[2]) : 0;
+  bool watch = n_args > 3 && mp_obj_is_true(args[3]);
+  vault_request_t r = {.op = VAULT_MONERO_PUBLIC,
+                       .arg = watch,
+                       .length = 8,
+                       .blob = hdnode_blob(hdnode_object(args[0]))};
+  memcpy(r.data, &major, 4);
+  memcpy(r.data + 4, &minor, 4);
+  vault_response_t out = {0};
+  vault_raise(&r, &out);
+  mp_obj_t result[3] = {
+      mp_obj_new_bytes(out.data, 32), mp_obj_new_bytes(out.data + 32, 32),
+      watch ? mp_obj_new_bytes(out.data + 64, 32) : mp_const_none};
+  memzero(&out, sizeof(out));
+  return mp_obj_new_tuple(3, result);
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorcrypto_monero_wallet_public_obj, 1, 4,
+    mod_trezorcrypto_monero_wallet_public);
+
 static const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
+    {MP_ROM_QSTR(MP_QSTR_wallet_public),
+     MP_ROM_PTR(&mod_trezorcrypto_monero_wallet_public_obj)},
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_monero)},
     // types
     {MP_ROM_QSTR(MP_QSTR_Point),

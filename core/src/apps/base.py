@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import storage.device as storage_device
-from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS, APP_COMMON_SEED
+from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
 from trezor import TR, config, utils, wire, workflow
 from trezor.enums import HomescreenFormat, MessageType
 from trezor.messages import Success, UnlockPath
@@ -391,7 +391,11 @@ else:
             from storage.cache_common import APP_COMMON_DERIVE_CARDANO
 
             derive_cardano = context.cache_get_bool(APP_COMMON_DERIVE_CARDANO)
-            have_seed = context.cache_is_set(APP_COMMON_SEED)
+            session_cache = cache_codec.get_active_session()
+            assert session_cache is not None
+            from storage.cache_common import APP_COMMON_SEED
+
+            have_seed = session_cache.get_secret(APP_COMMON_SEED) is not None
             if (
                 have_seed
                 and msg.derive_cardano is not None
@@ -471,6 +475,9 @@ async def handle_DoPreauthorized(msg: DoPreauthorized) -> protobuf.MessageType:
     wire_types = authorization.get_wire_types()
     utils.ensure(bool(wire_types), "Unsupported preauthorization found")
 
+    from trezorcrypto import begin_preauthorized_request
+
+    begin_preauthorized_request()
     req = await call_any(PreauthorizedRequest(), *wire_types)
 
     assert req.MESSAGE_WIRE_TYPE is not None
@@ -482,12 +489,11 @@ async def handle_DoPreauthorized(msg: DoPreauthorized) -> protobuf.MessageType:
 
 
 async def handle_UnlockPath(msg: UnlockPath) -> protobuf.MessageType:
-    from trezor.crypto import hmac
     from trezor.messages import UnlockedPathRequest
     from trezor.wire.context import call_any
 
     from apps.common.paths import SLIP25_PURPOSE
-    from apps.common.seed import Slip21Node, get_seed
+    from apps.common.seed import get_seed, slip21_mac, slip21_root
     from apps.common.writers import write_uint32_le
 
     _KEYCHAIN_MAC_KEY_PATH = [b"TREZOR", b"Keychain MAC key"]
@@ -499,12 +505,12 @@ async def handle_UnlockPath(msg: UnlockPath) -> protobuf.MessageType:
         raise wire.DataError("Invalid path")
 
     seed = await get_seed()
-    node = Slip21Node(seed)
+    node = slip21_root(seed)
     node.derive_path(_KEYCHAIN_MAC_KEY_PATH)
-    mac = utils.HashWriter(hmac(hmac.SHA256, node.key()))
+    mac_msg = bytearray()
     for i in msg.address_n:
-        write_uint32_le(mac, i)
-    expected_mac = mac.get_digest()
+        write_uint32_le(mac_msg, i)
+    expected_mac = slip21_mac(node.key(), mac_msg)
 
     # Require confirmation to access SLIP25 paths unless already authorized.
     if msg.mac:

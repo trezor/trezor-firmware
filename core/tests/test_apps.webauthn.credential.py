@@ -3,10 +3,10 @@ from common import *  # isort:skip
 
 import storage
 import storage.device
+from storage.cache_common import APP_COMMON_SEED_WITHOUT_PASSPHRASE
 from trezor.crypto.hashlib import sha256
 
 if not utils.BITCOIN_ONLY:
-    from apps.common import mnemonic
     from apps.webauthn.credential import (
         _NAME_MAX_LENGTH,
         Fido2Credential,
@@ -16,11 +16,29 @@ if not utils.BITCOIN_ONLY:
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "fido2")
-class TestCredential(unittest.TestCase):
+class TestCredential(VaultTestCase):
+    def test_seed_without_passphrase_is_cached(self):
+        from apps.common import seed
+
+        storage.device.store_mnemonic_secret(
+            b"all all all all all all all all all all all all"
+        )
+        cache = context.get_context().cache
+        self.assertIsNone(cache.get_secret(APP_COMMON_SEED_WITHOUT_PASSPHRASE))
+        holder = seed._get_seed_without_passphrase()
+        self.assertFalse(holder.empty())
+        node = seed.derive_node_without_passphrase([0x80000000], "nist256p1")
+        self.assertEqual(len(node.public_key()), 33)
+        self.assertIs(seed._get_seed_without_passphrase(), holder)
+        # Clearing the cache revokes it.
+        cache.clear()
+        self.assertTrue(holder.empty())
+
     def test_fido2_credential_decode(self):
         mnemonic_secret = b"all all all all all all all all all all all all"
-        mnemonic.get_secret = lambda: mnemonic_secret
-        storage.device.is_initialized = lambda: True
+        storage.device.store_mnemonic_secret(
+            mnemonic_secret, needs_backup=False, no_backup=False
+        )
 
         cred_id = (
             "f1d0020013e65c865634ad8abddf7a66df56ae7d8c3afd356f76426801508b2e"
@@ -62,7 +80,12 @@ class TestCredential(unittest.TestCase):
         self.assertIsNone(cred.user_display_name)
 
         # Check credential keys.
-        self.assertEqual(cred.hmac_secret_key().hex(), cred_random)
+        from trezor.crypto import hmac
+
+        self.assertEqual(
+            hmac.tag(hmac.SHA256, cred.hmac_secret_key(), b"credential test"),
+            hmac(hmac.SHA256, bytes.fromhex(cred_random), b"credential test").digest(),
+        )
         self.assertEqual(cred.public_key().hex(), public_key)
 
     def test_truncation(self):

@@ -299,7 +299,7 @@ if not utils.BITCOIN_ONLY:
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestCardanoNativeScript(unittest.TestCase):
+class TestCardanoNativeScript(VaultTestCase):
     def test_get_native_script_hash(self):
         mnemonic = "all all all all all all all all all all all all"
         binary_mnemonic = bip39.mnemonic_to_bits(mnemonic)

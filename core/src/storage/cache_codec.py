@@ -2,7 +2,11 @@ import builtins
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage.cache_common import APP_COMMON_SEED, DataCache
+from storage.cache_common import (
+    APP_COMMON_SEED,
+    APP_COMMON_SEED_WITHOUT_PASSPHRASE,
+    DataCache,
+)
 from trezor import utils
 
 if not utils.BITCOIN_ONLY:
@@ -37,6 +41,9 @@ class SessionCache(DataCache):
             APP_CARDANO_ICARUS_TREZOR_SECRET,
         )
     )
+
+    if not utils.BITCOIN_ONLY:
+        secret_fields += (APP_COMMON_SEED_WITHOUT_PASSPHRASE,)
 
     def __init__(self) -> None:
         self.session_id = bytearray(_SESSION_ID_LENGTH)

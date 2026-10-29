@@ -327,7 +327,7 @@ class hmac:
 
     @staticmethod
     def tag(hashtype: int, key: secbytes, message: AnyBytes) -> bytes:
-        """Compute a public authentication tag natively. Message is limited
+        """Compute a public authentication tag in the kernel. Message is limited
         to 256 bytes. For public MACs only; not a secret-output KDF
         interface."""
 
@@ -408,6 +408,25 @@ class secbytes:
 
     def empty(self) -> bool:
         """Return whether this object holds no secret (local check only)."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+def authorize_locked_session(authorized: bool) -> None:
+    """Grant/revoke the current session's confirmed CoinJoin permission.
+    Granting requires unlocked storage and a live request."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+def begin_preauthorized_request() -> None:
+    """Delegate a confirmed CoinJoin session grant to this request. It
+    survives consuming the last round until this request is torn down."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+def begin_confirmed_request() -> None:
+    """Allow this confirmed request's crypto to finish after autolock.
+    A new grant requires unlocked storage and does not authorize a
+    session."""
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
@@ -602,9 +621,9 @@ class sha512:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto.c
-def retain_secret(value: Any) -> None:
-    """Explicitly transfer an encrypted byte value from this request to its
-    session."""
+def retain_secret(value: Any, owner: SecretOwner | None = None) -> None:
+    """Explicitly transfer a node or snapshot from this request to its
+    session, optionally requiring that exact cache owner."""
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto.c
@@ -616,3 +635,12 @@ def vault_chacha(
     """Encrypt/decrypt public credential data with an opaque key.
     With decrypt=True and tag=None the result is unauthenticated metadata;
     callers must authenticate before using it as a credential."""
+from trezorcrypto.bip32 import HDNode
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto.c
+def cipher_key_value(
+    node: HDNode, label: AnyBytes, value: AnyBytes, encrypt: bool,
+    ask_on_encrypt: bool, ask_on_decrypt: bool, iv: AnyBytes = b"",
+) -> bytes:
+    """SLIP-0011 key derivation and AES-CBC with a protected HDNode."""

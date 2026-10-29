@@ -1,1 +1,1 @@
-Fix THP handshakes with protected HDNodes by deriving device identity keys natively, preserving existing pairings.
+Fix THP handshakes and wallet session signing with protected HDNodes while preserving existing device identities and pairings.

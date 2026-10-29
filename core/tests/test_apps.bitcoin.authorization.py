@@ -13,10 +13,11 @@ if not utils.USE_THP:
     import storage.cache_codec
 
 
-class TestAuthorization(TestCaseWithContext):
+class TestAuthorization(VaultTestCase):
     coin = coins.by_name("Bitcoin")
 
     def setUp(self):
+        super().setUp()
         self.msg_auth = AuthorizeCoinJoin(
             coordinator="www.example.com",
             max_rounds=3,

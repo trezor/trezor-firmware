@@ -11,7 +11,10 @@ PINKEY = 0x00
 def random_entry():
     while True:
         appid, key = 1 + random.uniform(63), random.uniform(256)
-        if appid != PINAPP or key != PINKEY:
+        if (appid != PINAPP or key != PINKEY) and (appid, key) not in (
+            (1, 2),
+            (1, 37),  # Kernel-only wallet storage entries.
+        ):
             break
     return appid, key
 
@@ -27,14 +30,14 @@ class TestConfig(unittest.TestCase):
         config.wipe()
         self.assertEqual(config.unlock("", None), True)
         config.set(1, 1, b"hello")
-        config.set(1, 2, b"world")
+        config.set(2, 2, b"world")
         v0 = config.get(1, 1)
-        v1 = config.get(1, 2)
+        v1 = config.get(2, 2)
         self.assertEqual(v0, b"hello")
         self.assertEqual(v1, b"world")
         config.wipe()
         v0 = config.get(1, 1)
-        v1 = config.get(1, 2)
+        v1 = config.get(2, 2)
         self.assertEqual(v0, None)
         self.assertEqual(v1, None)
 

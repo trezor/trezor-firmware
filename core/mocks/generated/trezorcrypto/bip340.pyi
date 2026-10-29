@@ -1,29 +1,21 @@
 from typing import *
 from buffer_types import *
+from trezorcrypto import secbytes
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
-def generate_secret() -> bytes:
-    """
-    Generate secret key.
-    """
+def generate_secret() -> secbytes:
+    """Generate a private key in the kernel; return an opaque value."""
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
-def publickey(secret_key: AnyBytes) -> bytes:
-    """
-    Computes public key from secret key.
-    """
+def publickey(secret_key: AnyBytes | secbytes) -> bytes:
+    """Compute the public key without exporting private material."""
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
-def sign(
-    secret_key: AnyBytes,
-    digest: AnyBytes,
-) -> bytes:
-    """
-    Uses secret key to produce the signature of the digest.
-    """
+def sign(secret_key: AnyBytes | secbytes, digest: AnyBytes) -> bytes:
+    """Sign in the kernel; return only the public signature."""
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
@@ -56,9 +48,7 @@ def tweak_public_key(
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
 def tweak_secret_key(
-    secret_key: AnyBytes,
+    secret_key: AnyBytes | secbytes,
     root_hash: AnyBytes | None = None,
-) -> bytes:
-    """
-    Tweaks the secret key with the specified root_hash.
-    """
+) -> secbytes:
+    """Return an independent opaque snapshot of the tweaked key."""

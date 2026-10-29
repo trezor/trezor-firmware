@@ -75,20 +75,35 @@ class VaultTestCase(TestCaseWithContext):
 
 
 def cache_seed(seed):
-    from trezorcrypto import retain_secret, secbytes
+    from storage import common, device
+
+    common.set_bool(common.APP_DEVICE, device.INITIALIZED, True, public=True)
+    from trezorcrypto import secbytes
+
+    from storage.cache_common import APP_COMMON_SEED
 
     if isinstance(seed, bytes):
         seed = secbytes(seed)
-    retain_secret(seed)
-    context.get_context().cache.vault_seed.take(seed)
+    context.get_context().cache.take_secret(APP_COMMON_SEED, seed)
 
 
-def assert_secret(test, actual, expected):
-    """Check every bit of a secret vector through its native MAC operation."""
-    from trezor.crypto import hmac
+def assert_cardano_key(test, node, private_key, extension):
+    """Check both halves of a Cardano node's expanded key against vectors.
+
+    A deterministic Ed25519 signature depends on the extension (R) and the
+    scalar (S), but only on the scalar modulo the group order. Hardened
+    derivation hashes the exact bytes of both halves, so a hardened child of
+    the node must also match that of a plaintext reference node."""
+    from trezor.crypto import cardano
+    from trezor.crypto.curve import ed25519
 
     message = b"protected secret test vector"
     test.assertEqual(
-        hmac.tag(hmac.SHA256, actual, message),
-        hmac(hmac.SHA256, expected, message).digest(),
+        ed25519.sign_ext(node, message),
+        ed25519.sign_ext(private_key, extension, message),
     )
+    reference = cardano.from_secret(private_key + extension + node.chain_code())
+    child = node.clone()
+    child.derive(0x8000_0000)
+    reference.derive(0x8000_0000)
+    test.assertEqual(child.public_key(), reference.public_key())

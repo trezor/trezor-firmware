@@ -57,5 +57,8 @@ def get_wire_types() -> Iterable[int]:
 
 
 def clear() -> None:
+    from trezorcrypto import authorize_locked_session
+
+    authorize_locked_session(False)
     context.cache_delete(APP_COMMON_AUTHORIZATION_TYPE)
     context.cache_delete(APP_COMMON_AUTHORIZATION_DATA)

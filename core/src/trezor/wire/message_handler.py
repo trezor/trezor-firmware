@@ -1,3 +1,4 @@
+from trezorcrypto import SecretOwner
 from typing import TYPE_CHECKING
 
 from storage.cache_common import InvalidSessionError
@@ -129,7 +130,21 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
 
         # Spawn a workflow around the task. This ensures that concurrent
         # workflows are shut down.
-        res_msg = await workflow.spawn(with_context(ctx, task))
+        # Seedless/initialization and debug requests use a sessionless parent.
+        try:
+            cache = ctx.cache
+        except InvalidSessionError:
+            cache = None
+        if cache is None:
+            from storage.cache import get_sessionless_cache
+
+            cache = get_sessionless_cache()
+        owner = SecretOwner(cache.get_secret_owner())
+        try:
+            res_msg = await workflow.spawn(with_context(ctx, task), secret_owner=owner)
+        finally:
+            # Setup failures too; scheduler teardown covers dropped coroutines.
+            owner.destroy()
 
         if __debug__ and utils.LOG_STACK_USAGE:
             unused_stack_after = utils.estimate_unused_stack()

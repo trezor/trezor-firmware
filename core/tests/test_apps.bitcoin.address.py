@@ -25,7 +25,7 @@ def node_derive(root, path):
     return node
 
 
-class TestAddress(unittest.TestCase):
+class TestAddress(VaultTestCase):
     # pylint: disable=C0301
 
     def test_p2wpkh_in_p2sh_address(self):
