@@ -10,7 +10,6 @@ from ..common import (
     interact,
     interact_simple,
     raise_if_not_confirmed,
-    with_info,
 )
 
 if TYPE_CHECKING:
@@ -711,39 +710,52 @@ async def confirm_blob(
     prompt_screen: bool = True,
 ) -> None:
     if ask_pagination:
-        main_ctx = trezorui_api.confirm_value_intro(
+        from trezor.ui.layouts.menu import (
+            Menu,
+            MenuResult,
+            cancel_leaf,
+            interact_with_menu,
+            leaf_from_layout,
+        )
+
+        def view_all_layout() -> trezorui_api.LayoutContext[trezorui_api.UiResult]:
+            return trezorui_api.confirm_value(
+                title=title,
+                value=data,
+                subtitle=description,
+                description=None,
+                verb=None,
+                verb_cancel=verb_cancel,
+                info=False,
+                hold=hold,
+                chunkify=chunkify,
+                page_counter=True,
+                prompt_screen=prompt_screen,
+                cancel=True,
+            )
+
+        menu = Menu(
+            [
+                # all the data can be confirmed at its end, too
+                leaf_from_layout(
+                    TR.buttons__view_all_data, view_all_layout, return_result=True
+                ),
+                cancel_leaf(verb_cancel or TR.buttons__cancel),
+            ]
+        )
+        with trezorui_api.confirm_value_intro(
             title=title,
             value=data,
             subtitle=description,
             verb=verb_skip_pagination or verb,
-            verb_cancel=verb_cancel,
             hold=hold,
             chunkify=chunkify,
-        )
-        info_ctx = trezorui_api.confirm_value(
-            title=title,
-            value=data,
-            subtitle=description,
-            description=None,
-            verb=None,
-            verb_cancel=verb_cancel,
-            info=False,
-            hold=hold,
-            chunkify=chunkify,
-            page_counter=True,
-            prompt_screen=prompt_screen,
-            cancel=True,
-        )
-
-        with main_ctx as main_layout, info_ctx as info_layout:
-            return await with_info(
-                main_layout,
-                info_layout,
-                br_name,
-                br_code,
-                repeat_button_request=True,
-                info_layout_can_confirm=True,
-            )
+            external_menu=True,
+        ) as layout:
+            result = await interact_with_menu(layout, menu, br_name, br_code)
+        if isinstance(result, MenuResult):
+            result = result.value
+        assert result is CONFIRMED
     else:
         with trezorui_api.confirm_value(
             title=title,
@@ -1163,19 +1175,36 @@ if not utils.BITCOIN_ONLY:
                 br_name=br_name,
             )
         else:
-            main_ctx = trezorui_api.confirm_with_info(
+            from trezor.ui.layouts.menu import (
+                Menu,
+                cancel_leaf,
+                confirm_with_menu,
+                leaf_from_layout,
+            )
+
+            def contract_address_layout() -> trezorui_api.LayoutContext:
+                # chunkified when requested, unlike `create_info_menu_leaf()`
+                return trezorui_api.show_info_with_cancel(
+                    title=TR.ethereum__contract_address,
+                    items=[("", recipient_addr, True)],
+                    chunkify=chunkify,
+                )
+
+            menu = Menu(
+                [
+                    leaf_from_layout(
+                        TR.ethereum__contract_address, contract_address_layout
+                    ),
+                    cancel_leaf(TR.buttons__cancel),
+                ]
+            )
+            with trezorui_api.confirm_with_info(
                 title=title,
                 items=[(recipient_str, True)],
                 verb="",
-                verb_info=TR.ethereum__contract_address,
-            )
-            info_ctx = trezorui_api.show_info_with_cancel(
-                title=TR.ethereum__contract_address,
-                items=[("", recipient_addr, True)],
-                chunkify=chunkify,
-            )
-            with main_ctx as main_layout, info_ctx as info_layout:
-                await with_info(main_layout, info_layout, br_name, br_code)
+                external_menu=True,
+            ) as layout:
+                await confirm_with_menu(layout, menu, br_name, br_code)
 
         if isinstance(total_amount, AboveThreshold):
             await show_warning(
@@ -2327,23 +2356,28 @@ async def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> None:
-    fee_ctx = trezorui_api.confirm_modify_fee(
+    from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
+
+    menu_items: list[MenuLeaf[None]] = []
+    if fee_rate_amount:
+        menu_items.append(
+            create_info_menu_leaf(
+                TR.words__title_information,
+                [(TR.bitcoin__new_fee_rate, fee_rate_amount, None)],
+                title=TR.confirm_total__title_fee,
+            )
+        )
+    menu_items.append(cancel_leaf(TR.buttons__cancel))
+
+    with trezorui_api.confirm_modify_fee(
         title=title,
         sign=sign,
         user_fee_change=user_fee_change,
         total_fee_new=total_fee_new,
         fee_rate_amount=fee_rate_amount,
-    )
-    items: list[StrPropertyType] = []
-    if fee_rate_amount:
-        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount, True))
-    info_ctx = trezorui_api.show_info_with_cancel(
-        title=TR.confirm_total__title_fee,
-        items=items,
-    )
-    with fee_ctx as fee_layout, info_ctx as info_layout:
-        return await with_info(
-            fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx
+    ) as layout:
+        await confirm_with_menu(
+            layout, Menu(menu_items), "modify_fee", ButtonRequestType.SignTx
         )
 
 

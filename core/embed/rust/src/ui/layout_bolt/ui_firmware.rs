@@ -146,6 +146,7 @@ impl FirmwareUI for UIBolt {
         _verb_view_all: Option<TString<'static>>,
         _hold: bool,
         _chunkify: bool,
+        _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
     }
