@@ -2,15 +2,17 @@ import struct
 import uctypes
 import utime
 from micropython import const
+from trezorcrypto import SecretOwner
 from typing import TYPE_CHECKING
 
 import storage.device as storage_device
+from storage.cache import get_sessionless_cache
 from trezor import TR, config, io, log, loop, utils, wire, workflow
 from trezor.crypto import hashlib
 from trezor.crypto.curve import nist256p1
 from trezor.ui.layouts import error_popup, interact_simple
 
-from apps.common import cbor
+from apps.common import cbor, seed
 from apps.common.lock_manager import set_homescreen
 
 from . import common
@@ -551,13 +553,25 @@ async def handle_reports(iface: HID) -> None:
             if req is None:
                 continue
             if not dialog_mgr.allow_cid(req.cid):
-                resp: Cmd | None = cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+                await send_cmd(cmd_error(req.cid, _ERR_CHANNEL_BUSY), iface)
             else:
-                resp = _dispatch_cmd(req, dialog_mgr)
-            if resp is not None:
-                await send_cmd(resp, iface)
+                owner = SecretOwner(get_sessionless_cache().get_secret_owner())
+                try:
+                    await loop.spawn(
+                        _dispatch_and_send(req, dialog_mgr), secret_owner=owner
+                    )
+                finally:
+                    owner.destroy()
         except Exception as e:
             log.exception(__name__, e)
+
+
+async def _dispatch_and_send(req: Cmd, dialog_mgr: "DialogManager") -> None:
+    # The scheduler binds a fresh request owner before dispatch, and revokes it
+    # on success, exception or cancellation. Dialogs get independent owners.
+    resp = _dispatch_cmd(req, dialog_mgr)
+    if resp is not None:
+        await send_cmd(resp, dialog_mgr.iface)
 
 
 class KeepaliveCallback:
@@ -1051,9 +1065,17 @@ class DialogManager:
         self.state = state
         self.reset_timeout()
         self.result = _RESULT_NONE
-        self.keepalive = self.keepalive_loop()  # TODO: use loop.spawn here
-        loop.schedule(self.keepalive)
-        self.workflow = workflow.spawn(self.dialog_workflow())
+        owner = None
+        try:
+            owner = SecretOwner(get_sessionless_cache().get_secret_owner())
+            self.keepalive = self.keepalive_loop()  # TODO: use loop.spawn here
+            loop.schedule(self.keepalive)
+            self.workflow = workflow.spawn(self.dialog_workflow(), secret_owner=owner)
+        except BaseException:
+            if owner is not None:
+                owner.destroy()
+            self.reset()
+            raise
         return True
 
     async def keepalive_loop(self) -> None:
@@ -1864,9 +1886,9 @@ def _cbor_get_assertion_hmac_secret(
         return None
 
     # Compute the hmac-secret output.
-    output = hmac(hmac.SHA256, cred_random, salt[:32]).digest()
+    output = seed.slip21_mac(cred_random, salt[:32])
     if len(salt) == 64:
-        output += hmac(hmac.SHA256, cred_random, salt[32:]).digest()
+        output += seed.slip21_mac(cred_random, salt[32:])
 
     # Encrypt the hmac-secret output.
     return aes(aes.CBC, shared_secret).encrypt(output)

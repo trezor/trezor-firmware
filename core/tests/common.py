@@ -44,3 +44,51 @@ class TestCaseWithContext(unittest.TestCase):
 
     def tearDownClass(self):
         context.CURRENT_CONTEXT = None
+
+
+class VaultTestCase(TestCaseWithContext):
+    """Explicit unlocked request fixture for tests of protected derivation."""
+
+    def setUp(self):
+        from trezorcrypto import SecretOwner, _secret_owner_activate
+
+        from trezor import config
+
+        config.init()
+        config.wipe()
+        assert config.unlock("", None)
+        if not utils.USE_THP:
+            from storage import cache_codec
+
+            cache_codec.start_session()
+        parent = context.get_context().cache.get_secret_owner()
+        self.secret_owner = SecretOwner(parent)
+        _secret_owner_activate(self.secret_owner)
+
+    def tearDown(self):
+        from trezorcrypto import _secret_owner_activate
+
+        owner = getattr(self, "secret_owner", None)
+        if owner is not None:
+            owner.destroy()
+        _secret_owner_activate(None)
+
+
+def cache_seed(seed):
+    from trezorcrypto import retain_secret, secbytes
+
+    if isinstance(seed, bytes):
+        seed = secbytes(seed)
+    retain_secret(seed)
+    context.get_context().cache.vault_seed.take(seed)
+
+
+def assert_secret(test, actual, expected):
+    """Check every bit of a secret vector through its native MAC operation."""
+    from trezor.crypto import hmac
+
+    message = b"protected secret test vector"
+    test.assertEqual(
+        hmac.tag(hmac.SHA256, actual, message),
+        hmac(hmac.SHA256, expected, message).digest(),
+    )

@@ -605,3 +605,14 @@ class sha512:
 def retain_secret(value: Any) -> None:
     """Explicitly transfer an encrypted byte value from this request to its
     session."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto.c
+def vault_chacha(
+    key: secbytes, nonce: AnyBytes, data: AnyBytes,
+    aad: AnyBytes = b"", tag: AnyBytes | None = None,
+    decrypt: bool = False,
+) -> tuple[bytes, bytes]:
+    """Encrypt/decrypt public credential data with an opaque key.
+    With decrypt=True and tag=None the result is unauthenticated metadata;
+    callers must authenticate before using it as a credential."""
