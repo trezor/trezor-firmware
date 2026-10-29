@@ -2467,23 +2467,27 @@ async def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> None:
-    fee_ctx = trezorui_api.confirm_modify_fee(
+    from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
+
+    menu_items: list[MenuLeaf[None]] = []
+    if fee_rate_amount:
+        menu_items.append(
+            create_info_menu_leaf(
+                TR.confirm_total__title_fee,
+                [(TR.bitcoin__new_fee_rate, fee_rate_amount, None)],
+            )
+        )
+    menu_items.append(cancel_leaf(TR.buttons__cancel))
+
+    with trezorui_api.confirm_modify_fee(
         title=title,
         sign=sign,
         user_fee_change=user_fee_change,
         total_fee_new=total_fee_new,
         fee_rate_amount=fee_rate_amount,
-    )
-    items: list[StrPropertyType] = []
-    if fee_rate_amount:
-        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount, True))
-    info_ctx = trezorui_api.show_info_with_cancel(
-        title=TR.confirm_total__title_fee,
-        items=items,
-    )
-    with fee_ctx as fee_layout, info_ctx as info_layout:
-        return await with_info(
-            fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx
+    ) as layout:
+        await confirm_with_menu(
+            layout, Menu(menu_items), "modify_fee", ButtonRequestType.SignTx
         )
 
 

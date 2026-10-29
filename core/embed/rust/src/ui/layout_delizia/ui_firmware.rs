@@ -331,10 +331,7 @@ impl FirmwareUI for UIDelizia {
 
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu(
-                ConfirmActionMenuStrings::new()
-                    .with_verb_info(Some(TR::words__title_information.into())),
-            ),
+            ConfirmActionExtra::ExternalMenu,
             ConfirmActionStrings::new(title, None, None, Some(title)),
             ConfirmActionOptions::new().with_hold(true),
         )?;
