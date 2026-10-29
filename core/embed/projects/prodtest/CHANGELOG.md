@@ -1,4 +1,9 @@
 
+## 0.3.10 [18th November 2026]
+
+### Changed
+- Make `tropic-update-fw` record the FW versions in R-memory slot 8 and `tropic-lock-check` report `NO` while they are missing or outdated.  [#7929]
+
 ## 0.3.9 [16th September 2026]
 
 ### Added
@@ -240,3 +245,4 @@
 [#6829]: https://github.com/trezor/trezor-firmware/pull/6829
 [#7161]: https://github.com/trezor/trezor-firmware/pull/7161
 [#7625]: https://github.com/trezor/trezor-firmware/pull/7625
+[#7929]: https://github.com/trezor/trezor-firmware/pull/7929
