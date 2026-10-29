@@ -180,26 +180,6 @@ SIGNED = Screen(
 )
 
 
-# Where a model draws less than the layout asks for: (layout type, what) ->
-# why. The test is not run there; it is reported as an expected failure.
-GAPS = {
-    (LayoutType.Delizia, "delegate"): (
-        "WIP: confirm_properties draws a review's facts on one screen with no "
-        "vertical paging, so a third fact is cut off"
-    ),
-    (LayoutType.Delizia, "contract/data"): (
-        "WIP: confirm_properties draws a review's facts on one screen with no "
-        "vertical paging, so long input data is cut off"
-    ),
-}
-
-
-def skip_gap(debug: "DebugLink", what: str) -> None:
-    reason = GAPS.get((debug.layout_type, what))
-    if reason is not None:
-        pytest.xfail(reason)
-
-
 def br_name(step: str) -> str:
     """The name a host sees for one step of the app."""
     return f"{APP_NAME}/{step}"
@@ -300,8 +280,14 @@ def confirm_verify(debug: "DebugLink", pages: int) -> None:
     debug.press_yes()
 
 
-def answer_review(debug: "DebugLink", screen: Screen, visit_extras: bool) -> None:
-    """Read a review's title, extras and every page, then confirm or hold it."""
+def answer_review(
+    debug: "DebugLink", screen: Screen, pages: int, visit_extras: bool
+) -> None:
+    """Read a review's title, extras and every page, then confirm or hold it.
+
+    `pages` is the count the ButtonRequest reported. Delizia's review traces no
+    page count of its own, so the ButtonRequest is the only source of truth there.
+    """
     layout = debug.read_layout()
     assert screen.title is not None
     assert screen.title in layout.title()
@@ -310,12 +296,12 @@ def answer_review(debug: "DebugLink", screen: Screen, visit_extras: bool) -> Non
         open_extra(debug, screen.extras)
 
     layout = debug.read_layout()
-    pages = [layout.text_content()]
-    for _ in range(layout.page_count() - 1):
+    texts = [layout.text_content()]
+    for _ in range(pages - 1):
         page(debug)
-        pages.append(debug.read_layout().text_content())
+        texts.append(debug.read_layout().text_content())
 
-    text = flat("".join(pages))
+    text = flat("".join(texts))
     for value in screen.values:
         assert flat(value) in text
     for label in screen.labels:
@@ -407,9 +393,6 @@ def run_showcase(
     visit_extras: bool = True,
 ) -> None:
     """Run one showcase, confirming every screen or cancelling at one of them."""
-    answered = screens if cancel_at is None else screens[:cancel_at]
-    for screen in answered:
-        skip_gap(session.debug, screen.step)
 
     def input_flow():
         for index, screen in enumerate(screens):
@@ -422,7 +405,8 @@ def run_showcase(
                 assert br.pages is not None
                 answer_verify(session.debug, screen, br.pages)
             elif screen.kind == "review":
-                answer_review(session.debug, screen, visit_extras)
+                assert br.pages is not None
+                answer_review(session.debug, screen, br.pages, visit_extras)
             else:
                 answer_simple(session.debug, screen, br.pages or 1)
 

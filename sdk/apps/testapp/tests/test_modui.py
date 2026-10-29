@@ -130,15 +130,6 @@ REVIEWS = {
 ALL = pytest.mark.parametrize("name", list(REVIEWS))
 FINAL = pytest.mark.parametrize("name", ["action", "value", "properties", "data"])
 
-# Where a model draws less than the layout asks for: (layout type, what) ->
-# why. The test is not run there; it is reported as an expected failure.
-GAPS = {
-    (LayoutType.Delizia, "action final extras"): (
-        "WIP: confirm_action drops the external menu when a hold is set, "
-        "so the extras are unreachable"
-    ),
-}
-
 # The testapp runs on Eckhart and Delizia only, so these model gaps are recorded
 # but never exercised here:
 # - `verify_address` / `verify_pubkey` call `flow_get_address` / `flow_get_pubkey`,
@@ -146,12 +137,6 @@ GAPS = {
 #   exception, `show_address` / `show_pubkey`, works on all four models.
 # - `done` calls `show_success`, which is `NotImplementedError` on Caesar; a
 #   Caesar app would probably be stopped before it answers the host.
-
-
-def skip_gap(session: Session, what: str) -> None:
-    reason = GAPS.get((session.debug.layout_type, what))
-    if reason is not None:
-        pytest.xfail(reason)
 
 
 def br_name(step: str) -> str:
@@ -362,7 +347,6 @@ def test_review_extras(session: Session, instance_id: int, name: str):
 @FINAL
 def test_review_final_extras(session: Session, instance_id: int, name: str):
     """A final review keeps its extras menu reachable while holding."""
-    skip_gap(session, f"{name} final extras")
     request = REVIEWS[name].request(is_final=True, extras=extras(*EXTRAS))
 
     def input_flow():
@@ -396,7 +380,6 @@ def test_review_extras_cancel(session: Session, instance_id: int, name: str):
 @FINAL
 def test_review_final_extras_cancel(session: Session, instance_id: int, name: str):
     """A final review's extras menu can still back out of it."""
-    skip_gap(session, f"{name} final extras")
     request = REVIEWS[name].request(is_final=True, extras=extras(*EXTRAS))
 
     def input_flow():
@@ -789,10 +772,10 @@ def test_field_data_paging(session: Session, instance_id: int):
         assert br.pages is not None
         assert br.pages == layout.page_count()
         assert br.pages > 1
-        first = read_all_pages(session.debug)
+        first = read_all_pages(session.debug, br.pages)
         assert value[:384].hex() in flat("".join(first))
         confirm(session.debug)  # the last page of the chunk reads "Continue"
-        second = read_all_pages(session.debug)
+        second = read_all_pages(session.debug, br.pages)
         assert value[384:].hex() in flat("".join(second))
         confirm(session.debug)
 
@@ -813,8 +796,8 @@ def test_field_data_cancel_between_chunks(session: Session, instance_id: int):
     )
 
     def input_flow():
-        yield
-        pages = read_all_pages(session.debug)
+        br = yield
+        pages = read_all_pages(session.debug, br.pages)
         assert len(pages) > 1
         session.debug.press_no()
 
@@ -834,14 +817,14 @@ def test_field_data_long_value(session: Session, instance_id: int):
     )
 
     def input_flow():
-        yield
-        pages = read_all_pages(session.debug)
+        br = yield
+        pages = read_all_pages(session.debug, br.pages)
         assert len(pages) > 1
         text = "".join(pages)
         for _ in range(2):  # the second and third chunks
             confirm(session.debug)
             session.debug.read_layout(wait=True)
-            text += "".join(read_all_pages(session.debug))
+            text += "".join(read_all_pages(session.debug, br.pages))
         confirm(session.debug)
         assert value.hex() in flat(text)
 
