@@ -3,12 +3,20 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from storage.cache_common import (
+    APP_COMMON_SEED,
     CHANNEL_ID,
     LAST_USAGE,
     SESSION_ID,
     SESSION_STATE,
     DataCache,
 )
+from trezor import utils
+
+if not utils.BITCOIN_ONLY:
+    from storage.cache_common import (
+        APP_CARDANO_ICARUS_SECRET,
+        APP_CARDANO_ICARUS_TREZOR_SECRET,
+    )
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -25,9 +33,17 @@ _SEEDLESS_STATE = const(2)
 
 
 class SessionThpCache(DataCache):
-    def __init__(self) -> None:
-        from trezor import utils
+    secret_fields = (
+        (APP_COMMON_SEED,)
+        if utils.BITCOIN_ONLY
+        else (
+            APP_COMMON_SEED,
+            APP_CARDANO_ICARUS_SECRET,
+            APP_CARDANO_ICARUS_TREZOR_SECRET,
+        )
+    )
 
+    def __init__(self) -> None:
         if utils.BITCOIN_ONLY:
             self.fields = (
                 2,  # CHANNEL_ID

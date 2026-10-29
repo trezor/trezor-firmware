@@ -143,8 +143,8 @@ def derive_and_store_secrets(ctx: Context, passphrase: str) -> None:
     else:
         icarus_trezor_secret = icarus_secret
 
-    ctx.cache.set(APP_CARDANO_ICARUS_SECRET, icarus_secret)
-    ctx.cache.set(APP_CARDANO_ICARUS_TREZOR_SECRET, icarus_trezor_secret)
+    ctx.cache.take_secret(APP_CARDANO_ICARUS_SECRET, icarus_secret)
+    ctx.cache.take_secret(APP_CARDANO_ICARUS_TREZOR_SECRET, icarus_trezor_secret)
 
 
 async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychain:
@@ -168,13 +168,13 @@ async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychai
         cache_entry = APP_CARDANO_ICARUS_TREZOR_SECRET
 
     # _get_secret
-    secret = context.cache_get(cache_entry)
+    secret = context.cache_get_secret(cache_entry)
     if not utils.USE_THP:
         if secret is None:
             from apps.common.seed import derive_and_store_roots_legacy
 
             await derive_and_store_roots_legacy()
-            secret = context.cache_get(cache_entry)
+            secret = context.cache_get_secret(cache_entry)
     assert secret is not None
 
     root = cardano.from_secret(secret)

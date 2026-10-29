@@ -42,9 +42,27 @@ class DataCache:
     """
 
     fields: Sequence[int]  # field sizes
+    secret_fields: tuple[int, ...] = ()
+    sessionless = False
 
     def __init__(self) -> None:
         self.data = [bytearray(f + 1) for f in self.fields]
+
+    def _secret_index(self, key: int) -> int:
+        index = key & ~SESSIONLESS_FLAG if self.sessionless else key
+        utils.ensure(index in self.secret_fields)
+        return index
+
+    def get_secret(self, key: int) -> bytes | None:
+        return self.get(self._secret_index(key))
+
+    def take_secret(self, key: int, value: AnyBytes) -> None:
+        # The cache takes ownership. Plain immutable inputs remain readable;
+        # protected backends can consume a temporary value in place.
+        self.set(self._secret_index(key), value)
+
+    def delete_secret(self, key: int) -> None:
+        self.delete(self._secret_index(key))
 
     if TYPE_CHECKING:
 
@@ -115,6 +133,9 @@ class SessionlessCache(DataCache):
     A cache for values that are independent of both
     passphrase seed derivation and the active session.
     """
+
+    sessionless = True
+    secret_fields = (APP_COMMON_SEED_WITHOUT_PASSPHRASE & ~SESSIONLESS_FLAG,)
 
     def __init__(self) -> None:
         self.fields = (

@@ -71,7 +71,7 @@ class Slip21Node:
 if utils.USE_THP:
 
     async def get_seed() -> bytes:  # type: ignore [obscured-by-same-name]
-        common_seed = context.cache_get(APP_COMMON_SEED)
+        common_seed = context.cache_get_secret(APP_COMMON_SEED)
         assert common_seed is not None
         return common_seed
 
@@ -93,7 +93,7 @@ if utils.USE_THP:
 
             passphrase = await get_passphrase(msg)
             common_seed = mnemonic.get_seed(passphrase)
-            ctx.cache.set(APP_COMMON_SEED, common_seed)
+            ctx.cache.take_secret(APP_COMMON_SEED, common_seed)
 
     else:
         # === Cardano variant ===
@@ -112,7 +112,7 @@ if utils.USE_THP:
 
             passphrase = await get_passphrase(msg)
             common_seed = mnemonic.get_seed(passphrase)
-            ctx.cache.set(APP_COMMON_SEED, common_seed)
+            ctx.cache.take_secret(APP_COMMON_SEED, common_seed)
 
             if msg.derive_cardano:
                 from apps.cardano.seed import derive_and_store_secrets
@@ -140,7 +140,7 @@ else:  # v1 protocol
         @cache.stored_async(APP_COMMON_SEED)
         async def get_seed() -> bytes:
             await derive_and_store_roots_legacy()
-            common_seed = context.cache_get(APP_COMMON_SEED)
+            common_seed = context.cache_get_secret(APP_COMMON_SEED)
             assert common_seed is not None
             return common_seed
 
@@ -160,7 +160,7 @@ else:  # v1 protocol
 
             if need_seed:
                 common_seed = mnemonic.get_seed(passphrase)
-                ctx.cache.set(APP_COMMON_SEED, common_seed)
+                ctx.cache.take_secret(APP_COMMON_SEED, common_seed)
 
             if need_cardano_secret:
                 from apps.cardano.seed import derive_and_store_secrets
