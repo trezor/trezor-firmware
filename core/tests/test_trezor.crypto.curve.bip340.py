@@ -84,7 +84,7 @@ class TestCryptoBip340(unittest.TestCase):
             tweaked.destroy()
             with self.assertRaises(ValueError):
                 bip340.sign(tweaked, digest)
-            key = secbytes(bytes.fromhex(self.vectors[0][0]))
+            key = secbytes(bytes.fromhex(self.vectors[0][0]), secbytes.SECP256K1)
             original_public = bip340.publickey(key)
             original_signature = bip340.sign(key, digest)
 

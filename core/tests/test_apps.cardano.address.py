@@ -32,6 +32,33 @@ class TestCardanoAddress(VaultTestCase):
         node = cardano.from_secret(secret)
         self.keychain = Keychain(node)
 
+    def test_key_check_compares_exact_scalar_bytes(self):
+        # Scalars that differ by the Ed25519 group order sign identically, so
+        # the signature alone cannot tell them apart; the hardened child in
+        # assert_cardano_key() must.
+        priv = bytes.fromhex(
+            "c0fe4a6973df4de06262693fc9186f71faf292960350882d49456bf108d13954"
+        )
+        ext = bytes.fromhex(
+            "4064253ffefc4127489bce1b825a47329010c5afb4d21154ef949ef786204405"
+        )
+        chain = bytes.fromhex(
+            "22c12755afdd192742613b3062069390743ea232bc1b366c8f41e37292af9305"
+        )
+        node = cardano.from_secret(priv + ext + chain)
+        assert_cardano_key(self, node, priv, ext)
+        order = 2**252 + 27742317777372353535851937790883648493
+        shifted = (int.from_bytes(priv, "little") + order).to_bytes(32, "little")
+        from trezor.crypto.curve import ed25519
+
+        message = b"same signature"
+        self.assertEqual(
+            ed25519.sign_ext(priv, ext, message),
+            ed25519.sign_ext(shifted, ext, message),
+        )
+        with self.assertRaises(AssertionError):
+            assert_cardano_key(self, node, shifted, ext)
+
     def test_hardened_address_derivation_scheme(self):
         addresses = [
             "Ae2tdPwUPEZ98eHFwxSsPBDz73amioKpr58Vw85mP1tMkzq8siaftiejJ3j",

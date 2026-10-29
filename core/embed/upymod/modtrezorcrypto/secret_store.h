@@ -9,13 +9,10 @@ static uint32_t secret_owner;
 typedef struct {
   uint32_t id, parent;
 } secret_owner_t;
-#include "vault_coreapp.h"
-#include "vault_slip21.h"
 static bool secret_rpc(vault_request_t *r, vault_response_t *out) {
   r->abi = VAULT_ABI;
   if (!r->owner) r->owner = secret_owner;
-  bool ok = r->op == VAULT_SLIP21 ? vault_slip21_call(r, out)
-                                  : vault_coreapp_call(r, out);
+  bool ok = vault_call(r, out);
   memzero(r, sizeof(*r));
   return ok;
 }

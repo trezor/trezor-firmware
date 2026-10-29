@@ -475,6 +475,7 @@ int hdnode_fill_public_key(HDNode *node) {
     node->public_key[0] = 0;
     if (node->curve == &ed25519_info) {
       ed25519_publickey(node->private_key, node->public_key + 1);
+#if !USE_BIP32_VAULT
     } else if (node->curve == &ed25519_sha3_info) {
       ed25519_publickey_sha3(node->private_key, node->public_key + 1);
 #if USE_KECCAK
@@ -487,6 +488,9 @@ int hdnode_fill_public_key(HDNode *node) {
     } else if (node->curve == &ed25519_cardano_info) {
       ed25519_publickey_ext(node->private_key, node->public_key + 1);
 #endif
+#endif
+    } else {
+      return 1;
     }
   }
 #else
@@ -808,6 +812,7 @@ const curve_info *get_curve_by_name(const char *curve_name) {
   if (strcmp(curve_name, SECP256K1_NAME) == 0) {
     return &secp256k1_info;
   }
+#if !USE_BIP32_VAULT
   if (strcmp(curve_name, SECP256K1_DECRED_NAME) == 0) {
     return &secp256k1_decred_info;
   }
@@ -817,12 +822,14 @@ const curve_info *get_curve_by_name(const char *curve_name) {
   if (strcmp(curve_name, SECP256K1_SMART_NAME) == 0) {
     return &secp256k1_smart_info;
   }
+#endif
   if (strcmp(curve_name, NIST256P1_NAME) == 0) {
     return &nist256p1_info;
   }
   if (strcmp(curve_name, ED25519_NAME) == 0) {
     return &ed25519_info;
   }
+#if !USE_BIP32_VAULT
 #if USE_CARDANO
   if (strcmp(curve_name, ED25519_CARDANO_NAME) == 0) {
     return &ed25519_cardano_info;
@@ -839,5 +846,6 @@ const curve_info *get_curve_by_name(const char *curve_name) {
   if (strcmp(curve_name, CURVE25519_NAME) == 0) {
     return &curve25519_info;
   }
+#endif
   return 0;
 }

@@ -49,7 +49,7 @@ class TestSecretLifecycle(unittest.TestCase):
 
     def test_no_implicit_owner(self):
         with self.assertRaises(ValueError):
-            secbytes(KEY)
+            secbytes(KEY, secbytes.SECP256K1)
         with self.assertRaises(ValueError):
             bip32.from_seed(KEY, "secp256k1")
 
@@ -75,7 +75,7 @@ class TestSecretLifecycle(unittest.TestCase):
             callbacks = []
 
             def work():
-                values.append(secbytes(KEY))
+                values.append(secbytes(KEY, secbytes.SECP256K1))
                 if fail:
                     raise ValueError("expected failure")
                 yield None
@@ -98,7 +98,7 @@ class TestSecretLifecycle(unittest.TestCase):
         values = []
 
         def work():
-            values.append(secbytes(KEY))
+            values.append(secbytes(KEY, secbytes.SECP256K1))
             yield None
             secp256k1.sign(values[0], DIGEST)
 
@@ -125,14 +125,14 @@ class TestSecretLifecycle(unittest.TestCase):
         values, children = [], []
 
         def child():
-            values.append(secbytes(KEY))
+            values.append(secbytes(KEY, secbytes.SECP256K1))
             yield None
 
         def parent():
             children.append(child())
             loop.schedule(children[0])
             yield None
-            values.append(secbytes(KEY))
+            values.append(secbytes(KEY, secbytes.SECP256K1))
             yield None
 
         task = parent()
@@ -180,14 +180,14 @@ class TestSecretLifecycle(unittest.TestCase):
         values, racers = [], []
 
         async def slow():
-            values.append(secbytes(KEY))
+            values.append(secbytes(KEY, secbytes.SECP256K1))
             await loop.sleep(10000)
 
         async def fast():
             return 1
 
         async def parent():
-            key = secbytes(KEY)
+            key = secbytes(KEY, secbytes.SECP256K1)
             values.append(key)
             racer = loop.race(slow(), fast())
             racers.append(racer)
@@ -211,7 +211,7 @@ class TestSecretLifecycle(unittest.TestCase):
         values = []
 
         def nested():
-            values.append(secbytes(KEY))
+            values.append(secbytes(KEY, secbytes.SECP256K1))
             yield None
 
         other = nested()
@@ -223,7 +223,9 @@ class TestSecretLifecycle(unittest.TestCase):
             def handle(self, task):
                 test.step(other)
                 test.assertIs(loop.this_task, task)
-                values.append(secbytes(KEY))  # must belong to the outer request
+                values.append(
+                    secbytes(KEY, secbytes.SECP256K1)
+                )  # must belong to the outer request
 
         def outer():
             yield NestedStep()
@@ -243,7 +245,7 @@ class TestSecretLifecycle(unittest.TestCase):
 
         def work():
             try:
-                values.append(secbytes(KEY))
+                values.append(secbytes(KEY, secbytes.SECP256K1))
                 yield None
             finally:
                 unwound.append(True)
@@ -278,7 +280,7 @@ class TestSecretLifecycle(unittest.TestCase):
         session = SecretOwner()
         request = SecretOwner(session)
         _secret_owner_activate(request)
-        key = secbytes(KEY)
+        key = secbytes(KEY, secbytes.SECP256K1)
         node = bip32.from_seed(KEY, "secp256k1")
         retain_secret(key)
         retain_secret(node)
@@ -319,7 +321,7 @@ class TestSecretLifecycle(unittest.TestCase):
         session = cache.get_secret_owner()
         request = SecretOwner(session)
         _secret_owner_activate(request)
-        key = secbytes(KEY)
+        key = secbytes(KEY, secbytes.SECP256K1)
         retain_secret(key)
         if utils.USE_THP:
             cache.clear()
@@ -346,7 +348,7 @@ class TestSecretLifecycle(unittest.TestCase):
         values = []
 
         def work():
-            key = secbytes(KEY)
+            key = secbytes(KEY, secbytes.SECP256K1)
             retain_secret(key)
             values.append(key)
             yield None
@@ -374,7 +376,7 @@ class TestSecretLifecycle(unittest.TestCase):
                 raise MemoryError("syscall failed")
 
         def work():
-            secbytes(KEY)
+            secbytes(KEY, secbytes.SECP256K1)
             yield FailingSyscall()
 
         task = work()
@@ -385,7 +387,7 @@ class TestSecretLifecycle(unittest.TestCase):
         self.assertTrue(session.valid())
 
         def completed():
-            secbytes(KEY)
+            secbytes(KEY, secbytes.SECP256K1)
             yield None
 
         def callback(task, value):
@@ -437,7 +439,7 @@ class TestSecretLifecycle(unittest.TestCase):
         session = cache.get_secret_owner()
         request = SecretOwner(session)
         _secret_owner_activate(request)
-        key = secbytes(KEY)
+        key = secbytes(KEY, secbytes.SECP256K1)
         micropython.heap_lock()
         try:
             try:
@@ -454,7 +456,7 @@ class TestSecretLifecycle(unittest.TestCase):
         values = []
 
         def work():
-            key = secbytes(b"\x00" * 32)
+            key = secbytes(b"\x00" * 32, secbytes.SECP256K1)
             values.append(key)
             secp256k1.sign(key, DIGEST)
             yield None
@@ -473,7 +475,7 @@ class TestSecretLifecycle(unittest.TestCase):
 
         def work():
             for _ in range(65):
-                values.append(secbytes(KEY))
+                values.append(secbytes(KEY, secbytes.SECP256K1))
             yield None
 
         task = work()

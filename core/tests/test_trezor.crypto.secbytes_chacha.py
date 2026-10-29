@@ -25,6 +25,17 @@ class TestVaultChaCha(VaultTestCase):
             self.assertEqual(decrypted, message)
             with self.assertRaises(AuthenticationError):
                 vault_chacha(opaque, nonce, encrypted, b"B" * 32, tag, True)
+            tampered = bytes([encrypted[0] ^ 1]) + encrypted[1:]
+            with self.assertRaises(AuthenticationError):
+                vault_chacha(opaque, nonce, tampered, aad, tag, True)
+            with self.assertRaises(AuthenticationError):
+                vault_chacha(opaque, nonce, encrypted, aad, bytes(16), True)
+        # Without AAD, as for credentials before their RP ID is known.
+        reference = chacha20poly1305_encrypt(key, nonce)
+        expected = reference.encrypt(b"no aad")
+        tag = reference.finish()
+        decrypted, _ = vault_chacha(opaque, nonce, expected, b"", tag, True)
+        self.assertEqual(decrypted, b"no aad")
         self.secret_owner.destroy()
         with self.assertRaises(ValueError):
             vault_chacha(opaque, nonce, b"revoked", aad)

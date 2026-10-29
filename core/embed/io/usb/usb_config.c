@@ -19,6 +19,8 @@
 
 #ifdef KERNEL_MODE
 
+#include <string.h>
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -214,12 +216,23 @@ static secbool usb_webauthn_iface_init(uint8_t *iface_num) {
 #define VCP_RX_BUFFER_LEN 2048
 
 #ifdef USE_USB_IFACE_VCP
+#ifdef STM32F4
+// Keep serial payloads in the MPU-protected I/O region.
+#define VCP_BUFFER_ATTR __attribute__((section(".buf")))
+#else
+#define VCP_BUFFER_ATTR
+#endif
 static secbool usb_vcp_iface_init(uint8_t *iface_num,
                                   usb_vcp_intr_callback_t vcp_intr_callback) {
   static uint8_t vcp_tx_packet[VCP_PACKET_LEN];
-  static uint8_t vcp_tx_buffer[VCP_TX_BUFFER_LEN];
+  static uint8_t vcp_tx_buffer[VCP_TX_BUFFER_LEN] VCP_BUFFER_ATTR;
   static uint8_t vcp_rx_packet[VCP_PACKET_LEN];
-  static uint8_t vcp_rx_buffer[VCP_RX_BUFFER_LEN];
+  static uint8_t vcp_rx_buffer[VCP_RX_BUFFER_LEN] VCP_BUFFER_ATTR;
+
+#ifdef STM32F4
+  memset(vcp_tx_buffer, 0, sizeof(vcp_tx_buffer));
+  memset(vcp_rx_buffer, 0, sizeof(vcp_rx_buffer));
+#endif
 
   const usb_vcp_info_t vcp_info = {
       .handle = SYSHANDLE_USB_VCP,

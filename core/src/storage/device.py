@@ -54,6 +54,7 @@ if not utils.BITCOIN_ONLY:
 _DELEGATED_IDENTITY_KEY_ROTATION_INDEX = const(0x26)  # int
 _DISABLE_TAP_TO_WAKE      = const(0x27)  # bool (0x01 or empty)
 _APP_ROOT_PACKET_STATE = const(0x28)  # bytes
+# 0x29 is reserved: kernel-only backup disclosure state (sec/vault).
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -167,6 +168,12 @@ def store_mnemonic_secret(
     common.set_bool(_NAMESPACE, INITIALIZED, True, public=True)
     if not no_backup:
         common.set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
+    if no_backup or not needs_backup:
+        from trezorcrypto import bip39
+
+        # The kernel allows one disclosure of a new mnemonic for its first
+        # backup; withdraw it when no backup is pending.
+        bip39.backup_done()
 
     if not utils.BITCOIN_ONLY:
         store_binary_mnemonic(secret, allow_derivation_fail)
@@ -196,7 +203,7 @@ if not utils.BITCOIN_ONLY:
 
         if get_backup_type() == BackupType.Bip39:
             try:
-                binary_mnemonic = bip39.mnemonic_to_bits(secret.decode())
+                bip39.mnemonic_to_bits(secret.decode())
             except ValueError:
                 if __debug__ and allow_derivation_fail:
                     # There is a possibility to load device with mnemonics that cannot
@@ -209,11 +216,8 @@ if not utils.BITCOIN_ONLY:
                 else:
                     raise
 
-            common.set(
-                _NAMESPACE,
-                _BINARY_MNEMONIC,
-                binary_mnemonic,
-            )
+            # Only the kernel writes the binary mnemonic, from the stored words.
+            bip39.migrate_binary_mnemonic()
 
 
 def get_backup_type() -> BackupType:

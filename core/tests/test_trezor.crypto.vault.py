@@ -59,10 +59,14 @@ class TestVault(unittest.TestCase):
         self.assertEqual(len(node.public_key()), 33)
 
     def test_raw_storage_reads_and_aliases_denied(self):
-        config.set(1, 0x25, b"binary mnemonic")
+        # Only the kernel writes the binary mnemonic.
+        with self.assertRaises(RuntimeError):
+            config.set(1, 0x25, b"binary mnemonic")
         for key in (2, 0x25):
             self.assertIsNone(config.get(1, key))
-            config.set(1, key, b"public alias", True)
+            # Protected values are stored only under the canonical private key.
+            with self.assertRaises(RuntimeError):
+                config.set(1, key, b"public alias", True)
             self.assertIsNone(config.get(1, key, True))
 
     def test_lock_gates_existing_handles_but_preserves_session(self):

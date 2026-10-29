@@ -61,11 +61,11 @@ mod vault;
 fn main() -> Result<()> {
     xbuild::build(|lib| {
         lib.import_lib("sys")?;
+        lib.import_lib("crypto")?;
 
         build_mods!(
             lib,
             [
-                vault if cfg!(feature = "vault"),
                 backup_ram if cfg!(feature = "backup_ram"),
                 board_capabilities,
                 consumption_mask if cfg!(feature = "consumption_mask"),
@@ -93,6 +93,7 @@ fn main() -> Result<()> {
                 tropic if cfg!(feature = "tropic"),
                 trustzone if cfg!(feature = "trustzone"),
                 unit_properties,
+                vault if cfg!(feature = "vault"),
             ]
         );
 

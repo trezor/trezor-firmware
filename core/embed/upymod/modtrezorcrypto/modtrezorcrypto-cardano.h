@@ -92,6 +92,39 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_cardano_derive_icarus_obj, 3, 4,
     mod_trezorcrypto_cardano_derive_icarus);
 
+/// def derive_icarus_pair(passphrase: str) -> tuple[secbytes, secbytes]:
+///     """Derive the Icarus and Icarus-Trezor master secrets from the stored
+///     mnemonic. They differ only for 24 words; otherwise the derivation runs
+///     once and both share one sealed value."""
+static mp_obj_t mod_trezorcrypto_cardano_derive_icarus_pair(
+    mp_obj_t passphrase) {
+  mp_buffer_info_t phrase = {0};
+  mp_get_buffer_raise(passphrase, &phrase, MP_BUFFER_READ);
+  if (phrase.len > 200)
+    mp_raise_ValueError(MP_ERROR_TEXT("Passphrase too long"));
+  mp_obj_t result[2] = {MP_OBJ_FROM_PTR(secbytes_new(96)),
+                        MP_OBJ_FROM_PTR(secbytes_new(96))};
+  vault_response_t out = {0};
+  for (uint32_t trezor = 0; trezor <= 1; trezor++) {
+    vault_request_t r = {.op = VAULT_CARDANO,
+                         .arg = 4,
+                         .child_num = trezor,
+                         .length = phrase.len};
+    memcpy(r.data, phrase.buf, phrase.len);
+    vault_raise(&r, &out);
+    secbytes_set_blob(MP_OBJ_TO_PTR(result[trezor]), &out.blob);
+    if (out.value != 33) {
+      secbytes_set_blob(MP_OBJ_TO_PTR(result[1]), &out.blob);
+      break;
+    }
+  }
+  memzero(&out, sizeof(out));
+  return mp_obj_new_tuple(2, result);
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(
+    mod_trezorcrypto_cardano_derive_icarus_pair_obj,
+    mod_trezorcrypto_cardano_derive_icarus_pair);
+
 /// def from_secret(secret: AnyBytes | secbytes) -> HDNode:
 ///     """Create a protected Cardano HD node from a master secret."""
 static mp_obj_t mod_trezorcrypto_from_secret(mp_obj_t secret) {
@@ -120,6 +153,8 @@ static const mp_rom_map_elem_t mod_trezorcrypto_cardano_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_cardano)},
     {MP_ROM_QSTR(MP_QSTR_derive_icarus),
      MP_ROM_PTR(&mod_trezorcrypto_cardano_derive_icarus_obj)},
+    {MP_ROM_QSTR(MP_QSTR_derive_icarus_pair),
+     MP_ROM_PTR(&mod_trezorcrypto_cardano_derive_icarus_pair_obj)},
     {MP_ROM_QSTR(MP_QSTR_from_secret),
      MP_ROM_PTR(&mod_trezorcrypto_from_secret_obj)},
     {MP_ROM_QSTR(MP_QSTR_from_seed_slip23),

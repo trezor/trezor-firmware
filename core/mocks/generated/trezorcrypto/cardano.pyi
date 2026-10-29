@@ -16,6 +16,13 @@ def derive_icarus(
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-cardano.h
+def derive_icarus_pair(passphrase: str) -> tuple[secbytes, secbytes]:
+    """Derive the Icarus and Icarus-Trezor master secrets from the stored
+    mnemonic. They differ only for 24 words; otherwise the derivation runs
+    once and both share one sealed value."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-cardano.h
 def from_secret(secret: AnyBytes | secbytes) -> HDNode:
     """Create a protected Cardano HD node from a master secret."""
 

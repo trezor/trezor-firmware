@@ -90,7 +90,12 @@ static mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t ext_salt) {
                    MP_ERROR_TEXT("Invalid length of external salt."));
   }
 
-  switch (storage_unlock(pin_b.buf, pin_b.len, ext_salt_b.buf)) {
+  storage_unlock_result_t result =
+      storage_unlock(pin_b.buf, pin_b.len, ext_salt_b.buf);
+#if defined(USE_VAULT) && defined(TREZOR_EMULATOR)
+  if (result == UNLOCK_OK) vault_storage_unlocked();
+#endif
+  switch (result) {
     case UNLOCK_OK:
       return mp_const_true;
     case UNLOCK_NOT_INITIALIZED:
@@ -161,6 +166,9 @@ static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_check_pin_obj,
 ///     Locks the storage.
 ///     """
 static mp_obj_t mod_trezorconfig_lock(void) {
+#if defined(USE_VAULT) && defined(TREZOR_EMULATOR)
+  vault_storage_locked();
+#endif
   storage_lock();
   return mp_const_none;
 }
@@ -333,7 +341,8 @@ static mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
   uint16_t appkey = (app << 8) | key;
 #ifdef USE_VAULT
   /* Match kernel policy in the single-process emulator as well. */
-  if ((appkey & 0x3fff) == 0x0102 || (appkey & 0x3fff) == 0x0125)
+  if ((appkey & 0x3fff) == 0x0102 || (appkey & 0x3fff) == 0x0125 ||
+      (appkey & 0x3fff) == 0x0129)
     return mp_const_none;
 #endif
   uint16_t len = 0;
@@ -371,10 +380,23 @@ static mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
   uint16_t appkey = (app << 8) | key;
   mp_buffer_info_t value;
   mp_get_buffer_raise(args[2], &value, MP_BUFFER_READ);
+#ifdef USE_VAULT
+  /* Match the kernel verifier: a write-once mnemonic, and keys that only the
+   * kernel creates. */
+  uint16_t protected_key = appkey & 0x3fff;
+  if (protected_key == 0x0129 || protected_key == 0x0125 ||
+      (protected_key == 0x0102 &&
+       (appkey != protected_key || sectrue == storage_has(appkey)))) {
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Could not save value"));
+  }
+#endif
   if (value.len > UINT16_MAX ||
       sectrue != storage_set(appkey, value.buf, value.len)) {
     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Could not save value"));
   }
+#if defined(USE_VAULT) && defined(TREZOR_EMULATOR)
+  vault_storage_written(appkey);
+#endif
   return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4,
@@ -403,6 +425,11 @@ static mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
     }
   }
   uint16_t appkey = (app << 8) | key;
+#ifdef USE_VAULT
+  /* Match the kernel: only the canonical protected keys are refused. */
+  if (appkey == 0x0102 || appkey == 0x0125 || appkey == 0x0129)
+    return mp_const_false;
+#endif
   if (sectrue != storage_delete(appkey)) {
     return mp_const_false;
   }

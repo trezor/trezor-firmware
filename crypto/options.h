@@ -71,10 +71,21 @@
 #define USE_BIP32_25519_CURVES 1
 #endif
 
+// Restrict HDNode to the operation-only vault's supported curves.
+// Other crypto entrypoints (including Ed25519-Keccak signing) are unaffected.
+#ifndef USE_BIP32_VAULT
+#define USE_BIP32_VAULT 0
+#endif
+
 // implement BIP39 caching
 #ifndef USE_BIP39_CACHE
 #define USE_BIP39_CACHE 1
 #define BIP39_CACHE_SIZE 4
+#endif
+
+// Lossless, constant-work dictionary lookup for kernel-only BIP39 migration.
+#ifndef USE_BIP39_COMPACT
+#define USE_BIP39_COMPACT 0
 #endif
 
 // support Ethereum operations

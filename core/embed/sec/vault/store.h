@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include "bip32.h"
+#include "curves.h"
 #include "memzero.h"
 #include "seal.h"
 
@@ -14,8 +16,10 @@
  * kernel RAM does not grow with the number of live secrets. The kernel keeps
  * owners, the per-boot key (seal.c) and a nonce counter. Never wrap
  * identities: exhausted counters fail closed until reboot. */
-#define SECRET_STORE_BYTES VAULT_SECRET_SIZE
-typedef struct {
+#define SECRET_STORE_BYTES \
+  (sizeof(HDNode) > VAULT_SECRET_SIZE ? sizeof(HDNode) : VAULT_SECRET_SIZE)
+typedef union {
+  HDNode node;
   uint8_t bytes[SECRET_STORE_BYTES];
 } secret_payload_t;
 _Static_assert(VAULT_RECORD_SIZE == VAULT_SECRET_SIZE, "record size");
@@ -110,7 +114,8 @@ static __attribute__((unused)) uint64_t secret_get64(const uint8_t *p) {
   return secret_get32(p) | (uint64_t)secret_get32(p + 4) << 32;
 }
 
-/* Blob header: owner u32 | kind u8 | length u8 | zero u16 | nonce u64. */
+/* Blob header: owner u32 | kind u8 | length u8 | type u8 | zero u8 |
+ * nonce u64. The type decides the kind: nodes are SECRET_NODE. */
 #define SECRET_BLOB_HEADER VAULT_HEADER_SIZE
 
 /* The whole header is authenticated, bound to the ABI version. */
@@ -122,32 +127,84 @@ static void secret_aad(const uint8_t header[SECRET_BLOB_HEADER],
   memcpy(aad + 4, header, SECRET_BLOB_HEADER);
 }
 
-/* Byte records have no native structure, padding or pointer fields. */
+/* Stable wire IDs, never serialize native curve pointers. */
+static const char *secret_curve_name(uint8_t id) {
+  static const char *const curves[] = {
+      SECP256K1_NAME,         NIST256P1_NAME,         ED25519_NAME,
+      SECP256K1_DECRED_NAME,  SECP256K1_GROESTL_NAME, SECP256K1_SMART_NAME,
+      "ed25519 cardano seed", ED25519_SHA3_NAME,      ED25519_KECCAK_NAME,
+      CURVE25519_NAME};
+  return id < sizeof(curves) / sizeof(curves[0]) ? curves[id] : NULL;
+}
+static uint8_t secret_curve_id(const HDNode *n) {
+  for (uint8_t i = 0; secret_curve_name(i); ++i)
+    if (n->curve == get_curve_by_name(secret_curve_name(i))) return i;
+  return UINT8_MAX;
+}
+static bool secret_curve_allowed(const char *name) {
+  for (uint8_t i = 0; secret_curve_name(i); ++i)
+    if (!strcmp(name, secret_curve_name(i)))
+      return get_curve_by_name(name) != NULL;
+  return false;
+}
+/* Canonical node encoding: no struct padding, addresses or curve pointers. */
 static void secret_encode(secret_kind_t kind, size_t length,
                           const secret_payload_t *p,
                           uint8_t data[VAULT_RECORD_SIZE]) {
-  (void)kind;
   memset(data, 0, VAULT_RECORD_SIZE);
-  memcpy(data, p->bytes, length);
+  if (kind == SECRET_BYTES) {
+    memcpy(data, p->bytes, length);
+    return;
+  }
+  const HDNode *n = &p->node;
+  secret_put32(data, n->depth);
+  secret_put32(data + 4, n->child_num);
+  memcpy(data + 8, n->chain_code, 32);
+  memcpy(data + 40, n->private_key, 32);
+  memcpy(data + 72, n->public_key, 33);
+  data[105] = n->is_public_key_set;
+  data[106] = secret_curve_id(n);
+  memcpy(data + 107, n->private_key_extension, 32);
 }
 static bool secret_decode(secret_kind_t kind, size_t length,
                           const uint8_t data[VAULT_RECORD_SIZE],
                           secret_payload_t *p) {
   memzero(p, sizeof(*p));
-  if ((kind != SECRET_BYTES && kind != SECRET_NODE) || !length ||
-      length > VAULT_SECRET_SIZE)
+  if (kind == SECRET_BYTES) {
+    if (length > VAULT_SECRET_SIZE) return false;
+    memcpy(p->bytes, data, length);
+    return true;
+  }
+  if (kind != SECRET_NODE || data[105] > 1 || !secret_curve_name(data[106]))
     return false;
-  memcpy(p->bytes, data, length);
-  return true;
+  HDNode *n = &p->node;
+  n->depth = secret_get32(data);
+  n->child_num = secret_get32(data + 4);
+  memcpy(n->chain_code, data + 8, 32);
+  memcpy(n->private_key, data + 40, 32);
+  memcpy(n->public_key, data + 72, 33);
+  memcpy(n->private_key_extension, data + 107, 32);
+  n->is_public_key_set = data[105];
+  n->curve = get_curve_by_name(secret_curve_name(data[106]));
+  return n->curve != NULL;
 }
 
-/* Seal a payload for a live owner into a fresh blob. */
-static bool secret_seal(uint32_t owner, secret_kind_t kind, size_t length,
+static secret_kind_t secret_type_kind(uint8_t type) {
+  return type == VAULT_KEY_NODE ? SECRET_NODE : SECRET_BYTES;
+}
+
+/* Seal a payload of a key type for a live owner into a fresh blob. */
+static bool secret_seal(uint32_t owner, uint8_t type, size_t length,
                         const secret_payload_t *p, vault_blob_t *out) {
   memzero(out, sizeof(*out));
+  secret_kind_t kind = secret_type_kind(type);
   if (!secret_busy || secret_crypto_failed || !secret_owner_find(owner) ||
-      (kind != SECRET_BYTES && kind != SECRET_NODE) || !length ||
-      length > VAULT_SECRET_SIZE)
+      !type || type >= VAULT_KEY_TYPE_END ||
+      (kind == SECRET_BYTES && (!length || length > VAULT_SECRET_SIZE)) ||
+      (kind == SECRET_NODE &&
+       (length != sizeof(HDNode) || secret_curve_id(&p->node) == UINT8_MAX ||
+        (memcmp(p->node.private_key_extension, (uint8_t[32]){0}, 32) &&
+         p->node.curve != get_curve_by_name("ed25519 cardano seed")))))
     return false;
   uint64_t nonce = 0;
   /* Advance before encryption: failed writes never reuse a nonce. */
@@ -157,12 +214,14 @@ static bool secret_seal(uint32_t owner, secret_kind_t kind, size_t length,
   secret_put32(b, owner);
   b[4] = kind;
   b[5] = kind == SECRET_BYTES ? length : 0;
+  b[6] = type;
   secret_put32(b + 8, nonce);
   secret_put32(b + 12, nonce >> 32);
   uint8_t data[VAULT_RECORD_SIZE], aad[VAULT_AAD_SIZE];
   secret_encode(kind, length, p, data);
   secret_aad(b, aad);
-  size_t encoded_length = vault_ciphertext_size(length);
+  size_t encoded_length =
+      vault_ciphertext_size(kind == SECRET_BYTES ? length : VAULT_NODE_SIZE);
   uint8_t tag[16] = {0};
   bool ok = vault_seal_record(true, nonce, aad, data, encoded_length, tag);
   if (ok && VAULT_TAG_SIZE)
@@ -178,21 +237,28 @@ static bool secret_seal(uint32_t owner, secret_kind_t kind, size_t length,
   return ok;
 }
 
-/* Open a blob into call-local scratch. Fails unless the active owner may use
- * the blob's owner and the blob authenticates. A tampered blob is an ordinary
- * failure, not a crypto failure: clients control blob contents. */
+static bool secret_type_accepted(const uint8_t *b, uint32_t types) {
+  return b[6] && b[6] < VAULT_KEY_TYPE_END && (types & VAULT_KEY(b[6])) &&
+         b[4] == secret_type_kind(b[6]);
+}
+
+/* Open a blob of one of the accepted key types into call-local scratch. Fails
+ * unless the active owner may use the blob's owner and the blob
+ * authenticates. A tampered blob is an ordinary failure, not a crypto
+ * failure: clients control blob contents. */
 static secret_payload_t *secret_open(const vault_blob_t *blob, uint32_t active,
-                                     secret_kind_t kind, size_t *length) {
+                                     uint32_t types, size_t *length) {
   const uint8_t *b = blob->bytes;
   if (!secret_busy || secret_crypto_failed ||
-      !secret_owner_access(active, secret_get32(b)) || b[4] != kind || b[6] ||
-      b[7])
+      !secret_owner_access(active, secret_get32(b)) ||
+      !secret_type_accepted(b, types) || b[7])
     return NULL;
-  size_t len = kind == SECRET_BYTES ? b[5] : VAULT_NODE_SIZE;
-  if (kind != SECRET_BYTES && kind != SECRET_NODE) return NULL;
+  secret_kind_t kind = secret_type_kind(b[6]);
+  size_t len = kind == SECRET_BYTES ? b[5] : sizeof(HDNode);
   if (kind == SECRET_NODE && b[5]) return NULL;
   if (kind == SECRET_BYTES && (!len || len > VAULT_SECRET_SIZE)) return NULL;
-  size_t encoded_length = vault_ciphertext_size(len);
+  size_t encoded_length =
+      vault_ciphertext_size(kind == SECRET_BYTES ? len : VAULT_NODE_SIZE);
   size_t blob_length = SECRET_BLOB_HEADER + encoded_length + VAULT_TAG_SIZE;
   /* Reject noncanonical envelopes; every supplied byte is authenticated or
    * checked, including unused wire padding. */
@@ -209,6 +275,11 @@ static secret_payload_t *secret_open(const vault_blob_t *blob, uint32_t active,
   bool ok = vault_seal_record(false, nonce, aad, data, encoded_length, tag) &&
             secret_decode(kind, len, data, p);
   memzero(data, sizeof(data));
+  /* Re-evaluated after decryption: one skipped access or type check above
+   * must not release another owner's secret, or a key for another use. */
+  if (!secret_owner_access(active, secret_get32(b)) ||
+      !secret_type_accepted(b, types))
+    ok = false;
   if (!ok) {
     if (!vault_seal_ready()) secret_crypto_failed = true;
     memzero(p, sizeof(*p));
@@ -229,6 +300,11 @@ static bool secret_transaction_end(void) {
   memzero(secret_scratch, sizeof(secret_scratch));
   memzero(secret_scratch_used, sizeof(secret_scratch_used));
   vault_seal_end();
+  /* A skipped wipe would leave plaintext in kernel RAM; verify it. */
+  volatile uint8_t residue = 0;
+  for (size_t i = 0; i < sizeof(secret_scratch); i++)
+    residue |= ((const uint8_t *)secret_scratch)[i];
+  if (residue || !vault_seal_idle()) ok = false;
   secret_busy = false;
   if (!ok) {
     secret_revoke_all();

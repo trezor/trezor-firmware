@@ -129,13 +129,10 @@ def derive_and_store_secrets(ctx: Context, passphrase: str) -> None:
         # nothing to do for SLIP-39, where we can derive the root from the main seed
         return
 
-    for key, trezor_derivation in (
-        (APP_CARDANO_ICARUS_SECRET, False),
-        (APP_CARDANO_ICARUS_TREZOR_SECRET, True),
-    ):
-        ctx.cache.take_secret(
-            key, cardano.derive_icarus(None, passphrase, trezor_derivation)
-        )
+    # The Trezor variant differs only for 24 words; otherwise it is derived once.
+    icarus_secret, icarus_trezor_secret = cardano.derive_icarus_pair(passphrase)
+    ctx.cache.take_secret(APP_CARDANO_ICARUS_SECRET, icarus_secret)
+    ctx.cache.take_secret(APP_CARDANO_ICARUS_TREZOR_SECRET, icarus_trezor_secret)
 
 
 async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychain:

@@ -6,11 +6,23 @@
 
 /// package: trezorcrypto.__init__
 /// class secbytes:
-///     """Opaque immutable native secret. No buffer or plaintext interface."""
-/// def __init__(self, value: AnyBytes | None, capacity: int = 160) -> None:
+///     """Opaque immutable native secret. No buffer or plaintext interface.
+///     Every value has a key type, which decides what the vault may do with
+///     it."""
+///     SEED: int
+///     SLIP21_NODE: int
+///     SYMMETRIC: int
+///     SECP256K1: int
+///     NIST256P1: int
+///     ED25519_SEED: int
+///     X25519: int
+///     THP_DEVICE: int
+///     CARDANO_SECRET: int
+/// def __init__(self, value: AnyBytes | None, arg: int = ...) -> None:
 ///     """Copy existing plaintext; this does not erase its Python source.
-///     None makes an empty holder for a long-lived slot, see take().
-///     capacity limits an empty holder; populated values use their actual
+///     arg is its key type, SYMMETRIC by default. None makes an empty
+///     holder for a long-lived slot, see take(); arg then limits its
+///     capacity, 160 by default, and populated values use their actual
 ///     size."""
 /// def destroy(self) -> None:
 ///     """Erase this value. Idempotent."""
@@ -56,11 +68,11 @@ static vault_blob_t secbytes_blob(const mp_obj_secbytes_t *o) {
 static void secbytes_set_blob(mp_obj_secbytes_t *o, const vault_blob_t *blob) {
   memcpy(o->blob, blob->bytes, secbytes_storage_size(o));
 }
-static mp_obj_t secbytes_copy(const void *data, size_t len) {
+static mp_obj_t secbytes_copy(const void *data, size_t len, uint32_t type) {
   if (len > SECRET_STORE_BYTES)
     mp_raise_ValueError(MP_ERROR_TEXT("Secret too long"));
   mp_obj_secbytes_t *o = secbytes_new(len);
-  vault_request_t r = {.op = VAULT_IMPORT_BYTES, .length = len};
+  vault_request_t r = {.op = VAULT_IMPORT_BYTES, .arg = type, .length = len};
   vault_response_t out = {0};
   memcpy(r.data, data, len);
   vault_raise(&r, &out);
@@ -77,11 +89,13 @@ static mp_obj_t secbytes_make_new(const mp_obj_type_t *type, size_t n_args,
       mp_raise_ValueError(MP_ERROR_TEXT("Invalid secret capacity"));
     return MP_OBJ_FROM_PTR(secbytes_new(capacity));
   }
-  if (n_args > 1)
-    mp_raise_TypeError(MP_ERROR_TEXT("Capacity requires empty holder"));
+  mp_int_t key_type =
+      n_args > 1 ? mp_obj_get_int(args[1]) : VAULT_KEY_SYMMETRIC;
+  if (key_type <= VAULT_KEY_NODE || key_type >= VAULT_KEY_TYPE_END)
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid key type"));
   mp_buffer_info_t b = {0};
   mp_get_buffer_raise(args[0], &b, MP_BUFFER_READ);
-  return secbytes_copy(b.buf, b.len);
+  return secbytes_copy(b.buf, b.len, key_type);
 }
 static mp_obj_secbytes_t *secbytes_object(mp_obj_t obj) {
   if (!mp_obj_is_type(obj, &mod_trezorcrypto_secbytes_type))
@@ -123,6 +137,15 @@ static const mp_rom_map_elem_t secbytes_locals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_take), MP_ROM_PTR(&secbytes_take_obj)},
     {MP_ROM_QSTR(MP_QSTR_empty), MP_ROM_PTR(&secbytes_empty_obj)},
     {MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&secbytes_destroy_obj)},
+    {MP_ROM_QSTR(MP_QSTR_SEED), MP_ROM_INT(VAULT_KEY_SEED)},
+    {MP_ROM_QSTR(MP_QSTR_SLIP21_NODE), MP_ROM_INT(VAULT_KEY_SLIP21_NODE)},
+    {MP_ROM_QSTR(MP_QSTR_SYMMETRIC), MP_ROM_INT(VAULT_KEY_SYMMETRIC)},
+    {MP_ROM_QSTR(MP_QSTR_SECP256K1), MP_ROM_INT(VAULT_KEY_SECP256K1)},
+    {MP_ROM_QSTR(MP_QSTR_NIST256P1), MP_ROM_INT(VAULT_KEY_NIST256P1)},
+    {MP_ROM_QSTR(MP_QSTR_ED25519_SEED), MP_ROM_INT(VAULT_KEY_ED25519_SEED)},
+    {MP_ROM_QSTR(MP_QSTR_X25519), MP_ROM_INT(VAULT_KEY_X25519)},
+    {MP_ROM_QSTR(MP_QSTR_THP_DEVICE), MP_ROM_INT(VAULT_KEY_THP_DEVICE)},
+    {MP_ROM_QSTR(MP_QSTR_CARDANO_SECRET), MP_ROM_INT(VAULT_KEY_CARDANO_SECRET)},
 };
 static MP_DEFINE_CONST_DICT(secbytes_locals, secbytes_locals_table);
 MP_DEFINE_CONST_OBJ_TYPE(mod_trezorcrypto_secbytes_type, MP_QSTR_secbytes,

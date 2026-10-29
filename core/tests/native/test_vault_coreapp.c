@@ -79,8 +79,10 @@ static bool is_zero(const void *p, size_t len) {
 static void locked_authorization(void) {
   secret_revoke_all();
   uint32_t session = owner_create(1, 0), request = owner_create(1, session);
-  vault_request_t r = {
-      .op = VAULT_IMPORT_BYTES, .owner = request, .length = 32};
+  vault_request_t r = {.op = VAULT_IMPORT_BYTES,
+                       .arg = VAULT_KEY_SECP256K1,
+                       .owner = request,
+                       .length = 32};
   memset(r.data, 1, 32);
   vault_response_t out = {0};
   assert(call(1, &r, &out));
@@ -126,8 +128,10 @@ static void locked_authorization(void) {
 static void confirmed_authorization(void) {
   secret_revoke_all();
   uint32_t session = owner_create(1, 0), request = owner_create(1, session);
-  vault_request_t r = {
-      .op = VAULT_IMPORT_BYTES, .owner = request, .length = 32};
+  vault_request_t r = {.op = VAULT_IMPORT_BYTES,
+                       .arg = VAULT_KEY_SECP256K1,
+                       .owner = request,
+                       .length = 32};
   memset(r.data, 1, 32);
   vault_response_t out = {0};
   assert(call(1, &r, &out));
@@ -326,8 +330,10 @@ static void slip21_vectors(void) {
   uint32_t owner = owner_create(1, owner_create(1, 0));
   uint8_t seed[64];
   for (int i = 0; i < 64; i++) seed[i] = i;
-  vault_request_t r = {
-      .op = VAULT_IMPORT_BYTES, .owner = owner, .length = sizeof(seed)};
+  vault_request_t r = {.op = VAULT_IMPORT_BYTES,
+                       .arg = VAULT_KEY_SEED,
+                       .owner = owner,
+                       .length = sizeof(seed)};
   memcpy(r.data, seed, sizeof(seed));
   vault_response_t out = {0};
   assert(call(1, &r, &out));
@@ -395,7 +401,10 @@ static void schnorr_vectors(void) {
   bool was_initialized = zkp_context_is_initialized();
   if (was_initialized) zkp_context_destroy();
   uint32_t owner = owner_create(1, 0);
-  vault_request_t r = {.op = VAULT_IMPORT_BYTES, .owner = owner, .length = 32};
+  vault_request_t r = {.op = VAULT_IMPORT_BYTES,
+                       .arg = VAULT_KEY_SECP256K1,
+                       .owner = owner,
+                       .length = 32};
   r.data[31] = 3;
   vault_response_t out = {0};
   assert(call(1, &r, &out));
@@ -584,7 +593,9 @@ int main(void) {
   assert(sign(replacement, &retained, NULL));
 
   /* Key rotation revokes every blob, even for live owners. */
-  r = (vault_request_t){.op = VAULT_IMPORT_BYTES, .owner = replacement};
+  r = (vault_request_t){.op = VAULT_IMPORT_BYTES,
+                        .arg = VAULT_KEY_SECP256K1,
+                        .owner = replacement};
   r.length = 32;
   memset(r.data, 7, 32);
   assert(call(1, &r, &out));

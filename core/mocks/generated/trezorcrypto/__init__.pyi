@@ -389,12 +389,24 @@ class ripemd160:
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
 class secbytes:
-    """Opaque immutable native secret. No buffer or plaintext interface."""
+    """Opaque immutable native secret. No buffer or plaintext interface.
+    Every value has a key type, which decides what the vault may do with
+    it."""
+    SEED: int
+    SLIP21_NODE: int
+    SYMMETRIC: int
+    SECP256K1: int
+    NIST256P1: int
+    ED25519_SEED: int
+    X25519: int
+    THP_DEVICE: int
+    CARDANO_SECRET: int
 
-    def __init__(self, value: AnyBytes | None, capacity: int = 160) -> None:
+    def __init__(self, value: AnyBytes | None, arg: int = ...) -> None:
         """Copy existing plaintext; this does not erase its Python source.
-        None makes an empty holder for a long-lived slot, see take().
-        capacity limits an empty holder; populated values use their actual
+        arg is its key type, SYMMETRIC by default. None makes an empty
+        holder for a long-lived slot, see take(); arg then limits its
+        capacity, 160 by default, and populated values use their actual
         size."""
 
     def destroy(self) -> None:

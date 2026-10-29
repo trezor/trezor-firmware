@@ -17,7 +17,7 @@ class TestCacheFramework(VaultTestCase):
         self.assertEqual(cache.fields[key], 64)
         slot = cache.data[key]
         self.assertIsNone(cache.get_secret(key))
-        source = secbytes(b"a" * 64)
+        source = secbytes(b"a" * 64, secbytes.SEED)
         cache.take_secret(key, source)
         self.assertTrue(source.empty())
         self.assertIs(cache.get_secret(key), slot)
@@ -28,7 +28,7 @@ class TestCacheFramework(VaultTestCase):
             cache.get(key)
         with self.assertRaises(TypeError):
             cache.set(key, b"x" * 64)
-        cache.take_secret(key, secbytes(b"b" * 64))
+        cache.take_secret(key, secbytes(b"b" * 64, secbytes.SEED))
         self.assertIs(cache.get_secret(key), slot)
         cache.delete_secret(key)
         self.assertIsNone(cache.get_secret(key))
@@ -38,14 +38,14 @@ class TestCacheFramework(VaultTestCase):
     def test_private_context_routing_uses_current_owner(self):
         cache = context.get_context().cache
         key = APP_COMMON_SEED_WITHOUT_PASSPHRASE
-        context.cache_take_secret(key, secbytes(b"a" * 64))
+        context.cache_take_secret(key, secbytes(b"a" * 64, secbytes.SEED))
         self.assertIs(context.cache_get_secret(key), cache.get_secret(key))
         context.cache_delete_secret(key)
         self.assertIsNone(cache.get_secret(key))
 
     def test_cross_cache_insertion_is_rejected(self):
         target = SessionlessCache()
-        value = secbytes(b"a" * 64)
+        value = secbytes(b"a" * 64, secbytes.SEED)
         with self.assertRaises(ValueError):
             target.take_secret(APP_COMMON_SEED_WITHOUT_PASSPHRASE, value)
         self.assertFalse(value.empty())
@@ -54,7 +54,7 @@ class TestCacheFramework(VaultTestCase):
 
     def test_revocation_renews_without_reallocation(self):
         cache = context.get_context().cache
-        cache.take_secret(APP_COMMON_SEED, secbytes(b"a" * 64))
+        cache.take_secret(APP_COMMON_SEED, secbytes(b"a" * 64, secbytes.SEED))
         slot = cache.data[APP_COMMON_SEED]
         cache._secret_owner.destroy()
         self.assertIsNone(cache.get_secret(APP_COMMON_SEED))
@@ -63,7 +63,7 @@ class TestCacheFramework(VaultTestCase):
         request = SecretOwner(cache.get_secret_owner())
         _secret_owner_activate(request)
         try:
-            cache.take_secret(APP_COMMON_SEED, secbytes(b"b" * 64))
+            cache.take_secret(APP_COMMON_SEED, secbytes(b"b" * 64, secbytes.SEED))
             self.assertIs(cache.get_secret(APP_COMMON_SEED), slot)
             cache.clear()
             self.assertTrue(slot.empty())
