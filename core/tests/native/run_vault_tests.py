@@ -58,7 +58,7 @@ def main():
         action="store_true",
         help="Test AES sealing/cache without EC code",
     )
-    parser.add_argument("--mode", choices=("gcm",), action="append")
+    parser.add_argument("--mode", choices=("gcm", "saes-gcm"), action="append")
     args = parser.parse_args()
     archive = args.crypto_archive or find_crypto(not args.sealing_only)
     print(f"Crypto archive: {archive}", flush=True)
@@ -143,8 +143,8 @@ def main():
             check=True,
         )
         subprocess.run([binary], cwd=ROOT, check=True)
-        for mode in args.mode or ("gcm",):
-            selection = {"gcm": 3}[mode]
+        for mode in args.mode or ("gcm", "saes-gcm"):
+            selection = {"gcm": 3, "saes-gcm": 3}[mode]
             print(f"Vault mode: {mode}", flush=True)
             names = [
                 "test_vault_sealing",
@@ -178,6 +178,12 @@ def main():
                 names += []
                 if not args.sealing_only:
                     names += ["test_ecdsa_cleanup", "test_ed25519_cleanup"]
+            if mode.startswith("saes-"):
+                names = [
+                    name
+                    for name in names
+                    if name not in ("test_vault_siv", "test_vault_kwp")
+                ]
             for name in names:
                 inputs = [f"core/tests/native/{name}.c", str(archive)]
                 if (

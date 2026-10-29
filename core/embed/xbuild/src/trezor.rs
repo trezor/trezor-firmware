@@ -215,6 +215,11 @@ fn configure_compiler_defaults(lib: &mut CLibrary) {
         caps,
     )
     .unwrap_or_else(|error| panic!("{error}"));
+    if has_feature("production") {
+        selected
+            .check_production(caps)
+            .unwrap_or_else(|error| panic!("{error}"));
+    }
     lib.add_define("VAULT_SEAL_MODE", Some(selected.cipher.define()));
     if selected.hardware {
         lib.add_define("VAULT_SEAL_HW", Some("1"));

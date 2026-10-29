@@ -1,8 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #ifdef SECURE_MODE
-#if defined(VAULT_SEAL_HW)
-#error "Select a record-sealing feature before enabling hardware records"
-#endif
 
 #include <trezor_bsp.h>
 
@@ -60,7 +57,7 @@ typedef struct {
   uint32_t wrapped[8];
   bool ready;
 } saes_key_t;
-static saes_key_t storage_key;
+static saes_key_t record_key, storage_key;
 
 /* HAL_CRYP_Init starts DHUK loading but does not wait for that load.
  * WrapKey/UnwrapKey enable SAES directly, so their callers must wait first. */
@@ -309,8 +306,7 @@ static uint32_t saes_request(saes_key_t* key, vault_saes_request_t* r) {
 }
 
 uint32_t vault_saes_record(vault_saes_request_t* r) {
-  memzero(r->data, sizeof(r->data));
-  return VAULT_SAES_FAILED;
+  return saes_request(&record_key, r);
 }
 
 uint32_t vault_saes_storage(vault_saes_request_t* r) {
