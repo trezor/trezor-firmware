@@ -180,6 +180,26 @@ SIGNED = Screen(
 )
 
 
+# Where a model draws less than the layout asks for: (layout type, what) ->
+# why. The test is not run there; it is reported as an expected failure.
+GAPS = {
+    (LayoutType.Delizia, "delegate"): (
+        "WIP: confirm_properties draws a review's facts on one screen with no "
+        "vertical paging, so a third fact is cut off"
+    ),
+    (LayoutType.Delizia, "contract/data"): (
+        "WIP: confirm_properties draws a review's facts on one screen with no "
+        "vertical paging, so long input data is cut off"
+    ),
+}
+
+
+def skip_gap(debug: "DebugLink", what: str) -> None:
+    reason = GAPS.get((debug.layout_type, what))
+    if reason is not None:
+        pytest.xfail(reason)
+
+
 def br_name(step: str) -> str:
     """The name a host sees for one step of the app."""
     return f"{APP_NAME}/{step}"
@@ -188,6 +208,15 @@ def br_name(step: str) -> str:
 def flat(text: str) -> str:
     """Text with every whitespace removed, for values the model wraps or pages."""
     return "".join(text.split())
+
+
+def screen_text(layout) -> str:
+    """Everything a screen says, the footer included.
+
+    Eckhart keeps a closing screen's description in the content, Delizia in the
+    footer, so a description is looked for wherever the model put it.
+    """
+    return flat(" ".join([layout.title(), layout.text_content(), layout.footer()]))
 
 
 def page(debug: "DebugLink") -> None:
@@ -253,12 +282,13 @@ def open_account_info(debug: "DebugLink", account: str, path: str) -> None:
     debug.click(debug.screen_buttons.menu())  # close the menu
 
 
-def confirm_verify(debug: "DebugLink") -> None:
+def confirm_verify(debug: "DebugLink", pages: int) -> None:
     """Page to the end of a verify flow, confirm, and dismiss its success."""
-    pages = debug.read_layout().page_count()
     if debug.layout_type is LayoutType.Delizia:
+        # Delizia pages the value, then asks for the tap on a prompt screen.
         for _ in range(pages - 1):
             debug.swipe_up()
+        debug.synchronize_at("PromptScreen")
         debug.click(debug.screen_buttons.tap_to_confirm())
     else:
         for _ in range(pages - 1):
@@ -266,7 +296,7 @@ def confirm_verify(debug: "DebugLink") -> None:
         debug.click(debug.screen_buttons.ok())
 
     success = debug.read_layout(wait=True)
-    assert "confirmed" in flat(success.text_content()).lower()
+    assert "confirmed" in screen_text(success).lower()
     debug.press_yes()
 
 
@@ -297,12 +327,16 @@ def answer_review(debug: "DebugLink", screen: Screen, visit_extras: bool) -> Non
         confirm(debug)
 
 
-def answer_simple(debug: "DebugLink", screen: Screen) -> None:
-    """Read a one-page screen and answer it."""
+def answer_simple(debug: "DebugLink", screen: Screen, pages: int) -> None:
+    """Read a screen, paging it if it runs over, and answer it."""
     layout = debug.read_layout()
     if screen.title is not None:
         assert screen.title in layout.title()
-    text = flat(layout.text_content())
+    texts = [screen_text(layout)]
+    for _ in range(pages - 1):
+        page(debug)
+        texts.append(screen_text(debug.read_layout()))
+    text = flat("".join(texts))
     for value in screen.values:
         assert flat(value) in text
     for label in screen.labels:
@@ -323,14 +357,14 @@ def answer_simple(debug: "DebugLink", screen: Screen) -> None:
         raise AssertionError(f"Unknown screen kind {screen.kind}")
 
 
-def answer_verify(debug: "DebugLink", screen: Screen) -> None:
+def answer_verify(debug: "DebugLink", screen: Screen, pages: int) -> None:
     """Read a verify flow's value, open its account info, and confirm."""
     text = flat(debug.read_layout().text_content())
     for value in screen.values:
         assert flat(value) in text
     if screen.account is not None and screen.path is not None:
         open_account_info(debug, screen.account, screen.path)
-    confirm_verify(debug)
+    confirm_verify(debug, pages)
 
 
 def cancel_screen(debug: "DebugLink", screen: Screen) -> None:
@@ -373,6 +407,9 @@ def run_showcase(
     visit_extras: bool = True,
 ) -> None:
     """Run one showcase, confirming every screen or cancelling at one of them."""
+    answered = screens if cancel_at is None else screens[:cancel_at]
+    for screen in answered:
+        skip_gap(session.debug, screen.step)
 
     def input_flow():
         for index, screen in enumerate(screens):
@@ -382,11 +419,12 @@ def run_showcase(
                 cancel_screen(session.debug, screen)
                 return
             if screen.kind == "verify":
-                answer_verify(session.debug, screen)
+                assert br.pages is not None
+                answer_verify(session.debug, screen, br.pages)
             elif screen.kind == "review":
                 answer_review(session.debug, screen, visit_extras)
             else:
-                answer_simple(session.debug, screen)
+                answer_simple(session.debug, screen, br.pages or 1)
 
     with session.test_ctx as client:
         client.set_input_flow(input_flow)

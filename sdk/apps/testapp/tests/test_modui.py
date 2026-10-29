@@ -165,6 +165,15 @@ def flat(text: str) -> str:
     return "".join(text.split())
 
 
+def screen_text(layout) -> str:
+    """Everything a screen says, the footer included.
+
+    Eckhart keeps a closing screen's description in the content, Delizia in the
+    footer, so a description is looked for wherever the model put it.
+    """
+    return flat(" ".join([layout.title(), layout.text_content(), layout.footer()]))
+
+
 def expect_one_button_request(step: str) -> list:
     """The responses of one layout: a single ButtonRequest, however long the
     person spends in its menu, then the app's answer."""
@@ -215,20 +224,23 @@ def open_extra(debug, items, index: int = 0) -> None:
     debug.click(debug.screen_buttons.menu())  # close the menu
 
 
-def read_all_pages(debug) -> list[str]:
+def read_all_pages(debug, pages: int | None = None) -> list[str]:
     """Read every page of a paged layout, leaving the last one up.
 
-    Eckhart pages with its action bar, Delizia with a swipe.
+    Eckhart pages with its action bar, Delizia with a swipe. `pages` is the count
+    the ButtonRequest reported, for a layout whose own trace has none.
     """
     layout = debug.read_layout()
-    pages = [layout.text_content()]
-    for _ in range(layout.page_count() - 1):
+    if pages is None:
+        pages = layout.page_count()
+    texts = [layout.text_content()]
+    for _ in range(pages - 1):
         if debug.layout_type is LayoutType.Delizia:
             debug.swipe_up()
         else:
             debug.click(debug.screen_buttons.ok())
-        pages.append(debug.read_layout().text_content())
-    return pages
+        texts.append(debug.read_layout().text_content())
+    return texts
 
 
 def open_account_info(
@@ -248,20 +260,20 @@ def open_account_info(
     debug.click(debug.screen_buttons.menu())  # close the menu
 
 
-def confirm_verify(debug) -> None:
+def confirm_verify(debug, pages: int) -> None:
     """Confirm a verify flow, dismiss its success screen, and check it said so."""
-    layout = debug.read_layout()
-    pages = layout.page_count()
     if debug.layout_type is LayoutType.Delizia:
+        # Delizia pages the value, then asks for the tap on a prompt screen.
         for _ in range(pages - 1):
             debug.swipe_up()
+        debug.synchronize_at("PromptScreen")
         debug.click(debug.screen_buttons.tap_to_confirm())
     else:
         for _ in range(pages - 1):
             debug.click(debug.screen_buttons.ok())
         debug.click(debug.screen_buttons.ok())
     success = debug.read_layout(wait=True)
-    assert "confirmed" in flat(success.text_content()).lower()
+    assert "confirmed" in screen_text(success).lower()
     debug.press_yes()
 
 
@@ -455,10 +467,11 @@ def test_danger_confirm(session: Session, instance_id: int):
     request = m.Danger(step="danger", title="Important", fields=DANGER_FIELDS)
 
     def input_flow():
-        yield
+        br = yield
+        assert br.pages is not None
         layout = session.debug.read_layout()
         assert "Important" in layout.title()
-        text = flat(layout.text_content())
+        text = flat("".join(read_all_pages(session.debug, br.pages)))
         assert flat("This contract is unknown. Continue only if you trust it.") in text
         assert "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t" in text
         open_menu(session.debug)
@@ -574,11 +587,12 @@ def test_verify_confirm(session: Session, instance_id: int, make, value: str):
     request = make(VERIFY_ACCOUNT, VERIFY_PATH)
 
     def input_flow():
-        yield
+        br = yield
+        assert br.pages is not None
         layout = session.debug.read_layout()
         assert flat(value) in flat(layout.text_content())
         open_account_info(session.debug, present=(VERIFY_ACCOUNT, VERIFY_PATH))
-        confirm_verify(session.debug)
+        confirm_verify(session.debug, br.pages)
 
     with session.test_ctx as client:
         client.set_input_flow(input_flow)
@@ -596,9 +610,10 @@ def test_verify_absent_account(session: Session, instance_id: int, make):
     request = make(None, None)
 
     def input_flow():
-        yield
+        br = yield
+        assert br.pages is not None
         open_account_info(session.debug, absent=(VERIFY_ACCOUNT, VERIFY_PATH))
-        confirm_verify(session.debug)
+        confirm_verify(session.debug, br.pages)
 
     with session.test_ctx as client:
         client.set_input_flow(input_flow)
@@ -663,7 +678,7 @@ def test_done(session: Session, instance_id: int):
     def input_flow():
         yield
         layout = session.debug.read_layout()
-        assert flat("Transaction signed") in flat(layout.text_content())
+        assert flat("Transaction signed") in screen_text(layout)
         session.debug.press_yes()
 
     with session.test_ctx as client:
