@@ -5,7 +5,7 @@ use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
-use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow, SwipePage};
 use crate::ui::geometry::Direction;
 use crate::ui::layout::util::PropsList;
 
@@ -106,9 +106,11 @@ pub fn new_show_danger(
         items,
     }
     .into_paragraphs();
+    // The content pages on its own, one page at a time; the flow's swipe-up
+    // keeps its meaning only on the last page, as on every other flow.
     let content_message = Frame::with_header(
         Header::left_aligned(title).with_menu_button().with_danger(),
-        SwipeContent::new(paragraphs),
+        SwipeContent::new(SwipePage::vertical(paragraphs)),
     )
     .with_tap_footer(Some(verb_cancel));
     // Fields can run over several pages; the plain message never did.
