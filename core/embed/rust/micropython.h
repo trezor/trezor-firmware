@@ -6,4 +6,5 @@
 #include "py/objstr.h"
 #include "py/runtime.h"
 
+#include "../upymod/thp_vault.h"
 #include "../upymod/trezorobj.h"

@@ -28,17 +28,18 @@ class TestTrezorHostProtocolCredentialManager(unittest.TestCase):
     def setUp(self):
         config.init()
         config.wipe()
+        self.assertTrue(config.unlock("", None))
 
-    def test_derive_cred_auth_key(self):
-        key1 = credential_manager.derive_cred_auth_key()
-        key2 = credential_manager.derive_cred_auth_key()
+    def test_credential_mac(self):
+        key1 = credential_manager._credential_mac(b"test credential")
+        key2 = credential_manager._credential_mac(b"test credential")
         self.assertEqual(len(key1), 32)
         self.assertEqual(key1, key2)
 
     def test_invalidate_cred_auth_key(self):
-        key1 = credential_manager.derive_cred_auth_key()
+        key1 = credential_manager._credential_mac(b"test credential")
         credential_manager.invalidate_cred_auth_key()
-        key2 = credential_manager.derive_cred_auth_key()
+        key2 = credential_manager._credential_mac(b"test credential")
         self.assertNotEqual(key1, key2)
 
     def test_credentials(self):
@@ -105,10 +106,16 @@ class TestTrezorHostProtocolCredentialManager(unittest.TestCase):
         expected = b"\n\x10\n\thost_name\x1a\x03APP\x12 p\x08Lv#\x185\xcd\x07sF\xb6f\x8e?P\x8d\x88\xf5\xa0\xd4\x16''\x90\x97$\xa4AQ@\x95"
 
         # Use hard-coded bytes as a "credential auth key" when issuing a credential
-        credential_manager.derive_cred_auth_key = lambda: b"\xbe\xef"
+        from mock import patch
+        from trezor.crypto import hmac
 
-        credential = _issue_credential(HOST_NAME_1, DUMMY_KEY_1)
-        self.assertEqual(credential, expected)
+        with patch(
+            credential_manager,
+            "_credential_mac",
+            lambda data: hmac(hmac.SHA256, b"\xbe\xef", data).digest(),
+        ):
+            credential = _issue_credential(HOST_NAME_1, DUMMY_KEY_1)
+            self.assertEqual(credential, expected)
 
 
 if __name__ == "__main__":

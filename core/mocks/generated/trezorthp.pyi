@@ -189,10 +189,11 @@ def next_timeout(iface_num: int) -> tuple[int, int] | None:
     Event loop needs to call `message_retransmit(channel_id)` after `timeout_ms`.
     Returns None if there is no channel that's waiting for an ACK.
     """
+from trezorcrypto import secbytes
 
 
 # rust/src/thp/micropython.rs
-def handshake_key_from_device_secret(iface_num: int, device_secret: AnyBytes | None) -> None:
+def handshake_key_from_device_secret(iface_num: int, device_secret: secbytes | None) -> None:
     """
     Derive the device static key natively to progress a handshake after `packet_in`
     returned `KEY_REQUIRED`. If the second argument is None, handshake is aborted
@@ -201,5 +202,5 @@ def handshake_key_from_device_secret(iface_num: int, device_secret: AnyBytes | N
 
 
 # rust/src/thp/micropython.rs
-def static_public_key(device_secret: AnyBytes) -> bytes:
+def static_public_key(device_secret: secbytes) -> bytes:
     """Derive the legacy THP public identity without exporting its private key."""

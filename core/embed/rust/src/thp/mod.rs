@@ -670,17 +670,23 @@ impl ThpContext {
         iface_num: u8,
         local_static_privkey: &[u8],
     ) -> Result<(), Error> {
+        use trezor_thp::channel::U8Array;
+        if local_static_privkey.len() != 32 {
+            return Err(Error::InvalidKeyLength);
+        }
+        self.handshake_identity(iface_num, &crypto::DhKey::from_slice(local_static_privkey))
+    }
+
+    pub fn handshake_identity(&mut self, iface_num: u8, key: &crypto::DhKey) -> Result<(), Error> {
+        use trezor_thp::channel::U8Array;
         let now = self.now();
-        let key = local_static_privkey
-            .try_into()
-            .map_err(|_| Error::InvalidKeyLength)?;
         let mut failed = Vec::<u16, MAX_CHANNELS_OPENING>::new();
         for che in self.channel_opening.values_mut() {
             if che.iface_num != iface_num {
                 continue;
             }
             if che.channel.static_key_required() {
-                if che.channel.set_static_key(key).is_err() {
+                if che.channel.set_static_key_native(key.clone()).is_err() {
                     // Only this channel is affected, keep serving the others.
                     unwrap!(failed.push(che.channel.channel_id()));
                     continue;

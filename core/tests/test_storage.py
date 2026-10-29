@@ -9,6 +9,7 @@ class TestConfig(unittest.TestCase):
     def setUp(self):
         config.init()
         config.wipe()
+        self.assertTrue(config.unlock("", None))
 
     def test_u2f_counter(self):
         for i in range(150):
@@ -50,13 +51,15 @@ class TestConfig(unittest.TestCase):
 
         def test_device_secret(self):
             secret1 = device.get_device_secret()
-            self.assertEqual(len(secret1), 16)
+            import trezorthp
+
+            public1 = trezorthp.static_public_key(secret1)
             secret2 = device.get_device_secret()
-            self.assertEqual(secret1, secret2)
+            self.assertEqual(public1, trezorthp.static_public_key(secret2))
             config.wipe()
+            self.assertTrue(config.unlock("", None))
             secret3 = device.get_device_secret()
-            self.assertEqual(len(secret3), 16)
-            self.assertNotEqual(secret1, secret3)
+            self.assertNotEqual(public1, trezorthp.static_public_key(secret3))
 
 
 if __name__ == "__main__":

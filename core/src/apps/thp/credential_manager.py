@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from trezor import protobuf, utils
-from trezor.crypto import hmac
 from trezor.messages import (
     ThpAuthenticatedCredentialData,
     ThpCredentialMetadata,
@@ -15,31 +14,13 @@ from trezorthp import MAX_CREDENTIAL_LEN
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
-    from apps.common.paths import Slip21Path
 
-_THP_CREDENTIAL_KEY_PATH_PREFIX = [b"TREZOR", b"THP credential authentication key"]
+def _credential_mac(data: AnyBytes) -> bytes:
+    from trezorcrypto import thp_credential_mac
 
+    from storage.device import get_cred_auth_key_counter
 
-def derive_cred_auth_key() -> bytes:
-    """
-    Derive the current THP credential authentication mac-ing key from the device secret.
-    """
-    from storage.device import get_cred_auth_key_counter, get_device_secret
-
-    from apps.common.seed import Slip21Node
-
-    # Derive the key using SLIP-21 https://github.com/satoshilabs/slips/blob/master/slip-0021.md,
-    # the derivation path is m/"TREZOR"/"THP credential authentication key"/(counter 4-byte BE)
-
-    thp_secret = get_device_secret()
-    counter = get_cred_auth_key_counter()
-    path: Slip21Path = _THP_CREDENTIAL_KEY_PATH_PREFIX + [counter]
-
-    symmetric_key_node: Slip21Node = Slip21Node(thp_secret)
-    symmetric_key_node.derive_path(path)
-    cred_auth_key = symmetric_key_node.key()
-
-    return cred_auth_key
+    return thp_credential_mac(get_cred_auth_key_counter(), data)
 
 
 def invalidate_cred_auth_key() -> None:
@@ -70,13 +51,12 @@ def issue_credential(
     ):
         credential_metadata.app_name = truncate_utf8(credential_metadata.app_name, 40)
 
-    cred_auth_key = derive_cred_auth_key()
     proto_msg = ThpAuthenticatedCredentialData(
         host_static_public_key=host_static_public_key,
         cred_metadata=credential_metadata,
     )
     authenticated_credential_data = _encode_message_into_new_buffer(proto_msg)
-    mac = hmac(hmac.SHA256, cred_auth_key, authenticated_credential_data).digest()
+    mac = _credential_mac(authenticated_credential_data)
 
     proto_msg = ThpPairingCredential(cred_metadata=credential_metadata, mac=mac)
     credential_raw = _encode_message_into_new_buffer(proto_msg)
@@ -115,13 +95,12 @@ def validate_credential(
     """
     Validate a pairing credential binded to the provided host static public key.
     """
-    cred_auth_key = derive_cred_auth_key()
     proto_msg = ThpAuthenticatedCredentialData(
         host_static_public_key=host_static_public_key,
         cred_metadata=credential.cred_metadata,
     )
     authenticated_credential_data = _encode_message_into_new_buffer(proto_msg)
-    mac = hmac(hmac.SHA256, cred_auth_key, authenticated_credential_data).digest()
+    mac = _credential_mac(authenticated_credential_data)
 
     if len(mac) != len(credential.mac):
         return False

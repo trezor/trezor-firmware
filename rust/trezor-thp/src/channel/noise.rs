@@ -208,6 +208,17 @@ impl<B: Backend> NoiseHandshake<Device, B> {
         static_privkey: &[u8; PRIVKEY_LEN],
         dest: &mut [u8],
     ) -> Result<usize, Error> {
+        self.write_initiation_response_key(
+            <DHPrivKey<B> as U8Array>::from_slice(static_privkey),
+            dest,
+        )
+    }
+
+    pub fn write_initiation_response_key(
+        &mut self,
+        static_privkey: DHPrivKey<B>,
+        dest: &mut [u8],
+    ) -> Result<usize, Error> {
         let mk = Self::mask_key(static_privkey);
         self.hss.set_s(mk.static_privkey);
         self.hss.set_s_mask(mk.mask);
@@ -265,11 +276,10 @@ impl<B: Backend> NoiseHandshake<Device, B> {
         Ok((nc, pairing_state, dest.len()))
     }
 
-    fn mask_key(static_privkey: &[u8; PRIVKEY_LEN]) -> MaskKeyResult<B>
+    fn mask_key(static_privkey: DHPrivKey<B>) -> MaskKeyResult<B>
     where
         DHPrivKey<B>: U8Array,
     {
-        let static_privkey = <DHPrivKey<B> as U8Array>::from_slice(static_privkey);
         let static_pubkey = <B::DH as DH>::pubkey(&static_privkey);
         let ephemeral_privkey = <B::DH as DH>::genkey();
         let ephemeral_pubkey = <B::DH as DH>::pubkey(&ephemeral_privkey);

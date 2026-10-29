@@ -42,11 +42,86 @@ where
     }
 }
 
+// Ciphertext descriptors survive between handshake packets. The static
+// scalar is used only inside the vault; ephemeral keys remain native.
+pub struct VaultIdentity {
+    handle: Zeroizing<[u8; 256]>,
+    public: curve25519::Point,
+}
+impl VaultIdentity {
+    pub fn from_secret(secret: crate::micropython::Obj) -> Result<Self, crate::micropython::Error> {
+        let mut handle = Zeroizing::new([0u8; 256]);
+        let mut public = [0u8; 32];
+        // SAFETY: the bridge validates the object without raising or allocating.
+        let ok = unsafe {
+            crate::micropython::ffi::trezorcrypto_thp_prepare(
+                secret,
+                handle.as_mut_ptr(),
+                public.as_mut_ptr(),
+            )
+        };
+        if !ok {
+            return Err(crate::micropython::Error::ValueError(
+                c"Invalid or locked THP identity",
+            ));
+        }
+        Ok(Self {
+            handle,
+            public: curve25519::Point::from_slice(&public),
+        })
+    }
+    pub fn public(&self) -> &[u8] {
+        self.public.as_slice()
+    }
+}
+
+pub enum DhKey {
+    Native(curve25519::Scalar),
+    Vault(VaultIdentity),
+}
+impl U8Array for DhKey {
+    fn new() -> Self {
+        Self::Native(curve25519::Scalar::new())
+    }
+    fn new_with(v: u8) -> Self {
+        Self::Native(curve25519::Scalar::new_with(v))
+    }
+    fn from_slice(s: &[u8]) -> Self {
+        Self::Native(curve25519::Scalar::from_slice(s))
+    }
+    fn len() -> usize {
+        32
+    }
+    // Noise uses byte access for native ephemeral/mask keys, and clone/DH for
+    // static keys. Never serialize an opaque key if that contract changes.
+    fn as_slice(&self) -> &[u8] {
+        match self {
+            Self::Native(k) => k.as_slice(),
+            Self::Vault(_) => panic!("Opaque THP key"),
+        }
+    }
+    fn as_mut(&mut self) -> &mut [u8] {
+        match self {
+            Self::Native(k) => k.as_mut(),
+            Self::Vault(_) => panic!("Opaque THP key"),
+        }
+    }
+    fn clone(&self) -> Self {
+        match self {
+            Self::Native(k) => Self::Native(k.clone()),
+            Self::Vault(k) => Self::Vault(VaultIdentity {
+                handle: Zeroizing::new(*k.handle),
+                public: k.public.clone(),
+            }),
+        }
+    }
+}
+
 pub struct TrezorCryptoCurve25519;
 
 impl DH for TrezorCryptoCurve25519 {
     // Scalar & Point implement ZeroizeOnDrop, no need to wrap them.
-    type Key = curve25519::Scalar;
+    type Key = DhKey;
     type Pubkey = curve25519::Point;
     type Output = curve25519::Point;
 
@@ -57,18 +132,38 @@ impl DH for TrezorCryptoCurve25519 {
     fn genkey() -> Self::Key {
         let mut bytes = [0u8; curve25519::CURVE25519_KEY_SIZE];
         crate::trezorhal::random::bytes(&mut bytes);
-        curve25519::Scalar::from_bytes(bytes)
+        DhKey::Native(curve25519::Scalar::from_bytes(bytes))
     }
 
     fn pubkey(privkey: &Self::Key) -> Self::Pubkey {
-        curve25519::Point::from_secret(privkey)
+        match privkey {
+            DhKey::Native(key) => curve25519::Point::from_secret(key),
+            DhKey::Vault(key) => key.public.clone(),
+        }
     }
 
     fn dh(privkey: &Self::Key, pubkey: &Self::Pubkey) -> Result<Self::Output, ()> {
         if pubkey.is_zero() {
             return Err(());
         }
-        let output = pubkey.multiply(privkey);
+        let output = match privkey {
+            DhKey::Native(key) => pubkey.multiply(key),
+            DhKey::Vault(key) => {
+                let mut output = curve25519::Point::new();
+                // SAFETY: descriptor and point have the fixed bridge sizes.
+                let ok = unsafe {
+                    crate::micropython::ffi::trezorcrypto_thp_dh(
+                        key.handle.as_ptr(),
+                        pubkey.as_slice().as_ptr(),
+                        output.as_mut().as_mut_ptr(),
+                    )
+                };
+                if !ok {
+                    return Err(());
+                }
+                output
+            }
+        };
         if output.is_zero() {
             // `output` is zeroized on drop.
             return Err(());
