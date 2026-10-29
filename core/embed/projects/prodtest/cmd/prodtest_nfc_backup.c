@@ -29,6 +29,8 @@
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 
+#include "ed25519-donna/ed25519.h"
+#include "hsm_keys.h"
 #include "memzero.h"
 #include "prodtest_error_codes.h"
 
@@ -41,6 +43,13 @@
 #define ENC_TAG_SIZE 16
 
 static noise_xxpsk3_initiator_t intr = {0};
+
+// Root CA public key of NFC backup card certificates
+#if !PRODUCTION
+static const ed25519_public_key NFC_CARD_ROOT_KEY = NFC_CARD_ROOT_DEBUG_ED25519;
+// The corresponding private key is
+// 6455474c2af0e2dd9745a1c4b778556c8acf5c851318bf5979d9397ad4ee57da
+#endif
 
 typedef struct {
   uint8_t version;                // 0 = v1, 1 = v2, 2 = v3
@@ -58,6 +67,8 @@ typedef struct {
   uint16_t key_usage;             // KeyUsage bitmask
   uint8_t auth_key_id[20];        // Authority Key Identifier
   uint8_t signature[64];          // Ed25519 Signature (64 bytes)
+  const uint8_t *tbs;             // Raw DER-encoded tbsCertificate
+  size_t tbs_size;                // Size of the raw tbsCertificate
 } nfc_backup_certificate_t;
 
 typedef ts_t (*on_tap_callback_t)(cli_t *cli);
@@ -406,6 +417,10 @@ int parse_x509_certificate(const uint8_t *buffer, size_t buffer_len,
   const uint8_t *tbs_ptr = asn1_parse_header(p, end, &tag, &len);
   if (!tbs_ptr || tag != 0x30) return -1;
   const uint8_t *tbs_end = tbs_ptr + len;
+
+  cert->tbs = p;
+  cert->tbs_size = (size_t)(tbs_ptr - p) + len;
+
   p = tbs_ptr;
 
   // Version [0] EXPLICIT
@@ -689,13 +704,27 @@ static ts_t nfc_backup_noise(cli_t *cli, uint8_t (*psk)[32]) {
   TSH_CHECK(noise_status, TS_EINVAL);
 
   nfc_backup_certificate_t cert = {0};
-  parse_x509_certificate(certificate, certificate_size, &cert);
+  int parse_result =
+      parse_x509_certificate(certificate, certificate_size, &cert);
+  TSH_CHECK(parse_result == 0, TS_EINVAL);
+
   print_certificate(cli, &cert);
 
-  if (memcmp(cert.public_key, card_public_key, NOISE_XXPSK3_DHLEN) != 0) {
-    cli_trace(cli, "Card public key does not match certificate public key.");
-    TSH_CHECK(false, TS_EINVAL);
-  }
+  // Verify the certificate signature against the trusted root key
+#if PRODUCTION
+  // No production root CA key exists yet
+  TSH_CHECK(false, TS_EINVAL);
+#else
+  int sig_result = ed25519_sign_open(cert.tbs, cert.tbs_size, NFC_CARD_ROOT_KEY,
+                                     cert.signature);
+  TSH_CHECK(sig_result == 0, TS_EINVAL);
+#endif
+
+  // Check that the card's static key proven in the handshake matches the
+  // public key in the certificate
+  int pubkey_diff =
+      memcmp(cert.public_key, card_public_key, NOISE_XXPSK3_DHLEN);
+  TSH_CHECK(pubkey_diff == 0, TS_EINVAL);
 
   noise_status = noise_xxpsk3_initiator_create_request2(
       &intr, static_private_key, static_public_key, *psk, NULL, 0, request,

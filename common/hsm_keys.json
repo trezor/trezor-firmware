@@ -1,6 +1,7 @@
 {
   "shared": {
-    "HSM_PUBLIC_DEBUG_X25519": "cfce80f7c87ea1e93d0d80983fecc998a0ddb6aa7a36366b6c7dd409325f674b"
+    "HSM_PUBLIC_DEBUG_X25519": "cfce80f7c87ea1e93d0d80983fecc998a0ddb6aa7a36366b6c7dd409325f674b",
+    "NFC_CARD_ROOT_DEBUG_ED25519": "4810d763b796dbb2e2df8d286909cc7645a2acbacf175bb5cc274005186bebc6"
   },
   "models": {
     "T2B1": {
