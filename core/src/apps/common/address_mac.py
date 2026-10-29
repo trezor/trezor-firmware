@@ -25,20 +25,19 @@ def check_address_mac(
 def get_address_mac(
     address: str, slip44: int, address_n: Bip32Path, keychain: Keychain
 ) -> bytes:
-    from trezor.crypto import hmac
-
+    from .seed import slip21_mac
     from .writers import write_bytes_unchecked, write_compact_size, write_uint32_le
 
     # k = Key(m/"SLIP-0024"/"Address MAC key")
     node = keychain.derive_slip21(_ADDRESS_MAC_KEY_PATH)
 
     # mac = HMAC-SHA256(key = k, msg = slip44 || address)
-    mac = utils.HashWriter(hmac(hmac.SHA256, node.key()))
+    msg = bytearray()
     address_bytes = address.encode()
-    write_uint32_le(mac, slip44)
-    write_compact_size(mac, len(address_n))
+    write_uint32_le(msg, slip44)
+    write_compact_size(msg, len(address_n))
     for n in address_n:
-        write_uint32_le(mac, n)
-    write_compact_size(mac, len(address_bytes))
-    write_bytes_unchecked(mac, address_bytes)
-    return mac.get_digest()
+        write_uint32_le(msg, n)
+    write_compact_size(msg, len(address_bytes))
+    write_bytes_unchecked(msg, address_bytes)
+    return slip21_mac(node.key(), msg)

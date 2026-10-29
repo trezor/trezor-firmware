@@ -14,6 +14,9 @@ from . import mnemonic
 from .passphrase import get_passphrase
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+    from trezorcrypto import secbytes
+
     from trezor.crypto import bip32
     from trezor.messages import ThpCreateNewSession
     from trezor.wire.protocol_common import Context
@@ -66,6 +69,67 @@ class Slip21Node:
 
     def clone(self) -> "Slip21Node":
         return Slip21Node(data=self.data)
+
+
+class VaultSlip21Node:
+    """
+    SLIP-0021 node of a vault seed. The node and its keys stay sealed in the
+    vault; use slip21_mac() for authentication tags.
+    """
+
+    def __init__(
+        self, seed: secbytes | None = None, node: secbytes | None = None
+    ) -> None:
+        from trezorcrypto import slip21_derive
+
+        if node is not None:
+            self.node = node
+        elif seed is not None:
+            self.node = slip21_derive(seed, (), root=True)
+        else:
+            raise ValueError  # neither seed nor node specified
+
+    def __del__(self) -> None:
+        # Clones share the immutable record; owner teardown revokes it.
+        del self.node
+
+    def derive_path(self, path: Slip21Path) -> None:
+        from trezorcrypto import slip21_derive
+
+        if path:
+            self.node = slip21_derive(self.node, path)
+
+    def key(self) -> secbytes:
+        from trezorcrypto import slip21_derive
+
+        return slip21_derive(self.node, (), key=True)
+
+    def clone(self) -> "VaultSlip21Node":
+        return VaultSlip21Node(node=self.node)
+
+
+def slip21_root(seed: bytes | secbytes) -> Slip21Node | VaultSlip21Node:
+    if isinstance(seed, bytes):
+        return Slip21Node(seed)
+    return VaultSlip21Node(seed)
+
+
+def slip21_export(seed: bytes | secbytes, path: Slip21Path) -> bytes:
+    """Return a node the host receives by design (Evolu only)."""
+    if isinstance(seed, bytes):
+        node = Slip21Node(seed)
+        node.derive_path(path)
+        return node.data
+    from trezorcrypto import slip21_export
+
+    return slip21_export(seed, path)
+
+
+def slip21_mac(key: bytes | secbytes, message: AnyBytes) -> bytes:
+    """HMAC-SHA256 under a SLIP-0021 key; vault keys never leave the vault."""
+    if isinstance(key, bytes):
+        return hmac(hmac.SHA256, key, message).digest()
+    return hmac.tag(hmac.SHA256, key, message)
 
 
 if utils.USE_THP:

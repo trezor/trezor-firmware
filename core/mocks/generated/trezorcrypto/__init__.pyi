@@ -325,6 +325,12 @@ class hmac:
         Return the digest of processed data so far.
         """
 
+    @staticmethod
+    def tag(hashtype: int, key: secbytes, message: AnyBytes) -> bytes:
+        """Compute a public authentication tag natively. Message is limited
+        to 256 bytes. For public MACs only; not a secret-output KDF
+        interface."""
+
 
 # upymod/modtrezorcrypto/modtrezorcrypto-pbkdf2.h
 class pbkdf2:
@@ -407,6 +413,23 @@ class secbytes:
 # upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
 def revoke_secrets() -> None:
     """Erase all native owners and entries; emergency teardown only."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+def slip21_derive(
+    source: secbytes,
+    path: Sequence[AnyBytes],
+    root: bool = False,
+    key: bool = False,
+) -> secbytes:
+    """SLIP-0021 in the vault: derive from a seed (root) or a 64-byte node
+    along path. Return the sealed node or, with key, its sealed key."""
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
+def slip21_export(seed: secbytes, path: Sequence[AnyBytes]) -> bytes:
+    """Return a SLIP-0021 node in plaintext, for protocols that hand it to
+    the host. The kernel allows only the Evolu namespace."""
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secbytes.h
