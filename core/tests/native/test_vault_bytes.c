@@ -21,7 +21,50 @@ static uint32_t owner_create(uintptr_t caller, uint32_t parent) {
   vault_response_t out = {0};
   return call(caller, &r, &out) ? out.value : 0;
 }
+/* Storage callbacks may inspect/revoke owners without entering crypto or
+ * disturbing an interrupted transaction. The handler entry accepts no crypto.
+ */
+static void lifecycle_callbacks(void) {
+  vault_lifecycle_request_t r = {VAULT_ABI, VAULT_OWNER_CREATE, 0};
+  vault_lifecycle_response_t out = {0};
+  assert(vault_lifecycle_dispatch(17, &r, &out));
+  uint32_t session = out.value;
+  r.owner = session;
+  assert(!vault_lifecycle_dispatch(18, &r, &out));
+  assert(vault_lifecycle_dispatch(17, &r, &out));
+  uint32_t request = out.value;
+  r = (vault_lifecycle_request_t){VAULT_ABI, VAULT_OWNER_INFO, request};
+  assert(vault_lifecycle_dispatch(17, &r, &out));
+  assert(out.parent == session);
+  secret_owner_find(request)->authorized_locked = true;
+  assert(vault_lifecycle_dispatch(17, &r, &out) && out.value == 1);
+  assert(!vault_lifecycle_dispatch(18, &r, &out));
+  assert(is_zero(&out, sizeof(out)));
+  r.abi++;
+  assert(!vault_lifecycle_dispatch(17, &r, &out));
+  r.abi = VAULT_ABI;
+  for (uint32_t op = VAULT_RETAIN; op <= VAULT_NEM_SHARED; op++) {
+    r.op = op;
+    assert(!vault_lifecycle_dispatch(17, &r, &out));
+  }
+  r.op = VAULT_OWNER_INFO;
+  memset(secret_scratch, 0x5a, sizeof(secret_scratch));
+  secret_busy = true;
+  assert(!vault_lifecycle_dispatch(17, &r, &out));
+  assert(secret_busy && ((uint8_t *)secret_scratch)[0] == 0x5a);
+  secret_busy = false;
+  memzero(secret_scratch, sizeof(secret_scratch));
+  r.op = VAULT_REVOKE_REQUESTS;
+  assert(vault_lifecycle_dispatch(17, &r, &out));
+  assert(!secret_owner_find(request) && secret_owner_find(session));
+  r.op = VAULT_RESET;
+  assert(vault_lifecycle_dispatch(17, &r, &out));
+  assert(!secret_owner_find(session));
+  assert(!secret_busy);
+}
+
 int main(void) {
+  lifecycle_callbacks();
   uint32_t session = owner_create(1, 0), request = owner_create(1, session);
   uint32_t sibling = owner_create(1, session);
   assert(session && request && sibling && !owner_create(2, session));

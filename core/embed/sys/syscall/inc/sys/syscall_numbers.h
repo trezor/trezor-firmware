@@ -224,6 +224,8 @@ typedef enum {
   SYSCALL_TELEMETRY_GET,
   SYSCALL_TROPIC_ENSURE_FW_UPDATED,
   SYSCALL_TROPIC_GET_UPDATE_STATE,
+  SYSCALL_VAULT_LIFECYCLE,
+
   // ------------------------------------------------------
   // Following syscalls are executed in kernel thread mode
 

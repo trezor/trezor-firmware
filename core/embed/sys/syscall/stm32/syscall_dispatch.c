@@ -1160,6 +1160,11 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
 #ifdef USE_VAULT
+    case SYSCALL_VAULT_LIFECYCLE: {
+      args[0] =
+          vault_lifecycle__verified((const vault_lifecycle_request_t *)args[0],
+                                    (vault_lifecycle_response_t *)args[1]);
+    } break;
     case SYSCALL_VAULT_CALL: {
       args[0] = vault_call__verified((const vault_request_t *)args[0],
                                      (vault_response_t *)args[1]);

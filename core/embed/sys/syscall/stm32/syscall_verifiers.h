@@ -422,6 +422,8 @@ ts_t app_get_heap__verified(void **heap_ptr, size_t *heap_size);
 
 #ifdef USE_VAULT
 #include <sec/vault.h>
+bool vault_lifecycle__verified(const vault_lifecycle_request_t *request,
+                               vault_lifecycle_response_t *response);
 bool vault_call__verified(const vault_request_t *request,
                           vault_response_t *response);
 #endif

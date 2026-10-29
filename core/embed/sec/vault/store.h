@@ -28,6 +28,7 @@ typedef struct {
   uint32_t id;
   uint32_t parent;
   uintptr_t caller;
+  bool authorized_locked;
 } secret_owner_t;
 static secret_owner_t secret_owners[SECRET_OWNER_CAPACITY];
 static uint32_t secret_next_owner = 1;
@@ -133,7 +134,8 @@ static bool secret_decode(secret_kind_t kind, size_t length,
                           const uint8_t data[VAULT_RECORD_SIZE],
                           secret_payload_t *p) {
   memzero(p, sizeof(*p));
-  if (kind != SECRET_BYTES || !length || length > VAULT_SECRET_SIZE)
+  if ((kind != SECRET_BYTES && kind != SECRET_NODE) || !length ||
+      length > VAULT_SECRET_SIZE)
     return false;
   memcpy(p->bytes, data, length);
   return true;
@@ -144,7 +146,8 @@ static bool secret_seal(uint32_t owner, secret_kind_t kind, size_t length,
                         const secret_payload_t *p, vault_blob_t *out) {
   memzero(out, sizeof(*out));
   if (!secret_busy || secret_crypto_failed || !secret_owner_find(owner) ||
-      kind != SECRET_BYTES || !length || length > VAULT_SECRET_SIZE)
+      (kind != SECRET_BYTES && kind != SECRET_NODE) || !length ||
+      length > VAULT_SECRET_SIZE)
     return false;
   uint64_t nonce = 0;
   /* Advance before encryption: failed writes never reuse a nonce. */
@@ -153,7 +156,7 @@ static bool secret_seal(uint32_t owner, secret_kind_t kind, size_t length,
   uint8_t *b = out->bytes;
   secret_put32(b, owner);
   b[4] = kind;
-  b[5] = length;
+  b[5] = kind == SECRET_BYTES ? length : 0;
   secret_put32(b + 8, nonce);
   secret_put32(b + 12, nonce >> 32);
   uint8_t data[VAULT_RECORD_SIZE], aad[VAULT_AAD_SIZE];
@@ -185,8 +188,9 @@ static secret_payload_t *secret_open(const vault_blob_t *blob, uint32_t active,
       !secret_owner_access(active, secret_get32(b)) || b[4] != kind || b[6] ||
       b[7])
     return NULL;
-  size_t len = b[5];
-  if (kind != SECRET_BYTES) return NULL;
+  size_t len = kind == SECRET_BYTES ? b[5] : VAULT_NODE_SIZE;
+  if (kind != SECRET_BYTES && kind != SECRET_NODE) return NULL;
+  if (kind == SECRET_NODE && b[5]) return NULL;
   if (kind == SECRET_BYTES && (!len || len > VAULT_SECRET_SIZE)) return NULL;
   size_t encoded_length = vault_ciphertext_size(len);
   size_t blob_length = SECRET_BLOB_HEADER + encoded_length + VAULT_TAG_SIZE;

@@ -73,7 +73,7 @@ void vault_seal_wipe(void) {
 bool vault_seal_ready(void) { return key_ready; }
 static bool vault_seal_begin(bool encrypt) {
   (void)encrypt;
-  vault_seal_end();
+  if (key_active) return true;
   uint8_t key[40 * VAULT_KEY_COUNT] = {0};
   bool ok = false;
   if (!key_ready) {

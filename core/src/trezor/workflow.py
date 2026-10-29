@@ -7,6 +7,7 @@ from trezor.enums import MessageType
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from trezorcrypto import SecretOwner
     from typing import TypeVar
 
     IdleCallback = Callable[[], None]
@@ -83,13 +84,15 @@ def _on_close(workflow: loop.spawn) -> None:
             micropython.mem_info()
 
 
-def spawn(workflow: loop.Task[T]) -> loop.spawn[T]:
+def spawn(
+    workflow: loop.Task[T], secret_owner: SecretOwner | None = None
+) -> loop.spawn[T]:
     """Spawn a workflow task.
 
     Creates an instance of loop.spawn for the workflow and registers it into the
     workflow management system.
     """
-    task = loop.spawn(workflow)
+    task = loop.spawn(workflow, secret_owner)
     _on_start(task)
     task.set_finalizer(_on_close)
     return task

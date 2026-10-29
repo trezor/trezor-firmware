@@ -27,6 +27,16 @@
 #ifdef USE_VAULT
 #include <sec/vault.h>
 bool vault_call(const vault_request_t *request, vault_response_t *response) {
+  if (vault_is_lifecycle(request->op)) {
+    vault_lifecycle_request_t in = {request->abi, request->op, request->owner};
+    vault_lifecycle_response_t out = {0};
+    bool ok = syscall_invoke2((uint32_t)&in, (uint32_t)&out,
+                              SYSCALL_VAULT_LIFECYCLE) != 0;
+    memset(response, 0, sizeof(*response));
+    response->value = out.value;
+    response->parent = out.parent;
+    return ok;
+  }
   return syscall_invoke2((uint32_t)request, (uint32_t)response,
                          SYSCALL_VAULT_CALL) != 0;
 }

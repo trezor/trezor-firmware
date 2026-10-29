@@ -26,6 +26,7 @@ APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | SESSIONLESS_FLAG)
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Sequence
+    from trezorcrypto import SecretOwner
     from typing import TypeVar, overload
 
     T = TypeVar("T")
@@ -46,7 +47,16 @@ class DataCache:
     sessionless = False
 
     def __init__(self) -> None:
+        from trezorcrypto import SecretOwner
+
+        self._secret_owner = SecretOwner(None, False)
         self.data = [bytearray(f + 1) for f in self.fields]
+
+    def get_secret_owner(self) -> SecretOwner:
+        owner = self._secret_owner
+        if not owner.valid():
+            owner.renew()
+        return owner
 
     def _secret_index(self, key: int) -> int:
         index = key & ~SESSIONLESS_FLAG if self.sessionless else key
@@ -120,6 +130,7 @@ class DataCache:
         self.data[key][:] = b"\x00"
 
     def clear(self) -> None:
+        self._secret_owner.destroy()
         for i in range(len(self.fields)):
             self.delete(i)
 
@@ -174,5 +185,4 @@ class SessionlessCache(DataCache):
         super().delete(key & ~SESSIONLESS_FLAG)
 
     def clear(self) -> None:
-        for i in range(len(self.fields)):
-            self.delete(i)
+        super().clear()
