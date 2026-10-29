@@ -103,11 +103,15 @@ def main():
         for mode in args.mode or ("gcm",):
             selection = {"gcm": 3}[mode]
             print(f"Vault mode: {mode}", flush=True)
-            names = ["test_vault_sealing", "test_vault_bytes"]
+            names = ["test_vault_sealing", "test_vault_bytes", "test_vault_slip21"]
             if True:
                 names += ["test_ed25519_cleanup"]
             for name in names:
-                inputs = [f"core/tests/native/{name}.c", str(archive)]
+                inputs = [
+                    f"core/tests/native/{name}.c",
+                    "crypto/slip21.c",
+                    str(archive),
+                ]
                 if name == "test_ecdsa_cleanup":
                     inputs += [
                         f"-Wl,--wrap={symbol}"
