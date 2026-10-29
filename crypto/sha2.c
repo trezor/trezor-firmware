@@ -771,6 +771,9 @@ void sha256_Transform(const sha2_word32* state_in, const sha2_word32* data, sha2
 	state_out[6] = state_in[6] + g;
 	state_out[7] = state_in[7] + h;
 
+	/* HMAC inputs can contain private keys; erase the message schedule. */
+	memzero(W256, sizeof(W256));
+
 	/* Clean up */
 	a = b = c = d = e = f = g = h = T1 = 0;
 }
@@ -841,6 +844,9 @@ void sha256_Transform(const sha2_word32* state_in, const sha2_word32* data, sha2
 	state_out[5] = state_in[5] + f;
 	state_out[6] = state_in[6] + g;
 	state_out[7] = state_in[7] + h;
+
+	/* HMAC inputs can contain private keys; erase the message schedule. */
+	memzero(W256, sizeof(W256));
 
 	/* Clean up */
 	a = b = c = d = e = f = g = h = T1 = T2 = 0;
@@ -1085,6 +1091,9 @@ void sha512_Transform(const sha2_word64* state_in, const sha2_word64* data, sha2
 	state_out[6] = state_in[6] + g;
 	state_out[7] = state_in[7] + h;
 
+	/* HMAC inputs can contain private keys; erase the message schedule. */
+	memzero(W512, sizeof(W512));
+
 	/* Clean up */
 	a = b = c = d = e = f = g = h = T1 = 0;
 }
@@ -1155,6 +1164,9 @@ void sha512_Transform(const sha2_word64* state_in, const sha2_word64* data, sha2
 	state_out[5] = state_in[5] + f;
 	state_out[6] = state_in[6] + g;
 	state_out[7] = state_in[7] + h;
+
+	/* HMAC inputs can contain private keys; erase the message schedule. */
+	memzero(W512, sizeof(W512));
 
 	/* Clean up */
 	a = b = c = d = e = f = g = h = T1 = T2 = 0;
