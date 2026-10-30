@@ -290,9 +290,9 @@ impl FirmwareUI for UIEckhart {
             info_hint,
             None,
             false,
-            Some(TR::confirm_total__title_fee.into()),
             None,
-            false,
+            None,
+            true,
         )?;
         Ok(flow)
     }
