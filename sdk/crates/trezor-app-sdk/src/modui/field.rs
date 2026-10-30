@@ -4,7 +4,7 @@
 //! value, and core decides the styling, the grouping and the paging of that kind
 //! on every model. Nothing here holds behaviour.
 
-use crate::structs::{FieldKind, OptStrSlice, Slice, WireField};
+use crate::structs::{FieldKind, OptStrSlice, Slice, Source, WireField};
 use crate::{Error, Result};
 
 /// One thing the person reads: a label and a value, or a sentence on its own.
@@ -36,6 +36,24 @@ use crate::{Error, Result};
 #[repr(transparent)]
 pub struct Field<'a> {
     wire: WireField<'a>,
+}
+
+/// Copies out of a `&[u8]` whose length is `total`.
+extern "C" fn read_bytes(ctx: *const u8, offset: u32, total: u32, buf: *mut u8, len: u32) -> i32 {
+    // SAFETY: `ctx` and `total` come from `Source::new` in `Field::data`, for a
+    // slice that outlives the request; `buf` and `len` come from core's chunk
+    // buffer.
+    let bytes = unsafe { core::slice::from_raw_parts(ctx, total as usize) };
+    let buf = unsafe { core::slice::from_raw_parts_mut(buf, len as usize) };
+    let start = offset as usize;
+    let Some(end) = start.checked_add(buf.len()) else {
+        return -1;
+    };
+    let Some(bytes) = bytes.get(start..end) else {
+        return -1;
+    };
+    buf.copy_from_slice(bytes);
+    0
 }
 
 impl<'a> Field<'a> {
@@ -104,7 +122,22 @@ impl<'a> Field<'a> {
     /// let data = Field::data("Input data", &[0xde, 0xad, 0xbe, 0xef]);
     /// ```
     pub fn data(label: &'a str, value: &'a [u8]) -> Self {
-        Self::new(FieldKind::Data, Some(label), value)
+        Self::wire_data(
+            label,
+            Source::new(value.as_ptr(), value.len() as u32, false, read_bytes),
+        )
+    }
+
+    fn wire_data(label: &'a str, source: Source<'a>) -> Self {
+        Self {
+            wire: WireField {
+                kind: FieldKind::Data,
+                label: OptStrSlice::new(Some(label)),
+                value: Slice::new(&[]),
+                len: source.total(),
+                source: Some(source),
+            },
+        }
     }
 
     /// A sentence with no label: a question or an explanation.
@@ -146,6 +179,7 @@ impl<'a> Field<'a> {
                 label: OptStrSlice::new(label),
                 value: Slice::new(value),
                 len: value.len() as u32,
+                source: None,
             },
         }
     }
@@ -156,6 +190,10 @@ impl<'a> Field<'a> {
 
     pub(crate) fn byte_len(&self) -> u32 {
         self.wire.len
+    }
+
+    pub(crate) fn is_streamed(&self) -> bool {
+        self.wire.is_streamed()
     }
 }
 
@@ -233,5 +271,36 @@ mod tests {
     fn one_data_field_beside_text_is_accepted() {
         let fields = [Field::data("a", &[1, 2, 3]), Field::text("b", "c")];
         assert!(check_fields(&fields).is_ok());
+    }
+
+    #[test]
+    fn the_slice_source_returns_the_right_ranges() {
+        let bytes = b"hello";
+        let mut buf = [0u8; 3];
+        assert_eq!(read_bytes(bytes.as_ptr(), 1, 5, buf.as_mut_ptr(), 3), 0);
+        assert_eq!(&buf, b"ell");
+        assert_eq!(read_bytes(bytes.as_ptr(), 4, 5, buf.as_mut_ptr(), 3), -1);
+    }
+
+    #[test]
+    fn the_request_does_not_grow_with_the_data() {
+        use crate::structs::{ReviewRequest, TrezorUiEnum};
+
+        fn size(bytes: &[u8]) -> usize {
+            let fields = [Field::data("a", bytes)];
+            let request = TrezorUiEnum::Review(ReviewRequest {
+                step: "s".into(),
+                title: "t".into(),
+                fields: wire_fields(&fields),
+                extras: Slice::new(&[]),
+                is_final: false,
+            });
+            rkyv::to_bytes::<rkyv::rancor::Error>(&request)
+                .unwrap()
+                .len()
+        }
+
+        assert_eq!(size(&[0u8; 4]), size(&[0u8; 1024]));
+        assert!(size(&[0u8; 1024]) < 128);
     }
 }

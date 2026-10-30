@@ -12,6 +12,8 @@
 //! new variant goes at the end with a new value, and no value is ever
 //! renumbered or reused.
 
+use core::marker::PhantomData;
+
 use rkyv::boxed::{ArchivedBox, BoxResolver};
 use rkyv::option::ArchivedOption;
 use rkyv::rancor::Fallible;
@@ -252,19 +254,110 @@ pub enum FieldKind {
     Warning = 5,
 }
 
+/// Reads `len` bytes at `offset` into `buf`; `0` on success, `-1` when the
+/// app's source failed.
+pub(crate) type ReadFn =
+    extern "C" fn(ctx: *const u8, offset: u32, total: u32, buf: *mut u8, len: u32) -> i32;
+
+/// Where a `Data` field's bytes come from, as the request carries it.
+///
+/// Not serialized: it points into the app's own memory, which does not cross
+/// IPC. `total` is the field's length, `read` is filled in by
+/// [`Field::data`](crate::modui::Field::data) or
+/// [`Field::data_source`](crate::modui::Field::data_source), and `streamed`
+/// says which of the two built it, so that an extra can refuse a stream.
+///
+/// The field order and `streamed: u32` are deliberate: together they keep the
+/// struct padding-free with one niche, which is what lets `Option<Source>` be
+/// `IStable` inside a `#[stabby::stabby]` struct. Do not "tidy" it.
+#[stabby::stabby]
+#[derive(Copy, Clone)]
+pub struct Source<'a> {
+    ctx: *const u8,
+    read: ReadFn,
+    total: u32,
+    streamed: u32,
+    _marker: PhantomData<&'a ()>,
+}
+
+impl<'a> Source<'a> {
+    pub(crate) const fn new(ctx: *const u8, total: u32, streamed: bool, read: ReadFn) -> Self {
+        Self {
+            ctx,
+            read,
+            total,
+            streamed: streamed as u32,
+            _marker: PhantomData,
+        }
+    }
+
+    /// The field's length in bytes.
+    pub fn total(&self) -> u32 {
+        self.total
+    }
+
+    /// Fills `buf` with the bytes at `offset`; `false` when the app's source
+    /// failed.
+    pub fn read(&self, offset: u32, buf: &mut [u8]) -> bool {
+        (self.read)(
+            self.ctx,
+            offset,
+            self.total,
+            buf.as_mut_ptr(),
+            buf.len() as u32,
+        ) == 0
+    }
+
+    pub(crate) fn is_streamed(&self) -> bool {
+        self.streamed != 0
+    }
+}
+
+// Two sources are the same when they point at the same bytes and describe the
+// same field; the reader is part of the shape, and comparing function pointers
+// says nothing, so it is left out.
+impl PartialEq for Source<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.ctx == other.ctx && self.total == other.total && self.streamed == other.streamed
+    }
+}
+
+impl Eq for Source<'_> {}
+
+// `ufmt` cannot format a raw pointer, and a source has nothing to print.
+impl ufmt::uDebug for Source<'_> {
+    fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite,
+    {
+        f.write_str("<source>")
+    }
+}
+
 /// One fact in a [`ReviewRequest`] or [`FieldsRequest`].
 ///
 /// `label` is `None` for [`FieldKind::Note`] and [`FieldKind::Warning`].
-/// `value` is UTF-8 for the text kinds and the bytes themselves for
-/// [`FieldKind::Data`]. `len` is `value.len()`; for `Data` it is the total
-/// length core pulls, and the value crosses empty.
-#[stabby::stabby]
+/// `value` is UTF-8 for the text kinds and empty for [`FieldKind::Data`], whose
+/// bytes come from `source`. `len` is `value.len()` for the text kinds; for
+/// `Data` it is the total length core pulls, and `source` is where they come
+/// from. `source` is not serialized: it never crosses IPC.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+#[stabby::stabby]
 pub struct WireField<'a> {
     pub kind: FieldKind,
     pub label: OptStrSlice<'a>,
     pub value: Slice<'a, u8>,
     pub len: u32,
+    #[rkyv(with = rkyv::with::Skip)]
+    pub source: Option<Source<'a>>,
+}
+
+impl<'a> WireField<'a> {
+    /// Whether the field's bytes come from an app-provided source rather than a
+    /// slice the app holds.
+    pub(crate) fn is_streamed(&self) -> bool {
+        self.source.is_some_and(|source| source.is_streamed())
+    }
 }
 
 /// More the person can open from a review's menu: the entry's label, and the

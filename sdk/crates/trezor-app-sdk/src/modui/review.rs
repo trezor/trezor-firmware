@@ -18,7 +18,9 @@ const MAX_EXTRAS: usize = 5;
 /// Facts the person can open from a review's menu, under a label of their own.
 ///
 /// An extra may hold a [`data`](Field::data) field like a review's own facts:
-/// core pulls it while the person pages through it.
+/// core pulls it while the person pages through it. A field built from
+/// [`data_source`](Field::data_source) may not sit in an extra: an extra can be
+/// opened again, and its bytes would be read again.
 ///
 /// An extra with no facts is not offered: there is nothing to show in it. Build
 /// one from an `Option` when the facts may be missing, and let it drop:
@@ -78,11 +80,17 @@ fn offered_extras<'a>(extras: &'a [Extra<'a>]) -> Result<([WireExtra<'a>; MAX_EX
     let mut kept = [empty; MAX_EXTRAS];
     let mut used = 0;
     for extra in extras {
-        if extra.wire.fields.as_slice().is_empty() {
+        let fields = extra.wire.fields.as_slice();
+        if fields.is_empty() {
             continue;
         }
         if used == MAX_EXTRAS {
             return Err(Error::DataError("more than 5 extras"));
+        }
+        if fields.iter().any(|field| field.is_streamed()) {
+            return Err(Error::DataError(
+                "a streamed data field cannot be in an extra",
+            ));
         }
         kept[used] = extra.wire;
         used += 1;
