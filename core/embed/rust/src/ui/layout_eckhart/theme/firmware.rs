@@ -16,8 +16,8 @@ pub const PROPS_KEY_FONT: TextStyle = TEXT_SMALL_LIGHT;
 pub const PROPS_VALUE_FONT: TextStyle = TEXT_MONO_LIGHT;
 pub const PROPS_VALUE_MONO_FONT: TextStyle = TEXT_MONO_LIGHT;
 
-/// The styles for the field kinds of contract C3, shared by every property list
-/// this model draws.
+/// The styles for the field kinds, shared by every property list this model
+/// draws.
 ///
 /// `text` is the model's body text, `amount` is the style the summary draws its
 /// amount with, `address` keeps the chunking this model already gives

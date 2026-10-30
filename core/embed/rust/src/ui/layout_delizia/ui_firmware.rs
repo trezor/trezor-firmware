@@ -48,7 +48,7 @@ use crate::ui::ModelUI;
 /// `show_continue_in_app`.
 const NOTICE_DONE_TIMEOUT_MS: u32 = 3200;
 
-/// Delizia's styles for the field kinds of contract C3.
+/// Delizia's styles for the field kinds.
 ///
 /// `text` is the model's plain body font, `amount` matches the summary's
 /// amount, `address` keeps the chunking this model already gives addresses,
@@ -886,9 +886,9 @@ impl FirmwareUI for UIDelizia {
         _menu_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        // Contract C3: `None` keeps the plain message, a list of items shows the
-        // fields to weigh instead of `value`, and their `Warning` ones are drawn
-        // as caution rows.
+        // `None` keeps the plain message, a list of items shows the fields to
+        // weigh instead of `value`, and their `Warning` ones are drawn as
+        // caution rows.
         let items = if items == Obj::const_none() {
             None
         } else {

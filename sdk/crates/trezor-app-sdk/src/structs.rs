@@ -234,8 +234,8 @@ where
 /// What a fact *is*, which decides how core formats and draws it.
 ///
 /// The app chooses the kind by what the value is, never by how it should look.
-/// The discriminants are the wire's (contract C1): a new kind goes at the end
-/// with a new value, and no value is ever renumbered or reused.
+/// The discriminants match the wire's: a new kind goes at the end with a new
+/// value, and no value is ever renumbered or reused.
 #[stabby::stabby]
 #[repr(u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
@@ -426,8 +426,8 @@ pub struct DoneRequest<'a> {
 
 /// One UI request, as it crosses IPC: one variant per decision an app asks.
 ///
-/// The discriminants are the wire's (contract C1): a new variant goes at the end
-/// with a new value, and no value is ever renumbered or reused.
+/// The discriminants match the wire's: a new variant goes at the end with a
+/// new value, and no value is ever renumbered or reused.
 #[stabby::stabby]
 #[repr(C, u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]

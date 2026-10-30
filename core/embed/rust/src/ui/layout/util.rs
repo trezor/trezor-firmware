@@ -98,9 +98,9 @@ impl ParagraphSource<'static> for ConfirmValueParams {
 
 /// How a value in a property list is drawn.
 ///
-/// Contract C3 picks one from the third element of an item: a bool keeps
-/// today's meaning (`true` = mono, `false` = plain), an int is a `FieldKind`
-/// 0–5. The bool is checked first, by identity, because in Python `True == 1`,
+/// The third element of an item picks one of these: a bool keeps today's
+/// meaning (`true` = mono, `false` = plain), an int is a `FieldKind` 0–5.
+/// The bool is checked first, by identity, because in Python `True == 1`,
 /// which is `FieldKind::Amount`.
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PropKind {
@@ -128,11 +128,11 @@ impl PropKind {
     }
 }
 
-/// A model's styles for the field kinds of contract C3.
+/// A model's styles for the field kinds.
 ///
-/// P4 and P5 fill this in for Eckhart and Delizia. Until then
-/// [`PropsList::new`] leaves it unset, which draws every kind in the plain
-/// value font, except mono, address and data in the mono one.
+/// A model that has its own styles sets them; [`PropsList::new`] otherwise
+/// leaves this unset, which draws every kind in the plain value font, except
+/// mono, address and data in the mono one.
 #[derive(Copy, Clone)]
 pub struct FieldStyles {
     pub text: &'static TextStyle,
@@ -168,7 +168,7 @@ impl FieldStyles {
     }
 }
 
-/// Reads the third element of a contract C3 item.
+/// Reads the third element of an item.
 ///
 /// The bools and `None` are checked first, by identity, because in Python
 /// `True == 1`, which is [`FieldKind::Amount`]; core's own layouts pass `None`
@@ -190,8 +190,7 @@ pub struct PropsList {
     value_mono_font: &'static TextStyle,
     key_value_padding: i16,
     props_padding: i16,
-    /// A model's styles for contract C3's field kinds; `None` until P4 and P5
-    /// fill theirs in.
+    /// A model's styles for the field kinds; `None` when the model has none.
     field_styles: Option<FieldStyles>,
 }
 
@@ -215,7 +214,7 @@ impl PropsList {
         })
     }
 
-    /// Draws contract C3's int kinds with the model's own styles.
+    /// Draws the int kinds with the model's own styles.
     pub fn with_field_styles(mut self, styles: FieldStyles) -> Self {
         self.field_styles = Some(styles);
         self
@@ -383,9 +382,9 @@ pub const MAX_XPUBS: usize = 16;
 mod tests {
     use super::*;
 
-    /// Contract C3: `true` is mono, `false` and `None` are plain, and the bools
-    /// are read before the ints. Core's own layouts pass `None`, so reading it
-    /// as an int would break them.
+    /// `true` is mono, `false` and `None` are plain, and the bools are read
+    /// before the ints. Core's own layouts pass `None`, so reading it as an
+    /// int would break them.
     #[test]
     fn bool_and_none_kinds_are_read_before_ints() {
         assert!(matches!(prop_kind(Obj::const_true()), Ok(PropKind::Mono)));

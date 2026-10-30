@@ -46,8 +46,8 @@ const EXTRA_PADDING: i16 = 6;
 /// The danger page's content: a description, then the fields to weigh, or the
 /// plain `value` when there are none.
 ///
-/// Contract C3: the fields carry their own styles and a `Warning` field is
-/// drawn as a caution row. A caller that has fields leaves `value` empty.
+/// The fields carry their own styles and a `Warning` field is drawn as a
+/// caution row. A caller that has fields leaves `value` empty.
 struct MessageContent {
     description: Paragraph<'static>,
     value: Paragraph<'static>,

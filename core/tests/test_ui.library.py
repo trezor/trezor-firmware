@@ -99,7 +99,7 @@ class Layouts:
 
 class TestFieldKinds(unittest.TestCase):
     def test_discriminants(self):
-        # the wire's `FieldKind`, as the renderers take it (C3)
+        # the wire's `FieldKind`, as the renderers take it
         self.assertEqual(TEXT, 0)
         self.assertEqual(AMOUNT, 1)
         self.assertEqual(ADDRESS, 2)

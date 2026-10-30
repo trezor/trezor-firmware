@@ -1264,8 +1264,8 @@ fn tstr_opt(s: &ArchivedOption<Archived<StrSlice>>) -> Result<Option<TString<'st
     s.as_ref().map(tstr).transpose()
 }
 
-/// The wire's `FieldKind` discriminant (contract C1) and whether the value is
-/// raw bytes rather than UTF-8.
+/// The wire's `FieldKind` discriminant and whether the value is raw bytes
+/// rather than UTF-8.
 #[cfg(feature = "app_loading")]
 fn field_kind(kind: &Archived<FieldKind>) -> (u8, bool) {
     match kind {

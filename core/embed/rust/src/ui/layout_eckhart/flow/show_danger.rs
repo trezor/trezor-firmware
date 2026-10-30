@@ -58,9 +58,9 @@ pub fn new_show_danger(
 ) -> Result<SwipeFlow, Error> {
     let verb_cancel = verb_cancel.unwrap_or(TR::buttons__cancel_and_exit.into());
 
-    // Contract C3: `None` keeps the plain message. A list of items shows the
-    // fields to weigh instead of `value`, and their `Warning` ones are drawn as
-    // caution rows.
+    // `None` keeps the plain message. A list of items shows the fields to
+    // weigh instead of `value`, and their `Warning` ones are drawn as caution
+    // rows.
     let items = if items == Obj::const_none() {
         None
     } else {
@@ -68,9 +68,9 @@ pub fn new_show_danger(
     };
 
     match items {
-        // Contract C3: the fields carry the message and page through the
-        // screen's pager. A description, when there is one, sits under the
-        // title rather than above the fields.
+        // The fields carry the message and page through the screen's pager. A
+        // description, when there is one, sits under the title rather than
+        // above the fields.
         Some(items) => {
             let paragraphs = items
                 .into_paragraphs()
