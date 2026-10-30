@@ -27,7 +27,7 @@ cmd("ls -vl `find /sys/bus/usb/devices/usb*/ -name disable`")
 cmd(
     'for F in `find /sys/bus/usb/devices/usb*/ -name disable | sort -V`; do echo -n "$F "; cat $F; done'
 )
-cmd('for P in /sys/bus/usb/devices/usb*/*/usb*-port*; do printf \'%-32s %-10s %s\n\' "${p##*/}" "$(cat $P/connect_type)" "$(cat $P/physical_location/panel 2>/dev/null)"; done')
+cmd('for P in /sys/bus/usb/devices/usb*/*/usb*-port*; do printf \'%-32s %-10s %s\\n\' "${P##*/}" "$(cat $P/connect_type)" "$(cat $P/physical_location/panel 2>/dev/null)"; done')
 cmd("lspci -v")
 cmd("lsusb --tree -v")
 cmd("uhubctl --version")
