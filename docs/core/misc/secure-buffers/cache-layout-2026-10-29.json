@@ -1,0 +1,47 @@
+{
+  "baseline": "1e8c39c6d6",
+  "framework": "b85327cb43c8726f48f92479b1c2e0595deda1fe",
+  "method": "Same native emulator, actual old/new Python constructors; host VM allocation, not ARM peak RAM",
+  "observations": {
+    "before": [
+      {
+        "constructor_heap_bytes": 1760,
+        "cleared_heap_bytes": 1760,
+        "slots": 9,
+        "cache": "session",
+        "model": "Safe 5",
+        "bitcoin_only": false,
+        "secret_holders": 4
+      },
+      {
+        "constructor_heap_bytes": 1376,
+        "cleared_heap_bytes": 1376,
+        "slots": 7,
+        "cache": "sessionless",
+        "model": "Safe 5",
+        "bitcoin_only": false,
+        "secret_holders": 4
+      }
+    ],
+    "after": [
+      {
+        "constructor_heap_bytes": 1504,
+        "cleared_heap_bytes": 1504,
+        "slots": 10,
+        "cache": "session",
+        "model": "Safe 5",
+        "bitcoin_only": false,
+        "secret_holders": 4
+      },
+      {
+        "constructor_heap_bytes": 800,
+        "cleared_heap_bytes": 800,
+        "slots": 7,
+        "cache": "sessionless",
+        "model": "Safe 5",
+        "bitcoin_only": false,
+        "secret_holders": 1
+      }
+    ]
+  }
+}

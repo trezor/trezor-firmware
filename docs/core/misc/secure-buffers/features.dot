@@ -1,0 +1,28 @@
+digraph secure_buffer_features {
+  graph [rankdir=TB, bgcolor="white", pad=0.25, nodesep=0.4, ranksep=0.45, fontname="DejaVu Sans"];
+  node [shape=box, style="rounded,filled", fillcolor="#edf3fa", fontname="DejaVu Sans", fontsize=11];
+  edge [color="#526b82"];
+  main [label="Main\n005a137a18"];
+  cache_framework [label="0. Main-compatible cache interfaces\nPlaintext representation and policy\npetrsusil/secure-buffers-cache-stages_cache-framework\n416433e530", fillcolor="#edf3fa", URL="https://github.com/trezor/trezor-firmware/tree/petrsusil/secure-buffers-cache-stages_cache-framework"];
+  wallet_integration [label="1. Owner-bound wallet values\nSoftware GCM / stable holders / exact owner\npetrsusil/secure-buffers-cache-stages_wallet-integration\n0d53d0f841", fillcolor="#edf3fa", URL="https://github.com/trezor/trezor-firmware/tree/petrsusil/secure-buffers-cache-stages_wallet-integration"];
+  kernel_ops [label="2. Typed private kernel operations\nCanonical storage / established cache contract\npetrsusil/secure-buffers-cache-stages_kernel-ops\n561324b742", fillcolor="#edf3fa", URL="https://github.com/trezor/trezor-firmware/tree/petrsusil/secure-buffers-cache-stages_kernel-ops"];
+  key_wrap [label="3. Protect idle keys\nIndependent record and storage keys\npetrsusil/secure-buffers-cache-stages_key-wrap\nbda6c0d425", fillcolor="#edf3fa", URL="https://github.com/trezor/trezor-firmware/tree/petrsusil/secure-buffers-cache-stages_key-wrap"];
+  cipher_base [label="Stage 4 shared provider base\nIndependent GCM storage-cache domain\npetrsusil/secure-buffers-cache-stages_cipher-base\n11cf876788", fillcolor="#edf3fa", URL="https://github.com/trezor/trezor-firmware/tree/petrsusil/secure-buffers-cache-stages_cipher-base"];
+  gcm [label="4. Hardware GCM records\ngcm / record-sealing\npetrsusil/secure-buffers-cache-stages_gcm\n99a09d1915", fillcolor="#edf3fa", URL="https://github.com/trezor/trezor-firmware/tree/petrsusil/secure-buffers-cache-stages_gcm"];
+  siv [label="Alternative SIV records\nSeparate leaf; no downstream merge\npetrsusil/secure-buffers-cache-stages_siv\n8ff3fd4fda", fillcolor="#fff3df", URL="https://github.com/trezor/trezor-firmware/tree/petrsusil/secure-buffers-cache-stages_siv"];
+  kwp [label="Alternative KWP records\nSeparate leaf; no downstream merge\npetrsusil/secure-buffers-cache-stages_kwp\na8f709dc75", fillcolor="#fff3df", URL="https://github.com/trezor/trezor-firmware/tree/petrsusil/secure-buffers-cache-stages_kwp"];
+  thp_vault [label="5. Protected THP and device secret\nGCM records only\npetrsusil/secure-buffers-cache-stages_thp-vault\n14fda1d3ae", fillcolor="#edf3fa", URL="https://github.com/trezor/trezor-firmware/tree/petrsusil/secure-buffers-cache-stages_thp-vault"];
+  main -> cache_framework;
+  cache_framework -> wallet_integration;
+  wallet_integration -> kernel_ops;
+  kernel_ops -> key_wrap;
+  key_wrap -> cipher_base;
+  cipher_base -> gcm;
+  cipher_base -> siv;
+  cipher_base -> kwp;
+  gcm -> thp_vault;
+  cleanup_api [label="6. Provider/API cleanup (planned)\nRemove migration aliases and redundant adapters\nNo branch yet", style="rounded,filled,dashed", fillcolor="#fff3df"];
+  cleanup_thp [label="7. THP descriptor cleanup (planned)\nShared C/Rust sizes; measure handshake RAM/stack\nNo branch yet", style="rounded,filled,dashed", fillcolor="#fff3df"];
+  thp_vault -> cleanup_api [style=dashed];
+  cleanup_api -> cleanup_thp [style=dashed];
+}
