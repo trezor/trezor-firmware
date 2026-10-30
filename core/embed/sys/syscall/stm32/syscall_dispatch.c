@@ -891,10 +891,22 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       nfc_dev_info_t *dev_info = (nfc_dev_info_t *)args[0];
       args[0] = ts_code(nfc_get_device_info__verified(dev_info));
     } break;
-    case SYSCALL_NFC_TRANSCEIVE: {
+    case SYSCALL_NFC_GET_STATE: {
+      args[0] = nfc_get_state();
+    } break;
+    case SYSCALL_NFC_TRANSCEIVE_START: {
       const nfc_apdu_message_t *cmd = (const nfc_apdu_message_t *)args[0];
-      nfc_apdu_message_t *resp = (nfc_apdu_message_t *)args[1];
-      args[0] = ts_code(nfc_transceive__verified(cmd, resp));
+      args[0] = ts_code(nfc_transceive_start__verified(cmd));
+    } break;
+    case SYSCALL_NFC_TRANSCEIVE_PSK_START: {
+      const uint8_t *pcd_psk = (const uint8_t *)args[0];
+      size_t pcd_psk_len = args[1];
+      args[0] =
+          ts_code(nfc_transceive_psk_start__verified(pcd_psk, pcd_psk_len));
+    } break;
+    case SYSCALL_NFC_TRANSCEIVE_COMPLETE: {
+      nfc_apdu_message_t *resp = (nfc_apdu_message_t *)args[0];
+      args[0] = ts_code(nfc_transceive_complete__verified(resp));
     } break;
 
 #endif
