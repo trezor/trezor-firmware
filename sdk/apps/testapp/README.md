@@ -130,6 +130,11 @@ stands, so each layout can be seen with realistic facts:
 | `get-address` | a `verify_address` |
 | `get-pubkey` | a `verify_pubkey` |
 | `contract-data` | a review with a `data` field |
+| `consent` | a review with a note only |
+| `swap` | a final review with amounts, a caution and five extras |
+| `fee-bump` | a final review with a transaction ID and fees, and an extra |
+| `sign-message` | a final review with an address and a message |
+| `verify-message` | a review, then `done` |
 | `signing-progress` | a `progress`, with the label changing per step |
 
 ### Run by hand

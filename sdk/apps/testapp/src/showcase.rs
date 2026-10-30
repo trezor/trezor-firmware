@@ -22,6 +22,7 @@ const CONTRACT: &str = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 const ACCOUNT: &str = "TRX #1";
 const LOCK_PERIOD: &str = "3 days";
 const PATH: &str = "m/44'/195'/0'/0/0";
+const TXID: &str = "8f2b6c1d9e4a7f30b5c2e81d6a9f4b7c3e0d5a2f8b6c1e9d4a7f3b0c5e2d81a6";
 const XPUB: &str = "tpubDDKn3FtHc74CaRrRbi1WFdJNaaenZkDWqq9NsEhcafnDZ4VuKeuLG2aKHm5SuwuLgAhRkkfHqcCxpnVNSrs5kJYZXwa6Ud431VnevzzzK3U";
 const CALLDATA: [u8; 68] = [
     // `transfer(address,uint256)` and its two arguments.
@@ -44,6 +45,11 @@ pub fn show(m: wire::Showcase) -> Result<wire::UiResult> {
         "get-address" => get_address,
         "get-pubkey" => get_pubkey,
         "contract-data" => contract_data,
+        "consent" => consent,
+        "swap" => swap,
+        "fee-bump" => fee_bump,
+        "sign-message" => sign_message,
+        "verify-message" => verify_message,
         "signing-progress" => signing_progress,
         _ => return Err(Error::InvalidArgument),
     };
@@ -185,6 +191,112 @@ fn contract_data() -> Result<()> {
         ],
     )
     .confirm()
+}
+
+/// A question the person answers yes or no: there is no value to check.
+fn consent() -> Result<()> {
+    modui::review(
+        "stake/consent",
+        "Stake",
+        &[Field::note(
+            "Stake your TRX with Everstake? You can unstake at any time.",
+        )],
+    )
+    .confirm()
+}
+
+/// A swap: what leaves, what arrives and where, as the last yes before signing.
+/// An extra the trade doesn't have is not offered.
+fn swap() -> Result<()> {
+    // The host's refund address, already checked with check_address_mac.
+    let refund: Option<Field> = Some(Field::address("Refund address", OWNER));
+    let provider = [
+        Field::text("Provider", "Changelly"),
+        Field::text("Quote ID", "a3f9-77c1"),
+    ];
+    let fees = [
+        Field::amount("Provider fee", "0.50 USDC"),
+        Field::amount("Fee limit", "10 TRX"),
+    ];
+    let route = [
+        Field::text("Hop 1", "TRX to USDT on SunSwap"),
+        Field::text("Hop 2", "USDT to USDC on Curve"),
+    ];
+    let account = [
+        Field::text("Account", ACCOUNT),
+        Field::text("Derivation path", PATH),
+    ];
+    modui::review(
+        "swap",
+        "Swap",
+        &[
+            Field::amount("You pay", "-1,000 TRX"),
+            Field::amount("You receive", "+118.40 USDC"),
+            Field::address("Recipient", RECIPIENT),
+            Field::amount("Network fee", "1.2 TRX"),
+            Field::warning("The price impact is 4.2%."),
+        ],
+    )
+    .extras(&[
+        Extra::new("Provider", &provider),
+        Extra::new("Refund", refund.as_slice()), // None: not offered
+        Extra::new("Fee details", &fees),
+        Extra::new("Route", &route),
+        Extra::new("Account info", &account),
+    ])
+    .confirm_final()
+}
+
+/// Raising the fee of a transaction already sent (replace-by-fee).
+fn fee_bump() -> Result<()> {
+    let rates = [
+        Field::text("Old fee rate", "4 sat/vB"),
+        Field::text("New fee rate", "12 sat/vB"),
+    ];
+    modui::review(
+        "bump_fee",
+        "Bump fee",
+        &[
+            Field::address("Transaction ID", TXID),
+            Field::amount("Old fee", "0.00000564 BTC"),
+            Field::amount("New fee", "0.00001692 BTC"),
+            Field::amount("Increased by", "0.00001128 BTC"),
+        ],
+    )
+    .extras(&[Extra::new("Fee rate", &rates)])
+    .confirm_final()
+}
+
+/// Signing a message: the address that signs, then the message, as the last
+/// yes. Bytes that are not UTF-8 are data, not text.
+fn sign_message() -> Result<()> {
+    let message: &[u8] = b"Log in to example.com at 18:05";
+    let shown = match core::str::from_utf8(message) {
+        Ok(text) => Field::text("Message", text),
+        Err(_) => Field::data("Message", message),
+    };
+    modui::review(
+        "sign_message",
+        "Sign message",
+        &[Field::address("Address", RECIPIENT), shown],
+    )
+    .confirm_final()
+}
+
+/// Verifying a message. The app checks the signature before it asks, so an
+/// invalid one never reaches the screen.
+fn verify_message() -> Result<()> {
+    modui::review(
+        "verify_message",
+        "Verify message",
+        &[
+            Field::address("Address", RECIPIENT),
+            Field::text("Message", "Log in to example.com at 18:05"),
+        ],
+    )
+    .confirm()?;
+    modui::done("verify_message/valid", "The signature is valid");
+    Ok(())
 }
 
 /// The reference's `progress` examples: work the app cannot count, then counted

@@ -50,6 +50,9 @@ XPUB = (
     "fHqcCxpnVNSrs5kJYZXwa6Ud431VnevzzzK3U"
 )
 
+TXID = "8f2b6c1d9e4a7f30b5c2e81d6a9f4b7c3e0d5a2f8b6c1e9d4a7f3b0c5e2d81a6"
+MESSAGE = "Log in to example.com at 18:05"
+
 # `transfer(address,uint256)` and its two arguments, as the reference passes it.
 CALLDATA = (
     bytes.fromhex("a9059cbb")
@@ -172,6 +175,69 @@ CONTRACT_DATA = Screen(
     values=(CONTRACT, CALLDATA.hex()),
     labels=("Contract", "Input data"),
 )
+
+CONSENT = Screen(
+    step="stake/consent",
+    title="Stake",
+    values=("Stake your TRX with Everstake? You can unstake at any time.",),
+)
+
+SWAP = Screen(
+    step="swap",
+    title="Swap",
+    values=(
+        "-1,000 TRX",
+        "+118.40 USDC",
+        RECIPIENT,
+        "1.2 TRX",
+        "The price impact is 4.2%.",
+    ),
+    labels=("You pay", "You receive", "Recipient", "Network fee"),
+    extras=(
+        ("Provider", (("Provider", "Changelly"), ("Quote ID", "a3f9-77c1"))),
+        ("Refund", (("Refund address", OWNER),)),
+        ("Fee details", (("Provider fee", "0.50 USDC"), ("Fee limit", "10 TRX"))),
+        (
+            "Route",
+            (("Hop 1", "TRX to USDT on SunSwap"), ("Hop 2", "USDT to USDC on Curve")),
+        ),
+        ACCOUNT_INFO,
+    ),
+    final=True,
+)
+
+FEE_BUMP = Screen(
+    step="bump_fee",
+    title="Bump fee",
+    values=(TXID, "0.00000564 BTC", "0.00001692 BTC", "0.00001128 BTC"),
+    labels=("Transaction ID", "Old fee", "New fee", "Increased by"),
+    extras=(
+        ("Fee rate", (("Old fee rate", "4 sat/vB"), ("New fee rate", "12 sat/vB"))),
+    ),
+    final=True,
+)
+
+SIGN_MESSAGE = Screen(
+    step="sign_message",
+    title="Sign message",
+    values=(RECIPIENT, MESSAGE),
+    labels=("Address", "Message"),
+    final=True,
+)
+
+VERIFY_MESSAGE = [
+    Screen(
+        step="verify_message",
+        title="Verify message",
+        values=(RECIPIENT, MESSAGE),
+        labels=("Address", "Message"),
+    ),
+    Screen(
+        step="verify_message/valid",
+        values=("The signature is valid",),
+        kind="done",
+    ),
+]
 
 SIGNED = Screen(
     step="signed",
@@ -615,3 +681,94 @@ def test_showcase_contract_data_cancel(session: Session, instance_id: int):
 def test_showcase_signing_progress(session: Session, instance_id: int):
     """Signing progress: uncounted and counted work, then the done screen."""
     run_showcase(session, instance_id, "signing-progress", [SIGNED])
+
+
+# ============================================================================
+# Consent, swap, fee bump, and signing or verifying a message
+# ============================================================================
+
+
+def test_showcase_consent(session: Session, instance_id: int):
+    """Consent: a question with no value to check, answered yes."""
+    run_showcase(session, instance_id, "consent", [CONSENT])
+
+
+def test_showcase_consent_cancel(session: Session, instance_id: int):
+    """Consent: answering no cancels the flow."""
+    run_showcase(
+        session,
+        instance_id,
+        "consent",
+        [CONSENT],
+        cancel_at=0,
+        reply=m.Reply.Cancelled,
+    )
+
+
+def test_showcase_swap(session: Session, instance_id: int):
+    """Swap: both amounts, the recipient and a caution, with five extras, held."""
+    run_showcase(session, instance_id, "swap", [SWAP])
+
+
+def test_showcase_swap_cancel(session: Session, instance_id: int):
+    """Swap: backing out of the review cancels the flow."""
+    run_showcase(
+        session,
+        instance_id,
+        "swap",
+        [SWAP],
+        cancel_at=0,
+        reply=m.Reply.Cancelled,
+    )
+
+
+def test_showcase_fee_bump(session: Session, instance_id: int):
+    """Fee bump: the transaction and its old and new fee, with the rates as an
+    extra, held."""
+    run_showcase(session, instance_id, "fee-bump", [FEE_BUMP])
+
+
+def test_showcase_fee_bump_cancel(session: Session, instance_id: int):
+    """Fee bump: backing out of the review cancels the flow."""
+    run_showcase(
+        session,
+        instance_id,
+        "fee-bump",
+        [FEE_BUMP],
+        cancel_at=0,
+        reply=m.Reply.Cancelled,
+    )
+
+
+def test_showcase_sign_message(session: Session, instance_id: int):
+    """Sign message: the address and the message as text, held."""
+    run_showcase(session, instance_id, "sign-message", [SIGN_MESSAGE])
+
+
+def test_showcase_sign_message_cancel(session: Session, instance_id: int):
+    """Sign message: backing out of the review cancels the flow."""
+    run_showcase(
+        session,
+        instance_id,
+        "sign-message",
+        [SIGN_MESSAGE],
+        cancel_at=0,
+        reply=m.Reply.Cancelled,
+    )
+
+
+def test_showcase_verify_message(session: Session, instance_id: int):
+    """Verify message: the address and the message, then the result."""
+    run_showcase(session, instance_id, "verify-message", VERIFY_MESSAGE)
+
+
+def test_showcase_verify_message_cancel(session: Session, instance_id: int):
+    """Verify message: backing out of the review cancels the flow."""
+    run_showcase(
+        session,
+        instance_id,
+        "verify-message",
+        VERIFY_MESSAGE,
+        cancel_at=0,
+        reply=m.Reply.Cancelled,
+    )

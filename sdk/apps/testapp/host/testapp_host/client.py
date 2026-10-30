@@ -51,6 +51,11 @@ SHOWCASES = (
     "get-address",
     "get-pubkey",
     "contract-data",
+    "consent",
+    "swap",
+    "fee-bump",
+    "sign-message",
+    "verify-message",
     "signing-progress",
 )
 
