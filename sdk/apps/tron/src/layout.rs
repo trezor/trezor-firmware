@@ -557,7 +557,7 @@ pub fn confirm_claim(
     if let Some(owner_address) = owner_address {
         confirm_address(
             title,
-            &owner_address,
+            owner_address,
             None,
             Some(tr!("tron__owner_address")),
             Some(tr!("buttons__continue")),
@@ -655,22 +655,12 @@ fn confirm_tron_summary(
     fee: Option<&str>,
     account_details: Option<(Option<&str>, &str)>,
 ) -> Result<()> {
-    let account_items = if let Some(account_details) = account_details {
-        Some(vec![
-            Property::new(
-                tr!("words__account"),
-                account_details.0.unwrap_or(""),
-                false,
-            ),
-            Property::new(
-                tr!("address_details__derivation_path"),
-                account_details.1,
-                false,
-            ),
-        ])
-    } else {
-        None
-    };
+    let account_items = account_details.map(|(account, path)| {
+        vec![
+            Property::new(tr!("words__account"), account.unwrap_or(""), false),
+            Property::new(tr!("address_details__derivation_path"), path, false),
+        ]
+    });
 
     let amount_label = if amount.is_some() {
         Some(tr!("words__amount"))
@@ -907,7 +897,7 @@ pub fn confirm_tron_voting<'a>(items: &[Property<'a>]) -> Result<()> {
     ui::error_if_not_confirmed(
         ui::confirm_properties(ui::ConfirmProperties::new(
             tr!("words__review"),
-            &items,
+            items,
             Some(tr!("words__voting")),
             None,
             true,

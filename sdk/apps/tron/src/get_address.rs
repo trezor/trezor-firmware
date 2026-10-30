@@ -57,7 +57,6 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
     let res = Address {
         address,
         mac: Some(mac.to_vec()),
-        ..Default::default()
     };
 
     Ok(res)

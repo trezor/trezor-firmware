@@ -4,6 +4,8 @@ pub mod common {
     include!(concat!(env!("OUT_DIR"), "/hw.trezor.common.rs"));
 }
 
+// Generated variants all end in `Contract`.
+#[allow(clippy::enum_variant_names)]
 pub mod tron {
     include!(concat!(env!("OUT_DIR"), "/hw.trezor.tron.rs"));
 }
