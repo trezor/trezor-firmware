@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import logging
 import tarfile
 import typing as t
@@ -124,16 +126,16 @@ def _normalize_eth_address(address: t.AnyStr) -> str:
 
 
 class Source:
-    def fetch_path(self, *components: str) -> t.Optional[bytes]:
+    def fetch_path(self, *components: str) -> bytes | None:
         raise NotImplementedError
 
-    def get_eth_network_by_slip44(self, slip44: int) -> t.Optional[bytes]:
+    def get_eth_network_by_slip44(self, slip44: int) -> bytes | None:
         return self.fetch_path("eth", "slip44", str(slip44), "network.dat")
 
-    def get_eth_network(self, chain_id: int) -> t.Optional[bytes]:
+    def get_eth_network(self, chain_id: int) -> bytes | None:
         return self.fetch_path("eth", "chain-id", str(chain_id), "network.dat")
 
-    def get_eth_token(self, chain_id: int, address: t.AnyStr) -> t.Optional[bytes]:
+    def get_eth_token(self, chain_id: int, address: t.AnyStr) -> bytes | None:
         address_str = _normalize_eth_address(address)
 
         return self.fetch_path(
@@ -142,7 +144,7 @@ class Source:
 
     def get_eth_display_format(
         self, chain_id: int, address: t.AnyStr, func_sig: bytes
-    ) -> t.Optional[bytes]:
+    ) -> bytes | None:
         """Fetch an ERC-7730 clear-signing contract descriptor (display format).
 
         Descriptors are keyed by the contract address and the 4-byte function
@@ -160,12 +162,12 @@ class Source:
             f"{address_str}-{func_sig_str}.dat",
         )
 
-    def get_solana_token(self, mint_account: str) -> t.Optional[bytes]:
+    def get_solana_token(self, mint_account: str) -> bytes | None:
         return self.fetch_path("solana", "token", f"{mint_account}.dat")
 
 
 class NullSource(Source):
-    def fetch_path(self, *components: str) -> t.Optional[bytes]:
+    def fetch_path(self, *components: str) -> bytes | None:
         return None
 
 
@@ -173,7 +175,7 @@ class FilesystemSource(Source):
     def __init__(self, root: Path) -> None:
         self.root = root
 
-    def fetch_path(self, *components: str) -> t.Optional[bytes]:
+    def fetch_path(self, *components: str) -> bytes | None:
         path = self.root.joinpath(*components)
         if not path.exists():
             LOG.info("Requested definition at %s was not found", path)
@@ -186,7 +188,7 @@ class UrlSource(Source):
     def __init__(self, base_url: str = DEFS_BASE_URL) -> None:
         self.base_url = base_url
 
-    def fetch_path(self, *components: str) -> t.Optional[bytes]:
+    def fetch_path(self, *components: str) -> bytes | None:
         url = self.base_url + "/".join(components)
         LOG.info("Downloading definition from %s", url)
         r = requests.get(url)
@@ -201,7 +203,7 @@ class TarSource(Source):
     def __init__(self, path: Path) -> None:
         self.archive = tarfile.open(path)
 
-    def fetch_path(self, *components: str) -> t.Optional[bytes]:
+    def fetch_path(self, *components: str) -> bytes | None:
         inner_name = "/".join(components)
         LOG.info("Extracting definition from %s:%s", self.archive.name, inner_name)
         try:

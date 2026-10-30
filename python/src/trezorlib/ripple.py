@@ -14,7 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING, Any, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from . import messages
 from .protobuf import dict_to_proto
@@ -54,7 +56,7 @@ def sign_tx(
     address_n: "Address",
     msg: messages.RippleSignTx,
     chunkify: bool = False,
-    payment_req: Optional[messages.PaymentRequest] = None,
+    payment_req: messages.PaymentRequest | None = None,
 ) -> messages.RippleSignedTx:
     msg.address_n = address_n
     msg.chunkify = chunkify

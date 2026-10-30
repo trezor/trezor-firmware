@@ -43,10 +43,10 @@ at top level. The style for doing that are as follows:
   from typing import TYPE_CHECKING
 
   if TYPE_CHECKING:
-      from typing import Any, TypeVar, Union
+      from typing import Any, TypeVar
       from trezor.messages import SomeMessage
 
-      TypeAlias = Union[int, str]
+      TypeAlias = int | str
       T = TypeVar("T")
   ```
 * If the module _only_ needs items from `typing`, you should not create a

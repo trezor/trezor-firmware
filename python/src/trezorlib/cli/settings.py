@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import io
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 import click
 import requests
@@ -167,7 +167,7 @@ def image_to_jpeg(filename: Path, width: int, height: int, quality: int = 90) ->
         return filename.read_bytes()
 
 
-def _should_remove(enable: Optional[bool], remove: bool) -> bool:
+def _should_remove(enable: bool | None, remove: bool) -> bool:
     """Helper to decide whether to remove something or not.
 
     Needed for backwards compatibility purposes, so we can support
@@ -191,7 +191,7 @@ def cli() -> None:
 @click.option("-r", "--remove", is_flag=True, hidden=True)
 @click.argument("enable", type=ChoiceType({"on": True, "off": False}), required=False)
 @with_session(seedless=True)
-def pin(session: "Session", enable: Optional[bool], remove: bool) -> None:
+def pin(session: "Session", enable: bool | None, remove: bool) -> None:
     """Set, change or remove PIN."""
     # Remove argument is there for backwards compatibility
     device.change_pin(session, remove=_should_remove(enable, remove))
@@ -201,7 +201,7 @@ def pin(session: "Session", enable: Optional[bool], remove: bool) -> None:
 @click.option("-r", "--remove", is_flag=True, hidden=True)
 @click.argument("enable", type=ChoiceType({"on": True, "off": False}), required=False)
 @with_session(seedless=True)
-def wipe_code(session: "Session", enable: Optional[bool], remove: bool) -> None:
+def wipe_code(session: "Session", enable: bool | None, remove: bool) -> None:
     """Set or remove the wipe code.
 
     The wipe code functions as a "self-destruct PIN". If the wipe code is ever
@@ -435,7 +435,7 @@ passphrase = cast(AliasedGroup, passphrase_main)
 @passphrase.command(name="on")
 @click.option("-f/-F", "--force-on-device/--no-force-on-device", default=None)
 @with_session(seedless=True)
-def passphrase_on(session: "Session", force_on_device: Optional[bool]) -> None:
+def passphrase_on(session: "Session", force_on_device: bool | None) -> None:
     """Enable passphrase."""
     if session.features.passphrase_protection is not True:
         use_passphrase = True

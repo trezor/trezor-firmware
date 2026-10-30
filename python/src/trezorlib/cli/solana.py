@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, TextIO
+from typing import TYPE_CHECKING, TextIO
 
 import click
 
@@ -90,7 +90,7 @@ def sign_tx(
     session: "Session",
     address: str,
     serialized_tx: str,
-    additional_info: Optional[TextIO],
+    additional_info: TextIO | None,
     token: str | None,
 ) -> str:
     """Sign Solana transaction.

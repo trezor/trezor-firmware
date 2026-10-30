@@ -24,7 +24,7 @@ import secrets
 import time
 import warnings
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Callable, Optional, overload
+from typing import TYPE_CHECKING, Callable, overload
 
 from slip10 import SLIP10
 
@@ -47,18 +47,18 @@ HOMESCREEN_STREAMING_MIN_VERSION = (2, 8, 11)
 @workflow(refresh_features=True)
 def apply_settings(
     session: "Session",
-    label: Optional[str] = None,
-    language: Optional[str] = None,
-    use_passphrase: Optional[bool] = None,
-    homescreen: Optional[bytes] = None,
-    passphrase_always_on_device: Optional[bool] = None,
-    auto_lock_delay_ms: Optional[int] = None,
-    auto_lock_delay_battery_ms: Optional[int] = None,
-    display_rotation: Optional[messages.DisplayRotation] = None,
-    safety_checks: Optional[messages.SafetyCheckLevel] = None,
-    experimental_features: Optional[bool] = None,
-    hide_passphrase_from_host: Optional[bool] = None,
-    haptic_feedback: Optional[bool] = None,
+    label: str | None = None,
+    language: str | None = None,
+    use_passphrase: bool | None = None,
+    homescreen: bytes | None = None,
+    passphrase_always_on_device: bool | None = None,
+    auto_lock_delay_ms: int | None = None,
+    auto_lock_delay_battery_ms: int | None = None,
+    display_rotation: messages.DisplayRotation | None = None,
+    safety_checks: messages.SafetyCheckLevel | None = None,
+    experimental_features: bool | None = None,
+    hide_passphrase_from_host: bool | None = None,
+    haptic_feedback: bool | None = None,
 ) -> None:
     if language is not None:
         warnings.warn(
@@ -149,15 +149,15 @@ def recover(
     word_count: int = 24,
     passphrase_protection: bool = False,
     pin_protection: bool = True,
-    label: Optional[str] = None,
-    language: Optional[str] = None,
-    input_callback: Optional[Callable] = None,
+    label: str | None = None,
+    language: str | None = None,
+    input_callback: Callable | None = None,
     input_method: messages.RecoveryDeviceInputMethod = messages.RecoveryDeviceInputMethod.ScrambledWords,
-    backup_method: Optional[messages.BackupMethod] = None,
-    dry_run: Optional[bool] = None,
-    u2f_counter: Optional[int] = None,
+    backup_method: messages.BackupMethod | None = None,
+    dry_run: bool | None = None,
+    u2f_counter: int | None = None,
     *,
-    type: Optional[messages.RecoveryType] = None,
+    type: messages.RecoveryType | None = None,
 ) -> None:
     if language is not None:
         warnings.warn(
@@ -271,11 +271,11 @@ def _seed_from_entropy(
 def reset(
     session: "Session",
     display_random: bool = False,
-    strength: Optional[int] = None,
+    strength: int | None = None,
     passphrase_protection: bool = False,
     pin_protection: bool = True,
-    label: Optional[str] = None,
-    language: Optional[str] = None,
+    label: str | None = None,
+    language: str | None = None,
     u2f_counter: int = 0,
     skip_backup: bool = False,
     no_backup: bool = False,
@@ -325,16 +325,16 @@ def _get_external_entropy() -> bytes:
 def setup(
     session: "Session",
     *,
-    strength: Optional[int] = None,
+    strength: int | None = None,
     passphrase_protection: bool = True,
     pin_protection: bool = False,
-    label: Optional[str] = None,
+    label: str | None = None,
     u2f_counter: int = 0,
     skip_backup: bool = False,
     no_backup: bool = False,
-    backup_type: Optional[messages.BackupType] = None,
-    backup_method: Optional[messages.BackupMethod] = None,
-    entropy_check_count: Optional[int] = None,
+    backup_type: messages.BackupType | None = None,
+    backup_method: messages.BackupMethod | None = None,
+    entropy_check_count: int | None = None,
     paths: Iterable[Address] = [],
     _get_entropy: Callable[[], bytes] = _get_external_entropy,
 ) -> Iterable[tuple[Address, str]]:
@@ -593,9 +593,9 @@ def _reset_with_entropycheck(
 @workflow(refresh_features=True)
 def backup(
     session: "Session",
-    group_threshold: Optional[int] = None,
+    group_threshold: int | None = None,
     groups: Iterable[tuple[int, int]] = (),
-    backup_method: Optional[messages.BackupMethod] = None,
+    backup_method: messages.BackupMethod | None = None,
 ) -> None:
     session.call(
         messages.BackupDevice(
@@ -634,7 +634,7 @@ def unlock_path(session: "Session", n: "Address") -> bytes:
 def reboot_to_bootloader(
     session: "Session",
     boot_command: messages.BootCommand = messages.BootCommand.STOP_AND_WAIT,
-    firmware_header: Optional[bytes] = None,
+    firmware_header: bytes | None = None,
 ) -> None:
     session.call(
         messages.RebootToBootloader(
@@ -656,7 +656,7 @@ def unlock_bootloader(session: "Session") -> None:
 
 
 @workflow(refresh_features=True)
-def set_busy(session: "Session", expiry_ms: Optional[int]) -> None:
+def set_busy(session: "Session", expiry_ms: int | None) -> None:
     """Sets or clears the busy state of the device.
 
     In the busy state the device shows a "Do not disconnect" message instead of the homescreen.
@@ -812,7 +812,7 @@ def authenticate(
 
 
 @workflow()
-def set_brightness(session: "Session", value: Optional[int] = None) -> None:
+def set_brightness(session: "Session", value: int | None = None) -> None:
     session.call(messages.SetBrightness(value=value), expect=messages.Success)
 
 

@@ -14,8 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import json
-from typing import TYPE_CHECKING, Any, Optional, TextIO
+from typing import TYPE_CHECKING, Any, TextIO
 
 import click
 
@@ -214,12 +216,12 @@ def get_address(
     address: str,
     address_type: messages.CardanoAddressType,
     staking_address: str,
-    staking_key_hash: Optional[str],
-    block_index: Optional[int],
-    tx_index: Optional[int],
-    certificate_index: Optional[int],
-    script_payment_hash: Optional[str],
-    script_staking_hash: Optional[str],
+    staking_key_hash: str | None,
+    block_index: int | None,
+    tx_index: int | None,
+    certificate_index: int | None,
+    script_payment_hash: str | None,
+    script_staking_hash: str | None,
     protocol_magic: int,
     network_id: int,
     show_display: bool,

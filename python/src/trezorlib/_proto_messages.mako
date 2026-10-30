@@ -2,9 +2,10 @@
 # fmt: off
 # isort:skip_file
 
+from __future__ import annotations
+
 from collections.abc import Sequence
 from enum import IntEnum
-from typing import Optional
 
 from . import protobuf
 % for enum in enums:
@@ -40,17 +41,17 @@ class ${message.name}(protobuf.MessageType):
         self,
         *,
 % for field in required_fields:
-        ${field.name}: "${field.python_type}",
+        ${field.name}: ${field.python_type},
 % endfor
 % for field in repeated_fields:
-        ${field.name}: Optional[Sequence["${field.python_type}"]] = None,
+        ${field.name}: Sequence[${field.python_type}] | None = None,
 % endfor
 % for field in optional_fields:
-        ${field.name}: Optional["${field.python_type}"] = ${field.default_value_repr},
+        ${field.name}: ${field.python_type} | None = ${field.default_value_repr},
 % endfor
     ) -> None:
 % for field in repeated_fields:
-        self.${field.name}: Sequence["${field.python_type}"] = ${field.name} if ${field.name} is not None else []
+        self.${field.name}: Sequence[${field.python_type}] = ${field.name} if ${field.name} is not None else []
 % endfor
 % for field in required_fields + optional_fields:
         self.${field.name} = ${field.name}
