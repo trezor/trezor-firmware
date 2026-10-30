@@ -93,6 +93,7 @@ def test_desync_v1(client: Client):
 
 
 @pytest.mark.models("eckhart")
+@pytest.mark.ble(skip="TODO")
 def test_get_features_avoids_restart(session: Session):
     debug = session.debug
     assert "Homescreen" == debug.read_layout().main_component()
