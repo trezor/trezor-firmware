@@ -436,8 +436,7 @@ def _prepared_test_ctx(
     ble_marker = request.node.get_closest_marker("ble")
     if ble_marker and isinstance(_raw_test_ctx.transport, BleTransport):
         if reason := ble_marker.kwargs.get("skip", False):
-            if not isinstance(reason, str):
-                reason = "no reason"
+            assert isinstance(reason, str)
             pytest.skip(f"Test not supported over BLE: {reason}")
 
         if ble_marker.kwargs.get("wipe", False):
