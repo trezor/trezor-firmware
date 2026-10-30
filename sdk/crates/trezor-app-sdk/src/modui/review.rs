@@ -149,7 +149,7 @@ fn check_no_extras(extras: &[Extra<'_>]) -> Result<()> {
 ///         "Delegate",
 ///         &[
 ///             Field::address("Recipient", receiver),
-///             Field::amount("Amount", "1,000 TRX"),
+///             Field::amount("Amount", "1,000", "TRX"),
 ///             Field::text("Resource", "Energy"),
 ///         ],
 ///     )
@@ -270,7 +270,10 @@ impl<'a> Review<'a> {
     ///     modui::review(
     ///         "summary",
     ///         "Send",
-    ///         &[Field::amount("Amount", amount), Field::amount("Fee limit", fee)],
+    ///         &[
+    ///             Field::amount("Amount", amount, "TRX"),
+    ///             Field::amount("Fee limit", fee, "TRX"),
+    ///         ],
     ///     )
     ///     .confirm_final()
     /// }

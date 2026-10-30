@@ -183,7 +183,7 @@ fn field(f: &wire::Field) -> Result<Field<'_>> {
     let text = || str::from_utf8(&f.value).map_err(|_| Error::InvalidArgument);
     Ok(match f.kind() {
         wire::FieldKind::Text => Field::text(label(f)?, text()?),
-        wire::FieldKind::Amount => Field::amount(label(f)?, text()?),
+        wire::FieldKind::Amount => Field::amount(label(f)?, text()?, f.ticker()),
         wire::FieldKind::Address => Field::address(label(f)?, text()?),
         wire::FieldKind::Data => Field::data(label(f)?, &f.value),
         wire::FieldKind::Note => Field::note(text()?),

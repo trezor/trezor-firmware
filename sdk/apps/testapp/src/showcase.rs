@@ -74,8 +74,8 @@ fn send() -> Result<()> {
         "summary",
         "Send",
         &[
-            Field::amount("Amount", "1.5 TRX"),
-            Field::amount("Fee limit", "10 TRX"),
+            Field::amount("Amount", "1.5", "TRX"),
+            Field::amount("Fee limit", "10", "TRX"),
         ],
     )
     .extras(&[Extra::new("Account info", &account)])
@@ -90,7 +90,7 @@ fn delegate() -> Result<()> {
         "Delegate",
         &[
             Field::address("Recipient", RECIPIENT),
-            Field::amount("Amount", "1,000 TRX"),
+            Field::amount("Amount", "1,000", "TRX"),
             Field::text("Resource", "Energy"),
         ],
     )
@@ -98,7 +98,7 @@ fn delegate() -> Result<()> {
 
     let lock: Option<&str> = Some(LOCK_PERIOD);
     let mut facts = Vec::from([
-        Field::amount("Amount", "1,000 TRX"),
+        Field::amount("Amount", "1,000", "TRX"),
         Field::text("Resource", "Energy"),
     ]);
     if let Some(lock) = lock {
@@ -162,7 +162,7 @@ fn typed_data() -> Result<()> {
             "Confirm message",
             &[
                 Field::address("Owner", OWNER),
-                Field::amount("Value", "1,000 USDT"),
+                Field::amount("Value", "1,000", "USDT"),
             ],
         )
         .confirm(),
@@ -215,8 +215,8 @@ fn swap() -> Result<()> {
         Field::text("Quote ID", "a3f9-77c1"),
     ];
     let fees = [
-        Field::amount("Provider fee", "0.50 USDC"),
-        Field::amount("Fee limit", "10 TRX"),
+        Field::amount("Provider fee", "0.50", "USDC"),
+        Field::amount("Fee limit", "10", "TRX"),
     ];
     let route = [
         Field::text("Hop 1", "TRX to USDT on SunSwap"),
@@ -230,10 +230,10 @@ fn swap() -> Result<()> {
         "swap",
         "Swap",
         &[
-            Field::amount("You pay", "-1,000 TRX"),
-            Field::amount("You receive", "+118.40 USDC"),
+            Field::amount("You pay", "-1,000", "TRX"),
+            Field::amount("You receive", "+118.40", "USDC"),
             Field::address("Recipient", RECIPIENT),
-            Field::amount("Network fee", "1.2 TRX"),
+            Field::amount("Network fee", "1.2", "TRX"),
             Field::warning("The price impact is 4.2%."),
         ],
     )
@@ -258,9 +258,9 @@ fn fee_bump() -> Result<()> {
         "Bump fee",
         &[
             Field::address("Transaction ID", TXID),
-            Field::amount("Old fee", "0.00000564 BTC"),
-            Field::amount("New fee", "0.00001692 BTC"),
-            Field::amount("Increased by", "0.00001128 BTC"),
+            Field::amount("Old fee", "0.00000564", "BTC"),
+            Field::amount("New fee", "0.00001692", "BTC"),
+            Field::amount("Increased by", "0.00001128", "BTC"),
         ],
     )
     .extras(&[Extra::new("Fee rate", &rates)])

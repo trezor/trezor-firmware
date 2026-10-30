@@ -30,17 +30,18 @@ from .client import (
 
 KINDS = {kind.name.lower(): kind for kind in m.FieldKind}
 
-# Every field kind that takes a label, by the helper that builds it. A note and a
-# warning are sentences, so they take no label and are handled apart.
+# The field kinds that take a label and one value, by the helper that builds
+# them. A note and a warning are sentences with no label, and an amount takes a
+# ticker too, so they are handled apart.
 LABELLED = {
     m.FieldKind.Text: text,
-    m.FieldKind.Amount: amount,
     m.FieldKind.Address: address,
 }
 
 
 def parsed_field(spec: str) -> m.Field:
-    """One fact as `KIND:LABEL=VALUE`, or `KIND:VALUE` for a note or warning."""
+    """One fact as `KIND:LABEL=VALUE`, or `KIND:VALUE` for a note or warning.
+    An amount's VALUE is its number and its ticker, `1.5 TRX`."""
     kind_name, sep, rest = spec.partition(":")
     kind = KINDS.get(kind_name.lower())
     if not sep or kind is None:
@@ -59,6 +60,13 @@ def parsed_field(spec: str) -> m.Field:
             return data(label, bytes.fromhex(value))
         except ValueError:
             raise argparse.ArgumentTypeError(f"expected hex bytes, got {value!r}")
+    if kind is m.FieldKind.Amount:
+        number, _, ticker = value.rpartition(" ")
+        if not number:
+            raise argparse.ArgumentTypeError(
+                f"expected amount:LABEL=NUMBER TICKER, got {spec!r}"
+            )
+        return amount(label, number, ticker)
     return LABELLED[kind](label, value)
 
 

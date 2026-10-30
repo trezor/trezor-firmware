@@ -95,7 +95,7 @@ REVIEWS = {
             title="Stake",
             fields=[
                 modui_ext.text("Resource", "Energy"),
-                modui_ext.amount("Amount", "1.5 TRX"),
+                modui_ext.amount("Amount", "1.5", "TRX"),
             ],
             **kw,
         ),
@@ -862,28 +862,30 @@ def test_progress_review_reshows(session: Session, instance_id: int):
 
 
 @pytest.mark.parametrize(
-    "kind, label, value",
+    "fact, shown",
     [
-        (m.FieldKind.Text, "Resource", "Energy"),
-        (m.FieldKind.Amount, "Amount", "1.5 TRX"),
-        (m.FieldKind.Address, "Recipient", ADDRESS),
+        (modui_ext.text("Resource", "Energy"), "Energy"),
+        (modui_ext.amount("Amount", "1.5", "TRX"), "1.5 TRX"),
+        (modui_ext.address("Recipient", ADDRESS), ADDRESS),
     ],
     ids=["text", "amount", "address"],
 )
 def test_field_value_kind(
-    session: Session, instance_id: int, kind: m.FieldKind, label: str, value: str
+    session: Session, instance_id: int, fact: m.Field, shown: str
 ):
-    """A text, amount or address field is shown as written."""
+    """A text or address field is shown as written, and an amount as its number
+    and its ticker."""
     request = m.Review(
         step="field",
         title="Field",
-        fields=[modui_ext.field(kind, value, label)],
+        fields=[fact],
     )
 
     def input_flow():
         yield
         layout = session.debug.read_layout()
-        assert flat(value) in flat(layout.text_content())
+        # an address is drawn in chunks, so compare without whitespace
+        assert flat(shown) in flat(layout.text_content())
         confirm(session.debug)
 
     with session.test_ctx as client:

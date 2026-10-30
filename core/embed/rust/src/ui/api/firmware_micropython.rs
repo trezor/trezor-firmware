@@ -1282,6 +1282,9 @@ fn field_kind(kind: &Archived<FieldKind>) -> (u8, bool) {
 /// `FieldKind` discriminant, `label` is `None` for notes and warnings, and
 /// `value` is `str` for the text kinds and `(total, offset, chunk)` for `Data`.
 ///
+/// An amount arrives as its number and its ticker, apart, and is drawn as the
+/// two joined by a space: how they are put together is core's, not the app's.
+///
 /// A `Data` value travels as its length alone, so its chunk is empty here: the
 /// driver pulls each chunk from the app while the person pages.
 #[cfg(feature = "app_loading")]
@@ -1297,7 +1300,19 @@ fn obj_from_field(field: &Archived<WireField<'_>>) -> Result<Obj, Error> {
         // The text kinds carry UTF-8, as the app wrote it.
         let text = core::str::from_utf8(field.value.as_ref())
             .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
-        Obj::try_from(text)?
+        let ticker = field.ticker.as_ref().map(|ticker| ticker.as_ref());
+        match ticker.filter(|ticker: &&str| !ticker.is_empty()) {
+            Some(ticker) => {
+                let joined = StrBuffer::alloc_with(text.len() + 1 + ticker.len(), |buf| {
+                    let (number, rest) = buf.split_at_mut(text.len());
+                    number.copy_from_slice(text.as_bytes());
+                    rest[0] = b' ';
+                    rest[1..].copy_from_slice(ticker.as_bytes());
+                })?;
+                Obj::try_from(joined.as_ref())?
+            }
+            None => Obj::try_from(text)?,
+        }
     };
     Ok(Obj::try_from((
         Obj::from(kind),

@@ -91,9 +91,11 @@ def text(label: str, value: str) -> m.Field:
     return field(m.FieldKind.Text, value, label)
 
 
-def amount(label: str, value: str) -> m.Field:
-    """A sum with its unit, already formatted by the app."""
-    return field(m.FieldKind.Amount, value, label)
+def amount(label: str, value: str, ticker: str) -> m.Field:
+    """A sum, formatted by the app, and the ticker of what it counts."""
+    fact = field(m.FieldKind.Amount, value, label)
+    fact.ticker = ticker
+    return fact
 
 
 def address(label: str, value: str) -> m.Field:

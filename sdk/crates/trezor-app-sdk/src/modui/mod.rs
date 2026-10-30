@@ -231,7 +231,7 @@
 //! fn confirm_send(address: &str, amount: &str) -> trezor_app_sdk::Result<()> {
 //!     modui::review("send", "Send", &[Field::address("Recipient", address)]).confirm()?;
 //!
-//!     modui::review("summary", "Send", &[Field::amount("Amount", amount)]).confirm_final()
+//!     modui::review("summary", "Send", &[Field::amount("Amount", amount, "TRX")]).confirm_final()
 //! }
 //!
 //! // Or handle the cancel yourself, when leaving is not the end of the flow.

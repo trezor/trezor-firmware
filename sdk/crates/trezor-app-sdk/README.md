@@ -78,7 +78,7 @@ fn confirm_send(recipient: &str, amount: &str) -> trezor_app_sdk::Result<()> {
     modui::review("send", "Send", &[Field::address("Recipient", recipient)])
         .extras(&[Extra::new("Account info", &account)])
         .confirm()?;
-    modui::review("summary", "Send", &[Field::amount("Amount", amount)])
+    modui::review("summary", "Send", &[Field::amount("Amount", amount, "TRX")])
         .confirm_final()
 }
 ```

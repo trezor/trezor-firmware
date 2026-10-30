@@ -1,9 +1,9 @@
 use crate::{
-    alloc_types::Vec,
+    alloc_types::{String, Vec},
     common::get_encoded_address,
     helpers::{
-        chunkify_number, format_blocks_as_time, format_energy_amount, format_token_amount,
-        format_trx_amount,
+        SUN, TRX, chunkify_number, format_blocks_as_time, format_energy_amount,
+        format_token_amount, format_trx_amount,
     },
     proto::tron::{ResourceCode, TransferContract, TriggerSmartContract},
     uformat,
@@ -47,7 +47,7 @@ pub fn confirm_freeze_operations(
 
     let amount = format_trx_amount(balance);
     let summary = [
-        Field::amount(tr!("words__amount"), &amount),
+        Field::amount(tr!("words__amount"), &amount, TRX),
         Field::text(tr!("words__resource"), resource_name(resource)),
     ];
     modui::review("freeze", tr!("words__title_summary"), &summary)
@@ -79,7 +79,7 @@ pub fn confirm_delegate_resource(
 
     let amount = format_trx_amount(balance);
     let summary = [
-        Field::amount(tr!("words__amount"), &amount),
+        Field::amount(tr!("words__amount"), &amount, TRX),
         Field::text(tr!("words__resource"), resource_name(resource)),
     ];
     let review = modui::review("delegate/resource", title, &summary);
@@ -119,7 +119,7 @@ pub fn confirm_undelegate_resource(
 
     let amount = format_trx_amount(balance);
     let summary = [
-        Field::amount(tr!("words__amount"), &amount),
+        Field::amount(tr!("words__amount"), &amount, TRX),
         Field::text(tr!("words__resource"), resource_name(resource)),
     ];
     modui::review("undelegate/resource", title, &summary)
@@ -157,7 +157,7 @@ pub fn confirm_trx_transfer(
     account_details: (Option<&str>, &str),
 ) -> Result<()> {
     confirm_tron_send(
-        Some(&format_trx_amount(contract.amount)),
+        Some((&format_trx_amount(contract.amount), TRX)),
         None,
         account_details,
         &get_encoded_address(&contract.to_address).c()?,
@@ -179,18 +179,21 @@ pub fn confirm_tron_claim(
         .c()
 }
 
+/// An amount as Tron passes it on: the number, then its ticker.
+type Amount<'a> = (&'a str, &'a str);
+
 fn confirm_tron_summary(
     title: Option<&str>,
-    amount: Option<&str>,
-    fee: Option<&str>,
+    amount: Option<Amount>,
+    fee: Option<Amount>,
     account_details: Option<(Option<&str>, &str)>,
 ) -> Result<()> {
     let mut summary = Vec::with_capacity(2);
-    if let Some(amount) = amount {
-        summary.push(Field::amount(tr!("words__amount"), amount));
+    if let Some((amount, ticker)) = amount {
+        summary.push(Field::amount(tr!("words__amount"), amount, ticker));
     }
-    if let Some(fee) = fee {
-        summary.push(Field::amount(tr!("words__fee_limit"), fee));
+    if let Some((fee, ticker)) = fee {
+        summary.push(Field::amount(tr!("words__fee_limit"), fee, ticker));
     }
 
     let account =
@@ -203,8 +206,8 @@ fn confirm_tron_summary(
 }
 
 fn confirm_tron_send(
-    amount: Option<&str>,
-    fee: Option<&str>,
+    amount: Option<Amount>,
+    fee: Option<Amount>,
     account_details: (Option<&str>, &str),
     address: &str,
 ) -> Result<()> {
@@ -221,7 +224,7 @@ fn confirm_tron_send(
 
 pub fn confirm_tron_transfer(
     recipient_addr: &str,
-    amount_str: &str,
+    (amount_str, ticker): Amount,
     maximum_fee: &str,
     native_amount_str: Option<&str>,
 ) -> Result<()> {
@@ -231,7 +234,7 @@ pub fn confirm_tron_transfer(
     modui::review("transfer", title, &recipient).confirm().c()?;
 
     let amount = [
-        Field::amount(tr!("words__amount"), amount_str),
+        Field::amount(tr!("words__amount"), amount_str, ticker),
         Field::text(tr!("words__chain"), "Tron"),
     ];
     modui::review("transfer/amount", title, &amount)
@@ -240,9 +243,9 @@ pub fn confirm_tron_transfer(
 
     let mut summary = Vec::with_capacity(2);
     if let Some(native_amount) = native_amount_str {
-        summary.push(Field::amount(tr!("words__amount"), native_amount));
+        summary.push(Field::amount(tr!("words__amount"), native_amount, TRX));
     }
-    summary.push(Field::amount(tr!("words__fee_limit"), maximum_fee));
+    summary.push(Field::amount(tr!("words__fee_limit"), maximum_fee, SUN));
     modui::review("transfer/summary", title, &summary)
         .confirm_final()
         .c()
@@ -250,7 +253,7 @@ pub fn confirm_tron_transfer(
 
 fn confirm_tron_approve(
     recipient_addr: &str,
-    amount_str: &str,
+    (amount_str, ticker): Amount,
     is_revoke: bool,
     maximum_fee: &str,
     native_amount_str: Option<&str>,
@@ -260,14 +263,19 @@ fn confirm_tron_approve(
             tr!("ethereum__approve_intro_title_revoke"),
             tr!("ethereum__approve_intro_revoke"),
             tr!("ethereum__approve_revoke_from"),
-            Field::amount(tr!("words__token"), &amount_str[2..]),
+            // revoking names only the token: there is no amount to read
+            Field::text(tr!("words__token"), ticker),
         )
     } else {
         (
             tr!("ethereum__approve_intro_title"),
             tr!("ethereum__approve_intro"),
             tr!("ethereum__approve_to"),
-            Field::amount(tr!("ethereum__approve_amount_allowance"), amount_str),
+            Field::amount(
+                tr!("ethereum__approve_amount_allowance"),
+                amount_str,
+                ticker,
+            ),
         )
     };
 
@@ -286,9 +294,9 @@ fn confirm_tron_approve(
 
     let mut summary = Vec::with_capacity(2);
     if let Some(native_amount) = native_amount_str {
-        summary.push(Field::amount(tr!("words__amount"), native_amount));
+        summary.push(Field::amount(tr!("words__amount"), native_amount, TRX));
     }
-    summary.push(Field::amount(tr!("words__fee_limit"), maximum_fee));
+    summary.push(Field::amount(tr!("words__fee_limit"), maximum_fee, SUN));
     modui::review("approve/summary", title, &summary)
         .confirm_final()
         .c()
@@ -340,8 +348,8 @@ pub fn confirm_unknown_smart_contract(
     let fee = format_energy_amount(fee_limit);
     confirm_tron_summary(
         Some(tr!("words__title_summary")),
-        amount.as_deref(),
-        Some(&fee),
+        amount.as_deref().map(|amount| (amount, TRX)),
+        Some((&fee, SUN)),
         None,
     )
 }
@@ -361,21 +369,17 @@ pub fn confirm_known_trc20_smart_contract(
     if is_approve {
         let mut is_revoke = false;
         let amount_str = if amount_arg.iter().all(|&byte| byte == 255) {
-            uformat!("{} {}", tr!("words__unlimited"), token_symbol)
+            String::from(tr!("words__unlimited"))
         } else {
             if amount_arg.iter().all(|&byte| byte == 0) {
                 is_revoke = true;
             }
-            format_token_amount(
-                U256::from_big_endian(amount_arg),
-                token_decimals,
-                token_symbol,
-            )
+            format_token_amount(U256::from_big_endian(amount_arg), token_decimals)
         };
 
         confirm_tron_approve(
             &get_encoded_address(recipient_addr).c()?,
-            &amount_str,
+            (&amount_str, token_symbol),
             is_revoke,
             &format_energy_amount(fee_limit),
             native_amount_str,
@@ -384,9 +388,8 @@ pub fn confirm_known_trc20_smart_contract(
     } else {
         confirm_tron_transfer(
             &get_encoded_address(recipient_addr).c()?,
-            &format_token_amount(
-                U256::from_big_endian(amount_arg),
-                token_decimals,
+            (
+                &format_token_amount(U256::from_big_endian(amount_arg), token_decimals),
                 token_symbol,
             ),
             &format_energy_amount(fee_limit),

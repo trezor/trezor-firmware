@@ -239,7 +239,7 @@ where
 pub enum FieldKind {
     /// Words or a number, shown as written.
     Text = 0,
-    /// A sum with its unit, already formatted by the app.
+    /// A sum formatted by the app, with its ticker apart in `WireField::ticker`.
     Amount = 1,
     /// Something compared character by character: grouped and fixed-width.
     Address = 2,
@@ -335,15 +335,18 @@ impl ufmt::uDebug for Source<'_> {
 ///
 /// `label` is `None` for [`FieldKind::Note`] and [`FieldKind::Warning`].
 /// `value` is UTF-8 for the text kinds and empty for [`FieldKind::Data`], whose
-/// bytes come from `source`. `len` is `value.len()` for the text kinds; for
-/// `Data` it is the total length core pulls, and `source` is where they come
-/// from. `source` is not serialized: it never crosses IPC.
+/// bytes come from `source`. `ticker` is the unit of a [`FieldKind::Amount`]
+/// (`"TRX"`), kept apart from its number so core decides how the two are drawn,
+/// and `None` for the other kinds. `len` is `value.len()` for the text kinds;
+/// for `Data` it is the total length core pulls, and `source` is where they
+/// come from. `source` is not serialized: it never crosses IPC.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 #[stabby::stabby]
 pub struct WireField<'a> {
     pub kind: FieldKind,
     pub label: OptStrSlice<'a>,
     pub value: Slice<'a, u8>,
+    pub ticker: OptStrSlice<'a>,
     pub len: u32,
     #[rkyv(with = rkyv::with::Skip)]
     pub source: Option<Source<'a>>,

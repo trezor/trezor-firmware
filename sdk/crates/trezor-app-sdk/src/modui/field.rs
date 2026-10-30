@@ -16,7 +16,7 @@ use crate::{Error, Result};
 /// | Constructor | For | Example |
 /// |---|---|---|
 /// | [`text`](Field::text) | Words or a number, shown as written. | `Field::text("Resource", "Energy")` |
-/// | [`amount`](Field::amount) | A sum with its unit, already formatted by the app. | `Field::amount("Amount", "1.5 TRX")` |
+/// | [`amount`](Field::amount) | A sum, formatted by the app, and its unit. | `Field::amount("Amount", "1.5", "TRX")` |
 /// | [`address`](Field::address) | Something compared character by character. | `Field::address("Recipient", &to)` |
 /// | [`data`](Field::data) | Raw bytes of any length, shown as hex and paged. | `Field::data("Input data", &calldata)` |
 /// | [`data_source`](Field::data_source) | Raw bytes the app hands out while core reads them, shown as hex and paged. | `Field::data_source("Input data", len, &source)` |
@@ -30,7 +30,7 @@ use crate::{Error, Result};
 ///
 /// let facts = [
 ///     Field::address("Recipient", "TRX..."),
-///     Field::amount("Amount", "1,000 TRX"),
+///     Field::amount("Amount", "1,000", "TRX"),
 ///     Field::text("Resource", "Energy"),
 /// ];
 /// ```
@@ -131,10 +131,11 @@ impl<'a> Field<'a> {
         Self::new(FieldKind::Text, Some(label), value.as_bytes())
     }
 
-    /// A sum with its unit, already formatted by the app.
+    /// A sum, and the ticker of what it counts: `"1.5"` and `"TRX"`.
     ///
     /// Core does not do the arithmetic or pick the unit; the app writes the
-    /// number as the person should read it. Under
+    /// number as the person should read it, sign included (`"-1,000"`), and
+    /// names its ticker apart. How the two are drawn together is core's. Under
     /// [`Review::confirm_final`](crate::modui::Review::confirm_final) an amount
     /// gets the summary styling.
     ///
@@ -143,10 +144,12 @@ impl<'a> Field<'a> {
     /// ```no_run
     /// use trezor_app_sdk::modui::Field;
     ///
-    /// let amount = Field::amount("Amount", "1.5 TRX");
+    /// let amount = Field::amount("Amount", "1.5", "TRX");
     /// ```
-    pub fn amount(label: &'a str, value: &'a str) -> Self {
-        Self::new(FieldKind::Amount, Some(label), value.as_bytes())
+    pub fn amount(label: &'a str, value: &'a str, ticker: &'a str) -> Self {
+        let mut field = Self::new(FieldKind::Amount, Some(label), value.as_bytes());
+        field.wire.ticker = OptStrSlice::new(Some(ticker));
+        field
     }
 
     /// Something compared character by character: an address, a key, a
@@ -263,6 +266,7 @@ impl<'a> Field<'a> {
                 kind: FieldKind::Data,
                 label: OptStrSlice::new(Some(label)),
                 value: Slice::new(&[]),
+                ticker: OptStrSlice::new(None),
                 len: source.total(),
                 source: Some(source),
             },
@@ -307,6 +311,7 @@ impl<'a> Field<'a> {
                 kind,
                 label: OptStrSlice::new(label),
                 value: Slice::new(value),
+                ticker: OptStrSlice::new(None),
                 len: value.len() as u32,
                 source: None,
             },
@@ -373,10 +378,21 @@ mod tests {
 
     #[test]
     fn text_facts_carry_their_label_and_bytes() {
-        let amount = Field::amount("Amount", "1.5 TRX");
+        let text = Field::text("Resource", "Energy");
+        assert!(text.kind() == FieldKind::Text);
+        assert_eq!(text.wire.label.as_str(), Some("Resource"));
+        assert_eq!(text.wire.value.as_slice(), b"Energy");
+        assert_eq!(text.wire.ticker.as_str(), None);
+    }
+
+    #[test]
+    fn an_amount_carries_its_ticker_apart() {
+        let amount = Field::amount("Amount", "1.5", "TRX");
         assert!(amount.kind() == FieldKind::Amount);
         assert_eq!(amount.wire.label.as_str(), Some("Amount"));
-        assert_eq!(amount.byte_len(), "1.5 TRX".len() as u32);
+        assert_eq!(amount.wire.value.as_slice(), b"1.5");
+        assert_eq!(amount.wire.ticker.as_str(), Some("TRX"));
+        assert_eq!(amount.byte_len(), "1.5".len() as u32);
     }
 
     #[test]

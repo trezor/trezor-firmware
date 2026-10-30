@@ -142,7 +142,7 @@
 "T3W1_en-test_sign_tx.py::test_sign_tx[Note_bad_utf8_bytes]": "4385d99cdf5eca284a042c7247ca8bac0f6f607c3f7e78a1c720e34b23803317",
 "T3W1_en-test_sign_tx.py::test_sign_tx[Note_hello_world]": "f8400e99467d68daaa9fd3782888a0e58818acff7b31927dea95a0e90c89f5c0",
 "T3W1_en-test_sign_tx.py::test_sign_tx[Note_too_long_string]": "90812f196e8c35dc7f35cb5a9a0e553c8fc6a610812d85b9f166e90b3f1c8b59",
-"T3W1_en-test_sign_tx.py::test_sign_tx[Revoke_TRC-20]": "ff9bfeec41bc4194439f93764c8839c755cc755fb36de0d421aeeb0f37e20c5b",
+"T3W1_en-test_sign_tx.py::test_sign_tx[Revoke_TRC-20]": "25cb70c10657b415a47a0a23071e4d6df584f66d2ad2dd83588ae3fb01299b58",
 "T3W1_en-test_sign_tx.py::test_sign_tx[Stake_for_Bandwidth]": "8c9cbb4c2a62e2e453484c396e40f7d9e3465eb84f914bffa197a2b4319f8d53",
 "T3W1_en-test_sign_tx.py::test_sign_tx[Stake_for_Energy]": "b111073d69b3c6e45eeaf2ece3af64b316f4f9c1e9f879aa90619a8cb2c7d99b",
 "T3W1_en-test_sign_tx.py::test_sign_tx[TransferContract]": "408c2859c292c84bc5e59c55f53b005612ae62b93ffca476d4aac4d0ec6cef24",

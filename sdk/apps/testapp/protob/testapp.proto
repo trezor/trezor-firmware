@@ -304,11 +304,13 @@ enum FieldKind {
 /**
  * One fact the person reads. `label` is absent for a note and a warning;
  * `value` is UTF-8 for the text kinds and the bytes themselves for `Data`.
+ * `ticker` is an amount's unit, apart from its number.
  */
 message Field {
     optional FieldKind kind = 1 [default = FieldKind_Text];
     optional string label = 2;
     required bytes value = 3;
+    optional string ticker = 4;
 }
 
 /**
