@@ -19,17 +19,20 @@ from __future__ import annotations
 import asyncio
 import atexit
 import logging
+import multiprocessing
 import sys
+import time
 import typing as t
 from dataclasses import dataclass
-from multiprocessing import Pipe, Process
-from multiprocessing.connection import Connection
 
+from .. import log
 from ..log import DUMP_PACKETS
-from . import Timeout, Transport, TransportException
-from .udp import UdpTransport
+from . import Timeout, Transport, TransportException, _get_transport_prefer_full
 
 if t.TYPE_CHECKING:
+    from multiprocessing.connection import Connection
+    from multiprocessing.process import BaseProcess
+
     from ..models import TrezorModel
 
 try:
@@ -49,12 +52,19 @@ TREZOR_SERVICE_UUID = "8c000001-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_RX = "8c000002-a59b-4d58-a9ad-073df69fa1b1"
 TREZOR_CHARACTERISTIC_TX = "8c000003-a59b-4d58-a9ad-073df69fa1b1"
 
-SCAN_INTERVAL_SECONDS = 3
+SCAN_INTERVAL_SECONDS = 5
+CONNECT_TIMEOUT_SECONDS = 20
 SHUTDOWN_TIMEOUT_SECONDS = 10
 # A single GATT write; a stalled one must not block the caller forever.
 WRITE_TIMEOUT_SECONDS = 5
+CACHE_SCAN_SECONDS = 5
 
 SHOULD_WRITE_WITH_RESPONSE = sys.platform == "darwin"
+
+if sys.platform == "darwin":
+    _FULL_LEN = len("ble:00000000-0000-0000-0000-000000000000")
+else:
+    _FULL_LEN = len("ble:00:00:00:00:00:00")
 
 
 class BleTransport(Transport):
@@ -62,7 +72,10 @@ class BleTransport(Transport):
     PATH_PREFIX = "ble"
     CHUNK_SIZE = 244
 
+    _DEBUG_TRANSPORT: str | None = None
     _ble = None
+    _cached_last = 0.0
+    _cached_devices: list[tuple[str, str]] = []
 
     def __init__(self, address: str) -> None:
         self.device = address
@@ -71,8 +84,16 @@ class BleTransport(Transport):
     def get_path(self) -> str:
         return "{}:{}".format(self.PATH_PREFIX, self.device)
 
-    def find_debug(self) -> UdpTransport:
-        return UdpTransport("127.0.0.1:27315")
+    def find_debug(self) -> Transport:
+        if self._DEBUG_TRANSPORT is not None:
+            LOG.info(f"Overriding BLE debuglink: {self._DEBUG_TRANSPORT}")
+            debug = _get_transport_prefer_full(self._DEBUG_TRANSPORT).find_debug()
+            LOG.warning(
+                f"Using replacement DebugLink for BLE device: {debug.get_path()}"
+            )
+            return debug
+
+        raise NotImplementedError
 
     @classmethod
     def enumerate(
@@ -83,26 +104,21 @@ class BleTransport(Transport):
         # (capability comes from the single-source model registry).
         if models and not any(model.ble_capable for model in models):
             return []
-        devices = cls.ble_proxy().scan()
-        return [BleTransport(device[0]) for device in devices]
+        # cli.get_client enumerates twice (full path, then prefix search)
+        # cache the scan results for a while to avoid scanning twice
+        since_cached = time.monotonic() - cls._cached_last
+        if since_cached > CACHE_SCAN_SECONDS:
+            cls._cached_devices = cls.ble_proxy().scan()
+            cls._cached_last = time.monotonic()
+        return [BleTransport(device[0]) for device in cls._cached_devices]
 
     @classmethod
-    def _try_path(cls, path: str) -> BleTransport:
-        devices = cls.enumerate(None)
-        devices = [d for d in devices if d.device == path]
-        if len(devices) == 0:
-            raise TransportException(f"No BLE device: {path}")
-        return devices[0]
-
-    @classmethod
-    def find_by_path(cls, path: str, prefix_search: bool = False) -> BleTransport:
-        if not prefix_search:
-            raise TransportException
-
-        if prefix_search:
-            return super().find_by_path(path, prefix_search)
-        else:
-            raise TransportException(f"No BLE device: {path}")
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> "BleTransport":
+        # short circuit non-prefix search
+        # full-len path should probably avoid scanning and use BleakScanner.find_device_by_address
+        if not prefix_search and len(path) != _FULL_LEN:
+            raise TransportException(f"BLE device not found: {path}")
+        return super().find_by_path(path, prefix_search)
 
     def _open(self) -> None:
         self.ble_proxy().connect(self.device)
@@ -138,7 +154,7 @@ class BleTransport(Transport):
 
 class BleProxy:
     pipe: Connection[t.Any, t.Any] | None = None
-    process: Process | None = None
+    process: BaseProcess | None = None
 
     def __init__(self) -> None:
         if not BLEAK_IMPORTED:
@@ -147,9 +163,14 @@ class BleProxy:
         if self.pipe is not None:
             return
 
-        parent_pipe, child_pipe = Pipe()
+        # Explicitly use forkserver in <3.14. Otherwise the other end of the pipe
+        # leaks to the child which causes it to never see EOFError.
+        ctx = multiprocessing.get_context("forkserver")
+        parent_pipe, child_pipe = ctx.Pipe()
         self.pipe = parent_pipe
-        self.process = Process(target=BleAsync, args=(child_pipe,), daemon=True)
+        self.process = ctx.Process(
+            target=BleAsync, args=(child_pipe, log._STDERR_VERBOSITY), daemon=True
+        )
         self.process.start()
 
         atexit.register(self._shutdown)
@@ -193,11 +214,18 @@ class Peripheral:
         return self.device.address
 
 
+class PeripheralDisconnected(Exception):
+    pass
+
+
 class BleAsync:
     class Shutdown(Exception):
         pass
 
-    def __init__(self, pipe: Connection) -> None:
+    def __init__(self, pipe: Connection, log_verbosity: int | None) -> None:
+        # Logging disabled in the new process, try re-setup if stderr.
+        if log_verbosity is not None:
+            log.enable_debug_output(log_verbosity)
         asyncio.run(self.main(pipe))
 
     async def main(self, pipe: Connection) -> None:
@@ -227,6 +255,8 @@ class BleAsync:
             except Exception as e:
                 LOG.exception("Error in async BLE process:")
                 await ready(pipe, write=True)
+                # some exceptions get mangled, others cannot be pickled at all
+                e = TransportException(f"{type(e).__name__}: {e}")
                 pipe.send(e)
             else:
                 await ready(pipe, write=True)
@@ -236,12 +266,13 @@ class BleAsync:
     async def scan(self) -> list[tuple[str, str]]:
         LOG.debug("scanning BLE")
 
-        # NOTE BleakScanner.discover(service_uuids=[TREZOR_SERVICE_UUID]) is broken
-        # problem possibly on the bluez side
-
+        # NOTE: filtering by UUIDs may not work on some systems/environments:
+        #       https://github.com/trezor/trezor-suite/pull/21093
+        # NOTE: filtering by UUIDs make bluez-5.87 crash
         devices = await BleakScanner.discover(
             timeout=SCAN_INTERVAL_SECONDS,
             return_adv=True,
+            # service_uuids=[TREZOR_SERVICE_UUID],
         )
 
         # throw away non connected peripherals
@@ -278,19 +309,27 @@ class BleAsync:
             LOG.debug(f"Already connected to {periph.address}")
             return
 
-        async def disconnect_callback(client: BleakClient) -> None:
+        def disconnected_callback(client: BleakClient) -> None:
             LOG.error(f"Got disconnected from {periph.address}")
-            self.devices[address].client = None
-            self.devices[address].queue = None
+            if not (device := self.devices.get(address)):
+                return
+            if device.queue is not None:
+                try:
+                    # switch to Queue.shutdown() on 3.13+
+                    device.queue.put_nowait(PeripheralDisconnected(periph.address))
+                except Exception:
+                    LOG.exception(f"Error handling {periph.address} disconnection:")
+            device.queue = None
+            device.client = None
 
         LOG.debug(f"Connecting to {address}...")
-        client = BleakClient(
+        periph.client = BleakClient(
             periph.device,
+            disconnected_callback=disconnected_callback,
             services=[TREZOR_SERVICE_UUID],
-            timeout=SCAN_INTERVAL_SECONDS,
-            disconnect_callback=disconnect_callback,
+            timeout=CONNECT_TIMEOUT_SECONDS,
         )
-        await client.connect()
+        await periph.client.connect()
 
         # here we should set up the pairing agent
         # https://github.com/hbldh/bleak/pull/1100
@@ -301,7 +340,7 @@ class BleAsync:
         # if there is no pairing agent we get (on linux)
         # bleak.exc.BleakDBusError: [org.bluez.Error.AuthenticationFailed] Authentication Failed
         try:
-            await client.pair()
+            await periph.client.pair()
         except BleakError:
             LOG.error("BLE pairing failed - make sure to open system pairing dialog")
             raise
@@ -319,10 +358,9 @@ class BleAsync:
         ) -> None:
             await queue.put(data)
 
-        await client.start_notify(TREZOR_CHARACTERISTIC_TX, read_callback)
-        periph.client = client
+        await periph.client.start_notify(TREZOR_CHARACTERISTIC_TX, read_callback)
         periph.queue = queue
-        LOG.info(f"Connected to {client.address}")
+        LOG.info(f"Connected to {periph.client.address}")
 
     async def is_connected(self, address: str) -> bool:
         periph = self.devices.get(address)
@@ -336,14 +374,12 @@ class BleAsync:
             return
 
         try:
-            await periph.client.stop_notify(TREZOR_CHARACTERISTIC_TX)
             await periph.client.disconnect()
             LOG.info(f"Disconnected from {periph.address}")
         except EOFError:
             LOG.debug(f"EOF when disconnecting from {periph.address}")
-        except Exception as ex:
-            LOG.error(f"Failed to disconnect from {periph.address}")
-            LOG.exception(ex)
+        except Exception:
+            LOG.exception(f"Failed to disconnect from {periph.address}:")
         finally:
             periph.client = None
             periph.queue = None
@@ -353,9 +389,12 @@ class BleAsync:
         if periph.queue is None:
             raise RuntimeError("Connect to peripheral before reading")
         try:
-            return await asyncio.wait_for(periph.queue.get(), timeout=timeout)
+            result = await asyncio.wait_for(periph.queue.get(), timeout=timeout)
         except (TimeoutError, asyncio.TimeoutError) as err:
             raise Timeout(f"Timeout reading BLE packet ({timeout}s)") from err
+        if isinstance(result, BaseException):
+            raise result
+        return result
 
     async def write(self, address: str, chunk: bytes) -> None:
         periph = self.devices[address]
