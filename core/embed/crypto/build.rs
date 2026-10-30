@@ -280,7 +280,6 @@ fn add_secp256k1_zkp(lib: &mut CLibrary, _attrs: &CompileAttrs) -> Result<()> {
         ("USE_SECP256K1_ZKP", None),
         ("USE_SECP256K1_ZKP_ECDSA", None),
         ("USE_EXTERNAL_DEFAULT_CALLBACKS", None),
-        ("ECMULT_GEN_PREC_BITS", Some("2")),
         ("ECMULT_WINDOW_SIZE", Some("2")),
         ("ENABLE_MODULE_GENERATOR", None),
         ("ENABLE_MODULE_RECOVERY", None),
