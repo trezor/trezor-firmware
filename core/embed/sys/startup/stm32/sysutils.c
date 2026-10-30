@@ -18,7 +18,9 @@
  */
 
 #include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
+#include <sys/irq.h>
 #include <sys/linker_utils.h>
 #include <sys/sysutils.h>
 
@@ -136,36 +138,11 @@ __attribute((naked, noreturn, no_stack_protector)) void call_with_new_stack(
   );
 }
 
-// Ensure that we are running in privileged thread mode.
-//
-// It checks if we are in handler mode, and if so, it switches to
-// privileged thread mode. Only the current exception is left, the ones
-// it preempted (e.g. a faulting IRQ handler) stay active.
-__attribute((naked, no_stack_protector)) void ensure_thread_mode(void) {
+__attribute((naked, no_stack_protector)) void unwind_exception(
+    uint32_t exc_return_code, uint32_t xpsr) {
   __asm__ volatile(
-      // --------------------------------------------------------------
-      // Check if we are in handler mode
-      // --------------------------------------------------------------
-
-      "LDR      R1, =0x1FF         \n"  // Get lower 9 bits of IPSR
-      "MRS      R0, IPSR           \n"
-      "ANDS     R0, R0, R1         \n"
-      "CMP      R0, #0             \n"  // == 0 if in thread mode
-      "IT       EQ                 \n"
-      "BXEQ     LR                 \n"  // return if in thread mode
-
-#ifdef STM32F4
-      // --------------------------------------------------------------
-      // Allow returning to thread mode while other exceptions are
-      // still active (ARMv7-M raises INVPC fault otherwise)
-      // --------------------------------------------------------------
-
-      "LDR     R1, = 0xE000ED14    \n"  // SCB->CCR
-      "LDR     R0, [R1]            \n"
-      "ORR     R0, R0, #1          \n"  // Set NONBASETHRDENA
-      "STR     R0, [R1]            \n"
-#endif
-
+      "MOV     R2, R0              \n"
+      "MOV     R3, R1              \n"
       // --------------------------------------------------------------
       // Disable FP registers lazy stacking
       // --------------------------------------------------------------
@@ -177,7 +154,7 @@ __attribute((naked, no_stack_protector)) void ensure_thread_mode(void) {
       "STR     R0, [R1]            \n"
 
       // --------------------------------------------------------------
-      // Exit handler mode, enter thread mode
+      // Exit handler mode
       // --------------------------------------------------------------
 
       "MOV     R0, SP              \n"  // Align stack pointer to 8 bytes
@@ -194,18 +171,86 @@ __attribute((naked, no_stack_protector)) void ensure_thread_mode(void) {
       "STR     LR, [SP, #20]       \n"  // future LR = LR
       "BIC     LR, LR, #1          \n"
       "STR     LR, [SP, #24]       \n"  // return address = LR
-      "LDR     R0, = 0x01000000    \n"  // THUMB bit set
-      "STR     R0, [SP, #28]       \n"  // future xPSR
+      "STR     R3, [SP, #28]       \n"  // future xPSR
 
       "MRS     R0, CONTROL         \n"  // Clear SPSEL to use MSP for thread
       "BIC     R0, R0, #3          \n"  // Clear nPRIV to run in privileged mode
       "MSR     CONTROL, R0         \n"
+      "BX      R2                  \n");
+}
+
+static uint32_t find_other_active_exception(uint32_t current) {
+  // External interrupts
+  for (size_t i = 0; i < ARRAY_LENGTH(NVIC->IABR); i++) {
+    uint32_t active = NVIC->IABR[i];
+
+    while (active != 0) {
+      uint32_t bit = __builtin_ctz(active);
+      active &= active - 1;
+
+      uint32_t exception = 16u + 32u * i + bit;
+      if (exception != current) {
+        return exception;
+      }
+    }
+  }
+
+  // System exceptions
+  static const struct {
+    uint32_t active_mask;
+    uint32_t exception;
+  } system_exceptions[] = {
+      {SCB_SHCSR_MEMFAULTACT_Msk, MemoryManagement_IRQn + 16},
+      {SCB_SHCSR_BUSFAULTACT_Msk, BusFault_IRQn + 16},
+      {SCB_SHCSR_USGFAULTACT_Msk, UsageFault_IRQn + 16},
+      {SCB_SHCSR_SVCALLACT_Msk, SVCall_IRQn + 16},
+      {SCB_SHCSR_MONITORACT_Msk, DebugMonitor_IRQn + 16},
+      {SCB_SHCSR_PENDSVACT_Msk, PendSV_IRQn + 16},
+      {SCB_SHCSR_SYSTICKACT_Msk, SysTick_IRQn + 16},
+  };
+
+  uint32_t shcsr = SCB->SHCSR;
+  for (size_t i = 0; i < ARRAY_LENGTH(system_exceptions); i++) {
+    if ((shcsr & system_exceptions[i].active_mask) != 0 &&
+        system_exceptions[i].exception != current) {
+      return system_exceptions[i].exception;
+    }
+  }
+
+  return 0;
+}
+
+void ensure_thread_mode(void) {
+  if ((__get_IPSR() & IPSR_ISR_Msk) == 0) {
+    // We are already in thread mode, no need to switch
+    return;
+  }
+
+  irq_key_t key = irq_lock();
+
 #if !defined(__ARM_FEATURE_CMSE) || (__ARM_FEATURE_CMSE == 3U)
-      "LDR     LR, = 0xFFFFFFF9    \n"  // Return to Secure Thread mode, use MSP
+  uint32_t exc_return = 0xFFFFFFF9;  // Secure, MSP stack, Thread-mode
 #else
-      "LDR     LR, = 0xFFFFFFB8    \n"  // Return to Thread mode, use MSP
+  uint32_t exc_return = 0xFFFFFFB9;  // Non-secure, MSP stack, Thread-mode
 #endif
-      "BX      LR                  \n");
+
+  // Unwind all active exceptions
+  for (;;) {
+    uint32_t current = __get_IPSR() & IPSR_ISR_Msk;
+    uint32_t next = find_other_active_exception(current);
+
+    if (next == 0) {
+      break;
+    }
+
+    // Switch to the handler mode
+    unwind_exception(exc_return & ~0x08, 0x01000000 | next);
+  }
+
+  // Switch to thread mode, use MSP
+  unwind_exception(exc_return, 0x01000000);
+
+  irq_unlock(key);
 }
 
 // Clears USB FIFO memory to prevent data leakage of sensitive information
@@ -411,8 +456,8 @@ void reset_peripherals_and_interrupts(void) {
   // Disable SysTick
   SysTick->CTRL = 0;
 
-  // Clear PENDSV flag to prevent the PendSV_Handler call
-  SCB->ICSR &= ~SCB_ICSR_PENDSVSET_Msk;
+  // Clear pending PendSV and SysTick exceptions.
+  SCB->ICSR = SCB_ICSR_PENDSVCLR_Msk | SCB_ICSR_PENDSTCLR_Msk;
 
   // Clear SCB->SHCSR exception flags so we can return back
   // to thread mode without any exception active

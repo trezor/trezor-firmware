@@ -127,27 +127,6 @@ system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
   // Reinitialize stack protector guard
   __stack_chk_guard = stack_chk_guard;
 
-  // If we crashed inside an interrupt handler, the interrupt stays active
-  // in the NVIC even after we leave handler mode and keeps the execution
-  // priority raised. That would mask SysTick and hang every delay in
-  // the error handler, so drop such interrupts to the lowest priority.
-  //
-  // Limitations:
-  // - The interrupt stays active, so it can never fire again. If the error
-  //   handler reinitializes its driver (e.g. the display's LTDC, TE or DMA
-  //   interrupts), the driver restores the priority and waits for the
-  //   interrupt, so the error handler still hangs.
-  // - A crash inside SysTick_Handler is not covered (it is not an NVIC
-  //   interrupt and the error handler needs it).
-  for (size_t i = 0; i < ARRAY_LENGTH(NVIC->IABR); i++) {
-    uint32_t active = NVIC->IABR[i];
-    while (active != 0) {
-      uint32_t bit = __builtin_ctz(active);
-      active &= active - 1;
-      NVIC_SetPriority((IRQn_Type)(i * 32 + bit), IRQ_PRI_LOWEST);
-    }
-  }
-
   // Now we can safely enable interrupts again
   __enable_fault_irq();
   // In case we crashed while irq_lock was active
