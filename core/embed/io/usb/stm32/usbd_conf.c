@@ -73,17 +73,6 @@ static PCD_HandleTypeDef pcd_fs_handle;
 #ifdef USE_USB_HS
 static PCD_HandleTypeDef pcd_hs_handle;
 #endif
-
-/* The OTG core always arms EP0 OUT for a full max-size packet and the HAL
-   copies whatever the host sends, regardless of the requested length.
-   Shorter EP0 receptions are bounced through this buffer and clamped to the
-   requested length when the packet completes. */
-static struct {
-  uint8_t buf[USB_MAX_EP0_SIZE] __attribute__((aligned(4)));
-  uint8_t *dst;
-  uint16_t len;
-  bool active;
-} ep0_rx;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -381,22 +370,7 @@ void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd)
   */
 void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum)
 {
-  uint8_t *pdata = hpcd->OUT_ep[epnum].xfer_buff;
-
-  if ((epnum == 0) && ep0_rx.active)
-  {
-    uint32_t count = MIN(hpcd->OUT_ep[0].xfer_count, ep0_rx.len);
-
-    if (count > 0)
-    {
-      memcpy(ep0_rx.dst, ep0_rx.buf, count);
-    }
-    hpcd->OUT_ep[0].xfer_count = count;
-    pdata = (ep0_rx.dst != NULL) ? ep0_rx.dst + count : NULL;
-    ep0_rx.active = false;
-  }
-
-  USBD_LL_DataOutStage(hpcd->pData, epnum, pdata);
+  USBD_LL_DataOutStage(hpcd->pData, epnum, hpcd->OUT_ep[epnum].xfer_buff);
 }
 
 /**
@@ -841,25 +815,6 @@ USBD_StatusTypeDef USBD_LL_PrepareReceive(USBD_HandleTypeDef *pdev,
                                           uint8_t  *pbuf,
                                           uint16_t  size)
 {
-  if ((ep_addr & 0x7F) == 0)
-  {
-    ep0_rx.active = (size < USB_MAX_EP0_SIZE);
-    if (ep0_rx.active)
-    {
-      ep0_rx.dst = pbuf;
-      ep0_rx.len = size;
-      pbuf = ep0_rx.buf;
-    }
-  }
-  else
-  {
-    /* The OTG core rounds OUT transfers up to whole max-size packets, so the
-       buffer must hold exactly that many to not be overrun by the host. */
-    uint32_t mps = ((PCD_HandleTypeDef *)pdev->pData)->OUT_ep[ep_addr & 0x7F].maxpacket;
-    ensure(sectrue * (size > 0 && mps > 0 && size % mps == 0),
-           "USB OUT size not packet aligned");
-  }
-
   HAL_PCD_EP_Receive(pdev->pData, ep_addr, pbuf, size);
   return USBD_OK;
 }

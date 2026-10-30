@@ -154,7 +154,6 @@ typedef struct {
   uint16_t max_packet_len;
   uint8_t ep_in_is_idle;  // Set to 1 after IN endpoint gets idle
   bool recv_pending;
-  uint8_t cmd_buffer[USB_CDC_MAX_CMD_PACKET_LEN];
 } usb_vcp_state_t;
 
 _Static_assert(sizeof(usb_vcp_state_t) <= USBD_CLASS_STATE_MAX_SIZE);
@@ -378,7 +377,11 @@ static uint8_t usb_vcp_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 
 static uint8_t usb_vcp_class_setup(USBD_HandleTypeDef *dev,
                                    USBD_SetupReqTypedef *req) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+  // EP0 data stage buffer, written by the USB core after this returns.
+  // Sized to a full EP0 packet: the OTG core always accepts one, however
+  // short the requested length. Shared by all VCP interfaces, since EP0
+  // serves one control transfer at a time.
+  static uint8_t cmd_buffer[USB_MAX_EP0_SIZE];
 
   static const usb_cdc_line_coding_t line_coding = {
       .dwDTERate = 115200,
@@ -396,12 +399,14 @@ static uint8_t usb_vcp_class_setup(USBD_HandleTypeDef *dev,
       USBD_CtlSendData(dev, UNCONST(&line_coding),
                        MIN_8bits(req->wLength, sizeof(line_coding)));
     } else {
-      USBD_CtlSendData(dev, state->cmd_buffer,
+      USBD_CtlSendData(dev, cmd_buffer,
                        MIN_8bits(req->wLength, USB_CDC_MAX_CMD_PACKET_LEN));
     }
-  } else if (req->wLength > 0) {  // USB_REQ_DIR_H2D
-    return USBD_CtlPrepareRx(dev, state->cmd_buffer, sizeof(state->cmd_buffer),
-                             req->wLength);
+  } else {  // USB_REQ_DIR_H2D
+    if (req->wLength > 0) {
+      USBD_CtlPrepareRx(dev, cmd_buffer,
+                        MIN_8bits(req->wLength, USB_CDC_MAX_CMD_PACKET_LEN));
+    }
   }
 
   return USBD_OK;
