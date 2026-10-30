@@ -399,8 +399,34 @@ pub(crate) fn confirm_data_and_summary<'a>(
     Ok(())
 }
 
+/// [`crypto::get_xpub`] on Ethereum's curve.
+pub(crate) fn get_xpub(address_n: &[u32], xpub_magic: u32) -> Result<[u8; 111]> {
+    crypto::get_xpub(crypto::Curve::Secp256k1, address_n, xpub_magic)
+}
+
+/// [`crypto::get_public_key`] on Ethereum's curve.
+pub(crate) fn get_public_key(address_n: &[u32], compressed: bool) -> Result<Vec<u8>> {
+    crypto::get_public_key(crypto::Curve::Secp256k1, address_n, compressed)
+}
+
+/// [`crypto::ecdsa_sign_digest`] on Ethereum's curve.
+pub(crate) fn ecdsa_sign_digest(
+    address_n: &[u32],
+    digest: &[u8; 32],
+    compressed: bool,
+    canonical: crypto::CanonicalSig,
+) -> Result<[u8; 65]> {
+    crypto::ecdsa_sign_digest(
+        crypto::EcdsaCurve::Secp256k1,
+        address_n,
+        digest,
+        compressed,
+        canonical,
+    )
+}
+
 pub(crate) fn get_eth_pubkey_hash(dp: &Bip32Path) -> Result<[u8; 20]> {
-    let ecdsa_pubkey = crypto::get_public_key(dp.as_slice(), false)?;
+    let ecdsa_pubkey = get_public_key(dp.as_slice(), false)?;
 
     let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
     hasher.update(&ecdsa_pubkey[1..]);
