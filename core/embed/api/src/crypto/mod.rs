@@ -1,6 +1,7 @@
 use alloc::vec::Vec;
 
 use rkyv::rancor::Failure;
+use rtl::unwrap;
 use stabby::boxed::BoxedSlice;
 use stabby::slice::Slice;
 use stabby::str::Str;
@@ -391,12 +392,13 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         .into()
     }
 
-    extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> FastResult<String, CryptoError> {
+    extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> String {
         let mut buffer = alloc::vec![0u8; crypto::base58::encoded_len_max(data.len())];
-        crypto::base58::encode_str(data.as_slice(), &mut buffer)
-            .map(String::from)
-            .map_err(|_| CryptoError::InvalidEncoding)
-            .into()
+        // Can't fail: only a short buffer is an error, `encoded_len_max` never is.
+        String::from(unwrap!(crypto::base58::encode_str(
+            data.as_slice(),
+            &mut buffer
+        )))
     }
 
     extern "C" fn base58_decode<'a>(
@@ -410,17 +412,15 @@ impl CryptoV1 for TrezorCryptoV1Impl {
             .into()
     }
 
-    extern "C" fn base58check_encode<'a>(
-        &self,
-        data: Slice<'a, u8>,
-    ) -> FastResult<String, CryptoError> {
+    extern "C" fn base58check_encode<'a>(&self, data: Slice<'a, u8>) -> String {
         let encoded_len =
             crypto::base58::encoded_len_max(data.len() + crypto::base58::CHECKSUM_LEN);
         let mut buffer = alloc::vec![0u8; encoded_len];
-        crypto::base58::encode_check_str(data.as_slice(), &mut buffer)
-            .map(String::from)
-            .map_err(|_| CryptoError::InvalidEncoding)
-            .into()
+        // Can't fail: only a short buffer is an error, `encoded_len_max` never is.
+        String::from(unwrap!(crypto::base58::encode_check_str(
+            data.as_slice(),
+            &mut buffer
+        )))
     }
 
     extern "C" fn base58check_decode<'a>(
