@@ -109,7 +109,7 @@ select = [
     "UP006",  # non-pep585-annotation: typing.Tuple -> tuple, typing.Type -> type, ...
     "UP035",  # deprecated-import: typing.Sequence -> collections.abc.Sequence, ...
 
-    # PEP 604 (used in /core only)
+    # PEP 604 (in /python only where `from __future__ import annotations` is present, see target-version)
     "UP007",  # non-pep604-annotation-union: Union[int, str] -> int | str
     "UP045",  # non-pep604-annotation-optional: Optional[str] -> str | None
 ]
@@ -131,7 +131,3 @@ extra-standard-library = [
 # `python` is needed for `from python.src.storage import ...` in storage tests
 known-first-party = ["trezorlib", "apps", "coin_info", "marketcap", "ui_tests", "python"]
 known-third-party = ["trezor", "storage"]
-
-[tool.ruff.lint.per-file-ignores]
-# PEP 604 syntax needs Python 3.10 - cannot be enforced e.g. in /python as it still supports Python 3.9.
-"!core/**/*.py" = ["UP007", "UP045"]

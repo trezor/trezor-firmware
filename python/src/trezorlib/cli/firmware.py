@@ -14,11 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import os
 import sys
 import time
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, BinaryIO, Optional, Union
+from typing import TYPE_CHECKING, Any, BinaryIO
 from urllib.parse import urlparse
 
 import click
@@ -70,7 +72,7 @@ def _get_file_name_from_url(url: str) -> str:
     return os.path.basename(full_path)
 
 
-def _print_firmware_model(hw_model: Union[bytes, fw_models.Model]) -> None:
+def _print_firmware_model(hw_model: bytes | fw_models.Model) -> None:
     try:
         model_name = fw_models.Model.from_hw_model(hw_model).name
         click.echo(f"{model_name} firmware image.")
@@ -150,7 +152,7 @@ def validate_signatures(
 
 def validate_fingerprint(
     fw: "firmware.FirmwareType",
-    expected_fingerprint: Optional[str] = None,
+    expected_fingerprint: str | None = None,
 ) -> None:
     """Determine and validate the firmware fingerprint.
 
@@ -267,8 +269,8 @@ def _should_use_bitcoin_only(features: messages.Features) -> bool:
 
 def find_best_firmware_version(
     client: "TrezorClient",
-    version: Optional[str],
-    bitcoin_only: Optional[bool],
+    version: str | None,
+    bitcoin_only: bool | None,
 ) -> tuple[str, str]:
     """Get the url from which to download the firmware and its expected fingerprint.
 
@@ -372,9 +374,9 @@ def download_firmware_data(url: str) -> bytes:
 
 def validate_firmware(
     firmware_data: bytes,
-    fingerprint: Optional[str] = None,
-    model: Optional[TrezorModel] = None,
-    bootloader_onev2: Optional[bool] = None,
+    fingerprint: str | None = None,
+    model: TrezorModel | None = None,
+    bootloader_onev2: bool | None = None,
     verify_only: bool = False,
 ) -> None:
     """Validate the firmware through multiple tests.
@@ -567,7 +569,7 @@ def verify(
     obj: "TrezorConnection",
     filename: BinaryIO,
     check_device: bool,
-    fingerprint: Optional[str],
+    fingerprint: str | None,
 ) -> None:
     """Verify the integrity of the firmware data stored in a file.
 
@@ -577,8 +579,8 @@ def verify(
     In case of validation failure exits with the appropriate exit code.
     """
     # Deciding if to take the device into account
-    bootloader_onev2: Optional[bool]
-    model: Optional[TrezorModel]
+    bootloader_onev2: bool | None
+    model: TrezorModel | None
     if check_device:
         with obj.client_context() as client:
             bootloader_onev2 = _is_bootloader_onev2(client)
@@ -609,12 +611,12 @@ def verify(
 # fmt: on
 def download(
     obj: "TrezorConnection",
-    output: Optional[BinaryIO],
-    model: Optional[TrezorModel],
-    version: Optional[str],
+    output: BinaryIO | None,
+    model: TrezorModel | None,
+    version: str | None,
     skip_check: bool,
-    fingerprint: Optional[str],
-    bitcoin_only: Optional[bool],
+    fingerprint: str | None,
+    bitcoin_only: bool | None,
 ) -> None:
     """Download and save the firmware image.
 
@@ -670,14 +672,14 @@ def download(
 @click.pass_obj
 def update(
     obj: "TrezorConnection",
-    filename: Optional[BinaryIO],
-    url: Optional[str],
-    version: Optional[str],
+    filename: BinaryIO | None,
+    url: str | None,
+    version: str | None,
     skip_check: bool,
-    fingerprint: Optional[str],
+    fingerprint: str | None,
     raw: bool,
     dry_run: bool,
-    bitcoin_only: Optional[bool],
+    bitcoin_only: bool | None,
 ) -> None:
     """Upload new firmware to device.
 
@@ -752,7 +754,7 @@ def update(
 @cli.command()
 @click.argument("hex_challenge", required=False)
 @with_session(seedless=True)
-def get_hash(session: "Session", hex_challenge: Optional[str]) -> str:
+def get_hash(session: "Session", hex_challenge: str | None) -> str:
     """Get a hash of the installed firmware combined with the optional challenge."""
     challenge = bytes.fromhex(hex_challenge) if hex_challenge else None
     return firmware.get_hash(session, challenge).hex()

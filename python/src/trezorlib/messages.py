@@ -2,9 +2,10 @@
 # fmt: off
 # isort:skip_file
 
+from __future__ import annotations
+
 from collections.abc import Sequence
 from enum import IntEnum
-from typing import Optional
 
 from . import protobuf
 
@@ -877,9 +878,9 @@ class BenchmarkNames(protobuf.MessageType):
     def __init__(
         self,
         *,
-        names: Optional[Sequence["str"]] = None,
+        names: Sequence[str] | None = None,
     ) -> None:
-        self.names: Sequence["str"] = names if names is not None else []
+        self.names: Sequence[str] = names if names is not None else []
 
 
 class BenchmarkRun(protobuf.MessageType):
@@ -891,7 +892,7 @@ class BenchmarkRun(protobuf.MessageType):
     def __init__(
         self,
         *,
-        name: Optional["str"] = None,
+        name: str | None = None,
     ) -> None:
         self.name = name
 
@@ -906,8 +907,8 @@ class BenchmarkResult(protobuf.MessageType):
     def __init__(
         self,
         *,
-        value: Optional["str"] = None,
-        unit: Optional["str"] = None,
+        value: str | None = None,
+        unit: str | None = None,
     ) -> None:
         self.value = value
         self.unit = unit
@@ -922,7 +923,7 @@ class Success(protobuf.MessageType):
     def __init__(
         self,
         *,
-        message: Optional["str"] = '',
+        message: str | None = '',
     ) -> None:
         self.message = message
 
@@ -937,8 +938,8 @@ class Failure(protobuf.MessageType):
     def __init__(
         self,
         *,
-        code: Optional["FailureType"] = None,
-        message: Optional["str"] = None,
+        code: FailureType | None = None,
+        message: str | None = None,
     ) -> None:
         self.code = code
         self.message = message
@@ -955,9 +956,9 @@ class ButtonRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        code: Optional["ButtonRequestType"] = None,
-        pages: Optional["int"] = None,
-        name: Optional["str"] = None,
+        code: ButtonRequestType | None = None,
+        pages: int | None = None,
+        name: str | None = None,
     ) -> None:
         self.code = code
         self.pages = pages
@@ -977,7 +978,7 @@ class PinMatrixRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: Optional["PinMatrixRequestType"] = None,
+        type: PinMatrixRequestType | None = None,
     ) -> None:
         self.type = type
 
@@ -991,7 +992,7 @@ class PinMatrixAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        pin: "str",
+        pin: str,
     ) -> None:
         self.pin = pin
 
@@ -1010,8 +1011,8 @@ class PassphraseAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        passphrase: Optional["str"] = None,
-        on_device: Optional["bool"] = None,
+        passphrase: str | None = None,
+        on_device: bool | None = None,
     ) -> None:
         self.passphrase = passphrase
         self.on_device = on_device
@@ -1031,12 +1032,12 @@ class HDNodeType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        depth: "int",
-        fingerprint: "int",
-        child_num: "int",
-        chain_code: "bytes",
-        public_key: "bytes",
-        private_key: Optional["bytes"] = None,
+        depth: int,
+        fingerprint: int,
+        child_num: int,
+        chain_code: bytes,
+        public_key: bytes,
+        private_key: bytes | None = None,
     ) -> None:
         self.depth = depth
         self.fingerprint = fingerprint
@@ -1059,13 +1060,13 @@ class PaymentRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        recipient_name: "str",
-        signature: "bytes",
-        memos: Optional[Sequence["PaymentRequestMemo"]] = None,
-        nonce: Optional["bytes"] = None,
-        amount: Optional["bytes"] = None,
+        recipient_name: str,
+        signature: bytes,
+        memos: Sequence[PaymentRequestMemo] | None = None,
+        nonce: bytes | None = None,
+        amount: bytes | None = None,
     ) -> None:
-        self.memos: Sequence["PaymentRequestMemo"] = memos if memos is not None else []
+        self.memos: Sequence[PaymentRequestMemo] = memos if memos is not None else []
         self.recipient_name = recipient_name
         self.signature = signature
         self.nonce = nonce
@@ -1084,10 +1085,10 @@ class Version(protobuf.MessageType):
     def __init__(
         self,
         *,
-        major: "int",
-        minor: "int",
-        patch: Optional["int"] = 0,
-        build: Optional["int"] = 0,
+        major: int,
+        minor: int,
+        patch: int | None = 0,
+        build: int | None = 0,
     ) -> None:
         self.major = major
         self.minor = minor
@@ -1107,10 +1108,10 @@ class PaymentRequestMemo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        text_memo: Optional["TextMemo"] = None,
-        refund_memo: Optional["RefundMemo"] = None,
-        coin_purchase_memo: Optional["CoinPurchaseMemo"] = None,
-        text_details_memo: Optional["TextDetailsMemo"] = None,
+        text_memo: TextMemo | None = None,
+        refund_memo: RefundMemo | None = None,
+        coin_purchase_memo: CoinPurchaseMemo | None = None,
+        text_details_memo: TextDetailsMemo | None = None,
     ) -> None:
         self.text_memo = text_memo
         self.refund_memo = refund_memo
@@ -1127,7 +1128,7 @@ class TextMemo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        text: "str",
+        text: str,
     ) -> None:
         self.text = text
 
@@ -1142,8 +1143,8 @@ class TextDetailsMemo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        title: "str",
-        text: "str",
+        title: str,
+        text: str,
     ) -> None:
         self.title = title
         self.text = text
@@ -1160,11 +1161,11 @@ class RefundMemo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        mac: "bytes",
-        address_n: Optional[Sequence["int"]] = None,
+        address: str,
+        mac: bytes,
+        address_n: Sequence[int] | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.address = address
         self.mac = mac
 
@@ -1182,13 +1183,13 @@ class CoinPurchaseMemo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        coin_type: "int",
-        amount: "str",
-        address: "str",
-        mac: "bytes",
-        address_n: Optional[Sequence["int"]] = None,
+        coin_type: int,
+        amount: str,
+        address: str,
+        mac: bytes,
+        address_n: Sequence[int] | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.coin_type = coin_type
         self.amount = amount
         self.address = address
@@ -1209,17 +1210,17 @@ class MultisigRedeemScriptType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        m: "int",
-        pubkeys: Optional[Sequence["HDNodePathType"]] = None,
-        signatures: Optional[Sequence["bytes"]] = None,
-        nodes: Optional[Sequence["HDNodeType"]] = None,
-        address_n: Optional[Sequence["int"]] = None,
-        pubkeys_order: Optional["MultisigPubkeysOrder"] = MultisigPubkeysOrder.PRESERVED,
+        m: int,
+        pubkeys: Sequence[HDNodePathType] | None = None,
+        signatures: Sequence[bytes] | None = None,
+        nodes: Sequence[HDNodeType] | None = None,
+        address_n: Sequence[int] | None = None,
+        pubkeys_order: MultisigPubkeysOrder | None = MultisigPubkeysOrder.PRESERVED,
     ) -> None:
-        self.pubkeys: Sequence["HDNodePathType"] = pubkeys if pubkeys is not None else []
-        self.signatures: Sequence["bytes"] = signatures if signatures is not None else []
-        self.nodes: Sequence["HDNodeType"] = nodes if nodes is not None else []
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.pubkeys: Sequence[HDNodePathType] = pubkeys if pubkeys is not None else []
+        self.signatures: Sequence[bytes] = signatures if signatures is not None else []
+        self.nodes: Sequence[HDNodeType] = nodes if nodes is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.m = m
         self.pubkeys_order = pubkeys_order
 
@@ -1238,14 +1239,14 @@ class GetPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        ecdsa_curve_name: Optional["str"] = None,
-        show_display: Optional["bool"] = None,
-        coin_name: Optional["str"] = 'Bitcoin',
-        script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
-        ignore_xpub_magic: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        ecdsa_curve_name: str | None = None,
+        show_display: bool | None = None,
+        coin_name: str | None = 'Bitcoin',
+        script_type: InputScriptType | None = InputScriptType.SPENDADDRESS,
+        ignore_xpub_magic: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.ecdsa_curve_name = ecdsa_curve_name
         self.show_display = show_display
         self.coin_name = coin_name
@@ -1265,10 +1266,10 @@ class PublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        node: "HDNodeType",
-        xpub: "str",
-        root_fingerprint: Optional["int"] = None,
-        descriptor: Optional["str"] = None,
+        node: HDNodeType,
+        xpub: str,
+        root_fingerprint: int | None = None,
+        descriptor: str | None = None,
     ) -> None:
         self.node = node
         self.xpub = xpub
@@ -1291,15 +1292,15 @@ class GetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        coin_name: Optional["str"] = 'Bitcoin',
-        show_display: Optional["bool"] = None,
-        multisig: Optional["MultisigRedeemScriptType"] = None,
-        script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
-        ignore_xpub_magic: Optional["bool"] = None,
-        chunkify: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        coin_name: str | None = 'Bitcoin',
+        show_display: bool | None = None,
+        multisig: MultisigRedeemScriptType | None = None,
+        script_type: InputScriptType | None = InputScriptType.SPENDADDRESS,
+        ignore_xpub_magic: bool | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.coin_name = coin_name
         self.show_display = show_display
         self.multisig = multisig
@@ -1318,8 +1319,8 @@ class Address(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        mac: Optional["bytes"] = None,
+        address: str,
+        mac: bytes | None = None,
     ) -> None:
         self.address = address
         self.mac = mac
@@ -1337,12 +1338,12 @@ class GetOwnershipId(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        coin_name: Optional["str"] = 'Bitcoin',
-        multisig: Optional["MultisigRedeemScriptType"] = None,
-        script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
+        address_n: Sequence[int] | None = None,
+        coin_name: str | None = 'Bitcoin',
+        multisig: MultisigRedeemScriptType | None = None,
+        script_type: InputScriptType | None = InputScriptType.SPENDADDRESS,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.coin_name = coin_name
         self.multisig = multisig
         self.script_type = script_type
@@ -1357,7 +1358,7 @@ class OwnershipId(protobuf.MessageType):
     def __init__(
         self,
         *,
-        ownership_id: "bytes",
+        ownership_id: bytes,
     ) -> None:
         self.ownership_id = ownership_id
 
@@ -1376,14 +1377,14 @@ class SignMessage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        message: "bytes",
-        address_n: Optional[Sequence["int"]] = None,
-        coin_name: Optional["str"] = 'Bitcoin',
-        script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
-        no_script_type: Optional["bool"] = None,
-        chunkify: Optional["bool"] = None,
+        message: bytes,
+        address_n: Sequence[int] | None = None,
+        coin_name: str | None = 'Bitcoin',
+        script_type: InputScriptType | None = InputScriptType.SPENDADDRESS,
+        no_script_type: bool | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.message = message
         self.coin_name = coin_name
         self.script_type = script_type
@@ -1401,8 +1402,8 @@ class MessageSignature(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        signature: "bytes",
+        address: str,
+        signature: bytes,
     ) -> None:
         self.address = address
         self.signature = signature
@@ -1421,11 +1422,11 @@ class VerifyMessage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        signature: "bytes",
-        message: "bytes",
-        coin_name: Optional["str"] = 'Bitcoin',
-        chunkify: Optional["bool"] = None,
+        address: str,
+        signature: bytes,
+        message: bytes,
+        coin_name: str | None = 'Bitcoin',
+        chunkify: bool | None = None,
     ) -> None:
         self.address = address
         self.signature = signature
@@ -1457,21 +1458,21 @@ class SignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        outputs_count: "int",
-        inputs_count: "int",
-        coin_name: Optional["str"] = 'Bitcoin',
-        version: Optional["int"] = 1,
-        lock_time: Optional["int"] = 0,
-        expiry: Optional["int"] = None,
-        overwintered: Optional["bool"] = None,
-        version_group_id: Optional["int"] = None,
-        timestamp: Optional["int"] = None,
-        branch_id: Optional["int"] = None,
-        amount_unit: Optional["AmountUnit"] = AmountUnit.BITCOIN,
-        decred_staking_ticket: Optional["bool"] = False,
-        serialize: Optional["bool"] = True,
-        coinjoin_request: Optional["CoinJoinRequest"] = None,
-        chunkify: Optional["bool"] = None,
+        outputs_count: int,
+        inputs_count: int,
+        coin_name: str | None = 'Bitcoin',
+        version: int | None = 1,
+        lock_time: int | None = 0,
+        expiry: int | None = None,
+        overwintered: bool | None = None,
+        version_group_id: int | None = None,
+        timestamp: int | None = None,
+        branch_id: int | None = None,
+        amount_unit: AmountUnit | None = AmountUnit.BITCOIN,
+        decred_staking_ticket: bool | None = False,
+        serialize: bool | None = True,
+        coinjoin_request: CoinJoinRequest | None = None,
+        chunkify: bool | None = None,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -1501,9 +1502,9 @@ class TxRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        request_type: Optional["RequestType"] = None,
-        details: Optional["TxRequestDetailsType"] = None,
-        serialized: Optional["TxRequestSerializedType"] = None,
+        request_type: RequestType | None = None,
+        details: TxRequestDetailsType | None = None,
+        serialized: TxRequestSerializedType | None = None,
     ) -> None:
         self.request_type = request_type
         self.details = details
@@ -1519,7 +1520,7 @@ class TxAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tx: Optional["TransactionType"] = None,
+        tx: TransactionType | None = None,
     ) -> None:
         self.tx = tx
 
@@ -1549,25 +1550,25 @@ class TxInput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        prev_hash: "bytes",
-        prev_index: "int",
-        amount: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        script_sig: Optional["bytes"] = None,
-        sequence: Optional["int"] = 4294967295,
-        script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
-        multisig: Optional["MultisigRedeemScriptType"] = None,
-        decred_tree: Optional["int"] = None,
-        witness: Optional["bytes"] = None,
-        ownership_proof: Optional["bytes"] = None,
-        commitment_data: Optional["bytes"] = None,
-        orig_hash: Optional["bytes"] = None,
-        orig_index: Optional["int"] = None,
-        decred_staking_spend: Optional["DecredStakingSpendType"] = None,
-        script_pubkey: Optional["bytes"] = None,
-        coinjoin_flags: Optional["int"] = 0,
+        prev_hash: bytes,
+        prev_index: int,
+        amount: int,
+        address_n: Sequence[int] | None = None,
+        script_sig: bytes | None = None,
+        sequence: int | None = 4294967295,
+        script_type: InputScriptType | None = InputScriptType.SPENDADDRESS,
+        multisig: MultisigRedeemScriptType | None = None,
+        decred_tree: int | None = None,
+        witness: bytes | None = None,
+        ownership_proof: bytes | None = None,
+        commitment_data: bytes | None = None,
+        orig_hash: bytes | None = None,
+        orig_index: int | None = None,
+        decred_staking_spend: DecredStakingSpendType | None = None,
+        script_pubkey: bytes | None = None,
+        coinjoin_flags: int | None = 0,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
         self.prev_index = prev_index
         self.amount = amount
@@ -1603,17 +1604,17 @@ class TxOutput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        amount: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        address: Optional["str"] = None,
-        script_type: Optional["OutputScriptType"] = OutputScriptType.PAYTOADDRESS,
-        multisig: Optional["MultisigRedeemScriptType"] = None,
-        op_return_data: Optional["bytes"] = None,
-        orig_hash: Optional["bytes"] = None,
-        orig_index: Optional["int"] = None,
-        payment_req_index: Optional["int"] = None,
+        amount: int,
+        address_n: Sequence[int] | None = None,
+        address: str | None = None,
+        script_type: OutputScriptType | None = OutputScriptType.PAYTOADDRESS,
+        multisig: MultisigRedeemScriptType | None = None,
+        op_return_data: bytes | None = None,
+        orig_hash: bytes | None = None,
+        orig_index: int | None = None,
+        payment_req_index: int | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.amount = amount
         self.address = address
         self.script_type = script_type
@@ -1641,15 +1642,15 @@ class PrevTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        version: "int",
-        lock_time: "int",
-        inputs_count: "int",
-        outputs_count: "int",
-        extra_data_len: Optional["int"] = 0,
-        expiry: Optional["int"] = None,
-        version_group_id: Optional["int"] = None,
-        timestamp: Optional["int"] = None,
-        branch_id: Optional["int"] = None,
+        version: int,
+        lock_time: int,
+        inputs_count: int,
+        outputs_count: int,
+        extra_data_len: int | None = 0,
+        expiry: int | None = None,
+        version_group_id: int | None = None,
+        timestamp: int | None = None,
+        branch_id: int | None = None,
     ) -> None:
         self.version = version
         self.lock_time = lock_time
@@ -1675,11 +1676,11 @@ class PrevInput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        prev_hash: "bytes",
-        prev_index: "int",
-        script_sig: "bytes",
-        sequence: "int",
-        decred_tree: Optional["int"] = None,
+        prev_hash: bytes,
+        prev_index: int,
+        script_sig: bytes,
+        sequence: int,
+        decred_tree: int | None = None,
     ) -> None:
         self.prev_hash = prev_hash
         self.prev_index = prev_index
@@ -1699,9 +1700,9 @@ class PrevOutput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        amount: "int",
-        script_pubkey: "bytes",
-        decred_script_version: Optional["int"] = None,
+        amount: int,
+        script_pubkey: bytes,
+        decred_script_version: int | None = None,
     ) -> None:
         self.amount = amount
         self.script_pubkey = script_pubkey
@@ -1717,7 +1718,7 @@ class TxAckInput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tx: "TxAckInputWrapper",
+        tx: TxAckInputWrapper,
     ) -> None:
         self.tx = tx
 
@@ -1731,7 +1732,7 @@ class TxAckOutput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tx: "TxAckOutputWrapper",
+        tx: TxAckOutputWrapper,
     ) -> None:
         self.tx = tx
 
@@ -1745,7 +1746,7 @@ class TxAckPrevMeta(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tx: "PrevTx",
+        tx: PrevTx,
     ) -> None:
         self.tx = tx
 
@@ -1759,7 +1760,7 @@ class TxAckPrevInput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tx: "TxAckPrevInputWrapper",
+        tx: TxAckPrevInputWrapper,
     ) -> None:
         self.tx = tx
 
@@ -1773,7 +1774,7 @@ class TxAckPrevOutput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tx: "TxAckPrevOutputWrapper",
+        tx: TxAckPrevOutputWrapper,
     ) -> None:
         self.tx = tx
 
@@ -1787,7 +1788,7 @@ class TxAckPrevExtraData(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tx: "TxAckPrevExtraDataWrapper",
+        tx: TxAckPrevExtraDataWrapper,
     ) -> None:
         self.tx = tx
 
@@ -1807,16 +1808,16 @@ class GetOwnershipProof(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        ownership_ids: Optional[Sequence["bytes"]] = None,
-        coin_name: Optional["str"] = 'Bitcoin',
-        script_type: Optional["InputScriptType"] = InputScriptType.SPENDWITNESS,
-        multisig: Optional["MultisigRedeemScriptType"] = None,
-        user_confirmation: Optional["bool"] = False,
-        commitment_data: Optional["bytes"] = b'',
+        address_n: Sequence[int] | None = None,
+        ownership_ids: Sequence[bytes] | None = None,
+        coin_name: str | None = 'Bitcoin',
+        script_type: InputScriptType | None = InputScriptType.SPENDWITNESS,
+        multisig: MultisigRedeemScriptType | None = None,
+        user_confirmation: bool | None = False,
+        commitment_data: bytes | None = b'',
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.ownership_ids: Sequence["bytes"] = ownership_ids if ownership_ids is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
+        self.ownership_ids: Sequence[bytes] = ownership_ids if ownership_ids is not None else []
         self.coin_name = coin_name
         self.script_type = script_type
         self.multisig = multisig
@@ -1834,8 +1835,8 @@ class OwnershipProof(protobuf.MessageType):
     def __init__(
         self,
         *,
-        ownership_proof: "bytes",
-        signature: "bytes",
+        ownership_proof: bytes,
+        signature: bytes,
     ) -> None:
         self.ownership_proof = ownership_proof
         self.signature = signature
@@ -1857,16 +1858,16 @@ class AuthorizeCoinJoin(protobuf.MessageType):
     def __init__(
         self,
         *,
-        coordinator: "str",
-        max_rounds: "int",
-        max_coordinator_fee_rate: "int",
-        max_fee_per_kvbyte: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        coin_name: Optional["str"] = 'Bitcoin',
-        script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
-        amount_unit: Optional["AmountUnit"] = AmountUnit.BITCOIN,
+        coordinator: str,
+        max_rounds: int,
+        max_coordinator_fee_rate: int,
+        max_fee_per_kvbyte: int,
+        address_n: Sequence[int] | None = None,
+        coin_name: str | None = 'Bitcoin',
+        script_type: InputScriptType | None = InputScriptType.SPENDADDRESS,
+        amount_unit: AmountUnit | None = AmountUnit.BITCOIN,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.coordinator = coordinator
         self.max_rounds = max_rounds
         self.max_coordinator_fee_rate = max_coordinator_fee_rate
@@ -1886,10 +1887,10 @@ class HDNodePathType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        node: "HDNodeType",
-        address_n: Optional[Sequence["int"]] = None,
+        node: HDNodeType,
+        address_n: Sequence[int] | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.node = node
 
 
@@ -1906,11 +1907,11 @@ class CoinJoinRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        fee_rate: "int",
-        no_fee_threshold: "int",
-        min_registrable_amount: "int",
-        mask_public_key: Optional["bytes"] = None,
-        signature: Optional["bytes"] = None,
+        fee_rate: int,
+        no_fee_threshold: int,
+        min_registrable_amount: int,
+        mask_public_key: bytes | None = None,
+        signature: bytes | None = None,
     ) -> None:
         self.fee_rate = fee_rate
         self.no_fee_threshold = no_fee_threshold
@@ -1931,10 +1932,10 @@ class TxRequestDetailsType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        request_index: Optional["int"] = None,
-        tx_hash: Optional["bytes"] = None,
-        extra_data_len: Optional["int"] = None,
-        extra_data_offset: Optional["int"] = None,
+        request_index: int | None = None,
+        tx_hash: bytes | None = None,
+        extra_data_len: int | None = None,
+        extra_data_offset: int | None = None,
     ) -> None:
         self.request_index = request_index
         self.tx_hash = tx_hash
@@ -1953,9 +1954,9 @@ class TxRequestSerializedType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature_index: Optional["int"] = None,
-        signature: Optional["bytes"] = None,
-        serialized_tx: Optional["bytes"] = None,
+        signature_index: int | None = None,
+        signature: bytes | None = None,
+        serialized_tx: bytes | None = None,
     ) -> None:
         self.signature_index = signature_index
         self.signature = signature
@@ -1984,24 +1985,24 @@ class TransactionType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        inputs: Optional[Sequence["TxInputType"]] = None,
-        bin_outputs: Optional[Sequence["TxOutputBinType"]] = None,
-        outputs: Optional[Sequence["TxOutputType"]] = None,
-        version: Optional["int"] = None,
-        lock_time: Optional["int"] = None,
-        inputs_cnt: Optional["int"] = None,
-        outputs_cnt: Optional["int"] = None,
-        extra_data: Optional["bytes"] = None,
-        extra_data_len: Optional["int"] = None,
-        expiry: Optional["int"] = None,
-        overwintered: Optional["bool"] = None,
-        version_group_id: Optional["int"] = None,
-        timestamp: Optional["int"] = None,
-        branch_id: Optional["int"] = None,
+        inputs: Sequence[TxInputType] | None = None,
+        bin_outputs: Sequence[TxOutputBinType] | None = None,
+        outputs: Sequence[TxOutputType] | None = None,
+        version: int | None = None,
+        lock_time: int | None = None,
+        inputs_cnt: int | None = None,
+        outputs_cnt: int | None = None,
+        extra_data: bytes | None = None,
+        extra_data_len: int | None = None,
+        expiry: int | None = None,
+        overwintered: bool | None = None,
+        version_group_id: int | None = None,
+        timestamp: int | None = None,
+        branch_id: int | None = None,
     ) -> None:
-        self.inputs: Sequence["TxInputType"] = inputs if inputs is not None else []
-        self.bin_outputs: Sequence["TxOutputBinType"] = bin_outputs if bin_outputs is not None else []
-        self.outputs: Sequence["TxOutputType"] = outputs if outputs is not None else []
+        self.inputs: Sequence[TxInputType] = inputs if inputs is not None else []
+        self.bin_outputs: Sequence[TxOutputBinType] = bin_outputs if bin_outputs is not None else []
+        self.outputs: Sequence[TxOutputType] = outputs if outputs is not None else []
         self.version = version
         self.lock_time = lock_time
         self.inputs_cnt = inputs_cnt
@@ -2040,25 +2041,25 @@ class TxInputType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        prev_hash: "bytes",
-        prev_index: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        script_sig: Optional["bytes"] = None,
-        sequence: Optional["int"] = 4294967295,
-        script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
-        multisig: Optional["MultisigRedeemScriptType"] = None,
-        amount: Optional["int"] = None,
-        decred_tree: Optional["int"] = None,
-        witness: Optional["bytes"] = None,
-        ownership_proof: Optional["bytes"] = None,
-        commitment_data: Optional["bytes"] = None,
-        orig_hash: Optional["bytes"] = None,
-        orig_index: Optional["int"] = None,
-        decred_staking_spend: Optional["DecredStakingSpendType"] = None,
-        script_pubkey: Optional["bytes"] = None,
-        coinjoin_flags: Optional["int"] = 0,
+        prev_hash: bytes,
+        prev_index: int,
+        address_n: Sequence[int] | None = None,
+        script_sig: bytes | None = None,
+        sequence: int | None = 4294967295,
+        script_type: InputScriptType | None = InputScriptType.SPENDADDRESS,
+        multisig: MultisigRedeemScriptType | None = None,
+        amount: int | None = None,
+        decred_tree: int | None = None,
+        witness: bytes | None = None,
+        ownership_proof: bytes | None = None,
+        commitment_data: bytes | None = None,
+        orig_hash: bytes | None = None,
+        orig_index: int | None = None,
+        decred_staking_spend: DecredStakingSpendType | None = None,
+        script_pubkey: bytes | None = None,
+        coinjoin_flags: int | None = 0,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
         self.prev_index = prev_index
         self.script_sig = script_sig
@@ -2088,9 +2089,9 @@ class TxOutputBinType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        amount: "int",
-        script_pubkey: "bytes",
-        decred_script_version: Optional["int"] = None,
+        amount: int,
+        script_pubkey: bytes,
+        decred_script_version: int | None = None,
     ) -> None:
         self.amount = amount
         self.script_pubkey = script_pubkey
@@ -2114,17 +2115,17 @@ class TxOutputType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        amount: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        address: Optional["str"] = None,
-        script_type: Optional["OutputScriptType"] = OutputScriptType.PAYTOADDRESS,
-        multisig: Optional["MultisigRedeemScriptType"] = None,
-        op_return_data: Optional["bytes"] = None,
-        orig_hash: Optional["bytes"] = None,
-        orig_index: Optional["int"] = None,
-        payment_req_index: Optional["int"] = None,
+        amount: int,
+        address_n: Sequence[int] | None = None,
+        address: str | None = None,
+        script_type: OutputScriptType | None = OutputScriptType.PAYTOADDRESS,
+        multisig: MultisigRedeemScriptType | None = None,
+        op_return_data: bytes | None = None,
+        orig_hash: bytes | None = None,
+        orig_index: int | None = None,
+        payment_req_index: int | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.amount = amount
         self.address = address
         self.script_type = script_type
@@ -2144,7 +2145,7 @@ class TxAckInputWrapper(protobuf.MessageType):
     def __init__(
         self,
         *,
-        input: "TxInput",
+        input: TxInput,
     ) -> None:
         self.input = input
 
@@ -2158,7 +2159,7 @@ class TxAckOutputWrapper(protobuf.MessageType):
     def __init__(
         self,
         *,
-        output: "TxOutput",
+        output: TxOutput,
     ) -> None:
         self.output = output
 
@@ -2172,7 +2173,7 @@ class TxAckPrevInputWrapper(protobuf.MessageType):
     def __init__(
         self,
         *,
-        input: "PrevInput",
+        input: PrevInput,
     ) -> None:
         self.input = input
 
@@ -2186,7 +2187,7 @@ class TxAckPrevOutputWrapper(protobuf.MessageType):
     def __init__(
         self,
         *,
-        output: "PrevOutput",
+        output: PrevOutput,
     ) -> None:
         self.output = output
 
@@ -2200,7 +2201,7 @@ class TxAckPrevExtraDataWrapper(protobuf.MessageType):
     def __init__(
         self,
         *,
-        extra_data_chunk: "bytes",
+        extra_data_chunk: bytes,
     ) -> None:
         self.extra_data_chunk = extra_data_chunk
 
@@ -2215,8 +2216,8 @@ class BleUnpair(protobuf.MessageType):
     def __init__(
         self,
         *,
-        all: Optional["bool"] = None,
-        addr: Optional["bytes"] = None,
+        all: bool | None = None,
+        addr: bytes | None = None,
     ) -> None:
         self.all = all
         self.addr = addr
@@ -2231,7 +2232,7 @@ class FirmwareErase(protobuf.MessageType):
     def __init__(
         self,
         *,
-        length: Optional["int"] = None,
+        length: int | None = None,
     ) -> None:
         self.length = length
 
@@ -2246,8 +2247,8 @@ class FirmwareRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        offset: "int",
-        length: "int",
+        offset: int,
+        length: int,
     ) -> None:
         self.offset = offset
         self.length = length
@@ -2263,8 +2264,8 @@ class FirmwareUpload(protobuf.MessageType):
     def __init__(
         self,
         *,
-        payload: "bytes",
-        hash: Optional["bytes"] = None,
+        payload: bytes,
+        hash: bytes | None = None,
     ) -> None:
         self.payload = payload
         self.hash = hash
@@ -2279,7 +2280,7 @@ class ProdTestT1(protobuf.MessageType):
     def __init__(
         self,
         *,
-        payload: Optional["bytes"] = None,
+        payload: bytes | None = None,
     ) -> None:
         self.payload = payload
 
@@ -2295,9 +2296,9 @@ class CardanoBlockchainPointerType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        block_index: "int",
-        tx_index: "int",
-        certificate_index: "int",
+        block_index: int,
+        tx_index: int,
+        certificate_index: int,
     ) -> None:
         self.block_index = block_index
         self.tx_index = tx_index
@@ -2319,16 +2320,16 @@ class CardanoNativeScript(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "CardanoNativeScriptType",
-        scripts: Optional[Sequence["CardanoNativeScript"]] = None,
-        key_path: Optional[Sequence["int"]] = None,
-        key_hash: Optional["bytes"] = None,
-        required_signatures_count: Optional["int"] = None,
-        invalid_before: Optional["int"] = None,
-        invalid_hereafter: Optional["int"] = None,
+        type: CardanoNativeScriptType,
+        scripts: Sequence[CardanoNativeScript] | None = None,
+        key_path: Sequence[int] | None = None,
+        key_hash: bytes | None = None,
+        required_signatures_count: int | None = None,
+        invalid_before: int | None = None,
+        invalid_hereafter: int | None = None,
     ) -> None:
-        self.scripts: Sequence["CardanoNativeScript"] = scripts if scripts is not None else []
-        self.key_path: Sequence["int"] = key_path if key_path is not None else []
+        self.scripts: Sequence[CardanoNativeScript] = scripts if scripts is not None else []
+        self.key_path: Sequence[int] = key_path if key_path is not None else []
         self.type = type
         self.key_hash = key_hash
         self.required_signatures_count = required_signatures_count
@@ -2347,9 +2348,9 @@ class CardanoGetNativeScriptHash(protobuf.MessageType):
     def __init__(
         self,
         *,
-        script: "CardanoNativeScript",
-        display_format: "CardanoNativeScriptHashDisplayFormat",
-        derivation_type: "CardanoDerivationType",
+        script: CardanoNativeScript,
+        display_format: CardanoNativeScriptHashDisplayFormat,
+        derivation_type: CardanoDerivationType,
     ) -> None:
         self.script = script
         self.display_format = display_format
@@ -2365,7 +2366,7 @@ class CardanoNativeScriptHash(protobuf.MessageType):
     def __init__(
         self,
         *,
-        script_hash: "bytes",
+        script_hash: bytes,
     ) -> None:
         self.script_hash = script_hash
 
@@ -2385,16 +2386,16 @@ class CardanoAddressParametersType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_type: "CardanoAddressType",
-        address_n: Optional[Sequence["int"]] = None,
-        address_n_staking: Optional[Sequence["int"]] = None,
-        staking_key_hash: Optional["bytes"] = None,
-        certificate_pointer: Optional["CardanoBlockchainPointerType"] = None,
-        script_payment_hash: Optional["bytes"] = None,
-        script_staking_hash: Optional["bytes"] = None,
+        address_type: CardanoAddressType,
+        address_n: Sequence[int] | None = None,
+        address_n_staking: Sequence[int] | None = None,
+        staking_key_hash: bytes | None = None,
+        certificate_pointer: CardanoBlockchainPointerType | None = None,
+        script_payment_hash: bytes | None = None,
+        script_staking_hash: bytes | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.address_n_staking: Sequence["int"] = address_n_staking if address_n_staking is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
+        self.address_n_staking: Sequence[int] = address_n_staking if address_n_staking is not None else []
         self.address_type = address_type
         self.staking_key_hash = staking_key_hash
         self.certificate_pointer = certificate_pointer
@@ -2416,12 +2417,12 @@ class CardanoGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        protocol_magic: "int",
-        network_id: "int",
-        address_parameters: "CardanoAddressParametersType",
-        derivation_type: "CardanoDerivationType",
-        show_display: Optional["bool"] = False,
-        chunkify: Optional["bool"] = None,
+        protocol_magic: int,
+        network_id: int,
+        address_parameters: CardanoAddressParametersType,
+        derivation_type: CardanoDerivationType,
+        show_display: bool | None = False,
+        chunkify: bool | None = None,
     ) -> None:
         self.protocol_magic = protocol_magic
         self.network_id = network_id
@@ -2441,8 +2442,8 @@ class CardanoAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        mac: Optional["bytes"] = None,
+        address: str,
+        mac: bytes | None = None,
     ) -> None:
         self.address = address
         self.mac = mac
@@ -2459,11 +2460,11 @@ class CardanoGetPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        derivation_type: "CardanoDerivationType",
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
+        derivation_type: CardanoDerivationType,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.derivation_type = derivation_type
         self.show_display = show_display
 
@@ -2478,8 +2479,8 @@ class CardanoPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        xpub: "str",
-        node: "HDNodeType",
+        xpub: str,
+        node: HDNodeType,
     ) -> None:
         self.xpub = xpub
         self.node = node
@@ -2517,30 +2518,30 @@ class CardanoSignTxInit(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signing_mode: "CardanoTxSigningMode",
-        protocol_magic: "int",
-        network_id: "int",
-        inputs_count: "int",
-        outputs_count: "int",
-        fee: "int",
-        certificates_count: "int",
-        withdrawals_count: "int",
-        has_auxiliary_data: "bool",
-        witness_requests_count: "int",
-        minting_asset_groups_count: "int",
-        derivation_type: "CardanoDerivationType",
-        collateral_inputs_count: "int",
-        required_signers_count: "int",
-        ttl: Optional["int"] = None,
-        validity_interval_start: Optional["int"] = None,
-        include_network_id: Optional["bool"] = False,
-        script_data_hash: Optional["bytes"] = None,
-        has_collateral_return: Optional["bool"] = False,
-        total_collateral: Optional["int"] = None,
-        reference_inputs_count: Optional["int"] = 0,
-        chunkify: Optional["bool"] = None,
-        tag_cbor_sets: Optional["bool"] = False,
-        payment_req: Optional["PaymentRequest"] = None,
+        signing_mode: CardanoTxSigningMode,
+        protocol_magic: int,
+        network_id: int,
+        inputs_count: int,
+        outputs_count: int,
+        fee: int,
+        certificates_count: int,
+        withdrawals_count: int,
+        has_auxiliary_data: bool,
+        witness_requests_count: int,
+        minting_asset_groups_count: int,
+        derivation_type: CardanoDerivationType,
+        collateral_inputs_count: int,
+        required_signers_count: int,
+        ttl: int | None = None,
+        validity_interval_start: int | None = None,
+        include_network_id: bool | None = False,
+        script_data_hash: bytes | None = None,
+        has_collateral_return: bool | None = False,
+        total_collateral: int | None = None,
+        reference_inputs_count: int | None = 0,
+        chunkify: bool | None = None,
+        tag_cbor_sets: bool | None = False,
+        payment_req: PaymentRequest | None = None,
     ) -> None:
         self.signing_mode = signing_mode
         self.protocol_magic = protocol_magic
@@ -2578,8 +2579,8 @@ class CardanoTxInput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        prev_hash: "bytes",
-        prev_index: "int",
+        prev_hash: bytes,
+        prev_index: int,
     ) -> None:
         self.prev_hash = prev_hash
         self.prev_index = prev_index
@@ -2601,14 +2602,14 @@ class CardanoTxOutput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        amount: "int",
-        asset_groups_count: "int",
-        address: Optional["str"] = None,
-        address_parameters: Optional["CardanoAddressParametersType"] = None,
-        datum_hash: Optional["bytes"] = None,
-        format: Optional["CardanoTxOutputSerializationFormat"] = CardanoTxOutputSerializationFormat.ARRAY_LEGACY,
-        inline_datum_size: Optional["int"] = 0,
-        reference_script_size: Optional["int"] = 0,
+        amount: int,
+        asset_groups_count: int,
+        address: str | None = None,
+        address_parameters: CardanoAddressParametersType | None = None,
+        datum_hash: bytes | None = None,
+        format: CardanoTxOutputSerializationFormat | None = CardanoTxOutputSerializationFormat.ARRAY_LEGACY,
+        inline_datum_size: int | None = 0,
+        reference_script_size: int | None = 0,
     ) -> None:
         self.amount = amount
         self.asset_groups_count = asset_groups_count
@@ -2630,8 +2631,8 @@ class CardanoAssetGroup(protobuf.MessageType):
     def __init__(
         self,
         *,
-        policy_id: "bytes",
-        tokens_count: "int",
+        policy_id: bytes,
+        tokens_count: int,
     ) -> None:
         self.policy_id = policy_id
         self.tokens_count = tokens_count
@@ -2648,9 +2649,9 @@ class CardanoToken(protobuf.MessageType):
     def __init__(
         self,
         *,
-        asset_name_bytes: "bytes",
-        amount: Optional["int"] = None,
-        mint_amount: Optional["int"] = None,
+        asset_name_bytes: bytes,
+        amount: int | None = None,
+        mint_amount: int | None = None,
     ) -> None:
         self.asset_name_bytes = asset_name_bytes
         self.amount = amount
@@ -2666,7 +2667,7 @@ class CardanoTxInlineDatumChunk(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data: "bytes",
+        data: bytes,
     ) -> None:
         self.data = data
 
@@ -2680,7 +2681,7 @@ class CardanoTxReferenceScriptChunk(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data: "bytes",
+        data: bytes,
     ) -> None:
         self.data = data
 
@@ -2695,10 +2696,10 @@ class CardanoPoolOwner(protobuf.MessageType):
     def __init__(
         self,
         *,
-        staking_key_path: Optional[Sequence["int"]] = None,
-        staking_key_hash: Optional["bytes"] = None,
+        staking_key_path: Sequence[int] | None = None,
+        staking_key_hash: bytes | None = None,
     ) -> None:
-        self.staking_key_path: Sequence["int"] = staking_key_path if staking_key_path is not None else []
+        self.staking_key_path: Sequence[int] = staking_key_path if staking_key_path is not None else []
         self.staking_key_hash = staking_key_hash
 
 
@@ -2715,11 +2716,11 @@ class CardanoPoolRelayParameters(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "CardanoPoolRelayType",
-        ipv4_address: Optional["bytes"] = None,
-        ipv6_address: Optional["bytes"] = None,
-        host_name: Optional["str"] = None,
-        port: Optional["int"] = None,
+        type: CardanoPoolRelayType,
+        ipv4_address: bytes | None = None,
+        ipv6_address: bytes | None = None,
+        host_name: str | None = None,
+        port: int | None = None,
     ) -> None:
         self.type = type
         self.ipv4_address = ipv4_address
@@ -2738,8 +2739,8 @@ class CardanoPoolMetadataType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        url: "str",
-        hash: "bytes",
+        url: str,
+        hash: bytes,
     ) -> None:
         self.url = url
         self.hash = hash
@@ -2763,16 +2764,16 @@ class CardanoPoolParametersType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        pool_id: "bytes",
-        vrf_key_hash: "bytes",
-        pledge: "int",
-        cost: "int",
-        margin_numerator: "int",
-        margin_denominator: "int",
-        reward_account: "str",
-        owners_count: "int",
-        relays_count: "int",
-        metadata: Optional["CardanoPoolMetadataType"] = None,
+        pool_id: bytes,
+        vrf_key_hash: bytes,
+        pledge: int,
+        cost: int,
+        margin_numerator: int,
+        margin_denominator: int,
+        reward_account: str,
+        owners_count: int,
+        relays_count: int,
+        metadata: CardanoPoolMetadataType | None = None,
     ) -> None:
         self.pool_id = pool_id
         self.vrf_key_hash = vrf_key_hash
@@ -2797,9 +2798,9 @@ class CardanoDRep(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "CardanoDRepType",
-        key_hash: Optional["bytes"] = None,
-        script_hash: Optional["bytes"] = None,
+        type: CardanoDRepType,
+        key_hash: bytes | None = None,
+        script_hash: bytes | None = None,
     ) -> None:
         self.type = type
         self.key_hash = key_hash
@@ -2822,16 +2823,16 @@ class CardanoTxCertificate(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "CardanoCertificateType",
-        path: Optional[Sequence["int"]] = None,
-        pool: Optional["bytes"] = None,
-        pool_parameters: Optional["CardanoPoolParametersType"] = None,
-        script_hash: Optional["bytes"] = None,
-        key_hash: Optional["bytes"] = None,
-        deposit: Optional["int"] = None,
-        drep: Optional["CardanoDRep"] = None,
+        type: CardanoCertificateType,
+        path: Sequence[int] | None = None,
+        pool: bytes | None = None,
+        pool_parameters: CardanoPoolParametersType | None = None,
+        script_hash: bytes | None = None,
+        key_hash: bytes | None = None,
+        deposit: int | None = None,
+        drep: CardanoDRep | None = None,
     ) -> None:
-        self.path: Sequence["int"] = path if path is not None else []
+        self.path: Sequence[int] = path if path is not None else []
         self.type = type
         self.pool = pool
         self.pool_parameters = pool_parameters
@@ -2853,12 +2854,12 @@ class CardanoTxWithdrawal(protobuf.MessageType):
     def __init__(
         self,
         *,
-        amount: "int",
-        path: Optional[Sequence["int"]] = None,
-        script_hash: Optional["bytes"] = None,
-        key_hash: Optional["bytes"] = None,
+        amount: int,
+        path: Sequence[int] | None = None,
+        script_hash: bytes | None = None,
+        key_hash: bytes | None = None,
     ) -> None:
-        self.path: Sequence["int"] = path if path is not None else []
+        self.path: Sequence[int] = path if path is not None else []
         self.amount = amount
         self.script_hash = script_hash
         self.key_hash = key_hash
@@ -2874,8 +2875,8 @@ class CardanoCVoteRegistrationDelegation(protobuf.MessageType):
     def __init__(
         self,
         *,
-        vote_public_key: "bytes",
-        weight: "int",
+        vote_public_key: bytes,
+        weight: int,
     ) -> None:
         self.vote_public_key = vote_public_key
         self.weight = weight
@@ -2897,17 +2898,17 @@ class CardanoCVoteRegistrationParametersType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        nonce: "int",
-        staking_path: Optional[Sequence["int"]] = None,
-        delegations: Optional[Sequence["CardanoCVoteRegistrationDelegation"]] = None,
-        vote_public_key: Optional["bytes"] = None,
-        payment_address_parameters: Optional["CardanoAddressParametersType"] = None,
-        format: Optional["CardanoCVoteRegistrationFormat"] = CardanoCVoteRegistrationFormat.CIP15,
-        voting_purpose: Optional["int"] = None,
-        payment_address: Optional["str"] = None,
+        nonce: int,
+        staking_path: Sequence[int] | None = None,
+        delegations: Sequence[CardanoCVoteRegistrationDelegation] | None = None,
+        vote_public_key: bytes | None = None,
+        payment_address_parameters: CardanoAddressParametersType | None = None,
+        format: CardanoCVoteRegistrationFormat | None = CardanoCVoteRegistrationFormat.CIP15,
+        voting_purpose: int | None = None,
+        payment_address: str | None = None,
     ) -> None:
-        self.staking_path: Sequence["int"] = staking_path if staking_path is not None else []
-        self.delegations: Sequence["CardanoCVoteRegistrationDelegation"] = delegations if delegations is not None else []
+        self.staking_path: Sequence[int] = staking_path if staking_path is not None else []
+        self.delegations: Sequence[CardanoCVoteRegistrationDelegation] = delegations if delegations is not None else []
         self.nonce = nonce
         self.vote_public_key = vote_public_key
         self.payment_address_parameters = payment_address_parameters
@@ -2926,8 +2927,8 @@ class CardanoTxAuxiliaryData(protobuf.MessageType):
     def __init__(
         self,
         *,
-        cvote_registration_parameters: Optional["CardanoCVoteRegistrationParametersType"] = None,
-        hash: Optional["bytes"] = None,
+        cvote_registration_parameters: CardanoCVoteRegistrationParametersType | None = None,
+        hash: bytes | None = None,
     ) -> None:
         self.cvote_registration_parameters = cvote_registration_parameters
         self.hash = hash
@@ -2942,7 +2943,7 @@ class CardanoTxMint(protobuf.MessageType):
     def __init__(
         self,
         *,
-        asset_groups_count: "int",
+        asset_groups_count: int,
     ) -> None:
         self.asset_groups_count = asset_groups_count
 
@@ -2957,8 +2958,8 @@ class CardanoTxCollateralInput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        prev_hash: "bytes",
-        prev_index: "int",
+        prev_hash: bytes,
+        prev_index: int,
     ) -> None:
         self.prev_hash = prev_hash
         self.prev_index = prev_index
@@ -2974,10 +2975,10 @@ class CardanoTxRequiredSigner(protobuf.MessageType):
     def __init__(
         self,
         *,
-        key_path: Optional[Sequence["int"]] = None,
-        key_hash: Optional["bytes"] = None,
+        key_path: Sequence[int] | None = None,
+        key_hash: bytes | None = None,
     ) -> None:
-        self.key_path: Sequence["int"] = key_path if key_path is not None else []
+        self.key_path: Sequence[int] = key_path if key_path is not None else []
         self.key_hash = key_hash
 
 
@@ -2991,8 +2992,8 @@ class CardanoTxReferenceInput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        prev_hash: "bytes",
-        prev_index: "int",
+        prev_hash: bytes,
+        prev_index: int,
     ) -> None:
         self.prev_hash = prev_hash
         self.prev_index = prev_index
@@ -3013,9 +3014,9 @@ class CardanoTxAuxiliaryDataSupplement(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "CardanoTxAuxiliaryDataSupplementType",
-        auxiliary_data_hash: Optional["bytes"] = None,
-        cvote_registration_signature: Optional["bytes"] = None,
+        type: CardanoTxAuxiliaryDataSupplementType,
+        auxiliary_data_hash: bytes | None = None,
+        cvote_registration_signature: bytes | None = None,
     ) -> None:
         self.type = type
         self.auxiliary_data_hash = auxiliary_data_hash
@@ -3031,9 +3032,9 @@ class CardanoTxWitnessRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        path: Optional[Sequence["int"]] = None,
+        path: Sequence[int] | None = None,
     ) -> None:
-        self.path: Sequence["int"] = path if path is not None else []
+        self.path: Sequence[int] = path if path is not None else []
 
 
 class CardanoTxWitnessResponse(protobuf.MessageType):
@@ -3048,10 +3049,10 @@ class CardanoTxWitnessResponse(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "CardanoTxWitnessType",
-        pub_key: "bytes",
-        signature: "bytes",
-        chain_code: Optional["bytes"] = None,
+        type: CardanoTxWitnessType,
+        pub_key: bytes,
+        signature: bytes,
+        chain_code: bytes | None = None,
     ) -> None:
         self.type = type
         self.pub_key = pub_key
@@ -3072,7 +3073,7 @@ class CardanoTxBodyHash(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tx_hash: "bytes",
+        tx_hash: bytes,
     ) -> None:
         self.tx_hash = tx_hash
 
@@ -3096,15 +3097,15 @@ class CardanoSignMessageInit(protobuf.MessageType):
     def __init__(
         self,
         *,
-        payload_size: "int",
-        prefer_hex_display: "bool",
-        derivation_type: "CardanoDerivationType",
-        signing_path: Optional[Sequence["int"]] = None,
-        protocol_magic: Optional["int"] = None,
-        network_id: Optional["int"] = None,
-        address_parameters: Optional["CardanoAddressParametersType"] = None,
+        payload_size: int,
+        prefer_hex_display: bool,
+        derivation_type: CardanoDerivationType,
+        signing_path: Sequence[int] | None = None,
+        protocol_magic: int | None = None,
+        network_id: int | None = None,
+        address_parameters: CardanoAddressParametersType | None = None,
     ) -> None:
-        self.signing_path: Sequence["int"] = signing_path if signing_path is not None else []
+        self.signing_path: Sequence[int] = signing_path if signing_path is not None else []
         self.payload_size = payload_size
         self.prefer_hex_display = prefer_hex_display
         self.derivation_type = derivation_type
@@ -3123,8 +3124,8 @@ class CardanoMessageDataRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        length: "int",
-        offset: "int",
+        length: int,
+        offset: int,
     ) -> None:
         self.length = length
         self.offset = offset
@@ -3139,7 +3140,7 @@ class CardanoMessageDataResponse(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data: "bytes",
+        data: bytes,
     ) -> None:
         self.data = data
 
@@ -3155,9 +3156,9 @@ class CardanoMessageSignature(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: "bytes",
-        address: "bytes",
-        pub_key: "bytes",
+        signature: bytes,
+        address: bytes,
+        pub_key: bytes,
     ) -> None:
         self.signature = signature
         self.address = address
@@ -3179,15 +3180,15 @@ class CipherKeyValue(protobuf.MessageType):
     def __init__(
         self,
         *,
-        key: "str",
-        value: "bytes",
-        address_n: Optional[Sequence["int"]] = None,
-        encrypt: Optional["bool"] = None,
-        ask_on_encrypt: Optional["bool"] = None,
-        ask_on_decrypt: Optional["bool"] = None,
-        iv: Optional["bytes"] = None,
+        key: str,
+        value: bytes,
+        address_n: Sequence[int] | None = None,
+        encrypt: bool | None = None,
+        ask_on_encrypt: bool | None = None,
+        ask_on_decrypt: bool | None = None,
+        iv: bytes | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.key = key
         self.value = value
         self.encrypt = encrypt
@@ -3205,7 +3206,7 @@ class CipheredKeyValue(protobuf.MessageType):
     def __init__(
         self,
         *,
-        value: "bytes",
+        value: bytes,
     ) -> None:
         self.value = value
 
@@ -3224,12 +3225,12 @@ class IdentityType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        proto: Optional["str"] = None,
-        user: Optional["str"] = None,
-        host: Optional["str"] = None,
-        port: Optional["str"] = None,
-        path: Optional["str"] = None,
-        index: Optional["int"] = 0,
+        proto: str | None = None,
+        user: str | None = None,
+        host: str | None = None,
+        port: str | None = None,
+        path: str | None = None,
+        index: int | None = 0,
     ) -> None:
         self.proto = proto
         self.user = user
@@ -3251,10 +3252,10 @@ class SignIdentity(protobuf.MessageType):
     def __init__(
         self,
         *,
-        identity: "IdentityType",
-        challenge_hidden: Optional["bytes"] = b'',
-        challenge_visual: Optional["str"] = '',
-        ecdsa_curve_name: Optional["str"] = None,
+        identity: IdentityType,
+        challenge_hidden: bytes | None = b'',
+        challenge_visual: str | None = '',
+        ecdsa_curve_name: str | None = None,
     ) -> None:
         self.identity = identity
         self.challenge_hidden = challenge_hidden
@@ -3273,9 +3274,9 @@ class SignedIdentity(protobuf.MessageType):
     def __init__(
         self,
         *,
-        public_key: "bytes",
-        signature: "bytes",
-        address: Optional["str"] = None,
+        public_key: bytes,
+        signature: bytes,
+        address: str | None = None,
     ) -> None:
         self.public_key = public_key
         self.signature = signature
@@ -3293,9 +3294,9 @@ class GetECDHSessionKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        identity: "IdentityType",
-        peer_public_key: "bytes",
-        ecdsa_curve_name: Optional["str"] = None,
+        identity: IdentityType,
+        peer_public_key: bytes,
+        ecdsa_curve_name: str | None = None,
     ) -> None:
         self.identity = identity
         self.peer_public_key = peer_public_key
@@ -3312,8 +3313,8 @@ class ECDHSessionKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        session_key: "bytes",
-        public_key: Optional["bytes"] = None,
+        session_key: bytes,
+        public_key: bytes | None = None,
     ) -> None:
         self.session_key = session_key
         self.public_key = public_key
@@ -3328,7 +3329,7 @@ class PaymentNotification(protobuf.MessageType):
     def __init__(
         self,
         *,
-        payment_req: Optional["PaymentRequest"] = None,
+        payment_req: PaymentRequest | None = None,
     ) -> None:
         self.payment_req = payment_req
 
@@ -3344,9 +3345,9 @@ class Initialize(protobuf.MessageType):
     def __init__(
         self,
         *,
-        session_id: Optional["bytes"] = None,
-        _skip_passphrase: Optional["bool"] = None,
-        derive_cardano: Optional["bool"] = None,
+        session_id: bytes | None = None,
+        _skip_passphrase: bool | None = None,
+        derive_cardano: bool | None = None,
     ) -> None:
         self.session_id = session_id
         self._skip_passphrase = _skip_passphrase
@@ -3427,70 +3428,70 @@ class Features(protobuf.MessageType):
     def __init__(
         self,
         *,
-        major_version: "int",
-        minor_version: "int",
-        patch_version: "int",
-        capabilities: Optional[Sequence["Capability"]] = None,
-        vendor: Optional["str"] = None,
-        build_version: Optional["int"] = None,
-        bootloader_mode: Optional["bool"] = None,
-        device_id: Optional["str"] = None,
-        pin_protection: Optional["bool"] = None,
-        passphrase_protection: Optional["bool"] = None,
-        language: Optional["str"] = None,
-        label: Optional["str"] = None,
-        initialized: Optional["bool"] = None,
-        revision: Optional["bytes"] = None,
-        bootloader_hash: Optional["bytes"] = None,
-        imported: Optional["bool"] = None,
-        unlocked: Optional["bool"] = None,
-        _passphrase_cached: Optional["bool"] = None,
-        firmware_present: Optional["bool"] = None,
-        backup_availability: Optional["BackupAvailability"] = None,
-        flags: Optional["int"] = None,
-        model: Optional["str"] = None,
-        fw_major: Optional["int"] = None,
-        fw_minor: Optional["int"] = None,
-        fw_patch: Optional["int"] = None,
-        fw_build: Optional["int"] = None,
-        fw_vendor: Optional["str"] = None,
-        unfinished_backup: Optional["bool"] = None,
-        no_backup: Optional["bool"] = None,
-        recovery_status: Optional["RecoveryStatus"] = None,
-        backup_type: Optional["BackupType"] = None,
-        sd_card_present: Optional["bool"] = None,
-        sd_protection: Optional["bool"] = None,
-        wipe_code_protection: Optional["bool"] = None,
-        session_id: Optional["bytes"] = None,
-        passphrase_always_on_device: Optional["bool"] = None,
-        safety_checks: Optional["SafetyCheckLevel"] = None,
-        auto_lock_delay_ms: Optional["int"] = None,
-        display_rotation: Optional["DisplayRotation"] = None,
-        experimental_features: Optional["bool"] = None,
-        busy: Optional["bool"] = None,
-        homescreen_format: Optional["HomescreenFormat"] = None,
-        hide_passphrase_from_host: Optional["bool"] = None,
-        internal_model: Optional["str"] = None,
-        unit_color: Optional["int"] = None,
-        unit_btconly: Optional["bool"] = None,
-        homescreen_width: Optional["int"] = None,
-        homescreen_height: Optional["int"] = None,
-        bootloader_locked: Optional["bool"] = None,
-        language_version_matches: Optional["bool"] = True,
-        unit_packaging: Optional["int"] = None,
-        haptic_feedback: Optional["bool"] = None,
-        recovery_type: Optional["RecoveryType"] = None,
-        optiga_sec: Optional["int"] = None,
-        soc: Optional["int"] = None,
-        firmware_corrupted: Optional["bool"] = None,
-        auto_lock_delay_battery_ms: Optional["int"] = None,
-        led: Optional["bool"] = None,
-        usb_connected: Optional["bool"] = None,
-        wireless_connected: Optional["bool"] = None,
-        tap_to_wake: Optional["bool"] = None,
-        max_passphrase_len: Optional["int"] = 50,
+        major_version: int,
+        minor_version: int,
+        patch_version: int,
+        capabilities: Sequence[Capability] | None = None,
+        vendor: str | None = None,
+        build_version: int | None = None,
+        bootloader_mode: bool | None = None,
+        device_id: str | None = None,
+        pin_protection: bool | None = None,
+        passphrase_protection: bool | None = None,
+        language: str | None = None,
+        label: str | None = None,
+        initialized: bool | None = None,
+        revision: bytes | None = None,
+        bootloader_hash: bytes | None = None,
+        imported: bool | None = None,
+        unlocked: bool | None = None,
+        _passphrase_cached: bool | None = None,
+        firmware_present: bool | None = None,
+        backup_availability: BackupAvailability | None = None,
+        flags: int | None = None,
+        model: str | None = None,
+        fw_major: int | None = None,
+        fw_minor: int | None = None,
+        fw_patch: int | None = None,
+        fw_build: int | None = None,
+        fw_vendor: str | None = None,
+        unfinished_backup: bool | None = None,
+        no_backup: bool | None = None,
+        recovery_status: RecoveryStatus | None = None,
+        backup_type: BackupType | None = None,
+        sd_card_present: bool | None = None,
+        sd_protection: bool | None = None,
+        wipe_code_protection: bool | None = None,
+        session_id: bytes | None = None,
+        passphrase_always_on_device: bool | None = None,
+        safety_checks: SafetyCheckLevel | None = None,
+        auto_lock_delay_ms: int | None = None,
+        display_rotation: DisplayRotation | None = None,
+        experimental_features: bool | None = None,
+        busy: bool | None = None,
+        homescreen_format: HomescreenFormat | None = None,
+        hide_passphrase_from_host: bool | None = None,
+        internal_model: str | None = None,
+        unit_color: int | None = None,
+        unit_btconly: bool | None = None,
+        homescreen_width: int | None = None,
+        homescreen_height: int | None = None,
+        bootloader_locked: bool | None = None,
+        language_version_matches: bool | None = True,
+        unit_packaging: int | None = None,
+        haptic_feedback: bool | None = None,
+        recovery_type: RecoveryType | None = None,
+        optiga_sec: int | None = None,
+        soc: int | None = None,
+        firmware_corrupted: bool | None = None,
+        auto_lock_delay_battery_ms: int | None = None,
+        led: bool | None = None,
+        usb_connected: bool | None = None,
+        wireless_connected: bool | None = None,
+        tap_to_wake: bool | None = None,
+        max_passphrase_len: int | None = 50,
     ) -> None:
-        self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
+        self.capabilities: Sequence[Capability] = capabilities if capabilities is not None else []
         self.major_version = major_version
         self.minor_version = minor_version
         self.patch_version = patch_version
@@ -3567,7 +3568,7 @@ class SetBusy(protobuf.MessageType):
     def __init__(
         self,
         *,
-        expiry_ms: Optional["int"] = None,
+        expiry_ms: int | None = None,
     ) -> None:
         self.expiry_ms = expiry_ms
 
@@ -3598,20 +3599,20 @@ class ApplySettings(protobuf.MessageType):
     def __init__(
         self,
         *,
-        language: Optional["str"] = None,
-        label: Optional["str"] = None,
-        use_passphrase: Optional["bool"] = None,
-        homescreen: Optional["bytes"] = None,
-        _passphrase_source: Optional["int"] = None,
-        auto_lock_delay_ms: Optional["int"] = None,
-        display_rotation: Optional["DisplayRotation"] = None,
-        passphrase_always_on_device: Optional["bool"] = None,
-        safety_checks: Optional["SafetyCheckLevel"] = None,
-        experimental_features: Optional["bool"] = None,
-        hide_passphrase_from_host: Optional["bool"] = None,
-        haptic_feedback: Optional["bool"] = None,
-        homescreen_length: Optional["int"] = None,
-        auto_lock_delay_battery_ms: Optional["int"] = None,
+        language: str | None = None,
+        label: str | None = None,
+        use_passphrase: bool | None = None,
+        homescreen: bytes | None = None,
+        _passphrase_source: int | None = None,
+        auto_lock_delay_ms: int | None = None,
+        display_rotation: DisplayRotation | None = None,
+        passphrase_always_on_device: bool | None = None,
+        safety_checks: SafetyCheckLevel | None = None,
+        experimental_features: bool | None = None,
+        hide_passphrase_from_host: bool | None = None,
+        haptic_feedback: bool | None = None,
+        homescreen_length: int | None = None,
+        auto_lock_delay_battery_ms: int | None = None,
     ) -> None:
         self.language = language
         self.label = label
@@ -3639,8 +3640,8 @@ class ChangeLanguage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data_length: "int",
-        show_display: Optional["bool"] = None,
+        data_length: int,
+        show_display: bool | None = None,
     ) -> None:
         self.data_length = data_length
         self.show_display = show_display
@@ -3656,8 +3657,8 @@ class DataChunkRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data_length: "int",
-        data_offset: "int",
+        data_length: int,
+        data_offset: int,
     ) -> None:
         self.data_length = data_length
         self.data_offset = data_offset
@@ -3672,7 +3673,7 @@ class DataChunkAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data_chunk: "bytes",
+        data_chunk: bytes,
     ) -> None:
         self.data_chunk = data_chunk
 
@@ -3686,7 +3687,7 @@ class ApplyFlags(protobuf.MessageType):
     def __init__(
         self,
         *,
-        flags: "int",
+        flags: int,
     ) -> None:
         self.flags = flags
 
@@ -3700,7 +3701,7 @@ class ChangePin(protobuf.MessageType):
     def __init__(
         self,
         *,
-        remove: Optional["bool"] = None,
+        remove: bool | None = None,
     ) -> None:
         self.remove = remove
 
@@ -3714,7 +3715,7 @@ class ChangeWipeCode(protobuf.MessageType):
     def __init__(
         self,
         *,
-        remove: Optional["bool"] = None,
+        remove: bool | None = None,
     ) -> None:
         self.remove = remove
 
@@ -3728,7 +3729,7 @@ class SdProtect(protobuf.MessageType):
     def __init__(
         self,
         *,
-        operation: "SdProtectOperationType",
+        operation: SdProtectOperationType,
     ) -> None:
         self.operation = operation
 
@@ -3743,8 +3744,8 @@ class Ping(protobuf.MessageType):
     def __init__(
         self,
         *,
-        message: Optional["str"] = '',
-        button_protection: Optional["bool"] = None,
+        message: str | None = '',
+        button_protection: bool | None = None,
     ) -> None:
         self.message = message
         self.button_protection = button_protection
@@ -3763,7 +3764,7 @@ class GetEntropy(protobuf.MessageType):
     def __init__(
         self,
         *,
-        size: "int",
+        size: int,
     ) -> None:
         self.size = size
 
@@ -3777,7 +3778,7 @@ class Entropy(protobuf.MessageType):
     def __init__(
         self,
         *,
-        entropy: "bytes",
+        entropy: bytes,
     ) -> None:
         self.entropy = entropy
 
@@ -3791,7 +3792,7 @@ class GetFirmwareHash(protobuf.MessageType):
     def __init__(
         self,
         *,
-        challenge: Optional["bytes"] = None,
+        challenge: bytes | None = None,
     ) -> None:
         self.challenge = challenge
 
@@ -3805,7 +3806,7 @@ class FirmwareHash(protobuf.MessageType):
     def __init__(
         self,
         *,
-        hash: "bytes",
+        hash: bytes,
     ) -> None:
         self.hash = hash
 
@@ -3820,8 +3821,8 @@ class AuthenticateDevice(protobuf.MessageType):
     def __init__(
         self,
         *,
-        challenge: "bytes",
-        stream: Optional["bool"] = None,
+        challenge: bytes,
+        stream: bool | None = None,
     ) -> None:
         self.challenge = challenge
         self.stream = stream
@@ -3841,16 +3842,16 @@ class AuthenticityProof(protobuf.MessageType):
     def __init__(
         self,
         *,
-        optiga_signature: "bytes",
-        optiga_certificates: Optional[Sequence["bytes"]] = None,
-        tropic_certificates: Optional[Sequence["bytes"]] = None,
-        mcu_certificates: Optional[Sequence["bytes"]] = None,
-        tropic_signature: Optional["bytes"] = None,
-        mcu_signature: Optional["bytes"] = None,
+        optiga_signature: bytes,
+        optiga_certificates: Sequence[bytes] | None = None,
+        tropic_certificates: Sequence[bytes] | None = None,
+        mcu_certificates: Sequence[bytes] | None = None,
+        tropic_signature: bytes | None = None,
+        mcu_signature: bytes | None = None,
     ) -> None:
-        self.optiga_certificates: Sequence["bytes"] = optiga_certificates if optiga_certificates is not None else []
-        self.tropic_certificates: Sequence["bytes"] = tropic_certificates if tropic_certificates is not None else []
-        self.mcu_certificates: Sequence["bytes"] = mcu_certificates if mcu_certificates is not None else []
+        self.optiga_certificates: Sequence[bytes] = optiga_certificates if optiga_certificates is not None else []
+        self.tropic_certificates: Sequence[bytes] = tropic_certificates if tropic_certificates is not None else []
+        self.mcu_certificates: Sequence[bytes] = mcu_certificates if mcu_certificates is not None else []
         self.optiga_signature = optiga_signature
         self.tropic_signature = tropic_signature
         self.mcu_signature = mcu_signature
@@ -3870,16 +3871,16 @@ class AuthenticityProofSizes(protobuf.MessageType):
     def __init__(
         self,
         *,
-        optiga_signature: "int",
-        optiga_certificates: Optional[Sequence["int"]] = None,
-        tropic_certificates: Optional[Sequence["int"]] = None,
-        mcu_certificates: Optional[Sequence["int"]] = None,
-        tropic_signature: Optional["int"] = None,
-        mcu_signature: Optional["int"] = None,
+        optiga_signature: int,
+        optiga_certificates: Sequence[int] | None = None,
+        tropic_certificates: Sequence[int] | None = None,
+        mcu_certificates: Sequence[int] | None = None,
+        tropic_signature: int | None = None,
+        mcu_signature: int | None = None,
     ) -> None:
-        self.optiga_certificates: Sequence["int"] = optiga_certificates if optiga_certificates is not None else []
-        self.tropic_certificates: Sequence["int"] = tropic_certificates if tropic_certificates is not None else []
-        self.mcu_certificates: Sequence["int"] = mcu_certificates if mcu_certificates is not None else []
+        self.optiga_certificates: Sequence[int] = optiga_certificates if optiga_certificates is not None else []
+        self.tropic_certificates: Sequence[int] = tropic_certificates if tropic_certificates is not None else []
+        self.mcu_certificates: Sequence[int] = mcu_certificates if mcu_certificates is not None else []
         self.optiga_signature = optiga_signature
         self.tropic_signature = tropic_signature
         self.mcu_signature = mcu_signature
@@ -3897,10 +3898,10 @@ class GetAuthenticityProofChunk(protobuf.MessageType):
     def __init__(
         self,
         *,
-        offset: "int",
-        size: "int",
-        proof_type: Optional["AuthenticityProofType"] = None,
-        index: Optional["int"] = None,
+        offset: int,
+        size: int,
+        proof_type: AuthenticityProofType | None = None,
+        index: int | None = None,
     ) -> None:
         self.offset = offset
         self.size = size
@@ -3917,7 +3918,7 @@ class AuthenticityProofChunk(protobuf.MessageType):
     def __init__(
         self,
         *,
-        chunk: "bytes",
+        chunk: bytes,
     ) -> None:
         self.chunk = chunk
 
@@ -3944,18 +3945,18 @@ class LoadDevice(protobuf.MessageType):
     def __init__(
         self,
         *,
-        mnemonics: Optional[Sequence["str"]] = None,
-        pin: Optional["str"] = None,
-        passphrase_protection: Optional["bool"] = None,
-        language: Optional["str"] = None,
-        label: Optional["str"] = None,
-        skip_checksum: Optional["bool"] = None,
-        u2f_counter: Optional["int"] = None,
-        needs_backup: Optional["bool"] = None,
-        no_backup: Optional["bool"] = None,
-        unfinished_backup: Optional["bool"] = None,
+        mnemonics: Sequence[str] | None = None,
+        pin: str | None = None,
+        passphrase_protection: bool | None = None,
+        language: str | None = None,
+        label: str | None = None,
+        skip_checksum: bool | None = None,
+        u2f_counter: int | None = None,
+        needs_backup: bool | None = None,
+        no_backup: bool | None = None,
+        unfinished_backup: bool | None = None,
     ) -> None:
-        self.mnemonics: Sequence["str"] = mnemonics if mnemonics is not None else []
+        self.mnemonics: Sequence[str] = mnemonics if mnemonics is not None else []
         self.pin = pin
         self.passphrase_protection = passphrase_protection
         self.language = language
@@ -3986,17 +3987,17 @@ class ResetDevice(protobuf.MessageType):
     def __init__(
         self,
         *,
-        strength: Optional["int"] = 256,
-        passphrase_protection: Optional["bool"] = None,
-        pin_protection: Optional["bool"] = None,
-        language: Optional["str"] = None,
-        label: Optional["str"] = None,
-        u2f_counter: Optional["int"] = None,
-        skip_backup: Optional["bool"] = None,
-        no_backup: Optional["bool"] = None,
-        backup_type: Optional["BackupType"] = BackupType.Bip39,
-        entropy_check: Optional["bool"] = None,
-        backup_method: Optional["BackupMethod"] = BackupMethod.Display,
+        strength: int | None = 256,
+        passphrase_protection: bool | None = None,
+        pin_protection: bool | None = None,
+        language: str | None = None,
+        label: str | None = None,
+        u2f_counter: int | None = None,
+        skip_backup: bool | None = None,
+        no_backup: bool | None = None,
+        backup_type: BackupType | None = BackupType.Bip39,
+        entropy_check: bool | None = None,
+        backup_method: BackupMethod | None = BackupMethod.Display,
     ) -> None:
         self.strength = strength
         self.passphrase_protection = passphrase_protection
@@ -4022,11 +4023,11 @@ class BackupDevice(protobuf.MessageType):
     def __init__(
         self,
         *,
-        groups: Optional[Sequence["Slip39Group"]] = None,
-        group_threshold: Optional["int"] = None,
-        backup_method: Optional["BackupMethod"] = BackupMethod.Display,
+        groups: Sequence[Slip39Group] | None = None,
+        group_threshold: int | None = None,
+        backup_method: BackupMethod | None = BackupMethod.Display,
     ) -> None:
-        self.groups: Sequence["Slip39Group"] = groups if groups is not None else []
+        self.groups: Sequence[Slip39Group] = groups if groups is not None else []
         self.group_threshold = group_threshold
         self.backup_method = backup_method
 
@@ -4041,8 +4042,8 @@ class EntropyRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        entropy_commitment: Optional["bytes"] = None,
-        prev_entropy: Optional["bytes"] = None,
+        entropy_commitment: bytes | None = None,
+        prev_entropy: bytes | None = None,
     ) -> None:
         self.entropy_commitment = entropy_commitment
         self.prev_entropy = prev_entropy
@@ -4057,7 +4058,7 @@ class EntropyAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        entropy: "bytes",
+        entropy: bytes,
     ) -> None:
         self.entropy = entropy
 
@@ -4075,7 +4076,7 @@ class EntropyCheckContinue(protobuf.MessageType):
     def __init__(
         self,
         *,
-        finish: Optional["bool"] = False,
+        finish: bool | None = False,
     ) -> None:
         self.finish = finish
 
@@ -4098,16 +4099,16 @@ class RecoveryDevice(protobuf.MessageType):
     def __init__(
         self,
         *,
-        word_count: Optional["int"] = None,
-        passphrase_protection: Optional["bool"] = None,
-        pin_protection: Optional["bool"] = None,
-        language: Optional["str"] = None,
-        label: Optional["str"] = None,
-        enforce_wordlist: Optional["bool"] = None,
-        input_method: Optional["RecoveryDeviceInputMethod"] = None,
-        u2f_counter: Optional["int"] = None,
-        type: Optional["RecoveryType"] = RecoveryType.NormalRecovery,
-        backup_method: Optional["BackupMethod"] = None,
+        word_count: int | None = None,
+        passphrase_protection: bool | None = None,
+        pin_protection: bool | None = None,
+        language: str | None = None,
+        label: str | None = None,
+        enforce_wordlist: bool | None = None,
+        input_method: RecoveryDeviceInputMethod | None = None,
+        u2f_counter: int | None = None,
+        type: RecoveryType | None = RecoveryType.NormalRecovery,
+        backup_method: BackupMethod | None = None,
     ) -> None:
         self.word_count = word_count
         self.passphrase_protection = passphrase_protection
@@ -4130,7 +4131,7 @@ class WordRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "WordRequestType",
+        type: WordRequestType,
     ) -> None:
         self.type = type
 
@@ -4144,7 +4145,7 @@ class WordAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        word: "str",
+        word: str,
     ) -> None:
         self.word = word
 
@@ -4158,7 +4159,7 @@ class SetU2FCounter(protobuf.MessageType):
     def __init__(
         self,
         *,
-        u2f_counter: "int",
+        u2f_counter: int,
     ) -> None:
         self.u2f_counter = u2f_counter
 
@@ -4176,7 +4177,7 @@ class NextU2FCounter(protobuf.MessageType):
     def __init__(
         self,
         *,
-        u2f_counter: "int",
+        u2f_counter: int,
     ) -> None:
         self.u2f_counter = u2f_counter
 
@@ -4203,8 +4204,8 @@ class RebootToBootloader(protobuf.MessageType):
     def __init__(
         self,
         *,
-        boot_command: Optional["BootCommand"] = BootCommand.STOP_AND_WAIT,
-        firmware_header: Optional["bytes"] = None,
+        boot_command: BootCommand | None = BootCommand.STOP_AND_WAIT,
+        firmware_header: bytes | None = None,
     ) -> None:
         self.boot_command = boot_command
         self.firmware_header = firmware_header
@@ -4223,7 +4224,7 @@ class Nonce(protobuf.MessageType):
     def __init__(
         self,
         *,
-        nonce: "bytes",
+        nonce: bytes,
     ) -> None:
         self.nonce = nonce
 
@@ -4238,10 +4239,10 @@ class UnlockPath(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        mac: Optional["bytes"] = None,
+        address_n: Sequence[int] | None = None,
+        mac: bytes | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.mac = mac
 
 
@@ -4254,7 +4255,7 @@ class UnlockedPathRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        mac: "bytes",
+        mac: bytes,
     ) -> None:
         self.mac = mac
 
@@ -4276,7 +4277,7 @@ class SetBrightness(protobuf.MessageType):
     def __init__(
         self,
         *,
-        value: Optional["int"] = None,
+        value: int | None = None,
     ) -> None:
         self.value = value
 
@@ -4294,7 +4295,7 @@ class SerialNumber(protobuf.MessageType):
     def __init__(
         self,
         *,
-        serial_number: "str",
+        serial_number: str,
     ) -> None:
         self.serial_number = serial_number
 
@@ -4309,8 +4310,8 @@ class Slip39Group(protobuf.MessageType):
     def __init__(
         self,
         *,
-        member_threshold: "int",
-        member_count: "int",
+        member_threshold: int,
+        member_count: int,
     ) -> None:
         self.member_threshold = member_threshold
         self.member_count = member_count
@@ -4333,15 +4334,15 @@ class DebugLinkDecision(protobuf.MessageType):
     def __init__(
         self,
         *,
-        button: Optional["DebugButton"] = None,
-        swipe: Optional["DebugSwipeDirection"] = None,
-        input: Optional["str"] = None,
-        x: Optional["int"] = None,
-        y: Optional["int"] = None,
-        wait: Optional["bool"] = None,
-        hold_ms: Optional["int"] = None,
-        physical_button: Optional["DebugPhysicalButton"] = None,
-        touch_event_type: Optional["DebugTouchEventType"] = None,
+        button: DebugButton | None = None,
+        swipe: DebugSwipeDirection | None = None,
+        input: str | None = None,
+        x: int | None = None,
+        y: int | None = None,
+        wait: bool | None = None,
+        hold_ms: int | None = None,
+        physical_button: DebugPhysicalButton | None = None,
+        touch_event_type: DebugTouchEventType | None = None,
     ) -> None:
         self.button = button
         self.swipe = swipe
@@ -4363,9 +4364,9 @@ class DebugLinkLayout(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tokens: Optional[Sequence["str"]] = None,
+        tokens: Sequence[str] | None = None,
     ) -> None:
-        self.tokens: Sequence["str"] = tokens if tokens is not None else []
+        self.tokens: Sequence[str] = tokens if tokens is not None else []
 
 
 class DebugLinkReseedRandom(protobuf.MessageType):
@@ -4377,7 +4378,7 @@ class DebugLinkReseedRandom(protobuf.MessageType):
     def __init__(
         self,
         *,
-        value: Optional["int"] = None,
+        value: int | None = None,
     ) -> None:
         self.value = value
 
@@ -4392,8 +4393,8 @@ class DebugLinkRecordScreen(protobuf.MessageType):
     def __init__(
         self,
         *,
-        target_directory: Optional["str"] = None,
-        refresh_index: Optional["int"] = 0,
+        target_directory: str | None = None,
+        refresh_index: int | None = 0,
     ) -> None:
         self.target_directory = target_directory
         self.refresh_index = refresh_index
@@ -4411,10 +4412,10 @@ class DebugLinkGetState(protobuf.MessageType):
     def __init__(
         self,
         *,
-        wait_word_list: Optional["bool"] = None,
-        wait_word_pos: Optional["bool"] = None,
-        wait_layout: Optional["DebugWaitType"] = DebugWaitType.IMMEDIATE,
-        return_empty_state: Optional["bool"] = False,
+        wait_word_list: bool | None = None,
+        wait_word_pos: bool | None = None,
+        wait_layout: DebugWaitType | None = DebugWaitType.IMMEDIATE,
+        return_empty_state: bool | None = False,
     ) -> None:
         self.wait_word_list = wait_word_list
         self.wait_word_pos = wait_word_pos
@@ -4443,21 +4444,21 @@ class DebugLinkState(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tokens: Optional[Sequence["str"]] = None,
-        layout: Optional["bytes"] = None,
-        pin: Optional["str"] = None,
-        matrix: Optional["str"] = None,
-        mnemonic_secret: Optional["bytes"] = None,
-        node: Optional["HDNodeType"] = None,
-        passphrase_protection: Optional["bool"] = None,
-        reset_word: Optional["str"] = None,
-        reset_entropy: Optional["bytes"] = None,
-        recovery_fake_word: Optional["str"] = None,
-        recovery_word_pos: Optional["int"] = None,
-        reset_word_pos: Optional["int"] = None,
-        mnemonic_type: Optional["BackupType"] = None,
+        tokens: Sequence[str] | None = None,
+        layout: bytes | None = None,
+        pin: str | None = None,
+        matrix: str | None = None,
+        mnemonic_secret: bytes | None = None,
+        node: HDNodeType | None = None,
+        passphrase_protection: bool | None = None,
+        reset_word: str | None = None,
+        reset_entropy: bytes | None = None,
+        recovery_fake_word: str | None = None,
+        recovery_word_pos: int | None = None,
+        reset_word_pos: int | None = None,
+        mnemonic_type: BackupType | None = None,
     ) -> None:
-        self.tokens: Sequence["str"] = tokens if tokens is not None else []
+        self.tokens: Sequence[str] = tokens if tokens is not None else []
         self.layout = layout
         self.pin = pin
         self.matrix = matrix
@@ -4483,9 +4484,9 @@ class DebugLinkGetPairingInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        channel_id: Optional["bytes"] = None,
-        handshake_hash: Optional["bytes"] = None,
-        nfc_secret_host: Optional["bytes"] = None,
+        channel_id: bytes | None = None,
+        handshake_hash: bytes | None = None,
+        nfc_secret_host: bytes | None = None,
     ) -> None:
         self.channel_id = channel_id
         self.handshake_hash = handshake_hash
@@ -4505,11 +4506,11 @@ class DebugLinkPairingInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        channel_id: Optional["bytes"] = None,
-        handshake_hash: Optional["bytes"] = None,
-        code_entry_code: Optional["int"] = None,
-        code_qr_code: Optional["bytes"] = None,
-        nfc_secret_trezor: Optional["bytes"] = None,
+        channel_id: bytes | None = None,
+        handshake_hash: bytes | None = None,
+        code_entry_code: int | None = None,
+        code_qr_code: bytes | None = None,
+        nfc_secret_trezor: bytes | None = None,
     ) -> None:
         self.channel_id = channel_id
         self.handshake_hash = handshake_hash
@@ -4533,9 +4534,9 @@ class DebugLinkLog(protobuf.MessageType):
     def __init__(
         self,
         *,
-        level: Optional["int"] = None,
-        bucket: Optional["str"] = None,
-        text: Optional["str"] = None,
+        level: int | None = None,
+        bucket: str | None = None,
+        text: str | None = None,
     ) -> None:
         self.level = level
         self.bucket = bucket
@@ -4552,8 +4553,8 @@ class DebugLinkMemoryRead(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: Optional["int"] = None,
-        length: Optional["int"] = None,
+        address: int | None = None,
+        length: int | None = None,
     ) -> None:
         self.address = address
         self.length = length
@@ -4568,7 +4569,7 @@ class DebugLinkMemory(protobuf.MessageType):
     def __init__(
         self,
         *,
-        memory: Optional["bytes"] = None,
+        memory: bytes | None = None,
     ) -> None:
         self.memory = memory
 
@@ -4584,9 +4585,9 @@ class DebugLinkMemoryWrite(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: Optional["int"] = None,
-        memory: Optional["bytes"] = None,
-        flash: Optional["bool"] = None,
+        address: int | None = None,
+        memory: bytes | None = None,
+        flash: bool | None = None,
     ) -> None:
         self.address = address
         self.memory = memory
@@ -4602,7 +4603,7 @@ class DebugLinkFlashErase(protobuf.MessageType):
     def __init__(
         self,
         *,
-        sector: Optional["int"] = None,
+        sector: int | None = None,
     ) -> None:
         self.sector = sector
 
@@ -4616,7 +4617,7 @@ class DebugLinkEraseSdCard(protobuf.MessageType):
     def __init__(
         self,
         *,
-        format: Optional["bool"] = None,
+        format: bool | None = None,
     ) -> None:
         self.format = format
 
@@ -4636,13 +4637,13 @@ class DebugLinkSetBatteryState(protobuf.MessageType):
     def __init__(
         self,
         *,
-        soc: Optional["int"] = None,
-        usb_connected: Optional["bool"] = None,
-        wireless_connected: Optional["bool"] = None,
-        ntc_connected: Optional["bool"] = None,
-        charging_limited: Optional["bool"] = None,
-        temp_control_active: Optional["bool"] = None,
-        battery_connected: Optional["bool"] = None,
+        soc: int | None = None,
+        usb_connected: bool | None = None,
+        wireless_connected: bool | None = None,
+        ntc_connected: bool | None = None,
+        charging_limited: bool | None = None,
+        temp_control_active: bool | None = None,
+        battery_connected: bool | None = None,
     ) -> None:
         self.soc = soc
         self.usb_connected = usb_connected
@@ -4662,7 +4663,7 @@ class DebugLinkWatchLayout(protobuf.MessageType):
     def __init__(
         self,
         *,
-        watch: Optional["bool"] = None,
+        watch: bool | None = None,
     ) -> None:
         self.watch = watch
 
@@ -4688,9 +4689,9 @@ class DebugLinkGcInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        items: Optional[Sequence["DebugLinkGcInfoItem"]] = None,
+        items: Sequence[DebugLinkGcInfoItem] | None = None,
     ) -> None:
-        self.items: Sequence["DebugLinkGcInfoItem"] = items if items is not None else []
+        self.items: Sequence[DebugLinkGcInfoItem] = items if items is not None else []
 
 
 class DebugLinkSetLogFilter(protobuf.MessageType):
@@ -4702,7 +4703,7 @@ class DebugLinkSetLogFilter(protobuf.MessageType):
     def __init__(
         self,
         *,
-        filter: Optional["str"] = None,
+        filter: str | None = None,
     ) -> None:
         self.filter = filter
 
@@ -4721,8 +4722,8 @@ class DebugLinkN1W1Write(protobuf.MessageType):
     def __init__(
         self,
         *,
-        key: Optional["str"] = None,
-        value: Optional["bytes"] = None,
+        key: str | None = None,
+        value: bytes | None = None,
     ) -> None:
         self.key = key
         self.value = value
@@ -4737,7 +4738,7 @@ class DebugLinkN1W1Read(protobuf.MessageType):
     def __init__(
         self,
         *,
-        key: Optional["str"] = None,
+        key: str | None = None,
     ) -> None:
         self.key = key
 
@@ -4751,7 +4752,7 @@ class DebugLinkN1W1Response(protobuf.MessageType):
     def __init__(
         self,
         *,
-        value: Optional["bytes"] = None,
+        value: bytes | None = None,
     ) -> None:
         self.value = value
 
@@ -4766,8 +4767,8 @@ class DebugLinkGcInfoItem(protobuf.MessageType):
     def __init__(
         self,
         *,
-        name: "str",
-        value: "int",
+        name: str,
+        value: int,
     ) -> None:
         self.name = name
         self.value = value
@@ -4785,10 +4786,10 @@ class EthereumNetworkInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        chain_id: "int",
-        symbol: "str",
-        slip44: "int",
-        name: "str",
+        chain_id: int,
+        symbol: str,
+        slip44: int,
+        name: str,
     ) -> None:
         self.chain_id = chain_id
         self.symbol = symbol
@@ -4809,11 +4810,11 @@ class EthereumTokenInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "bytes",
-        chain_id: "int",
-        symbol: "str",
-        decimals: "int",
-        name: "str",
+        address: bytes,
+        chain_id: int,
+        symbol: str,
+        decimals: int,
+        name: str,
     ) -> None:
         self.address = address
         self.chain_id = chain_id
@@ -4833,9 +4834,9 @@ class SolanaTokenInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        mint: "bytes",
-        symbol: "str",
-        name: "str",
+        mint: bytes,
+        symbol: str,
+        name: str,
     ) -> None:
         self.mint = mint
         self.symbol = symbol
@@ -4852,10 +4853,10 @@ class EthereumABITupleInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        is_dynamic: "bool",
-        fields: Optional[Sequence["EthereumABIValueInfo"]] = None,
+        is_dynamic: bool,
+        fields: Sequence[EthereumABIValueInfo] | None = None,
     ) -> None:
-        self.fields: Sequence["EthereumABIValueInfo"] = fields if fields is not None else []
+        self.fields: Sequence[EthereumABIValueInfo] = fields if fields is not None else []
         self.is_dynamic = is_dynamic
 
 
@@ -4871,10 +4872,10 @@ class EthereumABIValueInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        atomic: Optional["EthereumABIType"] = None,
-        dynamic: Optional["EthereumABIType"] = None,
-        tuple: Optional["EthereumABITupleInfo"] = None,
-        array: Optional["EthereumABIValueInfo"] = None,
+        atomic: EthereumABIType | None = None,
+        dynamic: EthereumABIType | None = None,
+        tuple: EthereumABITupleInfo | None = None,
+        array: EthereumABIValueInfo | None = None,
     ) -> None:
         self.atomic = atomic
         self.dynamic = dynamic
@@ -4895,13 +4896,13 @@ class EthereumERC7730Path(protobuf.MessageType):
     def __init__(
         self,
         *,
-        path: Optional[Sequence["int"]] = None,
-        container_path: Optional["EthereumERC7730ContainerPath"] = None,
-        const_value: Optional["str"] = None,
-        slice_start: Optional["int"] = None,
-        slice_end: Optional["int"] = None,
+        path: Sequence[int] | None = None,
+        container_path: EthereumERC7730ContainerPath | None = None,
+        const_value: str | None = None,
+        slice_start: int | None = None,
+        slice_end: int | None = None,
     ) -> None:
-        self.path: Sequence["int"] = path if path is not None else []
+        self.path: Sequence[int] = path if path is not None else []
         self.container_path = container_path
         self.const_value = const_value
         self.slice_start = slice_start
@@ -4931,24 +4932,24 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        path: "EthereumERC7730Path",
-        label: "str",
-        formatter: "EthereumERC7730FieldFormatterType",
-        native_currency_address: Optional[Sequence["bytes"]] = None,
-        enum_values: Optional[Sequence["EthereumERC7730EnumEntry"]] = None,
-        token_path: Optional["EthereumERC7730Path"] = None,
-        threshold: Optional["bytes"] = None,
-        threshold_message: Optional["str"] = None,
-        decimals: Optional["int"] = None,
-        base: Optional["str"] = None,
-        prefix: Optional["bool"] = None,
-        const_token_address: Optional["bytes"] = None,
-        callee_path: Optional["EthereumERC7730Path"] = None,
-        selector: Optional["bytes"] = None,
-        lookup_address: Optional["bool"] = False,
+        path: EthereumERC7730Path,
+        label: str,
+        formatter: EthereumERC7730FieldFormatterType,
+        native_currency_address: Sequence[bytes] | None = None,
+        enum_values: Sequence[EthereumERC7730EnumEntry] | None = None,
+        token_path: EthereumERC7730Path | None = None,
+        threshold: bytes | None = None,
+        threshold_message: str | None = None,
+        decimals: int | None = None,
+        base: str | None = None,
+        prefix: bool | None = None,
+        const_token_address: bytes | None = None,
+        callee_path: EthereumERC7730Path | None = None,
+        selector: bytes | None = None,
+        lookup_address: bool | None = False,
     ) -> None:
-        self.native_currency_address: Sequence["bytes"] = native_currency_address if native_currency_address is not None else []
-        self.enum_values: Sequence["EthereumERC7730EnumEntry"] = enum_values if enum_values is not None else []
+        self.native_currency_address: Sequence[bytes] = native_currency_address if native_currency_address is not None else []
+        self.enum_values: Sequence[EthereumERC7730EnumEntry] = enum_values if enum_values is not None else []
         self.path = path
         self.label = label
         self.formatter = formatter
@@ -4974,8 +4975,8 @@ class EthereumERC7730EnumEntry(protobuf.MessageType):
     def __init__(
         self,
         *,
-        key: "int",
-        value: "str",
+        key: int,
+        value: str,
     ) -> None:
         self.key = key
         self.value = value
@@ -4996,16 +4997,16 @@ class EthereumDisplayFormatInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        chain_id: "int",
-        address: "bytes",
-        func_sig: "bytes",
-        intent: "str",
-        parameter_definitions: Optional[Sequence["EthereumABIValueInfo"]] = None,
-        field_definitions: Optional[Sequence["EthereumERC7730FieldInfo"]] = None,
-        provider_name: Optional["str"] = None,
+        chain_id: int,
+        address: bytes,
+        func_sig: bytes,
+        intent: str,
+        parameter_definitions: Sequence[EthereumABIValueInfo] | None = None,
+        field_definitions: Sequence[EthereumERC7730FieldInfo] | None = None,
+        provider_name: str | None = None,
     ) -> None:
-        self.parameter_definitions: Sequence["EthereumABIValueInfo"] = parameter_definitions if parameter_definitions is not None else []
-        self.field_definitions: Sequence["EthereumERC7730FieldInfo"] = field_definitions if field_definitions is not None else []
+        self.parameter_definitions: Sequence[EthereumABIValueInfo] = parameter_definitions if parameter_definitions is not None else []
+        self.field_definitions: Sequence[EthereumERC7730FieldInfo] = field_definitions if field_definitions is not None else []
         self.chain_id = chain_id
         self.address = address
         self.func_sig = func_sig
@@ -5024,11 +5025,11 @@ class EosGetPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
-        chunkify: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.show_display = show_display
         self.chunkify = chunkify
 
@@ -5043,8 +5044,8 @@ class EosPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        wif_public_key: "str",
-        raw_public_key: "bytes",
+        wif_public_key: str,
+        raw_public_key: bytes,
     ) -> None:
         self.wif_public_key = wif_public_key
         self.raw_public_key = raw_public_key
@@ -5063,13 +5064,13 @@ class EosSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        chain_id: "bytes",
-        header: "EosTxHeader",
-        num_actions: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        chunkify: Optional["bool"] = None,
+        chain_id: bytes,
+        header: EosTxHeader,
+        num_actions: int,
+        address_n: Sequence[int] | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.chain_id = chain_id
         self.header = header
         self.num_actions = num_actions
@@ -5085,7 +5086,7 @@ class EosTxActionRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data_size: Optional["int"] = None,
+        data_size: int | None = None,
     ) -> None:
         self.data_size = data_size
 
@@ -5113,21 +5114,21 @@ class EosTxActionAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        common: "EosActionCommon",
-        transfer: Optional["EosActionTransfer"] = None,
-        delegate: Optional["EosActionDelegate"] = None,
-        undelegate: Optional["EosActionUndelegate"] = None,
-        refund: Optional["EosActionRefund"] = None,
-        buy_ram: Optional["EosActionBuyRam"] = None,
-        buy_ram_bytes: Optional["EosActionBuyRamBytes"] = None,
-        sell_ram: Optional["EosActionSellRam"] = None,
-        vote_producer: Optional["EosActionVoteProducer"] = None,
-        update_auth: Optional["EosActionUpdateAuth"] = None,
-        delete_auth: Optional["EosActionDeleteAuth"] = None,
-        link_auth: Optional["EosActionLinkAuth"] = None,
-        unlink_auth: Optional["EosActionUnlinkAuth"] = None,
-        new_account: Optional["EosActionNewAccount"] = None,
-        unknown: Optional["EosActionUnknown"] = None,
+        common: EosActionCommon,
+        transfer: EosActionTransfer | None = None,
+        delegate: EosActionDelegate | None = None,
+        undelegate: EosActionUndelegate | None = None,
+        refund: EosActionRefund | None = None,
+        buy_ram: EosActionBuyRam | None = None,
+        buy_ram_bytes: EosActionBuyRamBytes | None = None,
+        sell_ram: EosActionSellRam | None = None,
+        vote_producer: EosActionVoteProducer | None = None,
+        update_auth: EosActionUpdateAuth | None = None,
+        delete_auth: EosActionDeleteAuth | None = None,
+        link_auth: EosActionLinkAuth | None = None,
+        unlink_auth: EosActionUnlinkAuth | None = None,
+        new_account: EosActionNewAccount | None = None,
+        unknown: EosActionUnknown | None = None,
     ) -> None:
         self.common = common
         self.transfer = transfer
@@ -5155,7 +5156,7 @@ class EosSignedTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: "str",
+        signature: str,
     ) -> None:
         self.signature = signature
 
@@ -5174,12 +5175,12 @@ class EosTxHeader(protobuf.MessageType):
     def __init__(
         self,
         *,
-        expiration: "int",
-        ref_block_num: "int",
-        ref_block_prefix: "int",
-        max_net_usage_words: "int",
-        max_cpu_usage_ms: "int",
-        delay_sec: "int",
+        expiration: int,
+        ref_block_num: int,
+        ref_block_prefix: int,
+        max_net_usage_words: int,
+        max_cpu_usage_ms: int,
+        delay_sec: int,
     ) -> None:
         self.expiration = expiration
         self.ref_block_num = ref_block_num
@@ -5199,8 +5200,8 @@ class EosAsset(protobuf.MessageType):
     def __init__(
         self,
         *,
-        amount: "int",
-        symbol: "int",
+        amount: int,
+        symbol: int,
     ) -> None:
         self.amount = amount
         self.symbol = symbol
@@ -5216,8 +5217,8 @@ class EosPermissionLevel(protobuf.MessageType):
     def __init__(
         self,
         *,
-        actor: "int",
-        permission: "int",
+        actor: int,
+        permission: int,
     ) -> None:
         self.actor = actor
         self.permission = permission
@@ -5235,12 +5236,12 @@ class EosAuthorizationKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "int",
-        weight: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        key: Optional["bytes"] = None,
+        type: int,
+        weight: int,
+        address_n: Sequence[int] | None = None,
+        key: bytes | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.type = type
         self.weight = weight
         self.key = key
@@ -5256,8 +5257,8 @@ class EosAuthorizationAccount(protobuf.MessageType):
     def __init__(
         self,
         *,
-        account: "EosPermissionLevel",
-        weight: "int",
+        account: EosPermissionLevel,
+        weight: int,
     ) -> None:
         self.account = account
         self.weight = weight
@@ -5273,8 +5274,8 @@ class EosAuthorizationWait(protobuf.MessageType):
     def __init__(
         self,
         *,
-        wait_sec: "int",
-        weight: "int",
+        wait_sec: int,
+        weight: int,
     ) -> None:
         self.wait_sec = wait_sec
         self.weight = weight
@@ -5292,14 +5293,14 @@ class EosAuthorization(protobuf.MessageType):
     def __init__(
         self,
         *,
-        threshold: "int",
-        keys: Optional[Sequence["EosAuthorizationKey"]] = None,
-        accounts: Optional[Sequence["EosAuthorizationAccount"]] = None,
-        waits: Optional[Sequence["EosAuthorizationWait"]] = None,
+        threshold: int,
+        keys: Sequence[EosAuthorizationKey] | None = None,
+        accounts: Sequence[EosAuthorizationAccount] | None = None,
+        waits: Sequence[EosAuthorizationWait] | None = None,
     ) -> None:
-        self.keys: Sequence["EosAuthorizationKey"] = keys if keys is not None else []
-        self.accounts: Sequence["EosAuthorizationAccount"] = accounts if accounts is not None else []
-        self.waits: Sequence["EosAuthorizationWait"] = waits if waits is not None else []
+        self.keys: Sequence[EosAuthorizationKey] = keys if keys is not None else []
+        self.accounts: Sequence[EosAuthorizationAccount] = accounts if accounts is not None else []
+        self.waits: Sequence[EosAuthorizationWait] = waits if waits is not None else []
         self.threshold = threshold
 
 
@@ -5314,11 +5315,11 @@ class EosActionCommon(protobuf.MessageType):
     def __init__(
         self,
         *,
-        account: "int",
-        name: "int",
-        authorization: Optional[Sequence["EosPermissionLevel"]] = None,
+        account: int,
+        name: int,
+        authorization: Sequence[EosPermissionLevel] | None = None,
     ) -> None:
-        self.authorization: Sequence["EosPermissionLevel"] = authorization if authorization is not None else []
+        self.authorization: Sequence[EosPermissionLevel] = authorization if authorization is not None else []
         self.account = account
         self.name = name
 
@@ -5335,10 +5336,10 @@ class EosActionTransfer(protobuf.MessageType):
     def __init__(
         self,
         *,
-        sender: "int",
-        receiver: "int",
-        quantity: "EosAsset",
-        memo: "str",
+        sender: int,
+        receiver: int,
+        quantity: EosAsset,
+        memo: str,
     ) -> None:
         self.sender = sender
         self.receiver = receiver
@@ -5359,11 +5360,11 @@ class EosActionDelegate(protobuf.MessageType):
     def __init__(
         self,
         *,
-        sender: "int",
-        receiver: "int",
-        net_quantity: "EosAsset",
-        cpu_quantity: "EosAsset",
-        transfer: "bool",
+        sender: int,
+        receiver: int,
+        net_quantity: EosAsset,
+        cpu_quantity: EosAsset,
+        transfer: bool,
     ) -> None:
         self.sender = sender
         self.receiver = receiver
@@ -5384,10 +5385,10 @@ class EosActionUndelegate(protobuf.MessageType):
     def __init__(
         self,
         *,
-        sender: "int",
-        receiver: "int",
-        net_quantity: "EosAsset",
-        cpu_quantity: "EosAsset",
+        sender: int,
+        receiver: int,
+        net_quantity: EosAsset,
+        cpu_quantity: EosAsset,
     ) -> None:
         self.sender = sender
         self.receiver = receiver
@@ -5404,7 +5405,7 @@ class EosActionRefund(protobuf.MessageType):
     def __init__(
         self,
         *,
-        owner: "int",
+        owner: int,
     ) -> None:
         self.owner = owner
 
@@ -5420,9 +5421,9 @@ class EosActionBuyRam(protobuf.MessageType):
     def __init__(
         self,
         *,
-        payer: "int",
-        receiver: "int",
-        quantity: "EosAsset",
+        payer: int,
+        receiver: int,
+        quantity: EosAsset,
     ) -> None:
         self.payer = payer
         self.receiver = receiver
@@ -5440,9 +5441,9 @@ class EosActionBuyRamBytes(protobuf.MessageType):
     def __init__(
         self,
         *,
-        payer: "int",
-        receiver: "int",
-        bytes: "int",
+        payer: int,
+        receiver: int,
+        bytes: int,
     ) -> None:
         self.payer = payer
         self.receiver = receiver
@@ -5459,8 +5460,8 @@ class EosActionSellRam(protobuf.MessageType):
     def __init__(
         self,
         *,
-        account: "int",
-        bytes: "int",
+        account: int,
+        bytes: int,
     ) -> None:
         self.account = account
         self.bytes = bytes
@@ -5477,11 +5478,11 @@ class EosActionVoteProducer(protobuf.MessageType):
     def __init__(
         self,
         *,
-        voter: "int",
-        proxy: "int",
-        producers: Optional[Sequence["int"]] = None,
+        voter: int,
+        proxy: int,
+        producers: Sequence[int] | None = None,
     ) -> None:
-        self.producers: Sequence["int"] = producers if producers is not None else []
+        self.producers: Sequence[int] = producers if producers is not None else []
         self.voter = voter
         self.proxy = proxy
 
@@ -5498,10 +5499,10 @@ class EosActionUpdateAuth(protobuf.MessageType):
     def __init__(
         self,
         *,
-        account: "int",
-        permission: "int",
-        parent: "int",
-        auth: "EosAuthorization",
+        account: int,
+        permission: int,
+        parent: int,
+        auth: EosAuthorization,
     ) -> None:
         self.account = account
         self.permission = permission
@@ -5519,8 +5520,8 @@ class EosActionDeleteAuth(protobuf.MessageType):
     def __init__(
         self,
         *,
-        account: "int",
-        permission: "int",
+        account: int,
+        permission: int,
     ) -> None:
         self.account = account
         self.permission = permission
@@ -5538,10 +5539,10 @@ class EosActionLinkAuth(protobuf.MessageType):
     def __init__(
         self,
         *,
-        account: "int",
-        code: "int",
-        type: "int",
-        requirement: "int",
+        account: int,
+        code: int,
+        type: int,
+        requirement: int,
     ) -> None:
         self.account = account
         self.code = code
@@ -5560,9 +5561,9 @@ class EosActionUnlinkAuth(protobuf.MessageType):
     def __init__(
         self,
         *,
-        account: "int",
-        code: "int",
-        type: "int",
+        account: int,
+        code: int,
+        type: int,
     ) -> None:
         self.account = account
         self.code = code
@@ -5581,10 +5582,10 @@ class EosActionNewAccount(protobuf.MessageType):
     def __init__(
         self,
         *,
-        creator: "int",
-        name: "int",
-        owner: "EosAuthorization",
-        active: "EosAuthorization",
+        creator: int,
+        name: int,
+        owner: EosAuthorization,
+        active: EosAuthorization,
     ) -> None:
         self.creator = creator
         self.name = name
@@ -5602,8 +5603,8 @@ class EosActionUnknown(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data_size: "int",
-        data_chunk: "bytes",
+        data_size: int,
+        data_chunk: bytes,
     ) -> None:
         self.data_size = data_size
         self.data_chunk = data_chunk
@@ -5619,10 +5620,10 @@ class EthereumGetPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.show_display = show_display
 
 
@@ -5636,8 +5637,8 @@ class EthereumPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        node: "HDNodeType",
-        xpub: "str",
+        node: HDNodeType,
+        xpub: str,
     ) -> None:
         self.node = node
         self.xpub = xpub
@@ -5655,12 +5656,12 @@ class EthereumGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
-        encoded_network: Optional["bytes"] = None,
-        chunkify: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
+        encoded_network: bytes | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.show_display = show_display
         self.encoded_network = encoded_network
         self.chunkify = chunkify
@@ -5677,9 +5678,9 @@ class EthereumAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        _old_address: Optional["bytes"] = None,
-        address: Optional["str"] = None,
-        mac: Optional["bytes"] = None,
+        _old_address: bytes | None = None,
+        address: str | None = None,
+        mac: bytes | None = None,
     ) -> None:
         self._old_address = _old_address
         self.address = address
@@ -5708,22 +5709,22 @@ class EthereumSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        gas_price: "bytes",
-        gas_limit: "bytes",
-        chain_id: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        nonce: Optional["bytes"] = b'',
-        to: Optional["str"] = '',
-        value: Optional["bytes"] = b'',
-        data_initial_chunk: Optional["bytes"] = b'',
-        data_length: Optional["int"] = 0,
-        tx_type: Optional["int"] = None,
-        definitions: Optional["EthereumDefinitions"] = None,
-        chunkify: Optional["bool"] = None,
-        payment_req: Optional["PaymentRequest"] = None,
-        supports_definition_request: Optional["bool"] = None,
+        gas_price: bytes,
+        gas_limit: bytes,
+        chain_id: int,
+        address_n: Sequence[int] | None = None,
+        nonce: bytes | None = b'',
+        to: str | None = '',
+        value: bytes | None = b'',
+        data_initial_chunk: bytes | None = b'',
+        data_length: int | None = 0,
+        tx_type: int | None = None,
+        definitions: EthereumDefinitions | None = None,
+        chunkify: bool | None = None,
+        payment_req: PaymentRequest | None = None,
+        supports_definition_request: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.gas_price = gas_price
         self.gas_limit = gas_limit
         self.chain_id = chain_id
@@ -5763,25 +5764,25 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
     def __init__(
         self,
         *,
-        nonce: "bytes",
-        max_gas_fee: "bytes",
-        max_priority_fee: "bytes",
-        gas_limit: "bytes",
-        value: "bytes",
-        data_length: "int",
-        chain_id: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        access_list: Optional[Sequence["EthereumAccessList"]] = None,
-        to: Optional["str"] = '',
-        data_initial_chunk: Optional["bytes"] = b'',
-        definitions: Optional["EthereumDefinitions"] = None,
-        chunkify: Optional["bool"] = None,
-        payment_req: Optional["PaymentRequest"] = None,
-        supports_definition_request: Optional["bool"] = None,
-        auth7702: Optional["EthereumAuth7702"] = None,
+        nonce: bytes,
+        max_gas_fee: bytes,
+        max_priority_fee: bytes,
+        gas_limit: bytes,
+        value: bytes,
+        data_length: int,
+        chain_id: int,
+        address_n: Sequence[int] | None = None,
+        access_list: Sequence[EthereumAccessList] | None = None,
+        to: str | None = '',
+        data_initial_chunk: bytes | None = b'',
+        definitions: EthereumDefinitions | None = None,
+        chunkify: bool | None = None,
+        payment_req: PaymentRequest | None = None,
+        supports_definition_request: bool | None = None,
+        auth7702: EthereumAuth7702 | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.access_list: Sequence["EthereumAccessList"] = access_list if access_list is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
+        self.access_list: Sequence[EthereumAccessList] = access_list if access_list is not None else []
         self.nonce = nonce
         self.max_gas_fee = max_gas_fee
         self.max_priority_fee = max_priority_fee
@@ -5811,13 +5812,13 @@ class EthereumTxRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        auth7702_list: Optional[Sequence["EthereumAuth7702Tuple"]] = None,
-        data_length: Optional["int"] = None,
-        signature_v: Optional["int"] = None,
-        signature_r: Optional["bytes"] = None,
-        signature_s: Optional["bytes"] = None,
+        auth7702_list: Sequence[EthereumAuth7702Tuple] | None = None,
+        data_length: int | None = None,
+        signature_v: int | None = None,
+        signature_r: bytes | None = None,
+        signature_s: bytes | None = None,
     ) -> None:
-        self.auth7702_list: Sequence["EthereumAuth7702Tuple"] = auth7702_list if auth7702_list is not None else []
+        self.auth7702_list: Sequence[EthereumAuth7702Tuple] = auth7702_list if auth7702_list is not None else []
         self.data_length = data_length
         self.signature_v = signature_v
         self.signature_r = signature_r
@@ -5833,7 +5834,7 @@ class EthereumTxAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data_chunk: "bytes",
+        data_chunk: bytes,
     ) -> None:
         self.data_chunk = data_chunk
 
@@ -5849,9 +5850,9 @@ class EthereumDefinitionRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        chain_id: "int",
-        token_address: "bytes",
-        func_sig: Optional["bytes"] = None,
+        chain_id: int,
+        token_address: bytes,
+        func_sig: bytes | None = None,
     ) -> None:
         self.chain_id = chain_id
         self.token_address = token_address
@@ -5867,7 +5868,7 @@ class EthereumDefinitionAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        definitions: Optional["EthereumDefinitions"] = None,
+        definitions: EthereumDefinitions | None = None,
     ) -> None:
         self.definitions = definitions
 
@@ -5884,12 +5885,12 @@ class EthereumSignMessage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        message: "bytes",
-        address_n: Optional[Sequence["int"]] = None,
-        encoded_network: Optional["bytes"] = None,
-        chunkify: Optional["bool"] = None,
+        message: bytes,
+        address_n: Sequence[int] | None = None,
+        encoded_network: bytes | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.message = message
         self.encoded_network = encoded_network
         self.chunkify = chunkify
@@ -5905,8 +5906,8 @@ class EthereumMessageSignature(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: "bytes",
-        address: "str",
+        signature: bytes,
+        address: str,
     ) -> None:
         self.signature = signature
         self.address = address
@@ -5924,10 +5925,10 @@ class EthereumVerifyMessage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: "bytes",
-        message: "bytes",
-        address: "str",
-        chunkify: Optional["bool"] = None,
+        signature: bytes,
+        message: bytes,
+        address: str,
+        chunkify: bool | None = None,
     ) -> None:
         self.signature = signature
         self.message = message
@@ -5947,12 +5948,12 @@ class EthereumSignTypedHash(protobuf.MessageType):
     def __init__(
         self,
         *,
-        domain_separator_hash: "bytes",
-        address_n: Optional[Sequence["int"]] = None,
-        message_hash: Optional["bytes"] = None,
-        encoded_network: Optional["bytes"] = None,
+        domain_separator_hash: bytes,
+        address_n: Sequence[int] | None = None,
+        message_hash: bytes | None = None,
+        encoded_network: bytes | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.domain_separator_hash = domain_separator_hash
         self.message_hash = message_hash
         self.encoded_network = encoded_network
@@ -5968,8 +5969,8 @@ class EthereumTypedDataSignature(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: "bytes",
-        address: "str",
+        signature: bytes,
+        address: str,
     ) -> None:
         self.signature = signature
         self.address = address
@@ -5986,9 +5987,9 @@ class EthereumDefinitions(protobuf.MessageType):
     def __init__(
         self,
         *,
-        encoded_network: Optional["bytes"] = None,
-        encoded_token: Optional["bytes"] = None,
-        encoded_display_format: Optional["bytes"] = None,
+        encoded_network: bytes | None = None,
+        encoded_token: bytes | None = None,
+        encoded_display_format: bytes | None = None,
     ) -> None:
         self.encoded_network = encoded_network
         self.encoded_token = encoded_token
@@ -6005,10 +6006,10 @@ class EthereumAccessList(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        storage_keys: Optional[Sequence["bytes"]] = None,
+        address: str,
+        storage_keys: Sequence[bytes] | None = None,
     ) -> None:
-        self.storage_keys: Sequence["bytes"] = storage_keys if storage_keys is not None else []
+        self.storage_keys: Sequence[bytes] = storage_keys if storage_keys is not None else []
         self.address = address
 
 
@@ -6021,7 +6022,7 @@ class EthereumAuth7702(protobuf.MessageType):
     def __init__(
         self,
         *,
-        delegate: "str",
+        delegate: str,
     ) -> None:
         self.delegate = delegate
 
@@ -6035,9 +6036,9 @@ class EthereumAuth7702Tuple(protobuf.MessageType):
     def __init__(
         self,
         *,
-        items: Optional[Sequence["bytes"]] = None,
+        items: Sequence[bytes] | None = None,
     ) -> None:
-        self.items: Sequence["bytes"] = items if items is not None else []
+        self.items: Sequence[bytes] = items if items is not None else []
 
 
 class EthereumSignTypedData(protobuf.MessageType):
@@ -6053,13 +6054,13 @@ class EthereumSignTypedData(protobuf.MessageType):
     def __init__(
         self,
         *,
-        primary_type: "str",
-        address_n: Optional[Sequence["int"]] = None,
-        metamask_v4_compat: Optional["bool"] = True,
-        definitions: Optional["EthereumDefinitions"] = None,
-        show_message_hash: Optional["bytes"] = None,
+        primary_type: str,
+        address_n: Sequence[int] | None = None,
+        metamask_v4_compat: bool | None = True,
+        definitions: EthereumDefinitions | None = None,
+        show_message_hash: bytes | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.primary_type = primary_type
         self.metamask_v4_compat = metamask_v4_compat
         self.definitions = definitions
@@ -6075,7 +6076,7 @@ class EthereumTypedDataStructRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        name: "str",
+        name: str,
     ) -> None:
         self.name = name
 
@@ -6089,9 +6090,9 @@ class EthereumTypedDataStructAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        members: Optional[Sequence["EthereumStructMember"]] = None,
+        members: Sequence[EthereumStructMember] | None = None,
     ) -> None:
-        self.members: Sequence["EthereumStructMember"] = members if members is not None else []
+        self.members: Sequence[EthereumStructMember] = members if members is not None else []
 
 
 class EthereumTypedDataValueRequest(protobuf.MessageType):
@@ -6103,9 +6104,9 @@ class EthereumTypedDataValueRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        member_path: Optional[Sequence["int"]] = None,
+        member_path: Sequence[int] | None = None,
     ) -> None:
-        self.member_path: Sequence["int"] = member_path if member_path is not None else []
+        self.member_path: Sequence[int] = member_path if member_path is not None else []
 
 
 class EthereumTypedDataValueAck(protobuf.MessageType):
@@ -6117,7 +6118,7 @@ class EthereumTypedDataValueAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        value: "bytes",
+        value: bytes,
     ) -> None:
         self.value = value
 
@@ -6132,8 +6133,8 @@ class EthereumStructMember(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "EthereumFieldType",
-        name: "str",
+        type: EthereumFieldType,
+        name: str,
     ) -> None:
         self.type = type
         self.name = name
@@ -6151,10 +6152,10 @@ class EthereumFieldType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data_type: "EthereumDataType",
-        size: Optional["int"] = None,
-        entry_type: Optional["EthereumFieldType"] = None,
-        struct_name: Optional["str"] = None,
+        data_type: EthereumDataType,
+        size: int | None = None,
+        entry_type: EthereumFieldType | None = None,
+        struct_name: str | None = None,
     ) -> None:
         self.data_type = data_type
         self.size = size
@@ -6172,8 +6173,8 @@ class EvoluGetNode(protobuf.MessageType):
     def __init__(
         self,
         *,
-        proof_of_delegated_identity: "bytes",
-        node_rotation_index: Optional["int"] = 0,
+        proof_of_delegated_identity: bytes,
+        node_rotation_index: int | None = 0,
     ) -> None:
         self.proof_of_delegated_identity = proof_of_delegated_identity
         self.node_rotation_index = node_rotation_index
@@ -6188,7 +6189,7 @@ class EvoluNode(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data: "bytes",
+        data: bytes,
     ) -> None:
         self.data = data
 
@@ -6204,9 +6205,9 @@ class EvoluSignRegistrationRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        challenge_from_server: "bytes",
-        size_to_acquire: "int",
-        proof_of_delegated_identity: "bytes",
+        challenge_from_server: bytes,
+        size_to_acquire: int,
+        proof_of_delegated_identity: bytes,
     ) -> None:
         self.challenge_from_server = challenge_from_server
         self.size_to_acquire = size_to_acquire
@@ -6224,11 +6225,11 @@ class EvoluRegistrationRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: "bytes",
-        certificate_chain: Optional[Sequence["bytes"]] = None,
-        rotation_index: Optional["int"] = None,
+        signature: bytes,
+        certificate_chain: Sequence[bytes] | None = None,
+        rotation_index: int | None = None,
     ) -> None:
-        self.certificate_chain: Sequence["bytes"] = certificate_chain if certificate_chain is not None else []
+        self.certificate_chain: Sequence[bytes] = certificate_chain if certificate_chain is not None else []
         self.signature = signature
         self.rotation_index = rotation_index
 
@@ -6244,9 +6245,9 @@ class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        thp_credential: Optional["bytes"] = None,
-        rotation_index: Optional["int"] = None,
-        rotate: Optional["bool"] = None,
+        thp_credential: bytes | None = None,
+        rotation_index: int | None = None,
+        rotate: bool | None = None,
     ) -> None:
         self.thp_credential = thp_credential
         self.rotation_index = rotation_index
@@ -6263,8 +6264,8 @@ class EvoluDelegatedIdentityKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        private_key: "bytes",
-        rotation_index: Optional["int"] = None,
+        private_key: bytes,
+        rotation_index: int | None = None,
     ) -> None:
         self.private_key = private_key
         self.rotation_index = rotation_index
@@ -6279,7 +6280,7 @@ class EvoluIndexManagement(protobuf.MessageType):
     def __init__(
         self,
         *,
-        rotation_index: Optional["int"] = None,
+        rotation_index: int | None = None,
     ) -> None:
         self.rotation_index = rotation_index
 
@@ -6293,7 +6294,7 @@ class EvoluIndexManagementResponse(protobuf.MessageType):
     def __init__(
         self,
         *,
-        rotation_index: Optional["int"] = None,
+        rotation_index: int | None = None,
     ) -> None:
         self.rotation_index = rotation_index
 
@@ -6309,9 +6310,9 @@ class ExtAppLoad(protobuf.MessageType):
     def __init__(
         self,
         *,
-        id: "str",
-        version: "Version",
-        fingerprint: Optional["bytes"] = None,
+        id: str,
+        version: Version,
+        fingerprint: bytes | None = None,
     ) -> None:
         self.id = id
         self.version = version
@@ -6328,8 +6329,8 @@ class ExtAppLoaded(protobuf.MessageType):
     def __init__(
         self,
         *,
-        instance_id: "int",
-        version: "Version",
+        instance_id: int,
+        version: Version,
     ) -> None:
         self.instance_id = instance_id
         self.version = version
@@ -6350,9 +6351,9 @@ class ExtAppHeaderAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        header: "bytes",
-        proof: "bytes",
-        root_packet_timestamp: "int",
+        header: bytes,
+        proof: bytes,
+        root_packet_timestamp: int,
     ) -> None:
         self.header = header
         self.proof = proof
@@ -6368,7 +6369,7 @@ class ExtAppRootPacketRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        app_ring: "int",
+        app_ring: int,
     ) -> None:
         self.app_ring = app_ring
 
@@ -6382,7 +6383,7 @@ class ExtAppRootPacketAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        root_packet: "bytes",
+        root_packet: bytes,
     ) -> None:
         self.root_packet = root_packet
 
@@ -6396,7 +6397,7 @@ class ExtAppDataChunkRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        index: "int",
+        index: int,
     ) -> None:
         self.index = index
 
@@ -6411,8 +6412,8 @@ class ExtAppDataChunkAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data: "bytes",
-        hash: "bytes",
+        data: bytes,
+        hash: bytes,
     ) -> None:
         self.data = data
         self.hash = hash
@@ -6429,9 +6430,9 @@ class ExtAppMessage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        instance_id: "int",
-        message_id: "int",
-        data: "bytes",
+        instance_id: int,
+        message_id: int,
+        data: bytes,
     ) -> None:
         self.instance_id = instance_id
         self.message_id = message_id
@@ -6449,9 +6450,9 @@ class ExtAppResponse(protobuf.MessageType):
     def __init__(
         self,
         *,
-        message_id: "int",
-        data: "bytes",
-        finished: Optional["bool"] = False,
+        message_id: int,
+        data: bytes,
+        finished: bool | None = False,
     ) -> None:
         self.message_id = message_id
         self.data = data
@@ -6476,19 +6477,19 @@ class MoneroTransactionSourceEntry(protobuf.MessageType):
     def __init__(
         self,
         *,
-        outputs: Optional[Sequence["MoneroOutputEntry"]] = None,
-        real_out_additional_tx_keys: Optional[Sequence["bytes"]] = None,
-        real_output: Optional["int"] = None,
-        real_out_tx_key: Optional["bytes"] = None,
-        real_output_in_tx_index: Optional["int"] = None,
-        amount: Optional["int"] = None,
-        rct: Optional["bool"] = None,
-        mask: Optional["bytes"] = None,
-        multisig_kLRki: Optional["MoneroMultisigKLRki"] = None,
-        subaddr_minor: Optional["int"] = None,
+        outputs: Sequence[MoneroOutputEntry] | None = None,
+        real_out_additional_tx_keys: Sequence[bytes] | None = None,
+        real_output: int | None = None,
+        real_out_tx_key: bytes | None = None,
+        real_output_in_tx_index: int | None = None,
+        amount: int | None = None,
+        rct: bool | None = None,
+        mask: bytes | None = None,
+        multisig_kLRki: MoneroMultisigKLRki | None = None,
+        subaddr_minor: int | None = None,
     ) -> None:
-        self.outputs: Sequence["MoneroOutputEntry"] = outputs if outputs is not None else []
-        self.real_out_additional_tx_keys: Sequence["bytes"] = real_out_additional_tx_keys if real_out_additional_tx_keys is not None else []
+        self.outputs: Sequence[MoneroOutputEntry] = outputs if outputs is not None else []
+        self.real_out_additional_tx_keys: Sequence[bytes] = real_out_additional_tx_keys if real_out_additional_tx_keys is not None else []
         self.real_output = real_output
         self.real_out_tx_key = real_out_tx_key
         self.real_output_in_tx_index = real_output_in_tx_index
@@ -6512,11 +6513,11 @@ class MoneroTransactionDestinationEntry(protobuf.MessageType):
     def __init__(
         self,
         *,
-        amount: Optional["int"] = None,
-        addr: Optional["MoneroAccountPublicAddress"] = None,
-        is_subaddress: Optional["bool"] = None,
-        original: Optional["bytes"] = None,
-        is_integrated: Optional["bool"] = None,
+        amount: int | None = None,
+        addr: MoneroAccountPublicAddress | None = None,
+        is_subaddress: bool | None = None,
+        original: bytes | None = None,
+        is_integrated: bool | None = None,
     ) -> None:
         self.amount = amount
         self.addr = addr
@@ -6540,16 +6541,16 @@ class MoneroTransactionRsigData(protobuf.MessageType):
     def __init__(
         self,
         *,
-        grouping: Optional[Sequence["int"]] = None,
-        rsig_parts: Optional[Sequence["bytes"]] = None,
-        rsig_type: Optional["int"] = None,
-        offload_type: Optional["int"] = None,
-        mask: Optional["bytes"] = None,
-        rsig: Optional["bytes"] = None,
-        bp_version: Optional["int"] = None,
+        grouping: Sequence[int] | None = None,
+        rsig_parts: Sequence[bytes] | None = None,
+        rsig_type: int | None = None,
+        offload_type: int | None = None,
+        mask: bytes | None = None,
+        rsig: bytes | None = None,
+        bp_version: int | None = None,
     ) -> None:
-        self.grouping: Sequence["int"] = grouping if grouping is not None else []
-        self.rsig_parts: Sequence["bytes"] = rsig_parts if rsig_parts is not None else []
+        self.grouping: Sequence[int] = grouping if grouping is not None else []
+        self.rsig_parts: Sequence[bytes] = rsig_parts if rsig_parts is not None else []
         self.rsig_type = rsig_type
         self.offload_type = offload_type
         self.mask = mask
@@ -6572,15 +6573,15 @@ class MoneroGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
-        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
-        account: Optional["int"] = None,
-        minor: Optional["int"] = None,
-        payment_id: Optional["bytes"] = None,
-        chunkify: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
+        network_type: MoneroNetworkType | None = MoneroNetworkType.MAINNET,
+        account: int | None = None,
+        minor: int | None = None,
+        payment_id: bytes | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.show_display = show_display
         self.network_type = network_type
         self.account = account
@@ -6598,7 +6599,7 @@ class MoneroAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "bytes",
+        address: bytes,
     ) -> None:
         self.address = address
 
@@ -6613,10 +6614,10 @@ class MoneroGetWatchKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
+        address_n: Sequence[int] | None = None,
+        network_type: MoneroNetworkType | None = MoneroNetworkType.MAINNET,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.network_type = network_type
 
 
@@ -6630,8 +6631,8 @@ class MoneroWatchKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        watch_key: "bytes",
-        address: "bytes",
+        watch_key: bytes,
+        address: bytes,
     ) -> None:
         self.watch_key = watch_key
         self.address = address
@@ -6649,12 +6650,12 @@ class MoneroTransactionInitRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        version: Optional["int"] = None,
-        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
-        tsx_data: Optional["MoneroTransactionData"] = None,
+        address_n: Sequence[int] | None = None,
+        version: int | None = None,
+        network_type: MoneroNetworkType | None = MoneroNetworkType.MAINNET,
+        tsx_data: MoneroTransactionData | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.version = version
         self.network_type = network_type
         self.tsx_data = tsx_data
@@ -6670,10 +6671,10 @@ class MoneroTransactionInitAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        hmacs: Optional[Sequence["bytes"]] = None,
-        rsig_data: Optional["MoneroTransactionRsigData"] = None,
+        hmacs: Sequence[bytes] | None = None,
+        rsig_data: MoneroTransactionRsigData | None = None,
     ) -> None:
-        self.hmacs: Sequence["bytes"] = hmacs if hmacs is not None else []
+        self.hmacs: Sequence[bytes] = hmacs if hmacs is not None else []
         self.rsig_data = rsig_data
 
 
@@ -6686,7 +6687,7 @@ class MoneroTransactionSetInputRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        src_entr: Optional["MoneroTransactionSourceEntry"] = None,
+        src_entr: MoneroTransactionSourceEntry | None = None,
     ) -> None:
         self.src_entr = src_entr
 
@@ -6705,12 +6706,12 @@ class MoneroTransactionSetInputAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        vini: Optional["bytes"] = None,
-        vini_hmac: Optional["bytes"] = None,
-        pseudo_out: Optional["bytes"] = None,
-        pseudo_out_hmac: Optional["bytes"] = None,
-        pseudo_out_alpha: Optional["bytes"] = None,
-        spend_key: Optional["bytes"] = None,
+        vini: bytes | None = None,
+        vini_hmac: bytes | None = None,
+        pseudo_out: bytes | None = None,
+        pseudo_out_hmac: bytes | None = None,
+        pseudo_out_alpha: bytes | None = None,
+        spend_key: bytes | None = None,
     ) -> None:
         self.vini = vini
         self.vini_hmac = vini_hmac
@@ -6734,12 +6735,12 @@ class MoneroTransactionInputViniRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        src_entr: Optional["MoneroTransactionSourceEntry"] = None,
-        vini: Optional["bytes"] = None,
-        vini_hmac: Optional["bytes"] = None,
-        pseudo_out: Optional["bytes"] = None,
-        pseudo_out_hmac: Optional["bytes"] = None,
-        orig_idx: Optional["int"] = None,
+        src_entr: MoneroTransactionSourceEntry | None = None,
+        vini: bytes | None = None,
+        vini_hmac: bytes | None = None,
+        pseudo_out: bytes | None = None,
+        pseudo_out_hmac: bytes | None = None,
+        orig_idx: int | None = None,
     ) -> None:
         self.src_entr = src_entr
         self.vini = vini
@@ -6766,7 +6767,7 @@ class MoneroTransactionAllInputsSetAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        rsig_data: Optional["MoneroTransactionRsigData"] = None,
+        rsig_data: MoneroTransactionRsigData | None = None,
     ) -> None:
         self.rsig_data = rsig_data
 
@@ -6783,10 +6784,10 @@ class MoneroTransactionSetOutputRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        dst_entr: Optional["MoneroTransactionDestinationEntry"] = None,
-        dst_entr_hmac: Optional["bytes"] = None,
-        rsig_data: Optional["MoneroTransactionRsigData"] = None,
-        is_offloaded_bp: Optional["bool"] = None,
+        dst_entr: MoneroTransactionDestinationEntry | None = None,
+        dst_entr_hmac: bytes | None = None,
+        rsig_data: MoneroTransactionRsigData | None = None,
+        is_offloaded_bp: bool | None = None,
     ) -> None:
         self.dst_entr = dst_entr
         self.dst_entr_hmac = dst_entr_hmac
@@ -6807,11 +6808,11 @@ class MoneroTransactionSetOutputAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tx_out: Optional["bytes"] = None,
-        vouti_hmac: Optional["bytes"] = None,
-        rsig_data: Optional["MoneroTransactionRsigData"] = None,
-        out_pk: Optional["bytes"] = None,
-        ecdh_info: Optional["bytes"] = None,
+        tx_out: bytes | None = None,
+        vouti_hmac: bytes | None = None,
+        rsig_data: MoneroTransactionRsigData | None = None,
+        out_pk: bytes | None = None,
+        ecdh_info: bytes | None = None,
     ) -> None:
         self.tx_out = tx_out
         self.vouti_hmac = vouti_hmac
@@ -6829,7 +6830,7 @@ class MoneroTransactionAllOutSetRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        rsig_data: Optional["MoneroTransactionRsigData"] = None,
+        rsig_data: MoneroTransactionRsigData | None = None,
     ) -> None:
         self.rsig_data = rsig_data
 
@@ -6846,10 +6847,10 @@ class MoneroTransactionAllOutSetAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        extra: Optional["bytes"] = None,
-        tx_prefix_hash: Optional["bytes"] = None,
-        rv: Optional["MoneroRingCtSig"] = None,
-        full_message_hash: Optional["bytes"] = None,
+        extra: bytes | None = None,
+        tx_prefix_hash: bytes | None = None,
+        rv: MoneroRingCtSig | None = None,
+        full_message_hash: bytes | None = None,
     ) -> None:
         self.extra = extra
         self.tx_prefix_hash = tx_prefix_hash
@@ -6873,14 +6874,14 @@ class MoneroTransactionSignInputRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        src_entr: Optional["MoneroTransactionSourceEntry"] = None,
-        vini: Optional["bytes"] = None,
-        vini_hmac: Optional["bytes"] = None,
-        pseudo_out: Optional["bytes"] = None,
-        pseudo_out_hmac: Optional["bytes"] = None,
-        pseudo_out_alpha: Optional["bytes"] = None,
-        spend_key: Optional["bytes"] = None,
-        orig_idx: Optional["int"] = None,
+        src_entr: MoneroTransactionSourceEntry | None = None,
+        vini: bytes | None = None,
+        vini_hmac: bytes | None = None,
+        pseudo_out: bytes | None = None,
+        pseudo_out_hmac: bytes | None = None,
+        pseudo_out_alpha: bytes | None = None,
+        spend_key: bytes | None = None,
+        orig_idx: int | None = None,
     ) -> None:
         self.src_entr = src_entr
         self.vini = vini
@@ -6902,8 +6903,8 @@ class MoneroTransactionSignInputAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: Optional["bytes"] = None,
-        pseudo_out: Optional["bytes"] = None,
+        signature: bytes | None = None,
+        pseudo_out: bytes | None = None,
     ) -> None:
         self.signature = signature
         self.pseudo_out = pseudo_out
@@ -6926,11 +6927,11 @@ class MoneroTransactionFinalAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        cout_key: Optional["bytes"] = None,
-        salt: Optional["bytes"] = None,
-        rand_mult: Optional["bytes"] = None,
-        tx_enc_keys: Optional["bytes"] = None,
-        opening_key: Optional["bytes"] = None,
+        cout_key: bytes | None = None,
+        salt: bytes | None = None,
+        rand_mult: bytes | None = None,
+        tx_enc_keys: bytes | None = None,
+        opening_key: bytes | None = None,
     ) -> None:
         self.cout_key = cout_key
         self.salt = salt
@@ -6952,14 +6953,14 @@ class MoneroKeyImageExportInitRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        num: "int",
-        hash: "bytes",
-        address_n: Optional[Sequence["int"]] = None,
-        subs: Optional[Sequence["MoneroSubAddressIndicesList"]] = None,
-        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
+        num: int,
+        hash: bytes,
+        address_n: Sequence[int] | None = None,
+        subs: Sequence[MoneroSubAddressIndicesList] | None = None,
+        network_type: MoneroNetworkType | None = MoneroNetworkType.MAINNET,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.subs: Sequence["MoneroSubAddressIndicesList"] = subs if subs is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
+        self.subs: Sequence[MoneroSubAddressIndicesList] = subs if subs is not None else []
         self.num = num
         self.hash = hash
         self.network_type = network_type
@@ -6978,9 +6979,9 @@ class MoneroKeyImageSyncStepRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tdis: Optional[Sequence["MoneroTransferDetails"]] = None,
+        tdis: Sequence[MoneroTransferDetails] | None = None,
     ) -> None:
-        self.tdis: Sequence["MoneroTransferDetails"] = tdis if tdis is not None else []
+        self.tdis: Sequence[MoneroTransferDetails] = tdis if tdis is not None else []
 
 
 class MoneroKeyImageSyncStepAck(protobuf.MessageType):
@@ -6992,9 +6993,9 @@ class MoneroKeyImageSyncStepAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        kis: Optional[Sequence["MoneroExportedKeyImage"]] = None,
+        kis: Sequence[MoneroExportedKeyImage] | None = None,
     ) -> None:
-        self.kis: Sequence["MoneroExportedKeyImage"] = kis if kis is not None else []
+        self.kis: Sequence[MoneroExportedKeyImage] = kis if kis is not None else []
 
 
 class MoneroKeyImageSyncFinalRequest(protobuf.MessageType):
@@ -7010,7 +7011,7 @@ class MoneroKeyImageSyncFinalAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        enc_key: Optional["bytes"] = None,
+        enc_key: bytes | None = None,
     ) -> None:
         self.enc_key = enc_key
 
@@ -7031,16 +7032,16 @@ class MoneroGetTxKeyRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        salt1: "bytes",
-        salt2: "bytes",
-        tx_enc_keys: "bytes",
-        tx_prefix_hash: "bytes",
-        address_n: Optional[Sequence["int"]] = None,
-        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
-        reason: Optional["int"] = None,
-        view_public_key: Optional["bytes"] = None,
+        salt1: bytes,
+        salt2: bytes,
+        tx_enc_keys: bytes,
+        tx_prefix_hash: bytes,
+        address_n: Sequence[int] | None = None,
+        network_type: MoneroNetworkType | None = MoneroNetworkType.MAINNET,
+        reason: int | None = None,
+        view_public_key: bytes | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.salt1 = salt1
         self.salt2 = salt2
         self.tx_enc_keys = tx_enc_keys
@@ -7061,9 +7062,9 @@ class MoneroGetTxKeyAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        salt: Optional["bytes"] = None,
-        tx_keys: Optional["bytes"] = None,
-        tx_derivations: Optional["bytes"] = None,
+        salt: bytes | None = None,
+        tx_keys: bytes | None = None,
+        tx_derivations: bytes | None = None,
     ) -> None:
         self.salt = salt
         self.tx_keys = tx_keys
@@ -7080,10 +7081,10 @@ class MoneroLiveRefreshStartRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
+        address_n: Sequence[int] | None = None,
+        network_type: MoneroNetworkType | None = MoneroNetworkType.MAINNET,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.network_type = network_type
 
 
@@ -7104,11 +7105,11 @@ class MoneroLiveRefreshStepRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        out_key: "bytes",
-        recv_deriv: "bytes",
-        real_out_idx: "int",
-        sub_addr_major: "int",
-        sub_addr_minor: "int",
+        out_key: bytes,
+        recv_deriv: bytes,
+        real_out_idx: int,
+        sub_addr_major: int,
+        sub_addr_minor: int,
     ) -> None:
         self.out_key = out_key
         self.recv_deriv = recv_deriv
@@ -7127,8 +7128,8 @@ class MoneroLiveRefreshStepAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        salt: Optional["bytes"] = None,
-        key_image: Optional["bytes"] = None,
+        salt: bytes | None = None,
+        key_image: bytes | None = None,
     ) -> None:
         self.salt = salt
         self.key_image = key_image
@@ -7156,14 +7157,14 @@ class DebugMoneroDiagRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        pd: Optional[Sequence["int"]] = None,
-        ins: Optional["int"] = None,
-        p1: Optional["int"] = None,
-        p2: Optional["int"] = None,
-        data1: Optional["bytes"] = None,
-        data2: Optional["bytes"] = None,
+        pd: Sequence[int] | None = None,
+        ins: int | None = None,
+        p1: int | None = None,
+        p2: int | None = None,
+        data1: bytes | None = None,
+        data2: bytes | None = None,
     ) -> None:
-        self.pd: Sequence["int"] = pd if pd is not None else []
+        self.pd: Sequence[int] = pd if pd is not None else []
         self.ins = ins
         self.p1 = p1
         self.p2 = p2
@@ -7185,14 +7186,14 @@ class DebugMoneroDiagAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        pd: Optional[Sequence["int"]] = None,
-        ins: Optional["int"] = None,
-        p1: Optional["int"] = None,
-        p2: Optional["int"] = None,
-        data1: Optional["bytes"] = None,
-        data2: Optional["bytes"] = None,
+        pd: Sequence[int] | None = None,
+        ins: int | None = None,
+        p1: int | None = None,
+        p2: int | None = None,
+        data1: bytes | None = None,
+        data2: bytes | None = None,
     ) -> None:
-        self.pd: Sequence["int"] = pd if pd is not None else []
+        self.pd: Sequence[int] = pd if pd is not None else []
         self.ins = ins
         self.p1 = p1
         self.p2 = p2
@@ -7210,8 +7211,8 @@ class MoneroOutputEntry(protobuf.MessageType):
     def __init__(
         self,
         *,
-        idx: Optional["int"] = None,
-        key: Optional["MoneroRctKeyPublic"] = None,
+        idx: int | None = None,
+        key: MoneroRctKeyPublic | None = None,
     ) -> None:
         self.idx = idx
         self.key = key
@@ -7229,10 +7230,10 @@ class MoneroMultisigKLRki(protobuf.MessageType):
     def __init__(
         self,
         *,
-        K: Optional["bytes"] = None,
-        L: Optional["bytes"] = None,
-        R: Optional["bytes"] = None,
-        ki: Optional["bytes"] = None,
+        K: bytes | None = None,
+        L: bytes | None = None,
+        R: bytes | None = None,
+        ki: bytes | None = None,
     ) -> None:
         self.K = K
         self.L = L
@@ -7250,8 +7251,8 @@ class MoneroRctKeyPublic(protobuf.MessageType):
     def __init__(
         self,
         *,
-        dest: "bytes",
-        commitment: "bytes",
+        dest: bytes,
+        commitment: bytes,
     ) -> None:
         self.dest = dest
         self.commitment = commitment
@@ -7267,8 +7268,8 @@ class MoneroAccountPublicAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        spend_public_key: Optional["bytes"] = None,
-        view_public_key: Optional["bytes"] = None,
+        spend_public_key: bytes | None = None,
+        view_public_key: bytes | None = None,
     ) -> None:
         self.spend_public_key = spend_public_key
         self.view_public_key = view_public_key
@@ -7298,26 +7299,26 @@ class MoneroTransactionData(protobuf.MessageType):
     def __init__(
         self,
         *,
-        outputs: Optional[Sequence["MoneroTransactionDestinationEntry"]] = None,
-        minor_indices: Optional[Sequence["int"]] = None,
-        integrated_indices: Optional[Sequence["int"]] = None,
-        version: Optional["int"] = None,
-        payment_id: Optional["bytes"] = None,
-        unlock_time: Optional["int"] = None,
-        change_dts: Optional["MoneroTransactionDestinationEntry"] = None,
-        num_inputs: Optional["int"] = None,
-        mixin: Optional["int"] = None,
-        fee: Optional["int"] = None,
-        account: Optional["int"] = None,
-        rsig_data: Optional["MoneroTransactionRsigData"] = None,
-        client_version: Optional["int"] = None,
-        hard_fork: Optional["int"] = None,
-        monero_version: Optional["bytes"] = None,
-        chunkify: Optional["bool"] = None,
+        outputs: Sequence[MoneroTransactionDestinationEntry] | None = None,
+        minor_indices: Sequence[int] | None = None,
+        integrated_indices: Sequence[int] | None = None,
+        version: int | None = None,
+        payment_id: bytes | None = None,
+        unlock_time: int | None = None,
+        change_dts: MoneroTransactionDestinationEntry | None = None,
+        num_inputs: int | None = None,
+        mixin: int | None = None,
+        fee: int | None = None,
+        account: int | None = None,
+        rsig_data: MoneroTransactionRsigData | None = None,
+        client_version: int | None = None,
+        hard_fork: int | None = None,
+        monero_version: bytes | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.outputs: Sequence["MoneroTransactionDestinationEntry"] = outputs if outputs is not None else []
-        self.minor_indices: Sequence["int"] = minor_indices if minor_indices is not None else []
-        self.integrated_indices: Sequence["int"] = integrated_indices if integrated_indices is not None else []
+        self.outputs: Sequence[MoneroTransactionDestinationEntry] = outputs if outputs is not None else []
+        self.minor_indices: Sequence[int] = minor_indices if minor_indices is not None else []
+        self.integrated_indices: Sequence[int] = integrated_indices if integrated_indices is not None else []
         self.version = version
         self.payment_id = payment_id
         self.unlock_time = unlock_time
@@ -7344,9 +7345,9 @@ class MoneroRingCtSig(protobuf.MessageType):
     def __init__(
         self,
         *,
-        txn_fee: Optional["int"] = None,
-        message: Optional["bytes"] = None,
-        rv_type: Optional["int"] = None,
+        txn_fee: int | None = None,
+        message: bytes | None = None,
+        rv_type: int | None = None,
     ) -> None:
         self.txn_fee = txn_fee
         self.message = message
@@ -7363,10 +7364,10 @@ class MoneroSubAddressIndicesList(protobuf.MessageType):
     def __init__(
         self,
         *,
-        account: "int",
-        minor_indices: Optional[Sequence["int"]] = None,
+        account: int,
+        minor_indices: Sequence[int] | None = None,
     ) -> None:
-        self.minor_indices: Sequence["int"] = minor_indices if minor_indices is not None else []
+        self.minor_indices: Sequence[int] = minor_indices if minor_indices is not None else []
         self.account = account
 
 
@@ -7384,14 +7385,14 @@ class MoneroTransferDetails(protobuf.MessageType):
     def __init__(
         self,
         *,
-        out_key: "bytes",
-        tx_pub_key: "bytes",
-        internal_output_index: "int",
-        additional_tx_pub_keys: Optional[Sequence["bytes"]] = None,
-        sub_addr_major: Optional["int"] = None,
-        sub_addr_minor: Optional["int"] = None,
+        out_key: bytes,
+        tx_pub_key: bytes,
+        internal_output_index: int,
+        additional_tx_pub_keys: Sequence[bytes] | None = None,
+        sub_addr_major: int | None = None,
+        sub_addr_minor: int | None = None,
     ) -> None:
-        self.additional_tx_pub_keys: Sequence["bytes"] = additional_tx_pub_keys if additional_tx_pub_keys is not None else []
+        self.additional_tx_pub_keys: Sequence[bytes] = additional_tx_pub_keys if additional_tx_pub_keys is not None else []
         self.out_key = out_key
         self.tx_pub_key = tx_pub_key
         self.internal_output_index = internal_output_index
@@ -7409,8 +7410,8 @@ class MoneroExportedKeyImage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        iv: Optional["bytes"] = None,
-        blob: Optional["bytes"] = None,
+        iv: bytes | None = None,
+        blob: bytes | None = None,
     ) -> None:
         self.iv = iv
         self.blob = blob
@@ -7428,12 +7429,12 @@ class NEMGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        network: Optional["int"] = 104,
-        show_display: Optional["bool"] = None,
-        chunkify: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        network: int | None = 104,
+        show_display: bool | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.network = network
         self.show_display = show_display
         self.chunkify = chunkify
@@ -7448,7 +7449,7 @@ class NEMAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
+        address: str,
     ) -> None:
         self.address = address
 
@@ -7471,16 +7472,16 @@ class NEMSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        transaction: "NEMTransactionCommon",
-        multisig: Optional["NEMTransactionCommon"] = None,
-        transfer: Optional["NEMTransfer"] = None,
-        cosigning: Optional["bool"] = None,
-        provision_namespace: Optional["NEMProvisionNamespace"] = None,
-        mosaic_creation: Optional["NEMMosaicCreation"] = None,
-        supply_change: Optional["NEMMosaicSupplyChange"] = None,
-        aggregate_modification: Optional["NEMAggregateModification"] = None,
-        importance_transfer: Optional["NEMImportanceTransfer"] = None,
-        chunkify: Optional["bool"] = None,
+        transaction: NEMTransactionCommon,
+        multisig: NEMTransactionCommon | None = None,
+        transfer: NEMTransfer | None = None,
+        cosigning: bool | None = None,
+        provision_namespace: NEMProvisionNamespace | None = None,
+        mosaic_creation: NEMMosaicCreation | None = None,
+        supply_change: NEMMosaicSupplyChange | None = None,
+        aggregate_modification: NEMAggregateModification | None = None,
+        importance_transfer: NEMImportanceTransfer | None = None,
+        chunkify: bool | None = None,
     ) -> None:
         self.transaction = transaction
         self.multisig = multisig
@@ -7504,8 +7505,8 @@ class NEMSignedTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        data: "bytes",
-        signature: "bytes",
+        data: bytes,
+        signature: bytes,
     ) -> None:
         self.data = data
         self.signature = signature
@@ -7523,12 +7524,12 @@ class NEMDecryptMessage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        network: Optional["int"] = None,
-        public_key: Optional["bytes"] = None,
-        payload: Optional["bytes"] = None,
+        address_n: Sequence[int] | None = None,
+        network: int | None = None,
+        public_key: bytes | None = None,
+        payload: bytes | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.network = network
         self.public_key = public_key
         self.payload = payload
@@ -7543,7 +7544,7 @@ class NEMDecryptedMessage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        payload: "bytes",
+        payload: bytes,
     ) -> None:
         self.payload = payload
 
@@ -7562,14 +7563,14 @@ class NEMTransactionCommon(protobuf.MessageType):
     def __init__(
         self,
         *,
-        timestamp: "int",
-        fee: "int",
-        deadline: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        network: Optional["int"] = 104,
-        signer: Optional["bytes"] = None,
+        timestamp: int,
+        fee: int,
+        deadline: int,
+        address_n: Sequence[int] | None = None,
+        network: int | None = 104,
+        signer: bytes | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.timestamp = timestamp
         self.fee = fee
         self.deadline = deadline
@@ -7590,13 +7591,13 @@ class NEMTransfer(protobuf.MessageType):
     def __init__(
         self,
         *,
-        recipient: "str",
-        amount: "int",
-        mosaics: Optional[Sequence["NEMMosaic"]] = None,
-        payload: Optional["bytes"] = None,
-        public_key: Optional["bytes"] = None,
+        recipient: str,
+        amount: int,
+        mosaics: Sequence[NEMMosaic] | None = None,
+        payload: bytes | None = None,
+        public_key: bytes | None = None,
     ) -> None:
-        self.mosaics: Sequence["NEMMosaic"] = mosaics if mosaics is not None else []
+        self.mosaics: Sequence[NEMMosaic] = mosaics if mosaics is not None else []
         self.recipient = recipient
         self.amount = amount
         self.payload = payload
@@ -7615,10 +7616,10 @@ class NEMProvisionNamespace(protobuf.MessageType):
     def __init__(
         self,
         *,
-        namespace: "str",
-        sink: "str",
-        fee: "int",
-        parent: Optional["str"] = None,
+        namespace: str,
+        sink: str,
+        fee: int,
+        parent: str | None = None,
     ) -> None:
         self.namespace = namespace
         self.sink = sink
@@ -7637,9 +7638,9 @@ class NEMMosaicCreation(protobuf.MessageType):
     def __init__(
         self,
         *,
-        definition: "NEMMosaicDefinition",
-        sink: "str",
-        fee: "int",
+        definition: NEMMosaicDefinition,
+        sink: str,
+        fee: int,
     ) -> None:
         self.definition = definition
         self.sink = sink
@@ -7658,10 +7659,10 @@ class NEMMosaicSupplyChange(protobuf.MessageType):
     def __init__(
         self,
         *,
-        namespace: "str",
-        mosaic: "str",
-        type: "NEMSupplyChangeType",
-        delta: "int",
+        namespace: str,
+        mosaic: str,
+        type: NEMSupplyChangeType,
+        delta: int,
     ) -> None:
         self.namespace = namespace
         self.mosaic = mosaic
@@ -7679,10 +7680,10 @@ class NEMAggregateModification(protobuf.MessageType):
     def __init__(
         self,
         *,
-        modifications: Optional[Sequence["NEMCosignatoryModification"]] = None,
-        relative_change: Optional["int"] = None,
+        modifications: Sequence[NEMCosignatoryModification] | None = None,
+        relative_change: int | None = None,
     ) -> None:
-        self.modifications: Sequence["NEMCosignatoryModification"] = modifications if modifications is not None else []
+        self.modifications: Sequence[NEMCosignatoryModification] = modifications if modifications is not None else []
         self.relative_change = relative_change
 
 
@@ -7696,8 +7697,8 @@ class NEMImportanceTransfer(protobuf.MessageType):
     def __init__(
         self,
         *,
-        mode: "NEMImportanceTransferMode",
-        public_key: "bytes",
+        mode: NEMImportanceTransferMode,
+        public_key: bytes,
     ) -> None:
         self.mode = mode
         self.public_key = public_key
@@ -7714,9 +7715,9 @@ class NEMMosaic(protobuf.MessageType):
     def __init__(
         self,
         *,
-        namespace: "str",
-        mosaic: "str",
-        quantity: "int",
+        namespace: str,
+        mosaic: str,
+        quantity: int,
     ) -> None:
         self.namespace = namespace
         self.mosaic = mosaic
@@ -7746,23 +7747,23 @@ class NEMMosaicDefinition(protobuf.MessageType):
     def __init__(
         self,
         *,
-        namespace: "str",
-        mosaic: "str",
-        description: "str",
-        networks: Optional[Sequence["int"]] = None,
-        name: Optional["str"] = None,
-        ticker: Optional["str"] = None,
-        divisibility: Optional["int"] = None,
-        levy: Optional["NEMMosaicLevy"] = None,
-        fee: Optional["int"] = None,
-        levy_address: Optional["str"] = None,
-        levy_namespace: Optional["str"] = None,
-        levy_mosaic: Optional["str"] = None,
-        supply: Optional["int"] = None,
-        mutable_supply: Optional["bool"] = None,
-        transferable: Optional["bool"] = None,
+        namespace: str,
+        mosaic: str,
+        description: str,
+        networks: Sequence[int] | None = None,
+        name: str | None = None,
+        ticker: str | None = None,
+        divisibility: int | None = None,
+        levy: NEMMosaicLevy | None = None,
+        fee: int | None = None,
+        levy_address: str | None = None,
+        levy_namespace: str | None = None,
+        levy_mosaic: str | None = None,
+        supply: int | None = None,
+        mutable_supply: bool | None = None,
+        transferable: bool | None = None,
     ) -> None:
-        self.networks: Sequence["int"] = networks if networks is not None else []
+        self.networks: Sequence[int] = networks if networks is not None else []
         self.namespace = namespace
         self.mosaic = mosaic
         self.description = description
@@ -7789,8 +7790,8 @@ class NEMCosignatoryModification(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "NEMModificationType",
-        public_key: "bytes",
+        type: NEMModificationType,
+        public_key: bytes,
     ) -> None:
         self.type = type
         self.public_key = public_key
@@ -7805,9 +7806,9 @@ class NostrGetPubkey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
+        address_n: Sequence[int] | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
 
 
 class NostrPubkey(protobuf.MessageType):
@@ -7819,7 +7820,7 @@ class NostrPubkey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        pubkey: "bytes",
+        pubkey: bytes,
     ) -> None:
         self.pubkey = pubkey
 
@@ -7835,11 +7836,11 @@ class NostrTag(protobuf.MessageType):
     def __init__(
         self,
         *,
-        key: "str",
-        extra: Optional[Sequence["str"]] = None,
-        value: Optional["str"] = None,
+        key: str,
+        extra: Sequence[str] | None = None,
+        value: str | None = None,
     ) -> None:
-        self.extra: Sequence["str"] = extra if extra is not None else []
+        self.extra: Sequence[str] = extra if extra is not None else []
         self.key = key
         self.value = value
 
@@ -7857,14 +7858,14 @@ class NostrSignEvent(protobuf.MessageType):
     def __init__(
         self,
         *,
-        created_at: "int",
-        kind: "int",
-        content: "str",
-        address_n: Optional[Sequence["int"]] = None,
-        tags: Optional[Sequence["NostrTag"]] = None,
+        created_at: int,
+        kind: int,
+        content: str,
+        address_n: Sequence[int] | None = None,
+        tags: Sequence[NostrTag] | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.tags: Sequence["NostrTag"] = tags if tags is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
+        self.tags: Sequence[NostrTag] = tags if tags is not None else []
         self.created_at = created_at
         self.kind = kind
         self.content = content
@@ -7881,9 +7882,9 @@ class NostrEventSignature(protobuf.MessageType):
     def __init__(
         self,
         *,
-        pubkey: "bytes",
-        id: "bytes",
-        signature: "bytes",
+        pubkey: bytes,
+        id: bytes,
+        signature: bytes,
     ) -> None:
         self.pubkey = pubkey
         self.id = id
@@ -7901,11 +7902,11 @@ class RippleGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
-        chunkify: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.show_display = show_display
         self.chunkify = chunkify
 
@@ -7920,8 +7921,8 @@ class RippleAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        mac: Optional["bytes"] = None,
+        address: str,
+        mac: bytes | None = None,
     ) -> None:
         self.address = address
         self.mac = mac
@@ -7944,17 +7945,17 @@ class RippleSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        fee: "int",
-        sequence: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        flags: Optional["int"] = 0,
-        last_ledger_sequence: Optional["int"] = None,
-        payment: Optional["RipplePayment"] = None,
-        chunkify: Optional["bool"] = None,
-        payment_req: Optional["PaymentRequest"] = None,
-        account_delete: Optional["RippleAccountDelete"] = None,
+        fee: int,
+        sequence: int,
+        address_n: Sequence[int] | None = None,
+        flags: int | None = 0,
+        last_ledger_sequence: int | None = None,
+        payment: RipplePayment | None = None,
+        chunkify: bool | None = None,
+        payment_req: PaymentRequest | None = None,
+        account_delete: RippleAccountDelete | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.fee = fee
         self.sequence = sequence
         self.flags = flags
@@ -7975,8 +7976,8 @@ class RippleSignedTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: "bytes",
-        serialized_tx: "bytes",
+        signature: bytes,
+        serialized_tx: bytes,
     ) -> None:
         self.signature = signature
         self.serialized_tx = serialized_tx
@@ -7993,9 +7994,9 @@ class RipplePayment(protobuf.MessageType):
     def __init__(
         self,
         *,
-        amount: "int",
-        destination: "str",
-        destination_tag: Optional["int"] = None,
+        amount: int,
+        destination: str,
+        destination_tag: int | None = None,
     ) -> None:
         self.amount = amount
         self.destination = destination
@@ -8011,7 +8012,7 @@ class RippleAccountDelete(protobuf.MessageType):
     def __init__(
         self,
         *,
-        destination: "str",
+        destination: str,
     ) -> None:
         self.destination = destination
 
@@ -8026,10 +8027,10 @@ class SolanaGetPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.show_display = show_display
 
 
@@ -8042,7 +8043,7 @@ class SolanaPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        public_key: "bytes",
+        public_key: bytes,
     ) -> None:
         self.public_key = public_key
 
@@ -8058,11 +8059,11 @@ class SolanaGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
-        chunkify: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.show_display = show_display
         self.chunkify = chunkify
 
@@ -8077,8 +8078,8 @@ class SolanaAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        mac: Optional["bytes"] = None,
+        address: str,
+        mac: bytes | None = None,
     ) -> None:
         self.address = address
         self.mac = mac
@@ -8096,10 +8097,10 @@ class SolanaTxTokenAccountInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        base_address: "str",
-        token_program: "str",
-        token_mint: "str",
-        token_account: "str",
+        base_address: str,
+        token_program: str,
+        token_mint: str,
+        token_account: str,
     ) -> None:
         self.base_address = base_address
         self.token_program = token_program
@@ -8117,10 +8118,10 @@ class SolanaTxAdditionalInfo(protobuf.MessageType):
     def __init__(
         self,
         *,
-        token_accounts_infos: Optional[Sequence["SolanaTxTokenAccountInfo"]] = None,
-        encoded_token: Optional["bytes"] = None,
+        token_accounts_infos: Sequence[SolanaTxTokenAccountInfo] | None = None,
+        encoded_token: bytes | None = None,
     ) -> None:
-        self.token_accounts_infos: Sequence["SolanaTxTokenAccountInfo"] = token_accounts_infos if token_accounts_infos is not None else []
+        self.token_accounts_infos: Sequence[SolanaTxTokenAccountInfo] = token_accounts_infos if token_accounts_infos is not None else []
         self.encoded_token = encoded_token
 
 
@@ -8137,13 +8138,13 @@ class SolanaSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        serialized_tx: "bytes",
-        address_n: Optional[Sequence["int"]] = None,
-        additional_info: Optional["SolanaTxAdditionalInfo"] = None,
-        payment_req: Optional["PaymentRequest"] = None,
-        chunkify: Optional["bool"] = None,
+        serialized_tx: bytes,
+        address_n: Sequence[int] | None = None,
+        additional_info: SolanaTxAdditionalInfo | None = None,
+        payment_req: PaymentRequest | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.serialized_tx = serialized_tx
         self.additional_info = additional_info
         self.payment_req = payment_req
@@ -8159,7 +8160,7 @@ class SolanaTxSignature(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: "bytes",
+        signature: bytes,
     ) -> None:
         self.signature = signature
 
@@ -8174,10 +8175,10 @@ class SolanaOffchainMessageV1(protobuf.MessageType):
     def __init__(
         self,
         *,
-        message: "str",
-        signers: Optional[Sequence["bytes"]] = None,
+        message: str,
+        signers: Sequence[bytes] | None = None,
     ) -> None:
-        self.signers: Sequence["bytes"] = signers if signers is not None else []
+        self.signers: Sequence[bytes] = signers if signers is not None else []
         self.message = message
 
 
@@ -8192,11 +8193,11 @@ class SolanaSignMessage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        message: "SolanaOffchainMessageV1",
-        address_n: Optional[Sequence["int"]] = None,
-        chunkify: Optional["bool"] = None,
+        message: SolanaOffchainMessageV1,
+        address_n: Sequence[int] | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.message = message
         self.chunkify = chunkify
 
@@ -8211,8 +8212,8 @@ class SolanaMessageSignature(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: "bytes",
-        signed_data: Optional["bytes"] = None,
+        signature: bytes,
+        signed_data: bytes | None = None,
     ) -> None:
         self.signature = signature
         self.signed_data = signed_data
@@ -8229,11 +8230,11 @@ class SolanaVerifyMessage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        message: "SolanaOffchainMessageV1",
-        signatures: Optional[Sequence["bytes"]] = None,
-        chunkify: Optional["bool"] = None,
+        message: SolanaOffchainMessageV1,
+        signatures: Sequence[bytes] | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.signatures: Sequence["bytes"] = signatures if signatures is not None else []
+        self.signatures: Sequence[bytes] = signatures if signatures is not None else []
         self.message = message
         self.chunkify = chunkify
 
@@ -8249,9 +8250,9 @@ class StellarAsset(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "StellarAssetType",
-        code: Optional["str"] = None,
-        issuer: Optional["str"] = None,
+        type: StellarAssetType,
+        code: str | None = None,
+        issuer: str | None = None,
     ) -> None:
         self.type = type
         self.code = code
@@ -8269,11 +8270,11 @@ class StellarGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
-        chunkify: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.show_display = show_display
         self.chunkify = chunkify
 
@@ -8288,8 +8289,8 @@ class StellarAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        mac: Optional["bytes"] = None,
+        address: str,
+        mac: bytes | None = None,
     ) -> None:
         self.address = address
         self.mac = mac
@@ -8316,21 +8317,21 @@ class StellarSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        network_passphrase: "str",
-        source_account: "str",
-        fee: "int",
-        sequence_number: "int",
-        timebounds_start: "int",
-        timebounds_end: "int",
-        memo_type: "StellarMemoType",
-        num_operations: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        memo_text: Optional["str"] = None,
-        memo_id: Optional["int"] = None,
-        memo_hash: Optional["bytes"] = None,
-        payment_req: Optional["PaymentRequest"] = None,
+        network_passphrase: str,
+        source_account: str,
+        fee: int,
+        sequence_number: int,
+        timebounds_start: int,
+        timebounds_end: int,
+        memo_type: StellarMemoType,
+        num_operations: int,
+        address_n: Sequence[int] | None = None,
+        memo_text: str | None = None,
+        memo_id: int | None = None,
+        memo_hash: bytes | None = None,
+        payment_req: PaymentRequest | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.network_passphrase = network_passphrase
         self.source_account = source_account
         self.fee = fee
@@ -8361,10 +8362,10 @@ class StellarPaymentOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        destination_account: "str",
-        asset: "StellarAsset",
-        amount: "int",
-        source_account: Optional["str"] = None,
+        destination_account: str,
+        asset: StellarAsset,
+        amount: int,
+        source_account: str | None = None,
     ) -> None:
         self.destination_account = destination_account
         self.asset = asset
@@ -8383,9 +8384,9 @@ class StellarCreateAccountOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        new_account: "str",
-        starting_balance: "int",
-        source_account: Optional["str"] = None,
+        new_account: str,
+        starting_balance: int,
+        source_account: str | None = None,
     ) -> None:
         self.new_account = new_account
         self.starting_balance = starting_balance
@@ -8407,15 +8408,15 @@ class StellarPathPaymentStrictReceiveOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        send_asset: "StellarAsset",
-        send_max: "int",
-        destination_account: "str",
-        destination_asset: "StellarAsset",
-        destination_amount: "int",
-        paths: Optional[Sequence["StellarAsset"]] = None,
-        source_account: Optional["str"] = None,
+        send_asset: StellarAsset,
+        send_max: int,
+        destination_account: str,
+        destination_asset: StellarAsset,
+        destination_amount: int,
+        paths: Sequence[StellarAsset] | None = None,
+        source_account: str | None = None,
     ) -> None:
-        self.paths: Sequence["StellarAsset"] = paths if paths is not None else []
+        self.paths: Sequence[StellarAsset] = paths if paths is not None else []
         self.send_asset = send_asset
         self.send_max = send_max
         self.destination_account = destination_account
@@ -8439,15 +8440,15 @@ class StellarPathPaymentStrictSendOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        send_asset: "StellarAsset",
-        send_amount: "int",
-        destination_account: "str",
-        destination_asset: "StellarAsset",
-        destination_min: "int",
-        paths: Optional[Sequence["StellarAsset"]] = None,
-        source_account: Optional["str"] = None,
+        send_asset: StellarAsset,
+        send_amount: int,
+        destination_account: str,
+        destination_asset: StellarAsset,
+        destination_min: int,
+        paths: Sequence[StellarAsset] | None = None,
+        source_account: str | None = None,
     ) -> None:
-        self.paths: Sequence["StellarAsset"] = paths if paths is not None else []
+        self.paths: Sequence[StellarAsset] = paths if paths is not None else []
         self.send_asset = send_asset
         self.send_amount = send_amount
         self.destination_account = destination_account
@@ -8471,13 +8472,13 @@ class StellarManageSellOfferOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        selling_asset: "StellarAsset",
-        buying_asset: "StellarAsset",
-        amount: "int",
-        price_n: "int",
-        price_d: "int",
-        offer_id: "int",
-        source_account: Optional["str"] = None,
+        selling_asset: StellarAsset,
+        buying_asset: StellarAsset,
+        amount: int,
+        price_n: int,
+        price_d: int,
+        offer_id: int,
+        source_account: str | None = None,
     ) -> None:
         self.selling_asset = selling_asset
         self.buying_asset = buying_asset
@@ -8503,13 +8504,13 @@ class StellarManageBuyOfferOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        selling_asset: "StellarAsset",
-        buying_asset: "StellarAsset",
-        amount: "int",
-        price_n: "int",
-        price_d: "int",
-        offer_id: "int",
-        source_account: Optional["str"] = None,
+        selling_asset: StellarAsset,
+        buying_asset: StellarAsset,
+        amount: int,
+        price_n: int,
+        price_d: int,
+        offer_id: int,
+        source_account: str | None = None,
     ) -> None:
         self.selling_asset = selling_asset
         self.buying_asset = buying_asset
@@ -8534,12 +8535,12 @@ class StellarCreatePassiveSellOfferOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        selling_asset: "StellarAsset",
-        buying_asset: "StellarAsset",
-        amount: "int",
-        price_n: "int",
-        price_d: "int",
-        source_account: Optional["str"] = None,
+        selling_asset: StellarAsset,
+        buying_asset: StellarAsset,
+        amount: int,
+        price_n: int,
+        price_d: int,
+        source_account: str | None = None,
     ) -> None:
         self.selling_asset = selling_asset
         self.buying_asset = buying_asset
@@ -8569,18 +8570,18 @@ class StellarSetOptionsOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        source_account: Optional["str"] = None,
-        inflation_destination_account: Optional["str"] = None,
-        clear_flags: Optional["int"] = None,
-        set_flags: Optional["int"] = None,
-        master_weight: Optional["int"] = None,
-        low_threshold: Optional["int"] = None,
-        medium_threshold: Optional["int"] = None,
-        high_threshold: Optional["int"] = None,
-        home_domain: Optional["str"] = None,
-        signer_type: Optional["StellarSignerType"] = None,
-        signer_key: Optional["bytes"] = None,
-        signer_weight: Optional["int"] = None,
+        source_account: str | None = None,
+        inflation_destination_account: str | None = None,
+        clear_flags: int | None = None,
+        set_flags: int | None = None,
+        master_weight: int | None = None,
+        low_threshold: int | None = None,
+        medium_threshold: int | None = None,
+        high_threshold: int | None = None,
+        home_domain: str | None = None,
+        signer_type: StellarSignerType | None = None,
+        signer_key: bytes | None = None,
+        signer_weight: int | None = None,
     ) -> None:
         self.source_account = source_account
         self.inflation_destination_account = inflation_destination_account
@@ -8607,9 +8608,9 @@ class StellarChangeTrustOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        asset: "StellarAsset",
-        limit: "int",
-        source_account: Optional["str"] = None,
+        asset: StellarAsset,
+        limit: int,
+        source_account: str | None = None,
     ) -> None:
         self.asset = asset
         self.limit = limit
@@ -8629,11 +8630,11 @@ class StellarAllowTrustOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        trusted_account: "str",
-        asset_type: "StellarAssetType",
-        is_authorized: "bool",
-        source_account: Optional["str"] = None,
-        asset_code: Optional["str"] = None,
+        trusted_account: str,
+        asset_type: StellarAssetType,
+        is_authorized: bool,
+        source_account: str | None = None,
+        asset_code: str | None = None,
     ) -> None:
         self.trusted_account = trusted_account
         self.asset_type = asset_type
@@ -8652,8 +8653,8 @@ class StellarAccountMergeOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        destination_account: "str",
-        source_account: Optional["str"] = None,
+        destination_account: str,
+        source_account: str | None = None,
     ) -> None:
         self.destination_account = destination_account
         self.source_account = source_account
@@ -8670,9 +8671,9 @@ class StellarManageDataOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        key: "str",
-        source_account: Optional["str"] = None,
-        value: Optional["bytes"] = None,
+        key: str,
+        source_account: str | None = None,
+        value: bytes | None = None,
     ) -> None:
         self.key = key
         self.source_account = source_account
@@ -8689,8 +8690,8 @@ class StellarBumpSequenceOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        bump_to: "int",
-        source_account: Optional["str"] = None,
+        bump_to: int,
+        source_account: str | None = None,
     ) -> None:
         self.bump_to = bump_to
         self.source_account = source_account
@@ -8706,8 +8707,8 @@ class StellarClaimClaimableBalanceOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        balance_id: "bytes",
-        source_account: Optional["str"] = None,
+        balance_id: bytes,
+        source_account: str | None = None,
     ) -> None:
         self.balance_id = balance_id
         self.source_account = source_account
@@ -8723,8 +8724,8 @@ class StellarSignedTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        public_key: "bytes",
-        signature: "bytes",
+        public_key: bytes,
+        signature: bytes,
     ) -> None:
         self.public_key = public_key
         self.signature = signature
@@ -8756,27 +8757,27 @@ class StellarSCVal(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "StellarSCValType",
-        vec: Optional[Sequence["StellarSCVal"]] = None,
-        map: Optional[Sequence["StellarSCValMapEntry"]] = None,
-        b: Optional["bool"] = None,
-        u32: Optional["int"] = None,
-        i32: Optional["int"] = None,
-        u64: Optional["int"] = None,
-        i64: Optional["int"] = None,
-        timepoint: Optional["int"] = None,
-        duration: Optional["int"] = None,
-        u128: Optional["StellarUInt128Parts"] = None,
-        i128: Optional["StellarInt128Parts"] = None,
-        u256: Optional["StellarUInt256Parts"] = None,
-        i256: Optional["StellarInt256Parts"] = None,
-        bytes: Optional["bytes"] = None,
-        string: Optional["bytes"] = None,
-        symbol: Optional["str"] = None,
-        address: Optional["str"] = None,
+        type: StellarSCValType,
+        vec: Sequence[StellarSCVal] | None = None,
+        map: Sequence[StellarSCValMapEntry] | None = None,
+        b: bool | None = None,
+        u32: int | None = None,
+        i32: int | None = None,
+        u64: int | None = None,
+        i64: int | None = None,
+        timepoint: int | None = None,
+        duration: int | None = None,
+        u128: StellarUInt128Parts | None = None,
+        i128: StellarInt128Parts | None = None,
+        u256: StellarUInt256Parts | None = None,
+        i256: StellarInt256Parts | None = None,
+        bytes: bytes | None = None,
+        string: bytes | None = None,
+        symbol: str | None = None,
+        address: str | None = None,
     ) -> None:
-        self.vec: Sequence["StellarSCVal"] = vec if vec is not None else []
-        self.map: Sequence["StellarSCValMapEntry"] = map if map is not None else []
+        self.vec: Sequence[StellarSCVal] = vec if vec is not None else []
+        self.map: Sequence[StellarSCValMapEntry] = map if map is not None else []
         self.type = type
         self.b = b
         self.u32 = u32
@@ -8807,12 +8808,12 @@ class StellarInvokeContractArgs(protobuf.MessageType):
     def __init__(
         self,
         *,
-        contract_address: "str",
-        function_name: "str",
-        args: Optional[Sequence["StellarSCVal"]] = None,
-        asset_hint: Optional["StellarAsset"] = None,
+        contract_address: str,
+        function_name: str,
+        args: Sequence[StellarSCVal] | None = None,
+        asset_hint: StellarAsset | None = None,
     ) -> None:
-        self.args: Sequence["StellarSCVal"] = args if args is not None else []
+        self.args: Sequence[StellarSCVal] = args if args is not None else []
         self.contract_address = contract_address
         self.function_name = function_name
         self.asset_hint = asset_hint
@@ -8828,8 +8829,8 @@ class StellarContractIDPreimage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "StellarContractIDPreimageType",
-        from_address: Optional["StellarContractIDPreimageFromAddress"] = None,
+        type: StellarContractIDPreimageType,
+        from_address: StellarContractIDPreimageFromAddress | None = None,
     ) -> None:
         self.type = type
         self.from_address = from_address
@@ -8845,8 +8846,8 @@ class StellarContractExecutable(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "StellarContractExecutableType",
-        wasm_hash: Optional["bytes"] = None,
+        type: StellarContractExecutableType,
+        wasm_hash: bytes | None = None,
     ) -> None:
         self.type = type
         self.wasm_hash = wasm_hash
@@ -8863,11 +8864,11 @@ class StellarCreateContractArgsV2(protobuf.MessageType):
     def __init__(
         self,
         *,
-        contract_id_preimage: "StellarContractIDPreimage",
-        executable: "StellarContractExecutable",
-        constructor_args: Optional[Sequence["StellarSCVal"]] = None,
+        contract_id_preimage: StellarContractIDPreimage,
+        executable: StellarContractExecutable,
+        constructor_args: Sequence[StellarSCVal] | None = None,
     ) -> None:
-        self.constructor_args: Sequence["StellarSCVal"] = constructor_args if constructor_args is not None else []
+        self.constructor_args: Sequence[StellarSCVal] = constructor_args if constructor_args is not None else []
         self.contract_id_preimage = contract_id_preimage
         self.executable = executable
 
@@ -8883,9 +8884,9 @@ class StellarSorobanAuthorizedFunction(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "StellarSorobanAuthorizedFunctionType",
-        contract_fn: Optional["StellarInvokeContractArgs"] = None,
-        create_contract_v2_host_fn: Optional["StellarCreateContractArgsV2"] = None,
+        type: StellarSorobanAuthorizedFunctionType,
+        contract_fn: StellarInvokeContractArgs | None = None,
+        create_contract_v2_host_fn: StellarCreateContractArgsV2 | None = None,
     ) -> None:
         self.type = type
         self.contract_fn = contract_fn
@@ -8902,10 +8903,10 @@ class StellarSorobanAuthorizedInvocation(protobuf.MessageType):
     def __init__(
         self,
         *,
-        function: "StellarSorobanAuthorizedFunction",
-        sub_invocations: Optional[Sequence["StellarSorobanAuthorizedInvocation"]] = None,
+        function: StellarSorobanAuthorizedFunction,
+        sub_invocations: Sequence[StellarSorobanAuthorizedInvocation] | None = None,
     ) -> None:
-        self.sub_invocations: Sequence["StellarSorobanAuthorizedInvocation"] = sub_invocations if sub_invocations is not None else []
+        self.sub_invocations: Sequence[StellarSorobanAuthorizedInvocation] = sub_invocations if sub_invocations is not None else []
         self.function = function
 
 
@@ -8920,9 +8921,9 @@ class StellarHostFunction(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "StellarHostFunctionType",
-        invoke_contract: Optional["StellarInvokeContractArgs"] = None,
-        create_contract_v2: Optional["StellarCreateContractArgsV2"] = None,
+        type: StellarHostFunctionType,
+        invoke_contract: StellarInvokeContractArgs | None = None,
+        create_contract_v2: StellarCreateContractArgsV2 | None = None,
     ) -> None:
         self.type = type
         self.invoke_contract = invoke_contract
@@ -8941,10 +8942,10 @@ class StellarSorobanAddressCredentials(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        nonce: "int",
-        signature_expiration_ledger: "int",
-        signature: "StellarSCVal",
+        address: str,
+        nonce: int,
+        signature_expiration_ledger: int,
+        signature: StellarSCVal,
     ) -> None:
         self.address = address
         self.nonce = nonce
@@ -8963,11 +8964,11 @@ class StellarSorobanDelegateSignature(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        signature: "StellarSCVal",
-        nested_delegates: Optional[Sequence["StellarSorobanDelegateSignature"]] = None,
+        address: str,
+        signature: StellarSCVal,
+        nested_delegates: Sequence[StellarSorobanDelegateSignature] | None = None,
     ) -> None:
-        self.nested_delegates: Sequence["StellarSorobanDelegateSignature"] = nested_delegates if nested_delegates is not None else []
+        self.nested_delegates: Sequence[StellarSorobanDelegateSignature] = nested_delegates if nested_delegates is not None else []
         self.address = address
         self.signature = signature
 
@@ -8982,10 +8983,10 @@ class StellarSorobanAddressCredentialsWithDelegates(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_credentials: "StellarSorobanAddressCredentials",
-        delegates: Optional[Sequence["StellarSorobanDelegateSignature"]] = None,
+        address_credentials: StellarSorobanAddressCredentials,
+        delegates: Sequence[StellarSorobanDelegateSignature] | None = None,
     ) -> None:
-        self.delegates: Sequence["StellarSorobanDelegateSignature"] = delegates if delegates is not None else []
+        self.delegates: Sequence[StellarSorobanDelegateSignature] = delegates if delegates is not None else []
         self.address_credentials = address_credentials
 
 
@@ -9000,9 +9001,9 @@ class StellarSorobanCredentials(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "StellarSorobanCredentialsType",
-        address_v2: Optional["StellarSorobanAddressCredentials"] = None,
-        address_with_delegates: Optional["StellarSorobanAddressCredentialsWithDelegates"] = None,
+        type: StellarSorobanCredentialsType,
+        address_v2: StellarSorobanAddressCredentials | None = None,
+        address_with_delegates: StellarSorobanAddressCredentialsWithDelegates | None = None,
     ) -> None:
         self.type = type
         self.address_v2 = address_v2
@@ -9019,8 +9020,8 @@ class StellarSorobanAuthorizationEntry(protobuf.MessageType):
     def __init__(
         self,
         *,
-        credentials: "StellarSorobanCredentials",
-        root_invocation: "StellarSorobanAuthorizedInvocation",
+        credentials: StellarSorobanCredentials,
+        root_invocation: StellarSorobanAuthorizedInvocation,
     ) -> None:
         self.credentials = credentials
         self.root_invocation = root_invocation
@@ -9037,11 +9038,11 @@ class StellarInvokeHostFunctionOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        function: "StellarHostFunction",
-        auth: Optional[Sequence["StellarSorobanAuthorizationEntry"]] = None,
-        source_account: Optional["str"] = None,
+        function: StellarHostFunction,
+        auth: Sequence[StellarSorobanAuthorizationEntry] | None = None,
+        source_account: str | None = None,
     ) -> None:
-        self.auth: Sequence["StellarSorobanAuthorizationEntry"] = auth if auth is not None else []
+        self.auth: Sequence[StellarSorobanAuthorizationEntry] = auth if auth is not None else []
         self.function = function
         self.source_account = source_account
 
@@ -9058,12 +9059,12 @@ class StellarSignSorobanAuthorization(protobuf.MessageType):
     def __init__(
         self,
         *,
-        network_passphrase: "str",
-        envelope_type: "StellarSorobanAuthorizationEnvelopeType",
-        address_n: Optional[Sequence["int"]] = None,
-        soroban_authorization_with_address: Optional["StellarSorobanAuthorizationWithAddress"] = None,
+        network_passphrase: str,
+        envelope_type: StellarSorobanAuthorizationEnvelopeType,
+        address_n: Sequence[int] | None = None,
+        soroban_authorization_with_address: StellarSorobanAuthorizationWithAddress | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.network_passphrase = network_passphrase
         self.envelope_type = envelope_type
         self.soroban_authorization_with_address = soroban_authorization_with_address
@@ -9079,8 +9080,8 @@ class StellarSorobanAuthorizationSignature(protobuf.MessageType):
     def __init__(
         self,
         *,
-        public_key: "bytes",
-        signature: "bytes",
+        public_key: bytes,
+        signature: bytes,
     ) -> None:
         self.public_key = public_key
         self.signature = signature
@@ -9100,8 +9101,8 @@ class StellarTxExt(protobuf.MessageType):
     def __init__(
         self,
         *,
-        v: "int",
-        soroban_data: Optional["bytes"] = None,
+        v: int,
+        soroban_data: bytes | None = None,
     ) -> None:
         self.v = v
         self.soroban_data = soroban_data
@@ -9117,8 +9118,8 @@ class StellarUInt128Parts(protobuf.MessageType):
     def __init__(
         self,
         *,
-        hi: "int",
-        lo: "int",
+        hi: int,
+        lo: int,
     ) -> None:
         self.hi = hi
         self.lo = lo
@@ -9134,8 +9135,8 @@ class StellarInt128Parts(protobuf.MessageType):
     def __init__(
         self,
         *,
-        hi: "int",
-        lo: "int",
+        hi: int,
+        lo: int,
     ) -> None:
         self.hi = hi
         self.lo = lo
@@ -9153,10 +9154,10 @@ class StellarUInt256Parts(protobuf.MessageType):
     def __init__(
         self,
         *,
-        hi_hi: "int",
-        hi_lo: "int",
-        lo_hi: "int",
-        lo_lo: "int",
+        hi_hi: int,
+        hi_lo: int,
+        lo_hi: int,
+        lo_lo: int,
     ) -> None:
         self.hi_hi = hi_hi
         self.hi_lo = hi_lo
@@ -9176,10 +9177,10 @@ class StellarInt256Parts(protobuf.MessageType):
     def __init__(
         self,
         *,
-        hi_hi: "int",
-        hi_lo: "int",
-        lo_hi: "int",
-        lo_lo: "int",
+        hi_hi: int,
+        hi_lo: int,
+        lo_hi: int,
+        lo_lo: int,
     ) -> None:
         self.hi_hi = hi_hi
         self.hi_lo = hi_lo
@@ -9197,8 +9198,8 @@ class StellarSCValMapEntry(protobuf.MessageType):
     def __init__(
         self,
         *,
-        key: "StellarSCVal",
-        value: "StellarSCVal",
+        key: StellarSCVal,
+        value: StellarSCVal,
     ) -> None:
         self.key = key
         self.value = value
@@ -9214,8 +9215,8 @@ class StellarContractIDPreimageFromAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        salt: "bytes",
+        address: str,
+        salt: bytes,
     ) -> None:
         self.address = address
         self.salt = salt
@@ -9233,10 +9234,10 @@ class StellarSorobanAuthorizationWithAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        nonce: "int",
-        signature_expiration_ledger: "int",
-        address: "str",
-        invocation: "StellarSorobanAuthorizedInvocation",
+        nonce: int,
+        signature_expiration_ledger: int,
+        address: str,
+        invocation: StellarSorobanAuthorizedInvocation,
     ) -> None:
         self.nonce = nonce
         self.signature_expiration_ledger = signature_expiration_ledger
@@ -9260,10 +9261,10 @@ class Telemetry(protobuf.MessageType):
     def __init__(
         self,
         *,
-        min_temp_c: Optional["int"] = None,
-        max_temp_c: Optional["int"] = None,
-        battery_errors: Optional["int"] = None,
-        battery_cycles: Optional["int"] = None,
+        min_temp_c: int | None = None,
+        max_temp_c: int | None = None,
+        battery_errors: int | None = None,
+        battery_cycles: int | None = None,
     ) -> None:
         self.min_temp_c = min_temp_c
         self.max_temp_c = max_temp_c
@@ -9282,11 +9283,11 @@ class TezosGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
-        chunkify: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.show_display = show_display
         self.chunkify = chunkify
 
@@ -9301,8 +9302,8 @@ class TezosAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        mac: Optional["bytes"] = None,
+        address: str,
+        mac: bytes | None = None,
     ) -> None:
         self.address = address
         self.mac = mac
@@ -9319,11 +9320,11 @@ class TezosGetPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
-        chunkify: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.show_display = show_display
         self.chunkify = chunkify
 
@@ -9337,7 +9338,7 @@ class TezosPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        public_key: "str",
+        public_key: str,
     ) -> None:
         self.public_key = public_key
 
@@ -9359,17 +9360,17 @@ class TezosSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        branch: "bytes",
-        address_n: Optional[Sequence["int"]] = None,
-        reveal: Optional["TezosRevealOp"] = None,
-        transaction: Optional["TezosTransactionOp"] = None,
-        origination: Optional["TezosOriginationOp"] = None,
-        delegation: Optional["TezosDelegationOp"] = None,
-        proposal: Optional["TezosProposalOp"] = None,
-        ballot: Optional["TezosBallotOp"] = None,
-        chunkify: Optional["bool"] = None,
+        branch: bytes,
+        address_n: Sequence[int] | None = None,
+        reveal: TezosRevealOp | None = None,
+        transaction: TezosTransactionOp | None = None,
+        origination: TezosOriginationOp | None = None,
+        delegation: TezosDelegationOp | None = None,
+        proposal: TezosProposalOp | None = None,
+        ballot: TezosBallotOp | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.branch = branch
         self.reveal = reveal
         self.transaction = transaction
@@ -9391,9 +9392,9 @@ class TezosSignedTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: "str",
-        sig_op_contents: "bytes",
-        operation_hash: "str",
+        signature: str,
+        sig_op_contents: bytes,
+        operation_hash: str,
     ) -> None:
         self.signature = signature
         self.sig_op_contents = sig_op_contents
@@ -9410,8 +9411,8 @@ class TezosContractID(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tag: "TezosContractType",
-        hash: "bytes",
+        tag: TezosContractType,
+        hash: bytes,
     ) -> None:
         self.tag = tag
         self.hash = hash
@@ -9431,12 +9432,12 @@ class TezosRevealOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        source: "bytes",
-        fee: "int",
-        counter: "int",
-        gas_limit: "int",
-        storage_limit: "int",
-        public_key: "bytes",
+        source: bytes,
+        fee: int,
+        counter: int,
+        gas_limit: int,
+        storage_limit: int,
+        public_key: bytes,
     ) -> None:
         self.source = source
         self.fee = fee
@@ -9463,15 +9464,15 @@ class TezosTransactionOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        source: "bytes",
-        fee: "int",
-        counter: "int",
-        gas_limit: "int",
-        storage_limit: "int",
-        amount: "int",
-        destination: "TezosContractID",
-        parameters: Optional["bytes"] = None,
-        parameters_manager: Optional["TezosParametersManager"] = None,
+        source: bytes,
+        fee: int,
+        counter: int,
+        gas_limit: int,
+        storage_limit: int,
+        amount: int,
+        destination: TezosContractID,
+        parameters: bytes | None = None,
+        parameters_manager: TezosParametersManager | None = None,
     ) -> None:
         self.source = source
         self.fee = fee
@@ -9503,17 +9504,17 @@ class TezosOriginationOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        source: "bytes",
-        fee: "int",
-        counter: "int",
-        gas_limit: "int",
-        storage_limit: "int",
-        balance: "int",
-        script: "bytes",
-        manager_pubkey: Optional["bytes"] = None,
-        spendable: Optional["bool"] = None,
-        delegatable: Optional["bool"] = None,
-        delegate: Optional["bytes"] = None,
+        source: bytes,
+        fee: int,
+        counter: int,
+        gas_limit: int,
+        storage_limit: int,
+        balance: int,
+        script: bytes,
+        manager_pubkey: bytes | None = None,
+        spendable: bool | None = None,
+        delegatable: bool | None = None,
+        delegate: bytes | None = None,
     ) -> None:
         self.source = source
         self.fee = fee
@@ -9542,12 +9543,12 @@ class TezosDelegationOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        source: "bytes",
-        fee: "int",
-        counter: "int",
-        gas_limit: "int",
-        storage_limit: "int",
-        delegate: "bytes",
+        source: bytes,
+        fee: int,
+        counter: int,
+        gas_limit: int,
+        storage_limit: int,
+        delegate: bytes,
     ) -> None:
         self.source = source
         self.fee = fee
@@ -9568,11 +9569,11 @@ class TezosProposalOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        source: "bytes",
-        period: "int",
-        proposals: Optional[Sequence["bytes"]] = None,
+        source: bytes,
+        period: int,
+        proposals: Sequence[bytes] | None = None,
     ) -> None:
-        self.proposals: Sequence["bytes"] = proposals if proposals is not None else []
+        self.proposals: Sequence[bytes] = proposals if proposals is not None else []
         self.source = source
         self.period = period
 
@@ -9589,10 +9590,10 @@ class TezosBallotOp(protobuf.MessageType):
     def __init__(
         self,
         *,
-        source: "bytes",
-        period: "int",
-        proposal: "bytes",
-        ballot: "TezosBallotType",
+        source: bytes,
+        period: int,
+        proposal: bytes,
+        ballot: TezosBallotType,
     ) -> None:
         self.source = source
         self.period = period
@@ -9611,9 +9612,9 @@ class TezosParametersManager(protobuf.MessageType):
     def __init__(
         self,
         *,
-        set_delegate: Optional["bytes"] = None,
-        cancel_delegate: Optional["bool"] = None,
-        transfer: Optional["TezosManagerTransfer"] = None,
+        set_delegate: bytes | None = None,
+        cancel_delegate: bool | None = None,
+        transfer: TezosManagerTransfer | None = None,
     ) -> None:
         self.set_delegate = set_delegate
         self.cancel_delegate = cancel_delegate
@@ -9630,8 +9631,8 @@ class TezosManagerTransfer(protobuf.MessageType):
     def __init__(
         self,
         *,
-        destination: "TezosContractID",
-        amount: "int",
+        destination: TezosContractID,
+        amount: int,
     ) -> None:
         self.destination = destination
         self.amount = amount
@@ -9650,13 +9651,13 @@ class ThpDeviceProperties(protobuf.MessageType):
     def __init__(
         self,
         *,
-        internal_model: "str",
-        protocol_version_major: "int",
-        protocol_version_minor: "int",
-        pairing_methods: Optional[Sequence["ThpPairingMethod"]] = None,
-        model_variant: Optional["int"] = 0,
+        internal_model: str,
+        protocol_version_major: int,
+        protocol_version_minor: int,
+        pairing_methods: Sequence[ThpPairingMethod] | None = None,
+        model_variant: int | None = 0,
     ) -> None:
-        self.pairing_methods: Sequence["ThpPairingMethod"] = pairing_methods if pairing_methods is not None else []
+        self.pairing_methods: Sequence[ThpPairingMethod] = pairing_methods if pairing_methods is not None else []
         self.internal_model = internal_model
         self.protocol_version_major = protocol_version_major
         self.protocol_version_minor = protocol_version_minor
@@ -9672,7 +9673,7 @@ class ThpHandshakeCompletionReqNoisePayload(protobuf.MessageType):
     def __init__(
         self,
         *,
-        host_pairing_credential: Optional["bytes"] = None,
+        host_pairing_credential: bytes | None = None,
     ) -> None:
         self.host_pairing_credential = host_pairing_credential
 
@@ -9688,9 +9689,9 @@ class ThpCreateNewSession(protobuf.MessageType):
     def __init__(
         self,
         *,
-        passphrase: Optional["str"] = None,
-        on_device: Optional["bool"] = False,
-        derive_cardano: Optional["bool"] = False,
+        passphrase: str | None = None,
+        on_device: bool | None = False,
+        derive_cardano: bool | None = False,
     ) -> None:
         self.passphrase = passphrase
         self.on_device = on_device
@@ -9707,8 +9708,8 @@ class ThpPairingRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        host_name: "str",
-        app_name: "str",
+        host_name: str,
+        app_name: str,
     ) -> None:
         self.host_name = host_name
         self.app_name = app_name
@@ -9727,7 +9728,7 @@ class ThpSelectMethod(protobuf.MessageType):
     def __init__(
         self,
         *,
-        selected_pairing_method: "ThpPairingMethod",
+        selected_pairing_method: ThpPairingMethod,
     ) -> None:
         self.selected_pairing_method = selected_pairing_method
 
@@ -9745,7 +9746,7 @@ class ThpCodeEntryCommitment(protobuf.MessageType):
     def __init__(
         self,
         *,
-        commitment: "bytes",
+        commitment: bytes,
     ) -> None:
         self.commitment = commitment
 
@@ -9759,7 +9760,7 @@ class ThpCodeEntryChallenge(protobuf.MessageType):
     def __init__(
         self,
         *,
-        challenge: "bytes",
+        challenge: bytes,
     ) -> None:
         self.challenge = challenge
 
@@ -9773,7 +9774,7 @@ class ThpCodeEntryCpaceTrezor(protobuf.MessageType):
     def __init__(
         self,
         *,
-        cpace_trezor_public_key: "bytes",
+        cpace_trezor_public_key: bytes,
     ) -> None:
         self.cpace_trezor_public_key = cpace_trezor_public_key
 
@@ -9788,8 +9789,8 @@ class ThpCodeEntryCpaceHostTag(protobuf.MessageType):
     def __init__(
         self,
         *,
-        cpace_host_public_key: "bytes",
-        tag: "bytes",
+        cpace_host_public_key: bytes,
+        tag: bytes,
     ) -> None:
         self.cpace_host_public_key = cpace_host_public_key
         self.tag = tag
@@ -9804,7 +9805,7 @@ class ThpCodeEntrySecret(protobuf.MessageType):
     def __init__(
         self,
         *,
-        secret: "bytes",
+        secret: bytes,
     ) -> None:
         self.secret = secret
 
@@ -9818,7 +9819,7 @@ class ThpQrCodeTag(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tag: "bytes",
+        tag: bytes,
     ) -> None:
         self.tag = tag
 
@@ -9832,7 +9833,7 @@ class ThpQrCodeSecret(protobuf.MessageType):
     def __init__(
         self,
         *,
-        secret: "bytes",
+        secret: bytes,
     ) -> None:
         self.secret = secret
 
@@ -9846,7 +9847,7 @@ class ThpNfcTagHost(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tag: "bytes",
+        tag: bytes,
     ) -> None:
         self.tag = tag
 
@@ -9860,7 +9861,7 @@ class ThpNfcTagTrezor(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tag: "bytes",
+        tag: bytes,
     ) -> None:
         self.tag = tag
 
@@ -9876,9 +9877,9 @@ class ThpCredentialRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        host_static_public_key: "bytes",
-        autoconnect: Optional["bool"] = False,
-        credential: Optional["bytes"] = None,
+        host_static_public_key: bytes,
+        autoconnect: bool | None = False,
+        credential: bytes | None = None,
     ) -> None:
         self.host_static_public_key = host_static_public_key
         self.autoconnect = autoconnect
@@ -9895,8 +9896,8 @@ class ThpCredentialResponse(protobuf.MessageType):
     def __init__(
         self,
         *,
-        trezor_static_public_key: "bytes",
-        credential: "bytes",
+        trezor_static_public_key: bytes,
+        credential: bytes,
     ) -> None:
         self.trezor_static_public_key = trezor_static_public_key
         self.credential = credential
@@ -9921,9 +9922,9 @@ class ThpCredentialMetadata(protobuf.MessageType):
     def __init__(
         self,
         *,
-        host_name: "str",
-        app_name: "str",
-        autoconnect: Optional["bool"] = None,
+        host_name: str,
+        app_name: str,
+        autoconnect: bool | None = None,
     ) -> None:
         self.host_name = host_name
         self.app_name = app_name
@@ -9940,8 +9941,8 @@ class ThpPairingCredential(protobuf.MessageType):
     def __init__(
         self,
         *,
-        cred_metadata: "ThpCredentialMetadata",
-        mac: "bytes",
+        cred_metadata: ThpCredentialMetadata,
+        mac: bytes,
     ) -> None:
         self.cred_metadata = cred_metadata
         self.mac = mac
@@ -9957,8 +9958,8 @@ class ThpAuthenticatedCredentialData(protobuf.MessageType):
     def __init__(
         self,
         *,
-        host_static_public_key: "bytes",
-        cred_metadata: "ThpCredentialMetadata",
+        host_static_public_key: bytes,
+        cred_metadata: ThpCredentialMetadata,
     ) -> None:
         self.host_static_public_key = host_static_public_key
         self.cred_metadata = cred_metadata
@@ -9973,9 +9974,9 @@ class ThpPairedCache(protobuf.MessageType):
     def __init__(
         self,
         *,
-        entries: Optional[Sequence["ThpPairedCacheEntry"]] = None,
+        entries: Sequence[ThpPairedCacheEntry] | None = None,
     ) -> None:
-        self.entries: Sequence["ThpPairedCacheEntry"] = entries if entries is not None else []
+        self.entries: Sequence[ThpPairedCacheEntry] = entries if entries is not None else []
 
 
 class ThpPairedCacheEntry(protobuf.MessageType):
@@ -9989,9 +9990,9 @@ class ThpPairedCacheEntry(protobuf.MessageType):
     def __init__(
         self,
         *,
-        mac_addr: "bytes",
-        host_name: "str",
-        app_name: "str",
+        mac_addr: bytes,
+        host_name: str,
+        app_name: str,
     ) -> None:
         self.mac_addr = mac_addr
         self.host_name = host_name
@@ -10009,11 +10010,11 @@ class TronGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[Sequence["int"]] = None,
-        show_display: Optional["bool"] = None,
-        chunkify: Optional["bool"] = None,
+        address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.show_display = show_display
         self.chunkify = chunkify
 
@@ -10028,8 +10029,8 @@ class TronAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "str",
-        mac: Optional["bytes"] = None,
+        address: str,
+        mac: bytes | None = None,
     ) -> None:
         self.address = address
         self.mac = mac
@@ -10051,16 +10052,16 @@ class TronSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        ref_block_bytes: "bytes",
-        ref_block_hash: "bytes",
-        expiration: "int",
-        timestamp: "int",
-        address_n: Optional[Sequence["int"]] = None,
-        data: Optional["bytes"] = None,
-        fee_limit: Optional["int"] = None,
-        chunkify: Optional["bool"] = None,
+        ref_block_bytes: bytes,
+        ref_block_hash: bytes,
+        expiration: int,
+        timestamp: int,
+        address_n: Sequence[int] | None = None,
+        data: bytes | None = None,
+        fee_limit: int | None = None,
+        chunkify: bool | None = None,
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.ref_block_bytes = ref_block_bytes
         self.ref_block_hash = ref_block_hash
         self.expiration = expiration
@@ -10085,9 +10086,9 @@ class TronTransferContract(protobuf.MessageType):
     def __init__(
         self,
         *,
-        owner_address: "bytes",
-        to_address: "bytes",
-        amount: "int",
+        owner_address: bytes,
+        to_address: bytes,
+        amount: int,
     ) -> None:
         self.owner_address = owner_address
         self.to_address = to_address
@@ -10104,10 +10105,10 @@ class TronVoteWitnessContract(protobuf.MessageType):
     def __init__(
         self,
         *,
-        owner_address: "bytes",
-        votes: Optional[Sequence["TronVote"]] = None,
+        owner_address: bytes,
+        votes: Sequence[TronVote] | None = None,
     ) -> None:
-        self.votes: Sequence["TronVote"] = votes if votes is not None else []
+        self.votes: Sequence[TronVote] = votes if votes is not None else []
         self.owner_address = owner_address
 
 
@@ -10123,10 +10124,10 @@ class TronTriggerSmartContract(protobuf.MessageType):
     def __init__(
         self,
         *,
-        owner_address: "bytes",
-        contract_address: "bytes",
-        data: "bytes",
-        call_value: Optional["int"] = None,
+        owner_address: bytes,
+        contract_address: bytes,
+        data: bytes,
+        call_value: int | None = None,
     ) -> None:
         self.owner_address = owner_address
         self.contract_address = contract_address
@@ -10145,9 +10146,9 @@ class TronFreezeBalanceV2Contract(protobuf.MessageType):
     def __init__(
         self,
         *,
-        owner_address: "bytes",
-        balance: "int",
-        resource: Optional["TronResourceCode"] = TronResourceCode.BANDWIDTH,
+        owner_address: bytes,
+        balance: int,
+        resource: TronResourceCode | None = TronResourceCode.BANDWIDTH,
     ) -> None:
         self.owner_address = owner_address
         self.balance = balance
@@ -10165,9 +10166,9 @@ class TronUnfreezeBalanceV2Contract(protobuf.MessageType):
     def __init__(
         self,
         *,
-        owner_address: "bytes",
-        balance: "int",
-        resource: Optional["TronResourceCode"] = TronResourceCode.BANDWIDTH,
+        owner_address: bytes,
+        balance: int,
+        resource: TronResourceCode | None = TronResourceCode.BANDWIDTH,
     ) -> None:
         self.owner_address = owner_address
         self.balance = balance
@@ -10183,7 +10184,7 @@ class TronWithdrawUnfreeze(protobuf.MessageType):
     def __init__(
         self,
         *,
-        owner_address: "bytes",
+        owner_address: bytes,
     ) -> None:
         self.owner_address = owner_address
 
@@ -10197,7 +10198,7 @@ class TronWithdrawBalance(protobuf.MessageType):
     def __init__(
         self,
         *,
-        owner_address: "bytes",
+        owner_address: bytes,
     ) -> None:
         self.owner_address = owner_address
 
@@ -10216,12 +10217,12 @@ class TronDelegateResourceContract(protobuf.MessageType):
     def __init__(
         self,
         *,
-        owner_address: "bytes",
-        balance: "int",
-        receiver_address: "bytes",
-        resource: Optional["TronResourceCode"] = TronResourceCode.BANDWIDTH,
-        lock: Optional["bool"] = None,
-        lock_period: Optional["int"] = None,
+        owner_address: bytes,
+        balance: int,
+        receiver_address: bytes,
+        resource: TronResourceCode | None = TronResourceCode.BANDWIDTH,
+        lock: bool | None = None,
+        lock_period: int | None = None,
     ) -> None:
         self.owner_address = owner_address
         self.balance = balance
@@ -10243,10 +10244,10 @@ class TronUnDelegateResourceContract(protobuf.MessageType):
     def __init__(
         self,
         *,
-        owner_address: "bytes",
-        balance: "int",
-        receiver_address: "bytes",
-        resource: Optional["TronResourceCode"] = TronResourceCode.BANDWIDTH,
+        owner_address: bytes,
+        balance: int,
+        receiver_address: bytes,
+        resource: TronResourceCode | None = TronResourceCode.BANDWIDTH,
     ) -> None:
         self.owner_address = owner_address
         self.balance = balance
@@ -10263,7 +10264,7 @@ class TronSignature(protobuf.MessageType):
     def __init__(
         self,
         *,
-        signature: "bytes",
+        signature: bytes,
     ) -> None:
         self.signature = signature
 
@@ -10283,15 +10284,15 @@ class TronRawTransaction(protobuf.MessageType):
     def __init__(
         self,
         *,
-        ref_block_bytes: "bytes",
-        ref_block_hash: "bytes",
-        expiration: "int",
-        timestamp: "int",
-        contract: Optional[Sequence["TronRawContract"]] = None,
-        data: Optional["bytes"] = None,
-        fee_limit: Optional["int"] = None,
+        ref_block_bytes: bytes,
+        ref_block_hash: bytes,
+        expiration: int,
+        timestamp: int,
+        contract: Sequence[TronRawContract] | None = None,
+        data: bytes | None = None,
+        fee_limit: int | None = None,
     ) -> None:
-        self.contract: Sequence["TronRawContract"] = contract if contract is not None else []
+        self.contract: Sequence[TronRawContract] = contract if contract is not None else []
         self.ref_block_bytes = ref_block_bytes
         self.ref_block_hash = ref_block_hash
         self.expiration = expiration
@@ -10310,8 +10311,8 @@ class TronVote(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address: "bytes",
-        count: "int",
+        address: bytes,
+        count: int,
     ) -> None:
         self.address = address
         self.count = count
@@ -10327,8 +10328,8 @@ class TronRawContract(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "TronRawContractType",
-        parameter: "TronRawParameter",
+        type: TronRawContractType,
+        parameter: TronRawParameter,
     ) -> None:
         self.type = type
         self.parameter = parameter
@@ -10344,8 +10345,8 @@ class TronRawParameter(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type_url: "str",
-        value: "bytes",
+        type_url: str,
+        value: bytes,
     ) -> None:
         self.type_url = type_url
         self.value = value
@@ -10360,7 +10361,7 @@ class WebAuthnListResidentCredentials(protobuf.MessageType):
     def __init__(
         self,
         *,
-        batch_size: Optional["int"] = None,
+        batch_size: int | None = None,
     ) -> None:
         self.batch_size = batch_size
 
@@ -10374,7 +10375,7 @@ class WebAuthnAddResidentCredential(protobuf.MessageType):
     def __init__(
         self,
         *,
-        credential_id: Optional["bytes"] = None,
+        credential_id: bytes | None = None,
     ) -> None:
         self.credential_id = credential_id
 
@@ -10388,7 +10389,7 @@ class WebAuthnRemoveResidentCredential(protobuf.MessageType):
     def __init__(
         self,
         *,
-        index: Optional["int"] = None,
+        index: int | None = None,
     ) -> None:
         self.index = index
 
@@ -10403,10 +10404,10 @@ class WebAuthnCredentials(protobuf.MessageType):
     def __init__(
         self,
         *,
-        credentials: Optional[Sequence["WebAuthnCredential"]] = None,
-        is_done: Optional["bool"] = True,
+        credentials: Sequence[WebAuthnCredential] | None = None,
+        is_done: bool | None = True,
     ) -> None:
-        self.credentials: Sequence["WebAuthnCredential"] = credentials if credentials is not None else []
+        self.credentials: Sequence[WebAuthnCredential] = credentials if credentials is not None else []
         self.is_done = is_done
 
 
@@ -10434,18 +10435,18 @@ class WebAuthnCredential(protobuf.MessageType):
     def __init__(
         self,
         *,
-        index: Optional["int"] = None,
-        id: Optional["bytes"] = None,
-        rp_id: Optional["str"] = None,
-        rp_name: Optional["str"] = None,
-        user_id: Optional["bytes"] = None,
-        user_name: Optional["str"] = None,
-        user_display_name: Optional["str"] = None,
-        creation_time: Optional["int"] = None,
-        hmac_secret: Optional["bool"] = None,
-        use_sign_count: Optional["bool"] = None,
-        algorithm: Optional["int"] = None,
-        curve: Optional["int"] = None,
+        index: int | None = None,
+        id: bytes | None = None,
+        rp_id: str | None = None,
+        rp_name: str | None = None,
+        user_id: bytes | None = None,
+        user_name: str | None = None,
+        user_display_name: str | None = None,
+        creation_time: int | None = None,
+        hmac_secret: bool | None = None,
+        use_sign_count: bool | None = None,
+        algorithm: int | None = None,
+        curve: int | None = None,
     ) -> None:
         self.index = index
         self.id = id

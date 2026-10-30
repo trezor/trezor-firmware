@@ -14,7 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from . import messages
 from .tools import workflow
@@ -35,7 +37,7 @@ def sign_identity(
     identity: messages.IdentityType,
     challenge_hidden: bytes,
     challenge_visual: str,
-    ecdsa_curve_name: Optional[str] = None,
+    ecdsa_curve_name: str | None = None,
 ) -> messages.SignedIdentity:
     return session.call(
         messages.SignIdentity(
@@ -53,7 +55,7 @@ def get_ecdh_session_key(
     session: "Session",
     identity: messages.IdentityType,
     peer_public_key: bytes,
-    ecdsa_curve_name: Optional[str] = None,
+    ecdsa_curve_name: str | None = None,
 ) -> messages.ECDHSessionKey:
     return session.call(
         messages.GetECDHSessionKey(

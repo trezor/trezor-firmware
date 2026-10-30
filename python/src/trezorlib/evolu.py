@@ -16,7 +16,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from . import messages
 from .tools import workflow
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 def get_node(
     session: Session,
     proof: bytes,
-    node_rotation_index: Optional[int] = None,
+    node_rotation_index: int | None = None,
 ) -> bytes:
     return session.call(
         messages.EvoluGetNode(
@@ -55,9 +55,9 @@ def sign_registration_request(
 
 def get_delegated_identity_key(
     session: Session,
-    rotation_index: Optional[int] = None,
-    thp_credential: Optional[bytes] = None,
-    rotate: Optional[bool] = False,
+    rotation_index: int | None = None,
+    thp_credential: bytes | None = None,
+    rotate: bool | None = False,
 ) -> messages.EvoluDelegatedIdentityKey:
     return session.call(
         messages.EvoluGetDelegatedIdentityKey(
@@ -71,7 +71,7 @@ def get_delegated_identity_key(
 
 def index_management(
     session: Session,
-    rotation_index: Optional[int] = None,
+    rotation_index: int | None = None,
 ) -> messages.EvoluIndexManagementResponse:
     return session.call(
         messages.EvoluIndexManagement(

@@ -16,9 +16,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import decimal
 import json
-from typing import Any, Optional
+from typing import Any
 
 import click
 import requests
@@ -48,7 +50,7 @@ def prompt(*args: Any, **kwargs: Any):
     return click.prompt(*args, err=True, **kwargs)
 
 
-def _default_script_type(address_n: Optional[list[int]], script_types: Any) -> str:
+def _default_script_type(address_n: list[int] | None, script_types: Any) -> str:
     script_type = "address"
 
     if address_n is None:

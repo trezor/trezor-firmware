@@ -16,7 +16,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import click
 
@@ -83,8 +83,8 @@ def sign_registration_request(
 @with_session
 def get_delegated_identity_key(
     session: Session,
-    credential: Optional[str] = None,
-    rotation_index: Optional[int] = None,
+    credential: str | None = None,
+    rotation_index: int | None = None,
     rotate: bool = False,
 ) -> dict[str, str | int | None]:
     """
@@ -113,7 +113,7 @@ def get_delegated_identity_key(
 @with_session
 def index_management(
     session: Session,
-    rotation_index: Optional[int] = None,
+    rotation_index: int | None = None,
 ) -> str:
     """
     Read the rotation index for the delegated identity key.

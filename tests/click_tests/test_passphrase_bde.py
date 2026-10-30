@@ -17,7 +17,7 @@
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -59,7 +59,7 @@ def _get_test_address(session: Session) -> str:
 
 @contextmanager
 def prepare_passphrase_dialogue(
-    device_handler: "BackgroundDeviceHandler", address: Optional[str] = None
+    device_handler: "BackgroundDeviceHandler", address: str | None = None
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
     device_handler.get_session(passphrase=PassphraseSetting.ON_DEVICE)

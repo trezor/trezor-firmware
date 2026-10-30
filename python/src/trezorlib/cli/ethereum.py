@@ -14,13 +14,15 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import json
 import re
 import sys
 import tarfile
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, AnyStr, NoReturn, Optional, TextIO, cast
+from typing import TYPE_CHECKING, Any, AnyStr, NoReturn, TextIO, cast
 
 import click
 
@@ -62,7 +64,7 @@ ETHER_UNITS = {
 # fmt: on
 
 # So that we can import the web3 library only when really used and reuse the instance
-_WEB3_INSTANCE: Optional["web3.Web3"] = None
+_WEB3_INSTANCE: web3.Web3 | None = None
 
 
 def _print_eth_dependencies_and_die() -> NoReturn:
@@ -86,9 +88,7 @@ def _get_web3() -> "web3.Web3":
     return _WEB3_INSTANCE
 
 
-def _amount_to_int(
-    ctx: click.Context, param: Any, value: Optional[str]
-) -> Optional[int]:
+def _amount_to_int(ctx: click.Context, param: Any, value: str | None) -> int | None:
     if value is None:
         return None
     if value.isdigit():
@@ -174,29 +174,29 @@ def _hex_or_file(data: str) -> bytes:
 
 
 class CliSource(definitions.Source):
-    network: Optional[bytes] = None
-    token: Optional[bytes] = None
-    display_format: Optional[bytes] = None
+    network: bytes | None = None
+    token: bytes | None = None
+    display_format: bytes | None = None
     delegate: definitions.Source = definitions.NullSource()
 
-    def get_eth_network(self, chain_id: int) -> Optional[bytes]:
+    def get_eth_network(self, chain_id: int) -> bytes | None:
         if self.network is not None:
             return self.network
         return self.delegate.get_eth_network(chain_id)
 
-    def get_eth_network_by_slip44(self, slip44: int) -> Optional[bytes]:
+    def get_eth_network_by_slip44(self, slip44: int) -> bytes | None:
         if self.network is not None:
             return self.network
         return self.delegate.get_eth_network_by_slip44(slip44)
 
-    def get_eth_token(self, chain_id: int, address: Any) -> Optional[bytes]:
+    def get_eth_token(self, chain_id: int, address: Any) -> bytes | None:
         if self.token is not None:
             return self.token
         return self.delegate.get_eth_token(chain_id, address)
 
     def get_eth_display_format(
         self, chain_id: int, address: AnyStr, func_sig: bytes
-    ) -> Optional[bytes]:
+    ) -> bytes | None:
         if self.display_format is not None:
             return self.display_format
         return self.delegate.get_eth_display_format(chain_id, address, func_sig)
@@ -205,7 +205,7 @@ class CliSource(definitions.Source):
 DEFINITIONS_SOURCE = CliSource()
 
 
-def _network_def_from_address_n(address_n: tools.Address) -> Optional[bytes]:
+def _network_def_from_address_n(address_n: tools.Address) -> bytes | None:
     """Get network definition bytes based on address_n.
 
     Tries to extract the slip44 identifier and lookup the network definition.
@@ -240,11 +240,11 @@ def _network_def_from_address_n(address_n: tools.Address) -> Optional[bytes]:
     "--display-format", help="ERC-7730 clear-signing contract descriptor blob."
 )
 def cli(
-    defs: Optional[str],
-    auto_definitions: Optional[bool],
-    network: Optional[str],
-    token: Optional[str],
-    display_format: Optional[str],
+    defs: str | None,
+    auto_definitions: bool | None,
+    network: str | None,
+    token: str | None,
+    display_format: str | None,
 ) -> None:
     """Ethereum commands.
 
@@ -376,18 +376,18 @@ def sign_tx(
     chain_id: int,
     address: str,
     amount: int,
-    gas_limit: Optional[int],
-    gas_price: Optional[int],
-    nonce: Optional[int],
-    data: Optional[str],
+    gas_limit: int | None,
+    gas_price: int | None,
+    nonce: int | None,
+    data: str | None,
     publish: bool,
     to_address: str,
-    tx_type: Optional[int],
-    token: Optional[str],
-    max_gas_fee: Optional[int],
-    max_priority_fee: Optional[int],
+    tx_type: int | None,
+    token: str | None,
+    max_gas_fee: int | None,
+    max_priority_fee: int | None,
     access_list: list[EthereumAccessList],
-    eip2718_type: Optional[int],
+    eip2718_type: int | None,
     chunkify: bool,
 ) -> str:
     """Sign (and optionally publish) Ethereum transaction.

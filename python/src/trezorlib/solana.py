@@ -14,7 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING, Any, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from . import exceptions, messages
 from .tools import workflow
@@ -61,8 +63,8 @@ def sign_tx(
     session: "Session",
     address_n: list[int],
     serialized_tx: bytes,
-    additional_info: Optional[messages.SolanaTxAdditionalInfo],
-    payment_req: Optional[messages.PaymentRequest] = None,
+    additional_info: messages.SolanaTxAdditionalInfo | None,
+    payment_req: messages.PaymentRequest | None = None,
     chunkify: bool = False,
 ) -> bytes:
     return session.call(

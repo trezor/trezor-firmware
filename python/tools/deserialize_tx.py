@@ -16,9 +16,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import os
 import sys
-from typing import Any, Optional
+from typing import Any
 
 try:
     import construct as c
@@ -65,7 +67,7 @@ class ConstFlag(c.Adapter):
         self.const = const
         super().__init__(c.Optional(c.Const(const)))
 
-    def _encode(self, obj: Any, context: Any, path: Any) -> Optional[bytes]:
+    def _encode(self, obj: Any, context: Any, path: Any) -> bytes | None:
         return self.const if obj else None
 
     def _decode(self, obj: Any, context: Any, path: Any) -> bool:

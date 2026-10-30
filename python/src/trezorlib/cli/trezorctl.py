@@ -24,7 +24,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Callable, Optional, TypeVar, cast
+from typing import Any, Callable, TypeVar, cast
 
 import click
 
@@ -110,7 +110,7 @@ class TrezorctlGroup(AliasedGroup):
     subcommand of "ethereum" group.
     """
 
-    def get_command(self, ctx: click.Context, cmd_name: str) -> Optional[click.Command]:
+    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
         cmd = super().get_command(ctx, cmd_name)
         if cmd:
             return cmd

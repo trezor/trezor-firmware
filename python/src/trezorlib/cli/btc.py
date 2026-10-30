@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import base64
 import json
-from typing import TYPE_CHECKING, Optional, TextIO
+from typing import TYPE_CHECKING, TextIO
 
 import click
 import construct as c
@@ -139,7 +139,7 @@ def guess_script_type_from_path(address_n: list[int]) -> messages.InputScriptTyp
     return messages.InputScriptType.SPENDADDRESS
 
 
-def get_unlock_path(address_n: list[int]) -> Optional[list[int]]:
+def get_unlock_path(address_n: list[int]) -> list[int] | None:
     if address_n and address_n[0] == tools.H_(10025):
         return address_n[:1]
     return None
@@ -213,7 +213,7 @@ def get_address(
     if script_type is None:
         script_type = guess_script_type_from_path(address_n)
 
-    multisig: Optional[messages.MultisigRedeemScriptType]
+    multisig: messages.MultisigRedeemScriptType | None
     if multisig_xpub:
         if multisig_threshold is None:
             raise click.ClickException("Please specify signature threshold")
@@ -260,8 +260,8 @@ def get_public_node(
     session: "Session",
     coin: str,
     address: str,
-    curve: Optional[str],
-    script_type: Optional[messages.InputScriptType],
+    curve: str | None,
+    script_type: messages.InputScriptType | None,
     show_display: bool,
     ignore_xpub_magic: bool,
 ) -> dict:
@@ -298,10 +298,10 @@ def _append_descriptor_checksum(desc: str) -> str:
 
 def _get_descriptor(
     session: "Session",
-    coin: Optional[str],
+    coin: str | None,
     account: int,
-    purpose: Optional[int],
-    script_type: Optional[messages.InputScriptType],
+    purpose: int | None,
+    script_type: messages.InputScriptType | None,
     show_display: bool,
 ) -> str:
     if purpose is None:
@@ -371,10 +371,10 @@ def _get_descriptor(
 @with_session
 def get_descriptor(
     session: "Session",
-    coin: Optional[str],
+    coin: str | None,
     account: int,
-    account_type: Optional[int],
-    script_type: Optional[messages.InputScriptType],
+    account_type: int | None,
+    script_type: messages.InputScriptType | None,
     show_display: bool,
 ) -> str:
     """Get descriptor of given account."""
@@ -458,7 +458,7 @@ def sign_message(
     coin: str,
     address: str,
     message: str,
-    script_type: Optional[messages.InputScriptType],
+    script_type: messages.InputScriptType | None,
     electrum_compat: bool,
     chunkify: bool,
 ) -> dict[str, str]:

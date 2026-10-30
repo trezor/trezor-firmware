@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import typing as t
+from __future__ import annotations
 
 import pytest
 
@@ -90,7 +90,7 @@ MERKLE_TREE_VECTORS = (
 
 
 @pytest.mark.parametrize("node, expected_hash", NODE_VECTORS)
-def test_node(node: t.Union[Node, Leaf], expected_hash: str) -> None:
+def test_node(node: Node | Leaf, expected_hash: str) -> None:
     assert node.tree_hash.hex() == expected_hash
 
 

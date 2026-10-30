@@ -90,11 +90,11 @@ def chunkify(data: bytes) -> str:
 
 
 def format_container(
-    pb: t.Union[c.Container, Struct, dict],
+    pb: c.Container | Struct | dict,
     indent: int = 0,
     sep: str = " " * 4,
-    truncate_after: t.Optional[int] = 64,
-    truncate_to: t.Optional[int] = 32,
+    truncate_after: int | None = 64,
+    truncate_to: int | None = 32,
 ) -> str:
 
     def mostly_printable(bytes: bytes | bytearray) -> bool:
@@ -305,7 +305,7 @@ class LegacySignedImage(SignableImageProto, Protocol):
 
 
 class CosiSignatureHeaderProto(Protocol):
-    hw_model: t.Union[fw_models.Model, bytes]
+    hw_model: fw_models.Model | bytes
     signature: bytes
     sigmask: int
 

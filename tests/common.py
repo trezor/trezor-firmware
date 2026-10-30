@@ -21,7 +21,7 @@ import re
 import time
 from collections.abc import Generator
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 from unittest import mock
 
 import pytest
@@ -171,7 +171,7 @@ def generate_entropy(
 
 
 def click_through(
-    debug: "DebugLink", screens: int, code: Optional[messages.ButtonRequestType] = None
+    debug: "DebugLink", screens: int, code: messages.ButtonRequestType | None = None
 ) -> Generator[None, "ButtonRequest", None]:
     """Click through N dialog screens.
 
@@ -194,7 +194,7 @@ def click_through(
 
 def read_and_confirm_mnemonic(
     debug: "DebugLink", choose_wrong: bool = False
-) -> Generator[None, "ButtonRequest", Optional[str]]:
+) -> Generator[None, "ButtonRequest", str | None]:
     """Read mnemonic words from the screen and answer
     confirmation questions.
     Return the full mnemonic or None if `choose_wrong` is True.
