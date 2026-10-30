@@ -24,7 +24,7 @@ use stabby::str::Str;
 use crate::traits::ApiVariant;
 use crate::traits::allocator::{FfiLayout, GlobalAllocatorV1, GlobalAllocatorV1Vtable};
 use crate::traits::crypto::{
-    BoxedHasher, CanonicalSig, CryptoError, CryptoV1, CryptoV1Vtable, EcdsaCurve, Hasher,
+    BoxedHasher, CanonicalSig, CryptoError, CryptoV1, CryptoV1Vtable, Curve, EcdsaCurve, Hasher,
     HashingAlgorithm, HmacAlgorithm,
 };
 use crate::traits::syslog::{
@@ -135,6 +135,7 @@ impl CryptoV1 for DummyCrypto {
 
     extern "C" fn get_xpub<'a>(
         &self,
+        _curve: Curve,
         _address_n: Slice<'a, u32>,
         _xpub_magic: u32,
     ) -> FastResult<[u8; 111], WireError> {
@@ -143,6 +144,7 @@ impl CryptoV1 for DummyCrypto {
 
     extern "C" fn get_public_key<'a>(
         &self,
+        _curve: Curve,
         _address_n: Slice<'a, u32>,
         _compressed: bool,
     ) -> FastResult<stabby::boxed::BoxedSlice<u8>, WireError> {
@@ -151,6 +153,7 @@ impl CryptoV1 for DummyCrypto {
 
     extern "C" fn ecdsa_sign_digest<'a>(
         &self,
+        _curve: EcdsaCurve,
         _address_n: Slice<'a, u32>,
         _digest: &'a [u8; 32],
         _compressed: bool,

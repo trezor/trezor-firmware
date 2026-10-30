@@ -54,11 +54,22 @@ pub enum HmacAlgorithm {
     Sha512,
 }
 
+/// ECDSA curves. Their values match [`Curve`]'s.
 #[stabby::stabby]
 #[repr(u8)]
 pub enum EcdsaCurve {
-    Secp256k1,
-    Nist256p1,
+    Secp256k1 = 0,
+    Nist256p1 = 1,
+}
+
+/// Curves to derive keys on. Core only allows the ones in the app's manifest.
+#[stabby::stabby]
+#[repr(u8)]
+pub enum Curve {
+    Secp256k1 = 0,
+    Nist256p1 = 1,
+    Ed25519 = 2,
+    Curve25519 = 3,
 }
 
 /// Extra constraint on a secp256k1 signature, matching trezor-crypto's
@@ -82,15 +93,17 @@ pub trait CryptoV1: Send + Sync {
     /// the HMAC context's internal state); Core never retains it afterward.
     extern "C" fn get_hmac<'a>(&self, algorithm: HmacAlgorithm, key: Slice<'a, u8>) -> BoxedHasher;
 
-    /// Derives the extended public key (xpub) for `address_n`.
+    /// Derives the extended public key (xpub) for `address_n` on `curve`.
     extern "C" fn get_xpub<'a>(
         &self,
+        curve: Curve,
         address_n: Slice<'a, u32>,
         xpub_magic: u32,
     ) -> FastResult<[u8; 111], WireError>;
-    /// Derives the public key for `address_n`.
+    /// Derives the public key for `address_n` on `curve`.
     extern "C" fn get_public_key<'a>(
         &self,
+        curve: Curve,
         address_n: Slice<'a, u32>,
         compressed: bool,
     ) -> FastResult<BoxedSlice<u8>, WireError>;
@@ -101,6 +114,7 @@ pub trait CryptoV1: Send + Sync {
     /// anything but [`CanonicalSig::Any`].
     extern "C" fn ecdsa_sign_digest<'a>(
         &self,
+        curve: EcdsaCurve,
         address_n: Slice<'a, u32>,
         digest: &'a [u8; 32],
         compressed: bool,

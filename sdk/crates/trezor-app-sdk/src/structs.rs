@@ -834,14 +834,21 @@ pub enum TrezorUiResult {
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorCryptoEnum<'a> {
     GetXpub {
+        /// A [`Curve`](crate::traits::crypto::Curve), as its `u8` value.
+        curve: u8,
         address_n: Slice<'a, u32>,
         xpub_magic: u32,
     },
     GetPublicKey {
+        /// A [`Curve`](crate::traits::crypto::Curve), as its `u8` value.
+        curve: u8,
         address_n: Slice<'a, u32>,
         compressed: bool,
     },
     EcdsaSignDigest {
+        /// An [`EcdsaCurve`](crate::traits::crypto::EcdsaCurve), as its `u8`
+        /// value.
+        curve: u8,
         address_n: Slice<'a, u32>,
         digest: [u8; 32],
         compressed: bool,
@@ -939,6 +946,7 @@ mod tests {
         let variants: &[(u8, &str)] = &[
             (
                 GetXpub {
+                    curve: 0,
                     address_n: empty_u32.into(),
                     xpub_magic: 0,
                 }
@@ -947,6 +955,7 @@ mod tests {
             ),
             (
                 GetPublicKey {
+                    curve: 0,
                     address_n: empty_u32.into(),
                     compressed: false,
                 }
@@ -955,6 +964,7 @@ mod tests {
             ),
             (
                 EcdsaSignDigest {
+                    curve: 0,
                     address_n: empty_u32.into(),
                     digest: [0u8; 32],
                     compressed: false,
