@@ -1,5 +1,6 @@
 use crate::{
     alloc_types::{Box, String, ToString, Vec, vec},
+    common::ecdsa_sign_digest,
     definitions::unknown_network,
     layout::{confirm_blob_intro, confirm_blob_prefix},
     proto::definitions::{NetworkInfo, TokenInfo},
@@ -382,7 +383,7 @@ pub fn end_progress_if_active() -> Result<()> {
 /// signing. It replaces any "loading transaction" one still on screen.
 pub fn sign_digest(address_n: &[u32], digest: &[u8; 32], show_progress: bool) -> Result<[u8; 65]> {
     if !show_progress {
-        return crypto::ecdsa_sign_digest(address_n, digest, false, crypto::CanonicalSig::Ethereum);
+        return ecdsa_sign_digest(address_n, digest, false, crypto::CanonicalSig::Ethereum);
     }
     end_progress_if_active()?;
     ui::init_progress(
@@ -392,8 +393,7 @@ pub fn sign_digest(address_n: &[u32], digest: &[u8; 32], show_progress: bool) ->
         false,
     )?;
     ui::update_progress(None, 600)?;
-    let signature =
-        crypto::ecdsa_sign_digest(address_n, digest, false, crypto::CanonicalSig::Ethereum);
+    let signature = ecdsa_sign_digest(address_n, digest, false, crypto::CanonicalSig::Ethereum);
     ui::end_progress()?;
     signature
 }

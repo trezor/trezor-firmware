@@ -1,5 +1,6 @@
 use crate::{
     alloc_types::{String, Vec},
+    common::get_xpub,
     paths::Bip32Path,
     proto::{
         common::{HdNodeType, button_request::ButtonRequestType},
@@ -17,7 +18,7 @@ pub(crate) fn get_public_key(msg: GetPublicKey) -> Result<PublicKey> {
     const VERSION: u32 = 0x0488B21E;
 
     let dp = Bip32Path::from_slice(&msg.address_n);
-    let xpub = crypto::get_xpub(&dp.as_slice(), VERSION).c()?;
+    let xpub = get_xpub(dp.as_slice(), VERSION).c()?;
     let xpub =
         String::from(core::str::from_utf8(&xpub).map_err(|_| Error::DataError("Invalid xpub"))?);
 
