@@ -172,7 +172,7 @@ fn public_keys(keys: &[Vec<u8>]) -> Result<Vec<[u8; 32]>> {
 // ============================================================================
 
 pub fn base58_encode(m: wire::Base58Encode) -> Result<wire::Base58> {
-    let encoded = sdk::base58_encode(&m.data)?;
+    let encoded = sdk::base58_encode(&m.data);
     Ok(wire::Base58 { encoded })
 }
 
@@ -182,7 +182,7 @@ pub fn base58_decode(m: wire::Base58Decode) -> Result<wire::Data> {
 }
 
 pub fn base58check_encode(m: wire::Base58CheckEncode) -> Result<wire::Base58> {
-    let encoded = sdk::base58check_encode(&m.data)?;
+    let encoded = sdk::base58check_encode(&m.data);
     Ok(wire::Base58 { encoded })
 }
 
