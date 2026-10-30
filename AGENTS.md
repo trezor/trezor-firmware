@@ -63,7 +63,8 @@ Makefiles if in doubt; this file only captures what is non-obvious.
   Plain `nohup ... &` gets killed with the spawning shell. Stop the emulator by killing the **`trezor.pid`
   process** — `emu.py` then shuts down cleanly. Killing the `emu.py` process itself orphans `firmware-emu`
   and `model_server`.
-- T3W1 (Safe 7) needs the Tropic01 model server; `emu.py` starts and stops it automatically (TCP 28992).
+- T3W1 (Safe 7) needs the Tropic01 model server; `emu.py` starts and stops it automatically on a free
+  TCP port. With `--no-tropic-emulator` the emulator expects a manually started `model_server` on TCP 28992.
   `Fatal: tropic_pin_unmask_kek failed` on startup = stale state between flash and model server; restart
   with `-e` (or `-t`).
 
@@ -105,7 +106,7 @@ Makefiles if in doubt; this file only captures what is non-obvious.
 ## Parallel agents / worktrees
 
 Multiple emulators coexist only if each has its own port block and profile. Each emulator uses
-**7 consecutive UDP ports** from its base (default 21324): wire, debuglink, FIDO2, VCP, BLE ×2, (tropic).
+**6 consecutive UDP ports** from its base (default 21324): wire, debuglink, FIDO2, VCP, BLE ×2.
 
 - Always pass a unique `-P <port>` (above 30000, spaced ≥ 8 apart) and `-t` or `-p <name>`; never use the
   default port 21324 or the default profile `/var/tmp`.
@@ -116,8 +117,10 @@ Multiple emulators coexist only if each has its own port block and profile. Each
 - Stop only your own emulator (`kill "$(cat <profile>/trezor.pid)"`). **Never** `pkill -f firmware-emu` or
   `pkill -f model_server` — that kills every agent's processes.
 - Machine-wide singletons, one at a time:
-  - The Tropic model on TCP 28992, i.e. any **T3W1** emulator (`emu.py` hardcodes the port) and T3W1 unit tests.
-    Use other models (T3T1, T2T1) in parallel worktrees, or take turns.
+  - The Tropic model on TCP 28992: T3W1 unit tests (the binary defaults to that port) and T3W1 upgrade
+    tests (emulators before 2.9.4 are not configurable). `emu.py` and `prodtest_emu.py` start their own
+    model on a free port, so interactive **T3W1** emulators no longer collide; for the tests above, use
+    other models (T3T1, T2T1) in parallel worktrees, or take turns.
   - Runs that spawn their own emulators with `--control-emulators` (`*_multicore`, `test_emu_persistence*`,
     `test_emu_upgrade`) and `test_emu_prodtest` — their ports are fixed (base 20000), so concurrent runs collide.
 

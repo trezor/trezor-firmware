@@ -44,7 +44,7 @@ class ProdtestEmulator(Emulator):
     :func:`get_prodtest_emulator` factory.
     """
 
-    STORAGE_FILENAME = "trezor.flash"
+    STORAGE_FILENAME = "trezor_prodtest.flash"
 
     def __init__(
         self,
@@ -67,9 +67,7 @@ class ProdtestEmulator(Emulator):
         if port is not None:
             self.port = port
 
-        # The Tropic model is managed externally (see the ``tropic_prodtest``
-        # fixture); we only point the emulator at its port, like CoreEmulator.
-        self.tropic_model_port = tropic_model_port
+        self.tropic_model_port = tropic_model_port or emulator.TropicModel.DEFAULT_PORT
 
     @property
     def vcp_port(self) -> int:
@@ -85,8 +83,7 @@ class ProdtestEmulator(Emulator):
         )
         if self.headless:
             env["SDL_VIDEODRIVER"] = "dummy"
-        if self.tropic_model_port is not None:
-            env["TROPIC_MODEL_PORT"] = str(self.tropic_model_port)
+        env["TROPIC_MODEL_PORT"] = str(self.tropic_model_port)
         return env
 
     def _wait_until_ready(self, timeout: float = 30) -> None:

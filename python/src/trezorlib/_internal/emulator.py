@@ -26,7 +26,7 @@ import subprocess
 import time
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any, Optional, TextIO, Union, cast
+from typing import Any, TextIO, cast
 
 from ..debuglink import DebugLinkNotFound, TrezorTestContext
 from ..transport import Transport
@@ -54,25 +54,56 @@ def _rm_f(path: Path) -> None:
         pass
 
 
+def _reserve_free_port() -> tuple[socket.socket | None, int]:
+    """Reserve a free TCP port for the Tropic model.
+
+    The returned socket keeps the port bound until it is closed, so no other
+    process can take the port in the meantime and parallel runs never pick
+    the same port. `model_server` binds the port alongside the reservation:
+    Both set `SO_REUSEPORT`, which permits the duplicate binding, and the
+    connections go to the model, which is the only one listening.
+
+    Where `SO_REUSEPORT` is not available, fall back to just picking a free
+    port, with a small race window between closing the probe socket and the
+    model binding the port.
+    """
+    sock = socket.socket()
+    if hasattr(socket, "SO_REUSEPORT"):
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        sock.bind(("", 0))
+        return sock, sock.getsockname()[1]
+    with sock:
+        sock.bind(("", 0))
+        return None, sock.getsockname()[1]
+
+
 class TropicModel:
+    # The port where the emulators expect the Tropic model unless configured
+    # manually. The value matches `model_server`'s own default, so a manually
+    # started model listens where the emulators look. Models started by a
+    # launcher or a fixture use a free port (`port=None`) instead.
     DEFAULT_PORT = 28992
 
     def __init__(
         self,
         profile_dir: str,
         configfile: Path,
-        port: int = DEFAULT_PORT,
+        port: int | None = None,
         logfile: TextIO | str | Path | None = None,
         configfile_output: Path | None = None,
     ) -> None:
         self.profile_dir = Path(profile_dir).resolve()
-        self.port = port
+        self._port_reservation: socket.socket | None = None
+        if port is not None:
+            self.port = port
+        else:
+            self._port_reservation, self.port = _reserve_free_port()
         self.configfile = configfile.resolve()
         self.configfile_output = (
             configfile_output or self.profile_dir / "tropic_model_config_output.yml"
         )
         self.logfile = logfile or self.profile_dir / "trezor-tropic-model.log"
-        self.process: Optional[subprocess.Popen] = None
+        self.process: subprocess.Popen | None = None
 
     def start(self) -> None:
         self.process = self._launch_process()
@@ -100,6 +131,10 @@ class TropicModel:
                 LOG.info("Tropic model seems stuck. Sending kill signal.")
                 self.process.kill()
             _RUNNING_PIDS.remove(self.process)
+            self.process = None
+        if self._port_reservation is not None:
+            self._port_reservation.close()
+            self._port_reservation = None
 
     def _launch_process(self) -> subprocess.Popen:
         # Opening the file if it is not already opened
@@ -161,14 +196,15 @@ class TropicModel:
 
 class Emulator:
     STORAGE_FILENAME: str
+    SDCARD_FILENAME = "trezor.sdcard"
 
     def __init__(
         self,
         executable: Path,
         profile_dir: str,
         *,
-        logfile: Union[TextIO, str, Path, None] = None,
-        storage: Optional[bytes] = None,
+        logfile: TextIO | str | Path | None = None,
+        storage: bytes | None = None,
         headless: bool = False,
         debug: bool = True,
         auto_interact: bool = True,
@@ -210,7 +246,7 @@ class Emulator:
 
     @property
     def client(self) -> TrezorTestContext:
-        """So that type-checkers do not see `client` as `Optional`.
+        """So that type-checkers do not see `client` as optional.
 
         (it is not None between `start()` and `stop()` calls)
         """
@@ -222,7 +258,10 @@ class Emulator:
         return []
 
     def make_env(self) -> dict[str, str]:
-        return os.environ.copy()
+        env = os.environ.copy()
+        env["TREZOR_FLASH_FILENAME"] = self.STORAGE_FILENAME
+        env["TREZOR_SDCARD_FILENAME"] = self.SDCARD_FILENAME
+        return env
 
     def _get_transport(self) -> UdpTransport:
         return UdpTransport(f"127.0.0.1:{self.port}")
@@ -249,7 +288,7 @@ class Emulator:
 
         LOG.info(f"Emulator ready after {time.monotonic() - start:.3f} seconds")
 
-    def wait(self, timeout: Optional[float] = None) -> int:
+    def wait(self, timeout: float | None = None) -> int:
         assert self.process is not None, "Emulator not started"
         ret = self.process.wait(timeout=timeout)
         _RUNNING_PIDS.remove(self.process)
@@ -278,8 +317,8 @@ class Emulator:
 
     def start(
         self,
-        transport: Optional[UdpTransport] = None,
-        debug_transport: Optional[Transport] = None,
+        transport: UdpTransport | None = None,
+        debug_transport: Transport | None = None,
     ) -> None:
         if self.process:
             if self.process.poll() is not None:
@@ -357,7 +396,26 @@ class Emulator:
     def get_storage(self) -> bytes:
         return self.storage.read_bytes()
 
-    def properties(self) -> dict:
+    def properties(self) -> dict[str, Any]:
+        args = [str(self.executable), "--emulator-properties"]
+        try:
+            stdout = subprocess.check_output(
+                args,
+                cwd=self.workdir,
+                env=self.make_env(),
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=5,
+            )
+            props = json.loads(stdout)
+            assert isinstance(props, dict)
+            return props
+        except subprocess.CalledProcessError as exc:
+            LOG.warning(
+                f"{' '.join(args)} failed: {exc}\nstdout: {exc.stdout}\nstderr: {exc.stderr}"
+            )
+        except Exception as exc:
+            LOG.warning(f"{' '.join(args)} failed: {exc}")
         return {}
 
 
@@ -367,27 +425,27 @@ class CoreEmulator(Emulator):
     def __init__(
         self,
         *args: Any,
-        tropic_model_port: Optional[int] = None,
-        port: Optional[int] = None,
+        tropic_model_port: int | None = None,
+        port: int | None = None,
         main_args: Sequence[str] = ("-m", "main"),
-        workdir: Optional[Path] = None,
-        sdcard: Optional[bytes] = None,
+        workdir: Path | None = None,
+        sdcard: bytes | None = None,
         disable_animation: bool = True,
         heap_size: str = "20M",
-        display_scale: Optional[float] = None,
+        display_scale: float | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         if workdir is not None:
             self.workdir = Path(workdir).resolve()
 
-        self.sdcard = self.profile_dir / "trezor.sdcard"
+        self.sdcard = self.profile_dir / self.SDCARD_FILENAME
         if sdcard is not None:
             self.sdcard.write_bytes(sdcard)
 
         if port:
             self.port = port
-        self.tropic_model_port = tropic_model_port
+        self.tropic_model_port = tropic_model_port or TropicModel.DEFAULT_PORT
 
         self.disable_animation = disable_animation
         self.main_args = list(main_args)
@@ -408,7 +466,7 @@ class CoreEmulator(Emulator):
             env["TREZOR_DISABLE_ANIMATION"] = "1"
         if self.display_scale is not None:
             env["TREZOR_EMULATOR_SCALE"] = str(self.display_scale)
-        env["TROPIC_MODEL_PORT"] = str(self.tropic_port())
+        env["TROPIC_MODEL_PORT"] = str(self.tropic_model_port)
 
         return env
 
@@ -433,36 +491,14 @@ class CoreEmulator(Emulator):
     def ble_port(self) -> tuple[int, int]:
         return (self.port + 4, self.port + 5)
 
-    # Tropic model can be managed externally, return configured port if set.
-    # Also TCP instead of UDP.
-    def tropic_port(self) -> int:
-        return self.tropic_model_port or (self.port + 6)
-
-    def properties(self) -> dict[str, Any]:
-        args = [str(self.executable), "--emulator-properties"]
-        try:
-            stdout = subprocess.check_output(
-                args,
-                cwd=self.workdir,
-                env=self.make_env(),
-                stderr=subprocess.PIPE,
-                text=True,
-                timeout=5,
-            )
-            props = json.loads(stdout)
-            assert isinstance(props, dict)
-            return props
-        except subprocess.CalledProcessError as exc:
-            LOG.warning(
-                f"{' '.join(args)} failed: {exc}\nstdout: {exc.stdout}\nstderr: {exc.stderr}"
-            )
-        except Exception as exc:
-            LOG.warning(f"{' '.join(args)} failed: {exc}")
-        return {}
-
 
 class LegacyEmulator(Emulator):
     STORAGE_FILENAME = "emulator.img"
+
+    def properties(self) -> dict[str, Any]:
+        # The legacy emulator ignores command-line arguments altogether, so
+        # running it with `--emulator-properties` would just start it.
+        return {}
 
     def make_env(self) -> dict[str, str]:
         env = super().make_env()

@@ -282,8 +282,6 @@ def test_tropic_boot(scenario: TropicBootScenario) -> None:
             yaml.safe_dump(_build_tropic_model_config(scenario), sort_keys=False)
         )
 
-        # using the default port - needs similar mechanism as device tests if we want
-        # parallel execution of test cases (currently not supported for upgrade tests)
         with TropicModel(
             profile_dir=temp_dir,
             configfile=config_path,
