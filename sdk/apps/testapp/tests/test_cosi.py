@@ -20,7 +20,13 @@ from trezorlib import cosi
 from trezorlib.debuglink import DebugSession as Session
 
 from . import testapp_ext
-from .testapp_ext import INVALID_ENCODING, INVALID_SIGNATURE, SdkError, raises
+from .testapp_ext import (
+    INVALID_ENCODING,
+    INVALID_PUBLIC_KEY,
+    INVALID_SIGNATURE,
+    SdkError,
+    raises,
+)
 
 PRIVKEYS = [bytes([i]) * 32 for i in range(1, 6)]
 PUBKEYS = [cosi.pubkey_from_privkey(sk) for sk in PRIVKEYS]
@@ -211,13 +217,13 @@ def test_cosi_combine_publickeys_verifies(session: Session, instance_id: int):
 
 
 def test_cosi_combine_publickeys_empty(session: Session, instance_id: int):
-    with raises(SdkError.DataError, INVALID_ENCODING):
+    with raises(SdkError.DataError, INVALID_PUBLIC_KEY):
         testapp_ext.cosi_combine_publickeys(session, instance_id, [])
 
 
 def test_cosi_combine_publickeys_invalid_point(session: Session, instance_id: int):
     for keys in ([PUBKEYS[0], INVALID_POINT], [INVALID_POINT, PUBKEYS[0]]):
-        with raises(SdkError.DataError, INVALID_ENCODING):
+        with raises(SdkError.DataError, INVALID_PUBLIC_KEY):
             testapp_ext.cosi_combine_publickeys(session, instance_id, keys)
 
 
