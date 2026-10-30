@@ -1,5 +1,3 @@
-use alloc::vec::Vec;
-
 use rkyv::rancor::Failure;
 use rtl::unwrap;
 use stabby::boxed::BoxedSlice;
@@ -328,7 +326,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
             let public_key: &crypto::ed25519::PublicKey = public_key
                 .as_slice()
                 .try_into()
-                .map_err(|_| CryptoError::InvalidEncoding)?;
+                .map_err(|_| CryptoError::InvalidPublicKey)?;
             let signature: &crypto::ed25519::Signature = signature
                 .as_slice()
                 .try_into()
@@ -354,18 +352,8 @@ impl CryptoV1 for TrezorCryptoV1Impl {
                 .map_err(|_| CryptoError::InvalidEncoding)?;
             let cosi_sig = crypto::cosi::Signature::new(sigmask, *sig);
 
-            let keys: Result<Vec<crypto::ed25519::PublicKey>, CryptoError> = public_keys
-                .as_slice()
-                .iter()
-                .map(|k| {
-                    let key: &crypto::ed25519::PublicKey =
-                        k[..].try_into().map_err(|_| CryptoError::InvalidEncoding)?;
-                    Ok(*key)
-                })
-                .collect();
-            let keys = keys?;
-
-            crypto::cosi::verify(threshold, message.as_slice(), &keys, &cosi_sig)
+            // `ed25519::PublicKey` is `[u8; 32]`, the keys need no conversion.
+            crypto::cosi::verify(threshold, message.as_slice(), &public_keys, &cosi_sig)
                 .map_err(|_| CryptoError::InvalidSignature)?;
             Ok(())
         })()
@@ -376,20 +364,10 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         &self,
         public_keys: Slice<'a, [u8; 32]>,
     ) -> FastResult<[u8; 32], CryptoError> {
-        (|| {
-            let keys: Vec<crypto::ed25519::PublicKey> = public_keys
-                .as_slice()
-                .iter()
-                .map(|k| {
-                    let key: &crypto::ed25519::PublicKey =
-                        k[..].try_into().map_err(|_| CryptoError::InvalidEncoding)?;
-                    Ok(*key)
-                })
-                .collect::<Result<_, CryptoError>>()?;
-
-            crypto::cosi::combine_publickeys(&keys).map_err(|_| CryptoError::InvalidEncoding)
-        })()
-        .into()
+        // Fails on no keys or a key that isn't a curve point.
+        crypto::cosi::combine_publickeys(&public_keys)
+            .map_err(|_| CryptoError::InvalidPublicKey)
+            .into()
     }
 
     extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> String {
