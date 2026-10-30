@@ -57,6 +57,7 @@ font or a screen.
 | `review(step, title, &fields).confirm()` | to read facts and say yes | `Result<()>` |
 | `review(…).confirm_final()` | the same, as the last yes before signing | `Result<()>` |
 | `review(…).confirm_danger()` | to go on with something risky | `Result<()>` |
+| `summary(step, title).amount(…).fee(…).confirm_final()` | to sign a transfer: its amount and fee, as core's own summary shows them | `Result<()>` |
 | `details(step, title, &fields)` | whether to see the details | `Result<Details>` |
 | `verify_address(step, address, account, path)` | to check one of their own addresses | `Result<()>` |
 | `verify_pubkey(step, pubkey, account, path)` | to check one of their own public keys | `Result<()>` |
@@ -78,7 +79,9 @@ fn confirm_send(recipient: &str, amount: &str) -> trezor_app_sdk::Result<()> {
     modui::review("send", "Send", &[Field::address("Recipient", recipient)])
         .extras(&[Extra::new("Account info", &account)])
         .confirm()?;
-    modui::review("summary", "Send", &[Field::amount("Amount", amount, "TRX")])
+    modui::summary("summary", "Send")
+        .amount("Amount", amount, "TRX")
+        .account("Account info", &account)
         .confirm_final()
 }
 ```

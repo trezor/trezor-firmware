@@ -124,7 +124,7 @@ stands, so each layout can be seen with realistic facts:
 
 | Name | Shows |
 | ---- | ----- |
-| `send` | two reviews, with an "Account info" extra |
+| `send` | a review, then a `summary`, each with an "Account info" extra |
 | `delegate` | one review with address, amount and text facts |
 | `claim-owner` | a review with a warning beside an address |
 | `unknown-contract` | a `danger` for an unknown contract |

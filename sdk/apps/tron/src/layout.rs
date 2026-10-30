@@ -188,19 +188,18 @@ fn confirm_tron_summary(
     fee: Option<Amount>,
     account_details: Option<(Option<&str>, &str)>,
 ) -> Result<()> {
-    let mut summary = Vec::with_capacity(2);
-    if let Some((amount, ticker)) = amount {
-        summary.push(Field::amount(tr!("words__amount"), amount, ticker));
-    }
-    if let Some((fee, ticker)) = fee {
-        summary.push(Field::amount(tr!("words__fee_limit"), fee, ticker));
-    }
-
     let account =
         account_details.map_or_else(Vec::new, |(name, path)| account_facts(name, Some(path)));
 
-    modui::review("summary", title.unwrap_or(tr!("words__send")), &summary)
-        .extras(&[Extra::new(tr!("address_details__account_info"), &account)])
+    let mut summary = modui::summary("summary", title.unwrap_or(tr!("words__send")));
+    if let Some((amount, ticker)) = amount {
+        summary = summary.amount(tr!("words__amount"), amount, ticker);
+    }
+    if let Some((fee, ticker)) = fee {
+        summary = summary.fee(tr!("words__fee_limit"), fee, ticker);
+    }
+    summary
+        .account(tr!("address_details__account_info"), &account)
         .confirm_final()
         .c()
 }
@@ -241,12 +240,12 @@ pub fn confirm_tron_transfer(
         .confirm()
         .c()?;
 
-    let mut summary = Vec::with_capacity(2);
+    let mut summary = modui::summary("transfer/summary", title);
     if let Some(native_amount) = native_amount_str {
-        summary.push(Field::amount(tr!("words__amount"), native_amount, TRX));
+        summary = summary.amount(tr!("words__amount"), native_amount, TRX);
     }
-    summary.push(Field::amount(tr!("words__fee_limit"), maximum_fee, SUN));
-    modui::review("transfer/summary", title, &summary)
+    summary
+        .fee(tr!("words__fee_limit"), maximum_fee, SUN)
         .confirm_final()
         .c()
 }
@@ -292,12 +291,12 @@ fn confirm_tron_approve(
         .confirm()
         .c()?;
 
-    let mut summary = Vec::with_capacity(2);
+    let mut summary = modui::summary("approve/summary", title);
     if let Some(native_amount) = native_amount_str {
-        summary.push(Field::amount(tr!("words__amount"), native_amount, TRX));
+        summary = summary.amount(tr!("words__amount"), native_amount, TRX);
     }
-    summary.push(Field::amount(tr!("words__fee_limit"), maximum_fee, SUN));
-    modui::review("approve/summary", title, &summary)
+    summary
+        .fee(tr!("words__fee_limit"), maximum_fee, SUN)
         .confirm_final()
         .c()
 }

@@ -60,8 +60,8 @@ pub fn show(m: wire::Showcase) -> Result<wire::UiResult> {
     }
 }
 
-/// The reference's "Tron send, before and after": two reviews, the second one
-/// the last yes before signing.
+/// The reference's "Tron send, before and after": a review of the recipient,
+/// then the summary as the last yes before signing.
 fn send() -> Result<()> {
     let account = [
         Field::text("Account", ACCOUNT),
@@ -70,16 +70,11 @@ fn send() -> Result<()> {
     modui::review("send", "Send", &[Field::address("Recipient", RECIPIENT)])
         .extras(&[Extra::new("Account info", &account)])
         .confirm()?;
-    modui::review(
-        "summary",
-        "Send",
-        &[
-            Field::amount("Amount", "1.5", "TRX"),
-            Field::amount("Fee limit", "10", "TRX"),
-        ],
-    )
-    .extras(&[Extra::new("Account info", &account)])
-    .confirm_final()
+    modui::summary("summary", "Send")
+        .amount("Amount", "1.5", "TRX")
+        .fee("Fee limit", "10", "TRX")
+        .account("Account info", &account)
+        .confirm_final()
 }
 
 /// The reference's `delegate` examples: several facts on one screen, then the

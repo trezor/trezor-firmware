@@ -47,6 +47,7 @@
 //! | Layout | Shows | Extras |
 //! |---|---|---|
 //! | [`review`] | facts to read before a yes | yes |
+//! | [`summary`] | a transfer's amount and fee, as the last yes | account, fee info |
 //! | [`details`] | facts the person may skip | — |
 //! | [`verify_address`] | one of the person's own addresses | — |
 //! | [`verify_pubkey`] | one of the person's own public keys | — |
@@ -56,6 +57,10 @@
 //! [`Review::confirm`] is a tap, [`Review::confirm_final`] a hold, and
 //! [`Review::confirm_danger`] a deliberate detour past what is risky. A danger is
 //! an answer, not a layout of its own.
+//!
+//! A [`summary`] is a review with set roles, the shape of core's own summary
+//! screen: the amount and the fee as its facts, the account and the fee's
+//! details as its extras, answered by [`Summary::confirm_final`].
 //!
 //! Every layout is one function taking every parameter, and does not return
 //! until the person answers — except [`done`], which returns at once.
@@ -87,7 +92,7 @@
 //!
 //! What a layout returns depends on what kind of layout it is:
 //!
-//! - **[`review`]** (in all three of its answers),
+//! - **[`review`]** (in all three of its answers), **[`summary`]**,
 //!   **[`verify_address`]** and **[`verify_pubkey`]** return `Result<()>`:
 //!   `Ok(())` when the person said yes, and
 //!   `Err(`[`crate::Error::Cancelled`]`)` when they refused, by whatever
@@ -287,6 +292,7 @@ mod done;
 mod field;
 mod progress;
 mod review;
+mod summary;
 mod verify;
 
 pub use decision::{Details, details};
@@ -294,4 +300,5 @@ pub use done::done;
 pub use field::{DataSource, Field};
 pub use progress::{Progress, progress};
 pub use review::{Extra, Review, review};
+pub use summary::{Summary, summary};
 pub use verify::{verify_address, verify_pubkey};
