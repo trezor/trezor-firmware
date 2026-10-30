@@ -20,6 +20,7 @@ import asyncio
 import atexit
 import logging
 import sys
+import time
 import typing as t
 from dataclasses import dataclass
 from multiprocessing import Pipe, Process
@@ -53,6 +54,7 @@ SCAN_INTERVAL_SECONDS = 3
 SHUTDOWN_TIMEOUT_SECONDS = 10
 # A single GATT write; a stalled one must not block the caller forever.
 WRITE_TIMEOUT_SECONDS = 5
+CACHE_SCAN_SECONDS = 5
 
 SHOULD_WRITE_WITH_RESPONSE = sys.platform == "darwin"
 
@@ -63,6 +65,8 @@ class BleTransport(Transport):
     CHUNK_SIZE = 244
 
     _ble = None
+    _cached_last = 0.0
+    _cached_devices: list[tuple[str, str]] = []
 
     def __init__(self, address: str) -> None:
         self.device = address
@@ -83,8 +87,13 @@ class BleTransport(Transport):
         # (capability comes from the single-source model registry).
         if models and not any(model.ble_capable for model in models):
             return []
-        devices = cls.ble_proxy().scan()
-        return [BleTransport(device[0]) for device in devices]
+        # cli.get_client enumerates twice (full path, then prefix search)
+        # cache the scan results for a while to avoid scanning twice
+        since_cached = time.monotonic() - cls._cached_last
+        if since_cached > CACHE_SCAN_SECONDS:
+            cls._cached_devices = cls.ble_proxy().scan()
+            cls._cached_last = time.monotonic()
+        return [BleTransport(device[0]) for device in cls._cached_devices]
 
     @classmethod
     def _try_path(cls, path: str) -> BleTransport:

@@ -217,3 +217,21 @@ def get_transport(path: str | None = None, prefix_search: bool = False) -> Trans
         return transports[0].find_by_path(path, prefix_search=prefix_search)
 
     raise TransportException(f"Could not find device by path: {path}")
+
+
+# to be used for handling TREZOR_PATH
+# warning: may enumerate transports twice
+def _get_transport_prefer_full(path: str | None = None) -> Transport:
+    try:
+        # look for transport without prefix search
+        return get_transport(path, prefix_search=False)
+    except Exception:
+        # most likely not found. try again below.
+        pass
+
+    # do not enumerate again if there is no path
+    if path is None:
+        raise TransportException("No Trezor device found")
+
+    # look for transport with prefix search
+    return get_transport(path, prefix_search=True)
