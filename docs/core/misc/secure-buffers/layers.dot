@@ -1,0 +1,71 @@
+digraph secure_buffer_layers {
+  graph [rankdir=TB, bgcolor="white", pad=0.25, nodesep=0.4, ranksep=0.55,
+         fontname="DejaVu Sans", fontsize=16,
+         label="Secure-buffer layers and operation flow", labelloc=t, compound=true];
+  node [shape=box, style="rounded,filled", fillcolor="white", color="#52708d",
+        fontname="DejaVu Sans", fontsize=11, margin="0.16,0.12"];
+  edge [fontname="DejaVu Sans", fontsize=10, color="#526b82", arrowsize=0.75];
+
+  subgraph cluster_python {
+    label="MicroPython — coreapp"; style="rounded,filled"; fillcolor="#eef4fc"; color="#a9bdd4";
+    values [label="Main: ordinary secret values\nBuffers: opaque secbytes / protected HDNode\nWallet: protected seeds and crypto consumers"];
+    cache_framework [label="Stage 0: common secret-slot interfaces\nMain byte arrays -> in-place sealed holders\nOwner routing, replacement and invalidation"];
+    scopes [label="Wallet activation\nSession / request scopes\nTask close and cache eviction"];
+  }
+
+  subgraph cluster_c {
+    label="C layer — coreapp bindings and native crypto"; style="rounded,filled"; fillcolor="#eef4fc"; color="#a9bdd4";
+    bindings [label="Protected crypto bindings\nSealed arguments, public results\nVersioned bounded requests"];
+    adapter [label="Wallet checkpoint: native crypto adapter\nTemporary plaintext scratch\nRemoved at kernel-operations checkpoint", fillcolor="#fff3df"];
+    lifecycle_stub [label="Callback fix: compact lifecycle request\nOwner create / info / destroy / revoke / reset", fillcolor="#e4f3e9"];
+  }
+
+  subgraph cluster_kernel {
+    label="Kernel"; style="rounded,filled"; fillcolor="#eef6ef"; color="#a9c4ad";
+    verify [label="Syscall verifier\nAccess probes and input snapshot\nTrusted caller identity"];
+    crypto [label="Kernel-operations checkpoint\nDerive / sign / MAC / public-key operations\nPrivate scratch and cleanup"];
+    native_open [label="Wallet checkpoint only\nTemporary native-open interface", fillcolor="#fff3df"];
+    owners [label="Owner table and revocation\nCallback fix: handler-mode bookkeeping\nNo storage access or crypto transaction", fillcolor="#e4f3e9"];
+    records [label="Record authentication and sealing\nOwner / kind / type / length checks\nSealed children or public results"];
+    software [label="Software sealing backend\nF4 / emulator\nGCM on stages 1-5; alternative cipher leaves"];
+    secure_kernel [label="Secure-mode kernel: T3B1 / T3T1\nHardware key wrap or record sealing"];
+  }
+
+  subgraph cluster_secmon {
+    label="Secmon — T3W1"; style="rounded,filled"; fillcolor="#f5effa"; color="#bda9cf";
+    secure_copy [label="Fixed-purpose smcall verifier\nSecure-world request copy"];
+    secure_records [label="Hardware key wrap or record sealing\nDHUK-wrapped record key in SAES mode"];
+    storage [label="Stage 3/4: sealed storage-key cache\nSeparate key and IV domain\nNo storage-cache sealing smcall"];
+  }
+
+  provider [label="Common C cipher provider (kernel or secmon)\nOpaque key/engine handle\nECB blocks or native GCM + computed tag\nAuthenticated release and failure wiping", fillcolor="#e4f3e9"];
+  saes [label="U5 SAES adapter\nGCM via ECB + software GHASH\nSIV/KWP remain separate feature leaves\nKey readiness, peripheral reset and cleanup", fillcolor="#e4f3e9"];
+  h5 [label="Future H5F4 SAES adapter\nNative GCM through the same provider contract\nCommon record format and tag checks\nBoard/HAL integration pending", style="rounded,filled,dashed", fillcolor="#fff3df"];
+  selection [label="Build selection\nOne cipher per feature branch\nBackend: auto / software / SAES\nShared MCU capability metadata", fillcolor="#eef4fc"];
+
+
+  values -> cache_framework [label="cached secret values"];
+  cache_framework -> bindings [label="stages 1/2: opaque values"];
+  values -> bindings [label="protected values / crypto calls"];
+  scopes -> lifecycle_stub [label="owner lifecycle, including UI callbacks"];
+  bindings -> adapter [label="wallet checkpoint", style=dashed, color="#a4772f"];
+  adapter -> verify [label="open / seal", style=dashed, color="#a4772f"];
+  bindings -> verify [label="kernel checkpoint: crypto syscall"];
+  lifecycle_stub -> owners [label="handler-mode syscall"];
+  verify -> native_open [label="wallet checkpoint", style=dashed, color="#a4772f"];
+  verify -> crypto [label="kernel checkpoint"];
+  native_open -> records [style=dashed, color="#a4772f"];
+  crypto -> records [label="open / compute / seal / wipe"];
+  records -> owners [label="owner access checks"];
+  records -> software [label="software backend"];
+  records -> secure_kernel [label="direct secure call"];
+  records -> secure_copy [label="T3W1 smcall"];
+  secure_copy -> secure_records [label="bounded request"];
+  secure_kernel -> provider;
+  secure_records -> provider;
+  storage -> provider [label="GCM, independent key"];
+  provider -> saes [label="current backend"];
+  provider -> h5 [label="native-provider contract", style=dashed];
+  selection -> records [style=dotted, label="cipher fixes ABI"];
+  selection -> provider [style=dotted, label="backend fixes implementation"];
+}
