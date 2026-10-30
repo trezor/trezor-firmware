@@ -122,7 +122,7 @@ class Item:
             raise AttributeError
         return self.item[key]
 
-    def find_modules(self) -> list["Item"]:
+    def find_modules(self) -> list[Item]:
         return [it for it in self.backlinks if it.type == "module"]
 
     def name(self) -> str | None:

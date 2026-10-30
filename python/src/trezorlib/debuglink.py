@@ -59,7 +59,7 @@ if t.TYPE_CHECKING:
             self,
             hold_ms: int | None = None,
             wait: bool | None = None,
-        ) -> "None": ...
+        ) -> None: ...
 
     InputFlowType = t.Generator[None, messages.ButtonRequest, None]
 
@@ -80,7 +80,7 @@ class LayoutType(Enum):
     Eckhart = auto()
 
     @classmethod
-    def from_model(cls, model: models.TrezorModel) -> "LayoutType":
+    def from_model(cls, model: models.TrezorModel) -> LayoutType:
         # The model's UI layout is sourced from the single-source model registry
         # (trezorlib._modeldata); LayoutType member names match those layout
         # names, so a new model is handled without touching this function.
@@ -93,7 +93,7 @@ class LayoutType(Enum):
         raise ValueError(f"Unknown model: {model}")
 
     @classmethod
-    def from_internal_name(cls, internal_name: str) -> "LayoutType":
+    def from_internal_name(cls, internal_name: str) -> LayoutType:
         model = models.by_internal_name(internal_name)
         if model is not None and model.layout:
             return cls[model.layout]
@@ -505,7 +505,7 @@ def _make_input_func(
     button: messages.DebugButton | None = None,
     physical_button: messages.DebugPhysicalButton | None = None,
     swipe: messages.DebugSwipeDirection | None = None,
-) -> "InputFunc":
+) -> InputFunc:
     decision = messages.DebugLinkDecision(
         button=button,
         physical_button=physical_button,
@@ -513,7 +513,7 @@ def _make_input_func(
     )
 
     def input_func(
-        self: "DebugLink",
+        self: DebugLink,
         hold_ms: int | None = None,
         wait: bool | None = None,
     ) -> None:
@@ -525,7 +525,7 @@ def _make_input_func(
 
 
 class DebugLink:
-    def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
+    def __init__(self, transport: Transport, auto_interact: bool = True) -> None:
         transport.open(reopen=True)
 
         self.transport = transport
@@ -1077,7 +1077,7 @@ class DebugUI:
         next(self.input_flow)  # start default input flow generator
 
     def default_input_flow(
-        self, on_page: t.Callable[["LayoutContent"], None] | None = None
+        self, on_page: t.Callable[[LayoutContent], None] | None = None
     ) -> InputFlowType:
         while True:
             br = yield
@@ -1209,7 +1209,7 @@ class DebugUI:
     def _paginate_and_confirm(
         self,
         pages: int | None,
-        on_page: t.Callable[["LayoutContent"], None] | None = None,
+        on_page: t.Callable[[LayoutContent], None] | None = None,
     ) -> None:
         # TODO: we should check for `debuglink.layout` instead of `debuglink.model` but it fails emu sanity check of T3W1
         if pages is None:
@@ -1278,7 +1278,7 @@ class MessageFilter:
         self.fields: dict[str, t.Any] = {}
         self.update_fields(**fields)
 
-    def update_fields(self, **fields: t.Any) -> "MessageFilter":
+    def update_fields(self, **fields: t.Any) -> MessageFilter:
         for name, value in fields.items():
             try:
                 self.fields[name] = self.from_message_or_type(value)
@@ -1288,9 +1288,7 @@ class MessageFilter:
         return self
 
     @classmethod
-    def from_message_or_type(
-        cls, message_or_type: "ExpectedMessage"
-    ) -> "MessageFilter":
+    def from_message_or_type(cls, message_or_type: ExpectedMessage) -> MessageFilter:
         if isinstance(message_or_type, cls):
             return message_or_type
         if isinstance(message_or_type, protobuf.MessageType):
@@ -1302,7 +1300,7 @@ class MessageFilter:
         raise TypeError("Invalid kind of expected response")
 
     @classmethod
-    def from_message(cls, message: protobuf.MessageType) -> "MessageFilter":
+    def from_message(cls, message: protobuf.MessageType) -> MessageFilter:
         fields = {}
         for field in message.FIELDS.values():
             value = getattr(message, field.name)
@@ -1356,7 +1354,7 @@ class MessageFilter:
 
 
 class MessageFilterGenerator:
-    def __getattr__(self, key: str) -> t.Callable[..., "MessageFilter"]:
+    def __getattr__(self, key: str) -> t.Callable[..., MessageFilter]:
         message_type = getattr(messages, key)
         return MessageFilter(message_type).update_fields
 
@@ -1367,7 +1365,7 @@ message_filters = MessageFilterGenerator()
 if t.TYPE_CHECKING:
 
     class DebugSession(client.Session[client.TrezorClient, t.Any]):
-        test_ctx: "TrezorTestContext"
+        test_ctx: TrezorTestContext
         debug: DebugLink
         layout_type: LayoutType
 
@@ -1673,7 +1671,7 @@ class TrezorTestContext:
         else:
             return msg
 
-    def __enter__(self) -> "TrezorTestContext":
+    def __enter__(self) -> TrezorTestContext:
         # For usage in with/expected_responses
         if self.in_with_statement:
             raise RuntimeError("Do not nest!")
@@ -2098,7 +2096,7 @@ class ScreenButtons:
             raise ValueError("Wrong layout type")
 
     # select word component buttons
-    def word_check_words(self) -> "list[Coords]":
+    def word_check_words(self) -> list[Coords]:
         if self.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
             return [
                 (self._mid(), self._grid(self._height(), 4, 1)),
@@ -2115,7 +2113,7 @@ class ScreenButtons:
             raise ValueError("Wrong layout type")
 
     # vertical menu buttons
-    def vertical_menu_items(self) -> "list[Coords]":
+    def vertical_menu_items(self) -> list[Coords]:
         if self.layout_type is LayoutType.Delizia:
             return [
                 (self._mid(), self._grid(self._height(), 4, 1)),
@@ -2132,7 +2130,7 @@ class ScreenButtons:
             raise ValueError("Wrong layout type")
 
     # vertical menu buttons
-    def vertical_menu_prev_next(self) -> "list[Coords]":
+    def vertical_menu_prev_next(self) -> list[Coords]:
         if self.layout_type is LayoutType.Delizia:
             return [
                 (self._left(), self._grid(self._height(), 4, 3)),
@@ -2238,7 +2236,7 @@ class ButtonActions:
     def __init__(self, debuglink: DebugLink) -> None:
         self.debuglink = debuglink
 
-    def _passphrase_choices(self, char: str) -> "tuple[str, ...]":
+    def _passphrase_choices(self, char: str) -> tuple[str, ...]:
         if char in " *#" or char.islower():
             if self.debuglink.layout_type is LayoutType.Bolt:
                 return PASSPHRASE_LOWERCASE_BOLT
@@ -2258,7 +2256,7 @@ class ButtonActions:
         else:
             return PASSPHRASE_SPECIAL
 
-    def _label_choices(self, char: str) -> "tuple[str, ...]":
+    def _label_choices(self, char: str) -> tuple[str, ...]:
         if char in " *#" or char.islower():
             if self.debuglink.layout_type is LayoutType.Eckhart:
                 return LABEL_LOWERCASE_ECKHART

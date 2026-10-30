@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 @workflow(capability=messages.Capability.Solana)
 def get_public_key(
-    session: "Session",
+    session: Session,
     address_n: list[int],
     show_display: bool,
 ) -> bytes:
@@ -43,7 +43,7 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 @workflow(capability=messages.Capability.Solana)
 def get_authenticated_address(
-    session: "Session",
+    session: Session,
     address_n: list[int],
     show_display: bool,
     chunkify: bool = False,
@@ -60,7 +60,7 @@ def get_authenticated_address(
 
 @workflow(capability=messages.Capability.Solana)
 def sign_tx(
-    session: "Session",
+    session: Session,
     address_n: list[int],
     serialized_tx: bytes,
     additional_info: messages.SolanaTxAdditionalInfo | None,
@@ -81,7 +81,7 @@ def sign_tx(
 
 @workflow(capability=messages.Capability.Solana)
 def sign_message(
-    session: "Session",
+    session: Session,
     address_n: list[int],
     message: messages.SolanaOffchainMessageV1,
     chunkify: bool = False,
@@ -96,7 +96,7 @@ def sign_message(
 
 @workflow(capability=messages.Capability.Solana)
 def verify_message(
-    session: "Session",
+    session: Session,
     message: messages.SolanaOffchainMessageV1,
     signatures: list[bytes],
     chunkify: bool = False,

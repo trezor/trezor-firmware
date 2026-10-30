@@ -152,7 +152,7 @@ class TropicModel:
 
         LOG.info(f"Tropic model ready after {time.monotonic() - start:.3f} seconds")
 
-    def __enter__(self) -> "TropicModel":
+    def __enter__(self) -> TropicModel:
         return self
 
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
@@ -348,7 +348,7 @@ class Emulator:
                 prev_screenshot_dir, refresh_index=self.restart_amount
             )
 
-    def __enter__(self) -> "Emulator":
+    def __enter__(self) -> Emulator:
         return self
 
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:

@@ -75,7 +75,7 @@ def _print_eth_dependencies_and_die() -> NoReturn:
     sys.exit(1)
 
 
-def _get_web3() -> "web3.Web3":
+def _get_web3() -> web3.Web3:
     global _WEB3_INSTANCE
     if _WEB3_INSTANCE is None:
         try:
@@ -134,7 +134,7 @@ def _list_units(ctx: click.Context, param: Any, value: bool) -> None:
 
 
 def _erc20_contract(
-    token_address: "ChecksumAddress", to_address: str, amount: int
+    token_address: ChecksumAddress, to_address: str, amount: int
 ) -> str:
     min_abi = [
         {
@@ -154,7 +154,7 @@ def _erc20_contract(
 
 def _format_access_list(
     access_list: list[EthereumAccessList],
-) -> "_rlp.RLPItem":
+) -> _rlp.RLPItem:
     return [
         (ethereum.decode_hex(item.address), item.storage_keys) for item in access_list
     ]
@@ -296,7 +296,7 @@ def cli(
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
 def get_address(
-    session: "Session", address: str, show_display: bool, chunkify: bool
+    session: Session, address: str, show_display: bool, chunkify: bool
 ) -> str:
     """Get Ethereum address in hex encoding."""
     address_n = tools.parse_path(address)
@@ -308,7 +308,7 @@ def get_address(
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
 @with_session
-def get_public_node(session: "Session", address: str, show_display: bool) -> dict:
+def get_public_node(session: Session, address: str, show_display: bool) -> dict:
     """Get Ethereum public node of given path."""
     address_n = tools.parse_path(address)
     result = ethereum.get_public_node(session, address_n, show_display=show_display)
@@ -372,7 +372,7 @@ def get_public_node(session: "Session", address: str, show_display: bool) -> dic
 @click.argument("amount", callback=_amount_to_int)
 @with_session
 def sign_tx(
-    session: "Session",
+    session: Session,
     chain_id: int,
     address: str,
     amount: int,
@@ -560,7 +560,7 @@ def sign_tx(
 @click.argument("message")
 @with_session
 def sign_message(
-    session: "Session", address: str, message: str, chunkify: bool
+    session: Session, address: str, message: str, chunkify: bool
 ) -> dict[str, str]:
     """Sign message with Ethereum address."""
     address_n = tools.parse_path(address)
@@ -584,7 +584,7 @@ def sign_message(
 @click.argument("file", type=click.File("r"))
 @with_session
 def sign_typed_data(
-    session: "Session", address: str, metamask_v4_compat: bool, file: TextIO
+    session: Session, address: str, metamask_v4_compat: bool, file: TextIO
 ) -> dict[str, str]:
     """Sign typed data (EIP-712) with Ethereum address.
 
@@ -617,7 +617,7 @@ def sign_typed_data(
 @click.argument("message")
 @with_session
 def verify_message(
-    session: "Session",
+    session: Session,
     address: str,
     signature: str,
     message: str,
@@ -636,7 +636,7 @@ def verify_message(
 @click.argument("message_hash_hex")
 @with_session
 def sign_typed_data_hash(
-    session: "Session", address: str, domain_hash_hex: str, message_hash_hex: str
+    session: Session, address: str, domain_hash_hex: str, message_hash_hex: str
 ) -> dict[str, str]:
     """
     Sign hash of typed data (EIP-712) with Ethereum address.

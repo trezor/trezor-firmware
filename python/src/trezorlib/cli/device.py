@@ -71,7 +71,7 @@ def cli() -> None:
     is_flag=True,
 )
 @with_session(seedless=True)
-def wipe(session: "Session", bootloader: bool) -> None:
+def wipe(session: Session, bootloader: bool) -> None:
     """Reset device to factory defaults and remove all private data."""
     features = session.features
     if bootloader:
@@ -112,7 +112,7 @@ def wipe(session: "Session", bootloader: bool) -> None:
 @click.option("-n", "--no-backup", is_flag=True)
 @with_session(seedless=True)
 def load(
-    session: "Session",
+    session: Session,
     mnemonic: t.Sequence[str],
     pin: str,
     passphrase_protection: bool,
@@ -181,7 +181,7 @@ def load(
 @click.option("-b", "--unlock-repeated-backup", is_flag=True)
 @with_session(seedless=True)
 def recover(
-    session: "Session",
+    session: Session,
     words: str,
     expand: bool,
     pin_protection: bool,
@@ -243,7 +243,7 @@ def recover(
 @click.option("-e", "--entropy-check-count", type=click.IntRange(0))
 @with_session(seedless=True)
 def setup(
-    session: "Session",
+    session: Session,
     strength: int | None,
     passphrase_protection: bool,
     pin_protection: bool,
@@ -314,7 +314,7 @@ def setup(
 @click.option("-m", "--method", "method", type=ChoiceType(BACKUP_METHOD))
 @with_session(seedless=True)
 def backup(
-    session: "Session",
+    session: Session,
     group_threshold: int | None = None,
     groups: t.Sequence[tuple[int, int]] = (),
     method: messages.BackupMethod = messages.BackupMethod.Display,
@@ -337,7 +337,7 @@ def backup(
 @cli.command()
 @click.argument("operation", type=ChoiceType(SD_PROTECT_OPERATIONS))
 @with_session(seedless=True)
-def sd_protect(session: "Session", operation: messages.SdProtectOperationType) -> None:
+def sd_protect(session: Session, operation: messages.SdProtectOperationType) -> None:
     """Secure the device with SD card protection.
 
     When SD card protection is enabled, a randomly generated secret is stored
@@ -358,7 +358,7 @@ def sd_protect(session: "Session", operation: messages.SdProtectOperationType) -
 
 @cli.command()
 @click.pass_obj
-def reboot_to_bootloader(obj: "TrezorConnection") -> None:
+def reboot_to_bootloader(obj: TrezorConnection) -> None:
     """Reboot device into bootloader mode."""
     # avoid using @with_session because it closes the session afterwards,
     # which triggers double prompt on device
@@ -368,14 +368,14 @@ def reboot_to_bootloader(obj: "TrezorConnection") -> None:
 
 @cli.command()
 @with_session(seedless=True)
-def tutorial(session: "Session") -> None:
+def tutorial(session: Session) -> None:
     """Show on-device tutorial."""
     device.show_device_tutorial(session)
 
 
 @cli.command()
 @with_session(seedless=True)
-def unlock_bootloader(session: "Session") -> None:
+def unlock_bootloader(session: Session) -> None:
     """Unlocks bootloader. Irreversible."""
     device.unlock_bootloader(session)
 
@@ -389,7 +389,7 @@ def unlock_bootloader(session: "Session") -> None:
     help="Dialog expiry in seconds.",
 )
 @with_session(seedless=True)
-def set_busy(session: "Session", enable: bool | None, expiry: int | None) -> None:
+def set_busy(session: Session, enable: bool | None, expiry: int | None) -> None:
     """Show a "Do not disconnect" dialog."""
     if enable is False:
         device.set_busy(session, None)
@@ -445,7 +445,7 @@ def _print_auth_data(signature: bytes, certificates: t.Sequence[bytes]) -> None:
 )
 @with_session(seedless=True)
 def authenticate(
-    session: "Session",
+    session: Session,
     hex_challenge: str | None,
     p256_root: t.BinaryIO | None,
     ed25519_root: t.BinaryIO | None,
@@ -549,7 +549,7 @@ def authenticate(
 
 @cli.command()
 @with_session(seedless=True)
-def serial_number(session: "Session") -> str:
+def serial_number(session: Session) -> str:
     """Get serial number."""
     return device.get_serial_number(session)
 
@@ -557,7 +557,7 @@ def serial_number(session: "Session") -> str:
 @cli.command()
 @click.option("--all", is_flag=True, help="Forget all devices.")
 @click.pass_obj
-def forget(obj: "TrezorConnection", all: bool) -> None:
+def forget(obj: TrezorConnection, all: bool) -> None:
     """Forget a THP pairing key.
 
     Forgets the THP pairing key for the currently connected device.

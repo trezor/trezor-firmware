@@ -57,7 +57,7 @@ class WebUsbTransport(Transport):
 
     def __init__(
         self,
-        device: "usb1.USBDevice",
+        device: usb1.USBDevice,
         debug: bool = False,
     ) -> None:
 
@@ -72,8 +72,8 @@ class WebUsbTransport(Transport):
 
     @classmethod
     def enumerate(
-        cls, models: Iterable["TrezorModel"] | None = None, usb_reset: bool = False
-    ) -> Iterable["WebUsbTransport"]:
+        cls, models: Iterable[TrezorModel] | None = None, usb_reset: bool = False
+    ) -> Iterable[WebUsbTransport]:
         if cls.context is None:
             cls.context = usb1.USBContext()
             cls.context.open()
@@ -82,7 +82,7 @@ class WebUsbTransport(Transport):
         if models is None:
             models = ALL_MODELS
         usb_ids = [id for model in models for id in model.usb_ids]
-        devices: list["WebUsbTransport"] = []
+        devices: list[WebUsbTransport] = []
         for dev in cls.context.getDeviceIterator(skip_on_error=True):
             usb_id = (dev.getVendorID(), dev.getProductID())
             if usb_id not in usb_ids:
@@ -177,7 +177,7 @@ class WebUsbTransport(Transport):
             except Exception as e:
                 raise TransportException(f"USB read failed: {e}") from e
 
-    def find_debug(self) -> "WebUsbTransport":
+    def find_debug(self) -> WebUsbTransport:
         # For v1 protocol, find debug USB interface for the same serial number
         return self.__class__(self.device, debug=True)
 

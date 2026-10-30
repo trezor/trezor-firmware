@@ -66,7 +66,7 @@ def cli() -> None:
 @click.option("-T", "--tag-cbor-sets", is_flag=True)
 @with_session(cardano=True)
 def sign_tx(
-    session: "Session",
+    session: Session,
     file: TextIO,
     signing_mode: messages.CardanoTxSigningMode,
     protocol_magic: int,
@@ -212,7 +212,7 @@ def sign_tx(
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session(cardano=True)
 def get_address(
-    session: "Session",
+    session: Session,
     address: str,
     address_type: messages.CardanoAddressType,
     staking_address: str,
@@ -285,7 +285,7 @@ def get_address(
 @click.option("-d", "--show-display", is_flag=True)
 @with_session(cardano=True)
 def get_public_key(
-    session: "Session",
+    session: Session,
     address: str,
     derivation_type: messages.CardanoDerivationType,
     show_display: bool,
@@ -313,7 +313,7 @@ def get_public_key(
 )
 @with_session(cardano=True)
 def get_native_script_hash(
-    session: "Session",
+    session: Session,
     file: TextIO,
     display_format: messages.CardanoNativeScriptHashDisplayFormat,
     derivation_type: messages.CardanoDerivationType,
@@ -337,7 +337,7 @@ def get_native_script_hash(
 )
 @with_session(cardano=True)
 def sign_message(
-    session: "Session",
+    session: Session,
     file: TextIO,
     derivation_type: messages.CardanoDerivationType,
 ) -> messages.CardanoMessageSignature:

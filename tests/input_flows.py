@@ -1985,7 +1985,7 @@ class InputFlowEthereumSignTxStaking(InputFlowBase):
         yield from self.ETH.confirm_tx_staking(info=True)
 
 
-def get_mnemonic(debug: DebugLink) -> Generator[None, "messages.ButtonRequest", str]:
+def get_mnemonic(debug: DebugLink) -> Generator[None, messages.ButtonRequest, str]:
     """Used for BIP39 or SLIP-39 1-of-1 backup."""
     # mnemonic phrases
     [mnemonic] = yield from load_N_shares(debug, n=1)
@@ -2177,7 +2177,7 @@ def load_N_shares(
     debug: DebugLink,
     n: int,
     method: messages.BackupMethod = messages.BackupMethod.Display,
-) -> Generator[None, "messages.ButtonRequest", list[str]]:
+) -> Generator[None, messages.ButtonRequest, list[str]]:
     mnemonics: list[str] = []
 
     for _ in range(n):
@@ -2213,7 +2213,7 @@ def load_N_groups(
     debug: DebugLink,
     groups: Sequence[tuple[int, int]],
     method: messages.BackupMethod = messages.BackupMethod.Display,
-) -> Generator[None, "messages.ButtonRequest", list[list[str]]]:
+) -> Generator[None, messages.ButtonRequest, list[list[str]]]:
     mnemonics: list[list[str]] = []
     expected_br_name = "success_share_confirm"
     if debug.layout_type is LayoutType.Eckhart:
@@ -2619,7 +2619,7 @@ class InputFlowSlip39AdvancedCustomBackup(InputFlowBase):
 def load_5_groups_5_shares(
     debug: DebugLink,
     backup_method: messages.BackupMethod = messages.BackupMethod.Display,
-) -> Generator[None, "messages.ButtonRequest", list[str]]:
+) -> Generator[None, messages.ButtonRequest, list[str]]:
     mnemonics: list[str] = []
 
     for _g in range(5):
@@ -4153,7 +4153,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
     def __init__(
         self,
         client: Client | DebugSession,
-        on_page: Callable[["LayoutContent"], None] | None = None,
+        on_page: Callable[[LayoutContent], None] | None = None,
     ) -> None:
         super().__init__(client)
         self.on_page = on_page

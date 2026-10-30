@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 @workflow()
 def list_credentials(
-    session: "Session", batch_size: int | None = 10
+    session: Session, batch_size: int | None = 10
 ) -> Sequence[messages.WebAuthnCredential]:
     creds = []
     msg = messages.WebAuthnListResidentCredentials(batch_size=batch_size)
@@ -41,7 +41,7 @@ def list_credentials(
 
 
 @workflow()
-def add_credential(session: "Session", credential_id: bytes) -> None:
+def add_credential(session: Session, credential_id: bytes) -> None:
     session.call(
         messages.WebAuthnAddResidentCredential(credential_id=credential_id),
         expect=messages.Success,
@@ -49,21 +49,21 @@ def add_credential(session: "Session", credential_id: bytes) -> None:
 
 
 @workflow()
-def remove_credential(session: "Session", index: int) -> None:
+def remove_credential(session: Session, index: int) -> None:
     session.call(
         messages.WebAuthnRemoveResidentCredential(index=index), expect=messages.Success
     )
 
 
 @workflow()
-def set_counter(session: "Session", u2f_counter: int) -> None:
+def set_counter(session: Session, u2f_counter: int) -> None:
     session.call(
         messages.SetU2FCounter(u2f_counter=u2f_counter), expect=messages.Success
     )
 
 
 @workflow()
-def get_next_counter(session: "Session") -> int:
+def get_next_counter(session: Session) -> int:
     return session.call(
         messages.GetNextU2FCounter(), expect=messages.NextU2FCounter
     ).u2f_counter

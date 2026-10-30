@@ -31,7 +31,7 @@ BRGeneratorType = Generator[None, messages.ButtonRequest, None]
 PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 
 
-def get_text_possible_pagination(debug: "DebugLink", br: messages.ButtonRequest) -> str:
+def get_text_possible_pagination(debug: DebugLink, br: messages.ButtonRequest) -> str:
     """
     Read all text content from the device, handling possible pagination.
 
@@ -55,7 +55,7 @@ def get_text_possible_pagination(debug: "DebugLink", br: messages.ButtonRequest)
 
 
 def swipe_if_necessary(
-    debug: "DebugLink",
+    debug: DebugLink,
     br_code: messages.ButtonRequestType | None = None,
     br_name: str | None = None,
 ) -> BRGeneratorType:
@@ -77,7 +77,7 @@ def swipe_if_necessary(
     swipe_till_the_end(debug, br)
 
 
-def swipe_till_the_end(debug: "DebugLink", br: messages.ButtonRequest) -> None:
+def swipe_till_the_end(debug: DebugLink, br: messages.ButtonRequest) -> None:
     """
     Swipe through all pages until the end.
 

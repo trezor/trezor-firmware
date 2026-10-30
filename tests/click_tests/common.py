@@ -96,7 +96,7 @@ def get_char_category(char: str) -> KeyboardCategory:
     return KeyboardCategory.Special
 
 
-def go_next(debug: "DebugLink") -> LayoutContent:
+def go_next(debug: DebugLink) -> LayoutContent:
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Caesar:
@@ -108,7 +108,7 @@ def go_next(debug: "DebugLink") -> LayoutContent:
     return debug.read_layout()
 
 
-def go_back(debug: "DebugLink", r_middle: bool = False) -> LayoutContent:
+def go_back(debug: DebugLink, r_middle: bool = False) -> LayoutContent:
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.cancel())
     elif debug.layout_type is LayoutType.Caesar:
@@ -122,7 +122,7 @@ def go_back(debug: "DebugLink", r_middle: bool = False) -> LayoutContent:
 
 
 def navigate_to_action_and_press(
-    debug: "DebugLink",
+    debug: DebugLink,
     wanted_action: str,
     all_actions: AllActionsType,
     is_carousel: bool = True,
@@ -163,7 +163,7 @@ def _carousel_steps(current_index: int, wanted_index: int, length: int) -> int:
     return steps_forward if steps_forward <= steps_backward else -steps_backward
 
 
-def unlock_gesture(debug: "DebugLink") -> LayoutContent:
+def unlock_gesture(debug: DebugLink) -> LayoutContent:
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Caesar:
@@ -202,7 +202,7 @@ def keyboard_categories(layout_type: LayoutType) -> list[KeyboardCategory]:
         raise ValueError("Wrong layout type")
 
 
-def get_category(debug: "DebugLink") -> KeyboardCategory:
+def get_category(debug: DebugLink) -> KeyboardCategory:
     category = debug.read_layout().find_unique_value_by_key(
         "active_layout", default="", only_type=str
     )
@@ -213,7 +213,7 @@ def get_category(debug: "DebugLink") -> KeyboardCategory:
 
 
 def go_to_category(
-    debug: "DebugLink", category: KeyboardCategory, verify_layout: bool = False
+    debug: DebugLink, category: KeyboardCategory, verify_layout: bool = False
 ) -> None:
     """
     Go to a specific category on the passphrase/label keyboard.
@@ -247,7 +247,7 @@ def go_to_category(
     COORDS_PREV = (0, 0)  # type: ignore
 
 
-def press_char(debug: "DebugLink", char: str) -> None:
+def press_char(debug: DebugLink, char: str) -> None:
     """Press a character on the passphrase/label keyboard."""
     global COORDS_PREV
 
@@ -271,6 +271,6 @@ def press_char(debug: "DebugLink", char: str) -> None:
         debug.click(coords)
 
 
-def delete_char(debug: "DebugLink") -> None:
+def delete_char(debug: DebugLink) -> None:
     """Deletes the last char"""
     debug.click(debug.screen_buttons.pin_passphrase_erase())

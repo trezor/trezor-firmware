@@ -47,13 +47,13 @@ if TYPE_CHECKING:
         vout: int
         sequence: int
         coinbase: str
-        scriptSig: "ScriptSig"
+        scriptSig: ScriptSig
         txinwitness: list[str]
 
     class Vout(TypedDict):
         value: float
         int: int
-        scriptPubKey: "ScriptPubKey"
+        scriptPubKey: ScriptPubKey
 
     class Transaction(TypedDict):
         txid: str
@@ -72,8 +72,8 @@ if TYPE_CHECKING:
         def __contains__(self, __key: bytes) -> bool: ...
 
 
-def from_json(json_dict: "Transaction") -> messages.TransactionType:
-    def make_input(vin: "Vin") -> messages.TxInputType:
+def from_json(json_dict: Transaction) -> messages.TransactionType:
+    def make_input(vin: Vin) -> messages.TxInputType:
         if "coinbase" in vin:
             return messages.TxInputType(
                 prev_hash=b"\0" * 32,
@@ -90,7 +90,7 @@ def from_json(json_dict: "Transaction") -> messages.TransactionType:
                 sequence=vin["sequence"],
             )
 
-    def make_bin_output(vout: "Vout") -> messages.TxOutputBinType:
+    def make_bin_output(vout: Vout) -> messages.TxOutputBinType:
         return messages.TxOutputBinType(
             amount=int(Decimal(vout["value"]) * (10**8)),
             script_pubkey=bytes.fromhex(vout["scriptPubKey"]["hex"]),
@@ -106,8 +106,8 @@ def from_json(json_dict: "Transaction") -> messages.TransactionType:
 
 @workflow(capability=messages.Capability.Bitcoin)
 def get_public_node(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     ecdsa_curve_name: str | None = None,
     show_display: bool = False,
     coin_name: str | None = None,
@@ -141,9 +141,9 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 @workflow(capability=messages.Capability.Bitcoin)
 def get_authenticated_address(
-    session: "Session",
+    session: Session,
     coin_name: str,
-    n: "Address",
+    n: Address,
     show_display: bool = False,
     multisig: messages.MultisigRedeemScriptType | None = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
@@ -174,9 +174,9 @@ def get_authenticated_address(
 
 @workflow(capability=messages.Capability.Bitcoin)
 def get_ownership_id(
-    session: "Session",
+    session: Session,
     coin_name: str,
-    n: "Address",
+    n: Address,
     multisig: messages.MultisigRedeemScriptType | None = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> bytes:
@@ -193,9 +193,9 @@ def get_ownership_id(
 
 @workflow(capability=messages.Capability.Bitcoin)
 def get_ownership_proof(
-    session: "Session",
+    session: Session,
     coin_name: str,
-    n: "Address",
+    n: Address,
     multisig: messages.MultisigRedeemScriptType | None = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     user_confirmation: bool = False,
@@ -224,9 +224,9 @@ def get_ownership_proof(
 
 @workflow(capability=messages.Capability.Bitcoin)
 def sign_message(
-    session: "Session",
+    session: Session,
     coin_name: str,
-    n: "Address",
+    n: Address,
     message: AnyStr,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     no_script_type: bool = False,
@@ -246,7 +246,7 @@ def sign_message(
 
 
 def verify_message(
-    session: "Session",
+    session: Session,
     coin_name: str,
     address: str,
     signature: bytes,
@@ -271,7 +271,7 @@ def verify_message(
 
 @workflow(capability=messages.Capability.Bitcoin)
 def sign_tx(
-    session: "Session",
+    session: Session,
     coin_name: str,
     inputs: Sequence[messages.TxInputType],
     outputs: Sequence[messages.TxOutputType],
@@ -415,12 +415,12 @@ def sign_tx(
 
 @workflow(capability=messages.Capability.Bitcoin)
 def authorize_coinjoin(
-    session: "Session",
+    session: Session,
     coordinator: str,
     max_rounds: int,
     max_coordinator_fee_rate: int,
     max_fee_per_kvbyte: int,
-    n: "Address",
+    n: Address,
     coin_name: str,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> None:

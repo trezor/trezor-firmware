@@ -54,7 +54,7 @@ class TropicModelState:
         self.raw = raw
 
     @classmethod
-    def from_file(cls, path: Path | str) -> "TropicModelState":
+    def from_file(cls, path: Path | str) -> TropicModelState:
         path = Path(path)
         assert path.exists(), (
             f"Tropic model output file was not generated: {path}. "

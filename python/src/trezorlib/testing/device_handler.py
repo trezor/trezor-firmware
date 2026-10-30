@@ -79,7 +79,7 @@ class BackgroundDeviceHandler:
 
     _pool = ThreadPoolExecutor()
 
-    def __init__(self, client: "Client", nowait: bool = False) -> None:
+    def __init__(self, client: Client, nowait: bool = False) -> None:
         """
         Initialize the handler with a client.
 
@@ -91,7 +91,7 @@ class BackgroundDeviceHandler:
         self.task = None
         self.nowait = nowait
 
-    def _configure_client(self, client: "Client") -> None:
+    def _configure_client(self, client: Client) -> None:
         """
         Configure the client for background handling and set up the mock UI.
 
@@ -118,7 +118,7 @@ class BackgroundDeviceHandler:
 
     def run_with_session(
         self,
-        function: t.Callable[tx.Concatenate["Session", P], t.Any],
+        function: t.Callable[tx.Concatenate[Session, P], t.Any],
         seedless: bool = False,
         *args: P.args,
         **kwargs: P.kwargs,
@@ -153,8 +153,8 @@ class BackgroundDeviceHandler:
 
     def run_with_provided_session(
         self,
-        session: "Session",
-        function: t.Callable[tx.Concatenate["Session", P], t.Any],
+        session: Session,
+        function: t.Callable[tx.Concatenate[Session, P], t.Any],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> None:
@@ -196,7 +196,7 @@ class BackgroundDeviceHandler:
                 pass
         self.task = None
 
-    def restart(self, emulator: "Emulator") -> None:
+    def restart(self, emulator: Emulator) -> None:
         """
         Restart the emulator and reconfigure the client.
 
@@ -228,7 +228,7 @@ class BackgroundDeviceHandler:
         finally:
             self.task = None
 
-    def features(self) -> "Features":
+    def features(self) -> Features:
         """
         Refresh and return the client's features.
 
@@ -243,7 +243,7 @@ class BackgroundDeviceHandler:
         self.client.refresh_features()
         return self.client.features
 
-    def debuglink(self) -> "DebugLink":
+    def debuglink(self) -> DebugLink:
         """
         Get the debuglink for the client.
 
@@ -264,7 +264,7 @@ class BackgroundDeviceHandler:
             return False
         return True
 
-    def __enter__(self) -> "BackgroundDeviceHandler":
+    def __enter__(self) -> BackgroundDeviceHandler:
         """
         Enter the context manager.
 

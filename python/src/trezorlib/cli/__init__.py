@@ -559,13 +559,13 @@ def with_session(
 
     def decorator(
         func: FuncWithSession,
-    ) -> "t.Callable[P, R]":
+    ) -> t.Callable[P, R]:
 
         @click.pass_obj
         @functools.wraps(func)
         def function_with_session(
-            obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
-        ) -> "R":
+            obj: TrezorConnection, *args: P.args, **kwargs: P.kwargs
+        ) -> R:
             with obj.session_context(
                 prompt_passphrase=passphrase,
                 derive_cardano=cardano,

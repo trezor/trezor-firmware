@@ -43,7 +43,7 @@ def cli() -> None:
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
 def get_address(
-    session: "Session",
+    session: Session,
     address: str,
     network: int,
     show_display: bool,
@@ -62,7 +62,7 @@ def get_address(
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
 def sign_tx(
-    session: "Session",
+    session: Session,
     address: str,
     file: TextIO,
     broadcast: str | None,

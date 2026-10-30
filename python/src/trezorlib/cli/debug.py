@@ -94,7 +94,7 @@ def cli() -> None:
 )
 @click.option("-s", "--stop", is_flag=True, help="Stop the recording")
 @click.pass_obj
-def record(obj: "TrezorConnection", directory: Path | None, stop: bool) -> None:
+def record(obj: TrezorConnection, directory: Path | None, stop: bool) -> None:
     """Record screen changes into a specified directory.
 
     Recording can be stopped with `-s / --stop` option.
@@ -106,7 +106,7 @@ def record(obj: "TrezorConnection", directory: Path | None, stop: bool) -> None:
 
 @cli.command()
 @with_session(seedless=True)
-def prodtest_t1(session: "Session") -> None:
+def prodtest_t1(session: Session) -> None:
     """Perform a prodtest on Model One.
 
     Only available on PRODTEST firmware and on T1B1. Formerly named self-test.
@@ -116,7 +116,7 @@ def prodtest_t1(session: "Session") -> None:
 
 @cli.command()
 @with_session(seedless=True)
-def optiga_set_sec_max(session: "Session") -> None:
+def optiga_set_sec_max(session: Session) -> None:
     """Set Optiga's security event counter to maximum."""
     debug_transport = session.client.transport.find_debug()
     debug_transport.open()
@@ -128,7 +128,7 @@ def optiga_set_sec_max(session: "Session") -> None:
 @cli.command()
 @click.argument("filter", required=False)
 @with_session(seedless=True)
-def set_log_filter(session: "Session", filter: str) -> None:
+def set_log_filter(session: Session, filter: str) -> None:
     """Set logging filter string."""
     debug_transport = session.client.transport.find_debug()
     debug_transport.open()
@@ -175,7 +175,7 @@ def set_log_filter(session: "Session", filter: str) -> None:
 )
 @with_session(seedless=True)
 def set_battery_state(
-    session: "Session",
+    session: Session,
     soc: int | None,
     usb_connected: bool | None,
     wireless_connected: bool | None,

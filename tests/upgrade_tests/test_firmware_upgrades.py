@@ -87,7 +87,7 @@ def lower_models_minimum_version(func):
     return wrapper
 
 
-def _get_session(client: "Client", passphrase: str | None = "") -> "Session":
+def _get_session(client: Client, passphrase: str | None = "") -> Session:
     # For now, just use the standard get_session method
     # The special handling for protocol v1 < 2.3.0 is no longer needed
     return client.get_session(passphrase=passphrase)
@@ -100,7 +100,7 @@ def test_upgrade_load(
     model: str | None,
     shared_profile_dir: str,
 ) -> None:
-    def asserts(client: "Client"):
+    def asserts(client: Client):
         client.refresh_features()
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
@@ -145,7 +145,7 @@ def test_upgrade_load_pin(
 ) -> None:
     PIN = "1234"
 
-    def asserts(client: "Client") -> None:
+    def asserts(client: Client) -> None:
         assert client.features.pin_protection
         assert not client.features.passphrase_protection
         assert client.features.initialized
@@ -198,7 +198,7 @@ def test_storage_upgrade_progressive(
 ):
     PIN = "1234"
 
-    def asserts(client: "Client") -> None:
+    def asserts(client: Client) -> None:
         assert client.features.pin_protection
         assert not client.features.passphrase_protection
         assert client.features.initialized
@@ -250,7 +250,7 @@ def test_upgrade_wipe_code(
     PIN = "1234"
     WIPE_CODE = "4321"
 
-    def asserts(client: "Client"):
+    def asserts(client: Client):
         assert client.features.pin_protection
         assert not client.features.passphrase_protection
         assert client.features.initialized
@@ -307,7 +307,7 @@ def test_upgrade_reset(
     model: str | None,
     shared_profile_dir: str,
 ):
-    def asserts(client: "Client"):
+    def asserts(client: Client):
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
         assert client.features.initialized
@@ -352,7 +352,7 @@ def test_upgrade_reset_skip_backup(
     model: str | None,
     shared_profile_dir: str,
 ):
-    def asserts(client: "Client"):
+    def asserts(client: Client):
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
         assert client.features.initialized
@@ -398,7 +398,7 @@ def test_upgrade_reset_no_backup(
     model: str | None,
     shared_profile_dir: str,
 ):
-    def asserts(client: "Client"):
+    def asserts(client: Client):
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
         assert client.features.initialized

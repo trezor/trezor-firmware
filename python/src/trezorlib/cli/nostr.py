@@ -40,7 +40,7 @@ def cli() -> None:
 @click.option("-a", "--account", default=0, help="Account index")
 @with_session
 def get_pubkey(
-    session: "Session",
+    session: Session,
     account: int,
 ) -> str:
     """Return the pubkey derived by the given path."""
@@ -58,7 +58,7 @@ def get_pubkey(
 @click.argument("event")
 @with_session
 def sign_event(
-    session: "Session",
+    session: Session,
     account: int,
     event: str,
 ) -> dict[str, str]:
