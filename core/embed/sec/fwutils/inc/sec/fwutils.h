@@ -47,8 +47,10 @@ ts_t firmware_hash_start(const uint8_t* challenge, size_t challenge_len);
  *
  * @param[out] hash Buffer that receives the completed firmware hash.
  * @param[out] progress Hash calculation progress, from 0 to 100.
- * @return TS_OK on success, TS_ENOINIT if no hash calculation was started, or
- * TS_EINVAL if updating or finalizing the hash fails.
+ * @return
+ *    TS_OK on success,
+ *    TS_ENOINIT if hashing has not started or is already finished,
+ *    TS_EINVAL if updating or finalizing the hash fails.
  */
 ts_t firmware_hash_continue(firmware_hash_t* hash, int32_t* progress);
 
