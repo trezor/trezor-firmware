@@ -190,7 +190,8 @@ class UrlSource(Source):
         url = self.base_url + "/".join(components)
         LOG.info("Downloading definition from %s", url)
         r = requests.get(url)
-        if r.status_code == 404:
+        # the dev bucket answers 403 (not 404) for objects that do not exist
+        if r.status_code in (403, 404):
             LOG.info("Requested definition at %s was not found", url)
             return None
         r.raise_for_status()
