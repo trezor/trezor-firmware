@@ -314,8 +314,8 @@ impl<'a> Source<'a> {
 }
 
 // Two sources are the same when they point at the same bytes and describe the
-// same field; the reader is part of the shape, and comparing function pointers
-// says nothing, so it is left out.
+// same field. The reader is left out: comparing function pointers says nothing
+// about the bytes, and the pointer and the total already describe the range.
 impl PartialEq for Source<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.ctx == other.ctx && self.total == other.total && self.streamed == other.streamed

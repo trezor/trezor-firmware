@@ -32,6 +32,7 @@ REQUESTS = (
     m.Review,
     m.Danger,
     m.Details,
+    m.StreamData,
     m.VerifyAddress,
     m.VerifyPubkey,
     m.Done,

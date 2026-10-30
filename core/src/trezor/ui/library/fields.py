@@ -4,7 +4,8 @@ An app says what a fact is, never how it looks: the kind decides the styling,
 the grouping and the paging of that kind on every model.
 
 A `data` fact is pulled by core, one chunk at a time, while the person pages:
-the app keeps the bytes, and core asks for the range it draws.
+the app keeps the bytes or hands them out from a source, and core asks for the
+range it draws.
 """
 
 from micropython import const
@@ -149,6 +150,10 @@ class Pager:
     The first chunk is pulled before the first page is drawn, and each later one
     only after the person asked for the page before it — so a page pulls only what
     it draws, and a refusal between pages pulls nothing more.
+
+    Every range is pulled once, in order, and the person pages forward only: this
+    is what lets the app's source hash the bytes it hands out, so that the bytes on
+    the screen are the bytes that get signed.
     """
 
     def __init__(

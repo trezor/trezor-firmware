@@ -22,6 +22,9 @@ if TYPE_CHECKING:
 
 # Message id of a chunk request on the UI service, as the app-side shim reads it.
 _MSG_ID_CHUNK = const(1)
+# Message id of a chunk the app's source could not produce: core stops the
+# layout, and the app turns that cancel into the source's own error.
+_MSG_ID_CHUNK_FAILED = const(2)
 
 # how long Core waits for the app's next chunk
 _IPC_TIMEOUT_MS = const(20000)
@@ -74,19 +77,26 @@ def _data_puller(
 ) -> "Callable[[int, int, int], Awaitable[bytes]]":
     """The driver's way to ask the app for a `Data` chunk.
 
-    Core sends the range it wants and the app answers with those bytes. The
-    app's own bytes never leave its memory in full, and the answer doubles as
-    the wait for core's next request or its decision.
+    Core sends the range it wants and the app answers with those bytes, or says
+    the source could not produce them and stops the layout. The app's own bytes
+    never leave its memory in full, and the answer doubles as the wait for core's
+    next request or its decision.
     """
 
     async def pull(field: int, offset: int, length: int) -> bytes:
         session.send(
             SERVICE_UI,
             _MSG_ID_CHUNK,
-            trezorui_api.encode_chunk_request(field=field, offset=offset, len=length),
+            trezorui_api.encode_chunk_request(
+                field=field, offset=offset, length=length
+            ),
         )
         msg = await loop.wait(io.IPC2_EVENT | io.POLL_READ, timeout_ms=_IPC_TIMEOUT_MS)
-        if msg.service != SERVICE_UI or msg.message_id != _MSG_ID_CHUNK:
+        if msg.service != SERVICE_UI:
+            session.die(DataError("Unexpected message while pulling data"))
+        if msg.message_id == _MSG_ID_CHUNK_FAILED:
+            raise ActionCancelled
+        if msg.message_id != _MSG_ID_CHUNK:
             session.die(DataError("Unexpected message while pulling data"))
         # The app's `ipc_call` is still waiting; core's next message — another
         # request, or the decision — is its answer.

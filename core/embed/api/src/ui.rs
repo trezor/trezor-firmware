@@ -6,7 +6,9 @@
 //!
 //! A `Data` field travels as its length alone, so Core pulls the bytes from the
 //! app while the person pages: `ui_call` answers Core's chunk requests from the
-//! request still in the app's memory, and returns only the final decision.
+//! request's own source, and returns only the final decision. A source that
+//! cannot produce a range answers with the chunk-failed id instead, and Core
+//! stops the layout.
 //!
 //! This runs on the app's task but is part of the firmware, so anything an
 //! app would otherwise carry in its own binary belongs here or in core.
@@ -23,10 +25,12 @@ use crate::wire::{CoreIpcService, ipc_call, to_bytes};
 
 // Message ids on the UI service. A decision is the request's own id; a chunk
 // request has its own so that neither is mistaken for a decision. Each chunk
-// request is answered with the chunk itself, so the two alternate until core
-// sends the decision.
+// request is answered with the chunk itself, or with the chunk-failed id when
+// the app cannot produce it, so the two alternate until core sends the
+// decision.
 const MSG_ID_UI_DECISION: u16 = 0;
 const MSG_ID_UI_CHUNK: u16 = 1;
+const MSG_ID_UI_CHUNK_FAILED: u16 = 2;
 
 /// Reads a chunk request: the field's flat index, the offset and the length.
 fn chunk_request(data: &[u8]) -> Option<UiChunkRequest> {
@@ -120,15 +124,25 @@ fn ui_request(request: TrezorUiEnum) -> Result<TrezorUiResult, WireError> {
                 let chunk = chunk_request(&data).ok_or(WireError::DecodeError)?;
                 let source = data_field(&request, chunk.field).ok_or(WireError::DecodeError)?;
                 let mut bytes = alloc::vec![0u8; chunk.len as usize];
-                if !source.read(chunk.offset, &mut bytes) {
-                    return Err(WireError::DecodeError);
-                }
-                (id, data) = ipc_call(
-                    CoreIpcService::Ui.into(),
-                    MSG_ID_UI_CHUNK,
-                    &bytes,
-                    TIMEOUT_MAX,
-                )?;
+                let (next_id, next_data) = if source.read(chunk.offset, &mut bytes) {
+                    ipc_call(
+                        CoreIpcService::Ui.into(),
+                        MSG_ID_UI_CHUNK,
+                        &bytes,
+                        TIMEOUT_MAX,
+                    )?
+                } else {
+                    // The app's source could not produce the range. Core stops
+                    // the layout, and the next message is the cancel it sends.
+                    ipc_call(
+                        CoreIpcService::Ui.into(),
+                        MSG_ID_UI_CHUNK_FAILED,
+                        &[],
+                        TIMEOUT_MAX,
+                    )?
+                };
+                id = next_id;
+                data = next_data;
             }
             _ => return Err(WireError::DecodeError),
         }

@@ -64,10 +64,11 @@ font or a screen.
 | `progress(label, total, work)` | nothing: the app is working | what `work` returns |
 
 Facts are `Field`s, named by what the value *is* rather than by how it
-should look: `text`, `amount`, `address`, `data`, `note` and `warning`. One
-list may mix all six. A review can also offer extras, each a label and its own
-facts, passed as one `.extras(&[Extra::new(label, &fields), ...])` call; an
-extra with no facts is not offered.
+should look: `text`, `amount`, `address`, `data`, `data_source`, `note` and
+`warning`. One list may mix all seven. A review can also offer extras, each a
+label and its own facts, passed as one
+`.extras(&[Extra::new(label, &fields), ...])` call; an extra with no facts is
+not offered.
 
 ```rust
 use trezor_app_sdk::modui::{self, Extra, Field};
@@ -81,6 +82,15 @@ fn confirm_send(recipient: &str, amount: &str) -> trezor_app_sdk::Result<()> {
         .confirm_final()
 }
 ```
+
+`data` takes bytes the app already holds. `data_source` takes a `DataSource`
+and the total length instead, for bytes the app hands out one range at a time —
+a host stream it hashes on the way out, say. Core reads the source in order,
+from the start, each range once, and stops when the person reaches the end or
+refuses; a source whose read fails ends the review as refused, and the app gets
+that source's own error back rather than `Cancelled`. A `data_source` field may
+not sit in an extra, because an extra can be opened again and its bytes would be
+read again.
 
 A refusal is `Err(Error::Cancelled)`, so `?` ends the flow on it. A `details`
 answers `Details::Show` when the person wants the details, and `Details::Skip`

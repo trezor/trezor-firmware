@@ -5,7 +5,7 @@
 //! answer, [`Review::confirm_danger`](crate::modui::Review::confirm_danger).
 
 use crate::modui::Field;
-use crate::modui::call::call;
+use crate::modui::call::{call, take_source_error};
 use crate::modui::field::{check_fields, wire_fields};
 use crate::structs::{FieldsRequest, TrezorUiEnum, TrezorUiResult};
 use crate::{Error, Result};
@@ -72,6 +72,6 @@ pub fn details<'a>(step: &'a str, title: &'a str, fields: &'a [Field<'a>]) -> Re
     match call(TrezorUiEnum::Details(request)) {
         TrezorUiResult::ShowDetails => Ok(Details::Show),
         TrezorUiResult::Confirmed => Ok(Details::Skip),
-        TrezorUiResult::Cancelled => Err(Error::Cancelled),
+        TrezorUiResult::Cancelled => Err(take_source_error().unwrap_or(Error::Cancelled)),
     }
 }

@@ -29,8 +29,8 @@ use proto::testapp::{
     Base58CheckDecode, Base58CheckEncode, Base58Decode, Base58Encode, CheckAddressMac,
     CosiCombinePublicKeys, CosiVerify, Danger, Details, Done, EcdsaRecoverPubkey, EcdsaSignDigest,
     EcdsaVerify, EcdsaVerifyDigest, Ed25519Sign, Ed25519Verify, GetAddressMac, GetPublicKey,
-    GetXpub, Hash, Hmac, Review, ShowProgress, Showcase, VerifyAddress, VerifyNonceCache,
-    VerifyPubkey,
+    GetXpub, Hash, Hmac, Review, ShowProgress, Showcase, StreamData, VerifyAddress,
+    VerifyNonceCache, VerifyPubkey,
 };
 
 /// Wire codec for [`wire_handler!`] — encodes/decodes messages via [`prost`].
@@ -231,6 +231,13 @@ wire_handler!(
     layouts::show_progress
 );
 wire_handler!(
+    handle_stream_data,
+    ProstCodec,
+    StreamData,
+    MessageType::UiResult,
+    layouts::stream_data
+);
+wire_handler!(
     handle_showcase,
     ProstCodec,
     Showcase,
@@ -276,6 +283,7 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::VerifyPubkey) => handle_verify_pubkey(data),
         Ok(MessageType::Done) => handle_done(data),
         Ok(MessageType::ShowProgress) => handle_show_progress(data),
+        Ok(MessageType::StreamData) => handle_stream_data(data),
         Ok(MessageType::Showcase) => handle_showcase(data),
         Ok(_) => {
             error!("Invalid function: {:?}", id);

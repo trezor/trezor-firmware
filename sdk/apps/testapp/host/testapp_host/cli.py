@@ -80,6 +80,9 @@ BUILDERS: dict[str, Callable[[argparse.Namespace], protobuf.MessageType]] = {
     ),
     "danger": lambda a: m.Danger(step=a.step, title=a.title, fields=a.field or []),
     "details": lambda a: m.Details(step=a.step, title=a.title, fields=a.field or []),
+    "stream-data": lambda a: m.StreamData(
+        step=a.step, title=a.title, length=a.length, fail_at=a.fail_at
+    ),
     "verify-address": lambda a: m.VerifyAddress(
         step=a.step, value=a.value, account=a.account, path=a.path
     ),
@@ -154,6 +157,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = layout("details", "modui::details", "Confirm message")
     with_fields(p)
+
+    p = layout("stream-data", "a review with a data_source field", "Stream")
+    p.add_argument("--length", type=int, default=1025)
+    p.add_argument(
+        "--fail-at",
+        type=int,
+        help="make the k-th read (1-based) fail, so the host sees the app's error",
+    )
 
     p = layout("verify-address", "modui::verify_address")
     p.add_argument("--value", default="TQ9JfxgJ9JBz4GZ4MRDrjJeBdA6Mx5yYhq")

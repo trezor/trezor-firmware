@@ -77,8 +77,10 @@ review, a danger and a verify layout answer `Confirmed` for a yes and
 too; a `details` answers `ShowDetails` when the person wants them,
 `Confirmed` when they accept without, and `Cancelled` when they refuse. `Done`
 and a progress ask nothing, so their answer says nothing about a decision. A
-request the app refuses, such as two `data` fields or a sixth extra, comes
-back as a `Failure`; one Core cannot draw ends the app, as every app's would.
+request the app refuses, such as two `data` fields, a sixth extra or a
+streamed `data` field inside an extra, comes back as a `Failure`; so does a
+source whose read fails, with that source's own error. One Core cannot draw ends
+the app, as every app's would.
 The host plays the app's part here, so it picks every parameter, the step name
 included (`--step`, defaulting to the layout's name).
 
@@ -93,13 +95,17 @@ included (`--step`, defaulting to the layout's name).
 | `VerifyPubkey` | `modui::verify_pubkey(step, pubkey, account, path)` |
 | `Done` | `modui::done(step, text)` |
 | `ShowProgress` | `modui::progress(label, total, work)` |
+| `StreamData` | a review with a `data_source` field, then a final review of its hash |
 | `ProgressLabel` | `Progress::label(text)`, while a progress runs |
 
 `account` and `path` are optional in the verify layouts. A review's extras
 travel with its request, as one `.extras(&[Extra::new(label, &fields), ...])`
 call, and an extra with no facts is not offered. A progress stays on the device
 while the app works: the app asks the host for each step, and the host answers
-with the next step, a new label, or the end.
+with the next step, a new label, or the end. A `StreamData` request has the app
+generate `length` bytes, hash them as it hands them out, and show the hash and
+the number of reads in a final review; `fail_at` makes the k-th read fail, and
+the host then sees the app's own error rather than a cancel.
 
 `tests/test_modui.py` runs with the device tests above. Core draws an app's
 screens, so debuglink reads and drives them like any other: each layout is
@@ -129,13 +135,14 @@ stands, so each layout can be seen with realistic facts:
 ### Run by hand
 
 Build the emulator and the app as above (any model), start the emulator
-(`core/emu.py`), then run one showcase at a time:
+(`core/emu.py`), then run one layout at a time:
 
 ```sh
 sdk/apps/testapp/host/testappctl --help
 sdk/apps/testapp/host/testappctl showcase send
 sdk/apps/testapp/host/testappctl showcase unknown-contract
 sdk/apps/testapp/host/testappctl showcase signing-progress
+sdk/apps/testapp/host/testappctl stream-data --length 1025
 ```
 
 `testappctl showcase --help` lists the names. The app is loaded afresh each run,

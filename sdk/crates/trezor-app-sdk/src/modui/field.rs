@@ -4,6 +4,7 @@
 //! value, and core decides the styling, the grouping and the paging of that kind
 //! on every model. Nothing here holds behaviour.
 
+use crate::modui::call::set_source_error;
 use crate::structs::{FieldKind, OptStrSlice, Slice, Source, WireField};
 use crate::{Error, Result};
 
@@ -18,6 +19,7 @@ use crate::{Error, Result};
 /// | [`amount`](Field::amount) | A sum with its unit, already formatted by the app. | `Field::amount("Amount", "1.5 TRX")` |
 /// | [`address`](Field::address) | Something compared character by character. | `Field::address("Recipient", &to)` |
 /// | [`data`](Field::data) | Raw bytes of any length, shown as hex and paged. | `Field::data("Input data", &calldata)` |
+/// | [`data_source`](Field::data_source) | Raw bytes the app hands out while core reads them, shown as hex and paged. | `Field::data_source("Input data", len, &source)` |
 /// | [`note`](Field::note) | A sentence with no label: a question or an explanation. | `Field::note("Allow access to your balance?")` |
 /// | [`warning`](Field::warning) | A sentence to weigh before confirming. | `Field::warning("This address is not yours.")` |
 ///
@@ -38,22 +40,78 @@ pub struct Field<'a> {
     wire: WireField<'a>,
 }
 
+/// Where a [`data_source`](Field::data_source) field's bytes come from, read by
+/// core while the person pages.
+///
+/// Core reads in order, from offset 0, in contiguous ranges, and asks for each
+/// range once, so a source may hash what it hands out. It stops when the person
+/// reaches the end of the field or refuses it.
+///
+/// `read` takes `&self` so that a [`Field`] stays `Copy`: a source that keeps
+/// state keeps it in a `Cell` or `RefCell` of its own.
+pub trait DataSource {
+    /// Fills `buf` with the bytes starting at `offset`.
+    fn read(&self, offset: u32, buf: &mut [u8]) -> Result<()>;
+}
+
+impl DataSource for [u8] {
+    fn read(&self, offset: u32, buf: &mut [u8]) -> Result<()> {
+        let start = offset as usize;
+        let end = start
+            .checked_add(buf.len())
+            .ok_or(Error::DataError("a data source read past its end"))?;
+        let bytes = self
+            .get(start..end)
+            .ok_or(Error::DataError("a data source read past its end"))?;
+        buf.copy_from_slice(bytes);
+        Ok(())
+    }
+}
+
+impl<T: DataSource + ?Sized> DataSource for &T {
+    fn read(&self, offset: u32, buf: &mut [u8]) -> Result<()> {
+        (**self).read(offset, buf)
+    }
+}
+
 /// Copies out of a `&[u8]` whose length is `total`.
+///
+/// Not `read_source::<[u8]>`: a thin pointer cannot rebuild a slice, so the
+/// length comes from `Source::total` instead.
 extern "C" fn read_bytes(ctx: *const u8, offset: u32, total: u32, buf: *mut u8, len: u32) -> i32 {
     // SAFETY: `ctx` and `total` come from `Source::new` in `Field::data`, for a
     // slice that outlives the request; `buf` and `len` come from core's chunk
     // buffer.
     let bytes = unsafe { core::slice::from_raw_parts(ctx, total as usize) };
     let buf = unsafe { core::slice::from_raw_parts_mut(buf, len as usize) };
-    let start = offset as usize;
-    let Some(end) = start.checked_add(buf.len()) else {
-        return -1;
-    };
-    let Some(bytes) = bytes.get(start..end) else {
-        return -1;
-    };
-    buf.copy_from_slice(bytes);
-    0
+    match <[u8] as DataSource>::read(bytes, offset, buf) {
+        Ok(()) => 0,
+        Err(e) => {
+            set_source_error(e);
+            -1
+        }
+    }
+}
+
+/// Reads the `D` at `ctx`.
+extern "C" fn read_source<D: DataSource>(
+    ctx: *const u8,
+    offset: u32,
+    _total: u32,
+    buf: *mut u8,
+    len: u32,
+) -> i32 {
+    // SAFETY: `ctx` comes from `Source::new` in `Field::data_source`, for a `D`
+    // that outlives the request; `buf` and `len` come from core's chunk buffer.
+    let source = unsafe { &*ctx.cast::<D>() };
+    let buf = unsafe { core::slice::from_raw_parts_mut(buf, len as usize) };
+    match source.read(offset, buf) {
+        Ok(()) => 0,
+        Err(e) => {
+            set_source_error(e);
+            -1
+        }
+    }
 }
 
 impl<'a> Field<'a> {
@@ -125,6 +183,77 @@ impl<'a> Field<'a> {
         Self::wire_data(
             label,
             Source::new(value.as_ptr(), value.len() as u32, false, read_bytes),
+        )
+    }
+
+    /// Raw bytes the app does not hold all at once, shown as hex and paged.
+    ///
+    /// At most one per review, like [`data`](Field::data). It may not sit in an
+    /// extra: an extra can be opened again, and its bytes would be read again.
+    /// That is [`Error::DataError`] with
+    /// `"a streamed data field cannot be in an extra"`.
+    ///
+    /// Core reads the source while the person pages, **in order, from offset 0,
+    /// in contiguous ranges, each range once**, and stops when the person reaches
+    /// the end or refuses. A source may therefore hash what it hands out. `read`
+    /// takes `&self`, so a source that keeps state keeps it in a `Cell` or
+    /// `RefCell` of its own.
+    ///
+    /// If `read` fails, the review ends as refused and the app gets the source's
+    /// own error back, not [`Error::Cancelled`](crate::Error::Cancelled).
+    ///
+    /// `len` is the total number of bytes, the source's to know.
+    ///
+    /// A trait object works too: `&dyn DataSource` is itself a `DataSource`
+    /// through the blanket `impl for &T`, so pass it as `&source`.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use core::cell::RefCell;
+    /// use core::fmt::Write as _;
+    /// use trezor_app_sdk::crypto::{self as sdk, HasherExt, HashingAlgorithm};
+    /// use trezor_app_sdk::modui::{self, DataSource, Field};
+    /// use trezor_app_sdk::traits::crypto::BoxedHasher;
+    /// use trezor_app_sdk::{Error, Result};
+    ///
+    /// /// Bytes as the host streams them, hashed on the way out.
+    /// struct Stream<'a> {
+    ///     bytes: &'a [u8],
+    ///     hasher: RefCell<BoxedHasher>,
+    /// }
+    ///
+    /// impl DataSource for Stream<'_> {
+    ///     fn read(&self, offset: u32, buf: &mut [u8]) -> Result<()> {
+    ///         let start = offset as usize;
+    ///         let end = start + buf.len();
+    ///         let bytes = self.bytes.get(start..end).ok_or(Error::DataError("out of bytes"))?;
+    ///         buf.copy_from_slice(bytes);
+    ///         self.hasher.borrow_mut().update(buf);
+    ///         Ok(())
+    ///     }
+    /// }
+    ///
+    /// fn confirm_stream(bytes: &[u8]) -> Result<()> {
+    ///     let stream = Stream {
+    ///         bytes,
+    ///         hasher: RefCell::new(sdk::get_hasher(HashingAlgorithm::Sha256)),
+    ///     };
+    ///     let field = Field::data_source("Input data", bytes.len() as u32, &stream);
+    ///     modui::review("stream", "Stream", &[field]).confirm()?;
+    ///
+    ///     let digest = stream.hasher.borrow_mut().finalize();
+    ///     let mut hash = String::new();
+    ///     for byte in digest.as_ref() {
+    ///         let _ = write!(hash, "{:02x}", byte);
+    ///     }
+    ///     modui::review("summary", "Signed", &[Field::address("Hash", &hash)]).confirm_final()
+    /// }
+    /// ```
+    pub fn data_source<D: DataSource + 'a>(label: &'a str, len: u32, source: &'a D) -> Self {
+        Self::wire_data(
+            label,
+            Source::new(source as *const D as *const u8, len, true, read_source::<D>),
         )
     }
 
@@ -277,9 +406,9 @@ mod tests {
     fn the_slice_source_returns_the_right_ranges() {
         let bytes = b"hello";
         let mut buf = [0u8; 3];
-        assert_eq!(read_bytes(bytes.as_ptr(), 1, 5, buf.as_mut_ptr(), 3), 0);
+        <[u8] as DataSource>::read(bytes, 1, &mut buf).unwrap();
         assert_eq!(&buf, b"ell");
-        assert_eq!(read_bytes(bytes.as_ptr(), 4, 5, buf.as_mut_ptr(), 3), -1);
+        assert!(<[u8] as DataSource>::read(bytes, 4, &mut buf).is_err());
     }
 
     #[test]

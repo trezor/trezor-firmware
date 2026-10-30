@@ -19,6 +19,7 @@ the person confirms or backs out, and the extras menu every layout carries."""
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -894,6 +895,78 @@ def test_field_data_long_value(session: Session, instance_id: int):
         client.set_input_flow(input_flow)
         client.set_expected_responses(expect_one_button_request(request.step))
         assert modui_ext.show(session, instance_id, request) is m.Reply.Confirmed
+
+
+def test_stream_data(session: Session, instance_id: int):
+    """A data_source field is pulled from the app one chunk at a time, and the
+    final review shows the hash of the bytes it handed out and how many reads it
+    took."""
+    length = 1025  # 384 + 384 + 257: three chunks
+    value = bytes(i % 256 for i in range(length))
+    request = m.StreamData(step="stream", title="Stream", length=length)
+
+    def input_flow():
+        br = yield
+        assert br.name == br_name(request.step)
+        pages = read_all_pages(session.debug, br.pages)
+        assert len(pages) > 1
+        text = "".join(pages)
+        for _ in range(2):  # the second and third chunks
+            confirm(session.debug)
+            session.debug.read_layout(wait=True)
+            text += "".join(read_all_pages(session.debug))
+        confirm(session.debug)
+        assert value.hex() in flat(text)
+
+        br = yield
+        assert br.name == br_name("summary")
+        text = flat("".join(read_all_pages(session.debug, br.pages)))
+        assert hashlib.sha256(value).hexdigest() in text
+        assert "Reads3" in text
+        confirm_hold(session.debug)
+
+    with session.test_ctx as client:
+        client.set_input_flow(input_flow)
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(name=br_name(request.step)),
+                messages.ButtonRequest(name=br_name("summary")),
+                messages.ExtAppResponse,
+            ]
+        )
+        assert modui_ext.show(session, instance_id, request) is m.Reply.Confirmed
+
+
+def test_stream_data_failure(session: Session, instance_id: int):
+    """A source whose read fails ends the review as refused, and the app gets the
+    source's own error rather than a cancel."""
+    request = m.StreamData(step="stream", title="Stream", length=1025, fail_at=2)
+
+    def input_flow():
+        br = yield
+        read_all_pages(session.debug, br.pages)
+        confirm(session.debug)  # the second read then fails
+
+    with session.test_ctx as client:
+        client.set_input_flow(input_flow)
+        with testapp_ext.raises(SdkError.ValueError, "the stream failed"):
+            modui_ext.show(session, instance_id, request)
+
+
+def test_stream_data_cancel(session: Session, instance_id: int):
+    """Refusing a streamed field between two chunks pulls nothing more, and the
+    app still gets its answer."""
+    request = m.StreamData(step="stream", title="Stream", length=1025)
+
+    def input_flow():
+        br = yield
+        read_all_pages(session.debug, br.pages)
+        session.debug.press_no()
+
+    with session.test_ctx as client:
+        client.set_input_flow(input_flow)
+        client.set_expected_responses(expect_one_button_request(request.step))
+        assert modui_ext.show(session, instance_id, request) is m.Reply.Cancelled
 
 
 def test_data_in_an_extra(session: Session, instance_id: int):

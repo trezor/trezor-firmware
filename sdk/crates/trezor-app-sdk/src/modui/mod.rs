@@ -77,6 +77,12 @@
 //! looks on every model: its styling, its grouping, its paging and its font.
 //! The app never picks a style, and one list may mix all six kinds.
 //!
+//! A `data` field carries bytes the app already holds. A
+//! [`data_source`](Field::data_source) field carries a length and a source
+//! instead, for bytes the app hands out one range at a time — a host stream it
+//! hashes on the way out, say. Core reads the source in order, from the start,
+//! each range once, and stops when the person reaches the end or refuses.
+//!
 //! # Outcomes
 //!
 //! What a layout returns depends on what kind of layout it is:
@@ -157,8 +163,8 @@
 //! - **Chunking** is the firmware's, and exists because core's memory is
 //!   limited: long data — the bytes given to [`Field::data`] — is cut into
 //!   chunks so core never holds a whole blob at once. The bytes stay in the
-//!   app; core pulls each chunk while the person pages, and the call does not
-//!   return until the last one is read.
+//!   app, in a slice or in a source; core pulls each chunk while the person
+//!   pages, and the call does not return until the last one is read.
 //! - **Pagination** is core's, and exists because the screen is small. Core
 //!   splits whatever one request carries across as many screens as it takes
 //!   — a screen holds a few hundred bytes at most, on the largest model — as
@@ -189,11 +195,13 @@
 //! # Errors
 //!
 //! A layout's `Err` is [`crate::Error::Cancelled`] when the person refuses
-//! (see [outcomes](#outcomes)). What the library can tell before it asks —
-//! more than five extras, an extra beside a danger, more than one `data` field, a
-//! `data` field too long to travel inline — is also an `Err`, and `?` ends the
-//! flow on it, the same
-//! way: that is a mistake in the app, not a state to handle.
+//! (see [outcomes](#outcomes)). What the library can tell before it asks — more
+//! than five extras, an extra beside a danger, more than one `data` field, a
+//! streamed `data` field in an extra — is also an `Err`, and `?` ends the flow on
+//! it the same way: that is a mistake in the app, not a state to handle.
+//!
+//! A source whose `read` fails also ends the flow, but mid-review: the app gets
+//! the source's own error, not `Cancelled`.
 //!
 //! A failure — the request did not reach core, or the answer cannot be read —
 //! ends the app, and the call never returns. So does a request core cannot
@@ -255,7 +263,7 @@
 // So a new layout means a `structs` type and its `TrezorUiEnum` variant, an
 // arm in core's dispatch, and the layout's function here. Every layout goes
 // through `UiV1::ui_call`: a `data` field crosses as its length, and core
-// pulls the bytes from the app's slice while the person pages.
+// pulls the bytes from the app's slice or source while the person pages.
 //
 // ButtonRequests: the app names the step and nothing else. Core prefixes the
 // app's identity, its image ID (`testapp.trezor.io`), and adds the `/menu` and
@@ -283,7 +291,7 @@ mod verify;
 
 pub use decision::{Details, details};
 pub use done::done;
-pub use field::Field;
+pub use field::{DataSource, Field};
 pub use progress::{Progress, progress};
 pub use review::{Extra, Review, review};
 pub use verify::{verify_address, verify_pubkey};

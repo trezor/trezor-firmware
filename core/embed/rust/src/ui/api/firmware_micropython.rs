@@ -1461,7 +1461,7 @@ extern "C" fn new_encode_chunk_request(n_args: usize, args: *const Obj, kwargs: 
         let msg = UiChunkRequest {
             field: kwargs.get(Qstr::MP_QSTR_field)?.try_into()?,
             offset: kwargs.get(Qstr::MP_QSTR_offset)?.try_into()?,
-            len: kwargs.get(Qstr::MP_QSTR_len)?.try_into()?,
+            len: kwargs.get(Qstr::MP_QSTR_length)?.try_into()?,
         };
 
         let bytes = crate::util::archive::to_bytes_obj(&msg)?;
@@ -2447,7 +2447,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     field: int,
     ///     offset: int,
-    ///     len: int,
+    ///     length: int,
     /// ) -> bytes:
     ///     """Serialize one request for a `Data` field's chunk into the bytes the
     ///     extapp UI driver sends to the app."""

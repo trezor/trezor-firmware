@@ -50,4 +50,5 @@ enum MessageType {
     MessageType_ProgressEnd = 38;
     MessageType_Showcase = 39;
     MessageType_ProgressLabel = 40;
+    MessageType_StreamData = 41;
 }

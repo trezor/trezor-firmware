@@ -451,4 +451,16 @@ mod tests {
         assert_eq!(request.title.as_str(), "title");
         assert_eq!(request.fields.as_slice().len(), 1);
     }
+
+    #[test]
+    fn a_streamed_field_in_an_extra_is_refused() {
+        let bytes: &[u8] = &[0u8; 8];
+        let stream = [Field::data_source("stream", bytes.len() as u32, &bytes)];
+        assert!(matches!(
+            offered_extras(&[Extra::new("extra", &stream)]),
+            Err(Error::DataError(
+                "a streamed data field cannot be in an extra"
+            ))
+        ));
+    }
 }

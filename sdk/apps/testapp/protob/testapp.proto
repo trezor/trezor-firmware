@@ -352,6 +352,18 @@ message Details {
 }
 
 /**
+ * Request: a review with a `data_source` field the app generates while core
+ * pulls it, then a final review of the hash and of the number of reads
+ * @next UiResult
+ */
+message StreamData {
+    required string step = 1;
+    required string title = 2;
+    required uint32 length = 3;
+    optional uint32 fail_at = 4;
+}
+
+/**
  * Request: modui::verify_address
  * @next UiResult
  */

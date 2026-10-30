@@ -3,13 +3,17 @@
 //!
 //! The API reference's examples are in [`crate::showcase`].
 
+use core::cell::{Cell, RefCell};
+use core::fmt::Write as _;
 use core::str;
 
-use trezor_app_sdk::modui::{self, Details, Extra, Field};
+use trezor_app_sdk::crypto::{self as sdk, HasherExt, HashingAlgorithm};
+use trezor_app_sdk::modui::{self, DataSource, Details, Extra, Field};
+use trezor_app_sdk::traits::crypto::BoxedHasher;
 use trezor_app_sdk::{Error, Result, WireDecode, WireEncode, wire_request_raw};
 
 use crate::ProstCodec;
-use crate::alloc_types::Vec;
+use crate::alloc_types::{String, Vec};
 use crate::proto::messages::MessageType;
 use crate::proto::testapp::{self as wire, ui_result::Reply};
 
@@ -57,6 +61,60 @@ pub fn verify_pubkey(m: wire::VerifyPubkey) -> Result<wire::UiResult> {
 pub fn done(m: wire::Done) -> Result<wire::UiResult> {
     modui::done(&m.step, &m.text);
     answer(Reply::Confirmed)
+}
+
+/// Shows bytes the app generates as core asks for them, hashed on the way out,
+/// then a final review of the hash and of how many reads it took.
+///
+/// `fail_at` makes the k-th read (1-based) fail, so that the host sees the
+/// source's own error rather than a cancel.
+pub fn stream_data(m: wire::StreamData) -> Result<wire::UiResult> {
+    let source = StreamSource {
+        reads: Cell::new(0),
+        fail_at: m.fail_at,
+        hasher: RefCell::new(sdk::get_hasher(HashingAlgorithm::Sha256)),
+    };
+    decided(show_stream(&m, &source))
+}
+
+/// Shows the stream, then reports what the app read out of it.
+fn show_stream(m: &wire::StreamData, source: &StreamSource) -> Result<()> {
+    let facts = [Field::data_source("Input data", m.length, source)];
+    modui::review(&m.step, &m.title, &facts).confirm()?;
+
+    let digest = source.hasher.borrow_mut().finalize();
+    let mut hash = String::new();
+    for byte in digest.as_ref() {
+        let _ = write!(hash, "{:02x}", byte);
+    }
+    let mut reads = String::new();
+    let _ = write!(reads, "{}", source.reads.get());
+    let facts = [Field::text("Hash", &hash), Field::text("Reads", &reads)];
+    modui::review("summary", "Signed", &facts).confirm_final()
+}
+
+/// Bytes the app generates while core pulls them, hashed on the way out.
+///
+/// The bytes are the offset itself, so a host can predict every one of them.
+struct StreamSource {
+    reads: Cell<u32>,
+    fail_at: Option<u32>,
+    hasher: RefCell<BoxedHasher>,
+}
+
+impl DataSource for StreamSource {
+    fn read(&self, offset: u32, buf: &mut [u8]) -> Result<()> {
+        let read = self.reads.get() + 1;
+        self.reads.set(read);
+        if self.fail_at == Some(read) {
+            return Err(Error::ValueError("the stream failed"));
+        }
+        for (i, byte) in buf.iter_mut().enumerate() {
+            *byte = (offset as usize + i) as u8;
+        }
+        self.hasher.borrow_mut().update(buf);
+        Ok(())
+    }
 }
 
 /// Runs a progress for as long as the host keeps it going: each tick asks the
