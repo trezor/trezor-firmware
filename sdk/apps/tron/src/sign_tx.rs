@@ -125,35 +125,35 @@ fn validate_tx_fields(msg: &SignTx) -> Result<()> {
     const _MAX_FEE_LIMIT: u64 = 15_000_000_000; // TRON: Maximum Fee limit in SUN.
 
     //  https://developers.tron.network/docs/set-feelimit
-    if let Some(fee_limit) = msg.fee_limit {
-        if fee_limit > _MAX_FEE_LIMIT {
-            return Err(Error::DataError("Tron: fees too high"));
-        }
+    if let Some(fee_limit) = msg.fee_limit
+        && fee_limit > _MAX_FEE_LIMIT
+    {
+        return Err(Error::DataError("Tron: fees too high"));
     }
 
     // It is not necessary for it to be UTF-8 encoded but all applications using it use it as a Note to be attached with the transaction.
-    if let Some(data) = &msg.data {
-        if !data.is_empty() {
-            if data.len() > _MAX_DATA_LENGTH {
-                return Err(Error::DataError("Tron: data field too long"));
-            }
-
-            confirm_blob(
-                tr!("words__note"),
-                String::from_utf8_lossy(data).as_ref(),
-                None,
-                None,
-                "tron/note",
-                ButtonRequestType::Other.into(),
-                false,
-                Some(tr!("buttons__continue")),
-                None,
-                false,
-                false,
-                false,
-            )
-            .c()?;
+    if let Some(data) = &msg.data
+        && !data.is_empty()
+    {
+        if data.len() > _MAX_DATA_LENGTH {
+            return Err(Error::DataError("Tron: data field too long"));
         }
+
+        confirm_blob(
+            tr!("words__note"),
+            String::from_utf8_lossy(data).as_ref(),
+            None,
+            None,
+            "tron/note",
+            ButtonRequestType::Other.into(),
+            false,
+            Some(tr!("buttons__continue")),
+            None,
+            false,
+            false,
+            false,
+        )
+        .c()?;
     }
 
     Ok(())
@@ -350,7 +350,7 @@ fn process_contract(
     Ok(RawContract {
         r#type: contract_type as i32,
         parameter: RawParameter {
-            type_url: uformat!("{}{}", TYPE_URL_TEMPLATE, contract_type.as_str_name()).into(),
+            type_url: uformat!("{}{}", TYPE_URL_TEMPLATE, contract_type.as_str_name()),
             value,
         },
     })
@@ -388,12 +388,10 @@ fn process_smart_contract(
         }
         trx_value = Some(call_value);
     }
-    if process_known_trc20_contract(contract, fee_limit, trx_value, chunkify).c()? {
-        return Ok(());
-    } else {
+    if !process_known_trc20_contract(contract, fee_limit, trx_value, chunkify).c()? {
         confirm_unknown_smart_contract(contract, fee_limit, trx_value, chunkify).c()?;
-        Ok(())
     }
+    Ok(())
 }
 
 /// Returns false when the contract is unrecoginsed. i.e. not (Transfer and known TRC-20)
@@ -411,7 +409,7 @@ fn process_known_trc20_contract(
     let (token_decimals, token_symbol) = unwrap!(token_info);
 
     let (func_sig, rest) = contract.data.split_at(SC_FUNC_SIG_BYTES);
-    if func_sig != &SC_FUNC_SIG_APPROVE && func_sig != &SC_FUNC_SIG_TRANSFER {
+    if func_sig != SC_FUNC_SIG_APPROVE && func_sig != SC_FUNC_SIG_TRANSFER {
         return Ok(false);
     }
 
