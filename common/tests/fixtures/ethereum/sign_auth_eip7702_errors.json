@@ -20,18 +20,18 @@
             }
         },
         {
-            "name": "metamask_nonce_1_chainid_0_all_networks",
+            "name": "metamask_nonce_1_chainid_1_mainnet",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
                 "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
                 "tuple_nonce": 1,
-                "chain_id": 0,
+                "chain_id": 1,
                 "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
                 "value": 0,
                 "data": ""
             },
             "result": {
-                "error": "DataError: Chain ID out of bounds"
+                "error": "Unknown EIP-7702 delegate address"
             }
         },
         {
@@ -65,10 +65,10 @@
             }
         },
         {
-            "name": "metamask_nonce_1_chainid_200901_unknown",
+            "name": "ambire_nonce_1_chainid_200901_unknown",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
                 "tuple_nonce": 1,
                 "chain_id": 200901,
                 "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -80,10 +80,10 @@
             }
         },
         {
-            "name": "metamask_invalid_nonce_chainid_1_mainnet",
+            "name": "ambire_invalid_nonce_chainid_1_mainnet",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
                 "tuple_nonce": 18446744073709551615,
                 "chain_id": 1,
                 "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -95,10 +95,10 @@
             }
         },
         {
-            "name": "metamask_payment_request_chainid_1_mainnet",
+            "name": "ambire_payment_request_chainid_1_mainnet",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
                 "tuple_nonce": 1,
                 "chain_id": 1,
                 "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -111,10 +111,10 @@
             }
         },
         {
-            "name": "metamask_nonzero_value_chainid_1_mainnet",
+            "name": "ambire_nonzero_value_chainid_1_mainnet",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
                 "tuple_nonce": 1,
                 "chain_id": 1,
                 "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -126,10 +126,10 @@
             }
         },
         {
-            "name": "metamask_nonempty_data_chainid_1_mainnet",
+            "name": "ambire_nonempty_data_chainid_1_mainnet",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
                 "tuple_nonce": 1,
                 "chain_id": 1,
                 "to_address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -141,10 +141,10 @@
             }
         },
         {
-            "name": "metamask_empty_dest_chainid_1_mainnet",
+            "name": "ambire_empty_dest_chainid_1_mainnet",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "delegate": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
                 "tuple_nonce": 1,
                 "chain_id": 1,
                 "to_address": "",
@@ -153,6 +153,25 @@
             },
             "result": {
                 "error": "DataError: EIP-7702: empty destination"
+            }
+        },
+        {
+            "name": "metamask_authorize",
+            "parameters": {
+                "comment": "txid=0x876aaa1c0ebd442b54e3d5aa1b789fae6257d6b425e0bccba3d8de7aa0027bd7",
+                "path": "m/44'/60'/0'/0/0",
+                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
+                "tuple_nonce": 1,
+                "chain_id": 1,
+                "to_address": "0x14495E5EF84823170B62176913d798B26a1a1A69",
+                "value": 0,
+                "data": "",
+                "gas_limit": 69573,
+                "max_gas_fee": 132809059,
+                "max_priority_fee": 100000
+            },
+            "result": {
+                "error": "DataError: Unknown EIP-7702 delegate address"
             }
         }
     ]

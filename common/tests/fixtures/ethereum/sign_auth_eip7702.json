@@ -19,20 +19,6 @@
             }
         },
         {
-            "name": "metamask_nonce_1_chainid_1_mainnet",
-            "parameters": {
-                "path": "m/44'/60'/0'/0/0",
-                "delegate": "0x63c0c19a282a1b52b07dd5a65b58948a07dae32b",
-                "tuple_nonce": 1,
-                "chain_id": 1
-            },
-            "result": {
-                "sig_v": 0,
-                "sig_r": "c9d939488d895963635118cdb92d4956370e8ee8ce3a3180dcce66057f365dae",
-                "sig_s": "694b9ddb1caf5c2bee62fedd557a02a744da1e4cc32c0dcd3a0e7532cf5f546e"
-            }
-        },
-        {
             "name": "simple_nonce_1_chainid_1_mainnet",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",

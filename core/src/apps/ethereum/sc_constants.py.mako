@@ -95,8 +95,6 @@ _EIP7702_ADDRESSES = {
     1: [  # Ethereum
         # https://etherscan.io/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
         ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
-        # https://etherscan.io/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
-        ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
         # https://etherscan.io/address/0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9
         ("4Cd241E8d1510e30b2076397afc7508Ae59C66c9", "Simple7702Account")
     ],
@@ -115,22 +113,16 @@ _EIP7702_ADDRESSES = {
     100: [  # Gnosis
         # https://gnosisscan.io/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
         ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
-        # https://gnosisscan.io/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
-        ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
     ],
     8453: [  # Base
         # https://basescan.org/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
         ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
-        # https://basescan.org/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
-        ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
         # https://basescan.org/address/0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9
         ("4Cd241E8d1510e30b2076397afc7508Ae59C66c9", "Simple7702Account")
     ],
     42161: [  # Arbitum
         # https://arbiscan.io/address/0x5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d
         ("5a7fc11397e9a8ad41bf10bf13f22b0a63f96f6d", "Ambire"),
-        # https://arbiscan.io/address/0x63c0c19a282a1b52b07dd5a65b58948a07dae32b
-        ("63c0c19a282a1b52b07dd5a65b58948a07dae32b", "MetaMask"),
         # https://arbiscan.io/address/0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9
         ("4Cd241E8d1510e30b2076397afc7508Ae59C66c9", "Simple7702Account")
     ],
