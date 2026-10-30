@@ -5,7 +5,6 @@ from trezor.wire import context
 from trezor.wire.errors import DataError
 
 from apps.common import paths
-from apps.common.keychain import get_keychain
 
 from .session import MSG_ID_ERROR, SERVICE_CRYPTO, describe
 
@@ -35,7 +34,9 @@ _VERIFY_NONCE_CACHE = 6
 _CANONICAL_ANY = 0
 _CANONICAL_ETHEREUM = 1
 
-_SLIP24_NAMESPACE = [b"SLIP-0024"]
+# `Curve` values in the SDK; `EcdsaCurve` has the first two.
+_CURVES = ("secp256k1", "nist256p1", "ed25519", "curve25519")
+_ECDSA_CURVES = _CURVES[:2]
 
 
 async def handle(session: Session, msg: IpcMessage) -> None:
@@ -69,6 +70,12 @@ async def handle(session: Session, msg: IpcMessage) -> None:
         session.die(DataError("Failed to serialize or send crypto result"))
 
 
+def _curve(value: int, curves: tuple[str, ...] = _CURVES) -> str:
+    if not 0 <= value < len(curves):
+        raise DataError("Unknown curve")
+    return curves[value]
+
+
 def _check_not_slip25(address_n: list[int]) -> None:
     from apps.common.keychain import ForbiddenKeyPath
 
@@ -78,19 +85,19 @@ def _check_not_slip25(address_n: list[int]) -> None:
 
 
 async def _get_xpub(session: Session, obj: Any) -> str:
-    address_n, xpub_magic = obj
+    curve, address_n, xpub_magic = obj
     _check_not_slip25(address_n)
-    keychain = await get_keychain(session.curve, [paths.AlwaysMatchingSchema])
+    keychain = await session.keychain(_curve(curve))
     return keychain.derive(address_n).serialize_public(xpub_magic)
 
 
 async def _get_public_key(session: Session, obj: Any) -> bytes:
-    address_n, compressed = obj
+    curve, address_n, compressed = obj
     _check_not_slip25(address_n)
-    keychain = await get_keychain(session.curve, [paths.AlwaysMatchingSchema])
+    curve = _curve(curve)
+    keychain = await session.keychain(curve)
     private_key = keychain.derive(address_n).private_key()
 
-    curve = session.curve
     if curve == "secp256k1":
         from trezor.crypto.curve import secp256k1
 
@@ -103,26 +110,20 @@ async def _get_public_key(session: Session, obj: Any) -> bytes:
         from trezor.crypto.curve import ed25519
 
         public_key = ed25519.publickey(private_key)
-    elif curve == "curve25519":
+    else:
         from trezor.crypto.curve import curve25519
 
         public_key = curve25519.publickey(private_key)
-    elif curve == "bip340":
-        from trezor.crypto.curve import bip340
-
-        public_key = bip340.publickey(private_key)
-    else:
-        raise DataError(f"Unsupported curve: {curve}")
     return public_key
 
 
 async def _ecdsa_sign_digest(session: Session, obj: Any) -> bytes:
-    address_n, digest, compressed, canonical = obj
-    keychain = await get_keychain(session.curve, session.schemas, [_SLIP24_NAMESPACE])
+    curve, address_n, digest, compressed, canonical = obj
+    curve = _curve(curve, _ECDSA_CURVES)
+    keychain = await session.keychain(curve)
     await paths.validate_path(keychain, address_n)
     private_key = keychain.derive(address_n).private_key()
 
-    curve = session.curve
     if curve == "secp256k1":
         from trezor.crypto.curve import secp256k1
 
@@ -136,36 +137,34 @@ async def _ecdsa_sign_digest(session: Session, obj: Any) -> bytes:
 
     if canonical != _CANONICAL_ANY:
         raise DataError(f"Canonical signatures are not supported on {curve}")
-    if curve == "nist256p1":
-        from trezor.crypto.curve import nist256p1
+    from trezor.crypto.curve import nist256p1
 
-        return nist256p1.sign(private_key, digest, compressed)
-    raise DataError(f"ECDSA signing is not supported on {curve}")
+    return nist256p1.sign(private_key, digest, compressed)
 
 
 async def _ed25519_sign(session: Session, obj: Any) -> bytes:
     from trezor.crypto.curve import ed25519
 
     address_n, message = obj
-    if session.curve != "ed25519":
-        raise DataError(f"Ed25519 signing is not supported on {session.curve}")
-    keychain = await get_keychain(session.curve, session.schemas, [_SLIP24_NAMESPACE])
+    keychain = await session.keychain("ed25519")
     await paths.validate_path(keychain, address_n)
     private_key = keychain.derive(address_n).private_key()
     return ed25519.sign(private_key, message)
 
 
-async def _address_mac_keychain(session: Session, address_n: list[int]) -> Keychain:
-    keychain = await get_keychain(session.curve, session.schemas, [_SLIP24_NAMESPACE])
-    await paths.validate_path(keychain, address_n)
-    return keychain
+async def _address_mac_keychain(session: Session) -> Keychain:
+    # the SLIP-21 MAC key doesn't depend on the curve, so any allowed one does
+    if not session.curves:
+        raise DataError("No curve allowed")
+    return await session.keychain(session.curves[0])
 
 
 async def _get_address_mac(session: Session, obj: Any) -> bytes:
     from apps.common.address_mac import get_address_mac
 
     address_n, address, slip44 = obj
-    keychain = await _address_mac_keychain(session, address_n)
+    keychain = await _address_mac_keychain(session)
+    await paths.validate_path(keychain, address_n)
     return get_address_mac(address, slip44, address_n, keychain)
 
 
@@ -173,8 +172,8 @@ async def _check_address_mac(session: Session, obj: Any) -> bool:
     from apps.common.address_mac import check_address_mac
 
     address_n, mac, address, slip44 = obj
-    keychain = await _address_mac_keychain(session, address_n)
-    # raises on a wrong MAC
+    keychain = await _address_mac_keychain(session)
+    # raises on a wrong MAC; the path may belong to another app, e.g. in a memo
     check_address_mac(address, mac, slip44, address_n, keychain)
     return True
 
