@@ -76,8 +76,9 @@ exclude-newer = "30 days"
 astroid = "2026-10-08T09:36:44.123Z"
 pylint = "2026-10-11T07:49:10.691Z"
 pillow = "2026-10-16T22:18:09.719Z"
+filelock = "2026-10-19T01:57:51.002Z"
 certifi = "2026-10-20T02:24:16.605Z"
-virtualenv = "2026-10-21T01:58:51.725Z"
+virtualenv = "2026-10-22T20:10:16.953Z"
 
 [tool.uv.sources]
 trezor = { path = "./python", editable = true }
