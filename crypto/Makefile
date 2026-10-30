@@ -66,7 +66,6 @@ ifneq ($(FUZZER),1) # This can be removed once the fuzzer machine uses at least 
 endif
 
 ZKP_CFLAGS = \
-	-DECMULT_GEN_PREC_BITS=4 \
 	-DECMULT_WINDOW_SIZE=2 \
 	-DENABLE_MODULE_GENERATOR \
 	-DENABLE_MODULE_RECOVERY \
