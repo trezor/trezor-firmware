@@ -349,6 +349,7 @@ fn add_mldsa(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
     lib.add_defines([
         ("MLD_CONFIG_NAMESPACE_PREFIX", Some("mldsa")),
         ("MLD_CONFIG_NO_RANDOMIZED_API", Some("1")),
+        ("MLD_CONFIG_REDUCE_RAM", Some("1")),
     ]);
 
     lib.add_sources_in_dir_with_attrs(
