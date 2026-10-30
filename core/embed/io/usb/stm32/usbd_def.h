@@ -251,6 +251,11 @@ typedef struct _USBD_HandleTypeDef
   void                    *pClassData;
   void                    *pUserData;
   void                    *pData;
+  /* EP0 OUT reception buffer: class request data, and the packets that
+     carry no data for the stack (status stage, premature end of an IN
+     transfer). The OTG core accepts a full packet on EP0 however short the
+     armed length, so the buffer must hold one. */
+  uint8_t                 ep0_buf[USB_MAX_EP0_SIZE];
 } USBD_HandleTypeDef;
 
 /**
