@@ -502,8 +502,9 @@ class LegacyEmulator(Emulator):
     STORAGE_FILENAME = "emulator.img"
 
     def properties(self) -> dict[str, Any]:
-        # The legacy emulator ignores command-line arguments altogether, so
-        # running it with `--emulator-properties` would just start it.
+        # Kept because legacy emulators older than 1.14.4 ignore command-line
+        # arguments, so running them with `--emulator-properties` would just
+        # start them.
         return {}
 
     def make_env(self) -> dict[str, str]:

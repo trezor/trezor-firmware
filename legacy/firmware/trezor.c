@@ -39,7 +39,8 @@
 #include <libopencm3/stm32/desig.h>
 #include "otp.h"
 #else
-#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #endif
 
 #ifdef USE_SECP256K1_ZKP
@@ -160,7 +161,23 @@ static void collect_hw_entropy(bool privileged) {
 #endif
 }
 
+#if EMULATOR
+// Can be used to get basic emulator properties before regularly starting it.
+// Needs to be called before it starts listening on UDP sockets.
+static void print_emulator_properties_and_exit(void) {
+  printf("{\"internal_model\": \"T1B1\",\n");
+  printf(" \"version\": \"%d.%d.%d\"}\n", VERSION_MAJOR, VERSION_MINOR,
+         VERSION_PATCH);
+  exit(0);
+}
+
+int main(int argc, char **argv) {
+  if (argc > 1 && strcmp(argv[1], "--emulator-properties") == 0) {
+    print_emulator_properties_and_exit();
+  }
+#else
 int main(void) {
+#endif
 #ifndef APPVER
   setup();
   __stack_chk_guard = random32();  // this supports compiler provided
