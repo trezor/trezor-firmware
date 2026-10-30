@@ -51,4 +51,6 @@ enum MessageType {
     MessageType_Showcase = 39;
     MessageType_ProgressLabel = 40;
     MessageType_StreamData = 41;
+    MessageType_ProgressReview = 42;
+    MessageType_ProgressNested = 43;
 }

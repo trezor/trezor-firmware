@@ -12,6 +12,9 @@
 //! returned early through `?`. A lost `End` would leave the person staring at a
 //! bar for work that stopped, which is precisely what a scope is for.
 //!
+//! A progress cannot be nested: starting one inside another progress's closure
+//! ends the app. Finish the first before the next begins.
+//!
 //! # Form
 //!
 //! The work is one closure, and it is handed the [`Progress`] to report steps

@@ -97,12 +97,15 @@ included (`--step`, defaulting to the layout's name).
 | `ShowProgress` | `modui::progress(label, total, work)` |
 | `StreamData` | a review with a `data_source` field, then a final review of its hash |
 | `ProgressLabel` | `Progress::label(text)`, while a progress runs |
+| `ProgressReview` | `modui::review(step, title, &[]).confirm()`, inside the work |
+| `ProgressNested` | a nested `modui::progress`, refused: the app stops |
 
 `account` and `path` are optional in the verify layouts. A review's extras
 travel with its request, as one `.extras(&[Extra::new(label, &fields), ...])`
 call, and an extra with no facts is not offered. A progress stays on the device
 while the app works: the app asks the host for each step, and the host answers
-with the next step, a new label, or the end. A `StreamData` request has the app
+with the next step, a new label, a review in the middle of the work, or the end.
+A second progress inside the first is refused and stops the app. A `StreamData` request has the app
 generate `length` bytes, hash them as it hands them out, and show the hash and
 the number of reads in a final review; `fail_at` makes the k-th read fail, and
 the host then sees the app's own error rather than a cancel.

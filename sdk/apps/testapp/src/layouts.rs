@@ -134,6 +134,16 @@ pub fn show_progress(m: wire::ShowProgress) -> Result<wire::UiResult> {
                     let label: wire::ProgressLabel = ProstCodec::decode(&data)?;
                     progress.label(&label.label);
                 }
+                Ok(MessageType::ProgressReview) => {
+                    let review: wire::ProgressReview = ProstCodec::decode(&data)?;
+                    modui::review(&review.step, &review.title, &[]).confirm()?;
+                }
+                Ok(MessageType::ProgressNested) => {
+                    let nested: wire::ProgressNested = ProstCodec::decode(&data)?;
+                    // Core refuses a progress started inside another one and
+                    // stops the app, so this call never returns.
+                    modui::progress(&nested.label, None, |_| ());
+                }
                 Ok(MessageType::ProgressEnd) => {
                     let _: wire::ProgressEnd = ProstCodec::decode(&data)?;
                     return Ok(());

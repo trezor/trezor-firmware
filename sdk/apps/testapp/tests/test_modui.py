@@ -28,6 +28,7 @@ import pytest
 from trezorlib import messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
+from trezorlib.exceptions import TrezorFailure
 
 from . import modui_ext, testapp_ext
 from .generated import messages as m
@@ -780,6 +781,79 @@ def test_progress_label(session: Session, instance_id: int):
         [1, "Signing 1/3", 1, "Signing 2/3", 1],
     )
     assert reply is m.Reply.Confirmed
+
+
+def test_progress_nested_refused(session: Session, instance_id: int):
+    """A progress started inside another one is refused, and the app stops."""
+    testapp_ext.call_ext(
+        session,
+        instance_id,
+        msg_data=m.ShowProgress(label="Working...", total=0),
+        expect=[m.ProgressTick],
+    )
+
+    with pytest.raises(TrezorFailure) as e:
+        testapp_ext.call_ext(
+            session,
+            instance_id,
+            msg_data=m.ProgressNested(label="Inner"),
+            expect=[m.ProgressTick],
+        )
+    assert e.value.code == messages.FailureType.DataError
+    assert "nested" in e.value.message.lower()
+
+    with pytest.raises(TrezorFailure) as e:
+        testapp_ext.call_ext(
+            session,
+            instance_id,
+            msg_data=m.ShowProgress(label="Again", total=0),
+            expect=[m.ProgressTick],
+        )
+    assert "Task not running" in e.value.message
+
+
+def test_progress_review_reshows(session: Session, instance_id: int):
+    """A review inside the progress's work covers the bar, and confirming it
+    brings the bar back, unchanged."""
+    testapp_ext.call_ext(
+        session,
+        instance_id,
+        msg_data=m.ShowProgress(label="Working...", total=3),
+        expect=[m.ProgressTick],
+    )
+    testapp_ext.call_ext(
+        session,
+        instance_id,
+        msg_data=m.ProgressStep(units=1),
+        expect=[m.ProgressTick],
+    )
+    review = m.ProgressReview(step="review", title="Confirm step")
+
+    def input_flow():
+        yield
+        assert review.title in session.debug.read_layout().title()
+        confirm(session.debug)
+
+    with session.test_ctx as client:
+        client.set_input_flow(input_flow)
+        client.set_expected_responses(expect_one_button_request(review.step))
+        testapp_ext.call_ext(
+            session, instance_id, msg_data=review, expect=[m.ProgressTick]
+        )
+
+    # The review covered the bar; it is back as it was before the review.
+    assert session.debug.read_layout(wait=False).main_component() == "Progress"
+
+    testapp_ext.call_ext(
+        session,
+        instance_id,
+        msg_data=m.ProgressStep(units=1),
+        expect=[m.ProgressTick],
+    )
+    result = testapp_ext.call_ext(
+        session, instance_id, msg_data=m.ProgressEnd(), expect=[m.UiResult]
+    )
+    assert result.reply == m.Reply.Confirmed
 
 
 # ============================================================================

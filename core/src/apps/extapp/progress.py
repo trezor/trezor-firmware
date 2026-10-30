@@ -28,6 +28,10 @@ def handle(session: Session, msg: IpcMessage) -> None:
     obj = trezorui_api.deserialize_progress_message(data=bytes(msg.data))
 
     if message_id == _INIT:
+        if session.progress is not None:
+            # One bar at a time: a progress is closed before the app asks
+            # anything, so a start while one is open is the app's mistake.
+            session.die(DataError("Nested progress"))
         label, total = obj
         session.progress_total = total
         session.progress_done = 0

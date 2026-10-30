@@ -70,6 +70,10 @@ async def handle(session: Session, msg: IpcMessage) -> None:
         session.send(SERVICE_UI, 0, answer)
     except Exception as e:
         session.die(DataError(f"Cannot send the screen's answer: {e}"))
+    if session.progress is not None:
+        # The screen covered the bar while the person decided; show it again.
+        # Reporting the current value leaves the label alone and only repaints.
+        session.progress.report(session.progress.value)
 
 
 def _data_puller(

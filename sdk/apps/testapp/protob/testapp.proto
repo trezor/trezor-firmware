@@ -406,8 +406,9 @@ message Showcase {
 /**
  * Request: modui::progress, paced by the host.
  * The progress stays up while the app asks for steps with `ProgressTick`; the
- * host answers each tick with `ProgressStep` or `ProgressLabel`, or with
- * `ProgressEnd` to finish. Without `total` the progress is indeterminate.
+ * host answers each tick with `ProgressStep`, `ProgressLabel` or
+ * `ProgressReview`, or with `ProgressEnd` to finish. Without `total` the progress
+ * is indeterminate.
  * @next ProgressTick
  */
 message ShowProgress {
@@ -419,6 +420,7 @@ message ShowProgress {
  * The app's question while a progress runs: what next?
  * @next ProgressStep
  * @next ProgressLabel
+ * @next ProgressReview
  * @next ProgressEnd
  */
 message ProgressTick {}
@@ -436,6 +438,24 @@ message ProgressStep {
  * @next ProgressTick
  */
 message ProgressLabel {
+    required string label = 1;
+}
+
+/**
+ * Show a review inside the progress's work; the app asks for the next tick once
+ * the person confirms it.
+ * @next ProgressTick
+ */
+message ProgressReview {
+    required string step = 1;
+    required string title = 2;
+}
+
+/**
+ * Start a progress inside the running one. Core refuses the nesting and stops the
+ * app, so this never answers.
+ */
+message ProgressNested {
     required string label = 1;
 }
 
