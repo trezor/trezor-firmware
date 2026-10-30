@@ -1315,5 +1315,6 @@
   "1313": "solana__skip_details",
   "1314": "solana__skip_details_hint",
   "1315": "solana__title_blind_signing",
-  "1316": "solana__view_details_in_menu"
+  "1316": "solana__view_details_in_menu",
+  "1317": "menu__turn_off"
 }
