@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import logging
 import os
 import signal
@@ -43,6 +44,11 @@ PROFILE_BASE = Path.home() / ".trezoremu"
     help="Run command while emulator is running",
 )
 @click.option("-e", "--erase", is_flag=True, help="Erase profile before running")
+@click.option(
+    "--emulator-properties",
+    is_flag=True,
+    help="Print the emulator's build properties as JSON and exit",
+)
 @click.option("-h", "--headless", is_flag=True, help="Headless mode (no display)")
 @click.option(
     "-p",
@@ -87,6 +93,7 @@ def cli(
     model: str | None,
     run_command: bool,
     erase: bool,
+    emulator_properties: bool,
     headless: bool,
     profile: str | None,
     port: int | None,
@@ -135,9 +142,6 @@ def cli(
             "No profile: use -p or TREZOR_PROFILE_DIR with --no-temporary-profile."
         )
 
-    if erase:
-        (profile_dir / ProdtestEmulator.STORAGE_FILENAME).unlink(missing_ok=True)
-
     emulator = get_prodtest_emulator(
         model=model,
         profile_dir=str(profile_dir),
@@ -145,6 +149,16 @@ def cli(
         headless=headless,
         tropic_model_port=tropic_model_port,
     )
+
+    if emulator_properties:
+        properties = emulator.properties()
+        if not properties:
+            raise click.ClickException("Failed to read the emulator properties")
+        click.echo(json.dumps(properties))
+        return
+
+    if erase:
+        (profile_dir / ProdtestEmulator.STORAGE_FILENAME).unlink(missing_ok=True)
 
     tropic_model = None
     tropic_emulator_needed = tropic_emulator
