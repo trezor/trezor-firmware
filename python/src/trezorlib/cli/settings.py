@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import io
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 import click
 import requests
@@ -167,7 +167,7 @@ def image_to_jpeg(filename: Path, width: int, height: int, quality: int = 90) ->
         return filename.read_bytes()
 
 
-def _should_remove(enable: Optional[bool], remove: bool) -> bool:
+def _should_remove(enable: bool | None, remove: bool) -> bool:
     """Helper to decide whether to remove something or not.
 
     Needed for backwards compatibility purposes, so we can support
@@ -191,7 +191,7 @@ def cli() -> None:
 @click.option("-r", "--remove", is_flag=True, hidden=True)
 @click.argument("enable", type=ChoiceType({"on": True, "off": False}), required=False)
 @with_session(seedless=True)
-def pin(session: "Session", enable: Optional[bool], remove: bool) -> None:
+def pin(session: Session, enable: bool | None, remove: bool) -> None:
     """Set, change or remove PIN."""
     # Remove argument is there for backwards compatibility
     device.change_pin(session, remove=_should_remove(enable, remove))
@@ -201,7 +201,7 @@ def pin(session: "Session", enable: Optional[bool], remove: bool) -> None:
 @click.option("-r", "--remove", is_flag=True, hidden=True)
 @click.argument("enable", type=ChoiceType({"on": True, "off": False}), required=False)
 @with_session(seedless=True)
-def wipe_code(session: "Session", enable: Optional[bool], remove: bool) -> None:
+def wipe_code(session: Session, enable: bool | None, remove: bool) -> None:
     """Set or remove the wipe code.
 
     The wipe code functions as a "self-destruct PIN". If the wipe code is ever
@@ -217,14 +217,14 @@ def wipe_code(session: "Session", enable: Optional[bool], remove: bool) -> None:
 @click.option("-l", "--label", "_ignore", is_flag=True, hidden=True, expose_value=False)
 @click.argument("label")
 @with_session(seedless=True)
-def label(session: "Session", label: str) -> None:
+def label(session: Session, label: str) -> None:
     """Set new device label."""
     device.apply_settings(session, label=label)
 
 
 @cli.command()
 @with_session(seedless=True)
-def brightness(session: "Session") -> None:
+def brightness(session: Session) -> None:
     """Set display brightness."""
     device.set_brightness(session)
 
@@ -232,7 +232,7 @@ def brightness(session: "Session") -> None:
 @cli.command()
 @click.argument("enable", type=ChoiceType({"on": True, "off": False}))
 @with_session(seedless=True)
-def haptic_feedback(session: "Session", enable: bool) -> None:
+def haptic_feedback(session: Session, enable: bool) -> None:
     """Enable or disable haptic feedback."""
     device.apply_settings(session, haptic_feedback=enable)
 
@@ -245,7 +245,7 @@ def haptic_feedback(session: "Session", enable: bool) -> None:
 @click.option("-d/-D", "--display/--no-display", default=None)
 @with_session(seedless=True)
 def language(
-    session: "Session", path_or_url: str | None, remove: bool, display: bool | None
+    session: Session, path_or_url: str | None, remove: bool, display: bool | None
 ) -> None:
     """Set new language with translations."""
     if remove != (path_or_url is None):
@@ -275,7 +275,7 @@ def language(
 @cli.command()
 @click.argument("rotation", type=ChoiceType(ROTATION))
 @with_session(seedless=True)
-def display_rotation(session: "Session", rotation: messages.DisplayRotation) -> None:
+def display_rotation(session: Session, rotation: messages.DisplayRotation) -> None:
     """Set display rotation.
 
     Configure display rotation for Trezor Model T. The options are
@@ -287,7 +287,7 @@ def display_rotation(session: "Session", rotation: messages.DisplayRotation) -> 
 @cli.command()
 @click.argument("delay", type=str)
 @with_session(seedless=True)
-def auto_lock_delay(session: "Session", delay: str) -> None:
+def auto_lock_delay(session: Session, delay: str) -> None:
     """Set auto-lock delay (in seconds)."""
 
     if not session.features.pin_protection:
@@ -305,7 +305,7 @@ def auto_lock_delay(session: "Session", delay: str) -> None:
 @cli.command()
 @click.argument("flags")
 @with_session(seedless=True)
-def flags(session: "Session", flags: str) -> None:
+def flags(session: Session, flags: str) -> None:
     """Set device flags."""
     if flags.lower().startswith("0b"):
         flags_int = int(flags, 2)
@@ -323,7 +323,7 @@ def flags(session: "Session", flags: str) -> None:
 )
 @click.option("-q", "--quality", type=int, default=90, help="JPEG quality (0-100)")
 @with_session(seedless=True)
-def homescreen(session: "Session", filename: str, quality: int) -> None:
+def homescreen(session: Session, filename: str, quality: int) -> None:
     """Set new homescreen.
 
     To revert to default homescreen, use 'trezorctl set homescreen default'
@@ -387,7 +387,7 @@ def homescreen(session: "Session", filename: str, quality: int) -> None:
 @click.argument("level", type=ChoiceType(SAFETY_LEVELS))
 @with_session(seedless=True)
 def safety_checks(
-    session: "Session", always: bool, level: messages.SafetyCheckLevel
+    session: Session, always: bool, level: messages.SafetyCheckLevel
 ) -> None:
     """Set safety check level.
 
@@ -406,7 +406,7 @@ def safety_checks(
 @cli.command()
 @click.argument("enable", type=ChoiceType({"on": True, "off": False}))
 @with_session(seedless=True)
-def experimental_features(session: "Session", enable: bool) -> None:
+def experimental_features(session: Session, enable: bool) -> None:
     """Enable or disable experimental message types.
 
     This is a developer feature. Use with caution.
@@ -435,7 +435,7 @@ passphrase = cast(AliasedGroup, passphrase_main)
 @passphrase.command(name="on")
 @click.option("-f/-F", "--force-on-device/--no-force-on-device", default=None)
 @with_session(seedless=True)
-def passphrase_on(session: "Session", force_on_device: Optional[bool]) -> None:
+def passphrase_on(session: Session, force_on_device: bool | None) -> None:
     """Enable passphrase."""
     if session.features.passphrase_protection is not True:
         use_passphrase = True
@@ -450,7 +450,7 @@ def passphrase_on(session: "Session", force_on_device: Optional[bool]) -> None:
 
 @passphrase.command(name="off")
 @with_session(seedless=True)
-def passphrase_off(session: "Session") -> None:
+def passphrase_off(session: Session) -> None:
     """Disable passphrase."""
     device.apply_settings(session, use_passphrase=False)
 
@@ -466,7 +466,7 @@ passphrase.aliases = {
 @passphrase.command(name="hide")
 @click.argument("hide", type=ChoiceType({"on": True, "off": False}))
 @with_session(seedless=True)
-def hide_passphrase_from_host(session: "Session", hide: bool) -> None:
+def hide_passphrase_from_host(session: Session, hide: bool) -> None:
     """Enable or disable hiding passphrase coming from host.
 
     This is a developer feature. Use with caution.

@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 from collections.abc import Iterable, Iterator, Sequence
 from ipaddress import ip_address
 from itertools import chain
@@ -100,24 +102,24 @@ Chunk = TypeVar(
 )
 
 
-def parse_optional_bytes(value: Optional[str]) -> Optional[bytes]:
+def parse_optional_bytes(value: str | None) -> bytes | None:
     return bytes.fromhex(value) if value is not None else None
 
 
-def parse_optional_int(value: Optional[str]) -> Optional[int]:
+def parse_optional_int(value: str | None) -> int | None:
     return int(value) if value is not None else None
 
 
 def create_address_parameters(
     address_type: m.CardanoAddressType,
     address_n: list[int],
-    address_n_staking: Optional[list[int]] = None,
-    staking_key_hash: Optional[bytes] = None,
-    block_index: Optional[int] = None,
-    tx_index: Optional[int] = None,
-    certificate_index: Optional[int] = None,
-    script_payment_hash: Optional[bytes] = None,
-    script_staking_hash: Optional[bytes] = None,
+    address_n_staking: list[int] | None = None,
+    staking_key_hash: bytes | None = None,
+    block_index: int | None = None,
+    tx_index: int | None = None,
+    certificate_index: int | None = None,
+    script_payment_hash: bytes | None = None,
+    script_staking_hash: bytes | None = None,
 ) -> m.CardanoAddressParametersType:
     certificate_pointer = None
 
@@ -141,9 +143,9 @@ def create_address_parameters(
 
 
 def _create_certificate_pointer(
-    block_index: Optional[int],
-    tx_index: Optional[int],
-    certificate_index: Optional[int],
+    block_index: int | None,
+    tx_index: int | None,
+    certificate_index: int | None,
 ) -> m.CardanoBlockchainPointerType:
     if block_index is None or tx_index is None or certificate_index is None:
         raise ValueError("Invalid pointer parameters")
@@ -316,8 +318,8 @@ def _parse_address_parameters(
 
 
 def parse_optional_address_parameters(
-    address_parameters: Optional[dict],
-) -> Optional[m.CardanoAddressParametersType]:
+    address_parameters: dict | None,
+) -> m.CardanoAddressParametersType | None:
     if address_parameters is None:
         return None
 
@@ -332,7 +334,7 @@ def parse_optional_address_parameters(
 
 
 def _parse_chunkable_data(
-    data: Optional[bytes], chunk_type: type[Chunk]
+    data: bytes | None, chunk_type: type[Chunk]
 ) -> tuple[int, list[Chunk]]:
     if data is None:
         return 0, []
@@ -452,7 +454,7 @@ def parse_certificate(certificate: dict) -> CertificateWithPoolOwnersAndRelays:
         ):
             raise CERTIFICATE_MISSING_FIELDS_ERROR
 
-        pool_metadata: Optional[m.CardanoPoolMetadataType]
+        pool_metadata: m.CardanoPoolMetadataType | None
         if pool_parameters.get("metadata") is not None:
             pool_metadata = m.CardanoPoolMetadataType(
                 url=pool_parameters["metadata"]["url"],
@@ -518,7 +520,7 @@ def parse_certificate(certificate: dict) -> CertificateWithPoolOwnersAndRelays:
 
 def _parse_credential(
     obj: dict, error: ValueError
-) -> tuple[list[int], Optional[bytes], Optional[bytes]]:
+) -> tuple[list[int], bytes | None, bytes | None]:
     if not any(k in obj for k in ("path", "script_hash", "key_hash")):
         raise error
 
@@ -597,8 +599,8 @@ def parse_withdrawal(withdrawal: dict) -> m.CardanoTxWithdrawal:
 
 
 def parse_auxiliary_data(
-    auxiliary_data: Optional[dict],
-) -> Optional[m.CardanoTxAuxiliaryData]:
+    auxiliary_data: dict | None,
+) -> m.CardanoTxAuxiliaryData | None:
     if auxiliary_data is None:
         return None
 
@@ -665,7 +667,7 @@ def parse_mint(mint: Iterable[dict]) -> list[AssetGroupWithTokens]:
     return _parse_token_bundle(mint, is_mint=True)
 
 
-def parse_script_data_hash(script_data_hash: Optional[str]) -> Optional[bytes]:
+def parse_script_data_hash(script_data_hash: str | None) -> bytes | None:
     return parse_optional_bytes(script_data_hash)
 
 
@@ -830,7 +832,7 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 @tools.workflow(capability=m.Capability.Cardano)
 def get_authenticated_address(
-    session: "Session",
+    session: Session,
     address_parameters: m.CardanoAddressParametersType,
     protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
     network_id: int = NETWORK_IDS["mainnet"],
@@ -853,7 +855,7 @@ def get_authenticated_address(
 
 @tools.workflow(capability=m.Capability.Cardano)
 def get_public_key(
-    session: "Session",
+    session: Session,
     address_n: list[int],
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
     show_display: bool = False,
@@ -870,7 +872,7 @@ def get_public_key(
 
 @tools.workflow(capability=m.Capability.Cardano)
 def get_native_script_hash(
-    session: "Session",
+    session: Session,
     native_script: m.CardanoNativeScript,
     display_format: m.CardanoNativeScriptHashDisplayFormat = m.CardanoNativeScriptHashDisplayFormat.HIDE,
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
@@ -887,31 +889,31 @@ def get_native_script_hash(
 
 @tools.workflow(capability=m.Capability.Cardano)
 def sign_tx(
-    session: "Session",
+    session: Session,
     signing_mode: m.CardanoTxSigningMode,
     inputs: list[InputWithPath],
     outputs: list[OutputWithData],
     fee: int,
-    ttl: Optional[int],
-    validity_interval_start: Optional[int],
+    ttl: int | None,
+    validity_interval_start: int | None,
     certificates: Sequence[CertificateWithPoolOwnersAndRelays] = (),
     withdrawals: Sequence[m.CardanoTxWithdrawal] = (),
     protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
     network_id: int = NETWORK_IDS["mainnet"],
-    auxiliary_data: Optional[m.CardanoTxAuxiliaryData] = None,
+    auxiliary_data: m.CardanoTxAuxiliaryData | None = None,
     mint: Sequence[AssetGroupWithTokens] = (),
-    script_data_hash: Optional[bytes] = None,
+    script_data_hash: bytes | None = None,
     collateral_inputs: Sequence[CollateralInputWithPath] = (),
     required_signers: Sequence[m.CardanoTxRequiredSigner] = (),
-    collateral_return: Optional[OutputWithData] = None,
-    total_collateral: Optional[int] = None,
+    collateral_return: OutputWithData | None = None,
+    total_collateral: int | None = None,
     reference_inputs: Sequence[m.CardanoTxReferenceInput] = (),
     additional_witness_requests: Sequence[Path] = (),
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
     include_network_id: bool = False,
     chunkify: bool = False,
     tag_cbor_sets: bool = False,
-    payment_req: Optional[m.PaymentRequest] = None,
+    payment_req: m.PaymentRequest | None = None,
 ) -> dict[str, Any]:
     witness_requests = _get_witness_requests(
         inputs,
@@ -1013,14 +1015,14 @@ def sign_tx(
 
 @tools.workflow(capability=m.Capability.Cardano)
 def sign_message(
-    session: "Session",
+    session: Session,
     signing_path: Path,
     payload: bytes,
     prefer_hex_display: bool,
-    address_parameters: Optional[m.CardanoAddressParametersType] = None,
+    address_parameters: m.CardanoAddressParametersType | None = None,
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
-    protocol_magic: Optional[int] = None,
-    network_id: Optional[int] = None,
+    protocol_magic: int | None = None,
+    network_id: int | None = None,
 ) -> m.CardanoMessageSignature:
     response = session.call(
         m.CardanoSignMessageInit(

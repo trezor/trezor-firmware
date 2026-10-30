@@ -14,8 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import json
-from typing import TYPE_CHECKING, Optional, TextIO
+from typing import TYPE_CHECKING, TextIO
 
 import click
 import requests
@@ -41,7 +43,7 @@ def cli() -> None:
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
 def get_address(
-    session: "Session",
+    session: Session,
     address: str,
     network: int,
     show_display: bool,
@@ -60,10 +62,10 @@ def get_address(
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
 def sign_tx(
-    session: "Session",
+    session: Session,
     address: str,
     file: TextIO,
-    broadcast: Optional[str],
+    broadcast: str | None,
     chunkify: bool,
 ) -> dict:
     """Sign (and optionally broadcast) NEM transaction.

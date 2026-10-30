@@ -145,7 +145,7 @@ We will create the `python/src/trezorlib/hello_world.py` file and fill it with c
 ```python
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from . import messages
 
@@ -156,7 +156,7 @@ if TYPE_CHECKING:
 def say_hello(
     session: "Session",
     name: str,
-    amount: Optional[int],
+    amount: int | None,
     show_display: bool,
 ) -> str:
     return session.call(
@@ -177,7 +177,7 @@ This function is then called from the `CLI` function, which we will define in `p
 ```python
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import click
 
@@ -201,7 +201,7 @@ def cli() -> None:
 )
 @with_session
 def say_hello(
-    session: "Session", name: str, amount: Optional[int], show_display: bool
+    session: "Session", name: str, amount: int | None, show_display: bool
 ) -> str:
     """Simply say hello to the supplied name."""
     return hello_world.say_hello(session, name, amount, show_display=show_display)

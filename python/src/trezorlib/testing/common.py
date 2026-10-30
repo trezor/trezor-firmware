@@ -14,8 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 from collections.abc import Generator
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from .. import messages
 from ..debuglink import LayoutType
@@ -29,7 +31,7 @@ BRGeneratorType = Generator[None, messages.ButtonRequest, None]
 PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 
 
-def get_text_possible_pagination(debug: "DebugLink", br: messages.ButtonRequest) -> str:
+def get_text_possible_pagination(debug: DebugLink, br: messages.ButtonRequest) -> str:
     """
     Read all text content from the device, handling possible pagination.
 
@@ -53,9 +55,9 @@ def get_text_possible_pagination(debug: "DebugLink", br: messages.ButtonRequest)
 
 
 def swipe_if_necessary(
-    debug: "DebugLink",
-    br_code: Optional[messages.ButtonRequestType] = None,
-    br_name: Optional[str] = None,
+    debug: DebugLink,
+    br_code: messages.ButtonRequestType | None = None,
+    br_name: str | None = None,
 ) -> BRGeneratorType:
     """
     Generator that swipes through pages if necessary, based on button request code.
@@ -75,7 +77,7 @@ def swipe_if_necessary(
     swipe_till_the_end(debug, br)
 
 
-def swipe_till_the_end(debug: "DebugLink", br: messages.ButtonRequest) -> None:
+def swipe_till_the_end(debug: DebugLink, br: messages.ButtonRequest) -> None:
     """
     Swipe through all pages until the end.
 

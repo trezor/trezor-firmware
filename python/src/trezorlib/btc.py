@@ -19,7 +19,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from copy import copy
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, AnyStr, Optional
+from typing import TYPE_CHECKING, Any, AnyStr
 
 # TypedDict is not available in typing for python < 3.8
 from typing_extensions import Protocol, TypedDict
@@ -47,13 +47,13 @@ if TYPE_CHECKING:
         vout: int
         sequence: int
         coinbase: str
-        scriptSig: "ScriptSig"
+        scriptSig: ScriptSig
         txinwitness: list[str]
 
     class Vout(TypedDict):
         value: float
         int: int
-        scriptPubKey: "ScriptPubKey"
+        scriptPubKey: ScriptPubKey
 
     class Transaction(TypedDict):
         txid: str
@@ -72,8 +72,8 @@ if TYPE_CHECKING:
         def __contains__(self, __key: bytes) -> bool: ...
 
 
-def from_json(json_dict: "Transaction") -> messages.TransactionType:
-    def make_input(vin: "Vin") -> messages.TxInputType:
+def from_json(json_dict: Transaction) -> messages.TransactionType:
+    def make_input(vin: Vin) -> messages.TxInputType:
         if "coinbase" in vin:
             return messages.TxInputType(
                 prev_hash=b"\0" * 32,
@@ -90,7 +90,7 @@ def from_json(json_dict: "Transaction") -> messages.TransactionType:
                 sequence=vin["sequence"],
             )
 
-    def make_bin_output(vout: "Vout") -> messages.TxOutputBinType:
+    def make_bin_output(vout: Vout) -> messages.TxOutputBinType:
         return messages.TxOutputBinType(
             amount=int(Decimal(vout["value"]) * (10**8)),
             script_pubkey=bytes.fromhex(vout["scriptPubKey"]["hex"]),
@@ -106,15 +106,15 @@ def from_json(json_dict: "Transaction") -> messages.TransactionType:
 
 @workflow(capability=messages.Capability.Bitcoin)
 def get_public_node(
-    session: "Session",
-    n: "Address",
-    ecdsa_curve_name: Optional[str] = None,
+    session: Session,
+    n: Address,
+    ecdsa_curve_name: str | None = None,
     show_display: bool = False,
-    coin_name: Optional[str] = None,
+    coin_name: str | None = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     ignore_xpub_magic: bool = False,
-    unlock_path: Optional[list[int]] = None,
-    unlock_path_mac: Optional[bytes] = None,
+    unlock_path: list[int] | None = None,
+    unlock_path_mac: bytes | None = None,
 ) -> messages.PublicKey:
     if unlock_path:
         session.call(
@@ -141,15 +141,15 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 @workflow(capability=messages.Capability.Bitcoin)
 def get_authenticated_address(
-    session: "Session",
+    session: Session,
     coin_name: str,
-    n: "Address",
+    n: Address,
     show_display: bool = False,
-    multisig: Optional[messages.MultisigRedeemScriptType] = None,
+    multisig: messages.MultisigRedeemScriptType | None = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     ignore_xpub_magic: bool = False,
-    unlock_path: Optional[list[int]] = None,
-    unlock_path_mac: Optional[bytes] = None,
+    unlock_path: list[int] | None = None,
+    unlock_path_mac: bytes | None = None,
     chunkify: bool = False,
 ) -> messages.Address:
     if unlock_path:
@@ -174,10 +174,10 @@ def get_authenticated_address(
 
 @workflow(capability=messages.Capability.Bitcoin)
 def get_ownership_id(
-    session: "Session",
+    session: Session,
     coin_name: str,
-    n: "Address",
-    multisig: Optional[messages.MultisigRedeemScriptType] = None,
+    n: Address,
+    multisig: messages.MultisigRedeemScriptType | None = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> bytes:
     return session.call(
@@ -193,14 +193,14 @@ def get_ownership_id(
 
 @workflow(capability=messages.Capability.Bitcoin)
 def get_ownership_proof(
-    session: "Session",
+    session: Session,
     coin_name: str,
-    n: "Address",
-    multisig: Optional[messages.MultisigRedeemScriptType] = None,
+    n: Address,
+    multisig: messages.MultisigRedeemScriptType | None = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     user_confirmation: bool = False,
-    ownership_ids: Optional[list[bytes]] = None,
-    commitment_data: Optional[bytes] = None,
+    ownership_ids: list[bytes] | None = None,
+    commitment_data: bytes | None = None,
     preauthorized: bool = False,
 ) -> tuple[bytes, bytes]:
     if preauthorized:
@@ -224,9 +224,9 @@ def get_ownership_proof(
 
 @workflow(capability=messages.Capability.Bitcoin)
 def sign_message(
-    session: "Session",
+    session: Session,
     coin_name: str,
-    n: "Address",
+    n: Address,
     message: AnyStr,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     no_script_type: bool = False,
@@ -246,7 +246,7 @@ def sign_message(
 
 
 def verify_message(
-    session: "Session",
+    session: Session,
     coin_name: str,
     address: str,
     signature: bytes,
@@ -271,17 +271,17 @@ def verify_message(
 
 @workflow(capability=messages.Capability.Bitcoin)
 def sign_tx(
-    session: "Session",
+    session: Session,
     coin_name: str,
     inputs: Sequence[messages.TxInputType],
     outputs: Sequence[messages.TxOutputType],
-    prev_txes: Optional["TxCacheType"] = None,
+    prev_txes: TxCacheType | None = None,
     payment_reqs: Sequence[messages.PaymentRequest] = (),
     preauthorized: bool = False,
-    unlock_path: Optional[list[int]] = None,
-    unlock_path_mac: Optional[bytes] = None,
+    unlock_path: list[int] | None = None,
+    unlock_path_mac: bytes | None = None,
     **kwargs: Any,
-) -> tuple[Sequence[Optional[bytes]], bytes]:
+) -> tuple[Sequence[bytes | None], bytes]:
     """Sign a Bitcoin-like transaction.
 
     Returns a list of signatures (one for each provided input) and the
@@ -318,7 +318,7 @@ def sign_tx(
     res = session.call(signtx, expect=messages.TxRequest)
 
     # Prepare structure for signatures
-    signatures: list[Optional[bytes]] = [None] * len(inputs)
+    signatures: list[bytes | None] = [None] * len(inputs)
     serialized_tx = b""
 
     def copy_tx_meta(tx: messages.TransactionType) -> messages.TransactionType:
@@ -415,12 +415,12 @@ def sign_tx(
 
 @workflow(capability=messages.Capability.Bitcoin)
 def authorize_coinjoin(
-    session: "Session",
+    session: Session,
     coordinator: str,
     max_rounds: int,
     max_coordinator_fee_rate: int,
     max_fee_per_kvbyte: int,
-    n: "Address",
+    n: Address,
     coin_name: str,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> None:

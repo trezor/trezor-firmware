@@ -24,7 +24,7 @@ import secrets
 import time
 import warnings
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Callable, Optional, overload
+from typing import TYPE_CHECKING, Callable, overload
 
 from slip10 import SLIP10
 
@@ -46,19 +46,19 @@ HOMESCREEN_STREAMING_MIN_VERSION = (2, 8, 11)
 
 @workflow(refresh_features=True)
 def apply_settings(
-    session: "Session",
-    label: Optional[str] = None,
-    language: Optional[str] = None,
-    use_passphrase: Optional[bool] = None,
-    homescreen: Optional[bytes] = None,
-    passphrase_always_on_device: Optional[bool] = None,
-    auto_lock_delay_ms: Optional[int] = None,
-    auto_lock_delay_battery_ms: Optional[int] = None,
-    display_rotation: Optional[messages.DisplayRotation] = None,
-    safety_checks: Optional[messages.SafetyCheckLevel] = None,
-    experimental_features: Optional[bool] = None,
-    hide_passphrase_from_host: Optional[bool] = None,
-    haptic_feedback: Optional[bool] = None,
+    session: Session,
+    label: str | None = None,
+    language: str | None = None,
+    use_passphrase: bool | None = None,
+    homescreen: bytes | None = None,
+    passphrase_always_on_device: bool | None = None,
+    auto_lock_delay_ms: int | None = None,
+    auto_lock_delay_battery_ms: int | None = None,
+    display_rotation: messages.DisplayRotation | None = None,
+    safety_checks: messages.SafetyCheckLevel | None = None,
+    experimental_features: bool | None = None,
+    hide_passphrase_from_host: bool | None = None,
+    haptic_feedback: bool | None = None,
 ) -> None:
     if language is not None:
         warnings.warn(
@@ -88,8 +88,8 @@ def apply_settings(
 
 
 def _send_chunked_data(
-    session: "Session",
-    request: "messages.DataChunkRequest",
+    session: Session,
+    request: messages.DataChunkRequest,
     language_data: bytes,
 ) -> None:
     response = request
@@ -103,7 +103,7 @@ def _send_chunked_data(
 
 @workflow(refresh_features=True)
 def change_language(
-    session: "Session",
+    session: Session,
     language_data: bytes,
     show_display: bool | None = None,
 ) -> None:
@@ -119,45 +119,45 @@ def change_language(
 
 
 @workflow(refresh_features=True)
-def apply_flags(session: "Session", flags: int) -> None:
+def apply_flags(session: Session, flags: int) -> None:
     session.call(messages.ApplyFlags(flags=flags), expect=messages.Success)
 
 
 @workflow(refresh_features=True)
-def change_pin(session: "Session", remove: bool = False) -> None:
+def change_pin(session: Session, remove: bool = False) -> None:
     session.call(messages.ChangePin(remove=remove), expect=messages.Success)
 
 
 @workflow(refresh_features=True)
-def change_wipe_code(session: "Session", remove: bool = False) -> None:
+def change_wipe_code(session: Session, remove: bool = False) -> None:
     session.call(messages.ChangeWipeCode(remove=remove), expect=messages.Success)
 
 
 @workflow(refresh_features=True)
-def sd_protect(session: "Session", operation: messages.SdProtectOperationType) -> None:
+def sd_protect(session: Session, operation: messages.SdProtectOperationType) -> None:
     session.call(messages.SdProtect(operation=operation), expect=messages.Success)
 
 
 @workflow(invalidate_client=True)
-def wipe(session: "Session") -> None:
+def wipe(session: Session) -> None:
     session.call(messages.WipeDevice(), expect=messages.Success)
 
 
 @workflow(refresh_features=True)
 def recover(
-    session: "Session",
+    session: Session,
     word_count: int = 24,
     passphrase_protection: bool = False,
     pin_protection: bool = True,
-    label: Optional[str] = None,
-    language: Optional[str] = None,
-    input_callback: Optional[Callable] = None,
+    label: str | None = None,
+    language: str | None = None,
+    input_callback: Callable | None = None,
     input_method: messages.RecoveryDeviceInputMethod = messages.RecoveryDeviceInputMethod.ScrambledWords,
-    backup_method: Optional[messages.BackupMethod] = None,
-    dry_run: Optional[bool] = None,
-    u2f_counter: Optional[int] = None,
+    backup_method: messages.BackupMethod | None = None,
+    dry_run: bool | None = None,
+    u2f_counter: int | None = None,
     *,
-    type: Optional[messages.RecoveryType] = None,
+    type: messages.RecoveryType | None = None,
 ) -> None:
     if language is not None:
         warnings.warn(
@@ -269,13 +269,13 @@ def _seed_from_entropy(
 
 
 def reset(
-    session: "Session",
+    session: Session,
     display_random: bool = False,
-    strength: Optional[int] = None,
+    strength: int | None = None,
     passphrase_protection: bool = False,
     pin_protection: bool = True,
-    label: Optional[str] = None,
-    language: Optional[str] = None,
+    label: str | None = None,
+    language: str | None = None,
     u2f_counter: int = 0,
     skip_backup: bool = False,
     no_backup: bool = False,
@@ -323,18 +323,18 @@ def _get_external_entropy() -> bytes:
 
 @workflow(refresh_features=True)
 def setup(
-    session: "Session",
+    session: Session,
     *,
-    strength: Optional[int] = None,
+    strength: int | None = None,
     passphrase_protection: bool = True,
     pin_protection: bool = False,
-    label: Optional[str] = None,
+    label: str | None = None,
     u2f_counter: int = 0,
     skip_backup: bool = False,
     no_backup: bool = False,
-    backup_type: Optional[messages.BackupType] = None,
-    backup_method: Optional[messages.BackupMethod] = None,
-    entropy_check_count: Optional[int] = None,
+    backup_type: messages.BackupType | None = None,
+    backup_method: messages.BackupMethod | None = None,
+    entropy_check_count: int | None = None,
     paths: Iterable[Address] = [],
     _get_entropy: Callable[[], bytes] = _get_external_entropy,
 ) -> Iterable[tuple[Address, str]]:
@@ -437,7 +437,7 @@ def setup(
 
 
 def _reset_no_entropycheck(
-    session: "Session",
+    session: Session,
     msg: messages.ResetDevice,
     get_entropy: Callable[[], bytes],
 ) -> None:
@@ -459,7 +459,7 @@ def _reset_no_entropycheck(
 
 
 def _reset_with_entropycheck(
-    session: "Session",
+    session: Session,
     reset_msg: messages.ResetDevice,
     entropy_check_count: int,
     paths: Iterable[Address],
@@ -592,10 +592,10 @@ def _reset_with_entropycheck(
 
 @workflow(refresh_features=True)
 def backup(
-    session: "Session",
-    group_threshold: Optional[int] = None,
+    session: Session,
+    group_threshold: int | None = None,
     groups: Iterable[tuple[int, int]] = (),
-    backup_method: Optional[messages.BackupMethod] = None,
+    backup_method: messages.BackupMethod | None = None,
 ) -> None:
     session.call(
         messages.BackupDevice(
@@ -611,12 +611,12 @@ def backup(
 
 
 @workflow()
-def cancel_authorization(session: "Session") -> None:
+def cancel_authorization(session: Session) -> None:
     session.call(messages.CancelAuthorization(), expect=messages.Success)
 
 
 @workflow()
-def unlock_path(session: "Session", n: "Address") -> bytes:
+def unlock_path(session: Session, n: Address) -> bytes:
     resp = session.call(
         messages.UnlockPath(address_n=n), expect=messages.UnlockedPathRequest
     )
@@ -632,9 +632,9 @@ def unlock_path(session: "Session", n: "Address") -> bytes:
 
 @workflow()
 def reboot_to_bootloader(
-    session: "Session",
+    session: Session,
     boot_command: messages.BootCommand = messages.BootCommand.STOP_AND_WAIT,
-    firmware_header: Optional[bytes] = None,
+    firmware_header: bytes | None = None,
 ) -> None:
     session.call(
         messages.RebootToBootloader(
@@ -646,17 +646,17 @@ def reboot_to_bootloader(
 
 
 @workflow()
-def show_device_tutorial(session: "Session") -> None:
+def show_device_tutorial(session: Session) -> None:
     session.call(messages.ShowDeviceTutorial(), expect=messages.Success)
 
 
 @workflow()
-def unlock_bootloader(session: "Session") -> None:
+def unlock_bootloader(session: Session) -> None:
     session.call(messages.UnlockBootloader(), expect=messages.Success)
 
 
 @workflow(refresh_features=True)
-def set_busy(session: "Session", expiry_ms: Optional[int]) -> None:
+def set_busy(session: Session, expiry_ms: int | None) -> None:
     """Sets or clears the busy state of the device.
 
     In the busy state the device shows a "Do not disconnect" message instead of the homescreen.
@@ -671,7 +671,7 @@ PROOF_CERTS_LEN_LIMIT = 10
 
 
 def _fetch_proof_chunks(
-    session: "Session",
+    session: Session,
     chunk_size: int,
     proof_type: messages.AuthenticityProofType,
     index: int | None,
@@ -708,7 +708,7 @@ if TYPE_CHECKING:
 
     @overload
     def _fetch_proof_part(
-        session: "Session",
+        session: Session,
         chunk_size: int,
         part: messages.AuthenticityProofType,
         signature_size: int,
@@ -717,7 +717,7 @@ if TYPE_CHECKING:
 
     @overload
     def _fetch_proof_part(
-        session: "Session",
+        session: Session,
         chunk_size: int,
         part: messages.AuthenticityProofType,
         signature_size: None,
@@ -726,7 +726,7 @@ if TYPE_CHECKING:
 
 
 def _fetch_proof_part(
-    session: "Session",
+    session: Session,
     chunk_size: int,
     part: messages.AuthenticityProofType,
     signature_size: int | None,
@@ -750,7 +750,7 @@ def _fetch_proof_part(
 
 
 def _fetch_proof(
-    session: "Session",
+    session: Session,
     chunk_size: int,
     sizes: messages.AuthenticityProofSizes,
 ) -> messages.AuthenticityProof:
@@ -787,7 +787,7 @@ def _fetch_proof(
 
 @workflow()
 def authenticate(
-    session: "Session", challenge: bytes, chunk_size: int = 1024
+    session: Session, challenge: bytes, chunk_size: int = 1024
 ) -> messages.AuthenticityProof:
     stream = chunk_size > 0
     try:
@@ -812,16 +812,16 @@ def authenticate(
 
 
 @workflow()
-def set_brightness(session: "Session", value: Optional[int] = None) -> None:
+def set_brightness(session: Session, value: int | None = None) -> None:
     session.call(messages.SetBrightness(value=value), expect=messages.Success)
 
 
 @workflow()
-def get_serial_number(session: "Session") -> str:
+def get_serial_number(session: Session) -> str:
     ret = session.call(messages.GetSerialNumber(), expect=messages.SerialNumber)
     return ret.serial_number
 
 
 @workflow()
-def get_telemetry(session: "Session") -> messages.Telemetry:
+def get_telemetry(session: Session) -> messages.Telemetry:
     return session.call(messages.TelemetryGet(), expect=messages.Telemetry)

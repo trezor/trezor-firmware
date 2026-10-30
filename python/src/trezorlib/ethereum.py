@@ -14,11 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import re
 import warnings
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, AnyStr, Optional, Union
+from typing import TYPE_CHECKING, Any, AnyStr
 
 from typing_extensions import Self
 
@@ -67,7 +69,7 @@ def parse_type_n(type_name: str) -> int:
         raise ValueError(f"Could not parse type<N> from {type_name}.")
 
 
-def parse_array_n(type_name: str) -> Optional[int]:
+def parse_array_n(type_name: str) -> int | None:
     """Parse N in type[<N>] where "type" can itself be an array type."""
     # sign that it is a dynamic array - we do not know <N>
     if type_name.endswith("[]"):
@@ -157,10 +159,10 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 @workflow(capability=messages.Capability.Ethereum)
 def get_authenticated_address(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     show_display: bool = False,
-    encoded_network: Optional[bytes] = None,
+    encoded_network: bytes | None = None,
     chunkify: bool = False,
 ) -> messages.EthereumAddress:
     resp = session.call(
@@ -177,7 +179,7 @@ def get_authenticated_address(
 
 @workflow(capability=messages.Capability.Ethereum)
 def get_public_node(
-    session: "Session", n: "Address", show_display: bool = False
+    session: Session, n: Address, show_display: bool = False
 ) -> messages.EthereumPublicKey:
     return session.call(
         messages.EthereumGetPublicKey(address_n=n, show_display=show_display),
@@ -186,7 +188,7 @@ def get_public_node(
 
 
 def _answer_definition_request(
-    source: "Source",
+    source: Source,
     req: messages.EthereumDefinitionRequest,
 ) -> messages.EthereumDefinitionAck:
     """Answer a firmware `EthereumDefinitionRequest` from `source`."""
@@ -225,7 +227,7 @@ class SignTxResult:
     s: bytes
     auth7702_list: Sequence[Sequence[bytes]]  # non-empty for EIP-7702 transactions.
 
-    def __getitem__(self, i: int) -> Union[int, bytes]:
+    def __getitem__(self, i: int) -> int | bytes:
         """Used for backwards compatiblity, to allow accessing and unpacking the signature tuple."""
         warnings.warn(
             "Ethereum signature is a dataclass (`SignTxResult`), not a tuple.",
@@ -235,7 +237,7 @@ class SignTxResult:
         return (self.v, self.r, self.s)[i]
 
     @classmethod
-    def from_response(cls, msg: messages.EthereumTxRequest) -> Optional[Self]:
+    def from_response(cls, msg: messages.EthereumTxRequest) -> Self | None:
         if (
             msg.signature_v is not None
             and msg.signature_r is not None
@@ -253,10 +255,10 @@ class SignTxResult:
 
 
 def _ethereum_sign_loop(
-    session: "Session",
-    msg: Union[messages.EthereumSignTx, messages.EthereumSignTxEIP1559],
+    session: Session,
+    msg: messages.EthereumSignTx | messages.EthereumSignTxEIP1559,
     data: bytes,
-    definition_source: Optional["Source"],
+    definition_source: Source | None,
 ) -> SignTxResult:
     """Shared request/response loop for sign_tx and sign_tx_eip1559."""
     response = session.call(msg)
@@ -291,21 +293,21 @@ def _ethereum_sign_loop(
 
 @workflow(capability=messages.Capability.Ethereum)
 def sign_tx(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     nonce: int,
     gas_price: int,
     gas_limit: int,
     to: str,
     value: int,
-    data: Optional[bytes] = None,
-    chain_id: Optional[int] = None,
-    tx_type: Optional[int] = None,
-    definitions: Optional[messages.EthereumDefinitions] = None,
+    data: bytes | None = None,
+    chain_id: int | None = None,
+    tx_type: int | None = None,
+    definitions: messages.EthereumDefinitions | None = None,
     chunkify: bool = False,
-    payment_req: Optional[messages.PaymentRequest] = None,
-    supports_definition_request: Optional[bool] = None,
-    definition_source: Optional["Source"] = None,
+    payment_req: messages.PaymentRequest | None = None,
+    supports_definition_request: bool | None = None,
+    definition_source: Source | None = None,
 ) -> SignTxResult:
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
@@ -342,8 +344,8 @@ def sign_tx(
 
 @workflow(capability=messages.Capability.Ethereum)
 def sign_tx_eip1559(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     *,
     nonce: int,
     gas_limit: int,
@@ -353,13 +355,13 @@ def sign_tx_eip1559(
     chain_id: int,
     max_gas_fee: int,
     max_priority_fee: int,
-    access_list: Optional[list[messages.EthereumAccessList]] = None,
-    definitions: Optional[messages.EthereumDefinitions] = None,
+    access_list: list[messages.EthereumAccessList] | None = None,
+    definitions: messages.EthereumDefinitions | None = None,
     chunkify: bool = False,
-    payment_req: Optional[messages.PaymentRequest] = None,
-    supports_definition_request: Optional[bool] = None,
-    definition_source: Optional["Source"] = None,
-    auth7702: Optional[messages.EthereumAuth7702] = None,
+    payment_req: messages.PaymentRequest | None = None,
+    supports_definition_request: bool | None = None,
+    definition_source: Source | None = None,
+    auth7702: messages.EthereumAuth7702 | None = None,
 ) -> SignTxResult:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -387,10 +389,10 @@ def sign_tx_eip1559(
 
 @workflow(capability=messages.Capability.Ethereum)
 def sign_message(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     message: AnyStr,
-    encoded_network: Optional[bytes] = None,
+    encoded_network: bytes | None = None,
     chunkify: bool = False,
 ) -> messages.EthereumMessageSignature:
     return session.call(
@@ -406,13 +408,13 @@ def sign_message(
 
 @workflow(capability=messages.Capability.Ethereum)
 def sign_typed_data(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     data: dict[str, Any],
     *,
     metamask_v4_compat: bool = True,
-    definitions: Optional[messages.EthereumDefinitions] = None,
-    show_message_hash: Optional[bytes] = None,
+    definitions: messages.EthereumDefinitions | None = None,
+    show_message_hash: bytes | None = None,
 ) -> messages.EthereumTypedDataSignature:
     data = sanitize_typed_data(data)
     types = data["types"]
@@ -431,7 +433,7 @@ def sign_typed_data(
     while isinstance(response, messages.EthereumTypedDataStructRequest):
         struct_name = response.name
 
-        members: list["messages.EthereumStructMember"] = []
+        members: list[messages.EthereumStructMember] = []
         for field in types[struct_name]:
             field_type = get_field_type(field["type"], types)
             struct_member = messages.EthereumStructMember(
@@ -484,7 +486,7 @@ def sign_typed_data(
 
 @workflow(capability=messages.Capability.Ethereum)
 def verify_message(
-    session: "Session",
+    session: Session,
     address: str,
     signature: bytes,
     message: AnyStr,
@@ -507,11 +509,11 @@ def verify_message(
 
 @workflow(capability=messages.Capability.Ethereum)
 def sign_typed_data_hash(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     domain_hash: bytes,
-    message_hash: Optional[bytes],
-    encoded_network: Optional[bytes] = None,
+    message_hash: bytes | None,
+    encoded_network: bytes | None = None,
 ) -> messages.EthereumTypedDataSignature:
     return session.call(
         messages.EthereumSignTypedHash(

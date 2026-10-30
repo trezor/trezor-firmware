@@ -437,7 +437,7 @@ class Certificate:
 
         return passed
 
-    def is_issued_by(self, issuer: "Certificate", path_len: int) -> bool:
+    def is_issued_by(self, issuer: Certificate, path_len: int) -> bool:
         """Check if this certificate was issued by an issuer.
 
         Returns True if:

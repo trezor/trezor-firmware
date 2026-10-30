@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import Optional
-
 import pytest
 
 from trezorlib import btc, messages
@@ -194,8 +192,8 @@ def _responses(
     session: Session,
     INP1: messages.TxInputType,
     INP2: messages.TxInputType,
-    change_indices: Optional[list[int]] = None,
-    foreign_indices: Optional[list[int]] = None,
+    change_indices: list[int] | None = None,
+    foreign_indices: list[int] | None = None,
 ):
     if change_indices is None:
         change_indices = []

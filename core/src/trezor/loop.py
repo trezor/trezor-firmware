@@ -505,7 +505,7 @@ class spawn(Syscall[T]):
     def __init__(self, task: Task[T]) -> None:
         self.task = task
         self.callback: Task | None = None
-        self.finalizer_callback: Callable[["spawn"], None] | None = None
+        self.finalizer_callback: Callable[[spawn], None] | None = None
         self.finished = False
         self.return_value: Any = None
 

@@ -61,13 +61,13 @@ class HidTransport(Transport):
 
     @classmethod
     def enumerate(
-        cls, models: t.Iterable["TrezorModel"] | None = None, debug: bool = False
-    ) -> t.Iterable["HidTransport"]:
+        cls, models: t.Iterable[TrezorModel] | None = None, debug: bool = False
+    ) -> t.Iterable[HidTransport]:
         if models is None:
             models = {TREZOR_ONE}
         usb_ids = [id for model in models for id in model.usb_ids]
 
-        devices: list["HidTransport"] = []
+        devices: list[HidTransport] = []
         for dev in hid.enumerate(0, 0):
             usb_id = (dev["vendor_id"], dev["product_id"])
             if usb_id not in usb_ids:
@@ -81,7 +81,7 @@ class HidTransport(Transport):
             devices.append(HidTransport(dev))
         return devices
 
-    def find_debug(self) -> "HidTransport":
+    def find_debug(self) -> HidTransport:
         # For v1 protocol, find debug USB interface for the same serial number
         for debug in HidTransport.enumerate(debug=True):
             if debug.device["serial_number"] == self.device["serial_number"]:

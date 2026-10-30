@@ -14,7 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING, Any, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from . import messages
 from .protobuf import dict_to_proto
@@ -35,8 +37,8 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 @workflow(capability=messages.Capability.Ripple)
 def get_authenticated_address(
-    session: "Session",
-    address_n: "Address",
+    session: Session,
+    address_n: Address,
     show_display: bool = False,
     chunkify: bool = False,
 ) -> messages.RippleAddress:
@@ -50,11 +52,11 @@ def get_authenticated_address(
 
 @workflow(capability=messages.Capability.Ripple)
 def sign_tx(
-    session: "Session",
-    address_n: "Address",
+    session: Session,
+    address_n: Address,
     msg: messages.RippleSignTx,
     chunkify: bool = False,
-    payment_req: Optional[messages.PaymentRequest] = None,
+    payment_req: messages.PaymentRequest | None = None,
 ) -> messages.RippleSignedTx:
     msg.address_n = address_n
     msg.chunkify = chunkify

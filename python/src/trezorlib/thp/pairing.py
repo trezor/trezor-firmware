@@ -146,7 +146,7 @@ class PairingController:
         return self.client.channel
 
     @property
-    def methods(self) -> t.Collection[type["PairingMethod"]]:
+    def methods(self) -> t.Collection[type[PairingMethod]]:
         return {
             m
             for m in PairingMethod.METHODS_AVAILABLE

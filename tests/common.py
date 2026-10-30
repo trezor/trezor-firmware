@@ -21,7 +21,7 @@ import re
 import time
 from collections.abc import Generator
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 from unittest import mock
 
 import pytest
@@ -82,7 +82,7 @@ COMMON_FIXTURES_DIR = (
 MOCK_GET_ENTROPY = mock.Mock(return_value=EXTERNAL_ENTROPY)
 
 
-def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
+def parametrize_using_common_fixtures(*paths: str) -> MarkDecorator:
     fixtures = []
     for path in paths:
         fixtures.append(json.loads((COMMON_FIXTURES_DIR / path).read_text()))
@@ -171,8 +171,8 @@ def generate_entropy(
 
 
 def click_through(
-    debug: "DebugLink", screens: int, code: Optional[messages.ButtonRequestType] = None
-) -> Generator[None, "ButtonRequest", None]:
+    debug: DebugLink, screens: int, code: messages.ButtonRequestType | None = None
+) -> Generator[None, ButtonRequest, None]:
     """Click through N dialog screens.
 
     For use in an input flow function.
@@ -193,8 +193,8 @@ def click_through(
 
 
 def read_and_confirm_mnemonic(
-    debug: "DebugLink", choose_wrong: bool = False
-) -> Generator[None, "ButtonRequest", Optional[str]]:
+    debug: DebugLink, choose_wrong: bool = False
+) -> Generator[None, ButtonRequest, str | None]:
     """Read mnemonic words from the screen and answer
     confirmation questions.
     Return the full mnemonic or None if `choose_wrong` is True.
@@ -224,8 +224,8 @@ def read_and_confirm_mnemonic(
 
 
 def read_mnemonic_from_screen_bolt(
-    debug: "DebugLink",
-) -> Generator[None, "ButtonRequest", list[str]]:
+    debug: DebugLink,
+) -> Generator[None, ButtonRequest, list[str]]:
     mnemonic: list[str] = []
     br = yield
     assert br.pages is not None
@@ -242,8 +242,8 @@ def read_mnemonic_from_screen_bolt(
 
 
 def read_mnemonic_from_screen_caesar(
-    debug: "DebugLink",
-) -> Generator[None, "ButtonRequest", list[str]]:
+    debug: DebugLink,
+) -> Generator[None, ButtonRequest, list[str]]:
     mnemonic: list[str] = []
     yield  # write down all 12 words in order
     debug.press_yes()
@@ -262,8 +262,8 @@ def read_mnemonic_from_screen_caesar(
 
 
 def read_mnemonic_from_screen_delizia(
-    debug: "DebugLink",
-) -> Generator[None, "ButtonRequest", list[str]]:
+    debug: DebugLink,
+) -> Generator[None, ButtonRequest, list[str]]:
     mnemonic: list[str] = []
     br = yield
     assert br.pages is not None
@@ -283,8 +283,8 @@ def read_mnemonic_from_screen_delizia(
 
 
 def read_mnemonic_from_screen_eckhart(
-    debug: "DebugLink",
-) -> Generator[None, "ButtonRequest", list[str]]:
+    debug: DebugLink,
+) -> Generator[None, ButtonRequest, list[str]]:
     mnemonic: list[str] = []
     br = yield
     assert br.pages is not None
@@ -306,7 +306,7 @@ def read_mnemonic_from_screen_eckhart(
 
 
 def check_share(
-    debug: "DebugLink", mnemonic: list[str], choose_wrong: bool = False
+    debug: DebugLink, mnemonic: list[str], choose_wrong: bool = False
 ) -> bool:
     """
     Given the mnemonic word list, proceed with the backup check:
@@ -340,14 +340,14 @@ def check_share(
     return True
 
 
-def click_info_button_bolt(debug: "DebugLink") -> Generator[Any, Any, ButtonRequest]:
+def click_info_button_bolt(debug: DebugLink) -> Generator[Any, Any, ButtonRequest]:
     """Click Shamir backup info button and return back."""
     debug.press_info()
     debug.press_yes()
     return (yield)
 
 
-def click_info_button_delizia_eckhart(debug: "DebugLink"):
+def click_info_button_delizia_eckhart(debug: DebugLink):
     """Click Shamir backup info button, scroll through it and return back."""
     debug.click(debug.screen_buttons.menu())
     layout = debug.read_layout()
@@ -376,7 +376,7 @@ def check_pin_backoff_time(attempts: int, start: float) -> None:
     assert got >= expected
 
 
-def get_test_address(session: "Session") -> str:
+def get_test_address(session: Session) -> str:
     """Fetch a testnet address on a fixed path. Useful to make a pin/passphrase
     protected call, or to identify the root secret (seed+passphrase)"""
     return btc.get_address(session, "Testnet", TEST_ADDRESS_N)

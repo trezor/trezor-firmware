@@ -10,7 +10,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Union, Set
 
 RUST_SRC = THIS_FILE.parent / "src"
 

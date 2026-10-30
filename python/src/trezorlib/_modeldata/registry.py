@@ -19,7 +19,7 @@
 Once the firmware-side generator exists, the import list below is the only
 thing it needs to emit/maintain (one line per ``core/embed/models/<NAME>``)."""
 
-from typing import Optional
+from __future__ import annotations
 
 from . import D001, D002, D003, T1B1, T2B1, T2T1, T3B1, T3T1, T3T2, T3W1, ModelData
 
@@ -39,5 +39,5 @@ ALL: tuple[ModelData, ...] = (
 BY_INTERNAL_NAME: dict[str, ModelData] = {m.internal_name: m for m in ALL}
 
 
-def by_internal_name(internal_name: str) -> Optional[ModelData]:
+def by_internal_name(internal_name: str) -> ModelData | None:
     return BY_INTERNAL_NAME.get(internal_name)

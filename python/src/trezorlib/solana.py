@@ -14,7 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING, Any, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from . import exceptions, messages
 from .tools import workflow
@@ -25,7 +27,7 @@ if TYPE_CHECKING:
 
 @workflow(capability=messages.Capability.Solana)
 def get_public_key(
-    session: "Session",
+    session: Session,
     address_n: list[int],
     show_display: bool,
 ) -> bytes:
@@ -41,7 +43,7 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 @workflow(capability=messages.Capability.Solana)
 def get_authenticated_address(
-    session: "Session",
+    session: Session,
     address_n: list[int],
     show_display: bool,
     chunkify: bool = False,
@@ -58,11 +60,11 @@ def get_authenticated_address(
 
 @workflow(capability=messages.Capability.Solana)
 def sign_tx(
-    session: "Session",
+    session: Session,
     address_n: list[int],
     serialized_tx: bytes,
-    additional_info: Optional[messages.SolanaTxAdditionalInfo],
-    payment_req: Optional[messages.PaymentRequest] = None,
+    additional_info: messages.SolanaTxAdditionalInfo | None,
+    payment_req: messages.PaymentRequest | None = None,
     chunkify: bool = False,
 ) -> bytes:
     return session.call(
@@ -79,7 +81,7 @@ def sign_tx(
 
 @workflow(capability=messages.Capability.Solana)
 def sign_message(
-    session: "Session",
+    session: Session,
     address_n: list[int],
     message: messages.SolanaOffchainMessageV1,
     chunkify: bool = False,
@@ -94,7 +96,7 @@ def sign_message(
 
 @workflow(capability=messages.Capability.Solana)
 def verify_message(
-    session: "Session",
+    session: Session,
     message: messages.SolanaOffchainMessageV1,
     signatures: list[bytes],
     chunkify: bool = False,

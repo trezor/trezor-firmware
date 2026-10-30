@@ -41,9 +41,11 @@ in ``core/embed/models`` today and would need a ``[trezorlib]`` block in
 ``model.toml`` (or a parallel metadata file) to feed the generator.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Optional
+from typing import Callable
 
 
 def keys(*hexes: str) -> tuple[bytes, ...]:
@@ -97,7 +99,7 @@ class HashParams:
 
     hash_function: Callable
     chunk_size: int
-    padding_byte: Optional[bytes]
+    padding_byte: bytes | None
 
 
 @dataclass(frozen=True)
@@ -116,4 +118,4 @@ class ModelData:
     # --- firmware verification ---
     prod_keys: KeySet = field(default_factory=KeySet)
     dev_keys: KeySet = field(default_factory=KeySet)
-    hash_params: Optional[HashParams] = None
+    hash_params: HashParams | None = None

@@ -14,8 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import json
-from typing import TYPE_CHECKING, Any, Optional, TextIO
+from typing import TYPE_CHECKING, Any, TextIO
 
 import click
 
@@ -64,7 +66,7 @@ def cli() -> None:
 @click.option("-T", "--tag-cbor-sets", is_flag=True)
 @with_session(cardano=True)
 def sign_tx(
-    session: "Session",
+    session: Session,
     file: TextIO,
     signing_mode: messages.CardanoTxSigningMode,
     protocol_magic: int,
@@ -210,16 +212,16 @@ def sign_tx(
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session(cardano=True)
 def get_address(
-    session: "Session",
+    session: Session,
     address: str,
     address_type: messages.CardanoAddressType,
     staking_address: str,
-    staking_key_hash: Optional[str],
-    block_index: Optional[int],
-    tx_index: Optional[int],
-    certificate_index: Optional[int],
-    script_payment_hash: Optional[str],
-    script_staking_hash: Optional[str],
+    staking_key_hash: str | None,
+    block_index: int | None,
+    tx_index: int | None,
+    certificate_index: int | None,
+    script_payment_hash: str | None,
+    script_staking_hash: str | None,
     protocol_magic: int,
     network_id: int,
     show_display: bool,
@@ -283,7 +285,7 @@ def get_address(
 @click.option("-d", "--show-display", is_flag=True)
 @with_session(cardano=True)
 def get_public_key(
-    session: "Session",
+    session: Session,
     address: str,
     derivation_type: messages.CardanoDerivationType,
     show_display: bool,
@@ -311,7 +313,7 @@ def get_public_key(
 )
 @with_session(cardano=True)
 def get_native_script_hash(
-    session: "Session",
+    session: Session,
     file: TextIO,
     display_format: messages.CardanoNativeScriptHashDisplayFormat,
     derivation_type: messages.CardanoDerivationType,
@@ -335,7 +337,7 @@ def get_native_script_hash(
 )
 @with_session(cardano=True)
 def sign_message(
-    session: "Session",
+    session: Session,
     file: TextIO,
     derivation_type: messages.CardanoDerivationType,
 ) -> messages.CardanoMessageSignature:
