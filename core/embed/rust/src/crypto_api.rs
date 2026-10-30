@@ -52,7 +52,7 @@ extern "C" fn new_deserialize_crypto_message(
                 compressed,
             } => {
                 let dp_obj = obj_from_dp_slice(address_n)?;
-                let compressed_obj = unwrap!(Obj::try_from(*compressed));
+                let compressed_obj = Obj::from(*compressed);
                 (dp_obj, compressed_obj).try_into()?
             }
             Archived::<TrezorCryptoEnum>::EcdsaSignDigest {
@@ -65,7 +65,7 @@ extern "C" fn new_deserialize_crypto_message(
                 (
                     obj_from_dp_slice(address_n)?,
                     digest_obj,
-                    Obj::try_from(*compressed)?,
+                    Obj::from(*compressed),
                     Obj::from(*canonical),
                 )
                     .try_into()?
