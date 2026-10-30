@@ -205,12 +205,8 @@ pub fn cosi_combine_publickeys(public_keys: &[[u8; 32]]) -> Result<[u8; 32]> {
 }
 
 /// Base58-encodes `data`.
-pub fn base58_encode(data: &[u8]) -> Result<String> {
-    get_crypto_or_die()
-        .base58_encode(data.into())
-        .into_app_result()
-        .c()
-        .map(|s| String::from(s.as_str()))
+pub fn base58_encode(data: &[u8]) -> String {
+    String::from(get_crypto_or_die().base58_encode(data.into()).as_str())
 }
 
 /// Decodes a base58-encoded `data` string.
@@ -223,12 +219,8 @@ pub fn base58_decode(data: &str) -> Result<Vec<u8>> {
 }
 
 /// Base58Check-encodes `data` (base58 plus a 4-byte checksum).
-pub fn base58check_encode(data: &[u8]) -> Result<String> {
-    get_crypto_or_die()
-        .base58check_encode(data.into())
-        .into_app_result()
-        .c()
-        .map(|s| String::from(s.as_str()))
+pub fn base58check_encode(data: &[u8]) -> String {
+    String::from(get_crypto_or_die().base58check_encode(data.into()).as_str())
 }
 
 /// Decodes a base58Check-encoded `data` string, verifying its checksum.
