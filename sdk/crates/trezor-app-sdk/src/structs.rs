@@ -190,10 +190,7 @@ impl<'a, T: IStable> Slice<'a, T> {
     }
 
     pub fn as_slice(&self) -> &'a [T] {
-        let inner = self.inner;
-        // SAFETY: `inner` borrows `'a` data; `Slice::as_slice` only ties the
-        // result to `&self`, so this restores the original lifetime.
-        unsafe { core::slice::from_raw_parts(inner.as_slice().as_ptr(), inner.len()) }
+        self.inner.as_slice()
     }
 
     pub fn len(&self) -> usize {
