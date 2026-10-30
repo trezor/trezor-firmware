@@ -418,15 +418,7 @@ class TrezorConnection:
 
     def _get_transport(self) -> Transport:
         try:
-            # look for transport without prefix search
-            return transport.get_transport(self.path, prefix_search=False)
-        except Exception:
-            # most likely not found. try again below.
-            pass
-
-        # look for transport with prefix search
-        try:
-            return transport.get_transport(self.path, prefix_search=True)
+            return transport._get_transport_prefer_full(self.path)
         except Exception:
             if self.path:
                 raise click.ClickException(

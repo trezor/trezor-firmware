@@ -34,7 +34,7 @@ from trezorlib import debuglink, log, messages, models
 from trezorlib._internal.emulator import TropicModel
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.device import apply_settings
-from trezorlib.transport import enumerate_devices, get_transport
+from trezorlib.transport import _get_transport_prefer_full, enumerate_devices
 from trezorlib.transport.ble import BleTransport
 
 # register rewrites before importing from local package
@@ -222,7 +222,7 @@ def _raw_test_ctx(request: pytest.FixtureRequest) -> TrezorTestContext:
 
 
 def _test_ctx_from_path(path: str | None, interact: bool) -> TrezorTestContext:
-    transport = get_transport(path)
+    transport = _get_transport_prefer_full(path)
     return TrezorTestContext(transport, auto_interact=not interact, force_wipe=True)
 
 
