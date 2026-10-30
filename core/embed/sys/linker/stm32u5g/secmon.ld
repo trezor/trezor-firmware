@@ -79,7 +79,7 @@ SECTIONS {
   } >RAM
 
   .stack : ALIGN(8) {
-    . = 80K; /* Overflow causes UsageFault */
+    . = 32K; /* Overflow causes UsageFault */
   } >RAM
 
   .fb1 : ALIGN(4) {
