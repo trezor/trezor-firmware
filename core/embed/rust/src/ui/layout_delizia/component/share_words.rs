@@ -1,9 +1,10 @@
 use heapless::Vec;
 
-use super::super::component::swipe_content::SwipeAttachAnimation;
+use super::super::component::swipe_content::{attach_anim, attach_offset};
 use super::theme;
 use crate::strutil::TString;
 use crate::translations::TR;
+use crate::ui::component::attach_anim::AttachAnim;
 use crate::ui::component::base::AttachType;
 use crate::ui::component::paginated::Paginate;
 use crate::ui::component::text::TextStyle;
@@ -28,7 +29,7 @@ pub struct ShareWords<'a> {
     /// Area reserved for a shown word from mnemonic/share
     area_word: Rect,
     progress: i16,
-    attach_animation: SwipeAttachAnimation,
+    attach_anim: AttachAnim,
     wait_for_attach: bool,
     repeated_indices: IndexVec,
 }
@@ -45,7 +46,7 @@ impl<'a> ShareWords<'a> {
             next_index: 0,
             area_word: Rect::zero(),
             progress: 0,
-            attach_animation: SwipeAttachAnimation::new(),
+            attach_anim: attach_anim(),
             wait_for_attach: false,
             repeated_indices,
         }
@@ -141,7 +142,8 @@ impl<'a> Component for ShareWords<'a> {
 
         let (_, should_animate) = self.should_animate_attach(event);
 
-        self.attach_animation.lazy_start(ctx, event, should_animate);
+        self.attach_anim
+            .event_filtered(ctx, event, |_| should_animate);
 
         match event {
             Event::Attach(_) => {
@@ -219,13 +221,8 @@ impl<'a> Component for ShareWords<'a> {
                     self.render_word(self.page_index, target, target.viewport().clip)
                 });
             });
-        } else if (self.attach_animation.is_active() || self.wait_for_attach) && self.progress == 0
-        {
-            let t = self.attach_animation.eval();
-
-            let offset = self
-                .attach_animation
-                .get_offset(t, ShareWords::AREA_WORD_HEIGHT);
+        } else if (self.attach_anim.is_active() || self.wait_for_attach) && self.progress == 0 {
+            let offset = attach_offset(&self.attach_anim, ShareWords::AREA_WORD_HEIGHT);
 
             target.in_clip(self.area_word, &|target| {
                 target.with_origin(offset, &|target| {

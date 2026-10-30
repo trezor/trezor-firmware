@@ -1,6 +1,7 @@
+use easer::functions::Cubic;
 use sys::time::Duration;
 
-use crate::time::Stopwatch;
+use crate::ui::component::attach_anim::{ease_in_out, fade_in, slide_in, AttachAnim};
 use crate::ui::component::base::{AttachType, EventPropagation};
 use crate::ui::component::{Component, Event, EventCtx, Paginate};
 use crate::ui::constant::screen;
@@ -9,147 +10,41 @@ use crate::ui::event::SwipeEvent;
 use crate::ui::geometry::{Direction, Offset, Rect};
 use crate::ui::lerp::Lerp;
 use crate::ui::shape::{self, Renderer};
-use crate::ui::util::{animation_disabled, Pager};
+use crate::ui::util::Pager;
 
-#[derive(Default, Clone)]
-pub struct SwipeAttachAnimation {
-    /// Animation timer for time elapsed since the first animation frame tick
-    /// after the attach event. Stopped state indicates animation initial
-    /// state; after the animation duration elapses, the stopwatch continues
-    /// to run.
-    timer: Stopwatch,
-    pub attach_type: Option<AttachType>,
-    pub show_attach_anim: bool,
+/// Duration of the attach animation of swiped content.
+const ATTACH_DURATION: Duration = Duration::from_millis(500);
+/// Duration of the fade-in at the start of the attach animation.
+const ATTACH_FADE_DURATION: Duration = Duration::from_millis(200);
+
+/// Attach animation of swiped content. Animates only vertical and initial
+/// attaches.
+pub fn attach_anim() -> AttachAnim {
+    AttachAnim::new(ATTACH_DURATION)
 }
 
-impl SwipeAttachAnimation {
-    const DURATION_MS: u32 = 500;
-
-    pub fn new() -> Self {
-        Self {
-            timer: Stopwatch::new_stopped(),
-            attach_type: None,
-            show_attach_anim: true,
-        }
+/// Content offset during the attach animation: slides in vertically from
+/// `distance` pixels away. An initial attach slides in from above.
+pub fn attach_offset(anim: &AttachAnim, distance: i16) -> Offset {
+    match anim.dir() {
+        Some(dir @ (Direction::Up | Direction::Down)) => slide_in(dir, distance, anim.t()),
+        Some(_) => Offset::zero(),
+        None => slide_in(Direction::Down, distance, anim.t()),
     }
+}
 
-    /// Checks if the attach animation is active.
-    ///
-    /// The animation is considered "active" from attach event (timer stopped),
-    /// through the first animation frame (timer started), until the timer
-    /// exceeds animation duration.
-    pub fn is_active(&self) -> bool {
-        if animation_disabled() {
-            return false;
-        }
-
-        !self.timer.is_running()
-            || self
-                .timer
-                .is_running_within(Duration::from_millis(Self::DURATION_MS))
-    }
-
-    pub fn eval(&self) -> f32 {
-        if animation_disabled() {
-            return 1.0;
-        }
-
-        self.timer.elapsed().to_millis() as f32 / 1000.0
-    }
-
-    pub fn get_offset(&self, t: f32, max_offset: i16) -> Offset {
-        let value = pareen::constant(0.0).seq_ease_in(
-            0.0,
-            easer::functions::Linear,
-            Self::DURATION_MS as f32 / 1000.0,
-            pareen::constant(1.0),
-        );
-
-        match self.attach_type {
-            Some(AttachType::Initial) => {
-                Offset::lerp(Offset::new(0, -max_offset), Offset::zero(), value.eval(t))
-            }
-            Some(AttachType::Swipe(dir)) => match dir {
-                Direction::Up => {
-                    Offset::lerp(Offset::new(0, max_offset), Offset::zero(), value.eval(t))
-                }
-                Direction::Down => {
-                    Offset::lerp(Offset::new(0, -max_offset), Offset::zero(), value.eval(t))
-                }
-                _ => Offset::zero(),
-            },
-            _ => Offset::zero(),
-        }
-    }
-
-    pub fn get_opacity(&self, t: f32) -> u8 {
-        let value = pareen::constant(0.0).seq_ease_in_out(
-            0.0,
-            easer::functions::Cubic,
-            0.2,
-            pareen::constant(1.0),
-        );
-        match self.attach_type {
-            Some(AttachType::Initial)
-            | Some(AttachType::Swipe(Direction::Up))
-            | Some(AttachType::Swipe(Direction::Down)) => {}
-            _ => {
-                return 255;
-            }
-        }
-        u8::lerp(0, 255, value.eval(t))
-    }
-
-    /// Reset the animation to initial state.
-    fn reset(&mut self) {
-        self.timer = Stopwatch::new_stopped();
-    }
-
-    /// Lazily start the animation.
-    ///
-    /// Attach event will reset but not start the timer; the timer is started by
-    /// the first animation frame, to avoid any discontinuity in case Attach
-    /// precedes the first animation frame by a noticeable interval.
-    ///
-    /// While the animation is active, that is, from the first Attach to until
-    /// the timer runs out, no touch events are allowed through.
-    pub fn lazy_start(
-        &mut self,
-        ctx: &mut EventCtx,
-        event: Event,
-        animate: bool,
-    ) -> EventPropagation {
-        if let Event::Attach(attach_type) = event {
-            if self.show_attach_anim && animate {
-                self.attach_type = Some(attach_type);
-            } else {
-                self.attach_type = None;
-            }
-            self.reset();
-            ctx.request_anim_frame();
-        }
-        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if !animation_disabled() {
-                if !self.timer.is_running() {
-                    self.timer.start();
-                }
-                if self.is_active() {
-                    ctx.request_anim_frame();
-                    ctx.request_paint();
-                }
-            }
-        }
-        match event {
-            Event::Touch(_) if self.is_active() => EventPropagation::Stop,
-            _ => EventPropagation::Continue,
-        }
-    }
+/// Content opacity during the attach animation.
+pub fn attach_opacity(anim: &AttachAnim) -> u8 {
+    fade_in(ease_in_out::<Cubic>(
+        anim.window(Duration::ZERO, ATTACH_FADE_DURATION),
+    ))
 }
 
 struct SwipeContext {
     progress: i16,
     dir: Direction,
-    attach_animation: SwipeAttachAnimation,
+    attach_anim: AttachAnim,
+    show_attach_anim: bool,
 }
 
 impl SwipeContext {
@@ -157,7 +52,8 @@ impl SwipeContext {
         Self {
             progress: 0,
             dir: Direction::Up,
-            attach_animation: SwipeAttachAnimation::new(),
+            attach_anim: attach_anim(),
+            show_attach_anim: true,
         }
     }
 
@@ -191,10 +87,8 @@ impl SwipeContext {
                 _ => {}
             }
         } else {
-            let t = self.attach_animation.eval();
-            let opacity = self.attach_animation.get_opacity(t);
-            offset = self.attach_animation.get_offset(t, 20);
-            mask = 255 - opacity;
+            offset = attach_offset(&self.attach_anim, 20);
+            mask = 255 - attach_opacity(&self.attach_anim);
 
             if offset.x == 0 && offset.y == 0 {
                 clip = screen();
@@ -210,7 +104,15 @@ impl SwipeContext {
         event: Event,
         animate: bool,
     ) -> EventPropagation {
-        let propagate = self.attach_animation.lazy_start(ctx, event, animate);
+        let show_attach_anim = self.show_attach_anim;
+        self.attach_anim.event_filtered(ctx, event, |attach| {
+            show_attach_anim
+                && animate
+                && matches!(
+                    attach,
+                    AttachType::Initial | AttachType::Swipe(Direction::Up | Direction::Down)
+                )
+        });
 
         if let Event::Attach(_) = event {
             self.progress = 0;
@@ -227,7 +129,11 @@ impl SwipeContext {
             ctx.request_paint();
         }
 
-        propagate
+        // no touch input while the content is animating in
+        match event {
+            Event::Touch(_) if self.attach_anim.is_active() => EventPropagation::Stop,
+            _ => EventPropagation::Continue,
+        }
     }
 }
 
@@ -247,7 +153,7 @@ impl<T: Component> SwipeContent<T> {
     }
 
     pub fn with_no_attach_anim(mut self) -> Self {
-        self.swipe_context.attach_animation.show_attach_anim = false;
+        self.swipe_context.show_attach_anim = false;
         self
     }
 
@@ -343,7 +249,7 @@ where
         let is_swipe_up = matches!(attach_type, AttachType::Swipe(Direction::Up));
         let is_swipe_down = matches!(attach_type, AttachType::Swipe(Direction::Down));
 
-        if !self.content.swipe_context.attach_animation.show_attach_anim {
+        if !self.content.swipe_context.show_attach_anim {
             return false;
         }
 

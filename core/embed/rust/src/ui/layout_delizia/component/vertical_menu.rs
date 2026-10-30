@@ -1,11 +1,12 @@
+use easer::functions::{Circ, Cubic};
 use heapless::Vec;
 use sys::time::Duration;
 
 use super::super::component::button::{Button, ButtonContent, ButtonMsg, IconText};
 use super::theme;
 use crate::strutil::TString;
-use crate::time::Stopwatch;
-use crate::ui::component::base::{AttachType, Component};
+use crate::ui::component::attach_anim::{ease_in, slide_in, AttachAnim};
+use crate::ui::component::base::Component;
 use crate::ui::component::paginated::SinglePage;
 use crate::ui::component::{Event, EventCtx, Paginate};
 use crate::ui::constant::screen;
@@ -13,7 +14,7 @@ use crate::ui::display::{Color, Icon};
 use crate::ui::geometry::{Direction, Offset, Rect};
 use crate::ui::lerp::Lerp;
 use crate::ui::shape::{Bar, Renderer};
-use crate::ui::util::{animation_disabled, Pager};
+use crate::ui::util::Pager;
 
 pub enum VerticalMenuChoiceMsg {
     Selected(usize),
@@ -31,137 +32,8 @@ const MENU_SEP_HEIGHT: i16 = 2;
 
 type VerticalMenuButtons = Vec<Button, MENU_MAX_ITEMS>;
 
-#[derive(Default, Clone)]
-struct AttachAnimation {
-    pub attach_top: bool,
-    pub timer: Stopwatch,
-    pub active: bool,
-    pub duration: Duration,
-}
-
-impl AttachAnimation {
-    fn is_active(&self) -> bool {
-        if animation_disabled() {
-            return false;
-        }
-
-        self.timer.is_running_within(self.duration)
-    }
-
-    fn eval(&self) -> f32 {
-        if animation_disabled() {
-            return 1.0;
-        }
-
-        self.timer.elapsed().to_millis() as f32 / 1000.0
-    }
-
-    fn get_offset(&self, t: f32) -> Offset {
-        let value = if self.attach_top {
-            1.0
-        } else {
-            pareen::constant(0.0)
-                .seq_ease_in(
-                    0.0,
-                    easer::functions::Cubic,
-                    self.duration.to_millis() as f32 / 1000.0,
-                    pareen::constant(1.0).eval(t),
-                )
-                .eval(t)
-        };
-
-        Offset::lerp(Offset::new(-40, 0), Offset::zero(), value)
-    }
-
-    fn get_mask_width(&self, t: f32) -> i16 {
-        let value = if self.attach_top {
-            1.0
-        } else {
-            pareen::constant(0.0)
-                .seq_ease_in(0.0, easer::functions::Circ, 0.15, pareen::constant(1.0))
-                .eval(t)
-        };
-
-        //todo screen here is incorrect
-        i16::lerp(screen().width(), 0, value)
-    }
-
-    pub fn get_mask_item1_opacity(&self, t: f32) -> u8 {
-        let value = if self.attach_top {
-            pareen::constant(0.0)
-                .seq_ease_in(0.0, easer::functions::Cubic, 0.15, pareen::constant(1.0))
-                .eval(t)
-        } else {
-            1.0
-        };
-
-        u8::lerp(255, 0, value)
-    }
-
-    pub fn get_mask_item2_opacity(&self, t: f32) -> u8 {
-        let value = if self.attach_top {
-            pareen::constant(0.0)
-                .seq_ease_in(0.1, easer::functions::Cubic, 0.15, pareen::constant(1.0))
-                .eval(t)
-        } else {
-            1.0
-        };
-
-        u8::lerp(255, 0, value)
-    }
-
-    pub fn get_mask_item3_opacity(&self, t: f32) -> u8 {
-        let value = if self.attach_top {
-            pareen::constant(0.0)
-                .seq_ease_in(0.2, easer::functions::Cubic, 0.15, pareen::constant(1.0))
-                .eval(t)
-        } else {
-            1.0
-        };
-
-        u8::lerp(255, 0, value)
-    }
-
-    fn start(&mut self) {
-        self.active = true;
-        self.timer.start();
-    }
-
-    fn reset(&mut self) {
-        self.active = false;
-        self.timer = Stopwatch::new_stopped();
-    }
-
-    fn lazy_start(&mut self, ctx: &mut EventCtx, event: Event) {
-        if let Event::Attach(_) = event {
-            if let Event::Attach(AttachType::Swipe(Direction::Up))
-            | Event::Attach(AttachType::Swipe(Direction::Down))
-            | Event::Attach(AttachType::Initial) = event
-            {
-                self.attach_top = true;
-                self.duration = Duration::from_millis(350);
-            } else {
-                self.attach_top = false;
-                self.duration = Duration::from_millis(350);
-            }
-            self.reset();
-            ctx.request_anim_frame();
-        }
-        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if !self.timer.is_running() {
-                self.start();
-            }
-            if self.is_active() {
-                ctx.request_anim_frame();
-                ctx.request_paint();
-            } else if self.active {
-                self.active = false;
-                ctx.request_anim_frame();
-                ctx.request_paint();
-            }
-        }
-    }
-}
+/// Duration of the attach animation.
+const ATTACH_DURATION: Duration = Duration::from_millis(350);
 
 pub struct VerticalMenu {
     /// buttons placed vertically from top to bottom
@@ -169,7 +41,7 @@ pub struct VerticalMenu {
     /// length of `buttons` prefix that is currently active, set by `place()`
     n_items: usize,
 
-    attach_animation: AttachAnimation,
+    attach_anim: AttachAnim,
 }
 
 impl VerticalMenu {
@@ -177,7 +49,7 @@ impl VerticalMenu {
         Self {
             buttons,
             n_items: MENU_MAX_ITEMS,
-            attach_animation: AttachAnimation::default(),
+            attach_anim: AttachAnim::new(ATTACH_DURATION),
         }
     }
     pub fn select_word(words: [TString<'static>; 3]) -> Self {
@@ -214,6 +86,50 @@ impl VerticalMenu {
     }
 }
 
+impl VerticalMenu {
+    /// Left and right attaches slide the whole menu in, vertical and initial
+    /// attaches fade the items in one after another.
+    fn attach_is_horizontal(&self) -> bool {
+        matches!(
+            self.attach_anim.dir(),
+            Some(Direction::Left | Direction::Right)
+        )
+    }
+
+    fn attach_offset(&self) -> Offset {
+        if !self.attach_is_horizontal() {
+            return Offset::zero();
+        }
+        // both horizontal attaches slide in from the left
+        slide_in(Direction::Right, 40, ease_in::<Cubic>(self.attach_anim.t()))
+    }
+
+    /// Width of the black mask covering the menu from the left.
+    fn attach_mask_width(&self) -> i16 {
+        if !self.attach_is_horizontal() {
+            return 0;
+        }
+        let x = ease_in::<Circ>(
+            self.attach_anim
+                .window(Duration::ZERO, Duration::from_millis(150)),
+        );
+        //todo screen here is incorrect
+        i16::lerp(screen().width(), 0, x)
+    }
+
+    /// Opacity of the black mask covering the item `i`.
+    fn attach_item_mask_alpha(&self, i: usize) -> u8 {
+        if self.attach_is_horizontal() {
+            return 0;
+        }
+        let x = ease_in::<Cubic>(self.attach_anim.window(
+            Duration::from_millis(100 * i as u32),
+            Duration::from_millis(150),
+        ));
+        u8::lerp(255, 0, x)
+    }
+}
+
 impl Component for VerticalMenu {
     type Msg = VerticalMenuChoiceMsg;
 
@@ -238,9 +154,9 @@ impl Component for VerticalMenu {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.attach_animation.lazy_start(ctx, event);
+        self.attach_anim.event(ctx, event);
 
-        if !self.attach_animation.is_active() {
+        if !self.attach_anim.is_active() {
             for (i, button) in self.buttons.iter_mut().enumerate() {
                 if let Some(ButtonMsg::Clicked) = button.event(ctx, event) {
                     return Some(VerticalMenuChoiceMsg::Selected(i));
@@ -251,15 +167,8 @@ impl Component for VerticalMenu {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let t = self.attach_animation.eval();
-
-        let offset = self.attach_animation.get_offset(t);
-        let mask_width = self.attach_animation.get_mask_width(t);
-        let item1_opacity = self.attach_animation.get_mask_item1_opacity(t);
-        let item2_opacity = self.attach_animation.get_mask_item2_opacity(t);
-        let item3_opacity = self.attach_animation.get_mask_item3_opacity(t);
-
-        let opacities = [item1_opacity, item2_opacity, item3_opacity];
+        let offset = self.attach_offset();
+        let mask_width = self.attach_mask_width();
 
         target.with_translate(offset, &|target| {
             // render buttons separated by thin bars
@@ -269,7 +178,7 @@ impl Component for VerticalMenu {
                 Bar::new(button.area())
                     .with_fg(Color::black())
                     .with_bg(Color::black())
-                    .with_alpha(opacities[i])
+                    .with_alpha(self.attach_item_mask_alpha(i))
                     .render(target);
 
                 if i + 1 < self.buttons.len().min(self.n_items) {
@@ -284,7 +193,7 @@ impl Component for VerticalMenu {
                     Bar::new(area)
                         .with_fg(Color::black())
                         .with_bg(Color::black())
-                        .with_alpha(opacities[i])
+                        .with_alpha(self.attach_item_mask_alpha(i))
                         .render(target);
                 }
             }
