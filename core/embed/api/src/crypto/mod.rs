@@ -119,10 +119,9 @@ fn ecdsa_verify_by_recovery(
             signature,
             crypto::ecdsa::RecId::new(recid),
             digest,
-        ) {
-            if pubkey_matches(&recovered, public_key) {
-                return Ok(());
-            }
+        ) && pubkey_matches(&recovered, public_key)
+        {
+            return Ok(());
         }
     }
     Err(CryptoError::InvalidSignature)
