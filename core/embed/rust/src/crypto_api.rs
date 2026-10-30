@@ -40,22 +40,25 @@ extern "C" fn new_deserialize_crypto_message(
 
         let result: Obj = match archived {
             Archived::<TrezorCryptoEnum>::GetXpub {
+                curve,
                 address_n,
                 xpub_magic,
             } => {
                 let dp_obj = obj_from_dp_slice(address_n)?;
                 let magic_obj = unwrap!(Obj::try_from(xpub_magic.to_native()));
-                (dp_obj, magic_obj).try_into()?
+                (Obj::from(*curve), dp_obj, magic_obj).try_into()?
             }
             Archived::<TrezorCryptoEnum>::GetPublicKey {
+                curve,
                 address_n,
                 compressed,
             } => {
                 let dp_obj = obj_from_dp_slice(address_n)?;
                 let compressed_obj = Obj::from(*compressed);
-                (dp_obj, compressed_obj).try_into()?
+                (Obj::from(*curve), dp_obj, compressed_obj).try_into()?
             }
             Archived::<TrezorCryptoEnum>::EcdsaSignDigest {
+                curve,
                 address_n,
                 digest,
                 compressed,
@@ -63,6 +66,7 @@ extern "C" fn new_deserialize_crypto_message(
             } => {
                 let digest_obj = Obj::try_from(digest.as_slice())?;
                 (
+                    Obj::from(*curve),
                     obj_from_dp_slice(address_n)?,
                     digest_obj,
                     Obj::from(*compressed),
