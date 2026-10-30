@@ -4,27 +4,20 @@ use std::{fs, process};
 
 use anyhow::{Context, Result, ensure};
 
-use crate::args::{FlashArgs, FlashEraseArgs, FlashSection, Model, Project, ResetArgs};
+use crate::args::{FlashArgs, FlashEraseArgs, FlashSection, Model, ResetArgs};
 use crate::{combine, helpers};
 
 /// Flashes the specified project to the device using OpenOCD.
-pub fn flash(args: FlashArgs) -> Result<()> {
+pub fn flash_project(args: FlashArgs) -> Result<()> {
     ensure!(
         args.project.flashable(),
         "Flashing is not supported for `{}`",
         args.project.binary_name()
     );
 
-    // A combined image already holds the whole boot chain, assembled by
-    // `xtask combine`, so it is written as-is from the boardloader address --
-    // before any single-project binary is resolved, since it is not one.
-    if args.combined {
-        return flash_combined(&args);
-    }
-
-    // An explicitly given file replaces the build artifact; the address below is
-    // still derived from the project + model, so a prebuilt binary lands exactly
-    // where that project belongs.
+    // An explicitly given file replaces the build artifact; the addresses below
+    // are still derived from the project + model, so a prebuilt binary lands
+    // exactly where that project belongs.
     let binary = match args.file {
         Some(ref file) => file.clone(),
         None => {
@@ -36,40 +29,106 @@ pub fn flash(args: FlashArgs) -> Result<()> {
         .canonicalize()
         .with_context(|| format!("Failed to locate `{}` for flashing", binary.display()))?;
 
-    let flash_start = args.project.flash_start_symbol()?;
     let memory_ld = args.model.model_memory_ld()?;
-    let address = helpers::read_symbol(&memory_ld, flash_start)?;
+    let content = fs::read_to_string(&memory_ld)
+        .with_context(|| format!("Failed to read `{}`", memory_ld.display()))?;
+    let image =
+        fs::read(&binary).with_context(|| format!("Failed to read `{}`", binary.display()))?;
+    let segments = helpers::project_segments(&content, args.project, &image)?;
 
-    // On STM32F4 the firmware image spans two flash areas, and writing it in
-    // one piece would put its tail over the secret and storage sectors.
-    if args.project == Project::Firmware {
-        let content = fs::read_to_string(&memory_ld)
-            .with_context(|| format!("Failed to read `{}`", memory_ld.display()))?;
-        let image =
-            fs::read(&binary).with_context(|| format!("Failed to read `{}`", binary.display()))?;
-        let segments = helpers::firmware_segments(&content, &image)?;
-        if segments.len() > 1 {
-            return flash_segments(args.model, &binary, &segments);
-        }
-    }
-
-    println!(
-        "Flashing `{}` to address 0x{:08X}",
-        binary.display(),
-        address
-    );
-
-    let flash_instruction = build_flash_write_instruction(&binary, address)?;
-
-    run_openocd(args.model, &flash_instruction)
+    flash_segments(args.model, &binary, &image, &segments)
 }
 
-/// Flashes an image split into `(address, bytes)` segments, each written to
-/// its own address in a single OpenOCD session.
-fn flash_segments(model: Model, binary: &Path, segments: &[(u32, &[u8])]) -> Result<()> {
+/// Flash the combined image: the whole boot chain in one write.
+///
+/// Written byte for byte as `xtask combine` produced it, placed by
+/// [`combine::segments`]. The project name only says WHICH combined image; the
+/// image always starts at the bottom of the chain, so nothing about its
+/// contents is decided here.
+pub fn flash_combined(args: FlashArgs) -> Result<()> {
+    ensure!(
+        combine::supported(args.project),
+        "there is no combined image for `{}` -- a combined image runs from the \
+         boardloader up to one of: {}",
+        args.project.binary_name(),
+        combine::supported_projects()
+    );
+
+    // `--file` names the combined image to write, the same way it replaces the
+    // artifact on the single-project path: WHAT is written, never WHERE.
+    let binary = match args.file {
+        Some(ref file) => file
+            .canonicalize()
+            .with_context(|| format!("Failed to locate `{}` for flashing", file.display()))?,
+        None => {
+            let built = combine::combined_artifact(args.model, args.project)?;
+            ensure!(
+                built.exists(),
+                "no combined image at {binary} -- build one first:\n             \
+                 xtask combine {project} -m {model}",
+                binary = built.display(),
+                project = args.project.binary_name(),
+                model = args.model.model_id(),
+            );
+            built
+        }
+    };
+
+    println!("Combined `{}` image", args.project.binary_name());
+
+    let memory_ld = args.model.model_memory_ld()?;
+    let content = fs::read_to_string(&memory_ld)
+        .with_context(|| format!("Failed to read `{}`", memory_ld.display()))?;
+    let image =
+        fs::read(&binary).with_context(|| format!("Failed to read `{}`", binary.display()))?;
+    let segments = combine::segments(&content, &image)?;
+
+    flash_segments(args.model, &binary, &image, &segments)
+}
+
+/// Erase specified flash section using OpenOCD. The section boundaries are
+/// determined by reading symbols from the model's memory.ld file.
+pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
+    let mem_ld = args.model.model_memory_ld()?;
+    let content = fs::read_to_string(&mem_ld)
+        .with_context(|| format!("Failed to read `{}`", mem_ld.display()))?;
+    let instr = build_flash_erase_instruction(&content, args.section)?;
+
+    run_openocd(args.model, &instr)
+}
+
+/// Resets the connected device using OpenOCD.
+pub fn reset(args: ResetArgs) -> Result<()> {
+    println!("Resetting `{:?}`", args.model);
+
+    run_openocd(args.model, "init; reset; exit")
+}
+
+/// Flashes `image` (read from `binary`) as `(address, bytes)` segments, each
+/// written to its own address in a single OpenOCD session.
+///
+/// A segment covering the whole image is written straight from `binary`; the
+/// others go through temporary files, since `flash write_image` takes a whole
+/// file.
+fn flash_segments(
+    model: Model,
+    binary: &Path,
+    image: &[u8],
+    segments: &[(u32, &[u8])],
+) -> Result<()> {
     let mut temp_files = Vec::new();
     let mut files = Vec::new();
     for (i, (address, data)) in segments.iter().enumerate() {
+        if data.len() == image.len() {
+            println!(
+                "Flashing `{}` to address 0x{:08X}",
+                binary.display(),
+                address
+            );
+            files.push((binary.to_path_buf(), *address));
+            continue;
+        }
+
         let mut file = tempfile::Builder::new()
             .prefix("xtask-flash-")
             .suffix(".bin")
@@ -89,79 +148,8 @@ fn flash_segments(model: Model, binary: &Path, segments: &[(u32, &[u8])]) -> Res
         temp_files.push(file);
     }
 
-    let instruction = build_flash_write_segments_instruction(&files)?;
+    let instruction = build_flash_write_instruction(&files)?;
     run_openocd(model, &instruction)
-}
-
-/// Flash the combined image: the whole boot chain in one write.
-///
-/// Written byte for byte as `xtask combine` produced it, starting at the
-/// boardloader. The project name only says WHICH combined image; the image
-/// always starts at the bottom of the chain, so nothing about its contents is
-/// decided here.
-fn flash_combined(args: &FlashArgs) -> Result<()> {
-    ensure!(
-        combine::supported(args.project),
-        "there is no combined image for `{}` -- a combined image runs from the \
-         boardloader up to one of: {}",
-        args.project.binary_name(),
-        combine::supported_projects()
-    );
-
-    // `--file` names the combined image to write, the same way it replaces the
-    // artifact on the single-project path: WHAT is written, never WHERE. The
-    // address below stays the boardloader's, because that is what a combined
-    // image starts at whatever produced it.
-    let binary = match args.file {
-        Some(ref file) => file
-            .canonicalize()
-            .with_context(|| format!("Failed to locate `{}` for flashing", file.display()))?,
-        None => {
-            let built = combine::combined_artifact(args.model, args.project)?;
-            ensure!(
-                built.exists(),
-                "no combined image at {binary} -- build one first:\n             \
-                 xtask combine {project} -m {model}",
-                binary = built.display(),
-                project = args.project.binary_name(),
-                model = args.model.model_id(),
-            );
-            built
-        }
-    };
-
-    let memory_ld = args.model.model_memory_ld()?;
-    let address = helpers::read_symbol(&memory_ld, Project::Boardloader.flash_start_symbol()?)?;
-
-    println!(
-        "Flashing the combined `{}` image `{}` to address 0x{:08X}",
-        args.project.binary_name(),
-        binary.display(),
-        address
-    );
-
-    // `?`: quoting the path is fallible since the Tcl-quoting validation landed
-    // (a path that would break out of the braced word is rejected).
-    let flash_instruction = build_flash_write_instruction(&binary, address)?;
-    run_openocd(args.model, &flash_instruction)
-}
-
-/// Erase specified flash section using OpenOCD. The section boundaries are
-/// determined by reading symbols from the model's memory.ld file.
-pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
-    let mem_ld = args.model.model_memory_ld()?;
-    let content = fs::read_to_string(&mem_ld)
-        .with_context(|| format!("Failed to read `{}`", mem_ld.display()))?;
-    let instr = build_flash_erase_instruction(&content, args.section)?;
-
-    run_openocd(args.model, &instr)
-}
-
-/// Resets the connected device using OpenOCD.
-pub fn reset(args: ResetArgs) -> Result<()> {
-    println!("Resetting `{:?}`", args.model);
-
-    run_openocd(args.model, "init; reset; exit")
 }
 
 /// Runs OpenOCD instructions against the connected device for the given model.
@@ -223,11 +211,7 @@ fn tcl_quote_path(path: &Path) -> Result<String> {
     Ok(format!("{{{path}}}"))
 }
 
-fn build_flash_write_instruction(binary: &Path, address: u32) -> Result<String> {
-    build_flash_write_segments_instruction(&[(binary.to_path_buf(), address)])
-}
-
-fn build_flash_write_segments_instruction(files: &[(PathBuf, u32)]) -> Result<String> {
+fn build_flash_write_instruction(files: &[(PathBuf, u32)]) -> Result<String> {
     let mut instr = String::from("init; reset halt; ");
     for (path, address) in files {
         instr.push_str(&format!(
@@ -280,16 +264,13 @@ fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result
 mod tests {
     use std::path::{Path, PathBuf};
 
-    use super::{
-        build_flash_erase_instruction, build_flash_write_instruction,
-        build_flash_write_segments_instruction, tcl_quote_path,
-    };
+    use super::{build_flash_erase_instruction, build_flash_write_instruction, tcl_quote_path};
     use crate::args::FlashSection;
 
     #[test]
     fn builds_flash_write_instruction() {
         let instruction =
-            build_flash_write_instruction(Path::new("/tmp/fw.bin"), 0x0800_4000).unwrap();
+            build_flash_write_instruction(&[(PathBuf::from("/tmp/fw.bin"), 0x0800_4000)]).unwrap();
 
         assert_eq!(
             instruction,
@@ -298,8 +279,8 @@ mod tests {
     }
 
     #[test]
-    fn builds_flash_write_segments_instruction() {
-        let instruction = build_flash_write_segments_instruction(&[
+    fn builds_flash_write_instruction_for_several_segments() {
+        let instruction = build_flash_write_instruction(&[
             (PathBuf::from("/tmp/p1.bin"), 0x0804_0000),
             (PathBuf::from("/tmp/p2.bin"), 0x0812_0000),
         ])
@@ -317,9 +298,11 @@ mod tests {
     /// words and `[...]` would be command substitution.
     #[test]
     fn quotes_paths_that_tcl_would_otherwise_reparse() {
-        let instruction =
-            build_flash_write_instruction(Path::new("/my builds/fw [v2].bin"), 0x0800_4000)
-                .unwrap();
+        let instruction = build_flash_write_instruction(&[(
+            PathBuf::from("/my builds/fw [v2].bin"),
+            0x0800_4000,
+        )])
+        .unwrap();
 
         assert_eq!(
             instruction,

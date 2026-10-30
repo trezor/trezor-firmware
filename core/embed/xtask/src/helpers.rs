@@ -186,17 +186,28 @@ pub fn read_symbol_from_content(content: &str, symbol: &str) -> Result<u32> {
     parse_address(value).with_context(|| format!("Invalid address `{value}` for `{symbol}`"))
 }
 
-/// Splits a firmware image into the flash segments it occupies, as
+/// Splits a project's binary into the flash segments it occupies, as
 /// `(address, bytes)` pairs in ascending address order.
 ///
-/// A firmware image is one logical blob, the same one the bootloader receives
-/// on upload. On models whose firmware area is split into two parts
-/// (`FIRMWARE_P1_*` and `FIRMWARE_P2_*` in memory.ld, STM32F4), the bytes past
-/// `FIRMWARE_P1_MAXSIZE` belong at `FIRMWARE_P2_START`, not right after part 1
-/// -- between the two parts lie the secret, assets and storage sectors.
-pub fn firmware_segments<'a>(memory_ld: &str, image: &'a [u8]) -> Result<Vec<(u32, &'a [u8])>> {
+/// Most binaries are one contiguous segment at the project's flash start
+/// symbol. The exception is the firmware area on models where it is split into
+/// two parts (`FIRMWARE_P1_*` and `FIRMWARE_P2_*` in memory.ld, STM32F4): the
+/// image is one logical blob, the same one the bootloader receives on upload,
+/// but the bytes past `FIRMWARE_P1_MAXSIZE` belong at `FIRMWARE_P2_START`, not
+/// right after part 1 -- between the two parts lie the secret, assets and
+/// storage sectors.
+pub fn project_segments<'a>(
+    memory_ld: &str,
+    project: Project,
+    image: &'a [u8],
+) -> Result<Vec<(u32, &'a [u8])>> {
+    let start_symbol = project.flash_start_symbol()?;
+    let start = read_symbol_from_content(memory_ld, start_symbol)?;
+
+    if start_symbol != "FIRMWARE_START" {
+        return Ok(vec![(start, image)]);
+    }
     let Ok(p1_size) = read_symbol_from_content(memory_ld, "FIRMWARE_P1_MAXSIZE") else {
-        let start = read_symbol_from_content(memory_ld, "FIRMWARE_START")?;
         return Ok(vec![(start, image)]);
     };
 
@@ -248,32 +259,34 @@ pub fn print_version(args: PrintVersionArgs) -> Result<()> {
 mod tests {
     use std::fs;
 
-    use super::{firmware_segments, parse_address, parse_version_file, read_symbol_from_content};
+    use super::{parse_address, parse_version_file, project_segments, read_symbol_from_content};
+    use crate::args::Project;
 
     const SPLIT_MEMORY_LD: &str = "FIRMWARE_START = 0x8040000;\n\
         FIRMWARE_P1_START = 0x8040000;\nFIRMWARE_P1_MAXSIZE = 0x10;\n\
         FIRMWARE_P2_START = 0x8120000;\nFIRMWARE_P2_MAXSIZE = 0x8;\n";
 
     #[test]
-    fn firmware_segments_without_split_is_one_segment() {
+    fn segments_without_split_is_one_segment() {
         let image = [1u8; 32];
-        let segments = firmware_segments("FIRMWARE_START = 0x8010000;\n", &image).unwrap();
+        let segments =
+            project_segments("FIRMWARE_START = 0x8010000;\n", Project::Firmware, &image).unwrap();
 
         assert_eq!(segments, vec![(0x0801_0000, &image[..])]);
     }
 
     #[test]
-    fn firmware_segments_fitting_part1_is_one_segment() {
+    fn segments_fitting_part1_is_one_segment() {
         let image = [1u8; 0x10];
-        let segments = firmware_segments(SPLIT_MEMORY_LD, &image).unwrap();
+        let segments = project_segments(SPLIT_MEMORY_LD, Project::Firmware, &image).unwrap();
 
         assert_eq!(segments, vec![(0x0804_0000, &image[..])]);
     }
 
     #[test]
-    fn firmware_segments_places_tail_at_part2() {
+    fn segments_places_tail_at_part2() {
         let image: Vec<u8> = (0..0x14).collect();
-        let segments = firmware_segments(SPLIT_MEMORY_LD, &image).unwrap();
+        let segments = project_segments(SPLIT_MEMORY_LD, Project::Firmware, &image).unwrap();
 
         assert_eq!(
             segments,
@@ -282,11 +295,34 @@ mod tests {
     }
 
     #[test]
-    fn firmware_segments_rejects_image_larger_than_both_parts() {
+    fn segments_rejects_image_larger_than_both_parts() {
         let image = [1u8; 0x19];
-        let error = firmware_segments(SPLIT_MEMORY_LD, &image).unwrap_err();
+        let error = project_segments(SPLIT_MEMORY_LD, Project::Firmware, &image).unwrap_err();
 
         assert!(error.to_string().contains("does not fit"));
+    }
+
+    /// Prodtest shares the firmware area, so the same split applies to it.
+    #[test]
+    fn segments_split_prodtest_like_firmware() {
+        let image: Vec<u8> = (0..0x14).collect();
+        let segments = project_segments(SPLIT_MEMORY_LD, Project::Prodtest, &image).unwrap();
+
+        assert_eq!(
+            segments,
+            vec![(0x0804_0000, &image[..0x10]), (0x0812_0000, &image[0x10..])]
+        );
+    }
+
+    /// Only the firmware area is split; other projects stay one segment at
+    /// their own start symbol, however large.
+    #[test]
+    fn segments_of_other_projects_are_never_split() {
+        let memory_ld = format!("{SPLIT_MEMORY_LD}BOOTLOADER_START = 0x8020000;\n");
+        let image = [1u8; 0x20];
+        let segments = project_segments(&memory_ld, Project::Bootloader, &image).unwrap();
+
+        assert_eq!(segments, vec![(0x0802_0000, &image[..])]);
     }
 
     #[test]
