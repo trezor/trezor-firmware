@@ -34,11 +34,9 @@ jobs:
 
       - name: Setup environment
         uses: ./.github/actions/environment
-        with:
-          nix-dev-shell: default
 
       - name: Split en.json into per-layout files
-        run: $UV_RUN python core/translations/crowdin.py split
+        run: nix-shell --run "uv run python core/translations/crowdin.py split"
 
       - name: Download translations from Crowdin
         uses: crowdin/github-action@8818ff65bfc4322384f983ea37e3926948c11745  # crowdin/github-action@v2.15.0
@@ -54,10 +52,10 @@ jobs:
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
 
       - name: Merge translations
-        run: $UV_RUN python core/translations/crowdin.py merge
+        run: nix-shell --run "uv run python core/translations/crowdin.py merge"
 
       - name: Regenerate translation signatures
-        run: $UV_RUN make -C core translations
+        run: nix-shell --run "uv run make -C core translations"
 
       - name: Generate GitHub App token
         id: trezor-bot-token
