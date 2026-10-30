@@ -42,16 +42,7 @@ impl Trezor {
         req.set_message(message);
         let signature = handle_interaction(self.call(
             req,
-            Box::new(|_, m: protos::EthereumMessageSignature| {
-                let signature = m.signature();
-                if signature.len() != 65 {
-                    return Err(Error::MalformedSignature);
-                }
-                let r = signature[0..32].try_into().unwrap();
-                let s = signature[32..64].try_into().unwrap();
-                let v = signature[64] as u64;
-                Ok(Signature { r, s, v })
-            }),
+            Box::new(|_, m: protos::EthereumMessageSignature| signature_from_bytes(m.signature())),
         )?)?;
 
         Ok(signature)
@@ -156,6 +147,40 @@ impl Trezor {
 
         convert_signature(&resp, chain_id)
     }
+
+    /// Signs an EIP-712 domain separator and message hash.
+    pub fn ethereum_sign_typed_hash(
+        &mut self,
+        path: Vec<u32>,
+        domain_separator_hash: Vec<u8>,
+        message_hash: Option<Vec<u8>>,
+    ) -> Result<Signature> {
+        let mut req = protos::EthereumSignTypedHash::new();
+        req.address_n = path;
+        req.set_domain_separator_hash(domain_separator_hash);
+        if let Some(message_hash) = message_hash {
+            req.set_message_hash(message_hash);
+        }
+
+        handle_interaction(self.call(
+            req,
+            Box::new(|_, m: protos::EthereumTypedDataSignature| {
+                signature_from_bytes(m.signature())
+            }),
+        )?)
+    }
+}
+
+fn signature_from_bytes(signature: &[u8]) -> Result<Signature> {
+    if signature.len() != 65 {
+        return Err(Error::MalformedSignature);
+    }
+
+    Ok(Signature {
+        r: signature[..32].try_into().map_err(|_| Error::MalformedSignature)?,
+        s: signature[32..64].try_into().map_err(|_| Error::MalformedSignature)?,
+        v: signature[64] as u64,
+    })
 }
 
 fn convert_signature(resp: &EthereumTxRequest, chain_id: Option<u64>) -> Result<Signature> {
