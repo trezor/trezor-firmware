@@ -36,7 +36,8 @@ pub fn flash_project(args: FlashArgs) -> Result<()> {
         fs::read(&binary).with_context(|| format!("Failed to read `{}`", binary.display()))?;
     let segments = helpers::project_segments(&content, args.project, &image)?;
 
-    flash_segments(args.model, &binary, &image, &segments)
+    println!("Flashing `{}`", binary.display());
+    flash_segments(args.model, &segments)
 }
 
 /// Flash the combined image: the whole boot chain in one write.
@@ -74,8 +75,6 @@ pub fn flash_combined(args: FlashArgs) -> Result<()> {
         }
     };
 
-    println!("Combined `{}` image", args.project.binary_name());
-
     let memory_ld = args.model.model_memory_ld()?;
     let content = fs::read_to_string(&memory_ld)
         .with_context(|| format!("Failed to read `{}`", memory_ld.display()))?;
@@ -83,7 +82,12 @@ pub fn flash_combined(args: FlashArgs) -> Result<()> {
         fs::read(&binary).with_context(|| format!("Failed to read `{}`", binary.display()))?;
     let segments = combine::combined_segments(&content, &image)?;
 
-    flash_segments(args.model, &binary, &image, &segments)
+    println!(
+        "Flashing the combined `{}` image `{}`",
+        args.project.binary_name(),
+        binary.display()
+    );
+    flash_segments(args.model, &segments)
 }
 
 /// Erase specified flash section using OpenOCD. The section boundaries are
@@ -104,31 +108,15 @@ pub fn reset(args: ResetArgs) -> Result<()> {
     run_openocd(args.model, "init; reset; exit")
 }
 
-/// Flashes `image` (read from `binary`) as `(address, bytes)` segments, each
-/// written to its own address in a single OpenOCD session.
+/// Flashes `(address, bytes)` segments, each written to its own address in a
+/// single OpenOCD session.
 ///
-/// A segment covering the whole image is written straight from `binary`; the
-/// others go through temporary files, since `flash write_image` takes a whole
-/// file.
-fn flash_segments(
-    model: Model,
-    binary: &Path,
-    image: &[u8],
-    segments: &[(u32, &[u8])],
-) -> Result<()> {
+/// Every segment goes through a temporary file, since `flash write_image` takes
+/// a whole file.
+fn flash_segments(model: Model, segments: &[(u32, &[u8])]) -> Result<()> {
     let mut temp_files = Vec::new();
     let mut files = Vec::new();
     for (i, (address, data)) in segments.iter().enumerate() {
-        if data.len() == image.len() {
-            println!(
-                "Flashing `{}` to address 0x{:08X}",
-                binary.display(),
-                address
-            );
-            files.push((binary.to_path_buf(), *address));
-            continue;
-        }
-
         let mut file = tempfile::Builder::new()
             .prefix("xtask-flash-")
             .suffix(".bin")
@@ -138,8 +126,7 @@ fn flash_segments(
             .and_then(|()| file.flush())
             .with_context(|| format!("Failed to write `{}`", file.path().display()))?;
         println!(
-            "Flashing `{}` segment {}/{} ({} bytes) to address 0x{:08X}",
-            binary.display(),
+            "Writing segment {}/{} ({} bytes) to address 0x{:08X}",
             i + 1,
             segments.len(),
             data.len(),
