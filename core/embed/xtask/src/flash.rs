@@ -42,9 +42,9 @@ pub fn flash_project(args: FlashArgs) -> Result<()> {
 /// Flash the combined image: the whole boot chain in one write.
 ///
 /// Written byte for byte as `xtask combine` produced it, placed by
-/// [`combine::segments`]. The project name only says WHICH combined image; the
-/// image always starts at the bottom of the chain, so nothing about its
-/// contents is decided here.
+/// [`combine::combined_segments`]. The project name only says WHICH combined
+/// image; the image always starts at the bottom of the chain, so nothing about
+/// its contents is decided here.
 pub fn flash_combined(args: FlashArgs) -> Result<()> {
     ensure!(
         combine::supported(args.project),
@@ -81,7 +81,7 @@ pub fn flash_combined(args: FlashArgs) -> Result<()> {
         .with_context(|| format!("Failed to read `{}`", memory_ld.display()))?;
     let image =
         fs::read(&binary).with_context(|| format!("Failed to read `{}`", binary.display()))?;
-    let segments = combine::segments(&content, &image)?;
+    let segments = combine::combined_segments(&content, &image)?;
 
     flash_segments(args.model, &binary, &image, &segments)
 }
@@ -138,9 +138,10 @@ fn flash_segments(
             .and_then(|()| file.flush())
             .with_context(|| format!("Failed to write `{}`", file.path().display()))?;
         println!(
-            "Flashing `{}` part {} ({} bytes) to address 0x{:08X}",
+            "Flashing `{}` segment {}/{} ({} bytes) to address 0x{:08X}",
             binary.display(),
             i + 1,
+            segments.len(),
             data.len(),
             address
         );

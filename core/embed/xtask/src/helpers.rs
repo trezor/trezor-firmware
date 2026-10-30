@@ -186,13 +186,13 @@ pub fn read_symbol_from_content(content: &str, symbol: &str) -> Result<u32> {
     parse_address(value).with_context(|| format!("Invalid address `{value}` for `{symbol}`"))
 }
 
-/// Splits a project's binary into the flash segments it occupies, as
+/// Splits a project's image into the flash segments it occupies, as
 /// `(address, bytes)` pairs in ascending address order.
 ///
-/// Most binaries are one contiguous segment at the project's flash start
-/// symbol. The exception is the firmware area on models where it is split into
-/// two parts (`FIRMWARE_P1_*` and `FIRMWARE_P2_*` in memory.ld, STM32F4): the
-/// image is one logical blob, the same one the bootloader receives on upload,
+/// Most images are one contiguous segment at the project's flash start symbol.
+/// The exception is the firmware area on models where it is split into two
+/// parts (`FIRMWARE_P1_*` and `FIRMWARE_P2_*` in memory.ld, STM32F4): the
+/// image is still one file, the same one the bootloader receives on upload,
 /// but the bytes past `FIRMWARE_P1_MAXSIZE` belong at `FIRMWARE_P2_START`, not
 /// right after part 1 -- between the two parts lie the secret, assets and
 /// storage sectors.
