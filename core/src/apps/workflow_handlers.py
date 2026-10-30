@@ -97,6 +97,10 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.bitcoin.sign_message"
     if msg_type == MessageType.VerifyMessage:
         return "apps.bitcoin.verify_message"
+    if msg_type == MessageType.MiniscriptRegisterPolicy:
+        return "apps.bitcoin.miniscript.register_policy"
+    if msg_type == MessageType.MiniscriptGetAddress:
+        return "apps.bitcoin.miniscript.get_address"
 
     # extapp
     if utils.USE_APP_LOADING:

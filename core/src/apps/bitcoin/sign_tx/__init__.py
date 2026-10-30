@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor import utils
 
+from ...ward import WardApp, with_ward
 from ..keychain import with_keychain
 
 if TYPE_CHECKING:
@@ -11,6 +12,7 @@ if TYPE_CHECKING:
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
+    from apps.ward import WardStore
 
     from ..authorization import CoinJoinAuthorization
     from . import approvers
@@ -30,11 +32,14 @@ if TYPE_CHECKING:
 
 
 @with_keychain
+@with_ward(WardApp.BITCOIN)
 async def sign_tx(
     msg: SignTx,
     keychain: Keychain,
     coin: CoinInfo,
     authorization: CoinJoinAuthorization | None = None,
+    *,
+    ward: WardStore,
 ) -> TxRequest:
     from trezor import TR
     from trezor.ui.layouts import show_continue_in_app
@@ -68,6 +73,13 @@ async def sign_tx(
             signer_class = bitcoinlike.Bitcoinlike
 
     signer = signer_class(msg, keychain, coin, approver)
+
+    if utils.USE_MINISCRIPT and isinstance(signer, bitcoin.Bitcoin):
+        from ..miniscript import load_policy
+
+        for policy in msg.policies:
+            signer.registered_policies.append(await load_policy(ward, coin, policy))
+
     await signer.signer()
     show_continue_in_app(TR.send__transaction_signed)
     return signer.tx_req

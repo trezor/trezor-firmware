@@ -173,6 +173,9 @@ def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
         if tx.branch_id is not None:
             raise DataError("Branch ID not enabled on this coin.")
 
+    if tx.policies and not utils.USE_MINISCRIPT:
+        raise DataError("Miniscript is disabled.")
+
     return tx
 
 
@@ -203,6 +206,13 @@ def _sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
 
     if len(txi.prev_hash) != TX_HASH_SIZE:
         raise DataError("Provided prev_hash is invalid.")
+
+    if txi.miniscript:
+        if not utils.USE_MINISCRIPT:
+            raise DataError("Miniscript is disabled.")
+        if script_type != InputScriptType.SPENDWITNESS:
+            raise DataError("Unsupported script type for Miniscript.")
+        # TODO: check for unexpected/unsupported fields (like multisig/altcoin/external/replacement)
 
     if txi.multisig and script_type not in common.MULTISIG_INPUT_SCRIPT_TYPES:
         raise DataError("Multisig field provided but not expected.")
@@ -262,6 +272,16 @@ def _sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
     script_type = txo.script_type  # local_cache_attribute
     address_n = txo.address_n  # local_cache_attribute
 
+    if txo.miniscript:
+        if not utils.USE_MINISCRIPT:
+            raise DataError("Miniscript is disabled.")
+        if script_type != OutputScriptType.PAYTOWITNESS:
+            raise DataError("Unsupported script type for Miniscript.")
+        if txo.address or address_n:
+            # The address is derived from the registered policy.
+            raise DataError("Miniscript output with address or address_n.")
+        # TODO: check for unexpected/unsupported fields (like multisig/altcoin/SLIP-24)
+
     if txo.multisig and script_type not in common.MULTISIG_OUTPUT_SCRIPT_TYPES:
         raise DataError("Multisig field provided but not expected.")
 
@@ -287,14 +307,14 @@ def _sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
             raise DataError("OP_RETURN output without op_return_data")
         if txo.amount != 0:
             raise DataError("OP_RETURN output with non-zero amount")
-        if txo.address or address_n or txo.multisig:
-            raise DataError("OP_RETURN output with address or multisig")
+        if txo.address or address_n or txo.multisig or txo.miniscript:
+            raise DataError("OP_RETURN output with address/multisig/miniscript")
     else:
         if txo.op_return_data:
             raise DataError("OP RETURN data provided but not OP RETURN script type.")
         if address_n and txo.address:
             raise DataError("Both address and address_n provided.")
-        if not address_n and not txo.address:
+        if not address_n and not txo.address and not txo.miniscript:
             raise DataError("Missing address")
 
     if txo.orig_hash and txo.orig_index is None:

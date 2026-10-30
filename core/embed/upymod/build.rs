@@ -1195,6 +1195,7 @@ impl<'a> MpyBuilder<'a> {
 
         files.add(src, "apps/bitcoin/*.py")?;
         files.add(src, "apps/bitcoin/*/*.py")?;
+        files.remove(src, "apps/bitcoin/miniscript/*.py");
 
         files.remove(src, "apps/bitcoin/sign_tx/decred.py");
         files.remove(src, "apps/bitcoin/sign_tx/bitcoinlike.py");
@@ -1212,6 +1213,10 @@ impl<'a> MpyBuilder<'a> {
 
         if cfg!(feature = "thp") {
             files.add(src, "apps/thp/*.py")?;
+        }
+
+        if cfg!(feature = "miniscript") {
+            files.add(src, "apps/bitcoin/miniscript/*.py")?;
         }
 
         if cfg!(feature = "ward") {

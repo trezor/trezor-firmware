@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
 
     from ..common import SigHashType
+    from ..miniscript import RegisteredPolicy
     from ..writers import Writer
     from . import approvers
     from .sig_hasher import SigHasher
@@ -118,6 +119,7 @@ class DecredSigHasher:
         tx: SignTx | PrevTx,
         coin: CoinInfo,
         hash_type: int,
+        registered_policies: Sequence[RegisteredPolicy] = (),
     ) -> bytes:
         raise NotImplementedError
 

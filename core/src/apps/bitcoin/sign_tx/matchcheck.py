@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
 from trezor.enums import InputScriptType
 from trezor.messages import TxOutput
 from trezor.utils import ensure
@@ -128,3 +129,20 @@ class ScriptTypeChecker(MatchChecker):
             script_type = InputScriptType.SPENDADDRESS
 
         return script_type
+
+
+if utils.USE_MINISCRIPT:
+
+    class MiniscriptPolicyChecker(MatchChecker):
+        def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:
+            if (redeem := txio.miniscript) is None:
+                # The fingerprint of a non-Miniscript input/output is defined as an empty byte
+                # string (similar to MultisigFingerprintChecker). Therefore, a Miniscript output
+                # matches if and only if all the added inputs use the same registered policy,
+                # and a non-Miniscript output does not match if any of the added inputs uses
+                # a Miniscript policy.
+                return bytes()
+
+            return (
+                redeem.policy_index
+            )  # references the policy used by this input/output
