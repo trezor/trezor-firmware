@@ -6,7 +6,8 @@ use stabby::str::Str;
 use stabby::string::String;
 use trezor_app_sdk::structs::{TrezorCryptoEnum, TrezorCryptoResult};
 use trezor_app_sdk::traits::crypto::{
-    BoxedHasher, CanonicalSig, CryptoError, CryptoV1, EcdsaCurve, HashingAlgorithm, HmacAlgorithm,
+    BoxedHasher, CanonicalSig, CryptoError, CryptoV1, Curve, EcdsaCurve, HashingAlgorithm,
+    HmacAlgorithm,
 };
 use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
 use trezor_app_sdk::traits::wire::WireError;
@@ -150,11 +151,13 @@ impl CryptoV1 for TrezorCryptoV1Impl {
 
     extern "C" fn get_xpub<'a>(
         &self,
+        curve: Curve,
         address_n: Slice<'a, u32>,
         xpub_magic: u32,
     ) -> FastResult<[u8; 111], WireError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::GetXpub {
+                curve: curve as u8,
                 address_n: address_n.as_slice().into(),
                 xpub_magic,
             })?;
@@ -168,11 +171,13 @@ impl CryptoV1 for TrezorCryptoV1Impl {
 
     extern "C" fn get_public_key<'a>(
         &self,
+        curve: Curve,
         address_n: Slice<'a, u32>,
         compressed: bool,
     ) -> FastResult<BoxedSlice<u8>, WireError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::GetPublicKey {
+                curve: curve as u8,
                 address_n: address_n.as_slice().into(),
                 compressed,
             })?;
@@ -187,6 +192,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
 
     extern "C" fn ecdsa_sign_digest<'a>(
         &self,
+        curve: EcdsaCurve,
         address_n: Slice<'a, u32>,
         digest: &'a [u8; 32],
         compressed: bool,
@@ -194,6 +200,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
     ) -> FastResult<[u8; 65], WireError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::EcdsaSignDigest {
+                curve: curve as u8,
                 address_n: address_n.as_slice().into(),
                 digest: *digest,
                 compressed,
