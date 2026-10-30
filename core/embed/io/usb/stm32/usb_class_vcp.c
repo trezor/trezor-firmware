@@ -377,12 +377,6 @@ static uint8_t usb_vcp_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 
 static uint8_t usb_vcp_class_setup(USBD_HandleTypeDef *dev,
                                    USBD_SetupReqTypedef *req) {
-  // EP0 data stage buffer, written by the USB core after this returns.
-  // Sized to a full EP0 packet: the OTG core always accepts one, however
-  // short the requested length. Shared by all VCP interfaces, since EP0
-  // serves one control transfer at a time.
-  static uint8_t cmd_buffer[USB_MAX_EP0_SIZE];
-
   static const usb_cdc_line_coding_t line_coding = {
       .dwDTERate = 115200,
       .bCharFormat = USB_CDC_1_STOP_BITS,
@@ -399,12 +393,12 @@ static uint8_t usb_vcp_class_setup(USBD_HandleTypeDef *dev,
       USBD_CtlSendData(dev, UNCONST(&line_coding),
                        MIN_8bits(req->wLength, sizeof(line_coding)));
     } else {
-      USBD_CtlSendData(dev, cmd_buffer,
+      USBD_CtlSendData(dev, dev->ep0_buf,
                        MIN_8bits(req->wLength, USB_CDC_MAX_CMD_PACKET_LEN));
     }
   } else {  // USB_REQ_DIR_H2D
     if (req->wLength > 0) {
-      USBD_CtlPrepareRx(dev, cmd_buffer,
+      USBD_CtlPrepareRx(dev, dev->ep0_buf,
                         MIN_8bits(req->wLength, USB_CDC_MAX_CMD_PACKET_LEN));
     }
   }
