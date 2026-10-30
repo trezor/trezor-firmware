@@ -22,7 +22,13 @@ from trezorlib.debuglink import DebugSession as Session
 
 from . import signing, testapp_ext
 from .generated import messages as m
-from .testapp_ext import INVALID_ENCODING, INVALID_SIGNATURE, SdkError, raises
+from .testapp_ext import (
+    INVALID_ENCODING,
+    INVALID_PUBLIC_KEY,
+    INVALID_SIGNATURE,
+    SdkError,
+    raises,
+)
 
 ECDSA_CURVES = [
     pytest.param(m.EcdsaCurve.Secp256k1, id="secp256k1"),
@@ -226,7 +232,7 @@ def test_ed25519_verify_public_key_length(
 ):
     key = signing.ed25519_key(b"\x01" * 32)
     pubkey = (signing.ed25519_public_key(key) + b"\x00")[:length]
-    with raises(SdkError.DataError, INVALID_ENCODING):
+    with raises(SdkError.DataError, INVALID_PUBLIC_KEY):
         testapp_ext.ed25519_verify(session, instance_id, pubkey, key.sign(b"m"), b"m")
 
 
