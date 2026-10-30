@@ -178,7 +178,7 @@ def cli() -> None:
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
 def get_address(
-    session: "Session",
+    session: Session,
     coin: str,
     address: str,
     script_type: messages.InputScriptType | None,
@@ -257,7 +257,7 @@ def get_address(
 @click.option("-i", "--ignore-xpub-magic", is_flag=True)
 @with_session
 def get_public_node(
-    session: "Session",
+    session: Session,
     coin: str,
     address: str,
     curve: str | None,
@@ -297,7 +297,7 @@ def _append_descriptor_checksum(desc: str) -> str:
 
 
 def _get_descriptor(
-    session: "Session",
+    session: Session,
     coin: str | None,
     account: int,
     purpose: int | None,
@@ -370,7 +370,7 @@ def _get_descriptor(
 @click.option("-d", "--show-display", is_flag=True)
 @with_session
 def get_descriptor(
-    session: "Session",
+    session: Session,
     coin: str | None,
     account: int,
     account_type: int | None,
@@ -396,7 +396,7 @@ def get_descriptor(
 @click.option("-C", "--chunkify", is_flag=True)
 @click.argument("json_file", type=click.File())
 @with_session
-def sign_tx(session: "Session", json_file: TextIO, chunkify: bool) -> None:
+def sign_tx(session: Session, json_file: TextIO, chunkify: bool) -> None:
     """Sign transaction.
 
     Transaction data must be provided in a JSON file. See `transaction-format.md` for
@@ -454,7 +454,7 @@ def sign_tx(session: "Session", json_file: TextIO, chunkify: bool) -> None:
 @click.argument("message")
 @with_session
 def sign_message(
-    session: "Session",
+    session: Session,
     coin: str,
     address: str,
     message: str,
@@ -493,7 +493,7 @@ def sign_message(
 @click.argument("message")
 @with_session
 def verify_message(
-    session: "Session",
+    session: Session,
     coin: str,
     address: str,
     signature: str,

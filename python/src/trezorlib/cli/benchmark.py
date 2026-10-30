@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from ..client import Session
 
 
-def list_names_patern(session: "Session", pattern: str | None = None) -> list[str]:
+def list_names_patern(session: Session, pattern: str | None = None) -> list[str]:
     names = list(benchmark.list_names(session).names)
     if pattern is None:
         return names
@@ -43,7 +43,7 @@ def cli() -> None:
 @cli.command()
 @click.argument("pattern", required=False)
 @with_session(passphrase=False)
-def list_names(session: "Session", pattern: str | None = None) -> None:
+def list_names(session: Session, pattern: str | None = None) -> None:
     """List names of all supported benchmarks"""
     names = list_names_patern(session, pattern)
     if len(names) == 0:
@@ -56,7 +56,7 @@ def list_names(session: "Session", pattern: str | None = None) -> None:
 @cli.command()
 @click.argument("pattern", required=False)
 @with_session(passphrase=False)
-def run(session: "Session", pattern: str | None) -> None:
+def run(session: Session, pattern: str | None) -> None:
     """Run benchmark"""
     names = list_names_patern(session, pattern)
     if len(names) == 0:

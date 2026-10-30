@@ -80,7 +80,7 @@ class UdpTransport(Transport):
         super().__init__()
 
     @classmethod
-    def _try_path(cls, path: str) -> "UdpTransport":
+    def _try_path(cls, path: str) -> UdpTransport:
         d = cls(path)
         try:
             d.open()
@@ -98,8 +98,8 @@ class UdpTransport(Transport):
 
     @classmethod
     def enumerate(
-        cls, models: Iterable["TrezorModel"] | None = None
-    ) -> Iterable["UdpTransport"]:
+        cls, models: Iterable[TrezorModel] | None = None
+    ) -> Iterable[UdpTransport]:
         default_path = f"{cls.DEFAULT_HOST}:{cls.DEFAULT_PORT}"
         try:
             return [cls._try_path(default_path)]
@@ -107,7 +107,7 @@ class UdpTransport(Transport):
             return []
 
     @classmethod
-    def find_by_path(cls, path: str, prefix_search: bool = False) -> "UdpTransport":
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> UdpTransport:
         try:
             address = path.replace(f"{cls.PATH_PREFIX}:", "")
             return cls._try_path(address)
@@ -155,7 +155,7 @@ class UdpTransport(Transport):
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
         return chunk
 
-    def find_debug(self) -> "UdpTransport":
+    def find_debug(self) -> UdpTransport:
         host, port = self.device
         return UdpTransport(f"{host}:{port + 1}")
 

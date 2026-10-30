@@ -226,7 +226,7 @@ class Menu(Enum):
             content.extend([TR.regulatory__title, TR.words__about, TR.wipe__title])
             return content
 
-        lookup: dict["Menu", Callable[[], list[str] | None]] = {
+        lookup: dict[Menu, Callable[[], list[str] | None]] = {
             Menu.ROOT: root_content,
             Menu.PAIR_AND_CONNECT: connection_content,
             Menu.SETTINGS: settings_content,

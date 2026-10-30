@@ -27,13 +27,13 @@ if TYPE_CHECKING:
 
 
 @workflow(capability=messages.Capability.Crypto)
-def get_entropy(session: "Session", size: int) -> bytes:
+def get_entropy(session: Session, size: int) -> bytes:
     return session.call(messages.GetEntropy(size=size), expect=messages.Entropy).entropy
 
 
 @workflow(capability=messages.Capability.Crypto)
 def sign_identity(
-    session: "Session",
+    session: Session,
     identity: messages.IdentityType,
     challenge_hidden: bytes,
     challenge_visual: str,
@@ -52,7 +52,7 @@ def sign_identity(
 
 @workflow(capability=messages.Capability.Crypto)
 def get_ecdh_session_key(
-    session: "Session",
+    session: Session,
     identity: messages.IdentityType,
     peer_public_key: bytes,
     ecdsa_curve_name: str | None = None,
@@ -69,8 +69,8 @@ def get_ecdh_session_key(
 
 @workflow(capability=messages.Capability.Crypto)
 def encrypt_keyvalue(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     key: str,
     value: bytes,
     ask_on_encrypt: bool = True,
@@ -93,8 +93,8 @@ def encrypt_keyvalue(
 
 @workflow(capability=messages.Capability.Crypto)
 def decrypt_keyvalue(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     key: str,
     value: bytes,
     ask_on_encrypt: bool = True,
@@ -116,13 +116,13 @@ def decrypt_keyvalue(
 
 
 @workflow(capability=messages.Capability.Crypto)
-def get_nonce(session: "Session") -> bytes:
+def get_nonce(session: Session) -> bytes:
     return session.call(messages.GetNonce(), expect=messages.Nonce).nonce
 
 
 @workflow()
 def payment_notification(
-    session: "Session", payment_req: messages.PaymentRequest
+    session: Session, payment_req: messages.PaymentRequest
 ) -> None:
     session.call(
         messages.PaymentNotification(payment_req=payment_req), expect=messages.Success

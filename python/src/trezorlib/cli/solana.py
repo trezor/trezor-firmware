@@ -42,7 +42,7 @@ def cli() -> None:
 @click.option("-d", "--show-display", is_flag=True)
 @with_session
 def get_public_key(
-    session: "Session",
+    session: Session,
     address: str,
     show_display: bool,
 ) -> bytes:
@@ -57,7 +57,7 @@ def get_public_key(
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
 def get_address(
-    session: "Session",
+    session: Session,
     address: str,
     show_display: bool,
     chunkify: bool,
@@ -87,7 +87,7 @@ def _get_token(token: str | None) -> bytes | None:
 @click.option("-t", "--token", type=str)
 @with_session
 def sign_tx(
-    session: "Session",
+    session: Session,
     address: str,
     serialized_tx: str,
     additional_info: TextIO | None,
@@ -151,7 +151,7 @@ def sign_tx(
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
 def sign_message(
-    session: "Session",
+    session: Session,
     address: str,
     message: str,
     signer: tuple[str, ...],
@@ -193,7 +193,7 @@ def sign_message(
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
 def verify_message(
-    session: "Session",
+    session: Session,
     message: str,
     signer: tuple[str, ...],
     signature: tuple[str, ...],

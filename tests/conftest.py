@@ -152,7 +152,7 @@ def core_emulator(
 @pytest.fixture(scope="session")
 def emulator(
     tropic_model_port: int | None, request: pytest.FixtureRequest
-) -> t.Generator["Emulator", None, None]:
+) -> t.Generator[Emulator, None, None]:
     """Fixture for getting emulator connection in case tests should operate it on their own.
 
     Is responsible for starting it at the start of the session and stopping
@@ -541,7 +541,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -
 
 
 def pytest_terminal_summary(
-    terminalreporter: "TerminalReporter", exitstatus: pytest.ExitCode, config: "Config"
+    terminalreporter: TerminalReporter, exitstatus: pytest.ExitCode, config: Config
 ) -> None:
     println = terminalreporter.write_line
     println("")
@@ -556,7 +556,7 @@ def pytest_terminal_summary(
         )
 
 
-def pytest_addoption(parser: "Parser") -> None:
+def pytest_addoption(parser: Parser) -> None:
     parser.addoption(
         "--ui",
         action="store",
@@ -618,7 +618,7 @@ def pytest_addoption(parser: "Parser") -> None:
     )
 
 
-def pytest_configure(config: "Config") -> None:
+def pytest_configure(config: Config) -> None:
     """Called at testsuite setup time.
 
     Registers known markers, enables verbose output if requested.

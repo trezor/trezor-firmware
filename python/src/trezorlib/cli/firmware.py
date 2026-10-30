@@ -54,7 +54,7 @@ def _print_version(version: tuple[int, int, int, int]) -> None:
     click.echo(f"Firmware version {major}.{minor}.{patch} build {build}")
 
 
-def _is_bootloader_onev2(client: "TrezorClient") -> bool:
+def _is_bootloader_onev2(client: TrezorClient) -> bool:
     """Check if bootloader is capable of installing the Trezor One v2 firmware directly.
 
     This is the case from bootloader version 1.8.0, and also holds for firmware version
@@ -89,7 +89,7 @@ def _print_firmware_model(hw_model: bytes | fw_models.Model) -> None:
     click.echo(f"Suspicious hardware model code: {hw_model.hex()} ({hw_model!r})")
 
 
-def print_firmware_version(fw: "firmware.FirmwareType") -> None:
+def print_firmware_version(fw: firmware.FirmwareType) -> None:
     """Print out the firmware version and details."""
     if isinstance(fw, firmware.LegacyFirmware):
         if fw.embedded_v2:
@@ -109,7 +109,7 @@ def print_firmware_version(fw: "firmware.FirmwareType") -> None:
 
 
 def validate_signatures(
-    fw: "firmware.FirmwareType", prompt_unsigned: bool = True
+    fw: firmware.FirmwareType, prompt_unsigned: bool = True
 ) -> None:
     """Check the signatures on the firmware.
 
@@ -151,7 +151,7 @@ def validate_signatures(
 
 
 def validate_fingerprint(
-    fw: "firmware.FirmwareType",
+    fw: firmware.FirmwareType,
     expected_fingerprint: str | None = None,
 ) -> None:
     """Determine and validate the firmware fingerprint.
@@ -172,7 +172,7 @@ def validate_fingerprint(
 
 
 def check_device_match(
-    fw: "firmware.FirmwareType", model: TrezorModel, bootloader_onev2: bool
+    fw: firmware.FirmwareType, model: TrezorModel, bootloader_onev2: bool
 ) -> None:
     """Validate if the device and firmware are compatible.
 
@@ -268,7 +268,7 @@ def _should_use_bitcoin_only(features: messages.Features) -> bool:
 
 
 def find_best_firmware_version(
-    client: "TrezorClient",
+    client: TrezorClient,
     version: str | None,
     bitcoin_only: bool | None,
 ) -> tuple[str, str]:
@@ -426,7 +426,7 @@ def extract_embedded_fw(
 
 
 def upload_firmware_into_device(
-    session: "Session",
+    session: Session,
     firmware_data: bytes,
 ) -> None:
     """Perform the final act of loading the firmware into Trezor."""
@@ -452,9 +452,7 @@ _REBOOT_DEPART_TIMEOUT = 5.0
 _PROBE_TIMEOUT = 1.0
 
 
-def _answers(
-    transport: "Transport", mapping: "ProtobufMapping", reconnect: bool
-) -> bool:
+def _answers(transport: Transport, mapping: ProtobufMapping, reconnect: bool) -> bool:
     """Whether the device answers a message right now. A Busy failure does not
     count: the nRF sends it on its own while the main MCU is not accepting
     messages, e.g. during a reboot. Without `reconnect`, a closed link counts
@@ -478,7 +476,7 @@ def _answers(
 
 
 def _wait_for_device(
-    obj: "TrezorConnection", mapping: "ProtobufMapping", message: str
+    obj: TrezorConnection, mapping: ProtobufMapping, message: str
 ) -> None:
     """Close the connection and wait for the device to leave and come back: the
     device still answers for a moment before it reboots, so a reconnect could
@@ -516,7 +514,7 @@ def _wait_for_device(
             pass
 
 
-def _is_strict_update(client: "TrezorClient", firmware_data: bytes) -> bool:
+def _is_strict_update(client: TrezorClient, firmware_data: bytes) -> bool:
     """Check if the firmware is from the same vendor and the
     firmware is newer than the currently installed firmware.
     """
@@ -566,7 +564,7 @@ def cli() -> None:
 @click.pass_obj
 # fmt: on
 def verify(
-    obj: "TrezorConnection",
+    obj: TrezorConnection,
     filename: BinaryIO,
     check_device: bool,
     fingerprint: str | None,
@@ -610,7 +608,7 @@ def verify(
 @click.pass_obj
 # fmt: on
 def download(
-    obj: "TrezorConnection",
+    obj: TrezorConnection,
     output: BinaryIO | None,
     model: TrezorModel | None,
     version: str | None,
@@ -671,7 +669,7 @@ def download(
 # fmt: on
 @click.pass_obj
 def update(
-    obj: "TrezorConnection",
+    obj: TrezorConnection,
     filename: BinaryIO | None,
     url: str | None,
     version: str | None,
@@ -754,7 +752,7 @@ def update(
 @cli.command()
 @click.argument("hex_challenge", required=False)
 @with_session(seedless=True)
-def get_hash(session: "Session", hex_challenge: str | None) -> str:
+def get_hash(session: Session, hex_challenge: str | None) -> str:
     """Get a hash of the installed firmware combined with the optional challenge."""
     challenge = bytes.fromhex(hex_challenge) if hex_challenge else None
     return firmware.get_hash(session, challenge).hex()

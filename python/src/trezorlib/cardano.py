@@ -832,7 +832,7 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 @tools.workflow(capability=m.Capability.Cardano)
 def get_authenticated_address(
-    session: "Session",
+    session: Session,
     address_parameters: m.CardanoAddressParametersType,
     protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
     network_id: int = NETWORK_IDS["mainnet"],
@@ -855,7 +855,7 @@ def get_authenticated_address(
 
 @tools.workflow(capability=m.Capability.Cardano)
 def get_public_key(
-    session: "Session",
+    session: Session,
     address_n: list[int],
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
     show_display: bool = False,
@@ -872,7 +872,7 @@ def get_public_key(
 
 @tools.workflow(capability=m.Capability.Cardano)
 def get_native_script_hash(
-    session: "Session",
+    session: Session,
     native_script: m.CardanoNativeScript,
     display_format: m.CardanoNativeScriptHashDisplayFormat = m.CardanoNativeScriptHashDisplayFormat.HIDE,
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
@@ -889,7 +889,7 @@ def get_native_script_hash(
 
 @tools.workflow(capability=m.Capability.Cardano)
 def sign_tx(
-    session: "Session",
+    session: Session,
     signing_mode: m.CardanoTxSigningMode,
     inputs: list[InputWithPath],
     outputs: list[OutputWithData],
@@ -1015,7 +1015,7 @@ def sign_tx(
 
 @tools.workflow(capability=m.Capability.Cardano)
 def sign_message(
-    session: "Session",
+    session: Session,
     signing_path: Path,
     payload: bytes,
     prefer_hex_display: bool,

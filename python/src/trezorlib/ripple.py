@@ -37,8 +37,8 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 @workflow(capability=messages.Capability.Ripple)
 def get_authenticated_address(
-    session: "Session",
-    address_n: "Address",
+    session: Session,
+    address_n: Address,
     show_display: bool = False,
     chunkify: bool = False,
 ) -> messages.RippleAddress:
@@ -52,8 +52,8 @@ def get_authenticated_address(
 
 @workflow(capability=messages.Capability.Ripple)
 def sign_tx(
-    session: "Session",
-    address_n: "Address",
+    session: Session,
+    address_n: Address,
     msg: messages.RippleSignTx,
     chunkify: bool = False,
     payment_req: messages.PaymentRequest | None = None,

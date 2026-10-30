@@ -73,7 +73,7 @@ def supports_protocolV2() -> bool:
 
 
 class BridgeHandle:
-    def __init__(self, transport: "BridgeTransport") -> None:
+    def __init__(self, transport: BridgeTransport) -> None:
         self.transport = transport
 
     def read_buf(self, timeout: float | None = None) -> bytes:
@@ -95,7 +95,7 @@ class BridgeHandleModern(BridgeHandle):
 
 
 class BridgeHandleLegacy(BridgeHandle):
-    def __init__(self, transport: "BridgeTransport") -> None:
+    def __init__(self, transport: BridgeTransport) -> None:
         super().__init__(transport)
         self.request: str | None = None
 
@@ -165,7 +165,7 @@ class BridgeTransport(Transport):
     @classmethod
     def enumerate(
         cls, models: t.Iterable[TrezorModel] | None = None
-    ) -> t.Iterable["BridgeTransport"]:
+    ) -> t.Iterable[BridgeTransport]:
         try:
             legacy = is_legacy_bridge()
             return [

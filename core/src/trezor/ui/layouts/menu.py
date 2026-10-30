@@ -35,7 +35,7 @@ class Menu(Generic[R]):
         name: str = "",
     ) -> None:
         self.name = name
-        self.children: "Sequence[MenuNode[R]]" = tuple(children)
+        self.children: Sequence[MenuNode[R]] = tuple(children)
 
 
 class MenuLeaf(Generic[R]):

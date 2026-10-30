@@ -597,7 +597,7 @@ def get_default_client(
     pin_callback: t.Callable[[messages.PinMatrixRequest], str] | None = None,
     code_entry_callback: t.Callable[[], str] | None = None,
     **kwargs: t.Any,
-) -> "TrezorClient":
+) -> TrezorClient:
     """Get a client for a connected Trezor device.
 
     Returns a TrezorClient instance with minimum fuss.

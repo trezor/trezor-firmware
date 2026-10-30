@@ -159,8 +159,8 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 @workflow(capability=messages.Capability.Ethereum)
 def get_authenticated_address(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     show_display: bool = False,
     encoded_network: bytes | None = None,
     chunkify: bool = False,
@@ -179,7 +179,7 @@ def get_authenticated_address(
 
 @workflow(capability=messages.Capability.Ethereum)
 def get_public_node(
-    session: "Session", n: "Address", show_display: bool = False
+    session: Session, n: Address, show_display: bool = False
 ) -> messages.EthereumPublicKey:
     return session.call(
         messages.EthereumGetPublicKey(address_n=n, show_display=show_display),
@@ -188,7 +188,7 @@ def get_public_node(
 
 
 def _answer_definition_request(
-    source: "Source",
+    source: Source,
     req: messages.EthereumDefinitionRequest,
 ) -> messages.EthereumDefinitionAck:
     """Answer a firmware `EthereumDefinitionRequest` from `source`."""
@@ -255,7 +255,7 @@ class SignTxResult:
 
 
 def _ethereum_sign_loop(
-    session: "Session",
+    session: Session,
     msg: messages.EthereumSignTx | messages.EthereumSignTxEIP1559,
     data: bytes,
     definition_source: Source | None,
@@ -293,8 +293,8 @@ def _ethereum_sign_loop(
 
 @workflow(capability=messages.Capability.Ethereum)
 def sign_tx(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     nonce: int,
     gas_price: int,
     gas_limit: int,
@@ -344,8 +344,8 @@ def sign_tx(
 
 @workflow(capability=messages.Capability.Ethereum)
 def sign_tx_eip1559(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     *,
     nonce: int,
     gas_limit: int,
@@ -389,8 +389,8 @@ def sign_tx_eip1559(
 
 @workflow(capability=messages.Capability.Ethereum)
 def sign_message(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     message: AnyStr,
     encoded_network: bytes | None = None,
     chunkify: bool = False,
@@ -408,8 +408,8 @@ def sign_message(
 
 @workflow(capability=messages.Capability.Ethereum)
 def sign_typed_data(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     data: dict[str, Any],
     *,
     metamask_v4_compat: bool = True,
@@ -433,7 +433,7 @@ def sign_typed_data(
     while isinstance(response, messages.EthereumTypedDataStructRequest):
         struct_name = response.name
 
-        members: list["messages.EthereumStructMember"] = []
+        members: list[messages.EthereumStructMember] = []
         for field in types[struct_name]:
             field_type = get_field_type(field["type"], types)
             struct_member = messages.EthereumStructMember(
@@ -486,7 +486,7 @@ def sign_typed_data(
 
 @workflow(capability=messages.Capability.Ethereum)
 def verify_message(
-    session: "Session",
+    session: Session,
     address: str,
     signature: bytes,
     message: AnyStr,
@@ -509,8 +509,8 @@ def verify_message(
 
 @workflow(capability=messages.Capability.Ethereum)
 def sign_typed_data_hash(
-    session: "Session",
-    n: "Address",
+    session: Session,
+    n: Address,
     domain_hash: bytes,
     message_hash: bytes | None,
     encoded_network: bytes | None = None,
