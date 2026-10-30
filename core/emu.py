@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import logging
 import os
 import platform
@@ -164,6 +165,11 @@ def _from_env(name: str) -> bool:
     help="Alternate emulator executable",
 )
 @click.option(
+    "--emulator-properties",
+    is_flag=True,
+    help="Print the emulator's build properties as JSON and exit",
+)
+@click.option(
     "-g",
     "--profiling/--no-profiling",
     default=_from_env("TREZOR_PROFILING"),
@@ -273,6 +279,7 @@ def cli(
     erase: bool,
     display_scale: float,
     executable: str | Path,
+    emulator_properties: bool,
     profiling: bool,
     alloc_profiling: bool,
     headless: bool,
@@ -382,10 +389,6 @@ def cli(
     else:
         profile_dir = Path("/var/tmp")
 
-    if erase:
-        for entry in TREZOR_STORAGE_FILES:
-            (profile_dir / entry).unlink(missing_ok=True)
-
     if quiet:
         output = None
 
@@ -408,6 +411,17 @@ def cli(
         tropic_model_port=tropic_model_port,
         display_scale=display_scale,
     )
+
+    if emulator_properties:
+        properties = emulator.properties()
+        if not properties:
+            raise click.ClickException("Failed to read the emulator properties")
+        click.echo(json.dumps(properties))
+        return
+
+    if erase:
+        for entry in TREZOR_STORAGE_FILES:
+            (profile_dir / entry).unlink(missing_ok=True)
 
     emulator_env = dict(
         TREZOR_PATH=f"udp:127.0.0.1:{emulator.port}",
