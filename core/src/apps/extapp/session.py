@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor import io
+from trezor.wire.errors import DataError
 
 if __debug__:
     from trezor import log
@@ -12,6 +13,7 @@ if TYPE_CHECKING:
     from trezor.ui import ProgressLayout
     from trezorapp import AppImage
 
+    from apps.common.keychain import Keychain
     from apps.common.paths import PathSchema
 
 # IPC services between Core and a running external app
@@ -25,6 +27,8 @@ SERVICE_CRYPTO = 6
 
 # message id of a Core reply reporting a failed request
 MSG_ID_ERROR = 0xFFFF
+
+_SLIP24_NAMESPACE = [b"SLIP-0024"]
 
 
 def describe(exception: BaseException) -> str:
@@ -40,17 +44,32 @@ class Session:
     def __init__(
         self,
         image: AppImage,
-        curve: str,
+        curves: list[str],
         schemas: list[PathSchema],
     ) -> None:
         self.image = image
         self.task_id = image.task_id()
-        self.curve = curve
+        # curves allowed by the app's manifest
+        self.curves = curves
         self.schemas = schemas
+        # keychains created so far, by curve
+        self.keychains: dict[str, Keychain] = {}
         # progress layout opened by the app via `SERVICE_PROGRESS`
         self.progress: ProgressLayout | None = None
         # set once the app was stopped because of an error
         self.dead = False
+
+    async def keychain(self, curve: str) -> Keychain:
+        """Keychain of the app's paths on `curve`, if the app is allowed to use it."""
+        from apps.common.keychain import get_keychain
+
+        if curve not in self.curves:
+            raise DataError(f"Curve {curve} not allowed")
+        keychain = self.keychains.get(curve)
+        if keychain is None:
+            keychain = await get_keychain(curve, self.schemas, [_SLIP24_NAMESPACE])
+            self.keychains[curve] = keychain
+        return keychain
 
     def send(self, service: int, message_id: int, data: AnyBytes) -> None:
         io.ipc_send(self.task_id, service, message_id, data)

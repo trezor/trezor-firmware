@@ -167,8 +167,6 @@ def _open_session(request: ExtAppMessage) -> Session:
     image = app.image_by_handle(image_handle)
 
     curves: list[str] = list(image.allowed_curves())
-    if len(curves) != 1:
-        raise DataError(f"Expected exactly one allowed curve, got {curves}")
     patterns: list[str] = list(image.allowed_paths())
     if __debug__:
         log.debug(__name__, f"Allowed curves: {curves}, patterns: {patterns}")
@@ -179,4 +177,4 @@ def _open_session(request: ExtAppMessage) -> Session:
     if not image.is_running():
         raise DataError("Task not running")
 
-    return Session(image, curves[0], schemas)
+    return Session(image, curves, schemas)
