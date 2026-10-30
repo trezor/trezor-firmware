@@ -135,6 +135,27 @@ def get_public_node(
     )
 
 
+@workflow(capabilities={messages.Capability.Bitcoin, messages.Capability.Miniscript})
+def get_miniscript_address(
+    session: "Session",
+    policy: messages.MiniscriptPolicy,
+    derivation: messages.MiniscriptDerivation,
+    coin_name: str,
+    show_display: bool = False,
+    chunkify: bool = False,
+) -> messages.Address:
+    return session.call(
+        messages.MiniscriptGetAddress(
+            policy=policy,
+            derivation=derivation,
+            coin_name=coin_name,
+            show_display=show_display,
+            chunkify=chunkify,
+        ),
+        expect=messages.Address,
+    )
+
+
 def get_address(*args: Any, **kwargs: Any) -> str:
     return get_authenticated_address(*args, **kwargs).address
 
@@ -411,6 +432,29 @@ def sign_tx(
             raise exceptions.TrezorException("Some signatures are missing!")
 
     return signatures, serialized_tx
+
+
+@workflow(capabilities={messages.Capability.Bitcoin, messages.Capability.Miniscript})
+def register_policy(
+    session: "Session",
+    name: str,
+    descriptor: str,
+    keys: Sequence[messages.MiniscriptKey],
+    coin_name: str,
+) -> messages.MiniscriptPolicy:
+    fpr = int.from_bytes(session.get_root_fingerprint(), "big")
+    # TODO: handle fingerprint collision
+    (own_index,) = (i for i, k in enumerate(keys) if k.root_fingerprint == fpr)
+    policy = messages.MiniscriptPolicy(
+        descriptor=descriptor, keys=keys, own_index=own_index
+    )
+    session.call(
+        messages.MiniscriptRegisterPolicy(
+            policy=policy, name=name, coin_name=coin_name
+        ),
+        expect=messages.Success,
+    )
+    return policy
 
 
 @workflow(capability=messages.Capability.Bitcoin)

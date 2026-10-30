@@ -1,7 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import workflow
+from trezor import utils, workflow
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import HashWriter, empty_bytearray, ensure
@@ -19,6 +19,9 @@ from .helpers import request_tx_input, request_tx_output
 from .progress import progress
 from .tx_info import OriginalTxInfo
 
+if utils.USE_MINISCRIPT:
+    from ..miniscript import load_policy
+
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Sequence
@@ -33,6 +36,9 @@ if TYPE_CHECKING:
     from . import approvers
     from .sig_hasher import SigHasher
     from .tx_info import TxInfo
+
+    if utils.USE_MINISCRIPT:
+        from ..miniscript import RegisteredPolicy
 
 
 # the number of bytes to preallocate for serialized transaction chunks
@@ -59,6 +65,11 @@ class Bitcoin:
         progress.init(
             self.tx_info.tx, is_coinjoin=isinstance(self.approver, CoinJoinApprover)
         )
+
+        # Verify policies' registration
+        if utils.USE_MINISCRIPT:
+            for policy in self.tx_info.tx.policies:
+                self.registered_policies.append(await load_policy(policy))
 
         # Add inputs to sig_hasher and h_tx_check and compute the sum of input amounts.
         await self.step1_process_inputs()
@@ -162,6 +173,8 @@ class Bitcoin:
 
         # The index of the payment request being processed.
         self.payment_req_index: int | None = None
+
+        self.registered_policies: list[RegisteredPolicy] = []
 
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(sha256())
@@ -647,6 +660,7 @@ class Bitcoin:
             self.tx_info.tx,
             self.coin,
             self.get_hash_type(txi),
+            self.registered_policies,
         )
 
         signature = ecdsa_sign(node, hash143_digest)
@@ -952,10 +966,17 @@ class Bitcoin:
             assert txi.script_pubkey is not None  # checked in _sanitize_tx_input
             return txi.script_pubkey
 
-        if node is None:
-            node = self.keychain.derive(txi.address_n)
+        if utils.USE_MINISCRIPT and (redeem := txi.miniscript) is not None:
+            policy = self.registered_policies[redeem.policy_index]
+            # TODO: verify txi.address_n matches
+            address = policy.address_wsh(redeem.derivation, self.coin)
+        else:
+            if node is None:
+                node = self.keychain.derive(txi.address_n)
+            address = addresses.get_address(
+                txi.script_type, self.coin, node, txi.multisig
+            )
 
-        address = addresses.get_address(txi.script_type, self.coin, node, txi.multisig)
         return scripts.output_derive_script(address, self.coin)
 
     def output_derive_script(self, txo: TxOutput) -> AnyBytes:

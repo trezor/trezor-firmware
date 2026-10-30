@@ -2,7 +2,13 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor.enums import InputScriptType
-from trezor.messages import AuthorizeCoinJoin, SignMessage
+from trezor.messages import (
+    AuthorizeCoinJoin,
+    MiniscriptGetAddress,
+    MiniscriptRegisterPolicy,
+    SignMessage,
+    SignTx,
+)
 
 from apps.common.paths import PATTERN_BIP44, PATTERN_CASA, PathSchema, unharden
 
@@ -18,7 +24,6 @@ if TYPE_CHECKING:
         GetOwnershipId,
         GetOwnershipProof,
         GetPublicKey,
-        SignTx,
         VerifyMessage,
     )
     from trezor.protobuf import MessageType
@@ -55,6 +60,12 @@ PATTERN_BIP45 = "m/45'/[0-100]/change/address_index"
 PATTERN_BIP48_RAW = "m/48'/coin_type'/account'/0'/change/address_index"
 PATTERN_BIP48_P2SHSEGWIT = "m/48'/coin_type'/account'/1'/change/address_index"
 PATTERN_BIP48_SEGWIT = "m/48'/coin_type'/account'/2'/change/address_index"
+
+# Liana uses BIP-48 with non-standard change index derivation
+# (to allow reusing the same signer in different spending paths)
+# TODO: enable only for Miniscript
+# TODO: don't allow existing multisig to use it?
+PATTERN_BIP48_LIANA = "m/48'/coin_type'/account'/2'/[0-9]/address_index"
 
 # BIP-49 for segwit-in-P2SH: https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki
 PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
@@ -96,7 +107,9 @@ SLIP44_TESTNET = const(1)
 def _get_patterns_for_script_type(
     coin: coininfo.CoinInfo,
     script_type: InputScriptType,
-    multisig: bool,
+    *,
+    multisig: bool = False,
+    miniscript: bool = False,
     include_fw_signing: bool = False,
 ) -> set[str]:
     patterns: set[str] = set()
@@ -142,6 +155,8 @@ def _get_patterns_for_script_type(
         add(PATTERN_BIP84)
         if multisig:
             add(PATTERN_BIP48_SEGWIT)
+        if miniscript:
+            add(PATTERN_BIP48_LIANA)
         if slip44 == SLIP44_BITCOIN:
             add(PATTERN_GREENADDRESS_A)
             add(PATTERN_GREENADDRESS_B)
@@ -162,20 +177,27 @@ def validate_path_against_script_type(
     address_n: Bip32Path | None = None,
     script_type: InputScriptType | None = None,
     multisig: bool = False,
+    miniscript: bool = False,
 ) -> bool:
     if msg is not None:
         assert address_n is None and script_type is None
         address_n = msg.address_n
         script_type = msg.script_type or InputScriptType.SPENDADDRESS
         multisig = bool(getattr(msg, "multisig", False))
+        miniscript = bool(getattr(msg, "miniscript", False))
 
     else:
         assert address_n is not None and script_type is not None
 
     patterns = _get_patterns_for_script_type(
-        coin, script_type, multisig, include_fw_signing=SignMessage.is_type_of(msg)
+        coin,
+        script_type,
+        multisig=multisig,
+        miniscript=miniscript,
+        include_fw_signing=SignMessage.is_type_of(msg),
     )
 
+    # TODO: fail on miniscript?
     if SignMessage.is_type_of(msg):
         patterns |= _get_patterns_for_script_type(coin, script_type, multisig=True)
         # Export points of every script type, since signing hosts may send
@@ -411,6 +433,15 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
                 PathSchema.parse(pattern, coin.slip44)
                 for pattern in _sign_message_export_patterns(coin)
             ]
+
+        if (
+            MiniscriptRegisterPolicy.is_type_of(msg)
+            or MiniscriptGetAddress.is_type_of(msg)
+            or (SignTx.is_type_of(msg) and len(msg.policies) > 0)
+        ):
+            # Allow Liana-related derivation (BIP-48 with non-standard change indices).
+            extra_schemas.append(PathSchema.parse(PATTERN_BIP48_LIANA, coin.slip44))
+
         keychain = await _get_keychain_for_coin(coin, extra_schemas)
         if AuthorizeCoinJoin.is_type_of(auth_msg):
             auth_obj = authorization.from_cached_message(auth_msg)

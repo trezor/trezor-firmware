@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from trezor.utils import HashWriter, Writer
 
     from apps.bitcoin.common import SigHashType
+    from apps.bitcoin.miniscript import RegisteredPolicy
     from apps.common.coininfo import CoinInfo
 
 
@@ -110,6 +111,7 @@ class ZcashHasher:
         tx: SignTx | PrevTx,
         coin: CoinInfo,
         hash_type: int,
+        registered_policies: Sequence[RegisteredPolicy] = (),
     ) -> bytes:
         raise NotImplementedError
 
