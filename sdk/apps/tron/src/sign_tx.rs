@@ -6,7 +6,7 @@ use crate::sc_constants::{
 use crate::{
     alloc_types::{String, Vec, vec},
     common::get_pubkey_hash,
-    common::{COIN, SLIP44_ID, get_encoded_address},
+    common::{COIN, SLIP44_ID, ecdsa_sign_digest, get_encoded_address},
     consts::{TYPE_URL_TEMPLATE, token_by_address},
     layout::{
         confirm_blob, confirm_claim, confirm_delegate_resource, confirm_freeze_operations,
@@ -95,7 +95,7 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
     let w_hash: [u8; 32] = hasher.finalize().as_slice().try_into().unwrap();
 
     // https://tronprotocol.github.io/documentation-en/mechanism-algorithm/account/#algorithm
-    let sig = crypto::ecdsa_sign_digest(
+    let sig = ecdsa_sign_digest(
         &msg.address_n,
         &w_hash,
         false,
