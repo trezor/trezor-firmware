@@ -21,7 +21,7 @@ use stabby::slice::Slice;
 use crate::alloc_types::{String, Vec};
 use crate::app_runtime::get_crypto_or_die;
 pub use crate::traits::crypto::{
-    BoxedHasher, CanonicalSig, EcdsaCurve, HashingAlgorithm, HmacAlgorithm,
+    BoxedHasher, CanonicalSig, Curve, EcdsaCurve, HashingAlgorithm, HmacAlgorithm,
 };
 use crate::traits::crypto::{CryptoV1Dyn as _, HasherDynMut};
 use crate::{IntoAppResult, Result, ResultExt};
@@ -56,40 +56,41 @@ impl HasherExt for BoxedHasher {
     }
 }
 
-/// Derives the extended public key (xpub) for `address_n`, base58check-encoded
-/// with `xpub_magic` as its version bytes (e.g. the "xpub"/"ypub"/"zpub"
-/// prefix bytes for the coin/script type in use).
-pub fn get_xpub(address_n: &[u32], xpub_magic: u32) -> Result<[u8; 111]> {
+/// Derives the extended public key (xpub) for `address_n` on `curve`,
+/// base58check-encoded with `xpub_magic` as its version bytes (e.g. the
+/// "xpub"/"ypub"/"zpub" prefix bytes for the coin/script type in use).
+pub fn get_xpub(curve: Curve, address_n: &[u32], xpub_magic: u32) -> Result<[u8; 111]> {
     get_crypto_or_die()
-        .get_xpub(address_n.into(), xpub_magic)
+        .get_xpub(curve, address_n.into(), xpub_magic)
         .into_app_result()
         .c()
 }
 
-/// Derives the public key for `address_n`.
-pub fn get_public_key(address_n: &[u32], compressed: bool) -> Result<Vec<u8>> {
+/// Derives the public key for `address_n` on `curve`.
+pub fn get_public_key(curve: Curve, address_n: &[u32], compressed: bool) -> Result<Vec<u8>> {
     get_crypto_or_die()
-        .get_public_key(address_n.into(), compressed)
+        .get_public_key(curve, address_n.into(), compressed)
         .into_app_result()
         .c()
         .map(|b| b.as_ref().to_vec())
 }
 
-/// Signs a raw 32-byte digest with the ECDSA key at `address_n`, returning
-/// the 65-byte recoverable signature. Ed25519 has no digest signing, see
-/// [`ed25519_sign`].
+/// Signs a raw 32-byte digest with the ECDSA key at `address_n` on `curve`,
+/// returning the 65-byte recoverable signature. Ed25519 has no digest
+/// signing, see [`ed25519_sign`].
 ///
 /// `canonical` constrains a secp256k1 signature further, e.g.
 /// [`CanonicalSig::Ethereum`] for Ethereum transactions and messages. Other
 /// curves only accept [`CanonicalSig::Any`].
 pub fn ecdsa_sign_digest(
+    curve: EcdsaCurve,
     address_n: &[u32],
     digest: &[u8; 32],
     compressed: bool,
     canonical: CanonicalSig,
 ) -> Result<[u8; 65]> {
     get_crypto_or_die()
-        .ecdsa_sign_digest(address_n.into(), digest, compressed, canonical)
+        .ecdsa_sign_digest(curve, address_n.into(), digest, compressed, canonical)
         .into_app_result()
         .c()
 }
