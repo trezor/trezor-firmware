@@ -20,6 +20,11 @@ pub const STRKEY_MUXED_ACCOUNT: u8 = 12; // M...
 pub const STRKEY_CLAIMABLE_BALANCE: u8 = 1; // B...
 pub const STRKEY_LIQUIDITY_POOL: u8 = 11; // L...
 
+/// [`crypto::get_public_key`] on Stellar's curve.
+pub(crate) fn get_public_key(address_n: &[u32]) -> Result<Vec<u8>> {
+    crypto::get_public_key(crypto::Curve::Ed25519, address_n, false)
+}
+
 fn payload_size(version: u8) -> Option<usize> {
     match version {
         STRKEY_ED25519_PUBLIC_KEY => Some(32),

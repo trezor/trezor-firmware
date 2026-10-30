@@ -1,6 +1,6 @@
 use crate::{
     consts::{COIN, SLIP44_ID},
-    helpers::address_from_public_key,
+    helpers::{address_from_public_key, get_public_key},
     layout::fill,
     paths::{Bip32Path, PATTERNS_ADDRESS},
     proto::{
@@ -13,7 +13,7 @@ use trezor_app_sdk::{Result, ResultExt, crypto, ui};
 pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
     let dp = Bip32Path::from_slice(&msg.address_n);
 
-    let pubkey = crypto::get_public_key(dp.as_slice(), false).c()?;
+    let pubkey = get_public_key(dp.as_slice()).c()?;
     let address = address_from_public_key(&pubkey);
     let mac = crypto::get_address_mac(dp.as_ref(), &address, SLIP44_ID).c()?;
 

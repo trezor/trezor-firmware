@@ -33,19 +33,23 @@
 #
 # 9. Scroll down to the bottom and look at the "signatures" section. The Trezor should generate the same signature
 
+import json
 from base64 import b64decode, b64encode
 
 import pytest
 from stellar_sdk import Keypair, TransactionEnvelope
+from stellar_sdk import auth as stellar_auth
+from stellar_sdk import xdr as stellar_xdr
 
 from trezorlib import protobuf
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.exceptions import TrezorFailure
+from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import parse_path
 
 from . import stellar_ext
 from .common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
 from .generated import messages as stellar_messages
+from .input_flows import InputFlowShowAddressQRCode
 
 
 def parameters_to_proto(parameters):
@@ -127,8 +131,6 @@ def test_sign_tx_asset_hint_mismatch(session: Session, instance_id: int):
     trezorlib never produces such a hint (it only attaches self-derived
     matches), so forge one directly in the protobuf of a valid fixture.
     """
-    import json
-
     fixtures = json.loads((COMMON_FIXTURES_DIR / "sign_tx.json").read_text())
     parameters = next(
         t
@@ -150,3 +152,92 @@ def test_sign_tx_asset_hint_mismatch(session: Session, instance_id: int):
         tx.address_n,
         tx.network_passphrase,
     )
+
+
+@parametrize_using_common_fixtures("sign_soroban_authorization.json")
+def test_sign_soroban_authorization(
+    session: Session, instance_id: int, parameters, result
+):
+    authorization = protobuf.dict_to_proto(
+        stellar_messages.SorobanAuthorizationWithAddress,
+        parameters["authorization"],
+    )
+    entry = stellar_xdr.SorobanAuthorizationEntry.from_xdr(parameters["xdr"])
+
+    if "signature" in result:
+        assert entry.credentials.address_v2 is not None
+        payload = stellar_auth.authorization_payload_hash(
+            stellar_auth.build_authorization_preimage(
+                entry,
+                valid_until_ledger_sequence=entry.credentials.address_v2.signature_expiration_ledger.uint32,
+                network_passphrase=parameters["network_passphrase"],
+            )
+        )
+        pubkey = bytes.fromhex(result["public_key"])
+        keypair = Keypair.from_raw_ed25519_public_key(pubkey)
+        keypair.verify(payload, b64decode(result["signature"]))
+
+        response = stellar_ext.sign_soroban_authorization(
+            session,
+            instance_id,
+            parse_path(parameters["address_n"]),
+            parameters["network_passphrase"],
+            authorization,
+        )
+        assert response.public_key.hex() == result["public_key"]
+        assert b64encode(response.signature).decode() == result["signature"]
+    elif "error_message" in result:
+        with pytest.raises(TrezorFailure, match=result["error_message"]):
+            stellar_ext.sign_soroban_authorization(
+                session,
+                instance_id,
+                parse_path(parameters["address_n"]),
+                parameters["network_passphrase"],
+                authorization,
+            )
+    else:
+        assert False, "Invalid expected result"
+
+
+@parametrize_using_common_fixtures("get_address.json")
+def test_get_address(session: Session, instance_id: int, parameters, result):
+    address_n = parse_path(parameters["path"])
+    address = stellar_ext.get_address(
+        session, instance_id, address_n, show_display=True
+    )
+    assert address == result["address"]
+
+
+@parametrize_using_common_fixtures("get_address.json")
+def test_get_address_chunkify_details(
+    session: Session, instance_id: int, parameters, result
+):
+    with session.test_ctx as client:
+        IF = InputFlowShowAddressQRCode(client)
+        client.set_input_flow(IF.get())
+        address_n = parse_path(parameters["path"])
+        address = stellar_ext.get_address(
+            session, instance_id, address_n, show_display=True, chunkify=True
+        )
+        assert address == result["address"]
+
+
+def test_invalid_path(session: Session, instance_id: int):
+    # Core only reports a failed path validation to the app as a failed crypto
+    # call, so the error is a generic one.
+    with pytest.raises(TrezorFailure):
+        stellar_ext.get_address(
+            session, instance_id, parse_path("m/44h/999h/0h"), show_display=True
+        )
+
+
+def test_get_address_cancel_show(session: Session, instance_id: int):
+    address_n = parse_path(stellar_ext.DEFAULT_BIP32_PATH)
+
+    def input_flow():
+        yield
+        session.cancel()
+
+    with pytest.raises(Cancelled), session.test_ctx as client:
+        client.set_input_flow(input_flow)
+        stellar_ext.get_address(session, instance_id, address_n, show_display=True)
