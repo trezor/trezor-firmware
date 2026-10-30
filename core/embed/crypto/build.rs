@@ -21,8 +21,12 @@ fn main() -> Result<()> {
             add_aes_gcm(lib, &attrs)?;
         }
 
-        if cfg!(feature = "noise") {
-            add_noise(lib, &attrs)?;
+        if cfg!(feature = "noise_kk1") {
+            add_noise_kk1(lib, &attrs)?;
+        }
+
+        if cfg!(feature = "noise_xxpsk3") {
+            add_noise_xxpsk3(lib, &attrs)?;
         }
 
         if cfg!(feature = "secp256k1_zkp") {
@@ -256,12 +260,34 @@ fn add_aes_gcm(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
     Ok(())
 }
 
-fn add_noise(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
-    lib.add_sources_in_dir_with_attrs(
-        CRYPTO_PATH,
-        ["noise_kk1.c", "noise_xxpsk3.c"],
-        Some(attrs.clone()),
-    );
+fn add_noise_kk1(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
+    lib.add_sources_in_dir_with_attrs(CRYPTO_PATH, ["noise_kk1.c"], Some(attrs.clone()));
+
+    Ok(())
+}
+
+fn add_noise_xxpsk3(lib: &mut CLibrary, attrs: &CompileAttrs) -> Result<()> {
+    lib.add_sources_in_dir_with_attrs(CRYPTO_PATH, ["noise_xxpsk3.c"], Some(attrs.clone()));
+
+    lib.add_rust_bindings(|builder| {
+        Ok(builder
+            .header(format!("{CRYPTO_PATH}/noise_xxpsk3.h"))
+            .allowlist_var("NOISE_XXPSK3_DHLEN")
+            .allowlist_var("NOISE_XXPSK3_TAG_SIZE")
+            .allowlist_type("noise_xxpsk3_initiator_t")
+            .no_copy("noise_xxpsk3_cipher_state_t")
+            .no_copy("noise_xxpsk3_symmetric_state_t")
+            .no_copy("noise_xxpsk3_transport_state_t")
+            .no_copy("noise_xxpsk3_handshake_state_t")
+            .no_copy("noise_xxpsk3_initiator_t")
+            .allowlist_function("noise_xxpsk3_initiator_init")
+            .allowlist_function("noise_xxpsk3_initiator_deinit")
+            .allowlist_function("noise_xxpsk3_initiator_create_request1")
+            .allowlist_function("noise_xxpsk3_initiator_handle_response1")
+            .allowlist_function("noise_xxpsk3_initiator_create_request2")
+            .allowlist_function("noise_xxpsk3_send_message")
+            .allowlist_function("noise_xxpsk3_receive_message"))
+    })?;
 
     Ok(())
 }
