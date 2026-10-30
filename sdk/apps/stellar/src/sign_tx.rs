@@ -2,7 +2,7 @@ use crate::{
     ProstCodec,
     alloc_types::{String, ToString},
     consts::{SLIP44_ID, TX_TYPE},
-    helpers::{address_from_public_key, sha256},
+    helpers::{address_from_public_key, get_public_key, sha256},
     layout::{
         confirm_tx_final, require_confirm_memo, require_confirm_payment_request,
         require_confirm_tx_source,
@@ -43,7 +43,7 @@ fn request_tx_ext() -> Result<TxExt> {
 }
 
 pub fn sign_tx(msg: SignTx) -> Result<SignedTx> {
-    let pubkey = crypto::get_public_key(&msg.address_n, false).c()?;
+    let pubkey = get_public_key(&msg.address_n).c()?;
     let num_operations = msg.num_operations;
 
     if num_operations == 0 {
