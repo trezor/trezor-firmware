@@ -277,11 +277,9 @@ fn check_mac(address_n: &[u32], mac: &[u8], address: &str, slip44: u32) -> Resul
     let mac: &[u8; 32] = mac
         .try_into()
         .map_err(|_| Error::DataError("Invalid MAC"))?;
-    if crypto::check_address_mac(address_n, mac, address, slip44).c()? {
-        Ok(())
-    } else {
-        Err(Error::DataError("Invalid MAC"))
-    }
+    crypto::check_address_mac(address_n, mac, address, slip44)
+        .map_err(|_| Error::DataError("Invalid MAC"))
+        .c()
 }
 
 #[cfg(test)]

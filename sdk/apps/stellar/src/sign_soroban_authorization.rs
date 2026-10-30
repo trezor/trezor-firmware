@@ -1,5 +1,5 @@
 use crate::{
-    helpers::{address_from_public_key, sha256},
+    helpers::{address_from_public_key, get_public_key, sha256},
     layout::{
         confirm_auth_final, confirm_authorized_invocation, require_confirm_auth_on_behalf_of,
         require_confirm_auth_signing_address,
@@ -37,7 +37,7 @@ pub fn sign_soroban_authorization(
             "Stellar: missing soroban_authorization_with_address",
         ))?;
 
-    let pubkey = crypto::get_public_key(&msg.address_n, false).c()?;
+    let pubkey = get_public_key(&msg.address_n).c()?;
     let signing_address = address_from_public_key(&pubkey);
 
     // Serialize the ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS preimage
