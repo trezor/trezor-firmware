@@ -2,7 +2,6 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 import trezorui_api
-import ustruct  # pyright: ignore[reportMissingImports]
 from trezor import io, loop
 from trezor.ui import Shutdown
 from trezor.ui.library import CANCELLED, run
@@ -84,7 +83,7 @@ def _data_puller(
         session.send(
             SERVICE_UI,
             _MSG_ID_CHUNK,
-            ustruct.pack("<HII", field, offset, length),
+            trezorui_api.encode_chunk_request(field=field, offset=offset, len=length),
         )
         msg = await loop.wait(io.IPC2_EVENT | io.POLL_READ, timeout_ms=_IPC_TIMEOUT_MS)
         if msg.service != SERVICE_UI or msg.message_id != _MSG_ID_CHUNK:

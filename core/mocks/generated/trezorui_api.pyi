@@ -904,6 +904,17 @@ def encode_ui_result(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def encode_chunk_request(
+    *,
+    field: int,
+    offset: int,
+    len: int,
+) -> bytes:
+    """Serialize one request for a `Data` field's chunk into the bytes the
+    extapp UI driver sends to the app."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def deserialize_progress_message(
     *,
     data: bytes,

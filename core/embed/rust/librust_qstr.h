@@ -366,6 +366,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_disconnect;
   MP_QSTR_duration_ms;
   MP_QSTR_encode;
+  MP_QSTR_encode_chunk_request;
   MP_QSTR_encode_ui_result;
   MP_QSTR_encoded_length;
   MP_QSTR_entropy__send;
@@ -384,6 +385,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fee;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
+  MP_QSTR_field;
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__restart;
   MP_QSTR_firmware_update__title;
@@ -487,6 +489,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_led__enable;
   MP_QSTR_led__title;
   MP_QSTR_led_enabled;
+  MP_QSTR_len;
   MP_QSTR_lines;
   MP_QSTR_load_from_flash;
   MP_QSTR_lockable;
@@ -538,6 +541,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_needs_params_refresh;
   MP_QSTR_next_timeout;
   MP_QSTR_notification;
+  MP_QSTR_offset;
   MP_QSTR_packet_in;
   MP_QSTR_packet_in_channel;
   MP_QSTR_packet_out;

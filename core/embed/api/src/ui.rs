@@ -12,7 +12,9 @@
 //! app would otherwise carry in its own binary belongs here or in core.
 
 use rkyv::rancor::Failure;
-use trezor_app_sdk::structs::{Source, TrezorProgressEnum, TrezorUiEnum, WireField};
+use trezor_app_sdk::structs::{
+    Source, TrezorProgressEnum, TrezorUiEnum, UiChunkRequest, WireField,
+};
 use trezor_app_sdk::traits::ui::{StrSlice, TrezorUiResult, UiV1};
 use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
 use trezor_app_sdk::traits::wire::WireError;
@@ -26,17 +28,14 @@ use crate::wire::{CoreIpcService, ipc_call, to_bytes};
 const MSG_ID_UI_DECISION: u16 = 0;
 const MSG_ID_UI_CHUNK: u16 = 1;
 
-/// Reads a chunk request: `(field, offset, len)`, little-endian, as core packs
-/// it.
-fn chunk_request(data: &[u8]) -> Option<(u16, u32, u32)> {
-    if data.len() != 10 {
-        return None;
-    }
-    Some((
-        u16::from_le_bytes([data[0], data[1]]),
-        u32::from_le_bytes([data[2], data[3], data[4], data[5]]),
-        u32::from_le_bytes([data[6], data[7], data[8], data[9]]),
-    ))
+/// Reads a chunk request: the field's flat index, the offset and the length.
+fn chunk_request(data: &[u8]) -> Option<UiChunkRequest> {
+    let archived = rkyv::access::<rkyv::Archived<UiChunkRequest>, Failure>(data).ok()?;
+    Some(UiChunkRequest {
+        field: archived.field.to_native(),
+        offset: archived.offset.to_native(),
+        len: archived.len.to_native(),
+    })
 }
 
 /// What the flat index of a request names.
@@ -118,10 +117,10 @@ fn ui_request(request: TrezorUiEnum) -> Result<TrezorUiResult, WireError> {
                     .map_err(|_| WireError::DecodeError);
             }
             MSG_ID_UI_CHUNK => {
-                let (field, offset, len) = chunk_request(&data).ok_or(WireError::DecodeError)?;
-                let source = data_field(&request, field).ok_or(WireError::DecodeError)?;
-                let mut bytes = alloc::vec![0u8; len as usize];
-                if !source.read(offset, &mut bytes) {
+                let chunk = chunk_request(&data).ok_or(WireError::DecodeError)?;
+                let source = data_field(&request, chunk.field).ok_or(WireError::DecodeError)?;
+                let mut bytes = alloc::vec![0u8; chunk.len as usize];
+                if !source.read(chunk.offset, &mut bytes) {
                     return Err(WireError::DecodeError);
                 }
                 (id, data) = ipc_call(

@@ -3,8 +3,8 @@ use heapless::Vec;
 use rkyv::{option::ArchivedOption, rancor::Failure, Archived};
 #[cfg(feature = "app_loading")]
 use trezor_app_sdk::structs::{
-    FieldKind, Slice, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult, WireExtra,
-    WireField,
+    FieldKind, Slice, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult, UiChunkRequest,
+    WireExtra, WireField,
 };
 
 use crate::io::BinaryData;
@@ -1424,8 +1424,8 @@ extern "C" fn new_deserialize_ui_message(
 
 /// Serializes a UI decision into the bytes the extapp driver sends back to
 /// the app. `result` is a `TrezorUiResult` decision discriminant: 0 confirmed,
-/// 1 cancelled, or 5 show details. Chunk requests are core's own, never the
-/// driver's, so they cannot be encoded here.
+/// 1 cancelled, or 5 show details. Chunk requests are the driver's own, encoded
+/// by `encode_chunk_request`.
 #[cfg(feature = "app_loading")]
 extern "C" fn new_encode_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
@@ -1449,6 +1449,34 @@ extern "C" fn new_encode_ui_result(n_args: usize, args: *const Obj, kwargs: *mut
 
 #[cfg(not(feature = "app_loading"))]
 extern "C" fn new_encode_ui_result(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+    unimplemented!()
+}
+
+/// Serializes one request for a `Data` field's chunk into the bytes the extapp
+/// UI driver sends to the app: the field's flat index, the offset and the
+/// length.
+#[cfg(feature = "app_loading")]
+extern "C" fn new_encode_chunk_request(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let msg = UiChunkRequest {
+            field: kwargs.get(Qstr::MP_QSTR_field)?.try_into()?,
+            offset: kwargs.get(Qstr::MP_QSTR_offset)?.try_into()?,
+            len: kwargs.get(Qstr::MP_QSTR_len)?.try_into()?,
+        };
+
+        let bytes = crate::util::archive::to_bytes_obj(&msg)?;
+
+        Ok(bytes)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_encode_chunk_request(
+    _n_args: usize,
+    _args: *const Obj,
+    _kwargs: *mut Map,
+) -> Obj {
     unimplemented!()
 }
 
@@ -2414,6 +2442,16 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Serialize a UI result, by its `TrezorUiResult` discriminant, into the
     ///     bytes the extapp driver sends back to the app."""
     Qstr::MP_QSTR_encode_ui_result => obj_fn_kw!(0, new_encode_ui_result).as_obj(),
+
+    /// def encode_chunk_request(
+    ///     *,
+    ///     field: int,
+    ///     offset: int,
+    ///     len: int,
+    /// ) -> bytes:
+    ///     """Serialize one request for a `Data` field's chunk into the bytes the
+    ///     extapp UI driver sends to the app."""
+    Qstr::MP_QSTR_encode_chunk_request => obj_fn_kw!(0, new_encode_chunk_request).as_obj(),
 
     /// def deserialize_progress_message(
     ///     *,

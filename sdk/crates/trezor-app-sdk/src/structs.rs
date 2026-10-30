@@ -360,6 +360,20 @@ impl<'a> WireField<'a> {
     }
 }
 
+/// One chunk of a `Data` field, as core asks the app for it.
+///
+/// `field` is the field's flat index: the request's own facts first, then each
+/// extra's facts in order. The app answers with the bytes themselves.
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct UiChunkRequest {
+    /// The field's flat index.
+    pub field: u16,
+    /// Where the chunk starts.
+    pub offset: u32,
+    /// How many bytes to read.
+    pub len: u32,
+}
+
 /// More the person can open from a review's menu: the entry's label, and the
 /// facts shown when it is picked.
 #[stabby::stabby]
@@ -664,5 +678,20 @@ mod tests {
         }
         // total count must match — add new variants here when extending the enum
         assert_eq!(variants.len(), 4, "new variant added but test not updated");
+    }
+
+    #[test]
+    fn a_chunk_request_round_trips() {
+        let request = UiChunkRequest {
+            field: 7,
+            offset: 384,
+            len: 384,
+        };
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&request).unwrap();
+        let archived =
+            rkyv::access::<rkyv::Archived<UiChunkRequest>, rkyv::rancor::Failure>(&bytes).unwrap();
+        assert_eq!(archived.field, 7);
+        assert_eq!(archived.offset, 384);
+        assert_eq!(archived.len, 384);
     }
 }
