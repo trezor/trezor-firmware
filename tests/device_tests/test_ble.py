@@ -16,12 +16,20 @@
 
 import pytest
 
-from trezorlib import ble
+from trezorlib import ble, messages
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.exceptions import TrezorFailure
 
 
 @pytest.mark.models("t3w1")
 def test_ble_unpair_all(session: Session):
     ble.unpair(session, all=True)
     # `Success` is sent before unpairing is done, so we'll send another command just to "flush" the last screen.
+    session.client.ping("")
+
+
+@pytest.mark.models("t3w1")
+def test_ble_unpair_invalid_addr(session: Session):
+    with pytest.raises(TrezorFailure, match="Invalid address length"):
+        session.call(messages.BleUnpair(addr=b"\x01\x02"), expect=messages.Success)
     session.client.ping("")
