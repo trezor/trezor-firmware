@@ -72,11 +72,19 @@ extern const void nrf_app_size;
 
 LOG_DECLARE(coreapp_main)
 
+// Smoke test for the binary size report in CI, to be reverted.
+static const uint8_t size_report_smoke_test[1000] = {[0 ... 999] = 0xA5};
+
 #if USE_IPC
 uint32_t ipc_buffer[IPC_COREAPP_BUFFER_SIZE / sizeof(uint32_t)];
 #endif
 
 int main_func(uint32_t cmd, void *arg) {
+  volatile uint32_t size_report_smoke_index = 0;
+  volatile uint8_t size_report_smoke_sink =
+      size_report_smoke_test[size_report_smoke_index];
+  (void)size_report_smoke_sink;
+
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
     rsod_gui(info);
