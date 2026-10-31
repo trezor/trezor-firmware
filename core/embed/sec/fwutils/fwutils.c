@@ -32,6 +32,9 @@
 
 #define FW_HASHING_CHUNK_SIZE 1024
 
+_Static_assert(BLAKE2S_DIGEST_LENGTH == sizeof(firmware_hash_t),
+               "Unexpected BLAKE2S digest length");
+
 typedef struct {
   bool initialized;
   BLAKE2S_CTX blake;
@@ -42,20 +45,20 @@ typedef struct {
 
 static firmware_hash_context_t g_hash_context[SYSTASK_MAX_TASKS];
 
-int firmware_hash_start(const uint8_t* challenge, size_t challenge_len) {
+ts_t firmware_hash_start(const uint8_t* challenge, size_t challenge_len) {
+  TSH_DECLARE;
+
   firmware_hash_context_t* ctx = &g_hash_context[systask_id(systask_active())];
 
-  int err;
+  ctx->initialized = false;
 
   if (challenge_len != 0) {
-    err = blake2s_InitKey(&ctx->blake, BLAKE2S_DIGEST_LENGTH, challenge,
-                          challenge_len);
+    int err = blake2s_InitKey(&ctx->blake, BLAKE2S_DIGEST_LENGTH, challenge,
+                              challenge_len);
+    TSH_CHECK(err == 0, TS_EINVAL);
   } else {
-    err = blake2s_Init(&ctx->blake, BLAKE2S_DIGEST_LENGTH);
-  }
-
-  if (err != 0) {
-    return -1;
+    int err = blake2s_Init(&ctx->blake, BLAKE2S_DIGEST_LENGTH);
+    TSH_CHECK(err == 0, TS_EINVAL);
   }
 
   ctx->fw_offset = 0;
@@ -65,17 +68,21 @@ int firmware_hash_start(const uint8_t* challenge, size_t challenge_len) {
          "Cannot compute FW hash.");
 
   ctx->initialized = true;
-  return 0;
+
+cleanup:
+  TSH_RETURN;
 }
 
-int firmware_hash_continue(uint8_t* hash, size_t hash_len) {
+ts_t firmware_hash_continue(firmware_hash_t* hash, int32_t* progress) {
+  TSH_DECLARE;
+
   firmware_hash_context_t* ctx = &g_hash_context[systask_id(systask_active())];
 
-  memset(hash, 0, hash_len);
+  memset(hash, 0, sizeof(firmware_hash_t));
 
-  if (!ctx->initialized) {
-    return -1;
-  }
+  *progress = 0;
+
+  TSH_CHECK(ctx->initialized, TS_ENOINIT);
 
   int n_chunks = 128;
 
@@ -86,43 +93,44 @@ int firmware_hash_continue(uint8_t* hash, size_t hash_len) {
     int err = blake2s_Update(&ctx->blake, chunk_ptr, FW_HASHING_CHUNK_SIZE);
     if (err != 0) {
       ctx->initialized = false;
-      return -1;
+      TSH_RAISE(TS_EINVAL);
     }
 
     ctx->fw_offset += FW_HASHING_CHUNK_SIZE;
     --n_chunks;
   }
 
+  *progress = (100 * ctx->fw_offset) / ctx->fw_size;
+
   if (ctx->fw_offset >= ctx->fw_size) {
     ctx->initialized = false;
-    int err = blake2s_Final(&ctx->blake, hash, hash_len);
-    if (err != 0) {
-      return -1;
-    }
+    int err = blake2s_Final(&ctx->blake, hash, sizeof(firmware_hash_t));
+    TSH_CHECK(err == 0, TS_EINVAL);
   }
 
-  return (100 * ctx->fw_offset) / ctx->fw_size;
+cleanup:
+  TSH_RETURN;
 }
 
-secbool firmware_get_vendor(char* buff, size_t buff_size) {
+ts_t firmware_get_vendor(char* buff, size_t buff_size) {
+  TSH_DECLARE;
   const void* data = flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
   vendor_header vhdr = {0};
 
   memset(buff, 0, buff_size);
 
-  if (data == NULL ||
-      sectrue != read_vendor_header(data, VENDOR_HEADER_MAX_SIZE, &vhdr)) {
-    return secfalse;
-  }
+  TSH_CHECK(data != NULL, TS_EINVAL);
 
-  if (buff_size < (size_t)(vhdr.vstr_len + 1)) {
-    return secfalse;
-  }
+  secbool ret = read_vendor_header(data, VENDOR_HEADER_MAX_SIZE, &vhdr);
+  TSH_CHECK(ret == sectrue, TS_EBADMSG);
+
+  TSH_CHECK(buff_size >= (size_t)(vhdr.vstr_len + 1), TS_EINVAL);
 
   memcpy(buff, vhdr.vstr, vhdr.vstr_len);
 
-  return sectrue;
+cleanup:
+  TSH_RETURN;
 }
 
 void firmware_invalidate_header(void) {

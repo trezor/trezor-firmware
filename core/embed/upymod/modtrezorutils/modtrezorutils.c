@@ -214,6 +214,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
 ///     """
 static mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
                                               const mp_obj_t *args) {
+  ts_t status;
   mp_buffer_info_t chal = {0};
   if (n_args > 0 && args[0] != mp_const_none) {
     mp_get_buffer_raise(args[0], &chal, MP_BUFFER_READ);
@@ -225,24 +226,26 @@ static mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
   }
 
   vstr_t vstr = {0};
-  vstr_init_len(&vstr, BLAKE2S_DIGEST_LENGTH);
+  vstr_init_len(&vstr, sizeof(firmware_hash_t));
 
-  if (firmware_hash_start(chal.buf, chal.len) < 0) {
+  status = firmware_hash_start(chal.buf, chal.len);
+  if (ts_error(status)) {
     vstr_clear(&vstr);
+    if (ts_eq(status, TS_EINVAL)) {
+      mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid challenge."));
+    }
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Failed to start firmware hash."));
   }
 
-  int progress = 0;
+  int32_t progress = 0;
 
   while (progress < 100) {
-    progress = firmware_hash_continue((uint8_t *)vstr.buf, vstr.len);
-
-    if (progress < 0) {
+    status = firmware_hash_continue((firmware_hash_t *)vstr.buf, &progress);
+    if (ts_error(status)) {
       vstr_clear(&vstr);
       mp_raise_msg(&mp_type_RuntimeError,
                    MP_ERROR_TEXT("Failed to calculate firmware hash."));
-      break;
     }
 
     if (mp_obj_is_callable(ui_wait_callback)) {
@@ -266,7 +269,8 @@ static mp_obj_t mod_trezorutils_firmware_vendor(void) {
   return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)"EMULATOR", 8);
 #else
   char vendor[64] = {0};
-  if (sectrue != firmware_get_vendor(vendor, sizeof(vendor))) {
+  ts_t status = firmware_get_vendor(vendor, sizeof(vendor));
+  if (ts_error(status)) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Failed to read vendor header."));
   }
