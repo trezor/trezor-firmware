@@ -110,8 +110,8 @@
               cmake # for nRF build
               curl # for connect tests
               editorconfig-checker
-              gcc-arm-embedded-13
-              gcc14
+              gcc-arm-embedded-15
+              gcc15
               git
               git-subrepo
               gnumake
