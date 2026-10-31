@@ -1,7 +1,6 @@
-use std::env;
 use std::path::PathBuf;
 
-use xbuild::{CLibrary, Result, bail, bail_unsupported, cargo_out};
+use xbuild::{CLibrary, Result, bail, bail_unsupported};
 
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("tropic/inc");
@@ -20,12 +19,13 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         bail_unsupported!();
     }
 
-    cargo_out::rerun_if_env_changed("TROPIC_SILICON_REVISION");
-    let rev = env::var("TROPIC_SILICON_REVISION").unwrap_or_else(|_| "ACAB".into());
-    let (rev_define, fw_dir) = match rev.as_str() {
-        "ABAB" => ("LT_SILICON_REV_ABAB", "boot_v_1_0_1"),
-        "ACAB" => ("LT_SILICON_REV_ACAB", "boot_v_2_0_1"),
-        other => bail!("Unsupported TROPIC_SILICON_REVISION={other}"),
+    let (rev_define, fw_dir) = match (
+        cfg!(feature = "tropic_rev_abab"),
+        cfg!(feature = "tropic_rev_acab"),
+    ) {
+        (true, false) => ("LT_SILICON_REV_ABAB", "boot_v_1_0_1"),
+        (false, true) => ("LT_SILICON_REV_ACAB", "boot_v_2_0_1"),
+        _ => bail!("Enable exactly one of the tropic_rev_abab / tropic_rev_acab features"),
     };
     lib.add_define(rev_define, Some("1"));
 

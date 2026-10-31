@@ -87,6 +87,13 @@ endif
 ifeq ($(TREZOR_MEMPERF),1)
 XTASK_BUILD_OPTS += --mem-perf
 endif
+ifeq ($(TROPIC_SILICON_REVISION),ABAB)
+XTASK_BUILD_OPTS += --tropic-rev abab
+else ifeq ($(TROPIC_SILICON_REVISION),ACAB)
+XTASK_BUILD_OPTS += --tropic-rev acab
+else ifdef TROPIC_SILICON_REVISION
+$(error Unsupported TROPIC_SILICON_REVISION=$(TROPIC_SILICON_REVISION))
+endif
 ifeq ($(UNSAFE_FW),1)
 XTASK_BUILD_OPTS += --unsafe-fw
 endif
