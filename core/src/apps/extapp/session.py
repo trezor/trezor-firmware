@@ -49,8 +49,23 @@ class Session:
         self.schemas = schemas
         # progress layout opened by the app via `SERVICE_PROGRESS`
         self.progress: ProgressLayout | None = None
+        # The app reports work in its own units; the count and the fill are ours.
+        self.progress_total = 0
+        self.progress_done = 0
         # set once the app was stopped because of an error
         self.dead = False
+
+    @property
+    def app_id(self) -> str:
+        """The app's identity, the prefix of every step it asks for.
+
+        The image ID is the app's unique reverse-domain identifier
+        (`<package>.<domain>`), and the whole of it names the app: a package name
+        alone could be shared by two vendors. The display name is for people and
+        cannot name a screen, and the request's own step never reaches the host
+        unprefixed.
+        """
+        return self.image.id()
 
     def send(self, service: int, message_id: int, data: AnyBytes) -> None:
         io.ipc_send(self.task_id, service, message_id, data)

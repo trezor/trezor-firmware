@@ -21,6 +21,25 @@ pub const MAX_MENU_ITEMS: usize = 6;
 
 pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
 
+/// What kind of news a notice is.
+///
+/// The only thing the caller decides about a notice. The screen, its button
+/// words and its timeout follow from it, per model, in
+/// [`FirmwareUI::show_notice`].
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum Severity {
+    /// A step worked, and the flow continues after this screen.
+    Success,
+    /// The flow finished; the person goes back to the host.
+    Done,
+    /// Something to read before going on. Nothing is at stake.
+    Info,
+    /// Something to consider before going on.
+    Warning,
+    /// Going on is risky; the person has to choose it deliberately.
+    Danger,
+}
+
 /// One entry of `select_menu()`: its label plus what the entry means.
 ///
 /// TODO: named after `select_menu` only to avoid colliding with the existing
@@ -132,6 +151,18 @@ impl TryFrom<Obj> for DeviceMenuParams {
 }
 
 pub trait FirmwareUI {
+    /// How the confirmation screens read their buttons and menu.
+    ///
+    /// Shared by `confirm_action` and `confirm_value`, and the same wherever a
+    /// method takes these parameters:
+    ///
+    /// - `verb` — the confirm button's label; `None` means the model's own.
+    /// - `cancel` — whether the screen offers a way out.
+    /// - `verb_cancel` — the way out's label; `None` means the model's own.
+    /// - `external_menu` — draw a menu button that answers `INFO`, for a menu
+    ///   the caller drives. A model with no place for one draws without it.
+    ///
+    /// WIP: not every model honours all of these yet.
     #[allow(clippy::too_many_arguments)]
     fn confirm_action(
         title: TString<'static>,
@@ -166,6 +197,8 @@ pub trait FirmwareUI {
         back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    /// Reads `verb`, `cancel`, `verb_cancel` and `external_menu` as
+    /// [`FirmwareUI::confirm_action`] does.
     #[allow(clippy::too_many_arguments)]
     fn confirm_value(
         title: TString<'static>,
@@ -427,6 +460,7 @@ pub trait FirmwareUI {
         title: TString<'static>,
         description: TString<'static>,
         value: TString<'static>,
+        items: Obj,
         menu_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
@@ -499,6 +533,22 @@ pub trait FirmwareUI {
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_mismatch(title: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
+
+    /// A notice of the given [`Severity`].
+    ///
+    /// The model picks the screen, its button words and its timeout, so the
+    /// same severity looks the same wherever it comes from. `external_menu`
+    /// asks for a menu button the caller drives; a model whose screen for this
+    /// severity cannot draw one draws the notice without it, and says so.
+    /// `cancel` says the notice must offer a way to back out, answering
+    /// `CANCELLED`; how is the model's. WIP: every model ignores it.
+    fn show_notice(
+        severity: Severity,
+        title: TString<'static>,
+        content: TString<'static>,
+        external_menu: bool,
+        cancel: bool,
+    ) -> Result<Gc<LayoutObj>, Error>;
 
     fn show_progress(
         description: TString<'static>,

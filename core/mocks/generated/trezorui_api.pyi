@@ -10,11 +10,12 @@ from trezor.enums import ButtonRequestType, RecoveryType
 # cannot be `bytes` and started getting rid of `PropertyType` uses.
 # There are still a few instances where properties use `bytes`,
 # but we should probably get rid of all and drop `PropertyType` completely.
-# The next goal would be to replace the `bool` with something
-# that can encode actual types / rendering strategies.
+# The third component is being replaced by a `FieldKind` int (0-5),
+# which can encode actual types / rendering strategies; a bool keeps
+# today's meaning for the code that still passes one.
 # See more details here: https://github.com/trezor/trezor-firmware/issues/5411
-PropertyType = tuple[str | None, StrOrBytes | None, bool | None]
-StrPropertyType = tuple[str | None, str | None, bool | None]
+PropertyType = tuple[str | None, StrOrBytes | None, bool | int | None]
+StrPropertyType = tuple[str | None, str | None, bool | int | None]
 T = TypeVar("T")
 
 
@@ -334,8 +335,9 @@ def confirm_properties(
     verb: str | None = None,
     external_menu: bool = False,
 ) -> LayoutContext[UiResult]:
-    """Confirm list of key-value pairs. The third component in the tuple should be True if
-    the value is to be rendered as binary with monospace font, False otherwise."""
+    """Confirm list of key-value pairs. The third component in the tuple says how
+    the value is drawn: a bool keeps today's meaning (True renders it as binary
+    with monospace font), an int is a `FieldKind` 0-5."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -608,8 +610,10 @@ def show_danger(
     value: str = "",
     menu_title: str | None = None,
     verb_cancel: str | None = None,
+    items: Sequence[PropertyType] | None = None,
 ) -> LayoutContext[UiResult]:
-    """Warning modal that makes it easier to cancel than to continue."""
+    """Warning modal that makes it easier to cancel than to continue. With
+    `items`, the message page shows them and `description` may be empty."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -797,7 +801,9 @@ def show_properties(
     value: Sequence[PropertyType] | str,
     subtitle: str | None = None,
 ) -> LayoutContext[None]:
-    """Show a list of key-value pairs, or a monospace string."""
+    """Show a list of key-value pairs, or a monospace string. The third
+    component of a pair says how the value is drawn, as in
+    `confirm_properties`."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -879,20 +885,33 @@ def tutorial() -> LayoutContext[UiResult]:
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def process_ipc_message(
+def deserialize_ui_message(
     *,
     data: bytes,
-) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
-    """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
+) -> tuple[Any, ...]:
+    """Read an app's UI request into plain data for the extapp UI driver. The
+    first element is the request's `TrezorUiEnum` discriminant; the rest
+    follows the variant."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def send_ui_result(
+def encode_ui_result(
     *,
-    result: UiResult | int | str | None,
-    ipc_cb: Callable[[bytes], None] | None = None,
-) -> None:
-    """Serialize a UI result into bytes and send it via the ipc_cb callback.."""
+    result: int,
+) -> bytes:
+    """Serialize a UI result, by its `TrezorUiResult` discriminant, into the
+    bytes the extapp driver sends back to the app."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def encode_chunk_request(
+    *,
+    field: int,
+    offset: int,
+    length: int,
+) -> bytes:
+    """Serialize one request for a `Data` field's chunk into the bytes the
+    extapp UI driver sends to the app."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

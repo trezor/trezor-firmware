@@ -356,6 +356,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_description;
   MP_QSTR_deserialize_crypto_message;
   MP_QSTR_deserialize_progress_message;
+  MP_QSTR_deserialize_ui_message;
   MP_QSTR_details_title;
   MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
@@ -365,6 +366,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_disconnect;
   MP_QSTR_duration_ms;
   MP_QSTR_encode;
+  MP_QSTR_encode_chunk_request;
+  MP_QSTR_encode_ui_result;
   MP_QSTR_encoded_length;
   MP_QSTR_entropy__send;
   MP_QSTR_entropy__title_confirm;
@@ -382,6 +385,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fee;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
+  MP_QSTR_field;
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__restart;
   MP_QSTR_firmware_update__title;
@@ -461,7 +465,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__view_all_data;
   MP_QSTR_instructions_verb;
   MP_QSTR_interface;
-  MP_QSTR_ipc_cb;
   MP_QSTR_is_connectable;
   MP_QSTR_is_connected;
   MP_QSTR_is_data;
@@ -486,6 +489,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_led__enable;
   MP_QSTR_led__title;
   MP_QSTR_led_enabled;
+  MP_QSTR_length;
   MP_QSTR_lines;
   MP_QSTR_load_from_flash;
   MP_QSTR_lockable;
@@ -537,6 +541,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_needs_params_refresh;
   MP_QSTR_next_timeout;
   MP_QSTR_notification;
+  MP_QSTR_offset;
   MP_QSTR_packet_in;
   MP_QSTR_packet_in_channel;
   MP_QSTR_packet_out;
@@ -616,7 +621,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_pm_event;
   MP_QSTR_prefill;
   MP_QSTR_prefill_word;
-  MP_QSTR_process_ipc_message;
   MP_QSTR_production_year;
   MP_QSTR_progress__authenticity_check;
   MP_QSTR_progress__done;
@@ -854,7 +858,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
   MP_QSTR_send_transport_busy;
-  MP_QSTR_send_ui_result;
   MP_QSTR_serialize_crypto_result;
   MP_QSTR_set_brightness;
   MP_QSTR_set_enabled;

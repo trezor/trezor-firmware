@@ -96,6 +96,93 @@ impl ParagraphSource<'static> for ConfirmValueParams {
     }
 }
 
+/// How a value in a property list is drawn.
+///
+/// The third element of an item picks one of these: a bool keeps today's
+/// meaning (`true` = mono, `false` = plain), an int is a `FieldKind` 0–5.
+/// The bool is checked first, by identity, because in Python `True == 1`,
+/// which is `FieldKind::Amount`.
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum PropKind {
+    Plain,
+    Mono,
+    Text,
+    Amount,
+    Address,
+    Data,
+    Note,
+    Warning,
+}
+
+impl PropKind {
+    fn from_field_kind(kind: i32) -> Result<Self, Error> {
+        Ok(match kind {
+            0 => Self::Text,
+            1 => Self::Amount,
+            2 => Self::Address,
+            3 => Self::Data,
+            4 => Self::Note,
+            5 => Self::Warning,
+            _ => return Err(Error::TypeError),
+        })
+    }
+}
+
+/// A model's styles for the field kinds.
+///
+/// A model that has its own styles sets them; [`PropsList::new`] otherwise
+/// leaves this unset, which draws every kind in the plain value font, except
+/// mono, address and data in the mono one.
+#[derive(Copy, Clone)]
+pub struct FieldStyles {
+    pub text: &'static TextStyle,
+    pub amount: &'static TextStyle,
+    pub address: &'static TextStyle,
+    pub data: &'static TextStyle,
+    pub note: &'static TextStyle,
+    pub warning: &'static TextStyle,
+}
+
+impl FieldStyles {
+    /// A model that has not chosen styles: every kind is plain text.
+    pub const fn plain(text: &'static TextStyle) -> Self {
+        Self {
+            text,
+            amount: text,
+            address: text,
+            data: text,
+            note: text,
+            warning: text,
+        }
+    }
+
+    pub fn style(&self, kind: PropKind) -> &'static TextStyle {
+        match kind {
+            PropKind::Plain | PropKind::Text => self.text,
+            PropKind::Mono | PropKind::Address => self.address,
+            PropKind::Amount => self.amount,
+            PropKind::Data => self.data,
+            PropKind::Note => self.note,
+            PropKind::Warning => self.warning,
+        }
+    }
+}
+
+/// Reads the third element of an item.
+///
+/// The bools and `None` are checked first, by identity, because in Python
+/// `True == 1`, which is [`FieldKind::Amount`]; core's own layouts pass `None`
+/// for "no special styling". Only then is the element read as an int kind.
+fn prop_kind(kind: Obj) -> Result<PropKind, Error> {
+    if kind == Obj::const_true() {
+        return Ok(PropKind::Mono);
+    }
+    if kind == Obj::const_false() || kind == Obj::const_none() {
+        return Ok(PropKind::Plain);
+    }
+    PropKind::from_field_kind(i32::try_from(kind)?)
+}
+
 pub struct PropsList {
     items: Gc<List>,
     key_font: &'static TextStyle,
@@ -103,6 +190,8 @@ pub struct PropsList {
     value_mono_font: &'static TextStyle,
     key_value_padding: i16,
     props_padding: i16,
+    /// A model's styles for the field kinds; `None` when the model has none.
+    field_styles: Option<FieldStyles>,
 }
 
 impl PropsList {
@@ -121,7 +210,32 @@ impl PropsList {
             value_mono_font,
             key_value_padding,
             props_padding,
+            field_styles: None,
         })
+    }
+
+    /// Draws the int kinds with the model's own styles.
+    pub fn with_field_styles(mut self, styles: FieldStyles) -> Self {
+        self.field_styles = Some(styles);
+        self
+    }
+
+    /// The style for a value, from the third element of its item, and whether
+    /// that kind may hold raw bytes.
+    fn value_style(&self, kind: Obj) -> Result<(&'static TextStyle, bool), Error> {
+        let kind = prop_kind(kind)?;
+        let allow_bytes = matches!(kind, PropKind::Mono | PropKind::Address | PropKind::Data);
+        let style = match (kind, self.field_styles) {
+            // Core's own layouts pass a bool: they keep this list's own fonts.
+            (PropKind::Plain, _) => self.value_font,
+            (PropKind::Mono, _) => self.value_mono_font,
+            (kind, Some(styles)) => styles.style(kind),
+            // Bolt and Caesar have no styles for the field kinds yet: address and
+            // data keep the mono font, every other kind is plain.
+            (_, None) if allow_bytes => self.value_mono_font,
+            (_, None) => self.value_font,
+        };
+        Ok((style, allow_bytes))
     }
 
     pub fn new(obj: Obj) -> Result<Self, Error> {
@@ -145,10 +259,10 @@ impl ParagraphSource<'static> for PropsList {
     fn at(&self, index: usize, offset: usize) -> Paragraph<'static> {
         let block = move || {
             let entry = self.items.get(index / 2)?;
-            let [key, value, value_is_mono]: [Obj; 3] = iter_into_array(entry)?;
-            let value_is_mono: bool = bool::try_from(value_is_mono)?;
+            let [key, value, kind]: [Obj; 3] = iter_into_array(entry)?;
             let obj: Obj;
             let style: &TextStyle;
+            let allow_bytes: bool;
 
             if index.is_multiple_of(2) {
                 if !key.is_str() && key != Obj::const_none() {
@@ -156,15 +270,9 @@ impl ParagraphSource<'static> for PropsList {
                 }
                 style = self.key_font;
                 obj = key;
+                allow_bytes = false;
             } else {
-                if value_is_mono {
-                    style = self.value_mono_font;
-                } else {
-                    if value.is_bytes() {
-                        return Err(Error::TypeError);
-                    }
-                    style = self.value_font;
-                }
+                (style, allow_bytes) = self.value_style(kind)?;
                 obj = value;
             };
 
@@ -178,6 +286,9 @@ impl ParagraphSource<'static> for PropsList {
                 let content: StrBuffer = obj.try_into()?;
                 Paragraph::new(style, content.skip_prefix(offset))
             } else if obj.is_bytes() {
+                if !allow_bytes {
+                    return Err(Error::TypeError);
+                }
                 let content = hexlify_bytes(obj, offset, MAX_HEX_CHARS_ON_SCREEN)?;
                 Paragraph::new(style, content)
             } else {
@@ -266,3 +377,18 @@ pub enum ContentType {
 /// Maximum number of extended public keys (xpubs) that can be displayed in
 /// a layout or flow.
 pub const MAX_XPUBS: usize = 16;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// `true` is mono, `false` and `None` are plain, and the bools are read
+    /// before the ints. Core's own layouts pass `None`, so reading it as an
+    /// int would break them.
+    #[test]
+    fn bool_and_none_kinds_are_read_before_ints() {
+        assert!(matches!(prop_kind(Obj::const_true()), Ok(PropKind::Mono)));
+        assert!(matches!(prop_kind(Obj::const_false()), Ok(PropKind::Plain)));
+        assert!(matches!(prop_kind(Obj::const_none()), Ok(PropKind::Plain)));
+    }
+}

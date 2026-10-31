@@ -15,8 +15,9 @@ if TYPE_CHECKING:
     from .session import Session
 
 _INIT = 0
-_REPORT = 1
-_STOP = 2
+_STEP = 1
+_LABEL = 2
+_STOP = 3
 
 
 def handle(session: Session, msg: IpcMessage) -> None:
@@ -27,18 +28,31 @@ def handle(session: Session, msg: IpcMessage) -> None:
     obj = trezorui_api.deserialize_progress_message(data=bytes(msg.data))
 
     if message_id == _INIT:
-        description, title, indeterminate, danger = obj
-        session.progress = progress(
-            description=description,
-            title=title,
-            indeterminate=indeterminate,
-            danger=danger,
-        )
-    elif message_id == _REPORT:
+        if session.progress is not None:
+            # One bar at a time: a progress is closed before the app asks
+            # anything, so a start while one is open is the app's mistake.
+            session.die(DataError("Nested progress"))
+        label, total = obj
+        session.progress_total = total
+        session.progress_done = 0
+        # A total of 0 means the app does not know it: motion, no fill.
+        session.progress = progress(description=label, indeterminate=total == 0)
+        # The layout only appears on its first report, and an indeterminate
+        # progress never reports: show it now.
+        session.progress.report(0)
+    elif message_id == _STEP:
         if session.progress is None:
             session.die(DataError("Progress not initialized"))
-        description, value = obj
-        session.progress.report(value, description=description)
+        total = session.progress_total
+        if total:
+            # Past the total pins the bar full rather than wrapping.
+            session.progress_done = min(session.progress_done + obj, total)
+            session.progress.report(session.progress_done * 1000 // total)
+    elif message_id == _LABEL:
+        if session.progress is None:
+            session.die(DataError("Progress not initialized"))
+        # The label changes under the bar; the fill and the count are ours.
+        session.progress.report(session.progress.value, description=obj)
     elif message_id == _STOP:
         if session.progress is None:
             session.die(DataError("Progress not initialized"))

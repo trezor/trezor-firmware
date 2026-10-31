@@ -4,18 +4,6 @@
     "version": "2.13.0.0"
   },
   "translations": {
-    "address__check_with_source": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Vérifiez l'adresse avec la source."
-    },
-    "address__confirmed": {
-      "Bolt": "Adresse de réception confirmée",
-      "Caesar": "Adresse de réception confirmée",
-      "Delizia": "Adresse de réception confirmée.",
-      "Eckhart": "Adresse de réception confirmée."
-    },
     "address__warning_not_yours": {
       "Bolt": "",
       "Caesar": "",
@@ -61,8 +49,6 @@
     "ethereum__approve_intro_title_revoke": "Révocation de jetons",
     "ethereum__approve_revoke_from": "Révoquer de",
     "ethereum__approve_to": "Approuver à",
-    "ethereum__no_message_field": "Aucun champ de message",
-    "ethereum__sign_eip712": "Signer ces données structurées EIP-712 ?",
     "ethereum__staking_claim": "Réclamer",
     "ethereum__staking_stake": "Mettre en staking",
     "ethereum__staking_unstake": {
@@ -70,14 +56,6 @@
       "Caesar": "Retirer du staking",
       "Delizia": "Retirer du staking",
       "Eckhart": "Retirer du staking"
-    },
-    "ethereum__title_confirm_message": "Confirmer le message",
-    "ethereum__title_confirm_message_hash": "Confirmer le hash du message",
-    "ethereum__title_confirm_typed_data": {
-      "Bolt": "Confirmer les données structurées",
-      "Caesar": "Confirmer les données structurées",
-      "Delizia": "Confirmer les données structurées",
-      "Eckhart": "Conf. données"
     },
     "ethereum__title_input_data": "Données",
     "ethereum__title_token_contract": {
@@ -134,7 +112,6 @@
     "words__note": "Remarque",
     "words__recipient": "Destinataire",
     "words__resource": "Ressource",
-    "words__review": "Vérifier",
     "words__send": "Envoyer",
     "words__show_next": "Afficher la suite",
     "words__title_done": "Terminé",

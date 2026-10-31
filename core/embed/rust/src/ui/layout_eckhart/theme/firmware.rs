@@ -5,6 +5,7 @@ use super::super::fonts;
 use super::*;
 use crate::ui::component::text::layout::{Chunks, LineBreaking, PageBreaking};
 use crate::ui::component::text::TextStyle;
+use crate::ui::layout::util::FieldStyles;
 use crate::ui::notification::NotificationLevel;
 
 // props settings
@@ -14,6 +15,25 @@ pub const PROPS_SPACING_EXTRA: i16 = 20; // [px]
 pub const PROPS_KEY_FONT: TextStyle = TEXT_SMALL_LIGHT;
 pub const PROPS_VALUE_FONT: TextStyle = TEXT_MONO_LIGHT;
 pub const PROPS_VALUE_MONO_FONT: TextStyle = TEXT_MONO_LIGHT;
+
+/// The styles for the field kinds, shared by every property list this model
+/// draws.
+///
+/// `text` is the model's body text, `amount` is the style the summary draws its
+/// amount with, `address` keeps the chunking this model already gives
+/// addresses, `data` is mono without chunking, a `note` reads like the
+/// descriptions around it, and a `warning` is the caution row. A bool kind
+/// still means mono or plain.
+pub fn field_styles() -> FieldStyles {
+    FieldStyles {
+        text: &TEXT_REGULAR,
+        amount: &TEXT_MONO_MEDIUM_LIGHT,
+        address: &TEXT_MONO_ADDRESS_CHUNKS,
+        data: &TEXT_MONO_MEDIUM_LIGHT_DATA,
+        note: &TEXT_SMALL_LIGHT,
+        warning: &TEXT_WARNING,
+    }
+}
 
 pub const CONFIRM_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(1500);
 pub const ERASE_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(1500);
@@ -101,6 +121,12 @@ pub const TEXT_MONO_LIGHT_ELLIPSIS: TextStyle =
 
 pub const TEXT_REGULAR_WARNING: TextStyle =
     TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, RED, BG, FG, FG);
+
+/// A caution row inside a property list - the same orange the layout gives its
+/// caution hints, e.g. `Hint::new_warning_caution`.
+pub const TEXT_WARNING: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, ORANGE, BG, ORANGE, ORANGE)
+        .with_line_spacing(-4);
 
 pub const TEXT_MEDIUM_EXTRA_LIGHT: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_MEDIUM_26,

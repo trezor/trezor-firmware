@@ -1,9 +1,10 @@
 use heapless::Vec;
 #[cfg(feature = "app_loading")]
-use rkyv::{option::ArchivedOption, rancor::Failure, tuple::ArchivedTuple2, Archived};
+use rkyv::{option::ArchivedOption, rancor::Failure, Archived};
 #[cfg(feature = "app_loading")]
-use trezor_app_sdk::ui::{
-    Property, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
+use trezor_app_sdk::structs::{
+    FieldKind, Slice, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult, UiChunkRequest,
+    WireExtra, WireField,
 };
 
 use crate::io::BinaryData;
@@ -17,6 +18,8 @@ use crate::micropython::macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module};
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
 use crate::micropython::qstr::Qstr;
+#[cfg(feature = "app_loading")]
+use crate::micropython::tuple::Tuple;
 use crate::micropython::{util, Error, Obj};
 use crate::strutil::TString;
 use crate::trezorhal::model;
@@ -27,10 +30,6 @@ use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
 use crate::ui::layout::base::LAYOUT_STATE;
 use crate::ui::layout::device_menu_result::DEVICE_MENU_RESULT;
 use crate::ui::layout::menu_item_intent::micropython::MENU_ITEM_INTENT_OBJ;
-#[cfg(feature = "app_loading")]
-use crate::ui::layout::menu_item_intent::MenuItemIntent;
-#[cfg(feature = "app_loading")]
-use crate::ui::layout::obj::LayoutMaybeTrace;
 use crate::ui::layout::obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ};
 use crate::ui::layout::result::{BACK, CANCELLED, CONFIRMED, INFO};
 use crate::ui::layout::util::{upy_disable_animation, RecoveryType};
@@ -864,8 +863,14 @@ extern "C" fn new_show_danger(n_args: usize, args: *const Obj, kwargs: *mut Map)
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        // The app's facts, when it has them; the message page shows them
+        // instead of `description`, which may then be empty.
+        let items: Obj = kwargs
+            .get(Qstr::MP_QSTR_items)
+            .unwrap_or_else(|_| Obj::const_none());
 
-        let layout = ModelUI::show_danger(title, description, value, menu_title, verb_cancel)?;
+        let layout =
+            ModelUI::show_danger(title, description, value, items, menu_title, verb_cancel)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1250,378 +1255,243 @@ extern "C" fn new_tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
 }
 
 #[cfg(feature = "app_loading")]
-extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+fn tstr(s: &Archived<StrSlice>) -> Result<TString<'static>, Error> {
+    Ok(StrBuffer::alloc(s.as_ref())?.into())
+}
+
+#[cfg(feature = "app_loading")]
+fn tstr_opt(s: &ArchivedOption<Archived<StrSlice>>) -> Result<Option<TString<'static>>, Error> {
+    s.as_ref().map(tstr).transpose()
+}
+
+/// The wire's `FieldKind` discriminant and whether the value is raw bytes
+/// rather than UTF-8.
+#[cfg(feature = "app_loading")]
+fn field_kind(kind: &Archived<FieldKind>) -> (u8, bool) {
+    match kind {
+        Archived::<FieldKind>::Text => (0, false),
+        Archived::<FieldKind>::Amount => (1, false),
+        Archived::<FieldKind>::Address => (2, false),
+        Archived::<FieldKind>::Data => (3, true),
+        Archived::<FieldKind>::Note => (4, false),
+        Archived::<FieldKind>::Warning => (5, false),
+    }
+}
+
+/// One fact of a request, as `(kind, label, value)`: `kind` is the wire's
+/// `FieldKind` discriminant, `label` is `None` for notes and warnings, and
+/// `value` is `str` for the text kinds and `(total, offset, chunk)` for `Data`.
+///
+/// An amount arrives as its number and its ticker, apart, and is drawn as the
+/// two joined by a space: how they are put together is core's, not the app's.
+///
+/// A `Data` value travels as its length alone, so its chunk is empty here: the
+/// driver pulls each chunk from the app while the person pages.
+#[cfg(feature = "app_loading")]
+fn obj_from_field(field: &Archived<WireField<'_>>) -> Result<Obj, Error> {
+    let (kind, is_data) = field_kind(&field.kind);
+    let value = if is_data {
+        Obj::try_from((
+            Obj::try_from(u64::from(field.len.to_native()))?,
+            Obj::from(0u8),
+            Obj::try_from(field.value.as_ref())?,
+        ))?
+    } else {
+        // The text kinds carry UTF-8, as the app wrote it.
+        let text = core::str::from_utf8(field.value.as_ref())
+            .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
+        let ticker = field.ticker.as_ref().map(|ticker| ticker.as_ref());
+        match ticker.filter(|ticker: &&str| !ticker.is_empty()) {
+            Some(ticker) => {
+                let joined = StrBuffer::alloc_with(text.len() + 1 + ticker.len(), |buf| {
+                    let (number, rest) = buf.split_at_mut(text.len());
+                    number.copy_from_slice(text.as_bytes());
+                    rest[0] = b' ';
+                    rest[1..].copy_from_slice(ticker.as_bytes());
+                })?;
+                Obj::try_from(joined.as_ref())?
+            }
+            None => Obj::try_from(text)?,
+        }
+    };
+    Ok(Obj::try_from((
+        Obj::from(kind),
+        opt_obj(tstr_opt(&field.label)?)?,
+        value,
+    ))?)
+}
+
+#[cfg(feature = "app_loading")]
+fn obj_from_fields(archived: &Archived<Slice<'_, WireField<'_>>>) -> Result<Obj, Error> {
+    let slice = archived.as_ref();
+    let mut list = List::with_capacity(slice.len())?;
+    for field in slice {
+        list.append(obj_from_field(field)?)?;
+    }
+    Ok(List::alloc(unsafe { list.as_slice() })?.into())
+}
+
+#[cfg(feature = "app_loading")]
+fn opt_obj<T>(value: Option<T>) -> Result<Obj, Error>
+where
+    Obj: TryFrom<T>,
+    Error: From<<Obj as TryFrom<T>>::Error>,
+{
+    match value {
+        Some(value) => Ok(value.try_into()?),
+        None => Ok(Obj::const_none()),
+    }
+}
+
+#[cfg(feature = "app_loading")]
+fn obj_from_extras(archived: &Archived<Slice<WireExtra>>) -> Result<Obj, Error> {
+    let slice = archived.as_ref();
+    let mut list = List::with_capacity(slice.len())?;
+    for extra in slice {
+        list.append(Obj::try_from((
+            tstr(&extra.label)?,
+            obj_from_fields(&extra.fields)?,
+        ))?)?;
+    }
+    Ok(List::alloc(unsafe { list.as_slice() })?.into())
+}
+
+/// Reads an app's UI request into plain Python data for the extapp UI driver,
+/// which builds and runs the screens with the same calls the firmware's own
+/// flows use.
+///
+/// Returns `(kind, step, ...)`: `kind` is the `TrezorUiEnum` discriminant,
+/// `step` names the step as the app gave it (the driver prefixes the app's
+/// name), and the rest follows the variant: a review is `(kind, step, title,
+/// fields, extras, is_final)`, a danger or details is `(kind, step, title,
+/// fields)`, a verify is `(kind, step, value, account, path)`, and a done is
+/// `(kind, step, text)`. `fields` is a list of `(kind, label, value)` with the
+/// wire's `FieldKind` as an int, no label for notes and warnings, and for
+/// `Data` a `(total, offset, chunk)` triple whose chunk is empty until the
+/// driver pulls it; `extras` is a list of `(label, fields)`.
+///
+/// Only what the app chose arrives; every other parameter of the screens is
+/// the driver's, the same for every app.
+#[cfg(feature = "app_loading")]
+extern "C" fn new_deserialize_ui_message(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
 
-        let archived =
-            rkyv::access::<Archived<TrezorUiEnum>, Failure>(unwrap!(unsafe { get_buffer(obj) }))
-                .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
+        // Read in place, without copying.
+        let archived = rkyv::access::<Archived<TrezorUiEnum>, Failure>(unsafe { get_buffer(obj) }?)
+            .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
 
-        // Helper to wrap a layout with br_code and optional br_name into the expected
-        // tuple
-        fn wrap(
-            layout: impl LayoutMaybeTrace + 'static,
-            br_code: i32,
-            br_name: Option<&Archived<StrSlice>>,
-        ) -> Result<(Gc<LayoutObj>, i32, Obj), Error> {
-            Ok((
-                LayoutObj::new_root(layout)?,
-                br_code,
-                match br_name {
-                    Some(s) => <Obj as TryFrom<&str>>::try_from(s.as_ref())?,
-                    None => Obj::const_none(),
-                },
-            ))
-        }
-
-        fn tstr(s: &Archived<StrSlice>) -> TString<'static> {
-            unwrap!(StrBuffer::alloc(s.as_ref())).into()
-        }
-
-        fn tstr_opt(s: &ArchivedOption<Archived<StrSlice>>) -> Option<TString<'static>> {
-            s.as_ref()
-                .map(|s| unwrap!(StrBuffer::alloc(s.as_ref())).into())
-        }
-
-        fn tstr_tuple_opt(
-            s: &ArchivedOption<ArchivedTuple2<Archived<StrSlice>, bool>>,
-        ) -> Option<(TString<'static>, bool)> {
-            s.as_ref()
-                .map(|s| (unwrap!(StrBuffer::alloc(s.0.as_ref())).into(), s.1))
-        }
-
-        fn obj_from_strextlist(archived: &Archived<Slice<StrExt>>) -> Obj {
-            let slice = archived.as_ref();
-            let mut list = unwrap!(List::with_capacity(slice.len()));
-            for item in slice {
-                let obj = unwrap!(Obj::try_from((
-                    unwrap!(Obj::try_from(item.key.as_ref())),
-                    unwrap!(Obj::try_from(item.mono))
-                )));
-                unwrap!(list.append(obj));
-            }
-            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
-        }
-
-        fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Obj {
-            let slice = archived.as_ref();
-            let mut list = unwrap!(List::with_capacity(slice.len()));
-            for item in slice {
-                let obj = unwrap!(Obj::try_from((
-                    unwrap!(Obj::try_from(item.key.as_ref())),
-                    unwrap!(Obj::try_from(item.value.as_ref())),
-                    unwrap!(Obj::try_from(item.mono))
-                )));
-                unwrap!(list.append(obj));
-            }
-            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
-        }
-
-        let (main_layout, br_code, br_name) =
-        // Access the archived data zero-copy using safe Deref access
-        match archived {
-        Archived::<TrezorUiEnum>::SelectMenu(m) => {
-            let mut vec = heapless::Vec::<SelectMenuItem, MAX_MENU_ITEMS>::new();
-            for item in m.items.as_ref() {
-                unwrap!(vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard)));
-            }
-            wrap(
-                ModelUI::select_menu(vec, 0)?,
-                m.br_code.to_native(),
-                None,
-            )?
-        }
-        Archived::<TrezorUiEnum>::ConfirmTrade(m) => wrap(
-            ModelUI::confirm_trade(
-                tstr(&m.title),
-                tstr(&m.subtitle),
-                tstr_opt(&m.sell),
-                tstr(&m.buy),
-                m.back_button,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmAction(m) => wrap(
-            ModelUI::confirm_action(
-                tstr(&m.title),
-                Some(tstr(&m.action)),
-                tstr_opt(&m.description),
-                tstr_opt(&m.subtitle),
-                tstr_opt(&m.verb),
-                m.cancel,
-                None,
-                m.hold,
-                false,
-                false,
-                false,
-                None,
-                m.external_menu,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowInfoWithCancel(m) => wrap(
-            ModelUI::show_info_with_cancel(
-                tstr(&m.title),
-                obj_from_proplist((&m.items).into()),
-                false,
-                m.chunkify,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmValueIntro(m) => (
-            ModelUI::confirm_value_intro(
-                tstr(&m.title),
-                m.value.as_ref().try_into()?,
-                tstr_opt(&m.subtitle),
-                tstr_opt(&m.verb),
-                tstr_opt(&m.verb_cancel),
-                tstr_opt(&m.verb_view_all),
-                m.hold,
-                m.chunkify,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::ConfirmSummary(m) => wrap(
-            ModelUI::confirm_summary(
-                tstr_opt(&m.amount),
-                tstr_opt(&m.amount_label),
-                tstr(&m.fee),
-                tstr(&m.fee_label),
-                Some(tstr(&m.title)),
-                m.account_items.as_ref().map(|i| obj_from_proplist(i)),
-                tstr_opt(&m.account_title),
-                m.extra_items.as_ref().map(|i| obj_from_proplist(i)),
-                tstr_opt(&m.extra_title),
-                None,
-                m.back_button,
-                false,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmValue(m) => wrap(
-            ModelUI::confirm_value(
-                tstr(&m.title),
+        let fields: &[Obj] = match archived {
+            Archived::<TrezorUiEnum>::Review(m) => &[
+                Obj::from(0u8),
+                Obj::try_from(m.step.as_ref())?,
+                Obj::try_from(m.title.as_ref())?,
+                obj_from_fields(&m.fields)?,
+                obj_from_extras(&m.extras)?,
+                Obj::try_from(m.is_final)?,
+            ],
+            Archived::<TrezorUiEnum>::Danger(m) => &[
+                Obj::from(1u8),
+                Obj::try_from(m.step.as_ref())?,
+                Obj::try_from(m.title.as_ref())?,
+                obj_from_fields(&m.fields)?,
+            ],
+            Archived::<TrezorUiEnum>::Details(m) => &[
+                Obj::from(2u8),
+                Obj::try_from(m.step.as_ref())?,
+                Obj::try_from(m.title.as_ref())?,
+                obj_from_fields(&m.fields)?,
+            ],
+            Archived::<TrezorUiEnum>::VerifyAddress(m) => &[
+                Obj::from(3u8),
+                Obj::try_from(m.step.as_ref())?,
                 Obj::try_from(m.value.as_ref())?,
-                tstr_opt(&m.description),
-                m.is_data,
-                None,
-                tstr_opt(&m.subtitle),
-                tstr_opt(&m.verb),
-                None,
-                m.info,
-                m.hold,
-                m.chunkify,
-                m.page_counter,
-                false,
-                m.cancel,
-                false,
-                tstr_tuple_opt(&m.footer),
-                m.external_menu,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowWarning(m) => (
-            ModelUI::show_warning(
-                Some(tstr(&m.title)),
-                tstr(&m.verb),
-                tstr(&m.content),
-                TString::empty(),
-                m.allow_cancel,
-                m.danger,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::ShowMismatch(m) => wrap(
-            ModelUI::show_mismatch(tstr(&m.title))?,
-            m.br_code.to_native(),
-            None,
-        )?,
-        Archived::<TrezorUiEnum>::ShowDanger(m) => wrap(
-            ModelUI::show_danger(
-                tstr(&m.title),
-                tstr(&m.content),
-                TString::empty(),
-                tstr_opt(&m.menu_title),
-                tstr_opt(&m.verb_cancel),
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowSuccess(m) => (
-            ModelUI::show_success(
-                tstr(&m.title),
-                tstr(&m.button),
-                tstr(&m.content),
-                false,
-                m.duration_ms.as_ref().map(|d| d.to_native()).unwrap_or(0),
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::RequestNumber(m) => wrap(
-            ModelUI::request_number(
-                tstr(&m.title),
-                m.initial.into(),
-                m.min.into(),
-                m.max.into(),
-                Some(tstr(&m.content)),
-                Some(|_| TString::empty()),
-            )?,
-            m.br_code.to_native(),
-            None,
-        )?,
-        Archived::<TrezorUiEnum>::ConfirmProperties(m) => wrap(
-            ModelUI::confirm_properties(
-                tstr(&m.title),
-                tstr_opt(&m.subtitle),
-                obj_from_proplist(&m.props),
-                m.hold,
-                tstr_opt(&m.verb),
-                false,
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowProperties(m) => wrap(
-            ModelUI::show_properties(
-                tstr(&m.title),
-                tstr_opt(&m.subtitle),
-                obj_from_proplist(&m.props),
-            )?,
-            m.br_code.to_native(),
-            m.br_name.as_ref(),
-        )?,
-        Archived::<TrezorUiEnum>::ShowPublicKey(m) => {
-            let account = tstr_opt(&m.account);
-            let pubkey = tstr(&m.pubkey);
-            wrap(
-                ModelUI::flow_get_pubkey(
-                    pubkey,
-                    tstr(&m.title),
-                    account,
-                    tstr_opt(&m.warning),
-                    pubkey,
-                    account,
-                    tstr_opt(&m.path),
-                    11,
-                    tstr(&m.br_name),
-                )?,
-                m.br_code.to_native(),
-                None,
-            )?
-        }
-        Archived::<TrezorUiEnum>::ConfirmWithInfo(m) => (
-            ModelUI::confirm_with_info(
-                tstr(&m.title),
-                tstr_opt(&m.subtitle),
-                obj_from_strextlist(&m.items),
-                tstr(&m.verb),
-                tstr_opt(&m.verb_info),
-                None,
-                false,
-            )?,
-            m.br_code.to_native(),
-            match m.br_name.as_ref() {
-                Some(s) => Obj::try_from(s.as_ref())?,
-                None => Obj::const_none(),
-            },
-        ),
-        Archived::<TrezorUiEnum>::ShowAddress(m) => wrap(
-            ModelUI::flow_get_address(
-                tstr(&m.address),
-                tstr_opt(&m.title).unwrap_or("Receive".into()),
-                tstr_opt(&m.subtitle),
-                None,
-                None,
-                m.chunkify,
-                tstr(&m.address_qr),
-                m.case_sensitive,
-                tstr_opt(&m.account),
-                tstr_opt(&m.path),
-                obj_from_proplist(&m.xpubs),
-                10,
-                "show_address".into(),
-            )?,
-            m.br_code.to_native(),
-            None,
-        )?,
-    };
+                opt_obj(tstr_opt(&m.account)?)?,
+                opt_obj(tstr_opt(&m.path)?)?,
+            ],
+            Archived::<TrezorUiEnum>::VerifyPubkey(m) => &[
+                Obj::from(4u8),
+                Obj::try_from(m.step.as_ref())?,
+                Obj::try_from(m.value.as_ref())?,
+                opt_obj(tstr_opt(&m.account)?)?,
+                opt_obj(tstr_opt(&m.path)?)?,
+            ],
+            Archived::<TrezorUiEnum>::Done(m) => &[
+                Obj::from(5u8),
+                Obj::try_from(m.step.as_ref())?,
+                Obj::try_from(m.text.as_ref())?,
+            ],
+        };
 
-        Ok((
-            Obj::from(main_layout),
-            Obj::try_from(u32::try_from(br_code)?)?,
-            br_name,
-        )
-            .try_into()?)
+        Ok(Tuple::alloc(fields)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 #[cfg(not(feature = "app_loading"))]
-extern "C" fn new_process_ipc_message(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+extern "C" fn new_deserialize_ui_message(
+    _n_args: usize,
+    _args: *const Obj,
+    _kwargs: *mut Map,
+) -> Obj {
     unimplemented!()
 }
 
+/// Serializes a UI decision into the bytes the extapp driver sends back to
+/// the app. `result` is a `TrezorUiResult` decision discriminant: 0 confirmed,
+/// 1 cancelled, or 5 show details. Chunk requests are the driver's own, encoded
+/// by `encode_chunk_request`.
 #[cfg(feature = "app_loading")]
-extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_encode_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
-
-        let ipc_callback: Option<Obj> = kwargs
-            .get(Qstr::MP_QSTR_ipc_cb)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
-
-        let ipc_cb = unwrap!(ipc_callback.map(|cb| {
-            move |bytes: Obj| {
-                unwrap!(cb.call_with_n_args(&[bytes]));
-            }
-        }));
-
-        // Map MicroPython UiResult object to Rust enum for serialization
-        let msg = if obj == CONFIRMED.as_obj() {
-            TrezorUiResult::Confirmed
-        } else if obj == CANCELLED.as_obj() {
-            TrezorUiResult::Cancelled
-        } else if obj == BACK.as_obj() {
-            TrezorUiResult::Back
-        } else if obj == INFO.as_obj() {
-            TrezorUiResult::Info
-        } else if let Ok(val) = u32::try_from(obj) {
-            TrezorUiResult::Integer(val)
-        } else {
-            return Err(Error::TypeError);
+        // Say what the person did, rather than naming the button that did it.
+        // Only the layout's final answer goes back: its menu and extras stay
+        // in core. Which answers those are is `result.rs`'s to say.
+        let result: u32 = kwargs.get(Qstr::MP_QSTR_result)?.try_into()?;
+        let msg = match result {
+            0 => TrezorUiResult::Confirmed,
+            1 => TrezorUiResult::Cancelled,
+            5 => TrezorUiResult::ShowDetails,
+            _ => return Err(Error::ValueError(c"unknown UI result")),
         };
 
         let bytes = crate::util::archive::to_bytes_obj(&msg)?;
 
-        //Send the response back via the ipc_cb callback
-        ipc_cb(bytes);
-
-        Ok(Obj::const_none())
+        Ok(bytes)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 #[cfg(not(feature = "app_loading"))]
-extern "C" fn new_send_ui_result(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+extern "C" fn new_encode_ui_result(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+    unimplemented!()
+}
+
+/// Serializes one request for a `Data` field's chunk into the bytes the extapp
+/// UI driver sends to the app: the field's flat index, the offset and the
+/// length.
+#[cfg(feature = "app_loading")]
+extern "C" fn new_encode_chunk_request(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let msg = UiChunkRequest {
+            field: kwargs.get(Qstr::MP_QSTR_field)?.try_into()?,
+            offset: kwargs.get(Qstr::MP_QSTR_offset)?.try_into()?,
+            len: kwargs.get(Qstr::MP_QSTR_length)?.try_into()?,
+        };
+
+        let bytes = crate::util::archive::to_bytes_obj(&msg)?;
+
+        Ok(bytes)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[cfg(not(feature = "app_loading"))]
+extern "C" fn new_encode_chunk_request(
+    _n_args: usize,
+    _args: *const Obj,
+    _kwargs: *mut Map,
+) -> Obj {
     unimplemented!()
 }
 
@@ -1634,48 +1504,20 @@ extern "C" fn new_deserialize_progress_message(
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
 
-        let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
-
-        fn obj_from_archived_borrowed_str_option(
-            s: &ArchivedOption<Archived<StrSlice>>,
-        ) -> Result<Obj, Error> {
-            match s.as_ref() {
-                Some(s) => Ok(Obj::try_from(s.as_ref())?),
-                None => Ok(Obj::const_none()),
-            }
-        }
+        let data = unsafe { crate::micropython::buffer::get_buffer(obj)? };
 
         // Deserialize the rkyv archived data directly from the static buffer
         let archived = rkyv::access::<Archived<TrezorProgressEnum>, Failure>(data)
             .map_err(|_| Error::ValueError(c"Invalid progress message"))?;
 
-        // Access the archived data zero-copy using safe Deref access
         let result: Obj = match archived {
-            Archived::<TrezorProgressEnum>::Init {
-                description,
-                title,
-                indeterminate,
-                danger,
-            } => {
-                let description = description
-                    .as_ref()
-                    .map(|d| Obj::try_from(d.as_ref()))
-                    .unwrap_or(Ok(Obj::const_none()))?;
-                let title = obj_from_archived_borrowed_str_option(title)?;
-
-                (
-                    description,
-                    title,
-                    Obj::try_from(*indeterminate)?,
-                    Obj::try_from(*danger)?,
-                )
-                    .try_into()?
-            }
-            Archived::<TrezorProgressEnum>::Update { description, value } => {
-                let description = obj_from_archived_borrowed_str_option(description)?;
-                let value = Obj::try_from(value.to_native())?;
-                (description, value).try_into()?
-            }
+            Archived::<TrezorProgressEnum>::Init { label, total } => (
+                Obj::try_from(label.as_ref())?,
+                Obj::try_from(total.to_native())?,
+            )
+                .try_into()?,
+            Archived::<TrezorProgressEnum>::Step { units } => Obj::try_from(units.to_native())?,
+            Archived::<TrezorProgressEnum>::Label { label } => Obj::try_from(label.as_ref())?,
             Archived::<TrezorProgressEnum>::End => Obj::const_none(),
         };
 
@@ -1748,11 +1590,12 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// # cannot be `bytes` and started getting rid of `PropertyType` uses.
     /// # There are still a few instances where properties use `bytes`,
     /// # but we should probably get rid of all and drop `PropertyType` completely.
-    /// # The next goal would be to replace the `bool` with something
-    /// # that can encode actual types / rendering strategies.
+    /// # The third component is being replaced by a `FieldKind` int (0-5),
+    /// # which can encode actual types / rendering strategies; a bool keeps
+    /// # today's meaning for the code that still passes one.
     /// # See more details here: https://github.com/trezor/trezor-firmware/issues/5411
-    /// PropertyType = tuple[str | None, StrOrBytes | None, bool | None]
-    /// StrPropertyType = tuple[str | None, str | None, bool | None]
+    /// PropertyType = tuple[str | None, StrOrBytes | None, bool | int | None]
+    /// StrPropertyType = tuple[str | None, str | None, bool | int | None]
     ///
     ///
     /// T = TypeVar("T")
@@ -2092,8 +1935,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     verb: str | None = None,
     ///     external_menu: bool = False,
     /// ) -> LayoutContext[UiResult]:
-    ///     """Confirm list of key-value pairs. The third component in the tuple should be True if
-    ///     the value is to be rendered as binary with monospace font, False otherwise."""
+    ///     """Confirm list of key-value pairs. The third component in the tuple says how
+    ///     the value is drawn: a bool keeps today's meaning (True renders it as binary
+    ///     with monospace font), an int is a `FieldKind` 0-5."""
     Qstr::MP_QSTR_confirm_properties => obj_fn_kw!(0, new_confirm_properties).as_obj(),
 
     /// def confirm_reset_device(recovery: bool) -> LayoutContext[UiResult]:
@@ -2345,8 +2189,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     value: str = "",
     ///     menu_title: str | None = None,
     ///     verb_cancel: str | None = None,
+    ///     items: Sequence[PropertyType] | None = None,
     /// ) -> LayoutContext[UiResult]:
-    ///     """Warning modal that makes it easier to cancel than to continue."""
+    ///     """Warning modal that makes it easier to cancel than to continue. With
+    ///     `items`, the message page shows them and `description` may be empty."""
     Qstr::MP_QSTR_show_danger => obj_fn_kw!(0, new_show_danger).as_obj(),
 
     /// def show_error(
@@ -2520,7 +2366,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     value: Sequence[PropertyType] | str,
     ///     subtitle: str | None = None,
     /// ) -> LayoutContext[None]:
-    ///     """Show a list of key-value pairs, or a monospace string."""
+    ///     """Show a list of key-value pairs, or a monospace string. The third
+    ///     component of a pair says how the value is drawn, as in
+    ///     `confirm_properties`."""
     Qstr::MP_QSTR_show_properties => obj_fn_kw!(0, new_show_properties).as_obj(),
 
     /// def show_remaining_shares(
@@ -2593,20 +2441,32 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Show user how to interact with the device."""
     Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, new_tutorial).as_obj(),
 
-    /// def process_ipc_message(
+    /// def deserialize_ui_message(
     ///     *,
     ///     data: bytes,
-    /// ) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
-    ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
-    Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
+    /// ) -> tuple[Any, ...]:
+    ///     """Read an app's UI request into plain data for the extapp UI driver. The
+    ///     first element is the request's `TrezorUiEnum` discriminant; the rest
+    ///     follows the variant."""
+    Qstr::MP_QSTR_deserialize_ui_message => obj_fn_kw!(0, new_deserialize_ui_message).as_obj(),
 
-    /// def send_ui_result(
+    /// def encode_ui_result(
     ///     *,
-    ///     result: UiResult | int | str | None,
-    ///     ipc_cb: Callable[[bytes], None] | None = None,
-    /// ) -> None:
-    ///     """Serialize a UI result into bytes and send it via the ipc_cb callback.."""
-    Qstr::MP_QSTR_send_ui_result => obj_fn_kw!(0, new_send_ui_result).as_obj(),
+    ///     result: int,
+    /// ) -> bytes:
+    ///     """Serialize a UI result, by its `TrezorUiResult` discriminant, into the
+    ///     bytes the extapp driver sends back to the app."""
+    Qstr::MP_QSTR_encode_ui_result => obj_fn_kw!(0, new_encode_ui_result).as_obj(),
+
+    /// def encode_chunk_request(
+    ///     *,
+    ///     field: int,
+    ///     offset: int,
+    ///     length: int,
+    /// ) -> bytes:
+    ///     """Serialize one request for a `Data` field's chunk into the bytes the
+    ///     extapp UI driver sends to the app."""
+    Qstr::MP_QSTR_encode_chunk_request => obj_fn_kw!(0, new_encode_chunk_request).as_obj(),
 
     /// def deserialize_progress_message(
     ///     *,

@@ -942,6 +942,7 @@ impl DeviceMenuScreen {
                             theme::PROPS_SPACING,
                         )
                         .unwrap_or_else(|_| unwrap!(PropsList::empty()))
+                        .with_field_styles(theme::field_styles())
                         .into_paragraphs()
                         .with_placement(LinearPlacement::vertical()),
                     )

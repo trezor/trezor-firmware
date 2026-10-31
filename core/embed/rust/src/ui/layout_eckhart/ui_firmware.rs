@@ -31,7 +31,7 @@ use crate::ui::component::text::TextStyle;
 #[cfg(feature = "ble")]
 use crate::ui::component::{BLEHandler, BLEHandlerMode};
 use crate::ui::component::{ComponentExt as _, Empty, FormattedText, Timeout};
-use crate::ui::flow::FlowMsg;
+use crate::ui::flow::{FlowMsg, SwipeFlow};
 use crate::ui::geometry::{Alignment, LinearPlacement, Offset};
 use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
@@ -40,11 +40,41 @@ use crate::ui::layout::util::{
 };
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    DeviceMenuParams, FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-    MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
+    DeviceMenuParams, FirmwareUI, SelectMenuItem, Severity, MAX_CHECKLIST_ITEMS,
+    MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
 use crate::util::interpolate;
+
+/// How long the closing notice stays up before dismissing itself; the same as
+/// `show_continue_in_app`.
+const NOTICE_DONE_TIMEOUT_MS: u32 = 3200;
+
+/// The page of `show_properties`: the title, an optional subtitle, the fields
+/// and a close button that leaves without a decision.
+///
+/// Generic over the paragraphs so a single value and a `PropsList` page the
+/// same way, through the screen's own pager.
+fn properties_page<P>(
+    title: TString<'static>,
+    subtitle: Option<TString<'static>>,
+    paragraphs: Paragraphs<P>,
+) -> Result<SwipeFlow, Error>
+where
+    P: ParagraphSource<'static> + 'static,
+{
+    let mut screen =
+        TextScreen::new(paragraphs).with_header(Header::new(title).with_close_button());
+    if let Some(subtitle) = subtitle {
+        screen = screen.with_subtitle(subtitle);
+    }
+    let screen = screen.map(|msg| match msg {
+        TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+        TextScreenMsg::Menu => Some(FlowMsg::Info),
+        TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+    });
+    flow::util::single_page(screen)
+}
 
 impl FirmwareUI for UIEckhart {
     fn confirm_action(
@@ -105,10 +135,12 @@ impl FirmwareUI for UIEckhart {
             header = header.with_right_button(Button::with_icon(theme::ICON_MENU), HeaderMsg::Menu);
         }
 
+        // With a menu, the way out lives in it, as on this
+        // model's own screens, so the screen draws none of its own.
         let mut screen = TextScreen::new(paragraphs)
             .with_header(header)
             .with_external_menu(external_menu)
-            .with_action_bar(if cancel {
+            .with_action_bar(if cancel && !external_menu {
                 ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button)
             } else {
                 ActionBar::new_single(right_button)
@@ -353,12 +385,12 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
         let account_paragraphs = if let Some(items) = account_items {
-            Some(PropsList::new(items)?)
+            Some(PropsList::new(items)?.with_field_styles(theme::field_styles()))
         } else {
             None
         };
         let extra_paragraphs = if let Some(items) = extra_items {
-            Some(PropsList::new(items)?)
+            Some(PropsList::new(items)?.with_field_styles(theme::field_styles()))
         } else {
             None
         };
@@ -396,6 +428,7 @@ impl FirmwareUI for UIEckhart {
             theme::PROP_INNER_SPACING,
             theme::PROPS_SPACING,
         )?
+        .with_field_styles(theme::field_styles())
         .into_paragraphs()
         .with_placement(LinearPlacement::vertical());
 
@@ -531,7 +564,9 @@ impl FirmwareUI for UIEckhart {
             Header::new(title)
         };
 
-        let action_bar = if cancel {
+        // With a menu, the way out lives in it, as on this
+        // model's own screens, so the screen draws none of its own.
+        let action_bar = if cancel && !external_menu {
             ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button)
         } else if back_button {
             ActionBar::new_double(Button::with_icon(theme::ICON_CHEVRON_UP), right_button)
@@ -1042,11 +1077,18 @@ impl FirmwareUI for UIEckhart {
         title: TString<'static>,
         description: TString<'static>,
         value: TString<'static>,
+        items: Obj,
         menu_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow =
-            flow::show_danger::new_show_danger(title, description, value, menu_title, verb_cancel)?;
+        let flow = flow::show_danger::new_show_danger(
+            title,
+            description,
+            value,
+            items,
+            menu_title,
+            verb_cancel,
+        )?;
         Ok(flow)
     }
 
@@ -1330,6 +1372,61 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
+    fn show_notice(
+        severity: Severity,
+        title: TString<'static>,
+        content: TString<'static>,
+        external_menu: bool,
+        _cancel: bool,
+    ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: only the info screen has a menu a caller can drive. The notice is drawn
+        // without it, so the caller's extras are unreachable here.
+        let external_menu = if external_menu && severity != Severity::Info {
+            log::warn!("show_notice: external_menu is not supported for this severity, ignored");
+            false
+        } else {
+            external_menu
+        };
+        match severity {
+            Severity::Info => Self::show_info(
+                title,
+                content,
+                Some((TR::buttons__continue.into(), true)),
+                0,
+                external_menu,
+            ),
+            // Mid-flow: the person reads it and moves on themselves.
+            Severity::Success => {
+                Self::show_success(title, TR::buttons__continue.into(), content, false, 0)
+            }
+            // End of flow: the same screen as `show_continue_in_app`, which
+            // sends the person back to the host and does not wait for them.
+            Severity::Done => Self::show_success(
+                title,
+                TR::instructions__continue_in_app.into(),
+                content,
+                false,
+                NOTICE_DONE_TIMEOUT_MS,
+            ),
+            Severity::Warning => Self::show_warning(
+                Some(title),
+                TR::buttons__continue.into(),
+                TString::empty(),
+                content,
+                true, // allow_cancel: like core's own warnings
+                false,
+            ),
+            Severity::Danger => LayoutObj::new_root(Self::show_danger(
+                title,
+                content,
+                TString::empty(),
+                Obj::const_none(),
+                None,
+                Some(TR::buttons__cancel.into()),
+            )?),
+        }
+    }
+
     fn show_progress(
         description: TString<'static>,
         indeterminate: bool,
@@ -1379,69 +1476,28 @@ impl FirmwareUI for UIEckhart {
         subtitle: Option<TString<'static>>,
         value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut vec = ParagraphVecShort::new();
+        // The same page as `confirm_properties`, but read-only: it pages through
+        // the fields and leaves by the close button, without a decision.
         if Obj::is_str(value) {
             let text: TString = value.try_into()?;
-            unwrap!(vec.push(Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, text)));
+            let paragraphs = Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, text)
+                .into_paragraphs()
+                .with_placement(LinearPlacement::vertical());
+            properties_page(title, subtitle, paragraphs)
         } else {
-            let mut first_item_is_address: Option<bool> = None;
-            for property in IterBuf::new().try_iterate(value)? {
-                let [header, text, _is_data]: [Obj; 3] = util::iter_into_array(property)?;
-
-                let header = header
-                    .try_into_option::<TString>()?
-                    .unwrap_or_else(TString::empty);
-                if first_item_is_address.is_none() {
-                    // TODO: should be based on the first item's "property type" (when we have it)
-                    first_item_is_address = Some(header.is_empty());
-                }
-                let mut header_paragraph = Paragraph::new(
-                    if subtitle.is_none() {
-                        &theme::TEXT_SMALL
-                    } else {
-                        // subtitle is already quite prominent
-                        &theme::TEXT_SMALL_LIGHT
-                    },
-                    if header != title {
-                        header
-                    } else {
-                        TString::empty()
-                    },
-                )
-                .no_break();
-                if !first_item_is_address.unwrap_or(false) {
-                    // normal spacing between property keys and values
-                    // unless the first property is an address,
-                    // in which case less space looks better
-                    header_paragraph =
-                        header_paragraph.with_bottom_padding(theme::PROP_INNER_SPACING);
-                }
-                unwrap!(vec.push(header_paragraph));
-
-                let text = text
-                    .try_into_option::<TString>()?
-                    .unwrap_or_else(TString::empty);
-                // TODO: should be based on the "property type"
-                let value_paragraph = if header.is_empty() {
-                    Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, text)
-                        .with_bottom_padding(theme::PROPS_SPACING_EXTRA)
-                } else {
-                    Paragraph::new(&theme::TEXT_MONO_LIGHT, text)
-                        .with_bottom_padding(theme::PROPS_SPACING)
-                };
-                unwrap!(vec.push(value_paragraph));
-            }
-        };
-
-        let screen = TextScreen::new(
-            vec.into_paragraphs()
-                .with_placement(LinearPlacement::vertical()),
-        )
-        .with_header(Header::new(title).with_close_button())
-        .with_subtitle(subtitle.unwrap_or(TString::empty()));
-
-        let obj = RootComponent::new(screen);
-        Ok(obj)
+            let paragraphs = PropsList::new_styled(
+                value,
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_MEDIUM_LIGHT,
+                &theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            )?
+            .with_field_styles(theme::field_styles())
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical());
+            properties_page(title, subtitle, paragraphs)
+        }
     }
 
     fn show_share_words(

@@ -1,96 +1,64 @@
-//! Low-level IPC message types for the Trezor UI, Crypto, and Progress interfaces.
+//! The requests an app sends to core, and core's replies, for the UI, crypto
+//! and progress services.
 //!
-//! These types are serialized via [`rkyv`] and sent over IPC between the app
-//! and the Core firmware task.
+//! Each type is serialized with [`rkyv`] and sent over IPC between the app and
+//! the core task. A UI request is also what the app builds: `modui`'s params
+//! types are these, under their own names. Fields are `pub` because core reads
+//! them straight off the archived form.
 //!
-//! **Prefer the higher-level `ui`/`crypto`/`progress` modules and each type's
-//! `new()` constructor over building these directly.** Fields are `pub`
-//! despite that, because Core reads them straight off the archived (rkyv)
-//! form with no wrapper API of its own — that's the one legitimate reader
-//! these fields need to stay public for.
+//! The UI types also cross the `UiV1` vtable by value, between an app and a
+//! firmware that are built apart, so their layout is the app ABI. That is why
+//! the UI enums number their variants explicitly: within one API version a
+//! new variant goes at the end with a new value, and no value is ever
+//! renumbered or reused.
+
+use core::marker::PhantomData;
 
 use rkyv::boxed::{ArchivedBox, BoxResolver};
+use rkyv::option::ArchivedOption;
 use rkyv::rancor::Fallible;
 use rkyv::ser::Writer;
 use rkyv::{Archive, Deserialize, Place, Serialize, SerializeUnsized};
+use stabby::IStable;
+use stabby::slice::Slice as StabbySlice;
+use stabby::str::Str;
 use ufmt::derive::uDebug;
 
-/// A key-value pair with an optional monospace flag, used in UI detail views.
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
-pub struct Property<'a> {
-    pub key: StrSlice<'a>,
-    pub value: StrSlice<'a>,
-    pub mono: bool,
-}
+// ============================================================================
+// Field types
+// ============================================================================
+//
+// Every request type below is both `#[stabby::stabby]` and rkyv `Archive`: an
+// app passes it through the `UiV1` vtable as-is, and `core/embed/api`
+// serializes that same value for IPC. These three field types make that work:
+// each holds stabby's FFI-safe form and archives as the rkyv type core reads.
 
-impl<'a> Property<'a> {
-    pub fn new(key: &'a str, value: &'a str, mono: bool) -> Self {
-        Self {
-            key: key.into(),
-            value: value.into(),
-            mono,
-        }
-    }
-
-    pub fn mono(key: &'a str, value: &'a str) -> Self {
-        Self::new(key, value, true)
-    }
-
-    pub fn plain(key: &'a str, value: &'a str) -> Self {
-        Self::new(key, value, false)
-    }
-}
-
-/// A string with an optional monospace flag, used in UI list views.
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
-pub struct StrExt<'a> {
-    pub key: StrSlice<'a>,
-    pub mono: bool,
-}
-
-impl<'a> StrExt<'a> {
-    pub fn new(key: &'a str, mono: bool) -> Self {
-        Self {
-            key: key.into(),
-            mono,
-        }
-    }
-
-    pub fn mono(key: &'a str) -> Self {
-        Self::new(key, true)
-    }
-
-    pub fn plain(key: &'a str) -> Self {
-        Self::new(key, false)
-    }
-}
-
-/// A borrowed string slice wrapper, serialized as a relative pointer via rkyv.
-/// Used instead of `&str` because rkyv cannot serialize `&str` directly.
-#[derive(Copy, Clone, Default, PartialEq, Eq)]
+/// A borrowed string: stabby `Str` across the FFI, `ArchivedBox<str>` on the
+/// wire.
+#[stabby::stabby]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub struct StrSlice<'a> {
-    inner: &'a str,
+    inner: Str<'a>,
 }
 
 impl<'a> StrSlice<'a> {
-    pub fn new(s: &'a str) -> Self {
-        Self { inner: s }
+    pub const fn new(s: &'a str) -> Self {
+        Self { inner: Str::new(s) }
     }
 
     pub fn as_str(&self) -> &'a str {
-        self.inner
+        self.inner.as_str()
     }
 }
 
-// Manual uDebug: ufmt deliberately doesn't implement uDebug for `str` (it
-// would need panic-prone char-escaping logic), so this just writes the raw
-// contents, matching ufmt's own `uDisplay for str` behavior.
+// ufmt deliberately doesn't implement uDebug for `str`, so this writes the raw
+// contents, matching ufmt's own `uDisplay for str`.
 impl<'a> ufmt::uDebug for StrSlice<'a> {
     fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
     where
         W: ufmt::uWrite,
     {
-        f.write_str(self.inner)
+        f.write_str(self.as_str())
     }
 }
 
@@ -100,69 +68,129 @@ impl<'a> From<&'a str> for StrSlice<'a> {
     }
 }
 
-// The archived form of StrSlice is rkyv's own ArchivedBox<str> — a
-// #[repr(transparent)] RelPtr<str> wrapper that already carries a correct
-// CheckBytes/Verify impl, so archived StrSlice values can be read via safe,
-// validated rkyv::access instead of access_unchecked.
+// Archives as rkyv's own `ArchivedBox<str>`, whose `CheckBytes` core can use
+// to validate a request (WIP: core reads it with `access_unchecked`).
 impl<'a> Archive for StrSlice<'a> {
     type Archived = ArchivedBox<str>;
     type Resolver = BoxResolver;
 
     fn resolve(&self, resolver: Self::Resolver, out: Place<Self::Archived>) {
-        ArchivedBox::resolve_from_ref(self.inner, resolver, out)
+        ArchivedBox::resolve_from_ref(self.as_str(), resolver, out)
     }
 }
 
-// We restrict our serializer types with Writer because we need its
-// capabilities to serialize the inner string. For other types, we might
-// need more or less restrictive bounds on the type of S.
 impl<'a, S: Fallible + Writer + ?Sized> Serialize<S> for StrSlice<'a> {
     fn serialize(&self, serializer: &mut S) -> Result<Self::Resolver, S::Error> {
-        ArchivedBox::serialize_from_ref(self.inner, serializer)
+        ArchivedBox::serialize_from_ref(self.as_str(), serializer)
     }
 }
 
-/// A borrowed slice wrapper, serialized as a relative pointer via rkyv.
-/// Used instead of `&[T]` for the same reason as [`StrSlice`].
-pub struct Slice<'a, T: Archive> {
-    inner: &'a [T],
+/// An optional borrowed string. Archives exactly as `Option<StrSlice>` would.
+///
+/// Not a stabby `Option<Str>`: stabby cannot niche that, and its `Option`
+/// is not `Copy`. A flag next to the bytes is both.
+#[stabby::stabby]
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct OptStrSlice<'a> {
+    inner: Str<'a>,
+    some: bool,
 }
 
-// Manual Copy/Clone: `Slice` only ever copies the borrowed `&'a [T]` itself,
-// never the elements, so it shouldn't require `T: Copy`/`T: Clone` the way a
-// derive would.
-impl<'a, T: Archive> Copy for Slice<'a, T> {}
+impl<'a> OptStrSlice<'a> {
+    pub const NONE: Self = Self {
+        inner: Str::new(""),
+        some: false,
+    };
 
-impl<'a, T: Archive> Clone for Slice<'a, T> {
+    pub const fn new(s: Option<&'a str>) -> Self {
+        match s {
+            Some(s) => Self {
+                inner: Str::new(s),
+                some: true,
+            },
+            None => Self::NONE,
+        }
+    }
+
+    pub fn as_str(&self) -> Option<&'a str> {
+        self.some.then(|| self.inner.as_str())
+    }
+
+    fn as_slice(&self) -> Option<StrSlice<'a>> {
+        self.as_str().map(StrSlice::new)
+    }
+}
+
+impl<'a> ufmt::uDebug for OptStrSlice<'a> {
+    fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite,
+    {
+        self.as_slice().fmt(f)
+    }
+}
+
+impl<'a> From<Option<&'a str>> for OptStrSlice<'a> {
+    fn from(s: Option<&'a str>) -> Self {
+        Self::new(s)
+    }
+}
+
+impl<'a> Archive for OptStrSlice<'a> {
+    type Archived = ArchivedOption<ArchivedBox<str>>;
+    type Resolver = Option<BoxResolver>;
+
+    fn resolve(&self, resolver: Self::Resolver, out: Place<Self::Archived>) {
+        self.as_slice().resolve(resolver, out)
+    }
+}
+
+impl<'a, S: Fallible + Writer + ?Sized> Serialize<S> for OptStrSlice<'a> {
+    fn serialize(&self, serializer: &mut S) -> Result<Self::Resolver, S::Error> {
+        self.as_slice().serialize(serializer)
+    }
+}
+
+/// A borrowed slice: stabby `Slice` across the FFI, `ArchivedBox<[T]>` on the
+/// wire.
+#[stabby::stabby]
+pub struct Slice<'a, T: IStable> {
+    inner: StabbySlice<'a, T>,
+}
+
+// Manual Copy/Clone: only the borrow is copied, never the elements.
+impl<'a, T: IStable> Copy for Slice<'a, T> {}
+
+impl<'a, T: IStable> Clone for Slice<'a, T> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'a, T: Archive + ufmt::uDebug> ufmt::uDebug for Slice<'a, T> {
+impl<'a, T: IStable + ufmt::uDebug> ufmt::uDebug for Slice<'a, T> {
     fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
     where
         W: ufmt::uWrite,
     {
-        self.inner.fmt(f)
+        self.as_slice().fmt(f)
     }
 }
 
-impl<'a, T: Archive + PartialEq> PartialEq for Slice<'a, T> {
+impl<'a, T: IStable + PartialEq> PartialEq for Slice<'a, T> {
     fn eq(&self, other: &Self) -> bool {
-        self.inner == other.inner
+        self.as_slice() == other.as_slice()
     }
 }
 
-impl<'a, T: Archive + Eq> Eq for Slice<'a, T> {}
+impl<'a, T: IStable + Eq> Eq for Slice<'a, T> {}
 
-impl<'a, T: Archive> Slice<'a, T> {
+impl<'a, T: IStable> Slice<'a, T> {
     pub fn new(s: &'a [T]) -> Self {
-        Self { inner: s }
+        Self { inner: s.into() }
     }
 
     pub fn as_slice(&self) -> &'a [T] {
-        self.inner
+        self.inner.as_slice()
     }
 
     pub fn len(&self) -> usize {
@@ -172,660 +200,265 @@ impl<'a, T: Archive> Slice<'a, T> {
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
-
-    pub fn get(&self, index: usize) -> Option<&T> {
-        self.inner.get(index)
-    }
 }
 
-impl<'a, T: Archive> From<&'a [T]> for Slice<'a, T> {
+impl<'a, T: IStable> From<&'a [T]> for Slice<'a, T> {
     fn from(s: &'a [T]) -> Self {
         Self::new(s)
     }
 }
 
-// The archived form of Slice<T> is rkyv's own ArchivedBox<[T::Archived]> —
-// same rationale as StrSlice above: reuses rkyv's existing CheckBytes/Verify
-// impl for unsized RelPtr pointees instead of hand-rolling one.
-impl<'a, T: Archive> Archive for Slice<'a, T> {
+// Archives as rkyv's own `ArchivedBox<[T::Archived]>`, for the same reason as
+// `StrSlice`.
+impl<'a, T: IStable + Archive> Archive for Slice<'a, T> {
     type Archived = ArchivedBox<[T::Archived]>;
     type Resolver = BoxResolver;
 
     fn resolve(&self, resolver: Self::Resolver, out: Place<Self::Archived>) {
-        ArchivedBox::resolve_from_ref(self.inner, resolver, out)
+        ArchivedBox::resolve_from_ref(self.as_slice(), resolver, out)
     }
 }
 
-impl<'a, T: Archive, S: Fallible + Writer + ?Sized> Serialize<S> for Slice<'a, T>
+impl<'a, T: IStable + Archive, S: Fallible + Writer + ?Sized> Serialize<S> for Slice<'a, T>
 where
     [T]: SerializeUnsized<S>,
 {
     fn serialize(&self, serializer: &mut S) -> Result<Self::Resolver, S::Error> {
-        ArchivedBox::serialize_from_ref(self.inner, serializer)
+        ArchivedBox::serialize_from_ref(self.as_slice(), serializer)
     }
 }
 
-/// A menu of selectable string items.
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct SelectMenu<'a> {
-    pub items: Slice<'a, StrSlice<'a>>,
-    pub cancel: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> SelectMenu<'a> {
-    pub fn new(items: &'a [StrSlice<'a>], cancel: Option<&'a str>, br_code: i32) -> SelectMenu<'a> {
-        SelectMenu {
-            items: items.into(),
-            cancel: cancel.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A trade confirmation screen, shown via [`crate::ui::confirm_trade`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmTrade<'a> {
-    pub title: StrSlice<'a>,
-    pub subtitle: StrSlice<'a>,
-    pub buy: StrSlice<'a>,
-    pub sell: Option<StrSlice<'a>>,
-    pub back_button: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ConfirmTrade<'a> {
-    pub fn new(
-        title: &'a str,
-        subtitle: &'a str,
-        buy: &'a str,
-        sell: Option<&'a str>,
-        back_button: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> ConfirmTrade<'a> {
-        ConfirmTrade {
-            title: title.into(),
-            subtitle: subtitle.into(),
-            buy: buy.into(),
-            sell: sell.map(|s| s.into()),
-            back_button,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// An action confirmation screen, shown via [`crate::ui::confirm_action`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmAction<'a> {
-    pub title: StrSlice<'a>,
-    pub action: StrSlice<'a>,
-    pub description: Option<StrSlice<'a>>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub hold: bool,
-    pub cancel: bool,
-    pub verb: Option<StrSlice<'a>>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-    pub external_menu: bool,
-}
-
-impl<'a> ConfirmAction<'a> {
-    pub fn new(
-        title: &'a str,
-        action: &'a str,
-        description: Option<&'a str>,
-        subtitle: Option<&'a str>,
-        hold: bool,
-        verb: Option<&'a str>,
-        cancel: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        external_menu: bool,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            action: action.into(),
-            description: description.map(|s| s.into()),
-            subtitle: subtitle.map(|s| s.into()),
-            hold,
-            cancel,
-            verb: verb.map(|s| s.into()),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-            external_menu,
-        }
-    }
-}
-
-/// A transaction summary confirmation screen, shown via [`crate::ui::confirm_summary`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmSummary<'a> {
-    pub title: StrSlice<'a>,
-    pub amount: Option<StrSlice<'a>>,
-    pub amount_label: Option<StrSlice<'a>>,
-    pub fee: StrSlice<'a>,
-    pub fee_label: StrSlice<'a>,
-    pub account_title: Option<StrSlice<'a>>,
-    pub account_items: Option<Slice<'a, Property<'a>>>,
-    pub extra_title: Option<StrSlice<'a>>,
-    pub extra_items: Option<Slice<'a, Property<'a>>>,
-    pub back_button: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ConfirmSummary<'a> {
-    pub fn new(
-        title: &'a str,
-        amount: Option<&'a str>,
-        amount_label: Option<&'a str>,
-        fee: &'a str,
-        fee_label: &'a str,
-        account_title: Option<&'a str>,
-        account_items: Option<&'a [Property<'a>]>,
-        extra_title: Option<&'a str>,
-        extra_items: Option<&'a [Property<'a>]>,
-        back_button: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            amount: amount.map(|s| s.into()),
-            amount_label: amount_label.map(|s| s.into()),
-            fee: fee.into(),
-            fee_label: fee_label.into(),
-            account_title: account_title.map(|s| s.into()),
-            account_items: account_items.map(|s| s.into()),
-            extra_title: extra_title.map(|s| s.into()),
-            extra_items: extra_items.map(|s| s.into()),
-            back_button,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A value confirmation screen, shown via [`crate::ui::confirm_value`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmValue<'a> {
-    pub title: StrSlice<'a>,
-    pub value: StrSlice<'a>,
-    pub description: Option<StrSlice<'a>>,
-    pub is_data: bool,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub verb: Option<StrSlice<'a>>,
-    pub info: bool,
-    pub hold: bool,
-    pub chunkify: bool,
-    pub page_counter: bool,
-    pub cancel: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-    pub external_menu: bool,
-    pub footer: Option<(StrSlice<'a>, bool)>,
-}
-
-impl<'a> ConfirmValue<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        description: Option<&'a str>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        is_data: bool,
-        verb: Option<&'a str>,
-        subtitle: Option<&'a str>,
-        info: bool,
-        hold: bool,
-        chunkify: bool,
-        page_counter: bool,
-        cancel: bool,
-        external_menu: bool,
-        footer: Option<(&'a str, bool)>,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            value: content.into(),
-            description: description.map(|s| s.into()),
-            is_data,
-            subtitle: subtitle.map(|s| s.into()),
-            verb: verb.map(|s| s.into()),
-            info,
-            hold,
-            chunkify,
-            page_counter,
-            cancel,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-            external_menu,
-            footer: footer.map(|(s, b)| (s.into(), b)),
-        }
-    }
-}
-
-/// An intro screen shown before [`ConfirmValue`], via [`crate::ui::confirm_value_intro`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmValueIntro<'a> {
-    pub title: StrSlice<'a>,
-    pub value: StrSlice<'a>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub verb: Option<StrSlice<'a>>,
-    pub verb_cancel: Option<StrSlice<'a>>,
-    pub verb_view_all: Option<StrSlice<'a>>,
-    pub hold: bool,
-    pub chunkify: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ConfirmValueIntro<'a> {
-    pub fn new(
-        title: &'a str,
-        value: &'a str,
-        subtitle: Option<&'a str>,
-        verb: Option<&'a str>,
-        verb_cancel: Option<&'a str>,
-        verb_view_all: Option<&'a str>,
-        hold: bool,
-        chunkify: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            value: value.into(),
-            subtitle: subtitle.map(|s| s.into()),
-            verb: verb.map(|s| s.into()),
-            verb_cancel: verb_cancel.map(|s| s.into()),
-            verb_view_all: verb_view_all.map(|s| s.into()),
-            hold,
-            chunkify,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A warning screen, shown via [`crate::ui::show_warning`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowWarning<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub verb: StrSlice<'a>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-    pub allow_cancel: bool,
-    pub danger: bool,
-}
-
-impl<'a> ShowWarning<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        verb: &'a str,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        allow_cancel: bool,
-        danger: bool,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            verb: verb.into(),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-            allow_cancel,
-            danger,
-        }
-    }
-}
-
-/// A mismatch warning screen, shown via [`crate::ui::show_mismatch`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowMismatch<'a> {
-    pub title: StrSlice<'a>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowMismatch<'a> {
-    pub fn new(title: &'a str, br_code: i32) -> Self {
-        Self {
-            title: title.into(),
-            br_code,
-        }
-    }
-}
-
-/// A danger warning screen, shown via [`crate::ui::show_danger`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowDanger<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-    pub verb_cancel: Option<StrSlice<'a>>,
-    pub menu_title: Option<StrSlice<'a>>,
-}
-
-impl<'a> ShowDanger<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        br_name: Option<&'a str>,
-        br_code: i32,
-        verb_cancel: Option<&'a str>,
-        menu_title: Option<&'a str>,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-            verb_cancel: verb_cancel.map(|s| s.into()),
-            menu_title: menu_title.map(|s| s.into()),
-        }
-    }
-}
-
-/// A success screen, shown via [`crate::ui::show_success`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowSuccess<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub button: StrSlice<'a>,
-    pub duration_ms: Option<u32>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowSuccess<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        button: &'a str,
-        duration_ms: Option<u32>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            button: button.into(),
-            duration_ms,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A number-entry screen, shown via [`crate::ui::request_number`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct RequestNumber<'a> {
-    pub title: StrSlice<'a>,
-    pub content: StrSlice<'a>,
-    pub initial: u32,
-    pub min: u32,
-    pub max: u32,
-    pub br_code: i32,
-}
-
-impl<'a> RequestNumber<'a> {
-    pub fn new(
-        title: &'a str,
-        content: &'a str,
-        initial: u32,
-        min: u32,
-        max: u32,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            content: content.into(),
-            initial,
-            min,
-            max,
-            br_code,
-        }
-    }
-}
-
-/// A property-list confirmation screen, shown via [`crate::ui::confirm_properties`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmProperties<'a> {
-    pub title: StrSlice<'a>,
-    pub props: Slice<'a, Property<'a>>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub verb: Option<StrSlice<'a>>,
-    pub hold: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ConfirmProperties<'a> {
-    pub fn new(
-        title: &'a str,
-        props: &'a [Property<'a>],
-        subtitle: Option<&'a str>,
-        verb: Option<&'a str>,
-        hold: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            props: props.into(),
-            subtitle: subtitle.map(|s| s.into()),
-            verb: verb.map(|s| s.into()),
-            hold,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A property-list display screen (no confirmation), shown via [`crate::ui::show_properties`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowProperties<'a> {
-    pub title: StrSlice<'a>,
-    pub props: Slice<'a, Property<'a>>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowProperties<'a> {
-    pub fn new(
-        title: &'a str,
-        props: &'a [Property<'a>],
-        subtitle: Option<&'a str>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            props: props.into(),
-            subtitle: subtitle.map(|s| s.into()),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// A public key display screen, shown via [`crate::ui::show_public_key`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowPublicKey<'a> {
-    pub pubkey: StrSlice<'a>,
-    pub title: StrSlice<'a>,
-    pub account: Option<StrSlice<'a>>,
-    pub path: Option<StrSlice<'a>>,
-    pub warning: Option<StrSlice<'a>>,
-    pub br_name: StrSlice<'a>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowPublicKey<'a> {
-    pub fn new(
-        pubkey: &'a str,
-        title: &'a str,
-        account: Option<&'a str>,
-        path: Option<&'a str>,
-        warning: Option<&'a str>,
-        br_name: &'a str,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            pubkey: pubkey.into(),
-            title: title.into(),
-            account: account.map(|s| s.into()),
-            path: path.map(|s| s.into()),
-            warning: warning.map(|s| s.into()),
-            br_name: br_name.into(),
-            br_code,
-        }
-    }
-}
-
-/// An info screen with a cancel option, shown via [`crate::ui::show_info_with_cancel`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowInfoWithCancel<'a> {
-    pub title: StrSlice<'a>,
-    pub items: Slice<'a, Property<'a>>,
-    pub chunkify: bool,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl<'a> ShowInfoWithCancel<'a> {
-    pub fn new(
-        title: &'a str,
-        items: &'a [Property<'a>],
-        chunkify: bool,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> Self {
-        Self {
-            title: title.into(),
-            items: items.into(),
-            chunkify,
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-/// A confirmation screen with an extra info button, shown via [`crate::ui::confirm_with_info`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ConfirmWithInfo<'a> {
-    pub title: StrSlice<'a>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub items: Slice<'a, StrExt<'a>>,
-    pub verb: StrSlice<'a>,
-    pub verb_info: Option<StrSlice<'a>>,
-    pub br_name: Option<StrSlice<'a>>,
-    pub br_code: i32,
-}
-
-impl ConfirmWithInfo<'_> {
-    pub fn new<'a>(
-        title: &'a str,
-        subtitle: Option<&'a str>,
-        items: &'a [StrExt<'a>],
-        verb: &'a str,
-        verb_info: Option<&'a str>,
-        br_name: Option<&'a str>,
-        br_code: i32,
-    ) -> ConfirmWithInfo<'a> {
-        ConfirmWithInfo {
-            title: title.into(),
-            subtitle: subtitle.map(|s| s.into()),
-            items: items.into(),
-            verb: verb.into(),
-            verb_info: verb_info.map(|s| s.into()),
-            br_name: br_name.map(|s| s.into()),
-            br_code,
-        }
-    }
-}
-
-/// An address display screen, shown via [`crate::ui::show_address`].
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
-pub struct ShowAddress<'a> {
-    pub address: StrSlice<'a>,
-    pub address_qr: StrSlice<'a>,
-    pub title: Option<StrSlice<'a>>,
-    pub subtitle: Option<StrSlice<'a>>,
-    pub account: Option<StrSlice<'a>>,
-    pub path: Option<StrSlice<'a>>,
-    pub xpubs: Slice<'a, Property<'a>>,
-    pub chunkify: bool,
-    pub br_code: i32,
-    pub case_sensitive: bool,
-}
-
-impl ShowAddress<'_> {
-    pub fn new<'a>(
-        address: &'a str,
-        address_qr: &'a str,
-        title: Option<&'a str>,
-        subtitle: Option<&'a str>,
-        account: Option<&'a str>,
-        path: Option<&'a str>,
-        xpubs: &'a [Property<'a>],
-        chunkify: bool,
-        br_code: i32,
-        case_sensitive: bool,
-    ) -> ShowAddress<'a> {
-        ShowAddress {
-            address: address.into(),
-            address_qr: address_qr.into(),
-            title: title.map(|s| s.into()),
-            subtitle: subtitle.map(|s| s.into()),
-            account: account.map(|s| s.into()),
-            path: path.map(|s| s.into()),
-            xpubs: xpubs.into(),
-            chunkify,
-            br_code,
-            case_sensitive,
-        }
-    }
-}
-
-/// All UI screens that can be requested from the app via IPC.
+/// What a fact *is*, which decides how core formats and draws it.
 ///
-/// Each variant corresponds to one screen type in the Trezor UI. Constructed
-/// by the higher-level `ui` module — do not construct variants directly.
+/// The app chooses the kind by what the value is, never by how it should look.
+/// The discriminants match the wire's: a new kind goes at the end with a new
+/// value, and no value is ever renumbered or reused.
+#[stabby::stabby]
+#[repr(u8)]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub enum FieldKind {
+    /// Words or a number, shown as written.
+    Text = 0,
+    /// A sum formatted by the app, with its ticker apart in `WireField::ticker`.
+    Amount = 1,
+    /// Something compared character by character: grouped and fixed-width.
+    Address = 2,
+    /// Raw bytes, shown as hex. At most one per review.
+    Data = 3,
+    /// A sentence with no label: a question or an explanation.
+    Note = 4,
+    /// A sentence to weigh before confirming; a caution row.
+    Warning = 5,
+}
+
+/// Reads `len` bytes at `offset` into `buf`; `0` on success, `-1` when the
+/// app's source failed.
+pub(crate) type ReadFn =
+    extern "C" fn(ctx: *const u8, offset: u32, total: u32, buf: *mut u8, len: u32) -> i32;
+
+/// Where a `Data` field's bytes come from, as the request carries it.
+///
+/// Not serialized: it points into the app's own memory, which does not cross
+/// IPC. `total` is the field's length, `read` is filled in by
+/// [`Field::data`](crate::modui::Field::data) or
+/// [`Field::data_source`](crate::modui::Field::data_source), and `streamed`
+/// says which of the two built it, so that an extra can refuse a stream.
+///
+/// The field order and `streamed: u32` are deliberate: together they keep the
+/// struct padding-free with one niche, which is what lets `Option<Source>` be
+/// `IStable` inside a `#[stabby::stabby]` struct. Do not "tidy" it.
+#[stabby::stabby]
+#[derive(Copy, Clone)]
+pub struct Source<'a> {
+    ctx: *const u8,
+    read: ReadFn,
+    total: u32,
+    streamed: u32,
+    _marker: PhantomData<&'a ()>,
+}
+
+impl<'a> Source<'a> {
+    pub(crate) const fn new(ctx: *const u8, total: u32, streamed: bool, read: ReadFn) -> Self {
+        Self {
+            ctx,
+            read,
+            total,
+            streamed: streamed as u32,
+            _marker: PhantomData,
+        }
+    }
+
+    /// The field's length in bytes.
+    pub fn total(&self) -> u32 {
+        self.total
+    }
+
+    /// Fills `buf` with the bytes at `offset`; `false` when the app's source
+    /// failed.
+    pub fn read(&self, offset: u32, buf: &mut [u8]) -> bool {
+        (self.read)(
+            self.ctx,
+            offset,
+            self.total,
+            buf.as_mut_ptr(),
+            buf.len() as u32,
+        ) == 0
+    }
+
+    pub(crate) fn is_streamed(&self) -> bool {
+        self.streamed != 0
+    }
+}
+
+// Two sources are the same when they point at the same bytes and describe the
+// same field. The reader is left out: comparing function pointers says nothing
+// about the bytes, and the pointer and the total already describe the range.
+impl PartialEq for Source<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.ctx == other.ctx && self.total == other.total && self.streamed == other.streamed
+    }
+}
+
+impl Eq for Source<'_> {}
+
+// `ufmt` cannot format a raw pointer, and a source has nothing to print.
+impl ufmt::uDebug for Source<'_> {
+    fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite,
+    {
+        f.write_str("<source>")
+    }
+}
+
+/// One fact in a [`ReviewRequest`] or [`FieldsRequest`].
+///
+/// `label` is `None` for [`FieldKind::Note`] and [`FieldKind::Warning`].
+/// `value` is UTF-8 for the text kinds and empty for [`FieldKind::Data`], whose
+/// bytes come from `source`. `ticker` is the unit of a [`FieldKind::Amount`]
+/// (`"TRX"`), kept apart from its number so core decides how the two are drawn,
+/// and `None` for the other kinds. `len` is `value.len()` for the text kinds;
+/// for `Data` it is the total length core pulls, and `source` is where they
+/// come from. `source` is not serialized: it never crosses IPC.
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+#[stabby::stabby]
+pub struct WireField<'a> {
+    pub kind: FieldKind,
+    pub label: OptStrSlice<'a>,
+    pub value: Slice<'a, u8>,
+    pub ticker: OptStrSlice<'a>,
+    pub len: u32,
+    #[rkyv(with = rkyv::with::Skip)]
+    pub source: Option<Source<'a>>,
+}
+
+impl<'a> WireField<'a> {
+    /// Whether the field's bytes come from an app-provided source rather than a
+    /// slice the app holds.
+    pub(crate) fn is_streamed(&self) -> bool {
+        self.source.is_some_and(|source| source.is_streamed())
+    }
+}
+
+/// One chunk of a `Data` field, as core asks the app for it.
+///
+/// `field` is the field's flat index: the request's own facts first, then each
+/// extra's facts in order. The app answers with the bytes themselves.
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct UiChunkRequest {
+    /// The field's flat index.
+    pub field: u16,
+    /// Where the chunk starts.
+    pub offset: u32,
+    /// How many bytes to read.
+    pub len: u32,
+}
+
+/// More the person can open from a review's menu: the entry's label, and the
+/// facts shown when it is picked.
+#[stabby::stabby]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct WireExtra<'a> {
+    pub label: StrSlice<'a>,
+    pub fields: Slice<'a, WireField<'a>>,
+}
+
+/// Facts for the person to confirm or refuse, sent as
+/// [`TrezorUiEnum::Review`].
+#[stabby::stabby]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct ReviewRequest<'a> {
+    pub step: StrSlice<'a>,
+    pub title: StrSlice<'a>,
+    pub fields: Slice<'a, WireField<'a>>,
+    pub extras: Slice<'a, WireExtra<'a>>,
+    /// The last yes before the app signs or acts: core makes it a hold.
+    pub is_final: bool,
+}
+
+/// A risky decision, sent as [`TrezorUiEnum::Danger`].
+#[stabby::stabby]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct FieldsRequest<'a> {
+    pub step: StrSlice<'a>,
+    pub title: StrSlice<'a>,
+    pub fields: Slice<'a, WireField<'a>>,
+}
+
+/// An address or public key of the person's own, sent as
+/// [`TrezorUiEnum::VerifyAddress`] or [`TrezorUiEnum::VerifyPubkey`].
+#[stabby::stabby]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct VerifyRequest<'a> {
+    pub step: StrSlice<'a>,
+    pub value: StrSlice<'a>,
+    pub account: OptStrSlice<'a>,
+    pub path: OptStrSlice<'a>,
+}
+
+/// The end of a flow, sent as [`TrezorUiEnum::Done`].
+#[stabby::stabby]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct DoneRequest<'a> {
+    pub step: StrSlice<'a>,
+    pub text: StrSlice<'a>,
+}
+
+/// One UI request, as it crosses IPC: one variant per decision an app asks.
+///
+/// The discriminants match the wire's: a new variant goes at the end with a
+/// new value, and no value is ever renumbered or reused.
+#[stabby::stabby]
+#[repr(C, u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorUiEnum<'a> {
-    SelectMenu(SelectMenu<'a>),
-    ConfirmTrade(ConfirmTrade<'a>),
-    ConfirmAction(ConfirmAction<'a>),
-    ConfirmSummary(ConfirmSummary<'a>),
-    ConfirmValue(ConfirmValue<'a>),
-    ConfirmValueIntro(ConfirmValueIntro<'a>),
-    ShowWarning(ShowWarning<'a>),
-    ShowMismatch(ShowMismatch<'a>),
-    ShowDanger(ShowDanger<'a>),
-    ShowSuccess(ShowSuccess<'a>),
-    RequestNumber(RequestNumber<'a>),
-    ConfirmProperties(ConfirmProperties<'a>),
-    ShowProperties(ShowProperties<'a>),
-    ShowPublicKey(ShowPublicKey<'a>),
-    ShowInfoWithCancel(ShowInfoWithCancel<'a>),
-    ConfirmWithInfo(ConfirmWithInfo<'a>),
-    ShowAddress(ShowAddress<'a>),
+    Review(ReviewRequest<'a>) = 0,
+    Danger(FieldsRequest<'a>) = 1,
+    Details(FieldsRequest<'a>) = 2,
+    VerifyAddress(VerifyRequest<'a>) = 3,
+    VerifyPubkey(VerifyRequest<'a>) = 4,
+    Done(DoneRequest<'a>) = 5,
 }
 
-/// Result returned by the Core task after a UI interaction.
+/// How the person decided a request. Written by core, read by the app; apps
+/// never see it.
+///
+/// Variants say what the person *did*, not which button did it. Only the
+/// request's final answer crosses: what happens in its menu stays in core.
+#[must_use]
+#[stabby::stabby]
+#[repr(u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum TrezorUiResult {
-    Confirmed,
-    Back,
-    Cancelled,
-    Info,
-    Integer(u32),
+    /// Confirmed.
+    Confirmed = 0,
+    /// Refused, or left without answering.
+    Cancelled = 1,
+
+    // 2, 3 and 4 were the old inline-data paging answers. Data is pulled
+    // now, so they are reserved and never reused.
+    /// The person asked to see details.
+    ShowDetails = 5,
 }
 
 /// All crypto operations that can be requested from the app via IPC.
@@ -899,18 +532,32 @@ pub enum TrezorCryptoResult<'a> {
 
 /// Progress bar operations that can be requested from the app via IPC.
 ///
-/// Constructed by the higher-level `progress` module — do not construct variants directly.
+/// Built by `core/embed/api`; apps use `modui::progress`.
+///
+/// `Init` opens the progress, `Step` reports work done, `Label` changes the
+/// text under the bar, and `End` closes it. Core keeps the count and turns it
+/// into the bar. The app SDK pairs them with a guard that sends `End` on drop,
+/// so an app cannot leave a progress on screen for work that stopped; see the
+/// `modui` progress docs.
+///
+/// Only what the app chose travels; how the progress looks is core's.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum TrezorProgressEnum<'a> {
     Init {
-        description: Option<StrSlice<'a>>,
-        title: Option<StrSlice<'a>>,
-        indeterminate: bool,
-        danger: bool,
+        /// What the work is, such as `"Signing"`.
+        label: StrSlice<'a>,
+        /// How much work there is, in the app's own units. `0` means not
+        /// known: the bar shows motion rather than a fill.
+        total: u32,
     },
-    Update {
-        description: Option<StrSlice<'a>>,
-        value: u32,
+    Step {
+        /// Units of work done since the last step.
+        units: u32,
+    },
+    /// Changes the text under the bar while the work goes on.
+    Label {
+        /// What the work is now, such as `"Signing input 2/3"`.
+        label: StrSlice<'a>,
     },
     End,
 }
@@ -919,8 +566,9 @@ impl<'a> TrezorProgressEnum<'a> {
     pub fn id(&self) -> u16 {
         match self {
             TrezorProgressEnum::Init { .. } => 0,
-            TrezorProgressEnum::Update { .. } => 1,
-            TrezorProgressEnum::End => 2,
+            TrezorProgressEnum::Step { .. } => 1,
+            TrezorProgressEnum::Label { .. } => 2,
+            TrezorProgressEnum::End => 3,
         }
     }
 }
@@ -1013,22 +661,14 @@ mod tests {
         let variants: &[(u16, &str)] = &[
             (
                 Init {
-                    description: None,
-                    title: None,
-                    indeterminate: false,
-                    danger: false,
+                    label: "".into(),
+                    total: 0,
                 }
                 .id(),
                 "Init",
             ),
-            (
-                Update {
-                    description: None,
-                    value: 0,
-                }
-                .id(),
-                "Update",
-            ),
+            (Step { units: 0 }.id(), "Step"),
+            (Label { label: "".into() }.id(), "Label"),
             (End.id(), "End"),
         ];
         // all IDs must be unique
@@ -1037,6 +677,21 @@ mod tests {
             assert!(seen.insert(id), "duplicate id {} for variant {}", id, name);
         }
         // total count must match — add new variants here when extending the enum
-        assert_eq!(variants.len(), 3, "new variant added but test not updated");
+        assert_eq!(variants.len(), 4, "new variant added but test not updated");
+    }
+
+    #[test]
+    fn a_chunk_request_round_trips() {
+        let request = UiChunkRequest {
+            field: 7,
+            offset: 384,
+            len: 384,
+        };
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&request).unwrap();
+        let archived =
+            rkyv::access::<rkyv::Archived<UiChunkRequest>, rkyv::rancor::Failure>(&bytes).unwrap();
+        assert_eq!(archived.field, 7);
+        assert_eq!(archived.offset, 384);
+        assert_eq!(archived.len, 384);
     }
 }

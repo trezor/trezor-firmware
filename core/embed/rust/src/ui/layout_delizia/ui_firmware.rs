@@ -36,13 +36,35 @@ use crate::ui::flow::FlowMsg;
 use crate::ui::geometry::{self, Direction, Offset};
 use crate::ui::layout::menu_item_intent::MenuItemIntent;
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
-use crate::ui::layout::util::{ContentType, PropsList, RecoveryType};
+use crate::ui::layout::util::{ContentType, FieldStyles, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    DeviceMenuParams, FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-    MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
+    DeviceMenuParams, FirmwareUI, SelectMenuItem, Severity, MAX_CHECKLIST_ITEMS,
+    MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::ModelUI;
+
+/// How long the closing notice stays up before dismissing itself; the same as
+/// `show_continue_in_app`.
+const NOTICE_DONE_TIMEOUT_MS: u32 = 3200;
+
+/// Delizia's styles for the field kinds.
+///
+/// `text` is the model's plain body font, `amount` matches the summary's
+/// amount, `address` keeps the chunking this model already gives addresses,
+/// `data` is mono without chunking, a `note` reads like the descriptions around
+/// it, and a `warning` is the caution row. A bool kind still means mono or
+/// plain.
+fn field_styles() -> FieldStyles {
+    FieldStyles {
+        text: &theme::TEXT_NORMAL,
+        amount: &theme::TEXT_MONO_GREY_LIGHT,
+        address: &theme::TEXT_MONO_ADDRESS_CHUNKS,
+        data: &theme::TEXT_MONO_DATA,
+        note: &theme::TEXT_MAIN_GREY_LIGHT,
+        warning: &theme::TEXT_WARNING,
+    }
+}
 
 impl FirmwareUI for UIDelizia {
     fn confirm_action(
@@ -395,8 +417,13 @@ impl FirmwareUI for UIDelizia {
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         back_button: bool,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        if external_menu {
+            // WIP: this screen has no menu a caller can drive. It is drawn as
+            // before, without one, so the caller's extras are unreachable here.
+            log::warn!("confirm_summary: external_menu is not supported on this model, ignored");
+        }
         // collect available info
         let account_info = if let Some(items) = account_items {
             let mut pairs = Vec::<(TString<'static>, TString<'static>), 4>::new();
@@ -449,7 +476,7 @@ impl FirmwareUI for UIDelizia {
         _verb: Option<TString<'static>>,
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = PropsList::new(items)?;
+        let paragraphs = PropsList::new(items)?.with_field_styles(field_styles());
 
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
@@ -855,10 +882,20 @@ impl FirmwareUI for UIDelizia {
         title: TString<'static>,
         description: TString<'static>,
         value: TString<'static>,
+        items: Obj,
         _menu_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow = flow::show_danger::new_show_danger(title, description, value, verb_cancel)?;
+        // `None` keeps the plain message, a list of items shows the fields to
+        // weigh instead of `value`, and their `Warning` ones are drawn as
+        // caution rows.
+        let items = if items == Obj::const_none() {
+            None
+        } else {
+            Some(PropsList::new(items)?.with_field_styles(field_styles()))
+        };
+        let flow =
+            flow::show_danger::new_show_danger(title, description, value, items, verb_cancel)?;
         Ok(flow)
     }
 
@@ -982,13 +1019,15 @@ impl FirmwareUI for UIDelizia {
         _time_ms: u32,
         external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<Gc<LayoutObj>, Error> {
-        if external_menu {
-            return Err(Error::NotImplementedError);
-        }
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
+        let header = Header::left_aligned(title);
+        let header = if external_menu {
+            header.with_menu_button()
+        } else {
+            header
+        };
         let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::with_header(Header::left_aligned(title), SwipeContent::new(content))
-                .with_swipeup_footer(None),
+            Frame::with_header(header, SwipeContent::new(content)).with_swipeup_footer(None),
         ))?;
         Ok(obj)
     }
@@ -1051,6 +1090,65 @@ impl FirmwareUI for UIDelizia {
         Ok(layout)
     }
 
+    fn show_notice(
+        severity: Severity,
+        title: TString<'static>,
+        content: TString<'static>,
+        external_menu: bool,
+        _cancel: bool,
+    ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: only the info and warning notices have a menu a caller can
+        // drive. The others are drawn without it, so the caller's extras are
+        // unreachable there.
+        if external_menu && !matches!(severity, Severity::Info | Severity::Warning) {
+            log::warn!("show_notice: external_menu is not supported for this severity, ignored");
+        }
+        match severity {
+            Severity::Info => Self::show_info(title, content, None, 0, external_menu),
+            Severity::Warning if external_menu => {
+                let content =
+                    Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, content));
+                LayoutObj::new(SwipeUpScreen::new(
+                    Frame::with_header(
+                        Header::left_aligned(title).with_menu_button(),
+                        SwipeContent::new(content),
+                    )
+                    .with_swipeup_footer(Some(TR::buttons__continue.into())),
+                ))
+            }
+            // This model's success screen has a fixed header, and the message
+            // is the status text itself, as in its own `show_success`. The
+            // caller's title has nowhere to go.
+            Severity::Success => {
+                Self::show_success(content, TString::empty(), TString::empty(), false, 0)
+            }
+            // The same screen as `show_continue_in_app`.
+            Severity::Done => Self::show_success(
+                content,
+                TR::instructions__continue_in_app.into(),
+                TString::empty(),
+                false,
+                NOTICE_DONE_TIMEOUT_MS,
+            ),
+            Severity::Warning => Self::show_warning(
+                Some(title),
+                TR::buttons__continue.into(),
+                content,
+                TString::empty(),
+                true, // allow_cancel; WIP: this model's `show_warning` ignores it
+                false,
+            ),
+            Severity::Danger => LayoutObj::new_root(Self::show_danger(
+                title,
+                content,
+                TString::empty(),
+                Obj::const_none(),
+                None,
+                Some(TR::buttons__cancel.into()),
+            )?),
+        }
+    }
+
     fn show_progress(
         description: TString<'static>,
         indeterminate: bool,
@@ -1088,7 +1186,7 @@ impl FirmwareUI for UIDelizia {
 
     fn show_properties(
         title: TString<'static>,
-        _subtitle: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
         value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         if Obj::is_str(value) {
@@ -1099,32 +1197,16 @@ impl FirmwareUI for UIDelizia {
             return flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)));
         }
 
-        let mut items: Vec<(TString<'static>, TString<'static>, bool), 4> = Vec::new();
-        for property in IterBuf::new().try_iterate(value)? {
-            let [header, text, is_data]: [Obj; 3] = util::iter_into_array(property)?;
-            let header = header
-                .try_into_option::<TString>()?
-                .unwrap_or_else(TString::empty);
-            let text = text
-                .try_into_option::<TString>()?
-                .unwrap_or_else(TString::empty);
-            let is_data = is_data.try_into_option::<bool>()?.unwrap_or(false);
-            unwrap!(items.push((header, text, is_data)));
-        }
-
-        if items.len() == 1 {
-            let (header, value, is_data) = unwrap!(items.pop());
-            let confirm = ConfirmValue::new(title, value.into(), None)
-                .with_subtitle(if header != title { Some(header) } else { None })
-                .with_cancel_button()
-                .with_chunkify(is_data)
-                .with_text_mono(true);
-            let layout = confirm.into_layout()?;
-            flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)))
-        } else {
-            let layout = show_info_screen(title, items.into_iter().map(|(h, t, _is_data)| (h, t)));
-            flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)))
-        }
+        // The same page as `confirm_properties`, but read-only: it pages through
+        // the fields and leaves by the close button, without a decision.
+        let paragraphs = PropsList::new(value)?.with_field_styles(field_styles());
+        let flow = flow::new_confirm_action_simple(
+            paragraphs.into_paragraphs(),
+            ConfirmActionExtra::Cancel,
+            ConfirmActionStrings::new(title, subtitle, None, None),
+            ConfirmActionOptions::new(),
+        )?;
+        Ok(flow)
     }
 
     fn show_share_words(

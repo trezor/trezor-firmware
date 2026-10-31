@@ -4,18 +4,6 @@
     "version": "2.13.0.0"
   },
   "translations": {
-    "address__check_with_source": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Revisa dirección con la fuente."
-    },
-    "address__confirmed": {
-      "Bolt": "Dirección de destino confirmada",
-      "Caesar": "Dirección de destino confirmada",
-      "Delizia": "Dirección de destino confirmada.",
-      "Eckhart": "Dirección de destino confirmada."
-    },
     "address__warning_not_yours": {
       "Bolt": "",
       "Caesar": "",
@@ -36,19 +24,9 @@
     "ethereum__approve_intro_title_revoke": "Revocación de tokens",
     "ethereum__approve_revoke_from": "Revocar de",
     "ethereum__approve_to": "Aprobar a",
-    "ethereum__no_message_field": "Sin campo de mensaje.",
-    "ethereum__sign_eip712": "¿Quieres firmar los datos EIP-712?",
     "ethereum__staking_claim": "Reclamar",
     "ethereum__staking_stake": "Hacer stake",
     "ethereum__staking_unstake": "Retirar stake",
-    "ethereum__title_confirm_message": "Confirmar mensaje",
-    "ethereum__title_confirm_message_hash": "Confirmar hash de mensaje",
-    "ethereum__title_confirm_typed_data": {
-      "Bolt": "Conf. datos ingresados",
-      "Caesar": "Confirmar datos ingr.",
-      "Delizia": "Confirmar datos ingr.",
-      "Eckhart": "Validar datos"
-    },
     "ethereum__title_input_data": "Datos",
     "ethereum__title_token_contract": {
       "Bolt": "Contrato del token",
@@ -104,7 +82,6 @@
     "words__note": "Nota",
     "words__recipient": "Destinatario",
     "words__resource": "Recurso",
-    "words__review": "Revisar",
     "words__send": "Enviar",
     "words__show_next": "Mostrar siguiente",
     "words__title_done": "Listo",

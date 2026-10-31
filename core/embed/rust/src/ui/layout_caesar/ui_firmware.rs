@@ -31,8 +31,8 @@ use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
 use crate::ui::notification::Notification;
 use crate::ui::ui_firmware::{
-    DeviceMenuParams, FirmwareUI, SelectMenuItem, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-    MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
+    DeviceMenuParams, FirmwareUI, SelectMenuItem, Severity, MAX_CHECKLIST_ITEMS,
+    MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
 };
 use crate::ui::{geometry, ModelUI};
 
@@ -43,14 +43,14 @@ impl FirmwareUI for UICaesar {
         description: Option<TString<'static>>,
         _subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
-        _cancel: bool,
+        cancel: bool,
         verb_cancel: Option<TString<'static>>,
         hold: bool,
         _hold_danger: bool,
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = {
             let action = action.unwrap_or("".into());
@@ -71,10 +71,13 @@ impl FirmwareUI for UICaesar {
         content_in_button_page(
             title,
             paragraphs,
-            verb.unwrap_or(TString::empty()),
-            verb_cancel,
+            // A caller that names no verb still wants the screen answerable.
+            verb.unwrap_or(TR::buttons__confirm.into()),
+            // This model draws a cancel button only for a label; `""` is its
+            // icon. Core's own layouts pass the label, or turn `cancel` off.
+            verb_cancel.or(cancel.then(TString::empty)),
             hold,
-            false,
+            external_menu,
         )
     }
 
@@ -151,10 +154,10 @@ impl FirmwareUI for UICaesar {
         chunkify: bool,
         _page_counter: bool,
         _prompt_screen: bool,
-        _cancel: bool,
+        cancel: bool,
         _back_button: bool,
         _footer: Option<(TString<'static>, bool)>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
@@ -177,9 +180,11 @@ impl FirmwareUI for UICaesar {
             title,
             paragraphs,
             verb.unwrap_or(TR::buttons__confirm.into()),
-            verb_cancel,
+            // This model draws a cancel button only for a label; `""` is its
+            // icon.
+            verb_cancel.or(cancel.then(TString::empty)),
             hold,
-            false,
+            external_menu,
         )
     }
 
@@ -1053,6 +1058,7 @@ impl FirmwareUI for UICaesar {
         title: TString<'static>,
         description: TString<'static>,
         _value: TString<'static>,
+        _items: Obj,
         _menu_title: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -1237,6 +1243,58 @@ impl FirmwareUI for UICaesar {
 
         let obj = RootComponent::new(Flow::new(pages));
         Ok(obj)
+    }
+
+    fn show_notice(
+        severity: Severity,
+        title: TString<'static>,
+        content: TString<'static>,
+        external_menu: bool,
+        _cancel: bool,
+    ) -> Result<Gc<LayoutObj>, Error> {
+        // WIP: the menu is not wired into notices yet, so the caller's extras
+        // are unreachable here.
+        if external_menu {
+            log::warn!("show_notice: external_menu is not supported on this model, ignored");
+        }
+        match severity {
+            // A plain confirmation with a single Continue, as this model's own
+            // `show_success` is: its info screen has no button.
+            // WIP: `Done` should answer without waiting; here it waits for the
+            // tap (no screen with both a button and a timeout).
+            Severity::Info | Severity::Success | Severity::Done => {
+                LayoutObj::new_root(Self::confirm_action(
+                    title,
+                    None,
+                    Some(content),
+                    None,
+                    Some(TR::buttons__continue.into()),
+                    false,
+                    None,
+                    false,
+                    false,
+                    false,
+                    false,
+                    None,
+                    false,
+                )?)
+            }
+            Severity::Warning => Self::show_warning(
+                Some(title),
+                TR::buttons__continue.into(),
+                content,
+                TString::empty(),
+                true, // allow_cancel; WIP: this model's `show_warning` ignores it
+                false,
+            ),
+            Severity::Danger => LayoutObj::new_root(Self::show_danger(
+                title,
+                content,
+                TString::empty(),
+                None,
+                Some(TR::buttons__cancel.into()),
+            )?),
+        }
     }
 
     fn show_progress(
@@ -1501,6 +1559,8 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     } else {
         None
     };
+    // WIP: a menu takes the hold's place, so a `Final` step with extras is a
+    // tap here (#7694).
     if hold && !external_menu {
         confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
     }

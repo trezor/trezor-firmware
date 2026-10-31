@@ -204,6 +204,7 @@ impl FlowController for ConfirmActionWithConfirmation {
         match (self, msg) {
             (Self::Action, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
             (Self::Action, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
+            (Self::Confirmation, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
             (Self::Confirmation, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
@@ -308,12 +309,6 @@ pub fn new_confirm_action(
         }
         paragraphs.into_paragraphs()
     };
-
-    if external_menu && (prompt_screen || hold || hold_danger) {
-        return Err(Error::ValueError(
-            c"external_menu currently not supported in tandem with prompt_screen/hold",
-        ));
-    }
 
     let mut options = ConfirmActionOptions::new();
     options = if hold_danger {
@@ -503,7 +498,12 @@ fn create_confirm(
     };
 
     let mut header = Header::left_aligned(prompt_title);
-    if matches!(extra, ConfirmActionExtra::Menu(_)) {
+    // The menu stays reachable while holding to confirm, so that a caller who
+    // asks for both gets both.
+    if matches!(
+        extra,
+        ConfirmActionExtra::Menu(_) | ConfirmActionExtra::ExternalMenu
+    ) {
         header = header.with_menu_button();
     }
     if let Some(subtitle) = subtitle {
@@ -512,6 +512,11 @@ fn create_confirm(
     let content_confirm = Frame::with_header(header, SwipeContent::new(prompt))
         .with_footer(prompt_action, None)
         .with_swipe(Direction::Down, SwipeSettings::Default);
+    let content_confirm = if matches!(extra, ConfirmActionExtra::ExternalMenu) {
+        content_confirm.with_external_menu()
+    } else {
+        content_confirm
+    };
 
     flow.add_page(
         prompt_state,

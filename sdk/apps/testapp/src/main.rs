@@ -1,9 +1,10 @@
-//! A test-only app that exposes every SDK crypto function to the host.
+//! A test-only app that exposes every SDK crypto function and every modui
+//! layout to the host.
 //!
-//! Each wire request names one function and carries its parameters; the app
-//! calls the function and answers with its result, or with the error it
-//! returned. Meant for device tests of the crypto API; dev-signed only, and
-//! it must never ship.
+//! Each wire request names one function or layout and carries its parameters;
+//! the app calls it and answers with its result, or with the error it
+//! returned. Meant for device tests of the crypto API and for testing the UI
+//! by hand on every model; dev-signed only, and it must never ship.
 
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(not(test), no_main)]
@@ -19,14 +20,17 @@ use trezor_app_sdk::{
 
 pub(crate) mod alloc_types;
 mod crypto;
+mod layouts;
 pub(crate) mod proto;
+mod showcase;
 
 use proto::messages::MessageType;
 use proto::testapp::{
     Base58CheckDecode, Base58CheckEncode, Base58Decode, Base58Encode, CheckAddressMac,
-    CosiCombinePublicKeys, CosiVerify, EcdsaRecoverPubkey, EcdsaSignDigest, EcdsaVerify,
-    EcdsaVerifyDigest, Ed25519Sign, Ed25519Verify, GetAddressMac, GetPublicKey, GetXpub, Hash,
-    Hmac, VerifyNonceCache,
+    CosiCombinePublicKeys, CosiVerify, Danger, Details, Done, EcdsaRecoverPubkey, EcdsaSignDigest,
+    EcdsaVerify, EcdsaVerifyDigest, Ed25519Sign, Ed25519Verify, GetAddressMac, GetPublicKey,
+    GetXpub, Hash, Hmac, Review, ShowProgress, Showcase, StreamData, VerifyAddress,
+    VerifyNonceCache, VerifyPubkey,
 };
 
 /// Wire codec for [`wire_handler!`] — encodes/decodes messages via [`prost`].
@@ -177,6 +181,69 @@ wire_handler!(
     MessageType::Data,
     crypto::base58check_decode
 );
+wire_handler!(
+    handle_review,
+    ProstCodec,
+    Review,
+    MessageType::UiResult,
+    layouts::review
+);
+wire_handler!(
+    handle_danger,
+    ProstCodec,
+    Danger,
+    MessageType::UiResult,
+    layouts::danger
+);
+wire_handler!(
+    handle_details,
+    ProstCodec,
+    Details,
+    MessageType::UiResult,
+    layouts::details
+);
+wire_handler!(
+    handle_verify_address,
+    ProstCodec,
+    VerifyAddress,
+    MessageType::UiResult,
+    layouts::verify_address
+);
+wire_handler!(
+    handle_verify_pubkey,
+    ProstCodec,
+    VerifyPubkey,
+    MessageType::UiResult,
+    layouts::verify_pubkey
+);
+wire_handler!(
+    handle_done,
+    ProstCodec,
+    Done,
+    MessageType::UiResult,
+    layouts::done
+);
+wire_handler!(
+    handle_show_progress,
+    ProstCodec,
+    ShowProgress,
+    MessageType::UiResult,
+    layouts::show_progress
+);
+wire_handler!(
+    handle_stream_data,
+    ProstCodec,
+    StreamData,
+    MessageType::UiResult,
+    layouts::stream_data
+);
+wire_handler!(
+    handle_showcase,
+    ProstCodec,
+    Showcase,
+    MessageType::UiResult,
+    showcase::show
+);
 
 #[unsafe(no_mangle)]
 pub fn app() -> Result<()> {
@@ -209,6 +276,15 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::Base58Decode) => handle_base58_decode(data),
         Ok(MessageType::Base58CheckEncode) => handle_base58check_encode(data),
         Ok(MessageType::Base58CheckDecode) => handle_base58check_decode(data),
+        Ok(MessageType::Review) => handle_review(data),
+        Ok(MessageType::Danger) => handle_danger(data),
+        Ok(MessageType::Details) => handle_details(data),
+        Ok(MessageType::VerifyAddress) => handle_verify_address(data),
+        Ok(MessageType::VerifyPubkey) => handle_verify_pubkey(data),
+        Ok(MessageType::Done) => handle_done(data),
+        Ok(MessageType::ShowProgress) => handle_show_progress(data),
+        Ok(MessageType::StreamData) => handle_stream_data(data),
+        Ok(MessageType::Showcase) => handle_showcase(data),
         Ok(_) => {
             error!("Invalid function: {:?}", id);
             Err(Error::InvalidFunction)

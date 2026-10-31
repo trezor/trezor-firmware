@@ -1,6 +1,7 @@
 extends: default
 
 ignore: |
+  /.git
   /.venv
   vendor/
   /common/defs/ethereum/chains/

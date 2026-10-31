@@ -282,3 +282,202 @@ message Base58 {
 message Data {
     required bytes data = 1;
 }
+
+/**
+ * One request per modui layout. Each mirrors its layout's parameters one to
+ * one, so the host drives the library through the same surface an app uses.
+ * `step` is the step name the host sees for that screen. The app answers with
+ * a UiResult.
+ */
+
+// Prefixed because enum values share the package's namespace (`Data` is also a
+// message); prost and the Python generator both strip the prefix.
+enum FieldKind {
+    FieldKind_Text = 0;
+    FieldKind_Amount = 1;
+    FieldKind_Address = 2;
+    FieldKind_Data = 3;
+    FieldKind_Note = 4;
+    FieldKind_Warning = 5;
+}
+
+/**
+ * One fact the person reads. `label` is absent for a note and a warning;
+ * `value` is UTF-8 for the text kinds and the bytes themselves for `Data`.
+ * `ticker` is an amount's unit, apart from its number.
+ */
+message Field {
+    optional FieldKind kind = 1 [default = FieldKind_Text];
+    optional string label = 2;
+    required bytes value = 3;
+    optional string ticker = 4;
+}
+
+/**
+ * More the person can open from a review's menu.
+ */
+message Extra {
+    required string label = 1;
+    repeated Field fields = 2;
+}
+
+/**
+ * Request: modui::review, confirmed by `is_final`
+ * @next UiResult
+ */
+message Review {
+    required string step = 1;
+    required string title = 2;
+    repeated Field fields = 3;
+    repeated Extra extras = 4;
+    optional bool is_final = 5 [default = false];
+}
+
+/**
+ * Request: modui::review(...).confirm_danger()
+ * @next UiResult
+ */
+message Danger {
+    required string step = 1;
+    required string title = 2;
+    repeated Field fields = 3;
+}
+
+/**
+ * Request: modui::details
+ * @next UiResult
+ */
+message Details {
+    required string step = 1;
+    required string title = 2;
+    repeated Field fields = 3;
+}
+
+/**
+ * Request: a review with a `data_source` field the app generates while core
+ * pulls it, then a final review of the hash and of the number of reads
+ * @next UiResult
+ */
+message StreamData {
+    required string step = 1;
+    required string title = 2;
+    required uint32 length = 3;
+    optional uint32 fail_at = 4;
+}
+
+/**
+ * Request: modui::verify_address
+ * @next UiResult
+ */
+message VerifyAddress {
+    required string step = 1;
+    required string value = 2;
+    optional string account = 3;
+    optional string path = 4;
+}
+
+/**
+ * Request: modui::verify_pubkey
+ * @next UiResult
+ */
+message VerifyPubkey {
+    required string step = 1;
+    required string value = 2;
+    optional string account = 3;
+    optional string path = 4;
+}
+
+/**
+ * Request: modui::done; the app answers once the screen is up.
+ * @next UiResult
+ */
+message Done {
+    required string step = 1;
+    required string text = 2;
+}
+
+/**
+ * Request: one flow from the API reference's examples, by name; see
+ * `src/showcase.rs`.
+ * @next UiResult
+ */
+message Showcase {
+    required string name = 1;
+}
+
+/**
+ * Request: modui::progress, paced by the host.
+ * The progress stays up while the app asks for steps with `ProgressTick`; the
+ * host answers each tick with `ProgressStep`, `ProgressLabel` or
+ * `ProgressReview`, or with `ProgressEnd` to finish. Without `total` the progress
+ * is indeterminate.
+ * @next ProgressTick
+ */
+message ShowProgress {
+    required string label = 1;
+    optional uint32 total = 2;
+}
+
+/**
+ * The app's question while a progress runs: what next?
+ * @next ProgressStep
+ * @next ProgressLabel
+ * @next ProgressReview
+ * @next ProgressEnd
+ */
+message ProgressTick {}
+
+/**
+ * Report `units` more units of work done.
+ * @next ProgressTick
+ */
+message ProgressStep {
+    optional uint32 units = 1 [default = 1];
+}
+
+/**
+ * Change the text under the bar.
+ * @next ProgressTick
+ */
+message ProgressLabel {
+    required string label = 1;
+}
+
+/**
+ * Show a review inside the progress's work; the app asks for the next tick once
+ * the person confirms it.
+ * @next ProgressTick
+ */
+message ProgressReview {
+    required string step = 1;
+    required string title = 2;
+}
+
+/**
+ * Start a progress inside the running one. Core refuses the nesting and stops the
+ * app, so this never answers.
+ */
+message ProgressNested {
+    required string label = 1;
+}
+
+/**
+ * The work is over; the progress goes away.
+ * @next UiResult
+ */
+message ProgressEnd {}
+
+/**
+ * Response: how the layout ended. A details answers `ShowDetails` when the
+ * person asked for them and `Confirmed` when they skipped them; a progress
+ * answers `Confirmed` once it has run.
+ * @end
+ */
+message UiResult {
+    enum Reply {
+        Confirmed = 0;
+        Cancelled = 1;
+        ShowDetails = 5;
+    }
+    required Reply reply = 1;
+}

@@ -1056,6 +1056,8 @@ impl<'a> MpyBuilder<'a> {
 
         files.add(src.join("trezor/ui/layouts"), "*.py")?;
 
+        files.add(src.join("trezor/ui/library"), "*.py")?;
+
         if cfg!(not(feature = "universal_fw")) {
             files.remove(src, "trezor/ui/layouts/fido.py");
         }

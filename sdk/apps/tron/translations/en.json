@@ -4,13 +4,6 @@
     "version": "2.13.0.0"
   },
   "translations": {
-    "address__check_with_source": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Check the address with source."
-    },
-    "address__confirmed": "Receive address confirmed.",
     "address__warning_not_yours": {
       "Bolt": "",
       "Caesar": "",
@@ -31,14 +24,9 @@
     "ethereum__approve_intro_title_revoke": "Token revocation",
     "ethereum__approve_revoke_from": "Revoke from",
     "ethereum__approve_to": "Approve to",
-    "ethereum__no_message_field": "No message field",
-    "ethereum__sign_eip712": "Really sign EIP-712 typed data?",
     "ethereum__staking_claim": "Claim",
     "ethereum__staking_stake": "Stake",
     "ethereum__staking_unstake": "Unstake",
-    "ethereum__title_confirm_message": "Confirm message",
-    "ethereum__title_confirm_message_hash": "Confirm message hash",
-    "ethereum__title_confirm_typed_data": "Confirm typed data",
     "ethereum__title_input_data": "Data",
     "ethereum__title_token_contract": {
       "Delizia": "Token contract",
@@ -80,7 +68,6 @@
     "words__note": "Note",
     "words__recipient": "Recipient",
     "words__resource": "Resource",
-    "words__review": "Review",
     "words__send": "Send",
     "words__show_next": "Show next",
     "words__title_done": "Done",
