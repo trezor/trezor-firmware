@@ -1,4 +1,5 @@
-use miniscript::{SerializedPublicKey, TranslateErr, Translator};
+use miniscript::bitcoin::hashes::{hash160, ripemd160, sha256};
+use miniscript::{hash256, SerializedPublicKey, TranslateErr, Translator};
 
 use crate::micropython::buffer::{get_buffer, StrBuffer};
 use crate::micropython::error::Error;
@@ -12,18 +13,17 @@ use crate::miniscript::{Descriptor, KeyExpr};
 
 // TODO: better error handling?
 impl From<crate::miniscript::Error> for Error {
-    fn from(_: crate::miniscript::Error) -> Self {
-        Self::ValueError(c"Invalid miniscript")
+    fn from(e: crate::miniscript::Error) -> Self {
+        match e {
+            crate::miniscript::Error::Unsupported => Error::NotImplementedError,
+            crate::miniscript::Error::Invalid => Error::ValueError(c"Invalid miniscript"),
+        }
     }
 }
 
 impl KeyExpr {
     fn as_tuple(&self) -> (Obj, Obj, Obj) {
-        (
-            self.key.into(),
-            self.children.0.into(),
-            self.children.1.into(),
-        )
+        (self.key.into(), self.child.0.into(), self.child.1.into())
     }
 }
 
@@ -36,18 +36,29 @@ impl Translator<KeyExpr> for Derive {
     type Error = Error;
 
     fn pk(&mut self, k: &KeyExpr) -> Result<Self::TargetPk, Self::Error> {
+        let args = [k.key.into(), k.child.0.into(), k.child.1.into()];
         // TODO: safety semantics of `self.func_obj`
-        let buf: Obj = self.func_obj.call_with_n_args(&[
-            k.key.into(),
-            k.children.0.into(),
-            k.children.1.into(),
-        ])?;
+        let buf: Obj = self.func_obj.call_with_n_args(&args)?;
         // SAFETY: reference is discarded at the end of the block
         let buf_slice: &[u8] = unsafe { get_buffer(buf)? };
-        buf_slice
-            .try_into()
-            .map(SerializedPublicKey::new)
-            .map_err(|_| Error::RuntimeError(c"Invalid ECDSA pubkey"))
+        SerializedPublicKey::from_slice(buf_slice)
+            .map_err(|_| Error::RuntimeError(c"Invalid pubkey"))
+    }
+
+    fn sha256(&mut self, _sha256: &sha256::Hash) -> Result<sha256::Hash, Self::Error> {
+        Err(Error::NotImplementedError)
+    }
+
+    fn hash256(&mut self, _hash256: &hash256::Hash) -> Result<hash256::Hash, Self::Error> {
+        Err(Error::NotImplementedError)
+    }
+
+    fn ripemd160(&mut self, _ripemd160: &ripemd160::Hash) -> Result<ripemd160::Hash, Self::Error> {
+        Err(Error::NotImplementedError)
+    }
+
+    fn hash160(&mut self, _hash160: &hash160::Hash) -> Result<hash160::Hash, Self::Error> {
+        Err(Error::NotImplementedError)
     }
 }
 
@@ -57,7 +68,7 @@ impl From<TranslateErr<Error>> for Error {
             // pk() failed (e.g. `func_obj` raised)
             TranslateErr::TranslatorErr(e) => e,
             // the resulting miniscript is invalid
-            TranslateErr::OuterError(e) => e.into(),
+            TranslateErr::OuterError(e) => crate::miniscript::Error::from(e).into(),
         }
     }
 }
