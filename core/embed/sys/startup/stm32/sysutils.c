@@ -138,9 +138,9 @@ __attribute((naked, noreturn, no_stack_protector)) void call_with_new_stack(
 
 // Ensure that we are running in privileged thread mode.
 //
-// This function is used only on STM32F4, where a direct jump to the
-// bootloader is performed. It checks if we are in handler mode, and
-// if so, it switches to privileged thread mode.
+// It checks if we are in handler mode, and if so, it switches to
+// privileged thread mode. Only the current exception is left, the ones
+// it preempted (e.g. a faulting IRQ handler) stay active.
 __attribute((naked, no_stack_protector)) void ensure_thread_mode(void) {
   __asm__ volatile(
       // --------------------------------------------------------------
@@ -153,6 +153,18 @@ __attribute((naked, no_stack_protector)) void ensure_thread_mode(void) {
       "CMP      R0, #0             \n"  // == 0 if in thread mode
       "IT       EQ                 \n"
       "BXEQ     LR                 \n"  // return if in thread mode
+
+#ifdef STM32F4
+      // --------------------------------------------------------------
+      // Allow returning to thread mode while other exceptions are
+      // still active (ARMv7-M raises INVPC fault otherwise)
+      // --------------------------------------------------------------
+
+      "LDR     R1, = 0xE000ED14    \n"  // SCB->CCR
+      "LDR     R0, [R1]            \n"
+      "ORR     R0, R0, #1          \n"  // Set NONBASETHRDENA
+      "STR     R0, [R1]            \n"
+#endif
 
       // --------------------------------------------------------------
       // Disable FP registers lazy stacking
