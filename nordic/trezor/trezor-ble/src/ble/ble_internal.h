@@ -52,6 +52,43 @@
 #define BT_UUID_TRZ_TX BT_UUID_DECLARE_128(BT_UUID_TRZ_TX_VAL)
 #define BT_UUID_TRZ_NOTIFY BT_UUID_DECLARE_128(BT_UUID_TRZ_NOTIFY_VAL)
 
+// Console service (see console.c). Same vendor base as the wire-protocol
+// service, own block of short UUIDs.
+
+/** @brief UUID of the Console Service. **/
+#define BT_UUID_TRZ_CONSOLE_VAL \
+  BT_UUID_128_ENCODE(0x8c000010, 0xa59b, 0x4d58, 0xa9ad, 0x073df69fa1b1)
+
+/** @brief UUID of the Console RX Characteristic (host -> device). **/
+#define BT_UUID_TRZ_CONSOLE_RX_VAL \
+  BT_UUID_128_ENCODE(0x8c000011, 0xa59b, 0x4d58, 0xa9ad, 0x073df69fa1b1)
+
+/** @brief UUID of the Console TX Characteristic (device -> host). **/
+#define BT_UUID_TRZ_CONSOLE_TX_VAL \
+  BT_UUID_128_ENCODE(0x8c000012, 0xa59b, 0x4d58, 0xa9ad, 0x073df69fa1b1)
+
+#define BT_UUID_TRZ_CONSOLE_SERVICE BT_UUID_DECLARE_128(BT_UUID_TRZ_CONSOLE_VAL)
+#define BT_UUID_TRZ_CONSOLE_RX BT_UUID_DECLARE_128(BT_UUID_TRZ_CONSOLE_RX_VAL)
+#define BT_UUID_TRZ_CONSOLE_TX BT_UUID_DECLARE_128(BT_UUID_TRZ_CONSOLE_TX_VAL)
+
+// Debuglink service (see debug.c). Same vendor base, next block.
+
+/** @brief UUID of the Debuglink Service. **/
+#define BT_UUID_TRZ_DEBUG_VAL \
+  BT_UUID_128_ENCODE(0x8c000020, 0xa59b, 0x4d58, 0xa9ad, 0x073df69fa1b1)
+
+/** @brief UUID of the Debuglink RX Characteristic (host -> device). **/
+#define BT_UUID_TRZ_DEBUG_RX_VAL \
+  BT_UUID_128_ENCODE(0x8c000021, 0xa59b, 0x4d58, 0xa9ad, 0x073df69fa1b1)
+
+/** @brief UUID of the Debuglink TX Characteristic (device -> host). **/
+#define BT_UUID_TRZ_DEBUG_TX_VAL \
+  BT_UUID_128_ENCODE(0x8c000022, 0xa59b, 0x4d58, 0xa9ad, 0x073df69fa1b1)
+
+#define BT_UUID_TRZ_DEBUG_SERVICE BT_UUID_DECLARE_128(BT_UUID_TRZ_DEBUG_VAL)
+#define BT_UUID_TRZ_DEBUG_RX BT_UUID_DECLARE_128(BT_UUID_TRZ_DEBUG_RX_VAL)
+#define BT_UUID_TRZ_DEBUG_TX BT_UUID_DECLARE_128(BT_UUID_TRZ_DEBUG_TX_VAL)
+
 #define BLE_TX_PACKET_SIZE 244
 #define BLE_RX_PACKET_SIZE 244
 
@@ -122,7 +159,11 @@ typedef struct {
     uint8_t whitelist : 1;
     uint8_t user_disconnect : 1;  // If set, the device should not try to
                                   // reconnect after disconnecting
-    uint8_t reserved : 6;
+    uint8_t console : 1;          // Expose the BLE console service (prodtest,
+                                  // debug builds); clear in production firmware
+    uint8_t debuglink : 1;        // Expose the BLE debuglink service (debug
+                                  // builds only)
+    uint8_t reserved : 4;
   } flags;
   uint8_t color;
   uint8_t static_addr;
@@ -227,3 +268,19 @@ int service_send(struct bt_conn *conn, trz_packet_t *data);
 int service_notify(struct bt_conn *conn, uint8_t *data, size_t len);
 // Send hard-coded error response
 void service_send_busy(void);
+
+// Console service functions (console.c, CONFIG_TRZ_CONSOLE)
+// Start the forwarding thread; the service is registered on request
+void console_init(void);
+// Register (true) or unregister (false) the service
+int console_set_enabled(bool enable);
+// True while the service is registered, for the advertising flag
+bool console_enabled(void);
+
+// Debuglink service functions (debug.c, CONFIG_TRZ_DEBUG_LINK)
+// Start the forwarding thread; the service is registered on request
+void debug_init(void);
+// Register (true) or unregister (false) the service
+int debug_set_enabled(bool enable);
+// True while the service is registered, for the advertising flag
+bool debug_enabled(void);
