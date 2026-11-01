@@ -91,10 +91,11 @@ def _digest_policy(policy: MiniscriptPolicy) -> bytes:
 
 
 class RegisteredPolicy:
-    def __init__(self, policy: MiniscriptPolicy, name: str) -> None:
+    def __init__(self, policy: MiniscriptPolicy, name: str, digest: bytes) -> None:
         """MUST be constructed using `load_policy()` below."""
         self._policy = policy
         self.name = name
+        self.digest = digest  # identifies the policy (e.g. for change detection)
         # (key index, external child, internal child) for each key expression
         self._key_exprs: list[tuple[int, int, int]] | None = None
 
@@ -162,6 +163,16 @@ class RegisteredPolicy:
         raise ValueError  # Unsupported descriptor
 
 
+def get_registered_policy(
+    registered_policies: Sequence[RegisteredPolicy], policy_index: int
+) -> RegisteredPolicy:
+    from trezor.wire import DataError
+
+    if policy_index >= len(registered_policies):
+        raise DataError("Invalid policy index")
+    return registered_policies[policy_index]
+
+
 async def store_policy(policy: MiniscriptPolicy, name: str) -> None:
     from storage.device import set_registered_miniscript
     from trezor.messages import MiniscriptRegisteredEntry
@@ -183,8 +194,9 @@ async def load_policy(policy: MiniscriptPolicy) -> RegisteredPolicy:
     if (buf := get_registered_miniscript()) is not None:
         # TODO: experimental protobuf marker
         entry = decode(buf, MiniscriptRegisteredEntry, True)
-        if entry.policy_digest == _digest_policy(policy):
-            return RegisteredPolicy(policy, entry.name)
+        digest = _digest_policy(policy)
+        if entry.policy_digest == digest:
+            return RegisteredPolicy(policy, entry.name, digest)
 
     from trezor.wire import ProcessError
 

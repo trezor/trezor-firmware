@@ -1,10 +1,16 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
+from trezor import utils
+
 from .. import common
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from trezor.messages import TxInput, TxOutput
+
+    from ..miniscript import RegisteredPolicy
 
 # The chain id used for change.
 _BIP32_CHANGE_CHAIN = const(1)
@@ -15,8 +21,9 @@ _BIP32_MAX_LAST_ELEMENT = const(1_000_000)
 
 
 class ChangeDetector:
-    def __init__(self) -> None:
+    def __init__(self, registered_policies: Sequence[RegisteredPolicy] = ()) -> None:
         from .matchcheck import (
+            MiniscriptPolicyChecker,
             MultisigFingerprintChecker,
             ScriptTypeChecker,
             WalletPathChecker,
@@ -31,20 +38,43 @@ class ChangeDetector:
         # Common script type, used to validate change-output.
         self.script_type = ScriptTypeChecker()
 
+        # Digest of the registered Miniscript policy used by inputs, used to validate change-output.
+        self.miniscript_policy = MiniscriptPolicyChecker(registered_policies)
+
     def add_input(self, txi: TxInput) -> None:
         if not common.input_is_external(txi):
             self.wallet_path.add_input(txi)
             self.script_type.add_input(txi)
             self.multisig_fingerprint.add_input(txi)
+            if utils.USE_MINISCRIPT:
+                self.miniscript_policy.add_input(txi)
 
     def check_input(self, txi: TxInput) -> None:
         self.wallet_path.check_input(txi)
         self.script_type.check_input(txi)
         self.multisig_fingerprint.check_input(txi)
+        if utils.USE_MINISCRIPT:
+            self.miniscript_policy.check_input(txi)
 
     def output_is_change(self, txo: TxOutput) -> bool:
         if txo.script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:
             return False
+
+        if utils.USE_MINISCRIPT:
+            if not self.miniscript_policy.output_matches(txo):
+                return False
+
+            if (redeem := txo.miniscript) is not None:
+                # All inputs use the same registered policy as this output.
+                # The output's address is derived from that policy (the output has
+                # no address_n), so the wallet path checks below don't apply. Since all
+                # the policy's keys use the same derivation, limiting the index is
+                # sufficient to keep the change address discoverable.
+                return (
+                    self.script_type.output_matches(txo)
+                    and redeem.derivation.index <= _BIP32_MAX_LAST_ELEMENT
+                    and txo.amount > 0
+                )
 
         if txo.multisig and not common.multisig_uses_single_path(txo.multisig):
             # An address that uses different derivation paths for different xpubs

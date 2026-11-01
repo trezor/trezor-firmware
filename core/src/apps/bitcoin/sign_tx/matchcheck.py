@@ -7,11 +7,14 @@ from trezor.utils import ensure
 from ..common import BIP32_WALLET_DEPTH, CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing import Any, Generic, TypeVar
 
     from trezor.messages import TxInput
 
     from apps.common.paths import Bip32Path
+
+    from ..miniscript import RegisteredPolicy
 
     T = TypeVar("T")
 else:
@@ -111,6 +114,28 @@ class MultisigFingerprintChecker(MatchChecker):
             # the added inputs is singlesig.
             return bytes()
         return multisig.multisig_fingerprint(txio.multisig)
+
+
+class MiniscriptPolicyChecker(MatchChecker):
+    def __init__(self, registered_policies: Sequence[RegisteredPolicy]) -> None:
+        super().__init__()
+        # Filled by the signer before any inputs are added.
+        self.registered_policies = registered_policies
+
+    def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:
+        if (redeem := txio.miniscript) is None:
+            # The digest of a non-Miniscript input or output is defined as an empty byte
+            # string (similar to MultisigFingerprintChecker). Therefore, a Miniscript output
+            # matches if and only if all the added inputs use the same registered policy,
+            # and a non-Miniscript output does not match if any of the added inputs uses
+            # a Miniscript policy.
+            return bytes()
+
+        from ..miniscript import get_registered_policy
+
+        return get_registered_policy(
+            self.registered_policies, redeem.policy_index
+        ).digest
 
 
 class ScriptTypeChecker(MatchChecker):

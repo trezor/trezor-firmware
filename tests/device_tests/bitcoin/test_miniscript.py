@@ -28,6 +28,7 @@ from embit.transaction import SIGHASH
 from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.messages import ButtonRequestType as B
 from trezorlib.tools import H_, parse_path
 
 pytestmark = [
@@ -329,28 +330,91 @@ def test_miniscript_spend_liana(session: Session):
     # )
 
 
-def test_miniscript_spend_liana_to_policy(session: Session):
-    policy, psbt, inputs, outputs = _prepare_liana_spend(session)
+def _sign_liana_spend_get_button_codes(
+    session: Session,
+    psbt: PSBT,
+    inputs: list[messages.TxInputType],
+    outputs: list[messages.TxOutputType],
+    policies: list[messages.MiniscriptPolicy],
+) -> tuple[list[bytes], list[messages.ButtonRequestType]]:
+    with session.test_ctx as client:
+        start = len(client.actual_responses)
+        signatures = _sign_liana_spend(session, psbt, inputs, outputs, policies)
+        codes = [
+            r.code
+            for r in client.actual_responses[start:]
+            if isinstance(r, messages.ButtonRequest)
+        ]
+    return signatures, codes
 
-    # Send the funds back to the same policy (without providing an address).
-    derivation = messages.MiniscriptDerivation(internal=True, index=5)
-    addr = btc.get_miniscript_address(session, policy, derivation, LIANA_COIN).address
-    (output,) = outputs
-    output.address = None
-    output.miniscript = messages.MiniscriptRedeemPolicyType(
-        policy_index=0, derivation=derivation
-    )
-    (signature,) = _sign_liana_spend(session, psbt, inputs, [output], [policy])
 
-    # Make sure the signature commits to the policy-derived output script.
+def _verify_liana_signature(signature: bytes, output_address: str) -> None:
+    """Make sure the signature commits to the specified output address."""
+    psbt = PSBT.from_base64(LIANA_PSBT)
     tx = PSBT.from_base64(LIANA_PSBT).tx  # embit caches sighash parts
-    tx.vout[0].script_pubkey = address_to_scriptpubkey(addr)
+    tx.vout[0].script_pubkey = address_to_scriptpubkey(output_address)
     (psbt_input,) = psbt.inputs
     sighash = tx.sighash_segwit(
         0, psbt_input.witness_script, psbt_input.utxo.value, SIGHASH.ALL
     )
     pubkey = LIANA_TPUBS[0].key.derive("m/0/1").key
     assert pubkey.verify(ec.Signature.parse(signature), sighash)
+
+
+@pytest.mark.parametrize("internal", (True, False))
+def test_miniscript_change_output(session: Session, internal: bool):
+    policy, psbt, inputs, outputs = _prepare_liana_spend(session)
+
+    # Send the funds back to the same policy (without providing an address).
+    derivation = messages.MiniscriptDerivation(internal=internal, index=5)
+    addr = btc.get_miniscript_address(session, policy, derivation, LIANA_COIN).address
+    (output,) = outputs
+    output.address = None
+    output.miniscript = messages.MiniscriptRedeemPolicyType(
+        policy_index=0, derivation=derivation
+    )
+    (signature,), codes = _sign_liana_spend_get_button_codes(
+        session, psbt, inputs, [output], [policy]
+    )
+    _verify_liana_signature(signature, addr)
+
+    # The output is a change-output, so it is not confirmed.
+    assert B.ConfirmOutput not in codes
+    assert B.SignTx in codes
+
+
+def test_miniscript_change_output_large_index(session: Session):
+    policy, psbt, inputs, outputs = _prepare_liana_spend(session)
+
+    derivation = messages.MiniscriptDerivation(internal=True, index=1_000_001)
+    addr = btc.get_miniscript_address(session, policy, derivation, LIANA_COIN).address
+    (output,) = outputs
+    output.address = None
+    output.miniscript = messages.MiniscriptRedeemPolicyType(
+        policy_index=0, derivation=derivation
+    )
+    (signature,), codes = _sign_liana_spend_get_button_codes(
+        session, psbt, inputs, [output], [policy]
+    )
+    _verify_liana_signature(signature, addr)
+
+    # The derivation index is too large, so the output must be confirmed.
+    assert B.ConfirmOutput in codes
+
+
+def test_miniscript_singlesig_output_is_not_change(session: Session):
+    policy, psbt, inputs, outputs = _prepare_liana_spend(session)
+
+    # P2WPKH output using the same account as the Miniscript inputs
+    (output,) = outputs
+    output.address = None
+    output.address_n = parse_path("m/48h/1h/0h/2h/1/5")
+    (_signature,), codes = _sign_liana_spend_get_button_codes(
+        session, psbt, inputs, [output], [policy]
+    )
+
+    # The output doesn't use the inputs' policy, so it must be confirmed.
+    assert B.ConfirmOutput in codes
 
 
 @pytest.mark.parametrize(

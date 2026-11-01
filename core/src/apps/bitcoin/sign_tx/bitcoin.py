@@ -127,6 +127,9 @@ class Bitcoin:
         from . import approvers
         from .tx_info import TxInfo
 
+        # Loaded in signer(), but used by the change detector (inside TxInfo).
+        self.registered_policies: list[RegisteredPolicy] = []
+
         self.tx_info = TxInfo(self, helpers.sanitize_sign_tx(tx, coin))
         self.keychain = keychain
         self.coin = coin
@@ -174,12 +177,10 @@ class Bitcoin:
         # The index of the payment request being processed.
         self.payment_req_index: int | None = None
 
-        self.registered_policies: list[RegisteredPolicy] = []
-
     def get_registered_policy(self, policy_index: int) -> RegisteredPolicy:
-        if policy_index >= len(self.registered_policies):
-            raise DataError("Invalid policy index")
-        return self.registered_policies[policy_index]
+        from ..miniscript import get_registered_policy
+
+        return get_registered_policy(self.registered_policies, policy_index)
 
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(sha256())

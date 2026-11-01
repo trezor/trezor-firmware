@@ -12,10 +12,12 @@ if TYPE_CHECKING:
 
     from apps.common.coininfo import CoinInfo
 
+    from ..miniscript import RegisteredPolicy
     from .sig_hasher import SigHasher
 
     class Signer(Protocol):
         coin: CoinInfo
+        registered_policies: list[RegisteredPolicy]
 
         def create_hash_writer(self) -> HashWriter: ...
 
@@ -48,7 +50,7 @@ class TxInfoBase:
 
         from .change_detector import ChangeDetector
 
-        self.change_detector = ChangeDetector()
+        self.change_detector = ChangeDetector(signer.registered_policies)
 
         # h_tx_check is used to make sure that the inputs and outputs streamed in
         # different steps are the same every time, e.g. the ones streamed for approval

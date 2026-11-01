@@ -3,7 +3,15 @@ from common import *  # isort:skip
 
 from trezor.enums import InputScriptType, MultisigPubkeysOrder, OutputScriptType
 from trezor.enums.MultisigPubkeysOrder import LEXICOGRAPHIC, PRESERVED
-from trezor.messages import HDNodeType, MultisigRedeemScriptType, TxInput, TxOutput
+from trezor.messages import (
+    HDNodeType,
+    MiniscriptDerivation,
+    MiniscriptRedeemPolicyType,
+    MultisigRedeemScriptType,
+    TxInput,
+    TxOutput,
+)
+from trezor.wire import DataError, ProcessError
 
 from apps.bitcoin.sign_tx.change_detector import ChangeDetector
 
@@ -106,6 +114,77 @@ def get_external_singlesig_output():
         address="1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL",
         amount=1_000_000,
         script_type=OutputScriptType.PAYTOADDRESS,
+    )
+
+
+# BIP-48 account used by the Miniscript tests
+MINISCRIPT_ACCOUNT = [H_(48), H_(1), H_(0), H_(2)]
+
+
+class FakeRegisteredPolicy:
+    def __init__(self, digest: bytes) -> None:
+        self.digest = digest
+
+
+# Policies #0 and #2 are the same, policy #1 is different.
+MINISCRIPT_POLICIES = [
+    FakeRegisteredPolicy(b"\x01" * 32),
+    FakeRegisteredPolicy(b"\x02" * 32),
+    FakeRegisteredPolicy(b"\x01" * 32),
+]
+
+
+def get_miniscript_redeem(
+    policy_index: int, internal: bool, index: int
+) -> MiniscriptRedeemPolicyType:
+    return MiniscriptRedeemPolicyType(
+        policy_index=policy_index,
+        derivation=MiniscriptDerivation(internal=internal, index=index),
+    )
+
+
+def get_miniscript_input(
+    policy_index: int, child: int, internal: bool, index: int
+) -> TxInput:
+    return TxInput(
+        address_n=MINISCRIPT_ACCOUNT + [child, index],
+        amount=1_000_000,
+        prev_hash=bytes(32),
+        prev_index=0,
+        script_type=InputScriptType.SPENDWITNESS,
+        miniscript=get_miniscript_redeem(policy_index, internal, index),
+    )
+
+
+def get_miniscript_output(
+    policy_index: int,
+    internal: bool,
+    index: int,
+    script_type: OutputScriptType = OutputScriptType.PAYTOWITNESS,
+    amount: int = 1_000_000,
+) -> TxOutput:
+    return TxOutput(
+        amount=amount,
+        script_type=script_type,
+        miniscript=get_miniscript_redeem(policy_index, internal, index),
+    )
+
+
+def get_singlesig_witness_input(path: list[int]) -> TxInput:
+    return TxInput(
+        address_n=path,
+        amount=1_000_000,
+        prev_hash=bytes(32),
+        prev_index=0,
+        script_type=InputScriptType.SPENDWITNESS,
+    )
+
+
+def get_internal_singlesig_witness_output(path: list[int]) -> TxOutput:
+    return TxOutput(
+        address_n=path,
+        amount=1_000_000,
+        script_type=OutputScriptType.PAYTOWITNESS,
     )
 
 
@@ -623,6 +702,132 @@ class TestChangeDetector(unittest.TestCase):
 
         # External output
         assert self.d.output_is_change(get_external_singlesig_output()) is False
+
+
+@unittest.skipUnless(utils.USE_MINISCRIPT, "miniscript")
+class TestMiniscriptChangeDetector(unittest.TestCase):
+    def setUp(self):
+        self.d = ChangeDetector(MINISCRIPT_POLICIES)
+
+    def test_miniscript(self):
+        # Different key expressions (primary & recovery) and derivations
+        self.d.add_input(get_miniscript_input(0, 0, False, 1))
+        self.d.add_input(get_miniscript_input(0, 1, True, 2))
+        self.d.add_input(get_miniscript_input(0, 2, False, 3))
+
+        # Same policy, both external and internal derivations
+        assert self.d.output_is_change(get_miniscript_output(0, True, 5)) is True
+        assert self.d.output_is_change(get_miniscript_output(0, False, 5)) is True
+        assert (
+            self.d.output_is_change(get_miniscript_output(0, True, 1_000_000)) is True
+        )
+
+        # Same policy, using another index in SignTx.policies
+        assert self.d.output_is_change(get_miniscript_output(2, True, 5)) is True
+
+        # Different policy
+        assert self.d.output_is_change(get_miniscript_output(1, True, 5)) is False
+
+        # Derivation index too large
+        assert (
+            self.d.output_is_change(get_miniscript_output(0, True, 1_000_001)) is False
+        )
+
+        # Zero amount
+        assert (
+            self.d.output_is_change(get_miniscript_output(0, True, 5, amount=0))
+            is False
+        )
+
+        # Different script type
+        assert (
+            self.d.output_is_change(
+                get_miniscript_output(0, True, 5, OutputScriptType.PAYTOP2SHWITNESS)
+            )
+            is False
+        )
+
+        # Singlesig output using the same account
+        assert (
+            self.d.output_is_change(
+                get_internal_singlesig_witness_output(MINISCRIPT_ACCOUNT + [1, 5])
+            )
+            is False
+        )
+
+        # Multisig output using the same account
+        assert (
+            self.d.output_is_change(
+                get_internal_multisig_output(
+                    MINISCRIPT_ACCOUNT + [1, 5], [xpub1], PRESERVED
+                )
+            )
+            is False
+        )
+
+        # External output
+        assert self.d.output_is_change(get_external_singlesig_output()) is False
+
+    def test_miniscript_different_policies(self):
+        self.d.add_input(get_miniscript_input(0, 0, False, 1))
+        self.d.add_input(get_miniscript_input(1, 0, False, 1))
+
+        assert self.d.output_is_change(get_miniscript_output(0, True, 5)) is False
+        assert self.d.output_is_change(get_miniscript_output(1, True, 5)) is False
+
+    def test_miniscript_same_policy_different_index(self):
+        self.d.add_input(get_miniscript_input(0, 0, False, 1))
+        self.d.add_input(get_miniscript_input(2, 0, False, 2))
+
+        assert self.d.output_is_change(get_miniscript_output(0, True, 5)) is True
+        assert self.d.output_is_change(get_miniscript_output(2, True, 5)) is True
+
+    def test_miniscript_and_singlesig_inputs(self):
+        self.d.add_input(get_miniscript_input(0, 0, False, 1))
+        self.d.add_input(get_singlesig_witness_input(MINISCRIPT_ACCOUNT + [0, 2]))
+
+        assert self.d.output_is_change(get_miniscript_output(0, True, 5)) is False
+        assert (
+            self.d.output_is_change(
+                get_internal_singlesig_witness_output(MINISCRIPT_ACCOUNT + [1, 5])
+            )
+            is False
+        )
+
+    def test_singlesig_inputs(self):
+        self.d.add_input(get_singlesig_witness_input(MINISCRIPT_ACCOUNT + [0, 1]))
+        self.d.add_input(get_singlesig_witness_input(MINISCRIPT_ACCOUNT + [0, 2]))
+
+        # Miniscript output is not a change-output
+        assert self.d.output_is_change(get_miniscript_output(0, True, 5)) is False
+
+        # Singlesig output is still a change-output
+        assert (
+            self.d.output_is_change(
+                get_internal_singlesig_witness_output(MINISCRIPT_ACCOUNT + [1, 5])
+            )
+            is True
+        )
+
+    def test_check_input(self):
+        self.d.add_input(get_miniscript_input(0, 0, False, 1))
+        assert self.d.output_is_change(get_miniscript_output(0, True, 5)) is True
+
+        # Same policy
+        self.d.check_input(get_miniscript_input(0, 0, False, 1))
+        self.d.check_input(get_miniscript_input(2, 0, False, 1))
+
+        # Different policy
+        with self.assertRaises(ProcessError):
+            self.d.check_input(get_miniscript_input(1, 0, False, 1))
+
+        # Singlesig instead of Miniscript
+        with self.assertRaises(ProcessError):
+            self.d.check_input(get_singlesig_witness_input(MINISCRIPT_ACCOUNT + [0, 1]))
+
+    def test_invalid_policy_index(self):
+        with self.assertRaises(DataError):
+            self.d.add_input(get_miniscript_input(3, 0, False, 1))
 
 
 if __name__ == "__main__":
