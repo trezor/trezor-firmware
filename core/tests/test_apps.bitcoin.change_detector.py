@@ -122,15 +122,16 @@ MINISCRIPT_ACCOUNT = [H_(48), H_(1), H_(0), H_(2)]
 
 
 class FakeRegisteredPolicy:
-    def __init__(self, digest: bytes) -> None:
+    def __init__(self, digest: bytes, name: str) -> None:
         self.digest = digest
+        self.name = name
 
 
 # Policies #0 and #2 are the same, policy #1 is different.
 MINISCRIPT_POLICIES = [
-    FakeRegisteredPolicy(b"\x01" * 32),
-    FakeRegisteredPolicy(b"\x02" * 32),
-    FakeRegisteredPolicy(b"\x01" * 32),
+    FakeRegisteredPolicy(b"\x01" * 32, "Liana"),
+    FakeRegisteredPolicy(b"\x02" * 32, "Other"),
+    FakeRegisteredPolicy(b"\x01" * 32, "Liana"),
 ]
 
 
@@ -824,6 +825,31 @@ class TestMiniscriptChangeDetector(unittest.TestCase):
         # Singlesig instead of Miniscript
         with self.assertRaises(ProcessError):
             self.d.check_input(get_singlesig_witness_input(MINISCRIPT_ACCOUNT + [0, 1]))
+
+    def test_account_name(self):
+        # No inputs
+        assert self.d.account_name() is None
+
+        self.d.add_input(get_miniscript_input(0, 0, False, 1))
+        assert self.d.account_name() == "Liana"
+
+        # Same policy, using another index in SignTx.policies
+        self.d.add_input(get_miniscript_input(2, 1, True, 2))
+        assert self.d.account_name() == "Liana"
+
+    def test_account_name_different_policies(self):
+        self.d.add_input(get_miniscript_input(0, 0, False, 1))
+        self.d.add_input(get_miniscript_input(1, 0, False, 1))
+        assert self.d.account_name() is None
+
+    def test_account_name_singlesig(self):
+        self.d.add_input(get_singlesig_witness_input(MINISCRIPT_ACCOUNT + [0, 1]))
+        assert self.d.account_name() is None
+
+    def test_account_name_mixed_inputs(self):
+        self.d.add_input(get_miniscript_input(0, 0, False, 1))
+        self.d.add_input(get_singlesig_witness_input(MINISCRIPT_ACCOUNT + [0, 2]))
+        assert self.d.account_name() is None
 
     def test_invalid_policy_index(self):
         with self.assertRaises(DataError):

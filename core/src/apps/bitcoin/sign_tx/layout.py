@@ -48,7 +48,12 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
     return format_amount_unit(format_amount(amount, decimals), shortcut)
 
 
-def account_label(coin: CoinInfo, address_n: Bip32Path | None) -> str:
+def account_label(
+    coin: CoinInfo, address_n: Bip32Path | None, account_name: str | None = None
+) -> str:
+    if account_name:
+        # e.g. the name of a registered Miniscript policy
+        return account_name
     if address_n is None:
         return TR.bitcoin__multiple_accounts
     else:
@@ -64,6 +69,7 @@ async def confirm_output(
     output_index: int,
     chunkify: bool,
     address_n: Bip32Path | None,
+    account_name: str | None = None,
 ) -> None:
     from trezor.enums import OutputScriptType
 
@@ -108,7 +114,7 @@ async def confirm_output(
             address_label=address_label,
             output_index=output_index,
             chunkify=chunkify,
-            source_account=account_label(coin, address_n),
+            source_account=account_label(coin, address_n, account_name),
             source_account_path=address_n_to_str(address_n) if address_n else None,
         )
 
@@ -147,6 +153,7 @@ async def show_payment_request_details(
     coin: CoinInfo,
     amount_unit: AmountUnit,
     address_n: Bip32Path | None,
+    account_name: str | None = None,
 ) -> None:
     from trezor import wire
     from trezor.ui.layouts.slip24 import Refund, Trade
@@ -192,7 +199,7 @@ async def show_payment_request_details(
         else:
             raise wire.DataError("Unrecognized memo type in payment request memo.")
 
-    account = account_label(coin, address_n)
+    account = account_label(coin, address_n, account_name)
     account_path = address_n_to_str(address_n) if address_n else None
     account_items: list[StrPropertyType] = []
     if account:
@@ -272,8 +279,9 @@ async def confirm_total(
     coin: CoinInfo,
     amount_unit: AmountUnit,
     address_n: Bip32Path | None,
+    account_name: str | None = None,
 ) -> None:
-    account = account_label(coin, address_n)
+    account = account_label(coin, address_n, account_name)
     account_path = address_n_to_str(address_n) if address_n else None
     account_items: list[StrPropertyType] = [(TR.words__account, account, None)]
     if account_path and account_path != account:

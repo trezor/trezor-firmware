@@ -258,6 +258,7 @@ class BasicApprover(Approver):
             source_path = (
                 tx_info.change_detector.wallet_path.get_path() if tx_info else None
             )
+            source_name = tx_info.change_detector.account_name() if tx_info else None
             await helpers.confirm_output(
                 txo,
                 self.coin,
@@ -265,6 +266,7 @@ class BasicApprover(Approver):
                 self.external_output_index,
                 self.chunkify,
                 source_path,
+                source_name,
             )
             self.external_output_index += 1
         else:
@@ -286,6 +288,7 @@ class BasicApprover(Approver):
         source_path = (
             tx_info.change_detector.wallet_path.get_path() if tx_info else None
         )
+        source_name = tx_info.change_detector.account_name() if tx_info else None
 
         assert txo.address
 
@@ -295,6 +298,7 @@ class BasicApprover(Approver):
             self.coin,
             self.amount_unit,
             source_path,
+            source_name,
         )
 
     async def approve_orig_txids(
@@ -436,6 +440,7 @@ class BasicApprover(Approver):
                     coin,
                     amount_unit,
                     tx_info.change_detector.wallet_path.get_path(),
+                    tx_info.change_detector.account_name(),
                 )
             else:
                 await helpers.confirm_joint_total(spending, total, coin, amount_unit)

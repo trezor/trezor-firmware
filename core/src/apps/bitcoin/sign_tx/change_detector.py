@@ -56,6 +56,16 @@ class ChangeDetector:
         if utils.USE_MINISCRIPT:
             self.miniscript_policy.check_input(txi)
 
+    def account_name(self) -> str | None:
+        """
+        Return the name of the registered Miniscript policy used by all internal
+        inputs, or None if there is no such policy.
+        """
+        if utils.USE_MINISCRIPT:
+            if (policy := self.miniscript_policy.get_policy()) is not None:
+                return policy.name
+        return None
+
     def output_is_change(self, txo: TxOutput) -> bool:
         if txo.script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:
             return False

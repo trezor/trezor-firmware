@@ -137,6 +137,14 @@ class MiniscriptPolicyChecker(MatchChecker):
             self.registered_policies, redeem.policy_index
         ).digest
 
+    def get_policy(self) -> RegisteredPolicy | None:
+        """Return the registered policy used by all the added inputs (if any)."""
+        if isinstance(self.attribute, bytes) and self.attribute:
+            for policy in self.registered_policies:
+                if policy.digest == self.attribute:
+                    return policy
+        return None
+
 
 class ScriptTypeChecker(MatchChecker):
     def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:

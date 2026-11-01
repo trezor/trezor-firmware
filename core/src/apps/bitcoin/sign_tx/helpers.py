@@ -57,6 +57,7 @@ class UiConfirmOutput(UiConfirm):
         output_index: int,
         chunkify: bool,
         address_n: Bip32Path | None,
+        account_name: str | None = None,
     ) -> None:
         self.output = output
         self.coin = coin
@@ -64,6 +65,7 @@ class UiConfirmOutput(UiConfirm):
         self.output_index = output_index
         self.chunkify = chunkify
         self.address_n = address_n
+        self.account_name = account_name
 
     def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_output(
@@ -73,6 +75,7 @@ class UiConfirmOutput(UiConfirm):
             self.output_index,
             self.chunkify,
             self.address_n,
+            self.account_name,
         )
 
 
@@ -98,12 +101,14 @@ class UiConfirmPaymentRequest(UiConfirm):
         coin: CoinInfo,
         amount_unit: AmountUnit,
         address_n: Bip32Path | None,
+        account_name: str | None = None,
     ) -> None:
         self.provider_address = provider_address
         self.payment_req = payment_req
         self.amount_unit = amount_unit
         self.coin = coin
         self.address_n = address_n
+        self.account_name = account_name
 
     def confirm_dialog(self) -> Awaitable[None]:
         return layout.show_payment_request_details(
@@ -112,6 +117,7 @@ class UiConfirmPaymentRequest(UiConfirm):
             self.coin,
             self.amount_unit,
             self.address_n,
+            self.account_name,
         )
 
     __eq__ = utils.obj_eq
@@ -182,6 +188,7 @@ class UiConfirmTotal(UiConfirm):
         coin: CoinInfo,
         amount_unit: AmountUnit,
         address_n: Bip32Path | None,
+        account_name: str | None = None,
     ) -> None:
         self.spending = spending
         self.fee = fee
@@ -189,6 +196,7 @@ class UiConfirmTotal(UiConfirm):
         self.coin = coin
         self.amount_unit = amount_unit
         self.address_n = address_n
+        self.account_name = account_name
 
     def confirm_dialog(self) -> Awaitable[Any]:
         return layout.confirm_total(
@@ -198,6 +206,7 @@ class UiConfirmTotal(UiConfirm):
             self.coin,
             self.amount_unit,
             self.address_n,
+            self.account_name,
         )
 
 
@@ -272,10 +281,11 @@ def confirm_output(
     output_index: int,
     chunkify: bool,
     address_n: Bip32Path | None,
+    account_name: str | None = None,
 ) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
     return (
         yield UiConfirmOutput(  # type: ignore [awaitable-return-type]
-            output, coin, amount_unit, output_index, chunkify, address_n
+            output, coin, amount_unit, output_index, chunkify, address_n, account_name
         )
     )
 
@@ -292,10 +302,11 @@ def show_payment_request_details(
     coin: CoinInfo,
     amount_unit: AmountUnit,
     address_n: Bip32Path | None,
+    account_name: str | None = None,
 ) -> Awaitable[bool]:  # type: ignore [awaitable-return-type]
     return (
         yield UiConfirmPaymentRequest(  # type: ignore [awaitable-return-type]
-            provider_address, payment_req, coin, amount_unit, address_n
+            provider_address, payment_req, coin, amount_unit, address_n, account_name
         )
     )
 
@@ -332,8 +343,13 @@ def confirm_total(
     coin: CoinInfo,
     amount_unit: AmountUnit,
     address_n: Bip32Path | None,
+    account_name: str | None = None,
 ) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
-    return (yield UiConfirmTotal(spending, fee, fee_rate, coin, amount_unit, address_n))  # type: ignore [awaitable-return-type]
+    return (
+        yield UiConfirmTotal(  # type: ignore [awaitable-return-type]
+            spending, fee, fee_rate, coin, amount_unit, address_n, account_name
+        )
+    )
 
 
 def confirm_joint_total(
