@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
     from trezor.enums import AmountUnit
     from trezor.messages import (
+        MiniscriptRedeemPolicyType,
         PrevInput,
         PrevOutput,
         PrevTx,
@@ -535,6 +536,16 @@ def _sanitize_tx_meta(tx: PrevTx, coin: CoinInfo) -> PrevTx:
     return tx
 
 
+def _sanitize_miniscript(redeem: MiniscriptRedeemPolicyType) -> None:
+    from apps.common.paths import HARDENED
+
+    if not utils.USE_MINISCRIPT:
+        raise DataError("Miniscript not supported.")
+
+    if redeem.derivation.index & HARDENED:
+        raise DataError("Invalid Miniscript derivation index.")
+
+
 def _sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
     script_type = txi.script_type  # local_cache_attribute
 
@@ -546,6 +557,13 @@ def _sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
 
     if not txi.multisig and script_type == InputScriptType.SPENDMULTISIG:
         raise DataError("Multisig details required.")
+
+    if txi.miniscript is not None:
+        _sanitize_miniscript(txi.miniscript)
+        if txi.multisig:
+            raise DataError("Multisig and Miniscript fields provided.")
+        if script_type != InputScriptType.SPENDWITNESS:
+            raise DataError("Unsupported input script type for Miniscript.")
 
     if script_type in common.INTERNAL_INPUT_SCRIPT_TYPES:
         if not txi.address_n:
@@ -605,6 +623,16 @@ def _sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
     if not txo.multisig and script_type == OutputScriptType.PAYTOMULTISIG:
         raise DataError("Multisig details required.")
 
+    if txo.miniscript is not None:
+        _sanitize_miniscript(txo.miniscript)
+        if txo.multisig:
+            raise DataError("Multisig and Miniscript fields provided.")
+        if script_type != OutputScriptType.PAYTOWITNESS:
+            raise DataError("Unsupported output script type for Miniscript.")
+        if txo.address or address_n:
+            # The address is derived from the registered policy.
+            raise DataError("Miniscript output with address or address_n.")
+
     if address_n and script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:
         raise DataError("Output's address_n provided but not expected.")
 
@@ -631,7 +659,7 @@ def _sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
             raise DataError("OP RETURN data provided but not OP RETURN script type.")
         if address_n and txo.address:
             raise DataError("Both address and address_n provided.")
-        if not address_n and not txo.address:
+        if not address_n and not txo.address and txo.miniscript is None:
             raise DataError("Missing address")
 
     if txo.orig_hash and txo.orig_index is None:

@@ -143,7 +143,7 @@ def write_bip143_script_code_prefixed(
         if txi.script_type != InputScriptType.SPENDWITNESS:
             raise DataError("Unsupported input script type for miniscript")
 
-        # TODO: make sure txi.address_n matches one of the xpubs
+        # policy_index and txi.address_n are verified by the caller
         policy = registered_policies[redeem.policy_index]
         script = policy.script_wsh(redeem.derivation)
         write_compact_size(w, len(script))

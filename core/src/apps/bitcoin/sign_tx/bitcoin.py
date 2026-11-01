@@ -176,6 +176,11 @@ class Bitcoin:
 
         self.registered_policies: list[RegisteredPolicy] = []
 
+    def get_registered_policy(self, policy_index: int) -> RegisteredPolicy:
+        if policy_index >= len(self.registered_policies):
+            raise DataError("Invalid policy index")
+        return self.registered_policies[policy_index]
+
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(sha256())
 
@@ -359,6 +364,13 @@ class Bitcoin:
     async def process_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
         if txi.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
             raise DataError("Wrong input script type")
+
+        if utils.USE_MINISCRIPT and (redeem := txi.miniscript) is not None:
+            # Fail early if the input's key is not used by the policy.
+            policy = self.get_registered_policy(redeem.policy_index)
+            policy.verify_signing_key(
+                txi.address_n, node.public_key(), redeem.derivation
+            )
 
         await self.approver.add_internal_input(txi, node)
 
@@ -645,6 +657,11 @@ class Bitcoin:
 
         node = self.keychain.derive(txi.address_n)
         public_key = node.public_key()
+
+        if utils.USE_MINISCRIPT and (redeem := txi.miniscript) is not None:
+            # Make sure we sign using a key which is used by the policy.
+            policy = self.get_registered_policy(redeem.policy_index)
+            policy.verify_signing_key(txi.address_n, public_key, redeem.derivation)
 
         if txi.multisig:
             public_keys = multisig.multisig_get_pubkeys(txi.multisig)
@@ -967,8 +984,7 @@ class Bitcoin:
             return txi.script_pubkey
 
         if utils.USE_MINISCRIPT and (redeem := txi.miniscript) is not None:
-            policy = self.registered_policies[redeem.policy_index]
-            # TODO: verify txi.address_n matches
+            policy = self.get_registered_policy(redeem.policy_index)
             address = policy.address_wsh(redeem.derivation, self.coin)
         else:
             if node is None:
@@ -984,7 +1000,11 @@ class Bitcoin:
             assert txo.op_return_data is not None  # checked in _sanitize_tx_output
             return scripts.output_script_paytoopreturn(txo.op_return_data)
 
-        if txo.address_n:
+        if utils.USE_MINISCRIPT and (redeem := txo.miniscript) is not None:
+            # address_n and address are not allowed (checked in _sanitize_tx_output)
+            policy = self.get_registered_policy(redeem.policy_index)
+            txo.address = policy.address_wsh(redeem.derivation, self.coin)
+        elif txo.address_n:
             # change output
             try:
                 input_script_type = common.CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[

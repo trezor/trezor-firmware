@@ -17,14 +17,18 @@
 import re
 
 import pytest
+from embit import ec
 from embit.bip32 import HDKey
 from embit.descriptor import Descriptor, Key
 from embit.networks import NETWORKS
 from embit.psbt import PSBT
+from embit.script import address_to_scriptpubkey
+from embit.transaction import SIGHASH
 
 from trezorlib import btc, messages
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.tools import parse_path
+from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import H_, parse_path
 
 pytestmark = [
     pytest.mark.capabilities(messages.Capability.Miniscript),
@@ -231,31 +235,41 @@ def test_miniscript_get_address(
         assert address == expected
 
 
-def test_miniscript_spend_liana(session: Session):
-    COIN = "Signet"
-    # 1st always, or 2nd after 1 block
-    DESC = "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@1/<0;1>/*),older(52596))))"
-    TPUBS = _parse_keys(
-        "[5c9e228d/48'/1'/0'/2']tpubDEGquuorgFNbDrg8vepq1HnaV2mgQu9TcSBgBYfXw4AX8VMgkWqvkxHNuJmiah8iVnA3Hgj4cSvaGAXEnq814yC6hMEreckLsd7zyLL3o76",  # ALL x 12
-        "[72758bc3/84'/1'/0']tpubDCNhwLKYSSu2FKssoMziAdwhAAKS3bASH7wZYkNmJ7sU5hW9LgDaAQPqe7ivAkskSF29B1CkRRg4g2mbovXgAL9Mby6i9xBdhZh2txDeSLb",  # GYM x 12
-    )
-    keys = list(map(_to_protobuf, TPUBS))
+LIANA_COIN = "Signet"
+# 1st always, or 2nd after 1 block
+LIANA_DESC = "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@1/<0;1>/*),older(52596))))"
+LIANA_TPUBS = _parse_keys(
+    "[5c9e228d/48'/1'/0'/2']tpubDEGquuorgFNbDrg8vepq1HnaV2mgQu9TcSBgBYfXw4AX8VMgkWqvkxHNuJmiah8iVnA3Hgj4cSvaGAXEnq814yC6hMEreckLsd7zyLL3o76",  # ALL x 12
+    "[72758bc3/84'/1'/0']tpubDCNhwLKYSSu2FKssoMziAdwhAAKS3bASH7wZYkNmJ7sU5hW9LgDaAQPqe7ivAkskSF29B1CkRRg4g2mbovXgAL9Mby6i9xBdhZh2txDeSLb",  # GYM x 12
+)
+# (generated from Liana v13)
+LIANA_PSBT = "cHNidP8BAFICAAAAAeLueDmXeu2TBFNQoar0iky5T9JE59JPX0yr/gzIIr7UAAAAAAD9////AUYhAAAAAAAAFgAUhH7Jd+SNi4/DMKLI3HIJdwhi1+6kowQAAAEAywIAAAAAAQHYqmd/WZL+qJOT+5f2XEPzUALTONhlyumq5tyciNVZ8wAAAAAA/f///wE0IgAAAAAAACIAIDUq27pDBHpIicznRJ7W0Vfte6npLsF1yY7B5qOLXbjQAkcwRAIgEAu12ThbMeLnoUW4gXGoyRNtgLoJiMVTGBmN/EF1Ud8CIFacrJc9i3SqN3KU6pUlTnNm6GK1N4Vxa5D2tgz2MYc/ASEDwaxgrIFP7ymqIm9BGZ+2SbpwuLq5OiGykBIZVIRQOEqjowQAAQErNCIAAAAAAAAiACA1Ktu6QwR6SInM50Se1tFX7Xup6S7BdcmOweaji1240AEFRCEDC75bhURKbsY1a1FJFsQxD6kiEzUz4inlmKfSqZlD5JWsc2R2qRStjQxCX2+O2vUnBSggjUbj8GSQbIitA3TNALJoIgYCI1EpH6IXHxLBFqXb1/FWdb0zvMoXyhBDC5/EcW5MSpUYcnWLw1QAAIABAACAAAAAgAAAAAABAAAAIgYDC75bhURKbsY1a1FJFsQxD6kiEzUz4inlmKfSqZlD5JUcXJ4ijTAAAIABAACAAAAAgAIAAIAAAAAAAQAAAAAA"
 
-    node = btc.get_public_node(session, parse_path("m/48h/1h/0h/2h"), coin_name=COIN)
+
+def _prepare_liana_spend(
+    session: Session,
+) -> tuple[
+    messages.MiniscriptPolicy,
+    PSBT,
+    list[messages.TxInputType],
+    list[messages.TxOutputType],
+]:
+    keys = list(map(_to_protobuf, LIANA_TPUBS))
+
+    node = btc.get_public_node(
+        session, parse_path("m/48h/1h/0h/2h"), coin_name=LIANA_COIN
+    )
     assert _to_protobuf(Key.from_string(node.xpub)).node == keys[0].node
 
     policy = btc.register_policy(
-        session, name="Liana", descriptor=DESC, keys=keys, coin_name=COIN
+        session, name="Liana", descriptor=LIANA_DESC, keys=keys, coin_name=LIANA_COIN
     )
     derivation = messages.MiniscriptDerivation(internal=False, index=1)
     redeem = messages.MiniscriptRedeemPolicyType(policy_index=0, derivation=derivation)
-    addr = btc.get_miniscript_address(session, policy, derivation, COIN).address
+    addr = btc.get_miniscript_address(session, policy, derivation, LIANA_COIN).address
     assert addr == "tb1qx54dhwjrq3ay3zwvuazfa4k32lkhh20f9mqhtjvwc8n28z6ahrgq3pejk2"
 
-    # (generated from Liana v13)
-    psbt = PSBT.from_base64(
-        "cHNidP8BAFICAAAAAeLueDmXeu2TBFNQoar0iky5T9JE59JPX0yr/gzIIr7UAAAAAAD9////AUYhAAAAAAAAFgAUhH7Jd+SNi4/DMKLI3HIJdwhi1+6kowQAAAEAywIAAAAAAQHYqmd/WZL+qJOT+5f2XEPzUALTONhlyumq5tyciNVZ8wAAAAAA/f///wE0IgAAAAAAACIAIDUq27pDBHpIicznRJ7W0Vfte6npLsF1yY7B5qOLXbjQAkcwRAIgEAu12ThbMeLnoUW4gXGoyRNtgLoJiMVTGBmN/EF1Ud8CIFacrJc9i3SqN3KU6pUlTnNm6GK1N4Vxa5D2tgz2MYc/ASEDwaxgrIFP7ymqIm9BGZ+2SbpwuLq5OiGykBIZVIRQOEqjowQAAQErNCIAAAAAAAAiACA1Ktu6QwR6SInM50Se1tFX7Xup6S7BdcmOweaji1240AEFRCEDC75bhURKbsY1a1FJFsQxD6kiEzUz4inlmKfSqZlD5JWsc2R2qRStjQxCX2+O2vUnBSggjUbj8GSQbIitA3TNALJoIgYCI1EpH6IXHxLBFqXb1/FWdb0zvMoXyhBDC5/EcW5MSpUYcnWLw1QAAIABAACAAAAAgAAAAAABAAAAIgYDC75bhURKbsY1a1FJFsQxD6kiEzUz4inlmKfSqZlD5JUcXJ4ijTAAAIABAACAAAAAgAIAAIAAAAAAAQAAAAAA"
-    )
+    psbt = PSBT.from_base64(LIANA_PSBT)
     pubkey = HDKey.from_string(node.xpub).derive("m/0/1").key
     inputs = [
         messages.TxInputType(
@@ -277,17 +291,33 @@ def test_miniscript_spend_liana(session: Session):
         )
         for o in psbt.outputs
     ]
+    return policy, psbt, inputs, outputs
+
+
+def _sign_liana_spend(
+    session: Session,
+    psbt: PSBT,
+    inputs: list[messages.TxInputType],
+    outputs: list[messages.TxOutputType],
+    policies: list[messages.MiniscriptPolicy],
+) -> list[bytes]:
     signatures, _serialized = btc.sign_tx(
         session,
-        COIN,
+        LIANA_COIN,
         inputs,
         outputs,
         version=psbt.tx_version,
         lock_time=psbt.locktime,
         serialize=False,
         prev_txes=prev_txs(psbt),
-        policies=[policy],
+        policies=policies,
     )
+    return signatures
+
+
+def test_miniscript_spend_liana(session: Session):
+    policy, psbt, inputs, outputs = _prepare_liana_spend(session)
+    signatures = _sign_liana_spend(session, psbt, inputs, outputs, [policy])
     # 657c7c72f8e29eb0f9e97cb6418b8f5a228c2b05148f1b10c0f72982f7d3e38a on signet (height=304038)
     assert (
         signatures[0].hex()
@@ -297,6 +327,124 @@ def test_miniscript_spend_liana(session: Session):
     #     serialized.hex()
     #     == "02000000000101e2ee7839977aed93045350a1aaf48a4cb94fd244e7d24f5f4cabfe0cc822bed40000000000fdffffff014621000000000000160014847ec977e48d8b8fc330a2c8dc7209770862d7ee024730440220106ef246defefb79999e95d92a1fd63684ea17d5944133762ad589d10b6e2faa02200a73ee663bb732cf78f9f3a61dbc1cc5ca254a9b22b9737ac24149d144c2be18014421030bbe5b85444a6ec6356b514916c4310fa922133533e229e598a7d2a99943e495ac736476a914ad8d0c425f6f8edaf5270528208d46e3f064906c88ad0374cd00b268a4a30400"
     # )
+
+
+def test_miniscript_spend_liana_to_policy(session: Session):
+    policy, psbt, inputs, outputs = _prepare_liana_spend(session)
+
+    # Send the funds back to the same policy (without providing an address).
+    derivation = messages.MiniscriptDerivation(internal=True, index=5)
+    addr = btc.get_miniscript_address(session, policy, derivation, LIANA_COIN).address
+    (output,) = outputs
+    output.address = None
+    output.miniscript = messages.MiniscriptRedeemPolicyType(
+        policy_index=0, derivation=derivation
+    )
+    (signature,) = _sign_liana_spend(session, psbt, inputs, [output], [policy])
+
+    # Make sure the signature commits to the policy-derived output script.
+    tx = PSBT.from_base64(LIANA_PSBT).tx  # embit caches sighash parts
+    tx.vout[0].script_pubkey = address_to_scriptpubkey(addr)
+    (psbt_input,) = psbt.inputs
+    sighash = tx.sighash_segwit(
+        0, psbt_input.witness_script, psbt_input.utxo.value, SIGHASH.ALL
+    )
+    pubkey = LIANA_TPUBS[0].key.derive("m/0/1").key
+    assert pubkey.verify(ec.Signature.parse(signature), sighash)
+
+
+@pytest.mark.parametrize(
+    "address_n",
+    (
+        "m/48h/1h/0h/2h/0/2",  # wrong index
+        "m/48h/1h/0h/2h/1/1",  # wrong branch
+        "m/48h/1h/1h/2h/0/1",  # wrong account
+    ),
+)
+def test_miniscript_invalid_signing_key(session: Session, address_n: str):
+    policy, psbt, inputs, outputs = _prepare_liana_spend(session)
+    inputs[0].address_n = parse_path(address_n)
+    with pytest.raises(TrezorFailure, match="Invalid Miniscript signing key"):
+        _sign_liana_spend(session, psbt, inputs, outputs, [policy])
+
+
+def test_miniscript_invalid_policy_index(session: Session):
+    policy, psbt, inputs, outputs = _prepare_liana_spend(session)
+    assert inputs[0].miniscript is not None
+    inputs[0].miniscript.policy_index = 1
+    with pytest.raises(TrezorFailure, match="Invalid policy index"):
+        _sign_liana_spend(session, psbt, inputs, outputs, [policy])
+
+
+def _set_input_script_type(txi: messages.TxInputType, _txo: messages.TxOutputType):
+    txi.script_type = messages.InputScriptType.SPENDP2SHWITNESS
+
+
+def _set_input_multisig(txi: messages.TxInputType, _txo: messages.TxOutputType):
+    node = _to_protobuf(LIANA_TPUBS[0]).node
+    txi.multisig = messages.MultisigRedeemScriptType(
+        nodes=[node], address_n=[0, 1], signatures=[b""], m=1
+    )
+
+
+def _set_input_hardened_index(txi: messages.TxInputType, _txo: messages.TxOutputType):
+    assert txi.miniscript is not None
+    txi.miniscript.derivation.index = H_(1)
+
+
+def _set_output_with_address(_txi: messages.TxInputType, txo: messages.TxOutputType):
+    txo.miniscript = messages.MiniscriptRedeemPolicyType(
+        policy_index=0,
+        derivation=messages.MiniscriptDerivation(internal=True, index=0),
+    )
+
+
+def _set_output_script_type(_txi: messages.TxInputType, txo: messages.TxOutputType):
+    _set_output_with_address(_txi, txo)
+    txo.address = None
+    txo.script_type = messages.OutputScriptType.PAYTOADDRESS
+
+
+@pytest.mark.parametrize(
+    "modify, error",
+    (
+        (_set_input_script_type, "Unsupported input script type for Miniscript"),
+        (_set_input_multisig, "Multisig and Miniscript fields provided"),
+        (_set_input_hardened_index, "Invalid Miniscript derivation index"),
+        (_set_output_with_address, "Miniscript output with address or address_n"),
+        (_set_output_script_type, "Unsupported output script type for Miniscript"),
+    ),
+)
+def test_miniscript_invalid_fields(session: Session, modify, error: str):
+    policy, psbt, inputs, outputs = _prepare_liana_spend(session)
+    modify(inputs[0], outputs[0])
+    with pytest.raises(TrezorFailure, match=error):
+        _sign_liana_spend(session, psbt, inputs, outputs, [policy])
+
+
+def test_miniscript_attack_change_policy_index(session: Session):
+    policy, psbt, inputs, outputs = _prepare_liana_spend(session)
+
+    # The same policy is provided twice, so the derived scripts are the same.
+    # However, changing `policy_index` during signing must still be detected.
+    seen = 0
+
+    def attack_processor(msg: messages.TxAck) -> messages.TxAck:
+        nonlocal seen
+        if msg.tx.inputs and msg.tx.inputs[0].miniscript is not None:
+            seen += 1
+            if seen > 1:
+                msg.tx.inputs[0].miniscript.policy_index = 1
+        return msg
+
+    with (
+        session.test_ctx as client,
+        pytest.raises(TrezorFailure, match="Transaction has changed during signing"),
+    ):
+        client.set_filter(messages.TxAck, attack_processor)
+        _sign_liana_spend(session, psbt, inputs, outputs, [policy, policy])
+
+    assert seen > 1
 
 
 def test_miniscript_spend_liana_decay(session: Session):

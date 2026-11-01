@@ -1,6 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
+from trezor import utils
 from trezor.utils import ensure
 
 from apps.common.writers import (  # noqa: F401
@@ -50,6 +51,15 @@ def write_tx_input_check(w: Writer, i: TxInput) -> None:
     write_uint32(w, i.script_type)
     multisig_fp = multisig_fingerprint(i.multisig) if i.multisig else b""
     write_bytes_prefixed(w, multisig_fp)
+    if utils.USE_MINISCRIPT:
+        # SignTx.policies are fixed during signing, so policy_index identifies the policy.
+        if (redeem := i.miniscript) is not None:
+            write_uint8(w, 1)
+            write_uint32(w, redeem.policy_index)
+            write_uint8(w, int(redeem.derivation.internal))
+            write_uint32(w, redeem.derivation.index)
+        else:
+            write_uint8(w, 0)
     write_uint64(w, i.amount or 0)
     write_bytes_prefixed(w, i.witness or b"")
     write_bytes_prefixed(w, i.ownership_proof or b"")

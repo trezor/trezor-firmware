@@ -5,6 +5,9 @@ from trezor.crypto.hashlib import sha256
 from trezorminiscript import collect_keys
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+    from collections.abc import Sequence
+
     from trezor.messages import (
         MiniscriptDerivation,
         MiniscriptKey,
@@ -92,6 +95,38 @@ class RegisteredPolicy:
         """MUST be constructed using `load_policy()` below."""
         self._policy = policy
         self.name = name
+        # (key index, external child, internal child) for each key expression
+        self._key_exprs: list[tuple[int, int, int]] | None = None
+
+    def verify_signing_key(
+        self,
+        address_n: Sequence[int],
+        public_key: AnyBytes,
+        derivation: MiniscriptDerivation,
+    ) -> None:
+        """
+        Make sure that the key derived using `address_n` (with `public_key`) is used
+        by this policy at the given derivation (external/internal & index).
+        """
+        from trezor.wire import DataError
+
+        if self._key_exprs is None:
+            self._key_exprs = collect_keys(self._policy.descriptor)
+
+        if len(address_n) >= 2:
+            prefix = list(address_n[:-2])
+            child, index = address_n[-2:]
+            if index == derivation.index:
+                for key_idx, *children in self._key_exprs:
+                    if children[derivation.internal] != child:
+                        continue
+                    key = self._policy.keys[key_idx]
+                    if key.derivation_path != prefix:
+                        continue
+                    if derive_node(key, child, index).public_key() == public_key:
+                        return
+
+        raise DataError("Invalid Miniscript signing key")
 
     def script_wsh(self, derivation: MiniscriptDerivation) -> bytes:
         from trezorminiscript import compile
