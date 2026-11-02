@@ -3,6 +3,7 @@ pub mod artifacts;
 pub mod cargo;
 pub mod combine;
 pub mod config;
+pub mod device;
 pub mod features;
 pub mod flash;
 pub mod helpers;

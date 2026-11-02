@@ -4,7 +4,7 @@ use std::ops::RangeInclusive;
 use anyhow::{Context, Result, ensure};
 
 use crate::args::{FlashArgs, FlashEraseArgs, FlashSection, Model, ResetArgs};
-use crate::{combine, helpers, openocd};
+use crate::{combine, device, helpers, openocd};
 
 /// Flashes the specified project to the device.
 pub fn flash_project(args: FlashArgs) -> Result<()> {
@@ -34,6 +34,8 @@ pub fn flash_project(args: FlashArgs) -> Result<()> {
     let image =
         fs::read(&binary).with_context(|| format!("Failed to read `{}`", binary.display()))?;
     let segments = helpers::project_segments(&content, args.project, &image)?;
+
+    device::check(args.model, args.skip_device_check)?;
 
     println!("Flashing `{}`", binary.display());
     flash_segments(args.model, &segments)
@@ -81,6 +83,8 @@ pub fn flash_combined(args: FlashArgs) -> Result<()> {
         fs::read(&binary).with_context(|| format!("Failed to read `{}`", binary.display()))?;
     let segments = combine::combined_segments(&content, &image)?;
 
+    device::check(args.model, args.skip_device_check)?;
+
     println!(
         "Flashing the combined `{}` image `{}`",
         args.project.binary_name(),
@@ -97,6 +101,7 @@ pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
         .with_context(|| format!("Failed to read `{}`", mem_ld.display()))?;
     let sectors = sectors_to_erase(&content, args.section)?;
 
+    device::check(args.model, args.skip_device_check)?;
     match sectors {
         Some(sectors) => openocd::erase_sectors(args.model, &sectors),
         None => openocd::erase_all(args.model),

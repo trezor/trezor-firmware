@@ -54,6 +54,22 @@ impl ModelConfig {
             mcu => Err(anyhow!("Unknown MCU: {mcu}")),
         }
     }
+
+    /// The address of the MCU's `DBGMCU_IDCODE` register, and the `DEV_ID`
+    /// (its bits 11:0) this model's MCU reports there.
+    pub fn mcu_dev_id(&self) -> Result<(u32, u16)> {
+        match self.mcu.as_str() {
+            // STM32F42x/43x
+            "stm32f427" | "stm32f429" => Ok((0xE004_2000, 0x419)),
+            // STM32U575/585
+            "stm32u58" => Ok((0xE004_4000, 0x482)),
+            // STM32U59x/5Ax
+            "stm32u5a" => Ok((0xE004_4000, 0x481)),
+            // STM32U5Fx/5Gx
+            "stm32u5g" => Ok((0xE004_4000, 0x476)),
+            mcu => Err(anyhow!("Unknown MCU: {mcu}")),
+        }
+    }
 }
 
 pub struct Peripheral {

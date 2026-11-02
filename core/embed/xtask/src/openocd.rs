@@ -1,7 +1,7 @@
 //! Debug probe access through OpenOCD.
 //!
 //! Everything that talks to the device goes through the operations here --
-//! write, erase and reset -- so the rest of xtask never builds OpenOCD
+//! write, erase, reset and read -- so the rest of xtask never builds OpenOCD
 //! scripts or parses its log. Each operation is one OpenOCD session over an
 //! ST-Link.
 
@@ -10,7 +10,7 @@ use std::ops::RangeInclusive;
 use std::path::{Path, PathBuf};
 use std::{fs, process};
 
-use anyhow::{Context, Result, anyhow, ensure};
+use anyhow::{Context, Result, anyhow, bail, ensure};
 
 use crate::args::Model;
 
@@ -50,6 +50,35 @@ pub fn reset(model: Model) -> Result<()> {
     run(model, "init; reset; exit")
 }
 
+/// Halts the device and reads `(address, size)` ranges of memory, returning
+/// the bytes of each.
+///
+/// A read that fails (e.g. read-protected memory) does not fail the others;
+/// its result carries OpenOCD's error message instead. Every read goes through
+/// a temporary file, which `dump_image` writes -- unlike console output, that
+/// works the same in every OpenOCD build.
+pub fn read_memory(model: Model, reads: &[(u32, u32)]) -> Result<Vec<Result<Vec<u8>, String>>> {
+    let dir = TempDir::new()?;
+    let files = (0..reads.len())
+        .map(|i| {
+            (
+                dir.0.join(format!("read-{i}.bin")),
+                dir.0.join(format!("read-{i}.err")),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    let script = build_read_script(reads, &files)?;
+    // The log is only shown if OpenOCD itself fails; the results are in files.
+    run_captured(model, &script)?;
+
+    Ok(reads
+        .iter()
+        .zip(&files)
+        .map(|(read, files)| read_result(*read, files))
+        .collect())
+}
+
 /// OpenOCD's target config for the model's MCU.
 fn target_config(model: Model) -> Result<&'static str> {
     match model.config()?.mcu.as_str() {
@@ -68,6 +97,25 @@ fn run(model: Model, script: &str) -> Result<()> {
     ensure!(status.success(), "`openocd` failed with status: {status}");
 
     Ok(())
+}
+
+/// Like [`run`], but returns OpenOCD's output (stdout and stderr, where its
+/// log goes) instead of showing it -- unless OpenOCD fails, when the output is
+/// printed to explain the failure.
+fn run_captured(model: Model, script: &str) -> Result<String> {
+    let output = command(model, script)?
+        .output()
+        .context("Failed to spawn `openocd`")?;
+
+    let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
+    text.push_str(&String::from_utf8_lossy(&output.stderr));
+
+    if !output.status.success() {
+        eprint!("{text}");
+        bail!("`openocd` failed with status: {}", output.status);
+    }
+
+    Ok(text)
 }
 
 fn command(model: Model, script: &str) -> Result<process::Command> {
@@ -178,11 +226,48 @@ fn build_erase_script(sectors: &[RangeInclusive<u32>]) -> String {
     script
 }
 
+/// Script dumping each read to its data file, or, if the read fails, the
+/// error message to its error file.
+fn build_read_script(reads: &[(u32, u32)], files: &[(PathBuf, PathBuf)]) -> Result<String> {
+    let mut script = String::from("init; reset halt; ");
+    for ((address, size), (data, error)) in reads.iter().zip(files) {
+        script.push_str(&format!(
+            "if {{[catch {{dump_image {} 0x{address:X} {size}}} e]}} \
+             {{set f [open {} w]; puts -nonewline $f $e; close $f}}; ",
+            tcl_quote_path(data)?,
+            tcl_quote_path(error)?,
+        ));
+    }
+    script.push_str("exit");
+    Ok(script)
+}
+
+/// The bytes a read script dumped for `(address, size)`, or why there are none.
+fn read_result(
+    (address, size): (u32, u32),
+    (data, error): &(PathBuf, PathBuf),
+) -> Result<Vec<u8>, String> {
+    if let Ok(message) = fs::read_to_string(error) {
+        return Err(message);
+    }
+    match fs::read(data) {
+        Ok(bytes) if bytes.len() == size as usize => Ok(bytes),
+        Ok(bytes) => Err(format!(
+            "read {} of {size} bytes at 0x{address:08X}",
+            bytes.len()
+        )),
+        Err(_) => Err(format!("no data read at 0x{address:08X}")),
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use std::fs;
     use std::path::{Path, PathBuf};
 
-    use super::{build_erase_script, build_write_script, tcl_quote_path};
+    use super::{
+        build_erase_script, build_read_script, build_write_script, read_result, tcl_quote_path,
+    };
 
     #[test]
     fn builds_write_script() {
@@ -270,5 +355,58 @@ mod tests {
             "init; reset halt; flash info 0; \
              flash erase_sector 0 5 10; flash erase_sector 0 11 18; exit"
         );
+    }
+
+    #[test]
+    fn builds_read_script() {
+        let files = [
+            (PathBuf::from("/tmp/r0.bin"), PathBuf::from("/tmp/r0.err")),
+            (PathBuf::from("/tmp/r1.bin"), PathBuf::from("/tmp/r1.err")),
+        ];
+
+        assert_eq!(
+            build_read_script(&[(0xE004_4000, 4), (0x0C01_BF00, 0x100)], &files).unwrap(),
+            "init; reset halt; \
+             if {[catch {dump_image {/tmp/r0.bin} 0xE0044000 4} e]} \
+             {set f [open {/tmp/r0.err} w]; puts -nonewline $f $e; close $f}; \
+             if {[catch {dump_image {/tmp/r1.bin} 0xC01BF00 256} e]} \
+             {set f [open {/tmp/r1.err} w]; puts -nonewline $f $e; close $f}; \
+             exit"
+        );
+    }
+
+    fn files(dir: &Path) -> (PathBuf, PathBuf) {
+        (dir.join("read.bin"), dir.join("read.err"))
+    }
+
+    #[test]
+    fn returns_the_dumped_bytes() {
+        let dir = tempfile::tempdir().unwrap();
+        let files = files(dir.path());
+        fs::write(&files.0, b"TRZC").unwrap();
+
+        assert_eq!(read_result((0x1000, 4), &files), Ok(b"TRZC".to_vec()));
+    }
+
+    #[test]
+    fn keeps_a_failed_read() {
+        let dir = tempfile::tempdir().unwrap();
+        let files = files(dir.path());
+        fs::write(&files.1, "Failed to read memory").unwrap();
+
+        assert_eq!(
+            read_result((0x1000, 4), &files),
+            Err("Failed to read memory".to_string())
+        );
+    }
+
+    #[test]
+    fn rejects_a_short_or_missing_read() {
+        let dir = tempfile::tempdir().unwrap();
+        let files = files(dir.path());
+
+        assert!(read_result((0x1000, 4), &files).is_err());
+        fs::write(&files.0, b"TR").unwrap();
+        assert!(read_result((0x1000, 4), &files).is_err());
     }
 }
