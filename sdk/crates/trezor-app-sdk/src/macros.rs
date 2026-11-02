@@ -77,9 +77,9 @@ macro_rules! wire_handler {
             match $handler_fn(request) {
                 Ok(resp) => {
                     let response_bytes = <$codec as $crate::WireEncode<_>>::encode(&resp);
-                    $crate::wire_respond_raw($response_msg as i32, &response_bytes)
+                    $crate::wire_send(&response_bytes, $response_msg as u16)
                 }
-                Err(e) => $crate::wire_error_raw(&e),
+                Err(e) => $crate::wire_error(&e),
             }
         }
     };
