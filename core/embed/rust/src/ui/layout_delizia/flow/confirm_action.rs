@@ -202,6 +202,7 @@ impl FlowController for ConfirmActionWithConfirmation {
         match (self, msg) {
             (Self::Action, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
             (Self::Action, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
+            (Self::Confirmation, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
             (Self::Confirmation, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
@@ -320,12 +321,6 @@ pub fn new_confirm_action(
         }
         paragraphs.into_paragraphs()
     };
-
-    if external_menu && (prompt_screen || hold) {
-        return Err(Error::ValueError(
-            c"external_menu not supported with a tap prompt, nor with hold and action/description",
-        ));
-    }
 
     new_confirm_action_simple(
         paragraphs,
@@ -498,15 +493,25 @@ fn create_confirm(
     prompt_title: TString<'static>,
     prompt_state: &'static dyn FlowController,
 ) -> Result<(), Error> {
+    // The menu stays reachable while holding to confirm, so that a caller who
+    // asks for both gets both.
     let content_confirm = prompt_frame(
         prompt_title,
         subtitle,
         hold,
         danger,
-        matches!(extra, ConfirmActionExtra::Menu(_)),
+        matches!(
+            extra,
+            ConfirmActionExtra::Menu(_) | ConfirmActionExtra::ExternalMenu
+        ),
         None,
     )
     .with_swipe(Direction::Down, SwipeSettings::Default);
+    let content_confirm = if matches!(extra, ConfirmActionExtra::ExternalMenu) {
+        content_confirm.with_external_menu()
+    } else {
+        content_confirm
+    };
 
     flow.add_page(
         prompt_state,
