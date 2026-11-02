@@ -27,6 +27,13 @@ enum EcdsaCurve {
     Nist256p1 = 1;
 }
 
+enum Curve {
+    CurveSecp256k1 = 0;
+    CurveNist256p1 = 1;
+    CurveEd25519 = 2;
+    CurveCurve25519 = 3;
+}
+
 enum CanonicalSig {
     Any = 0;
     Ethereum = 1;
@@ -64,8 +71,9 @@ message Digest {
  * @next Xpub
  */
 message GetXpub {
-    repeated uint32 address_n = 1;
-    required uint32 xpub_magic = 2;
+    required Curve curve = 1;
+    repeated uint32 address_n = 2;
+    required uint32 xpub_magic = 3;
 }
 
 /**
@@ -81,8 +89,9 @@ message Xpub {
  * @next PublicKey
  */
 message GetPublicKey {
-    repeated uint32 address_n = 1;
-    required bool compressed = 2;
+    required Curve curve = 1;
+    repeated uint32 address_n = 2;
+    required bool compressed = 3;
 }
 
 /**
@@ -98,10 +107,11 @@ message PublicKey {
  * @next Signature
  */
 message EcdsaSignDigest {
-    repeated uint32 address_n = 1;
-    required bytes digest = 2;
-    required bool compressed = 3;
-    required CanonicalSig canonical = 4;
+    required EcdsaCurve curve = 1;
+    repeated uint32 address_n = 2;
+    required bytes digest = 3;
+    required bool compressed = 4;
+    required CanonicalSig canonical = 5;
 }
 
 /**
