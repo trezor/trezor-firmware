@@ -77,6 +77,24 @@ impl ModelConfig {
         }
     }
 
+    /// OpenOCD commands run right after `reset halt`, before any flash
+    /// operation.
+    ///
+    /// With TrustZone enabled, the ST OpenOCD stm32h5x driver erases and writes
+    /// through the secure flash interface and marks the flash secure for that
+    /// via SECBBxR1..R4 only -- enough for the 128-sector banks of the
+    /// STM32H56x/H57x. The STM32H5F5 has 256 sectors per bank, so sectors
+    /// 128..255 of each bank stay non-secure (outside the secure watermark) and
+    /// are rejected with WRPERR ("stm32x device protected"). Mark them secure
+    /// via SECBBxR5..R8 as well; the firmware reprograms all SECBB registers
+    /// on boot, and they reset with the device.
+    pub fn openocd_post_halt(&self) -> &'static str {
+        match self.mcu.as_str() {
+            "stm32h5f5" => "mww 0x500220B0 0xffffffff 4; mww 0x500221B0 0xffffffff 4; ",
+            _ => "",
+        }
+    }
+
     /// OpenOCD SWD transport.
     ///
     /// The STM32H5 target script rejects `hla_swd`: the hla transport cannot

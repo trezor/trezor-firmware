@@ -45,7 +45,8 @@ pub fn flash(args: FlashArgs) -> Result<()> {
         address
     );
 
-    let flash_instruction = build_flash_write_instruction(&binary, address)?;
+    let flash_instruction =
+        build_flash_write_instruction(&halt_prefix(args.model)?, &binary, address)?;
 
     run_openocd(args.model, &flash_instruction)
 }
@@ -99,7 +100,8 @@ fn flash_combined(args: &FlashArgs) -> Result<()> {
 
     // `?`: quoting the path is fallible since the Tcl-quoting validation landed
     // (a path that would break out of the braced word is rejected).
-    let flash_instruction = build_flash_write_instruction(&binary, address)?;
+    let flash_instruction =
+        build_flash_write_instruction(&halt_prefix(args.model)?, &binary, address)?;
     run_openocd(args.model, &flash_instruction)
 }
 
@@ -109,7 +111,7 @@ pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
     let mem_ld = args.model.model_memory_ld()?;
     let content = fs::read_to_string(&mem_ld)
         .with_context(|| format!("Failed to read `{}`", mem_ld.display()))?;
-    let instr = build_flash_erase_instruction(&content, args.section)?;
+    let instr = build_flash_erase_instruction(&halt_prefix(args.model)?, &content, args.section)?;
 
     run_openocd(args.model, &instr)
 }
@@ -119,6 +121,14 @@ pub fn reset(args: ResetArgs) -> Result<()> {
     println!("Resetting `{:?}`", args.model);
 
     run_openocd(args.model, "init; reset; exit")
+}
+
+/// `init; reset halt; ` followed by the model's post-halt commands.
+fn halt_prefix(model: Model) -> Result<String> {
+    Ok(format!(
+        "init; reset halt; {}",
+        model.config()?.openocd_post_halt()
+    ))
 }
 
 /// Runs OpenOCD instructions against the connected device for the given model.
@@ -182,16 +192,20 @@ fn tcl_quote_path(path: &Path) -> Result<String> {
     Ok(format!("{{{path}}}"))
 }
 
-fn build_flash_write_instruction(binary: &Path, address: u32) -> Result<String> {
+fn build_flash_write_instruction(prefix: &str, binary: &Path, address: u32) -> Result<String> {
     Ok(format!(
-        "init; reset halt; flash write_image erase {} 0x{:X}; exit",
+        "{prefix}flash write_image erase {} 0x{:X}; exit",
         tcl_quote_path(binary)?,
         address
     ))
 }
 
-fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result<String> {
-    let mut instr = String::from("init; reset halt; flash info 0; ");
+fn build_flash_erase_instruction(
+    prefix: &str,
+    content: &str,
+    section: FlashSection,
+) -> Result<String> {
+    let mut instr = format!("{prefix}flash info 0; ");
 
     let mut push_erase = |symbol_prefix: &str| {
         let start =
@@ -233,10 +247,12 @@ mod tests {
     use super::{build_flash_erase_instruction, build_flash_write_instruction, tcl_quote_path};
     use crate::args::FlashSection;
 
+    const PREFIX: &str = "init; reset halt; ";
+
     #[test]
     fn builds_flash_write_instruction() {
         let instruction =
-            build_flash_write_instruction(Path::new("/tmp/fw.bin"), 0x0800_4000).unwrap();
+            build_flash_write_instruction(PREFIX, Path::new("/tmp/fw.bin"), 0x0800_4000).unwrap();
 
         assert_eq!(
             instruction,
@@ -250,7 +266,7 @@ mod tests {
     #[test]
     fn quotes_paths_that_tcl_would_otherwise_reparse() {
         let instruction =
-            build_flash_write_instruction(Path::new("/my builds/fw [v2].bin"), 0x0800_4000)
+            build_flash_write_instruction(PREFIX, Path::new("/my builds/fw [v2].bin"), 0x0800_4000)
                 .unwrap();
 
         assert_eq!(
@@ -307,7 +323,8 @@ FIRMWARE_P1_SECTOR_END = 10;\n\
 FIRMWARE_P2_SECTOR_START = 11;\n\
 FIRMWARE_P2_SECTOR_END = 18;\n";
 
-        let instruction = build_flash_erase_instruction(content, FlashSection::Firmware).unwrap();
+        let instruction =
+            build_flash_erase_instruction(PREFIX, content, FlashSection::Firmware).unwrap();
 
         assert!(instruction.contains("flash erase_sector 0 5 10;"));
         assert!(instruction.contains("flash erase_sector 0 11 18;"));
@@ -322,7 +339,8 @@ STORAGE_1_SECTOR_END = 3;\n\
 STORAGE_2_SECTOR_START = 4;\n\
 STORAGE_2_SECTOR_END = 5;\n";
 
-        let instruction = build_flash_erase_instruction(content, FlashSection::Storage).unwrap();
+        let instruction =
+            build_flash_erase_instruction(PREFIX, content, FlashSection::Storage).unwrap();
 
         assert!(instruction.contains("flash erase_sector 0 2 3;"));
         assert!(instruction.contains("flash erase_sector 0 4 5;"));
