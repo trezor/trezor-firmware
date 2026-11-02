@@ -1,0 +1,297 @@
+"""Command-line frontend: one subcommand per modui endpoint, every parameter a
+flag.
+
+Only argument parsing lives here; the work is done by the library.
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+import time
+from collections.abc import Callable, Sequence
+from pathlib import Path
+
+from trezorlib import exceptions, protobuf
+
+from . import messages as m
+from .client import (
+    ARTIFACTS,
+    TestApp,
+    address,
+    amount,
+    connect,
+    data,
+    extras,
+    note,
+    text,
+    warning,
+)
+from .showcases import SHOWCASES
+from .showcases import run as run_showcase
+
+KINDS = {kind.name.lower(): kind for kind in m.FieldKind}
+
+# The field kinds that take a label and one value, by the helper that builds
+# them. A note and a warning are sentences with no label, and an amount takes a
+# ticker too, so they are handled apart.
+LABELLED = {
+    m.FieldKind.Text: text,
+    m.FieldKind.Address: address,
+}
+
+
+def parsed_field(spec: str) -> m.Field:
+    """One fact as `KIND:LABEL=VALUE`, or `KIND:VALUE` for a note or warning.
+    An amount's VALUE is its number and its ticker, `1.5 TRX`."""
+    kind_name, sep, rest = spec.partition(":")
+    kind = KINDS.get(kind_name.lower())
+    if not sep or kind is None:
+        raise argparse.ArgumentTypeError(
+            f"expected KIND:..., KIND one of {', '.join(KINDS)}; got {spec!r}"
+        )
+    if kind is m.FieldKind.Note:
+        return note(rest)
+    if kind is m.FieldKind.Warning:
+        return warning(rest)
+    label, sep, value = rest.partition("=")
+    if not sep:
+        raise argparse.ArgumentTypeError(f"expected KIND:LABEL=VALUE, got {spec!r}")
+    if kind is m.FieldKind.Data:
+        try:
+            return data(label, bytes.fromhex(value))
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"expected hex bytes, got {value!r}")
+    if kind is m.FieldKind.Amount:
+        number, _, ticker = value.rpartition(" ")
+        if not number:
+            raise argparse.ArgumentTypeError(
+                f"expected amount:LABEL=NUMBER TICKER, got {spec!r}"
+            )
+        return amount(label, number, ticker)
+    return LABELLED[kind](label, value)
+
+
+def parsed_extras(args: argparse.Namespace) -> list[m.Extra]:
+    items = []
+    for label, *specs in args.extra or []:
+        items.append((label, [parsed_field(spec) for spec in specs]))
+    return extras(*items)
+
+
+def parsed_amount(spec: str) -> m.Amount:
+    """An amount as `LABEL=NUMBER TICKER`."""
+    label, sep, value = spec.partition("=")
+    number, _, ticker = value.rpartition(" ")
+    if not sep or not number:
+        raise argparse.ArgumentTypeError(f"expected LABEL=NUMBER TICKER, got {spec!r}")
+    return m.Amount(label=label, value=number, ticker=ticker)
+
+
+def parsed_extra(values: list[str] | None) -> m.Extra | None:
+    """One extra from `LABEL KIND:LABEL=VALUE...`, or none."""
+    if not values:
+        return None
+    label, *specs = values
+    return m.Extra(label=label, fields=[parsed_field(spec) for spec in specs])
+
+
+ANSWERS = {answer.name.lower(): answer for answer in m.Answer}
+
+
+# Each subcommand turns its flags into one request.
+BUILDERS: dict[str, Callable[[argparse.Namespace], protobuf.MessageType]] = {
+    "review": lambda a: m.Review(
+        step=a.step,
+        title=a.title,
+        fields=a.field or [],
+        extras=parsed_extras(a),
+        answer=ANSWERS[a.answer],
+    ),
+    "summary": lambda a: m.Summary(
+        step=a.step,
+        title=a.title,
+        amount=a.amount,
+        fee=a.fee,
+        account=parsed_extra(a.account),
+        fee_info=parsed_extra(a.fee_info),
+    ),
+    "verify-address": lambda a: m.VerifyAddress(
+        step=a.step, value=a.value, account=a.account, path=a.path
+    ),
+    "verify-pubkey": lambda a: m.VerifyPubkey(
+        step=a.step, value=a.value, account=a.account, path=a.path
+    ),
+    "done": lambda a: m.Done(step=a.step, text=a.text),
+    "stream-data": lambda a: m.StreamData(
+        step=a.step, title=a.title, length=a.length, fail_at=a.fail_at
+    ),
+}
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="testappctl",
+        description="Drive one modui endpoint on the device through the test app.",
+    )
+    parser.add_argument(
+        "--artifacts",
+        type=Path,
+        default=ARTIFACTS,
+        help="directory with the testapp build, its proof and the root packet (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--no-reload",
+        action="store_true",
+        help="reuse an app image the device already has instead of loading afresh",
+    )
+    endpoints = parser.add_subparsers(
+        dest="endpoint", required=True, metavar="ENDPOINT"
+    )
+
+    def endpoint(
+        name: str, help: str, title: str | None = None
+    ) -> argparse.ArgumentParser:
+        p = endpoints.add_parser(name, help=help, description=help)
+        p.add_argument(
+            "--step",
+            default=name,
+            help="step name, relative to the app (default: %(default)s)",
+        )
+        if title is not None:
+            p.add_argument("--title", default=title)
+        return p
+
+    def with_fields(p: argparse.ArgumentParser) -> None:
+        p.add_argument(
+            "--field",
+            type=parsed_field,
+            action="append",
+            metavar="KIND:LABEL=VALUE",
+            help="a fact, repeatable; KIND:VALUE for a note or a warning",
+        )
+
+    def with_extras(p: argparse.ArgumentParser) -> None:
+        p.add_argument(
+            "--extra",
+            nargs="+",
+            action="append",
+            metavar=("LABEL", "KIND:LABEL=VALUE"),
+            help="an extra reachable from the menu; repeatable",
+        )
+
+    p = endpoint("review", "modui::review(...).extras(...), then the answer", "Send")
+    with_fields(p)
+    with_extras(p)
+    p.add_argument(
+        "--answer",
+        choices=ANSWERS,
+        default="confirm",
+        help="confirm, strong, danger or details (default: %(default)s)",
+    )
+
+    p = endpoint("summary", "modui::summary(...)...confirm_strong()", "Send")
+    p.add_argument("--amount", type=parsed_amount, metavar="LABEL=NUMBER TICKER")
+    p.add_argument("--fee", type=parsed_amount, metavar="LABEL=NUMBER TICKER")
+    p.add_argument(
+        "--account",
+        nargs="+",
+        metavar=("TITLE", "KIND:LABEL=VALUE"),
+        help="the account",
+    )
+    p.add_argument(
+        "--fee-info",
+        nargs="+",
+        metavar=("TITLE", "KIND:LABEL=VALUE"),
+        help="the fee's details",
+    )
+
+    p = endpoint("verify-address", "modui::verify_address")
+    p.add_argument("--value", default="TQ9JfxgJ9JBz4GZ4MRDrjJeBdA6Mx5yYhq")
+    p.add_argument("--account", default="TRX #1")
+    p.add_argument("--path", default="m/44'/195'/0'/0/0")
+
+    p = endpoint("verify-pubkey", "modui::verify_pubkey")
+    p.add_argument(
+        "--value",
+        default="tpubDDKn3FtHc74CaRrRbi1WFdJNaaenZkDWqq9NsEhcafnDZ4VuKeuLG2aKHm5SuwuLgAhRkkfHqcCxpnVNSrs5kJYZXwa6Ud431VnevzzzK3U",
+    )
+    p.add_argument("--account", default="TRX #1")
+    p.add_argument("--path", default="m/44'/195'/0'/0/0")
+
+    p = endpoint("done", "modui::done")
+    p.add_argument("--text", default="Transaction signed")
+
+    p = endpoint("stream-data", "a review of one Field::data_source field", "Stream")
+    p.add_argument("--length", type=int, default=1025)
+    p.add_argument(
+        "--fail-at",
+        type=int,
+        help="make the k-th read (1-based) fail, so the host sees the app's error",
+    )
+
+    p = endpoints.add_parser(
+        "progress",
+        help="modui::progress, paced from here",
+        description="modui::progress, paced from here",
+    )
+    p.add_argument("--label", default="Working...")
+    p.add_argument(
+        "--total", type=int, help="total units; omit for an indeterminate progress"
+    )
+    p.add_argument("--steps", type=int, default=10)
+    p.add_argument("--step-units", type=int, default=1)
+    p.add_argument("--step-delay-ms", type=int, default=200)
+    p.add_argument(
+        "--step-label",
+        help="change the label under the bar before each step, as `LABEL i/n`",
+    )
+
+    p = endpoints.add_parser(
+        "showcase",
+        help="one example flow, composed here on the host",
+        description="one example flow, composed here on the host",
+    )
+    p.add_argument(
+        "name",
+        choices=SHOWCASES,
+        metavar="NAME",
+        help=", ".join(SHOWCASES),
+    )
+
+    return parser
+
+
+def run_progress(app: TestApp, args: argparse.Namespace) -> None:
+    with app.progress(args.label, total=args.total) as progress:
+        for i in range(args.steps):
+            time.sleep(args.step_delay_ms / 1000)
+            if args.step_label is not None:
+                progress.label(f"{args.step_label} {i + 1}/{args.steps}")
+            progress.step(args.step_units)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+
+    session = connect()
+    app = TestApp.load(session, args.artifacts, force_reload=not args.no_reload)
+    print("Walk the screen on the device now.")
+    try:
+        if args.endpoint == "progress":
+            run_progress(app, args)
+            print("Progress done.")
+            return 0
+        if args.endpoint == "showcase":
+            result = run_showcase(app, args.name)
+        else:
+            result = app.call(BUILDERS[args.endpoint](args))
+    except exceptions.TrezorFailure as e:
+        print(f"Failure: {e}")
+        return 1
+    print(f"Reply: {result.name}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
