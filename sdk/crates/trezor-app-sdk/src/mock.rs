@@ -288,25 +288,13 @@ impl SyslogV1 for DummySyslog {
 struct DummyWire;
 
 impl WireV1 for DummyWire {
-    extern "C" fn wire_receive_start(
-        &self,
-        _timeout_ms: u32,
-    ) -> FastResult<WireMessage, WireError> {
+    extern "C" fn wire_receive(&self, _timeout_ms: u32) -> FastResult<WireMessage, WireError> {
         Err(WireError::Timeout).into()
     }
 
-    extern "C" fn wire_request<'a>(
+    extern "C" fn wire_send<'a>(
         &self,
         _id: u16,
-        _data: Slice<'a, u8>,
-        _timeout_ms: u32,
-    ) -> FastResult<WireMessage, WireError> {
-        Err(WireError::Timeout).into()
-    }
-
-    extern "C" fn wire_respond<'a>(
-        &self,
-        _response_id: u16,
         _data: Slice<'a, u8>,
     ) -> FastResult<(), WireError> {
         Err(WireError::FailedToSend).into()
