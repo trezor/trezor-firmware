@@ -271,10 +271,10 @@ def call_to_strs(call):
     # finish layouts iterator -- should not do anything ideally
     layout_text.extend(layouts_iter)
 
-    layout_text = [layout_to_output(l) for l in layout_text]
+    layout_text = [layout_to_output(layout) for layout in layout_text]
 
     all_lines = "\n".join([call] + layout_text + result_list).split("\n")
-    all_lines = [f"    {l}" for l in all_lines]
+    all_lines = [f"    {line}" for line in all_lines]
     func_name_under = func_name.replace(".", "_")
     all_lines.insert(0, f"def test_{func_name_under}(device_handler):")
     all_lines.insert(1, "    debug = device_handler.debuglink()")

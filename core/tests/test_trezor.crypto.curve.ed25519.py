@@ -70,10 +70,10 @@ class TestCryptoEd25519(unittest.TestCase):
             pass
 
     def test_sign_verify_random(self):
-        for l in range(1, 300):
+        for length in range(1, 300):
             sk = ed25519.generate_secret()
             pk = ed25519.publickey(sk)
-            msg = random.bytes(l)
+            msg = random.bytes(length)
             sig = ed25519.sign(sk, msg)
             self.assertTrue(ed25519.verify(pk, sig, msg))
 

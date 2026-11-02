@@ -86,7 +86,7 @@ def annotate(obj: SharedObject, filename: str) -> None:
     filedata = obj.data[filename]
 
     linedata = {lineno: alloc_str(line) for lineno, line in filedata.items()}
-    maxlen = max(len(l) for l in linedata.values())
+    maxlen = max(len(s) for s in linedata.values())
 
     lineno = 0
     for line in open("src/" + filename):
@@ -119,21 +119,21 @@ def list_function(obj: SharedObject, reverse: bool) -> None:
     if obj.type == "total":
         field = "total_allocs"
 
-        def format_num(l: tuple[str, float, int]) -> str:
-            return f"{l[2]}"
+        def format_num(item: tuple[str, float, int]) -> str:
+            return f"{item[2]}"
 
     else:
         field = "avg_allocs"
 
-        def format_num(l: tuple[str, float, int]) -> str:
-            return f"{l[1]:.2f}"
+        def format_num(item: tuple[str, float, int]) -> str:
+            return f"{item[1]:.2f}"
 
     file_sums = _list(obj, field, reverse)
 
-    maxlen = max(len(format_num(l)) for l in file_sums)
-    for l in file_sums:
-        num_str = format_num(l)
-        filename = l[0]
+    maxlen = max(len(format_num(item)) for item in file_sums)
+    for item in file_sums:
+        num_str = format_num(item)
+        filename = item[0]
         print(f"{num_str:>{maxlen}}  {filename}")
 
 

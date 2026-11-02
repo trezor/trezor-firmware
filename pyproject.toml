@@ -112,6 +112,10 @@ select = [
     # PEP 604 (in /python only where `from __future__ import annotations` is present, see target-version)
     "UP007",  # non-pep604-annotation-union: Union[int, str] -> int | str
     "UP045",  # non-pep604-annotation-optional: Optional[str] -> str | None
+
+    # pycodestyle
+    "E7",  # statements: x == None, not x in y, bare except, lambda assignment, ambiguous names (l, I, O), ...
+    "E9",  # runtime errors: unreadable file (io-error)
 ]
 
 [tool.ruff.lint.isort]

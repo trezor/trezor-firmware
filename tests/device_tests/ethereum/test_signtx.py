@@ -352,9 +352,9 @@ def test_data_streaming(session: Session):
 
         br_protect = messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall)
 
-        def tx_request(l):
+        def tx_request(length):
             return message_filters.EthereumTxRequest(
-                data_length=l, signature_r=None, signature_s=None, signature_v=None
+                data_length=length, signature_r=None, signature_s=None, signature_v=None
             )
 
         if is_legacy:
@@ -365,11 +365,15 @@ def test_data_streaming(session: Session):
                 br_protect,
                 br_sign_tx(None),
             ]
-            expected_responses += [tx_request(l) for l in (1024, 1024, 1024, 3)]
+            expected_responses += [
+                tx_request(length) for length in (1024, 1024, 1024, 3)
+            ]
             expected_responses += [message_filters.EthereumTxRequest(data_length=None)]
         else:
             expected_responses: list[ExpectedResponse] = []
-            expected_responses += [tx_request(l) for l in (1024, 1024, 1024, 3)]
+            expected_responses += [
+                tx_request(length) for length in (1024, 1024, 1024, 3)
+            ]
             expected_responses += [br_sign_tx("confirm_data")]
             if client.model is models.T3T1 or client.model is models.T3W1:
                 # related issue: https://github.com/trezor/trezor-firmware/issues/6490

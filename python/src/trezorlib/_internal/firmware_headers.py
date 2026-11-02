@@ -646,7 +646,7 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
             (2, False): fw_models.LEGACY_V1V2,
             (2, True): fw_models.LEGACY_V1V2_DEV,
         }
-        if not (signature_version, dev_keys) in keymap:
+        if (signature_version, dev_keys) not in keymap:
             raise ValueError("Unsupported signature version")
         return keymap[signature_version, dev_keys].firmware_keys
 

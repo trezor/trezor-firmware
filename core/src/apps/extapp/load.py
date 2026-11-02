@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import storage.device as storage_device
-import ustruct  # pyright: ignore[reportMissingImports]
+import ustruct  # type: ignore [Import "ustruct" could not be resolved]
 from storage import cache_common as cc
 from trezor import log
 from trezor.crypto import random

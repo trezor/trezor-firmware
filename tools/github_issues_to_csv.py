@@ -38,17 +38,17 @@ def write_issues(r: requests.Response, csvout: Any) -> None:
             severity = ""
             weight = ""
             labels = []
-            for l in issue["labels"]:
-                if l["name"][:2] in PRIORITIES:
-                    priority = l["name"]
-                elif l["name"][:2] in SEVERITIES:
-                    severity = l["name"]
-                elif l["name"] in WEIGHTS:
-                    weight = l["name"][1:]
+            for label in issue["labels"]:
+                if label["name"][:2] in PRIORITIES:
+                    priority = label["name"]
+                elif label["name"][:2] in SEVERITIES:
+                    severity = label["name"]
+                elif label["name"] in WEIGHTS:
+                    weight = label["name"][1:]
                     if weight == "1/2":
                         weight = "0.5"
                 else:
-                    labels.append(l["name"])
+                    labels.append(label["name"])
             if not weight:
                 continue
             labels = ", ".join(labels)
