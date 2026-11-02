@@ -9,8 +9,7 @@ extern crate alloc;
 
 use prost::Message;
 use trezor_app_sdk::{
-    Error, Result, ResultExt, WireDecode, WireEncode, debug, error, wire_handler,
-    wire_receive_wire_start, wire_request_raw,
+    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_call, wire_handler, wire_receive,
 };
 
 // Include generated code
@@ -40,7 +39,7 @@ where
     Req: Message,
     Resp: Message + Default,
 {
-    let (_id, resp_bytes) = wire_request_raw(&req.encode_to_vec(), id as u16).c()?;
+    let (_id, resp_bytes) = wire_call(&req.encode_to_vec(), id as u16).c()?;
     Resp::decode(resp_bytes.as_slice()).map_err(|_| Error::InvalidMessage)
 }
 
@@ -81,11 +80,8 @@ wire_handler!(
 // Application entry point - receives raw bytes, returns raw bytes
 #[unsafe(no_mangle)]
 pub fn app() -> Result<()> {
-    loop {
-        debug!("Waiting for wire message");
-        let (id, data) = wire_receive_wire_start().c()?;
-        handle_wire_message(id as i32, &data).c()?;
-    }
+    let (id, data) = wire_receive().c()?;
+    handle_wire_message(id as i32, &data).c()
 }
 
 /// Entry point for handling protobuf function calls
