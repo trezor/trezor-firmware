@@ -150,24 +150,36 @@ def hmac(
 
 
 def get_xpub(
-    session: "Session", instance_id: int, address_n: "Address", xpub_magic: int
+    session: "Session",
+    instance_id: int,
+    address_n: "Address",
+    xpub_magic: int,
+    curve: m.Curve = m.Curve.CurveSecp256k1,
 ) -> str:
     res = call_ext(
         session,
         instance_id,
-        msg_data=m.GetXpub(address_n=list(address_n), xpub_magic=xpub_magic),
+        msg_data=m.GetXpub(
+            curve=curve, address_n=list(address_n), xpub_magic=xpub_magic
+        ),
         expect=[m.Xpub],
     )
     return res.xpub
 
 
 def get_public_key(
-    session: "Session", instance_id: int, address_n: "Address", compressed: bool
+    session: "Session",
+    instance_id: int,
+    address_n: "Address",
+    compressed: bool,
+    curve: m.Curve = m.Curve.CurveSecp256k1,
 ) -> bytes:
     res = call_ext(
         session,
         instance_id,
-        msg_data=m.GetPublicKey(address_n=list(address_n), compressed=compressed),
+        msg_data=m.GetPublicKey(
+            curve=curve, address_n=list(address_n), compressed=compressed
+        ),
         expect=[m.PublicKey],
     )
     return res.public_key
@@ -180,11 +192,13 @@ def ecdsa_sign_digest(
     digest: bytes,
     compressed: bool,
     canonical: m.CanonicalSig = m.CanonicalSig.Any,
+    curve: m.EcdsaCurve = m.EcdsaCurve.Secp256k1,
 ) -> bytes:
     res = call_ext(
         session,
         instance_id,
         msg_data=m.EcdsaSignDigest(
+            curve=curve,
             address_n=list(address_n),
             digest=digest,
             compressed=compressed,

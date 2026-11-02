@@ -17,8 +17,12 @@ heap-size = 32768
 # Host wire messages land here, so it must exceed the SDK default; see tron.
 ipc-buffer-size = 8192
 app-ring = 0
-curves = ["secp256k1"]
-paths = ["m/44'/1'/account'/change/address_index/**"]
+curves = ["secp256k1", "nist256p1", "ed25519"]
+paths = [
+    "m/44'/1'/account'/change/address_index/**",
+    # all hardened, for Ed25519
+    "m/44'/1'/account'",
+]
 
 [dependencies]
 trezor-app-sdk = { path = "../../crates/trezor-app-sdk" }

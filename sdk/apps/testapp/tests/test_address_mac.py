@@ -16,6 +16,7 @@
 
 import pytest
 
+from trezorlib import btc
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
@@ -101,7 +102,7 @@ def test_address_mac_long_address(session: Session, instance_id: int):
     "path",
     [
         pytest.param("m/44h/0h/0h/0/0", id="other_coin"),
-        pytest.param("m/44h/1h/0h", id="account_level"),
+        pytest.param("m/44h", id="purpose"),
     ],
 )
 def test_get_address_mac_forbidden_path(session: Session, instance_id: int, path: str):
@@ -109,8 +110,13 @@ def test_get_address_mac_forbidden_path(session: Session, instance_id: int, path
         get_mac(session, instance_id, address_n=parse_path(path))
 
 
-def test_check_address_mac_forbidden_path(session: Session, instance_id: int):
-    """A path the app may not use fails, even with its own valid MAC."""
-    mac = get_mac(session, instance_id)
+def test_check_address_mac_other_app_path(session: Session, instance_id: int):
+    """A MAC from another app checks, as in a coin purchase memo, while a wrong
+    one on the same path still fails."""
+    address_n = parse_path("m/44h/0h/0h/0/0")
+    resp = btc.get_authenticated_address(session, "Bitcoin", address_n)
+    assert resp.mac is not None
+    kw = {"address_n": address_n, "address": resp.address, "slip44": 0}
+    check_mac(session, instance_id, resp.mac, **kw)
     with raises(SdkError.DataError, OPERATION_FAILED):
-        check_mac(session, instance_id, mac, address_n=parse_path("m/44h/0h/0h/0/0"))
+        check_mac(session, instance_id, b"\x00" * 32, **kw)

@@ -7,7 +7,7 @@
 //! function's own.
 
 use trezor_app_sdk::crypto::{
-    self as sdk, CanonicalSig, EcdsaCurve, HasherExt, HashingAlgorithm, HmacAlgorithm,
+    self as sdk, CanonicalSig, Curve, EcdsaCurve, HasherExt, HashingAlgorithm, HmacAlgorithm,
 };
 use trezor_app_sdk::{Error, Result};
 
@@ -56,18 +56,19 @@ fn digest(hasher: &mut sdk::BoxedHasher, chunks: &[Vec<u8>]) -> wire::Digest {
 // ============================================================================
 
 pub fn get_xpub(m: wire::GetXpub) -> Result<wire::Xpub> {
-    let xpub = sdk::get_xpub(&m.address_n, m.xpub_magic)?;
+    let xpub = sdk::get_xpub(key_curve(m.curve)?, &m.address_n, m.xpub_magic)?;
     let xpub = String::from_utf8(xpub.to_vec()).map_err(|_| Error::InvalidMessage)?;
     Ok(wire::Xpub { xpub })
 }
 
 pub fn get_public_key(m: wire::GetPublicKey) -> Result<wire::PublicKey> {
-    let public_key = sdk::get_public_key(&m.address_n, m.compressed)?;
+    let public_key = sdk::get_public_key(key_curve(m.curve)?, &m.address_n, m.compressed)?;
     Ok(wire::PublicKey { public_key })
 }
 
 pub fn ecdsa_sign_digest(m: wire::EcdsaSignDigest) -> Result<wire::Signature> {
     let signature = sdk::ecdsa_sign_digest(
+        curve(m.curve)?,
         &m.address_n,
         array(&m.digest)?,
         m.compressed,
@@ -140,6 +141,16 @@ fn curve(value: i32) -> Result<EcdsaCurve> {
     match wire::EcdsaCurve::try_from(value) {
         Ok(wire::EcdsaCurve::Secp256k1) => Ok(EcdsaCurve::Secp256k1),
         Ok(wire::EcdsaCurve::Nist256p1) => Ok(EcdsaCurve::Nist256p1),
+        Err(_) => Err(Error::InvalidArgument),
+    }
+}
+
+fn key_curve(value: i32) -> Result<Curve> {
+    match wire::Curve::try_from(value) {
+        Ok(wire::Curve::Secp256k1) => Ok(Curve::Secp256k1),
+        Ok(wire::Curve::Nist256p1) => Ok(Curve::Nist256p1),
+        Ok(wire::Curve::Ed25519) => Ok(Curve::Ed25519),
+        Ok(wire::Curve::Curve25519) => Ok(Curve::Curve25519),
         Err(_) => Err(Error::InvalidArgument),
     }
 }
