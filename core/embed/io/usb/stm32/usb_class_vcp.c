@@ -393,8 +393,7 @@ static uint8_t usb_vcp_class_setup(USBD_HandleTypeDef *dev,
       USBD_CtlSendData(dev, UNCONST(&line_coding),
                        MIN_8bits(req->wLength, sizeof(line_coding)));
     } else {
-      USBD_CtlSendData(dev, dev->ep0_buf,
-                       MIN_8bits(req->wLength, USB_CDC_MAX_CMD_PACKET_LEN));
+      USBD_CtlError(dev, req);
     }
   } else {  // USB_REQ_DIR_H2D
     if (req->wLength > 0) {
