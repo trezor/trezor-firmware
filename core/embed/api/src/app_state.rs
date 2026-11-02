@@ -14,7 +14,7 @@
 
 use alloc::boxed::Box;
 use core::ptr::null_mut;
-use core::sync::atomic::{AtomicPtr, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 
 use rtl::fatal_error;
 use spin::{Mutex, Once};
@@ -29,6 +29,9 @@ pub(crate) struct AppState {
     pub allocator: Mutex<Talc<Manual, DefaultBinning>>,
     /// The app's IPC inbox, registered by [`crate::wire::register_inbox`].
     pub inbox: Once<IpcInbox<Box<[usize]>>>,
+    /// Set once Core asked the app to stop. Sticky, so that an app which maps
+    /// the error away still can't carry on.
+    pub stop_requested: AtomicBool,
 }
 
 impl Drop for AppState {
@@ -60,6 +63,7 @@ impl AppState {
         Self {
             allocator: Mutex::new(talc),
             inbox: Once::new(),
+            stop_requested: AtomicBool::new(false),
         }
     }
 }
