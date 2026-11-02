@@ -184,9 +184,9 @@
     },
     "backup__new_wallet_created": {
       "Bolt": "",
-      "Caesar": "Portefeuille créé.\n",
-      "Delizia": "Portefeuille créé.\n",
-      "Eckhart": "Portefeuille créé.\n"
+      "Caesar": "Portefeuille créé.",
+      "Delizia": "Portefeuille créé.",
+      "Eckhart": "Portefeuille créé."
     },
     "backup__new_wallet_successfully_created": {
       "Bolt": "Portefeuille créé avec succès.",

@@ -159,9 +159,9 @@
     },
     "backup__new_wallet_created": {
       "Bolt": "",
-      "Caesar": "Billetera creada.\n",
-      "Delizia": "Billetera creada.\n",
-      "Eckhart": "Billetera creada.\n"
+      "Caesar": "Billetera creada.",
+      "Delizia": "Billetera creada.",
+      "Eckhart": "Billetera creada."
     },
     "backup__new_wallet_successfully_created": {
       "Bolt": "Billetera creada correctamente.",

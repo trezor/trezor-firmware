@@ -632,6 +632,7 @@ impl FirmwareUI for UICaesar {
         let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
         ops.add_text_with_font(TR::backup__new_wallet_created, fonts::FONT_NORMAL)
             .add_newline()
+            .add_newline()
             .add_text_with_font(TR::backup__it_should_be_backed_up_now, fonts::FONT_NORMAL)
             .add_next_page()
             .add_text_with_font(TR::backup__recover_anytime, fonts::FONT_NORMAL);

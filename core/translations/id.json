@@ -128,9 +128,9 @@
     },
     "backup__new_wallet_created": {
       "Bolt": "",
-      "Caesar": "Dompet dibuat.\n",
-      "Delizia": "Dompet dibuat.\n",
-      "Eckhart": "Dompet dibuat.\n"
+      "Caesar": "Dompet dibuat.",
+      "Delizia": "Dompet dibuat.",
+      "Eckhart": "Dompet dibuat."
     },
     "backup__new_wallet_successfully_created": {
       "Bolt": "Dompet berhasil dibuat.",
