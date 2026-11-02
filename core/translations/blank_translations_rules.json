@@ -392,13 +392,6 @@
   },
   {
     "exact": [
-      "reset__check_backup_title"
-    ],
-    "allowedLayouts": [ "Caesar", "Eckhart" ],
-    "description": "These are specific to Caesar and Eckhart layouts"
-  },
-  {
-    "exact": [
       "brightness__changed_title",
       "ethereum__subtitle_input_data_bytes",
       "fido__more_credentials",

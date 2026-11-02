@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.models("eckhart")]
 
 
 def prepare_check_backup(debug: "DebugLink", features: "Features") -> None:
-    check_backup_title = TR.reset__check_backup_title
+    check_backup_title = TR.recovery__title_dry_run
     security_content = Menu.SECURITY.content(features)
     if security_content is None:
         raise NoSecuritySettings
@@ -80,7 +80,7 @@ def test_backup_needed_fails(device_handler: "BackgroundDeviceHandler"):
     assert features.backup_availability == messages.BackupAvailability.Required
 
     # Device needs backup, check backup is not accessible in the security settings
-    with pytest.raises(MenuItemNotFound, match=TR.reset__check_backup_title):
+    with pytest.raises(MenuItemNotFound, match=TR.recovery__title_dry_run):
         prepare_check_backup(debug, features)
 
 
@@ -91,7 +91,7 @@ def test_no_backup_fails(device_handler: "BackgroundDeviceHandler"):
     assert features.no_backup is True
 
     # Device has no backup, check backup is not accessible in the security settings
-    with pytest.raises(MenuItemNotFound, match=TR.reset__check_backup_title):
+    with pytest.raises(MenuItemNotFound, match=TR.recovery__title_dry_run):
         prepare_check_backup(debug, features)
 
 

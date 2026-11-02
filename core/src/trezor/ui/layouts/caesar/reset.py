@@ -27,7 +27,7 @@ async def show_share_words(
 
     if share_index is None:
         title = TR.reset__share_words_title
-        check_title = TR.reset__check_backup_title
+        check_title = TR.recovery__title_dry_run
     elif group_index is None:
         title = f"{TR.words__title_share} #{share_index + 1}"
         check_title = (

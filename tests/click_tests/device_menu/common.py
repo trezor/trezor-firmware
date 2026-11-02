@@ -180,7 +180,7 @@ class Menu(Enum):
                 content.append(TR.auto_lock__title)
                 content.append(TR.wipe_code__title)
             if not needs_backup and not no_backup and not unfinished_backup:
-                content.append(TR.reset__check_backup_title)
+                content.append(TR.recovery__title_dry_run)
             return content
 
         def pin_content():
