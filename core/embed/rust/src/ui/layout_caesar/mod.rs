@@ -30,6 +30,8 @@ pub struct UICaesar {}
 
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;
+#[cfg(all(feature = "micropython", feature = "app_loading"))]
+pub mod ui_modui;
 
 impl CommonUI for UICaesar {
     const SCREEN: Rect = constant::SCREEN;
