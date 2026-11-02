@@ -47,8 +47,8 @@ def _pk_mldsa44(pubkey_hex: str) -> PublicKey:
 
 
 CHALLENGE_HEADER = b"AuthenticateDevice:"
+# First firmware version that sends the MCU (ML-DSA-44) authenticity proof.
 MCU_ATTESTATION_MIN_VERSION = (2, 12, 1)
-
 # Safe 3 and Safe 5 attest only with Optiga.
 OPTIGA_ONLY_MODELS = (models.T2B1, models.T3B1, models.T3T1)
 
