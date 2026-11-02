@@ -98,6 +98,7 @@ T3W1 = _BY_INTERNAL["T3W1"]
 D001 = _BY_INTERNAL["D001"]
 D002 = _BY_INTERNAL["D002"]
 D003 = _BY_INTERNAL["D003"]
+D004 = _BY_INTERNAL["D004"]
 
 # ==== model based names ====
 
@@ -109,6 +110,7 @@ TREZOR_SAFE5 = T3T1
 TREZOR_DISC1 = D001
 TREZOR_DISC2 = D002
 TREZOR_DISC3 = D003
+TREZOR_DISC4 = D004
 
 # deprecated aliases: the discovery boards used to be exposed under DISC1/DISC2,
 # but the canonical handle is now the internal name (D001/D002), like every
@@ -116,6 +118,7 @@ TREZOR_DISC3 = D003
 DISC1 = D001
 DISC2 = D002
 DISC3 = D003
+DISC4 = D004
 
 LEGACY_MODELS = frozenset(
     _BY_INTERNAL[d.internal_name]
