@@ -1714,8 +1714,6 @@ pub struct ExtAppResponse {
     pub message_id: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppResponse.data)
     pub data: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.extapp.ExtAppResponse.finished)
-    pub finished: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.extapp.ExtAppResponse.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1787,27 +1785,8 @@ impl ExtAppResponse {
         self.data.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional bool finished = 3;
-
-    pub fn finished(&self) -> bool {
-        self.finished.unwrap_or(false)
-    }
-
-    pub fn clear_finished(&mut self) {
-        self.finished = ::std::option::Option::None;
-    }
-
-    pub fn has_finished(&self) -> bool {
-        self.finished.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_finished(&mut self, v: bool) {
-        self.finished = ::std::option::Option::Some(v);
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "message_id",
@@ -1818,11 +1797,6 @@ impl ExtAppResponse {
             "data",
             |m: &ExtAppResponse| { &m.data },
             |m: &mut ExtAppResponse| { &mut m.data },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "finished",
-            |m: &ExtAppResponse| { &m.finished },
-            |m: &mut ExtAppResponse| { &mut m.finished },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppResponse>(
             "ExtAppResponse",
@@ -1854,9 +1828,6 @@ impl ::protobuf::Message for ExtAppResponse {
                 18 => {
                     self.data = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                24 => {
-                    self.finished = ::std::option::Option::Some(is.read_bool()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1875,9 +1846,6 @@ impl ::protobuf::Message for ExtAppResponse {
         if let Some(v) = self.data.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
-        if let Some(v) = self.finished {
-            my_size += 1 + 1;
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1889,9 +1857,6 @@ impl ::protobuf::Message for ExtAppResponse {
         }
         if let Some(v) = self.data.as_ref() {
             os.write_bytes(2, v)?;
-        }
-        if let Some(v) = self.finished {
-            os.write_bool(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1912,7 +1877,6 @@ impl ::protobuf::Message for ExtAppResponse {
     fn clear(&mut self) {
         self.message_id = ::std::option::Option::None;
         self.data = ::std::option::Option::None;
-        self.finished = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -1920,7 +1884,6 @@ impl ::protobuf::Message for ExtAppResponse {
         static instance: ExtAppResponse = ExtAppResponse {
             message_id: ::std::option::Option::None,
             data: ::std::option::Option::None,
-            finished: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1962,11 +1925,10 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x01\x20\x02(\x0cR\x04data\x12\x12\n\x04hash\x18\x02\x20\x02(\x0cR\
     \x04hash\"c\n\rExtAppMessage\x12\x1f\n\x0binstance_id\x18\x01\x20\x02(\r\
     R\ninstanceId\x12\x1d\n\nmessage_id\x18\x02\x20\x02(\rR\tmessageId\x12\
-    \x12\n\x04data\x18\x03\x20\x02(\x0cR\x04data\"f\n\x0eExtAppResponse\x12\
+    \x12\n\x04data\x18\x03\x20\x02(\x0cR\x04data\"C\n\x0eExtAppResponse\x12\
     \x1d\n\nmessage_id\x18\x01\x20\x02(\rR\tmessageId\x12\x12\n\x04data\x18\
-    \x02\x20\x02(\x0cR\x04data\x12!\n\x08finished\x18\x03\x20\x01(\x08:\x05f\
-    alseR\x08finishedB4\n#com.satoshilabs.trezor.lib.protobufB\rMessageExtAp\
-    p\
+    \x02\x20\x02(\x0cR\x04dataB4\n#com.satoshilabs.trezor.lib.protobufB\rMes\
+    sageExtApp\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
