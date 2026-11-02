@@ -2132,12 +2132,6 @@
       "Delizia": "Let's do a quick check of your backup.",
       "Eckhart": "Let's do a quick check of your backup."
     },
-    "reset__check_backup_title": {
-      "Bolt": "",
-      "Caesar": "Check backup",
-      "Delizia": "",
-      "Eckhart": "Check backup"
-    },
     "reset__check_group_share_title_template": {
       "Bolt": "Share {1} of group {0}",
       "Caesar": "",

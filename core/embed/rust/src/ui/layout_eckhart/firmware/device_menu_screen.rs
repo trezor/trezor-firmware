@@ -609,7 +609,7 @@ impl DeviceMenuScreen {
 
         if check_backup {
             items.add(MenuItem::return_msg(
-                TR::reset__check_backup_title.into(),
+                TR::recovery__title_dry_run.into(),
                 DeviceMenuMsg::CheckBackup,
             ));
         }
