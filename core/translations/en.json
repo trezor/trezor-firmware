@@ -2144,7 +2144,7 @@
       "Delizia": "Check share {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": "Check wallet backup",
+    "reset__check_wallet_backup_title": "Wallet backup check",
     "reset__continue_with_next_share": {
       "Bolt": "Continue with the next share.",
       "Caesar": "Continue with the next share.",
