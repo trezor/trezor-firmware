@@ -357,7 +357,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_delete;
   MP_QSTR_description;
   MP_QSTR_deserialize_crypto_message;
-  MP_QSTR_deserialize_progress_message;
   MP_QSTR_details_title;
   MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
@@ -624,7 +623,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_pm_event;
   MP_QSTR_prefill;
   MP_QSTR_prefill_word;
-  MP_QSTR_process_ipc_message;
   MP_QSTR_production_year;
   MP_QSTR_progress__authenticity_check;
   MP_QSTR_progress__done;

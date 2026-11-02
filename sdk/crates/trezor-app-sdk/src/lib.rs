@@ -46,9 +46,6 @@ pub mod traits;
 pub mod crypto;
 
 #[cfg(feature = "app")]
-pub mod ui;
-
-#[cfg(feature = "app")]
 pub mod log;
 
 #[doc(hidden)]
