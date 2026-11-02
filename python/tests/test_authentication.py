@@ -84,11 +84,11 @@ def authenticate_proof(
     proof: messages.AuthenticityProof,
     version: tuple[int, int, int] = MCU_VERSION,
     **kwargs: t.Any,
-) -> None:
+) -> RootCertificate | None:
     monkeypatch.setattr(
         authentication.device, "authenticate", lambda session, challenge: proof
     )
-    authentication.authenticate_device(
+    return authentication.authenticate_device(
         FakeSession(model, version),  # type: ignore [arg-type]
         CHALLENGE,
         **kwargs,
@@ -328,8 +328,8 @@ def authenticate(
     chains: t.Mapping[AttestationSource, Chain],
     version: tuple[int, int, int] = MCU_VERSION,
     **kwargs: t.Any,
-) -> None:
-    authenticate_proof(monkeypatch, model, make_proof(chains), version, **kwargs)
+) -> RootCertificate | None:
+    return authenticate_proof(monkeypatch, model, make_proof(chains), version, **kwargs)
 
 
 # ---- verify_authentication_response ----
@@ -507,7 +507,8 @@ def test_verify_custom_root_mismatch(
 
 
 def test_authenticate_t3w1(roots: Roots, monkeypatch: pytest.MonkeyPatch) -> None:
-    authenticate(monkeypatch, models.T3W1, make_chains(roots.t3w1_prod))
+    root = authenticate(monkeypatch, models.T3W1, make_chains(roots.t3w1_prod))
+    assert root is roots.t3w1_prod.certificate
 
 
 def test_authenticate_t3w1_debug(
@@ -516,7 +517,10 @@ def test_authenticate_t3w1_debug(
     caplog_error: pytest.LogCaptureFixture,
 ) -> None:
     chains = make_chains(roots.t3w1_debug)
-    authenticate(monkeypatch, models.T3W1, chains, allow_development_devices=True)
+    root = authenticate(
+        monkeypatch, models.T3W1, chains, allow_development_devices=True
+    )
+    assert root is roots.t3w1_debug.certificate
     with pytest.raises(DeviceNotAuthentic):
         authenticate(monkeypatch, models.T3W1, chains)
     assert_logged_error(caplog_error, "manufactured by Test DEBUG root")
@@ -561,7 +565,8 @@ def test_authenticate_t3w1_mcu_min_version(
     caplog_error: pytest.LogCaptureFixture,
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
-    authenticate(monkeypatch, models.T3W1, chains, version=MCU_VERSION)
+    root = authenticate(monkeypatch, models.T3W1, chains, version=MCU_VERSION)
+    assert root is roots.t3w1_prod.certificate
 
     major, minor, patch = MCU_VERSION
     older = (major, minor, patch - 1)
@@ -589,7 +594,8 @@ def test_authenticate_optiga_only(
     # Tropic and MCU proofs are not checked on models without them
     garbage = make_chain(FakeRoot((model,), RootKeyType.PROD), TROPIC, common_name)
     garbage_mcu = make_chain(FakeRoot((model,), RootKeyType.PROD), MCU, common_name)
-    authenticate(monkeypatch, model, {OPTIGA: chain, TROPIC: garbage, MCU: garbage_mcu})
+    chains = {OPTIGA: chain, TROPIC: garbage, MCU: garbage_mcu}
+    assert authenticate(monkeypatch, model, chains) is root.certificate
 
 
 @pytest.mark.parametrize("source", [OPTIGA, TROPIC])
@@ -613,7 +619,7 @@ def test_authenticate_custom_roots(
     roots: Roots, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     chains = make_chains(roots.t3w1_debug)
-    authenticate(
+    root = authenticate(
         monkeypatch,
         models.T3W1,
         chains,
@@ -621,6 +627,8 @@ def test_authenticate_custom_roots(
         ed25519_root_pubkey=roots.t3w1_debug.pubkey_bytes(TROPIC),
         mldsa44_root_pubkey=roots.t3w1_debug.pubkey_bytes(MCU),
     )
+    # custom roots are not matched against the built-in ones
+    assert root is None
 
 
 @pytest.mark.parametrize(
@@ -640,7 +648,7 @@ def test_authenticate_custom_root_requires_proof(
 ) -> None:
     # a custom Tropic or MCU root enforces that proof even on a model without it
     chain = make_chain(roots.t3t1_prod, OPTIGA, "T3T1 Trezor Safe 5")
-    kwargs = {root_pubkey_arg: roots.t3w1_debug.pubkey_bytes(source)}
+    kwargs: dict[str, t.Any] = {root_pubkey_arg: roots.t3w1_debug.pubkey_bytes(source)}
     with pytest.raises(DeviceNotAuthentic):
         authenticate(monkeypatch, models.T3T1, {OPTIGA: chain}, **kwargs)
     assert_logged_error(caplog_error, message)
@@ -754,8 +762,9 @@ def test_authenticate_safe3_safe5_serial_number(
     common_name: str,
     serial_number: str | None,
 ) -> None:
-    chain = make_chain(getattr(roots, root_name), OPTIGA, common_name, serial_number)
-    authenticate(monkeypatch, model, {OPTIGA: chain})
+    root = getattr(roots, root_name)
+    chain = make_chain(root, OPTIGA, common_name, serial_number)
+    assert authenticate(monkeypatch, model, {OPTIGA: chain}) is root.certificate
 
 
 # ==== tests with the built-in root keys ====
@@ -934,4 +943,7 @@ def test_authenticate_emulator(
             source = chain.source.value
             setattr(proof, f"{source}_signature", emulator_signature(chain.source))
             setattr(proof, f"{source}_certificates", chain.certificates)
-    authenticate_proof(monkeypatch, model, proof, allow_development_devices=True)
+    root = authenticate_proof(monkeypatch, model, proof, allow_development_devices=True)
+    assert root is not None
+    assert root.devel
+    assert model in root.trezor_models

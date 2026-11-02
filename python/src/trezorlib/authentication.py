@@ -660,7 +660,7 @@ def authenticate_device(
     p256_root_pubkey: bytes | PublicKey | None = None,
     ed25519_root_pubkey: bytes | PublicKey | None = None,
     mldsa44_root_pubkey: bytes | PublicKey | None = None,
-) -> None:
+) -> RootCertificate | None:
     if challenge is None:
         challenge = secrets.token_bytes(16)
 
@@ -752,6 +752,9 @@ def authenticate_device(
     # All chains must be issued by the same root authority. Chains rooted in different built-in
     # authorities and any mix of custom and built-in roots are rejected; chains rooted entirely in
     # custom keys (all None) are accepted as the caller's deliberate choice.
-    if len(set(r.root for r in results)) != 1:
+    roots = set(r.root for r in results)
+    if len(roots) != 1:
         LOG.error("Certificates issued by different root authorities.")
         raise DeviceNotAuthentic
+
+    return roots.pop()
