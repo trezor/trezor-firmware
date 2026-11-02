@@ -929,19 +929,9 @@
       "Eckhart": "Data:\n{0} / {1} bytes"
     },
     "ethereum__title_signing_address": "Signing address",
-    "ethereum__title_token_contract": {
-      "Bolt": "Token contract",
-      "Caesar": "Token contract address",
-      "Delizia": "Token contract",
-      "Eckhart": "Token contract address"
-    },
+    "ethereum__title_token_contract": "Contract address",
     "ethereum__to": "To",
-    "ethereum__token_contract": {
-      "Bolt": "Token contract address",
-      "Caesar": "Token contract",
-      "Delizia": "Token contract address",
-      "Eckhart": "Token contract address"
-    },
+    "ethereum__token_contract": "Contract address",
     "ethereum__units_template": "{0} units",
     "ethereum__unknown_contract_address": {
       "Bolt": "Unknown contract address.",
