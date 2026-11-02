@@ -25,6 +25,7 @@ use super::wire::WireError;
 mod constructors;
 
 pub use constructors::as_opt_str;
+#[cfg(feature = "app")]
 pub(crate) use constructors::opt_bytes;
 
 /// A key-value pair with an optional monospace flag, used in UI detail views.
