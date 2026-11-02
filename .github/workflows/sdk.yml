@@ -404,8 +404,7 @@ jobs:
       # compiled in for this model, and with debug link enabled (PYOPT=0) so
       # the device tests can drive it. See core/Makefile's XTASK_BUILD_OPTS.
       - run: nix-shell --run "export TREZOR_MODEL=$(echo ${{ matrix.model }} | tr a-z A-Z); export BITCOIN_ONLY=0; export PYOPT=0; uv run make -C core build_unix"
-      # testapp has no UI fixtures, so it runs without screenshot checks.
-      - run: nix-shell --run "uv run make ${{ matrix.app == 'testapp' && 'extapp_test_emu' || 'extapp_test_emu_ui' }}"
+      - run: nix-shell --run "uv run make extapp_test_emu_ui"
       - uses: ./.github/actions/ui-report
         with:
           model: ${{ matrix.model }}
