@@ -23,30 +23,38 @@ pub trait WireEncode<T> {
     fn encode(val: &T) -> Vec<u8>;
 }
 
-/// Sends a successful response over the wire.
-pub fn wire_respond_raw(response_msg: i32, response_bytes: &[u8]) -> Result<()> {
-    let id: u16 = response_msg
-        .try_into()
-        .map_err(|_| Error::InvalidMessage)
-        .c()?;
-    get_wire_or_die()
-        .wire_respond(id, response_bytes.into())
+/// Waits for the next message from the host and returns its id and raw bytes.
+pub fn wire_receive() -> Result<(u16, Vec<u8>)> {
+    debug!("Waiting for wire message");
+    let message = get_wire_or_die()
+        .wire_receive(Timeout::max().as_ms())
         .into_app_result()
         .c()?;
-    Ok(())
+    debug!("Received wire message: id={}", message.id);
+
+    Ok((message.id, message.data.as_ref().to_vec()))
 }
 
-/// Sends an error response over the wire.
-pub fn wire_error_raw(e: &Error) -> Result<()> {
+/// Sends a message to the host. On its own this is how a flow ends; mid-flow
+/// use [`wire_call`].
+pub fn wire_send(bytes: &[u8], id: u16) -> Result<()> {
+    get_wire_or_die()
+        .wire_send(id, bytes.into())
+        .into_app_result()
+        .c()
+}
+
+/// Sends an error to the host.
+pub fn wire_error(e: &Error) -> Result<()> {
     crate::error!("{}", e);
     get_wire_or_die()
         .wire_error(e.code(), e.message().into())
         .into_app_result()
-        .c()?;
-    Ok(())
+        .c()
 }
 
-/// Sends a request to Core and returns the response's message id and raw bytes.
+/// Sends a request to the host and returns the response's message id and raw
+/// bytes.
 ///
 /// Encoding/decoding of `req`/the response is left to the caller, so this
 /// primitive has no serializer dependency. Returning the id alongside the
@@ -56,12 +64,9 @@ pub fn wire_error_raw(e: &Error) -> Result<()> {
 /// message types. Prefer [`wire_request`] for the common single-response
 /// case; use this directly only when you need that dispatch, or need to
 /// bypass [`WireRequest`]/[`WireEncode`]/[`WireDecode`] entirely.
-pub fn wire_request_raw(req_bytes: &[u8], id: u16) -> Result<(u16, Vec<u8>)> {
-    let result = get_wire_or_die()
-        .wire_request(id, req_bytes.into(), Timeout::max().as_ms())
-        .into_app_result()
-        .c()?;
-    Ok((result.id, result.data.as_ref().to_vec()))
+pub fn wire_call(req_bytes: &[u8], id: u16) -> Result<(u16, Vec<u8>)> {
+    wire_send(req_bytes, id)?;
+    wire_receive()
 }
 
 /// Associates a request type with its response type and wire id.
@@ -75,7 +80,7 @@ pub trait WireRequest {
     const ID: u16;
 }
 
-/// Sends `req` to Core using `Codec` and decodes the response.
+/// Sends `req` to the host using `Codec` and decodes the response.
 ///
 /// `Req`'s response type and wire id come from its [`WireRequest`] impl
 /// rather than being repeated at the call site.
@@ -85,17 +90,6 @@ where
     Codec: WireEncode<Req> + WireDecode<Req::Response>,
 {
     let req_bytes = Codec::encode(req);
-    let (_id, resp_bytes) = wire_request_raw(&req_bytes, Req::ID)?;
+    let (_id, resp_bytes) = wire_call(&req_bytes, Req::ID)?;
     Codec::decode(&resp_bytes)
-}
-
-pub fn wire_receive_wire_start() -> Result<(u16, Vec<u8>)> {
-    debug!("Waiting for wire start IPC message");
-    let message = get_wire_or_die()
-        .wire_receive_start(Timeout::max().as_ms())
-        .into_app_result()
-        .c()?;
-    debug!("Received wire start IPC message: id={}", message.id);
-
-    Ok((message.id, message.data.as_ref().to_vec()))
 }

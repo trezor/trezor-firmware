@@ -45,6 +45,8 @@ pub unsafe extern "C" fn applet_main(api_get: crate::traits::ApiGetter) -> core:
     {
         match unsafe { app() } {
             Ok(()) => system_exit(),
+            // a stop requested by Core is a normal exit
+            Err(e) if e.is_stopped() => system_exit(),
             Err(e) => {
                 let mut error_buf = [0u8; 256];
                 let mut writer = crate::util::SliceWriter::new(&mut error_buf);

@@ -20,6 +20,8 @@ pub enum WireError {
     DecodeError,
     /// Core failed to perform the requested operation.
     OperationFailed,
+    /// Core asked the app to stop: it must exit via its entry point.
+    Stopped,
 }
 
 impl WireError {
@@ -32,6 +34,7 @@ impl WireError {
             Self::UnexpectedResponse => "received unexpected response message",
             Self::DecodeError => "failed to decode response",
             Self::OperationFailed => "operation failed in Core",
+            Self::Stopped => "app stopped by Core",
         }
     }
 }
@@ -43,33 +46,19 @@ pub struct WireMessage {
     pub data: BoxedSlice<u8>,
 }
 
-/// Talks to Core over the wire transaction protocol (WireStart/Continue/End/Error).
+/// Talks to the host through Core.
 ///
 /// Apps never see raw IPC primitives — this trait *is* the transport, hiding
 /// how bytes actually move between the app and Core.
 #[stabby::stabby(checked)]
 pub trait WireV1: Send + Sync {
-    /// Waits for the message that starts a new wire transaction — Core
-    /// pushes this, the app never sends it.
-    extern "C" fn wire_receive_start(&self, timeout_ms: u32) -> FastResult<WireMessage, WireError>;
+    /// Waits for the next message from the host.
+    extern "C" fn wire_receive(&self, timeout_ms: u32) -> FastResult<WireMessage, WireError>;
 
-    /// Sends `data` tagged `id` and waits for Core's reply, for use mid-transaction
-    /// when the app needs more input from the host.
-    extern "C" fn wire_request<'a>(
-        &self,
-        id: u16,
-        data: Slice<'a, u8>,
-        timeout_ms: u32,
-    ) -> FastResult<WireMessage, WireError>;
+    /// Sends `data` tagged `id` to the host.
+    extern "C" fn wire_send<'a>(&self, id: u16, data: Slice<'a, u8>) -> FastResult<(), WireError>;
 
-    /// Sends the final, successful response, ending the transaction.
-    extern "C" fn wire_respond<'a>(
-        &self,
-        response_id: u16,
-        data: Slice<'a, u8>,
-    ) -> FastResult<(), WireError>;
-
-    /// Sends an error response, ending the transaction.
+    /// Sends an error to the host, ending the app's run.
     extern "C" fn wire_error<'a>(&self, code: u16, message: Str<'a>) -> FastResult<(), WireError>;
 }
 

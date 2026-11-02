@@ -23,6 +23,8 @@ pub enum Error {
     InvalidMessage,
     InvalidArgument,
     ValueError(&'static str),
+    /// Core asked the app to stop, the error must reach the app's entry point.
+    Stopped,
     #[cfg(all(feature = "debug", feature = "app"))]
     Context {
         file: &'static str,
@@ -41,6 +43,7 @@ impl Error {
             Self::InvalidMessage => 6,
             Self::InvalidArgument => 7,
             Self::ValueError(_) => 8,
+            Self::Stopped => 9,
             #[cfg(all(feature = "debug", feature = "app"))]
             Self::Context { source, .. } => source.code(),
         }
@@ -55,8 +58,19 @@ impl Error {
             Self::DataError(msg) => msg,
             Self::ValueError(msg) => msg,
             Self::Cancelled => "",
+            Self::Stopped => "",
             #[cfg(all(feature = "debug", feature = "app"))]
             Self::Context { source, .. } => source.message(),
+        }
+    }
+
+    /// Whether Core asked the app to stop.
+    pub fn is_stopped(&self) -> bool {
+        match self {
+            Self::Stopped => true,
+            #[cfg(all(feature = "debug", feature = "app"))]
+            Self::Context { source, .. } => source.is_stopped(),
+            _ => false,
         }
     }
 
@@ -69,6 +83,7 @@ impl Error {
             Self::InvalidMessage => "InvalidMessage",
             Self::InvalidArgument => "InvalidArgument",
             Self::ValueError(_) => "ValueError",
+            Self::Stopped => "Stopped",
             #[cfg(all(feature = "debug", feature = "app"))]
             Self::Context { source, .. } => source.error_type(),
         }
@@ -95,7 +110,10 @@ impl Error {
 #[cfg(feature = "app")]
 impl From<WireError> for Error {
     fn from(error: WireError) -> Self {
-        Error::DataError(error.message())
+        match error {
+            WireError::Stopped => Error::Stopped,
+            error => Error::DataError(error.message()),
+        }
     }
 }
 
@@ -239,5 +257,24 @@ impl<T> ResultExt<T> for Result<T> {
     #[cfg(not(all(feature = "debug", feature = "app")))]
     fn c(self) -> Self {
         self
+    }
+}
+
+#[cfg(all(test, feature = "app"))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn stop_signal_survives_conversion() {
+        assert!(Error::from(WireError::Stopped).is_stopped());
+        assert!(!Error::from(WireError::OperationFailed).is_stopped());
+        assert!(!Error::DataError("stopped").is_stopped());
+    }
+
+    #[cfg(feature = "debug")]
+    #[test]
+    fn stop_signal_survives_context() {
+        let error = Error::from(WireError::Stopped).c_at(core::panic::Location::caller());
+        assert!(error.is_stopped());
     }
 }
