@@ -16,9 +16,9 @@ class TestCryptoRandom(unittest.TestCase):
             self.assertAlmostEqual(c[r], 1000, delta=200)
 
     def test_bytes_length(self):
-        for l in range(1024 + 1):
-            lst = random.bytes(l)
-            self.assertEqual(len(lst), l)
+        for length in range(1024 + 1):
+            lst = random.bytes(length)
+            self.assertEqual(len(lst), length)
 
     def test_bytes_big_length(self):
         with self.assertRaises(ValueError):
@@ -37,11 +37,11 @@ class TestCryptoRandom(unittest.TestCase):
                 self.assertAlmostEqual(c[h], 1000, delta=200)
 
     def test_shuffle(self):
-        for l in range(256 + 1):
-            lst = list(range(l))
+        for length in range(256 + 1):
+            lst = list(range(length))
             random.shuffle(lst)
-            self.assertEqual(len(lst), l)
-            self.assertEqual(sorted(lst), list(range(l)))
+            self.assertEqual(len(lst), length)
+            self.assertEqual(sorted(lst), list(range(length)))
 
 
 if __name__ == "__main__":

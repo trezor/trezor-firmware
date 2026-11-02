@@ -397,8 +397,9 @@ def sign_tx(
                 assert res.details.extra_data_offset is not None
                 assert res.details.extra_data_len is not None
                 assert current_tx.extra_data is not None
-                o, l = res.details.extra_data_offset, res.details.extra_data_len
-                msg.extra_data = current_tx.extra_data[o : o + l]
+                offset = res.details.extra_data_offset
+                length = res.details.extra_data_len
+                msg.extra_data = current_tx.extra_data[offset : offset + length]
             else:
                 raise exceptions.TrezorException(
                     f"Unknown request type - {res.request_type}."

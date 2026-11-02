@@ -166,17 +166,17 @@ def decrypt(
     here, because passphrase function is symmetric in SLIP-39. We are using the terms
     "encrypt" and "decrypt" instead.
     """
-    l = encrypted_master_secret[: len(encrypted_master_secret) // 2]
-    r = encrypted_master_secret[len(encrypted_master_secret) // 2 :]
+    left = encrypted_master_secret[: len(encrypted_master_secret) // 2]
+    right = encrypted_master_secret[len(encrypted_master_secret) // 2 :]
     salt = _get_salt(identifier, extendable)
     for i in reversed(range(_ROUND_COUNT)):
-        l, r = (
-            r,
-            _xor(l, _round_function(i, passphrase, iteration_exponent, salt, r)),
+        left, right = (
+            right,
+            _xor(left, _round_function(i, passphrase, iteration_exponent, salt, right)),
         )
         if progress_callback:
             progress_callback(_ROUND_COUNT - i, _ROUND_COUNT)
-    return r + l
+    return right + left
 
 
 def generate_random_identifier() -> int:

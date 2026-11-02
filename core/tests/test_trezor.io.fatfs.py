@@ -37,12 +37,12 @@ class TestTrezorIoFatfs(unittest.TestCase):
             f.write(bytearray(b"test"))
         with fatfs.open(f"/{self._dirname()}/{self._filename('2')}", "w") as f:
             f.write(bytearray(b"testtest"))
-        l = [e for e in fatfs.listdir("/")]
+        entries = [e for e in fatfs.listdir("/")]
         self.assertEqual(
-            l, [(0, "---d-", self._dirname()), (4, "----a", self._filename())]
+            entries, [(0, "---d-", self._dirname()), (4, "----a", self._filename())]
         )
-        l = [e for e in fatfs.listdir(f"/{self._dirname()}")]
-        self.assertEqual(l, [(8, "----a", self._filename("2"))])
+        entries = [e for e in fatfs.listdir(f"/{self._dirname()}")]
+        self.assertEqual(entries, [(8, "----a", self._filename("2"))])
 
     def test_unlink(self):
         fatfs.mkdir(f"/{self._dirname()}")

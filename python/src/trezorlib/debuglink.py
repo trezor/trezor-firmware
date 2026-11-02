@@ -2291,9 +2291,11 @@ class ButtonActions:
             yield from self._type_word_bip39(word)
 
     def _type_word_slip39(self, word: str) -> t.Iterator[Coords]:
-        for l in word:
+        for letter in word:
             idx = next(
-                i for i, letters in enumerate(BUTTON_LETTERS_SLIP39) if l in letters
+                i
+                for i, letters in enumerate(BUTTON_LETTERS_SLIP39)
+                if letter in letters
             )
             yield self.debuglink.screen_buttons.mnemonic_from_index(idx)
 

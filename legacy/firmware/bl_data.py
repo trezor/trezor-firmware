@@ -26,13 +26,13 @@ if fn != "bootloader_qa.dat":
     # is our bootloader
     with open("bl_check.c", "rt") as f:
         hashes = []
-        for l in f.readlines():
-            if not len(l) >= 78 or not l.startswith('             "\\x'):
+        for line in f.readlines():
+            if not len(line) >= 78 or not line.startswith('             "\\x'):
                 continue
-            l = l[14:78]
+            line = line[14:78]
             h = ""
-            for i in range(0, len(l), 4):
-                h += l[i + 2 : i + 4]
+            for i in range(0, len(line), 4):
+                h += line[i + 2 : i + 4]
             hashes.append(h)
         check = hashes[-2] + hashes[-1]
         if check != bh.hex():

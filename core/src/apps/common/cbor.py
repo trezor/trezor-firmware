@@ -51,19 +51,19 @@ _CBOR_RAW_TAG = const(0x18)  # Tag 24
 _CBOR_SET_TAG = const(0x102)  # Tag 258
 
 
-def _header(typ: int, l: int) -> bytes:
+def _header(typ: int, length: int) -> bytes:
     from struct import pack
 
-    if l < 24:
-        return pack(">B", typ + l)
-    elif l < 2**8:
-        return pack(">BB", typ + 24, l)
-    elif l < 2**16:
-        return pack(">BH", typ + 25, l)
-    elif l < 2**32:
-        return pack(">BI", typ + 26, l)
-    elif l < 2**64:
-        return pack(">BQ", typ + 27, l)
+    if length < 24:
+        return pack(">B", typ + length)
+    elif length < 2**8:
+        return pack(">BB", typ + 24, length)
+    elif length < 2**16:
+        return pack(">BH", typ + 25, length)
+    elif length < 2**32:
+        return pack(">BI", typ + 26, length)
+    elif length < 2**64:
+        return pack(">BQ", typ + 27, length)
     else:
         raise NotImplementedError  # Length not supported
 
