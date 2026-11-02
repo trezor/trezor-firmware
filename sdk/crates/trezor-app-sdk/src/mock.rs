@@ -304,6 +304,8 @@ impl WireV1 for DummyWire {
     }
 }
 
+/// Stub — Core has asked the app to stop: every UI call answers with the stop
+/// signal, as it would once a stop is pending.
 struct DummyUi;
 
 impl UiV1 for DummyUi {
@@ -311,7 +313,7 @@ impl UiV1 for DummyUi {
         &self,
         _request: TrezorUiEnum<'a>,
     ) -> FastResult<TrezorUiResult, WireError> {
-        unimplemented!("not exercised by the current test suite")
+        Err(WireError::Stopped).into()
     }
 
     extern "C" fn init_progress<'a>(
@@ -319,19 +321,19 @@ impl UiV1 for DummyUi {
         _label: StrSlice<'a>,
         _total: u32,
     ) -> FastResult<(), WireError> {
-        unimplemented!("not exercised by the current test suite")
+        Err(WireError::Stopped).into()
     }
 
     extern "C" fn step_progress(&self, _units: u32) -> FastResult<(), WireError> {
-        unimplemented!("not exercised by the current test suite")
+        Err(WireError::Stopped).into()
     }
 
     extern "C" fn label_progress<'a>(&self, _label: StrSlice<'a>) -> FastResult<(), WireError> {
-        unimplemented!("not exercised by the current test suite")
+        Err(WireError::Stopped).into()
     }
 
     extern "C" fn end_progress(&self) -> FastResult<(), WireError> {
-        unimplemented!("not exercised by the current test suite")
+        Err(WireError::Stopped).into()
     }
 }
 
