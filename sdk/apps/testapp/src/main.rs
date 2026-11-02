@@ -13,8 +13,7 @@ extern crate alloc;
 
 use prost::Message;
 use trezor_app_sdk::{
-    Error, Result, ResultExt, WireDecode, WireEncode, debug, error, wire_handler,
-    wire_receive_wire_start,
+    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_handler, wire_receive,
 };
 
 pub(crate) mod alloc_types;
@@ -180,11 +179,8 @@ wire_handler!(
 
 #[unsafe(no_mangle)]
 pub fn app() -> Result<()> {
-    loop {
-        debug!("Waiting for wire message");
-        let (id, data) = wire_receive_wire_start().c()?;
-        handle_wire_message(id as i32, &data).c()?;
-    }
+    let (id, data) = wire_receive().c()?;
+    handle_wire_message(id as i32, &data).c()
 }
 
 /// Dispatches one wire request to its handler.
