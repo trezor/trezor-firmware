@@ -284,6 +284,11 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     // the 60 MHz phy60m_ck the PHY produces). The SBS PHY-tuner register is
     // writable from here because the SBS peripheral clock is enabled in
     // SystemInit(). The D+/D- lines use the PHY's dedicated pins, not GPIO.
+    //
+    // In non-secure mode the PWR USB supply control and the SBS PHY tuner are
+    // secure, so the same sequence runs in the secure monitor instead
+    // (usb_power_init).
+#ifdef SECURE_MODE
     {
       // OTG_HS PHY reference clock: HSE/2 = 48 MHz / 2 = 24 MHz. This is a
       // clean, crystal-accurate 24 MHz that matches the OTGPHYREFCKSEL_24M
@@ -307,6 +312,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 
       HAL_PWREx_EnableUSBOTGHSPhy();
     }
+#endif
 
 #else // !USE_USB_HS_IN_FS && !USE_USB_HS_INTERNAL_PHY
 

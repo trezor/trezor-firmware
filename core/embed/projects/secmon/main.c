@@ -65,10 +65,26 @@
 #if defined(USE_USB_HS) && !defined(USE_USB_HS_IN_FS)
 void usb_power_init(void) {
 #if defined(STM32H5)
+  // OTG_HS embedded PHY bring-up, in the order of the CubeMX reference. The
+  // PWR USB supply control and the SBS PHY tuner are secure, so the
+  // non-secure kernel cannot do this in HAL_PCD_MspInit; without the PHY
+  // enabled the OTG core never leaves its soft reset.
+  //
+  // OTG_HS kernel clock and PHY reference clock: HSE/2 = 24 MHz.
+  __HAL_RCC_OTGHS_CONFIG(RCC_OTGHSCLKSOURCE_HSE_DIV2);
+
   // The STM32H5 PWR domain is always clocked; there is no RCC PWR clock gate.
-  // The OTG_HS PHY itself is brought up in HAL_PCD_MspInit (usbd_conf.c).
   HAL_PWREx_EnableUSBVoltageDetector();
   HAL_PWREx_EnableVddUSB();
+
+  __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
+  __HAL_RCC_OTGPHY_CLK_ENABLE();
+  __HAL_RCC_OTGPHY_CONFIG(RCC_OTGPHYREFCKCLKSOURCE_24M);
+
+  HAL_SBS_SetOTGPHYDisconnectThreshold(SBS_OTG_HS_PHY_DISCONNECT_5_9PERCENT);
+  HAL_SBS_SetOTGPHYSquelchThreshold(SBS_OTG_HS_PHY_SQUELCH_15PERCENT);
+
+  HAL_PWREx_EnableUSBOTGHSPhy();
 #else
   __HAL_RCC_PWR_CLK_ENABLE();
   // Enable VDDUSB
