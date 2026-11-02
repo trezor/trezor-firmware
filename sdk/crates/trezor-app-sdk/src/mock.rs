@@ -273,27 +273,29 @@ impl WireV1 for DummyWire {
     }
 }
 
+/// Stub — Core has asked the app to stop: every UI call answers with the stop
+/// signal, as it would once a stop is pending.
 struct DummyUi;
 
 impl UiV1 for DummyUi {
     extern "C" fn ui_call<'a>(&self, _request: TrezorUiEnum<'a>) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
+        Err(CoreServiceError::StopApplication).into()
     }
 
     extern "C" fn init_progress<'a>(&self, _label: StrSlice<'a>, _total: u32) -> ServiceResult<()> {
-        unimplemented!("not exercised by the current test suite")
+        Err(CoreServiceError::StopApplication).into()
     }
 
     extern "C" fn step_progress(&self, _units: u32) -> ServiceResult<()> {
-        unimplemented!("not exercised by the current test suite")
+        Err(CoreServiceError::StopApplication).into()
     }
 
     extern "C" fn label_progress<'a>(&self, _label: StrSlice<'a>) -> ServiceResult<()> {
-        unimplemented!("not exercised by the current test suite")
+        Err(CoreServiceError::StopApplication).into()
     }
 
     extern "C" fn end_progress(&self) -> ServiceResult<()> {
-        unimplemented!("not exercised by the current test suite")
+        Err(CoreServiceError::StopApplication).into()
     }
 }
 
