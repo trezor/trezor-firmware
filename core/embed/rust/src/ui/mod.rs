@@ -42,6 +42,8 @@ pub mod ui_prodtest;
 pub mod ui_common;
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;
+#[cfg(all(feature = "micropython", feature = "app_loading"))]
+pub mod ui_modui;
 
 pub use ui_common::CommonUI;
 #[cfg(feature = "ui_performance_overlay")]

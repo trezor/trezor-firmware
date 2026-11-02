@@ -57,6 +57,7 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     hint: Option<TString<'static>>,
     verb: Option<TString<'static>>,
     hold: bool,
+    page_counter: bool,
     extra_menu_label: Option<TString<'static>>,
     cancel_menu_label: Option<TString<'static>>,
     external_menu: bool,
@@ -84,6 +85,8 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
 
     if let Some(hint) = hint {
         value_screen = value_screen.with_hint(Hint::new_instruction(hint, Some(theme::ICON_INFO)));
+    } else if page_counter {
+        value_screen = value_screen.with_hint(Hint::new_page_counter());
     }
     let content_value = value_screen.map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
