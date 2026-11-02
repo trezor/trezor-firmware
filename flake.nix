@@ -72,10 +72,12 @@
           src = pkgs.fetchFromGitHub {
             owner = "STMicroelectronics";
             repo = "OpenOCD";
-            rev = "openocd-cubeide-v1.13.0";
-            sha256 = "a811402e19f0bfe496f6eecdc05ecea57f79a323879a810efaaff101cb0f420f";
+            # v2.1.0 adds the STM32H5E/H5F (RM0517) flash support needed for
+            # STM32H5F5; earlier releases only know H503 and H56x/H57x.
+            rev = "openocd-cubeide-v2.1.0";
+            sha256 = "sha256-1upCnj0QUTUc/t0tUt7sl+bjFq1ryLb455gr5Mls4UI=";
           };
-          version = "stm-cubeide-v1.13.0";
+          version = "stm-cubeide-v2.1.0";
           nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ pkgs.autoreconfHook ];
         });
         moneroTestsPatched = pkgs.runCommandCC "monero_trezor_tests" { } ''

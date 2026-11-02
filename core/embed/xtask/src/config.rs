@@ -64,6 +64,29 @@ impl ModelConfig {
             mcu => Err(anyhow!("Unknown MCU: {mcu}")),
         }
     }
+
+    /// OpenOCD interface script for the ST-LINK probe.
+    ///
+    /// `interface/stlink.cfg` loads the ST-LINK as a high-level adapter (hla),
+    /// which only offers the `hla_swd` transport. The STM32H5 needs it loaded
+    /// as a DAP adapter so that `dapdirect_swd` is available.
+    pub fn openocd_interface(&self) -> &'static str {
+        match self.mcu.as_str() {
+            "stm32h5f5" => "interface/stlink-dap.cfg",
+            _ => "interface/stlink.cfg",
+        }
+    }
+
+    /// OpenOCD SWD transport.
+    ///
+    /// The STM32H5 target script rejects `hla_swd`: the hla transport cannot
+    /// handle the multiple access ports of the TrustZone-enabled debug port.
+    pub fn openocd_transport(&self) -> &'static str {
+        match self.mcu.as_str() {
+            "stm32h5f5" => "dapdirect_swd",
+            _ => "hla_swd",
+        }
+    }
 }
 
 pub struct Peripheral {
