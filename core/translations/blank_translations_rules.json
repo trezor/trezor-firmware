@@ -331,7 +331,6 @@
     "exact": [
       "backup__it_should_be_backed_up_now",
       "backup__recover_anytime",
-      "backup__title_backup_wallet",
       "confirm_total__title_sending_from",
       "fido__wanna_erase_credentials",
       "homescreen__click_to_connect",

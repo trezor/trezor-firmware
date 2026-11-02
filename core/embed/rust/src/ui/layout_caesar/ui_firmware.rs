@@ -644,7 +644,7 @@ impl FirmwareUI for UICaesar {
             .with_confirm_btn(Some(ButtonDetails::text(TR::buttons__back_up.into())));
         let frame = ScrollableFrame::new(content).with_page_titles([
             TR::words__title_success.into(),
-            TR::backup__title_backup_wallet.into(),
+            TR::reset__recovery_wallet_backup_title.into(),
         ]);
         Ok(RootComponent::new(frame))
     }

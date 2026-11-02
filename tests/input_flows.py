@@ -4111,7 +4111,7 @@ class InputFlowResetSkipBackup(InputFlowBase):
         # second page and back with "Shift"
         self.debug.press_right()
         layout = self.debug.read_layout()
-        assert layout.title() == TR.backup__title_backup_wallet
+        assert layout.title() == TR.reset__recovery_wallet_backup_title
         assert TR.backup__recover_anytime in layout.text_content()
         self.debug.press_right_with_shift()
         layout = self.debug.read_layout()
