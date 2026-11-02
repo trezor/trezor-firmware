@@ -54,14 +54,6 @@ impl ModelConfig {
             mcu => Err(anyhow!("Unknown MCU: {mcu}")),
         }
     }
-
-    pub fn openocd_target(&self) -> Result<&'static str> {
-        match self.mcu.as_str() {
-            "stm32f427" | "stm32f429" => Ok("target/stm32f4x.cfg"),
-            "stm32u58" | "stm32u5g" | "stm32u5a" => Ok("target/stm32u5x.cfg"),
-            mcu => Err(anyhow!("Unknown MCU: {mcu}")),
-        }
-    }
 }
 
 pub struct Peripheral {

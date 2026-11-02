@@ -8,6 +8,7 @@ pub mod flash;
 pub mod helpers;
 pub mod memusage;
 pub mod model;
+pub mod openocd;
 pub mod options;
 pub mod postbuild;
 pub mod prebuild;
