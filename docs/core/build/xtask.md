@@ -313,6 +313,22 @@ xtask combine prodtest -m t3w1
 xtask flash   prodtest -m t3w1 --combined
 ```
 
+### Checking the connected device
+
+Before writing, `xtask flash` and `xtask flash-erase` check that the connected
+device is a `-m` model, so that flashing for one model cannot hit another:
+
+- The MCU's `DEV_ID` must be the one the model's MCU reports. OpenOCD's target
+  config alone only tells F4 from U5, so this tells the U5 variants apart.
+- If the device has board capabilities (written by the boardloader at
+  `BOARDCAPS_START`), the model they name must be the `-m` one. This tells
+  apart models sharing an MCU, like T2T1 and T2B1.
+
+A device without board capabilities (blank flash, or a boardloader too old to
+have them) passes with a warning that only the MCU was confirmed.
+`--skip-device-check` skips the check, e.g. to move a board to another model
+on purpose. `xtask reset` does not check, since it writes nothing.
+
 ## Tips and common pitfalls
 
 - Omit `--board` to use the model's default board.

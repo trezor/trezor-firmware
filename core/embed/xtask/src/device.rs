@@ -1,0 +1,210 @@
+//! Checks that the device on the debug probe is the model being flashed.
+//!
+//! The debug probe's target config only tells MCU families apart (F4 vs U5),
+//! but several models share one family. Before writing, a short read-only
+//! session reads two things from the device:
+//!
+//! * the MCU's `DEV_ID`, which tells the U5 variants apart, and
+//! * the board capabilities the boardloader stores at `BOARDCAPS_START`, which
+//!   name the model the boardloader was built for.
+//!
+//! A mismatch in either refuses the operation. Missing or unreadable board
+//! capabilities (blank flash, or a boardloader too old to have them) only
+//! confirm the MCU, and a warning says so.
+
+use std::fs;
+
+use anyhow::{Context, Result, anyhow, ensure};
+
+use crate::args::Model;
+use crate::{helpers, openocd};
+
+/// Header of the board capabilities block.
+const CAPABILITIES_HEADER: &[u8] = b"TRZC";
+/// Tag that ends the board capabilities.
+const TAG_TERMINATOR: u8 = 0x00;
+/// Tag of the four-character model name, e.g. `T3W1`.
+const TAG_MODEL_NAME: u8 = 0x02;
+
+/// Fails unless the connected device is a `model` device, as far as it can
+/// be told -- see the module documentation.
+pub fn check(model: Model, skip: bool) -> Result<()> {
+    if skip {
+        println!("Skipping the check of the connected device");
+        return Ok(());
+    }
+
+    let config = model.config()?;
+    let (idcode_address, expected) = config.mcu_dev_id()?;
+
+    let memory_ld = model.model_memory_ld()?;
+    let content = fs::read_to_string(&memory_ld)
+        .with_context(|| format!("Failed to read `{}`", memory_ld.display()))?;
+    let caps_start = helpers::read_symbol_from_content(&content, "BOARDCAPS_START")?;
+    let caps_size = helpers::read_symbol_from_content(&content, "BOARDCAPS_MAXSIZE")?;
+
+    println!("Checking the connected device");
+    let idcode = openocd::read_memory(model, idcode_address, 4)
+        .context("Failed to read the MCU's IDCODE")?;
+    check_mcu(model.model_id(), &config.mcu, expected, dev_id(&idcode)?)?;
+
+    match openocd::read_memory(model, caps_start, caps_size).map(|caps| board_name(&caps)) {
+        Ok(Some(board)) => {
+            check_board(model.model_id(), &board)?;
+            println!(
+                "Connected device: {} with a {board} boardloader",
+                config.mcu
+            );
+        }
+        Ok(None) => println!(
+            "Warning: no board capabilities at 0x{caps_start:08X} (blank flash or an old \
+             boardloader), so only the MCU ({}) is confirmed, not the model",
+            config.mcu
+        ),
+        Err(error) => println!(
+            "Warning: could not read the board capabilities at 0x{caps_start:08X} ({error:#}), \
+             so only the MCU ({}) is confirmed, not the model",
+            config.mcu
+        ),
+    }
+    Ok(())
+}
+
+/// The `DEV_ID` field of a `DBGMCU_IDCODE` read.
+fn dev_id(idcode: &[u8]) -> Result<u16> {
+    let idcode: [u8; 4] = idcode
+        .try_into()
+        .map_err(|_| anyhow!("the IDCODE read is not four bytes"))?;
+    Ok((u32::from_le_bytes(idcode) & 0xFFF) as u16)
+}
+
+/// The model name in board capabilities, if they are present and have one.
+///
+/// Walks the tag-length-value list the same way the firmware does: a header,
+/// then `tag, length, data` until a terminator or the end of the area.
+fn board_name(caps: &[u8]) -> Option<String> {
+    let mut rest = caps.strip_prefix(CAPABILITIES_HEADER)?;
+    while let [tag, length, data @ ..] = rest {
+        let value = data.get(..*length as usize)?;
+        match *tag {
+            TAG_TERMINATOR => return None,
+            TAG_MODEL_NAME if value.len() == 4 => {
+                return Some(String::from_utf8_lossy(value).into_owned());
+            }
+            _ => {}
+        }
+        rest = &data[value.len()..];
+    }
+    None
+}
+
+/// Fails unless the device's `found` DEV_ID is the `expected` one of
+/// `model`'s MCU.
+fn check_mcu(model: &str, mcu: &str, expected: u16, found: u16) -> Result<()> {
+    ensure!(
+        found == expected,
+        "the connected MCU reports DEV_ID 0x{found:03X}, but {model} has an {mcu} \
+         (DEV_ID 0x{expected:03X}) -- is another model connected? \
+         Pass --skip-device-check to proceed anyway"
+    );
+    Ok(())
+}
+
+/// Fails unless the `board` named by the device's board capabilities is
+/// `model`.
+fn check_board(model: &str, board: &str) -> Result<()> {
+    ensure!(
+        board == model,
+        "the connected device has a {board} boardloader, not a {model} one -- is \
+         another model connected? Pass --skip-device-check to proceed anyway"
+    );
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{board_name, check_board, check_mcu, dev_id};
+
+    /// Board capabilities as the boardloader lays them out, for `model`.
+    fn caps(model: &str) -> Vec<u8> {
+        let mut caps = b"TRZC".to_vec();
+        caps.extend([0x02, 4]);
+        caps.extend(model.as_bytes());
+        caps.extend([0x03, 4, 2, 1, 0, 0]);
+        caps.extend([0x00, 0]);
+        caps.resize(0x100, 0xFF);
+        caps
+    }
+
+    #[test]
+    fn reads_the_model_name() {
+        assert_eq!(board_name(&caps("T3W1")).as_deref(), Some("T3W1"));
+    }
+
+    #[test]
+    fn finds_the_model_name_after_other_tags() {
+        let mut caps = b"TRZC".to_vec();
+        caps.extend([0x03, 4, 2, 1, 0, 0, 0x01, 0]);
+        caps.extend([0x02, 4]);
+        caps.extend(b"T2B1");
+        caps.extend([0x00, 0]);
+
+        assert_eq!(board_name(&caps).as_deref(), Some("T2B1"));
+    }
+
+    #[test]
+    fn erased_flash_has_no_model_name() {
+        assert_eq!(board_name(&[0xFF; 0x100]), None);
+    }
+
+    #[test]
+    fn stops_at_the_terminator() {
+        let mut caps = b"TRZC".to_vec();
+        caps.extend([0x00, 0, 0x02, 4]);
+        caps.extend(b"T3W1");
+
+        assert_eq!(board_name(&caps), None);
+    }
+
+    #[test]
+    fn rejects_a_field_running_past_the_area() {
+        let mut caps = b"TRZC".to_vec();
+        caps.extend([0x02, 4]);
+        caps.extend(b"T3");
+
+        assert_eq!(board_name(&caps), None);
+    }
+
+    #[test]
+    fn takes_the_dev_id_from_the_idcode() {
+        // DBGMCU_IDCODE 0x10016476, little-endian: REV_ID 0x1001, DEV_ID 0x476.
+        assert_eq!(dev_id(&[0x76, 0x64, 0x01, 0x10]).unwrap(), 0x476);
+    }
+
+    #[test]
+    fn requires_a_four_byte_idcode() {
+        assert!(dev_id(&[0x76, 0x64]).is_err());
+    }
+
+    #[test]
+    fn accepts_the_matching_device() {
+        assert!(check_mcu("T3W1", "stm32u5g", 0x476, 0x476).is_ok());
+        assert!(check_board("T3W1", "T3W1").is_ok());
+    }
+
+    #[test]
+    fn rejects_another_mcu() {
+        // A T3T1 (STM32U585) connected while flashing for a T3W1.
+        let error = check_mcu("T3W1", "stm32u5g", 0x476, 0x482).unwrap_err();
+
+        assert!(error.to_string().contains("DEV_ID 0x482"));
+    }
+
+    #[test]
+    fn rejects_another_model_on_the_same_mcu() {
+        // T2T1 and T2B1 share the STM32F427; only the boardloader tells them apart.
+        let error = check_board("T2B1", "T2T1").unwrap_err();
+
+        assert!(error.to_string().contains("T2T1 boardloader"));
+    }
+}
