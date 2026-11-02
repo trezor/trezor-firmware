@@ -31,7 +31,7 @@ use crate::{
     uformat,
 };
 use prost::Message;
-use trezor_app_sdk::{Error, Result, ResultExt, WireEncode, unwrap, wire_request_raw};
+use trezor_app_sdk::{Error, Result, ResultExt, WireEncode, unwrap, wire_call};
 use trezor_app_sdk::{
     crypto,
     crypto::{HasherExt as _, HashingAlgorithm},
@@ -358,7 +358,7 @@ fn process_contract(
 
 pub(crate) fn request_contract() -> Result<(RawContractType, Vec<u8>)> {
     let req_bytes = ProstCodec::encode(&ContractRequest {});
-    let (id, data) = wire_request_raw(&req_bytes, MessageType::ContractRequest as u16).c()?;
+    let (id, data) = wire_call(&req_bytes, MessageType::ContractRequest as u16).c()?;
 
     let contract_type = match (id as i32).try_into() {
         Ok(MessageType::TransferContract) => RawContractType::TransferContract,
