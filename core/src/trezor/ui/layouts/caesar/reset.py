@@ -284,7 +284,7 @@ def show_intro_backup(num_of_words: int | None) -> Awaitable[None]:
 
     return confirm_action(
         "backup_intro",
-        title=TR.backup__title_backup_wallet,
+        title=TR.reset__recovery_wallet_backup_title,
         verb=TR.buttons__continue,
         description=description,
         verb_cancel=None,

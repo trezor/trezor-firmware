@@ -150,12 +150,6 @@
       "Delizia": "Wallet backup completed.",
       "Eckhart": "Wallet backup completed."
     },
-    "backup__title_backup_wallet": {
-      "Bolt": "",
-      "Caesar": "Back up wallet",
-      "Delizia": "",
-      "Eckhart": ""
-    },
     "backup__title_create_wallet_backup": "Create wallet backup",
     "backup__title_skip": {
       "Bolt": "",
