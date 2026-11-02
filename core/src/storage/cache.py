@@ -28,7 +28,6 @@ else:
     _PROTOCOL_CACHE = cache_codec
 
 _PROTOCOL_CACHE.initialize()
-_SESSIONLESS_CACHE.clear()
 
 _ALL_CACHES: Sequence[DataCache] = _PROTOCOL_CACHE.get_sessions() + [_SESSIONLESS_CACHE]
 
@@ -87,12 +86,6 @@ homescreen_shown: object | None = None
 # Timestamp of last autolock activity.
 # Here to persist across main loop restart between workflows.
 autolock_last_touch: int | None = None
-
-
-# Either direction can leave a cache whose ciphertext reads back as plaintext: `encrypt`
-# sets `is_encrypted` last, `decrypt` clears it before verifying the tag. Continuing would
-# serve that to `get_seed`. The caches deliberately do not repair themselves -- halting is
-# the whole mechanism, so do not narrow the `except`, and do not skip to the next cache.
 
 
 def encrypt_cache() -> None:

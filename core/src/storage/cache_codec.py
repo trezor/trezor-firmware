@@ -2,12 +2,15 @@ import builtins
 from micropython import const
 from typing import TYPE_CHECKING
 
+from storage.cache_codec_keys import (
+    APP_COMMON_AUTHORIZATION_TYPE,
+    CACHE_ENCRYPTED_COUNT_CODEC,
+)
 from storage.cache_common import DataCache
 from trezor import utils
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from collections.abc import Sequence
     from typing import TypeVar
 
     T = TypeVar("T")
@@ -23,24 +26,29 @@ class SessionCache(DataCache):
     or are specific to a `protocol_v1` session.
     """
 
+    encrypted_count = CACHE_ENCRYPTED_COUNT_CODEC
+
     def __init__(self) -> None:
         self.session_id = bytearray(_SESSION_ID_LENGTH)
+        self.session_id[:] = b""  # no id yet; keeps the capacity, allocates nothing
         if utils.BITCOIN_ONLY:
-            self.fields = (
+            self.field_sizes = (
                 64,  # APP_COMMON_SEED
+                32,  # APP_COMMON_NONCE
+                0,  # APP_CARDANO_ICARUS_SECRET (unused)
+                0,  # APP_CARDANO_ICARUS_TREZOR_SECRET (unused)
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
-                32,  # APP_COMMON_NONCE
             )
         else:
-            self.fields = (
+            self.field_sizes = (
                 64,  # APP_COMMON_SEED
-                2,  # APP_COMMON_AUTHORIZATION_TYPE
-                128,  # APP_COMMON_AUTHORIZATION_DATA
                 32,  # APP_COMMON_NONCE
-                0,  # APP_COMMON_DERIVE_CARDANO
                 96,  # APP_CARDANO_ICARUS_SECRET
                 96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
+                2,  # APP_COMMON_AUTHORIZATION_TYPE
+                128,  # APP_COMMON_AUTHORIZATION_DATA
+                0,  # APP_COMMON_DERIVE_CARDANO
                 0,  # APP_MONERO_LIVE_REFRESH
                 4 + 4,  # APP_EXTAPP_IDS
             )
@@ -56,14 +64,7 @@ class SessionCache(DataCache):
         # export it as immutable bytes
         return bytes(self.session_id)
 
-    def fields_to_encrypt(self) -> Sequence[int]:
-        from storage.cache_codec_keys import CACHE_ENCRYPTED_KEYS_CODEC
-
-        return CACHE_ENCRYPTED_KEYS_CODEC
-
     def is_preauthorized(self) -> bool:
-        from storage.cache_codec_keys import APP_COMMON_AUTHORIZATION_TYPE
-
         return self.is_set(APP_COMMON_AUTHORIZATION_TYPE)
 
     def clear(self) -> None:
@@ -76,18 +77,10 @@ _SESSIONS: list[SessionCache] = []
 
 
 def initialize() -> None:
-    # Allocation notes:
     # Instantiation of any DataCache subclass should make as little garbage
     # as possible so that the preallocated bytearrays are compact in memory.
-    # That is why the initialization is two-step: first, create appropriately
-    # sized bytearrays, then call `clear()` on all existing objects, which
-    # resets them to zero length. The `clear()` function uses `arr[:]`, which
-    # allocates a slice.
     for _ in range(_MAX_SESSIONS_COUNT):
         _SESSIONS.append(SessionCache())
-
-    for session in _SESSIONS:
-        session.clear()
 
 
 def get_sessions() -> list[SessionCache]:

@@ -3,31 +3,23 @@ from micropython import const
 from trezor import utils
 
 if utils.USE_THP:
-    # Cache keys for THP session
-    CHANNEL_ID = const(0)
-    SESSION_ID = const(1)
-    SESSION_STATE = const(2)
-    LAST_USAGE = const(3)
-    APP_COMMON_SEED = const(4)
-    APP_COMMON_AUTHORIZATION_TYPE = const(5)
-    APP_COMMON_AUTHORIZATION_DATA = const(6)
-    APP_COMMON_NONCE = const(7)
+    CACHE_ENCRYPTED_COUNT_THP = const(4)
+
+    # Cache keys for THP session, encrypted ones first
+    APP_COMMON_SEED = const(0)
+    APP_COMMON_NONCE = const(1)
     if not utils.BITCOIN_ONLY:
-        APP_COMMON_DERIVE_CARDANO = const(8)
-        APP_CARDANO_ICARUS_SECRET = const(9)
-        APP_CARDANO_ICARUS_TREZOR_SECRET = const(10)
+        APP_CARDANO_ICARUS_SECRET = const(2)
+        APP_CARDANO_ICARUS_TREZOR_SECRET = const(3)
+
+    # non-encrypted keys
+    CHANNEL_ID = const(4)
+    SESSION_ID = const(5)
+    SESSION_STATE = const(6)
+    LAST_USAGE = const(7)
+    APP_COMMON_AUTHORIZATION_TYPE = const(8)
+    APP_COMMON_AUTHORIZATION_DATA = const(9)
+    if not utils.BITCOIN_ONLY:
+        APP_COMMON_DERIVE_CARDANO = const(10)
         APP_MONERO_LIVE_REFRESH = const(11)
         APP_EXTAPP_IDS = const(12)
-
-    if utils.BITCOIN_ONLY:
-        CACHE_ENCRYPTED_KEYS_THP = (
-            APP_COMMON_SEED,
-            APP_COMMON_NONCE,
-        )
-    else:
-        CACHE_ENCRYPTED_KEYS_THP = (
-            APP_COMMON_SEED,
-            APP_COMMON_NONCE,
-            APP_CARDANO_ICARUS_SECRET,
-            APP_CARDANO_ICARUS_TREZOR_SECRET,
-        )
