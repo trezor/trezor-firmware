@@ -4,14 +4,14 @@
     "allowedLayouts": [ "Eckhart" ],
     "description": "BLE related strings only in Eckhart"
   },
-    {
+  {
     "prefix": "thp__nfc_",
     "allowedLayouts": [ "Eckhart" ],
     "description": "THP NFC related strings only in Eckhart"
   },
   {
     "prefix": "thp__",
-    "allowedLayouts": [ "Delizia","Eckhart" ],
+    "allowedLayouts": [ "Delizia", "Eckhart" ],
     "description": "THP related strings only in Delizia and Eckhart"
   },
   {
@@ -106,6 +106,7 @@
       "buttons__disconnect",
       "buttons__forget",
       "buttons__review",
+      "menu__turn_off",
       "regulatory__title",
       "wipe_code__change",
       "wipe_code__remove",
