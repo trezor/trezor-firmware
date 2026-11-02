@@ -172,7 +172,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_backup__not_recommend;
   MP_QSTR_backup__recover_anytime;
   MP_QSTR_backup__title_backup_completed;
-  MP_QSTR_backup__title_backup_wallet;
   MP_QSTR_backup__title_create_wallet_backup;
   MP_QSTR_backup__title_skip;
   MP_QSTR_backup__type_create;
@@ -705,7 +704,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__by_continuing;
   MP_QSTR_reset__cancel_create_wallet;
   MP_QSTR_reset__check_backup_instructions;
-  MP_QSTR_reset__check_backup_title;
   MP_QSTR_reset__check_group_share_title_template;
   MP_QSTR_reset__check_share_backup_template;
   MP_QSTR_reset__check_share_title_template;
