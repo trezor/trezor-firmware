@@ -154,12 +154,12 @@
     },
     "backup__new_wallet_created": {
       "Bolt": "",
-      "Caesar": "Peněženka byla vytvořena.",
-      "Delizia": "Peněženka byla vytvořena.\n",
-      "Eckhart": "Peněženka byla vytvořena.\n"
+      "Caesar": "Peněženka vytvořena.",
+      "Delizia": "Peněženka vytvořena.",
+      "Eckhart": "Peněženka vytvořena."
     },
     "backup__new_wallet_successfully_created": {
-      "Bolt": "Peněženka byla vytvořena.",
+      "Bolt": "Peněženka úspěšně vytvořena.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""

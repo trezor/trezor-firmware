@@ -169,9 +169,9 @@
     },
     "backup__new_wallet_created": {
       "Bolt": "",
-      "Caesar": "Carteira criada.\n",
-      "Delizia": "Carteira criada.\n",
-      "Eckhart": "Carteira criada.\n"
+      "Caesar": "Carteira criada.",
+      "Delizia": "Carteira criada.",
+      "Eckhart": "Carteira criada."
     },
     "backup__new_wallet_successfully_created": {
       "Bolt": "Carteira criada com sucesso.",
