@@ -17,6 +17,7 @@
 import hashlib
 
 import pytest
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
@@ -26,6 +27,8 @@ from .generated import messages as m
 from .testapp_ext import DEFAULT_BIP32_PATH, OPERATION_FAILED, SdkError, raises
 
 ADDRESS_N = parse_path(DEFAULT_BIP32_PATH)
+# All hardened, so it works on Ed25519 too.
+ACCOUNT_N = parse_path("m/44h/1h/0h")
 
 DIGESTS = [
     pytest.param(hashlib.sha256(b"message").digest(), id="sha256"),
@@ -36,24 +39,29 @@ DIGESTS = [
 # Paths outside the app's manifest (m/44'/1'/account'/change/address_index/**).
 FORBIDDEN_PATHS = [
     pytest.param("m/44h/0h/0h/0/0", id="other_coin"),
-    pytest.param("m/44h/1h/0h", id="account_level"),
     pytest.param("m/44h/1h/0/0/0", id="unhardened_account"),
     pytest.param("m", id="root"),
 ]
 
 
-def public_key(session: Session, instance_id: int) -> bytes:
-    return testapp_ext.get_public_key(session, instance_id, ADDRESS_N, False)
+def public_key(
+    session: Session, instance_id: int, curve: m.Curve = m.Curve.CurveSecp256k1
+) -> bytes:
+    return testapp_ext.get_public_key(session, instance_id, ADDRESS_N, False, curve)
 
 
 def check_signature(
-    signature: bytes, pubkey: bytes, digest: bytes, header_base: int
+    signature: bytes,
+    pubkey: bytes,
+    digest: bytes,
+    header_base: int,
+    curve: m.EcdsaCurve = m.EcdsaCurve.Secp256k1,
 ) -> int:
     """Checks a 65-byte header || r || s signature; returns its recovery id."""
     assert len(signature) == 65
     rs = signature[1:]
-    assert signing.ecdsa_verify(pubkey, m.EcdsaCurve.Secp256k1, rs, digest)
-    recid = signing.recovery_id(m.EcdsaCurve.Secp256k1, pubkey, rs, digest)
+    assert signing.ecdsa_verify(pubkey, curve, rs, digest)
+    recid = signing.recovery_id(curve, pubkey, rs, digest)
     assert signature[0] == header_base + recid
     return recid
 
@@ -134,8 +142,62 @@ def test_ecdsa_sign_digest_wrong_length(
         )
 
 
-def test_ed25519_sign_wrong_curve(session: Session, instance_id: int):
-    """The testapp's curve is secp256k1, so Core refuses Ed25519 signing."""
+@pytest.mark.parametrize("digest", DIGESTS)
+@pytest.mark.parametrize("compressed", [True, False])
+def test_ecdsa_sign_digest_nist256p1(
+    session: Session, instance_id: int, digest: bytes, compressed: bool
+):
+    signature = testapp_ext.ecdsa_sign_digest(
+        session,
+        instance_id,
+        ADDRESS_N,
+        digest,
+        compressed,
+        curve=m.EcdsaCurve.Nist256p1,
+    )
+    pubkey = public_key(session, instance_id, m.Curve.CurveNist256p1)
+    check_signature(
+        signature, pubkey, digest, 31 if compressed else 27, m.EcdsaCurve.Nist256p1
+    )
+
+
+def test_ecdsa_sign_digest_canonical_nist256p1(session: Session, instance_id: int):
+    """Canonical signatures are secp256k1 only."""
+    with raises(SdkError.DataError, OPERATION_FAILED):
+        testapp_ext.ecdsa_sign_digest(
+            session,
+            instance_id,
+            ADDRESS_N,
+            b"\x01" * 32,
+            False,
+            m.CanonicalSig.Ethereum,
+            m.EcdsaCurve.Nist256p1,
+        )
+
+
+# ============================================================================
+# ed25519_sign
+# ============================================================================
+
+
+@pytest.mark.parametrize("message", [b"message", bytes(range(256))])
+def test_ed25519_sign(session: Session, instance_id: int, message: bytes):
+    signature = testapp_ext.ed25519_sign(session, instance_id, ACCOUNT_N, message)
+    pubkey = testapp_ext.get_public_key(
+        session, instance_id, ACCOUNT_N, False, m.Curve.CurveEd25519
+    )
+    # raises on a bad signature
+    Ed25519PublicKey.from_public_bytes(pubkey).verify(signature, message)
+
+
+def test_ed25519_sign_empty(session: Session, instance_id: int):
+    """trezor-crypto refuses to sign an empty message."""
+    with raises(SdkError.DataError, OPERATION_FAILED):
+        testapp_ext.ed25519_sign(session, instance_id, ACCOUNT_N, b"")
+
+
+def test_ed25519_sign_unhardened(session: Session, instance_id: int):
+    """Ed25519 keys only exist on hardened paths."""
     with raises(SdkError.DataError, OPERATION_FAILED):
         testapp_ext.ed25519_sign(session, instance_id, ADDRESS_N, b"message")
 
