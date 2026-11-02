@@ -211,11 +211,7 @@ class SetupParams:
                 apply_settings(session, experimental_features=True)
 
     def load_app(self, session: Session) -> None:
-        """Load the modular app into `session`.
-
-        The instance ID is bound to the session that loaded the app, so this must
-        be the very session the tests then use to talk to the app.
-        """
+        """Load the modular app. The instance ID is valid in any session."""
         if not self.extapp_path:
             raise ValueError("--app option must be provided")
         path = Path(self.extapp_path)
