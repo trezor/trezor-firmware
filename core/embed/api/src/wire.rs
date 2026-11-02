@@ -8,6 +8,8 @@
 //! There is currently a single remote endpoint apps talk to: Core (the
 //! `CoreApp` system task).
 
+use core::sync::atomic::Ordering;
+
 use rkyv::Serialize;
 use rkyv::api::high::{HighSerializer, to_bytes_in_with_alloc};
 use rkyv::rancor::Failure;
@@ -52,15 +54,13 @@ enum RemoteSysTask {
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(u16)]
 pub(crate) enum CoreIpcService {
-    // Only Core sends it, to start a request; apps receive it.
-    #[allow(dead_code)]
-    WireStart = 0,
-    WireContinue = 1,
-    WireEnd = 2,
-    WireError = 3,
-    Ui = 4,
-    Progress = 5,
-    Crypto = 6,
+    Wire = 0,
+    WireError = 1,
+    Ui = 2,
+    Progress = 3,
+    Crypto = 4,
+    // Only Core sends it, to stop the app.
+    Lifecycle = 5,
 }
 
 /// Message id of a Core reply reporting a failed request.
@@ -107,6 +107,31 @@ fn receive_until(timeout: Timeout) -> Option<ReceivedMessage> {
     }
 }
 
+/// Fails if Core has asked the app to stop.
+fn check_not_stopped() -> Result<(), WireError> {
+    if app_state::get().stop_requested.load(Ordering::Relaxed) {
+        return Err(WireError::Stopped);
+    }
+    Ok(())
+}
+
+/// Waits for a message on `service`. A stop signal from Core can arrive
+/// at any time, and it overrides whatever the app is waiting for.
+fn receive(service: u16, timeout: Timeout) -> Result<ReceivedMessage, WireError> {
+    check_not_stopped()?;
+    match receive_until(timeout) {
+        Some(msg) if msg.service == u16::from(CoreIpcService::Lifecycle) => {
+            app_state::get()
+                .stop_requested
+                .store(true, Ordering::Relaxed);
+            Err(WireError::Stopped)
+        }
+        Some(msg) if msg.service == service => Ok(msg),
+        Some(_) => Err(WireError::UnexpectedService),
+        None => Err(WireError::Timeout),
+    }
+}
+
 /// Serializes `value` for [`ipc_call`], with a scratch arena local to this
 /// call. `rkyv::to_bytes` would instead cache its arena in a global static,
 /// i.e. in Core's memory, which the app's task can't access and which would
@@ -120,24 +145,23 @@ where
 }
 
 /// Sends `data` tagged `service`/`id` to Core and waits (up to `timeout_ms`)
-/// for a reply on the same service. The single low-level call primitive
-/// shared by [`WireV1Impl::wire_request`] and this crate's `crypto`/`ui`
-/// implementations — the one place the wire protocol is actually spoken.
+/// for a reply on the same service. The low-level call primitive of this
+/// crate's `crypto`/`ui` implementations.
 pub(crate) fn ipc_call(
     service: u16,
     id: u16,
     data: &[u8],
     timeout_ms: u32,
 ) -> Result<(u16, BoxedSlice<u8>), WireError> {
-    if sys::ipc::send(coreapp(), service, id, data).is_err() {
-        return Err(WireError::FailedToSend);
-    }
+    send(service, id, data)?;
+    let msg = receive(service, timeout(timeout_ms))?;
+    Ok((msg.id, msg.data))
+}
 
-    match receive_until(timeout(timeout_ms)) {
-        Some(msg) if msg.service == service => Ok((msg.id, msg.data)),
-        Some(_) => Err(WireError::UnexpectedService),
-        None => Err(WireError::Timeout),
-    }
+/// Sends `data` tagged `service`/`id` to Core, unless the app has to stop.
+fn send(service: u16, id: u16, data: &[u8]) -> Result<(), WireError> {
+    check_not_stopped()?;
+    sys::ipc::send(coreapp(), service, id, data).map_err(|_| WireError::FailedToSend)
 }
 
 /// Allocates this app's IPC inbox out of its own heap and registers it with
@@ -171,65 +195,25 @@ pub(crate) fn register_inbox(ipc_buffer_size: usize) {
 pub struct WireV1Impl;
 
 impl WireV1 for WireV1Impl {
-    extern "C" fn wire_receive_start(&self, timeout_ms: u32) -> FastResult<WireMessage, WireError> {
-        match receive_until(timeout(timeout_ms)) {
-            Some(msg) => Ok(WireMessage {
+    extern "C" fn wire_receive(&self, timeout_ms: u32) -> FastResult<WireMessage, WireError> {
+        receive(CoreIpcService::Wire.into(), timeout(timeout_ms))
+            .map(|msg| WireMessage {
                 id: msg.id,
                 data: msg.data,
             })
-            .into(),
-            None => Err(WireError::Timeout).into(),
-        }
+            .into()
     }
 
-    extern "C" fn wire_request<'a>(
-        &self,
-        id: u16,
-        data: Slice<'a, u8>,
-        timeout_ms: u32,
-    ) -> FastResult<WireMessage, WireError> {
-        match ipc_call(
-            CoreIpcService::WireContinue.into(),
-            id,
-            data.as_slice(),
-            timeout_ms,
-        ) {
-            Ok((id, data)) => Ok(WireMessage { id, data }).into(),
-            Err(e) => Err(e).into(),
-        }
-    }
-
-    extern "C" fn wire_respond<'a>(
-        &self,
-        response_id: u16,
-        data: Slice<'a, u8>,
-    ) -> FastResult<(), WireError> {
-        if sys::ipc::send(
-            coreapp(),
-            CoreIpcService::WireEnd.into(),
-            response_id,
-            data.as_slice(),
-        )
-        .is_ok()
-        {
-            Ok(()).into()
-        } else {
-            Err(WireError::FailedToSend).into()
-        }
+    extern "C" fn wire_send<'a>(&self, id: u16, data: Slice<'a, u8>) -> FastResult<(), WireError> {
+        send(CoreIpcService::Wire.into(), id, data.as_slice()).into()
     }
 
     extern "C" fn wire_error<'a>(&self, code: u16, message: Str<'a>) -> FastResult<(), WireError> {
-        if sys::ipc::send(
-            coreapp(),
+        send(
             CoreIpcService::WireError.into(),
             code,
             message.as_str().as_bytes(),
         )
-        .is_ok()
-        {
-            Ok(()).into()
-        } else {
-            Err(WireError::FailedToSend).into()
-        }
+        .into()
     }
 }
