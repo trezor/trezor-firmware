@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor import io
-from trezor.wire.errors import DataError
+from trezor.wire.errors import DataError, FirmwareError
 
 if __debug__:
     from trezor import log
@@ -17,18 +17,24 @@ if TYPE_CHECKING:
     from apps.common.paths import PathSchema
 
 # IPC services between Core and a running external app
-SERVICE_WIRE_START = 0
-SERVICE_WIRE_CONTINUE = 1
-SERVICE_WIRE_END = 2
-SERVICE_WIRE_ERROR = 3
-SERVICE_UI = 4
-SERVICE_PROGRESS = 5
-SERVICE_CRYPTO = 6
+SERVICE_WIRE = 0
+SERVICE_WIRE_ERROR = 1
+SERVICE_UI = 2
+SERVICE_PROGRESS = 3
+SERVICE_CRYPTO = 4
+SERVICE_LIFECYCLE = 5
+
+# message id on `SERVICE_LIFECYCLE`: the app must exit as soon as it can
+LIFECYCLE_ABORT = 0
 
 # message id of a Core reply reporting a failed request
 MSG_ID_ERROR = 0xFFFF
 
 _SLIP24_NAMESPACE = [b"SLIP-0024"]
+
+
+class ApplicationError(FirmwareError):
+    """The app crashed or broke the lifecycle protocol."""
 
 
 def describe(exception: BaseException) -> str:
@@ -39,15 +45,17 @@ def describe(exception: BaseException) -> str:
 
 
 class Session:
-    """State of a single `ExtAppMessage` exchange with a running external app."""
+    """State of one run of an external app."""
 
     def __init__(
         self,
         image: AppImage,
+        instance_id: int,
         curves: list[str],
         schemas: list[PathSchema],
     ) -> None:
         self.image = image
+        self.instance_id = instance_id
         self.task_id = image.task_id()
         # curves allowed by the app's manifest
         self.curves = curves
@@ -56,7 +64,11 @@ class Session:
         self.keychains: dict[str, Keychain] = {}
         # progress layout opened by the app via `SERVICE_PROGRESS`
         self.progress: ProgressLayout | None = None
-        # set once the app was stopped because of an error
+        # whether the app answered the host's last message
+        self.response_sent = False
+        # set once Core killed the app
+        self.stopped = False
+        # set once the app was killed because of an error
         self.dead = False
 
     async def keychain(self, curve: str) -> Keychain:
@@ -74,9 +86,13 @@ class Session:
     def send(self, service: int, message_id: int, data: AnyBytes) -> None:
         io.ipc_send(self.task_id, service, message_id, data)
 
+    def stop(self) -> None:
+        self.stopped = True
+        self.image.stop()
+
     def die(self, exception: Exception) -> NoReturn:
         self.dead = True
         if __debug__:
             log.error(__name__, f"Task died due to exception: {exception}")
-        self.image.stop()
+        self.stop()
         raise exception

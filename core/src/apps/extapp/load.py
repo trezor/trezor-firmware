@@ -133,8 +133,6 @@ async def load(msg: ExtAppLoad) -> ExtAppLoaded:
             log.exception(__name__, e)
             raise DataError("Failed to load app")
 
-    image.run()
-
     instance_id = random.uniform(2**32 - 1)
     cache_entry = ustruct.pack("<II", image.handle(), instance_id)
     context.cache_set(cc.APP_EXTAPP_IDS, cache_entry)
