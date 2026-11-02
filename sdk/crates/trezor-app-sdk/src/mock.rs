@@ -31,12 +31,7 @@ use crate::traits::syslog::{
     LogCallbackDyn as _, LogCallbackRef, LogLevel, LogRecord, SyslogV1, SyslogV1Vtable,
 };
 use crate::traits::trezor_v1::{TrezorApiV1, TrezorApiV1Struct, TrezorApiV1Vtable};
-use crate::traits::ui::{
-    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
-    ConfirmValueIntro, ConfirmWithInfo, RequestNumber, SelectMenu, ShowAddress, ShowDanger,
-    ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess, ShowWarning,
-    TrezorUiResult, UiV1, UiV1Vtable,
-};
+use crate::traits::ui::{StrSlice, TrezorUiEnum, TrezorUiResult, UiV1, UiV1Vtable};
 use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
 use crate::traits::wire::{FailureKind, WireMessage, WireV1, WireV1Vtable};
 
@@ -308,125 +303,19 @@ impl WireV1 for DummyWire {
 struct DummyUi;
 
 impl UiV1 for DummyUi {
-    extern "C" fn confirm_value<'a>(
-        &self,
-        _value: ConfirmValue<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
+    extern "C" fn ui_call<'a>(&self, _request: TrezorUiEnum<'a>) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn confirm_value_intro<'a>(
-        &self,
-        _value: ConfirmValueIntro<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
+    extern "C" fn init_progress<'a>(&self, _label: StrSlice<'a>, _total: u32) -> ServiceResult<()> {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn confirm_summary<'a>(
-        &self,
-        _value: ConfirmSummary<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
+    extern "C" fn step_progress(&self, _units: u32) -> ServiceResult<()> {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn confirm_action<'a>(
-        &self,
-        _value: ConfirmAction<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn select_menu<'a>(&self, _value: SelectMenu<'a>) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn confirm_properties<'a>(
-        &self,
-        _value: ConfirmProperties<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn show_properties<'a>(&self, _value: ShowProperties<'a>) -> ServiceResult<()> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn show_warning<'a>(&self, _value: ShowWarning<'a>) -> ServiceResult<()> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn show_info_with_cancel<'a>(
-        &self,
-        _value: ShowInfoWithCancel<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn show_mismatch<'a>(
-        &self,
-        _value: ShowMismatch<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn confirm_trade<'a>(
-        &self,
-        _value: ConfirmTrade<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn show_danger<'a>(&self, _value: ShowDanger<'a>) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn show_success<'a>(&self, _value: ShowSuccess<'a>) -> ServiceResult<()> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn request_number<'a>(
-        &self,
-        _value: RequestNumber<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn show_public_key<'a>(
-        &self,
-        _value: ShowPublicKey<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn confirm_with_info<'a>(
-        &self,
-        _value: ConfirmWithInfo<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn show_address<'a>(
-        &self,
-        _value: ShowAddress<'a>,
-    ) -> ServiceResult<TrezorUiResult> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn init_progress<'a>(
-        &self,
-        _description: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
-        _title: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
-        _indeterminate: bool,
-        _danger: bool,
-    ) -> ServiceResult<()> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn update_progress<'a>(
-        &self,
-        _description: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
-        _value: u32,
-    ) -> ServiceResult<()> {
+    extern "C" fn label_progress<'a>(&self, _label: StrSlice<'a>) -> ServiceResult<()> {
         unimplemented!("not exercised by the current test suite")
     }
 
