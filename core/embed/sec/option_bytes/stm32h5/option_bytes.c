@@ -42,7 +42,8 @@
 // option bytes that are NOT set by default and that the secure monitor needs:
 //
 //   * TZEN  = enabled (0xB4) — turns on TrustZone secure access.
-//   * Secure watermark (bank 1) covering the secret + boardloader sectors.
+//   * Secure watermark (bank 1) covering the secret + boardloader sectors;
+//     the bank 2 watermark is disabled.
 //   * HDP (bank 1) covering the secret sectors (hidden via SBS HDPL at
 //   runtime).
 //   * Secure boot address = BOARDLOADER_START.
@@ -66,12 +67,43 @@
 #define HDP_SECTOR_START SECRET_SECTOR_START
 #define HDP_SECTOR_END SECRET_SECTOR_END
 
+// Bank 2 has no secure watermark area (START > END disables the area).
+#define WMSEC2_SECTOR_START (FLASH_SECTOR_NB - 1)
+#define WMSEC2_SECTOR_END 0
+
+#define FLASH_SECWMR_VALUE(start, end)     \
+  (((end) << FLASH_SECWMR_SECWM_END_Pos) | \
+   ((start) << FLASH_SECWMR_SECWM_STRT_Pos))
+#define FLASH_SECWMR_MASK \
+  (FLASH_SECWMR_SECWM_END_Msk | FLASH_SECWMR_SECWM_STRT_Msk)
+
+#define FLASH_HDPR_VALUE(start, end) \
+  (((end) << FLASH_HDPR_HDP_END_Pos) | ((start) << FLASH_HDPR_HDP_STRT_Pos))
+#define FLASH_HDPR_MASK (FLASH_HDPR_HDP_END_Msk | FLASH_HDPR_HDP_STRT_Msk)
+
+static secbool flash_check_tzen(void) {
+  return sectrue *
+         ((FLASH->OPTSR2_CUR & FLASH_OPTSR2_TZEN_Msk) == OB_TZEN_ENABLE);
+}
+
 static secbool flash_check_option_bytes(void) {
-  // The secure monitor requires TrustZone to be enabled. Since the programming
-  // path below sets TZEN together with the secure watermark, HDP and secure
-  // boot address in a single option-byte launch, TZEN is a sufficient proxy for
-  // "already configured".
-  if ((FLASH->OPTSR2_CUR & FLASH_OPTSR2_TZEN_Msk) != OB_TZEN_ENABLE) {
+  if (sectrue != flash_check_tzen()) {
+    return secfalse;
+  }
+  if ((FLASH->SECWM1R_CUR & FLASH_SECWMR_MASK) !=
+      FLASH_SECWMR_VALUE(WMSEC_SECTOR_START, WMSEC_SECTOR_END)) {
+    return secfalse;
+  }
+  if ((FLASH->SECWM2R_CUR & FLASH_SECWMR_MASK) !=
+      FLASH_SECWMR_VALUE(WMSEC2_SECTOR_START, WMSEC2_SECTOR_END)) {
+    return secfalse;
+  }
+  if ((FLASH->HDP1R_CUR & FLASH_HDPR_MASK) !=
+      FLASH_HDPR_VALUE(HDP_SECTOR_START, HDP_SECTOR_END)) {
+    return secfalse;
+  }
+  if ((FLASH->SECBOOTR_CUR & FLASH_BOOTR_BOOTADD_Msk) !=
+      (BOARDLOADER_START & FLASH_BOOTR_BOOTADD_Msk)) {
     return secfalse;
   }
   return sectrue;
@@ -83,28 +115,41 @@ static void flash_set_option_bytes(void) {
 
   FLASH_OBProgramInitTypeDef ob = {0};
 
-  // Enable TrustZone (TZEN = 0xB4).
-  ob.OptionType = OPTIONBYTE_USER;
-  ob.USERType = OB_USER_TZEN;
-  ob.USERConfig = OB_TZEN_ENABLE;
-  HAL_FLASHEx_OBProgram(&ob);
+  if (sectrue != flash_check_tzen()) {
+    // The secure watermark and HDP option bytes cannot be programmed while
+    // TrustZone is disabled, and enabling TZEN resets both secure watermarks
+    // to cover the whole bank. So TrustZone is enabled in a launch of its own;
+    // the secure areas are programmed by the next call, once TZEN is active.
+    ob.OptionType = OPTIONBYTE_USER;
+    ob.USERType = OB_USER_TZEN;
+    ob.USERConfig = OB_TZEN_ENABLE;
+    HAL_FLASHEx_OBProgram(&ob);
+  } else {
+    // Secure watermark, bank 1: secret + boardloader sectors are secure.
+    // Everything else is made secure at runtime via SECBB (see tz_init).
+    ob.OptionType = OPTIONBYTE_WMSEC;
+    ob.Banks = FLASH_BANK_1;
+    ob.WMSecStartSector = WMSEC_SECTOR_START;
+    ob.WMSecEndSector = WMSEC_SECTOR_END;
+    HAL_FLASHEx_OBProgram(&ob);
 
-  // Secure watermark, bank 1: secret + boardloader sectors are secure.
-  memset(&ob, 0, sizeof(ob));
-  ob.OptionType = OPTIONBYTE_WMSEC;
-  ob.Banks = FLASH_BANK_1;
-  ob.WMSecStartSector = WMSEC_SECTOR_START;
-  ob.WMSecEndSector = WMSEC_SECTOR_END;
-  HAL_FLASHEx_OBProgram(&ob);
+    // Secure watermark, bank 2: disabled.
+    memset(&ob, 0, sizeof(ob));
+    ob.OptionType = OPTIONBYTE_WMSEC;
+    ob.Banks = FLASH_BANK_2;
+    ob.WMSecStartSector = WMSEC2_SECTOR_START;
+    ob.WMSecEndSector = WMSEC2_SECTOR_END;
+    HAL_FLASHEx_OBProgram(&ob);
 
-  // Hide-protection area, bank 1: the secret sectors. The area is actually
-  // hidden at runtime by advancing the HDPL (see sec/secret/stm32h5).
-  memset(&ob, 0, sizeof(ob));
-  ob.OptionType = OPTIONBYTE_HDP;
-  ob.Banks = FLASH_BANK_1;
-  ob.HDPStartSector = HDP_SECTOR_START;
-  ob.HDPEndSector = HDP_SECTOR_END;
-  HAL_FLASHEx_OBProgram(&ob);
+    // Hide-protection area, bank 1: the secret sectors. The area is actually
+    // hidden at runtime by advancing the HDPL (see sec/secret/stm32h5).
+    memset(&ob, 0, sizeof(ob));
+    ob.OptionType = OPTIONBYTE_HDP;
+    ob.Banks = FLASH_BANK_1;
+    ob.HDPStartSector = HDP_SECTOR_START;
+    ob.HDPEndSector = HDP_SECTOR_END;
+    HAL_FLASHEx_OBProgram(&ob);
+  }
 
   // Secure boot address = boardloader.
   memset(&ob, 0, sizeof(ob));
@@ -113,8 +158,9 @@ static void flash_set_option_bytes(void) {
   ob.BootAddr = BOARDLOADER_START;
   HAL_FLASHEx_OBProgram(&ob);
 
-  // Commit the option bytes. This resets the device, so execution normally does
-  // not return past this point.
+  // Commit the option bytes. This may reset the device; if it does not,
+  // option_bytes_configure() calls this function again until all option bytes
+  // are set.
   HAL_FLASH_OB_Launch();
 
   HAL_FLASH_OB_Lock();
