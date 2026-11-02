@@ -1316,6 +1316,12 @@
       "Delizia": "",
       "Eckhart": "Unlock"
     },
+    "menu__turn_off": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Turn off"
+    },
     "misc__decrypt_value": "Decrypt value",
     "misc__enable_labeling": "Enable labeling?",
     "misc__encrypt_value": "Encrypt value",

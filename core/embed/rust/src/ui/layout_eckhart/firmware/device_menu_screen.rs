@@ -494,7 +494,7 @@ impl DeviceMenuScreen {
     fn register_power_menu(&mut self) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         items.add(MenuItem::return_msg(
-            TR::buttons__turn_off.into(),
+            TR::menu__turn_off.into(),
             DeviceMenuMsg::TurnOff,
         ));
         items.add(MenuItem::return_msg(
