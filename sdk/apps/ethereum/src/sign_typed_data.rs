@@ -176,7 +176,7 @@ impl TypedDataEnvelope {
             name: type_name.to_string(),
         };
 
-        let current_type: TypedDataStructAck = unwrap!(wire_request(&req));
+        let current_type: TypedDataStructAck = wire_request(&req).c()?;
         let members = current_type.members.clone();
         self.types.insert(type_name.to_string(), current_type);
 
