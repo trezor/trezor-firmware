@@ -1,0 +1,11 @@
+header = "D004/boards/stm32h5f5j_dk.h"
+
+# Headless bring-up of the STM32H5F5J-DK: the board's display and touch panel
+# are not wired yet. The "none" drivers satisfy the display/touch APIs with
+# no-ops. (The touch UI stack is still compiled because the bolt layout depends
+# on it.) The real DK panel can be added once the H5 display path is up.
+[display]
+driver = "io/display_none"
+
+[touch]
+driver = "io/touch_none"

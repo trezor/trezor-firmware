@@ -25,7 +25,7 @@ Makefiles if in doubt; this file only captures what is non-obvious.
 
 - Builds go through `xtask` (a venv entry point wrapping `cargo xtask` in `core/embed/`; it compiles itself on
   first use). `xtask build <project> -m <model>` — **`-m` is required**. Models: `T2T1`, `T2B1`, `T3B1`,
-  `T3T1`, `T3T2`, `T3W1`, discovery boards `D001`–`D003` (case-insensitive). The core Makefile defaults to
+  `T3T1`, `T3T2`, `T3W1`, discovery boards `D001`–`D004` (case-insensitive). The core Makefile defaults to
   `TREZOR_MODEL=T3W1`. Projects: `firmware`, `bootloader`, `boardloader`, `prodtest`, `secmon`, ...
   Artifacts land in `core/build/artifacts/<MODEL>/`, symlinked as `artifacts/latest`.
 - Emulator: `xtask build firmware --emulator -m <model> [-p <preset>]` (~1 min). Embedded: drop `--emulator`.
