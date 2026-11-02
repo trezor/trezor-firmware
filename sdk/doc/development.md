@@ -245,49 +245,56 @@ Every app must export an `app()` function as its entry point:
 ```rust
 #[unsafe(no_mangle)]
 pub fn app() -> Result<()> {
-    loop {
-        let (id, data) = wire_receive_wire_start().c()?;
-        handle_wire_message(id as i32, &data).c()?
-    }
+    let (id, data) = wire_receive().c()?;
+    handle_wire_message(id as i32, &data).c()
 }
 ```
 
-The function runs an infinite loop that drives the app's message handling:
+Core starts the app anew for every host request that isn't part of a running flow, so the app handles one request and exits:
 
-1. **Wait** — `wire_receive_wire_start()` blocks until Trezor Core sends a `WireStart` message carrying a new protobuf request from the host.
-2. **Handle** — `handle_wire_message()` is called to process the request.
+1. **Wait** — `wire_receive()` blocks until Trezor Core delivers a protobuf request from the host.
+2. **Handle** — `handle_wire_message()` processes the request. It may talk to the host mid-flow with `wire_call()`, which is a `wire_send()` followed by `wire_receive()`.
+3. **Exit** — returning from `app()` ends the app. Core returns to the homescreen, and then delivers the response the app sent last.
 
-This runs indefinitely, for the lifetime of the app — the loop has no exit condition of its own. The only way out is `handle_wire_message()` returning an `Err` (via `.c()?`), which unwinds `app()` and terminates the app.
+An app may instead wrap this in a `loop`. It then keeps its state between requests, but it stays running after answering, and Core doesn't return to the homescreen until the host sends something else.
 
-Because returning `Err` here is fatal, `handle_wire_message()` must only do so for irreversible problems — e.g. the IPC channel itself failing. Anything the host can recover from (a malformed request, a business-logic failure such as a bad derivation path) is a **non-critical error**: it must be caught and reported back to Core over the `WireError` service instead, so `handle_wire_message()` returns `Ok(())` and the loop continues waiting for the next request.
+Returning `Err` from `app()` ends the app with an error, which Core treats as a crash. So `handle_wire_message()` must only do so for irreversible problems — e.g. the IPC channel itself failing. Anything the host can recover from (a malformed request, a business-logic failure such as a bad derivation path) is a **non-critical error**: it must be reported with `wire_error()` instead, and `handle_wire_message()` returns `Ok(())`.
+
+### Stopping
+
+Core can ask the app to stop at any time, e.g. when the host sends something other than `ExtAppMessage` in the middle of a flow. Any wire, UI or crypto call then fails with `Error::Stopped`. The app must let that error reach `app()`, which the SDK treats as a normal exit. Mapping it to another error doesn't help, since all the following calls fail the same way.
+
+An app that doesn't exit within 250 ms is killed, and Core reports an error to the host. So long computations can't react to the signal, and may be killed instead.
 
 ### Wire Message Handling
 
-When a `WireStart` message is received, `handle_wire_message()` is responsible for:
+When a request is received, `handle_wire_message()` is responsible for:
 
 1. **Dispatching** to the appropriate handler function based on the message type, generated per-message by the `wire_handler!` macro.
 2. **Deserializing** the incoming protobuf payload from the message data.
 3. **Responding** — the result is serialized and sent back to Core:
-   - On success → response is sent via the `WireEnd` service.
-   - On non-critical error (including a deserialization failure) → the error is sent via the `WireError` service, and `handle_wire_message()` still returns `Ok(())`.
+   - On success → the response is sent with `wire_send()`.
+   - On non-critical error → the error is sent with `wire_error()`, and `handle_wire_message()` still returns `Ok(())`.
 
-A message type that isn't recognized, or a failure while sending the `WireEnd`/`WireError` response itself, is treated as irreversible: `handle_wire_message()` returns `Err`, which — per above — terminates the app.
+A message type that isn't recognized, a deserialization failure, or a failure while sending the response itself, is treated as irreversible: `handle_wire_message()` returns `Err`, which — per above — ends the app with an error.
+
+An app must answer before it exits: Core reports an error to the host otherwise.
 
 ```sh
-Host  ──WireStart──►  app()
-                        │
-                   deserialize
-                        │
-                   handler fn
-                        │
-              ┌─────────┴─────────┐
-           response              error
-              │                   │
-          serialize           serialize
-              │                   │
-         WireEnd            WireError
-              │                   │
-Host  ◄───────┴───────────────────┘
+Host  ──request──►  app()
+                      │
+                 deserialize
+                      │
+                 handler fn
+                      │
+            ┌─────────┴─────────┐
+         response              error
+            │                   │
+        serialize           serialize
+            │                   │
+        wire_send()        wire_error()
+            │                   │
+Host  ◄─────┴───────────────────┘
 ```
 
 ### Protobuf Messages
