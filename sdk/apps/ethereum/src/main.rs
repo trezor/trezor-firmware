@@ -1,3 +1,4 @@
+// Not ported to modui yet: it does not build, and is out of the workspace.
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(not(test), no_main)]
 #![allow(clippy::too_many_arguments)]
