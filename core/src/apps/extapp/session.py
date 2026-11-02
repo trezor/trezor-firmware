@@ -64,12 +64,22 @@ class Session:
         self.keychains: dict[str, Keychain] = {}
         # progress layout opened by the app via `SERVICE_PROGRESS`
         self.progress: ProgressLayout | None = None
+        # The app reports work in its own units; the count and the fill are ours.
+        self.progress_total = 0
+        self.progress_done = 0
         # whether the app answered the host's last message
         self.response_sent = False
         # set once Core killed the app
         self.stopped = False
         # set once the app was killed because of an error
         self.dead = False
+
+    @property
+    def app_id(self) -> str:
+        """The app's identity, its image ID (`<package>.<domain>`): the prefix
+        of every step it asks for. A package name alone could be shared by two
+        vendors."""
+        return self.image.id()
 
     async def keychain(self, curve: str) -> Keychain:
         """Keychain of the app's paths on `curve`, if the app is allowed to use it."""
