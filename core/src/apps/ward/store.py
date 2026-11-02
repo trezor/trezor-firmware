@@ -1,5 +1,10 @@
+from typing import TYPE_CHECKING
+
 import trezorward
 from trezorward import WardError  # noqa: F401
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
 
 if __debug__:
     # Number of modifications of any store, lets debug builds detect
@@ -37,7 +42,7 @@ class WardStore:
             raise ValueError("Subscope name too long")
         return WardStore(self._wallet_id, app)
 
-    async def get(self, key: bytes) -> bytes | None:
+    async def get(self, key: AnyBytes) -> bytes | None:
         """Return the value stored under `key`, or None if there is none."""
         return trezorward.get(self._wallet_id, self._app, key)
 
@@ -51,14 +56,14 @@ class WardStore:
         """
         return WardIterator(self._wallet_id, self._app)
 
-    async def set(self, key: bytes, value: bytes) -> None:
+    async def set(self, key: AnyBytes, value: AnyBytes) -> None:
         """Store `value` under `key`, replacing the current value, if any."""
         if __debug__:
             global _modifications
             _modifications += 1
         trezorward.set(self._wallet_id, self._app, key, value)
 
-    async def delete(self, key: bytes) -> bool:
+    async def delete(self, key: AnyBytes) -> bool:
         """Delete the record stored under `key`, return whether there was one."""
         if __debug__:
             global _modifications
