@@ -17,7 +17,7 @@
 import io
 import re
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, AnyStr, Optional
+from typing import TYPE_CHECKING, Any, AnyStr
 
 from trezorlib import exceptions, protobuf
 from trezorlib.messages import ExtAppMessage, ExtAppResponse, Failure
@@ -134,7 +134,7 @@ def parse_type_n(type_name: str) -> int:
         raise ValueError(f"Could not parse type<N> from {type_name}.")
 
 
-def parse_array_n(type_name: str) -> Optional[int]:
+def parse_array_n(type_name: str) -> int | None:
     """Parse N in type[<N>] where "type" can itself be an array type."""
     # sign that it is a dynamic array - we do not know <N>
     if type_name.endswith("[]"):
@@ -231,7 +231,7 @@ def get_authenticated_address(
     instance_id: int,
     n: "Address",
     show_display: bool = False,
-    encoded_network: Optional[bytes] = None,
+    encoded_network: bytes | None = None,
     chunkify: bool = False,
 ) -> ethereum_messages.Address:
     """Request Ethereum address (optionally displayed) with full response payload."""
@@ -267,9 +267,10 @@ def _ethereum_sign_loop(
     response: Any,
     data: bytes,
     chain_id: int,
-    definition_provider: Optional[
-        Callable[[ethereum_messages.DefinitionRequest], ethereum_messages.DefinitionAck]
-    ],
+    definition_provider: Callable[
+        [ethereum_messages.DefinitionRequest], ethereum_messages.DefinitionAck
+    ]
+    | None,
 ) -> tuple[int, bytes, bytes]:
     """Shared request/response loop for sign_tx and sign_tx_eip1559."""
     while True:
@@ -331,16 +332,17 @@ def sign_tx(
     gas_limit: int,
     to: str,
     value: int,
-    data: Optional[bytes] = None,
-    chain_id: Optional[int] = None,
-    tx_type: Optional[int] = None,
-    definitions: Optional[ethereum_messages.Definitions] = None,
+    data: bytes | None = None,
+    chain_id: int | None = None,
+    tx_type: int | None = None,
+    definitions: ethereum_messages.Definitions | None = None,
     chunkify: bool = False,
-    payment_req: Optional[ethereum_messages.PaymentRequest] = None,
-    supports_definition_request: Optional[bool] = None,
-    definition_provider: Optional[
-        Callable[[ethereum_messages.DefinitionRequest], ethereum_messages.DefinitionAck]
-    ] = None,
+    payment_req: ethereum_messages.PaymentRequest | None = None,
+    supports_definition_request: bool | None = None,
+    definition_provider: Callable[
+        [ethereum_messages.DefinitionRequest], ethereum_messages.DefinitionAck
+    ]
+    | None = None,
 ) -> tuple[int, bytes, bytes]:
     """Sign legacy/EIP-2930 style transaction and return (v, r, s)."""
     if chain_id is None:
@@ -399,14 +401,15 @@ def sign_tx_eip1559(
     chain_id: int,
     max_gas_fee: int,
     max_priority_fee: int,
-    access_list: Optional[list[ethereum_messages.AccessList]] = None,
-    definitions: Optional[ethereum_messages.Definitions] = None,
+    access_list: list[ethereum_messages.AccessList] | None = None,
+    definitions: ethereum_messages.Definitions | None = None,
     chunkify: bool = False,
-    payment_req: Optional[ethereum_messages.PaymentRequest] = None,
-    supports_definition_request: Optional[bool] = None,
-    definition_provider: Optional[
-        Callable[[ethereum_messages.DefinitionRequest], ethereum_messages.DefinitionAck]
-    ] = None,
+    payment_req: ethereum_messages.PaymentRequest | None = None,
+    supports_definition_request: bool | None = None,
+    definition_provider: Callable[
+        [ethereum_messages.DefinitionRequest], ethereum_messages.DefinitionAck
+    ]
+    | None = None,
 ) -> tuple[int, bytes, bytes]:
     """Sign EIP-1559 transaction and return (v, r, s)."""
     length = len(data)
@@ -452,7 +455,7 @@ def sign_message(
     instance_id: int,
     n: "Address",
     message: AnyStr,
-    encoded_network: Optional[bytes] = None,
+    encoded_network: bytes | None = None,
     chunkify: bool = False,
 ) -> ethereum_messages.MessageSignature:
     """Sign an arbitrary message with Ethereum personal-sign semantics."""
@@ -476,8 +479,8 @@ def sign_typed_data(
     data: dict[str, Any],
     *,
     metamask_v4_compat: bool = True,
-    definitions: Optional[ethereum_messages.Definitions] = None,
-    show_message_hash: Optional[bytes] = None,
+    definitions: ethereum_messages.Definitions | None = None,
+    show_message_hash: bytes | None = None,
 ) -> ethereum_messages.TypedDataSignature:
     """Sign EIP-712 typed data via interactive struct/value request flow."""
     data = sanitize_typed_data(data)
@@ -606,8 +609,8 @@ def sign_typed_data_hash(
     instance_id: int,
     n: "Address",
     domain_hash: bytes,
-    message_hash: Optional[bytes],
-    encoded_network: Optional[bytes] = None,
+    message_hash: bytes | None,
+    encoded_network: bytes | None = None,
 ) -> ethereum_messages.TypedDataSignature:
     """Sign precomputed EIP-712 domain/message hashes."""
     return call_ext(
