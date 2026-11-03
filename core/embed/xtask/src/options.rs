@@ -264,6 +264,10 @@ build_options! {
     #[arg(long, short = 'b')]
     opt board: String,
 
+    /// Cross-compilation target for a Unix emulator build
+    #[arg(long)]
+    opt emulator_target: String,
+
     /// Disable TROPIC support
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     opt disable_tropic: bool,

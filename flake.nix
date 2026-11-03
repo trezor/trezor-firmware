@@ -56,6 +56,8 @@
         rustProfiles = pkgs.rust-bin.nightly."2026-03-16";
         rustNightly = rustProfiles.minimal.override {
           targets = [
+            "aarch64-linux-android" # Android phones
+            "x86_64-linux-android" # Android emulator
             "thumbv8m.main-none-eabihf" # T3
             "thumbv7em-none-eabihf" # T2
             "thumbv7m-none-eabi" # T1

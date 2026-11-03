@@ -15,13 +15,19 @@ pub fn elf_path(args: &ResolvedBuildArgs) -> Result<PathBuf> {
 
 /// Returns the explicit `--target` triple passed to cargo, if any.
 ///
-/// Hardware builds target the model's MCU. Emulator builds normally rely on
-/// cargo's implicit host target, except with ASAN, where an explicit host
+/// Hardware builds target the model's MCU. Emulator builds may specify a
+/// cross-compilation target; otherwise they use cargo's implicit host target,
+/// except with ASAN, where an explicit host
 /// triple is needed to keep the sanitizer rustflags out of proc-macros and
 /// build scripts (see `features::configure_cargo`). Cargo places the output
 /// under `build/<triple>/` whenever a target is given, so `profile_dir` must
 /// follow the same rule.
 pub fn target_triple(args: &ResolvedBuildArgs) -> Result<Option<String>> {
+    if let Some(target) = &args.emulator_target {
+        anyhow::ensure!(args.emulator, "--emulator-target requires --emulator");
+        anyhow::ensure!(!args.asan, "--emulator-target cannot be used with --asan");
+        return Ok(Some(target.clone()));
+    }
     if !args.emulator {
         let model_config = args.model.config()?;
         return Ok(Some(model_config.target_triple()?.to_owned()));
@@ -216,7 +222,26 @@ pub fn print_version(args: PrintVersionArgs) -> Result<()> {
 mod tests {
     use std::fs;
 
-    use super::{parse_address, parse_version_file, read_symbol_from_content};
+    use super::{parse_address, parse_version_file, read_symbol_from_content, target_triple};
+    use crate::options::ResolvedBuildArgs;
+
+    #[test]
+    fn emulator_cross_target_requires_emulator_without_host_asan() {
+        let mut args = ResolvedBuildArgs {
+            emulator_target: Some("aarch64-linux-android".into()),
+            ..Default::default()
+        };
+        assert!(target_triple(&args).is_err());
+
+        args.emulator = true;
+        assert_eq!(
+            target_triple(&args).unwrap().as_deref(),
+            Some("aarch64-linux-android")
+        );
+
+        args.asan = true;
+        assert!(target_triple(&args).is_err());
+    }
 
     #[test]
     fn parses_version_file_symbols() {

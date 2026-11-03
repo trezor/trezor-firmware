@@ -80,6 +80,12 @@
 
 #include <SDL3/SDL.h>
 
+#ifdef __ANDROID__
+// SDL_main below is defined explicitly, without SDL renaming main.
+#define SDL_MAIN_HANDLED
+#include <SDL3/SDL_main.h>
+#endif
+
 #include "../../version.h"
 
 static void drivers_deinit(void) { flash_deinit(); }
@@ -207,6 +213,11 @@ static void kernel_loop(applet_t *coreapp) {
 }
 
 int main(int argc, char **argv) {
+#ifdef __ANDROID__
+  SDL_SetMainReady();
+  // Otherwise SDL asks Android's Java VM for the executable's display name.
+  SDL_SetAppMetadata("Trezor Emulator", NULL, "io.trezor.emulator");
+#endif
   system_init(&rsod_panic_handler);
 
   if (argc > 1 && strcmp(argv[1], "--emulator-properties") == 0) {
@@ -265,3 +276,10 @@ int main(int argc, char **argv) {
 
   return coreapp.task.pminfo.exit.code;
 }
+
+#ifdef __ANDROID__
+// SDLActivity and tools/android/launcher.c call this from libmain.so.
+__attribute__((visibility("default"))) int SDL_main(int argc, char **argv) {
+  return main(argc, argv);
+}
+#endif

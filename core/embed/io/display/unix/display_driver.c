@@ -138,7 +138,15 @@ bool display_init(display_content_mode_t mode) {
     return true;
   }
 
-  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_HAPTIC | SDL_INIT_EVENTS)) {
+  SDL_InitFlags init_flags = SDL_INIT_VIDEO | SDL_INIT_HAPTIC | SDL_INIT_EVENTS;
+#ifdef __ANDROID__
+  // Android haptics require a Java VM, which the headless executable lacks.
+  const char *video_driver = getenv("SDL_VIDEODRIVER");
+  if (video_driver != NULL && strcmp(video_driver, "dummy") == 0) {
+    init_flags &= ~SDL_INIT_HAPTIC;
+  }
+#endif
+  if (!SDL_Init(init_flags)) {
     LOG_ERR("%s", SDL_GetError());
     error_shutdown("SDL_Init error");
   }
@@ -303,7 +311,15 @@ bool display_init(display_content_mode_t mode) {
     SDL_SetWindowSize(drv->window, window_width, window_height);
   }
 
-  if (window_width != logical_width || window_height != logical_height) {
+#ifdef __ANDROID__
+  // Android windows fill the screen, whatever size was requested.
+  const bool fills_screen = true;
+#else
+  const bool fills_screen = false;
+#endif
+
+  if (fills_screen || window_width != logical_width ||
+      window_height != logical_height) {
     // Keep drawing in unscaled display coordinates and let SDL scale the
     // result to the window. Letterboxing keeps the aspect ratio intact when
     // rounding to whole pixels does not divide evenly, and it also lets
@@ -314,7 +330,7 @@ bool display_init(display_content_mode_t mode) {
     // Nearest-neighbour sampling, set when the texture was created, keeps
     // whole-number enlarging crisp. Any other factor needs interpolation,
     // otherwise rows and columns of pixels are dropped outright.
-    if (window_width % logical_width != 0 ||
+    if (fills_screen || window_width % logical_width != 0 ||
         window_height % logical_height != 0) {
       SDL_SetTextureScaleMode(drv->texture, SDL_SCALEMODE_LINEAR);
     }

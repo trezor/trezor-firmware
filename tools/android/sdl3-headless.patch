@@ -1,0 +1,15 @@
+--- a/src/core/android/SDL_android.c	2026-11-03 16:11:45.794826327 +0100
++++ b/src/core/android/SDL_android.c	2026-11-03 16:11:45.840636690 +0100
+@@ -1004,6 +1004,12 @@
+ {
+     bool got_event = false;
+ 
++    // A headless executable never calls nativeSetupJNI, which creates the
++    // semaphore. Waiting on a NULL semaphore succeeds and would spin forever.
++    if (!Android_LifecycleEventSem) {
++        return false;
++    }
++
+     while (!got_event && SDL_WaitSemaphoreTimeoutNS(Android_LifecycleEventSem, timeoutNS)) {
+         SDL_LockMutex(Android_LifecycleMutex);
+         {

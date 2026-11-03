@@ -140,6 +140,12 @@ fn main() -> Result<()> {
 
         lib.add_sources_in_dir_with_attrs(mpy_dir, ["py/gc.c", "py/pystack.c", "py/vm.c"], attrs);
 
+        // NDK Clang enables _Float16 in MicroPython's half-float decoder. Its
+        // intentional conversion to float triggers -Wdouble-promotion.
+        let binary_attrs = (env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("android"))
+            .then(|| xbuild::CompileAttrs::new().with_flag("-Wno-double-promotion"));
+        lib.add_sources_in_dir_with_attrs(mpy_dir, ["py/binary.c"], binary_attrs);
+
         lib.add_sources_in_dir(
             mpy_dir,
             [
@@ -154,7 +160,6 @@ fn main() -> Result<()> {
                 "py/asmx86.c",
                 "py/asmxtensa.c",
                 "py/bc.c",
-                "py/binary.c",
                 "py/builtinevex.c",
                 "py/builtinhelp.c",
                 "py/builtinimport.c",

@@ -277,7 +277,18 @@ impl CLibrary {
             cargo_out::rustc_link_lib("c");
             cargo_out::rustc_link_lib("m");
             cargo_out::rustc_link_lib("dl");
-            cargo_out::rustc_link_lib("pthread");
+            if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("android") {
+                // Android apps load native code from shared libraries. Export
+                // only the SDL entry point, so that symbols bind locally, as
+                // the PIE code assumes, and unused code is still collected.
+                // Bionic libc includes the pthread implementation.
+                let script = PathBuf::from(env::var("OUT_DIR")?).join("android.map");
+                fs::write(&script, "{ global: SDL_main; local: *; };\n")?;
+                cargo_out::rustc_link_arg("-shared");
+                cargo_out::rustc_link_arg(format!("-Wl,--version-script={}", script.display()));
+            } else {
+                cargo_out::rustc_link_lib("pthread");
+            }
         } else {
             cargo_out::rustc_link_arg("-lm");
             cargo_out::rustc_link_arg("-lgcc");

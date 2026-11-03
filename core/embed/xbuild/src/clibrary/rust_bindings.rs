@@ -58,10 +58,16 @@ impl CLibrary {
         if !builders.is_empty() {
             let mut attrs = self.get_merged_attrs();
 
-            if use_cc_includes {
+            let android = std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("android");
+            if use_cc_includes || android {
                 attrs
                     .import_cc_compiler_includes()
                     .context("Failed to import C compiler includes")?;
+            }
+            if android {
+                // Do not mix libclang's resource headers with the NDK Clang
+                // headers: their include guards can hide the actual types.
+                attrs.add_flag("-nostdinc");
             }
 
             // bindgen uses clang to parse headers, while GCC compiles the C code.
@@ -75,6 +81,9 @@ impl CLibrary {
                 let mut content = Vec::<u8>::new();
                 apply_defaults(builder, &defaults)?
                     .clang_args(attrs.to_compiler_args())
+                    // Host Clang's discovered includes can override the NDK
+                    // sysroot. Use the target compiler's includes on Android.
+                    .detect_include_paths(!android)
                     // Customize the standard types.
                     .use_core()
                     .ctypes_prefix("cty")
