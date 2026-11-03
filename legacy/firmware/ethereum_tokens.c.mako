@@ -15,7 +15,7 @@ static const EthereumTokenInfo tokens[TOKENS_COUNT] = {
     .decimals = ${t.decimals},
     .address = {
       .size = 20,
-      .bytes = ${c_str(t.address_bytes)}
+      .bytes = ${c_bytearray(t.address_bytes)},
     },
     .chain_id = ${t.chain_id},
 ##    .name = "${t.name}"
@@ -29,7 +29,8 @@ const EthereumTokenInfo UNKNOWN_TOKEN = {
   .decimals = 0,
   .address = {
     .size = 20,
-    .bytes = "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff",
+    .bytes = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+              0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
   },
   .chain_id = CHAIN_ID_UNKNOWN,
   .name = "",
