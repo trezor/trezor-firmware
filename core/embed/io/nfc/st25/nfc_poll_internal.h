@@ -27,3 +27,9 @@ bool nfc_identify(nfc_dev_info_t *dev_info);
 bool nfc_check_connection(nfc_dev_info_t *dev_info);
 
 ts_t nfc_restart_discovery(void);
+
+// Progress the asynchronous exchange, if any. Must be called after
+// rfalNfcWorker(). Returns true if exchange is in progress.
+bool nfc_transceive_process(void);
+
+bool nfc_transceive_take_event(void);
