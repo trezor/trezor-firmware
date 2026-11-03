@@ -51,6 +51,15 @@ PROFILE_BASE = Path.home() / ".trezoremu"
     help="Profile name or path (persistent; overrides --temporary-profile)",
 )
 @click.option(
+    "-P",
+    "--port",
+    metavar="PORT",
+    type=int,
+    envvar="TREZOR_UDP_PORT",
+    default=None,
+    help="Base UDP port number (the VCP interface listens on PORT+3)",
+)
+@click.option(
     "-t",
     "--temporary-profile/--no-temporary-profile",
     default=True,
@@ -80,6 +89,7 @@ def cli(
     erase: bool,
     headless: bool,
     profile: str | None,
+    port: int | None,
     temporary_profile: bool,
     tropic_emulator: bool | None,
     tropic_emulator_config: Path,
@@ -131,6 +141,7 @@ def cli(
     emulator = get_prodtest_emulator(
         model=model,
         profile_dir=str(profile_dir),
+        port=port,
         headless=headless,
         tropic_model_port=tropic_model_port,
     )
