@@ -228,6 +228,9 @@ fn build_erase_script(sectors: &[RangeInclusive<u32>]) -> String {
 
 /// Script dumping each read to its data file, or, if the read fails, the
 /// error message to its error file.
+///
+/// The target is resumed before exiting: OpenOCD leaves it halted otherwise,
+/// and a refused device would stay frozen until power-cycled.
 fn build_read_script(reads: &[(u32, u32)], files: &[(PathBuf, PathBuf)]) -> Result<String> {
     let mut script = String::from("init; reset halt; ");
     for ((address, size), (data, error)) in reads.iter().zip(files) {
@@ -238,7 +241,7 @@ fn build_read_script(reads: &[(u32, u32)], files: &[(PathBuf, PathBuf)]) -> Resu
             tcl_quote_path(error)?,
         ));
     }
-    script.push_str("exit");
+    script.push_str("resume; exit");
     Ok(script)
 }
 
@@ -371,7 +374,7 @@ mod tests {
              {set f [open {/tmp/r0.err} w]; puts -nonewline $f $e; close $f}; \
              if {[catch {dump_image {/tmp/r1.bin} 0xC01BF00 256} e]} \
              {set f [open {/tmp/r1.err} w]; puts -nonewline $f $e; close $f}; \
-             exit"
+             resume; exit"
         );
     }
 
