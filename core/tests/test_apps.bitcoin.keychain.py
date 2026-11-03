@@ -11,6 +11,7 @@ from apps.bitcoin.keychain import (
     _get_keychain_for_coin,
     address_n_to_name,
     address_n_to_name_or_unknown,
+    is_bip48_segwit_account,
     validate_path_against_script_type,
     validate_xpub_path_against_script_type,
     with_keychain,
@@ -223,6 +224,44 @@ class TestValidateXpubPath(unittest.TestCase):
         # A pattern with no hardened component has no export point, so the
         # root xpub is never exportable this way.
         self.assertFalse(is_export_point([], InputScriptType.SPENDADDRESS))
+
+
+class TestBip48SegwitAccount(unittest.TestCase):
+    def test_account_node(self):
+        from trezor.enums import InputScriptType as IST
+
+        btc = _get_coin_by_name("Bitcoin")
+        bch = _get_coin_by_name("Bcash")
+
+        def is_bip48(coin, address_n, script_type):
+            return is_bip48_segwit_account(coin, address_n, script_type)
+
+        self.assertTrue(is_bip48(btc, [H_(48), H_(0), H_(0), H_(2)], IST.SPENDWITNESS))
+        self.assertTrue(
+            is_bip48(btc, [H_(48), H_(0), H_(5), H_(1)], IST.SPENDP2SHWITNESS)
+        )
+        # the script type must match the BIP-48 script level
+        self.assertFalse(is_bip48(btc, [H_(48), H_(0), H_(0), H_(1)], IST.SPENDWITNESS))
+        self.assertFalse(
+            is_bip48(btc, [H_(48), H_(0), H_(0), H_(2)], IST.SPENDP2SHWITNESS)
+        )
+        # legacy BIP-48 multisig keeps the plain xpub
+        self.assertFalse(
+            is_bip48(btc, [H_(48), H_(0), H_(0), H_(0)], IST.SPENDMULTISIG)
+        )
+        # only the account node, not its parent or its children
+        self.assertFalse(is_bip48(btc, [H_(48), H_(0), H_(0)], IST.SPENDWITNESS))
+        self.assertFalse(
+            is_bip48(btc, [H_(48), H_(0), H_(0), H_(2), 0], IST.SPENDWITNESS)
+        )
+        # single-key accounts are unaffected
+        self.assertFalse(is_bip48(btc, [H_(84), H_(0), H_(0)], IST.SPENDWITNESS))
+        # the coin type must match
+        self.assertFalse(is_bip48(btc, [H_(48), H_(1), H_(0), H_(2)], IST.SPENDWITNESS))
+        # no SegWit, no multisig SegWit magic
+        self.assertFalse(
+            is_bip48(bch, [H_(48), H_(145), H_(0), H_(2)], IST.SPENDWITNESS)
+        )
 
 
 class TestAccountNames(unittest.TestCase):
