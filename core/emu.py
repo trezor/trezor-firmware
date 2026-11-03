@@ -325,6 +325,9 @@ def cli(
     if command and not run_command:
         raise click.ClickException("Extra arguments found. Did you mean to use -c?")
 
+    if run_command and not command:
+        raise click.ClickException("No command to run with -c.")
+
     if watch and (command or debugger):
         raise click.ClickException("Cannot use -w together with -c or -D")
 
