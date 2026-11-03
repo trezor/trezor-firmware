@@ -44,9 +44,9 @@ ENV USER=root \
     NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 # Realize the nix-shell environment and dump it into a sourceable script. Variables specific to the nix-shell
-# session (temp dirs, shell bookkeeping) are left out. Only shell.nix is copied, so this layer is cached
-# across source changes.
-COPY shell.nix /opt/trezor-firmware-env/shell.nix
+# session (temp dirs, shell bookkeeping) are left out. shell.nix evaluates flake.nix (pinned by flake.lock) with
+# src = ./., so the three files get a directory of their own, and this layer is cached across source changes.
+COPY shell.nix flake.nix flake.lock /opt/trezor-firmware-env/
 RUN nix-shell /opt/trezor-firmware-env/shell.nix --run ' \
       for v in $(compgen -e); do \
         case "$v" in \
@@ -68,10 +68,14 @@ RUN . /etc/trezor-firmware-env.sh \
     && git config --global --add safe.directory '*' \
     && git submodule update --init --recursive --depth 1 --jobs 8
 
-# Python deps, and all Rust crates of the core workspace, so that later builds work offline.
+# Python deps, and all Rust crates of the core workspace and of the standalone crates in rust/, so that later
+# builds work offline (most of rust/ has no Cargo.lock in git, so fetching leaves an untracked one there).
+# Running python/tests/test_firmware.py downloads the release firmware it tests against into python/tests/.
 RUN . /etc/trezor-firmware-env.sh \
     && uv sync --locked \
-    && cargo fetch --locked --manifest-path core/embed/Cargo.toml
+    && cargo fetch --locked --manifest-path core/embed/Cargo.toml \
+    && for manifest in rust/*/Cargo.toml; do cargo fetch --manifest-path "$manifest"; done \
+    && pytest -q python/tests/test_firmware.py
 
 # T3T1 emulator with debuglink, non-frozen. Artifacts land in core/build/artifacts/T3T1/ (`latest` symlink).
 RUN . /etc/trezor-firmware-env.sh \
@@ -86,10 +90,16 @@ RUN . /etc/trezor-firmware-env.sh \
 # From here on, every bash shell (interactive or not) gets the environment, and tools do not try the network.
 # ASAN_OPTIONS as in CI (.github/workflows/common.yml): the crypto pytest suite loads the ASAN-built
 # libtrezor-crypto.so into an uninstrumented python via ctypes, which fails without verify_asan_link_order=0.
+# CK_TIMEOUT_MULTIPLIER as in CI too: some ASAN-built crypto/tests/test_check cases take about as long as Check's
+# default 4s timeout.
+# SDL_VIDEODRIVER as in CI (.github/workflows/core.yml): there is no display, and the trezor_lib Rust tests
+# (`make -C core test_rust`) fail in SDL_Init without it.
 RUN printf '%s\n' \
       'export UV_OFFLINE=1' \
       'export CARGO_NET_OFFLINE=true' \
       'export ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0' \
+      'export CK_TIMEOUT_MULTIPLIER=5' \
+      'export SDL_VIDEODRIVER=dummy' \
       >> /etc/trezor-firmware-env.sh \
     && echo '. /etc/trezor-firmware-env.sh' >> /root/.bashrc
 ENV BASH_ENV=/etc/trezor-firmware-env.sh
