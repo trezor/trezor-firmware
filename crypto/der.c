@@ -100,6 +100,9 @@ bool der_read_item(BUFFER_READER *buf, DER_ITEM *item) {
   }
 
   size_t header_size = buf->pos - begin_pos;
+  if (len > SIZE_MAX - header_size) {
+    return false;
+  }
   if (!buffer_seek(buf, begin_pos) ||
       !buffer_read_buffer(buf, &item->buf, header_size + len)) {
     return false;
