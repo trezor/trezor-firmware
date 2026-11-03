@@ -1,7 +1,7 @@
 import typing as t
 from dataclasses import dataclass
 from hashlib import sha256
-from typing import Optional, Protocol
+from typing import Protocol
 
 from ecdsa import NIST256p, SigningKey
 
@@ -35,7 +35,7 @@ class TextDetailsMemo:
 @dataclass
 class RefundMemo:
     address_n: list[int]
-    address_resp: Optional[ethereum_messages.Address] = None
+    address_resp: ethereum_messages.Address | None = None
 
 
 @dataclass
@@ -44,7 +44,7 @@ class CoinPurchaseMemo:
     coin_name: str
     slip44: int
     address_n: list[int]
-    address_resp: Optional[ethereum_messages.Address] = None
+    address_resp: ethereum_messages.Address | None = None
 
 
 payment_req_signer = SigningKey.from_string(
@@ -61,11 +61,11 @@ def hash_bytes_prefixed(hasher: _HashLike, data: bytes) -> None:
 def make_payment_request(
     session: Session,
     recipient_name: str,
-    slip44: Optional[int] = None,
-    outputs: Optional[list[tuple[int, Optional[str]]]] = None,
-    change_addresses: Optional[list[str]] = None,
-    memos: Optional[list[t.Any]] = None,
-    nonce: Optional[bytes] = None,
+    slip44: int | None = None,
+    outputs: list[tuple[int, str | None]] | None = None,
+    change_addresses: list[str] | None = None,
+    memos: list[t.Any] | None = None,
+    nonce: bytes | None = None,
     amount_size_bytes: int = 8,
 ) -> ethereum_messages.PaymentRequest:
     h_pr = sha256(b"SL\x00\x24")
