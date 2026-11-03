@@ -63,3 +63,4 @@ log-external     = { true = ["sys/log_external"] }
 log-level        = { off = ["sys/log_max_off"], error = ["sys/log_max_error"], warn = ["sys/log_max_warn"], info = ["sys/log_max_info"], debug = ["sys/log_max_debug"] }
 perf-overlay     = { true = ["ui_performance_overlay"] }
 production       = { true = ["production"] }
+tropic-rev       = { abab = ["sec/tropic_rev_abab"], acab = ["sec/tropic_rev_acab"] }
