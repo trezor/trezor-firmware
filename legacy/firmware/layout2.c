@@ -26,6 +26,7 @@
 
 #include "bignum.h"
 #include "bitmaps.h"
+#include "common.h"
 #include "config.h"
 #include "crypto.h"
 #include "gettext.h"
@@ -706,6 +707,19 @@ void layoutConfirmUnverifiedExternalInputs(void) {
                     _("Continue?"), NULL);
 }
 
+void layoutFormatTimestampUtc(uint32_t timestamp, char *buf, size_t buf_len) {
+  time_t time = timestamp;
+  struct tm tm = {0};
+  gmtime_r(&time, &tm);
+  // A 32-bit timestamp always fits into 19 characters (years up to 2106).
+  int len =
+      snprintf(buf, buf_len, "%04d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900,
+               tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+  if (len < 0 || (size_t)len >= buf_len) {
+    __fatal_error("Timestamp buffer too small", __FILE__, __LINE__);
+  }
+}
+
 void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                                      bool lock_time_disabled) {
   if (lock_time_disabled) {
@@ -721,9 +735,7 @@ void layoutConfirmNondefaultLockTime(uint32_t lock_time,
       snprintf(str_locktime, sizeof(str_locktime), "%" PRIu32, lock_time);
     } else {
       str_type = "timestamp (UTC):";
-      time_t time = lock_time;
-      const struct tm *tm = gmtime(&time);
-      strftime(str_locktime, sizeof(str_locktime), "%F %T", tm);
+      layoutFormatTimestampUtc(lock_time, str_locktime, sizeof(str_locktime));
     }
 
     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
