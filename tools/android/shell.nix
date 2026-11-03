@@ -33,5 +33,7 @@ pkgs.mkShell {
     src = pkgs.sdl3.src;
     patches = [ ./sdl3-headless.patch ];
   };
-  SDL3_IMAGE_SOURCE = pkgs.sdl3-image.src;  ANDROID_PKG_CONFIG = "${pkgs.pkg-config-unwrapped}/bin/pkg-config";
+  SDL3_IMAGE_SOURCE = pkgs.sdl3-image.src;
+  LIBJPEG_SOURCE = pkgs.libjpeg_turbo.src;
+  ANDROID_PKG_CONFIG = "${pkgs.pkg-config-unwrapped}/bin/pkg-config";
 }

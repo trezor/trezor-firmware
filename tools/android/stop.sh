@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # Stop the runners for an adb device, then the Android virtual device itself.
-# Run inside nix-shell tools/android/shell.nix.
 set -euo pipefail
 
 serial=${1:-emulator-5580}
+
+if ! command -v adb >/dev/null; then
+    repo_dir=$(cd "$(dirname "$0")/../.." && pwd)
+    exec nix-shell "$repo_dir/tools/android/shell.nix" \
+        --run "$(printf '%q ' "$0" "$serial")"
+fi
 
 # Interrupt only the Python processes, not their `uv run` or shell wrappers,
 # so that each runner's cleanup is not interrupted by a second signal.

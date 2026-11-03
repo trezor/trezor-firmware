@@ -32,6 +32,12 @@ For an x86_64 Android virtual device, use:
 bash tools/android/build.sh x86_64
 ```
 
+The model defaults to T2T1; pass another one as the second argument, e.g.
+`bash tools/android/build.sh x86_64 T3W1`. The build always disables Optiga and
+Tropic, as Android has neither the secure elements nor the Tropic model server.
+The T3W1 screen works, but its host communication through the virtual device is
+not reliable yet: requests often time out.
+
 On Android, the firmware is linked as `libmain.so`, which exports only
 `SDL_main`. Each ABI's build is collected under `core/build/android/<ABI>/`:
 
@@ -43,8 +49,19 @@ On Android, the firmware is linked as `libmain.so`, which exports only
 
 ## Run on an Android virtual device
 
-On a Linux host with KVM, enter the shell with the optional Android emulator and
-Android 9 system image:
+On a Linux host with KVM, a single command enters the Nix shell, creates and
+boots an Android 9 virtual device when needed, and runs the firmware on it:
+
+```sh
+tools/android/start.sh --apk   # without --apk, the firmware runs headless
+```
+
+Stop it with Ctrl-C, which leaves the virtual device running, or with
+`tools/android/stop.sh`, which also stops the virtual device. See
+`tools/android/start.sh --help` for the options. The steps below do the same
+manually.
+
+Enter the shell with the optional Android emulator and Android 9 system image:
 
 ```sh
 nix-shell tools/android/shell.nix --arg withEmulator true
@@ -84,10 +101,11 @@ uv run trezorctl get-features
 uv run pytest tests/device_tests/test_msg_ping.py
 ```
 
-Stop the runner and the Android virtual device, in the same Nix shell:
+Stop the runner and the Android virtual device; like `start.sh`, the script
+enters the Nix shell when needed:
 
 ```sh
-bash tools/android/stop.sh emulator-5580
+tools/android/stop.sh emulator-5580
 ```
 
 For a physical phone's serial, the script stops only the runner.

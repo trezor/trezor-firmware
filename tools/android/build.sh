@@ -4,15 +4,17 @@ set -euo pipefail
 
 repo_dir=$(cd "$(dirname "$0")/../.." && pwd)
 abi=${1:-arm64-v8a}
+model=${2:-T2T1}
 case "$abi" in
     arm64-v8a) target=aarch64-linux-android; compiler=aarch64-linux-android ;;
     x86_64) target=x86_64-linux-android; compiler=x86_64-linux-android ;;
-    *) echo "Usage: $0 [arm64-v8a|x86_64]" >&2; exit 2 ;;
+    *) echo "Usage: $0 [arm64-v8a|x86_64] [model]" >&2; exit 2 ;;
 esac
 
 : "${ANDROID_NDK_HOME:?Use nix-shell tools/android/shell.nix}"
 : "${SDL3_SOURCE:?SDL3 source directory is required}"
 : "${SDL3_IMAGE_SOURCE:?SDL3_image source directory is required}"
+: "${LIBJPEG_SOURCE:?libjpeg-turbo source directory is required}"
 : "${ANDROID_PKG_CONFIG:?Unwrapped pkg-config is required}"
 android_api=28
 build_dir="$repo_dir/core/build/android/$abi"
@@ -41,6 +43,14 @@ cmake -S "$SDL3_IMAGE_SOURCE" -B "$build_dir/sdl-image" "${cmake_args[@]}" \
     -DSDLIMAGE_AVIF=OFF -DSDLIMAGE_JXL=OFF -DSDLIMAGE_TIF=OFF -DSDLIMAGE_WEBP=OFF
 cmake --build "$build_dir/sdl-image" --parallel "${CARGO_BUILD_JOBS:-4}"
 cmake --install "$build_dir/sdl-image"
+
+# The emulated JPEG decoder of some models uses libjpeg, linked into libmain.so.
+cmake -S "$LIBJPEG_SOURCE" -B "$build_dir/libjpeg" "${cmake_args[@]}" \
+    -DENABLE_SHARED=OFF -DENABLE_STATIC=ON -DWITH_TURBOJPEG=OFF \
+    -DWITH_SIMD=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+cmake --build "$build_dir/libjpeg" --parallel "${CARGO_BUILD_JOBS:-4}"
+cmake --install "$build_dir/libjpeg"
+
 # Only target dependencies may be discovered by pkg-config. Host tools such as
 # mpy-cross must continue to use the host compiler.
 target_key=${target//-/_}
@@ -57,8 +67,9 @@ export CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-4}
 export CARGO_PROFILE_DEV_DEBUG=${CARGO_PROFILE_DEV_DEBUG:-0}
 
 cd "$repo_dir"
-uv run xtask build firmware --emulator -m T2T1 -p test \
-    --emulator-target "$target" --btc-only
+# Android has no secure elements, nor the host's Tropic model server.
+uv run xtask build firmware --emulator -m "$model" -p test \
+    --emulator-target "$target" --btc-only --disable-optiga --disable-tropic
 
 # On Android, the firmware is linked as a shared library for SDLActivity. The
 # launcher runs it as an executable for adb shell.
@@ -66,7 +77,7 @@ dist="$build_dir/dist"
 cc="$toolchain/bin/$compiler$android_api-clang"
 rm -rf "$dist"
 mkdir -p "$dist"
-cp "$repo_dir/core/build/artifacts/T2T1/firmware-emu" "$dist/libmain.so"
+cp "$repo_dir/core/build/artifacts/${model^^}/firmware-emu" "$dist/libmain.so"
 cp -L "$prefix"/lib/*.so* "$dist/"
 "$cc" -O2 -Wall -Wextra -Werror -o "$dist/firmware-emu" \
     "$repo_dir/tools/android/launcher.c"
