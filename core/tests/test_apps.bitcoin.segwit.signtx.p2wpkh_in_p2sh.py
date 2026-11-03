@@ -98,9 +98,6 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             coin_name="Testnet", version=1, lock_time=0, inputs_count=1, outputs_count=2
         )
 
-        # precomputed tx weight is 168 = ceil(670 / 4)
-        fee_rate = 11000 / 168
-
         messages = [
             # check fee
             TxRequest(
@@ -282,9 +279,6 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
         tx = SignTx(
             coin_name="Testnet", version=1, lock_time=0, inputs_count=1, outputs_count=2
         )
-
-        # precomputed tx weight is 168 = ceil(670 / 4)
-        fee_rate = 11000 / 168
 
         messages = [
             # check fee
@@ -480,9 +474,6 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
         tx = SignTx(
             coin_name="Testnet", version=1, lock_time=0, inputs_count=1, outputs_count=2
         )
-
-        # precomputed tx weight is 168 = ceil(670 / 4)
-        fee_rate = (9 - 8 - 1) / 168
 
         messages = [
             # check fee

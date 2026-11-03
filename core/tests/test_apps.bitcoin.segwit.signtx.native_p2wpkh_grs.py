@@ -105,9 +105,6 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             outputs_count=2,
         )
 
-        # precomputed tx weight is 142 = ceil(566 / 4)
-        fee_rate = 11000 / 142
-
         messages = [
             # check fee
             TxRequest(
@@ -296,9 +293,6 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             inputs_count=1,
             outputs_count=2,
         )
-
-        # precomputed tx weight is 142 = ceil(566 / 4)
-        fee_rate = 11000 / 142
 
         messages = [
             # check fee
