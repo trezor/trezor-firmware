@@ -97,14 +97,6 @@ class TestSignTxDecred(unittest.TestCase):
             outputs_count=1,
         )
 
-        tx = SignTx(
-            coin_name="Decred Testnet",
-            version=1,
-            lock_time=0,
-            inputs_count=1,
-            outputs_count=1,
-        )
-
         messages = [
             TxRequest(
                 request_type=TXINPUT,
@@ -238,15 +230,6 @@ class TestSignTxDecred(unittest.TestCase):
             script_type=OutputScriptType.PAYTOADDRESS,
             multisig=None,
         )
-        tx = SignTx(
-            coin_name="Decred Testnet",
-            version=1,
-            lock_time=0,
-            inputs_count=1,
-            outputs_count=3,
-            decred_staking_ticket=True,
-        )
-
         tx = SignTx(
             coin_name="Decred Testnet",
             version=1,
