@@ -37,6 +37,9 @@ help: ## show this help
 PY_FILES = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude ) common/protob/pb2py
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 PROTO_FILES = $(shell find common core -type f -name '*.proto')
+# git-tracked only, so untracked dirs (worktrees, in-progress vendoring, ...)
+# are never walked, regardless of name.
+YAML_FILES = $(shell git ls-files '*.yml' '*.yaml')
 RUST_CRATES = $(shell find core -type f -name Cargo.toml -printf "%h\n")
 
 style_check: pystyle_check ruststyle_check cstyle_check protostyle_check changelog_check translations_style_check yaml_check workflow_timeout_check docs_summary_check editor_check ## run all style checks
@@ -100,7 +103,7 @@ translations_style_check: ## Check that translation files are properly formatted
 
 yaml_check: ## check yaml formatting
 	@echo [YAML-STYLE-CHECK]
-	yamllint --strict .
+	yamllint --strict $(YAML_FILES)
 
 workflow_timeout_check: ## check that all CI jobs declare a timeout
 	@echo [WORKFLOW-TIMEOUT-CHECK]
