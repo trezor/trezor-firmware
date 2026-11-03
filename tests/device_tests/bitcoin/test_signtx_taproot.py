@@ -62,6 +62,7 @@ TXHASH_ec5194 = bytes.fromhex(
 TXHASH_c96621 = bytes.fromhex(
     "c96621a96668f7dd505c4deb9ee2b2038503a5daa4888242560e9b640cca8819"
 )
+FAKE_TXHASH = bytes(32)
 
 
 @pytest.mark.parametrize("chunkify", (True, False))
@@ -314,6 +315,61 @@ def test_send_mixed(session: Session):
         serialized_tx.hex()
         == "010000000001045d77b6e482d770031ad3ce3423727cc1707bc2c82e729b1189d2b60aa1a73e8c0000000017160014a33c6e24c99e108b97bc411e7e9ef31e9d5d6164ffffffff7b350e3faca092f39883d7086cdd502c82b6f0314ab61541b062733edef156790000000000ffffffff852e125137abca2dd7a42837dccfc34edc358c72eefd62978d6747d3be9315900000000000ffffffff9b117a776a9aaf70d4c3ffe89f009dcd23210a03d649ee5e38791d83902ec33a020000006b483045022100f6bd64136839b49822cf7e2050bc5c91346fc18b5cf97a945d4fd6c502f712d002207d1859e66d218f705b704f3cfca0c75410349bb1f50623f4fc2d09d5d8df0a3f012103bae960983f83e28fcb8f0e5f3dc1f1297b9f9636612fd0835b768e1b7275fb9dffffffff05a861000000000000160014d1a739f628f7eca55e8b99e7f32b22dcdbf672d4581b0000000000001976a91402e9b094fd98e2a26e805894eb78f7ff3fef199b88acf41a00000000000017a9141ff816cbeb74817050de585ceb2c772ebf71147a870000000000000000186a1674657374206f66206f705f72657475726e206461746110270000000000002251205a02573f7b39770ac53f73d161dc86f5104c6812bac297cb6ba418f6f1219c070247304402205fae7fa2b5141548593d5623ce5bd82ee18dfc751c243526039c91848efd603702200febfbe3467a68c599245ff89055514f26e146c79b58d932ced2325e6dad1b1a0121021630971f20fa349ba940a6ba3706884c41579cd760c89901374358db5dd545b90247304402201b21212100c84207697cebb852374669c382ed97cbd08afbbdfe1b302802161602206b32b2140d094cf5b7e758135961c95478c8e82fea0df30f56ccee284b79eaea012103f6b2377d52960a6094ec158cf19dcf9e33b3da4798c2302aa5806483ed4187ae0140470aaf1a975c27a541de1efbdb5f930ddcc6f3f1765dbd6547a24bba3dc34b682ca5f03e1426b75bee3e9009c92534865362000705f3415ab60d9e7a3e6cfce00000000000"
     )
+
+
+@pytest.mark.slow
+@pytest.mark.models("core")
+def test_lots_of_foreign_inputs(session: Session):
+    # Each input is at a different BIP-44 path, which is foreign for SPENDTAPROOT, so
+    # every input shows a warning and its path is stored by the approver.
+    # NOTE: FAKE input tx, Taproot-only transactions don't stream previous transactions.
+
+    input_count = 100
+    inputs = [
+        messages.TxInputType(
+            address_n=parse_path(f"m/44h/1h/0h/0/{i}"),
+            amount=10_000,
+            prev_hash=FAKE_TXHASH,
+            prev_index=i,
+            script_type=messages.InputScriptType.SPENDTAPROOT,
+        )
+        for i in range(input_count)
+    ]
+    out1 = messages.TxOutputType(
+        address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
+        amount=input_count * 10_000 - 60_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    request_inputs = [request_input(i) for i in range(input_count)]
+
+    with session.test_ctx as client:
+        IF = InputFlowConfirmAllWarnings(session)
+        client.set_input_flow(IF.get())
+        client.set_expected_responses(
+            [
+                response
+                for i in range(input_count)
+                for response in (
+                    request_input(i),
+                    messages.ButtonRequest(code=B.UnknownDerivationPath),
+                )
+            ]
+            + [
+                request_output(0),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
+            ]
+            + request_inputs
+            + [request_output(0)]
+            + request_inputs
+            + [request_finished()]
+        )
+        signatures, _ = btc.sign_tx(session, "Testnet", inputs, [out1])
+
+    assert len(signatures) == input_count
+    assert all(signatures)
 
 
 def test_attack_script_type(session: Session):
