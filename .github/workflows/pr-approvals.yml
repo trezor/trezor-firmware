@@ -100,31 +100,32 @@ jobs:
               return [approvers.length >= REQUIRED_APPROVALS, `external contributor: ${result}`];
             }
 
-            let prs;
-            if (context.eventName === "pull_request_target") {
-              prs = [context.payload.pull_request];
-            } else {
-              // `workflow_run.pull_requests` is empty for forks, find the PR by its head
-              const run = context.payload.workflow_run;
-              const { data } = await github.rest.pulls.list({
-                owner,
-                repo,
-                state: "open",
-                head: `${run.head_repository.owner.login}:${run.head_branch}`,
-              });
-              prs = data.filter((pr) => pr.head.sha === run.head_sha);
-            }
+            // the status is stored per commit, so it is shared by all open PRs with this head;
+            // they contain the same code, so it passes if any of them passes
+            const eventPr = context.payload.pull_request;
+            const sha = eventPr?.head.sha ?? context.payload.workflow_run.head_sha;
+            const openPrs = await github.paginate(github.rest.pulls.list, {
+              owner,
+              repo,
+              state: "open",
+              per_page: 100,
+            });
+            const prs = openPrs.filter((pr) => pr.head.sha === sha && pr.number !== eventPr?.number);
+            if (eventPr) prs.unshift(eventPr);
+            if (!prs.length) return;
 
+            let passed, description;
             for (const pr of prs) {
-              const [passed, description] = await evaluate(pr);
+              [passed, description] = await evaluate(pr);
               core.info(`#${pr.number}: ${description}`);
-              await bot.rest.repos.createCommitStatus({
-                owner,
-                repo,
-                sha: pr.head.sha,
-                state: passed ? "success" : "failure",
-                context: STATUS_CONTEXT,
-                description: description.slice(0, 140),
-                target_url: `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
-              });
+              if (passed) break;
             }
+            await bot.rest.repos.createCommitStatus({
+              owner,
+              repo,
+              sha,
+              state: passed ? "success" : "failure",
+              context: STATUS_CONTEXT,
+              description: description.slice(0, 140),
+              target_url: `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
+            });
