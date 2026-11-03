@@ -26,7 +26,11 @@
 
 // Once the TZSC configuration is locked (the secure monitor does so at the
 // end of `tz_init()`), writes to it are silently ignored. Fail loudly instead.
-static void tzsc_ensure_unlocked(void) {
+//
+// Which callers exist depends on the build (the secure monitor drops the
+// SAES/TAMP setters, only the GFXMMU parts have the GFXMMU one), so a U58
+// secure monitor has none.
+__attribute__((unused)) static void tzsc_ensure_unlocked(void) {
   ensure(sectrue * ((GTZC_TZSC1->CR & GTZC_TZSC_CR_LCK_Msk) == 0),
          "TZSC locked");
 }
