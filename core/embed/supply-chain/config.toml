@@ -7,6 +7,9 @@ version = "0.10"
 [imports.bytecodealliance]
 url = "https://raw.githubusercontent.com/bytecodealliance/wasmtime/main/supply-chain/audits.toml"
 
+[imports.embark-studios]
+url = "https://raw.githubusercontent.com/EmbarkStudios/rust-ecosystem/main/audits.toml"
+
 [imports.google]
 url = "https://raw.githubusercontent.com/google/rust-crate-audits/main/audits.toml"
 
@@ -20,9 +23,6 @@ url = "https://raw.githubusercontent.com/mozilla/supply-chain/main/audits.toml"
 url = "https://raw.githubusercontent.com/zcash/rust-ecosystem/main/supply-chain/audits.toml"
 
 [policy.pareen]
-audit-as-crates-io = true
-
-[policy.qrcodegen]
 audit-as-crates-io = true
 
 [policy.trezor-tjpgdec]
@@ -52,21 +52,8 @@ criteria = "safe-to-deploy"
 version = "0.3.76"
 criteria = "safe-to-deploy"
 
-[[exemptions.bitflags]]
-version = "2.11.0"
-criteria = "safe-to-deploy"
-notes = "forbid-unsafe"
-
 [[exemptions.bstr]]
 version = "1.12.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.camino]]
-version = "1.2.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.cargo_metadata]]
-version = "0.23.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
@@ -193,11 +180,6 @@ notes = "no-unsafe"
 version = "0.2.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.qrcodegen]]
-version = "1.8.0"
-criteria = "safe-to-deploy"
-notes = "forbid-unsafe"
-
 [[exemptions.regex-automata]]
 version = "0.4.14"
 criteria = "safe-to-deploy"
@@ -216,10 +198,6 @@ criteria = "safe-to-run"
 
 [[exemptions.ryu]]
 version = "1.0.23"
-criteria = "safe-to-deploy"
-
-[[exemptions.semver]]
-version = "1.0.27"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_json]]
