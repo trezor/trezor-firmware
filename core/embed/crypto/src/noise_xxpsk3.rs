@@ -17,7 +17,7 @@ impl HazardGuard<'_, ffi::noise_xxpsk3_initiator_t> {
     fn init(&mut self) -> Result<(), ()> {
         // SAFETY: ffi
         let res = unsafe { ffi::noise_xxpsk3_initiator_init(self.hazard_mut()) };
-        if res { return Ok(()) } else { return Err(()) }
+        if res { Ok(()) } else { Err(()) }
     }
 
     fn create_request1(&mut self, payload: &[u8], request: &mut [u8]) -> Result<usize, ()> {
@@ -161,32 +161,28 @@ impl<D: DerefMut<Target = NoiseXXpsk3Ctx>> NoiseXXpsk3<D> {
         Ok(Self(locked_ctx))
     }
 
-    pub fn create_request1<'a>(
-        &mut self,
-        payload: &[u8],
-        request: &'a mut [u8],
-    ) -> Result<usize, ()> {
+    pub fn create_request1(&mut self, payload: &[u8], request: &mut [u8]) -> Result<usize, ()> {
         self.0.guarded().create_request1(payload, request)
     }
 
-    pub fn handle_response1<'a>(
+    pub fn handle_response1(
         &mut self,
         response: &[u8],
         remote_static_public_key: &mut [u8; DHLEN],
-        payload: &'a mut [u8],
+        payload: &mut [u8],
     ) -> Result<usize, ()> {
         self.0
             .guarded()
             .handle_response1(response, remote_static_public_key, payload)
     }
 
-    pub fn create_request2<'a>(
+    pub fn create_request2(
         &mut self,
         static_private_key: &[u8; DHLEN],
         static_public_key: &[u8; DHLEN],
         psk: &[u8; DHLEN],
         payload: &[u8],
-        request: &'a mut [u8],
+        request: &mut [u8],
     ) -> Result<usize, ()> {
         self.0.guarded().create_request2(
             static_private_key,
@@ -197,19 +193,11 @@ impl<D: DerefMut<Target = NoiseXXpsk3Ctx>> NoiseXXpsk3<D> {
         )
     }
 
-    pub fn send_message<'a>(
-        &mut self,
-        payload: &[u8],
-        ciphertext: &'a mut [u8],
-    ) -> Result<usize, ()> {
+    pub fn send_message(&mut self, payload: &[u8], ciphertext: &mut [u8]) -> Result<usize, ()> {
         self.0.guarded().send_message(payload, ciphertext)
     }
 
-    pub fn receive_message<'a>(
-        &mut self,
-        ciphertext: &[u8],
-        payload: &'a mut [u8],
-    ) -> Result<usize, ()> {
+    pub fn receive_message(&mut self, ciphertext: &[u8], payload: &mut [u8]) -> Result<usize, ()> {
         self.0.guarded().receive_message(ciphertext, payload)
     }
 }
