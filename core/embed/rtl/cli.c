@@ -335,6 +335,9 @@ static const char* cli_history_fwd(cli_t* cli, int* idx, char* line,
 
 #define ESC_SEQ(ch) (0x200 + (ch))
 
+// Maximum numeric code accepted in a VT sequence (ESC[<number>~)
+#define ESC_CODE_MAX 64
+
 // Reads a character from the console input and return it.
 // Comple escape sequences translates into ESC_SEQ values
 //   - ESC[<letter> => ESC_SEQ(letter),   e.g. ESC[A => ESC_SEQ('A')
@@ -370,8 +373,14 @@ static int cli_readch(cli_t* cli) {
       return ESC_SEQ(ch);
     } else if (cli->esc_len >= 2 && ch >= '0' && ch <= '9') {
       // VT sequences - ESC[<number>~
-      cli->esc_code = cli->esc_code * 10 + (ch - '0');
-      cli->esc_len++;
+      int code = cli->esc_code * 10 + (ch - '0');
+      if (code > ESC_CODE_MAX) {
+        // Number too large, treat as invalid VT sequence
+        cli->esc_len = 0;
+      } else {
+        cli->esc_code = code;
+        cli->esc_len++;
+      }
     } else if (cli->esc_len >= 3 && ch == '~') {
       // End of VT sequence
       cli->esc_len = 0;
