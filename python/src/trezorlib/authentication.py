@@ -97,6 +97,10 @@ class AllowList:
             raise ValueError(
                 "Invalid allow list: no CA public keys or revoked public keys."
             )
+        if self.whitelist is not None and self.blacklist is not None:
+            raise ValueError(
+                "Invalid allow list: both CA public keys and revoked public keys present."
+            )
 
     def is_allowed(self, pubkey: bytes) -> bool:
         if self.whitelist is not None:
