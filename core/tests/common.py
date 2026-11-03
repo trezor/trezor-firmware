@@ -75,14 +75,16 @@ _SIGNING_UI_STUBS = (
 class UiCall:
     """Expected (or recorded) call of a `apps.bitcoin.sign_tx.layout` function."""
 
-    def __init__(self, name: str, args: tuple, kwargs: dict) -> None:
+    def __init__(
+        self, name: str, args: tuple[Any, ...], kwargs: dict[str, Any]
+    ) -> None:
         if name not in _SIGNING_UI_STUBS:
             raise AttributeError(f"unknown signing UI function: {name}")
         self.name = name
         self.args = args
         self.kwargs = kwargs
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: Any) -> bool:
         return (
             isinstance(other, UiCall)
             and self.name == other.name
