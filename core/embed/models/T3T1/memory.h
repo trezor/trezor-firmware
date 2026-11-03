@@ -89,6 +89,10 @@
 #define FB1_RAM_START 0x300A3E00
 #define FB1_RAM_SIZE (115200)
 
+// Single framebuffer configuration: FB2 is unused (FRAME_BUFFER_COUNT == 1)
+#define FB2_RAM_START 0x300C0000
+#define FB2_RAM_SIZE (0)
+
 // misc
 #define CODE_ALIGNMENT 0x200
 #define COREAPP_ALIGNMENT 0x2000
