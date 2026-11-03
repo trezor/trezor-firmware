@@ -93,7 +93,7 @@ class DecredApprover(BasicApprover):
         from .layout import confirm_decred_sstx_submission
 
         # NOTE: The following calls Approver.add_external_output(), not BasicApprover.add_external_output().
-        # This is needed to skip calling helpers.confirm_output(), which is what BasicApprover would do.
+        # This is needed to skip calling layout.confirm_output(), which is what BasicApprover would do.
         await super(BasicApprover, self).add_external_output(
             txo, script_pubkey, None, None
         )
