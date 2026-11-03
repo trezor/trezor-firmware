@@ -1,5 +1,5 @@
 import io
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 
 from trezorlib import exceptions, protobuf
 from trezorlib.messages import ExtAppMessage, ExtAppResponse, Failure
@@ -11,17 +11,17 @@ if TYPE_CHECKING:
     from trezorlib.client import Session
     from trezorlib.tools import Address
 
-    TronMessageType = Union[
-        tron_messages.TransferContract,
-        tron_messages.TriggerSmartContract,
-        tron_messages.FreezeBalanceV2Contract,
-        tron_messages.UnfreezeBalanceV2Contract,
-        tron_messages.WithdrawUnfreeze,
-        tron_messages.WithdrawBalance,
-        tron_messages.VoteWitnessContract,
-        tron_messages.DelegateResourceContract,
-        tron_messages.UnDelegateResourceContract,
-    ]
+    TronMessageType = (
+        tron_messages.TransferContract
+        | tron_messages.TriggerSmartContract
+        | tron_messages.FreezeBalanceV2Contract
+        | tron_messages.UnfreezeBalanceV2Contract
+        | tron_messages.WithdrawUnfreeze
+        | tron_messages.WithdrawBalance
+        | tron_messages.VoteWitnessContract
+        | tron_messages.DelegateResourceContract
+        | tron_messages.UnDelegateResourceContract
+    )
 
 
 def message_id(msg: type[protobuf.MessageType] | protobuf.MessageType) -> int:
