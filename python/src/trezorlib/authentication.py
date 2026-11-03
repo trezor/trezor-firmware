@@ -292,7 +292,7 @@ class RootKeyType(Enum):
     STAGING = "staging"
 
 
-class RootCertificate(t.NamedTuple):
+class RootPublicKeys(t.NamedTuple):
     name: str
     trezor_models: tuple[models.TrezorModel, ...]
     key_type: RootKeyType
@@ -322,28 +322,28 @@ class RootCertificate(t.NamedTuple):
 
 
 ROOT_PUBLIC_KEYS = [
-    RootCertificate(
+    RootPublicKeys(
         # Root production key for T2B1.
         "Trezor Company",
         (models.T2B1,),
         RootKeyType.PROD,
         _pk_p256(_root_keys.T2B1_DEV_AUTH_ROOT_PROD_P256_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root production key for T3B1.
         "Trezor Company",
         (models.T3B1,),
         RootKeyType.PROD,
         _pk_p256(_root_keys.T3B1_DEV_AUTH_ROOT_PROD_P256_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root production key for T3T1.
         "Trezor Company",
         (models.T3T1,),
         RootKeyType.PROD,
         _pk_p256(_root_keys.T3T1_DEV_AUTH_ROOT_PROD_P256_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root production keys for T3W1.
         "Trezor Company",
         (models.T3W1,),
@@ -352,7 +352,7 @@ ROOT_PUBLIC_KEYS = [
         _pk_ed25519(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_ED25519_HEX),
         _pk_mldsa44(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_MLDSA44_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root backup production keys for T3W1.
         "Trezor Company",
         (models.T3W1,),
@@ -361,21 +361,21 @@ ROOT_PUBLIC_KEYS = [
         _pk_ed25519(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_BACKUP_ED25519_HEX),
         _pk_mldsa44(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_BACKUP_MLDSA44_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root debug key for T2B1 and T3B1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
         (models.T2B1, models.T3B1),
         RootKeyType.DEBUG,
         _pk_p256(_root_keys.T2B1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root debug key for T3T1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
         (models.T3T1,),
         RootKeyType.DEBUG,
         _pk_p256(_root_keys.T3T1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root debug keys for T3W1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
         (models.T3W1,),
@@ -384,7 +384,7 @@ ROOT_PUBLIC_KEYS = [
         _pk_ed25519(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_ED25519_HEX),
         _pk_mldsa44(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_MLDSA44_HEX),
     ),
-    RootCertificate(
+    RootPublicKeys(
         # Root staging keys for T3W1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
         (models.T3W1,),
@@ -512,7 +512,7 @@ class AuthenticationResult(t.NamedTuple):
     end-entity (device) certificate.
     """
 
-    root: RootCertificate | None
+    root: RootPublicKeys | None
     common_name: str
     serial_number: str | None
 
@@ -664,7 +664,7 @@ def authenticate_device(
     p256_root_pubkey: bytes | PublicKey | None = None,
     ed25519_root_pubkey: bytes | PublicKey | None = None,
     mldsa44_root_pubkey: bytes | PublicKey | None = None,
-) -> RootCertificate | None:
+) -> RootPublicKeys | None:
     if challenge is None:
         challenge = secrets.token_bytes(16)
 

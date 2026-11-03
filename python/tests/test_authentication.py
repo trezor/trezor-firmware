@@ -31,8 +31,8 @@ from trezorlib import _ed25519, authentication, messages, models
 from trezorlib.authentication import (
     AttestationSource,
     DeviceNotAuthentic,
-    RootCertificate,
     RootKeyType,
+    RootPublicKeys,
 )
 
 OPTIGA = AttestationSource.OPTIGA
@@ -84,7 +84,7 @@ def authenticate_proof(
     proof: messages.AuthenticityProof,
     version: tuple[int, int, int] = MCU_VERSION,
     **kwargs: t.Any,
-) -> RootCertificate | None:
+) -> RootPublicKeys | None:
     monkeypatch.setattr(
         authentication.device, "authenticate", lambda session, challenge: proof
     )
@@ -166,7 +166,7 @@ def make_certificate(
 
 
 class FakeRoot:
-    """Root private keys together with the matching `RootCertificate`."""
+    """Root private keys together with the matching `RootPublicKeys`."""
 
     def __init__(
         self,
@@ -179,7 +179,7 @@ class FakeRoot:
             source: authentication.PublicKey.from_public_key(key.public_key())
             for source, key in self.keys.items()
         }
-        self.certificate = RootCertificate(
+        self.public_keys = RootPublicKeys(
             f"Test {key_type.name} root",
             trezor_models,
             key_type,
@@ -189,7 +189,7 @@ class FakeRoot:
         )
 
     def pubkey_bytes(self, source: AttestationSource) -> bytes:
-        return self.certificate.pubkey_for_attestation_source(source).to_bytes()
+        return self.public_keys.pubkey_for_attestation_source(source).to_bytes()
 
 
 class Chain(t.NamedTuple):
@@ -297,7 +297,7 @@ def roots(module_roots: Roots, monkeypatch: pytest.MonkeyPatch) -> Roots:
     monkeypatch.setattr(
         authentication,
         "ROOT_PUBLIC_KEYS",
-        [root.certificate for root in module_roots],
+        [root.public_keys for root in module_roots],
     )
     return module_roots
 
@@ -328,7 +328,7 @@ def authenticate(
     chains: t.Mapping[AttestationSource, Chain],
     version: tuple[int, int, int] = MCU_VERSION,
     **kwargs: t.Any,
-) -> RootCertificate | None:
+) -> RootPublicKeys | None:
     return authenticate_proof(monkeypatch, model, make_proof(chains), version, **kwargs)
 
 
@@ -339,14 +339,14 @@ def authenticate(
 def test_verify_builtin_root(roots: Roots, source: AttestationSource) -> None:
     chain = make_chain(roots.t3w1_prod, source)
     result = verify(chain, source)
-    assert result.root is roots.t3w1_prod.certificate
+    assert result.root is roots.t3w1_prod.public_keys
     assert result.common_name == "T3W1 Trezor Safe 7"
     assert result.serial_number == SERIAL
 
 
 def test_verify_backup_root(roots: Roots) -> None:
     chain = make_chain(roots.t3w1_backup, OPTIGA)
-    assert verify(chain, OPTIGA).root is roots.t3w1_backup.certificate
+    assert verify(chain, OPTIGA).root is roots.t3w1_backup.public_keys
 
 
 def test_verify_without_serial_number(roots: Roots) -> None:
@@ -384,7 +384,7 @@ def test_verify_root_of_other_model(
 def test_verify_root_shared_by_models(roots: Roots, common_name: str) -> None:
     chain = make_chain(roots.safe3_debug, OPTIGA, common_name, None)
     result = verify(chain, OPTIGA, allow_development_devices=True)
-    assert result.root is roots.safe3_debug.certificate
+    assert result.root is roots.safe3_debug.public_keys
 
 
 def test_verify_unknown_model(
@@ -457,7 +457,7 @@ def test_verify_debug_root(
     chain = make_chain(roots.t3w1_debug, OPTIGA)
     if devel_allowed:
         result = verify(chain, OPTIGA, allow_development_devices=True)
-        assert result.root is roots.t3w1_debug.certificate
+        assert result.root is roots.t3w1_debug.public_keys
     else:
         with pytest.raises(DeviceNotAuthentic):
             verify(chain, OPTIGA)
@@ -508,7 +508,7 @@ def test_verify_custom_root_mismatch(
 
 def test_authenticate_t3w1(roots: Roots, monkeypatch: pytest.MonkeyPatch) -> None:
     root = authenticate(monkeypatch, models.T3W1, make_chains(roots.t3w1_prod))
-    assert root is roots.t3w1_prod.certificate
+    assert root is roots.t3w1_prod.public_keys
 
 
 def test_authenticate_t3w1_debug(
@@ -520,7 +520,7 @@ def test_authenticate_t3w1_debug(
     root = authenticate(
         monkeypatch, models.T3W1, chains, allow_development_devices=True
     )
-    assert root is roots.t3w1_debug.certificate
+    assert root is roots.t3w1_debug.public_keys
     with pytest.raises(DeviceNotAuthentic):
         authenticate(monkeypatch, models.T3W1, chains)
     assert_logged_error(caplog_error, "manufactured by Test DEBUG root")
@@ -566,7 +566,7 @@ def test_authenticate_t3w1_mcu_min_version(
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     root = authenticate(monkeypatch, models.T3W1, chains, version=MCU_VERSION)
-    assert root is roots.t3w1_prod.certificate
+    assert root is roots.t3w1_prod.public_keys
 
     major, minor, patch = MCU_VERSION
     older = (major, minor, patch - 1)
@@ -595,7 +595,7 @@ def test_authenticate_optiga_only(
     garbage = make_chain(FakeRoot((model,), RootKeyType.PROD), TROPIC, common_name)
     garbage_mcu = make_chain(FakeRoot((model,), RootKeyType.PROD), MCU, common_name)
     chains = {OPTIGA: chain, TROPIC: garbage, MCU: garbage_mcu}
-    assert authenticate(monkeypatch, model, chains) is root.certificate
+    assert authenticate(monkeypatch, model, chains) is root.public_keys
 
 
 @pytest.mark.parametrize("source", [OPTIGA, TROPIC])
@@ -764,7 +764,7 @@ def test_authenticate_safe3_safe5_serial_number(
 ) -> None:
     root = getattr(roots, root_name)
     chain = make_chain(root, OPTIGA, common_name, serial_number)
-    assert authenticate(monkeypatch, model, {OPTIGA: chain}) is root.certificate
+    assert authenticate(monkeypatch, model, {OPTIGA: chain}) is root.public_keys
 
 
 # ==== tests with the built-in root keys ====
@@ -849,7 +849,7 @@ def emulator_signature(source: AttestationSource) -> bytes:
 TESTING_ROOT_NAME = "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE"
 
 
-def builtin_roots(model: models.TrezorModel) -> list[RootCertificate]:
+def builtin_roots(model: models.TrezorModel) -> list[RootPublicKeys]:
     return [r for r in authentication.ROOT_PUBLIC_KEYS if model in r.trezor_models]
 
 
