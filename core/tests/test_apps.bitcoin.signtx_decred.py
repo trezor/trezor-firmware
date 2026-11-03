@@ -6,7 +6,7 @@ if (
     and not utils.BITCOIN_ONLY
 ):
     from trezor.crypto import bip39
-    from trezor.enums import OutputScriptType
+    from trezor.enums import AmountUnit, OutputScriptType
     from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
     from trezor.messages import (
         PrevInput,
@@ -97,6 +97,9 @@ class TestSignTxDecred(unittest.TestCase):
             outputs_count=1,
         )
 
+        # precomputed tx weight is 864
+        fee_rate = 100_000 / (864 / 4)
+
         messages = [
             TxRequest(
                 request_type=TXINPUT,
@@ -116,6 +119,17 @@ class TestSignTxDecred(unittest.TestCase):
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
+            ui.confirm_output(
+                out1, coin_decred, AmountUnit.BITCOIN, 0, False, [H_(44), H_(1), H_(0)]
+            ),
+            ui.confirm_total(
+                200_000_000,
+                100_000,
+                fee_rate,
+                coin_decred,
+                AmountUnit.BITCOIN,
+                inp1.address_n[:3],
+            ),
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -239,6 +253,9 @@ class TestSignTxDecred(unittest.TestCase):
             decred_staking_ticket=True,
         )
 
+        # precomputed tx weight is 1188
+        fee_rate = 100_000 / (1188 / 4)
+
         messages = [
             TxRequest(
                 request_type=TXINPUT,
@@ -258,6 +275,7 @@ class TestSignTxDecred(unittest.TestCase):
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
+            ui.confirm_decred_sstx_submission(out1, coin_decred, AmountUnit.BITCOIN),
             TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
@@ -278,6 +296,14 @@ class TestSignTxDecred(unittest.TestCase):
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out3)),
+            ui.confirm_total(
+                200_000_000,
+                100_000,
+                fee_rate,
+                coin_decred,
+                AmountUnit.BITCOIN,
+                inp1.address_n[:3],
+            ),
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),

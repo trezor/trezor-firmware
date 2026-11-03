@@ -2,7 +2,7 @@
 from common import *  # isort:skip
 
 from trezor.crypto import bip39
-from trezor.enums import OutputScriptType
+from trezor.enums import AmountUnit, OutputScriptType
 from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
 from trezor.messages import (
     PrevInput,
@@ -94,6 +94,9 @@ class TestSignTx(unittest.TestCase):
             coin_name=None, version=1, lock_time=0, inputs_count=1, outputs_count=1
         )
 
+        # precomputed tx weight is 768
+        fee_rate = 50_000 / (768 / 4)
+
         messages = [
             TxRequest(
                 request_type=TXINPUT,
@@ -107,6 +110,17 @@ class TestSignTx(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
+            ui.confirm_output(
+                out1, coin_bitcoin, AmountUnit.BITCOIN, 0, False, [H_(44), H_(0), H_(0)]
+            ),
+            ui.confirm_total(
+                3_801_747,
+                50_000,
+                fee_rate,
+                coin_bitcoin,
+                AmountUnit.BITCOIN,
+                inp1.address_n[:3],
+            ),
             # ButtonRequest(code=ButtonRequest_ConfirmOutput),
             # ButtonRequest(code=ButtonRequest_SignTx),
             TxRequest(

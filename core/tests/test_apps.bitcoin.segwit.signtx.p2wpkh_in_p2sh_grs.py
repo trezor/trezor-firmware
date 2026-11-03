@@ -2,7 +2,7 @@
 from common import *  # isort:skip
 
 from trezor.crypto import bip39
-from trezor.enums import InputScriptType, OutputScriptType
+from trezor.enums import AmountUnit, InputScriptType, OutputScriptType
 from trezor.enums.RequestType import TXFINISHED, TXINPUT, TXMETA, TXOUTPUT
 from trezor.messages import (
     PrevInput,
@@ -107,6 +107,9 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             outputs_count=2,
         )
 
+        # precomputed tx weight is 168 = ceil(670 / 4)
+        fee_rate = 11000 / 168
+
         messages = [
             # check fee
             TxRequest(
@@ -121,12 +124,27 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
+            ui.confirm_output(
+                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
+            ),
             TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
+            ui.confirm_output(
+                out2, coin, AmountUnit.BITCOIN, 1, False, [H_(49), H_(1), H_(0)]
+            ),
+            ui.confirm_nondefault_locktime(tx.lock_time, False),
+            ui.confirm_total(
+                123445789 + 11000,
+                11000,
+                fee_rate,
+                coin,
+                AmountUnit.BITCOIN,
+                inp1.address_n[:3],
+            ),
             # check prev tx
             TxRequest(
                 request_type=TXINPUT,
@@ -297,6 +315,9 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             outputs_count=2,
         )
 
+        # precomputed tx weight is 168 = ceil(670 / 4)
+        fee_rate = 11000 / 168
+
         messages = [
             # check fee
             TxRequest(
@@ -311,12 +332,24 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
+            ui.confirm_output(
+                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
+            ),
             TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
+            ui.confirm_nondefault_locktime(tx.lock_time, False),
+            ui.confirm_total(
+                12300000 + 11000,
+                11000,
+                fee_rate,
+                coin,
+                AmountUnit.BITCOIN,
+                inp1.address_n[:3],
+            ),
             # check prev tx
             TxRequest(
                 request_type=TXINPUT,
