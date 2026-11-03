@@ -15,6 +15,7 @@ if not utils.BITCOIN_ONLY:
         EthereumERC7730FieldInfo,
         EthereumERC7730Path,
     )
+    from trezor.ui.layouts.properties import AboveThreshold
 
     from apps.ethereum import clear_signing_definitions
     from apps.ethereum.clear_signing import (
@@ -48,6 +49,7 @@ if not utils.BITCOIN_ONLY:
         parse_string,
         parse_uint256,
     )
+    from apps.ethereum.tokens import UNKNOWN_TOKEN
 
     parse_bytes4 = make_fixed_bytes_parser(4)
     parse_bytes8 = make_fixed_bytes_parser(8)
@@ -1158,11 +1160,98 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertIn("stETH", formatted)
         self.assertIn("2", formatted)
 
-    def test_token_amount_no_token_source_rejected(self):
-        # Neither token_path nor const_token_address set -> cannot resolve a token.
+    # --- tokenAmount without a token (neither token_path nor const_token_address) ---
+
+    ZERO_ADDRESS = b"\x00" * 20
+    NATIVE_SENTINEL = b"\xee" * 20
+
+    @staticmethod
+    def _eth_defs():
+        class _Defs:
+            network = make_eth_network(symbol="ETH")
+
+            def get_token(self, address):
+                raise AssertionError("a tokenless amount must not look up a token")
+
+        return _Defs()
+
+    def test_from_proto_token_amount_without_token(self):
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Minimum to Receive",
+            formatter=FT.FORMATTER_TOKEN_AMOUNT,
+            native_currency_address=[self.ZERO_ADDRESS, self.NATIVE_SENTINEL],
+        )
+        fmt = FieldDefinition.from_proto(info).get_formatter()
+        self.assertIsInstance(fmt, TokenAmountFormatter)
+        self.assertIsNone(fmt.token_path)
+        self.assertIsNone(fmt.const_token_address)
+
+    def test_token_amount_without_token_is_unknown(self):
+        # Rendered as the raw integer with the unknown-token ticker, and no
+        # token address, so the confirm screen cannot claim a token contract.
         fmt = TokenAmountFormatter()
-        with self.assertRaises(InvalidFormatDefinition):
-            await_result(fmt.format(1, None, None, None))
+        formatted, token, addr = await_result(
+            fmt.format(995 * 10**15, None, self._eth_defs(), None)
+        )
+        self.assertEqual(formatted, "995,000,000,000,000,000 Wei UNKN")
+        self.assertIs(token, UNKNOWN_TOKEN)
+        self.assertIsNone(addr)
+
+    def test_token_amount_without_token_is_never_native(self):
+        # Even when the descriptor lists the zero address as native currency,
+        # a missing token must not be rendered as ETH.
+        fmt = TokenAmountFormatter(
+            native_currency_address=[self.ZERO_ADDRESS, self.NATIVE_SENTINEL]
+        )
+        formatted, token, addr = await_result(
+            fmt.format(995 * 10**15, None, self._eth_defs(), None)
+        )
+        self.assertEqual(formatted, "995,000,000,000,000,000 Wei UNKN")
+        self.assertIs(token, UNKNOWN_TOKEN)
+        self.assertIsNone(addr)
+
+    def test_token_amount_without_token_threshold(self):
+        # `threshold` is compared against the raw amount, independent of
+        # decimals: above it the message is shown, below it the raw value.
+        fmt = TokenAmountFormatter(threshold=1000, threshold_message="Unlimited")
+        formatted, token, addr = await_result(
+            fmt.format(1000, None, self._eth_defs(), None)
+        )
+        self.assertIsInstance(formatted, AboveThreshold)
+        self.assertEqual(formatted.message, "Unlimited")
+        self.assertIs(token, UNKNOWN_TOKEN)
+        self.assertIsNone(addr)
+
+        formatted, token, addr = await_result(
+            fmt.format(999, None, self._eth_defs(), None)
+        )
+        self.assertEqual(formatted, "999 Wei UNKN")
+        self.assertIs(token, UNKNOWN_TOKEN)
+        self.assertIsNone(addr)
+
+    def test_token_amount_without_token_multi_value(self):
+        fmt = TokenAmountFormatter()
+        formatted, token, addr = await_result(
+            _format_field_value(fmt, [1, 2], None, self._eth_defs(), None)
+        )
+        self.assertEqual(formatted, "1 Wei UNKN\n2 Wei UNKN")
+        self.assertIs(token, UNKNOWN_TOKEN)
+        self.assertIsNone(addr)
+
+    def test_token_amount_explicit_zero_token_is_native(self):
+        # An explicit `token: 0x000...` listed in nativeCurrencyAddress is a
+        # legitimate way to denote the native currency.
+        fmt = TokenAmountFormatter(
+            const_token_address=self.ZERO_ADDRESS,
+            native_currency_address=[self.ZERO_ADDRESS, self.NATIVE_SENTINEL],
+        )
+        formatted, token, addr = await_result(
+            fmt.format(2 * 10**18, None, self._eth_defs(), None)
+        )
+        self.assertEqual(formatted, "2 ETH")
+        self.assertIsNone(token)
+        self.assertIsNone(addr)
 
     # --- `calldata` fields (nested invocations) ---
 
@@ -1526,6 +1615,34 @@ class TestEthereumClearSigning(unittest.TestCase):
             clear_signing_definitions.all_display_formats = original
 
         self._assert_raw_fallback(fields, blob)
+
+    def test_calldata_inner_token_amount_without_token(self):
+        # A tokenless amount inside a subcall renders as an unknown token (no
+        # token address) instead of degrading the subcall to raw hex.
+        blob = b"\x12\x34\x56\x78" + to_bytes(995)
+        inner_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x12\x34\x56\x78",
+            intent="Inner",
+            parameter_definitions=[Atomic(parse_uint256)],
+            field_definitions=[
+                FieldDefinition((0,), "Minimum to Receive", TokenAmountFormatter())
+            ],
+        )
+
+        original = clear_signing_definitions.all_display_formats
+        clear_signing_definitions.all_display_formats = lambda: iter([inner_format])
+        try:
+            fields = self._expand(blob)
+        finally:
+            clear_signing_definitions.all_display_formats = original
+
+        self.assertEqual(len(fields), 3)
+        (label, formatted, _), token, token_address = fields[2]
+        self.assertEqual(label, "(Subcall) Minimum to Receive")
+        self.assertEqual(formatted, "995 Wei UNKN")
+        self.assertIs(token, UNKNOWN_TOKEN)
+        self.assertIsNone(token_address)
 
     # --- arrays of subcalls (`bytes[] data`, e.g. a multicall) ---
 

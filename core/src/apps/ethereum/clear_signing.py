@@ -385,6 +385,7 @@ class TokenAmountFormatter(FieldFormatter):
         if not isinstance(amount, int):
             raise InvalidFormatDefinition
 
+        token_address: AnyBytes | None
         if self.const_token_address is not None:
             # token given as a literal constant address
             token_address = self.const_token_address
@@ -394,47 +395,36 @@ class TokenAmountFormatter(FieldFormatter):
                 raise InvalidFormatDefinition
             token_address = walked
         else:
-            raise InvalidFormatDefinition
+            # The descriptor does not say which token this is. Per ERC-7730,
+            # show the raw value as an unknown token.
+            token_address = None
 
-        # TODO: Dead code. We don't pull this externally but we should.
-        if self.native_currency_address is not None:
-            if token_address in self.native_currency_address:
-                if self.threshold is not None and amount >= self.threshold:
-                    return (
-                        AboveThreshold(self.threshold_message or TR.words__unlimited),
-                        None,
-                        None,
+        token: EthereumTokenInfo | None
+        if token_address is None:
+            token = UNKNOWN_TOKEN
+        elif (
+            # Addresses the descriptor declares as the native currency.
+            # Typically zero's (0x000..), or ERC-7528 (0xeeee..) address.
+            self.native_currency_address is not None
+            and token_address in self.native_currency_address
+        ):
+            token = None
+            token_address = None
+        else:
+            token = defs.get_token(token_address)
+            if token is UNKNOWN_TOKEN:
+                if msg.supports_definition_request:
+                    received_definitions, _ = await request_definitions(
+                        msg.chain_id, token_address, func_sig=None
                     )
-                else:
-                    return (
-                        format_ethereum_amount(amount, None, defs.network),
-                        None,
-                        None,
-                    )
-
-        # Non-native currency - dealing with tokens
-
-        token = defs.get_token(token_address)
-        if token is UNKNOWN_TOKEN:
-            if msg.supports_definition_request:
-                received_definitions, _ = await request_definitions(
-                    msg.chain_id, token_address, func_sig=None
-                )
-                if received_definitions is not None:
-                    token = received_definitions.get_token(token_address)
+                    if received_definitions is not None:
+                        token = received_definitions.get_token(token_address)
 
         if self.threshold is not None and amount >= self.threshold:
-            return (
-                AboveThreshold(self.threshold_message or TR.words__unlimited),
-                token,
-                token_address,
-            )
+            formatted = AboveThreshold(self.threshold_message or TR.words__unlimited)
         else:
-            return (
-                format_ethereum_amount(amount, token, defs.network),
-                token,
-                token_address,
-            )
+            formatted = format_ethereum_amount(amount, token, defs.network)
+        return formatted, token, token_address
 
 
 class UnitFormatter(FieldFormatter):
@@ -1575,8 +1565,8 @@ async def _handle_generic_ui(
         if amount is not None and formatted == amount:
             value_shown_as_field = True
         properties_to_confirm.append((label, formatted, is_mono))
-        if actual_token is tokens.UNKNOWN_TOKEN:
-            assert actual_token_address is not None
+        # a tokenless amount has no contract address to show
+        if actual_token is tokens.UNKNOWN_TOKEN and actual_token_address is not None:
             token_address_str = address_from_bytes(actual_token_address, defs.network)
             token_address_property: StrPropertyType = (
                 TR.ethereum__token_contract,
