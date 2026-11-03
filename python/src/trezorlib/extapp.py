@@ -20,7 +20,7 @@ import base64
 import json
 from hashlib import sha256
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 import construct as c
 from construct_classes import subcon
@@ -261,7 +261,7 @@ def load(
 def load_tapp(
     session: Session,
     tapp_file: Path,
-    min_version: Optional[tuple[int, int, int, int]] = None,
+    min_version: tuple[int, int, int, int] | None = None,
     match_fingerprint: bool = False,
 ) -> int:
     """Load a serialized external application (`.tapp`) onto the device.
