@@ -205,3 +205,23 @@ jobs:
             check-usb-permissions.log
           retention-days: 7
         if: always()
+
+  notify_scheduled_failure_to_slack:
+    name: Notify Slack on nightly failure
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only nightly runs; manual runs are watched by whoever started them.
+    # if: failure() && github.event_name == 'schedule'
+    # FIXME: testing only, restore the condition above before merging
+    if: always() && github.event_name == 'workflow_dispatch'
+    needs: [core_device_test, core_monero_test, legacy_device_test]
+    steps:
+      - name: Notify scheduled job failure to Slack
+        env:
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
+          COMMIT_SHA: ${{ github.sha }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HW_TESTS_WEBHOOK }}
+        run: |
+          jq -n --arg text "Nightly hardware tests failed on \`$GITHUB_REF_NAME\` (<$COMMIT_URL|${COMMIT_SHA::10}>): <$GITHUB_RUN_URL|GitHub run>" '{text: $text}' \
+            | curl -sSf -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL"
