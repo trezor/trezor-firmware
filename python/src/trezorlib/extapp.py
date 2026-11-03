@@ -185,7 +185,7 @@ def load(
     chunk_hashes: list[bytes],
     proof: bytes,
     root_packet: bytes,
-    min_version: Optional[tuple[int, int, int, int]],
+    min_version: tuple[int, int, int, int] | None,
     match_fingerprint: bool = False,
 ) -> int:
     """Load an external application onto the device.
