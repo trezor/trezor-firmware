@@ -7,9 +7,12 @@ set -euo pipefail
 repo_dir=$(cd "$(dirname "$0")/../.." && pwd)
 usage() {
     cat >&2 <<EOF
-Usage: $0 [--apk] [--no-window] [--avd NAME] [--console-port N] [--port N]
+Usage: $0 [--apk] [--disable-animation] [--no-window] [--avd NAME]
+          [--console-port N] [--port N]
 
   --apk             show the Trezor screen (default: headless firmware)
+  --disable-animation
+                    disable the APK's animations, as device tests need
   --no-window       do not show the Android virtual device's window
   --avd NAME        virtual device, created if missing (default: trezor-android)
   --console-port N  Android emulator console port (default: 5580)
@@ -20,14 +23,15 @@ EOF
     exit 2
 }
 
-apk=()
+args=("$@")
+runner_args=()
 window=()
 avd=trezor-android
 console_port=5580
 port=31344
 while [ $# -gt 0 ]; do
     case "$1" in
-        --apk) apk=(--apk) ;;
+        --apk | --disable-animation) runner_args+=("$1") ;;
         --no-window) window=(-no-window) ;;
         --avd) avd=${2:?}; shift ;;
         --console-port) console_port=${2:?}; shift ;;
@@ -39,8 +43,7 @@ done
 
 if ! command -v emulator >/dev/null; then
     exec nix-shell "$repo_dir/tools/android/shell.nix" --arg withEmulator true \
-        --run "$(printf '%q ' "$0" "${apk[@]}" "${window[@]}" --avd "$avd" \
-            --console-port "$console_port" --port "$port")"
+        --run "$(printf '%q ' "$0" "${args[@]}")"
 fi
 
 serial="emulator-$console_port"
@@ -63,4 +66,5 @@ if ! adb devices | grep -q "^$serial\b"; then
 fi
 
 cd "$repo_dir"
-exec uv run python tools/android/run.py --serial "$serial" --port "$port" "${apk[@]}"
+exec uv run python tools/android/run.py --serial "$serial" --port "$port" \
+    "${runner_args[@]}"

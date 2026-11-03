@@ -91,6 +91,12 @@ def main() -> int:
     parser.add_argument(
         "--apk", action="store_true", help="run the APK with the Trezor screen"
     )
+    parser.add_argument(
+        "--disable-animation",
+        action="store_true",
+        help="disable the APK's animations, as device tests need (always "
+        "disabled when headless)",
+    )
     args = parser.parse_args()
     if not 30000 < args.port <= 65536 - PORT_COUNT:
         parser.error(f"--port must be between 30001 and {65536 - PORT_COUNT}")
@@ -135,6 +141,17 @@ def main() -> int:
 
     forwarded: list[int] = []
     relay: subprocess.Popen[str] | None = None
+    log_follower: subprocess.Popen[bytes] | None = None
+
+    def stop_device_log_follower() -> None:
+        # The device's tail outlives its adb client. run-as can only signal
+        # the app's own processes.
+        subprocess.run(
+            [*adb, "shell", f"run-as {APP_PACKAGE} pkill -x tail"],
+            check=False,
+            capture_output=True,
+        )
+
     try:
         # `adb forward` carries only TCP. The device relay converts it to UDP.
         relay = subprocess.Popen(
@@ -162,11 +179,23 @@ def main() -> int:
                 command(
                     "shell",
                     f"am start -W -n {APP_PACKAGE}/.TrezorActivity"
-                    f" --ei port {args.port}",
+                    f" --ei port {args.port}"
+                    f" --ez disable_animation {str(args.disable_animation).lower()}",
                     capture_output=True,
+                )
+                # Show the firmware's log, as when running it headless. Each
+                # start truncates the log, so follow it from the beginning.
+                log_follower = subprocess.Popen(
+                    [
+                        *adb,
+                        "shell",
+                        f"run-as {APP_PACKAGE} tail -n +1 -f files/firmware.log",
+                    ]
                 )
                 while shell(f"pidof {APP_PACKAGE} || true"):
                     time.sleep(1)
+                log_follower.terminate()
+                stop_device_log_follower()
 
         environment = {
             "LD_LIBRARY_PATH": remote,
@@ -205,6 +234,9 @@ def main() -> int:
                 pass
         if args.apk:
             subprocess.run([*adb, "shell", f"am force-stop {APP_PACKAGE}"], check=False)
+        if log_follower is not None:
+            log_follower.terminate()
+            stop_device_log_follower()
         if relay is not None:
             try:
                 relay.wait(timeout=5)

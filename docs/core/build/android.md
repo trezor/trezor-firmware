@@ -35,8 +35,6 @@ bash tools/android/build.sh x86_64
 The model defaults to T2T1; pass another one as the second argument, e.g.
 `bash tools/android/build.sh x86_64 T3W1`. The build always disables Optiga and
 Tropic, as Android has neither the secure elements nor the Tropic model server.
-The T3W1 screen works, but its host communication through the virtual device is
-not reliable yet: requests often time out.
 
 On Android, the firmware is linked as `libmain.so`, which exports only
 `SDL_main`. Each ABI's build is collected under `core/build/android/<ABI>/`:
@@ -81,7 +79,12 @@ uv run python tools/android/run.py --serial emulator-5580 --port 31344
 
 Add `--apk` to install and start the APK instead, which shows the Trezor screen
 on the device. Without it, the firmware runs headless with SDL's dummy video
-driver.
+driver. In both modes, the runner prints the firmware's log; the APK writes it
+to `files/firmware.log` in its data directory.
+
+Like `emu.py --headless`, the headless firmware always runs without animations,
+which device tests need: a click during an animation is lost. The APK keeps its
+animations, unless `--disable-animation` is passed to `run.py` or `start.sh`.
 
 The runner makes the firmware's seven UDP ports available on the host's
 `127.0.0.1`. `adb forward` carries only TCP, and the Android emulator's UDP
@@ -100,6 +103,11 @@ export TREZOR_PATH=udp:127.0.0.1:31344
 uv run trezorctl get-features
 uv run pytest tests/device_tests/test_msg_ping.py
 ```
+
+Models with THP, such as T3W1, ask for pairing on the device's screen when
+`trezorctl` connects. Confirm it on the APK's screen; the headless firmware
+cannot show it, so `trezorctl` waits until it times out. Device tests pair
+through debuglink and work in both modes.
 
 Stop the runner and the Android virtual device; like `start.sh`, the script
 enters the Nix shell when needed:

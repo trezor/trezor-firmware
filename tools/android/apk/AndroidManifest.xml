@@ -13,9 +13,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- Debuggable, so that run-as can read the firmware log. -->
     <application
         android:label="Trezor Emulator"
         android:allowBackup="false"
+        android:debuggable="true"
         android:extractNativeLibs="true"
         android:hardwareAccelerated="true"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
