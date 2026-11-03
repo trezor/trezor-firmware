@@ -54,10 +54,6 @@ class _ScriptEnded(Exception):
     pass
 
 
-async def _auto_confirm(*args, **kwargs):
-    return True
-
-
 _SIGNING_UI_STUBS = (
     "confirm_output",
     "confirm_decred_sstx_submission",
@@ -76,48 +72,104 @@ _SIGNING_UI_STUBS = (
 )
 
 
-def stub_signing_ui() -> None:
-    from apps.bitcoin.sign_tx import layout
+class UiCall:
+    """Expected (or recorded) call of a `apps.bitcoin.sign_tx.layout` function."""
 
-    for name in _SIGNING_UI_STUBS:
-        setattr(layout, name, _auto_confirm)
+    def __init__(self, name: str, args: tuple, kwargs: dict) -> None:
+        if name not in _SIGNING_UI_STUBS:
+            raise AttributeError(f"unknown signing UI function: {name}")
+        self.name = name
+        self.args = args
+        self.kwargs = kwargs
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, UiCall)
+            and self.name == other.name
+            and self.args == other.args
+            and self.kwargs == other.kwargs
+        )
+
+    def __repr__(self) -> str:
+        return f"<UiCall {self.name} args={self.args} kwargs={self.kwargs}>"
+
+
+class _UiExpectations:
+    """`ui.confirm_output(...)` builds the expected `UiCall` for `layout.confirm_output(...)`."""
+
+    def __getattr__(self, name: str):
+        def expect(*args, **kwargs) -> UiCall:
+            return UiCall(name, args, kwargs)
+
+        return expect
+
+
+ui = _UiExpectations()
 
 
 class ScriptedContext:
-    """Fake wire context that asserts TxRequests and returns scripted acknowledgements."""
+    """Fake wire context that asserts TxRequests and returns scripted acknowledgements.
+
+    Expected signing UI calls (`UiCall`s) are interleaved with the TxRequests in the
+    same script, so their relative order is asserted as well.
+    """
 
     def __init__(self, script: list, testcase: unittest.TestCase) -> None:
         self._script = script
         self._index = 0
         self._tc = testcase
 
-    async def call(self, msg, expected_type):
+    def _next_expected(self, actual) -> None:
         if self._index >= len(self._script):
-            self._tc.fail(f"unexpected TxRequest after end of script: {msg}")
+            self._tc.fail(f"unexpected {actual} after end of script")
         expected = self._script[self._index]
         self._index += 1
-        self._tc.assertEqual(msg, expected)
+        if isinstance(expected, UiCall) != isinstance(actual, UiCall):
+            self._tc.fail(f"expected {expected}, got {actual}")
+        self._tc.assertEqual(actual, expected)
+
+    async def call(self, msg, expected_type):
+        self._next_expected(msg)
         if self._index >= len(self._script):
             raise _ScriptEnded
         ack = self._script[self._index]
         self._index += 1
         return ack
 
+    def ui_call(self, name: str, args: tuple, kwargs: dict) -> bool:
+        self._next_expected(UiCall(name, args, kwargs))
+        if self._index >= len(self._script):
+            raise _ScriptEnded
+        return True
+
+
+def stub_signing_ui(ctx: ScriptedContext) -> None:
+    from apps.bitcoin.sign_tx import layout
+
+    def make_stub(name: str):
+        async def stub(*args, **kwargs):
+            return ctx.ui_call(name, args, kwargs)
+
+        return stub
+
+    for name in _SIGNING_UI_STUBS:
+        setattr(layout, name, make_stub(name))
+
 
 def run_signer(
     testcase: unittest.TestCase, signer: Bitcoin, messages: list
 ) -> TxRequest | None:
-    """Drive a bitcoin signer against a TxRequest / TxAck script.
+    """Drive a bitcoin signer against a TxRequest / TxAck / UiCall script.
 
     `messages` is a flat list of expected `TxRequest`s interleaved with the
-    corresponding acknowledgements. A trailing `TxRequest` with
-    `request_type=TXFINISHED` is asserted against `signer.tx_req` after the
-    signer returns, and is not treated as a `context.call()`.
+    corresponding acknowledgements, and expected signing UI calls (built via
+    `ui.<layout function>(...)`), which are auto-confirmed. A trailing
+    `TxRequest` with `request_type=TXFINISHED` is asserted against
+    `signer.tx_req` after the signer returns, and is not treated as a
+    `context.call()`.
     """
     from trezor.enums import RequestType
     from trezor.messages import TxRequest
-
-    stub_signing_ui()
 
     finished = None
     if messages:
@@ -127,6 +179,7 @@ def run_signer(
             messages = messages[:-1]
 
     ctx = ScriptedContext(messages, testcase)
+    stub_signing_ui(ctx)
     try:
         await_result(context.with_context(ctx, signer.signer()))
     except _ScriptEnded:
