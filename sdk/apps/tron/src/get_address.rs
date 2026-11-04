@@ -5,7 +5,6 @@ use crate::{
         common::button_request::ButtonRequestType,
         tron::{Address, GetAddress},
     },
-    uformat,
 };
 use trezor_app_sdk::{Result, ResultExt, crypto, ui};
 
@@ -20,8 +19,7 @@ pub(crate) fn get_address(msg: GetAddress) -> Result<Address> {
     let mac = crypto::get_address_mac(dp.as_ref(), &address, SLIP44_ID).c()?;
 
     if let Some(true) = msg.show_display {
-        // TODO: template translation
-        let subtitle = uformat!("{} address", COIN);
+        let subtitle = tr!("address__coin_address_template").replace("{0}", COIN);
         let account_name = dp
             .get_account_name(COIN, &PATTERNS_ADDRESS, SLIP44_ID)
             .ok_or(crate::Error::DataError("Failed to get account name"))

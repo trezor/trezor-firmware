@@ -227,6 +227,32 @@ pub fn confirm_value(
     Ok(())
 }
 
+/// Same as Python's `confirm_properties`: menu with a cancel entry.
+fn confirm_properties(
+    title: &str,
+    props: &[Property],
+    subtitle: Option<&str>,
+    verb: Option<&str>,
+    hold: bool,
+    br_name: &str,
+    br_code: i32,
+) -> Result<()> {
+    let menu = ui::Menu::new(&[], Some(ui::Cancel::new(tr!("buttons__cancel"))));
+    ui::error_if_not_confirmed(
+        ui::interact_with_menu_flow(
+            |name| {
+                ui::confirm_properties(ui::ConfirmProperties::new(
+                    title, props, subtitle, verb, hold, name, br_code, true,
+                ))
+            },
+            &menu,
+            Some(br_name),
+        )
+        .c()?,
+    )
+    .c()
+}
+
 pub(crate) fn confirm_blob_intro(
     title: &str,
     value: &[u8],
@@ -280,7 +306,7 @@ pub(crate) fn confirm_blob_prefix(
         .c()?;
     let confirmed_len = confirmed_len + prefix.len();
     let verb = if confirmed_len < total_len {
-        tr!("words__show_next")
+        tr!("buttons__show_next")
     } else {
         tr!("buttons__continue")
     };
@@ -291,7 +317,7 @@ pub(crate) fn confirm_blob_prefix(
     let show_more = !ui::should_show_more(
         &title,
         &[StrExt::mono(&prefix)],
-        tr!("words__confirm_all"), // will return True
+        tr!("buttons__confirm_all"), // will return True
         Some(br_name),
         br_code.into(),
         verb, // will return False
@@ -403,20 +429,17 @@ pub fn confirm_freeze_operations(
     )
     .c()?;
 
-    ui::error_if_not_confirmed(
-        ui::confirm_properties(ui::ConfirmProperties::new(
-            tr!("words__title_summary"),
-            &[
-                Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
-                Property::new(tr!("words__resource"), resource_name(resource), false),
-            ],
-            None,
-            None,
-            true,
-            Some("tron/freeze"),
-            ButtonRequestType::ConfirmOutput.into(),
-        ))
-        .c()?,
+    confirm_properties(
+        tr!("words__title_summary"),
+        &[
+            Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
+            Property::new(tr!("words__resource"), resource_name(resource), false),
+        ],
+        None,
+        None,
+        true,
+        "tron/freeze",
+        ButtonRequestType::ConfirmOutput.into(),
     )
     .c()?;
     Ok(())
@@ -454,46 +477,40 @@ pub fn confirm_delegate_resource(
     )
     .c()?;
 
-    ui::error_if_not_confirmed(
-        ui::confirm_properties(ui::ConfirmProperties::new(
-            title,
-            &[
-                Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
-                Property::new(tr!("words__resource"), resource_name(resource), false),
-            ],
-            None,
-            None,
-            lock_period.is_none(),
-            Some(uformat!("{}/resource", br_name).as_str()),
-            ButtonRequestType::ConfirmOutput.into(),
-        ))
-        .c()?,
+    confirm_properties(
+        title,
+        &[
+            Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
+            Property::new(tr!("words__resource"), resource_name(resource), false),
+        ],
+        None,
+        None,
+        lock_period.is_none(),
+        uformat!("{}/resource", br_name).as_str(),
+        ButtonRequestType::ConfirmOutput.into(),
     )
     .c()?;
 
     if let Some(lock_period) = lock_period {
-        ui::error_if_not_confirmed(
-            ui::confirm_properties(ui::ConfirmProperties::new(
-                title,
-                &[
-                    Property::new(
-                        tr!("tron__lockperiod_time"),
-                        &format_blocks_as_time(lock_period),
-                        true,
-                    ),
-                    Property::new(
-                        tr!("tron__lockperiod_blocks"),
-                        &chunkify_number(lock_period),
-                        true,
-                    ),
-                ],
-                Some(tr!("tron__lock_period")),
-                None,
-                true,
-                Some(uformat!("{}/lock_period", br_name).as_str()),
-                ButtonRequestType::ConfirmOutput.into(),
-            ))
-            .c()?,
+        confirm_properties(
+            title,
+            &[
+                Property::new(
+                    tr!("tron__lockperiod_time"),
+                    &format_blocks_as_time(lock_period),
+                    true,
+                ),
+                Property::new(
+                    tr!("tron__lockperiod_blocks"),
+                    &chunkify_number(lock_period),
+                    true,
+                ),
+            ],
+            Some(tr!("tron__lock_period")),
+            None,
+            true,
+            uformat!("{}/lock_period", br_name).as_str(),
+            ButtonRequestType::ConfirmOutput.into(),
         )
         .c()?;
     }
@@ -524,20 +541,17 @@ pub fn confirm_undelegate_resource(
     )
     .c()?;
 
-    ui::error_if_not_confirmed(
-        ui::confirm_properties(ui::ConfirmProperties::new(
-            title,
-            &[
-                Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
-                Property::new(tr!("words__resource"), resource_name(resource), false),
-            ],
-            None,
-            None,
-            true,
-            Some(uformat!("{}/resource", br_name).as_str()),
-            ButtonRequestType::ConfirmOutput.into(),
-        ))
-        .c()?,
+    confirm_properties(
+        title,
+        &[
+            Property::new(tr!("words__amount"), &format_trx_amount(balance), false),
+            Property::new(tr!("words__resource"), resource_name(resource), false),
+        ],
+        None,
+        None,
+        true,
+        uformat!("{}/resource", br_name).as_str(),
+        ButtonRequestType::ConfirmOutput.into(),
     )
     .c()?;
 
@@ -756,17 +770,14 @@ pub fn confirm_tron_transfer(
         Property::new(tr!("words__chain"), "Tron", true),
     ];
 
-    ui::error_if_not_confirmed(
-        ui::confirm_properties(ui::ConfirmProperties::new(
-            title,
-            &properties,
-            None,
-            Some(tr!("buttons__continue")),
-            false,
-            Some(br_name),
-            ButtonRequestType::ConfirmOutput.into(),
-        ))
-        .c()?,
+    confirm_properties(
+        title,
+        &properties,
+        None,
+        Some(tr!("buttons__continue")),
+        false,
+        br_name,
+        ButtonRequestType::ConfirmOutput.into(),
     )
     .c()?;
 
@@ -819,18 +830,24 @@ fn confirm_tron_approve(
     };
 
     ui::error_if_not_confirmed(
-        ui::confirm_action(ui::ConfirmAction::new(
-            title,
-            action_subtitle,
-            None,
-            None,
-            false,
-            Some(tr!("buttons__continue")),
-            true,
+        ui::interact_with_menu_flow(
+            |name| {
+                ui::confirm_action(ui::ConfirmAction::new(
+                    title,
+                    action_subtitle,
+                    None,
+                    None,
+                    false,
+                    Some(tr!("buttons__continue")),
+                    false,
+                    name,
+                    ButtonRequestType::Other.into(),
+                    true,
+                ))
+            },
+            &ui::Menu::new(&[], Some(ui::Cancel::new(tr!("buttons__cancel")))),
             Some(br_name),
-            ButtonRequestType::Other.into(),
-            false,
-        ))
+        )
         .c()?,
     )
     .c()?;
@@ -857,17 +874,14 @@ fn confirm_tron_approve(
         Property::new(tr!("words__chain"), "Tron", true),
     ];
 
-    ui::error_if_not_confirmed(
-        ui::confirm_properties(ui::ConfirmProperties::new(
-            title,
-            &properties,
-            None,
-            Some(tr!("buttons__continue")),
-            false,
-            Some(br_name),
-            ButtonRequestType::ConfirmOutput.into(),
-        ))
-        .c()?,
+    confirm_properties(
+        title,
+        &properties,
+        None,
+        Some(tr!("buttons__continue")),
+        false,
+        br_name,
+        ButtonRequestType::ConfirmOutput.into(),
     )
     .c()?;
 
@@ -903,6 +917,7 @@ pub fn confirm_tron_voting<'a>(items: &[Property<'a>]) -> Result<()> {
             true,
             Some("tron/vote"),
             ButtonRequestType::SignTx.into(),
+            false,
         ))
         .c()?,
     )
