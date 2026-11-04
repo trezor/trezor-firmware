@@ -822,16 +822,6 @@ EMULATOR_TROPIC_PREFIX = bytes.fromhex(
 )
 
 
-def sign_ed25519_expanded(scalar: bytes, prefix: bytes, message: bytes) -> bytes:
-    """Ed25519 signature with an expanded secret key, as stored in Tropic."""
-    a = _ed25519.decodeint(scalar)
-    public_key = _ed25519.encodepoint(_ed25519.scalarmult_B(a))
-    r = _ed25519.Hint(prefix + message)
-    R = _ed25519.encodepoint(_ed25519.scalarmult_B(r))
-    S = (r + _ed25519.Hint(R + public_key + message) * a) % _ed25519.l
-    return R + _ed25519.encodeint(S)
-
-
 def emulator_signature(source: AttestationSource) -> bytes:
     message = authentication.get_challenge_message(CHALLENGE)
     if source is OPTIGA:
@@ -840,8 +830,8 @@ def emulator_signature(source: AttestationSource) -> bytes:
         )
         return sign(key, message)
     if source is TROPIC:
-        return sign_ed25519_expanded(
-            EMULATOR_TROPIC_SCALAR, EMULATOR_TROPIC_PREFIX, message
+        return _ed25519.signature_unsafe_expanded(
+            message, EMULATOR_TROPIC_SCALAR, EMULATOR_TROPIC_PREFIX
         )
     return sign(mldsa.MLDSA44PrivateKey.from_seed_bytes(EMULATOR_MCU_SEED), message)
 
