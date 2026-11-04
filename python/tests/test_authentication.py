@@ -495,17 +495,16 @@ def test_verify_ca_without_ca_extensions(roots: Roots, rejects: Rejects) -> None
         verify(chain, OPTIGA)
 
 
-@pytest.mark.parametrize("devel_allowed", [False, True])
-def test_verify_debug_root(
-    roots: Roots, rejects: Rejects, devel_allowed: bool
-) -> None:
+def test_verify_debug_root_allowed(roots: Roots) -> None:
     chain = make_chain(roots.t3w1_debug, OPTIGA)
-    if devel_allowed:
-        result = verify(chain, OPTIGA, allow_development_devices=True)
-        assert result.root is roots.t3w1_debug.certificate
-    else:
-        with rejects("Successfully verified a Trezor Safe 7"):
-            verify(chain, OPTIGA)
+    result = verify(chain, OPTIGA, allow_development_devices=True)
+    assert result.root is roots.t3w1_debug.certificate
+
+
+def test_verify_debug_root_rejected(roots: Roots, rejects: Rejects) -> None:
+    chain = make_chain(roots.t3w1_debug, OPTIGA)
+    with rejects("Successfully verified a Trezor Safe 7"):
+        verify(chain, OPTIGA)
 
 
 def test_verify_allowlist(roots: Roots, rejects: Rejects) -> None:
@@ -553,10 +552,16 @@ def test_authenticate_t3w1(roots: Roots, auth: AuthFromChains) -> None:
     assert root is roots.t3w1_prod.certificate
 
 
-def test_authenticate_t3w1_debug(roots: Roots, auth: AuthFromChains, rejects: Rejects) -> None:
+def test_authenticate_t3w1_debug_allowed(roots: Roots, auth: AuthFromChains) -> None:
     chains = make_chains(roots.t3w1_debug)
     root = auth(models.T3W1, chains, allow_development_devices=True)
     assert root is roots.t3w1_debug.certificate
+
+
+def test_authenticate_t3w1_debug_rejected(
+    roots: Roots, auth: AuthFromChains, rejects: Rejects
+) -> None:
+    chains = make_chains(roots.t3w1_debug)
     with rejects("manufactured by Test DEBUG root"):
         auth(models.T3W1, chains)
 
