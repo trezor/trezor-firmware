@@ -715,7 +715,9 @@ def test_authenticate_custom_root_requires_proof(
         auth(models.T3T1, {OPTIGA: chain}, **kwargs)
 
 
-def test_authenticate_mixed_roots(roots: Roots, auth: AuthFromChains, rejects: Rejects) -> None:
+def test_authenticate_mixed_roots(
+    roots: Roots, auth: AuthFromChains, rejects: Rejects
+) -> None:
     chains = make_chains(roots.t3w1_prod)
     chains[TROPIC] = make_chain(roots.t3w1_backup, TROPIC)
     with rejects("different root authorities"):
