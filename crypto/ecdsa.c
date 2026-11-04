@@ -1441,12 +1441,20 @@ int ecdsa_unmask_scalar(const ecdsa_curve *curve,
 
   bignum256 s = {0};
   bn_read_be(masked_scalar, &s);
-  bn_inverse(&k, &curve->order);       // k = k^-1
-  bn_multiply(&k, &s, &curve->order);  // s = s * k
+
+  // Blind the secret masking key before modular inversion to mitigate
+  // side-channel timing and power analysis on bn_inverse.
+  bignum256 randk = {0};
+  generate_k_random(&randk, &curve->order);
+  bn_multiply(&randk, &k, &curve->order);  // k' = k * randk
+  bn_inverse(&k, &curve->order);           // k = (k * randk)^-1
+  bn_multiply(&k, &s, &curve->order);      // s = s * (k * randk)^-1
+  bn_multiply(&randk, &s, &curve->order);  // s = s * k^-1
   bn_mod(&s, &curve->order);
   bn_write_be(&s, scalar);
   memzero(&k, sizeof(k));
   memzero(&s, sizeof(s));
+  memzero(&randk, sizeof(randk));
   return 0;
 }
 
@@ -1458,13 +1466,15 @@ int ecdsa_unmask_public_key(const ecdsa_curve *curve,
   int ret = 0;
 
   curve_point point = {0};
+  bignum256 k = {0};
+  bignum256 randk = {0};
+
   if (!ecdsa_read_pubkey(curve, masked_pub_key, &point)) {
     // Invalid public key.
     ret = 1;
     goto cleanup;
   }
 
-  bignum256 k = {0};
   bn_read_be(masking_key, &k);
   if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
     // Invalid masking key.
@@ -1472,7 +1482,11 @@ int ecdsa_unmask_public_key(const ecdsa_curve *curve,
     goto cleanup;
   }
 
-  bn_inverse(&k, &curve->order);
+  // Blind the secret masking key before modular inversion.
+  generate_k_random(&randk, &curve->order);
+  bn_multiply(&randk, &k, &curve->order);  // k' = k * randk
+  bn_inverse(&k, &curve->order);           // k = (k * randk)^-1
+  bn_multiply(&randk, &k, &curve->order);  // k = k^-1
   bn_mod(&k, &curve->order);
   point_multiply(curve, &k, &point, &point);
 
@@ -1483,5 +1497,6 @@ int ecdsa_unmask_public_key(const ecdsa_curve *curve,
 cleanup:
   memzero(&point, sizeof(point));
   memzero(&k, sizeof(k));
+  memzero(&randk, sizeof(randk));
   return ret;
 }

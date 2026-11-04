@@ -4509,6 +4509,15 @@ START_TEST(test_ecdsa_masking) {
     res = ecdsa_verify_digest(curve, pub_key, sig, digest);
     ck_assert_int_eq(res, 0);
   }
+
+  // Verify rejection of invalid zero masking key.
+  uint8_t zero_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
+  uint8_t out_scalar[ECDSA_PRIVATE_KEY_SIZE] = {0};
+  res = ecdsa_unmask_scalar(curve, zero_key, masked_digest, out_scalar);
+  ck_assert_int_eq(res, 1);
+  res = ecdsa_unmask_public_key(curve, zero_key, masked_pub_key,
+                                unmasked_pub_key);
+  ck_assert_int_eq(res, 2);
 }
 END_TEST
 
@@ -12127,7 +12136,9 @@ static void test_noise_xxpsk3_handshake(uint32_t seed,
                                         noise_xxpsk3_responder_t *responder) {
   random_reseed(seed);
 
-  uint8_t psk[32] = "this_is_a_32byte_preshared_key!!";
+  uint8_t psk[32] = {'t', 'h', 'i', 's', '_', 'i', 's', '_', 'a', '_', '3',
+                     '2', 'b', 'y', 't', 'e', '_', 'p', 'r', 'e', 's', 'h',
+                     'a', 'r', 'e', 'd', '_', 'k', 'e', 'y', '!', '!'};
 
   uint8_t initiator_private_key[32] = {0};
   uint8_t responder_private_key[32] = {0};
