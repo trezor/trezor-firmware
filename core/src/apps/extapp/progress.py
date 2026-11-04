@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 import trezorui_api
 from trezor.ui.layouts.progress import progress
-from trezor.wire.errors import DataError
 
 from .session import SERVICE_PROGRESS
 
@@ -36,18 +35,18 @@ def handle(session: Session, msg: IpcMessage) -> None:
         )
     elif message_id == _REPORT:
         if session.progress is None:
-            session.die(DataError("Progress not initialized"))
+            session.die("Progress not initialized")
         description, value = obj
         session.progress.report(value, description=description)
     elif message_id == _STOP:
         if session.progress is None:
-            session.die(DataError("Progress not initialized"))
+            session.die("Progress not initialized")
         session.progress.stop()
         session.progress = None
     else:
-        session.die(DataError("Unknown progress message ID"))
+        session.die("Unknown progress message ID")
 
     try:
         session.send(SERVICE_PROGRESS, message_id, b"")
     except Exception:
-        session.die(DataError("Failed to send progress result"))
+        session.die("Failed to send progress result")

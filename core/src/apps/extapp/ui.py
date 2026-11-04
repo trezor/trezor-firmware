@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 import trezorui_api
 from trezor.ui.layouts.common import interact
-from trezor.wire.errors import DataError
 
 from .session import SERVICE_UI
 
@@ -22,7 +21,7 @@ async def handle(session: Session, msg: IpcMessage) -> None:
             data=bytes(msg.data)
         )
     except Exception:
-        session.die(DataError("Invalid UI request"))
+        session.die("Invalid UI request")
     result = await interact(layout_obj, br_name, br_code, raise_on_cancel=None)
     if __debug__:
         log.debug(__name__, f"UI interaction result: {result}")
@@ -33,4 +32,4 @@ async def handle(session: Session, msg: IpcMessage) -> None:
     try:
         trezorui_api.send_ui_result(result=result, ipc_cb=send)
     except Exception:
-        session.die(DataError("Failed to serialize or send UI result"))
+        session.die("Failed to serialize or send UI result")

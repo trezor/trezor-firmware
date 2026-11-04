@@ -84,6 +84,11 @@ class InvalidSession(Error):
         super().__init__(FailureType.InvalidSession, message)
 
 
+class AppError(Error):
+    def __init__(self, message: str = "Application error") -> None:
+        super().__init__(FailureType.AppError, message)
+
+
 class FirmwareError(Error):
     def __init__(self, message: str) -> None:
         super().__init__(FailureType.FirmwareError, message)
