@@ -565,6 +565,26 @@
             }
         },
         {
+            "name": "1inch_AggregationRouterV6_ethUnoswap",
+            "parameters": {
+                "comment": "supported | https://etherscan.io/tx/0xd590d9d63c7750a5c88f11912ac3b47454760ff4131698ff71a5c82c974c64f7",
+                "data": "a76dfc3b000000000000000000000000000000000000000000000000000000000022eea700000000000000003b6d0340b4e16d0168e52d35cacd2c6185b44281ec28c9dce7f553244a82836d",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x111111125421cA6dc452d289314280a0f8842A65",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x28fa6dcc",
+                "gas_limit": "0x26639",
+                "tx_type": null,
+                "value": "0x38d7ea4c68000"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "b429fa615dacc296a2466a97f9a627bce3a9cba3069e16647b5cb2d7d339036d",
+                "sig_s": "4a7f39a10ebc9c6ce59edabd10ab4e536af97d9caba21de0f6b1a52563fb1ebc"
+            }
+        },
+        {
             "name": "kiln_Vault_USDC_Morpho_Gauntlet_Prime_deposit",
             "parameters": {
                 "comment": "supported | https://etherscan.io/tx/0x274e05b1c841b1aaabf647406264230de5a5b7d6079cb9158364eaf5e82cbb50",
