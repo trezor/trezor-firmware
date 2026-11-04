@@ -220,6 +220,8 @@ def show_card_prompt(state: int, remaining_ms: int) -> bool:
         )
     failed = state != _CARD_DONE
     result = progress(description, title=title, danger=failed)
+    # Draw it complete in one paint: animating the bar would block too.
+    result.value = 1000
     result.report(1000, description)
     # A success returns at once: the workflow may need the card again right
     # away, while it is still held. A failure ends the workflow, so pause to
