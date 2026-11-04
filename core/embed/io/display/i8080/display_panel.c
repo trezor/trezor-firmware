@@ -149,16 +149,20 @@ void display_panel_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
   uint32_t id = display_panel_identify();
   if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
       (id == DISPLAY_ID_ST7789V)) {
-    ISSUE_CMD_BYTE(0x2A);
-    ISSUE_DATA_BYTE(x0 >> 8);
-    ISSUE_DATA_BYTE(x0 & 0xFF);
-    ISSUE_DATA_BYTE(x1 >> 8);
-    ISSUE_DATA_BYTE(x1 & 0xFF);  // column addr set
+    // RASET is issued before CASET on purpose: both are independent and
+    // RAMWR resets the write pointer, so the order does not matter to the
+    // panel, but it breaks bus sniffers that sync on the canonical
+    // CASET/RASET/RAMWR sequence.
     ISSUE_CMD_BYTE(0x2B);
     ISSUE_DATA_BYTE(y0 >> 8);
     ISSUE_DATA_BYTE(y0 & 0xFF);
     ISSUE_DATA_BYTE(y1 >> 8);
     ISSUE_DATA_BYTE(y1 & 0xFF);  // row addr set
+    ISSUE_CMD_BYTE(0x2A);
+    ISSUE_DATA_BYTE(x0 >> 8);
+    ISSUE_DATA_BYTE(x0 & 0xFF);
+    ISSUE_DATA_BYTE(x1 >> 8);
+    ISSUE_DATA_BYTE(x1 & 0xFF);  // column addr set
     ISSUE_CMD_BYTE(0x2C);
   }
 }
