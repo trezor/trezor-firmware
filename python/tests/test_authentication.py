@@ -270,18 +270,19 @@ def make_chains(
 
 
 def make_proof(
-    chains: t.Mapping[AttestationSource, Chain],
+    parts: t.Mapping[AttestationSource, tuple[list[bytes], bytes]],
 ) -> messages.AuthenticityProof:
     def certificates(source: AttestationSource) -> list[bytes] | None:
-        chain = chains.get(source)
-        return chain.certificates if chain is not None else None
+        part = parts.get(source)
+        return part[0] if part is not None else None
 
     def signature(source: AttestationSource) -> bytes | None:
-        chain = chains.get(source)
-        return chain.sign() if chain is not None else None
+        part = parts.get(source)
+        return part[1] if part is not None else None
 
     return messages.AuthenticityProof(
         optiga_certificates=certificates(OPTIGA),
+        # optiga_signature is a required protobuf field, the other signatures are not
         optiga_signature=signature(OPTIGA) or b"",
         tropic_certificates=certificates(TROPIC),
         tropic_signature=signature(TROPIC),
@@ -365,7 +366,11 @@ def auth(auth_proof: AuthFromProof) -> AuthFromChains:
         version: tuple[int, int, int] = MCU_VERSION,
         **kwargs: t.Any,
     ) -> RootPublicKeys | None:
-        return auth_proof(model, make_proof(chains), version, **kwargs)
+        parts = {
+            source: (chain.certificates, chain.sign())
+            for source, chain in chains.items()
+        }
+        return auth_proof(model, make_proof(parts), version, **kwargs)
 
     return do
 
@@ -891,12 +896,13 @@ def test_emulator_chain(rejects: Rejects, chain: EmulatorChain) -> None:
 def test_authenticate_emulator(
     auth_proof: AuthFromProof, model: models.TrezorModel
 ) -> None:
-    proof = messages.AuthenticityProof(optiga_signature=b"")
-    for chain in EMULATOR_CHAINS:
-        if chain.model is model:
-            source = chain.source.value
-            setattr(proof, f"{source}_signature", emulator_signature(chain.source))
-            setattr(proof, f"{source}_certificates", chain.certificates)
+    proof = make_proof(
+        {
+            chain.source: (chain.certificates, emulator_signature(chain.source))
+            for chain in EMULATOR_CHAINS
+            if chain.model is model
+        }
+    )
     root = auth_proof(model, proof, allow_development_devices=True)
     assert root is not None
     assert root.devel
