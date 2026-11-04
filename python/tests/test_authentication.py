@@ -845,10 +845,6 @@ def emulator_signature(source: AttestationSource) -> bytes:
 TESTING_ROOT_NAME = "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE"
 
 
-def builtin_roots(model: models.TrezorModel) -> list[RootPublicKeys]:
-    return [r for r in authentication.ROOT_PUBLIC_KEYS if model in r.trezor_models]
-
-
 ALL_MODELS = sorted(models.ALL_MODELS, key=lambda m: m.internal_name)
 
 
@@ -859,7 +855,7 @@ ALL_MODELS = sorted(models.ALL_MODELS, key=lambda m: m.internal_name)
 def test_root_keys_for_model(model: models.TrezorModel) -> None:
     # Models with emulator certificates support authentication and need root keys.
     # Models without them must have no root keys, which would remain untested.
-    roots = builtin_roots(model)
+    roots = authentication.roots_for_model(model)
     if model not in EMULATOR_MODELS:
         assert not roots, "root keys without emulator certificates"
         return
