@@ -1,0 +1,57 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "111111125421ca6dc452d289314280a0f8842a65",
+    "func_sig": "a76dfc3b",
+    "intent": "Swap",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "container_path": "VALUE"
+        },
+        "label": "Amount to Send",
+        "formatter": "FORMATTER_AMOUNT"
+      },
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Minimum to Receive",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "0000000000000000000000000000000000000000"
+        ]
+      },
+      {
+        "path": {
+          "container_path": "FROM"
+        },
+        "label": "Beneficiary",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ],
+          "slice_start": -20
+        },
+        "label": "Last pool",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      }
+    ],
+    "provider_name": "1inch Network: AggregationRouterV6"
+  }
+}
