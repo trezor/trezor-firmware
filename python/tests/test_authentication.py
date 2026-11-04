@@ -299,6 +299,33 @@ def make_proof(
     )
 
 
+class RootSpec(t.NamedTuple):
+    name: str
+    trezor_models: tuple[models.TrezorModel, ...]
+    key_type: RootKeyType
+    sources: tuple[AttestationSource, ...] = (OPTIGA, TROPIC, MCU)
+
+
+ROOT_SPECS = (
+    RootSpec("t3w1_prod", (models.T3W1,), RootKeyType.PROD),
+    RootSpec("t3w1_backup", (models.T3W1,), RootKeyType.PROD_BACKUP),
+    RootSpec("t3w1_debug", (models.T3W1,), RootKeyType.DEBUG),
+    RootSpec("t3t1_prod", (models.T3T1,), RootKeyType.PROD, (OPTIGA,)),
+    RootSpec("t3t1_debug", (models.T3T1,), RootKeyType.DEBUG, (OPTIGA,)),
+    RootSpec("t2b1_prod", (models.T2B1,), RootKeyType.PROD, (OPTIGA,)),
+    RootSpec("t3b1_prod", (models.T3B1,), RootKeyType.PROD, (OPTIGA,)),
+    RootSpec("safe3_debug", (models.T2B1, models.T3B1), RootKeyType.DEBUG, (OPTIGA,)),
+)
+
+# every valid root x model x source combination
+ROOT_MATRIX = [
+    (spec, model, source)
+    for spec in ROOT_SPECS
+    for model in spec.trezor_models
+    for source in spec.sources
+]
+
+
 class Roots(t.NamedTuple):
     t3w1_prod: FakeRoot
     t3w1_backup: FakeRoot
@@ -310,26 +337,18 @@ class Roots(t.NamedTuple):
     safe3_debug: FakeRoot
 
     def prod(self, model: models.TrezorModel) -> FakeRoot:
-        prod_roots = {
-            models.T3W1: self.t3w1_prod,
-            models.T3T1: self.t3t1_prod,
-            models.T2B1: self.t2b1_prod,
-            models.T3B1: self.t3b1_prod,
-        }
-        return prod_roots[model]
+        (spec,) = (
+            s
+            for s in ROOT_SPECS
+            if s.key_type is RootKeyType.PROD and model in s.trezor_models
+        )
+        return getattr(self, spec.name)
 
 
 @pytest.fixture(scope="module")
 def module_roots() -> Roots:
     return Roots(
-        t3w1_prod=FakeRoot((models.T3W1,), RootKeyType.PROD),
-        t3w1_backup=FakeRoot((models.T3W1,), RootKeyType.PROD_BACKUP),
-        t3w1_debug=FakeRoot((models.T3W1,), RootKeyType.DEBUG),
-        t3t1_prod=FakeRoot((models.T3T1,), RootKeyType.PROD, (OPTIGA,)),
-        t3t1_debug=FakeRoot((models.T3T1,), RootKeyType.DEBUG, (OPTIGA,)),
-        t2b1_prod=FakeRoot((models.T2B1,), RootKeyType.PROD, (OPTIGA,)),
-        t3b1_prod=FakeRoot((models.T3B1,), RootKeyType.PROD, (OPTIGA,)),
-        safe3_debug=FakeRoot((models.T2B1, models.T3B1), RootKeyType.DEBUG, (OPTIGA,)),
+        **{s.name: FakeRoot(s.trezor_models, s.key_type, s.sources) for s in ROOT_SPECS}
     )
 
 
@@ -400,18 +419,23 @@ def test_model_cn_format() -> None:
     assert model_cn(models.T3W1) == "T3W1 Trezor Safe 7"
 
 
-@pytest.mark.parametrize("source", [OPTIGA, TROPIC, MCU])
-def test_verify_builtin_root(roots: Roots, source: AttestationSource) -> None:
-    chain = make_chain(roots.t3w1_prod, source)
-    result = verify(chain, source)
-    assert result.root is roots.t3w1_prod.certificate
-    assert result.common_name == "T3W1 Trezor Safe 7"
+@pytest.mark.parametrize(
+    "spec, model, source",
+    ROOT_MATRIX,
+    ids=[f"{s.name}-{m.internal_name}-{src.value}" for s, m, src in ROOT_MATRIX],
+)
+def test_verify_builtin_root(
+    roots: Roots,
+    spec: RootSpec,
+    model: models.TrezorModel,
+    source: AttestationSource,
+) -> None:
+    root = getattr(roots, spec.name)
+    chain = make_chain(root, source, model_cn(model))
+    result = verify(chain, source, allow_development_devices=root.certificate.devel)
+    assert result.root is root.certificate
+    assert result.common_name == model_cn(model)
     assert result.serial_number == SERIAL
-
-
-def test_verify_backup_root(roots: Roots) -> None:
-    chain = make_chain(roots.t3w1_backup, OPTIGA)
-    assert verify(chain, OPTIGA).root is roots.t3w1_backup.certificate
 
 
 def test_verify_without_serial_number(roots: Roots) -> None:
@@ -439,13 +463,6 @@ def test_verify_root_of_other_model(roots: Roots, rejects: Rejects) -> None:
     chain = make_chain(roots.t3w1_prod, OPTIGA, model_cn(models.T3T1))
     with rejects("issued by an unknown root"):
         verify(chain, OPTIGA)
-
-
-@pytest.mark.parametrize("model", [models.T2B1, models.T3B1], ids=["T2B1", "T3B1"])
-def test_verify_root_shared_by_models(roots: Roots, model: models.TrezorModel) -> None:
-    chain = make_chain(roots.safe3_debug, OPTIGA, model_cn(model), None)
-    result = verify(chain, OPTIGA, allow_development_devices=True)
-    assert result.root is roots.safe3_debug.certificate
 
 
 def test_verify_unknown_model(roots: Roots, rejects: Rejects) -> None:
@@ -493,12 +510,6 @@ def test_verify_ca_without_ca_extensions(roots: Roots, rejects: Rejects) -> None
     chain = make_chain(roots.t3w1_prod, OPTIGA, ca_extensions=False)
     with rejects("Missing extension"):
         verify(chain, OPTIGA)
-
-
-def test_verify_debug_root_allowed(roots: Roots) -> None:
-    chain = make_chain(roots.t3w1_debug, OPTIGA)
-    result = verify(chain, OPTIGA, allow_development_devices=True)
-    assert result.root is roots.t3w1_debug.certificate
 
 
 def test_verify_debug_root_rejected(roots: Roots, rejects: Rejects) -> None:
