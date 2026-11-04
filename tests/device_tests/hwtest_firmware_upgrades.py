@@ -267,7 +267,7 @@ def test_firmware_upgrade() -> None:
     try:
         f = client.features
         log(
-            f"Checking the device runs {version_str(new_version[:3])} "
+            f"Checking the device runs {version_str(new_version)} "
             "and kept its seed, PIN and label"
         )
         assert (f.major_version, f.minor_version, f.patch_version) == new_version[
@@ -279,6 +279,9 @@ def test_firmware_upgrade() -> None:
         address_after = get_test_address(client.get_session())
         log(f"Address after upgrade: {address_after}")
         assert address_after == address
-        log("Upgrade test passed")
+        log(
+            f"Upgrade test passed: {version_str(current_version)} -> "
+            f"{version_str(new_version)}"
+        )
     finally:
         client.transport.close()
