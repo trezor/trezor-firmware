@@ -48,6 +48,11 @@ PrivateKey = t.Union[
 ]
 
 
+def model_cn(model: models.TrezorModel) -> str:
+    """Common name used in the device certificates of the model."""
+    return f"{model.internal_name} Trezor {model.name}"
+
+
 def sign(key: PrivateKey, message: bytes) -> bytes:
     if isinstance(key, ec.EllipticCurvePrivateKey):
         return key.sign(message, ec.ECDSA(hashes.SHA256()))
@@ -124,6 +129,9 @@ def auth_proof(monkeypatch: pytest.MonkeyPatch) -> AuthFromProof:
 SERIAL = "12345678901234"
 VALID_FROM = datetime.datetime(2025, 1, 1)
 VALID_TO = datetime.datetime(2045, 1, 1)
+
+# most tests build T3W1 chains
+DEFAULT_COMMON_NAME = model_cn(models.T3W1)
 
 
 def generate_key(source: AttestationSource) -> PrivateKey:
@@ -227,7 +235,7 @@ class Chain(t.NamedTuple):
 def make_chain(
     root: FakeRoot,
     source: AttestationSource,
-    common_name: str | None = "T3W1 Trezor Safe 7",
+    common_name: str | None = DEFAULT_COMMON_NAME,
     serial_number: str | None = SERIAL,
     *,
     ca_extensions: bool = True,
@@ -260,7 +268,7 @@ def make_chain(
 
 def make_chains(
     root: FakeRoot,
-    common_name: str = "T3W1 Trezor Safe 7",
+    common_name: str = DEFAULT_COMMON_NAME,
     serial_number: str | None = SERIAL,
 ) -> dict[AttestationSource, Chain]:
     return {
@@ -378,6 +386,11 @@ def auth(auth_proof: AuthFromProof) -> AuthFromChains:
 # ---- verify_authentication_response ----
 
 
+def test_model_cn_format() -> None:
+    # pin the CN convention used by the production device certificates
+    assert model_cn(models.T3W1) == "T3W1 Trezor Safe 7"
+
+
 @pytest.mark.parametrize("source", [OPTIGA, TROPIC, MCU])
 def test_verify_builtin_root(roots: Roots, source: AttestationSource) -> None:
     chain = make_chain(roots.t3w1_prod, source)
@@ -393,7 +406,7 @@ def test_verify_backup_root(roots: Roots) -> None:
 
 
 def test_verify_without_serial_number(roots: Roots) -> None:
-    chain = make_chain(roots.t3t1_prod, OPTIGA, "T3T1 Trezor Safe 5", None)
+    chain = make_chain(roots.t3t1_prod, OPTIGA, model_cn(models.T3T1), None)
     assert verify(chain, OPTIGA).serial_number is None
 
 
@@ -414,14 +427,14 @@ def test_verify_wrong_attestation_source(
 
 def test_verify_root_of_other_model(roots: Roots, rejects: Rejects) -> None:
     # signed by the T3W1 root, but claims to be a T3T1
-    chain = make_chain(roots.t3w1_prod, OPTIGA, "T3T1 Trezor Safe 5")
+    chain = make_chain(roots.t3w1_prod, OPTIGA, model_cn(models.T3T1))
     with rejects("issued by an unknown root"):
         verify(chain, OPTIGA)
 
 
-@pytest.mark.parametrize("common_name", ["T2B1 Trezor Safe 3", "T3B1 Trezor Safe 3"])
-def test_verify_root_shared_by_models(roots: Roots, common_name: str) -> None:
-    chain = make_chain(roots.safe3_debug, OPTIGA, common_name, None)
+@pytest.mark.parametrize("model", [models.T2B1, models.T3B1], ids=["T2B1", "T3B1"])
+def test_verify_root_shared_by_models(roots: Roots, model: models.TrezorModel) -> None:
+    chain = make_chain(roots.safe3_debug, OPTIGA, model_cn(model), None)
     result = verify(chain, OPTIGA, allow_development_devices=True)
     assert result.root is roots.safe3_debug.public_keys
 
@@ -645,7 +658,7 @@ def test_authenticate_custom_root_requires_proof(
     message: str,
 ) -> None:
     # a custom Tropic or MCU root enforces that proof even on a model without it
-    chain = make_chain(roots.t3t1_prod, OPTIGA, "T3T1 Trezor Safe 5")
+    chain = make_chain(roots.t3t1_prod, OPTIGA, model_cn(models.T3T1))
     kwargs: dict[str, t.Any] = {root_pubkey_arg: roots.t3w1_debug.pubkey_bytes(source)}
     with rejects(message):
         auth(models.T3T1, {OPTIGA: chain}, **kwargs)
@@ -701,7 +714,7 @@ def test_authenticate_model_mismatch_safe5_as_t3w1(
     roots: Roots, auth: AuthFromChains, rejects: Rejects
 ) -> None:
     # A Safe 5 Optiga in a device reporting itself as a T3W1.
-    chain = make_chain(roots.t3t1_prod, OPTIGA, "T3T1 Trezor Safe 5")
+    chain = make_chain(roots.t3t1_prod, OPTIGA, model_cn(models.T3T1))
     with rejects("Missing Tropic"):
         auth(models.T3W1, {OPTIGA: chain})
 
