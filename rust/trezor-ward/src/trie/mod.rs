@@ -2,9 +2,12 @@
 //! name, with the digests that make it a Merkle tree, which is why the prover's type is a
 //! `Tree`. See the crate documentation for the structure, the encodings and the proof format.
 //!
-//! `common` holds what the prover and the verifier must agree on byte for byte.
+//! `common` holds what the prover and the verifier must agree on byte for byte. `verifier`
+//! holds a proof against a trusted root and derives the root a change produces, from the root
+//! and the proof alone.
 
 pub mod common;
+pub mod verifier;
 
 #[cfg(feature = "sha2")]
 pub use common::Sha256;
@@ -12,3 +15,4 @@ pub use common::{
     BitPos, ByteArray, Error, HashFn, Hashable, Key, Leaf, Proof, Step, Steps, bit, branch_digest,
     crit_bit, empty_root, key_bits, key_len, leaf_digest,
 };
+pub use verifier::{Entry, OccupiedEntry, VacantEntry};

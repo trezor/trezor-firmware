@@ -45,6 +45,21 @@ pub fn branch_digest<H: HashFn>(
     ])
 }
 
+/// The digest of the branch above `child`, which sits on `side` (`true` = right, the key's
+/// bit at `crit_bit`) with `sibling` on the other side.
+pub(crate) fn parent_digest<H: HashFn>(
+    crit_bit: BitPos,
+    side: bool,
+    child: &H::Output,
+    sibling: &H::Output,
+) -> H::Output {
+    let (left, right) = match side {
+        false => (child, sibling),
+        true => (sibling, child),
+    };
+    branch_digest::<H>(crit_bit, left, right)
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::hash::Sha256;
@@ -54,8 +69,8 @@ mod tests {
     fn empty_root_is_sha256_of_the_tag() {
         // sha256(0x02), derived independently with Python's hashlib
         assert_eq!(
-            empty_root::<Sha256>(),
-            hex("dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986")
+            hex::encode(empty_root::<Sha256>()),
+            "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986"
         );
     }
 
@@ -75,13 +90,5 @@ mod tests {
             branch_digest::<Sha256>(BitPos::new(1), &a, &b),
             branch_digest::<Sha256>(BitPos::new(2), &a, &b)
         );
-    }
-
-    fn hex(s: &str) -> [u8; 32] {
-        let mut out = [0u8; 32];
-        for (i, byte) in out.iter_mut().enumerate() {
-            *byte = u8::from_str_radix(&s[2 * i..2 * i + 2], 16).unwrap();
-        }
-        out
     }
 }

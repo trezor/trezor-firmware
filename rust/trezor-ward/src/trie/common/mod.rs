@@ -15,5 +15,6 @@ pub use error::Error;
 pub use hash::Sha256;
 pub use hash::{HashFn, Hashable};
 pub use key::{BitPos, Key, bit, crit_bit, key_bits, key_len};
+pub(crate) use node::parent_digest;
 pub use node::{branch_digest, empty_root, leaf_digest};
 pub use proof::{Leaf, Proof, Step, Steps};
