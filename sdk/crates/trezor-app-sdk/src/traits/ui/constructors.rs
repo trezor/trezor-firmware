@@ -332,6 +332,7 @@ impl<'a> ConfirmProperties<'a> {
         hold: bool,
         br_name: Option<&'a str>,
         br_code: i32,
+        external_menu: bool,
     ) -> Self {
         Self {
             title: title.into(),
@@ -341,6 +342,7 @@ impl<'a> ConfirmProperties<'a> {
             hold,
             br_name: opt_bytes(br_name),
             br_code,
+            external_menu,
         }
     }
 }

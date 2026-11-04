@@ -189,7 +189,7 @@ impl<'a> Details<'a> {
     }
 }
 
-/// The cancel entry of a [`Menu`], rendered as a [`ConfirmAction`] screen when selected.
+/// The cancel entry of a [`Menu`]; selecting it cancels the flow.
 #[derive(Copy, Clone)]
 pub struct Cancel<'a> {
     title: &'a str,
@@ -198,13 +198,6 @@ pub struct Cancel<'a> {
 impl<'a> Cancel<'a> {
     pub fn new(title: &'a str) -> Self {
         Self { title }
-    }
-
-    fn interact(&self) -> UiResult {
-        // TODO: impl br code
-        confirm_action(ConfirmAction::new(
-            self.title, "", None, None, false, None, false, None, 1, false,
-        ))
     }
 }
 
@@ -260,17 +253,11 @@ impl<'a> Menu<'a> {
                 TrezorUiResult::Confirmed => {
                     return Ok(TrezorUiResult::Confirmed);
                 }
-                TrezorUiResult::Cancelled => {
-                    if let Some(cancel) = self.cancel.as_ref() {
-                        let r = cancel.interact()?;
-                        match r {
-                            TrezorUiResult::Confirmed => return Ok(TrezorUiResult::Cancelled),
-                            TrezorUiResult::Cancelled => continue,
-                            // TODO: proper error type
-                            _ => return Err(Error::Cancelled),
-                        }
-                    }
+                // Same behavior as Python's `cancel_leaf`: cancel without confirmation.
+                TrezorUiResult::Cancelled if self.cancel.is_some() => {
+                    return Ok(TrezorUiResult::Cancelled);
                 }
+                TrezorUiResult::Cancelled => continue,
                 // TODO: proper error type
                 _ => return Err(Error::Cancelled),
             }

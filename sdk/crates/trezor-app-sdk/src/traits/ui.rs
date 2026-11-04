@@ -213,6 +213,7 @@ pub struct ConfirmProperties<'a> {
     pub hold: bool,
     pub br_name: StabbyOption<Slice<'a, u8>>,
     pub br_code: i32,
+    pub external_menu: bool,
 }
 
 #[stabby::stabby]
